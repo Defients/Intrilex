@@ -1,0 +1,5 @@
+{
+  "schemaVersion": "2.0.0",
+  "status": "SUPERSEDED_BY_GOVERNING_LEDGER",
+  "governingDocument": "docs/PROVENANCE_CONFLICT_LEDGER.md"
+}

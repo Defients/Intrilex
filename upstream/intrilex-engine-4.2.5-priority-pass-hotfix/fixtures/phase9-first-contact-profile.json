@@ -1,0 +1,365 @@
+[
+  {
+    "id": "CT-093",
+    "title": "First Contact disables suit-specific effects",
+    "sourceTestId": "CT-093",
+    "purpose": "Reject Rank-10 suit text before source commitment while First Contact is active.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT-093-P1_HAND-01"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT-093-P1_HAND-01": {
+          "id": "CT-093-P1_HAND-01",
+          "identity": "10♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT-093-DP-01": {
+          "id": "CT-093-DP-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-093-DP-02": {
+          "id": "CT-093-DP-02",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-093-DP-03": {
+          "id": "CT-093-DP-03",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-093-DP-04": {
+          "id": "CT-093-DP-04",
+          "identity": "4♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT-093-DP-01",
+          "CT-093-DP-02",
+          "CT-093-DP-03",
+          "CT-093-DP-04"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {
+        "firstContact": {
+          "active": true,
+          "profileId": "first-contact",
+          "teachingOverrideId": null,
+          "allowedActions": [
+            "draw",
+            "play-for-points",
+            "play-for-effect",
+            "scuttle",
+            "pass"
+          ],
+          "disabledSystems": [
+            "swap-bar",
+            "comboing",
+            "supers",
+            "reserved-advanced-classes",
+            "ultras",
+            "sudden-death",
+            "aegis",
+            "royal-shield",
+            "exile",
+            "revealed-until-start",
+            "draw-and-cast",
+            "voltage",
+            "suit-specific-effects",
+            "optional-modules"
+          ]
+        }
+      }
+    },
+    "commands": [
+      {
+        "id": "CT093-1",
+        "type": "RESOLVE_PHASE9_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "validate-declaration",
+          "declarationClass": "suit-specific-effect",
+          "sourceCardIds": [
+            "CT-093-P1_HAND-01"
+          ],
+          "rank": "10",
+          "effectKey": "stack-theft-ten-spade"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        false
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT-093-P1_HAND-01"
+            ],
+            "pr": [],
+            "er": []
+          },
+          "P2": {
+            "hand": [],
+            "pr": [],
+            "er": []
+          }
+        },
+        "zones": {
+          "dp": [
+            "CT-093-DP-01",
+            "CT-093-DP-02",
+            "CT-093-DP-03",
+            "CT-093-DP-04"
+          ],
+          "gy": [],
+          "exile": [],
+          "swapBar": [],
+          "staging": []
+        },
+        "stackDepth": 0,
+        "phase": "Action",
+        "winner": null,
+        "metadata": {
+          "firstContact": {
+            "active": true,
+            "profileId": "first-contact",
+            "teachingOverrideId": null,
+            "allowedActions": [
+              "draw",
+              "play-for-points",
+              "play-for-effect",
+              "scuttle",
+              "pass"
+            ],
+            "disabledSystems": [
+              "swap-bar",
+              "comboing",
+              "supers",
+              "reserved-advanced-classes",
+              "ultras",
+              "sudden-death",
+              "aegis",
+              "royal-shield",
+              "exile",
+              "revealed-until-start",
+              "draw-and-cast",
+              "voltage",
+              "suit-specific-effects",
+              "optional-modules"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-119",
+    "title": "First Contact rejects every optional module combination",
+    "sourceTestId": "CT-119",
+    "purpose": "Reject First Contact combined with optional modules when no canonical teaching override exists.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {},
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT119-1",
+        "type": "RESOLVE_PHASE9_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "validate-profile-configuration",
+          "enabledModules": [
+            "battle-realm",
+            "trap",
+            "multiplayer",
+            "deffy-mode",
+            "time-bomb",
+            "tournament-seed"
+          ]
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        false
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [],
+            "pr": [],
+            "er": []
+          },
+          "P2": {
+            "hand": [],
+            "pr": [],
+            "er": []
+          }
+        },
+        "zones": {
+          "dp": [],
+          "gy": [],
+          "exile": [],
+          "swapBar": [],
+          "staging": []
+        },
+        "stackDepth": 0,
+        "phase": "Action",
+        "winner": null,
+        "metadata": {}
+      }
+    }
+  }
+]

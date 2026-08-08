@@ -1,0 +1,157 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-003",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT003-QH": {
+        "controllerId": "P1",
+        "id": "CT003-QH",
+        "identity": "Q♥",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": -2,
+          "tapped": true,
+          "timeBombStage": 1
+        },
+        "zone": "P1_PR"
+      },
+      "CT003-QS": {
+        "controllerId": "P1",
+        "id": "CT003-QS",
+        "identity": "Q♠",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": 0
+        },
+        "zone": "P1_ER"
+      }
+    },
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [
+          "CT003-QS"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT003-QH"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-battle-realm",
+        "specs": {
+          "P1": "Brilliance",
+          "P2": "Beauty"
+        }
+      },
+      "actorId": "P1",
+      "id": "CT003-1",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "kind": "recalculate-continuous-bonuses"
+      },
+      "actorId": "P1",
+      "id": "CT003-2",
+      "type": "RESOLVE_PHASE12_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT003-1",
+      "id": "EV-000001",
+      "payload": {
+        "selectedSpecByPlayer": {
+          "P1": "Brilliance",
+          "P2": "Beauty"
+        }
+      },
+      "previousStateHash": "767ec4b48abb236c7152e4ad877b0f6492fbda9495d703d7a07d1e8f9a5e287d",
+      "sequence": 1,
+      "stateHash": "06d955036273d7e5d4f250b3604a79fe2140e70009316ac601dd99d52420b713",
+      "type": "BATTLEREALM_SPECS_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT003-2",
+      "id": "EV-000002",
+      "payload": {
+        "continuousBonusByPlayer": {
+          "P1": 2,
+          "P2": 0
+        }
+      },
+      "previousStateHash": "06d955036273d7e5d4f250b3604a79fe2140e70009316ac601dd99d52420b713",
+      "sequence": 2,
+      "stateHash": "281d2f3358d5bcdd823af65b465cbbe866b8db9a458c53c9ef2abb2efb557ce7",
+      "type": "BATTLEREALM_CONTINUOUS_BONUSES_RECALCULATED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "767ec4b48abb236c7152e4ad877b0f6492fbda9495d703d7a07d1e8f9a5e287d",
+  "finalStateHash": "281d2f3358d5bcdd823af65b465cbbe866b8db9a458c53c9ef2abb2efb557ce7",
+  "eventLogHash": "9a9ab612405173afa4e35db0dea1eafc9ecf3df8fe500061795b227b62f2738c"
+}

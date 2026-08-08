@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-08-03T00:00:00.000Z",
+  "generatedBy": "Phase 0 baseline audit",
+  "source": {
+    "projectRoot": "H:\\myProjects\\Intrilex-dev2",
+    "gitCommit": "e753607713f9e16916bdd64566c980337d211b0e",
+    "sourceTreeHash": "b5f87c081d643ba1dc97cd7c918f4b812e474aa06f2e4bd1b63b92d9787a02bb",
+    "distHash": "33a64aaca548563557203f16fe3f5789439127af83698e55d44ce6ccf8ad66a5",
+    "predecessorVersion": "0.16.1",
+    "engineVersion": "4.2.6",
+    "rulesVersion": "4.1.2",
+    "schemaVersion": "4.1.0",
+    "analyticsSchemaVersion": "4.1.0",
+    "telemetrySchemaVersion": "4.1.0",
+    "decisionTraceSchemaVersion": "2.0.0",
+    "replayDataVersion": "0.10.1"
+  },
+  "environment": {
+    "nodeVersion": "v22.14.0",
+    "packageManager": "pnpm@10.11.0",
+    "platform": "win32"
+  },
+  "packages": {
+    "root": "0.16.1",
+    "workspaces": {
+      "@intrilex/analytics": "0.16.1",
+      "@intrilex/browser-crypto-shim": "0.16.1",
+      "@intrilex/decision-intelligence": "0.16.1",
+      "@intrilex/engine-adapter": "0.16.1",
+      "@intrilex/game-ai": "0.16.1",
+      "@intrilex/policies": "0.16.1",
+      "@intrilex/policy-sdk": "0.16.1",
+      "@intrilex/shared": "0.16.1",
+      "@intrilex/simulation-runtime": "0.16.1",
+      "@intrilex/statistics": "0.16.1",
+      "@intrilex/telemetry": "0.16.1",
+      "@intrilex/batch-cli": "0.16.1"
+    },
+    "count": 12
+  },
+  "routes": {
+    "observatory": ["/watch", "/replays", "/history", "/mechanics", "/cards", "/synergies", "/ranks", "/compare", "/traces", "/branches", "/diagnostics", "/evidence"],
+    "landing": ["/", "/play", "/rules", "/sim"],
+    "count": 16
+  },
+  "tests": {
+    "files": 47,
+    "total": 770,
+    "pass": 770,
+    "fail": 0,
+    "skip": 0,
+    "cancelled": 0
+  },
+  "ci": {
+    "stages": 69,
+    "parity": true
+  },
+  "playRoute": {
+    "files": 10,
+    "modules": [
+      "apps/lab-web/src/play/play-app.js",
+      "apps/lab-web/src/play/play-controller.js",
+      "apps/lab-web/src/play/play-renderer.js",
+      "apps/lab-web/src/play/action-presenter.js",
+      "apps/lab-web/src/play/persistence.js",
+      "apps/lab-web/src/play/play-privacy.js",
+      "apps/lab-web/src/play/tutorial-runtime.js",
+      "apps/lab-web/src/play/replay-library.js",
+      "apps/lab-web/src/play/hash.js",
+      "apps/lab-web/src/play/play.css"
+    ],
+    "capabilitySummary": {
+      "complete": 21,
+      "partial": 4,
+      "unavailable": 6,
+      "stub": 0,
+      "broken": 0,
+      "unverified": 2
+    }
+  },
+  "generatedArtifacts": {
+    "analytics.json": 21594934,
+    "rank-anatomy-registry.json": 28617,
+    "rank-2-eligibility.json": 658,
+    "rank-eligibility-summary.json": 5977,
+    "metric-registry.json": 2427,
+    "extract.json": 320058,
+    "aggregate.json": 35057,
+    "lab-replay-index.json": 5746844
+  },
+  "predecessorCertification": {
+    "v0.16.1": {
+      "tests": "765/765 PASS (self-audit)",
+      "browserCertification": "27/27 PASS (Chrome CDP)",
+      "attributionFixtures": "29/29 PASS",
+      "falsificationCampaign": "20/20 PASS",
+      "determinism": "PASS (byte-identical)",
+      "truthDrift": "PASS"
+    }
+  }
+}

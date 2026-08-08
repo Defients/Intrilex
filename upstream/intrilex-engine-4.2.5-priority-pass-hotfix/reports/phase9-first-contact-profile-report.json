@@ -1,0 +1,44 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase9-first-contact-profile.json"
+  ],
+  "fixtureCount": 2,
+  "repeatCount": 7,
+  "passed": 2,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-093",
+      "title": "First Contact disables suit-specific effects",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "e6464ed03f5b0562f7adafe0e8e14ecf9c45945573c6369f5e73f163b0b6094a",
+      "finalStateHash": "e6464ed03f5b0562f7adafe0e8e14ecf9c45945573c6369f5e73f163b0b6094a",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "e7ea9afcaf4e7746e4f3e49c5663338a89585a896456e7f02bdd0229cf4ad44f",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-119",
+      "title": "First Contact rejects every optional module combination",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "dae5c05459f9ffca0c27f2c2c29cb7f406c403a76ff90adaf0a95026744c6c28",
+      "finalStateHash": "dae5c05459f9ffca0c27f2c2c29cb7f406c403a76ff90adaf0a95026744c6c28",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "e914c55f57b1e803a7ba5d00563572beedb9ae96710735f69e9d169dfd8d4c5f",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "f77a355b1e74c1302d8e38e9542d0d143d1008d59be2dacc007a06fb6ff857b5"
+}

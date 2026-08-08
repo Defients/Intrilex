@@ -1,0 +1,1006 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-004",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-003": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-003",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-004": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-004",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-005": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-005",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-006": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-006",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-007": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-007",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-008": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-008",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-009": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-009",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-010": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-010",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-011": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-011",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-012": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-012",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-013": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-013",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-014": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-014",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-015": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-015",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-016": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-016",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-017": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-017",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-018": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-018",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-019": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-019",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-020": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-020",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-021": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-021",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-022": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-022",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-023": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-023",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-024": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-024",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-025": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-025",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-026": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-026",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-027": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-027",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-028": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-028",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-029": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-029",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-030": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-030",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-031": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-031",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-032": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-032",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-033": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-033",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-034": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-034",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-035": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-035",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-036": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-036",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-037": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-037",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-038": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-038",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-039": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-039",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-040": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-040",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-041": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-041",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-042": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-042",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-043": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-043",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-044": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-044",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-045": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-045",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-046": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-046",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-047": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-047",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-048": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-048",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-049": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-049",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-050": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-050",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-051": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-051",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-052": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-052",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-053": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-053",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-054": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-054",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Setup",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "OPAQUE-HIDDEN-CARD-001",
+        "OPAQUE-HIDDEN-CARD-002",
+        "OPAQUE-HIDDEN-CARD-003",
+        "OPAQUE-HIDDEN-CARD-004",
+        "OPAQUE-HIDDEN-CARD-005",
+        "OPAQUE-HIDDEN-CARD-006",
+        "OPAQUE-HIDDEN-CARD-007",
+        "OPAQUE-HIDDEN-CARD-008",
+        "OPAQUE-HIDDEN-CARD-009",
+        "OPAQUE-HIDDEN-CARD-010",
+        "OPAQUE-HIDDEN-CARD-011",
+        "OPAQUE-HIDDEN-CARD-012",
+        "OPAQUE-HIDDEN-CARD-013",
+        "OPAQUE-HIDDEN-CARD-014",
+        "OPAQUE-HIDDEN-CARD-015",
+        "OPAQUE-HIDDEN-CARD-016",
+        "OPAQUE-HIDDEN-CARD-017",
+        "OPAQUE-HIDDEN-CARD-018",
+        "OPAQUE-HIDDEN-CARD-019",
+        "OPAQUE-HIDDEN-CARD-020",
+        "OPAQUE-HIDDEN-CARD-021",
+        "OPAQUE-HIDDEN-CARD-022",
+        "OPAQUE-HIDDEN-CARD-023",
+        "OPAQUE-HIDDEN-CARD-024",
+        "OPAQUE-HIDDEN-CARD-025",
+        "OPAQUE-HIDDEN-CARD-026",
+        "OPAQUE-HIDDEN-CARD-027",
+        "OPAQUE-HIDDEN-CARD-028",
+        "OPAQUE-HIDDEN-CARD-029",
+        "OPAQUE-HIDDEN-CARD-030",
+        "OPAQUE-HIDDEN-CARD-031",
+        "OPAQUE-HIDDEN-CARD-032",
+        "OPAQUE-HIDDEN-CARD-033",
+        "OPAQUE-HIDDEN-CARD-034",
+        "OPAQUE-HIDDEN-CARD-035",
+        "OPAQUE-HIDDEN-CARD-036",
+        "OPAQUE-HIDDEN-CARD-037",
+        "OPAQUE-HIDDEN-CARD-038",
+        "OPAQUE-HIDDEN-CARD-039",
+        "OPAQUE-HIDDEN-CARD-040",
+        "OPAQUE-HIDDEN-CARD-041",
+        "OPAQUE-HIDDEN-CARD-042",
+        "OPAQUE-HIDDEN-CARD-043",
+        "OPAQUE-HIDDEN-CARD-044",
+        "OPAQUE-HIDDEN-CARD-045",
+        "OPAQUE-HIDDEN-CARD-046",
+        "OPAQUE-HIDDEN-CARD-047",
+        "OPAQUE-HIDDEN-CARD-048",
+        "OPAQUE-HIDDEN-CARD-049",
+        "OPAQUE-HIDDEN-CARD-050",
+        "OPAQUE-HIDDEN-CARD-051",
+        "OPAQUE-HIDDEN-CARD-052",
+        "OPAQUE-HIDDEN-CARD-053",
+        "OPAQUE-HIDDEN-CARD-054"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "enabledOptionalModules": [
+          "tournament-seed"
+        ],
+        "kind": "configure-tournament-seed",
+        "seedOrder": [
+          "P1",
+          "P2"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT004-CFG",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-02",
+        "category": 1,
+        "kind": "select-tournament-category",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT004-C1-P1",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-03",
+        "category": 1,
+        "kind": "select-tournament-category",
+        "playerId": "P2"
+      },
+      "actorId": "P1",
+      "id": "CT004-C1-P2",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-06",
+        "category": 2,
+        "kind": "select-tournament-category",
+        "playerId": "P2"
+      },
+      "actorId": "P1",
+      "id": "CT004-C2-P2",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-05",
+        "category": 2,
+        "kind": "select-tournament-category",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT004-C2-P1",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-10",
+        "category": 3,
+        "kind": "select-tournament-category",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT004-C3-P1",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-15",
+        "category": 3,
+        "kind": "select-tournament-category",
+        "playerId": "P2"
+      },
+      "actorId": "P1",
+      "id": "CT004-C3-P2",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-42",
+        "category": 4,
+        "kind": "select-tournament-category",
+        "playerId": "P2"
+      },
+      "actorId": "P1",
+      "id": "CT004-C4-P2",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-47",
+        "category": 4,
+        "kind": "select-tournament-category",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT004-C4-P1",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "kind": "resolve-high-impact",
+        "rankingsByPlayer": {
+          "P1": [
+            "A♣",
+            "A♠",
+            "3♠"
+          ],
+          "P2": [
+            "K♠",
+            "K♣",
+            "Q♣"
+          ]
+        }
+      },
+      "actorId": "P1",
+      "id": "CT004-HI",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "kind": "finalize-tournament-seed"
+      },
+      "actorId": "P1",
+      "id": "CT004-FIN",
+      "type": "RESOLVE_PHASE15_ACTION"
+    }
+  ],
+  "accepted": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT004-CFG",
+      "id": "EV-000001",
+      "payload": {
+        "banPileCardIds": [
+          "CT004-54",
+          "CT004-39",
+          "CT004-32",
+          "CT004-36",
+          "CT004-37",
+          "CT004-48",
+          "CT004-44",
+          "CT004-16"
+        ],
+        "highImpactPool": [
+          "A♣",
+          "A♠",
+          "3♠",
+          "5♠",
+          "6♠",
+          "7♠",
+          "8♥",
+          "9♥",
+          "10♦",
+          "10♠",
+          "Q♣",
+          "K♣",
+          "K♠"
+        ],
+        "seedOrder": [
+          "P1",
+          "P2"
+        ]
+      },
+      "previousStateHash": "573546e2f99d6bb5e06ad6bd4b0da1757c2ced2c795ffd49ce61958e895cb9da",
+      "sequence": 1,
+      "stateHash": "13568635e5f84d6cd976ee0b9f7bf5988b77c4cc1f3a89978bf611e43099b688",
+      "type": "TOURNAMENT_SEED_CONFIGURED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C1-P1",
+      "id": "EV-000002",
+      "payload": {
+        "cardId": "CT004-02",
+        "category": 1,
+        "playerId": "P1"
+      },
+      "previousStateHash": "13568635e5f84d6cd976ee0b9f7bf5988b77c4cc1f3a89978bf611e43099b688",
+      "sequence": 2,
+      "stateHash": "8a86c0061093d80284b7aecae9df965c6863ab826021b00330dae56599f8e91e",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C1-P2",
+      "id": "EV-000003",
+      "payload": {
+        "cardId": "CT004-03",
+        "category": 1,
+        "playerId": "P2"
+      },
+      "previousStateHash": "8a86c0061093d80284b7aecae9df965c6863ab826021b00330dae56599f8e91e",
+      "sequence": 3,
+      "stateHash": "ead6223f2c61cce94addb56c21302b64ed31bac7072f50ad61489141dc0ca685",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C2-P2",
+      "id": "EV-000004",
+      "payload": {
+        "cardId": "CT004-06",
+        "category": 2,
+        "playerId": "P2"
+      },
+      "previousStateHash": "ead6223f2c61cce94addb56c21302b64ed31bac7072f50ad61489141dc0ca685",
+      "sequence": 4,
+      "stateHash": "cef145a24d3cd9b7a62dd605a8cadfb66c2826d42da07f1af175e05ef631dea7",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C2-P1",
+      "id": "EV-000005",
+      "payload": {
+        "cardId": "CT004-05",
+        "category": 2,
+        "playerId": "P1"
+      },
+      "previousStateHash": "cef145a24d3cd9b7a62dd605a8cadfb66c2826d42da07f1af175e05ef631dea7",
+      "sequence": 5,
+      "stateHash": "faaa6d37d8e18e6ccdbedd26a2b3132c633378796b0600a46855b4d9d2c7166d",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C3-P1",
+      "id": "EV-000006",
+      "payload": {
+        "cardId": "CT004-10",
+        "category": 3,
+        "playerId": "P1"
+      },
+      "previousStateHash": "faaa6d37d8e18e6ccdbedd26a2b3132c633378796b0600a46855b4d9d2c7166d",
+      "sequence": 6,
+      "stateHash": "9bd9aeb27c0537a88adac3925eee5ffbccc71d6f288ffa53c68d0a5ecc1b7adc",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C3-P2",
+      "id": "EV-000007",
+      "payload": {
+        "cardId": "CT004-15",
+        "category": 3,
+        "playerId": "P2"
+      },
+      "previousStateHash": "9bd9aeb27c0537a88adac3925eee5ffbccc71d6f288ffa53c68d0a5ecc1b7adc",
+      "sequence": 7,
+      "stateHash": "717c5d2bbb621907bc0b6129fbb4c4b725520f4ef0a449688916376a6061f017",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C4-P2",
+      "id": "EV-000008",
+      "payload": {
+        "cardId": "CT004-42",
+        "category": 4,
+        "playerId": "P2"
+      },
+      "previousStateHash": "717c5d2bbb621907bc0b6129fbb4c4b725520f4ef0a449688916376a6061f017",
+      "sequence": 8,
+      "stateHash": "0d13880654b3b4745f7b55a965eb06ecc148857340da1bf0d7beb136708d8cc6",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C4-P1",
+      "id": "EV-000009",
+      "payload": {
+        "cardId": "CT004-47",
+        "category": 4,
+        "playerId": "P1"
+      },
+      "previousStateHash": "0d13880654b3b4745f7b55a965eb06ecc148857340da1bf0d7beb136708d8cc6",
+      "sequence": 9,
+      "stateHash": "c4e7c6df8d2a39f5afd9d67d27e5e47b090ada559fc703c549afd12b2108c5e6",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-HI",
+      "id": "EV-000010",
+      "payload": {
+        "rankingsByPlayer": {
+          "P1": [
+            "A♣",
+            "A♠",
+            "3♠"
+          ],
+          "P2": [
+            "K♠",
+            "K♣",
+            "Q♣"
+          ]
+        }
+      },
+      "previousStateHash": "c4e7c6df8d2a39f5afd9d67d27e5e47b090ada559fc703c549afd12b2108c5e6",
+      "sequence": 10,
+      "stateHash": "066252f8b5dc6670f85a0a6b01e9b26cc38a88ebeb341e5102a275d4d0fa2eef",
+      "type": "HIGH_IMPACT_RANKINGS_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-HI",
+      "id": "EV-000012",
+      "payload": {
+        "assignments": {
+          "P1": "CT004-01",
+          "P2": "CT004-52"
+        }
+      },
+      "previousStateHash": "066252f8b5dc6670f85a0a6b01e9b26cc38a88ebeb341e5102a275d4d0fa2eef",
+      "sequence": 11,
+      "stateHash": "3413060dfe3c49787b94c80841e7e52d4f891aafeb08fffd6a8a0ea0543bb08c",
+      "type": "HIGH_IMPACT_ASSIGNED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-FIN",
+      "id": "EV-000012",
+      "payload": {
+        "redacted": true,
+        "visibility": "authorized"
+      },
+      "previousStateHash": "3413060dfe3c49787b94c80841e7e52d4f891aafeb08fffd6a8a0ea0543bb08c",
+      "sequence": 12,
+      "stateHash": "a6c13aa37de3153f8515eef8f2208e6d263947e2a13114017266b239f7144736",
+      "type": "TOURNAMENT_SEED_SETUP_COMPLETE",
+      "visibility": "authorized"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT004-CFG",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "2454c3cabdc420cb33a4dbb4d6d06d54b318a0dba4ba21f2c49bd6462872abf3"
+    },
+    {
+      "commandIndex": 1,
+      "commandId": "CT004-C1-P1",
+      "accepted": true,
+      "eventStartIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "3d637638a6343913e48708440b3f831d7a55d9fc1fe3cad061afc7792e3996d2"
+    },
+    {
+      "commandIndex": 2,
+      "commandId": "CT004-C1-P2",
+      "accepted": true,
+      "eventStartIndex": 2,
+      "eventEndIndex": 3,
+      "eventRangeHash": "967011e7c1057c87f5ba1f58d9f3acc5366c80e643b8c2fef3da8ec6abb860ca"
+    },
+    {
+      "commandIndex": 3,
+      "commandId": "CT004-C2-P2",
+      "accepted": true,
+      "eventStartIndex": 3,
+      "eventEndIndex": 4,
+      "eventRangeHash": "0d0f06636479054c6d821d77d0dbba2dd57a522adc9a045b9855f7193694fede"
+    },
+    {
+      "commandIndex": 4,
+      "commandId": "CT004-C2-P1",
+      "accepted": true,
+      "eventStartIndex": 4,
+      "eventEndIndex": 5,
+      "eventRangeHash": "c6ff737651a494f4810eb7f71eca8a309af2aff5d51aaba710b766d919e6c01a"
+    },
+    {
+      "commandIndex": 5,
+      "commandId": "CT004-C3-P1",
+      "accepted": true,
+      "eventStartIndex": 5,
+      "eventEndIndex": 6,
+      "eventRangeHash": "c83de6ed49524e78737a702790e66f4d9debd0946ce19ad6b80e8364e3c53f7a"
+    },
+    {
+      "commandIndex": 6,
+      "commandId": "CT004-C3-P2",
+      "accepted": true,
+      "eventStartIndex": 6,
+      "eventEndIndex": 7,
+      "eventRangeHash": "649cee469e3e43c3fa87f47a04349f000e8005387e55b3504a8efdb329ab5bb5"
+    },
+    {
+      "commandIndex": 7,
+      "commandId": "CT004-C4-P2",
+      "accepted": true,
+      "eventStartIndex": 7,
+      "eventEndIndex": 8,
+      "eventRangeHash": "4c7267b6d0a77df0a5b1e3c35a82893182f8402a91875d86e85fad0b2581e474"
+    },
+    {
+      "commandIndex": 8,
+      "commandId": "CT004-C4-P1",
+      "accepted": true,
+      "eventStartIndex": 8,
+      "eventEndIndex": 9,
+      "eventRangeHash": "85a62b8c7b3e37ca30b525f227e1c61ace9c6e3babc7ba61ad4c0fb7d0804106"
+    },
+    {
+      "commandIndex": 9,
+      "commandId": "CT004-HI",
+      "accepted": true,
+      "eventStartIndex": 9,
+      "eventEndIndex": 11,
+      "eventRangeHash": "a80949384c0420b478b7d511e6daebb6a6cd2e60c6eb90a44c2b5ff56f57a419"
+    },
+    {
+      "commandIndex": 10,
+      "commandId": "CT004-FIN",
+      "accepted": true,
+      "eventStartIndex": 11,
+      "eventEndIndex": 12,
+      "eventRangeHash": "752044957b871548661ec2a6d92f7f9c43d909ada4d7369a044283ca5b09a72b"
+    }
+  ],
+  "publicEventLogHash": "488d7f8aedbce3d7bb8c9a4573a0a90514fc6399d5ac48d22800922a4acc9a8b",
+  "publicContentHash": "8a1353562ba211520ab7df3240bee4491bf2a5c155b5d4e5b3ea091c054f8532"
+}

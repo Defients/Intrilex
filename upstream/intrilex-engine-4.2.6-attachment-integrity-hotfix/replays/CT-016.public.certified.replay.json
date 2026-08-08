@@ -1,0 +1,174 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-016",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-003": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-003",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-004": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-004",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-005": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-005",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-006": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-006",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-007": {
+        "controllerId": "P2",
+        "id": "OPAQUE-HIDDEN-CARD-007",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P2",
+        "state": {
+          "faceDownTrap": true,
+          "pointValue": 0
+        },
+        "zone": "P2_ER"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-005",
+          "OPAQUE-HIDDEN-CARD-006"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [
+          "OPAQUE-HIDDEN-CARD-007"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "OPAQUE-HIDDEN-CARD-001",
+        "OPAQUE-HIDDEN-CARD-002",
+        "OPAQUE-HIDDEN-CARD-003",
+        "OPAQUE-HIDDEN-CARD-004"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "eventKey": "royal-marriage-declared",
+        "kind": "check-trigger",
+        "qualifyingEvent": false,
+        "trapCardId": "CT-016-P2-TRAP"
+      },
+      "actorId": "P2",
+      "id": "CT016-1",
+      "type": "RESOLVE_PHASE10_ACTION"
+    }
+  ],
+  "accepted": [
+    false
+  ],
+  "events": [],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT016-1",
+      "accepted": false,
+      "eventStartIndex": 0,
+      "eventEndIndex": 0,
+      "eventRangeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  ],
+  "publicEventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "publicContentHash": "1c71afc0806921e1afa8f8b3f5dac692c8445781d74586a6857d9fd1d7e61348"
+}

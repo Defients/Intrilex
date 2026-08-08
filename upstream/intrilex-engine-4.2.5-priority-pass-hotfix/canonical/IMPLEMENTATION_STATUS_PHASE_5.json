@@ -1,0 +1,40 @@
+{
+  "status_version": 1,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0-phase2.5.0",
+  "milestone": "Roadmap Phase 5 — State lifecycles",
+  "completed_phases": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "phase5_gate_ids": [
+    "CT-025",
+    "CT-036",
+    "CT-037",
+    "CT-038",
+    "CT-051",
+    "CT-052",
+    "CT-053",
+    "CT-054"
+  ],
+  "lifecycle_services": [
+    "Aegis replacement and exact expiry",
+    "Tap replacement and exact/dynamic release",
+    "Revealed-Until-Start expiry and hand-exit cleanup",
+    "Played-for-Effect OTT lifecycle",
+    "Exile-Bound permanent marker and GY destination replacement"
+  ],
+  "regression_requirement": {
+    "phase2_4_fixture_count": 22,
+    "expected_aggregate": "aeee864319a1ef41df2bf8de5675fd5236df04229a84d7b1182f607b3d52ae6f"
+  },
+  "next_gate": {
+    "phase": 6,
+    "name": "Core rank system",
+    "official_test_range": "CT-064–CT-081"
+  },
+  "scope_note": "The Phase 5 JSON corpus is an engine-normalized executable projection aligned to the official roadmap gate IDs. It does not claim the complete rank registry."
+}

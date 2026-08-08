@@ -1,0 +1,33 @@
+import { createHash } from 'node:crypto';
+import { copyFile, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const release = path.join(root, 'release');
+const zipName = 'Intrilex_Engine_v4.1.4_First_Contact_Private_Choice_Authority.zip';
+const zipPath = path.join(release, zipName);
+const tempZip = `${zipPath}.tmp`;
+function run(command, args, env = {}) {
+  const result = spawnSync(command, args, { cwd: root, stdio: 'inherit', env: { ...process.env, ...env } });
+  if (result.status !== 0) process.exit(result.status ?? 1);
+}
+await mkdir(release, { recursive: true });
+await rm(tempZip, { force: true });
+run('npm', ['run', 'build']);
+run('npm', ['run', 'patch:manifest:generate']);
+run('npm', ['run', 'patch:manifest:verify']);
+run('python3', ['scripts/create-deterministic-zip.py', root, tempZip]);
+await rename(tempZip, zipPath);
+const bytes = await readFile(zipPath);
+const digest = createHash('sha256').update(bytes).digest('hex');
+await writeFile(`${zipPath}.sha256`, `${digest}  ${zipName}\n`);
+await copyFile(path.join(root, 'PRIVATE_CHOICE_AUTHORITY_MANIFEST.json'), path.join(release, 'PRIVATE_CHOICE_AUTHORITY_MANIFEST.json'));
+await copyFile(path.join(root, 'reports/BUILD_PROOF_4.1.4.md'), path.join(release, 'BUILD_PROOF.md'));
+await copyFile(path.join(root, 'reports/PRIVATE_CHOICE_AUTHORITY_CERTIFICATION.md'), path.join(release, 'PRIVATE_CHOICE_AUTHORITY_CERTIFICATION.md'));
+await copyFile(path.join(root, 'reports/PRIVATE_CHOICE_AUTHORITY_CERTIFICATION.json'), path.join(release, 'PRIVATE_CHOICE_AUTHORITY_CERTIFICATION.json'));
+await copyFile(path.join(root, 'reports/CAPABILITY_MANIFEST_4.1.4.json'), path.join(release, 'CAPABILITY_MANIFEST_4.1.4.json'));
+await copyFile(path.join(root, 'reports/browser-private-choice-parity.json'), path.join(release, 'browser-private-choice-parity.json'));
+await copyFile(path.join(root, 'reports/private-choice-authority-stress-500.json'), path.join(release, 'private-choice-authority-stress-500.json'));
+await copyFile(path.join(root, 'docs/FIRST_CONTACT_PRIVATE_CHOICE_AUTHORITY.md'), path.join(release, 'FIRST_CONTACT_PRIVATE_CHOICE_AUTHORITY.md'));
+console.log(`RELEASE PACKAGE PASS: ${zipName}; sha256=${digest}; bytes=${bytes.length}`);

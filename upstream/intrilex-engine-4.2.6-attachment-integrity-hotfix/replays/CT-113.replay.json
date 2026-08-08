@@ -1,0 +1,213 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-113",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT113-C1": {
+        "controllerId": "P1",
+        "id": "CT113-C1",
+        "identity": "3♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT113-C2": {
+        "controllerId": "P1",
+        "id": "CT113-C2",
+        "identity": "4♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT113-QD": {
+        "controllerId": "P2",
+        "id": "CT113-QD",
+        "identity": "Q♦",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 2,
+          "timeBomb": {
+            "peak": 3,
+            "stage": 1,
+            "suit": "♦"
+          },
+          "timeBombStage": 1
+        },
+        "zone": "P2_PR"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {
+      "phase13": {
+        "enabled": true,
+        "forcedDrawByPlayer": {},
+        "lastResolution": null,
+        "queuedFuseCardIds": []
+      }
+    },
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT113-C1",
+          "CT113-C2"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT113-QD"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "costCardIds": [
+          "CT113-C1",
+          "CT113-C2"
+        ],
+        "kind": "declare-defuse",
+        "responseWindow": true,
+        "targetCardId": "CT113-QD"
+      },
+      "actorId": "P1",
+      "id": "CT113-1",
+      "type": "RESOLVE_PHASE13_ACTION"
+    },
+    {
+      "action": {
+        "kind": "consume-action-phase-skip",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT113-2",
+      "type": "RESOLVE_PHASE13_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT113-1",
+      "id": "EV-000001",
+      "payload": {
+        "actorId": "P1",
+        "costCardIds": [
+          "CT113-C1",
+          "CT113-C2"
+        ],
+        "required": 2,
+        "targetCardId": "CT113-QD"
+      },
+      "previousStateHash": "97f2118e9ff8f2fc71c4970bb47477d9b4f06fc9f8410d9163b5d3bc8216aa7a",
+      "sequence": 1,
+      "stateHash": "39a0e5904d9c7f9a4519dd20a095ac899e05798fd60de821ed9f285c6817766a",
+      "type": "DEFUSE_DECLARED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT113-1",
+      "id": "EV-000003",
+      "payload": {
+        "pending": 1,
+        "playerId": "P1"
+      },
+      "previousStateHash": "39a0e5904d9c7f9a4519dd20a095ac899e05798fd60de821ed9f285c6817766a",
+      "sequence": 2,
+      "stateHash": "d99106c15fde016ff534518a3afcfc3c178bd3ca7558bab46996b98b944278a9",
+      "type": "ACTION_PHASE_SKIP_ADDED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT113-1",
+      "id": "EV-000005",
+      "payload": {
+        "actorId": "P1",
+        "destination": "GY",
+        "from": "P2_PR",
+        "targetCardId": "CT113-QD"
+      },
+      "previousStateHash": "d99106c15fde016ff534518a3afcfc3c178bd3ca7558bab46996b98b944278a9",
+      "sequence": 3,
+      "stateHash": "d259f9753256350681774057167c08180f8c663479f6ba6cb2e943fc6660da1d",
+      "type": "TIME_BOMB_DEFUSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT113-2",
+      "id": "EV-000004",
+      "payload": {
+        "miniTurnGrantsIgnored": true,
+        "pending": 0,
+        "playerId": "P1"
+      },
+      "previousStateHash": "d259f9753256350681774057167c08180f8c663479f6ba6cb2e943fc6660da1d",
+      "sequence": 4,
+      "stateHash": "81cd5867aee8bd2114235459f9659f67d15d88fa7b23643ccfdce9b0984dbbd6",
+      "type": "ACTION_PHASE_SKIPPED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "97f2118e9ff8f2fc71c4970bb47477d9b4f06fc9f8410d9163b5d3bc8216aa7a",
+  "finalStateHash": "81cd5867aee8bd2114235459f9659f67d15d88fa7b23643ccfdce9b0984dbbd6",
+  "eventLogHash": "dd7486d624e533f74d458e4e5960f1342e9004a67a24909d63f871f7570a6636"
+}

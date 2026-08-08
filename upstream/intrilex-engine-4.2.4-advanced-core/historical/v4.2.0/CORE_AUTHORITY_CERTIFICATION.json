@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0",
+  "verdict": "PASS",
+  "artifact": "Intrilex Engine v4.2.0 — Core Foundation Authority",
+  "declaredScope": "core-foundation-authority",
+  "engineTests": {"passed": 155, "total": 155},
+  "conformance": {"passed": 121, "total": 121, "aggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"},
+  "stress": {"matches": 500, "normalVictories": 500, "engineRejections": 0, "abortCount": 0, "resultHash": "08729e33c3b625a5f24824d8fdcb11d73e79f40434e538b574ac12b09d57a62e"},
+  "browser": {"status": "PASS", "replayAggregate": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322", "coreMatchHash": "adf22405e0b4f6705bdc1b7059872237997067097a0a01956d6c714f67bcd5a2"},
+  "limitations": ["COMPLETE_CORE_EFFECT_SURFACE_UNAVAILABLE", "CORE_RESPONSE_AUTHORITY_UNAVAILABLE", "SUPERS_ULTRAS_VOLTAGE_REPLAY_ONLY", "OPTIONAL_MODULES_BLOCKED", "MULTIPLAYER_BLOCKED"]
+}

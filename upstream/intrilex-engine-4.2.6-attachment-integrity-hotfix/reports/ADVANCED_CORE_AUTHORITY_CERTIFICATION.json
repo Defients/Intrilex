@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.0",
+  "verdict": "PASS",
+  "artifact": "Intrilex Engine v4.2.4 \u2014 Advanced Core Authority",
+  "engineVersion": "4.2.4",
+  "rulesAuthorityVersion": "4.1.1",
+  "engineTests": {
+    "passed": 186,
+    "failed": 0
+  },
+  "conformance": {
+    "fixtures": 121,
+    "aggregateHash": "8c91e8194e7fa3ab6bbb3eaa6946a97efd70343c36d5e5953ee8e1c0357013df"
+  },
+  "stress": {
+    "matches": 500,
+    "terminations": {
+      "NORMAL_VICTORY": 370,
+      "EXHAUSTED_RESOLUTION": 124,
+      "CANONICAL_DRAW": 6,
+      "DECISION_LIMIT": 0,
+      "ENGINE_REJECTION": 0,
+      "UNSUPPORTED_CONFIGURATION": 0
+    },
+    "coverage": {
+      "royalMarriage": 5,
+      "superTwoScore": 46,
+      "superFourExchange": 15,
+      "superEight": 5,
+      "superJack": 1,
+      "rank10Heart": 103,
+      "rank10SpadeRecovery": 33,
+      "rank10StackTheft": 212,
+      "superAce": 51,
+      "kingSpadeCounter": 3,
+      "ultraThreeBlack": 234,
+      "ultraThreeRed": 748,
+      "ultraTwoBlackTwoRed": 184,
+      "voltageFiveGyBottom": 2026
+    },
+    "resultHash": "0f8347f2d99f0075cdb577583ba8fcea88a350e2ba38962f3f7db8e09852ccf2",
+    "engineRejections": 0,
+    "unsupportedConfigurations": 0,
+    "maxDecisions": 693,
+    "meanDecisions": 258.562
+  },
+  "browser": {
+    "status": "PASS",
+    "replayAggregate": "0f38ef8a8b0bb0502937f88f5b678b233328fc9d0a5569bf0a39831ee97c108c",
+    "finalStateHash": "714a1ebf65a98321e02f24941844351e6e47de9d4ea4f76fe2df3239ef81eb24",
+    "decisionHash": "9e07968a0b1d77659485f38c77c190eb001aba450da75adab726c8230f98f394",
+    "advancedCount": 12
+  },
+  "boundaries": [
+    "Not complete Core",
+    "No 10\u2666 Mimic",
+    "No 10\u2663 Foundation trigger",
+    "No hidden Super/Voltage branches",
+    "No modules or multiplayer"
+  ]
+}

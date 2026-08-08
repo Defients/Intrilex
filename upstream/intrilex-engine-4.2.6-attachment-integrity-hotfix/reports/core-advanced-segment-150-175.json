@@ -1,0 +1,478 @@
+{
+  "schemaVersion": "1.0",
+  "status": "PASS",
+  "engineVersion": "4.2.4",
+  "rulesAuthorityVersion": "4.1.1",
+  "profileId": "core-advanced-authority",
+  "startOrdinal": 150,
+  "endOrdinalExclusive": 175,
+  "matchCount": 25,
+  "terminations": {
+    "NORMAL_VICTORY": 17,
+    "EXHAUSTED_RESOLUTION": 8,
+    "CANONICAL_DRAW": 0,
+    "DECISION_LIMIT": 0,
+    "ENGINE_REJECTION": 0,
+    "UNSUPPORTED_CONFIGURATION": 0
+  },
+  "coverage": {
+    "royalMarriage": 1,
+    "superTwoScore": 4,
+    "superFourExchange": 1,
+    "superEight": 0,
+    "superJack": 0,
+    "rank10Heart": 8,
+    "rank10SpadeRecovery": 1,
+    "rank10StackTheft": 13,
+    "superAce": 1,
+    "kingSpadeCounter": 0,
+    "ultraThreeBlack": 13,
+    "ultraThreeRed": 32,
+    "ultraTwoBlackTwoRed": 9,
+    "voltageFiveGyBottom": 84
+  },
+  "engineRejections": 0,
+  "unsupportedConfigurations": 0,
+  "maxDecisions": 503,
+  "meanDecisions": 263.04,
+  "resultHash": "99c0dc6bf95e5a72c5c3575219183b9c307e0c993af31e08d387d22ec99c885d",
+  "durationMs": 18326,
+  "matchesPerSecond": 1.36,
+  "generatedAt": "2026-07-27T18:22:40.046Z",
+  "summaries": [
+    {
+      "ordinal": 150,
+      "seed": 4139863478,
+      "terminationReason": "EXHAUSTED_RESOLUTION",
+      "winner": "P1",
+      "decisions": 448,
+      "commands": 741,
+      "events": 1251,
+      "coverage": {
+        "ultraThreeRed": 2,
+        "voltageFiveGyBottom": 12,
+        "superAce": 1,
+        "rank10StackTheft": 1
+      },
+      "finalStateHash": "7b3ed54fdb270639343494b0e8d2d82c38bb9c971ea29384a3023142e6295f24",
+      "decisionHash": "4e6e6a472721d46ca8fb2ac3312c335e4d85f18cb50eee317b6b4928fa474cbd",
+      "commandHash": "83ba368ca5d36aeaf333326ee3f183075ab9b18d450dbdd7d28166e7ec9caf2b"
+    },
+    {
+      "ordinal": 151,
+      "seed": 2499331943,
+      "terminationReason": "EXHAUSTED_RESOLUTION",
+      "winner": "P2",
+      "decisions": 340,
+      "commands": 569,
+      "events": 962,
+      "coverage": {
+        "ultraThreeRed": 2,
+        "rank10Heart": 1,
+        "ultraThreeBlack": 1,
+        "superTwoScore": 1,
+        "ultraTwoBlackTwoRed": 1,
+        "voltageFiveGyBottom": 1
+      },
+      "finalStateHash": "3c1c94b098b581633de61caa0346d21437bddc1b37354d43807d0d178ea676b3",
+      "decisionHash": "94e38f5cb10dadf555609cd296e719eaad3986a050191d95813100d3124bd2ed",
+      "commandHash": "0a8245dd63da6151eea8610b7063c7ff895ec238b6a24989933c6116dfe0515a"
+    },
+    {
+      "ordinal": 152,
+      "seed": 858800408,
+      "terminationReason": "EXHAUSTED_RESOLUTION",
+      "winner": "P1",
+      "decisions": 325,
+      "commands": 536,
+      "events": 907,
+      "coverage": {
+        "ultraThreeRed": 1,
+        "rank10StackTheft": 1,
+        "rank10Heart": 1,
+        "superFourExchange": 1
+      },
+      "finalStateHash": "46c405cefccab227284360fe030b4ee59db5faad76f6c0bba0c4ab57169d274b",
+      "decisionHash": "e6cfba9f2695947658547eec754d71155a64dd1e83bd428025034af40c0173b0",
+      "commandHash": "6a2eea65a7de56fbc1664780992b98058e08acd9af96d6141b7d5a393cff082a"
+    },
+    {
+      "ordinal": 153,
+      "seed": 3513236169,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisions": 160,
+      "commands": 262,
+      "events": 429,
+      "coverage": {
+        "ultraThreeRed": 2,
+        "ultraThreeBlack": 1,
+        "rank10StackTheft": 1,
+        "voltageFiveGyBottom": 2
+      },
+      "finalStateHash": "a1e55455036bbe623005e1d7fd2f2e24c3a9333930e263d91f40b9adba6f7b1d",
+      "decisionHash": "71328a040992f8249257a709785215bc4ca31cd1f0b3bc2608cba57c5b221d8f",
+      "commandHash": "3883ad7be46e59d4a343917bd145d78258647ea1a40190d907f73a1fae3c0ed6"
+    },
+    {
+      "ordinal": 154,
+      "seed": 1872704634,
+      "terminationReason": "EXHAUSTED_RESOLUTION",
+      "winner": "P1",
+      "decisions": 503,
+      "commands": 851,
+      "events": 1442,
+      "coverage": {
+        "ultraThreeRed": 2,
+        "ultraThreeBlack": 1,
+        "voltageFiveGyBottom": 2,
+        "rank10StackTheft": 1
+      },
+      "finalStateHash": "d48bdb1058441a65aa628dac2b41c30186f8f761fe3ed70aad908a1de3c5debd",
+      "decisionHash": "9d980c7f0ef3d2208e71d5ba187b7478a0d37eda3bd1e745259e3f371da06f39",
+      "commandHash": "4c53bab88959bb03c79feb0b753e8ae84ab301f41d23f4ade0b797b01b050f54"
+    },
+    {
+      "ordinal": 155,
+      "seed": 232173099,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisions": 73,
+      "commands": 120,
+      "events": 204,
+      "coverage": {
+        "ultraTwoBlackTwoRed": 1,
+        "ultraThreeBlack": 1
+      },
+      "finalStateHash": "bdb7c6662a74ac1e72493413c67cd2a82963c50ca3ee8a3aaf3d5e7d7ee978f0",
+      "decisionHash": "0c145f65549a38f9666acd84314aa11610abb90647ef903019e3ead988ae5889",
+      "commandHash": "e5c123d4f0355dabdf2c2ecc4f214b9749cfe83fa26c358d30abb20ca845947d"
+    },
+    {
+      "ordinal": 156,
+      "seed": 2886608860,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisions": 38,
+      "commands": 61,
+      "events": 100,
+      "coverage": {},
+      "finalStateHash": "9dea5afd4fcdb8b059ca9a4b036735d175e7c9f23bd97657bcd87f29b2653dad",
+      "decisionHash": "1d0a1b19f57ff431a0302e044e5527f8e299ab5e516e89f91bf9c10ba82ba89c",
+      "commandHash": "cc9099aa015a260bffd3df1962ed7c8dae9115c4a650da72ff8645b6a1728f70"
+    },
+    {
+      "ordinal": 157,
+      "seed": 1246077325,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisions": 256,
+      "commands": 424,
+      "events": 711,
+      "coverage": {
+        "ultraTwoBlackTwoRed": 1,
+        "ultraThreeRed": 1,
+        "voltageFiveGyBottom": 3
+      },
+      "finalStateHash": "235159a81bcac36770e9e4c6f2f60e372965ad481a21b81e66259ef387b6fbc5",
+      "decisionHash": "1217c704ad9c9535914c3ad12ffdb6aa238f714361b291e57c4b9b90085a28ea",
+      "commandHash": "a117d1582dd515b1bb166556803eb66097a74860d5cfd06d5f1c5eb728c2db9b"
+    },
+    {
+      "ordinal": 158,
+      "seed": 3900513086,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisions": 399,
+      "commands": 672,
+      "events": 1131,
+      "coverage": {
+        "ultraThreeRed": 3,
+        "ultraThreeBlack": 1,
+        "rank10StackTheft": 1,
+        "voltageFiveGyBottom": 1,
+        "superTwoScore": 1
+      },
+      "finalStateHash": "f3936286a1addf21b9aa9592b9c71dc8ef1b6c4be9b01229fad7e0b1da0d39d1",
+      "decisionHash": "4ec21efa4ea2cd7ff1d7be4bdaa705d294f98135b58372633d75db033dff623a",
+      "commandHash": "e784e706cecd268b1dd2bd2ef617a8d8b94427bc68507dadec41305e3142229e"
+    },
+    {
+      "ordinal": 159,
+      "seed": 2259981551,
+      "terminationReason": "EXHAUSTED_RESOLUTION",
+      "winner": "P1",
+      "decisions": 346,
+      "commands": 569,
+      "events": 973,
+      "coverage": {
+        "ultraThreeRed": 1,
+        "ultraThreeBlack": 1,
+        "rank10SpadeRecovery": 1,
+        "rank10Heart": 1
+      },
+      "finalStateHash": "12948e1a43e0fee8cbc1ec5a6f1ce914fe6aecbc826b2dc074094ace26365491",
+      "decisionHash": "7f90963877909782149b15232b06bbd59dfdde0a8dd02761ce0a2f6b2127b1fa",
+      "commandHash": "d07a90d623a0a6a87b9292bf642a164a28225e3a75417e9349ea2a68866b3800"
+    },
+    {
+      "ordinal": 160,
+      "seed": 619450016,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisions": 55,
+      "commands": 90,
+      "events": 153,
+      "coverage": {
+        "ultraTwoBlackTwoRed": 1
+      },
+      "finalStateHash": "f91ae3ae53cd19a437bfab26808497fabcedbe6480a29f3e6f831f8ad9f18ffb",
+      "decisionHash": "69e2084d2649ef73455d98be1d4bed0ad69eac4a7ab9e579b3f6d41fd17052e8",
+      "commandHash": "86b0e06af4fb70fd36237026bd4a4d9d0005d84fef52e1167263e0e5077199b1"
+    },
+    {
+      "ordinal": 161,
+      "seed": 3273885777,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisions": 47,
+      "commands": 78,
+      "events": 131,
+      "coverage": {
+        "ultraThreeRed": 1
+      },
+      "finalStateHash": "e81ea430f38df3cb452ecda36f3cafeeb3dddebb52c773cf99c55b09b3ac128c",
+      "decisionHash": "1ba6c6058a030a715f4fc3a955d61adf1bae0b3a3390ee25fc950de32b1ca284",
+      "commandHash": "b441eff86bc6ce95aa826fcca2c47ce67eca23d517ce777c6ac704431078a7d5"
+    },
+    {
+      "ordinal": 162,
+      "seed": 1633354242,
+      "terminationReason": "EXHAUSTED_RESOLUTION",
+      "winner": "P2",
+      "decisions": 353,
+      "commands": 584,
+      "events": 978,
+      "coverage": {
+        "ultraThreeRed": 2,
+        "superTwoScore": 1,
+        "voltageFiveGyBottom": 1
+      },
+      "finalStateHash": "343ebb0afb25b8843767f34e40dacc831874a85b7d5fcd3f100a9f249eeaeb33",
+      "decisionHash": "af47339364afb522125fe03429fd84373af907fb2c34825c7e4e3a79a219f5dd",
+      "commandHash": "a02cb93ef964964b0cc0b1acd8786924f3f8433daf8eedb8cd9419eeb11a5780"
+    },
+    {
+      "ordinal": 163,
+      "seed": 4287790003,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisions": 141,
+      "commands": 232,
+      "events": 394,
+      "coverage": {
+        "ultraThreeBlack": 1,
+        "rank10Heart": 1
+      },
+      "finalStateHash": "e6bb4a4d807051e29bd110ad11585b60a83913f2417025890cb2681e795ab0be",
+      "decisionHash": "f9dc873d7ba8f0bc7c7adc44ecb1e186ec4947d89ad5dfc6f89295b6f266589d",
+      "commandHash": "133e8f748e16dc615bcb097ce2ad005a78008d53a4b920fe2bd32701bf1ebb39"
+    },
+    {
+      "ordinal": 164,
+      "seed": 2647258468,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisions": 322,
+      "commands": 526,
+      "events": 875,
+      "coverage": {
+        "ultraThreeRed": 1,
+        "rank10StackTheft": 1,
+        "voltageFiveGyBottom": 10,
+        "ultraTwoBlackTwoRed": 1
+      },
+      "finalStateHash": "881971c214ed4e5428040b9f6d0c3881711bc870382cf767e121f17a6bd2d10e",
+      "decisionHash": "834566c02776413ae24264acff58a0f3efca1c45f955840acadff77a4d225a7f",
+      "commandHash": "0374a29ac820cf8a46b333b084ba13ef767348d931d45eb657981f7d9d72e5b4"
+    },
+    {
+      "ordinal": 165,
+      "seed": 1006726933,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisions": 412,
+      "commands": 660,
+      "events": 1091,
+      "coverage": {
+        "ultraThreeRed": 3,
+        "voltageFiveGyBottom": 22,
+        "ultraThreeBlack": 1,
+        "rank10StackTheft": 1,
+        "rank10Heart": 1
+      },
+      "finalStateHash": "25db01999ca91c38facafd2951f92e07324642faeebddfbda0fdbe1701087691",
+      "decisionHash": "87f3ca329ce604c8dffdd1ecc8f1b8463633394810196f4cc35b484680649c19",
+      "commandHash": "8adfc2bb6e48b5337517fc241aeba823df5c252a29e2429301afd89d440022c7"
+    },
+    {
+      "ordinal": 166,
+      "seed": 3661162694,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisions": 369,
+      "commands": 606,
+      "events": 1019,
+      "coverage": {
+        "ultraTwoBlackTwoRed": 1,
+        "ultraThreeRed": 1,
+        "rank10Heart": 1,
+        "rank10StackTheft": 1,
+        "superTwoScore": 1
+      },
+      "finalStateHash": "495ba46369e567bd51bf62f703279b60b4da2927ba00e4047e6a02418f1551e3",
+      "decisionHash": "e60a5d62dd82f22b2b1bd68d2d1d960f14ff5b3c04c7c2b99bdbe10bf0477a11",
+      "commandHash": "146b5dbf9febc97b77bf8f65a95ea8a4cf963b2047f816e6d7de9aea4ed30702"
+    },
+    {
+      "ordinal": 167,
+      "seed": 2020631159,
+      "terminationReason": "EXHAUSTED_RESOLUTION",
+      "winner": "P1",
+      "decisions": 336,
+      "commands": 548,
+      "events": 922,
+      "coverage": {
+        "ultraTwoBlackTwoRed": 1,
+        "ultraThreeRed": 1,
+        "ultraThreeBlack": 1,
+        "rank10Heart": 1,
+        "voltageFiveGyBottom": 4,
+        "rank10StackTheft": 1
+      },
+      "finalStateHash": "3179e44a468ca0d314cff3cab2c6083b5ef1cd963e73e7a54a19fedba5c35a68",
+      "decisionHash": "d7365b9b6838869d137f62a4d1a75b524d7c706bd57bb75594312f80d8b38c5a",
+      "commandHash": "854210a22ee075fb2c31ea4b99f21c6db94a0fc83658e71874b0934524fb9480"
+    },
+    {
+      "ordinal": 168,
+      "seed": 380099624,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisions": 239,
+      "commands": 388,
+      "events": 645,
+      "coverage": {
+        "ultraThreeRed": 2,
+        "rank10StackTheft": 1
+      },
+      "finalStateHash": "b3867a8472897a079d52c91bdcd12debf7e0e0d66615638fcb6ff06f367ad863",
+      "decisionHash": "dc3ef61ac2ebab49aa39a88ff985352bc2d1ea6700c126d5aa50602a38bd6b0b",
+      "commandHash": "8aaf96b73862230af3c883d0bba38addc97f96a57c9a706d1eaee5d8c4aa002c"
+    },
+    {
+      "ordinal": 169,
+      "seed": 3034535385,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisions": 341,
+      "commands": 561,
+      "events": 947,
+      "coverage": {
+        "ultraThreeBlack": 2,
+        "ultraThreeRed": 2,
+        "voltageFiveGyBottom": 8,
+        "ultraTwoBlackTwoRed": 1,
+        "rank10StackTheft": 1
+      },
+      "finalStateHash": "05d2b94981f00002611df43e240ea12a79b576c91feb1c9ef8acdec8f408a7a4",
+      "decisionHash": "c7fb4e53274ed41c64b30106681756fb5a519c7cd0f7797ed152c91352458419",
+      "commandHash": "8e31c4612bb0f278a013e5aa7bea9d465a5439005415aee1fa1b8b5d39c0a6b2"
+    },
+    {
+      "ordinal": 170,
+      "seed": 1394003850,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisions": 180,
+      "commands": 296,
+      "events": 494,
+      "coverage": {
+        "ultraThreeRed": 2,
+        "ultraThreeBlack": 1,
+        "voltageFiveGyBottom": 6,
+        "rank10Heart": 1
+      },
+      "finalStateHash": "707b5f5e8ccbe4ada04ea66bbf692bbc743a9c04f6fbe6fe3434b968d40ba5b0",
+      "decisionHash": "b954f3892ef2a80a50a947acaec615036758538ba16eb7b715b9f3d759d410e9",
+      "commandHash": "81cc2b218cc99c0371d7225c7c94ac2d39dff10b13d45e9143bc144e5d6031d1"
+    },
+    {
+      "ordinal": 171,
+      "seed": 4048439611,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisions": 82,
+      "commands": 128,
+      "events": 204,
+      "coverage": {
+        "ultraTwoBlackTwoRed": 1,
+        "voltageFiveGyBottom": 2
+      },
+      "finalStateHash": "ecf88dd9dc651d4db9b499836954ae9bde1d1016ec85784befdec8635cf36c28",
+      "decisionHash": "88e7e55f6fdfde6873a20a33954cecc98c2279a08196e21385d4356225ced8b7",
+      "commandHash": "14230a57e4041e28816e9c51209c1bba5f869bc487f3b9497e4372a37225a2c2"
+    },
+    {
+      "ordinal": 172,
+      "seed": 2407908076,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisions": 272,
+      "commands": 454,
+      "events": 762,
+      "coverage": {
+        "ultraThreeRed": 1,
+        "rank10StackTheft": 1,
+        "voltageFiveGyBottom": 2
+      },
+      "finalStateHash": "62c58dd6ab47207a28bca5acfb6a3aa6751e4d44b267ff937c66018cae84ba30",
+      "decisionHash": "b31d0dc5b3aabf25c0b88e4359802716c5217cb144c2adaefaa9990ea018c494",
+      "commandHash": "8e68ca319191b4e04ff66e56b11a2f2869bea576790dcb8904780183e8f9c25c"
+    },
+    {
+      "ordinal": 173,
+      "seed": 767376541,
+      "terminationReason": "EXHAUSTED_RESOLUTION",
+      "winner": "P2",
+      "decisions": 414,
+      "commands": 684,
+      "events": 1154,
+      "coverage": {
+        "royalMarriage": 1,
+        "ultraThreeRed": 1,
+        "ultraThreeBlack": 1,
+        "voltageFiveGyBottom": 8,
+        "rank10StackTheft": 1
+      },
+      "finalStateHash": "c7e2943ce14925b891a7a61fb960e5ba0b5ecd450c54d8476d4ff5b22b0fd2a0",
+      "decisionHash": "a2874a45fdaabc2b7527b7a5cfeb2de23e56568574d60e2a004d4a7f660d065b",
+      "commandHash": "d88aff33d89ea4a34d840fdab45327b8f83b4ece7c2bd960fb53f44e427905ad"
+    },
+    {
+      "ordinal": 174,
+      "seed": 3421812302,
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisions": 125,
+      "commands": 208,
+      "events": 347,
+      "coverage": {
+        "ultraThreeRed": 1
+      },
+      "finalStateHash": "08fe9e553068d66943f1554cbce67534289a8c06b0769850c10290b5e73246bf",
+      "decisionHash": "1d82f9998fb2b4da211e02c41e851515187f613ac0f16dbe1b708765d37c331c",
+      "commandHash": "f856684076a91bba76042b129cafa20ba4b00dcd16305704a76c16defc117b0d"
+    }
+  ]
+}

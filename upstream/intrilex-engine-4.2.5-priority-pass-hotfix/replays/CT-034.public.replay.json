@@ -1,0 +1,120 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-034",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {},
+    "fullTurnSequence": 12,
+    "metadata": {
+      "phase8": {
+        "boardLock": {
+          "activationFullTurnSequence": 10,
+          "remaining": 2
+        },
+        "exhausted": {
+          "remaining": 3,
+          "startedFullTurnSequence": 11
+        },
+        "suddenDeath": {
+          "activationFullTurnSequence": 10,
+          "activatorId": "P2",
+          "remaining": 2
+        },
+        "voltageSnapshots": {},
+        "voltageUsedThisFT": {}
+      }
+    },
+    "pendingDeclaration": null,
+    "phase": "BetweenTurns",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 2,
+          "pendingActionPhaseSkips": 1,
+          "pendingFullTurnSkips": 1,
+          "rank10PlayedThisFT": true,
+          "swapBarUsedThisFT": true,
+          "ultraPlayedThisFT": true
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "consume-skipped-turn-slot"
+      },
+      "actorId": "P1",
+      "id": "CT-034-C1",
+      "type": "RESOLVE_PHASE20_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT-034-C1",
+      "id": "EV-000001",
+      "payload": {
+        "fullTurnOccurred": false,
+        "nextPlayerId": "P2",
+        "playerId": "P1"
+      },
+      "previousStateHash": "ccf9f306054749361f902942318cd6ff6e7418229001aec3b7110935ae2732f4",
+      "sequence": 1,
+      "stateHash": "d626a9fdb75ffb69fe8eba553119111c5b7b5edcfc710ce3f8520cb072f19865",
+      "type": "TURN_SLOT_SKIPPED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "ccf9f306054749361f902942318cd6ff6e7418229001aec3b7110935ae2732f4",
+  "finalStateHash": "d626a9fdb75ffb69fe8eba553119111c5b7b5edcfc710ce3f8520cb072f19865",
+  "eventLogHash": "f401109f0b65fde0e3254ae92ac54e729d37d3b98a0e3f124eb4b84db7d5aafd"
+}

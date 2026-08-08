@@ -1,0 +1,168 @@
+{
+  "timestamp": "2026-08-04T00:33:34.506Z",
+  "chromeVersion": "Chrome/151.0.7922.71",
+  "chromePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "baseUrl": "http://127.0.0.1:8787",
+  "debugPort": 9222,
+  "serverPort": 8787,
+  "scenarioCount": 6,
+  "passedCount": 6,
+  "failedCount": 0,
+  "allPassed": true,
+  "results": [
+    {
+      "scenario": "active-match-e2e",
+      "passed": true,
+      "details": {
+        "formRendered": true,
+        "matchStarted": true,
+        "actionCount": 14,
+        "stateText": "H\n    hybrix-rusher-easy\n    1200\n    \n  \n      \n    Goal\n    21\n    / 21\n  \n  \n    Secured\n    0\n  "
+      }
+    },
+    {
+      "scenario": "two-tab-lease-conflict",
+      "passed": true,
+      "details": {
+        "tabAStarted": true,
+        "tabBOpened": true,
+        "leaseInfoA": {
+          "leaseKeys": [
+            "intrilex-session-lease:S-f770f3c10dfdd34c",
+            "intrilex-session-lease:S-b29e63b629ba9d21"
+          ],
+          "leaseData": {
+            "intrilex-session-lease:S-f770f3c10dfdd34c": {
+              "tabId": "tab-1785803587141-3uyfad",
+              "sessionId": "S-f770f3c10dfdd34c",
+              "acquiredAt": 1785803587141,
+              "lastHeartbeat": 1785803587141
+            },
+            "intrilex-session-lease:S-b29e63b629ba9d21": {
+              "tabId": "tab-1785803586818-u3zw4c",
+              "sessionId": "S-b29e63b629ba9d21",
+              "acquiredAt": 1785803586818,
+              "lastHeartbeat": 1785803586818
+            }
+          },
+          "leaseKeyCount": 2
+        },
+        "conflictResult": {
+          "sessionId": "S-f770f3c10dfdd34c",
+          "acquired": false,
+          "conflict": true,
+          "checkResult": {
+            "leased": true
+          },
+          "leaseKeyCount": 2
+        }
+      }
+    },
+    {
+      "scenario": "save-reload-roundtrip",
+      "passed": true,
+      "details": {
+        "matchStarted": true,
+        "idbAvailable": true,
+        "saveCount": 0,
+        "saves": [],
+        "pageReloaded": true,
+        "hubRendered": true,
+        "hasContinueButton": false,
+        "continueSaveId": null
+      }
+    },
+    {
+      "scenario": "tampered-import-rejection",
+      "passed": true,
+      "details": {
+        "validSaveAccepted": true,
+        "tamperedCount": 6,
+        "allTamperedRejected": true,
+        "results": [
+          {
+            "test": "valid-save",
+            "valid": true,
+            "reasonCode": null
+          },
+          {
+            "test": "tampered-saveId",
+            "valid": false,
+            "reasonCode": "SAVE_HASH_MISMATCH"
+          },
+          {
+            "test": "tampered-commandLog",
+            "valid": false,
+            "reasonCode": "SAVE_HASH_MISMATCH"
+          },
+          {
+            "test": "tampered-contentHash",
+            "valid": false,
+            "reasonCode": "SAVE_HASH_MISMATCH"
+          },
+          {
+            "test": "v1-legacy",
+            "valid": false,
+            "reasonCode": "LEGACY_UNBOUND_AUTHORITY"
+          },
+          {
+            "test": "rogue-profile",
+            "valid": false,
+            "reasonCode": "UNSUPPORTED_PROFILE"
+          },
+          {
+            "test": "wrong-engine",
+            "valid": false,
+            "reasonCode": "INCOMPATIBLE_ENGINE_VERSION"
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "privacy-accessibility-responsive",
+      "passed": true,
+      "details": {
+        "privacy": {
+          "privateMarkersFound": [
+            "face-down"
+          ],
+          "privateElementCount": 0,
+          "visiblePrivateCount": 0
+        },
+        "accessibility": {
+          "hasSkipLink": true,
+          "ariaLabelCount": 59,
+          "roleCount": 11,
+          "buttonCount": 23,
+          "buttonsWithoutLabel": 0,
+          "hasLangAttr": true,
+          "lang": "en",
+          "hasMainLandmark": true
+        },
+        "responsive": {
+          "viewportWidth": 400,
+          "viewportHeight": 711,
+          "bodyScrollWidth": 389,
+          "htmlScrollWidth": 400,
+          "hasHorizontalOverflow": false,
+          "sideRailDisplay": "flex",
+          "shellPresent": true
+        }
+      }
+    },
+    {
+      "scenario": "terminal-evidence-navigation",
+      "passed": true,
+      "details": {
+        "advanceCount": 54,
+        "reachedTerminal": true,
+        "terminalText": "💀\n      Match Complete\n      You lost.\n    \n    \n      WinnerP2\n      TerminationNormal Victory\n      Full Turns12\n    \n    \n    Post-Match Analysis\n    \n      \n    Secured Points\n    —\n    vs\n    —\n",
+        "hasWinner": true,
+        "winnerText": "P2",
+        "hasEvidenceLink": true,
+        "hasReplayLink": true,
+        "evidenceNavigated": false
+      }
+    }
+  ]
+}

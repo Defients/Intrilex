@@ -1,0 +1,150 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-111",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT111-QC": {
+        "controllerId": "P1",
+        "id": "CT111-QC",
+        "identity": "Q♣",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": 4,
+          "timeBomb": {
+            "peak": 3,
+            "stage": 2,
+            "suit": "♣"
+          },
+          "timeBombStage": 2
+        },
+        "zone": "P1_PR"
+      },
+      "CT111-QH": {
+        "controllerId": "P1",
+        "id": "CT111-QH",
+        "identity": "Q♥",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": -4,
+          "timeBomb": {
+            "peak": 3,
+            "stage": 2,
+            "suit": "♥"
+          },
+          "timeBombStage": 2
+        },
+        "zone": "P1_PR"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {
+      "phase12": {
+        "enabled": true,
+        "selectedSpecByPlayer": {
+          "P1": "Brilliance",
+          "P2": "Balance"
+        }
+      },
+      "phase13": {
+        "enabled": false,
+        "forcedDrawByPlayer": {},
+        "lastResolution": null,
+        "queuedFuseCardIds": []
+      }
+    },
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT111-QC",
+          "CT111-QH"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-time-bomb"
+      },
+      "actorId": "P1",
+      "id": "CT111-1",
+      "type": "RESOLVE_PHASE13_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT111-1",
+      "id": "EV-000001",
+      "payload": {
+        "enabled": true
+      },
+      "previousStateHash": "2974742cc92b30d13152b965e196c27128b26a304951db75972a7017013325d9",
+      "sequence": 1,
+      "stateHash": "4c4810a495ebccf18685b091cfc85a4e44f58bd08d134b81b2e8606f00f02c79",
+      "type": "TIME_BOMB_CONFIGURED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "2974742cc92b30d13152b965e196c27128b26a304951db75972a7017013325d9",
+  "finalStateHash": "4c4810a495ebccf18685b091cfc85a4e44f58bd08d134b81b2e8606f00f02c79",
+  "eventLogHash": "890eaa833615110116cf373007fe9e13b4f1ce8e324001aa2b6d25829d8b5cd2"
+}

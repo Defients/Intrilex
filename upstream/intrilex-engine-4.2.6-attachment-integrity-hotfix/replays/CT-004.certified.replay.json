@@ -1,0 +1,1177 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-004",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT004-01": {
+        "controllerId": "P1",
+        "id": "CT004-01",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-02": {
+        "controllerId": "P1",
+        "id": "CT004-02",
+        "identity": "A♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-03": {
+        "controllerId": "P1",
+        "id": "CT004-03",
+        "identity": "A♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-04": {
+        "controllerId": "P1",
+        "id": "CT004-04",
+        "identity": "A♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-05": {
+        "controllerId": "P1",
+        "id": "CT004-05",
+        "identity": "2♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-06": {
+        "controllerId": "P1",
+        "id": "CT004-06",
+        "identity": "2♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-07": {
+        "controllerId": "P1",
+        "id": "CT004-07",
+        "identity": "2♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-08": {
+        "controllerId": "P1",
+        "id": "CT004-08",
+        "identity": "2♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-09": {
+        "controllerId": "P1",
+        "id": "CT004-09",
+        "identity": "3♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-10": {
+        "controllerId": "P1",
+        "id": "CT004-10",
+        "identity": "3♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-11": {
+        "controllerId": "P1",
+        "id": "CT004-11",
+        "identity": "3♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-12": {
+        "controllerId": "P1",
+        "id": "CT004-12",
+        "identity": "3♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-13": {
+        "controllerId": "P1",
+        "id": "CT004-13",
+        "identity": "4♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-14": {
+        "controllerId": "P1",
+        "id": "CT004-14",
+        "identity": "4♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-15": {
+        "controllerId": "P1",
+        "id": "CT004-15",
+        "identity": "4♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-16": {
+        "controllerId": "P1",
+        "id": "CT004-16",
+        "identity": "4♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-17": {
+        "controllerId": "P1",
+        "id": "CT004-17",
+        "identity": "5♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-18": {
+        "controllerId": "P1",
+        "id": "CT004-18",
+        "identity": "5♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-19": {
+        "controllerId": "P1",
+        "id": "CT004-19",
+        "identity": "5♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-20": {
+        "controllerId": "P1",
+        "id": "CT004-20",
+        "identity": "5♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-21": {
+        "controllerId": "P1",
+        "id": "CT004-21",
+        "identity": "6♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-22": {
+        "controllerId": "P1",
+        "id": "CT004-22",
+        "identity": "6♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-23": {
+        "controllerId": "P1",
+        "id": "CT004-23",
+        "identity": "6♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-24": {
+        "controllerId": "P1",
+        "id": "CT004-24",
+        "identity": "6♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-25": {
+        "controllerId": "P1",
+        "id": "CT004-25",
+        "identity": "7♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-26": {
+        "controllerId": "P1",
+        "id": "CT004-26",
+        "identity": "7♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-27": {
+        "controllerId": "P1",
+        "id": "CT004-27",
+        "identity": "7♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-28": {
+        "controllerId": "P1",
+        "id": "CT004-28",
+        "identity": "7♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-29": {
+        "controllerId": "P1",
+        "id": "CT004-29",
+        "identity": "8♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-30": {
+        "controllerId": "P1",
+        "id": "CT004-30",
+        "identity": "8♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-31": {
+        "controllerId": "P1",
+        "id": "CT004-31",
+        "identity": "8♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-32": {
+        "controllerId": "P1",
+        "id": "CT004-32",
+        "identity": "8♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-33": {
+        "controllerId": "P1",
+        "id": "CT004-33",
+        "identity": "9♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-34": {
+        "controllerId": "P1",
+        "id": "CT004-34",
+        "identity": "9♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-35": {
+        "controllerId": "P1",
+        "id": "CT004-35",
+        "identity": "9♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-36": {
+        "controllerId": "P1",
+        "id": "CT004-36",
+        "identity": "9♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-37": {
+        "controllerId": "P1",
+        "id": "CT004-37",
+        "identity": "10♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-38": {
+        "controllerId": "P1",
+        "id": "CT004-38",
+        "identity": "10♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-39": {
+        "controllerId": "P1",
+        "id": "CT004-39",
+        "identity": "10♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-40": {
+        "controllerId": "P1",
+        "id": "CT004-40",
+        "identity": "10♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-41": {
+        "controllerId": "P1",
+        "id": "CT004-41",
+        "identity": "J♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-42": {
+        "controllerId": "P1",
+        "id": "CT004-42",
+        "identity": "J♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-43": {
+        "controllerId": "P1",
+        "id": "CT004-43",
+        "identity": "J♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-44": {
+        "controllerId": "P1",
+        "id": "CT004-44",
+        "identity": "J♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-45": {
+        "controllerId": "P1",
+        "id": "CT004-45",
+        "identity": "Q♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-46": {
+        "controllerId": "P1",
+        "id": "CT004-46",
+        "identity": "Q♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-47": {
+        "controllerId": "P1",
+        "id": "CT004-47",
+        "identity": "Q♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-48": {
+        "controllerId": "P1",
+        "id": "CT004-48",
+        "identity": "Q♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-49": {
+        "controllerId": "P1",
+        "id": "CT004-49",
+        "identity": "K♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-50": {
+        "controllerId": "P1",
+        "id": "CT004-50",
+        "identity": "K♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-51": {
+        "controllerId": "P1",
+        "id": "CT004-51",
+        "identity": "K♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-52": {
+        "controllerId": "P1",
+        "id": "CT004-52",
+        "identity": "K♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-53": {
+        "controllerId": "P1",
+        "id": "CT004-53",
+        "identity": "RJ",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT004-54": {
+        "controllerId": "P1",
+        "id": "CT004-54",
+        "identity": "BJ",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Setup",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT004-01",
+        "CT004-02",
+        "CT004-03",
+        "CT004-04",
+        "CT004-05",
+        "CT004-06",
+        "CT004-07",
+        "CT004-08",
+        "CT004-09",
+        "CT004-10",
+        "CT004-11",
+        "CT004-12",
+        "CT004-13",
+        "CT004-14",
+        "CT004-15",
+        "CT004-16",
+        "CT004-17",
+        "CT004-18",
+        "CT004-19",
+        "CT004-20",
+        "CT004-21",
+        "CT004-22",
+        "CT004-23",
+        "CT004-24",
+        "CT004-25",
+        "CT004-26",
+        "CT004-27",
+        "CT004-28",
+        "CT004-29",
+        "CT004-30",
+        "CT004-31",
+        "CT004-32",
+        "CT004-33",
+        "CT004-34",
+        "CT004-35",
+        "CT004-36",
+        "CT004-37",
+        "CT004-38",
+        "CT004-39",
+        "CT004-40",
+        "CT004-41",
+        "CT004-42",
+        "CT004-43",
+        "CT004-44",
+        "CT004-45",
+        "CT004-46",
+        "CT004-47",
+        "CT004-48",
+        "CT004-49",
+        "CT004-50",
+        "CT004-51",
+        "CT004-52",
+        "CT004-53",
+        "CT004-54"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "enabledOptionalModules": [
+          "tournament-seed"
+        ],
+        "kind": "configure-tournament-seed",
+        "seedOrder": [
+          "P1",
+          "P2"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT004-CFG",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-02",
+        "category": 1,
+        "kind": "select-tournament-category",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT004-C1-P1",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-03",
+        "category": 1,
+        "kind": "select-tournament-category",
+        "playerId": "P2"
+      },
+      "actorId": "P1",
+      "id": "CT004-C1-P2",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-06",
+        "category": 2,
+        "kind": "select-tournament-category",
+        "playerId": "P2"
+      },
+      "actorId": "P1",
+      "id": "CT004-C2-P2",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-05",
+        "category": 2,
+        "kind": "select-tournament-category",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT004-C2-P1",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-10",
+        "category": 3,
+        "kind": "select-tournament-category",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT004-C3-P1",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-15",
+        "category": 3,
+        "kind": "select-tournament-category",
+        "playerId": "P2"
+      },
+      "actorId": "P1",
+      "id": "CT004-C3-P2",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-42",
+        "category": 4,
+        "kind": "select-tournament-category",
+        "playerId": "P2"
+      },
+      "actorId": "P1",
+      "id": "CT004-C4-P2",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT004-47",
+        "category": 4,
+        "kind": "select-tournament-category",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT004-C4-P1",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "kind": "resolve-high-impact",
+        "rankingsByPlayer": {
+          "P1": [
+            "A♣",
+            "A♠",
+            "3♠"
+          ],
+          "P2": [
+            "K♠",
+            "K♣",
+            "Q♣"
+          ]
+        }
+      },
+      "actorId": "P1",
+      "id": "CT004-HI",
+      "type": "RESOLVE_PHASE15_ACTION"
+    },
+    {
+      "action": {
+        "kind": "finalize-tournament-seed"
+      },
+      "actorId": "P1",
+      "id": "CT004-FIN",
+      "type": "RESOLVE_PHASE15_ACTION"
+    }
+  ],
+  "accepted": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT004-CFG",
+      "id": "EV-000001",
+      "payload": {
+        "banPileCardIds": [
+          "CT004-54",
+          "CT004-39",
+          "CT004-32",
+          "CT004-36",
+          "CT004-37",
+          "CT004-48",
+          "CT004-44",
+          "CT004-16"
+        ],
+        "highImpactPool": [
+          "A♣",
+          "A♠",
+          "3♠",
+          "5♠",
+          "6♠",
+          "7♠",
+          "8♥",
+          "9♥",
+          "10♦",
+          "10♠",
+          "Q♣",
+          "K♣",
+          "K♠"
+        ],
+        "seedOrder": [
+          "P1",
+          "P2"
+        ]
+      },
+      "previousStateHash": "573546e2f99d6bb5e06ad6bd4b0da1757c2ced2c795ffd49ce61958e895cb9da",
+      "sequence": 1,
+      "stateHash": "13568635e5f84d6cd976ee0b9f7bf5988b77c4cc1f3a89978bf611e43099b688",
+      "type": "TOURNAMENT_SEED_CONFIGURED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C1-P1",
+      "id": "EV-000002",
+      "payload": {
+        "cardId": "CT004-02",
+        "category": 1,
+        "playerId": "P1"
+      },
+      "previousStateHash": "13568635e5f84d6cd976ee0b9f7bf5988b77c4cc1f3a89978bf611e43099b688",
+      "sequence": 2,
+      "stateHash": "8a86c0061093d80284b7aecae9df965c6863ab826021b00330dae56599f8e91e",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C1-P2",
+      "id": "EV-000003",
+      "payload": {
+        "cardId": "CT004-03",
+        "category": 1,
+        "playerId": "P2"
+      },
+      "previousStateHash": "8a86c0061093d80284b7aecae9df965c6863ab826021b00330dae56599f8e91e",
+      "sequence": 3,
+      "stateHash": "ead6223f2c61cce94addb56c21302b64ed31bac7072f50ad61489141dc0ca685",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C2-P2",
+      "id": "EV-000004",
+      "payload": {
+        "cardId": "CT004-06",
+        "category": 2,
+        "playerId": "P2"
+      },
+      "previousStateHash": "ead6223f2c61cce94addb56c21302b64ed31bac7072f50ad61489141dc0ca685",
+      "sequence": 4,
+      "stateHash": "cef145a24d3cd9b7a62dd605a8cadfb66c2826d42da07f1af175e05ef631dea7",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C2-P1",
+      "id": "EV-000005",
+      "payload": {
+        "cardId": "CT004-05",
+        "category": 2,
+        "playerId": "P1"
+      },
+      "previousStateHash": "cef145a24d3cd9b7a62dd605a8cadfb66c2826d42da07f1af175e05ef631dea7",
+      "sequence": 5,
+      "stateHash": "faaa6d37d8e18e6ccdbedd26a2b3132c633378796b0600a46855b4d9d2c7166d",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C3-P1",
+      "id": "EV-000006",
+      "payload": {
+        "cardId": "CT004-10",
+        "category": 3,
+        "playerId": "P1"
+      },
+      "previousStateHash": "faaa6d37d8e18e6ccdbedd26a2b3132c633378796b0600a46855b4d9d2c7166d",
+      "sequence": 6,
+      "stateHash": "9bd9aeb27c0537a88adac3925eee5ffbccc71d6f288ffa53c68d0a5ecc1b7adc",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C3-P2",
+      "id": "EV-000007",
+      "payload": {
+        "cardId": "CT004-15",
+        "category": 3,
+        "playerId": "P2"
+      },
+      "previousStateHash": "9bd9aeb27c0537a88adac3925eee5ffbccc71d6f288ffa53c68d0a5ecc1b7adc",
+      "sequence": 7,
+      "stateHash": "717c5d2bbb621907bc0b6129fbb4c4b725520f4ef0a449688916376a6061f017",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C4-P2",
+      "id": "EV-000008",
+      "payload": {
+        "cardId": "CT004-42",
+        "category": 4,
+        "playerId": "P2"
+      },
+      "previousStateHash": "717c5d2bbb621907bc0b6129fbb4c4b725520f4ef0a449688916376a6061f017",
+      "sequence": 8,
+      "stateHash": "0d13880654b3b4745f7b55a965eb06ecc148857340da1bf0d7beb136708d8cc6",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-C4-P1",
+      "id": "EV-000009",
+      "payload": {
+        "cardId": "CT004-47",
+        "category": 4,
+        "playerId": "P1"
+      },
+      "previousStateHash": "0d13880654b3b4745f7b55a965eb06ecc148857340da1bf0d7beb136708d8cc6",
+      "sequence": 9,
+      "stateHash": "c4e7c6df8d2a39f5afd9d67d27e5e47b090ada559fc703c549afd12b2108c5e6",
+      "type": "TOURNAMENT_CATEGORY_SELECTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-HI",
+      "id": "EV-000010",
+      "payload": {
+        "rankingsByPlayer": {
+          "P1": [
+            "A♣",
+            "A♠",
+            "3♠"
+          ],
+          "P2": [
+            "K♠",
+            "K♣",
+            "Q♣"
+          ]
+        }
+      },
+      "previousStateHash": "c4e7c6df8d2a39f5afd9d67d27e5e47b090ada559fc703c549afd12b2108c5e6",
+      "sequence": 10,
+      "stateHash": "066252f8b5dc6670f85a0a6b01e9b26cc38a88ebeb341e5102a275d4d0fa2eef",
+      "type": "HIGH_IMPACT_RANKINGS_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-HI",
+      "id": "EV-000012",
+      "payload": {
+        "assignments": {
+          "P1": "CT004-01",
+          "P2": "CT004-52"
+        }
+      },
+      "previousStateHash": "066252f8b5dc6670f85a0a6b01e9b26cc38a88ebeb341e5102a275d4d0fa2eef",
+      "sequence": 11,
+      "stateHash": "3413060dfe3c49787b94c80841e7e52d4f891aafeb08fffd6a8a0ea0543bb08c",
+      "type": "HIGH_IMPACT_ASSIGNED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT004-FIN",
+      "id": "EV-000012",
+      "payload": {
+        "randomSixthByPlayer": {
+          "P1": "CT004-19",
+          "P2": "CT004-13"
+        },
+        "swapCardIds": [
+          "CT004-34",
+          "CT004-14",
+          "CT004-53"
+        ]
+      },
+      "previousStateHash": "3413060dfe3c49787b94c80841e7e52d4f891aafeb08fffd6a8a0ea0543bb08c",
+      "sequence": 12,
+      "stateHash": "a6c13aa37de3153f8515eef8f2208e6d263947e2a13114017266b239f7144736",
+      "type": "TOURNAMENT_SEED_SETUP_COMPLETE",
+      "visibility": "authorized"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT004-CFG",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "2454c3cabdc420cb33a4dbb4d6d06d54b318a0dba4ba21f2c49bd6462872abf3",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "13568635e5f84d6cd976ee0b9f7bf5988b77c4cc1f3a89978bf611e43099b688",
+      "stateHashBefore": "573546e2f99d6bb5e06ad6bd4b0da1757c2ced2c795ffd49ce61958e895cb9da"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT004-C1-P1",
+      "commandIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "3d637638a6343913e48708440b3f831d7a55d9fc1fe3cad061afc7792e3996d2",
+      "eventStartIndex": 1,
+      "revisionAfter": 2,
+      "revisionBefore": 1,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "8a86c0061093d80284b7aecae9df965c6863ab826021b00330dae56599f8e91e",
+      "stateHashBefore": "13568635e5f84d6cd976ee0b9f7bf5988b77c4cc1f3a89978bf611e43099b688"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT004-C1-P2",
+      "commandIndex": 2,
+      "eventEndIndex": 3,
+      "eventRangeHash": "967011e7c1057c87f5ba1f58d9f3acc5366c80e643b8c2fef3da8ec6abb860ca",
+      "eventStartIndex": 2,
+      "revisionAfter": 3,
+      "revisionBefore": 2,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "ead6223f2c61cce94addb56c21302b64ed31bac7072f50ad61489141dc0ca685",
+      "stateHashBefore": "8a86c0061093d80284b7aecae9df965c6863ab826021b00330dae56599f8e91e"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT004-C2-P2",
+      "commandIndex": 3,
+      "eventEndIndex": 4,
+      "eventRangeHash": "0d0f06636479054c6d821d77d0dbba2dd57a522adc9a045b9855f7193694fede",
+      "eventStartIndex": 3,
+      "revisionAfter": 4,
+      "revisionBefore": 3,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "cef145a24d3cd9b7a62dd605a8cadfb66c2826d42da07f1af175e05ef631dea7",
+      "stateHashBefore": "ead6223f2c61cce94addb56c21302b64ed31bac7072f50ad61489141dc0ca685"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT004-C2-P1",
+      "commandIndex": 4,
+      "eventEndIndex": 5,
+      "eventRangeHash": "c6ff737651a494f4810eb7f71eca8a309af2aff5d51aaba710b766d919e6c01a",
+      "eventStartIndex": 4,
+      "revisionAfter": 5,
+      "revisionBefore": 4,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "faaa6d37d8e18e6ccdbedd26a2b3132c633378796b0600a46855b4d9d2c7166d",
+      "stateHashBefore": "cef145a24d3cd9b7a62dd605a8cadfb66c2826d42da07f1af175e05ef631dea7"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT004-C3-P1",
+      "commandIndex": 5,
+      "eventEndIndex": 6,
+      "eventRangeHash": "c83de6ed49524e78737a702790e66f4d9debd0946ce19ad6b80e8364e3c53f7a",
+      "eventStartIndex": 5,
+      "revisionAfter": 6,
+      "revisionBefore": 5,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "9bd9aeb27c0537a88adac3925eee5ffbccc71d6f288ffa53c68d0a5ecc1b7adc",
+      "stateHashBefore": "faaa6d37d8e18e6ccdbedd26a2b3132c633378796b0600a46855b4d9d2c7166d"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT004-C3-P2",
+      "commandIndex": 6,
+      "eventEndIndex": 7,
+      "eventRangeHash": "649cee469e3e43c3fa87f47a04349f000e8005387e55b3504a8efdb329ab5bb5",
+      "eventStartIndex": 6,
+      "revisionAfter": 7,
+      "revisionBefore": 6,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "717c5d2bbb621907bc0b6129fbb4c4b725520f4ef0a449688916376a6061f017",
+      "stateHashBefore": "9bd9aeb27c0537a88adac3925eee5ffbccc71d6f288ffa53c68d0a5ecc1b7adc"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT004-C4-P2",
+      "commandIndex": 7,
+      "eventEndIndex": 8,
+      "eventRangeHash": "4c7267b6d0a77df0a5b1e3c35a82893182f8402a91875d86e85fad0b2581e474",
+      "eventStartIndex": 7,
+      "revisionAfter": 8,
+      "revisionBefore": 7,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "0d13880654b3b4745f7b55a965eb06ecc148857340da1bf0d7beb136708d8cc6",
+      "stateHashBefore": "717c5d2bbb621907bc0b6129fbb4c4b725520f4ef0a449688916376a6061f017"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT004-C4-P1",
+      "commandIndex": 8,
+      "eventEndIndex": 9,
+      "eventRangeHash": "85a62b8c7b3e37ca30b525f227e1c61ace9c6e3babc7ba61ad4c0fb7d0804106",
+      "eventStartIndex": 8,
+      "revisionAfter": 9,
+      "revisionBefore": 8,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "c4e7c6df8d2a39f5afd9d67d27e5e47b090ada559fc703c549afd12b2108c5e6",
+      "stateHashBefore": "0d13880654b3b4745f7b55a965eb06ecc148857340da1bf0d7beb136708d8cc6"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT004-HI",
+      "commandIndex": 9,
+      "eventEndIndex": 11,
+      "eventRangeHash": "a80949384c0420b478b7d511e6daebb6a6cd2e60c6eb90a44c2b5ff56f57a419",
+      "eventStartIndex": 9,
+      "revisionAfter": 11,
+      "revisionBefore": 9,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "3413060dfe3c49787b94c80841e7e52d4f891aafeb08fffd6a8a0ea0543bb08c",
+      "stateHashBefore": "c4e7c6df8d2a39f5afd9d67d27e5e47b090ada559fc703c549afd12b2108c5e6"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT004-FIN",
+      "commandIndex": 10,
+      "eventEndIndex": 12,
+      "eventRangeHash": "9e575f2fa0cc9363b50674f268d974a014fca9fc38a540a1db164ea998c2a76b",
+      "eventStartIndex": 11,
+      "revisionAfter": 12,
+      "revisionBefore": 11,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 35,
+        "seed": 4276082676
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "a6c13aa37de3153f8515eef8f2208e6d263947e2a13114017266b239f7144736",
+      "stateHashBefore": "3413060dfe3c49787b94c80841e7e52d4f891aafeb08fffd6a8a0ea0543bb08c"
+    }
+  ],
+  "initialStateHash": "573546e2f99d6bb5e06ad6bd4b0da1757c2ced2c795ffd49ce61958e895cb9da",
+  "finalStateHash": "a6c13aa37de3153f8515eef8f2208e6d263947e2a13114017266b239f7144736",
+  "eventLogHash": "1a5a97111dfa0d8495245f00a0ea1bd2856261a02662608528444b29666e0d50",
+  "checkpointLogHash": "a4c183c64db2665698d1a8ca71201f0a1eab5fe91ce7129640a4caaae1eccad3",
+  "rngTraceHash": "44a3bd0ba0d23566de2e1dc8ab3540e9c0230b0bec3d6bb57abbe9be6912ac06",
+  "contentHash": "9ee805013f5ab03ba52cb8620c31252fbd43a4418cee770d012079a81dbc255e",
+  "integrityHash": "b4a752c588bfd0c135081c1017bd0fedb338551afa929d5e4b8b14200cfe8be8"
+}

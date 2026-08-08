@@ -1,0 +1,200 @@
+[
+  {
+    "rankId": "A",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [
+      "super-ace"
+    ],
+    "superEffectCount": 1
+  },
+  {
+    "rankId": "2",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": false,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_SPADES_PLAY_FORM",
+    "spadesNote": "2♠ Solo Wild Copy may target spade-enhanced Base modes (3♠/4♠/6♠/7♠) that 2♣/2♦/2♥ cannot copy.",
+    "superEffectIds": [
+      "super-two"
+    ],
+    "superEffectCount": 1
+  },
+  {
+    "rankId": "3",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [
+      "super-three-raid"
+    ],
+    "superEffectCount": 1
+  },
+  {
+    "rankId": "4",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [
+      "super-four-exchange"
+    ],
+    "superEffectCount": 1
+  },
+  {
+    "rankId": "5",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": "5♠ rummage may access any Exile card; other suits have position-restricted access.",
+    "superEffectIds": [
+      "super-five-recycle"
+    ],
+    "superEffectCount": 1
+  },
+  {
+    "rankId": "6",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [
+      "super-six-dig"
+    ],
+    "superEffectCount": 1
+  },
+  {
+    "rankId": "7",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [
+      "super-seven-topdeck"
+    ],
+    "superEffectCount": 1
+  },
+  {
+    "rankId": "8",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [
+      "super-eight-scuttle"
+    ],
+    "superEffectCount": 1
+  },
+  {
+    "rankId": "9",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [],
+    "superEffectCount": 0
+  },
+  {
+    "rankId": "10",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [],
+    "superEffectCount": 0
+  },
+  {
+    "rankId": "J",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [
+      "super-jack-tempo"
+    ],
+    "superEffectCount": 1
+  },
+  {
+    "rankId": "Q",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [],
+    "superEffectCount": 0
+  },
+  {
+    "rankId": "K",
+    "spadesVariantEligible": true,
+    "hasDistinctPrintedSpadesEffect": true,
+    "hasDistinctSpadesPlayForm": true,
+    "hasDistinctSpadesResolution": true,
+    "spadesAnalyticsEligible": true,
+    "spadesReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+    "spadesNote": null,
+    "superEffectIds": [],
+    "superEffectCount": 0
+  },
+  {
+    "rankId": "RJ",
+    "spadesVariantEligible": false,
+    "hasDistinctPrintedSpadesEffect": false,
+    "hasDistinctSpadesPlayForm": false,
+    "hasDistinctSpadesResolution": false,
+    "spadesAnalyticsEligible": false,
+    "spadesReasonCode": "NO_DISTINCT_SPADES_BEHAVIOR",
+    "spadesNote": "Rank RJ has no mechanically distinct Spades variant in canonical authority.",
+    "superEffectIds": [],
+    "superEffectCount": 0
+  },
+  {
+    "rankId": "BJ",
+    "spadesVariantEligible": false,
+    "hasDistinctPrintedSpadesEffect": false,
+    "hasDistinctSpadesPlayForm": false,
+    "hasDistinctSpadesResolution": false,
+    "spadesAnalyticsEligible": false,
+    "spadesReasonCode": "NO_DISTINCT_SPADES_BEHAVIOR",
+    "spadesNote": "Rank BJ has no mechanically distinct Spades variant in canonical authority.",
+    "superEffectIds": [],
+    "superEffectCount": 0
+  }
+]

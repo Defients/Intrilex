@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0",
+  "engine": {
+    "package": "@intrilex/headless-engine",
+    "version": "4.2.0",
+    "rulesVersion": "4.1",
+    "baseCertifiedVersion": "4.1.0",
+    "basePayloadHash": "707377ea9fa94f449c293b6a4dcd8dc4b40dd058bcd6f9e5dd874339859cf168",
+    "preservedConformanceAggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"
+  },
+  "profiles": [
+    {
+      "profileId": "core-foundation-authority",
+      "canonicalProfile": "CORE",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "autonomy": "SUPPORTED",
+      "actionCoverage": {
+        "covered": ["STANDARD_SETUP", "START_PHASE", "FACE_DOWN_SWAP", "ACTION_PHASE", "DRAW", "FACE_UP_SWAP_DRAW", "PLAY_FOR_POINTS", "ORDINARY_SCUTTLE", "PASS", "TURN_COMPLETION", "NORMAL_VICTORY", "EXHAUSTED"],
+        "replayOnly": ["CORE_EFFECTS", "QUICK_INSTANT_INTERRUPT", "CORE_RESPONSE_WINDOWS", "SUPERS", "ULTRAS", "VOLTAGE", "ADVANCED_PROTECTION"],
+        "blocked": ["OPTIONAL_MODULES", "MULTIPLAYER", "TEAMS"]
+      },
+      "reasonCodes": ["STANDARD_CORE_SETUP", "ENGINE_OWNED_SWAP_BAR", "ENGINE_OWNED_ACTION_ECONOMY", "ENGINE_OWNED_SCORING_SCUTTLE", "ENGINE_OWNED_VICTORY_EXHAUSTED", "ADVANCED_CORE_EFFECTS_FAIL_CLOSED"],
+      "evidence": ["engine-tests-155", "conformance-121", "core-authority-stress-500", "browser-core-authority-parity"]
+    }
+  ]
+}

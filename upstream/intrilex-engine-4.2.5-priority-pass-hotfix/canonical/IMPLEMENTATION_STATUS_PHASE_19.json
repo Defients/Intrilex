@@ -1,0 +1,44 @@
+{
+  "status_version": 1,
+  "status": "complete",
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0",
+  "milestone": "Roadmap Phase 19 \u2014 Balance simulation and playtesting instrumentation",
+  "completed_phases": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "evidence": {
+    "full_match_count": 10800,
+    "scenario_count": 121,
+    "policy_matchups": 9,
+    "deterministic_rerun": "PASS",
+    "campaign_hash": "1883275f3a68356c991217e29b610076313d95595cf2c26515ea44ea93e60fb3"
+  },
+  "watchlist": {
+    "first_player_win_rate": 0.6846296296296296,
+    "wilson_95": [
+      0.6758016930890399,
+      0.6933262659880349
+    ],
+    "scope": "First Contact Draw/Points/Scuttle/Pass legal-action subset under three declared policies"
+  },
+  "interpretation": "Phase 19 completes reproducible balance telemetry and confidence-bound reporting. The watchlist is not generalized to optimal play or advanced-module metagames."
+}

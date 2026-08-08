@@ -1,0 +1,1528 @@
+[
+  {
+    "id": "CT-016",
+    "title": "Royal Marriage is not a Combo",
+    "sourceTestId": "CT-016",
+    "purpose": "Keep Combo Breaker hidden when the declared multi-card play is Royal Marriage rather than a Combo.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 12,
+      "startPhaseSequenceByPlayer": {
+        "P1": 5,
+        "P2": 6
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT-016-P1-H1",
+            "CT-016-P1-H2"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [
+            "CT-016-P2-TRAP"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT-016-P1-H1": {
+          "id": "CT-016-P1-H1",
+          "identity": "K♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT-016-P1-H2": {
+          "id": "CT-016-P1-H2",
+          "identity": "Q♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT-016-P2-TRAP": {
+          "id": "CT-016-P2-TRAP",
+          "identity": "4♥",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_ER",
+          "state": {
+            "faceDownTrap": true,
+            "pointValue": 0
+          }
+        },
+        "CT-016-DP-01": {
+          "id": "CT-016-DP-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-016-DP-02": {
+          "id": "CT-016-DP-02",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-016-DP-03": {
+          "id": "CT-016-DP-03",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-016-DP-04": {
+          "id": "CT-016-DP-04",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT-016-DP-01",
+          "CT-016-DP-02",
+          "CT-016-DP-03",
+          "CT-016-DP-04"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT016-1",
+        "type": "RESOLVE_PHASE10_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "check-trigger",
+          "trapCardId": "CT-016-P2-TRAP",
+          "eventKey": "royal-marriage-declared",
+          "qualifyingEvent": false
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        false
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT-016-P1-H1",
+              "CT-016-P1-H2"
+            ]
+          },
+          "P2": {
+            "er": [
+              "CT-016-P2-TRAP"
+            ]
+          }
+        },
+        "markers": {
+          "CT-016-P2-TRAP": {
+            "faceDownTrap": true
+          }
+        },
+        "zones": {
+          "gy": []
+        },
+        "stackDepth": 0
+      }
+    }
+  },
+  {
+    "id": "CT-024",
+    "title": "4♠ from hand uses Core Total Clear",
+    "sourceTestId": "CT-024",
+    "purpose": "Distinguish Core 4♠ Total Clear from its face-down Trap identity.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 12,
+      "startPhaseSequenceByPlayer": {
+        "P1": 5,
+        "P2": 6
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT-024-P1-H"
+          ],
+          "pr": [
+            "CT-024-P1-PR"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT-024-P2-PR"
+          ],
+          "er": [
+            "CT-024-P2-ER"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT-024-P1-H": {
+          "id": "CT-024-P1-H",
+          "identity": "4♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT-024-P1-PR": {
+          "id": "CT-024-P1-PR",
+          "identity": "7♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": 7
+          }
+        },
+        "CT-024-P2-PR": {
+          "id": "CT-024-P2-PR",
+          "identity": "8♦",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 8,
+            "aegis": true
+          }
+        },
+        "CT-024-P2-ER": {
+          "id": "CT-024-P2-ER",
+          "identity": "Q♣",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_ER",
+          "state": {
+            "anchor": true
+          }
+        },
+        "CT-024-DP-01": {
+          "id": "CT-024-DP-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-024-DP-02": {
+          "id": "CT-024-DP-02",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-024-DP-03": {
+          "id": "CT-024-DP-03",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-024-DP-04": {
+          "id": "CT-024-DP-04",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT-024-DP-01",
+          "CT-024-DP-02",
+          "CT-024-DP-03",
+          "CT-024-DP-04"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT024-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "total-clear",
+          "sourceCardId": "CT-024-P1-H"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [],
+            "pr": [],
+            "er": []
+          },
+          "P2": {
+            "pr": [],
+            "er": []
+          }
+        },
+        "zones": {
+          "gy": [
+            "CT-024-P1-H",
+            "CT-024-P1-PR",
+            "CT-024-P2-PR",
+            "CT-024-P2-ER"
+          ]
+        },
+        "cardZones": {
+          "CT-024-P2-PR": "GY"
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-094",
+    "title": "4♠ Trap uses Total Pressure identity",
+    "sourceTestId": "CT-094",
+    "purpose": "Reveal 4♠ as a Trap and clear only the declaring opponent PR.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P2",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 12,
+      "startPhaseSequenceByPlayer": {
+        "P1": 5,
+        "P2": 6
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [
+            "CT-094-P1-TRAP"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT-094-P2-H1",
+            "CT-094-P2-H2"
+          ],
+          "pr": [
+            "CT-094-P2-PR"
+          ],
+          "er": [
+            "CT-094-P2-ER"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT-094-P2-H1": {
+          "id": "CT-094-P2-H1",
+          "identity": "6♣",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_HAND",
+          "state": {}
+        },
+        "CT-094-P2-H2": {
+          "id": "CT-094-P2-H2",
+          "identity": "6♦",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_HAND",
+          "state": {}
+        },
+        "CT-094-P2-PR": {
+          "id": "CT-094-P2-PR",
+          "identity": "7♥",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 7
+          }
+        },
+        "CT-094-P1-TRAP": {
+          "id": "CT-094-P1-TRAP",
+          "identity": "4♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_ER",
+          "state": {
+            "faceDownTrap": true,
+            "pointValue": 0
+          }
+        },
+        "CT-094-P2-ER": {
+          "id": "CT-094-P2-ER",
+          "identity": "Q♣",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_ER",
+          "state": {
+            "anchor": true
+          }
+        },
+        "CT-094-DP-01": {
+          "id": "CT-094-DP-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-094-DP-02": {
+          "id": "CT-094-DP-02",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-094-DP-03": {
+          "id": "CT-094-DP-03",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-094-DP-04": {
+          "id": "CT-094-DP-04",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT-094-DP-01",
+          "CT-094-DP-02",
+          "CT-094-DP-03",
+          "CT-094-DP-04"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT094-1",
+        "type": "RESOLVE_PHASE10_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "resolve-total-pressure",
+          "trapCardId": "CT-094-P1-TRAP",
+          "opponentId": "P2"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "er": []
+          },
+          "P2": {
+            "hand": [
+              "CT-094-P2-H1",
+              "CT-094-P2-H2"
+            ],
+            "pr": [],
+            "er": [
+              "CT-094-P2-ER"
+            ]
+          }
+        },
+        "zones": {
+          "gy": [
+            "CT-094-P2-PR",
+            "CT-094-P1-TRAP"
+          ]
+        },
+        "cardZones": {
+          "CT-094-P2-ER": "P2_ER"
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-095",
+    "title": "Undefined Combo recipe is illegal before Combo Breaker",
+    "sourceTestId": "CT-095",
+    "purpose": "Reject an undefined Combo before any hidden Trap is eligible to reveal.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 12,
+      "startPhaseSequenceByPlayer": {
+        "P1": 5,
+        "P2": 6
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT-095-P1-H1",
+            "CT-095-P1-H2"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT-095-P2-TRAP"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT-095-P1-H1": {
+          "id": "CT-095-P1-H1",
+          "identity": "3♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT-095-P1-H2": {
+          "id": "CT-095-P1-H2",
+          "identity": "4♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT-095-P2-TRAP": {
+          "id": "CT-095-P2-TRAP",
+          "identity": "4♥",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "faceDownTrap": true,
+            "pointValue": 0
+          }
+        },
+        "CT-095-DP-01": {
+          "id": "CT-095-DP-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-095-DP-02": {
+          "id": "CT-095-DP-02",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-095-DP-03": {
+          "id": "CT-095-DP-03",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-095-DP-04": {
+          "id": "CT-095-DP-04",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT-095-DP-01",
+          "CT-095-DP-02",
+          "CT-095-DP-03",
+          "CT-095-DP-04"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT095-1",
+        "type": "RESOLVE_PHASE10_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "declare-combo",
+          "sourceCardIds": [
+            "CT-095-P1-H1",
+            "CT-095-P1-H2"
+          ],
+          "initiatorCardId": "CT-095-P1-H1",
+          "recipeDefined": false
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        false
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT-095-P1-H1",
+              "CT-095-P1-H2"
+            ]
+          },
+          "P2": {
+            "pr": [
+              "CT-095-P2-TRAP"
+            ]
+          }
+        },
+        "markers": {
+          "CT-095-P2-TRAP": {
+            "faceDownTrap": true
+          }
+        },
+        "zones": {
+          "gy": []
+        },
+        "stackDepth": 0
+      }
+    }
+  },
+  {
+    "id": "CT-096",
+    "title": "Trap reveal is not an Eight resolving as a play",
+    "sourceTestId": "CT-096",
+    "purpose": "Prevent play-resolution modifiers from firing when an Eight is revealed as a Trap.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 12,
+      "startPhaseSequenceByPlayer": {
+        "P1": 5,
+        "P2": 6
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT-096-P1-TRAP"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT-096-P2-K"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT-096-P1-TRAP": {
+          "id": "CT-096-P1-TRAP",
+          "identity": "8♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "faceDownTrap": true,
+            "pointValue": 0
+          }
+        },
+        "CT-096-P2-K": {
+          "id": "CT-096-P2-K",
+          "identity": "K♣",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 8
+          }
+        },
+        "CT-096-DP-01": {
+          "id": "CT-096-DP-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-096-DP-02": {
+          "id": "CT-096-DP-02",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-096-DP-03": {
+          "id": "CT-096-DP-03",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-096-DP-04": {
+          "id": "CT-096-DP-04",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT-096-DP-01",
+          "CT-096-DP-02",
+          "CT-096-DP-03",
+          "CT-096-DP-04"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT096-1",
+        "type": "RESOLVE_PHASE10_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "reveal-trap-as-effect",
+          "trapCardId": "CT-096-P1-TRAP"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "pr": []
+          },
+          "P2": {
+            "pr": [
+              "CT-096-P2-K"
+            ]
+          }
+        },
+        "zones": {
+          "gy": [
+            "CT-096-P1-TRAP"
+          ]
+        },
+        "cardZones": {
+          "CT-096-P2-K": "P2_PR"
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-097",
+    "title": "Board Lock suppresses Trap trigger",
+    "sourceTestId": "CT-097",
+    "purpose": "Keep an existing eligible Trap hidden and unspent while Board Lock is active.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 12,
+      "startPhaseSequenceByPlayer": {
+        "P1": 5,
+        "P2": 6
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [
+            "CT-097-P2-TRAP"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT-097-P2-TRAP": {
+          "id": "CT-097-P2-TRAP",
+          "identity": "5♠",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_ER",
+          "state": {
+            "faceDownTrap": true,
+            "pointValue": 0
+          }
+        },
+        "CT-097-DP-01": {
+          "id": "CT-097-DP-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-097-DP-02": {
+          "id": "CT-097-DP-02",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-097-DP-03": {
+          "id": "CT-097-DP-03",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-097-DP-04": {
+          "id": "CT-097-DP-04",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT-097-DP-01",
+          "CT-097-DP-02",
+          "CT-097-DP-03",
+          "CT-097-DP-04"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {
+        "phase8": {
+          "boardLock": {
+            "remaining": 1,
+            "activationFullTurnSequence": 11
+          },
+          "suddenDeath": null,
+          "exhausted": null,
+          "voltageSnapshots": {},
+          "voltageUsedThisFT": {}
+        }
+      }
+    },
+    "commands": [
+      {
+        "id": "CT097-1",
+        "type": "RESOLVE_PHASE10_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "check-trigger",
+          "trapCardId": "CT-097-P2-TRAP",
+          "eventKey": "ultra-declared",
+          "qualifyingEvent": true
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        false
+      ],
+      "final": {
+        "playerZones": {
+          "P2": {
+            "er": [
+              "CT-097-P2-TRAP"
+            ]
+          }
+        },
+        "markers": {
+          "CT-097-P2-TRAP": {
+            "faceDownTrap": true
+          }
+        },
+        "zones": {
+          "gy": []
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-098",
+    "title": "Module-3 counter disables a Trap",
+    "sourceTestId": "CT-098",
+    "purpose": "Counter a pending Trap effect, turn it face-down, and attach a public Disable Token.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 12,
+      "startPhaseSequenceByPlayer": {
+        "P1": 5,
+        "P2": 6
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT-098-P1-3"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [
+            "CT-098-P2-TRAP"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT-098-P1-3": {
+          "id": "CT-098-P1-3",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT-098-P2-TRAP": {
+          "id": "CT-098-P2-TRAP",
+          "identity": "4♥",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_ER",
+          "state": {
+            "faceDownTrap": true,
+            "pointValue": 0
+          }
+        },
+        "CT-098-DP-01": {
+          "id": "CT-098-DP-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-098-DP-02": {
+          "id": "CT-098-DP-02",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-098-DP-03": {
+          "id": "CT-098-DP-03",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-098-DP-04": {
+          "id": "CT-098-DP-04",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT-098-DP-01",
+          "CT-098-DP-02",
+          "CT-098-DP-03",
+          "CT-098-DP-04"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT098-1",
+        "type": "RESOLVE_PHASE10_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "module3-counter",
+          "counterCardId": "CT-098-P1-3",
+          "trapCardId": "CT-098-P2-TRAP"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": []
+          },
+          "P2": {
+            "er": [
+              "CT-098-P2-TRAP"
+            ]
+          }
+        },
+        "zones": {
+          "gy": [
+            "CT-098-P1-3"
+          ]
+        },
+        "markers": {
+          "CT-098-P2-TRAP": {
+            "faceDownTrap": true,
+            "disabledTrap": {
+              "counteringPlayerId": "P1",
+              "expiresAfterCompletedFullTurnSequence": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-099",
+    "title": "Disable Token expires after countering player completed FT",
+    "sourceTestId": "CT-099",
+    "purpose": "Remove the public Disable Token at the end of the countering player next completed Full Turn.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "End",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 12,
+      "startPhaseSequenceByPlayer": {
+        "P1": 5,
+        "P2": 6
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [
+            "CT-099-P2-TRAP"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT-099-P2-TRAP": {
+          "id": "CT-099-P2-TRAP",
+          "identity": "4♥",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_ER",
+          "state": {
+            "faceDownTrap": true,
+            "pointValue": 0,
+            "disabledTrap": {
+              "counteringPlayerId": "P1",
+              "expiresAfterCompletedFullTurnSequence": 1
+            }
+          }
+        },
+        "CT-099-DP-01": {
+          "id": "CT-099-DP-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-099-DP-02": {
+          "id": "CT-099-DP-02",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-099-DP-03": {
+          "id": "CT-099-DP-03",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT-099-DP-04": {
+          "id": "CT-099-DP-04",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT-099-DP-01",
+          "CT-099-DP-02",
+          "CT-099-DP-03",
+          "CT-099-DP-04"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {
+        "phase10": {
+          "enabled": true,
+          "triggerUsedThisActiveFT": {},
+          "module3CounterUsedFullTurnSequence": 12,
+          "module3CounterPending": false,
+          "completedFullTurnsByPlayer": {
+            "P1": 0,
+            "P2": 0
+          }
+        }
+      }
+    },
+    "commands": [
+      {
+        "id": "CT099-1",
+        "type": "RESOLVE_PHASE10_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "complete-full-turn",
+          "playerId": "P1"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "playerZones": {
+          "P2": {
+            "er": [
+              "CT-099-P2-TRAP"
+            ]
+          }
+        },
+        "markers": {
+          "CT-099-P2-TRAP": {
+            "faceDownTrap": true
+          }
+        },
+        "absentMarkers": {
+          "CT-099-P2-TRAP": [
+            "disabledTrap"
+          ]
+        },
+        "metadata": {
+          "phase10": {
+            "enabled": true,
+            "triggerUsedThisActiveFT": {},
+            "module3CounterUsedFullTurnSequence": 12,
+            "module3CounterPending": false,
+            "completedFullTurnsByPlayer": {
+              "P1": 1,
+              "P2": 0
+            }
+          }
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,33 @@
+{
+  "status_version": 1,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0-phase2.12.0",
+  "milestone": "Roadmap Phase 12 — BattleRealm",
+  "completed_phases": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "phase12_gate_ids": ["CT-001", "CT-002", "CT-003", "CT-106", "CT-107", "CT-108", "CT-109", "CT-110", "CT-117", "CT-118"],
+  "phase12_unique_fixture_ids": ["CT-001", "CT-002", "CT-003", "CT-106", "CT-107", "CT-108", "CT-110", "CT-117", "CT-118"],
+  "battlerealm_services": [
+    "immutable four-Spec registry and simultaneous selection lock",
+    "per-player Signature and Ultimate use counters",
+    "Beauty Extra Lucky three-use game pool with once-per-Full-Turn enforcement",
+    "single controller-level Calculated Court derived contribution",
+    "Beauty Marriage derived continuous scoring",
+    "Goal floor and absolute Mini-Turn, Ultra, and Rank-10 caps",
+    "reserved advanced-combine rejection",
+    "Bravery Courageous Assault and Hard Jack modifier hooks",
+    "Balance Harmonized Mimic hook",
+    "Beauty Chromatic Ten hook",
+    "Brilliance Mastermind, Goal Shock, and Counter Distortion hooks",
+    "cross-module generated-play modifier preservation"
+  ],
+  "preserved_phase2_11_aggregate": "77509fa7ad58fd001e5052b761b178ac905a6913122dab31a6b6caac8c3176b1",
+  "phase12_aggregate": "d24188478c8b43d71fd00afd55ba5b6d582174b466100e9140fa356e22a7662e",
+  "combined_phase2_12_aggregate": "1496309f836fd3eee52bb69f138f5a76560e2944c93cfd24cc80acf04c634e0d",
+  "scope_note": "Phase 12 is an engine-normalized executable projection of the official BattleRealm gate. Unsupported Spec branches and later module combinations remain fail-closed until their roadmap scope opens.",
+  "next_gate": {
+    "phase": 13,
+    "name": "Time Bomb",
+    "requirements": "Queen Bomb lifecycle, Fuse triggers, all four tracks, Defuse, Action-Phase skips, tapping, control changes, and cross-module scoring"
+  }
+}

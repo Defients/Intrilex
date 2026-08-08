@@ -1,0 +1,557 @@
+{
+  "requests": [
+    {
+      "url": "http://127.0.0.1:59401/",
+      "method": "GET",
+      "requestId": "1D2D28B3094D57D269A0470B09B66F39"
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&display=swap",
+      "method": "GET",
+      "requestId": "24096.2"
+    },
+    {
+      "url": "http://127.0.0.1:59401/styles.8195e88ee617.css",
+      "method": "GET",
+      "requestId": "24096.3"
+    },
+    {
+      "url": "http://127.0.0.1:59401/app.67f00e8ef64c.js",
+      "method": "GET",
+      "requestId": "24096.4"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/match-summaries.ndjson",
+      "method": "GET",
+      "requestId": "24096.8"
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+      "method": "GET",
+      "requestId": "24096.15"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/replay-index.json",
+      "method": "GET",
+      "requestId": "24096.51"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/lab-replay-index.json",
+      "method": "GET",
+      "requestId": "24096.52"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/corpus-analytics.json",
+      "method": "GET",
+      "requestId": "24096.53"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/aggregate.json",
+      "method": "GET",
+      "requestId": "24096.54"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/observatory/analytics.json",
+      "method": "GET",
+      "requestId": "24096.55"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/release/capability-manifest.json",
+      "method": "GET",
+      "requestId": "24096.56"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/release/rank-authority.json",
+      "method": "GET",
+      "requestId": "24096.57"
+    },
+    {
+      "url": "http://127.0.0.1:59401/favicon.ico",
+      "method": "GET",
+      "requestId": "24096.58"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/observatory/rank-anatomy-registry.json",
+      "method": "GET",
+      "requestId": "24096.59"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/lab-replays/public/M-db5607576bcf3b736ffa.json",
+      "method": "GET",
+      "requestId": "24096.60"
+    },
+    {
+      "url": "http://127.0.0.1:59401/play/play.css",
+      "method": "GET",
+      "requestId": "24096.61"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/rulebook.md",
+      "method": "GET",
+      "requestId": "24096.62"
+    },
+    {
+      "url": "http://127.0.0.1:59401/assets/card-art/ac.webp",
+      "method": "GET",
+      "requestId": "24096.63"
+    },
+    {
+      "url": "http://127.0.0.1:59401/assets/card-art/ad.webp",
+      "method": "GET",
+      "requestId": "24096.64"
+    },
+    {
+      "url": "http://127.0.0.1:59401/assets/card-art/ah.webp",
+      "method": "GET",
+      "requestId": "24096.65"
+    },
+    {
+      "url": "http://127.0.0.1:59401/assets/card-art/as.webp",
+      "method": "GET",
+      "requestId": "24096.66"
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7SUc.woff2",
+      "method": "GET",
+      "requestId": "24096.12"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-trace-index.json",
+      "method": "GET",
+      "requestId": "24096.67"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-db5607576bcf3b736ffa.json",
+      "method": "GET",
+      "requestId": "24096.68"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-b0dd67cb0fc8c38d360a.json",
+      "method": "GET",
+      "requestId": "24096.69"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-0c51bfc9af877181fef8.json",
+      "method": "GET",
+      "requestId": "24096.70"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-96f8d6e0671f6b0113e7.json",
+      "method": "GET",
+      "requestId": "24096.71"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-30c7b7fc93bdce116200.json",
+      "method": "GET",
+      "requestId": "24096.72"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-32554c52e72828ec4e65.json",
+      "method": "GET",
+      "requestId": "24096.73"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-9d6b12cca4bdf92bff4c.json",
+      "method": "GET",
+      "requestId": "24096.74"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-d1a23cd84bc78a2f1de1.json",
+      "method": "GET",
+      "requestId": "24096.75"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-624f89fb8bc71556beb0.json",
+      "method": "GET",
+      "requestId": "24096.76"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-a0ed6f03c5863b110f63.json",
+      "method": "GET",
+      "requestId": "24096.77"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-348575694781a826f21d.json",
+      "method": "GET",
+      "requestId": "24096.78"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-b972031865852375adaa.json",
+      "method": "GET",
+      "requestId": "24096.79"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-b5ca80ea2f84b0b1c968.json",
+      "method": "GET",
+      "requestId": "24096.80"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-653957a150e2bbe13efd.json",
+      "method": "GET",
+      "requestId": "24096.81"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-8a09cd80ff1466ddd042.json",
+      "method": "GET",
+      "requestId": "24096.82"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-ba6b3f739cb83ce568b4.json",
+      "method": "GET",
+      "requestId": "24096.83"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-13035780fb6e9e2f1a22.json",
+      "method": "GET",
+      "requestId": "24096.84"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-1ca33d2d2d48a983db4b.json",
+      "method": "GET",
+      "requestId": "24096.85"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-ccfa8161e4a2a20a0d29.json",
+      "method": "GET",
+      "requestId": "24096.86"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-3f690a23544e3a5a151b.json",
+      "method": "GET",
+      "requestId": "24096.87"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-3cb26d19e3fc6947ff94.json",
+      "method": "GET",
+      "requestId": "24096.88"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-78ef191b510e1ed753d3.json",
+      "method": "GET",
+      "requestId": "24096.89"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-9680ef5649d09a8ca5df.json",
+      "method": "GET",
+      "requestId": "24096.90"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-0ba5698b7a6a819cd6ac.json",
+      "method": "GET",
+      "requestId": "24096.91"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-e4742667834eae5d28bf.json",
+      "method": "GET",
+      "requestId": "24096.92"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-ffd345581590ac0686c7.json",
+      "method": "GET",
+      "requestId": "24096.93"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-0bf010ae401cee49e3e5.json",
+      "method": "GET",
+      "requestId": "24096.94"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-9f16b0986a688f6f8b2d.json",
+      "method": "GET",
+      "requestId": "24096.95"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-377151b355ce345b328a.json",
+      "method": "GET",
+      "requestId": "24096.96"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-6e64c0549395a2f50b89.json",
+      "method": "GET",
+      "requestId": "24096.97"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-2e89978c2a9446919af9.json",
+      "method": "GET",
+      "requestId": "24096.98"
+    }
+  ],
+  "responses": [
+    {
+      "url": "http://127.0.0.1:59401/",
+      "status": 200,
+      "requestId": "1D2D28B3094D57D269A0470B09B66F39"
+    },
+    {
+      "url": "http://127.0.0.1:59401/styles.8195e88ee617.css",
+      "status": 200,
+      "requestId": "24096.3"
+    },
+    {
+      "url": "http://127.0.0.1:59401/app.67f00e8ef64c.js",
+      "status": 200,
+      "requestId": "24096.4"
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&display=swap",
+      "status": 200,
+      "requestId": "24096.2"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/match-summaries.ndjson",
+      "status": 200,
+      "requestId": "24096.8"
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+      "status": 200,
+      "requestId": "24096.15"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/replay-index.json",
+      "status": 200,
+      "requestId": "24096.51"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/aggregate.json",
+      "status": 200,
+      "requestId": "24096.54"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/corpus-analytics.json",
+      "status": 200,
+      "requestId": "24096.53"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/release/capability-manifest.json",
+      "status": 200,
+      "requestId": "24096.56"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/release/rank-authority.json",
+      "status": 200,
+      "requestId": "24096.57"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/lab-replay-index.json",
+      "status": 200,
+      "requestId": "24096.52"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/observatory/analytics.json",
+      "status": 200,
+      "requestId": "24096.55"
+    },
+    {
+      "url": "http://127.0.0.1:59401/favicon.ico",
+      "status": 404,
+      "requestId": "24096.58"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/observatory/rank-anatomy-registry.json",
+      "status": 200,
+      "requestId": "24096.59"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/lab-replays/public/M-db5607576bcf3b736ffa.json",
+      "status": 200,
+      "requestId": "24096.60"
+    },
+    {
+      "url": "http://127.0.0.1:59401/play/play.css",
+      "status": 200,
+      "requestId": "24096.61"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/rulebook.md",
+      "status": 200,
+      "requestId": "24096.62"
+    },
+    {
+      "url": "http://127.0.0.1:59401/assets/card-art/ac.webp",
+      "status": 200,
+      "requestId": "24096.63"
+    },
+    {
+      "url": "http://127.0.0.1:59401/assets/card-art/ah.webp",
+      "status": 200,
+      "requestId": "24096.65"
+    },
+    {
+      "url": "http://127.0.0.1:59401/assets/card-art/ad.webp",
+      "status": 200,
+      "requestId": "24096.64"
+    },
+    {
+      "url": "http://127.0.0.1:59401/assets/card-art/as.webp",
+      "status": 200,
+      "requestId": "24096.66"
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7SUc.woff2",
+      "status": 200,
+      "requestId": "24096.12"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-trace-index.json",
+      "status": 200,
+      "requestId": "24096.67"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-0c51bfc9af877181fef8.json",
+      "status": 200,
+      "requestId": "24096.70"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-30c7b7fc93bdce116200.json",
+      "status": 200,
+      "requestId": "24096.72"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-96f8d6e0671f6b0113e7.json",
+      "status": 200,
+      "requestId": "24096.71"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-db5607576bcf3b736ffa.json",
+      "status": 200,
+      "requestId": "24096.68"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-b0dd67cb0fc8c38d360a.json",
+      "status": 200,
+      "requestId": "24096.69"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-32554c52e72828ec4e65.json",
+      "status": 200,
+      "requestId": "24096.73"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-9d6b12cca4bdf92bff4c.json",
+      "status": 200,
+      "requestId": "24096.74"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-624f89fb8bc71556beb0.json",
+      "status": 200,
+      "requestId": "24096.76"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-d1a23cd84bc78a2f1de1.json",
+      "status": 200,
+      "requestId": "24096.75"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-a0ed6f03c5863b110f63.json",
+      "status": 200,
+      "requestId": "24096.77"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-348575694781a826f21d.json",
+      "status": 200,
+      "requestId": "24096.78"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-b972031865852375adaa.json",
+      "status": 200,
+      "requestId": "24096.79"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-653957a150e2bbe13efd.json",
+      "status": 200,
+      "requestId": "24096.81"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-b5ca80ea2f84b0b1c968.json",
+      "status": 200,
+      "requestId": "24096.80"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-8a09cd80ff1466ddd042.json",
+      "status": 200,
+      "requestId": "24096.82"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-ba6b3f739cb83ce568b4.json",
+      "status": 200,
+      "requestId": "24096.83"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-13035780fb6e9e2f1a22.json",
+      "status": 200,
+      "requestId": "24096.84"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-1ca33d2d2d48a983db4b.json",
+      "status": 200,
+      "requestId": "24096.85"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-ccfa8161e4a2a20a0d29.json",
+      "status": 200,
+      "requestId": "24096.86"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-3f690a23544e3a5a151b.json",
+      "status": 200,
+      "requestId": "24096.87"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-3cb26d19e3fc6947ff94.json",
+      "status": 200,
+      "requestId": "24096.88"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-78ef191b510e1ed753d3.json",
+      "status": 200,
+      "requestId": "24096.89"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-e4742667834eae5d28bf.json",
+      "status": 200,
+      "requestId": "24096.92"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-0ba5698b7a6a819cd6ac.json",
+      "status": 200,
+      "requestId": "24096.91"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-ffd345581590ac0686c7.json",
+      "status": 200,
+      "requestId": "24096.93"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-9680ef5649d09a8ca5df.json",
+      "status": 200,
+      "requestId": "24096.90"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-0bf010ae401cee49e3e5.json",
+      "status": 200,
+      "requestId": "24096.94"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-9f16b0986a688f6f8b2d.json",
+      "status": 200,
+      "requestId": "24096.95"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-377151b355ce345b328a.json",
+      "status": 200,
+      "requestId": "24096.96"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-6e64c0549395a2f50b89.json",
+      "status": 200,
+      "requestId": "24096.97"
+    },
+    {
+      "url": "http://127.0.0.1:59401/data/autonomy/decision-traces/M-2e89978c2a9446919af9.json",
+      "status": 200,
+      "requestId": "24096.98"
+    }
+  ],
+  "failures": []
+}

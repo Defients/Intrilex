@@ -1,0 +1,56 @@
+
+> intrilex-simulation-lab@0.19.0 build H:\myProjects\Intrilex-dev2
+> pnpm run engine-patch:build && node scripts/build.mjs
+
+
+> intrilex-simulation-lab@0.19.0 engine-patch:build H:\myProjects\Intrilex-dev2
+> node scripts/build-engine-patch.mjs
+
+ENGINE PATCH BUILD PASS: H:\myProjects\Intrilex-dev2\runtime\autonomy-engine-dist
+CAPABILITY MANIFEST PASS: 42d454eecd795c696877d070b016a8187eb9ac6028f2aa743f3f83995fe7177f
+generate-version: wrote Node version to H:\myProjects\Intrilex-dev2\packages\shared\src\version.mjs (v0.19.0)
+generate-version: wrote browser version to H:\myProjects\Intrilex-dev2\apps\lab-web\src\version.js (v0.19.0)
+DATA PASS: verified=121; aggregate=343189487750e437df6784f0519590243d3fc465c31072ad977642a453fe03c8
+REPLAY RESUME PASS: M-db5607576bcf3b736ffa
+REPLAY RESUME PASS: M-b0dd67cb0fc8c38d360a
+REPLAY RESUME PASS: M-0c51bfc9af877181fef8
+REPLAY RESUME PASS: M-96f8d6e0671f6b0113e7
+REPLAY RESUME PASS: M-30c7b7fc93bdce116200
+REPLAY RESUME PASS: M-32554c52e72828ec4e65
+REPLAY RESUME PASS: M-9d6b12cca4bdf92bff4c
+REPLAY RESUME PASS: M-d1a23cd84bc78a2f1de1
+REPLAY RESUME PASS: M-624f89fb8bc71556beb0
+REPLAY RESUME PASS: M-a0ed6f03c5863b110f63
+REPLAY RESUME PASS: M-348575694781a826f21d
+REPLAY RESUME PASS: M-b972031865852375adaa
+REPLAY RESUME PASS: M-b5ca80ea2f84b0b1c968
+REPLAY RESUME PASS: M-653957a150e2bbe13efd
+REPLAY RESUME PASS: M-8a09cd80ff1466ddd042
+REPLAY RESUME PASS: M-ba6b3f739cb83ce568b4
+REPLAY RESUME PASS: M-13035780fb6e9e2f1a22
+REPLAY RESUME PASS: M-1ca33d2d2d48a983db4b
+REPLAY RESUME PASS: M-ccfa8161e4a2a20a0d29
+REPLAY RESUME PASS: M-3f690a23544e3a5a151b
+REPLAY RESUME PASS: M-3cb26d19e3fc6947ff94
+REPLAY RESUME PASS: M-78ef191b510e1ed753d3
+REPLAY RESUME PASS: M-9680ef5649d09a8ca5df
+REPLAY RESUME PASS: M-0ba5698b7a6a819cd6ac
+REPLAY RESUME PASS: M-e4742667834eae5d28bf
+REPLAY RESUME PASS: M-ffd345581590ac0686c7
+REPLAY RESUME PASS: M-0bf010ae401cee49e3e5
+REPLAY RESUME PASS: M-9f16b0986a688f6f8b2d
+REPLAY RESUME PASS: M-377151b355ce345b328a
+REPLAY RESUME PASS: M-6e64c0549395a2f50b89
+REPLAY RESUME PASS: M-2e89978c2a9446919af9
+ADVANCED CORE REPLAY ARTIFACTS PASS: 31
+RANK ANATOMY REGISTRY PASS: ranks=15; spadesVariants=13; superEffects=9; hash=9c9a77a0611f0f3a
+VARIANT ANALYTICS PASS: variants=59; metrics=["schemaVersion","telemetrySchemaVersion","profileId","variantKeys","entities","participantIds","variantMetrics","perParticipantVariantMetrics","variantPower","confidence","synergies","sensitivity","rankComparisons","perProfile","perPolicyMetrics","perSeatMetrics","perFirstPlayerMetrics","metricRegistry","metricRegistryHash","variantRegistry","aggregateHash"]
+RANK ANALYTICS PASS: rankPower=7 ranks; swapMatrix=15 entries
+OBSERVATORY ANALYTICS PASS: matches=100; detailed=12; mechanics=130; synergies=193; hash=85f0530e6bf95952d75457e532180b78fb5d433a2cf31a9fbfd64ad84e72a0f9
+EXTRACT JSON PASS: sample-data/observatory/extract.json; hash=898bbdf1f065f0c4652ad7fd326699ec41fddee511a8ed5a0eb1b7b18af79781
+EXTRACT MARKDOWN PASS: sample-data/observatory/extract.md
+BUILD PASS: H:\myProjects\Intrilex-dev2\apps\lab-web\dist; browserModules=29; certifiedReplays=121; rankPower=[15 ranks, ladder 15 entries]
+bundle: updated index.html with hashed asset references
+bundle: wrote app.e12c5a365f2b.js (3491.4 KB)
+bundle: wrote styles.877d9c775a0d.css (79.7 KB)
+bundle: manifest at BUNDLE_MANIFEST.json

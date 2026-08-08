@@ -1,0 +1,118 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-038",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT038-C1": {
+        "controllerId": "P1",
+        "id": "CT038-C1",
+        "identity": "10♦",
+        "originalOwnerId": "P1",
+        "state": {
+          "exileBound": true,
+          "playedForEffect": true,
+          "pointValue": 10
+        },
+        "zone": "P1_PR"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT038-C1"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "actorId": "P2",
+      "cardId": "CT038-C1",
+      "destination": "GY",
+      "id": "CT038-1",
+      "type": "MOVE_CARD"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT038-1",
+      "id": "EV-000001",
+      "payload": {
+        "actualDestination": "EXILE",
+        "cardId": "CT038-C1",
+        "controllerId": "P1",
+        "from": "P1_PR",
+        "requestedDestination": "GY"
+      },
+      "previousStateHash": "2b4e81b3fcd15aa3b0338e6b1f4aa8c35111307a33ecbd4f1e50c1d9ac60803c",
+      "sequence": 1,
+      "stateHash": "5c622191d5d8a6f723662e56ae585536be0c23e8f50c54a5525b60b33017cebc",
+      "type": "CARD_MOVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "2b4e81b3fcd15aa3b0338e6b1f4aa8c35111307a33ecbd4f1e50c1d9ac60803c",
+  "finalStateHash": "5c622191d5d8a6f723662e56ae585536be0c23e8f50c54a5525b60b33017cebc",
+  "eventLogHash": "2fe251300b6da311cd17674689ed955d028040e9a55c07efa271d5b4c1805c40"
+}

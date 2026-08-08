@@ -1,0 +1,169 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase12-battlerealm.json",
+    "fixtures/phase11-multiplayer-teams.json#CT-109"
+  ],
+  "fixtureCount": 10,
+  "repeatCount": 7,
+  "passed": 10,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-001",
+      "title": "Calculated Court adds one controller-level bonus to one Q♥ Time Bomb",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "be0591764c76a6a52050e6c7da77505d7e2b436e0ea238927d03f934971d5045",
+      "finalStateHash": "2dc30fa06b8d786a5b4c692dc60df0642ea1f6d4f52059a5fbd610332cb0f680",
+      "eventLogHash": "b00f15da86d65c53701b0a7c5841bf99c756ff42160ff11e368db94c0d1fc1b7",
+      "replayHash": "54173077b14396ac3222cb5c1350c1c70427668987615579ed1cda2ee8998a2a",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-002",
+      "title": "Calculated Court uses one total bonus for two Queens",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "e42e5e0caa8a01258526d43610112b71e9ac8df54d05dd268225bee46ded5f5a",
+      "finalStateHash": "bb1a585959a7af68c71bb4a087553050bf2581ff3c62e3e51f10169623140c40",
+      "eventLogHash": "f52c66aae35058bdbd65d2c9c98f23e1a331283b7ce64043316a61ceb1916f57",
+      "replayHash": "cddb226ba3624de46f560cdce1140b8861b4980bc24731df4d40ba9f1f7cacd2",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-003",
+      "title": "Tapped Time Bomb receives no Calculated Court contribution",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "767ec4b48abb236c7152e4ad877b0f6492fbda9495d703d7a07d1e8f9a5e287d",
+      "finalStateHash": "281d2f3358d5bcdd823af65b465cbbe866b8db9a458c53c9ef2abb2efb557ce7",
+      "eventLogHash": "9a9ab612405173afa4e35db0dea1eafc9ecf3df8fe500061795b227b62f2738c",
+      "replayHash": "2e04a0699b2cff7f0ac36017b9d31e0998d0c44071e2968805d3257581cba143",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-106",
+      "title": "Courageous Assault uses Interrupt timing without an inherited turn tax",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "022f6420efc52acc6a745bf7b792a57025b3282e7df48d8d40f87d26cf2f194a",
+      "finalStateHash": "860883fe72f40723f3b8bcf39443cf8c0657d248f73f01a9ff9da792d2a63ee6",
+      "eventLogHash": "e4f9c4c70879149f18b5ce2a1cb487778f579640f2b8f548b7debce416f3f3c8",
+      "replayHash": "df7ce40bdf2cd5fc24898510de2fcdef04965d35b155a849e9039e1e324f5a73",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-107",
+      "title": "Extra Lucky enforces finite uses and once-per-FT timing",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "d2ef37b9c08a33e64d3eff2148147b6f499846dff50a72bc5c5c61fc28d3554a",
+      "finalStateHash": "9ab26fbd8f803e0eb4bcec022c70d06f488ed200c52839ad821dac34d6d2d631",
+      "eventLogHash": "3f70c5b2029d715bf3de3eefaed5c5cd2dc97d56fd8cd90c221f633b4315d8e4",
+      "replayHash": "ab6b055ae5b27a67b3de6628d13592413ee207e9aaca6554512abd207eda2498",
+      "accepted": [
+        true,
+        true,
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-108",
+      "title": "BattleRealm cannot exceed Core caps or activate reserved combines",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "9d4bfc7a0b98376944ea4ff70032ee8afdedba9cade35faf92ca0540e397c45a",
+      "finalStateHash": "2127d1848a125d14b8cf17b9f07eca70fbc1b00b549ea24fd339af2f060b845f",
+      "eventLogHash": "fed5406b6953aef6ab1e0f9e5cb8d8314e12217ba206ee206bd6e06c700d5585",
+      "replayHash": "d53d7fe58121cf5dabdf9258abaa60b6ab4277dcc1e5b4c30d7a00f6416e0f68",
+      "accepted": [
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-109",
+      "title": "Multiplayer Source Intercept rebinds controller-relative text",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "08aee0b1e90a83254957c7f87f337855c0ed6f809e9ad127569328f2277810fe",
+      "finalStateHash": "34973f711c204bc68bd66cb08b574eeda6fc02683be039166d244ee3d7db607b",
+      "eventLogHash": "88abe8f6dff51e2c9d6c652b0a9fa93f353ff34e2256fa7cb298e1bf31c4f385",
+      "replayHash": "b46538b075974a302d31aa6607eda64a4f5fd5213730fdcdeb7d96e95f3bbf5a",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-110",
+      "title": "BattleRealm-era multiplayer drafting remains self-free and cyclic",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "41e840988a0cef73b2cef4e5abefa7c0da2c0788d2bc002b939163ca859a13ea",
+      "finalStateHash": "3fe62ce3c5ffed40d73506c5c60f305da06215de31d8dba70304fbf647ee0a46",
+      "eventLogHash": "e53dd70c296223b40bdd92716f34c55c0ae64afd7d60cdfb0743d4b4c9c53e1a",
+      "replayHash": "e8c131779e23e77ebd8c7bb7f525969671394e033b5e7d96b61d3e15ab7cc13c",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-117",
+      "title": "BattleRealm plus Trap preserves intercepted play properties",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "29dab4c63459dafc82588b36fda379c47385fbea8e3db6d9b7acb7d0648c7687",
+      "finalStateHash": "ee37f687dd4b29e4c010cb893632e9123cc724184c2c152b2bf385ab31a56537",
+      "eventLogHash": "599177d223d58c951fbdfb6cb4b02bf01aa0a905b32610649b0e8525a3f9ea07",
+      "replayHash": "fc2942f7d6c5645a9b44985fb892bf2e3912a162bc9fab8ded05d8a2fe56b56f",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-118",
+      "title": "Brilliance plus Time Bomb adds one signed controller bonus",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "3c16038d942b5b7003fbab685fd8ac594d934bdb3fe5a495a3bae7b024871c56",
+      "finalStateHash": "27d9e9dfb356e0252d648f98c3f40163574e89f29bbbbf7fc0a7085b932002d9",
+      "eventLogHash": "9c5efadf7fba3a06bcf2a7abc9a205524daea9011d9e7644715197b0805b57eb",
+      "replayHash": "d6a69bca21fe64728dbd146dfab4baccd040a9c458afe4411243a89e7a7a7036",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "86ab0c68b7bf0e75cc1bf6c2ed6a683444d5d9cfe5f18240883a586b2bddc734"
+}

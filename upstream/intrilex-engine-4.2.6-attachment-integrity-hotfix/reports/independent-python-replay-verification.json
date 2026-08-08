@@ -1,0 +1,12 @@
+{
+  "verdict": "PASS",
+  "runtime": "Python 3.13.5",
+  "algorithm": "independent canonical-hash/checkpoint verifier v1",
+  "authorizedReplayCount": 121,
+  "publicReplayCount": 121,
+  "verifiedPairCount": 121,
+  "failureCount": 0,
+  "failures": [],
+  "corpusHash": "d998a1a9355be3a909b91ce6e4c1026ded373dd207a0f1145908975d887b1570",
+  "aggregateHash": "60fa842b90024a6d5f51eb7e114347eb024f7b7a6f34016a2f80a8c46de47da3"
+}

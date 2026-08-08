@@ -1,0 +1,310 @@
+{
+  "verdict": "PASS",
+  "checks": [
+    {
+      "name": "exists:README.md",
+      "status": "PASS",
+      "detail": "1163 bytes"
+    },
+    {
+      "name": "exists:package.json",
+      "status": "PASS",
+      "detail": "2364 bytes"
+    },
+    {
+      "name": "exists:tsconfig.json",
+      "status": "PASS",
+      "detail": "581 bytes"
+    },
+    {
+      "name": "exists:src/engine.ts",
+      "status": "PASS",
+      "detail": "32682 bytes"
+    },
+    {
+      "name": "exists:src/phase20.ts",
+      "status": "PASS",
+      "detail": "6782 bytes"
+    },
+    {
+      "name": "exists:src/replay.ts",
+      "status": "PASS",
+      "detail": "2410 bytes"
+    },
+    {
+      "name": "exists:src/phase16.ts",
+      "status": "PASS",
+      "detail": "9124 bytes"
+    },
+    {
+      "name": "exists:src/phase17.ts",
+      "status": "PASS",
+      "detail": "6200 bytes"
+    },
+    {
+      "name": "exists:src/phase18.ts",
+      "status": "PASS",
+      "detail": "7329 bytes"
+    },
+    {
+      "name": "exists:src/simulation.ts",
+      "status": "PASS",
+      "detail": "12772 bytes"
+    },
+    {
+      "name": "exists:src/certification.ts",
+      "status": "PASS",
+      "detail": "7686 bytes"
+    },
+    {
+      "name": "exists:tools/independent_replay_verifier.py",
+      "status": "PASS",
+      "detail": "7351 bytes"
+    },
+    {
+      "name": "exists:fixtures/phase16-rng-vectors.json",
+      "status": "PASS",
+      "detail": "1188 bytes"
+    },
+    {
+      "name": "exists:fixtures/phase20-canonical-closure.json",
+      "status": "PASS",
+      "detail": "13440 bytes"
+    },
+    {
+      "name": "exists:docs/INTRILEX_v4.1_COMPLETE_PLAYER_RULEBOOK.md",
+      "status": "PASS",
+      "detail": "115747 bytes"
+    },
+    {
+      "name": "exists:canonical/INTRILEX_v4.1_COMPLETE_PLAYER_RULEBOOK.md",
+      "status": "PASS",
+      "detail": "115747 bytes"
+    },
+    {
+      "name": "exists:docs/REPLAY_FORMAT.md",
+      "status": "PASS",
+      "detail": "922 bytes"
+    },
+    {
+      "name": "exists:docs/JUDGE_TOOLS.md",
+      "status": "PASS",
+      "detail": "840 bytes"
+    },
+    {
+      "name": "exists:docs/MODULE_INTEGRATION.md",
+      "status": "PASS",
+      "detail": "957 bytes"
+    },
+    {
+      "name": "exists:docs/CANONICAL_FIXTURE_PROVENANCE.md",
+      "status": "PASS",
+      "detail": "1525 bytes"
+    },
+    {
+      "name": "exists:docs/BALANCE_SIMULATION.md",
+      "status": "PASS",
+      "detail": "1756 bytes"
+    },
+    {
+      "name": "exists:docs/FINAL_RELEASE_CERTIFICATION.md",
+      "status": "PASS",
+      "detail": "1557 bytes"
+    },
+    {
+      "name": "exists:docs/ROADMAP_COMPLETION_STATUS.md",
+      "status": "PASS",
+      "detail": "1256 bytes"
+    },
+    {
+      "name": "exists:canonical/INTRILEX_v4.1_CANON_LOCK.json",
+      "status": "PASS",
+      "detail": "2886 bytes"
+    },
+    {
+      "name": "exists:canonical/IMPLEMENTATION_STATUS_PHASE_16.json",
+      "status": "PASS",
+      "detail": "714 bytes"
+    },
+    {
+      "name": "exists:canonical/IMPLEMENTATION_STATUS_PHASE_17.json",
+      "status": "PASS",
+      "detail": "666 bytes"
+    },
+    {
+      "name": "exists:canonical/IMPLEMENTATION_STATUS_PHASE_18.json",
+      "status": "PASS",
+      "detail": "816 bytes"
+    },
+    {
+      "name": "exists:canonical/IMPLEMENTATION_STATUS_PHASE_19.json",
+      "status": "PASS",
+      "detail": "1051 bytes"
+    },
+    {
+      "name": "exists:canonical/IMPLEMENTATION_STATUS_PHASE_20.json",
+      "status": "PASS",
+      "detail": "1029 bytes"
+    },
+    {
+      "name": "exists:reports/conformance-report.json",
+      "status": "PASS",
+      "detail": "73378 bytes"
+    },
+    {
+      "name": "exists:reports/phase2-18-regression-report.json",
+      "status": "PASS",
+      "detail": "70391 bytes"
+    },
+    {
+      "name": "exists:reports/phase20-canonical-closure-report.json",
+      "status": "PASS",
+      "detail": "3292 bytes"
+    },
+    {
+      "name": "exists:reports/phase16-replay-serialization-rng-report.json",
+      "status": "PASS",
+      "detail": "2715 bytes"
+    },
+    {
+      "name": "exists:reports/phase17-judge-tools-report.json",
+      "status": "PASS",
+      "detail": "5812 bytes"
+    },
+    {
+      "name": "exists:reports/phase18-integration-report.json",
+      "status": "PASS",
+      "detail": "9531 bytes"
+    },
+    {
+      "name": "exists:reports/phase19-balance-simulation-report.json",
+      "status": "PASS",
+      "detail": "39109 bytes"
+    },
+    {
+      "name": "exists:reports/independent-python-replay-verification.json",
+      "status": "PASS",
+      "detail": "420 bytes"
+    },
+    {
+      "name": "exists:reports/final-release-certification.json",
+      "status": "PASS",
+      "detail": "1575 bytes"
+    },
+    {
+      "name": "exists:reports/BUILD_PROOF.md",
+      "status": "PASS",
+      "detail": "973 bytes"
+    },
+    {
+      "name": "exists:HOTFIX_NOTICE_v4.1.1_INTERRUPT_TIMING.md",
+      "status": "PASS",
+      "detail": "1059 bytes"
+    },
+    {
+      "name": "exists:canonical/INTRILEX_v4.1.1_INTERRUPT_TIMING_HOTFIX.json",
+      "status": "PASS",
+      "detail": "666 bytes"
+    },
+    {
+      "name": "package-rules-line-version",
+      "status": "PASS",
+      "detail": "@intrilex/headless-engine@4.2.4; certified-base=4.1.0; rules-authority=4.1.1"
+    },
+    {
+      "name": "ci-gate-shape",
+      "status": "PASS",
+      "detail": "npm run test && npm run conformance && npm run judge && npm run integration && npm run simulate && npm run verify:python && npm run certify && npm run validate"
+    },
+    {
+      "name": "phase2-18-regression-preserved",
+      "status": "PASS",
+      "detail": "fixtures=116; aggregate=e754dfc25e171bdd60a6d41025b42afd3e8120e0ae210c68b02d51d11bfeb211; engine=4.1.0"
+    },
+    {
+      "name": "final-conformance",
+      "status": "PASS",
+      "detail": "fixtures=121; aggregate=8c91e8194e7fa3ab6bbb3eaa6946a97efd70343c36d5e5953ee8e1c0357013df; engine=4.1.0"
+    },
+    {
+      "name": "phase16-gate",
+      "status": "PASS",
+      "detail": "fixtures=4; ids=CT-091,CT-109,CT-116,CT-120; aggregate=2c582b3e3cdfc60cb49605246c6ee4a77badaad8b6a887f4aca1daf3bbfd78c0"
+    },
+    {
+      "name": "phase17-gate",
+      "status": "PASS",
+      "detail": "fixtures=9; ids=CT-005,CT-014,CT-022,CT-024,CT-031,CT-094,CT-097,CT-115,CT-120; aggregate=412dab8f92ec37d31c2063dffaf487ff17f2034c879a12d2591a248dee7e49e2"
+    },
+    {
+      "name": "phase18-gate",
+      "status": "PASS",
+      "detail": "fixtures=15; ids=CT-001,CT-002,CT-003,CT-004,CT-005,CT-014,CT-017,CT-025,CT-089,CT-103,CT-104,CT-105,CT-117,CT-118,CT-119; aggregate=788dc0fa3af805d40c3ad27166a6bc6d9ec2f68d35dfba06d158677e06ae0b7d"
+    },
+    {
+      "name": "phase20-gate",
+      "status": "PASS",
+      "detail": "fixtures=5; ids=CT-013,CT-021,CT-023,CT-034,CT-035; aggregate=36ba5e9f83d3587b38e8d647af76fab532cec9bc7eb98e6d483df084f7952f5a"
+    },
+    {
+      "name": "replay-corpus",
+      "status": "PASS",
+      "detail": "legacy=121+121; certified=121+121; verified=121"
+    },
+    {
+      "name": "integration-matrix",
+      "status": "PASS",
+      "detail": "10/10; 962be61a6a7d044d65b64c4e0f705b0624ecb91f12642b310ebd9a3cb6c72d5d"
+    },
+    {
+      "name": "phase19-simulation",
+      "status": "PASS",
+      "detail": "scenarios=121; matches=10800; deterministic=true; campaign=1883275f3a68356c991217e29b610076313d95595cf2c26515ea44ea93e60fb3"
+    },
+    {
+      "name": "independent-python-runtime",
+      "status": "PASS",
+      "detail": "runtime=Python 3.13.5; pairs=121; failures=0; aggregate=60fa842b90024a6d5f51eb7e114347eb024f7b7a6f34016a2f80a8c46de47da3"
+    },
+    {
+      "name": "final-certification",
+      "status": "PASS",
+      "detail": "replays=121; fuzz=605; source=120/120; missing="
+    },
+    {
+      "name": "fixture-count",
+      "status": "PASS",
+      "detail": "121 executable fixtures"
+    },
+    {
+      "name": "phase16-status-record",
+      "status": "PASS",
+      "detail": "engine=4.1.0; status=complete; phases=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]"
+    },
+    {
+      "name": "phase17-status-record",
+      "status": "PASS",
+      "detail": "engine=4.1.0; status=complete; phases=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]"
+    },
+    {
+      "name": "phase18-status-record",
+      "status": "PASS",
+      "detail": "engine=4.1.0; status=complete; phases=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]"
+    },
+    {
+      "name": "phase19-status-record",
+      "status": "PASS",
+      "detail": "engine=4.1.0; status=complete; phases=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]"
+    },
+    {
+      "name": "phase20-status-record",
+      "status": "PASS",
+      "detail": "engine=4.1.0; status=complete; phases=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]"
+    },
+    {
+      "name": "manifest-generated",
+      "status": "PASS",
+      "detail": "973 payload files; 8b1e85354d77745d8c728ef2b29db0b502c9722ac843e652a4971e4668df4e0e"
+    }
+  ]
+}

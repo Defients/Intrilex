@@ -1,0 +1,243 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-010",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "actorId": "P1",
+      "id": "CT010-C1",
+      "play": {
+        "controllerId": "P1",
+        "instructions": [
+          {
+            "delta": 5,
+            "op": "change-goal",
+            "playerId": "P2"
+          },
+          {
+            "cardIds": [],
+            "op": "discard",
+            "playerId": "P1",
+            "requiredMinimum": 0
+          }
+        ],
+        "kind": "goal-shift-plus-five",
+        "requirements": [],
+        "revalidationClass": "none",
+        "sourceCardIds": [
+          "CT010-9S"
+        ],
+        "sourceDestination": "GY",
+        "tags": [],
+        "targetCardIds": []
+      },
+      "type": "DECLARE_PLAY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT010-C2",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT010-C3",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT010-C4",
+      "type": "RESOLVE_TOP"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT010-C1",
+      "id": "EV-000001",
+      "payload": {
+        "kind": "goal-shift-plus-five",
+        "sourceCardIds": [
+          "CT010-9S"
+        ],
+        "stackItemId": "SI-CT010-C1",
+        "targetCardIds": []
+      },
+      "previousStateHash": "8d41a02f8b23cd309cf031cf22c12df595ec7c5e322c8cc9197b546dee718022",
+      "sequence": 1,
+      "stateHash": "11abd1bcf945b3adabea731c771e2c9d927f21b5d9dd922b2e57e491e77b3b5a",
+      "type": "DECLARATION_COMMITTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT010-C2",
+      "id": "EV-000002",
+      "payload": {
+        "consecutivePasses": 1,
+        "playerId": "P2"
+      },
+      "previousStateHash": "11abd1bcf945b3adabea731c771e2c9d927f21b5d9dd922b2e57e491e77b3b5a",
+      "sequence": 2,
+      "stateHash": "98d058dcc271e1bc6687ddc8d0c56912efbd67ed92dce0267f74aae0533641c6",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT010-C3",
+      "id": "EV-000003",
+      "payload": {
+        "consecutivePasses": 2,
+        "playerId": "P1"
+      },
+      "previousStateHash": "98d058dcc271e1bc6687ddc8d0c56912efbd67ed92dce0267f74aae0533641c6",
+      "sequence": 3,
+      "stateHash": "9368d318a54496c2b8666439949f9774df0c37a1c3e8cdb1fe5044702b5e3b6a",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT010-C3",
+      "id": "EV-000005",
+      "payload": {
+        "reason": "all-players-passed"
+      },
+      "previousStateHash": "9368d318a54496c2b8666439949f9774df0c37a1c3e8cdb1fe5044702b5e3b6a",
+      "sequence": 4,
+      "stateHash": "de7244e416d30817bf9f1a7e72e98d80e24f2994bf237e4af3143012b9c77596",
+      "type": "PRIORITY_CLOSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT010-C4",
+      "id": "EV-000005",
+      "payload": {
+        "kind": "goal-shift-plus-five",
+        "stackItemId": "SI-CT010-C1"
+      },
+      "previousStateHash": "de7244e416d30817bf9f1a7e72e98d80e24f2994bf237e4af3143012b9c77596",
+      "sequence": 5,
+      "stateHash": "6ef7f219af3fe8466b02c7f1c6ce09763a321fdebef7255fde8faf5e993bd81b",
+      "type": "RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT010-C4",
+      "id": "EV-000007",
+      "payload": {
+        "delta": 5,
+        "goal": 26,
+        "playerId": "P2"
+      },
+      "previousStateHash": "6ef7f219af3fe8466b02c7f1c6ce09763a321fdebef7255fde8faf5e993bd81b",
+      "sequence": 6,
+      "stateHash": "f8ff04b59a6722d180cd85cc63f3b9628fe9ea7a78653bae36c44c0385f5aede",
+      "type": "GOAL_CHANGED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT010-C4",
+      "id": "EV-000009",
+      "payload": {
+        "cardIds": [],
+        "playerId": "P1"
+      },
+      "previousStateHash": "f8ff04b59a6722d180cd85cc63f3b9628fe9ea7a78653bae36c44c0385f5aede",
+      "sequence": 7,
+      "stateHash": "c46ab5dfa71372d09dc63454fc579bc6706e4f8b0228890cd0e5c530147882e4",
+      "type": "CARDS_DISCARDED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT010-C4",
+      "id": "EV-000011",
+      "payload": {
+        "stackItemId": "SI-CT010-C1"
+      },
+      "previousStateHash": "c46ab5dfa71372d09dc63454fc579bc6706e4f8b0228890cd0e5c530147882e4",
+      "sequence": 8,
+      "stateHash": "a4d453b0521b9d54a1b0d4d553ceb83ba4d04dd9f759a8bfb77e0ae35acd2533",
+      "type": "STACK_ITEM_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "8d41a02f8b23cd309cf031cf22c12df595ec7c5e322c8cc9197b546dee718022",
+  "finalStateHash": "a4d453b0521b9d54a1b0d4d553ceb83ba4d04dd9f759a8bfb77e0ae35acd2533",
+  "eventLogHash": "57f4a281663d19b93ef71525ecb1e69171bca3a7a29ae67be604adef096742a6"
+}

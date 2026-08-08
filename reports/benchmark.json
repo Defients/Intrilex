@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "4.0.0",
+  "environment": {
+    "node": "v22.14.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "replayVerification": {
+    "workload": {
+      "certifiedReplays": 121,
+      "commands": 285,
+      "events": 373
+    },
+    "durationMs": 259.9258,
+    "verifiedReplaysPerSecond": 465.5174669078637,
+    "commandsPerSecond": 1096.4667608986872,
+    "memoryRssBytes": 49373184
+  },
+  "browserParity": {
+    "status": "PASS",
+    "aggregateHash": "0f38ef8a8b0bb0502937f88f5b678b233328fc9d0a5569bf0a39831ee97c108c",
+    "mainThreadDurationMs": 807,
+    "workerDurationMs": 798,
+    "replayCount": 121
+  },
+  "autonomyExecutions": [
+    {
+      "executionId": "workers-2",
+      "workerCount": 2,
+      "matchCount": 100,
+      "durationMs": 73626,
+      "matchesPerSecond": 1.36,
+      "canonicalResultHash": "7c089f6de736399a9cd74e0db93ae30245e90e216d5a558ee2bdce5e2bc9f975"
+    },
+    {
+      "executionId": "workers-4",
+      "workerCount": 4,
+      "matchCount": 100,
+      "durationMs": 42066,
+      "matchesPerSecond": 2.38,
+      "canonicalResultHash": "7c089f6de736399a9cd74e0db93ae30245e90e216d5a558ee2bdce5e2bc9f975"
+    },
+    {
+      "executionId": "workers-4-clean-rerun",
+      "workerCount": 4,
+      "matchCount": 100,
+      "durationMs": 40381,
+      "matchesPerSecond": 2.48,
+      "canonicalResultHash": "7c089f6de736399a9cd74e0db93ae30245e90e216d5a558ee2bdce5e2bc9f975"
+    }
+  ],
+  "interpretationBoundary": "Replay throughput covers the governing v4.1.2-compatible certified corpus. Campaign throughput covers the engine-owned v4.2.5 core-advanced-authority profile; complete Core, modules, and multiplayer remain outside scope."
+}

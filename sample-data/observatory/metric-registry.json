@@ -1,0 +1,93 @@
+{
+  "win-rate": {
+    "metricId": "win-rate",
+    "version": "4.2.0",
+    "formula": "wins / decisive completed matches",
+    "uncertainty": "Wilson 95% interval",
+    "formulaHash": "ec429969658fee3c08d9cfdec77f90801c757b37bb15a4b401e5fe13c083bef6"
+  },
+  "participant-prevalence": {
+    "metricId": "participant-prevalence",
+    "version": "4.2.0",
+    "formula": "unique participant-match pairs that selected entity ≥1 / all eligible participant-match records",
+    "uncertainty": "Wilson 95% interval",
+    "formulaHash": "380d488d64ae6a91d259fedb79e4f1e1a822dc23946e19564ca2296aa128a08c"
+  },
+  "match-prevalence": {
+    "metricId": "match-prevalence",
+    "version": "4.2.0",
+    "formula": "unique matches in which entity selected ≥1 / all eligible matches",
+    "uncertainty": "Wilson 95% interval",
+    "formulaHash": "afd80665b3e86b9a829493c8dfe00e07fc917858a57aab57b553ad856d0e156b"
+  },
+  "pick-rate-when-legal": {
+    "metricId": "pick-rate-when-legal",
+    "version": "4.2.0",
+    "formula": "selections / distinct legal decision windows",
+    "uncertainty": "Wilson 95% interval; N/A when zero legal opportunities",
+    "formulaHash": "c9b6cb70e5d4248d6234f570c26eb28d7cd6c5de260d6ef3b30949fd3c9e1742"
+  },
+  "selection-frequency": {
+    "metricId": "selection-frequency",
+    "version": "4.2.0",
+    "formula": "total selections / eligible participant-match records",
+    "uncertainty": "descriptive rate",
+    "formulaHash": "d6140b5266e681b5d7d3de5a09e94f8db68f83548c32154b7913221cabb80901"
+  },
+  "resolution-rate": {
+    "metricId": "resolution-rate",
+    "version": "4.2.0",
+    "formula": "resolved declarations / accepted declarations",
+    "uncertainty": "Wilson 95% interval",
+    "formulaHash": "d50cc705225a7c42270b0f2ffe6769ac9872f9546b54ce0aa585c48d0bffc833"
+  },
+  "response-play-rate": {
+    "metricId": "response-play-rate",
+    "version": "4.2.0",
+    "formula": "response plays / lawful response opportunities",
+    "uncertainty": "Wilson 95% interval",
+    "formulaHash": "ad799f7a62e3c512e65005a52c6b336acf858d24f7c00395b8b77b340e6653c9"
+  },
+  "counter-efficiency": {
+    "metricId": "counter-efficiency",
+    "version": "4.2.0",
+    "formula": "opponent value prevented / own card and tempo cost",
+    "uncertainty": "match-clustered deterministic bootstrap",
+    "formulaHash": "804b7710884afcc05130f6ef907cfad293514de6408f4879df56f6524577bc53"
+  },
+  "synergy-interaction": {
+    "metricId": "synergy-interaction",
+    "version": "4.2.0",
+    "formula": "stratified logistic A×B interaction (odds-ratio scale) from four-cohort model",
+    "uncertainty": "Wald CI from inverse-variance pooled SE + BH FDR",
+    "formulaHash": "581889d3af451efa9bfb296049a1e1c0781c80e7e51d8696433ed8fc92c21f8d"
+  },
+  "immediate-point-impact": {
+    "metricId": "immediate-point-impact",
+    "version": "4.2.0",
+    "formula": "sum actor-perspective secured point delta / resolved selections with point data",
+    "uncertainty": "match-clustered deterministic bootstrap",
+    "formulaHash": "6737c3e7f6336d0adce20989d17bb6f271655f2f7ee337c42125d60077cb6f5a"
+  },
+  "raw-win-association": {
+    "metricId": "raw-win-association",
+    "version": "4.2.0",
+    "formula": "P(win|selected) - P(win|not selected)",
+    "uncertainty": "two-proportion z-test CI",
+    "formulaHash": "85105687d6f9ab588142a614296e10a6290cd0a78f51e50eab7618698b48be33"
+  },
+  "adjusted-win-association": {
+    "metricId": "adjusted-win-association",
+    "version": "4.2.0",
+    "formula": "stratified win-rate differential controlling for policy, seat, profile",
+    "uncertainty": "Mantel-Haenszel-style stratified estimator CI",
+    "formulaHash": "b96bd6bef6c4d26d86738e3b6c202595081c8cf64e74b57d497d3c5a4d20ed19"
+  },
+  "policy-fingerprint": {
+    "metricId": "policy-fingerprint",
+    "version": "4.2.0",
+    "formula": "policy event/action count / policy games",
+    "uncertainty": "descriptive; no optimality claim",
+    "formulaHash": "24b168c29d3e7069f9218717ca5ad35a008abb3249c97f4bd0cf6ba3e584f286"
+  }
+}

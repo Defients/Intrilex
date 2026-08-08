@@ -1,0 +1,14 @@
+{
+  "name": "@intrilex/game-ai",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./policy-adapter": "./src/policy-adapter.mjs"
+  },
+  "dependencies": {
+    "@intrilex/policy-sdk": "workspace:*",
+    "@intrilex/policies": "workspace:*",
+    "@intrilex/decision-intelligence": "workspace:*"
+  }
+}

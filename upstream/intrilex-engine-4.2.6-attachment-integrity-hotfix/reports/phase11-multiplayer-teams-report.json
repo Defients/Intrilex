@@ -1,0 +1,148 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase11-multiplayer-teams.json"
+  ],
+  "fixtureCount": 9,
+  "repeatCount": 7,
+  "passed": 9,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-014",
+      "title": "Three-player That's Urz assignment is a complete cycle",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "b9013b1c6c3af6ee801c1a88bed6167848013cc888a85ad6371d5ba168f69a10",
+      "finalStateHash": "bc1bf53266b24ec9e0ff86ac24766ec98e85361be81367e663101dd9c7efab2c",
+      "eventLogHash": "0db2ec1b075391670d36290b571a7761637522b7f1929b8e3892f73206ff5ef4",
+      "replayHash": "30d65827c86bcad06ceaa449315729ad9e2fe4d2ff987c6c4a7c1008f1f49b1f",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-100",
+      "title": "Four-player That's Urz assignment remains bijective",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "41e840988a0cef73b2cef4e5abefa7c0da2c0788d2bc002b939163ca859a13ea",
+      "finalStateHash": "3fe62ce3c5ffed40d73506c5c60f305da06215de31d8dba70304fbf647ee0a46",
+      "eventLogHash": "9be8793e9bd261b7c698e027d932e7648b4fb01c7d0fe4c05583bcf5cea722c9",
+      "replayHash": "a87123f43c3f81983db0c5f3cd413b496b2aa43c13f66d85648ed96c5c6e42ee",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-101",
+      "title": "Three-player FFA setup scales hands and Swap Bar",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "f547ccebe457747b81443b56ec7049d2d124c6968a7446075d55f061fb5e4a05",
+      "finalStateHash": "4fd1d8e2e13f3a502d57c64c78872259ceaa3ee945e160abf05ed8e100bfead8",
+      "eventLogHash": "6aaf598bd2499523e274430e7c8774deb2d11817166a9e59db031508a5ae7583",
+      "replayHash": "27c25bcd15839be79cebe02b336708a85782a2d8faa15c15b2f2879729c1751c",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-102",
+      "title": "Four-player Teams setup alternates teams and scales Swap Bar",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "4e5d28e22384ff80f95a06510d535d14290dc3431e17bd65a98efd3559301002",
+      "finalStateHash": "eb7756d31bc03a185e3fa36861e40aa1f9433a3b37caaae07a4b568319df1f2e",
+      "eventLogHash": "c65ce4e1ad6a08bd394d3a71137d2e97412d384b41cfb6f3a07d020513be2bb5",
+      "replayHash": "ff4f06f4b9b82a071b5eefef73a898394081dbcaf94ae5213e76917d703227ba",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-103",
+      "title": "Four-player Tournament Seed resolves unique registered backups",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "75e8f0d5a65dc99956f0f332d7ffae37e835fe55dbe309389c6c4a8b42b6cece",
+      "finalStateHash": "be032bdec161ce76f5a224fc96dac2e6f299221c2d943a52fc4c24cb68201ff3",
+      "eventLogHash": "5524b13e889e24ac62d7f3067c46dde01eaf487a2323d49e9d65dc1df0ec3cd6",
+      "replayHash": "8561e2f7094bd5ebb9418d9b33d078b521aac6597c7de949b264b4c4f87b4f6e",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-104",
+      "title": "Opponent means Enemy and hostile Ally targeting is illegal",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "2bd329bedacea20e918b92a919258e607bbef21e9769bafe4d8d7802dd723ca8",
+      "finalStateHash": "a9adbefaace74eef0e1ef265a8fe9b6fabc0337c4897d10df6048cc534976b18",
+      "eventLogHash": "338c2f81e0f3d03a3507319b671aadc451e3ce0e9a254518c2366779f56b65a5",
+      "replayHash": "0ff4ab7ef1e367e35e45b4466493c742101ad4cc348c7e0711e29418d2a8ac9a",
+      "accepted": [
+        false,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-105",
+      "title": "Four-player priority requires a full consecutive pass cycle",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "7d39a21264c67d3ca606a4361697143e803c0a16757e3f4627ec5d71a1e6b780",
+      "finalStateHash": "6b01607d55402d17bd530d810a42ccea475d81ee74c8beb5ee89956d3f4fea50",
+      "eventLogHash": "0f2fc729d2a73c0caf4fa31b22e55b2f4baab82655cffa0edaeafb2fbcb8dc79",
+      "replayHash": "e4ce6961b83e17c0584348f3599825c55b6fcec3d1f5a16a3af47a9a90587453",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-109",
+      "title": "Multiplayer Source Intercept rebinds controller-relative text",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "08aee0b1e90a83254957c7f87f337855c0ed6f809e9ad127569328f2277810fe",
+      "finalStateHash": "34973f711c204bc68bd66cb08b574eeda6fc02683be039166d244ee3d7db607b",
+      "eventLogHash": "88abe8f6dff51e2c9d6c652b0a9fa93f353ff34e2256fa7cb298e1bf31c4f385",
+      "replayHash": "b46538b075974a302d31aa6607eda64a4f5fd5213730fdcdeb7d96e95f3bbf5a",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-114",
+      "title": "Team Exhausted compares combined active Anchors before Points",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "c2c7a2f1cf1b0e8d74d567788a46b3ab6f29d0f8cb36f2af6f43a4460da48688",
+      "finalStateHash": "2d06a0547880a6d975193bf4535dbca6d05c6003b11e3188b30aa1126bf9217d",
+      "eventLogHash": "8ce66ba32cfc3e8572f514eadfa5315fd2f020477f1ddd6f4e9e11709676d453",
+      "replayHash": "0cc8ec7b2bced2a194a20b1a9fcb837bb1eee91fe09c0f3be17b294c01a4c190",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "d9f6da6572d80033406965865b1a4be11370ed5d68536f8b6f348b0ef51f311d"
+}

@@ -1,0 +1,185 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-003",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT003-QH": {
+        "controllerId": "P1",
+        "id": "CT003-QH",
+        "identity": "Q♥",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": -2,
+          "tapped": true,
+          "timeBombStage": 1
+        },
+        "zone": "P1_PR"
+      },
+      "CT003-QS": {
+        "controllerId": "P1",
+        "id": "CT003-QS",
+        "identity": "Q♠",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": 0
+        },
+        "zone": "P1_ER"
+      }
+    },
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [
+          "CT003-QS"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT003-QH"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-battle-realm",
+        "specs": {
+          "P1": "Brilliance",
+          "P2": "Beauty"
+        }
+      },
+      "actorId": "P1",
+      "id": "CT003-1",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "kind": "recalculate-continuous-bonuses"
+      },
+      "actorId": "P1",
+      "id": "CT003-2",
+      "type": "RESOLVE_PHASE12_ACTION"
+    }
+  ],
+  "accepted": [
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT003-1",
+      "id": "EV-000001",
+      "payload": {
+        "selectedSpecByPlayer": {
+          "P1": "Brilliance",
+          "P2": "Beauty"
+        }
+      },
+      "previousStateHash": "767ec4b48abb236c7152e4ad877b0f6492fbda9495d703d7a07d1e8f9a5e287d",
+      "sequence": 1,
+      "stateHash": "06d955036273d7e5d4f250b3604a79fe2140e70009316ac601dd99d52420b713",
+      "type": "BATTLEREALM_SPECS_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT003-2",
+      "id": "EV-000002",
+      "payload": {
+        "continuousBonusByPlayer": {
+          "P1": 2,
+          "P2": 0
+        }
+      },
+      "previousStateHash": "06d955036273d7e5d4f250b3604a79fe2140e70009316ac601dd99d52420b713",
+      "sequence": 2,
+      "stateHash": "281d2f3358d5bcdd823af65b465cbbe866b8db9a458c53c9ef2abb2efb557ce7",
+      "type": "BATTLEREALM_CONTINUOUS_BONUSES_RECALCULATED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT003-1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "3292eee4dee13585d7a68e43a573ac3e0395c46a1b0af0e6b585dd1c8ca09ae2"
+    },
+    {
+      "commandIndex": 1,
+      "commandId": "CT003-2",
+      "accepted": true,
+      "eventStartIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "e36c250b905466345642af427721ef8bfc207b02cd5680093872d54f3ee04883"
+    }
+  ],
+  "publicEventLogHash": "9a9ab612405173afa4e35db0dea1eafc9ecf3df8fe500061795b227b62f2738c",
+  "publicContentHash": "e9bd6906f5ff000068f1f1d2a1ea8a4d8b4cb6153b2ec4bc36fcc14e5ef275a9"
+}

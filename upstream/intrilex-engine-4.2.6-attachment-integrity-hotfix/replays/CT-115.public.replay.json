@@ -1,0 +1,689 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-115",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-003": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-003",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-004": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-004",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-005": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-005",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-006": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-006",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-007": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-007",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-008": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-008",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-009": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-009",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-010": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-010",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-011": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-011",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-012": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-012",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-013": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-013",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-014": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-014",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-015": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-015",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-016": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-016",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-017": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-017",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-018": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-018",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-019": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-019",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-020": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-020",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-021": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-021",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-022": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-022",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-023": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-023",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-024": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-024",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-025": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-025",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "OPAQUE-HIDDEN-CARD-005",
+        "OPAQUE-HIDDEN-CARD-006",
+        "OPAQUE-HIDDEN-CARD-007",
+        "OPAQUE-HIDDEN-CARD-008",
+        "OPAQUE-HIDDEN-CARD-009",
+        "OPAQUE-HIDDEN-CARD-010",
+        "OPAQUE-HIDDEN-CARD-011",
+        "OPAQUE-HIDDEN-CARD-012",
+        "OPAQUE-HIDDEN-CARD-013",
+        "OPAQUE-HIDDEN-CARD-014",
+        "OPAQUE-HIDDEN-CARD-015",
+        "OPAQUE-HIDDEN-CARD-016",
+        "OPAQUE-HIDDEN-CARD-017",
+        "OPAQUE-HIDDEN-CARD-018",
+        "OPAQUE-HIDDEN-CARD-019",
+        "OPAQUE-HIDDEN-CARD-020",
+        "OPAQUE-HIDDEN-CARD-021",
+        "OPAQUE-HIDDEN-CARD-022",
+        "OPAQUE-HIDDEN-CARD-023",
+        "OPAQUE-HIDDEN-CARD-024",
+        "OPAQUE-HIDDEN-CARD-025",
+        "OPAQUE-HIDDEN-CARD-001",
+        "OPAQUE-HIDDEN-CARD-002",
+        "OPAQUE-HIDDEN-CARD-003",
+        "OPAQUE-HIDDEN-CARD-004"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-deffy",
+        "subMode": "classic",
+        "turnOrder": [
+          "P1",
+          "P2"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT115-1",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "faceDownCardIds": [
+          "CT115-P03",
+          "CT115-P04",
+          "CT115-P06",
+          "CT115-P20",
+          "CT115-P21"
+        ],
+        "kind": "initialize-draft-pool",
+        "poolCardIds": [
+          "CT115-P01",
+          "CT115-P02",
+          "CT115-P03",
+          "CT115-P04",
+          "CT115-P05",
+          "CT115-P06",
+          "CT115-P07",
+          "CT115-P08",
+          "CT115-P09",
+          "CT115-P10",
+          "CT115-P11",
+          "CT115-P12",
+          "CT115-P13",
+          "CT115-P14",
+          "CT115-P15",
+          "CT115-P16",
+          "CT115-P17",
+          "CT115-P18",
+          "CT115-P19",
+          "CT115-P20",
+          "CT115-P21"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT115-2",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P01",
+        "drafterId": "P1",
+        "kind": "draft-pick"
+      },
+      "actorId": "P1",
+      "id": "CT115-3",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P02",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-4",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P03",
+        "drafterId": "P1",
+        "kind": "draft-pick"
+      },
+      "actorId": "P1",
+      "id": "CT115-5",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P04",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-6",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P05",
+        "drafterId": "P1",
+        "kind": "draft-pick"
+      },
+      "actorId": "P1",
+      "id": "CT115-7",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P06",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-8",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P07",
+        "drafterId": "P1",
+        "kind": "draft-pick"
+      },
+      "actorId": "P1",
+      "id": "CT115-9",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P08",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-10",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P09",
+        "drafterId": "P1",
+        "kind": "draft-pick"
+      },
+      "actorId": "P1",
+      "id": "CT115-11",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P10",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-12",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P11",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-13",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "kind": "complete-draft"
+      },
+      "actorId": "P1",
+      "id": "CT115-14",
+      "type": "RESOLVE_PHASE14_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT115-1",
+      "id": "EV-000001",
+      "payload": {
+        "addOns": {
+          "mirrorMe": false,
+          "speedRun": false,
+          "thatsUrz": false,
+          "thirdPartied": false
+        },
+        "assignments": {
+          "P1": "P1",
+          "P2": "P2"
+        },
+        "subMode": "classic",
+        "targetHandSizes": {
+          "P1": 5,
+          "P2": 6
+        },
+        "turnOrder": [
+          "P1",
+          "P2"
+        ]
+      },
+      "previousStateHash": "dd2375e37d5791e9d13f4a8596b6d15f671be102ef9afe37e1ee259da508db0c",
+      "sequence": 1,
+      "stateHash": "a5d6376d7c0477bd95800ad4349d87edd087ec854a2dca32c979dbe44c16ee08",
+      "type": "DEFFY_MODE_CONFIGURED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-2",
+      "id": "EV-000002",
+      "payload": {
+        "faceDownCount": 5,
+        "poolSize": 21,
+        "subMode": "classic"
+      },
+      "previousStateHash": "a5d6376d7c0477bd95800ad4349d87edd087ec854a2dca32c979dbe44c16ee08",
+      "sequence": 2,
+      "stateHash": "3bddb23a1fa342408604afc87c3867ef2c0df4ca85dd698d781894a5e8a1d0d9",
+      "type": "DEFFY_POOL_CREATED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-3",
+      "id": "EV-000003",
+      "payload": {
+        "cardId": "CT115-P01",
+        "drafterId": "P1",
+        "recipientId": "P1"
+      },
+      "previousStateHash": "3bddb23a1fa342408604afc87c3867ef2c0df4ca85dd698d781894a5e8a1d0d9",
+      "sequence": 3,
+      "stateHash": "39623cf616fad37c1288582df0c105bffc14782c559c790b3b52362eb80079db",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-4",
+      "id": "EV-000004",
+      "payload": {
+        "cardId": "CT115-P02",
+        "drafterId": "P2",
+        "recipientId": "P2"
+      },
+      "previousStateHash": "39623cf616fad37c1288582df0c105bffc14782c559c790b3b52362eb80079db",
+      "sequence": 4,
+      "stateHash": "66bae88a4f1645cc98536c35d9c25a34889cb3e83b7872efc0e7c276df69df59",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-5",
+      "id": "EV-000005",
+      "payload": {
+        "redacted": true,
+        "visibility": "authorized"
+      },
+      "previousStateHash": "66bae88a4f1645cc98536c35d9c25a34889cb3e83b7872efc0e7c276df69df59",
+      "sequence": 5,
+      "stateHash": "9738a0e35618abcb47ebc998a01b27b544d612162c3cc9f53fc287c5b27bc33f",
+      "type": "DEFFY_FACE_DOWN_PICK",
+      "visibility": "authorized"
+    },
+    {
+      "commandId": "CT115-6",
+      "id": "EV-000006",
+      "payload": {
+        "redacted": true,
+        "visibility": "authorized"
+      },
+      "previousStateHash": "9738a0e35618abcb47ebc998a01b27b544d612162c3cc9f53fc287c5b27bc33f",
+      "sequence": 6,
+      "stateHash": "1459020f1ddfae08c833a092012229b3924826cd3d57f8b58d37af637a63f4be",
+      "type": "DEFFY_FACE_DOWN_PICK",
+      "visibility": "authorized"
+    },
+    {
+      "commandId": "CT115-7",
+      "id": "EV-000007",
+      "payload": {
+        "cardId": "CT115-P05",
+        "drafterId": "P1",
+        "recipientId": "P1"
+      },
+      "previousStateHash": "1459020f1ddfae08c833a092012229b3924826cd3d57f8b58d37af637a63f4be",
+      "sequence": 7,
+      "stateHash": "d6f9a838cc7a8afed8f2110f81936262cfc1d0d7ff727e0237201e1d7b82af55",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-8",
+      "id": "EV-000008",
+      "payload": {
+        "redacted": true,
+        "visibility": "authorized"
+      },
+      "previousStateHash": "d6f9a838cc7a8afed8f2110f81936262cfc1d0d7ff727e0237201e1d7b82af55",
+      "sequence": 8,
+      "stateHash": "0de2b143b45be39a4a43c8aea88013b2f45186694460da00ab1f103a25847e57",
+      "type": "DEFFY_FACE_DOWN_PICK",
+      "visibility": "authorized"
+    },
+    {
+      "commandId": "CT115-9",
+      "id": "EV-000009",
+      "payload": {
+        "cardId": "CT115-P07",
+        "drafterId": "P1",
+        "recipientId": "P1"
+      },
+      "previousStateHash": "0de2b143b45be39a4a43c8aea88013b2f45186694460da00ab1f103a25847e57",
+      "sequence": 9,
+      "stateHash": "e6e4736d05391ba8106f09d28d98cc1c00244ad935b588dc48f5fc7f6df0fd63",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-10",
+      "id": "EV-000010",
+      "payload": {
+        "cardId": "CT115-P08",
+        "drafterId": "P2",
+        "recipientId": "P2"
+      },
+      "previousStateHash": "e6e4736d05391ba8106f09d28d98cc1c00244ad935b588dc48f5fc7f6df0fd63",
+      "sequence": 10,
+      "stateHash": "6a8937aa2934275e88ede1c8a579242dd8c3246c84cdc04a0236d147a513dfec",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-11",
+      "id": "EV-000011",
+      "payload": {
+        "cardId": "CT115-P09",
+        "drafterId": "P1",
+        "recipientId": "P1"
+      },
+      "previousStateHash": "6a8937aa2934275e88ede1c8a579242dd8c3246c84cdc04a0236d147a513dfec",
+      "sequence": 11,
+      "stateHash": "ecfdf61d0bc95633ecfb67a0b38550b2c9d5cd2696bb8e80bbb94f528ef1d69f",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-12",
+      "id": "EV-000012",
+      "payload": {
+        "cardId": "CT115-P10",
+        "drafterId": "P2",
+        "recipientId": "P2"
+      },
+      "previousStateHash": "ecfdf61d0bc95633ecfb67a0b38550b2c9d5cd2696bb8e80bbb94f528ef1d69f",
+      "sequence": 12,
+      "stateHash": "b0d737570a2b17b9e55cc36f6c77e3706712596fe44c0dbe55db37dab8f4da52",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-13",
+      "id": "EV-000013",
+      "payload": {
+        "cardId": "CT115-P11",
+        "drafterId": "P2",
+        "recipientId": "P2"
+      },
+      "previousStateHash": "b0d737570a2b17b9e55cc36f6c77e3706712596fe44c0dbe55db37dab8f4da52",
+      "sequence": 13,
+      "stateHash": "2f43539dfdf670722a9b4fe8af4c8e27f71660b224a898fa0b8774a74ea9dbf9",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-14",
+      "id": "EV-000014",
+      "payload": {
+        "leftoverCount": 10,
+        "leftoverDisposition": "shuffle",
+        "specsMayBeRevealed": true,
+        "targetHandSizes": {
+          "P1": 5,
+          "P2": 6
+        }
+      },
+      "previousStateHash": "2f43539dfdf670722a9b4fe8af4c8e27f71660b224a898fa0b8774a74ea9dbf9",
+      "sequence": 14,
+      "stateHash": "4cee642676463011e46f740b4bada30f3acd15ca34736ed6d825cc3000c6c4cc",
+      "type": "DEFFY_DRAFT_COMPLETED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "dd2375e37d5791e9d13f4a8596b6d15f671be102ef9afe37e1ee259da508db0c",
+  "finalStateHash": "4cee642676463011e46f740b4bada30f3acd15ca34736ed6d825cc3000c6c4cc",
+  "eventLogHash": "255b5559c64f33c55eb89a253fcae303a05417ad6f64c3e526ad220bf66e84b6"
+}

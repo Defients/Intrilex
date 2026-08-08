@@ -1,0 +1,133 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-018",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT018-X": {
+        "controllerId": "P1",
+        "id": "CT018-X",
+        "identity": "5♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "EXILE"
+      }
+    },
+    "fullTurnSequence": 4,
+    "metadata": {
+      "phase8": {
+        "boardLock": null,
+        "exhausted": {
+          "remaining": 2,
+          "startedFullTurnSequence": 2
+        },
+        "suddenDeath": null,
+        "voltageSnapshots": {},
+        "voltageUsedThisFT": {}
+      }
+    },
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [
+        "CT018-X"
+      ],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "cardIds": [
+          "CT018-X"
+        ],
+        "kind": "recover-exhausted"
+      },
+      "actorId": "P1",
+      "id": "CT018-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT018-1",
+      "id": "EV-000001",
+      "payload": {
+        "cardIds": [
+          "CT018-X"
+        ],
+        "restrictionsLiftedImmediately": true
+      },
+      "previousStateHash": "c960dd60c1a6ff357ed757936f967646f0d3ea35b366ba372bae36fd387bf9e6",
+      "sequence": 1,
+      "stateHash": "185776c08bec6cc0e30c94f9666a81a919c4f058f5a9a63aac0d7ecea3784558",
+      "type": "EXHAUSTED_RECOVERED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "c960dd60c1a6ff357ed757936f967646f0d3ea35b366ba372bae36fd387bf9e6",
+  "finalStateHash": "185776c08bec6cc0e30c94f9666a81a919c4f058f5a9a63aac0d7ecea3784558",
+  "eventLogHash": "00ba92957692efa708cb0f1a575f4d29e31634c798ebec8b80be7b447d6be2b6"
+}

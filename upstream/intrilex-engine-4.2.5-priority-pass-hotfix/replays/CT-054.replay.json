@@ -1,0 +1,169 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-054",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT054-C1": {
+        "controllerId": "P1",
+        "id": "CT054-C1",
+        "identity": "10♠",
+        "originalOwnerId": "P1",
+        "state": {
+          "exileBound": true
+        },
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT054-C1"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "actorId": "P1",
+      "cardId": "CT054-C1",
+      "controllerId": "P1",
+      "destination": "P1_PR",
+      "id": "CT054-1",
+      "type": "MOVE_CARD"
+    },
+    {
+      "actorId": "P1",
+      "cardId": "CT054-C1",
+      "controllerId": "P1",
+      "destination": "P1_HAND",
+      "id": "CT054-2",
+      "type": "MOVE_CARD"
+    },
+    {
+      "actorId": "P1",
+      "cardId": "CT054-C1",
+      "destination": "GY",
+      "id": "CT054-3",
+      "type": "MOVE_CARD"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT054-1",
+      "id": "EV-000001",
+      "payload": {
+        "actualDestination": "P1_PR",
+        "cardId": "CT054-C1",
+        "controllerId": "P1",
+        "from": "P1_HAND",
+        "requestedDestination": "P1_PR"
+      },
+      "previousStateHash": "01e6e64b9001487e9f12a387a5f107aad526eccb93f91e18972b02919fc1b89e",
+      "sequence": 1,
+      "stateHash": "1415a2819d5df506084d37ccdc075bc571d4f2a278bb8bcb6467b0d0a30d09ea",
+      "type": "CARD_MOVED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT054-2",
+      "id": "EV-000002",
+      "payload": {
+        "actualDestination": "P1_HAND",
+        "cardId": "CT054-C1",
+        "controllerId": "P1",
+        "from": "P1_PR",
+        "requestedDestination": "P1_HAND"
+      },
+      "previousStateHash": "1415a2819d5df506084d37ccdc075bc571d4f2a278bb8bcb6467b0d0a30d09ea",
+      "sequence": 2,
+      "stateHash": "b2c4841beb846de48a4f7131dec1cc195f0466320a677d33b9e7e924c02dfb04",
+      "type": "CARD_MOVED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT054-3",
+      "id": "EV-000003",
+      "payload": {
+        "actualDestination": "EXILE",
+        "cardId": "CT054-C1",
+        "controllerId": "P1",
+        "from": "P1_HAND",
+        "requestedDestination": "GY"
+      },
+      "previousStateHash": "b2c4841beb846de48a4f7131dec1cc195f0466320a677d33b9e7e924c02dfb04",
+      "sequence": 3,
+      "stateHash": "5bef8d7df81480e04cec1bc3e47015fd6f9515171ea4fbad0a85d9ab4af5bb2d",
+      "type": "CARD_MOVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "01e6e64b9001487e9f12a387a5f107aad526eccb93f91e18972b02919fc1b89e",
+  "finalStateHash": "5bef8d7df81480e04cec1bc3e47015fd6f9515171ea4fbad0a85d9ab4af5bb2d",
+  "eventLogHash": "9373f1eccb62575284dd5c965fe0e67667f47aca8f08f5795778b88e473d756f"
+}

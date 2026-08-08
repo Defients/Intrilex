@@ -1,0 +1,176 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-108",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {},
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-battle-realm",
+        "specs": {
+          "P1": "Balance",
+          "P2": "Brilliance"
+        }
+      },
+      "actorId": "P1",
+      "id": "CT108-1",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "amount": 9,
+        "kind": "grant-mini-turns",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT108-2",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "kind": "register-limited-play",
+        "playClass": "ultra",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT108-3",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "kind": "register-limited-play",
+        "playClass": "ultra",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT108-4",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "combine": "brilliance-two-spades",
+        "kind": "validate-reserved-combine",
+        "sourceCardIds": []
+      },
+      "actorId": "P1",
+      "id": "CT108-5",
+      "type": "RESOLVE_PHASE12_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT108-1",
+      "id": "EV-000001",
+      "payload": {
+        "selectedSpecByPlayer": {
+          "P1": "Balance",
+          "P2": "Brilliance"
+        }
+      },
+      "previousStateHash": "9d4bfc7a0b98376944ea4ff70032ee8afdedba9cade35faf92ca0540e397c45a",
+      "sequence": 1,
+      "stateHash": "ef687d1413c9706926340edc6ab1f3264c680a632c73c229b78ef0515fdef3ba",
+      "type": "BATTLEREALM_SPECS_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT108-2",
+      "id": "EV-000002",
+      "payload": {
+        "cap": 3,
+        "playerId": "P1",
+        "previous": 1,
+        "remaining": 3,
+        "requested": 9
+      },
+      "previousStateHash": "ef687d1413c9706926340edc6ab1f3264c680a632c73c229b78ef0515fdef3ba",
+      "sequence": 2,
+      "stateHash": "c3e71769906e525b66b05fc3476d48c81330cda129140784c2226bbfd6041760",
+      "type": "BATTLEREALM_MINI_TURNS_GRANTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT108-3",
+      "id": "EV-000003",
+      "payload": {
+        "playClass": "ultra",
+        "playerId": "P1"
+      },
+      "previousStateHash": "c3e71769906e525b66b05fc3476d48c81330cda129140784c2226bbfd6041760",
+      "sequence": 3,
+      "stateHash": "2127d1848a125d14b8cf17b9f07eca70fbc1b00b549ea24fd339af2f060b845f",
+      "type": "BATTLEREALM_LIMITED_PLAY_REGISTERED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "9d4bfc7a0b98376944ea4ff70032ee8afdedba9cade35faf92ca0540e397c45a",
+  "finalStateHash": "2127d1848a125d14b8cf17b9f07eca70fbc1b00b549ea24fd339af2f060b845f",
+  "eventLogHash": "fed5406b6953aef6ab1e0f9e5cb8d8314e12217ba206ee206bd6e06c700d5585"
+}

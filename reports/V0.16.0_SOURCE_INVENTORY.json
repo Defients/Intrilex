@@ -1,0 +1,108 @@
+{
+  "auditDate": "2026-08-03",
+  "source": "working-tree",
+  "archiveHash": null,
+  "archivePath": null,
+  "environment": {
+    "os": "Windows NT 10.0.x",
+    "node": "see node --version",
+    "packageManager": "pnpm"
+  },
+  "versions": {
+    "lab": "0.15.0",
+    "engine": "4.2.6",
+    "rules": "4.1.2",
+    "analyticsSchema": "4.1.0",
+    "telemetrySchema": "4.1.0",
+    "variantTelemetrySchema": "5.1.0",
+    "variantRegistrySchema": "1.0.0",
+    "rankPowerSchema": "1.0.0"
+  },
+  "packageGraph": {
+    "rootVersion": "0.15.0",
+    "workspacePackages": 11,
+    "apps": 2,
+    "packages": [
+      {"name": "@intrilex/analytics", "version": "0.15.0"},
+      {"name": "@intrilex/browser-crypto-shim", "version": "0.15.0"},
+      {"name": "@intrilex/decision-intelligence", "version": "0.15.0"},
+      {"name": "@intrilex/engine-adapter", "version": "0.15.0"},
+      {"name": "@intrilex/game-ai", "version": "0.15.0"},
+      {"name": "@intrilex/policies", "version": "0.15.0"},
+      {"name": "@intrilex/policy-sdk", "version": "0.15.0"},
+      {"name": "@intrilex/shared", "version": "0.15.0"},
+      {"name": "@intrilex/simulation-runtime", "version": "0.15.0"},
+      {"name": "@intrilex/statistics", "version": "0.15.0"},
+      {"name": "@intrilex/telemetry", "version": "0.15.0"}
+    ]
+  },
+  "routes": [
+    "/", "/rules", "/play", "/sim",
+    "/watch", "/replays", "/history", "/mechanics",
+    "/cards", "/synergies", "/ranks", "/compare",
+    "/traces", "/branches", "/diagnostics", "/evidence"
+  ],
+  "routeCount": 16,
+  "sourceFileCount": 1220,
+  "deterministicTreeHash": "c703058662b5047dab5b53231bf3d590c2ff3c9361f43b096892c6dec5df7288",
+  "testFiles": 45,
+  "ciStages": 67,
+  "generatedArtifacts": 421,
+  "releasePayloadMB": 331.6,
+  "gitPresent": true,
+  "schemas": [
+    "analytics.schema.json",
+    "experiment.schema.json",
+    "run-provenance.schema.json",
+    "semantic-telemetry.schema.json",
+    "telemetry.schema.json"
+  ],
+  "selfAudit": {
+    "totalTests": 714,
+    "totalPass": 714,
+    "totalFail": 0,
+    "score": 97,
+    "status": "PASS",
+    "generatedAt": "2026-08-02T19:11:19Z"
+  },
+  "observatory": {
+    "schemaVersion": "4.1.0",
+    "summaryCount": 100,
+    "detailedMatches": 12,
+    "mechanicsCount": 130,
+    "synergiesCount": 193,
+    "rankPowerRanks": 15,
+    "rankPowerLadder": 15,
+    "observatoryHash": "a61032ffa93a744e7347cec825d4e02a37c29bf75aae0f02029a71d12fc6ff24",
+    "hasVariantAnalytics": false
+  },
+  "playerizationStatus": {
+    "localMatchLoop": "COMPLETE",
+    "legalActionPresentation": "COMPLETE",
+    "priorityResponseWindow": "COMPLETE",
+    "tutorialOnboarding": "COMPLETE",
+    "playerVisibleState": "COMPLETE",
+    "hiddenInfoProtection": "COMPLETE",
+    "saveFlow": "COMPLETE",
+    "replayGeneration": "COMPLETE",
+    "replayReopening": "PARTIAL",
+    "transitionToAnalysisWorkspaces": "PARTIAL",
+    "browserNativeExecution": "COMPLETE",
+    "browserE2ETests": "PARTIAL",
+    "keyboardAccessibility": "UNAVAILABLE",
+    "responsiveLayouts": "COMPLETE",
+    "failureRecovery": "PARTIAL",
+    "deterministicReplayVerification": "COMPLETE"
+  },
+  "rankAnatomy": {
+    "spadesVariants": 13,
+    "superEffects": 9,
+    "rank2Eligible": true,
+    "rank2Reason": "2♠ Solo Wild Copy may target spade-enhanced Base modes (3♠/4♠/6♠/7♠) that 2♣/2♦/2♥ cannot copy",
+    "variantRegistryExists": true,
+    "variantTelemetryExists": true,
+    "variantAnalyticsInBuild": false,
+    "variantAnalyticsInBrowser": true,
+    "duplicateVariantAnalyticsImplementations": 2
+  }
+}

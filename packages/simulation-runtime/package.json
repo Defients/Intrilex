@@ -1,0 +1,27 @@
+{
+  "name": "@intrilex/simulation-runtime",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/runtime.mjs",
+    "./campaign": "./src/campaign.mjs",
+    "./worker": "./src/worker.mjs",
+    "./counterfactual": "./src/counterfactual.mjs",
+    "./policy-catalog": "./src/policy-catalog.mjs",
+    "./rank-attribution": "./src/rank-attribution.mjs",
+    "./rank-counterfactual": "./src/rank-counterfactual.mjs",
+    "./rank-power": "./src/rank-power.mjs",
+    "./variant-registry": "./src/variant-registry.mjs",
+    "./rank-anatomy-registry": "./src/rank-anatomy-registry.mjs"
+  },
+  "dependencies": {
+    "@intrilex/shared": "workspace:*",
+    "@intrilex/telemetry": "workspace:*",
+    "@intrilex/engine-adapter": "workspace:*",
+    "@intrilex/policy-sdk": "workspace:*",
+    "@intrilex/policies": "workspace:*",
+    "@intrilex/game-ai": "workspace:*",
+    "@intrilex/decision-intelligence": "workspace:*",
+    "@intrilex/statistics": "workspace:*"
+  }
+}

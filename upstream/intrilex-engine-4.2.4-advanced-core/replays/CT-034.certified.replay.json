@@ -1,0 +1,158 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-034",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {},
+    "fullTurnSequence": 12,
+    "metadata": {
+      "phase8": {
+        "boardLock": {
+          "activationFullTurnSequence": 10,
+          "remaining": 2
+        },
+        "exhausted": {
+          "remaining": 3,
+          "startedFullTurnSequence": 11
+        },
+        "suddenDeath": {
+          "activationFullTurnSequence": 10,
+          "activatorId": "P2",
+          "remaining": 2
+        },
+        "voltageSnapshots": {},
+        "voltageUsedThisFT": {}
+      }
+    },
+    "pendingDeclaration": null,
+    "phase": "BetweenTurns",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 2,
+          "pendingActionPhaseSkips": 1,
+          "pendingFullTurnSkips": 1,
+          "rank10PlayedThisFT": true,
+          "swapBarUsedThisFT": true,
+          "ultraPlayedThisFT": true
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "consume-skipped-turn-slot"
+      },
+      "actorId": "P1",
+      "id": "CT-034-C1",
+      "type": "RESOLVE_PHASE20_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT-034-C1",
+      "id": "EV-000001",
+      "payload": {
+        "fullTurnOccurred": false,
+        "nextPlayerId": "P2",
+        "playerId": "P1"
+      },
+      "previousStateHash": "ccf9f306054749361f902942318cd6ff6e7418229001aec3b7110935ae2732f4",
+      "sequence": 1,
+      "stateHash": "d626a9fdb75ffb69fe8eba553119111c5b7b5edcfc710ce3f8520cb072f19865",
+      "type": "TURN_SLOT_SKIPPED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT-034-C1",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "f401109f0b65fde0e3254ae92ac54e729d37d3b98a0e3f124eb4b84db7d5aafd",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "d626a9fdb75ffb69fe8eba553119111c5b7b5edcfc710ce3f8520cb072f19865",
+      "stateHashBefore": "ccf9f306054749361f902942318cd6ff6e7418229001aec3b7110935ae2732f4"
+    }
+  ],
+  "initialStateHash": "ccf9f306054749361f902942318cd6ff6e7418229001aec3b7110935ae2732f4",
+  "finalStateHash": "d626a9fdb75ffb69fe8eba553119111c5b7b5edcfc710ce3f8520cb072f19865",
+  "eventLogHash": "f401109f0b65fde0e3254ae92ac54e729d37d3b98a0e3f124eb4b84db7d5aafd",
+  "checkpointLogHash": "ee43c4d13e3c60c676366e58fe47dc5e720d3e446d72fa886c36c2665dc53a68",
+  "rngTraceHash": "2d957ed9c18b6f1e3d355052411cef792a02c47f0ba21d5a8bf3fe412d86c6a7",
+  "contentHash": "3d69175fa7661c5df224a4d2b5360ae1c12f58bc4f9aa8e1f9d10c02cabd7a63",
+  "integrityHash": "908ebff1cc4e9fadb12ced18399cd017f264362b24533d6dc483115a1a73f796"
+}

@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1.0",
+  "engine": {
+    "package": "@intrilex/headless-engine",
+    "version": "4.2.2",
+    "rulesVersion": "4.1",
+    "baseCertifiedVersion": "4.1.0",
+    "basePayloadHash": "707377ea9fa94f449c293b6a4dcd8dc4b40dd058bcd6f9e5dd874339859cf168",
+    "preservedConformanceAggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"
+  },
+  "profiles": [
+    {
+      "profileId": "core-foundation-authority",
+      "canonicalProfile": "CORE",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "status": "SUPPORTED",
+      "scope": "setup, Swap Bar, lifecycle, Draw, scoring, ordinary Scuttle, Pass, victory, Exhausted"
+    },
+    {
+      "profileId": "core-effect-declaration-authority",
+      "canonicalProfile": "CORE",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "status": "SUPPORTED",
+      "scope": "Core Foundation plus audited public single-card effects"
+    },
+    {
+      "profileId": "core-response-authority",
+      "canonicalProfile": "CORE",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "status": "SUPPORTED",
+      "scope": "Core Effect Declaration plus engine-owned priority, pass cycles, counter chains, and audited Quick/Instant responses",
+      "supportedResponses": [
+        "A-base-counter", "A-anchor-counter", "A-spade-exile-counter", "8-scuttle-counter",
+        "K-anchor-counter", "J-disrupt", "9-tap", "8-spade-free-scuttle",
+        "8-aegis-field-quick", "Q-aegis-quick"
+      ],
+      "reasonCodes": [
+        "ENGINE_OWNED_PRIORITY_CIRCULATION", "COUNTER_ON_COUNTER_CHAINS",
+        "AUDITED_QUICK_AND_INSTANT_ACTIONS", "COMMAND_VAULT_ISOLATED",
+        "PRIVATE_CHOICE_AND_INTERRUPT_FAMILIES_FAIL_CLOSED"
+      ]
+    }
+  ],
+  "unsupported": [
+    {"capability": "complete-core", "status": "REPLAY_ONLY", "reasonCodes": ["PRIVATE_CHOICE_EFFECTS_UNAVAILABLE", "ADVANCED_TIMING_UNAVAILABLE"]},
+    {"capability": "rank10-interrupt", "status": "REPLAY_ONLY", "reasonCodes": ["INTERRUPT_AUTHORITY_UNAVAILABLE"]},
+    {"capability": "supers-ultras-voltage", "status": "REPLAY_ONLY", "reasonCodes": ["ADVANCED_ACTION_ENUMERATION_UNAVAILABLE"]},
+    {"capability": "optional-modules", "status": "BLOCKED", "reasonCodes": ["MODULE_AUTONOMY_UNAVAILABLE"]},
+    {"capability": "multiplayer-teams", "status": "BLOCKED", "reasonCodes": ["MULTIPLAYER_ORCHESTRATION_UNAVAILABLE"]}
+  ],
+  "evidence": [
+    "reports/CORE_RESPONSE_AUTHORITY_CERTIFICATION.json",
+    "reports/core-response-authority-stress-500.json",
+    "reports/browser-core-response-parity.json"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "verdict": "PASS",
+  "engineVersion": "4.1.0",
+  "certifiedReplayCount": 121,
+  "publicLeakFailures": [],
+  "invariantFuzzCases": 605,
+  "invariantFuzzFailures": [],
+  "sourceTestCoverage": {
+    "canonicalTotal": 120,
+    "uniqueSourceIds": 120,
+    "missingSourceIds": [],
+    "duplicateSourceIds": [
+      "CT-063"
+    ]
+  },
+  "independentRuntime": {
+    "runtime": "Python 3.13.5",
+    "verifiedPairCount": 121,
+    "failureCount": 0,
+    "aggregateHash": "60fa842b90024a6d5f51eb7e114347eb024f7b7a6f34016a2f80a8c46de47da3"
+  },
+  "preservedPhase218Aggregate": "e754dfc25e171bdd60a6d41025b42afd3e8120e0ae210c68b02d51d11bfeb211",
+  "finalConformanceAggregate": "8c91e8194e7fa3ab6bbb3eaa6946a97efd70343c36d5e5953ee8e1c0357013df",
+  "simulationCampaignHash": "1883275f3a68356c991217e29b610076313d95595cf2c26515ea44ea93e60fb3",
+  "interpretationBoundaries": [
+    "The Phase 19 campaign is a reproducible legal First Contact action-subset study under declared policies; it is not a claim of solved optimal play or complete advanced-module metagame balance.",
+    "CT-063 intentionally has two provenance-separated executable projections because historical engine certification and the canon-locked upstream suite reused that identifier for different semantics.",
+    "The Python verifier is an independent runtime and hash/checkpoint implementation; gameplay semantics remain authoritative in the TypeScript engine and are reproduced from every certified command stream there."
+  ],
+  "aggregateHash": "6d4e20266b1333df8c724f05844cfdf01cf43b5a5dca6ff351941f5fe4119bbc"
+}

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "1.0",
+  "status": "PASS",
+  "engineVersion": "4.2.4",
+  "profileId": "core-advanced-authority",
+  "proofKind": "REAL_CHROMIUM_MAIN_THREAD_AND_WEB_WORKER_CORE_ADVANCED",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/144.0.0.0 Safari/537.36",
+  "certifiedReplayCorpus": {
+    "replayCount": 121,
+    "commandCount": 285,
+    "eventCount": 373,
+    "aggregateHash": "0f38ef8a8b0bb0502937f88f5b678b233328fc9d0a5569bf0a39831ee97c108c"
+  },
+  "coreAdvancedMatch": {
+    "terminationReason": "NORMAL_VICTORY",
+    "winner": "P2",
+    "decisionCount": 367,
+    "commandCount": 609,
+    "finalStateHash": "714a1ebf65a98321e02f24941844351e6e47de9d4ea4f76fe2df3239ef81eb24",
+    "decisionHash": "9e07968a0b1d77659485f38c77c190eb001aba450da75adab726c8230f98f394",
+    "swapCount": 2,
+    "effectCount": 9,
+    "responseCount": 10,
+    "privateChoiceCount": 10,
+    "privateChoiceHash": "87d94e91e009208416c178abad0068f45f556afb281592045bd98d60d05d1137",
+    "advancedCount": 12
+  },
+  "mainThread": {
+    "replay": {
+      "replayCount": 121,
+      "commandCount": 285,
+      "eventCount": 373,
+      "aggregateHash": "0f38ef8a8b0bb0502937f88f5b678b233328fc9d0a5569bf0a39831ee97c108c"
+    },
+    "match": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisionCount": 367,
+      "commandCount": 609,
+      "finalStateHash": "714a1ebf65a98321e02f24941844351e6e47de9d4ea4f76fe2df3239ef81eb24",
+      "decisionHash": "9e07968a0b1d77659485f38c77c190eb001aba450da75adab726c8230f98f394",
+      "swapCount": 2,
+      "effectCount": 9,
+      "responseCount": 10,
+      "privateChoiceCount": 10,
+      "privateChoiceHash": "87d94e91e009208416c178abad0068f45f556afb281592045bd98d60d05d1137",
+      "advancedCount": 12
+    }
+  },
+  "worker": {
+    "replay": {
+      "replayCount": 121,
+      "commandCount": 285,
+      "eventCount": 373,
+      "aggregateHash": "0f38ef8a8b0bb0502937f88f5b678b233328fc9d0a5569bf0a39831ee97c108c"
+    },
+    "match": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisionCount": 367,
+      "commandCount": 609,
+      "finalStateHash": "714a1ebf65a98321e02f24941844351e6e47de9d4ea4f76fe2df3239ef81eb24",
+      "decisionHash": "9e07968a0b1d77659485f38c77c190eb001aba450da75adab726c8230f98f394",
+      "swapCount": 2,
+      "effectCount": 9,
+      "responseCount": 10,
+      "privateChoiceCount": 10,
+      "privateChoiceHash": "87d94e91e009208416c178abad0068f45f556afb281592045bd98d60d05d1137",
+      "advancedCount": 12
+    }
+  },
+  "parity": {
+    "mainReplayMatchesNode": true,
+    "workerReplayMatchesNode": true,
+    "mainMatchMatchesNode": true,
+    "workerMatchMatchesNode": true,
+    "canonicalTermination": true,
+    "swapBarExercised": true,
+    "effectsExercised": true,
+    "responsesExercised": true,
+    "privateChoicesExercised": true,
+    "advancedAuthorityExercised": true,
+    "shaVectors": true
+  },
+  "generatedAt": "2026-07-27T18:26:49.850Z"
+}

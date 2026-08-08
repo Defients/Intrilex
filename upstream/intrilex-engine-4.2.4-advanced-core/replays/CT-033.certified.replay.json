@@ -1,0 +1,228 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-033",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT033-B": {
+        "controllerId": "P1",
+        "id": "CT033-B",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "GY"
+      },
+      "CT033-E": {
+        "controllerId": "P2",
+        "id": "CT033-E",
+        "identity": "7♠",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "ON_STACK"
+      },
+      "CT033-R1": {
+        "controllerId": "P1",
+        "id": "CT033-R1",
+        "identity": "3♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT033-R2": {
+        "controllerId": "P1",
+        "id": "CT033-R2",
+        "identity": "4♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT033-R3": {
+        "controllerId": "P1",
+        "id": "CT033-R3",
+        "identity": "5♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT033-R1",
+          "CT033-R2",
+          "CT033-R3"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [
+      {
+        "controllerId": "P2",
+        "id": "CT033-SI",
+        "instructions": [],
+        "kind": "ordinary-effect",
+        "revalidationClass": "none",
+        "sourceCardIds": [
+          "CT033-E"
+        ],
+        "sourceDestination": "GY",
+        "status": "pending",
+        "targetCardIds": []
+      }
+    ],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [
+        "CT033-B"
+      ],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "resolve-ultra",
+        "recipe": "3-red",
+        "sourceCardIds": [
+          "CT033-R1",
+          "CT033-R2",
+          "CT033-R3"
+        ],
+        "targetStackItemId": "CT033-SI"
+      },
+      "actorId": "P1",
+      "id": "CT033-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT033-1",
+      "id": "EV-000001",
+      "payload": {
+        "actorId": "P1",
+        "atomic": true,
+        "recipe": "3-red",
+        "sourceCardIds": [
+          "CT033-R1",
+          "CT033-R2",
+          "CT033-R3"
+        ]
+      },
+      "previousStateHash": "b4f9ea007b50856890a3eb81fe06788c187e29611e3add1792b77e3623d6238b",
+      "sequence": 1,
+      "stateHash": "f7e987db3c44cb52c7f32328477b6ce4f10340d49cdb98b8ec4b1785897eef64",
+      "type": "ULTRA_RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT033-1",
+      "id": "EV-000003",
+      "payload": {
+        "bottomGyDrawCardId": "CT033-B",
+        "counterAuthority": "super-ace",
+        "priorityWindowsInside": 0,
+        "targetStackItemId": "CT033-SI"
+      },
+      "previousStateHash": "f7e987db3c44cb52c7f32328477b6ce4f10340d49cdb98b8ec4b1785897eef64",
+      "sequence": 2,
+      "stateHash": "9c7a0260eba4df66b835c1f16cbc62ce2bee6fd140d1c960f39827e27d61e663",
+      "type": "ULTRA_3_RED_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT033-1",
+      "commandIndex": 0,
+      "eventEndIndex": 2,
+      "eventRangeHash": "c9a46511043995dff0b1bbc64c2f87ecc063f2f127cd82a487f0dd4ac3085f4a",
+      "eventStartIndex": 0,
+      "revisionAfter": 2,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "9c7a0260eba4df66b835c1f16cbc62ce2bee6fd140d1c960f39827e27d61e663",
+      "stateHashBefore": "b4f9ea007b50856890a3eb81fe06788c187e29611e3add1792b77e3623d6238b"
+    }
+  ],
+  "initialStateHash": "b4f9ea007b50856890a3eb81fe06788c187e29611e3add1792b77e3623d6238b",
+  "finalStateHash": "9c7a0260eba4df66b835c1f16cbc62ce2bee6fd140d1c960f39827e27d61e663",
+  "eventLogHash": "c9a46511043995dff0b1bbc64c2f87ecc063f2f127cd82a487f0dd4ac3085f4a",
+  "checkpointLogHash": "df3cedb46ae42328085332b646a843691208bd2a5c2868a1692051d87edc50b3",
+  "rngTraceHash": "60e0127e3e07eed73e4eb8a4bc9b4aee5f4f8d0c63fdc10a1543b275aa560161",
+  "contentHash": "e8839a6dc37174effaa4e6ac3aaa9fa11f038616affb281d484b315408be3975",
+  "integrityHash": "136dd469cbda00cd1a49e918dcb06d39977c9607b795162c28bb885dad3c3271"
+}

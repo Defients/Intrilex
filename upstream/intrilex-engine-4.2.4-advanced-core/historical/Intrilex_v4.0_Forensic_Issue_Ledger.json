@@ -1,0 +1,319 @@
+{
+  "metadata": {
+    "source_file": "Intrilex_v4_Canonical_Rules.md",
+    "source_revision_date": "2026-07-25",
+    "audit_date": "2026-07-25",
+    "source_sha256": "C6AF0362F26C245D12C9AB325571A90443AFACE2243E3A324D792165D468E272",
+    "source_lines": 3492,
+    "source_words": 19723,
+    "report_file": "Intrilex_v4_Forensic_Analytics_Report.md"
+  },
+  "summary": {
+    "total_issues": 29,
+    "critical": 3,
+    "major": 8,
+    "minor": 10,
+    "notes": 8,
+    "false_positives": 8,
+    "total_test_vectors": 120,
+    "total_tricky_interactions": 40,
+    "total_patches": 16,
+    "readiness_scores": {
+      "overall": 6.2,
+      "digital_implementation": 5,
+      "physical_judge": 6,
+      "tournament": 6,
+      "testability": 6
+    }
+  },
+  "issues": [
+    {
+      "id": "C-001",
+      "severity": "critical",
+      "type": "Incomplete Procedure",
+      "title": "Multiple global timers active simultaneously lack interaction rules",
+      "tags": ["CORE", "SUDDEN_DEATH", "EXHAUSTED"],
+      "sections": ["§3.4", "§10.3", "§11.3", "§19.12"],
+      "confidence": "high",
+      "tests": ["TV-001", "TV-002", "TV-003"],
+      "patch_id": "P-C001"
+    },
+    {
+      "id": "C-002",
+      "severity": "critical",
+      "type": "Undefined Mechanic",
+      "title": "10♠ Stack Theft fizzle destination for stolen source cards is undefined",
+      "tags": ["RANK_10", "STACK"],
+      "sections": ["§13 10♠"],
+      "confidence": "high",
+      "tests": ["TV-004", "TV-005"],
+      "patch_id": "P-C002"
+    },
+    {
+      "id": "C-003",
+      "severity": "critical",
+      "type": "Incomplete Procedure",
+      "title": "Exhausted recovery timing during another player's FT is undefined",
+      "tags": ["EXHAUSTED", "CORE"],
+      "sections": ["§10.4", "§14.5"],
+      "confidence": "high",
+      "tests": ["TV-006", "TV-007"],
+      "patch_id": "P-C003"
+    },
+    {
+      "id": "M-001",
+      "severity": "major",
+      "type": "Module Conflict",
+      "title": "Time Bomb + Brilliance Queen Point bonus interaction with negative-value Time Bombs",
+      "tags": ["TIME_BOMB", "BATTLE_REALM"],
+      "sections": ["§22.6", "§17.5"],
+      "confidence": "medium",
+      "tests": ["TV-008", "TV-009"],
+      "patch_id": "P-M001"
+    },
+    {
+      "id": "M-002",
+      "severity": "major",
+      "type": "Undefined Mechanic",
+      "title": "Tournament Seed non-banned high-impact card is undefined",
+      "tags": ["TOURNAMENT_SEED"],
+      "sections": ["§26.3"],
+      "confidence": "high",
+      "tests": ["TV-010", "TV-011"],
+      "patch_id": "P-M002"
+    },
+    {
+      "id": "M-003",
+      "severity": "major",
+      "type": "Incomplete Procedure",
+      "title": "5♥ Source Intercept does not specify revalidation of controller-relative text",
+      "tags": ["TRAP", "STACK"],
+      "sections": ["§19.9 5♥"],
+      "confidence": "high",
+      "tests": ["TV-012", "TV-013"],
+      "patch_id": "P-M003"
+    },
+    {
+      "id": "M-004",
+      "severity": "major",
+      "type": "Cross-Reference Defect",
+      "title": "4♠ Trap trigger identity vs Core effect identity lacks explicit context rule",
+      "tags": ["TRAP", "RANK_4"],
+      "sections": ["§19.9", "§13 4♠", "§5.5"],
+      "confidence": "high",
+      "tests": ["TV-014", "TV-015"],
+      "patch_id": "P-M004"
+    },
+    {
+      "id": "M-005",
+      "severity": "major",
+      "type": "Incomplete Procedure",
+      "title": "6♠ Deep Draw does not specify minimum hand requirement",
+      "tags": ["RANK_6"],
+      "sections": ["§13 6♠"],
+      "confidence": "high",
+      "tests": ["TV-016", "TV-017"],
+      "patch_id": "P-M005"
+    },
+    {
+      "id": "M-006",
+      "severity": "major",
+      "type": "Digital Implementation Hazard",
+      "title": "Time Bomb Q♥ negative Points with no explicit no-clamp rule",
+      "tags": ["TIME_BOMB", "DIGITAL_ENGINE"],
+      "sections": ["§25.3", "§1.6"],
+      "confidence": "high",
+      "tests": ["TV-018", "TV-019"],
+      "patch_id": "P-M006"
+    },
+    {
+      "id": "M-007",
+      "severity": "major",
+      "type": "Incomplete Procedure",
+      "title": "⭐4 Row Exchange with empty opponent row is legal but unconfirmed",
+      "tags": ["RANK_4"],
+      "sections": ["§13 ⭐4"],
+      "confidence": "high",
+      "tests": ["TV-020"],
+      "patch_id": "P-M007"
+    },
+    {
+      "id": "M-008",
+      "severity": "major",
+      "type": "Ambiguity",
+      "title": "9♠ +5 Goal Shift does not specify whose discard",
+      "tags": ["RANK_9"],
+      "sections": ["§13 9♠"],
+      "confidence": "high",
+      "tests": ["TV-021"],
+      "patch_id": "P-M008"
+    },
+    {
+      "id": "m-001",
+      "severity": "minor",
+      "type": "Editorial Defect",
+      "title": "Glossary Affect definition omits Attachment from §1.5",
+      "tags": ["EDITORIAL"],
+      "sections": ["§20.1", "§1.5"],
+      "confidence": "high",
+      "tests": [],
+      "patch_id": "P-m001"
+    },
+    {
+      "id": "m-002",
+      "severity": "minor",
+      "type": "Editorial Defect",
+      "title": "Quick Reference End Phase omits Exhausted tiebreaker detail",
+      "tags": ["EDITORIAL"],
+      "sections": ["§23"],
+      "confidence": "high",
+      "tests": [],
+      "patch_id": "P-m002"
+    },
+    {
+      "id": "m-003",
+      "severity": "minor",
+      "type": "Test Gap",
+      "title": "J Disrupt against Draw & Cast is functionally redundant",
+      "tags": ["RANK_J"],
+      "sections": ["§13 J", "§3.2"],
+      "confidence": "high",
+      "tests": ["TV-022"],
+      "patch_id": null
+    },
+    {
+      "id": "m-004",
+      "severity": "minor",
+      "type": "Undefined Mechanic",
+      "title": "Scuttle immunity term used but never formally defined",
+      "tags": ["SCUTTLE"],
+      "sections": ["§7.1", "§7.3", "§16.4"],
+      "confidence": "high",
+      "tests": ["TV-043", "TV-046", "TV-047"],
+      "patch_id": "P-m004"
+    },
+    {
+      "id": "m-005",
+      "severity": "minor",
+      "type": "Digital Implementation Hazard",
+      "title": "2 Quick and Q Quick pending prevents declaration needs engine tracking",
+      "tags": ["DIGITAL_ENGINE"],
+      "sections": ["§13 2", "§13 Q"],
+      "confidence": "high",
+      "tests": ["TV-029", "TV-030"],
+      "patch_id": null
+    },
+    {
+      "id": "m-006",
+      "severity": "minor",
+      "type": "Ambiguity",
+      "title": "Brilliance Mastermind one opponent in Multiplayer is ambiguous",
+      "tags": ["BATTLE_REALM", "MULTIPLAYER"],
+      "sections": ["§17.5"],
+      "confidence": "high",
+      "tests": [],
+      "patch_id": "P-m006"
+    },
+    {
+      "id": "m-007",
+      "severity": "minor",
+      "type": "Ambiguity",
+      "title": "Deffy That's Urz assignment in Multiplayer is ambiguous",
+      "tags": ["DEFFY_MODE", "MULTIPLAYER"],
+      "sections": ["§24.7"],
+      "confidence": "medium",
+      "tests": [],
+      "patch_id": "P-m007"
+    },
+    {
+      "id": "m-008",
+      "severity": "minor",
+      "type": "Undefined Mechanic",
+      "title": "Beauty Extra Lucky same source position for Swap Bar draws",
+      "tags": ["BATTLE_REALM"],
+      "sections": ["§17.4"],
+      "confidence": "medium",
+      "tests": ["TV-023"],
+      "patch_id": null
+    },
+    {
+      "id": "m-009",
+      "severity": "minor",
+      "type": "Editorial Defect",
+      "title": "Voltage Snapshot timing in §12.1 vs §3.1 different granularity",
+      "tags": ["EDITORIAL", "VOLTAGE"],
+      "sections": ["§12.1", "§3.1"],
+      "confidence": "high",
+      "tests": [],
+      "patch_id": null
+    },
+    {
+      "id": "m-010",
+      "severity": "minor",
+      "type": "Editorial Defect",
+      "title": "8 PR immunity except 4♠ and ⭐2 could be misread",
+      "tags": ["RANK_8"],
+      "sections": ["§13 8"],
+      "confidence": "high",
+      "tests": ["TV-041", "TV-042"],
+      "patch_id": null
+    }
+  ],
+  "notes": [
+    { "id": "N-001", "title": "Loop Prevention and hidden-information stalls", "tags": ["CORE", "PHYSICAL_PLAY"] },
+    { "id": "N-002", "title": "Engine should compute Secured PR Points as derived value", "tags": ["DIGITAL_ENGINE"] },
+    { "id": "N-003", "title": "Physical component kit recommendation", "tags": ["PHYSICAL_PLAY"] },
+    { "id": "N-004", "title": "Replay serialization must capture all hidden-information decisions", "tags": ["DIGITAL_ENGINE"] },
+    { "id": "N-005", "title": "First Contact as configuration profile not separate engine path", "tags": ["FIRST_CONTACT", "DIGITAL_ENGINE"] },
+    { "id": "N-006", "title": "Balance watch: 10♥ +2 Mini-Turns is strongest tempo swing", "tags": ["BALANCE", "RANK_10"] },
+    { "id": "N-007", "title": "Balance watch: Brilliance Queen bonuses create runaway leader potential", "tags": ["BALANCE", "BATTLE_REALM"] },
+    { "id": "N-008", "title": "Tournament Seed ban list concentrates power in remaining high cards", "tags": ["BALANCE", "TOURNAMENT_SEED"] }
+  ],
+  "false_positives": [
+    { "id": "FP-001", "title": "⭐4 Row Exchange Aegis grant to Nines is contradictory", "resolution": "§5.6: Failed Aegis grant does nothing. No contradiction." },
+    { "id": "FP-002", "title": "Bravery Nine Anchor Goal conflicts with BattleRealm Goal floor", "resolution": "§17.1: Goal floor 5 prevents edge case. No conflict." },
+    { "id": "FP-003", "title": "3 Red Ultra counter of multi-card plays has undefined destinations", "resolution": "Resolve as ⭐A inherits ⭐A rules. §4.9 defaults apply." },
+    { "id": "FP-004", "title": "Beauty Marriage ER Points contradict §1.6", "resolution": "§1.6 explicitly allows rules that add Points from ER." },
+    { "id": "FP-005", "title": "Defuse Action-Phase skip with pending Full-Turn skip is undefined", "resolution": "§25.5 and §20.3 FAQ: FT skip does not consume AP skip." },
+    { "id": "FP-006", "title": "Multiplayer FFA Sudden Death with eliminated activator", "resolution": "No elimination rule exists. All players continue." },
+    { "id": "FP-007", "title": "10♦ Mimic of ⭐A two-Queen defense is ambiguous", "resolution": "§13 10♦ explicitly states same two-Queen restriction." },
+    { "id": "FP-008", "title": "Owner vs controller in Aegis expiry", "resolution": "§5.2: Changing control does not move expiration event." }
+  ],
+  "test_vectors": {
+    "count": 120,
+    "categories": [
+      { "name": "Core Declaration and Resolution", "range": "TV-001–TV-015", "count": 15 },
+      { "name": "Core Timing and Priority", "range": "TV-016–TV-030", "count": 15 },
+      { "name": "Protection Systems", "range": "TV-031–TV-045", "count": 15 },
+      { "name": "Scuttle", "range": "TV-046–TV-055", "count": 10 },
+      { "name": "Stack and Triggers", "range": "TV-056–TV-070", "count": 15 },
+      { "name": "Rank Interactions", "range": "TV-071–TV-085", "count": 15 },
+      { "name": "Module Interactions", "range": "TV-086–TV-100", "count": 15 },
+      { "name": "Edge Cases and Error Handling", "range": "TV-101–TV-115", "count": 15 },
+      { "name": "State Lifecycle and Markers", "range": "TV-116–TV-120", "count": 5 }
+    ]
+  },
+  "tricky_interactions": {
+    "count": 40,
+    "detailed": 10,
+    "summary": 30
+  },
+  "patches": [
+    { "id": "P-C001", "issue": "C-001", "section": "§3.4", "severity": "critical" },
+    { "id": "P-C002", "issue": "C-002", "section": "§13 10♠", "severity": "critical" },
+    { "id": "P-C003", "issue": "C-003", "section": "§10.4", "severity": "critical" },
+    { "id": "P-M001", "issue": "M-001", "section": "§22.6", "severity": "major" },
+    { "id": "P-M002", "issue": "M-002", "section": "§26.3", "severity": "major" },
+    { "id": "P-M003", "issue": "M-003", "section": "§19.9 5♥", "severity": "major" },
+    { "id": "P-M004", "issue": "M-004", "section": "§19.9", "severity": "major" },
+    { "id": "P-M005", "issue": "M-005", "section": "§13 6♠", "severity": "major" },
+    { "id": "P-M006", "issue": "M-006", "section": "§1.6", "severity": "major" },
+    { "id": "P-M007", "issue": "M-007", "section": "§13 ⭐4", "severity": "major" },
+    { "id": "P-M008", "issue": "M-008", "section": "§13 9♠", "severity": "major" },
+    { "id": "P-m001", "issue": "m-001", "section": "§20.1", "severity": "minor" },
+    { "id": "P-m002", "issue": "m-002", "section": "§23", "severity": "minor" },
+    { "id": "P-m004", "issue": "m-004", "section": "§20.1", "severity": "minor" },
+    { "id": "P-m006", "issue": "m-006", "section": "§17.5", "severity": "minor" },
+    { "id": "P-m007", "issue": "m-007", "section": "§24.7", "severity": "minor" }
+  ]
+}

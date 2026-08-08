@@ -1,0 +1,69 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase15-tournament-seed.json"
+  ],
+  "fixtureCount": 3,
+  "repeatCount": 7,
+  "passed": 3,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-004",
+      "title": "Tournament Seed uses the canonical High-Impact Pool",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "573546e2f99d6bb5e06ad6bd4b0da1757c2ced2c795ffd49ce61958e895cb9da",
+      "finalStateHash": "a6c13aa37de3153f8515eef8f2208e6d263947e2a13114017266b239f7144736",
+      "eventLogHash": "1a5a97111dfa0d8495245f00a0ea1bd2856261a02662608528444b29666e0d50",
+      "replayHash": "55ca64c3ab54d31e0f2ace9d0252cf804cd8630cde1d44577815cba0a7bd3df5",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-005",
+      "title": "Tournament Seed collision uses ranked backup",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "bafd87cd472d26d5246805b3aef0a5809e99d9d5664c53cfcd628ea11b29e761",
+      "finalStateHash": "ec129d7d01c50ceba8e54ffbf254dc8b92d56203e1f22b36dcd4949f692e68c2",
+      "eventLogHash": "22afd50b4718a8953a0cffc2cb425dccaf5bbd8dfa23153126304e62260a857d",
+      "replayHash": "052708e008fc8e0e5e01be4857553083613dcbab1ade27b0df9b5543e7e482e0",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-063@TOURNAMENT-SEED",
+      "title": "Tournament Seed rejects Trap Module configuration",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "e97eb51df0b824b951921f725e628f1c057f804abe1c098961e528d9bc04f371",
+      "finalStateHash": "e97eb51df0b824b951921f725e628f1c057f804abe1c098961e528d9bc04f371",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "43a19c9da37fa3b1f2b1eb06219fe2e18e278fab5a3cfe4852f8a85578029211",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "947fbabed61c95b3fd9631eea324051de25339bec3a2cae660cbea05f4510a79"
+}

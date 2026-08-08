@@ -1,0 +1,12 @@
+{
+  "name": "@intrilex/engine-adapter",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/adapter.mjs",
+    "./public-projection": "./src/public-projection.mjs"
+  },
+  "dependencies": {
+    "@intrilex/shared": "workspace:*"
+  }
+}

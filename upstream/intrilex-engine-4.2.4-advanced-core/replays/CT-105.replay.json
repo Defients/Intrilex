@@ -1,0 +1,299 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-105",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT105-S": {
+        "controllerId": "P1",
+        "id": "CT105-S",
+        "identity": "3♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT105-S"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "A"
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "B"
+      },
+      "P3": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P3",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "A"
+      },
+      "P4": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P4",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "B"
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2",
+      "P3",
+      "P4"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "actorId": "P1",
+      "id": "CT105-1",
+      "play": {
+        "controllerId": "P1",
+        "instructions": [
+          {
+            "label": "priority-cycle-complete",
+            "op": "record"
+          }
+        ],
+        "kind": "ordinary-effect",
+        "requirements": [],
+        "revalidationClass": "none",
+        "sourceCardIds": [
+          "CT105-S"
+        ],
+        "sourceDestination": "GY",
+        "targetCardIds": []
+      },
+      "type": "DECLARE_PLAY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT105-2",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P3",
+      "id": "CT105-3",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P4",
+      "id": "CT105-4",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT105-5",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT105-6",
+      "type": "RESOLVE_TOP"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT105-1",
+      "id": "EV-000001",
+      "payload": {
+        "kind": "ordinary-effect",
+        "sourceCardIds": [
+          "CT105-S"
+        ],
+        "stackItemId": "SI-CT105-1",
+        "targetCardIds": []
+      },
+      "previousStateHash": "7d39a21264c67d3ca606a4361697143e803c0a16757e3f4627ec5d71a1e6b780",
+      "sequence": 1,
+      "stateHash": "88907f0ee1529c1a5e7fec0aebf30918d950ee9bebfeef16e104f6b1d336319d",
+      "type": "DECLARATION_COMMITTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT105-2",
+      "id": "EV-000002",
+      "payload": {
+        "consecutivePasses": 1,
+        "playerId": "P2"
+      },
+      "previousStateHash": "88907f0ee1529c1a5e7fec0aebf30918d950ee9bebfeef16e104f6b1d336319d",
+      "sequence": 2,
+      "stateHash": "2c3b00f6121333252862df033944db7740f259a2ca156d264bd9e4fccc1d0dfe",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT105-3",
+      "id": "EV-000003",
+      "payload": {
+        "consecutivePasses": 2,
+        "playerId": "P3"
+      },
+      "previousStateHash": "2c3b00f6121333252862df033944db7740f259a2ca156d264bd9e4fccc1d0dfe",
+      "sequence": 3,
+      "stateHash": "efc0016cee3d463d6ebdc1d2822982160ab90e4a342c18711fe1a3641c6b0e9f",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT105-4",
+      "id": "EV-000004",
+      "payload": {
+        "consecutivePasses": 3,
+        "playerId": "P4"
+      },
+      "previousStateHash": "efc0016cee3d463d6ebdc1d2822982160ab90e4a342c18711fe1a3641c6b0e9f",
+      "sequence": 4,
+      "stateHash": "e7946030e843fbab00382808f0a1ce1918c52ae0a6a0c68a035d333d2a99e7ee",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT105-5",
+      "id": "EV-000005",
+      "payload": {
+        "consecutivePasses": 4,
+        "playerId": "P1"
+      },
+      "previousStateHash": "e7946030e843fbab00382808f0a1ce1918c52ae0a6a0c68a035d333d2a99e7ee",
+      "sequence": 5,
+      "stateHash": "c35c479c2965170c2f6eca473c7d3a3c842f07a9995080ea2dcd26b623da4089",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT105-5",
+      "id": "EV-000007",
+      "payload": {
+        "reason": "all-players-passed"
+      },
+      "previousStateHash": "c35c479c2965170c2f6eca473c7d3a3c842f07a9995080ea2dcd26b623da4089",
+      "sequence": 6,
+      "stateHash": "c2cd7612361869abbc4849b10225213756accfa57cf0f1a72748ce611b59be2d",
+      "type": "PRIORITY_CLOSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT105-6",
+      "id": "EV-000007",
+      "payload": {
+        "kind": "ordinary-effect",
+        "stackItemId": "SI-CT105-1"
+      },
+      "previousStateHash": "c2cd7612361869abbc4849b10225213756accfa57cf0f1a72748ce611b59be2d",
+      "sequence": 7,
+      "stateHash": "32c5c7e179fd24a39fff439b826b767a1be3ff916f7e465b5248837746fb2e6c",
+      "type": "RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT105-6",
+      "id": "EV-000009",
+      "payload": {
+        "label": "priority-cycle-complete"
+      },
+      "previousStateHash": "32c5c7e179fd24a39fff439b826b767a1be3ff916f7e465b5248837746fb2e6c",
+      "sequence": 8,
+      "stateHash": "cea6e330b07bb8b8c17083b1e2805fb224df3a3826a68d316c72d5fbb8d8ab69",
+      "type": "FACT_RECORDED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT105-6",
+      "id": "EV-000011",
+      "payload": {
+        "stackItemId": "SI-CT105-1"
+      },
+      "previousStateHash": "cea6e330b07bb8b8c17083b1e2805fb224df3a3826a68d316c72d5fbb8d8ab69",
+      "sequence": 9,
+      "stateHash": "6b01607d55402d17bd530d810a42ccea475d81ee74c8beb5ee89956d3f4fea50",
+      "type": "STACK_ITEM_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "7d39a21264c67d3ca606a4361697143e803c0a16757e3f4627ec5d71a1e6b780",
+  "finalStateHash": "6b01607d55402d17bd530d810a42ccea475d81ee74c8beb5ee89956d3f4fea50",
+  "eventLogHash": "0f2fc729d2a73c0caf4fa31b22e55b2f4baab82655cffa0edaeafb2fbcb8dc79"
+}

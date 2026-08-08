@@ -1,0 +1,430 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-011",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT011-3H": {
+        "controllerId": "P1",
+        "id": "CT011-3H",
+        "identity": "3♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT011-5H": {
+        "controllerId": "P2",
+        "id": "CT011-5H",
+        "identity": "5♥",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "P2_HAND"
+      },
+      "CT011-7C": {
+        "controllerId": "P1",
+        "id": "CT011-7C",
+        "identity": "7♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT011-7C"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT011-5H"
+        ],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT011-3H"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "actorId": "P1",
+      "id": "CT011-C1",
+      "play": {
+        "controllerId": "P1",
+        "instructions": [
+          {
+            "cardId": "CT011-3H",
+            "op": "take-card",
+            "playerId": "P1",
+            "revealUntilStart": true
+          },
+          {
+            "data": "P1",
+            "label": "controllerRelative",
+            "op": "record"
+          }
+        ],
+        "kind": "generated-topdeck-play",
+        "requirements": [],
+        "revalidationClass": "none",
+        "sourceCardIds": [
+          "CT011-7C"
+        ],
+        "sourceDestination": "GY",
+        "tags": [],
+        "targetCardIds": []
+      },
+      "type": "DECLARE_PLAY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT011-C2",
+      "play": {
+        "controllerId": "P2",
+        "instructions": [
+          {
+            "controllerId": "P2",
+            "op": "rebind-stack-item",
+            "replacementInstructions": [
+              {
+                "cardId": "CT011-3H",
+                "op": "take-card",
+                "playerId": "P2",
+                "revealUntilStart": true
+              },
+              {
+                "data": "P2",
+                "label": "controllerRelative",
+                "op": "record"
+              }
+            ],
+            "stackItemId": "SI-CT011-C1"
+          },
+          {
+            "data": "P2",
+            "label": "interceptor",
+            "op": "record"
+          }
+        ],
+        "kind": "source-intercept",
+        "requirements": [],
+        "revalidationClass": "none",
+        "sourceCardIds": [
+          "CT011-5H"
+        ],
+        "sourceDestination": "GY",
+        "tags": [],
+        "targetCardIds": []
+      },
+      "type": "RESPOND_WITH_PLAY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT011-C3",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT011-C4",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT011-C5",
+      "type": "RESOLVE_TOP"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT011-C6",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT011-C7",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT011-C8",
+      "type": "RESOLVE_TOP"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT011-C1",
+      "id": "EV-000001",
+      "payload": {
+        "kind": "generated-topdeck-play",
+        "sourceCardIds": [
+          "CT011-7C"
+        ],
+        "stackItemId": "SI-CT011-C1",
+        "targetCardIds": []
+      },
+      "previousStateHash": "be8750de52cadaf6c01b7b81d3be41cc21f5af56e1eae6ec1a9a0f770cfe2c54",
+      "sequence": 1,
+      "stateHash": "912537c391b587616b26ad2d4fd94356df111e62bd5b0ad013258d268c62c0f6",
+      "type": "DECLARATION_COMMITTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C2",
+      "id": "EV-000002",
+      "payload": {
+        "kind": "source-intercept",
+        "sourceCardIds": [
+          "CT011-5H"
+        ],
+        "stackItemId": "SI-CT011-C2",
+        "targetCardIds": []
+      },
+      "previousStateHash": "912537c391b587616b26ad2d4fd94356df111e62bd5b0ad013258d268c62c0f6",
+      "sequence": 2,
+      "stateHash": "abeb084a33669fc2c4571d5aded1de103fdbad51ffbeb6777589a56379112123",
+      "type": "DECLARATION_COMMITTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C3",
+      "id": "EV-000003",
+      "payload": {
+        "consecutivePasses": 1,
+        "playerId": "P1"
+      },
+      "previousStateHash": "abeb084a33669fc2c4571d5aded1de103fdbad51ffbeb6777589a56379112123",
+      "sequence": 3,
+      "stateHash": "8c40e260c8b59ebc9977b7376cc87ecf615a18258b652f0d5459ef9c30b0f83f",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C4",
+      "id": "EV-000004",
+      "payload": {
+        "consecutivePasses": 2,
+        "playerId": "P2"
+      },
+      "previousStateHash": "8c40e260c8b59ebc9977b7376cc87ecf615a18258b652f0d5459ef9c30b0f83f",
+      "sequence": 4,
+      "stateHash": "6b04d94328670626bc49c1401fe632d663364dc34237c5cbd031b6978cfe823d",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C4",
+      "id": "EV-000006",
+      "payload": {
+        "reason": "all-players-passed"
+      },
+      "previousStateHash": "6b04d94328670626bc49c1401fe632d663364dc34237c5cbd031b6978cfe823d",
+      "sequence": 5,
+      "stateHash": "cfaa781201d770aae2c0688142e2de7b2ade52b4b7621a907ea6851992419d18",
+      "type": "PRIORITY_CLOSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C5",
+      "id": "EV-000006",
+      "payload": {
+        "kind": "source-intercept",
+        "stackItemId": "SI-CT011-C2"
+      },
+      "previousStateHash": "cfaa781201d770aae2c0688142e2de7b2ade52b4b7621a907ea6851992419d18",
+      "sequence": 6,
+      "stateHash": "312f23689c7f224496cf06d8e20fb9ec7e89e928d7beece85f386be7fa90ce1b",
+      "type": "RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C5",
+      "id": "EV-000008",
+      "payload": {
+        "controllerId": "P2",
+        "stackItemId": "SI-CT011-C1"
+      },
+      "previousStateHash": "312f23689c7f224496cf06d8e20fb9ec7e89e928d7beece85f386be7fa90ce1b",
+      "sequence": 7,
+      "stateHash": "f05b83ed2d524d890c57f2a2f6d83dc624fcebf6b87d5316e9e4b1c970ba6b8a",
+      "type": "STACK_ITEM_REBOUND",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C5",
+      "id": "EV-000010",
+      "payload": {
+        "data": "P2",
+        "label": "interceptor"
+      },
+      "previousStateHash": "f05b83ed2d524d890c57f2a2f6d83dc624fcebf6b87d5316e9e4b1c970ba6b8a",
+      "sequence": 8,
+      "stateHash": "63d527c0af8bfe2d78403a2553d03d71d3ebd20736e09b06d3a62e2c6a2e6a77",
+      "type": "FACT_RECORDED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C5",
+      "id": "EV-000012",
+      "payload": {
+        "stackItemId": "SI-CT011-C2"
+      },
+      "previousStateHash": "63d527c0af8bfe2d78403a2553d03d71d3ebd20736e09b06d3a62e2c6a2e6a77",
+      "sequence": 9,
+      "stateHash": "fa967e877d8ada2546f3d361f921d2647703872232986622c5b1b01a79ea0c21",
+      "type": "STACK_ITEM_RESOLVED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C6",
+      "id": "EV-000010",
+      "payload": {
+        "consecutivePasses": 1,
+        "playerId": "P1"
+      },
+      "previousStateHash": "fa967e877d8ada2546f3d361f921d2647703872232986622c5b1b01a79ea0c21",
+      "sequence": 10,
+      "stateHash": "ff46c7910bc93cdd13381a6449d696d8eef90a62167622abe92bda4cd4f9aa63",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C7",
+      "id": "EV-000011",
+      "payload": {
+        "consecutivePasses": 2,
+        "playerId": "P2"
+      },
+      "previousStateHash": "ff46c7910bc93cdd13381a6449d696d8eef90a62167622abe92bda4cd4f9aa63",
+      "sequence": 11,
+      "stateHash": "3f72018df73b03aae7c12476c9487f961b714166c62e234163639fda85387d11",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C7",
+      "id": "EV-000013",
+      "payload": {
+        "reason": "all-players-passed"
+      },
+      "previousStateHash": "3f72018df73b03aae7c12476c9487f961b714166c62e234163639fda85387d11",
+      "sequence": 12,
+      "stateHash": "06991c3eb0c3c60868c6ed24db91c8aa943a2325534745197ac3e3ea236cbae5",
+      "type": "PRIORITY_CLOSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C8",
+      "id": "EV-000013",
+      "payload": {
+        "kind": "generated-topdeck-play",
+        "stackItemId": "SI-CT011-C1"
+      },
+      "previousStateHash": "06991c3eb0c3c60868c6ed24db91c8aa943a2325534745197ac3e3ea236cbae5",
+      "sequence": 13,
+      "stateHash": "de4cda2fce269a1a3e0760d0f73bbe4bbd35c44597ffa19d4c14af2213f2175a",
+      "type": "RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C8",
+      "id": "EV-000015",
+      "payload": {
+        "cardId": "CT011-3H",
+        "playerId": "P2"
+      },
+      "previousStateHash": "de4cda2fce269a1a3e0760d0f73bbe4bbd35c44597ffa19d4c14af2213f2175a",
+      "sequence": 14,
+      "stateHash": "0f00fcbf5d5d686e6449ec953dd32f1d1159674c8e89ca28b4088ff2ed3309b5",
+      "type": "CARD_TAKEN",
+      "visibility": "authorized"
+    },
+    {
+      "commandId": "CT011-C8",
+      "id": "EV-000017",
+      "payload": {
+        "data": "P2",
+        "label": "controllerRelative"
+      },
+      "previousStateHash": "0f00fcbf5d5d686e6449ec953dd32f1d1159674c8e89ca28b4088ff2ed3309b5",
+      "sequence": 15,
+      "stateHash": "d6c2a55d5753789d9d88a5604f1fc8fbf7faaedd8f0122b045d17fe53f947981",
+      "type": "FACT_RECORDED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT011-C8",
+      "id": "EV-000019",
+      "payload": {
+        "stackItemId": "SI-CT011-C1"
+      },
+      "previousStateHash": "d6c2a55d5753789d9d88a5604f1fc8fbf7faaedd8f0122b045d17fe53f947981",
+      "sequence": 16,
+      "stateHash": "eda08a4179805fc905a687bf47a127cfe47f257e589aee3c6b5d5c6b57baf171",
+      "type": "STACK_ITEM_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "be8750de52cadaf6c01b7b81d3be41cc21f5af56e1eae6ec1a9a0f770cfe2c54",
+  "finalStateHash": "eda08a4179805fc905a687bf47a127cfe47f257e589aee3c6b5d5c6b57baf171",
+  "eventLogHash": "5b0d93352566167479a6aae00eb04ecebf5379e1f74600ee7503cab8b8cfe2eb"
+}

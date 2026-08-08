@@ -1,0 +1,150 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-015",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {},
+    "fullTurnSequence": 12,
+    "metadata": {
+      "phase8": {
+        "boardLock": null,
+        "exhausted": {
+          "remaining": 1,
+          "startedFullTurnSequence": 8
+        },
+        "suddenDeath": {
+          "activationFullTurnSequence": 10,
+          "activatorId": "P2",
+          "remaining": 1
+        },
+        "voltageSnapshots": {},
+        "voltageUsedThisFT": {}
+      }
+    },
+    "pendingDeclaration": null,
+    "phase": "End",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "process-end-phase"
+      },
+      "actorId": "P1",
+      "id": "CT015-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT015-1",
+      "id": "EV-000001",
+      "payload": {
+        "remaining": 0,
+        "step": 3
+      },
+      "previousStateHash": "f67c5eae88b06b78fbe874bc837f420752544c0bb65a4c895e55530be58f6387",
+      "sequence": 1,
+      "stateHash": "1b5c52d12605912423ae3900ba9a5614b261ea8f2cbfcb30d4bb5580bb41091c",
+      "type": "SUDDEN_DEATH_TICKED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT015-1",
+      "id": "EV-000003",
+      "payload": {
+        "playerId": "P2",
+        "reason": "sudden-death",
+        "shortCircuited": true,
+        "step": 3
+      },
+      "previousStateHash": "1b5c52d12605912423ae3900ba9a5614b261ea8f2cbfcb30d4bb5580bb41091c",
+      "sequence": 2,
+      "stateHash": "bcf532bce1ffeae4a5abe12936dd167492635b8c4fed70f6744dc7849605daeb",
+      "type": "WINNER_DECLARED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT015-1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 2,
+      "eventRangeHash": "6b02e881745daae58a696ca0428a0669956f57476e93db6120da1ed4ccb5d4e8"
+    }
+  ],
+  "publicEventLogHash": "6b02e881745daae58a696ca0428a0669956f57476e93db6120da1ed4ccb5d4e8",
+  "publicContentHash": "03df7950ff4ae0463958b5fd494309705eb57bdd63991daea1a10368faaa2019"
+}

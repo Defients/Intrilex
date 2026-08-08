@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0",
+  "rulesVersion": "4.1.2",
+  "authority": "DIRECT_OWNER_RULING",
+  "ordinaryPassGenerallyAvailable": false,
+  "exhaustedPass": {
+    "semantic": "ACTION_EXHAUSTED_PASS",
+    "conditions": ["EXHAUSTED_ACTIVE", "DRAW_PILE_EMPTY", "NO_OTHER_LEGAL_MINI_TURN_ACTION"],
+    "consumesMiniTurn": true
+  },
+  "responseDecline": {
+    "semantic": "DECLINE_RESPONSE",
+    "requiresLawfulResponseOption": true,
+    "consumesMiniTurn": false,
+    "createsSkip": false
+  },
+  "automaticPriorityAdvance": {
+    "semantic": "AUTOMATIC_PRIORITY_ADVANCE",
+    "requiresPolicyInput": false
+  },
+  "responseWindowClosed": {
+    "semantic": "RESPONSE_WINDOW_CLOSED",
+    "classification": "ENGINE_ORCHESTRATION"
+  },
+  "interruptHotfixPreserved": "4.1.1"
+}

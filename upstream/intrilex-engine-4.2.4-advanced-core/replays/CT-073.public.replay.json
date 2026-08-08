@@ -1,0 +1,132 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-073",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001",
+          "OPAQUE-HIDDEN-CARD-002"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "effectKey": "super-counter",
+        "kind": "mimic-ten-diamond",
+        "mimickedRank": "A",
+        "pairedTwoId": "CT073-2",
+        "sourceCardId": "CT073-10"
+      },
+      "actorId": "P1",
+      "id": "CT073-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT073-1",
+      "id": "EV-000001",
+      "payload": {
+        "controllerId": "P1",
+        "effectKey": "super-counter",
+        "mimickedRank": "A",
+        "paired": "CT073-2"
+      },
+      "previousStateHash": "8b008a9bd831fc79d2f533590fe6ca3fec472246e6551173dc6fd2fca6375298",
+      "sequence": 1,
+      "stateHash": "c68fd2683bb237a3a3def1f619dcab74b6a81d14ffff6d32780acc091228ad38",
+      "type": "TEN_DIAMOND_MIMIC_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "8b008a9bd831fc79d2f533590fe6ca3fec472246e6551173dc6fd2fca6375298",
+  "finalStateHash": "c68fd2683bb237a3a3def1f619dcab74b6a81d14ffff6d32780acc091228ad38",
+  "eventLogHash": "97772cb0577f633f7754e67315727941de636c195e2f9d8b71b9c499671937b5"
+}

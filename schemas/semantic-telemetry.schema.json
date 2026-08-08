@@ -1,0 +1,14 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://intrilex.local/schemas/semantic-telemetry-4.0.0.json",
+  "title":"Intrilex Semantic Telemetry 4.0.0",
+  "type":"object",
+  "required":["factId","matchId","checkpointId","semanticClass","actorId","legalOptionIds","hadLawfulResponse","consumedMiniTurn","createdSkip","engineEventIds","visibility"],
+  "properties":{
+    "factId":{"type":"string"},"matchId":{"type":"string"},"checkpointId":{"type":"string"},"turn":{"type":"integer"},"phase":{"type":"string"},"actorId":{"type":"string"},
+    "semanticClass":{"enum":["mini-turn-action","free-response-play","response-decline","engine-orchestration","trigger","private-choice","phase-transition","invariant"]},
+    "legalOptionIds":{"type":"array","items":{"type":"string"}},"chosenOptionId":{"type":"string"},"policyScores":{"type":"object","additionalProperties":{"type":"number"}},
+    "hadLawfulResponse":{"type":"boolean"},"consumedMiniTurn":{"type":"boolean"},"createdSkip":{"type":"boolean"},"engineCommandId":{"type":"string"},
+    "engineEventIds":{"type":"array","items":{"type":"string"}},"visibility":{"enum":["public","private","authorized"]}
+  },"additionalProperties":true
+}

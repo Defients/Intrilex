@@ -1,0 +1,153 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-084",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT084-T": {
+        "controllerId": "P1",
+        "id": "CT084-T",
+        "identity": "10♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT084-T"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "cardId": "CT084-T",
+        "destinationAfterResolution": "GY",
+        "kind": "begin-rank10-resolution"
+      },
+      "actorId": "P1",
+      "id": "CT084-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT084-1",
+      "id": "EV-000001",
+      "payload": {
+        "cardId": "CT084-T",
+        "exileBound": true,
+        "royalShieldApplicable": false
+      },
+      "previousStateHash": "0902ea1774b466916362f2e7d4d2c5e351ecae6ace100e660f080b2e4197305e",
+      "sequence": 1,
+      "stateHash": "6aa8b927481ea0cc30d802bd4a5ff08fe886de873ae4f895571ac759b1ce9f9c",
+      "type": "RANK10_RESOLUTION_BEGAN",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT084-1",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "18678767e738a33bf27cd93269bff5433a0bb02bb6bf165379fa0ff0e9c5110d",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "6aa8b927481ea0cc30d802bd4a5ff08fe886de873ae4f895571ac759b1ce9f9c",
+      "stateHashBefore": "0902ea1774b466916362f2e7d4d2c5e351ecae6ace100e660f080b2e4197305e"
+    }
+  ],
+  "initialStateHash": "0902ea1774b466916362f2e7d4d2c5e351ecae6ace100e660f080b2e4197305e",
+  "finalStateHash": "6aa8b927481ea0cc30d802bd4a5ff08fe886de873ae4f895571ac759b1ce9f9c",
+  "eventLogHash": "18678767e738a33bf27cd93269bff5433a0bb02bb6bf165379fa0ff0e9c5110d",
+  "checkpointLogHash": "5c2d219ed00c78cb29d20728b530bbda0ee5a49e7d462ccfe13c93ce12ae81c8",
+  "rngTraceHash": "a376b132e702bd6b577ff7b0054d459cc8dd314c75d1f2cac4ce1582a1a65207",
+  "contentHash": "ee5479e717d4c3b80bfef77d36aa137683354fb742245d56993dbbf457589287",
+  "integrityHash": "9652cfba6ca84fa9cb289fcacdbcc1e4fb19c0e62bc0ceac24f3be1a43bc6fe0"
+}

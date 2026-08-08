@@ -1,0 +1,47 @@
+{
+  "status_version": 1,
+  "status": "complete",
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0",
+  "milestone": "Roadmap Phase 20 \u2014 Final release certification",
+  "completed_phases": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "canonical_source_coverage": {
+    "represented": 120,
+    "total": 120,
+    "executable_fixtures": 121,
+    "provenance_duplicates": [
+      "CT-063"
+    ]
+  },
+  "preserved_phase2_18_aggregate": "994faf051dfa9441dd6511d360caa79a8b534b9db90908055e9692d6952f896a",
+  "final_conformance_aggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547",
+  "certified_replays": 121,
+  "invariant_fuzz_cases": 605,
+  "independent_runtime": {
+    "runtime": "Python 3.13.5",
+    "verified_pairs": 121,
+    "aggregate": "60fa842b90024a6d5f51eb7e114347eb024f7b7a6f34016a2f80a8c46de47da3"
+  },
+  "release_class": "stable-certified-headless-engine"
+}

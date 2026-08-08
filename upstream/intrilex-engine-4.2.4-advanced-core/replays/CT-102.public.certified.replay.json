@@ -1,0 +1,460 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-102",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT102-C01": {
+        "controllerId": "P2",
+        "id": "CT102-C01",
+        "identity": "A♣",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C02": {
+        "controllerId": "P3",
+        "id": "CT102-C02",
+        "identity": "2♦",
+        "originalOwnerId": "P3",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C03": {
+        "controllerId": "P4",
+        "id": "CT102-C03",
+        "identity": "3♥",
+        "originalOwnerId": "P4",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C04": {
+        "controllerId": "P1",
+        "id": "CT102-C04",
+        "identity": "4♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C05": {
+        "controllerId": "P2",
+        "id": "CT102-C05",
+        "identity": "5♣",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C06": {
+        "controllerId": "P3",
+        "id": "CT102-C06",
+        "identity": "A♣",
+        "originalOwnerId": "P3",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C07": {
+        "controllerId": "P4",
+        "id": "CT102-C07",
+        "identity": "2♦",
+        "originalOwnerId": "P4",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C08": {
+        "controllerId": "P1",
+        "id": "CT102-C08",
+        "identity": "3♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C09": {
+        "controllerId": "P2",
+        "id": "CT102-C09",
+        "identity": "4♠",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C10": {
+        "controllerId": "P3",
+        "id": "CT102-C10",
+        "identity": "5♣",
+        "originalOwnerId": "P3",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C11": {
+        "controllerId": "P4",
+        "id": "CT102-C11",
+        "identity": "A♣",
+        "originalOwnerId": "P4",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C12": {
+        "controllerId": "P1",
+        "id": "CT102-C12",
+        "identity": "2♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C13": {
+        "controllerId": "P2",
+        "id": "CT102-C13",
+        "identity": "3♥",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C14": {
+        "controllerId": "P3",
+        "id": "CT102-C14",
+        "identity": "4♠",
+        "originalOwnerId": "P3",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C15": {
+        "controllerId": "P4",
+        "id": "CT102-C15",
+        "identity": "5♣",
+        "originalOwnerId": "P4",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C16": {
+        "controllerId": "P1",
+        "id": "CT102-C16",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C17": {
+        "controllerId": "P2",
+        "id": "CT102-C17",
+        "identity": "2♦",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C18": {
+        "controllerId": "P3",
+        "id": "CT102-C18",
+        "identity": "3♥",
+        "originalOwnerId": "P3",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C19": {
+        "controllerId": "P4",
+        "id": "CT102-C19",
+        "identity": "4♠",
+        "originalOwnerId": "P4",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C20": {
+        "controllerId": "P1",
+        "id": "CT102-C20",
+        "identity": "5♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C21": {
+        "controllerId": "P2",
+        "id": "CT102-C21",
+        "identity": "A♣",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C22": {
+        "controllerId": "P3",
+        "id": "CT102-C22",
+        "identity": "2♦",
+        "originalOwnerId": "P3",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C23": {
+        "controllerId": "P4",
+        "id": "CT102-C23",
+        "identity": "3♥",
+        "originalOwnerId": "P4",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C24": {
+        "controllerId": "P1",
+        "id": "CT102-C24",
+        "identity": "4♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT102-C25": {
+        "controllerId": "P2",
+        "id": "CT102-C25",
+        "identity": "5♣",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "A"
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "B"
+      },
+      "P3": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P3",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "A"
+      },
+      "P4": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P4",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "B"
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2",
+      "P3",
+      "P4"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT102-C01",
+        "CT102-C02",
+        "CT102-C03",
+        "CT102-C04",
+        "CT102-C05",
+        "CT102-C06",
+        "CT102-C07",
+        "CT102-C08",
+        "CT102-C09",
+        "CT102-C10",
+        "CT102-C11",
+        "CT102-C12",
+        "CT102-C13",
+        "CT102-C14",
+        "CT102-C15",
+        "CT102-C16",
+        "CT102-C17",
+        "CT102-C18",
+        "CT102-C19",
+        "CT102-C20",
+        "CT102-C21",
+        "CT102-C22",
+        "CT102-C23",
+        "CT102-C24",
+        "CT102-C25"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "handAssignments": {
+          "P1": [
+            "CT102-C01",
+            "CT102-C02",
+            "CT102-C03",
+            "CT102-C04",
+            "CT102-C05"
+          ],
+          "P2": [
+            "CT102-C06",
+            "CT102-C07",
+            "CT102-C08",
+            "CT102-C09",
+            "CT102-C10"
+          ],
+          "P3": [
+            "CT102-C11",
+            "CT102-C12",
+            "CT102-C13",
+            "CT102-C14",
+            "CT102-C15"
+          ],
+          "P4": [
+            "CT102-C16",
+            "CT102-C17",
+            "CT102-C18",
+            "CT102-C19",
+            "CT102-C20"
+          ]
+        },
+        "kind": "apply-multiplayer-setup",
+        "mode": "teams-4",
+        "swapBarFaceDownCardIds": [
+          "CT102-C21",
+          "CT102-C22",
+          "CT102-C23"
+        ],
+        "swapBarFaceUpCardIds": [
+          "CT102-C24",
+          "CT102-C25"
+        ],
+        "teamAssignments": {
+          "P1": "A",
+          "P2": "B",
+          "P3": "A",
+          "P4": "B"
+        },
+        "turnOrder": [
+          "P1",
+          "P2",
+          "P3",
+          "P4"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT102-1",
+      "type": "RESOLVE_PHASE11_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT102-1",
+      "id": "EV-000001",
+      "payload": {
+        "handSizes": {
+          "P1": 5,
+          "P2": 5,
+          "P3": 5,
+          "P4": 5
+        },
+        "mode": "teams-4",
+        "swapBarLayout": {
+          "capacity": 5,
+          "faceDownCardIds": [
+            "CT102-C21",
+            "CT102-C22",
+            "CT102-C23"
+          ],
+          "faceUpCardIds": [
+            "CT102-C24",
+            "CT102-C25"
+          ]
+        },
+        "turnOrder": [
+          "P1",
+          "P2",
+          "P3",
+          "P4"
+        ]
+      },
+      "previousStateHash": "4e5d28e22384ff80f95a06510d535d14290dc3431e17bd65a98efd3559301002",
+      "sequence": 1,
+      "stateHash": "eb7756d31bc03a185e3fa36861e40aa1f9433a3b37caaae07a4b568319df1f2e",
+      "type": "MULTIPLAYER_SETUP_APPLIED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT102-1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "c65ce4e1ad6a08bd394d3a71137d2e97412d384b41cfb6f3a07d020513be2bb5"
+    }
+  ],
+  "publicEventLogHash": "c65ce4e1ad6a08bd394d3a71137d2e97412d384b41cfb6f3a07d020513be2bb5",
+  "publicContentHash": "dd47fa2d068ce8352324c1e97332e13315c8242a00159fd4d55deab0a0b076ed"
+}

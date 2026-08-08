@@ -1,0 +1,86 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase20-canonical-closure.json"
+  ],
+  "fixtureCount": 5,
+  "repeatCount": 7,
+  "passed": 5,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-013",
+      "title": "⭐4 exchanges a non-empty PR with an empty PR under canon-lock vectors",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "553675e82aed0d2dd25ab6ceceda4cbc7924975e35b9f3b1a0b363d76ad554b6",
+      "finalStateHash": "435de5af602e34269d9d00b51172d7e2ddebf80519cb0cd7d4849a91ce67ab51",
+      "eventLogHash": "ab64336834f9cd94b05e6f859ae6a377aae49ff16814b2ec58f8a7abff675bab",
+      "replayHash": "c7d9f3ec3fc3976324119039623d97c293aacd4283c91ecb584e07d28f0397f5",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-021",
+      "title": "⭐7 with one DP card suspends once, resolves one child, and resumes",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "2b0bb9ce25b74d4c9e138847b2acf34608b83ae0af630fb60e959b7f2377804d",
+      "finalStateHash": "72b5e712dac391d97f6149a9d76df529be9b01c00dfe7760902d4b4f20b54197",
+      "eventLogHash": "5a77913784dade5968348a05a8cfd85cc541f0c400f7eae2355fb207b33b9b16",
+      "replayHash": "5fa855124bd491948e92c15620b6968388c930836d377b6bb04f6126cf0733e4",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-023",
+      "title": "⭐5 ignores empty Exile because it is a DP-and-GY interaction",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "38a1e981b107bc8e97361b98da5bfba9ee786bf044faebea91e976d2269d31c5",
+      "finalStateHash": "485f31d3cfbe7398855839f29b07a388dab628b03a7d31fa29cd296114f15655",
+      "eventLogHash": "bf22ed0b4900867ebe5cca539b6ec2bd2093aadbcbbdf216689cb58b9af6b1bd",
+      "replayHash": "89a0f3b7096b9c5e682802108652558f45b039aa3f10420b22a9db05c6ee3a67",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-034",
+      "title": "Skipped turn slot does not reset per-FT state",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "ccf9f306054749361f902942318cd6ff6e7418229001aec3b7110935ae2732f4",
+      "finalStateHash": "d626a9fdb75ffb69fe8eba553119111c5b7b5edcfc710ce3f8520cb072f19865",
+      "eventLogHash": "f401109f0b65fde0e3254ae92ac54e729d37d3b98a0e3f124eb4b84db7d5aafd",
+      "replayHash": "a4a76a69a1382ec7a737cfb96f52b1116af612da70566bfc4af3b91741650d4b",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-035",
+      "title": "Original owner never changes with controller",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "da0230ddca18d58f5be2d858c8f11263435c157aa45ceafa66e68f9b16fe7e0b",
+      "finalStateHash": "339bf1d7891c6aa3d2e8e7171060d07f99d9f1ffc249e6795ab2d226e8a3e2ab",
+      "eventLogHash": "bcafe2f159f9531f0d472311ebf2b51794b6c1269e739e960c1af41c9ed5fdf8",
+      "replayHash": "a7a86a30900b49f65bbc4ad3cf5b60bb0442d124a9dca732d0057d9bc353c8e5",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "36ba5e9f83d3587b38e8d647af76fab532cec9bc7eb98e6d483df084f7952f5a"
+}

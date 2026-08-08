@@ -1,0 +1,77 @@
+// ═══════════════════════════════════════════════════════════════
+// reason-codes.mjs — Stable, machine-readable protocol reason codes
+// ═══════════════════════════════════════════════════════════════
+
+export const ReasonCode = Object.freeze({
+  // Protocol-level
+  PROTOCOL_INVALID: 'PROTOCOL_INVALID',
+  PROTOCOL_VERSION_UNSUPPORTED: 'PROTOCOL_VERSION_UNSUPPORTED',
+  MESSAGE_TYPE_UNKNOWN: 'MESSAGE_TYPE_UNKNOWN',
+  MESSAGE_TOO_LARGE: 'MESSAGE_TOO_LARGE',
+  MALFORMED_JSON: 'MALFORMED_JSON',
+  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
+  INVALID_FIELD_TYPE: 'INVALID_FIELD_TYPE',
+
+  // Authentication / Authorization
+  AUTH_INVALID: 'AUTH_INVALID',
+  AUTH_TOKEN_MISSING: 'AUTH_TOKEN_MISSING',
+  AUTH_TOKEN_INVALID: 'AUTH_TOKEN_INVALID',
+  AUTH_TOKEN_EXPIRED: 'AUTH_TOKEN_EXPIRED',
+  PARTICIPANT_NOT_FOUND: 'PARTICIPANT_NOT_FOUND',
+  PARTICIPANT_NOT_AUTHORIZED: 'PARTICIPANT_NOT_AUTHORIZED',
+
+  // Match lifecycle
+  MATCH_NOT_FOUND: 'MATCH_NOT_FOUND',
+  MATCH_FULL: 'MATCH_FULL',
+  MATCH_NOT_RUNNING: 'MATCH_NOT_RUNNING',
+  MATCH_ALREADY_JOINED: 'MATCH_ALREADY_JOINED',
+  MATCH_EXPIRED: 'MATCH_EXPIRED',
+  MATCH_ABORTED: 'MATCH_ABORTED',
+
+  // Matchmaking queue
+  QUEUE_FULL: 'QUEUE_FULL',
+  QUEUE_TIMEOUT: 'QUEUE_TIMEOUT',
+  NOT_IN_QUEUE: 'NOT_IN_QUEUE',
+  ALREADY_IN_QUEUE: 'ALREADY_IN_QUEUE',
+
+  // Gameplay
+  NOT_DECISION_ACTOR: 'NOT_DECISION_ACTOR',
+  STALE_REVISION: 'STALE_REVISION',
+  STALE_DECISION_FRAME: 'STALE_DECISION_FRAME',
+  ACTION_ID_INVALID: 'ACTION_ID_INVALID',
+  ENGINE_REJECTION: 'ENGINE_REJECTION',
+  PROFILE_UNSUPPORTED: 'PROFILE_UNSUPPORTED',
+
+  // Idempotency
+  IDEMPOTENCY_CONFLICT: 'IDEMPOTENCY_CONFLICT',
+
+  // Rate limiting
+  RATE_LIMITED: 'RATE_LIMITED',
+
+  // Connection
+  CONNECTION_SUPERSEDED: 'CONNECTION_SUPERSEDED',
+  CONNECTION_TIMEOUT: 'CONNECTION_TIMEOUT',
+  CONNECTION_MATCH_MISMATCH: 'CONNECTION_MATCH_MISMATCH',
+
+  // Server
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+  SERVER_SHUTTING_DOWN: 'SERVER_SHUTTING_DOWN',
+});
+
+/**
+ * Map a reason code to an HTTP-like status category for logging.
+ * @param {string} code - Reason code to categorize
+ * @returns {string}
+ */
+export function reasonCategory(code) {
+  if (code.startsWith('PROTOCOL') || code.startsWith('MALFORMED') || code.startsWith('MISSING') || code.startsWith('INVALID_FIELD') || code.startsWith('MESSAGE_')) return 'CLIENT_ERROR';
+  if (code.startsWith('AUTH')) return 'AUTH';
+  if (code.startsWith('PARTICIPANT')) return 'AUTH';
+  if (code.startsWith('MATCH')) return 'MATCH';
+  if (code.startsWith('STALE') || code === 'NOT_DECISION_ACTOR' || code === 'ACTION_ID_INVALID') return 'STALE';
+  if (code === 'ENGINE_REJECTION') return 'ENGINE';
+  if (code === 'RATE_LIMITED') return 'RATE';
+  if (code.startsWith('CONNECTION')) return 'CONNECTION';
+  if (code === 'INTERNAL_ERROR' || code === 'SERVER_SHUTTING_DOWN') return 'SERVER';
+  return 'UNKNOWN';
+}

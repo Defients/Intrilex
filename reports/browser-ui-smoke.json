@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "2.0.0",
+  "status": "PASS",
+  "browser": "Chromium 144 headless",
+  "workspaces": {
+    "replays": true,
+    "history": true,
+    "mechanics": true,
+    "cards": true,
+    "synergies": true,
+    "ranks": true,
+    "compare": true,
+    "traces": true,
+    "branches": true,
+    "diagnostics": true,
+    "evidence": true
+  },
+  "landing": {
+    "landing": true,
+    "play": true,
+    "rules": true,
+    "sim": true
+  },
+  "campaign": {
+    "status": "PASS · 1 matches, 0 aborts, 304ms",
+    "matchCount": 1,
+    "abortCount": 0
+  },
+  "replay": {
+    "checkpointStep": true,
+    "playerProjection": true,
+    "opponentHandHidden": true
+  },
+  "accessibility": {
+    "lang": "en",
+    "skipLink": true,
+    "main": true,
+    "navLinks": 12,
+    "unnamedButtons": 0,
+    "reducedMotion": true,
+    "axInteractiveNodes": 45,
+    "axUnnamedInteractiveNodes": 0
+  },
+  "responsive": [
+    {
+      "name": "mobile-390",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "scrollHeight": 844,
+      "workspace": "Mechanics",
+      "screenshot": "reports/visual-qa/mobile-390.png"
+    },
+    {
+      "name": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "scrollWidth": 758,
+      "clientWidth": 768,
+      "scrollHeight": 1024,
+      "workspace": "Mechanics",
+      "screenshot": "reports/visual-qa/tablet-768.png"
+    },
+    {
+      "name": "desktop-1366",
+      "width": 1366,
+      "height": 768,
+      "scrollWidth": 1356,
+      "clientWidth": 1356,
+      "scrollHeight": 1313,
+      "workspace": "Card Faces",
+      "screenshot": "reports/visual-qa/desktop-1366.png"
+    },
+    {
+      "name": "theatre-1920",
+      "width": 1920,
+      "height": 1080,
+      "scrollWidth": 1910,
+      "clientWidth": 1910,
+      "scrollHeight": 1444,
+      "workspace": "Watch",
+      "screenshot": "reports/visual-qa/theatre-1920.png"
+    }
+  ],
+  "reducedMotion": true,
+  "exceptions": []
+}

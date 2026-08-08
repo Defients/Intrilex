@@ -1,0 +1,3760 @@
+TAP version 13
+# Subtest: document has language, skip link and main landmark
+ok 1 - document has language, skip link and main landmark
+  ---
+  duration_ms: 5.9272
+  ...
+# Subtest: controls expose labels
+ok 2 - controls expose labels
+  ---
+  duration_ms: 1.7523
+  ...
+# Subtest: focus-visible styling exists
+ok 3 - focus-visible styling exists
+  ---
+  duration_ms: 0.9619
+  ...
+# Subtest: statuses are encoded in text and not color alone
+ok 4 - statuses are encoded in text and not color alone
+  ---
+  duration_ms: 2.2784
+  ...
+# Subtest: landing page has skip link in renderLanding
+ok 5 - landing page has skip link in renderLanding
+  ---
+  duration_ms: 1.7678
+  ...
+# Subtest: landing cards have focus-visible styling
+ok 6 - landing cards have focus-visible styling
+  ---
+  duration_ms: 1.3466
+  ...
+# Subtest: landing page respects reduced-motion for aurora animation
+ok 7 - landing page respects reduced-motion for aurora animation
+  ---
+  duration_ms: 1.9345
+  ...
+# Subtest: 10ΓÖú Foundation is in supportedFamilies
+ok 8 - 10ΓÖú Foundation is in supportedFamilies
+  ---
+  duration_ms: 1.627
+  ...
+# Subtest: 10ΓÖú Foundation match completes without errors
+ok 9 - 10ΓÖú Foundation match completes without errors
+  ---
+  duration_ms: 8641.1522
+  ...
+# Subtest: 10ΓÖú Foundation enumeration produces candidates when 10ΓÖú is in hand
+ok 10 - 10ΓÖú Foundation enumeration produces candidates when 10ΓÖú is in hand
+  ---
+  duration_ms: 17.1489
+  ...
+# Subtest: 10ΓÖú Foundation determinism: same seed produces same replay hash
+ok 11 - 10ΓÖú Foundation determinism: same seed produces same replay hash
+  ---
+  duration_ms: 2910.1442
+  ...
+# Subtest: Γ¡É2 Hold is in supportedFamilies
+ok 12 - Γ¡É2 Hold is in supportedFamilies
+  ---
+  duration_ms: 0.2598
+  ...
+# Subtest: Γ¡É2 Hold match completes without errors
+ok 13 - Γ¡É2 Hold match completes without errors
+  ---
+  duration_ms: 561.4343
+  ...
+# Subtest: Γ¡É2 Hold determinism: same seed produces same replay hash
+ok 14 - Γ¡É2 Hold determinism: same seed produces same replay hash
+  ---
+  duration_ms: 7634.7112
+  ...
+# Subtest: Voltage 3 is in supportedFamilies
+ok 15 - Voltage 3 is in supportedFamilies
+  ---
+  duration_ms: 0.1434
+  ...
+# Subtest: Voltage 3 match completes without errors
+ok 16 - Voltage 3 match completes without errors
+  ---
+  duration_ms: 2723.1076
+  ...
+# Subtest: Voltage 4 is in supportedFamilies
+ok 17 - Voltage 4 is in supportedFamilies
+  ---
+  duration_ms: 0.5311
+  ...
+# Subtest: Voltage 4 match completes without errors
+ok 18 - Voltage 4 match completes without errors
+  ---
+  duration_ms: 2123.4664
+  ...
+# Subtest: Voltage 5 Refine is in supportedFamilies
+ok 19 - Voltage 5 Refine is in supportedFamilies
+  ---
+  duration_ms: 0.1409
+  ...
+# Subtest: Voltage 5 Refine match completes without errors
+ok 20 - Voltage 5 Refine match completes without errors
+  ---
+  duration_ms: 1835.3916
+  ...
+# Subtest: Special scoring riders are in supportedFamilies
+ok 21 - Special scoring riders are in supportedFamilies
+  ---
+  duration_ms: 0.1214
+  ...
+# Subtest: Scoring riders match completes without errors
+ok 22 - Scoring riders match completes without errors
+  ---
+  duration_ms: 265.4386
+  ...
+# Subtest: 10ΓÖú is allowed as Ultra Three Black score card
+ok 23 - 10ΓÖú is allowed as Ultra Three Black score card
+  ---
+  duration_ms: 1238.8236
+  ...
+# Subtest: Advanced continuations do not break replay compatibility
+ok 24 - Advanced continuations do not break replay compatibility
+  ---
+  duration_ms: 2965.3435
+  ...
+# Subtest: Advanced continuations are deterministic across repeated matches
+ok 25 - Advanced continuations are deterministic across repeated matches
+  ---
+  duration_ms: 5326.8221
+  ...
+# Subtest: Advanced continuations: multiple policy pairings all terminate cleanly
+ok 26 - Advanced continuations: multiple policy pairings all terminate cleanly
+  ---
+  duration_ms: 3554.1399
+  ...
+# Subtest: statistical utilities are deterministic and bounded
+ok 27 - statistical utilities are deterministic and bounded
+  ---
+  duration_ms: 4.2823
+  ...
+# Subtest: known positive interaction is detected with evidence fields
+ok 28 - known positive interaction is detected with evidence fields
+  ---
+  duration_ms: 22.2403
+  ...
+# Subtest: Observatory aggregate is formula-versioned and hash-bound
+ok 29 - Observatory aggregate is formula-versioned and hash-bound
+  ---
+  duration_ms: 22.2236
+  ...
+# Subtest: mechanic outcomes are attributed to the participant who used them
+ok 30 - mechanic outcomes are attributed to the participant who used them
+  ---
+  duration_ms: 0.9043
+  ...
+# Subtest: engine exposes bounded Advanced Core and retains complete First Contact
+ok 31 - engine exposes bounded Advanced Core and retains complete First Contact
+  ---
+  duration_ms: 2.5801
+  ...
+# Subtest: Core decision frame exposes semantic actions but not raw command vault
+ok 32 - Core decision frame exposes semantic actions but not raw command vault
+  ---
+  duration_ms: 66.2214
+  ...
+# Subtest: strict Core policy view preserves hidden information and exposes authorized Core systems
+ok 33 - strict Core policy view preserves hidden information and exposes authorized Core systems
+  ---
+  duration_ms: 3.043
+  ...
+# Subtest: five policies remain deterministic and behaviorally distinct
+ok 34 - five policies remain deterministic and behaviorally distinct
+  ---
+  duration_ms: 14.9817
+  ...
+# Subtest: selected Advanced Core policy matches terminate canonically and exercise advanced authority
+ok 35 - selected Advanced Core policy matches terminate canonically and exercise advanced authority
+  ---
+  duration_ms: 5496.126
+  ...
+# Subtest: bounded campaign result hash is independent of worker count
+ok 36 - bounded campaign result hash is independent of worker count
+  ---
+  duration_ms: 11915.1982
+  ...
+# Subtest: capability report supports bounded Advanced Core without claiming complete Core
+ok 37 - capability report supports bounded Advanced Core without claiming complete Core
+  ---
+  duration_ms: 1.9541
+  ...
+# Subtest: static app declares module entry and product identity
+ok 38 - static app declares module entry and product identity
+  ---
+  duration_ms: 6.7796
+  ...
+# Subtest: landing page container and routes are present
+ok 39 - landing page container and routes are present
+  ---
+  duration_ms: 2.5065
+  ...
+# Subtest: rulebook-renderer exports renderMarkdown and renderRulesPage
+ok 40 - rulebook-renderer exports renderMarkdown and renderRulesPage
+  ---
+  duration_ms: 2.6949
+  ...
+# Subtest: styles.css has landing, play, and rules page styles
+ok 41 - styles.css has landing, play, and rules page styles
+  ---
+  duration_ms: 1.7025
+  ...
+# Subtest: browser worker executes certified replay verification and Advanced Core campaigns
+ok 42 - browser worker executes certified replay verification and Advanced Core campaigns
+  ---
+  duration_ms: 1.3166
+  ...
+# Subtest: reduced motion is supported
+ok 43 - reduced motion is supported
+  ---
+  duration_ms: 1.9064
+  ...
+# Subtest: browser engine build is narrow and Node-free
+ok 44 - browser engine build is narrow and Node-free
+  ---
+  duration_ms: 29.87
+  ...
+# Subtest: browser SHA-256 shim passes standard vectors
+ok 45 - browser SHA-256 shim passes standard vectors
+  ---
+  duration_ms: 12.3858
+  ...
+# Subtest: static build declares Advanced Core browser engine and capability truth
+ok 46 - static build declares Advanced Core browser engine and capability truth
+  ---
+  duration_ms: 5.1344
+  ...
+# Subtest: BL-10: smoke test requires P2 board and hand zone to exist
+ok 47 - BL-10: smoke test requires P2 board and hand zone to exist
+  ---
+  duration_ms: 5.9504
+  ...
+# Subtest: BL-23: Watch view verified badge is conditional on certified hash
+ok 48 - BL-23: Watch view verified badge is conditional on certified hash
+  ---
+  duration_ms: 2.4037
+  ...
+# Subtest: BL-23: Integrity dialog shows conditional verified status
+not ok 49 - BL-23: Integrity dialog shows conditional verified status
+  ---
+  duration_ms: 5.8993
+  location: 'H:\\myProjects\\Intrilex-dev2\\test\\browser-hidden-info.test.mjs:44:1'
+  failureType: 'testCodeFailure'
+  error: 'Integrity dialog must show Hash-verified when all hashes present'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///H:/myProjects/Intrilex-dev2/test/browser-hidden-info.test.mjs:50:10)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: BL-12: Integrity dialog uses capability manifest version, not hardcoded 0.10.0
+ok 50 - BL-12: Integrity dialog uses capability manifest version, not hardcoded 0.10.0
+  ---
+  duration_ms: 6.2609
+  ...
+# Subtest: browser autonomy-runtime exports all 19 policies (5 baseline + 14 HYBRIX)
+ok 51 - browser autonomy-runtime exports all 19 policies (5 baseline + 14 HYBRIX)
+  ---
+  duration_ms: 7.6827
+  ...
+# Subtest: browser app.js exposes all 19 policies in the dropdown
+ok 52 - browser app.js exposes all 19 policies in the dropdown
+  ---
+  duration_ms: 3.9515
+  ...
+# Subtest: browser hybrix dist contains all required modules
+ok 53 - browser hybrix dist contains all required modules
+  ---
+  duration_ms: 3.1166
+  ...
+# Subtest: browser hybrix policy-adapter exports HYBRIX_POLICY_IDS and chooseHybrixPolicy
+ok 54 - browser hybrix policy-adapter exports HYBRIX_POLICY_IDS and chooseHybrixPolicy
+  ---
+  duration_ms: 3.3113
+  ...
+# Subtest: BL-07: renderTraces loads trace shards via ensureTraceShardsLoaded
+ok 55 - BL-07: renderTraces loads trace shards via ensureTraceShardsLoaded
+  ---
+  duration_ms: 11.1073
+  ...
+# Subtest: BL-08: renderBranches uses fixtureId from lab-replay-index records
+ok 56 - BL-08: renderBranches uses fixtureId from lab-replay-index records
+  ---
+  duration_ms: 2.769
+  ...
+# Subtest: BL-08: runPairedCounterfactual uses fixtureId from lab-replay-index records
+ok 57 - BL-08: runPairedCounterfactual uses fixtureId from lab-replay-index records
+  ---
+  duration_ms: 6.5775
+  ...
+# Subtest: BL-09: Diagnostics Run button reads current selector values at click time
+ok 58 - BL-09: Diagnostics Run button reads current selector values at click time
+  ---
+  duration_ms: 2.4152
+  ...
+# Subtest: BL-07: trace index records contain metadata only, not traces array
+ok 59 - BL-07: trace index records contain metadata only, not traces array
+  ---
+  duration_ms: 1.8402
+  ...
+# Subtest: BL-08: lab-replay-index records have fixtureId, not matchId
+ok 60 - BL-08: lab-replay-index records have fixtureId, not matchId
+  ---
+  duration_ms: 70.1266
+  ...
+# Subtest: BL-16: renderRanks includes swap matrix heatmap section
+ok 61 - BL-16: renderRanks includes swap matrix heatmap section
+  ---
+  duration_ms: 11.1283
+  ...
+# Subtest: BL-16: observatory analytics.json contains swap matrix data
+not ok 62 - BL-16: observatory analytics.json contains swap matrix data
+  ---
+  duration_ms: 374.6796
+  location: 'H:\\myProjects\\Intrilex-dev2\\test\\browser-workspace-liveness.test.mjs:95:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    cell must have numeric decisionValue
+    + actual - expected
+    
+    + 'undefined'
+    - 'number'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'number'
+  actual: 'undefined'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///H:/myProjects/Intrilex-dev2/test/browser-workspace-liveness.test.mjs:108:10)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: BL-16: styles.css contains swap matrix heatmap styles
+ok 63 - BL-16: styles.css contains swap matrix heatmap styles
+  ---
+  duration_ms: 22.833
+  ...
+# Subtest: Advanced Core aggregate and determinism report are internally consistent
+ok 64 - Advanced Core aggregate and determinism report are internally consistent
+  ---
+  duration_ms: 13.6965
+  ...
+# Subtest: 100-match Advanced Core campaign covers all pairings and every major authority class
+ok 65 - 100-match Advanced Core campaign covers all pairings and every major authority class
+  ---
+  duration_ms: 4.1909
+  ...
+# Subtest: representative replay retention is paired, complete, and advanced-aware
+ok 66 - representative replay retention is paired, complete, and advanced-aware
+  ---
+  duration_ms: 151.3576
+  ...
+# Subtest: CSV export neutralizes formula-like fields
+ok 67 - CSV export neutralizes formula-like fields
+  ---
+  duration_ms: 6.1323
+  ...
+# Subtest: campaign records satisfy accounting invariant ΓÇö every match is mutually exclusively categorized
+ok 68 - campaign records satisfy accounting invariant ΓÇö every match is mutually exclusively categorized
+  ---
+  duration_ms: 190.0742
+  ...
+# Subtest: retained Lab replay artifacts are hash-linked and use Advanced Core
+ok 69 - retained Lab replay artifacts are hash-linked and use Advanced Core
+  ---
+  duration_ms: 9891.9466
+  ...
+# Subtest: Card Face Registry v1.1 exposes all 54 exact cards with canonical definitions
+ok 70 - Card Face Registry v1.1 exposes all 54 exact cards with canonical definitions
+  ---
+  duration_ms: 2.4349
+  ...
+# Subtest: King faces are suit-specific and K spade preserves special authority
+ok 71 - King faces are suit-specific and K spade preserves special authority
+  ---
+  duration_ms: 0.6464
+  ...
+# Subtest: Ace faces preserve counter authority and AΓÖá exile counter
+ok 72 - Ace faces preserve counter authority and AΓÖá exile counter
+  ---
+  duration_ms: 0.3201
+  ...
+# Subtest: Queen faces preserve Guard, Aegis, and QΓÖá special protection
+ok 73 - Queen faces preserve Guard, Aegis, and QΓÖá special protection
+  ---
+  duration_ms: 0.2358
+  ...
+# Subtest: Jack faces preserve Disrupt, PR Attachment, and JΓÖá ER Attachment
+ok 74 - Jack faces preserve Disrupt, PR Attachment, and JΓÖá ER Attachment
+  ---
+  duration_ms: 0.4224
+  ...
+# Subtest: Numeric ranks 2-9 have canonical definitions with suit-specific spade variants
+ok 75 - Numeric ranks 2-9 have canonical definitions with suit-specific spade variants
+  ---
+  duration_ms: 0.4661
+  ...
+# Subtest: Jokers have canonical definitions with correct PR values and effect modes
+ok 76 - Jokers have canonical definitions with correct PR values and effect modes
+  ---
+  duration_ms: 1.157
+  ...
+# Subtest: No card falls through to generic scaffold for any of the 54 exact identities
+ok 77 - No card falls through to generic scaffold for any of the 54 exact identities
+  ---
+  duration_ms: 0.3773
+  ...
+# Subtest: Rank 10 rules preserve limit, Exile-Bound, and printed Stack Theft skip consequence
+ok 78 - Rank 10 rules preserve limit, Exile-Bound, and printed Stack Theft skip consequence
+  ---
+  duration_ms: 0.5777
+  ...
+# Subtest: renderer emits Board, Lite, and Full Zoom deterministic views
+ok 79 - renderer emits Board, Lite, and Full Zoom deterministic views
+  ---
+  duration_ms: 1.7421
+  ...
+# Subtest: lab app integrates Card Faces workspace and replay card inspector
+ok 80 - lab app integrates Card Faces workspace and replay card inspector
+  ---
+  duration_ms: 17.2469
+  ...
+# Subtest: family switcher exposes all 14 rank families in rank order
+ok 81 - family switcher exposes all 14 rank families in rank order
+  ---
+  duration_ms: 2.9835
+  ...
+# Subtest: cardFaceFamilyFor returns correct family for any identity
+ok 82 - cardFaceFamilyFor returns correct family for any identity
+  ---
+  duration_ms: 2.4313
+  ...
+# Subtest: all 54 cards have art paths pointing to suit-specific files
+ok 83 - all 54 cards have art paths pointing to suit-specific files
+  ---
+  duration_ms: 0.5193
+  ...
+# Subtest: reason code vocabulary is finite and has displays
+ok 84 - reason code vocabulary is finite and has displays
+  ---
+  duration_ms: 1.9395
+  ...
+# Subtest: reason code vocabulary hash is deterministic
+ok 85 - reason code vocabulary hash is deterministic
+  ---
+  duration_ms: 0.3363
+  ...
+# Subtest: validateReasonCodes rejects unknown codes
+ok 86 - validateReasonCodes rejects unknown codes
+  ---
+  duration_ms: 1.2592
+  ...
+# Subtest: mechanic registry contains canonical mechanics with display names
+ok 87 - mechanic registry contains canonical mechanics with display names
+  ---
+  duration_ms: 0.3785
+  ...
+# Subtest: mechanic registry hash is deterministic
+ok 88 - mechanic registry hash is deterministic
+  ---
+  duration_ms: 0.7948
+  ...
+# Subtest: resolveMechanicId resolves family and mode
+ok 89 - resolveMechanicId resolves family and mode
+  ---
+  duration_ms: 0.2257
+  ...
+# Subtest: mechanicDisplayName returns human-readable name
+ok 90 - mechanicDisplayName returns human-readable name
+  ---
+  duration_ms: 0.279
+  ...
+# Subtest: validateMechanicTags separates known and unknown
+ok 91 - validateMechanicTags separates known and unknown
+  ---
+  duration_ms: 0.2653
+  ...
+# Subtest: quarantineUnknownTags produces quarantine ledger entries
+ok 92 - quarantineUnknownTags produces quarantine ledger entries
+  ---
+  duration_ms: 0.6402
+  ...
+# Subtest: analyticsEligibleMechanics excludes non-discovery mechanics
+ok 93 - analyticsEligibleMechanics excludes non-discovery mechanics
+  ---
+  duration_ms: 0.716
+  ...
+# Subtest: decision trace has required schema fields
+ok 94 - decision trace has required schema fields
+  ---
+  duration_ms: 2.453
+  ...
+# Subtest: decision trace score components reconcile exactly
+ok 95 - decision trace score components reconcile exactly
+  ---
+  duration_ms: 1.393
+  ...
+# Subtest: validateDecisionTrace passes for valid trace
+ok 96 - validateDecisionTrace passes for valid trace
+  ---
+  duration_ms: 25.6502
+  ...
+# Subtest: publicDecisionTrace redacts private context
+ok 97 - publicDecisionTrace redacts private context
+  ---
+  duration_ms: 1.2392
+  ...
+# Subtest: decision trace legal options are stably ordered
+ok 98 - decision trace legal options are stably ordered
+  ---
+  duration_ms: 23.1538
+  ...
+# Subtest: decision trace is deterministic across reruns
+ok 99 - decision trace is deterministic across reruns
+  ---
+  duration_ms: 1.3829
+  ...
+# Subtest: continuation seed is deterministic
+ok 100 - continuation seed is deterministic
+  ---
+  duration_ms: 0.3289
+  ...
+# Subtest: isCounterfactualSupported rejects invalid inputs
+ok 101 - isCounterfactualSupported rejects invalid inputs
+  ---
+  duration_ms: 0.1979
+  ...
+# Subtest: runCounterfactualBranch produces analysis-only results
+ok 102 - runCounterfactualBranch produces analysis-only results
+  ---
+  duration_ms: 0.5808
+  ...
+# Subtest: runCounterfactualBranch is deterministic across reruns
+ok 103 - runCounterfactualBranch is deterministic across reruns
+  ---
+  duration_ms: 0.1876
+  ...
+# Subtest: compareCounterfactual produces estimated difference
+ok 104 - compareCounterfactual produces estimated difference
+  ---
+  duration_ms: 0.2913
+  ...
+# Subtest: diagnosePolicy produces metrics and limitations
+ok 105 - diagnosePolicy produces metrics and limitations
+  ---
+  duration_ms: 0.8584
+  ...
+# Subtest: comparePolicyDiagnostics produces descriptive comparison
+ok 106 - comparePolicyDiagnostics produces descriptive comparison
+  ---
+  duration_ms: 0.6503
+  ...
+# Subtest: runPolicyMatch with decisionTracesEnabled produces traces without affecting canonical output
+ok 107 - runPolicyMatch with decisionTracesEnabled produces traces without affecting canonical output
+  ---
+  duration_ms: 11867.6559
+  ...
+# Subtest: replay index canonical hash is valid
+ok 108 - replay index canonical hash is valid
+  ---
+  duration_ms: 8.8328
+  ...
+# Subtest: aggregate hash is valid
+ok 109 - aggregate hash is valid
+  ---
+  duration_ms: 6.4736
+  ...
+# Subtest: representative public artifact hash is valid
+ok 110 - representative public artifact hash is valid
+  ---
+  duration_ms: 3.1363
+  ...
+# Subtest: representative authorized artifact hash is valid
+ok 111 - representative authorized artifact hash is valid
+  ---
+  duration_ms: 2.5326
+  ...
+# Subtest: decision traces exist as positive fixtures for diagnostics
+ok 112 - decision traces exist as positive fixtures for diagnostics
+  ---
+  duration_ms: 18.3512
+  ...
+# Subtest: diagnostics pipeline produces valid output from retained traces
+ok 113 - diagnostics pipeline produces valid output from retained traces
+  ---
+  duration_ms: 403.2857
+  ...
+# Subtest: diagnostics workspace renders fail-closed when no traces available
+ok 114 - diagnostics workspace renders fail-closed when no traces available
+  ---
+  duration_ms: 3.808
+  ...
+# Subtest: all Observatory workspaces exist
+ok 115 - all Observatory workspaces exist
+  ---
+  duration_ms: 9.3015
+  ...
+# Subtest: landing page routes exist in app.js
+ok 116 - landing page routes exist in app.js
+  ---
+  duration_ms: 10.145
+  ...
+# Subtest: rulebook-renderer.js exists in src and dist
+ok 117 - rulebook-renderer.js exists in src and dist
+  ---
+  duration_ms: 1.2647
+  ...
+# Subtest: built app includes corpus, Observatory and retained replay evidence
+ok 118 - built app includes corpus, Observatory and retained replay evidence
+  ---
+  duration_ms: 2.4336
+  ...
+# Subtest: watch controls expose semantic stepping and visibility
+ok 119 - watch controls expose semantic stepping and visibility
+  ---
+  duration_ms: 4.6075
+  ...
+# Subtest: policy package cannot import raw engine surfaces
+ok 120 - policy package cannot import raw engine surfaces
+  ---
+  duration_ms: 17.8284
+  ...
+# Subtest: web app cannot import mutation helpers directly
+ok 121 - web app cannot import mutation helpers directly
+  ---
+  duration_ms: 635.8029
+  ...
+# Subtest: only engine adapter imports compiled engine runtime
+ok 122 - only engine adapter imports compiled engine runtime
+  ---
+  duration_ms: 381.8098
+  ...
+# Subtest: capability manifest exposes only audited Lab aliases and remains fail-closed
+ok 123 - capability manifest exposes only audited Lab aliases and remains fail-closed
+  ---
+  duration_ms: 22.6009
+  ...
+# Subtest: Config
+    # Subtest: DEFAULT_CONFIG has all required sections
+    ok 1 - DEFAULT_CONFIG has all required sections
+      ---
+      duration_ms: 1.0983
+      ...
+    # Subtest: loadConfig merges partial overrides
+    ok 2 - loadConfig merges partial overrides
+      ---
+      duration_ms: 0.5222
+      ...
+    # Subtest: validateConfig detects missing sections
+    ok 3 - validateConfig detects missing sections
+      ---
+      duration_ms: 0.2262
+      ...
+    # Subtest: validateConfig flags positive risk weight
+    ok 4 - validateConfig flags positive risk weight
+      ---
+      duration_ms: 0.3972
+      ...
+    1..4
+ok 124 - Config
+  ---
+  duration_ms: 3.9552
+  type: 'suite'
+  ...
+# Subtest: Perception
+    # Subtest: detects entity within vision range and cone
+    ok 1 - detects entity within vision range and cone
+      ---
+      duration_ms: 1.1822
+      ...
+    # Subtest: does not detect entity outside vision range and sound range
+    ok 2 - does not detect entity outside vision range and sound range
+      ---
+      duration_ms: 0.2445
+      ...
+    # Subtest: does not detect entity outside vision cone but within sound range
+    ok 3 - does not detect entity outside vision cone but within sound range
+      ---
+      duration_ms: 0.4376
+      ...
+    # Subtest: reset clears all state
+    ok 4 - reset clears all state
+      ---
+      duration_ms: 0.7268
+      ...
+    1..4
+ok 125 - Perception
+  ---
+  duration_ms: 3.1696
+  type: 'suite'
+  ...
+# Subtest: Personality
+    # Subtest: all archetypes have 5 traits
+    ok 1 - all archetypes have 5 traits
+      ---
+      duration_ms: 0.6058
+      ...
+    # Subtest: createPersonality applies per-instance variance
+    ok 2 - createPersonality applies per-instance variance
+      ---
+      duration_ms: 0.6375
+      ...
+    # Subtest: traits stay within 0-1 after variance
+    ok 3 - traits stay within 0-1 after variance
+      ---
+      duration_ms: 0.9637
+      ...
+    # Subtest: updateMorale adjusts morale on win/loss
+    ok 4 - updateMorale adjusts morale on win/loss
+      ---
+      duration_ms: 0.3749
+      ...
+    # Subtest: decayMorale moves toward baseline
+    ok 5 - decayMorale moves toward baseline
+      ---
+      duration_ms: 0.3031
+      ...
+    # Subtest: describePersonality returns readable string
+    ok 6 - describePersonality returns readable string
+      ---
+      duration_ms: 0.1999
+      ...
+    1..6
+ok 126 - Personality
+  ---
+  duration_ms: 3.5849
+  type: 'suite'
+  ...
+# Subtest: Memory
+    # Subtest: record and recognizePatterns
+    ok 1 - record and recognizePatterns
+      ---
+      duration_ms: 0.8122
+      ...
+    # Subtest: getAdaptiveNudges returns clamped values
+    ok 2 - getAdaptiveNudges returns clamped values
+      ---
+      duration_ms: 0.5815
+      ...
+    # Subtest: reset clears all state
+    ok 3 - reset clears all state
+      ---
+      duration_ms: 0.2768
+      ...
+    # Subtest: decay reduces weights
+    ok 4 - decay reduces weights
+      ---
+      duration_ms: 0.2376
+      ...
+    1..4
+ok 127 - Memory
+  ---
+  duration_ms: 2.1333
+  type: 'suite'
+  ...
+# Subtest: Cognition
+    # Subtest: decide returns an action
+    ok 1 - decide returns an action
+      ---
+      duration_ms: 24.0962
+      ...
+    # Subtest: SURVIVAL node triggers on critical threat
+    ok 2 - SURVIVAL node triggers on critical threat
+      ---
+      duration_ms: 1.6573
+      ...
+    # Subtest: IDLE_ROAM is the fallback when no threats or enemies
+    ok 3 - IDLE_ROAM is the fallback when no threats or enemies
+      ---
+      duration_ms: 0.6495
+      ...
+    # Subtest: GOAP respects max goals cap
+    ok 4 - GOAP respects max goals cap
+      ---
+      duration_ms: 0.3638
+      ...
+    1..4
+ok 128 - Cognition
+  ---
+  duration_ms: 27.1394
+  type: 'suite'
+  ...
+# Subtest: Difficulty
+    # Subtest: all levels exist
+    ok 1 - all levels exist
+      ---
+      duration_ms: 0.2403
+      ...
+    # Subtest: easy has higher error injection than hard
+    ok 2 - easy has higher error injection than hard
+      ---
+      duration_ms: 0.1428
+      ...
+    # Subtest: easy has slower reaction than hard
+    ok 3 - easy has slower reaction than hard
+      ---
+      duration_ms: 0.117
+      ...
+    # Subtest: auditDifficultyConfig flags cheating levers
+    ok 4 - auditDifficultyConfig flags cheating levers
+      ---
+      duration_ms: 0.2194
+      ...
+    # Subtest: auditDifficultyConfig passes clean config
+    ok 5 - auditDifficultyConfig passes clean config
+      ---
+      duration_ms: 0.1411
+      ...
+    # Subtest: applyDifficultySelection injects errors at easy
+    ok 6 - applyDifficultySelection injects errors at easy
+      ---
+      duration_ms: 0.5792
+      ...
+    1..6
+ok 129 - Difficulty
+  ---
+  duration_ms: 1.6804
+  type: 'suite'
+  ...
+# Subtest: Coordination
+    # Subtest: shared blackboard posts and retrieves intents
+    ok 1 - shared blackboard posts and retrieves intents
+      ---
+      duration_ms: 0.5477
+      ...
+    # Subtest: getIntents excludes self
+    ok 2 - getIntents excludes self
+      ---
+      duration_ms: 0.2408
+      ...
+    # Subtest: evaluateCoordination returns LONE_WOLF when disabled
+    ok 3 - evaluateCoordination returns LONE_WOLF when disabled
+      ---
+      duration_ms: 0.4711
+      ...
+    # Subtest: callout cooldown prevents spam
+    ok 4 - callout cooldown prevents spam
+      ---
+      duration_ms: 0.2344
+      ...
+    1..4
+ok 130 - Coordination
+  ---
+  duration_ms: 1.7023
+  type: 'suite'
+  ...
+# Subtest: Failsafe
+    # Subtest: detects stuck loops
+    ok 1 - detects stuck loops
+      ---
+      duration_ms: 0.5827
+      ...
+    # Subtest: detects budget exceeded
+    ok 2 - detects budget exceeded
+      ---
+      duration_ms: 0.1493
+      ...
+    # Subtest: LOD distant simplifies actions
+    ok 3 - LOD distant simplifies actions
+      ---
+      duration_ms: 0.1763
+      ...
+    # Subtest: determineLodTier returns correct tier
+    ok 4 - determineLodTier returns correct tier
+      ---
+      duration_ms: 0.2584
+      ...
+    # Subtest: shouldUseFullAI respects max bot cap
+    ok 5 - shouldUseFullAI respects max bot cap
+      ---
+      duration_ms: 0.1593
+      ...
+    1..5
+ok 131 - Failsafe
+  ---
+  duration_ms: 1.5408
+  type: 'suite'
+  ...
+# Subtest: Debug
+    # Subtest: records and retrieves traces
+    ok 1 - records and retrieves traces
+      ---
+      duration_ms: 0.597
+      ...
+    # Subtest: explainLastDecision returns readable string
+    ok 2 - explainLastDecision returns readable string
+      ---
+      duration_ms: 0.5007
+      ...
+    # Subtest: metrics track entropy and diversity
+    ok 3 - metrics track entropy and diversity
+      ---
+      duration_ms: 0.3138
+      ...
+    # Subtest: aggregateTelemetry combines multiple bots
+    ok 4 - aggregateTelemetry combines multiple bots
+      ---
+      duration_ms: 0.3864
+      ...
+    1..4
+ok 132 - Debug
+  ---
+  duration_ms: 2.0027
+  type: 'suite'
+  ...
+# Subtest: Agent Integration
+    # Subtest: createHybrixAgent creates a working agent
+    ok 1 - createHybrixAgent creates a working agent
+      ---
+      duration_ms: 0.469
+      ...
+    # Subtest: agent.tick returns action and trace
+    ok 2 - agent.tick returns action and trace
+      ---
+      duration_ms: 1.4963
+      ...
+    # Subtest: agent.getDebug returns complete debug info
+    ok 3 - agent.getDebug returns complete debug info
+      ---
+      duration_ms: 0.4003
+      ...
+    # Subtest: agent.reset clears all state
+    ok 4 - agent.reset clears all state
+      ---
+      duration_ms: 2.4028
+      ...
+    # Subtest: agent.notifyOutcome updates morale
+    ok 5 - agent.notifyOutcome updates morale
+      ---
+      duration_ms: 0.4714
+      ...
+    # Subtest: agent.choose is policy-compatible
+    ok 6 - agent.choose is policy-compatible
+      ---
+      duration_ms: 2.2391
+      ...
+    # Subtest: different archetypes produce different behavior
+    ok 7 - different archetypes produce different behavior
+      ---
+      duration_ms: 0.2399
+      ...
+    # Subtest: different difficulty produces different error rates
+    ok 8 - different difficulty produces different error rates
+      ---
+      duration_ms: 0.404
+      ...
+    1..8
+ok 133 - Agent Integration
+  ---
+  duration_ms: 14.625
+  type: 'suite'
+  ...
+# Subtest: Policy Adapter
+    # Subtest: HYBRIX_POLICIES has 14 variants
+    ok 1 - HYBRIX_POLICIES has 14 variants
+      ---
+      duration_ms: 0.2042
+      ...
+    # Subtest: all HYBRIX policies have unique IDs
+    ok 2 - all HYBRIX policies have unique IDs
+      ---
+      duration_ms: 0.1426
+      ...
+    # Subtest: all HYBRIX policies have hybrix trait
+    ok 3 - all HYBRIX policies have hybrix trait
+      ---
+      duration_ms: 0.1317
+      ...
+    # Subtest: createHybrixPolicy creates a valid policy definition
+    ok 4 - createHybrixPolicy creates a valid policy definition
+      ---
+      duration_ms: 0.2363
+      ...
+    # Subtest: agent caching persists memory across choose() calls
+    ok 5 - agent caching persists memory across choose() calls
+      ---
+      duration_ms: 0.9217
+      ...
+    # Subtest: new match clears agent cache
+    ok 6 - new match clears agent cache
+      ---
+      duration_ms: 1.1662
+      ...
+    1..6
+ok 134 - Policy Adapter
+  ---
+  duration_ms: 3.1731
+  type: 'suite'
+  ...
+# Subtest: Domain Scoring Integration
+    # Subtest: HYBRIX agent uses domain-specific scoring via scorePolicyAction
+    ok 1 - HYBRIX agent uses domain-specific scoring via scorePolicyAction
+      ---
+      duration_ms: 0.4413
+      ...
+    # Subtest: rusher maps to score-rush scoring policy
+    ok 2 - rusher maps to score-rush scoring policy
+      ---
+      duration_ms: 0.3564
+      ...
+    # Subtest: defender maps to control scoring policy
+    ok 3 - defender maps to control scoring policy
+      ---
+      duration_ms: 0.3562
+      ...
+    1..3
+ok 135 - Domain Scoring Integration
+  ---
+  duration_ms: 1.3142
+  type: 'suite'
+  ...
+# Subtest: Trace Adapter
+    # Subtest: extractHybrixTraces returns empty for non-HYBRIX match
+    ok 1 - extractHybrixTraces returns empty for non-HYBRIX match
+      ---
+      duration_ms: 1.6558
+      ...
+    # Subtest: extractHybrixTraces extracts from HYBRIX decisions
+    ok 2 - extractHybrixTraces extracts from HYBRIX decisions
+      ---
+      duration_ms: 0.4454
+      ...
+    # Subtest: explainHybrixTrace produces readable output
+    ok 3 - explainHybrixTrace produces readable output
+      ---
+      duration_ms: 0.6435
+      ...
+    # Subtest: summarizeHybrixDecisions aggregates stats
+    ok 4 - summarizeHybrixDecisions aggregates stats
+      ---
+      duration_ms: 0.4126
+      ...
+    # Subtest: mapHybrixReasonCodes maps BT nodes
+    ok 5 - mapHybrixReasonCodes maps BT nodes
+      ---
+      duration_ms: 0.1992
+      ...
+    # Subtest: mapHybrixReasonCodes maps failsafe triggers
+    ok 6 - mapHybrixReasonCodes maps failsafe triggers
+      ---
+      duration_ms: 0.1346
+      ...
+    # Subtest: mapHybrixReasonCodes maps difficulty errors
+    ok 7 - mapHybrixReasonCodes maps difficulty errors
+      ---
+      duration_ms: 0.1207
+      ...
+    1..7
+ok 136 - Trace Adapter
+  ---
+  duration_ms: 3.91
+  type: 'suite'
+  ...
+# Subtest: public CT-120 artifact contains no authorized hidden identities
+ok 137 - public CT-120 artifact contains no authorized hidden identities
+  ---
+  duration_ms: 17.2296
+  ...
+# Subtest: all Lab public artifacts use replay-scoped opaque handles and exclude raw RNG/seed state
+ok 138 - all Lab public artifacts use replay-scoped opaque handles and exclude raw RNG/seed state
+  ---
+  duration_ms: 1404.6409
+  ...
+# Subtest: opaque card handles differ between replay scopes
+ok 139 - opaque card handles differ between replay scopes
+  ---
+  duration_ms: 11.3396
+  ...
+# Subtest: public artifacts contain no raw command instructions
+ok 140 - public artifacts contain no raw command instructions
+  ---
+  duration_ms: 1.9324
+  ...
+# Subtest: public initial load does not fetch authorized data
+ok 141 - public initial load does not fetch authorized data
+  ---
+  duration_ms: 11.553
+  ...
+# Subtest: BL-04: HYBIX choose() returns {actionId, metadata} envelope, not canonical action
+ok 142 - BL-04: HYBIX choose() returns {actionId, metadata} envelope, not canonical action
+  ---
+  duration_ms: 7.8863
+  ...
+# Subtest: BL-04: browser runtime accesses selected.family on HYBIX envelope (crash path)
+ok 143 - BL-04: browser runtime accesses selected.family on HYBIX envelope (crash path)
+  ---
+  duration_ms: 6.4839
+  ...
+# Subtest: BL-04: choosePolicy must adapt HYBIX envelope to canonical action shape
+ok 144 - BL-04: choosePolicy must adapt HYBIX envelope to canonical action shape
+  ---
+  duration_ms: 5.5134
+  ...
+# Subtest: BL-05: browser HYBIX call path omits matchId/runInstanceId/decisionIndex
+ok 145 - BL-05: browser HYBIX call path omits matchId/runInstanceId/decisionIndex
+  ---
+  duration_ms: 8.3411
+  ...
+# Subtest: BL-05: HYBIX adapter cache key must include runInstanceId, not just matchId
+ok 146 - BL-05: HYBIX adapter cache key must include runInstanceId, not just matchId
+  ---
+  duration_ms: 4.2774
+  ...
+# Subtest: HYBRIX repeat: two identical runs produce identical first-decision envelopes
+ok 147 - HYBRIX repeat: two identical runs produce identical first-decision envelopes
+  ---
+  duration_ms: 1176.8743
+  ...
+# Subtest: HYBRIX repeat: two identical runs produce identical match result hashes
+ok 148 - HYBRIX repeat: two identical runs produce identical match result hashes
+  ---
+  duration_ms: 846.6604
+  ...
+# Subtest: HYBRIX repeat: two identical runs produce identical canonical result hashes
+not ok 149 - HYBRIX repeat: two identical runs produce identical canonical result hashes
+  ---
+  duration_ms: 811.1271
+  location: 'H:\\myProjects\\Intrilex-dev2\\test\\hybrix-evidence-envelope.test.mjs:50:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Canonical summary hash must be identical across repeats
+    + actual - expected
+    
+    + '7448ef76a8a24db6ce77e8c418286cfeb4b061b57c8ac0c53bea479076fa2e91'
+    - '725abdeaaf48803b70c68bf891e0e65b26fbed4c8edbe8d45bbeba5ecd7c3be4'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '725abdeaaf48803b70c68bf891e0e65b26fbed4c8edbe8d45bbeba5ecd7c3be4'
+  actual: '7448ef76a8a24db6ce77e8c418286cfeb4b061b57c8ac0c53bea479076fa2e91'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///H:/myProjects/Intrilex-dev2/test/hybrix-evidence-envelope.test.mjs:53:10)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: HYBRIX interleave: running match A between two runs of match B does not change B
+ok 150 - HYBRIX interleave: running match A between two runs of match B does not change B
+  ---
+  duration_ms: 3200.4987
+  ...
+# Subtest: HYBRIX interleave: different opponents produce different match outcomes
+ok 151 - HYBRIX interleave: different opponents produce different match outcomes
+  ---
+  duration_ms: 876.9361
+  ...
+# Subtest: HYBRIX worker parity: single-worker and multi-worker produce identical results
+ok 152 - HYBRIX worker parity: single-worker and multi-worker produce identical results
+  ---
+  duration_ms: 774.5653
+  ...
+# Subtest: HYBRIX self-play: both HYBRIX agents produce independent traces
+ok 153 - HYBRIX self-play: both HYBRIX agents produce independent traces
+  ---
+  duration_ms: 500.4101
+  ...
+# Subtest: HYBRIX trace provenance: decision traces carry hybrixTrace evidence from agent
+ok 154 - HYBRIX trace provenance: decision traces carry hybrixTrace evidence from agent
+  ---
+  duration_ms: 407.6771
+  ...
+# Subtest: HYBRIX trace provenance: hybrixTrace contains expected agent evidence fields
+ok 155 - HYBRIX trace provenance: hybrixTrace contains expected agent evidence fields
+  ---
+  duration_ms: 412.894
+  ...
+# Subtest: HYBRIX determinism: match result hash is stable across 8 consecutive runs
+ok 156 - HYBRIX determinism: match result hash is stable across 8 consecutive runs
+  ---
+  duration_ms: 3034.7341
+  ...
+# Subtest: all 121 certified authorized replays verify
+ok 157 - all 121 certified authorized replays verify
+  ---
+  duration_ms: 1384.5072
+  ...
+# Subtest: generated replay index covers corpus
+ok 158 - generated replay index covers corpus
+  ---
+  duration_ms: 2.2028
+  ...
+# Subtest: corpus analytics never claims match balance
+ok 159 - corpus analytics never claims match balance
+  ---
+  duration_ms: 2.7217
+  ...
+# Subtest: batch CLI advertises and runs the Advanced Core default profile
+ok 160 - batch CLI advertises and runs the Advanced Core default profile
+  ---
+  duration_ms: 2346.8983
+  ...
+# Subtest: LANDING_MODES set contains /, /play, /rules
+ok 161 - LANDING_MODES set contains /, /play, /rules
+  ---
+  duration_ms: 12.6091
+  ...
+# Subtest: route() maps /sim to /watch
+ok 162 - route() maps /sim to /watch
+  ---
+  duration_ms: 2.8516
+  ...
+# Subtest: route() returns landing modes for /, /play, /rules
+ok 163 - route() returns landing modes for /, /play, /rules
+  ---
+  duration_ms: 2.2162
+  ...
+# Subtest: renderLanding() exists and renders three CTA cards
+ok 164 - renderLanding() exists and renders three CTA cards
+  ---
+  duration_ms: 10.7302
+  ...
+# Subtest: renderPlay() exists with disabled feature cards and "Not yet available" badge
+ok 165 - renderPlay() exists with disabled feature cards and "Not yet available" badge
+  ---
+  duration_ms: 1.9482
+  ...
+# Subtest: renderRules() exists and calls renderRulesPage
+ok 166 - renderRules() exists and calls renderRulesPage
+  ---
+  duration_ms: 1.9295
+  ...
+# Subtest: renderLandingMode() dispatches to the three render functions
+ok 167 - renderLandingMode() dispatches to the three render functions
+  ---
+  duration_ms: 1.9634
+  ...
+# Subtest: render() hides observatory shell and shows landing container for landing modes
+ok 168 - render() hides observatory shell and shows landing container for landing modes
+  ---
+  duration_ms: 2.9125
+  ...
+# Subtest: render() shows observatory shell and hides landing container for observatory modes
+ok 169 - render() shows observatory shell and hides landing container for observatory modes
+  ---
+  duration_ms: 3.0593
+  ...
+# Subtest: render() loads replay on first observatory entry after landing boot
+ok 170 - render() loads replay on first observatory entry after landing boot
+  ---
+  duration_ms: 2.3648
+  ...
+# Subtest: boot() skips loadReplay for landing modes
+ok 171 - boot() skips loadReplay for landing modes
+  ---
+  duration_ms: 3.812
+  ...
+# Subtest: rulebook-renderer.js exports renderMarkdown and renderRulesPage
+ok 172 - rulebook-renderer.js exports renderMarkdown and renderRulesPage
+  ---
+  duration_ms: 1.3533
+  ...
+# Subtest: renderMarkdown handles ATX headers
+ok 173 - renderMarkdown handles ATX headers
+  ---
+  duration_ms: 1.3019
+  ...
+# Subtest: renderMarkdown handles pipe tables
+ok 174 - renderMarkdown handles pipe tables
+  ---
+  duration_ms: 1.0643
+  ...
+# Subtest: renderMarkdown handles ordered and unordered lists
+ok 175 - renderMarkdown handles ordered and unordered lists
+  ---
+  duration_ms: 1.1728
+  ...
+# Subtest: renderMarkdown handles bold, italic, and inline code
+ok 176 - renderMarkdown handles bold, italic, and inline code
+  ---
+  duration_ms: 1.6105
+  ...
+# Subtest: renderMarkdown handles fenced code blocks
+ok 177 - renderMarkdown handles fenced code blocks
+  ---
+  duration_ms: 1.405
+  ...
+# Subtest: renderMarkdown handles blockquotes
+ok 178 - renderMarkdown handles blockquotes
+  ---
+  duration_ms: 0.9942
+  ...
+# Subtest: renderMarkdown handles horizontal rules
+ok 179 - renderMarkdown handles horizontal rules
+  ---
+  duration_ms: 1.3141
+  ...
+# Subtest: buildToc extracts h1 and h2 headers
+ok 180 - buildToc extracts h1 and h2 headers
+  ---
+  duration_ms: 1.4502
+  ...
+# Subtest: renderCollapsibleParts wraps \# PART sections in details elements
+ok 181 - renderCollapsibleParts wraps \# PART sections in details elements
+  ---
+  duration_ms: 2.0302
+  ...
+# Subtest: renderRulesPage fetches data/rulebook.md and renders TOC + content
+ok 182 - renderRulesPage fetches data/rulebook.md and renders TOC + content
+  ---
+  duration_ms: 1.0615
+  ...
+# Subtest: index.html contains landing-app container
+ok 183 - index.html contains landing-app container
+  ---
+  duration_ms: 1.9461
+  ...
+# Subtest: styles.css has landing page classes
+ok 184 - styles.css has landing page classes
+  ---
+  duration_ms: 3.5527
+  ...
+# Subtest: styles.css has play stub classes
+ok 185 - styles.css has play stub classes
+  ---
+  duration_ms: 5.3794
+  ...
+# Subtest: styles.css has rules page classes
+ok 186 - styles.css has rules page classes
+  ---
+  duration_ms: 1.7779
+  ...
+# Subtest: styles.css has per-card accent colors
+ok 187 - styles.css has per-card accent colors
+  ---
+  duration_ms: 1.363
+  ...
+# Subtest: styles.css has responsive breakpoint for landing and rules
+ok 188 - styles.css has responsive breakpoint for landing and rules
+  ---
+  duration_ms: 2.6074
+  ...
+# Subtest: styles.css has reduced-motion support for landing animations
+ok 189 - styles.css has reduced-motion support for landing animations
+  ---
+  duration_ms: 1.5236
+  ...
+# Subtest: build.mjs copies rulebook to dist/data/rulebook.md
+ok 190 - build.mjs copies rulebook to dist/data/rulebook.md
+  ---
+  duration_ms: 1.788
+  ...
+# Subtest: dist/data/rulebook.md exists and contains PART headers
+ok 191 - dist/data/rulebook.md exists and contains PART headers
+  ---
+  duration_ms: 2.3599
+  ...
+# Subtest: dist/rulebook-renderer.js exists
+ok 192 - dist/rulebook-renderer.js exists
+  ---
+  duration_ms: 1.1235
+  ...
+# Subtest: dist/app.js contains landing page render functions
+ok 193 - dist/app.js contains landing page render functions
+  ---
+  duration_ms: 2.5499
+  ...
+# Subtest: app.js imports renderRulesPage from rulebook-renderer.js
+ok 194 - app.js imports renderRulesPage from rulebook-renderer.js
+  ---
+  duration_ms: 2.177
+  ...
+# Subtest: 10ΓÖª Mimic is listed in supported families of CORE_ADVANCED_AUTHORITY_PROFILE
+ok 195 - 10ΓÖª Mimic is listed in supported families of CORE_ADVANCED_AUTHORITY_PROFILE
+  ---
+  duration_ms: 1.5088
+  ...
+# Subtest: 10ΓÖª Mimic candidates appear in advanced core enumeration
+ok 196 - 10ΓÖª Mimic candidates appear in advanced core enumeration
+  ---
+  duration_ms: 387.444
+  ...
+# Subtest: 10ΓÖª Mimic row-exchange resolves and exchanges rows between players
+ok 197 - 10ΓÖª Mimic row-exchange resolves and exchanges rows between players
+  ---
+  duration_ms: 3591.7593
+  ...
+# Subtest: 10ΓÖª Mimic paired with a Two allows mimicking rank 8 (absolute scuttle)
+ok 198 - 10ΓÖª Mimic paired with a Two allows mimicking rank 8 (absolute scuttle)
+  ---
+  duration_ms: 3792.5496
+  ...
+# Subtest: 10ΓÖª Mimic super-j-tempo grants +2 mini-turns capped at 3
+ok 199 - 10ΓÖª Mimic super-j-tempo grants +2 mini-turns capped at 3
+  ---
+  duration_ms: 771.7696
+  ...
+# Subtest: 10ΓÖª Mimic is deterministic across repeated matches with same seed
+ok 200 - 10ΓÖª Mimic is deterministic across repeated matches with same seed
+  ---
+  duration_ms: 7440.2401
+  ...
+# Subtest: 10ΓÖª Mimic score decomposition includes mimic synergy for row-exchange feature vector
+ok 201 - 10ΓÖª Mimic score decomposition includes mimic synergy for row-exchange feature vector
+  ---
+  duration_ms: 0.6498
+  ...
+# Subtest: 10ΓÖª Mimic score decomposition includes risk for absolute-scuttle feature vector
+ok 202 - 10ΓÖª Mimic score decomposition includes risk for absolute-scuttle feature vector
+  ---
+  duration_ms: 0.2384
+  ...
+# Subtest: 10ΓÖª Mimic does not break existing replay compatibility
+ok 203 - 10ΓÖª Mimic does not break existing replay compatibility
+  ---
+  duration_ms: 3961.1747
+  ...
+# Subtest: 10ΓÖª Mimic rank-10 limit is enforced (only one rank-10 effect per FT)
+ok 204 - 10ΓÖª Mimic rank-10 limit is enforced (only one rank-10 effect per FT)
+  ---
+  duration_ms: 602.0527
+  ...
+# Subtest: 10ΓÖª Mimic exile-bound: 10ΓÖª goes to EXILE not GY after resolution
+ok 205 - 10ΓÖª Mimic exile-bound: 10ΓÖª goes to EXILE not GY after resolution
+  ---
+  duration_ms: 2052.2351
+  ...
+# Subtest: seven Mechanics Observatory workspaces and four presets ship
+ok 206 - seven Mechanics Observatory workspaces and four presets ship
+  ---
+  duration_ms: 50.0941
+  ...
+# Subtest: semantic stepping and priority clarity controls ship
+ok 207 - semantic stepping and priority clarity controls ship
+  ---
+  duration_ms: 12.7447
+  ...
+# Subtest: generated Observatory evidence exists
+not ok 208 - generated Observatory evidence exists
+  ---
+  duration_ms: 300.0926
+  location: 'H:\\myProjects\\Intrilex-dev2\\test\\observatory.test.mjs:4:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    '4.1.0' !== '4.0.0'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '4.0.0'
+  actual: '4.1.0'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///H:/myProjects/Intrilex-dev2/test/observatory.test.mjs:4:354)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: Privacy matrix: public frame-based artifacts hide draw-pile card identities in every frame
+ok 209 - Privacy matrix: public frame-based artifacts hide draw-pile card identities in every frame
+  ---
+  duration_ms: 2295.7956
+  ...
+# Subtest: Privacy matrix: public frame-based artifacts do not contain rng/seed in any frame state
+ok 210 - Privacy matrix: public frame-based artifacts do not contain rng/seed in any frame state
+  ---
+  duration_ms: 1893.1723
+  ...
+# Subtest: Privacy matrix: public frame-based artifacts hide opponent hand identities
+ok 211 - Privacy matrix: public frame-based artifacts hide opponent hand identities
+  ---
+  duration_ms: 1105.6262
+  ...
+# Subtest: Privacy matrix: public frame-based artifacts do not contain playerViews or omniscientState
+ok 212 - Privacy matrix: public frame-based artifacts do not contain playerViews or omniscientState
+  ---
+  duration_ms: 1075.1549
+  ...
+# Subtest: Privacy matrix: authorized player views hide draw-pile card identities in every frame
+ok 213 - Privacy matrix: authorized player views hide draw-pile card identities in every frame
+  ---
+  duration_ms: 3027.4394
+  ...
+# Subtest: Privacy matrix: authorized player views do not contain rng/seed
+ok 214 - Privacy matrix: authorized player views do not contain rng/seed
+  ---
+  duration_ms: 4011.1451
+  ...
+# Subtest: Privacy matrix: authorized player views hide opponent hand identities
+ok 215 - Privacy matrix: authorized player views hide opponent hand identities
+  ---
+  duration_ms: 2669.7915
+  ...
+# Subtest: Privacy matrix: authorized player views show own hand identities
+ok 216 - Privacy matrix: authorized player views show own hand identities
+  ---
+  duration_ms: 1017.2528
+  ...
+# Subtest: Privacy matrix: authorized omniscient state contains real draw-pile identities (judge view)
+ok 217 - Privacy matrix: authorized omniscient state contains real draw-pile identities (judge view)
+  ---
+  duration_ms: 894.9408
+  ...
+# Subtest: Privacy matrix: certified replay public artifacts hide draw-pile identities in initialState
+ok 218 - Privacy matrix: certified replay public artifacts hide draw-pile identities in initialState
+  ---
+  duration_ms: 67.945
+  ...
+# Subtest: Privacy matrix: certified replay public artifacts do not contain rng/seed in initialState
+ok 219 - Privacy matrix: certified replay public artifacts do not contain rng/seed in initialState
+  ---
+  duration_ms: 70.0217
+  ...
+# Subtest: Privacy matrix: browser app.js does not render draw-pile identities without viewer-role check
+ok 220 - Privacy matrix: browser app.js does not render draw-pile identities without viewer-role check
+  ---
+  duration_ms: 1.5871
+  ...
+# Subtest: policy actions and semantic facts exclude raw command vault payloads
+ok 221 - policy actions and semantic facts exclude raw command vault payloads
+  ---
+  duration_ms: 28.2279
+  ...
+# Subtest: public replay artifacts contain no private command bodies or stable hidden IDs
+ok 222 - public replay artifacts contain no private command bodies or stable hidden IDs
+  ---
+  duration_ms: 500.9589
+  ...
+# Subtest: normal production UI never displays raw pass-priority label
+ok 223 - normal production UI never displays raw pass-priority label
+  ---
+  duration_ms: 31.2113
+  ...
+# Subtest: canonical rank authority has all 15 ranks
+ok 224 - canonical rank authority has all 15 ranks
+  ---
+  duration_ms: 6.0506
+  ...
+# Subtest: rank authority has correct PR points for key ranks
+ok 225 - rank authority has correct PR points for key ranks
+  ---
+  duration_ms: 0.5462
+  ...
+# Subtest: rank authority has correct scuttle order
+ok 226 - rank authority has correct scuttle order
+  ---
+  duration_ms: 0.8336
+  ...
+# Subtest: rank authority has modes and notes
+ok 227 - rank authority has modes and notes
+  ---
+  duration_ms: 0.5097
+  ...
+# Subtest: ordinary single-rank score gets exact attribution
+ok 228 - ordinary single-rank score gets exact attribution
+  ---
+  duration_ms: 0.6092
+  ...
+# Subtest: same-rank Super gets exact attribution to that rank
+ok 229 - same-rank Super gets exact attribution to that rank
+  ---
+  duration_ms: 0.2389
+  ...
+# Subtest: same-rank Ultra (Rank 2) gets exact attribution to Rank 2
+ok 230 - same-rank Ultra (Rank 2) gets exact attribution to Rank 2
+  ---
+  duration_ms: 0.2197
+  ...
+# Subtest: Royal Marriage (K+Q) gets fractional attribution
+ok 231 - Royal Marriage (K+Q) gets fractional attribution
+  ---
+  duration_ms: 0.3245
+  ...
+# Subtest: Rank 7 generated effect gets generated-origin attribution
+ok 232 - Rank 7 generated effect gets generated-origin attribution
+  ---
+  duration_ms: 0.5557
+  ...
+# Subtest: Solo Wild Copy (2ΓÖÑ copying 5ΓÖÑ recycle) gets generated-origin attribution to Rank 2
+ok 233 - Solo Wild Copy (2ΓÖÑ copying 5ΓÖÑ recycle) gets generated-origin attribution to Rank 2
+  ---
+  duration_ms: 0.6368
+  ...
+# Subtest: generated Black Joker is distinct from natural Black Joker
+ok 234 - generated Black Joker is distinct from natural Black Joker
+  ---
+  duration_ms: 0.3458
+  ...
+# Subtest: generic score family derives source rank from exact card identity
+ok 235 - generic score family derives source rank from exact card identity
+  ---
+  duration_ms: 0.176
+  ...
+# Subtest: swap action derives source rank from exact card identity
+ok 236 - swap action derives source rank from exact card identity
+  ---
+  duration_ms: 0.1494
+  ...
+# Subtest: response-decline receives no rank attribution
+ok 237 - response-decline receives no rank attribution
+  ---
+  duration_ms: 0.2153
+  ...
+# Subtest: response-decline via attributeAction returns not-observable
+ok 238 - response-decline via attributeAction returns not-observable
+  ---
+  duration_ms: 0.3773
+  ...
+# Subtest: hidden identity becomes not-observable in public mode
+ok 239 - hidden identity becomes not-observable in public mode
+  ---
+  duration_ms: 0.1379
+  ...
+# Subtest: no source cards returns not-observable
+ok 240 - no source cards returns not-observable
+  ---
+  duration_ms: 0.1024
+  ...
+# Subtest: classifyPlayForm correctly identifies play forms
+ok 241 - classifyPlayForm correctly identifies play forms
+  ---
+  duration_ms: 1.3138
+  ...
+# Subtest: parseIdentity correctly parses rank and suit
+ok 242 - parseIdentity correctly parses rank and suit
+  ---
+  duration_ms: 0.3809
+  ...
+# Subtest: allRankDefinitions returns 15 definitions in canonical order
+ok 243 - allRankDefinitions returns 15 definitions in canonical order
+  ---
+  duration_ms: 0.3676
+  ...
+# Subtest: RANK_REGISTRY is frozen/immutable
+ok 244 - RANK_REGISTRY is frozen/immutable
+  ---
+  duration_ms: 0.3229
+  ...
+# Subtest: buildSourceCards hides opponent hand in public mode
+ok 245 - buildSourceCards hides opponent hand in public mode
+  ---
+  duration_ms: 0.3757
+  ...
+# Subtest: buildSourceCards shows all in private mode
+ok 246 - buildSourceCards shows all in private mode
+  ---
+  duration_ms: 0.189
+  ...
+# Subtest: rank counterfactual schema version is 1.0.0
+ok 247 - rank counterfactual schema version is 1.0.0
+  ---
+  duration_ms: 1.3808
+  ...
+# Subtest: eligibleRankAnchor returns eligible when 2+ rank-distinct actions
+ok 248 - eligibleRankAnchor returns eligible when 2+ rank-distinct actions
+  ---
+  duration_ms: 2.2651
+  ...
+# Subtest: eligibleRankAnchor returns not eligible when only 1 rank
+ok 249 - eligibleRankAnchor returns not eligible when only 1 rank
+  ---
+  duration_ms: 0.4124
+  ...
+# Subtest: eligibleRankAnchor returns not eligible when 0 rank-distinct actions
+ok 250 - eligibleRankAnchor returns not eligible when 0 rank-distinct actions
+  ---
+  duration_ms: 0.2149
+  ...
+# Subtest: computeRankDecisionValue computes win rate delta correctly
+ok 251 - computeRankDecisionValue computes win rate delta correctly
+  ---
+  duration_ms: 0.8299
+  ...
+# Subtest: computeRankDecisionValue confidence HIGH for 32+ rollouts
+ok 252 - computeRankDecisionValue confidence HIGH for 32+ rollouts
+  ---
+  duration_ms: 0.8902
+  ...
+# Subtest: computeRankDecisionValue confidence MEDIUM for 16+ rollouts
+ok 253 - computeRankDecisionValue confidence MEDIUM for 16+ rollouts
+  ---
+  duration_ms: 1.2631
+  ...
+# Subtest: computeRankDecisionValue returns INSUFFICIENT for 0 rollouts
+ok 254 - computeRankDecisionValue returns INSUFFICIENT for 0 rollouts
+  ---
+  duration_ms: 0.2382
+  ...
+# Subtest: computeRankDecisionValue handles mixed outcomes
+ok 255 - computeRankDecisionValue handles mixed outcomes
+  ---
+  duration_ms: 1.1349
+  ...
+# Subtest: buildRankSwapMatrix creates matrix from paired results
+ok 256 - buildRankSwapMatrix creates matrix from paired results
+  ---
+  duration_ms: 0.8491
+  ...
+# Subtest: aggregateRankDecisionValues aggregates across decisions
+ok 257 - aggregateRankDecisionValues aggregates across decisions
+  ---
+  duration_ms: 0.6646
+  ...
+# Subtest: aggregateRankDecisionValues skips INSUFFICIENT results
+ok 258 - aggregateRankDecisionValues skips INSUFFICIENT results
+  ---
+  duration_ms: 0.4012
+  ...
+# Subtest: selectEligibleRankAnchors filters and limits
+ok 259 - selectEligibleRankAnchors filters and limits
+  ---
+  duration_ms: 0.7071
+  ...
+# Subtest: selectEligibleRankAnchors respects maxAnchors
+ok 260 - selectEligibleRankAnchors respects maxAnchors
+  ---
+  duration_ms: 0.6155
+  ...
+# Subtest: buildRankCounterfactualOutput produces complete output
+ok 261 - buildRankCounterfactualOutput produces complete output
+  ---
+  duration_ms: 0.3083
+  ...
+# Subtest: rank analytics schema version is 1.0.0
+ok 262 - rank analytics schema version is 1.0.0
+  ---
+  duration_ms: 1.266
+  ...
+# Subtest: buildRankAnalytics produces complete output with empty summaries
+ok 263 - buildRankAnalytics produces complete output with empty summaries
+  ---
+  duration_ms: 3.4064
+  ...
+# Subtest: buildRankAnalytics processes rank decisions
+ok 264 - buildRankAnalytics processes rank decisions
+  ---
+  duration_ms: 2.0033
+  ...
+# Subtest: buildRankAnalytics attributes victory to selected ranks
+ok 265 - buildRankAnalytics attributes victory to selected ranks
+  ---
+  duration_ms: 0.7321
+  ...
+# Subtest: buildRankAnalytics attributes defeat to selected ranks
+ok 266 - buildRankAnalytics attributes defeat to selected ranks
+  ---
+  duration_ms: 0.659
+  ...
+# Subtest: buildRankAnalytics produces rank power model
+ok 267 - buildRankAnalytics produces rank power model
+  ---
+  duration_ms: 1.0213
+  ...
+# Subtest: buildRankAnalytics produces per-participant metrics
+ok 268 - buildRankAnalytics produces per-participant metrics
+  ---
+  duration_ms: 0.7823
+  ...
+# Subtest: augmentMechanicsWithRankFacets adds rankFacet to matching mechanics
+ok 269 - augmentMechanicsWithRankFacets adds rankFacet to matching mechanics
+  ---
+  duration_ms: 1.0636
+  ...
+# Subtest: augmentMechanicsWithRankFacets returns original when no rankAnalytics
+ok 270 - augmentMechanicsWithRankFacets returns original when no rankAnalytics
+  ---
+  duration_ms: 7.4149
+  ...
+# Subtest: buildRankCompareFacet produces comparison data
+ok 271 - buildRankCompareFacet produces comparison data
+  ---
+  duration_ms: 2.7352
+  ...
+# Subtest: buildRankCompareFacet returns null for no rankAnalytics
+ok 272 - buildRankCompareFacet returns null for no rankAnalytics
+  ---
+  duration_ms: 0.3001
+  ...
+# Subtest: buildRankEvidenceFacet produces evidence data
+ok 273 - buildRankEvidenceFacet produces evidence data
+  ---
+  duration_ms: 0.5822
+  ...
+# Subtest: buildRankEvidenceFacet returns null for no rankAnalytics
+ok 274 - buildRankEvidenceFacet returns null for no rankAnalytics
+  ---
+  duration_ms: 0.1347
+  ...
+# Subtest: sample-data observatory analytics.json has complete rank power data
+ok 275 - sample-data observatory analytics.json has complete rank power data
+  ---
+  duration_ms: 395.8685
+  ...
+# Subtest: dist observatory analytics.json has complete rank power data
+ok 276 - dist observatory analytics.json has complete rank power data
+  ---
+  duration_ms: 348.9133
+  ...
+# Subtest: rank power data in sample-data and dist are structurally identical
+ok 277 - rank power data in sample-data and dist are structurally identical
+  ---
+  duration_ms: 731.8399
+  ...
+# Subtest: rank power watchlist contains real flags from observed cohort data
+ok 278 - rank power watchlist contains real flags from observed cohort data
+  ---
+  duration_ms: 315.4133
+  ...
+# Subtest: build.mjs contains rank power assertion to prevent silent data loss
+ok 279 - build.mjs contains rank power assertion to prevent silent data loss
+  ---
+  duration_ms: 2.4588
+  ...
+# Subtest: rank power schema version is 1.0.0
+ok 280 - rank power schema version is 1.0.0
+  ---
+  duration_ms: 1.4445
+  ...
+# Subtest: RPI axis weights sum to 1.0
+ok 281 - RPI axis weights sum to 1.0
+  ---
+  duration_ms: 0.3021
+  ...
+# Subtest: RPI axis weights has 6 axes
+ok 282 - RPI axis weights has 6 axes
+  ---
+  duration_ms: 0.2848
+  ...
+# Subtest: RPI axis weights are frozen
+ok 283 - RPI axis weights are frozen
+  ---
+  duration_ms: 0.156
+  ...
+# Subtest: normalizeMinimax scales to [0, 1]
+ok 284 - normalizeMinimax scales to [0, 1]
+  ---
+  duration_ms: 0.3174
+  ...
+# Subtest: normalizeMinimax returns 0.5 for all-equal values
+ok 285 - normalizeMinimax returns 0.5 for all-equal values
+  ---
+  duration_ms: 0.1779
+  ...
+# Subtest: normalizeMinimax handles empty input
+ok 286 - normalizeMinimax handles empty input
+  ---
+  duration_ms: 0.8631
+  ...
+# Subtest: computePowerAxes produces six axes per rank
+ok 287 - computePowerAxes produces six axes per rank
+  ---
+  duration_ms: 1.3888
+  ...
+# Subtest: computeObservedRPI produces values in [0, 1]
+ok 288 - computeObservedRPI produces values in [0, 1]
+  ---
+  duration_ms: 2.3201
+  ...
+# Subtest: computeDecisionPower blends RPI with ORV
+ok 289 - computeDecisionPower blends RPI with ORV
+  ---
+  duration_ms: 1.0312
+  ...
+# Subtest: confidenceStatus returns HIGH for 200+ opportunities
+ok 290 - confidenceStatus returns HIGH for 200+ opportunities
+  ---
+  duration_ms: 0.3871
+  ...
+# Subtest: confidenceStatus returns MEDIUM for 50+ opportunities
+ok 291 - confidenceStatus returns MEDIUM for 50+ opportunities
+  ---
+  duration_ms: 0.1449
+  ...
+# Subtest: confidenceStatus returns LOW for 10+ opportunities
+ok 292 - confidenceStatus returns LOW for 10+ opportunities
+  ---
+  duration_ms: 0.091
+  ...
+# Subtest: confidenceStatus returns INSUFFICIENT for <10 opportunities
+ok 293 - confidenceStatus returns INSUFFICIENT for <10 opportunities
+  ---
+  duration_ms: 0.0782
+  ...
+# Subtest: buildBalanceWatchlist flags overpowered ranks
+ok 294 - buildBalanceWatchlist flags overpowered ranks
+  ---
+  duration_ms: 0.7086
+  ...
+# Subtest: buildBalanceWatchlist flags underpowered ranks
+ok 295 - buildBalanceWatchlist flags underpowered ranks
+  ---
+  duration_ms: 0.3756
+  ...
+# Subtest: buildBalanceWatchlist only flags HIGH confidence ranks
+ok 296 - buildBalanceWatchlist only flags HIGH confidence ranks
+  ---
+  duration_ms: 0.292
+  ...
+# Subtest: buildRankPowerModel produces complete model
+ok 297 - buildRankPowerModel produces complete model
+  ---
+  duration_ms: 0.8944
+  ...
+# Subtest: buildRankPowerModel includes ORV when provided
+ok 298 - buildRankPowerModel includes ORV when provided
+  ---
+  duration_ms: 0.4936
+  ...
+# Subtest: buildRankPowerModel has 15 ranks
+ok 299 - buildRankPowerModel has 15 ranks
+  ---
+  duration_ms: 0.2832
+  ...
+# Subtest: buildRankPowerModel per-rank profile has all fields
+ok 300 - buildRankPowerModel per-rank profile has all fields
+  ---
+  duration_ms: 1.2977
+  ...
+# Subtest: telemetry v5 schema version is 5.0.0
+ok 301 - telemetry v5 schema version is 5.0.0
+  ---
+  duration_ms: 1.5188
+  ...
+# Subtest: rank metric registry has 16 metrics
+ok 302 - rank metric registry has 16 metrics
+  ---
+  duration_ms: 0.3286
+  ...
+# Subtest: RANK_METRIC_REGISTRY is frozen
+ok 303 - RANK_METRIC_REGISTRY is frozen
+  ---
+  duration_ms: 0.1374
+  ...
+# Subtest: emptyRankCounters has all 15 ranks with zero counters
+ok 304 - emptyRankCounters has all 15 ranks with zero counters
+  ---
+  duration_ms: 0.5516
+  ...
+# Subtest: emptyParticipantRankCounters creates per-participant structure
+ok 305 - emptyParticipantRankCounters creates per-participant structure
+  ---
+  duration_ms: 0.2786
+  ...
+# Subtest: applyDecisionToRankCounters increments selection for exact attribution
+ok 306 - applyDecisionToRankCounters increments selection for exact attribution
+  ---
+  duration_ms: 0.4267
+  ...
+# Subtest: applyDecisionToRankCounters increments super play count
+ok 307 - applyDecisionToRankCounters increments super play count
+  ---
+  duration_ms: 0.3388
+  ...
+# Subtest: applyDecisionToRankCounters increments ultra play count
+ok 308 - applyDecisionToRankCounters increments ultra play count
+  ---
+  duration_ms: 0.1872
+  ...
+# Subtest: applyDecisionToRankCounters credits both ranks for Royal Marriage
+ok 309 - applyDecisionToRankCounters credits both ranks for Royal Marriage
+  ---
+  duration_ms: 0.5146
+  ...
+# Subtest: applyDecisionToRankCounters increments counter declaration count
+ok 310 - applyDecisionToRankCounters increments counter declaration count
+  ---
+  duration_ms: 0.708
+  ...
+# Subtest: applyDecisionToRankCounters increments scuttle count
+ok 311 - applyDecisionToRankCounters increments scuttle count
+  ---
+  duration_ms: 0.2942
+  ...
+# Subtest: applyDecisionToRankCounters increments effect play count
+ok 312 - applyDecisionToRankCounters increments effect play count
+  ---
+  duration_ms: 0.2418
+  ...
+# Subtest: applyDecisionToRankCounters increments generated effect count
+ok 313 - applyDecisionToRankCounters increments generated effect count
+  ---
+  duration_ms: 0.1955
+  ...
+# Subtest: applyDecisionToRankCounters handles response decline with rank opportunities
+ok 314 - applyDecisionToRankCounters handles response decline with rank opportunities
+  ---
+  duration_ms: 0.1476
+  ...
+# Subtest: applyMatchResultToRankCounters credits victory
+ok 315 - applyMatchResultToRankCounters credits victory
+  ---
+  duration_ms: 0.1794
+  ...
+# Subtest: applyMatchResultToRankCounters credits defeat
+ok 316 - applyMatchResultToRankCounters credits defeat
+  ---
+  duration_ms: 0.1268
+  ...
+# Subtest: applyStateDeltaToRankCounters attributes secured points for exact attribution
+ok 317 - applyStateDeltaToRankCounters attributes secured points for exact attribution
+  ---
+  duration_ms: 0.2986
+  ...
+# Subtest: applyStateDeltaToRankCounters splits points for fractional attribution
+ok 318 - applyStateDeltaToRankCounters splits points for fractional attribution
+  ---
+  duration_ms: 0.2083
+  ...
+# Subtest: rankDecisionExtension produces v5 extension fields
+ok 319 - rankDecisionExtension produces v5 extension fields
+  ---
+  duration_ms: 0.155
+  ...
+# Subtest: rankOpportunityExtension produces v5 extension fields
+ok 320 - rankOpportunityExtension produces v5 extension fields
+  ---
+  duration_ms: 0.203
+  ...
+# Subtest: rankSelectionRate computes correctly
+ok 321 - rankSelectionRate computes correctly
+  ---
+  duration_ms: 0.1458
+  ...
+# Subtest: computeRankMetrics produces all 16 metrics per rank
+ok 322 - computeRankMetrics produces all 16 metrics per rank
+  ---
+  duration_ms: 0.4458
+  ...
+# Subtest: computeAggregateRankMetrics sums across participants
+ok 323 - computeAggregateRankMetrics sums across participants
+  ---
+  duration_ms: 0.4067
+  ...
+# Subtest: buildRankAnalyticsOutput produces complete output contract
+ok 324 - buildRankAnalyticsOutput produces complete output contract
+  ---
+  duration_ms: 1.3108
+  ...
+# Subtest: campaign policy stats are symmetric across both seats
+ok 325 - campaign policy stats are symmetric across both seats
+  ---
+  duration_ms: 11021.2673
+  ...
+# Subtest: browser autonomy runtime uses POLICY_V4 stream (parity with Node)
+ok 326 - browser autonomy runtime uses POLICY_V4 stream (parity with Node)
+  ---
+  duration_ms: 7.7771
+  ...
+# Subtest: scoring weights are exported and contain all categories
+ok 327 - scoring weights are exported and contain all categories
+  ---
+  duration_ms: 0.3137
+  ...
+# Subtest: scoring with extracted weights produces identical results to hardcoded values
+ok 328 - scoring with extracted weights produces identical results to hardcoded values
+  ---
+  duration_ms: 0.4817
+  ...
+# Subtest: strategic policies let their own response resolve instead of self-countering
+ok 329 - strategic policies let their own response resolve instead of self-countering
+  ---
+  duration_ms: 0.6383
+  ...
+# Subtest: structuredClone is skipped when telemetry is disabled
+ok 330 - structuredClone is skipped when telemetry is disabled
+  ---
+  duration_ms: 5708.1007
+  ...
+# Subtest: browser analytics campaignAggregate credits both seats symmetrically
+not ok 331 - browser analytics campaignAggregate credits both seats symmetrically
+  ---
+  duration_ms: 118.9362
+  location: 'H:\\myProjects\\Intrilex-dev2\\test\\regression.test.mjs:103:1'
+  failureType: 'testCodeFailure'
+  error: 'campaignAggregate is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file:///H:/myProjects/Intrilex-dev2/test/regression.test.mjs:119:15)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: app.js has loading state and error boundaries
+ok 332 - app.js has loading state and error boundaries
+  ---
+  duration_ms: 2.1827
+  ...
+# Subtest: app.js boot does not use raw split-map for NDJSON
+ok 333 - app.js boot does not use raw split-map for NDJSON
+  ---
+  duration_ms: 1.8252
+  ...
+# Subtest: browser runBrowserCampaign segment execution matches full range
+ok 334 - browser runBrowserCampaign segment execution matches full range
+  ---
+  duration_ms: 14588.2512
+  ...
+# Subtest: worker.js has segment and aggregate message types for multi-worker parallelism
+ok 335 - worker.js has segment and aggregate message types for multi-worker parallelism
+  ---
+  duration_ms: 3.7444
+  ...
+# Subtest: app.js spawns multiple workers when workerCount > 1
+ok 336 - app.js spawns multiple workers when workerCount > 1
+  ---
+  duration_ms: 1.4338
+  ...
+# Subtest: Defect \#2: match count validation rejects invalid and exceeds-max counts
+ok 337 - Defect \#2: match count validation rejects invalid and exceeds-max counts
+  ---
+  duration_ms: 0.6573
+  ...
+# Subtest: Defect \#2: app.js preflight validates match count and rejects outside range
+ok 338 - Defect \#2: app.js preflight validates match count and rejects outside range
+  ---
+  duration_ms: 4.5224
+  ...
+# Subtest: Defect \#6: match summary includes participants with per-seat attribution
+ok 339 - Defect \#6: match summary includes participants with per-seat attribution
+  ---
+  duration_ms: 970.8178
+  ...
+# Subtest: Defect \#6: campaign aggregate uses participant data for per-policy attribution
+ok 340 - Defect \#6: campaign aggregate uses participant data for per-policy attribution
+  ---
+  duration_ms: 3472.0374
+  ...
+# Subtest: Defect \#10: mechanics atlas formula hash uses immediate-point-impact not synergy-interaction
+ok 341 - Defect \#10: mechanics atlas formula hash uses immediate-point-impact not synergy-interaction
+  ---
+  duration_ms: 16.5279
+  ...
+# Subtest: Defect \#11: synergy analysis excludes structural/bookkeeping mechanics
+ok 342 - Defect \#11: synergy analysis excludes structural/bookkeeping mechanics
+  ---
+  duration_ms: 0.8693
+  ...
+# Subtest: Defect \#12: app.js evidence links show unavailable state for missing records
+ok 343 - Defect \#12: app.js evidence links show unavailable state for missing records
+  ---
+  duration_ms: 0.8843
+  ...
+# Subtest: Defect \#15: Compare selectors default to actual dataset policies not hard-coded
+ok 344 - Defect \#15: Compare selectors default to actual dataset policies not hard-coded
+  ---
+  duration_ms: 1.0981
+  ...
+# Subtest: Defect \#16: Evidence workspace does not hard-code engine test count
+ok 345 - Defect \#16: Evidence workspace does not hard-code engine test count
+  ---
+  duration_ms: 0.7978
+  ...
+# Subtest: Defect version: all version strings updated to current release
+ok 346 - Defect version: all version strings updated to current release
+  ---
+  duration_ms: 0.723
+  ...
+# Subtest: Extract: extractAnalysis produces valid AI-agent brief with all required sections
+ok 347 - Extract: extractAnalysis produces valid AI-agent brief with all required sections
+  ---
+  duration_ms: 120.5109
+  ...
+# Subtest: Extract: CLI script generates JSON and Markdown artifacts
+ok 348 - Extract: CLI script generates JSON and Markdown artifacts
+  ---
+  duration_ms: 581.0803
+  ...
+# Subtest: Extract: browser app.js has extract UI and command palette entries
+ok 349 - Extract: browser app.js has extract UI and command palette entries
+  ---
+  duration_ms: 0.9688
+  ...
+# Subtest: Extract: browser-analytics.js exports extractAnalysis
+ok 350 - Extract: browser-analytics.js exports extractAnalysis
+  ---
+  duration_ms: 0.831
+  ...
+# Subtest: validator correctly checks type constraints
+ok 351 - validator correctly checks type constraints
+  ---
+  duration_ms: 2.7128
+  ...
+# Subtest: validator correctly checks required fields
+ok 352 - validator correctly checks required fields
+  ---
+  duration_ms: 0.5479
+  ...
+# Subtest: validator correctly checks const and enum
+ok 353 - validator correctly checks const and enum
+  ---
+  duration_ms: 0.4977
+  ...
+# Subtest: validator correctly checks minimum
+ok 354 - validator correctly checks minimum
+  ---
+  duration_ms: 0.2245
+  ...
+# Subtest: validator correctly checks array items
+ok 355 - validator correctly checks array items
+  ---
+  duration_ms: 0.2561
+  ...
+# Subtest: validator correctly checks nested objects
+ok 356 - validator correctly checks nested objects
+  ---
+  duration_ms: 0.2331
+  ...
+# Subtest: validator correctly checks additionalProperties: false
+ok 357 - validator correctly checks additionalProperties: false
+  ---
+  duration_ms: 0.2568
+  ...
+# Subtest: telemetry schema validates a well-formed telemetry frame
+ok 358 - telemetry schema validates a well-formed telemetry frame
+  ---
+  duration_ms: 11.7683
+  ...
+# Subtest: telemetry schema rejects a frame missing required fields
+ok 359 - telemetry schema rejects a frame missing required fields
+  ---
+  duration_ms: 0.8094
+  ...
+# Subtest: semantic-telemetry schema validates a well-formed semantic fact
+ok 360 - semantic-telemetry schema validates a well-formed semantic fact
+  ---
+  duration_ms: 40.4443
+  ...
+# Subtest: semantic-telemetry schema rejects invalid semanticClass enum
+ok 361 - semantic-telemetry schema rejects invalid semanticClass enum
+  ---
+  duration_ms: 13.1367
+  ...
+# Subtest: experiment schema validates a well-formed experiment
+ok 362 - experiment schema validates a well-formed experiment
+  ---
+  duration_ms: 11.4683
+  ...
+# Subtest: experiment schema rejects matchCount below minimum
+ok 363 - experiment schema rejects matchCount below minimum
+  ---
+  duration_ms: 23.9361
+  ...
+# Subtest: run-provenance schema validates a well-formed provenance record
+ok 364 - run-provenance schema validates a well-formed provenance record
+  ---
+  duration_ms: 13.1957
+  ...
+# Subtest: run-provenance schema rejects invalid authorizedScope
+ok 365 - run-provenance schema rejects invalid authorizedScope
+  ---
+  duration_ms: 15.5598
+  ...
+# Analytics schema validation errors: [ 'schemaVersion: expected const "4.0.0", got "4.1.0"' ]
+# Subtest: analytics schema validates the generated observatory analytics.json
+not ok 366 - analytics schema validates the generated observatory analytics.json
+  ---
+  duration_ms: 334.8932
+  location: 'H:\\myProjects\\Intrilex-dev2\\test\\schema-validation.test.mjs:179:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    analytics.json should validate against analytics.schema.json:
+    schemaVersion: expected const "4.0.0", got "4.1.0"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///H:/myProjects/Intrilex-dev2/test/schema-validation.test.mjs:190:10)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: validateFile CLI works end-to-end
+ok 367 - validateFile CLI works end-to-end
+  ---
+  duration_ms: 351.8825
+  ...
+# Subtest: createScoringWeights returns defaults when no overrides given
+ok 368 - createScoringWeights returns defaults when no overrides given
+  ---
+  duration_ms: 2.7996
+  ...
+# Subtest: createScoringWeights applies top-level overrides
+ok 369 - createScoringWeights applies top-level overrides
+  ---
+  duration_ms: 0.4675
+  ...
+# Subtest: createScoringWeights deep-merges nested objects
+ok 370 - createScoringWeights deep-merges nested objects
+  ---
+  duration_ms: 0.9596
+  ...
+# Subtest: scoringWeightsHash is deterministic
+ok 371 - scoringWeightsHash is deterministic
+  ---
+  duration_ms: 0.4687
+  ...
+# Subtest: scoringWeightsHash differs for different weights
+ok 372 - scoringWeightsHash differs for different weights
+  ---
+  duration_ms: 0.6054
+  ...
+# Subtest: sensitivity: perturbing scuttle targetMultiplier changes scuttle scores
+ok 373 - sensitivity: perturbing scuttle targetMultiplier changes scuttle scores
+  ---
+  duration_ms: 1.2134
+  ...
+# Subtest: sensitivity: perturbing phase weight changes phase action score
+ok 374 - sensitivity: perturbing phase weight changes phase action score
+  ---
+  duration_ms: 0.3373
+  ...
+# Subtest: sensitivity: perturbing exhaustedPass weight changes exhausted-pass score
+ok 375 - sensitivity: perturbing exhaustedPass weight changes exhausted-pass score
+  ---
+  duration_ms: 0.4906
+  ...
+# Subtest: sensitivity: rank order changes when weights shift
+ok 376 - sensitivity: rank order changes when weights shift
+  ---
+  duration_ms: 27.8471
+  ...
+# Subtest: sensitivity: ┬▒10% perturbation of all multipliers keeps ranking stable (robustness)
+ok 377 - sensitivity: ┬▒10% perturbation of all multipliers keeps ranking stable (robustness)
+  ---
+  duration_ms: 1.1749
+  ...
+# Subtest: self-audit.json critical gates are all true (no false PASS)
+ok 378 - self-audit.json critical gates are all true (no false PASS)
+  ---
+  duration_ms: 22.6353
+  ...
+# Subtest: self-audit.json schema version is 3.0.0 (generated by script, not hand-written)
+ok 379 - self-audit.json schema version is 3.0.0 (generated by script, not hand-written)
+  ---
+  duration_ms: 13.0433
+  ...
+# Subtest: self-audit test count matches actual executed test count (BL-14 binding)
+ok 380 - self-audit test count matches actual executed test count (BL-14 binding)
+  ---
+  duration_ms: 458.6239
+  ...
+# Subtest: self-audit certification count agrees with self-audit count (BL-15 binding)
+ok 381 - self-audit certification count agrees with self-audit count (BL-15 binding)
+  ---
+  duration_ms: 2.1712
+  ...
+# Subtest: self-audit is not a static-only check ΓÇö negative control: tampered audit must fail
+ok 382 - self-audit is not a static-only check ΓÇö negative control: tampered audit must fail
+  ---
+  duration_ms: 3.5764
+  ...
+# Subtest: ordinary action frames expose no ordinary Pass
+ok 383 - ordinary action frames expose no ordinary Pass
+  ---
+  duration_ms: 69.4761
+  ...
+# Subtest: semantic counters separate response decline from actions and orchestration
+ok 384 - semantic counters separate response decline from actions and orchestration
+  ---
+  duration_ms: 0.5907
+  ...
+# Subtest: real match preserves semantic accounting and observer invariance
+ok 385 - real match preserves semantic accounting and observer invariance
+  ---
+  duration_ms: 6713.9476
+  ...
+# Subtest: meta: every *.test.mjs on disk is listed in the default test script (BL-01 non-vacuity)
+ok 386 - meta: every *.test.mjs on disk is listed in the default test script (BL-01 non-vacuity)
+  ---
+  duration_ms: 13.2741
+  ...
+# Subtest: meta: every *.test.mjs on disk is listed in CI script (BL-01 non-vacuity)
+ok 387 - meta: every *.test.mjs on disk is listed in CI script (BL-01 non-vacuity)
+  ---
+  duration_ms: 14.1057
+  ...
+# Subtest: meta: CI run_step count matches printed denominator (BL-17 regression guard)
+ok 388 - meta: CI run_step count matches printed denominator (BL-17 regression guard)
+  ---
+  duration_ms: 4.1994
+  ...
+# Subtest: meta: no test file uses bare try/catch that swallows assertion failures (BL-13 regression guard)
+ok 389 - meta: no test file uses bare try/catch that swallows assertion failures (BL-13 regression guard)
+  ---
+  duration_ms: 44.162
+  ...
+# Subtest: canonicalization sorts object keys
+ok 390 - canonicalization sorts object keys
+  ---
+  duration_ms: 1.8113
+  ...
+# Subtest: canonical hash is key-order independent
+ok 391 - canonical hash is key-order independent
+  ---
+  duration_ms: 0.8514
+  ...
+# Subtest: CSV formula injection is neutralized
+ok 392 - CSV formula injection is neutralized
+  ---
+  duration_ms: 0.3376
+  ...
+# Subtest: CSV quotes are escaped
+ok 393 - CSV quotes are escaped
+  ---
+  duration_ms: 0.3613
+  ...
+# Subtest: Wilson interval handles empty sample
+ok 394 - Wilson interval handles empty sample
+  ---
+  duration_ms: 1.3025
+  ...
+# Subtest: Wilson interval contains observed rate
+ok 395 - Wilson interval contains observed rate
+  ---
+  duration_ms: 0.2992
+  ...
+# Subtest: number summary is deterministic
+ok 396 - number summary is deterministic
+  ---
+  duration_ms: 0.7574
+  ...
+# Subtest: unrestricted profile is exported and has correct metadata
+ok 397 - unrestricted profile is exported and has correct metadata
+  ---
+  duration_ms: 1.4862
+  ...
+# Subtest: unrestricted profile supports all advanced families plus hidden branches
+ok 398 - unrestricted profile supports all advanced families plus hidden branches
+  ---
+  duration_ms: 0.4876
+  ...
+# Subtest: unrestricted profile has no excluded advanced systems
+ok 399 - unrestricted profile has no excluded advanced systems
+  ---
+  duration_ms: 0.2218
+  ...
+# Subtest: unrestricted profile creates a valid simulation state
+ok 400 - unrestricted profile creates a valid simulation state
+  ---
+  duration_ms: 12.3307
+  ...
+# Subtest: unrestricted profile: Super 3 Raid enumerates with paired 3s
+ok 401 - unrestricted profile: Super 3 Raid enumerates with paired 3s
+  ---
+  duration_ms: 126.5532
+  ...
+# Subtest: unrestricted profile: Super 5 Recycle enumerates with paired 5s
+ok 402 - unrestricted profile: Super 5 Recycle enumerates with paired 5s
+  ---
+  duration_ms: 62.1843
+  ...
+# Subtest: unrestricted profile: Super 6 Dig enumerates with paired 6s
+ok 403 - unrestricted profile: Super 6 Dig enumerates with paired 6s
+  ---
+  duration_ms: 83.7157
+  ...
+# Subtest: unrestricted profile: Super 7 Topdeck enumerates with paired 7s
+ok 404 - unrestricted profile: Super 7 Topdeck enumerates with paired 7s
+  ---
+  duration_ms: 51.763
+  ...
+# Subtest: unrestricted profile: Sudden Death enumerates as interrupt
+ok 405 - unrestricted profile: Sudden Death enumerates as interrupt
+  ---
+  duration_ms: 45.7704
+  ...
+# Subtest: unrestricted profile: 10ΓÖª Mimic generated effect copy (topdeck-seven) enumerates
+ok 406 - unrestricted profile: 10ΓÖª Mimic generated effect copy (topdeck-seven) enumerates
+  ---
+  duration_ms: 57.1744
+  ...
+# Subtest: unrestricted profile: 10ΓÖª Mimic generated effect copy (recycle-five) enumerates
+ok 407 - unrestricted profile: 10ΓÖª Mimic generated effect copy (recycle-five) enumerates
+  ---
+  duration_ms: 66.7582
+  ...
+# Subtest: unrestricted profile: hidden Supers are NOT available in advanced-only profile
+ok 408 - unrestricted profile: hidden Supers are NOT available in advanced-only profile
+  ---
+  duration_ms: 83.1641
+  ...
+# Subtest: unrestricted profile: Random Legal match is deterministic and terminal
+ok 409 - unrestricted profile: Random Legal match is deterministic and terminal
+  ---
+  duration_ms: 1867.2622
+  ...
+# Subtest: unrestricted profile: simulation capabilities list includes unrestricted profile
+ok 410 - unrestricted profile: simulation capabilities list includes unrestricted profile
+  ---
+  duration_ms: 0.457
+  ...
+# Subtest: Anchor resolver ΓÇö pure authority verification
+    # Subtest: authentic retained authority succeeds (positive control)
+    ok 1 - authentic retained authority succeeds (positive control)
+      ---
+      duration_ms: 2.0213
+      ...
+    # Subtest: synthetic decisionId derived from the validator formula fails (inversion reversed)
+    ok 2 - synthetic decisionId derived from the validator formula fails (inversion reversed)
+      ---
+      duration_ms: 0.4809
+      ...
+    # Subtest: missing matchId fails
+    ok 3 - missing matchId fails
+      ---
+      duration_ms: 0.2067
+      ...
+    # Subtest: missing replayContentHash fails
+    ok 4 - missing replayContentHash fails
+      ---
+      duration_ms: 0.2291
+      ...
+    # Subtest: missing replayIntegrityHash fails
+    ok 5 - missing replayIntegrityHash fails
+      ---
+      duration_ms: 0.1247
+      ...
+    # Subtest: missing decisionId fails
+    ok 6 - missing decisionId fails
+      ---
+      duration_ms: 0.1317
+      ...
+    # Subtest: missing decisionIndex fails
+    ok 7 - missing decisionIndex fails
+      ---
+      duration_ms: 0.4069
+      ...
+    # Subtest: missing replayCommandIndex fails
+    ok 8 - missing replayCommandIndex fails
+      ---
+      duration_ms: 0.7045
+      ...
+    # Subtest: missing beforeStateHash fails
+    ok 9 - missing beforeStateHash fails
+      ---
+      duration_ms: 0.4826
+      ...
+    # Subtest: missing actorId fails
+    ok 10 - missing actorId fails
+      ---
+      duration_ms: 0.7534
+      ...
+    # Subtest: missing seat fails
+    ok 11 - missing seat fails
+      ---
+      duration_ms: 0.1924
+      ...
+    # Subtest: missing legalActionSetHash fails
+    ok 12 - missing legalActionSetHash fails
+      ---
+      duration_ms: 0.1123
+      ...
+    # Subtest: missing selectedActionId fails
+    ok 13 - missing selectedActionId fails
+      ---
+      duration_ms: 0.095
+      ...
+    # Subtest: missing selectedCommandHash fails
+    ok 14 - missing selectedCommandHash fails
+      ---
+      duration_ms: 0.1107
+      ...
+    # Subtest: missing postSelectedActionStateHash fails
+    ok 15 - missing postSelectedActionStateHash fails
+      ---
+      duration_ms: 0.6885
+      ...
+    # Subtest: missing engineVersion fails
+    ok 16 - missing engineVersion fails
+      ---
+      duration_ms: 0.127
+      ...
+    # Subtest: missing rulesVersion fails
+    ok 17 - missing rulesVersion fails
+      ---
+      duration_ms: 0.085
+      ...
+    # Subtest: truncated beforeStateHash fails
+    ok 18 - truncated beforeStateHash fails
+      ---
+      duration_ms: 0.6184
+      ...
+    # Subtest: replay content hash cannot substitute for before-state authority
+    ok 19 - replay content hash cannot substitute for before-state authority
+      ---
+      duration_ms: 0.1819
+      ...
+    # Subtest: wrong actor fails (value-matched against frame)
+    ok 20 - wrong actor fails (value-matched against frame)
+      ---
+      duration_ms: 0.1186
+      ...
+    # Subtest: wrong seat fails (value-matched against frame)
+    ok 21 - wrong seat fails (value-matched against frame)
+      ---
+      duration_ms: 0.1096
+      ...
+    # Subtest: wrong legal action set hash fails
+    ok 22 - wrong legal action set hash fails
+      ---
+      duration_ms: 0.1501
+      ...
+    # Subtest: selected action not from retained evidence fails
+    ok 23 - selected action not from retained evidence fails
+      ---
+      duration_ms: 0.1514
+      ...
+    # Subtest: wrong selected command hash fails
+    ok 24 - wrong selected command hash fails
+      ---
+      duration_ms: 0.1214
+      ...
+    # Subtest: wrong post-state hash fails (historical action must reproduce post-state)
+    ok 25 - wrong post-state hash fails (historical action must reproduce post-state)
+      ---
+      duration_ms: 0.0986
+      ...
+    # Subtest: incompatible engine version fails
+    ok 26 - incompatible engine version fails
+      ---
+      duration_ms: 0.3597
+      ...
+    # Subtest: incompatible rules version fails
+    ok 27 - incompatible rules version fails
+      ---
+      duration_ms: 0.2032
+      ...
+    # Subtest: fake match id fails
+    ok 28 - fake match id fails
+      ---
+      duration_ms: 0.1413
+      ...
+    # Subtest: wrong decision index (vs retained) fails
+    ok 29 - wrong decision index (vs retained) fails
+      ---
+      duration_ms: 0.1416
+      ...
+    # Subtest: replay command index out of range fails
+    ok 30 - replay command index out of range fails
+      ---
+      duration_ms: 0.2492
+      ...
+    # Subtest: decision-to-command mapping mismatch fails
+    ok 31 - decision-to-command mapping mismatch fails
+      ---
+      duration_ms: 0.2657
+      ...
+    # Subtest: legacy 16-char retained checkpoint hash reconciles against full before-state hash
+    ok 32 - legacy 16-char retained checkpoint hash reconciles against full before-state hash
+      ---
+      duration_ms: 0.1804
+      ...
+    # Subtest: isFullHash rejects truncated and accepts full
+    ok 33 - isFullHash rejects truncated and accepts full
+      ---
+      duration_ms: 0.1385
+      ...
+    1..33
+ok 411 - Anchor resolver ΓÇö pure authority verification
+  ---
+  duration_ms: 13.406
+  type: 'suite'
+  ...
+# Subtest: runPairedCounterfactual ΓÇö authentic authority closure
+    # Subtest: authentic retained decisionId succeeds (inversion reversed)
+    ok 1 - authentic retained decisionId succeeds (inversion reversed)
+      ---
+      duration_ms: 5245.8513
+      ...
+    # Subtest: synthetic decisionId fails (inversion reversed)
+    ok 2 - synthetic decisionId fails (inversion reversed)
+      ---
+      duration_ms: 949.2386
+      ...
+    # Subtest: wrong actor fails
+    ok 3 - wrong actor fails
+      ---
+      duration_ms: 973.4798
+      ...
+    # Subtest: wrong seat fails
+    ok 4 - wrong seat fails
+      ---
+      duration_ms: 948.0124
+      ...
+    # Subtest: truncated checkpointHash fails
+    ok 5 - truncated checkpointHash fails
+      ---
+      duration_ms: 908.4137
+      ...
+    # Subtest: replay content hash cannot substitute for checkpoint authority
+    ok 6 - replay content hash cannot substitute for checkpoint authority
+      ---
+      duration_ms: 943.4171
+      ...
+    1..6
+ok 412 - runPairedCounterfactual ΓÇö authentic authority closure
+  ---
+  duration_ms: 9968.8608
+  type: 'suite'
+  ...
+# Subtest: Counterfactual Anchor Binding
+    # Subtest: 4. Fake match ID fails
+    ok 1 - 4. Fake match ID fails
+      ---
+      duration_ms: 6951.9847
+      ...
+    # Subtest: 5. Fake checkpoint hash fails
+    ok 2 - 5. Fake checkpoint hash fails
+      ---
+      duration_ms: 6333.7214
+      ...
+    # Subtest: 6. Wrong decision ID fails
+    ok 3 - 6. Wrong decision ID fails
+      ---
+      duration_ms: 5013.4617
+      ...
+    # Subtest: 7. Wrong decision index fails
+    ok 4 - 7. Wrong decision index fails
+      ---
+      duration_ms: 3520.7725
+      ...
+    # Subtest: 13. Decision index and command index cannot be interchanged
+    ok 5 - 13. Decision index and command index cannot be interchanged
+      ---
+      duration_ms: 2831.5324
+      ...
+    1..5
+ok 413 - Counterfactual Anchor Binding
+  ---
+  duration_ms: 24653.1131
+  type: 'suite'
+  ...
+# Subtest: Paired Counterfactual Experiment
+    # Subtest: 16. One API returns selected and alternative branches together
+    ok 1 - 16. One API returns selected and alternative branches together
+      ---
+      duration_ms: 7924.6324
+      ...
+    # Subtest: 17. Every rollout uses matched continuation streams
+    ok 2 - 17. Every rollout uses matched continuation streams
+      ---
+      duration_ms: 7451.0688
+      ...
+    # Subtest: 18. Branch execution order cannot change results
+    ok 3 - 18. Branch execution order cannot change results
+      ---
+      duration_ms: 12291.0879
+      ...
+    # Subtest: 19. Failed rollouts remain present and fail the experiment gate
+    ok 4 - 19. Failed rollouts remain present and fail the experiment gate
+      ---
+      duration_ms: 12209.2554
+      ...
+    1..4
+ok 414 - Paired Counterfactual Experiment
+  ---
+  duration_ms: 39876.7104
+  type: 'suite'
+  ...
+# Subtest: Decision Evidence Reconciliation
+    # Subtest: 22. Every actual score total reconciles with actual contributions
+    ok 1 - 22. Every actual score total reconciles with actual contributions
+      ---
+      duration_ms: 0.5841
+      ...
+    # Subtest: 23. Opaque policy totals have no fabricated causal decomposition
+    ok 2 - 23. Opaque policy totals have no fabricated causal decomposition
+      ---
+      duration_ms: 0.3027
+      ...
+    # Subtest: 24. Every legal candidate is preserved losslessly
+    ok 3 - 24. Every legal candidate is preserved losslessly
+      ---
+      duration_ms: 0.2781
+      ...
+    # Subtest: 25. Random choices report probability and null margin
+    ok 4 - 25. Random choices report probability and null margin
+      ---
+      duration_ms: 0.196
+      ...
+    1..4
+ok 415 - Decision Evidence Reconciliation
+  ---
+  duration_ms: 1.5895
+  type: 'suite'
+  ...
+# Subtest: Rule Audits
+    # Subtest: 27. Exhausted Pass fails if Exhausted is inactive
+    ok 1 - 27. Exhausted Pass fails if Exhausted is inactive
+      ---
+      duration_ms: 0.421
+      ...
+    # Subtest: 28. Exhausted Pass fails if Draw Pile is nonempty
+    ok 2 - 28. Exhausted Pass fails if Draw Pile is nonempty
+      ---
+      duration_ms: 0.2112
+      ...
+    # Subtest: 32. Quick, Interrupt, and Instant consume no Mini-Turn
+    ok 3 - 32. Quick, Interrupt, and Instant consume no Mini-Turn
+      ---
+      duration_ms: 0.2425
+      ...
+    # Subtest: 33. Generic Interrupt skip creation fails
+    ok 4 - 33. Generic Interrupt skip creation fails
+      ---
+      duration_ms: 0.1645
+      ...
+    # Subtest: Audit checks have expected, evidenceRefs, and limitation fields
+    ok 5 - Audit checks have expected, evidenceRefs, and limitation fields
+      ---
+      duration_ms: 0.2415
+      ...
+    # Subtest: Overall audit cannot PASS with zero applicable checks
+    ok 6 - Overall audit cannot PASS with zero applicable checks
+      ---
+      duration_ms: 0.2036
+      ...
+    1..6
+ok 416 - Rule Audits
+  ---
+  duration_ms: 1.696
+  type: 'suite'
+  ...
+# Subtest: Browser Branch Lab
+    # Subtest: 1. Browser Branch without a loaded replay fails closed
+    ok 1 - 1. Browser Branch without a loaded replay fails closed
+      ---
+      duration_ms: 1.8321
+      ...
+    # Subtest: 2. Browser Branch UI does not have independent A/B buttons
+    ok 2 - 2. Browser Branch UI does not have independent A/B buttons
+      ---
+      duration_ms: 1.0236
+      ...
+    # Subtest: 3. Browser Branch does not accept raw checkpoint index input
+    ok 3 - 3. Browser Branch does not accept raw checkpoint index input
+      ---
+      duration_ms: 0.9557
+      ...
+    1..3
+ok 417 - Browser Branch Lab
+  ---
+  duration_ms: 3.9975
+  type: 'suite'
+  ...
+# Subtest: Browser Diagnostics
+    # Subtest: 36. Browser Diagnostics shows unavailable, not zero
+    ok 1 - 36. Browser Diagnostics shows unavailable, not zero
+      ---
+      duration_ms: 1.2249
+      ...
+    # Subtest: 37. Diagnostics does not send empty decisions array
+    ok 2 - 37. Diagnostics does not send empty decisions array
+      ---
+      duration_ms: 0.9616
+      ...
+    1..2
+ok 418 - Browser Diagnostics
+  ---
+  duration_ms: 2.3146
+  type: 'suite'
+  ...
+# Subtest: HYBRIX Determinism and Isolation
+    # Subtest: 38. The real HYBRIX trace survives runtime transport
+    ok 1 - 38. The real HYBRIX trace survives runtime transport
+      ---
+      duration_ms: 355.7672
+      ...
+    # Subtest: 39. Four identical HYBRIX runs produce one semantic result hash
+    ok 2 - 39. Four identical HYBRIX runs produce one semantic result hash
+      ---
+      duration_ms: 1345.3208
+      ...
+    # Subtest: 40. HYBRIX branch ordering cannot change results
+    ok 3 - 40. HYBRIX branch ordering cannot change results
+      ---
+      duration_ms: 732.6261
+      ...
+    # Subtest: 42. Mutable HYBRIX state cannot cross runs
+    ok 4 - 42. Mutable HYBRIX state cannot cross runs
+      ---
+      duration_ms: 2273.0871
+      ...
+    # Subtest: 44. Active Intrilex HYBRIX imports no spatial runtime systems
+    ok 5 - 44. Active Intrilex HYBRIX imports no spatial runtime systems
+      ---
+      duration_ms: 0.7279
+      ...
+    1..5
+ok 419 - HYBRIX Determinism and Isolation
+  ---
+  duration_ms: 4707.802
+  type: 'suite'
+  ...
+# Subtest: Benchmark Accounting
+    # Subtest: 45. Benchmark attribution remains correct under seat swaps
+    ok 1 - 45. Benchmark attribution remains correct under seat swaps
+      ---
+      duration_ms: 0.4147
+      ...
+    # Subtest: 46. Benchmark accounting satisfies requested = completed + draws + failures + unsupported
+    ok 2 - 46. Benchmark accounting satisfies requested = completed + draws + failures + unsupported
+      ---
+      duration_ms: 0.2862
+      ...
+    # Subtest: 47. Self-play cannot enter a HYBRIX-versus-baseline aggregate
+    ok 3 - 47. Self-play cannot enter a HYBRIX-versus-baseline aggregate
+      ---
+      duration_ms: 0.238
+      ...
+    # Subtest: 48. Errors and unsupported outcomes cannot become draws
+    ok 4 - 48. Errors and unsupported outcomes cannot become draws
+      ---
+      duration_ms: 0.3639
+      ...
+    1..4
+ok 420 - Benchmark Accounting
+  ---
+  duration_ms: 1.4279
+  type: 'suite'
+  ...
+# Subtest: Campaign Reliability
+    # Subtest: 49. Campaign errors remain structured and fail the campaign
+    ok 1 - 49. Campaign errors remain structured and fail the campaign
+      ---
+      duration_ms: 0.6512
+      ...
+    1..1
+ok 421 - Campaign Reliability
+  ---
+  duration_ms: 0.7333
+  type: 'suite'
+  ...
+# Subtest: Package and Version Integrity
+    # Subtest: 50. Clean frozen pnpm installation succeeds
+    ok 1 - 50. Clean frozen pnpm installation succeeds
+      ---
+      duration_ms: 0.5232
+      ...
+    # Subtest: 51. Active package graph has zero cycles
+    ok 2 - 51. Active package graph has zero cycles
+      ---
+      duration_ms: 0.3239
+      ...
+    # Subtest: 52. All active versions and provenance fields agree
+    ok 3 - 52. All active versions and provenance fields agree
+      ---
+      duration_ms: 0.489
+      ...
+    1..3
+ok 422 - Package and Version Integrity
+  ---
+  duration_ms: 1.4952
+  type: 'suite'
+  ...
+# Subtest: Browser Workspace Coverage
+    # Subtest: 53. Workspace /watch has behavioral smoke coverage
+    ok 1 - 53. Workspace /watch has behavioral smoke coverage
+      ---
+      duration_ms: 0.9683
+      ...
+    # Subtest: 53. Workspace /replays has behavioral smoke coverage
+    ok 2 - 53. Workspace /replays has behavioral smoke coverage
+      ---
+      duration_ms: 0.7304
+      ...
+    # Subtest: 53. Workspace /history has behavioral smoke coverage
+    ok 3 - 53. Workspace /history has behavioral smoke coverage
+      ---
+      duration_ms: 0.6832
+      ...
+    # Subtest: 53. Workspace /mechanics has behavioral smoke coverage
+    ok 4 - 53. Workspace /mechanics has behavioral smoke coverage
+      ---
+      duration_ms: 0.6502
+      ...
+    # Subtest: 53. Workspace /synergies has behavioral smoke coverage
+    ok 5 - 53. Workspace /synergies has behavioral smoke coverage
+      ---
+      duration_ms: 0.6442
+      ...
+    # Subtest: 53. Workspace /compare has behavioral smoke coverage
+    ok 6 - 53. Workspace /compare has behavioral smoke coverage
+      ---
+      duration_ms: 0.6571
+      ...
+    # Subtest: 53. Workspace /traces has behavioral smoke coverage
+    ok 7 - 53. Workspace /traces has behavioral smoke coverage
+      ---
+      duration_ms: 0.6786
+      ...
+    # Subtest: 53. Workspace /branches has behavioral smoke coverage
+    ok 8 - 53. Workspace /branches has behavioral smoke coverage
+      ---
+      duration_ms: 0.6723
+      ...
+    # Subtest: 53. Workspace /diagnostics has behavioral smoke coverage
+    ok 9 - 53. Workspace /diagnostics has behavioral smoke coverage
+      ---
+      duration_ms: 0.6506
+      ...
+    # Subtest: 53. Workspace /evidence has behavioral smoke coverage
+    ok 10 - 53. Workspace /evidence has behavioral smoke coverage
+      ---
+      duration_ms: 0.6369
+      ...
+    1..10
+ok 423 - Browser Workspace Coverage
+  ---
+  duration_ms: 7.3352
+  type: 'suite'
+  ...
+# Subtest: Null Utility Handling
+    # Subtest: 20. Null utilities are not silently converted to zero
+    ok 1 - 20. Null utilities are not silently converted to zero
+      ---
+      duration_ms: 0.4219
+      ...
+    1..1
+ok 424 - Null Utility Handling
+  ---
+  duration_ms: 0.4935
+  type: 'suite'
+  ...
+# Subtest: Node/Browser Parity
+    # Subtest: 21. Browser and Node decision-intelligence exports match
+    ok 1 - 21. Browser and Node decision-intelligence exports match
+      ---
+      duration_ms: 0.8875
+      ...
+    1..1
+ok 425 - Node/Browser Parity
+  ---
+  duration_ms: 0.9747
+  type: 'suite'
+  ...
+# Subtest: Adversarial: Anchor Binding
+    # Subtest: 53. Missing anchor field fails closed
+    ok 1 - 53. Missing anchor field fails closed
+      ---
+      duration_ms: 4755.2349
+      ...
+    # Subtest: 54. Truncated checkpoint hash fails
+    ok 2 - 54. Truncated checkpoint hash fails
+      ---
+      duration_ms: 4295.2508
+      ...
+    # Subtest: 55. Wrong legalActionSetHash fails
+    ok 3 - 55. Wrong legalActionSetHash fails
+      ---
+      duration_ms: 4409.1322
+      ...
+    # Subtest: 56. Wrong engine version fails
+    ok 4 - 56. Wrong engine version fails
+      ---
+      duration_ms: 4756.0334
+      ...
+    # Subtest: 57. Wrong selectedCommandHash fails
+    ok 5 - 57. Wrong selectedCommandHash fails
+      ---
+      duration_ms: 4669.7391
+      ...
+    # Subtest: 58. Wrong postSelectedActionStateHash fails
+    ok 6 - 58. Wrong postSelectedActionStateHash fails
+      ---
+      duration_ms: 3330.1493
+      ...
+    # Subtest: 59. Wrong replayCommandIndex fails
+    ok 7 - 59. Wrong replayCommandIndex fails
+      ---
+      duration_ms: 3342.5818
+      ...
+    # Subtest: 60. Wrong actorId fails
+    ok 8 - 60. Wrong actorId fails
+      ---
+      duration_ms: 3143.6777
+      ...
+    1..8
+ok 426 - Adversarial: Anchor Binding
+  ---
+  duration_ms: 32702.2339
+  type: 'suite'
+  ...
+# Subtest: Adversarial: Status and Rollouts
+    # Subtest: 61. Failed rollouts produce FAILED status, not COMPLETED
+    ok 1 - 61. Failed rollouts produce FAILED status, not COMPLETED
+      ---
+      duration_ms: 1.6243
+      ...
+    # Subtest: 62. All-aborted rollouts produce FAILED status
+    ok 2 - 62. All-aborted rollouts produce FAILED status
+      ---
+      duration_ms: 0.1956
+      ...
+    # Subtest: 63. Empty results produce FAILED status
+    ok 3 - 63. Empty results produce FAILED status
+      ---
+      duration_ms: 0.1355
+      ...
+    # Subtest: 64. compareCounterfactual returns null when either branch is FAILED
+    ok 4 - 64. compareCounterfactual returns null when either branch is FAILED
+      ---
+      duration_ms: 0.1016
+      ...
+    # Subtest: 65. compareCounterfactual returns null when both utilities are null
+    ok 5 - 65. compareCounterfactual returns null when both utilities are null
+      ---
+      duration_ms: 0.07
+      ...
+    # Subtest: 66. Rollout results array preserves error entries
+    ok 6 - 66. Rollout results array preserves error entries
+      ---
+      duration_ms: 0.1202
+      ...
+    1..6
+ok 427 - Adversarial: Status and Rollouts
+  ---
+  duration_ms: 2.3801
+  type: 'suite'
+  ...
+# Subtest: Adversarial: Decision Evidence
+    # Subtest: 67. Policy-sourced scores carry honest causal decomposition
+    ok 1 - 67. Policy-sourced scores carry honest causal decomposition
+      ---
+      duration_ms: 927.6667
+      ...
+    # Subtest: 68. Reconstructed scores have actualContributions
+    ok 2 - 68. Reconstructed scores have actualContributions
+      ---
+      duration_ms: 964.4809
+      ...
+    # Subtest: 69. Trace includes selectionProbability for random policies
+    ok 3 - 69. Trace includes selectionProbability for random policies
+      ---
+      duration_ms: 881.1195
+      ...
+    # Subtest: 70. Trace carries honest decomposition with residual for policy totals
+    ok 4 - 70. Trace carries honest decomposition with residual for policy totals
+      ---
+      duration_ms: 973.2232
+      ...
+    # Subtest: 71. Trace preserves selectedActionId from replay evidence
+    ok 5 - 71. Trace preserves selectedActionId from replay evidence
+      ---
+      duration_ms: 1587.7556
+      ...
+    # Subtest: 72. Trace includes hybrixTrace when HYBRIX policy is used
+    ok 6 - 72. Trace includes hybrixTrace when HYBRIX policy is used
+      ---
+      duration_ms: 221.5302
+      ...
+    1..6
+ok 428 - Adversarial: Decision Evidence
+  ---
+  duration_ms: 5556.1036
+  type: 'suite'
+  ...
+# Subtest: Adversarial: Rule Audits
+    # Subtest: 73. Rule audit checks include expected and evidenceRefs
+    ok 1 - 73. Rule audit checks include expected and evidenceRefs
+      ---
+      duration_ms: 1592.8555
+      ...
+    # Subtest: 74. Rule audit status is not PASS when all checks are NOT_APPLICABLE
+    ok 2 - 74. Rule audit status is not PASS when all checks are NOT_APPLICABLE
+      ---
+      duration_ms: 1531.4757
+      ...
+    # Subtest: 75. Rule audit observed values are not hardcoded true
+    ok 3 - 75. Rule audit observed values are not hardcoded true
+      ---
+      duration_ms: 1484.8045
+      ...
+    # Subtest: 76. Rule audit includes checkId for every check
+    ok 4 - 76. Rule audit includes checkId for every check
+      ---
+      duration_ms: 1511.1864
+      ...
+    # Subtest: 77. Rule audit check statuses are from valid enum
+    ok 5 - 77. Rule audit check statuses are from valid enum
+      ---
+      duration_ms: 1426.8705
+      ...
+    # Subtest: 78. Rule audit overall status reconciles with checks
+    ok 6 - 78. Rule audit overall status reconciles with checks
+      ---
+      duration_ms: 1451.9272
+      ...
+    1..6
+ok 429 - Adversarial: Rule Audits
+  ---
+  duration_ms: 8999.3488
+  type: 'suite'
+  ...
+# Subtest: Adversarial: Traces Loading
+    # Subtest: 79. Decision trace index has records with matchId
+    ok 1 - 79. Decision trace index has records with matchId
+      ---
+      duration_ms: 0.3829
+      ...
+    # Subtest: 80. Decision trace shards load and have traces array
+    ok 2 - 80. Decision trace shards load and have traces array
+      ---
+      duration_ms: 2.0622
+      ...
+    # Subtest: 81. Every trace has required schema fields
+    ok 3 - 81. Every trace has required schema fields
+      ---
+      duration_ms: 2.5758
+      ...
+    # Subtest: 82. Trace schemaVersion is 2.0.0
+    ok 4 - 82. Trace schemaVersion is 2.0.0
+      ---
+      duration_ms: 2.747
+      ...
+    # Subtest: 83. Trace legalOptions have scoreSource field
+    ok 5 - 83. Trace legalOptions have scoreSource field
+      ---
+      duration_ms: 3.8199
+      ...
+    # Subtest: 84. Trace ruleAudit has checks array
+    ok 6 - 84. Trace ruleAudit has checks array
+      ---
+      duration_ms: 3.3548
+      ...
+    1..6
+ok 430 - Adversarial: Traces Loading
+  ---
+  duration_ms: 15.1698
+  type: 'suite'
+  ...
+# Subtest: Adversarial: Campaign Reliability
+    # Subtest: 85. Campaign records preserve errored matches
+    ok 1 - 85. Campaign records preserve errored matches
+      ---
+      duration_ms: 3513.6901
+      ...
+    # Subtest: 86. Campaign experimentHash is deterministic for same config
+    ok 2 - 86. Campaign experimentHash is deterministic for same config
+      ---
+      duration_ms: 6042.5974
+      ...
+    # Subtest: 87. Campaign includes semantic outcome in records
+    ok 3 - 87. Campaign includes semantic outcome in records
+      ---
+      duration_ms: 2640.406
+      ...
+    # Subtest: 88. Campaign does not silently drop errored records
+    ok 4 - 88. Campaign does not silently drop errored records
+      ---
+      duration_ms: 5882.1382
+      ...
+    # Subtest: 89. Campaign per-ordinal records preserve match index
+    ok 5 - 89. Campaign per-ordinal records preserve match index
+      ---
+      duration_ms: 2627.6012
+      ...
+    # Subtest: 90. Campaign status reflects semantic outcomes not just function returns
+    ok 6 - 90. Campaign status reflects semantic outcomes not just function returns
+      ---
+      duration_ms: 2351.5158
+      ...
+    1..6
+ok 431 - Adversarial: Campaign Reliability
+  ---
+  duration_ms: 23058.2167
+  type: 'suite'
+  ...
+# Subtest: Adversarial: Browser Evidence
+    # Subtest: 91. Browser dist has all 12 workspace renderers
+    ok 1 - 91. Browser dist has all 12 workspace renderers
+      ---
+      duration_ms: 0.6494
+      ...
+    # Subtest: 92. Browser dist does not have independent A/B branch buttons
+    ok 2 - 92. Browser dist does not have independent A/B branch buttons
+      ---
+      duration_ms: 0.4924
+      ...
+    # Subtest: 93. Browser dist does not accept free-text action ID for branch
+    ok 3 - 93. Browser dist does not accept free-text action ID for branch
+      ---
+      duration_ms: 0.5143
+      ...
+    # Subtest: 94. Browser dist does not accept raw checkpoint index input
+    ok 4 - 94. Browser dist does not accept raw checkpoint index input
+      ---
+      duration_ms: 0.4773
+      ...
+    # Subtest: 95. Browser parity report has correct version
+    ok 5 - 95. Browser parity report has correct version
+      ---
+      duration_ms: 0.2165
+      ...
+    # Subtest: 96. Browser UI smoke report has at least 10 workspaces
+    ok 6 - 96. Browser UI smoke report has at least 10 workspaces
+      ---
+      duration_ms: 0.2351
+      ...
+    1..6
+ok 432 - Adversarial: Browser Evidence
+  ---
+  duration_ms: 2.7121
+  type: 'suite'
+  ...
+# Subtest: Adversarial: HYBRIX
+    # Subtest: 97. HYBRIX traces do not contain spatial vocabulary
+    ok 1 - 97. HYBRIX traces do not contain spatial vocabulary
+      ---
+      duration_ms: 223.6799
+      ...
+    # Subtest: 98. HYBRIX decisions have candidateScores
+    ok 2 - 98. HYBRIX decisions have candidateScores
+      ---
+      duration_ms: 196.8809
+      ...
+    # Subtest: 99. HYBRIX match produces deterministic result hash
+    ok 3 - 99. HYBRIX match produces deterministic result hash
+      ---
+      duration_ms: 386.5685
+      ...
+    # Subtest: 100. HYBRIX trace transport preserves btNode data
+    ok 4 - 100. HYBRIX trace transport preserves btNode data
+      ---
+      duration_ms: 209.8981
+      ...
+    # Subtest: 101. HYBRIX agent does not import spatial runtime
+    ok 5 - 101. HYBRIX agent does not import spatial runtime
+      ---
+      duration_ms: 0.4178
+      ...
+    # Subtest: 102. HYBRIX policy adapter uses runInstanceId for isolation
+    ok 6 - 102. HYBRIX policy adapter uses runInstanceId for isolation
+      ---
+      duration_ms: 0.232
+      ...
+    1..6
+ok 433 - Adversarial: HYBRIX
+  ---
+  duration_ms: 1017.8459
+  type: 'suite'
+  ...
+# Subtest: Adversarial: Benchmark
+    # Subtest: 103. Benchmark script counts wins by policy ID not seat
+    ok 1 - 103. Benchmark script counts wins by policy ID not seat
+      ---
+      duration_ms: 0.2398
+      ...
+    # Subtest: 104. Benchmark script separates errors from draws
+    ok 2 - 104. Benchmark script separates errors from draws
+      ---
+      duration_ms: 0.189
+      ...
+    # Subtest: 105. Benchmark script excludes self-play from aggregates
+    ok 3 - 105. Benchmark script excludes self-play from aggregates
+      ---
+      duration_ms: 0.1976
+      ...
+    # Subtest: 106. Benchmark script enforces accounting invariant
+    ok 4 - 106. Benchmark script enforces accounting invariant
+      ---
+      duration_ms: 0.1771
+      ...
+    # Subtest: 107. Benchmark script tracks unsupported outcomes
+    ok 5 - 107. Benchmark script tracks unsupported outcomes
+      ---
+      duration_ms: 0.1689
+      ...
+    # Subtest: 108. Benchmark script does not count errors as draws
+    ok 6 - 108. Benchmark script does not count errors as draws
+      ---
+      duration_ms: 0.2198
+      ...
+    1..6
+ok 434 - Adversarial: Benchmark
+  ---
+  duration_ms: 1.3063
+  type: 'suite'
+  ...
+# Subtest: Adversarial: CI and Manifest
+    # Subtest: 109. CI script has manifest-verify gate
+    ok 1 - 109. CI script has manifest-verify gate
+      ---
+      duration_ms: 0.175
+      ...
+    # Subtest: 110. CI script has package-graph gate
+    ok 2 - 110. CI script has package-graph gate
+      ---
+      duration_ms: 0.1479
+      ...
+    # Subtest: 111. Manifest verification script exists
+    ok 3 - 111. Manifest verification script exists
+      ---
+      duration_ms: 0.148
+      ...
+    # Subtest: 112. Package graph check script exists
+    ok 4 - 112. Package graph check script exists
+      ---
+      duration_ms: 0.1003
+      ...
+    # Subtest: 113. All workspace packages are version 0.14.0
+    ok 5 - 113. All workspace packages are version 0.14.0
+      ---
+      duration_ms: 12.7328
+      ...
+    # Subtest: 114. Decision-intelligence has no simulation-runtime dependency
+    ok 6 - 114. Decision-intelligence has no simulation-runtime dependency
+      ---
+      duration_ms: 0.5418
+      ...
+    1..6
+ok 435 - Adversarial: CI and Manifest
+  ---
+  duration_ms: 14.0003
+  type: 'suite'
+  ...
+# Subtest: Adversarial: Continuation Seeds
+    # Subtest: 115. deriveContinuationSeed includes verifiedDecisionId
+    ok 1 - 115. deriveContinuationSeed includes verifiedDecisionId
+      ---
+      duration_ms: 0.1709
+      ...
+    # Subtest: 116. deriveContinuationSeed includes orderedContinuationPolicyIds
+    ok 2 - 116. deriveContinuationSeed includes orderedContinuationPolicyIds
+      ---
+      duration_ms: 0.0878
+      ...
+    # Subtest: 117. Paired counterfactual uses shared seeds for both branches
+    ok 3 - 117. Paired counterfactual uses shared seeds for both branches
+      ---
+      duration_ms: 5815.0345
+      ...
+    # Subtest: 118. deriveContinuationSeed does not include alternativeActionId
+    ok 4 - 118. deriveContinuationSeed does not include alternativeActionId
+      ---
+      duration_ms: 0.2254
+      ...
+    # Subtest: 119. runPairedCounterfactual requires selectedActionId from evidence
+    ok 5 - 119. runPairedCounterfactual requires selectedActionId from evidence
+      ---
+      duration_ms: 3004.7618
+      ...
+    # Subtest: 120. runPairedCounterfactual does not use policyActions[0] as selected
+    ok 6 - 120. runPairedCounterfactual does not use policyActions[0] as selected
+      ---
+      duration_ms: 4940.3236
+      ...
+    # Subtest: 121. Undefined derived anchor fields are filled from restored authority
+    ok 7 - 121. Undefined derived anchor fields are filled from restored authority
+      ---
+      duration_ms: 4995.4975
+      ...
+    # Subtest: 122. Campaign records array preserves all matches with semantic result
+    ok 8 - 122. Campaign records array preserves all matches with semantic result
+      ---
+      duration_ms: 2352.8039
+      ...
+    # Subtest: 123. Decision trace fullCheckpointHash is 64-hex when provided
+    ok 9 - 123. Decision trace fullCheckpointHash is 64-hex when provided
+      ---
+      duration_ms: 1419.374
+      ...
+    # Subtest: 124. Browser anchor.js is byte-identical to anchor.mjs
+    ok 10 - 124. Browser anchor.js is byte-identical to anchor.mjs
+      ---
+      duration_ms: 0.9406
+      ...
+    1..10
+ok 436 - Adversarial: Continuation Seeds
+  ---
+  duration_ms: 22529.56
+  type: 'suite'
+  ...
+# Subtest: Browser-Node anchor parity
+    # Subtest: anchor.js and anchor.mjs are byte-identical (single source of truth)
+    ok 1 - anchor.js and anchor.mjs are byte-identical (single source of truth)
+      ---
+      duration_ms: 3.003
+      ...
+    # Subtest: both resolvers produce identical results for authentic anchor
+    ok 2 - both resolvers produce identical results for authentic anchor
+      ---
+      duration_ms: 2.3131
+      ...
+    # Subtest: both resolvers produce identical results for synthetic decisionId
+    ok 3 - both resolvers produce identical results for synthetic decisionId
+      ---
+      duration_ms: 0.3603
+      ...
+    # Subtest: both resolvers produce identical results for wrong actor
+    ok 4 - both resolvers produce identical results for wrong actor
+      ---
+      duration_ms: 0.2261
+      ...
+    # Subtest: both resolvers produce identical results for truncated hash
+    ok 5 - both resolvers produce identical results for truncated hash
+      ---
+      duration_ms: 0.5245
+      ...
+    # Subtest: both resolvers produce identical verifiedAnchorHash
+    ok 6 - both resolvers produce identical verifiedAnchorHash
+      ---
+      duration_ms: 1.4013
+      ...
+    # Subtest: both resolvers export the same API surface
+    ok 7 - both resolvers export the same API surface
+      ---
+      duration_ms: 0.6648
+      ...
+    1..7
+ok 437 - Browser-Node anchor parity
+  ---
+  duration_ms: 10.6539
+  type: 'suite'
+  ...
+# Subtest: V0.10.0 Contract: Counterfactual Anchoring
+    # Subtest: 1. Branch without a real replay returns NOT_SUPPORTED
+    ok 1 - 1. Branch without a real replay returns NOT_SUPPORTED
+      ---
+      duration_ms: 1.6342
+      ...
+    # Subtest: 2. Branch with an unverifiable replay returns NOT_SUPPORTED
+    ok 2 - 2. Branch with an unverifiable replay returns NOT_SUPPORTED
+      ---
+      duration_ms: 0.604
+      ...
+    # Subtest: 3. Branch with out-of-range checkpoint index returns NOT_SUPPORTED
+    ok 3 - 3. Branch with out-of-range checkpoint index returns NOT_SUPPORTED
+      ---
+      duration_ms: 0.2759
+      ...
+    # Subtest: 4. Branch with nonexistent alternative action returns NOT_SUPPORTED
+    ok 4 - 4. Branch with nonexistent alternative action returns NOT_SUPPORTED
+      ---
+      duration_ms: 6911.667
+      ...
+    # Subtest: 5. Branch restores exact before-state hash from checkpoint
+    ok 5 - 5. Branch restores exact before-state hash from checkpoint
+      ---
+      duration_ms: 6884.4631
+      ...
+    # Subtest: 6. Alternative action produces different post-action state hash
+    ok 6 - 6. Alternative action produces different post-action state hash
+      ---
+      duration_ms: 6506.894
+      ...
+    # Subtest: 7. Counterfactual result preserves all rollouts including failures
+    ok 7 - 7. Counterfactual result preserves all rollouts including failures
+      ---
+      duration_ms: 5695.5987
+      ...
+    # Subtest: 8. Counterfactual result uses focalSeat utility, not raw seat1/seat2
+    ok 8 - 8. Counterfactual result uses focalSeat utility, not raw seat1/seat2
+      ---
+      duration_ms: 6514.3537
+      ...
+    1..8
+ok 438 - V0.10.0 Contract: Counterfactual Anchoring
+  ---
+  duration_ms: 32518.9192
+  type: 'suite'
+  ...
+# Subtest: V0.10.0 Contract: Paired Continuation Seeds
+    # Subtest: 9. deriveContinuationSeed does not include alternativeActionId
+    ok 1 - 9. deriveContinuationSeed does not include alternativeActionId
+      ---
+      duration_ms: 0.2542
+      ...
+    # Subtest: 10. deriveContinuationSeed changes with rolloutIndex
+    ok 2 - 10. deriveContinuationSeed changes with rolloutIndex
+      ---
+      duration_ms: 0.2336
+      ...
+    1..2
+ok 439 - V0.10.0 Contract: Paired Continuation Seeds
+  ---
+  duration_ms: 0.6391
+  type: 'suite'
+  ...
+# Subtest: V0.10.0 Contract: Decision Evidence
+    # Subtest: 11. Trace displayed policy score equals actual policy-emitted score
+    ok 1 - 11. Trace displayed policy score equals actual policy-emitted score
+      ---
+      duration_ms: 3277.6979
+      ...
+    # Subtest: 12. Random-policy traces must have null selectionMargin
+    ok 2 - 12. Random-policy traces must have null selectionMargin
+      ---
+      duration_ms: 1151.8389
+      ...
+    # Subtest: 13. Trace legalOptions include all legal actions
+    ok 3 - 13. Trace legalOptions include all legal actions
+      ---
+      duration_ms: 3147.7719
+      ...
+    # Subtest: 14. Trace schema version is 2.0.0
+    ok 4 - 14. Trace schema version is 2.0.0
+      ---
+      duration_ms: 2771.4966
+      ...
+    1..4
+ok 440 - V0.10.0 Contract: Decision Evidence
+  ---
+  duration_ms: 10348.9891
+  type: 'suite'
+  ...
+# Subtest: V0.10.0 Contract: Evidence-Derived Rule Audits
+    # Subtest: 15. Rule audit checks include checkId, status, observed, and evidence
+    ok 1 - 15. Rule audit checks include checkId, status, observed, and evidence
+      ---
+      duration_ms: 2816.2522
+      ...
+    # Subtest: 16. No audit check may PASS based on action family alone
+    ok 2 - 16. No audit check may PASS based on action family alone
+      ---
+      duration_ms: 2785.2969
+      ...
+    # Subtest: 17. Counter audit fails when countering own top
+    ok 3 - 17. Counter audit fails when countering own top
+      ---
+      duration_ms: 6347.984
+      ...
+    # Subtest: 18. Exhausted-pass audit does not use hardcoded observed=true
+    ok 4 - 18. Exhausted-pass audit does not use hardcoded observed=true
+      ---
+      duration_ms: 5591.7992
+      ...
+    1..4
+ok 441 - V0.10.0 Contract: Evidence-Derived Rule Audits
+  ---
+  duration_ms: 17541.7568
+  type: 'suite'
+  ...
+# Subtest: V0.10.0 Contract: Diagnostics Truth
+    # Subtest: 19. Diagnostics with available decisions must produce nonzero decision count
+    ok 1 - 19. Diagnostics with available decisions must produce nonzero decision count
+      ---
+      duration_ms: 4877.5196
+      ...
+    # Subtest: 20. Diagnostics never emit NaN or fabricated zero values
+    ok 2 - 20. Diagnostics never emit NaN or fabricated zero values
+      ---
+      duration_ms: 4257.7898
+      ...
+    # Subtest: 21. Diagnostics uses decisionId not checkpointId for low-margin decisions
+    ok 3 - 21. Diagnostics uses decisionId not checkpointId for low-margin decisions
+      ---
+      duration_ms: 3911.6051
+      ...
+    1..3
+ok 442 - V0.10.0 Contract: Diagnostics Truth
+  ---
+  duration_ms: 13047.1795
+  type: 'suite'
+  ...
+# Subtest: V0.10.0 Contract: HYBRIX Trace and Domain-Native
+    # Subtest: 22. HYBRIX match produces decision traces
+    ok 1 - 22. HYBRIX match produces decision traces
+      ---
+      duration_ms: 309.1513
+      ...
+    # Subtest: 23. HYBRIX traces with actual scores must use scoreSource="policy"
+    ok 2 - 23. HYBRIX traces with actual scores must use scoreSource="policy"
+      ---
+      duration_ms: 248.1402
+      ...
+    # Subtest: 24. HYBRIX agent produces candidate scores in decisions
+    ok 3 - 24. HYBRIX agent produces candidate scores in decisions
+      ---
+      duration_ms: 278.5657
+      ...
+    # Subtest: 25. HYBRIX traces do not contain spatial vocabulary
+    ok 4 - 25. HYBRIX traces do not contain spatial vocabulary
+      ---
+      duration_ms: 293.6745
+      ...
+    1..4
+ok 443 - V0.10.0 Contract: HYBRIX Trace and Domain-Native
+  ---
+  duration_ms: 1129.7351
+  type: 'suite'
+  ...
+# Subtest: V0.10.0 Contract: Determinism and Invariance
+    # Subtest: 26. Same seed produces identical match result hash
+    ok 1 - 26. Same seed produces identical match result hash
+      ---
+      duration_ms: 3984.4488
+      ...
+    # Subtest: 27. Worker-count invariance: experiment hash is identical
+    ok 2 - 27. Worker-count invariance: experiment hash is identical
+      ---
+      duration_ms: 5011.0814
+      ...
+    # Subtest: 28. Seat swap changes which policy wins
+    ok 3 - 28. Seat swap changes which policy wins
+      ---
+      duration_ms: 2413.9831
+      ...
+    1..3
+ok 444 - V0.10.0 Contract: Determinism and Invariance
+  ---
+  duration_ms: 11409.683
+  type: 'suite'
+  ...
+# Subtest: V0.10.0 Contract: Counterfactual Comparison
+    # Subtest: 29. compareCounterfactual uses focal-seat utility, not raw seat1 win rate
+    ok 1 - 29. compareCounterfactual uses focal-seat utility, not raw seat1 win rate
+      ---
+      duration_ms: 7931.3894
+      ...
+    # Subtest: 30. Counterfactual result includes legalActionSetHash in anchor verification
+    ok 2 - 30. Counterfactual result includes legalActionSetHash in anchor verification
+      ---
+      duration_ms: 4751.5151
+      ...
+    1..2
+ok 445 - V0.10.0 Contract: Counterfactual Comparison
+  ---
+  duration_ms: 12683.0463
+  type: 'suite'
+  ...
+# Subtest: V0.10.0 Contract: Package and Version Integrity
+    # Subtest: 31. All workspace package versions match root package.json version
+    ok 1 - 31. All workspace package versions match root package.json version
+      ---
+      duration_ms: 12.2536
+      ...
+    # Subtest: 32. Decision-intelligence has no simulation-runtime dependency
+    ok 2 - 32. Decision-intelligence has no simulation-runtime dependency
+      ---
+      duration_ms: 1.0017
+      ...
+    1..2
+ok 446 - V0.10.0 Contract: Package and Version Integrity
+  ---
+  duration_ms: 13.5106
+  type: 'suite'
+  ...
+# Subtest: CosmoTech tokens, semantic FX and responsive breakpoints exist
+ok 447 - CosmoTech tokens, semantic FX and responsive breakpoints exist
+  ---
+  duration_ms: 9.0319
+  ...
+# Subtest: charts and graph have accessible text alternatives
+ok 448 - charts and graph have accessible text alternatives
+  ---
+  duration_ms: 8.4391
+  ...
+1..448
+# tests 663
+# suites 49
+# pass 657
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 165774.9001

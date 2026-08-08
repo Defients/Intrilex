@@ -1,0 +1,37 @@
+{
+  "status_version": 1,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0-phase2.6.0",
+  "milestone": "Roadmap Phase 6 — Core rank system",
+  "completed_phases": [2, 3, 4, 5, 6],
+  "phase6_gate_ids": [
+    "CT-064", "CT-065", "CT-066", "CT-067", "CT-068", "CT-069",
+    "CT-070", "CT-071", "CT-072", "CT-073", "CT-074", "CT-075",
+    "CT-076", "CT-077", "CT-078", "CT-079", "CT-080", "CT-081"
+  ],
+  "rank_services": [
+    "typed canonical registry for A through K plus Red Joker and Black Joker",
+    "canonical Point values and Scuttle ordering",
+    "rank-aware declaration validation and atomic resolution",
+    "Ace counter authority boundaries",
+    "Commandeer, structural clears, row exchange, recycle, dig, and topdeck resolution",
+    "Aegis-field and Goal-shift behavior",
+    "Rank-10 limits, Mimic identity, Foundation, Stack Theft, and Exile-Bound integration",
+    "Jack Attachments, Queen Anchor entry, and Royal Marriage classification",
+    "Joker reset and Board Lock activation",
+    "ordinary and absolute Scuttle legality"
+  ],
+  "preserved_regression_aggregates": {
+    "phase2_4": "aeee864319a1ef41df2bf8de5675fd5236df04229a84d7b1182f607b3d52ae6f",
+    "phase5": "8e44d3bac08ad2cfa11609251bad170d466d70d7395f6e29f8946d7b58115f54",
+    "phase2_5": "aaa3f1bfca94e759ac486bf9f38fb143079041bbf5b179fa262afd3607ab00b5"
+  },
+  "phase6_aggregate": "4726d50bbecbf9332a4dd0eb8bbaebea210dae3f01edd63c96d133f0277ae4e3",
+  "combined_phase2_6_aggregate": "7f2e969aba1af7c733978f97f7f48edf8ef676d91bb570314d21ef74c9cd23b3",
+  "scope_note": "The Phase 6 JSON corpus is an engine-normalized executable projection aligned to official CT-064 through CT-081. The release provides the complete typed rank registry and the rank behaviors required by this gate. Card-text branches outside this milestone remain future implementation work and are not claimed complete.",
+  "next_gate": {
+    "status": "not declared in this implementation record",
+    "rule": "Consult the official Intrilex v4.1 Implementation Roadmap before opening another semantic scope."
+  }
+}

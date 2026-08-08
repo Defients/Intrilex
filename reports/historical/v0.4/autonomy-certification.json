@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "2.0",
+  "status": "PASS",
+  "labVersion": "0.4.0",
+  "enginePatchVersion": "4.1.5",
+  "upstreamCertifiedEngineVersion": "4.1.0",
+  "profileId": "first-contact-trigger-closure",
+  "profileScope": "COMPLETE_GENERIC_TWO_PLAYER_FIRST_CONTACT",
+  "unitTests": 150,
+  "conformanceFixtures": 121,
+  "originalConformanceAggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547",
+  "campaign": {
+    "matchCount": 10000,
+    "completedMatchCount": 10000,
+    "abortCount": 0,
+    "drawCount": 26,
+    "experimentHash": "17f2c4026369d53545e6fcb602c1f4ad1f905a37d4ddea74d001780ac59d050a",
+    "canonicalResultHash": "ca19a170be8a0848d3171cc1424c33125e95b74f3344565ebc1d1e58cd98caaf",
+    "aggregateHash": "78fe48cc9bfed11e7969e9ad23e8327c8684cfa2d904c720bf07bc71b862a8cb"
+  },
+  "retainedReplayCount": 30,
+  "limitations": [
+    "OPTIONAL_MODULE_AUTONOMY_UNAVAILABLE",
+    "MULTIPLAYER_AUTONOMY_UNAVAILABLE",
+    "CORE_AUTONOMY_UNAVAILABLE"
+  ]
+}

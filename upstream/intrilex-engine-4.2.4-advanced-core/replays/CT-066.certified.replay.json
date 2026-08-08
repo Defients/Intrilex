@@ -1,0 +1,163 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-066",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT066-A": {
+        "controllerId": "P1",
+        "id": "CT066-A",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT066-S": {
+        "controllerId": "P2",
+        "id": "CT066-S",
+        "identity": "3♦",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "ON_STACK"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT066-A"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [
+      {
+        "controllerId": "P2",
+        "id": "CT066-SI",
+        "instructions": [],
+        "kind": "royal-shield-protected-effect",
+        "revalidationClass": "none",
+        "sourceCardIds": [
+          "CT066-S"
+        ],
+        "sourceDestination": "GY",
+        "status": "pending",
+        "targetCardIds": []
+      }
+    ],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "authority": "base",
+        "kind": "ace-counter",
+        "sourceCardIds": [
+          "CT066-A"
+        ],
+        "stackItemId": "CT066-SI"
+      },
+      "actorId": "P1",
+      "id": "CT066-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "accepted": [
+    false
+  ],
+  "events": [],
+  "checkpoints": [
+    {
+      "accepted": false,
+      "commandId": "CT066-1",
+      "commandIndex": 0,
+      "eventEndIndex": 0,
+      "eventRangeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "eventStartIndex": 0,
+      "revisionAfter": 0,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "b5b059e8789e13d91ca3998f2d9497381b170087384a14124f60c6d74162ac61",
+      "stateHashBefore": "b5b059e8789e13d91ca3998f2d9497381b170087384a14124f60c6d74162ac61"
+    }
+  ],
+  "initialStateHash": "b5b059e8789e13d91ca3998f2d9497381b170087384a14124f60c6d74162ac61",
+  "finalStateHash": "b5b059e8789e13d91ca3998f2d9497381b170087384a14124f60c6d74162ac61",
+  "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "checkpointLogHash": "b0747f5fb798a62986feee693ab10c7d224093db780fb4507a1a7e9e7afaf56b",
+  "rngTraceHash": "6d673dc93137c7537db0f587db774e69dc017dbb77d378de8abfd805721f19e0",
+  "contentHash": "730445349518949d4b94e5b79bd77d73e345b9937300f928362272f7b49c5659",
+  "integrityHash": "ab86c4ca9701207e183649452af623390cd1c7c0b76886de9844be991e3ea1dc"
+}

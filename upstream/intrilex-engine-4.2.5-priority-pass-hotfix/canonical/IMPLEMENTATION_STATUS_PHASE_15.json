@@ -1,0 +1,37 @@
+{
+  "status_version": 1,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0-phase2.15.0",
+  "milestone": "Roadmap Phase 15 — Tournament Seed",
+  "completed_phases": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+  "phase15_official_source_ids": ["CT-004", "CT-005", "CT-063"],
+  "phase15_executable_fixture_ids": ["CT-004", "CT-005", "CT-063@TOURNAMENT-SEED"],
+  "fixture_provenance": {
+    "collision": "The certified historical Phase 7 corpus already used executable ID CT-063 for a counter projection.",
+    "resolution": "Preserve historical CT-063 and execute official Tournament Seed CT-063 as CT-063@TOURNAMENT-SEED with sourceTestId CT-063.",
+    "historical_hashes_rewritten": false
+  },
+  "tournament_seed_services": [
+    "exact eight-card Ban Pile outside gameplay zones",
+    "six deterministic starting-hand categories",
+    "thirteen-card canonical High-Impact Pool",
+    "published alternate-pool validation",
+    "rotating category priority from recorded seed order",
+    "simultaneous ranked High-Impact choices with three-choice fallback",
+    "immediate physical-card removal from DP",
+    "serialized RNG shuffle and random sixth-card deal",
+    "normal player-count-scaled Swap Bar construction",
+    "Trap and Time Bomb configuration prohibition",
+    "event-sheet approval boundary for other optional modules",
+    "strictly-higher-rank Tournament Seed Scuttle"
+  ],
+  "preserved_phase2_14_aggregate": "e4e9f6be4fcf6e8732a362ff30d76aedfe379603dfab3b354d9b0683cf5c6b71",
+  "phase15_aggregate": "947fbabed61c95b3fd9631eea324051de25339bec3a2cae660cbea05f4510a79",
+  "combined_phase2_15_aggregate": "994faf051dfa9441dd6511d360caa79a8b534b9db90908055e9692d6952f896a",
+  "scope_note": "The official Phase 15 source gate is CT-004, CT-005, and CT-063. The executable alias prevents an upstream-ID collision from overwriting certified historical release artifacts. Full category, pool, setup, configuration, and Scuttle behavior also has independent unit proof.",
+  "next_gate": {
+    "status": "not declared in this implementation record",
+    "rule": "Recover the exact next entry from the official Intrilex v4.1 Implementation Roadmap before opening another semantic scope."
+  }
+}

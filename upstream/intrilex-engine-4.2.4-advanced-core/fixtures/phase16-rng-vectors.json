@@ -1,0 +1,90 @@
+[
+  {
+    "name": "zero-seed",
+    "seed": 0,
+    "cursor": 0,
+    "draws": 4,
+    "lengths": [
+      1,
+      2,
+      7
+    ],
+    "expectedUint32": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "expectedIndices": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "production-default",
+    "seed": 439041101,
+    "cursor": 0,
+    "draws": 5,
+    "lengths": [
+      3,
+      13,
+      54
+    ],
+    "expectedUint32": [
+      3388403996,
+      3984204854,
+      2523572680,
+      2838152257,
+      3320909456
+    ],
+    "expectedIndices": [
+      2,
+      12,
+      46
+    ]
+  },
+  {
+    "name": "continued-cursor",
+    "seed": 2654435769,
+    "cursor": 17,
+    "draws": 3,
+    "lengths": [
+      5,
+      8,
+      21
+    ],
+    "expectedUint32": [
+      1359758873,
+      3761132862,
+      2075758394
+    ],
+    "expectedIndices": [
+      1,
+      7,
+      18
+    ]
+  },
+  {
+    "name": "unsigned-boundary",
+    "seed": 4294967295,
+    "cursor": 0,
+    "draws": 4,
+    "lengths": [
+      2,
+      16,
+      53
+    ],
+    "expectedUint32": [
+      253983,
+      4228382207,
+      1958451267,
+      4056713434
+    ],
+    "expectedIndices": [
+      1,
+      12,
+      45
+    ]
+  }
+]

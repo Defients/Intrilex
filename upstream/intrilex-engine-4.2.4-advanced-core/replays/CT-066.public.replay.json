@@ -1,0 +1,130 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-066",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT066-S": {
+        "controllerId": "P2",
+        "id": "CT066-S",
+        "identity": "3♦",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "ON_STACK"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [
+      {
+        "controllerId": "P2",
+        "id": "CT066-SI",
+        "instructions": [],
+        "kind": "royal-shield-protected-effect",
+        "revalidationClass": "none",
+        "sourceCardIds": [
+          "CT066-S"
+        ],
+        "sourceDestination": "GY",
+        "status": "pending",
+        "targetCardIds": []
+      }
+    ],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "authority": "base",
+        "kind": "ace-counter",
+        "sourceCardIds": [
+          "CT066-A"
+        ],
+        "stackItemId": "CT066-SI"
+      },
+      "actorId": "P1",
+      "id": "CT066-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "events": [],
+  "initialStateHash": "b5b059e8789e13d91ca3998f2d9497381b170087384a14124f60c6d74162ac61",
+  "finalStateHash": "b5b059e8789e13d91ca3998f2d9497381b170087384a14124f60c6d74162ac61",
+  "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+}

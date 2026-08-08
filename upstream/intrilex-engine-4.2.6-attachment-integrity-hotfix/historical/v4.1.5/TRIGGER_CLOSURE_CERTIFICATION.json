@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.0",
+  "artifact": "Intrilex Engine v4.1.5 — First Contact Trigger Closure",
+  "verdict": "PASS",
+  "declaredScope": "Complete two-player generic First Contact autonomous action/effect surface through first-contact-trigger-closure",
+  "engineTests": {
+    "passed": 150,
+    "total": 150
+  },
+  "conformance": {
+    "passed": 121,
+    "total": 121,
+    "aggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"
+  },
+  "stress": {
+    "matches": 500,
+    "terminations": {
+      "NORMAL_VICTORY": 498,
+      "EXHAUSTED_RESOLUTION": 2,
+      "CANONICAL_DRAW": 0,
+      "DECISION_LIMIT": 0,
+      "ENGINE_REJECTION": 0,
+      "UNSUPPORTED_CONFIGURATION": 0
+    },
+    "triggerEvents": {
+      "queued": 220,
+      "flushed": 220,
+      "began": 220,
+      "resolved": 220
+    },
+    "triggerChoiceCount": 220,
+    "engineRejections": 0,
+    "resultHash": "d80896db1dadc0c5369b583ee84c60ea1475ad604d18f8f8f3bd27f95089de32"
+  },
+  "browser": {
+    "status": "PASS",
+    "proofKind": "REAL_CHROMIUM_MAIN_THREAD_AND_WEB_WORKER",
+    "replays": 121,
+    "replayAggregate": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322",
+    "matchFinalStateHash": "90ae80a9e101340381b84d83ba8ca515a72adb57802e6afc6a428a4032ae2922",
+    "parity": {
+      "mainReplayMatchesNode": true,
+      "workerReplayMatchesNode": true,
+      "mainMatchMatchesNode": true,
+      "workerMatchMatchesNode": true,
+      "canonicalTermination": true,
+      "privateChoicesExercised": true,
+      "sevenTriggerExercised": true,
+      "shaVectors": true
+    }
+  },
+  "canonResolution": {
+    "topic": "First Contact reveal marker override",
+    "governingRule": "First Contact §15.3",
+    "resolution": "Cards are public during Seven reveal choice, then hidden after entering hand."
+  },
+  "limitations": [
+    "Optional modules remain prohibited in First Contact",
+    "Core and multiplayer autonomy are not added by this patch"
+  ]
+}

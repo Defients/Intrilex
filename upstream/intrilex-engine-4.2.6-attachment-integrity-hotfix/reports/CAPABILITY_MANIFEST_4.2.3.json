@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "1.0",
+  "engine": {
+    "package": "@intrilex/headless-engine",
+    "version": "4.2.3",
+    "rulesVersion": "4.1",
+    "rulesAuthorityVersion": "4.1.1",
+    "certifiedBaseVersion": "4.1.0",
+    "certifiedBasePayloadHash": "707377ea9fa94f449c293b6a4dcd8dc4b40dd058bcd6f9e5dd874339859cf168",
+    "historicalV410Phase218Aggregate": "994faf051dfa9441dd6511d360caa79a8b534b9db90908055e9692d6952f896a",
+    "governingV411Phase218Aggregate": "e754dfc25e171bdd60a6d41025b42afd3e8120e0ae210c68b02d51d11bfeb211",
+    "historicalV410ConformanceAggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547",
+    "governingV411ConformanceAggregate": "8c91e8194e7fa3ab6bbb3eaa6946a97efd70343c36d5e5953ee8e1c0357013df"
+  },
+  "profiles": [
+    {
+      "profileId": "core-foundation-authority",
+      "status": "SUPPORTED"
+    },
+    {
+      "profileId": "core-effect-declaration-authority",
+      "status": "SUPPORTED"
+    },
+    {
+      "profileId": "core-response-authority",
+      "status": "SUPPORTED"
+    },
+    {
+      "profileId": "core-private-choice-authority",
+      "status": "SUPPORTED",
+      "playerCounts": [
+        2
+      ],
+      "moduleSets": [
+        []
+      ],
+      "completeActionFamilies": [
+        "core-foundation",
+        "public-core-effects",
+        "priority-and-response",
+        "3-present-take",
+        "3-force-discard",
+        "5-recycle-rummage",
+        "6-deep-dig",
+        "7-topdeck-casting",
+        "9-anchor-discard"
+      ],
+      "reasonCodes": [
+        "GOVERNING_INTERRUPT_TIMING_HOTFIX_APPLIED",
+        "SEALED_PRIVATE_CHOICE_TOKENS",
+        "VIEWER_AUTHORIZED_PROJECTIONS",
+        "OPAQUE_HIDDEN_CARD_HANDLES",
+        "ENGINE_OWNED_GENERATED_SEVEN_CHILD_EFFECTS",
+        "EXACT_REWIND_ON_INVALID_CHOICE"
+      ]
+    }
+  ],
+  "unsupportedCombinations": [
+    {
+      "scope": "private Quick suit enhancements",
+      "status": "REPLAY_ONLY",
+      "reasonCode": "SEALED_QUICK_CONTINUATION_NOT_IMPLEMENTED"
+    },
+    {
+      "scope": "Supers, Rank 10, Voltage, Ultras, Royal Marriage",
+      "status": "REPLAY_ONLY",
+      "reasonCode": "ADVANCED_CORE_AUTHORITY_UNAVAILABLE"
+    },
+    {
+      "scope": "optional modules",
+      "status": "BLOCKED",
+      "reasonCode": "MODULE_AUTHORITY_UNAVAILABLE"
+    },
+    {
+      "scope": "multiplayer",
+      "status": "BLOCKED",
+      "reasonCode": "MULTIPLAYER_AUTHORITY_UNAVAILABLE"
+    }
+  ],
+  "evidence": [
+    "reports/core-private-choice-authority-stress-500.json",
+    "reports/browser-core-private-choice-parity.json",
+    "reports/conformance-report.json",
+    "reports/final-release-certification.json",
+    "HOTFIX_NOTICE_v4.1.1_INTERRUPT_TIMING.md"
+  ]
+}

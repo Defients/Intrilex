@@ -1,0 +1,602 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-050",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT050-2C": {
+        "controllerId": "P2",
+        "id": "CT050-2C",
+        "identity": "2♣",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 2
+        },
+        "zone": "P2_PR"
+      },
+      "CT050-3D": {
+        "controllerId": "P2",
+        "id": "CT050-3D",
+        "identity": "3♦",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "P2_HAND"
+      },
+      "CT050-3H": {
+        "controllerId": "P2",
+        "id": "CT050-3H",
+        "identity": "3♥",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 3
+        },
+        "zone": "P2_PR"
+      },
+      "CT050-4C": {
+        "controllerId": "P1",
+        "id": "CT050-4C",
+        "identity": "4♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT050-4C"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT050-3D"
+        ],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT050-2C",
+          "CT050-3H"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "actorId": "P1",
+      "id": "CT050-C1",
+      "play": {
+        "controllerId": "P1",
+        "instructions": [
+          {
+            "cardId": "CT050-2C",
+            "destination": "GY",
+            "op": "remove-target"
+          },
+          {
+            "cardId": "CT050-3H",
+            "destination": "GY",
+            "op": "remove-target"
+          }
+        ],
+        "kind": "independent-multi-target-clear",
+        "requirements": [],
+        "revalidationClass": "independent-targets",
+        "sourceCardIds": [
+          "CT050-4C"
+        ],
+        "sourceDestination": "GY",
+        "tags": [],
+        "targetCardIds": [
+          "CT050-2C",
+          "CT050-3H"
+        ]
+      },
+      "type": "DECLARE_PLAY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT050-C2",
+      "play": {
+        "controllerId": "P2",
+        "instructions": [
+          {
+            "cardId": "CT050-2C",
+            "destination": "GY",
+            "op": "remove-target"
+          }
+        ],
+        "kind": "response-remove-one",
+        "requirements": [],
+        "revalidationClass": "single-required-target",
+        "sourceCardIds": [
+          "CT050-3D"
+        ],
+        "sourceDestination": "GY",
+        "tags": [],
+        "targetCardIds": [
+          "CT050-2C"
+        ]
+      },
+      "type": "RESPOND_WITH_PLAY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT050-C3",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT050-C4",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT050-C5",
+      "type": "RESOLVE_TOP"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT050-C6",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT050-C7",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT050-C8",
+      "type": "RESOLVE_TOP"
+    }
+  ],
+  "accepted": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT050-C1",
+      "id": "EV-000001",
+      "payload": {
+        "kind": "independent-multi-target-clear",
+        "sourceCardIds": [
+          "CT050-4C"
+        ],
+        "stackItemId": "SI-CT050-C1",
+        "targetCardIds": [
+          "CT050-2C",
+          "CT050-3H"
+        ]
+      },
+      "previousStateHash": "a9d02b1acbb6980c65041fb6206895a2ea5d134dd4d8bbbd80345e9db4bc2dae",
+      "sequence": 1,
+      "stateHash": "83a2f21f15d183c9e1fbdb38f7e4f59048c429165bcaeef451c5780948159f4e",
+      "type": "DECLARATION_COMMITTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C2",
+      "id": "EV-000002",
+      "payload": {
+        "kind": "response-remove-one",
+        "sourceCardIds": [
+          "CT050-3D"
+        ],
+        "stackItemId": "SI-CT050-C2",
+        "targetCardIds": [
+          "CT050-2C"
+        ]
+      },
+      "previousStateHash": "83a2f21f15d183c9e1fbdb38f7e4f59048c429165bcaeef451c5780948159f4e",
+      "sequence": 2,
+      "stateHash": "04aea0699bff89f077ce61d7574a93a86b27dd88ace9df144e437bdbf7c9b514",
+      "type": "DECLARATION_COMMITTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C3",
+      "id": "EV-000003",
+      "payload": {
+        "consecutivePasses": 1,
+        "playerId": "P1"
+      },
+      "previousStateHash": "04aea0699bff89f077ce61d7574a93a86b27dd88ace9df144e437bdbf7c9b514",
+      "sequence": 3,
+      "stateHash": "c917aeefd6ad55836db0af8b01963288ccc2dd7e5cc8d25617a605211c39ed2e",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C4",
+      "id": "EV-000004",
+      "payload": {
+        "consecutivePasses": 2,
+        "playerId": "P2"
+      },
+      "previousStateHash": "c917aeefd6ad55836db0af8b01963288ccc2dd7e5cc8d25617a605211c39ed2e",
+      "sequence": 4,
+      "stateHash": "144058ccecb20534e4412265846a7413697d76df8d3acbdc0578aebfcdb298b2",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C4",
+      "id": "EV-000006",
+      "payload": {
+        "reason": "all-players-passed"
+      },
+      "previousStateHash": "144058ccecb20534e4412265846a7413697d76df8d3acbdc0578aebfcdb298b2",
+      "sequence": 5,
+      "stateHash": "88cc706c2aa20219acda97f5fd734febcfc45576dcaff5fe4d580043e90ea138",
+      "type": "PRIORITY_CLOSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C5",
+      "id": "EV-000006",
+      "payload": {
+        "kind": "response-remove-one",
+        "stackItemId": "SI-CT050-C2"
+      },
+      "previousStateHash": "88cc706c2aa20219acda97f5fd734febcfc45576dcaff5fe4d580043e90ea138",
+      "sequence": 6,
+      "stateHash": "249ace5232023a636fe408e791d375045a18219e4fa105fb93d9dd6249865606",
+      "type": "RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C5",
+      "id": "EV-000008",
+      "payload": {
+        "cardId": "CT050-2C",
+        "destination": "GY"
+      },
+      "previousStateHash": "249ace5232023a636fe408e791d375045a18219e4fa105fb93d9dd6249865606",
+      "sequence": 7,
+      "stateHash": "a07c9c4ff48b5c2ff8e08cb77674238bb4f1a8e5f078c7f48b138167aa545fbd",
+      "type": "TARGET_REMOVED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C5",
+      "id": "EV-000010",
+      "payload": {
+        "stackItemId": "SI-CT050-C2"
+      },
+      "previousStateHash": "a07c9c4ff48b5c2ff8e08cb77674238bb4f1a8e5f078c7f48b138167aa545fbd",
+      "sequence": 8,
+      "stateHash": "201e845f02e71be4562d3e0a70ba7d6bd4d0f66720ffa99f769bbf1656936b15",
+      "type": "STACK_ITEM_RESOLVED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C6",
+      "id": "EV-000009",
+      "payload": {
+        "consecutivePasses": 1,
+        "playerId": "P2"
+      },
+      "previousStateHash": "201e845f02e71be4562d3e0a70ba7d6bd4d0f66720ffa99f769bbf1656936b15",
+      "sequence": 9,
+      "stateHash": "d7fcebe060f629be2dedec3a7851663d89abfcf66c5b4a6badab2d1315b75a5a",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C7",
+      "id": "EV-000010",
+      "payload": {
+        "consecutivePasses": 2,
+        "playerId": "P1"
+      },
+      "previousStateHash": "d7fcebe060f629be2dedec3a7851663d89abfcf66c5b4a6badab2d1315b75a5a",
+      "sequence": 10,
+      "stateHash": "c9230e2327474552a5bad1f345ba89d7470b776c320fbc11d8bddb402763cc27",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C7",
+      "id": "EV-000012",
+      "payload": {
+        "reason": "all-players-passed"
+      },
+      "previousStateHash": "c9230e2327474552a5bad1f345ba89d7470b776c320fbc11d8bddb402763cc27",
+      "sequence": 11,
+      "stateHash": "737a7fe79110969a9a8ebb2856d5586fca93e9bcb364b3a3ce409d0ee6e4d78e",
+      "type": "PRIORITY_CLOSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C8",
+      "id": "EV-000012",
+      "payload": {
+        "kind": "independent-multi-target-clear",
+        "stackItemId": "SI-CT050-C1"
+      },
+      "previousStateHash": "737a7fe79110969a9a8ebb2856d5586fca93e9bcb364b3a3ce409d0ee6e4d78e",
+      "sequence": 12,
+      "stateHash": "7ca491cfce1864254448ee8a88a41997e3de86edf46a507df515fb6597dd682e",
+      "type": "RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C8",
+      "id": "EV-000014",
+      "payload": {
+        "cardId": "CT050-3H",
+        "destination": "GY"
+      },
+      "previousStateHash": "7ca491cfce1864254448ee8a88a41997e3de86edf46a507df515fb6597dd682e",
+      "sequence": 13,
+      "stateHash": "4a5ce83a774144b8821ac6e1cf23ae71ac9b6ca6ab79a91da733ed79bbd9abf8",
+      "type": "TARGET_REMOVED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT050-C8",
+      "id": "EV-000016",
+      "payload": {
+        "stackItemId": "SI-CT050-C1"
+      },
+      "previousStateHash": "4a5ce83a774144b8821ac6e1cf23ae71ac9b6ca6ab79a91da733ed79bbd9abf8",
+      "sequence": 14,
+      "stateHash": "6ce2cf75062747f85305a509f8140f90d8f75f6b9a3e36b98353b0f733577f7d",
+      "type": "STACK_ITEM_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT050-C1",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "698519fcee3777e36de118a06b1507cad505e54ee129f20153a74632c29f7dfb",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "83a2f21f15d183c9e1fbdb38f7e4f59048c429165bcaeef451c5780948159f4e",
+      "stateHashBefore": "a9d02b1acbb6980c65041fb6206895a2ea5d134dd4d8bbbd80345e9db4bc2dae"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT050-C2",
+      "commandIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "53f436db99668567385d25744c6497167453f62d48aad1677b9650f4774220a4",
+      "eventStartIndex": 1,
+      "revisionAfter": 2,
+      "revisionBefore": 1,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "04aea0699bff89f077ce61d7574a93a86b27dd88ace9df144e437bdbf7c9b514",
+      "stateHashBefore": "83a2f21f15d183c9e1fbdb38f7e4f59048c429165bcaeef451c5780948159f4e"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT050-C3",
+      "commandIndex": 2,
+      "eventEndIndex": 3,
+      "eventRangeHash": "ef5a86faab079254d7d19e07fc5a9b135735c3fa04aa790bf2dad00cd2e425f7",
+      "eventStartIndex": 2,
+      "revisionAfter": 3,
+      "revisionBefore": 2,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "c917aeefd6ad55836db0af8b01963288ccc2dd7e5cc8d25617a605211c39ed2e",
+      "stateHashBefore": "04aea0699bff89f077ce61d7574a93a86b27dd88ace9df144e437bdbf7c9b514"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT050-C4",
+      "commandIndex": 3,
+      "eventEndIndex": 5,
+      "eventRangeHash": "190c80727c554103bc4d00137a2c45f2fd8c60b926765191a9f527c712d5dfc1",
+      "eventStartIndex": 3,
+      "revisionAfter": 5,
+      "revisionBefore": 3,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "88cc706c2aa20219acda97f5fd734febcfc45576dcaff5fe4d580043e90ea138",
+      "stateHashBefore": "c917aeefd6ad55836db0af8b01963288ccc2dd7e5cc8d25617a605211c39ed2e"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT050-C5",
+      "commandIndex": 4,
+      "eventEndIndex": 8,
+      "eventRangeHash": "7510d6d764d6958519ed8c16b32584f2ce2d7d609d02a7486262c056465f40ed",
+      "eventStartIndex": 5,
+      "revisionAfter": 8,
+      "revisionBefore": 5,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "201e845f02e71be4562d3e0a70ba7d6bd4d0f66720ffa99f769bbf1656936b15",
+      "stateHashBefore": "88cc706c2aa20219acda97f5fd734febcfc45576dcaff5fe4d580043e90ea138"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT050-C6",
+      "commandIndex": 5,
+      "eventEndIndex": 9,
+      "eventRangeHash": "541e4c92cc4b1949728a56bd4f836ac8210022061248fd2f7244d2312e29cb81",
+      "eventStartIndex": 8,
+      "revisionAfter": 9,
+      "revisionBefore": 8,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "d7fcebe060f629be2dedec3a7851663d89abfcf66c5b4a6badab2d1315b75a5a",
+      "stateHashBefore": "201e845f02e71be4562d3e0a70ba7d6bd4d0f66720ffa99f769bbf1656936b15"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT050-C7",
+      "commandIndex": 6,
+      "eventEndIndex": 11,
+      "eventRangeHash": "d9f3cd1669add11d515e0d3a763bed7c1e765fb01a071a3151b66218ddd881fe",
+      "eventStartIndex": 9,
+      "revisionAfter": 11,
+      "revisionBefore": 9,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "737a7fe79110969a9a8ebb2856d5586fca93e9bcb364b3a3ce409d0ee6e4d78e",
+      "stateHashBefore": "d7fcebe060f629be2dedec3a7851663d89abfcf66c5b4a6badab2d1315b75a5a"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT050-C8",
+      "commandIndex": 7,
+      "eventEndIndex": 14,
+      "eventRangeHash": "a3e717284bc3845346419ecadc1376af8a8bbbed0808510d1c24ee6495086b9c",
+      "eventStartIndex": 11,
+      "revisionAfter": 14,
+      "revisionBefore": 11,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "6ce2cf75062747f85305a509f8140f90d8f75f6b9a3e36b98353b0f733577f7d",
+      "stateHashBefore": "737a7fe79110969a9a8ebb2856d5586fca93e9bcb364b3a3ce409d0ee6e4d78e"
+    }
+  ],
+  "initialStateHash": "a9d02b1acbb6980c65041fb6206895a2ea5d134dd4d8bbbd80345e9db4bc2dae",
+  "finalStateHash": "6ce2cf75062747f85305a509f8140f90d8f75f6b9a3e36b98353b0f733577f7d",
+  "eventLogHash": "fe2aa72974918a4509f6216a723fdd9b221ac064c90fcb5003c6f9b6c4f88426",
+  "checkpointLogHash": "6a001226b56eb6ed894fe2dc3abcd08599de9c9d5b51dffa247ba0d382fbe94e",
+  "rngTraceHash": "3926a374c9ebfc056afcb94b528d704b3e9c1ed59fb71b075f6c1b242fa1ca09",
+  "contentHash": "57d9f6c46c5959ecc9f016e9d0d0f9de0c0737e3fdf0a7c3498f7e49aef32cb1",
+  "integrityHash": "6ba125fb2a6e80c5dcd8f34cc2c730e362ac09fa3f3549208caa79cc8761de95"
+}

@@ -1,0 +1,320 @@
+{
+  "schemaVersion": "4.1.0",
+  "labVersion": "0.24.2",
+  "rulesVersion": "4.3.1",
+  "telemetryVersion": "4.1.0",
+  "analyticsVersion": "4.2.0",
+  "replayVersion": {
+    "legacy": 1,
+    "certified": 2,
+    "labSemantic": 4
+  },
+  "engine": {
+    "package": "@intrilex/headless-engine",
+    "version": "4.2.6",
+    "rulesVersion": "4.3.1",
+    "sourceIntegrity": "VERIFIED_CERTIFIED_BASE_PLUS_PRIORITY_PASS_AND_ATTACHMENT_INTEGRITY_HOTFIX",
+    "legacyProtocolConformance": {
+      "rulesAuthorityVersion": "4.1.1",
+      "fixtureCount": 121,
+      "aggregate": "8c91e8194e7fa3ab6bbb3eaa6946a97efd70343c36d5e5953ee8e1c0357013df",
+      "status": "PRESERVED_RAW_PROTOCOL_COMPATIBILITY"
+    },
+    "semanticHotfixConformance": {
+      "fixtureCount": 25,
+      "aggregate": "29f032742f25f86a242c775834384b3d2b010fad98e7fbff671cd0d20f0a543b",
+      "status": "PASS"
+    },
+    "historicalBaseConformance": {
+      "version": "4.1.0",
+      "fixtureCount": 121,
+      "aggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"
+    },
+    "patch": {
+      "version": "4.2.6",
+      "rulesVersion": "4.3.1",
+      "payloadHash": "d787262e0a037439a89413e36361a58982a554556f692705dfe123c1693aaf75",
+      "fileCount": 1090,
+      "manifest": "upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/PRIORITY_PASS_HOTFIX_MANIFEST.json"
+    },
+    "patchNature": "ENGINE_OWNED_ATTACHMENT_INTEGRITY_HOTFIX_ON_BOUNDED_ADVANCED_CORE_WITH_QUEENS_COURT"
+  },
+  "defaultSimulationProfile": "core-advanced-authority",
+  "surfaces": {
+    "execute": true,
+    "legalActionEnumeration": true,
+    "completeMatchOrchestration": true,
+    "deterministicMatchSetup": true,
+    "privateCommandVault": true,
+    "responseAuthority": true,
+    "privateChoiceAuthority": true,
+    "advancedCoreAuthority": true,
+    "semanticTelemetry": true,
+    "causalFactGraph": true,
+    "mechanicsAtlas": true,
+    "synergyAnalytics": true,
+    "observerInvariance": true,
+    "legacyReplay": true,
+    "certifiedReplayV2": true,
+    "publicStateView": true,
+    "playerAuthorizedStateView": true,
+    "nodeAutonomousExecution": "SUPPORTED",
+    "nodeWorkerExecution": "SUPPORTED",
+    "browserExecution": "SUPPORTED",
+    "browserWorkerExecution": "SUPPORTED",
+    "browserNodeHashParity": "SUPPORTED"
+  },
+  "profiles": [
+    {
+      "profileId": "CORE_ADVANCED_2P",
+      "displayName": "Advanced Core Authority — Two Player",
+      "engineProfileId": "core-advanced-authority",
+      "canonicalProfile": "CORE",
+      "autonomy": "SUPPORTED",
+      "playerCounts": [
+        2
+      ],
+      "moduleSets": [
+        []
+      ],
+      "profileNature": "ENGINE_OWNED_BOUNDED_ADVANCED_CORE_WITH_PRIORITY_PASS_HOTFIX",
+      "actionCoverage": {
+        "covered": [
+          "core-foundation",
+          "public-effects",
+          "responses",
+          "private-choices",
+          "selected-supers",
+          "royal-marriage",
+          "queens-court",
+          "selected-rank10",
+          "three-ultra-recipes",
+          "public-voltage",
+          "voltage-3-choice",
+          "voltage-4-prediction",
+          "voltage-5-refine",
+          "10-club-foundation",
+          "10-diamond-mimic",
+          "exhausted-pass"
+        ],
+        "replayOnly": [
+          "complete-core",
+          "hidden-choice-supers",
+          "generated-effect-copy",
+          "sudden-death"
+        ],
+        "blocked": [
+          "optional-modules",
+          "multiplayer"
+        ]
+      },
+      "reasonCodes": [
+        "ENGINE_V4_2_6_QUEENS_COURT_UPDATE",
+        "INTERRUPT_TIMING_ONLY_V4_1_1",
+        "PASS_PRIORITY_SEMANTICS_V4_2_0",
+        "UNSUPPORTED_BRANCHES_FAIL_CLOSED"
+      ],
+      "evidence": [
+        "HOTFIX_NOTICE_v4.1.2_PASS_AND_PRIORITY.md",
+        "reports/pass-priority-conformance-diff.json",
+        "reports/advanced-core-integration-certification.json"
+      ]
+    },
+    {
+      "profileId": "CORE_UNRESTRICTED_2P",
+      "displayName": "Unrestricted Core Authority — Two Player",
+      "engineProfileId": "core-unrestricted-authority",
+      "canonicalProfile": "CORE",
+      "autonomy": "SUPPORTED",
+      "playerCounts": [
+        2
+      ],
+      "moduleSets": [
+        []
+      ],
+      "profileNature": "ENGINE_OWNED_COMPLETE_CORE_WITH_HIDDEN_SUPERS_GENERATED_EFFECTS_AND_SUDDEN_DEATH",
+      "actionCoverage": {
+        "covered": [
+          "core-foundation",
+          "public-effects",
+          "responses",
+          "private-choices",
+          "all-supers",
+          "royal-marriage",
+          "queens-court",
+          "all-rank10",
+          "three-ultra-recipes",
+          "public-voltage",
+          "voltage-3-choice",
+          "voltage-4-prediction",
+          "voltage-5-refine",
+          "10-club-foundation",
+          "10-diamond-mimic",
+          "hidden-choice-supers",
+          "generated-effect-copy",
+          "sudden-death",
+          "exhausted-pass"
+        ],
+        "replayOnly": [],
+        "blocked": [
+          "optional-modules",
+          "multiplayer"
+        ]
+      },
+      "reasonCodes": [
+        "ENGINE_V4_2_6_UNRESTRICTED_CORE_AUTHORITY",
+        "COMPLETE_CORE_AUTONOMY_SUPPORTED",
+        "PASS_PRIORITY_SEMANTICS_V4_2_0"
+      ],
+      "evidence": [
+        "upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-advanced.ts",
+        "reports/capability-manifest.json"
+      ]
+    },
+    {
+      "profileId": "FIRST_CONTACT_GENERIC_2P",
+      "displayName": "Complete Generic Two-Player First Contact",
+      "engineProfileId": "first-contact-trigger-closure",
+      "canonicalProfile": "FIRST_CONTACT",
+      "autonomy": "SUPPORTED",
+      "playerCounts": [
+        2
+      ],
+      "moduleSets": [
+        []
+      ],
+      "profileNature": "ENGINE_OWNED_COMPLETE_GENERIC_TWO_PLAYER_FIRST_CONTACT",
+      "actionCoverage": {
+        "covered": [
+          "draw",
+          "play-for-points",
+          "play-for-effect",
+          "scuttle",
+          "exhausted-pass",
+          "responses",
+          "private-choices",
+          "seven-scoring-trigger"
+        ],
+        "replayOnly": [],
+        "blocked": [
+          "optional-modules",
+          "multiplayer",
+          "Core-only systems"
+        ]
+      },
+      "reasonCodes": [
+        "ENGINE_PROFILE_FIRST_CONTACT_TRIGGER_CLOSURE",
+        "NO_ORDINARY_PASS_V4_1_2"
+      ],
+      "evidence": [
+        "upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/autonomy.ts"
+      ]
+    }
+  ],
+  "unsupportedCombinations": [
+    {
+      "kind": "COMPLETE_CORE_AUTONOMY",
+      "status": "SUPPORTED",
+      "reasonCode": "UNRESTRICTED_CORE_AUTHORITY_IMPLEMENTED"
+    },
+    {
+      "kind": "OPTIONAL_MODULE_AUTONOMY",
+      "status": "BLOCKED",
+      "reasonCode": "SCOPE_FREEZE_AND_ENGINE_AUTHORITY_UNAVAILABLE"
+    },
+    {
+      "kind": "MULTIPLAYER_AUTONOMY",
+      "status": "BLOCKED",
+      "reasonCode": "SCOPE_FREEZE_AND_MULTIPLAYER_AUTHORITY_UNAVAILABLE"
+    },
+    {
+      "kind": "EVENT_LEVEL_STATE_STEPPING",
+      "status": "BLOCKED",
+      "reasonCode": "EVENT_STATE_SNAPSHOTS_UNAVAILABLE"
+    }
+  ],
+  "priorityPassRuling": {
+    "ordinaryPassGenerallyAvailable": false,
+    "exhaustedPassOnly": true,
+    "responseDeclineIsAction": false,
+    "automaticNoResponseAdvance": true,
+    "rawCompatibilityCommandPrivateOnly": true,
+    "evidence": "HOTFIX_NOTICE_v4.1.2_PASS_AND_PRIORITY.md"
+  },
+  "interruptRuling": {
+    "keywordTax": false,
+    "printedExceptions": [
+      "10♠ Stack Theft",
+      "Time Bomb Defuse"
+    ],
+    "evidence": "upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/HOTFIX_NOTICE_v4.1.1_INTERRUPT_TIMING.md"
+  },
+  "browserEvidence": {
+    "report": "reports/browser-parity.json",
+    "proofKind": "REAL_CHROMIUM_CDP_MAIN_THREAD_AND_WEB_WORKER",
+    "certifiedReplayCount": 121,
+    "autonomousProfile": "core-advanced-authority"
+  },
+  "networkAuthority": {
+    "status": "SUPPORTED",
+    "transport": "WEBSOCKET",
+    "authority": "SERVER",
+    "protocolVersion": 1,
+    "playerCounts": [
+      2
+    ],
+    "profiles": [
+      "core-unrestricted-authority"
+    ],
+    "features": {
+      "serverAuthoritative": true,
+      "hiddenInfoFirewall": true,
+      "idempotentSubmission": true,
+      "disconnectReconnect": true,
+      "certifiedReplay": true,
+      "deterministicParity": true,
+      "lobbyUI": true,
+      "inviteCodeSharing": true,
+      "reconnectPersistence": true,
+      "persistentStorage": true,
+      "publicMatchmaking": {
+        "supported": true,
+        "enabledByDefault": false,
+        "enableFlag": "INTRILEX_PUBLIC_MATCHMAKING"
+      },
+      "webSocketCompression": true,
+      "spectatorMode": true,
+      "rateLimiting": true,
+      "ipRateLimiting": true,
+      "spectatorLimit": true,
+      "matchHistory": {
+        "supported": true,
+        "enabledByDefault": false,
+        "enableFlag": "INTRILEX_PUBLIC_HISTORY"
+      }
+    },
+    "uxIntegration": {
+      "lobbyHub": true,
+      "createFlow": true,
+      "joinFlow": true,
+      "waitingRoom": true,
+      "readyCheck": true,
+      "reconnectDialog": true,
+      "errorScreen": true,
+      "statusBanner": true
+    },
+    "reasonCodes": [
+      "NETWORKED_CORE_2P_AUTHORITY",
+      "SERVER_OWNS_CANONICAL_STATE",
+      "CLIENTS_SUBMIT_INTENT_ONLY",
+      "HIDDEN_INFORMATION_NEVER_ON_WIRE",
+      "LOBBY_UI_INTEGRATED"
+    ]
+  },
+  "canonicalMultiplayerModule": {
+    "status": "BLOCKED",
+    "reasonCode": "SCOPE_FREEZE_AND_MULTIPLAYER_AUTHORITY_UNAVAILABLE",
+    "note": "Online 1v1 Direct Duel is supported via networkAuthority. This entry blocks the canonical 3-4 player Multiplayer rules module only."
+  },
+  "capabilityHash": "9747c7c3a6327b7ca45ec2bd0ad972853d8a54964360cd5039a6f17e27828c78"
+}

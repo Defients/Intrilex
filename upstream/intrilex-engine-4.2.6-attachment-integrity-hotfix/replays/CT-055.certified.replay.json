@@ -1,0 +1,154 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-055",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "C55-H": {
+        "controllerId": "P1",
+        "id": "C55-H",
+        "identity": "7♦",
+        "originalOwnerId": "P1",
+        "state": {
+          "aegis": {
+            "expiresAt": {
+              "playerId": "P1",
+              "startSequence": 2
+            },
+            "sourceRef": "Q-Quick"
+          },
+          "pointValue": 7
+        },
+        "zone": "P1_PR"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "C55-H"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "destination": "GY",
+        "kind": "attempt-interaction",
+        "profile": {
+          "bypasses": [],
+          "channel": "effect",
+          "hostile": false,
+          "operation": "tap",
+          "shape": "single-target"
+        },
+        "targetCardId": "C55-H"
+      },
+      "actorId": "P1",
+      "id": "C55-1",
+      "type": "RESOLVE_INTERACTION_ACTION"
+    }
+  ],
+  "accepted": [
+    false
+  ],
+  "events": [],
+  "checkpoints": [
+    {
+      "accepted": false,
+      "commandId": "C55-1",
+      "commandIndex": 0,
+      "eventEndIndex": 0,
+      "eventRangeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "eventStartIndex": 0,
+      "revisionAfter": 0,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "1fc18af23f5ccf439befb0de60de6ae589fc03fc1ab380aed77a68b333179630",
+      "stateHashBefore": "1fc18af23f5ccf439befb0de60de6ae589fc03fc1ab380aed77a68b333179630"
+    }
+  ],
+  "initialStateHash": "1fc18af23f5ccf439befb0de60de6ae589fc03fc1ab380aed77a68b333179630",
+  "finalStateHash": "1fc18af23f5ccf439befb0de60de6ae589fc03fc1ab380aed77a68b333179630",
+  "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "checkpointLogHash": "714743a2c06a2634b42ad67b410ccf661d2d8b02fb5fc6c739833eb1da65496f",
+  "rngTraceHash": "d68327f2cd0e8cdc7f49a8b7f91ac60006579dad8427124d7299322c0eeb0d25",
+  "contentHash": "bbd6804a4a5571abab0798d9902da58b1060f2d314feb4c69251f5a653dea279",
+  "integrityHash": "c79dc6ad4e2ce6eaa4b41b385b8cc13df41ebbe8da872f39adfaa588195593b5"
+}

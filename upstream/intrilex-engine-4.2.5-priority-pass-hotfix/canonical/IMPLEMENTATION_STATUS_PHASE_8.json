@@ -1,0 +1,45 @@
+{
+  "status_version": 1,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0-phase2.8.0",
+  "milestone": "Roadmap Phase 8 — Ultras, Rank 10, Voltage, and endgames",
+  "completed_phases": [2, 3, 4, 5, 6, 7, 8],
+  "phase8_gate_ids": [
+    "CT-015", "CT-017", "CT-018", "CT-019", "CT-033",
+    "CT-073", "CT-074", "CT-075", "CT-076", "CT-077",
+    "CT-078", "CT-079", "CT-080", "CT-081", "CT-082",
+    "CT-083", "CT-084", "CT-085", "CT-086", "CT-087",
+    "CT-088", "CT-089", "CT-090", "CT-091", "CT-092"
+  ],
+  "phase8_unique_fixture_ids": [
+    "CT-015", "CT-017", "CT-018", "CT-019", "CT-033",
+    "CT-082", "CT-083", "CT-084", "CT-085", "CT-086",
+    "CT-087", "CT-088", "CT-089", "CT-090", "CT-091", "CT-092"
+  ],
+  "services": [
+    "atomic 3 Black, 3 Red, and 2 Black + 2 Red Ultra executor",
+    "Rank-10 once-per-FT containment and Exile-Bound wrapper",
+    "fixed Start-phase Voltage snapshots and rank 3/4/5 resolution",
+    "ordered Board Lock, Sudden Death, and Exhausted End Phase processor",
+    "raw signed victory comparison and Anchor-first Exhausted tiebreak"
+  ],
+  "preserved_regression_aggregates": {
+    "phase2_4": "aeee864319a1ef41df2bf8de5675fd5236df04229a84d7b1182f607b3d52ae6f",
+    "phase5": "8e44d3bac08ad2cfa11609251bad170d466d70d7395f6e29f8946d7b58115f54",
+    "phase2_5": "aaa3f1bfca94e759ac486bf9f38fb143079041bbf5b179fa262afd3607ab00b5",
+    "phase6": "4726d50bbecbf9332a4dd0eb8bbaebea210dae3f01edd63c96d133f0277ae4e3",
+    "phase2_6": "7f2e969aba1af7c733978f97f7f48edf8ef676d91bb570314d21ef74c9cd23b3",
+    "phase7": "78e06182e34d1e03c0dff64118eed37f7163a8c720d517becdf3d15e46a06574",
+    "phase2_7": "d75e52247a5d144b356fdd3876db7e843905ca508842e355c8f92e1e0d84f376"
+  },
+  "phase8_aggregate": "10d6a95d3c12a0c24c13f7767fd0643fc87187ccdb846987eb28894f79981048",
+  "combined_phase2_8_aggregate": "4a91565ab07fc6bdcb856c182f64108763361299e8f49a466a4dac48415e0e07",
+  "correction": "The Phase 7 status file carried a stale proposed Phase 8 label. The official v4.1 roadmap controls: Phase 8 is Ultras, Rank 10, Voltage, and endgames.",
+  "scope_note": "The Phase 8 JSON corpus is an engine-normalized executable projection aligned to the official gate IDs. CT-073–CT-081 are reused from the immutable Phase 6 corpus and are not duplicated in the combined unique set.",
+  "next_gate": {
+    "phase": 9,
+    "name": "First Contact",
+    "instruction": "Read the exact official roadmap gate before implementation; do not infer IDs from stale status records."
+  }
+}

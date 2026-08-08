@@ -1,0 +1,235 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-116",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT116-AC": {
+        "controllerId": "P1",
+        "id": "CT116-AC",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT116-KD": {
+        "controllerId": "P1",
+        "id": "CT116-KD",
+        "identity": "K♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {
+          "draftFaceUp": false
+        },
+        "zone": "STAGING"
+      },
+      "CT116-QS": {
+        "controllerId": "P1",
+        "id": "CT116-QS",
+        "identity": "Q♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {
+      "phase14": {
+        "addOns": {
+          "mirrorMe": true,
+          "speedRun": false,
+          "thatsUrz": false,
+          "thirdPartied": false
+        },
+        "assignmentByDrafter": {
+          "P1": "P1",
+          "P2": "P2"
+        },
+        "draftOrder": [
+          "P1",
+          "P2"
+        ],
+        "draftedFor": {
+          "P1": [],
+          "P2": []
+        },
+        "enabled": true,
+        "faceDownPicksByDrafter": {
+          "P1": 0,
+          "P2": 0
+        },
+        "faceUpPicksByDrafter": {
+          "P1": 0,
+          "P2": 0
+        },
+        "lastResolution": null,
+        "nextDrafterIndex": 0,
+        "poolFaceUpByCard": {
+          "CT116-QH": false
+        },
+        "rngAudit": [],
+        "specsMayBeRevealed": false,
+        "status": "drafting",
+        "subMode": "classic",
+        "targetHandSizes": {
+          "P1": 5,
+          "P2": 6
+        },
+        "trapPlacementDuringDraft": false
+      }
+    },
+    "pendingDeclaration": null,
+    "phase": "Setup",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 305419896
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT116-QS",
+        "CT116-AC",
+        "CT116-KD"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [
+        "OPAQUE-HIDDEN-CARD-001"
+      ],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "cardId": "CT116-QH",
+        "drafterId": "P1",
+        "kind": "mirror-me-pick",
+        "mirrorCardId": "CT116-QS"
+      },
+      "actorId": "P1",
+      "id": "CT116-1",
+      "type": "RESOLVE_PHASE14_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT116-1",
+      "id": "EV-000001",
+      "payload": {
+        "cardId": "CT116-QH",
+        "drafterId": "P1",
+        "identity": "Q♥"
+      },
+      "previousStateHash": "f72163222d3de39fdcd93b1cfe4862063b7759b17ce4304c84fb6c84aa0d0dfb",
+      "sequence": 1,
+      "stateHash": "2d4257105c3735b616e3227a863e5f1f84db6bfe6df92a0b0977d1035aaec35b",
+      "type": "DEFFY_MIRROR_PICK_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT116-1",
+      "id": "EV-000003",
+      "payload": {
+        "cardId": "CT116-QH",
+        "drafterId": "P1",
+        "recipientId": "P1"
+      },
+      "previousStateHash": "2d4257105c3735b616e3227a863e5f1f84db6bfe6df92a0b0977d1035aaec35b",
+      "sequence": 2,
+      "stateHash": "7e47dd692738c721a6fd6da76534cbfa2ee2dec1c8c6dd9171610a85536f1842",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT116-1",
+      "id": "EV-000005",
+      "payload": {
+        "identity": "Q♠",
+        "mirrorCardId": "CT116-QS"
+      },
+      "previousStateHash": "7e47dd692738c721a6fd6da76534cbfa2ee2dec1c8c6dd9171610a85536f1842",
+      "sequence": 3,
+      "stateHash": "7ec469f05d8eb25291c286744088a79daa69e02fa6deb06cf8dfc10694457d78",
+      "type": "DEFFY_MIRROR_ADDED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT116-1",
+      "id": "EV-000007",
+      "payload": {
+        "redacted": true,
+        "visibility": "authorized"
+      },
+      "previousStateHash": "7ec469f05d8eb25291c286744088a79daa69e02fa6deb06cf8dfc10694457d78",
+      "sequence": 4,
+      "stateHash": "683b307fa642ecdb0bece0dad3329d6092ffaffbe80193297278efc8576e7eae",
+      "type": "DP_SHUFFLED",
+      "visibility": "authorized"
+    }
+  ],
+  "initialStateHash": "f72163222d3de39fdcd93b1cfe4862063b7759b17ce4304c84fb6c84aa0d0dfb",
+  "finalStateHash": "683b307fa642ecdb0bece0dad3329d6092ffaffbe80193297278efc8576e7eae",
+  "eventLogHash": "2df4064ed10d0f46d6431c290d98c10c8661bd120d9674195d56537f222d85cb"
+}

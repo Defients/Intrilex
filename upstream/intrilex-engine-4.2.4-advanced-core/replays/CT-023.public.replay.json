@@ -1,0 +1,176 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-023",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT-023-DP-01": {
+        "controllerId": "P1",
+        "id": "CT-023-DP-01",
+        "identity": "3♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-023-DP-02": {
+        "controllerId": "P1",
+        "id": "CT-023-DP-02",
+        "identity": "7♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-023-DP-03": {
+        "controllerId": "P1",
+        "id": "CT-023-DP-03",
+        "identity": "K♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001",
+          "OPAQUE-HIDDEN-CARD-002"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT-023-DP-01",
+        "CT-023-DP-02",
+        "CT-023-DP-03"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "chosenCardId": "CT-023-DP-02",
+        "disposition": "points",
+        "kind": "resolve-super-five",
+        "sourceCardIds": [
+          "CT-023-P1_HAND-01",
+          "CT-023-P1_HAND-02"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT-023-C1",
+      "type": "RESOLVE_PHASE20_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT-023-C1",
+      "id": "EV-000001",
+      "payload": {
+        "cardIds": [
+          "CT-023-DP-01",
+          "CT-023-DP-02",
+          "CT-023-DP-03"
+        ]
+      },
+      "previousStateHash": "38a1e981b107bc8e97361b98da5bfba9ee786bf044faebea91e976d2269d31c5",
+      "sequence": 1,
+      "stateHash": "30d27366e3b4698be2c6747820996f01823a722b94da253c769b0309edbf05cd",
+      "type": "SUPER_FIVE_MILLED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT-023-C1",
+      "id": "EV-000003",
+      "payload": {
+        "cardId": "CT-023-DP-02",
+        "disposition": "points"
+      },
+      "previousStateHash": "30d27366e3b4698be2c6747820996f01823a722b94da253c769b0309edbf05cd",
+      "sequence": 2,
+      "stateHash": "485f31d3cfbe7398855839f29b07a388dab628b03a7d31fa29cd296114f15655",
+      "type": "SUPER_FIVE_CARD_PLAYED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "38a1e981b107bc8e97361b98da5bfba9ee786bf044faebea91e976d2269d31c5",
+  "finalStateHash": "485f31d3cfbe7398855839f29b07a388dab628b03a7d31fa29cd296114f15655",
+  "eventLogHash": "bf22ed0b4900867ebe5cca539b6ec2bd2093aadbcbbdf216689cb58b9af6b1bd"
+}

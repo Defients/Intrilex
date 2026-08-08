@@ -1,0 +1,34 @@
+{
+  "status_version": 1,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0-phase2.13.0",
+  "milestone": "Roadmap Phase 13 — Time Bomb",
+  "completed_phases": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+  "phase13_gate_ids": ["CT-001", "CT-002", "CT-003", "CT-012", "CT-111", "CT-112", "CT-113", "CT-114", "CT-118"],
+  "phase13_unique_fixture_ids": ["CT-012", "CT-111", "CT-112", "CT-113"],
+  "time_bomb_services": [
+    "structured Queen Fuse state with signed suit tracks",
+    "mandatory current-controller Start trigger queuing",
+    "tapped Fuse advancement with zero tapped contribution",
+    "Peak-stage repetition",
+    "Club newest-and-oldest GY recovery",
+    "Diamond next-Enemy forced Draw persistence",
+    "Heart deterministic enemy discard choices",
+    "controller-change stage preservation",
+    "Defuse declaration costs, counter and fizzle handling",
+    "independent Action-Phase skip consumption",
+    "PR-exit Time Bomb cleanup",
+    "BattleRealm Calculated Court separation"
+  ],
+  "preserved_phase2_12_aggregate": "1496309f836fd3eee52bb69f138f5a76560e2944c93cfd24cc80acf04c634e0d",
+  "phase13_aggregate": "325f89a6b48b9cd0bc5d21158da4d046d7bdfa4bb889eccf7903f6d6beb18891",
+  "combined_phase2_13_aggregate": "1dc3b0817bb4a27df55d0b60643943e513496be1b37c19b379409b73667b0427",
+  "scope_note": "Five official Phase 13 gate IDs reuse immutable certified fixtures from BattleRealm and Multiplayer. Four unique Time Bomb fixtures are added. The existing CT-114 Multiplayer fixture remains untouched; Time Bomb plus Multiplayer next-Enemy behavior is independently unit-tested to avoid duplicate fixture identities.",
+  "next_gate": {
+    "phase": 14,
+    "name": "Deffy Mode",
+    "gate_ids": ["CT-014", "CT-115", "CT-116"],
+    "requirements": "deterministic pregame pools, hidden picks, add-ons, exact target sizes, and self-free That's Urz assignment"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@intrilex/policies",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./scoring": "./src/scoring.mjs"
+  },
+  "dependencies": {
+    "@intrilex/policy-sdk": "workspace:*"
+  }
+}

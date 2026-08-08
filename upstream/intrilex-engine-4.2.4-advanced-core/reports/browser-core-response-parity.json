@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1.0",
+  "status": "PASS",
+  "engineVersion": "4.2.2",
+  "profileId": "core-response-authority",
+  "proofKind": "REAL_CHROMIUM_MAIN_THREAD_AND_WEB_WORKER_CORE_RESPONSE",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/144.0.0.0 Safari/537.36",
+  "certifiedReplayCorpus": {
+    "replayCount": 121,
+    "commandCount": 285,
+    "eventCount": 374,
+    "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+  },
+  "coreResponseMatch": {
+    "terminationReason": "NORMAL_VICTORY",
+    "winner": "P2",
+    "decisionCount": 141,
+    "commandCount": 236,
+    "finalStateHash": "5c929b3f7070970221e4e96500235c284dfe8d8af562956ab3bd4ba06f1ef6f8",
+    "decisionHash": "1bb23cdf4418eac7b3ae2f1decc3c1ad9bd30da9fe1ad4b6b4c59646221edc9a",
+    "swapCount": 2,
+    "effectCount": 4,
+    "responseCount": 6
+  },
+  "mainThread": {
+    "replay": {
+      "replayCount": 121,
+      "commandCount": 285,
+      "eventCount": 374,
+      "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+    },
+    "match": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisionCount": 141,
+      "commandCount": 236,
+      "finalStateHash": "5c929b3f7070970221e4e96500235c284dfe8d8af562956ab3bd4ba06f1ef6f8",
+      "decisionHash": "1bb23cdf4418eac7b3ae2f1decc3c1ad9bd30da9fe1ad4b6b4c59646221edc9a",
+      "swapCount": 2,
+      "effectCount": 4,
+      "responseCount": 6
+    }
+  },
+  "worker": {
+    "replay": {
+      "replayCount": 121,
+      "commandCount": 285,
+      "eventCount": 374,
+      "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+    },
+    "match": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisionCount": 141,
+      "commandCount": 236,
+      "finalStateHash": "5c929b3f7070970221e4e96500235c284dfe8d8af562956ab3bd4ba06f1ef6f8",
+      "decisionHash": "1bb23cdf4418eac7b3ae2f1decc3c1ad9bd30da9fe1ad4b6b4c59646221edc9a",
+      "swapCount": 2,
+      "effectCount": 4,
+      "responseCount": 6
+    }
+  },
+  "parity": {
+    "mainReplayMatchesNode": true,
+    "workerReplayMatchesNode": true,
+    "mainMatchMatchesNode": true,
+    "workerMatchMatchesNode": true,
+    "canonicalTermination": true,
+    "swapBarExercised": true,
+    "effectsExercised": true,
+    "responsesExercised": true,
+    "shaVectors": true
+  },
+  "generatedAt": "2026-07-27T16:01:04.675Z"
+}

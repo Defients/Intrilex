@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0",
+  "status": "PASS",
+  "buildRuns": 2,
+  "first": {
+    "dist": {
+      "fileCount": 548,
+      "treeHash": "977b38762f4d70e45971b4e4006b07a80cd696d7afda9602d160eda0e63dcd07"
+    },
+    "sampleData": {
+      "fileCount": 388,
+      "treeHash": "043a65d07d7ed0688784ee9422a63522fe76d33ba7d8c3cce7410aeb1fb3e3e3"
+    }
+  },
+  "second": {
+    "dist": {
+      "fileCount": 548,
+      "treeHash": "977b38762f4d70e45971b4e4006b07a80cd696d7afda9602d160eda0e63dcd07"
+    },
+    "sampleData": {
+      "fileCount": 388,
+      "treeHash": "043a65d07d7ed0688784ee9422a63522fe76d33ba7d8c3cce7410aeb1fb3e3e3"
+    }
+  },
+  "identical": true
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@intrilex/statistics",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/statistics.mjs"
+  },
+  "dependencies": {}
+}

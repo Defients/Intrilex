@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "1.0",
+  "engine": {
+    "package": "@intrilex/headless-engine",
+    "version": "4.1.4",
+    "rulesVersion": "4.1",
+    "baseCertifiedVersion": "4.1.0",
+    "baseOuterZipSha256": "fa5609e11370d674e6e2f20042997901ce3f3cfadcbf642f7c273983d2cc1e0f",
+    "basePayloadHash": "707377ea9fa94f449c293b6a4dcd8dc4b40dd058bcd6f9e5dd874339859cf168",
+    "preservedConformanceAggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"
+  },
+  "surfaces": {
+    "execute": true,
+    "legalActionEnumeration": true,
+    "engineOwnedPriority": true,
+    "engineOwnedCounters": true,
+    "sealedPrivateChoices": true,
+    "viewerAuthorizedChoiceFrames": true,
+    "opaqueHiddenCardHandles": true,
+    "legacyPublicReplayRedaction": true,
+    "certifiedV2PublicReplayRedaction": true,
+    "browserExecution": "SUPPORTED"
+  },
+  "profiles": [
+    {
+      "profileId": "first-contact-baseline",
+      "status": "SUPPORTED",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "actionFamilies": ["draw", "play-for-points", "scuttle", "pass"]
+    },
+    {
+      "profileId": "first-contact-essentials",
+      "status": "SUPPORTED",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "actionFamilies": ["draw", "play-for-points", "play-for-effect", "scuttle", "pass"]
+    },
+    {
+      "profileId": "first-contact-response",
+      "status": "SUPPORTED",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "actionFamilies": ["draw", "play-for-points", "play-for-effect", "scuttle", "pass", "A-base-counter", "8-scuttle-counter", "J-disrupt", "K-anchor-goal-counter"]
+    },
+    {
+      "profileId": "first-contact-private-choice",
+      "status": "SUPPORTED",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "actionFamilies": [
+        "draw", "play-for-points", "play-for-effect", "scuttle", "pass",
+        "A-base-counter", "8-scuttle-counter", "J-disrupt", "K-anchor-goal-counter",
+        "3-opponent-presentation", "3-opponent-discard", "3-caster-take",
+        "5-rummage", "6-private-draw", "7-topdeck-assignment",
+        "7-generated-effect", "9-anchor-opponent-discard"
+      ],
+      "reasonCodes": [
+        "FORMAL_FIRST_CONTACT_TEACHING_OVERRIDE",
+        "ENGINE_OWNED_PRIORITY",
+        "ENGINE_OWNED_COUNTER_AUTHORITY",
+        "SEALED_PRIVATE_CHOICE_TOKENS",
+        "VIEWER_AUTHORIZED_CHOICE_FRAMES",
+        "OPAQUE_HIDDEN_CARD_HANDLES",
+        "SEVEN_SCORING_TRIGGER_EXCLUDED"
+      ]
+    },
+    {
+      "profileId": "first-contact-complete",
+      "status": "REPLAY_ONLY",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "reasonCodes": ["SEVEN_SCORING_TRIGGER_AUTHORITY_UNAVAILABLE"]
+    }
+  ],
+  "policyCommandVaultIsolation": "SUPPORTED",
+  "hiddenInformationBoundary": "SUPPORTED",
+  "multiplayerAutonomy": "BLOCKED",
+  "optionalModuleAutonomy": "BLOCKED"
+}

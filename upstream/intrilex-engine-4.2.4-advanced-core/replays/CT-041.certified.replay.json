@@ -1,0 +1,157 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-041",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "C41-H": {
+        "controllerId": "P2",
+        "id": "C41-H",
+        "identity": "7♦",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 7
+        },
+        "zone": "P2_PR"
+      },
+      "C41-Q": {
+        "controllerId": "P2",
+        "id": "C41-Q",
+        "identity": "Q♣",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "P2_ER"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [
+          "C41-Q"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "C41-H"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "destination": "GY",
+        "kind": "attempt-interaction",
+        "profile": {
+          "bypasses": [],
+          "channel": "effect",
+          "hostile": true,
+          "operation": "bounce",
+          "shape": "single-target"
+        },
+        "targetCardId": "C41-H"
+      },
+      "actorId": "P1",
+      "id": "C41-1",
+      "type": "RESOLVE_INTERACTION_ACTION"
+    }
+  ],
+  "accepted": [
+    false
+  ],
+  "events": [],
+  "checkpoints": [
+    {
+      "accepted": false,
+      "commandId": "C41-1",
+      "commandIndex": 0,
+      "eventEndIndex": 0,
+      "eventRangeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "eventStartIndex": 0,
+      "revisionAfter": 0,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "a7961c206ab338e613969e12764b28287fc6c1cdf67daca0b2b86968dd746e71",
+      "stateHashBefore": "a7961c206ab338e613969e12764b28287fc6c1cdf67daca0b2b86968dd746e71"
+    }
+  ],
+  "initialStateHash": "a7961c206ab338e613969e12764b28287fc6c1cdf67daca0b2b86968dd746e71",
+  "finalStateHash": "a7961c206ab338e613969e12764b28287fc6c1cdf67daca0b2b86968dd746e71",
+  "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "checkpointLogHash": "569b05b459a62d71d201ff2b053490e53f68856f83f74cf1639f200125ea6b24",
+  "rngTraceHash": "ec8cd4215d9e607b9a0d1042bc2f8686793f9c025fcbe608d98633b7872a5e42",
+  "contentHash": "66c9c860c92ed10d2229e3b1df5f67906404edfb2f52f1ef54dd0f828a2ba5f3",
+  "integrityHash": "6e353ff2dcb23cd950bbace256378557505fa8491719148376206ede7a49082c"
+}

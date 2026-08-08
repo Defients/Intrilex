@@ -1,0 +1,164 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-090",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT090-4": {
+        "controllerId": "P1",
+        "id": "CT090-4",
+        "identity": "4♣",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": 4
+        },
+        "zone": "P1_PR"
+      },
+      "CT090-T": {
+        "controllerId": "P1",
+        "id": "CT090-T",
+        "identity": "K♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT090-4"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT090-T"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "capture-voltage",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT090-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    },
+    {
+      "action": {
+        "guessRank": "K",
+        "guessSuit": "♠",
+        "kind": "resolve-voltage",
+        "playerId": "P1",
+        "rank": "4",
+        "rankMatchDisposition": "points"
+      },
+      "actorId": "P1",
+      "id": "CT090-2",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT090-1",
+      "id": "EV-000001",
+      "payload": {
+        "playerId": "P1",
+        "snapshot": {
+          "capturedFullTurnSequence": 1,
+          "rank3": 0,
+          "rank4": 4,
+          "rank5": 0
+        }
+      },
+      "previousStateHash": "b8921e23e455247ee28f3676625e5a7464090bedcc6e3cd4274b3f1151decd23",
+      "sequence": 1,
+      "stateHash": "a7ad034639d0fa93bca2c3a1f42a455ca6bc19d9f70c8a10ac3674c270207958",
+      "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT090-2",
+      "id": "EV-000002",
+      "payload": {
+        "playerId": "P1",
+        "rankCorrect": true,
+        "result": "rank-points",
+        "suitCorrect": true,
+        "topCardId": "CT090-T"
+      },
+      "previousStateHash": "a7ad034639d0fa93bca2c3a1f42a455ca6bc19d9f70c8a10ac3674c270207958",
+      "sequence": 2,
+      "stateHash": "775a794081be70b53e1f57bdabc927578e2571b0abe0fb4e5ec3568eb67020d6",
+      "type": "VOLTAGE_4_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "b8921e23e455247ee28f3676625e5a7464090bedcc6e3cd4274b3f1151decd23",
+  "finalStateHash": "775a794081be70b53e1f57bdabc927578e2571b0abe0fb4e5ec3568eb67020d6",
+  "eventLogHash": "ce0c706301d63017c522bb6d91167f7b0c423b03fd99cfedc19f687999696063"
+}

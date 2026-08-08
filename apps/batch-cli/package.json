@@ -1,0 +1,10 @@
+{
+  "name": "@intrilex/batch-cli",
+  "version": "0.24.2",
+  "type": "module",
+  "dependencies": {
+    "@intrilex/engine-adapter": "workspace:*",
+    "@intrilex/policies": "workspace:*",
+    "@intrilex/simulation-runtime": "workspace:*"
+  }
+}

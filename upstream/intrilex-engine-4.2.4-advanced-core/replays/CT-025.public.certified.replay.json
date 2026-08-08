@@ -1,0 +1,215 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-025",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT025-C1": {
+        "controllerId": "P2",
+        "id": "CT025-C1",
+        "identity": "8♦",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 8,
+          "tapState": {
+            "expiresAt": {
+              "playerId": "P2",
+              "startSequence": 1
+            },
+            "kind": "start-phase",
+            "sourceRef": "⭐2 Commandeer"
+          },
+          "tapped": true
+        },
+        "zone": "P2_PR"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT025-C1"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "actorId": "P1",
+      "cardId": "CT025-C1",
+      "controllerId": "P1",
+      "id": "CT025-1",
+      "type": "CHANGE_CONTROLLER"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT025-2",
+      "playerId": "P1",
+      "type": "BEGIN_START_PHASE"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT025-3",
+      "playerId": "P2",
+      "type": "BEGIN_START_PHASE"
+    }
+  ],
+  "accepted": [
+    true,
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT025-1",
+      "id": "EV-000001",
+      "payload": {
+        "cardId": "CT025-C1",
+        "controllerId": "P1",
+        "previousControllerId": "P2"
+      },
+      "previousStateHash": "0f99de05681450a79146517074b696d6bc47fc3cee6e1938f6c930525faf3d59",
+      "sequence": 1,
+      "stateHash": "7583b895639eb4af8d5f58d6e70f35f022361c143c330dc4255e234925531909",
+      "type": "CONTROLLER_CHANGED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT025-2",
+      "id": "EV-000002",
+      "payload": {
+        "playerId": "P1",
+        "startSequence": 1
+      },
+      "previousStateHash": "7583b895639eb4af8d5f58d6e70f35f022361c143c330dc4255e234925531909",
+      "sequence": 2,
+      "stateHash": "1f6f9c7a0d344c6958a579e164d13148a415efe8d79dc82235e81e387f87c092",
+      "type": "START_PHASE_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT025-3",
+      "id": "EV-000003",
+      "payload": {
+        "playerId": "P2",
+        "startSequence": 1
+      },
+      "previousStateHash": "1f6f9c7a0d344c6958a579e164d13148a415efe8d79dc82235e81e387f87c092",
+      "sequence": 3,
+      "stateHash": "b623e564aa25c9dc72263de555b2806185d5bcd65dcddf0098d4ad3f774901f4",
+      "type": "START_PHASE_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT025-3",
+      "id": "EV-000005",
+      "payload": {
+        "cardId": "CT025-C1",
+        "expiry": {
+          "playerId": "P2",
+          "startSequence": 1
+        },
+        "sourceRef": "⭐2 Commandeer"
+      },
+      "previousStateHash": "b623e564aa25c9dc72263de555b2806185d5bcd65dcddf0098d4ad3f774901f4",
+      "sequence": 4,
+      "stateHash": "8c56e0317c954f1172d792ed57327b5df7d0bc66f4dd42b072c7a6f22877444e",
+      "type": "TAP_EXPIRED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT025-1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "9d29fdf6bbe38d23128b2732aa3fbc69b4c5768cb0fd67153e95abd32cae3be0"
+    },
+    {
+      "commandIndex": 1,
+      "commandId": "CT025-2",
+      "accepted": true,
+      "eventStartIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "b367290258d8325f65d2af2b1f0d0c59405fda7025721df5953fe4017bfe3067"
+    },
+    {
+      "commandIndex": 2,
+      "commandId": "CT025-3",
+      "accepted": true,
+      "eventStartIndex": 2,
+      "eventEndIndex": 4,
+      "eventRangeHash": "2eabaadc33fdadf7413bacd43e1ffee5c265f01a2d39671aa4d937e0ab8b22bf"
+    }
+  ],
+  "publicEventLogHash": "079627870d0844529f0daf8dfeac374ba090c2b57fedbd6332ce37b6464b3c74",
+  "publicContentHash": "107d780c07243b760fa10c0d93aabaa168a84af4e4014c316df6e1b439f261de"
+}

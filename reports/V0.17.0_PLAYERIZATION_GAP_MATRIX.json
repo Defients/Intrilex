@@ -1,0 +1,156 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-08-03T00:00:00.000Z",
+  "gaps": [
+    {
+      "capability": "keyboard controls",
+      "status": "UNAVAILABLE",
+      "currentBehavior": "No keyboard event handlers in Play route. All interaction is mouse/touch via click handlers.",
+      "requiredBehavior": "Tab/Shift+Tab focus, Arrow keys within card groups, Enter/Space activate, Escape cancel, P pass, I inspector, R stack, ? help. Visible focus, logical order, focus restoration, no traps.",
+      "authoritySource": "Spec section 23.1",
+      "blocking": true,
+      "evidence": ["No keydown/keypress/keyup handlers found in play-app.js, play-renderer.js, or action-presenter.js"],
+      "plannedWork": ["Add keyboard reducer to play-app.js", "Add focus management to play-renderer.js", "Add keyboard shortcuts (P, I, R, ?)", "Add visible focus styles to play.css"]
+    },
+    {
+      "capability": "illegal-action explanation (reason codes)",
+      "status": "PARTIAL",
+      "currentBehavior": "Generic error messages ('Submission rejected') without detailed reason codes exposed to user.",
+      "requiredBehavior": "Structured reason codes (NOT_PRIORITY_HOLDER, WRONG_PHASE, WRONG_WINDOW, SOURCE_NOT_AVAILABLE, etc.) with precise explanations. Every visible disabled action maps to reason codes.",
+      "authoritySource": "Spec section 10.2",
+      "blocking": true,
+      "evidence": ["play-controller.js:271-285 returns error codes but they are not surfaced as structured reason codes", "play-app.js:279-288 shows generic 'Submission rejected' banner"],
+      "plannedWork": ["Create reason-code-registry module", "Map engine rejection codes to stable reason codes", "Render precise explanations in action-presenter.js", "Add reason code to disabled action tooltips"]
+    },
+    {
+      "capability": "target selection",
+      "status": "PARTIAL",
+      "currentBehavior": "Implicit via action choice. Single-source actions auto-select source. No explicit target picking UI for multi-target actions.",
+      "requiredBehavior": "Legal targets visually distinct, keyboard reachable, programmatically identified, limited to authority-provided targets, reversible before confirmation.",
+      "authoritySource": "Spec section 13.3",
+      "blocking": true,
+      "evidence": ["play-app.js:17-18 tracks _selectedSourceCardId only", "No target selection state in play-app.js or play-controller.js"],
+      "plannedWork": ["Add target selection state to play-app.js", "Add target highlighting to play-renderer.js", "Add target confirmation step before action submission"]
+    },
+    {
+      "capability": "Rank Anatomy integration",
+      "status": "UNAVAILABLE",
+      "currentBehavior": "No references to rank anatomy in Play route files. /ranks is a separate Observatory workspace.",
+      "requiredBehavior": "For ordinary, Spades, and Super actions, link to correct analytical entity. Map ordinary→Rank/Ordinary, Spades→Rank/Spades, Super→Rank/Supers/exact Super.",
+      "authoritySource": "Spec section 18.3",
+      "blocking": true,
+      "evidence": ["No rank anatomy references in play-app.js, play-controller.js, or play-renderer.js"],
+      "plannedWork": ["Create rank-anatomy-links module in play/intelligence/", "Add post-action explanation with Rank Anatomy link", "Add deep links from result screen to Rank Anatomy entities"]
+    },
+    {
+      "capability": "History integration",
+      "status": "UNAVAILABLE",
+      "currentBehavior": "No references to history workspace in Play route files.",
+      "requiredBehavior": "Completed matches produce replay records that appear in History. Decision links open exact checkpoints.",
+      "authoritySource": "Spec section 17.3",
+      "blocking": true,
+      "evidence": ["No history references in play-app.js or play-controller.js"],
+      "plannedWork": ["Write replay records to shared replay index", "Add History link from result screen", "Add exact checkpoint deep links"]
+    },
+    {
+      "capability": "Trace integration",
+      "status": "UNAVAILABLE",
+      "currentBehavior": "No references to trace workspace or decision intelligence in Play route files.",
+      "requiredBehavior": "Human decisions create decision evidence objects linked to traces.",
+      "authoritySource": "Spec section 18.1",
+      "blocking": false,
+      "evidence": ["No trace references in play-app.js or play-controller.js"],
+      "plannedWork": ["Create decision-evidence module", "Link decisions to trace workspace"]
+    },
+    {
+      "capability": "browser E2E testing",
+      "status": "UNAVAILABLE",
+      "currentBehavior": "No browser automation tests for Play route. Only unit tests exist in play-module.test.mjs.",
+      "requiredBehavior": "Real browser E2E with 6 scenarios (A-F): new guided match, keyboard-only segment, illegal-action explanation, Super flow, recovery, responsive.",
+      "authoritySource": "Spec section 24.6",
+      "blocking": true,
+      "evidence": ["No Playwright/Cypress config", "test/play-module.test.mjs has only unit tests"],
+      "plannedWork": ["Create browser E2E script using Chrome CDP", "Implement all 6 scenarios", "Add to CI pipeline"]
+    },
+    {
+      "capability": "discard pile top card",
+      "status": "PARTIAL",
+      "currentBehavior": "Graveyard zone displays count only.",
+      "requiredBehavior": "Top card of Discard Pile always visible when legally public.",
+      "authoritySource": "Spec section 8.1",
+      "blocking": false,
+      "evidence": ["play-renderer.js:185-189 shows count only"],
+      "plannedWork": ["Add top card display to graveyard zone in play-renderer.js"]
+    },
+    {
+      "capability": "initial draw indication",
+      "status": "PARTIAL",
+      "currentBehavior": "No explicit UI indication that initial draw occurred. Relies on engine orchestration.",
+      "requiredBehavior": "Player should be able to see when initial draw happens.",
+      "authoritySource": "Spec section 7.4",
+      "blocking": false,
+      "evidence": ["play-controller.js:138-217 processes orchestration but no draw event is surfaced"],
+      "plannedWork": ["Add draw event to event log", "Add visual indication in tutorial"]
+    },
+    {
+      "capability": "priority banner with pass consequences",
+      "status": "PARTIAL",
+      "currentBehavior": "Decision banner shows phase/turn/player but does not explain what happens if player passes.",
+      "requiredBehavior": "Banner must answer: Who may act? What window? What is waiting? What happens if pass? Is passing reversible?",
+      "authoritySource": "Spec section 9.2",
+      "blocking": false,
+      "evidence": ["play-renderer.js:58-74 shows decision kind and phase but no pass consequence text"],
+      "plannedWork": ["Add pass consequence text to priority banner", "Add response timeline visualization"]
+    },
+    {
+      "capability": "guidance modes (OFF/ESSENTIAL/GUIDED/DETAILED)",
+      "status": "PARTIAL",
+      "currentBehavior": "Tutorial has on/off but no graduated guidance modes.",
+      "requiredBehavior": "Four guidance modes with persistent local preference.",
+      "authoritySource": "Spec section 11.4",
+      "blocking": false,
+      "evidence": ["tutorial-runtime.js has active/dismissed but no guidance level"],
+      "plannedWork": ["Add guidance mode to tutorial store", "Add mode selector to setup screen"]
+    },
+    {
+      "capability": "duplicate tab protection",
+      "status": "UNAVAILABLE",
+      "currentBehavior": "No duplicate tab detection or session lease.",
+      "requiredBehavior": "Prevent two tabs from silently mutating same match. Local session lease.",
+      "authoritySource": "Spec section 16.5",
+      "blocking": false,
+      "evidence": ["No session lease in persistence.js or play-app.js"],
+      "plannedWork": ["Add session lease to persistence.js", "Add duplicate tab detection to play-app.js"]
+    },
+    {
+      "capability": "decision evidence objects",
+      "status": "UNAVAILABLE",
+      "currentBehavior": "No decision evidence objects created for human decisions.",
+      "requiredBehavior": "Visibility-safe decision evidence with priority context, legal options, selected option, rank anatomy refs.",
+      "authoritySource": "Spec section 18.1",
+      "blocking": false,
+      "evidence": ["No decision evidence in play-controller.js or replay-library.js"],
+      "plannedWork": ["Create decision-evidence module", "Generate evidence on each human decision", "Link to Rank Anatomy entities"]
+    },
+    {
+      "capability": "post-action explanation",
+      "status": "UNAVAILABLE",
+      "currentBehavior": "No post-action explanation after resolution.",
+      "requiredBehavior": "After resolution, optionally show: What happened? Why legal? What changed? Where to inspect?",
+      "authoritySource": "Spec section 18.2",
+      "blocking": false,
+      "evidence": ["No post-action explanation in play-renderer.js"],
+      "plannedWork": ["Add post-action explanation panel", "Link to replay and Rank Anatomy"]
+    },
+    {
+      "capability": "event log",
+      "status": "PARTIAL",
+      "currentBehavior": "No structured human-readable event log from accepted engine events.",
+      "requiredBehavior": "Concise log generated from accepted engine events. No invented causal relationships.",
+      "authoritySource": "Spec section 14.2",
+      "blocking": false,
+      "evidence": ["No event log in play-renderer.js"],
+      "plannedWork": ["Add event log to play-renderer.js", "Generate from accepted runtime events"]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "status_version": 1,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0-phase2.11.0",
+  "milestone": "Roadmap Phase 11 — Multiplayer and Teams",
+  "completed_phases": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "phase11_gate_ids": ["CT-014", "CT-100", "CT-101", "CT-102", "CT-103", "CT-104", "CT-105", "CT-109", "CT-114"],
+  "multiplayer_services": [
+    "three-player FFA and four-player alternating Teams configuration",
+    "central self, Ally, and Enemy relation evaluation",
+    "N-player priority circulation and consecutive-pass closure",
+    "player-count Swap Bar scaling with explicit replay assignments",
+    "cyclic That's Urz hand-draft assignment",
+    "deterministic Tournament Seed conflict and backup allocation",
+    "controller-relative generated-play interception",
+    "Partner Royal Marriage validation",
+    "per-player state isolation and combined team endgame aggregation"
+  ],
+  "preserved_phase2_10_aggregate": "f4ddfb936cc8981791a3b11cce3cae37bbbb95372b8fd025a64523cdd8649863",
+  "phase11_aggregate": "d9f6da6572d80033406965865b1a4be11370ed5d68536f8b6f348b0ef51f311d",
+  "combined_phase2_11_aggregate": "77509fa7ad58fd001e5052b761b178ac905a6913122dab31a6b6caac8c3176b1",
+  "scope_note": "The Phase 11 fixtures are an engine-normalized executable projection of the official Multiplayer and Teams gate. Unsupported optional-module branches remain fail-closed until their roadmap phase opens.",
+  "next_gate": {
+    "status": "resolve from the official Intrilex v4.1 Implementation Roadmap before opening semantic scope"
+  }
+}

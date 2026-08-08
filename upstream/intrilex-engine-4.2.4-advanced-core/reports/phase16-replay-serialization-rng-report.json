@@ -1,0 +1,74 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "certified replay gate over existing fixture corpus"
+  ],
+  "fixtureCount": 4,
+  "repeatCount": 7,
+  "passed": 4,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-091",
+      "title": "Voltage Refinement draws bottom GY",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "8714fd0c1a94a2b395f6379c209e218824a0e1f5e87439e6c4a94da25ed2f2b0",
+      "finalStateHash": "559f9b0bfdbcc8ad10327897d9a2c895775f9b9864651061c863fc7871edd999",
+      "eventLogHash": "8ff02303b4557db39289d18379fc896eeb5bcfcd666abe5f0210819072c17a0c",
+      "replayHash": "0811a411a2d9c08178f2b6f9dfc2cf215288bdcffb90bf7ffc8ec7a4f929a2a9",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-109",
+      "title": "Multiplayer Source Intercept rebinds controller-relative text",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "08aee0b1e90a83254957c7f87f337855c0ed6f809e9ad127569328f2277810fe",
+      "finalStateHash": "34973f711c204bc68bd66cb08b574eeda6fc02683be039166d244ee3d7db607b",
+      "eventLogHash": "88abe8f6dff51e2c9d6c652b0a9fa93f353ff34e2256fa7cb298e1bf31c4f385",
+      "replayHash": "b46538b075974a302d31aa6607eda64a4f5fd5213730fdcdeb7d96e95f3bbf5a",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-116",
+      "title": "Mirror Me adds one legal mirror then shuffles DP",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "f72163222d3de39fdcd93b1cfe4862063b7759b17ce4304c84fb6c84aa0d0dfb",
+      "finalStateHash": "683b307fa642ecdb0bece0dad3329d6092ffaffbe80193297278efc8576e7eae",
+      "eventLogHash": "2df4064ed10d0f46d6431c290d98c10c8661bd120d9674195d56537f222d85cb",
+      "replayHash": "06de6f5caea4150c9f0a225516f8bd88a9cf96078fb10eb9b46006d49d0d8e6b",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-120",
+      "title": "Authorized replay preserves hidden choice without public leak",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "949665c7ebe59c29eb988b038dea794326bf0869fea59db333163451a82568cd",
+      "finalStateHash": "d8a294929461a097881b9d6d021f9ac94fba2ec2a037d86d1ee26791ce156ecc",
+      "eventLogHash": "4695782e0255707a4a3a02848f458b6458bf8f5389a2c78e9505dc8af0e59194",
+      "replayHash": "3731be0d2283c9120e567e2ed04b887d90e2ab43a29bb6dcb5c926353f1e7b1c",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "2c582b3e3cdfc60cb49605246c6ee4a77badaad8b6a887f4aca1daf3bbfd78c0"
+}

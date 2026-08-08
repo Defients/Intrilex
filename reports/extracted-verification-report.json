@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1.2",
+  "status": "FAIL",
+  "sourceZip": "Intrilex_Simulation_Lab_v0.10.2_Mechanics_Observatory.zip",
+  "zipSha256": "ba2ca7c46402d2e7de2d7ca8d915e7354d76b1efd64b59c17b0189b562382cbb",
+  "manifestPayloadHash": "817fd7a0a0a84353816fcecfc12c21976c212be1555c5da7e0a1f5f8187f368a",
+  "verificationMode": "CURRENT_ZIP_SHA256_SAFE_EXTRACTION_OFFLINE_INSTALL_READ_ONLY_FULL_CI_POST_CI_MANIFEST_CLI_ADVANCED_CORE",
+  "steps": [
+    {
+      "name": "zip-sha256",
+      "status": "PASS",
+      "exitCode": null,
+      "zipSha256": "ba2ca7c46402d2e7de2d7ca8d915e7354d76b1efd64b59c17b0189b562382cbb",
+      "entryCount": null
+    },
+    {
+      "name": "archive-path-safety",
+      "status": "PASS",
+      "exitCode": null,
+      "zipSha256": null,
+      "entryCount": 4474
+    },
+    {
+      "name": "extract",
+      "status": "PASS",
+      "exitCode": 0,
+      "zipSha256": null,
+      "entryCount": null
+    },
+    {
+      "name": "pnpm-install-offline",
+      "status": "FAIL",
+      "exitCode": 1,
+      "zipSha256": null,
+      "entryCount": null
+    }
+  ],
+  "error": "pnpm-install-offline failed with exit code 1"
+}

@@ -1,0 +1,200 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-069",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-003": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-003",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-004": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-004",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-005": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-005",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-006": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-006",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-007": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-007",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-008": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-008",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-002",
+          "OPAQUE-HIDDEN-CARD-001"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "OPAQUE-HIDDEN-CARD-003",
+        "OPAQUE-HIDDEN-CARD-004",
+        "OPAQUE-HIDDEN-CARD-005",
+        "OPAQUE-HIDDEN-CARD-006",
+        "OPAQUE-HIDDEN-CARD-007",
+        "OPAQUE-HIDDEN-CARD-008"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "discardCardIds": [
+          "CT069-2"
+        ],
+        "keepCardIds": [
+          "CT069-D1",
+          "CT069-D2",
+          "CT069-D3"
+        ],
+        "kind": "deep-draw-six-spade",
+        "sourceCardId": "CT069-6"
+      },
+      "actorId": "P1",
+      "id": "CT069-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT069-1",
+      "id": "EV-000001",
+      "payload": {
+        "discarded": [
+          "CT069-2"
+        ],
+        "drawn": [
+          "CT069-D1",
+          "CT069-D2",
+          "CT069-D3",
+          "CT069-D4",
+          "CT069-D5",
+          "CT069-D6"
+        ],
+        "kept": [
+          "CT069-D1",
+          "CT069-D2",
+          "CT069-D3"
+        ],
+        "sourceCardId": "CT069-6"
+      },
+      "previousStateHash": "c2364e2cdfc3b7163fa58ab03cee2ce1b4ff43cedd89b8fafcc4cfda532f67fd",
+      "sequence": 1,
+      "stateHash": "c5150d6eb42a6afc2e75452f8e3c2ef91e7f5d5f91300879535fd8523e2253db",
+      "type": "SIX_DEEP_DRAW_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "c2364e2cdfc3b7163fa58ab03cee2ce1b4ff43cedd89b8fafcc4cfda532f67fd",
+  "finalStateHash": "c5150d6eb42a6afc2e75452f8e3c2ef91e7f5d5f91300879535fd8523e2253db",
+  "eventLogHash": "ad47377e0af1e6fb6d08620f4e492e6649b6b259d23bab3100c81f22d02e3193"
+}

@@ -1,0 +1,122 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-075",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT075-Q": {
+        "controllerId": "P1",
+        "id": "CT075-Q",
+        "identity": "Q♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT075-Q"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "queen-anchor",
+        "sourceCardId": "CT075-Q"
+      },
+      "actorId": "P1",
+      "id": "CT075-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT075-1",
+      "id": "EV-000001",
+      "payload": {
+        "aegisExpiresAt": {
+          "playerId": "P1",
+          "startSequence": 2
+        },
+        "controllerId": "P1",
+        "sourceCardId": "CT075-Q"
+      },
+      "previousStateHash": "5f4b2a0e47cfd02eba71d23e550199bde3cb0ca5f7b19fab40dcc3e48a732e8a",
+      "sequence": 1,
+      "stateHash": "8ce268d8525299cb3a252f3ea41d7a904b4274b0fe9b7a88205de38080592b52",
+      "type": "QUEEN_ANCHOR_ENTERED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "5f4b2a0e47cfd02eba71d23e550199bde3cb0ca5f7b19fab40dcc3e48a732e8a",
+  "finalStateHash": "8ce268d8525299cb3a252f3ea41d7a904b4274b0fe9b7a88205de38080592b52",
+  "eventLogHash": "f92e916ed17132d41508cc51263e00875e8420d23484d47458e9216a74ab4a1b"
+}

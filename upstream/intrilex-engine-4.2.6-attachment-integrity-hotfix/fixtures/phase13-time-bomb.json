@@ -1,0 +1,648 @@
+[
+  {
+    "id": "CT-012",
+    "title": "Q♥ Time Bomb Peak remains signed and repeats without clamping",
+    "sourceTestId": "CT-012",
+    "purpose": "Prove a Q♥ Peak contribution remains -7 and a repeated Peak Fuse does not clamp or advance beyond Peak.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Start",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT012-QH"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT012-QH": {
+          "id": "CT012-QH",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": -7,
+            "timeBombStage": 3,
+            "timeBomb": {
+              "suit": "♥",
+              "stage": 3,
+              "peak": 3
+            }
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {
+        "phase13": {
+          "enabled": true,
+          "forcedDrawByPlayer": {},
+          "queuedFuseCardIds": [],
+          "lastResolution": null
+        }
+      }
+    },
+    "commands": [
+      {
+        "id": "CT012-1",
+        "type": "RESOLVE_PHASE13_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "queue-fuse-triggers",
+          "playerId": "P1"
+        }
+      },
+      {
+        "id": "CT012-2",
+        "type": "RESOLVE_PHASE13_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "resolve-fuse",
+          "cardId": "CT012-QH"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true
+      ],
+      "final": {
+        "securedPoints": {
+          "P1": -7,
+          "P2": 0
+        },
+        "markers": {
+          "CT012-QH": {
+            "pointValue": -7,
+            "timeBombStage": 3,
+            "timeBomb": {
+              "suit": "♥",
+              "stage": 3,
+              "peak": 3
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-111",
+    "title": "Calculated Court remains one bonus across signed Time Bomb tracks",
+    "sourceTestId": "CT-111",
+    "purpose": "Calculate +4 and -4 normally, then add one N+1 Court bonus for two qualifying Queens.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT111-QC",
+            "CT111-QH"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT111-QC": {
+          "id": "CT111-QC",
+          "identity": "Q♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": 4,
+            "timeBombStage": 2,
+            "timeBomb": {
+              "suit": "♣",
+              "stage": 2,
+              "peak": 3
+            }
+          }
+        },
+        "CT111-QH": {
+          "id": "CT111-QH",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": -4,
+            "timeBombStage": 2,
+            "timeBomb": {
+              "suit": "♥",
+              "stage": 2,
+              "peak": 3
+            }
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {
+        "phase12": {
+          "enabled": true,
+          "selectedSpecByPlayer": {
+            "P1": "Brilliance",
+            "P2": "Balance"
+          }
+        },
+        "phase13": {
+          "enabled": false,
+          "forcedDrawByPlayer": {},
+          "queuedFuseCardIds": [],
+          "lastResolution": null
+        }
+      }
+    },
+    "commands": [
+      {
+        "id": "CT111-1",
+        "type": "RESOLVE_PHASE13_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-time-bomb"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "securedPoints": {
+          "P1": 3,
+          "P2": 0
+        },
+        "markers": {
+          "CT111-QC": {
+            "pointValue": 4,
+            "timeBombStage": 2
+          },
+          "CT111-QH": {
+            "pointValue": -4,
+            "timeBombStage": 2
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-112",
+    "title": "Tapped Q♠ Time Bomb advances Fuse while contributing zero",
+    "sourceTestId": "CT-112",
+    "purpose": "Prove tapping suppresses Point contribution but does not stop Fuse advancement to Peak.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Start",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT112-QS"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT112-QS": {
+          "id": "CT112-QS",
+          "identity": "Q♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "tapped": true,
+            "tapState": {
+              "kind": "manual-only",
+              "sourceRef": "CT112-tap"
+            },
+            "pointValue": 15,
+            "timeBombStage": 5,
+            "timeBomb": {
+              "suit": "♠",
+              "stage": 5,
+              "peak": 6
+            }
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {
+        "phase13": {
+          "enabled": true,
+          "forcedDrawByPlayer": {},
+          "queuedFuseCardIds": [],
+          "lastResolution": null
+        }
+      }
+    },
+    "commands": [
+      {
+        "id": "CT112-1",
+        "type": "RESOLVE_PHASE13_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "queue-fuse-triggers",
+          "playerId": "P1"
+        }
+      },
+      {
+        "id": "CT112-2",
+        "type": "RESOLVE_PHASE13_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "resolve-fuse",
+          "cardId": "CT112-QS"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true
+      ],
+      "final": {
+        "securedPoints": {
+          "P1": 0,
+          "P2": 0
+        },
+        "markers": {
+          "CT112-QS": {
+            "tapped": true,
+            "pointValue": 21,
+            "timeBombStage": 6,
+            "timeBomb": {
+              "suit": "♠",
+              "stage": 6,
+              "peak": 6
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-113",
+    "title": "Defuse pays full cost and creates an Action-Phase skip",
+    "sourceTestId": "CT-113",
+    "purpose": "Prove below-Peak Defuse pays two cards, removes the Bomb, and skips the next actual Action Phase.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT113-C1",
+            "CT113-C2"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT113-QD"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT113-QD": {
+          "id": "CT113-QD",
+          "identity": "Q♦",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 2,
+            "timeBombStage": 1,
+            "timeBomb": {
+              "suit": "♦",
+              "stage": 1,
+              "peak": 3
+            }
+          }
+        },
+        "CT113-C1": {
+          "id": "CT113-C1",
+          "identity": "3♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT113-C2": {
+          "id": "CT113-C2",
+          "identity": "4♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {
+        "phase13": {
+          "enabled": true,
+          "forcedDrawByPlayer": {},
+          "queuedFuseCardIds": [],
+          "lastResolution": null
+        }
+      }
+    },
+    "commands": [
+      {
+        "id": "CT113-1",
+        "type": "RESOLVE_PHASE13_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "declare-defuse",
+          "targetCardId": "CT113-QD",
+          "costCardIds": [
+            "CT113-C1",
+            "CT113-C2"
+          ],
+          "responseWindow": true
+        }
+      },
+      {
+        "id": "CT113-2",
+        "type": "RESOLVE_PHASE13_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "consume-action-phase-skip",
+          "playerId": "P1"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": []
+          },
+          "P2": {
+            "pr": []
+          }
+        },
+        "zones": {
+          "gy": [
+            "CT113-C1",
+            "CT113-C2",
+            "CT113-QD"
+          ]
+        },
+        "playerLimits": {
+          "P1": {
+            "pendingActionPhaseSkips": 0,
+            "miniTurnsRemaining": 0
+          }
+        },
+        "cardZones": {
+          "CT113-QD": "GY"
+        },
+        "absentMarkers": {
+          "CT113-QD": [
+            "timeBomb",
+            "timeBombStage"
+          ]
+        },
+        "phase": "End"
+      }
+    }
+  }
+]

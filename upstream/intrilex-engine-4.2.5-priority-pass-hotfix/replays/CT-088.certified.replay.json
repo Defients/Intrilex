@@ -1,0 +1,276 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-088",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT088-3": {
+        "controllerId": "P1",
+        "id": "CT088-3",
+        "identity": "3♣",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": 3
+        },
+        "zone": "P1_PR"
+      },
+      "CT088-D1": {
+        "controllerId": "P1",
+        "id": "CT088-D1",
+        "identity": "A♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT088-D2": {
+        "controllerId": "P1",
+        "id": "CT088-D2",
+        "identity": "K♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT088-3"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT088-D1",
+        "CT088-D2"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "capture-voltage",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT088-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    },
+    {
+      "actorId": "P1",
+      "cardId": "CT088-3",
+      "destination": "GY",
+      "id": "CT088-2",
+      "type": "MOVE_CARD"
+    },
+    {
+      "action": {
+        "chosenCardId": "CT088-D1",
+        "disposition": "hand",
+        "kind": "resolve-voltage",
+        "playerId": "P1",
+        "rank": "3"
+      },
+      "actorId": "P1",
+      "id": "CT088-3",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "accepted": [
+    true,
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT088-1",
+      "id": "EV-000001",
+      "payload": {
+        "playerId": "P1",
+        "snapshot": {
+          "capturedFullTurnSequence": 1,
+          "rank3": 3,
+          "rank4": 0,
+          "rank5": 0
+        }
+      },
+      "previousStateHash": "698bf88afdba75ac3683633764b5fd683e9ae267567816182151fbeb724a2253",
+      "sequence": 1,
+      "stateHash": "8f3a875cd287bf09cae43c455ec258bdd97c0a82cde8de46eda68b1ad04df608",
+      "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT088-2",
+      "id": "EV-000002",
+      "payload": {
+        "actualDestination": "GY",
+        "cardId": "CT088-3",
+        "controllerId": "P1",
+        "from": "P1_PR",
+        "requestedDestination": "GY"
+      },
+      "previousStateHash": "8f3a875cd287bf09cae43c455ec258bdd97c0a82cde8de46eda68b1ad04df608",
+      "sequence": 2,
+      "stateHash": "49d8b5b6b58f96049ecf23e0e5cc7ec581c978e054db073df72f4f2f554b9c23",
+      "type": "CARD_MOVED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT088-3",
+      "id": "EV-000003",
+      "payload": {
+        "chosenCardId": "CT088-D1",
+        "disposition": "hand",
+        "playerId": "P1",
+        "revealedCardIds": [
+          "CT088-D1",
+          "CT088-D2"
+        ]
+      },
+      "previousStateHash": "49d8b5b6b58f96049ecf23e0e5cc7ec581c978e054db073df72f4f2f554b9c23",
+      "sequence": 3,
+      "stateHash": "567022c130063d90beca2a5107a9f393a92b9192531109bdc4b6b3b1e465562c",
+      "type": "VOLTAGE_3_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT088-1",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "3aeda776dc22764a4554cd81492117d3587a51ad156dc571473791b8540edcd3",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "8f3a875cd287bf09cae43c455ec258bdd97c0a82cde8de46eda68b1ad04df608",
+      "stateHashBefore": "698bf88afdba75ac3683633764b5fd683e9ae267567816182151fbeb724a2253"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT088-2",
+      "commandIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "c3817efb9f70b3dee37f9b73a55afa51906afce957036924c6bedc12b50a9b9a",
+      "eventStartIndex": 1,
+      "revisionAfter": 2,
+      "revisionBefore": 1,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "49d8b5b6b58f96049ecf23e0e5cc7ec581c978e054db073df72f4f2f554b9c23",
+      "stateHashBefore": "8f3a875cd287bf09cae43c455ec258bdd97c0a82cde8de46eda68b1ad04df608"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT088-3",
+      "commandIndex": 2,
+      "eventEndIndex": 3,
+      "eventRangeHash": "cc3c57ddb77b3e54550d667ac940cbe444bf50261ea60ab0c6aacd1c5940d51a",
+      "eventStartIndex": 2,
+      "revisionAfter": 3,
+      "revisionBefore": 2,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "567022c130063d90beca2a5107a9f393a92b9192531109bdc4b6b3b1e465562c",
+      "stateHashBefore": "49d8b5b6b58f96049ecf23e0e5cc7ec581c978e054db073df72f4f2f554b9c23"
+    }
+  ],
+  "initialStateHash": "698bf88afdba75ac3683633764b5fd683e9ae267567816182151fbeb724a2253",
+  "finalStateHash": "567022c130063d90beca2a5107a9f393a92b9192531109bdc4b6b3b1e465562c",
+  "eventLogHash": "4b37a017feed42c950cc3198bb55df31493ffc9b37aa319ec8304c7bdff10854",
+  "checkpointLogHash": "3f0eaaf4f0495381a4637dda5043881d84e23234d7bcf87524e346b95845e777",
+  "rngTraceHash": "e00303e77f02222f4fc73de9d8e87917d16b82c4c4f9a50577444ea71a99eadf",
+  "contentHash": "88317f873009b03ad76907603ec9a78bcaf09a247272b24ccad0fd0e67c3f752",
+  "integrityHash": "2f5ae1502dd74e33faf05a174b219d43fec08b1b497f75429a446dc9d022ba31"
+}

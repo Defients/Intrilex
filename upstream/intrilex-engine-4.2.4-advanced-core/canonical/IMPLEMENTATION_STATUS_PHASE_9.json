@@ -1,0 +1,38 @@
+{
+  "status_version": 1,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0-phase2.9.0",
+  "milestone": "Roadmap Phase 9 — First Contact profile",
+  "completed_phases": [2, 3, 4, 5, 6, 7, 8, 9],
+  "phase9_gate_ids": ["CT-093", "CT-119"],
+  "services": [
+    "immutable First Contact capability profile",
+    "two-player Goal-15 setup normalization",
+    "generic-effect allowlist and pre-commit disabled-declaration rejection",
+    "optional-module configuration exclusion with explicit teaching-override hook",
+    "one-Mini-Turn economy with ignored grant handling",
+    "automatic controlled-OTT untap at Start",
+    "Exile-to-GY destination replacement",
+    "hidden hand-entry normalization without Revealed-Until-Start"
+  ],
+  "preserved_regression_aggregates": {
+    "phase2_4": "aeee864319a1ef41df2bf8de5675fd5236df04229a84d7b1182f607b3d52ae6f",
+    "phase5": "8e44d3bac08ad2cfa11609251bad170d466d70d7395f6e29f8946d7b58115f54",
+    "phase2_5": "aaa3f1bfca94e759ac486bf9f38fb143079041bbf5b179fa262afd3607ab00b5",
+    "phase6": "4726d50bbecbf9332a4dd0eb8bbaebea210dae3f01edd63c96d133f0277ae4e3",
+    "phase2_6": "7f2e969aba1af7c733978f97f7f48edf8ef676d91bb570314d21ef74c9cd23b3",
+    "phase7": "78e06182e34d1e03c0dff64118eed37f7163a8c720d517becdf3d15e46a06574",
+    "phase2_7": "d75e52247a5d144b356fdd3876db7e843905ca508842e355c8f92e1e0d84f376",
+    "phase8": "10d6a95d3c12a0c24c13f7767fd0643fc87187ccdb846987eb28894f79981048",
+    "phase2_8": "4a91565ab07fc6bdcb856c182f64108763361299e8f49a466a4dac48415e0e07"
+  },
+  "phase9_aggregate": "f77a355b1e74c1302d8e38e9542d0d143d1008d59be2dacc007a06fb6ff857b5",
+  "combined_phase2_9_aggregate": "3479405b489459a9e14e686da85a102972a656116f42aeb5e4f0366519ba2087",
+  "scope_note": "First Contact is a profile over the production kernel, not a fork. Unsupported profile combinations and declarations fail closed without mutation.",
+  "next_authorized_gate": {
+    "phase": 10,
+    "name": "Trap Module",
+    "test_ids": ["CT-011", "CT-016", "CT-024", "CT-031", "CT-094", "CT-095", "CT-096", "CT-097", "CT-098", "CT-099"]
+  }
+}

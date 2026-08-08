@@ -1,0 +1,54 @@
+{
+  "auditDate": "2026-08-03",
+  "pipelineStages": 16,
+  "nodes": [
+    {"id":"engine-authority","path":"packages/engine-adapter/src/adapter.mjs","authority":"canonical","schemaVersion":"engine-native","hash":"authorityHash via canonicalRankAuthority()"},
+    {"id":"card-face-data","path":"apps/lab-web/src/card-face-data.js","authority":"browser-only","schemaVersion":"manual","hash":"none"},
+    {"id":"rank-anatomy-registry","path":"packages/simulation-runtime/src/rank-anatomy-registry.mjs","authority":"derived","schemaVersion":"1.0.0","hash":"registryHash via hashFn(core)"},
+    {"id":"variant-registry","path":"packages/simulation-runtime/src/variant-registry.mjs","authority":"canonical","schemaVersion":"VARIANT_REGISTRY_SCHEMA_VERSION","hash":"authorityHash via canonicalVariantRegistry()"},
+    {"id":"rank-attribution","path":"packages/simulation-runtime/src/rank-attribution.mjs","authority":"canonical","schemaVersion":"attribution-v1","hash":"none"},
+    {"id":"runtime","path":"packages/simulation-runtime/src/runtime.mjs","authority":"canonical","schemaVersion":"runtime","hash":"none"},
+    {"id":"rank-telemetry","path":"packages/telemetry/src/rank-telemetry.mjs","authority":"canonical","schemaVersion":"5.1.0","hash":"none"},
+    {"id":"analytics-builder","path":"packages/analytics/src/rank-integration.mjs","authority":"derived","schemaVersion":"1.0.0","hash":"aggregateHash"},
+    {"id":"analytics-aggregation","path":"packages/analytics/src/analytics.mjs","authority":"derived","schemaVersion":"4.1.0","hash":"observatoryHash"},
+    {"id":"generated-artifact","path":"sample-data/observatory/analytics.json","authority":"generated","schemaVersion":"4.1.0","hash":"observatoryHash"},
+    {"id":"production-build","path":"scripts/build.mjs","authority":"build","schemaVersion":"n/a","hash":"none"},
+    {"id":"browser-loader","path":"apps/lab-web/src/app.js","authority":"browser","schemaVersion":"n/a","hash":"none"},
+    {"id":"browser-analytics","path":"apps/lab-web/src/browser-analytics.js","authority":"DUPLICATED","schemaVersion":"4.0.0 (stale)","hash":"none"},
+    {"id":"browser-rank-analytics","path":"apps/lab-web/src/browser-rank-analytics.js","authority":"DUPLICATED","schemaVersion":"1.0.0","hash":"none"},
+    {"id":"rank-anatomy-workspace","path":"apps/lab-web/src/workspaces/ranks/rank-anatomy-workspace.js","authority":"presentation","schemaVersion":"n/a","hash":"none"},
+    {"id":"evidence-deep-link","path":"NOT_IMPLEMENTED","authority":"n/a","schemaVersion":"n/a","hash":"none"}
+  ],
+  "edges": [
+    {"from":"engine-authority","to":"rank-anatomy-registry","contract":"RANK_REGISTRY import","tested":true,"failureMode":"adapter fails to load"},
+    {"from":"engine-authority","to":"variant-registry","contract":"RANK_REGISTRY import","tested":true,"failureMode":"adapter fails to load"},
+    {"from":"variant-registry","to":"rank-anatomy-registry","contract":"spadeVariantForRank, superEffectsForRank","tested":true,"failureMode":"returns null for missing rank"},
+    {"from":"rank-attribution","to":"runtime","contract":"attributeAction","tested":true,"failureMode":"returns not-observable status"},
+    {"from":"runtime","to":"rank-telemetry","contract":"rankDecisions, rankOpportunities","tested":true,"failureMode":"missing stateDelta"},
+    {"from":"rank-telemetry","to":"analytics-builder","contract":"variant counters","tested":true,"failureMode":"missing counters treated as zero"},
+    {"from":"analytics-builder","to":"analytics-aggregation","contract":"variantAnalytics object","tested":true,"failureMode":"try-catch returns null, logs warning"},
+    {"from":"analytics-aggregation","to":"generated-artifact","contract":"analytics.json","tested":true,"failureMode":"script throws on hash mismatch"},
+    {"from":"generated-artifact","to":"production-build","contract":"copy to dist","tested":true,"failureMode":"build fails"},
+    {"from":"production-build","to":"browser-loader","contract":"dist files","tested":false,"failureMode":"no version verification"},
+    {"from":"browser-loader","to":"browser-analytics","contract":"import for live computation","tested":false,"failureMode":"DUPLICATED implementation, stale schema"},
+    {"from":"browser-loader","to":"rank-anatomy-workspace","contract":"renderRankAnatomy call","tested":false,"failureMode":"shows empty state"},
+    {"from":"rank-anatomy-workspace","to":"evidence-deep-link","contract":"n/a","tested":false,"failureMode":"NOT IMPLEMENTED"}
+  ],
+  "duplicates": [
+    {"function":"buildVariantAnalytics","locations":["packages/analytics/src/rank-integration.mjs:526","apps/lab-web/src/browser-analytics.js:782","apps/lab-web/src/browser-rank-analytics.js:782"],"status":"3 implementations"},
+    {"function":"SPADE_VARIANTS","locations":["packages/simulation-runtime/src/variant-registry.mjs:48","apps/lab-web/src/browser-analytics.js:477","apps/lab-web/src/browser-rank-analytics.js:477"],"status":"3 copies"},
+    {"function":"SUPER_EFFECTS","locations":["packages/simulation-runtime/src/variant-registry.mjs:71","apps/lab-web/src/browser-analytics.js:493","apps/lab-web/src/browser-rank-analytics.js:493"],"status":"3 copies"},
+    {"function":"resolveSuperEffect","locations":["packages/simulation-runtime/src/variant-registry.mjs:171","apps/lab-web/src/browser-analytics.js:507","apps/lab-web/src/browser-rank-analytics.js:507"],"status":"3 copies with string matching"},
+    {"function":"classifyVariantEntity","locations":["packages/simulation-runtime/src/rank-attribution.mjs","apps/lab-web/src/browser-analytics.js:558","apps/lab-web/src/browser-rank-analytics.js:558"],"status":"3 copies"}
+  ],
+  "issues": [
+    {"severity":"CRITICAL","description":"Three duplicate buildVariantAnalytics implementations","impact":"Risk of divergence between build and browser"},
+    {"severity":"HIGH","description":"attributeActionWithVariant exported but never called in runtime","impact":"variantEntity not captured during simulation"},
+    {"severity":"HIGH","description":"String-based effect classification with substring matching fallback","impact":"Fragile, can break on engine schema changes"},
+    {"severity":"HIGH","description":"Source/dist divergence with no verification","impact":"dist may not match source"},
+    {"severity":"HIGH","description":"Silently missing data - variantAnalytics failure only logs warning","impact":"Incomplete analytics possible"},
+    {"severity":"MEDIUM","description":"No evidence deep link","impact":"Cannot link to specific evidence records"},
+    {"severity":"MEDIUM","description":"No artifact version verification in browser","impact":"Stale artifacts may be loaded"},
+    {"severity":"LOW","description":"browser-rank-analytics.js is exact duplicate of browser-analytics.js","impact":"Dead code, maintenance burden"}
+  ]
+}

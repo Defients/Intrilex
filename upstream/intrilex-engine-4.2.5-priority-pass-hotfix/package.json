@@ -1,0 +1,43 @@
+{
+  "name": "@intrilex/headless-engine",
+  "version": "4.2.5",
+  "description": "Deterministic certified Intrilex engine with Priority/Pass canon hotfix under governing v4.1.2 semantics and bounded Advanced Core Authority.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/test/*.test.js",
+    "conformance": "npm run build && node dist/src/cli.js conformance",
+    "validate": "npm run build && node dist/src/cli.js validate",
+    "replay": "npm run build && node dist/src/cli.js replay",
+    "ci": "npm run test && npm run conformance && npm run judge && npm run integration && npm run simulate && npm run verify:python && npm run certify && npm run validate",
+    "judge": "npm run build && node dist/src/cli.js judge",
+    "integration": "npm run build && node dist/src/cli.js integration",
+    "simulate": "npm run build && node dist/src/cli.js simulate",
+    "certify": "npm run build && node dist/src/cli.js certify",
+    "verify:python": "python3 tools/independent_replay_verifier.py",
+    "test:browser-parity": "node scripts/browser-parity-core-advanced.mjs",
+    "patch:manifest:generate": "node scripts/priority-pass-integrity.mjs generate",
+    "patch:manifest:verify": "node scripts/priority-pass-integrity.mjs verify",
+    "release:package": "node scripts/package-core-advanced-authority.mjs",
+    "release:verify-extracted": "node scripts/verify-extracted-core-advanced-authority.mjs",
+    "test:private-choice-authority": "npm run test",
+    "campaign:private-choice-cert": "bash scripts/run-private-choice-cert.sh",
+    "test:trigger-closure": "npm run test",
+    "campaign:trigger-closure-cert": "node scripts/trigger-closure-campaign.mjs 500 0",
+    "test:core-authority": "npm run test",
+    "campaign:core-cert": "node scripts/core-authority-campaign.mjs 500 0",
+    "campaign:core-effect-cert": "node scripts/core-effect-campaign.mjs 500 0",
+    "campaign:core-response-cert": "bash scripts/run-core-response-cert.sh",
+    "campaign:core-private-choice-cert": "bash scripts/run-core-private-choice-cert.sh",
+    "campaign:core-advanced-cert": "bash scripts/run-core-advanced-cert.sh"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typescript": "file:vendor/toolchain/typescript-5.8.3"
+  }
+}

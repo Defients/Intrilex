@@ -1,0 +1,34 @@
+{
+  "status_version": 1,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0-phase2.14.0",
+  "milestone": "Roadmap Phase 14 — Deffy Mode",
+  "completed_phases": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+  "phase14_gate_ids": ["CT-014", "CT-115", "CT-116"],
+  "phase14_unique_fixture_ids": ["CT-115", "CT-116"],
+  "deffy_mode_services": [
+    "setup-only draft reducer without gameplay Stack use",
+    "Classic 21, ICU, Soda, Mystery Mix, and Deffy Moment pool definitions",
+    "hidden pool identity redaction",
+    "exact target-size alternating picks",
+    "face-down first-pick and per-drafter cap enforcement",
+    "pool exhaustion refill",
+    "deterministic leftover shuffle or unanimous Scrap",
+    "Speed Run serialized RNG selection",
+    "self-free bijective That's Urz assignment validation",
+    "Mirror Me reveal, legal mirror search, and deterministic DP shuffle",
+    "BattleRealm-after-draft and Trap-gameplay-only boundaries",
+    "no Time Bomb creation during setup"
+  ],
+  "preserved_phase2_13_aggregate": "1dc3b0817bb4a27df55d0b60643943e513496be1b37c19b379409b73667b0427",
+  "phase14_aggregate": "bbd47f801aeba8df8934edf10f5327aa5253276fceea8f353d4c49e23545fff8",
+  "combined_phase2_14_aggregate": "e4e9f6be4fcf6e8732a362ff30d76aedfe379603dfab3b354d9b0683cf5c6b71",
+  "scope_note": "CT-014 reuses the immutable certified Multiplayer assignment history. CT-115 and CT-116 add the two unique Deffy Mode fixtures. Broader sub-mode and add-on behavior is independently unit-tested without creating duplicate conformance identities.",
+  "next_gate": {
+    "phase": 15,
+    "name": "Tournament Seed",
+    "gate_ids": ["CT-004", "CT-005", "CT-063"],
+    "requirements": "Ban Pile, exact categories and High-Impact Pool, collision-safe backups, event configuration validation, and stricter Scuttle"
+  }
+}

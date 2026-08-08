@@ -1,0 +1,44 @@
+{
+  "status_version": 1,
+  "status": "complete",
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0",
+  "milestone": "Roadmap Phase 17 \u2014 Physical and judge tools",
+  "completed_phases": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "gate_ids": [
+    "CT-005",
+    "CT-014",
+    "CT-022",
+    "CT-024",
+    "CT-031",
+    "CT-094",
+    "CT-097",
+    "CT-115",
+    "CT-120"
+  ],
+  "services": [
+    "judge packet",
+    "public marker checklist",
+    "printable state aid",
+    "illegal versus fizzle classifier",
+    "public/private fact partition"
+  ]
+}

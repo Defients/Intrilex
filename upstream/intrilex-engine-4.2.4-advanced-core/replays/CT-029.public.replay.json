@@ -1,0 +1,293 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-029",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P2",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P2",
+        "state": {
+          "faceDownTrap": true
+        },
+        "zone": "P2_ER"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-003": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-003",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-002",
+          "OPAQUE-HIDDEN-CARD-003"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [
+          "OPAQUE-HIDDEN-CARD-001"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "actorId": "P1",
+      "id": "CT029-C1",
+      "play": {
+        "controllerId": "P1",
+        "instructions": [
+          {
+            "cardId": "CT029-KC",
+            "op": "move-card",
+            "zone": "P1_ER"
+          },
+          {
+            "cardId": "CT029-QC",
+            "op": "move-card",
+            "zone": "P1_ER"
+          },
+          {
+            "data": false,
+            "label": "comboTrapTriggered",
+            "op": "record"
+          }
+        ],
+        "kind": "royal-marriage",
+        "requirements": [],
+        "revalidationClass": "none",
+        "sourceCardIds": [
+          "CT029-KC",
+          "CT029-QC"
+        ],
+        "sourceDestination": "GY",
+        "tags": [
+          "multi-card",
+          "anchor-play",
+          "royal-marriage"
+        ],
+        "targetCardIds": []
+      },
+      "type": "DECLARE_PLAY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT029-C2",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT029-C3",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT029-C4",
+      "type": "RESOLVE_TOP"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT029-C1",
+      "id": "EV-000001",
+      "payload": {
+        "kind": "royal-marriage",
+        "sourceCardIds": [
+          "CT029-KC",
+          "CT029-QC"
+        ],
+        "stackItemId": "SI-CT029-C1",
+        "targetCardIds": []
+      },
+      "previousStateHash": "8d4cf70781c1cc77c199bd9f1b5deef39f043601ef160959c868be254b746634",
+      "sequence": 1,
+      "stateHash": "9dfc9893cc8638fb58e2e2717f8a9063a82ad3f8a25962f0ad95848b60361237",
+      "type": "DECLARATION_COMMITTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT029-C2",
+      "id": "EV-000002",
+      "payload": {
+        "consecutivePasses": 1,
+        "playerId": "P2"
+      },
+      "previousStateHash": "9dfc9893cc8638fb58e2e2717f8a9063a82ad3f8a25962f0ad95848b60361237",
+      "sequence": 2,
+      "stateHash": "fbccf58f48e585d75f056b41bdd36ffda567426928bd21eb50f32bff6bb49d57",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT029-C3",
+      "id": "EV-000003",
+      "payload": {
+        "consecutivePasses": 2,
+        "playerId": "P1"
+      },
+      "previousStateHash": "fbccf58f48e585d75f056b41bdd36ffda567426928bd21eb50f32bff6bb49d57",
+      "sequence": 3,
+      "stateHash": "f8ca221d3fa6d7fcc347656b8a875e3f94004d69e5c967643936d7300ea01327",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT029-C3",
+      "id": "EV-000005",
+      "payload": {
+        "reason": "all-players-passed"
+      },
+      "previousStateHash": "f8ca221d3fa6d7fcc347656b8a875e3f94004d69e5c967643936d7300ea01327",
+      "sequence": 4,
+      "stateHash": "b1820fefe71474cadd94d64e68b178fe74a73446c98c03b4b272471e5cb2d31c",
+      "type": "PRIORITY_CLOSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT029-C4",
+      "id": "EV-000005",
+      "payload": {
+        "kind": "royal-marriage",
+        "stackItemId": "SI-CT029-C1"
+      },
+      "previousStateHash": "b1820fefe71474cadd94d64e68b178fe74a73446c98c03b4b272471e5cb2d31c",
+      "sequence": 5,
+      "stateHash": "e0e8ccffda28ff81e86a8f8d3962fb6841b48b44a3aa008f6c0f97607b5b8307",
+      "type": "RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT029-C4",
+      "id": "EV-000007",
+      "payload": {
+        "cardId": "CT029-KC",
+        "op": "move-card",
+        "zone": "P1_ER"
+      },
+      "previousStateHash": "e0e8ccffda28ff81e86a8f8d3962fb6841b48b44a3aa008f6c0f97607b5b8307",
+      "sequence": 6,
+      "stateHash": "3c470358ed08fde6bea2196439a29362ab59e62d323f467932f9136295825d80",
+      "type": "CARD_MOVED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT029-C4",
+      "id": "EV-000009",
+      "payload": {
+        "cardId": "CT029-QC",
+        "op": "move-card",
+        "zone": "P1_ER"
+      },
+      "previousStateHash": "3c470358ed08fde6bea2196439a29362ab59e62d323f467932f9136295825d80",
+      "sequence": 7,
+      "stateHash": "1fb5a856fbafddf4e387cb85c095c24d57f3042e399d4dcf0cb3fff6a3ac5688",
+      "type": "CARD_MOVED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT029-C4",
+      "id": "EV-000011",
+      "payload": {
+        "data": false,
+        "label": "comboTrapTriggered"
+      },
+      "previousStateHash": "1fb5a856fbafddf4e387cb85c095c24d57f3042e399d4dcf0cb3fff6a3ac5688",
+      "sequence": 8,
+      "stateHash": "4e929e2a7ede32594683c5ce327d0396966c24c328606e972fb55891265bafad",
+      "type": "FACT_RECORDED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT029-C4",
+      "id": "EV-000013",
+      "payload": {
+        "stackItemId": "SI-CT029-C1"
+      },
+      "previousStateHash": "4e929e2a7ede32594683c5ce327d0396966c24c328606e972fb55891265bafad",
+      "sequence": 9,
+      "stateHash": "7da31d046bd314f8922dd118648521b4a139b873c238a938c4d7e7d5c0d0fe0f",
+      "type": "STACK_ITEM_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "8d4cf70781c1cc77c199bd9f1b5deef39f043601ef160959c868be254b746634",
+  "finalStateHash": "7da31d046bd314f8922dd118648521b4a139b873c238a938c4d7e7d5c0d0fe0f",
+  "eventLogHash": "d01b498c04102707a33b96caae763dd537970df11ed71d3d3ff35a133a6fbfd4"
+}

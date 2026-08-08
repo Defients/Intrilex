@@ -1,0 +1,144 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-001",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT001-QH": {
+        "controllerId": "P1",
+        "id": "CT001-QH",
+        "identity": "Q♥",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": -2,
+          "timeBombStage": 1
+        },
+        "zone": "P1_PR"
+      }
+    },
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT001-QH"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-battle-realm",
+        "specs": {
+          "P1": "Brilliance",
+          "P2": "Bravery"
+        }
+      },
+      "actorId": "P1",
+      "id": "CT001-1",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "kind": "recalculate-continuous-bonuses"
+      },
+      "actorId": "P1",
+      "id": "CT001-2",
+      "type": "RESOLVE_PHASE12_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT001-1",
+      "id": "EV-000001",
+      "payload": {
+        "selectedSpecByPlayer": {
+          "P1": "Brilliance",
+          "P2": "Bravery"
+        }
+      },
+      "previousStateHash": "be0591764c76a6a52050e6c7da77505d7e2b436e0ea238927d03f934971d5045",
+      "sequence": 1,
+      "stateHash": "7a6fd5e93d33e4cec5fb46cac9b07f7db23264d4f0a49b3e6609598601276fc4",
+      "type": "BATTLEREALM_SPECS_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT001-2",
+      "id": "EV-000002",
+      "payload": {
+        "continuousBonusByPlayer": {
+          "P1": 2,
+          "P2": 0
+        }
+      },
+      "previousStateHash": "7a6fd5e93d33e4cec5fb46cac9b07f7db23264d4f0a49b3e6609598601276fc4",
+      "sequence": 2,
+      "stateHash": "2dc30fa06b8d786a5b4c692dc60df0642ea1f6d4f52059a5fbd610332cb0f680",
+      "type": "BATTLEREALM_CONTINUOUS_BONUSES_RECALCULATED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "be0591764c76a6a52050e6c7da77505d7e2b436e0ea238927d03f934971d5045",
+  "finalStateHash": "2dc30fa06b8d786a5b4c692dc60df0642ea1f6d4f52059a5fbd610332cb0f680",
+  "eventLogHash": "b00f15da86d65c53701b0a7c5841bf99c756ff42160ff11e368db94c0d1fc1b7"
+}

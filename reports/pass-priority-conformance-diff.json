@@ -1,0 +1,563 @@
+{
+  "schemaVersion": "2.0.0",
+  "status": "PASS",
+  "historicalProtocolCorpus": {
+    "rulesAuthorityVersion": "4.1.1",
+    "fixtureCount": 121,
+    "aggregate": "8c91e8194e7fa3ab6bbb3eaa6946a97efd70343c36d5e5953ee8e1c0357013df",
+    "changedFixtureIds": [],
+    "reason": "Raw PASS_PRIORITY remains a private compatibility command; historical certified replay hashes are immutable."
+  },
+  "governingSemanticRulesVersion": "4.1.2",
+  "semanticFixtureCount": 25,
+  "governingSemanticAggregate": "29f032742f25f86a242c775834384b3d2b010fad98e7fbff671cd0d20f0a543b",
+  "addedFixtureIds": [
+    "PP-001",
+    "PP-002",
+    "PP-003",
+    "PP-004",
+    "PP-005",
+    "PP-006",
+    "PP-007",
+    "PP-008",
+    "PP-009",
+    "PP-010",
+    "PP-011",
+    "PP-012",
+    "PP-013",
+    "PP-014",
+    "PP-015",
+    "PP-016",
+    "PP-017",
+    "PP-018",
+    "PP-019",
+    "PP-020",
+    "PP-021",
+    "PP-022",
+    "PP-023",
+    "PP-024",
+    "PP-025"
+  ],
+  "unchangedHistoricalFixtureCount": 121,
+  "records": [
+    {
+      "fixtureId": "PP-001",
+      "behavior": "ordinary-pass-unavailable",
+      "status": "PASS",
+      "evidence": {
+        "profile": "core-advanced-authority",
+        "families": [
+          "swap-bar",
+          "swap-bar",
+          "phase",
+          "swap-bar",
+          "swap-bar",
+          "swap-bar",
+          "swap-bar",
+          "swap-bar",
+          "swap-bar",
+          "swap-bar",
+          "swap-bar"
+        ]
+      }
+    },
+    {
+      "fixtureId": "PP-002",
+      "behavior": "ordinary-pass-unavailable",
+      "status": "PASS",
+      "evidence": {
+        "profile": "first-contact-trigger-closure",
+        "families": [
+          "draw",
+          "effect-private-choice",
+          "effect-private-choice",
+          "effect-private-choice",
+          "play-for-points",
+          "play-for-points",
+          "play-for-points",
+          "play-for-points",
+          "play-for-points"
+        ]
+      }
+    },
+    {
+      "fixtureId": "PP-003",
+      "behavior": "exhausted-pass-exclusive-legality",
+      "status": "PASS",
+      "evidence": {
+        "actions": [
+          {
+            "family": "exhausted-pass",
+            "mode": "forced-mini-turn",
+            "timingClass": "ACTION"
+          }
+        ]
+      }
+    },
+    {
+      "fixtureId": "PP-004",
+      "behavior": "exhausted-pass-consumes-one-mini-turn",
+      "status": "PASS",
+      "evidence": {
+        "before": 1,
+        "after": 0,
+        "eventTypes": [
+          "CORE_ACTION_DECLARED"
+        ]
+      }
+    },
+    {
+      "fixtureId": "PP-005",
+      "behavior": "match-terminates-canonically",
+      "status": "PASS",
+      "evidence": {
+        "seed": 439041101,
+        "policyIds": [
+          "score-rush",
+          "control"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 7,
+        "responsePlayedCount": 5,
+        "responseDeclinedWithOptionsCount": 3,
+        "automaticPriorityAdvanceCount": 78,
+        "responseWindowClosedCount": 40,
+        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+      }
+    },
+    {
+      "fixtureId": "PP-006",
+      "behavior": "ordinary-pass-count-is-exhausted-only",
+      "status": "PASS",
+      "evidence": {
+        "seed": 439041101,
+        "policyIds": [
+          "score-rush",
+          "control"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 7,
+        "responsePlayedCount": 5,
+        "responseDeclinedWithOptionsCount": 3,
+        "automaticPriorityAdvanceCount": 78,
+        "responseWindowClosedCount": 40,
+        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+      }
+    },
+    {
+      "fixtureId": "PP-007",
+      "behavior": "declines-consume-no-mini-turn",
+      "status": "PASS",
+      "evidence": {
+        "seed": 439041101,
+        "policyIds": [
+          "score-rush",
+          "control"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 7,
+        "responsePlayedCount": 5,
+        "responseDeclinedWithOptionsCount": 3,
+        "automaticPriorityAdvanceCount": 78,
+        "responseWindowClosedCount": 40,
+        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "declines": 3
+      }
+    },
+    {
+      "fixtureId": "PP-008",
+      "behavior": "declines-create-no-skip",
+      "status": "PASS",
+      "evidence": {
+        "seed": 439041101,
+        "policyIds": [
+          "score-rush",
+          "control"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 7,
+        "responsePlayedCount": 5,
+        "responseDeclinedWithOptionsCount": 3,
+        "automaticPriorityAdvanceCount": 78,
+        "responseWindowClosedCount": 40,
+        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "declines": 3
+      }
+    },
+    {
+      "fixtureId": "PP-009",
+      "behavior": "declines-have-lawful-response",
+      "status": "PASS",
+      "evidence": {
+        "seed": 439041101,
+        "policyIds": [
+          "score-rush",
+          "control"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 7,
+        "responsePlayedCount": 5,
+        "responseDeclinedWithOptionsCount": 3,
+        "automaticPriorityAdvanceCount": 78,
+        "responseWindowClosedCount": 40,
+        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "declines": 3
+      }
+    },
+    {
+      "fixtureId": "PP-010",
+      "behavior": "automatic-advance-is-not-policy-decision",
+      "status": "PASS",
+      "evidence": {
+        "seed": 439041101,
+        "policyIds": [
+          "score-rush",
+          "control"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 7,
+        "responsePlayedCount": 5,
+        "responseDeclinedWithOptionsCount": 3,
+        "automaticPriorityAdvanceCount": 78,
+        "responseWindowClosedCount": 40,
+        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+      }
+    },
+    {
+      "fixtureId": "PP-011",
+      "behavior": "response-window-closure-recorded",
+      "status": "PASS",
+      "evidence": {
+        "seed": 439041101,
+        "policyIds": [
+          "score-rush",
+          "control"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 7,
+        "responsePlayedCount": 5,
+        "responseDeclinedWithOptionsCount": 3,
+        "automaticPriorityAdvanceCount": 78,
+        "responseWindowClosedCount": 40,
+        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+      }
+    },
+    {
+      "fixtureId": "PP-012",
+      "behavior": "observer-match-hash-invariant",
+      "status": "PASS",
+      "evidence": {
+        "seed": 439041101,
+        "policyIds": [
+          "score-rush",
+          "control"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 7,
+        "responsePlayedCount": 5,
+        "responseDeclinedWithOptionsCount": 3,
+        "automaticPriorityAdvanceCount": 78,
+        "responseWindowClosedCount": 40,
+        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+      }
+    },
+    {
+      "fixtureId": "PP-013",
+      "behavior": "observer-final-state-invariant",
+      "status": "PASS",
+      "evidence": {
+        "seed": 439041101,
+        "policyIds": [
+          "score-rush",
+          "control"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 7,
+        "responsePlayedCount": 5,
+        "responseDeclinedWithOptionsCount": 3,
+        "automaticPriorityAdvanceCount": 78,
+        "responseWindowClosedCount": 40,
+        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+      }
+    },
+    {
+      "fixtureId": "PP-014",
+      "behavior": "policy-action-accounting-excludes-decline-and-orchestration",
+      "status": "PASS",
+      "evidence": {
+        "seed": 439041101,
+        "policyIds": [
+          "score-rush",
+          "control"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 7,
+        "responsePlayedCount": 5,
+        "responseDeclinedWithOptionsCount": 3,
+        "automaticPriorityAdvanceCount": 78,
+        "responseWindowClosedCount": 40,
+        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
+        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+      }
+    },
+    {
+      "fixtureId": "PP-015",
+      "behavior": "match-terminates-canonically",
+      "status": "PASS",
+      "evidence": {
+        "seed": 292934512,
+        "policyIds": [
+          "random-legal",
+          "random-legal"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 15,
+        "responsePlayedCount": 11,
+        "responseDeclinedWithOptionsCount": 6,
+        "automaticPriorityAdvanceCount": 59,
+        "responseWindowClosedCount": 30,
+        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+      }
+    },
+    {
+      "fixtureId": "PP-016",
+      "behavior": "ordinary-pass-count-is-exhausted-only",
+      "status": "PASS",
+      "evidence": {
+        "seed": 292934512,
+        "policyIds": [
+          "random-legal",
+          "random-legal"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 15,
+        "responsePlayedCount": 11,
+        "responseDeclinedWithOptionsCount": 6,
+        "automaticPriorityAdvanceCount": 59,
+        "responseWindowClosedCount": 30,
+        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+      }
+    },
+    {
+      "fixtureId": "PP-017",
+      "behavior": "declines-consume-no-mini-turn",
+      "status": "PASS",
+      "evidence": {
+        "seed": 292934512,
+        "policyIds": [
+          "random-legal",
+          "random-legal"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 15,
+        "responsePlayedCount": 11,
+        "responseDeclinedWithOptionsCount": 6,
+        "automaticPriorityAdvanceCount": 59,
+        "responseWindowClosedCount": 30,
+        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "declines": 6
+      }
+    },
+    {
+      "fixtureId": "PP-018",
+      "behavior": "declines-create-no-skip",
+      "status": "PASS",
+      "evidence": {
+        "seed": 292934512,
+        "policyIds": [
+          "random-legal",
+          "random-legal"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 15,
+        "responsePlayedCount": 11,
+        "responseDeclinedWithOptionsCount": 6,
+        "automaticPriorityAdvanceCount": 59,
+        "responseWindowClosedCount": 30,
+        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "declines": 6
+      }
+    },
+    {
+      "fixtureId": "PP-019",
+      "behavior": "declines-have-lawful-response",
+      "status": "PASS",
+      "evidence": {
+        "seed": 292934512,
+        "policyIds": [
+          "random-legal",
+          "random-legal"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 15,
+        "responsePlayedCount": 11,
+        "responseDeclinedWithOptionsCount": 6,
+        "automaticPriorityAdvanceCount": 59,
+        "responseWindowClosedCount": 30,
+        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "declines": 6
+      }
+    },
+    {
+      "fixtureId": "PP-020",
+      "behavior": "automatic-advance-is-not-policy-decision",
+      "status": "PASS",
+      "evidence": {
+        "seed": 292934512,
+        "policyIds": [
+          "random-legal",
+          "random-legal"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 15,
+        "responsePlayedCount": 11,
+        "responseDeclinedWithOptionsCount": 6,
+        "automaticPriorityAdvanceCount": 59,
+        "responseWindowClosedCount": 30,
+        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+      }
+    },
+    {
+      "fixtureId": "PP-021",
+      "behavior": "response-window-closure-recorded",
+      "status": "PASS",
+      "evidence": {
+        "seed": 292934512,
+        "policyIds": [
+          "random-legal",
+          "random-legal"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 15,
+        "responsePlayedCount": 11,
+        "responseDeclinedWithOptionsCount": 6,
+        "automaticPriorityAdvanceCount": 59,
+        "responseWindowClosedCount": 30,
+        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+      }
+    },
+    {
+      "fixtureId": "PP-022",
+      "behavior": "observer-match-hash-invariant",
+      "status": "PASS",
+      "evidence": {
+        "seed": 292934512,
+        "policyIds": [
+          "random-legal",
+          "random-legal"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 15,
+        "responsePlayedCount": 11,
+        "responseDeclinedWithOptionsCount": 6,
+        "automaticPriorityAdvanceCount": 59,
+        "responseWindowClosedCount": 30,
+        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+      }
+    },
+    {
+      "fixtureId": "PP-023",
+      "behavior": "observer-final-state-invariant",
+      "status": "PASS",
+      "evidence": {
+        "seed": 292934512,
+        "policyIds": [
+          "random-legal",
+          "random-legal"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 15,
+        "responsePlayedCount": 11,
+        "responseDeclinedWithOptionsCount": 6,
+        "automaticPriorityAdvanceCount": 59,
+        "responseWindowClosedCount": 30,
+        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+      }
+    },
+    {
+      "fixtureId": "PP-024",
+      "behavior": "policy-action-accounting-excludes-decline-and-orchestration",
+      "status": "PASS",
+      "evidence": {
+        "seed": 292934512,
+        "policyIds": [
+          "random-legal",
+          "random-legal"
+        ],
+        "termination": "NORMAL_VICTORY",
+        "passActionCount": 0,
+        "exhaustedPassActionCount": 0,
+        "responseOpportunityCount": 15,
+        "responsePlayedCount": 11,
+        "responseDeclinedWithOptionsCount": 6,
+        "automaticPriorityAdvanceCount": 59,
+        "responseWindowClosedCount": 30,
+        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
+        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+      }
+    },
+    {
+      "fixtureId": "PP-025",
+      "behavior": "meaningful-decline-and-automatic-advance-coexist",
+      "status": "PASS",
+      "evidence": {}
+    }
+  ],
+  "interpretation": "The v4.1.2 correction is certified by a new semantic autonomy corpus rather than rewriting the immutable 121-command protocol corpus."
+}

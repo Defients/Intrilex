@@ -1,0 +1,143 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-042",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "C42-H": {
+        "controllerId": "P2",
+        "id": "C42-H",
+        "identity": "7♦",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 7
+        },
+        "zone": "P2_PR"
+      },
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "C42-Q": {
+        "controllerId": "P2",
+        "id": "C42-Q",
+        "identity": "Q♣",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "P2_ER"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [
+          "C42-Q"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "C42-H"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "scuttle",
+        "profile": "ordinary",
+        "sourceCardIds": [
+          "C42-K"
+        ],
+        "targetCardId": "C42-H"
+      },
+      "actorId": "P1",
+      "id": "C42-1",
+      "type": "RESOLVE_INTERACTION_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "C42-1",
+      "id": "EV-000001",
+      "payload": {
+        "bypasses": [],
+        "profile": "ordinary",
+        "sourceCardIds": [
+          "C42-K"
+        ],
+        "targetCardId": "C42-H"
+      },
+      "previousStateHash": "849fd9f7305bf139e28d60d21692248a3d2ecc0901cbeb5fbae06e8310c4c401",
+      "sequence": 1,
+      "stateHash": "fa43b66000dc72c3303d3b8bf63400e2903711c1c2134f470d883f1eac89ad23",
+      "type": "SCUTTLE_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "849fd9f7305bf139e28d60d21692248a3d2ecc0901cbeb5fbae06e8310c4c401",
+  "finalStateHash": "fa43b66000dc72c3303d3b8bf63400e2903711c1c2134f470d883f1eac89ad23",
+  "eventLogHash": "d517236813a840a068db518a76d87d87bcaffdd6144333913e991b81d59246b5"
+}

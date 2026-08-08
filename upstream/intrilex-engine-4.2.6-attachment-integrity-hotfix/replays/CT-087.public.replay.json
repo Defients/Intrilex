@@ -1,0 +1,100 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-087",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT087-Q": {
+        "controllerId": "P1",
+        "id": "CT087-Q",
+        "identity": "Q♥",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": -7
+        },
+        "zone": "P1_PR"
+      }
+    },
+    "fullTurnSequence": 7,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "End",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": -5,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT087-Q"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "process-end-phase"
+      },
+      "actorId": "P1",
+      "id": "CT087-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "events": [],
+  "initialStateHash": "420ec01d2ba337f0128a1386dc2e99dd1893e407cc1ca638666a8f6671986e21",
+  "finalStateHash": "1784f8a15beb7334f9654790104e5dac096137da71bc437c9108b9b47f0ede6f",
+  "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+}

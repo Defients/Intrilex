@@ -1,0 +1,2292 @@
+[
+  {
+    "id": "CT-014",
+    "title": "Three-player That's Urz assignment is a complete cycle",
+    "sourceTestId": "CT-014",
+    "purpose": "Prove default multiplayer draft assignment is self-free and bijective.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {},
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT014-1",
+        "type": "RESOLVE_PHASE11_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "assign-thats-urz",
+          "turnOrder": [
+            "P1",
+            "P2",
+            "P3"
+          ]
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "metadata": {
+          "phase11": {
+            "mode": null,
+            "teamByPlayer": {
+              "P1": null,
+              "P2": null,
+              "P3": null
+            },
+            "swapBarLayout": null,
+            "thatsUrzAssignments": {
+              "P1": "P2",
+              "P2": "P3",
+              "P3": "P1"
+            },
+            "tournamentSeedAssignments": {},
+            "lastTargetEvaluation": null,
+            "winningTeamId": null,
+            "lastTeamTotals": {}
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-100",
+    "title": "Four-player That's Urz assignment remains bijective",
+    "sourceTestId": "CT-100",
+    "purpose": "Prove the last player drafts for the first and no player drafts for self.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0,
+        "P4": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P4": {
+          "id": "P4",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {},
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT100-1",
+        "type": "RESOLVE_PHASE11_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "assign-thats-urz",
+          "turnOrder": [
+            "P1",
+            "P2",
+            "P3",
+            "P4"
+          ]
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "metadata": {
+          "phase11": {
+            "mode": null,
+            "teamByPlayer": {
+              "P1": null,
+              "P2": null,
+              "P3": null,
+              "P4": null
+            },
+            "swapBarLayout": null,
+            "thatsUrzAssignments": {
+              "P1": "P2",
+              "P2": "P3",
+              "P3": "P4",
+              "P4": "P1"
+            },
+            "tournamentSeedAssignments": {},
+            "lastTargetEvaluation": null,
+            "winningTeamId": null,
+            "lastTeamTotals": {}
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-101",
+    "title": "Three-player FFA setup scales hands and Swap Bar",
+    "sourceTestId": "CT-101",
+    "purpose": "Apply the deterministic three-player setup profile with 5/6/6 hands and a 2/2 Swap Bar.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT101-C01": {
+          "id": "CT101-C01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C02": {
+          "id": "CT101-C02",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C03": {
+          "id": "CT101-C03",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C04": {
+          "id": "CT101-C04",
+          "identity": "4♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C05": {
+          "id": "CT101-C05",
+          "identity": "5♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C06": {
+          "id": "CT101-C06",
+          "identity": "6♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C07": {
+          "id": "CT101-C07",
+          "identity": "7♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C08": {
+          "id": "CT101-C08",
+          "identity": "8♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C09": {
+          "id": "CT101-C09",
+          "identity": "9♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C10": {
+          "id": "CT101-C10",
+          "identity": "10♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C11": {
+          "id": "CT101-C11",
+          "identity": "J♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C12": {
+          "id": "CT101-C12",
+          "identity": "Q♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C13": {
+          "id": "CT101-C13",
+          "identity": "K♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C14": {
+          "id": "CT101-C14",
+          "identity": "RJ",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C15": {
+          "id": "CT101-C15",
+          "identity": "BJ",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C16": {
+          "id": "CT101-C16",
+          "identity": "A♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C17": {
+          "id": "CT101-C17",
+          "identity": "2♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C18": {
+          "id": "CT101-C18",
+          "identity": "3♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C19": {
+          "id": "CT101-C19",
+          "identity": "4♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C20": {
+          "id": "CT101-C20",
+          "identity": "5♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT101-C21": {
+          "id": "CT101-C21",
+          "identity": "6♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT101-C01",
+          "CT101-C02",
+          "CT101-C03",
+          "CT101-C04",
+          "CT101-C05",
+          "CT101-C06",
+          "CT101-C07",
+          "CT101-C08",
+          "CT101-C09",
+          "CT101-C10",
+          "CT101-C11",
+          "CT101-C12",
+          "CT101-C13",
+          "CT101-C14",
+          "CT101-C15",
+          "CT101-C16",
+          "CT101-C17",
+          "CT101-C18",
+          "CT101-C19",
+          "CT101-C20",
+          "CT101-C21"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT101-1",
+        "type": "RESOLVE_PHASE11_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "apply-multiplayer-setup",
+          "mode": "ffa-3",
+          "turnOrder": [
+            "P1",
+            "P2",
+            "P3"
+          ],
+          "handAssignments": {
+            "P1": [
+              "CT101-C01",
+              "CT101-C02",
+              "CT101-C03",
+              "CT101-C04",
+              "CT101-C05"
+            ],
+            "P2": [
+              "CT101-C06",
+              "CT101-C07",
+              "CT101-C08",
+              "CT101-C09",
+              "CT101-C10",
+              "CT101-C11"
+            ],
+            "P3": [
+              "CT101-C12",
+              "CT101-C13",
+              "CT101-C14",
+              "CT101-C15",
+              "CT101-C16",
+              "CT101-C17"
+            ]
+          },
+          "swapBarFaceDownCardIds": [
+            "CT101-C18",
+            "CT101-C19"
+          ],
+          "swapBarFaceUpCardIds": [
+            "CT101-C20",
+            "CT101-C21"
+          ]
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT101-C01",
+              "CT101-C02",
+              "CT101-C03",
+              "CT101-C04",
+              "CT101-C05"
+            ]
+          },
+          "P2": {
+            "hand": [
+              "CT101-C06",
+              "CT101-C07",
+              "CT101-C08",
+              "CT101-C09",
+              "CT101-C10",
+              "CT101-C11"
+            ]
+          },
+          "P3": {
+            "hand": [
+              "CT101-C12",
+              "CT101-C13",
+              "CT101-C14",
+              "CT101-C15",
+              "CT101-C16",
+              "CT101-C17"
+            ]
+          }
+        },
+        "zones": {
+          "swapBar": [
+            "CT101-C18",
+            "CT101-C19",
+            "CT101-C20",
+            "CT101-C21"
+          ],
+          "dp": []
+        },
+        "goals": {
+          "P1": 21,
+          "P2": 21,
+          "P3": 21
+        },
+        "metadata": {
+          "phase11": {
+            "mode": "ffa-3",
+            "teamByPlayer": {
+              "P1": null,
+              "P2": null,
+              "P3": null
+            },
+            "swapBarLayout": {
+              "capacity": 4,
+              "faceDownCardIds": [
+                "CT101-C18",
+                "CT101-C19"
+              ],
+              "faceUpCardIds": [
+                "CT101-C20",
+                "CT101-C21"
+              ]
+            },
+            "thatsUrzAssignments": {},
+            "tournamentSeedAssignments": {},
+            "lastTargetEvaluation": null,
+            "winningTeamId": null,
+            "lastTeamTotals": {}
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-102",
+    "title": "Four-player Teams setup alternates teams and scales Swap Bar",
+    "sourceTestId": "CT-102",
+    "purpose": "Apply exact two-team setup with alternating turn order, five-card hands, and a 3/2 Swap Bar.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0,
+        "P4": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": "A",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": "B",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": "A",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P4": {
+          "id": "P4",
+          "teamId": "B",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT102-C01": {
+          "id": "CT102-C01",
+          "identity": "A♣",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C02": {
+          "id": "CT102-C02",
+          "identity": "2♦",
+          "originalOwnerId": "P3",
+          "controllerId": "P3",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C03": {
+          "id": "CT102-C03",
+          "identity": "3♥",
+          "originalOwnerId": "P4",
+          "controllerId": "P4",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C04": {
+          "id": "CT102-C04",
+          "identity": "4♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C05": {
+          "id": "CT102-C05",
+          "identity": "5♣",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C06": {
+          "id": "CT102-C06",
+          "identity": "A♣",
+          "originalOwnerId": "P3",
+          "controllerId": "P3",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C07": {
+          "id": "CT102-C07",
+          "identity": "2♦",
+          "originalOwnerId": "P4",
+          "controllerId": "P4",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C08": {
+          "id": "CT102-C08",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C09": {
+          "id": "CT102-C09",
+          "identity": "4♠",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C10": {
+          "id": "CT102-C10",
+          "identity": "5♣",
+          "originalOwnerId": "P3",
+          "controllerId": "P3",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C11": {
+          "id": "CT102-C11",
+          "identity": "A♣",
+          "originalOwnerId": "P4",
+          "controllerId": "P4",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C12": {
+          "id": "CT102-C12",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C13": {
+          "id": "CT102-C13",
+          "identity": "3♥",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C14": {
+          "id": "CT102-C14",
+          "identity": "4♠",
+          "originalOwnerId": "P3",
+          "controllerId": "P3",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C15": {
+          "id": "CT102-C15",
+          "identity": "5♣",
+          "originalOwnerId": "P4",
+          "controllerId": "P4",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C16": {
+          "id": "CT102-C16",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C17": {
+          "id": "CT102-C17",
+          "identity": "2♦",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C18": {
+          "id": "CT102-C18",
+          "identity": "3♥",
+          "originalOwnerId": "P3",
+          "controllerId": "P3",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C19": {
+          "id": "CT102-C19",
+          "identity": "4♠",
+          "originalOwnerId": "P4",
+          "controllerId": "P4",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C20": {
+          "id": "CT102-C20",
+          "identity": "5♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C21": {
+          "id": "CT102-C21",
+          "identity": "A♣",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C22": {
+          "id": "CT102-C22",
+          "identity": "2♦",
+          "originalOwnerId": "P3",
+          "controllerId": "P3",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C23": {
+          "id": "CT102-C23",
+          "identity": "3♥",
+          "originalOwnerId": "P4",
+          "controllerId": "P4",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C24": {
+          "id": "CT102-C24",
+          "identity": "4♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT102-C25": {
+          "id": "CT102-C25",
+          "identity": "5♣",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT102-C01",
+          "CT102-C02",
+          "CT102-C03",
+          "CT102-C04",
+          "CT102-C05",
+          "CT102-C06",
+          "CT102-C07",
+          "CT102-C08",
+          "CT102-C09",
+          "CT102-C10",
+          "CT102-C11",
+          "CT102-C12",
+          "CT102-C13",
+          "CT102-C14",
+          "CT102-C15",
+          "CT102-C16",
+          "CT102-C17",
+          "CT102-C18",
+          "CT102-C19",
+          "CT102-C20",
+          "CT102-C21",
+          "CT102-C22",
+          "CT102-C23",
+          "CT102-C24",
+          "CT102-C25"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT102-1",
+        "type": "RESOLVE_PHASE11_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "apply-multiplayer-setup",
+          "mode": "teams-4",
+          "turnOrder": [
+            "P1",
+            "P2",
+            "P3",
+            "P4"
+          ],
+          "teamAssignments": {
+            "P1": "A",
+            "P2": "B",
+            "P3": "A",
+            "P4": "B"
+          },
+          "handAssignments": {
+            "P1": [
+              "CT102-C01",
+              "CT102-C02",
+              "CT102-C03",
+              "CT102-C04",
+              "CT102-C05"
+            ],
+            "P2": [
+              "CT102-C06",
+              "CT102-C07",
+              "CT102-C08",
+              "CT102-C09",
+              "CT102-C10"
+            ],
+            "P3": [
+              "CT102-C11",
+              "CT102-C12",
+              "CT102-C13",
+              "CT102-C14",
+              "CT102-C15"
+            ],
+            "P4": [
+              "CT102-C16",
+              "CT102-C17",
+              "CT102-C18",
+              "CT102-C19",
+              "CT102-C20"
+            ]
+          },
+          "swapBarFaceDownCardIds": [
+            "CT102-C21",
+            "CT102-C22",
+            "CT102-C23"
+          ],
+          "swapBarFaceUpCardIds": [
+            "CT102-C24",
+            "CT102-C25"
+          ]
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT102-C01",
+              "CT102-C02",
+              "CT102-C03",
+              "CT102-C04",
+              "CT102-C05"
+            ]
+          },
+          "P2": {
+            "hand": [
+              "CT102-C06",
+              "CT102-C07",
+              "CT102-C08",
+              "CT102-C09",
+              "CT102-C10"
+            ]
+          },
+          "P3": {
+            "hand": [
+              "CT102-C11",
+              "CT102-C12",
+              "CT102-C13",
+              "CT102-C14",
+              "CT102-C15"
+            ]
+          },
+          "P4": {
+            "hand": [
+              "CT102-C16",
+              "CT102-C17",
+              "CT102-C18",
+              "CT102-C19",
+              "CT102-C20"
+            ]
+          }
+        },
+        "zones": {
+          "swapBar": [
+            "CT102-C21",
+            "CT102-C22",
+            "CT102-C23",
+            "CT102-C24",
+            "CT102-C25"
+          ],
+          "dp": []
+        },
+        "metadata": {
+          "phase11": {
+            "mode": "teams-4",
+            "teamByPlayer": {
+              "P1": "A",
+              "P2": "B",
+              "P3": "A",
+              "P4": "B"
+            },
+            "swapBarLayout": {
+              "capacity": 5,
+              "faceDownCardIds": [
+                "CT102-C21",
+                "CT102-C22",
+                "CT102-C23"
+              ],
+              "faceUpCardIds": [
+                "CT102-C24",
+                "CT102-C25"
+              ]
+            },
+            "thatsUrzAssignments": {},
+            "tournamentSeedAssignments": {},
+            "lastTargetEvaluation": null,
+            "winningTeamId": null,
+            "lastTeamTotals": {}
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-103",
+    "title": "Four-player Tournament Seed resolves unique registered backups",
+    "sourceTestId": "CT-103",
+    "purpose": "Allocate one unique High-Impact identity per player in priority order without exhausting the pool.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0,
+        "P4": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P4": {
+          "id": "P4",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT103-AS": {
+          "id": "CT103-AS",
+          "identity": "A♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-10D": {
+          "id": "CT103-10D",
+          "identity": "10♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-10S": {
+          "id": "CT103-10S",
+          "identity": "10♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-KS": {
+          "id": "CT103-KS",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-KC": {
+          "id": "CT103-KC",
+          "identity": "K♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-QS": {
+          "id": "CT103-QS",
+          "identity": "Q♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-JS": {
+          "id": "CT103-JS",
+          "identity": "J♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-9S": {
+          "id": "CT103-9S",
+          "identity": "9♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-8S": {
+          "id": "CT103-8S",
+          "identity": "8♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-7S": {
+          "id": "CT103-7S",
+          "identity": "7♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-6S": {
+          "id": "CT103-6S",
+          "identity": "6♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT103-5S": {
+          "id": "CT103-5S",
+          "identity": "5♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT103-AS",
+          "CT103-10D",
+          "CT103-10S",
+          "CT103-KS",
+          "CT103-KC",
+          "CT103-QS",
+          "CT103-JS",
+          "CT103-9S",
+          "CT103-8S",
+          "CT103-7S",
+          "CT103-6S",
+          "CT103-5S"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT103-1",
+        "type": "RESOLVE_PHASE11_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "assign-tournament-seed",
+          "priorityOrder": [
+            "P1",
+            "P2",
+            "P3",
+            "P4"
+          ],
+          "poolCardIds": [
+            "CT103-AS",
+            "CT103-10D",
+            "CT103-10S",
+            "CT103-KS",
+            "CT103-KC",
+            "CT103-QS",
+            "CT103-JS",
+            "CT103-9S",
+            "CT103-8S",
+            "CT103-7S",
+            "CT103-6S",
+            "CT103-5S"
+          ],
+          "preferences": {
+            "P1": [
+              "CT103-AS",
+              "CT103-10D"
+            ],
+            "P2": [
+              "CT103-AS",
+              "CT103-10S"
+            ],
+            "P3": [
+              "CT103-AS",
+              "CT103-KS"
+            ],
+            "P4": [
+              "CT103-AS",
+              "CT103-KC"
+            ]
+          }
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT103-AS"
+            ]
+          },
+          "P2": {
+            "hand": [
+              "CT103-10S"
+            ]
+          },
+          "P3": {
+            "hand": [
+              "CT103-KS"
+            ]
+          },
+          "P4": {
+            "hand": [
+              "CT103-KC"
+            ]
+          }
+        },
+        "zones": {
+          "dp": [
+            "CT103-10D",
+            "CT103-QS",
+            "CT103-JS",
+            "CT103-9S",
+            "CT103-8S",
+            "CT103-7S",
+            "CT103-6S",
+            "CT103-5S"
+          ]
+        },
+        "metadata": {
+          "phase11": {
+            "mode": null,
+            "teamByPlayer": {
+              "P1": null,
+              "P2": null,
+              "P3": null,
+              "P4": null
+            },
+            "swapBarLayout": null,
+            "thatsUrzAssignments": {},
+            "tournamentSeedAssignments": {
+              "P1": "CT103-AS",
+              "P2": "CT103-10S",
+              "P3": "CT103-KS",
+              "P4": "CT103-KC"
+            },
+            "lastTargetEvaluation": null,
+            "winningTeamId": null,
+            "lastTeamTotals": {}
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-104",
+    "title": "Opponent means Enemy and hostile Ally targeting is illegal",
+    "sourceTestId": "CT-104",
+    "purpose": "Reject a hostile target on an Ally and accept the same profile against an Enemy.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0,
+        "P4": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": "A",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": "B",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": "A",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P4": {
+          "id": "P4",
+          "teamId": "B",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {},
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT104-1",
+        "type": "RESOLVE_PHASE11_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "validate-player-target",
+          "sourcePlayerId": "P1",
+          "targetPlayerId": "P3",
+          "hostile": true
+        }
+      },
+      {
+        "id": "CT104-2",
+        "type": "RESOLVE_PHASE11_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "validate-player-target",
+          "sourcePlayerId": "P1",
+          "targetPlayerId": "P2",
+          "hostile": true
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        false,
+        true
+      ],
+      "final": {
+        "metadata": {
+          "phase11": {
+            "mode": null,
+            "teamByPlayer": {
+              "P1": "A",
+              "P2": "B",
+              "P3": "A",
+              "P4": "B"
+            },
+            "swapBarLayout": null,
+            "thatsUrzAssignments": {},
+            "tournamentSeedAssignments": {},
+            "lastTargetEvaluation": {
+              "sourcePlayerId": "P1",
+              "targetPlayerId": "P2",
+              "relation": "enemy",
+              "legal": true
+            },
+            "winningTeamId": null,
+            "lastTeamTotals": {}
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-105",
+    "title": "Four-player priority requires a full consecutive pass cycle",
+    "sourceTestId": "CT-105",
+    "purpose": "Prove priority starts with the next player, includes Allies, and resolves only after all four pass.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0,
+        "P4": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": "A",
+          "goal": 21,
+          "hand": [
+            "CT105-S"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": "B",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": "A",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P4": {
+          "id": "P4",
+          "teamId": "B",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT105-S": {
+          "id": "CT105-S",
+          "identity": "3♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT105-1",
+        "type": "DECLARE_PLAY",
+        "actorId": "P1",
+        "play": {
+          "kind": "ordinary-effect",
+          "controllerId": "P1",
+          "sourceCardIds": [
+            "CT105-S"
+          ],
+          "targetCardIds": [],
+          "requirements": [],
+          "revalidationClass": "none",
+          "instructions": [
+            {
+              "op": "record",
+              "label": "priority-cycle-complete"
+            }
+          ],
+          "sourceDestination": "GY"
+        }
+      },
+      {
+        "id": "CT105-2",
+        "type": "PASS_PRIORITY",
+        "actorId": "P2"
+      },
+      {
+        "id": "CT105-3",
+        "type": "PASS_PRIORITY",
+        "actorId": "P3"
+      },
+      {
+        "id": "CT105-4",
+        "type": "PASS_PRIORITY",
+        "actorId": "P4"
+      },
+      {
+        "id": "CT105-5",
+        "type": "PASS_PRIORITY",
+        "actorId": "P1"
+      },
+      {
+        "id": "CT105-6",
+        "type": "RESOLVE_TOP",
+        "actorId": "P1"
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "final": {
+        "zones": {
+          "gy": [
+            "CT105-S"
+          ]
+        },
+        "stackDepth": 0,
+        "metadata": {}
+      }
+    }
+  },
+  {
+    "id": "CT-109",
+    "title": "Multiplayer Source Intercept rebinds controller-relative text",
+    "sourceTestId": "CT-109",
+    "purpose": "Transfer a generated play to the interceptor and revalidate its target as that player's Enemy.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT109-T"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT109-T": {
+          "id": "CT109-T",
+          "identity": "7♦",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 7
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [
+        {
+          "id": "CT109-SI",
+          "controllerId": "P1",
+          "sourceCardIds": [],
+          "targetCardIds": [],
+          "kind": "generated-effect",
+          "revalidationClass": "single-required-target",
+          "instructions": [],
+          "sourceDestination": "GY",
+          "status": "pending"
+        }
+      ],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT109-1",
+        "type": "RESOLVE_PHASE11_ACTION",
+        "actorId": "P3",
+        "action": {
+          "kind": "intercept-generated-play",
+          "stackItemId": "CT109-SI",
+          "originalControllerId": "P1",
+          "interceptorId": "P3",
+          "replacementTargetIds": [
+            "CT109-T"
+          ]
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "stackDepth": 1,
+        "metadata": {
+          "phase11": {
+            "mode": null,
+            "teamByPlayer": {
+              "P1": null,
+              "P2": null,
+              "P3": null
+            },
+            "swapBarLayout": null,
+            "thatsUrzAssignments": {},
+            "tournamentSeedAssignments": {},
+            "lastTargetEvaluation": null,
+            "winningTeamId": null,
+            "lastTeamTotals": {}
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-114",
+    "title": "Team Exhausted compares combined active Anchors before Points",
+    "sourceTestId": "CT-114",
+    "purpose": "Aggregate teammates without shared rows and select the Anchor-leading team before comparing signed Points.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "End",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0,
+        "P4": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": "A",
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT114-PA"
+          ],
+          "er": [
+            "CT114-A1"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": "B",
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT114-PB"
+          ],
+          "er": [
+            "CT114-B1"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": "A",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [
+            "CT114-A2"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P4": {
+          "id": "P4",
+          "teamId": "B",
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT114-A1": {
+          "id": "CT114-A1",
+          "identity": "Q♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_ER",
+          "state": {
+            "anchor": true
+          }
+        },
+        "CT114-A2": {
+          "id": "CT114-A2",
+          "identity": "K♦",
+          "originalOwnerId": "P3",
+          "controllerId": "P3",
+          "zone": "P3_ER",
+          "state": {
+            "anchor": true
+          }
+        },
+        "CT114-B1": {
+          "id": "CT114-B1",
+          "identity": "Q♥",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_ER",
+          "state": {
+            "anchor": true
+          }
+        },
+        "CT114-PA": {
+          "id": "CT114-PA",
+          "identity": "4♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": 4
+          }
+        },
+        "CT114-PB": {
+          "id": "CT114-PB",
+          "identity": "10♠",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 10
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT114-1",
+        "type": "RESOLVE_PHASE11_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "resolve-team-endgame",
+          "kindOfCheck": "exhausted",
+          "activePlayerId": "P1"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "winner": "P1",
+        "metadata": {
+          "phase11": {
+            "mode": null,
+            "teamByPlayer": {
+              "P1": "A",
+              "P2": "B",
+              "P3": "A",
+              "P4": "B"
+            },
+            "swapBarLayout": null,
+            "thatsUrzAssignments": {},
+            "tournamentSeedAssignments": {},
+            "lastTargetEvaluation": null,
+            "winningTeamId": "A",
+            "lastTeamTotals": {
+              "A": {
+                "anchors": 2,
+                "points": 4
+              },
+              "B": {
+                "anchors": 1,
+                "points": 10
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]

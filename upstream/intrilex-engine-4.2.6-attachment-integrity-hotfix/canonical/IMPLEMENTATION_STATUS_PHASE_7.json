@@ -1,0 +1,43 @@
+{
+  "status_version": 1,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0-phase2.7.0",
+  "milestone": "Roadmap Phase 7 — Protection, Scuttle, counters, and Attachments",
+  "completed_phases": [2, 3, 4, 5, 6, 7],
+  "phase7_gate_ids": [
+    "CT-020", "CT-022", "CT-039", "CT-040", "CT-041", "CT-042",
+    "CT-055", "CT-056", "CT-057", "CT-058", "CT-059", "CT-060",
+    "CT-061", "CT-062", "CT-063", "CT-071"
+  ],
+  "phase7_unique_fixture_ids": [
+    "CT-020", "CT-022", "CT-039", "CT-040", "CT-041", "CT-042",
+    "CT-055", "CT-056", "CT-057", "CT-058", "CT-059", "CT-060",
+    "CT-061", "CT-062", "CT-063"
+  ],
+  "interaction_services": [
+    "independent Guard, Aegis, rank-immunity, Q-spade, and Scuttle-immunity evaluation",
+    "named bypass sets with no implied protection bypass",
+    "ordinary, 8-spade Free, and absolute-eight Scuttle profiles",
+    "Base Ace, Anchor Ace, A-spade, Super Ace, King, K-spade, and Eight counter authority",
+    "Royal Shield and two-Queen declaration checks",
+    "reciprocal Jack Attachment graph",
+    "immediate sever and host cleanup after relevant movement or control changes",
+    "runtime rejection of committed orphan or invalid Attachment graphs"
+  ],
+  "preserved_regression_aggregates": {
+    "phase2_4": "aeee864319a1ef41df2bf8de5675fd5236df04229a84d7b1182f607b3d52ae6f",
+    "phase5": "8e44d3bac08ad2cfa11609251bad170d466d70d7395f6e29f8946d7b58115f54",
+    "phase2_5": "aaa3f1bfca94e759ac486bf9f38fb143079041bbf5b179fa262afd3607ab00b5",
+    "phase6": "4726d50bbecbf9332a4dd0eb8bbaebea210dae3f01edd63c96d133f0277ae4e3",
+    "phase2_6": "7f2e969aba1af7c733978f97f7f48edf8ef676d91bb570314d21ef74c9cd23b3"
+  },
+  "phase7_aggregate": "78e06182e34d1e03c0dff64118eed37f7163a8c720d517becdf3d15e46a06574",
+  "combined_phase2_7_aggregate": "d75e52247a5d144b356fdd3876db7e843905ca508842e355c8f92e1e0d84f376",
+  "scope_note": "Phase 7 is an engine-normalized executable projection of the official gate. CT-071 is reused from the immutable Phase 6 corpus and is not duplicated in the combined fixture set.",
+  "next_gate": {
+    "phase": 8,
+    "name": "Advanced play classes",
+    "official_test_ids": ["CT-029", "CT-030", "CT-043", "CT-044", "CT-045", "CT-046", "CT-047", "CT-048", "CT-049", "CT-050", "CT-079", "CT-086", "CT-107", "CT-111", "CT-112", "CT-113"]
+  }
+}

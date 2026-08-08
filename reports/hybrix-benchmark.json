@@ -1,0 +1,936 @@
+{
+  "timestamp": "2026-08-01T11:20:16.436Z",
+  "matchesPerMatchup": 20,
+  "matchups": [
+    {
+      "label": "HYBRIX Rusher vs SCORE_RUSH",
+      "p1": "hybrix-rusher",
+      "p2": "score-rush",
+      "matches": 20,
+      "p1Wins": 12,
+      "p2Wins": 8,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 10,
+      "policyBWins": 10,
+      "policyAWinRate": 0.5,
+      "policyBWinRate": 0.5,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.5,
+      "wilson95": {
+        "lower": 0.299,
+        "upper": 0.701
+      },
+      "wilson99": {
+        "lower": 0.25,
+        "upper": 0.75
+      },
+      "cohensH": 0,
+      "effectSize": "negligible",
+      "seatBalance": {
+        "seat1WinRate": 0.6,
+        "seat2WinRate": 0.4,
+        "imbalance": 0.2,
+        "seat1CI": {
+          "lower": 0.313,
+          "upper": 0.832
+        },
+        "seat2CI": {
+          "lower": 0.168,
+          "upper": 0.687
+        }
+      },
+      "avgP1Score": 19.8,
+      "avgP2Score": 17.7,
+      "avgMargin": 11.1,
+      "avgDecisions": 20.9,
+      "avgTurns": 7.6,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 20
+      }
+    },
+    {
+      "label": "HYBRIX Defender vs CONTROL",
+      "p1": "hybrix-defender",
+      "p2": "control",
+      "matches": 20,
+      "p1Wins": 7,
+      "p2Wins": 10,
+      "draws": 3,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 10,
+      "policyBWins": 7,
+      "policyAWinRate": 0.5,
+      "policyBWinRate": 0.35,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.5,
+      "wilson95": {
+        "lower": 0.299,
+        "upper": 0.701
+      },
+      "wilson99": {
+        "lower": 0.25,
+        "upper": 0.75
+      },
+      "cohensH": 0,
+      "effectSize": "negligible",
+      "seatBalance": {
+        "seat1WinRate": 0.5,
+        "seat2WinRate": 0.667,
+        "imbalance": 0.167,
+        "seat1CI": {
+          "lower": 0.215,
+          "upper": 0.785
+        },
+        "seat2CI": {
+          "lower": 0.354,
+          "upper": 0.879
+        }
+      },
+      "avgP1Score": 2.4,
+      "avgP2Score": 1.8,
+      "avgMargin": 3.6,
+      "avgDecisions": 127.7,
+      "avgTurns": 46.5,
+      "terminationReasons": {
+        "EXHAUSTED_RESOLUTION": 16,
+        "CANONICAL_DRAW": 3,
+        "NORMAL_VICTORY": 1
+      }
+    },
+    {
+      "label": "HYBRIX Trickster vs TEMPO",
+      "p1": "hybrix-trickster",
+      "p2": "tempo",
+      "matches": 20,
+      "p1Wins": 12,
+      "p2Wins": 8,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 14,
+      "policyBWins": 6,
+      "policyAWinRate": 0.7,
+      "policyBWinRate": 0.3,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.7,
+      "wilson95": {
+        "lower": 0.481,
+        "upper": 0.855
+      },
+      "wilson99": {
+        "lower": 0.416,
+        "upper": 0.884
+      },
+      "cohensH": 0.412,
+      "effectSize": "small",
+      "seatBalance": {
+        "seat1WinRate": 0.8,
+        "seat2WinRate": 0.6,
+        "imbalance": 0.2,
+        "seat1CI": {
+          "lower": 0.49,
+          "upper": 0.943
+        },
+        "seat2CI": {
+          "lower": 0.313,
+          "upper": 0.832
+        }
+      },
+      "avgP1Score": 19.2,
+      "avgP2Score": 16.9,
+      "avgMargin": 12.2,
+      "avgDecisions": 26.2,
+      "avgTurns": 9.5,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 20
+      }
+    },
+    {
+      "label": "HYBRIX Sniper vs VALUE",
+      "p1": "hybrix-sniper",
+      "p2": "value",
+      "matches": 20,
+      "p1Wins": 11,
+      "p2Wins": 9,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 13,
+      "policyBWins": 7,
+      "policyAWinRate": 0.65,
+      "policyBWinRate": 0.35,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.65,
+      "wilson95": {
+        "lower": 0.433,
+        "upper": 0.819
+      },
+      "wilson99": {
+        "lower": 0.372,
+        "upper": 0.854
+      },
+      "cohensH": 0.305,
+      "effectSize": "small",
+      "seatBalance": {
+        "seat1WinRate": 0.7,
+        "seat2WinRate": 0.6,
+        "imbalance": 0.1,
+        "seat1CI": {
+          "lower": 0.397,
+          "upper": 0.892
+        },
+        "seat2CI": {
+          "lower": 0.313,
+          "upper": 0.832
+        }
+      },
+      "avgP1Score": 18.4,
+      "avgP2Score": 17.3,
+      "avgMargin": 11.4,
+      "avgDecisions": 30.4,
+      "avgTurns": 11.1,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 20
+      }
+    },
+    {
+      "label": "HYBRIX Support vs VALUE",
+      "p1": "hybrix-support",
+      "p2": "value",
+      "matches": 20,
+      "p1Wins": 11,
+      "p2Wins": 9,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 11,
+      "policyBWins": 9,
+      "policyAWinRate": 0.55,
+      "policyBWinRate": 0.45,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.55,
+      "wilson95": {
+        "lower": 0.342,
+        "upper": 0.742
+      },
+      "wilson99": {
+        "lower": 0.289,
+        "upper": 0.786
+      },
+      "cohensH": 0.1,
+      "effectSize": "negligible",
+      "seatBalance": {
+        "seat1WinRate": 0.6,
+        "seat2WinRate": 0.5,
+        "imbalance": 0.1,
+        "seat1CI": {
+          "lower": 0.313,
+          "upper": 0.832
+        },
+        "seat2CI": {
+          "lower": 0.237,
+          "upper": 0.763
+        }
+      },
+      "avgP1Score": 18,
+      "avgP2Score": 16.3,
+      "avgMargin": 12.8,
+      "avgDecisions": 25.4,
+      "avgTurns": 8.9,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 20
+      }
+    },
+    {
+      "label": "HYBRIX Tank vs CONTROL",
+      "p1": "hybrix-tank",
+      "p2": "control",
+      "matches": 20,
+      "p1Wins": 8,
+      "p2Wins": 8,
+      "draws": 4,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 10,
+      "policyBWins": 6,
+      "policyAWinRate": 0.5,
+      "policyBWinRate": 0.3,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.5,
+      "wilson95": {
+        "lower": 0.299,
+        "upper": 0.701
+      },
+      "wilson99": {
+        "lower": 0.25,
+        "upper": 0.75
+      },
+      "cohensH": 0,
+      "effectSize": "negligible",
+      "seatBalance": {
+        "seat1WinRate": 0.625,
+        "seat2WinRate": 0.625,
+        "imbalance": 0,
+        "seat1CI": {
+          "lower": 0.306,
+          "upper": 0.863
+        },
+        "seat2CI": {
+          "lower": 0.306,
+          "upper": 0.863
+        }
+      },
+      "avgP1Score": 1.6,
+      "avgP2Score": 2.3,
+      "avgMargin": 3.6,
+      "avgDecisions": 139.7,
+      "avgTurns": 51.3,
+      "terminationReasons": {
+        "EXHAUSTED_RESOLUTION": 15,
+        "CANONICAL_DRAW": 4,
+        "NORMAL_VICTORY": 1
+      }
+    },
+    {
+      "label": "HYBRIX Rusher (hard) vs SCORE_RUSH",
+      "p1": "hybrix-rusher-hard",
+      "p2": "score-rush",
+      "matches": 20,
+      "p1Wins": 13,
+      "p2Wins": 7,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 13,
+      "policyBWins": 7,
+      "policyAWinRate": 0.65,
+      "policyBWinRate": 0.35,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.65,
+      "wilson95": {
+        "lower": 0.433,
+        "upper": 0.819
+      },
+      "wilson99": {
+        "lower": 0.372,
+        "upper": 0.854
+      },
+      "cohensH": 0.305,
+      "effectSize": "small",
+      "seatBalance": {
+        "seat1WinRate": 0.8,
+        "seat2WinRate": 0.5,
+        "imbalance": 0.3,
+        "seat1CI": {
+          "lower": 0.49,
+          "upper": 0.943
+        },
+        "seat2CI": {
+          "lower": 0.237,
+          "upper": 0.763
+        }
+      },
+      "avgP1Score": 20.4,
+      "avgP2Score": 16.4,
+      "avgMargin": 10.9,
+      "avgDecisions": 18.6,
+      "avgTurns": 6.8,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 20
+      }
+    },
+    {
+      "label": "HYBRIX Defender (hard) vs CONTROL",
+      "p1": "hybrix-defender-hard",
+      "p2": "control",
+      "matches": 20,
+      "p1Wins": 4,
+      "p2Wins": 12,
+      "draws": 4,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 7,
+      "policyBWins": 9,
+      "policyAWinRate": 0.35,
+      "policyBWinRate": 0.45,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.35,
+      "wilson95": {
+        "lower": 0.181,
+        "upper": 0.567
+      },
+      "wilson99": {
+        "lower": 0.146,
+        "upper": 0.628
+      },
+      "cohensH": 0.305,
+      "effectSize": "small",
+      "seatBalance": {
+        "seat1WinRate": 0.143,
+        "seat2WinRate": 0.667,
+        "imbalance": 0.524,
+        "seat1CI": {
+          "lower": 0.026,
+          "upper": 0.513
+        },
+        "seat2CI": {
+          "lower": 0.354,
+          "upper": 0.879
+        }
+      },
+      "avgP1Score": 1.1,
+      "avgP2Score": 3,
+      "avgMargin": 4,
+      "avgDecisions": 126.8,
+      "avgTurns": 46.6,
+      "terminationReasons": {
+        "EXHAUSTED_RESOLUTION": 14,
+        "NORMAL_VICTORY": 2,
+        "CANONICAL_DRAW": 4
+      }
+    },
+    {
+      "label": "HYBRIX Trickster (hard) vs TEMPO",
+      "p1": "hybrix-trickster-hard",
+      "p2": "tempo",
+      "matches": 20,
+      "p1Wins": 9,
+      "p2Wins": 11,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 15,
+      "policyBWins": 5,
+      "policyAWinRate": 0.75,
+      "policyBWinRate": 0.25,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.75,
+      "wilson95": {
+        "lower": 0.531,
+        "upper": 0.888
+      },
+      "wilson99": {
+        "lower": 0.463,
+        "upper": 0.913
+      },
+      "cohensH": 0.524,
+      "effectSize": "medium",
+      "seatBalance": {
+        "seat1WinRate": 0.7,
+        "seat2WinRate": 0.8,
+        "imbalance": 0.1,
+        "seat1CI": {
+          "lower": 0.397,
+          "upper": 0.892
+        },
+        "seat2CI": {
+          "lower": 0.49,
+          "upper": 0.943
+        }
+      },
+      "avgP1Score": 18.3,
+      "avgP2Score": 18,
+      "avgMargin": 10.3,
+      "avgDecisions": 23.1,
+      "avgTurns": 8.3,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 20
+      }
+    },
+    {
+      "label": "HYBRIX Sniper (hard) vs VALUE",
+      "p1": "hybrix-sniper-hard",
+      "p2": "value",
+      "matches": 20,
+      "p1Wins": 10,
+      "p2Wins": 10,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 14,
+      "policyBWins": 6,
+      "policyAWinRate": 0.7,
+      "policyBWinRate": 0.3,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.7,
+      "wilson95": {
+        "lower": 0.481,
+        "upper": 0.855
+      },
+      "wilson99": {
+        "lower": 0.416,
+        "upper": 0.884
+      },
+      "cohensH": 0.412,
+      "effectSize": "small",
+      "seatBalance": {
+        "seat1WinRate": 0.7,
+        "seat2WinRate": 0.7,
+        "imbalance": 0,
+        "seat1CI": {
+          "lower": 0.397,
+          "upper": 0.892
+        },
+        "seat2CI": {
+          "lower": 0.397,
+          "upper": 0.892
+        }
+      },
+      "avgP1Score": 17.8,
+      "avgP2Score": 17.4,
+      "avgMargin": 10.9,
+      "avgDecisions": 21.9,
+      "avgTurns": 8,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 20
+      }
+    },
+    {
+      "label": "HYBRIX Rusher (easy) vs SCORE_RUSH",
+      "p1": "hybrix-rusher-easy",
+      "p2": "score-rush",
+      "matches": 20,
+      "p1Wins": 12,
+      "p2Wins": 8,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 10,
+      "policyBWins": 10,
+      "policyAWinRate": 0.5,
+      "policyBWinRate": 0.5,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.5,
+      "wilson95": {
+        "lower": 0.299,
+        "upper": 0.701
+      },
+      "wilson99": {
+        "lower": 0.25,
+        "upper": 0.75
+      },
+      "cohensH": 0,
+      "effectSize": "negligible",
+      "seatBalance": {
+        "seat1WinRate": 0.6,
+        "seat2WinRate": 0.4,
+        "imbalance": 0.2,
+        "seat1CI": {
+          "lower": 0.313,
+          "upper": 0.832
+        },
+        "seat2CI": {
+          "lower": 0.168,
+          "upper": 0.687
+        }
+      },
+      "avgP1Score": 18.4,
+      "avgP2Score": 17.7,
+      "avgMargin": 10.9,
+      "avgDecisions": 21.9,
+      "avgTurns": 7.9,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 20
+      }
+    },
+    {
+      "label": "HYBRIX Defender (easy) vs CONTROL",
+      "p1": "hybrix-defender-easy",
+      "p2": "control",
+      "matches": 20,
+      "p1Wins": 10,
+      "p2Wins": 6,
+      "draws": 4,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 10,
+      "policyBWins": 6,
+      "policyAWinRate": 0.5,
+      "policyBWinRate": 0.3,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.5,
+      "wilson95": {
+        "lower": 0.299,
+        "upper": 0.701
+      },
+      "wilson99": {
+        "lower": 0.25,
+        "upper": 0.75
+      },
+      "cohensH": 0,
+      "effectSize": "negligible",
+      "seatBalance": {
+        "seat1WinRate": 0.75,
+        "seat2WinRate": 0.5,
+        "imbalance": 0.25,
+        "seat1CI": {
+          "lower": 0.409,
+          "upper": 0.929
+        },
+        "seat2CI": {
+          "lower": 0.215,
+          "upper": 0.785
+        }
+      },
+      "avgP1Score": 0.7,
+      "avgP2Score": 0.7,
+      "avgMargin": 1.2,
+      "avgDecisions": 131.9,
+      "avgTurns": 49,
+      "terminationReasons": {
+        "EXHAUSTED_RESOLUTION": 16,
+        "CANONICAL_DRAW": 4
+      }
+    },
+    {
+      "label": "HYBRIX Rusher (nightmare) vs VALUE",
+      "p1": "hybrix-rusher-nightmare",
+      "p2": "value",
+      "matches": 20,
+      "p1Wins": 10,
+      "p2Wins": 10,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 12,
+      "policyBWins": 8,
+      "policyAWinRate": 0.6,
+      "policyBWinRate": 0.4,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.6,
+      "wilson95": {
+        "lower": 0.387,
+        "upper": 0.781
+      },
+      "wilson99": {
+        "lower": 0.329,
+        "upper": 0.821
+      },
+      "cohensH": 0.201,
+      "effectSize": "small",
+      "seatBalance": {
+        "seat1WinRate": 0.6,
+        "seat2WinRate": 0.6,
+        "imbalance": 0,
+        "seat1CI": {
+          "lower": 0.313,
+          "upper": 0.832
+        },
+        "seat2CI": {
+          "lower": 0.313,
+          "upper": 0.832
+        }
+      },
+      "avgP1Score": 19.2,
+      "avgP2Score": 17.8,
+      "avgMargin": 10.3,
+      "avgDecisions": 20.4,
+      "avgTurns": 7.5,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 20
+      }
+    },
+    {
+      "label": "HYBRIX Defender (nightmare) vs CONTROL",
+      "p1": "hybrix-defender-nightmare",
+      "p2": "control",
+      "matches": 20,
+      "p1Wins": 5,
+      "p2Wins": 10,
+      "draws": 5,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": false,
+      "isVsBaseline": true,
+      "policyAWins": 5,
+      "policyBWins": 10,
+      "policyAWinRate": 0.25,
+      "policyBWinRate": 0.5,
+      "accountingCheck": true,
+      "hybrixWinRate": 0.25,
+      "wilson95": {
+        "lower": 0.112,
+        "upper": 0.469
+      },
+      "wilson99": {
+        "lower": 0.087,
+        "upper": 0.537
+      },
+      "cohensH": 0.524,
+      "effectSize": "medium",
+      "seatBalance": {
+        "seat1WinRate": 0.143,
+        "seat2WinRate": 0.5,
+        "imbalance": 0.357,
+        "seat1CI": {
+          "lower": 0.026,
+          "upper": 0.513
+        },
+        "seat2CI": {
+          "lower": 0.215,
+          "upper": 0.785
+        }
+      },
+      "avgP1Score": 0.3,
+      "avgP2Score": 3.2,
+      "avgMargin": 3.5,
+      "avgDecisions": 113.8,
+      "avgTurns": 41.5,
+      "terminationReasons": {
+        "EXHAUSTED_RESOLUTION": 13,
+        "NORMAL_VICTORY": 2,
+        "CANONICAL_DRAW": 5
+      }
+    },
+    {
+      "label": "HYBRIX Rusher vs HYBRIX Defender",
+      "p1": "hybrix-rusher",
+      "p2": "hybrix-defender",
+      "matches": 20,
+      "p1Wins": 11,
+      "p2Wins": 9,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": true,
+      "isVsBaseline": false,
+      "policyAWins": 19,
+      "policyBWins": 1,
+      "policyAWinRate": 0.95,
+      "policyBWinRate": 0.05,
+      "accountingCheck": true,
+      "hybrixWinRate": 0,
+      "wilson95": {
+        "lower": 0,
+        "upper": 0.161
+      },
+      "wilson99": {
+        "lower": 0,
+        "upper": 0.249
+      },
+      "cohensH": 1.571,
+      "effectSize": "large",
+      "seatBalance": {
+        "seat1WinRate": 0.55,
+        "seat2WinRate": 0,
+        "imbalance": 0.55,
+        "seat1CI": {
+          "lower": 0.342,
+          "upper": 0.742
+        },
+        "seat2CI": {
+          "lower": 0,
+          "upper": 0
+        }
+      },
+      "avgP1Score": 13.1,
+      "avgP2Score": 11.4,
+      "avgMargin": 19.9,
+      "avgDecisions": 65.2,
+      "avgTurns": 25.1,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 18,
+        "EXHAUSTED_RESOLUTION": 2
+      }
+    },
+    {
+      "label": "HYBRIX Trickster vs HYBRIX Sniper",
+      "p1": "hybrix-trickster",
+      "p2": "hybrix-sniper",
+      "matches": 20,
+      "p1Wins": 12,
+      "p2Wins": 8,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": true,
+      "isVsBaseline": false,
+      "policyAWins": 12,
+      "policyBWins": 8,
+      "policyAWinRate": 0.6,
+      "policyBWinRate": 0.4,
+      "accountingCheck": true,
+      "hybrixWinRate": 0,
+      "wilson95": {
+        "lower": 0,
+        "upper": 0.161
+      },
+      "wilson99": {
+        "lower": 0,
+        "upper": 0.249
+      },
+      "cohensH": 1.571,
+      "effectSize": "large",
+      "seatBalance": {
+        "seat1WinRate": 0.6,
+        "seat2WinRate": 0,
+        "imbalance": 0.6,
+        "seat1CI": {
+          "lower": 0.387,
+          "upper": 0.781
+        },
+        "seat2CI": {
+          "lower": 0,
+          "upper": 0
+        }
+      },
+      "avgP1Score": 18.6,
+      "avgP2Score": 16.5,
+      "avgMargin": 12.6,
+      "avgDecisions": 25.6,
+      "avgTurns": 9.4,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 20
+      }
+    },
+    {
+      "label": "HYBRIX Support vs HYBRIX Tank",
+      "p1": "hybrix-support",
+      "p2": "hybrix-tank",
+      "matches": 20,
+      "p1Wins": 8,
+      "p2Wins": 12,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": true,
+      "isVsBaseline": false,
+      "policyAWins": 16,
+      "policyBWins": 4,
+      "policyAWinRate": 0.8,
+      "policyBWinRate": 0.2,
+      "accountingCheck": true,
+      "hybrixWinRate": 0,
+      "wilson95": {
+        "lower": 0,
+        "upper": 0.161
+      },
+      "wilson99": {
+        "lower": 0,
+        "upper": 0.249
+      },
+      "cohensH": 1.571,
+      "effectSize": "large",
+      "seatBalance": {
+        "seat1WinRate": 0.4,
+        "seat2WinRate": 0,
+        "imbalance": 0.4,
+        "seat1CI": {
+          "lower": 0.219,
+          "upper": 0.613
+        },
+        "seat2CI": {
+          "lower": 0,
+          "upper": 0
+        }
+      },
+      "avgP1Score": 11.6,
+      "avgP2Score": 11.6,
+      "avgMargin": 18.4,
+      "avgDecisions": 79.4,
+      "avgTurns": 30.1,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 17,
+        "EXHAUSTED_RESOLUTION": 3
+      }
+    },
+    {
+      "label": "HYBRIX Rusher (hard) vs HYBRIX Defender (hard)",
+      "p1": "hybrix-rusher-hard",
+      "p2": "hybrix-defender-hard",
+      "matches": 20,
+      "p1Wins": 6,
+      "p2Wins": 14,
+      "draws": 0,
+      "errors": 0,
+      "unsupported": 0,
+      "isSelfPlay": true,
+      "isVsBaseline": false,
+      "policyAWins": 16,
+      "policyBWins": 4,
+      "policyAWinRate": 0.8,
+      "policyBWinRate": 0.2,
+      "accountingCheck": true,
+      "hybrixWinRate": 0,
+      "wilson95": {
+        "lower": 0,
+        "upper": 0.161
+      },
+      "wilson99": {
+        "lower": 0,
+        "upper": 0.249
+      },
+      "cohensH": 1.571,
+      "effectSize": "large",
+      "seatBalance": {
+        "seat1WinRate": 0.3,
+        "seat2WinRate": 0,
+        "imbalance": 0.3,
+        "seat1CI": {
+          "lower": 0.145,
+          "upper": 0.519
+        },
+        "seat2CI": {
+          "lower": 0,
+          "upper": 0
+        }
+      },
+      "avgP1Score": 10.7,
+      "avgP2Score": 11.8,
+      "avgMargin": 18.9,
+      "avgDecisions": 77,
+      "avgTurns": 31.1,
+      "terminationReasons": {
+        "NORMAL_VICTORY": 16,
+        "EXHAUSTED_RESOLUTION": 4
+      }
+    }
+  ],
+  "totals": {
+    "totalMatches": 360,
+    "totalHybrixWins": 234,
+    "totalBaselineWins": 106,
+    "totalDraws": 20,
+    "totalErrors": 0,
+    "totalUnsupported": 0,
+    "accountingInvariant": true,
+    "overallHybrixWinRate": 0.65,
+    "overallWilson95": {
+      "lower": 0.599,
+      "upper": 0.697
+    },
+    "overallWilson99": {
+      "lower": 0.583,
+      "upper": 0.712
+    }
+  }
+}

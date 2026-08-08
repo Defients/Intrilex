@@ -1,0 +1,11 @@
+{
+  "name": "@intrilex/shared",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/canonical.mjs",
+    "./version": "./src/version.mjs",
+    "./provenance": "./src/provenance.mjs",
+    "./release-identity": "./src/release-identity.mjs"
+  }
+}

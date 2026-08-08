@@ -1,0 +1,17 @@
+{
+  "name": "@intrilex/decision-intelligence",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./decision-trace": "./src/decision-trace.mjs",
+    "./reason-codes": "./src/reason-codes.mjs",
+    "./mechanic-registry": "./src/mechanic-registry.mjs",
+    "./counterfactual": "./src/counterfactual.mjs",
+    "./anchor": "./src/anchor.mjs",
+    "./policy-diagnostics": "./src/policy-diagnostics.mjs"
+  },
+  "dependencies": {
+    "@intrilex/shared": "workspace:*"
+  }
+}

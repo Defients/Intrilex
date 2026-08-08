@@ -1,0 +1,152 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-078",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT078-BJ": {
+        "controllerId": "P1",
+        "id": "CT078-BJ",
+        "identity": "BJ",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 9,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT078-BJ"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "black-joker-board-lock",
+        "sourceCardId": "CT078-BJ"
+      },
+      "actorId": "P1",
+      "id": "CT078-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT078-1",
+      "id": "EV-000001",
+      "payload": {
+        "activationFullTurnId": 9,
+        "activatorId": "P1",
+        "turnsRemaining": 2
+      },
+      "previousStateHash": "b0992d29d1f45d6bc9d6296298b5e129f187a598bc24aec7621671ef5a7278a3",
+      "sequence": 1,
+      "stateHash": "7de848e43a9b6f1a4cb6e70b796a0e5cc5b4b92d9264868e316a0e67f5fa25b6",
+      "type": "BLACK_JOKER_BOARD_LOCK_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT078-1",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "637588f8f87b30b8127f8b1a004a6c438130038121ac5bdd474959df05b2c3b7",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "7de848e43a9b6f1a4cb6e70b796a0e5cc5b4b92d9264868e316a0e67f5fa25b6",
+      "stateHashBefore": "b0992d29d1f45d6bc9d6296298b5e129f187a598bc24aec7621671ef5a7278a3"
+    }
+  ],
+  "initialStateHash": "b0992d29d1f45d6bc9d6296298b5e129f187a598bc24aec7621671ef5a7278a3",
+  "finalStateHash": "7de848e43a9b6f1a4cb6e70b796a0e5cc5b4b92d9264868e316a0e67f5fa25b6",
+  "eventLogHash": "637588f8f87b30b8127f8b1a004a6c438130038121ac5bdd474959df05b2c3b7",
+  "checkpointLogHash": "5f9856bbf563da8b27a3dec97e545a0b884f56d8d7d9b779d98a1e7a508652fb",
+  "rngTraceHash": "43333ab24858ddc2962acf448c9ff6f781384beb93291f7fa2378975a2010390",
+  "contentHash": "3cfd350a167d4858855025c4776c8f901e698e3eb549365089e58f56d0995013",
+  "integrityHash": "988b0a0b346fcf296d090922674842ff37abdf16c1c17d76200aaf256687b28e"
+}

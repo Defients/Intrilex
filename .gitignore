@@ -1,0 +1,15 @@
+# Local checkpoint gitignore (Devin safety checkpoints only; no remote)
+node_modules/
+_baseline-extract/
+*.zip
+# Large generated/binary trees tracked separately by build
+runtime/autonomy-engine-dist/
+runtime/vendor-dist/
+runtime/match-server/
+apps/lab-web/dist/
+# Release verification extracts and archives are generated artifacts
+release/extracted-verification/
+release/archives/
+# Devin tooling
+.devin/
+# Probe evidence is tracked explicitly when needed

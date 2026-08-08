@@ -1,0 +1,302 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-009",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-002",
+          "OPAQUE-HIDDEN-CARD-001"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "actorId": "P1",
+      "id": "CT009-C1",
+      "play": {
+        "controllerId": "P1",
+        "instructions": [
+          {
+            "delta": 5,
+            "op": "change-goal",
+            "playerId": "P2"
+          },
+          {
+            "cardIds": [
+              "CT009-2C"
+            ],
+            "op": "discard",
+            "playerId": "P1",
+            "requiredMinimum": 1
+          }
+        ],
+        "kind": "goal-shift-plus-five",
+        "requirements": [],
+        "revalidationClass": "none",
+        "sourceCardIds": [
+          "CT009-9S"
+        ],
+        "sourceDestination": "GY",
+        "tags": [],
+        "targetCardIds": []
+      },
+      "type": "DECLARE_PLAY"
+    },
+    {
+      "actorId": "P2",
+      "id": "CT009-C2",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT009-C3",
+      "type": "PASS_PRIORITY"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT009-C4",
+      "type": "RESOLVE_TOP"
+    }
+  ],
+  "accepted": [
+    true,
+    true,
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT009-C1",
+      "id": "EV-000001",
+      "payload": {
+        "kind": "goal-shift-plus-five",
+        "sourceCardIds": [
+          "CT009-9S"
+        ],
+        "stackItemId": "SI-CT009-C1",
+        "targetCardIds": []
+      },
+      "previousStateHash": "30553460eed6099d47e4d784aae8d6bee270ffa9b2d67e4c16ab3b91f31e6593",
+      "sequence": 1,
+      "stateHash": "c33ea655bca5a60cda7aed58316cd8cacb0f4241be637b1503adf7afe59f4c49",
+      "type": "DECLARATION_COMMITTED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT009-C2",
+      "id": "EV-000002",
+      "payload": {
+        "consecutivePasses": 1,
+        "playerId": "P2"
+      },
+      "previousStateHash": "c33ea655bca5a60cda7aed58316cd8cacb0f4241be637b1503adf7afe59f4c49",
+      "sequence": 2,
+      "stateHash": "ea10cce6f72539fa02af265eef0f83a0def842a2c1b264bba63b492891389cb8",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT009-C3",
+      "id": "EV-000003",
+      "payload": {
+        "consecutivePasses": 2,
+        "playerId": "P1"
+      },
+      "previousStateHash": "ea10cce6f72539fa02af265eef0f83a0def842a2c1b264bba63b492891389cb8",
+      "sequence": 3,
+      "stateHash": "e0b519cab6d285497bf2b4ec4b121e9dad71ec03ab3be94b8e74b7bde26426d1",
+      "type": "PRIORITY_PASSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT009-C3",
+      "id": "EV-000005",
+      "payload": {
+        "reason": "all-players-passed"
+      },
+      "previousStateHash": "e0b519cab6d285497bf2b4ec4b121e9dad71ec03ab3be94b8e74b7bde26426d1",
+      "sequence": 4,
+      "stateHash": "6451db84c4627c7a7b9b55002960f08080999de688af09b5ba17eca522d00b76",
+      "type": "PRIORITY_CLOSED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT009-C4",
+      "id": "EV-000005",
+      "payload": {
+        "kind": "goal-shift-plus-five",
+        "stackItemId": "SI-CT009-C1"
+      },
+      "previousStateHash": "6451db84c4627c7a7b9b55002960f08080999de688af09b5ba17eca522d00b76",
+      "sequence": 5,
+      "stateHash": "6f6fa43a94add0d477189790dd320887876c3fe4e3f8615c6b0d00a2beda16ab",
+      "type": "RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT009-C4",
+      "id": "EV-000007",
+      "payload": {
+        "delta": 5,
+        "goal": 26,
+        "playerId": "P2"
+      },
+      "previousStateHash": "6f6fa43a94add0d477189790dd320887876c3fe4e3f8615c6b0d00a2beda16ab",
+      "sequence": 6,
+      "stateHash": "762cc9d409d15dcdfb75192fdf34432995a73d53d89f0c1b9c4433e2c1317a9f",
+      "type": "GOAL_CHANGED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT009-C4",
+      "id": "EV-000009",
+      "payload": {
+        "cardIds": [
+          "CT009-2C"
+        ],
+        "playerId": "P1"
+      },
+      "previousStateHash": "762cc9d409d15dcdfb75192fdf34432995a73d53d89f0c1b9c4433e2c1317a9f",
+      "sequence": 7,
+      "stateHash": "f16d150c11d351f63bb0f5b8b89442bf597e75282573fe376debd969e1f50ddc",
+      "type": "CARDS_DISCARDED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT009-C4",
+      "id": "EV-000011",
+      "payload": {
+        "stackItemId": "SI-CT009-C1"
+      },
+      "previousStateHash": "f16d150c11d351f63bb0f5b8b89442bf597e75282573fe376debd969e1f50ddc",
+      "sequence": 8,
+      "stateHash": "f288d135eafddf857547f375061977b6873a6000204f11a0b9977da32328c75b",
+      "type": "STACK_ITEM_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT009-C1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "fd285ba2499810e6d418d0f4c2eb8073688a2d06c1d49a40890c8621e1c060c1"
+    },
+    {
+      "commandIndex": 1,
+      "commandId": "CT009-C2",
+      "accepted": true,
+      "eventStartIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "517874ca98b19a3e8cdf93fcd8201f742eab48aa40103f6369b1025d9cceab07"
+    },
+    {
+      "commandIndex": 2,
+      "commandId": "CT009-C3",
+      "accepted": true,
+      "eventStartIndex": 2,
+      "eventEndIndex": 4,
+      "eventRangeHash": "8d4224a495b49b4a1eb7640cb719132fdd260817d976133eb1652cc155641078"
+    },
+    {
+      "commandIndex": 3,
+      "commandId": "CT009-C4",
+      "accepted": true,
+      "eventStartIndex": 4,
+      "eventEndIndex": 8,
+      "eventRangeHash": "7761425bb77ecca897abba25ae3446100501f893d5ea80897947b21d3c236826"
+    }
+  ],
+  "publicEventLogHash": "854b0d2619637042f9235c2914e44f2053f242aa86c6f5a2b1ab8a65d6baea93",
+  "publicContentHash": "099bf9406236198af58a5c3a50be493cc8e6b1c52d89b8026fca3df6d7931761"
+}

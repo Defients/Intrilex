@@ -1,0 +1,305 @@
+// ═══════════════════════════════════════════════════════════════
+// validation.mjs — Strict protocol message validators
+// ═══════════════════════════════════════════════════════════════
+
+import { ReasonCode } from './reason-codes.mjs';
+
+export const PROTOCOL_VERSION = 1;
+export const MAX_MESSAGE_SIZE = 65536; // 64 KB
+
+/**
+ * @typedef {{ valid: true }} ValidationResultOk
+ * @typedef {{ valid: false, code: string, message: string }} ValidationResultFail
+ * @typedef {ValidationResultOk | ValidationResultFail} ValidationResult
+ */
+
+/**
+ * @typedef {Object} ProtocolMessage
+ * @property {number} [protocolVersion]
+ * @property {string} [type]
+ * @property {string} [requestId]
+ * @property {*} [payload]
+ */
+
+const KNOWN_TYPES = new Set([
+  // Client → Server
+  'CREATE_MATCH', 'JOIN_MATCH', 'RESUME_MATCH',
+  'READY', 'SUBMIT_ACTION', 'REQUEST_SYNC', 'LEAVE_MATCH',
+  'QUEUE_JOIN', 'QUEUE_LEAVE',
+  'SPECTATE_MATCH', 'SPECTATE_LEAVE',
+  'MATCH_HISTORY',
+  'GET_REPLAY',
+  // Server → Client
+  'MATCH_CREATED', 'MATCH_JOINED', 'MATCH_VIEW',
+  'ACTION_RESULT', 'PARTICIPANT_STATUS', 'MATCH_STARTED',
+  'MATCH_ENDED', 'ERROR',
+  'QUEUE_JOINED', 'QUEUE_LEFT', 'QUEUE_MATCHED',
+  'SPECTATE_JOINED', 'SPECTATE_LEFT',
+  'MATCH_HISTORY_RESULT',
+  'REPLAY_AVAILABLE', 'REPLAY_DATA',
+]);
+
+const ID_PATTERN = /^[A-Za-z0-9_-]{4,64}$/;
+const INVITE_CODE_PATTERN = /^[A-Z0-9]{6,8}$/;
+
+/**
+ * Check if a value is a valid identifier.
+ * @param {unknown} v - Value to check
+ * @returns {boolean}
+ */
+function isValidId(v) { return typeof v === 'string' && ID_PATTERN.test(v); }
+
+/**
+ * Check if a value is a valid invite code.
+ * @param {unknown} v - Value to check
+ * @returns {boolean}
+ */
+function isValidInviteCode(v) { return typeof v === 'string' && INVITE_CODE_PATTERN.test(v); }
+
+/**
+ * Build a failure validation result.
+ * @param {string} code - Reason code
+ * @param {string} message - Error message
+ * @returns {ValidationResultFail}
+ */
+function fail(code, message) {
+  return { valid: false, code, message };
+}
+
+/**
+ * Build a success validation result.
+ * @returns {ValidationResultOk}
+ */
+function ok() { return { valid: true }; }
+
+/**
+ * Validate a protocol envelope.
+ * @param {ProtocolMessage} msg - The parsed JSON message
+ * @returns {ValidationResult}
+ */
+export function validateEnvelope(msg) {
+  if (!msg || typeof msg !== 'object' || Array.isArray(msg)) {
+    return fail(ReasonCode.MALFORMED_JSON, 'Message must be a JSON object');
+  }
+  if (typeof msg.protocolVersion !== 'number' || msg.protocolVersion !== PROTOCOL_VERSION) {
+    return fail(ReasonCode.PROTOCOL_VERSION_UNSUPPORTED, `Unsupported protocol version: ${msg.protocolVersion}`);
+  }
+  if (typeof msg.type !== 'string' || !KNOWN_TYPES.has(msg.type)) {
+    return fail(ReasonCode.MESSAGE_TYPE_UNKNOWN, `Unknown message type: ${msg.type}`);
+  }
+  if (msg.requestId !== undefined && (typeof msg.requestId !== 'string' || msg.requestId.length > 128)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'requestId must be a string <= 128 chars');
+  }
+  if (msg.payload === undefined) {
+    return fail(ReasonCode.MISSING_REQUIRED_FIELD, 'payload is required');
+  }
+  if (typeof msg.payload !== 'object' || msg.payload === null || Array.isArray(msg.payload)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'payload must be a JSON object');
+  }
+  return ok();
+}
+
+/**
+ * Validate a CREATE_MATCH payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateCreateMatch(payload) {
+  if (typeof payload.profileId !== 'string' || !payload.profileId.startsWith('core-')) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'profileId must be a core-* profile');
+  }
+  return ok();
+}
+
+/**
+ * Validate a JOIN_MATCH payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateJoinMatch(payload) {
+  if (!isValidInviteCode(payload.inviteCode)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'inviteCode must be a 6-char alphanumeric code');
+  }
+  return ok();
+}
+
+/**
+ * Validate a RESUME_MATCH payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateResumeMatch(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId is invalid');
+  }
+  if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 16) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken is invalid');
+  }
+  return ok();
+}
+
+/**
+ * Validate a SUBMIT_ACTION payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateSubmitAction(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId is invalid');
+  }
+  if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 16) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken is invalid');
+  }
+  if (typeof payload.clientCommandId !== 'string' || payload.clientCommandId.length < 4 || payload.clientCommandId.length > 64) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'clientCommandId must be 4-64 chars');
+  }
+  if (typeof payload.expectedRevision !== 'number' || payload.expectedRevision < 0 || !Number.isInteger(payload.expectedRevision)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'expectedRevision must be a non-negative integer');
+  }
+  if (typeof payload.decisionFrameHash !== 'string' || payload.decisionFrameHash.length < 8) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'decisionFrameHash must be a string >= 8 chars');
+  }
+  if (typeof payload.actionId !== 'string' || payload.actionId.length < 4) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'actionId must be a string >= 4 chars');
+  }
+  return ok();
+}
+
+/**
+ * Validate a READY payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateReady(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId is invalid');
+  }
+  if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 16) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken is invalid');
+  }
+  return ok();
+}
+
+/**
+ * Validate a REQUEST_SYNC payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateRequestSync(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId is invalid');
+  }
+  if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 16) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken is invalid');
+  }
+  return ok();
+}
+
+/**
+ * Validate a LEAVE_MATCH payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateLeaveMatch(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId is invalid');
+  }
+  if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 16) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken is invalid');
+  }
+  return ok();
+}
+
+/**
+ * Validate a QUEUE_JOIN payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateQueueJoin(payload) {
+  if (typeof payload.profileId !== 'string' || !payload.profileId.startsWith('core-')) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'profileId must be a core-* profile');
+  }
+  return ok();
+}
+
+/**
+ * Validate a QUEUE_LEAVE payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateQueueLeave(payload) {
+  // QUEUE_LEAVE has no required fields
+  return ok();
+}
+
+/**
+ * Validate a SPECTATE_MATCH payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateSpectateMatch(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId is invalid');
+  }
+  return ok();
+}
+
+/**
+ * Validate a SPECTATE_LEAVE payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateSpectateLeave(payload) {
+  // SPECTATE_LEAVE has no required fields
+  return ok();
+}
+
+/**
+ * Validate a MATCH_HISTORY payload.
+ * Optional fields: status (filter by status), limit (max results, default 20)
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateMatchHistory(payload) {
+  if (payload.status !== undefined && payload.status !== null && typeof payload.status !== 'string') {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'status must be a string or null');
+  }
+  if (payload.limit !== undefined && payload.limit !== null) {
+    if (typeof payload.limit !== 'number' || payload.limit < 1 || payload.limit > 100) {
+      return fail(ReasonCode.INVALID_FIELD_TYPE, 'limit must be a number between 1 and 100');
+    }
+  }
+  return ok();
+}
+
+/**
+ * Validate a GET_REPLAY request.
+ * Requires a matchId. The participantToken authenticates the requester
+ * (only match participants can download replays).
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateGetReplay(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId must be a valid identifier');
+  }
+  if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 10) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken must be a non-empty string');
+  }
+  return ok();
+}
+
+/**
+ * Check message size before parsing.
+ * @param {string|Buffer} raw - Raw message string or buffer
+ * @returns {ValidationResult}
+ */
+export function checkMessageSize(raw) {
+  if (typeof raw === 'string' && raw.length > MAX_MESSAGE_SIZE) {
+    return { valid: false, code: ReasonCode.MESSAGE_TOO_LARGE, message: `Message exceeds ${MAX_MESSAGE_SIZE} bytes` };
+  }
+  if (Buffer.isBuffer(raw) && raw.length > MAX_MESSAGE_SIZE) {
+    return { valid: false, code: ReasonCode.MESSAGE_TOO_LARGE, message: `Message exceeds ${MAX_MESSAGE_SIZE} bytes` };
+  }
+  return { valid: true };
+}

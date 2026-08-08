@@ -1,0 +1,195 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-082",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT082-B1": {
+        "controllerId": "P1",
+        "id": "CT082-B1",
+        "identity": "3♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT082-B2": {
+        "controllerId": "P1",
+        "id": "CT082-B2",
+        "identity": "4♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT082-D1": {
+        "controllerId": "P1",
+        "id": "CT082-D1",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT082-D2": {
+        "controllerId": "P1",
+        "id": "CT082-D2",
+        "identity": "K♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT082-R1": {
+        "controllerId": "P1",
+        "id": "CT082-R1",
+        "identity": "5♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT082-R2": {
+        "controllerId": "P1",
+        "id": "CT082-R2",
+        "identity": "6♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT082-B1",
+          "CT082-B2",
+          "CT082-R1",
+          "CT082-R2"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 2,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT082-D1",
+        "CT082-D2"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "branch": "draw-two",
+        "kind": "resolve-ultra",
+        "recipe": "2-black-2-red",
+        "sourceCardIds": [
+          "CT082-B1",
+          "CT082-B2",
+          "CT082-R1",
+          "CT082-R2"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT082-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT082-1",
+      "id": "EV-000001",
+      "payload": {
+        "actorId": "P1",
+        "atomic": true,
+        "recipe": "2-black-2-red",
+        "sourceCardIds": [
+          "CT082-B1",
+          "CT082-B2",
+          "CT082-R1",
+          "CT082-R2"
+        ]
+      },
+      "previousStateHash": "d4e36f17ba9c80ac4f7a09c9ce680a7c3bbbc910ab24d12b346bb34140a37abb",
+      "sequence": 1,
+      "stateHash": "9ecf08a3147ec6c88e1fa5ae12b2a356e203652ad9414c6957072a69433f31e1",
+      "type": "ULTRA_RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT082-1",
+      "id": "EV-000003",
+      "payload": {
+        "branch": "draw-two",
+        "drawnCardIds": [
+          "CT082-D1",
+          "CT082-D2"
+        ],
+        "miniTurnsRemaining": 3
+      },
+      "previousStateHash": "9ecf08a3147ec6c88e1fa5ae12b2a356e203652ad9414c6957072a69433f31e1",
+      "sequence": 2,
+      "stateHash": "9362fa9ed005bf246059a7dbde9a0806d9caeb9be78041797faa708cce0efe3f",
+      "type": "ULTRA_2B2R_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "d4e36f17ba9c80ac4f7a09c9ce680a7c3bbbc910ab24d12b346bb34140a37abb",
+  "finalStateHash": "9362fa9ed005bf246059a7dbde9a0806d9caeb9be78041797faa708cce0efe3f",
+  "eventLogHash": "6a78ec4a1ccb2f6e236f05c12f98d8c5e99648a80d4587e916983e9d1f5f71fb"
+}

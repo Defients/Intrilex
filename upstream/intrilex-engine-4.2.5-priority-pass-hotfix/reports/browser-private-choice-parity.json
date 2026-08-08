@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "1.0",
+  "status": "PASS",
+  "engineVersion": "4.1.4",
+  "profileId": "first-contact-private-choice",
+  "proofKind": "REAL_CHROMIUM_MAIN_THREAD_AND_WEB_WORKER",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/144.0.0.0 Safari/537.36",
+  "certifiedReplayCorpus": {
+    "replayCount": 121,
+    "commandCount": 285,
+    "eventCount": 374,
+    "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+  },
+  "privateChoiceAuthorityMatch": {
+    "terminationReason": "NORMAL_VICTORY",
+    "winner": "P2",
+    "decisionCount": 43,
+    "commandCount": 86,
+    "privateChoiceDecisionCount": 2,
+    "privateChoiceDecisionHash": "03706e153c726fa1cf07bce9f2d53c78809e78de16629987f8bd4e66839a5c57",
+    "finalStateHash": "e988cc319aa97348cb86709226ad3d7fb1799587de0421be566d81b8a6625a63",
+    "decisionHash": "06db224172b4485a13a78c196735cec478109f189939bd7a3cc302f6a7c83e6d"
+  },
+  "mainThread": {
+    "replay": {
+      "replayCount": 121,
+      "commandCount": 285,
+      "eventCount": 374,
+      "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+    },
+    "match": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisionCount": 43,
+      "commandCount": 86,
+      "privateChoiceDecisionCount": 2,
+      "privateChoiceDecisionHash": "03706e153c726fa1cf07bce9f2d53c78809e78de16629987f8bd4e66839a5c57",
+      "finalStateHash": "e988cc319aa97348cb86709226ad3d7fb1799587de0421be566d81b8a6625a63",
+      "decisionHash": "06db224172b4485a13a78c196735cec478109f189939bd7a3cc302f6a7c83e6d"
+    }
+  },
+  "worker": {
+    "replay": {
+      "replayCount": 121,
+      "commandCount": 285,
+      "eventCount": 374,
+      "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+    },
+    "match": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisionCount": 43,
+      "commandCount": 86,
+      "privateChoiceDecisionCount": 2,
+      "privateChoiceDecisionHash": "03706e153c726fa1cf07bce9f2d53c78809e78de16629987f8bd4e66839a5c57",
+      "finalStateHash": "e988cc319aa97348cb86709226ad3d7fb1799587de0421be566d81b8a6625a63",
+      "decisionHash": "06db224172b4485a13a78c196735cec478109f189939bd7a3cc302f6a7c83e6d"
+    }
+  },
+  "parity": {
+    "mainReplayMatchesNode": true,
+    "workerReplayMatchesNode": true,
+    "mainMatchMatchesNode": true,
+    "workerMatchMatchesNode": true,
+    "canonicalTermination": true,
+    "privateChoicesExercised": true,
+    "shaVectors": true
+  },
+  "generatedAt": "2026-07-27T02:47:16.706Z"
+}

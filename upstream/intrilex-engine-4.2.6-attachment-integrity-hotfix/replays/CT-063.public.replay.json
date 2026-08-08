@@ -1,0 +1,180 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-063",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "C63-T": {
+        "controllerId": "P2",
+        "id": "C63-T",
+        "identity": "7♦",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "ON_STACK"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001",
+          "OPAQUE-HIDDEN-CARD-002"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [
+      {
+        "controllerId": "P2",
+        "id": "S63",
+        "instructions": [],
+        "kind": "multi-play",
+        "revalidationClass": "none",
+        "sourceCardIds": [
+          "C63-T"
+        ],
+        "sourceDestination": "GY",
+        "status": "pending",
+        "targetCardIds": []
+      }
+    ],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "authority": "king",
+        "kind": "counter-stack",
+        "sourceCardIds": [
+          "C63-K"
+        ],
+        "target": {
+          "class": "multi-play",
+          "royalShieldProtected": false,
+          "stackItemId": "S63"
+        }
+      },
+      "actorId": "P1",
+      "id": "C63-1",
+      "type": "RESOLVE_INTERACTION_ACTION"
+    },
+    {
+      "action": {
+        "authority": "king-spade",
+        "kind": "counter-stack",
+        "sourceCardIds": [
+          "C63-KS"
+        ],
+        "target": {
+          "class": "multi-play",
+          "royalShieldProtected": false,
+          "stackItemId": "S63"
+        }
+      },
+      "actorId": "P1",
+      "id": "C63-2",
+      "type": "RESOLVE_INTERACTION_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "C63-2",
+      "id": "EV-000001",
+      "payload": {
+        "authority": "king-spade",
+        "evaluation": {
+          "blockedByRoyalShield": false,
+          "blockedByTwoQueenDefense": false,
+          "legal": true,
+          "reason": null
+        },
+        "sourceCardIds": [
+          "C63-KS"
+        ],
+        "targetClass": "multi-play",
+        "targetDestination": "GY",
+        "targetStackItemId": "S63"
+      },
+      "previousStateHash": "855077ac244f9f261d539617186b8485eb772d279eef27073514b4ab95079d50",
+      "sequence": 1,
+      "stateHash": "b8bea40f77951252ee12a2b27491847877e3960270c265a085a6a564f29a549e",
+      "type": "COUNTER_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "855077ac244f9f261d539617186b8485eb772d279eef27073514b4ab95079d50",
+  "finalStateHash": "b8bea40f77951252ee12a2b27491847877e3960270c265a085a6a564f29a549e",
+  "eventLogHash": "da284f19487089970c9ab1abc110806c927c5dcda4aabdd1986faa2df5818784"
+}

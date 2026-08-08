@@ -1,0 +1,19 @@
+{
+  "rankId": "2",
+  "spadesVariantEligible": true,
+  "hasDistinctPrintedSpadesEffect": false,
+  "hasDistinctSpadesPlayForm": true,
+  "hasDistinctSpadesResolution": true,
+  "spadesAnalyticsEligible": true,
+  "reasonCode": "DISTINCT_SPADES_PLAY_FORM",
+  "authorityRefs": [
+    "RANK_REGISTRY",
+    "card-face-data",
+    "variant-registry"
+  ],
+  "mode": "solo-wild-copy",
+  "displayName": "2♠ Enhanced Wild Copy",
+  "note": "2♠ Solo Wild Copy may target spade-enhanced Base modes (3♠/4♠/6♠/7♠) that 2♣/2♦/2♥ cannot copy.",
+  "distinctFromNormal": true,
+  "authorityHash": "cbedc1fc5cf3293697a01eb6f577ca7a700b9b817a13c7a39f014d80289d4efe"
+}

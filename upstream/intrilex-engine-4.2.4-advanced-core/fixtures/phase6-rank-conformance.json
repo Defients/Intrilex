@@ -1,0 +1,2737 @@
+[
+  {
+    "id": "CT-064",
+    "title": "Aegis blocks an otherwise legal control change",
+    "sourceTestId": "CT-064",
+    "purpose": "Protect controller state from ⭐2.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT064-C1",
+            "CT064-C2"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT064-C3"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT064-C1": {
+          "id": "CT064-C1",
+          "identity": "2♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT064-C2": {
+          "id": "CT064-C2",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT064-C3": {
+          "id": "CT064-C3",
+          "identity": "7♥",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 7,
+            "aegis": {
+              "sourceRef": "fixture",
+              "expiresAt": {
+                "playerId": "P2",
+                "startSequence": 5
+              }
+            }
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT064-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "commandeer",
+          "sourceCardIds": [
+            "CT064-C1",
+            "CT064-C2"
+          ],
+          "targetCardId": "CT064-C3",
+          "disposition": "score"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT064-C1",
+              "CT064-C2"
+            ]
+          },
+          "P2": {
+            "pr": [
+              "CT064-C3"
+            ]
+          }
+        },
+        "controllers": {
+          "CT064-C3": "P2"
+        },
+        "securedPoints": {
+          "P1": 0,
+          "P2": 7
+        },
+        "stackDepth": 0
+      },
+      "accepted": [
+        false
+      ]
+    }
+  },
+  {
+    "id": "CT-065",
+    "title": "4♠ bypasses Aegis but respects destination replacement",
+    "sourceTestId": "CT-065",
+    "purpose": "Exercise the exact Hard Bypass boundary.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT065-C1"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT065-C2"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT065-C1": {
+          "id": "CT065-C1",
+          "identity": "4♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT065-C2": {
+          "id": "CT065-C2",
+          "identity": "10♦",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 10,
+            "exileBound": true,
+            "aegis": {
+              "sourceRef": "fixture",
+              "expiresAt": {
+                "playerId": "P2",
+                "startSequence": 5
+              }
+            }
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT065-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "total-clear",
+          "sourceCardId": "CT065-C1"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": []
+          },
+          "P2": {
+            "pr": []
+          }
+        },
+        "zones": {
+          "gy": [
+            "CT065-C1"
+          ],
+          "exile": [
+            "CT065-C2"
+          ]
+        },
+        "cardZones": {
+          "CT065-C1": "GY",
+          "CT065-C2": "EXILE"
+        },
+        "markers": {
+          "CT065-C2": {
+            "exileBound": true
+          }
+        },
+        "absentMarkers": {
+          "CT065-C2": [
+            "aegis"
+          ]
+        },
+        "securedPoints": {
+          "P1": 0,
+          "P2": 0
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-066",
+    "title": "Royal Shield blocks Base Ace authority",
+    "sourceTestId": "CT-066",
+    "purpose": "Verify protection is checked before a Base Ace counter changes the stack.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT066-A"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT066-A": {
+          "id": "CT066-A",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT066-S": {
+          "id": "CT066-S",
+          "identity": "3♦",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "ON_STACK",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [
+        {
+          "id": "CT066-SI",
+          "controllerId": "P2",
+          "sourceCardIds": [
+            "CT066-S"
+          ],
+          "targetCardIds": [],
+          "kind": "royal-shield-protected-effect",
+          "revalidationClass": "none",
+          "instructions": [],
+          "sourceDestination": "GY",
+          "status": "pending"
+        }
+      ],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT066-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "ace-counter",
+          "sourceCardIds": [
+            "CT066-A"
+          ],
+          "stackItemId": "CT066-SI",
+          "authority": "base"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT066-A"
+            ]
+          }
+        },
+        "cardZones": {
+          "CT066-S": "ON_STACK"
+        },
+        "stackDepth": 1
+      },
+      "accepted": [
+        false
+      ]
+    }
+  },
+  {
+    "id": "CT-067",
+    "title": "⭐4 exchanges a non-empty PR with an empty PR",
+    "sourceTestId": "CT-067",
+    "purpose": "Confirm an empty opposing row is still a legal structural exchange.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT067-4A",
+            "CT067-4B"
+          ],
+          "pr": [
+            "CT067-7"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT067-4A": {
+          "id": "CT067-4A",
+          "identity": "4♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT067-4B": {
+          "id": "CT067-4B",
+          "identity": "4♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT067-7": {
+          "id": "CT067-7",
+          "identity": "7♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": 7
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT067-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "row-exchange",
+          "sourceCardIds": [
+            "CT067-4A",
+            "CT067-4B"
+          ],
+          "targetPlayerId": "P2",
+          "row": "pr"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [],
+            "pr": []
+          },
+          "P2": {
+            "pr": [
+              "CT067-7"
+            ]
+          }
+        },
+        "zones": {
+          "gy": [
+            "CT067-4A",
+            "CT067-4B"
+          ]
+        },
+        "controllers": {
+          "CT067-7": "P2"
+        },
+        "markers": {
+          "CT067-7": {
+            "aegis": {
+              "sourceRef": "⭐4",
+              "expiresAt": {
+                "playerId": "P2",
+                "startSequence": 2
+              }
+            }
+          }
+        },
+        "securedPoints": {
+          "P1": 0,
+          "P2": 7
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-068",
+    "title": "Five Recycle preserves ordered mill, rummage, and bottom draw",
+    "sourceTestId": "CT-068",
+    "purpose": "Execute the core GY lifecycle for Rank 5.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT068-5"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT068-5": {
+          "id": "CT068-5",
+          "identity": "5♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT068-3": {
+          "id": "CT068-3",
+          "identity": "3♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT068-K": {
+          "id": "CT068-K",
+          "identity": "K♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT068-3",
+          "CT068-K"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT068-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "recycle-five",
+          "sourceCardId": "CT068-5",
+          "rummageCardId": "CT068-3"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT068-3",
+              "CT068-K"
+            ]
+          }
+        },
+        "zones": {
+          "dp": [],
+          "gy": [
+            "CT068-5"
+          ]
+        },
+        "markers": {
+          "CT068-3": {
+            "revealedUntil": {
+              "playerId": "P1",
+              "startSequence": 2
+            }
+          }
+        },
+        "cardZones": {
+          "CT068-K": "P1_HAND"
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-069",
+    "title": "6♠ with one other card resolves by discarding one",
+    "sourceTestId": "CT-069",
+    "purpose": "Exercise the patched Deep Draw declaration and keep limit.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT069-6",
+            "CT069-2"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT069-6": {
+          "id": "CT069-6",
+          "identity": "6♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT069-2": {
+          "id": "CT069-2",
+          "identity": "2♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT069-D1": {
+          "id": "CT069-D1",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT069-D2": {
+          "id": "CT069-D2",
+          "identity": "3♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT069-D3": {
+          "id": "CT069-D3",
+          "identity": "4♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT069-D4": {
+          "id": "CT069-D4",
+          "identity": "5♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT069-D5": {
+          "id": "CT069-D5",
+          "identity": "7♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT069-D6": {
+          "id": "CT069-D6",
+          "identity": "8♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT069-D1",
+          "CT069-D2",
+          "CT069-D3",
+          "CT069-D4",
+          "CT069-D5",
+          "CT069-D6"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT069-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "deep-draw-six-spade",
+          "sourceCardId": "CT069-6",
+          "discardCardIds": [
+            "CT069-2"
+          ],
+          "keepCardIds": [
+            "CT069-D1",
+            "CT069-D2",
+            "CT069-D3"
+          ]
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT069-D1",
+              "CT069-D2",
+              "CT069-D3"
+            ]
+          }
+        },
+        "zones": {
+          "dp": [
+            "CT069-D4",
+            "CT069-D5",
+            "CT069-D6"
+          ],
+          "gy": [
+            "CT069-2",
+            "CT069-6"
+          ]
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-070",
+    "title": "Seven topdeck casting records separate hand and effect assignments",
+    "sourceTestId": "CT-070",
+    "purpose": "Exercise Rank 7 deterministic topdeck assignment.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT070-7"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT070-7": {
+          "id": "CT070-7",
+          "identity": "7♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT070-A": {
+          "id": "CT070-A",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT070-3": {
+          "id": "CT070-3",
+          "identity": "3♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT070-A",
+          "CT070-3"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT070-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "topdeck-seven",
+          "sourceCardId": "CT070-7",
+          "handCardId": "CT070-A",
+          "effectCardId": "CT070-3"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT070-A"
+            ]
+          }
+        },
+        "zones": {
+          "dp": [],
+          "gy": [
+            "CT070-3",
+            "CT070-7"
+          ]
+        },
+        "markers": {
+          "CT070-A": {
+            "revealedUntil": {
+              "playerId": "P1",
+              "startSequence": 2
+            }
+          }
+        },
+        "metadata": {
+          "lastGeneratedEffectCardId": "CT070-3"
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-071",
+    "title": "Eight Aegis Field grants protection while Nine rejects it",
+    "sourceTestId": "CT-071",
+    "purpose": "Exercise Aegis replacement and Nine immunity in one resolution.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT071-8"
+          ],
+          "pr": [
+            "CT071-5",
+            "CT071-9"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT071-8": {
+          "id": "CT071-8",
+          "identity": "8♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT071-5": {
+          "id": "CT071-5",
+          "identity": "5♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": 5
+          }
+        },
+        "CT071-9": {
+          "id": "CT071-9",
+          "identity": "9♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": 9
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT071-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "aegis-field-eight",
+          "sourceCardId": "CT071-8"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "zones": {
+          "gy": [
+            "CT071-8"
+          ]
+        },
+        "markers": {
+          "CT071-5": {
+            "aegis": {
+              "sourceRef": "8-Quick",
+              "expiresAt": {
+                "playerId": "P1",
+                "startSequence": 2
+              }
+            }
+          }
+        },
+        "absentMarkers": {
+          "CT071-9": [
+            "aegis"
+          ]
+        },
+        "securedPoints": {
+          "P1": 14,
+          "P2": 0
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-072",
+    "title": "9♠ +5 Goal Shift identifies the discard actor",
+    "sourceTestId": "CT-072",
+    "purpose": "Apply +5 to the opponent, discard from the controller, and reduce the controller Goal by 2.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT072-9",
+            "CT072-D"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT072-9": {
+          "id": "CT072-9",
+          "identity": "9♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT072-D": {
+          "id": "CT072-D",
+          "identity": "3♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT072-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "goal-shift-nine",
+          "sourceCardId": "CT072-9",
+          "targetPlayerId": "P2",
+          "delta": 5,
+          "discardCardId": "CT072-D",
+          "ownGoalDelta": -2
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": []
+          }
+        },
+        "zones": {
+          "gy": [
+            "CT072-D",
+            "CT072-9"
+          ]
+        },
+        "goals": {
+          "P1": 19,
+          "P2": 26
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-073",
+    "title": "10♦ paired Mimic preserves Rank-10 identity and Exile-Bound",
+    "sourceTestId": "CT-073",
+    "purpose": "Compile a paired Mimic of ⭐A without turning the source into an Ace.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT073-10",
+            "CT073-2"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT073-10": {
+          "id": "CT073-10",
+          "identity": "10♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT073-2": {
+          "id": "CT073-2",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT073-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "mimic-ten-diamond",
+          "sourceCardId": "CT073-10",
+          "pairedTwoId": "CT073-2",
+          "mimickedRank": "A",
+          "effectKey": "super-counter"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "zones": {
+          "gy": [
+            "CT073-2"
+          ],
+          "exile": [
+            "CT073-10"
+          ]
+        },
+        "markers": {
+          "CT073-10": {
+            "exileBound": true
+          }
+        },
+        "playerLimits": {
+          "P1": {
+            "rank10PlayedThisFT": true
+          }
+        },
+        "metadata": {
+          "lastMimic": {
+            "controllerId": "P1",
+            "mimickedRank": "A",
+            "effectKey": "super-counter",
+            "paired": "CT073-2"
+          }
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-074",
+    "title": "10♣ Foundation records zero before entry and bonus-scores once",
+    "sourceTestId": "CT-074",
+    "purpose": "Exercise entry Aegis and the zero-Points scoring trigger.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT074-10",
+            "CT074-7"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT074-10": {
+          "id": "CT074-10",
+          "identity": "10♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT074-7": {
+          "id": "CT074-7",
+          "identity": "7♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT074-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "foundation-ten-club",
+          "sourceCardId": "CT074-10",
+          "bonusScoreCardId": "CT074-7"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [],
+            "pr": [
+              "CT074-10",
+              "CT074-7"
+            ]
+          }
+        },
+        "markers": {
+          "CT074-10": {
+            "aegis": {
+              "sourceRef": "10♣-entry",
+              "expiresAt": {
+                "playerId": "P1",
+                "startSequence": 2
+              }
+            },
+            "pointValue": 10
+          },
+          "CT074-7": {
+            "pointValue": 7
+          }
+        },
+        "securedPoints": {
+          "P1": 17,
+          "P2": 0
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-075",
+    "title": "Queen Anchor enters with exact future-Start Aegis",
+    "sourceTestId": "CT-075",
+    "purpose": "Create the Guard provider and its protected entry state.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT075-Q"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT075-Q": {
+          "id": "CT075-Q",
+          "identity": "Q♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT075-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "queen-anchor",
+          "sourceCardId": "CT075-Q"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [],
+            "er": [
+              "CT075-Q"
+            ]
+          }
+        },
+        "markers": {
+          "CT075-Q": {
+            "aegis": {
+              "sourceRef": "Queen-entry",
+              "expiresAt": {
+                "playerId": "P1",
+                "startSequence": 2
+              }
+            }
+          }
+        },
+        "securedPoints": {
+          "P1": 0,
+          "P2": 0
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-076",
+    "title": "10♠ stolen play fizzles with explicit failed-play destination",
+    "sourceTestId": "CT-076",
+    "purpose": "Rebind a pending play, remove every legal target, and preserve both skip penalties.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT076-10"
+          ],
+          "pr": [
+            "CT076-T"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT076-10": {
+          "id": "CT076-10",
+          "identity": "10♠",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_HAND",
+          "state": {}
+        },
+        "CT076-3": {
+          "id": "CT076-3",
+          "identity": "3♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "ON_STACK",
+          "state": {}
+        },
+        "CT076-T": {
+          "id": "CT076-T",
+          "identity": "7♣",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 7
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [
+        {
+          "id": "CT076-SI",
+          "controllerId": "P1",
+          "sourceCardIds": [
+            "CT076-3"
+          ],
+          "targetCardIds": [
+            "CT076-T"
+          ],
+          "kind": "single-effect",
+          "revalidationClass": "single-required-target",
+          "instructions": [
+            {
+              "op": "remove-target",
+              "cardId": "CT076-T",
+              "destination": "GY"
+            }
+          ],
+          "sourceDestination": "GY",
+          "status": "pending"
+        }
+      ],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT076-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "stack-theft-ten-spade",
+          "sourceCardId": "CT076-10",
+          "stackItemId": "CT076-SI",
+          "replacementTargetIds": []
+        }
+      },
+      {
+        "id": "CT076-2",
+        "type": "RESOLVE_TOP",
+        "actorId": "P2"
+      }
+    ],
+    "expectation": {
+      "final": {
+        "zones": {
+          "gy": [
+            "CT076-3"
+          ],
+          "exile": [
+            "CT076-10"
+          ]
+        },
+        "stackDepth": 0,
+        "playerZones": {
+          "P2": {
+            "pr": [
+              "CT076-T"
+            ]
+          }
+        },
+        "playerLimits": {
+          "P1": {
+            "pendingFullTurnSkips": 1
+          },
+          "P2": {
+            "pendingFullTurnSkips": 1,
+            "rank10PlayedThisFT": true
+          }
+        },
+        "controllers": {
+          "CT076-T": "P2"
+        }
+      },
+      "accepted": [
+        true,
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-077",
+    "title": "Jack PR Attachment changes control and applies its Point bonus",
+    "sourceTestId": "CT-077",
+    "purpose": "Create a valid Attachment and move its host into the controller scoring row.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT077-J"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT077-7"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT077-J": {
+          "id": "CT077-J",
+          "identity": "J♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT077-7": {
+          "id": "CT077-7",
+          "identity": "7♥",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 7
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT077-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "attach-jack",
+          "sourceCardId": "CT077-J",
+          "targetCardId": "CT077-7",
+          "row": "pr"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [],
+            "pr": [
+              "CT077-7"
+            ],
+            "er": [
+              "CT077-J"
+            ]
+          },
+          "P2": {
+            "pr": []
+          }
+        },
+        "controllers": {
+          "CT077-7": "P1"
+        },
+        "markers": {
+          "CT077-J": {
+            "attachmentHostId": "CT077-7"
+          },
+          "CT077-7": {
+            "attachedJackId": "CT077-J",
+            "jackPointBonus": 1
+          }
+        },
+        "securedPoints": {
+          "P1": 8,
+          "P2": 0
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-078",
+    "title": "Black Joker establishes Board Lock without ticking its activation FT",
+    "sourceTestId": "CT-078",
+    "purpose": "Create the canonical two-turn global lock record.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 9,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT078-BJ"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT078-BJ": {
+          "id": "CT078-BJ",
+          "identity": "BJ",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT078-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "black-joker-board-lock",
+          "sourceCardId": "CT078-BJ"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": []
+          }
+        },
+        "zones": {
+          "gy": [
+            "CT078-BJ"
+          ]
+        },
+        "metadata": {
+          "boardLock": {
+            "turnsRemaining": 2,
+            "activationFullTurnId": 9,
+            "activatorId": "P1"
+          }
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-079",
+    "title": "Royal Marriage is a dedicated play class, not a Combo",
+    "sourceTestId": "CT-079",
+    "purpose": "Place matching King and Queen Anchors while preserving class identity.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT079-K",
+            "CT079-Q"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT079-K": {
+          "id": "CT079-K",
+          "identity": "K♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT079-Q": {
+          "id": "CT079-Q",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT079-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "royal-marriage",
+          "kingCardId": "CT079-K",
+          "queenCardId": "CT079-Q"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [],
+            "er": [
+              "CT079-K",
+              "CT079-Q"
+            ]
+          }
+        },
+        "markers": {
+          "CT079-Q": {
+            "aegis": {
+              "sourceRef": "Royal-Marriage-entry",
+              "expiresAt": {
+                "playerId": "P1",
+                "startSequence": 2
+              }
+            }
+          }
+        },
+        "metadata": {
+          "lastPlayClass": "RoyalMarriage"
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  },
+  {
+    "id": "CT-080",
+    "title": "Ordinary Scuttle respects Red Joker immunity",
+    "sourceTestId": "CT-080",
+    "purpose": "Reject a rank-superior ordinary Scuttle before any source is spent.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT080-K"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT080-RJ"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT080-K": {
+          "id": "CT080-K",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT080-RJ": {
+          "id": "CT080-RJ",
+          "identity": "RJ",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 5
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT080-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "ordinary-scuttle",
+          "sourceCardId": "CT080-K",
+          "targetCardId": "CT080-RJ"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": [
+              "CT080-K"
+            ]
+          },
+          "P2": {
+            "pr": [
+              "CT080-RJ"
+            ]
+          }
+        },
+        "securedPoints": {
+          "P1": 0,
+          "P2": 5
+        }
+      },
+      "accepted": [
+        false
+      ]
+    }
+  },
+  {
+    "id": "CT-081",
+    "title": "⭐8 ignores ordinary Scuttle immunity but still uses normal destinations",
+    "sourceTestId": "CT-081",
+    "purpose": "Resolve Absolute Scuttle against an otherwise immune Red Joker.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 1,
+        "P2": 1
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT081-8A",
+            "CT081-8B"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT081-RJ"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT081-8A": {
+          "id": "CT081-8A",
+          "identity": "8♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT081-8B": {
+          "id": "CT081-8B",
+          "identity": "8♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT081-RJ": {
+          "id": "CT081-RJ",
+          "identity": "RJ",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": 5
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT081-1",
+        "type": "RESOLVE_RANK_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "absolute-scuttle",
+          "sourceCardIds": [
+            "CT081-8A",
+            "CT081-8B"
+          ],
+          "targetCardId": "CT081-RJ"
+        }
+      }
+    ],
+    "expectation": {
+      "final": {
+        "playerZones": {
+          "P1": {
+            "hand": []
+          },
+          "P2": {
+            "pr": []
+          }
+        },
+        "zones": {
+          "gy": [
+            "CT081-RJ",
+            "CT081-8A",
+            "CT081-8B"
+          ]
+        },
+        "securedPoints": {
+          "P1": 0,
+          "P2": 0
+        }
+      },
+      "accepted": [
+        true
+      ]
+    }
+  }
+]

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.0",
+  "status": "PASS",
+  "engineVersion": "4.2.0",
+  "profileId": "core-foundation-authority",
+  "proofKind": "REAL_CHROMIUM_MAIN_THREAD_AND_WEB_WORKER",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/144.0.0.0 Safari/537.36",
+  "certifiedReplayCorpus": {
+    "replayCount": 121,
+    "commandCount": 285,
+    "eventCount": 374,
+    "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+  },
+  "coreAuthorityMatch": {
+    "terminationReason": "NORMAL_VICTORY",
+    "winner": "P2",
+    "decisionCount": 38,
+    "commandCount": 74,
+    "finalStateHash": "adf22405e0b4f6705bdc1b7059872237997067097a0a01956d6c714f67bcd5a2",
+    "decisionHash": "a192732ddb50440da206aafa0e2fda40589da8b30c8a3a09e3f38bfa1b46e9ec",
+    "swapCount": 3
+  },
+  "mainThread": {
+    "replay": {
+      "replayCount": 121,
+      "commandCount": 285,
+      "eventCount": 374,
+      "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+    },
+    "match": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisionCount": 38,
+      "commandCount": 74,
+      "finalStateHash": "adf22405e0b4f6705bdc1b7059872237997067097a0a01956d6c714f67bcd5a2",
+      "decisionHash": "a192732ddb50440da206aafa0e2fda40589da8b30c8a3a09e3f38bfa1b46e9ec",
+      "swapCount": 3
+    }
+  },
+  "worker": {
+    "replay": {
+      "replayCount": 121,
+      "commandCount": 285,
+      "eventCount": 374,
+      "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+    },
+    "match": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P2",
+      "decisionCount": 38,
+      "commandCount": 74,
+      "finalStateHash": "adf22405e0b4f6705bdc1b7059872237997067097a0a01956d6c714f67bcd5a2",
+      "decisionHash": "a192732ddb50440da206aafa0e2fda40589da8b30c8a3a09e3f38bfa1b46e9ec",
+      "swapCount": 3
+    }
+  },
+  "parity": {
+    "mainReplayMatchesNode": true,
+    "workerReplayMatchesNode": true,
+    "mainMatchMatchesNode": true,
+    "workerMatchMatchesNode": true,
+    "canonicalTermination": true,
+    "swapBarExercised": true,
+    "shaVectors": true
+  },
+  "generatedAt": "2026-07-27T14:49:47.896Z"
+}

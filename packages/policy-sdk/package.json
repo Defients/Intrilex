@@ -1,0 +1,11 @@
+{
+  "name": "@intrilex/policy-sdk",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/contracts.mjs"
+  },
+  "dependencies": {
+    "@intrilex/shared": "workspace:*"
+  }
+}

@@ -1,0 +1,2249 @@
+[
+  {
+    "id": "CT-004",
+    "title": "Tournament Seed uses the canonical High-Impact Pool",
+    "sourceTestId": "CT-004",
+    "purpose": "Execute the exact Ban Pile, categories, canonical High-Impact Pool, random sixth, and Swap Bar setup.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Setup",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT004-01": {
+          "id": "CT004-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-02": {
+          "id": "CT004-02",
+          "identity": "A♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-03": {
+          "id": "CT004-03",
+          "identity": "A♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-04": {
+          "id": "CT004-04",
+          "identity": "A♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-05": {
+          "id": "CT004-05",
+          "identity": "2♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-06": {
+          "id": "CT004-06",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-07": {
+          "id": "CT004-07",
+          "identity": "2♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-08": {
+          "id": "CT004-08",
+          "identity": "2♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-09": {
+          "id": "CT004-09",
+          "identity": "3♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-10": {
+          "id": "CT004-10",
+          "identity": "3♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-11": {
+          "id": "CT004-11",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-12": {
+          "id": "CT004-12",
+          "identity": "3♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-13": {
+          "id": "CT004-13",
+          "identity": "4♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-14": {
+          "id": "CT004-14",
+          "identity": "4♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-15": {
+          "id": "CT004-15",
+          "identity": "4♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-16": {
+          "id": "CT004-16",
+          "identity": "4♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-17": {
+          "id": "CT004-17",
+          "identity": "5♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-18": {
+          "id": "CT004-18",
+          "identity": "5♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-19": {
+          "id": "CT004-19",
+          "identity": "5♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-20": {
+          "id": "CT004-20",
+          "identity": "5♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-21": {
+          "id": "CT004-21",
+          "identity": "6♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-22": {
+          "id": "CT004-22",
+          "identity": "6♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-23": {
+          "id": "CT004-23",
+          "identity": "6♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-24": {
+          "id": "CT004-24",
+          "identity": "6♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-25": {
+          "id": "CT004-25",
+          "identity": "7♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-26": {
+          "id": "CT004-26",
+          "identity": "7♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-27": {
+          "id": "CT004-27",
+          "identity": "7♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-28": {
+          "id": "CT004-28",
+          "identity": "7♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-29": {
+          "id": "CT004-29",
+          "identity": "8♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-30": {
+          "id": "CT004-30",
+          "identity": "8♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-31": {
+          "id": "CT004-31",
+          "identity": "8♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-32": {
+          "id": "CT004-32",
+          "identity": "8♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-33": {
+          "id": "CT004-33",
+          "identity": "9♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-34": {
+          "id": "CT004-34",
+          "identity": "9♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-35": {
+          "id": "CT004-35",
+          "identity": "9♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-36": {
+          "id": "CT004-36",
+          "identity": "9♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-37": {
+          "id": "CT004-37",
+          "identity": "10♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-38": {
+          "id": "CT004-38",
+          "identity": "10♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-39": {
+          "id": "CT004-39",
+          "identity": "10♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-40": {
+          "id": "CT004-40",
+          "identity": "10♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-41": {
+          "id": "CT004-41",
+          "identity": "J♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-42": {
+          "id": "CT004-42",
+          "identity": "J♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-43": {
+          "id": "CT004-43",
+          "identity": "J♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-44": {
+          "id": "CT004-44",
+          "identity": "J♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-45": {
+          "id": "CT004-45",
+          "identity": "Q♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-46": {
+          "id": "CT004-46",
+          "identity": "Q♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-47": {
+          "id": "CT004-47",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-48": {
+          "id": "CT004-48",
+          "identity": "Q♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-49": {
+          "id": "CT004-49",
+          "identity": "K♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-50": {
+          "id": "CT004-50",
+          "identity": "K♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-51": {
+          "id": "CT004-51",
+          "identity": "K♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-52": {
+          "id": "CT004-52",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-53": {
+          "id": "CT004-53",
+          "identity": "RJ",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT004-54": {
+          "id": "CT004-54",
+          "identity": "BJ",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT004-01",
+          "CT004-02",
+          "CT004-03",
+          "CT004-04",
+          "CT004-05",
+          "CT004-06",
+          "CT004-07",
+          "CT004-08",
+          "CT004-09",
+          "CT004-10",
+          "CT004-11",
+          "CT004-12",
+          "CT004-13",
+          "CT004-14",
+          "CT004-15",
+          "CT004-16",
+          "CT004-17",
+          "CT004-18",
+          "CT004-19",
+          "CT004-20",
+          "CT004-21",
+          "CT004-22",
+          "CT004-23",
+          "CT004-24",
+          "CT004-25",
+          "CT004-26",
+          "CT004-27",
+          "CT004-28",
+          "CT004-29",
+          "CT004-30",
+          "CT004-31",
+          "CT004-32",
+          "CT004-33",
+          "CT004-34",
+          "CT004-35",
+          "CT004-36",
+          "CT004-37",
+          "CT004-38",
+          "CT004-39",
+          "CT004-40",
+          "CT004-41",
+          "CT004-42",
+          "CT004-43",
+          "CT004-44",
+          "CT004-45",
+          "CT004-46",
+          "CT004-47",
+          "CT004-48",
+          "CT004-49",
+          "CT004-50",
+          "CT004-51",
+          "CT004-52",
+          "CT004-53",
+          "CT004-54"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT004-CFG",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-tournament-seed",
+          "seedOrder": [
+            "P1",
+            "P2"
+          ],
+          "enabledOptionalModules": [
+            "tournament-seed"
+          ]
+        }
+      },
+      {
+        "id": "CT004-C1-P1",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "select-tournament-category",
+          "playerId": "P1",
+          "category": 1,
+          "cardId": "CT004-02"
+        }
+      },
+      {
+        "id": "CT004-C1-P2",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "select-tournament-category",
+          "playerId": "P2",
+          "category": 1,
+          "cardId": "CT004-03"
+        }
+      },
+      {
+        "id": "CT004-C2-P2",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "select-tournament-category",
+          "playerId": "P2",
+          "category": 2,
+          "cardId": "CT004-06"
+        }
+      },
+      {
+        "id": "CT004-C2-P1",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "select-tournament-category",
+          "playerId": "P1",
+          "category": 2,
+          "cardId": "CT004-05"
+        }
+      },
+      {
+        "id": "CT004-C3-P1",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "select-tournament-category",
+          "playerId": "P1",
+          "category": 3,
+          "cardId": "CT004-10"
+        }
+      },
+      {
+        "id": "CT004-C3-P2",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "select-tournament-category",
+          "playerId": "P2",
+          "category": 3,
+          "cardId": "CT004-15"
+        }
+      },
+      {
+        "id": "CT004-C4-P2",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "select-tournament-category",
+          "playerId": "P2",
+          "category": 4,
+          "cardId": "CT004-42"
+        }
+      },
+      {
+        "id": "CT004-C4-P1",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "select-tournament-category",
+          "playerId": "P1",
+          "category": 4,
+          "cardId": "CT004-47"
+        }
+      },
+      {
+        "id": "CT004-HI",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "resolve-high-impact",
+          "rankingsByPlayer": {
+            "P1": [
+              "A♣",
+              "A♠",
+              "3♠"
+            ],
+            "P2": [
+              "K♠",
+              "K♣",
+              "Q♣"
+            ]
+          }
+        }
+      },
+      {
+        "id": "CT004-FIN",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "finalize-tournament-seed"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "final": {
+        "hands": {
+          "P1": [
+            "CT004-02",
+            "CT004-05",
+            "CT004-10",
+            "CT004-47",
+            "CT004-01",
+            "CT004-19"
+          ],
+          "P2": [
+            "CT004-03",
+            "CT004-06",
+            "CT004-15",
+            "CT004-42",
+            "CT004-52",
+            "CT004-13"
+          ]
+        },
+        "zones": {
+          "swapBar": [
+            "CT004-34",
+            "CT004-14",
+            "CT004-53"
+          ]
+        },
+        "cardZones": {
+          "CT004-54": "VOID",
+          "CT004-39": "VOID",
+          "CT004-32": "VOID",
+          "CT004-36": "VOID",
+          "CT004-37": "VOID",
+          "CT004-48": "VOID",
+          "CT004-44": "VOID",
+          "CT004-16": "VOID"
+        },
+        "metadata": {
+          "phase15": {
+            "enabled": true,
+            "status": "complete",
+            "seedOrder": [
+              "P1",
+              "P2"
+            ],
+            "eventSheetId": null,
+            "approvedOptionalModules": [],
+            "activeHighImpactPool": [
+              "A♣",
+              "A♠",
+              "3♠",
+              "5♠",
+              "6♠",
+              "7♠",
+              "8♥",
+              "9♥",
+              "10♦",
+              "10♠",
+              "Q♣",
+              "K♣",
+              "K♠"
+            ],
+            "banPileCardIds": [
+              "CT004-54",
+              "CT004-39",
+              "CT004-32",
+              "CT004-36",
+              "CT004-37",
+              "CT004-48",
+              "CT004-44",
+              "CT004-16"
+            ],
+            "selectionsByPlayer": {
+              "P1": {
+                "category1": "CT004-02",
+                "category2": "CT004-05",
+                "category3": "CT004-10",
+                "category4": "CT004-47",
+                "category5": "CT004-01",
+                "category6": "CT004-19"
+              },
+              "P2": {
+                "category1": "CT004-03",
+                "category2": "CT004-06",
+                "category3": "CT004-15",
+                "category4": "CT004-42",
+                "category5": "CT004-52",
+                "category6": "CT004-13"
+              }
+            },
+            "categoryPriority": {
+              "1": [
+                "P1",
+                "P2"
+              ],
+              "2": [
+                "P2",
+                "P1"
+              ],
+              "3": [
+                "P1",
+                "P2"
+              ],
+              "4": [
+                "P2",
+                "P1"
+              ],
+              "5": [
+                "P1",
+                "P2"
+              ]
+            },
+            "highImpactRankings": {
+              "P1": [
+                "A♣",
+                "A♠",
+                "3♠"
+              ],
+              "P2": [
+                "K♠",
+                "K♣",
+                "Q♣"
+              ]
+            },
+            "highImpactAssignments": {
+              "P1": "CT004-01",
+              "P2": "CT004-52"
+            },
+            "rngAudit": [
+              {
+                "operation": "shuffle-before-random-sixth",
+                "cursorBefore": 0,
+                "cursorAfter": 35
+              }
+            ],
+            "compatibilityAlias": {
+              "executableFixtureId": "CT-063@TOURNAMENT-SEED",
+              "officialSourceId": "CT-063"
+            },
+            "lastResolution": {
+              "kind": "complete",
+              "randomSixthByPlayer": {
+                "P1": "CT004-19",
+                "P2": "CT004-13"
+              },
+              "swapCardIds": [
+                "CT004-34",
+                "CT004-14",
+                "CT004-53"
+              ]
+            }
+          },
+          "tournamentSeedDisabledSystems": [
+            "trap",
+            "time-bomb",
+            "ultra-counter-resistant-gy-rider",
+            "reserved-star",
+            "reserved-sparkle",
+            "volatility-icons"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-005",
+    "title": "Tournament Seed collision uses ranked backup",
+    "sourceTestId": "CT-005",
+    "purpose": "Resolve simultaneous ranked High-Impact choices in category priority order.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Setup",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT005-01": {
+          "id": "CT005-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-02": {
+          "id": "CT005-02",
+          "identity": "A♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-03": {
+          "id": "CT005-03",
+          "identity": "A♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-04": {
+          "id": "CT005-04",
+          "identity": "A♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-05": {
+          "id": "CT005-05",
+          "identity": "2♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-06": {
+          "id": "CT005-06",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-07": {
+          "id": "CT005-07",
+          "identity": "2♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-08": {
+          "id": "CT005-08",
+          "identity": "2♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-09": {
+          "id": "CT005-09",
+          "identity": "3♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-10": {
+          "id": "CT005-10",
+          "identity": "3♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-11": {
+          "id": "CT005-11",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-12": {
+          "id": "CT005-12",
+          "identity": "3♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-13": {
+          "id": "CT005-13",
+          "identity": "4♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-14": {
+          "id": "CT005-14",
+          "identity": "4♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-15": {
+          "id": "CT005-15",
+          "identity": "4♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-16": {
+          "id": "CT005-16",
+          "identity": "4♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-17": {
+          "id": "CT005-17",
+          "identity": "5♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-18": {
+          "id": "CT005-18",
+          "identity": "5♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-19": {
+          "id": "CT005-19",
+          "identity": "5♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-20": {
+          "id": "CT005-20",
+          "identity": "5♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-21": {
+          "id": "CT005-21",
+          "identity": "6♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-22": {
+          "id": "CT005-22",
+          "identity": "6♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-23": {
+          "id": "CT005-23",
+          "identity": "6♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-24": {
+          "id": "CT005-24",
+          "identity": "6♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-25": {
+          "id": "CT005-25",
+          "identity": "7♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-26": {
+          "id": "CT005-26",
+          "identity": "7♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-27": {
+          "id": "CT005-27",
+          "identity": "7♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-28": {
+          "id": "CT005-28",
+          "identity": "7♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-29": {
+          "id": "CT005-29",
+          "identity": "8♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-30": {
+          "id": "CT005-30",
+          "identity": "8♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-31": {
+          "id": "CT005-31",
+          "identity": "8♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-32": {
+          "id": "CT005-32",
+          "identity": "8♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-33": {
+          "id": "CT005-33",
+          "identity": "9♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-34": {
+          "id": "CT005-34",
+          "identity": "9♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-35": {
+          "id": "CT005-35",
+          "identity": "9♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-36": {
+          "id": "CT005-36",
+          "identity": "9♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-37": {
+          "id": "CT005-37",
+          "identity": "10♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-38": {
+          "id": "CT005-38",
+          "identity": "10♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-39": {
+          "id": "CT005-39",
+          "identity": "10♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-40": {
+          "id": "CT005-40",
+          "identity": "10♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-41": {
+          "id": "CT005-41",
+          "identity": "J♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-42": {
+          "id": "CT005-42",
+          "identity": "J♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-43": {
+          "id": "CT005-43",
+          "identity": "J♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-44": {
+          "id": "CT005-44",
+          "identity": "J♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-45": {
+          "id": "CT005-45",
+          "identity": "Q♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-46": {
+          "id": "CT005-46",
+          "identity": "Q♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-47": {
+          "id": "CT005-47",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-48": {
+          "id": "CT005-48",
+          "identity": "Q♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-49": {
+          "id": "CT005-49",
+          "identity": "K♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-50": {
+          "id": "CT005-50",
+          "identity": "K♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-51": {
+          "id": "CT005-51",
+          "identity": "K♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-52": {
+          "id": "CT005-52",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-53": {
+          "id": "CT005-53",
+          "identity": "RJ",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT005-54": {
+          "id": "CT005-54",
+          "identity": "BJ",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT005-01",
+          "CT005-02",
+          "CT005-03",
+          "CT005-04",
+          "CT005-05",
+          "CT005-06",
+          "CT005-07",
+          "CT005-08",
+          "CT005-09",
+          "CT005-10",
+          "CT005-11",
+          "CT005-12",
+          "CT005-13",
+          "CT005-14",
+          "CT005-15",
+          "CT005-16",
+          "CT005-17",
+          "CT005-18",
+          "CT005-19",
+          "CT005-20",
+          "CT005-21",
+          "CT005-22",
+          "CT005-23",
+          "CT005-24",
+          "CT005-25",
+          "CT005-26",
+          "CT005-27",
+          "CT005-28",
+          "CT005-29",
+          "CT005-30",
+          "CT005-31",
+          "CT005-32",
+          "CT005-33",
+          "CT005-34",
+          "CT005-35",
+          "CT005-36",
+          "CT005-37",
+          "CT005-38",
+          "CT005-39",
+          "CT005-40",
+          "CT005-41",
+          "CT005-42",
+          "CT005-43",
+          "CT005-44",
+          "CT005-45",
+          "CT005-46",
+          "CT005-47",
+          "CT005-48",
+          "CT005-49",
+          "CT005-50",
+          "CT005-51",
+          "CT005-52",
+          "CT005-53",
+          "CT005-54"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT005-CFG",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-tournament-seed",
+          "seedOrder": [
+            "P1",
+            "P2"
+          ],
+          "enabledOptionalModules": [
+            "tournament-seed"
+          ]
+        }
+      },
+      {
+        "id": "CT005-HI",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "resolve-high-impact",
+          "rankingsByPlayer": {
+            "P1": [
+              "10♠",
+              "A♠",
+              "A♣"
+            ],
+            "P2": [
+              "10♠",
+              "K♠",
+              "K♣"
+            ]
+          }
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true
+      ],
+      "final": {
+        "hands": {
+          "P1": [
+            "CT005-40"
+          ],
+          "P2": [
+            "CT005-52"
+          ]
+        },
+        "metadata": {
+          "phase15": {
+            "enabled": true,
+            "status": "selecting",
+            "seedOrder": [
+              "P1",
+              "P2"
+            ],
+            "eventSheetId": null,
+            "approvedOptionalModules": [],
+            "activeHighImpactPool": [
+              "A♣",
+              "A♠",
+              "3♠",
+              "5♠",
+              "6♠",
+              "7♠",
+              "8♥",
+              "9♥",
+              "10♦",
+              "10♠",
+              "Q♣",
+              "K♣",
+              "K♠"
+            ],
+            "banPileCardIds": [
+              "CT005-54",
+              "CT005-39",
+              "CT005-32",
+              "CT005-36",
+              "CT005-37",
+              "CT005-48",
+              "CT005-44",
+              "CT005-16"
+            ],
+            "selectionsByPlayer": {
+              "P1": {
+                "category5": "CT005-40"
+              },
+              "P2": {
+                "category5": "CT005-52"
+              }
+            },
+            "categoryPriority": {
+              "1": [
+                "P1",
+                "P2"
+              ],
+              "2": [
+                "P2",
+                "P1"
+              ],
+              "3": [
+                "P1",
+                "P2"
+              ],
+              "4": [
+                "P2",
+                "P1"
+              ],
+              "5": [
+                "P1",
+                "P2"
+              ]
+            },
+            "highImpactRankings": {
+              "P1": [
+                "10♠",
+                "A♠",
+                "A♣"
+              ],
+              "P2": [
+                "10♠",
+                "K♠",
+                "K♣"
+              ]
+            },
+            "highImpactAssignments": {
+              "P1": "CT005-40",
+              "P2": "CT005-52"
+            },
+            "rngAudit": [],
+            "compatibilityAlias": {
+              "executableFixtureId": "CT-063@TOURNAMENT-SEED",
+              "officialSourceId": "CT-063"
+            },
+            "lastResolution": {
+              "kind": "high-impact",
+              "assignments": {
+                "P1": "CT005-40",
+                "P2": "CT005-52"
+              }
+            }
+          },
+          "tournamentSeedDisabledSystems": [
+            "trap",
+            "time-bomb",
+            "ultra-counter-resistant-gy-rider",
+            "reserved-star",
+            "reserved-sparkle",
+            "volatility-icons"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-063@TOURNAMENT-SEED",
+    "title": "Tournament Seed rejects Trap Module configuration",
+    "sourceTestId": "CT-063",
+    "purpose": "Certify official CT-063 configuration semantics without overwriting the historical Phase 7 executable ID.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Setup",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 0,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT063TS-01": {
+          "id": "CT063TS-01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-02": {
+          "id": "CT063TS-02",
+          "identity": "A♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-03": {
+          "id": "CT063TS-03",
+          "identity": "A♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-04": {
+          "id": "CT063TS-04",
+          "identity": "A♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-05": {
+          "id": "CT063TS-05",
+          "identity": "2♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-06": {
+          "id": "CT063TS-06",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-07": {
+          "id": "CT063TS-07",
+          "identity": "2♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-08": {
+          "id": "CT063TS-08",
+          "identity": "2♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-09": {
+          "id": "CT063TS-09",
+          "identity": "3♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-10": {
+          "id": "CT063TS-10",
+          "identity": "3♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-11": {
+          "id": "CT063TS-11",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-12": {
+          "id": "CT063TS-12",
+          "identity": "3♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-13": {
+          "id": "CT063TS-13",
+          "identity": "4♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-14": {
+          "id": "CT063TS-14",
+          "identity": "4♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-15": {
+          "id": "CT063TS-15",
+          "identity": "4♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-16": {
+          "id": "CT063TS-16",
+          "identity": "4♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-17": {
+          "id": "CT063TS-17",
+          "identity": "5♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-18": {
+          "id": "CT063TS-18",
+          "identity": "5♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-19": {
+          "id": "CT063TS-19",
+          "identity": "5♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-20": {
+          "id": "CT063TS-20",
+          "identity": "5♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-21": {
+          "id": "CT063TS-21",
+          "identity": "6♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-22": {
+          "id": "CT063TS-22",
+          "identity": "6♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-23": {
+          "id": "CT063TS-23",
+          "identity": "6♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-24": {
+          "id": "CT063TS-24",
+          "identity": "6♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-25": {
+          "id": "CT063TS-25",
+          "identity": "7♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-26": {
+          "id": "CT063TS-26",
+          "identity": "7♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-27": {
+          "id": "CT063TS-27",
+          "identity": "7♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-28": {
+          "id": "CT063TS-28",
+          "identity": "7♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-29": {
+          "id": "CT063TS-29",
+          "identity": "8♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-30": {
+          "id": "CT063TS-30",
+          "identity": "8♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-31": {
+          "id": "CT063TS-31",
+          "identity": "8♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-32": {
+          "id": "CT063TS-32",
+          "identity": "8♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-33": {
+          "id": "CT063TS-33",
+          "identity": "9♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-34": {
+          "id": "CT063TS-34",
+          "identity": "9♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-35": {
+          "id": "CT063TS-35",
+          "identity": "9♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-36": {
+          "id": "CT063TS-36",
+          "identity": "9♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-37": {
+          "id": "CT063TS-37",
+          "identity": "10♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-38": {
+          "id": "CT063TS-38",
+          "identity": "10♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-39": {
+          "id": "CT063TS-39",
+          "identity": "10♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-40": {
+          "id": "CT063TS-40",
+          "identity": "10♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-41": {
+          "id": "CT063TS-41",
+          "identity": "J♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-42": {
+          "id": "CT063TS-42",
+          "identity": "J♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-43": {
+          "id": "CT063TS-43",
+          "identity": "J♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-44": {
+          "id": "CT063TS-44",
+          "identity": "J♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-45": {
+          "id": "CT063TS-45",
+          "identity": "Q♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-46": {
+          "id": "CT063TS-46",
+          "identity": "Q♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-47": {
+          "id": "CT063TS-47",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-48": {
+          "id": "CT063TS-48",
+          "identity": "Q♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-49": {
+          "id": "CT063TS-49",
+          "identity": "K♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-50": {
+          "id": "CT063TS-50",
+          "identity": "K♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-51": {
+          "id": "CT063TS-51",
+          "identity": "K♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-52": {
+          "id": "CT063TS-52",
+          "identity": "K♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-53": {
+          "id": "CT063TS-53",
+          "identity": "RJ",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT063TS-54": {
+          "id": "CT063TS-54",
+          "identity": "BJ",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT063TS-01",
+          "CT063TS-02",
+          "CT063TS-03",
+          "CT063TS-04",
+          "CT063TS-05",
+          "CT063TS-06",
+          "CT063TS-07",
+          "CT063TS-08",
+          "CT063TS-09",
+          "CT063TS-10",
+          "CT063TS-11",
+          "CT063TS-12",
+          "CT063TS-13",
+          "CT063TS-14",
+          "CT063TS-15",
+          "CT063TS-16",
+          "CT063TS-17",
+          "CT063TS-18",
+          "CT063TS-19",
+          "CT063TS-20",
+          "CT063TS-21",
+          "CT063TS-22",
+          "CT063TS-23",
+          "CT063TS-24",
+          "CT063TS-25",
+          "CT063TS-26",
+          "CT063TS-27",
+          "CT063TS-28",
+          "CT063TS-29",
+          "CT063TS-30",
+          "CT063TS-31",
+          "CT063TS-32",
+          "CT063TS-33",
+          "CT063TS-34",
+          "CT063TS-35",
+          "CT063TS-36",
+          "CT063TS-37",
+          "CT063TS-38",
+          "CT063TS-39",
+          "CT063TS-40",
+          "CT063TS-41",
+          "CT063TS-42",
+          "CT063TS-43",
+          "CT063TS-44",
+          "CT063TS-45",
+          "CT063TS-46",
+          "CT063TS-47",
+          "CT063TS-48",
+          "CT063TS-49",
+          "CT063TS-50",
+          "CT063TS-51",
+          "CT063TS-52",
+          "CT063TS-53",
+          "CT063TS-54"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT063TS-CFG",
+        "type": "RESOLVE_PHASE15_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-tournament-seed",
+          "seedOrder": [
+            "P1",
+            "P2"
+          ],
+          "enabledOptionalModules": [
+            "tournament-seed",
+            "trap"
+          ]
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        false
+      ],
+      "final": {
+        "zones": {
+          "dp": [
+            "CT063TS-01",
+            "CT063TS-02",
+            "CT063TS-03",
+            "CT063TS-04",
+            "CT063TS-05",
+            "CT063TS-06",
+            "CT063TS-07",
+            "CT063TS-08",
+            "CT063TS-09",
+            "CT063TS-10",
+            "CT063TS-11",
+            "CT063TS-12",
+            "CT063TS-13",
+            "CT063TS-14",
+            "CT063TS-15",
+            "CT063TS-16",
+            "CT063TS-17",
+            "CT063TS-18",
+            "CT063TS-19",
+            "CT063TS-20",
+            "CT063TS-21",
+            "CT063TS-22",
+            "CT063TS-23",
+            "CT063TS-24",
+            "CT063TS-25",
+            "CT063TS-26",
+            "CT063TS-27",
+            "CT063TS-28",
+            "CT063TS-29",
+            "CT063TS-30",
+            "CT063TS-31",
+            "CT063TS-32",
+            "CT063TS-33",
+            "CT063TS-34",
+            "CT063TS-35",
+            "CT063TS-36",
+            "CT063TS-37",
+            "CT063TS-38",
+            "CT063TS-39",
+            "CT063TS-40",
+            "CT063TS-41",
+            "CT063TS-42",
+            "CT063TS-43",
+            "CT063TS-44",
+            "CT063TS-45",
+            "CT063TS-46",
+            "CT063TS-47",
+            "CT063TS-48",
+            "CT063TS-49",
+            "CT063TS-50",
+            "CT063TS-51",
+            "CT063TS-52",
+            "CT063TS-53",
+            "CT063TS-54"
+          ]
+        },
+        "metadata": {}
+      }
+    }
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.0",
+  "engineVersion": "4.1.4",
+  "profileId": "first-contact-private-choice",
+  "matchCount": 100,
+  "terminations": {
+    "NORMAL_VICTORY": 100,
+    "EXHAUSTED_RESOLUTION": 0,
+    "CANONICAL_DRAW": 0,
+    "DECISION_LIMIT": 0,
+    "ENGINE_REJECTION": 0,
+    "UNSUPPORTED_CONFIGURATION": 0
+  },
+  "responses": {
+    "ace": 94,
+    "eight": 32,
+    "king": 21,
+    "jack": 118,
+    "passPriority": 4421
+  },
+  "privateChoices": {
+    "rank3-present": 36,
+    "rank3-take": 28,
+    "rank3-discard": 17,
+    "rank5-rummage": 52,
+    "rank6-dig": 49,
+    "rank7-assign": 50,
+    "rank7-generated-effect": 50,
+    "nine-anchor-discard": 13
+  },
+  "engineRejections": 0,
+  "maxDecisions": 230,
+  "meanDecisions": 69.91,
+  "privateChoiceDecisionCount": 295,
+  "resultHash": "7d956744c0de67b13a5c5ab06e9e55c9d8a5247afc0aa7825010d79fb918d79b",
+  "status": "PASS",
+  "missingChoiceKinds": [],
+  "durationMs": 8168,
+  "matchesPerSecond": 12.24,
+  "generatedAt": "2026-07-27T02:26:31.633Z"
+}

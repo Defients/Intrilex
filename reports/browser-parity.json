@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "3.0",
+  "status": "PASS",
+  "proofKind": "REAL_CHROMIUM_CDP_MAIN_THREAD_AND_WEB_WORKER",
+  "labVersion": "0.24.1",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "profileId": "core-advanced-authority",
+  "certifiedReplayCount": 155,
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+  "sha256Vectors": 2,
+  "nodeReference": {
+    "replayCount": 121,
+    "commandCount": 285,
+    "eventCount": 372,
+    "aggregateHash": "5471d012e94199a2fe20869114152b66440b8a9416b98873ed32c5be35e8ae0d"
+  },
+  "nodePolicy": {
+    "terminationReason": "NORMAL_VICTORY",
+    "winner": "P1",
+    "winningSeat": 1,
+    "decisionCount": 80,
+    "responseDecisionCount": 8,
+    "privateChoiceDecisionCount": 2,
+    "advancedDecisionCount": 6,
+    "ultraDecisionCount": 2,
+    "voltageDecisionCount": 0,
+    "commandCount": 268,
+    "finalStateHash": "1c73e7bbf8db4334094fa5a7da9556f83881c7951ed76bab6fd03d73eadae413",
+    "finalScores": {
+      "P1": 21,
+      "P2": 0
+    }
+  },
+  "mainThread": {
+    "replayCount": 121,
+    "commandCount": 285,
+    "eventCount": 372,
+    "aggregateHash": "5471d012e94199a2fe20869114152b66440b8a9416b98873ed32c5be35e8ae0d",
+    "policy": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "winningSeat": 1,
+      "decisionCount": 80,
+      "responseDecisionCount": 8,
+      "privateChoiceDecisionCount": 2,
+      "advancedDecisionCount": 6,
+      "ultraDecisionCount": 2,
+      "voltageDecisionCount": 0,
+      "commandCount": 268,
+      "finalStateHash": "1c73e7bbf8db4334094fa5a7da9556f83881c7951ed76bab6fd03d73eadae413",
+      "finalScores": {
+        "P1": 21,
+        "P2": 0
+      }
+    },
+    "durationMs": 1252
+  },
+  "worker": {
+    "replayCount": 121,
+    "commandCount": 285,
+    "eventCount": 372,
+    "aggregateHash": "5471d012e94199a2fe20869114152b66440b8a9416b98873ed32c5be35e8ae0d",
+    "policy": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "winningSeat": 1,
+      "decisionCount": 80,
+      "responseDecisionCount": 8,
+      "privateChoiceDecisionCount": 2,
+      "advancedDecisionCount": 6,
+      "ultraDecisionCount": 2,
+      "voltageDecisionCount": 0,
+      "commandCount": 268,
+      "finalStateHash": "1c73e7bbf8db4334094fa5a7da9556f83881c7951ed76bab6fd03d73eadae413",
+      "finalScores": {
+        "P1": 21,
+        "P2": 0
+      }
+    },
+    "durationMs": 1406
+  },
+  "parity": {
+    "aggregateHashesEqual": true,
+    "replayCountsEqual": true,
+    "commandCountsEqual": true,
+    "eventCountsEqual": true,
+    "browserMatchesNode": true,
+    "browserCountsMatchNode": true,
+    "policyMainWorkerEqual": true,
+    "policyBrowserMatchesNode": true,
+    "policyTerminatesCanonically": true
+  },
+  "generatedAt": "2026-08-07T16:30:27.928Z"
+}

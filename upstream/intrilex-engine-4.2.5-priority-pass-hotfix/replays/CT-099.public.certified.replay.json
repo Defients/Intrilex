@@ -1,0 +1,185 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-099",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-003": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-003",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-004": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-004",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-005": {
+        "controllerId": "P2",
+        "id": "OPAQUE-HIDDEN-CARD-005",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P2",
+        "state": {
+          "disabledTrap": {
+            "counteringPlayerId": "P1",
+            "expiresAfterCompletedFullTurnSequence": 1
+          },
+          "faceDownTrap": true,
+          "pointValue": 0
+        },
+        "zone": "P2_ER"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {
+      "phase10": {
+        "completedFullTurnsByPlayer": {
+          "P1": 0,
+          "P2": 0
+        },
+        "enabled": true,
+        "module3CounterPending": false,
+        "module3CounterUsedFullTurnSequence": 12,
+        "triggerUsedThisActiveFT": {}
+      }
+    },
+    "pendingDeclaration": null,
+    "phase": "End",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [
+          "OPAQUE-HIDDEN-CARD-005"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "OPAQUE-HIDDEN-CARD-001",
+        "OPAQUE-HIDDEN-CARD-002",
+        "OPAQUE-HIDDEN-CARD-003",
+        "OPAQUE-HIDDEN-CARD-004"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "complete-full-turn",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT099-1",
+      "type": "RESOLVE_PHASE10_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT099-1",
+      "id": "EV-000001",
+      "payload": {
+        "completedCount": 1,
+        "enabledTrapIds": [
+          "CT-099-P2-TRAP"
+        ],
+        "playerId": "P1"
+      },
+      "previousStateHash": "786964c14a941d052854dbf9251352a61e29d35cca193d96786d5029b2890763",
+      "sequence": 1,
+      "stateHash": "a9d73a26e70311928c0e1c97c3bd9ce02b6ebeebf98e7c6ccf9ba085cd3970fa",
+      "type": "FULL_TURN_COMPLETED_FOR_TRAPS",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT099-1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "268269f59cdd43f591625c15521d3ffdddebe7d0bbd99831027cae5a1a7f49dd"
+    }
+  ],
+  "publicEventLogHash": "268269f59cdd43f591625c15521d3ffdddebe7d0bbd99831027cae5a1a7f49dd",
+  "publicContentHash": "29512b3fd2c590a0098e1632ba72ed95c53829e0b8348bb95d818001863b13b8"
+}

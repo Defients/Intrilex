@@ -1,0 +1,124 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-074",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001",
+          "OPAQUE-HIDDEN-CARD-002"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "bonusScoreCardId": "CT074-7",
+        "kind": "foundation-ten-club",
+        "sourceCardId": "CT074-10"
+      },
+      "actorId": "P1",
+      "id": "CT074-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT074-1",
+      "id": "EV-000001",
+      "payload": {
+        "bonusScoreCardId": "CT074-7",
+        "preEntryPoints": 0,
+        "sourceCardId": "CT074-10"
+      },
+      "previousStateHash": "496386c52d0a845577475ddfa545d50012cc37b5664ba8e9ff4544fca9587b00",
+      "sequence": 1,
+      "stateHash": "ab027f28deef3e125ca8adff45c681822fd55c7a53c6d714c220ec45c452aaae",
+      "type": "TEN_CLUB_FOUNDATION_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "496386c52d0a845577475ddfa545d50012cc37b5664ba8e9ff4544fca9587b00",
+  "finalStateHash": "ab027f28deef3e125ca8adff45c681822fd55c7a53c6d714c220ec45c452aaae",
+  "eventLogHash": "8a4cff2a32fec4d2c345778342760f704327488325e0fb09b21aeafa419656dc"
+}

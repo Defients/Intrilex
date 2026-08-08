@@ -1,0 +1,825 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-115",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT115-DP1": {
+        "controllerId": "P1",
+        "id": "CT115-DP1",
+        "identity": "6♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-DP2": {
+        "controllerId": "P1",
+        "id": "CT115-DP2",
+        "identity": "6♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-DP3": {
+        "controllerId": "P1",
+        "id": "CT115-DP3",
+        "identity": "6♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-DP4": {
+        "controllerId": "P1",
+        "id": "CT115-DP4",
+        "identity": "7♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P01": {
+        "controllerId": "P1",
+        "id": "CT115-P01",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P02": {
+        "controllerId": "P1",
+        "id": "CT115-P02",
+        "identity": "A♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P03": {
+        "controllerId": "P1",
+        "id": "CT115-P03",
+        "identity": "2♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P04": {
+        "controllerId": "P1",
+        "id": "CT115-P04",
+        "identity": "2♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P05": {
+        "controllerId": "P1",
+        "id": "CT115-P05",
+        "identity": "3♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P06": {
+        "controllerId": "P1",
+        "id": "CT115-P06",
+        "identity": "3♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P07": {
+        "controllerId": "P1",
+        "id": "CT115-P07",
+        "identity": "4♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P08": {
+        "controllerId": "P1",
+        "id": "CT115-P08",
+        "identity": "4♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P09": {
+        "controllerId": "P1",
+        "id": "CT115-P09",
+        "identity": "5♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P10": {
+        "controllerId": "P1",
+        "id": "CT115-P10",
+        "identity": "5♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P11": {
+        "controllerId": "P1",
+        "id": "CT115-P11",
+        "identity": "6♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P12": {
+        "controllerId": "P1",
+        "id": "CT115-P12",
+        "identity": "A♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P13": {
+        "controllerId": "P1",
+        "id": "CT115-P13",
+        "identity": "A♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P14": {
+        "controllerId": "P1",
+        "id": "CT115-P14",
+        "identity": "2♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P15": {
+        "controllerId": "P1",
+        "id": "CT115-P15",
+        "identity": "2♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P16": {
+        "controllerId": "P1",
+        "id": "CT115-P16",
+        "identity": "3♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P17": {
+        "controllerId": "P1",
+        "id": "CT115-P17",
+        "identity": "3♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P18": {
+        "controllerId": "P1",
+        "id": "CT115-P18",
+        "identity": "4♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P19": {
+        "controllerId": "P1",
+        "id": "CT115-P19",
+        "identity": "4♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P20": {
+        "controllerId": "P1",
+        "id": "CT115-P20",
+        "identity": "5♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT115-P21": {
+        "controllerId": "P1",
+        "id": "CT115-P21",
+        "identity": "5♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT115-P01",
+        "CT115-P02",
+        "CT115-P03",
+        "CT115-P04",
+        "CT115-P05",
+        "CT115-P06",
+        "CT115-P07",
+        "CT115-P08",
+        "CT115-P09",
+        "CT115-P10",
+        "CT115-P11",
+        "CT115-P12",
+        "CT115-P13",
+        "CT115-P14",
+        "CT115-P15",
+        "CT115-P16",
+        "CT115-P17",
+        "CT115-P18",
+        "CT115-P19",
+        "CT115-P20",
+        "CT115-P21",
+        "CT115-DP1",
+        "CT115-DP2",
+        "CT115-DP3",
+        "CT115-DP4"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-deffy",
+        "subMode": "classic",
+        "turnOrder": [
+          "P1",
+          "P2"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT115-1",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "faceDownCardIds": [
+          "CT115-P03",
+          "CT115-P04",
+          "CT115-P06",
+          "CT115-P20",
+          "CT115-P21"
+        ],
+        "kind": "initialize-draft-pool",
+        "poolCardIds": [
+          "CT115-P01",
+          "CT115-P02",
+          "CT115-P03",
+          "CT115-P04",
+          "CT115-P05",
+          "CT115-P06",
+          "CT115-P07",
+          "CT115-P08",
+          "CT115-P09",
+          "CT115-P10",
+          "CT115-P11",
+          "CT115-P12",
+          "CT115-P13",
+          "CT115-P14",
+          "CT115-P15",
+          "CT115-P16",
+          "CT115-P17",
+          "CT115-P18",
+          "CT115-P19",
+          "CT115-P20",
+          "CT115-P21"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT115-2",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P01",
+        "drafterId": "P1",
+        "kind": "draft-pick"
+      },
+      "actorId": "P1",
+      "id": "CT115-3",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P02",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-4",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P03",
+        "drafterId": "P1",
+        "kind": "draft-pick"
+      },
+      "actorId": "P1",
+      "id": "CT115-5",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P04",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-6",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P05",
+        "drafterId": "P1",
+        "kind": "draft-pick"
+      },
+      "actorId": "P1",
+      "id": "CT115-7",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P06",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-8",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P07",
+        "drafterId": "P1",
+        "kind": "draft-pick"
+      },
+      "actorId": "P1",
+      "id": "CT115-9",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P08",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-10",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P09",
+        "drafterId": "P1",
+        "kind": "draft-pick"
+      },
+      "actorId": "P1",
+      "id": "CT115-11",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P10",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-12",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "cardId": "CT115-P11",
+        "drafterId": "P2",
+        "kind": "draft-pick"
+      },
+      "actorId": "P2",
+      "id": "CT115-13",
+      "type": "RESOLVE_PHASE14_ACTION"
+    },
+    {
+      "action": {
+        "kind": "complete-draft"
+      },
+      "actorId": "P1",
+      "id": "CT115-14",
+      "type": "RESOLVE_PHASE14_ACTION"
+    }
+  ],
+  "accepted": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT115-1",
+      "id": "EV-000001",
+      "payload": {
+        "addOns": {
+          "mirrorMe": false,
+          "speedRun": false,
+          "thatsUrz": false,
+          "thirdPartied": false
+        },
+        "assignments": {
+          "P1": "P1",
+          "P2": "P2"
+        },
+        "subMode": "classic",
+        "targetHandSizes": {
+          "P1": 5,
+          "P2": 6
+        },
+        "turnOrder": [
+          "P1",
+          "P2"
+        ]
+      },
+      "previousStateHash": "dd2375e37d5791e9d13f4a8596b6d15f671be102ef9afe37e1ee259da508db0c",
+      "sequence": 1,
+      "stateHash": "a5d6376d7c0477bd95800ad4349d87edd087ec854a2dca32c979dbe44c16ee08",
+      "type": "DEFFY_MODE_CONFIGURED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-2",
+      "id": "EV-000002",
+      "payload": {
+        "faceDownCount": 5,
+        "poolSize": 21,
+        "subMode": "classic"
+      },
+      "previousStateHash": "a5d6376d7c0477bd95800ad4349d87edd087ec854a2dca32c979dbe44c16ee08",
+      "sequence": 2,
+      "stateHash": "3bddb23a1fa342408604afc87c3867ef2c0df4ca85dd698d781894a5e8a1d0d9",
+      "type": "DEFFY_POOL_CREATED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-3",
+      "id": "EV-000003",
+      "payload": {
+        "cardId": "CT115-P01",
+        "drafterId": "P1",
+        "recipientId": "P1"
+      },
+      "previousStateHash": "3bddb23a1fa342408604afc87c3867ef2c0df4ca85dd698d781894a5e8a1d0d9",
+      "sequence": 3,
+      "stateHash": "39623cf616fad37c1288582df0c105bffc14782c559c790b3b52362eb80079db",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-4",
+      "id": "EV-000004",
+      "payload": {
+        "cardId": "CT115-P02",
+        "drafterId": "P2",
+        "recipientId": "P2"
+      },
+      "previousStateHash": "39623cf616fad37c1288582df0c105bffc14782c559c790b3b52362eb80079db",
+      "sequence": 4,
+      "stateHash": "66bae88a4f1645cc98536c35d9c25a34889cb3e83b7872efc0e7c276df69df59",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-5",
+      "id": "EV-000005",
+      "payload": {
+        "redacted": true,
+        "visibility": "authorized"
+      },
+      "previousStateHash": "66bae88a4f1645cc98536c35d9c25a34889cb3e83b7872efc0e7c276df69df59",
+      "sequence": 5,
+      "stateHash": "9738a0e35618abcb47ebc998a01b27b544d612162c3cc9f53fc287c5b27bc33f",
+      "type": "DEFFY_FACE_DOWN_PICK",
+      "visibility": "authorized"
+    },
+    {
+      "commandId": "CT115-6",
+      "id": "EV-000006",
+      "payload": {
+        "redacted": true,
+        "visibility": "authorized"
+      },
+      "previousStateHash": "9738a0e35618abcb47ebc998a01b27b544d612162c3cc9f53fc287c5b27bc33f",
+      "sequence": 6,
+      "stateHash": "1459020f1ddfae08c833a092012229b3924826cd3d57f8b58d37af637a63f4be",
+      "type": "DEFFY_FACE_DOWN_PICK",
+      "visibility": "authorized"
+    },
+    {
+      "commandId": "CT115-7",
+      "id": "EV-000007",
+      "payload": {
+        "cardId": "CT115-P05",
+        "drafterId": "P1",
+        "recipientId": "P1"
+      },
+      "previousStateHash": "1459020f1ddfae08c833a092012229b3924826cd3d57f8b58d37af637a63f4be",
+      "sequence": 7,
+      "stateHash": "d6f9a838cc7a8afed8f2110f81936262cfc1d0d7ff727e0237201e1d7b82af55",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-8",
+      "id": "EV-000008",
+      "payload": {
+        "redacted": true,
+        "visibility": "authorized"
+      },
+      "previousStateHash": "d6f9a838cc7a8afed8f2110f81936262cfc1d0d7ff727e0237201e1d7b82af55",
+      "sequence": 8,
+      "stateHash": "0de2b143b45be39a4a43c8aea88013b2f45186694460da00ab1f103a25847e57",
+      "type": "DEFFY_FACE_DOWN_PICK",
+      "visibility": "authorized"
+    },
+    {
+      "commandId": "CT115-9",
+      "id": "EV-000009",
+      "payload": {
+        "cardId": "CT115-P07",
+        "drafterId": "P1",
+        "recipientId": "P1"
+      },
+      "previousStateHash": "0de2b143b45be39a4a43c8aea88013b2f45186694460da00ab1f103a25847e57",
+      "sequence": 9,
+      "stateHash": "e6e4736d05391ba8106f09d28d98cc1c00244ad935b588dc48f5fc7f6df0fd63",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-10",
+      "id": "EV-000010",
+      "payload": {
+        "cardId": "CT115-P08",
+        "drafterId": "P2",
+        "recipientId": "P2"
+      },
+      "previousStateHash": "e6e4736d05391ba8106f09d28d98cc1c00244ad935b588dc48f5fc7f6df0fd63",
+      "sequence": 10,
+      "stateHash": "6a8937aa2934275e88ede1c8a579242dd8c3246c84cdc04a0236d147a513dfec",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-11",
+      "id": "EV-000011",
+      "payload": {
+        "cardId": "CT115-P09",
+        "drafterId": "P1",
+        "recipientId": "P1"
+      },
+      "previousStateHash": "6a8937aa2934275e88ede1c8a579242dd8c3246c84cdc04a0236d147a513dfec",
+      "sequence": 11,
+      "stateHash": "ecfdf61d0bc95633ecfb67a0b38550b2c9d5cd2696bb8e80bbb94f528ef1d69f",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-12",
+      "id": "EV-000012",
+      "payload": {
+        "cardId": "CT115-P10",
+        "drafterId": "P2",
+        "recipientId": "P2"
+      },
+      "previousStateHash": "ecfdf61d0bc95633ecfb67a0b38550b2c9d5cd2696bb8e80bbb94f528ef1d69f",
+      "sequence": 12,
+      "stateHash": "b0d737570a2b17b9e55cc36f6c77e3706712596fe44c0dbe55db37dab8f4da52",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-13",
+      "id": "EV-000013",
+      "payload": {
+        "cardId": "CT115-P11",
+        "drafterId": "P2",
+        "recipientId": "P2"
+      },
+      "previousStateHash": "b0d737570a2b17b9e55cc36f6c77e3706712596fe44c0dbe55db37dab8f4da52",
+      "sequence": 13,
+      "stateHash": "2f43539dfdf670722a9b4fe8af4c8e27f71660b224a898fa0b8774a74ea9dbf9",
+      "type": "DEFFY_FACE_UP_PICK",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT115-14",
+      "id": "EV-000014",
+      "payload": {
+        "leftoverCount": 10,
+        "leftoverDisposition": "shuffle",
+        "specsMayBeRevealed": true,
+        "targetHandSizes": {
+          "P1": 5,
+          "P2": 6
+        }
+      },
+      "previousStateHash": "2f43539dfdf670722a9b4fe8af4c8e27f71660b224a898fa0b8774a74ea9dbf9",
+      "sequence": 14,
+      "stateHash": "4cee642676463011e46f740b4bada30f3acd15ca34736ed6d825cc3000c6c4cc",
+      "type": "DEFFY_DRAFT_COMPLETED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT115-1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "a759b680ec9328d9b1636c308f7eb0b1e3505168be9dd48fd72c39f859393399"
+    },
+    {
+      "commandIndex": 1,
+      "commandId": "CT115-2",
+      "accepted": true,
+      "eventStartIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "ba857a73c1ece3fb95b8e83dea0eba0200651b0bd167b724340867ba46b4a6bf"
+    },
+    {
+      "commandIndex": 2,
+      "commandId": "CT115-3",
+      "accepted": true,
+      "eventStartIndex": 2,
+      "eventEndIndex": 3,
+      "eventRangeHash": "2a41c6f652601b2cb9e01198ab0085d1464ecefd6fb18d035483ad81e652beda"
+    },
+    {
+      "commandIndex": 3,
+      "commandId": "CT115-4",
+      "accepted": true,
+      "eventStartIndex": 3,
+      "eventEndIndex": 4,
+      "eventRangeHash": "eb4193433f61aaf426370f41f725c9dea67a81cc3f68b50009d237b34ff86c7b"
+    },
+    {
+      "commandIndex": 4,
+      "commandId": "CT115-5",
+      "accepted": true,
+      "eventStartIndex": 4,
+      "eventEndIndex": 5,
+      "eventRangeHash": "2474ed82d5ce2209727fe65e199935e9a14f9494a602408364caa653c3f510aa"
+    },
+    {
+      "commandIndex": 5,
+      "commandId": "CT115-6",
+      "accepted": true,
+      "eventStartIndex": 5,
+      "eventEndIndex": 6,
+      "eventRangeHash": "8f74c3fadb18ac9bee7ba56ef332619ef4f2bfd0a98edff85fad11c168e6ab0b"
+    },
+    {
+      "commandIndex": 6,
+      "commandId": "CT115-7",
+      "accepted": true,
+      "eventStartIndex": 6,
+      "eventEndIndex": 7,
+      "eventRangeHash": "02903b7fafafc00859edfd535a63ab34d37f2716e732acd3e31b136432197aeb"
+    },
+    {
+      "commandIndex": 7,
+      "commandId": "CT115-8",
+      "accepted": true,
+      "eventStartIndex": 7,
+      "eventEndIndex": 8,
+      "eventRangeHash": "3bbee42d1d5ea6ac087f5f95553c4849355e88d918b473abfec6704185b484dc"
+    },
+    {
+      "commandIndex": 8,
+      "commandId": "CT115-9",
+      "accepted": true,
+      "eventStartIndex": 8,
+      "eventEndIndex": 9,
+      "eventRangeHash": "3483c3b142aa436bfd6a956d3912136205619a81557b05ae6a004ce200bf8c52"
+    },
+    {
+      "commandIndex": 9,
+      "commandId": "CT115-10",
+      "accepted": true,
+      "eventStartIndex": 9,
+      "eventEndIndex": 10,
+      "eventRangeHash": "2134a030a61832e22a07a9733e314d0ec329c014836a1655c130a16c140ae607"
+    },
+    {
+      "commandIndex": 10,
+      "commandId": "CT115-11",
+      "accepted": true,
+      "eventStartIndex": 10,
+      "eventEndIndex": 11,
+      "eventRangeHash": "a8e086bbf8e4a4f90f2dc45885ad54b088253f577e61bd7d84117b1925ed432d"
+    },
+    {
+      "commandIndex": 11,
+      "commandId": "CT115-12",
+      "accepted": true,
+      "eventStartIndex": 11,
+      "eventEndIndex": 12,
+      "eventRangeHash": "33a6be646ce257cd3682b6b5746752a7a18c3258690b85ca98cde3368fe170e6"
+    },
+    {
+      "commandIndex": 12,
+      "commandId": "CT115-13",
+      "accepted": true,
+      "eventStartIndex": 12,
+      "eventEndIndex": 13,
+      "eventRangeHash": "f1d09c21db146e35126ec0ba80e22ce03694c572a555a272ce83d67826ba1e7d"
+    },
+    {
+      "commandIndex": 13,
+      "commandId": "CT115-14",
+      "accepted": true,
+      "eventStartIndex": 13,
+      "eventEndIndex": 14,
+      "eventRangeHash": "fd4377c7448a63e8e68e00754a9283d4ce89a8a76a13649a26bd4a2d1906dc0b"
+    }
+  ],
+  "publicEventLogHash": "bcc34678bd722a3f6c0fee0eca2bec460a6fa2f308f2dbb4fd1b4204d55e9a30",
+  "publicContentHash": "f1916b9913740f5db6f0e729d2662f0a1bde99e0da0a87b44c18bd4ef2e63ce0"
+}

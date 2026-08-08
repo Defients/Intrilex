@@ -1,0 +1,73 @@
+generate-self-audit: running 105 test files...
+generate-self-audit: FAILED to parse test count from output
+Output tail:  1917 - tournament.js has export functionality
+  ---
+  duration_ms: 1.2628
+  ...
+# Subtest: tournament.js has analytics rendering
+ok 1918 - tournament.js has analytics rendering
+  ---
+  duration_ms: 1.4274
+  ...
+# Subtest: tournament.js has third-place rendering
+ok 1919 - tournament.js has third-place rendering
+  ---
+  duration_ms: 1.3379
+  ...
+# Subtest: tournament.js has Watch Live button
+ok 1920 - tournament.js has Watch Live button
+  ---
+  duration_ms: 5.8436
+  ...
+# Subtest: tournament.js has live viewer rendering
+ok 1921 - tournament.js has live viewer rendering
+  ---
+  duration_ms: 3.3713
+  ...
+# Subtest: tournament.js has frame reconstruction
+ok 1922 - tournament.js has frame reconstruction
+  ---
+  duration_ms: 1.5042
+  ...
+# Subtest: tournament.js has playback controls
+ok 1923 - tournament.js has playback controls
+  ---
+  duration_ms: 5.4178
+  ...
+# Subtest: tournament.js has board rendering for live viewer
+ok 1924 - tournament.js has board rendering for live viewer
+  ---
+  duration_ms: 6.6283
+  ...
+# Subtest: autonomy-runtime.js supports recordReplay option
+ok 1925 - autonomy-runtime.js supports recordReplay option
+  ---
+  duration_ms: 1.177
+  ...
+# Subtest: worker.js passes through replay data
+ok 1926 - worker.js passes through replay data
+  ---
+  duration_ms: 103.9686
+  ...
+# Subtest: runBrowserPolicyMatch with recordReplay produces replay data
+ok 1927 - runBrowserPolicyMatch with recordReplay produces replay data
+  ---
+  duration_ms: 3330.7758
+  ...
+# Subtest: replay from recordReplay can be reconstructed into frames
+ok 1928 - replay from recordReplay can be reconstructed into frames
+  ---
+  duration_ms: 2938.4469
+  ...
+# Subtest: CosmoTech tokens, semantic FX and responsive breakpoints exist
+ok 1929 - CosmoTech tokens, semantic FX and responsive breakpoints exist
+  ---
+  duration_ms: 9.9886
+  ...
+# Subtest: charts and graph have accessible text alternatives
+ok 1930 - charts and graph have accessible text alternatives
+  ---
+  duration_ms: 73.586
+  ...
+
+

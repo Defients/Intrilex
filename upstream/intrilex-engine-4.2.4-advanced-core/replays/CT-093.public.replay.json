@@ -1,0 +1,175 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-093",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT-093-DP-01": {
+        "controllerId": "P1",
+        "id": "CT-093-DP-01",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-093-DP-02": {
+        "controllerId": "P1",
+        "id": "CT-093-DP-02",
+        "identity": "2♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-093-DP-03": {
+        "controllerId": "P1",
+        "id": "CT-093-DP-03",
+        "identity": "3♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-093-DP-04": {
+        "controllerId": "P1",
+        "id": "CT-093-DP-04",
+        "identity": "4♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {
+      "firstContact": {
+        "active": true,
+        "allowedActions": [
+          "draw",
+          "play-for-points",
+          "play-for-effect",
+          "scuttle",
+          "pass"
+        ],
+        "disabledSystems": [
+          "swap-bar",
+          "comboing",
+          "supers",
+          "reserved-advanced-classes",
+          "ultras",
+          "sudden-death",
+          "aegis",
+          "royal-shield",
+          "exile",
+          "revealed-until-start",
+          "draw-and-cast",
+          "voltage",
+          "suit-specific-effects",
+          "optional-modules"
+        ],
+        "profileId": "first-contact",
+        "teachingOverrideId": null
+      }
+    },
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT-093-DP-01",
+        "CT-093-DP-02",
+        "CT-093-DP-03",
+        "CT-093-DP-04"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "declarationClass": "suit-specific-effect",
+        "effectKey": "stack-theft-ten-spade",
+        "kind": "validate-declaration",
+        "rank": "10",
+        "sourceCardIds": [
+          "CT-093-P1_HAND-01"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT093-1",
+      "type": "RESOLVE_PHASE9_ACTION"
+    }
+  ],
+  "events": [],
+  "initialStateHash": "e6464ed03f5b0562f7adafe0e8e14ecf9c45945573c6369f5e73f163b0b6094a",
+  "finalStateHash": "e6464ed03f5b0562f7adafe0e8e14ecf9c45945573c6369f5e73f163b0b6094a",
+  "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+}

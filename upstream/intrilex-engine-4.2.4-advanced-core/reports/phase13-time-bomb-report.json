@@ -1,0 +1,151 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase13-time-bomb.json",
+    "fixtures/phase12-battlerealm.json#CT-001-CT-003,CT-118",
+    "fixtures/phase11-multiplayer-teams.json#CT-114"
+  ],
+  "fixtureCount": 9,
+  "repeatCount": 7,
+  "passed": 9,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-001",
+      "title": "Calculated Court adds one controller-level bonus to one Q♥ Time Bomb",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "be0591764c76a6a52050e6c7da77505d7e2b436e0ea238927d03f934971d5045",
+      "finalStateHash": "2dc30fa06b8d786a5b4c692dc60df0642ea1f6d4f52059a5fbd610332cb0f680",
+      "eventLogHash": "b00f15da86d65c53701b0a7c5841bf99c756ff42160ff11e368db94c0d1fc1b7",
+      "replayHash": "54173077b14396ac3222cb5c1350c1c70427668987615579ed1cda2ee8998a2a",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-002",
+      "title": "Calculated Court uses one total bonus for two Queens",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "e42e5e0caa8a01258526d43610112b71e9ac8df54d05dd268225bee46ded5f5a",
+      "finalStateHash": "bb1a585959a7af68c71bb4a087553050bf2581ff3c62e3e51f10169623140c40",
+      "eventLogHash": "f52c66aae35058bdbd65d2c9c98f23e1a331283b7ce64043316a61ceb1916f57",
+      "replayHash": "cddb226ba3624de46f560cdce1140b8861b4980bc24731df4d40ba9f1f7cacd2",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-003",
+      "title": "Tapped Time Bomb receives no Calculated Court contribution",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "767ec4b48abb236c7152e4ad877b0f6492fbda9495d703d7a07d1e8f9a5e287d",
+      "finalStateHash": "281d2f3358d5bcdd823af65b465cbbe866b8db9a458c53c9ef2abb2efb557ce7",
+      "eventLogHash": "9a9ab612405173afa4e35db0dea1eafc9ecf3df8fe500061795b227b62f2738c",
+      "replayHash": "2e04a0699b2cff7f0ac36017b9d31e0998d0c44071e2968805d3257581cba143",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-012",
+      "title": "Q♥ Time Bomb Peak remains signed and repeats without clamping",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "686c9fdb629830f42d82417230a99e3e27f9017b4e025f2dfe78858070236518",
+      "finalStateHash": "e317d8747ba11514f7311708d285be5da375cdd5a08ba8348004e480cdbf4669",
+      "eventLogHash": "629bef54e5c32d583b785b5d180e85b458717cb0d6cf74372611f65cca58125d",
+      "replayHash": "b3a2a4dbef393c0073dcb2c63cec8deae1e197c8bec182e086f57fa8cc0aa3e9",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-111",
+      "title": "Calculated Court remains one bonus across signed Time Bomb tracks",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "2974742cc92b30d13152b965e196c27128b26a304951db75972a7017013325d9",
+      "finalStateHash": "4c4810a495ebccf18685b091cfc85a4e44f58bd08d134b81b2e8606f00f02c79",
+      "eventLogHash": "890eaa833615110116cf373007fe9e13b4f1ce8e324001aa2b6d25829d8b5cd2",
+      "replayHash": "bf9c5bd22a7804163809809c22746f6691058a60378037fea82bf05d7ed0166a",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-112",
+      "title": "Tapped Q♠ Time Bomb advances Fuse while contributing zero",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "9c60c624c83c81cbfed66e2e12a2a8502607aac9a646f2977d68de37e629918f",
+      "finalStateHash": "121a93460708a1c5942c4c3872321a7d882aeeeddc5f6f12002dd296b3ab50eb",
+      "eventLogHash": "9f7a0adf9a5cf2d46c1c95664acf517f723ac818a8b4e25938d04726f3f72893",
+      "replayHash": "b6127199d67ecc85d1ae6e65eda82b176793b53edd107fb6b7b873219d13f35d",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-113",
+      "title": "Defuse pays full cost and creates an Action-Phase skip",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "97f2118e9ff8f2fc71c4970bb47477d9b4f06fc9f8410d9163b5d3bc8216aa7a",
+      "finalStateHash": "81cd5867aee8bd2114235459f9659f67d15d88fa7b23643ccfdce9b0984dbbd6",
+      "eventLogHash": "dd7486d624e533f74d458e4e5960f1342e9004a67a24909d63f871f7570a6636",
+      "replayHash": "d628625a8c1cfc96880e6c6bab18c6d58fa0d41e189a39cba025364a87942971",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-114",
+      "title": "Team Exhausted compares combined active Anchors before Points",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "c2c7a2f1cf1b0e8d74d567788a46b3ab6f29d0f8cb36f2af6f43a4460da48688",
+      "finalStateHash": "2d06a0547880a6d975193bf4535dbca6d05c6003b11e3188b30aa1126bf9217d",
+      "eventLogHash": "8ce66ba32cfc3e8572f514eadfa5315fd2f020477f1ddd6f4e9e11709676d453",
+      "replayHash": "0cc8ec7b2bced2a194a20b1a9fcb837bb1eee91fe09c0f3be17b294c01a4c190",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-118",
+      "title": "Brilliance plus Time Bomb adds one signed controller bonus",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "3c16038d942b5b7003fbab685fd8ac594d934bdb3fe5a495a3bae7b024871c56",
+      "finalStateHash": "27d9e9dfb356e0252d648f98c3f40163574e89f29bbbbf7fc0a7085b932002d9",
+      "eventLogHash": "9c5efadf7fba3a06bcf2a7abc9a205524daea9011d9e7644715197b0805b57eb",
+      "replayHash": "d6a69bca21fe64728dbd146dfab4baccd040a9c458afe4411243a89e7a7a7036",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "325f89a6b48b9cd0bc5d21158da4d046d7bdfa4bb889eccf7903f6d6beb18891"
+}

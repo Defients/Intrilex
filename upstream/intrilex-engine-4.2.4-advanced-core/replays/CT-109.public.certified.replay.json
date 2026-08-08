@@ -1,0 +1,175 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-109",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT109-T": {
+        "controllerId": "P2",
+        "id": "CT109-T",
+        "identity": "7♦",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 7
+        },
+        "zone": "P2_PR"
+      }
+    },
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT109-T"
+        ],
+        "teamId": null
+      },
+      "P3": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P3",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [
+      {
+        "controllerId": "P1",
+        "id": "CT109-SI",
+        "instructions": [],
+        "kind": "generated-effect",
+        "revalidationClass": "single-required-target",
+        "sourceCardIds": [],
+        "sourceDestination": "GY",
+        "status": "pending",
+        "targetCardIds": []
+      }
+    ],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2",
+      "P3"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "interceptorId": "P3",
+        "kind": "intercept-generated-play",
+        "originalControllerId": "P1",
+        "replacementTargetIds": [
+          "CT109-T"
+        ],
+        "stackItemId": "CT109-SI"
+      },
+      "actorId": "P3",
+      "id": "CT109-1",
+      "type": "RESOLVE_PHASE11_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT109-1",
+      "id": "EV-000001",
+      "payload": {
+        "controllerId": "P3",
+        "controllerRelativeTextRebound": true,
+        "previousControllerId": "P1",
+        "replacementTargetIds": [
+          "CT109-T"
+        ],
+        "stackItemId": "CT109-SI"
+      },
+      "previousStateHash": "08aee0b1e90a83254957c7f87f337855c0ed6f809e9ad127569328f2277810fe",
+      "sequence": 1,
+      "stateHash": "34973f711c204bc68bd66cb08b574eeda6fc02683be039166d244ee3d7db607b",
+      "type": "GENERATED_PLAY_INTERCEPTED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT109-1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "88abe8f6dff51e2c9d6c652b0a9fa93f353ff34e2256fa7cb298e1bf31c4f385"
+    }
+  ],
+  "publicEventLogHash": "88abe8f6dff51e2c9d6c652b0a9fa93f353ff34e2256fa7cb298e1bf31c4f385",
+  "publicContentHash": "0f497a7463b5389f66c51d586ea6de38d49ee3aeae9010d75e3c5c1718d867d5"
+}

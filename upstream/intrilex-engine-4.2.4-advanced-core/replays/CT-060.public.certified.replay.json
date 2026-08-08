@@ -1,0 +1,165 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-060",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "C60-RJ": {
+        "controllerId": "P2",
+        "id": "C60-RJ",
+        "identity": "RJ",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 5
+        },
+        "zone": "P2_PR"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001",
+          "OPAQUE-HIDDEN-CARD-002"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "C60-RJ"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "scuttle",
+        "profile": "absolute-eight",
+        "sourceCardIds": [
+          "C60-A",
+          "C60-B"
+        ],
+        "targetCardId": "C60-RJ"
+      },
+      "actorId": "P1",
+      "id": "C60-1",
+      "type": "RESOLVE_INTERACTION_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "C60-1",
+      "id": "EV-000001",
+      "payload": {
+        "bypasses": [
+          "scuttle-immunity"
+        ],
+        "profile": "absolute-eight",
+        "sourceCardIds": [
+          "C60-A",
+          "C60-B"
+        ],
+        "targetCardId": "C60-RJ"
+      },
+      "previousStateHash": "912c8273bf02fdc6971f135351fa5bb2b6aeb7ba007cca427a15ef119f2cc029",
+      "sequence": 1,
+      "stateHash": "5a180d7f2b6e1a59b8f7e939e0e3c1a9a3c628a9073fc38b2422f41519272e6c",
+      "type": "SCUTTLE_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "C60-1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "b7138615351862cd3b70da38aef6e54c7223dbe866bacaa3207f58a315cb9bfd"
+    }
+  ],
+  "publicEventLogHash": "b7138615351862cd3b70da38aef6e54c7223dbe866bacaa3207f58a315cb9bfd",
+  "publicContentHash": "8955eb2a1dfbc3e82fd84217dc1be743ec86d7931bccf0b8c478e3a18994a5dd"
+}

@@ -1,0 +1,13 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://intrilex.local/schemas/analytics-4.2.0.json",
+  "title":"Intrilex Mechanics Observatory Analytics 4.2.0",
+  "type":"object",
+  "required":["schemaVersion","metricRegistry","mechanics","synergies","policies","anomalies","completeness","observatoryHash"],
+  "properties":{
+    "schemaVersion":{"const":"4.2.0"},"metricRegistry":{"type":"object"},"mechanics":{"type":"array"},"synergies":{"type":"array"},"motifs":{"type":"array"},"policies":{"type":"array"},"anomalies":{"type":"array"},
+    "completeness":{"type":"object","required":["unclassifiedCount","tolerance","status"]},"observatoryHash":{"type":"string"},
+    "variantAnalytics":{"type":["object","null"]},
+    "taxonomyDimensions":{"type":["object","array"]},"hasOpportunityTelemetry":{"type":"boolean"},"legacySchema":{"type":"boolean"},"pairedABBA":{"type":["object","null"]}
+  },"additionalProperties":true
+}

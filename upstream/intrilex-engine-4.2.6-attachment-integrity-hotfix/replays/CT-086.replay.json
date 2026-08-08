@@ -1,0 +1,164 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-086",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {},
+    "fullTurnSequence": 20,
+    "metadata": {
+      "phase8": {
+        "boardLock": {
+          "activationFullTurnSequence": 18,
+          "remaining": 1
+        },
+        "exhausted": {
+          "remaining": 1,
+          "startedFullTurnSequence": 17
+        },
+        "suddenDeath": {
+          "activationFullTurnSequence": 18,
+          "activatorId": "P2",
+          "remaining": 1
+        },
+        "voltageSnapshots": {},
+        "voltageUsedThisFT": {}
+      }
+    },
+    "pendingDeclaration": null,
+    "phase": "End",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "process-end-phase"
+      },
+      "actorId": "P1",
+      "id": "CT086-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT086-1",
+      "id": "EV-000001",
+      "payload": {
+        "remaining": 0,
+        "step": 2
+      },
+      "previousStateHash": "77b311c3f2fcd41ce9b581de12afb840c5e50f0b01a05ab1ab0ab6e8f332141a",
+      "sequence": 1,
+      "stateHash": "70e50953c0f1fee13e20145c19680cab1ba3006e64f03622ffcd5de6a6768823",
+      "type": "BOARD_LOCK_TICKED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT086-1",
+      "id": "EV-000003",
+      "payload": {
+        "step": 2
+      },
+      "previousStateHash": "70e50953c0f1fee13e20145c19680cab1ba3006e64f03622ffcd5de6a6768823",
+      "sequence": 2,
+      "stateHash": "2681ce8f8029fd8486d319bc46c899d7175872fe05fcaf448a1f5d84ceaedc3b",
+      "type": "BOARD_LOCK_ENDED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT086-1",
+      "id": "EV-000005",
+      "payload": {
+        "remaining": 0,
+        "step": 3
+      },
+      "previousStateHash": "2681ce8f8029fd8486d319bc46c899d7175872fe05fcaf448a1f5d84ceaedc3b",
+      "sequence": 3,
+      "stateHash": "661089075f75c825b2de2a15acde336d926b36b3847f2d38d3eb217e461c8092",
+      "type": "SUDDEN_DEATH_TICKED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT086-1",
+      "id": "EV-000007",
+      "payload": {
+        "playerId": "P2",
+        "reason": "sudden-death",
+        "shortCircuited": true,
+        "step": 3
+      },
+      "previousStateHash": "661089075f75c825b2de2a15acde336d926b36b3847f2d38d3eb217e461c8092",
+      "sequence": 4,
+      "stateHash": "5a77a72bb011c99a60255334c614e2db63b4314a89e35e9e45be34a9a3b83cfd",
+      "type": "WINNER_DECLARED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "77b311c3f2fcd41ce9b581de12afb840c5e50f0b01a05ab1ab0ab6e8f332141a",
+  "finalStateHash": "5a77a72bb011c99a60255334c614e2db63b4314a89e35e9e45be34a9a3b83cfd",
+  "eventLogHash": "7ebfd0e30a7d5b892576e8fc029d9e627619fd23117f3cca29c99d6626ca568c"
+}

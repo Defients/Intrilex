@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.0",
+  "verdict": "PASS",
+  "engineVersion": "4.1.4",
+  "profileId": "first-contact-private-choice",
+  "engineTests": { "passed": 144, "total": 144 },
+  "conformance": {
+    "passed": 121,
+    "total": 121,
+    "aggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"
+  },
+  "baseVendor": {
+    "fileCount": 651,
+    "payloadHash": "707377ea9fa94f449c293b6a4dcd8dc4b40dd058bcd6f9e5dd874339859cf168",
+    "outerZipSha256": "fa5609e11370d674e6e2f20042997901ce3f3cfadcbf642f7c273983d2cc1e0f"
+  },
+  "stressCampaign": {
+    "matchCount": 500,
+    "normalVictories": 495,
+    "exhaustedResolutions": 5,
+    "canonicalDraws": 0,
+    "decisionLimits": 0,
+    "engineRejections": 0,
+    "privateChoiceDecisions": 1544,
+    "responseDeclarations": 1308,
+    "resultHash": "95dbb2283ac94eeeffd389b4e21f38b5f8e168af7d1c1132269d66fee9fa2684"
+  },
+  "browserParity": {
+    "status": "PASS",
+    "proofKind": "REAL_CHROMIUM_MAIN_THREAD_AND_WEB_WORKER",
+    "replayAggregate": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322",
+    "finalStateHash": "e988cc319aa97348cb86709226ad3d7fb1799587de0421be566d81b8a6625a63",
+    "decisionHash": "06db224172b4485a13a78c196735cec478109f189939bd7a3cc302f6a7c83e6d"
+  },
+  "hiddenInformation": {
+    "opaqueHiddenCardHandles": true,
+    "legacyReplayChoiceRedaction": true,
+    "certifiedV2ChoiceRedaction": true,
+    "exactRewindOnInvalidSubmission": true
+  },
+  "limitations": [
+    "SEVEN_SCORING_TRIGGER_AUTHORITY_UNAVAILABLE",
+    "SUIT_SPECIFIC_EFFECTS_EXCLUDED",
+    "SUPERS_ULTRAS_EXCLUDED",
+    "OPTIONAL_MODULE_AUTONOMY_BLOCKED",
+    "MULTIPLAYER_AUTONOMY_BLOCKED"
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-107",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-003": {
+        "controllerId": "P2",
+        "id": "OPAQUE-HIDDEN-CARD-003",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 44,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001",
+          "OPAQUE-HIDDEN-CARD-002"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "OPAQUE-HIDDEN-CARD-003"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-battle-realm",
+        "specs": {
+          "P1": "Beauty",
+          "P2": "Bravery"
+        }
+      },
+      "actorId": "P1",
+      "id": "CT107-1",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "drawnCardId": "CT107-DRAWN",
+        "kind": "extra-lucky",
+        "sourcePosition": "dp-top"
+      },
+      "actorId": "P1",
+      "id": "CT107-2",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "drawnCardId": "CT107-OTHER",
+        "kind": "extra-lucky",
+        "sourcePosition": "unavailable"
+      },
+      "actorId": "P1",
+      "id": "CT107-3",
+      "type": "RESOLVE_PHASE12_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT107-1",
+      "id": "EV-000001",
+      "payload": {
+        "selectedSpecByPlayer": {
+          "P1": "Beauty",
+          "P2": "Bravery"
+        }
+      },
+      "previousStateHash": "d2ef37b9c08a33e64d3eff2148147b6f499846dff50a72bc5c5c61fc28d3554a",
+      "sequence": 1,
+      "stateHash": "98d72e0d38c25f6142069342f8a5826d67483be0a963c35d7ad77539fa2eebd9",
+      "type": "BATTLEREALM_SPECS_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT107-2",
+      "id": "EV-000002",
+      "payload": {
+        "playerId": "P1",
+        "replacementCardId": "CT107-REPLACEMENT",
+        "scrappedCardId": "CT107-DRAWN",
+        "sourcePosition": "dp-top"
+      },
+      "previousStateHash": "98d72e0d38c25f6142069342f8a5826d67483be0a963c35d7ad77539fa2eebd9",
+      "sequence": 2,
+      "stateHash": "9ab26fbd8f803e0eb4bcec022c70d06f488ed200c52839ad821dac34d6d2d631",
+      "type": "EXTRA_LUCKY_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "d2ef37b9c08a33e64d3eff2148147b6f499846dff50a72bc5c5c61fc28d3554a",
+  "finalStateHash": "9ab26fbd8f803e0eb4bcec022c70d06f488ed200c52839ad821dac34d6d2d631",
+  "eventLogHash": "3f70c5b2029d715bf3de3eefaed5c5cd2dc97d56fd8cd90c221f633b4315d8e4"
+}

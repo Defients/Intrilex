@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "1.0",
+  "engine": {
+    "package": "@intrilex/headless-engine",
+    "version": "4.1.5",
+    "rulesVersion": "4.1",
+    "baseCertifiedVersion": "4.1.0",
+    "outerZipSha256": "fa5609e11370d674e6e2f20042997901ce3f3cfadcbf642f7c273983d2cc1e0f",
+    "basePayloadHash": "707377ea9fa94f449c293b6a4dcd8dc4b40dd058bcd6f9e5dd874339859cf168",
+    "preservedConformanceAggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"
+  },
+  "surfaces": {
+    "execute": true,
+    "legalActionEnumeration": true,
+    "completeFirstContactOrchestration": true,
+    "legacyReplay": true,
+    "certifiedReplayV2": true,
+    "publicStateView": true,
+    "playerAuthorizedStateView": true,
+    "browserExecution": "SUPPORTED",
+    "triggerQueueAuthority": "SUPPORTED",
+    "sealedPrivateChoiceAuthority": "SUPPORTED"
+  },
+  "profiles": [
+    {
+      "profileId": "first-contact-baseline",
+      "playerCounts": [
+        2
+      ],
+      "moduleSets": [
+        []
+      ],
+      "autonomy": "SUPPORTED"
+    },
+    {
+      "profileId": "first-contact-essentials",
+      "playerCounts": [
+        2
+      ],
+      "moduleSets": [
+        []
+      ],
+      "autonomy": "SUPPORTED"
+    },
+    {
+      "profileId": "first-contact-response",
+      "playerCounts": [
+        2
+      ],
+      "moduleSets": [
+        []
+      ],
+      "autonomy": "SUPPORTED"
+    },
+    {
+      "profileId": "first-contact-private-choice",
+      "playerCounts": [
+        2
+      ],
+      "moduleSets": [
+        []
+      ],
+      "autonomy": "SUPPORTED"
+    },
+    {
+      "profileId": "first-contact-trigger-closure",
+      "canonicalProfile": "FIRST_CONTACT",
+      "playerCounts": [
+        2
+      ],
+      "moduleSets": [
+        []
+      ],
+      "autonomy": "SUPPORTED",
+      "completeGenericFirstContactSurface": true,
+      "reasonCodes": [
+        "COMPLETE_FIRST_CONTACT_GENERIC_ALLOWLIST",
+        "ENGINE_OWNED_PRIORITY",
+        "ENGINE_OWNED_COUNTER_AUTHORITY",
+        "SEALED_PRIVATE_CHOICE_TOKENS",
+        "ENGINE_OWNED_TRIGGER_QUEUE",
+        "FIRST_CONTACT_HIDDEN_HAND_OVERRIDE"
+      ],
+      "evidence": [
+        "engine-tests-150",
+        "conformance-121",
+        "trigger-stress-500",
+        "browser-trigger-closure-parity"
+      ]
+    }
+  ],
+  "unsupportedCombinations": [
+    {
+      "scope": "optional-modules",
+      "status": "BLOCKED",
+      "reasonCode": "FIRST_CONTACT_PROHIBITS_OPTIONAL_MODULES"
+    },
+    {
+      "scope": "3-player-or-4-player-autonomy",
+      "status": "BLOCKED",
+      "reasonCode": "FIRST_CONTACT_TWO_PLAYER_PROFILE"
+    },
+    {
+      "scope": "Core-autonomy",
+      "status": "BLOCKED",
+      "reasonCode": "CORE_COMPLETE_ACTION_SURFACE_NOT_IMPLEMENTED"
+    }
+  ],
+  "evidence": {
+    "stressResultHash": "d80896db1dadc0c5369b583ee84c60ea1475ad604d18f8f8f3bd27f95089de32",
+    "browserReplayAggregate": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322",
+    "browserMatchHash": "90ae80a9e101340381b84d83ba8ca515a72adb57802e6afc6a428a4032ae2922"
+  }
+}

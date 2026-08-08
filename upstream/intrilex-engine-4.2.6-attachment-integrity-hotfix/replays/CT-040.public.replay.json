@@ -1,0 +1,154 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-040",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "C40-H": {
+        "controllerId": "P1",
+        "id": "C40-H",
+        "identity": "7♦",
+        "originalOwnerId": "P2",
+        "state": {
+          "attachedByJackId": "C40-J",
+          "jackPointBonus": 1,
+          "pointValue": 7
+        },
+        "zone": "P1_PR"
+      },
+      "C40-J": {
+        "controllerId": "P1",
+        "id": "C40-J",
+        "identity": "J♣",
+        "originalOwnerId": "P1",
+        "state": {
+          "attachmentGraph": {
+            "hostCardId": "C40-H",
+            "kind": "jack-pr",
+            "originalHostControllerId": "P2",
+            "originalHostZone": "P2_PR",
+            "pointBonus": 1
+          }
+        },
+        "zone": "P1_ER"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [
+          "C40-J"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "C40-H"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "cardId": "C40-J",
+        "destination": "GY",
+        "kind": "move-and-revalidate"
+      },
+      "actorId": "P1",
+      "id": "C40-1",
+      "type": "RESOLVE_INTERACTION_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "C40-1",
+      "id": "EV-000001",
+      "payload": {
+        "actualDestination": "GY",
+        "cardId": "C40-J",
+        "from": "P1_ER",
+        "requestedDestination": "GY"
+      },
+      "previousStateHash": "71ad881793e1ed8fa3b23c400fe97f81ee3a449c556bcf92e4632b88b43a7452",
+      "sequence": 1,
+      "stateHash": "e3eab02b6652f556c10302e130189cfc709250cd810c2a649afd7c854ad9e0b0",
+      "type": "CARD_MOVED_WITH_ATTACHMENT_REVALIDATION",
+      "visibility": "public"
+    },
+    {
+      "commandId": "C40-1",
+      "id": "EV-000003",
+      "payload": {
+        "hostCardId": "C40-H",
+        "hostControllerPreserved": false,
+        "hostDestinationPreserved": false,
+        "jackCardId": "C40-J",
+        "reason": "relationship-invalid"
+      },
+      "previousStateHash": "e3eab02b6652f556c10302e130189cfc709250cd810c2a649afd7c854ad9e0b0",
+      "sequence": 2,
+      "stateHash": "0fec962c189a765768e0d915d8f4fcce1adf8c97dd4c5f013087dddcb7eaa78b",
+      "type": "ATTACHMENT_SEVERED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "71ad881793e1ed8fa3b23c400fe97f81ee3a449c556bcf92e4632b88b43a7452",
+  "finalStateHash": "0fec962c189a765768e0d915d8f4fcce1adf8c97dd4c5f013087dddcb7eaa78b",
+  "eventLogHash": "050ad9c2d293d2330e5a98d7493fc2a39392bc20ca92a5283201865f409b7edd"
+}

@@ -1,0 +1,621 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-063@TOURNAMENT-SEED",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT063TS-01": {
+        "controllerId": "P1",
+        "id": "CT063TS-01",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-02": {
+        "controllerId": "P1",
+        "id": "CT063TS-02",
+        "identity": "A♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-03": {
+        "controllerId": "P1",
+        "id": "CT063TS-03",
+        "identity": "A♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-04": {
+        "controllerId": "P1",
+        "id": "CT063TS-04",
+        "identity": "A♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-05": {
+        "controllerId": "P1",
+        "id": "CT063TS-05",
+        "identity": "2♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-06": {
+        "controllerId": "P1",
+        "id": "CT063TS-06",
+        "identity": "2♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-07": {
+        "controllerId": "P1",
+        "id": "CT063TS-07",
+        "identity": "2♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-08": {
+        "controllerId": "P1",
+        "id": "CT063TS-08",
+        "identity": "2♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-09": {
+        "controllerId": "P1",
+        "id": "CT063TS-09",
+        "identity": "3♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-10": {
+        "controllerId": "P1",
+        "id": "CT063TS-10",
+        "identity": "3♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-11": {
+        "controllerId": "P1",
+        "id": "CT063TS-11",
+        "identity": "3♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-12": {
+        "controllerId": "P1",
+        "id": "CT063TS-12",
+        "identity": "3♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-13": {
+        "controllerId": "P1",
+        "id": "CT063TS-13",
+        "identity": "4♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-14": {
+        "controllerId": "P1",
+        "id": "CT063TS-14",
+        "identity": "4♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-15": {
+        "controllerId": "P1",
+        "id": "CT063TS-15",
+        "identity": "4♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-16": {
+        "controllerId": "P1",
+        "id": "CT063TS-16",
+        "identity": "4♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-17": {
+        "controllerId": "P1",
+        "id": "CT063TS-17",
+        "identity": "5♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-18": {
+        "controllerId": "P1",
+        "id": "CT063TS-18",
+        "identity": "5♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-19": {
+        "controllerId": "P1",
+        "id": "CT063TS-19",
+        "identity": "5♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-20": {
+        "controllerId": "P1",
+        "id": "CT063TS-20",
+        "identity": "5♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-21": {
+        "controllerId": "P1",
+        "id": "CT063TS-21",
+        "identity": "6♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-22": {
+        "controllerId": "P1",
+        "id": "CT063TS-22",
+        "identity": "6♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-23": {
+        "controllerId": "P1",
+        "id": "CT063TS-23",
+        "identity": "6♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-24": {
+        "controllerId": "P1",
+        "id": "CT063TS-24",
+        "identity": "6♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-25": {
+        "controllerId": "P1",
+        "id": "CT063TS-25",
+        "identity": "7♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-26": {
+        "controllerId": "P1",
+        "id": "CT063TS-26",
+        "identity": "7♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-27": {
+        "controllerId": "P1",
+        "id": "CT063TS-27",
+        "identity": "7♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-28": {
+        "controllerId": "P1",
+        "id": "CT063TS-28",
+        "identity": "7♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-29": {
+        "controllerId": "P1",
+        "id": "CT063TS-29",
+        "identity": "8♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-30": {
+        "controllerId": "P1",
+        "id": "CT063TS-30",
+        "identity": "8♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-31": {
+        "controllerId": "P1",
+        "id": "CT063TS-31",
+        "identity": "8♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-32": {
+        "controllerId": "P1",
+        "id": "CT063TS-32",
+        "identity": "8♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-33": {
+        "controllerId": "P1",
+        "id": "CT063TS-33",
+        "identity": "9♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-34": {
+        "controllerId": "P1",
+        "id": "CT063TS-34",
+        "identity": "9♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-35": {
+        "controllerId": "P1",
+        "id": "CT063TS-35",
+        "identity": "9♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-36": {
+        "controllerId": "P1",
+        "id": "CT063TS-36",
+        "identity": "9♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-37": {
+        "controllerId": "P1",
+        "id": "CT063TS-37",
+        "identity": "10♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-38": {
+        "controllerId": "P1",
+        "id": "CT063TS-38",
+        "identity": "10♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-39": {
+        "controllerId": "P1",
+        "id": "CT063TS-39",
+        "identity": "10♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-40": {
+        "controllerId": "P1",
+        "id": "CT063TS-40",
+        "identity": "10♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-41": {
+        "controllerId": "P1",
+        "id": "CT063TS-41",
+        "identity": "J♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-42": {
+        "controllerId": "P1",
+        "id": "CT063TS-42",
+        "identity": "J♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-43": {
+        "controllerId": "P1",
+        "id": "CT063TS-43",
+        "identity": "J♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-44": {
+        "controllerId": "P1",
+        "id": "CT063TS-44",
+        "identity": "J♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-45": {
+        "controllerId": "P1",
+        "id": "CT063TS-45",
+        "identity": "Q♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-46": {
+        "controllerId": "P1",
+        "id": "CT063TS-46",
+        "identity": "Q♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-47": {
+        "controllerId": "P1",
+        "id": "CT063TS-47",
+        "identity": "Q♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-48": {
+        "controllerId": "P1",
+        "id": "CT063TS-48",
+        "identity": "Q♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-49": {
+        "controllerId": "P1",
+        "id": "CT063TS-49",
+        "identity": "K♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-50": {
+        "controllerId": "P1",
+        "id": "CT063TS-50",
+        "identity": "K♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-51": {
+        "controllerId": "P1",
+        "id": "CT063TS-51",
+        "identity": "K♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-52": {
+        "controllerId": "P1",
+        "id": "CT063TS-52",
+        "identity": "K♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-53": {
+        "controllerId": "P1",
+        "id": "CT063TS-53",
+        "identity": "RJ",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT063TS-54": {
+        "controllerId": "P1",
+        "id": "CT063TS-54",
+        "identity": "BJ",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Setup",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT063TS-01",
+        "CT063TS-02",
+        "CT063TS-03",
+        "CT063TS-04",
+        "CT063TS-05",
+        "CT063TS-06",
+        "CT063TS-07",
+        "CT063TS-08",
+        "CT063TS-09",
+        "CT063TS-10",
+        "CT063TS-11",
+        "CT063TS-12",
+        "CT063TS-13",
+        "CT063TS-14",
+        "CT063TS-15",
+        "CT063TS-16",
+        "CT063TS-17",
+        "CT063TS-18",
+        "CT063TS-19",
+        "CT063TS-20",
+        "CT063TS-21",
+        "CT063TS-22",
+        "CT063TS-23",
+        "CT063TS-24",
+        "CT063TS-25",
+        "CT063TS-26",
+        "CT063TS-27",
+        "CT063TS-28",
+        "CT063TS-29",
+        "CT063TS-30",
+        "CT063TS-31",
+        "CT063TS-32",
+        "CT063TS-33",
+        "CT063TS-34",
+        "CT063TS-35",
+        "CT063TS-36",
+        "CT063TS-37",
+        "CT063TS-38",
+        "CT063TS-39",
+        "CT063TS-40",
+        "CT063TS-41",
+        "CT063TS-42",
+        "CT063TS-43",
+        "CT063TS-44",
+        "CT063TS-45",
+        "CT063TS-46",
+        "CT063TS-47",
+        "CT063TS-48",
+        "CT063TS-49",
+        "CT063TS-50",
+        "CT063TS-51",
+        "CT063TS-52",
+        "CT063TS-53",
+        "CT063TS-54"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "enabledOptionalModules": [
+          "tournament-seed",
+          "trap"
+        ],
+        "kind": "configure-tournament-seed",
+        "seedOrder": [
+          "P1",
+          "P2"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT063TS-CFG",
+      "type": "RESOLVE_PHASE15_ACTION"
+    }
+  ],
+  "accepted": [
+    false
+  ],
+  "events": [],
+  "checkpoints": [
+    {
+      "accepted": false,
+      "commandId": "CT063TS-CFG",
+      "commandIndex": 0,
+      "eventEndIndex": 0,
+      "eventRangeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "eventStartIndex": 0,
+      "revisionAfter": 0,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "e97eb51df0b824b951921f725e628f1c057f804abe1c098961e528d9bc04f371",
+      "stateHashBefore": "e97eb51df0b824b951921f725e628f1c057f804abe1c098961e528d9bc04f371"
+    }
+  ],
+  "initialStateHash": "e97eb51df0b824b951921f725e628f1c057f804abe1c098961e528d9bc04f371",
+  "finalStateHash": "e97eb51df0b824b951921f725e628f1c057f804abe1c098961e528d9bc04f371",
+  "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "checkpointLogHash": "8f90d53c963416f003c2bd7b7c26a22ca82f47ae6164ddecb70de566efd7f68e",
+  "rngTraceHash": "c170d79b5ab97edd104ef61671cec887d8d3f1467590ada68583344bc704280d",
+  "contentHash": "64a8e5c2bda7c48acf81e908cc33169e9735f35c185fa13b3bb6de6bd4767b1e",
+  "integrityHash": "75b5925fec0c052fe50b55606183ebefb6d775856ffddedd53cd30f8c69b5cba"
+}

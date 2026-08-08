@@ -1,0 +1,12 @@
+{
+  "name": "@intrilex/telemetry",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./rank-telemetry": "./src/rank-telemetry.mjs"
+  },
+  "dependencies": {
+    "@intrilex/shared": "workspace:*"
+  }
+}

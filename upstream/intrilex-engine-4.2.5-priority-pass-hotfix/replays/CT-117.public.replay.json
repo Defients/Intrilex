@@ -1,0 +1,192 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-117",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT117-T": {
+        "controllerId": "P3",
+        "id": "CT117-T",
+        "identity": "9♣",
+        "originalOwnerId": "P3",
+        "state": {
+          "pointValue": 9
+        },
+        "zone": "P3_PR"
+      }
+    },
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P3": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P3",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT117-T"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [
+      {
+        "controllerId": "P1",
+        "id": "CT117-SI",
+        "instructions": [],
+        "kind": "generated-effect",
+        "revalidationClass": "single-required-target",
+        "sourceCardIds": [],
+        "sourceDestination": "GY",
+        "status": "pending",
+        "targetCardIds": []
+      }
+    ],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2",
+      "P3"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-battle-realm",
+        "specs": {
+          "P1": "Brilliance",
+          "P2": "Balance",
+          "P3": "Beauty"
+        }
+      },
+      "actorId": "P1",
+      "id": "CT117-1",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "interceptorId": "P2",
+        "kind": "preserve-intercepted-play",
+        "originalControllerId": "P1",
+        "preservedModifierKeys": [
+          "seven-bottom-reveal",
+          "trap-source-intercept"
+        ],
+        "replacementTargetIds": [
+          "CT117-T"
+        ],
+        "stackItemId": "CT117-SI"
+      },
+      "actorId": "P2",
+      "id": "CT117-2",
+      "type": "RESOLVE_PHASE12_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT117-1",
+      "id": "EV-000001",
+      "payload": {
+        "selectedSpecByPlayer": {
+          "P1": "Brilliance",
+          "P2": "Balance",
+          "P3": "Beauty"
+        }
+      },
+      "previousStateHash": "29dab4c63459dafc82588b36fda379c47385fbea8e3db6d9b7acb7d0648c7687",
+      "sequence": 1,
+      "stateHash": "d138e80bce01b1f32b1a330ae582e87d720c569452109445106cdb0e36287f53",
+      "type": "BATTLEREALM_SPECS_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT117-2",
+      "id": "EV-000002",
+      "payload": {
+        "controllerId": "P2",
+        "originalControllerId": "P1",
+        "preservedModifierKeys": [
+          "seven-bottom-reveal",
+          "trap-source-intercept"
+        ],
+        "replacementTargetIds": [
+          "CT117-T"
+        ],
+        "stackItemId": "CT117-SI"
+      },
+      "previousStateHash": "d138e80bce01b1f32b1a330ae582e87d720c569452109445106cdb0e36287f53",
+      "sequence": 2,
+      "stateHash": "ee37f687dd4b29e4c010cb893632e9123cc724184c2c152b2bf385ab31a56537",
+      "type": "INTERCEPTED_PLAY_PROPERTIES_PRESERVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "29dab4c63459dafc82588b36fda379c47385fbea8e3db6d9b7acb7d0648c7687",
+  "finalStateHash": "ee37f687dd4b29e4c010cb893632e9123cc724184c2c152b2bf385ab31a56537",
+  "eventLogHash": "599177d223d58c951fbdfb6cb4b02bf01aa0a905b32610649b0e8525a3f9ea07"
+}

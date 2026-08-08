@@ -1,0 +1,16 @@
+{
+  "name": "@intrilex/match-authority",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/authoritative-match-session.mjs",
+    "./player-projection": "./src/player-projection.mjs",
+    "./match-store": "./src/match-store.mjs",
+    "./matchmaking-queue": "./src/matchmaking-queue.mjs"
+  },
+  "dependencies": {
+    "@intrilex/engine-adapter": "workspace:*",
+    "@intrilex/shared": "workspace:*",
+    "@intrilex/network-protocol": "workspace:*"
+  }
+}

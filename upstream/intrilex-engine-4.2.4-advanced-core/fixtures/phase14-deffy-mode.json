@@ -1,0 +1,755 @@
+[
+  {
+    "id": "CT-115",
+    "title": "Classic Deffy draft reaches exact target hands",
+    "sourceTestId": "CT-115",
+    "purpose": "Prove Classic 21 drafting reaches exact 5/6 target hands, enforces hidden-pick limits, and returns leftovers to DP without using the gameplay Stack.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT115-P01": {
+          "id": "CT115-P01",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P02": {
+          "id": "CT115-P02",
+          "identity": "A♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P03": {
+          "id": "CT115-P03",
+          "identity": "2♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P04": {
+          "id": "CT115-P04",
+          "identity": "2♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P05": {
+          "id": "CT115-P05",
+          "identity": "3♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P06": {
+          "id": "CT115-P06",
+          "identity": "3♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P07": {
+          "id": "CT115-P07",
+          "identity": "4♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P08": {
+          "id": "CT115-P08",
+          "identity": "4♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P09": {
+          "id": "CT115-P09",
+          "identity": "5♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P10": {
+          "id": "CT115-P10",
+          "identity": "5♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P11": {
+          "id": "CT115-P11",
+          "identity": "6♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P12": {
+          "id": "CT115-P12",
+          "identity": "A♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P13": {
+          "id": "CT115-P13",
+          "identity": "A♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P14": {
+          "id": "CT115-P14",
+          "identity": "2♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P15": {
+          "id": "CT115-P15",
+          "identity": "2♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P16": {
+          "id": "CT115-P16",
+          "identity": "3♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P17": {
+          "id": "CT115-P17",
+          "identity": "3♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P18": {
+          "id": "CT115-P18",
+          "identity": "4♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P19": {
+          "id": "CT115-P19",
+          "identity": "4♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P20": {
+          "id": "CT115-P20",
+          "identity": "5♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-P21": {
+          "id": "CT115-P21",
+          "identity": "5♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-DP1": {
+          "id": "CT115-DP1",
+          "identity": "6♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-DP2": {
+          "id": "CT115-DP2",
+          "identity": "6♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-DP3": {
+          "id": "CT115-DP3",
+          "identity": "6♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT115-DP4": {
+          "id": "CT115-DP4",
+          "identity": "7♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT115-P01",
+          "CT115-P02",
+          "CT115-P03",
+          "CT115-P04",
+          "CT115-P05",
+          "CT115-P06",
+          "CT115-P07",
+          "CT115-P08",
+          "CT115-P09",
+          "CT115-P10",
+          "CT115-P11",
+          "CT115-P12",
+          "CT115-P13",
+          "CT115-P14",
+          "CT115-P15",
+          "CT115-P16",
+          "CT115-P17",
+          "CT115-P18",
+          "CT115-P19",
+          "CT115-P20",
+          "CT115-P21",
+          "CT115-DP1",
+          "CT115-DP2",
+          "CT115-DP3",
+          "CT115-DP4"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT115-1",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-deffy",
+          "subMode": "classic",
+          "turnOrder": [
+            "P1",
+            "P2"
+          ]
+        }
+      },
+      {
+        "id": "CT115-2",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "initialize-draft-pool",
+          "poolCardIds": [
+            "CT115-P01",
+            "CT115-P02",
+            "CT115-P03",
+            "CT115-P04",
+            "CT115-P05",
+            "CT115-P06",
+            "CT115-P07",
+            "CT115-P08",
+            "CT115-P09",
+            "CT115-P10",
+            "CT115-P11",
+            "CT115-P12",
+            "CT115-P13",
+            "CT115-P14",
+            "CT115-P15",
+            "CT115-P16",
+            "CT115-P17",
+            "CT115-P18",
+            "CT115-P19",
+            "CT115-P20",
+            "CT115-P21"
+          ],
+          "faceDownCardIds": [
+            "CT115-P03",
+            "CT115-P04",
+            "CT115-P06",
+            "CT115-P20",
+            "CT115-P21"
+          ]
+        }
+      },
+      {
+        "id": "CT115-3",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P1",
+          "cardId": "CT115-P01"
+        }
+      },
+      {
+        "id": "CT115-4",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P2",
+          "cardId": "CT115-P02"
+        }
+      },
+      {
+        "id": "CT115-5",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P1",
+          "cardId": "CT115-P03"
+        }
+      },
+      {
+        "id": "CT115-6",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P2",
+          "cardId": "CT115-P04"
+        }
+      },
+      {
+        "id": "CT115-7",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P1",
+          "cardId": "CT115-P05"
+        }
+      },
+      {
+        "id": "CT115-8",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P2",
+          "cardId": "CT115-P06"
+        }
+      },
+      {
+        "id": "CT115-9",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P1",
+          "cardId": "CT115-P07"
+        }
+      },
+      {
+        "id": "CT115-10",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P2",
+          "cardId": "CT115-P08"
+        }
+      },
+      {
+        "id": "CT115-11",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P1",
+          "cardId": "CT115-P09"
+        }
+      },
+      {
+        "id": "CT115-12",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P2",
+          "cardId": "CT115-P10"
+        }
+      },
+      {
+        "id": "CT115-13",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "draft-pick",
+          "drafterId": "P2",
+          "cardId": "CT115-P11"
+        }
+      },
+      {
+        "id": "CT115-14",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "complete-draft"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "final": {
+        "hands": {
+          "P1": [
+            "CT115-P01",
+            "CT115-P03",
+            "CT115-P05",
+            "CT115-P07",
+            "CT115-P09"
+          ],
+          "P2": [
+            "CT115-P02",
+            "CT115-P04",
+            "CT115-P06",
+            "CT115-P08",
+            "CT115-P10",
+            "CT115-P11"
+          ]
+        },
+        "zones": {
+          "staging": [],
+          "dp": [
+            "CT115-DP1",
+            "CT115-DP2",
+            "CT115-DP3",
+            "CT115-DP4",
+            "CT115-P19",
+            "CT115-P17",
+            "CT115-P21",
+            "CT115-P13",
+            "CT115-P16",
+            "CT115-P20",
+            "CT115-P15",
+            "CT115-P12",
+            "CT115-P14",
+            "CT115-P18"
+          ]
+        },
+        "phase": "Setup",
+        "stackDepth": 0,
+        "triggerQueueDepth": 0
+      }
+    }
+  },
+  {
+    "id": "CT-116",
+    "title": "Mirror Me adds one legal mirror then shuffles DP",
+    "sourceTestId": "CT-116",
+    "purpose": "Prove a hidden Queen pick is revealed, exactly one same-rank mirror enters the pool face-up, the remaining DP is shuffled deterministically, and no Time Bomb state exists during setup.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Setup",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 1,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT116-QH": {
+          "id": "CT116-QH",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "STAGING",
+          "state": {
+            "draftFaceUp": false
+          }
+        },
+        "CT116-QS": {
+          "id": "CT116-QS",
+          "identity": "Q♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT116-AC": {
+          "id": "CT116-AC",
+          "identity": "A♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        },
+        "CT116-KD": {
+          "id": "CT116-KD",
+          "identity": "K♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT116-QS",
+          "CT116-AC",
+          "CT116-KD"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": [
+          "CT116-QH"
+        ]
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 305419896,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {
+        "phase14": {
+          "enabled": true,
+          "subMode": "classic",
+          "status": "drafting",
+          "targetHandSizes": {
+            "P1": 5,
+            "P2": 6
+          },
+          "draftOrder": [
+            "P1",
+            "P2"
+          ],
+          "assignmentByDrafter": {
+            "P1": "P1",
+            "P2": "P2"
+          },
+          "poolFaceUpByCard": {
+            "CT116-QH": false
+          },
+          "draftedFor": {
+            "P1": [],
+            "P2": []
+          },
+          "faceDownPicksByDrafter": {
+            "P1": 0,
+            "P2": 0
+          },
+          "faceUpPicksByDrafter": {
+            "P1": 0,
+            "P2": 0
+          },
+          "addOns": {
+            "speedRun": false,
+            "thatsUrz": false,
+            "thirdPartied": false,
+            "mirrorMe": true
+          },
+          "rngAudit": [],
+          "specsMayBeRevealed": false,
+          "trapPlacementDuringDraft": false,
+          "lastResolution": null,
+          "nextDrafterIndex": 0
+        }
+      }
+    },
+    "commands": [
+      {
+        "id": "CT116-1",
+        "type": "RESOLVE_PHASE14_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "mirror-me-pick",
+          "drafterId": "P1",
+          "cardId": "CT116-QH",
+          "mirrorCardId": "CT116-QS"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "hands": {
+          "P1": [
+            "CT116-QH"
+          ],
+          "P2": []
+        },
+        "zones": {
+          "staging": [
+            "CT116-QS"
+          ],
+          "dp": [
+            "CT116-AC",
+            "CT116-KD"
+          ]
+        },
+        "cardZones": {
+          "CT116-QH": "P1_HAND",
+          "CT116-QS": "STAGING"
+        },
+        "absentMarkers": {
+          "CT116-QH": [
+            "timeBomb",
+            "timeBombStage"
+          ],
+          "CT116-QS": [
+            "timeBomb",
+            "timeBombStage"
+          ]
+        },
+        "markers": {
+          "CT116-QS": {
+            "draftFaceUp": true
+          }
+        },
+        "stackDepth": 0
+      }
+    }
+  }
+]

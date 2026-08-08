@@ -1,0 +1,184 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-096",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT-096-DP-01": {
+        "controllerId": "P1",
+        "id": "CT-096-DP-01",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-096-DP-02": {
+        "controllerId": "P1",
+        "id": "CT-096-DP-02",
+        "identity": "2♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-096-DP-03": {
+        "controllerId": "P1",
+        "id": "CT-096-DP-03",
+        "identity": "3♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-096-DP-04": {
+        "controllerId": "P1",
+        "id": "CT-096-DP-04",
+        "identity": "K♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-096-P1-TRAP": {
+        "controllerId": "P1",
+        "id": "CT-096-P1-TRAP",
+        "identity": "8♦",
+        "originalOwnerId": "P1",
+        "state": {
+          "faceDownTrap": true,
+          "pointValue": 0
+        },
+        "zone": "P1_PR"
+      },
+      "CT-096-P2-K": {
+        "controllerId": "P2",
+        "id": "CT-096-P2-K",
+        "identity": "K♣",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 8
+        },
+        "zone": "P2_PR"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT-096-P1-TRAP"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT-096-P2-K"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT-096-DP-01",
+        "CT-096-DP-02",
+        "CT-096-DP-03",
+        "CT-096-DP-04"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "reveal-trap-as-effect",
+        "trapCardId": "CT-096-P1-TRAP"
+      },
+      "actorId": "P1",
+      "id": "CT096-1",
+      "type": "RESOLVE_PHASE10_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT096-1",
+      "id": "EV-000001",
+      "payload": {
+        "identity": "8♦",
+        "resolvesAsPlay": false,
+        "trapCardId": "CT-096-P1-TRAP"
+      },
+      "previousStateHash": "99a36306e73c03f46e1226532b347955af99f9265b43a7e8dff8b89402cc108f",
+      "sequence": 1,
+      "stateHash": "ac580c82960b1c34c55d297fff17f42d1c90dee14c5d4ee65dbffdf4784d6c1f",
+      "type": "TRAP_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT096-1",
+      "id": "EV-000003",
+      "payload": {
+        "createsOnPlayModifier": false,
+        "trapCardId": "CT-096-P1-TRAP"
+      },
+      "previousStateHash": "ac580c82960b1c34c55d297fff17f42d1c90dee14c5d4ee65dbffdf4784d6c1f",
+      "sequence": 2,
+      "stateHash": "5322b7e17dfe9658109616cb094abb0fdf24ccaeee0c839cabfd9d28b6f40cb6",
+      "type": "TRAP_EFFECT_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "99a36306e73c03f46e1226532b347955af99f9265b43a7e8dff8b89402cc108f",
+  "finalStateHash": "5322b7e17dfe9658109616cb094abb0fdf24ccaeee0c839cabfd9d28b6f40cb6",
+  "eventLogHash": "c4ae8692a3a4ee69a8a84f877947a8bea659365d2e20e959919f3138b2290876"
+}

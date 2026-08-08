@@ -1,0 +1,164 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-091",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT091-5": {
+        "controllerId": "P1",
+        "id": "CT091-5",
+        "identity": "5♥",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": 5
+        },
+        "zone": "P1_PR"
+      },
+      "CT091-B": {
+        "controllerId": "P1",
+        "id": "CT091-B",
+        "identity": "A♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "GY"
+      },
+      "CT091-N": {
+        "controllerId": "P1",
+        "id": "CT091-N",
+        "identity": "K♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "GY"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT091-5"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [
+        "CT091-B",
+        "CT091-N"
+      ],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "capture-voltage",
+        "playerId": "P1"
+      },
+      "actorId": "P1",
+      "id": "CT091-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    },
+    {
+      "action": {
+        "branch": "gy-bottom",
+        "kind": "resolve-voltage",
+        "playerId": "P1",
+        "rank": "5"
+      },
+      "actorId": "P1",
+      "id": "CT091-2",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT091-1",
+      "id": "EV-000001",
+      "payload": {
+        "playerId": "P1",
+        "snapshot": {
+          "capturedFullTurnSequence": 1,
+          "rank3": 0,
+          "rank4": 0,
+          "rank5": 5
+        }
+      },
+      "previousStateHash": "8714fd0c1a94a2b395f6379c209e218824a0e1f5e87439e6c4a94da25ed2f2b0",
+      "sequence": 1,
+      "stateHash": "1bb75304315e7f577e4e678cd293774a29c300a47865246b47c72f294dfb4fd3",
+      "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT091-2",
+      "id": "EV-000002",
+      "payload": {
+        "branch": "gy-bottom",
+        "cardId": "CT091-B",
+        "playerId": "P1"
+      },
+      "previousStateHash": "1bb75304315e7f577e4e678cd293774a29c300a47865246b47c72f294dfb4fd3",
+      "sequence": 2,
+      "stateHash": "559f9b0bfdbcc8ad10327897d9a2c895775f9b9864651061c863fc7871edd999",
+      "type": "VOLTAGE_5_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "8714fd0c1a94a2b395f6379c209e218824a0e1f5e87439e6c4a94da25ed2f2b0",
+  "finalStateHash": "559f9b0bfdbcc8ad10327897d9a2c895775f9b9864651061c863fc7871edd999",
+  "eventLogHash": "8ff02303b4557db39289d18379fc896eeb5bcfcd666abe5f0210819072c17a0c"
+}

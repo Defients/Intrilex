@@ -1,0 +1,126 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-079",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001",
+          "OPAQUE-HIDDEN-CARD-002"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "royal-marriage",
+        "kingCardId": "CT079-K",
+        "queenCardId": "CT079-Q"
+      },
+      "actorId": "P1",
+      "id": "CT079-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT079-1",
+      "id": "EV-000001",
+      "payload": {
+        "isCombo": false,
+        "kingCardId": "CT079-K",
+        "playClass": "RoyalMarriage",
+        "queenCardId": "CT079-Q",
+        "suit": "♥"
+      },
+      "previousStateHash": "01ef71fbd1f9221617556d4d5d1fe343937f55a2075eed8a5830a2ed254d5467",
+      "sequence": 1,
+      "stateHash": "3b2f4607beb4471732c1478bf10b9d94cb64ce5b5be3e07be7994ce73ea68c55",
+      "type": "ROYAL_MARRIAGE_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "01ef71fbd1f9221617556d4d5d1fe343937f55a2075eed8a5830a2ed254d5467",
+  "finalStateHash": "3b2f4607beb4471732c1478bf10b9d94cb64ce5b5be3e07be7994ce73ea68c55",
+  "eventLogHash": "239d614e198af96e4d2302a3129435f171d2a245b524f517b03558e81ed6231d"
+}

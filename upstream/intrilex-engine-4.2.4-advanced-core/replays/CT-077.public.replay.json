@@ -1,0 +1,135 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-077",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT077-7": {
+        "controllerId": "P2",
+        "id": "CT077-7",
+        "identity": "7♥",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 7
+        },
+        "zone": "P2_PR"
+      },
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT077-7"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "attach-jack",
+        "row": "pr",
+        "sourceCardId": "CT077-J",
+        "targetCardId": "CT077-7"
+      },
+      "actorId": "P1",
+      "id": "CT077-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT077-1",
+      "id": "EV-000001",
+      "payload": {
+        "controllerId": "P1",
+        "hostCardId": "CT077-7",
+        "jackCardId": "CT077-J",
+        "oldController": "P2",
+        "row": "pr"
+      },
+      "previousStateHash": "575d6c887592b383f667c7d93300e7a450c1f207af25238be5ba900ba1547492",
+      "sequence": 1,
+      "stateHash": "5744ed8f23c494f2ebc00aeae48f1989a7b9f9441b11656ef5473e9f50a1e3c7",
+      "type": "JACK_ATTACHED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "575d6c887592b383f667c7d93300e7a450c1f207af25238be5ba900ba1547492",
+  "finalStateHash": "5744ed8f23c494f2ebc00aeae48f1989a7b9f9441b11656ef5473e9f50a1e3c7",
+  "eventLogHash": "d2067cc86de31f25658ca734347bdf044e2f7ff6651bcf386cbc613845da7fa8"
+}

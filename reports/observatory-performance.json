@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "PASS",
+  "environment": {
+    "node": "v22.16.0",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "workloads": {
+    "sourceMatches": 100,
+    "scaledReferenceMatches": 10800,
+    "mechanics": 119,
+    "synergies": 229
+  },
+  "measurements": {
+    "summaryParse": {
+      "minMs": 1.2621430000000018,
+      "medianMs": 1.601333000000004,
+      "p95Ms": 6.051537,
+      "maxMs": 6.051537,
+      "iterations": 15
+    },
+    "analyticsParse": {
+      "minMs": 2.502707000000001,
+      "medianMs": 2.846502000000008,
+      "p95Ms": 4.371331000000005,
+      "maxMs": 4.371331000000005,
+      "iterations": 15
+    },
+    "scaledCrossFilter": {
+      "minMs": 0.2305379999999957,
+      "medianMs": 0.24631500000000983,
+      "p95Ms": 0.5643369999999948,
+      "maxMs": 4.088441000000003,
+      "iterations": 120
+    },
+    "mechanicsFilter": {
+      "minMs": 0.008696999999983746,
+      "medianMs": 0.009063999999995076,
+      "p95Ms": 0.0106219999999837,
+      "maxMs": 0.09494999999998299,
+      "iterations": 120
+    },
+    "synergyFilter": {
+      "minMs": 0.0051120000000253185,
+      "medianMs": 0.005976000000003978,
+      "p95Ms": 0.03610100000000216,
+      "maxMs": 0.09177599999998165,
+      "iterations": 120
+    },
+    "memoryGrowthBytes": 18247680
+  },
+  "referenceNote": "The 10,800-row responsiveness workload deterministically repeats the 100 certified summaries to test scale mechanics only; it is not additional gameplay evidence.",
+  "checksum": "d2edfbbe529e3b83b32bfd2733041287464b4069c13774da2f0b022105ee6298"
+}

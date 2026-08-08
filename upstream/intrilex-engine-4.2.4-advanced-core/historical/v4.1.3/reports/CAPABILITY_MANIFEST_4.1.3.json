@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "1.0",
+  "engine": {
+    "package": "@intrilex/headless-engine",
+    "version": "4.1.3",
+    "rulesVersion": "4.1",
+    "baseCertifiedVersion": "4.1.0",
+    "basePayloadHash": "707377ea9fa94f449c293b6a4dcd8dc4b40dd058bcd6f9e5dd874339859cf168",
+    "preservedConformanceAggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"
+  },
+  "profiles": [
+    {
+      "profileId": "first-contact-baseline",
+      "status": "SUPPORTED",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "actionFamilies": ["draw", "play-for-points", "scuttle", "pass"]
+    },
+    {
+      "profileId": "first-contact-essentials",
+      "status": "SUPPORTED",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "actionFamilies": ["draw", "play-for-points", "play-for-effect", "scuttle", "pass"]
+    },
+    {
+      "profileId": "first-contact-response",
+      "status": "SUPPORTED",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "actionFamilies": ["draw", "play-for-points", "play-for-effect", "scuttle", "pass", "A-base-counter", "8-scuttle-counter", "J-disrupt", "K-anchor-goal-counter"],
+      "reasonCodes": ["FORMAL_FIRST_CONTACT_TEACHING_OVERRIDE", "ENGINE_OWNED_PRIORITY", "ENGINE_OWNED_COUNTER_AUTHORITY", "PRIVATE_CHOICE_EFFECTS_EXCLUDED"]
+    },
+    {
+      "profileId": "first-contact-complete",
+      "status": "REPLAY_ONLY",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "reasonCodes": ["PRIVATE_CHOICE_CONTINUATIONS_UNAVAILABLE"]
+    }
+  ],
+  "browserExecution": "SUPPORTED",
+  "policyCommandVaultIsolation": "SUPPORTED",
+  "multiplayerAutonomy": "BLOCKED"
+}

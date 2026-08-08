@@ -1,0 +1,176 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-106",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT106-T": {
+        "controllerId": "P2",
+        "id": "CT106-T",
+        "identity": "5♠",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 0,
+          "scuttleImmune": true
+        },
+        "zone": "P2_ER"
+      }
+    },
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [
+          "CT106-T"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-battle-realm",
+        "specs": {
+          "P1": "Bravery",
+          "P2": "Balance"
+        }
+      },
+      "actorId": "P1",
+      "id": "CT106-1",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "kind": "courageous-assault",
+        "targetCardId": "CT106-T"
+      },
+      "actorId": "P1",
+      "id": "CT106-2",
+      "type": "RESOLVE_PHASE12_ACTION"
+    }
+  ],
+  "accepted": [
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT106-1",
+      "id": "EV-000001",
+      "payload": {
+        "selectedSpecByPlayer": {
+          "P1": "Bravery",
+          "P2": "Balance"
+        }
+      },
+      "previousStateHash": "022f6420efc52acc6a745bf7b792a57025b3282e7df48d8d40f87d26cf2f194a",
+      "sequence": 1,
+      "stateHash": "15751c67655f701443fe36af0547a28d92c6c6f57d0ac04f96e83db24be86ce9",
+      "type": "BATTLEREALM_SPECS_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT106-2",
+      "id": "EV-000002",
+      "payload": {
+        "bypassed": [
+          "rank",
+          "suit",
+          "guard",
+          "scuttle-immunity"
+        ],
+        "destination": "GY",
+        "from": "P2_ER",
+        "interruptCreatesSkip": false,
+        "playerId": "P1",
+        "targetCardId": "CT106-T",
+        "uncounterable": true
+      },
+      "previousStateHash": "15751c67655f701443fe36af0547a28d92c6c6f57d0ac04f96e83db24be86ce9",
+      "sequence": 2,
+      "stateHash": "860883fe72f40723f3b8bcf39443cf8c0657d248f73f01a9ff9da792d2a63ee6",
+      "type": "COURAGEOUS_ASSAULT_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT106-1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "bc94aa720c39b30189b80b74e3c04059d5b07cd66ea861b8b503d3e9efed04ca"
+    },
+    {
+      "commandIndex": 1,
+      "commandId": "CT106-2",
+      "accepted": true,
+      "eventStartIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "1e26d3422c2e1620c246a2e079c90a9a0c406049a64a43c24a243cef65720acb"
+    }
+  ],
+  "publicEventLogHash": "e4f9c4c70879149f18b5ce2a1cb487778f579640f2b8f548b7debce416f3f3c8",
+  "publicContentHash": "4e58f2c7a6f299081b406abe9df9ca314f3642fde5cd7d01476e145dd8242e21"
+}

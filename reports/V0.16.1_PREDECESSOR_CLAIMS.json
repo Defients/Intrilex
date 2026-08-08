@@ -1,0 +1,126 @@
+{
+  "auditDate": "2026-08-03",
+  "predecessorVersion": "0.16.0",
+  "claims": [
+    {
+      "claim": "736 tests pass",
+      "status": "CONFIRMED",
+      "observed": { "passed": 736, "failed": 0, "skipped": 0 },
+      "command": "node scripts/generate-self-audit.mjs",
+      "evidencePath": "reports/self-audit.json",
+      "notes": ["Self-audit reports 736 tests, 736 pass, 0 fail, status PASS"]
+    },
+    {
+      "claim": "46 test files",
+      "status": "CONFIRMED",
+      "observed": { "passed": 46, "failed": 0, "skipped": 0 },
+      "command": "Get-ChildItem test -Filter *.test.mjs | Measure-Object",
+      "evidencePath": "test/",
+      "notes": ["46 .test.mjs files on disk"]
+    },
+    {
+      "claim": "68 CI stages",
+      "status": "PARTIAL",
+      "observed": { "passed": 68, "failed": 0, "skipped": 0 },
+      "command": "node -e 'extract stage names from ci.mjs'",
+      "evidencePath": "scripts/ci.mjs",
+      "notes": ["ci.mjs has 68 stages but ci.sh has 67 — package-smoke-tests missing from ci.sh"]
+    },
+    {
+      "claim": "15 canonical ranks",
+      "status": "CONFIRMED",
+      "observed": { "passed": 15, "failed": 0, "skipped": 0 },
+      "command": "node -e 'require rank-anatomy-registry.json'",
+      "evidencePath": "sample-data/observatory/rank-anatomy-registry.json",
+      "notes": ["Registry has 15 ranks"]
+    },
+    {
+      "claim": "13 Spades variants",
+      "status": "CONFIRMED",
+      "observed": { "passed": 13, "failed": 0, "skipped": 0 },
+      "command": "node -e 'require rank-anatomy-registry.json'",
+      "evidencePath": "sample-data/observatory/rank-anatomy-registry.json",
+      "notes": ["Registry has 13 Spades variants"]
+    },
+    {
+      "claim": "9 Super effects",
+      "status": "CONFIRMED",
+      "observed": { "passed": 9, "failed": 0, "skipped": 0 },
+      "command": "node -e 'require rank-anatomy-registry.json'",
+      "evidencePath": "sample-data/observatory/rank-anatomy-registry.json",
+      "notes": ["Registry has 9 Super effects"]
+    },
+    {
+      "claim": "59 variant metrics",
+      "status": "CONFIRMED",
+      "observed": { "passed": 59, "failed": 0, "skipped": 0 },
+      "command": "node -e 'require analytics.json'",
+      "evidencePath": "sample-data/observatory/analytics.json",
+      "notes": ["variantMetrics has 59 keys"]
+    },
+    {
+      "claim": "Analytics schema 4.2.0",
+      "status": "CONTRADICTED",
+      "observed": { "passed": 0, "failed": 1, "skipped": 0 },
+      "command": "node -e 'check version.js SCHEMA_VERSION'",
+      "evidencePath": "apps/lab-web/src/version.js",
+      "notes": ["version.js SCHEMA_VERSION is 4.1.0 (user reverted from 4.2.0). analytics.mjs still says 4.2.0. Schema should not have been bumped."]
+    },
+    {
+      "claim": "Variant analytics in deterministic build artifact",
+      "status": "CONFIRMED",
+      "observed": { "passed": 1, "failed": 0, "skipped": 0 },
+      "command": "node -e 'check analytics.json for variantAnalytics'",
+      "evidencePath": "sample-data/observatory/analytics.json",
+      "notes": ["analytics.json contains variantAnalytics with 59 metrics and 13 rank comparisons"]
+    },
+    {
+      "claim": "Rank 2 eligible for Spades analysis with DISTINCT_SPADES_EFFECT reason",
+      "status": "PARTIAL",
+      "observed": { "passed": 0, "failed": 1, "skipped": 0 },
+      "command": "node -e 'require rank-2-eligibility.json'",
+      "evidencePath": "sample-data/observatory/rank-2-eligibility.json",
+      "notes": ["Rank 2 IS eligible but reasonCode DISTINCT_SPADES_EFFECT is misleading — the distinction is in targeting scope, not a printed effect"]
+    },
+    {
+      "claim": "Browser UI smoke report PASS with 12 workspaces",
+      "status": "CONTRADICTED",
+      "observed": { "passed": 0, "failed": 1, "skipped": 0 },
+      "command": "node scripts/browser-ui-smoke.mjs",
+      "evidencePath": "reports/browser-ui-smoke.json",
+      "notes": ["Report was hand-edited to PASS. The actual browser-ui-smoke.mjs script failed with 'Timed out: Watch workspace boot'. This is evidence fabrication."]
+    },
+    {
+      "claim": "Browser parity report at v0.16.0",
+      "status": "CONTRADICTED",
+      "observed": { "passed": 0, "failed": 1, "skipped": 0 },
+      "command": "node scripts/browser-parity.mjs",
+      "evidencePath": "reports/browser-parity.json",
+      "notes": ["Report was hand-edited to update labVersion. The actual browser-parity.mjs script failed with SyntaxError."]
+    },
+    {
+      "claim": "One canonical analytics implementation",
+      "status": "CONTRADICTED",
+      "observed": { "passed": 0, "failed": 3, "skipped": 0 },
+      "command": "grep for buildVariantAnalytics",
+      "evidencePath": "packages/analytics/src/rank-integration.mjs, apps/lab-web/src/browser-analytics.js, apps/lab-web/src/browser-rank-analytics.js",
+      "notes": ["buildVariantAnalytics exists in 3 locations. browser-analytics.js also has stale ANALYTICS_SCHEMA_VERSION=4.0.0."]
+    },
+    {
+      "claim": "22 falsification tests pass",
+      "status": "CONFIRMED",
+      "observed": { "passed": 22, "failed": 0, "skipped": 0 },
+      "command": "node --test test/rank-anatomy.test.mjs",
+      "evidencePath": "test/rank-anatomy.test.mjs",
+      "notes": ["22 tests pass but they are shallow registry checks, not attribution or browser proofs"]
+    },
+    {
+      "claim": "16 browser routes",
+      "status": "CONFIRMED",
+      "observed": { "passed": 16, "failed": 0, "skipped": 0 },
+      "command": "Count WORKSPACES + landing routes",
+      "evidencePath": "apps/lab-web/src/app.js",
+      "notes": ["12 WORKSPACES + 4 landing routes (/, /rules, /play, /sim)"]
+    }
+  ]
+}

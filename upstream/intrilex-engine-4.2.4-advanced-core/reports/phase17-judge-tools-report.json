@@ -1,0 +1,161 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "judge-tools gate over existing fixture corpus"
+  ],
+  "fixtureCount": 9,
+  "repeatCount": 7,
+  "passed": 9,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-005",
+      "title": "Tournament Seed collision uses ranked backup",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "bafd87cd472d26d5246805b3aef0a5809e99d9d5664c53cfcd628ea11b29e761",
+      "finalStateHash": "ec129d7d01c50ceba8e54ffbf254dc8b92d56203e1f22b36dcd4949f692e68c2",
+      "eventLogHash": "22afd50b4718a8953a0cffc2cb425dccaf5bbd8dfa23153126304e62260a857d",
+      "replayHash": "052708e008fc8e0e5e01be4857553083613dcbab1ade27b0df9b5543e7e482e0",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-014",
+      "title": "Three-player That's Urz assignment is a complete cycle",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "b9013b1c6c3af6ee801c1a88bed6167848013cc888a85ad6371d5ba168f69a10",
+      "finalStateHash": "bc1bf53266b24ec9e0ff86ac24766ec98e85361be81367e663101dd9c7efab2c",
+      "eventLogHash": "0db2ec1b075391670d36290b571a7761637522b7f1929b8e3892f73206ff5ef4",
+      "replayHash": "30d65827c86bcad06ceaa449315729ad9e2fe4d2ff987c6c4a7c1008f1f49b1f",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-022",
+      "title": "Explicit control change immediately severs Jack",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "390c89190393eba1e44d42dd388dbf6995d55a5ab4b7ad759b9427e25276152f",
+      "finalStateHash": "c70888eb5e93dbc330fa065eb544a17e99bae670e90f3fc6703cc7988cb76cd0",
+      "eventLogHash": "bac8b654645313f566b29cea99667f491845ccc8b051597f81859a43405afebc",
+      "replayHash": "3f98ad974e36b0f5cc5aa9315b0c7ce5cad16ceeadce030efd30cc7723c46fb3",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-024",
+      "title": "4♠ from hand uses Core Total Clear",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "4ced3cb4a8d0f0e801604ab40e26c85fa5a18f296bcdc31ab12e2498c95e5112",
+      "finalStateHash": "5a66393e09d52aca3944dc2e7e202ac05cb032d0abf562d2bd883176ea2ade7d",
+      "eventLogHash": "c070c73f8a355243fcfaf92427b7d0814218229156cc8f44b68794bbc8c61da2",
+      "replayHash": "762cfb5c19258048eba023fc565057c444230274340521288c11e6837c1a5d44",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-031",
+      "title": "Illegal response rewinds without disturbing pending play",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "01d03f6d8f61b47e71ecbc7705186be6a0a1cb47517dbc5df4bf267e0be67c88",
+      "finalStateHash": "da001e3fd78e8fcaadadfe818062d9d6ecb2ff78b9d1e1ce040a485c1e60e979",
+      "eventLogHash": "b2f79577f9a7bc143a30af6a25f72dce65900fc2573093d0e5526c8cc7efe15f",
+      "replayHash": "66954a4b11c67e41bc6c5cdc6b6371b01732678489db3d9a748ab7a47b38170e",
+      "accepted": [
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-094",
+      "title": "4♠ Trap uses Total Pressure identity",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "65a7fd9b6d80c89cae0c9095b3021b25f90203807ff5fb61771fa09f13d42f29",
+      "finalStateHash": "ec0064219d264f2fab42c7e1d84bb2aedc8ad2ef2b7e18b7766506278e3ea651",
+      "eventLogHash": "132b6ca789239e2ea3b5c0e6994e4d2f8e36cfdac49f6d058a9335fb1889e878",
+      "replayHash": "fcaa0b10ac88d1bc34da2f2c222d523f8ac10a39ff92ad901add02d78b5b50b6",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-097",
+      "title": "Board Lock suppresses Trap trigger",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "4d0166b8b64f2c4b0ff09fe9e7a92c392ee33e220c5381f44522033d82e26c47",
+      "finalStateHash": "4d0166b8b64f2c4b0ff09fe9e7a92c392ee33e220c5381f44522033d82e26c47",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "87a021494d4b1776d0b79f214165da3226a9a984aba37d545f1c5a10e5e8b24e",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-115",
+      "title": "Classic Deffy draft reaches exact target hands",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "dd2375e37d5791e9d13f4a8596b6d15f671be102ef9afe37e1ee259da508db0c",
+      "finalStateHash": "4cee642676463011e46f740b4bada30f3acd15ca34736ed6d825cc3000c6c4cc",
+      "eventLogHash": "255b5559c64f33c55eb89a253fcae303a05417ad6f64c3e526ad220bf66e84b6",
+      "replayHash": "36369d5ec44d5ce1ab391a7e2fd688458e2ae321221ba063cd7ae5e62e3351ac",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-120",
+      "title": "Authorized replay preserves hidden choice without public leak",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "949665c7ebe59c29eb988b038dea794326bf0869fea59db333163451a82568cd",
+      "finalStateHash": "d8a294929461a097881b9d6d021f9ac94fba2ec2a037d86d1ee26791ce156ecc",
+      "eventLogHash": "4695782e0255707a4a3a02848f458b6458bf8f5389a2c78e9505dc8af0e59194",
+      "replayHash": "3731be0d2283c9120e567e2ed04b887d90e2ab43a29bb6dcb5c926353f1e7b1c",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "412dab8f92ec37d31c2063dffaf487ff17f2034c879a12d2591a248dee7e49e2"
+}

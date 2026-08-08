@@ -1,0 +1,20 @@
+# Intrilex v4.1 Phase 10 Trap Module Conformance Report
+
+- Verdict: **PASS**
+- Engine: `4.1.0`
+- Fixtures: 10/10 passed
+- Repetitions per fixture: 7
+- Aggregate hash: `24389b41f7dd0767e1d53f2734812c0b84169e2de2037bf430b592875a9ffebc`
+
+| Fixture | Status | Final state SHA-256 | Event log SHA-256 |
+|---|---|---|---|
+| CT-011 | PASS | `eda08a4179805fc905a687bf47a127cfe47f257e589aee3c6b5d5c6b57baf171` | `5b0d93352566167479a6aae00eb04ecebf5379e1f74600ee7503cab8b8cfe2eb` |
+| CT-016 | PASS | `a7089f0abe353cd1ce06e75af6500e0d5b4c9cc7c368190279dc994b54219fc3` | `4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945` |
+| CT-024 | PASS | `5a66393e09d52aca3944dc2e7e202ac05cb032d0abf562d2bd883176ea2ade7d` | `c070c73f8a355243fcfaf92427b7d0814218229156cc8f44b68794bbc8c61da2` |
+| CT-031 | PASS | `da001e3fd78e8fcaadadfe818062d9d6ecb2ff78b9d1e1ce040a485c1e60e979` | `b2f79577f9a7bc143a30af6a25f72dce65900fc2573093d0e5526c8cc7efe15f` |
+| CT-094 | PASS | `ec0064219d264f2fab42c7e1d84bb2aedc8ad2ef2b7e18b7766506278e3ea651` | `132b6ca789239e2ea3b5c0e6994e4d2f8e36cfdac49f6d058a9335fb1889e878` |
+| CT-095 | PASS | `f4e8b36dc2ace5fcee44bc86fb51e73be944c29113c366aabd831dca4bc07154` | `4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945` |
+| CT-096 | PASS | `5322b7e17dfe9658109616cb094abb0fdf24ccaeee0c839cabfd9d28b6f40cb6` | `c4ae8692a3a4ee69a8a84f877947a8bea659365d2e20e959919f3138b2290876` |
+| CT-097 | PASS | `4d0166b8b64f2c4b0ff09fe9e7a92c392ee33e220c5381f44522033d82e26c47` | `4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945` |
+| CT-098 | PASS | `57549e2cfc15c8c25d7eb1d0ffe1ab10ed09a53ff836e0d07804262ce0fbfb9b` | `81ede8c4b967830a8d2d9c268582bd685576932e683c39b17a16702e614459d2` |
+| CT-099 | PASS | `a9d73a26e70311928c0e1c97c3bd9ce02b6ebeebf98e7c6ccf9ba085cd3970fa` | `268269f59cdd43f591625c15521d3ffdddebe7d0bbd99831027cae5a1a7f49dd` |

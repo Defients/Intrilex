@@ -1,0 +1,93 @@
+[
+  {
+    "id": "CT-013",
+    "title": "⭐4 exchanges a non-empty PR with an empty PR under canon-lock vectors",
+    "sourceTestId": "CT-013",
+    "purpose": "Close the canon-locked source projection while proving structural empty-row exchange, controller transfer, fresh Aegis, and Nine's Aegis immunity.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": ["P1", "P2"],
+      "fullTurnSequence": 12,
+      "startPhaseSequenceByPlayer": {"P1": 5, "P2": 6},
+      "players": {
+        "P1": {"id":"P1","teamId":null,"goal":21,"hand":["CT-013-P1_HAND-01","CT-013-P1_HAND-02"],"pr":["CT-013-P1_PR-01","CT-013-P1_PR-02"],"er":[],"limits":{"miniTurnsUsed":0,"miniTurnsRemaining":1,"swapBarUsedThisFT":false,"rank10PlayedThisFT":false,"ultraPlayedThisFT":false,"pendingFullTurnSkips":0,"pendingActionPhaseSkips":0}},
+        "P2": {"id":"P2","teamId":null,"goal":21,"hand":[],"pr":[],"er":[],"limits":{"miniTurnsUsed":0,"miniTurnsRemaining":1,"swapBarUsedThisFT":false,"rank10PlayedThisFT":false,"ultraPlayedThisFT":false,"pendingFullTurnSkips":0,"pendingActionPhaseSkips":0}}
+      },
+      "cards": {
+        "CT-013-P1_HAND-01":{"id":"CT-013-P1_HAND-01","identity":"4♣","originalOwnerId":"P1","controllerId":"P1","zone":"P1_HAND","state":{}},
+        "CT-013-P1_HAND-02":{"id":"CT-013-P1_HAND-02","identity":"4♦","originalOwnerId":"P1","controllerId":"P1","zone":"P1_HAND","state":{}},
+        "CT-013-P1_PR-01":{"id":"CT-013-P1_PR-01","identity":"7♥","originalOwnerId":"P1","controllerId":"P1","zone":"P1_PR","state":{"pointValue":7}},
+        "CT-013-P1_PR-02":{"id":"CT-013-P1_PR-02","identity":"9♣","originalOwnerId":"P1","controllerId":"P1","zone":"P1_PR","state":{"pointValue":9}},
+        "CT-013-DP-01":{"id":"CT-013-DP-01","identity":"A♣","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}},
+        "CT-013-DP-02":{"id":"CT-013-DP-02","identity":"A♦","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}},
+        "CT-013-DP-03":{"id":"CT-013-DP-03","identity":"A♥","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}},
+        "CT-013-DP-04":{"id":"CT-013-DP-04","identity":"A♠","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}}
+      },
+      "zones":{"dp":["CT-013-DP-01","CT-013-DP-02","CT-013-DP-03","CT-013-DP-04"],"gy":[],"exile":[],"swapBar":[],"staging":[]},
+      "stack":[],"triggerQueue":[],"suspendedStackItemIds":[],"pendingDeclaration":null,"priority":null,
+      "rng":{"algorithm":"xorshift32","seed":439041101,"cursor":0},"winner":null,"metadata":{}
+    },
+    "commands":[{"id":"CT-013-C1","type":"RESOLVE_RANK_ACTION","actorId":"P1","action":{"kind":"row-exchange","sourceCardIds":["CT-013-P1_HAND-01","CT-013-P1_HAND-02"],"targetPlayerId":"P2","row":"pr"}}],
+    "expectation":{"accepted":[true],"final":{"playerZones":{"P1":{"hand":[],"pr":[]},"P2":{"pr":["CT-013-P1_PR-01","CT-013-P1_PR-02"]}},"zones":{"dp":["CT-013-DP-01","CT-013-DP-02","CT-013-DP-03","CT-013-DP-04"],"gy":["CT-013-P1_HAND-01","CT-013-P1_HAND-02"]},"controllers":{"CT-013-P1_PR-01":"P2","CT-013-P1_PR-02":"P2"},"originalOwners":{"CT-013-P1_PR-01":"P1","CT-013-P1_PR-02":"P1"},"markers":{"CT-013-P1_PR-01":{"aegis":{"sourceRef":"⭐4","expiresAt":{"playerId":"P2","startSequence":7}}}},"absentMarkers":{"CT-013-P1_PR-02":["aegis"]},"securedPoints":{"P1":0,"P2":16}}}
+  },
+  {
+    "id":"CT-021",
+    "title":"⭐7 with one DP card suspends once, resolves one child, and resumes",
+    "sourceTestId":"CT-021",
+    "purpose":"Close the canon-locked one-card sequential-child projection without inventing or Scrapping an absent second object.",
+    "initialState":{
+      "schemaVersion":1,"rulesVersion":"4.1","revision":0,"phase":"Action","activePlayerId":"P1","turnOrder":["P1","P2"],"fullTurnSequence":12,"startPhaseSequenceByPlayer":{"P1":5,"P2":6},
+      "players":{"P1":{"id":"P1","teamId":null,"goal":21,"hand":["CT-021-P1_HAND-01","CT-021-P1_HAND-02"],"pr":[],"er":[],"limits":{"miniTurnsUsed":0,"miniTurnsRemaining":1,"swapBarUsedThisFT":false,"rank10PlayedThisFT":false,"ultraPlayedThisFT":false,"pendingFullTurnSkips":0,"pendingActionPhaseSkips":0}},"P2":{"id":"P2","teamId":null,"goal":21,"hand":[],"pr":[],"er":[],"limits":{"miniTurnsUsed":0,"miniTurnsRemaining":1,"swapBarUsedThisFT":false,"rank10PlayedThisFT":false,"ultraPlayedThisFT":false,"pendingFullTurnSkips":0,"pendingActionPhaseSkips":0}}},
+      "cards":{"CT-021-P1_HAND-01":{"id":"CT-021-P1_HAND-01","identity":"7♣","originalOwnerId":"P1","controllerId":"P1","zone":"P1_HAND","state":{}},"CT-021-P1_HAND-02":{"id":"CT-021-P1_HAND-02","identity":"7♦","originalOwnerId":"P1","controllerId":"P1","zone":"P1_HAND","state":{}},"CT-021-DP-01":{"id":"CT-021-DP-01","identity":"3♠","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}}},
+      "zones":{"dp":["CT-021-DP-01"],"gy":[],"exile":[],"swapBar":[],"staging":[]},"stack":[],"triggerQueue":[],"suspendedStackItemIds":[],"pendingDeclaration":null,"priority":null,"rng":{"algorithm":"xorshift32","seed":439041101,"cursor":0},"winner":null,"metadata":{}
+    },
+    "commands":[{"id":"CT-021-C1","type":"RESOLVE_PHASE20_ACTION","actorId":"P1","action":{"kind":"resolve-super-seven-single","sourceCardIds":["CT-021-P1_HAND-01","CT-021-P1_HAND-02"],"childCardId":"CT-021-DP-01"}}],
+    "expectation":{"accepted":[true],"final":{"playerZones":{"P1":{"hand":[]}},"zones":{"dp":[],"gy":["CT-021-P1_HAND-01","CT-021-P1_HAND-02","CT-021-DP-01"]},"stackDepth":0,"triggerQueueDepth":0,"metadata":{"phase20":{"lastSequentialSeven":{"sourceCardIds":["CT-021-P1_HAND-01","CT-021-P1_HAND-02"],"revealedCardIds":["CT-021-DP-01"],"suspended":true,"childResolved":true,"parentResumed":true,"absentSecondChildCreated":false}}}}}
+  },
+  {
+    "id":"CT-023",
+    "title":"⭐5 ignores empty Exile because it is a DP-and-GY interaction",
+    "sourceTestId":"CT-023",
+    "purpose":"Close the canon-locked ⭐5 projection and prevent invented Exile access or fallback behavior.",
+    "initialState":{
+      "schemaVersion":1,"rulesVersion":"4.1","revision":0,"phase":"Action","activePlayerId":"P1","turnOrder":["P1","P2"],"fullTurnSequence":12,"startPhaseSequenceByPlayer":{"P1":5,"P2":6},
+      "players":{"P1":{"id":"P1","teamId":null,"goal":21,"hand":["CT-023-P1_HAND-01","CT-023-P1_HAND-02"],"pr":[],"er":[],"limits":{"miniTurnsUsed":0,"miniTurnsRemaining":1,"swapBarUsedThisFT":false,"rank10PlayedThisFT":false,"ultraPlayedThisFT":false,"pendingFullTurnSkips":0,"pendingActionPhaseSkips":0}},"P2":{"id":"P2","teamId":null,"goal":21,"hand":[],"pr":[],"er":[],"limits":{"miniTurnsUsed":0,"miniTurnsRemaining":1,"swapBarUsedThisFT":false,"rank10PlayedThisFT":false,"ultraPlayedThisFT":false,"pendingFullTurnSkips":0,"pendingActionPhaseSkips":0}}},
+      "cards":{"CT-023-P1_HAND-01":{"id":"CT-023-P1_HAND-01","identity":"5♣","originalOwnerId":"P1","controllerId":"P1","zone":"P1_HAND","state":{}},"CT-023-P1_HAND-02":{"id":"CT-023-P1_HAND-02","identity":"5♦","originalOwnerId":"P1","controllerId":"P1","zone":"P1_HAND","state":{}},"CT-023-DP-01":{"id":"CT-023-DP-01","identity":"3♠","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}},"CT-023-DP-02":{"id":"CT-023-DP-02","identity":"7♥","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}},"CT-023-DP-03":{"id":"CT-023-DP-03","identity":"K♣","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}}},
+      "zones":{"dp":["CT-023-DP-01","CT-023-DP-02","CT-023-DP-03"],"gy":[],"exile":[],"swapBar":[],"staging":[]},"stack":[],"triggerQueue":[],"suspendedStackItemIds":[],"pendingDeclaration":null,"priority":null,"rng":{"algorithm":"xorshift32","seed":439041101,"cursor":0},"winner":null,"metadata":{}
+    },
+    "commands":[{"id":"CT-023-C1","type":"RESOLVE_PHASE20_ACTION","actorId":"P1","action":{"kind":"resolve-super-five","sourceCardIds":["CT-023-P1_HAND-01","CT-023-P1_HAND-02"],"chosenCardId":"CT-023-DP-02","disposition":"points"}}],
+    "expectation":{"accepted":[true],"final":{"playerZones":{"P1":{"hand":[],"pr":["CT-023-DP-02"]}},"zones":{"dp":[],"gy":["CT-023-DP-01","CT-023-DP-03","CT-023-P1_HAND-01","CT-023-P1_HAND-02"],"exile":[]},"cardZones":{"CT-023-DP-02":"P1_PR"},"controllers":{"CT-023-DP-02":"P1"},"securedPoints":{"P1":7,"P2":0},"metadata":{"phase20":{"lastSuperFive":{"sourceCardIds":["CT-023-P1_HAND-01","CT-023-P1_HAND-02"],"milledCardIds":["CT-023-DP-01","CT-023-DP-02","CT-023-DP-03"],"chosenCardId":"CT-023-DP-02","disposition":"points","exileConsulted":false}}}}}
+  },
+  {
+    "id":"CT-034",
+    "title":"Skipped turn slot does not reset per-FT state",
+    "sourceTestId":"CT-034",
+    "purpose":"Close the canon-locked skipped-slot projection: no phases, no Start reset, no timer tick, and no completed Full Turn.",
+    "initialState":{
+      "schemaVersion":1,"rulesVersion":"4.1","revision":0,"phase":"BetweenTurns","activePlayerId":"P1","turnOrder":["P1","P2"],"fullTurnSequence":12,"startPhaseSequenceByPlayer":{"P1":5,"P2":6},
+      "players":{"P1":{"id":"P1","teamId":null,"goal":21,"hand":[],"pr":[],"er":[],"limits":{"miniTurnsUsed":2,"miniTurnsRemaining":1,"swapBarUsedThisFT":true,"rank10PlayedThisFT":true,"ultraPlayedThisFT":true,"pendingFullTurnSkips":1,"pendingActionPhaseSkips":1}},"P2":{"id":"P2","teamId":null,"goal":21,"hand":[],"pr":[],"er":[],"limits":{"miniTurnsUsed":0,"miniTurnsRemaining":1,"swapBarUsedThisFT":false,"rank10PlayedThisFT":false,"ultraPlayedThisFT":false,"pendingFullTurnSkips":0,"pendingActionPhaseSkips":0}}},
+      "cards":{},"zones":{"dp":[],"gy":[],"exile":[],"swapBar":[],"staging":[]},"stack":[],"triggerQueue":[],"suspendedStackItemIds":[],"pendingDeclaration":null,"priority":null,"rng":{"algorithm":"xorshift32","seed":439041101,"cursor":0},"winner":null,
+      "metadata":{"phase8":{"boardLock":{"remaining":2,"activationFullTurnSequence":10},"suddenDeath":{"remaining":2,"activationFullTurnSequence":10,"activatorId":"P2"},"exhausted":{"remaining":3,"startedFullTurnSequence":11},"voltageSnapshots":{},"voltageUsedThisFT":{}}}
+    },
+    "commands":[{"id":"CT-034-C1","type":"RESOLVE_PHASE20_ACTION","actorId":"P1","action":{"kind":"consume-skipped-turn-slot"}}],
+    "expectation":{"accepted":[true],"final":{"activePlayerId":"P2","fullTurnSequence":12,"phase":"BetweenTurns","startPhaseSequenceByPlayer":{"P1":5,"P2":6},"playerLimits":{"P1":{"miniTurnsUsed":2,"miniTurnsRemaining":1,"swapBarUsedThisFT":true,"rank10PlayedThisFT":true,"ultraPlayedThisFT":true,"pendingFullTurnSkips":0,"pendingActionPhaseSkips":1}},"metadata":{"phase8":{"boardLock":{"remaining":2,"activationFullTurnSequence":10},"suddenDeath":{"remaining":2,"activationFullTurnSequence":10,"activatorId":"P2"},"exhausted":{"remaining":3,"startedFullTurnSequence":11},"voltageSnapshots":{},"voltageUsedThisFT":{}},"phase20":{"lastSkippedTurnSlot":{"playerId":"P1","nextPlayerId":"P2","fullTurnSequenceUnchanged":true,"startSequencesUnchanged":true,"timersUnchanged":true,"perFtStateReset":false}}}}}
+  },
+  {
+    "id":"CT-035",
+    "title":"Original owner never changes with controller",
+    "sourceTestId":"CT-035",
+    "purpose":"Close the canon-locked ownership projection by moving control and row while preserving immutable original ownership.",
+    "initialState":{
+      "schemaVersion":1,"rulesVersion":"4.1","revision":0,"phase":"Action","activePlayerId":"P1","turnOrder":["P1","P2"],"fullTurnSequence":12,"startPhaseSequenceByPlayer":{"P1":5,"P2":6},
+      "players":{"P1":{"id":"P1","teamId":null,"goal":21,"hand":[],"pr":["CT-035-P1_PR-01"],"er":[],"limits":{"miniTurnsUsed":0,"miniTurnsRemaining":1,"swapBarUsedThisFT":false,"rank10PlayedThisFT":false,"ultraPlayedThisFT":false,"pendingFullTurnSkips":0,"pendingActionPhaseSkips":0}},"P2":{"id":"P2","teamId":null,"goal":21,"hand":[],"pr":[],"er":[],"limits":{"miniTurnsUsed":0,"miniTurnsRemaining":1,"swapBarUsedThisFT":false,"rank10PlayedThisFT":false,"ultraPlayedThisFT":false,"pendingFullTurnSkips":0,"pendingActionPhaseSkips":0}}},
+      "cards":{"CT-035-P1_PR-01":{"id":"CT-035-P1_PR-01","identity":"7♥","originalOwnerId":"P2","controllerId":"P1","zone":"P1_PR","state":{"pointValue":7}},"CT-035-DP-01":{"id":"CT-035-DP-01","identity":"A♣","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}},"CT-035-DP-02":{"id":"CT-035-DP-02","identity":"A♦","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}},"CT-035-DP-03":{"id":"CT-035-DP-03","identity":"A♥","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}},"CT-035-DP-04":{"id":"CT-035-DP-04","identity":"A♠","originalOwnerId":"P1","controllerId":"P1","zone":"DP","state":{}}},
+      "zones":{"dp":["CT-035-DP-01","CT-035-DP-02","CT-035-DP-03","CT-035-DP-04"],"gy":[],"exile":[],"swapBar":[],"staging":[]},"stack":[],"triggerQueue":[],"suspendedStackItemIds":[],"pendingDeclaration":null,"priority":null,"rng":{"algorithm":"xorshift32","seed":439041101,"cursor":0},"winner":null,"metadata":{}
+    },
+    "commands":[{"id":"CT-035-C1","type":"MOVE_CARD","actorId":"P1","cardId":"CT-035-P1_PR-01","destination":"P2_PR","controllerId":"P2"}],
+    "expectation":{"accepted":[true],"final":{"playerZones":{"P1":{"pr":[]},"P2":{"pr":["CT-035-P1_PR-01"]}},"controllers":{"CT-035-P1_PR-01":"P2"},"originalOwners":{"CT-035-P1_PR-01":"P2"},"cardZones":{"CT-035-P1_PR-01":"P2_PR"},"securedPoints":{"P1":0,"P2":7}}}
+  }
+]

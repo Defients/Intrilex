@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "1.0",
+  "status": "PASS",
+  "engineVersion": "4.1.4",
+  "profileId": "first-contact-private-choice",
+  "startOrdinal": 0,
+  "endOrdinalExclusive": 500,
+  "matchCount": 500,
+  "terminations": {
+    "NORMAL_VICTORY": 495,
+    "EXHAUSTED_RESOLUTION": 5,
+    "CANONICAL_DRAW": 0,
+    "DECISION_LIMIT": 0,
+    "ENGINE_REJECTION": 0,
+    "UNSUPPORTED_CONFIGURATION": 0
+  },
+  "responses": {
+    "ace": 416,
+    "eight": 143,
+    "king": 145,
+    "jack": 604,
+    "passPriority": 23047
+  },
+  "privateChoices": {
+    "rank3-present": 153,
+    "rank3-take": 134,
+    "rank3-discard": 133,
+    "rank5-rummage": 293,
+    "rank6-dig": 238,
+    "rank7-assign": 272,
+    "rank7-generated-effect": 271,
+    "nine-anchor-discard": 50
+  },
+  "engineRejections": 0,
+  "maxDecisions": 305,
+  "meanDecisions": 72.804,
+  "privateChoiceDecisionCount": 1544,
+  "resultHash": "95dbb2283ac94eeeffd389b4e21f38b5f8e168af7d1c1132269d66fee9fa2684",
+  "segmentHashes": [
+    {
+      "start": 0,
+      "end": 100,
+      "resultHash": "91bbb54ff3628324ba0cc2f474dcb8079bc4e530c4d914ebead0e61f21ce6cd0"
+    },
+    {
+      "start": 100,
+      "end": 200,
+      "resultHash": "cd6d2753a109f74def509887f155a9ecb46347022e68eb50ca13e8ccacbc3e00"
+    },
+    {
+      "start": 200,
+      "end": 300,
+      "resultHash": "f01b485bbe2fcd231071f94d2d01bff0e230fa3460975f62a91a49bdfae7e41e"
+    },
+    {
+      "start": 300,
+      "end": 400,
+      "resultHash": "0f79075568e2b31fac723570dcef053c360fd830013066da40ce160dcc6b9356"
+    },
+    {
+      "start": 400,
+      "end": 500,
+      "resultHash": "8f504ede43b05c17718dff53f7033a1873db3b16a44db1693830495f28a8ba54"
+    }
+  ],
+  "generatedAt": "2026-07-27T02:48:35.743Z"
+}

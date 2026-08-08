@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0",
+  "rulesPatch": "4.1.1",
+  "topic": "interrupt-timing-authority",
+  "status": "CANONICAL_HOTFIX",
+  "ruling": {
+    "quick": "OWN_FULL_TURN_LEGAL_WINDOWS",
+    "interrupt": "ANY_LEGAL_RESPONSE_WINDOW",
+    "keywordConsumesMiniTurn": false,
+    "keywordCreatesFullTurnSkip": false,
+    "keywordCreatesActionPhaseSkip": false
+  },
+  "explicitSkipConsequences": [
+    "10S_STACK_THEFT_PRINTED_FULL_TURN_SKIPS",
+    "TIME_BOMB_DEFUSE_PRINTED_ACTION_PHASE_SKIP"
+  ],
+  "removedInheritedSkips": [
+    "COURAGEOUS_ASSAULT",
+    "REJUVENATION",
+    "RED_NINE_GOAL_SHOCK"
+  ],
+  "supersedes": [
+    "V4.1.0_GENERIC_INTERRUPT_FULL_TURN_SKIP"
+  ]
+}

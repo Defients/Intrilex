@@ -1,0 +1,238 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-069",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT069-2": {
+        "controllerId": "P1",
+        "id": "CT069-2",
+        "identity": "2♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT069-6": {
+        "controllerId": "P1",
+        "id": "CT069-6",
+        "identity": "6♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT069-D1": {
+        "controllerId": "P1",
+        "id": "CT069-D1",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT069-D2": {
+        "controllerId": "P1",
+        "id": "CT069-D2",
+        "identity": "3♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT069-D3": {
+        "controllerId": "P1",
+        "id": "CT069-D3",
+        "identity": "4♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT069-D4": {
+        "controllerId": "P1",
+        "id": "CT069-D4",
+        "identity": "5♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT069-D5": {
+        "controllerId": "P1",
+        "id": "CT069-D5",
+        "identity": "7♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT069-D6": {
+        "controllerId": "P1",
+        "id": "CT069-D6",
+        "identity": "8♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT069-6",
+          "CT069-2"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT069-D1",
+        "CT069-D2",
+        "CT069-D3",
+        "CT069-D4",
+        "CT069-D5",
+        "CT069-D6"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "discardCardIds": [
+          "CT069-2"
+        ],
+        "keepCardIds": [
+          "CT069-D1",
+          "CT069-D2",
+          "CT069-D3"
+        ],
+        "kind": "deep-draw-six-spade",
+        "sourceCardId": "CT069-6"
+      },
+      "actorId": "P1",
+      "id": "CT069-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT069-1",
+      "id": "EV-000001",
+      "payload": {
+        "discarded": [
+          "CT069-2"
+        ],
+        "drawn": [
+          "CT069-D1",
+          "CT069-D2",
+          "CT069-D3",
+          "CT069-D4",
+          "CT069-D5",
+          "CT069-D6"
+        ],
+        "kept": [
+          "CT069-D1",
+          "CT069-D2",
+          "CT069-D3"
+        ],
+        "sourceCardId": "CT069-6"
+      },
+      "previousStateHash": "c2364e2cdfc3b7163fa58ab03cee2ce1b4ff43cedd89b8fafcc4cfda532f67fd",
+      "sequence": 1,
+      "stateHash": "c5150d6eb42a6afc2e75452f8e3c2ef91e7f5d5f91300879535fd8523e2253db",
+      "type": "SIX_DEEP_DRAW_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT069-1",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "ad47377e0af1e6fb6d08620f4e492e6649b6b259d23bab3100c81f22d02e3193",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "c5150d6eb42a6afc2e75452f8e3c2ef91e7f5d5f91300879535fd8523e2253db",
+      "stateHashBefore": "c2364e2cdfc3b7163fa58ab03cee2ce1b4ff43cedd89b8fafcc4cfda532f67fd"
+    }
+  ],
+  "initialStateHash": "c2364e2cdfc3b7163fa58ab03cee2ce1b4ff43cedd89b8fafcc4cfda532f67fd",
+  "finalStateHash": "c5150d6eb42a6afc2e75452f8e3c2ef91e7f5d5f91300879535fd8523e2253db",
+  "eventLogHash": "ad47377e0af1e6fb6d08620f4e492e6649b6b259d23bab3100c81f22d02e3193",
+  "checkpointLogHash": "e86867f7d5b7d20807865183d8e1cb00eef99609757f8ec1c45946ea5eb58f62",
+  "rngTraceHash": "0e19c803915ae2ccd2a8ede80383b842a57929d0c9e15e7a93509697760e93ad",
+  "contentHash": "96bcf1f9e389a1425805e276f717de66b1b67953b508f489fd860a79db620604",
+  "integrityHash": "152cd49af64bf422a042d623d5a538927426ec8b727397d134a07a017a21ca57"
+}

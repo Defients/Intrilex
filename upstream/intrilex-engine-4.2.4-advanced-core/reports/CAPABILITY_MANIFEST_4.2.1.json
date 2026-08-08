@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0",
+  "engine": {
+    "package": "@intrilex/headless-engine",
+    "version": "4.2.1",
+    "rulesVersion": "4.1",
+    "baseCertifiedVersion": "4.1.0",
+    "basePayloadHash": "707377ea9fa94f449c293b6a4dcd8dc4b40dd058bcd6f9e5dd874339859cf168",
+    "preservedConformanceAggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"
+  },
+  "profiles": [
+    {
+      "profileId": "core-foundation-authority",
+      "canonicalProfile": "CORE",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "autonomy": "SUPPORTED",
+      "actionCoverage": {"covered": ["SETUP", "SWAP_BAR", "DRAW", "SCORING", "SCUTTLE", "PASS", "VICTORY", "EXHAUSTED"], "replayOnly": ["CORE_EFFECTS"], "blocked": ["MODULES", "MULTIPLAYER"]}
+    },
+    {
+      "profileId": "core-effect-declaration-authority",
+      "canonicalProfile": "CORE",
+      "playerCounts": [2],
+      "moduleSets": [[]],
+      "autonomy": "SUPPORTED",
+      "actionCoverage": {
+        "covered": ["CORE_FOUNDATION", "ACE_PURGE", "ACE_ANCHOR", "THREE_BOUNCE", "FOUR_ROW_CLEAR", "FOUR_SPADE_TOTAL_CLEAR", "JACK_ATTACHMENTS", "QUEEN_ANCHOR", "KING_ANCHOR", "RED_JOKER_MODES", "BLACK_JOKER_BOARD_LOCK"],
+        "replayOnly": ["PRIVATE_CHOICE_EFFECTS", "QUICK_INSTANT_INTERRUPT", "RESPONSES", "SUPERS", "RANK10", "VOLTAGE", "ULTRAS", "ROYAL_MARRIAGE"],
+        "blocked": ["OPTIONAL_MODULES", "MULTIPLAYER", "TEAMS"]
+      },
+      "reasonCodes": ["CORE_FOUNDATION_INHERITED", "ENGINE_OWNED_PUBLIC_EFFECT_DECLARATIONS", "ENGINE_SOUND_TARGET_ENUMERATION", "PRIVATE_CHOICE_EFFECTS_FAIL_CLOSED", "RESPONSE_TIMING_FAILS_CLOSED"],
+      "evidence": ["engine-tests-160", "conformance-121", "core-effect-authority-stress-500", "browser-core-effect-parity"]
+    }
+  ]
+}

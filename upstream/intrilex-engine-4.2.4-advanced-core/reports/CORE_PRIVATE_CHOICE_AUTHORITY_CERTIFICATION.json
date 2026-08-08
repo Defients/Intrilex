@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "1.0",
+  "artifact": "Intrilex Engine v4.2.3 \u2014 Core Private Choice Authority",
+  "declaredScope": "core-private-choice-authority",
+  "verdict": "PASS",
+  "rulesAuthority": {
+    "version": "4.1.1",
+    "interruptTimingOnly": true,
+    "genericInterruptSkip": false,
+    "historicalV410Aggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547",
+    "governingV411Aggregate": "8c91e8194e7fa3ab6bbb3eaa6946a97efd70343c36d5e5953ee8e1c0357013df"
+  },
+  "engineTests": {
+    "passed": 176,
+    "total": 176
+  },
+  "conformance": {
+    "passed": 121,
+    "total": 121,
+    "aggregate": "8c91e8194e7fa3ab6bbb3eaa6946a97efd70343c36d5e5953ee8e1c0357013df"
+  },
+  "stress": {
+    "matches": 500,
+    "resultHash": "ea4aee42a64346ad80c6190e8abcf8e5bd474f2f5a237ac75fdcdca02ca0a741",
+    "terminations": {
+      "NORMAL_VICTORY": 472,
+      "EXHAUSTED_RESOLUTION": 28,
+      "CANONICAL_DRAW": 0,
+      "DECISION_LIMIT": 0,
+      "ENGINE_REJECTION": 0,
+      "UNSUPPORTED_CONFIGURATION": 0
+    },
+    "privateChoiceDecisionCount": 2170,
+    "choices": {
+      "core-rank3-present": 169,
+      "core-rank3-take": 137,
+      "core-rank3-discard": 148,
+      "core-rank5-rummage": 417,
+      "core-rank6-dig": 393,
+      "core-rank7-assign": 380,
+      "core-rank7-generated-effect": 380,
+      "core-nine-anchor-discard": 146
+    },
+    "engineRejections": 0
+  },
+  "browser": {
+    "status": "PASS",
+    "replayAggregate": "0f38ef8a8b0bb0502937f88f5b678b233328fc9d0a5569bf0a39831ee97c108c",
+    "matchFinalStateHash": "742c44e277c05b914540547de8d665e34c729e6fc7e484c4b93da68e10203640",
+    "privateChoiceHash": "18bcb81bd8b82e814f8b170e6418c52db00c445b2e4f6383c9e823500d275f0b"
+  },
+  "limitations": [
+    "private Quick suit enhancements",
+    "Supers",
+    "Rank 10",
+    "Voltage",
+    "Ultras",
+    "Royal Marriage",
+    "optional modules",
+    "multiplayer"
+  ]
+}

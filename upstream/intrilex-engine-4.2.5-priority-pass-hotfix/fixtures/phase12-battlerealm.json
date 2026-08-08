@@ -1,0 +1,1347 @@
+[
+  {
+    "id": "CT-001",
+    "title": "Calculated Court adds one controller-level bonus to one Q♥ Time Bomb",
+    "sourceTestId": "CT-001",
+    "purpose": "Keep the Bomb stage at -2 and add one Brilliance controller bonus of +2.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT001-QH"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT001-QH": {
+          "id": "CT001-QH",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": -2,
+            "timeBombStage": 1
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT001-1",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-battle-realm",
+          "specs": {
+            "P1": "Brilliance",
+            "P2": "Bravery"
+          }
+        }
+      },
+      {
+        "id": "CT001-2",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "recalculate-continuous-bonuses"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true
+      ],
+      "final": {
+        "securedPoints": {
+          "P1": 0,
+          "P2": 0
+        },
+        "markers": {
+          "CT001-QH": {
+            "pointValue": -2,
+            "timeBombStage": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-002",
+    "title": "Calculated Court uses one total bonus for two Queens",
+    "sourceTestId": "CT-002",
+    "purpose": "Two qualifying Queens add one controller-level +3 bonus.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT002-QH"
+          ],
+          "er": [
+            "CT002-QC"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT002-QH": {
+          "id": "CT002-QH",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": -2,
+            "timeBombStage": 1
+          }
+        },
+        "CT002-QC": {
+          "id": "CT002-QC",
+          "identity": "Q♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_ER",
+          "state": {
+            "pointValue": 0
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT002-1",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-battle-realm",
+          "specs": {
+            "P1": "Brilliance",
+            "P2": "Balance"
+          }
+        }
+      },
+      {
+        "id": "CT002-2",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "recalculate-continuous-bonuses"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true
+      ],
+      "final": {
+        "securedPoints": {
+          "P1": 1
+        },
+        "markers": {
+          "CT002-QH": {
+            "pointValue": -2
+          },
+          "CT002-QC": {
+            "pointValue": 0
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-003",
+    "title": "Tapped Time Bomb receives no Calculated Court contribution",
+    "sourceTestId": "CT-003",
+    "purpose": "A tapped Bomb contributes zero and is excluded from the Queen count.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT003-QH"
+          ],
+          "er": [
+            "CT003-QS"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT003-QH": {
+          "id": "CT003-QH",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_PR",
+          "state": {
+            "pointValue": -2,
+            "timeBombStage": 1,
+            "tapped": true
+          }
+        },
+        "CT003-QS": {
+          "id": "CT003-QS",
+          "identity": "Q♠",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_ER",
+          "state": {
+            "pointValue": 0
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT003-1",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-battle-realm",
+          "specs": {
+            "P1": "Brilliance",
+            "P2": "Beauty"
+          }
+        }
+      },
+      {
+        "id": "CT003-2",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "recalculate-continuous-bonuses"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true
+      ],
+      "final": {
+        "securedPoints": {
+          "P1": 2
+        },
+        "markers": {
+          "CT003-QH": {
+            "tapped": true,
+            "pointValue": -2
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-106",
+    "title": "Courageous Assault uses Interrupt timing without an inherited turn tax",
+    "sourceTestId": "CT-106",
+    "purpose": "Resolve the source-free uncounterable Signature and prove the v4.1.1 Interrupt timing hotfix adds no generic skip.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [
+            "CT106-T"
+          ],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT106-T": {
+          "id": "CT106-T",
+          "identity": "5♠",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "P2_ER",
+          "state": {
+            "pointValue": 0,
+            "scuttleImmune": true
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT106-1",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-battle-realm",
+          "specs": {
+            "P1": "Bravery",
+            "P2": "Balance"
+          }
+        }
+      },
+      {
+        "id": "CT106-2",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "courageous-assault",
+          "targetCardId": "CT106-T"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true
+      ],
+      "final": {
+        "zones": {
+          "gy": [
+            "CT106-T"
+          ]
+        },
+        "cardZones": {
+          "CT106-T": "GY"
+        },
+        "playerLimits": {
+          "P1": {
+            "pendingFullTurnSkips": 0
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-107",
+    "title": "Extra Lucky enforces finite uses and once-per-FT timing",
+    "sourceTestId": "CT-107",
+    "purpose": "The second use in the same Full Turn is rejected without mutation.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 44,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [
+            "CT107-DRAWN",
+            "CT107-OTHER"
+          ],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT107-DRAWN": {
+          "id": "CT107-DRAWN",
+          "identity": "3♣",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT107-OTHER": {
+          "id": "CT107-OTHER",
+          "identity": "4♦",
+          "originalOwnerId": "P1",
+          "controllerId": "P1",
+          "zone": "P1_HAND",
+          "state": {}
+        },
+        "CT107-REPLACEMENT": {
+          "id": "CT107-REPLACEMENT",
+          "identity": "A♠",
+          "originalOwnerId": "P2",
+          "controllerId": "P2",
+          "zone": "DP",
+          "state": {}
+        }
+      },
+      "zones": {
+        "dp": [
+          "CT107-REPLACEMENT"
+        ],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT107-1",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-battle-realm",
+          "specs": {
+            "P1": "Beauty",
+            "P2": "Bravery"
+          }
+        }
+      },
+      {
+        "id": "CT107-2",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "extra-lucky",
+          "drawnCardId": "CT107-DRAWN",
+          "sourcePosition": "dp-top"
+        }
+      },
+      {
+        "id": "CT107-3",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "extra-lucky",
+          "drawnCardId": "CT107-OTHER",
+          "sourcePosition": "unavailable"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true,
+        false
+      ],
+      "final": {
+        "hands": {
+          "P1": [
+            "CT107-OTHER",
+            "CT107-REPLACEMENT"
+          ]
+        },
+        "zones": {
+          "gy": [
+            "CT107-DRAWN"
+          ],
+          "dp": []
+        },
+        "cardZones": {
+          "CT107-DRAWN": "GY",
+          "CT107-REPLACEMENT": "P1_HAND"
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-108",
+    "title": "BattleRealm cannot exceed Core caps or activate reserved combines",
+    "sourceTestId": "CT-108",
+    "purpose": "Enforce Mini-Turn/Ultra caps and fail closed on undefined bonus combines.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {},
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT108-1",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-battle-realm",
+          "specs": {
+            "P1": "Balance",
+            "P2": "Brilliance"
+          }
+        }
+      },
+      {
+        "id": "CT108-2",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "grant-mini-turns",
+          "playerId": "P1",
+          "amount": 9
+        }
+      },
+      {
+        "id": "CT108-3",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "register-limited-play",
+          "playerId": "P1",
+          "playClass": "ultra"
+        }
+      },
+      {
+        "id": "CT108-4",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "register-limited-play",
+          "playerId": "P1",
+          "playClass": "ultra"
+        }
+      },
+      {
+        "id": "CT108-5",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "validate-reserved-combine",
+          "combine": "brilliance-two-spades",
+          "sourceCardIds": []
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true,
+        true,
+        false,
+        false
+      ],
+      "final": {
+        "playerLimits": {
+          "P1": {
+            "miniTurnsRemaining": 3,
+            "ultraPlayedThisFT": true
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-110",
+    "title": "BattleRealm-era multiplayer drafting remains self-free and cyclic",
+    "sourceTestId": "CT-110",
+    "purpose": "Preserve the exact four-player That's Urz assignment procedure before Spec reveal.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0,
+        "P4": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P4": {
+          "id": "P4",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {},
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT110-1",
+        "type": "RESOLVE_PHASE11_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "assign-thats-urz",
+          "turnOrder": [
+            "P1",
+            "P2",
+            "P3",
+            "P4"
+          ]
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true
+      ],
+      "final": {
+        "metadata": {
+          "phase11": {
+            "mode": null,
+            "teamByPlayer": {
+              "P1": null,
+              "P2": null,
+              "P3": null,
+              "P4": null
+            },
+            "swapBarLayout": null,
+            "thatsUrzAssignments": {
+              "P1": "P2",
+              "P2": "P3",
+              "P3": "P4",
+              "P4": "P1"
+            },
+            "tournamentSeedAssignments": {},
+            "lastTargetEvaluation": null,
+            "winningTeamId": null,
+            "lastTeamTotals": {}
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-117",
+    "title": "BattleRealm plus Trap preserves intercepted play properties",
+    "sourceTestId": "CT-117",
+    "purpose": "Controller changes preserve lawful Spec modifiers and rebind controller-relative text.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0,
+        "P3": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P3": {
+          "id": "P3",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT117-T"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT117-T": {
+          "id": "CT117-T",
+          "identity": "9♣",
+          "originalOwnerId": "P3",
+          "controllerId": "P3",
+          "zone": "P3_PR",
+          "state": {
+            "pointValue": 9
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [
+        {
+          "id": "CT117-SI",
+          "controllerId": "P1",
+          "sourceCardIds": [],
+          "targetCardIds": [],
+          "kind": "generated-effect",
+          "revalidationClass": "single-required-target",
+          "instructions": [],
+          "sourceDestination": "GY",
+          "status": "pending"
+        }
+      ],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT117-1",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-battle-realm",
+          "specs": {
+            "P1": "Brilliance",
+            "P2": "Balance",
+            "P3": "Beauty"
+          }
+        }
+      },
+      {
+        "id": "CT117-2",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "preserve-intercepted-play",
+          "stackItemId": "CT117-SI",
+          "originalControllerId": "P1",
+          "interceptorId": "P2",
+          "replacementTargetIds": [
+            "CT117-T"
+          ],
+          "preservedModifierKeys": [
+            "seven-bottom-reveal",
+            "trap-source-intercept"
+          ]
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true
+      ],
+      "final": {
+        "stackDepth": 1,
+        "metadata": {
+          "interceptedPlayProperties": {
+            "stackItemId": "CT117-SI",
+            "originalControllerId": "P1",
+            "controllerId": "P2",
+            "preservedModifierKeys": [
+              "seven-bottom-reveal",
+              "trap-source-intercept"
+            ],
+            "controllerRelativeTermsUse": "P2"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "CT-118",
+    "title": "Brilliance plus Time Bomb adds one signed controller bonus",
+    "sourceTestId": "CT-118",
+    "purpose": "Original ownership does not receive Court; the current Brilliance controller does.",
+    "initialState": {
+      "schemaVersion": 1,
+      "rulesVersion": "4.1",
+      "revision": 0,
+      "phase": "Action",
+      "activePlayerId": "P1",
+      "turnOrder": [
+        "P1",
+        "P2"
+      ],
+      "fullTurnSequence": 20,
+      "startPhaseSequenceByPlayer": {
+        "P1": 0,
+        "P2": 0
+      },
+      "players": {
+        "P1": {
+          "id": "P1",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        },
+        "P2": {
+          "id": "P2",
+          "teamId": null,
+          "goal": 21,
+          "hand": [],
+          "pr": [
+            "CT118-QH"
+          ],
+          "er": [],
+          "limits": {
+            "miniTurnsUsed": 0,
+            "miniTurnsRemaining": 1,
+            "swapBarUsedThisFT": false,
+            "rank10PlayedThisFT": false,
+            "ultraPlayedThisFT": false,
+            "pendingFullTurnSkips": 0,
+            "pendingActionPhaseSkips": 0
+          }
+        }
+      },
+      "cards": {
+        "CT118-QH": {
+          "id": "CT118-QH",
+          "identity": "Q♥",
+          "originalOwnerId": "P1",
+          "controllerId": "P2",
+          "zone": "P2_PR",
+          "state": {
+            "pointValue": -2,
+            "timeBombStage": 1
+          }
+        }
+      },
+      "zones": {
+        "dp": [],
+        "gy": [],
+        "exile": [],
+        "swapBar": [],
+        "staging": []
+      },
+      "stack": [],
+      "triggerQueue": [],
+      "suspendedStackItemIds": [],
+      "pendingDeclaration": null,
+      "priority": null,
+      "rng": {
+        "algorithm": "xorshift32",
+        "seed": 439041101,
+        "cursor": 0
+      },
+      "winner": null,
+      "metadata": {}
+    },
+    "commands": [
+      {
+        "id": "CT118-1",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P1",
+        "action": {
+          "kind": "configure-battle-realm",
+          "specs": {
+            "P1": "Bravery",
+            "P2": "Brilliance"
+          }
+        }
+      },
+      {
+        "id": "CT118-2",
+        "type": "RESOLVE_PHASE12_ACTION",
+        "actorId": "P2",
+        "action": {
+          "kind": "recalculate-continuous-bonuses"
+        }
+      }
+    ],
+    "expectation": {
+      "accepted": [
+        true,
+        true
+      ],
+      "final": {
+        "securedPoints": {
+          "P1": 0,
+          "P2": 0
+        },
+        "controllers": {
+          "CT118-QH": "P2"
+        },
+        "markers": {
+          "CT118-QH": {
+            "pointValue": -2,
+            "timeBombStage": 1
+          }
+        }
+      }
+    }
+  }
+]

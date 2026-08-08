@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "1.0",
+  "status": "PASS",
+  "engineVersion": "4.1.3",
+  "profileId": "first-contact-response",
+  "proofKind": "REAL_CHROMIUM_MAIN_THREAD_AND_WEB_WORKER",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/144.0.0.0 Safari/537.36",
+  "certifiedReplayCorpus": {
+    "replayCount": 121,
+    "commandCount": 285,
+    "eventCount": 374,
+    "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+  },
+  "responseAuthorityMatch": {
+    "terminationReason": "NORMAL_VICTORY",
+    "winner": "P1",
+    "decisionCount": 122,
+    "commandCount": 279,
+    "finalStateHash": "9216b8373274d872f619ff63a6acee7bb44c7f8ed3c1acd7600f7703e99e8cdb",
+    "decisionHash": "5b2755bea0bc43ff0e062a3f201a6ea9c71a3a5e6c7c68a1bd6a9f00732ad2bc"
+  },
+  "mainThread": {
+    "replay": {
+      "replayCount": 121,
+      "commandCount": 285,
+      "eventCount": 374,
+      "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+    },
+    "match": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisionCount": 122,
+      "commandCount": 279,
+      "finalStateHash": "9216b8373274d872f619ff63a6acee7bb44c7f8ed3c1acd7600f7703e99e8cdb",
+      "decisionHash": "5b2755bea0bc43ff0e062a3f201a6ea9c71a3a5e6c7c68a1bd6a9f00732ad2bc"
+    }
+  },
+  "worker": {
+    "replay": {
+      "replayCount": 121,
+      "commandCount": 285,
+      "eventCount": 374,
+      "aggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322"
+    },
+    "match": {
+      "terminationReason": "NORMAL_VICTORY",
+      "winner": "P1",
+      "decisionCount": 122,
+      "commandCount": 279,
+      "finalStateHash": "9216b8373274d872f619ff63a6acee7bb44c7f8ed3c1acd7600f7703e99e8cdb",
+      "decisionHash": "5b2755bea0bc43ff0e062a3f201a6ea9c71a3a5e6c7c68a1bd6a9f00732ad2bc"
+    }
+  },
+  "parity": {
+    "mainReplayMatchesNode": true,
+    "workerReplayMatchesNode": true,
+    "mainMatchMatchesNode": true,
+    "workerMatchMatchesNode": true,
+    "normalTermination": true,
+    "shaVectors": true
+  },
+  "generatedAt": "2026-07-27T01:34:34.311Z"
+}

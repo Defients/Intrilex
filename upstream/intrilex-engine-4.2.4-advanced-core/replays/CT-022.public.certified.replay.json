@@ -1,0 +1,174 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-022",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "C22-H": {
+        "controllerId": "P1",
+        "id": "C22-H",
+        "identity": "7♦",
+        "originalOwnerId": "P2",
+        "state": {
+          "attachedByJackId": "C22-J",
+          "jackPointBonus": 1,
+          "pointValue": 7
+        },
+        "zone": "P1_PR"
+      },
+      "C22-J": {
+        "controllerId": "P1",
+        "id": "C22-J",
+        "identity": "J♣",
+        "originalOwnerId": "P1",
+        "state": {
+          "attachmentGraph": {
+            "hostCardId": "C22-H",
+            "kind": "jack-pr",
+            "originalHostControllerId": "P2",
+            "originalHostZone": "P2_PR",
+            "pointBonus": 1
+          }
+        },
+        "zone": "P1_ER"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [
+          "C22-J"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "C22-H"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "cardId": "C22-H",
+        "controllerId": "P2",
+        "kind": "change-controller-and-revalidate"
+      },
+      "actorId": "P1",
+      "id": "C22-1",
+      "type": "RESOLVE_INTERACTION_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "C22-1",
+      "id": "EV-000001",
+      "payload": {
+        "cardId": "C22-H",
+        "controllerId": "P2",
+        "previousControllerId": "P1",
+        "previousZone": "P1_PR",
+        "zone": "P2_PR"
+      },
+      "previousStateHash": "390c89190393eba1e44d42dd388dbf6995d55a5ab4b7ad759b9427e25276152f",
+      "sequence": 1,
+      "stateHash": "c3ee3e0e0220954cd35497f812b7ca6be415552f617e6b1c072402f9e7421854",
+      "type": "CONTROLLER_CHANGED_WITH_ATTACHMENT_REVALIDATION",
+      "visibility": "public"
+    },
+    {
+      "commandId": "C22-1",
+      "id": "EV-000003",
+      "payload": {
+        "hostCardId": "C22-H",
+        "hostControllerPreserved": true,
+        "hostDestinationPreserved": true,
+        "jackCardId": "C22-J",
+        "reason": "relationship-invalid"
+      },
+      "previousStateHash": "c3ee3e0e0220954cd35497f812b7ca6be415552f617e6b1c072402f9e7421854",
+      "sequence": 2,
+      "stateHash": "c70888eb5e93dbc330fa065eb544a17e99bae670e90f3fc6703cc7988cb76cd0",
+      "type": "ATTACHMENT_SEVERED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "C22-1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 2,
+      "eventRangeHash": "bac8b654645313f566b29cea99667f491845ccc8b051597f81859a43405afebc"
+    }
+  ],
+  "publicEventLogHash": "bac8b654645313f566b29cea99667f491845ccc8b051597f81859a43405afebc",
+  "publicContentHash": "74dd86bec4f68aea503ae3fa24b7deb83ab08e9c5b1ad96b9d7a8311763d98dd"
+}

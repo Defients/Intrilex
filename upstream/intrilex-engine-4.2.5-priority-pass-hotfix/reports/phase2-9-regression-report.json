@@ -1,0 +1,1274 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase2-4-conformance.json",
+    "fixtures/phase5-lifecycle-conformance.json",
+    "fixtures/phase6-rank-conformance.json",
+    "fixtures/phase7-interactions-conformance.json",
+    "fixtures/phase8-ultras-rank10-voltage-endgames.json",
+    "fixtures/phase9-first-contact-profile.json"
+  ],
+  "fixtureCount": 81,
+  "repeatCount": 7,
+  "passed": 81,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-006",
+      "title": "6♠ as the only hand card is illegal",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "c2a40dea4c90adbd2ee03f19415072f495989768df481bb576444012f47c31fb",
+      "finalStateHash": "c2a40dea4c90adbd2ee03f19415072f495989768df481bb576444012f47c31fb",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "98855caa313a27efc6bad667e8d3fa3b72740f386d49f9a9dc674f2d8721d0d3",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-007",
+      "title": "6♠ with one other card resolves by discarding one",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "0567f5fbb54c5a6f2d9c550d3d65506b8c2267027678875f6f36e070fe755964",
+      "finalStateHash": "1b020941cf617da2a52ef88865e7d1e97b387b45bfa807ab9e69378575b40896",
+      "eventLogHash": "4d28a16db075d931b56e65e9bf1f06b48c71c72a5e6aa8d51862408092d86ff4",
+      "replayHash": "ddb56689f4e45bd507f9b7ed52ca4de2dfcbd6ba87f6e5b5c72c4169716feac3",
+      "accepted": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-008",
+      "title": "Legal 6♠ later fizzles when no discard remains",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "92974dbfaaf75e558f89cfc0b3cc148e30fd7b2d541ef37896b7d5a48014fe92",
+      "finalStateHash": "8245b467346f83115f6edeb89415989949e676d5c46292c8517be9e2c0228dd2",
+      "eventLogHash": "2e5339f5f9b268f28efc4615ae68d8771616f4c99ab85395ca9c0aac55faa4d9",
+      "replayHash": "deb2e29151a97c945b585f7f936281e64b2fb5644140ab96b798f45ff844f576",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-009",
+      "title": "Nine +5 Goal Shift identifies the discard actor",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "30553460eed6099d47e4d784aae8d6bee270ffa9b2d67e4c16ab3b91f31e6593",
+      "finalStateHash": "f288d135eafddf857547f375061977b6873a6000204f11a0b9977da32328c75b",
+      "eventLogHash": "854b0d2619637042f9235c2914e44f2053f242aa86c6f5a2b1ab8a65d6baea93",
+      "replayHash": "441c02f028ae27f1ae1738a086a17e14db6747cc1bc3e9350e50d528a043987c",
+      "accepted": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-010",
+      "title": "Nine +5 persists when controller has no discard",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "8d41a02f8b23cd309cf031cf22c12df595ec7c5e322c8cc9197b546dee718022",
+      "finalStateHash": "a4d453b0521b9d54a1b0d4d553ceb83ba4d04dd9f759a8bfb77e0ae35acd2533",
+      "eventLogHash": "57f4a281663d19b93ef71525ecb1e69171bca3a7a29ae67be604adef096742a6",
+      "replayHash": "bfd3b275dd86a0e4b813ce271cb653233897028a48d2d5cd59d25bd65f2fe5dd",
+      "accepted": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-011",
+      "title": "Source Intercept rebinds controller-relative text",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "be8750de52cadaf6c01b7b81d3be41cc21f5af56e1eae6ec1a9a0f770cfe2c54",
+      "finalStateHash": "eda08a4179805fc905a687bf47a127cfe47f257e589aee3c6b5d5c6b57baf171",
+      "eventLogHash": "5b0d93352566167479a6aae00eb04ecebf5379e1f74600ee7503cab8b8cfe2eb",
+      "replayHash": "f16be45dcc66d69e6af2de55f704c59da6ebfa6b97d32b4ce9752641457e8bab",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-026",
+      "title": "Visible illegal target rewinds completely",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "78570b329bce1a3d0c0c26e456782ade7d45b8093f189f5a30429025478bca91",
+      "finalStateHash": "78570b329bce1a3d0c0c26e456782ade7d45b8093f189f5a30429025478bca91",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "ff657de58ae919425de00cecdc1c5e12f947c45e5f88996e70590e2a9dc35b82",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-027",
+      "title": "Illegal Defuse rewinds staged discard costs",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "a8bc3cf952fd2e6d0b195ca35f0cfa75557b81e8aea451cf8068a995df2fc01a",
+      "finalStateHash": "a8bc3cf952fd2e6d0b195ca35f0cfa75557b81e8aea451cf8068a995df2fc01a",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "54c1452618108d7852c80703fd6e235d499274df263c9e8edaf29073b3c1c7b8",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-028",
+      "title": "Legal declaration later fizzles after target leaves OTT",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "dfd5b2f514cb9fa0ce51fa05c3d2c098c79b5c0ae7734082ce157db9703ece42",
+      "finalStateHash": "51ed06254c46a949fb0d7d523b8aee53f207748e9112153ed198d7f9872b39a3",
+      "eventLogHash": "241ee237dc284ca969b83d72aae5a1ec861f10d16c4dbd7cbeef5237580c72d3",
+      "replayHash": "d171ad66f94411f40230cbb615d473e9798d1078f0b2ca4abc054f11d0edb5a7",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-029",
+      "title": "Royal Marriage is not a Combo",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "8d4cf70781c1cc77c199bd9f1b5deef39f043601ef160959c868be254b746634",
+      "finalStateHash": "7da31d046bd314f8922dd118648521b4a139b873c238a938c4d7e7d5c0d0fe0f",
+      "eventLogHash": "d01b498c04102707a33b96caae763dd537970df11ed71d3d3ff35a133a6fbfd4",
+      "replayHash": "5b906dd78b600097612d848a9bb5e232bb0fb667396ed2b63f853484f29fbb6d",
+      "accepted": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-030",
+      "title": "Combo-only counter answers a true Combo",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "3d907c5cc63085d003d6538c27147e54dd273014df949ac677d7c6c757b57efd",
+      "finalStateHash": "18f339f4655fce0a2f43ff4f4ed8c5256e6f349deba66f971f715601c01c4196",
+      "eventLogHash": "2560f7bcca21f2b6a2673372e1dbdb3d4ffa7899279087e2e4dc37aead8ed3f2",
+      "replayHash": "b294a806a907374537450f4992f0b49678dde8fac800629e10957e3d82b1dabe",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-031",
+      "title": "Illegal response rewinds without disturbing pending play",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "01d03f6d8f61b47e71ecbc7705186be6a0a1cb47517dbc5df4bf267e0be67c88",
+      "finalStateHash": "da001e3fd78e8fcaadadfe818062d9d6ecb2ff78b9d1e1ce040a485c1e60e979",
+      "eventLogHash": "b2f79577f9a7bc143a30af6a25f72dce65900fc2573093d0e5526c8cc7efe15f",
+      "replayHash": "66954a4b11c67e41bc6c5cdc6b6371b01732678489db3d9a748ab7a47b38170e",
+      "accepted": [
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-032",
+      "title": "Countering a counter preserves the underlying play",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "9aa43170235121e5b6f58e4f3149b7d32fdb1e60f8279d6a36e06642b81a6c5b",
+      "finalStateHash": "65310e8cd735ead137038960d394ffca941c8bc77e17c772c592754409ab8ecd",
+      "eventLogHash": "87206c1ed85723fb3fae457cca97920c16b43c0c5d0c2d733bc4d6a286a01d28",
+      "replayHash": "2117ed0f52aca00f6ef3510ab9028b703ba792068626513a868b5d4e0a96ab01",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-043",
+      "title": "LIFO response resolves before parent",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "fbd70272930eb642a1c6c0e75f510adb8ae183d2310222dbc415560639042717",
+      "finalStateHash": "817a8f929e024472dfc5135e8bcebc27af51aae71664d954b50d50aff35a05a2",
+      "eventLogHash": "f4c42072c75930b7aedb2c241e845e0ff299ec269c36c2d319472cb563baef1d",
+      "replayHash": "751c41be1c99b379b4298bc77eafc1c2cf81abcd18a3cfe8caf9f123b50e5816",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-044",
+      "title": "Identical commands produce identical events and hashes",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "02e9c6af79117486c3f6794e9f66f2c5d1b167ab4ad3b10fd0c652d0e9fffc81",
+      "finalStateHash": "1c023c3310436de248e03b4d21a463e8c0e6b638b2192866245e15277fa263d5",
+      "eventLogHash": "f8443d3577162dd1da1f34759eee56bb0541a27aa23a914a93b0653b0dd25af4",
+      "replayHash": "c9e6fc1ce71c35386f68adb44c2f9f12dc279908bc188376fa19b3eda57d80ee",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-045",
+      "title": "Triggers queue during atomic resolution",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "167cef576db622f949a06ec558a29522c8ed574634606bae8e453e44f94a2fd2",
+      "finalStateHash": "e2161ec0bfc94dfd332ae71aef57c387b3bc15633cd66f1e71d6bea9dcb323ec",
+      "eventLogHash": "3947c74aef435987d84741ee2ff749d0c36064f9b29616b50fc2544b3ca0ec15",
+      "replayHash": "30aaeafab28414e38c8894eca450828008452b3d8634d16dd2f13f0702e13799",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-046",
+      "title": "Priority rotates through every player",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "727141031b6f407acdd9bfd491e39a39bd409acddb6bda4875a6ab19a4825ed4",
+      "finalStateHash": "77fe9f2f65e9c4eaa3ccf68895b69e3c15cd886e85879cefba281c05e630eb7b",
+      "eventLogHash": "055df482b34f244f280144f5e75593c9abe90ce7f01f2255a71525249874407c",
+      "replayHash": "6e4bbb0ef230ecb6bf0724659e008a17699fd7d871ef5b40a8e17399de986a8d",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-047",
+      "title": "Counter removes the pending item",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "ac3cda7d734100769f1abe2aaf89cb899c3e5445d1ffc0250ba0bc634c0ee81d",
+      "finalStateHash": "b7b49bc3f6ae38b1c284756dd3975819c1f1f08ed3cc7b19c3abf75581deae3d",
+      "eventLogHash": "d76618e57eab37c21fc1d19894a985020213580ff870073dabe77e2a567ea78e",
+      "replayHash": "4dee81df7728bc66115d94c45355d19e4fba874c8fa1312118ec51511bf14c6b",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-048",
+      "title": "A player may counter their own pending play",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "1de815fb064b28d756025d7a52259aa8f83bd9292754a916fd6dbb9a4ec19352",
+      "finalStateHash": "faf65d1cf336d02a2dfbf609cb2677b779ca2a4d4d55322dc05617b101cabc65",
+      "eventLogHash": "bf2a6ce9eaabdff4654f97f85c2a9b6b851079d1c7548cf2f559ba0b2437bc94",
+      "replayHash": "b5cb601e7968e89365c560454a2edae6ed77d6d0316bc4c3257d94b4ab127513",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-049",
+      "title": "Child play resolves before suspended parent resumes",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "2d5f09df14af02459f1b92b5c147fd87ff137d8611d79edec080320b36d10673",
+      "finalStateHash": "e65af4942ae1049533d8e695eed3a0c625a4691217d3e1dd9aaecd5f0dede587",
+      "eventLogHash": "e24737421583f4040aeca3bac25a0c0ee553c5dbe607a969900f348715c07dd9",
+      "replayHash": "cda4613f74db1ad8f5573e4b30734218117ccfb54ec95f94971f5d1783626b18",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-050",
+      "title": "Independent targets revalidate separately",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "a9d02b1acbb6980c65041fb6206895a2ea5d134dd4d8bbbd80345e9db4bc2dae",
+      "finalStateHash": "6ce2cf75062747f85305a509f8140f90d8f75f6b9a3e36b98353b0f733577f7d",
+      "eventLogHash": "fe2aa72974918a4509f6216a723fdd9b221ac064c90fcb5003c6f9b6c4f88426",
+      "replayHash": "2fa9e17427192b4f61f653b29124d33da179b2d7fdd18569a30d76bff7a47f2e",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-120",
+      "title": "Authorized replay preserves hidden choice without public leak",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "949665c7ebe59c29eb988b038dea794326bf0869fea59db333163451a82568cd",
+      "finalStateHash": "d8a294929461a097881b9d6d021f9ac94fba2ec2a037d86d1ee26791ce156ecc",
+      "eventLogHash": "4695782e0255707a4a3a02848f458b6458bf8f5389a2c78e9505dc8af0e59194",
+      "replayHash": "3731be0d2283c9120e567e2ed04b887d90e2ab43a29bb6dcb5c926353f1e7b1c",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-025",
+      "title": "Tap State records an exact future Start after controller change",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "0f99de05681450a79146517074b696d6bc47fc3cee6e1938f6c930525faf3d59",
+      "finalStateHash": "8c56e0317c954f1172d792ed57327b5df7d0bc66f4dd42b072c7a6f22877444e",
+      "eventLogHash": "079627870d0844529f0daf8dfeac374ba090c2b57fedbd6332ce37b6464b3c74",
+      "replayHash": "6a5327e1bdc368d26117cad543b7a54fa354134bf14210f38aa68d794ec0a776",
+      "accepted": [
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-036",
+      "title": "Revealed-Until-Start clears at the recorded Start",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "4111cb6f84652ba8089203548b0abeaa4c8825ca8cbe04cbec2d9dbeea53b6b0",
+      "finalStateHash": "111e64576ca5b00c02733eae78be129295ebff5a4a67a7a6d91a22ae36db4b50",
+      "eventLogHash": "0a0d5b11a98576e74d23f26e970b40d320a1e41cd39ef7d0eef32565c74073ac",
+      "replayHash": "289ad3c8e558d95b28dfb4879bcac613425e997a07422668188ba17f1d1ac3cb",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-037",
+      "title": "Aegis replacement owns one exact expiration event",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "982fe85b19989c98407d7e4641010a14d0b761df34fcaa66a3258dd5298c5b05",
+      "finalStateHash": "0f5a4c93c086c6bdebd4270c0a6b19097f1bd1c05aecca5f70bebac49e660ad6",
+      "eventLogHash": "9942d0ae8edd3a36b81059139cfcc8cd8c35e2767c7c33db9b59b57e04d2e81e",
+      "replayHash": "3f5ba143726ffdf709557e8bd51e5f0e4f61c20073350b3c1729822ea06d7abf",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-038",
+      "title": "Exile-Bound replaces a would-be GY destination",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "2b4e81b3fcd15aa3b0338e6b1f4aa8c35111307a33ecbd4f1e50c1d9ac60803c",
+      "finalStateHash": "5c622191d5d8a6f723662e56ae585536be0c23e8f50c54a5525b60b33017cebc",
+      "eventLogHash": "2fe251300b6da311cd17674689ed955d028040e9a55c07efa271d5b4c1805c40",
+      "replayHash": "c387361ae7cd1981c0a0a05197b019731ef7a4b9ec67d6f2e413baf49e4e9cbc",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-051",
+      "title": "Nine Tap releases when the current controller scores",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "39c41a006a1c8344a203c49791339dcc998f12a6b3aab8c99db0d85af5712a61",
+      "finalStateHash": "d41e883643725541247ca516685318286c810791e04a59e9c84ae4b87b21cee8",
+      "eventLogHash": "0498a48641ac9463a7993ea535e9e637a2441eceb7fd58afb0525e6089d90191",
+      "replayHash": "d3156f6ef2ec22245e5c84a927952326be6d3fec24ca876102c522ae80374809",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-052",
+      "title": "Reveal marker is removed when its card leaves hand",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "c9ed4c2545d0785f49d6cfefd9f37f707e9ef9d66222190ea04b320d75d8f20f",
+      "finalStateHash": "98ff31fba60e4cbff3cc527e76fa2b467d11fda92cf3e6ad2ca0a53a08611864",
+      "eventLogHash": "a46c58dd68ed287b35fbb9a57ba651ef61c5e13486722acbbca2a6dedc6f3156",
+      "replayHash": "25005d968c860eeca12b53fcc3f23c1b4ba0f3150540eda3517deedcfda5e0f9",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-053",
+      "title": "Played-for-Effect persists across OTT movement and clears on OTT exit",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "50b66a0d1beea763efbcbca0dbc4c0d23c8765f87c1fbab70fa8e447d8ec236a",
+      "finalStateHash": "56aa8c66bb64a36acd901a569ec67bb9328ee916870e5ae2030dfe0f23fe3943",
+      "eventLogHash": "63ee84ec38431760319be97fe4d667a90c56b40fa8dd87b627ea09d1cb87e577",
+      "replayHash": "5539337807e871218c918fbc28776abaabaf02d6e2ba8fcf784a9fef02fdb89b",
+      "accepted": [
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-054",
+      "title": "Exile-Bound persists through every zone change",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "01e6e64b9001487e9f12a387a5f107aad526eccb93f91e18972b02919fc1b89e",
+      "finalStateHash": "5bef8d7df81480e04cec1bc3e47015fd6f9515171ea4fbad0a85d9ab4af5bb2d",
+      "eventLogHash": "9373f1eccb62575284dd5c965fe0e67667f47aca8f08f5795778b88e473d756f",
+      "replayHash": "1db6693598e9aac95966d6619e02942cac8205192a6cdb2b5acf9b41b8768cca",
+      "accepted": [
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-064",
+      "title": "Aegis blocks an otherwise legal control change",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "1c5132b400ee4dbebf044733f7ac44b28df0f5ce1fc60795d7e4d9c4c318a5cb",
+      "finalStateHash": "1c5132b400ee4dbebf044733f7ac44b28df0f5ce1fc60795d7e4d9c4c318a5cb",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "234e3f5d11dceac09bf181a6270e219a1231d108234728127410d33a5577123f",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-065",
+      "title": "4♠ bypasses Aegis but respects destination replacement",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "fcc9bab1a51e28ef9c80ed614c46b075f12b95a8d1c3a82729fe29cbc65328d0",
+      "finalStateHash": "284eb5ec1979cf615e83167d62d9ce8f2b84fb123846f30d22c8c2f15f7d3c17",
+      "eventLogHash": "37085d747d59a9e376c37bfa0477d861ba6b72b6e1cd6b1f3ceb3702c30cb1b8",
+      "replayHash": "c637234bc997416fe23ab9b88fbff616f1e327a5925495f8929039c9b57dc315",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-066",
+      "title": "Royal Shield blocks Base Ace authority",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "b5b059e8789e13d91ca3998f2d9497381b170087384a14124f60c6d74162ac61",
+      "finalStateHash": "b5b059e8789e13d91ca3998f2d9497381b170087384a14124f60c6d74162ac61",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "6f1fc4abaed7e2f8cb99c73751af3d988414468aba3ba48ebf8d5652687da7d6",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-067",
+      "title": "⭐4 exchanges a non-empty PR with an empty PR",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "8835dcb0a85f9e82c86d3ab007e3c17e4d24bad84087ad5454abcff33e09eb29",
+      "finalStateHash": "2678b47c1cffb1c3d35216746be7427cf6911912c3afb2edd34a366ef306c0ee",
+      "eventLogHash": "12fe2447d45f6b56ee25a66f72160850f8ba9376ed4c126a725e112739da846b",
+      "replayHash": "339c36f8cb9c985596408c99e2d853c2eafb2c8f3b0170ed7fed05438ad0b538",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-068",
+      "title": "Five Recycle preserves ordered mill, rummage, and bottom draw",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "c40ac6dc3e2c68fd1cccd18a9c4b7edaa62b66be172fedaa0767497f5927feb4",
+      "finalStateHash": "43d3ba27720e677c91bcb619eb99a509884f238ec73ef5d2052e312bc9310419",
+      "eventLogHash": "20495364a209f397d061bae4913bc33c87cc5db2e4e557edebc22fe6aaccf5aa",
+      "replayHash": "cd2fd00f8ce9abfd160a04171d5841d91f39e72768e7268e2b2893527e95de85",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-069",
+      "title": "6♠ with one other card resolves by discarding one",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "c2364e2cdfc3b7163fa58ab03cee2ce1b4ff43cedd89b8fafcc4cfda532f67fd",
+      "finalStateHash": "c5150d6eb42a6afc2e75452f8e3c2ef91e7f5d5f91300879535fd8523e2253db",
+      "eventLogHash": "ad47377e0af1e6fb6d08620f4e492e6649b6b259d23bab3100c81f22d02e3193",
+      "replayHash": "5880802ffba62bab4c50b44a94fcaa6269a760b646da9ba9f134bc28aae973bf",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-070",
+      "title": "Seven topdeck casting records separate hand and effect assignments",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "15f179c35cef1b0c727541707f34f831b89ddad714b815e694951f060072183d",
+      "finalStateHash": "5fad0d5176c887e9391b02e8ab8ccae9d2f4efe2af7e030e77a91ef4cba68481",
+      "eventLogHash": "d9d201c7d6081204aee89ef104fde3b417d6dad3866ba681426b04c7de9bf647",
+      "replayHash": "99bb0de74172a99ece632c93081080e2d4cf901fde5115ce25442b2355e492b0",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-071",
+      "title": "Eight Aegis Field grants protection while Nine rejects it",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "5a3e2852ee67c96257a6201186693ec37bb5945feaf1c441dc45605c91b630d5",
+      "finalStateHash": "35e720480835261e310f45d5a6d2e66b5fdc122390ae74bfcf335b460a35d8fb",
+      "eventLogHash": "b7abec591895d87f26f531959d220f79140d34700b9da522bb3322f5a54d2a99",
+      "replayHash": "e8d006aac0cf224b73bd814dfcb31f4fef6e82461dbf2d934b3e5c55374202f5",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-072",
+      "title": "9♠ +5 Goal Shift identifies the discard actor",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "a33a0360787d0864be06818fdf882b12ea71a09e691150f6341e2023ae801c7b",
+      "finalStateHash": "aeffa0678a697a92eefa25062c6e6c508689069db63b8a88d9fb028aec798a8c",
+      "eventLogHash": "004ab2790af0e1b8b65acbd136f2f504a5c885a01b0bdde7e660865b303326f7",
+      "replayHash": "abc01343e56af2cebb3a0597127ef7c1a3b1bc3a547a58f900c2b518be50a073",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-073",
+      "title": "10♦ paired Mimic preserves Rank-10 identity and Exile-Bound",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "8b008a9bd831fc79d2f533590fe6ca3fec472246e6551173dc6fd2fca6375298",
+      "finalStateHash": "c68fd2683bb237a3a3def1f619dcab74b6a81d14ffff6d32780acc091228ad38",
+      "eventLogHash": "97772cb0577f633f7754e67315727941de636c195e2f9d8b71b9c499671937b5",
+      "replayHash": "9eda91f2821d1ab33e2a81fe55ed43771ec54682e700f71be980dcf18ca9ec4c",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-074",
+      "title": "10♣ Foundation records zero before entry and bonus-scores once",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "496386c52d0a845577475ddfa545d50012cc37b5664ba8e9ff4544fca9587b00",
+      "finalStateHash": "ab027f28deef3e125ca8adff45c681822fd55c7a53c6d714c220ec45c452aaae",
+      "eventLogHash": "8a4cff2a32fec4d2c345778342760f704327488325e0fb09b21aeafa419656dc",
+      "replayHash": "7276233ccf961563cd665fc8a96583730b0af36c4d12eeea64a57f5131161ef8",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-075",
+      "title": "Queen Anchor enters with exact future-Start Aegis",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "5f4b2a0e47cfd02eba71d23e550199bde3cb0ca5f7b19fab40dcc3e48a732e8a",
+      "finalStateHash": "8ce268d8525299cb3a252f3ea41d7a904b4274b0fe9b7a88205de38080592b52",
+      "eventLogHash": "f92e916ed17132d41508cc51263e00875e8420d23484d47458e9216a74ab4a1b",
+      "replayHash": "e7a9de3b1b5f5b3f693f42a70265f4f05e90bb54730184d32f827d259791fe49",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-076",
+      "title": "10♠ stolen play fizzles with explicit failed-play destination",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "6e268abc0d29c80ba8845e734235896bd5761fc8350f7b3af00cb34d9eb5895c",
+      "finalStateHash": "e4443172a3822b5b2d8dd670e3a33e61313615cb3cfb83a230041bc977c1f3a6",
+      "eventLogHash": "53e46f20407dcdfad42560b1dc59e3214df33b97ea17b1b6a45cd673ead276e6",
+      "replayHash": "a969aaa312e26f816be5aadfe11096ff4dc60fa1fda0814d792c6ee99ba5fcc6",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-077",
+      "title": "Jack PR Attachment changes control and applies its Point bonus",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "575d6c887592b383f667c7d93300e7a450c1f207af25238be5ba900ba1547492",
+      "finalStateHash": "5744ed8f23c494f2ebc00aeae48f1989a7b9f9441b11656ef5473e9f50a1e3c7",
+      "eventLogHash": "d2067cc86de31f25658ca734347bdf044e2f7ff6651bcf386cbc613845da7fa8",
+      "replayHash": "8c40a881708eed04c0095bb3ed8427740d885a79318fd0ec3e19dc6a067cfba6",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-078",
+      "title": "Black Joker establishes Board Lock without ticking its activation FT",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "b0992d29d1f45d6bc9d6296298b5e129f187a598bc24aec7621671ef5a7278a3",
+      "finalStateHash": "7de848e43a9b6f1a4cb6e70b796a0e5cc5b4b92d9264868e316a0e67f5fa25b6",
+      "eventLogHash": "637588f8f87b30b8127f8b1a004a6c438130038121ac5bdd474959df05b2c3b7",
+      "replayHash": "2bf8c36091f1f246bc8233661080e710089ee128b9cc4dc9b463e858408c80a4",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-079",
+      "title": "Royal Marriage is a dedicated play class, not a Combo",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "01ef71fbd1f9221617556d4d5d1fe343937f55a2075eed8a5830a2ed254d5467",
+      "finalStateHash": "3b2f4607beb4471732c1478bf10b9d94cb64ce5b5be3e07be7994ce73ea68c55",
+      "eventLogHash": "239d614e198af96e4d2302a3129435f171d2a245b524f517b03558e81ed6231d",
+      "replayHash": "aa7efbd9956e2db61e5903ead65a57cb5ee4dea52341e9e581eccc11377a2c57",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-080",
+      "title": "Ordinary Scuttle respects Red Joker immunity",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "8650c1e3f0d535a6093daad458202aa17d35a417de8f3fd4873493996e43988f",
+      "finalStateHash": "8650c1e3f0d535a6093daad458202aa17d35a417de8f3fd4873493996e43988f",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "9dae06172ff2d6f6f664c1b4d24d96e8acf7472976cec0588896e99541836b81",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-081",
+      "title": "⭐8 ignores ordinary Scuttle immunity but still uses normal destinations",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "fb686d913a05f4de0d2a28b58a445b67c0de9a3c96265c822b5215d57e9bccc3",
+      "finalStateHash": "e83ef1b58334427440c08c43e7f201213a7c7d2d3a6c5a3864db9d0fdba88799",
+      "eventLogHash": "4e70809f2849dd5513beef1371a7c39dfe30ad6ba17fdc91d1088994bb602e76",
+      "replayHash": "7ae134fca7d6cf29863efb0b2dd282c4916c3185b680ca15d2dd87b56b954a57",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-020",
+      "title": "8♠ Free Scuttle respects Scuttle immunity",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "4f879c67931de532ce701256cafb3c7b8de6b4b5478f310ea5a12045037a3132",
+      "finalStateHash": "4f879c67931de532ce701256cafb3c7b8de6b4b5478f310ea5a12045037a3132",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "a534f1c0241b032bb8444a786389411aaac36a152c6e2c970443f31ad7c00dbd",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-022",
+      "title": "Explicit control change immediately severs Jack",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "390c89190393eba1e44d42dd388dbf6995d55a5ab4b7ad759b9427e25276152f",
+      "finalStateHash": "c70888eb5e93dbc330fa065eb544a17e99bae670e90f3fc6703cc7988cb76cd0",
+      "eventLogHash": "bac8b654645313f566b29cea99667f491845ccc8b051597f81859a43405afebc",
+      "replayHash": "3f98ad974e36b0f5cc5aa9315b0c7ce5cad16ceeadce030efd30cc7723c46fb3",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-039",
+      "title": "PR Jack creates an authoritative Attachment graph",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "0e83f3b954ad94b85f3a159f834a9b0282723b6df047e4d3a79d49d561612067",
+      "finalStateHash": "c942bb90b06f1a3a62704569ec8adb8596af6880cd35305e01d0f91c4dcbad04",
+      "eventLogHash": "c5370e012e7fa2801772f991b0e9f9b9d7558fc5ed2ae951b5e617f7cb332ce9",
+      "replayHash": "0b3a3f8f798caefc6f9252e0fdbbcefda0db2a0bc81206153b13fa488bcbc8d3",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-040",
+      "title": "Jack removal immediately restores its host",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "71ad881793e1ed8fa3b23c400fe97f81ee3a449c556bcf92e4632b88b43a7452",
+      "finalStateHash": "0fec962c189a765768e0d915d8f4fcce1adf8c97dd4c5f013087dddcb7eaa78b",
+      "eventLogHash": "050ad9c2d293d2330e5a98d7493fc2a39392bc20ca92a5283201865f409b7edd",
+      "replayHash": "d8c6eb631fa7dc727c4854d6e92fa42c12de636c832b83a8a4d853dc574a5651",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-041",
+      "title": "Guard blocks hostile single-target Effects",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "a7961c206ab338e613969e12764b28287fc6c1cdf67daca0b2b86968dd746e71",
+      "finalStateHash": "a7961c206ab338e613969e12764b28287fc6c1cdf67daca0b2b86968dd746e71",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "700b5f54c081314c00591f6a929b1bb139df88b31830b757ffeecaa991da60f2",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-042",
+      "title": "Guard does not protect against Scuttle",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "849fd9f7305bf139e28d60d21692248a3d2ecc0901cbeb5fbae06e8310c4c401",
+      "finalStateHash": "fa43b66000dc72c3303d3b8bf63400e2903711c1c2134f470d883f1eac89ad23",
+      "eventLogHash": "d517236813a840a068db518a76d87d87bcaffdd6144333913e991b81d59246b5",
+      "replayHash": "62882c027f702166f69f3a72bc31471da5dfc97e1563fdb9ab83f01182e80d71",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-055",
+      "title": "Aegis blocks friendly Effects",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "1fc18af23f5ccf439befb0de60de6ae589fc03fc1ab380aed77a68b333179630",
+      "finalStateHash": "1fc18af23f5ccf439befb0de60de6ae589fc03fc1ab380aed77a68b333179630",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "765e13a8eb12fdde5a8d57204fe84f6f6fc5a44180d9a7fb04bfe5af143a46bc",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-056",
+      "title": "Rank effect-target immunity is independent",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "17d699432148bec7dd74d3560501bcc2505c69681fa1bc60750ad8cf57eee886",
+      "finalStateHash": "17d699432148bec7dd74d3560501bcc2505c69681fa1bc60750ad8cf57eee886",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "cf6ef5834d43ad557920505252641410c6009d57200be0d96a3bdd827d96dd25",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-057",
+      "title": "Q♠ survives non-total multi-target clears",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "6f39750cfc268d9ca2c2f7a4008af5ea1a6cd1f60c8c24332da7fe8f2ad81c8a",
+      "finalStateHash": "6f39750cfc268d9ca2c2f7a4008af5ea1a6cd1f60c8c24332da7fe8f2ad81c8a",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "08f3d803af8ad68e4cea6949852fedb37088fde314dc2d053f270222865dc6a4",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-058",
+      "title": "Structural total clear uses only named bypasses",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "de2615d550125e518476ded58021e0c4364a0a239edf4e4e5eed861c9f1c4270",
+      "finalStateHash": "0fa6195e0dbeda6369149ffd8b475bae9a0d4a1ca0e2b4921399e0cea9bb9133",
+      "eventLogHash": "774868fe7bd062fe4b64936c9d7fbcebf107440f91011a7ee8ff5d94b6d05a03",
+      "replayHash": "b1c2a05d82ff659a8a3c0a589f610e3db95dc9c9a447f0998d61675433d66385",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-059",
+      "title": "8♠ Free Scuttle ignores rank and suit",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "4b727b2cee1cb2f18ed998f9116d2fe55499bf2524b4ba459148f7e962b7d95b",
+      "finalStateHash": "0220d91a197f3cc86595a8b3ada078e836a5cb5d5f2ab792d30359d53caf3ad3",
+      "eventLogHash": "e7cae98436757136541bb223bad24adeab869f3f7021007c46afd9335c384138",
+      "replayHash": "33dd6d263f07f4729159bddd6a741f6d606c39008b6fe9851ca9fb840ab6c06b",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-060",
+      "title": "⭐8 bypasses ordinary Scuttle immunity",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "912c8273bf02fdc6971f135351fa5bb2b6aeb7ba007cca427a15ef119f2cc029",
+      "finalStateHash": "5a180d7f2b6e1a59b8f7e939e0e3c1a9a3c628a9073fc38b2422f41519272e6c",
+      "eventLogHash": "b7138615351862cd3b70da38aef6e54c7223dbe866bacaa3207f58a315cb9bfd",
+      "replayHash": "302a0f4853b21d32b797ea0def65cf048e126b726663dff9605c4400bdaf8a7e",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-061",
+      "title": "⭐8 remains blocked by Aegis",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "09df2ed64764c586a9036f2596e421803a67e9f4d6c6f73b933944c09a23b77c",
+      "finalStateHash": "09df2ed64764c586a9036f2596e421803a67e9f4d6c6f73b933944c09a23b77c",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "98b5764c47e224eb40eb989405b7fe7efef598d1a6cb4e4ac510ec97ace05e03",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-062",
+      "title": "Royal Shield blocks only Base and Anchor Ace",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "80ba708340bd1800a5a73533c74cdf60433d6385b56085489165ef68c0df2d42",
+      "finalStateHash": "a493e927200a40db92c7b2534564e6d3736dbfdce41d40587aeceeeb538ca320",
+      "eventLogHash": "07d829068e41d4626de6c95ea2fc7d61051ba395cfa17db2af70bfc0e8bc2155",
+      "replayHash": "20753d05cbd794d8f045d4ba461b5b16d8a654fd5e9bae5f3a11ab7fc2c9fa60",
+      "accepted": [
+        false,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-063",
+      "title": "King and K♠ counter authority remain distinct",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "855077ac244f9f261d539617186b8485eb772d279eef27073514b4ab95079d50",
+      "finalStateHash": "b8bea40f77951252ee12a2b27491847877e3960270c265a085a6a564f29a549e",
+      "eventLogHash": "da284f19487089970c9ab1abc110806c927c5dcda4aabdd1986faa2df5818784",
+      "replayHash": "28155122ad0d89b2a9928775188b4b216263e4f53a8031d7aa83a78bef20e332",
+      "accepted": [
+        false,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-015",
+      "title": "End Phase short-circuits after Sudden Death",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "f67c5eae88b06b78fbe874bc837f420752544c0bb65a4c895e55530be58f6387",
+      "finalStateHash": "bcf532bce1ffeae4a5abe12936dd167492635b8c4fed70f6744dc7849605daeb",
+      "eventLogHash": "6b02e881745daae58a696ca0428a0669956f57476e93db6120da1ed4ccb5d4e8",
+      "replayHash": "1f76b87a29b1b73a9709374916143a319ff2572ef7ed2dac2c4fc55e6ece5cec",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-017",
+      "title": "Stolen Rank-10 play fizzle follows failed-play destinations",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "6e268abc0d29c80ba8845e734235896bd5761fc8350f7b3af00cb34d9eb5895c",
+      "finalStateHash": "e4443172a3822b5b2d8dd670e3a33e61313615cb3cfb83a230041bc977c1f3a6",
+      "eventLogHash": "53e46f20407dcdfad42560b1dc59e3214df33b97ea17b1b6a45cd673ead276e6",
+      "replayHash": "f4747f4a40fc3fce45b9d76cef7cd14eabf6b86bf7721460c345b403a00ae19f",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-018",
+      "title": "Exhausted recovery lifts restrictions immediately",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "c960dd60c1a6ff357ed757936f967646f0d3ea35b366ba372bae36fd387bf9e6",
+      "finalStateHash": "185776c08bec6cc0e30c94f9666a81a919c4f058f5a9a63aac0d7ecea3784558",
+      "eventLogHash": "00ba92957692efa708cb0f1a575f4d29e31634c798ebec8b80be7b447d6be2b6",
+      "replayHash": "9329a8098a1561f1326c0043666bb722dd77f531d345aa1b8e8f61582700ab41",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-019",
+      "title": "3 Black Ultra resolves atomically",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "3e390ab2f4a29d48623a39d887535325b8b6a8be896cf6293cd5f6d9d3ec5f03",
+      "finalStateHash": "6edbff72c248b603cc67c703171766b3b18283230c9f518bfd135046b0061f97",
+      "eventLogHash": "08ca5f298c9db83d6492aca6e4d891724bc0b5fcdf54d3b860d0e084dd0756db",
+      "replayHash": "6ed984b98e119a972d807737b49dcf39b3d1d9f28ca21eb42d6c22ff7816e7ac",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-033",
+      "title": "3 Red Ultra counters and draws from bottom GY",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "b4f9ea007b50856890a3eb81fe06788c187e29611e3add1792b77e3623d6238b",
+      "finalStateHash": "9c7a0260eba4df66b835c1f16cbc62ce2bee6fd140d1c960f39827e27d61e663",
+      "eventLogHash": "c9a46511043995dff0b1bbc64c2f87ecc063f2f127cd82a487f0dd4ac3085f4a",
+      "replayHash": "d267abe2b5fd98dc3b64ecf8e5061a834fd618e9b4f09535aea566ddcbff9066",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-082",
+      "title": "2 Black + 2 Red respects Mini-Turn cap",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "d4e36f17ba9c80ac4f7a09c9ce680a7c3bbbc910ab24d12b346bb34140a37abb",
+      "finalStateHash": "9362fa9ed005bf246059a7dbde9a0806d9caeb9be78041797faa708cce0efe3f",
+      "eventLogHash": "6a78ec4a1ccb2f6e236f05c12f98d8c5e99648a80d4587e916983e9d1f5f71fb",
+      "replayHash": "bc747376441f49037cbbfcccab6de522267318a6fe921b9347661e1e17acd517",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-083",
+      "title": "Internal Ultra-cast Ten becomes Exile-Bound",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "5aa6fbfd64d8c921073569b92294a5f9656984161237d5acdf23cbe36c33200e",
+      "finalStateHash": "2b63ecf778c2ea98150b34e3e5a0045005ae230fce71a740b9fb3e54483af778",
+      "eventLogHash": "47f67cffbaba3c0ac7f38ec374542b0110c568f991f845f353a462a4bdaeca0b",
+      "replayHash": "c3dbcb6ef4e9adf0ff98982d79bc7506737bc0cf0a233fa9a8d1fbbb97c72c19",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-084",
+      "title": "Rank-10 wrapper applies destination replacement",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "0902ea1774b466916362f2e7d4d2c5e351ecae6ace100e660f080b2e4197305e",
+      "finalStateHash": "6aa8b927481ea0cc30d802bd4a5ff08fe886de873ae4f895571ac759b1ce9f9c",
+      "eventLogHash": "18678767e738a33bf27cd93269bff5433a0bb02bb6bf165379fa0ff0e9c5110d",
+      "replayHash": "709e554486f0265c88cd40152f0857f8b1a0395fdf4e5480696ccc3a9deea0fd",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-085",
+      "title": "Rank-10 once-per-FT limit fails closed",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "d5bbcffe6901f19ca509d9080574fd008f8b17e45c4b8b05079e80ec4445f4b8",
+      "finalStateHash": "672990e6116d2558ba659c0071abbce5bad9979804a4e67b445d410768cafe78",
+      "eventLogHash": "b828e9063d2d529f414f836ec1b348a64ee2b38814d17c7e377d0bd193482da4",
+      "replayHash": "4ad4d0ac0c0e0d49f4f3413439f5c8ae00ab9a0ede15f5bb60a83acbaa165f45",
+      "accepted": [
+        true,
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-086",
+      "title": "All global timers resolve in numbered order",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "77b311c3f2fcd41ce9b581de12afb840c5e50f0b01a05ab1ab0ab6e8f332141a",
+      "finalStateHash": "5a77a72bb011c99a60255334c614e2db63b4314a89e35e9e45be34a9a3b83cfd",
+      "eventLogHash": "7ebfd0e30a7d5b892576e8fc029d9e627619fd23117f3cca29c99d6626ca568c",
+      "replayHash": "9dd786d71f63745e35970127bc29f0b05646adc369e33f065f1dd06a56511720",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-087",
+      "title": "Signed Points are never clamped",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "420ec01d2ba337f0128a1386dc2e99dd1893e407cc1ca638666a8f6671986e21",
+      "finalStateHash": "1784f8a15beb7334f9654790104e5dac096137da71bc437c9108b9b47f0ede6f",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "81607a0923bfd61fab09cd1496dddec0d3d31d6ebbdf5f5d3c05085ed022f160",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-088",
+      "title": "Voltage snapshot remains fixed after board change",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "698bf88afdba75ac3683633764b5fd683e9ae267567816182151fbeb724a2253",
+      "finalStateHash": "567022c130063d90beca2a5107a9f393a92b9192531109bdc4b6b3b1e465562c",
+      "eventLogHash": "4b37a017feed42c950cc3198bb55df31493ffc9b37aa319ec8304c7bdff10854",
+      "replayHash": "a0e55899689ce0c450574c4ff16eafa3c42b6bbf46a2850ed78dc618a8fc84cd",
+      "accepted": [
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-089",
+      "title": "Start checkpoint enters Exhausted and captures Voltage",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "3568c99dca0c85ebcd7eeb10ff920522ef9220a85da0fd3560bb7ec57ab2e81a",
+      "finalStateHash": "a322f148139156dbd53d61c372cec5b9534280a3d7613798acda33c80978db04",
+      "eventLogHash": "fd3a906824eaf418985d8c8d7d545146e8148673c8d8bcbecbc41fcdf44a3911",
+      "replayHash": "d965af9f1682c5b1abde17502ce27784203b698beffbae9767acf7c1a56bc90c",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-090",
+      "title": "Voltage Predictable uses rank-correct branch first",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "b8921e23e455247ee28f3676625e5a7464090bedcc6e3cd4274b3f1151decd23",
+      "finalStateHash": "775a794081be70b53e1f57bdabc927578e2571b0abe0fb4e5ec3568eb67020d6",
+      "eventLogHash": "ce0c706301d63017c522bb6d91167f7b0c423b03fd99cfedc19f687999696063",
+      "replayHash": "208b31820f7e69c0b3c253d374139242e3d4604efdfbe29ef342ab30c0b52833",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-091",
+      "title": "Voltage Refinement draws bottom GY",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "8714fd0c1a94a2b395f6379c209e218824a0e1f5e87439e6c4a94da25ed2f2b0",
+      "finalStateHash": "559f9b0bfdbcc8ad10327897d9a2c895775f9b9864651061c863fc7871edd999",
+      "eventLogHash": "8ff02303b4557db39289d18379fc896eeb5bcfcd666abe5f0210819072c17a0c",
+      "replayHash": "0811a411a2d9c08178f2b6f9dfc2cf215288bdcffb90bf7ffc8ec7a4f929a2a9",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-092",
+      "title": "Exhausted tiebreak compares Anchors before Points",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "938658d697c115426d1754c68593d12ad82658486852f599c69d75ef06475708",
+      "finalStateHash": "41c8f0b55db46c938491354142f86e278b74c27688ff6bf8a97b690ef2043e58",
+      "eventLogHash": "122af0b64c8634df285f5109ebfca66f22b1d02b85249442b10b1e1433d5aef9",
+      "replayHash": "af36fbfef0a0a91720ee00f37bb17b8a52a79c1d65623a657a5d7c52904bf4bd",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-093",
+      "title": "First Contact disables suit-specific effects",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "e6464ed03f5b0562f7adafe0e8e14ecf9c45945573c6369f5e73f163b0b6094a",
+      "finalStateHash": "e6464ed03f5b0562f7adafe0e8e14ecf9c45945573c6369f5e73f163b0b6094a",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "e7ea9afcaf4e7746e4f3e49c5663338a89585a896456e7f02bdd0229cf4ad44f",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-119",
+      "title": "First Contact rejects every optional module combination",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "dae5c05459f9ffca0c27f2c2c29cb7f406c403a76ff90adaf0a95026744c6c28",
+      "finalStateHash": "dae5c05459f9ffca0c27f2c2c29cb7f406c403a76ff90adaf0a95026744c6c28",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "e914c55f57b1e803a7ba5d00563572beedb9ae96710735f69e9d169dfd8d4c5f",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "3479405b489459a9e14e686da85a102972a656116f42aeb5e4f0366519ba2087"
+}

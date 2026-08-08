@@ -1,0 +1,166 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-019",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT019-C": {
+        "controllerId": "P1",
+        "id": "CT019-C",
+        "identity": "3♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT019-S": {
+        "controllerId": "P1",
+        "id": "CT019-S",
+        "identity": "7♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT019-X": {
+        "controllerId": "P1",
+        "id": "CT019-X",
+        "identity": "5♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT019-S",
+          "CT019-C",
+          "CT019-X"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "castCardId": "CT019-C",
+        "exileCardId": "CT019-X",
+        "kind": "resolve-ultra",
+        "recipe": "3-black",
+        "scoreCardId": "CT019-S",
+        "sourceCardIds": [
+          "CT019-S",
+          "CT019-C",
+          "CT019-X"
+        ]
+      },
+      "actorId": "P1",
+      "id": "CT019-1",
+      "type": "RESOLVE_PHASE8_ACTION"
+    }
+  ],
+  "events": [
+    {
+      "commandId": "CT019-1",
+      "id": "EV-000001",
+      "payload": {
+        "actorId": "P1",
+        "atomic": true,
+        "recipe": "3-black",
+        "sourceCardIds": [
+          "CT019-S",
+          "CT019-C",
+          "CT019-X"
+        ]
+      },
+      "previousStateHash": "3e390ab2f4a29d48623a39d887535325b8b6a8be896cf6293cd5f6d9d3ec5f03",
+      "sequence": 1,
+      "stateHash": "55a84d4e92504714e56233ae95df7f484e8685b548422b7067aabab6ca1e1c46",
+      "type": "ULTRA_RESOLUTION_BEGAN",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT019-1",
+      "id": "EV-000003",
+      "payload": {
+        "castCardId": "CT019-C",
+        "castInternal": true,
+        "exileCardId": "CT019-X",
+        "priorityWindowsInside": 0,
+        "scoreCardId": "CT019-S"
+      },
+      "previousStateHash": "55a84d4e92504714e56233ae95df7f484e8685b548422b7067aabab6ca1e1c46",
+      "sequence": 2,
+      "stateHash": "6edbff72c248b603cc67c703171766b3b18283230c9f518bfd135046b0061f97",
+      "type": "ULTRA_3_BLACK_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "initialStateHash": "3e390ab2f4a29d48623a39d887535325b8b6a8be896cf6293cd5f6d9d3ec5f03",
+  "finalStateHash": "6edbff72c248b603cc67c703171766b3b18283230c9f518bfd135046b0061f97",
+  "eventLogHash": "08ca5f298c9db83d6492aca6e4d891724bc0b5fcdf54d3b860d0e084dd0756db"
+}

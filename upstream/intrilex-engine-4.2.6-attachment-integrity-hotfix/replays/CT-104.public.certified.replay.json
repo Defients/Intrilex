@@ -1,0 +1,178 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-104",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {},
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "A"
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "B"
+      },
+      "P3": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P3",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "A"
+      },
+      "P4": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P4",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "B"
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2",
+      "P3",
+      "P4"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "hostile": true,
+        "kind": "validate-player-target",
+        "sourcePlayerId": "P1",
+        "targetPlayerId": "P3"
+      },
+      "actorId": "P1",
+      "id": "CT104-1",
+      "type": "RESOLVE_PHASE11_ACTION"
+    },
+    {
+      "action": {
+        "hostile": true,
+        "kind": "validate-player-target",
+        "sourcePlayerId": "P1",
+        "targetPlayerId": "P2"
+      },
+      "actorId": "P1",
+      "id": "CT104-2",
+      "type": "RESOLVE_PHASE11_ACTION"
+    }
+  ],
+  "accepted": [
+    false,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT104-2",
+      "id": "EV-000001",
+      "payload": {
+        "legal": true,
+        "relation": "enemy",
+        "sourcePlayerId": "P1",
+        "targetPlayerId": "P2"
+      },
+      "previousStateHash": "2bd329bedacea20e918b92a919258e607bbef21e9769bafe4d8d7802dd723ca8",
+      "sequence": 1,
+      "stateHash": "a9adbefaace74eef0e1ef265a8fe9b6fabc0337c4897d10df6048cc534976b18",
+      "type": "MULTIPLAYER_TARGET_VALIDATED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT104-1",
+      "accepted": false,
+      "eventStartIndex": 0,
+      "eventEndIndex": 0,
+      "eventRangeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "commandIndex": 1,
+      "commandId": "CT104-2",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "338c2f81e0f3d03a3507319b671aadc451e3ce0e9a254518c2366779f56b65a5"
+    }
+  ],
+  "publicEventLogHash": "338c2f81e0f3d03a3507319b671aadc451e3ce0e9a254518c2366779f56b65a5",
+  "publicContentHash": "e7a4f224b6a8e066fb0e44c9ba4d2297c8c437ccfe122366e01d6c697fdfbad9"
+}

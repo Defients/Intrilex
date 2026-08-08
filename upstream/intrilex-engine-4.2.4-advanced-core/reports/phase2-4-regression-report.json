@@ -1,0 +1,419 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase2-4-conformance.json"
+  ],
+  "fixtureCount": 22,
+  "repeatCount": 7,
+  "passed": 22,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-006",
+      "title": "6♠ as the only hand card is illegal",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "c2a40dea4c90adbd2ee03f19415072f495989768df481bb576444012f47c31fb",
+      "finalStateHash": "c2a40dea4c90adbd2ee03f19415072f495989768df481bb576444012f47c31fb",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "98855caa313a27efc6bad667e8d3fa3b72740f386d49f9a9dc674f2d8721d0d3",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-007",
+      "title": "6♠ with one other card resolves by discarding one",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "0567f5fbb54c5a6f2d9c550d3d65506b8c2267027678875f6f36e070fe755964",
+      "finalStateHash": "1b020941cf617da2a52ef88865e7d1e97b387b45bfa807ab9e69378575b40896",
+      "eventLogHash": "4d28a16db075d931b56e65e9bf1f06b48c71c72a5e6aa8d51862408092d86ff4",
+      "replayHash": "ddb56689f4e45bd507f9b7ed52ca4de2dfcbd6ba87f6e5b5c72c4169716feac3",
+      "accepted": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-008",
+      "title": "Legal 6♠ later fizzles when no discard remains",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "92974dbfaaf75e558f89cfc0b3cc148e30fd7b2d541ef37896b7d5a48014fe92",
+      "finalStateHash": "8245b467346f83115f6edeb89415989949e676d5c46292c8517be9e2c0228dd2",
+      "eventLogHash": "2e5339f5f9b268f28efc4615ae68d8771616f4c99ab85395ca9c0aac55faa4d9",
+      "replayHash": "deb2e29151a97c945b585f7f936281e64b2fb5644140ab96b798f45ff844f576",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-009",
+      "title": "Nine +5 Goal Shift identifies the discard actor",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "30553460eed6099d47e4d784aae8d6bee270ffa9b2d67e4c16ab3b91f31e6593",
+      "finalStateHash": "f288d135eafddf857547f375061977b6873a6000204f11a0b9977da32328c75b",
+      "eventLogHash": "854b0d2619637042f9235c2914e44f2053f242aa86c6f5a2b1ab8a65d6baea93",
+      "replayHash": "441c02f028ae27f1ae1738a086a17e14db6747cc1bc3e9350e50d528a043987c",
+      "accepted": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-010",
+      "title": "Nine +5 persists when controller has no discard",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "8d41a02f8b23cd309cf031cf22c12df595ec7c5e322c8cc9197b546dee718022",
+      "finalStateHash": "a4d453b0521b9d54a1b0d4d553ceb83ba4d04dd9f759a8bfb77e0ae35acd2533",
+      "eventLogHash": "57f4a281663d19b93ef71525ecb1e69171bca3a7a29ae67be604adef096742a6",
+      "replayHash": "bfd3b275dd86a0e4b813ce271cb653233897028a48d2d5cd59d25bd65f2fe5dd",
+      "accepted": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-011",
+      "title": "Source Intercept rebinds controller-relative text",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "be8750de52cadaf6c01b7b81d3be41cc21f5af56e1eae6ec1a9a0f770cfe2c54",
+      "finalStateHash": "eda08a4179805fc905a687bf47a127cfe47f257e589aee3c6b5d5c6b57baf171",
+      "eventLogHash": "5b0d93352566167479a6aae00eb04ecebf5379e1f74600ee7503cab8b8cfe2eb",
+      "replayHash": "f16be45dcc66d69e6af2de55f704c59da6ebfa6b97d32b4ce9752641457e8bab",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-026",
+      "title": "Visible illegal target rewinds completely",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "78570b329bce1a3d0c0c26e456782ade7d45b8093f189f5a30429025478bca91",
+      "finalStateHash": "78570b329bce1a3d0c0c26e456782ade7d45b8093f189f5a30429025478bca91",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "ff657de58ae919425de00cecdc1c5e12f947c45e5f88996e70590e2a9dc35b82",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-027",
+      "title": "Illegal Defuse rewinds staged discard costs",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "a8bc3cf952fd2e6d0b195ca35f0cfa75557b81e8aea451cf8068a995df2fc01a",
+      "finalStateHash": "a8bc3cf952fd2e6d0b195ca35f0cfa75557b81e8aea451cf8068a995df2fc01a",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "54c1452618108d7852c80703fd6e235d499274df263c9e8edaf29073b3c1c7b8",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-028",
+      "title": "Legal declaration later fizzles after target leaves OTT",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "dfd5b2f514cb9fa0ce51fa05c3d2c098c79b5c0ae7734082ce157db9703ece42",
+      "finalStateHash": "51ed06254c46a949fb0d7d523b8aee53f207748e9112153ed198d7f9872b39a3",
+      "eventLogHash": "241ee237dc284ca969b83d72aae5a1ec861f10d16c4dbd7cbeef5237580c72d3",
+      "replayHash": "d171ad66f94411f40230cbb615d473e9798d1078f0b2ca4abc054f11d0edb5a7",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-029",
+      "title": "Royal Marriage is not a Combo",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "8d4cf70781c1cc77c199bd9f1b5deef39f043601ef160959c868be254b746634",
+      "finalStateHash": "7da31d046bd314f8922dd118648521b4a139b873c238a938c4d7e7d5c0d0fe0f",
+      "eventLogHash": "d01b498c04102707a33b96caae763dd537970df11ed71d3d3ff35a133a6fbfd4",
+      "replayHash": "5b906dd78b600097612d848a9bb5e232bb0fb667396ed2b63f853484f29fbb6d",
+      "accepted": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-030",
+      "title": "Combo-only counter answers a true Combo",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "3d907c5cc63085d003d6538c27147e54dd273014df949ac677d7c6c757b57efd",
+      "finalStateHash": "18f339f4655fce0a2f43ff4f4ed8c5256e6f349deba66f971f715601c01c4196",
+      "eventLogHash": "2560f7bcca21f2b6a2673372e1dbdb3d4ffa7899279087e2e4dc37aead8ed3f2",
+      "replayHash": "b294a806a907374537450f4992f0b49678dde8fac800629e10957e3d82b1dabe",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-031",
+      "title": "Illegal response rewinds without disturbing pending play",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "01d03f6d8f61b47e71ecbc7705186be6a0a1cb47517dbc5df4bf267e0be67c88",
+      "finalStateHash": "da001e3fd78e8fcaadadfe818062d9d6ecb2ff78b9d1e1ce040a485c1e60e979",
+      "eventLogHash": "b2f79577f9a7bc143a30af6a25f72dce65900fc2573093d0e5526c8cc7efe15f",
+      "replayHash": "66954a4b11c67e41bc6c5cdc6b6371b01732678489db3d9a748ab7a47b38170e",
+      "accepted": [
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-032",
+      "title": "Countering a counter preserves the underlying play",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "9aa43170235121e5b6f58e4f3149b7d32fdb1e60f8279d6a36e06642b81a6c5b",
+      "finalStateHash": "65310e8cd735ead137038960d394ffca941c8bc77e17c772c592754409ab8ecd",
+      "eventLogHash": "87206c1ed85723fb3fae457cca97920c16b43c0c5d0c2d733bc4d6a286a01d28",
+      "replayHash": "2117ed0f52aca00f6ef3510ab9028b703ba792068626513a868b5d4e0a96ab01",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-043",
+      "title": "LIFO response resolves before parent",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "fbd70272930eb642a1c6c0e75f510adb8ae183d2310222dbc415560639042717",
+      "finalStateHash": "817a8f929e024472dfc5135e8bcebc27af51aae71664d954b50d50aff35a05a2",
+      "eventLogHash": "f4c42072c75930b7aedb2c241e845e0ff299ec269c36c2d319472cb563baef1d",
+      "replayHash": "751c41be1c99b379b4298bc77eafc1c2cf81abcd18a3cfe8caf9f123b50e5816",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-044",
+      "title": "Identical commands produce identical events and hashes",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "02e9c6af79117486c3f6794e9f66f2c5d1b167ab4ad3b10fd0c652d0e9fffc81",
+      "finalStateHash": "1c023c3310436de248e03b4d21a463e8c0e6b638b2192866245e15277fa263d5",
+      "eventLogHash": "f8443d3577162dd1da1f34759eee56bb0541a27aa23a914a93b0653b0dd25af4",
+      "replayHash": "c9e6fc1ce71c35386f68adb44c2f9f12dc279908bc188376fa19b3eda57d80ee",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-045",
+      "title": "Triggers queue during atomic resolution",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "167cef576db622f949a06ec558a29522c8ed574634606bae8e453e44f94a2fd2",
+      "finalStateHash": "e2161ec0bfc94dfd332ae71aef57c387b3bc15633cd66f1e71d6bea9dcb323ec",
+      "eventLogHash": "3947c74aef435987d84741ee2ff749d0c36064f9b29616b50fc2544b3ca0ec15",
+      "replayHash": "30aaeafab28414e38c8894eca450828008452b3d8634d16dd2f13f0702e13799",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-046",
+      "title": "Priority rotates through every player",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "727141031b6f407acdd9bfd491e39a39bd409acddb6bda4875a6ab19a4825ed4",
+      "finalStateHash": "77fe9f2f65e9c4eaa3ccf68895b69e3c15cd886e85879cefba281c05e630eb7b",
+      "eventLogHash": "055df482b34f244f280144f5e75593c9abe90ce7f01f2255a71525249874407c",
+      "replayHash": "6e4bbb0ef230ecb6bf0724659e008a17699fd7d871ef5b40a8e17399de986a8d",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-047",
+      "title": "Counter removes the pending item",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "ac3cda7d734100769f1abe2aaf89cb899c3e5445d1ffc0250ba0bc634c0ee81d",
+      "finalStateHash": "b7b49bc3f6ae38b1c284756dd3975819c1f1f08ed3cc7b19c3abf75581deae3d",
+      "eventLogHash": "d76618e57eab37c21fc1d19894a985020213580ff870073dabe77e2a567ea78e",
+      "replayHash": "4dee81df7728bc66115d94c45355d19e4fba874c8fa1312118ec51511bf14c6b",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-048",
+      "title": "A player may counter their own pending play",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "1de815fb064b28d756025d7a52259aa8f83bd9292754a916fd6dbb9a4ec19352",
+      "finalStateHash": "faf65d1cf336d02a2dfbf609cb2677b779ca2a4d4d55322dc05617b101cabc65",
+      "eventLogHash": "bf2a6ce9eaabdff4654f97f85c2a9b6b851079d1c7548cf2f559ba0b2437bc94",
+      "replayHash": "b5cb601e7968e89365c560454a2edae6ed77d6d0316bc4c3257d94b4ab127513",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-049",
+      "title": "Child play resolves before suspended parent resumes",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "2d5f09df14af02459f1b92b5c147fd87ff137d8611d79edec080320b36d10673",
+      "finalStateHash": "e65af4942ae1049533d8e695eed3a0c625a4691217d3e1dd9aaecd5f0dede587",
+      "eventLogHash": "e24737421583f4040aeca3bac25a0c0ee553c5dbe607a969900f348715c07dd9",
+      "replayHash": "cda4613f74db1ad8f5573e4b30734218117ccfb54ec95f94971f5d1783626b18",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-050",
+      "title": "Independent targets revalidate separately",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "a9d02b1acbb6980c65041fb6206895a2ea5d134dd4d8bbbd80345e9db4bc2dae",
+      "finalStateHash": "6ce2cf75062747f85305a509f8140f90d8f75f6b9a3e36b98353b0f733577f7d",
+      "eventLogHash": "fe2aa72974918a4509f6216a723fdd9b221ac064c90fcb5003c6f9b6c4f88426",
+      "replayHash": "2fa9e17427192b4f61f653b29124d33da179b2d7fdd18569a30d76bff7a47f2e",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-120",
+      "title": "Authorized replay preserves hidden choice without public leak",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "949665c7ebe59c29eb988b038dea794326bf0869fea59db333163451a82568cd",
+      "finalStateHash": "d8a294929461a097881b9d6d021f9ac94fba2ec2a037d86d1ee26791ce156ecc",
+      "eventLogHash": "4695782e0255707a4a3a02848f458b6458bf8f5389a2c78e9505dc8af0e59194",
+      "replayHash": "3731be0d2283c9120e567e2ed04b887d90e2ab43a29bb6dcb5c926353f1e7b1c",
+      "accepted": [
+        true,
+        true
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "aeee864319a1ef41df2bf8de5675fd5236df04229a84d7b1182f607b3d52ae6f"
+}

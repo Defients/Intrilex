@@ -1,0 +1,7 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://intrilex.local/schemas/run-provenance-4.0.0.json",
+  "type":"object",
+  "required":["runId","matchId","labVersion","engineVersion","rulesVersion","profileId","capabilityManifestHash","telemetrySchemaVersion","analyticsSchemaVersion","replayFormatVersion","seed","policyIdsBySeat","workerCount","authorizedScope","provenanceHash"],
+  "properties":{"authorizedScope":{"enum":["public","player","omniscient"]}},"additionalProperties":true
+}

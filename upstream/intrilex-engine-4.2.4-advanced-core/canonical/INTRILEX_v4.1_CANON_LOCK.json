@@ -1,0 +1,67 @@
+{
+  "lock_version": 2,
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "status": "official-canon",
+  "effective_date": "2026-07-26",
+  "decision": "Promote the validated v4.1 artifact set from canonical-candidate to official canon.",
+  "supersedes": {
+    "rules_version": "4.0",
+    "status": "historical",
+    "local_source_sha256": "c6af0362f26c245d12c9ab325571a90443aface2243e3a324d792165d468e272"
+  },
+  "authority_order": [
+    "Intrilex_v4.1_Canonical_Rules.md",
+    "Intrilex_v4.1_Decision_Ledger.json",
+    "Intrilex_v4.1_Digital_Engine_Contract.md",
+    "Intrilex_v4.1_Test_Vectors.json",
+    "Intrilex_v4.1_Conformance_Tests.md",
+    "Intrilex_v4_to_v4.1_Change_Ledger.md",
+    "Intrilex_v4.1_Implementation_Roadmap.md",
+    "Intrilex_v4.1_Agent_Handoff.md",
+    "Intrilex_v4.1_Validation_Report.md",
+    "historical materials"
+  ],
+  "validated_upstream_snapshot": {
+    "validated_at": "2026-07-26T04:27:54.413Z",
+    "verdict": "PASS",
+    "files": {
+      "README.md": "c3ca043bf671e57a190f4b0e4aac9239d533eabaed9639333288236590f2c70a",
+      "Intrilex_v4.1_Canonical_Rules.md": "d852e42064d2dc1514139d9044137758010ca20172aa1ade00c7a745db0b02d4",
+      "Intrilex_v4_to_v4.1_Change_Ledger.md": "d85f28c90332cdeba2ed87df72090dd932aca4fe4d8ec86ba186ab76a1e5abeb",
+      "Intrilex_v4.1_Decision_Ledger.json": "cfa6bc07a9c42557380e1bf6f810db6de860f7cf822e636a01cdeba48d2903ee",
+      "Intrilex_v4.1_Conformance_Tests.md": "dad4750cdbf02c9fa21897ac9b5fcbb6a8889f73ae5a8bc8add6ef51b4a322da",
+      "Intrilex_v4.1_Test_Vectors.json": "ee3eb83f6bbf04c67c58f0b1b6193290aca30f90dd032cb9ece12a899890e35a",
+      "Intrilex_v4.1_Digital_Engine_Contract.md": "214c3a04d3f2b50ff6eb414cac4ffa58e9ec2aa1ef96b15f57e47217cae09840",
+      "Intrilex_v4.1_Implementation_Roadmap.md": "73efe83fe3a7fae8dbdc3507fa175d5248f07a7d554014b509f44c13d198bb7f",
+      "Intrilex_v4.1_Agent_Handoff.md": "7e5511337e8e97381fb1204679132a850608a0b4d82784be6033b01e581b5bba"
+    }
+  },
+  "reopen_policy": {
+    "required_evidence": "A reproducible playtest or engine replay demonstrating a divergent, impossible, or undesirable legal outcome.",
+    "required_artifacts": [
+      "minimal reproduction",
+      "initial state",
+      "command sequence",
+      "expected and actual outcome",
+      "state/event hashes"
+    ],
+    "version_rule": "Any semantic change requires a new decision ID, synchronized artifacts, regression vectors, validation, and a new rules version."
+  },
+  "implementation_scope": {
+    "included": [
+      "Phase 2 core data model",
+      "Phase 3 deterministic event engine",
+      "Phase 4 declaration and priority",
+      "Phase 5 persistent state lifecycles"
+    ],
+    "excluded_until_later_gate": [
+      "complete rank registry",
+      "protection/scuttle/attachment resolution",
+      "optional modules",
+      "AI",
+      "animation",
+      "React interface"
+    ]
+  }
+}

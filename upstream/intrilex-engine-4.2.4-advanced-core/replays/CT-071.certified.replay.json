@@ -1,0 +1,183 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-071",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT071-5": {
+        "controllerId": "P1",
+        "id": "CT071-5",
+        "identity": "5♦",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": 5
+        },
+        "zone": "P1_PR"
+      },
+      "CT071-8": {
+        "controllerId": "P1",
+        "id": "CT071-8",
+        "identity": "8♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT071-9": {
+        "controllerId": "P1",
+        "id": "CT071-9",
+        "identity": "9♦",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": 9
+        },
+        "zone": "P1_PR"
+      }
+    },
+    "fullTurnSequence": 1,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT071-8"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT071-5",
+          "CT071-9"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 0,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 1,
+      "P2": 1
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "aegis-field-eight",
+        "sourceCardId": "CT071-8"
+      },
+      "actorId": "P1",
+      "id": "CT071-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT071-1",
+      "id": "EV-000001",
+      "payload": {
+        "affected": [
+          "CT071-5"
+        ],
+        "expiresAt": {
+          "playerId": "P1",
+          "startSequence": 2
+        },
+        "failed": [
+          "CT071-9"
+        ],
+        "sourceCardId": "CT071-8"
+      },
+      "previousStateHash": "5a3e2852ee67c96257a6201186693ec37bb5945feaf1c441dc45605c91b630d5",
+      "sequence": 1,
+      "stateHash": "35e720480835261e310f45d5a6d2e66b5fdc122390ae74bfcf335b460a35d8fb",
+      "type": "EIGHT_AEGIS_FIELD_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT071-1",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "b7abec591895d87f26f531959d220f79140d34700b9da522bb3322f5a54d2a99",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "35e720480835261e310f45d5a6d2e66b5fdc122390ae74bfcf335b460a35d8fb",
+      "stateHashBefore": "5a3e2852ee67c96257a6201186693ec37bb5945feaf1c441dc45605c91b630d5"
+    }
+  ],
+  "initialStateHash": "5a3e2852ee67c96257a6201186693ec37bb5945feaf1c441dc45605c91b630d5",
+  "finalStateHash": "35e720480835261e310f45d5a6d2e66b5fdc122390ae74bfcf335b460a35d8fb",
+  "eventLogHash": "b7abec591895d87f26f531959d220f79140d34700b9da522bb3322f5a54d2a99",
+  "checkpointLogHash": "666f9ae711b043c1cf11777222c1fd7b89fbb8c73751359861b7879bc7cabf98",
+  "rngTraceHash": "61993d9c3e351990315c9fcf038ddea34348068327bdf601fe645a8131a0d348",
+  "contentHash": "f2a12ea59e5165d6a9b727dd5640c27a04ed70c758a5ba1d9a21f3e4f67c22a8",
+  "integrityHash": "d9d5f085c2b4f5bbab533c770805226e672148f21a8372ae2d711c43c039c15f"
+}

@@ -1,0 +1,72 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase14-deffy-mode.json",
+    "fixtures/phase11-multiplayer-teams.json#CT-014"
+  ],
+  "fixtureCount": 3,
+  "repeatCount": 7,
+  "passed": 3,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-014",
+      "title": "Three-player That's Urz assignment is a complete cycle",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "b9013b1c6c3af6ee801c1a88bed6167848013cc888a85ad6371d5ba168f69a10",
+      "finalStateHash": "bc1bf53266b24ec9e0ff86ac24766ec98e85361be81367e663101dd9c7efab2c",
+      "eventLogHash": "0db2ec1b075391670d36290b571a7761637522b7f1929b8e3892f73206ff5ef4",
+      "replayHash": "30d65827c86bcad06ceaa449315729ad9e2fe4d2ff987c6c4a7c1008f1f49b1f",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-115",
+      "title": "Classic Deffy draft reaches exact target hands",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "dd2375e37d5791e9d13f4a8596b6d15f671be102ef9afe37e1ee259da508db0c",
+      "finalStateHash": "4cee642676463011e46f740b4bada30f3acd15ca34736ed6d825cc3000c6c4cc",
+      "eventLogHash": "255b5559c64f33c55eb89a253fcae303a05417ad6f64c3e526ad220bf66e84b6",
+      "replayHash": "36369d5ec44d5ce1ab391a7e2fd688458e2ae321221ba063cd7ae5e62e3351ac",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-116",
+      "title": "Mirror Me adds one legal mirror then shuffles DP",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "f72163222d3de39fdcd93b1cfe4862063b7759b17ce4304c84fb6c84aa0d0dfb",
+      "finalStateHash": "683b307fa642ecdb0bece0dad3329d6092ffaffbe80193297278efc8576e7eae",
+      "eventLogHash": "2df4064ed10d0f46d6431c290d98c10c8661bd120d9674195d56537f222d85cb",
+      "replayHash": "06de6f5caea4150c9f0a225516f8bd88a9cf96078fb10eb9b46006d49d0d8e6b",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "bbd47f801aeba8df8934edf10f5327aa5253276fceea8f353d4c49e23545fff8"
+}

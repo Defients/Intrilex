@@ -1,0 +1,3 @@
+import { readdir, readFile, writeFile } from 'node:fs/promises';import path from 'node:path';import { hashCanonical } from '@intrilex/shared';
+const root='runtime/campaign-segments-v070';
+for(const dir of await readdir(root)){const base=path.join(root,dir);for(const file of (await readdir(base)).filter(x=>x.endsWith('.json')&&x!=='config.json')){const p=path.join(base,file),x=JSON.parse(await readFile(p,'utf8'));for(const s of x.summaries){const {matchResultHash,provenanceHash,replayHash,...core}=s;s.matchResultHash=hashCanonical(core);}x.segmentResultHash=hashCanonical(x.summaries.map(s=>s.matchResultHash));await writeFile(p,JSON.stringify(x)+'\n');console.log(`MIGRATED ${p}`);}}

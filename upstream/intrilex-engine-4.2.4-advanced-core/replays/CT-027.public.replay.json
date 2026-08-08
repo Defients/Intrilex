@@ -1,0 +1,159 @@
+{
+  "format": "intrilex-replay",
+  "version": 1,
+  "rulesVersion": "4.1",
+  "fixtureId": "CT-027",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT027-QS": {
+        "controllerId": "P2",
+        "id": "CT027-QS",
+        "identity": "Q♠",
+        "originalOwnerId": "P2",
+        "state": {
+          "aegis": true,
+          "pointValue": 6,
+          "timeBombStage": 2
+        },
+        "zone": "P2_PR"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001",
+          "OPAQUE-HIDDEN-CARD-002"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT027-QS"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "actorId": "P1",
+      "id": "CT027-C1",
+      "play": {
+        "controllerId": "P1",
+        "instructions": [
+          {
+            "cardId": "CT027-QS",
+            "destination": "GY",
+            "op": "remove-target"
+          }
+        ],
+        "kind": "defuse",
+        "requirements": [
+          {
+            "cardId": "CT027-QS",
+            "kind": "target-unprotected"
+          },
+          {
+            "cardIds": [
+              "CT027-3C",
+              "CT027-4D"
+            ],
+            "kind": "hand-cost-available",
+            "playerId": "P1"
+          }
+        ],
+        "revalidationClass": "single-required-target",
+        "sourceCardIds": [],
+        "sourceDestination": "GY",
+        "tags": [],
+        "targetCardIds": [
+          "CT027-QS"
+        ]
+      },
+      "stagedCostIds": [
+        "CT027-3C",
+        "CT027-4D"
+      ],
+      "type": "DECLARE_PLAY"
+    }
+  ],
+  "events": [],
+  "initialStateHash": "a8bc3cf952fd2e6d0b195ca35f0cfa75557b81e8aea451cf8068a995df2fc01a",
+  "finalStateHash": "a8bc3cf952fd2e6d0b195ca35f0cfa75557b81e8aea451cf8068a995df2fc01a",
+  "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+}

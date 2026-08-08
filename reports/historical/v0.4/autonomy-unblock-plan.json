@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "2.0",
+  "status": "COMPLETED_FOR_GENERIC_TWO_PLAYER_FIRST_CONTACT",
+  "implementedBy": "@intrilex/headless-engine 4.1.5",
+  "supportedProfile": "first-contact-trigger-closure",
+  "completedSurfaces": [
+    "DETERMINISTIC_SETUP",
+    "LEGAL_ACTION_ENUMERATION",
+    "PRIVATE_COMMAND_VAULT",
+    "COMPLETE_MATCH_ORCHESTRATION",
+    "RESPONSE_AUTHORITY",
+    "SEALED_PRIVATE_CHOICES",
+    "SEVEN_TRIGGER_CLOSURE",
+    "CERTIFIED_REPLAY_PRODUCTION"
+  ],
+  "remainingBlocked": [
+    "CORE_AUTONOMY",
+    "OPTIONAL_MODULE_AUTONOMY",
+    "MULTIPLAYER_AUTONOMY"
+  ]
+}

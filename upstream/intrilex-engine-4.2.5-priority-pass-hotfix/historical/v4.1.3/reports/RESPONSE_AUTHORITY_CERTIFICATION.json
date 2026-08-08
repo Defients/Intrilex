@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0",
+  "status": "PASS",
+  "engineVersion": "4.1.3",
+  "profileId": "first-contact-response",
+  "engineTests": {"passed": 135, "total": 135},
+  "originalConformance": {
+    "passed": 121,
+    "total": 121,
+    "aggregate": "05f67133eab3f8e92d526db17b25407842204e0eeea3a605bd417d0479805547"
+  },
+  "integration": {"passed": 10, "total": 10},
+  "inheritedFinalCertification": {"replays": 121, "fuzzCases": 605, "sourceIds": 120},
+  "stressCampaign": {
+    "matches": 500,
+    "normalVictories": 500,
+    "aborts": 0,
+    "responseDeclarations": 961,
+    "resultHash": "dfdc04de5f98a2acbbbe54417b48702e02ae3ca9099b772c5b87c32f9734a338"
+  },
+  "browserParity": {
+    "status": "PASS",
+    "paths": ["NODE", "CHROMIUM_MAIN_THREAD", "CHROMIUM_WEB_WORKER"],
+    "certifiedReplayCount": 121,
+    "replayAggregateHash": "f7cd65a7f766265c569ef10571923cee8f34d1b3da5418a69d27a145a95ae322",
+    "responseMatchFinalStateHash": "9216b8373274d872f619ff63a6acee7bb44c7f8ed3c1acd7600f7703e99e8cdb"
+  },
+  "limitations": [
+    "PRIVATE_CHOICE_CONTINUATIONS_UNAVAILABLE",
+    "OPTIONAL_MODULE_AUTONOMY_UNAVAILABLE",
+    "MULTIPLAYER_AUTONOMY_UNAVAILABLE"
+  ]
+}

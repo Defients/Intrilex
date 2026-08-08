@@ -1,0 +1,22 @@
+{
+  "name": "@intrilex/analytics-ai",
+  "version": "0.24.2",
+  "type": "module",
+  "description": "Optional local-LLM analytics intelligence layer powered by Ollama. Grounded interpretation of deterministic simulation analytics.",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./config": "./src/config.mjs",
+    "./ollama-client": "./src/ollama-client.mjs",
+    "./model-discovery": "./src/model-discovery.mjs",
+    "./security-sanitizer": "./src/security-sanitizer.mjs",
+    "./deterministic-statistics": "./src/deterministic-statistics.mjs",
+    "./analytics-context-builder": "./src/analytics-context-builder.mjs",
+    "./response-schema": "./src/response-schema.mjs",
+    "./response-validator": "./src/response-validator.mjs",
+    "./response-repair": "./src/response-repair.mjs",
+    "./prompt-builder": "./src/prompt-builder.mjs",
+    "./analysis-cache": "./src/analysis-cache.mjs",
+    "./analysis-controller": "./src/analysis-controller.mjs"
+  },
+  "dependencies": {}
+}

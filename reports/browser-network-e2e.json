@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-08-08T01:49:06.635Z",
+  "chromeVersion": "Chrome/151.0.7922.76",
+  "chromePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "baseUrl": "http://127.0.0.1:8788",
+  "matchServerUrl": "ws://127.0.0.1:3099",
+  "debugPort": 9223,
+  "serverPort": 8788,
+  "scenarioCount": 6,
+  "passedCount": 6,
+  "failedCount": 0,
+  "allPassed": true,
+  "results": [
+    {
+      "scenario": "network-lobby-renders",
+      "passed": true,
+      "details": {
+        "hasLobby": true,
+        "hasCreateBtn": true,
+        "hasJoinBtn": true,
+        "hasStatus": true,
+        "statusText": "● Unknown",
+        "lobbyText": "← Back\n    Direct Duel Online\n    Play a server-authoritative 1v1 match against a remote human opponent. Share an invite code to start.\n    \n      Authority server:\n      ws://127.0.0.1:3099\n      ● U"
+      }
+    },
+    {
+      "scenario": "network-create-match",
+      "passed": true,
+      "details": {
+        "hasWaiting": true,
+        "hasInviteCode": true,
+        "inviteCode": "89ABD2",
+        "waitingText": "← Cancel\n    Waiting for Opponent\n    \n      Invite Code\n      89ABD2\n      Copy code\n      Share this code with your opponent. They can join via “Join with Code.”\n    \n    \n      ○ Waiting for oppone"
+      }
+    },
+    {
+      "scenario": "network-join-match",
+      "passed": true,
+      "details": {
+        "inviteCode": "2F59D0",
+        "hasWaiting": false,
+        "hasReadyBtn": true,
+        "errorText": null,
+        "bodyText": "\n  Skip to Observatory\n  \n  \n  \n    ← Cancel\n    Joined Match\n    You are P2\n    \n      ○ Waiting for opponent…\n    \n    \n    \n      Mark Ready\n      Leave match\n    \n    Match ID: M-RbqDDU2gH6XW32Cv\n  \n  \n    \n      \n        IX\n        INTRILEXSIMULATION LAB · v0.24.0\n      \n      \n      \n        E"
+      }
+    },
+    {
+      "scenario": "network-opponent-connected",
+      "passed": true,
+      "details": {
+        "opponentConnected": true,
+        "hasReadyBtn": true
+      }
+    },
+    {
+      "scenario": "network-ready-check",
+      "passed": true,
+      "details": {
+        "matchStarted": true
+      }
+    },
+    {
+      "scenario": "network-privacy-check",
+      "passed": true,
+      "details": {
+        "hasSeed": false,
+        "hasRng": false,
+        "hasCommandVault": false,
+        "hasDrawPileIds": false,
+        "hasOpponentHand": false,
+        "hasPrivateState": false,
+        "domSnippet": "\n  Skip to Observatory\n  \n  \n  \n    ← Back\n    Direct Duel Online\n    Play a server-authoritative 1v1 match against a remote human opponent. Share an invite code to start.\n    \n      Authority server:\n      ws://127.0.0.1:3099\n      ● Unknown\n    \n    \n        Reconnect to Match\n        You have an in-progress online match.\n        Match: M-Oa0gpSdJxd…\n        Reconnect\n        Abandon match\n      \n    \n      \n        ⚔\n        Create Duel\n        Start a new match and invite an opponent with a "
+      }
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase7-interactions-conformance.json",
+    "fixtures/phase6-rank-conformance.json#CT-071"
+  ],
+  "fixtureCount": 16,
+  "repeatCount": 7,
+  "passed": 16,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-020",
+      "title": "8♠ Free Scuttle respects Scuttle immunity",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "4f879c67931de532ce701256cafb3c7b8de6b4b5478f310ea5a12045037a3132",
+      "finalStateHash": "4f879c67931de532ce701256cafb3c7b8de6b4b5478f310ea5a12045037a3132",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "a534f1c0241b032bb8444a786389411aaac36a152c6e2c970443f31ad7c00dbd",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-022",
+      "title": "Explicit control change immediately severs Jack",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "390c89190393eba1e44d42dd388dbf6995d55a5ab4b7ad759b9427e25276152f",
+      "finalStateHash": "c70888eb5e93dbc330fa065eb544a17e99bae670e90f3fc6703cc7988cb76cd0",
+      "eventLogHash": "bac8b654645313f566b29cea99667f491845ccc8b051597f81859a43405afebc",
+      "replayHash": "3f98ad974e36b0f5cc5aa9315b0c7ce5cad16ceeadce030efd30cc7723c46fb3",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-039",
+      "title": "PR Jack creates an authoritative Attachment graph",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "0e83f3b954ad94b85f3a159f834a9b0282723b6df047e4d3a79d49d561612067",
+      "finalStateHash": "c942bb90b06f1a3a62704569ec8adb8596af6880cd35305e01d0f91c4dcbad04",
+      "eventLogHash": "c5370e012e7fa2801772f991b0e9f9b9d7558fc5ed2ae951b5e617f7cb332ce9",
+      "replayHash": "0b3a3f8f798caefc6f9252e0fdbbcefda0db2a0bc81206153b13fa488bcbc8d3",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-040",
+      "title": "Jack removal immediately restores its host",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "71ad881793e1ed8fa3b23c400fe97f81ee3a449c556bcf92e4632b88b43a7452",
+      "finalStateHash": "0fec962c189a765768e0d915d8f4fcce1adf8c97dd4c5f013087dddcb7eaa78b",
+      "eventLogHash": "050ad9c2d293d2330e5a98d7493fc2a39392bc20ca92a5283201865f409b7edd",
+      "replayHash": "d8c6eb631fa7dc727c4854d6e92fa42c12de636c832b83a8a4d853dc574a5651",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-041",
+      "title": "Guard blocks hostile single-target Effects",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "a7961c206ab338e613969e12764b28287fc6c1cdf67daca0b2b86968dd746e71",
+      "finalStateHash": "a7961c206ab338e613969e12764b28287fc6c1cdf67daca0b2b86968dd746e71",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "700b5f54c081314c00591f6a929b1bb139df88b31830b757ffeecaa991da60f2",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-042",
+      "title": "Guard does not protect against Scuttle",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "849fd9f7305bf139e28d60d21692248a3d2ecc0901cbeb5fbae06e8310c4c401",
+      "finalStateHash": "fa43b66000dc72c3303d3b8bf63400e2903711c1c2134f470d883f1eac89ad23",
+      "eventLogHash": "d517236813a840a068db518a76d87d87bcaffdd6144333913e991b81d59246b5",
+      "replayHash": "62882c027f702166f69f3a72bc31471da5dfc97e1563fdb9ab83f01182e80d71",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-055",
+      "title": "Aegis blocks friendly Effects",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "1fc18af23f5ccf439befb0de60de6ae589fc03fc1ab380aed77a68b333179630",
+      "finalStateHash": "1fc18af23f5ccf439befb0de60de6ae589fc03fc1ab380aed77a68b333179630",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "765e13a8eb12fdde5a8d57204fe84f6f6fc5a44180d9a7fb04bfe5af143a46bc",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-056",
+      "title": "Rank effect-target immunity is independent",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "17d699432148bec7dd74d3560501bcc2505c69681fa1bc60750ad8cf57eee886",
+      "finalStateHash": "17d699432148bec7dd74d3560501bcc2505c69681fa1bc60750ad8cf57eee886",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "cf6ef5834d43ad557920505252641410c6009d57200be0d96a3bdd827d96dd25",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-057",
+      "title": "Q♠ survives non-total multi-target clears",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "6f39750cfc268d9ca2c2f7a4008af5ea1a6cd1f60c8c24332da7fe8f2ad81c8a",
+      "finalStateHash": "6f39750cfc268d9ca2c2f7a4008af5ea1a6cd1f60c8c24332da7fe8f2ad81c8a",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "08f3d803af8ad68e4cea6949852fedb37088fde314dc2d053f270222865dc6a4",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-058",
+      "title": "Structural total clear uses only named bypasses",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "de2615d550125e518476ded58021e0c4364a0a239edf4e4e5eed861c9f1c4270",
+      "finalStateHash": "0fa6195e0dbeda6369149ffd8b475bae9a0d4a1ca0e2b4921399e0cea9bb9133",
+      "eventLogHash": "774868fe7bd062fe4b64936c9d7fbcebf107440f91011a7ee8ff5d94b6d05a03",
+      "replayHash": "b1c2a05d82ff659a8a3c0a589f610e3db95dc9c9a447f0998d61675433d66385",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-059",
+      "title": "8♠ Free Scuttle ignores rank and suit",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "4b727b2cee1cb2f18ed998f9116d2fe55499bf2524b4ba459148f7e962b7d95b",
+      "finalStateHash": "0220d91a197f3cc86595a8b3ada078e836a5cb5d5f2ab792d30359d53caf3ad3",
+      "eventLogHash": "e7cae98436757136541bb223bad24adeab869f3f7021007c46afd9335c384138",
+      "replayHash": "33dd6d263f07f4729159bddd6a741f6d606c39008b6fe9851ca9fb840ab6c06b",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-060",
+      "title": "⭐8 bypasses ordinary Scuttle immunity",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "912c8273bf02fdc6971f135351fa5bb2b6aeb7ba007cca427a15ef119f2cc029",
+      "finalStateHash": "5a180d7f2b6e1a59b8f7e939e0e3c1a9a3c628a9073fc38b2422f41519272e6c",
+      "eventLogHash": "b7138615351862cd3b70da38aef6e54c7223dbe866bacaa3207f58a315cb9bfd",
+      "replayHash": "302a0f4853b21d32b797ea0def65cf048e126b726663dff9605c4400bdaf8a7e",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-061",
+      "title": "⭐8 remains blocked by Aegis",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "09df2ed64764c586a9036f2596e421803a67e9f4d6c6f73b933944c09a23b77c",
+      "finalStateHash": "09df2ed64764c586a9036f2596e421803a67e9f4d6c6f73b933944c09a23b77c",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "98b5764c47e224eb40eb989405b7fe7efef598d1a6cb4e4ac510ec97ace05e03",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-062",
+      "title": "Royal Shield blocks only Base and Anchor Ace",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "80ba708340bd1800a5a73533c74cdf60433d6385b56085489165ef68c0df2d42",
+      "finalStateHash": "a493e927200a40db92c7b2534564e6d3736dbfdce41d40587aeceeeb538ca320",
+      "eventLogHash": "07d829068e41d4626de6c95ea2fc7d61051ba395cfa17db2af70bfc0e8bc2155",
+      "replayHash": "20753d05cbd794d8f045d4ba461b5b16d8a654fd5e9bae5f3a11ab7fc2c9fa60",
+      "accepted": [
+        false,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-063",
+      "title": "King and K♠ counter authority remain distinct",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "855077ac244f9f261d539617186b8485eb772d279eef27073514b4ab95079d50",
+      "finalStateHash": "b8bea40f77951252ee12a2b27491847877e3960270c265a085a6a564f29a549e",
+      "eventLogHash": "da284f19487089970c9ab1abc110806c927c5dcda4aabdd1986faa2df5818784",
+      "replayHash": "28155122ad0d89b2a9928775188b4b216263e4f53a8031d7aa83a78bef20e332",
+      "accepted": [
+        false,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-071",
+      "title": "Eight Aegis Field grants protection while Nine rejects it",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "5a3e2852ee67c96257a6201186693ec37bb5945feaf1c441dc45605c91b630d5",
+      "finalStateHash": "35e720480835261e310f45d5a6d2e66b5fdc122390ae74bfcf335b460a35d8fb",
+      "eventLogHash": "b7abec591895d87f26f531959d220f79140d34700b9da522bb3322f5a54d2a99",
+      "replayHash": "e8d006aac0cf224b73bd814dfcb31f4fef6e82461dbf2d934b3e5c55374202f5",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "78e06182e34d1e03c0dff64118eed37f7163a8c720d517becdf3d15e46a06574"
+}

@@ -1,0 +1,168 @@
+{
+  "reportVersion": 1,
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureFiles": [
+    "fixtures/phase10-trap-module.json",
+    "fixtures/phase2-4-conformance.json#CT-011-CT-031"
+  ],
+  "fixtureCount": 10,
+  "repeatCount": 7,
+  "passed": 10,
+  "failed": 0,
+  "deterministic": true,
+  "fixtures": [
+    {
+      "id": "CT-011",
+      "title": "Source Intercept rebinds controller-relative text",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "be8750de52cadaf6c01b7b81d3be41cc21f5af56e1eae6ec1a9a0f770cfe2c54",
+      "finalStateHash": "eda08a4179805fc905a687bf47a127cfe47f257e589aee3c6b5d5c6b57baf171",
+      "eventLogHash": "5b0d93352566167479a6aae00eb04ecebf5379e1f74600ee7503cab8b8cfe2eb",
+      "replayHash": "f16be45dcc66d69e6af2de55f704c59da6ebfa6b97d32b4ce9752641457e8bab",
+      "accepted": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-016",
+      "title": "Royal Marriage is not a Combo",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "a7089f0abe353cd1ce06e75af6500e0d5b4c9cc7c368190279dc994b54219fc3",
+      "finalStateHash": "a7089f0abe353cd1ce06e75af6500e0d5b4c9cc7c368190279dc994b54219fc3",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "5830c2ad115c7563f1acfafe46313165eb11739f2aaf567771730f3ad9b103e9",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-024",
+      "title": "4♠ from hand uses Core Total Clear",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "4ced3cb4a8d0f0e801604ab40e26c85fa5a18f296bcdc31ab12e2498c95e5112",
+      "finalStateHash": "5a66393e09d52aca3944dc2e7e202ac05cb032d0abf562d2bd883176ea2ade7d",
+      "eventLogHash": "c070c73f8a355243fcfaf92427b7d0814218229156cc8f44b68794bbc8c61da2",
+      "replayHash": "762cfb5c19258048eba023fc565057c444230274340521288c11e6837c1a5d44",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-031",
+      "title": "Illegal response rewinds without disturbing pending play",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "01d03f6d8f61b47e71ecbc7705186be6a0a1cb47517dbc5df4bf267e0be67c88",
+      "finalStateHash": "da001e3fd78e8fcaadadfe818062d9d6ecb2ff78b9d1e1ce040a485c1e60e979",
+      "eventLogHash": "b2f79577f9a7bc143a30af6a25f72dce65900fc2573093d0e5526c8cc7efe15f",
+      "replayHash": "66954a4b11c67e41bc6c5cdc6b6371b01732678489db3d9a748ab7a47b38170e",
+      "accepted": [
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-094",
+      "title": "4♠ Trap uses Total Pressure identity",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "65a7fd9b6d80c89cae0c9095b3021b25f90203807ff5fb61771fa09f13d42f29",
+      "finalStateHash": "ec0064219d264f2fab42c7e1d84bb2aedc8ad2ef2b7e18b7766506278e3ea651",
+      "eventLogHash": "132b6ca789239e2ea3b5c0e6994e4d2f8e36cfdac49f6d058a9335fb1889e878",
+      "replayHash": "fcaa0b10ac88d1bc34da2f2c222d523f8ac10a39ff92ad901add02d78b5b50b6",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-095",
+      "title": "Undefined Combo recipe is illegal before Combo Breaker",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "f4e8b36dc2ace5fcee44bc86fb51e73be944c29113c366aabd831dca4bc07154",
+      "finalStateHash": "f4e8b36dc2ace5fcee44bc86fb51e73be944c29113c366aabd831dca4bc07154",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "04af64590b7414b1bc3b81882df110f971659b4bc29d534e48007f51a8560f9b",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-096",
+      "title": "Trap reveal is not an Eight resolving as a play",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "99a36306e73c03f46e1226532b347955af99f9265b43a7e8dff8b89402cc108f",
+      "finalStateHash": "5322b7e17dfe9658109616cb094abb0fdf24ccaeee0c839cabfd9d28b6f40cb6",
+      "eventLogHash": "c4ae8692a3a4ee69a8a84f877947a8bea659365d2e20e959919f3138b2290876",
+      "replayHash": "7b2a1c2f11ee9f86a6db202677339738e1f51957c349f8bfa69fc6a7be472fcd",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-097",
+      "title": "Board Lock suppresses Trap trigger",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "4d0166b8b64f2c4b0ff09fe9e7a92c392ee33e220c5381f44522033d82e26c47",
+      "finalStateHash": "4d0166b8b64f2c4b0ff09fe9e7a92c392ee33e220c5381f44522033d82e26c47",
+      "eventLogHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "replayHash": "87a021494d4b1776d0b79f214165da3226a9a984aba37d545f1c5a10e5e8b24e",
+      "accepted": [
+        false
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-098",
+      "title": "Module-3 counter disables a Trap",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "307fc0c78391ad33d2ea28d3b0656bd7f415271b56ea21abc5b64e3eae8c0a8c",
+      "finalStateHash": "57549e2cfc15c8c25d7eb1d0ffe1ab10ed09a53ff836e0d07804262ce0fbfb9b",
+      "eventLogHash": "81ede8c4b967830a8d2d9c268582bd685576932e683c39b17a16702e614459d2",
+      "replayHash": "c9825d84b370b006c11d13d2b531762b953e595a12a157b5d755740bb23ac886",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    },
+    {
+      "id": "CT-099",
+      "title": "Disable Token expires after countering player completed FT",
+      "status": "PASS",
+      "repeatedRuns": 7,
+      "initialStateHash": "786964c14a941d052854dbf9251352a61e29d35cca193d96786d5029b2890763",
+      "finalStateHash": "a9d73a26e70311928c0e1c97c3bd9ce02b6ebeebf98e7c6ccf9ba085cd3970fa",
+      "eventLogHash": "268269f59cdd43f591625c15521d3ffdddebe7d0bbd99831027cae5a1a7f49dd",
+      "replayHash": "c956402acf9f0804f47f6683aab49dfb51904f801b5d0353b8191d333eca011b",
+      "accepted": [
+        true
+      ],
+      "failures": []
+    }
+  ],
+  "aggregateHash": "24389b41f7dd0767e1d53f2734812c0b84169e2de2037bf430b592875a9ffebc"
+}

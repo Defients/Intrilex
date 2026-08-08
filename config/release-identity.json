@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0.0",
+  "productName": "Intrilex Simulation Lab",
+  "version": "0.24.2",
+  "releaseTitle": "Invite Alpha Truth Closure II",
+  "buildKind": "RANKED_DUEL_PLAYER_SHELL",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "officialRulesVersion": "4.3.1",
+  "coreSchemaVersion": "4.1.0",
+  "telemetrySchemaVersion": "4.1.0",
+  "analyticsSchemaVersion": "4.2.0",
+  "decisionTraceSchemaVersion": "2.0.0",
+  "playerRuntimeVersion": "1.2.0",
+  "saveFormatVersion": 2,
+  "replayDataVersion": "0.10.1",
+  "localProfileSchemaVersion": "1.1.0",
+  "defaultSimulationProfile": "core-advanced-authority",
+  "artifactKinds": [
+    "source",
+    "deploy",
+    "evidence"
+  ],
+  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.24.2",
+  "releaseDate": "2026-08-08"
+}

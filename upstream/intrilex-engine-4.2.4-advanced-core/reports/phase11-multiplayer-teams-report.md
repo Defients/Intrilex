@@ -1,0 +1,19 @@
+# Intrilex v4.1 Phase 11 Multiplayer and Teams Conformance Report
+
+- Verdict: **PASS**
+- Engine: `4.1.0`
+- Fixtures: 9/9 passed
+- Repetitions per fixture: 7
+- Aggregate hash: `d9f6da6572d80033406965865b1a4be11370ed5d68536f8b6f348b0ef51f311d`
+
+| Fixture | Status | Final state SHA-256 | Event log SHA-256 |
+|---|---|---|---|
+| CT-014 | PASS | `bc1bf53266b24ec9e0ff86ac24766ec98e85361be81367e663101dd9c7efab2c` | `0db2ec1b075391670d36290b571a7761637522b7f1929b8e3892f73206ff5ef4` |
+| CT-100 | PASS | `3fe62ce3c5ffed40d73506c5c60f305da06215de31d8dba70304fbf647ee0a46` | `9be8793e9bd261b7c698e027d932e7648b4fb01c7d0fe4c05583bcf5cea722c9` |
+| CT-101 | PASS | `4fd1d8e2e13f3a502d57c64c78872259ceaa3ee945e160abf05ed8e100bfead8` | `6aaf598bd2499523e274430e7c8774deb2d11817166a9e59db031508a5ae7583` |
+| CT-102 | PASS | `eb7756d31bc03a185e3fa36861e40aa1f9433a3b37caaae07a4b568319df1f2e` | `c65ce4e1ad6a08bd394d3a71137d2e97412d384b41cfb6f3a07d020513be2bb5` |
+| CT-103 | PASS | `be032bdec161ce76f5a224fc96dac2e6f299221c2d943a52fc4c24cb68201ff3` | `5524b13e889e24ac62d7f3067c46dde01eaf487a2323d49e9d65dc1df0ec3cd6` |
+| CT-104 | PASS | `a9adbefaace74eef0e1ef265a8fe9b6fabc0337c4897d10df6048cc534976b18` | `338c2f81e0f3d03a3507319b671aadc451e3ce0e9a254518c2366779f56b65a5` |
+| CT-105 | PASS | `6b01607d55402d17bd530d810a42ccea475d81ee74c8beb5ee89956d3f4fea50` | `0f2fc729d2a73c0caf4fa31b22e55b2f4baab82655cffa0edaeafb2fbcb8dc79` |
+| CT-109 | PASS | `34973f711c204bc68bd66cb08b574eeda6fc02683be039166d244ee3d7db607b` | `88abe8f6dff51e2c9d6c652b0a9fa93f353ff34e2256fa7cb298e1bf31c4f385` |
+| CT-114 | PASS | `2d06a0547880a6d975193bf4535dbca6d05c6003b11e3188b30aa1126bf9217d` | `8ce66ba32cfc3e8572f514eadfa5315fd2f020477f1ddd6f4e9e11709676d453` |

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "3.0.0",
+  "status": "PASS",
+  "source": "upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix",
+  "version": "4.2.6",
+  "rulesVersion": "4.1.2",
+  "fileCount": 1090,
+  "payloadHash": "d787262e0a037439a89413e36361a58982a554556f692705dfe123c1693aaf75",
+  "base": {
+    "version": "4.1.0"
+  },
+  "legacyProtocolConformance": {
+    "fixtureCount": 121,
+    "aggregate": "8c91e8194e7fa3ab6bbb3eaa6946a97efd70343c36d5e5953ee8e1c0357013df"
+  },
+  "semanticHotfixFixtureCount": 25,
+  "manifest": "upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/PRIORITY_PASS_HOTFIX_MANIFEST.json",
+  "sha256Sums": "upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/PRIORITY_PASS_HOTFIX_SHA256SUMS"
+}

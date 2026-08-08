@@ -1,0 +1,20 @@
+import { readFile, readdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const engine=await import(pathToFileURL(path.join(root,'dist/src/index.js')).href+`?merge=${Date.now()}`);
+const names=(await readdir(path.join(root,'reports'))).filter(n=>/^core-response-segment-\d+-\d+\.json$/.test(n));
+const segments=[];for(const name of names)segments.push(JSON.parse(await readFile(path.join(root,'reports',name),'utf8')));
+const summaries=segments.flatMap(s=>s.summaries).sort((a,b)=>a.ordinal-b.ordinal);
+const ordinals=summaries.map(x=>x.ordinal);
+if(summaries.length!==500||new Set(ordinals).size!==500||ordinals[0]!==0||ordinals.at(-1)!==499) throw new Error(`ordinal coverage failure: count=${summaries.length}; unique=${new Set(ordinals).size}; first=${ordinals[0]}; last=${ordinals.at(-1)}`);
+for(let i=0;i<500;i++)if(ordinals[i]!==i)throw new Error(`missing/misordered ordinal ${i}`);
+const terminations={}; const declarations={}; const resolutions={}; let durationMs=0;
+for(const segment of segments){durationMs+=segment.durationMs;for(const [k,v] of Object.entries(segment.terminations))terminations[k]=(terminations[k]??0)+v;for(const [k,v] of Object.entries(segment.declarations))declarations[k]=(declarations[k]??0)+v;for(const [k,v] of Object.entries(segment.resolutions))resolutions[k]=(resolutions[k]??0)+v;}
+const allowed=new Set(['NORMAL_VICTORY','EXHAUSTED_RESOLUTION','CANONICAL_DRAW']);
+const noncanonical=Object.entries(terminations).filter(([k,v])=>!allowed.has(k)&&v>0);
+const missing=['roots','baseAce','anchorAce','spadeAce','eightCounter','kingCounter','jackDisrupt','nineTap','eightSpadeScuttle','eightAegis','queenAegis'].filter(k=>(declarations[k]??0)===0);
+const report={schemaVersion:'1.0',status:noncanonical.length===0&&missing.length===0?'PASS':'FAIL',engineVersion:'4.2.2',profileId:'core-response-authority',matchCount:500,startOrdinal:0,endOrdinalExclusive:500,terminations,declarations,resolutions,engineRejections:terminations.ENGINE_REJECTION??0,unsupportedConfigurations:terminations.UNSUPPORTED_CONFIGURATION??0,maxDecisions:Math.max(...summaries.map(x=>x.decisions)),meanDecisions:Number((summaries.reduce((a,b)=>a+b.decisions,0)/500).toFixed(4)),resultHash:engine.hashCanonical(summaries),durationMs,matchesPerSecond:Number((500/(durationMs/1000)).toFixed(2)),segmentCount:segments.length,segmentHashes:segments.sort((a,b)=>a.startOrdinal-b.startOrdinal).map(s=>s.resultHash),generatedAt:new Date().toISOString(),summaries};
+if(report.status!=='PASS')throw new Error(JSON.stringify({noncanonical,missing}));
+await writeFile(path.join(root,'reports/core-response-authority-stress-500.json'),JSON.stringify(report,null,2)+'\n');
+console.log(`CORE RESPONSE STRESS MERGE PASS: matches=500; hash=${report.resultHash}; terminations=${JSON.stringify(terminations)}; declarations=${JSON.stringify(declarations)}; segments=${segments.length}`);

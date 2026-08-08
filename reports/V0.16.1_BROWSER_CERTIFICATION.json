@@ -1,0 +1,208 @@
+{
+  "schemaVersion": "1.0.0",
+  "generator": "scripts/browser-certification-v0161.mjs",
+  "generatorHash": "420ec1a7ac201dec85e6e0b2d1b6075e054f279be3a91f70cbbe767aa8852b28",
+  "command": "node scripts/browser-certification-v0161.mjs",
+  "sourceTreeHash": "see V0.16.1_BASELINE_AUDIT.json",
+  "distHash": "3452cf5e93548f6ace6413889027b169317a261ac003364711073e7c88730e7e",
+  "browser": {
+    "name": "Chrome",
+    "version": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "executablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+  },
+  "startedAt": "2026-08-02T23:01:46.370Z",
+  "completedAt": "2026-08-02T23:02:03.935Z",
+  "passed": 27,
+  "failed": 0,
+  "skipped": 0,
+  "tests": [
+    {
+      "name": "Watch workspace boot",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route / (Landing)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /play (Play Hub)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /rules (Rules)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /sim (Sim (Watch))",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /watch (Watch)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /replays (Replays)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /history (History)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /mechanics (Mechanics)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /cards (Card Faces)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /synergies (Synergies)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /ranks (Ranks)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /compare (Compare)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /traces (Traces)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /branches (Branches)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /diagnostics (Diagnostics)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Route /evidence (Evidence)",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Rank Anatomy workspace renders",
+      "passed": true,
+      "details": "{\"title\":\"Ranks\",\"hasRankAnatomy\":true,\"hasTabs\":true,\"hasRankList\":false,\"textLength\":4770}"
+    },
+    {
+      "name": "Viewport mobile-390 (390x844) - no horizontal overflow",
+      "passed": true,
+      "details": "{\"scrollWidth\":390,\"clientWidth\":390,\"scrollHeight\":5574,\"workspace\":\"Ranks\",\"hasOverflow\":false}"
+    },
+    {
+      "name": "Viewport tablet-768 (768x1024) - no horizontal overflow",
+      "passed": true,
+      "details": "{\"scrollWidth\":760,\"clientWidth\":758,\"scrollHeight\":5030,\"workspace\":\"Ranks\",\"hasOverflow\":false}"
+    },
+    {
+      "name": "Viewport desktop-1366 (1366x768) - no horizontal overflow",
+      "passed": true,
+      "details": "{\"scrollWidth\":1356,\"clientWidth\":1356,\"scrollHeight\":3239,\"workspace\":\"Ranks\",\"hasOverflow\":false}"
+    },
+    {
+      "name": "Viewport theatre-1920 (1920x1080) - no horizontal overflow",
+      "passed": true,
+      "details": "{\"scrollWidth\":1910,\"clientWidth\":1910,\"scrollHeight\":3056,\"workspace\":\"Ranks\",\"hasOverflow\":false}"
+    },
+    {
+      "name": "Reduced motion emulation",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Keyboard accessibility - focusable elements exist",
+      "passed": true,
+      "details": "{\"focusableCount\":125,\"firstFocusable\":\"A\",\"hasSkipLink\":true}"
+    },
+    {
+      "name": "No critical console errors",
+      "passed": true,
+      "details": "0 console errors: "
+    },
+    {
+      "name": "No network failures",
+      "passed": true,
+      "details": "0 network failures: "
+    },
+    {
+      "name": "No unhandled exceptions",
+      "passed": true,
+      "details": "0 exceptions: "
+    }
+  ],
+  "viewports": [
+    {
+      "name": "mobile-390",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "scrollHeight": 5574,
+      "workspace": "Ranks",
+      "hasOverflow": false,
+      "screenshot": "reports/v0.16.1-browser/mobile-390-ranks.png"
+    },
+    {
+      "name": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "scrollWidth": 760,
+      "clientWidth": 758,
+      "scrollHeight": 5030,
+      "workspace": "Ranks",
+      "hasOverflow": false,
+      "screenshot": "reports/v0.16.1-browser/tablet-768-ranks.png"
+    },
+    {
+      "name": "desktop-1366",
+      "width": 1366,
+      "height": 768,
+      "scrollWidth": 1356,
+      "clientWidth": 1356,
+      "scrollHeight": 3239,
+      "workspace": "Ranks",
+      "hasOverflow": false,
+      "screenshot": "reports/v0.16.1-browser/desktop-1366-ranks.png"
+    },
+    {
+      "name": "theatre-1920",
+      "width": 1920,
+      "height": 1080,
+      "scrollWidth": 1910,
+      "clientWidth": 1910,
+      "scrollHeight": 3056,
+      "workspace": "Ranks",
+      "hasOverflow": false,
+      "screenshot": "reports/v0.16.1-browser/theatre-1920-ranks.png"
+    }
+  ],
+  "consoleErrors": [],
+  "networkFailures": [],
+  "exceptions": [],
+  "artifacts": [
+    "H:\\myProjects\\Intrilex-dev2\\reports\\v0.16.1-browser"
+  ],
+  "reportHash": "75166e94d0d5869867b94e12684f1abab00b9c431a16546425ded3f855a888bb"
+}

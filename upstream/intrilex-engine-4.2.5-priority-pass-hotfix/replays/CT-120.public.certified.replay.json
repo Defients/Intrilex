@@ -1,0 +1,165 @@
+{
+  "format": "intrilex-public-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-120",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "OPAQUE-HIDDEN-CARD-001": {
+        "controllerId": "P1",
+        "id": "OPAQUE-HIDDEN-CARD-001",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "OPAQUE-HIDDEN-CARD-002": {
+        "controllerId": "P2",
+        "id": "OPAQUE-HIDDEN-CARD-002",
+        "identity": "HIDDEN",
+        "originalOwnerId": "P2",
+        "state": {},
+        "zone": "P2_HAND"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-001"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "OPAQUE-HIDDEN-CARD-002"
+        ],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "id": "CT120-C1",
+      "type": "HIDDEN_CHOICE",
+      "actorId": "P1",
+      "choiceId": "private-order",
+      "payload": {
+        "redacted": true
+      },
+      "visibility": "authorized"
+    },
+    {
+      "actorId": "P1",
+      "id": "CT120-C2",
+      "label": "replay-boundary",
+      "type": "NOOP"
+    }
+  ],
+  "accepted": [
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT120-C1",
+      "id": "EV-000001",
+      "payload": {
+        "redacted": true,
+        "visibility": "authorized"
+      },
+      "previousStateHash": "949665c7ebe59c29eb988b038dea794326bf0869fea59db333163451a82568cd",
+      "sequence": 1,
+      "stateHash": "4ff6fea4132f62cb2c6e4726c47a75a8f6577807cdc6e23582f001dd55d02ca9",
+      "type": "HIDDEN_CHOICE_RECORDED",
+      "visibility": "authorized"
+    },
+    {
+      "commandId": "CT120-C2",
+      "id": "EV-000002",
+      "payload": {
+        "label": "replay-boundary"
+      },
+      "previousStateHash": "4ff6fea4132f62cb2c6e4726c47a75a8f6577807cdc6e23582f001dd55d02ca9",
+      "sequence": 2,
+      "stateHash": "d8a294929461a097881b9d6d021f9ac94fba2ec2a037d86d1ee26791ce156ecc",
+      "type": "NOOP_RECORDED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "commandIndex": 0,
+      "commandId": "CT120-C1",
+      "accepted": true,
+      "eventStartIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "55632ea944a3a6080ad90a034d0f8a9787df535adbb1f5ac9c3360f4162388e4"
+    },
+    {
+      "commandIndex": 1,
+      "commandId": "CT120-C2",
+      "accepted": true,
+      "eventStartIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "296f3ee3e8471d92db2d5f9ef286dc0f6528f237f2cd844bc62252ec082406eb"
+    }
+  ],
+  "publicEventLogHash": "54a8ccba31bbf4828b7af91405305ae7ade75d01679c31a7c6bf491a8af3e2ce",
+  "publicContentHash": "39d1694483a8485407db4b0555ab033b5c0caa765d8540c6a474d08173f065ec"
+}

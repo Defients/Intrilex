@@ -1,0 +1,40 @@
+{
+  "status_version": 1,
+  "status": "complete",
+  "product": "Intrilex",
+  "rules_version": "4.1",
+  "engine_version": "4.1.0",
+  "milestone": "Roadmap Phase 16 \u2014 Replay, serialization, and deterministic RNG",
+  "completed_phases": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "gate_ids": [
+    "CT-091",
+    "CT-109",
+    "CT-116",
+    "CT-120"
+  ],
+  "services": [
+    "legacy replay v1",
+    "certified replay v2 checkpoints",
+    "canonical JSON",
+    "public redaction",
+    "xorshift32 vectors",
+    "tamper detection"
+  ],
+  "preserved_gameplay_aggregate": "994faf051dfa9441dd6511d360caa79a8b534b9db90908055e9692d6952f896a"
+}
