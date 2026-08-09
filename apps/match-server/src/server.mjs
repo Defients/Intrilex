@@ -27,7 +27,7 @@ import {
   validateRequestSync, validateLeaveMatch,
   validateQueueJoin, validateQueueLeave,
   validateSpectateMatch, validateSpectateLeave,
-  validateMatchHistory, validateGetReplay,
+  validateMatchHistory, validateGetReplay, validateSendChat,
   checkMessageSize, ReasonCode,
   matchCreated, matchJoined, matchView, actionResult,
   participantStatus, matchStarted, matchEnded, error as errorMsg,
@@ -35,6 +35,7 @@ import {
   spectateMatch, spectateLeave, spectateJoined, spectateLeft,
   matchHistoryResult, envelope,
   replayAvailable, replayData,
+  sendChat as sendChatBuilder, chatMessage,
 } from '@intrilex/network-protocol';
 
 // ── Configuration ──
@@ -447,12 +448,15 @@ export function startServer(opts = {}) {
 
   return new Promise((resolve) => {
     httpServer.listen(port, host, () => {
-      resolve({
+      const api = {
         httpServer,
         wss,
         close() {
           clearInterval(heartbeatTimer);
           clearInterval(cleanupTimer);
+          // v0.25: Remove signal handlers on explicit close
+          process.removeListener('SIGTERM', signalHandler);
+          process.removeListener('SIGINT', signalHandler);
           // Close all active connections
           for (const conn of connections.values()) {
             try { conn.ws.terminate(); } catch { /* ignore */ }
@@ -473,7 +477,20 @@ export function startServer(opts = {}) {
             });
           });
         },
-      });
+      };
+
+      // v0.25: Graceful shutdown on SIGTERM/SIGINT
+      // Stop accepting new connections, close existing WebSockets cleanly,
+      // flush/close SQLite, and exit deterministically.
+      const signalHandler = async (sig) => {
+        console.log(`\n${sig} received — shutting down match server...`);
+        try { await api.close(); } catch { /* ignore */ }
+        process.exit(0);
+      };
+      process.on('SIGTERM', signalHandler);
+      process.on('SIGINT', signalHandler);
+
+      resolve(api);
     });
   });
 }
@@ -539,6 +556,7 @@ function handleMessage(connectionId, ws, raw) {
       case 'SPECTATE_LEAVE': return handleSpectateLeave(connectionId, ws, payload, requestId);
       case 'MATCH_HISTORY': return handleMatchHistory(connectionId, ws, payload, requestId);
       case 'GET_REPLAY': return handleGetReplay(connectionId, ws, payload, requestId);
+      case 'SEND_CHAT': return handleSendChat(connectionId, ws, payload, requestId);
       default:
         return send(ws, errorMsg(ReasonCode.MESSAGE_TYPE_UNKNOWN, `Unknown type: ${type}`, requestId));
     }
@@ -1010,6 +1028,54 @@ function handleGetReplay(connectionId, ws, payload, requestId) {
   const replayHash = createHash('sha256').update(JSON.stringify(replay)).digest('hex');
   send(ws, replayData(match.matchId, replay, replayHash, requestId));
   logEvent('replayDownload', { matchId: match.matchId, participantId });
+}
+
+/**
+ * Handle a SEND_CHAT message from a participant.
+ * Validates the payload, authenticates the participant, checks the
+ * connection-match binding, and broadcasts the chat message to all
+ * participants in the match. Spectators do not receive chat (out of scope
+ * for v0.25). Rate limiting is handled by the per-connection token bucket
+ * in the main message handler (chat messages consume tokens like all
+ * other messages).
+ */
+function handleSendChat(connectionId, ws, payload, requestId) {
+  const check = validateSendChat(payload);
+  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
+
+  const conn = connections.get(connectionId);
+  if (!conn) return send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, 'Connection not found', requestId));
+
+  // v0.25: Defense-in-depth — connection must be bound to this match.
+  if (conn.matchId !== payload.matchId) {
+    return send(ws, errorMsg(ReasonCode.CONNECTION_MATCH_MISMATCH, 'Connection is not bound to this match', requestId));
+  }
+
+  const match = matchStore.get(payload.matchId);
+  if (!match) return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Match not found', requestId));
+
+  // Authenticate the participant token
+  const participantId = match.findParticipantByToken(payload.participantToken);
+  if (!participantId) return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_INVALID, 'Invalid participant token', requestId));
+
+  // Only allow chat during active matches (not in lobby, not after terminal)
+  if (match.status !== 'RUNNING' && match.status !== 'READY_CHECK' && match.status !== 'WAITING_FOR_OPPONENT' && match.status !== 'STARTING') {
+    return send(ws, errorMsg(ReasonCode.MATCH_NOT_RUNNING, 'Chat is only available during active matches', requestId));
+  }
+
+  // Build the chat message and broadcast to all participants
+  const timestamp = new Date().toISOString();
+  const text = String(payload.text).slice(0, 200); // hard cap at protocol limit
+
+  // Broadcast to all participants in the match
+  for (const [pid] of match.participants) {
+    const targetConn = findConnectionByParticipant(pid, match.matchId);
+    if (targetConn) {
+      send(targetConn.ws, chatMessage(match.matchId, participantId, text, timestamp));
+    }
+  }
+
+  logEvent('chatMessage', { matchId: match.matchId, participantId, textLength: text.length });
 }
 
 /**

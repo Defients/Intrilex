@@ -408,7 +408,7 @@ async function renderActiveMatch(container) {
     guidanceMode: state.guidanceMode,
     showKeyboardHelp: state.showKeyboardHelp,
     tutorial: tutorialState,
-    chatMessages: state.chatMessages.slice(-20),
+    chatMessages: (state.networkSession?.chatMessages ?? state.chatMessages).slice(-30),
     rightRailTab: state.rightRailTab || 'chat',
     soundMuted: state.soundMuted,
     isNetworkMatch: !!(state.networkSession && state.networkSession.constructor?.name === 'NetworkPlaySession'),

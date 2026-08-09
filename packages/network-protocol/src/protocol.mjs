@@ -5,7 +5,7 @@
 import { PROTOCOL_VERSION, MAX_MESSAGE_SIZE } from './validation.mjs';
 export { PROTOCOL_VERSION, MAX_MESSAGE_SIZE };
 export { ReasonCode, reasonCategory } from './reason-codes.mjs';
-export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, checkMessageSize } from './validation.mjs';
+export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, checkMessageSize } from './validation.mjs';
 
 /**
  * @typedef {Object} ProtocolEnvelope
@@ -230,6 +230,20 @@ export function matchHistoryResult(matches, requestId) {
   return envelope('MATCH_HISTORY_RESULT', { matches }, requestId);
 }
 
+// ── Chat ──
+
+/**
+ * Build a SEND_CHAT message (client → server).
+ * @param {string} matchId - Match identifier
+ * @param {string} participantToken - Participant authentication token
+ * @param {string} text - Chat message text (1-200 chars)
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function sendChat(matchId, participantToken, text, requestId) {
+  return envelope('SEND_CHAT', { matchId, participantToken, text }, requestId);
+}
+
 // ── Server → Client message builders ──
 
 /**
@@ -335,6 +349,20 @@ export function replayAvailable(matchId, replayUrl, replayHash, requestId) {
  */
 export function replayData(matchId, replay, replayHash, requestId) {
   return envelope('REPLAY_DATA', { matchId, replay, replayHash }, requestId);
+}
+
+/**
+ * Build a CHAT_MESSAGE message (server → client).
+ * Broadcast to match participants after authorization and rate limiting.
+ * @param {string} matchId - Match identifier
+ * @param {string} participantId - Sender participant ID
+ * @param {string} text - Chat message text
+ * @param {string} timestamp - ISO timestamp
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function chatMessage(matchId, participantId, text, timestamp, requestId) {
+  return envelope('CHAT_MESSAGE', { matchId, participantId, text, timestamp }, requestId);
 }
 
 /**

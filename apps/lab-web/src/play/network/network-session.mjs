@@ -11,7 +11,7 @@
 
 import {
   createMatch, joinMatch, resumeMatch, ready, submitAction,
-  requestSync, leaveMatch,
+  requestSync, leaveMatch, sendChat,
   PROTOCOL_VERSION,
 } from './network-protocol-client.mjs';
 
@@ -386,6 +386,42 @@ export class NetworkPlaySession {
     this.disconnect();
   }
 
+  // ── Chat ──
+
+  /**
+   * Send a chat message to the match participants via the server.
+   * The message is validated (1-200 chars), sent via SEND_CHAT protocol
+   * message, and the server broadcasts it to all participants.
+   * @param {string} text - Chat message text (1-200 chars)
+   * @returns {Promise<boolean>} true if sent successfully
+   */
+  async sendChatMessage(text) {
+    if (!this.matchId || !this.participantToken) return false;
+    if (typeof text !== 'string' || text.length === 0 || text.length > 200) return false;
+    try {
+      const msg = sendChat(this.matchId, this.participantToken, text);
+      // Chat is fire-and-forget — the server broadcasts CHAT_MESSAGE back.
+      // We don't wait for a response (there is no ACK for SEND_CHAT).
+      if (this._ws && this._ws.readyState === WebSocket.OPEN) {
+        this._ws.send(JSON.stringify(msg));
+      }
+      // Add to local chat messages immediately (optimistic)
+      this.chatMessages = this.chatMessages || [];
+      this.chatMessages.push({
+        participantId: this.participantId,
+        text,
+        timestamp: new Date().toISOString(),
+        isHuman: true,
+        isNetwork: true,
+        time: new Date().toLocaleTimeString(),
+      });
+      this._notifyStateChange();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   // ── Replay download ──
 
   /**
@@ -621,6 +657,22 @@ export class NetworkPlaySession {
         this.replayUrl = msg.payload?.replayUrl ?? null;
         this.replayHash = msg.payload?.replayHash ?? null;
         this._notifyStateChange();
+        break;
+      case 'CHAT_MESSAGE':
+        // v0.25: Network chat — received from server after participant broadcast.
+        // Store in the chat messages array and notify listeners.
+        if (msg.payload?.text) {
+          this.chatMessages = this.chatMessages || [];
+          this.chatMessages.push({
+            participantId: msg.payload.participantId,
+            text: msg.payload.text,
+            timestamp: msg.payload.timestamp,
+            isHuman: msg.payload.participantId === this.participantId,
+            isNetwork: true,
+            time: msg.payload.timestamp,
+          });
+          this._notifyStateChange();
+        }
         break;
       case 'LEFT_MATCH':
         // Server acknowledged leave — clean up

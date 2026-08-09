@@ -71,4 +71,8 @@ export function matchHistory(limit = 20, status = null) {
   return envelope('MATCH_HISTORY', { limit, status });
 }
 
+export function sendChat(matchId, participantToken, text) {
+  return envelope('SEND_CHAT', { matchId, participantToken, text });
+}
+
 export { PROTOCOL_VERSION };

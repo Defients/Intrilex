@@ -29,6 +29,7 @@ const KNOWN_TYPES = new Set([
   'SPECTATE_MATCH', 'SPECTATE_LEAVE',
   'MATCH_HISTORY',
   'GET_REPLAY',
+  'SEND_CHAT',
   // Server → Client
   'MATCH_CREATED', 'MATCH_JOINED', 'MATCH_VIEW',
   'ACTION_RESULT', 'PARTICIPANT_STATUS', 'MATCH_STARTED',
@@ -37,6 +38,7 @@ const KNOWN_TYPES = new Set([
   'SPECTATE_JOINED', 'SPECTATE_LEFT',
   'MATCH_HISTORY_RESULT',
   'REPLAY_AVAILABLE', 'REPLAY_DATA',
+  'CHAT_MESSAGE',
 ]);
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{4,64}$/;
@@ -285,6 +287,25 @@ export function validateGetReplay(payload) {
   }
   if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 10) {
     return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken must be a non-empty string');
+  }
+  return ok();
+}
+
+/**
+ * Validate a SEND_CHAT payload.
+ * Chat messages are short text (1-200 chars) from authenticated participants.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateSendChat(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId is invalid');
+  }
+  if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 16) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken is invalid');
+  }
+  if (typeof payload.text !== 'string' || payload.text.length === 0 || payload.text.length > 200) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'text must be a string of 1-200 chars');
   }
   return ok();
 }

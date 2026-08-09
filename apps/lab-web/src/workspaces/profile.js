@@ -83,8 +83,8 @@ function renderBadgeGallery(profile) {
     { id: 'streak-3', name: 'Streak \u00d73', description: 'Win 3 consecutive verified duels', icon: 'flame' },
     { id: 'supercharged', name: 'Supercharged', description: 'Declare your first Super', icon: 'bolt' },
     { id: 'unshaken', name: 'Unshaken', description: 'Win after trailing in Secured Points', icon: 'heart' },
-    { id: 'tournament-champion', name: 'Tournament Champion', description: 'Win a tournament', icon: 'medal' },
-    { id: 'bracket-buster', name: 'Bracket Buster', description: 'Win a tournament as the lowest seed', icon: 'sword' },
+    { id: 'tournament-champion', name: 'Tournament Champion', description: 'Win a tournament (coming soon)', icon: 'medal', available: false },
+    { id: 'bracket-buster', name: 'Bracket Buster', description: 'Win a tournament as the lowest seed (coming soon)', icon: 'sword', available: false },
     { id: 'tactician', name: 'Tactician', description: 'Win 5 matches against hard/nightmare AI', icon: 'brain' },
   ];
 
@@ -102,12 +102,16 @@ function renderBadgeGallery(profile) {
 
   const badges = badgeDefs.map(def => {
     const earned = earnedIds.has(def.id);
+    const unavailable = def.available === false;
     const icon = BADGE_ICONS[def.icon] ?? '🔹';
-    const progress = !earned && progressHints[def.id] ? progressHints[def.id]() : null;
-    return `<div class="badge-card ${earned ? 'earned' : 'locked'}" title="${esc(def.description)}">
-      <span class="badge-icon" style="font-size:1.5em;filter:${earned ? 'none' : 'grayscale(1) opacity(0.4)'}">${icon}</span>
+    const progress = !earned && !unavailable && progressHints[def.id] ? progressHints[def.id]() : null;
+    const cls = earned ? 'earned' : unavailable ? 'unavailable' : 'locked';
+    const filter = earned ? 'none' : 'grayscale(1) opacity(0.4)';
+    const status = earned ? 'Earned' : unavailable ? 'Coming soon' : (progress ? esc(progress) : esc(def.description));
+    return `<div class="badge-card ${cls}" title="${esc(def.description)}">
+      <span class="badge-icon" style="font-size:1.5em;filter:${filter}">${icon}</span>
       <span class="badge-name">${esc(def.name)}</span>
-      ${!earned ? `<small class="badge-progress">${progress ? esc(progress) : esc(def.description)}</small>` : `<small class="badge-progress">Earned</small>`}
+      <small class="badge-progress">${status}</small>
     </div>`;
   }).join('');
 

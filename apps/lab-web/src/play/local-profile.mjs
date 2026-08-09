@@ -31,8 +31,8 @@ const BADGE_DEFINITIONS = [
   { id: 'streak-3', name: 'Streak \u00d73', description: 'Win 3 consecutive verified duels', icon: 'flame', check: (p) => p.streakData.bestStreak >= 3 },
   { id: 'supercharged', name: 'Supercharged', description: 'Declare your first Super', icon: 'bolt', check: (p) => p.badges.some(b => b.id === 'supercharged') },
   { id: 'unshaken', name: 'Unshaken', description: 'Win after trailing in Secured Points', icon: 'heart', check: (p) => p.badges.some(b => b.id === 'unshaken') },
-  { id: 'tournament-champion', name: 'Tournament Champion', description: 'Win a tournament', icon: 'medal', check: (p) => p.badges.some(b => b.id === 'tournament-champion') },
-  { id: 'bracket-buster', name: 'Bracket Buster', description: 'Win a tournament as the lowest seed', icon: 'sword', check: (p) => p.badges.some(b => b.id === 'bracket-buster') },
+  { id: 'tournament-champion', name: 'Tournament Champion', description: 'Win a tournament (coming soon)', icon: 'medal', available: false, check: () => false },
+  { id: 'bracket-buster', name: 'Bracket Buster', description: 'Win a tournament as the lowest seed (coming soon)', icon: 'sword', available: false, check: () => false },
   { id: 'tactician', name: 'Tactician', description: 'Win 5 matches against hard/nightmare AI', icon: 'brain', check: (p) => {
     const hardWins = p.verifiedResults.filter(r => (r.aiDifficulty === 'hard' || r.aiDifficulty === 'nightmare') && r.outcome === 'win').length;
     return hardWins >= 5;

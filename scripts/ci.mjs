@@ -162,6 +162,7 @@ const STAGES = [
   ['spectator-projection-hardening', 'node', ['--test', 'test/spectator-projection-hardening.test.mjs']],
   ['dev-cache-truth', 'node', ['--test', 'test/dev-cache-truth.test.mjs']],
   ['regression-score-selection', 'node', ['--test', 'test/regression-score-selection.test.mjs']],
+  ['network-chat', 'node', ['--test', 'test/network-chat.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

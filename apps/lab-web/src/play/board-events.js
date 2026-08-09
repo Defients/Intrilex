@@ -241,27 +241,36 @@ export function bindBoardEvents(container, callbacks) {
     });
   }
 
-  // v0.21.0: Side dock chat send (data-action="chat-send")
+  // v0.25: Chat send — routes to network session for online matches,
+  // or local echo for Local vs AI matches.
   const chatSendBtn = container.querySelector('[data-action="chat-send"]');
   if (chatSendBtn) {
-    chatSendBtn.addEventListener('click', () => {
+    chatSendBtn.addEventListener('click', async () => {
       const input = container.querySelector('[data-chat-input]');
       const text = input?.value?.trim();
       if (!text) return;
-      state.chatMessages.push({ isHuman: true, text, time: new Date().toLocaleTimeString() });
       input.value = '';
+      if (state.networkSession && typeof state.networkSession.sendChatMessage === 'function') {
+        await state.networkSession.sendChatMessage(text);
+      } else {
+        state.chatMessages.push({ isHuman: true, text, time: new Date().toLocaleTimeString() });
+      }
       renderActiveMatch(container);
     });
   }
   const chatInputEl = container.querySelector('[data-chat-input]');
   if (chatInputEl) {
-    chatInputEl.addEventListener('keydown', (e) => {
+    chatInputEl.addEventListener('keydown', async (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         const text = chatInputEl.value?.trim();
         if (!text) return;
-        state.chatMessages.push({ isHuman: true, text, time: new Date().toLocaleTimeString() });
         chatInputEl.value = '';
+        if (state.networkSession && typeof state.networkSession.sendChatMessage === 'function') {
+          await state.networkSession.sendChatMessage(text);
+        } else {
+          state.chatMessages.push({ isHuman: true, text, time: new Date().toLocaleTimeString() });
+        }
         renderActiveMatch(container);
       }
     });
