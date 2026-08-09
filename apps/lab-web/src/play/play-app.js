@@ -20,6 +20,13 @@ import { SoundEngine } from './play-sound.js';
 import { ParticleSystem } from './play-particles.js';
 import { state } from './play-state.js';
 import { bindBoardEvents as bindBoardEventsModule } from './board-events.js';
+import {
+  openAdvancedCardRules as openAdvancedCardRulesController,
+  closeAdvancedCardRules,
+  isCardInspectable,
+  buildCurrentMatchContext,
+  getOpenIdentity,
+} from './advanced-card-rules/advanced-card-rules-controller.mjs';
 import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs';
 import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
@@ -419,6 +426,16 @@ async function renderActiveMatch(container) {
   bindBoardEvents(container);
   bindKeyboardShortcuts(container);
   bindVisibilityHandler();
+
+  // If the Advanced Card Rules View is open, refresh its Current Match
+  // section from the new authoritative state (directive §15). If the
+  // inspected card is no longer inspectable, the controller sanitizes
+  // (closes) the view to avoid leaking stale information.
+  if (getOpenIdentity() && state.advancedRulesCardId) {
+    import('./advanced-card-rules/advanced-card-rules-controller.mjs').then(({ refreshCurrentMatch }) => {
+      refreshCurrentMatch(snapshot, state.advancedRulesCardId);
+    });
+  }
 }
 
 /**
@@ -431,7 +448,7 @@ function bindBoardEvents(container) {
     renderActiveMatch,
     showHoverPopover,
     hideHoverPopover,
-    openCardFaceDialog,
+    openAdvancedCardRules,
     startNewMatch,
     stopAutosave,
   });
@@ -1281,6 +1298,9 @@ function bindKeyboardShortcuts(container) {
     } else if (key === 'i') {
       e.preventDefault();
       handleInspectorShortcut(container);
+    } else if (key === 'a') {
+      e.preventDefault();
+      handleAdvancedRulesShortcut(container);
     } else if (key === 'r') {
       e.preventDefault();
       handleStackShortcut(container);
@@ -1344,10 +1364,9 @@ function removeVisibilityHandler() {
  * @param {Element} cardEl - the hovered card wrapper element
  * @param {string} identity - card identity (e.g. "A♣")
  * @param {string} view - 'lite' or 'zoom'
- * Positioned above the hovered card element. For 'lite' view, includes a
- * "Full Zoom →" button that opens the global #card-face-dialog with the
- * zoom dossier. For 'zoom' view, renders the full dossier inline in the
- * popover.
+ * Positioned above the hovered card element. For 'lite' view, includes an
+ * "Advanced Rules →" button that opens the Advanced Card Rules View.
+ * For 'zoom' view, renders the full dossier inline in the popover.
  */
 function showHoverPopover(container, cardEl, identity, view = 'lite') {
   const popover = container.querySelector('#card-hover-popover');
@@ -1367,7 +1386,7 @@ function showHoverPopover(container, cardEl, identity, view = 'lite') {
     if (state.hoverPopoverIdentity !== identity) return; // stale
     const faceView = view === 'zoom' ? 'zoom' : 'lite';
     const zoomBtn = view === 'lite'
-      ? `<button class="card-hover-popover-zoom" data-hover-zoom="${esc(identity)}" aria-label="Open full dossier">Full Zoom →</button>`
+      ? `<button class="card-hover-popover-zoom" data-hover-zoom="${esc(identity)}" aria-label="Open advanced card rules">Advanced Rules →</button>`
       : '';
     popover.innerHTML = `<div class="card-hover-popover-inner">
       ${renderCardFace(identity, { view: faceView })}
@@ -1376,11 +1395,12 @@ function showHoverPopover(container, cardEl, identity, view = 'lite') {
     popover.classList.add('visible');
     popover.setAttribute('aria-hidden', 'false');
 
-    // Wire the Full Zoom button (lite view only)
+    // Wire the Advanced Rules button (lite view only) — opens the
+    // Advanced Card Rules View (replaces the old card-face-dialog zoom).
     const zoomBtnEl = popover.querySelector('[data-hover-zoom]');
     if (zoomBtnEl) {
       zoomBtnEl.addEventListener('click', () => {
-        openCardFaceDialog(identity);
+        openAdvancedCardRules(identity);
       });
     }
 
@@ -1407,18 +1427,28 @@ function hideHoverPopover(container) {
 }
 
 /**
- * Open the global #card-face-dialog with the zoom (full) dossier.
+ * Open the Advanced Card Rules View (card codex / rules dossier).
+ * Honors the hidden-info firewall: a face-down or non-inspectable card
+ * is never opened. Builds the CURRENT MATCH section from the
+ * authoritative legal-action contract. Informational only — never
+ * mutates game state.
+ *
+ * @param {string} identity - Card identity (e.g. "7♥")
+ * @param {string} [cardId] - Entity id for current-match legality
+ * @returns {boolean} true if opened
  */
-function openCardFaceDialog(identity) {
-  const dialog = document.querySelector('#card-face-dialog');
-  if (!dialog) return;
-  const titleEl = document.querySelector('#card-face-dialog-title');
-  const contentEl = document.querySelector('#card-face-dialog-content');
-  if (titleEl) titleEl.textContent = identity;
-  import('../card-face-renderer.js').then(({ renderCardFace }) => {
-    if (contentEl) contentEl.innerHTML = renderCardFace(identity, { view: 'zoom' });
-    if (typeof dialog.showModal === 'function') dialog.showModal();
+function openAdvancedCardRules(identity, cardId) {
+  if (!identity) return false;
+  const snapshot = state.session?.getSnapshot();
+  // Hidden-info firewall: verify the card is inspectable before opening.
+  if (cardId && snapshot && !isCardInspectable(snapshot, cardId)) return false;
+  const currentMatch = cardId && snapshot ? buildCurrentMatchContext(snapshot, cardId, identity) : null;
+  const opened = openAdvancedCardRulesController(identity, {
+    currentMatch,
+    onClose: () => { state.advancedRulesCardId = null; },
   });
+  if (opened) state.advancedRulesCardId = cardId ?? null;
+  return opened;
 }
 
 /**
@@ -1449,6 +1479,24 @@ function handleInspectorShortcut(container) {
 }
 
 /**
+ * Handle A key — open Advanced Card Rules View for the selected or
+ * inspected card. Falls back to the selected source card. Honors the
+ * hidden-info firewall (openAdvancedCardRules verifies inspectability).
+ */
+function handleAdvancedRulesShortcut(container) {
+  const cardId = state.inspectorCardId ?? state.selectedSourceCardId;
+  if (!cardId) return;
+  const snapshot = state.session?.getSnapshot();
+  if (!snapshot) return;
+  const found = snapshot.playerView?.own?.hand?.find(c => (c.entityId ?? c.id) === cardId)
+    ?? snapshot.playerView?.own?.pointRow?.find(c => (c.entityId ?? c.id) === cardId)
+    ?? snapshot.playerView?.own?.enduringRow?.find(c => (c.entityId ?? c.id) === cardId);
+  const identity = found?.identity;
+  if (!identity) return;
+  openAdvancedCardRules(identity, cardId);
+}
+
+/**
  * Handle R key — toggle stack details.
  */
 function handleStackShortcut(container) {
@@ -1467,9 +1515,13 @@ function handleHelpShortcut(container) {
 }
 
 /**
- * Handle Escape key — cancel selection or close inspector.
+ * Handle Escape key — close Advanced View, cancel selection or close inspector.
  */
 function handleEscapeShortcut(container) {
+  if (getOpenIdentity()) {
+    closeAdvancedCardRules();
+    return;
+  }
   if (state.inspectorCardId) {
     state.inspectorCardId = null;
     state.inspectorFaceView = 'board';

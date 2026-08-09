@@ -3,8 +3,8 @@
 // routing to workspace renderers, and owns the Watch workspace.
 // ═══════════════════════════════════════════════════════════════
 
-import { renderCardFace} from './card-face-renderer.js';
 import { getCardDefinition } from './card-face-data.js';
+import { openAdvancedCardRules } from './play/advanced-card-rules/advanced-card-rules-controller.mjs';
 import { renderRulesPage } from './rulebook-renderer.js';
 import { RULES_VERSION, ENGINE_VERSION } from './version.js';
 import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js';
@@ -260,10 +260,8 @@ function renderWatch() {
     if (identity && identity !== 'HIDDEN') {
       const def = getCardDefinition(identity);
       if (def) {
-        const dialog = document.querySelector('#card-face-dialog');
-        document.querySelector('#card-face-dialog-title').textContent = identity;
-        document.querySelector('#card-face-dialog-content').innerHTML = renderCardFace(identity, 'full');
-        dialog.showModal();
+        // Open the Advanced Card Rules View (replaces the old card-face dialog).
+        openAdvancedCardRules(identity);
       }
     }
   });

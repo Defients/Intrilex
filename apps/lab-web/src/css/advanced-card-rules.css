@@ -1,0 +1,227 @@
+/* ═══════════════════════════════════════════════════════════════
+   advanced-card-rules.css — Advanced Card Rules View (codex dossier).
+   Dark, cosmic, structured. Reference material — legibility first.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Modal shell ─────────────────────────────────────────────── */
+#advanced-card-rules-dialog{
+  width:min(960px,calc(100% - 28px));
+  max-height:92vh;
+  border:1px solid rgba(124,217,255,.28);
+  border-radius:18px;
+  background:#070b11;
+  color:var(--text,#e7ecf3);
+  box-shadow:0 30px 90px rgba(0,0,0,.7),0 0 0 1px rgba(167,139,250,.10) inset;
+  padding:0;
+  overflow:hidden;
+  animation:dialog-rise 220ms cubic-bezier(.2,.8,.2,1);
+}
+#advanced-card-rules-dialog::backdrop{
+  background:rgba(0,0,0,.82);
+  backdrop-filter:blur(9px) saturate(1.05);
+}
+#advanced-card-rules-dialog[aria-hidden="true"]{display:none}
+
+.acr-dialog-head{
+  position:sticky;top:0;z-index:6;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 20px;
+  border-bottom:1px solid rgba(124,217,255,.18);
+  background:rgba(7,11,17,.97);
+  backdrop-filter:blur(12px);
+}
+.acr-dialog-head .eyebrow{
+  margin:0;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:#7cd9ff;
+}
+.acr-dialog-head h2{margin:2px 0 0;font-size:17px;font-weight:650;color:#eaf2fb}
+.acr-dialog-head .icon-button{
+  border:1px solid rgba(124,217,255,.3);border-radius:10px;
+  background:rgba(124,217,255,.06);color:#cfe8f7;font-size:18px;
+  width:38px;height:38px;cursor:pointer;
+}
+.acr-dialog-head .icon-button:hover{background:rgba(124,217,255,.16)}
+.acr-dialog-head .icon-button:focus-visible{outline:2px solid #7cd9ff;outline-offset:2px}
+
+#advanced-card-rules-content{
+  max-height:calc(92vh - 58px);
+  overflow:auto;
+  padding:22px 24px 40px;
+  background:radial-gradient(circle at 50% 0%,rgba(167,139,250,.10),transparent 42%),#080c12;
+}
+
+/* ── View layout ─────────────────────────────────────────────── */
+.acr-view{display:flex;flex-direction:column;gap:18px}
+
+.acr-header{
+  display:flex;gap:18px;align-items:flex-start;
+  padding:16px 18px;border-radius:14px;
+  border:1px solid rgba(124,217,255,.16);
+  background:linear-gradient(180deg,rgba(124,217,255,.06),rgba(167,139,250,.04));
+}
+.acr-identity-chip{
+  flex:0 0 auto;display:flex;gap:12px;align-items:center;
+  min-width:150px;
+}
+.acr-chip-art{
+  width:64px;height:84px;border-radius:10px;
+  background-size:cover;background-position:center;
+  border:1px solid var(--card-accent,#7cd9ff);
+  box-shadow:0 6px 18px rgba(0,0,0,.5);
+}
+.acr-chip-meta{display:flex;flex-direction:column;gap:2px}
+.acr-chip-rank{font-size:22px;font-weight:700;color:var(--card-accent,#7cd9ff)}
+.acr-chip-rank .acr-suit{margin-left:2px}
+.acr-chip-name{font-size:14px;font-weight:600;color:#eaf2fb}
+.acr-chip-points{font-size:12px;color:#9fb3c8}
+.acr-header-meta{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.acr-eyebrow{margin:0;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#7cd9ff}
+.acr-subtitle{margin:0;font-size:13px;color:#cfe0ef}
+.acr-motto{margin:0;font-size:11.5px;color:#8aa0b6;font-style:italic}
+.acr-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.acr-badge{
+  font-size:10px;letter-spacing:.04em;padding:3px 8px;border-radius:999px;
+  background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.28);
+  color:#c9bbf5;
+}
+
+/* ── Sections ────────────────────────────────────────────────── */
+.acr-body{display:flex;flex-direction:column;gap:14px}
+.acr-section{
+  border:1px solid rgba(124,217,255,.12);
+  border-radius:12px;
+  background:rgba(11,17,25,.6);
+  overflow:hidden;
+}
+.acr-section-header{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:11px 16px;cursor:default;
+  border-bottom:1px solid rgba(124,217,255,.10);
+  background:rgba(124,217,255,.04);
+}
+.acr-section-header h3{margin:0;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:#9fdcff;font-weight:650}
+.acr-chevron{color:#7cd9ff;font-size:12px;transition:transform .15s}
+details.acr-section .acr-section-header{cursor:pointer;list-style:none}
+details.acr-section .acr-section-header::-webkit-details-marker{display:none}
+details.acr-section[open] .acr-chevron{transform:rotate(90deg)}
+.acr-section-body{padding:14px 16px}
+details.acr-section > .acr-section-body{padding:14px 16px}
+
+.acr-overview{margin:0;font-size:14px;line-height:1.6;color:#dce7f2}
+.acr-bullets{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.acr-bullets li{font-size:13px;line-height:1.55;color:#cdd9e6}
+
+/* ── Play modes ──────────────────────────────────────────────── */
+.acr-modes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.acr-mode{display:flex;gap:12px;align-items:flex-start}
+.acr-mode-icon{
+  flex:0 0 auto;width:30px;height:30px;border-radius:8px;
+  display:grid;place-items:center;font-size:16px;
+  background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);
+  color:#c9bbf5;
+}
+.acr-mode-body{flex:1;min-width:0}
+.acr-mode-title{display:block;font-size:13.5px;font-weight:650;color:#eaf2fb}
+.acr-mode-timing{
+  margin-left:8px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 7px;border-radius:6px;
+  background:rgba(124,217,255,.12);border:1px solid rgba(124,217,255,.25);color:#9fdcff;
+}
+.acr-mode-full{margin:4px 0 0;font-size:13px;line-height:1.55;color:#c4d2e2}
+.acr-restrictions{margin:6px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:3px}
+.acr-restrictions li{font-size:12px;color:#e09a8a}
+
+/* ── Destinations table ──────────────────────────────────────── */
+.acr-destinations{width:100%;border-collapse:collapse;font-size:12.5px}
+.acr-destinations th{text-align:left;padding:7px 10px;font-weight:600;color:#9fdcff;border-bottom:1px solid rgba(124,217,255,.14);white-space:nowrap}
+.acr-destinations td{padding:7px 10px;color:#cdd9e6;border-bottom:1px solid rgba(124,217,255,.06);line-height:1.5}
+.acr-destinations tr:last-child td{border-bottom:0}
+
+/* ── Combinations ────────────────────────────────────────────── */
+.acr-combo{padding:10px 0;border-bottom:1px solid rgba(124,217,255,.08)}
+.acr-combo:last-child{border-bottom:0}
+.acr-combo-name{display:block;font-size:13px;font-weight:650;color:#cdb4f0}
+.acr-combo p{margin:4px 0 0;font-size:12.5px;line-height:1.55;color:#c4d2e2}
+
+/* ── Rulings ─────────────────────────────────────────────────── */
+.acr-filter-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.acr-filter-chip{
+  font-size:10.5px;padding:3px 9px;border-radius:999px;cursor:pointer;
+  background:rgba(11,17,25,.6);border:1px solid rgba(124,217,255,.22);color:#9fb3c8;
+}
+.acr-filter-chip[aria-pressed="true"]{
+  background:rgba(124,217,255,.18);border-color:#7cd9ff;color:#eaf2fb;
+}
+.acr-filter-chip:focus-visible{outline:2px solid #7cd9ff;outline-offset:1px}
+.acr-rulings{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.acr-ruling{
+  padding:12px 14px;border-radius:10px;
+  border:1px solid rgba(167,139,250,.18);
+  background:rgba(167,139,250,.05);
+}
+.acr-ruling-title{display:block;font-size:13.5px;font-weight:650;color:#eaf2fb}
+.acr-ruling-q{margin:5px 0 0;font-size:12.5px;color:#9fdcff;font-style:italic}
+.acr-ruling-text{margin:6px 0 0;font-size:13px;line-height:1.55;color:#cdd9e6}
+.acr-ruling-tags{display:inline-flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.acr-tag{
+  font-size:9.5px;letter-spacing:.04em;padding:2px 7px;border-radius:6px;
+  background:rgba(124,217,255,.10);border:1px solid rgba(124,217,255,.2);color:#9fdcff;
+}
+.acr-ruling-src{display:block;margin-top:6px;font-size:10px;color:#6f8296;letter-spacing:.04em}
+
+/* ── Examples ────────────────────────────────────────────────── */
+.acr-examples{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.acr-example{
+  display:grid;grid-template-columns:22px 64px 1fr;gap:10px;align-items:start;
+  padding:9px 12px;border-radius:8px;
+}
+.acr-example-legal{background:rgba(79,211,135,.08);border:1px solid rgba(79,211,135,.25)}
+.acr-example-illegal{background:rgba(240,93,120,.08);border:1px solid rgba(240,93,120,.25)}
+.acr-example-mark{font-size:15px;font-weight:700;text-align:center}
+.acr-example-legal .acr-example-mark{color:#4fd387}
+.acr-example-illegal .acr-example-mark{color:#f05d78}
+.acr-example-label{font-size:10px;letter-spacing:.1em;font-weight:700;text-transform:uppercase}
+.acr-example-legal .acr-example-label{color:#4fd387}
+.acr-example-illegal .acr-example-label{color:#f05d78}
+.acr-example p{margin:0;font-size:12.5px;line-height:1.5;color:#cdd9e6}
+
+/* ── Current match ───────────────────────────────────────────── */
+.acr-current-match{
+  padding:14px 16px;border-radius:10px;
+  border:1px solid rgba(240,116,73,.28);
+  background:rgba(240,116,73,.06);
+}
+.acr-cm-field{display:inline-block;margin-right:14px;font-size:12px;color:#cfe0ef}
+.acr-cm-field b{color:#f0b48f;font-weight:650}
+.acr-cm-actions{list-style:none;margin:10px 0 6px;padding:0;display:flex;flex-direction:column;gap:6px}
+.acr-cm-action{
+  display:flex;align-items:center;gap:10px;
+  padding:7px 10px;border-radius:8px;
+  background:rgba(79,211,135,.08);border:1px solid rgba(79,211,135,.22);
+}
+.acr-cm-mark{color:#4fd387;font-weight:700}
+.acr-cm-label{font-size:13px;color:#eaf2fb;flex:1}
+.acr-cm-tag{
+  font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 7px;border-radius:6px;
+  background:rgba(124,217,255,.12);border:1px solid rgba(124,217,255,.25);color:#9fdcff;
+}
+.acr-cm-unavailable{margin:8px 0 0;font-size:13px;color:#e09a8a}
+.acr-cm-targets{margin:6px 0 0;font-size:12px;color:#9fb3c8}
+.acr-cm-provenance{margin:10px 0 0;font-size:10.5px;color:#6f8296;font-style:italic}
+
+/* ── Related rules ───────────────────────────────────────────── */
+.acr-related{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.acr-related li{display:flex;justify-content:space-between;gap:12px;font-size:12.5px}
+.acr-related-label{color:#cdb4f0;font-weight:600}
+.acr-related-ref{color:#6f8296;font-size:11px}
+
+/* ── Narrow layout (directive §16) ───────────────────────────── */
+@media(max-width:760px){
+  #advanced-card-rules-dialog{width:100%;max-width:100%;max-height:100vh;height:100vh;border-radius:0;border:0}
+  #advanced-card-rules-content{padding:16px 14px 32px;max-height:calc(100vh - 56px)}
+  .acr-header{flex-direction:column}
+  .acr-chip-art{width:54px;height:72px}
+  .acr-example{grid-template-columns:20px 56px 1fr;gap:8px}
+  .acr-destinations th,.acr-destinations td{padding:6px 7px;font-size:11.5px}
+}

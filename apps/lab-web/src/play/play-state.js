@@ -16,7 +16,7 @@ export const state = {
   selectedSourceCardId: null,
   selectedTargetIds: [],
   inspectorCardId: null,
-  inspectorFaceView: 'board', // 'board' | 'lite' (zoom opens the global #card-face-dialog)
+  inspectorFaceView: 'essentials', // 'essentials' is the single inline view (Advanced Rules opens #advanced-card-rules-dialog)
   hoverTimer: null, // reserved (Ctrl/Shift hover uses immediate show, no delay)
   hoverPopoverIdentity: null, // identity currently shown in the hover popover
   guidanceMode: GuidanceMode.GUIDED,

@@ -68,6 +68,7 @@ const STAGES = [
   ['observatory', 'node', ['--test', 'test/observatory.test.mjs', 'test/observatory-hardening.test.mjs', 'test/observatory-completion.test.mjs']],
   ['visual', 'node', ['--test', 'test/visual.test.mjs']],
   ['card-face-renderer', 'node', ['--test', 'test/card-face-renderer.test.mjs']],
+  ['advanced-card-rules', 'node', ['--test', 'test/advanced-card-rules.test.mjs']],
   ['card-art', 'node', ['--test', 'test/card-art.test.mjs']],
   ['privacy', 'node', ['--test', 'test/privacy.test.mjs']],
   ['privacy-matrix', 'node', ['--test', 'test/privacy-matrix.test.mjs']],

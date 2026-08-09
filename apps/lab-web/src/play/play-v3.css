@@ -682,9 +682,275 @@
 .inspector-face-tab.dossier:hover { background: rgba(90, 215, 232, 0.14); }
 .inspector-face-tab.dossier:disabled { opacity: 0.4; cursor: not-allowed; }
 .inspector-face-stage { display: flex; justify-content: center; padding: var(--tcg-space-2) 0; overflow-x: auto; }
-.inspector-face-stage .ix-card-face { width: 100%; max-width: 100%; pointer-events: none; }
-.inspector-face-stage[data-inspector-face-view="board"] .ix-card-face { max-width: min(620px, 100%); }
-.inspector-face-stage[data-inspector-face-view="lite"] .ix-card-face { max-width: min(790px, 100%); }
+.inspector-face-stage[data-inspector-face-view="essentials"] { justify-content: stretch; padding: 0; }
+
+/* ── Inspector Essentials (inline card summary, enhanced visuals) ── */
+.inspector-essentials {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Banner with card art (rank centered) ── */
+.inspector-essentials-banner {
+  position: relative;
+  border-radius: var(--tcg-radius-md);
+  overflow: hidden;
+  min-height: 96px;
+  background-size: 200%;
+  background-repeat: no-repeat;
+  border: 1px solid rgba(255,255,255,.10);
+  border-left: 3px solid var(--card-accent, var(--tcg-accent));
+}
+.inspector-essentials-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(5,8,14,.35) 0%, rgba(5,8,14,.75) 100%);
+}
+.inspector-essentials-banner-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 96px;
+}
+.inspector-essentials-rank {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--card-accent, var(--tcg-accent));
+  font-family: var(--tcg-font-mono);
+  line-height: 1;
+  text-shadow: 0 0 16px var(--card-accent, transparent), 0 2px 8px rgba(0,0,0,.7);
+  filter: drop-shadow(0 0 8px var(--card-accent, transparent));
+}
+.inspector-essentials-suit { margin-left: 2px; }
+
+/* ── Values row (centered, below banner) ── */
+.inspector-essentials-values-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.inspector-essentials-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.inspector-essentials-value small {
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-weight: 600;
+}
+.inspector-essentials-value b {
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-family: var(--tcg-font-mono);
+}
+.inspector-essentials-value-pr small { color: #e8a54a; }
+.inspector-essentials-value-pr b { color: #f0c060; }
+.inspector-essentials-value-er small { color: #7cd9ff; }
+.inspector-essentials-value-er b { color: #a0e0ff; }
+
+/* ── Badges ── */
+.inspector-essentials-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 0 2px;
+}
+.inspector-essentials-badges span {
+  font-size: .65rem;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(167,139,250,.12), rgba(124,217,255,.08));
+  border: 1px solid rgba(167,139,250,.28);
+  color: #c9bbf5;
+  letter-spacing: .03em;
+  font-weight: 500;
+}
+
+/* ── State chips ── */
+.inspector-essentials-state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 0 2px;
+}
+.inspector-essentials-state-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .68rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+.inspector-essentials-state-chip b { font-size: .82rem; }
+.inspector-essentials-state-tapped { background: rgba(255,170,60,.10); border: 1px solid rgba(255,170,60,.28); color: #e8b060; }
+.inspector-essentials-state-aegis { background: rgba(90,215,232,.10); border: 1px solid rgba(90,215,232,.28); color: #7cd9ff; }
+.inspector-essentials-state-guard { background: rgba(79,211,135,.10); border: 1px solid rgba(79,211,135,.28); color: #4fd387; }
+.inspector-essentials-state-exile-bound { background: rgba(167,139,250,.10); border: 1px solid rgba(167,139,250,.28); color: #c9bbf5; }
+.inspector-essentials-state-attached { background: rgba(240,93,120,.10); border: 1px solid rgba(240,93,120,.28); color: #f05d78; }
+
+/* ── Ability tiles ── */
+.inspector-essentials-abilities {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 2px;
+}
+.inspector-essentials-ability {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px 10px 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.07);
+  overflow: hidden;
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+.inspector-essentials-ability:hover {
+  border-color: rgba(255,255,255,.14);
+  transform: translateX(2px);
+}
+.inspector-essentials-ability-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+}
+
+/* Timing-based accent colors */
+.inspector-essentials-timing-effect .inspector-essentials-ability-glow { background: #7cd9ff; }
+.inspector-essentials-timing-effect { background: linear-gradient(135deg, rgba(124,217,255,.06), rgba(124,217,255,.02)); }
+.inspector-essentials-timing-effect .inspector-essentials-ability-timing { background: rgba(124,217,255,.12); border-color: rgba(124,217,255,.28); color: #7cd9ff; }
+
+.inspector-essentials-timing-instant .inspector-essentials-ability-glow { background: #f0a54a; }
+.inspector-essentials-timing-instant { background: linear-gradient(135deg, rgba(240,165,74,.06), rgba(240,165,74,.02)); }
+.inspector-essentials-timing-instant .inspector-essentials-ability-timing { background: rgba(240,165,74,.12); border-color: rgba(240,165,74,.28); color: #f0a54a; }
+
+.inspector-essentials-timing-quick .inspector-essentials-ability-glow { background: #4fd387; }
+.inspector-essentials-timing-quick { background: linear-gradient(135deg, rgba(79,211,135,.06), rgba(79,211,135,.02)); }
+.inspector-essentials-timing-quick .inspector-essentials-ability-timing { background: rgba(79,211,135,.12); border-color: rgba(79,211,135,.28); color: #4fd387; }
+
+.inspector-essentials-timing-super .inspector-essentials-ability-glow { background: #c9bbf5; }
+.inspector-essentials-timing-super { background: linear-gradient(135deg, rgba(201,187,245,.06), rgba(201,187,245,.02)); }
+.inspector-essentials-timing-super .inspector-essentials-ability-timing { background: rgba(201,187,245,.12); border-color: rgba(201,187,245,.28); color: #c9bbf5; }
+
+.inspector-essentials-timing-scoring .inspector-essentials-ability-glow { background: #f0c060; }
+.inspector-essentials-timing-scoring { background: linear-gradient(135deg, rgba(240,192,96,.06), rgba(240,192,96,.02)); }
+.inspector-essentials-timing-scoring .inspector-essentials-ability-timing { background: rgba(240,192,96,.12); border-color: rgba(240,192,96,.28); color: #f0c060; }
+
+.inspector-essentials-timing-anchor .inspector-essentials-ability-glow { background: #e8b4f0; }
+.inspector-essentials-timing-anchor { background: linear-gradient(135deg, rgba(232,180,240,.06), rgba(232,180,240,.02)); }
+.inspector-essentials-timing-anchor .inspector-essentials-ability-timing { background: rgba(232,180,240,.12); border-color: rgba(232,180,240,.28); color: #e8b4f0; }
+
+.inspector-essentials-timing-passive .inspector-essentials-ability-glow { background: #8899aa; }
+.inspector-essentials-timing-passive { background: linear-gradient(135deg, rgba(136,153,170,.06), rgba(136,153,170,.02)); }
+.inspector-essentials-timing-passive .inspector-essentials-ability-timing { background: rgba(136,153,170,.12); border-color: rgba(136,153,170,.28); color: #8899aa; }
+
+.inspector-essentials-timing-action .inspector-essentials-ability-glow { background: #f07a8a; }
+.inspector-essentials-timing-action { background: linear-gradient(135deg, rgba(240,122,138,.06), rgba(240,122,138,.02)); }
+.inspector-essentials-timing-action .inspector-essentials-ability-timing { background: rgba(240,122,138,.12); border-color: rgba(240,122,138,.28); color: #f07a8a; }
+
+.inspector-essentials-ability-icon {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  color: var(--card-accent, #c9bbf5);
+  text-shadow: 0 0 8px var(--card-accent, transparent);
+}
+.inspector-essentials-ability-body { flex: 1; min-width: 0; }
+.inspector-essentials-ability-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.inspector-essentials-ability-body h5 {
+  margin: 0;
+  font-size: .84rem;
+  font-weight: 700;
+  color: var(--tcg-text);
+  letter-spacing: .01em;
+}
+.inspector-essentials-ability-timing {
+  display: inline-block;
+  font-size: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-weight: 600;
+  border: 1px solid;
+}
+.inspector-essentials-ability-body p {
+  margin: 4px 0 0;
+  font-size: .78rem;
+  line-height: 1.5;
+  color: var(--tcg-text-dim);
+}
+
+/* Restriction dots */
+.inspector-essentials-restrictions {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-self: center;
+  flex-shrink: 0;
+}
+.inspector-essentials-restrictions i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(240,93,120,.6);
+}
+
+.inspector-essentials-no-abilities {
+  font-size: .82rem;
+  color: var(--tcg-text-muted);
+  font-style: italic;
+  padding: var(--tcg-space-3);
+  text-align: center;
+}
+
+/* ── Motto ── */
+.inspector-essentials-motto {
+  margin: 0;
+  font-size: .7rem;
+  color: var(--tcg-text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: 6px 0 0;
+  border-top: 1px solid rgba(255,255,255,.05);
+  letter-spacing: .04em;
+}
+
+/* ── Fallback ── */
+.inspector-essentials-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--tcg-space-2);
+  padding: var(--tcg-space-4);
+}
 
 .inspector-card-face { display: flex; flex-direction: column; align-items: center; gap: var(--tcg-space-2); padding: var(--tcg-space-4); background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(90, 215, 232, 0.15); border-radius: var(--tcg-radius-md); }
 .inspector-card-identity { font-weight: 800; font-size: 1.1rem; color: var(--tcg-accent); font-family: var(--tcg-font-mono); }

@@ -23,12 +23,12 @@ import { getSuitParticleColor } from './play-particles.js';
  * @param {function} callbacks.renderActiveMatch — re-render the active match
  * @param {function} callbacks.showHoverPopover — show card hover popover
  * @param {function} callbacks.hideHoverPopover — hide card hover popover
- * @param {function} callbacks.openCardFaceDialog — open the card face dialog
+ * @param {function} callbacks.openAdvancedCardRules — open the Advanced Card Rules View
  * @param {function} callbacks.startNewMatch — start a new match with setup
  * @param {function} callbacks.stopAutosave — stop the autosave timer
  */
 export function bindBoardEvents(container, callbacks) {
-  const { renderActiveMatch, showHoverPopover, hideHoverPopover, openCardFaceDialog, startNewMatch, stopAutosave } = callbacks;
+  const { renderActiveMatch, showHoverPopover, hideHoverPopover, openAdvancedCardRules, startNewMatch, stopAutosave } = callbacks;
 
   // Initialize sound on first user interaction (browser autoplay policy)
   if (state.sound && !state.soundInitialized) {
@@ -178,20 +178,44 @@ export function bindBoardEvents(container, callbacks) {
     });
   }
 
-  // v0.20.0: Inspector face-view toggle (Board / Lite) and Full dossier (zoom)
-  container.querySelectorAll('[data-inspector-face]').forEach(tab => {
-    tab.addEventListener('click', () => {
-      state.inspectorFaceView = tab.dataset.inspectorFace === 'lite' ? 'lite' : 'board';
-      renderActiveMatch(container);
-    });
-  });
-  container.querySelectorAll('[data-inspector-dossier]').forEach(btn => {
+  // Inspector: Essentials is the single inline view (no Board/Lite toggle).
+  // Advanced Card Rules View — opens the codex dossier (directive §1).
+  // Informational only: never selects, submits, or mutates game state.
+  container.querySelectorAll('[data-inspector-advanced-rules]').forEach(btn => {
     if (btn.disabled) return;
     btn.addEventListener('click', () => {
-      const identity = btn.dataset.inspectorDossier;
-      if (!identity) return;
-      openCardFaceDialog(identity);
+      const identity = btn.dataset.inspectorAdvancedRules;
+      const cardId = btn.dataset.cardId;
+      if (!identity || !openAdvancedCardRules) return;
+      openAdvancedCardRules(identity, cardId);
     });
+  });
+
+  // Advanced Details via Shift+right-click on any board card (directive §1).
+  // Plain right-click remains the lightweight inspector; Shift+right-click
+  // jumps straight to the Advanced Card Rules View.
+  container.querySelectorAll('.rd-card').forEach(el => {
+    el.addEventListener('contextmenu', (e) => {
+      if (!e.shiftKey || !openAdvancedCardRules) return;
+      const identity = el.dataset.cardIdentity;
+      const cardId = el.dataset.cardId;
+      if (!identity) return;
+      e.preventDefault();
+      openAdvancedCardRules(identity, cardId);
+    });
+  });
+  // Hand cards already bind contextmenu above; add a Shift+right-click
+  // Advanced path that runs before the inspector toggle.
+  container.querySelectorAll('.hand-card').forEach(el => {
+    el.addEventListener('contextmenu', (e) => {
+      if (!e.shiftKey || !openAdvancedCardRules) return;
+      const identity = el.dataset.cardIdentity;
+      const cardId = el.dataset.cardId;
+      if (!identity) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      openAdvancedCardRules(identity, cardId);
+    }, true);
   });
 
   // v0.17.0: Keyboard help close button

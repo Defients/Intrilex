@@ -149,9 +149,11 @@ test('lab app integrates Card Faces workspace and replay card inspector',async()
   const css=(await Promise.all(['tokens-base','feature-components','pages-polish'].map(f=>readFile(`apps/lab-web/src/css/${f}.css`,'utf8')))).join('\n');
   assert.match(routerJs,/\['\/cards','▣','Card Faces','Renderer v1'\]/);
   assert.match(observatoryJs,/function renderCardFaces\(/);
-  assert.match(appJs,/renderCardFace\(identity, 'full'\)/);
-  assert.match(appJs,/#card-face-dialog/);
-  assert.match(html,/id="card-face-dialog"/);
+  // The old #card-face-dialog has been replaced by the Advanced Card Rules View.
+  assert.match(appJs,/openAdvancedCardRules/);
+  assert.doesNotMatch(appJs,/#card-face-dialog/);
+  assert.match(html,/id="advanced-card-rules-dialog"/);
+  assert.doesNotMatch(html,/id="card-face-dialog"/);
   assert.match(css,/Intrilex Card Face Renderer v1/);
   assert.match(css,/\.ix-view-board/);
   assert.match(css,/\.ix-view-lite/);

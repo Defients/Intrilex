@@ -69,12 +69,12 @@
       <div id="integrity-content"></div>
     </form>
   </dialog>
-  <dialog id="card-face-dialog" class="card-face-dialog" aria-labelledby="card-face-dialog-title">
-    <form method="dialog">
-      <div class="dialog-head card-face-dialog-head"><div><p class="eyebrow">CARD FACE RENDERER v1</p><h2 id="card-face-dialog-title">Card inspector</h2></div><button class="icon-button" aria-label="Close card inspector">×</button></div>
-      <div id="card-face-dialog-controls" class="card-face-dialog-controls"></div>
-      <div id="card-face-dialog-content"></div>
-    </form>
+  <dialog id="advanced-card-rules-dialog" class="advanced-card-rules-dialog" aria-labelledby="advanced-card-rules-title" aria-hidden="true">
+    <div class="acr-dialog-head">
+      <div><p class="eyebrow">Advanced Card Details</p><h2 id="advanced-card-rules-title">Card rules</h2></div>
+      <button class="icon-button" data-acr-close aria-label="Close advanced card details">×</button>
+    </div>
+    <div id="advanced-card-rules-content"></div>
   </dialog>
   <script type="module" src="app.js"></script>
   <script src="sw-register.js"></script>

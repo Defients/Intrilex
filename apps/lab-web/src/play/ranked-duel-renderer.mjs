@@ -13,7 +13,8 @@ import { buildLegalActionContract, groupActionsByTiming, actionsForCard } from '
 import { buildImmediateExplanation, buildWhyExplanation, buildUnavailableExplanation, GuidanceMode } from './intelligence/action-explanation.js';
 import { buildEventLog } from './orchestration/resolution-flow.js';
 import { renderTcgCard, renderTcgCardBack, renderTcgCardPreview } from './play-card-component.js';
-import { renderCardFace } from '../card-face-renderer.js';
+import { getCardDefinition, getSuit } from '../card-face-data.js';
+import { getCardArtBoardPath, getCardArtBoardPosition } from '../card-art-registry.js';
 import { getArchetypePersonality, getTerminalBanter } from './ai-personality.js';
 
 /**
@@ -1491,9 +1492,10 @@ function renderKeyboardHelp() {
     <dl class="keyboard-help-list">
       <dt><kbd>P</kbd></dt><dd>Pass priority / Decline response</dd>
       <dt><kbd>I</kbd></dt><dd>Open card inspector for selected card</dd>
+      <dt><kbd>A</kbd></dt><dd>Open Advanced Card Rules for selected/inspected card</dd>
       <dt><kbd>R</kbd></dt><dd>Toggle stack details</dd>
       <dt><kbd>?</kbd></dt><dd>Toggle this help</dd>
-      <dt><kbd>Esc</kbd></dt><dd>Cancel selection or close inspector</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Close Advanced View, cancel selection, or close inspector</dd>
       <dt><kbd>Enter</kbd></dt><dd>Confirm selected action</dd>
     </dl>
     <button class="keyboard-help-close" data-testid="keyboard-help-close" aria-label="Close keyboard help">Close</button>
@@ -1578,19 +1580,117 @@ function renderWhyCanIAct(decision, snapshot, priorityContext) {
  * inspected card using all three Card Face Renderer views as appropriate:
  *   - board (default): compact face with ability tiles + state strip
  *   - lite: full reference view with ability summaries
- *   - zoom: opened on demand via the "View full dossier" button, which
- *           surfaces the existing #card-face-dialog with the zoom view.
- * The board and lite faces are toggled in-drawer; zoom is a modal dialog
- * because its dossier layout needs the full viewport width.
+ *   - advanced: opened on demand via the "Advanced Rules" button, which
+ *               surfaces the #advanced-card-rules-dialog codex view.
+ * The board and lite faces are toggled in-drawer; the Advanced Card Rules
+ * View is a modal dialog because its dossier layout needs the full viewport.
  */
-function renderInspector(cardId, cardRegistry, contracts, guidanceMode, faceView = 'board') {
+/**
+ * Render the inline "Essentials" card summary for the inspector sidebar.
+ * Replaces the old Board/Lite card-face-renderer gfx with a clean,
+ * compact, inline summary: identity, values, badges, runtime state,
+ * and all ability summaries with timing + restrictions.
+ *
+ * @param {object} card — view-model card from the card registry
+ * @param {object} runtimeState — derived from statusMarkers
+ * @returns {string}
+ */
+/**
+ * Map an ability timing label to a CSS class for color-coding.
+ */
+function timingClass(timing) {
+  const t = String(timing ?? '').toLowerCase();
+  if (t.includes('super')) return 'super';
+  if (t.includes('instant') || t.includes('interrupt')) return 'instant';
+  if (t.includes('quick')) return 'quick';
+  if (t.includes('scoring')) return 'scoring';
+  if (t.includes('anchor') || t.includes('attachment')) return 'anchor';
+  if (t.includes('passive')) return 'passive';
+  if (t.includes('action')) return 'action';
+  return 'effect';
+}
+
+function renderInspectorEssentials(card, runtimeState) {
+  const identity = card.identity;
+  if (!identity) {
+    return `<div class="inspector-essentials-fallback">
+      <span class="inspector-essentials-identity">${esc(card.identity ?? 'unknown')}</span>
+      <span class="inspector-essentials-points">${card.pointValue ?? 0} points</span>
+    </div>`;
+  }
+  const def = getCardDefinition(identity);
+  if (!def) return '';
+  const suit = getSuit(def.suit);
+
+  // Resolve card art for the header banner
+  let artPath = def.art;
+  let artPos = 'center 20%';
+  try {
+    artPath = getCardArtBoardPath(identity);
+    artPos = getCardArtBoardPosition(identity);
+  } catch { /* keep def.art */ }
+
+  // Runtime state chips
+  const stateChips = [];
+  if (runtimeState.tapped) stateChips.push({ icon: '↻', label: 'Tapped', cls: 'tapped' });
+  if (runtimeState.aegis) stateChips.push({ icon: '⬡', label: 'Aegis', cls: 'aegis' });
+  if (runtimeState.providesGuard) stateChips.push({ icon: '◒', label: 'Guard', cls: 'guard' });
+  if (runtimeState.exileBound) stateChips.push({ icon: '⊘', label: 'Exile-Bound', cls: 'exile-bound' });
+  if (runtimeState.jackHostId) stateChips.push({ icon: '⛓', label: 'Attached', cls: 'attached' });
+
+  // Ability tiles — with timing-based accent colors
+  const abilityTiles = (def.abilities ?? []).map(a => {
+    const tcls = timingClass(a.timing);
+    const restrictions = (a.restrictions?.length)
+      ? `<div class="inspector-essentials-restrictions" aria-label="${a.restrictions.length} restrictions">${a.restrictions.map(() => '<i></i>').join('')}</div>`
+      : '';
+    return `<article class="inspector-essentials-ability inspector-essentials-timing-${tcls}" data-ability-id="${esc(a.id)}">
+      <div class="inspector-essentials-ability-glow"></div>
+      <span class="inspector-essentials-ability-icon" aria-hidden="true">${esc(a.icon ?? '◆')}</span>
+      <div class="inspector-essentials-ability-body">
+        <div class="inspector-essentials-ability-head">
+          <h5>${esc(a.title)}</h5>
+          ${a.timing ? `<span class="inspector-essentials-ability-timing">${esc(a.timing)}</span>` : ''}
+        </div>
+        <p>${esc(a.summary ?? '')}</p>
+      </div>
+      ${restrictions}
+    </article>`;
+  }).join('');
+
+  // Value display
+  const values = [
+    { label: 'Points', value: def.prValue ?? 0, cls: 'pr' },
+  ];
+  if (def.erValue !== null && def.erValue !== undefined) {
+    values.push({ label: 'ER', value: def.erValue, cls: 'er' });
+  }
+
+  return `<div class="inspector-essentials tcg-suit-${suit.id}" data-testid="inspector-essentials" style="--card-accent:${suit.accent};--card-accent-2:${suit.accent2}">
+    <div class="inspector-essentials-banner" role="img" aria-label="${esc(identity)} card art" style="background-image:url('${esc(artPath ?? '')}');background-position:${esc(artPos)}">
+      <div class="inspector-essentials-banner-overlay"></div>
+      <div class="inspector-essentials-banner-content">
+        <span class="inspector-essentials-rank">${esc(def.rank)}${def.suit ? `<span class="inspector-essentials-suit" aria-hidden="true">${esc(def.suit)}</span>` : ''}</span>
+      </div>
+    </div>
+    <div class="inspector-essentials-values-row">
+      ${values.map(v => `<span class="inspector-essentials-value inspector-essentials-value-${v.cls}"><small>${v.label}</small><b>${esc(v.value)}</b></span>`).join('')}
+    </div>
+    ${(def.badges?.length) ? `<div class="inspector-essentials-badges">${def.badges.map(b => `<span>${esc(b)}</span>`).join('')}</div>` : ''}
+    ${stateChips.length ? `<div class="inspector-essentials-state" aria-label="Current card state">${stateChips.map(c => `<span class="inspector-essentials-state-chip inspector-essentials-state-${c.cls}"><b aria-hidden="true">${esc(c.icon)}</b>${esc(c.label)}</span>`).join('')}</div>` : ''}
+    <section class="inspector-essentials-abilities" aria-label="Card abilities">
+      ${abilityTiles || '<p class="inspector-essentials-no-abilities">Detailed rules pending.</p>'}
+    </section>
+    <p class="inspector-essentials-motto">${esc(def.motto ?? '')}</p>
+  </div>`;
+}
+
+function renderInspector(cardId, cardRegistry, contracts, guidanceMode, _faceView = 'board') {
   const card = cardRegistry?.[cardId];
   if (!card) return '';
   const identity = card.identity ?? null;
   const cardActions = actionsForCard(contracts, cardId);
   const hasLegalActions = cardActions.length > 0;
-  // Normalize the face view; 'full' is the zoom alias used by the dialog.
-  const view = faceView === 'lite' ? 'lite' : 'board';
 
   const actionList = cardActions.map(a => {
     const why = buildWhyExplanation(a, cardRegistry, guidanceMode);
@@ -1604,20 +1704,15 @@ function renderInspector(cardId, cardRegistry, contracts, guidanceMode, faceView
     ? buildUnavailableExplanation('SOURCE_NOT_AVAILABLE', guidanceMode)
     : null;
 
-  // Render the authoritative Card Face (board or lite). The renderer is
-  // defensive: if the identity is unknown it falls back to a generic card
-  // definition, so we only skip when there is no identity at all.
-  const faceHtml = identity
-    ? renderCardFace(identity, { view, runtimeState: cardRuntimeState(card) })
-    : `<div class="inspector-card-face"><span class="inspector-card-identity">${esc(card.identity ?? 'unknown')}</span><span class="inspector-card-points">${card.pointValue ?? 0} points</span></div>`;
+  // Render the inline Essentials summary (replaces old Board/Lite card-face gfx).
+  const essentialsHtml = renderInspectorEssentials(card, cardRuntimeState(card));
 
   return `<aside class="card-inspector" data-testid="card-inspector" role="region" aria-label="Card inspector: ${esc(identity ?? 'unknown')}">
-    <div class="inspector-face-toolbar" role="tablist" aria-label="Card face view">
-      <button class="inspector-face-tab ${view === 'board' ? 'active' : ''}" data-inspector-face="board" role="tab" aria-selected="${view === 'board'}">Board</button>
-      <button class="inspector-face-tab ${view === 'lite' ? 'active' : ''}" data-inspector-face="lite" role="tab" aria-selected="${view === 'lite'}">Lite</button>
-      <button class="inspector-face-tab dossier" data-inspector-dossier="${esc(identity ?? '')}" role="button" aria-label="Open full dossier" ${identity ? '' : 'disabled'}>Full dossier</button>
+    <div class="inspector-face-toolbar" role="tablist" aria-label="Card inspector view">
+      <span class="inspector-face-tab active" role="tab" aria-selected="true">Essentials</span>
+      <button class="inspector-face-tab advanced-rules" data-inspector-advanced-rules="${esc(identity ?? '')}" data-card-id="${esc(cardId)}" role="button" aria-label="Open advanced card rules" ${identity ? '' : 'disabled'}>Advanced Rules</button>
     </div>
-    <div class="inspector-face-stage" data-inspector-face-view="${view}">${faceHtml}</div>
+    <div class="inspector-face-stage" data-inspector-face-view="essentials">${essentialsHtml}</div>
     <div class="inspector-actions">
       <h4>Legal actions for this card</h4>
       ${hasLegalActions ? `<ul class="inspector-action-list">${actionList}</ul>` : '<p class="inspector-no-actions">No legal actions for this card right now.</p>'}
