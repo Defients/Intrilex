@@ -2,11 +2,11 @@
   "schemaVersion": "3.0",
   "status": "PASS",
   "proofKind": "REAL_CHROMIUM_CDP_MAIN_THREAD_AND_WEB_WORKER",
-  "labVersion": "0.24.1",
+  "labVersion": "0.24.2",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
   "profileId": "core-advanced-authority",
-  "certifiedReplayCount": 155,
+  "certifiedReplayCount": 221,
   "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
   "sha256Vectors": 2,
   "nodeReference": {
@@ -54,7 +54,7 @@
         "P2": 0
       }
     },
-    "durationMs": 1252
+    "durationMs": 563
   },
   "worker": {
     "replayCount": 121,
@@ -78,7 +78,7 @@
         "P2": 0
       }
     },
-    "durationMs": 1406
+    "durationMs": 544
   },
   "parity": {
     "aggregateHashesEqual": true,
@@ -91,5 +91,5 @@
     "policyBrowserMatchesNode": true,
     "policyTerminatesCanonically": true
   },
-  "generatedAt": "2026-08-07T16:30:27.928Z"
+  "generatedAt": "2026-08-09T12:49:41.992Z"
 }
