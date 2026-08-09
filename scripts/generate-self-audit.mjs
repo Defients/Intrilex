@@ -61,13 +61,23 @@ await rm(tmpOutput, { force: true });
 const output = fileOutput + '\n' + (result.stderr ?? '');
 
 // ── Parse TAP summary ──
-const testsMatch = output.match(/^# tests\s+(\d+)/m);
-const passMatch = output.match(/^# pass\s+(\d+)/m);
-const failMatch = output.match(/^# fail\s+(\d+)/m);
-const skipMatch = output.match(/^# skip\s+(\d+)/m);
-const cancelledMatch = output.match(/^# cancelled\s+(\d+)/m);
-const todoMatch = output.match(/^# todo\s+(\d+)/m);
-const durationMatch = output.match(/^# duration_ms\s+([\d.]+)/m);
+// When running multiple test files, node --test emits a summary block per
+// file AND a final aggregate summary. We must use the LAST (aggregate) match,
+// not the first (per-file) match. Use global regex + take the last match.
+function lastMatch(str, re) {
+  const matches = str.matchAll(re);
+  let last = null;
+  for (const m of matches) last = m;
+  return last;
+}
+
+const testsMatch = lastMatch(output, /^# tests\s+(\d+)/gm);
+const passMatch = lastMatch(output, /^# pass\s+(\d+)/gm);
+const failMatch = lastMatch(output, /^# fail\s+(\d+)/gm);
+const skipMatch = lastMatch(output, /^# skip(?:ped)?\s+(\d+)/gm);
+const cancelledMatch = lastMatch(output, /^# cancelled\s+(\d+)/gm);
+const todoMatch = lastMatch(output, /^# todo\s+(\d+)/gm);
+const durationMatch = lastMatch(output, /^# duration_ms\s+([\d.]+)/gm);
 
 const totalTests = testsMatch ? parseInt(testsMatch[1]) : 0;
 const totalPass = passMatch ? parseInt(passMatch[1]) : 0;
@@ -159,17 +169,29 @@ const gateEvidence = {
 };
 
 const audit = {
-  schemaVersion: '3.0.0',
+  schemaVersion: '3.1.0',
   // v0.24.2: PASS requires ALL of:
   //   - totalFail === 0 (no test failures)
   //   - score >= threshold (dimensional score)
   //   - unaccounted === 0 (test arithmetic reconciles exactly)
   //   - all critical gates pass (including testAccountingReconciled)
+  // v0.25: quickMode reports are never canonical (written to .quick.json)
   status: (totalFail === 0 && score >= threshold && unaccounted === 0 && Object.values(criticalGates).every(v => v === true)) ? 'PASS' : 'FAIL',
   score,
   threshold,
   generatedAt: new Date().toISOString(),
-  generatedBy: `generate-self-audit.mjs v3.0.0 (package v${rootPkg.version})`,
+  generatedBy: `generate-self-audit.mjs v3.1.0 (package v${rootPkg.version})`,
+  // v0.25: Provenance for freshness verification — the canonical audit must
+  // correspond to the current repository state. These fields allow a release
+  // gate to mechanically reject stale or incompatible audits.
+  provenance: {
+    labVersion: rootPkg.version,
+    mode: quick ? 'quick' : 'full',
+    testFileCount: allTestFiles.length,
+    filesExecuted: testArgs.length,
+    gitCommit: (() => { try { return spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })(),
+    gitBranch: (() => { try { return spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })(),
+  },
   dimensions,
   criticalGates,
   gateEvidence,
@@ -189,9 +211,15 @@ const audit = {
   }
 };
 
-const outputPath = path.join(root, 'reports/self-audit.json');
+// v0.25: Quick mode writes to reports/self-audit.quick.json — it can NEVER
+// overwrite the canonical reports/self-audit.json. Only full mode (the default)
+// writes the canonical audit. This prevents a quick developer run from being
+// committed as release evidence.
+const outputPath = quick
+  ? path.join(root, 'reports/self-audit.quick.json')
+  : path.join(root, 'reports/self-audit.json');
 await writeFile(outputPath, JSON.stringify(audit, null, 2) + '\n');
-console.log(`generate-self-audit: wrote ${outputPath} (status=${audit.status}, score=${score}/${threshold})`);
+console.log(`generate-self-audit: wrote ${outputPath} (status=${audit.status}, score=${score}/${threshold}${quick ? ' [QUICK]' : ' [CANONICAL]'})`);
 
 if (totalFail > 0) {
   console.error(`generate-self-audit: ${totalFail} tests failed — self-audit status is FAIL`);
