@@ -81,6 +81,7 @@ const STAGES = [
   ['decision-intelligence', 'node', ['--test', 'test/decision-intelligence.test.mjs']],
   ['game-ai', 'node', ['--test', 'test/game-ai.test.mjs']],
   ['rank-anatomy', 'node', ['--test', 'test/rank-anatomy.test.mjs', 'test/rank-anatomy-completion.test.mjs']],
+  ['rank-truth-closure', 'node', ['--test', 'test/rank-truth-closure.test.mjs']],
   ['attribution-fixtures', 'node', ['--test', 'test/v0.16.1-attribution-fixtures.test.mjs']],
   ['package-smoke-tests', 'node', ['--test', 'packages/shared/test/smoke.test.mjs', 'packages/statistics/test/smoke.test.mjs', 'packages/policy-sdk/test/smoke.test.mjs', 'packages/policies/test/smoke.test.mjs', 'packages/decision-intelligence/test/smoke.test.mjs', 'packages/telemetry/test/smoke.test.mjs', 'packages/game-ai/test/smoke.test.mjs', 'packages/analytics/test/smoke.test.mjs', 'packages/analytics-ai/test/smoke.test.mjs', 'packages/browser-crypto-shim/test/smoke.test.mjs', 'packages/engine-adapter/test/smoke.test.mjs', 'packages/simulation-runtime/test/smoke.test.mjs']],
   ['v0.10.0-contract', 'node', ['--test', 'test/v0.10.0-contract.test.mjs']],
