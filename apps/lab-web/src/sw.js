@@ -116,6 +116,7 @@ self.addEventListener('fetch', (event) => {
     url.pathname.endsWith('.js') ||
     url.pathname.endsWith('.css') ||
     url.pathname.endsWith('.webp') ||
+    url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.svg')
   ) {
     event.respondWith(staleWhileRevalidate(request));

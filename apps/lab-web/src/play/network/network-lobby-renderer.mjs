@@ -10,8 +10,58 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NetworkSessionState } from './network-session.mjs';
+import { loadProfile } from '../local-profile.mjs';
+import { ratingToTierDivision, RankTier } from '@intrilex/account-domain/rank-tier';
+import { renderRankGlyph, rankLabel } from '../rank/rank-glyph.js';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/**
+ * Render a versus card for the local player showing their rank glyph + name +
+ * tier. Opponent rank is added when their rating is known (server-supplied).
+ * @param {object} [overrides] - { displayName, opponentDisplayName, opponentRating, opponentRatedMatches }
+ * @returns {string} HTML
+ */
+function renderVersusCard(overrides = {}) {
+  let local = null;
+  try { local = loadProfile(); } catch { /* no profile */ }
+  const localName = overrides.displayName ?? local?.displayName ?? 'You';
+  const localRating = local?.rating;
+  const localAssignment = localRating
+    ? ratingToTierDivision(localRating.value, { ratedMatches: localRating.ratedMatches })
+    : null;
+  const localGlyph = localAssignment
+    ? renderRankGlyph({ tier: localAssignment.tier, division: localAssignment.division, size: 72, showDivision: true, decorative: true, className: 'versus-glyph' })
+    : renderRankGlyph({ tier: RankTier.UNRANKED, size: 72, decorative: true, className: 'versus-glyph' });
+  const localTier = localAssignment
+    ? (localAssignment.isPlacement ? 'Unranked' : rankLabel(localAssignment.tier, localAssignment.division))
+    : 'Unranked';
+
+  const oppName = overrides.opponentDisplayName ?? 'Opponent';
+  const oppAssignment = (typeof overrides.opponentRating === 'number')
+    ? ratingToTierDivision(overrides.opponentRating, { ratedMatches: overrides.opponentRatedMatches ?? 5 })
+    : null;
+  const oppGlyph = oppAssignment
+    ? renderRankGlyph({ tier: oppAssignment.tier, division: oppAssignment.division, size: 72, showDivision: true, decorative: true, className: 'versus-glyph' })
+    : renderRankGlyph({ tier: RankTier.UNRANKED, size: 72, decorative: true, className: 'versus-glyph' });
+  const oppTier = oppAssignment
+    ? (oppAssignment.isPlacement ? 'Unranked' : rankLabel(oppAssignment.tier, oppAssignment.division))
+    : 'Waiting…';
+
+  return `<div class="network-versus" data-testid="network-versus" aria-label="Versus">
+    <div class="network-versus-side">
+      ${localGlyph}
+      <span class="network-versus-name">${esc(localName)}</span>
+      <span class="network-versus-tier">${esc(localTier)}</span>
+    </div>
+    <span class="network-versus-sep" aria-hidden="true">VS</span>
+    <div class="network-versus-side">
+      ${oppGlyph}
+      <span class="network-versus-name">${esc(oppName)}</span>
+      <span class="network-versus-tier">${esc(oppTier)}</span>
+    </div>
+  </div>`;
+}
 
 /**
  * Render the online Direct Duel lobby hub — entry point for network play.
@@ -113,6 +163,7 @@ export function renderNetworkCreateWaiting(session, options = {}) {
   return `<div class="network-waiting" data-testid="network-waiting">
     <a class="play-hub-back" href="#/play/online" aria-label="Back to lobby">← Cancel</a>
     <h1>Waiting for Opponent</h1>
+    ${renderVersusCard()}
     <div class="network-invite-card" data-testid="network-invite-card">
       <h2>Invite Code</h2>
       <div class="network-invite-code" data-testid="network-invite-code" role="textbox" aria-readonly="true" aria-label="Invite code">${esc(inviteCode)}</div>
@@ -195,6 +246,7 @@ export function renderNetworkJoinWaiting(session, options = {}) {
   return `<div class="network-waiting" data-testid="network-join-waiting">
     <a class="play-hub-back" href="#/play/online" aria-label="Back to lobby">← Cancel</a>
     <h1>Joined Match</h1>
+    ${renderVersusCard()}
     <p class="network-joined-seat">You are <strong data-testid="network-seat">${esc(session?.playerId ?? '—')}</strong></p>
     <div class="network-waiting-status" data-testid="network-waiting-status">
       ${opponentStatus}

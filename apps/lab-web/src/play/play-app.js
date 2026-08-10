@@ -475,6 +475,33 @@ async function renderActiveMatch(container) {
     </div>`;
     return;
   }
+  // Phase 4C: Focus preservation during re-renders.
+  // The full innerHTML replacement destroys the DOM and any focused element.
+  // Save the focused element's selector before replacement, then restore focus
+  // after re-binding events. This prevents keyboard users from losing their
+  // place during the rapid re-renders of the game loop.
+  const _previouslyFocused = document.activeElement;
+  let _focusSelector = null;
+  if (_previouslyFocused && container.contains(_previouslyFocused)) {
+    // Build a selector to find the equivalent element after re-render
+    const focused = _previouslyFocused;
+    if (focused.dataset && focused.dataset.testid) {
+      _focusSelector = `[data-testid="${focused.dataset.testid}"]`;
+    } else if (focused.dataset && focused.dataset.grid) {
+      _focusSelector = `[data-grid="${focused.dataset.grid}"]`;
+    } else if (focused.id) {
+      _focusSelector = `#${focused.id}`;
+    } else if (focused.getAttribute && focused.getAttribute('role')) {
+      const role = focused.getAttribute('role');
+      const label = focused.getAttribute('aria-label');
+      if (label) {
+        _focusSelector = `[role="${role}"][aria-label="${label}"]`;
+      } else {
+        _focusSelector = `[role="${role}"]`;
+      }
+    }
+  }
+
   container.innerHTML = boardHtml;
 
   // Mount particle canvas on the YOUR ACTION frame (or stage fallback)
@@ -488,6 +515,14 @@ async function renderActiveMatch(container) {
   bindBoardEvents(container);
   bindKeyboardShortcuts(container);
   bindVisibilityHandler();
+
+  // Phase 4C: Restore focus after re-render
+  if (_focusSelector) {
+    const restored = container.querySelector(_focusSelector);
+    if (restored && typeof restored.focus === 'function') {
+      try { restored.focus({ preventScroll: true }); } catch { /* ignore */ }
+    }
+  }
 
   // If the Advanced Card Rules View is open, refresh its Current Match
   // section from the new authoritative state (directive §15). If the
@@ -1659,6 +1694,8 @@ async function updatePlayerStatsOnTerminal(snapshot) {
  */
 function showConfirmDialog(title, message) {
   return new Promise((resolve) => {
+    // Phase 4B: Save previously focused element for focus restoration
+    const previouslyFocused = document.activeElement;
     const overlay = document.createElement('div');
     overlay.className = 'confirm-dialog-overlay';
     overlay.setAttribute('role', 'dialog');
@@ -1674,12 +1711,33 @@ function showConfirmDialog(title, message) {
     </div>`;
 
     let resolved = false;
-    const cleanup = () => { overlay.remove(); document.removeEventListener('keydown', keyHandler); };
+    const cleanup = () => {
+      overlay.remove();
+      document.removeEventListener('keydown', keyHandler);
+      // Phase 4B: Restore focus to the element that had it before the dialog opened
+      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+        try { previouslyFocused.focus({ preventScroll: true }); } catch { /* ignore */ }
+      }
+    };
     const done = (result) => { if (resolved) return; resolved = true; cleanup(); resolve(result); };
 
     const keyHandler = (e) => {
       if (e.key === 'Escape') { e.preventDefault(); done(false); }
       else if (e.key === 'Enter') { e.preventDefault(); done(true); }
+      // Phase 4B: Focus trap — Tab/Shift+Tab cycles within the dialog
+      else if (e.key === 'Tab') {
+        const focusable = overlay.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     document.addEventListener('keydown', keyHandler);
 

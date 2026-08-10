@@ -2,12 +2,17 @@
 // fake-match-result-persistor.mjs — In-memory persistor for tests
 //
 // Stores all persisted results in arrays for inspection.
-// Tracks rating state per (accountId, queueId) for deterministic testing.
-// Idempotent: re-persisting the same matchId is a no-op.
+// Tracks Glicko-2 rating state per (accountId, queueId, seasonId) for
+// deterministic testing. Idempotent: re-persisting the same matchId is a
+// no-op that does NOT re-apply ratings (idempotency gate via _matches).
+// Records rating_events, peak_rating, placements_played, last_rated_at.
 // ═══════════════════════════════════════════════════════════════
 
 import { MatchResultPersistor } from './match-result-persistor.mjs';
-import { DEFAULT_RATING, initialRatingState } from '@intrilex/account-domain';
+import {
+  DEFAULT_RATING, DEFAULT_RATING_DEVIATION, DEFAULT_VOLATILITY,
+  PLACEMENTS_REQUIRED, PROVISIONAL_THRESHOLD,
+} from '@intrilex/account-domain';
 
 export class FakeMatchResultPersistor extends MatchResultPersistor {
   constructor() {
@@ -16,24 +21,29 @@ export class FakeMatchResultPersistor extends MatchResultPersistor {
     this._matches = new Map(); // matchId → record
     /** @type {Array<{ matchId: string, accountId: string, seat: string, result: string, ratingBefore: number|null, ratingAfter: number|null, ratingDelta: number|null }>} */
     this._participants = [];
-    /** @type {Map<string, { rating: number, ratedMatches: number, provisional: boolean }>} */
-    this._ratings = new Map(); // `${accountId}:${queueId}` → state
+    /** @type {Map<string, { rating: number, ratingDeviation: number, volatility: number, ratedMatches: number, provisional: boolean, placementsPlayed: number, peakRating: number, lastRatedAt: number|null, lastRatedMatchId: string|null }>} */
+    this._ratings = new Map(); // `${accountId}:${queueId}:${seasonId}` → state
     /** @type {Map<string, { onlineMatches: number, onlineWins: number, onlineLosses: number, onlineDraws: number, rankedMatches: number, rankedWins: number, rankedLosses: number, currentWinStreak: number, bestWinStreak: number }>} */
     this._stats = new Map(); // accountId → stats
+    /** @type {Array<{ matchId: string, userId: string, seasonId: string, ratingBefore: number, ratingAfter: number, ratingDelta: number, rdBefore: number, rdAfter: number, volatilityBefore: number, volatilityAfter: number, result: string, algorithmVersion: string, createdAt: number }>} */
+    this._ratingEvents = [];
     /** @type {Set<string>} — `${accountId}:${achievementId}` for idempotency */
     this._achievements = new Set();
     /** @type {Array<{ accountId: string, achievementId: string, unlockedAt: string, provenance: string, matchId: string|null, rulesVersion: string|null, productVersion: string|null }>} */
     this._achievementRows = [];
+    /** @type {Map<string, string>} — queueId → active seasonId */
+    this._activeSeasons = new Map([['ranked', 'season-1'], ['casual', 'season-1']]);
   }
 
   /**
    * @param {string} accountId
    * @param {string} queueId
+   * @param {string} [seasonId]
    * @returns {string}
    * @private
    */
-  _key(accountId, queueId) {
-    return `${accountId}:${queueId}`;
+  _key(accountId, queueId, seasonId) {
+    return `${accountId}:${queueId}:${seasonId ?? 'season-1'}`;
   }
 
   /**
@@ -42,28 +52,65 @@ export class FakeMatchResultPersistor extends MatchResultPersistor {
    * @param {string} queueId
    * @param {number} rating
    * @param {number} ratedMatches
+   * @param {Object} [opts]
+   * @param {number} [opts.ratingDeviation]
+   * @param {number} [opts.volatility]
+   * @param {number} [opts.peakRating]
+   * @param {number} [opts.placementsPlayed]
+   * @param {string} [opts.seasonId]
    */
-  seedRating(accountId, queueId, rating, ratedMatches = 0) {
-    const provisional = ratedMatches < 10;
-    this._ratings.set(this._key(accountId, queueId), { rating, ratedMatches, provisional });
+  seedRating(accountId, queueId, rating, ratedMatches = 0, opts = {}) {
+    const seasonId = opts.seasonId ?? 'season-1';
+    const provisional = ratedMatches < PROVISIONAL_THRESHOLD;
+    this._ratings.set(this._key(accountId, queueId, seasonId), {
+      rating,
+      ratingDeviation: opts.ratingDeviation ?? DEFAULT_RATING_DEVIATION,
+      volatility: opts.volatility ?? DEFAULT_VOLATILITY,
+      ratedMatches,
+      provisional,
+      placementsPlayed: opts.placementsPlayed ?? Math.min(ratedMatches, PLACEMENTS_REQUIRED),
+      peakRating: opts.peakRating ?? rating,
+      lastRatedAt: null,
+      lastRatedMatchId: null,
+    });
   }
 
-  async getRatingState(accountId, queueId) {
-    return this._ratings.get(this._key(accountId, queueId)) ?? null;
+  async resolveActiveSeasonId(queueId) {
+    return this._activeSeasons.get(queueId) ?? 'season-1';
+  }
+
+  /** Set the active season for a queue (test helper). */
+  setActiveSeason(queueId, seasonId) {
+    this._activeSeasons.set(queueId, seasonId);
+  }
+
+  async isMatchPersisted(matchId) {
+    return this._matches.has(matchId);
+  }
+
+  /**
+   * @param {string} accountId
+   * @param {string} queueId
+   * @param {string} [seasonId]
+   */
+  async getRatingState(accountId, queueId, seasonId) {
+    const sid = seasonId ?? await this.resolveActiveSeasonId(queueId);
+    return this._ratings.get(this._key(accountId, queueId, sid)) ?? null;
   }
 
   /**
    * @param {import('./match-result-persistor.mjs').MatchResultRecord} record
    */
   async persistMatchResult(record) {
-    // Idempotency: if already persisted, return success without double-counting
+    // Idempotency gate: if already persisted, return success without re-applying.
     if (this._matches.has(record.matchId)) {
-      return { success: true, error: null, record };
+      return { success: true, error: null, record, alreadyPersisted: true };
     }
 
     this._matches.set(record.matchId, record);
 
     const queueId = record.queueId ?? 'casual';
+    const seasonId = record.seasonId ?? 'season-1';
 
     for (const p of record.participants) {
       // Store participant record
@@ -80,16 +127,47 @@ export class FakeMatchResultPersistor extends MatchResultPersistor {
       // Skip rating/stats updates for anonymous (no accountId) or aborted matches
       if (!p.accountId || p.result === 'ABORT') continue;
 
-      // Update rating state
-      const key = this._key(p.accountId, queueId);
-      const current = this._ratings.get(key) ?? { rating: DEFAULT_RATING, ratedMatches: 0, provisional: true };
+      // Update rating state (Glicko-2)
+      const key = this._key(p.accountId, queueId, seasonId);
+      const current = this._ratings.get(key) ?? {
+        rating: DEFAULT_RATING, ratingDeviation: DEFAULT_RATING_DEVIATION, volatility: DEFAULT_VOLATILITY,
+        ratedMatches: 0, provisional: true, placementsPlayed: 0, peakRating: DEFAULT_RATING,
+        lastRatedAt: null, lastRatedMatchId: null,
+      };
       const newRating = p.ratingAfter ?? current.rating;
       const newMatches = current.ratedMatches + 1;
+      const newPlacements = Math.min(current.placementsPlayed + 1, PLACEMENTS_REQUIRED);
+      const newPeak = Math.max(current.peakRating, newRating);
       this._ratings.set(key, {
         rating: newRating,
+        ratingDeviation: p.rdAfter ?? current.ratingDeviation,
+        volatility: p.volatilityAfter ?? current.volatility,
         ratedMatches: newMatches,
-        provisional: newMatches < 10,
+        provisional: newMatches < PROVISIONAL_THRESHOLD,
+        placementsPlayed: newPlacements,
+        peakRating: newPeak,
+        lastRatedAt: Date.now(),
+        lastRatedMatchId: record.matchId,
       });
+
+      // Record rating event (idempotency via _matches gate; ledger for audit)
+      if (p.ratingBefore !== null && p.ratingAfter !== null) {
+        this._ratingEvents.push({
+          matchId: record.matchId,
+          userId: p.accountId,
+          seasonId,
+          ratingBefore: p.ratingBefore,
+          ratingAfter: p.ratingAfter,
+          ratingDelta: p.ratingDelta,
+          rdBefore: p.rdBefore ?? current.ratingDeviation,
+          rdAfter: p.rdAfter ?? current.ratingDeviation,
+          volatilityBefore: p.volatilityBefore ?? current.volatility,
+          volatilityAfter: p.volatilityAfter ?? current.volatility,
+          result: p.result,
+          algorithmVersion: 'glicko2-v1',
+          createdAt: Date.now(),
+        });
+      }
 
       // Update stats
       const stats = this._stats.get(p.accountId) ?? {
@@ -117,7 +195,7 @@ export class FakeMatchResultPersistor extends MatchResultPersistor {
       this._stats.set(p.accountId, stats);
     }
 
-    return { success: true, error: null, record };
+    return { success: true, error: null, record, alreadyPersisted: false };
   }
 
   /**
@@ -128,7 +206,6 @@ export class FakeMatchResultPersistor extends MatchResultPersistor {
     for (const u of unlocks) {
       if (!u.accountId || !u.achievementId) continue;
       const key = `${u.accountId}:${u.achievementId}`;
-      // Idempotent: skip if already unlocked
       if (this._achievements.has(key)) continue;
       this._achievements.add(key);
       this._achievementRows.push({
@@ -148,64 +225,51 @@ export class FakeMatchResultPersistor extends MatchResultPersistor {
   // ── Inspection helpers for tests ──
 
   /** @returns {import('./match-result-persistor.mjs').MatchResultRecord | null} */
-  getMatch(matchId) {
-    return this._matches.get(matchId) ?? null;
-  }
+  getMatch(matchId) { return this._matches.get(matchId) ?? null; }
 
   /** @returns {Array<import('./match-result-persistor.mjs').MatchResultRecord>} */
-  getAllMatches() {
-    return [...this._matches.values()];
-  }
+  getAllMatches() { return [...this._matches.values()]; }
 
   /** @returns {number} */
-  get matchCount() {
-    return this._matches.size;
-  }
+  get matchCount() { return this._matches.size; }
 
   /**
    * @param {string} matchId
    * @returns {Array<object>}
    */
-  getParticipants(matchId) {
-    return this._participants.filter(p => p.matchId === matchId);
-  }
+  getParticipants(matchId) { return this._participants.filter(p => p.matchId === matchId); }
 
   /**
    * @param {string} accountId
-   * @returns {{ onlineMatches: number, onlineWins: number, onlineLosses: number, onlineDraws: number, rankedMatches: number, rankedWins: number, rankedLosses: number, currentWinStreak: number, bestWinStreak: number } | null}
+   * @returns {object|null}
    */
-  getStats(accountId) {
-    return this._stats.get(accountId) ?? null;
-  }
+  getStats(accountId) { return this._stats.get(accountId) ?? null; }
 
   /**
-   * Get all persisted achievement rows for a player.
+   * Get rating events for a player (audit ledger).
    * @param {string} accountId
-   * @returns {Array<{ accountId: string, achievementId: string, unlockedAt: string, provenance: string, matchId: string|null, rulesVersion: string|null, productVersion: string|null }>}
+   * @returns {Array<object>}
    */
-  getAchievements(accountId) {
-    return this._achievementRows.filter(r => r.accountId === accountId);
-  }
+  getRatingEvents(accountId) { return this._ratingEvents.filter(e => e.userId === accountId); }
+
+  /** @returns {number} */
+  get ratingEventCount() { return this._ratingEvents.length; }
 
   /**
-   * Get all persisted achievement rows (for inspection).
-   * @returns {number}
+   * @param {string} accountId
+   * @returns {Array<object>}
    */
-  get achievementCount() {
-    return this._achievementRows.length;
-  }
+  getAchievements(accountId) { return this._achievementRows.filter(r => r.accountId === accountId); }
+
+  /** @returns {number} */
+  get achievementCount() { return this._achievementRows.length; }
 
   /**
-   * Check if a specific achievement has been persisted for a player.
    * @param {string} accountId
    * @param {string} achievementId
    * @returns {boolean}
    */
-  hasAchievement(accountId, achievementId) {
-    return this._achievements.has(`${accountId}:${achievementId}`);
-  }
+  hasAchievement(accountId, achievementId) { return this._achievements.has(`${accountId}:${achievementId}`); }
 
-  async close() {
-    // No-op — in-memory
-  }
+  async close() { /* No-op — in-memory */ }
 }

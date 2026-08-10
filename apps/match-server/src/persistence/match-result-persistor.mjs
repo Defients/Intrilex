@@ -26,6 +26,10 @@
  * @property {number|null} ratingBefore
  * @property {number|null} ratingAfter
  * @property {number|null} ratingDelta
+ * @property {number|null} [rdBefore] - Glicko-2 rating deviation before (server-only)
+ * @property {number|null} [rdAfter] - Glicko-2 rating deviation after (server-only)
+ * @property {number|null} [volatilityBefore] - Glicko-2 volatility before (server-only)
+ * @property {number|null} [volatilityAfter] - Glicko-2 volatility after (server-only)
  */
 
 /**
@@ -42,6 +46,7 @@
  * @property {string} rulesVersion - Engine rules version
  * @property {Array<MatchParticipantRecord>} participants
  * @property {string|null} queueId - 'casual' or 'ranked' (null for private duels)
+ * @property {string} [seasonId] - Active ranked season id (for rated queues)
  */
 
 /**
@@ -82,10 +87,31 @@ export class MatchResultPersistor {
    * Used to fetch ratingBefore before computing the update.
    * @param {string} accountId
    * @param {string} queueId
-   * @returns {Promise<{rating: number, ratedMatches: number, provisional: boolean} | null>}
+   * @param {string} [seasonId] - Active season id (defaults to canonical)
+   * @returns {Promise<{rating: number, ratingDeviation: number, volatility: number, ratedMatches: number, provisional: boolean, placementsPlayed: number, peakRating: number} | null>}
    */
-  async getRatingState(_accountId, _queueId) {
+  async getRatingState(_accountId, _queueId, _seasonId) {
     throw new Error('MatchResultPersistor.getRatingState() not implemented');
+  }
+
+  /**
+   * Resolve the active season id for a queue. Returns a stable season id.
+   * @param {string} queueId
+   * @returns {Promise<string>}
+   */
+  async resolveActiveSeasonId(_queueId) {
+    throw new Error('MatchResultPersistor.resolveActiveSeasonId() not implemented');
+  }
+
+  /**
+   * Check whether a match result has already been persisted (idempotency
+   * gate). Returns true if the matchId is already in the authoritative
+   * store, so re-persisting is a safe no-op that does NOT re-apply ratings.
+   * @param {string} matchId
+   * @returns {Promise<boolean>}
+   */
+  async isMatchPersisted(_matchId) {
+    throw new Error('MatchResultPersistor.isMatchPersisted() not implemented');
   }
 
   /**

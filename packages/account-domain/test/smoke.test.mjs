@@ -44,10 +44,16 @@ import {
   isMigrationCompleted,
   describeMigrationStep,
   LeaderboardType,
-  buildLeaderboardQuery,
   computeWinRate,
+  leaderboardComparator,
+  toLeaderboardEntry,
   processLeaderboardRows,
   findPlayerRank,
+  normalizeSearchQuery,
+  validateTierFilter,
+  apexLabel,
+  DEFAULT_LEADERBOARD_LIMIT,
+  MAX_LEADERBOARD_LIMIT,
 } from '../src/index.mjs';
 
 test('account-domain: generatePublicPlayerId produces valid PLY_ IDs', () => {
@@ -209,7 +215,9 @@ test('rating: computeRatingUpdate — win for player A', () => {
   assert.equal(result.playerB.result, 'LOSS');
   assert.ok(result.playerA.ratingAfter > result.playerA.ratingBefore, 'winner rating increases');
   assert.ok(result.playerB.ratingAfter < result.playerB.ratingBefore, 'loser rating decreases');
-  assert.equal(result.playerA.ratingDelta, -(result.playerB.ratingDelta), 'zero-sum');
+  // Glicko-2 is not strictly zero-sum in general, but for symmetric initial
+  // states the deltas are mirror images (within rounding tolerance).
+  assert.ok(Math.abs(result.playerA.ratingDelta + result.playerB.ratingDelta) <= 1, 'near zero-sum for symmetric states');
 });
 
 test('rating: computeRatingUpdate — draw keeps ratings near equal', () => {
@@ -420,34 +428,10 @@ test('migration: describeMigrationStep returns table info', () => {
 
 // ── Leaderboard tests ──
 
-test('leaderboard: buildLeaderboardQuery for TOP_RATED uses player_ratings', () => {
-  const query = buildLeaderboardQuery({ type: LeaderboardType.TOP_RATED, queueId: 'ranked' });
-  assert.equal(query.table, 'player_ratings');
-  assert.equal(query.order.column, 'rating');
-  assert.equal(query.order.ascending, false);
-  assert.ok(query.filters.some(f => f.column === 'queue_id' && f.value === 'ranked'));
-});
-
-test('leaderboard: buildLeaderboardQuery for MOST_WINS uses player_stats', () => {
-  const query = buildLeaderboardQuery({ type: LeaderboardType.MOST_WINS });
-  assert.equal(query.table, 'player_stats');
-  assert.equal(query.order.column, 'online_wins');
-  assert.equal(query.order.ascending, false);
-});
-
-test('leaderboard: buildLeaderboardQuery for BEST_STREAK orders by best_win_streak', () => {
-  const query = buildLeaderboardQuery({ type: LeaderboardType.BEST_STREAK });
-  assert.equal(query.table, 'player_stats');
-  assert.equal(query.order.column, 'best_win_streak');
-});
-
-test('leaderboard: limit is clamped to [1, MAX]', () => {
-  const q1 = buildLeaderboardQuery({ limit: 0 });
-  assert.equal(q1.limit, 1);
-  const q2 = buildLeaderboardQuery({ limit: 10000 });
-  assert.ok(q2.limit <= 200);
-  const q3 = buildLeaderboardQuery({ limit: 25 });
-  assert.equal(q3.limit, 25);
+test('leaderboard: canonical board type is RANKED only at launch', () => {
+  assert.equal(LeaderboardType.RANKED, 'RANKED');
+  assert.equal(DEFAULT_LEADERBOARD_LIMIT, 100, 'Top 100 default');
+  assert.ok(MAX_LEADERBOARD_LIMIT >= 100);
 });
 
 test('leaderboard: computeWinRate handles edge cases', () => {
@@ -457,30 +441,54 @@ test('leaderboard: computeWinRate handles edge cases', () => {
   assert.equal(computeWinRate(3, 3, 4), 0.3);
 });
 
-test('leaderboard: processLeaderboardRows assigns ranks and computes win rate', () => {
-  const rows = [
-    { user_id: 'a1111111-1111-1111-1111-111111111111', rating: 1800, wins: 15, losses: 5, draws: 0, rated_matches: 20, provisional: false },
-    { user_id: 'b2222222-2222-2222-2222-222222222222', rating: 1500, wins: 10, losses: 10, draws: 0, rated_matches: 20, provisional: false },
-  ];
-  const entries = processLeaderboardRows({ rows, type: LeaderboardType.TOP_RATED });
-  assert.equal(entries.length, 2);
-  assert.equal(entries[0].rank, 1);
-  assert.equal(entries[0].userId, 'a1111111-1111-1111-1111-111111111111');
-  assert.equal(entries[0].rating, 1800);
-  assert.equal(entries[0].winRate, 0.75);
-  assert.equal(entries[1].rank, 2);
+test('leaderboard: toLeaderboardEntry strips private fields and derives tier', () => {
+  const entry = toLeaderboardEntry({
+    publicPlayerId: 'PLY_abc',
+    displayName: 'Deffy',
+    handle: 'deffy',
+    avatarUrl: null,
+    rating: 1674,
+    ratedMatches: 61,
+    wins: 61, losses: 44, draws: 0,
+    // Private fields that MUST NOT appear in the DTO:
+    user_id: 'a1111111-1111-1111-1111-111111111111',
+    email: 'x@x.com',
+    ratingDeviation: 80,
+    volatility: 0.06,
+  }, 7);
+  assert.equal(entry.position, 7);
+  assert.equal(entry.player.publicPlayerId, 'PLY_abc');
+  assert.equal(entry.player.displayName, 'Deffy');
+  assert.equal(entry.player.handle, 'deffy');
+  assert.equal(entry.rank.rating, 1674);
+  assert.equal(entry.rank.tier, 'VANGUARD');
+  assert.equal(entry.record.games, 105);
+  assert.equal(entry.record.winRate, 61 / 105);
+  // No private leakage in the DTO shape
+  assert.equal(/** @type {any} */ (entry).user_id, undefined);
+  assert.equal(/** @type {any} */ (entry).email, undefined);
+  assert.equal(/** @type {any} */ (entry).ratingDeviation, undefined);
+  assert.equal(/** @type {any} */ (entry).volatility, undefined);
 });
 
-test('leaderboard: processLeaderboardRows joins profile data', () => {
+test('leaderboard: processLeaderboardRows assigns positions and computes win rate', () => {
   const rows = [
-    { user_id: 'a1111111-1111-1111-1111-111111111111', rating: 1800, wins: 10, losses: 0, draws: 0, rated_matches: 10, provisional: false },
+    { publicPlayerId: 'PLY_a', displayName: 'A', rating: 1800, ratedMatches: 20, wins: 15, losses: 5, draws: 0 },
+    { publicPlayerId: 'PLY_b', displayName: 'B', rating: 1500, ratedMatches: 20, wins: 10, losses: 10, draws: 0 },
   ];
-  const profiles = [
-    { user_id: 'a1111111-1111-1111-1111-111111111111', display_name: 'Alice', handle: 'alice', avatar_url: null },
-  ];
-  const entries = processLeaderboardRows({ rows, profiles });
-  assert.equal(entries[0].displayName, 'Alice');
-  assert.equal(entries[0].handle, 'alice');
+  const entries = processLeaderboardRows({ rows });
+  assert.equal(entries.length, 2);
+  assert.equal(entries[0].position, 1);
+  assert.equal(entries[0].player.publicPlayerId, 'PLY_a');
+  assert.equal(entries[0].rank.rating, 1800);
+  assert.equal(entries[0].record.winRate, 0.75);
+  assert.equal(entries[1].position, 2);
+});
+
+test('leaderboard: processLeaderboardRows respects offset for pagination', () => {
+  const rows = [{ publicPlayerId: 'PLY_c', displayName: 'C', rating: 1400, ratedMatches: 10, wins: 5, losses: 5, draws: 0 }];
+  const entries = processLeaderboardRows({ rows, offset: 100 });
+  assert.equal(entries[0].position, 101);
 });
 
 test('leaderboard: processLeaderboardRows handles empty input', () => {
@@ -488,13 +496,50 @@ test('leaderboard: processLeaderboardRows handles empty input', () => {
   assert.deepEqual(processLeaderboardRows({ rows: null }), []);
 });
 
-test('leaderboard: findPlayerRank locates a player in the leaderboard', () => {
-  const entries = [
-    { rank: 1, userId: 'a1111111-1111-1111-1111-111111111111', rating: 1800, wins: 15, losses: 5, draws: 0, ratedMatches: 20, provisional: false, winRate: 0.75 },
-    { rank: 2, userId: 'b2222222-2222-2222-2222-222222222222', rating: 1500, wins: 10, losses: 10, draws: 0, ratedMatches: 20, provisional: false, winRate: 0.5 },
+test('leaderboard: leaderboardComparator orders by rating DESC then deterministic tie-breaks', () => {
+  const rows = [
+    { rating: 1500, ratingDeviation: 100, ratedMatches: 10, lastRatedAt: 1, publicPlayerId: 'PLY_a' },
+    { rating: 1800, ratingDeviation: 100, ratedMatches: 10, lastRatedAt: 1, publicPlayerId: 'PLY_b' },
+    { rating: 1800, ratingDeviation: 80, ratedMatches: 10, lastRatedAt: 1, publicPlayerId: 'PLY_c' },
   ];
-  const found = findPlayerRank(entries, 'b2222222-2222-2222-2222-222222222222');
+  const sorted = [...rows].sort(leaderboardComparator);
+  assert.equal(sorted[0].publicPlayerId, 'PLY_c', 'higher rating, lower RD first');
+  assert.equal(sorted[1].publicPlayerId, 'PLY_b');
+  assert.equal(sorted[2].publicPlayerId, 'PLY_a');
+});
+
+test('leaderboard: findPlayerRank locates a player by publicPlayerId', () => {
+  const entries = [
+    { position: 1, player: { publicPlayerId: 'PLY_a' }, rank: { rating: 1800 }, record: { wins: 15, losses: 5, draws: 0, games: 20, winRate: 0.75 } },
+    { position: 2, player: { publicPlayerId: 'PLY_b' }, rank: { rating: 1500 }, record: { wins: 10, losses: 10, draws: 0, games: 20, winRate: 0.5 } },
+  ];
+  const found = findPlayerRank(entries, 'PLY_b');
   assert.ok(found);
-  assert.equal(found.rank, 2);
-  assert.equal(findPlayerRank(entries, 'nonexistent'), null);
+  assert.equal(found.position, 2);
+  assert.equal(findPlayerRank(entries, 'PLY_zzz'), null);
+});
+
+test('leaderboard: normalizeSearchQuery validates input', () => {
+  assert.equal(normalizeSearchQuery('a'), null, 'too short');
+  assert.equal(normalizeSearchQuery('   '), null);
+  assert.equal(normalizeSearchQuery('ab'), 'ab');
+  assert.equal(normalizeSearchQuery('  Deffy  '), 'Deffy');
+  assert.equal(normalizeSearchQuery('a'.repeat(100)), null, 'too long');
+  assert.equal(normalizeSearchQuery('D\x00effy'), 'Deffy', 'control chars stripped');
+});
+
+test('leaderboard: validateTierFilter accepts canonical tiers only', () => {
+  assert.equal(validateTierFilter('ALL'), null);
+  assert.equal(validateTierFilter(null), null);
+  assert.equal(validateTierFilter('VANGUARD'), 'VANGUARD');
+  assert.equal(validateTierFilter('INTRILEX'), 'INTRILEX');
+  assert.equal(validateTierFilter('FAKE'), null);
+  assert.equal(validateTierFilter('UNRANKED'), null, 'unranked is not a board filter');
+});
+
+test('leaderboard: apexLabel renders INTRILEX #N or bare INTRILEX', () => {
+  assert.equal(apexLabel(1), 'INTRILEX #1');
+  assert.equal(apexLabel(83), 'INTRILEX #83');
+  assert.equal(apexLabel(null), 'INTRILEX');
+  assert.equal(apexLabel(0), 'INTRILEX');
 });

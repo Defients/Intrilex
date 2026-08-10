@@ -39,6 +39,8 @@ async function startAuthServer(identities = {}) {
   server = await startServer({
     port: testPort, host: '127.0.0.1', dbPath: ':memory:', persistent: false,
     rateLimitCapacity: 10000, authMode: 'required', identityVerifier: verifier,
+    // DATA-04: Allow FakeMatchResultPersistor in auth tests (testing only)
+    allowFakePersistor: true,
   });
   return server;
 }

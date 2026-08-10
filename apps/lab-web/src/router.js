@@ -18,7 +18,8 @@ export const WORKSPACES = [
   ['/diagnostics','⚙','Diagnostics','Policy behavior'],
   ['/tournament','🏆','Tournament','AI bracket'],
   ['/evidence','◎','Evidence','Integrity'],
-  ['/profile','👤','Profile','Player record'],
+  ['/profile','👤','Profile','Player profile'],
+  ['/leaderboard','⬒','Leaderboard','Ranked ladder'],
   ['/intelligence','✦','Analytics AI','Ollama interpretation'],
   ['/achievements','🏆','Achievements','56 launch achievements']
 ];
@@ -40,7 +41,8 @@ export const SUBTITLES = {
   '/branches':'Policy-conditioned counterfactual estimates from command checkpoints.',
   '/diagnostics':'Decision margins, self-counter rates, response conservation, timing, and win rates.',
   '/tournament':'Single-elimination AI-vs-AI bracket with deterministic matches and champion crowning.',
-  '/profile':'Local player profile with rating, badges, match history, and archetype breakdown.',
+  '/profile':'Player profile — identity, ranked, achievements, showcase, customization, and privacy.',
+  '/leaderboard':'The canonical Ranked leaderboard. One prestigious ladder, server-side ranking, season standings.',
   '/achievements':'56 launch achievements with deterministic detection, career tracking, and hidden discoveries.'
 };
 
@@ -52,6 +54,10 @@ export function route() {
   const r = location.hash.replace(/^#/,'').split('?')[0] || '/';
   if (r === '/sim') return '/watch';
   if (LANDING_MODES.has(r) || isPlayRoute(r)) return r;
+  // Public player profile: #/player/@handle or #/player/PLY_…
+  // Normalized to '/player' so app.js dispatches to renderProfile,
+  // which reads location.hash directly to extract the handle/id.
+  if (r === '/player' || r.startsWith('/player/')) return '/player';
   return TITLES[r] ? r : '/watch';
 }
 
@@ -60,7 +66,7 @@ export function renderNavigation() {
   const SECTIONS = [
     { label: 'Analysis', routes: ['/watch', '/replays', '/history', '/mechanics', '/cards', '/synergies'] },
     { label: 'Investigation', routes: ['/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament'] },
-    { label: 'System', routes: ['/evidence', '/profile', '/achievements', '/intelligence'] },
+    { label: 'System', routes: ['/evidence', '/profile', '/leaderboard', '/achievements', '/intelligence'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));
   const nav = document.querySelector('#workspace-nav');

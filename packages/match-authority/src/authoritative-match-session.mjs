@@ -130,6 +130,9 @@ export const ConnectionState = Object.freeze({
  * @property {number} [updatedAt]
  * @property {VersionBinding} [versionBinding]
  * @property {string} [integrity]
+ * @property {string} [matchMode] - Server-owned product classification: 'private'|'casual'|'ranked'|'tutorial'|'simulation'|'local-ai' (v3+; absent in old snapshots → defaults to 'private')
+ * @property {string|null} [queueId] - Server-recognized matchmaking/rating queue: 'ranked'|'casual'|'private'|null (v3+; absent → null)
+ * @property {string|null} [seasonId] - Active server-resolved competitive season (ranked only; null otherwise)
  */
 
 const DEFAULT_PROFILE_ID = CORE_UNRESTRICTED_AUTHORITY_PROFILE?.id ?? 'core-unrestricted-authority';
@@ -144,6 +147,9 @@ const MAX_ORCHESTRATION = 128;
  * @param {string} opts.profileId - Engine profile (default: core-unrestricted-authority)
  * @param {number} opts.seed - CSPRNG-generated seed for the match
  * @param {string[]} opts.seatOrder - ['P1', 'P2'] by default
+ * @param {string} [opts.matchMode] - Server-owned product classification: 'private'|'casual'|'ranked'|'tutorial'|'simulation'|'local-ai'
+ * @param {string|null} [opts.queueId] - Server-recognized matchmaking/rating queue
+ * @param {string|null} [opts.seasonId] - Active server-resolved competitive season (ranked only)
  * @returns {AuthoritativeMatchSession}
  */
 export function createAuthoritativeMatch(opts) {
@@ -157,11 +163,23 @@ export class AuthoritativeMatchSession {
    * @param {string} [opts.profileId] - Engine profile (default: core-unrestricted-authority)
    * @param {number} [opts.seed] - CSPRNG-generated seed for the match
    * @param {string[]} [opts.seatOrder] - ['P1', 'P2'] by default
+   * @param {string} [opts.matchMode] - Server-owned product classification (default: 'private')
+   * @param {string|null} [opts.queueId] - Server-recognized matchmaking/rating queue (default: null)
+   * @param {string|null} [opts.seasonId] - Active server-resolved competitive season (ranked only)
    */
-  constructor({ matchId, profileId, seed, seatOrder } = {}) {
+  constructor({ matchId, profileId, seed, seatOrder, matchMode, queueId, seasonId } = {}) {
     if (!matchId) throw new Error('matchId is required');
     this.matchId = matchId;
     this.profileId = profileId ?? DEFAULT_PROFILE_ID;
+    // RANK-01: Server-owned match classification — immutable after creation.
+    // The client may request a queue, but the server creates authoritative
+    // classification after validation. Never inferred from profileId or UI labels.
+    /** @type {string} */
+    this.matchMode = matchMode ?? 'private';
+    /** @type {string|null} */
+    this.queueId = queueId ?? null;
+    /** @type {string|null} */
+    this.seasonId = seasonId ?? null;
     /** @type {MatchStatusValue} */
     this.status = MatchStatus.WAITING_FOR_OPPONENT;
     this.participants = new Map(); // participantId → { playerId, token, connectionState, ready }
@@ -728,6 +746,10 @@ export class AuthoritativeMatchSession {
       seed: this._seed,
       seatOrder: this.seatOrder,
       status: this.status,
+      // RANK-01: Server-owned match classification — survives snapshot/reconnect/restart
+      matchMode: this.matchMode,
+      queueId: this.queueId,
+      seasonId: this.seasonId,
       participants: [...this.participants.entries()].map(([pid, p]) => ({
         participantId: pid,
         playerId: p.playerId,
@@ -831,6 +853,12 @@ export class AuthoritativeMatchSession {
       profileId: snapshot.profileId,
       seed: snapshot.seed,
       seatOrder: snapshot.seatOrder,
+      // RANK-01: Restore server-owned classification. Old snapshots (v1/v2)
+      // lack these fields → default conservatively to non-ranked 'private'.
+      // Never infer ranked from a profile string.
+      matchMode: snapshot.matchMode ?? 'private',
+      queueId: snapshot.queueId ?? null,
+      seasonId: snapshot.seasonId ?? null,
     });
 
     // Restore participants

@@ -7,7 +7,10 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),relea
 const zipName=`Intrilex_Simulation_Lab_v${version}_Mechanics_Observatory.zip`,zip=path.join(release,zipName);
 await mkdir(release,{recursive:true});
 for(const name of await readdir(release))if(/^Intrilex_Simulation_Lab_v.+\.zip(?:\.sha256)?$/.test(name))try{await rm(path.join(release,name),{force:true});}catch{/* Windows may lock files briefly; best-effort cleanup */}
-let r=spawnSync(process.execPath,['scripts/package-engine-patch.mjs'],{cwd:root,stdio:'inherit'});if(r.status!==0)process.exit(r.status??1);
+// SEC-01: Secret containment scan — fail-closed before packaging.
+// No secrets, tokens, or private keys may be present in tracked files or artifacts.
+let r=spawnSync(process.execPath,['scripts/secret-containment-scan.mjs'],{cwd:root,stdio:'inherit'});if(r.status!==0){console.error('SEC-01 FAIL: secret containment scan failed — refusing to package release');process.exit(r.status??1);}
+r=spawnSync(process.execPath,['scripts/package-engine-patch.mjs'],{cwd:root,stdio:'inherit'});if(r.status!==0)process.exit(r.status??1);
 await copyFile(path.join(root,'reports/BUILD_PROOF.md'),path.join(release,'BUILD_PROOF.md'));
 const python=process.platform==='win32'?'python':'python3';
 r=spawnSync(python,[path.join(root,'scripts/deterministic_zip.py'),root,zip,'release/Intrilex_Simulation_Lab_v*.zip','release/Intrilex_Simulation_Lab_v*.zip.sha256','release/Intrilex_Engine_v*.zip','release/Intrilex_Engine_v*.zip.sha256','release/extracted-verification-report.json','reports/extracted-verification-report.json','reports/package-determinism.json','release/package-determinism.json','release/RELEASE_INTEGRITY.md','.git/*','runtime/campaign-segments*/*','runtime/campaign-replays*/*','node_modules/*','*/node_modules/*','package-lock.json'],{cwd:root,stdio:'inherit'});if(r.status!==0)process.exit(r.status??1);

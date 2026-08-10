@@ -40,13 +40,16 @@ import {
   sendChat as sendChatBuilder, chatMessage,
   authenticated as authenticatedBuilder,
   achievementsEarned,
+  SUPPORTED_PROFILE_IDS, SUPPORTED_QUEUE_IDS,
 } from '@intrilex/network-protocol';
-import { AuthMode, ConnectionAuthState, resolveCapabilities, toSafePublicProfile } from '@intrilex/account-domain';
+import { AuthMode, ConnectionAuthState, resolveCapabilities, toSafePublicProfile, RANKED_QUEUE_ID } from '@intrilex/account-domain';
 import { FakeIdentityVerifier } from './auth/fake-identity-verifier.mjs';
 import { evaluateMatchAchievements } from '@intrilex/match-authority/achievement-projection';
 import { MatchResultPersistor } from './persistence/match-result-persistor.mjs';
 import { FakeMatchResultPersistor } from './persistence/fake-match-result-persistor.mjs';
 import { buildMatchResultRecord } from './persistence/match-result-builder.mjs';
+import { RatingService } from './ranked/rating-service.mjs';
+import { TerminalOutbox } from './persistence/terminal-outbox.mjs';
 import { LAB_VERSION } from '@intrilex/shared/version';
 
 const require = createRequire(import.meta.url);
@@ -106,7 +109,10 @@ let matchStore = null;
 let matchmakingQueue = null;
 let identityVerifier = null; // IdentityVerifier instance (set by startServer)
 let matchResultPersistor = null; // MatchResultPersistor instance (set by startServer)
+let ratingService = null; // RatingService instance (set by startServer) — RANK-01/3C
+let terminalOutbox = null; // TerminalOutbox instance (set by startServer) — DATA-01
 let _authMode = AUTH_MODE; // Active auth mode (can be overridden by startServer opts)
+let _isProductionMode = false; // True when authMode=required (DATA-04: fail-closed persistence)
 const connections = new Map(); // connectionId → { ws, authState, account, participantId, matchId, lastHeartbeat, isSpectator, spectatingMatchId, rateLimit, ip }
 const bannedIps = new Map(); // ip → banExpiresAt
 const ipConnectionCounts = new Map(); // ip → active connection count
@@ -197,6 +203,118 @@ function isIpBanned(ip) {
  */
 function banIp(ip) {
   bannedIps.set(ip, Date.now() + RATE_LIMIT_BAN_DURATION_MS);
+}
+
+// ── RANK-01: Server-owned match classification ──
+
+/**
+ * Classify a match based on the client's request and server-side validation.
+ *
+ * The client may request a queueId, but the server creates authoritative
+ * classification after validation. A client can NEVER declare a result ranked
+ * — ranked admission requires:
+ *   - authentication enabled and both players authenticated
+ *   - an explicitly supported ranked queue
+ *   - an active season resolved server-side
+ *   - required durable persistence/schema capability
+ *
+ * Historical snapshots lacking classification default conservatively to
+ * non-ranked 'private' — never infer ranked from a profile string.
+ *
+ * @param {object} opts
+ * @param {string} [opts.requestedQueueId] - Client-requested queue ('ranked'|'casual'|'private')
+ * @param {string} [opts.profileId] - Engine rules profile
+ * @param {boolean} [opts.isMatchmaking] - Whether this match is from public matchmaking
+ * @returns {{ matchMode: string, queueId: string|null, seasonId: string|null, admitted: boolean, reason: string|null }}
+ */
+function classifyMatch({ requestedQueueId, profileId, isMatchmaking = false }) {
+  // Default: private duel (invite-based)
+  if (!requestedQueueId || requestedQueueId === 'private') {
+    return { matchMode: 'private', queueId: 'private', seasonId: null, admitted: true, reason: null };
+  }
+
+  // Casual matchmaking
+  if (requestedQueueId === 'casual' || (isMatchmaking && !requestedQueueId)) {
+    return { matchMode: 'casual', queueId: 'casual', seasonId: null, admitted: true, reason: null };
+  }
+
+  // Ranked admission — server-owned, fail-closed
+  if (requestedQueueId === 'ranked') {
+    // Requirement 1: auth must be required (production mode)
+    if (_authMode !== AuthMode.REQUIRED) {
+      return { matchMode: 'private', queueId: null, seasonId: null, admitted: false, reason: 'RANKED_REQUIRES_AUTH' };
+    }
+    // Requirement 2: production mode must have a durable (non-fake) persistor
+    if (!matchResultPersistor || matchResultPersistor instanceof FakeMatchResultPersistor) {
+      return { matchMode: 'private', queueId: null, seasonId: null, admitted: false, reason: 'RANKED_REQUIRES_DURABLE_PERSISTENCE' };
+    }
+    // Requirement 3: RatingService must be configured
+    if (!ratingService) {
+      return { matchMode: 'private', queueId: null, seasonId: null, admitted: false, reason: 'RANKED_REQUIRES_RATING_SERVICE' };
+    }
+    // Requirement 4: active season resolved server-side
+    let seasonId = null;
+    if (matchResultPersistor && typeof matchResultPersistor.resolveActiveSeasonId === 'function') {
+      // Season resolution is async — we attempt it here but classification
+      // is sync. The season is resolved at terminal time in buildMatchResultRecord.
+      // For admission, we check that the persistor CAN resolve seasons.
+      seasonId = 'pending'; // Will be resolved at terminal time
+    } else {
+      return { matchMode: 'private', queueId: null, seasonId: null, admitted: false, reason: 'RANKED_REQUIRES_SEASON_AUTHORITY' };
+    }
+    return { matchMode: 'ranked', queueId: 'ranked', seasonId, admitted: true, reason: null };
+  }
+
+  // Unknown queue — fail closed
+  return { matchMode: 'private', queueId: null, seasonId: null, admitted: false, reason: 'UNKNOWN_QUEUE' };
+}
+
+/**
+ * Validate ranked admission for a specific match with both participants present.
+ * Called when the second player joins/ready-checks a ranked match.
+ *
+ * @param {import('@intrilex/match-authority').AuthoritativeMatchSession} match
+ * @returns {{ admitted: boolean, reason: string|null }}
+ */
+function validateRankedAdmission(match) {
+  if (match.queueId !== RANKED_QUEUE_ID) return { admitted: true, reason: null };
+
+  // Both participants must be authenticated with distinct permanent accounts
+  const participants = [...match.participants.values()];
+  if (participants.length !== 2) {
+    return { admitted: false, reason: 'RANKED_REQUIRES_TWO_PLAYERS' };
+  }
+  const [p1, p2] = participants;
+  if (!p1.accountId || !p2.accountId) {
+    return { admitted: false, reason: 'RANKED_REQUIRES_AUTHENTICATED_PLAYERS' };
+  }
+  if (p1.accountId === p2.accountId) {
+    return { admitted: false, reason: 'RANKED_REQUIRES_DISTINCT_ACCOUNTS' };
+  }
+
+  return { admitted: true, reason: null };
+}
+
+/**
+ * Classify a match for CREATE_MATCH, returning the classification fields
+ * or throwing with a typed reason code if ranked admission fails.
+ * @param {Record<string,*>} payload - CREATE_MATCH payload
+ * @returns {{ matchMode: string, queueId: string|null, seasonId: string|null }}
+ */
+function classifyMatchForCreate(payload) {
+  const classification = classifyMatch({
+    requestedQueueId: payload.queueId,
+    profileId: payload.profileId,
+    isMatchmaking: false,
+  });
+  if (!classification.admitted) {
+    throw Object.assign(new Error(`Ranked admission denied: ${classification.reason}`), { code: ReasonCode.QUEUE_FULL, classificationReason: classification.reason });
+  }
+  return {
+    matchMode: classification.matchMode,
+    queueId: classification.queueId,
+    seasonId: classification.seasonId,
+  };
 }
 
 /**
@@ -327,35 +445,103 @@ export function startServer(opts = {}) {
     matchStore = new InMemoryMatchStore();
   }
 
-  // Initialize match result persistor (writes terminal match results to Supabase)
-  // If not provided, default to FakeMatchResultPersistor (in-memory, for dev/test)
+  // DATA-04: Unified production persistence configuration — fail-closed.
+  // One canonical server-only configuration contract. The old
+  // supabaseSecretKey/supabaseServiceKey split is replaced with a single
+  // opts.supabaseServiceKey (or env SUPABASE_SECRET_KEY) used for both
+  // auth verifier and result persistor. A compatibility alias is retained
+  // but emits a redacted deprecation warning.
+  //
+  // In production/auth-required mode, startup FAILS LOUDLY unless a durable
+  // result persistor is configured. FakeMatchResultPersistor is allowed
+  // ONLY in explicit dev/test modes (authMode=disabled or opts.allowFakePersistor).
+  _isProductionMode = _authMode === AuthMode.REQUIRED;
+
+  // Resolve the canonical service key from one source (DATA-04):
+  // Precedence: opts.supabaseServiceKey > opts.supabaseSecretKey (deprecated alias) > env
+  const _resolvedServiceKey = opts.supabaseServiceKey
+    ?? opts.supabaseSecretKey
+    ?? process.env.SUPABASE_SECRET_KEY
+    ?? null;
+  if (opts.supabaseSecretKey && opts.supabaseServiceKey && opts.supabaseSecretKey !== opts.supabaseServiceKey) {
+    process.stderr.write('⚠  WARNING: Both supabaseSecretKey and supabaseServiceKey provided with different values. Using supabaseServiceKey (canonical). supabaseSecretKey is deprecated.\n');
+  } else if (opts.supabaseSecretKey && !opts.supabaseServiceKey) {
+    process.stderr.write('⚠  WARNING: supabaseSecretKey is deprecated. Use supabaseServiceKey instead. Using the provided value for this startup.\n');
+  }
+
   if (opts.matchResultPersistor) {
     matchResultPersistor = opts.matchResultPersistor;
-  } else if (opts.supabaseUrl && opts.supabaseServiceKey) {
+  } else if (opts.supabaseUrl && _resolvedServiceKey) {
     // Dynamically import to avoid loading supabase-js when persistence is not needed
     const { SupabaseMatchResultPersistor } = require('./persistence/supabase-match-result-persistor.mjs');
     matchResultPersistor = new SupabaseMatchResultPersistor({
       supabaseUrl: opts.supabaseUrl,
-      supabaseServiceKey: opts.supabaseServiceKey,
+      supabaseServiceKey: _resolvedServiceKey,
     });
-  } else if (process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY) {
+  } else if (process.env.SUPABASE_URL && _resolvedServiceKey) {
     const { SupabaseMatchResultPersistor } = require('./persistence/supabase-match-result-persistor.mjs');
     matchResultPersistor = new SupabaseMatchResultPersistor({
       supabaseUrl: process.env.SUPABASE_URL,
-      supabaseServiceKey: process.env.SUPABASE_SECRET_KEY,
+      supabaseServiceKey: _resolvedServiceKey,
     });
+  } else if (_isProductionMode && !opts.allowFakePersistor) {
+    // DATA-04: FAIL LOUDLY in production — never silently use fake persistence
+    throw new Error(
+      'INTRILEX_AUTH_MODE=required but no durable match result persistor configured. ' +
+      'Provide opts.matchResultPersistor, opts.supabaseUrl+opts.supabaseServiceKey, ' +
+      'or set SUPABASE_URL+SUPABASE_SECRET_KEY environment variables. ' +
+      'FakeMatchResultPersistor is forbidden in production mode.'
+    );
   } else {
-    // Dev/test default: in-memory persistor (no-op for production)
+    // Dev/test default: in-memory persistor (explicitly allowed only in dev mode)
     matchResultPersistor = new FakeMatchResultPersistor();
   }
-  logEvent('persistorConfigured', { type: matchResultPersistor.constructor.name });
+  logEvent('persistorConfigured', { type: matchResultPersistor.constructor.name, productionMode: _isProductionMode });
+
+  // RANK-01/3C: Wire RatingService in production server orchestration.
+  // RatingService is the canonical rated-result application owner.
+  // In dev mode, it's still wired (using the fake persistor) for testing.
+  ratingService = new RatingService({ persistor: matchResultPersistor, logger: { debug: (data) => logEvent('ratingService', data) } });
+  logEvent('ratingServiceConfigured', { type: ratingService.constructor.name });
+
+  // DATA-01: Durable terminal lifecycle outbox.
+  // Terminal effects (result + achievements) are durably queued before
+  // completion is considered durable. Retries with bounded backoff,
+  // restart recovery, and idempotent application.
+  const outboxDurable = persistent && opts.outboxDurable !== false;
+  const outboxPath = opts.outboxPath ?? (opts.dbPath ? dirname(opts.dbPath) + '/terminal-outbox.sqlite' : 'runtime/match-server/terminal-outbox.sqlite');
+  if (outboxDurable) {
+    const outboxDir = dirname(outboxPath);
+    try { mkdirSync(outboxDir, { recursive: true }); } catch { /* may already exist */ }
+  }
+  terminalOutbox = new TerminalOutbox({
+    durable: outboxDurable,
+    path: outboxPath,
+    persistor: matchResultPersistor,
+    ratingService,
+    logger: { debug: (data) => logEvent('outbox', data) },
+  });
+  // Recover any interrupted jobs from a previous run
+  const recovered = terminalOutbox.recoverPending();
+  terminalOutbox.startDrain();
+  logEvent('terminalOutboxConfigured', { durable: outboxDurable, recovered });
 
   // Initialize matchmaking queue
   matchmakingQueue = new MatchmakingQueue({
     onCreateMatch: (profileId, seed, players) => {
       // Create a match and add both players
       const matchId = `M-${randomBytes(12).toString('base64url')}`;
-      const match = createAuthoritativeMatch({ matchId, profileId, seed });
+      // RANK-01: Matchmaking queue matches are classified as 'casual' by default.
+      // Ranked matchmaking requires explicit queueId='ranked' in QUEUE_JOIN payload
+      // and passes ranked admission validation.
+      const queueId = players[0]?.queueId ?? players[1]?.queueId ?? 'casual';
+      const classification = classifyMatch({ requestedQueueId: queueId, profileId, isMatchmaking: true });
+      const match = createAuthoritativeMatch({
+        matchId, profileId, seed,
+        matchMode: classification.matchMode,
+        queueId: classification.queueId,
+        seasonId: classification.seasonId,
+      });
 
       const results = players.map(({ connectionId, accountId }) => {
         const participantToken = randomBytes(32).toString('base64url');
@@ -498,7 +684,28 @@ export function startServer(opts = {}) {
     connections.set(connectionId, { ws, authState: ConnectionAuthState.UNAUTHENTICATED, account: null, participantId: null, matchId: null, lastHeartbeat: Date.now(), isSpectator: false, spectatingMatchId: null, ip });
     logEvent('connectionOpen', { connectionId, ip, total: connections.size });
 
-    ws.on('message', (raw) => handleMessage(connectionId, ws, raw));
+    ws.on('message', (raw) => {
+      // NET-01: Promise-aware dispatch — observe the returned promise so
+      // async handler rejections are contained at the WebSocket boundary
+      // rather than escaping as unhandled rejections. The sync try/catch
+      // inside handleMessage only catches synchronous throws; async
+      // rejections need explicit .catch() on the returned promise.
+      try {
+        const result = handleMessage(connectionId, ws, raw);
+        if (result && typeof result.then === 'function') {
+          result.catch((err) => {
+            // Request-scoped failure — already handled inside handleMessage
+            // for most paths, but this is the safety net for any edge case
+            // where an async handler rejects before sending its own error.
+            logEvent('unhandledAsyncRejection', { connectionId, error: err?.message ?? String(err) });
+          });
+        }
+      } catch (err) {
+        // Synchronous throw inside handleMessage itself (should be rare —
+        // handleMessage has its own try/catch, but this is defense-in-depth).
+        logEvent('messageHandlerThrow', { connectionId, error: err?.message ?? String(err) });
+      }
+    });
     ws.on('close', () => handleDisconnect(connectionId));
     ws.on('error', () => handleDisconnect(connectionId));
     // Track liveness via pong — update lastHeartbeat when the client responds to ping
@@ -551,6 +758,8 @@ export function startServer(opts = {}) {
         wss,
         get matchStore() { return matchStore; },
         get matchResultPersistor() { return matchResultPersistor; },
+        get ratingService() { return ratingService; },
+        get terminalOutbox() { return terminalOutbox; },
         close() {
           clearInterval(heartbeatTimer);
           clearInterval(cleanupTimer);
@@ -566,18 +775,27 @@ export function startServer(opts = {}) {
           if (matchStore) matchStore.close();
           matchStore = null;
           if (identityVerifier) { identityVerifier.close?.(); identityVerifier = null; }
-          if (matchResultPersistor) { matchResultPersistor.close?.(); matchResultPersistor = null; }
-          // Clear module-level state to prevent cross-instance contamination in tests
-          bannedIps.clear();
-          // Force-close with a timeout fallback
-          return new Promise((resolve) => {
-            let resolved = false;
-            const done = () => { if (!resolved) { resolved = true; resolve(); } };
-            setTimeout(done, 2000); // fallback timeout
-            wss.close(() => {
-              httpServer.close(() => done());
+          // DATA-01: Drain terminal outbox before closing persistor.
+          // Bound shutdown drain time, persist unfinished work, then close.
+          return (async () => {
+            if (terminalOutbox) {
+              try { await terminalOutbox.shutdown(5000); } catch { /* ignore */ }
+              terminalOutbox = null;
+            }
+            if (matchResultPersistor) { matchResultPersistor.close?.(); matchResultPersistor = null; }
+            ratingService = null;
+            // Clear module-level state to prevent cross-instance contamination in tests
+            bannedIps.clear();
+            // Force-close with a timeout fallback
+            return new Promise((resolve) => {
+              let resolved = false;
+              const done = () => { if (!resolved) { resolved = true; resolve(); } };
+              setTimeout(done, 2000); // fallback timeout
+              wss.close(() => {
+                httpServer.close(() => done());
+              });
             });
-          });
+          })();
         },
       };
 
@@ -654,29 +872,69 @@ function handleMessage(connectionId, ws, raw) {
     }
   }
 
+  // NET-01: Promise-aware dispatch — one unified request boundary that
+  // handles synchronous and asynchronous handlers uniformly. Every handler
+  // may return a value or promise without leaking a rejection. Request-
+  // scoped unexpected errors produce one safe structured INTERNAL_ERROR
+  // response with the original requestId. Error messages are sanitized to
+  // avoid leaking stack traces, tokens, secrets, raw commands, or account
+  // UUIDs. Expected domain rejections remain typed reason codes (handlers
+  // send their own typed errors before throwing/rejecting).
+  /**
+   * Sanitize an error message for safe transmission to the client.
+   * Strips anything that looks like a file path, stack trace, token, or UUID.
+   * @param {unknown} err - Error value
+   * @returns {string}
+   */
+  function safeErrorMessage(err) {
+    const raw = err?.message ?? String(err);
+    // Remove file paths, stack frames, and anything after a newline
+    const singleLine = String(raw).split('\n')[0].trim();
+    // Redact patterns that resemble tokens, UUIDs, or file paths
+    return singleLine
+      .replace(/at\s+.*\s+\(.*\)/g, '') // stack frames
+      .replace(/[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}/g, '[redacted-uuid]')
+      .replace(/[A-Za-z0-9_-]{32,}/g, '[redacted-token]')
+      .replace(/[A-Za-z]:[\\\/][^\s)]+/g, '[redacted-path]')
+      .replace(/\.[mc]?js:\d+/g, '')
+      .trim() || 'Internal error';
+  }
+
   try {
+    let handlerResult;
     switch (type) {
-      case 'AUTHENTICATE': return handleAuthenticate(connectionId, ws, payload, requestId).catch(err => send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, err.message, requestId)));
-      case 'AUTH_REFRESH': return handleAuthRefresh(connectionId, ws, payload, requestId).catch(err => send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, err.message, requestId)));
-      case 'CREATE_MATCH': return handleCreateMatch(connectionId, ws, payload, requestId);
-      case 'JOIN_MATCH': return handleJoinMatch(connectionId, ws, payload, requestId);
-      case 'RESUME_MATCH': return handleResumeMatch(connectionId, ws, payload, requestId);
-      case 'READY': return handleReady(connectionId, ws, payload, requestId);
-      case 'SUBMIT_ACTION': return handleSubmitAction(connectionId, ws, payload, requestId);
-      case 'REQUEST_SYNC': return handleRequestSync(connectionId, ws, payload, requestId);
-      case 'LEAVE_MATCH': return handleLeaveMatch(connectionId, ws, payload, requestId);
-      case 'QUEUE_JOIN': return handleQueueJoin(connectionId, ws, payload, requestId);
-      case 'QUEUE_LEAVE': return handleQueueLeave(connectionId, ws, payload, requestId);
-      case 'SPECTATE_MATCH': return handleSpectateMatch(connectionId, ws, payload, requestId);
-      case 'SPECTATE_LEAVE': return handleSpectateLeave(connectionId, ws, payload, requestId);
-      case 'MATCH_HISTORY': return handleMatchHistory(connectionId, ws, payload, requestId);
-      case 'GET_REPLAY': return handleGetReplay(connectionId, ws, payload, requestId);
-      case 'SEND_CHAT': return handleSendChat(connectionId, ws, payload, requestId);
+      case 'AUTHENTICATE': handlerResult = handleAuthenticate(connectionId, ws, payload, requestId); break;
+      case 'AUTH_REFRESH': handlerResult = handleAuthRefresh(connectionId, ws, payload, requestId); break;
+      case 'CREATE_MATCH': handlerResult = handleCreateMatch(connectionId, ws, payload, requestId); break;
+      case 'JOIN_MATCH': handlerResult = handleJoinMatch(connectionId, ws, payload, requestId); break;
+      case 'RESUME_MATCH': handlerResult = handleResumeMatch(connectionId, ws, payload, requestId); break;
+      case 'READY': handlerResult = handleReady(connectionId, ws, payload, requestId); break;
+      case 'SUBMIT_ACTION': handlerResult = handleSubmitAction(connectionId, ws, payload, requestId); break;
+      case 'REQUEST_SYNC': handlerResult = handleRequestSync(connectionId, ws, payload, requestId); break;
+      case 'LEAVE_MATCH': handlerResult = handleLeaveMatch(connectionId, ws, payload, requestId); break;
+      case 'QUEUE_JOIN': handlerResult = handleQueueJoin(connectionId, ws, payload, requestId); break;
+      case 'QUEUE_LEAVE': handlerResult = handleQueueLeave(connectionId, ws, payload, requestId); break;
+      case 'SPECTATE_MATCH': handlerResult = handleSpectateMatch(connectionId, ws, payload, requestId); break;
+      case 'SPECTATE_LEAVE': handlerResult = handleSpectateLeave(connectionId, ws, payload, requestId); break;
+      case 'MATCH_HISTORY': handlerResult = handleMatchHistory(connectionId, ws, payload, requestId); break;
+      case 'GET_REPLAY': handlerResult = handleGetReplay(connectionId, ws, payload, requestId); break;
+      case 'SEND_CHAT': handlerResult = handleSendChat(connectionId, ws, payload, requestId); break;
       default:
         return send(ws, errorMsg(ReasonCode.MESSAGE_TYPE_UNKNOWN, `Unknown type: ${type}`, requestId));
     }
+    // If the handler returned a promise, attach a .catch() so rejections
+    // are contained at this request boundary. The ws.on('message') listener
+    // also has a safety-net .catch() on the outer handleMessage promise.
+    if (handlerResult && typeof handlerResult.then === 'function') {
+      return handlerResult.catch((err) => {
+        logEvent('asyncHandlerError', { connectionId, type, error: err?.message ?? String(err) });
+        send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, safeErrorMessage(err), requestId));
+      });
+    }
+    return handlerResult;
   } catch (err) {
-    return send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, err.message, requestId));
+    logEvent('syncHandlerError', { connectionId, type, error: err?.message ?? String(err) });
+    return send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, safeErrorMessage(err), requestId));
   }
 }
 
@@ -839,6 +1097,9 @@ function handleCreateMatch(connectionId, ws, payload, requestId) {
     matchId,
     profileId: payload.profileId,
     seed,
+    // RANK-01: Server-owned match classification — client may request a
+    // queue, but the server validates and creates authoritative classification.
+    ...classifyMatchForCreate(payload),
   });
 
   // Bind connection to participant
@@ -852,7 +1113,7 @@ function handleCreateMatch(connectionId, ws, payload, requestId) {
   conn.matchId = matchId;
 
   send(ws, matchCreated(matchId, inviteCode, participantToken, requestId));
-  logEvent('matchCreate', { matchId, profileId: payload.profileId, accountId: conn?.account?.accountId ?? null });
+  logEvent('matchCreate', { matchId, profileId: payload.profileId, matchMode: match.matchMode, queueId: match.queueId, accountId: conn?.account?.accountId ?? null });
 }
 
 function handleJoinMatch(connectionId, ws, payload, requestId) {
@@ -1151,7 +1412,8 @@ function handleQueueJoin(connectionId, ws, payload, requestId) {
   // Use accountId for queue identity when auth is enabled (prevents multi-queue abuse + self-match)
   const conn = connections.get(connectionId);
   const accountId = conn?.account?.accountId ?? null;
-  const result = matchmakingQueue.enqueue(connectionId, payload.profileId, accountId);
+  // RANK-01: Pass client-requested queueId — server validates ranked admission
+  const result = matchmakingQueue.enqueue(connectionId, payload.profileId, accountId, payload.queueId ?? null);
   if (!result.queued) {
     return send(ws, errorMsg(result.code || ReasonCode.INTERNAL_ERROR, result.error || 'Failed to join queue', requestId));
   }
@@ -1466,65 +1728,57 @@ function broadcastMatchEnded(match) {
     }
   }
 
-  // Persist match result to the authoritative store (Supabase in production,
-  // in-memory in dev/test). This writes the matches row, match_participants
-  // rows, and updates player_ratings + player_stats.
-  // Fire-and-forget — persistence failure must not crash the server or
-  // prevent clients from receiving MATCH_ENDED. Errors are logged.
-  if (matchResultPersistor) {
+  // DATA-01: Durable terminal lifecycle — persist via the terminal outbox
+  // instead of fire-and-forget. The outbox ensures terminal effects are
+  // recoverable, idempotent, retryable, and auditable. The result is
+  // queued BEFORE clients are told the match is terminal (above), so
+  // completion is durable.
+  //
+  // RANK-01: Use the server-owned match.queueId (not profileId.includes('ranked')).
+  // The outbox routes ranked records through RatingService.applyRatedResult()
+  // which fails closed for ineligible records.
+  if (terminalOutbox && matchResultPersistor) {
     buildMatchResultRecord({
       match,
       persistor: matchResultPersistor,
-      queueId: match.profileId?.includes('ranked') ? 'ranked' : 'casual',
+      queueId: match.queueId ?? 'casual',
+      seasonId: match.seasonId && match.seasonId !== 'pending' ? match.seasonId : undefined,
       serverVersion: LAB_VERSION,
     }).then(record => {
-      if (!record) return null;
-      return matchResultPersistor.persistMatchResult(record);
-    }).then(result => {
-      if (result && !result.success) {
-        logEvent('matchPersistError', { matchId: match.matchId, error: result.error });
-      } else if (result) {
-        logEvent('matchPersisted', { matchId: match.matchId, status: result.record.status });
-      }
-    }).catch(err => {
-      logEvent('matchPersistError', { matchId: match.matchId, error: err.message });
-    });
+      if (!record) return;
+      // Enqueue result job — idempotency key is matchId
+      terminalOutbox.enqueueResult(record);
 
-    // Persist server-authoritative achievement unlocks to account_achievements.
-    // Only for authenticated participants (those with an accountId).
-    // Uses SERVER provenance — these rows can only be written by the service role.
-    const achUnlocks = [];
-    for (const [pid] of match.participants) {
-      const achResult = achievementResults[pid];
-      if (!achResult || achResult.newUnlocks.length === 0) continue;
-      const participant = match.participants.get(pid);
-      const accountId = participant?.accountId;
-      if (!accountId) continue; // Skip anonymous players
-      for (const unlock of achResult.newUnlocks) {
-        achUnlocks.push({
-          accountId,
-          achievementId: unlock.achievementId,
-          unlockedAt: unlock.unlockedAt || new Date().toISOString(),
-          provenance: 'SERVER',
-          matchId: match.matchId,
-          rulesVersion: unlock.rulesVersion || null,
-          productVersion: unlock.productVersion || null,
-        });
+      // Enqueue achievement jobs — idempotency key is matchId:accountId
+      const achUnlocks = [];
+      for (const [pid] of match.participants) {
+        const achResult = achievementResults[pid];
+        if (!achResult || achResult.newUnlocks.length === 0) continue;
+        const participant = match.participants.get(pid);
+        const accountId = participant?.accountId;
+        if (!accountId) continue; // Skip anonymous players
+        for (const unlock of achResult.newUnlocks) {
+          achUnlocks.push({
+            accountId,
+            achievementId: unlock.achievementId,
+            unlockedAt: unlock.unlockedAt || new Date().toISOString(),
+            provenance: 'SERVER',
+            matchId: match.matchId,
+            rulesVersion: unlock.rulesVersion || null,
+            productVersion: unlock.productVersion || null,
+          });
+        }
       }
-    }
-    if (achUnlocks.length > 0) {
-      matchResultPersistor.persistAchievementUnlocks(achUnlocks)
-        .then(result => {
-          if (!result.success) {
-            logEvent('achievementPersistError', { matchId: match.matchId, error: result.error });
-          } else {
-            logEvent('achievementsPersisted', { matchId: match.matchId, count: result.persisted });
-          }
-        })
-        .catch(err => {
-          logEvent('achievementPersistError', { matchId: match.matchId, error: err.message });
-        });
-    }
+      if (achUnlocks.length > 0) {
+        terminalOutbox.enqueueAchievements(achUnlocks, match.matchId);
+      }
+      // Trigger an immediate drain attempt (don't wait for the interval)
+      terminalOutbox._drainOnce().catch(err => {
+        logEvent('outboxDrainError', { matchId: match.matchId, error: err?.message ?? String(err) });
+      });
+    }).catch(err => {
+      logEvent('matchResultBuildError', { matchId: match.matchId, error: err?.message ?? String(err) });
+    });
   }
 }
 

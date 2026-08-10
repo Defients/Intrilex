@@ -50,6 +50,76 @@ const ID_PATTERN = /^[A-Za-z0-9_-]{4,64}$/;
 const INVITE_CODE_PATTERN = /^[A-Z0-9]{6,8}$/;
 
 /**
+ * Exact supported engine rules profile IDs.
+ * Sourced from the engine's canonical profile objects (engine 4.2.6):
+ *   CORE_FOUNDATION_AUTHORITY_PROFILE.id         = "core-foundation-authority"
+ *   CORE_ADVANCED_AUTHORITY_PROFILE.id           = "core-advanced-authority"
+ *   CORE_UNRESTRICTED_AUTHORITY_PROFILE.id       = "core-unrestricted-authority"
+ *   CORE_EFFECT_DECLARATION_PROFILE.id           = "core-effect-declaration-authority"
+ *   CORE_RESPONSE_AUTHORITY_PROFILE.id           = "core-response-authority"
+ *   CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id     = "core-private-choice-authority"
+ *
+ * PROTO-01: `startsWith('core-')` was insufficient — it accepted any
+ * fabricated `core-*` string. This exact enumeration is the authoritative
+ * ingress gate. The match server cross-checks this list against the
+ * engine-adapter's profile exports at startup.
+ */
+export const SUPPORTED_PROFILE_IDS = Object.freeze(new Set([
+  'core-foundation-authority',
+  'core-advanced-authority',
+  'core-unrestricted-authority',
+  'core-effect-declaration-authority',
+  'core-response-authority',
+  'core-private-choice-authority',
+]));
+
+/**
+ * Check if a value is an exact supported engine rules profile ID.
+ * @param {unknown} v - Value to check
+ * @returns {boolean}
+ */
+export function isSupportedProfileId(v) {
+  return typeof v === 'string' && SUPPORTED_PROFILE_IDS.has(v);
+}
+
+/**
+ * Server-recognized matchmaking/rating queue IDs.
+ * RANK-01: The client may request one of these, but the server creates
+ * authoritative classification after validation. A client can never
+ * declare a result ranked by setting queueId — the server validates
+ * ranked admission requirements before classifying.
+ */
+export const SUPPORTED_QUEUE_IDS = Object.freeze(new Set([
+  'ranked',
+  'casual',
+  'private',
+]));
+
+/**
+ * Server-owned match mode classifications.
+ * RANK-01: Separate from rulesProfileId (which engine profile executes)
+ * and queueId (which matchmaking/rating queue). The server sets this
+ * immutably after validation — never inferred from profileId or UI labels.
+ */
+export const MATCH_MODES = Object.freeze(new Set([
+  'private',
+  'casual',
+  'ranked',
+  'tutorial',
+  'simulation',
+  'local-ai',
+]));
+
+/**
+ * Check if a value is a supported queue ID.
+ * @param {unknown} v - Value to check
+ * @returns {boolean}
+ */
+export function isSupportedQueueId(v) {
+  return typeof v === 'string' && SUPPORTED_QUEUE_IDS.has(v);
+}
+
+/**
  * Check if a value is a valid identifier.
  * @param {unknown} v - Value to check
  * @returns {boolean}
@@ -112,8 +182,12 @@ export function validateEnvelope(msg) {
  * @returns {ValidationResult}
  */
 export function validateCreateMatch(payload) {
-  if (typeof payload.profileId !== 'string' || !payload.profileId.startsWith('core-')) {
-    return fail(ReasonCode.INVALID_FIELD_TYPE, 'profileId must be a core-* profile');
+  if (!isSupportedProfileId(payload.profileId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'profileId must be an exact supported engine profile');
+  }
+  // RANK-01: Client may request a queue, but server validates ranked admission.
+  if (payload.queueId !== undefined && !isSupportedQueueId(payload.queueId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'queueId must be a supported queue ID');
   }
   return ok();
 }
@@ -223,8 +297,12 @@ export function validateLeaveMatch(payload) {
  * @returns {ValidationResult}
  */
 export function validateQueueJoin(payload) {
-  if (typeof payload.profileId !== 'string' || !payload.profileId.startsWith('core-')) {
-    return fail(ReasonCode.INVALID_FIELD_TYPE, 'profileId must be a core-* profile');
+  if (!isSupportedProfileId(payload.profileId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'profileId must be an exact supported engine profile');
+  }
+  // RANK-01: Client may request a queue, but server validates ranked admission.
+  if (payload.queueId !== undefined && !isSupportedQueueId(payload.queueId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'queueId must be a supported queue ID');
   }
   return ok();
 }

@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "productName": "Intrilex Simulation Lab",
   "version": "0.24.2",
-  "releaseTitle": "Invite Alpha Truth Closure II",
+  "releaseTitle": "Invite Alpha Truth Closure II: replay privacy closure, SQLite match history participant ID fix, connection-match binding defense-in-depth, self-audit exact reconciliation, AI selector vs canon certification split, browser layout proof, release/version truth alignment",
   "buildKind": "RANKED_DUEL_PLAYER_SHELL",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
@@ -16,11 +16,20 @@
   "replayDataVersion": "0.10.1",
   "localProfileSchemaVersion": "1.1.0",
   "defaultSimulationProfile": "core-advanced-authority",
+  "supportedProfileIds": [
+    "core-advanced-authority",
+    "core-effect-declaration-authority",
+    "core-foundation-authority",
+    "core-private-choice-authority",
+    "core-response-authority",
+    "core-unrestricted-authority"
+  ],
   "artifactKinds": [
     "source",
     "deploy",
     "evidence"
   ],
   "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.24.2",
-  "releaseDate": "2026-08-08"
+  "releaseDate": "2026-08-10",
+  "integrityHash": "3b5769d29fee215a6c7fed00b4dd3304"
 }

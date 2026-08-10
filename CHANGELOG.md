@@ -1,5 +1,245 @@
 # Changelog
 
+## v0.25.3 — Backlog Completion (Ranked Leaderboard Hardening)
+
+### Summary
+
+Completes all 6 deferred backlog items from the v0.25.2 polish phase.
+No new user-facing features — infrastructure hardening, performance
+optimization, and defensive validation.
+
+### BACKLOG 1: AbortController in leaderboard-data.js
+
+- All four fetch functions (`fetchLeaderboard`, `fetchPlayerStanding`,
+  `fetchSeasons`, `fetchPlayerSeasonHistory`) now accept an optional
+  `AbortSignal` parameter, passed through to the Supabase client RPC call.
+- `leaderboard.js` workspace creates a new `AbortController` on each
+  `load()` call and aborts the previous one. `destroyLeaderboard()` and
+  `renderLeaderboard()` also abort in-flight requests.
+- This prevents wasted bandwidth and stale responses when the user
+  changes filters rapidly or navigates away.
+
+### BACKLOG 2: Functional indexes for SQL search
+
+- Migration `0011_tier_helpers_and_indexes.sql` creates two functional
+  indexes on `profiles`:
+  - `idx_profiles_handle_lower` on `lower(handle)`
+  - `idx_profiles_display_name_lower` on `lower(display_name)`
+- These accelerate leaderboard search and profile handle lookups that
+  use `lower(p.handle) LIKE lower(v_search)`.
+
+### BACKLOG 3: Tier boundary extraction to SQL helper functions
+
+- Migration `0011_tier_helpers_and_indexes.sql` creates three IMMUTABLE,
+  PARALLEL SAFE SQL helper functions:
+  - `tier_for_rating(integer)` — returns tier name for a rating
+  - `division_for_rating(integer)` — returns division (I/II/III/NULL)
+  - `is_apex_rating(integer)` — returns boolean for apex (>=2400)
+- All 6 RPCs in migrations 0009 and 0010 (`get_ranked_leaderboard`,
+  `get_player_standing`, `get_player_season_history`,
+  `get_public_profile`, `get_self_profile`) are refactored to use
+  these helpers instead of duplicated inline CASE statements.
+- The tier filter in `get_ranked_leaderboard` now uses
+  `tier_for_rating(e.rating) = p_tier_filter` instead of 8 hardcoded
+  `OR` clauses with explicit rating thresholds.
+- Tier thresholds are now defined in ONE place. Changing a threshold
+  requires updating only the helper function, not 6 RPCs.
+
+### BACKLOG 4: Transaction wrapping in match result persistence
+
+- Migration `0012_atomic_persist_match_result.sql` creates a new
+  `persist_match_result(jsonb)` RPC that performs all multi-table
+  writes (matches, match_participants, player_ratings, rating_events,
+  player_stats) in a single database transaction.
+- The RPC is SECURITY DEFINER, restricted to `service_role` only
+  (revoked from authenticated and anon).
+- Includes idempotency gate (returns `alreadyPersisted: true` if match
+  exists), exception handler for automatic rollback, and all
+  `ON CONFLICT DO NOTHING` clauses for defense-in-depth.
+- `SupabaseMatchResultPersistor.persistMatchResult()` now calls the
+  atomic RPC first. If the RPC doesn't exist (migration 0012 not yet
+  applied), it falls back to the legacy multi-call path via
+  `_isMissingRpcError()` detection.
+- The legacy path is preserved as `_persistMatchResultLegacy()` for
+  backward compatibility.
+
+### BACKLOG 5: Catalog ID uniqueness validation
+
+- New `validateCatalogConsistency()` function in `profile-domain.mjs`
+  checks that cosmetic catalog IDs are globally unique across all
+  catalogs (titles, frames, card backs, badges).
+- Detects both cross-catalog collisions (same ID in different catalogs)
+  and within-catalog duplicates (same ID twice in one catalog).
+- The known `'none'` sentinel (shared between titles and frames as the
+  "no cosmetic equipped" default) is detected and reported as a known
+  collision — it is harmless because lookup functions are
+  catalog-specific.
+- Exported from `@intrilex/account-domain` package index.
+
+### Additional: Profile.js request ID tracking (user contribution)
+
+- `profile.js` workspace now uses a monotonic `_renderRequestId` to
+  guard against stale async responses when navigating between profiles.
+- Modal overlay cleanup on re-entry prevents zombie interactions.
+- Tab content cache (`_tabCache`) with invalidation on profile change
+  and after mutations (edit, customize, privacy save).
+- WAI-ARIA tabs pattern: `aria-controls`, `tabindex` roving, `role="tablist"`.
+- Malformed profile data guard (`INVALID_PROFILE` error state).
+
+### Test Updates
+
+- 14 new tests added to `ranked-leaderboard.test.mjs` covering all
+  backlog items. Total: 76 tests (was 62).
+- `supabase-schema.test.mjs` updated to include migrations 0011 and 0012.
+- `v0.22.0-profile-deepening.test.mjs` updated for renamed profile.js
+  functions (`renderRatingHistoryChart`, `renderShowcaseSection`,
+  `renderRankedDetailCard`, `renderRecentMatches`, `renderMatchesTab`).
+- `ranked-glyphs.test.mjs` updated for `profile-ranked-hero` class name.
+- `analytics-ai-ui.test.mjs` updated for `/leaderboard` in System routes.
+- Total test suite: 2839 tests (was 2825), 0 failures.
+
+### Migrations
+
+- `0011_tier_helpers_and_indexes.sql` — tier helper functions + functional indexes + RPC refactors
+- `0012_atomic_persist_match_result.sql` — atomic persist RPC
+
+## v0.25.2 — Ranked Leaderboard Polish (Enhancement-First)
+
+### Summary
+
+Surgical reliability and robustness fixes for the Ranked Leaderboard ecosystem
+introduced in v0.25.1. No new features — bug fixes, edge-case guards, memory
+leak prevention, and regression tests.
+
+### Reliability Fixes
+
+- **Glicko-2 opponent validation** — `glicko2Update()` now validates each
+  opponent's `rating` (finite), `ratingDeviation` (> 0), and `score` ([0, 1])
+  before computation. Previously, NaN/invalid inputs propagated silently
+  through the rating calculation, producing NaN ratings.
+- **Glicko-2 zero-variance guard** — Added defensive check for `vInv === 0`
+  (degenerate opponent RD) to prevent Infinity ratings.
+- **computeWinRate input sanitization** — NaN and negative inputs are now
+  clamped to 0 before division. Previously, `computeWinRate(NaN, 5, 0)` would
+  return NaN instead of 0.
+- **Season finalization rollback** — `SeasonService.finalizeSeason()` now wraps
+  the `processPendingMatches` and `snapshotStandings` hooks in try-catch. On
+  failure, the season is rolled back to ACTIVE (not stuck in FINALIZING
+  forever). The `activateNextSeason` hook failure is logged but does not roll
+  back (the season is correctly archived).
+
+### Memory & Race Condition Fixes
+
+- **Leaderboard stale-request guard** — `load()` now uses a monotonic `_loadId`
+  to ignore stale async responses when the user changes filters rapidly. This
+  prevents the UI from flashing stale data after a newer request completes.
+- **Leaderboard timer cleanup** — `destroyLeaderboard()` export clears the
+  pending search debounce timer. `renderLeaderboard()` also clears any
+  leftover timer on re-entry. Prevents memory leaks when navigating away.
+- **Leaderboard listener accumulation** — Target-level delegation listeners
+  (click, keydown) are now added once per target element (tracked via
+  `_wiredTarget`), preventing listener accumulation across re-renders.
+
+### Robustness Improvements
+
+- **RPC response validation** — `leaderboard-data.js` now validates that RPC
+  responses are arrays via `Array.isArray()` before mapping. Previously,
+  malformed responses would throw cryptic errors.
+- **Error message context** — All RPC error messages now include request
+  parameters (season, tier, queue) for faster debugging.
+
+### Code Health
+
+- **Lint warnings reduced** — Removed 4 unused-var warnings (unused `i` in
+  skeleton renderer, unused imports `deriveOutcome`, `Division`,
+  `buildMatchResultRecord` in test file). Total warnings: 311 (was 315).
+- **8 regression tests added** — Tests for Glicko-2 opponent validation,
+  computeWinRate sanitization, season-service rollback, leaderboard.js
+  stale-request guard, and RPC response validation. Total: 62 tests (was 54).
+
+## v0.25.1 — Ranked Leaderboard & Competitive Standing
+
+### Summary
+
+Complete Ranked Leaderboard ecosystem with Glicko-2 rating model, server-side
+deterministic ranking, season lifecycle, idempotent persistence, and a
+canonical leaderboard UI. The browser is never authoritative — rating,
+position, and season state are all server-owned.
+
+### Rating System (Glicko-2)
+
+- **Glicko-2 rating model** (`packages/account-domain/src/glicko2.mjs`) replaces
+  the legacy Elo system. Tracks rating, rating deviation (RD), and volatility
+  per player per season. RD widens during inactivity and shrinks with play.
+- **Soft-reset season transitions** — RD is increased (never a destructive hard
+  reset). Rating and volatility are preserved across season boundaries.
+- **Peak rating tracking** — `peak_rating` column stores the highest rating
+  achieved in a season, updated monotonically.
+- **Placements** — 5 placement matches required before entering the ladder.
+  `placements_played` capped at `PLACEMENTS_REQUIRED`.
+
+### Database (Migration 0009)
+
+- `ranked_seasons` table with `UPCOMING`/`ACTIVE`/`FINALIZING`/`ARCHIVED`
+  status lifecycle and a partial unique index enforcing the single-active-season
+  invariant.
+- `player_ratings` extended with `rating_deviation`, `volatility`, `peak_rating`,
+  `placements_played`, `last_rated_at`, `last_rated_match_id`.
+- `rating_events` — server-owned audit ledger with `UNIQUE(match_id, user_id)`
+  idempotency constraint. Owner-only SELECT via RLS.
+- `ranked_season_archive` — read-only final standings snapshots. Owner-only
+  SELECT via RLS.
+- Canonical leaderboard index: `rating DESC, rating_deviation ASC,
+  rated_matches DESC, last_rated_at DESC`.
+- 4 SECURITY DEFINER RPCs with locked `search_path = public`:
+  `get_ranked_leaderboard`, `get_player_standing`, `get_ranked_seasons`,
+  `get_player_season_history`. All use `ROW_NUMBER()` for derived position
+  (never stored mutable state). Banned/suspended players excluded.
+
+### Server Rating Service
+
+- `RatingService` (`apps/match-server/src/ranked/rating-service.mjs`) —
+  orchestrates idempotent application of terminal Ranked match results.
+  Rejects non-ranked/non-terminal/self-match/anonymous results.
+- `SeasonService` (`apps/match-server/src/ranked/season-service.mjs`) —
+  resolves active season, lists seasons, idempotent season finalization.
+- `LeaderboardRepository` (`apps/match-server/src/ranked/leaderboard-repository.mjs`)
+  — server-side leaderboard queries via Supabase RPCs.
+- `SupabaseMatchResultPersistor` — idempotency gate via `isMatchPersisted()`;
+  writes Glicko-2 state, peak, placements, rating events, and last-rated
+  metadata. Re-persisting the same matchId is a safe no-op.
+- `FakeMatchResultPersistor` — updated for Glicko-2 state, seasons, peak,
+  placements, and rating event ledger.
+
+### Leaderboard UI
+
+- `/leaderboard` workspace — canonical Ranked leaderboard with Top 100, My Rank
+  (works outside Top 100), search, tier filter, season picker, top-3 emphasis,
+  loading skeletons, empty/error/unavailable states.
+- Server-side ranking via RPCs — the browser never sorts the full table.
+- Responsive collapse to card view on narrow widths.
+- Accessibility: semantic table, `aria-sort`, `aria-live`, `aria-busy`,
+  keyboard-activatable rows, visually-hidden labels, reduced-motion support.
+- `leaderboard-data.js` — browser-side data fetcher using authenticated
+  Supabase client. Returns structured "unavailable" result when Supabase is
+  not configured (graceful offline mode).
+
+### Privacy / RLS
+
+- `toLeaderboardEntry()` strips all private fields (`user_id`, `email`,
+  `ratingDeviation`, `volatility`) — only safe public columns in the DTO.
+- Leaderboard RPC returns `public_player_id` (never `user_id`).
+- `rating_events` and `ranked_season_archive` are owner-only SELECT via RLS.
+- No client write grants on any ranked table — service role only.
+- No service-key references in any browser-side source file.
+
+### Tests
+
+- `test/ranked-leaderboard.test.mjs` — 54 tests covering Glicko-2 model, rank
+  tiers, leaderboard contract, seasons domain, idempotent persistence, peak
+  tracking, placements, RatingService, SeasonService, privacy/RLS, and UI
+  structure. Registered in `package.json` and `scripts/ci.mjs`.
+
 ## v0.24.1 — Network Truth Closure — Invite Alpha
 
 ### Summary

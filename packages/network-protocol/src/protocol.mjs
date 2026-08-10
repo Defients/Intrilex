@@ -5,7 +5,7 @@
 import { PROTOCOL_VERSION, MAX_MESSAGE_SIZE } from './validation.mjs';
 export { PROTOCOL_VERSION, MAX_MESSAGE_SIZE };
 export { ReasonCode, reasonCategory } from './reason-codes.mjs';
-export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateAuthenticate, validateAuthRefresh, checkMessageSize } from './validation.mjs';
+export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateAuthenticate, validateAuthRefresh, checkMessageSize, SUPPORTED_PROFILE_IDS, isSupportedProfileId, SUPPORTED_QUEUE_IDS, MATCH_MODES, isSupportedQueueId } from './validation.mjs';
 
 /**
  * @typedef {Object} ProtocolEnvelope

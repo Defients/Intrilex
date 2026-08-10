@@ -54,6 +54,8 @@ async function startAuthServer(opts = {}) {
     rateLimitCapacity: 10000,
     authMode: opts.authMode ?? 'required',
     identityVerifier: opts.authMode === 'disabled' ? undefined : verifier,
+    // DATA-04: Allow FakeMatchResultPersistor in auth tests (testing only)
+    allowFakePersistor: true,
   });
   return server;
 }

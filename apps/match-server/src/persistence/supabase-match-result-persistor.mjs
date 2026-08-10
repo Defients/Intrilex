@@ -16,7 +16,10 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { MatchResultPersistor } from './match-result-persistor.mjs';
-import { DEFAULT_RATING } from '@intrilex/account-domain';
+import {
+  DEFAULT_RATING, DEFAULT_RATING_DEVIATION, DEFAULT_VOLATILITY,
+  PLACEMENTS_REQUIRED, PROVISIONAL_THRESHOLD,
+} from '@intrilex/account-domain';
 
 export class SupabaseMatchResultPersistor extends MatchResultPersistor {
   /**
@@ -36,16 +39,51 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
   }
 
   /**
+   * Resolve the active season id for a queue from ranked_seasons.
+   * @param {string} queueId
+   * @returns {Promise<string>}
+   */
+  async resolveActiveSeasonId(queueId) {
+    const { data, error } = await this._client
+      .from('ranked_seasons')
+      .select('season_id')
+      .eq('queue_id', queueId)
+      .eq('status', 'ACTIVE')
+      .order('starts_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) return 'season-1';
+    return data.season_id;
+  }
+
+  /**
+   * Check whether a match has already been persisted (idempotency gate).
+   * @param {string} matchId
+   * @returns {Promise<boolean>}
+   */
+  async isMatchPersisted(matchId) {
+    const { data, error } = await this._client
+      .from('matches')
+      .select('match_id')
+      .eq('match_id', matchId)
+      .maybeSingle();
+    if (error) return false;
+    return !!data;
+  }
+
+  /**
    * @param {string} accountId
    * @param {string} queueId
+   * @param {string} [seasonId]
    */
-  async getRatingState(accountId, queueId) {
+  async getRatingState(accountId, queueId, seasonId) {
+    const sid = seasonId ?? await this.resolveActiveSeasonId(queueId);
     const { data, error } = await this._client
       .from('player_ratings')
-      .select('rating, rated_matches, provisional')
+      .select('rating, rating_deviation, volatility, rated_matches, provisional, placements_played, peak_rating')
       .eq('user_id', accountId)
       .eq('queue_id', queueId)
-      .eq('season_id', 'season-0')
+      .eq('season_id', sid)
       .maybeSingle();
 
     if (error) {
@@ -54,8 +92,12 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
     if (!data) return null;
     return {
       rating: data.rating,
+      ratingDeviation: data.rating_deviation ?? DEFAULT_RATING_DEVIATION,
+      volatility: data.volatility ?? DEFAULT_VOLATILITY,
       ratedMatches: data.rated_matches,
       provisional: data.provisional,
+      placementsPlayed: data.placements_played ?? 0,
+      peakRating: data.peak_rating ?? data.rating,
     };
   }
 
@@ -63,6 +105,114 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
    * @param {import('./match-result-persistor.mjs').MatchResultRecord} record
    */
   async persistMatchResult(record) {
+    // Idempotency gate (section 39/94): if the match is already persisted,
+    // return success WITHOUT re-applying ratings. This prevents reconnect/
+    // retry/replay from double-counting. The rating_events UNIQUE(match_id,
+    // user_id) constraint is a defense-in-depth backstop.
+    if (record.matchId && await this.isMatchPersisted(record.matchId)) {
+      return { success: true, error: null, record, alreadyPersisted: true };
+    }
+
+    // ── Atomic path: single RPC call with server-side transaction ──
+    // The persist_match_result RPC wraps all multi-table writes (matches,
+    // match_participants, player_ratings, rating_events, player_stats) in
+    // a single database transaction. If any write fails, all are rolled
+    // back — no partial state. This replaces the previous approach of 5+
+    // separate HTTP round-trips with no transaction wrapping.
+    try {
+      const { data, error } = await this._client.rpc('persist_match_result', {
+        p_record: this._serializeRecordForRpc(record),
+      });
+
+      if (error) {
+        // If the RPC doesn't exist yet (migration 0012 not applied),
+        // fall back to the legacy multi-call path.
+        if (this._isMissingRpcError(error)) {
+          return this._persistMatchResultLegacy(record);
+        }
+        return { success: false, error: `persist_match_result RPC failed: ${error.message}`, record };
+      }
+
+      if (data && data.success === false) {
+        return { success: false, error: data.error ?? 'persist_match_result RPC returned failure', record };
+      }
+
+      return {
+        success: true,
+        error: null,
+        record,
+        alreadyPersisted: data?.alreadyPersisted ?? false,
+      };
+    } catch (err) {
+      // Network errors or RPC not found — fall back to legacy path
+      if (this._isMissingRpcError(err)) {
+        return this._persistMatchResultLegacy(record);
+      }
+      return { success: false, error: err?.message ?? 'persist_match_result threw', record };
+    }
+  }
+
+  /**
+   * Check if an error indicates the persist_match_result RPC doesn't
+   * exist (migration 0012 not yet applied). In that case we fall back
+   * to the legacy multi-call path for backward compatibility.
+   * @param {{ message?: string, code?: string } | Error} err
+   * @returns {boolean}
+   */
+  _isMissingRpcError(err) {
+    const msg = (err?.message ?? String(err)).toLowerCase();
+    return msg.includes('could not find the function')
+        || msg.includes('function public.persist_match_result')
+        || msg.includes('does not exist')
+        || msg.includes('p089')
+        || msg.includes('42883'); // undefined_function error code
+  }
+
+  /**
+   * Serialize a MatchResultRecord into the JSONB shape expected by the
+   * persist_match_result RPC. Converts timestamps to ISO strings and
+   * omits null/undefined fields to keep the payload compact.
+   * @param {import('./match-result-persistor.mjs').MatchResultRecord} record
+   * @returns {Record<string, unknown>}
+   */
+  _serializeRecordForRpc(record) {
+    return {
+      matchId: record.matchId,
+      rulesProfileId: record.rulesProfileId,
+      status: record.status,
+      startedAt: new Date(record.startedAt).toISOString(),
+      endedAt: new Date(record.endedAt).toISOString(),
+      terminationReason: record.terminationReason,
+      winnerUserId: record.winnerUserId,
+      replayHash: record.replayHash,
+      serverVersion: record.serverVersion,
+      rulesVersion: record.rulesVersion,
+      queueId: record.queueId ?? 'casual',
+      seasonId: record.seasonId ?? null,
+      participants: record.participants.map(p => ({
+        accountId: p.accountId,
+        seat: p.seat,
+        result: p.result,
+        ratingBefore: p.ratingBefore,
+        ratingAfter: p.ratingAfter,
+        ratingDelta: p.ratingDelta,
+        rdBefore: p.rdBefore ?? null,
+        rdAfter: p.rdAfter ?? null,
+        volatilityBefore: p.volatilityBefore ?? null,
+        volatilityAfter: p.volatilityAfter ?? null,
+      })),
+    };
+  }
+
+  /**
+   * Legacy multi-call persistence path. Used as a fallback when the
+   * persist_match_result RPC is not available (migration 0012 not applied).
+   * This is the original implementation — 5+ separate HTTP round-trips
+   * with no transaction wrapping. Kept for backward compatibility.
+   * @param {import('./match-result-persistor.mjs').MatchResultRecord} record
+   * @returns {Promise<{ success: boolean, error: string|null, record: import('./match-result-persistor.mjs').MatchResultRecord, alreadyPersisted: boolean }>}
+   */
+  async _persistMatchResultLegacy(record) {
     // Step 1: Insert matches row (idempotent via PK)
     const matchRow = {
       match_id: record.matchId,
@@ -82,11 +232,12 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
       .upsert(matchRow, { onConflict: 'match_id' });
 
     if (matchError) {
-      return { success: false, error: `matches insert failed: ${matchError.message}`, record };
+      return { success: false, error: `matches insert failed: ${matchError.message}`, record, alreadyPersisted: false };
     }
 
     // Step 2: Insert match_participants rows + update ratings/stats
     const queueId = record.queueId ?? 'casual';
+    const seasonId = record.seasonId ?? (queueId === 'ranked' ? await this.resolveActiveSeasonId(queueId) : 'season-1');
 
     for (const p of record.participants) {
       // Skip participants without an account (anonymous play)
@@ -106,13 +257,12 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
         }, { onConflict: 'match_id,user_id' });
 
       if (pError) {
-        return { success: false, error: `match_participants insert failed: ${pError.message}`, record };
+        return { success: false, error: `match_participants insert failed: ${pError.message}`, record, alreadyPersisted: false };
       }
 
       // Skip rating/stats updates for aborted matches
       if (p.result === 'ABORT') continue;
 
-      // Update player_ratings (upsert)
       const isWin = p.result === 'WIN' ? 1 : 0;
       const isLoss = p.result === 'LOSS' ? 1 : 0;
       const isDraw = p.result === 'DRAW' ? 1 : 0;
@@ -120,38 +270,71 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
       // Fetch current state to compute increments
       const { data: currentRating, error: rError } = await this._client
         .from('player_ratings')
-        .select('rating, rated_matches, wins, losses, draws, provisional')
+        .select('rating, rating_deviation, volatility, rated_matches, wins, losses, draws, provisional, placements_played, peak_rating')
         .eq('user_id', p.accountId)
         .eq('queue_id', queueId)
-        .eq('season_id', 'season-0')
+        .eq('season_id', seasonId)
         .maybeSingle();
 
       if (rError) {
-        return { success: false, error: `player_ratings fetch failed: ${rError.message}`, record };
+        return { success: false, error: `player_ratings fetch failed: ${rError.message}`, record, alreadyPersisted: false };
       }
 
       const existing = currentRating ?? {
-        rating: DEFAULT_RATING, rated_matches: 0, wins: 0, losses: 0, draws: 0, provisional: true,
+        rating: DEFAULT_RATING, rating_deviation: DEFAULT_RATING_DEVIATION, volatility: DEFAULT_VOLATILITY,
+        rated_matches: 0, wins: 0, losses: 0, draws: 0, provisional: true,
+        placements_played: 0, peak_rating: DEFAULT_RATING,
       };
       const newRatedMatches = existing.rated_matches + 1;
+      const newPlacements = Math.min((existing.placements_played ?? 0) + 1, PLACEMENTS_REQUIRED);
+      const newRating = p.ratingAfter ?? existing.rating;
+      const newPeak = Math.max(existing.peak_rating ?? existing.rating, newRating);
 
       const { error: ratingError } = await this._client
         .from('player_ratings')
         .upsert({
           user_id: p.accountId,
           queue_id: queueId,
-          season_id: 'season-0',
-          rating: p.ratingAfter ?? existing.rating,
-          provisional: newRatedMatches < 10,
+          season_id: seasonId,
+          rating: newRating,
+          rating_deviation: p.rdAfter ?? existing.rating_deviation ?? DEFAULT_RATING_DEVIATION,
+          volatility: p.volatilityAfter ?? existing.volatility ?? DEFAULT_VOLATILITY,
+          provisional: newRatedMatches < PROVISIONAL_THRESHOLD,
           rated_matches: newRatedMatches,
+          placements_played: newPlacements,
+          peak_rating: newPeak,
           wins: existing.wins + isWin,
           losses: existing.losses + isLoss,
           draws: existing.draws + isDraw,
+          last_rated_at: new Date().toISOString(),
+          last_rated_match_id: record.matchId,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id,queue_id,season_id' });
 
       if (ratingError) {
-        return { success: false, error: `player_ratings upsert failed: ${ratingError.message}`, record };
+        return { success: false, error: `player_ratings upsert failed: ${ratingError.message}`, record, alreadyPersisted: false };
+      }
+
+      // Record rating event (audit ledger — idempotency via UNIQUE match_id,user_id)
+      if (p.ratingBefore !== null && p.ratingAfter !== null) {
+        await this._client
+          .from('rating_events')
+          .upsert({
+            match_id: record.matchId,
+            user_id: p.accountId,
+            season_id: seasonId,
+            queue_id: queueId,
+            rating_before: p.ratingBefore,
+            rating_after: p.ratingAfter,
+            rating_delta: p.ratingDelta,
+            rd_before: p.rdBefore ?? existing.rating_deviation ?? DEFAULT_RATING_DEVIATION,
+            rd_after: p.rdAfter ?? existing.rating_deviation ?? DEFAULT_RATING_DEVIATION,
+            volatility_before: p.volatilityBefore ?? existing.volatility ?? DEFAULT_VOLATILITY,
+            volatility_after: p.volatilityAfter ?? existing.volatility ?? DEFAULT_VOLATILITY,
+            result: p.result,
+            algorithm_version: 'glicko2-v1',
+          }, { onConflict: 'match_id,user_id' });
+        // A conflict here means the event was already recorded — safe no-op.
       }
 
       // Update player_stats (upsert)
@@ -162,7 +345,7 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
         .maybeSingle();
 
       if (sError) {
-        return { success: false, error: `player_stats fetch failed: ${sError.message}`, record };
+        return { success: false, error: `player_stats fetch failed: ${sError.message}`, record, alreadyPersisted: false };
       }
 
       const exStats = currentStats ?? {
@@ -191,11 +374,11 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
         }, { onConflict: 'user_id' });
 
       if (statsError) {
-        return { success: false, error: `player_stats upsert failed: ${statsError.message}`, record };
+        return { success: false, error: `player_stats upsert failed: ${statsError.message}`, record, alreadyPersisted: false };
       }
     }
 
-    return { success: true, error: null, record };
+    return { success: true, error: null, record, alreadyPersisted: false };
   }
 
   /**

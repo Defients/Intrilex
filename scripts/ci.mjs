@@ -172,7 +172,17 @@ const STAGES = [
   ['auth-server', 'node', ['--test', 'test/auth-server.test.mjs']],
   ['auth-reconnect', 'node', ['--test', 'test/auth-reconnect.test.mjs']],
   ['supabase-schema', 'node', ['--test', 'test/supabase-schema.test.mjs']],
+  ['ranked-leaderboard', 'node', ['--test', 'test/ranked-leaderboard.test.mjs']],
   ['match-result-persistence', 'node', ['--test', 'test/match-result-persistence.test.mjs']],
+  // Canonical Ranked glyph integration (8 tier assets + presentation registry)
+  ['ranked-glyphs', 'node', ['--test', 'test/ranked-glyphs.test.mjs']],
+  // Player Profile system (domain contracts, SQL schema, projection builders)
+  ['profile-domain', 'node', ['--test', 'test/profile-domain.test.mjs']],
+  ['profile-schema', 'node', ['--test', 'test/profile-schema.test.mjs']],
+  ['profile-projection', 'node', ['--test', 'test/profile-projection.test.mjs']],
+  ['sec-01-secret-containment', 'node', ['--test', 'test/sec-01-secret-containment.test.mjs']],
+  ['release-identity', 'node', ['--test', 'test/release-identity.test.mjs']],
+  ['engine-manifest', 'node', ['--test', 'test/engine-manifest.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

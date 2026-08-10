@@ -12,6 +12,7 @@ const rendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/rank
 // ── Required grid areas ──────────────────────────────────────────
 // Every direct child of the duel grid MUST have one of these named areas.
 // v0.25: Removed scoreSpine — score integrated into prestige banners
+// Phase 4A: Added scoreRail — the authoritative score display cell
 const requiredAreas = {
   '.rd-header': 'header',
   '.rd-enemy-enduring': 'enemyE',
@@ -23,6 +24,7 @@ const requiredAreas = {
   '.rd-stack': 'stack',
   '.rd-chat': 'chat',
   '.rd-gamelog': 'gamelog',
+  '.rd-score-rail': 'scoreRail',
   '.rd-player-enduring': 'playerE',
   '.rd-player-points': 'playerP',
   '.rd-player-profile': 'playerPro',
@@ -157,11 +159,11 @@ test('CSS: responsive card size variables exist', () => {
   assert.ok(cssSrc.includes('clamp('), 'Card sizes must use clamp() for responsive scaling');
 });
 
-test('Renderer: all 14 grid cells are emitted with data-grid attributes (v0.25: scoreSpine removed)', () => {
+test('Renderer: all 15 grid cells are emitted with data-grid attributes (v0.25: scoreRail added)', () => {
   const expectedDataGrids = [
     'enemyE', 'enemyP', 'enemyProfile',
     'piles', 'swap', 'stage', 'stack', 'chat',
-    'playerE', 'playerP', 'gamelog',
+    'playerE', 'playerP', 'gamelog', 'scoreRail',
     'playerPro', 'playerH', 'actions',
   ];
   for (const area of expectedDataGrids) {
@@ -212,5 +214,59 @@ test('Renderer: active stage shows selected card preview when a card is selected
   assert.ok(
     rendererSrc.includes('selectedSourceCardId'),
     'Active stage must check selectedSourceCardId for card preview'
+  );
+});
+
+// ── Phase 4A: Score Rail tests ──
+
+test('CSS: scoreRail area exists in grid-template-areas (Phase 4A)', () => {
+  const areasBlock = cssSrc.match(/grid-template-areas:\s*([\s\S]*?)!/);
+  assert.ok(areasBlock, 'grid-template-areas must exist in CSS');
+  assert.ok(areasBlock[1].includes('scoreRail'), 'grid-template-areas must contain "scoreRail"');
+});
+
+test('CSS: .rd-score-rail has grid-area: scoreRail assignment (Phase 4A)', () => {
+  assert.ok(
+    /\.rd-score-rail\s*\{[^}]*grid-area:\s*scoreRail\s*!important/s.test(cssSrc),
+    '.rd-score-rail must have grid-area: scoreRail !important'
+  );
+});
+
+test('CSS: score rail has responsive media queries (Phase 4A)', () => {
+  // Must have at least one media query that adjusts score rail elements
+  const scoreRailMediaPattern = /@media[^{]*\{[^}]*\.rd-score-cell/s;
+  assert.ok(
+    scoreRailMediaPattern.test(cssSrc),
+    'Must have responsive media queries for .rd-score-cell elements'
+  );
+});
+
+test('Renderer: score rail is rendered with OPP and YOU cells (Phase 4A)', () => {
+  assert.ok(
+    rendererSrc.includes('rd-score-rail'),
+    'Renderer must emit .rd-score-rail element'
+  );
+  assert.ok(
+    rendererSrc.includes('rd-score-cell opp'),
+    'Renderer must emit opponent score cell'
+  );
+  assert.ok(
+    rendererSrc.includes('rd-score-cell you'),
+    'Renderer must emit player score cell'
+  );
+  assert.ok(
+    rendererSrc.includes('data-testid="score-rail"'),
+    'Score rail must have data-testid="score-rail"'
+  );
+});
+
+test('Renderer: score rail cells have aria-label with score values (Phase 4A)', () => {
+  assert.ok(
+    rendererSrc.includes('aria-label="Opponent score'),
+    'Opponent score cell must have aria-label with score value'
+  );
+  assert.ok(
+    rendererSrc.includes('aria-label="Your score'),
+    'Player score cell must have aria-label with score value'
   );
 });

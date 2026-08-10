@@ -23,6 +23,8 @@ import { getCardArtBoardPath, getCardArtBoardPosition } from '../card-art-regist
 import { getArchetypePersonality } from './ai-personality.js';
 import { renderPlayHub, renderNewMatchSetup } from './ranked-duel-hub.mjs';
 import { renderTerminal, renderError, renderKeyboardHelp, formatPhase, formatTerminationReason } from './ranked-duel-terminal.mjs';
+import { ratingToTierDivision } from '@intrilex/account-domain/rank-tier';
+import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
 
 // Re-export hub and terminal functions for backward compatibility
 // (tests and play-app.js import these from ranked-duel-renderer.mjs)
@@ -1274,7 +1276,16 @@ function renderPlayerPlate(plate, side) {
   const ratingHtml = plate.rating
     ? `<span class="rd-plate-rating">${plate.rating.value}${plate.rating.provisional ? '?' : ''}</span>`
     : (plate.aiRating ? `<span class="rd-plate-rating">AI ${plate.aiRating}</span>` : '');
+  // Compact rank glyph for human players (32px — enhances identity without
+  // consuming battlefield space). AI opponents show no rank glyph.
+  const rankGlyph = plate.isHuman && plate.rating
+    ? (() => {
+        const a = ratingToTierDivision(plate.rating.value, { ratedMatches: plate.rating.ratedMatches });
+        return renderRankGlyph({ tier: a.tier, division: a.division, size: 32, showDivision: true, decorative: true, className: 'rd-plate-glyph' });
+      })()
+    : '';
   return `<div class="rd-player-plate ${side}">
+    ${rankGlyph}
     <div class="rd-plate-avatar ${side}">${esc(plate.monogram)}</div>
     <div class="rd-plate-info">
       <div class="rd-plate-name" title="${esc(plate.displayName)}">${esc(plate.displayName)}</div>
@@ -1318,6 +1329,13 @@ function renderProfileBlock(plate, side, vm) {
     : (plate.aiRating ? `<span class="rd-plate-rating">AI ${plate.aiRating}</span>` : '');
   const isActive = vm.match.activePlayerId === plate.playerId;
   const sideLabel = side === 'opponent' ? (plate.isHuman ? 'Human' : 'AI Opponent') : 'You';
+  // Rank label for human players (e.g. "Vanguard II"). AI shows no rank label.
+  const rankLabelHtml = plate.isHuman && plate.rating
+    ? (() => {
+        const a = ratingToTierDivision(plate.rating.value, { ratedMatches: plate.rating.ratedMatches });
+        return a.isPlacement ? '' : `<span class="rd-prestige-rank" data-testid="profile-rank-label-${side}">${esc(rankLabel(a.tier, a.division))}</span>`;
+      })()
+    : '';
 
   // v0.25: Prestige banner is identity-only (name, rating, badges, cosmetics).
   // Score has been moved to the dedicated Score Rail between Game Log and Active Stage.
@@ -1327,7 +1345,7 @@ function renderProfileBlock(plate, side, vm) {
     <div class="rd-prestige-banner-scrim" aria-hidden="true"></div>
     <div class="rd-prestige-banner-content">
       <span class="rd-prestige-banner-name">${esc(plate.displayName)}</span>
-      <span class="rd-prestige-banner-meta">${esc(sideLabel)} ${ratingHtml} ${badgeHtml}</span>
+      <span class="rd-prestige-banner-meta">${esc(sideLabel)} ${ratingHtml} ${rankLabelHtml} ${badgeHtml}</span>
     </div>
   </div>`;
 

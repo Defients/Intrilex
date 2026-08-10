@@ -18,8 +18,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\//, '')), '..');
+// Phase 2C: Use fileURLToPath for cross-platform path resolution.
+// The previous pathname.replace(/^\//, '') hack was POSIX-only and
+// broke on Windows where pathnames have drive letters (e.g. /H:/...).
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 async function readSrc(rel) {
   return readFile(path.join(root, rel), 'utf8');

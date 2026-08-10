@@ -23,7 +23,7 @@ export const MAX_QUEUE_SIZE = 200;
 export const QUEUE_TIMEOUT_MS = 120000; // 2 minutes
 
 /**
- * @typedef {{ connectionId: string, profileId: string, joinedAt: number, accountId: string|null }} QueueEntry
+ * @typedef {{ connectionId: string, profileId: string, joinedAt: number, accountId: string|null, queueId: string|null }} QueueEntry
  */
 /**
  * @typedef {object} EnqueueResult
@@ -61,9 +61,10 @@ export class MatchmakingQueue {
    * @param {string} connectionId
    * @param {string} profileId
    * @param {string|null} [accountId] - Account ID for identity-based queue dedup + self-match prevention
+   * @param {string|null} [queueId] - Requested queue ('ranked'|'casual'|null) — RANK-01
    * @returns {EnqueueResult}
    */
-  enqueue(connectionId, profileId, accountId = null) {
+  enqueue(connectionId, profileId, accountId = null, queueId = null) {
     if (this._byConnection.has(connectionId)) {
       return { queued: false, error: 'Already in queue', code: 'ALREADY_IN_QUEUE' };
     }
@@ -79,7 +80,7 @@ export class MatchmakingQueue {
       return { queued: false, error: 'Queue is full', code: 'QUEUE_FULL' };
     }
 
-    const entry = { connectionId, profileId, joinedAt: Date.now(), accountId };
+    const entry = { connectionId, profileId, joinedAt: Date.now(), accountId, queueId };
     this._queue.push(entry);
     this._byConnection.set(connectionId, this._queue.length - 1);
 
@@ -164,6 +165,8 @@ export class MatchmakingQueue {
    * @private
    */
   _tryPair(profileId) {
+    // RANK-01: Match by both profileId and queueId — ranked players should
+    // only be paired with other ranked players, casual with casual.
     const candidates = this._queue.filter(e => e.profileId === profileId);
     if (candidates.length < 2) return null;
 
@@ -176,6 +179,16 @@ export class MatchmakingQueue {
       b = different;
     }
 
+    // RANK-01: Only pair entries with the same queueId (or both null)
+    if ((a.queueId ?? 'casual') !== (b.queueId ?? 'casual')) {
+      // Try to find a better match with the same queueId
+      const sameQueue = candidates.filter(e => (e.queueId ?? 'casual') === (a.queueId ?? 'casual') && e.connectionId !== a.connectionId);
+      if (sameQueue.length === 0) return null;
+      const different2 = sameQueue.find(e => !a.accountId || !e.accountId || e.accountId !== a.accountId);
+      if (!different2) return null;
+      b = different2;
+    }
+
     // Remove both from queue
     this.dequeue(a.connectionId);
     this.dequeue(b.connectionId);
@@ -185,8 +198,8 @@ export class MatchmakingQueue {
 
     const seed = randomBytes(4).readUInt32BE(0);
     const result = this._onCreateMatch(profileId, seed, [
-      { connectionId: a.connectionId, accountId: a.accountId },
-      { connectionId: b.connectionId, accountId: b.accountId },
+      { connectionId: a.connectionId, accountId: a.accountId, queueId: a.queueId },
+      { connectionId: b.connectionId, accountId: b.accountId, queueId: b.queueId },
     ]);
 
     return result; // [{ connectionId, matchId, participantId, participantToken }, ...]

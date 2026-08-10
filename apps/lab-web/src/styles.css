@@ -6,3 +6,5 @@
 @import './css/feature-components.css';
 @import './css/pages-polish.css';
 @import './css/advanced-card-rules.css';
+@import './play/rank/rank-glyph.css';
+@import './play/ranked/leaderboard.css';

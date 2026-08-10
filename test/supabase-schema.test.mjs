@@ -34,7 +34,7 @@ test('schema: supabase directory structure exists', async () => {
   assert.ok(existsSync(path.join(root, 'supabase', 'seed.sql')), 'supabase/seed.sql must exist');
 });
 
-test('schema: all 7 migration files exist and are non-empty', async () => {
+test('schema: all migration files exist and are non-empty', async () => {
   const files = await readdir(migrationsDir);
   const expected = [
     '0001_profiles.sql',
@@ -44,6 +44,11 @@ test('schema: all 7 migration files exist and are non-empty', async () => {
     '0005_achievements.sql',
     '0006_moderation.sql',
     '0007_migration_meta.sql',
+    '0008_service_role_grants.sql',
+    '0009_ranked_leaderboard.sql',
+    '0010_profile_customization.sql',
+    '0011_tier_helpers_and_indexes.sql',
+    '0012_atomic_persist_match_result.sql',
   ];
   for (const name of expected) {
     assert.ok(files.includes(name), `migration ${name} must exist`);
@@ -146,4 +151,86 @@ test('schema: .env.example documents required variables', async () => {
   assert.ok(envExample.includes('SUPABASE_SECRET_KEY'), '.env.example must document SUPABASE_SECRET_KEY');
   assert.ok(envExample.includes('INTRILEX_AUTH_MODE'), '.env.example must document INTRILEX_AUTH_MODE');
   assert.ok(envExample.includes('NEVER'), '.env.example must warn about secrets');
+});
+
+// ── Migration 0009: Ranked Leaderboard ecosystem ──
+
+test('schema: ranked_seasons table exists with RLS and single-active guard', async () => {
+  const sql = await readMigration('0009_ranked_leaderboard.sql');
+  assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.ranked_seasons'), 'ranked_seasons table must exist');
+  assert.ok(sql.includes("status IN ('UPCOMING','ACTIVE','FINALIZING','ARCHIVED')"), 'season status CHECK must exist');
+  assert.ok(sql.includes('ENABLE ROW LEVEL SECURITY'), 'ranked_seasons must enable RLS');
+  // Single-active-season invariant guard (partial unique index)
+  assert.ok(sql.includes('ranked_seasons_one_active'), 'single-active-season guard index must exist');
+  assert.ok(sql.includes("WHERE status = 'ACTIVE'"), 'guard must be scoped to ACTIVE status');
+  // No client writes
+  assert.ok(!sql.match(/FOR (INSERT|UPDATE|DELETE) TO authenticated.*ranked_seasons/s), 'ranked_seasons must not allow client writes');
+});
+
+test('schema: player_ratings extended with Glicko-2 state + peak + placements', async () => {
+  const sql = await readMigration('0009_ranked_leaderboard.sql');
+  assert.ok(sql.includes('rating_deviation'), 'rating_deviation column must be added');
+  assert.ok(sql.includes('volatility'), 'volatility column must be added');
+  assert.ok(sql.includes('peak_rating'), 'peak_rating column must be added');
+  assert.ok(sql.includes('placements_played'), 'placements_played column must be added');
+  assert.ok(sql.includes('last_rated_at'), 'last_rated_at column must be added');
+  // Leaderboard index
+  assert.ok(sql.includes('player_ratings_leaderboard_idx'), 'leaderboard index must exist');
+  assert.ok(sql.includes('rating DESC'), 'index must order by rating DESC');
+});
+
+test('schema: rating_events ledger has idempotency constraint + RLS', async () => {
+  const sql = await readMigration('0009_ranked_leaderboard.sql');
+  assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.rating_events'), 'rating_events table must exist');
+  assert.ok(sql.includes('UNIQUE (match_id, user_id)'), 'idempotency UNIQUE constraint must exist');
+  assert.ok(sql.includes('algorithm_version'), 'algorithm_version must be tracked');
+  assert.ok(sql.includes('ENABLE ROW LEVEL SECURITY'), 'rating_events must enable RLS');
+  // Owner-only SELECT; no client INSERT/UPDATE/DELETE
+  assert.ok(sql.includes('rating_events_owner_select'), 'owner SELECT policy must exist');
+  assert.ok(!sql.match(/FOR (INSERT|UPDATE|DELETE) TO authenticated.*rating_events/s), 'rating_events must not allow client writes');
+});
+
+test('schema: ranked_season_archive is read-only to clients', async () => {
+  const sql = await readMigration('0009_ranked_leaderboard.sql');
+  assert.ok(sql.includes('ranked_season_archive'), 'archive table must exist');
+  assert.ok(sql.includes('final_position'), 'archive must store final_position');
+  assert.ok(sql.includes('peak_rating'), 'archive must store peak_rating');
+  assert.ok(sql.includes('peak_tier'), 'archive must store peak_tier');
+  assert.ok(sql.includes('ENABLE ROW LEVEL SECURITY'), 'archive must enable RLS');
+  assert.ok(!sql.match(/FOR (INSERT|UPDATE|DELETE) TO authenticated.*archive/s), 'archive must not allow client writes');
+});
+
+test('schema: leaderboard RPCs are SECURITY DEFINER with locked search_path', async () => {
+  const sql = await readMigration('0009_ranked_leaderboard.sql');
+  assert.ok(sql.includes('get_ranked_leaderboard'), 'leaderboard RPC must exist');
+  assert.ok(sql.includes('get_player_standing'), 'player standing RPC must exist');
+  assert.ok(sql.includes('get_ranked_seasons'), 'seasons RPC must exist');
+  assert.ok(sql.includes('get_player_season_history'), 'season history RPC must exist');
+  // All RPCs must be SECURITY DEFINER with locked search_path (section 64)
+  const secDefCount = (sql.match(/SECURITY DEFINER/g) || []).length;
+  assert.ok(secDefCount >= 4, 'all 4 leaderboard RPCs must be SECURITY DEFINER');
+  assert.ok(sql.includes("SET search_path = public"), 'RPCs must lock search_path');
+  // RPCs must use ROW_NUMBER (derived position, not stored mutable state)
+  assert.ok(sql.includes('ROW_NUMBER()'), 'RPCs must derive position via ROW_NUMBER');
+  // RPCs must exclude banned players
+  assert.ok(sql.includes("m.status = 'ACTIVE'"), 'RPCs must exclude banned/suspended players');
+  // RPCs must not expose auth uuid as a returned column — they use public_player_id
+  assert.ok(sql.includes('public_player_id'), 'RPCs must return safe public_player_id');
+  // The leaderboard RPC's RETURNS block lists safe columns only (no user_id column)
+  const lbBlock = sql.split('get_ranked_leaderboard')[1].split('get_player_standing')[0];
+  assert.ok(!lbBlock.includes('user_id'), 'get_ranked_leaderboard RETURNS block must not list user_id');
+});
+
+test('schema: leaderboard RPC grants execute to authenticated (read-only)', async () => {
+  const sql = await readMigration('0009_ranked_leaderboard.sql');
+  assert.ok(sql.includes('GRANT EXECUTE ON FUNCTION public.get_ranked_leaderboard TO authenticated'), 'leaderboard RPC must be executable by authenticated');
+  // No GRANT INSERT/UPDATE/DELETE on the new tables to authenticated
+  assert.ok(!sql.match(/GRANT (INSERT|UPDATE|DELETE) ON TABLE.*TO authenticated/s), 'no client write grants on ranked tables');
+});
+
+test('schema: first season is seeded idempotently', async () => {
+  const sql = await readMigration('0009_ranked_leaderboard.sql');
+  assert.ok(sql.includes("season-1"), 'first season must be seeded');
+  assert.ok(sql.includes("ON CONFLICT (season_id) DO NOTHING"), 'season seed must be idempotent');
+  assert.ok(sql.includes("'ACTIVE'"), 'seeded season must be ACTIVE');
 });

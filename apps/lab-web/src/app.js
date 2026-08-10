@@ -19,6 +19,7 @@ import { renderEvidence } from './workspaces/evidence.js';
 import { renderIntelligence } from './workspaces/intelligence.js';
 import { renderTournament } from './workspaces/tournament.js';
 import { renderProfile } from './workspaces/profile.js';
+import { renderLeaderboard } from './workspaces/leaderboard.js';
 import { renderAchievementsWorkspace } from './play/achievements/achievement-ui.js';
 import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces, renderCardFaces } from './workspaces/observatory.js';
 import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js';
@@ -63,7 +64,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/cards': renderCardFaces, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/profile': renderProfile, '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app)
+    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/profile': renderProfile, '/player': renderProfile, '/leaderboard': () => renderLeaderboard(app), '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app)
   };
   try { (renderers[r] ?? renderEvidence)(); }
   catch (error) {

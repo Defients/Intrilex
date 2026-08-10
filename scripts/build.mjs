@@ -65,6 +65,12 @@ if (!traceIndexExists) {
 const cardArt = spawnSync(process.execPath, ['scripts/build-card-art.mjs'], { cwd: root, stdio: 'inherit' });
 if (cardArt.status !== 0) process.exit(cardArt.status ?? 1);
 
+// ── Ranked glyphs: regenerate PNG derivatives from 1024 masters (deterministic, skip-unchanged) ──
+// Masters live in <root>/ranked-glyphs/ (canonical immutable source artwork).
+// Derivatives (256/128/64, alpha-preserving) ship under apps/lab-web/src/assets/ranked/glyphs/.
+const rankedGlyphs = spawnSync(process.execPath, ['scripts/build-ranked-glyphs.mjs'], { cwd: root, stdio: 'inherit' });
+if (rankedGlyphs.status !== 0) process.exit(rankedGlyphs.status ?? 1);
+
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
 await cp(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });

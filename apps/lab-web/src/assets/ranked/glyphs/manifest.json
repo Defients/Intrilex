@@ -1,0 +1,207 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedBy": "scripts/build-ranked-glyphs.mjs",
+  "source": "ranked-glyphs/",
+  "masterSize": {
+    "width": 1024,
+    "height": 1024,
+    "channels": 4
+  },
+  "derivativeSizes": [
+    256,
+    128,
+    64
+  ],
+  "tierCount": 8,
+  "tiers": [
+    "initiate",
+    "cipher",
+    "warden",
+    "vanguard",
+    "ascendant",
+    "paragon",
+    "sovereign",
+    "intrilex"
+  ],
+  "ladderOrder": [
+    "UNRANKED",
+    "INITIATE",
+    "CIPHER",
+    "WARDEN",
+    "VANGUARD",
+    "ASCENDANT",
+    "PARAGON",
+    "SOVEREIGN",
+    "INTRILEX"
+  ],
+  "entries": [
+    {
+      "tier": "ascendant",
+      "size": 64,
+      "file": "64/ascendant.png",
+      "bytes": 4250,
+      "hash": "ca74aa4f8cfabf72"
+    },
+    {
+      "tier": "ascendant",
+      "size": 128,
+      "file": "128/ascendant.png",
+      "bytes": 14389,
+      "hash": "628230e729e4687f"
+    },
+    {
+      "tier": "ascendant",
+      "size": 256,
+      "file": "256/ascendant.png",
+      "bytes": 51210,
+      "hash": "b4773938d43f469f"
+    },
+    {
+      "tier": "cipher",
+      "size": 64,
+      "file": "64/cipher.png",
+      "bytes": 2720,
+      "hash": "433ec1173667fc48"
+    },
+    {
+      "tier": "cipher",
+      "size": 128,
+      "file": "128/cipher.png",
+      "bytes": 9270,
+      "hash": "856a53e6f19c91b3"
+    },
+    {
+      "tier": "cipher",
+      "size": 256,
+      "file": "256/cipher.png",
+      "bytes": 33505,
+      "hash": "38e47d19118e4d68"
+    },
+    {
+      "tier": "initiate",
+      "size": 64,
+      "file": "64/initiate.png",
+      "bytes": 1505,
+      "hash": "d1ad3dd6c12fc833"
+    },
+    {
+      "tier": "initiate",
+      "size": 128,
+      "file": "128/initiate.png",
+      "bytes": 4336,
+      "hash": "04f14b76b7b7711c"
+    },
+    {
+      "tier": "initiate",
+      "size": 256,
+      "file": "256/initiate.png",
+      "bytes": 12770,
+      "hash": "5632773c8e43f4f6"
+    },
+    {
+      "tier": "intrilex",
+      "size": 64,
+      "file": "64/intrilex.png",
+      "bytes": 4578,
+      "hash": "3e78dfdcee604b99"
+    },
+    {
+      "tier": "intrilex",
+      "size": 128,
+      "file": "128/intrilex.png",
+      "bytes": 15965,
+      "hash": "615d189cda0f7de1"
+    },
+    {
+      "tier": "intrilex",
+      "size": 256,
+      "file": "256/intrilex.png",
+      "bytes": 58275,
+      "hash": "97697ebf66df16ba"
+    },
+    {
+      "tier": "paragon",
+      "size": 64,
+      "file": "64/paragon.png",
+      "bytes": 2789,
+      "hash": "fc122f293e7d2ec4"
+    },
+    {
+      "tier": "paragon",
+      "size": 128,
+      "file": "128/paragon.png",
+      "bytes": 8994,
+      "hash": "ccd257c53267fa6b"
+    },
+    {
+      "tier": "paragon",
+      "size": 256,
+      "file": "256/paragon.png",
+      "bytes": 31330,
+      "hash": "e3c87455a0a775f8"
+    },
+    {
+      "tier": "sovereign",
+      "size": 64,
+      "file": "64/sovereign.png",
+      "bytes": 6217,
+      "hash": "be0a42d82a74743d"
+    },
+    {
+      "tier": "sovereign",
+      "size": 128,
+      "file": "128/sovereign.png",
+      "bytes": 22676,
+      "hash": "66c5b7949977b22f"
+    },
+    {
+      "tier": "sovereign",
+      "size": 256,
+      "file": "256/sovereign.png",
+      "bytes": 84554,
+      "hash": "8dc6bb1123cc4d97"
+    },
+    {
+      "tier": "vanguard",
+      "size": 64,
+      "file": "64/vanguard.png",
+      "bytes": 4702,
+      "hash": "000f4c3563bfc495"
+    },
+    {
+      "tier": "vanguard",
+      "size": 128,
+      "file": "128/vanguard.png",
+      "bytes": 16782,
+      "hash": "a7955afce27c9631"
+    },
+    {
+      "tier": "vanguard",
+      "size": 256,
+      "file": "256/vanguard.png",
+      "bytes": 63335,
+      "hash": "01afcc60dd9ea25d"
+    },
+    {
+      "tier": "warden",
+      "size": 64,
+      "file": "64/warden.png",
+      "bytes": 3483,
+      "hash": "b5beac1d7955deda"
+    },
+    {
+      "tier": "warden",
+      "size": 128,
+      "file": "128/warden.png",
+      "bytes": 11599,
+      "hash": "76aab44c2c405fab"
+    },
+    {
+      "tier": "warden",
+      "size": 256,
+      "file": "256/warden.png",
+      "bytes": 41302,
+      "hash": "9cb3714d641b94fe"
+    }
+  ]
+}

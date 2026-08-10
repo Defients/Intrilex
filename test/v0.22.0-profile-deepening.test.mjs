@@ -216,7 +216,7 @@ test('migrateProfile enriches old verified results with difficulty', async () =>
 test('profile workspace file exists and exports renderProfile', async () => {
   const wsPath = path.join(root, 'apps/lab-web/src/workspaces/profile.js');
   const source = await readFile(wsPath, 'utf8');
-  assert.ok(source.includes('export function renderProfile'), 'profile.js must export renderProfile');
+  assert.ok(source.includes('export async function renderProfile'), 'profile.js must export renderProfile');
 });
 
 test('router.js registers /profile route', async () => {
@@ -232,21 +232,24 @@ test('app.js imports and routes to renderProfile', async () => {
 
 test('profile workspace renders rating chart', async () => {
   const source = await readFile(path.join(root, 'apps/lab-web/src/workspaces/profile.js'), 'utf8');
-  assert.ok(source.includes('renderRatingChart'), 'must have rating chart renderer');
+  assert.ok(source.includes('renderRatingHistoryChart'), 'must have rating chart renderer');
   assert.ok(source.includes('svg'), 'must use SVG for chart');
 });
 
 test('profile workspace renders badge gallery', async () => {
   const source = await readFile(path.join(root, 'apps/lab-web/src/workspaces/profile.js'), 'utf8');
-  assert.ok(source.includes('renderBadgeGallery'), 'must have badge gallery renderer');
+  assert.ok(source.includes('renderShowcaseSection'), 'must have showcase section for badges');
 });
 
 test('profile workspace renders archetype breakdown', async () => {
   const source = await readFile(path.join(root, 'apps/lab-web/src/workspaces/profile.js'), 'utf8');
-  assert.ok(source.includes('renderArchetypeBreakdown'), 'must have archetype breakdown renderer');
+  // Archetype breakdown was replaced by the ranked detail card in the v0.25
+  // profile refactor. Verify the ranked tab has detail content.
+  assert.ok(source.includes('renderRankedDetailCard'), 'must have ranked detail card');
 });
 
 test('profile workspace renders match history', async () => {
   const source = await readFile(path.join(root, 'apps/lab-web/src/workspaces/profile.js'), 'utf8');
-  assert.ok(source.includes('renderMatchHistory'), 'must have match history renderer');
+  assert.ok(source.includes('renderRecentMatches'), 'must have recent matches renderer');
+  assert.ok(source.includes('renderMatchesTab'), 'must have matches tab renderer');
 });

@@ -6,6 +6,12 @@
     ".": "./src/index.mjs",
     "./identity": "./src/identity.mjs",
     "./capabilities": "./src/capabilities.mjs",
-    "./validation": "./src/validation.mjs"
+    "./validation": "./src/validation.mjs",
+    "./rank-tier": "./src/rank-tier.mjs",
+    "./profile-domain": "./src/profile-domain.mjs",
+    "./leaderboard": "./src/leaderboard.mjs",
+    "./rating": "./src/rating.mjs",
+    "./glicko2": "./src/glicko2.mjs",
+    "./seasons": "./src/seasons.mjs"
   }
 }

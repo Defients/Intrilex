@@ -31,3 +31,5 @@ scripts/archive/add-debug2.cjs
 scripts/archive/diag-*.mjs
 # Supabase CLI local scratch files
 supabase/.temp/
+# Terminal outbox SQLite (generated during testing)
+terminal-outbox.sqlite

@@ -1,17 +1,26 @@
 // ═══════════════════════════════════════════════════════════════
-// rating.mjs — Elo-based competitive rating system
+// rating.mjs — Canonical Intrilex Rating (IR) system
 //
-// Pure, deterministic rating calculation. No I/O, no side effects.
-// The server calls computeRatingUpdate() on terminal match and
-// the persistor writes the result to player_ratings + match_participants.
+// The canonical skill model is Glicko-2 (see glicko2.mjs). This module
+// exposes a match-oriented API (computeRatingUpdate) that the match
+// server calls on terminal Ranked matches. Internal Glicko-2 state
+// (ratingDeviation, volatility) is server-owned and NEVER exposed in
+// ordinary player UI — only the public IR is shown.
 //
-// Design:
-//   - Standard Elo with configurable K-factor
-//   - Provisional players (rated_matches < PROVISIONAL_THRESHOLD) use higher K
-//   - Rating clamped to [0, 5000] to match DB CHECK constraint
-//   - Draw support (score 0.5 for both)
-//   - No external dependencies — pure math
+// A legacy Elo implementation (computeEloUpdate) is retained for
+// backward-compatibility references and historical parity tests, but
+// the canonical rating transaction uses Glicko-2.
+//
+// Pure, deterministic. No I/O, no side effects.
 // ═══════════════════════════════════════════════════════════════
+
+import {
+  glicko2Update,
+  initialGlicko2State,
+  resultToScore,
+  DEFAULT_RATING_DEVIATION,
+  DEFAULT_VOLATILITY,
+} from './glicko2.mjs';
 
 /**
  * Default starting rating for new players.
@@ -30,25 +39,19 @@ export const MIN_RATING = 0;
 export const MAX_RATING = 5000;
 
 /**
- * K-factor for established players (rated_matches >= PROVISIONAL_THRESHOLD).
- * Lower K = rating changes less per game once established.
- */
-export const K_ESTABLISHED = 24;
-
-/**
- * K-factor for provisional players (rated_matches < PROVISIONAL_THRESHOLD).
- * Higher K = rating changes faster while the system calibrates.
- */
-export const K_PROVISIONAL = 40;
-
-/**
  * Number of rated matches before a player is no longer provisional.
- * Matches the `provisional` column semantics in player_ratings.
+ * Distinct from the placement count (PLACEMENTS_REQUIRED in rank-tier).
+ * Provisional = higher Glicko-2 uncertainty window for calibration.
  */
 export const PROVISIONAL_THRESHOLD = 10;
 
+// ── Legacy Elo constants (retained for computeEloUpdate parity) ──
+export const K_ESTABLISHED = 24;
+export const K_PROVISIONAL = 40;
+
 /**
  * Clamp a rating to the valid range [MIN_RATING, MAX_RATING].
+ * Non-finite values fall back to DEFAULT_RATING.
  * @param {number} rating
  * @returns {number}
  */
@@ -58,31 +61,13 @@ export function clampRating(rating) {
 }
 
 /**
- * Resolve the K-factor for a player based on their match count.
- * @param {number} ratedMatches - Number of rated matches played
- * @returns {number}
- */
-export function resolveKFactor(ratedMatches) {
-  return ratedMatches < PROVISIONAL_THRESHOLD ? K_PROVISIONAL : K_ESTABLISHED;
-}
-
-/**
- * Expected score for player A against player B.
- * Standard Elo formula: E_A = 1 / (1 + 10^((R_B - R_A) / 400))
- * @param {number} ratingA - Player A's rating
- * @param {number} ratingB - Player B's rating
- * @returns {number} Expected score in [0, 1]
- */
-export function expectedScore(ratingA, ratingB) {
-  return 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
-}
-
-/**
  * @typedef {Object} PlayerRatingState
  * @property {string} accountId - Supabase user UUID
- * @property {number} rating - Current rating
+ * @property {number} rating - Current IR
+ * @property {number} [ratingDeviation] - Current RD (defaults to initial)
+ * @property {number} [volatility] - Current σ (defaults to initial)
  * @property {number} ratedMatches - Total rated matches played
- * @property {boolean} provisional - Whether still in provisional period
+ * @property {boolean} [provisional] - Whether still in provisional period
  */
 
 /**
@@ -93,13 +78,27 @@ export function expectedScore(ratingA, ratingB) {
  * @property {number} ratingDelta
  * @property {'WIN'|'LOSS'|'DRAW'} result
  * @property {boolean} provisional
+ * @property {number} ratingDeviation - New RD (server-only, not for player UI)
+ * @property {number} volatility - New σ (server-only, not for player UI)
  */
 
 /**
- * Compute the rating update for a completed match between two players.
+ * Resolve the provisional flag from the post-update match count.
+ * @param {number} ratedMatchesAfter
+ * @returns {boolean}
+ */
+function isProvisional(ratedMatchesAfter) {
+  return ratedMatchesAfter < PROVISIONAL_THRESHOLD;
+}
+
+/**
+ * Compute the canonical Glicko-2 rating update for a completed match
+ * between two players. This is the function the match server calls on
+ * terminal Ranked matches.
  *
- * Uses standard Elo with asymmetric K-factors (provisional vs established).
- * The function is pure — it does not write to any database.
+ * Both players are updated simultaneously using each other as the single
+ * opponent for this rating period. The function is pure — it does not
+ * write to any database.
  *
  * @param {object} opts
  * @param {PlayerRatingState} opts.playerA - Player A (seat P1)
@@ -115,29 +114,28 @@ export function computeRatingUpdate({ playerA, playerB, outcome }) {
 
   const ratingA = playerA.rating ?? DEFAULT_RATING;
   const ratingB = playerB.rating ?? DEFAULT_RATING;
+  const rdA = playerA.ratingDeviation ?? DEFAULT_RATING_DEVIATION;
+  const rdB = playerB.ratingDeviation ?? DEFAULT_RATING_DEVIATION;
+  const volA = playerA.volatility ?? DEFAULT_VOLATILITY;
+  const volB = playerB.volatility ?? DEFAULT_VOLATILITY;
 
-  const kA = resolveKFactor(playerA.ratedMatches ?? 0);
-  const kB = resolveKFactor(playerB.ratedMatches ?? 0);
-
-  const eA = expectedScore(ratingA, ratingB);
-  const eB = 1 - eA;
-
-  // Actual scores: 1 for win, 0 for loss, 0.5 for draw
-  let scoreA, scoreB;
-  let resultA, resultB;
+  let scoreA, scoreB, resultA, resultB;
   if (outcome === 'WIN_A') {
-    scoreA = 1; scoreB = 0;
-    resultA = 'WIN'; resultB = 'LOSS';
+    scoreA = 1; scoreB = 0; resultA = 'WIN'; resultB = 'LOSS';
   } else if (outcome === 'WIN_B') {
-    scoreA = 0; scoreB = 1;
-    resultA = 'LOSS'; resultB = 'WIN';
+    scoreA = 0; scoreB = 1; resultA = 'LOSS'; resultB = 'WIN';
   } else {
-    scoreA = 0.5; scoreB = 0.5;
-    resultA = 'DRAW'; resultB = 'DRAW';
+    scoreA = 0.5; scoreB = 0.5; resultA = 'DRAW'; resultB = 'DRAW';
   }
 
-  const newRatingA = clampRating(ratingA + kA * (scoreA - eA));
-  const newRatingB = clampRating(ratingB + kB * (scoreB - eB));
+  const updateA = glicko2Update(
+    { rating: ratingA, ratingDeviation: rdA, volatility: volA },
+    [{ rating: ratingB, ratingDeviation: rdB, score: scoreA }],
+  );
+  const updateB = glicko2Update(
+    { rating: ratingB, ratingDeviation: rdB, volatility: volB },
+    [{ rating: ratingA, ratingDeviation: rdA, score: scoreB }],
+  );
 
   const matchesA = (playerA.ratedMatches ?? 0) + 1;
   const matchesB = (playerB.ratedMatches ?? 0) + 1;
@@ -146,18 +144,22 @@ export function computeRatingUpdate({ playerA, playerB, outcome }) {
     playerA: {
       accountId: playerA.accountId,
       ratingBefore: ratingA,
-      ratingAfter: newRatingA,
-      ratingDelta: newRatingA - ratingA,
+      ratingAfter: clampRating(updateA.rating),
+      ratingDelta: clampRating(updateA.rating) - ratingA,
       result: /** @type {'WIN'|'LOSS'|'DRAW'} */ (resultA),
-      provisional: matchesA < PROVISIONAL_THRESHOLD,
+      provisional: isProvisional(matchesA),
+      ratingDeviation: updateA.ratingDeviation,
+      volatility: updateA.volatility,
     },
     playerB: {
       accountId: playerB.accountId,
       ratingBefore: ratingB,
-      ratingAfter: newRatingB,
-      ratingDelta: newRatingB - ratingB,
+      ratingAfter: clampRating(updateB.rating),
+      ratingDelta: clampRating(updateB.rating) - ratingB,
       result: /** @type {'WIN'|'LOSS'|'DRAW'} */ (resultB),
-      provisional: matchesB < PROVISIONAL_THRESHOLD,
+      provisional: isProvisional(matchesB),
+      ratingDeviation: updateB.ratingDeviation,
+      volatility: updateB.volatility,
     },
   };
 }
@@ -178,15 +180,93 @@ export function deriveOutcome(winner, seatA = 'P1', seatB = 'P2') {
 }
 
 /**
- * Build the initial rating state for a new player.
+ * Build the initial rating state for a new player (Glicko-2 defaults).
  * @param {string} accountId
  * @returns {PlayerRatingState}
  */
 export function initialRatingState(accountId) {
+  const init = initialGlicko2State(DEFAULT_RATING);
   return {
     accountId,
-    rating: DEFAULT_RATING,
+    rating: init.rating,
+    ratingDeviation: init.ratingDeviation,
+    volatility: init.volatility,
     ratedMatches: 0,
     provisional: true,
   };
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Legacy Elo implementation — retained for historical parity tests.
+// NOT used by the canonical rating transaction (Glicko-2 is canonical).
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Resolve the legacy Elo K-factor for a player based on match count.
+ * @param {number} ratedMatches
+ * @returns {number}
+ */
+export function resolveKFactor(ratedMatches) {
+  return ratedMatches < PROVISIONAL_THRESHOLD ? K_PROVISIONAL : K_ESTABLISHED;
+}
+
+/**
+ * Legacy Elo expected score.
+ * @param {number} ratingA
+ * @param {number} ratingB
+ * @returns {number}
+ */
+export function expectedScore(ratingA, ratingB) {
+  return 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400));
+}
+
+/**
+ * Legacy Elo rating update. Retained for parity/historical tests only.
+ * The canonical system uses computeRatingUpdate (Glicko-2).
+ * @param {object} opts
+ * @param {PlayerRatingState} opts.playerA
+ * @param {PlayerRatingState} opts.playerB
+ * @param {'WIN_A'|'WIN_B'|'DRAW'} opts.outcome
+ * @returns {{ playerA: RatingUpdateResult, playerB: RatingUpdateResult }}
+ */
+export function computeEloUpdate({ playerA, playerB, outcome }) {
+  if (!playerA || !playerB) throw new Error('Both players required');
+  if (playerA.accountId === playerB.accountId) throw new Error('Cannot rate a self-match');
+  if (!['WIN_A', 'WIN_B', 'DRAW'].includes(outcome)) throw new Error(`Invalid outcome: ${outcome}`);
+
+  const ratingA = playerA.rating ?? DEFAULT_RATING;
+  const ratingB = playerB.rating ?? DEFAULT_RATING;
+  const kA = resolveKFactor(playerA.ratedMatches ?? 0);
+  const kB = resolveKFactor(playerB.ratedMatches ?? 0);
+  const eA = expectedScore(ratingA, ratingB);
+  const eB = 1 - eA;
+
+  let scoreA, scoreB, resultA, resultB;
+  if (outcome === 'WIN_A') {
+    scoreA = 1; scoreB = 0; resultA = 'WIN'; resultB = 'LOSS';
+  } else if (outcome === 'WIN_B') {
+    scoreA = 0; scoreB = 1; resultA = 'LOSS'; resultB = 'WIN';
+  } else {
+    scoreA = 0.5; scoreB = 0.5; resultA = 'DRAW'; resultB = 'DRAW';
+  }
+
+  const newRatingA = clampRating(ratingA + kA * (scoreA - eA));
+  const newRatingB = clampRating(ratingB + kB * (scoreB - eB));
+  const matchesA = (playerA.ratedMatches ?? 0) + 1;
+  const matchesB = (playerB.ratedMatches ?? 0) + 1;
+
+  return {
+    playerA: {
+      accountId: playerA.accountId, ratingBefore: ratingA, ratingAfter: newRatingA,
+      ratingDelta: newRatingA - ratingA, result: /** @type {'WIN'|'LOSS'|'DRAW'} */ (resultA),
+      provisional: isProvisional(matchesA), ratingDeviation: DEFAULT_RATING_DEVIATION, volatility: DEFAULT_VOLATILITY,
+    },
+    playerB: {
+      accountId: playerB.accountId, ratingBefore: ratingB, ratingAfter: newRatingB,
+      ratingDelta: newRatingB - ratingB, result: /** @type {'WIN'|'LOSS'|'DRAW'} */ (resultB),
+      provisional: isProvisional(matchesB), ratingDeviation: DEFAULT_RATING_DEVIATION, volatility: DEFAULT_VOLATILITY,
+    },
+  };
+}
+
+export { resultToScore };

@@ -12,6 +12,9 @@ import {
   deriveOutcome,
   initialRatingState,
   DEFAULT_RATING,
+  DEFAULT_RATING_DEVIATION,
+  DEFAULT_VOLATILITY,
+  RANKED_QUEUE_ID,
 } from '@intrilex/account-domain';
 import { ENGINE_VERSION, RULES_VERSION } from '@intrilex/engine-adapter';
 import { MatchStatus } from '@intrilex/match-authority';
@@ -38,13 +41,25 @@ import { MatchStatus } from '@intrilex/match-authority';
  * @param {boolean} [opts.isAborted=false] - Whether the match was aborted (no rating change)
  * @returns {Promise<MatchResultRecord | null>} null if match is not terminal or has no rated participants
  */
-export async function buildMatchResultRecord({ match, persistor, queueId = 'casual', serverVersion, isAborted = false }) {
+export async function buildMatchResultRecord({ match, persistor, queueId = 'casual', serverVersion, isAborted = false, seasonId }) {
   if (match.status !== MatchStatus.TERMINAL && match.status !== MatchStatus.ABORTED && match.status !== MatchStatus.EXPIRED) {
     return null;
   }
 
   const participants = [...match.participants.values()];
   if (participants.length === 0) return null;
+
+  // Resolve the active season for rated queues (server-authoritative, never
+  // browser-derived). For casual queues the season is irrelevant to rating.
+  let resolvedSeasonId = seasonId;
+  if (!resolvedSeasonId && persistor && typeof persistor.resolveActiveSeasonId === 'function' && queueId === RANKED_QUEUE_ID) {
+    try {
+      resolvedSeasonId = await persistor.resolveActiveSeasonId(queueId);
+    } catch {
+      resolvedSeasonId = 'season-1';
+    }
+  }
+  if (!resolvedSeasonId) resolvedSeasonId = 'season-1';
 
   // Sort by seat (P1 first, P2 second) for deterministic ordering
   const sorted = participants.sort((a, b) => a.playerId.localeCompare(b.playerId));
@@ -79,17 +94,17 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
 
     // Both must have accountIds to be rated
     if (p1.accountId && p2.accountId && p1.accountId !== p2.accountId) {
-      // Fetch current rating states
+      // Fetch current rating states (including Glicko-2 RD/volatility)
       const [state1, state2] = await Promise.all([
-        persistor.getRatingState(p1.accountId, queueId),
-        persistor.getRatingState(p2.accountId, queueId),
+        persistor.getRatingState(p1.accountId, queueId, resolvedSeasonId),
+        persistor.getRatingState(p2.accountId, queueId, resolvedSeasonId),
       ]);
 
       const playerA = state1
-        ? { accountId: p1.accountId, rating: state1.rating, ratedMatches: state1.ratedMatches, provisional: state1.provisional }
+        ? { accountId: p1.accountId, rating: state1.rating, ratingDeviation: state1.ratingDeviation, volatility: state1.volatility, ratedMatches: state1.ratedMatches, provisional: state1.provisional }
         : initialRatingState(p1.accountId);
       const playerB = state2
-        ? { accountId: p2.accountId, rating: state2.rating, ratedMatches: state2.ratedMatches, provisional: state2.provisional }
+        ? { accountId: p2.accountId, rating: state2.rating, ratingDeviation: state2.ratingDeviation, volatility: state2.volatility, ratedMatches: state2.ratedMatches, provisional: state2.provisional }
         : initialRatingState(p2.accountId);
 
       const outcome = deriveOutcome(match.winner, p1.playerId, p2.playerId);
@@ -97,6 +112,12 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
       if (outcome) {
         const update = computeRatingUpdate({ playerA, playerB, outcome });
 
+        // DATA-02: Truthful before/after provenance — use the PRE-update
+        // state (playerA.ratingDeviation, playerA.volatility) for *Before
+        // fields, and the POST-update result (update.playerA.ratingDeviation,
+        // update.playerA.volatility) for *After fields. Previously both
+        // before and after were set to the post-update value, falsifying
+        // the provenance record.
         participantRecords.push({
           accountId: p1.accountId,
           participantId: [...match.participants.keys()].find(k => match.participants.get(k) === p1) ?? 'unknown',
@@ -105,6 +126,10 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
           ratingBefore: update.playerA.ratingBefore,
           ratingAfter: update.playerA.ratingAfter,
           ratingDelta: update.playerA.ratingDelta,
+          rdBefore: playerA.ratingDeviation,
+          rdAfter: update.playerA.ratingDeviation,
+          volatilityBefore: playerA.volatility,
+          volatilityAfter: update.playerA.volatility,
         });
         participantRecords.push({
           accountId: p2.accountId,
@@ -114,6 +139,10 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
           ratingBefore: update.playerB.ratingBefore,
           ratingAfter: update.playerB.ratingAfter,
           ratingDelta: update.playerB.ratingDelta,
+          rdBefore: playerB.ratingDeviation,
+          rdAfter: update.playerB.ratingDeviation,
+          volatilityBefore: playerB.volatility,
+          volatilityAfter: update.playerB.volatility,
         });
       } else {
         // Inconclusive outcome — record without rating changes
@@ -171,5 +200,6 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
     rulesVersion: RULES_VERSION ?? 'unknown',
     participants: participantRecords,
     queueId,
+    seasonId: resolvedSeasonId,
   };
 }

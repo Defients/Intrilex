@@ -410,20 +410,30 @@ export class NetworkPlaySession {
     if (!this.matchId || !this.participantToken) return false;
     if (typeof text !== 'string' || text.length === 0 || text.length > 200) return false;
     try {
+      // NET-UX-01: Generate a client-side message ID for exactly-once delivery.
+      // The optimistic local echo uses this ID, and the server broadcast
+      // is deduplicated against it to prevent duplicate display.
+      const messageId = `c-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const timestamp = new Date().toISOString();
       const msg = sendChat(this.matchId, this.participantToken, text);
       // Chat is fire-and-forget — the server broadcasts CHAT_MESSAGE back.
       // We don't wait for a response (there is no ACK for SEND_CHAT).
       if (this._ws && this._ws.readyState === WebSocket.OPEN) {
         this._ws.send(JSON.stringify(msg));
       }
-      // Add to local chat messages immediately (optimistic)
+      // Add to local chat messages immediately (optimistic) with messageId
       this.chatMessages = this.chatMessages || [];
+      // NET-UX-01: Track seen message IDs for exactly-once display
+      this._seenChatMessageIds = this._seenChatMessageIds || new Set();
+      this._seenChatMessageIds.add(messageId);
       this.chatMessages.push({
+        messageId,
         participantId: this.participantId,
         text,
-        timestamp: new Date().toISOString(),
+        timestamp,
         isHuman: true,
         isNetwork: true,
+        isOptimistic: true,
         time: new Date().toLocaleTimeString(),
       });
       this._notifyStateChange();
@@ -721,15 +731,49 @@ export class NetworkPlaySession {
         break;
       case 'CHAT_MESSAGE':
         // v0.25: Network chat — received from server after participant broadcast.
-        // Store in the chat messages array and notify listeners.
+        // NET-UX-01: Exactly-once delivery with deduplication.
+        // The server broadcasts CHAT_MESSAGE to all participants INCLUDING the sender.
+        // The sender already has the message from optimistic local echo, so we
+        // deduplicate using a composite key of participantId + text + timestamp-window.
+        // Non-sender participants receive the message normally.
         if (msg.payload?.text) {
           this.chatMessages = this.chatMessages || [];
+          // NET-UX-01: Dedup key — participantId + text + approximate timestamp
+          // The server may not echo back the exact same timestamp, so we use
+          // a 5-second window for matching optimistic echoes.
+          const dedupKey = `${msg.payload.participantId}:${msg.payload.text}`;
+          const isFromSelf = msg.payload.participantId === this.participantId;
+
+          if (isFromSelf) {
+            // Check if we already have this message from optimistic echo
+            // Match on participantId + text within a 5-second window
+            const now = Date.now();
+            const existing = this.chatMessages.find(m =>
+              m.participantId === msg.payload.participantId &&
+              m.text === msg.payload.text &&
+              m.isOptimistic &&
+              Math.abs(new Date(m.timestamp).getTime() - new Date(msg.payload.timestamp).getTime()) < 5000
+            );
+            if (existing) {
+              // Update the existing message with server-confirmed timestamp
+              // and mark it as confirmed (no longer optimistic)
+              existing.timestamp = msg.payload.timestamp;
+              existing.isOptimistic = false;
+              this._notifyStateChange();
+              break;
+            }
+            // If no match found, fall through and add as a new message
+            // (this can happen if the optimistic echo was evicted)
+          }
+
+          // Add the message from server broadcast
           this.chatMessages.push({
             participantId: msg.payload.participantId,
             text: msg.payload.text,
             timestamp: msg.payload.timestamp,
-            isHuman: msg.payload.participantId === this.participantId,
+            isHuman: isFromSelf,
             isNetwork: true,
+            isOptimistic: false,
             time: msg.payload.timestamp,
           });
           this._notifyStateChange();

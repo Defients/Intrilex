@@ -50,6 +50,20 @@ export const { CORE_RESPONSE_AUTHORITY_PROFILE } = coreResponse;
 export const { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE } = corePrivate;
 export const { coreAuthorityCapabilities } = core;
 
+/**
+ * Exact set of supported engine rules profile IDs, derived from the
+ * canonical profile objects. Used by the match server to cross-check
+ * the network-protocol's SUPPORTED_PROFILE_IDS at startup (PROTO-01).
+ */
+export const SUPPORTED_PROFILE_IDS = Object.freeze(new Set([
+  CORE_FOUNDATION_AUTHORITY_PROFILE.id,
+  CORE_ADVANCED_AUTHORITY_PROFILE.id,
+  CORE_UNRESTRICTED_AUTHORITY_PROFILE.id,
+  CORE_EFFECT_DECLARATION_PROFILE.id,
+  CORE_RESPONSE_AUTHORITY_PROFILE.id,
+  CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id,
+]));
+
 export const DEFAULT_SIMULATION_PROFILE = CORE_ADVANCED_AUTHORITY_PROFILE.id;
 export const ENGINE_VERSION = '4.2.6';
 export const RULES_VERSION = '4.3.1';

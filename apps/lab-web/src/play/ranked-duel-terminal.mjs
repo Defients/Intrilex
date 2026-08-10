@@ -4,6 +4,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getTerminalBanter } from './ai-personality.js';
+import { loadProfile } from './local-profile.mjs';
+import { ratingToTierDivision, compareRank } from '@intrilex/account-domain/rank-tier';
+import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -50,6 +53,7 @@ export function renderTerminal(vm, opts) {
       <dt>Termination</dt><dd>${esc(formatTerminationReason(vm.match.terminationReason || 'UNKNOWN'))}</dd>
       <dt>Full Turns</dt><dd>${vm.match.fullTurnSequence ?? 0}</dd>
     </dl>
+    ${renderRankResultBlock(opts)}
     ${opts.achievementSummaryHtml || ''}
     <div class="terminal-actions">
       <button class="primary-button" data-testid="watch-replay" data-action="watch-replay">Watch replay</button>
@@ -73,6 +77,75 @@ export function renderError(vm, opts) {
     <p>${esc(vm.error?.reason || vm.error || 'Unknown error')}</p>
     <button class="secondary-button" data-action="return-to-hub">Return to Play hub</button>
   </div>`;
+}
+
+/**
+ * Render the rank result block on the terminal screen.
+ *
+ * Shows the player's tier glyph + rating delta. When `opts.rankResult` is
+ * supplied (authoritative result from the play controller / server), a full
+ * before→after result is rendered, including a promotion swap when the tier
+ * changed. Promotion glyphs are only shown after the authoritative result is
+ * known — never predicted on the client.
+ *
+ * When no rankResult is available (e.g. tutorial, simulation, spectator), a
+ * simple current-rank glyph is rendered from the local profile, or nothing if
+ * the player is unranked/has no profile.
+ *
+ * @param {object} opts - Terminal render options.
+ * @returns {string} HTML
+ */
+function renderRankResultBlock(opts) {
+  const rr = opts.rankResult;
+  if (rr && typeof rr === 'object') {
+    const ratedBefore = Math.max((rr.ratedMatchesBefore ?? 1) - 1, 0);
+    const ratedAfter = rr.ratedMatchesAfter ?? (rr.ratedMatchesBefore ?? 1);
+    const before = ratingToTierDivision(rr.ratingBefore, { ratedMatches: ratedBefore });
+    const after = ratingToTierDivision(rr.ratingAfter, { ratedMatches: ratedAfter });
+    const delta = Math.round((rr.ratingAfter ?? 0) - (rr.ratingBefore ?? 0));
+    const deltaSign = delta > 0 ? '+' : '';
+    const deltaClass = delta > 0 ? 'rank-result-delta-up' : delta < 0 ? 'rank-result-delta-down' : '';
+    // Detect rank changes by combined tier+division ordinal (not just tier).
+    const rankCmp = compareRank(after, before);
+    const promoted = rankCmp > 0;
+    const demoted = rankCmp < 0;
+    const beforeGlyph = renderRankGlyph({ tier: before.tier, division: before.division, size: 96, showDivision: true, decorative: true, className: 'rank-result-before-glyph' });
+    const afterGlyph = renderRankGlyph({ tier: after.tier, division: after.division, size: 96, showDivision: true, decorative: false, className: 'rank-result-after-glyph' });
+    const arrow = (promoted || demoted) ? `<span class="rank-result-arrow" aria-hidden="true">→</span>` : '';
+    const banner = promoted ? '<p class="rank-result-banner rank-up" data-testid="rank-result-banner">RANK UP</p>'
+      : demoted ? '<p class="rank-result-banner rank-down" data-testid="rank-result-banner">RANK DOWN</p>'
+      : '';
+    const ratingBeforeStr = rr.ratingBefore != null ? String(rr.ratingBefore) : '—';
+    const ratingAfterStr = rr.ratingAfter != null ? String(rr.ratingAfter) : '—';
+    return `<div class="rank-result-block" data-testid="rank-result-block">
+      ${banner}
+      <div class="rank-result-glyphs">
+        ${(promoted || demoted) ? `${beforeGlyph}${arrow}${afterGlyph}` : afterGlyph}
+      </div>
+      <p class="rank-result-tier" data-testid="rank-result-tier">${esc(rankLabel(after.tier, after.division))}</p>
+      <p class="rank-result-rating ${deltaClass}" data-testid="rank-result-rating">${ratingBeforeStr} → ${ratingAfterStr} IR <span class="rank-result-delta">${deltaSign}${delta}</span></p>
+    </div>`;
+  }
+  // Fallback: show current rank glyph from local profile (no delta).
+  try {
+    const profile = loadProfile();
+    if (!profile?.rating) return '';
+    const a = ratingToTierDivision(profile.rating.value, { ratedMatches: profile.rating.ratedMatches });
+    if (a.isPlacement) {
+      return `<div class="rank-result-block" data-testid="rank-result-block">
+        ${renderRankGlyph({ tier: a.tier, division: a.division, size: 96, showDivision: false, decorative: false })}
+        <p class="rank-result-tier">${esc(rankLabel(a.tier, a.division))}</p>
+        <p class="rank-result-placement">${a.placementsPlayed} / ${a.placementsRequired} Placements</p>
+      </div>`;
+    }
+    return `<div class="rank-result-block" data-testid="rank-result-block">
+      ${renderRankGlyph({ tier: a.tier, division: a.division, size: 96, showDivision: true, decorative: false })}
+      <p class="rank-result-tier">${esc(rankLabel(a.tier, a.division))}</p>
+      <p class="rank-result-rating">${profile.rating.value} IR</p>
+    </div>`;
+  } catch {
+    return '';
+  }
 }
 
 /**

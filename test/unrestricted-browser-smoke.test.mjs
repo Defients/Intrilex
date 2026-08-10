@@ -144,10 +144,10 @@ test('experiment-controls.js includes unrestricted profile in dropdown', async (
     'experiment-controls.js must include "Unrestricted Core" as a display label');
 });
 
-test('ranked-duel-renderer.mjs includes unrestricted profile as a mode card', async () => {
-  const rendererSrc = await readFile(path.join(dist, 'play/ranked-duel-renderer.mjs'), 'utf8');
-  assert.ok(rendererSrc.includes('core-unrestricted-authority'),
-    'ranked-duel-renderer.mjs must reference core-unrestricted-authority');
+test('ranked-duel-hub.mjs includes unrestricted profile as a mode card', async () => {
+  const hubSrc = await readFile(path.join(dist, 'play/ranked-duel-hub.mjs'), 'utf8');
+  assert.ok(hubSrc.includes('core-unrestricted-authority'),
+    'ranked-duel-hub.mjs must reference core-unrestricted-authority');
 });
 
 // ── Browser Bundle: Campaign Support ─────────────────────────
