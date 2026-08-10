@@ -33,3 +33,5 @@ scripts/archive/diag-*.mjs
 supabase/.temp/
 # Terminal outbox SQLite (generated during testing)
 terminal-outbox.sqlite
+# Self-audit TAP output temp file (generated during self-audit:generate)
+reports/.self-audit-tap-output.txt

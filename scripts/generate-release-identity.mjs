@@ -158,7 +158,10 @@ export async function generateReleaseIdentity() {
   }
 
   // 5. Parse release title from description
-  const releaseTitle = pkg.description?.split('—')?.[1]?.trim()?.split('.')?.[0] ?? 'Unknown';
+  // Format: "Intrilex Simulation Lab v0.24.2 — Invite Alpha Truth Closure II: ..."
+  // Extract just the short title before the colon.
+  const afterEmDash = pkg.description?.split('—')?.[1]?.trim() ?? '';
+  const releaseTitle = afterEmDash.split(':')[0]?.trim() || afterEmDash.split('.')?.[0]?.trim() || 'Unknown';
 
   // 6. Build the manifest
   const manifest = {
