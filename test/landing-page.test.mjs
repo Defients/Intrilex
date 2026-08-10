@@ -28,12 +28,11 @@ test('route() returns landing modes for /, /play, /rules', async () => {
 });
 
 // ── Render functions ──
-test('renderLanding() exists and renders three CTA cards', async () => {
+test('renderLanding() exists and renders play panel and rules card', async () => {
   const js = await src('app.js');
   assert.match(js, /function renderLanding\(\)/);
   assert.match(js, /landing-card.*play/);
   assert.match(js, /landing-card.*rules/);
-  assert.match(js, /landing-card.*sim/);
 });
 
 test('renderPlayMode() exists and lazy-loads the play module', async () => {
@@ -344,4 +343,112 @@ test('dist/app.js contains landing page render functions', async () => {
 test('app.js imports renderRulesPage from rulebook-renderer.js', async () => {
   const js = await src('app.js');
   assert.match(js, /import \{ renderRulesPage \} from '.\/rulebook-renderer\.js'/);
+});
+
+// ── Homepage polish pass (v0.24.2 final polish) ──
+test('header brand sub uses timeless descriptor, not version string', async () => {
+  const js = await src('app.js');
+  assert.match(js, /TACTICAL PLAYING CARD GAME/);
+  assert.doesNotMatch(js, /DETERMINISTIC CARD ENGINE.*V\$\{RULES_VERSION\}/);
+});
+
+test('default selected mode is local', async () => {
+  const js = await src('app.js');
+  assert.match(js, /_landingSelectedMode = 'local'/);
+  assert.match(js, /class="landing-mode-tile selected"[^>]*data-mode="local"/);
+});
+
+test('mode tiles have selected-state check indicator', async () => {
+  const js = await src('app.js');
+  assert.match(js, /landing-mode-check/);
+  const css = await cssSrc();
+  assert.match(css, /\.landing-mode-check/);
+  assert.match(css, /\.landing-mode-tile\.selected \.landing-mode-check/);
+});
+
+test('primary CTA is mode-aware with dynamic labels', async () => {
+  const js = await src('app.js');
+  assert.match(js, /START LOCAL DUEL/);
+  assert.match(js, /START ONLINE DUEL/);
+  assert.match(js, /START GUIDED TUTORIAL/);
+  assert.match(js, /modeLabels\[/);
+});
+
+test('initial CTA text matches default local mode', async () => {
+  const js = await src('app.js');
+  assert.match(js, /<span>START LOCAL DUEL<\/span>/);
+});
+
+test('Tutorial mode card is named Guided Tutorial', async () => {
+  const js = await src('app.js');
+  assert.match(js, /Guided Tutorial/);
+  assert.match(js, /Learn by playing your first guided duel/);
+});
+
+test('Online Duel copy does not overpromise with worldwide', async () => {
+  const js = await src('app.js');
+  assert.match(js, /Compete against players online/);
+  assert.doesNotMatch(js, /players worldwide/);
+});
+
+test('Learn Intrilex rail card removed (no redundant CTA to tutorial)', async () => {
+  const js = await src('app.js');
+  assert.doesNotMatch(js, /LEARN INTRILEX/);
+  assert.doesNotMatch(js, /landing-rail-card learn/);
+});
+
+test('right rail order: Continue slot, Rules, Forums, What\'s New', async () => {
+  const js = await src('app.js');
+  const railStart = js.indexOf('landing-secondary-rail');
+  const railSection = js.slice(railStart);
+  const continueIdx = railSection.indexOf('landing-continue-slot');
+  const rulesIdx = railSection.indexOf('landing-rail-card rules');
+  const forumsIdx = railSection.indexOf('intrilex.discourse.group');
+  const whatsNewIdx = railSection.indexOf("WHAT'S NEW");
+  assert.ok(continueIdx > -1 && continueIdx < rulesIdx, 'Continue slot must come before Rules');
+  assert.ok(rulesIdx > -1 && rulesIdx < forumsIdx, 'Rules must come before Forums');
+  assert.ok(forumsIdx > -1 && forumsIdx < whatsNewIdx, 'Forums must come before What\'s New');
+});
+
+test('Forums card links to intrilex.discourse.group', async () => {
+  const js = await src('app.js');
+  assert.match(js, /href="https:\/\/intrilex\.discourse\.group\/"/);
+});
+
+test('Rules card copy says complete official rulebook', async () => {
+  const js = await src('app.js');
+  assert.match(js, /Read the complete official rulebook/);
+});
+
+test('What\'s New card shows version from canonical sources', async () => {
+  const js = await src('app.js');
+  assert.match(js, /Intrilex v\$\{LAB_VERSION\}/);
+  assert.match(js, /Engine \$\{ENGINE_VERSION\}/);
+  assert.match(js, /Rules \$\{RULES_VERSION\}/);
+});
+
+test('footer credit uses muted color, not bright red', async () => {
+  const css = await cssSrc();
+  assert.match(css, /\.landing-footer-credit-name\{[^}]*color:#8a1430/);
+  assert.match(css, /\.landing-footer-credit\{[^}]*opacity:\.7/);
+  assert.doesNotMatch(css, /\.landing-footer-credit-name\{[^}]*color:#CC0011/);
+});
+
+test('mode tiles have radiogroup and radio semantics', async () => {
+  const js = await src('app.js');
+  assert.match(js, /role="radiogroup"/);
+  assert.match(js, /role="radio"/);
+  assert.match(js, /aria-checked="true"/);
+  assert.match(js, /aria-checked="false"/);
+});
+
+test('mode tiles support arrow-key navigation', async () => {
+  const js = await src('app.js');
+  assert.match(js, /ArrowRight/);
+  assert.match(js, /ArrowLeft/);
+});
+
+test('landing-mode-tile has position relative for check indicator', async () => {
+  const css = await cssSrc();
+  assert.match(css, /\.landing-mode-tile\{[^}]*position:relative/);
 });

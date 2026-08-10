@@ -11,6 +11,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { createServer } from 'node:http';
+import { createRequire } from 'node:module';
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -28,6 +29,7 @@ import {
   validateQueueJoin, validateQueueLeave,
   validateSpectateMatch, validateSpectateLeave,
   validateMatchHistory, validateGetReplay, validateSendChat,
+  validateAuthenticate, validateAuthRefresh,
   checkMessageSize, ReasonCode,
   matchCreated, matchJoined, matchView, actionResult,
   participantStatus, matchStarted, matchEnded, error as errorMsg,
@@ -36,7 +38,18 @@ import {
   matchHistoryResult, envelope,
   replayAvailable, replayData,
   sendChat as sendChatBuilder, chatMessage,
+  authenticated as authenticatedBuilder,
+  achievementsEarned,
 } from '@intrilex/network-protocol';
+import { AuthMode, ConnectionAuthState, resolveCapabilities, toSafePublicProfile } from '@intrilex/account-domain';
+import { FakeIdentityVerifier } from './auth/fake-identity-verifier.mjs';
+import { evaluateMatchAchievements } from '@intrilex/match-authority/achievement-projection';
+import { MatchResultPersistor } from './persistence/match-result-persistor.mjs';
+import { FakeMatchResultPersistor } from './persistence/fake-match-result-persistor.mjs';
+import { buildMatchResultRecord } from './persistence/match-result-builder.mjs';
+import { LAB_VERSION } from '@intrilex/shared/version';
+
+const require = createRequire(import.meta.url);
 
 // ── Configuration ──
 
@@ -63,6 +76,13 @@ const PUBLIC_HISTORY_ENABLED = process.env.INTRILEX_PUBLIC_HISTORY === '1' || fa
 // Enable explicitly with INTRILEX_PUBLIC_MATCHMAKING=1
 const PUBLIC_MATCHMAKING_ENABLED = process.env.INTRILEX_PUBLIC_MATCHMAKING === '1' || false;
 
+// ── Auth configuration ──
+// Auth mode: 'required' (production), 'disabled' (development only)
+// When 'required', all WebSocket connections must AUTHENTICATE before
+// sending any privileged command (CREATE_MATCH, JOIN_MATCH, etc.).
+// When 'disabled', the server behaves as before (no auth required) — DEV ONLY.
+const AUTH_MODE = process.env.INTRILEX_AUTH_MODE ?? AuthMode.DISABLED;
+
 // Feature flags — can be overridden by startServer() opts for testing
 const _featureFlags = {
   publicHistory: PUBLIC_HISTORY_ENABLED,
@@ -84,7 +104,10 @@ const MAX_GLOBAL_CONNECTIONS = 500; // global connection cap — prevents botnet
 
 let matchStore = null;
 let matchmakingQueue = null;
-const connections = new Map(); // connectionId → { ws, participantId, matchId, lastHeartbeat, isSpectator, spectatingMatchId, rateLimit, ip }
+let identityVerifier = null; // IdentityVerifier instance (set by startServer)
+let matchResultPersistor = null; // MatchResultPersistor instance (set by startServer)
+let _authMode = AUTH_MODE; // Active auth mode (can be overridden by startServer opts)
+const connections = new Map(); // connectionId → { ws, authState, account, participantId, matchId, lastHeartbeat, isSpectator, spectatingMatchId, rateLimit, ip }
 const bannedIps = new Map(); // ip → banExpiresAt
 const ipConnectionCounts = new Map(); // ip → active connection count
 const _httpRateLimit = new Map(); // ip → { count, windowStart } — v0.24.2 HTTP rate limiter
@@ -97,6 +120,7 @@ const _eventCounters = {
   rateLimitHit: 0, ipBan: 0, spectateJoin: 0, spectateLeave: 0,
   reconnect: 0, error: 0, globalConnectionReject: 0, ipConnectionReject: 0,
   replayDownload: 0,
+  authSuccess: 0, authFailure: 0, authRefresh: 0, authRequired: 0,
 };
 const LOG_ENABLED = process.env.INTRILEX_LOG !== '0'; // set INTRILEX_LOG=0 to silence
 
@@ -128,6 +152,13 @@ function getHealthMetrics() {
       heapTotalMB: Math.round(memUsage.heapTotal / 1048576),
     },
     events: { ..._eventCounters },
+    auth: {
+      mode: _authMode,
+      verifierConfigured: identityVerifier !== null,
+    },
+    persistence: {
+      persistorType: matchResultPersistor?.constructor.name ?? 'none',
+    },
   };
 }
 
@@ -223,12 +254,56 @@ function checkRateLimit(connectionId) {
  * @param {string} [opts.host='127.0.0.1']
  * @param {string} [opts.dbPath] - SQLite path (default: durable file). Use ':memory:' for volatile.
  * @param {boolean} [opts.persistent=true] - Use SqliteMatchStore (true) or InMemoryMatchStore (false)
+ * @param {string} [opts.authMode] - Auth mode: 'required' (production) or 'disabled' (dev)
+ * @param {object} [opts.identityVerifier] - IdentityVerifier instance (for testing or custom verification)
+ * @param {string} [opts.supabaseUrl] - Supabase project URL (for production verifier)
+ * @param {string} [opts.supabaseSecretKey] - Supabase service role key (for production verifier)
  * @returns {Promise<{ httpServer, wss, close }>}
  */
 export function startServer(opts = {}) {
   const port = opts.port ?? DEFAULT_PORT;
   const host = opts.host ?? DEFAULT_HOST;
   const persistent = opts.persistent ?? true;
+
+  // ── Auth initialization ──
+  _authMode = opts.authMode ?? AUTH_MODE;
+
+  if (_authMode === AuthMode.REQUIRED) {
+    // Production: must have a verifier
+    if (opts.identityVerifier) {
+      identityVerifier = opts.identityVerifier;
+    } else if (opts.supabaseUrl && opts.supabaseSecretKey) {
+      // Dynamically import to avoid loading supabase-js when auth is disabled
+      const { SupabaseIdentityVerifier } = require('./auth/supabase-identity-verifier.mjs');
+      identityVerifier = new SupabaseIdentityVerifier({
+        supabaseUrl: opts.supabaseUrl,
+        supabaseSecretKey: opts.supabaseSecretKey,
+      });
+    } else if (process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY) {
+      const { SupabaseIdentityVerifier } = require('./auth/supabase-identity-verifier.mjs');
+      identityVerifier = new SupabaseIdentityVerifier({
+        supabaseUrl: process.env.SUPABASE_URL,
+        supabaseSecretKey: process.env.SUPABASE_SECRET_KEY,
+      });
+    } else {
+      // FAIL STARTUP LOUDLY — never silently run insecure multiplayer
+      throw new Error(
+        'INTRILEX_AUTH_MODE=required but no identity verifier configured. ' +
+        'Provide opts.identityVerifier, opts.supabaseUrl+opts.supabaseSecretKey, ' +
+        'or set SUPABASE_URL+SUPABASE_SECRET_KEY environment variables.'
+      );
+    }
+    logEvent('authConfigured', { mode: _authMode, verifier: identityVerifier.constructor.name });
+  } else {
+    // Dev mode: auth disabled
+    identityVerifier = null;
+    if (LOG_ENABLED) {
+      process.stderr.write(
+        '\n⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED\n' +
+        '   DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION\n\n'
+      );
+    }
+  }
 
   // Override feature flags from opts (for testing and explicit trusted environments)
   const publicHistory = opts.publicHistory ?? PUBLIC_HISTORY_ENABLED;
@@ -252,6 +327,29 @@ export function startServer(opts = {}) {
     matchStore = new InMemoryMatchStore();
   }
 
+  // Initialize match result persistor (writes terminal match results to Supabase)
+  // If not provided, default to FakeMatchResultPersistor (in-memory, for dev/test)
+  if (opts.matchResultPersistor) {
+    matchResultPersistor = opts.matchResultPersistor;
+  } else if (opts.supabaseUrl && opts.supabaseServiceKey) {
+    // Dynamically import to avoid loading supabase-js when persistence is not needed
+    const { SupabaseMatchResultPersistor } = require('./persistence/supabase-match-result-persistor.mjs');
+    matchResultPersistor = new SupabaseMatchResultPersistor({
+      supabaseUrl: opts.supabaseUrl,
+      supabaseServiceKey: opts.supabaseServiceKey,
+    });
+  } else if (process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY) {
+    const { SupabaseMatchResultPersistor } = require('./persistence/supabase-match-result-persistor.mjs');
+    matchResultPersistor = new SupabaseMatchResultPersistor({
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseServiceKey: process.env.SUPABASE_SECRET_KEY,
+    });
+  } else {
+    // Dev/test default: in-memory persistor (no-op for production)
+    matchResultPersistor = new FakeMatchResultPersistor();
+  }
+  logEvent('persistorConfigured', { type: matchResultPersistor.constructor.name });
+
   // Initialize matchmaking queue
   matchmakingQueue = new MatchmakingQueue({
     onCreateMatch: (profileId, seed, players) => {
@@ -259,10 +357,10 @@ export function startServer(opts = {}) {
       const matchId = `M-${randomBytes(12).toString('base64url')}`;
       const match = createAuthoritativeMatch({ matchId, profileId, seed });
 
-      const results = players.map(({ connectionId }) => {
+      const results = players.map(({ connectionId, accountId }) => {
         const participantToken = randomBytes(32).toString('base64url');
         const participantId = `P-${randomBytes(8).toString('base64url')}`;
-        match.addParticipant(participantId, participantToken);
+        match.addParticipant(participantId, participantToken, accountId ?? null);
 
         // Bind connection to participant
         const conn = connections.get(connectionId);
@@ -322,7 +420,7 @@ export function startServer(opts = {}) {
       res.end(JSON.stringify({
         server: 'Intrilex Match Authority',
         version: '0.24.2',
-        protocolVersion: 1,
+        protocolVersion: 2,
         ...getHealthMetrics(),
       }));
       return;
@@ -397,7 +495,7 @@ export function startServer(opts = {}) {
     }
 
     const connectionId = randomUUID();
-    connections.set(connectionId, { ws, participantId: null, matchId: null, lastHeartbeat: Date.now(), isSpectator: false, spectatingMatchId: null, ip });
+    connections.set(connectionId, { ws, authState: ConnectionAuthState.UNAUTHENTICATED, account: null, participantId: null, matchId: null, lastHeartbeat: Date.now(), isSpectator: false, spectatingMatchId: null, ip });
     logEvent('connectionOpen', { connectionId, ip, total: connections.size });
 
     ws.on('message', (raw) => handleMessage(connectionId, ws, raw));
@@ -451,6 +549,8 @@ export function startServer(opts = {}) {
       const api = {
         httpServer,
         wss,
+        get matchStore() { return matchStore; },
+        get matchResultPersistor() { return matchResultPersistor; },
         close() {
           clearInterval(heartbeatTimer);
           clearInterval(cleanupTimer);
@@ -465,6 +565,8 @@ export function startServer(opts = {}) {
           if (matchmakingQueue) matchmakingQueue = null;
           if (matchStore) matchStore.close();
           matchStore = null;
+          if (identityVerifier) { identityVerifier.close?.(); identityVerifier = null; }
+          if (matchResultPersistor) { matchResultPersistor.close?.(); matchResultPersistor = null; }
           // Clear module-level state to prevent cross-instance contamination in tests
           bannedIps.clear();
           // Force-close with a timeout fallback
@@ -541,8 +643,21 @@ function handleMessage(connectionId, ws, raw) {
   // Route by type
   const { type, payload, requestId } = msg;
 
+  // ── Auth gate: when authMode='required', reject privileged commands before AUTHENTICATE ──
+  // Pre-auth messages: AUTHENTICATE, AUTH_REFRESH only
+  const PRE_AUTH_TYPES = new Set(['AUTHENTICATE', 'AUTH_REFRESH']);
+  if (_authMode === AuthMode.REQUIRED && !PRE_AUTH_TYPES.has(type)) {
+    const connAuth = connections.get(connectionId);
+    if (!connAuth || connAuth.authState !== ConnectionAuthState.AUTHENTICATED) {
+      logEvent('authRequired', { connectionId, type });
+      return send(ws, errorMsg(ReasonCode.AUTH_REQUIRED, 'Authentication required before this command', requestId));
+    }
+  }
+
   try {
     switch (type) {
+      case 'AUTHENTICATE': return handleAuthenticate(connectionId, ws, payload, requestId).catch(err => send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, err.message, requestId)));
+      case 'AUTH_REFRESH': return handleAuthRefresh(connectionId, ws, payload, requestId).catch(err => send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, err.message, requestId)));
       case 'CREATE_MATCH': return handleCreateMatch(connectionId, ws, payload, requestId);
       case 'JOIN_MATCH': return handleJoinMatch(connectionId, ws, payload, requestId);
       case 'RESUME_MATCH': return handleResumeMatch(connectionId, ws, payload, requestId);
@@ -566,6 +681,126 @@ function handleMessage(connectionId, ws, raw) {
 }
 
 // ── Handlers ──
+
+// ── Auth handshake handlers ──
+
+async function handleAuthenticate(connectionId, ws, payload, requestId) {
+  // When auth is disabled, accept silently (no-op)
+  if (_authMode !== AuthMode.REQUIRED) {
+    return send(ws, authenticatedBuilder(
+      { publicPlayerId: 'PLY_dev', displayName: 'DevPlayer', handle: null, avatarUrl: null, isAnonymous: false, capabilities: resolveCapabilities({}, true) },
+      Date.now() + 3600000,
+      requestId,
+    ));
+  }
+
+  const check = validateAuthenticate(payload);
+  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
+
+  const result = await identityVerifier.verify(payload.accessToken);
+  if (!result.valid) {
+    logEvent('authFailure', { connectionId, code: result.code });
+    return send(ws, errorMsg(result.code, result.message, requestId));
+  }
+
+  // Bind verified identity to connection
+  const conn = connections.get(connectionId);
+  if (!conn) return;
+  conn.authState = ConnectionAuthState.AUTHENTICATED;
+  conn.account = {
+    accountId: result.identity.accountId,
+    publicPlayerId: result.identity.publicProfile.publicPlayerId,
+    isAnonymous: result.identity.isAnonymous,
+    provider: result.identity.provider,
+    tokenExpiresAt: result.identity.expiresAt,
+    capabilities: result.identity.capabilities,
+    accountStatus: result.identity.accountStatus ?? 'ACTIVE',
+    displayName: result.identity.publicProfile.displayName,
+    handle: result.identity.publicProfile.handle,
+    avatarUrl: result.identity.publicProfile.avatarUrl,
+  };
+
+  logEvent('authSuccess', { connectionId, accountId: result.identity.accountId, isAnonymous: result.identity.isAnonymous });
+
+  // Send AUTHENTICATED with safe public profile — NEVER echo the access token
+  send(ws, authenticatedBuilder(
+    toSafePublicProfile(result.identity) ? {
+      publicPlayerId: result.identity.publicProfile.publicPlayerId,
+      displayName: result.identity.publicProfile.displayName,
+      handle: result.identity.publicProfile.handle,
+      avatarUrl: result.identity.publicProfile.avatarUrl,
+      isAnonymous: result.identity.isAnonymous,
+      capabilities: result.identity.capabilities,
+    } : {
+      publicPlayerId: result.identity.publicProfile.publicPlayerId,
+      displayName: result.identity.publicProfile.displayName,
+      handle: null,
+      avatarUrl: null,
+      isAnonymous: result.identity.isAnonymous,
+      capabilities: result.identity.capabilities,
+    },
+    result.identity.expiresAt,
+    requestId,
+  ));
+}
+
+async function handleAuthRefresh(connectionId, ws, payload, requestId) {
+  // When auth is disabled, no-op
+  if (_authMode !== AuthMode.REQUIRED) {
+    return send(ws, authenticatedBuilder(
+      { publicPlayerId: 'PLY_dev', displayName: 'DevPlayer', handle: null, avatarUrl: null, isAnonymous: false, capabilities: resolveCapabilities({}, true) },
+      Date.now() + 3600000,
+      requestId,
+    ));
+  }
+
+  const check = validateAuthRefresh(payload);
+  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
+
+  const conn = connections.get(connectionId);
+  if (!conn) return;
+
+  // Must already be authenticated to refresh
+  if (conn.authState !== ConnectionAuthState.AUTHENTICATED || !conn.account) {
+    return send(ws, errorMsg(ReasonCode.AUTH_REQUIRED, 'Must authenticate before refresh', requestId));
+  }
+
+  const result = await identityVerifier.verify(payload.accessToken);
+  if (!result.valid) {
+    logEvent('authFailure', { connectionId, code: result.code, reason: 'refresh' });
+    return send(ws, errorMsg(result.code, result.message, requestId));
+  }
+
+  // Refreshed token sub must match already-bound account
+  if (result.identity.accountId !== conn.account.accountId) {
+    logEvent('authFailure', { connectionId, code: 'AUTH_ACCOUNT_MISMATCH', reason: 'refresh_different_account' });
+    // Disconnect — do not allow account switching via refresh
+    send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_MISMATCH, 'Token refresh account mismatch — disconnecting', requestId));
+    // Use close() not terminate() to allow the ERROR message to flush
+    ws.close();
+    connections.delete(connectionId);
+    return;
+  }
+
+  // Update token expiration on the connection
+  conn.account.tokenExpiresAt = result.identity.expiresAt;
+  logEvent('authRefresh', { connectionId, accountId: conn.account.accountId });
+
+  send(ws, authenticatedBuilder(
+    {
+      publicPlayerId: conn.account.publicPlayerId,
+      displayName: conn.account.displayName,
+      handle: conn.account.handle,
+      avatarUrl: conn.account.avatarUrl,
+      isAnonymous: conn.account.isAnonymous,
+      capabilities: conn.account.capabilities,
+    },
+    result.identity.expiresAt,
+    requestId,
+  ));
+}
+
+// ── Match lifecycle handlers ──
 
 function handleCreateMatch(connectionId, ws, payload, requestId) {
   if (matchStore.count >= MAX_MATCHES) {
@@ -606,17 +841,18 @@ function handleCreateMatch(connectionId, ws, payload, requestId) {
     seed,
   });
 
-  match.addParticipant(participantId, participantToken);
+  // Bind connection to participant
+  const conn = connections.get(connectionId);
+
+  match.addParticipant(participantId, participantToken, conn?.account?.accountId ?? null);
   matchStore.save(match);
   matchStore.registerInvite(inviteCode, matchId);
 
-  // Bind connection to participant
-  const conn = connections.get(connectionId);
   conn.participantId = participantId;
   conn.matchId = matchId;
 
   send(ws, matchCreated(matchId, inviteCode, participantToken, requestId));
-  logEvent('matchCreate', { matchId, profileId: payload.profileId });
+  logEvent('matchCreate', { matchId, profileId: payload.profileId, accountId: conn?.account?.accountId ?? null });
 }
 
 function handleJoinMatch(connectionId, ws, payload, requestId) {
@@ -637,19 +873,29 @@ function handleJoinMatch(connectionId, ws, payload, requestId) {
     return send(ws, errorMsg(ReasonCode.MATCH_FULL, 'Match is full', requestId));
   }
 
+  // Prevent self-join: same account cannot occupy both seats (when auth enabled)
+  const conn = connections.get(connectionId);
+  const joinerAccountId = conn?.account?.accountId ?? null;
+  if (joinerAccountId) {
+    for (const [, p] of match.participants) {
+      if (p.accountId === joinerAccountId) {
+        return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_MISMATCH, 'Cannot join your own match', requestId));
+      }
+    }
+  }
+
   const participantToken = randomBytes(32).toString('base64url');
   const participantId = `P-${randomBytes(8).toString('base64url')}`;
 
-  const result = match.addParticipant(participantId, participantToken);
+  const result = match.addParticipant(participantId, participantToken, joinerAccountId);
   matchStore.save(match);
 
   // Bind connection
-  const conn = connections.get(connectionId);
   conn.participantId = participantId;
   conn.matchId = match.matchId;
 
   send(ws, matchJoined(match.matchId, participantToken, result.playerId, requestId));
-  logEvent('matchJoin', { matchId: match.matchId, participantId });
+  logEvent('matchJoin', { matchId: match.matchId, participantId, accountId: joinerAccountId });
 
   // Notify the opponent (P1) that P2 has connected
   const opponentId = [...match.participants.keys()].find(pid => pid !== participantId);
@@ -674,9 +920,21 @@ function handleResumeMatch(connectionId, ws, payload, requestId) {
   const participantId = match.findParticipantByToken(payload.participantToken);
   if (!participantId) return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_INVALID, 'Invalid participant token', requestId));
 
+  // ── Account-bound reconnect security ──
+  // When auth is enabled, the verified accountId must match the participant's accountId.
+  // A stolen participant token alone cannot be reused by an unrelated authenticated account.
+  const conn = connections.get(connectionId);
+  const participant = match.participants.get(participantId);
+  const reconnectAccountId = conn?.account?.accountId ?? null;
+  if (_authMode === AuthMode.REQUIRED && reconnectAccountId && participant?.accountId) {
+    if (reconnectAccountId !== participant.accountId) {
+      logEvent('authFailure', { connectionId, code: 'AUTH_ACCOUNT_MISMATCH', reason: 'reconnect' });
+      return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_MISMATCH, 'This match belongs to another Intrilex account', requestId));
+    }
+  }
+
   // Bind new connection FIRST, then supersede old — eliminates the race window
   // where neither connection is bound during reconnection.
-  const conn = connections.get(connectionId);
   conn.participantId = participantId;
   conn.matchId = match.matchId;
 
@@ -690,7 +948,7 @@ function handleResumeMatch(connectionId, ws, payload, requestId) {
   const view = match.getAuthorizedView(participantId);
   const safeView = buildNetworkPlayerView(view);
   send(ws, matchView(match.matchId, safeView, requestId));
-  logEvent('reconnect', { matchId: match.matchId, participantId });
+  logEvent('reconnect', { matchId: match.matchId, participantId, accountId: reconnectAccountId });
 }
 
 function handleReady(connectionId, ws, payload, requestId) {
@@ -890,7 +1148,10 @@ function handleQueueJoin(connectionId, ws, payload, requestId) {
     return send(ws, errorMsg(ReasonCode.RATE_LIMITED, 'Server at match capacity', requestId));
   }
 
-  const result = matchmakingQueue.enqueue(connectionId, payload.profileId);
+  // Use accountId for queue identity when auth is enabled (prevents multi-queue abuse + self-match)
+  const conn = connections.get(connectionId);
+  const accountId = conn?.account?.accountId ?? null;
+  const result = matchmakingQueue.enqueue(connectionId, payload.profileId, accountId);
   if (!result.queued) {
     return send(ws, errorMsg(result.code || ReasonCode.INTERNAL_ERROR, result.error || 'Failed to join queue', requestId));
   }
@@ -1170,12 +1431,99 @@ function broadcastMatchEnded(match) {
   // replayUrl is null — HTTP replay download was removed in v0.24.2.
   // Replays are retrieved via the authenticated WebSocket GET_REPLAY flow only.
   const replayUrl = null;
+
+  // Evaluate server-side achievements for all participants.
+  // The server has full access to engine state and events (no hidden-info firewall).
+  // Results are sent per-participant — each player only receives their own unlocks.
+  let achievementResults = {};
+  try {
+    const engineState = match.getAuthoritativeState();
+    const allEvents = match.getAllEvents();
+    const playerIds = [...match.participants.keys()];
+    if (allEvents.length > 0 && playerIds.length > 0) {
+      achievementResults = evaluateMatchAchievements({
+        matchId: match.matchId,
+        engineState,
+        playerIds,
+        events: allEvents,
+      });
+    }
+  } catch (err) {
+    logEvent('achievementEvalError', { matchId: match.matchId, error: err.message });
+  }
+
   for (const [pid] of match.participants) {
     const targetConn = findConnectionByParticipant(pid, match.matchId);
     if (targetConn) {
       send(targetConn.ws, matchEnded(match.matchId, match.terminalReason, match.winner));
       // Send REPLAY_AVAILABLE so clients know they can request the certified replay
       send(targetConn.ws, replayAvailable(match.matchId, replayUrl, replayHash));
+      // Send server-authoritative achievement unlocks for this participant
+      const achResult = achievementResults[pid];
+      if (achResult && achResult.newUnlocks.length > 0) {
+        send(targetConn.ws, achievementsEarned(match.matchId, achResult.newUnlocks, achResult.progressUpdates));
+      }
+    }
+  }
+
+  // Persist match result to the authoritative store (Supabase in production,
+  // in-memory in dev/test). This writes the matches row, match_participants
+  // rows, and updates player_ratings + player_stats.
+  // Fire-and-forget — persistence failure must not crash the server or
+  // prevent clients from receiving MATCH_ENDED. Errors are logged.
+  if (matchResultPersistor) {
+    buildMatchResultRecord({
+      match,
+      persistor: matchResultPersistor,
+      queueId: match.profileId?.includes('ranked') ? 'ranked' : 'casual',
+      serverVersion: LAB_VERSION,
+    }).then(record => {
+      if (!record) return null;
+      return matchResultPersistor.persistMatchResult(record);
+    }).then(result => {
+      if (result && !result.success) {
+        logEvent('matchPersistError', { matchId: match.matchId, error: result.error });
+      } else if (result) {
+        logEvent('matchPersisted', { matchId: match.matchId, status: result.record.status });
+      }
+    }).catch(err => {
+      logEvent('matchPersistError', { matchId: match.matchId, error: err.message });
+    });
+
+    // Persist server-authoritative achievement unlocks to account_achievements.
+    // Only for authenticated participants (those with an accountId).
+    // Uses SERVER provenance — these rows can only be written by the service role.
+    const achUnlocks = [];
+    for (const [pid] of match.participants) {
+      const achResult = achievementResults[pid];
+      if (!achResult || achResult.newUnlocks.length === 0) continue;
+      const participant = match.participants.get(pid);
+      const accountId = participant?.accountId;
+      if (!accountId) continue; // Skip anonymous players
+      for (const unlock of achResult.newUnlocks) {
+        achUnlocks.push({
+          accountId,
+          achievementId: unlock.achievementId,
+          unlockedAt: unlock.unlockedAt || new Date().toISOString(),
+          provenance: 'SERVER',
+          matchId: match.matchId,
+          rulesVersion: unlock.rulesVersion || null,
+          productVersion: unlock.productVersion || null,
+        });
+      }
+    }
+    if (achUnlocks.length > 0) {
+      matchResultPersistor.persistAchievementUnlocks(achUnlocks)
+        .then(result => {
+          if (!result.success) {
+            logEvent('achievementPersistError', { matchId: match.matchId, error: result.error });
+          } else {
+            logEvent('achievementsPersisted', { matchId: match.matchId, count: result.persisted });
+          }
+        })
+        .catch(err => {
+          logEvent('achievementPersistError', { matchId: match.matchId, error: err.message });
+        });
     }
   }
 }

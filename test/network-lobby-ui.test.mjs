@@ -153,8 +153,8 @@ test('protocol-client: spectateLeave builds correct message', () => {
 });
 
 test('protocol-client: all new builders have correct protocol version', () => {
-  assert.equal(queueJoin('core-test').protocolVersion, 1);
-  assert.equal(queueLeave().protocolVersion, 1);
-  assert.equal(spectateMatch('M-test').protocolVersion, 1);
-  assert.equal(spectateLeave().protocolVersion, 1);
+  assert.equal(queueJoin('core-test').protocolVersion, 2);
+  assert.equal(queueLeave().protocolVersion, 2);
+  assert.equal(spectateMatch('M-test').protocolVersion, 2);
+  assert.equal(spectateLeave().protocolVersion, 2);
 });

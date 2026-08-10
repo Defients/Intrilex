@@ -192,12 +192,12 @@ test('Renderer: swap bar is rendered as a grid cell (not auto-placed)', () => {
 
 test('Renderer: actions panel shows meaningful prompt during human turn with no selection', () => {
   assert.ok(
-    rendererSrc.includes('awaiting-selection'),
-    'Actions panel must have awaiting-selection state when no card is selected'
+    rendererSrc.includes('rd-stage-board-context'),
+    'Active stage must show board context when no card is selected'
   );
   assert.ok(
-    rendererSrc.includes('Select a card from your hand'),
-    'Actions panel must prompt user to select a card'
+    rendererSrc.includes('intent') && rendererSrc.includes('available'),
+    'Actions panel must show available intent count as a prompt'
   );
 });
 

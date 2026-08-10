@@ -9,6 +9,19 @@ const fetchJson = async (url) => {
   return response.json();
 };
 
+// Inline bootstrap-style CI for the mean (avoids @intrilex/statistics node:crypto dependency)
+function bootstrapMeanCIInline(values, _alpha = 0.05) {
+  const clean = (values ?? []).filter(Number.isFinite);
+  if (clean.length < 2) return null;
+  const mean = clean.reduce((a, b) => a + b, 0) / clean.length;
+  const variance = clean.length > 1 ? clean.reduce((s, v) => s + (v - mean) ** 2, 0) / (clean.length - 1) : 0;
+  const se = Math.sqrt(variance) / Math.sqrt(clean.length);
+  const n = clean.length;
+  const tCritical = n >= 30 ? 1.959963984540054 : n >= 10 ? 2.262 : n >= 5 ? 2.776 : 3.182;
+  const margin = tCritical * se;
+  return [Number((mean - margin).toFixed(4)), Number((mean + margin).toFixed(4))];
+}
+
 self.onmessage = async (event) => {
   const { type, records, fixtureIds } = event.data ?? {};
   if (type === 'aggregate') {
@@ -81,9 +94,94 @@ self.onmessage = async (event) => {
   if (type === 'run-paired-counterfactual') {
     try {
       const { runPairedCounterfactual } = await import('./decision-intelligence.js');
-      const result = runPairedCounterfactual(event.data.config ?? {});
+      const cfg = event.data.config ?? {};
+      // Load the authorized replay if not already provided in config
+      if (!cfg.replay && cfg.fixtureId) {
+        const replayUrl = cfg.replayKind === 'autonomy'
+          ? `data/autonomy/replays/authorized/${cfg.fixtureId}.authorized.replay.json`
+          : `data/replays/authorized/${cfg.fixtureId}.json`;
+        cfg.replay = await fetchJson(replayUrl);
+      }
+      const result = runPairedCounterfactual(cfg);
       self.postMessage({ type: 'paired-counterfactual-result', ok: true, result });
     } catch (error) { self.postMessage({ type: 'paired-counterfactual-result', ok: false, error: error?.stack ?? String(error) }); }
+    return;
+  }
+  if (type === 'get-legal-actions') {
+    try {
+      const { getCheckpointLegalActions } = await import('./decision-intelligence.js');
+      const { replay, checkpointIndex, profileId, fixtureId, replayKind } = event.data;
+      let replayObj = replay;
+      if (!replayObj && fixtureId) {
+        const replayUrl = replayKind === 'autonomy'
+          ? `data/autonomy/replays/authorized/${fixtureId}.authorized.replay.json`
+          : `data/replays/authorized/${fixtureId}.json`;
+        replayObj = await fetchJson(replayUrl);
+      }
+      const result = getCheckpointLegalActions(replayObj, checkpointIndex, profileId);
+      self.postMessage({ type: 'legal-actions-result', ok: true, result });
+    } catch (error) { self.postMessage({ type: 'legal-actions-result', ok: false, error: error?.stack ?? String(error) }); }
+    return;
+  }
+  if (type === 'run-all-actions') {
+    try {
+      const { getCheckpointLegalActions, runCounterfactualBranch } = await import('./decision-intelligence.js');
+      const { replay, checkpointIndex, profileId, fixtureId, replayKind, rolloutCount, continuationPolicyIds, baseSeed, seatOrder, matchId } = event.data;
+      let replayObj = replay;
+      if (!replayObj && fixtureId) {
+        const replayUrl = replayKind === 'autonomy'
+          ? `data/autonomy/replays/authorized/${fixtureId}.authorized.replay.json`
+          : `data/replays/authorized/${fixtureId}.json`;
+        replayObj = await fetchJson(replayUrl);
+      }
+      const legalInfo = getCheckpointLegalActions(replayObj, checkpointIndex, profileId);
+      if (legalInfo.status !== 'OK') {
+        self.postMessage({ type: 'all-actions-result', ok: false, error: `Legal actions failed: ${legalInfo.reason ?? 'unknown'}` });
+        return;
+      }
+      const historicalActionId = legalInfo.selectedActionId;
+      const rankings = [];
+      for (const action of legalInfo.legalActions) {
+        const cfg = {
+          replay: replayObj,
+          checkpointIndex,
+          profileId,
+          selectedActionId: historicalActionId,
+          alternativeActionId: action.actionId,
+          rolloutCount,
+          continuationPolicyIds,
+          baseSeed: baseSeed ?? legalInfo.baseSeed,
+          seatOrder: seatOrder ?? legalInfo.seatOrder,
+          matchId: matchId ?? legalInfo.matchId,
+          focalSeat: 1,
+        };
+        const branchResult = runCounterfactualBranch(cfg);
+        const sum = branchResult.summary ?? {};
+        rankings.push({
+          actionId: action.actionId,
+          isHistorical: action.isHistorical,
+          meanFocalUtility: sum.meanFocalUtility,
+          focalWinRate: sum.focalWinRate,
+          completedCount: sum.completedCount,
+          totalRollouts: sum.totalRollouts,
+          utilityCI: sum.focalUtilityDistribution?.length >= 2 ? bootstrapMeanCIInline(sum.focalUtilityDistribution) : null,
+        });
+        self.postMessage({ type: 'all-actions-progress', completed: rankings.length, total: legalInfo.legalActions.length });
+      }
+      // Compute utility delta relative to historical
+      const historical = rankings.find(r => r.isHistorical);
+      const historicalUtil = historical?.meanFocalUtility ?? 0;
+      for (const r of rankings) {
+        r.utilityDelta = r.meanFocalUtility != null ? r.meanFocalUtility - historicalUtil : null;
+      }
+      // Sort by mean utility descending
+      rankings.sort((a, b) => (b.meanFocalUtility ?? -Infinity) - (a.meanFocalUtility ?? -Infinity));
+      self.postMessage({
+        type: 'all-actions-result',
+        ok: true,
+        result: { rankings, checkpointIndex, rolloutCount, continuationPolicyIds, historicalActionId },
+      });
+    } catch (error) { self.postMessage({ type: 'all-actions-result', ok: false, error: error?.stack ?? String(error) }); }
     return;
   }
   if (type === 'run-diagnostics') {

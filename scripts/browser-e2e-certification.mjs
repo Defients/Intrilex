@@ -56,6 +56,8 @@ const MIME = {
   '.jpg': 'image/jpeg',
   '.woff2': 'font/woff2',
   '.woff': 'font/woff',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
   '.txt': 'text/plain; charset=utf-8',
   '.md': 'text/markdown; charset=utf-8',
 };
@@ -788,11 +790,39 @@ async function scenario6_TerminalEvidence(cdp, baseUrl) {
             confirmBtn.click();
             return { terminal: false, clicked: true, type: 'confirm' };
           }
+          // Check for target buttons
+          const targetBtns = document.querySelectorAll('[data-testid="target-button"]:not([disabled])');
+          if (targetBtns.length > 0) {
+            targetBtns[0].click();
+            return { terminal: false, clicked: true, type: 'target' };
+          }
+          // Check if a source card is already selected
+          const selectedCard = document.querySelector('.hand-card.selected');
+          // If no card is selected and there are legal hand cards, select one first
+          const legalHandCards = document.querySelectorAll('.hand-card.legal-source');
+          if (!selectedCard && legalHandCards.length > 0) {
+            legalHandCards[0].click();
+            return { terminal: false, clicked: true, type: 'card' };
+          }
+          // Click first available intent button
+          const intentBtns = document.querySelectorAll('[data-intent-key]:not([disabled])');
+          if (intentBtns.length > 0) {
+            const nonPass = Array.from(intentBtns).find(b => !b.classList.contains('pass'));
+            const target = nonPass || intentBtns[0];
+            target.click();
+            return { terminal: false, clicked: true, type: 'intent' };
+          }
           // Click first available action button
           const actions = document.querySelectorAll('[data-testid="action-button"]:not([disabled]), [data-action-id]:not([disabled])');
           if (actions.length > 0) {
             actions[0].click();
             return { terminal: false, clicked: true, actionCount: actions.length, type: 'action' };
+          }
+          // Check for pass button
+          const passBtn = document.querySelector('[data-action-id][data-key="P"]');
+          if (passBtn && !passBtn.disabled) {
+            passBtn.click();
+            return { terminal: false, clicked: true, type: 'pass' };
           }
           // Check for advance/continue button (AI turn or waiting)
           const advanceBtn = document.querySelector('[data-action="advance"], .advance-btn, button.advance, [data-testid="continue-match"]');

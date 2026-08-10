@@ -85,6 +85,13 @@ async function bundle() {
     let html = await readFile(indexHtmlPath, 'utf8');
     html = html.replace(/styles\.css/g, cssFileName);
     html = html.replace(/src="app\.js"/g, `src="${jsFileName}"`);
+    // Inject browser-safe Supabase config from env vars (if available)
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (supabaseUrl && supabaseKey && !html.includes('__INTRILEX_CONFIG__')) {
+      const configScript = `<script>window.__INTRILEX_CONFIG__={supabase:{url:${JSON.stringify(supabaseUrl)},publishableKey:${JSON.stringify(supabaseKey)}}};</script>`;
+      html = html.replace('</head>', configScript + '\n</head>');
+    }
     await writeFile(indexHtmlPath, html);
     console.log(`bundle: updated index.html with hashed asset references`);
   }

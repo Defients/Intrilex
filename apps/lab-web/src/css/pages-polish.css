@@ -48,6 +48,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,[t
 .landing-aurora{filter:blur(100px);opacity:.85}
 .landing-grid-bg{background-size:72px 72px;mask-image:radial-gradient(ellipse at 50% 35%,#000 28%,transparent 78%)}
 
+/* ── Landing: Player-first redesign overrides (v0.24.2) ── */
+.landing-hero{padding:clamp(8px,1.5vh,20px) 40px var(--space-5)}
+.landing-content .landing-cards{gap:16px}
+.landing-play-panel.landing-card{padding:clamp(36px,5vh,64px) clamp(36px,4vw,56px);border-radius:var(--radius-xl);transition:none}
+.landing-play-panel.landing-card:hover{transform:none;box-shadow:0 24px 64px rgba(0,0,0,.32),var(--shadow-inset)}
+.landing-play-panel.landing-card::before{background:radial-gradient(ellipse at 50% 0%,rgba(241,189,93,.05),transparent 60%);opacity:1}
+.landing-nav-link.landing-card.sim{padding:6px 14px;border-radius:999px;transition:border-color var(--fast),background var(--fast),color var(--fast)}
+.landing-nav-link.landing-card.sim:hover{transform:none;box-shadow:none}
+.landing-nav-link.landing-card.sim::before{display:none}
+.landing-app .landing-footer{padding:14px 40px}
+
 /* ═══════════════════════════════════════════════════════════════
    OBSERVATORY SHELL
    ═══════════════════════════════════════════════════════════════ */

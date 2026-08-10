@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-08-04T00:33:34.506Z",
-  "chromeVersion": "Chrome/151.0.7922.71",
+  "timestamp": "2026-08-10T02:24:48.269Z",
+  "chromeVersion": "Chrome/151.0.7922.76",
   "chromePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "baseUrl": "http://127.0.0.1:8787",
   "debugPort": 9222,
@@ -16,8 +16,8 @@
       "details": {
         "formRendered": true,
         "matchStarted": true,
-        "actionCount": 14,
-        "stateText": "H\n    hybrix-rusher-easy\n    1200\n    \n  \n      \n    Goal\n    21\n    / 21\n  \n  \n    Secured\n    0\n  "
+        "actionCount": 2,
+        "stateText": null
       }
     },
     {
@@ -28,27 +28,27 @@
         "tabBOpened": true,
         "leaseInfoA": {
           "leaseKeys": [
-            "intrilex-session-lease:S-f770f3c10dfdd34c",
-            "intrilex-session-lease:S-b29e63b629ba9d21"
+            "intrilex-session-lease:S-eb05bbe1e55c87a3",
+            "intrilex-session-lease:S-b86fef52cdc9b3e7"
           ],
           "leaseData": {
-            "intrilex-session-lease:S-f770f3c10dfdd34c": {
-              "tabId": "tab-1785803587141-3uyfad",
-              "sessionId": "S-f770f3c10dfdd34c",
-              "acquiredAt": 1785803587141,
-              "lastHeartbeat": 1785803587141
+            "intrilex-session-lease:S-eb05bbe1e55c87a3": {
+              "tabId": "tab-1786328663606-ebl8dq",
+              "sessionId": "S-eb05bbe1e55c87a3",
+              "acquiredAt": 1786328663608,
+              "lastHeartbeat": 1786328663608
             },
-            "intrilex-session-lease:S-b29e63b629ba9d21": {
-              "tabId": "tab-1785803586818-u3zw4c",
-              "sessionId": "S-b29e63b629ba9d21",
-              "acquiredAt": 1785803586818,
-              "lastHeartbeat": 1785803586818
+            "intrilex-session-lease:S-b86fef52cdc9b3e7": {
+              "tabId": "tab-1786328664003-k4cdhg",
+              "sessionId": "S-b86fef52cdc9b3e7",
+              "acquiredAt": 1786328664011,
+              "lastHeartbeat": 1786328664011
             }
           },
           "leaseKeyCount": 2
         },
         "conflictResult": {
-          "sessionId": "S-f770f3c10dfdd34c",
+          "sessionId": "S-eb05bbe1e55c87a3",
           "acquired": false,
           "conflict": true,
           "checkResult": {
@@ -123,27 +123,25 @@
       "passed": true,
       "details": {
         "privacy": {
-          "privateMarkersFound": [
-            "face-down"
-          ],
+          "privateMarkersFound": [],
           "privateElementCount": 0,
           "visiblePrivateCount": 0
         },
         "accessibility": {
           "hasSkipLink": true,
-          "ariaLabelCount": 59,
-          "roleCount": 11,
-          "buttonCount": 23,
+          "ariaLabelCount": 88,
+          "roleCount": 37,
+          "buttonCount": 16,
           "buttonsWithoutLabel": 0,
           "hasLangAttr": true,
           "lang": "en",
           "hasMainLandmark": true
         },
         "responsive": {
-          "viewportWidth": 400,
-          "viewportHeight": 711,
-          "bodyScrollWidth": 389,
-          "htmlScrollWidth": 400,
+          "viewportWidth": 375,
+          "viewportHeight": 667,
+          "bodyScrollWidth": 375,
+          "htmlScrollWidth": 375,
           "hasHorizontalOverflow": false,
           "sideRailDisplay": "flex",
           "shellPresent": true
@@ -154,11 +152,11 @@
       "scenario": "terminal-evidence-navigation",
       "passed": true,
       "details": {
-        "advanceCount": 54,
+        "advanceCount": 41,
         "reachedTerminal": true,
-        "terminalText": "💀\n      Match Complete\n      You lost.\n    \n    \n      WinnerP2\n      TerminationNormal Victory\n      Full Turns12\n    \n    \n    Post-Match Analysis\n    \n      \n    Secured Points\n    —\n    vs\n    —\n",
+        "terminalText": "💀\n      Match Complete\n      You lost.\n      Well played.\n    \n    \n      WinnerAI\n      TerminationNormal Victory\n      Full Turns10\n    \n    \n      Watch replay\n      \n      Rematch same seed\n     ",
         "hasWinner": true,
-        "winnerText": "P2",
+        "winnerText": "AI",
         "hasEvidenceLink": true,
         "hasReplayLink": true,
         "evidenceNavigated": false

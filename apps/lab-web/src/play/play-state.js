@@ -17,8 +17,6 @@ export const state = {
   selectedTargetIds: [],
   inspectorCardId: null,
   inspectorFaceView: 'essentials', // 'essentials' is the single inline view (Advanced Rules opens #advanced-card-rules-dialog)
-  hoverTimer: null, // reserved (Ctrl/Shift hover uses immediate show, no delay)
-  hoverPopoverIdentity: null, // identity currently shown in the hover popover
   guidanceMode: GuidanceMode.GUIDED,
   autosaveTimer: null,
   isAdvancing: false,
@@ -39,6 +37,9 @@ export const state = {
   visibilityHandler: null,
   prevHandCount: 0,
   statsRecorded: false, // Guard: update player stats only once per terminal match
+  selectedIntentKey: null, // Currently selected intent group key
+  viewMode: null, // Current view mode (e.g. 'start')
+  rightRailTab: 'chat', // Active right rail tab ('chat' | 'debug')
 };
 
 /**
@@ -54,8 +55,6 @@ export function resetState() {
   state.selectedTargetIds = [];
   state.inspectorCardId = null;
   state.inspectorFaceView = 'board';
-  state.hoverTimer = null;
-  state.hoverPopoverIdentity = null;
   state.autosaveTimer = null;
   state.isAdvancing = false;
   state.keyboardHandler = null;
@@ -75,4 +74,9 @@ export function resetState() {
   state.visibilityHandler = null;
   state.prevHandCount = 0;
   state.statsRecorded = false;
+  state.selectedIntentKey = null;
+  state.viewMode = null;
+  state.rightRailTab = 'chat';
+  state._networkAchievementsApplied = false;
+  state._achievementSummaryHtml = undefined;
 }

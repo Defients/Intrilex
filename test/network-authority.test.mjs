@@ -46,20 +46,20 @@ test('protocol: unknown version rejected', () => {
 });
 
 test('protocol: unknown type rejected', () => {
-  const msg = { protocolVersion: 1, type: 'UNKNOWN_TYPE', payload: {} };
+  const msg = { protocolVersion: 2, type: 'UNKNOWN_TYPE', payload: {} };
   const result = validateEnvelope(msg);
   assert.equal(result.valid, false);
   assert.equal(result.code, ReasonCode.MESSAGE_TYPE_UNKNOWN);
 });
 
 test('protocol: missing payload rejected', () => {
-  const msg = { protocolVersion: 1, type: 'CREATE_MATCH' };
+  const msg = { protocolVersion: 2, type: 'CREATE_MATCH' };
   const result = validateEnvelope(msg);
   assert.equal(result.valid, false);
 });
 
 test('protocol: non-object payload rejected', () => {
-  const msg = { protocolVersion: 1, type: 'CREATE_MATCH', payload: 'string' };
+  const msg = { protocolVersion: 2, type: 'CREATE_MATCH', payload: 'string' };
   const result = validateEnvelope(msg);
   assert.equal(result.valid, false);
 });
@@ -761,7 +761,7 @@ test('server: starts and responds to health check', async () => {
   const resp = await fetch(`http://127.0.0.1:${TEST_PORT}`);
   const body = await resp.json();
   assert.equal(body.server, 'Intrilex Match Authority');
-  assert.equal(body.protocolVersion, 1);
+  assert.equal(body.protocolVersion, 2);
 });
 
 test('server: WebSocket create and join duel', async () => {
@@ -1032,7 +1032,7 @@ test('server: full WebSocket match with GET_REPLAY round-trip', async () => {
 
   // Send GET_REPLAY and verify REPLAY_DATA
   ws1.send(JSON.stringify({
-    protocolVersion: 1,
+    protocolVersion: 2,
     type: 'GET_REPLAY',
     payload: { matchId, participantToken: p1Token },
   }));

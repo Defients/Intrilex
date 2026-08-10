@@ -4,10 +4,12 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "@intrilex/account-domain": "workspace:*",
     "@intrilex/engine-adapter": "workspace:*",
     "@intrilex/match-authority": "workspace:*",
     "@intrilex/network-protocol": "workspace:*",
     "@intrilex/shared": "workspace:*",
+    "@supabase/supabase-js": "2.112.2",
     "ws": "^8.21.0"
   }
 }

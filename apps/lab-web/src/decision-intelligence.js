@@ -193,6 +193,83 @@ function verifyAnchor(config, replay, checkpointIndex, advanced, selectedActionI
   return verifyAnchorAuthority({ anchor, retainedRecord, restoredAuthority });
 }
 
+/**
+ * Extract legal actions at a specific checkpoint in a certified replay.
+ *
+ * Reconstructs the engine state up to the checkpoint, advances to the next
+ * decision, and returns the legal actions with the historically-taken action
+ * flagged. This enables the Branch Lab UI to show a dropdown of legal actions
+ * instead of requiring the user to type an action ID.
+ *
+ * @param {object} replay - Certified replay object
+ * @param {number} checkpointIndex - Checkpoint index (0-based, into replay.commands)
+ * @param {string} profileId - Simulation profile ID (e.g. 'core-advanced-authority')
+ * @returns {{status: string, legalActions: Array<{actionId: string, label: string, isHistorical: boolean}>, selectedActionId: string|null, matchId: string, profileId: string, baseSeed: number, seatOrder: string[]}|{status: string, reason: string, missingAuthority: string}}
+ */
+export function getCheckpointLegalActions(replay, checkpointIndex, profileId) {
+  if (!replay) {
+    return { status: 'NOT_SUPPORTED', reason: 'NO_REPLAY', missingAuthority: 'authority-certified-replay' };
+  }
+
+  const supportCheck = isCounterfactualSupported(replay, checkpointIndex);
+  if (!supportCheck.supported) {
+    return { status: 'NOT_SUPPORTED', reason: supportCheck.reason, missingAuthority: supportCheck.missingAuthority };
+  }
+
+  try { verifyCertifiedReplay(replay); } catch (error) {
+    return { status: 'NOT_SUPPORTED', reason: 'REPLAY_VERIFICATION_FAILED', missingAuthority: 'authority-certified-replay' };
+  }
+
+  let frames;
+  try {
+    frames = reconstructCheckpoints(replay);
+  } catch (error) {
+    return { status: 'NOT_SUPPORTED', reason: 'CHECKPOINT_RECONSTRUCTION_FAILED', missingAuthority: 'checkpoint-reconstruction' };
+  }
+
+  const checkpointState = frames[checkpointIndex].state;
+  let advanced;
+  try {
+    advanced = isCore(profileId) ? advanceCoreToDecision(checkpointState) : advanceToDecision(checkpointState);
+  } catch (error) {
+    return { status: 'NOT_SUPPORTED', reason: 'NO_DECISION_AT_CHECKPOINT', missingAuthority: 'decision-frame' };
+  }
+
+  if (advanced.status !== 'PLAYER_DECISION_REQUIRED' || !advanced.legalActionFrame) {
+    return { status: 'NOT_SUPPORTED', reason: 'NO_DECISION_AT_CHECKPOINT', missingAuthority: 'decision-frame' };
+  }
+
+  const engineActions = advanced.legalActionFrame.actions;
+  const historicalCommand = replay.commands[checkpointIndex];
+  const historicalCommandHash = hashCanonical(historicalCommand);
+
+  // Find which legal action corresponds to the historically-taken command
+  let selectedActionId = null;
+  const legalActions = engineActions.map((action) => {
+    const isHistorical = hashCanonical(action.command) === historicalCommandHash;
+    if (isHistorical) selectedActionId = action.actionId;
+    return {
+      actionId: action.actionId,
+      label: action.actionId,
+      isHistorical,
+    };
+  });
+
+  const matchId = replay.fixtureId ?? replay.matchId ?? 'unknown';
+  const baseSeed = replay.initialState?.rng?.seed ?? 0;
+  const seatOrder = replay.initialState?.turnOrder ?? ['P1', 'P2'];
+
+  return {
+    status: 'OK',
+    legalActions,
+    selectedActionId,
+    matchId,
+    profileId,
+    baseSeed,
+    seatOrder,
+  };
+}
+
 export function runCounterfactualBranch(config) {
   const { matchId,  baseSeed,  seatOrder,  policyIds,  profileId,  alternativeActionId,  continuationPolicyIds,  replay,  checkpointIndex = 0,  rolloutCount = 32,  focalSeat,  analysisVersion = ANALYSIS_VERSION,  selectedActionId } = config;
 
@@ -486,22 +563,92 @@ export function compareCounterfactual(selectedBranch, alternativeBranch) {
   const sUtil = s.meanFocalUtility;
   const aUtil = a.meanFocalUtility;
   const diff = aUtil - sUtil;
+
+  // Confidence intervals (Wilson score for win rate, bootstrap-style for utility)
+  const sWinCI = wilsonInterval(s.focalWins, s.completedCount);
+  const aWinCI = wilsonInterval(a.focalWins, a.completedCount);
+  const sUtilCI = bootstrapMeanCI(s.focalUtilityDistribution);
+  const aUtilCI = bootstrapMeanCI(a.focalUtilityDistribution);
+
+  // Effect size and significance
+  const pooledSD = Math.sqrt(((s.completedCount - 1) * variance(s.focalUtilityDistribution) + (a.completedCount - 1) * variance(a.focalUtilityDistribution)) / Math.max(1, s.completedCount + a.completedCount - 2));
+  const cohenD = pooledSD > 0 ? diff / pooledSD : null;
+  const significant = sUtilCI && aUtilCI ? !(sUtilCI[1] >= aUtilCI[0] && aUtilCI[1] >= sUtilCI[0]) : false;
+
   return {
     selectedFocalUtility: sUtil,
     alternativeFocalUtility: aUtil,
     estimatedDifference: Number(diff.toFixed(4)),
+    selectedWinRateCI: sWinCI,
+    alternativeWinRateCI: aWinCI,
+    selectedUtilityCI: sUtilCI,
+    alternativeUtilityCI: aUtilCI,
+    cohenD: cohenD != null ? Number(cohenD.toFixed(4)) : null,
+    significant,
     selectedRolloutCount: s.totalRollouts,
     alternativeRolloutCount: a.totalRollouts,
     selectedAbortedCount: s.abortedCount,
     alternativeAbortedCount: a.abortedCount,
-    interpretation: 'Under these paired deterministic, policy-conditioned continuations, the alternative produced a different mean focal-seat utility. This estimate depends on the continuation policies and sampled streams.',
+    interpretation: significant
+      ? `Under these paired deterministic, policy-conditioned continuations, the alternative produced a ${diff > 0 ? 'significantly higher' : 'significantly lower'} mean focal-seat utility (95% CI intervals do not overlap). Effect size (Cohen's d): ${cohenD != null ? cohenD.toFixed(3) : 'N/A'}.`
+      : 'Under these paired deterministic, policy-conditioned continuations, the alternative produced a different mean focal-seat utility. The difference is not statistically significant at the 95% level (CI intervals overlap).',
     limitations: [
       'Sample size may be insufficient for narrow claims.',
       'Continuation policies are heuristics, not optimal play.',
       'This is an estimate, not proof of what should have happened.',
-      'Aborted rollouts are preserved and counted as failures, not draws.'
+      'Aborted rollouts are preserved and counted as failures, not draws.',
+      'Wilson score intervals are used for win rate; bootstrap-style quantile intervals for utility.',
+      'Cohen\'s d assumes approximately normal distributions and equal variances.'
     ]
   };
+}
+
+// ── Statistical helpers (inlined to avoid node:crypto dependency from @intrilex/statistics) ──
+
+/**
+ * Wilson score interval for a binomial proportion.
+ * @param {number} successes
+ * @param {number} total
+ * @param {number} [z=1.96] - Z-score (default: 95%)
+ * @returns {[number, number]} [lower, upper] in [0, 1]
+ */
+function wilsonInterval(successes, total, z = 1.959963984540054) {
+  if (total === 0) return [0, 0];
+  const p = successes / total, z2 = z * z, denom = 1 + z2 / total;
+  const center = (p + z2 / (2 * total)) / denom;
+  const margin = (z * Math.sqrt((p * (1 - p) + z2 / (4 * total)) / total)) / denom;
+  return [Math.max(0, center - margin), Math.min(1, center + margin)];
+}
+
+/**
+ * Compute variance of a numeric array.
+ * @param {number[]} values
+ * @returns {number}
+ */
+function variance(values) {
+  if (values.length < 2) return 0;
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  return values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (values.length - 1);
+}
+
+/**
+ * Bootstrap-style confidence interval for the mean using quantiles.
+ * Uses the t-distribution approximation for small samples.
+ * @param {number[]} values
+ * @param {number} [alpha=0.05] - Significance level (default: 95% CI)
+ * @returns {[number, number] | null} [lower, upper] or null if insufficient data
+ */
+function bootstrapMeanCI(values, alpha = 0.05) {
+  const clean = values.filter(Number.isFinite);
+  if (clean.length < 2) return null;
+  const mean = clean.reduce((a, b) => a + b, 0) / clean.length;
+  const sd = Math.sqrt(variance(clean));
+  const n = clean.length;
+  const se = sd / Math.sqrt(n);
+  // t-distribution approximation: for n >= 30, t ≈ z; for small n, use conservative t-value
+  const tCritical = n >= 30 ? 1.959963984540054 : n >= 10 ? 2.262 : n >= 5 ? 2.776 : 3.182;
+  const margin = tCritical * se;
+  return [Number((mean - margin).toFixed(4)), Number((mean + margin).toFixed(4))];
 }
 
 export function diagnosePolicy(summaries, decisions = [], policyId) {

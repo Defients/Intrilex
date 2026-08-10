@@ -194,7 +194,7 @@ test('matchmaking: QUEUE_JOIN valid message accepted', () => {
 });
 
 test('matchmaking: QUEUE_JOIN invalid profile rejected', () => {
-  const msg = { protocolVersion: 1, type: 'QUEUE_JOIN', payload: { profileId: 'invalid' } };
+  const msg = { protocolVersion: 2, type: 'QUEUE_JOIN', payload: { profileId: 'invalid' } };
   const envCheck = validateEnvelope(msg);
   assert.ok(envCheck.valid);
   const payloadCheck = validateQueueJoin(msg.payload);

@@ -12,6 +12,7 @@
 import {
   createMatch, joinMatch, resumeMatch, ready, submitAction,
   requestSync, leaveMatch, sendChat,
+  authenticate, authRefresh,
   PROTOCOL_VERSION,
 } from './network-protocol-client.mjs';
 
@@ -94,6 +95,11 @@ export class NetworkPlaySession {
     this.opponentPlayerId = null;
     this.opponentConnectionState = null;
 
+    // v2 auth state
+    this.accessToken = null;       // Set before connect() for authenticated sessions
+    this.authenticatedAccount = null;  // Set when AUTHENTICATED is received
+    this.tokenExpiresAt = null;
+
     // Replay download metadata (set when REPLAY_AVAILABLE is received)
     this.replayUrl = null;
     this.replayHash = null;
@@ -168,6 +174,11 @@ export class NetworkPlaySession {
         if (this._connectSettled) return;
         this._connectSettled = true;
         clearTimeout(connectTimeout);
+        // v2: Send AUTHENTICATE immediately on connect if we have an access token.
+        // The server gates privileged commands (CREATE_MATCH, JOIN_MATCH, etc.)
+        // behind successful authentication when authMode='required'.
+        // When authMode='disabled' (dev), the server accepts this as a no-op.
+        this._sendAuthenticate();
         // Don't set status here — caller will drive via createDuel/joinDuel/reconnect
         resolve();
       };
@@ -422,6 +433,44 @@ export class NetworkPlaySession {
     }
   }
 
+  // ── Auth handshake (v2) ──
+
+  /**
+   * Send AUTHENTICATE with the current access token.
+   * Called automatically on WebSocket open. Can also be called manually
+   * to re-authenticate after a token refresh.
+   * @returns {boolean} true if sent, false if no token or socket not open
+   */
+  _sendAuthenticate() {
+    if (!this.accessToken) return false;
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return false;
+    try {
+      const msg = authenticate(this.accessToken);
+      this._ws.send(JSON.stringify(msg));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Update the access token and send AUTH_REFRESH to the server.
+   * Called when the Supabase session refreshes the token.
+   * @param {string} newToken - New access token from Supabase
+   * @returns {boolean} true if sent
+   */
+  refreshAccessToken(newToken) {
+    this.accessToken = newToken;
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return false;
+    try {
+      const msg = authRefresh(newToken);
+      this._ws.send(JSON.stringify(msg));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   // ── Replay download ──
 
   /**
@@ -433,7 +482,7 @@ export class NetworkPlaySession {
   async getReplay() {
     if (this.status !== NetworkSessionState.TERMINAL) return null;
     if (!this.matchId || !this.participantToken) return null;
-    const msg = { protocolVersion: 1, type: 'GET_REPLAY', payload: { matchId: this.matchId, participantToken: this.participantToken } };
+    const msg = { protocolVersion: 2, type: 'GET_REPLAY', payload: { matchId: this.matchId, participantToken: this.participantToken } };
     const resp = await this._request(msg);
     if (resp.type === 'ERROR') return null;
     const replay = resp.payload?.replay ?? null;
@@ -619,6 +668,12 @@ export class NetworkPlaySession {
 
     // Handle server-pushed messages (no requestId or unmatched requestId)
     switch (msg.type) {
+      case 'AUTHENTICATED':
+        // v2 auth handshake — server confirmed our identity
+        this.authenticatedAccount = msg.payload?.account ?? null;
+        this.tokenExpiresAt = msg.payload?.expiresAt ?? null;
+        this._notifyStateChange();
+        break;
       case 'MATCH_VIEW':
         if (msg.payload?.view) {
           this._applyView(msg.payload.view);
@@ -656,6 +711,12 @@ export class NetworkPlaySession {
         // Store replay metadata so the UI can offer a download button
         this.replayUrl = msg.payload?.replayUrl ?? null;
         this.replayHash = msg.payload?.replayHash ?? null;
+        this._notifyStateChange();
+        break;
+      case 'ACHIEVEMENTS_EARNED':
+        // Server-authoritative achievement unlocks for this participant
+        this.achievementUnlocks = msg.payload?.unlocks ?? [];
+        this.achievementProgressUpdates = msg.payload?.progressUpdates ?? {};
         this._notifyStateChange();
         break;
       case 'CHAT_MESSAGE':

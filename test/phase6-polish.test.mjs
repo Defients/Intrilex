@@ -133,7 +133,7 @@ test('phase6: play-renderer-v3 has sound toggle testid', async () => {
 });
 
 test('phase6: play-renderer-v3 has Enter key in keyboard help', async () => {
-  const js = await playSrc('ranked-duel-renderer.mjs');
+  const js = await playSrc('ranked-duel-terminal.mjs');
   assert.match(js, /Enter/);
   assert.match(js, /Confirm selected action/);
 });

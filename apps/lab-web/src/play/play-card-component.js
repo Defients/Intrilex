@@ -233,8 +233,7 @@ export function renderTcgCardPreview(card) {
  * Used for opponent hands and face-down swap bar slots.
  * @returns {string} HTML
  */
-export function renderTcgCardBack() {
-  return `<div class="tcg-card-back" aria-hidden="true">
-    <span class="tcg-card-back-monogram">IX</span>
-  </div>`;
+export function renderTcgCardBack(variant) {
+  const cls = variant === 'mini' ? 'tcg-card-back mini' : 'tcg-card-back';
+  return `<div class="${cls}" aria-hidden="true"></div>`;
 }

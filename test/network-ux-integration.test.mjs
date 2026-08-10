@@ -32,14 +32,14 @@ async function playSrc(rel) {
 // ── Section 1: Play Hub — Direct Duel card ──
 
 test('network-ux: play hub includes Direct Duel card with data-action', async () => {
-  const js = await playSrc('ranked-duel-renderer.mjs');
+  const js = await playSrc('ranked-duel-hub.mjs');
   assert.match(js, /data-action="online-duel"/);
   assert.match(js, /Direct Duel/);
   assert.match(js, /remote human opponent/);
 });
 
 test('network-ux: play hub has data-testid for online-duel', async () => {
-  const js = await playSrc('ranked-duel-renderer.mjs');
+  const js = await playSrc('ranked-duel-hub.mjs');
   assert.match(js, /data-testid="online-duel"/);
 });
 

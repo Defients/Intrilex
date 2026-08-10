@@ -7,6 +7,7 @@ import { join } from 'node:path';
 
 // Read the renderer source to verify it contains v0.17.0 features
 const rendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
+const terminalSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-terminal.mjs'), 'utf8');
 const appSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-app.js'), 'utf8');
 const boardEventsSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/board-events.js'), 'utf8');
 const playStateSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-state.js'), 'utf8');
@@ -88,9 +89,10 @@ test('renderBoard: has legal action indicators on hand cards', () => {
 });
 
 test('renderBoard: terminal has Rank Anatomy and History links', () => {
-  assert.ok(rendererSrc.includes('open-rank-anatomy'), 'Terminal must link to Rank Anatomy');
-  assert.ok(rendererSrc.includes('open-history'), 'Terminal must link to History');
-  assert.ok(rendererSrc.includes('return-to-hub'), 'Terminal must have return to hub button');
+  // Terminal functions extracted to ranked-duel-terminal.mjs
+  assert.ok(terminalSrc.includes('open-rank-anatomy'), 'Terminal must link to Rank Anatomy');
+  assert.ok(terminalSrc.includes('open-history'), 'Terminal must link to History');
+  assert.ok(terminalSrc.includes('return-to-hub'), 'Terminal must have return to hub button');
 });
 
 // ─── App Controller Tests ───────────────────────────────────────

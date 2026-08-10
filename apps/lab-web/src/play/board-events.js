@@ -14,6 +14,118 @@ import { getReasonCode } from './authority/reason-code-registry.js';
 import { setPreference } from './persistence.js';
 import { parseCardIdentity } from './play-card-component.js';
 import { getSuitParticleColor } from './play-particles.js';
+import { buildActionGroups, resolveAction } from './action-presentation.mjs';
+
+// Lazy-loaded module reference for the group button handler
+const _actionPresentationModule = { buildActionGroups, resolveAction };
+
+/**
+ * Reset all transient selection state to defaults.
+ * Called after confirm, cancel, and stage-cancel flows.
+ */
+function clearSelection() {
+  state.selectedActionId = null;
+  state.selectedIntentKey = null;
+  state.selectedSourceCardId = null;
+  state.selectedTargetIds = [];
+  state.viewMode = null;
+}
+
+/**
+ * Submit an action to the session and handle the result.
+ * Extracted from the confirm-button handler so it can be reused for
+ * auto-submit flows (e.g. phase/enter-action skips confirm).
+ *
+ * @param {HTMLElement} container — the active match DOM container
+ * @param {string} actionId — the action ID to submit
+ * @param {function} renderActiveMatch — re-render the active match
+ * @returns {Promise<boolean>} true if accepted, false otherwise
+ */
+async function submitAction(container, actionId, renderActiveMatch) {
+  if (!state.session || state.session.status !== SessionState.HUMAN_DECISION) return false;
+  const snapshot = state.session.getSnapshot();
+  const submission = {
+    sessionId: snapshot.sessionId,
+    stateRevision: snapshot.decision?.stateRevision,
+    decisionFrameHash: snapshot.decision?.frameHash,
+    actionId,
+  };
+
+  // Network sessions use server authority, not local lease.
+  const isNetworkSession = !!state.networkSession;
+  if (!isNetworkSession && state.leaseMode !== 'CONTROLLED') {
+    const banner = container.querySelector('.rd-contextual-actions') || container.querySelector('.rd-action-bar') || container.querySelector('.decision-banner');
+    if (banner) {
+      const errEl = document.createElement('div');
+      errEl.className = 'submission-error';
+      errEl.setAttribute('role', 'alert');
+      errEl.textContent = state.leaseMode === 'READ_ONLY' ? 'This match is view-only. Another tab controls it.' : 'Session ownership required to act.';
+      banner.appendChild(errEl);
+      setTimeout(() => errEl.remove(), 4000);
+    }
+    return false;
+  }
+  if (isNetworkSession && state.networkSession) {
+    if (state.networkSession.status !== 'RUNNING') {
+      const banner = container.querySelector('.rd-contextual-actions') || container.querySelector('.rd-action-bar') || container.querySelector('.decision-banner');
+      if (banner) {
+        const errEl = document.createElement('div');
+        errEl.className = 'submission-error';
+        errEl.setAttribute('role', 'alert');
+        errEl.textContent = 'Match is not running.';
+        banner.appendChild(errEl);
+        setTimeout(() => errEl.remove(), 3000);
+      }
+      return false;
+    }
+    if (state.networkSession._pendingAction) return false;
+  }
+  try {
+    const result = await state.session.submitHumanAction(submission);
+    if (!result.accepted) {
+      const reasonDef = getReasonCode(result.error);
+      const banner = container.querySelector('.rd-contextual-actions') || container.querySelector('.rd-action-bar') || container.querySelector('.decision-banner');
+      if (banner) {
+        const errEl = document.createElement('div');
+        errEl.className = 'submission-error';
+        errEl.setAttribute('role', 'alert');
+        errEl.textContent = reasonDef.shortText;
+        banner.appendChild(errEl);
+        setTimeout(() => errEl.remove(), 3000);
+      }
+    } else {
+      // Phase 6: Play card-play sound + particle burst
+      if (state.sound) {
+        const postSubmitSnapshot = state.session.getSnapshot();
+        const action = postSubmitSnapshot.decision?.legalActions?.find(a => a.actionId === actionId);
+        const sourceCard = action?.sourceHandles?.[0];
+        const cardRegistry = postSubmitSnapshot.playerView?.own?.hand?.reduce((m, c) => { m[c.id] = c; return m; }, {}) ?? {};
+        const card = sourceCard ? cardRegistry[sourceCard] : null;
+        const suit = card ? parseCardIdentity(card.identity).suit : null;
+        state.sound.playCardPlay(suit);
+        if (state.particles && card) {
+          const boardEl = container.querySelector('.tcg-board');
+          if (boardEl) {
+            const rect = boardEl.getBoundingClientRect();
+            state.particles.burst(rect.width / 2, rect.height / 2, { color: getSuitParticleColor(suit), count: 10 });
+          }
+        }
+      }
+    }
+    // Check tutorial completion
+    if (state.tutorial && result.accepted) {
+      const lastAction = snapshot.decision.legalActions.find(a => a.actionId === actionId);
+      if (state.tutorial.checkCompletion(lastAction)) {
+        state.tutorial.advance();
+      }
+    }
+    await renderActiveMatch(container);
+    return result.accepted;
+  } catch (err) {
+    console.error('submitAction error:', err);
+    return false;
+  }
+}
 
 /**
  * Bind all board interaction events for the active match container.
@@ -21,14 +133,12 @@ import { getSuitParticleColor } from './play-particles.js';
  * @param {HTMLElement} container — the active match DOM container
  * @param {object} callbacks — functions defined in play-app.js
  * @param {function} callbacks.renderActiveMatch — re-render the active match
- * @param {function} callbacks.showHoverPopover — show card hover popover
- * @param {function} callbacks.hideHoverPopover — hide card hover popover
  * @param {function} callbacks.openAdvancedCardRules — open the Advanced Card Rules View
  * @param {function} callbacks.startNewMatch — start a new match with setup
  * @param {function} callbacks.stopAutosave — stop the autosave timer
  */
 export function bindBoardEvents(container, callbacks) {
-  const { renderActiveMatch, showHoverPopover, hideHoverPopover, openAdvancedCardRules, startNewMatch, stopAutosave } = callbacks;
+  const { renderActiveMatch, openAdvancedCardRules, startNewMatch, stopAutosave } = callbacks;
 
   // Initialize sound on first user interaction (browser autoplay policy)
   if (state.sound && !state.soundInitialized) {
@@ -54,11 +164,74 @@ export function bindBoardEvents(container, callbacks) {
     });
   });
 
+  // Group buttons — click to select an action group (v0.26.0 progressive disclosure)
+  container.querySelectorAll('[data-group-id]').forEach(el => {
+    if (el.disabled) return;
+    el.addEventListener('click', async () => {
+      const groupId = el.dataset.groupId;
+      state.selectedIntentKey = state.selectedIntentKey === groupId ? null : groupId;
+      state.selectedActionId = null; // Reset concrete action
+      state.selectedTargetIds = [];
+      // Try to auto-resolve to a concrete action
+      if (state.selectedIntentKey) {
+        const snapshot = state.session?.getSnapshot();
+        const rawActions = snapshot?.decision?.legalActions ?? [];
+        // Build action groups the same way the renderer does
+        const { buildActionGroups, resolveAction } = _actionPresentationModule;
+        const groups = buildActionGroups(rawActions, {
+          selectedSourceCardId: state.selectedSourceCardId,
+        });
+        const group = groups.find(g => g.id === groupId);
+        if (group) {
+          // If a source card is selected, try to resolve with it
+          if (state.selectedSourceCardId) {
+            const concrete = resolveAction(group, state.selectedSourceCardId);
+            if (concrete) {
+              state.selectedActionId = concrete.actionId;
+              state.selectedIntentKey = null;
+            }
+          } else if (group.selectionType === 'direct' || group.actions.length === 1) {
+            // Direct or single-action group — auto-select
+            state.selectedActionId = group.actions[0].actionId;
+            state.selectedIntentKey = null;
+          }
+          // Auto-submit phase/enter-action — no confirm step needed
+          if (group.family === 'phase' && state.selectedActionId) {
+            const actionId = state.selectedActionId;
+            clearSelection();
+            await submitAction(container, actionId, renderActiveMatch);
+            return;
+          }
+          // Otherwise, keep selectedIntentKey set to show variant selection
+        }
+      }
+      renderActiveMatch(container);
+    });
+  });
+
+  // Variant buttons — click to select a specific variant within a group
+  container.querySelectorAll('[data-variant-action-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      const actionId = el.dataset.variantActionId;
+      state.selectedActionId = actionId;
+      state.selectedIntentKey = null; // Exit variant selection
+      state.selectedTargetIds = [];
+      // Auto-set source card if the action has a single source
+      const snapshot = state.session?.getSnapshot();
+      const action = snapshot?.decision?.legalActions?.find(a => a.actionId === actionId);
+      if (action?.sourceHandles?.length === 1) {
+        state.selectedSourceCardId = action.sourceHandles[0];
+      }
+      renderActiveMatch(container);
+    });
+  });
+
   // Hand cards — click to select source, double-click to inspect
   container.querySelectorAll('.hand-card').forEach(el => {
     el.addEventListener('click', () => {
       const cardId = el.dataset.cardId;
       state.selectedSourceCardId = state.selectedSourceCardId === cardId ? null : cardId;
+      state.selectedIntentKey = null; // Clear intent when source card changes
       renderActiveMatch(container);
     });
     // v0.17.0: Inspector — right-click or Shift+click
@@ -81,25 +254,6 @@ export function bindBoardEvents(container, callbacks) {
       el.classList.remove('dragging');
       // Clear drag-over highlights from all drop zones
       container.querySelectorAll('[data-drop-zone].drag-over').forEach(z => z.classList.remove('drag-over'));
-    });
-    // v0.20.0: Ctrl+hover → Lite Card Face popover; Shift+hover → Full Zoom dialog.
-    // Plain hover shows mechanic icon tooltips (native title attr on each icon).
-    el.addEventListener('mousemove', (e) => {
-      const identity = el.dataset.cardIdentity;
-      if (!identity) return;
-      if (e.ctrlKey && state.hoverPopoverIdentity !== identity) {
-        clearTimeout(state.hoverTimer);
-        showHoverPopover(container, el, identity, 'lite');
-      } else if (e.shiftKey && state.hoverPopoverIdentity !== identity) {
-        clearTimeout(state.hoverTimer);
-        showHoverPopover(container, el, identity, 'zoom');
-      } else if (!e.ctrlKey && !e.shiftKey && state.hoverPopoverIdentity) {
-        hideHoverPopover(container);
-      }
-    });
-    el.addEventListener('mouseleave', () => {
-      clearTimeout(state.hoverTimer);
-      hideHoverPopover(container);
     });
   });
 
@@ -149,6 +303,24 @@ export function bindBoardEvents(container, callbacks) {
       } else {
         state.selectedTargetIds = [...state.selectedTargetIds, targetId];
       }
+      // For swap-bar face-down: the engine pre-pairs (source, target) as
+      // separate actions. When the player selects a target, find the action
+      // matching the current source + selected target and update selectedActionId.
+      const snapshot = state.session?.getSnapshot();
+      const rawActions = snapshot?.decision?.legalActions ?? [];
+      const currentAction = rawActions.find(a => a.actionId === state.selectedActionId);
+      if (currentAction && currentAction.family === 'swap-bar' && currentAction.mode === 'face-down') {
+        const sourceId = (currentAction.sourceHandles ?? currentAction.sourceEntityIds ?? [])[0];
+        const matching = rawActions.find(a => {
+          if (a.family !== 'swap-bar' || a.mode !== 'face-down') return false;
+          const aSource = (a.sourceHandles ?? a.sourceEntityIds ?? [])[0];
+          const aTarget = (a.targetHandles ?? a.targets?.legalTargetIds ?? [])[0];
+          return aSource === sourceId && aTarget === targetId;
+        });
+        if (matching) {
+          state.selectedActionId = matching.actionId;
+        }
+      }
       renderActiveMatch(container);
     });
   });
@@ -166,6 +338,19 @@ export function bindBoardEvents(container, callbacks) {
       renderActiveMatch(container);
     });
     el.style.cursor = 'pointer';
+  });
+
+  // Swap bar "Take" button — selects the face-up-draw action and confirms
+  container.querySelectorAll('[data-action="swap-take"]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const actionId = el.dataset.actionId;
+      state.selectedActionId = actionId;
+      state.selectedIntentKey = null;
+      state.selectedTargetIds = [];
+      state.selectedSourceCardId = null;
+      renderActiveMatch(container);
+    });
   });
 
   // v0.17.0: Inspector close button
@@ -311,101 +496,13 @@ export function bindBoardEvents(container, callbacks) {
   if (confirmBtn) {
     confirmBtn.addEventListener('click', async () => {
       if (!state.session || state.session.status !== SessionState.HUMAN_DECISION) return;
-      if (confirmBtn.dataset.submitting === 'true') return;  // Guard: already submitting
+      if (confirmBtn.dataset.submitting === 'true') return;
       confirmBtn.dataset.submitting = 'true';
       confirmBtn.disabled = true;
       const actionId = confirmBtn.dataset.actionId;
-      const snapshot = state.session.getSnapshot();
-      const submission = {
-        sessionId: snapshot.sessionId,
-        stateRevision: snapshot.decision?.stateRevision,
-        decisionFrameHash: snapshot.decision?.frameHash,
-        actionId,
-      };
-      state.selectedActionId = null;
-      state.selectedSourceCardId = null;
-      state.selectedTargetIds = [];
-
-      // Network sessions use server authority, not local lease.
-      // Local sessions require the local lease to be CONTROLLED.
-      const isNetworkSession = !!state.networkSession;
-      if (!isNetworkSession && state.leaseMode !== 'CONTROLLED') {
-        const banner = container.querySelector('.rd-contextual-actions') || container.querySelector('.rd-action-bar') || container.querySelector('.decision-banner');
-        if (banner) {
-          const errEl = document.createElement('div');
-          errEl.className = 'submission-error';
-          errEl.setAttribute('role', 'alert');
-          errEl.textContent = state.leaseMode === 'READ_ONLY' ? 'This match is view-only. Another tab controls it.' : 'Session ownership required to act.';
-          banner.appendChild(errEl);
-          setTimeout(() => errEl.remove(), 4000);
-        }
-        confirmBtn.dataset.submitting = 'false';
-        confirmBtn.disabled = false;
-        return;
-      }
-      // Network sessions: reject if not running or if pending
-      if (isNetworkSession && state.networkSession) {
-        if (state.networkSession.status !== 'RUNNING') {
-          const banner = container.querySelector('.rd-contextual-actions') || container.querySelector('.rd-action-bar') || container.querySelector('.decision-banner');
-          if (banner) {
-            const errEl = document.createElement('div');
-            errEl.className = 'submission-error';
-            errEl.setAttribute('role', 'alert');
-            errEl.textContent = 'Match is not running.';
-            banner.appendChild(errEl);
-            setTimeout(() => errEl.remove(), 3000);
-          }
-          confirmBtn.dataset.submitting = 'false';
-          confirmBtn.disabled = false;
-          return;
-        }
-        if (state.networkSession._pendingAction) {
-          confirmBtn.dataset.submitting = 'false';
-          confirmBtn.disabled = false;
-          return; // Already pending
-        }
-      }
+      clearSelection();
       try {
-        const result = await state.session.submitHumanAction(submission);
-        if (!result.accepted) {
-          // v0.17.0: Show structured reason code instead of generic message
-          const reasonDef = getReasonCode(result.error);
-          const banner = container.querySelector('.rd-contextual-actions') || container.querySelector('.rd-action-bar') || container.querySelector('.decision-banner');
-          if (banner) {
-            const errEl = document.createElement('div');
-            errEl.className = 'submission-error';
-            errEl.setAttribute('role', 'alert');
-            errEl.textContent = reasonDef.shortText;
-            banner.appendChild(errEl);
-            setTimeout(() => errEl.remove(), 3000);
-          }
-        } else {
-          // Phase 6: Play card-play sound + particle burst
-          if (state.sound) {
-            const postSubmitSnapshot = state.session.getSnapshot();
-            const action = postSubmitSnapshot.decision?.legalActions?.find(a => a.actionId === actionId);
-            const sourceCard = action?.sourceHandles?.[0];
-            const cardRegistry = postSubmitSnapshot.playerView?.own?.hand?.reduce((m, c) => { m[c.id] = c; return m; }, {}) ?? {};
-            const card = sourceCard ? cardRegistry[sourceCard] : null;
-            const suit = card ? parseCardIdentity(card.identity).suit : null;
-            state.sound.playCardPlay(suit);
-            if (state.particles && card) {
-              const boardEl = container.querySelector('.tcg-board');
-              if (boardEl) {
-                const rect = boardEl.getBoundingClientRect();
-                state.particles.burst(rect.width / 2, rect.height / 2, { color: getSuitParticleColor(suit), count: 10 });
-              }
-            }
-          }
-        }
-        // Check tutorial completion
-        if (state.tutorial && result.accepted) {
-          const lastAction = snapshot.decision.legalActions.find(a => a.actionId === actionId);
-          if (state.tutorial.checkCompletion(lastAction)) {
-            state.tutorial.advance();
-          }
-        }
-        await renderActiveMatch(container);
+        await submitAction(container, actionId, renderActiveMatch);
       } finally {
         confirmBtn.dataset.submitting = 'false';
         confirmBtn.disabled = false;
@@ -417,8 +514,7 @@ export function bindBoardEvents(container, callbacks) {
   const cancelBtn = container.querySelector('[data-testid="cancel-action"]');
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
-      state.selectedActionId = null;
-      state.selectedTargetIds = [];
+      clearSelection();
       renderActiveMatch(container);
     });
   }
@@ -427,12 +523,41 @@ export function bindBoardEvents(container, callbacks) {
   const stageCancelBtn = container.querySelector('[data-action="cancel-selection"]');
   if (stageCancelBtn) {
     stageCancelBtn.addEventListener('click', () => {
-      state.selectedSourceCardId = null;
+      clearSelection();
+      renderActiveMatch(container);
+    });
+  }
+
+  // v0.26.0: Back/Cancel buttons for progressive disclosure states
+  container.querySelectorAll('[data-action="cancel-variant"], [data-action="cancel-target"], [data-action="cancel-confirm"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Go back to overview: clear intent + action, keep source card selection
+      state.selectedIntentKey = null;
       state.selectedActionId = null;
       state.selectedTargetIds = [];
       renderActiveMatch(container);
     });
-  }
+  });
+
+  // Back to Start Phase button — visual toggle to show the Start phase view
+  container.querySelectorAll('[data-action="back-to-start"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.viewMode = 'start';
+      state.selectedIntentKey = null;
+      state.selectedActionId = null;
+      state.selectedTargetIds = [];
+      state.selectedSourceCardId = null;
+      renderActiveMatch(container);
+    });
+  });
+
+  // Forward to Action Phase button — return from Start phase view to Action phase
+  container.querySelectorAll('[data-action="forward-to-action"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.viewMode = null;
+      renderActiveMatch(container);
+    });
+  });
 
   // v0.25: Mechanic icon tooltips — promote to fixed-position overlay to escape
   // overflow:hidden clipping from card/row/hand containers.

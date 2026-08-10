@@ -18,14 +18,14 @@
 .ranked-duel-shell {
   --hand-card-w: clamp(118px, 7vw, 155px);
   --hand-card-h: calc(var(--hand-card-w) * 1.4);
-  --board-card-w: clamp(72px, 5vw, 100px);
-  --board-card-h: calc(var(--board-card-w) * 1.4);
+  --board-card-w: clamp(88px, 6vw, 128px);
+  --board-card-h: calc(var(--board-card-w) * 0.75);
   --active-card-w: clamp(120px, 9vw, 180px);
   --active-card-h: clamp(140px, 11vh, 200px);
   --swap-slot-w: clamp(72px, 5vw, 96px);
   --swap-slot-h: clamp(72px, 7vh, 96px);
   --board-lane-h: clamp(110px, 13vh, 150px);
-  --utility-row-h: clamp(84px, 11vh, 120px);
+  --utility-row-h: clamp(150px, 16vh, 190px);
   --bottom-band-h: clamp(170px, 24vh, 230px);
 
   /* ── Visual hierarchy tokens (v0.25) ── */
@@ -71,12 +71,13 @@
   /* v0.25: Score Rail inserted between Game Log and Active Stage (row 4 only).
      Game Log shrinks 5→4 cols; Active Stage stays 6 cols; Stack stays 3 cols. */
   grid-template-columns: repeat(14, minmax(0, 1fr)) clamp(290px, 18vw, 360px) !important;
-  grid-template-rows: 36px var(--board-lane-h) var(--utility-row-h) 1fr var(--board-lane-h) var(--bottom-band-h) !important;
+  grid-template-rows: 36px var(--board-lane-h) var(--utility-row-h) 330px 1fr var(--board-lane-h) var(--bottom-band-h) !important;
   grid-template-areas:
     "header    header    header    header    header    header    header    header    header    header    header    header    header    header    enemyProfile"
     "enemyE    enemyE    enemyE    enemyE    enemyE    enemyE    enemyE    enemyP    enemyP    enemyP    enemyP    enemyP    enemyP    enemyP    enemyProfile"
-    "piles     piles     piles     piles     piles     swap      swap      swap      swap      swap      swap      stack     stack     stack     enemyProfile"
-    "gamelog   gamelog   gamelog   gamelog   scoreRail stage     stage     stage     stage     stage     stage     stack     stack     stack     chat"
+    "piles     piles     piles     piles     piles     swap      swap      swap      swap      swap      swap      stack     stack     stack     chat"
+    "gamelog   gamelog   gamelog   gamelog   scoreRail stage     stage     stage     stage     stage     stage     stack     stack     stack     actions"
+    "gamelog   gamelog   gamelog   gamelog   scoreRail stage     stage     stage     stage     stage     stage     stack     stack     stack     actions"
     "playerE   playerE   playerE   playerE   playerE   playerE    playerE   playerP   playerP   playerP   playerP   playerP   playerP   playerP   actions"
     "playerPro playerPro playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   actions" !important;
   gap: 4px !important;
@@ -131,7 +132,7 @@
 .rd-score-rail      { grid-area: scoreRail !important; }
 .rd-player-profile  { grid-area: playerPro !important; }
 .rd-player-hand     { grid-area: playerH !important; }
-.rd-actions         { grid-area: actions !important; }
+.rd-actions         { grid-area: actions !important; margin-top: -4px !important; }
 /* v0.25: Score Rail — authoritative score display between Game Log and Active Stage */
 
 /* ── Enemy profile (right rail top — bigger, rival presence) ── */
@@ -152,10 +153,9 @@
 .rd-enemy-profile .rd-profile-block {
   flex-direction: column !important;
   align-items: center !important;
-  justify-content: space-between !important;
+  justify-content: flex-start !important;
   gap: 6px !important;
   padding: 0 !important;
-  height: 100% !important;
   width: 100% !important;
 }
 
@@ -642,9 +642,27 @@
   scrollbar-width: thin !important;
   align-items: center !important;
   flex: 1 !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
   padding: 2px 0 !important;
   width: 100% !important;
+}
+
+/* ── Board row cards: Rank/Suit centered side-by-side (4:3 landscape) ── */
+.rd-enduring-row .tcg-card .tcg-rank,
+.rd-point-row .tcg-card .tcg-rank {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(calc(-100% - 3px), -50%) !important;
+  font-size: 1.5rem !important;
+}
+.rd-enduring-row .tcg-card .tcg-suit-glyph,
+.rd-point-row .tcg-card .tcg-suit-glyph {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(3px, -50%) !important;
+  font-size: 1.2rem !important;
 }
 
 /* ── Profile block with prestige banner (v0.25) ──────────────── */
@@ -970,6 +988,17 @@
 
 .rd-pile-card.empty { opacity: 0.35 !important; }
 
+/* Draw pile cardback background (mini cardback image) */
+.rd-pile-cardback.mini {
+  position: absolute !important;
+  inset: 0 !important;
+  background: url('assets/intrilex-cardback1_mini.png') center/cover no-repeat !important;
+  border-radius: 7px !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  opacity: 0.85 !important;
+}
+
 .rd-pile-face { text-align: center !important; position: relative !important; z-index: 1 !important; }
 .rd-pile-label {
   font-size: 10px !important;
@@ -1022,7 +1051,7 @@
 }
 
 .rd-swap-label {
-  font-size: 10px !important;
+  font-size: 8px !important;
   text-transform: uppercase !important;
   letter-spacing: 1.5px !important;
   color: #fbbf24 !important;
@@ -1030,6 +1059,7 @@
   flex-shrink: 0 !important;
   writing-mode: vertical-rl !important;
   text-orientation: mixed !important;
+  transform: rotate(180deg) !important;
 }
 
 .rd-swap-slots {
@@ -1083,6 +1113,35 @@
   min-width: 0 !important;
   min-height: 0 !important;
   border: none !important;
+}
+
+/* "Take" button on face-up swap bar cards */
+.rd-swap-take-btn {
+  position: absolute !important;
+  bottom: 4px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  padding: 3px 12px !important;
+  border: 1px solid rgba(34,211,238,0.40) !important;
+  border-radius: 4px !important;
+  background: linear-gradient(180deg, rgba(34,211,238,0.18) 0%, rgba(34,211,238,0.08) 100%) !important;
+  color: #22d3ee !important;
+  cursor: pointer !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  white-space: nowrap !important;
+  z-index: 10 !important;
+  transition: all 0.15s ease !important;
+}
+.rd-swap-take-btn:hover {
+  background: linear-gradient(180deg, rgba(34,211,238,0.28) 0%, rgba(34,211,238,0.14) 100%) !important;
+  border-color: rgba(34,211,238,0.60) !important;
+  transform: translateX(-50%) translateY(-1px) !important;
+}
+.rd-swap-slot.has-card {
+  position: relative !important;
 }
 
 .rd-swap-slot-rank {
@@ -1633,7 +1692,7 @@
 .rd-card-back {
   width: 28px !important;
   height: 40px !important;
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%) !important;
+  background: url('assets/intrilex-cardback1.png') center/cover no-repeat, linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%) !important;
   border: 1px solid rgba(99,102,241,0.30) !important;
   border-radius: 4px !important;
   flex-shrink: 0 !important;
@@ -1746,6 +1805,12 @@
   flex: 0 1 auto !important;
   max-height: 40px !important;
 }
+/* Chat fills the utility row — messages expand so the input pins to the cell bottom. */
+.rd-cell.rd-chat .rd-chat-messages {
+  flex: 1 !important;
+  max-height: none !important;
+  padding: 8px 12px !important;
+}
 .rd-chat-panel[data-chat-empty="true"] .rd-chat-header {
   padding: 6px 12px !important;
 }
@@ -1814,7 +1879,7 @@
 .rd-chat-input {
   display: flex !important;
   gap: 6px !important;
-  padding: 8px 14px !important;
+  padding: 8px 12px !important;
   border-top: 1px solid rgba(56,189,248,0.10) !important;
   flex-shrink: 0 !important;
   background: rgba(56,189,248,0.02) !important;
@@ -2133,6 +2198,383 @@
   text-align: center !important;
 }
 
+/* ═══ v0.26.0: Progressive Disclosure Action Panel ═══ */
+.rd-contextual-actions.variant-mode,
+.rd-contextual-actions.target-mode,
+.rd-contextual-actions.confirm-mode {
+  gap: 6px !important;
+}
+
+.rd-actions-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.rd-back-btn {
+  background: none !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  transition: all 0.15s ease !important;
+}
+.rd-back-btn:hover {
+  color: #22d3ee !important;
+  background: rgba(56,189,248,0.08) !important;
+}
+
+
+.rd-actions-title {
+  flex: 1 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #e2e8f0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+}
+
+/* Selected card header */
+.rd-selected-card-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 10px !important;
+  background: rgba(34,211,238,0.06) !important;
+  border-left: 3px solid #22d3ee !important;
+  border-radius: 4px !important;
+  flex-shrink: 0 !important;
+}
+.rd-selected-card-label {
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  color: #22d3ee !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+}
+.rd-selected-card-id {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #e2e8f0 !important;
+}
+.rd-selected-card-intents {
+  font-size: 9px !important;
+  color: #94a3b8 !important;
+  margin-left: auto !important;
+}
+
+/* Action categories container */
+.rd-action-categories {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  padding: 2px 0 !important;
+}
+
+.rd-action-category {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.rd-action-category-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 2px 4px !important;
+}
+.rd-action-category-icon { font-size: 10px !important; }
+.rd-action-category-label {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+}
+
+.rd-action-category-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  padding-left: 14px !important;
+}
+
+/* Group buttons — the primary action cards in the overview */
+.rd-group-btn {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  padding: 6px 10px !important;
+  border: 1px solid rgba(56,189,248,0.12) !important;
+  border-radius: 6px !important;
+  background: linear-gradient(180deg, #142035 0%, #111827 100%) !important;
+  color: #e2e8f0 !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  transition: all 0.18s ease !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+.rd-group-btn:hover:not([disabled]) {
+  border-color: rgba(56,189,248,0.35) !important;
+  background: linear-gradient(180deg, rgba(56,189,248,0.10) 0%, rgba(56,189,248,0.04) 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 3px 10px rgba(56,189,248,0.10) !important;
+}
+.rd-group-btn.card-match {
+  border-color: rgba(34,211,238,0.40) !important;
+  background: linear-gradient(180deg, rgba(34,211,238,0.08) 0%, rgba(34,211,238,0.03) 100%) !important;
+}
+.rd-group-btn.card-match:hover:not([disabled]) {
+  border-color: #22d3ee !important;
+  box-shadow: 0 0 12px rgba(34,211,238,0.20) !important;
+}
+.rd-group-btn.pass {
+  border-color: rgba(248,113,113,0.30) !important;
+  color: #f87171 !important;
+}
+.rd-group-btn.response {
+  border-color: rgba(251,191,36,0.25) !important;
+}
+.rd-group-btn.dimmed {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+.rd-group-btn.dimmed:hover {
+  transform: none !important;
+  background: #111827 !important;
+  box-shadow: none !important;
+}
+
+/* Preview buttons (Upcoming category — not yet actionable) */
+.rd-group-btn.preview {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  border-style: dashed !important;
+  border-color: rgba(148,163,184,0.20) !important;
+}
+.rd-group-btn.preview:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+.rd-preview-category .rd-action-category-label {
+  color: #64748b !important;
+}
+.rd-timing-badge.preview-badge {
+  background: rgba(148,163,184,0.10) !important;
+  color: #64748b !important;
+  font-style: italic !important;
+}
+
+.rd-group-main {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+.rd-group-label {
+  font-weight: 600 !important;
+  font-size: 12px !important;
+}
+.rd-group-count {
+  font-size: 9px !important;
+  padding: 1px 5px !important;
+  border-radius: 3px !important;
+  background: rgba(56,189,248,0.12) !important;
+  color: #22d3ee !important;
+  font-weight: 600 !important;
+}
+.rd-group-score {
+  font-size: 9px !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
+  background: rgba(251,191,36,0.12) !important;
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+}
+.rd-group-desc {
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+  line-height: 1.3 !important;
+}
+.rd-group-meta {
+  display: flex !important;
+  gap: 4px !important;
+  align-items: center !important;
+}
+.rd-turn-badge {
+  font-size: 7px !important;
+  padding: 1px 3px !important;
+  border-radius: 2px !important;
+  background: rgba(248,113,113,0.12) !important;
+  color: #f87171 !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+}
+
+/* Variant selection state */
+.rd-variant-prompt,
+.rd-target-prompt {
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  padding: 4px 10px !important;
+}
+.rd-target-count { color: #64748b !important; }
+
+.rd-variant-list,
+.rd-target-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  padding: 2px 0 !important;
+}
+.rd-variant-list,
+.rd-target-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 4px !important;
+}
+
+.rd-variant-btn {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  padding: 10px 6px !important;
+  border: 1px solid rgba(56,189,248,0.15) !important;
+  border-radius: 6px !important;
+  background: linear-gradient(180deg, #142035 0%, #111827 100%) !important;
+  color: #e2e8f0 !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  transition: all 0.15s ease !important;
+  text-align: center !important;
+  width: 100% !important;
+  min-height: 56px !important;
+}
+.rd-variant-btn:hover {
+  border-color: rgba(56,189,248,0.40) !important;
+  background: linear-gradient(180deg, rgba(56,189,248,0.10) 0%, rgba(56,189,248,0.04) 100%) !important;
+  transform: translateY(-1px) !important;
+}
+.rd-variant-btn.card-match {
+  border-color: rgba(34,211,238,0.40) !important;
+  background: linear-gradient(180deg, rgba(34,211,238,0.08) 0%, rgba(34,211,238,0.03) 100%) !important;
+}
+.rd-variant-label { font-weight: 700 !important; font-size: 22px !important; line-height: 1 !important; }
+.rd-variant-detail {
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+}
+
+/* Target selection state */
+.rd-target-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 6px !important;
+  border: 1px solid rgba(56,189,248,0.15) !important;
+  border-radius: 6px !important;
+  background: #111827 !important;
+  color: #e2e8f0 !important;
+  cursor: pointer !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  transition: all 0.15s ease !important;
+  text-align: center !important;
+  min-height: 56px !important;
+}
+.rd-target-btn:hover {
+  border-color: rgba(56,189,248,0.40) !important;
+  background: rgba(56,189,248,0.06) !important;
+}
+.rd-target-btn.selected {
+  border-color: #22d3ee !important;
+  background: rgba(34,211,238,0.10) !important;
+  color: #22d3ee !important;
+}
+
+/* Confirmation state */
+.rd-confirm-box {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  padding: 10px 14px !important;
+  background: rgba(34,211,238,0.04) !important;
+  border: 1px solid rgba(34,211,238,0.20) !important;
+  border-radius: 6px !important;
+  margin: 4px 0 !important;
+}
+.rd-confirm-action {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #22d3ee !important;
+}
+.rd-confirm-sources,
+.rd-confirm-targets,
+.rd-confirm-timing,
+.rd-confirm-costs {
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+}
+.rd-confirm-turn {
+  font-size: 10px !important;
+  color: #f87171 !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.rd-confirm-btn {
+  padding: 8px 24px !important;
+  border: 1px solid #22d3ee !important;
+  border-radius: 6px !important;
+  background: linear-gradient(180deg, rgba(34,211,238,0.18) 0%, rgba(34,211,238,0.08) 100%) !important;
+  color: #22d3ee !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  transition: all 0.18s ease !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.2px !important;
+}
+.rd-confirm-btn:hover:not([disabled]) {
+  background: linear-gradient(180deg, rgba(34,211,238,0.28) 0%, rgba(34,211,238,0.14) 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 14px rgba(34,211,238,0.25) !important;
+}
+.rd-confirm-btn[disabled] {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+.rd-cancel-btn {
+  padding: 8px 18px !important;
+  border: 1px solid rgba(148,163,184,0.25) !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  transition: all 0.15s ease !important;
+}
+.rd-cancel-btn:hover {
+  border-color: rgba(148,163,184,0.45) !important;
+  color: #cbd5e1 !important;
+  background: rgba(148,163,184,0.06) !important;
+}
+
 /* Source/target/confirm */
 .rd-source-selection {
   display: flex !important;
@@ -2320,10 +2762,6 @@
 /* ── Tutorial coach ──────────────────────────────────────────── */
 .tutorial-coach { position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important; max-width: 600px !important; background: rgba(10,14,26,0.95) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border: 1px solid rgba(56,189,248,0.30) !important; border-radius: 10px !important; padding: 12px 20px !important; z-index: 90 !important; box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important; }
 
-/* ── Card hover popover ──────────────────────────────────────── */
-.card-hover-popover { position: fixed !important; z-index: 150 !important; pointer-events: none !important; opacity: 0 !important; transition: opacity 0.2s !important; max-width: 280px !important; }
-.card-hover-popover[aria-hidden="false"] { opacity: 1 !important; }
-
 /* ── Accessibility: focus styles ─────────────────────────────── */
 .rd-header-btn:focus-visible,
 .rd-intent-btn:focus-visible,
@@ -2397,7 +2835,7 @@
 @media (max-width: 1400px) {
   .ranked-duel-shell {
     --hand-card-w: clamp(95px, 6.5vw, 130px);
-    --board-card-w: clamp(64px, 4.5vw, 88px);
+    --board-card-w: clamp(80px, 5.5vw, 112px);
     --active-card-w: clamp(100px, 8vw, 150px);
     --active-card-h: clamp(120px, 9vh, 170px);
   }
@@ -2407,7 +2845,7 @@
 @media (max-width: 1100px) {
   .ranked-duel-shell {
     --hand-card-w: clamp(80px, 6vw, 110px);
-    --board-card-w: clamp(52px, 4vw, 72px);
+    --board-card-w: clamp(64px, 5vw, 90px);
     --active-card-w: clamp(80px, 7vw, 120px);
     --active-card-h: clamp(100px, 8vh, 140px);
     --board-row-h: clamp(90px, 9vh, 120px);
@@ -2449,7 +2887,7 @@
     min-height: 100vh !important;
     min-height: 100dvh !important;
     --hand-card-w: 56px;
-    --board-card-w: 48px;
+    --board-card-w: 60px;
     --active-card-w: 70px;
     --active-card-h: 90px;
     --board-lane-h: clamp(80px, 12vh, 110px) !important;
@@ -2744,11 +3182,10 @@
 @media (max-width: 390px) {
   .ranked-duel-shell {
     --hand-card-w: 48px;
-    --board-card-w: 40px;
+    --board-card-w: 52px;
     gap: 3px !important;
     padding: 3px !important;
   }
-  .card-hover-popover { display: none !important; }
   .rd-header-center { font-size: 9px !important; }
   .rd-header-owner { font-size: 9px !important; padding: 1px 6px !important; }
   .rd-toolbar-btn { width: 36px !important; height: 36px !important; font-size: 13px !important; }
@@ -2814,9 +3251,6 @@
     -webkit-touch-callout: none;
     user-select: none;
   }
-
-  /* Card hover popover: show on tap instead */
-  .card-hover-popover { display: none !important; }
 }
 
 /* ── High contrast: WCAG 2.2+ ─────────────────────────────────── */

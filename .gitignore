@@ -1,5 +1,9 @@
 # Local checkpoint gitignore (Devin safety checkpoints only; no remote)
 node_modules/
+# Environment files contain secrets — NEVER commit
+.env
+.env.local
+.env.*.local
 _baseline-extract/
 *.zip
 # Large generated/binary trees tracked separately by build
@@ -13,3 +17,15 @@ release/archives/
 # Devin tooling
 .devin/
 # Probe evidence is tracked explicitly when needed
+# Temporary lint output
+lint-tmp.txt
+# Scratch / debug output
+tsc-errors.txt
+# Local screenshots
+reports/v25-local-board-screenshot.png
+# Debug / scratch scripts
+scripts/remove-debug.cjs
+scripts/remove-debug2.cjs
+scripts/archive/add-debug.cjs
+scripts/archive/add-debug2.cjs
+scripts/archive/diag-*.mjs

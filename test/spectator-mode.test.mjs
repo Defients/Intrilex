@@ -44,7 +44,7 @@ test('spectator: SPECTATE_MATCH valid message accepted', () => {
 });
 
 test('spectator: SPECTATE_MATCH invalid matchId rejected', () => {
-  const msg = { protocolVersion: 1, type: 'SPECTATE_MATCH', payload: { matchId: 'x' } };
+  const msg = { protocolVersion: 2, type: 'SPECTATE_MATCH', payload: { matchId: 'x' } };
   const envCheck = validateEnvelope(msg);
   assert.ok(envCheck.valid);
   const payloadCheck = validateSpectateMatch(msg.payload);

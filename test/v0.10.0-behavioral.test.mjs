@@ -369,11 +369,11 @@ describe('Browser Branch Lab', () => {
     const branchJs = read('apps/lab-web/dist/workspaces/branches.js');
     // The Branch Lab must have a fail-closed path when no retained replays are available.
     // It must show an empty/unavailable state, not allow running counterfactual experiments.
-    assert.match(branchJs, /No retained replays|empty-state.*Branch|branch.*retention/i,
+    assert.match(branchJs, /No replay data|empty-state.*replay|branch.*retention/i,
       'Branch Lab must have a fail-closed empty state when no retained replays are loaded');
-    // Alt-action input must be sanitized via esc() to prevent injection
-    assert.match(branchJs, /branch-alt-action.*type="text".*placeholder/,
-      'Alt-action input must have placeholder guidance and be text-based');
+    // Alt-action selector must be a dropdown (select) with esc() sanitization
+    assert.match(branchJs, /branch-alt-action.*select/i,
+      'Alt-action must be a dropdown select element');
   });
 
   it('2. Browser Branch UI does not have independent A/B buttons', () => {

@@ -15,12 +15,13 @@ import {
   SUPPORTED_PROFILES,
   buildSaveIntegrityPayload,
   validateSaveEnvelope,
-  SAVE_REASON_CODES,
+  canMigrateSave,
+  migrateSave,
 } from './save-integrity.js';
 import { createPolicyRng, computePlayerStats } from './session-utils.js';
 
 // Re-export for backward compatibility (other modules import from play-controller)
-export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope };
+export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope, canMigrateSave, migrateSave };
 
 // Session states
 export const SessionState = Object.freeze({
@@ -102,6 +103,8 @@ export class PlaySession {
     this._decisionIndex = 0;
     this._rngByPlayer = null;
     this._policyContext = null;
+    this._isAdvancing = false;
+    this._achievementConsumer = null; // (events, snapshot) => void — set by play-app
   }
 
   /**
@@ -146,17 +149,66 @@ export class PlaySession {
   }
 
   /**
+   * Register an achievement consumer callback.
+   * Called after each batch of engine events with (events, snapshot).
+   * @param {(events: object[], snapshot: object|null) => void} consumer
+   */
+  setAchievementConsumer(consumer) {
+    this._achievementConsumer = consumer;
+  }
+
+  /**
+   * Build a compact snapshot for achievement checkpoint facts.
+   * @returns {object}
+   */
+  _buildAchievementSnapshot() {
+    const humanId = this.setup.humanPlayerId;
+    const opponentId = humanId === 'P1' ? 'P2' : 'P1';
+    const state = this.state;
+    if (!state) return null;
+    const humanPlayer = state.players?.[humanId];
+    const opponentPlayer = state.players?.[opponentId];
+    return {
+      humanScore: humanPlayer?.securedPoints ?? 0,
+      opponentScore: opponentPlayer?.securedPoints ?? 0,
+      humanHandCount: humanPlayer?.hand?.length ?? 0,
+      opponentHandCount: opponentPlayer?.hand?.length ?? 0,
+      stackDepth: state.stack?.length ?? 0,
+      fullTurnSequence: state.fullTurnSequence ?? 0,
+      stateRevision: this._stateRevision,
+      isTerminal: this.status === SessionState.TERMINAL,
+      winner: this.winner,
+      isDraw: this.winner === null && this.status === SessionState.TERMINAL,
+    };
+  }
+
+  /**
+   * Notify the achievement consumer of new events.
+   * @param {object[]} events
+   */
+  _notifyAchievementConsumer(events) {
+    if (!this._achievementConsumer || !events || events.length === 0) return;
+    try {
+      const snapshot = this._buildAchievementSnapshot();
+      this._achievementConsumer(events, snapshot);
+    } catch {
+      // Achievement consumer errors are non-fatal — never break the game
+    }
+  }
+
+  /**
    * Advance the session to the next decision boundary or terminal state.
    * This is the core loop that processes automatic orchestration commands
    * and stops at human decisions, AI decisions, or terminal.
    */
   async _advance() {
     if (this.status === SessionState.TERMINAL || this.status === SessionState.ERROR) return;
+    if (this._isAdvancing) return; // prevent concurrent orchestration
+    this._isAdvancing = true;
 
     this.status = SessionState.ADVANCING;
     const auto = await autonomy();
 
-    let lastEvents = [];
     let safetyCounter = 0;
     const MAX_ORCHESTRATION = 64;
 
@@ -173,12 +225,16 @@ export class PlaySession {
         }
         if (result.events) {
           this.recentEvents = [...this.recentEvents, ...result.events].slice(-20);
-          lastEvents = result.events;
         }
 
         // Update state
         this.state = result.state;
         this._stateRevision = this.state.revision ?? this._stateRevision + 1;
+
+        // Notify achievement consumer of new events
+        if (result.events && result.events.length > 0) {
+          this._notifyAchievementConsumer(result.events);
+        }
 
         // Check terminal
         if (result.status === 'TERMINAL') {
@@ -187,6 +243,8 @@ export class PlaySession {
           this.winner = this.state.winner;
           this.currentFrame = null;
           this.commandVault = null;
+          // Final checkpoint notification for terminal state
+          this._notifyAchievementConsumer([]);
           return;
         }
 
@@ -228,6 +286,8 @@ export class PlaySession {
     } catch (error) {
       this.status = SessionState.ERROR;
       this.error = { code: 'ADVANCE_EXCEPTION', message: error.message };
+    } finally {
+      this._isAdvancing = false;
     }
   }
 
@@ -338,6 +398,9 @@ export class PlaySession {
     this.recentEvents = [...this.recentEvents, ...result.events].slice(-20);
     this.state = result.state;
     this._stateRevision = this.state.revision ?? this._stateRevision + 1;
+
+    // Notify achievement consumer of human action events
+    this._notifyAchievementConsumer(result.events);
 
     // Clear the current frame
     this.commandVault = null;
@@ -452,6 +515,9 @@ export class PlaySession {
     this.state = result.state;
     this._stateRevision = this.state.revision ?? this._stateRevision + 1;
 
+    // Notify achievement consumer of AI action events
+    this._notifyAchievementConsumer(result.events);
+
     // Clear the current frame
     this.commandVault = null;
     this.currentFrame = null;
@@ -546,8 +612,8 @@ export class PlaySession {
         aiPolicyVersion: '1.0.0',
         aiConfigHash: hashCanonical({ policyId: this.setup.aiPolicyId }),
       },
-      decisionJournal: this.decisionJournal,
-      commandLog: this.commandLog.map(c => c.command),
+      decisionJournal: this.decisionJournal.map(e => ({ ...e })),
+      commandLog: this.commandLog.map(c => structuredClone(c.command)),
       initialStateHash,
       commandLogHash,
       expectedStateHash,
@@ -555,11 +621,36 @@ export class PlaySession {
         stateRevision: this._stateRevision,
         decisionFrameHash: this.currentFrame.frameHash,
       } : { stateRevision: this._stateRevision, decisionFrameHash: null },
+      summary: this._buildSaveSummary(),
       tutorial: this.setup.tutorial ?? null,
     };
     // Content hash binds EVERY authority-critical field (v2)
     envelope.contentHash = buildSaveIntegrityPayload(envelope);
     return envelope;
+  }
+
+  /**
+   * Build a lightweight summary for the Continue Duel card on the landing page.
+   * Contains only public, non-authority-critical display data (turn, scores, opponent).
+   * @returns {{ turn: number, humanScore: number, opponentScore: number, opponentLabel: string, mode: string } | null}
+   */
+  _buildSaveSummary() {
+    const auto = _autonomyModule;
+    if (!auto || !this.state || !this.setup) return null;
+    const humanId = this.setup.humanPlayerId;
+    const oppId = humanId === 'P1' ? 'P2' : 'P1';
+    const humanView = auto.strictView(this.state, humanId);
+    const oppView = auto.strictView(this.state, oppId);
+    const modeLabel = this.setup.mode ? String(this.setup.mode).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : 'Local vs AI';
+    const opponentRaw = this.setup.aiPolicyId ?? '';
+    const opponentLabel = opponentRaw ? opponentRaw.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'AI';
+    return {
+      turn: this.state.fullTurnSequence ?? 0,
+      humanScore: humanView?.own?.securedPoints ?? 0,
+      opponentScore: oppView?.own?.securedPoints ?? 0,
+      opponentLabel,
+      mode: modeLabel,
+    };
   }
 
   /**
@@ -574,7 +665,26 @@ export class PlaySession {
     // ═══════════════════════════════════════════════════════════
     const validation = validateSaveEnvelope(save);
     if (!validation.valid) {
-      throw Object.assign(new Error(validation.message), { reasonCode: validation.reasonCode, field: validation.field });
+      // Attempt migration for v1 saves and version mismatches before rejecting
+      const migration = canMigrateSave(save);
+      if (migration.canMigrate) {
+        const auto = await autonomy();
+        const engineMod = await engine();
+        const migrationResult = await migrateSave(save, engineMod, auto);
+        if (migrationResult.ok) {
+          // Re-validate the migrated save
+          const reValidation = validateSaveEnvelope(migrationResult.save);
+          if (reValidation.valid) {
+            save = migrationResult.save;
+          } else {
+            throw Object.assign(new Error(`Migration produced invalid save: ${reValidation.message}`), { reasonCode: 'MIGRATION_FAILED', field: reValidation.field });
+          }
+        } else {
+          throw Object.assign(new Error(`Save migration failed: ${migrationResult.error}`), { reasonCode: 'MIGRATION_FAILED' });
+        }
+      } else {
+        throw Object.assign(new Error(validation.message), { reasonCode: validation.reasonCode, field: validation.field });
+      }
     }
 
     // ═══════════════════════════════════════════════════════════

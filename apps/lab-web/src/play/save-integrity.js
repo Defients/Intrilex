@@ -47,7 +47,136 @@ export const SAVE_REASON_CODES = Object.freeze({
   EXPECTED_STATE_HASH_MISMATCH: 'EXPECTED_STATE_HASH_MISMATCH',
   STABLE_BOUNDARY_MISMATCH: 'STABLE_BOUNDARY_MISMATCH',
   RESTORE_FRAME_HASH_MISMATCH: 'RESTORE_FRAME_HASH_MISMATCH',
+  MIGRATION_REQUIRED: 'MIGRATION_REQUIRED',
+  MIGRATION_FAILED: 'MIGRATION_FAILED',
+  MIGRATED_FROM_V1: 'MIGRATED_FROM_V1',
+  MIGRATED_VERSION_MISMATCH: 'MIGRATED_VERSION_MISMATCH',
 });
+
+/**
+ * Check if a save envelope can be migrated to the current format/version.
+ * Returns the migration type or null if migration is not applicable.
+ *
+ * @param {object} save - The save envelope to check
+ * @returns {{ canMigrate: boolean, migrationType?: 'V1_TO_V2' | 'VERSION_MISMATCH', reasonCode?: string }}
+ */
+export function canMigrateSave(save) {
+  if (!save || typeof save !== 'object') return { canMigrate: false };
+  if (save.format !== 'intrilex-player-save') return { canMigrate: false };
+
+  // v1 saves can be migrated to v2 if they have a commandLog and setup
+  if (save.version === 1) {
+    if (!save.commandLog || !save.setup || !save.profileId) {
+      return { canMigrate: false, reasonCode: 'MIGRATION_FAILED' };
+    }
+    return { canMigrate: true, migrationType: 'V1_TO_V2' };
+  }
+
+  // v2 saves with version mismatch can be migrated if they have valid content hash
+  // (proving they were created by a trusted prior version)
+  if (save.version === SAVE_FORMAT_VERSION) {
+    const computedHash = buildSaveIntegrityPayload(save);
+    if (computedHash === save.contentHash) {
+      const versionMismatch =
+        save.engineVersion !== ENGINE_VERSION ||
+        save.rulesVersion !== RULES_VERSION ||
+        save.playerRuntimeVersion !== PLAYER_RUNTIME_VERSION ||
+        save.productVersion !== PRODUCT_VERSION;
+      if (versionMismatch) {
+        return { canMigrate: true, migrationType: 'VERSION_MISMATCH' };
+      }
+    }
+  }
+
+  return { canMigrate: false };
+}
+
+/**
+ * Migrate a save envelope to the current format and version.
+ *
+ * For v1 saves: reconstructs the authority-bound fields (initialStateHash,
+ * commandLogHash, expectedStateHash, contentHash) by replaying the command
+ * log against the current engine.
+ *
+ * For version mismatches: re-derives the state hashes against the current
+ * engine and stamps the current version fields.
+ *
+ * The migration is DESTRUCTIVE to the save envelope — it produces a new
+ * v2 envelope with current version fields. The original save should be
+ * preserved by the caller for audit purposes.
+ *
+ * @param {object} save - The save envelope to migrate
+ * @param {object} engineModule - The engine module (IntrilexEngine, hashCanonical)
+ * @param {object} autonomyModule - The autonomy module (createState)
+ * @returns {Promise<{ ok: boolean, save?: object, migrationType?: string, error?: string }>}
+ */
+export async function migrateSave(save, engineModule, autonomyModule) {
+  const migration = canMigrateSave(save);
+  if (!migration.canMigrate) {
+    return { ok: false, error: migration.reasonCode ?? 'MIGRATION_FAILED' };
+  }
+
+  try {
+    const { IntrilexEngine, hashCanonical: hashFn } = engineModule;
+    const { createState } = autonomyModule;
+
+    // Reconstruct initial state from setup
+    const stateSetup = {
+      profileId: save.profileId,
+      playerIds: ['P1', 'P2'],
+      enabledModules: [],
+      eventApprovedModules: [],
+      seed: save.setup.seed >>> 0 || 1,
+      seatOrder: save.setup.seatOrder,
+    };
+    const initialState = structuredClone(createState(stateSetup));
+    const initialStateHash = hashFn(initialState);
+
+    // Replay the command log to derive expectedStateHash
+    const engine = new IntrilexEngine();
+    let candidateState = initialState;
+    for (const command of save.commandLog) {
+      const result = engine.execute(candidateState, command);
+      if (!result.accepted) {
+        return { ok: false, error: `MIGRATION_FAILED: command rejected during replay at index ${save.commandLog.indexOf(command)}` };
+      }
+      candidateState = result.state;
+    }
+    const expectedStateHash = hashFn(candidateState);
+    const commandLogHash = hashFn(save.commandLog);
+
+    // Build the migrated v2 envelope
+    const migrated = {
+      format: 'intrilex-player-save',
+      version: SAVE_FORMAT_VERSION,
+      saveId: save.saveId ?? `migrated-${Date.now()}`,
+      sessionId: save.sessionId,
+      productVersion: PRODUCT_VERSION,
+      playerRuntimeVersion: PLAYER_RUNTIME_VERSION,
+      engineVersion: ENGINE_VERSION,
+      rulesVersion: RULES_VERSION,
+      profileId: save.profileId,
+      mode: save.mode,
+      setup: save.setup,
+      decisionJournal: save.decisionJournal ?? [],
+      commandLog: save.commandLog,
+      initialStateHash,
+      commandLogHash,
+      expectedStateHash,
+      stableBoundary: save.stableBoundary ?? null,
+      tutorial: save.tutorial ?? null,
+      migratedFrom: migration.migrationType,
+      migratedAt: new Date().toISOString(),
+    };
+
+    // Compute the content hash binding all authority-critical fields
+    migrated.contentHash = buildSaveIntegrityPayload(migrated);
+
+    return { ok: true, save: migrated, migrationType: migration.migrationType };
+  } catch (error) {
+    return { ok: false, error: `MIGRATION_FAILED: ${error?.message ?? String(error)}` };
+  }
+}
 
 /**
  * Build the canonical integrity payload for a save envelope.

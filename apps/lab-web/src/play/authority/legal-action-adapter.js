@@ -264,7 +264,7 @@ export function groupActionsByTiming(contracts) {
       groups.quick.push(c);
     } else if (c.isResponse || c.form === 'response') {
       groups.response.push(c);
-    } else if (c.timingClass === 'SETUP' || c.form === 'phase' || c.form === 'draw') {
+    } else if (c.form === 'phase' || c.form === 'draw') {
       groups.system.push(c);
     } else {
       groups.primary.push(c);

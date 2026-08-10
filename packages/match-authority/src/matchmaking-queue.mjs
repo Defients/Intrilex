@@ -23,7 +23,7 @@ export const MAX_QUEUE_SIZE = 200;
 export const QUEUE_TIMEOUT_MS = 120000; // 2 minutes
 
 /**
- * @typedef {{ connectionId: string, profileId: string, joinedAt: number }} QueueEntry
+ * @typedef {{ connectionId: string, profileId: string, joinedAt: number, accountId: string|null }} QueueEntry
  */
 /**
  * @typedef {object} EnqueueResult
@@ -60,17 +60,26 @@ export class MatchmakingQueue {
    * Add a connection to the queue.
    * @param {string} connectionId
    * @param {string} profileId
+   * @param {string|null} [accountId] - Account ID for identity-based queue dedup + self-match prevention
    * @returns {EnqueueResult}
    */
-  enqueue(connectionId, profileId) {
+  enqueue(connectionId, profileId, accountId = null) {
     if (this._byConnection.has(connectionId)) {
       return { queued: false, error: 'Already in queue', code: 'ALREADY_IN_QUEUE' };
+    }
+    // One active queue entry per account (prevents multi-queue abuse)
+    if (accountId) {
+      for (const entry of this._queue) {
+        if (entry.accountId && entry.accountId === accountId) {
+          return { queued: false, error: 'Account already in queue', code: 'ALREADY_IN_QUEUE' };
+        }
+      }
     }
     if (this._queue.length >= MAX_QUEUE_SIZE) {
       return { queued: false, error: 'Queue is full', code: 'QUEUE_FULL' };
     }
 
-    const entry = { connectionId, profileId, joinedAt: Date.now() };
+    const entry = { connectionId, profileId, joinedAt: Date.now(), accountId };
     this._queue.push(entry);
     this._byConnection.set(connectionId, this._queue.length - 1);
 
@@ -158,7 +167,14 @@ export class MatchmakingQueue {
     const candidates = this._queue.filter(e => e.profileId === profileId);
     if (candidates.length < 2) return null;
 
-    const [a, b] = candidates;
+    // Prevent self-matching: don't pair two entries with the same accountId
+    let [a, b] = candidates;
+    if (a.accountId && b.accountId && a.accountId === b.accountId) {
+      // Look for a third candidate with a different accountId
+      const different = candidates.find(e => e.accountId !== a.accountId);
+      if (!different) return null; // Can't pair — all same account
+      b = different;
+    }
 
     // Remove both from queue
     this.dequeue(a.connectionId);
@@ -169,8 +185,8 @@ export class MatchmakingQueue {
 
     const seed = randomBytes(4).readUInt32BE(0);
     const result = this._onCreateMatch(profileId, seed, [
-      { connectionId: a.connectionId },
-      { connectionId: b.connectionId },
+      { connectionId: a.connectionId, accountId: a.accountId },
+      { connectionId: b.connectionId, accountId: b.accountId },
     ]);
 
     return result; // [{ connectionId, matchId, participantId, participantToken }, ...]

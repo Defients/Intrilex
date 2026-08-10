@@ -1,0 +1,8 @@
+-- ═══════════════════════════════════════════════════════════════
+-- seed.sql — Development seed data
+--
+-- No production data. Used by `supabase db reset` for local dev.
+-- ═══════════════════════════════════════════════════════════════
+-- Seed data is intentionally empty for the account infrastructure.
+-- Profiles are auto-created by the auth.users trigger.
+-- Test users should be created via Supabase Auth in local dev.

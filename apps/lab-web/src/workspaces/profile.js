@@ -3,7 +3,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { state, app, esc, pct } from '../state.js';
-import { loadProfile, isStorageAvailable } from '../play/local-profile.mjs';
+import { loadProfile, isStorageAvailable, BADGE_DEFINITIONS } from '../play/local-profile.mjs';
+import { getAchievementRuntime } from '../play/achievements/achievement-runtime.js';
+import { getDefinition } from '../play/achievements/achievement-runtime.js';
 
 const BADGE_ICONS = {
   shield: '🛡', trophy: '🏆', star: '⭐', crown: '👑', flame: '🔥',
@@ -27,6 +29,7 @@ export function renderProfile() {
     ${renderRatingCard(r, winRate, totalGames)}
     ${renderStreakCard(streak)}
     ${renderRatingChart(profile.ratingHistory)}
+    ${renderAchievementSummary()}
     ${renderBadgeGallery(profile)}
     ${renderArchetypeBreakdown(profile.archetypeBreakdown)}
     ${renderMatchHistory(profile.verifiedResults)}
@@ -49,6 +52,32 @@ function renderStreakCard(streak) {
     <div class="stat-card"><span class="stat-value">${streak.bestStreak}</span><span class="stat-label">Best Streak</span></div>
     <div class="stat-card"><span class="stat-value">${streak.lastResult ? esc(streak.lastResult.toUpperCase()) : '—'}</span><span class="stat-label">Last Result</span></div>
   </div>`;
+}
+
+function renderAchievementSummary() {
+  try {
+    const runtime = getAchievementRuntime();
+    const summary = runtime.getSummary();
+    if (summary.earned === 0) {
+      return `<div class="achievement-profile-summary" style="margin-bottom:16px">
+        <h3 style="margin:0 0 8px 0">Achievements</h3>
+        <p style="color:var(--text-dim);margin:0">No achievements earned yet. <a href="#/achievements">View all ${summary.total} achievements</a></p>
+      </div>`;
+    }
+    const latestDef = summary.latestUnlock ? getDefinition(summary.latestUnlock) : null;
+    const latestName = latestDef ? esc(latestDef.name) : '';
+    const apPct = summary.maxAp > 0 ? pct(summary.ap / summary.maxAp) : '0%';
+    return `<div class="achievement-profile-summary" style="margin-bottom:16px">
+      <div class="experiment-grid">
+        <div class="stat-card"><span class="stat-value">${summary.earned}/${summary.total}</span><span class="stat-label">Achievements Earned</span></div>
+        <div class="stat-card"><span class="stat-value">${summary.ap}</span><span class="stat-label">Achievement Points (${apPct} of ${summary.maxAp})</span></div>
+        <div class="stat-card"><span class="stat-value" style="font-size:1.2em">${latestName || '—'}</span><span class="stat-label">Latest Unlock</span></div>
+      </div>
+      <p style="margin:8px 0 0 0"><a href="#/achievements">View all achievements</a></p>
+    </div>`;
+  } catch {
+    return ''; // achievement system not available
+  }
 }
 
 function renderRatingChart(history) {
@@ -75,19 +104,6 @@ function renderRatingChart(history) {
 }
 
 function renderBadgeGallery(profile) {
-  const badgeDefs = [
-    { id: 'first-duel', name: 'First Duel', description: 'Complete your first verified duel', icon: 'shield' },
-    { id: 'first-victory', name: 'First Victory', description: 'Win your first verified duel', icon: 'trophy' },
-    { id: 'field-tested', name: 'Field Tested', description: 'Complete 10 verified duels', icon: 'star' },
-    { id: 'duelist', name: 'Duelist', description: 'Complete 25 verified duels', icon: 'crown' },
-    { id: 'streak-3', name: 'Streak \u00d73', description: 'Win 3 consecutive verified duels', icon: 'flame' },
-    { id: 'supercharged', name: 'Supercharged', description: 'Declare your first Super', icon: 'bolt' },
-    { id: 'unshaken', name: 'Unshaken', description: 'Win after trailing in Secured Points', icon: 'heart' },
-    { id: 'tournament-champion', name: 'Tournament Champion', description: 'Win a tournament (coming soon)', icon: 'medal', available: false },
-    { id: 'bracket-buster', name: 'Bracket Buster', description: 'Win a tournament as the lowest seed (coming soon)', icon: 'sword', available: false },
-    { id: 'tactician', name: 'Tactician', description: 'Win 5 matches against hard/nightmare AI', icon: 'brain' },
-  ];
-
   const earnedIds = new Set(profile.badges.map(b => b.id));
   const totalDuels = profile.verifiedResults.length;
   const hardWins = profile.verifiedResults.filter(r => (r.aiDifficulty === 'hard' || r.aiDifficulty === 'nightmare') && r.outcome === 'win').length;
@@ -100,7 +116,7 @@ function renderBadgeGallery(profile) {
     'tactician': () => `${hardWins}/5`,
   };
 
-  const badges = badgeDefs.map(def => {
+  const badges = BADGE_DEFINITIONS.map(def => {
     const earned = earnedIds.has(def.id);
     const unavailable = def.available === false;
     const icon = BADGE_ICONS[def.icon] ?? '🔹';
@@ -115,7 +131,7 @@ function renderBadgeGallery(profile) {
     </div>`;
   }).join('');
 
-  return `<section class="panel" style="margin-bottom:16px"><div class="panel-header"><h3>Badges (${earnedIds.size}/${badgeDefs.length})</h3></div><div class="panel-body"><div class="badge-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">${badges}</div></div></section>`;
+  return `<section class="panel" style="margin-bottom:16px"><div class="panel-header"><h3>Badges (${earnedIds.size}/${BADGE_DEFINITIONS.length})</h3></div><div class="panel-body"><div class="badge-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">${badges}</div></div></section>`;
 }
 
 function renderArchetypeBreakdown(breakdown) {

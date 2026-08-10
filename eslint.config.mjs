@@ -120,11 +120,12 @@ export default [
     }
   },
   {
-    // browser-e2e-certification.mjs and browser-network-e2e.mjs serialize arrow
-    // functions via .toString() and evaluate them in the browser via CDP
+    // browser-e2e-certification.mjs, browser-network-e2e.mjs, and
+    // browser-v25-certification.mjs serialize arrow functions via
+    // .toString() and evaluate them in the browser via CDP
     // Runtime.evaluate, so browser globals like document/location appear as
     // bare identifiers in Node code.
-    files: ['scripts/browser-e2e-certification.mjs', 'scripts/browser-network-e2e.mjs'],
+    files: ['scripts/browser-e2e-certification.mjs', 'scripts/browser-network-e2e.mjs', 'scripts/browser-v25-certification.mjs'],
     languageOptions: {
       globals: {
         document: 'readonly',

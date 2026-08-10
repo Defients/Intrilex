@@ -372,8 +372,7 @@
 .tcg-state-marker b { display: inline-block; color: var(--tcg-warning); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
 
 /* v0.20.0: Mechanic icons in the dead center of the card (Board appearance for hand cards).
-   Each icon has a native title tooltip with the ability name + summary.
-   Ctrl+hover on the card → Lite popover; Shift+hover → Full Zoom popover. */
+   Each icon has a native title tooltip with the ability name + summary. */
 .tcg-mechanic-icons { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; align-items: center; max-width: calc(100% - 8px); z-index: 2; }
 .tcg-mechanic-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 35px; height: 35px; font-size: 1.5rem; line-height: 1; color: var(--card-accent, var(--tcg-accent)); background: rgba(0, 0, 0, 0.65); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 6px; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); cursor: help; transition: transform 0.18s ease, background 0.12s ease, border-color 0.12s ease, box-shadow 0.18s ease; }
 .tcg-mechanic-icon:hover, .tcg-mechanic-icon:focus-visible { background: rgba(0, 0, 0, 0.8); border-color: var(--card-accent, var(--tcg-accent)); transform: scale(1.15); box-shadow: 0 0 12px var(--card-accent, var(--tcg-accent-glow)), 0 2px 8px rgba(0,0,0,0.6); outline: none; }
@@ -460,10 +459,10 @@
 .tcg-card.joker { background: linear-gradient(135deg, rgba(240, 93, 120, 0.18), rgba(79, 211, 135, 0.18), rgba(176, 140, 255, 0.18), rgba(240, 116, 73, 0.18)); border-color: var(--tcg-suit-neutral); }
 @keyframes tcg-foil { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* Card back — privacy-safe */
-.tcg-card-back { position: relative; display: inline-flex; align-items: center; justify-content: center; width: var(--tcg-card-w); min-width: var(--tcg-card-w); min-height: var(--tcg-card-h); background: linear-gradient(135deg, #1a1f3a, #0a0d1a); border: 1.5px solid rgba(90, 215, 232, 0.3); border-radius: var(--tcg-radius-md); overflow: hidden; box-shadow: var(--tcg-shadow-card); }
-.tcg-card-back::before { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg, rgba(90, 215, 232, 0.08) 0 2px, transparent 2px 10px); animation: tcg-shimmer 6s linear infinite; }
-.tcg-card-back::after { content: ''; position: absolute; inset: 0; background: linear-gradient(120deg, transparent 30%, rgba(90, 215, 232, 0.12) 50%, transparent 70%); background-size: 200% 100%; animation: tcg-shimmer-2 5s linear infinite; }
+/* Card back — privacy-safe, uses project cardback image */
+.tcg-card-back { position: relative; display: inline-flex; align-items: center; justify-content: center; width: var(--tcg-card-w); min-width: var(--tcg-card-w); min-height: var(--tcg-card-h); background: url('assets/intrilex-cardback1.png') center/cover no-repeat, linear-gradient(135deg, #1a1f3a, #0a0d1a); border: 1.5px solid rgba(90, 215, 232, 0.3); border-radius: var(--tcg-radius-md); overflow: hidden; box-shadow: var(--tcg-shadow-card); }
+.tcg-card-back::before { content: ''; position: absolute; inset: 0; background: linear-gradient(120deg, transparent 30%, rgba(90, 215, 232, 0.08) 50%, transparent 70%); background-size: 200% 100%; animation: tcg-shimmer-2 5s linear infinite; }
+.tcg-card-back.mini { background: url('assets/intrilex-cardback1_mini.png') center/cover no-repeat, linear-gradient(135deg, #1a1f3a, #0a0d1a); }
 .tcg-card-back-monogram { position: relative; z-index: 1; font-weight: 800; font-size: 1.1rem; letter-spacing: 0.05em; color: var(--tcg-accent); text-shadow: 0 0 8px rgba(90, 215, 232, 0.5); }
 @keyframes tcg-shimmer { 0% { transform: translateX(-10px); } 100% { transform: translateX(10px); } }
 @keyframes tcg-shimmer-2 { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -513,15 +512,6 @@
 .tcg-preview-actions-list li { padding: 2px 0; font-size: 0.72rem; color: var(--tcg-text); }
 .tcg-preview-actions-list li::before { content: '▸ '; color: var(--tcg-accent); }
 .tcg-preview-no-actions { margin: 0; font-size: 0.72rem; color: var(--tcg-text-dim); font-style: italic; }
-
-/* v0.20.0: Card hover popover — Ctrl+hover → Lite, Shift+hover → Full Zoom */
-.card-hover-popover { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%) translateY(8px); z-index: calc(var(--tcg-z-cards) + 100); opacity: 0; visibility: hidden; transition: opacity 0.18s ease, transform 0.18s ease; pointer-events: none; max-width: min(1080px, 92vw); max-height: 85vh; overflow-y: auto; }
-.card-hover-popover.visible { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); pointer-events: auto; }
-.card-hover-popover-inner { position: relative; background: var(--tcg-bg-panel-solid, #0a0e16); border: 1px solid rgba(90, 215, 232, 0.3); border-radius: var(--tcg-radius-lg, 12px); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7); padding: 0; overflow: hidden; }
-.card-hover-popover-inner .ix-card-face { width: min(790px, 85vw); pointer-events: none; }
-.card-hover-popover-inner .ix-view-zoom { width: min(1040px, 90vw); }
-.card-hover-popover-zoom { display: block; width: 100%; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--tcg-accent, #5ad7e8); background: rgba(90, 215, 232, 0.08); border: none; border-top: 1px solid rgba(90, 215, 232, 0.2); cursor: pointer; transition: background 0.15s ease; text-align: center; }
-.card-hover-popover-zoom:hover { background: rgba(90, 215, 232, 0.16); }
 
 /* Drag-to-play drop zones */
 [data-drop-zone] { transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease; }
@@ -1116,7 +1106,6 @@
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 390px) {
   :root { --tcg-card-w: 48px; --tcg-card-h: 66px; }
-  .card-hover-popover { display: none !important; }
   .play-board-grid { padding: var(--tcg-space-1); gap: var(--tcg-space-1); }
   .tcg-rank { font-size: 1.6rem; }
   .tcg-suit-glyph { font-size: 1.5rem; }
@@ -1151,7 +1140,6 @@
   }
   .stack-item { transform: none !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important; }
   .board-card-wrapper.targetable { box-shadow: 0 0 0 2px var(--tcg-accent) !important; }
-  .card-hover-popover { transition: none !important; }
 }
 
 /* ── High contrast ── */

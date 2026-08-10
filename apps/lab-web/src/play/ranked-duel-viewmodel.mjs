@@ -39,9 +39,14 @@ export function buildRankedDuelViewModel(snapshot, localProfile = null, modeInfo
   const opponent = buildPlayerPlate(state, opponentPlayerId, opponentSeatIndex, false, null);
 
   const zones = buildZones(state, humanPlayerId);
-  const battlefield = buildBattlefield(state, humanPlayerId, opponentPlayerId, humanSeatIndex);
-  const stack = buildStack(state);
   const actions = buildAuthorizedActions(snapshot);
+  // Extract legal source card IDs so hand cards can be marked as legal sources
+  const legalSourceIds = new Set();
+  for (const a of actions) {
+    for (const sid of a.sourceEntityIds ?? []) legalSourceIds.add(sid);
+  }
+  const battlefield = buildBattlefield(state, humanPlayerId, opponentPlayerId, humanSeatIndex, legalSourceIds);
+  const stack = buildStack(state);
   const chat = buildChat(snapshot);
 
   const mode = modeInfo ?? { kind: 'LOCAL_AI', label: 'LOCAL \u00b7 VS AI', networkRanked: false };
@@ -59,6 +64,8 @@ export function buildRankedDuelViewModel(snapshot, localProfile = null, modeInfo
       windowLabel: state.windowLabel ?? '',
       goalMayBeDynamic: true,
       globalStates: extractGlobalStates(state),
+      terminationReason: state.terminationReason ?? null,
+      winner: state.winner ?? null,
     },
     human,
     opponent,
@@ -80,7 +87,7 @@ function createErrorModel(code, reason, modeInfo = null) {
     sessionId: null,
     status: 'ERROR',
     mode: modeInfo ?? { kind: 'LOCAL_AI', label: 'LOCAL \u00b7 VS AI', networkRanked: false },
-    match: { fullTurnSequence: 0, phase: 'ERROR', activePlayerId: null, priorityOwnerId: null, windowLabel: '', goalMayBeDynamic: true },
+    match: { fullTurnSequence: 0, phase: 'ERROR', activePlayerId: null, priorityOwnerId: null, windowLabel: '', goalMayBeDynamic: true, terminationReason: null, winner: null },
     human: emptyPlayerPlate(),
     opponent: emptyPlayerPlate(),
     zones: emptyZones(),
@@ -196,6 +203,7 @@ function buildSwapSlots(state) {
   const swap = state.swapBar ?? state.swap ?? [];
   return swap.map((card, index) => ({
     slotId: index,
+    entityId: card?.id ?? null,
     card: card && !card.faceDown ? buildPublicCardView(card) : null,
     faceDown: card ? card.faceDown === true : true,
     swapAvailable: state.swapAvailable ?? true,
@@ -204,7 +212,7 @@ function buildSwapSlots(state) {
 
 // ── Battlefield ────────────────────────────────────────────────
 
-function buildBattlefield(state, humanPlayerId, opponentPlayerId, humanSeatIndex) {
+function buildBattlefield(state, humanPlayerId, opponentPlayerId, humanSeatIndex, legalSourceIds = new Set()) {
   const human = state.players?.[humanPlayerId] ?? {};
   const opponent = state.players?.[opponentPlayerId] ?? {};
 
@@ -213,7 +221,11 @@ function buildBattlefield(state, humanPlayerId, opponentPlayerId, humanSeatIndex
   const opponentPR = (opponent.pointRow ?? opponent.pr ?? []).map(buildPublicCardView);
   const opponentER = (opponent.enduringRow ?? opponent.er ?? []).map(buildPublicCardView);
 
-  const humanHand = (Array.isArray(human.hand) ? human.hand : []).map(buildPrivateOwnedCardView);
+  const humanHand = (Array.isArray(human.hand) ? human.hand : []).map(card => {
+    const view = buildPrivateOwnedCardView(card);
+    if (view && legalSourceIds.has(view.entityId)) view.legalSource = true;
+    return view;
+  });
   const opponentHandCount = Array.isArray(opponent.hand) ? opponent.hand.length : (opponent.hand?.count ?? 0);
 
   // Determine row ordering based on seat
@@ -289,21 +301,65 @@ function buildCardMarkers(card) {
 
 function buildStack(state) {
   const stackItems = state.stack ?? state.resolutionStack ?? [];
+  const humanPlayerId = state.humanPlayerId ?? state.seatOrder?.[0] ?? 'P1';
+  // Build a card identity lookup from all visible cards in the state
+  const cardLookup = {};
+  const collectCard = (c) => { if (c?.id) cardLookup[c.id] = c.identity ?? null; };
+  // Hand, PR, ER for human
+  const human = state.players?.[humanPlayerId] ?? {};
+  (human.hand ?? []).forEach(collectCard);
+  (human.pointRow ?? human.pr ?? []).forEach(collectCard);
+  (human.enduringRow ?? human.er ?? []).forEach(collectCard);
+  // Opponents
+  for (const pid of (state.seatOrder ?? [])) {
+    if (pid === humanPlayerId) continue;
+    const opp = state.players?.[pid] ?? {};
+    (opp.pointRow ?? opp.pr ?? []).forEach(collectCard);
+    (opp.enduringRow ?? opp.er ?? []).forEach(collectCard);
+  }
+  // Swap bar
+  (state.swapBar ?? state.swap ?? []).forEach(collectCard);
+  // Graveyard top card
+  if (state.graveyard?.topCard) collectCard(state.graveyard.topCard);
+
   return stackItems.map(item => ({
     stackIndex: item.stackIndex ?? item.index ?? 0,
     actionFamily: item.actionFamily ?? item.family ?? null,
     actionMode: item.actionMode ?? item.mode ?? null,
-    sourcePlayerId: item.sourcePlayerId ?? item.actorId ?? null,
-    targetCardIdentity: item.targetCard?.identity ?? null,
-    isResolving: item.isResolving === true,
-    description: item.description ?? buildStackDescription(item),
+    actionType: item.actionType ?? null,
+    stackClass: item.stackClass ?? null,
+    sourcePlayerId: item.sourcePlayerId ?? item.actorId ?? item.controllerId ?? null,
+    sourceCardIds: item.sourceCardIds ?? [],
+    targetCardIds: item.targetCardIds ?? [],
+    isHuman: item.isHuman ?? (item.controllerId === humanPlayerId),
+    actorName: item.actorName ?? null,
+    isResolving: item.isResolving === true || item.status === 'resolving',
+    status: item.status ?? null,
+    description: item.description ?? buildStackDescription(item, cardLookup),
   }));
 }
 
-function buildStackDescription(item) {
-  const family = item.actionFamily ?? item.family ?? 'Action';
-  const mode = item.actionMode ?? item.mode ?? '';
-  return mode ? `${family} \u2014 ${mode}` : family;
+function buildStackDescription(item, cardLookup) {
+  const actionType = item.actionType ?? item.actionFamily ?? item.family ?? null;
+  const stackClass = item.stackClass ?? null;
+  const kind = item.kind ?? null;
+
+  let label = actionType ?? stackClass ?? kind ?? 'Action';
+  label = label.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  const sourceIds = item.sourceCardIds ?? [];
+  const targetIds = item.targetCardIds ?? [];
+  const sourceIdentities = sourceIds.map(id => cardLookup[id]).filter(Boolean);
+  const targetIdentities = targetIds.map(id => cardLookup[id]).filter(Boolean);
+
+  let desc = label;
+  if (sourceIdentities.length > 0) {
+    desc += ` \u2014 ${sourceIdentities.join(', ')}`;
+  }
+  if (targetIdentities.length > 0) {
+    desc += ` \u2192 ${targetIdentities.join(', ')}`;
+  }
+  return desc;
 }
 
 // ── Authorized actions ─────────────────────────────────────────
@@ -317,6 +373,7 @@ function buildAuthorizedActions(snapshot) {
       actionId: contract.optionId,
       family: contract.family,
       mode: contract.mode,
+      form: contract.form ?? null,
       timingClass: contract.timingClass ?? 'ACTION',
       requiresSource: contract.sourceEntityIds.length > 0,
       requiresTarget: contract.targets?.required ?? false,
@@ -469,11 +526,12 @@ function extractGlobalStates(state) {
 
 function deriveStatus(state, snapshot) {
   if (state.terminationReason) return 'TERMINAL';
-  if (snapshot.isAiDecision || state.activePlayerId !== (snapshot.humanPlayerId ?? state.seatOrder?.[0])) {
-    return 'AI_DECISION';
-  }
-  if (snapshot.legalActions?.length > 0 || state.activePlayerId === (snapshot.humanPlayerId ?? state.seatOrder?.[0])) {
-    return 'HUMAN_DECISION';
-  }
-  return 'HUMAN_DECISION';
+  // The decision frame's isHuman flag is authoritative — in response windows,
+  // the active player may be the AI (who acted) but the human has a response action.
+  const isHuman = snapshot.decision?.isHuman;
+  if (isHuman === true) return 'HUMAN_DECISION';
+  if (isHuman === false) return 'AI_DECISION';
+  // Fallback: infer from active player when no decision frame is present
+  const humanId = snapshot.humanPlayerId ?? state.seatOrder?.[0];
+  return state.activePlayerId === humanId ? 'HUMAN_DECISION' : 'AI_DECISION';
 }

@@ -6,11 +6,14 @@
     ".": "./src/authoritative-match-session.mjs",
     "./player-projection": "./src/player-projection.mjs",
     "./match-store": "./src/match-store.mjs",
-    "./matchmaking-queue": "./src/matchmaking-queue.mjs"
+    "./matchmaking-queue": "./src/matchmaking-queue.mjs",
+    "./achievement-projection": "./src/achievement-projection.mjs"
   },
   "dependencies": {
+    "@intrilex/account-domain": "workspace:*",
     "@intrilex/engine-adapter": "workspace:*",
     "@intrilex/shared": "workspace:*",
-    "@intrilex/network-protocol": "workspace:*"
+    "@intrilex/network-protocol": "workspace:*",
+    "@intrilex/achievements": "workspace:*"
   }
 }

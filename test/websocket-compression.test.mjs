@@ -135,7 +135,7 @@ test('compression: protocol messages survive compression round-trip', async () =
     });
 
     // Verify the response has the correct protocol version
-    assert.equal(response.protocolVersion, 1);
+    assert.equal(response.protocolVersion, 2);
     assert.equal(response.type, 'MATCH_CREATED');
 
     ws.close();

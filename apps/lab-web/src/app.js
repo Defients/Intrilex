@@ -6,7 +6,7 @@
 import { getCardDefinition } from './card-face-data.js';
 import { openAdvancedCardRules } from './play/advanced-card-rules/advanced-card-rules-controller.mjs';
 import { renderRulesPage } from './rulebook-renderer.js';
-import { RULES_VERSION, ENGINE_VERSION } from './version.js';
+import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js';
 import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js';
 import { TITLES,   SUBTITLES,   LANDING_MODES,   isPlayRoute,   route} from './router.js';
 import { boot,   loadReplay} from './data-loader.js';
@@ -19,6 +19,7 @@ import { renderEvidence } from './workspaces/evidence.js';
 import { renderIntelligence } from './workspaces/intelligence.js';
 import { renderTournament } from './workspaces/tournament.js';
 import { renderProfile } from './workspaces/profile.js';
+import { renderAchievementsWorkspace } from './play/achievements/achievement-ui.js';
 import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces, renderCardFaces } from './workspaces/observatory.js';
 import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js';
 import { shouldShowTour, startTour } from './onboarding-tour.js';
@@ -41,7 +42,7 @@ export function render() {
   if (LANDING_MODES.has(r)) {
     shell.style.display = 'none';
     if (landingContainer) landingContainer.style.display = 'block';
-    document.title = r === '/' ? 'Intrilex — Play · Rules · Sim' : r === '/rules' ? 'Intrilex — Rules' : 'Intrilex';
+    document.title = r === '/' ? 'Intrilex — Play' : r === '/rules' ? 'Intrilex — Rules' : 'Intrilex';
     renderLandingMode(r);
     return;
   }
@@ -62,7 +63,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/cards': renderCardFaces, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/profile': renderProfile, '/intelligence': renderIntelligence
+    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/profile': renderProfile, '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app)
   };
   try { (renderers[r] ?? renderEvidence)(); }
   catch (error) {
@@ -117,41 +118,287 @@ async function renderPlayMode(r) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LANDING PAGE
+// LANDING PAGE — Player-first home screen (v0.24.2 redesign)
+// Play dominant · Learn secondary · Rules available · Lab hidden
 // ═══════════════════════════════════════════════════════════════
+let _landingSelectedMode = 'local';
+
 function renderLanding() {
+  _landingSelectedMode = 'local';
   landingContainer.innerHTML = `<div class="landing-app">
+    <video class="landing-video-bg" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+      <source src="assets/landing1.mp4" type="video/mp4" />
+    </video>
+    <div class="landing-video-overlay" aria-hidden="true"></div>
     <div class="landing-aurora" aria-hidden="true"></div>
     <div class="landing-grid-bg" aria-hidden="true"></div>
+    <div class="landing-orbital" aria-hidden="true"></div>
     <a class="skip skip-link" href="#landing-main">Skip to content</a>
+    <header class="landing-topbar">
+      <a class="landing-brand" href="#/" aria-label="Intrilex home">
+        <img src="assets/intrilex-name.png" alt="INTRILEX" class="landing-brand-logo" />
+        <small class="landing-brand-sub">TACTICAL PLAYING CARD GAME</small>
+      </a>
+      <nav class="landing-utility-nav" aria-label="Utility navigation">
+        <a href="#/sim" class="lab-button" aria-label="Open Simulation Lab">
+          <svg class="lab-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 3h6M10 3v6.5L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 9.5V3"/>
+            <circle cx="12" cy="15" r="1.5"/>
+            <path d="M9.5 15.5l2-1M14.5 15.5l-2-1" opacity=".6"/>
+          </svg>
+          <span class="lab-button-label">Lab</span>
+          <svg class="lab-button-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 3l5 5-5 5"/>
+          </svg>
+        </a>
+        <div class="account-menu" data-account-menu>
+          <button class="account-trigger" data-account-trigger aria-label="Account menu" aria-expanded="false" aria-haspopup="menu">
+            <span class="account-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+              </svg>
+            </span>
+            <span class="account-name">Guest</span>
+            <svg class="account-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 5l5 5 5-5"/>
+            </svg>
+          </button>
+          <div class="account-dropdown" data-account-dropdown role="menu" aria-label="Account">
+            <div class="account-dropdown-header">
+              <span class="account-dropdown-avatar" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+                </svg>
+              </span>
+              <div class="account-dropdown-id">
+                <strong>Guest Player</strong>
+                <small>Not signed in</small>
+              </div>
+            </div>
+            <div class="account-dropdown-divider"></div>
+            <a class="account-dropdown-item disabled" aria-disabled="true" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+              <span>Profile</span>
+              <svg class="account-lock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
+            </a>
+            <a class="account-dropdown-item disabled" aria-disabled="true" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              <span>Match History</span>
+              <svg class="account-lock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
+            </a>
+            <a class="account-dropdown-item disabled" aria-disabled="true" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z"/></svg>
+              <span>Achievements</span>
+              <svg class="account-lock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
+            </a>
+            <a class="account-dropdown-item disabled" aria-disabled="true" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Settings</span>
+              <svg class="account-lock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
+            </a>
+            <div class="account-dropdown-divider"></div>
+            <a class="account-dropdown-item sign-in" href="#/auth" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+              <span>Sign In</span>
+            </a>
+          </div>
+        </div>
+      </nav>
+    </header>
     <main id="landing-main" class="landing-hero" tabindex="-1">
-      <p class="landing-eyebrow">DETERMINISTIC CARD ENGINE · v${RULES_VERSION}</p>
-      <h1 class="landing-title">INTRILEX</h1>
-      <p class="landing-tagline">A tactical card game of public score, disruption, and exactly-when spending. Build, counter, and time your way to the Goal.</p>
-      <div class="landing-cards">
-        <a class="landing-card play" href="#/play">
-          <span class="landing-card-icon" aria-hidden="true">▶</span>
-          <span class="landing-card-body"><strong>Play</strong><small>Play vs AI, run the First Contact tutorial, or browse your replay library.</small></span>
-          <span class="landing-card-cta">Play now →</span>
-        </a>
-        <a class="landing-card rules" href="#/rules">
-          <span class="landing-card-icon" aria-hidden="true">§</span>
-          <span class="landing-card-body"><strong>Rules</strong><small>The complete player rulebook — all ten parts, every card, every ruling.</small></span>
-          <span class="landing-card-cta">Read the rules →</span>
-        </a>
-        <a class="landing-card sim" href="#/sim">
-          <span class="landing-card-icon" aria-hidden="true">◈</span>
-          <span class="landing-card-body"><strong>Sim</strong><small>The rank intelligence observatory — watch, trace, and investigate deterministic matches.</small></span>
-          <span class="landing-card-cta">Open observatory →</span>
-        </a>
+      <div class="landing-content">
+        <section class="landing-play-panel landing-card play" aria-labelledby="play-heading">
+          <div class="landing-play-crest" aria-hidden="true"><img src="assets/intrilex-crest.png" alt="" /></div>
+          <div class="landing-play-content">
+            <p class="landing-eyebrow">BUILD &middot; COUNTER &middot; OUTTHINK &middot; WIN</p>
+            <h1 class="landing-title" id="play-heading">PLAY NOW</h1>
+            <p class="landing-tagline">A tactical card game of public score, disruption, and exactly-when spending. Every decision matters.</p>
+            <div class="landing-mode-section">
+              <p class="landing-mode-label" id="mode-label">CHOOSE MODE</p>
+              <div class="landing-mode-grid" role="radiogroup" aria-labelledby="mode-label">
+                <button class="landing-mode-tile selected" role="radio" aria-checked="true" data-mode="local" data-href="#/play/new">
+                  <span class="landing-mode-icon" aria-hidden="true">&#128100;</span>
+                  <span class="landing-mode-body"><strong>Local vs AI</strong><small>Solo practice against adaptive AI</small></span>
+                  <span class="landing-mode-check" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="landing-mode-tile" role="radio" aria-checked="false" data-mode="online" data-href="#/play/online">
+                  <span class="landing-mode-icon" aria-hidden="true">&#127760;</span>
+                  <span class="landing-mode-body"><strong>Online Duel</strong><small>Compete against players online</small></span>
+                  <span class="landing-mode-check" aria-hidden="true">&#10003;</span>
+                </button>
+                <button class="landing-mode-tile" role="radio" aria-checked="false" data-mode="tutorial" data-href="#/play/tutorial">
+                  <span class="landing-mode-icon" aria-hidden="true">&#128214;</span>
+                  <span class="landing-mode-body"><strong>Guided Tutorial</strong><small>Learn by playing your first guided duel</small></span>
+                  <span class="landing-mode-check" aria-hidden="true">&#10003;</span>
+                </button>
+              </div>
+            </div>
+            <button class="landing-play-cta" data-testid="landing-cta" data-href="#/play/new">
+              <span>START LOCAL DUEL</span><span class="landing-cta-arrow" aria-hidden="true">&rarr;</span>
+            </button>
+            <p class="landing-play-subline" data-mode-subline>Choose your mode. Make every decision count.</p>
+          </div>
+        </section>
+        <aside class="landing-secondary-rail" aria-label="Secondary navigation">
+          <div class="landing-cards">
+            <div id="landing-continue-slot" aria-live="polite"></div>
+            <a class="landing-rail-card rules landing-card rules" href="#/rules">
+              <span class="landing-rail-body">
+                <strong>&sect; Rules</strong>
+                <p>Read the complete official rulebook.</p>
+              </span>
+              <span class="landing-rail-chevron" aria-hidden="true">&rsaquo;</span>
+            </a>
+            <a class="landing-rail-card forums" href="https://intrilex.discourse.group/" target="_blank" rel="noopener noreferrer">
+              <span class="landing-rail-forums-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                </svg>
+              </span>
+              <span class="landing-rail-body">
+                <strong>Official Forums</strong>
+                <p>Join the community. Discuss strategy, report issues, and connect with other players.</p>
+              </span>
+              <span class="landing-rail-chevron" aria-hidden="true">&rsaquo;</span>
+            </a>
+            <a class="landing-rail-card whats-new" href="#/evidence">
+              <span class="landing-rail-body">
+                <strong>WHAT'S NEW</strong>
+                <p>Intrilex v${LAB_VERSION} &middot; Engine ${ENGINE_VERSION} &middot; Rules ${RULES_VERSION}</p>
+                <span class="landing-rail-cta">Release details &rarr;</span>
+              </span>
+              <span class="landing-rail-emblem gold subtle" aria-hidden="true">&#10022;</span>
+            </a>
+          </div>
+        </aside>
       </div>
     </main>
     <footer class="landing-footer">
-      <span class="landing-footer-brand"><span class="brand-glyph" aria-hidden="true">IX</span> INTRILEX</span>
-      <span>Engine ${ENGINE_VERSION} · Rules ${RULES_VERSION} · Pass/Priority hotfix</span>
-      <span class="landing-footer-stamp"><span class="live-dot" aria-hidden="true"></span> Deterministic · hash-verified</span>
+      <span class="landing-footer-brand"><img src="assets/intrilex-crest.png" alt="IX" class="landing-footer-crest" /> INTRILEX</span>
+      <a class="landing-footer-credit" href="https://deffy.me" target="_blank" rel="noopener noreferrer" aria-label="Created and Designed by Ðeffy Urz">
+        <span class="landing-footer-credit-prefix">Created &amp; Designed by</span>
+        <span class="landing-footer-credit-name">Ðeffy Urz</span>
+      </a>
     </footer>
   </div>`;
+  bindLandingEvents();
+  loadContinueCard();
+}
+
+/**
+ * Wire up mode-tile selection and primary CTA on the landing page.
+ */
+function bindLandingEvents() {
+  const tiles = [...landingContainer.querySelectorAll('.landing-mode-tile')];
+  const cta = landingContainer.querySelector('.landing-play-cta');
+  if (!tiles.length || !cta) return;
+  const selectTile = (tile) => {
+    tiles.forEach(t => { t.classList.remove('selected'); t.setAttribute('aria-checked', 'false'); });
+    tile.classList.add('selected');
+    tile.setAttribute('aria-checked', 'true');
+    _landingSelectedMode = tile.dataset.mode || 'local';
+    cta.dataset.href = tile.dataset.href || '#/play/new';
+    const label = cta.querySelector('span:first-child');
+    if (label) {
+      const modeLabels = { local: 'START LOCAL DUEL', online: 'START ONLINE DUEL', tutorial: 'START GUIDED TUTORIAL' };
+      label.textContent = modeLabels[_landingSelectedMode] || 'START DUEL';
+    }
+    const subline = landingContainer.querySelector('[data-mode-subline]');
+    if (subline) {
+      const sublines = {
+        local: 'Fast matches. Adaptive AI. Deterministic outcomes.',
+        online: 'Server-authoritative. Real opponents. Verified replays.',
+        tutorial: 'Learn the basics. Interactive guidance. No pressure.',
+      };
+      subline.textContent = sublines[_landingSelectedMode] || 'Choose your mode. Make every decision count.';
+    }
+  };
+  tiles.forEach(tile => {
+    tile.addEventListener('click', () => selectTile(tile));
+    // Arrow-key navigation within the radiogroup
+    tile.addEventListener('keydown', (e) => {
+      const i = tiles.indexOf(tile);
+      let next = -1;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % tiles.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i - 1 + tiles.length) % tiles.length;
+      if (next >= 0) { e.preventDefault(); tiles[next].focus(); selectTile(tiles[next]); }
+    });
+  });
+  cta.addEventListener('click', () => {
+    location.hash = cta.dataset.href || '#/play/new';
+  });
+
+  // ── Account dropdown menu ──
+  const accountTrigger = landingContainer.querySelector('[data-account-trigger]');
+  const accountDropdown = landingContainer.querySelector('[data-account-dropdown]');
+  const accountMenu = landingContainer.querySelector('[data-account-menu]');
+  if (accountTrigger && accountDropdown && accountMenu) {
+    const toggleMenu = (open) => {
+      const isOpen = open ?? !accountMenu.classList.contains('open');
+      accountMenu.classList.toggle('open', isOpen);
+      accountTrigger.setAttribute('aria-expanded', String(isOpen));
+    };
+    accountTrigger.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!accountMenu.contains(e.target)) toggleMenu(false);
+    });
+    // Close on Escape
+    accountMenu.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { toggleMenu(false); accountTrigger.focus(); }
+    });
+    // Close after clicking a menu item
+    accountDropdown.querySelectorAll('.account-dropdown-item').forEach(item => {
+      item.addEventListener('click', () => toggleMenu(false));
+    });
+  }
+}
+
+/**
+ * Async-load saved match state and insert a Continue Duel card if one exists.
+ * Renders nothing if IndexedDB is unavailable or no saves are found.
+ */
+async function loadContinueCard() {
+  const slot = landingContainer.querySelector('#landing-continue-slot');
+  if (!slot) return;
+  try {
+    const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js');
+    if (!isIndexedDBAvailable()) return;
+    const saves = await listSaves();
+    if (!saves || saves.length === 0) return;
+    const save = saves.find(s => s.stableBoundary?.decisionFrameHash) ?? saves[0];
+    if (!save) return;
+    // Build rich metadata from the save summary (v2 envelope) or fall back to basics
+    const sum = save.summary;
+    const mode = sum?.mode ?? (save.mode ? String(save.mode).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : 'Local vs AI');
+    const turn = sum?.turn ? `Turn ${sum.turn}` : (save.stableBoundary?.turn ? `Turn ${save.stableBoundary.turn}` : '');
+    const score = (sum && typeof sum.humanScore === 'number') ? `${sum.humanScore}\u2013${sum.opponentScore}` : '';
+    const opponent = sum?.opponentLabel ?? '';
+    const parts = [mode, turn, score].filter(Boolean);
+    const meta = parts.join(' &middot; ');
+    slot.innerHTML = `<button class="landing-rail-card continue" data-save-id="${esc(save.saveId)}">
+      <span class="landing-rail-body">
+        <strong>CONTINUE DUEL</strong>
+        <p>Pick up where you left off.${meta ? `<br><span class="landing-rail-sub">${meta}</span>` : ''}</p>
+        <span class="landing-resume-btn">RESUME &rarr;</span>
+      </span>
+      <img src="assets/intrilex-crest.png" alt="" class="landing-rail-crest" aria-hidden="true" />
+    </button>`;
+    const continueBtn = slot.querySelector('.landing-rail-card.continue');
+    if (continueBtn) {
+      continueBtn.addEventListener('click', () => {
+        const saveId = continueBtn.dataset.saveId;
+        if (!saveId) return;
+        // Hand off the saveId to the play hub, which restores via continueMatch
+        try { sessionStorage.setItem('intrilex-continue-save', saveId); } catch { /* unavailable */ }
+        location.hash = '#/play';
+      });
+    }
+    // Continue slot is already first in the rail; no promotion needed
+    // (Learn Intrilex card was removed — Continue Duel is the top rail card)
+  } catch { /* persistence unavailable — silently omit Continue card */ }
 }
 
 function renderRules() {

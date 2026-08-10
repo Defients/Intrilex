@@ -5,7 +5,7 @@
 // No Node.js dependencies — uses only standard Web APIs.
 // ═══════════════════════════════════════════════════════════════
 
-const PROTOCOL_VERSION = 1;
+const PROTOCOL_VERSION = 2;
 
 let _nextId = 0;
 function nextRequestId() {
@@ -73,6 +73,16 @@ export function matchHistory(limit = 20, status = null) {
 
 export function sendChat(matchId, participantToken, text) {
   return envelope('SEND_CHAT', { matchId, participantToken, text });
+}
+
+// ── Auth handshake (v2) ──
+
+export function authenticate(accessToken) {
+  return envelope('AUTHENTICATE', { accessToken });
+}
+
+export function authRefresh(accessToken) {
+  return envelope('AUTH_REFRESH', { accessToken });
 }
 
 export { PROTOCOL_VERSION };

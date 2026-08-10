@@ -367,8 +367,12 @@ test('play module: persistence has no node: imports', async () => {
 test('play module: play-renderer-v3 exports renderBoard and renderPlayHub', async () => {
   const js = await playSrc('ranked-duel-renderer.mjs');
   assert.match(js, /export function renderBoard/);
-  assert.match(js, /export function renderPlayHub/);
-  assert.match(js, /export function renderNewMatchSetup/);
+  // renderPlayHub and renderNewMatchSetup are now in ranked-duel-hub.mjs, re-exported
+  assert.match(js, /renderPlayHub/);
+  assert.match(js, /renderNewMatchSetup/);
+  const hubJs = await playSrc('ranked-duel-hub.mjs');
+  assert.match(hubJs, /export function renderPlayHub/);
+  assert.match(hubJs, /export function renderNewMatchSetup/);
 });
 
 test('play module: play-app exports handlePlayRoute', async () => {
@@ -494,7 +498,8 @@ test('play module: play-renderer-v3 has priority explainer', async () => {
 });
 
 test('play module: play-renderer-v3 has terminal and error states', async () => {
-  const js = await playSrc('ranked-duel-renderer.mjs');
+  // Terminal/error states are now in ranked-duel-terminal.mjs, imported by the main renderer
+  const js = await playSrc('ranked-duel-terminal.mjs');
   assert.match(js, /renderTerminal/);
   assert.match(js, /renderError/);
   assert.match(js, /watch-replay/);
@@ -502,7 +507,7 @@ test('play module: play-renderer-v3 has terminal and error states', async () => 
 });
 
 test('play module: ranked-duel-renderer has download-replay button for network matches', async () => {
-  const js = await playSrc('ranked-duel-renderer.mjs');
+  const js = await playSrc('ranked-duel-terminal.mjs');
   assert.match(js, /download-replay/, 'must have download-replay action');
   assert.match(js, /isNetworkMatch/, 'must check isNetworkMatch option');
 });

@@ -136,14 +136,14 @@ test('Stage: no scoreline in board context (score moved to Score Rail)', () => {
 
 // ── Actions tests ──
 
-test('Actions: intent buttons present when card selected', () => {
+test('Actions: group buttons present when card selected', () => {
   const html = renderBoard(makeMockSnapshot(), { selectedSourceCardId: 'C1' });
-  assert.ok(html.includes('rd-intent-btn'), 'Intent buttons should be present');
+  assert.ok(html.includes('rd-group-btn'), 'Group buttons should be present');
   assert.ok(!html.includes('awaiting-selection'), 'Should not show awaiting-selection');
 });
 
 test('Actions: available (non-disabled) buttons exist when card matches source', () => {
   const html = renderBoard(makeMockSnapshot(), { selectedSourceCardId: 'C1' });
-  assert.ok(html.includes('rd-intent-btn') && html.includes('available'),
-    'Should have available intent buttons for selected card');
+  assert.ok(html.includes('rd-group-btn') && html.includes('available'),
+    'Should have available group buttons for selected card');
 });

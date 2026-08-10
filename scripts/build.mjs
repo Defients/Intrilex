@@ -1,4 +1,5 @@
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -8,6 +9,23 @@ const rootPackage = JSON.parse(await readFile(path.join(root, 'package.json'), '
 const productVersion = rootPackage.version;
 const dist = path.join(root, 'apps/lab-web/dist');
 const vendorRuntime = path.join(root, 'runtime/autonomy-engine-dist/src');
+
+// ── Load .env file (lightweight dotenv — no dependency) ──
+const envPath = path.join(root, '.env');
+if (existsSync(envPath)) {
+  const envContent = readFileSync(envPath, 'utf8');
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    const value = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+    if (key && !(key in process.env)) {
+      process.env[key] = value;
+    }
+  }
+}
 const browserEngine = path.join(dist, 'engine');
 const certifiedReplaySource = path.join(root, 'upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/replays');
 const certifiedReplayDist = path.join(dist, 'data/certified-replays');
@@ -61,6 +79,19 @@ await cp(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
   const aaiModules = (await readdir(aaiSrc)).filter(f => f.endsWith('.mjs'));
   for (const mod of aaiModules) {
     await cp(path.join(aaiSrc, mod), path.join(aaiDist, mod));
+  }
+}
+// ── Achievements: copy isomorphic package modules into dist/achievements ──
+// The browser UI adapters (apps/lab-web/src/achievements/*.js) import these
+// .mjs modules via relative paths. The package is self-contained (no workspace
+// imports), so no import rewriting is required.
+{
+  const achSrc = path.join(root, 'packages/achievements/src');
+  const achDist = path.join(dist, 'achievements');
+  await mkdir(achDist, { recursive: true });
+  const achModules = (await readdir(achSrc)).filter(f => f.endsWith('.mjs'));
+  for (const mod of achModules) {
+    await cp(path.join(achSrc, mod), path.join(achDist, mod));
   }
 }
 // Copy scoring.mjs with Node→browser import rewrite (replace node:crypto with browser SHA-256 shim)
@@ -138,6 +169,25 @@ if (includeReplayBlobs) {
   });
   console.log(`build: excluded replay blob directories (set INTRILEX_INCLUDE_REPLAY_BLOBS=1 to include) — saved ~670MB`);
 }
+// On Windows external/mapped drives, cp with filter may create directory entries
+// without fully writing file contents. Re-copy the observatory directory without
+// a filter to ensure the ~37MB analytics.json is fully written.
+const observatorySrcDir = path.join(root, 'sample-data', 'observatory');
+const observatoryDistDir = path.join(dist, 'data', 'observatory');
+await rm(observatoryDistDir, { recursive: true, force: true });
+await cp(observatorySrcDir, observatoryDistDir, { recursive: true });
+// Wait for filesystem sync and verify the critical file is readable
+let observatoryReady = false;
+for (let attempt = 0; attempt < 20; attempt++) {
+  try {
+    const stat = await (await import('node:fs/promises')).stat(path.join(observatoryDistDir, 'analytics.json'));
+    if (stat.size > 0) { observatoryReady = true; break; }
+  } catch { /* not ready yet */ }
+  await new Promise(r => setTimeout(r, 500));
+}
+if (!observatoryReady) {
+  throw new Error('Observatory analytics.json could not be copied and verified after 20 retries');
+}
 await mkdir(path.join(dist, 'data/release'), { recursive: true });
 await cp(path.join(root, 'docs/INTRILEX_v4.3.1_COMPLETE_PLAYER_RULEBOOK.md'), path.join(dist, 'data/rulebook.md'));
 await cp(path.join(root, 'reports/capability-manifest.json'), path.join(dist, 'data/release/capability-manifest.json'));
@@ -213,7 +263,14 @@ await writeFile(path.join(rankAuthorityDir, 'rank-authority.json'), JSON.stringi
 const observatoryAnalyticsPath = path.join(dist, 'data', 'observatory', 'analytics.json');
 let rankPowerAssertion = null;
 try {
-  const observatoryJson = JSON.parse(await readFile(observatoryAnalyticsPath, 'utf8'));
+  // Retry reads for up to ~5s — on Windows external/mapped drives, large files
+  // (analytics.json is ~37MB) may not be readable immediately after cp completes.
+  let observatoryRaw = null;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try { observatoryRaw = await readFile(observatoryAnalyticsPath, 'utf8'); break; } catch { await new Promise(r => setTimeout(r, 500)); }
+  }
+  if (!observatoryRaw) throw new Error(`Unable to read ${observatoryAnalyticsPath} after 10 retries (filesystem sync race)`);
+  const observatoryJson = JSON.parse(observatoryRaw);
   const rankCount = observatoryJson.rankPower?.ranks ? Object.keys(observatoryJson.rankPower.ranks).length : 0;
   const ladderLength = observatoryJson.rankPower?.ladder?.length ?? 0;
   if (rankCount < 18) {
@@ -235,7 +292,12 @@ try {
 // Assert Rank Anatomy registry artifact exists
 const rankAnatomyRegistryPath = path.join(dist, 'data', 'observatory', 'rank-anatomy-registry.json');
 try {
-  const registryJson = JSON.parse(await readFile(rankAnatomyRegistryPath, 'utf8'));
+  let registryRaw = null;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try { registryRaw = await readFile(rankAnatomyRegistryPath, 'utf8'); break; } catch { await new Promise(r => setTimeout(r, 500)); }
+  }
+  if (!registryRaw) throw new Error(`Unable to read ${rankAnatomyRegistryPath} after 10 retries (filesystem sync race)`);
+  const registryJson = JSON.parse(registryRaw);
   if (registryJson.rankCount !== 15) throw new Error(`rank-anatomy-registry.json has ${registryJson.rankCount} ranks, expected 15.`);
   if (registryJson.spadesVariantCount !== 13) throw new Error(`rank-anatomy-registry.json has ${registryJson.spadesVariantCount} Spades variants, expected 13.`);
   if (registryJson.superEffectCount !== 9) throw new Error(`rank-anatomy-registry.json has ${registryJson.superEffectCount} Super effects, expected 9.`);

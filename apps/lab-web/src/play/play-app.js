@@ -8,6 +8,7 @@ import { createSession, restoreSession, SessionState } from './play-controller.j
 import { renderBoard, renderPlayHub, renderNewMatchSetup } from './ranked-duel-renderer.mjs';
 import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js';
 import { getSave, listSaves, putSave, isIndexedDBAvailable, getPreference, getPlayerStats, updatePlayerStats } from './persistence.js';
+import { buildSaveIntegrityPayload } from './save-integrity.js';
 import { getTutorialSetup, TutorialRuntime } from './tutorial-runtime.js';
 import { validateSnapshotPrivacy } from './play-privacy.js';
 import { POLICY_IDS } from '../autonomy-runtime.js';
@@ -18,7 +19,7 @@ import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId }
 import { getAiBanter } from './ai-personality.js';
 import { SoundEngine } from './play-sound.js';
 import { ParticleSystem } from './play-particles.js';
-import { state } from './play-state.js';
+import { state, resetState } from './play-state.js';
 import { bindBoardEvents as bindBoardEventsModule } from './board-events.js';
 import {
   openAdvancedCardRules as openAdvancedCardRulesController,
@@ -35,6 +36,8 @@ import {
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
   renderNetworkStatusBanner,
 } from './network/network-lobby-renderer.mjs';
+import { getAchievementRuntime } from './achievements/achievement-runtime.js';
+import { getAchievementPresenter } from './achievements/achievement-presenter.js';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -97,6 +100,14 @@ async function renderHub(container) {
     mode: continueSave.mode,
   } : null, { idbAvailable, playerStats });
   bindHubEvents(container);
+  // Auto-continue handoff from the landing page Continue Duel card
+  try {
+    const pendingSaveId = sessionStorage.getItem('intrilex-continue-save');
+    if (pendingSaveId) {
+      sessionStorage.removeItem('intrilex-continue-save');
+      if (idbAvailable) await continueMatch(pendingSaveId, container);
+    }
+  } catch { /* sessionStorage unavailable — ignore */ }
 }
 
 /**
@@ -170,22 +181,25 @@ async function startTutorial(container) {
  * Start a new match.
  */
 async function startNewMatch(setup, container) {
-  state.session = null;
-  state.selectedActionId = null;
-  state.selectedSourceCardId = null;
-  state.selectedTargetIds = [];
-  state.inspectorCardId = null;
-  state.inspectorFaceView = 'board';
-  state.leaseMode = 'UNCLAIMED';
-  state.chatMessages = [];
-  state.rightRailTab = 'chat';
-  state.lastEventCount = 0;
-  state.statsRecorded = false;
+  resetState();
   container.innerHTML = '<div class="play-loading">Creating match...</div>';
   try {
     state.session = await createSession(setup);
     state.sessionId = state.session.sessionId;
     state.tabId = state.tabId || generateTabId();
+
+    // Start achievement tracking for this match
+    try {
+      const achRuntime = getAchievementRuntime();
+      await achRuntime.init();
+      const isTutorial = Boolean(setup.tutorial);
+      achRuntime.startMatch(state.sessionId, setup.humanPlayerId, { isTutorial });
+      const presenter = getAchievementPresenter();
+      achRuntime.onUnlock((unlocks) => presenter.queueUnlocks(unlocks));
+      state.session.setAchievementConsumer((events, snapshot) => {
+        achRuntime.consumeEvents(events, null, snapshot);
+      });
+    } catch { /* achievement tracking is non-fatal */ }
     // Initialize sound engine
     state.sound = state.sound || new SoundEngine();
     state.particles = state.particles || new ParticleSystem();
@@ -220,6 +234,18 @@ async function continueMatch(saveId, container) {
     state.tabId = state.tabId || generateTabId();
     state.chatMessages = [];
     state.lastEventCount = 0;
+    // Resume achievement tracking for restored match
+    try {
+      const achRuntime = getAchievementRuntime();
+      await achRuntime.init();
+      const isTutorial = Boolean(save.tutorial);
+      achRuntime.startMatch(state.sessionId, save.setup?.humanPlayerId ?? 'P1', { isTutorial });
+      const presenter = getAchievementPresenter();
+      achRuntime.onUnlock((unlocks) => presenter.queueUnlocks(unlocks));
+      state.session.setAchievementConsumer((events, snapshot) => {
+        achRuntime.consumeEvents(events, null, snapshot);
+      });
+    } catch { /* achievement tracking is non-fatal */ }
     // Initialize sound + particles
     state.sound = state.sound || new SoundEngine();
     state.particles = state.particles || new ParticleSystem();
@@ -388,6 +414,26 @@ async function renderActiveMatch(container) {
     updatePlayerStatsOnTerminal(snapshot);
   }
 
+  // Build achievement summary HTML for terminal display.
+  // finishMatch() clears _matchRuntime on first call, so cache the HTML
+  // to persist across re-renders of the terminal screen.
+  let achievementSummaryHtml = '';
+  if (snapshot.status === 'TERMINAL') {
+    if (state._achievementSummaryHtml !== undefined) {
+      achievementSummaryHtml = state._achievementSummaryHtml;
+    } else {
+      try {
+        const achRuntime = getAchievementRuntime();
+        const presenter = getAchievementPresenter();
+        const unlocks = achRuntime.finishMatch();
+        if (unlocks && unlocks.length > 0) {
+          presenter.queueUnlocks(unlocks);
+          achievementSummaryHtml = presenter.buildTerminalSummaryHtml(unlocks);
+        }
+      } catch { /* achievement finalization is non-fatal */ }
+      state._achievementSummaryHtml = achievementSummaryHtml;
+    }
+  }
 
   const tutorialState = state.tutorial && !state.tutorial.isComplete ? {
     currentChapter: state.tutorial.currentChapter,
@@ -399,8 +445,11 @@ async function renderActiveMatch(container) {
     recommendedAltFamily: state.tutorial.recommendedAltFamily,
   } : null;
 
-  container.innerHTML = renderBoard(snapshot, {
-    selectedActionId: state.selectedActionId,
+  let boardHtml;
+  try {
+    boardHtml = renderBoard(snapshot, {
+      selectedActionId: state.selectedActionId,
+      selectedIntentKey: state.selectedIntentKey,
     selectedSourceCardId: state.selectedSourceCardId,
     selectedTargets: state.selectedTargetIds,
     inspectorCardId: state.inspectorCardId,
@@ -411,9 +460,22 @@ async function renderActiveMatch(container) {
     chatMessages: (state.networkSession?.chatMessages ?? state.chatMessages).slice(-30),
     rightRailTab: state.rightRailTab || 'chat',
     soundMuted: state.soundMuted,
+    achievementSummaryHtml,
     isNetworkMatch: !!(state.networkSession && state.networkSession.constructor?.name === 'NetworkPlaySession'),
     isTutorial: !!(state.tutorial && !state.tutorial.isComplete),
+    viewMode: state.viewMode,
   });
+  } catch (renderError) {
+    console.error('renderBoard threw:', renderError);
+    container.innerHTML = `<div class="play-error" role="alert">
+      <h2>Render error</h2>
+      <p>${esc(renderError.message)}</p>
+      <pre>${esc(renderError.stack ?? '')}</pre>
+      <a href="#/play" class="secondary-button">Back to Play</a>
+    </div>`;
+    return;
+  }
+  container.innerHTML = boardHtml;
 
   // Mount particle canvas on the YOUR ACTION frame (or stage fallback)
   if (state.particles && snapshot.status !== 'TERMINAL') {
@@ -446,8 +508,6 @@ async function renderActiveMatch(container) {
 function bindBoardEvents(container) {
   bindBoardEventsModule(container, {
     renderActiveMatch,
-    showHoverPopover,
-    hideHoverPopover,
     openAdvancedCardRules,
     startNewMatch,
     stopAutosave,
@@ -1029,8 +1089,6 @@ function bindHistoryActions(container, ws, matchHistory) {
       try { ws.close(); } catch { /* ignore */ }
       // Navigate to spectate flow with the match ID pre-filled
       location.hash = `#/play/online/spectate`;
-      // We'll pass the match ID via a global state
-      window.__spectateMatchId = matchId;
     });
   });
 }
@@ -1041,6 +1099,10 @@ function bindHistoryActions(container, ws, matchHistory) {
  */
 async function renderNetworkActiveMatch(container) {
   const session = state.networkSession;
+  // Reset network achievement state when entering a non-terminal session
+  if (session && session.status !== NetworkSessionState.TERMINAL) {
+    state._networkAchievementsApplied = false;
+  }
   if (!session) {
     // Try reconnecting from saved info
     const saved = NetworkPlaySession.getSavedMatch();
@@ -1074,6 +1136,18 @@ async function renderNetworkActiveMatch(container) {
 
   if (session.status === NetworkSessionState.TERMINAL) {
     // Match ended — show terminal state via board renderer
+    // Apply server-authoritative achievement unlocks if available
+    if (session.achievementUnlocks && session.achievementUnlocks.length > 0 && !state._networkAchievementsApplied) {
+      state._networkAchievementsApplied = true;
+      try {
+        const achRuntime = getAchievementRuntime();
+        const presenter = getAchievementPresenter();
+        const newUnlocks = achRuntime.applyServerUnlocks(session.achievementUnlocks, session.achievementProgressUpdates || {});
+        if (newUnlocks.length > 0) {
+          presenter.queueUnlocks(newUnlocks);
+        }
+      } catch { /* achievement merge is non-fatal */ }
+    }
   }
 
   state.session = session; // Make board-events.js use the network session
@@ -1089,9 +1163,19 @@ async function renderNetworkActiveMatch(container) {
       // Don't re-render if we've navigated away or the session was replaced
       if (state.networkSession !== session) return;
       if (state.activeContainer !== container) return;
-      // If the session transitioned to TERMINAL, clear reconnect info
+      // If the session transitioned to TERMINAL, apply server achievements
       if (session.status === NetworkSessionState.TERMINAL) {
-        // Terminal rendering will be handled by renderActiveMatch
+        if (session.achievementUnlocks && session.achievementUnlocks.length > 0 && !state._networkAchievementsApplied) {
+          state._networkAchievementsApplied = true;
+          try {
+            const achRuntime = getAchievementRuntime();
+            const presenter = getAchievementPresenter();
+            const newUnlocks = achRuntime.applyServerUnlocks(session.achievementUnlocks, session.achievementProgressUpdates || {});
+            if (newUnlocks.length > 0) {
+              presenter.queueUnlocks(newUnlocks);
+            }
+          } catch { /* achievement merge is non-fatal */ }
+        }
       }
       // Re-render the board with the latest authoritative view
       renderActiveMatch(container);
@@ -1230,10 +1314,13 @@ function startAutosave() {
       _autosaveInFlight = true;
       try {
         const envelope = state.session.getSaveEnvelope();
+        // Override saveId for autosave and recompute content hash
         envelope.saveId = `AUTOSAVE-${state.session.sessionId}`;
         if (state.tutorial) {
           envelope.tutorial = state.tutorial.getSaveState();
         }
+        // Recompute content hash after saveId/tutorial changes
+        envelope.contentHash = buildSaveIntegrityPayload(envelope);
         await putSave(envelope);
       } catch (error) {
         console.warn('Autosave failed:', error.message);
@@ -1261,8 +1348,6 @@ export function cleanupPlay() {
   stopAutosave();
   removeKeyboardShortcuts();
   removeVisibilityHandler();
-  clearTimeout(state.hoverTimer);
-  state.hoverPopoverIdentity = null;
   if (state.sound) { state.sound.destroy(); state.sound = null; }
   if (state.particles) { state.particles.destroy(); state.particles = null; }
   state.session = null;
@@ -1352,78 +1437,6 @@ function removeVisibilityHandler() {
     document.removeEventListener('visibilitychange', state.visibilityHandler);
     state.visibilityHandler = null;
   }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// v0.20.0: HOVER POPOVER — Ctrl+hover → Lite, Shift+hover → Full Zoom
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Show the hover popover with the given Card Face view for the identity.
- * @param {Element} container - play-root container
- * @param {Element} cardEl - the hovered card wrapper element
- * @param {string} identity - card identity (e.g. "A♣")
- * @param {string} view - 'lite' or 'zoom'
- * Positioned above the hovered card element. For 'lite' view, includes an
- * "Advanced Rules →" button that opens the Advanced Card Rules View.
- * For 'zoom' view, renders the full dossier inline in the popover.
- */
-function showHoverPopover(container, cardEl, identity, view = 'lite') {
-  const popover = container.querySelector('#card-hover-popover');
-  if (!popover) return;
-  state.hoverPopoverIdentity = identity;
-
-  // Position the popover above the card
-  const cardRect = cardEl.getBoundingClientRect();
-  const containerRect = container.getBoundingClientRect();
-  const popoverLeft = cardRect.left - containerRect.left + cardRect.width / 2;
-  const popoverBottom = containerRect.bottom - cardRect.top + 8;
-  popover.style.left = `${popoverLeft}px`;
-  popover.style.bottom = `${popoverBottom}px`;
-
-  // Render the Card Face for the requested view
-  import('../card-face-renderer.js').then(({ renderCardFace }) => {
-    if (state.hoverPopoverIdentity !== identity) return; // stale
-    const faceView = view === 'zoom' ? 'zoom' : 'lite';
-    const zoomBtn = view === 'lite'
-      ? `<button class="card-hover-popover-zoom" data-hover-zoom="${esc(identity)}" aria-label="Open advanced card rules">Advanced Rules →</button>`
-      : '';
-    popover.innerHTML = `<div class="card-hover-popover-inner">
-      ${renderCardFace(identity, { view: faceView })}
-      ${zoomBtn}
-    </div>`;
-    popover.classList.add('visible');
-    popover.setAttribute('aria-hidden', 'false');
-
-    // Wire the Advanced Rules button (lite view only) — opens the
-    // Advanced Card Rules View (replaces the old card-face-dialog zoom).
-    const zoomBtnEl = popover.querySelector('[data-hover-zoom]');
-    if (zoomBtnEl) {
-      zoomBtnEl.addEventListener('click', () => {
-        openAdvancedCardRules(identity);
-      });
-    }
-
-    // Keep popover open when hovering over it
-    popover.addEventListener('mouseenter', () => {
-      clearTimeout(state.hoverTimer);
-    });
-    popover.addEventListener('mouseleave', () => {
-      hideHoverPopover(container);
-    });
-  });
-}
-
-/**
- * Hide the hover popover.
- */
-function hideHoverPopover(container) {
-  const popover = container.querySelector('#card-hover-popover');
-  if (!popover) return;
-  state.hoverPopoverIdentity = null;
-  popover.classList.remove('visible');
-  popover.setAttribute('aria-hidden', 'true');
-  popover.innerHTML = '';
 }
 
 /**
@@ -1631,6 +1644,9 @@ async function updatePlayerStatsOnTerminal(snapshot) {
   if (state.particles && isHumanWinner) {
     state.particles.confetti(3000);
   }
+  // Achievement finalization (finishMatch + terminal summary) is handled
+  // in renderActiveMatch when the terminal snapshot is rendered, so that
+  // the summary HTML can be injected into the terminal screen.
 }
 
 /**

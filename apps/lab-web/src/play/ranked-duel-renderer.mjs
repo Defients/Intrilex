@@ -7,7 +7,12 @@
 
 import { buildRankedDuelViewModel, buildGroupedActions, buildIntentGroups, resolveConcreteAction } from './ranked-duel-viewmodel.mjs';
 import { loadProfile } from './local-profile.mjs';
-import { declarationSummary, decisionKindLabel, timingLabel } from './action-presenter.js';
+import { declarationSummary, decisionKindLabel, timingLabel, familyLabel } from './action-presenter.js';
+import {
+  buildActionGroups, categoryLabel, categoryIcon, activeCategories,
+  groupsByCategory, isResponseWindow as isResponseWindowGroups,
+  resolveAction, ACTION_CATEGORY, SELECTION_TYPE, variantLabel,
+} from './action-presentation.mjs';
 import { derivePriorityContext, priorityBannerText, priorityTimeline, windowTypeLabel } from './authority/priority-projection.js';
 import { buildLegalActionContract, groupActionsByTiming, actionsForCard } from './authority/legal-action-adapter.js';
 import { buildImmediateExplanation, buildWhyExplanation, buildUnavailableExplanation, GuidanceMode } from './intelligence/action-explanation.js';
@@ -15,7 +20,13 @@ import { buildEventLog } from './orchestration/resolution-flow.js';
 import { renderTcgCard, renderTcgCardBack, renderTcgCardPreview } from './play-card-component.js';
 import { getCardDefinition, getSuit } from '../card-face-data.js';
 import { getCardArtBoardPath, getCardArtBoardPosition } from '../card-art-registry.js';
-import { getArchetypePersonality, getTerminalBanter } from './ai-personality.js';
+import { getArchetypePersonality } from './ai-personality.js';
+import { renderPlayHub, renderNewMatchSetup } from './ranked-duel-hub.mjs';
+import { renderTerminal, renderError, renderKeyboardHelp, formatPhase, formatTerminationReason } from './ranked-duel-terminal.mjs';
+
+// Re-export hub and terminal functions for backward compatibility
+// (tests and play-app.js import these from ranked-duel-renderer.mjs)
+export { renderPlayHub, renderNewMatchSetup };
 
 /**
  * Map a view-model card's statusMarkers into the runtimeState shape
@@ -88,7 +99,7 @@ function adaptSnapshotForViewModel(controllerSnapshot) {
     sessionId: controllerSnapshot.sessionId,
     humanPlayerId: humanId,
     status: controllerSnapshot.status,
-    isAiDecision: controllerSnapshot.status === 'AI_DECISION',
+    decision: controllerSnapshot.decision ?? null,
     legalActions: controllerSnapshot.decision?.legalActions ?? [],
     chat: [],
     state: {
@@ -107,6 +118,7 @@ function adaptSnapshotForViewModel(controllerSnapshot) {
       stack: pv.stack ?? [],
       swapAvailable: true,
       terminationReason: controllerSnapshot.match?.terminationReason ?? null,
+      winner: controllerSnapshot.match?.winner ?? null,
     },
   };
 }
@@ -193,7 +205,7 @@ function renderMatch(vm, opts, snapshot) {
       </div>
     </section>
     <section class="rd-cell rd-swap" data-grid="swap" aria-label="Swap bar">
-      ${renderSwapBar(vm)}
+      ${renderSwapBar(vm, opts, isHumanTurn, isReadOnly)}
     </section>
     <section class="rd-cell rd-stage" data-grid="stage" data-board="1" aria-label="Active stage">
       ${renderActiveStage(vm, opts, snapshot, priorityContext, immediate)}
@@ -229,7 +241,6 @@ function renderMatch(vm, opts, snapshot) {
     ${opts.inspectorCardId ? renderInspector(opts.inspectorCardId, cardRegistry, [], guidanceMode, opts.inspectorFaceView) : ''}
     ${opts.showKeyboardHelp ? renderKeyboardHelp() : ''}
     ${renderTutorialCoach(opts.tutorial)}
-    <div id="card-hover-popover" class="card-hover-popover" data-testid="card-hover-popover" role="tooltip" aria-hidden="true"></div>
   </div>`;
 }
 
@@ -424,7 +435,7 @@ function renderSharedBattlefield(vm, opts, snapshot, priorityContext, immediate)
         ${renderPileCard('Discard', zones.discard.count, gyTopCard, 'discard')}
         ${renderPileCard('Draw', zones.draw.count, null, 'draw')}
       </div>
-      ${renderSwapBar(vm)}
+      ${renderSwapBar(vm, opts, false, true)}
     </div>
     <div class="rd-active-stage-area">
       ${renderActiveStage(vm, opts, snapshot, priorityContext, immediate)}
@@ -443,7 +454,12 @@ function renderPileCard(label, count, topCard, dataPile) {
   const topHtml = topCard
     ? `<div class="rd-pile-top" aria-label="Top card">${esc(topCard.identity)}</div>`
     : '';
+  // Draw pile uses the mini cardback image as background with label overlaid
+  const drawBg = dataPile === 'draw' && !isEmpty
+    ? '<div class="rd-pile-cardback mini" aria-hidden="true"></div>'
+    : '';
   return `<div class="${cls}" data-pile="${dataPile}" aria-label="${label} pile, ${count} cards" role="button" tabindex="0">
+    ${drawBg}
     <div class="rd-pile-face">
       <div class="rd-pile-label">${label}</div>
       <div class="rd-pile-count">${count}</div>
@@ -605,12 +621,12 @@ function renderResolutionStack(vm) {
       ${items.map((item, i) => {
         const cls = item.isResolving ? 'rd-stack-entry resolving' : 'rd-stack-entry';
         const actor = item.actorName || (item.isHuman ? 'You' : vm.opponent.displayName);
-        const status = item.isResolving ? 'Resolving' : 'Pending';
+        const status = item.isResolving ? 'Resolving' : (item.status ?? 'Pending');
         return `<div class="${cls}" style="--stack-idx:${i}">
           <div class="rd-stack-entry-num">${i + 1}</div>
           <div class="rd-stack-entry-body">
             <div class="rd-stack-entry-desc">${esc(item.description)}</div>
-            <div class="rd-stack-entry-meta">${esc(actor)} \u00b7 ${status}</div>
+            <div class="rd-stack-entry-meta">${esc(actor)} \u00b7 ${esc(status)}</div>
           </div>
         </div>`;
       }).join('')}
@@ -620,6 +636,9 @@ function renderResolutionStack(vm) {
 }
 
 // ── Contextual Actions (rendered in right rail, bottom section) ──
+// v0.26.0: Re-architected with progressive disclosure:
+//   Intent → Variant → Target → Confirmation
+// Uses action-presentation.mjs for semantic grouping.
 
 function renderActionBar(vm, opts, isHumanTurn, isAiTurn, isReadOnly, priorityContext, immediate) {
   const passAction = vm.actions.find(a => a.isPass);
@@ -647,130 +666,405 @@ function renderActionBar(vm, opts, isHumanTurn, isAiTurn, isReadOnly, priorityCo
     </div>`;
   }
 
-  // Human turn with legal actions but no card selected yet — show a meaningful prompt
-  if (isHumanTurn && !opts.selectedSourceCardId && !opts.selectedActionId && !opts.selectedIntentKey) {
-    const legalCount = actions.filter(a => !a.isPass).length;
-    const passBtn = passAction && !isReadOnly
-      ? `<button class="rd-action-pass" data-action-id="${esc(passAction.actionId)}" data-key="P">End Action</button>`
-      : '<button class="rd-action-pass disabled" disabled aria-disabled="true">End Action</button>';
-    return `<div class="rd-contextual-actions awaiting-selection" aria-label="Actions" role="region" data-testid="action-rail">
-      <div class="rd-actions-header">YOUR ACTION</div>
-      <div class="rd-action-prompt">${legalCount > 0
-        ? `${legalCount} legal action${legalCount > 1 ? 's' : ''} available.`
-        : 'No legal actions.'}</div>
-      <div class="rd-action-hint">Select a card from your hand.</div>
-      <div class="rd-action-footer">${passBtn}</div>
-    </div>`;
+  // Build card registry from vm for identity lookups
+  const cardRegistry = {};
+  const handCards = vm?.battlefield?.humanHand ?? [];
+  for (const c of handCards) { if (c.entityId) cardRegistry[c.entityId] = c; }
+  const oppPR = vm?.battlefield?.topPR ?? [];
+  const oppER = vm?.battlefield?.topER ?? [];
+  const humPR = vm?.battlefield?.bottomPR ?? [];
+  const humER = vm?.battlefield?.bottomER ?? [];
+  [...oppPR, ...oppER, ...humPR, ...humER].forEach(c => { if (c?.entityId) cardRegistry[c.entityId] = c; });
+  // Include swap bar cards — face-down cards need slot labels for target display.
+  // Apply the SAME visual reordering as renderSwapBar (face-up → center first)
+  // so labels match what the player sees on the board.
+  const swapSlots = vm?.zones?.swap ?? [];
+  const slotLabels = ['Left', 'Center', 'Right'];
+  const visualOrder = [null, null, null];
+  const faceUpSlots = swapSlots.filter(s => s && s.card);
+  const faceDownOrEmpty = swapSlots.filter(s => !s || !s.card);
+  if (faceUpSlots.length > 0) visualOrder[1] = faceUpSlots[0];
+  if (faceUpSlots.length > 1) visualOrder[0] = faceUpSlots[1];
+  if (faceUpSlots.length > 2) visualOrder[2] = faceUpSlots[2];
+  let fdIdx = 0;
+  for (let i = 0; i < 3; i++) {
+    if (!visualOrder[i]) visualOrder[i] = faceDownOrEmpty[fdIdx++] || null;
   }
-
-  // Build intent groups
-  const intents = buildIntentGroups(actions);
-  const selectedSourceCardId = opts.selectedSourceCardId;
-  const selectedActionId = opts.selectedActionId;
-  const selectedIntentKey = opts.selectedIntentKey ?? null;
-  const selectedIntent = selectedIntentKey
-    ? intents.find(i => i.intentKey === selectedIntentKey)
-    : intents.find(i => i.actions.some(a => a.actionId === selectedActionId));
-
-  const { groups, groupOrder } = buildGroupedActions(actions);
-  const timingByIntent = new Map();
-  for (const [timingKey, groupActions] of Object.entries(groups)) {
-    for (const a of groupActions) {
-      const key = `${a.family}|${a.mode ?? ''}`;
-      timingByIntent.set(key, timingKey);
+  visualOrder.forEach((s, i) => {
+    if (s?.card?.entityId) {
+      cardRegistry[s.card.entityId] = s.card;
     }
+    if (s?.entityId) {
+      cardRegistry[s.entityId] = {
+        entityId: s.entityId,
+        identity: s.faceDown ? (slotLabels[i] ?? `Slot ${i + 1}`) : (s.card?.identity ?? `Slot ${i + 1}`),
+        faceDown: s.faceDown === true,
+        slotIndex: i,
+      };
+    }
+  });
+
+  // Build semantic action groups
+  const groups = buildActionGroups(actions, {
+    cardRegistry,
+    selectedSourceCardId: opts.selectedSourceCardId ?? null,
+  });
+
+  if (groups.length === 0 && !passAction) {
+    return `<div class="rd-contextual-actions empty" aria-label="Actions" role="region">
+      <div class="rd-actions-header">ACTIONS</div>
+      <span class="rd-action-status">No actions available</span>
+    </div>`;
   }
 
-  // Filter out system group — these are setup/phase controls, not player actions
-  const playerGroupOrder = groupOrder.filter(g => g !== 'system');
+  // Determine panel state: overview, variant-selection, target-selection, confirm
+  const selectedGroupId = opts.selectedIntentKey ?? null;
+  const selectedActionId = opts.selectedActionId ?? null;
+  const selectedSourceCardId = opts.selectedSourceCardId ?? null;
 
-  const groupLabels = {
-    primary: 'Primary', quick: 'Quick', interrupt: 'Interrupt',
-    response: 'Response', score: 'Score', pass: 'Pass', system: 'System',
-  };
-  const groupIcons = {
-    primary: '\u25C6', quick: '\u26A1', interrupt: '\u2726', response: '\u21A9',
-    score: '\u2605', pass: '\u2298', system: '\u2699',
-  };
+  // Find the selected group
+  const selectedGroup = selectedGroupId
+    ? groups.find(g => g.id === selectedGroupId)
+    : null;
 
-  const groupsHtml = playerGroupOrder.map(key => {
-    const groupIntents = intents.filter(i => timingByIntent.get(i.intentKey) === key);
-    if (groupIntents.length === 0) return '';
-
-    const buttons = groupIntents.map(intent => {
-      const cls = ['rd-intent-btn'];
-      if (intent.isPass) cls.push('pass');
-      const isSelected = selectedIntent && selectedIntent.intentKey === intent.intentKey;
-      if (isSelected) cls.push('selected');
-      const hasSources = intent.sourceCardIds.length > 0;
-      const sourceMatches = hasSources && selectedSourceCardId && intent.sourceCardIds.includes(selectedSourceCardId);
-      if (sourceMatches || !hasSources || !selectedSourceCardId) cls.push('available');
-      else cls.push('dimmed');
-      const disabledAttr = (sourceMatches || !hasSources || !selectedSourceCardId) ? '' : 'disabled';
-
-      const timingBadge = intent.timingClass && intent.timingClass !== 'ACTION' && intent.timingClass !== 'ORDINARY'
-        ? `<span class="rd-timing-badge">${esc(timingLabel(intent.timingClass))}</span>` : '';
-      const superBadge = intent.isSuper ? '<span class="rd-super-badge">SUPER</span>' : '';
-      const spadesBadge = intent.isSpadesVariant ? '<span class="rd-spades-badge">\u2660</span>' : '';
-      const costHint = intent.costs && intent.costs.length > 0
-        ? `<span class="rd-action-cost">${intent.costs.map(c => esc(c.label ?? c.type ?? '')).join(', ')}</span>` : '';
-      const sourceCount = intent.sourceCardIds.length > 1
-        ? `<span class="rd-intent-count">${intent.sourceCardIds.length}</span>` : '';
-
-      return `<button class="${cls.join(' ')}" data-intent-key="${esc(intent.intentKey)}" data-action-family="${esc(intent.family)}" aria-label="${esc(intent.displayLabel)}" ${disabledAttr}>
-        <span class="rd-action-label">${esc(intent.shortLabel || intent.displayLabel)}</span>
-        ${timingBadge}${superBadge}${spadesBadge}${costHint}${sourceCount}
-      </button>`;
-    }).join('');
-
-    return `<div class="rd-action-group" data-testid="action-group-${esc(key)}">
-      <span class="rd-action-group-label"><span class="rd-action-group-icon" aria-hidden="true">${groupIcons[key]}</span> ${esc(groupLabels[key])}</span>
-      ${buttons}
-    </div>`;
-  }).join('');
-
-  // Source/target/confirm sections
-  let sourceSection = '';
-  let targetSection = '';
-  let confirmSection = '';
-
-  if (selectedIntent && !selectedActionId) {
-    sourceSection = renderSourceSelection(selectedIntent, opts, vm);
-  } else if (selectedActionId) {
+  // If a concrete action is selected, show confirmation or target selection
+  if (selectedActionId) {
     const selectedAction = actions.find(a => a.actionId === selectedActionId);
     if (selectedAction) {
       if (selectedAction.targets?.required && !(opts.selectedTargets?.length > 0)) {
-        targetSection = renderTargetSelection(selectedAction, opts);
-      } else {
-        confirmSection = renderConfirmation(selectedAction, opts);
+        return renderActionBarWithTargetSelection(vm, opts, selectedAction, groups, passHtml, priorityContext, immediate, cardRegistry);
       }
+      return renderActionBarWithConfirm(vm, opts, selectedAction, groups, passHtml, priorityContext, immediate, cardRegistry);
     }
   }
 
+  // If a group is selected and it has variants, show variant selection
+  if (selectedGroup && selectedGroup.selectionType !== SELECTION_TYPE.DIRECT && selectedGroup.variants?.length > 1) {
+    return renderActionBarWithVariants(vm, opts, selectedGroup, passHtml, priorityContext, immediate, cardRegistry);
+  }
+
+  // If a group is selected and it's direct or single-variant, try to auto-resolve
+  // (the event handler handles this, but if we get here, just show the overview)
+
+  // Default: show the overview with all groups
+  return renderActionBarOverview(vm, opts, groups, passHtml, priorityContext, immediate, selectedSourceCardId, cardRegistry);
+}
+
+/**
+ * Render the overview state — all action groups organized by category.
+ * This is the normal resting state of the ACTIONS panel.
+ */
+function renderActionBarOverview(vm, opts, groups, passHtml, priorityContext, immediate, selectedSourceCardId, cardRegistry) {
+  const cats = activeCategories(groups);
+  const isResponse = isResponseWindowGroups(groups);
+  const isStartPhase = vm.match.phase === 'Start' || vm.match.phase === 'SETUP';
+
   // Response window indicator
-  const isResponseWindow = priorityContext?.windowType === 'response' || priorityContext?.windowType === 'interrupt';
-  const responseIndicator = isResponseWindow && immediate?.passInfo
-    ? `<div class="rd-response-hint" data-testid="pass-info">${esc(immediate.passInfo)}</div>`
-    : '';
+  const responseIndicator = isResponse && immediate?.passInfo
+    ? `<div class="rd-response-hint" data-testid="pass-info">${esc(immediate.passInfo)}</div>` : '';
 
   // Priority indicator
   const priorityOwner = vm.match.priorityOwnerId === vm.human.playerId ? 'You' :
     (vm.match.priorityOwnerId === vm.opponent.playerId ? vm.opponent.displayName : '');
   const priorityIndicator = priorityOwner ? `<div class="rd-action-priority">\u25CF Priority: ${esc(priorityOwner)}</div>` : '';
 
+  // Selected card header
+  let selectedHeader = '';
+  if (selectedSourceCardId) {
+    const card = cardRegistry[selectedSourceCardId];
+    const identity = card?.identity ?? '?';
+    const matchingGroups = groups.filter(g => g.selectedCardMatch);
+    const intentLabels = matchingGroups.map(g => g.label).join(' \u00b7 ');
+    selectedHeader = `<div class="rd-selected-card-header" data-testid="selected-card-header">
+      <span class="rd-selected-card-label">SELECTED</span>
+      <span class="rd-selected-card-id">${esc(identity)}</span>
+      ${intentLabels ? `<span class="rd-selected-card-intents">${esc(intentLabels)}</span>` : ''}
+    </div>`;
+  }
+
+  // Build category sections
+  const sectionsHtml = cats.map(cat => {
+    const catGroups = groupsByCategory(groups, cat);
+    if (catGroups.length === 0) return '';
+
+    const catLabel = categoryLabel(cat);
+    const catIcon = categoryIcon(cat);
+    const isResponseCat = cat === ACTION_CATEGORY.RESPOND;
+
+    const groupButtons = catGroups.map(group => {
+      return renderGroupButton(group, selectedSourceCardId, cardRegistry, isResponseCat);
+    }).join('');
+
+    return `<div class="rd-action-category" data-testid="action-category-${esc(cat)}">
+      <div class="rd-action-category-header">
+        <span class="rd-action-category-icon" aria-hidden="true">${catIcon}</span>
+        <span class="rd-action-category-label">${esc(catLabel)}</span>
+      </div>
+      <div class="rd-action-category-body">${groupButtons}</div>
+    </div>`;
+  }).join('');
+
+  // In the Start phase, show preview buttons for Action-phase intents that
+  // will become available after entering the Action Phase.
+  let previewHtml = '';
+  if (isStartPhase && !selectedSourceCardId) {
+    const previews = [];
+    // Draw from DP
+    const dpCount = vm.zones?.draw?.count ?? 0;
+    if (dpCount > 0) {
+      const handCount = vm.battlefield?.humanHand?.length ?? 0;
+      const drawLabel = handCount === 0 ? '2x Draw (empty hand)' : 'Draw from Pile';
+      previews.push({ label: drawLabel, desc: 'Draw card(s) from the top of the Draw Pile.', icon: '\u2193' });
+    }
+    // Face-up Draw from swap bar
+    const swapSlots = vm.zones?.swap ?? [];
+    const hasFaceUp = swapSlots.some(s => s && s.card && !s.faceDown);
+    if (hasFaceUp) {
+      previews.push({ label: 'Face-up Draw', desc: 'Take a face-up card from the Swap Bar.', icon: '\u2191' });
+    }
+    if (previews.length > 0) {
+      const previewBtns = previews.map(p => {
+        return `<button class="rd-group-btn preview" disabled aria-label="${esc(p.label)} (available in Action Phase)" title="Available after entering Action Phase">
+    <span class="rd-group-main">
+      <span class="rd-group-label">${esc(p.label)}</span>
+    </span>
+    <span class="rd-group-desc">${esc(p.desc)}</span>
+    <span class="rd-group-meta"><span class="rd-timing-badge preview-badge">Action Phase</span></span>
+  </button>`;
+      }).join('');
+      previewHtml = `<div class="rd-action-category rd-preview-category" data-testid="action-category-preview">
+      <div class="rd-action-category-header">
+        <span class="rd-action-category-icon" aria-hidden="true">\u29C9</span>
+        <span class="rd-action-category-label">Upcoming</span>
+      </div>
+      <div class="rd-action-category-body">${previewBtns}</div>
+    </div>`;
+    }
+  }
+
+  // Prompt text
+  const legalCount = groups.filter(g => !g.isPass).length;
+  const promptText = '';
+
   return `<div class="rd-contextual-actions" aria-label="Actions" role="region" data-testid="action-rail">
-    <div class="rd-actions-header">ACTIONS</div>
+    <div class="rd-actions-header">${isResponse ? 'RESPONSE' : 'ACTIONS'}</div>
     ${responseIndicator}
-    <div class="rd-action-groups">
-      ${groupsHtml}
-    </div>
-    ${sourceSection}
-    ${targetSection}
-    ${confirmSection}
-    <div class="rd-action-footer">
-      ${passHtml}
-    </div>
+    ${selectedHeader}
+    ${promptText}
+    <div class="rd-action-categories">${sectionsHtml}${previewHtml}</div>
+    <div class="rd-action-footer">${passHtml}</div>
     ${priorityIndicator}
+  </div>`;
+}
+
+/**
+ * Render a single action group as a button/card.
+ * Shows the group label, description, variant count, and timing metadata.
+ */
+function renderGroupButton(group, selectedSourceCardId, cardRegistry, isResponseCat) {
+  const cls = ['rd-group-btn'];
+  if (group.isPass) cls.push('pass');
+  if (group.selectedCardMatch) cls.push('card-match');
+  if (isResponseCat) cls.push('response');
+
+  // Determine if this group is available given the selected card
+  const hasSources = group.sourceCardIds.length > 0;
+  const sourceMatches = hasSources && selectedSourceCardId && group.sourceCardIds.includes(selectedSourceCardId);
+  if (hasSources && selectedSourceCardId && !sourceMatches) {
+    cls.push('dimmed');
+  } else {
+    cls.push('available');
+  }
+  const disabledAttr = (hasSources && selectedSourceCardId && !sourceMatches) ? 'disabled aria-disabled="true"' : '';
+
+  // Variant count badge ("N options" or "N cards")
+  let countBadge = '';
+  if (group.variantCount > 1) {
+    const countLabel = group.selectionType === SELECTION_TYPE.SOURCE
+      ? `${group.variantCount} cards`
+      : group.selectionType === SELECTION_TYPE.COMBINATION
+        ? `${group.variantCount} configs`
+        : group.selectionType === SELECTION_TYPE.TARGET
+          ? `${group.variantCount} targets`
+          : `${group.variantCount} options`;
+    countBadge = `<span class="rd-group-count">${esc(countLabel)}</span>`;
+  }
+
+  // Score value badge
+  const scoreBadge = group.scoreValue != null
+    ? `<span class="rd-group-score">+${esc(group.scoreValue)}</span>` : '';
+
+  // Timing badge (only for non-standard timing)
+  const timingBadge = group.timingClass && group.timingClass !== 'ACTION' && group.timingClass !== 'ORDINARY'
+    ? `<span class="rd-timing-badge">${esc(group.timingLabel)}</span>` : '';
+
+  // Full Turn indicator
+  const turnBadge = group.isFullTurn
+    ? '<span class="rd-turn-badge">Full Turn</span>' : '';
+
+  // Description
+  const descHtml = group.description
+    ? `<span class="rd-group-desc">${esc(group.description)}</span>` : '';
+
+  return `<button class="${cls.join(' ')}" data-group-id="${esc(group.id)}" data-action-family="${esc(group.family)}" aria-label="${esc(group.label)}${group.variantCount > 1 ? ` — ${group.variantCount} options` : ''}" ${disabledAttr}>
+    <span class="rd-group-main">
+      <span class="rd-group-label">${esc(group.label)}</span>
+      ${countBadge}${scoreBadge}
+    </span>
+    ${descHtml}
+    <span class="rd-group-meta">${timingBadge}${turnBadge}</span>
+  </button>`;
+}
+
+/**
+ * Render the variant selection state — player has chosen a group and
+ * now needs to pick which specific variant (source card, effect, configuration).
+ */
+function renderActionBarWithVariants(vm, opts, group, passHtml, priorityContext, immediate, cardRegistry) {
+  const variants = group.variants ?? [];
+  const isResponse = group.category === ACTION_CATEGORY.RESPOND;
+
+  // Build variant buttons
+  const variantButtons = variants.map(v => {
+    const cls = ['rd-variant-btn'];
+    // Check if this variant matches the selected source card
+    if (opts.selectedSourceCardId && v.sourceHandles.includes(opts.selectedSourceCardId)) {
+      cls.push('card-match');
+    }
+    // Show source card identities for source-type variants, but only when
+    // the detail differs from the label (avoids "10♠ 10♠" duplication for
+    // swap-bar face-down where the label IS the source card identity)
+    let detail = '';
+    if (v.sourceHandles.length > 0) {
+      const srcs = v.sourceHandles.map(id => cardRegistry[id]?.identity ?? '?').join(' + ');
+      if (srcs !== v.label) {
+        detail = `<span class="rd-variant-detail">${esc(srcs)}</span>`;
+      }
+    }
+    return `<button class="${cls.join(' ')}" data-variant-action-id="${esc(v.actionId)}" aria-label="${esc(v.label)}">
+      <span class="rd-variant-label">${esc(v.label)}</span>
+      ${detail}
+    </button>`;
+  }).join('');
+
+  return `<div class="rd-contextual-actions variant-mode" aria-label="Actions" role="region" data-testid="action-rail">
+    <div class="rd-actions-header">
+      <button class="rd-back-btn" data-action="cancel-variant" aria-label="Back to actions">\u2190</button>
+      <span class="rd-actions-title">${esc(group.label)}</span>
+    </div>
+    <div class="rd-variant-prompt">Choose ${esc(variantPromptLabel(group))}:</div>
+    <div class="rd-variant-list" role="group" aria-label="${esc(group.label)} variants">${variantButtons}</div>
+    <div class="rd-action-footer">
+      <button class="rd-cancel-btn" data-action="cancel-variant" aria-label="Cancel variant selection">Cancel</button>
+    </div>
+  </div>`;
+}
+
+/**
+ * Generate the prompt label for variant selection based on selection type.
+ */
+function variantPromptLabel(group) {
+  switch (group.selectionType) {
+    case SELECTION_TYPE.SOURCE: return 'a card';
+    case SELECTION_TYPE.COMBINATION: return 'a configuration';
+    case SELECTION_TYPE.TARGET: return 'a target';
+    case SELECTION_TYPE.VARIANT: return 'an effect';
+    default: return 'an option';
+  }
+}
+
+/**
+ * Render the target selection state — player has chosen a concrete action
+ * and now needs to pick a target.
+ */
+function renderActionBarWithTargetSelection(vm, opts, action, groups, passHtml, priorityContext, immediate, cardRegistry) {
+  let targets = action.targets?.legalTargetIds ?? [];
+  const isSwapFaceDown = action.family === 'swap-bar' && action.mode === 'face-down';
+
+  // For swap-bar face-down: the engine pre-pairs each (source, target) as a
+  // separate action. When the player picked a source card (variant), only
+  // that action's single target was shown. Collect ALL face-down targets
+  // from ALL actions in the group that share the same source handle, so
+  // the player can choose which slot to place on.
+  if (isSwapFaceDown) {
+    const sourceId = (action.sourceEntityIds ?? action.sourceHandles ?? [])[0];
+    if (sourceId && groups) {
+      const swapGroup = groups.find(g => g.family === 'swap-bar' && g.mode === 'face-down');
+      if (swapGroup) {
+        const allTargets = new Set();
+        for (const a of swapGroup.actions) {
+          const aSource = (a.sourceHandles ?? a.sourceEntityIds ?? [])[0];
+          if (aSource === sourceId) {
+            for (const tid of (a.targetHandles ?? a.targets?.legalTargetIds ?? [])) {
+              allTargets.add(tid);
+            }
+          }
+        }
+        if (allTargets.size > 1) targets = [...allTargets];
+      }
+    }
+  }
+
+  const targetButtons = targets.map(tid => {
+    const card = cardRegistry[tid];
+    let label = card?.identity ?? tid;
+    // For face-down swap bar targets, show slot position labels
+    if (isSwapFaceDown && card?.faceDown) {
+      label = card?.identity ?? 'Face-down';
+    }
+    const isSelected = opts.selectedTargets?.includes(tid);
+    return `<button class="rd-target-btn ${isSelected ? 'selected' : ''}" data-testid="target-button" data-target-id="${esc(tid)}" aria-label="Select target ${esc(label)}">
+      ${esc(label)}
+    </button>`;
+  }).join('');
+
+  const actionLabel = action.displayLabel ?? action.shortLabel ?? 'Action';
+
+  return `<div class="rd-contextual-actions target-mode" aria-label="Actions" role="region" data-testid="action-rail">
+    <div class="rd-actions-header">
+      <button class="rd-back-btn" data-action="cancel-target" aria-label="Back">\u2190</button>
+      <span class="rd-actions-title">${esc(actionLabel)}</span>
+    </div>
+    <div class="rd-target-prompt">Select a target <span class="rd-target-count">(${targets.length} available)</span></div>
+    <div class="rd-target-list" role="group" aria-label="Select a target">${targetButtons}</div>
+    <div class="rd-action-footer">
+      <button class="rd-cancel-btn" data-action="cancel-target" aria-label="Cancel target selection">Cancel</button>
+    </div>
+  </div>`;
+}
+
+/**
+ * Render the confirmation state — player has chosen everything and
+ * needs to confirm the action.
+ */
+function renderActionBarWithConfirm(vm, opts, action, groups, passHtml, priorityContext, immediate, cardRegistry) {
+  const summary = action.displayLabel ?? action.shortLabel ?? 'Action';
+  const sourceIds = action.sourceEntityIds ?? [];
+  const targetIds = action.targets?.legalTargetIds ?? [];
+  const sourceLabels = sourceIds.map(id => cardRegistry[id]?.identity ?? id).join(', ');
+  const targetLabels = targetIds.map(id => cardRegistry[id]?.identity ?? id).join(', ');
+  const costsText = action.costs?.length > 0
+    ? action.costs.map(c => c.label ?? c.type ?? '').join(', ') : '';
+  const isFullTurn = action.timingClass === 'ACTION' && !action.isResponse;
+  const timingLbl = timingLabel(action.timingClass ?? 'ACTION');
+
+  return `<div class="rd-contextual-actions confirm-mode" aria-label="Actions" role="region" data-testid="action-rail">
+    <div class="rd-actions-header">
+      <button class="rd-back-btn" data-action="cancel-confirm" aria-label="Back">\u2190</button>
+      <span class="rd-actions-title">Confirm</span>
+    </div>
+    <div class="rd-confirm-box" data-testid="action-confirm">
+      <div class="rd-confirm-action">${esc(summary)}</div>
+      ${sourceLabels ? `<div class="rd-confirm-sources">Source: ${esc(sourceLabels)}</div>` : ''}
+      ${targetLabels ? `<div class="rd-confirm-targets">Target: ${esc(targetLabels)}</div>` : ''}
+      ${isFullTurn ? '<div class="rd-confirm-turn">Full Turn commitment</div>' : ''}
+      ${timingLbl && timingLbl !== 'Action' ? `<div class="rd-confirm-timing">${esc(timingLbl)}</div>` : ''}
+      ${costsText ? `<div class="rd-confirm-costs">Costs: ${esc(costsText)}</div>` : ''}
+    </div>
+    <div class="rd-action-footer">
+      <button class="rd-confirm-btn" data-testid="confirm-action" data-action-id="${esc(action.actionId)}" aria-label="Confirm: ${esc(summary)}">Confirm</button>
+      <button class="rd-cancel-btn" data-action="cancel-confirm" aria-label="Cancel">Cancel</button>
+    </div>
   </div>`;
 }
 
@@ -926,7 +1220,11 @@ function renderPile(label, count, topCard, dataPile) {
   const topHtml = topCard
     ? `<div class="rd-pile-topcard">${esc(topCard.identity)}</div>`
     : (count > 0 ? '' : '<div class="rd-pile-empty">Empty</div>');
+  const drawBg = dataPile === 'draw' && count > 0
+    ? '<div class="rd-pile-cardback mini" aria-hidden="true"></div>'
+    : '';
   return `<div class="rd-pile" data-pile="${dataPile}" title="${label} (${count})">
+    ${drawBg}
     <div class="rd-pile-label">${label}</div>
     <div class="rd-pile-count">${count}</div>
     ${topHtml}
@@ -961,7 +1259,7 @@ function renderBattlefield(vm, opts) {
       ${renderBoardRow(oppER, 'ER')}
       ${renderBoardRow(oppPR, 'PR')}
     </section>
-    ${renderSwapBar(vm)}
+    ${renderSwapBar(vm, opts, false, true)}
     <section class="rd-human-zone" aria-label="Your board">
       ${renderBoardRow(humPR, 'PR')}
       ${renderBoardRow(humER, 'ER')}
@@ -1034,13 +1332,15 @@ function renderProfileBlock(plate, side, vm) {
   </div>`;
 
   // Compact identity row (avatar + active indicator) — sits outside the banner
-  const identityHtml = `<div class="rd-profile-identity">
-    <div class="rd-profile-avatar ${side} ${isActive ? 'active' : ''}">${esc(plate.monogram)}</div>
-  </div>`;
+  const identityHtml = side === 'opponent'
+    ? ''
+    : `<div class="rd-profile-identity">
+      <div class="rd-profile-avatar ${side} ${isActive ? 'active' : ''}">${esc(plate.monogram)}</div>
+    </div>`;
 
-  // Opponent: banner on top, avatar at bottom; Player: avatar on top, banner at bottom
+  // Opponent: banner only; Player: avatar on top, banner at bottom
   const inner = side === 'opponent'
-    ? `${bannerHtml}${identityHtml}`
+    ? `${bannerHtml}`
     : `${identityHtml}${bannerHtml}`;
 
   return `<div class="rd-profile-block ${side} ${isActive ? 'active' : ''}" data-testid="profile-${side}">
@@ -1105,7 +1405,7 @@ function renderCard(card, handOpts = {}) {
   const classes = ['rd-card'];
   if (handOpts.isHand) classes.push('hand-card');
   if (card.statusMarkers?.some(m => m.type === 'TAPPED')) classes.push('tapped');
-  if (card.legalSource || (handOpts.selectedSourceCardId && card.entityId === handOpts.selectedSourceCardId)) classes.push('selected');
+  if (handOpts.selectedSourceCardId && card.entityId === handOpts.selectedSourceCardId) classes.push('selected');
   if (card.legalSource) classes.push('legal-source', 'has-legal-actions');
   if (!card.legalSource && handOpts.isHand) classes.push('no-legal-actions');
   if (card.isSuper) classes.push('super-eligible');
@@ -1126,7 +1426,7 @@ function renderCard(card, handOpts = {}) {
   // using the authoritative card-face-data registry. The .rd-card wrapper
   // carries interaction classes/data attributes; the .tcg-card inside is
   // the visual card face. Hand cards get mechanic icons in the center
-  // (the Board appearance); on hover for 0.25s a Lite popover appears.
+  // (the Board appearance).
   const tcgCardHtml = renderTcgCard(vmCardToTcgCard(card), {
     showMechanicIcons: handOpts.isHand === true,
   });
@@ -1140,9 +1440,20 @@ function renderCard(card, handOpts = {}) {
 
 // ── Swap bar ───────────────────────────────────────────────────
 
-function renderSwapBar(vm) {
+function renderSwapBar(vm, opts, isHumanTurn, isReadOnly) {
   const { swap } = vm.zones;
   const rawSlots = swap && swap.length ? swap : [null, null, null];
+
+  // Find face-up-draw actions so we can show "Take" buttons on eligible cards
+  const faceUpDrawActions = isHumanTurn && !isReadOnly
+    ? (vm.actions || []).filter(a => a.family === 'swap-bar' && a.mode === 'face-up-draw')
+    : [];
+  const faceUpDrawByTarget = new Map();
+  for (const a of faceUpDrawActions) {
+    const tid = (a.targetHandles ?? a.targets?.legalTargetIds ?? [])[0];
+    if (tid) faceUpDrawByTarget.set(tid, a);
+  }
+
   // Ensure exactly 3 slots; reorder so any face-up card is in the MIDDLE slot
   const slots = [null, null, null];
   const cards = rawSlots.filter(s => s && s.card);
@@ -1162,20 +1473,27 @@ function renderSwapBar(vm) {
       // Use renderTcgCard for full card face rendering (rank, suit, art, points)
       const tcgCard = vmCardToTcgCard(s.card);
       const cardHtml = renderTcgCard(tcgCard, { zoneClass: 'swap' });
+      // "Take" button for face-up swap cards when the player can draw them
+      const cardId = s.card.entityId ?? s.entityId;
+      const drawAction = faceUpDrawByTarget.get(cardId);
+      const takeBtn = drawAction
+        ? `<button class="rd-swap-take-btn" data-action="swap-take" data-action-id="${esc(drawAction.actionId)}" data-testid="swap-take-btn" aria-label="Take ${esc(s.card.identity ?? 'card')} from swap bar">Take</button>`
+        : '';
       return `<div class="rd-swap-slot has-card" data-swap-index="${i}" aria-label="Swap slot ${i+1}: ${esc(s.card.identity ?? 'card')}">
         ${cardHtml}
+        ${takeBtn}
       </div>`;
     }
     if (s && s.faceDown) {
-      // Face-down card in swap — show card back, not empty
+      // Face-down card in swap — show mini card back, not empty
       return `<div class="rd-swap-slot face-down" data-swap-index="${i}" aria-label="Swap slot ${i+1}: face down" aria-hidden="true">
-        ${renderTcgCardBack()}
+        ${renderTcgCardBack('mini')}
       </div>`;
     }
     return `<div class="rd-swap-slot empty" data-swap-index="${i}" aria-hidden="true"></div>`;
   }).join('');
   return `<div class="rd-swap-bar" aria-label="Swap bar">
-    <span class="rd-swap-label">SWAP</span>
+    <span class="rd-swap-label">SWAP BAR</span>
     <div class="rd-swap-slots">
       ${slotHtml}
     </div>
@@ -1431,76 +1749,7 @@ function renderConfirmation(action, opts) {
   </div>`;
 }
 
-// ── Terminal ───────────────────────────────────────────────────
-
-function renderTerminal(vm, opts) {
-  const outcome = vm.match.terminationReason?.includes('VICTORY')
-    ? (vm.human.secured >= vm.human.goal ? 'win' : 'loss')
-    : 'draw';
-  const outcomeLabel = outcome === 'win' ? 'VICTORY' : outcome === 'loss' ? 'DEFEAT' : 'DRAW';
-  const resultIcon = outcome === 'win' ? '🏆' : outcome === 'loss' ? '💀' : '🤝';
-
-  // v0.19.0: AI banter on terminal
-  const archetype = vm.opponent?.archetype ?? '';
-  const banter = getTerminalBanter(archetype, outcome === 'loss');
-
-  return `<div class="play-terminal ${outcome}" data-testid="play-terminal">
-    <div class="terminal-result-banner ${outcome}">
-      <span class="terminal-result-icon" aria-hidden="true">${resultIcon}</span>
-      <h2>Match Complete</h2>
-      <p class="terminal-result" data-testid="terminal-result">${outcomeLabel === 'VICTORY' ? 'You won!' : outcomeLabel === 'DEFEAT' ? 'You lost.' : 'Draw.'}</p>
-      <p class="terminal-banter" data-testid="terminal-banter">${esc(banter)}</p>
-    </div>
-    <dl class="terminal-details">
-      <dt>Winner</dt><dd data-testid="terminal-winner">${esc(outcome === 'win' ? 'You' : outcome === 'loss' ? 'AI' : 'Draw')}</dd>
-      <dt>Termination</dt><dd>${esc(formatTerminationReason(vm.match.terminationReason || 'UNKNOWN'))}</dd>
-      <dt>Full Turns</dt><dd>${vm.match.fullTurnSequence ?? 0}</dd>
-    </dl>
-    <div class="terminal-actions">
-      <button class="primary-button" data-testid="watch-replay" data-action="watch-replay">Watch replay</button>
-      ${opts.isNetworkMatch ? '<button class="secondary-button" data-testid="download-replay" data-action="download-replay">Download certified replay</button>' : ''}
-      ${opts.isNetworkMatch ? '' : '<button class="secondary-button" data-testid="rematch-same-seed" data-action="rematch">Rematch same seed</button>'}
-      ${opts.isNetworkMatch ? '' : '<button class="secondary-button" data-testid="new-seed" data-action="new-seed">New seed</button>'}
-      <a class="secondary-button" data-testid="open-rank-anatomy" href="#/ranks">Open Rank Anatomy</a>
-      <a class="secondary-button" data-testid="open-history" href="#/history">Open History</a>
-      <button class="secondary-button" data-testid="return-to-hub" data-action="return-to-hub">Return to Play hub</button>
-    </div>
-  </div>`;
-}
-
-// ── Error ──────────────────────────────────────────────────────
-
-function renderError(vm, opts) {
-  return `<div class="play-error" data-testid="play-error" role="alert">
-    <h2>Session Error</h2>
-    <p>${esc(vm.error?.reason || vm.error || 'Unknown error')}</p>
-    <button class="secondary-button" data-action="return-to-hub">Return to Play hub</button>
-  </div>`;
-}
-
-// ═══════════════════════════════════════════════════════════════
-// v0.17.0 Feature Ports — priority banner, action dock, inspector,
-// event log, keyboard help, tutorial coach, confirmation V17
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Render keyboard help overlay (v0.17.0 port).
- */
-function renderKeyboardHelp() {
-  return `<div class="keyboard-help-overlay" data-testid="keyboard-help" role="dialog" aria-label="Keyboard shortcuts">
-    <h3>Keyboard Shortcuts</h3>
-    <dl class="keyboard-help-list">
-      <dt><kbd>P</kbd></dt><dd>Pass priority / Decline response</dd>
-      <dt><kbd>I</kbd></dt><dd>Open card inspector for selected card</dd>
-      <dt><kbd>A</kbd></dt><dd>Open Advanced Card Rules for selected/inspected card</dd>
-      <dt><kbd>R</kbd></dt><dd>Toggle stack details</dd>
-      <dt><kbd>?</kbd></dt><dd>Toggle this help</dd>
-      <dt><kbd>Esc</kbd></dt><dd>Close Advanced View, cancel selection, or close inspector</dd>
-      <dt><kbd>Enter</kbd></dt><dd>Confirm selected action</dd>
-    </dl>
-    <button class="keyboard-help-close" data-testid="keyboard-help-close" aria-label="Close keyboard help">Close</button>
-  </div>`;
-}
+// ── Terminal/Error/KeyboardHelp extracted to ranked-duel-terminal.mjs ──
 
 /**
  * Render the v0.17.0 priority banner — answers:
@@ -1842,179 +2091,4 @@ function renderActionDock(snapshot, options, contracts, priorityContext, guidanc
     ${groupsHtml}
   </div>`;
 }
-
-// ── Format helpers ─────────────────────────────────────────────
-
-function formatPhase(phase) {
-  if (!phase) return '';
-  return String(phase).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-}
-
-function formatTerminationReason(reason) {
-  if (!reason) return 'Unknown';
-  return String(reason).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Play Hub and New Match Setup (v3 port — full replacement)
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Render the Play hub (entry point for #/play).
- */
-export function renderPlayHub(continueSave, options = {}) {
-  const idbAvailable = options.idbAvailable !== false;
-  const stats = options.playerStats ?? null;
-  const hasStats = stats && stats.totalMatches > 0;
-
-  // Stats dashboard
-  const statsDashboard = hasStats ? `<div class="play-hub-stats" data-testid="play-hub-stats">
-    <h2>Your Record</h2>
-    <div class="stats-summary-row">
-      <span class="stat-item"><span class="stat-value">${stats.wins ?? 0}</span><span class="stat-label">Wins</span></span>
-      <span class="stat-item"><span class="stat-value">${stats.losses ?? 0}</span><span class="stat-label">Losses</span></span>
-      <span class="stat-item"><span class="stat-value">${stats.draws ?? 0}</span><span class="stat-label">Draws</span></span>
-      <span class="stat-item"><span class="stat-value">${stats.totalMatches ?? 0}</span><span class="stat-label">Total</span></span>
-    </div>
-    ${stats.difficultyBreakdown && Object.keys(stats.difficultyBreakdown).length > 0 ? `<div class="stats-difficulty-breakdown" data-testid="stats-difficulty-breakdown">
-      <h3>By Difficulty</h3>
-      ${Object.entries(stats.difficultyBreakdown).map(([diff, d]) => `<div class="difficulty-stat-row">
-        <span class="difficulty-stat-label">${esc(diff.charAt(0).toUpperCase() + diff.slice(1))}</span>
-        <span class="difficulty-stat-record">${d.wins ?? 0}W / ${d.losses ?? 0}L / ${d.draws ?? 0}D</span>
-      </div>`).join('')}
-    </div>` : ''}
-    ${stats.recentResults && stats.recentResults.length > 0 ? `<div class="stats-recent" data-testid="stats-recent">
-      <h3>Recent Matches</h3>
-      ${stats.recentResults.map(r => `<div class="recent-match-row">
-        <span class="recent-result ${r.isHumanWinner ? 'win' : r.winner ? 'loss' : 'draw'}">${r.isHumanWinner ? 'Won' : r.winner ? 'Lost' : 'Draw'}</span>
-        <span class="recent-opponent">${esc(r.aiPolicyId ?? 'AI')}</span>
-        <span class="recent-profile">${esc(r.profileId ?? '')}</span>
-      </div>`).join('')}
-    </div>` : ''}
-  </div>` : '';
-
-  return `<div class="play-hub" data-testid="play-hub">
-    <a class="play-hub-back" href="#/" aria-label="Back to landing">← Back</a>
-    <h1 class="play-hub-title">Play</h1>
-    <p class="play-hub-subtitle">Local single-player matches against the deterministic AI.</p>
-    ${continueSave ? `<div class="continue-card" data-testid="continue-card">
-      <h2>Continue</h2>
-      <p>Profile: ${esc(continueSave.profileId)} · Mode: ${esc(continueSave.mode ?? 'ADVANCED_CORE')}</p>
-      <button class="primary-button" data-testid="continue-match" data-action="continue-match" data-save-id="${esc(continueSave.saveId)}">Continue match</button>
-    </div>` : ''}
-    ${statsDashboard}
-    <div class="play-hub-grid">
-      <button class="play-hub-card" data-testid="start-tutorial" data-action="start-tutorial">
-        <span class="play-hub-icon" aria-hidden="true">📖</span>
-        <strong>First Contact Tutorial</strong>
-        <p>Learn the basics with an interactive guide.</p>
-      </button>
-      <button class="play-hub-card" data-testid="new-game" data-action="new-game">
-        <span class="play-hub-icon" aria-hidden="true">⚔</span>
-        <strong>New Game vs AI</strong>
-        <p>Start a match against a HYBRIX AI opponent.</p>
-      </button>
-      <button class="play-hub-card" data-testid="online-duel" data-action="online-duel">
-        <span class="play-hub-icon" aria-hidden="true">🌐</span>
-        <strong>Direct Duel</strong>
-        <p>Play online against a remote human opponent.</p>
-      </button>
-      <button class="play-hub-card" data-testid="replay-library" data-action="replay-library">
-        <span class="play-hub-icon" aria-hidden="true">▶</span>
-        <strong>Replay Library</strong>
-        <p>Watch your completed matches with verified replays.</p>
-      </button>
-    </div>
-    <p class="play-hub-notice">All saves and replays are stored locally in this browser.</p>
-    <p class="play-hub-compat">Engine 4.2.6 · Rules 4.3.1</p>
-    ${!idbAvailable ? '<p class="play-hub-warning" role="alert">IndexedDB is unavailable. Progress will not survive refresh.</p>' : ''}
-  </div>`;
-}
-
-/**
- * Render the new match setup screen.
- */
-export function renderNewMatchSetup(policyCatalog) {
-  const profiles = [
-    { id: 'first-contact-trigger-closure', label: 'First Contact', desc: 'Simplified rules for learning', icon: '📖' },
-    { id: 'core-advanced-authority', label: 'Advanced Core', desc: 'Full rules with all mechanics', icon: '⚔' },
-    { id: 'core-unrestricted-authority', label: 'Unrestricted Core', desc: 'Hidden supers, generated effects, sudden death', icon: '🔥' },
-  ];
-  const seats = [
-    { id: 'P1', label: 'Seat 1 (goes first)', icon: '①' },
-    { id: 'P2', label: 'Seat 2 (goes second)', icon: '②' },
-    { id: 'random', label: 'Random seat', icon: '🎲' },
-  ];
-  // Group policies by difficulty
-  const byDifficulty = new Map();
-  for (const p of policyCatalog) {
-    const diff = p.traits?.difficulty ?? 'normal';
-    if (!byDifficulty.has(diff)) byDifficulty.set(diff, []);
-    byDifficulty.get(diff).push(p);
-  }
-  const difficultyOrder = ['easy', 'normal', 'hard', 'nightmare'];
-  const difficultyColors = { easy: 'var(--tcg-success)', normal: 'var(--tcg-accent)', hard: 'var(--tcg-warning)', nightmare: 'var(--tcg-danger)' };
-  const difficultyIcons = { easy: '🟢', normal: '🔵', hard: '🟠', nightmare: '🔴' };
-
-  return `<div class="play-setup" data-testid="play-setup">
-    <a class="play-hub-back" href="#/play" aria-label="Back to Play hub">← Back</a>
-    <h1>New Match</h1>
-    <form id="new-match-form" data-testid="new-match-form">
-      <fieldset>
-        <legend>Mode</legend>
-        <div class="setup-card-grid">
-          ${profiles.map(p => `<label class="setup-card">
-            <input type="radio" name="profile" value="${esc(p.id)}" ${p.id === 'core-advanced-authority' ? 'checked' : ''}>
-            <span class="setup-card-icon" aria-hidden="true">${p.icon}</span>
-            <span class="setup-card-body">
-              <strong>${esc(p.label)}</strong>
-              <small>${esc(p.desc)}</small>
-            </span>
-          </label>`).join('')}
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend>Your seat</legend>
-        <div class="setup-seat-row">
-          ${seats.map(s => `<label class="setup-seat-option">
-            <input type="radio" name="seat" value="${esc(s.id)}" ${s.id === 'P1' ? 'checked' : ''}>
-            <span class="setup-seat-icon" aria-hidden="true">${s.icon}</span>
-            <span>${esc(s.label)}</span>
-          </label>`).join('')}
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend>AI opponent</legend>
-        ${difficultyOrder.map(diff => {
-          const policies = byDifficulty.get(diff) ?? [];
-          if (policies.length === 0) return '';
-          const color = difficultyColors[diff] ?? 'var(--tcg-text-dim)';
-          const icon = difficultyIcons[diff] ?? '⚪';
-          return `<div class="difficulty-group" style="--diff-color:${color}">
-            <span class="difficulty-label">${icon} ${esc(diff.charAt(0).toUpperCase() + diff.slice(1))}</span>
-            <div class="ai-personality-grid">
-              ${policies.map(p => {
-                const archetype = p.traits?.archetype ?? '';
-                const personality = getArchetypePersonality(archetype);
-                return `<label class="ai-personality-card">
-                  <input type="radio" name="ai-policy" value="${esc(p.policyId)}">
-                  <span class="ai-personality-name">${esc(archetype || p.policyId)}</span>
-                  <span class="ai-personality-style">${esc(personality.playStyle)}</span>
-                  <span class="ai-personality-desc">${esc(personality.description)}</span>
-                </label>`;
-              }).join('')}
-            </div>
-          </div>`;
-        }).join('')}
-      </fieldset>
-      <fieldset>
-        <legend>Seed (optional)</legend>
-        <label class="seed-input-label">Manual seed: <input type="number" name="seed" min="1" max="4294967295" placeholder="Random"></label>
-      </fieldset>
-      <div class="setup-actions">
-        <button type="submit" class="primary-button" data-testid="start-match">Start match</button>
-        <a class="secondary-button" href="#/play">Back</a>
-      </div>
-    </form>
-  </div>`;
-}
+// ── Format helpers, Play Hub, and New Match Setup extracted to ranked-duel-terminal.mjs and ranked-duel-hub.mjs ──

@@ -1,0 +1,11 @@
+{
+  "name": "@intrilex/account-domain",
+  "version": "0.24.2",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./identity": "./src/identity.mjs",
+    "./capabilities": "./src/capabilities.mjs",
+    "./validation": "./src/validation.mjs"
+  }
+}

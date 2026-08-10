@@ -119,7 +119,7 @@ test('replay-privacy: non-participant cannot fetch replay via WebSocket GET_REPL
     const ws3 = new WebSocket(`ws://127.0.0.1:${testPort}`);
     await new Promise(r => ws3.on('open', r));
     ws3.send(JSON.stringify({
-      protocolVersion: 1,
+      protocolVersion: 2,
       type: 'GET_REPLAY',
       payload: { matchId, participantToken: 'fake-token-not-valid-1234567890' },
     }));
@@ -181,7 +181,7 @@ test('replay-privacy: broadcastMatchEnded sends replayUrl=null, not HTTP URL', a
 
       // Register the connection with the match
       ws1.send(JSON.stringify({
-        protocolVersion: 1,
+        protocolVersion: 2,
         type: 'CREATE_MATCH',
         payload: { profileId: 'core-unrestricted-authority' },
       }));

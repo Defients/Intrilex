@@ -83,7 +83,7 @@ const STAGES = [
   ['rank-anatomy', 'node', ['--test', 'test/rank-anatomy.test.mjs', 'test/rank-anatomy-completion.test.mjs']],
   ['rank-truth-closure', 'node', ['--test', 'test/rank-truth-closure.test.mjs']],
   ['attribution-fixtures', 'node', ['--test', 'test/v0.16.1-attribution-fixtures.test.mjs']],
-  ['package-smoke-tests', 'node', ['--test', 'packages/shared/test/smoke.test.mjs', 'packages/statistics/test/smoke.test.mjs', 'packages/policy-sdk/test/smoke.test.mjs', 'packages/policies/test/smoke.test.mjs', 'packages/decision-intelligence/test/smoke.test.mjs', 'packages/telemetry/test/smoke.test.mjs', 'packages/game-ai/test/smoke.test.mjs', 'packages/analytics/test/smoke.test.mjs', 'packages/analytics-ai/test/smoke.test.mjs', 'packages/browser-crypto-shim/test/smoke.test.mjs', 'packages/engine-adapter/test/smoke.test.mjs', 'packages/simulation-runtime/test/smoke.test.mjs']],
+  ['package-smoke-tests', 'node', ['--test', 'packages/shared/test/smoke.test.mjs', 'packages/statistics/test/smoke.test.mjs', 'packages/policy-sdk/test/smoke.test.mjs', 'packages/policies/test/smoke.test.mjs', 'packages/decision-intelligence/test/smoke.test.mjs', 'packages/telemetry/test/smoke.test.mjs', 'packages/game-ai/test/smoke.test.mjs', 'packages/analytics/test/smoke.test.mjs', 'packages/analytics-ai/test/smoke.test.mjs', 'packages/browser-crypto-shim/test/smoke.test.mjs', 'packages/engine-adapter/test/smoke.test.mjs', 'packages/simulation-runtime/test/smoke.test.mjs', 'packages/achievements/test/smoke.test.mjs', 'packages/account-domain/test/smoke.test.mjs']],
   ['v0.10.0-contract', 'node', ['--test', 'test/v0.10.0-contract.test.mjs']],
   ['v0.10.0-behavioral', 'node', ['--test', 'test/v0.10.0-behavioral.test.mjs']],
   ['v0.10.0-anchor-authority', 'node', ['--test', 'test/v0.10.0-anchor-authority.test.mjs']],
@@ -165,6 +165,14 @@ const STAGES = [
   ['network-chat', 'node', ['--test', 'test/network-chat.test.mjs']],
   ['local-online-parity', 'node', ['--test', 'test/local-online-parity.test.mjs']],
   ['tutorial-guidance-parity', 'node', ['--test', 'test/tutorial-guidance-parity.test.mjs']],
+  ['local-vs-ai-full-match', 'node', ['--test', 'test/local-vs-ai-full-match.test.mjs']],
+  ['action-presentation', 'node', ['--test', 'test/action-presentation.test.mjs']],
+  ['achievements', 'node', ['--test', 'test/achievements.test.mjs']],
+  ['auth-protocol', 'node', ['--test', 'test/auth-protocol.test.mjs']],
+  ['auth-server', 'node', ['--test', 'test/auth-server.test.mjs']],
+  ['auth-reconnect', 'node', ['--test', 'test/auth-reconnect.test.mjs']],
+  ['supabase-schema', 'node', ['--test', 'test/supabase-schema.test.mjs']],
+  ['match-result-persistence', 'node', ['--test', 'test/match-result-persistence.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

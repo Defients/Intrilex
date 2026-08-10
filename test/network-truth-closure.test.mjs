@@ -106,31 +106,31 @@ test('P0.1: spectator action submission is rejected', async () => {
   try {
     // Create a match
     const ws1 = await connectWs(port);
-    sendMsg(ws1, { protocolVersion: 1, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
+    sendMsg(ws1, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
     const created = await waitForMessage(ws1);
     const { matchId, participantToken } = created.payload;
 
     // Join from second client
     const ws2 = await connectWs(port);
-    sendMsg(ws2, { protocolVersion: 1, type: 'JOIN_MATCH', requestId: 'r2', payload: { inviteCode: created.payload.inviteCode } });
+    sendMsg(ws2, { protocolVersion: 2, type: 'JOIN_MATCH', requestId: 'r2', payload: { inviteCode: created.payload.inviteCode } });
     const joined = await waitForMessage(ws2);
 
     // Both ready
-    sendMsg(ws1, { protocolVersion: 1, type: 'READY', requestId: 'r3', payload: { matchId, participantToken } });
+    sendMsg(ws1, { protocolVersion: 2, type: 'READY', requestId: 'r3', payload: { matchId, participantToken } });
     await waitForMessage(ws1);
-    sendMsg(ws2, { protocolVersion: 1, type: 'READY', requestId: 'r4', payload: { matchId, participantToken: joined.payload.participantToken } });
+    sendMsg(ws2, { protocolVersion: 2, type: 'READY', requestId: 'r4', payload: { matchId, participantToken: joined.payload.participantToken } });
     // Wait for match started
     const started1 = await waitForMessage(ws1, 10000);
 
     // Spectate from third client
     const ws3 = await connectWs(port);
-    sendMsg(ws3, { protocolVersion: 1, type: 'SPECTATE_MATCH', requestId: 'r5', payload: { matchId } });
+    sendMsg(ws3, { protocolVersion: 2, type: 'SPECTATE_MATCH', requestId: 'r5', payload: { matchId } });
     const spectateResp = await waitForMessage(ws3);
     assert.strictEqual(spectateResp.type, 'SPECTATE_JOINED');
 
     // Spectator tries to submit an action — must be rejected
     sendMsg(ws3, {
-      protocolVersion: 1, type: 'SUBMIT_ACTION', requestId: 'r6',
+      protocolVersion: 2, type: 'SUBMIT_ACTION', requestId: 'r6',
       payload: { matchId, participantToken: 'fake-token', clientCommandId: 'cmd-1', expectedRevision: 1, decisionFrameHash: 'fake', actionId: 'act-1' },
     });
     const actionResp = await waitForMessage(ws3);
@@ -237,7 +237,7 @@ test('P1.9: snapshot includes version binding and integrity hash', async () => {
   match.start();
 
   const snapshot = match.toSnapshot();
-  assert.strictEqual(snapshot.schemaVersion, 2);
+  assert.strictEqual(snapshot.schemaVersion, 3);
   assert.ok(snapshot.versionBinding, 'Snapshot must include versionBinding');
   assert.ok(snapshot.versionBinding.engineVersion, 'Version binding must include engineVersion');
   assert.ok(snapshot.versionBinding.rulesVersion, 'Version binding must include rulesVersion');
@@ -341,12 +341,12 @@ test('P1.11: leave match sends LEFT_MATCH not ERROR with code OK', async () => {
 
   try {
     const ws1 = await connectWs(port);
-    sendMsg(ws1, { protocolVersion: 1, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
+    sendMsg(ws1, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
     const created = await waitForMessage(ws1);
     const { matchId, participantToken } = created.payload;
 
     // Leave the match
-    sendMsg(ws1, { protocolVersion: 1, type: 'LEAVE_MATCH', requestId: 'r2', payload: { matchId, participantToken } });
+    sendMsg(ws1, { protocolVersion: 2, type: 'LEAVE_MATCH', requestId: 'r2', payload: { matchId, participantToken } });
     const leaveResp = await waitForMessage(ws1);
     assert.strictEqual(leaveResp.type, 'LEFT_MATCH', 'Leave should return LEFT_MATCH, not ERROR with code OK');
     assert.notStrictEqual(leaveResp.type, 'ERROR');
@@ -365,11 +365,11 @@ test('P1.11: conflicting create/join is rejected', async () => {
   try {
     const ws = await connectWs(port);
     // Create first match
-    sendMsg(ws, { protocolVersion: 1, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
+    sendMsg(ws, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
     const created = await waitForMessage(ws);
 
     // Try to create a second match on the same connection — should be rejected
-    sendMsg(ws, { protocolVersion: 1, type: 'CREATE_MATCH', requestId: 'r2', payload: { profileId: 'core-unrestricted-authority' } });
+    sendMsg(ws, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r2', payload: { profileId: 'core-unrestricted-authority' } });
     const secondResp = await waitForMessage(ws);
     assert.strictEqual(secondResp.type, 'ERROR');
     assert.strictEqual(secondResp.payload.code, 'MATCH_ALREADY_JOINED');
@@ -388,7 +388,7 @@ test('P1.12: public match history is disabled by default', async () => {
 
   try {
     const ws = await connectWs(port);
-    sendMsg(ws, { protocolVersion: 1, type: 'MATCH_HISTORY', requestId: 'r1', payload: { limit: 20 } });
+    sendMsg(ws, { protocolVersion: 2, type: 'MATCH_HISTORY', requestId: 'r1', payload: { limit: 20 } });
     const resp = await waitForMessage(ws);
     assert.strictEqual(resp.type, 'ERROR');
     assert.strictEqual(resp.payload.code, 'PARTICIPANT_NOT_AUTHORIZED');
@@ -405,7 +405,7 @@ test('P1.12: public matchmaking is disabled by default', async () => {
 
   try {
     const ws = await connectWs(port);
-    sendMsg(ws, { protocolVersion: 1, type: 'QUEUE_JOIN', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
+    sendMsg(ws, { protocolVersion: 2, type: 'QUEUE_JOIN', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
     const resp = await waitForMessage(ws);
     assert.strictEqual(resp.type, 'ERROR');
     ws.close();
@@ -492,7 +492,7 @@ test('P0.6: error messages include code, message, and requestId', async () => {
   try {
     const ws = await connectWs(port);
     // Send an invalid message to trigger an error
-    sendMsg(ws, { protocolVersion: 1, type: 'SUBMIT_ACTION', requestId: 'r-err-1', payload: {} });
+    sendMsg(ws, { protocolVersion: 2, type: 'SUBMIT_ACTION', requestId: 'r-err-1', payload: {} });
     const resp = await waitForMessage(ws);
     assert.strictEqual(resp.type, 'ERROR');
     assert.ok(resp.payload.code, 'Error must include code');

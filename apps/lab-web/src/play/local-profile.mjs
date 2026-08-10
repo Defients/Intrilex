@@ -23,7 +23,7 @@ const DEFAULT_PROFILE = {
 
 // ── Badge definitions ──────────────────────────────────────────
 
-const BADGE_DEFINITIONS = [
+export const BADGE_DEFINITIONS = [
   { id: 'first-duel', name: 'First Duel', description: 'Complete your first verified duel', icon: 'shield', check: (p) => p.verifiedResults.length >= 1 },
   { id: 'first-victory', name: 'First Victory', description: 'Win your first verified duel', icon: 'trophy', check: (p) => p.record.wins >= 1 },
   { id: 'field-tested', name: 'Field Tested', description: 'Complete 10 verified duels', icon: 'star', check: (p) => p.verifiedResults.length >= 10 },

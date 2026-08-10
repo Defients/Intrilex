@@ -5,7 +5,7 @@
 import { PROTOCOL_VERSION, MAX_MESSAGE_SIZE } from './validation.mjs';
 export { PROTOCOL_VERSION, MAX_MESSAGE_SIZE };
 export { ReasonCode, reasonCategory } from './reason-codes.mjs';
-export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, checkMessageSize } from './validation.mjs';
+export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateAuthenticate, validateAuthRefresh, checkMessageSize } from './validation.mjs';
 
 /**
  * @typedef {Object} ProtocolEnvelope
@@ -366,6 +366,20 @@ export function chatMessage(matchId, participantId, text, timestamp, requestId) 
 }
 
 /**
+ * Build an ACHIEVEMENTS_EARNED message (server → client).
+ * Sent after MATCH_ENDED to deliver server-authoritative achievement unlocks
+ * for this participant. The client merges these into its local achievement profile.
+ * @param {string} matchId - Match identifier
+ * @param {object[]} unlocks - Array of unlock records (achievementId, rarity, ap, provenance, timestamp, matchId)
+ * @param {Record<string, *>} progressUpdates - Progress updates by achievement ID
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function achievementsEarned(matchId, unlocks, progressUpdates, requestId) {
+  return envelope('ACHIEVEMENTS_EARNED', { matchId, unlocks, progressUpdates }, requestId);
+}
+
+/**
  * Build an ERROR message.
  * @param {string} code - Error reason code
  * @param {string} message - Human-readable error message
@@ -375,4 +389,44 @@ export function chatMessage(matchId, participantId, text, timestamp, requestId) 
  */
 export function error(code, message, requestId, details) {
   return envelope('ERROR', { code, message, ...(details ? { details } : {}) }, requestId);
+}
+
+// ── Auth handshake message builders (v2) ──
+
+/**
+ * Build an AUTHENTICATE message (client → server).
+ * Sent immediately after WebSocket open to establish account identity.
+ * The access token is a Supabase JWT — never logged or echoed by the server.
+ * @param {string} accessToken - Supabase access token (JWT)
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function authenticate(accessToken, requestId) {
+  return envelope('AUTHENTICATE', { accessToken }, requestId);
+}
+
+/**
+ * Build an AUTH_REFRESH message (client → server).
+ * Sent when the Supabase session refreshes the access token during an
+ * active WebSocket connection. The server verifies the new token and
+ * updates the connection's auth context.
+ * @param {string} accessToken - New Supabase access token (JWT)
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function authRefresh(accessToken, requestId) {
+  return envelope('AUTH_REFRESH', { accessToken }, requestId);
+}
+
+/**
+ * Build an AUTHENTICATED message (server → client).
+ * Sent in response to a successful AUTHENTICATE or AUTH_REFRESH.
+ * Contains the verified account identity — never the access token.
+ * @param {{ publicPlayerId: string, displayName: string, handle: (string|null), avatarUrl: (string|null), isAnonymous: boolean, capabilities: Record<string, boolean> }} account - Verified account identity
+ * @param {number} expiresAt - Token expiration timestamp (ms epoch)
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function authenticated(account, expiresAt, requestId) {
+  return envelope('AUTHENTICATED', { account, expiresAt }, requestId);
 }

@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const rendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
+const terminalSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-terminal.mjs'), 'utf8');
 const appSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-app.js'), 'utf8');
 const playStateSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-state.js'), 'utf8');
 const cssSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-v3.css'), 'utf8');
@@ -36,7 +37,7 @@ test('Renderer: has role=group on target selection', () => {
 });
 
 test('Renderer: has role=dialog on keyboard help', () => {
-  assert.ok(rendererSrc.includes('role="dialog"'), 'Keyboard help must have role=dialog');
+  assert.ok(terminalSrc.includes('role="dialog"'), 'Keyboard help must have role=dialog');
 });
 
 test('Renderer: has aria-hidden on decorative elements', () => {
@@ -164,15 +165,15 @@ test('CSS: focus style uses outline with offset', () => {
 
 test('Renderer: has keyboard help overlay', () => {
   assert.ok(rendererSrc.includes('renderKeyboardHelp'), 'Must have renderKeyboardHelp function');
-  assert.ok(rendererSrc.includes('keyboard-help-overlay'), 'Must have keyboard-help-overlay class');
+  assert.ok(terminalSrc.includes('keyboard-help-overlay'), 'Must have keyboard-help-overlay class');
 });
 
 test('Renderer: keyboard help lists all shortcuts', () => {
-  assert.ok(rendererSrc.includes('<kbd>P</kbd>'), 'Must list P key');
-  assert.ok(rendererSrc.includes('<kbd>I</kbd>'), 'Must list I key');
-  assert.ok(rendererSrc.includes('<kbd>R</kbd>'), 'Must list R key');
-  assert.ok(rendererSrc.includes('<kbd>?</kbd>'), 'Must list ? key');
-  assert.ok(rendererSrc.includes('<kbd>Esc</kbd>'), 'Must list Esc key');
+  assert.ok(terminalSrc.includes('<kbd>P</kbd>'), 'Must list P key');
+  assert.ok(terminalSrc.includes('<kbd>I</kbd>'), 'Must list I key');
+  assert.ok(terminalSrc.includes('<kbd>R</kbd>'), 'Must list R key');
+  assert.ok(terminalSrc.includes('<kbd>?</kbd>'), 'Must list ? key');
+  assert.ok(terminalSrc.includes('<kbd>Esc</kbd>'), 'Must list Esc key');
 });
 
 // ─── Conservation Tests ─────────────────────────────────────────

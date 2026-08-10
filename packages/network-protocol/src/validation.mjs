@@ -4,7 +4,7 @@
 
 import { ReasonCode } from './reason-codes.mjs';
 
-export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_VERSION = 2;
 export const MAX_MESSAGE_SIZE = 65536; // 64 KB
 
 /**
@@ -30,6 +30,8 @@ const KNOWN_TYPES = new Set([
   'MATCH_HISTORY',
   'GET_REPLAY',
   'SEND_CHAT',
+  // Client → Server (auth handshake — v2)
+  'AUTHENTICATE', 'AUTH_REFRESH',
   // Server → Client
   'MATCH_CREATED', 'MATCH_JOINED', 'MATCH_VIEW',
   'ACTION_RESULT', 'PARTICIPANT_STATUS', 'MATCH_STARTED',
@@ -39,6 +41,9 @@ const KNOWN_TYPES = new Set([
   'MATCH_HISTORY_RESULT',
   'REPLAY_AVAILABLE', 'REPLAY_DATA',
   'CHAT_MESSAGE',
+  'ACHIEVEMENTS_EARNED',
+  // Server → Client (auth handshake — v2)
+  'AUTHENTICATED',
 ]);
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{4,64}$/;
@@ -323,4 +328,50 @@ export function checkMessageSize(raw) {
     return { valid: false, code: ReasonCode.MESSAGE_TOO_LARGE, message: `Message exceeds ${MAX_MESSAGE_SIZE} bytes` };
   }
   return { valid: true };
+}
+
+// ── Auth handshake validators (v2) ──
+
+/** Maximum access token length — JWTs are typically <2KB but allow headroom */
+const MAX_TOKEN_LENGTH = 8192;
+
+/**
+ * Validate an AUTHENTICATE payload.
+ * The access token is a Supabase JWT — never logged or echoed.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateAuthenticate(payload) {
+  if (typeof payload.accessToken !== 'string' || payload.accessToken.length === 0) {
+    return fail(ReasonCode.AUTH_TOKEN_MISSING, 'accessToken is required');
+  }
+  if (payload.accessToken.length > MAX_TOKEN_LENGTH) {
+    return fail(ReasonCode.MESSAGE_TOO_LARGE, 'accessToken exceeds maximum length');
+  }
+  // JWT format check: three dot-separated base64url segments
+  const parts = payload.accessToken.split('.');
+  if (parts.length !== 3) {
+    return fail(ReasonCode.AUTH_TOKEN_INVALID, 'accessToken must be a JWT with 3 segments');
+  }
+  return ok();
+}
+
+/**
+ * Validate an AUTH_REFRESH payload.
+ * Same format as AUTHENTICATE — a fresh access token from Supabase.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateAuthRefresh(payload) {
+  if (typeof payload.accessToken !== 'string' || payload.accessToken.length === 0) {
+    return fail(ReasonCode.AUTH_TOKEN_MISSING, 'accessToken is required');
+  }
+  if (payload.accessToken.length > MAX_TOKEN_LENGTH) {
+    return fail(ReasonCode.MESSAGE_TOO_LARGE, 'accessToken exceeds maximum length');
+  }
+  const parts = payload.accessToken.split('.');
+  if (parts.length !== 3) {
+    return fail(ReasonCode.AUTH_TOKEN_INVALID, 'accessToken must be a JWT with 3 segments');
+  }
+  return ok();
 }

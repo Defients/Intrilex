@@ -36,6 +36,8 @@ export const state = {
   lastCampaignResult:null, historyPage:0, historyFilterTerm:'', historyFilterReason:'all', historyFilterPolicy:'all',
   traceIndex:null, traceFilterPolicy:'all', traceSelectedId:null,
   branchReplayId:null, branchCheckpoint:0, branchAltAction:null, branchRolloutCount:32, branchContP1:'score-rush', branchContP2:'control', branchResult:null, branchResultB:null, branchComparison:null, branchRunning:false,
+  branchLegalActions:null, branchSelectedActionId:null, branchLegalActionsLoading:false, branchLegalActionsError:null,
+  branchAllActionsResult:null, branchAllActionsRunning:false,
   diagBaseline:null, diagCandidate:null, lastDiagResult:null,
   cardFaceView:'board', cardFaceFamily:'ace', cardFaceSelected:'A♣',
   selectedRank:null, rankPower:null, rankAuthority:null, swapMatrix:null,

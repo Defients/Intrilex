@@ -100,6 +100,7 @@ export const ConnectionState = Object.freeze({
  * @property {string} participantId
  * @property {string} playerId
  * @property {string} token
+ * @property {string|null} [accountId] - Account ID that owns this participant (v3 — absent in v2 snapshots)
  * @property {string} connectionState
  * @property {boolean} ready
  */
@@ -214,9 +215,10 @@ export class AuthoritativeMatchSession {
    * Add a participant to the match.
    * @param {string} participantId
    * @param {string} token
-   * @returns {{ participantId: string, token: string, playerId: string }}
+   * @param {string|null} [accountId] - Account ID that owns this participant (for account-bound reconnect)
+   * @returns {{ participantId: string, token: string, playerId: string, accountId: string|null }}
    */
-  addParticipant(participantId, token) {
+  addParticipant(participantId, token, accountId = null) {
     if (this.participants.size >= 2) {
       throw Object.assign(new Error('Match is full'), { code: ReasonCode.MATCH_FULL });
     }
@@ -227,6 +229,7 @@ export class AuthoritativeMatchSession {
     this.participants.set(participantId, {
       playerId,
       token,
+      accountId: accountId ?? null,
       connectionState: ConnectionState.CONNECTED,
       ready: false,
     });
@@ -236,7 +239,7 @@ export class AuthoritativeMatchSession {
       this.status = MatchStatus.READY_CHECK;
     }
 
-    return { participantId, token, playerId };
+    return { participantId, token, playerId, accountId: accountId ?? null };
   }
 
   /**
@@ -649,6 +652,21 @@ export class AuthoritativeMatchSession {
   // ── Replay ──
 
   /**
+   * Collect all engine events from the command log (for achievement evaluation).
+   * Returns a flat array of all events emitted during the match.
+   * @returns {object[]}
+   */
+  getAllEvents() {
+    const events = [];
+    for (const entry of this.commandLog) {
+      if (entry.events && entry.events.length > 0) {
+        events.push(...entry.events);
+      }
+    }
+    return events;
+  }
+
+  /**
    * Generate a certified replay from the authoritative command log.
    */
   getReplay() {
@@ -704,7 +722,7 @@ export class AuthoritativeMatchSession {
   toSnapshot() {
     /** @type {MatchSnapshot} */
     const snapshot = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       matchId: this.matchId,
       profileId: this.profileId,
       seed: this._seed,
@@ -715,6 +733,8 @@ export class AuthoritativeMatchSession {
         playerId: p.playerId,
         // Token stored for reconnection validation — server-side only, never exposed to clients
         token: p.token,
+        // Account ID that owns this participant (v3 — absent in v2 snapshots)
+        accountId: p.accountId ?? null,
         connectionState: p.connectionState,
         ready: p.ready,
       })),
@@ -776,7 +796,7 @@ export class AuthoritativeMatchSession {
     if (!snapshot || typeof snapshot !== 'object') {
       throw new Error('Snapshot is not an object');
     }
-    if (snapshot.schemaVersion !== 2 && snapshot.schemaVersion !== 1) {
+    if (snapshot.schemaVersion !== 3 && snapshot.schemaVersion !== 2 && snapshot.schemaVersion !== 1) {
       throw new Error(`Unsupported snapshot schema version: ${snapshot.schemaVersion}`);
     }
 
@@ -819,6 +839,8 @@ export class AuthoritativeMatchSession {
       match.participants.set(p.participantId, {
         playerId: p.playerId,
         token: p.token,
+        // accountId is v3 — absent in v2 snapshots, tolerate null
+        accountId: p.accountId ?? null,
         connectionState: p.connectionState ?? ConnectionState.DISCONNECTED,
         ready: p.ready ?? false,
       });

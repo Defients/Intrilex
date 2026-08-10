@@ -79,7 +79,7 @@ test('connection-binding: READY with mismatched matchId returns CONNECTION_MATCH
 
     // Send READY for a DIFFERENT matchId — must be rejected
     ws.send(JSON.stringify({
-      protocolVersion: 1,
+      protocolVersion: 2,
       type: 'READY',
       payload: { matchId: 'M-fakeMatchId123', participantToken: p1Token },
     }));
@@ -102,7 +102,7 @@ test('connection-binding: SUBMIT_ACTION with mismatched matchId returns CONNECTI
 
     // Send SUBMIT_ACTION for a different matchId
     ws.send(JSON.stringify({
-      protocolVersion: 1,
+      protocolVersion: 2,
       type: 'SUBMIT_ACTION',
       payload: {
         matchId: 'M-fakeMatchId456',
@@ -132,7 +132,7 @@ test('connection-binding: REQUEST_SYNC with mismatched matchId returns CONNECTIO
 
     // Send REQUEST_SYNC for a different matchId
     ws.send(JSON.stringify({
-      protocolVersion: 1,
+      protocolVersion: 2,
       type: 'REQUEST_SYNC',
       payload: { matchId: 'M-fakeMatchId789', participantToken: p1Token },
     }));
@@ -156,7 +156,7 @@ test('connection-binding: LEAVE_MATCH with mismatched matchId returns CONNECTION
 
     // Send LEAVE_MATCH for a different matchId — must not disconnect from the real match
     ws.send(JSON.stringify({
-      protocolVersion: 1,
+      protocolVersion: 2,
       type: 'LEAVE_MATCH',
       payload: { matchId: 'M-fakeMatchId000', participantToken: p1Token },
     }));
@@ -179,7 +179,7 @@ test('connection-binding: LEAVE_MATCH with invalid participant token returns AUT
 
     // Send LEAVE_MATCH with a fake token — must be rejected
     ws.send(JSON.stringify({
-      protocolVersion: 1,
+      protocolVersion: 2,
       type: 'LEAVE_MATCH',
       payload: { matchId, participantToken: 'fake-token-not-valid-1234567890' },
     }));
@@ -202,7 +202,7 @@ test('connection-binding: GET_REPLAY with mismatched matchId returns CONNECTION_
 
     // Send GET_REPLAY for a different matchId
     ws.send(JSON.stringify({
-      protocolVersion: 1,
+      protocolVersion: 2,
       type: 'GET_REPLAY',
       payload: { matchId: 'M-fakeMatchId999', participantToken: p1Token },
     }));
@@ -226,7 +226,7 @@ test('connection-binding: LEAVE_MATCH with correct matchId and token succeeds', 
 
     // Send LEAVE_MATCH with correct matchId and token — must succeed
     ws.send(JSON.stringify({
-      protocolVersion: 1,
+      protocolVersion: 2,
       type: 'LEAVE_MATCH',
       payload: { matchId, participantToken: p1Token },
     }));

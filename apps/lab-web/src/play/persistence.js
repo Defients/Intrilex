@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 const DB_NAME = 'intrilex-player';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORES = Object.freeze({
   SAVES: 'saves',
   REPLAYS: 'replays',
@@ -12,6 +12,7 @@ const STORES = Object.freeze({
   QUARANTINE: 'quarantine',
   PLAYER_STATS: 'player-stats',
   TOURNAMENTS: 'tournaments',
+  ACHIEVEMENTS: 'achievements',
 });
 
 let _db = null;
@@ -60,6 +61,9 @@ export async function openDB() {
       }
       if (!db.objectStoreNames.contains(STORES.TOURNAMENTS)) {
         db.createObjectStore(STORES.TOURNAMENTS, { keyPath: 'tournamentId' });
+      }
+      if (!db.objectStoreNames.contains(STORES.ACHIEVEMENTS)) {
+        db.createObjectStore(STORES.ACHIEVEMENTS, { keyPath: 'key' });
       }
     };
   });
@@ -407,16 +411,38 @@ export async function importSave(jsonString) {
   try { data = JSON.parse(jsonString); } catch { throw new Error('INVALID_JSON'); }
   if (data.format !== 'intrilex-player-save') throw new Error('INVALID_SAVE_FORMAT');
 
-  // v1 legacy saves require explicit migration to v2 authority model
+  // v1 legacy saves: attempt migration to v2 authority model before rejecting
   if (data.version === 1) {
+    const { canMigrateSave, migrateSave } = await import('./save-integrity.js');
+    const migration = canMigrateSave(data);
+    if (migration.canMigrate) {
+      const engineModule = await import('../engine/browser-entry.js');
+      const autonomyModule = await import('../autonomy-runtime.js');
+      const result = await migrateSave(data, engineModule, autonomyModule);
+      if (result.ok) {
+        await putSave(result.save);
+        return result.save.saveId;
+      }
+    }
     await quarantineSave(data.saveId, 'LEGACY_UNBOUND_AUTHORITY', data);
     throw new Error('LEGACY_UNBOUND_AUTHORITY');
   }
 
   // v2+ saves: route through canonical validator
-  const { validateSaveEnvelope } = await import('./save-integrity.js');
+  const { validateSaveEnvelope, canMigrateSave: canMigrate, migrateSave: migrate } = await import('./save-integrity.js');
   const validation = validateSaveEnvelope(data);
   if (!validation.valid) {
+    // Attempt migration for version mismatches before quarantining
+    const migration = canMigrate(data);
+    if (migration.canMigrate) {
+      const engineModule = await import('../engine/browser-entry.js');
+      const autonomyModule = await import('../autonomy-runtime.js');
+      const result = await migrate(data, engineModule, autonomyModule);
+      if (result.ok) {
+        await putSave(result.save);
+        return result.save.saveId;
+      }
+    }
     await quarantineSave(data.saveId, validation.reasonCode ?? 'INVALID_SAVE_ENVELOPE', data);
     throw new Error(validation.reasonCode ?? 'INVALID_SAVE_ENVELOPE');
   }
@@ -436,4 +462,86 @@ export async function exportReplay(replayId, kind = 'private') {
     return JSON.stringify(replay.publicView ?? replay, null, 2);
   }
   return JSON.stringify(replay.privateView ?? replay.certifiedReplay, null, 2);
+}
+
+// ── Achievements ──
+
+const ACHIEVEMENT_KEY = 'profile';
+
+/**
+ * Get the achievement profile state from IndexedDB.
+ * Falls back to localStorage if IndexedDB is unavailable.
+ * @returns {Promise<object|null>}
+ */
+export async function getAchievementState() {
+  if (!isIndexedDBAvailable()) {
+    try {
+      const raw = localStorage.getItem('intrilex-achievements-v1');
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      console.error('[achievements] Failed to load state from localStorage:', err);
+      return null;
+    }
+  }
+  try {
+    const { store } = await tx(STORES.ACHIEVEMENTS, 'readonly');
+    const result = await promisifyRequest(store.get(ACHIEVEMENT_KEY));
+    return result?.value ?? null;
+  } catch (err) {
+    console.error('[achievements] Failed to load state from IndexedDB:', err);
+    return null;
+  }
+}
+
+/**
+ * Save the achievement profile state to IndexedDB.
+ * Falls back to localStorage if IndexedDB is unavailable.
+ * @param {object} state - The achievement profile state
+ * @returns {Promise<boolean>}
+ */
+export async function saveAchievementState(state) {
+  if (!isIndexedDBAvailable()) {
+    try {
+      localStorage.setItem('intrilex-achievements-v1', JSON.stringify(state));
+      return true;
+    } catch (err) {
+      console.error('[achievements] Failed to save state to localStorage:', err);
+      return false;
+    }
+  }
+  try {
+    const { store, transaction } = await tx(STORES.ACHIEVEMENTS, 'readwrite');
+    await promisifyRequest(store.put({ key: ACHIEVEMENT_KEY, value: state }));
+    await awaitTx(transaction);
+    return true;
+  } catch (err) {
+    console.error('[achievements] Failed to save state to IndexedDB:', err);
+    return false;
+  }
+}
+
+/**
+ * Reset the achievement profile state (developer testing).
+ * Only resets achievement state — does not touch saves, replays, profile, or stats.
+ * @returns {Promise<boolean>}
+ */
+export async function resetAchievementState() {
+  if (!isIndexedDBAvailable()) {
+    try {
+      localStorage.removeItem('intrilex-achievements-v1');
+      return true;
+    } catch (err) {
+      console.error('[achievements] Failed to reset state in localStorage:', err);
+      return false;
+    }
+  }
+  try {
+    const { store, transaction } = await tx(STORES.ACHIEVEMENTS, 'readwrite');
+    await promisifyRequest(store.delete(ACHIEVEMENT_KEY));
+    await awaitTx(transaction);
+    return true;
+  } catch (err) {
+    console.error('[achievements] Failed to reset state in IndexedDB:', err);
+    return false;
+  }
 }

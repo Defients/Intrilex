@@ -77,7 +77,7 @@ test('network matches do not autosave to IndexedDB (server-side persistence inst
 });
 
 test('network terminal shows download replay, local shows rematch', async () => {
-  const src = await read('apps/lab-web/src/play/ranked-duel-renderer.mjs');
+  const src = await read('apps/lab-web/src/play/ranked-duel-terminal.mjs');
   // Network terminal: download certified replay
   assert.match(src, /download-replay/, 'network terminal must show download-replay button');
   // Local terminal: rematch same seed

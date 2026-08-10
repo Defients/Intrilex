@@ -19,7 +19,8 @@ export const WORKSPACES = [
   ['/tournament','🏆','Tournament','AI bracket'],
   ['/evidence','◎','Evidence','Integrity'],
   ['/profile','👤','Profile','Player record'],
-  ['/intelligence','✦','Analytics AI','Ollama interpretation']
+  ['/intelligence','✦','Analytics AI','Ollama interpretation'],
+  ['/achievements','🏆','Achievements','56 launch achievements']
 ];
 
 export const TITLES = Object.fromEntries(WORKSPACES.map(([route,,label]) => [route,label]));
@@ -39,7 +40,8 @@ export const SUBTITLES = {
   '/branches':'Policy-conditioned counterfactual estimates from command checkpoints.',
   '/diagnostics':'Decision margins, self-counter rates, response conservation, timing, and win rates.',
   '/tournament':'Single-elimination AI-vs-AI bracket with deterministic matches and champion crowning.',
-  '/profile':'Local player profile with rating, badges, match history, and archetype breakdown.'
+  '/profile':'Local player profile with rating, badges, match history, and archetype breakdown.',
+  '/achievements':'56 launch achievements with deterministic detection, career tracking, and hidden discoveries.'
 };
 
 export const LANDING_MODES = new Set(['/', '/play', '/play/new', '/play/tutorial', '/play/match', '/play/replays', '/rules']);
@@ -58,7 +60,7 @@ export function renderNavigation() {
   const SECTIONS = [
     { label: 'Analysis', routes: ['/watch', '/replays', '/history', '/mechanics', '/cards', '/synergies'] },
     { label: 'Investigation', routes: ['/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament'] },
-    { label: 'System', routes: ['/evidence', '/profile', '/intelligence'] },
+    { label: 'System', routes: ['/evidence', '/profile', '/achievements', '/intelligence'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));
   const nav = document.querySelector('#workspace-nav');

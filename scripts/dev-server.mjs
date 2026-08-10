@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, statSync, readFileSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +8,24 @@ import { spawnSync, spawn } from 'node:child_process';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'apps/lab-web/dist');
 const srcDir = path.join(root, 'apps/lab-web/src');
+
+// ── Load .env file (lightweight dotenv — no dependency) ──
+const envPath = path.join(root, '.env');
+if (existsSync(envPath)) {
+  const envContent = readFileSync(envPath, 'utf8');
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    const value = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+    if (key && !(key in process.env)) {
+      process.env[key] = value;
+    }
+  }
+  console.log('[env] Loaded .env file');
+}
 
 // Parse --watch flag
 const watchMode = process.argv.includes('--watch');
@@ -37,7 +55,11 @@ const types = {
   '.webp': 'image/webp',
   '.png': 'image/png',
   '.woff2': 'font/woff2',
-  '.map': 'application/json; charset=utf-8'
+  '.map': 'application/json; charset=utf-8',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf'
 };
 
 // Hashed assets (app.[hash].js, styles.[hash].css) get long-lived cache
@@ -100,7 +122,8 @@ if (watchMode) {
   const { watch } = await import('node:fs');
   const watchPaths = [
     { dir: srcDir, recursive: true },
-    { dir: path.join(root, 'packages/analytics-ai/src'), recursive: false }
+    { dir: path.join(root, 'packages/analytics-ai/src'), recursive: false },
+    { dir: path.join(root, 'packages/achievements/src'), recursive: false }
   ];
 
   for (const { dir, recursive } of watchPaths) {
@@ -188,6 +211,26 @@ const server = http.createServer(async (request, response) => {
       const reloadScript = '<script src="/__devreload-client.js"></script>';
       html = html.replace('</head>', reloadScript + '\n</head>');
     }
+    // Inject browser-safe Supabase config from env vars (if available)
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (supabaseUrl && supabaseKey && !html.includes('__INTRILEX_CONFIG__')) {
+      const configScript = `<script>window.__INTRILEX_CONFIG__={supabase:{url:${JSON.stringify(supabaseUrl)},publishableKey:${JSON.stringify(supabaseKey)}}};</script>`;
+      html = html.replace('</head>', configScript + '\n</head>');
+    }
+    response.end(html);
+    return;
+  }
+
+  // Non-watch mode: also inject config for built dist
+  if (!watchMode && ext === '.html') {
+    let html = await readFile(file, 'utf8');
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (supabaseUrl && supabaseKey && !html.includes('__INTRILEX_CONFIG__')) {
+      const configScript = `<script>window.__INTRILEX_CONFIG__={supabase:{url:${JSON.stringify(supabaseUrl)},publishableKey:${JSON.stringify(supabaseKey)}}};</script>`;
+      html = html.replace('</head>', configScript + '\n</head>');
+    }
     response.end(html);
     return;
   }
@@ -204,8 +247,19 @@ server.listen(4173, '127.0.0.1', () => {
 if (withNetwork) {
   try {
     const { startServer } = await import('../apps/match-server/src/server.mjs');
-    const matchServer = await startServer({ port: 3099, host: '127.0.0.1' });
+    // Pass Supabase env vars to the match server for auth + persistence
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
+    const authMode = process.env.INTRILEX_AUTH_MODE || (supabaseUrl && supabaseSecretKey ? 'required' : 'disabled');
+    const matchServer = await startServer({
+      port: 3099, host: '127.0.0.1',
+      supabaseUrl,
+      supabaseSecretKey,
+      authMode,
+    });
     console.log('Match Authority Server: ws://127.0.0.1:3099');
+    console.log(`Auth mode: ${authMode}`);
+    if (supabaseUrl) console.log(`Supabase: ${supabaseUrl}`);
     console.log('Direct Duel lobby: http://127.0.0.1:4173/#/play/online');
     // Close match server when dev server exits
     process.on('SIGINT', () => { matchServer.close(); process.exit(0); });
