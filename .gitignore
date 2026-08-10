@@ -29,3 +29,5 @@ scripts/remove-debug2.cjs
 scripts/archive/add-debug.cjs
 scripts/archive/add-debug2.cjs
 scripts/archive/diag-*.mjs
+# Supabase CLI local scratch files
+supabase/.temp/
