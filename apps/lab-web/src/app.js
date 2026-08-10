@@ -21,9 +21,13 @@ import { renderTournament } from './workspaces/tournament.js';
 import { renderProfile } from './workspaces/profile.js';
 import { renderLeaderboard } from './workspaces/leaderboard.js';
 import { renderAchievementsWorkspace } from './play/achievements/achievement-ui.js';
+import { renderAuth } from './workspaces/auth.js';
+import { renderSettings } from './workspaces/settings.js';
 import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces, renderCardFaces } from './workspaces/observatory.js';
 import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js';
 import { shouldShowTour, startTour } from './onboarding-tour.js';
+import { initAuth, getAuthState, getProfile, subscribe as subscribeToAuth } from './play/network/auth-controller.js';
+import { initAccountStore, subscribe as subscribeToAccount } from './play/network/account-store.js';
 
 // Install global error boundary at module load time
 installGlobalErrorBoundary();
@@ -64,7 +68,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/cards': renderCardFaces, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/profile': renderProfile, '/player': renderProfile, '/leaderboard': () => renderLeaderboard(app), '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app)
+    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/profile': renderProfile, '/player': renderProfile, '/leaderboard': () => renderLeaderboard(app), '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app), '/auth': renderAuth, '/settings': renderSettings
   };
   try { (renderers[r] ?? renderEvidence)(); }
   catch (error) {
@@ -179,28 +183,24 @@ function renderLanding() {
               </div>
             </div>
             <div class="account-dropdown-divider"></div>
-            <a class="account-dropdown-item disabled" aria-disabled="true" role="menuitem">
+            <a class="account-dropdown-item" href="#/profile" role="menuitem">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
               <span>Profile</span>
-              <svg class="account-lock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
             </a>
-            <a class="account-dropdown-item disabled" aria-disabled="true" role="menuitem">
+            <a class="account-dropdown-item" href="#/history" role="menuitem">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
               <span>Match History</span>
-              <svg class="account-lock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
             </a>
-            <a class="account-dropdown-item disabled" aria-disabled="true" role="menuitem">
+            <a class="account-dropdown-item" href="#/achievements" role="menuitem">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21.4 8 14 2 9.4h7.6z"/></svg>
               <span>Achievements</span>
-              <svg class="account-lock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
             </a>
-            <a class="account-dropdown-item disabled" aria-disabled="true" role="menuitem">
+            <a class="account-dropdown-item" href="#/settings" role="menuitem">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               <span>Settings</span>
-              <svg class="account-lock" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
             </a>
             <div class="account-dropdown-divider"></div>
-            <a class="account-dropdown-item sign-in" href="#/auth" role="menuitem">
+            <a class="account-dropdown-item sign-in" href="#/auth" role="menuitem" data-account-signin>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
               <span>Sign In</span>
             </a>
@@ -286,6 +286,63 @@ function renderLanding() {
   </div>`;
   bindLandingEvents();
   loadContinueCard();
+  showPreAlphaOverlay();
+}
+
+let _preAlphaOverlayTimer = null;
+
+function showPreAlphaOverlay() {
+  if (_preAlphaOverlayTimer) { clearTimeout(_preAlphaOverlayTimer); _preAlphaOverlayTimer = null; }
+  const existing = document.getElementById('prealpha-overlay');
+  if (existing) existing.remove();
+
+  const acknowledged = localStorage.getItem('intrilex-prealpha-acknowledged') === 'true';
+  const waitSeconds = acknowledged ? 2 : 5;
+
+  _preAlphaOverlayTimer = setTimeout(() => {
+    const overlay = document.createElement('div');
+    overlay.id = 'prealpha-overlay';
+    overlay.className = 'prealpha-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', 'prealpha-title');
+    overlay.innerHTML = `<div class="prealpha-card">
+      <div class="prealpha-badge"><span class="prealpha-badge-dot" aria-hidden="true"></span>PRE-ALPHA</div>
+      <h2 class="prealpha-title" id="prealpha-title">Early Pre-Alpha Preview</h2>
+      <p class="prealpha-body">Intrilex is currently in an <strong>early pre-Alpha stage</strong> and is intended for <strong>preview purposes</strong> rather than full play. Mechanics, balance, and features are under <strong>active development</strong> and may change frequently. Thank you for exploring and sharing the journey.</p>
+      <button class="prealpha-acknowledge" id="prealpha-acknowledge" disabled aria-disabled="true">
+        <span class="prealpha-acknowledge-text">Please wait ${waitSeconds}s&hellip;</span>
+      </button>
+    </div>`;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('prealpha-overlay--visible'));
+
+    const btn = overlay.querySelector('#prealpha-acknowledge');
+    const btnText = overlay.querySelector('.prealpha-acknowledge-text');
+    let remaining = waitSeconds;
+    const countdown = setInterval(() => {
+      remaining--;
+      if (remaining > 0) {
+        btnText.textContent = `Please wait ${remaining}s\u2026`;
+      } else {
+        clearInterval(countdown);
+        btn.disabled = false;
+        btn.setAttribute('aria-disabled', 'false');
+        btnText.textContent = 'I Understand \u2014 Continue';
+      }
+    }, 1000);
+
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      localStorage.setItem('intrilex-prealpha-acknowledged', 'true');
+      overlay.classList.remove('prealpha-overlay--visible');
+      setTimeout(() => overlay.remove(), 400);
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay && !btn.disabled) btn.click();
+    });
+  }, 2000);
 }
 
 /**
@@ -539,9 +596,63 @@ export async function showExtract(format) {
 // BOOT — entry point
 // ═══════════════════════════════════════════════════════════════
 
+/**
+ * Update the account dropdown in the landing header to reflect the
+ * current auth state. Called on boot and whenever auth state changes.
+ */
+function updateAccountDropdown() {
+  const authState = getAuthState();
+  const profile = getProfile();
+  const signedIn = authState === 'AUTHENTICATED' || authState === 'ANONYMOUS';
+
+  // Update account name in the trigger button
+  const accountName = document.querySelector('.account-name');
+  if (accountName) {
+    accountName.textContent = signedIn ? (profile?.displayName ?? 'Player') : 'Guest';
+  }
+
+  // Update dropdown header
+  const dropdownHeader = document.querySelector('.account-dropdown-id strong');
+  if (dropdownHeader) {
+    dropdownHeader.textContent = signedIn ? (profile?.displayName ?? 'Player') : 'Guest Player';
+  }
+  const dropdownSub = document.querySelector('.account-dropdown-id small');
+  if (dropdownSub) {
+    dropdownSub.textContent = signedIn
+      ? (authState === 'ANONYMOUS' ? 'Guest session' : (profile?.handle ? `@${profile.handle}` : 'Signed in'))
+      : 'Not signed in';
+  }
+
+  // Update the sign-in / sign-out link
+  const signInLink = document.querySelector('[data-account-signin]');
+  if (signInLink) {
+    if (signedIn) {
+      signInLink.href = '#/settings';
+      signInLink.querySelector('span').textContent = 'Sign Out';
+      signInLink.querySelector('svg').innerHTML = '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>';
+    } else {
+      signInLink.href = '#/auth';
+      signInLink.querySelector('span').textContent = 'Sign In';
+      signInLink.querySelector('svg').innerHTML = '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>';
+    }
+  }
+}
+
 // Set up hashchange listener BEFORE boot, so play routes (which return
 // early from boot without calling bindGlobal) still respond to navigation.
 window.addEventListener('hashchange', () => { render(); });
+
+// Initialize auth and account store on boot.
+// initAuth reads the Supabase session and subscribes to changes.
+// initAccountStore syncs the reactive store with auth-controller.
+// Both are safe to call when Supabase is not configured (they return UNCONFIGURED).
+initAuth().then(() => {
+  initAccountStore();
+  // Subscribe to auth state changes to update the account dropdown reactively
+  subscribeToAccount(() => updateAccountDropdown());
+  // Update the dropdown once on init
+  updateAccountDropdown();
+});
 
 boot().then(() => {
   render();

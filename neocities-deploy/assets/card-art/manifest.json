@@ -1,0 +1,336 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedBy": "scripts/build-card-art.mjs",
+  "boardSize": {
+    "width": 720,
+    "height": 1000
+  },
+  "webpQuality": 82,
+  "count": 54,
+  "entries": [
+    {
+      "code": "10c",
+      "output": "10c.webp",
+      "bytes": 223498,
+      "hash": "b7de93c3938cf394"
+    },
+    {
+      "code": "10d",
+      "output": "10d.webp",
+      "bytes": 220200,
+      "hash": "417a709d1842923a"
+    },
+    {
+      "code": "10h",
+      "output": "10h.webp",
+      "bytes": 260010,
+      "hash": "cb48321516567c39"
+    },
+    {
+      "code": "10s",
+      "output": "10s.webp",
+      "bytes": 195350,
+      "hash": "015cf35dee70735a"
+    },
+    {
+      "code": "2c",
+      "output": "2c.webp",
+      "bytes": 170324,
+      "hash": "e3d461514e904632"
+    },
+    {
+      "code": "2d",
+      "output": "2d.webp",
+      "bytes": 203432,
+      "hash": "cb8ade08f432e924"
+    },
+    {
+      "code": "2h",
+      "output": "2h.webp",
+      "bytes": 233574,
+      "hash": "f32e7ee38fdf14b8"
+    },
+    {
+      "code": "2s",
+      "output": "2s.webp",
+      "bytes": 190926,
+      "hash": "9b14ddee2a67ccbf"
+    },
+    {
+      "code": "3c",
+      "output": "3c.webp",
+      "bytes": 195550,
+      "hash": "78b3580a6423f7c6"
+    },
+    {
+      "code": "3d",
+      "output": "3d.webp",
+      "bytes": 235206,
+      "hash": "2b8e77da6921e99a"
+    },
+    {
+      "code": "3h",
+      "output": "3h.webp",
+      "bytes": 246960,
+      "hash": "b163c6b16ba02f1f"
+    },
+    {
+      "code": "3s",
+      "output": "3s.webp",
+      "bytes": 200430,
+      "hash": "38326c93138b7350"
+    },
+    {
+      "code": "4c",
+      "output": "4c.webp",
+      "bytes": 201044,
+      "hash": "ad04b64ffeb9fbca"
+    },
+    {
+      "code": "4d",
+      "output": "4d.webp",
+      "bytes": 208464,
+      "hash": "50b1d6d8069f0250"
+    },
+    {
+      "code": "4h",
+      "output": "4h.webp",
+      "bytes": 235672,
+      "hash": "11f5340701120e85"
+    },
+    {
+      "code": "4s",
+      "output": "4s.webp",
+      "bytes": 186192,
+      "hash": "555f2d19aaf2baf6"
+    },
+    {
+      "code": "5c",
+      "output": "5c.webp",
+      "bytes": 205638,
+      "hash": "713c912354469c3f"
+    },
+    {
+      "code": "5d",
+      "output": "5d.webp",
+      "bytes": 238448,
+      "hash": "a463ee8250607c31"
+    },
+    {
+      "code": "5h",
+      "output": "5h.webp",
+      "bytes": 221116,
+      "hash": "2685f75a74592230"
+    },
+    {
+      "code": "5s",
+      "output": "5s.webp",
+      "bytes": 200336,
+      "hash": "368b9ff9cbc4b357"
+    },
+    {
+      "code": "6c",
+      "output": "6c.webp",
+      "bytes": 182562,
+      "hash": "c0c2c06c84f1c4a0"
+    },
+    {
+      "code": "6d",
+      "output": "6d.webp",
+      "bytes": 221726,
+      "hash": "adfc93217a427d84"
+    },
+    {
+      "code": "6h",
+      "output": "6h.webp",
+      "bytes": 235222,
+      "hash": "22c0bff9bcd464db"
+    },
+    {
+      "code": "6s",
+      "output": "6s.webp",
+      "bytes": 211828,
+      "hash": "a02f6e3a08cd2919"
+    },
+    {
+      "code": "7c",
+      "output": "7c.webp",
+      "bytes": 195550,
+      "hash": "78b3580a6423f7c6"
+    },
+    {
+      "code": "7d",
+      "output": "7d.webp",
+      "bytes": 206024,
+      "hash": "0b226bf509c49fb4"
+    },
+    {
+      "code": "7h",
+      "output": "7h.webp",
+      "bytes": 229728,
+      "hash": "461189f4b0cc93fc"
+    },
+    {
+      "code": "7s",
+      "output": "7s.webp",
+      "bytes": 201964,
+      "hash": "aeb7c855edf67673"
+    },
+    {
+      "code": "8c",
+      "output": "8c.webp",
+      "bytes": 176614,
+      "hash": "cb443674aa47a7d6"
+    },
+    {
+      "code": "8d",
+      "output": "8d.webp",
+      "bytes": 224860,
+      "hash": "f74ea8578df50cd4"
+    },
+    {
+      "code": "8h",
+      "output": "8h.webp",
+      "bytes": 233102,
+      "hash": "41d970e0ce11c46d"
+    },
+    {
+      "code": "8s",
+      "output": "8s.webp",
+      "bytes": 251706,
+      "hash": "1dcc3e47c3d79eca"
+    },
+    {
+      "code": "9c",
+      "output": "9c.webp",
+      "bytes": 222532,
+      "hash": "36a5bba6c9aadcb4"
+    },
+    {
+      "code": "9d",
+      "output": "9d.webp",
+      "bytes": 241666,
+      "hash": "2fd48b8dce499dae"
+    },
+    {
+      "code": "9h",
+      "output": "9h.webp",
+      "bytes": 230448,
+      "hash": "6ac561e8faae46c0"
+    },
+    {
+      "code": "9s",
+      "output": "9s.webp",
+      "bytes": 251706,
+      "hash": "1dcc3e47c3d79eca"
+    },
+    {
+      "code": "ac",
+      "output": "ac.webp",
+      "bytes": 202436,
+      "hash": "a518fe63df6ae0f9"
+    },
+    {
+      "code": "ad",
+      "output": "ad.webp",
+      "bytes": 240558,
+      "hash": "77f114a7b734a51c"
+    },
+    {
+      "code": "ah",
+      "output": "ah.webp",
+      "bytes": 209254,
+      "hash": "f2aa1238c96a8a08"
+    },
+    {
+      "code": "as",
+      "output": "as.webp",
+      "bytes": 201920,
+      "hash": "a438a4a3c8dc61dd"
+    },
+    {
+      "code": "bj",
+      "output": "bj.webp",
+      "bytes": 200210,
+      "hash": "58ea480a4138f8c6"
+    },
+    {
+      "code": "jc",
+      "output": "jc.webp",
+      "bytes": 212436,
+      "hash": "78671e2c816b51f2"
+    },
+    {
+      "code": "jd",
+      "output": "jd.webp",
+      "bytes": 172544,
+      "hash": "dbe11112354f81a7"
+    },
+    {
+      "code": "jh",
+      "output": "jh.webp",
+      "bytes": 223780,
+      "hash": "a97d6149ad1ce6ca"
+    },
+    {
+      "code": "js",
+      "output": "js.webp",
+      "bytes": 184970,
+      "hash": "e48046837f7a2935"
+    },
+    {
+      "code": "kc",
+      "output": "kc.webp",
+      "bytes": 191678,
+      "hash": "3b9fcbec13805502"
+    },
+    {
+      "code": "kd",
+      "output": "kd.webp",
+      "bytes": 201556,
+      "hash": "104717d57fc9417f"
+    },
+    {
+      "code": "kh",
+      "output": "kh.webp",
+      "bytes": 223654,
+      "hash": "c83a1745d7e9bed6"
+    },
+    {
+      "code": "ks",
+      "output": "ks.webp",
+      "bytes": 199188,
+      "hash": "819be6cc5d1b3d7d"
+    },
+    {
+      "code": "qc",
+      "output": "qc.webp",
+      "bytes": 202240,
+      "hash": "2f4f26c21ce9e8a4"
+    },
+    {
+      "code": "qd",
+      "output": "qd.webp",
+      "bytes": 205870,
+      "hash": "af398a57ff53d853"
+    },
+    {
+      "code": "qh",
+      "output": "qh.webp",
+      "bytes": 224614,
+      "hash": "a8fad7d36d453405"
+    },
+    {
+      "code": "qs",
+      "output": "qs.webp",
+      "bytes": 175508,
+      "hash": "88b19e2ea886a767"
+    },
+    {
+      "code": "rj",
+      "output": "rj.webp",
+      "bytes": 169934,
+      "hash": "e3690976b47caeac"
+    }
+  ]
+}

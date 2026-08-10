@@ -1,0 +1,10 @@
+/* ═══════════════════════════════════════════════════════════════
+   styles.css — Main stylesheet entry point.
+   Imports modular CSS sections; esbuild inlines @import at build time.
+   ═══════════════════════════════════════════════════════════════ */
+@import './css/tokens-base.css';
+@import './css/feature-components.css';
+@import './css/pages-polish.css';
+@import './css/advanced-card-rules.css';
+@import './play/rank/rank-glyph.css';
+@import './play/ranked/leaderboard.css';

@@ -1,0 +1,1024 @@
+{
+  "schemaVersion": "1.0.0",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "variantRegistrySchemaVersion": "1.0.0",
+  "profileIds": [
+    "core-advanced-authority",
+    "core-unrestricted-authority"
+  ],
+  "rankCount": 15,
+  "spadesVariantCount": 13,
+  "superEffectCount": 9,
+  "originKinds": [
+    "natural",
+    "generated",
+    "copied",
+    "mimicked",
+    "replayed",
+    "transferred",
+    "unknown"
+  ],
+  "attributionStatuses": [
+    "exact",
+    "fractional",
+    "generated-origin",
+    "not-observable"
+  ],
+  "evidenceGrades": [
+    "measured",
+    "provisional",
+    "weak",
+    "insufficient",
+    "not-observable",
+    "unsupported"
+  ],
+  "descriptiveClassifications": [
+    "investigate-high-impact",
+    "policy-sensitive",
+    "rare-high-potency",
+    "frequent-low-impact",
+    "variant-concentrated",
+    "super-dependent",
+    "insufficient-evidence"
+  ],
+  "rankAuthorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0",
+  "ranks": [
+    {
+      "rankId": "A",
+      "displayName": "A",
+      "authority": {
+        "pointRowValue": 4,
+        "scuttleOrder": 1,
+        "prScuttleImmune": true,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "base-counter",
+          "purge",
+          "anchor-counter",
+          "spade-exile-counter",
+          "super-counter"
+        ],
+        "canonicalRestrictions": [
+          "A♠ and ⭐A use expanded counter authority."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "base-counter",
+          "purge",
+          "anchor-counter",
+          "super-counter"
+        ],
+        "eligibleCardIds": [
+          "A♣",
+          "A♦",
+          "A♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "A♠",
+        "mode": "spade-exile-counter",
+        "displayName": "A♠ Exile Counter",
+        "effectIds": [
+          "spade-exile-counter"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [
+        {
+          "superId": "rank-a-super-super-ace",
+          "effectId": "super-ace",
+          "displayName": "⭐A Super Counter",
+          "mode": "super-counter",
+          "kind": "core-declare-super-ace-counter",
+          "altKinds": [
+            "advanced-super-ace"
+          ],
+          "actionModes": [
+            "super-ace"
+          ],
+          "profiles": [
+            "core-advanced-authority",
+            "core-unrestricted-authority"
+          ],
+          "authorityRefs": [
+            "SUPER_EFFECTS",
+            "variant-registry",
+            "card-face-data"
+          ]
+        }
+      ],
+      "superEffectCount": 1,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "2",
+      "displayName": "2",
+      "authority": {
+        "pointRowValue": 2,
+        "scuttleOrder": 2,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "quick-score-discard",
+          "wild-catalyst",
+          "solo-wild-copy",
+          "commandeer"
+        ],
+        "canonicalRestrictions": [
+          "⭐2 bypasses Guard and rank control protection, never Aegis.",
+          "Solo Wild copies a same-suit rank 3-7 Base effect; wild for effect only, not points."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "quick-score-discard",
+          "wild-catalyst",
+          "commandeer"
+        ],
+        "eligibleCardIds": [
+          "2♣",
+          "2♦",
+          "2♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": false,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "2♠",
+        "mode": "solo-wild-copy",
+        "displayName": "2♠ Enhanced Wild Copy",
+        "effectIds": [
+          "solo-wild-copy"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_SPADES_PLAY_FORM",
+        "note": "2♠ Solo Wild Copy may target spade-enhanced Base modes (3♠/4♠/6♠/7♠) that 2♣/2♦/2♥ cannot copy."
+      },
+      "supers": [
+        {
+          "superId": "rank-2-super-super-two",
+          "effectId": "super-two",
+          "displayName": "⭐2 Commandeer",
+          "mode": "commandeer",
+          "kind": "advanced-super-two",
+          "altKinds": [],
+          "actionModes": [
+            "two-score",
+            "two-hold"
+          ],
+          "profiles": [
+            "core-advanced-authority",
+            "core-unrestricted-authority"
+          ],
+          "authorityRefs": [
+            "SUPER_EFFECTS",
+            "variant-registry",
+            "card-face-data"
+          ]
+        }
+      ],
+      "superEffectCount": 1,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "3",
+      "displayName": "3",
+      "authority": {
+        "pointRowValue": 3,
+        "scuttleOrder": 3,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "hand-raid",
+          "instant-bounce",
+          "spade-enhancement",
+          "super-raid"
+        ],
+        "canonicalRestrictions": [
+          "Generated effect plays open their own response window."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "hand-raid",
+          "instant-bounce",
+          "super-raid"
+        ],
+        "eligibleCardIds": [
+          "3♣",
+          "3♦",
+          "3♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "3♠",
+        "mode": "spade-enhancement",
+        "displayName": "3♠ Enhancement",
+        "effectIds": [
+          "spade-enhancement"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [
+        {
+          "superId": "rank-3-super-super-three-raid",
+          "effectId": "super-three-raid",
+          "displayName": "⭐3 Super Raid",
+          "mode": "super-raid",
+          "kind": "advanced-super-three-raid",
+          "altKinds": [],
+          "actionModes": [
+            "three-raid"
+          ],
+          "profiles": [
+            "core-unrestricted-authority"
+          ],
+          "authorityRefs": [
+            "SUPER_EFFECTS",
+            "variant-registry",
+            "card-face-data"
+          ]
+        }
+      ],
+      "superEffectCount": 1,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "4",
+      "displayName": "4",
+      "authority": {
+        "pointRowValue": 4,
+        "scuttleOrder": 4,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": true,
+        "supportedModes": [
+          "row-clear",
+          "natural",
+          "total-clear",
+          "row-exchange"
+        ],
+        "canonicalRestrictions": [
+          "4♠ and ⭐4 are structural operations."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "row-clear",
+          "natural",
+          "total-clear",
+          "row-exchange"
+        ],
+        "eligibleCardIds": [
+          "4♣",
+          "4♦",
+          "4♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "4♠",
+        "mode": "total-clear",
+        "displayName": "4♠ Total Clear",
+        "effectIds": [
+          "total-clear"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [
+        {
+          "superId": "rank-4-super-super-four-exchange",
+          "effectId": "super-four-exchange",
+          "displayName": "⭐4 Row Exchange",
+          "mode": "row-exchange",
+          "kind": "advanced-super-four-exchange",
+          "altKinds": [],
+          "actionModes": [
+            "four-exchange-pr",
+            "four-exchange-er"
+          ],
+          "profiles": [
+            "core-advanced-authority",
+            "core-unrestricted-authority"
+          ],
+          "authorityRefs": [
+            "SUPER_EFFECTS",
+            "variant-registry",
+            "card-face-data"
+          ]
+        }
+      ],
+      "superEffectCount": 1,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "5",
+      "displayName": "5",
+      "authority": {
+        "pointRowValue": 5,
+        "scuttleOrder": 5,
+        "prScuttleImmune": true,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "recycle",
+          "suit-rummage",
+          "super-recycle"
+        ],
+        "canonicalRestrictions": [
+          "Exile access is suit-position dependent."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "recycle",
+          "suit-rummage",
+          "super-recycle"
+        ],
+        "eligibleCardIds": [
+          "5♣",
+          "5♦",
+          "5♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "5♠",
+        "mode": "suit-rummage",
+        "displayName": "5♠ Any-Exile Rummage",
+        "effectIds": [
+          "suit-rummage"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": "5♠ rummage may access any Exile card; other suits have position-restricted access."
+      },
+      "supers": [
+        {
+          "superId": "rank-5-super-super-five-recycle",
+          "effectId": "super-five-recycle",
+          "displayName": "⭐5 Super Recycle",
+          "mode": "super-recycle",
+          "kind": "advanced-super-five-recycle",
+          "altKinds": [],
+          "actionModes": [
+            "five-recycle"
+          ],
+          "profiles": [
+            "core-unrestricted-authority"
+          ],
+          "authorityRefs": [
+            "SUPER_EFFECTS",
+            "variant-registry",
+            "card-face-data"
+          ]
+        }
+      ],
+      "superEffectCount": 1,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "6",
+      "displayName": "6",
+      "authority": {
+        "pointRowValue": 6,
+        "scuttleOrder": 6,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "dig",
+          "swap-bar-peek",
+          "deep-draw",
+          "super-dig"
+        ],
+        "canonicalRestrictions": [
+          "6♠ requires at least one other hand card at declaration."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "dig",
+          "swap-bar-peek",
+          "deep-draw",
+          "super-dig"
+        ],
+        "eligibleCardIds": [
+          "6♣",
+          "6♦",
+          "6♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "6♠",
+        "mode": "deep-draw",
+        "displayName": "6♠ Deep Draw",
+        "effectIds": [
+          "deep-draw"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [
+        {
+          "superId": "rank-6-super-super-six-dig",
+          "effectId": "super-six-dig",
+          "displayName": "⭐6 Super Dig",
+          "mode": "super-dig",
+          "kind": "advanced-super-six-dig",
+          "altKinds": [],
+          "actionModes": [
+            "six-dig"
+          ],
+          "profiles": [
+            "core-unrestricted-authority"
+          ],
+          "authorityRefs": [
+            "SUPER_EFFECTS",
+            "variant-registry",
+            "card-face-data"
+          ]
+        }
+      ],
+      "superEffectCount": 1,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "7",
+      "displayName": "7",
+      "authority": {
+        "pointRowValue": 7,
+        "scuttleOrder": 7,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "topdeck-cast",
+          "scoring-trigger",
+          "spade-topdeck",
+          "sequential-topdeck"
+        ],
+        "canonicalRestrictions": [
+          "⭐7 uses suspended child plays."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "topdeck-cast",
+          "scoring-trigger",
+          "sequential-topdeck"
+        ],
+        "eligibleCardIds": [
+          "7♣",
+          "7♦",
+          "7♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "7♠",
+        "mode": "spade-topdeck",
+        "displayName": "7♠ Topdeck",
+        "effectIds": [
+          "spade-topdeck"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [
+        {
+          "superId": "rank-7-super-super-seven-topdeck",
+          "effectId": "super-seven-topdeck",
+          "displayName": "⭐7 Sequential Topdeck",
+          "mode": "sequential-topdeck",
+          "kind": "advanced-super-seven-topdeck",
+          "altKinds": [],
+          "actionModes": [
+            "seven-topdeck"
+          ],
+          "profiles": [
+            "core-unrestricted-authority"
+          ],
+          "authorityRefs": [
+            "SUPER_EFFECTS",
+            "variant-registry",
+            "card-face-data"
+          ]
+        }
+      ],
+      "superEffectCount": 1,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "8",
+      "displayName": "8",
+      "authority": {
+        "pointRowValue": 8,
+        "scuttleOrder": 8,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": true,
+        "supportedModes": [
+          "aegis-field",
+          "scuttle-counter",
+          "free-scuttle",
+          "absolute-scuttle"
+        ],
+        "canonicalRestrictions": [
+          "8♠ respects Scuttle immunity; ⭐8 ignores ordinary Scuttle immunity."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "aegis-field",
+          "scuttle-counter",
+          "free-scuttle",
+          "absolute-scuttle"
+        ],
+        "eligibleCardIds": [
+          "8♣",
+          "8♦",
+          "8♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "8♠",
+        "mode": "free-scuttle",
+        "displayName": "8♠ Free Scuttle",
+        "effectIds": [
+          "free-scuttle"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [
+        {
+          "superId": "rank-8-super-super-eight-scuttle",
+          "effectId": "super-eight-scuttle",
+          "displayName": "⭐8 Absolute Scuttle",
+          "mode": "absolute-scuttle",
+          "kind": "advanced-super-eight-scuttle",
+          "altKinds": [],
+          "actionModes": [
+            "eight-absolute-scuttle"
+          ],
+          "profiles": [
+            "core-advanced-authority",
+            "core-unrestricted-authority"
+          ],
+          "authorityRefs": [
+            "SUPER_EFFECTS",
+            "variant-registry",
+            "card-face-data"
+          ]
+        }
+      ],
+      "superEffectCount": 1,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "9",
+      "displayName": "9",
+      "authority": {
+        "pointRowValue": 9,
+        "scuttleOrder": 9,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "tap",
+          "goal-shift",
+          "spade-goal-shift",
+          "anchor"
+        ],
+        "canonicalRestrictions": [
+          "Nines can never receive Aegis."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "tap",
+          "goal-shift",
+          "anchor"
+        ],
+        "eligibleCardIds": [
+          "9♣",
+          "9♦",
+          "9♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "9♠",
+        "mode": "spade-goal-shift",
+        "displayName": "9♠ Goal Shift",
+        "effectIds": [
+          "spade-goal-shift"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [],
+      "superEffectCount": 0,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "10",
+      "displayName": "10",
+      "authority": {
+        "pointRowValue": 10,
+        "scuttleOrder": 10,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "club-foundation",
+          "diamond-mimic",
+          "heart-tempo",
+          "spade-stack-theft",
+          "spade-exile-recovery"
+        ],
+        "canonicalRestrictions": [
+          "Effect-play Tens become permanently Exile-Bound when resolution begins."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "club-foundation",
+          "diamond-mimic",
+          "heart-tempo"
+        ],
+        "eligibleCardIds": [
+          "10♣",
+          "10♦",
+          "10♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "10♠",
+        "mode": "spade-stack-theft",
+        "displayName": "10♠ Stack Theft / Exile Recovery",
+        "effectIds": [
+          "spade-stack-theft"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [],
+      "superEffectCount": 0,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "J",
+      "displayName": "J",
+      "authority": {
+        "pointRowValue": 3,
+        "scuttleOrder": 11,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "disrupt",
+          "pr-attachment",
+          "er-attachment",
+          "tempo-force"
+        ],
+        "canonicalRestrictions": [
+          "Attachment validity is rechecked after relevant state changes."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "disrupt",
+          "pr-attachment",
+          "er-attachment",
+          "tempo-force"
+        ],
+        "eligibleCardIds": [
+          "J♣",
+          "J♦",
+          "J♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "J♠",
+        "mode": "jack-er",
+        "displayName": "J♠ ER Attachment",
+        "effectIds": [
+          "jack-er"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [
+        {
+          "superId": "rank-j-super-super-jack-tempo",
+          "effectId": "super-jack-tempo",
+          "displayName": "⭐J Tempo Force",
+          "mode": "tempo-force",
+          "kind": "advanced-super-j-tempo",
+          "altKinds": [],
+          "actionModes": [
+            "jack-tempo"
+          ],
+          "profiles": [
+            "core-advanced-authority",
+            "core-unrestricted-authority"
+          ],
+          "authorityRefs": [
+            "SUPER_EFFECTS",
+            "variant-registry",
+            "card-face-data"
+          ]
+        }
+      ],
+      "superEffectCount": 1,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "Q",
+      "displayName": "Q",
+      "authority": {
+        "pointRowValue": 2,
+        "scuttleOrder": 12,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "pr-score",
+          "guard-anchor",
+          "quick-aegis",
+          "spade-protection"
+        ],
+        "canonicalRestrictions": [
+          "A Queen entering ER receives exact future-Start Aegis."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "pr-score",
+          "guard-anchor",
+          "quick-aegis"
+        ],
+        "eligibleCardIds": [
+          "Q♣",
+          "Q♦",
+          "Q♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "Q♠",
+        "mode": "spade-protection",
+        "displayName": "Q♠ Special Protection",
+        "effectIds": [
+          "spade-protection"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [],
+      "superEffectCount": 0,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "K",
+      "displayName": "K",
+      "authority": {
+        "pointRowValue": 8,
+        "scuttleOrder": 13,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "anchor-goal-counter",
+          "spade-multi-counter",
+          "wild-sovereignty",
+          "anchor",
+          "royal-marriage"
+        ],
+        "canonicalRestrictions": [
+          "Royal Marriage is not a Combo.",
+          "K♠ Wild Sovereignty copies one Spade Base effect of rank 3-7 and is Exiled after that Wild use."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "anchor-goal-counter",
+          "wild-sovereignty",
+          "anchor",
+          "royal-marriage"
+        ],
+        "eligibleCardIds": [
+          "K♣",
+          "K♦",
+          "K♥"
+        ]
+      },
+      "spadesVariant": {
+        "eligible": true,
+        "hasDistinctPrintedSpadesEffect": true,
+        "hasDistinctSpadesPlayForm": true,
+        "hasDistinctSpadesResolution": true,
+        "spadesAnalyticsEligible": true,
+        "cardId": "K♠",
+        "mode": "spade-multi-counter",
+        "displayName": "K♠ Multi-Counter / Wild Sovereignty",
+        "effectIds": [
+          "spade-multi-counter"
+        ],
+        "ineligibilityReason": null,
+        "eligibilityReasonCode": "DISTINCT_PRINTED_SPADES_EFFECT",
+        "note": null
+      },
+      "supers": [],
+      "superEffectCount": 0,
+      "spadesEligible": true
+    },
+    {
+      "rankId": "RJ",
+      "displayName": "RJ",
+      "authority": {
+        "pointRowValue": 5,
+        "scuttleOrder": 14,
+        "prScuttleImmune": true,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "hand-swap",
+          "self-reset",
+          "opponent-attack",
+          "shuffle-reset"
+        ],
+        "canonicalRestrictions": [
+          "Shuffle Reset has narrow counter authority."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "hand-swap",
+          "self-reset",
+          "opponent-attack",
+          "shuffle-reset"
+        ],
+        "eligibleCardIds": []
+      },
+      "spadesVariant": {
+        "eligible": false,
+        "hasDistinctPrintedSpadesEffect": false,
+        "hasDistinctSpadesPlayForm": false,
+        "hasDistinctSpadesResolution": false,
+        "spadesAnalyticsEligible": false,
+        "cardId": null,
+        "effectIds": [],
+        "ineligibilityReason": "NO_DISTINCT_SPADES_BEHAVIOR",
+        "ineligibilityNote": "Rank RJ has no mechanically distinct Spades variant in canonical authority."
+      },
+      "supers": [],
+      "superEffectCount": 0,
+      "spadesEligible": false
+    },
+    {
+      "rankId": "BJ",
+      "displayName": "BJ",
+      "authority": {
+        "pointRowValue": 11,
+        "scuttleOrder": 15,
+        "prScuttleImmune": false,
+        "prEffectTargetImmune": false,
+        "supportedModes": [
+          "board-lock-quick",
+          "exile-recycle"
+        ],
+        "canonicalRestrictions": [
+          "Board Lock is a Quick Effect that costs no Mini-Turn.",
+          "Only ⭐A authority may directly counter Board Lock."
+        ],
+        "authorityVersion": "4.2.6",
+        "rulesVersion": "4.3.1",
+        "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0"
+      },
+      "ordinaryBaseline": {
+        "effectIds": [
+          "board-lock-quick",
+          "exile-recycle"
+        ],
+        "eligibleCardIds": []
+      },
+      "spadesVariant": {
+        "eligible": false,
+        "hasDistinctPrintedSpadesEffect": false,
+        "hasDistinctSpadesPlayForm": false,
+        "hasDistinctSpadesResolution": false,
+        "spadesAnalyticsEligible": false,
+        "cardId": null,
+        "effectIds": [],
+        "ineligibilityReason": "NO_DISTINCT_SPADES_BEHAVIOR",
+        "ineligibilityNote": "Rank BJ has no mechanically distinct Spades variant in canonical authority."
+      },
+      "supers": [],
+      "superEffectCount": 0,
+      "spadesEligible": false
+    }
+  ],
+  "registryHash": "32e5d1631e24220f47bd074c701799056784c1b1ececcfeeacc0afcbfd879779"
+}

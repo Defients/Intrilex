@@ -1,0 +1,234 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-024",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT-024-DP-01": {
+        "controllerId": "P1",
+        "id": "CT-024-DP-01",
+        "identity": "A♣",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-024-DP-02": {
+        "controllerId": "P1",
+        "id": "CT-024-DP-02",
+        "identity": "2♦",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-024-DP-03": {
+        "controllerId": "P1",
+        "id": "CT-024-DP-03",
+        "identity": "3♥",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-024-DP-04": {
+        "controllerId": "P1",
+        "id": "CT-024-DP-04",
+        "identity": "K♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "DP"
+      },
+      "CT-024-P1-H": {
+        "controllerId": "P1",
+        "id": "CT-024-P1-H",
+        "identity": "4♠",
+        "originalOwnerId": "P1",
+        "state": {},
+        "zone": "P1_HAND"
+      },
+      "CT-024-P1-PR": {
+        "controllerId": "P1",
+        "id": "CT-024-P1-PR",
+        "identity": "7♣",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": 7
+        },
+        "zone": "P1_PR"
+      },
+      "CT-024-P2-ER": {
+        "controllerId": "P2",
+        "id": "CT-024-P2-ER",
+        "identity": "Q♣",
+        "originalOwnerId": "P2",
+        "state": {
+          "anchor": true
+        },
+        "zone": "P2_ER"
+      },
+      "CT-024-P2-PR": {
+        "controllerId": "P2",
+        "id": "CT-024-P2-PR",
+        "identity": "8♦",
+        "originalOwnerId": "P2",
+        "state": {
+          "aegis": true,
+          "pointValue": 8
+        },
+        "zone": "P2_PR"
+      }
+    },
+    "fullTurnSequence": 12,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [
+          "CT-024-P1-H"
+        ],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT-024-P1-PR"
+        ],
+        "teamId": null
+      },
+      "P2": {
+        "er": [
+          "CT-024-P2-ER"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT-024-P2-PR"
+        ],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 5,
+      "P2": 6
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [
+        "CT-024-DP-01",
+        "CT-024-DP-02",
+        "CT-024-DP-03",
+        "CT-024-DP-04"
+      ],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "total-clear",
+        "sourceCardId": "CT-024-P1-H"
+      },
+      "actorId": "P1",
+      "id": "CT024-1",
+      "type": "RESOLVE_RANK_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT024-1",
+      "id": "EV-000001",
+      "payload": {
+        "destinations": {
+          "CT-024-P1-PR": "GY",
+          "CT-024-P2-ER": "GY",
+          "CT-024-P2-PR": "GY"
+        },
+        "sourceCardId": "CT-024-P1-H",
+        "targetCardIds": [
+          "CT-024-P1-PR",
+          "CT-024-P2-PR",
+          "CT-024-P2-ER"
+        ]
+      },
+      "previousStateHash": "4ced3cb4a8d0f0e801604ab40e26c85fa5a18f296bcdc31ab12e2498c95e5112",
+      "sequence": 1,
+      "stateHash": "5a66393e09d52aca3944dc2e7e202ac05cb032d0abf562d2bd883176ea2ade7d",
+      "type": "TOTAL_CLEAR_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT024-1",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "c070c73f8a355243fcfaf92427b7d0814218229156cc8f44b68794bbc8c61da2",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "5a66393e09d52aca3944dc2e7e202ac05cb032d0abf562d2bd883176ea2ade7d",
+      "stateHashBefore": "4ced3cb4a8d0f0e801604ab40e26c85fa5a18f296bcdc31ab12e2498c95e5112"
+    }
+  ],
+  "initialStateHash": "4ced3cb4a8d0f0e801604ab40e26c85fa5a18f296bcdc31ab12e2498c95e5112",
+  "finalStateHash": "5a66393e09d52aca3944dc2e7e202ac05cb032d0abf562d2bd883176ea2ade7d",
+  "eventLogHash": "c070c73f8a355243fcfaf92427b7d0814218229156cc8f44b68794bbc8c61da2",
+  "checkpointLogHash": "c7d8a641cbda81267745431db10790c3fdb59e6340a619e0ceceab19cc480c14",
+  "rngTraceHash": "42d26816fae89c4eed1c10e2e1aa6c47f7e2d1fd3733458d6333c2959b771e83",
+  "contentHash": "89c6b42c2a8db84e43a85bfe290f2b78f178a9f408ca07f15af5eca5200e1559",
+  "integrityHash": "b74662b3fcbd7c87d894991a6f0d20a0b6cdf88d740a2b75d7bce0bc8f55cb11"
+}

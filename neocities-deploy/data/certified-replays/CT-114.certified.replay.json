@@ -1,0 +1,251 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-114",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT114-A1": {
+        "controllerId": "P1",
+        "id": "CT114-A1",
+        "identity": "Q♣",
+        "originalOwnerId": "P1",
+        "state": {
+          "anchor": true
+        },
+        "zone": "P1_ER"
+      },
+      "CT114-A2": {
+        "controllerId": "P3",
+        "id": "CT114-A2",
+        "identity": "K♦",
+        "originalOwnerId": "P3",
+        "state": {
+          "anchor": true
+        },
+        "zone": "P3_ER"
+      },
+      "CT114-B1": {
+        "controllerId": "P2",
+        "id": "CT114-B1",
+        "identity": "Q♥",
+        "originalOwnerId": "P2",
+        "state": {
+          "anchor": true
+        },
+        "zone": "P2_ER"
+      },
+      "CT114-PA": {
+        "controllerId": "P1",
+        "id": "CT114-PA",
+        "identity": "4♣",
+        "originalOwnerId": "P1",
+        "state": {
+          "pointValue": 4
+        },
+        "zone": "P1_PR"
+      },
+      "CT114-PB": {
+        "controllerId": "P2",
+        "id": "CT114-PB",
+        "identity": "10♠",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 10
+        },
+        "zone": "P2_PR"
+      }
+    },
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "End",
+    "players": {
+      "P1": {
+        "er": [
+          "CT114-A1"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT114-PA"
+        ],
+        "teamId": "A"
+      },
+      "P2": {
+        "er": [
+          "CT114-B1"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [
+          "CT114-PB"
+        ],
+        "teamId": "B"
+      },
+      "P3": {
+        "er": [
+          "CT114-A2"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P3",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "A"
+      },
+      "P4": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P4",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": "B"
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0,
+      "P3": 0,
+      "P4": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2",
+      "P3",
+      "P4"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "activePlayerId": "P1",
+        "kind": "resolve-team-endgame",
+        "kindOfCheck": "exhausted"
+      },
+      "actorId": "P1",
+      "id": "CT114-1",
+      "type": "RESOLVE_PHASE11_ACTION"
+    }
+  ],
+  "accepted": [
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT114-1",
+      "id": "EV-000001",
+      "payload": {
+        "kindOfCheck": "exhausted",
+        "representativeWinnerId": "P1",
+        "totals": {
+          "A": {
+            "anchors": 2,
+            "points": 4
+          },
+          "B": {
+            "anchors": 1,
+            "points": 10
+          }
+        },
+        "winningTeamId": "A"
+      },
+      "previousStateHash": "c2c7a2f1cf1b0e8d74d567788a46b3ab6f29d0f8cb36f2af6f43a4460da48688",
+      "sequence": 1,
+      "stateHash": "2d06a0547880a6d975193bf4535dbca6d05c6003b11e3188b30aa1126bf9217d",
+      "type": "TEAM_ENDGAME_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT114-1",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "8ce66ba32cfc3e8572f514eadfa5315fd2f020477f1ddd6f4e9e11709676d453",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "2d06a0547880a6d975193bf4535dbca6d05c6003b11e3188b30aa1126bf9217d",
+      "stateHashBefore": "c2c7a2f1cf1b0e8d74d567788a46b3ab6f29d0f8cb36f2af6f43a4460da48688"
+    }
+  ],
+  "initialStateHash": "c2c7a2f1cf1b0e8d74d567788a46b3ab6f29d0f8cb36f2af6f43a4460da48688",
+  "finalStateHash": "2d06a0547880a6d975193bf4535dbca6d05c6003b11e3188b30aa1126bf9217d",
+  "eventLogHash": "8ce66ba32cfc3e8572f514eadfa5315fd2f020477f1ddd6f4e9e11709676d453",
+  "checkpointLogHash": "a70cae487e60bb5a05962f63ce6c3c5a8aa952403152321c01be59024e350fdb",
+  "rngTraceHash": "05d14f0172b7fa3fe880f4e5b1fdd59c3a1e3e145c14a4336e78478ca1cec39c",
+  "contentHash": "3174133aee1819e13dd1db4c15e9f6baf0b58f26283f9f967f8fa5ce7ac83b85",
+  "integrityHash": "9ee00cef2e6eabab12d1274436b4b4c7102ba72426e0425581887b7f5e418ef0"
+}

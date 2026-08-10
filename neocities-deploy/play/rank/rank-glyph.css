@@ -1,0 +1,239 @@
+/* ═══════════════════════════════════════════════════════════════
+   rank-glyph.css — Canonical Ranked glyph presentation.
+   Normalized bounding box + tier-aware halos + division ornamentation.
+   The PNG artwork is never recolored here — only outer CSS effects.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Normalized visual box ──
+   Silhouettes vary (Initiate narrow, Sovereign wide, Intrilex complex).
+   The common logical bounding box centers them without stretching. */
+.rank-glyph {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--rank-glyph-size, 128px);
+  height: var(--rank-glyph-size, 128px);
+  flex: 0 0 auto;
+  border-radius: 50%;
+  contain: layout paint;
+}
+
+.rank-glyph-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* preserve aspect ratio, never clip tips */
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Tier-aware halos (outer CSS only — never recolor the image) ──
+   Restrained per tier; the art carries most of the identity. */
+.rank-glyph.tier-initiate  { filter: drop-shadow(0 0 6px rgba(120,160,200,0.25)); }
+.rank-glyph.tier-cipher    { filter: drop-shadow(0 0 7px rgba(80,200,220,0.30)); }
+.rank-glyph.tier-warden    { filter: drop-shadow(0 0 8px rgba(90,180,220,0.35)); }
+.rank-glyph.tier-vanguard  { filter: drop-shadow(0 0 9px rgba(110,210,230,0.40)); }
+.rank-glyph.tier-ascendant { filter: drop-shadow(0 0 11px rgba(120,180,255,0.45)); }
+.rank-glyph.tier-paragon   { filter: drop-shadow(0 0 12px rgba(180,200,255,0.50)); }
+.rank-glyph.tier-sovereign { filter: drop-shadow(0 0 14px rgba(160,190,255,0.55)); }
+.rank-glyph.tier-intrilex  { filter: drop-shadow(0 0 16px rgba(120,220,255,0.55)) drop-shadow(0 0 22px rgba(180,140,255,0.35)); }
+.rank-glyph.tier-unranked  { filter: none; }
+
+/* ── INTRILEX apex special case ──
+   Slightly stronger surrounding UI treatment (spectral cyan-violet-white).
+   The glyph silhouette must remain recognizable — keep it restrained. */
+.rank-glyph-apex::after {
+  content: "";
+  position: absolute;
+  inset: -6%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(120,220,255,0.10) 0%, rgba(180,140,255,0.06) 50%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.rank-glyph-apex-position {
+  position: absolute;
+  bottom: -2%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: calc(var(--rank-glyph-size, 128px) * 0.16);
+  font-weight: 700;
+  color: var(--text, #e8eef6);
+  text-shadow: 0 0 8px rgba(120,220,255,0.6);
+  letter-spacing: 0.02em;
+}
+
+/* ── Division ornamentation ──
+   A subtle outer ring accent differentiates II/I from base III without
+   masking the central silhouette. III = base glyph (no accent). */
+.rank-glyph.division-ii::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(120,200,230,0.35) inset;
+  pointer-events: none;
+}
+
+.rank-glyph.division-i::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(140,220,255,0.55) inset, 0 0 10px rgba(140,220,255,0.25);
+  pointer-events: none;
+}
+
+/* ── UNRANKED neutral placeholder ──
+   Never uses an earned glyph. Neutral outlined frame + subtle "?" mark. */
+.rank-glyph-unranked {
+  border: 2px dashed rgba(160,180,200,0.35);
+  background: rgba(120,140,170,0.06);
+}
+.rank-glyph-placeholder {
+  font-size: calc(var(--rank-glyph-size, 128px) * 0.42);
+  font-weight: 600;
+  color: rgba(160,180,200,0.55);
+  line-height: 1;
+}
+
+/* ── Compact rank chip (plates / lists / leaderboards) ── */
+.rank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.rank-chip-label {
+  font-size: 0.85em;
+  color: var(--text, #e8eef6);
+}
+
+/* ── Profile rank card ── */
+.rank-card .rank-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.rank-card-current {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.rank-card-current-text { display: flex; flex-direction: column; gap: 4px; }
+.rank-card-tier { margin: 0; font-size: 1.4em; font-weight: 700; }
+.rank-card-placement { margin: 0; color: var(--text-dim, #8aa); }
+.rank-card-peak {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(120,140,170,0.08);
+}
+.rank-card-peak-label { color: var(--text-dim, #8aa); }
+@media (max-width: 560px) {
+  .rank-card .rank-card-body { flex-direction: column; align-items: flex-start; }
+}
+
+/* ── Terminal rank result block ── */
+.rank-result-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(120,140,170,0.06);
+}
+.rank-result-banner {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.rank-result-banner.rank-up { color: var(--accent, #6cf); }
+.rank-result-banner.rank-down { color: var(--danger, #e55); }
+.rank-result-glyphs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rank-result-arrow { font-size: 1.6em; color: var(--accent, #6cf); }
+.rank-result-tier { margin: 0; font-size: 1.2em; font-weight: 700; }
+.rank-result-rating { margin: 0; color: var(--text, #e8eef6); }
+.rank-result-delta { font-weight: 700; }
+.rank-result-delta-up { color: var(--accent, #6cf); }
+.rank-result-delta-down { color: var(--danger, #e55); }
+.rank-result-placement { margin: 0; color: var(--text-dim, #8aa); }
+
+/* ── Player plate glyph ── */
+.rd-plate-glyph { flex: 0 0 auto; }
+.rd-player-plate { align-items: center; }
+.rd-prestige-rank {
+  font-weight: 600;
+  color: var(--accent, #6cf);
+}
+
+/* ── Matchmaking versus card ── */
+.network-versus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 16px;
+  margin: 12px 0;
+  border-radius: 12px;
+  background: rgba(120,140,170,0.08);
+}
+.network-versus-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+}
+.network-versus-name { font-weight: 700; color: var(--text, #e8eef6); }
+.network-versus-tier { font-size: 0.85em; color: var(--text-dim, #8aa); }
+.network-versus-sep {
+  font-weight: 800;
+  font-size: 1.2em;
+  letter-spacing: 0.1em;
+  color: var(--accent, #6cf);
+}
+@media (max-width: 480px) {
+  .network-versus { gap: 12px; }
+  .network-versus-side { min-width: 90px; }
+}
+
+/* ── Reduced motion: drop animated glows ── */
+@media (prefers-reduced-motion: reduce) {
+  .rank-glyph,
+  .rank-glyph-apex::after {
+    filter: none;
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ── Small-size readability safeguards ──
+   At very small sizes (≤40px) the halo can bloom; scale it down.
+   Uses data-size attribute set by the component (not fragile style substring). */
+.rank-glyph[data-size="24"],
+.rank-glyph[data-size="28"],
+.rank-glyph[data-size="32"],
+.rank-glyph[data-size="36"],
+.rank-glyph[data-size="40"] {
+  filter: none;
+}
+.rank-glyph[data-size="24"].tier-intrilex,
+.rank-glyph[data-size="28"].tier-intrilex,
+.rank-glyph[data-size="32"].tier-intrilex,
+.rank-glyph[data-size="36"].tier-intrilex,
+.rank-glyph[data-size="40"].tier-intrilex {
+  filter: drop-shadow(0 0 4px rgba(120,220,255,0.40));
+}

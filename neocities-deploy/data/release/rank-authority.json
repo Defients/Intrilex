@@ -1,0 +1,296 @@
+{
+  "schemaVersion": "1.0.0",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0",
+  "ranks": [
+    {
+      "rankId": "A",
+      "displayName": "A",
+      "prPoints": 4,
+      "scuttleOrder": 1,
+      "modes": [
+        "base-counter",
+        "purge",
+        "anchor-counter",
+        "spade-exile-counter",
+        "super-counter"
+      ],
+      "prScuttleImmune": true,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "A♠ and ⭐A use expanded counter authority."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "2",
+      "displayName": "2",
+      "prPoints": 2,
+      "scuttleOrder": 2,
+      "modes": [
+        "quick-score-discard",
+        "wild-catalyst",
+        "solo-wild-copy",
+        "commandeer"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "⭐2 bypasses Guard and rank control protection, never Aegis.",
+        "Solo Wild copies a same-suit rank 3-7 Base effect; wild for effect only, not points."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "3",
+      "displayName": "3",
+      "prPoints": 3,
+      "scuttleOrder": 3,
+      "modes": [
+        "hand-raid",
+        "instant-bounce",
+        "spade-enhancement",
+        "super-raid"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "Generated effect plays open their own response window."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "4",
+      "displayName": "4",
+      "prPoints": 4,
+      "scuttleOrder": 4,
+      "modes": [
+        "row-clear",
+        "natural",
+        "total-clear",
+        "row-exchange"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": true,
+      "notes": [
+        "4♠ and ⭐4 are structural operations."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "5",
+      "displayName": "5",
+      "prPoints": 5,
+      "scuttleOrder": 5,
+      "modes": [
+        "recycle",
+        "suit-rummage",
+        "super-recycle"
+      ],
+      "prScuttleImmune": true,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "Exile access is suit-position dependent."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "6",
+      "displayName": "6",
+      "prPoints": 6,
+      "scuttleOrder": 6,
+      "modes": [
+        "dig",
+        "swap-bar-peek",
+        "deep-draw",
+        "super-dig"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "6♠ requires at least one other hand card at declaration."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "7",
+      "displayName": "7",
+      "prPoints": 7,
+      "scuttleOrder": 7,
+      "modes": [
+        "topdeck-cast",
+        "scoring-trigger",
+        "spade-topdeck",
+        "sequential-topdeck"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "⭐7 uses suspended child plays."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "8",
+      "displayName": "8",
+      "prPoints": 8,
+      "scuttleOrder": 8,
+      "modes": [
+        "aegis-field",
+        "scuttle-counter",
+        "free-scuttle",
+        "absolute-scuttle"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": true,
+      "notes": [
+        "8♠ respects Scuttle immunity; ⭐8 ignores ordinary Scuttle immunity."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "9",
+      "displayName": "9",
+      "prPoints": 9,
+      "scuttleOrder": 9,
+      "modes": [
+        "tap",
+        "goal-shift",
+        "spade-goal-shift",
+        "anchor"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "Nines can never receive Aegis."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "10",
+      "displayName": "10",
+      "prPoints": 10,
+      "scuttleOrder": 10,
+      "modes": [
+        "club-foundation",
+        "diamond-mimic",
+        "heart-tempo",
+        "spade-stack-theft",
+        "spade-exile-recovery"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "Effect-play Tens become permanently Exile-Bound when resolution begins."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "J",
+      "displayName": "J",
+      "prPoints": 3,
+      "scuttleOrder": 11,
+      "modes": [
+        "disrupt",
+        "pr-attachment",
+        "er-attachment",
+        "tempo-force"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "Attachment validity is rechecked after relevant state changes."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "Q",
+      "displayName": "Q",
+      "prPoints": 2,
+      "scuttleOrder": 12,
+      "modes": [
+        "pr-score",
+        "guard-anchor",
+        "quick-aegis",
+        "spade-protection"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "A Queen entering ER receives exact future-Start Aegis."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "K",
+      "displayName": "K",
+      "prPoints": 8,
+      "scuttleOrder": 13,
+      "modes": [
+        "anchor-goal-counter",
+        "spade-multi-counter",
+        "wild-sovereignty",
+        "anchor",
+        "royal-marriage"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "Royal Marriage is not a Combo.",
+        "K♠ Wild Sovereignty copies one Spade Base effect of rank 3-7 and is Exiled after that Wild use."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "RJ",
+      "displayName": "RJ",
+      "prPoints": 5,
+      "scuttleOrder": 14,
+      "modes": [
+        "hand-swap",
+        "self-reset",
+        "opponent-attack",
+        "shuffle-reset"
+      ],
+      "prScuttleImmune": true,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "Shuffle Reset has narrow counter authority."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    },
+    {
+      "rankId": "BJ",
+      "displayName": "BJ",
+      "prPoints": 11,
+      "scuttleOrder": 15,
+      "modes": [
+        "board-lock-quick",
+        "exile-recycle"
+      ],
+      "prScuttleImmune": false,
+      "prEffectTargetImmune": false,
+      "notes": [
+        "Board Lock is a Quick Effect that costs no Mini-Turn.",
+        "Only ⭐A authority may directly counter Board Lock."
+      ],
+      "sourceEngineVersion": "4.2.6",
+      "sourceRulesVersion": "4.3.1"
+    }
+  ]
+}

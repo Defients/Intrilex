@@ -21,7 +21,9 @@ export const WORKSPACES = [
   ['/profile','👤','Profile','Player profile'],
   ['/leaderboard','⬒','Leaderboard','Ranked ladder'],
   ['/intelligence','✦','Analytics AI','Ollama interpretation'],
-  ['/achievements','🏆','Achievements','56 launch achievements']
+  ['/achievements','🏆','Achievements','56 launch achievements'],
+  ['/settings','⚙','Settings','Display, network, and account'],
+  ['/auth','⊕','Sign In','Account authentication']
 ];
 
 export const TITLES = Object.fromEntries(WORKSPACES.map(([route,,label]) => [route,label]));
@@ -43,7 +45,9 @@ export const SUBTITLES = {
   '/tournament':'Single-elimination AI-vs-AI bracket with deterministic matches and champion crowning.',
   '/profile':'Player profile — identity, ranked, achievements, showcase, customization, and privacy.',
   '/leaderboard':'The canonical Ranked leaderboard. One prestigious ladder, server-side ranking, season standings.',
-  '/achievements':'56 launch achievements with deterministic detection, career tracking, and hidden discoveries.'
+  '/achievements':'56 launch achievements with deterministic detection, career tracking, and hidden discoveries.',
+  '/settings':'Display, accessibility, network, account, and data settings.',
+  '/auth':'Sign in with Discord or continue as a guest to play online.'
 };
 
 export const LANDING_MODES = new Set(['/', '/play', '/play/new', '/play/tutorial', '/play/match', '/play/replays', '/rules']);
@@ -66,7 +70,7 @@ export function renderNavigation() {
   const SECTIONS = [
     { label: 'Analysis', routes: ['/watch', '/replays', '/history', '/mechanics', '/cards', '/synergies'] },
     { label: 'Investigation', routes: ['/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament'] },
-    { label: 'System', routes: ['/evidence', '/profile', '/leaderboard', '/achievements', '/intelligence'] },
+    { label: 'System', routes: ['/evidence', '/profile', '/leaderboard', '/achievements', '/intelligence', '/settings'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));
   const nav = document.querySelector('#workspace-nav');

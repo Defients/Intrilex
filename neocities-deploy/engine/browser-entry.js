@@ -1,0 +1,12 @@
+export { IntrilexEngine } from './engine.js';
+export { parseCertifiedReplay, verifyCertifiedReplay, createCertifiedReplay, publicCertifiedReplayView, serializeCertifiedReplay } from './phase16.js';
+export { publicStateView, privateStateView, publicEventView } from './views.js';
+export { hashCanonical, sha256Text } from './hash.js';
+export { deriveSecuredPoints } from './state.js';
+export { FIRST_CONTACT_AUTONOMY_BASELINE_PROFILE, FIRST_CONTACT_AUTONOMY_ESSENTIALS_PROFILE, FIRST_CONTACT_RESPONSE_AUTHORITY_PROFILE, FIRST_CONTACT_PRIVATE_CHOICE_AUTHORITY_PROFILE, FIRST_CONTACT_TRIGGER_CLOSURE_PROFILE, createMatchState, enumerateLegalActions, authorizedLegalActionView, advanceToDecision, autonomousCapabilities, runRandomLegalMatch } from './autonomy.js';
+export { createCoreMatchState, advanceCoreToDecision, enumerateCoreLegalActions, enumerateCoreResponseActions, enumerateCorePrivateChoiceActions, toAuthorizedCoreAction, coreAuthorityCapabilities } from './core-autonomy.js';
+export { CORE_FOUNDATION_AUTHORITY_PROFILE } from './core-authority.js';
+export { CORE_EFFECT_DECLARATION_PROFILE } from './core-effects.js';
+export { CORE_RESPONSE_AUTHORITY_PROFILE } from './core-response.js';
+export { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE } from './core-private-choice.js';
+export { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE } from './core-advanced.js';

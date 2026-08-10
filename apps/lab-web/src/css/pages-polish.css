@@ -469,6 +469,73 @@ button:active:not(:disabled){transform:translateY(1px)}
 .tour-back{background:var(--surface);border:1px solid var(--border);color:var(--text)}
 .tour-next{background:linear-gradient(135deg,var(--cyan),var(--cyan-2));border:none;color:#0a1218}
 .tour-back:hover{background:var(--surface-2)}
+
+/* ── Auth workspace ── */
+.auth-page{display:flex;align-items:center;justify-content:center;min-height:60vh;padding:24px}
+.auth-card{max-width:440px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.auth-header{text-align:center;padding:32px 24px 20px;border-bottom:1px solid var(--border-soft)}
+.auth-glyph{display:inline-grid;place-items:center;width:56px;height:56px;border:1px solid var(--cyan-2);border-radius:14px;color:var(--cyan);font-weight:800;letter-spacing:.06em;font-size:22px;background:linear-gradient(145deg,rgba(90,215,232,.12),rgba(238,108,183,.08));margin-bottom:12px}
+.auth-header h2{margin:0 0 4px;font-size:20px;color:var(--text-bright)}
+.auth-subtitle{margin:0;font-size:13px;color:var(--muted)}
+.auth-body{padding:24px;display:flex;flex-direction:column;gap:16px}
+.auth-actions{display:flex;flex-direction:column;gap:12px}
+.auth-button{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:var(--transition-smooth);border:1px solid var(--border);background:var(--surface-2);color:var(--text)}
+.auth-button:hover:not(:disabled){border-color:var(--cyan-2);background:var(--surface)}
+.auth-button:disabled{opacity:.5;cursor:not-allowed}
+.auth-button.discord{background:#5865F2;border-color:#5865F2;color:#fff}
+.auth-button.discord:hover:not(:disabled){background:#4752F0;border-color:#4752F0}
+.auth-button.guest{background:var(--surface-2)}
+.auth-button.danger{border-color:rgba(242,119,122,.3);color:var(--danger,#f2777a)}
+.auth-button.danger:hover:not(:disabled){background:rgba(242,119,122,.08)}
+.auth-button svg{width:20px;height:20px;flex-shrink:0}
+.auth-divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border-soft)}
+.auth-info{font-size:12px;color:var(--muted);line-height:1.6;padding-top:8px;border-top:1px solid var(--border-soft)}
+.auth-info p{margin:0 0 4px}
+.auth-info strong{color:var(--text)}
+.auth-back{display:block;text-align:center;color:var(--muted);text-decoration:none;font-size:13px;padding:8px;transition:color var(--fast)}
+.auth-back:hover{color:var(--cyan)}
+.auth-profile{display:flex;align-items:center;gap:14px;padding:12px;background:var(--surface-2);border-radius:10px}
+.auth-profile-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border)}
+.auth-profile-avatar img{width:100%;height:100%;object-fit:cover}
+.auth-profile-avatar svg{width:28px;height:28px;color:var(--muted)}
+.auth-profile-info{display:flex;flex-direction:column;gap:2px}
+.auth-profile-info strong{font-size:15px;color:var(--text-bright)}
+.auth-profile-info small{font-size:11px;color:var(--muted)}
+
+/* ── Settings workspace ── */
+.settings-page{display:flex;flex-direction:column;gap:20px;max-width:640px;margin:0 auto;padding:8px 0}
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.settings-section h3{margin:0 0 16px;font-size:15px;color:var(--text-bright);letter-spacing:.04em}
+.settings-row{display:flex;flex-direction:column;gap:12px}
+.settings-toggle{display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+.settings-toggle input{margin-top:3px;accent-color:var(--cyan)}
+.settings-toggle-label{display:flex;flex-direction:column;gap:2px}
+.settings-toggle-label strong{font-size:14px;color:var(--text)}
+.settings-toggle-label small{font-size:12px;color:var(--muted)}
+.settings-field{display:flex;flex-direction:column;gap:6px}
+.settings-field-label{display:flex;flex-direction:column;gap:2px}
+.settings-field-label strong{font-size:14px;color:var(--text)}
+.settings-field-label small{font-size:12px;color:var(--muted)}
+.settings-field input{padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text);font-size:13px}
+.settings-button{padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;transition:var(--transition-smooth);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.settings-button:hover{border-color:var(--cyan-2);background:var(--surface)}
+.settings-button.danger{border-color:rgba(242,119,122,.3);color:var(--danger,#f2777a)}
+.settings-button.danger:hover{background:rgba(242,119,122,.08)}
+.settings-button.primary{background:linear-gradient(135deg,var(--cyan),var(--cyan-2));border:none;color:#0a1218}
+.settings-account{display:flex;flex-direction:column;gap:12px}
+.settings-account-info{display:flex;align-items:center;gap:14px;padding:12px;background:var(--surface-2);border-radius:10px}
+.settings-account-avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border)}
+.settings-account-avatar img{width:100%;height:100%;object-fit:cover}
+.settings-account-avatar svg{width:26px;height:26px;color:var(--muted)}
+.settings-account-details{display:flex;flex-direction:column;gap:2px;flex:1}
+.settings-account-details strong{font-size:14px;color:var(--text-bright)}
+.settings-account-details small{font-size:11px;color:var(--muted)}
+.settings-account-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;width:fit-content}
+.settings-account-badge.guest{background:rgba(241,189,93,.12);color:#f1bd5d}
+.settings-account-badge.verified{background:rgba(90,215,232,.12);color:var(--cyan)}
+.settings-account-signedout{display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;text-align:center}
+.settings-account-signedout p{margin:0;color:var(--muted);font-size:13px}
 .tour-next:hover{box-shadow:0 0 12px rgba(90,215,232,.4)}
 main{padding-left:calc(24px + var(--safe-area-left));padding-right:calc(24px + var(--safe-area-right));padding-bottom:calc(40px + var(--safe-area-bottom))}
 @media(max-width:760px){

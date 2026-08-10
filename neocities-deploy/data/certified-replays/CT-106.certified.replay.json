@@ -1,0 +1,214 @@
+{
+  "format": "intrilex-replay",
+  "version": 2,
+  "codec": "canonical-json-v1",
+  "rulesVersion": "4.1",
+  "engineVersion": "4.1.0",
+  "fixtureId": "CT-106",
+  "initialState": {
+    "activePlayerId": "P1",
+    "cards": {
+      "CT106-T": {
+        "controllerId": "P2",
+        "id": "CT106-T",
+        "identity": "5♠",
+        "originalOwnerId": "P2",
+        "state": {
+          "pointValue": 0,
+          "scuttleImmune": true
+        },
+        "zone": "P2_ER"
+      }
+    },
+    "fullTurnSequence": 20,
+    "metadata": {},
+    "pendingDeclaration": null,
+    "phase": "Action",
+    "players": {
+      "P1": {
+        "er": [],
+        "goal": 21,
+        "hand": [],
+        "id": "P1",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      },
+      "P2": {
+        "er": [
+          "CT106-T"
+        ],
+        "goal": 21,
+        "hand": [],
+        "id": "P2",
+        "limits": {
+          "miniTurnsRemaining": 1,
+          "miniTurnsUsed": 0,
+          "pendingActionPhaseSkips": 0,
+          "pendingFullTurnSkips": 0,
+          "rank10PlayedThisFT": false,
+          "swapBarUsedThisFT": false,
+          "ultraPlayedThisFT": false
+        },
+        "pr": [],
+        "teamId": null
+      }
+    },
+    "priority": null,
+    "revision": 0,
+    "rng": {
+      "algorithm": "xorshift32",
+      "cursor": 0,
+      "seed": 439041101
+    },
+    "rulesVersion": "4.1",
+    "schemaVersion": 1,
+    "stack": [],
+    "startPhaseSequenceByPlayer": {
+      "P1": 0,
+      "P2": 0
+    },
+    "suspendedStackItemIds": [],
+    "triggerQueue": [],
+    "turnOrder": [
+      "P1",
+      "P2"
+    ],
+    "winner": null,
+    "zones": {
+      "dp": [],
+      "exile": [],
+      "gy": [],
+      "staging": [],
+      "swapBar": []
+    }
+  },
+  "commands": [
+    {
+      "action": {
+        "kind": "configure-battle-realm",
+        "specs": {
+          "P1": "Bravery",
+          "P2": "Balance"
+        }
+      },
+      "actorId": "P1",
+      "id": "CT106-1",
+      "type": "RESOLVE_PHASE12_ACTION"
+    },
+    {
+      "action": {
+        "kind": "courageous-assault",
+        "targetCardId": "CT106-T"
+      },
+      "actorId": "P1",
+      "id": "CT106-2",
+      "type": "RESOLVE_PHASE12_ACTION"
+    }
+  ],
+  "accepted": [
+    true,
+    true
+  ],
+  "events": [
+    {
+      "commandId": "CT106-1",
+      "id": "EV-000001",
+      "payload": {
+        "selectedSpecByPlayer": {
+          "P1": "Bravery",
+          "P2": "Balance"
+        }
+      },
+      "previousStateHash": "022f6420efc52acc6a745bf7b792a57025b3282e7df48d8d40f87d26cf2f194a",
+      "sequence": 1,
+      "stateHash": "15751c67655f701443fe36af0547a28d92c6c6f57d0ac04f96e83db24be86ce9",
+      "type": "BATTLEREALM_SPECS_REVEALED",
+      "visibility": "public"
+    },
+    {
+      "commandId": "CT106-2",
+      "id": "EV-000002",
+      "payload": {
+        "bypassed": [
+          "rank",
+          "suit",
+          "guard",
+          "scuttle-immunity"
+        ],
+        "destination": "GY",
+        "from": "P2_ER",
+        "interruptCreatesSkip": false,
+        "playerId": "P1",
+        "targetCardId": "CT106-T",
+        "uncounterable": true
+      },
+      "previousStateHash": "15751c67655f701443fe36af0547a28d92c6c6f57d0ac04f96e83db24be86ce9",
+      "sequence": 2,
+      "stateHash": "860883fe72f40723f3b8bcf39443cf8c0657d248f73f01a9ff9da792d2a63ee6",
+      "type": "COURAGEOUS_ASSAULT_RESOLVED",
+      "visibility": "public"
+    }
+  ],
+  "checkpoints": [
+    {
+      "accepted": true,
+      "commandId": "CT106-1",
+      "commandIndex": 0,
+      "eventEndIndex": 1,
+      "eventRangeHash": "bc94aa720c39b30189b80b74e3c04059d5b07cd66ea861b8b503d3e9efed04ca",
+      "eventStartIndex": 0,
+      "revisionAfter": 1,
+      "revisionBefore": 0,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "15751c67655f701443fe36af0547a28d92c6c6f57d0ac04f96e83db24be86ce9",
+      "stateHashBefore": "022f6420efc52acc6a745bf7b792a57025b3282e7df48d8d40f87d26cf2f194a"
+    },
+    {
+      "accepted": true,
+      "commandId": "CT106-2",
+      "commandIndex": 1,
+      "eventEndIndex": 2,
+      "eventRangeHash": "1e26d3422c2e1620c246a2e079c90a9a0c406049a64a43c24a243cef65720acb",
+      "eventStartIndex": 1,
+      "revisionAfter": 2,
+      "revisionBefore": 1,
+      "rngAfter": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "rngBefore": {
+        "algorithm": "xorshift32",
+        "cursor": 0,
+        "seed": 439041101
+      },
+      "stateHashAfter": "860883fe72f40723f3b8bcf39443cf8c0657d248f73f01a9ff9da792d2a63ee6",
+      "stateHashBefore": "15751c67655f701443fe36af0547a28d92c6c6f57d0ac04f96e83db24be86ce9"
+    }
+  ],
+  "initialStateHash": "022f6420efc52acc6a745bf7b792a57025b3282e7df48d8d40f87d26cf2f194a",
+  "finalStateHash": "860883fe72f40723f3b8bcf39443cf8c0657d248f73f01a9ff9da792d2a63ee6",
+  "eventLogHash": "e4f9c4c70879149f18b5ce2a1cb487778f579640f2b8f548b7debce416f3f3c8",
+  "checkpointLogHash": "5882aacb41d39d3b6888754afda39de9bd5f2a4019e4e1dcbd72a3091bc4b512",
+  "rngTraceHash": "148e6e0d6ee02686b9689ce651a97b6fa2fb87bb0140a67cbfa3241710d6e19e",
+  "contentHash": "9d7276196cf90311e9e3aae3fe71b6e0d89ed2a63d93213f15d646e508e1e0b4",
+  "integrityHash": "4fc85f9f33d346430224406f1d5e80507bdddab6ade39d063ce7cc3e9e805e4b"
+}

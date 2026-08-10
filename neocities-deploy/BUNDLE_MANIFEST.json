@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-08-10T21:03:05.155Z",
+  "assets": {
+    "app": {
+      "file": "app.027f92757079.js",
+      "hash": "027f92757079",
+      "type": "js"
+    },
+    "styles": {
+      "file": "styles.7ad3b97cf5cb.css",
+      "hash": "7ad3b97cf5cb",
+      "type": "css"
+    }
+  }
+}
