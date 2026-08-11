@@ -1,13 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // workspaces/observatory.js — Consolidated workspace renderers:
-//   Compare, Mechanics, Synergies, History, Replays, Traces, CardFaces
+//   Compare, Mechanics, Synergies, History, Replays, Traces
 // ═══════════════════════════════════════════════════════════════
 
 import { state, app, esc, fmt, pct, short, definitionList } from '../state.js';
-import { renderCardFace} from '../card-face-renderer.js';
-import { listAuthoritativeCards} from '../card-face-data.js';
-
-const CARD_FAMILIES = [['ace', 'Ace'], ['two', 'Two'], ['three', 'Three'], ['four', 'Four'], ['five', 'Five'], ['six', 'Six'], ['seven', 'Seven'], ['eight', 'Eight'], ['nine', 'Nine'], ['ten', 'Ten'], ['jack', 'Jack'], ['queen', 'Queen'], ['king', 'King'], ['joker', 'Jokers']];
 
 // ── /compare ──────────────────────────────────────────────────────
 export function renderCompare() {
@@ -288,7 +284,7 @@ export function renderReplays() {
   const records = index?.records ?? [];
   if (!records.length) { app.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">▶</span><strong>No replay records.</strong><p>Run a campaign to generate certified replays.</p></div>'; return; }
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Replay Library</h2><p>${records.length} certified replays — click to load in Watch</p></div></div><div class="panel-body"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fixture</th><th>Commands</th><th>Events</th><th>Outcome</th></tr></thead><tbody>${records.map(r => `<tr class="clickable-row" data-fixture="${esc(r.fixtureId)}"><td class="mono">${esc(r.fixtureId)}</td><td>${r.commandCount ?? '—'}</td><td>${r.eventCount ?? '—'}</td><td>${esc(r.outcome ?? r.terminationReason ?? '—')}</td></tr>`).join('')}</tbody></table></div></div></section>`;
-  document.querySelectorAll('[data-fixture]').forEach(row => row.onclick = () => { state.fixtureId = row.dataset.fixture; state.replayKind = isAutonomy ? 'autonomy' : 'corpus'; state.replay = null; import('../app.js').then(m => m.render()); });
+  document.querySelectorAll('[data-fixture]').forEach(row => row.onclick = () => { state.fixtureId = row.dataset.fixture; state.replayKind = isAutonomy ? 'autonomy' : 'corpus'; state.replay = null; state.frame = 0; location.hash = '#/watch'; });
 }
 
 // ── /traces ───────────────────────────────────────────────────────
@@ -314,17 +310,4 @@ export function renderTraces() {
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Decision Traces</h2><p>${filtered.length} match trace records</p></div><div class="toolbar"><select id="trace-filter-policy"><option value="all">All policies</option>${policies.map(p => `<option value="${esc(p)}" ${p === filterPolicy ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select></div></div><div class="panel-body"><div class="table-wrap"><table class="data-table"><thead><tr><th>Match ID</th><th>Policy</th><th>Traces</th><th>Seat</th></tr></thead><tbody>${filtered.map(r => `<tr class="clickable-row" data-match-id="${esc(r.matchId)}"><td class="mono">${short(r.matchId)}</td><td>${esc(r.policyId ?? '—')}</td><td>${r.traceCount ?? '—'}</td><td>${r.seat ?? '—'}</td></tr>`).join('')}</tbody></table></div></div></section>`;
   document.querySelector('#trace-filter-policy')?.addEventListener('change', e => { state.traceFilterPolicy = e.target.value; import('../app.js').then(m => m.render()); });
   document.querySelectorAll('[data-match-id]').forEach(row => row.onclick = () => { state.traceSelectedId = row.dataset.matchId; import('../app.js').then(m => m.render()); });
-}
-
-// ── /cards ────────────────────────────────────────────────────────
-export function renderCardFaces() {
-  const view = state.cardFaceView ?? 'board';
-  const family = state.cardFaceFamily ?? 'ace';
-  const selected = state.cardFaceSelected ?? 'A♣';
-  const cards = listAuthoritativeCards();
-  const familyCards = cards.filter(c => c.family === family);
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Card Face Renderer</h2><p>Deterministic Board, Lite, and Full Zoom faces — ${cards.length} canonical cards</p></div><div class="toolbar"><select id="card-view"><option value="board" ${view === 'board' ? 'selected' : ''}>Board</option><option value="lite" ${view === 'lite' ? 'selected' : ''}>Lite</option><option value="full" ${view === 'full' ? 'selected' : ''}>Full Zoom</option></select><select id="card-family">${CARD_FAMILIES.map(([id, label]) => `<option value="${id}" ${id === family ? 'selected' : ''}>${label}</option>`).join('')}</select></div></div><div class="panel-body"><div class="ix-gallery">${familyCards.map(c => `<button class="ix-gallery-item ${c.identity === selected ? 'selected' : ''}" data-card-id="${esc(c.identity)}" aria-label="Select ${esc(c.identity)}">${renderCardFace(c.identity, view)}</button>`).join('')}</div></div></section>`;
-  document.querySelector('#card-view').onchange = e => { state.cardFaceView = e.target.value; import('../app.js').then(m => m.render()); };
-  document.querySelector('#card-family').onchange = e => { state.cardFaceFamily = e.target.value; import('../app.js').then(m => m.render()); };
-  document.querySelectorAll('[data-card-id]').forEach(btn => btn.onclick = () => { state.cardFaceSelected = btn.dataset.cardId; import('../app.js').then(m => m.render()); });
 }

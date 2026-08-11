@@ -272,4 +272,63 @@ export class FakeMatchResultPersistor extends MatchResultPersistor {
   hasAchievement(accountId, achievementId) { return this._achievements.has(`${accountId}:${achievementId}`); }
 
   async close() { /* No-op — in-memory */ }
+
+  // ── Guest migration ──
+
+  /** @type {Map<string, { sourceIdentity: string, targetIdentity: string, completedAt: number }>} */
+  _migrations = new Map();
+
+  async isMigrationCompleted(migrationId) {
+    return this._migrations.has(migrationId);
+  }
+
+  /**
+   * @param {object} plan - Migration plan
+   * @param {string} plan.migrationId
+   * @param {string} plan.sourceIdentity
+   * @param {string} plan.targetIdentity
+   * @param {number} [plan.migrationVersion]
+   * @param {Array<{ achievementId: string, unlockedAt: string, provenance?: string }>} achievements
+   */
+  async executeGuestMigration(plan, achievements) {
+    if (this._migrations.has(plan.migrationId)) {
+      return { success: true, error: null, migrationId: plan.migrationId, achievementsTransferred: 0, alreadyMigrated: true };
+    }
+
+    let achievementsTransferred = 0;
+    if (achievements && achievements.length > 0) {
+      for (const a of achievements) {
+        const key = `${plan.targetIdentity}:${a.achievementId}`;
+        if (this._achievements.has(key)) continue;
+        this._achievements.add(key);
+        this._achievementRows.push({
+          accountId: plan.targetIdentity,
+          achievementId: a.achievementId,
+          unlockedAt: a.unlockedAt,
+          provenance: a.provenance ?? 'LOCAL_DEVICE',
+          matchId: null,
+          rulesVersion: null,
+          productVersion: null,
+        });
+        achievementsTransferred++;
+      }
+    }
+
+    this._migrations.set(plan.migrationId, {
+      sourceIdentity: plan.sourceIdentity,
+      targetIdentity: plan.targetIdentity,
+      completedAt: Date.now(),
+    });
+
+    return { success: true, error: null, migrationId: plan.migrationId, achievementsTransferred, alreadyMigrated: false };
+  }
+
+  /** @returns {number} */
+  get migrationCount() { return this._migrations.size; }
+
+  /**
+   * @param {string} migrationId
+   * @returns {object|null}
+   */
+  getMigration(migrationId) { return this._migrations.get(migrationId) ?? null; }
 }

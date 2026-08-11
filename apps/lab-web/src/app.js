@@ -9,25 +9,28 @@ import { renderRulesPage } from './rulebook-renderer.js';
 import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js';
 import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js';
 import { TITLES,   SUBTITLES,   LANDING_MODES,   isPlayRoute,   route} from './router.js';
-import { boot,   loadReplay} from './data-loader.js';
+import { boot,   loadReplay,   getObservatoryBootPromise} from './data-loader.js';
 import {} from './experiment-controls.js';
 import {} from './integrity.js';
 import { renderRanks } from './workspaces/ranks.js';
 import { renderDiagnostics } from './workspaces/diagnostics.js';
 import { renderBranches} from './workspaces/branches.js';
 import { renderEvidence } from './workspaces/evidence.js';
+import { renderReleaseNotes } from './workspaces/release-notes.js';
 import { renderIntelligence } from './workspaces/intelligence.js';
 import { renderTournament } from './workspaces/tournament.js';
 import { renderProfile } from './workspaces/profile.js';
-import { renderLeaderboard } from './workspaces/leaderboard.js';
+import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.js';
 import { renderAchievementsWorkspace } from './play/achievements/achievement-ui.js';
 import { renderAuth } from './workspaces/auth.js';
 import { renderSettings } from './workspaces/settings.js';
-import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces, renderCardFaces } from './workspaces/observatory.js';
+import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js';
 import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js';
-import { shouldShowTour, startTour } from './onboarding-tour.js';
-import { initAuth, getAuthState, getProfile, subscribe as subscribeToAuth } from './play/network/auth-controller.js';
+import { initAuth, getAuthState, getProfile, signOut, subscribe as subscribeToAuth, isMigrationPending } from './play/network/auth-controller.js';
 import { initAccountStore, subscribe as subscribeToAccount } from './play/network/account-store.js';
+import { runMigrationIfPending, onMigrationStatusChange } from './play/network/migration-controller.js';
+import { renderPrivacyPage, renderTermsPage } from './legal-pages.js';
+import { renderRankingSystemOverlay } from './play/rank/ranking-system-overlay.js';
 
 // Install global error boundary at module load time
 installGlobalErrorBoundary();
@@ -37,6 +40,18 @@ installGlobalErrorBoundary();
 // ═══════════════════════════════════════════════════════════════
 export function render() {
   const r = route();
+  // Restore default SEO meta when leaving legal routes
+  if (r !== '/privacy' && r !== '/terms') {
+    const defaultDesc = 'Intrilex Simulation Lab — deterministic card-game simulation, replay forensics, rank anatomy observatory, and interactive play vs AI. Server-authoritative online Direct Duel invite alpha.';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc && metaDesc.getAttribute('content') !== defaultDesc) metaDesc.setAttribute('content', defaultDesc);
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) ogDesc.setAttribute('content', defaultDesc);
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute('content', 'Intrilex Simulation Lab — Deterministic Card-Game Simulation & Replay Forensics');
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical && canonical.getAttribute('href') !== 'https://intrilex.cards/') canonical.setAttribute('href', 'https://intrilex.cards/');
+  }
   if (isPlayRoute(r)) {
     shell.style.display = 'none';
     if (landingContainer) landingContainer.style.display = 'block';
@@ -47,13 +62,29 @@ export function render() {
   if (LANDING_MODES.has(r)) {
     shell.style.display = 'none';
     if (landingContainer) landingContainer.style.display = 'block';
-    document.title = r === '/' ? 'Intrilex — Play' : r === '/rules' ? 'Intrilex — Rules' : 'Intrilex';
+    document.title = r === '/' ? 'Intrilex — Play' : r === '/rules' ? 'Intrilex — Rules' : r === '/privacy' ? 'Intrilex — Privacy Policy' : r === '/terms' ? 'Intrilex — Terms of Service' : r === '/auth' ? 'Intrilex — Sign In' : 'Intrilex';
     renderLandingMode(r);
     return;
   }
   shell.style.display = '';
   if (landingContainer) landingContainer.style.display = 'none';
-  if (!state.replay) { loadReplay(state.fixtureId).then(render); return; }
+  // If observatory data is still loading in the background (started by boot()
+  // for landing/play routes), wait for it to complete before rendering.
+  const bootPromise = getObservatoryBootPromise();
+  if (bootPromise) {
+    bootPromise.then(() => { render(); }).catch(() => { render(); });
+    return;
+  }
+  // Only the Watch workspace needs a loaded replay. Other workspaces render
+  // from observatory data (summaries, analytics, indices) and must not be
+  // blocked by replay loading — especially since replay blobs are excluded
+  // from the build by default (~670MB savings), which means loadReplay()
+  // silently fails and would otherwise cause an infinite render loop.
+  if (r === '/watch' && !state.replay && state._replayLoadedFor !== state.fixtureId) {
+    state._replayLoadedFor = state.fixtureId;
+    loadReplay(state.fixtureId).then(render);
+    return;
+  }
   pageTitle.textContent = TITLES[r];
   pageSubtitle.textContent = SUBTITLES[r];
   const breadcrumbCurrent = document.querySelector('#breadcrumb-current');
@@ -66,19 +97,23 @@ export function render() {
   stopTransientFx();
   const renderers = {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
-    '/mechanics': renderMechanics, '/cards': renderCardFaces, '/synergies': renderSynergies,
+    '/mechanics': renderMechanics, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/profile': renderProfile, '/player': renderProfile, '/leaderboard': () => renderLeaderboard(app), '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app), '/auth': renderAuth, '/settings': renderSettings
+    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app), '/settings': renderSettings
   };
-  try { (renderers[r] ?? renderEvidence)(); }
+  try {
+    const result = (renderers[r] ?? renderEvidence)();
+    // Handle async renderers (renderProfile, renderAchievementsWorkspace, renderReleaseNotes)
+    if (result && typeof result.then === 'function') {
+      result.catch((error) => {
+        console.error(`[render] Async workspace error for ${r}:`, error);
+        app.innerHTML = `<div class="notice danger"><strong>Workspace error.</strong><p>Failed to render ${esc(r)}.</p><pre>${esc(error.stack ?? error.message)}</pre></div>`;
+      });
+    }
+  }
   catch (error) {
     console.error(`[render] Workspace error for ${r}:`, error);
     app.innerHTML = `<div class="notice danger"><strong>Workspace error.</strong><p>Failed to render ${esc(r)}.</p><pre>${esc(error.stack ?? error.message)}</pre></div>`;
-  }
-  // Trigger onboarding tour on first observatory visit
-  if (shouldShowTour()) {
-    // Defer to next frame so the workspace DOM is fully painted
-    requestAnimationFrame(() => startTour());
   }
 }
 
@@ -86,6 +121,241 @@ function renderLandingMode(r) {
   if (!landingContainer) return;
   if (r === '/') renderLanding();
   else if (r === '/rules') renderRules();
+  else if (r === '/privacy') renderLegalPage(r);
+  else if (r === '/terms') renderLegalPage(r);
+  else if (r === '/auth') {
+    // Sign In is an overlay on the homepage, not a Simulation Lab workspace.
+    // Render the landing page first, then open the auth overlay on top.
+    renderLanding();
+    openAuthOverlay();
+  }
+}
+
+/**
+ * Render a legal page (Privacy Policy or Terms of Service) inside the
+ * landing container using the same reading layout as the rules page.
+ * Also updates SEO meta tags (description, canonical, OG) for the route.
+ * @param {string} r - Route ('/privacy' or '/terms')
+ */
+function renderLegalPage(r) {
+  const isPrivacy = r === '/privacy';
+  const description = isPrivacy
+    ? 'Intrilex Privacy Policy — how Intrilex, operated by Deffy Pyah Urz, handles personal information, account data, gameplay records, and your privacy rights.'
+    : 'Intrilex Terms of Service — the terms governing your use of Intrilex, including account rules, acceptable use, competitive integrity, creator policy, and dispute provisions.';
+  // Update meta description for SEO
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.setAttribute('content', description);
+  const ogDesc = document.querySelector('meta[property="og:description"]');
+  if (ogDesc) ogDesc.setAttribute('content', description);
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle) ogTitle.setAttribute('content', isPrivacy ? 'Intrilex — Privacy Policy' : 'Intrilex — Terms of Service');
+  // Canonical reflects the legal route
+  const canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical) canonical.setAttribute('href', `https://intrilex.cards/#${r}`);
+
+  landingContainer.innerHTML = `<div class="landing-app rules-app">
+    <a class="skip skip-link" href="#legal-content">Skip to content</a>
+    <a class="back-button" href="#/" aria-label="Back to landing">&larr; Back</a>
+    <div id="legal-page-root"></div>
+  </div>`;
+  const root = landingContainer.querySelector('#legal-page-root');
+  if (isPrivacy) renderPrivacyPage(root);
+  else renderTermsPage(root);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LANDING OVERLAY — Large modal overlay for account features
+// (Settings, Achievements, Match History, Profile, Sign In)
+// Renders on top of the homepage without navigating away.
+// ═══════════════════════════════════════════════════════════════
+let _landingOverlay = null;
+let _landingOverlayTeardown = null;
+
+function closeLandingOverlay() {
+  if (!_landingOverlay) return;
+  // Run any registered teardown (e.g. abort in-flight requests, clear timers)
+  if (_landingOverlayTeardown) {
+    try { _landingOverlayTeardown(); } catch (e) { console.error('[closeLandingOverlay] teardown error:', e); }
+    _landingOverlayTeardown = null;
+  }
+  _landingOverlay.classList.remove('landing-overlay--visible');
+  const el = _landingOverlay;
+  _landingOverlay = null;
+  setTimeout(() => el.remove(), 300);
+}
+
+function openLandingOverlay(title, renderer, teardown) {
+  // Remove any existing overlay (and run its teardown)
+  if (_landingOverlay) {
+    if (_landingOverlayTeardown) { try { _landingOverlayTeardown(); } catch { /* best-effort */ } }
+    _landingOverlayTeardown = null;
+    _landingOverlay.remove();
+    _landingOverlay = null;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'landing-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'landing-overlay-title');
+  overlay.innerHTML = `<div class="landing-overlay-backdrop" data-overlay-close></div>
+    <div class="landing-overlay-card">
+      <div class="landing-overlay-header">
+        <h2 id="landing-overlay-title">${esc(title)}</h2>
+        <button class="landing-overlay-close" data-overlay-close aria-label="Close ${esc(title)}">&times;</button>
+      </div>
+      <div class="landing-overlay-body"></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  _landingOverlay = overlay;
+  _landingOverlayTeardown = typeof teardown === 'function' ? teardown : null;
+  requestAnimationFrame(() => overlay.classList.add('landing-overlay--visible'));
+
+  // Close handlers
+  overlay.querySelectorAll('[data-overlay-close]').forEach(el =>
+    el.addEventListener('click', closeLandingOverlay));
+  document.addEventListener('keydown', _overlayEscHandler);
+
+  // Render content
+  const body = overlay.querySelector('.landing-overlay-body');
+  try {
+    const result = renderer(body);
+    if (result && typeof result.then === 'function') {
+      result.catch((error) => {
+        console.error(`[openLandingOverlay] Async error for ${title}:`, error);
+        body.innerHTML = `<div class="notice danger"><strong>Error.</strong><p>Failed to render ${esc(title)}.</p><pre>${esc(error.stack ?? error.message)}</pre></div>`;
+      });
+    }
+  } catch (error) {
+    console.error(`[openLandingOverlay] Error for ${title}:`, error);
+    body.innerHTML = `<div class="notice danger"><strong>Error.</strong><p>Failed to render ${esc(title)}.</p><pre>${esc(error.stack ?? error.message)}</pre></div>`;
+  }
+}
+
+function _overlayEscHandler(e) {
+  if (e.key === 'Escape' && _landingOverlay) {
+    closeLandingOverlay();
+    document.removeEventListener('keydown', _overlayEscHandler);
+  }
+}
+
+// ── Overlay content renderers ────────────────────────────────────
+
+function openProfileOverlay() {
+  openLandingOverlay('Profile', (c) => renderProfile(c));
+}
+
+function openSettingsOverlay() {
+  openLandingOverlay('Settings', (c) => renderSettings(c));
+}
+
+function openAuthOverlay() {
+  // Sign In has its own panel (.auth-card), so we bypass the standard
+  // landing-overlay-card wrapper to avoid a panel-inside-a-panel.
+  // The .auth-card is rendered directly as the floating overlay card.
+  if (_landingOverlay) {
+    if (_landingOverlayTeardown) { try { _landingOverlayTeardown(); } catch { /* best-effort */ } }
+    _landingOverlayTeardown = null;
+    _landingOverlay.remove();
+    _landingOverlay = null;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'landing-overlay landing-overlay--bare';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'auth-overlay-title');
+  overlay.innerHTML = `<div class="landing-overlay-backdrop" data-overlay-close></div>
+    <div class="landing-overlay-body landing-overlay-body--bare"></div>`;
+  document.body.appendChild(overlay);
+  _landingOverlay = overlay;
+  requestAnimationFrame(() => overlay.classList.add('landing-overlay--visible'));
+
+  // Close handlers
+  overlay.querySelectorAll('[data-overlay-close]').forEach(el =>
+    el.addEventListener('click', closeLandingOverlay));
+  document.addEventListener('keydown', _overlayEscHandler);
+
+  // Render auth content; the .auth-card becomes the floating panel.
+  const body = overlay.querySelector('.landing-overlay-body--bare');
+  try {
+    renderAuth(body);
+  } catch (error) {
+    console.error('[openAuthOverlay] Error:', error);
+    body.innerHTML = `<div class="notice danger"><strong>Error.</strong><p>Failed to render Sign In.</p><pre>${esc(error.stack ?? error.message)}</pre></div>`;
+  }
+
+  // Inject a close button into the auth-card header so the overlay is dismissible.
+  const authHeader = body.querySelector('.auth-card .auth-header');
+  if (authHeader) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'landing-overlay-close auth-overlay-close';
+    closeBtn.setAttribute('aria-label', 'Close Sign In');
+    closeBtn.innerHTML = '&times;';
+    closeBtn.addEventListener('click', closeLandingOverlay);
+    authHeader.appendChild(closeBtn);
+  }
+}
+
+function openAchievementsOverlay() {
+  openLandingOverlay('Achievements', (c) => renderAchievementsWorkspace(c));
+}
+
+function openReleaseNotesOverlay() {
+  openLandingOverlay("What's New", (c) => renderReleaseNotes(c));
+}
+
+function openLeaderboardOverlay() {
+  openLandingOverlay('Leaderboard', (c) => renderLeaderboard(c), destroyLeaderboard);
+}
+
+function openRankingSystemOverlay() {
+  openLandingOverlay('Ranking System', (c) => renderRankingSystemOverlay(c));
+}
+
+async function openMatchHistoryOverlay() {
+  openLandingOverlay('Match History', async (container) => {
+    container.innerHTML = '<div class="loading-state"><span class="loading-spinner" aria-hidden="true"></span><strong>Loading match history…</strong></div>';
+    try {
+      const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js');
+      if (!isIndexedDBAvailable()) {
+        container.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">⚙</span><strong>No local match history.</strong><p>Match saves require IndexedDB, which is not available in this browser.</p></div>';
+        return;
+      }
+      const saves = await listSaves();
+      if (!saves || saves.length === 0) {
+        container.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">⚔</span><strong>No matches yet.</strong><p>Play your first duel to start building match history.</p></div>';
+        return;
+      }
+      container.innerHTML = `<div class="match-history-meta">${saves.length} saved match${saves.length > 1 ? 'es' : ''}</div><div class="match-history-list">${saves.map(s => {
+        const sum = s.summary;
+        const mode = sum?.mode ?? (s.mode ? String(s.mode).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : 'Local vs AI');
+        const turn = sum?.turn ? `Turn ${sum.turn}` : (s.stableBoundary?.turn ? `Turn ${s.stableBoundary.turn}` : '');
+        const score = (sum && typeof sum.humanScore === 'number') ? `${sum.humanScore}\u2013${sum.opponentScore}` : '';
+        const opponent = sum?.opponentLabel ?? '';
+        const updated = s.updatedAt ? new Date(s.updatedAt).toLocaleDateString() : '';
+        const parts = [mode, turn, score, opponent].filter(Boolean);
+        return `<button class="match-history-item" data-save-id="${esc(s.saveId)}">
+          <div class="match-history-item-info">
+            <strong>${esc(parts[0] ?? 'Match')}</strong>
+            <small>${esc(parts.slice(1).join(' · '))}</small>
+            <small class="match-history-item-date">${esc(updated)}</small>
+          </div>
+          <span class="match-history-item-action">Resume &rarr;</span>
+        </button>`;
+      }).join('')}</div>`;
+      container.querySelectorAll('.match-history-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const saveId = item.dataset.saveId;
+          closeLandingOverlay();
+          localStorage.setItem('intrilex:resume-save-id', saveId);
+          location.hash = '#/play/match';
+        });
+      });
+    } catch (err) {
+      container.innerHTML = `<div class="notice danger"><strong>Could not load match history.</strong><p>${esc(err.message ?? 'Unknown error')}</p></div>`;
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -97,7 +367,7 @@ async function renderPlayMode(r) {
   if (!landingContainer) return;
   if (!_playModule) {
     _playModule = await import('./play/play-app.js');
-    // Load base play CSS (tokens, hub, setup, tutorial, network lobby, terminal) — needed for all play routes
+    // Load base play CSS (tokens, hub, setup, network lobby, terminal) — needed for all play routes
     if (!document.querySelector('link[data-play-css]')) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -131,7 +401,7 @@ let _landingSelectedMode = 'local';
 function renderLanding() {
   _landingSelectedMode = 'local';
   landingContainer.innerHTML = `<div class="landing-app">
-    <video class="landing-video-bg" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+    <video class="landing-video-bg" autoplay muted loop playsinline preload="metadata" aria-hidden="true" data-mobile-skip>
       <source src="assets/landing1.mp4" type="video/mp4" />
     </video>
     <div class="landing-video-overlay" aria-hidden="true"></div>
@@ -229,11 +499,6 @@ function renderLanding() {
                   <span class="landing-mode-body"><strong>Online Duel</strong><small>Compete against players online</small></span>
                   <span class="landing-mode-check" aria-hidden="true">&#10003;</span>
                 </button>
-                <button class="landing-mode-tile" role="radio" aria-checked="false" data-mode="tutorial" data-href="#/play/tutorial">
-                  <span class="landing-mode-icon" aria-hidden="true">&#128214;</span>
-                  <span class="landing-mode-body"><strong>Guided Tutorial</strong><small>Learn by playing your first guided duel</small></span>
-                  <span class="landing-mode-check" aria-hidden="true">&#10003;</span>
-                </button>
               </div>
             </div>
             <button class="landing-play-cta" data-testid="landing-cta" data-href="#/play/new">
@@ -252,6 +517,20 @@ function renderLanding() {
               </span>
               <span class="landing-rail-chevron" aria-hidden="true">&rsaquo;</span>
             </a>
+            <button class="landing-rail-card ranking-system" data-ranking-system-card data-testid="ranking-system-button">
+              <span class="landing-rail-emblem ranking-system-emblem" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/>
+                  <path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/>
+                </svg>
+              </span>
+              <span class="landing-rail-body">
+                <strong>Ranking System</strong>
+                <p>How Intrilex Rating works &middot; the rank ladder &middot; how to climb</p>
+                <span class="landing-rail-cta">How ranking works &rarr;</span>
+              </span>
+              <span class="landing-rail-chevron" aria-hidden="true">&rsaquo;</span>
+            </button>
             <a class="landing-rail-card forums" href="https://intrilex.discourse.group/" target="_blank" rel="noopener noreferrer">
               <span class="landing-rail-forums-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -264,7 +543,7 @@ function renderLanding() {
               </span>
               <span class="landing-rail-chevron" aria-hidden="true">&rsaquo;</span>
             </a>
-            <a class="landing-rail-card whats-new" href="#/evidence">
+            <a class="landing-rail-card whats-new" href="#/release-notes">
               <span class="landing-rail-body">
                 <strong>WHAT'S NEW</strong>
                 <p>Intrilex v${LAB_VERSION} &middot; Engine ${ENGINE_VERSION} &middot; Rules ${RULES_VERSION}</p>
@@ -272,12 +551,29 @@ function renderLanding() {
               </span>
               <span class="landing-rail-emblem gold subtle" aria-hidden="true">&#10022;</span>
             </a>
+            <a class="landing-rail-card leaderboard" href="#/leaderboard" data-leaderboard-card>
+              <span class="landing-rail-body">
+                <strong>LEADERBOARD</strong>
+                <p>Season ladder &middot; Top 100 &middot; Your rank &middot; Tier filter</p>
+                <span class="landing-rail-cta">View standings &rarr;</span>
+              </span>
+              <span class="landing-rail-emblem leaderboard-emblem" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/>
+                  <path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/>
+                </svg>
+              </span>
+            </a>
           </div>
         </aside>
       </div>
     </main>
     <footer class="landing-footer">
-      <span class="landing-footer-brand"><img src="assets/intrilex-crest.png" alt="IX" class="landing-footer-crest" /> INTRILEX</span>
+      <span class="landing-footer-brand"><img src="assets/intrilex-icon.png" alt="IX" class="landing-footer-crest" /> INTRILEX</span>
+      <nav class="landing-footer-legal" aria-label="Legal">
+        <a href="#/privacy">Privacy</a>
+        <a href="#/terms">Terms</a>
+      </nav>
       <a class="landing-footer-credit" href="https://deffy.me" target="_blank" rel="noopener noreferrer" aria-label="Created and Designed by Ðeffy Urz">
         <span class="landing-footer-credit-prefix">Created &amp; Designed by</span>
         <span class="landing-footer-credit-name">Ðeffy Urz</span>
@@ -287,6 +583,30 @@ function renderLanding() {
   bindLandingEvents();
   loadContinueCard();
   showPreAlphaOverlay();
+  maybeSkipLandingVideo();
+}
+
+/**
+ * Skip the 6MB landing background video on small screens, reduced-motion, or
+ * metered connections. The video is decorative (aria-hidden) and the gradient
+ * + aurora layers remain as a graceful fallback. Setting preload="none" and
+ * removing the <source> stops the network fetch entirely on these clients.
+ */
+function maybeSkipLandingVideo() {
+  const video = landingContainer.querySelector('.landing-video-bg[data-mobile-skip]');
+  if (!video) return;
+  const mq = window.matchMedia;
+  const small = mq && mq('(max-width: 900px)').matches;
+  const reducedMotion = mq && mq('(prefers-reduced-motion: reduce)').matches;
+  const saveData = navigator.connection && (navigator.connection.saveData || navigator.connection.effectiveType === 'slow-2g' || navigator.connection.effectiveType === '2g');
+  if (small || reducedMotion || saveData) {
+    video.preload = 'none';
+    video.pause();
+    video.removeAttribute('autoplay');
+    const source = video.querySelector('source');
+    if (source) source.remove();
+    video.load();
+  }
 }
 
 let _preAlphaOverlayTimer = null;
@@ -296,8 +616,16 @@ function showPreAlphaOverlay() {
   const existing = document.getElementById('prealpha-overlay');
   if (existing) existing.remove();
 
-  const acknowledged = localStorage.getItem('intrilex-prealpha-acknowledged') === 'true';
-  const waitSeconds = acknowledged ? 2 : 5;
+  // Only show the overlay once every 12 hours per browser.
+  // The timestamp of the last acknowledgement is stored; if less than
+  // 12 hours have passed, the overlay is skipped entirely.
+  const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+  const lastAck = Number(localStorage.getItem('intrilex-prealpha-acknowledged-at') || 0);
+  const acknowledged = lastAck > 0 && (Date.now() - lastAck) < TWELVE_HOURS_MS;
+  if (acknowledged) return; // still within the 12-hour window — skip overlay
+
+  const firstTime = lastAck === 0;
+  const waitSeconds = firstTime ? 5 : 2;
 
   _preAlphaOverlayTimer = setTimeout(() => {
     const overlay = document.createElement('div');
@@ -313,6 +641,15 @@ function showPreAlphaOverlay() {
       <button class="prealpha-acknowledge" id="prealpha-acknowledge" disabled aria-disabled="true">
         <span class="prealpha-acknowledge-text">Please wait ${waitSeconds}s&hellip;</span>
       </button>
+      <div class="prealpha-dev-stamp" aria-label="Last development date: August 11, 2026">
+        <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
+        <span class="prealpha-dev-stamp-content">
+          <span class="prealpha-dev-stamp-dot" aria-hidden="true"></span>
+          <span class="prealpha-dev-stamp-label">Last development</span>
+          <time class="prealpha-dev-stamp-date" datetime="2026-08-11">Aug 11, 2026</time>
+        </span>
+        <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
+      </div>
     </div>`;
     document.body.appendChild(overlay);
     requestAnimationFrame(() => overlay.classList.add('prealpha-overlay--visible'));
@@ -334,7 +671,7 @@ function showPreAlphaOverlay() {
 
     btn.addEventListener('click', () => {
       if (btn.disabled) return;
-      localStorage.setItem('intrilex-prealpha-acknowledged', 'true');
+      localStorage.setItem('intrilex-prealpha-acknowledged-at', String(Date.now()));
       overlay.classList.remove('prealpha-overlay--visible');
       setTimeout(() => overlay.remove(), 400);
     });
@@ -360,7 +697,7 @@ function bindLandingEvents() {
     cta.dataset.href = tile.dataset.href || '#/play/new';
     const label = cta.querySelector('span:first-child');
     if (label) {
-      const modeLabels = { local: 'START LOCAL DUEL', online: 'START ONLINE DUEL', tutorial: 'START GUIDED TUTORIAL' };
+      const modeLabels = { local: 'START LOCAL DUEL', online: 'START ONLINE DUEL' };
       label.textContent = modeLabels[_landingSelectedMode] || 'START DUEL';
     }
     const subline = landingContainer.querySelector('[data-mode-subline]');
@@ -368,7 +705,6 @@ function bindLandingEvents() {
       const sublines = {
         local: 'Fast matches. Adaptive AI. Deterministic outcomes.',
         online: 'Server-authoritative. Real opponents. Verified replays.',
-        tutorial: 'Learn the basics. Interactive guidance. No pressure.',
       };
       subline.textContent = sublines[_landingSelectedMode] || 'Choose your mode. Make every decision count.';
     }
@@ -407,9 +743,58 @@ function bindLandingEvents() {
     accountMenu.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { toggleMenu(false); accountTrigger.focus(); }
     });
-    // Close after clicking a menu item
+    // Close after clicking a menu item and intercept account routes → overlays
     accountDropdown.querySelectorAll('.account-dropdown-item').forEach(item => {
-      item.addEventListener('click', () => toggleMenu(false));
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleMenu(false);
+        // The sign-in/sign-out link is dual-purpose: when signed out it opens
+        // the auth overlay; when signed in it signs the user out directly.
+        if (item.hasAttribute('data-account-signin')) {
+          if (getAuthState() === 'AUTHENTICATED' || getAuthState() === 'ANONYMOUS') {
+            signOut().then((ok) => {
+              if (ok) showToast('Signed out', { type: 'info' });
+              else showToast('Sign-out failed', { type: 'error' });
+            }).catch(() => showToast('Sign-out failed', { type: 'error' }));
+          } else {
+            openAuthOverlay();
+          }
+          return;
+        }
+        const href = item.getAttribute('href') || '';
+        if (href === '#/profile') { openProfileOverlay(); }
+        else if (href === '#/history') { openMatchHistoryOverlay(); }
+        else if (href === '#/achievements') { openAchievementsOverlay(); }
+        else if (href === '#/settings') { openSettingsOverlay(); }
+        else if (href === '#/auth') { openAuthOverlay(); }
+      });
+    });
+  }
+
+  // ── WHAT'S NEW card → overlay ──
+  const whatsNewLink = landingContainer.querySelector('.landing-rail-card.whats-new');
+  if (whatsNewLink) {
+    whatsNewLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openReleaseNotesOverlay();
+    });
+  }
+
+  // ── LEADERBOARD card → overlay ──
+  const leaderboardLink = landingContainer.querySelector('[data-leaderboard-card]');
+  if (leaderboardLink) {
+    leaderboardLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openLeaderboardOverlay();
+    });
+  }
+
+  // ── RANKING SYSTEM card → overlay ──
+  const rankingSystemBtn = landingContainer.querySelector('[data-ranking-system-card]');
+  if (rankingSystemBtn) {
+    rankingSystemBtn.addEventListener('click', () => {
+      openRankingSystemOverlay();
     });
   }
 }
@@ -442,7 +827,6 @@ async function loadContinueCard() {
         <p>Pick up where you left off.${meta ? `<br><span class="landing-rail-sub">${meta}</span>` : ''}</p>
         <span class="landing-resume-btn">RESUME &rarr;</span>
       </span>
-      <img src="assets/intrilex-crest.png" alt="" class="landing-rail-crest" aria-hidden="true" />
     </button>`;
     const continueBtn = slot.querySelector('.landing-rail-card.continue');
     if (continueBtn) {
@@ -451,7 +835,7 @@ async function loadContinueCard() {
         if (!saveId) return;
         // Hand off the saveId to the play hub, which restores via continueMatch
         try { sessionStorage.setItem('intrilex-continue-save', saveId); } catch { /* unavailable */ }
-        location.hash = '#/play';
+        location.hash = '#/play/match';
       });
     }
     // Continue slot is already first in the rail; no promotion needed
@@ -623,15 +1007,18 @@ function updateAccountDropdown() {
       : 'Not signed in';
   }
 
-  // Update the sign-in / sign-out link
+  // Update the sign-in / sign-out link.
+  // The click handler in bindLandingEvents intercepts this link and acts
+  // based on the current auth state (sign out when signed in, open auth
+  // overlay when signed out), so the href is only a semantic fallback.
   const signInLink = document.querySelector('[data-account-signin]');
   if (signInLink) {
     if (signedIn) {
-      signInLink.href = '#/settings';
+      signInLink.setAttribute('aria-label', 'Sign out');
       signInLink.querySelector('span').textContent = 'Sign Out';
       signInLink.querySelector('svg').innerHTML = '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>';
     } else {
-      signInLink.href = '#/auth';
+      signInLink.setAttribute('aria-label', 'Sign in');
       signInLink.querySelector('span').textContent = 'Sign In';
       signInLink.querySelector('svg').innerHTML = '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>';
     }
@@ -652,6 +1039,28 @@ initAuth().then(() => {
   subscribeToAccount(() => updateAccountDropdown());
   // Update the dropdown once on init
   updateAccountDropdown();
+  // Guest→permanent migration: if the user just linked Discord, transfer
+  // local achievements to the permanent account via the match server.
+  if (isMigrationPending()) {
+    showToast('Transferring your progress to your permanent account…', { type: 'info' });
+    runMigrationIfPending().then((result) => {
+      if (result && result.success) {
+        if (result.alreadyMigrated) {
+          showToast('Progress already transferred — welcome back!', { type: 'info' });
+        } else {
+          showToast(`Transfer complete! ${result.achievementsTransferred} achievement${result.achievementsTransferred === 1 ? '' : 's'} transferred.`, { type: 'success' });
+        }
+      } else if (result === null) {
+        // No migration was pending — shouldn't happen, but handle gracefully
+      } else {
+        showToast('Progress transfer failed — your local data is safe. Try again from Settings.', { type: 'error' });
+      }
+    }).catch(() => {
+      showToast('Progress transfer failed — your local data is safe.', { type: 'error' });
+    });
+  }
+}).catch((err) => {
+  console.warn('[app] initAuth failed, continuing without auth:', err?.message ?? err);
 });
 
 boot().then(() => {

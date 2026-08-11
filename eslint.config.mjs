@@ -98,6 +98,7 @@ export default [
         performance: 'readonly',
         structuredClone: 'readonly',
         AbortController: 'readonly',
+        AbortSignal: 'readonly',
         crypto: 'readonly',
         fetch: 'readonly',
         WebSocket: 'readonly',

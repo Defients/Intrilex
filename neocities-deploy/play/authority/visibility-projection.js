@@ -6,7 +6,6 @@
 //   - disabled-action explanations
 //   - card inspector
 //   - action preview
-//   - tutorial text
 //   - target highlighting
 //   - replay links
 //   - error messages

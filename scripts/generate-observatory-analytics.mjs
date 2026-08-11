@@ -10,6 +10,25 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const autonomy=path.join(root,'sample-data/autonomy');
 const out=path.join(root,'sample-data/observatory');
 await mkdir(out,{recursive:true});
+
+// Windows filesystem retry wrapper — antivirus/indexer can briefly lock files,
+// causing UNKNOWN (errno -4094) on writeFile. Retry with backoff.
+async function writeFileWithRetry(filePath, data, retries = 5) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      await writeFile(filePath, data);
+      return;
+    } catch (err) {
+      if (err.code === 'UNKNOWN' || err.code === 'EPERM' || err.code === 'EBUSY') {
+        if (attempt < retries - 1) {
+          await new Promise(r => setTimeout(r, 200 * (attempt + 1)));
+          continue;
+        }
+      }
+      throw err;
+    }
+  }
+}
 const summariesText=await readFile(path.join(autonomy,'match-summaries.ndjson'),'utf8');
 const summaries=summariesText.trim().split('\n').filter(Boolean).map(JSON.parse);
 const aggregate=JSON.parse(await readFile(path.join(autonomy,'aggregate.json'),'utf8'));
@@ -24,31 +43,31 @@ for(const retained of selected){
 }
 const analytics=buildObservatoryAnalytics({summaries,detailedMatches:detailed,aggregate});
 const full={...analytics,summaries,retainedReplayIndex:retention.records.map(r=>({matchId:r.matchId,reasons:r.reasons,summary:r.summary})),detailedMatchCount:detailed.length,sourceHashes:{aggregate:aggregate.aggregateHash,retention:retention.retentionHash,summaries:hashCanonical(summaries.map(s=>s.matchResultHash))}};
-await writeFile(path.join(out,'analytics.json'),JSON.stringify(full,null,2)+'\n');
-await writeFile(path.join(out,'metric-registry.json'),JSON.stringify(full.metricRegistry,null,2)+'\n');
-await writeFile(path.join(out,'decision-facts.ndjson'),detailed.flatMap(m=>m.facts.decisionFacts).map(JSON.stringify).join('\n')+'\n');
-await writeFile(path.join(out,'resolution-facts.ndjson'),detailed.flatMap(m=>m.facts.resolutionFacts).map(JSON.stringify).join('\n')+'\n');
-await writeFile(path.join(out,'causal-edges.ndjson'),detailed.flatMap(m=>m.facts.causalEdges).map(JSON.stringify).join('\n')+'\n');
+await writeFileWithRetry(path.join(out,'analytics.json'),JSON.stringify(full,null,2)+'\n');
+await writeFileWithRetry(path.join(out,'metric-registry.json'),JSON.stringify(full.metricRegistry,null,2)+'\n');
+await writeFileWithRetry(path.join(out,'decision-facts.ndjson'),detailed.flatMap(m=>m.facts.decisionFacts).map(JSON.stringify).join('\n')+'\n');
+await writeFileWithRetry(path.join(out,'resolution-facts.ndjson'),detailed.flatMap(m=>m.facts.resolutionFacts).map(JSON.stringify).join('\n')+'\n');
+await writeFileWithRetry(path.join(out,'causal-edges.ndjson'),detailed.flatMap(m=>m.facts.causalEdges).map(JSON.stringify).join('\n')+'\n');
 const mechCols=['mechanic','usageUnit','analysisUnitOpportunityCount','matchOpportunityCount','selectionCount','usageRate','sampleSize','outcomeAssociation','ciLow','ciHigh','evidenceGrade','status','formulaHash'];
 const mechRows=full.mechanics.map(x=>[x.mechanic,x.usageUnit??'match',x.analysisUnitOpportunityCount??x.matchOpportunityCount??'N/A',x.matchOpportunityCount??'N/A',x.selectionCount??'N/A',x.matchUsageRate??'N/A',x.sampleSize??'N/A',x.outcomeAssociation??'N/A',x.outcomeAssociation95?.[0]??'N/A',x.outcomeAssociation95?.[1]??'N/A',x.evidenceGrade??'N/A',x.status??'N/A',x.formulaHash??'N/A']);
-await writeFile(path.join(out,'mechanics.csv'),[mechCols,...mechRows].map(r=>r.map(sanitizeCsvCell).join(',')).join('\n')+'\n');
+await writeFileWithRetry(path.join(out,'mechanics.csv'),[mechCols,...mechRows].map(r=>r.map(sanitizeCsvCell).join(',')).join('\n')+'\n');
 const synCols=['source','target','relationshipClass','effect','shrunkEffect','ciLow','ciHigh','pValue','qValue','jointOpportunityCount','baselineCount','evidenceGrade','status','formulaHash'];
 const synRows=full.synergies.map(x=>[x.source,x.target,x.relationshipClass,x.effect??'N/A',x.shrunkEffect??'N/A',x.confidenceInterval?.[0]??'N/A',x.confidenceInterval?.[1]??'N/A',x.pValue??'N/A',x.qValue??'N/A',x.jointOpportunityCount??'N/A',x.baselineCount??'N/A',x.evidenceGrade??'N/A',x.status??'N/A',x.formulaHash??'N/A']);
-await writeFile(path.join(out,'synergies.csv'),[synCols,...synRows].map(r=>r.map(sanitizeCsvCell).join(',')).join('\n')+'\n');
-await writeFile(path.join(out,'README.md'),`# Mechanics Observatory sample data\n\nTelemetry schema: 4.1.0\nAnalytics schema: 4.2.0\nMatches: ${summaries.length}\nDetailed semantic fact matches: ${detailed.length}\nObservatory hash: ${full.observatoryHash}\n`);
+await writeFileWithRetry(path.join(out,'synergies.csv'),[synCols,...synRows].map(r=>r.map(sanitizeCsvCell).join(',')).join('\n')+'\n');
+await writeFileWithRetry(path.join(out,'README.md'),`# Mechanics Observatory sample data\n\nTelemetry schema: 4.1.0\nAnalytics schema: 4.2.0\nMatches: ${summaries.length}\nDetailed semantic fact matches: ${detailed.length}\nObservatory hash: ${full.observatoryHash}\n`);
 
 // Generate canonical Rank Anatomy registry artifact
 const rankAnatomyRegistry = canonicalRankAnatomyRegistry(hashCanonical);
 const rank2Eligibility = rank2EligibilityRecord(hashCanonical);
 const eligibilitySummary = rankEligibilitySummary();
-await writeFile(path.join(out,'rank-anatomy-registry.json'),JSON.stringify(rankAnatomyRegistry,null,2)+'\n');
-await writeFile(path.join(out,'rank-2-eligibility.json'),JSON.stringify(rank2Eligibility,null,2)+'\n');
-await writeFile(path.join(out,'rank-eligibility-summary.json'),JSON.stringify(eligibilitySummary,null,2)+'\n');
+await writeFileWithRetry(path.join(out,'rank-anatomy-registry.json'),JSON.stringify(rankAnatomyRegistry,null,2)+'\n');
+await writeFileWithRetry(path.join(out,'rank-2-eligibility.json'),JSON.stringify(rank2Eligibility,null,2)+'\n');
+await writeFileWithRetry(path.join(out,'rank-eligibility-summary.json'),JSON.stringify(eligibilitySummary,null,2)+'\n');
 console.log(`RANK ANATOMY REGISTRY PASS: ranks=${rankAnatomyRegistry.rankCount}; spadesVariants=${rankAnatomyRegistry.spadesVariantCount}; superEffects=${rankAnatomyRegistry.superEffectCount}; hash=${rankAnatomyRegistry.registryHash?.substring(0,16)}`);
 
 // Write per-variant analytics (Rank Anatomy: ordinary/spade/super/effect decomposition)
 if (full.variantAnalytics) {
-  await writeFile(path.join(out,'variant-analytics.json'),JSON.stringify(full.variantAnalytics,null,2)+'\n');
+  await writeFileWithRetry(path.join(out,'variant-analytics.json'),JSON.stringify(full.variantAnalytics,null,2)+'\n');
   const variantKeys = Object.keys(full.variantAnalytics.variantMetrics || {});
   console.log(`VARIANT ANALYTICS PASS: variants=${variantKeys.length}; metrics=${JSON.stringify(Object.keys(full.variantAnalytics))}`);
 } else {
@@ -64,7 +83,7 @@ if (full.rankPower || full.rankCounters) {
     rankCounters: full.rankCounters,
     generatedAt: new Date().toISOString()
   };
-  await writeFile(path.join(out,'rank-analytics.json'),JSON.stringify(rankAnalyticsExport,null,2)+'\n');
+  await writeFileWithRetry(path.join(out,'rank-analytics.json'),JSON.stringify(rankAnalyticsExport,null,2)+'\n');
   console.log(`RANK ANALYTICS PASS: rankPower=${full.rankPower ? Object.keys(full.rankPower).length : 0} ranks; swapMatrix=${full.swapMatrix ? Object.keys(full.swapMatrix).length : 0} entries`);
 }
 

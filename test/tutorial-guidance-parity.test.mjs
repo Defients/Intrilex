@@ -1,10 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // tutorial-guidance-parity.test.mjs
-// v0.25 Phase D: Tutorial and guidance parity proofs.
+// v0.25 Phase D: Guidance parity proofs.
 //
-// Verifies that the tutorial system and guidance mode work correctly
-// for local matches, and that guidance mode (which is a global UI
-// preference) applies to both local and network matches.
+// Verifies that guidance mode (which is a global UI preference) applies
+// to both local and network matches.
 // ═══════════════════════════════════════════════════════════════
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,42 +13,6 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel) => readFile(path.join(root, rel), 'utf8');
-
-// ── Tutorial system ──
-
-test('TutorialRuntime is imported and instantiated for local matches', async () => {
-  const src = await read('apps/lab-web/src/play/play-app.js');
-  assert.match(src, /import.*TutorialRuntime.*from.*tutorial-runtime/, 'must import TutorialRuntime');
-  assert.match(src, /new TutorialRuntime\(\)/, 'must instantiate TutorialRuntime');
-});
-
-test('tutorial-runtime.js exports TutorialRuntime and getTutorialSetup', async () => {
-  const src = await read('apps/lab-web/src/play/tutorial-runtime.js');
-  assert.match(src, /export.*TutorialRuntime/, 'must export TutorialRuntime');
-  assert.match(src, /export.*getTutorialSetup/, 'must export getTutorialSetup');
-});
-
-test('tutorial is restored from saves in continueMatch', async () => {
-  const src = await read('apps/lab-web/src/play/play-app.js');
-  // continueMatch should restore tutorial state
-  const fnStart = src.indexOf('async function continueMatch');
-  const fnEnd = src.indexOf('\n}', fnStart);
-  const section = src.substring(fnStart, fnEnd);
-  assert.match(section, /tutorial/i, 'continueMatch must handle tutorial state');
-});
-
-test('tutorial coach overlay is rendered when active', async () => {
-  const src = await read('apps/lab-web/src/play/ranked-duel-renderer.mjs');
-  // Renderer must handle tutorial state
-  assert.match(src, /tutorial/i, 'renderer must handle tutorial state');
-  // Tutorial acknowledge and skip buttons must exist
-  assert.match(src, /tutorial-acknowledge|tutorial-skip/, 'renderer must have tutorial acknowledge/skip buttons');
-});
-
-test('tutorial events are bound in board-events.js', async () => {
-  const src = await read('apps/lab-web/src/play/board-events.js');
-  assert.match(src, /tutorial-acknowledge|tutorial-skip/, 'board-events must bind tutorial acknowledge/skip');
-});
 
 // ── Guidance mode ──
 

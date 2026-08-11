@@ -78,6 +78,13 @@ const _ws = {
 let _renderRequestId = 0;
 
 /**
+ * Active render container — defaults to the observatory #app element,
+ * but can be overridden by passing a container to renderProfile().
+ * This allows the profile to render inside the landing page context.
+ */
+let _container = app;
+
+/**
  * Remove any open modal overlays from the DOM. Called at the start
  * of every renderProfile() to prevent memory leaks and zombie
  * interactions when navigating away while a modal is open.
@@ -91,7 +98,8 @@ function cleanupModals() {
  * Detects self (#/profile) vs public (#/player/@handle) from the hash.
  * @returns {Promise<void>}
  */
-export async function renderProfile() {
+export async function renderProfile(container = app) {
+  _container = container;
   // Cancel any in-flight render and clean up modals from prior render
   const requestId = ++_renderRequestId;
   cleanupModals();
@@ -134,27 +142,36 @@ async function loadProfileData() {
       _ws.error = 'Online profiles require Supabase. Local-only mode cannot view other players.';
       return;
     }
-    const result = await fetchPublicProfile(_ws.handleOrId);
-    if (result.error) {
-      _ws.error = result.error;
-      return;
+    try {
+      const result = await fetchPublicProfile(_ws.handleOrId);
+      if (result.error) {
+        _ws.error = result.error;
+        return;
+      }
+      if (!result.profile) {
+        _ws.error = 'PLAYER_NOT_FOUND';
+        return;
+      }
+      _ws.publicProfile = result.profile;
+    } catch (err) {
+      _ws.error = err?.message ?? 'Could not reach the profile server.';
     }
-    if (!result.profile) {
-      _ws.error = 'PLAYER_NOT_FOUND';
-      return;
-    }
-    _ws.publicProfile = result.profile;
     return;
   }
 
   // Self mode
   if (isSupabaseConfigured()) {
-    const result = await fetchSelfProfile();
-    if (result.error) {
-      _ws.error = result.error;
-      return;
+    try {
+      const result = await fetchSelfProfile();
+      if (result.error) {
+        _ws.error = result.error;
+        return;
+      }
+      _ws.selfProfile = result.profile;
+    } catch (err) {
+      // Network/CSP error — fall back to local profile only
+      console.warn('[profile] fetchSelfProfile failed:', err?.message ?? err);
     }
-    _ws.selfProfile = result.profile;
   }
   // localProfile was already loaded at the start of renderProfile();
   // no need to re-read from storage here.
@@ -163,7 +180,7 @@ async function loadProfileData() {
 // ── Skeleton ────────────────────────────────────────────────────
 
 function renderSkeleton() {
-  app.innerHTML = `<section class="panel" style="max-width:1200px;margin:0 auto;padding:20px">
+  _container.innerHTML = `<section class="panel" style="max-width:1200px;margin:0 auto;padding:20px">
     <div class="loading-state" data-testid="profile-skeleton">
       <span class="loading-spinner" aria-hidden="true"></span>
       <strong>Loading Profile…</strong>
@@ -188,7 +205,7 @@ function renderCurrent() {
 
 function renderError(error) {
   if (error === 'PLAYER_NOT_FOUND' || error === 'INVALID_PROFILE') {
-    app.innerHTML = `<section class="panel" style="max-width:800px;margin:0 auto;padding:40px 20px;text-align:center">
+    _container.innerHTML = `<section class="panel" style="max-width:800px;margin:0 auto;padding:40px 20px;text-align:center">
       <div data-testid="profile-not-found">
         <h2 style="font-size:24px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase">Player Not Found</h2>
         <p style="color:var(--text-dim);margin:12px 0 24px">No public profile exists for this identifier.</p>
@@ -197,7 +214,7 @@ function renderError(error) {
     </section>`;
     return;
   }
-  app.innerHTML = `<section class="panel" style="max-width:800px;margin:0 auto;padding:40px 20px;text-align:center">
+  _container.innerHTML = `<section class="panel" style="max-width:800px;margin:0 auto;padding:40px 20px;text-align:center">
     <div data-testid="profile-error">
       <h2 style="font-size:20px;color:var(--danger,#e55)">Couldn't load this profile.</h2>
       <p style="color:var(--text-dim);margin:12px 0 24px">${esc(error)}</p>
@@ -242,7 +259,7 @@ function renderSelfProfile(selfProfile, localProfile) {
   const authState = getAuthState();
   const isGuest = authState === 'ANONYMOUS' || profile.identity.accountType === 'GUEST';
 
-  app.innerHTML = `<div class="profile-workspace" data-testid="profile-self" style="max-width:1200px;margin:0 auto;padding:20px">
+  _container.innerHTML = `<div class="profile-workspace" data-testid="profile-self">
     ${isOffline ? renderOfflineBanner() : ''}
     ${isGuest && !isOffline ? renderGuestBanner() : ''}
     ${renderHero(profile, true)}
@@ -256,14 +273,14 @@ function renderSelfProfile(selfProfile, localProfile) {
 }
 
 function renderOfflineBanner() {
-  return `<div class="notice" style="background:rgba(0,200,220,0.08);border:1px solid rgba(0,200,220,0.3);padding:12px 16px;margin-bottom:16px;border-radius:6px" data-testid="profile-offline-banner">
+  return `<div class="notice profile-banner profile-banner--offline" data-testid="profile-offline-banner">
     <strong>Offline mode.</strong> Showing device-local profile data. Online Ranked identity and customization require Supabase.
   </div>`;
 }
 
 function renderGuestBanner() {
-  return `<div class="notice" style="background:rgba(255,200,0,0.08);border:1px solid rgba(255,200,0,0.3);padding:12px 16px;margin-bottom:16px;border-radius:6px">
-    <strong>Guest account.</strong> Link a Discord account to enable Ranked, leaderboard placement, and profile customization.
+  return `<div class="notice profile-banner profile-banner--guest">
+    <strong>Guest account.</strong> Link a Discord or Google account to enable Ranked, leaderboard placement, and profile customization.
   </div>`;
 }
 
@@ -276,7 +293,7 @@ function renderPublicProfile(profile) {
     renderError('PLAYER_NOT_FOUND');
     return;
   }
-  app.innerHTML = `<div class="profile-workspace" data-testid="profile-public" style="max-width:1200px;margin:0 auto;padding:20px">
+  _container.innerHTML = `<div class="profile-workspace" data-testid="profile-public">
     ${renderHero(profile, false)}
     ${renderTabNav(_ws.tab, false)}
     <div class="profile-tab-content" id="${TAB_CONTENT_ID}" role="tabpanel" data-testid="profile-tab-content">
@@ -303,24 +320,24 @@ function renderHero(profile, isSelf) {
   const rankedHero = ranked && ranked.available ? renderRankedHero(ranked) : renderUnrankedHero(ranked);
 
   const editButtons = isSelf ? `
-    <div class="profile-hero-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+    <div class="profile-hero-actions">
       <button class="btn btn-sm" data-action="edit" data-testid="profile-edit-btn">Edit Profile</button>
       <button class="btn btn-sm" data-action="customize" data-testid="profile-customize-btn">Customize</button>
       <button class="btn btn-sm" data-action="privacy" data-testid="profile-privacy-btn">Privacy</button>
     </div>` : '';
 
-  return `<section class="panel profile-hero ${frameClass}" data-testid="profile-hero" style="margin-bottom:16px;border-radius:8px;overflow:hidden">
-    <div class="profile-hero-body" style="display:flex;gap:24px;padding:24px;align-items:flex-start;flex-wrap:wrap">
-      <div class="profile-hero-avatar" style="flex-shrink:0">${avatarHtml}</div>
-      <div class="profile-hero-identity" style="flex:1;min-width:200px">
-        <h2 style="font-size:28px;font-weight:400;margin:0;color:var(--text,#e0f0ff)" data-testid="profile-display-name">${esc(id.displayName)}</h2>
-        ${id.handle ? `<div style="color:var(--text-dim,#8a9ba8);font-size:14px;margin:4px 0" data-testid="profile-handle">@${esc(id.handle)}</div>` : ''}
-        ${titleText ? `<div style="color:var(--accent,#00c8dc);font-size:14px;font-style:italic;margin:4px 0" data-testid="profile-title">${esc(titleText)}</div>` : ''}
-        ${joinedDate ? `<div style="color:var(--text-dim,#8a9ba8);font-size:12px;margin:4px 0">Joined ${esc(joinedDate)}</div>` : ''}
-        ${id.accountType === 'GUEST' ? `<div style="color:var(--text-dim,#8a9ba8);font-size:12px"><span class="badge-tag" style="background:var(--text-dim);color:var(--bg)">Guest</span></div>` : ''}
+  return `<section class="panel profile-hero ${frameClass}" data-testid="profile-hero">
+    <div class="profile-hero-body">
+      <div class="profile-hero-avatar">${avatarHtml}</div>
+      <div class="profile-hero-identity">
+        <h2 data-testid="profile-display-name">${esc(id.displayName)}</h2>
+        ${id.handle ? `<div class="profile-hero-handle" data-testid="profile-handle">@${esc(id.handle)}</div>` : ''}
+        ${titleText ? `<div class="profile-hero-title" data-testid="profile-title">${esc(titleText)}</div>` : ''}
+        ${joinedDate ? `<div class="profile-hero-joined">Joined ${esc(joinedDate)}</div>` : ''}
+        ${id.accountType === 'GUEST' ? `<div class="profile-hero-guest"><span class="badge-tag">Guest</span></div>` : ''}
         ${editButtons}
       </div>
-      <div class="profile-hero-ranked" style="flex-shrink:0;min-width:200px">
+      <div class="profile-hero-ranked">
         ${rankedHero}
       </div>
     </div>
@@ -349,13 +366,13 @@ function renderRankedHero(ranked) {
     ? `Peak: ${rankLabel(ranked.peakTier, ranked.peakDivision)} · ${ranked.peakRating}`
     : '';
 
-  return `<div data-testid="profile-ranked-hero" style="text-align:center">
+  return `<div class="profile-ranked-hero" data-testid="profile-ranked-hero">
     ${glyph}
-    <div style="margin-top:8px">
-      <div style="font-size:18px;font-weight:500;color:var(--text,#e0f0ff)" data-testid="profile-rank-label">${esc(rankLine)}</div>
-      <div style="font-size:14px;color:var(--text-dim,#8a9ba8)" data-testid="profile-ir">${esc(irText)}</div>
-      ${positionText ? `<div style="font-size:12px;color:var(--accent,#00c8dc)" data-testid="profile-position">${esc(positionText)}</div>` : ''}
-      ${peakText ? `<div style="font-size:12px;color:var(--text-dim,#8a9ba8)" data-testid="profile-peak">${esc(peakText)}</div>` : ''}
+    <div class="profile-ranked-hero-info">
+      <div class="profile-ranked-hero-label" data-testid="profile-rank-label">${esc(rankLine)}</div>
+      <div class="profile-ranked-hero-ir" data-testid="profile-ir">${esc(irText)}</div>
+      ${positionText ? `<div class="profile-ranked-hero-position" data-testid="profile-position">${esc(positionText)}</div>` : ''}
+      ${peakText ? `<div class="profile-ranked-hero-peak" data-testid="profile-peak">${esc(peakText)}</div>` : ''}
     </div>
   </div>`;
 }
@@ -364,11 +381,11 @@ function renderUnrankedHero(ranked) {
   const placementText = ranked && ranked.isPlacement
     ? `${ranked.placementsPlayed} / ${ranked.placementsRequired} Placements`
     : 'Complete placements to enter the Ranked ladder.';
-  return `<div data-testid="profile-ranked-hero" style="text-align:center">
+  return `<div class="profile-ranked-hero" data-testid="profile-ranked-hero">
     ${renderRankGlyph({ tier: RankTier.UNRANKED, size: 96, decorative: false })}
-    <div style="margin-top:8px">
-      <div style="font-size:18px;font-weight:500;color:var(--text-dim,#8a9ba8)">NO RANKED HISTORY</div>
-      <div style="font-size:12px;color:var(--text-dim,#8a9ba8)">${esc(placementText)}</div>
+    <div class="profile-ranked-hero-info">
+      <div class="profile-ranked-hero-label profile-ranked-hero-label--unranked">NO RANKED HISTORY</div>
+      <div class="profile-ranked-hero-placement">${esc(placementText)}</div>
     </div>
   </div>`;
 }
@@ -376,9 +393,9 @@ function renderUnrankedHero(ranked) {
 function renderAvatar(avatarUrl, displayName, size) {
   const initials = (displayName || 'P').slice(0, 2).toUpperCase();
   if (avatarUrl && avatarUrl.startsWith('https://')) {
-    return `<img src="${esc(avatarUrl)}" alt="${esc(displayName)} avatar" width="${size}" height="${size}" style="border-radius:50%;object-fit:cover" loading="lazy" decoding="async" />`;
+    return `<img src="${esc(avatarUrl)}" alt="${esc(displayName)} avatar" width="${size}" height="${size}" class="profile-avatar-img" loading="lazy" decoding="async" />`;
   }
-  return `<div class="profile-avatar-default" style="width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,rgba(0,200,220,0.2),rgba(160,32,240,0.2));display:flex;align-items:center;justify-content:center;font-size:${Math.floor(size*0.4)}px;color:var(--text-dim,#8a9ba8);font-weight:300" aria-label="${esc(displayName)} avatar">${esc(initials)}</div>`;
+  return `<div class="profile-avatar-default" style="width:${size}px;height:${size}px;font-size:${Math.floor(size*0.4)}px;color:#8a9ba8" aria-label="${esc(displayName)} avatar">${esc(initials)}</div>`;
 }
 
 function formatJoinedDate(iso) {
@@ -463,7 +480,7 @@ function activateTab(newTab, buttons) {
     b.setAttribute('tabindex', isActive ? '0' : '-1');
   });
   // Render or reuse tab content
-  const contentEl = app.querySelector(`#${TAB_CONTENT_ID}`);
+  const contentEl = _container.querySelector(`#${TAB_CONTENT_ID}`);
   if (contentEl) {
     const cached = getCachedTab(newTab);
     if (cached !== null) {
@@ -477,12 +494,12 @@ function activateTab(newTab, buttons) {
     }
   }
   // Move focus to the newly activated tab button (WAI-ARIA pattern)
-  const activeBtn = app.querySelector(`.profile-tab-btn[data-tab="${newTab}"]`);
+  const activeBtn = _container.querySelector(`.profile-tab-btn[data-tab="${newTab}"]`);
   if (activeBtn) /** @type {HTMLElement} */ (activeBtn).focus();
 }
 
 function wireTabNav(_isSelf) {
-  const buttons = app.querySelectorAll('.profile-tab-btn');
+  const buttons = _container.querySelectorAll('.profile-tab-btn');
   for (const btn of buttons) {
     btn.addEventListener('click', () => {
       const newTab = btn.dataset.tab;
@@ -492,7 +509,7 @@ function wireTabNav(_isSelf) {
   }
 
   // WAI-ARIA tabs pattern: keyboard arrow navigation
-  const tablist = app.querySelector('.profile-tab-nav');
+  const tablist = _container.querySelector('.profile-tab-nav');
   if (tablist) {
     tablist.addEventListener('keydown', (/** @type {KeyboardEvent} */ e) => {
       const currentIdx = TABS.indexOf(_ws.tab);
@@ -972,10 +989,10 @@ function setButtonLoading(btn) {
 }
 
 function wireHeroActions(profile) {
-  const editBtn = app.querySelector('[data-action="edit"]');
-  const customizeBtn = app.querySelector('[data-action="customize"]');
-  const privacyBtn = app.querySelector('[data-action="privacy"]');
-  const matchesLink = app.querySelector('[data-action="goto-matches"]');
+  const editBtn = _container.querySelector('[data-action="edit"]');
+  const customizeBtn = _container.querySelector('[data-action="customize"]');
+  const privacyBtn = _container.querySelector('[data-action="privacy"]');
+  const matchesLink = _container.querySelector('[data-action="goto-matches"]');
 
   if (editBtn) editBtn.addEventListener('click', () => { _ws.editMode = true; renderEditPanel(profile, editBtn); });
   if (customizeBtn) customizeBtn.addEventListener('click', () => { _ws.customizeMode = true; renderCustomizePanel(profile, customizeBtn); });

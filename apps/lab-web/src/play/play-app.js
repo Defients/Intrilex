@@ -5,11 +5,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { createSession, restoreSession, SessionState } from './play-controller.js';
-import { renderBoard, renderPlayHub, renderNewMatchSetup } from './ranked-duel-renderer.mjs';
+import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs';
 import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js';
-import { getSave, listSaves, putSave, isIndexedDBAvailable, getPreference, getPlayerStats, updatePlayerStats } from './persistence.js';
+import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js';
+import { ensureReplayFrames } from '../replay-frames.js';
+import { state as observatoryState } from '../state.js';
 import { buildSaveIntegrityPayload } from './save-integrity.js';
-import { getTutorialSetup, TutorialRuntime } from './tutorial-runtime.js';
 import { validateSnapshotPrivacy } from './play-privacy.js';
 import { POLICY_IDS } from '../autonomy-runtime.js';
 import { GuidanceMode } from './intelligence/action-explanation.js';
@@ -32,10 +33,10 @@ import { NetworkPlaySession, NetworkSessionState } from './network/network-sessi
 import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
   renderNetworkQueueWaiting, renderNetworkSpectateForm, renderNetworkSpectating,
-  renderNetworkMatchHistory,
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
-  renderNetworkStatusBanner,
+  renderNetworkStatusBanner, renderNetworkUnavailable,
 } from './network/network-lobby-renderer.mjs';
+import { getMatchServerUrl, isMatchServerConfigured, validateMatchServerUrl } from './network/match-server-config.js';
 import { getAchievementRuntime } from './achievements/achievement-runtime.js';
 import { getAchievementPresenter } from './achievements/achievement-presenter.js';
 
@@ -54,12 +55,23 @@ export async function handlePlayRoute(route, container) {
   }
   const sub = route.replace(/^\/play/, '') || '';
   if (sub === '' || sub === '/') {
-    await renderHub(container);
+    // #/play hub has been removed — redirect to new match setup
+    location.hash = '#/play/new';
+    return;
   } else if (sub === '/new') {
     await renderNewMatch(container);
-  } else if (sub === '/tutorial') {
-    await startTutorial(container);
   } else if (sub === '/match') {
+    // Auto-continue handoff from the landing page Continue Duel card
+    try {
+      const pendingSaveId = sessionStorage.getItem('intrilex-continue-save');
+      if (pendingSaveId) {
+        sessionStorage.removeItem('intrilex-continue-save');
+        if (isIndexedDBAvailable()) {
+          await continueMatch(pendingSaveId, container);
+          return;
+        }
+      }
+    } catch { /* sessionStorage unavailable — ignore */ }
     await renderActiveMatch(container);
   } else if (sub === '/replays') {
     await renderReplays(container);
@@ -73,60 +85,12 @@ export async function handlePlayRoute(route, container) {
     await renderNetworkQueueFlow(container);
   } else if (sub === '/online/spectate') {
     await renderNetworkSpectateFlow(container);
-  } else if (sub === '/online/history') {
-    await renderNetworkHistoryFlow(container);
   } else if (sub === '/online/match') {
     await renderNetworkActiveMatch(container);
   } else {
-    await renderHub(container);
+    // Unknown play sub-route — redirect to new match setup
+    location.hash = '#/play/new';
   }
-}
-
-/**
- * Render the Play hub.
- */
-async function renderHub(container) {
-  const idbAvailable = isIndexedDBAvailable();
-  let continueSave = null;
-  let playerStats = null;
-  if (idbAvailable) {
-    const saves = await listSaves();
-    continueSave = saves.find(s => s.stableBoundary?.decisionFrameHash) ?? saves[0] ?? null;
-    playerStats = await getPlayerStats();
-  }
-  container.innerHTML = renderPlayHub(continueSave ? {
-    saveId: continueSave.saveId,
-    profileId: continueSave.profileId,
-    mode: continueSave.mode,
-  } : null, { idbAvailable, playerStats });
-  bindHubEvents(container);
-  // Auto-continue handoff from the landing page Continue Duel card
-  try {
-    const pendingSaveId = sessionStorage.getItem('intrilex-continue-save');
-    if (pendingSaveId) {
-      sessionStorage.removeItem('intrilex-continue-save');
-      if (idbAvailable) await continueMatch(pendingSaveId, container);
-    }
-  } catch { /* sessionStorage unavailable — ignore */ }
-}
-
-/**
- * Bind hub events.
- */
-function bindHubEvents(container) {
-  container.querySelectorAll('[data-action]').forEach(el => {
-    el.addEventListener('click', async (e) => {
-      const action = el.dataset.action;
-      if (action === 'start-tutorial') location.hash = '#/play/tutorial';
-      else if (action === 'new-game') location.hash = '#/play/new';
-      else if (action === 'replay-library') location.hash = '#/play/replays';
-      else if (action === 'online-duel') location.hash = '#/play/online';
-      else if (action === 'continue-match') {
-        const saveId = el.dataset.saveId;
-        await continueMatch(saveId, container);
-      }
-    });
-  });
 }
 
 /**
@@ -169,15 +133,6 @@ function bindNewMatchForm(container) {
 }
 
 /**
- * Start the tutorial.
- */
-async function startTutorial(container) {
-  state.tutorial = new TutorialRuntime();
-  const setup = getTutorialSetup();
-  await startNewMatch(setup, container);
-}
-
-/**
  * Start a new match.
  */
 async function startNewMatch(setup, container) {
@@ -192,8 +147,7 @@ async function startNewMatch(setup, container) {
     try {
       const achRuntime = getAchievementRuntime();
       await achRuntime.init();
-      const isTutorial = Boolean(setup.tutorial);
-      achRuntime.startMatch(state.sessionId, setup.humanPlayerId, { isTutorial });
+      achRuntime.startMatch(state.sessionId, setup.humanPlayerId, { isTutorial: false });
       const presenter = getAchievementPresenter();
       achRuntime.onUnlock((unlocks) => presenter.queueUnlocks(unlocks));
       state.session.setAchievementConsumer((events, snapshot) => {
@@ -218,7 +172,7 @@ async function startNewMatch(setup, container) {
     location.hash = '#/play/match';
     await renderActiveMatch(container);
   } catch (error) {
-    container.innerHTML = `<div class="play-error" role="alert"><h2>Failed to start match</h2><p>${esc(error.message)}</p><a href="#/play" class="secondary-button">Back to Play</a></div>`;
+    container.innerHTML = `<div class="play-error" role="alert"><h2>Failed to start match</h2><p>${esc(error.message)}</p><a href="#/" class="secondary-button">Back to Home</a></div>`;
   }
 }
 
@@ -238,8 +192,7 @@ async function continueMatch(saveId, container) {
     try {
       const achRuntime = getAchievementRuntime();
       await achRuntime.init();
-      const isTutorial = Boolean(save.tutorial);
-      achRuntime.startMatch(state.sessionId, save.setup?.humanPlayerId ?? 'P1', { isTutorial });
+      achRuntime.startMatch(state.sessionId, save.setup?.humanPlayerId ?? 'P1', { isTutorial: false });
       const presenter = getAchievementPresenter();
       achRuntime.onUnlock((unlocks) => presenter.queueUnlocks(unlocks));
       state.session.setAchievementConsumer((events, snapshot) => {
@@ -261,15 +214,11 @@ async function continueMatch(saveId, container) {
     }
     state.leaseMode = 'CONTROLLED';
     startHeartbeat();
-    if (save.tutorial) {
-      state.tutorial = new TutorialRuntime();
-      state.tutorial.restore(save.tutorial);
-    }
     startAutosave();
     location.hash = '#/play/match';
     await renderActiveMatch(container);
   } catch (error) {
-    container.innerHTML = `<div class="play-error" role="alert"><h2>Failed to resume match</h2><p>${esc(error.message)}</p><a href="#/play" class="secondary-button">Back to Play</a></div>`;
+    container.innerHTML = `<div class="play-error" role="alert"><h2>Failed to resume match</h2><p>${esc(error.message)}</p><a href="#/" class="secondary-button">Back to Home</a></div>`;
   }
 }
 
@@ -328,7 +277,7 @@ function bindLeaseConflictEvents(container, sessionId) {
   if (cancelBtn) cancelBtn.onclick = () => {
     teardownSession();
     state.session = null;
-    location.hash = '#/play';
+    location.hash = '#/';
   };
 }
 
@@ -337,7 +286,7 @@ function bindLeaseConflictEvents(container, sessionId) {
  */
 async function renderActiveMatch(container) {
   if (!state.session) {
-    location.hash = '#/play';
+    location.hash = '#/';
     return;
   }
   if (!container) return; // Guard: heartbeat may fire after navigation away from play
@@ -384,7 +333,7 @@ async function renderActiveMatch(container) {
         state.session.status = SessionState.ERROR;
         state.session.error = { code: 'AI_STEP_EXCEPTION', message: error.message };
       }
-      container.innerHTML = `<div class="play-error" role="alert"><h2>AI error</h2><p>${esc(error.message)}</p><a href="#/play" class="secondary-button">Back to Play</a></div>`;
+      container.innerHTML = `<div class="play-error" role="alert"><h2>AI error</h2><p>${esc(error.message)}</p><a href="#/" class="secondary-button">Back to Home</a></div>`;
       state.isAdvancing = false;
       return;
     }
@@ -435,16 +384,6 @@ async function renderActiveMatch(container) {
     }
   }
 
-  const tutorialState = state.tutorial && !state.tutorial.isComplete ? {
-    currentChapter: state.tutorial.currentChapter,
-    completedChapters: state.tutorial.completedChapters,
-    chapterCount: state.tutorial.chapterCount,
-    isComplete: state.tutorial.isComplete,
-    skipped: state.tutorial.skipped,
-    recommendedFamily: state.tutorial.recommendedFamily,
-    recommendedAltFamily: state.tutorial.recommendedAltFamily,
-  } : null;
-
   let boardHtml;
   try {
     boardHtml = renderBoard(snapshot, {
@@ -456,13 +395,11 @@ async function renderActiveMatch(container) {
     inspectorFaceView: state.inspectorFaceView,
     guidanceMode: state.guidanceMode,
     showKeyboardHelp: state.showKeyboardHelp,
-    tutorial: tutorialState,
     chatMessages: (state.networkSession?.chatMessages ?? state.chatMessages).slice(-30),
     rightRailTab: state.rightRailTab || 'chat',
     soundMuted: state.soundMuted,
     achievementSummaryHtml,
     isNetworkMatch: !!(state.networkSession && state.networkSession.constructor?.name === 'NetworkPlaySession'),
-    isTutorial: !!(state.tutorial && !state.tutorial.isComplete),
     viewMode: state.viewMode,
   });
   } catch (renderError) {
@@ -471,7 +408,7 @@ async function renderActiveMatch(container) {
       <h2>Render error</h2>
       <p>${esc(renderError.message)}</p>
       <pre>${esc(renderError.stack ?? '')}</pre>
-      <a href="#/play" class="secondary-button">Back to Play</a>
+      <a href="#/" class="secondary-button">Back to Home</a>
     </div>`;
     return;
   }
@@ -562,19 +499,18 @@ async function renderReplays(container) {
  * Bind replay library events.
  */
 function bindReplayLibraryEvents(container) {
+  // Button-level actions (Watch, Export, Delete)
   container.querySelectorAll('[data-action]').forEach(el => {
-    el.addEventListener('click', async () => {
+    el.addEventListener('click', async (e) => {
+      e.stopPropagation();
       const action = el.dataset.action;
       const replayId = el.dataset.replayId;
       if (action === 'watch-replay') {
-        // For now, redirect to the main replay viewer
-        location.hash = `#/replays`;
+        await watchLocalReplay(replayId, container);
       } else if (action === 'export-private') {
-        const { getReplay } = await import('./persistence.js');
         const record = await getReplay(replayId);
         if (record) downloadReplay(record, 'private');
       } else if (action === 'export-public') {
-        const { getReplay } = await import('./persistence.js');
         const record = await getReplay(replayId);
         if (record) downloadReplay(record, 'public');
       } else if (action === 'delete-replay') {
@@ -587,6 +523,52 @@ function bindReplayLibraryEvents(container) {
       }
     });
   });
+  // Row-level click — watch the replay (clicking anywhere on the row
+  // except the action buttons triggers Watch)
+  container.querySelectorAll('[data-watch-replay]').forEach(row => {
+    row.addEventListener('click', async () => {
+      const replayId = row.dataset.watchReplay;
+      await watchLocalReplay(replayId, container);
+    });
+  });
+}
+
+/**
+ * Load a local replay from IndexedDB, reconstruct its frames, and
+ * navigate to the Observatory Watch workspace for playback.
+ */
+async function watchLocalReplay(replayId, container) {
+  const record = await getReplay(replayId);
+  if (!record || !record.certifiedReplay) {
+    container.innerHTML = `<div class="play-error" role="alert"><h2>Replay not found</h2><p>Could not load replay ${esc(replayId)}. It may have been deleted.</p><a href="#/play/replays" class="secondary-button">Back to Replays</a></div>`;
+    return;
+  }
+  // Show a loading indicator while frames are reconstructed
+  container.innerHTML = '<div class="play-loading">Loading replay…</div>';
+  try {
+    // Build a replay object the Watch workspace can consume.
+    // The certified replay envelope has initialState + commands but no
+    // frames array — ensureReplayFrames reconstructs it via the engine.
+    const replay = { ...record.certifiedReplay, frames: undefined };
+    await ensureReplayFrames(replay);
+    if (!replay.frames || replay.frames.length === 0) {
+      throw new Error('Frame reconstruction produced no frames');
+    }
+    // Hand the replay to the Observatory state and navigate to Watch.
+    // Setting _replayLoadedFor prevents render() from re-fetching via
+    // loadReplay() (which would overwrite our local replay).
+    observatoryState.replay = replay;
+    observatoryState.authorized = null;
+    observatoryState.fixtureId = record.sessionId ?? replayId;
+    observatoryState._replayLoadedFor = observatoryState.fixtureId;
+    observatoryState.frame = 0;
+    observatoryState.playing = false;
+    observatoryState.replayKind = 'corpus';
+    observatoryState.visibility = 'public';
+    location.hash = '#/watch';
+  } catch (error) {
+    container.innerHTML = `<div class="play-error" role="alert"><h2>Failed to load replay</h2><p>${esc(error.message)}</p><a href="#/play/replays" class="secondary-button">Back to Replays</a></div>`;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -594,27 +576,44 @@ function bindReplayLibraryEvents(container) {
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Default match authority server URL.
- * Can be overridden via localStorage 'intrilex:network-server-url'.
+ * Resolve the match authority server URL.
+ * Delegates to the centralised config module (match-server-config.js).
+ * Returns null when unconfigured in production — the lobby must show
+ * an "unavailable" state rather than silently falling back to localhost.
+ * @returns {string|null}
  */
 function getNetworkServerUrl() {
-  try {
-    const saved = localStorage.getItem('intrilex:network-server-url');
-    if (saved) return saved;
-  } catch { /* ignore */ }
-  // Default: same host as the page, port 3099, ws:// for localhost
-  const loc = location;
-  if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
-    return `ws://${loc.hostname}:3099`;
-  }
-  return `wss://${loc.hostname}:3099`;
+  return getMatchServerUrl();
 }
 
 /**
  * Render the network lobby hub — entry point for online Direct Duel.
+ * If the match server URL is not configured (production without env var),
+ * show an "unavailable" screen instead of silently failing.
  */
 async function renderNetworkLobbyHub(container) {
   const serverUrl = getNetworkServerUrl();
+
+  // Fail visibly when no match server is configured (production without INTRILEX_MATCH_SERVER_URL)
+  if (!serverUrl) {
+    container.innerHTML = renderNetworkUnavailable({
+      reason: 'configuration-error',
+    });
+    bindNetworkErrorEvents(container);
+    return;
+  }
+
+  // Validate URL safety (prevent mixed-content: ws:// from https:// page)
+  const validation = validateMatchServerUrl(serverUrl);
+  if (!validation.valid) {
+    container.innerHTML = renderNetworkUnavailable({
+      reason: 'invalid-url',
+      detail: validation.reason,
+    });
+    bindNetworkErrorEvents(container);
+    return;
+  }
+
   const savedMatch = NetworkPlaySession.getSavedMatch();
   const hasSavedMatch = !!savedMatch;
 
@@ -660,8 +659,6 @@ function bindNetworkLobbyEvents(container) {
         location.hash = '#/play/online/queue';
       } else if (action === 'network-spectate') {
         location.hash = '#/play/online/spectate';
-      } else if (action === 'network-history') {
-        location.hash = '#/play/online/history';
       } else if (action === 'network-reconnect') {
         await reconnectToSavedMatch(container);
       } else if (action === 'network-abandon') {
@@ -679,6 +676,11 @@ async function renderNetworkCreateFlow(container) {
   container.innerHTML = '<div class="play-loading">Connecting to authority server…</div>';
   try {
     const serverUrl = getNetworkServerUrl();
+    if (!serverUrl) {
+      container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
+      bindNetworkErrorEvents(container);
+      return;
+    }
     const session = new NetworkPlaySession(serverUrl);
     session.onStateChange = () => {
       // Re-render the waiting room on state changes (opponent connect, ready, etc.)
@@ -770,6 +772,11 @@ function bindNetworkJoinFormEvents(container) {
 
     try {
       const serverUrl = getNetworkServerUrl();
+      if (!serverUrl) {
+        container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
+        bindNetworkErrorEvents(container);
+        return;
+      }
       const session = new NetworkPlaySession(serverUrl);
       session.onStateChange = () => {
         const activeContainer = state.activeContainer;
@@ -896,6 +903,11 @@ function bindNetworkWaitingEvents(container) {
 async function renderNetworkQueueFlow(container) {
   const { queueJoin, queueLeave } = await import('./network/network-protocol-client.mjs');
   const serverUrl = getNetworkServerUrl();
+  if (!serverUrl) {
+    container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
+    bindNetworkErrorEvents(container);
+    return;
+  }
   const ws = new WebSocket(serverUrl);
 
   container.innerHTML = renderNetworkQueueWaiting({ position: 1, estimatedWaitMs: 5000 });
@@ -992,6 +1004,11 @@ async function renderNetworkSpectateFlow(container) {
     container.innerHTML = renderNetworkSpectateForm({ connecting: true });
 
     const serverUrl = getNetworkServerUrl();
+    if (!serverUrl) {
+      container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
+      bindNetworkErrorEvents(container);
+      return;
+    }
     const ws = new WebSocket(serverUrl);
 
     ws.addEventListener('open', () => {
@@ -1055,75 +1072,6 @@ async function renderNetworkSpectateFlow(container) {
       container.innerHTML = renderNetworkSpectateForm({
         error: 'Connection to server failed. Please try again.',
       });
-    });
-  });
-}
-
-/**
- * Render the match history flow — fetches recent matches and displays them.
- */
-async function renderNetworkHistoryFlow(container) {
-  const { matchHistory } = await import('./network/network-protocol-client.mjs');
-  container.innerHTML = renderNetworkMatchHistory({ loading: true });
-
-  const serverUrl = getNetworkServerUrl();
-  const ws = new WebSocket(serverUrl);
-
-  ws.addEventListener('open', () => {
-    ws.send(JSON.stringify(matchHistory(20, null)));
-  });
-
-  ws.addEventListener('message', (event) => {
-    try {
-      const msg = JSON.parse(event.data);
-      if (msg.type === 'MATCH_HISTORY_RESULT') {
-        container.innerHTML = renderNetworkMatchHistory({ matches: msg.payload.matches });
-        bindHistoryActions(container, ws, matchHistory);
-      } else if (msg.type === 'ERROR') {
-        container.innerHTML = renderNetworkMatchHistory({
-          error: msg.payload.message ?? 'Failed to load match history.',
-        });
-        bindHistoryActions(container, ws, matchHistory);
-      }
-    } catch { /* ignore parse errors */ }
-  });
-
-  ws.addEventListener('error', () => {
-    container.innerHTML = renderNetworkMatchHistory({
-      error: 'Connection to server failed. Please try again.',
-    });
-  });
-
-  // Bind refresh action
-  const refreshBtn = container.querySelector('[data-action="network-history-refresh"]');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        container.innerHTML = renderNetworkMatchHistory({ loading: true });
-        ws.send(JSON.stringify(matchHistory(20, null)));
-      }
-    });
-  }
-}
-
-function bindHistoryActions(container, ws, matchHistory) {
-  // Bind refresh
-  const refreshBtn = container.querySelector('[data-action="network-history-refresh"]');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        container.innerHTML = renderNetworkMatchHistory({ loading: true });
-        ws.send(JSON.stringify(matchHistory(20, null)));
-      }
-    });
-  }
-  // Bind spectate buttons
-  container.querySelectorAll('[data-testid="network-history-spectate"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const matchId = btn.dataset.matchId;
-      try { ws.close(); } catch { /* ignore */ }
-      // Navigate to spectate flow with the match ID pre-filled
-      location.hash = `#/play/online/spectate`;
     });
   });
 }
@@ -1351,10 +1299,7 @@ function startAutosave() {
         const envelope = state.session.getSaveEnvelope();
         // Override saveId for autosave and recompute content hash
         envelope.saveId = `AUTOSAVE-${state.session.sessionId}`;
-        if (state.tutorial) {
-          envelope.tutorial = state.tutorial.getSaveState();
-        }
-        // Recompute content hash after saveId/tutorial changes
+        // Recompute content hash after saveId changes
         envelope.contentHash = buildSaveIntegrityPayload(envelope);
         await putSave(envelope);
       } catch (error) {
@@ -1386,7 +1331,6 @@ export function cleanupPlay() {
   if (state.sound) { state.sound.destroy(); state.sound = null; }
   if (state.particles) { state.particles.destroy(); state.particles = null; }
   state.session = null;
-  state.tutorial = null;
   state.selectedActionId = null;
   state.selectedSourceCardId = null;
   state.selectedTargetIds = [];
@@ -1755,11 +1699,4 @@ function showConfirmDialog(title, message) {
  */
 export function getSession() {
   return state.session;
-}
-
-/**
- * Get the current tutorial (for testing).
- */
-export function getTutorial() {
-  return state.tutorial;
 }

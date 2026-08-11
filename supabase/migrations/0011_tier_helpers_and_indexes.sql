@@ -123,7 +123,7 @@ CREATE OR REPLACE FUNCTION public.get_ranked_leaderboard(
   p_offset      integer DEFAULT 0
 )
 RETURNS TABLE (
-  position        integer,
+  "position"      integer,
   public_player_id text,
   display_name    text,
   handle          text,
@@ -205,7 +205,7 @@ BEGIN
            OR lower(p.display_name) LIKE lower(v_search))
   )
   SELECT
-    e.pos::integer AS position,
+    e.pos::integer AS "position",
     e.public_player_id,
     e.display_name,
     e.handle,
@@ -235,7 +235,7 @@ CREATE OR REPLACE FUNCTION public.get_player_standing(
   p_user_id   uuid DEFAULT NULL
 )
 RETURNS TABLE (
-  position        integer,
+  "position"      integer,
   public_player_id text,
   display_name    text,
   handle          text,

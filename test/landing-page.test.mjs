@@ -77,7 +77,7 @@ test('render() loads replay on first observatory entry after landing boot', asyn
 test('boot() skips loadReplay for landing and play modes', async () => {
   const js = await src('data-loader.js');
   assert.match(js, /isPlayRoute\(r\)/);
-  assert.match(js, /!LANDING_MODES\.has\(r\)\) await loadReplay/);
+  assert.match(js, /!LANDING_MODES\.has\(r\).*await loadReplay/);
 });
 
 // ── Rulebook renderer ──
@@ -206,55 +206,6 @@ test('dev-server.mjs default URL points to landing page', async () => {
   assert.ok(!dev.includes('#/match'), 'dev server must not default to #/match');
 });
 
-// ── Onboarding tour ──
-test('onboarding-tour.js exports shouldShowTour and startTour', async () => {
-  const js = await src('onboarding-tour.js');
-  assert.match(js, /export function shouldShowTour/, 'must export shouldShowTour');
-  assert.match(js, /export function startTour/, 'must export startTour');
-});
-
-test('onboarding-tour.js persists completion in localStorage', async () => {
-  const js = await src('onboarding-tour.js');
-  assert.match(js, /localStorage\.setItem/, 'must persist completion via localStorage.setItem');
-  assert.match(js, /localStorage\.getItem/, 'must check completion via localStorage.getItem');
-  assert.match(js, /TOUR_KEY/, 'must use a TOUR_KEY constant');
-});
-
-test('onboarding-tour.js has at least 4 tour steps', async () => {
-  const js = await src('onboarding-tour.js');
-  assert.match(js, /TOUR_STEPS\s*=\s*\[/, 'must define TOUR_STEPS array');
-  assert.match(js, /data-route="\/watch"/, 'must include Watch workspace step');
-  assert.match(js, /data-route="\/replays"/, 'must include Replays workspace step');
-  assert.match(js, /data-route="\/ranks"/, 'must include Ranks workspace step');
-  assert.match(js, /data-route="\/traces"/, 'must include Traces workspace step');
-});
-
-test('onboarding-tour.js supports keyboard navigation (Escape, arrows)', async () => {
-  const js = await src('onboarding-tour.js');
-  assert.match(js, /e\.key === 'Escape'/, 'must handle Escape to close');
-  assert.match(js, /ArrowRight/, 'must handle ArrowRight for next step');
-  assert.match(js, /ArrowLeft/, 'must handle ArrowLeft for previous step');
-});
-
-test('onboarding-tour.js can be re-triggered via ?tour=1 URL parameter', async () => {
-  const js = await src('onboarding-tour.js');
-  assert.match(js, /tour.*===.*'1'/, 'must check for tour=1 URL parameter');
-});
-
-test('app.js imports and triggers onboarding tour', async () => {
-  const js = await src('app.js');
-  assert.match(js, /from '\.\/onboarding-tour\.js'/, 'must import from onboarding-tour.js');
-  assert.match(js, /shouldShowTour\(\)/, 'must call shouldShowTour()');
-  assert.match(js, /startTour\(\)/, 'must call startTour()');
-});
-
-test('pages-polish.css has tour overlay styles', async () => {
-  const css = await cssSrc();
-  assert.match(css, /\.tour-overlay/, 'must have .tour-overlay CSS rule');
-  assert.match(css, /\.tour-spotlight/, 'must have .tour-spotlight CSS rule');
-  assert.match(css, /\.tour-tooltip/, 'must have .tour-tooltip CSS rule');
-});
-
 test('CSS has brand-block link and back-home styles', async () => {
   const css = await cssSrc();
   assert.match(css, /a\.brand-block/, 'must style brand-block as link');
@@ -370,19 +321,12 @@ test('primary CTA is mode-aware with dynamic labels', async () => {
   const js = await src('app.js');
   assert.match(js, /START LOCAL DUEL/);
   assert.match(js, /START ONLINE DUEL/);
-  assert.match(js, /START GUIDED TUTORIAL/);
   assert.match(js, /modeLabels\[/);
 });
 
 test('initial CTA text matches default local mode', async () => {
   const js = await src('app.js');
   assert.match(js, /<span>START LOCAL DUEL<\/span>/);
-});
-
-test('Tutorial mode card is named Guided Tutorial', async () => {
-  const js = await src('app.js');
-  assert.match(js, /Guided Tutorial/);
-  assert.match(js, /Learn by playing your first guided duel/);
 });
 
 test('Online Duel copy does not overpromise with worldwide', async () => {
@@ -429,8 +373,8 @@ test('What\'s New card shows version from canonical sources', async () => {
 
 test('footer credit uses muted color, not bright red', async () => {
   const css = await cssSrc();
-  assert.match(css, /\.landing-footer-credit-name\{[^}]*color:#8a1430/);
-  assert.match(css, /\.landing-footer-credit\{[^}]*opacity:\.7/);
+  assert.match(css, /\.landing-footer-credit-name\{[^}]*color:#c4405a/);
+  assert.match(css, /\.landing-footer-credit\{[^}]*opacity:\.85/);
   assert.doesNotMatch(css, /\.landing-footer-credit-name\{[^}]*color:#CC0011/);
 });
 

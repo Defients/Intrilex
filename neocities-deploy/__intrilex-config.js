@@ -1,0 +1,1 @@
+window.__INTRILEX_CONFIG__={supabase:{url:"https://xczwhiqnvyxubywhpxiv.supabase.co",publishableKey:"sb_publishable_UVKJqdusXdkz4KCl7n4VlA_mPVSC0sr"},matchServerUrl:"wss://match.intrilex.cards"};

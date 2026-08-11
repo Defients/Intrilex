@@ -9,8 +9,7 @@
 //   - SqliteMatchStore.listMatches returns correct results
 //   - Filtering by status works
 //   - Limit parameter works
-//   - Lobby UI renders match history button
-//   - renderNetworkMatchHistory renders match list
+//   - Lobby UI no longer renders a Match History button (removed — redundant with homepage overlay)
 //   - Protocol client matchHistory builder is correct
 // ═══════════════════════════════════════════════════════════════
 
@@ -36,7 +35,6 @@ function makeMatch() {
 
 import {
   renderNetworkLobby,
-  renderNetworkMatchHistory,
 } from '../apps/lab-web/src/play/network/network-lobby-renderer.mjs';
 
 import {
@@ -235,64 +233,19 @@ test('match-history: server returns empty list when no matches', async () => {
   }
 });
 
-// ── Section 6: Lobby UI ──
+// ── Section 6: Lobby UI (Match History card removed — redundant with homepage overlay) ──
 
-test('match-history: lobby hub includes Match History button', () => {
+test('match-history: lobby hub does NOT include Match History button', () => {
   const html = renderNetworkLobby({ serverUrl: 'ws://localhost:3099' });
-  assert.ok(html.includes('data-action="network-history"'), 'Lobby must have Match History button');
-  assert.ok(html.includes('data-testid="network-history"'), 'Match History button must have testid');
-  assert.ok(html.includes('Match History'), 'Match History button must have visible text');
+  assert.ok(!html.includes('data-action="network-history"'), 'Lobby must NOT have Match History button');
+  assert.ok(!html.includes('data-testid="network-history"'), 'Lobby must NOT have Match History testid');
+  assert.ok(!html.includes('Match History'), 'Lobby must NOT have Match History visible text');
 });
 
-test('match-history: lobby hub has 5 cards (create, join, queue, spectate, history)', () => {
+test('match-history: lobby hub has 4 cards (create, join, queue, spectate)', () => {
   const html = renderNetworkLobby({ serverUrl: 'ws://localhost:3099' });
   const cards = html.match(/class="play-hub-card network-lobby-card"/g) || [];
-  assert.equal(cards.length, 5, 'Lobby must have 5 cards');
-});
-
-test('match-history: renderNetworkMatchHistory renders empty state', () => {
-  const html = renderNetworkMatchHistory({ matches: [] });
-  assert.ok(html.includes('data-testid="network-history"'), 'Must have history container');
-  assert.ok(html.includes('data-testid="network-history-empty"'), 'Must have empty state');
-});
-
-test('match-history: renderNetworkMatchHistory renders loading state', () => {
-  const html = renderNetworkMatchHistory({ loading: true });
-  assert.ok(html.includes('data-testid="network-history-loading"'), 'Must have loading state');
-});
-
-test('match-history: renderNetworkMatchHistory renders match list', () => {
-  const html = renderNetworkMatchHistory({
-    matches: [
-      { matchId: 'M-test123', status: 'RUNNING', createdAt: Date.now(), updatedAt: Date.now(), participants: ['P1', 'P2'] },
-    ],
-  });
-  assert.ok(html.includes('data-testid="network-history-list"'), 'Must have match list');
-  assert.ok(html.includes('data-testid="network-history-item"'), 'Must have match item');
-  assert.ok(html.includes('M-test123'), 'Must show match ID');
-  assert.ok(html.includes('RUNNING'), 'Must show match status');
-  assert.ok(html.includes('data-testid="network-history-spectate"'), 'Must have spectate button for running match');
-});
-
-test('match-history: renderNetworkMatchHistory shows error', () => {
-  const html = renderNetworkMatchHistory({ error: 'Connection failed' });
-  assert.ok(html.includes('data-testid="network-error"'), 'Must have error element');
-  assert.ok(html.includes('Connection failed'), 'Must show error text');
-});
-
-test('match-history: renderNetworkMatchHistory has refresh button', () => {
-  const html = renderNetworkMatchHistory({ matches: [] });
-  assert.ok(html.includes('data-action="network-history-refresh"'), 'Must have refresh action');
-});
-
-test('match-history: non-spectatable matches do not show spectate button', () => {
-  const html = renderNetworkMatchHistory({
-    matches: [
-      { matchId: 'M-lobby1', status: 'LOBBY', createdAt: Date.now(), updatedAt: Date.now(), participants: [] },
-    ],
-  });
-  assert.ok(!html.includes('data-testid="network-history-spectate"'), 'LOBBY matches should not have spectate button');
-  assert.ok(html.includes('Not spectatable'), 'Should show "Not spectatable" text');
+  assert.equal(cards.length, 4, 'Lobby must have 4 cards');
 });
 
 // ── Section 7: Protocol client builder ──

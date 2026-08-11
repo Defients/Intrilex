@@ -181,25 +181,27 @@ export async function listReplaySummaries() {
 export function renderReplayLibrary(summaries, options = {}) {
   if (!summaries || summaries.length === 0) {
     return `<div class="replay-library" data-testid="replay-library">
-      <a class="play-hub-back" href="#/play" aria-label="Back to Play hub">← Back</a>
+      <a class="play-hub-back" href="#/" aria-label="Back to home">← Back</a>
       <h1>Replay Library</h1>
       <p class="replay-empty">No completed matches yet. Play a match to build your library.</p>
-      <a href="#/play" class="secondary-button">Back to Play</a>
+      <a href="#/" class="secondary-button">Back to Home</a>
     </div>`;
   }
 
   const rows = summaries.map(s => {
     const isHumanWin = s.winner === (s.humanPlayerId ?? 'P1');
     const verified = s.certified ? '<span class="verified-badge" aria-label="Certified verified">✓</span>' : '';
-    return `<tr data-replay-id="${esc(s.replayId)}" data-testid="replay-row">
+    const resultLabel = isHumanWin ? 'Win' : s.winner ? 'Loss' : 'Draw';
+    const resultClass = isHumanWin ? 'result-win' : s.winner ? 'result-loss' : 'result-draw';
+    return `<tr data-replay-id="${esc(s.replayId)}" data-testid="replay-row" class="clickable-row" data-watch-replay="${esc(s.replayId)}">
       <td>${esc(new Date(s.completedAt).toLocaleDateString())}</td>
       <td>${esc(s.profileId === 'first-contact-trigger-closure' ? 'First Contact' : 'Advanced Core')}</td>
-      <td>${isHumanWin ? 'Win' : s.winner ? 'Loss' : 'Draw'}</td>
+      <td class="${resultClass}"><strong>${resultLabel}</strong></td>
       <td>${esc(s.fullTurnSequence ?? 0)}</td>
       <td>${esc(s.decisionCount ?? 0)}</td>
       <td>${esc(s.aiPolicyId ?? '—')}</td>
       <td>${verified}</td>
-      <td>
+      <td class="replay-actions">
         <button class="secondary-button" data-action="watch-replay" data-replay-id="${esc(s.replayId)}">Watch</button>
         <button class="secondary-button" data-action="export-private" data-replay-id="${esc(s.replayId)}">Export private</button>
         <button class="secondary-button" data-action="export-public" data-replay-id="${esc(s.replayId)}">Export public</button>
@@ -209,7 +211,7 @@ export function renderReplayLibrary(summaries, options = {}) {
   }).join('');
 
   return `<div class="replay-library" data-testid="replay-library">
-    <a class="play-hub-back" href="#/play" aria-label="Back to Play hub">← Back</a>
+    <a class="play-hub-back" href="#/" aria-label="Back to home">← Back</a>
     <h1>Replay Library</h1>
     <table class="replay-table" data-testid="replay-table">
       <thead>
@@ -217,7 +219,7 @@ export function renderReplayLibrary(summaries, options = {}) {
       </thead>
       <tbody>${rows}</tbody>
     </table>
-    <a href="#/play" class="secondary-button">Back to Play</a>
+    <a href="#/" class="secondary-button">Back to Home</a>
   </div>`;
 }
 

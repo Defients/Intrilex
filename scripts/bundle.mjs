@@ -42,12 +42,15 @@ async function bundle() {
     absWorkingDir: dist
   });
 
-  // Minify CSS
+  // Bundle and minify CSS — inline @import statements
+  // Mark asset URLs as external so esbuild doesn't try to resolve font/image files
   const cssResult = await esbuild.build({
     entryPoints: [entryCss],
+    bundle: true,
     minify: true,
     write: false,
-    logLevel: 'info'
+    logLevel: 'info',
+    external: ['*.ttf', '*.otf', '*.woff2', '*.png', '*.jpg', '*.jpeg', '*.svg', '*.gif', '*.webp', '/assets/*']
   });
 
   // Hash the outputs
@@ -85,13 +88,45 @@ async function bundle() {
     let html = await readFile(indexHtmlPath, 'utf8');
     html = html.replace(/styles\.css/g, cssFileName);
     html = html.replace(/src="app\.js"/g, `src="${jsFileName}"`);
-    // Inject browser-safe Supabase config from env vars (if available)
+    // Inject browser-safe runtime config as an external JS file (CSP-compliant).
+    // Contains: Supabase publishable credentials + match server WebSocket URL.
+    // NEVER inject server secrets (SUPABASE_SECRET_KEY) here — this file is browser-visible.
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
-    if (supabaseUrl && supabaseKey && !html.includes('__INTRILEX_CONFIG__')) {
-      const configScript = `<script>window.__INTRILEX_CONFIG__={supabase:{url:${JSON.stringify(supabaseUrl)},publishableKey:${JSON.stringify(supabaseKey)}}};</script>`;
-      html = html.replace('</head>', configScript + '\n</head>');
+    const matchServerUrl = process.env.INTRILEX_MATCH_SERVER_URL || '';
+    const hasSupabase = supabaseUrl && supabaseKey;
+    const hasMatchServer = !!matchServerUrl;
+    if ((hasSupabase || hasMatchServer) && !html.includes('__INTRILEX_CONFIG__')) {
+      const configParts = [];
+      if (hasSupabase) {
+        configParts.push(`supabase:{url:${JSON.stringify(supabaseUrl)},publishableKey:${JSON.stringify(supabaseKey)}}`);
+      }
+      if (hasMatchServer) {
+        configParts.push(`matchServerUrl:${JSON.stringify(matchServerUrl)}`);
+      }
+      const configBody = `window.__INTRILEX_CONFIG__={${configParts.join(',')}};`;
+      await writeFile(path.join(dist, '__intrilex-config.js'), configBody);
+      html = html.replace('</head>', '<script src="/__intrilex-config.js"></script>\n</head>');
+      if (hasMatchServer) {
+        console.log(`bundle: injected match server URL: ${matchServerUrl}`);
+      }
     }
+
+    // Inject production WebSocket endpoint into CSP connect-src directive.
+    // This prevents mixed-content blocking when the frontend is on HTTPS
+    // and the match server is on a separate WSS host.
+    if (matchServerUrl && matchServerUrl.startsWith('wss://')) {
+      const cspWsHost = matchServerUrl; // Full wss:// URL for CSP
+      // Add the WSS endpoint to connect-src if not already present
+      if (html.includes('connect-src') && !html.includes(cspWsHost)) {
+        html = html.replace(
+          /(connect-src[^;]*?)(;)/,
+          `$1 ${cspWsHost}$2`
+        );
+        console.log(`bundle: added ${cspWsHost} to CSP connect-src`);
+      }
+    }
+
     await writeFile(indexHtmlPath, html);
     console.log(`bundle: updated index.html with hashed asset references`);
   }

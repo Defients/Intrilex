@@ -32,6 +32,8 @@ const KNOWN_TYPES = new Set([
   'SEND_CHAT',
   // Client → Server (auth handshake — v2)
   'AUTHENTICATE', 'AUTH_REFRESH',
+  // Client → Server (guest migration — v2)
+  'MIGRATE_GUEST',
   // Server → Client
   'MATCH_CREATED', 'MATCH_JOINED', 'MATCH_VIEW',
   'ACTION_RESULT', 'PARTICIPANT_STATUS', 'MATCH_STARTED',
@@ -44,6 +46,8 @@ const KNOWN_TYPES = new Set([
   'ACHIEVEMENTS_EARNED',
   // Server → Client (auth handshake — v2)
   'AUTHENTICATED',
+  // Server → Client (guest migration — v2)
+  'MIGRATION_RESULT',
 ]);
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{4,64}$/;
@@ -450,6 +454,48 @@ export function validateAuthRefresh(payload) {
   const parts = payload.accessToken.split('.');
   if (parts.length !== 3) {
     return fail(ReasonCode.AUTH_TOKEN_INVALID, 'accessToken must be a JWT with 3 segments');
+  }
+  return ok();
+}
+
+// ── Guest migration validators (v2) ──
+
+/** UUID pattern for Supabase user IDs */
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Maximum number of achievements in a single migration payload */
+const MAX_MIGRATION_ACHIEVEMENTS = 200;
+
+/**
+ * Validate a MIGRATE_GUEST payload.
+ * Contains the source (guest) identity, target (permanent) identity,
+ * and the local achievement data to migrate.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateMigrateGuest(payload) {
+  if (typeof payload.sourceIdentity !== 'string' || !UUID_PATTERN.test(payload.sourceIdentity)) {
+    return fail(ReasonCode.MISSING_REQUIRED_FIELD, 'sourceIdentity must be a valid UUID');
+  }
+  if (typeof payload.targetIdentity !== 'string' || !UUID_PATTERN.test(payload.targetIdentity)) {
+    return fail(ReasonCode.MISSING_REQUIRED_FIELD, 'targetIdentity must be a valid UUID');
+  }
+  if (payload.sourceIdentity === payload.targetIdentity) {
+    return fail(ReasonCode.MIGRATION_PLAN_INVALID, 'source and target identities must differ');
+  }
+  if (!Array.isArray(payload.achievements)) {
+    return fail(ReasonCode.MISSING_REQUIRED_FIELD, 'achievements must be an array');
+  }
+  if (payload.achievements.length > MAX_MIGRATION_ACHIEVEMENTS) {
+    return fail(ReasonCode.MESSAGE_TOO_LARGE, `achievements array exceeds maximum of ${MAX_MIGRATION_ACHIEVEMENTS}`);
+  }
+  for (const a of payload.achievements) {
+    if (!a || typeof a.achievementId !== 'string' || a.achievementId.length === 0) {
+      return fail(ReasonCode.INVALID_FIELD_TYPE, 'each achievement must have a non-empty achievementId');
+    }
+    if (typeof a.unlockedAt !== 'string' || a.unlockedAt.length === 0) {
+      return fail(ReasonCode.INVALID_FIELD_TYPE, 'each achievement must have an unlockedAt ISO string');
+    }
   }
   return ok();
 }

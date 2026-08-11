@@ -60,6 +60,11 @@ export const ReasonCode = Object.freeze({
   CONNECTION_TIMEOUT: 'CONNECTION_TIMEOUT',
   CONNECTION_MATCH_MISMATCH: 'CONNECTION_MATCH_MISMATCH',
 
+  // Migration
+  MIGRATION_ALREADY_COMPLETED: 'MIGRATION_ALREADY_COMPLETED',
+  MIGRATION_PLAN_INVALID: 'MIGRATION_PLAN_INVALID',
+  MIGRATION_IDENTITY_MISMATCH: 'MIGRATION_IDENTITY_MISMATCH',
+
   // Server
   INTERNAL_ERROR: 'INTERNAL_ERROR',
   SERVER_SHUTTING_DOWN: 'SERVER_SHUTTING_DOWN',
@@ -79,6 +84,7 @@ export function reasonCategory(code) {
   if (code === 'ENGINE_REJECTION') return 'ENGINE';
   if (code === 'RATE_LIMITED') return 'RATE';
   if (code.startsWith('CONNECTION')) return 'CONNECTION';
+  if (code.startsWith('MIGRATION')) return 'MIGRATION';
   if (code === 'INTERNAL_ERROR' || code === 'SERVER_SHUTTING_DOWN') return 'SERVER';
   return 'UNKNOWN';
 }

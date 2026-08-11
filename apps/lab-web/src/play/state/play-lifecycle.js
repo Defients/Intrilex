@@ -31,7 +31,6 @@ const SessionState = Object.freeze({
 export const LifecycleState = Object.freeze({
   UNINITIALIZED: 'UNINITIALIZED',
   SETUP: 'SETUP',
-  TUTORIAL_OPTION: 'TUTORIAL_OPTION',
   MATCH_START: 'MATCH_START',
   AWAITING_PRIORITY: 'AWAITING_PRIORITY',
   SELECTING_ACTION: 'SELECTING_ACTION',
@@ -139,7 +138,6 @@ export function lifecycleStateLabel(state) {
   const labels = {
     [LifecycleState.UNINITIALIZED]: 'Not started',
     [LifecycleState.SETUP]: 'Setting up match',
-    [LifecycleState.TUTORIAL_OPTION]: 'Tutorial option',
     [LifecycleState.MATCH_START]: 'Starting match',
     [LifecycleState.AWAITING_PRIORITY]: 'Awaiting priority',
     [LifecycleState.SELECTING_ACTION]: 'Selecting action',
@@ -166,9 +164,8 @@ export function lifecycleStateLabel(state) {
  */
 export function validTransitions(state) {
   const transitions = {
-    [LifecycleState.UNINITIALIZED]: [LifecycleState.SETUP, LifecycleState.TUTORIAL_OPTION],
+    [LifecycleState.UNINITIALIZED]: [LifecycleState.SETUP],
     [LifecycleState.SETUP]: [LifecycleState.MATCH_START, LifecycleState.UNINITIALIZED],
-    [LifecycleState.TUTORIAL_OPTION]: [LifecycleState.MATCH_START, LifecycleState.SETUP],
     [LifecycleState.MATCH_START]: [LifecycleState.AWAITING_PRIORITY, LifecycleState.RESOLVING, LifecycleState.TERMINAL],
     [LifecycleState.AWAITING_PRIORITY]: [LifecycleState.SELECTING_ACTION, LifecycleState.RESOLVING, LifecycleState.RESPONSE_WINDOW, LifecycleState.TERMINAL],
     [LifecycleState.SELECTING_ACTION]: [LifecycleState.SELECTING_TARGETS, LifecycleState.CONFIRMING_DECLARATION, LifecycleState.AWAITING_PRIORITY],

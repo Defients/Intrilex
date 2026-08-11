@@ -231,7 +231,6 @@ const BOARD_STATE_JS = `(() => {
   const inspector = document.querySelector('.rd-inspector, [data-testid="card-inspector"]');
   const advancedRules = document.querySelector('.rd-advanced-card-rules, [data-testid="advanced-card-rules"]');
   const guidanceToggle = document.querySelector('[data-testid="guidance-mode-toggle"]');
-  const tutorialOverlay = document.querySelector('.rd-tutorial, [data-testid="tutorial-overlay"]');
   return {
     hasBoard: board !== null,
     isTerminal: terminal !== null,
@@ -263,7 +262,6 @@ const BOARD_STATE_JS = `(() => {
     hasInspector: inspector !== null,
     hasAdvancedRules: advancedRules !== null,
     hasGuidanceToggle: guidanceToggle !== null,
-    hasTutorial: tutorialOverlay !== null,
     bodyText: document.body.innerText.substring(0, 500),
   };
 })()`;
@@ -601,9 +599,6 @@ async function localVsAIJourney(cdp, baseUrl) {
 
     // 31. Toggle guidance — use mid-game capture (board may have ended by now)
     results['31_toggleGuidance'] = { status: midGameGuidance.found ? 'PASS' : 'PARTIAL', details: midGameGuidance };
-
-    // 32. Tutorial — only applicable if tutorial was started
-    results['32_tutorial'] = { status: 'PARTIAL', details: { note: 'Tutorial is optional; not started in this journey' } };
 
     // 33-37. Save/Resume
     // Wait for autosave

@@ -13,7 +13,7 @@ const cssSrc = async () => (await Promise.all(['tokens-base','feature-components
 test('BL-07: renderTraces loads trace shards via ensureTraceShardsLoaded', async () => {
   const code = await src('workspaces/observatory.js');
   // Must not read r.traces from index records
-  const renderTracesMatch = code.match(/export function renderTraces[\s\S]*?\nexport function renderCardFaces/);
+  const renderTracesMatch = code.match(/export function renderTraces[\s\S]*$/);
   assert.ok(renderTracesMatch, 'must find renderTraces function');
   const fnBody = renderTracesMatch[0];
   assert.ok(!fnBody.includes('r.traces??[]'),

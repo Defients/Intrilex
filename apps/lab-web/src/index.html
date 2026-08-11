@@ -5,30 +5,140 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5,user-scalable=yes">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#05080e">
-  <meta name="description" content="Intrilex Simulation Lab v0.24.2 — Server-authoritative online Direct Duel (invite alpha), interactive play vs AI, deterministic match watching, replay investigation, decision traces, counterfactual branch lab, mechanics, synergy, rank power, comparison, policy diagnostics, tournament mode, player profile, AI commentary, and evidence.">
-  <title>Intrilex Simulation Lab v0.24.2</title>
+
+  <!-- Primary SEO -->
+  <title>Intrilex Simulation Lab v0.27.0 — Deterministic Card-Game Simulation &amp; Replay Forensics</title>
+  <meta name="description" content="Intrilex Simulation Lab — deterministic card-game simulation, replay forensics, rank anatomy observatory, and interactive play vs AI. Server-authoritative online Direct Duel invite alpha.">
+  <meta name="keywords" content="Intrilex, card game, simulation lab, replay forensics, rank anatomy, deterministic engine, decision traces, counterfactual analysis, policy diagnostics, AI opponents, online duel, tournament, match analytics, card synergy, mechanics observatory">
+  <meta name="author" content="Intrilex">
+  <meta name="publisher" content="Intrilex">
+  <meta name="application-name" content="Intrilex Simulation Lab">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow">
+  <meta name="bingbot" content="index, follow">
+  <link rel="canonical" href="https://intrilex.cards/">
+  <link rel="alternate" hreflang="en" href="https://intrilex.cards/">
+  <link rel="alternate" hreflang="x-default" href="https://intrilex.cards/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Intrilex Simulation Lab">
+  <meta property="og:title" content="Intrilex Simulation Lab — Deterministic Card-Game Simulation &amp; Replay Forensics">
+  <meta property="og:description" content="Server-authoritative online Direct Duel (invite alpha), interactive play vs AI, deterministic match watching, replay investigation, decision traces, counterfactual branch lab, mechanics, synergy, rank power, comparison, policy diagnostics, tournament mode, player profile, AI commentary, and evidence.">
+  <meta property="og:url" content="https://intrilex.cards/">
+  <meta property="og:image" content="https://intrilex.cards/assets/og-image.png">
+  <meta property="og:image:secure_url" content="https://intrilex.cards/assets/og-image.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Intrilex Simulation Lab — IX brand mark on dark navy with concentric rings and wordmark">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@defyxinate">
+  <meta name="twitter:title" content="Intrilex Simulation Lab — Deterministic Card-Game Simulation &amp; Replay Forensics">
+  <meta name="twitter:description" content="Server-authoritative online Direct Duel (invite alpha), interactive play vs AI, deterministic match watching, replay investigation, decision traces, counterfactual branch lab, mechanics, synergy, rank power, comparison, policy diagnostics, tournament mode, player profile, AI commentary, and evidence.">
+  <meta name="twitter:image" content="https://intrilex.cards/assets/og-image.png">
+  <meta name="twitter:image:alt" content="Intrilex Simulation Lab — IX brand mark on dark navy with concentric rings and wordmark">
+
+  <!-- PWA / mobile -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="mask-icon" href="icon.svg" color="#5ad7e8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Intrilex">
+
+  <!-- Fonts & styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=Dancing+Script:wght@500;600;700&family=Great+Vibes&display=swap">
   <link rel="stylesheet" href="styles.css">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icon.svg">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Intrilex">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' http://localhost:* https://localhost:* http://127.0.0.1:* ws://localhost:* wss://localhost:* ws://127.0.0.1:* wss://127.0.0.1:*; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';">
+
+  <!-- Structured data (JSON-LD is not executed as script, so CSP script-src does not apply) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://intrilex.cards/#app",
+        "name": "Intrilex Simulation Lab",
+        "alternateName": "Intrilex",
+        "url": "https://intrilex.cards/",
+        "description": "Deterministic card-game simulation lab with replay forensics, rank anatomy observatory, counterfactual branch analysis, and interactive play vs AI. Server-authoritative online Direct Duel invite alpha.",
+        "applicationCategory": "Game",
+        "applicationSubCategory": "Card Game Simulation",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires JavaScript. Requires a modern browser with ES modules, CSS grid, and IndexedDB support.",
+        "softwareVersion": "0.27.0",
+        "image": "https://intrilex.cards/assets/og-image.png",
+        "thumbnailUrl": "https://intrilex.cards/icon.svg",
+        "inLanguage": "en",
+        "genre": ["Card Game", "Strategy", "Simulation", "Analytics"],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock"
+        },
+        "author": { "@id": "https://intrilex.cards/#org" },
+        "publisher": { "@id": "https://intrilex.cards/#org" },
+        "featureList": [
+          "Deterministic match watching",
+          "Replay investigation and forensics",
+          "Decision traces",
+          "Counterfactual branch lab",
+          "Mechanics atlas",
+          "Synergy observatory",
+          "Rank power analytics",
+          "Policy diagnostics",
+          "Tournament mode",
+          "Player profile",
+          "AI commentary",
+          "Server-authoritative online Direct Duel",
+          "Interactive play vs AI"
+        ]
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://intrilex.cards/#org",
+        "name": "Intrilex",
+        "url": "https://intrilex.cards/",
+        "logo": "https://intrilex.cards/icon.svg",
+        "image": "https://intrilex.cards/assets/og-image.png",
+        "sameAs": [
+          "https://intrilex.discourse.group/"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://intrilex.cards/#website",
+        "url": "https://intrilex.cards/",
+        "name": "Intrilex Simulation Lab",
+        "publisher": { "@id": "https://intrilex.cards/#org" },
+        "inLanguage": "en"
+      }
+    ]
+  }
+  </script>
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://cdn.discordapp.com https://lh3.googleusercontent.com; connect-src 'self' http://localhost:* https://localhost:* http://127.0.0.1:* ws://localhost:* wss://localhost:* ws://127.0.0.1:* wss://127.0.0.1:* https://xczwhiqnvyxubywhpxiv.supabase.co wss://xczwhiqnvyxubywhpxiv.supabase.co; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';">
 </head>
 <body>
   <a class="skip skip-link" href="#main">Skip to Observatory</a>
   <div id="fx-layer" class="fx-layer" aria-hidden="true"></div>
   <div id="toast-stack" class="toast-stack" role="region" aria-label="Notifications" aria-live="polite"></div>
-  <div id="landing-app" class="landing-root" style="display:none"></div>
-  <div class="observatory-shell" data-preset="observatory">
+  <div id="landing-app" class="landing-root"></div>
+  <div class="observatory-shell" data-preset="observatory" style="display:none">
     <aside class="side-rail" aria-label="Observatory navigation and experiment controls">
       <a class="brand-block" href="#/" aria-label="Back to Intrilex home">
         <span class="brand-glyph" aria-hidden="true">IX</span>
-        <span><strong>INTRILEX</strong><small>SIMULATION LAB · v0.24.2</small></span>
+        <span><strong>INTRILEX</strong><small>SIMULATION LAB · v0.27.0</small></span>
       </a>
       <nav id="workspace-nav" class="workspace-nav" aria-label="Analytical workspaces"></nav>
       <section class="experiment-rail" aria-labelledby="experiment-title">

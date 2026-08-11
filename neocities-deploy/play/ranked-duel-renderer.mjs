@@ -21,14 +21,14 @@ import { renderTcgCard, renderTcgCardBack, renderTcgCardPreview } from './play-c
 import { getCardDefinition, getSuit } from '../card-face-data.js';
 import { getCardArtBoardPath, getCardArtBoardPosition } from '../card-art-registry.js';
 import { getArchetypePersonality } from './ai-personality.js';
-import { renderPlayHub, renderNewMatchSetup } from './ranked-duel-hub.mjs';
+import { renderNewMatchSetup } from './ranked-duel-hub.mjs';
 import { renderTerminal, renderError, renderKeyboardHelp, formatPhase, formatTerminationReason } from './ranked-duel-terminal.mjs';
 import { ratingToTierDivision } from '@intrilex/account-domain/rank-tier';
 import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
 
 // Re-export hub and terminal functions for backward compatibility
 // (tests and play-app.js import these from ranked-duel-renderer.mjs)
-export { renderPlayHub, renderNewMatchSetup };
+export { renderNewMatchSetup };
 
 /**
  * Map a view-model card's statusMarkers into the runtimeState shape
@@ -129,7 +129,7 @@ function adaptSnapshotForViewModel(controllerSnapshot) {
  * Render the full play board from a snapshot.
  * v0.20.0: Full replacement for play-renderer-v3.js renderBoard.
  * @param {object} snapshot — Authorized player snapshot from PlaySession
- * @param {object} options — { selectedActionId, selectedSourceCardId, selectedTargets, inspectorCardId, guidanceMode, showKeyboardHelp, tutorial, chatMessages, soundMuted }
+ * @param {object} options — { selectedActionId, selectedSourceCardId, selectedTargets, inspectorCardId, guidanceMode, showKeyboardHelp, chatMessages, soundMuted }
  * @returns {string} HTML
  */
 export function renderBoard(snapshot, options = {}) {
@@ -139,18 +139,16 @@ export function renderBoard(snapshot, options = {}) {
 
 /**
  * @param {object} snapshot — Authorized player snapshot from PlaySession
- * @param {object} options — { selectedActionId, selectedSourceCardId, selectedTargets, inspectorCardId, guidanceMode, showKeyboardHelp, tutorial, chatMessages, soundMuted }
+ * @param {object} options — { selectedActionId, selectedSourceCardId, selectedTargets, inspectorCardId, guidanceMode, showKeyboardHelp, chatMessages, soundMuted }
  * @returns {string} HTML
  */
 export function renderRankedDuel(snapshot, options = {}) {
   const profile = loadProfile();
   const adapted = adaptSnapshotForViewModel(snapshot);
-  // Derive mode info from options (network match flag, tutorial, etc.)
+  // Derive mode info from options (network match flag, etc.)
   const modeInfo = options.isNetworkMatch
     ? { kind: 'NETWORK', label: 'ONLINE \u00b7 DIRECT DUEL', networkRanked: true }
-    : options.isTutorial
-      ? { kind: 'TUTORIAL', label: 'TUTORIAL \u00b7 FIRST CONTACT', networkRanked: false }
-      : null; // null = default LOCAL_AI
+    : null; // null = default LOCAL_AI
   const vm = buildRankedDuelViewModel(adapted, profile, modeInfo);
 
   if (vm.status === 'ERROR') {
@@ -242,7 +240,6 @@ function renderMatch(vm, opts, snapshot) {
     </section>
     ${opts.inspectorCardId ? renderInspector(opts.inspectorCardId, cardRegistry, [], guidanceMode, opts.inspectorFaceView) : ''}
     ${opts.showKeyboardHelp ? renderKeyboardHelp() : ''}
-    ${renderTutorialCoach(opts.tutorial)}
   </div>`;
 }
 
@@ -276,7 +273,7 @@ function renderHeader(vm, opts, priorityContext, immediate) {
 
   return `<header class="rd-header" role="banner">
     <div class="rd-header-left">
-      <a class="rd-header-back" href="#/play" aria-label="Back to Play hub" title="Back to Play hub">\u2190</a>
+      <a class="rd-header-back" href="#/" aria-label="Back to home" title="Back to home">\u2190</a>
       <span class="rd-header-logo">INTRILEX</span>
       <span class="rd-header-mode">${esc(vm.mode.label)}</span>
     </div>
@@ -2027,26 +2024,6 @@ function renderEventLog(events) {
       <span class="event-index">${e.index}.</span>
       <span class="event-description">${esc(e.description)}</span>
     </div>`).join('')}
-  </div>`;
-}
-
-/**
- * Render the tutorial coach overlay (v0.17.0 port).
- */
-function renderTutorialCoach(tutorial) {
-  if (!tutorial || tutorial.isComplete || tutorial.skipped) return '';
-  const chapter = tutorial.currentChapter;
-  if (!chapter) return '';
-  return `<div class="tutorial-coach" data-testid="tutorial-coach" role="region" aria-label="Tutorial: ${esc(chapter.title)}">
-    <div class="tutorial-coach-header">
-      <span class="tutorial-chapter-title">${esc(chapter.title)}</span>
-      <span class="tutorial-progress">${tutorial.completedChapters.size}/${tutorial.chapterCount}</span>
-    </div>
-    <p class="tutorial-text">${esc(chapter.text)}</p>
-    <div class="tutorial-controls">
-      ${chapter.completion?.type === 'acknowledge' ? `<button class="tutorial-acknowledge" data-testid="tutorial-acknowledge">Got it</button>` : ''}
-      <button class="tutorial-skip" data-testid="tutorial-skip">Skip tutorial</button>
-    </div>
   </div>`;
 }
 

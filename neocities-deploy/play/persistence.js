@@ -545,3 +545,40 @@ export async function resetAchievementState() {
     return false;
   }
 }
+
+/**
+ * Mark local achievements as migrated to a permanent account.
+ * Adds a `migratedAt` timestamp to the achievement state so the UI can
+ * show "migrated" status. Does NOT delete the local data — it stays as
+ * a backup in case the cloud sync needs to be re-run.
+ * @param {string} migrationId - The migration ID for provenance
+ * @returns {Promise<boolean>}
+ */
+export async function markAchievementsMigrated(migrationId) {
+  if (!isIndexedDBAvailable()) {
+    try {
+      const raw = localStorage.getItem('intrilex-achievements-v1');
+      const state = raw ? JSON.parse(raw) : {};
+      state.migratedAt = new Date().toISOString();
+      state.migrationId = migrationId ?? null;
+      localStorage.setItem('intrilex-achievements-v1', JSON.stringify(state));
+      return true;
+    } catch (err) {
+      console.error('[achievements] Failed to mark migrated in localStorage:', err);
+      return false;
+    }
+  }
+  try {
+    const currentState = await getAchievementState();
+    if (!currentState) return true; // Nothing to mark
+    currentState.migratedAt = new Date().toISOString();
+    currentState.migrationId = migrationId ?? null;
+    const { store, transaction } = await tx(STORES.ACHIEVEMENTS, 'readwrite');
+    await promisifyRequest(store.put({ key: ACHIEVEMENT_KEY, value: currentState }));
+    await awaitTx(transaction);
+    return true;
+  } catch (err) {
+    console.error('[achievements] Failed to mark migrated in IndexedDB:', err);
+    return false;
+  }
+}

@@ -12,7 +12,7 @@
 
 // Fallback version if BUILD_INFO.json is not yet fetched.
 // The real version is loaded asynchronously in the install handler.
-let CACHE_VERSION = 'intrilex-v0.24.2-unknown';
+let CACHE_VERSION = 'intrilex-v0.27.0-unknown';
 let CACHE_NAME = `${CACHE_VERSION}-${self.registration ? self.registration.scope : 'root'}`;
 
 // App shell — always cached for offline use
@@ -135,8 +135,9 @@ async function staleWhileRevalidate(request) {
 
   const fetchPromise = fetch(request)
     .then((response) => {
-      if (response && response.ok) {
-        cache.put(request, response.clone());
+      // Only cache OK, non-partial, non-opaque responses
+      if (response && response.ok && response.status !== 206 && response.type !== 'opaque') {
+        cache.put(request, response.clone()).catch(() => {});
         evictIfNeeded(cache);
       }
       return response;
@@ -150,8 +151,8 @@ async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
     const response = await fetch(request);
-    if (response && response.ok) {
-      cache.put(request, response.clone());
+    if (response && response.ok && response.status !== 206 && response.type !== 'opaque') {
+      cache.put(request, response.clone()).catch(() => {});
       evictIfNeeded(cache);
     }
     return response;

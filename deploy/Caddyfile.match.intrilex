@@ -1,0 +1,44 @@
+# Intrilex Match Server — Caddy reverse proxy configuration
+#
+# Install:
+#   sudo cp Caddyfile.match.intrilex /etc/caddy/
+#   sudo caddy reload --config /etc/caddy/Caddyfile
+#
+# Or if Caddy uses a single Caddyfile, append the contents of this file
+# to the existing /etc/caddy/Caddyfile and reload.
+#
+# Caddy automatically:
+#   - obtains TLS certificates from Let's Encrypt
+#   - renews certificates before expiry
+#   - proxies WebSocket upgrade traffic
+#   - redirects HTTP -> HTTPS
+#
+# The match server itself runs on 127.0.0.1:3099 (loopback only).
+# Port 3099 is NOT exposed to the public internet.
+
+match.intrilex.cards {
+    # Reverse proxy to the Intrilex match server
+    reverse_proxy 127.0.0.1:3099 {
+        # WebSocket support is automatic in Caddy — no special headers needed.
+        # Caddy handles the Upgrade/Connection headers transparently.
+
+        # Trust upstream for health checking
+        health_uri /health
+        health_timeout 5s
+    }
+
+    # Basic security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+
+    # Log access
+    log {
+        output file /var/log/caddy/match.intrilex.cards.log {
+            roll_size 100mb
+            roll_keep 5
+        }
+    }
+}

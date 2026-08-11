@@ -42,7 +42,7 @@
  * @property {string|null} terminationReason
  * @property {string|null} winnerUserId - Supabase UUID of winner (null for draw/abort)
  * @property {string|null} replayHash - SHA-256 hex of certified replay
- * @property {string} serverVersion - Intrilex version (e.g. '0.24.2')
+ * @property {string} serverVersion - Intrilex version (e.g. '0.27.0')
  * @property {string} rulesVersion - Engine rules version
  * @property {Array<MatchParticipantRecord>} participants
  * @property {string|null} queueId - 'casual' or 'ranked' (null for private duels)
@@ -124,6 +124,31 @@ export class MatchResultPersistor {
    */
   async persistAchievementUnlocks(_unlocks) {
     throw new Error('MatchResultPersistor.persistAchievementUnlocks() not implemented');
+  }
+
+  /**
+   * Execute a guest→permanent account migration.
+   * Copies local achievements from a guest identity to a permanent identity
+   * and records the migration for idempotency. Only the service role can
+   * write to account_migrations, so this is always server-side.
+   * @param {object} plan - Migration plan (from account-domain/guest-migration)
+   * @param {string} plan.migrationId - Deterministic migration ID
+   * @param {string} plan.sourceIdentity - Guest user UUID
+   * @param {string} plan.targetIdentity - Permanent user UUID
+   * @param {Array<{ achievementId: string, unlockedAt: string, provenance?: string }>} achievements - Local achievements to migrate
+   * @returns {Promise<{ success: boolean, error: string|null, migrationId: string, achievementsTransferred: number, alreadyMigrated: boolean }>}
+   */
+  async executeGuestMigration(_plan, _achievements) {
+    throw new Error('MatchResultPersistor.executeGuestMigration() not implemented');
+  }
+
+  /**
+   * Check if a guest→permanent migration has already been completed.
+   * @param {string} migrationId - Deterministic migration ID
+   * @returns {Promise<boolean>}
+   */
+  async isMigrationCompleted(_migrationId) {
+    throw new Error('MatchResultPersistor.isMigrationCompleted() not implemented');
   }
 
   /**

@@ -610,13 +610,13 @@ test('privacy: leaderboard UI source has no service-key or secret references', a
 // Section: UI workspace source structure
 // ═══════════════════════════════════════════════════════════════
 
-test('ui: leaderboard workspace is registered in router and app.js', async () => {
+test('ui: leaderboard is wired as a homepage overlay (not a Simulation Lab workspace)', async () => {
   const router = await readFile(path.join(root, 'apps/lab-web/src/router.js'), 'utf8');
-  assert.ok(router.includes("'/leaderboard'"), 'router has /leaderboard workspace');
-  assert.ok(router.includes('Ranked ladder'), 'router has subtitle');
+  assert.ok(!router.includes("'/leaderboard'"), 'router no longer has /leaderboard workspace (removed from Simulation Lab)');
   const appJs = await readFile(path.join(root, 'apps/lab-web/src/app.js'), 'utf8');
   assert.ok(appJs.includes('renderLeaderboard'), 'app.js imports renderLeaderboard');
-  assert.ok(appJs.includes("'/leaderboard'"), 'app.js routes /leaderboard');
+  assert.ok(appJs.includes('openLeaderboardOverlay'), 'app.js has openLeaderboardOverlay for homepage overlay');
+  assert.ok(appJs.includes('destroyLeaderboard'), 'app.js imports destroyLeaderboard for overlay teardown');
 });
 
 test('ui: leaderboard CSS is imported in styles.css', async () => {

@@ -85,4 +85,10 @@ export function authRefresh(accessToken) {
   return envelope('AUTH_REFRESH', { accessToken });
 }
 
+// ── Guest migration (v2) ──
+
+export function migrateGuest(sourceIdentity, targetIdentity, achievements) {
+  return envelope('MIGRATE_GUEST', { sourceIdentity, targetIdentity, achievements });
+}
+
 export { PROTOCOL_VERSION };

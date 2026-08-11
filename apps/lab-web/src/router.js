@@ -9,7 +9,6 @@ export const WORKSPACES = [
   ['/replays','▶','Replays','Verification'],
   ['/history','☰','History','Match ledger'],
   ['/mechanics','⌁','Mechanics','Atlas'],
-  ['/cards','▣','Card Faces','Renderer v1'],
   ['/synergies','⟷','Synergies','Relationships'],
   ['/ranks','★','Ranks','Power observatory'],
   ['/compare','⇄','Compare','Matched cohorts'],
@@ -18,8 +17,8 @@ export const WORKSPACES = [
   ['/diagnostics','⚙','Diagnostics','Policy behavior'],
   ['/tournament','🏆','Tournament','AI bracket'],
   ['/evidence','◎','Evidence','Integrity'],
+  ['/release-notes','✧','Release Notes','What\'s new'],
   ['/profile','👤','Profile','Player profile'],
-  ['/leaderboard','⬒','Leaderboard','Ranked ladder'],
   ['/intelligence','✦','Analytics AI','Ollama interpretation'],
   ['/achievements','🏆','Achievements','56 launch achievements'],
   ['/settings','⚙','Settings','Display, network, and account'],
@@ -32,25 +31,26 @@ export const SUBTITLES = {
   '/watch':'Canonical match truth with semantic stepping and causal evidence.',
   '/replays':'Verify, search, compare, and investigate retained match evidence.',
   '/mechanics':'Opportunity, usage, impact, uncertainty, and replay evidence by mechanic.',
-  '/cards':'Deterministic Board, Lite, and Full Zoom faces backed by canonical card data.',
   '/synergies':'Stratified synergy, anti-synergy, motifs, and counterexamples.',
   '/ranks':'Cohort-relative rank power profiles, counterfactual decision value, and balance watchlist.',
   '/compare':'Policy, seat, campaign, and matched-cohort differences without canon mixing.',
   '/history':'Per-match ledger with full telemetry, sortable columns, and detail inspector.',
   '/evidence':'Formula registry, provenance, capabilities, anomalies, and release integrity.',
+  '/release-notes':'What\'s new in each version — changelog with version summaries and release details.',
   '/intelligence':'Optional local-LLM analytics interpretation grounded in the active simulation dataset. Deterministic warnings are computed locally; LLM interpretations are clearly labelled.',
   '/traces':'Per-decision traces with score decomposition, reason codes, and rule audit.',
   '/branches':'Policy-conditioned counterfactual estimates from command checkpoints.',
   '/diagnostics':'Decision margins, self-counter rates, response conservation, timing, and win rates.',
   '/tournament':'Single-elimination AI-vs-AI bracket with deterministic matches and champion crowning.',
   '/profile':'Player profile — identity, ranked, achievements, showcase, customization, and privacy.',
-  '/leaderboard':'The canonical Ranked leaderboard. One prestigious ladder, server-side ranking, season standings.',
   '/achievements':'56 launch achievements with deterministic detection, career tracking, and hidden discoveries.',
   '/settings':'Display, accessibility, network, account, and data settings.',
-  '/auth':'Sign in with Discord or continue as a guest to play online.'
+  '/auth':'Sign in with Discord or Google, or continue as a guest to play online.'
 };
 
-export const LANDING_MODES = new Set(['/', '/play', '/play/new', '/play/tutorial', '/play/match', '/play/replays', '/rules']);
+export const LEGAL_MODES = new Set(['/privacy', '/terms']);
+
+export const LANDING_MODES = new Set(['/', '/play', '/play/new', '/play/match', '/play/replays', '/rules', '/privacy', '/terms', '/auth']);
 
 export const isPlayRoute = (r) => r === '/play' || r.startsWith('/play/');
 
@@ -68,9 +68,9 @@ export function route() {
 export function renderNavigation() {
   // Group workspaces into sections for visual hierarchy
   const SECTIONS = [
-    { label: 'Analysis', routes: ['/watch', '/replays', '/history', '/mechanics', '/cards', '/synergies'] },
+    { label: 'Analysis', routes: ['/watch', '/replays', '/history', '/mechanics', '/synergies'] },
     { label: 'Investigation', routes: ['/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament'] },
-    { label: 'System', routes: ['/evidence', '/profile', '/leaderboard', '/achievements', '/intelligence', '/settings'] },
+    { label: 'System', routes: ['/evidence', '/release-notes', '/intelligence'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));
   const nav = document.querySelector('#workspace-nav');

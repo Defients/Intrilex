@@ -2,7 +2,7 @@
 // experiment-controls.js — Experiment panel, campaign runner, global bindings
 // ═══════════════════════════════════════════════════════════════
 
-import { state, esc, fmt, pct, short, definitionList, showToast } from './state.js';
+import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting } from './state.js';
 import { WORKSPACES, route, policyOptions } from './router.js';
 import { showIntegrity } from './integrity.js';
 import { RULES_VERSION, LAB_VERSION } from './version.js';
@@ -53,10 +53,12 @@ export function bindGlobal() {
   document.querySelector('#layout-preset').addEventListener('change', e => {
     state.layout = e.target.value;
     document.querySelector('.observatory-shell').dataset.preset = state.layout;
+    persistSetting('layout', state.layout);
     import('./app.js').then(m => m.render());
   });
   document.querySelector('#global-visibility').addEventListener('change', async e => {
     state.visibility = e.target.value;
+    persistSetting('visibility', state.visibility);
     if (state.visibility !== 'public') {
       const { loadAuthorized } = await import('./data-loader.js');
       await loadAuthorized();
@@ -102,9 +104,9 @@ function renderCommandResults() {
   const q = document.querySelector('#command-search').value.toLowerCase();
   const commands = [
     ...WORKSPACES.map(([r, , label, sub]) => ({ label: `Open ${label}`, detail: sub, run: () => { location.hash = `#${r}`; } })),
-    { label: 'Toggle reduced motion', detail: 'Accessibility', run: () => { state.reducedMotion = !state.reducedMotion; document.body.classList.toggle('reduced-motion', state.reducedMotion); } },
-    { label: 'Toggle reduced sensory', detail: 'Accessibility', run: () => { state.reducedSensory = !state.reducedSensory; document.body.classList.toggle('reduced-sensory', state.reducedSensory); } },
-    { label: 'Toggle FX', detail: 'Presentation', run: () => { state.fx = !state.fx; document.body.classList.toggle('fx-off', !state.fx); } },
+    { label: 'Toggle reduced motion', detail: 'Accessibility', run: () => { state.reducedMotion = !state.reducedMotion; document.body.classList.toggle('reduced-motion', state.reducedMotion); persistSetting('reducedMotion', state.reducedMotion); } },
+    { label: 'Toggle reduced sensory', detail: 'Accessibility', run: () => { state.reducedSensory = !state.reducedSensory; document.body.classList.toggle('reduced-sensory', state.reducedSensory); persistSetting('reducedSensory', state.reducedSensory); } },
+    { label: 'Toggle FX', detail: 'Presentation', run: () => { state.fx = !state.fx; document.body.classList.toggle('fx-off', !state.fx); persistSetting('fx', state.fx); } },
     { label: 'Show priority orchestration', detail: 'Developer evidence', run: () => { state.showOrchestration = !state.showOrchestration; import('./app.js').then(m => m.render()); } },
     { label: 'Restart replay', detail: 'Identical seed / source replay', run: () => { import('./app.js').then(m => { m.stop(); state.frame = 0; m.render(); }); } },
     { label: 'Extract analysis (JSON)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js').then(m => m.showExtract('json')); } },

@@ -196,7 +196,7 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
     terminationReason: match.terminalReason,
     winnerUserId,
     replayHash,
-    serverVersion: serverVersion ?? '0.24.2',
+    serverVersion: serverVersion ?? '0.27.0',
     rulesVersion: RULES_VERSION ?? 'unknown',
     participants: participantRecords,
     queueId,

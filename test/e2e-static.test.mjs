@@ -1,5 +1,5 @@
 import test from "node:test";import assert from "node:assert/strict";import { access,readFile } from "node:fs/promises";
-const routes=["/watch","/replays","/history","/mechanics","/cards","/synergies","/ranks","/compare","/traces","/branches","/diagnostics","/evidence"];
+const routes=["/watch","/replays","/history","/mechanics","/synergies","/ranks","/compare","/traces","/branches","/diagnostics","/evidence"];
 test("all Observatory workspaces exist",async()=>{const js=await readFile("apps/lab-web/src/app.js","utf8");for(const route of routes)assert.match(js,new RegExp(route.replace("/","\\/")));});
 test("landing page routes exist in router.js",async()=>{const js=await readFile("apps/lab-web/src/router.js","utf8");for(const route of ["/","/play","/rules","/sim"])assert.ok(js.includes(`'${route}'`),`must reference landing route ${route}`);});
 test("rulebook-renderer.js exists in src and dist",async()=>{for(const p of ["apps/lab-web/src/rulebook-renderer.js","apps/lab-web/dist/rulebook-renderer.js"])await access(p);});

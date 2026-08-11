@@ -155,7 +155,7 @@ export function renderMarkdown(mdText) {
   return html.join('\n');
 }
 
-function slugify(text) {
+export function slugify(text) {
   return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'section';
 }
 

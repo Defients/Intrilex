@@ -17,7 +17,7 @@ function canonicalize(value) {
 
 /**
  * FNV-1a hash — fast, deterministic, no dependencies.
- * Used for content integrity in play modules (save envelopes, tutorial state).
+ * Used for content integrity in play modules (save envelopes).
  * NOT for cryptographic verification — use engine hashCanonical for that.
  */
 function fnv1a(text) {

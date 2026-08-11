@@ -502,7 +502,7 @@ async function scenario3_SaveReload(cdp, baseUrl) {
       allButtons: document.querySelectorAll('button').length,
     })`).catch(() => 'eval failed');
 
-    await waitFor(cdp, sessionId, () => document.querySelector('.play-hub, [data-testid="new-game"], [data-testid="start-tutorial"], [data-action="new-game"]') !== null, 15000);
+    await waitFor(cdp, sessionId, () => document.querySelector('.play-hub, [data-testid="new-game"], [data-action="new-game"]') !== null, 15000);
 
     const hubInfo = await evaluate(cdp, sessionId, `
       (() => {

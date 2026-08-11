@@ -59,7 +59,8 @@ const types = {
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
   '.ttf': 'font/ttf',
-  '.otf': 'font/otf'
+  '.otf': 'font/otf',
+  '.txt': 'text/plain; charset=utf-8'
 };
 
 // Hashed assets (app.[hash].js, styles.[hash].css) get long-lived cache
@@ -204,6 +205,32 @@ const server = http.createServer(async (request, response) => {
     response.setHeader('Cache-Control', 'public, max-age=3600');
   }
 
+  // Serve browser-safe runtime config as an external same-origin JS file (CSP-compliant).
+  // Contains: Supabase publishable credentials + match server WebSocket URL.
+  // NEVER include server secrets here — this file is browser-visible.
+  if (url.pathname === '/__intrilex-config.js') {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+    // Dev default: ws://localhost:3099 unless overridden by INTRILEX_MATCH_SERVER_URL
+    const matchServerUrl = process.env.INTRILEX_MATCH_SERVER_URL || (withNetwork ? 'ws://localhost:3099' : '');
+    const configParts = [];
+    if (supabaseUrl && supabaseKey) {
+      configParts.push(`supabase:{url:${JSON.stringify(supabaseUrl)},publishableKey:${JSON.stringify(supabaseKey)}}`);
+    }
+    if (matchServerUrl) {
+      configParts.push(`matchServerUrl:${JSON.stringify(matchServerUrl)}`);
+    }
+    const body = configParts.length > 0
+      ? `window.__INTRILEX_CONFIG__={${configParts.join(',')}};`
+      : '';
+    response.writeHead(200, {
+      'Content-Type': 'text/javascript; charset=utf-8',
+      'Cache-Control': 'no-store'
+    });
+    response.end(body);
+    return;
+  }
+
   // In watch mode, inject hot-reload script into HTML
   if (watchMode && ext === '.html') {
     let html = await readFile(file, 'utf8');
@@ -211,12 +238,9 @@ const server = http.createServer(async (request, response) => {
       const reloadScript = '<script src="/__devreload-client.js"></script>';
       html = html.replace('</head>', reloadScript + '\n</head>');
     }
-    // Inject browser-safe Supabase config from env vars (if available)
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
-    if (supabaseUrl && supabaseKey && !html.includes('__INTRILEX_CONFIG__')) {
-      const configScript = `<script>window.__INTRILEX_CONFIG__={supabase:{url:${JSON.stringify(supabaseUrl)},publishableKey:${JSON.stringify(supabaseKey)}}};</script>`;
-      html = html.replace('</head>', configScript + '\n</head>');
+    // Inject Supabase config via external script (CSP-compliant)
+    if (!html.includes('__INTRILEX_CONFIG__')) {
+      html = html.replace('</head>', '<script src="/__intrilex-config.js"></script>\n</head>');
     }
     response.end(html);
     return;
@@ -225,11 +249,8 @@ const server = http.createServer(async (request, response) => {
   // Non-watch mode: also inject config for built dist
   if (!watchMode && ext === '.html') {
     let html = await readFile(file, 'utf8');
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
-    if (supabaseUrl && supabaseKey && !html.includes('__INTRILEX_CONFIG__')) {
-      const configScript = `<script>window.__INTRILEX_CONFIG__={supabase:{url:${JSON.stringify(supabaseUrl)},publishableKey:${JSON.stringify(supabaseKey)}}};</script>`;
-      html = html.replace('</head>', configScript + '\n</head>');
+    if (!html.includes('__INTRILEX_CONFIG__')) {
+      html = html.replace('</head>', '<script src="/__intrilex-config.js"></script>\n</head>');
     }
     response.end(html);
     return;

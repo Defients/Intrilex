@@ -44,6 +44,8 @@ const STAGES = [
   ['mimic-ten-diamond', 'node', ['--test', 'test/mimic-ten-diamond.test.mjs']],
   ['advanced-continuations', 'node', ['--test', 'test/advanced-continuations.test.mjs']],
   ['landing-page', 'node', ['--test', 'test/landing-page.test.mjs']],
+  ['ranking-system-overlay', 'node', ['--test', 'test/ranking-system-overlay.test.mjs']],
+  ['release-notes-workspace', 'node', ['--test', 'test/release-notes-workspace.test.mjs']],
   ['unrestricted-core', 'node', ['--test', 'test/unrestricted-core.test.mjs']],
   ['unrestricted-browser-smoke', 'node', ['--test', 'test/unrestricted-browser-smoke.test.mjs']],
   ['scoring-sensitivity', 'node', ['--test', 'test/scoring-sensitivity.test.mjs']],
@@ -183,6 +185,12 @@ const STAGES = [
   ['sec-01-secret-containment', 'node', ['--test', 'test/sec-01-secret-containment.test.mjs']],
   ['release-identity', 'node', ['--test', 'test/release-identity.test.mjs']],
   ['engine-manifest', 'node', ['--test', 'test/engine-manifest.test.mjs']],
+  // Guest→permanent account migration (domain contracts, server execution, E2E)
+  ['guest-migration-plan', 'node', ['--test', 'test/guest-migration-plan.test.mjs']],
+  ['guest-migration-e2e', 'node', ['--test', 'test/guest-migration-e2e.test.mjs']],
+  // Match server production configuration (deployment hardening)
+  ['match-server-config', 'node', ['--test', 'test/match-server-config.test.mjs']],
+  ['match-server-production', 'node', ['--test', 'test/match-server-production.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

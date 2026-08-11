@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { hashCanonical } from '@intrilex/shared';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rootPackage = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
@@ -70,6 +71,13 @@ if (cardArt.status !== 0) process.exit(cardArt.status ?? 1);
 // Derivatives (256/128/64, alpha-preserving) ship under apps/lab-web/src/assets/ranked/glyphs/.
 const rankedGlyphs = spawnSync(process.execPath, ['scripts/build-ranked-glyphs.mjs'], { cwd: root, stdio: 'inherit' });
 if (rankedGlyphs.status !== 0) process.exit(rankedGlyphs.status ?? 1);
+
+// ── Social share image: regenerate og-image.png from an inline SVG via sharp.
+// Deterministic (skip-unchanged via source-hash sidecar). Always reflects the
+// current brand design + version stamp. Copied to dist/ by the recursive
+// src→dist copy below, and to neocities-deploy/ by sync-neocities.mjs.
+const ogImage = spawnSync(process.execPath, ['scripts/generate-og-image.mjs'], { cwd: root, stdio: 'inherit' });
+if (ogImage.status !== 0) process.exit(ogImage.status ?? 1);
 
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
@@ -160,6 +168,21 @@ const replayBlobDirs = new Set([
   'autonomy/replays/authorized',
   'autonomy/replays/public',
   'autonomy/decision-traces',
+  // data/replays/public/ is redundant with data/certified-replays/ — the browser
+  // app loads certified replays via data/certified-replays/<id>.certified.replay.json,
+  // never data/replays/public/<id>.json. Excluding saves ~1MB per deploy.
+  'replays/public',
+]);
+// Individual autonomy JSON files not fetched by the browser app. These are campaign
+// accounting/retention artifacts used by server-side analysis and tests (which read
+// from sample-data/, not dist/). Excluding saves ~36MB per deploy.
+const excludedDataFiles = new Set([
+  'autonomy/campaign-accounting.json',
+  'autonomy/retention-index.json',
+  'autonomy/execution-manifests.json',
+  'autonomy/experiment.json',
+  // The browser loads match-summaries.ndjson (line 97 of data-loader.js), not .csv
+  'autonomy/match-summaries.csv',
 ]);
 if (includeReplayBlobs) {
   await cp(path.join(root, 'sample-data'), path.join(dist, 'data'), { recursive: true });
@@ -168,12 +191,13 @@ if (includeReplayBlobs) {
     recursive: true,
     filter: (src) => {
       const rel = path.relative(path.join(root, 'sample-data'), src);
-      // Always copy root and top-level entries; skip only the heavy blob dirs
+      // Always copy root and top-level entries; skip blob dirs and excluded files
       if (!rel || rel === '.') return true;
-      return !replayBlobDirs.has(rel.replace(/\\/g, '/'));
+      const relFwd = rel.replace(/\\/g, '/');
+      return !replayBlobDirs.has(relFwd) && !excludedDataFiles.has(relFwd);
     },
   });
-  console.log(`build: excluded replay blob directories (set INTRILEX_INCLUDE_REPLAY_BLOBS=1 to include) — saved ~670MB`);
+  console.log(`build: excluded replay blob directories and unused data files (set INTRILEX_INCLUDE_REPLAY_BLOBS=1 to include) — saved ~670MB`);
 }
 // On Windows external/mapped drives, cp with filter may create directory entries
 // without fully writing file contents. Re-copy the observatory directory without
@@ -181,7 +205,23 @@ if (includeReplayBlobs) {
 const observatorySrcDir = path.join(root, 'sample-data', 'observatory');
 const observatoryDistDir = path.join(dist, 'data', 'observatory');
 await rm(observatoryDistDir, { recursive: true, force: true });
-await cp(observatorySrcDir, observatoryDistDir, { recursive: true });
+// Retry cp on Windows — antivirus/indexer can briefly lock source files
+let cpSuccess = false;
+for (let attempt = 0; attempt < 3; attempt++) {
+  try {
+    await cp(observatorySrcDir, observatoryDistDir, { recursive: true });
+    cpSuccess = true;
+    break;
+  } catch (err) {
+    if (attempt < 2) {
+      await new Promise(r => setTimeout(r, 500));
+      await rm(observatoryDistDir, { recursive: true, force: true });
+      continue;
+    }
+    throw err;
+  }
+}
+if (!cpSuccess) throw new Error('Failed to copy observatory directory after 3 retries');
 // Wait for filesystem sync and verify the critical file is readable
 let observatoryReady = false;
 for (let attempt = 0; attempt < 20; attempt++) {
@@ -194,8 +234,44 @@ for (let attempt = 0; attempt < 20; attempt++) {
 if (!observatoryReady) {
   throw new Error('Observatory analytics.json could not be copied and verified after 20 retries');
 }
+
+// ── Slim index files for browser deploy ──────────────────────────────────
+// The replay-index.json and lab-replay-index.json each embed a ~180KB `summary`
+// object per autonomy record (100 records × 180KB ≈ 18MB per file). The browser
+// app never reads `record.summary` — it loads match summaries separately from
+// match-summaries.ndjson. Stripping `summary` from the dist copies saves ~36MB.
+// Tests verify `record.summary` from sample-data/ (the source), not dist/.
+async function slimIndexFile(filePath, label) {
+  const abs = path.join(dist, 'data', filePath);
+  if (!existsSync(abs)) return;
+  const raw = JSON.parse(await readFile(abs, 'utf8'));
+  if (!raw.records) return;
+  let stripped = 0;
+  raw.records = raw.records.map((r) => {
+    if (r.summary) { stripped++; const rest = { ...r }; delete rest.summary; return rest; }
+    return r;
+  });
+  // Recompute indexHash over the slimmed core (without the hash field itself)
+  const core = { ...raw };
+  delete core.indexHash;
+  raw.indexHash = hashCanonical(core);
+  await writeFile(abs, JSON.stringify(raw) + '\n');
+  console.log(`build: slimmed ${label} — stripped ${stripped} record summaries, ${label} is now ${JSON.stringify(raw).length} bytes`);
+}
+await slimIndexFile('replay-index.json', 'replay-index.json');
+await slimIndexFile('autonomy/lab-replay-index.json', 'lab-replay-index.json');
+
+// ── Clean up empty directories left by blob-dir exclusion filter ──────────
+// The cp filter creates parent directories before excluding their children,
+// leaving empty dirs like data/autonomy/replays/ and data/autonomy/lab-replays/.
+for (const emptyDir of ['data/autonomy/replays', 'data/autonomy/lab-replays', 'data/replays/public']) {
+  const abs = path.join(dist, emptyDir);
+  if (existsSync(abs)) await rm(abs, { recursive: true, force: true });
+}
+
 await mkdir(path.join(dist, 'data/release'), { recursive: true });
 await cp(path.join(root, 'docs/INTRILEX_v4.3.1_COMPLETE_PLAYER_RULEBOOK.md'), path.join(dist, 'data/rulebook.md'));
+await cp(path.join(root, 'CHANGELOG.md'), path.join(dist, 'data/changelog.md'));
 await cp(path.join(root, 'reports/capability-manifest.json'), path.join(dist, 'data/release/capability-manifest.json'));
 
 const importPattern = /from\s+["']\.\/(.+?\.js)["']/g;

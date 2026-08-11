@@ -47,22 +47,22 @@ export async function renderAchievementsWorkspace(container) {
     });
 
     container.innerHTML = `
-      <div class="achievements-workspace" style="max-width:1200px;margin:0 auto;padding:20px">
-        <div class="achievements-header" style="margin-bottom:24px">
-          <h1 style="font-size:28px;font-weight:300;letter-spacing:2px;text-transform:uppercase;color:#e0f0ff;margin:0 0 8px 0">Achievements</h1>
-          <div class="achievements-summary" style="display:flex;gap:24px;font-size:14px;color:#8a9ba8">
-            <span><strong style="color:#e0f0ff">${summary.earned}</strong> / ${summary.total} Unlocked</span>
-            <span><strong style="color:#00c8dc">${summary.ap}</strong> / ${summary.maxAp} AP</span>
+      <div class="achievements-workspace">
+        <div class="achievements-header">
+          <h1>Achievements</h1>
+          <div class="achievements-summary">
+            <span class="ach-stat"><b>${summary.earned}</b> / ${summary.total} Unlocked</span>
+            <span class="ach-stat"><b class="ach-ap">${summary.ap}</b> / ${summary.maxAp} AP</span>
           </div>
         </div>
 
-        <div class="achievements-filters" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="achievements-filters">
           ${renderFilterButtons(currentFilter)}
-          <div style="width:1px;background:rgba(255,255,255,0.1);margin:0 4px"></div>
+          <div class="achievements-filter-divider"></div>
           ${renderCategoryButtons(currentCategory)}
         </div>
 
-        <div class="achievements-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">
+        <div class="achievements-grid">
           ${galleryData.map(card => renderCard(card)).join('')}
         </div>
       </div>
@@ -100,8 +100,7 @@ function renderFilterButtons(activeFilter) {
   ];
   return filters.map(f => {
     const isActive = f.id === activeFilter;
-    const activeStyle = isActive ? 'background:#5ad7e8;color:#05080e;border-color:#5ad7e8;font-weight:600' : '';
-    return `<button data-filter="${f.id}" class="achievement-filter-btn${isActive ? ' active' : ''}" style="padding:6px 14px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:#8a9ba8;border-radius:4px;cursor:pointer;font-size:12px;text-transform:uppercase;letter-spacing:1px;${activeStyle}">${f.label}</button>`;
+    return `<button data-filter="${f.id}" class="achievement-filter-btn${isActive ? ' active' : ''}">${f.label}</button>`;
   }).join('');
 }
 
@@ -116,8 +115,7 @@ function renderCategoryButtons(activeCategory) {
   ];
   return categories.map(c => {
     const isActive = c.id === activeCategory;
-    const activeStyle = isActive ? 'background:#5ad7e8;color:#05080e;border-color:#5ad7e8;font-weight:600' : '';
-    return `<button data-category-filter="${c.id}" class="achievement-category-btn${isActive ? ' active' : ''}" style="padding:6px 14px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:#8a9ba8;border-radius:4px;cursor:pointer;font-size:12px;${activeStyle}">${c.label}</button>`;
+    return `<button data-category-filter="${c.id}" class="achievement-category-btn${isActive ? ' active' : ''}">${c.label}</button>`;
   }).join('');
 }
 
@@ -136,12 +134,12 @@ function renderCard(card) {
   if (card.progress && !card.earned) {
     const pct = card.progress.target ? Math.min(100, (card.progress.current / card.progress.target) * 100) : 0;
     progressHtml = `
-      <div class="achievement-progress" style="margin-top:8px">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:#8a9ba8;margin-bottom:4px">
+      <div class="achievement-progress">
+        <div class="achievement-progress-label">
           <span>${card.progress.current} / ${card.progress.target}</span>
         </div>
-        <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${color};transition:width 0.3s"></div>
+        <div class="achievement-progress-bar">
+          <div class="achievement-progress-fill" style="width:${pct}%;background:${color}"></div>
         </div>
       </div>
     `;
@@ -152,24 +150,21 @@ function renderCard(card) {
   if (card.earned && card.earnedAt) {
     try {
       const date = new Date(card.earnedAt).toLocaleDateString();
-      earnedDateHtml = `<div style="font-size:10px;color:#8a9ba8;margin-top:4px">Earned ${date}</div>`;
+      earnedDateHtml = `<div class="achievement-earned-date">Earned ${date}</div>`;
     } catch { /* ignore date parse errors */ }
   }
 
   return `
-    <div class="achievement-card ${earnedClass}" style="
-      padding:16px;border:1px solid ${card.earned ? color : 'rgba(255,255,255,0.08)'};
-      border-radius:8px;background:rgba(10,14,20,0.6);transition:border-color 0.2s
-    ">
-      <div style="display:flex;align-items:flex-start;gap:12px">
-        <div style="font-size:28px;color:${color};line-height:1;flex-shrink:0" aria-hidden="true">${symbol}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:600;font-size:14px;color:${card.earned ? '#e0f0ff' : '#8a9ba8'};margin-bottom:4px">${escapeHtml(card.name)}</div>
-          <div style="font-size:12px;color:#8a9ba8;line-height:1.4;margin-bottom:8px">${escapeHtml(card.description)}</div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:11px">
-            <span style="color:${color};text-transform:uppercase;letter-spacing:1px">${card.rarity}</span>
-            <span style="color:${color}">+${card.achievementPoints} AP</span>
-            <span style="color:#5a6a78;margin-left:auto">${CATEGORY_LABELS[card.category] ?? card.category}</span>
+    <div class="achievement-card ${earnedClass}" style="border-color:${card.earned ? color : 'rgba(255,255,255,0.08)'}">
+      <div class="achievement-card-inner">
+        <div class="achievement-card-symbol" style="color:${color}" aria-hidden="true">${symbol}</div>
+        <div class="achievement-card-body">
+          <div class="achievement-card-name" style="color:${card.earned ? '#e0f0ff' : '#8a9ba8'}">${escapeHtml(card.name)}</div>
+          <div class="achievement-card-desc">${escapeHtml(card.description)}</div>
+          <div class="achievement-card-meta">
+            <span class="achievement-card-rarity" style="color:${color}">${card.rarity}</span>
+            <span class="achievement-card-ap" style="color:${color}">+${card.achievementPoints} AP</span>
+            <span class="achievement-card-category">${CATEGORY_LABELS[card.category] ?? card.category}</span>
           </div>
           ${progressHtml}
           ${earnedDateHtml}

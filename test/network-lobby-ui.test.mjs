@@ -40,10 +40,12 @@ test('lobby-ui: lobby hub includes Spectate button', () => {
   assert.ok(html.includes('Spectate'), 'Spectate button must have visible text');
 });
 
-test('lobby-ui: lobby hub has 5 cards (create, join, queue, spectate, history)', () => {
+test('lobby-ui: lobby hub has 4 cards (create, join, queue, spectate)', () => {
   const html = renderNetworkLobby({ serverUrl: 'ws://localhost:3099' });
-  const cards = html.match(/class="play-hub-card network-lobby-card"/g) || [];
-  assert.equal(cards.length, 5, 'Lobby must have 5 cards');
+  const cards = html.match(/class="play-hub-card network-lobby-card[^"]*"/g) || [];
+  assert.equal(cards.length, 4, 'Lobby must have 4 cards');
+  // Match History card was removed (redundant with homepage overlay)
+  assert.ok(!html.includes('data-action="network-history"'), 'Lobby must NOT have Match History button');
 });
 
 // ── Section 2: Queue waiting screen ──

@@ -5,7 +5,7 @@
 // Binds all DOM event listeners for the active match board:
 // action buttons, hand cards, drag-to-play, target selection,
 // inspector, chat, guidance toggle, sound, confirm/cancel,
-// tutorial controls, and terminal actions.
+// and terminal actions.
 // ═══════════════════════════════════════════════════════════════
 import { state } from './play-state.js';
 import { SessionState } from './play-controller.js';
@@ -110,13 +110,6 @@ async function submitAction(container, actionId, renderActiveMatch) {
             state.particles.burst(rect.width / 2, rect.height / 2, { color: getSuitParticleColor(suit), count: 10 });
           }
         }
-      }
-    }
-    // Check tutorial completion
-    if (state.tutorial && result.accepted) {
-      const lastAction = snapshot.decision.legalActions.find(a => a.actionId === actionId);
-      if (state.tutorial.checkCompletion(lastAction)) {
-        state.tutorial.advance();
       }
     }
     await renderActiveMatch(container);
@@ -614,22 +607,6 @@ export function bindBoardEvents(container, callbacks) {
     iconEl.addEventListener('blur', hideMechanicTooltip);
   });
 
-  // Tutorial controls
-  const tutorialAck = container.querySelector('[data-testid="tutorial-acknowledge"]');
-  if (tutorialAck) {
-    tutorialAck.addEventListener('click', () => {
-      state.tutorial.advance();
-      renderActiveMatch(container);
-    });
-  }
-  const tutorialSkip = container.querySelector('[data-testid="tutorial-skip"]');
-  if (tutorialSkip) {
-    tutorialSkip.addEventListener('click', () => {
-      state.tutorial.skip();
-      renderActiveMatch(container);
-    });
-  }
-
   // Terminal actions and header actions
   container.querySelectorAll('[data-action]').forEach(el => {
     el.addEventListener('click', async () => {
@@ -671,10 +648,9 @@ export function bindBoardEvents(container, callbacks) {
       } else if (action === 'return-to-hub' || action === 'exit-match') {
         stopAutosave();
         state.session = null;
-        state.tutorial = null;
         state.inspectorCardId = null;
         state.inspectorFaceView = 'board';
-        location.hash = '#/play';
+        location.hash = '#/';
       } else if (action === 'keyboard-help') {
         state.showKeyboardHelp = !state.showKeyboardHelp;
         renderActiveMatch(container);

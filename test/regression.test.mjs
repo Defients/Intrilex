@@ -286,10 +286,10 @@ test('Defect #16: Evidence workspace does not hard-code engine test count', asyn
 
 test('Defect version: all version strings updated to current release', async () => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(pkg.version, '0.24.2', 'package.json version should be 0.24.2');
+  assert.equal(pkg.version, '0.27.0', 'package.json version should be 0.27.0');
   const { LAB_VERSION, REPLAY_DATA_VERSION } = await import('../packages/simulation-runtime/src/runtime.mjs');
-  // LAB_VERSION is now the product version (0.24.2), separate from REPLAY_DATA_VERSION.
-  assert.equal(LAB_VERSION, '0.24.2', 'LAB_VERSION should be the product version 0.24.2');
+  // LAB_VERSION is now the product version (0.27.0), separate from REPLAY_DATA_VERSION.
+  assert.equal(LAB_VERSION, '0.27.0', 'LAB_VERSION should be the product version 0.27.0');
   assert.equal(REPLAY_DATA_VERSION, '0.10.1', 'REPLAY_DATA_VERSION should be 0.10.1 for backward compatibility');
 });
 

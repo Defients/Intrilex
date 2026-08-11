@@ -88,7 +88,7 @@ export function renderError(vm, opts) {
  * changed. Promotion glyphs are only shown after the authoritative result is
  * known — never predicted on the client.
  *
- * When no rankResult is available (e.g. tutorial, simulation, spectator), a
+ * When no rankResult is available (e.g. simulation, spectator), a
  * simple current-rank glyph is rendered from the local profile, or nothing if
  * the player is unranked/has no profile.
  *

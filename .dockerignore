@@ -1,0 +1,50 @@
+# ─────────────────────────────────────────────────────────────────
+# Docker ignore — excludes files not needed in the match server image
+# ─────────────────────────────────────────────────────────────────
+
+# Build artifacts
+apps/lab-web/dist/
+neocities-deploy/
+release/
+
+# Dependencies (installed inside the container)
+node_modules/
+
+# Test files
+test/
+full-test-output.txt
+lint-tmp.txt
+
+# Documentation (not needed at runtime)
+docs/
+*.md
+!packages/*/README.md
+
+# Runtime data (created at runtime)
+runtime/match-server/
+terminal-outbox.sqlite
+
+# Secrets — must be provided via env vars at runtime, not baked into the image
+.env
+.env.local
+.env.*.local
+neocities.config.js
+
+# Version control
+.git/
+.github/
+
+# IDE / editor
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Card art source files (not needed by match server)
+card-art/
+ranked-glyphs/
+sample-data/
+upstream/
+vendor/

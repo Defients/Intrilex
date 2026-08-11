@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 // rank-tier.mjs — Pure competitive rank domain (tier + division).
 //
-// Maps an Intrilex Rating (Elo-based, see rating.mjs) to a canonical
-// Ranked tier and division. This module is PURE: no I/O, no side
-// effects, no image paths, no UI. Presentation lives in the browser
-// presentation registry (apps/lab-web/src/play/rank/rank-presentation.mjs).
+// Maps an Intrilex Rating (Glicko-2 skill model, see rating.mjs) to a
+// canonical Ranked tier and division. This module is PURE: no I/O, no
+// side effects, no image paths, no UI. Presentation lives in the
+// browser presentation registry (apps/lab-web/src/play/rank/rank-presentation.mjs).
 //
 // Canonical ladder (lowest → highest):
 //   UNRANKED → INITIATE → CIPHER → WARDEN → VANGUARD →
@@ -84,9 +84,13 @@ export const RANK_LADDER = Object.freeze([
 /**
  * Rating thresholds for each earned tier. Each entry is [minInclusive, maxExclusive).
  * INTRILEX has maxExclusive = Infinity (apex).
+ *
+ * Exported so UI components (ranking explainer, profile progress, leaderboard
+ * markers) can derive tier bounds and progress from the single source of truth
+ * instead of re-hardcoding thresholds.
  * @type {Record<string, [number, number]>}
  */
-const TIER_THRESHOLDS = Object.freeze({
+export const TIER_THRESHOLDS = Object.freeze({
   [RankTier.INITIATE]: [0, 1200],
   [RankTier.CIPHER]: [1200, 1400],
   [RankTier.WARDEN]: [1400, 1600],
@@ -240,4 +244,88 @@ export function ratingToTierDivision(rating, opts = {}) {
 export function compareRank(a, b) {
   if (a.tierOrdinal !== b.tierOrdinal) return a.tierOrdinal - b.tierOrdinal;
   return a.divisionOrdinal - b.divisionOrdinal;
+}
+
+/**
+ * Resolve the [minInclusive, maxExclusive) rating bounds for an earned tier.
+ * Returns null for UNRANKED or unknown tiers.
+ * @param {string} tier - One of RankTier (earned).
+ * @returns {[number, number]|null}
+ */
+export function tierBounds(tier) {
+  const bounds = TIER_THRESHOLDS[tier];
+  return bounds ? [bounds[0], bounds[1]] : null;
+}
+
+/**
+ * @typedef {Object} TierProgress
+ * @property {boolean} isPlacement - True while in the UNRANKED placement period.
+ * @property {boolean} isApex - True when the player has reached INTRILEX (no upper bound).
+ * @property {number} rating - The clamped rating used for the calculation.
+ * @property {string} tier - Current tier (UNRANKED during placement).
+ * @property {string} division - Current division (NONE for UNRANKED/apex).
+ * @property {number} tierMin - Inclusive lower bound of the current tier.
+ * @property {number} tierMax - Exclusive upper bound of the current tier (Infinity for apex).
+ * @property {number} span - Width of the current tier in rating points (Infinity for apex).
+ * @property {number} intoTier - Rating points progressed into the current tier.
+ * @property {number} remaining - Rating points remaining until the next tier boundary.
+ * @property {number} percent - 0–100 progress through the current tier (0 for apex/placement).
+ * @property {string|null} nextTier - The next tier up the ladder, or null at apex.
+ */
+
+/**
+ * Compute a player's progress through their current tier toward the next
+ * tier boundary. During placement (UNRANKED) or at apex (INTRILEX) the
+ * percent is 0 because there is no meaningful "next tier" to progress toward.
+ *
+ * This is the canonical progress calculation — UI progress bars must call
+ * this rather than re-deriving thresholds.
+ *
+ * @param {number} rating - Intrilex Rating.
+ * @param {number} [ratedMatches=0] - Rated matches played (for placement check).
+ * @returns {TierProgress}
+ */
+export function progressInTier(rating, ratedMatches = 0) {
+  const assignment = ratingToTierDivision(rating, { ratedMatches });
+  const r = Math.max(0, Math.round(rating));
+  if (assignment.isPlacement) {
+    return {
+      isPlacement: true,
+      isApex: false,
+      rating: r,
+      tier: assignment.tier,
+      division: assignment.division,
+      tierMin: 0,
+      tierMax: 0,
+      span: 0,
+      intoTier: 0,
+      remaining: 0,
+      percent: 0,
+      nextTier: RankTier.INITIATE,
+    };
+  }
+  const bounds = tierBounds(assignment.tier);
+  const [tierMin, tierMax] = bounds ?? [0, 0];
+  const span = tierMax === Infinity ? Infinity : tierMax - tierMin;
+  const intoTier = r - tierMin;
+  const remaining = tierMax === Infinity ? 0 : Math.max(0, tierMax - r);
+  const percent = span === Infinity ? 0 : Math.max(0, Math.min(100, (intoTier / span) * 100));
+  const ordinal = tierOrdinal(assignment.tier);
+  const nextTier = ordinal >= 0 && ordinal < RANK_LADDER.length - 1
+    ? RANK_LADDER[ordinal + 1]
+    : null;
+  return {
+    isPlacement: false,
+    isApex: assignment.isApex,
+    rating: r,
+    tier: assignment.tier,
+    division: assignment.division,
+    tierMin,
+    tierMax,
+    span,
+    intoTier,
+    remaining,
+    percent,
+    nextTier,
+  };
 }

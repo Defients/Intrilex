@@ -141,14 +141,10 @@ test('renderer emits Board, Lite, and Full Zoom deterministic views',()=>{
   assert.match(zoom,/Rules 4\.3\.1/);
 });
 
-test('lab app integrates Card Faces workspace and replay card inspector',async()=>{
+test('lab app integrates replay card inspector via Advanced Card Rules View',async()=>{
   const appJs=await readFile('apps/lab-web/src/app.js','utf8');
-  const routerJs=await readFile('apps/lab-web/src/router.js','utf8');
-  const observatoryJs=await readFile('apps/lab-web/src/workspaces/observatory.js','utf8');
   const html=await readFile('apps/lab-web/src/index.html','utf8');
   const css=(await Promise.all(['tokens-base','feature-components','pages-polish'].map(f=>readFile(`apps/lab-web/src/css/${f}.css`,'utf8')))).join('\n');
-  assert.match(routerJs,/\['\/cards','▣','Card Faces','Renderer v1'\]/);
-  assert.match(observatoryJs,/function renderCardFaces\(/);
   // The old #card-face-dialog has been replaced by the Advanced Card Rules View.
   assert.match(appJs,/openAdvancedCardRules/);
   assert.doesNotMatch(appJs,/#card-face-dialog/);
@@ -158,16 +154,6 @@ test('lab app integrates Card Faces workspace and replay card inspector',async()
   assert.match(css,/\.ix-view-board/);
   assert.match(css,/\.ix-view-lite/);
   assert.match(css,/\.ix-view-zoom/);
-});
-
-test('family switcher exposes all 14 rank families in rank order',async()=>{
-  const js=await readFile('apps/lab-web/src/workspaces/observatory.js','utf8');
-  const expectedFamilies=['ace','two','three','four','five','six','seven','eight','nine','ten','jack','queen','king','joker'];
-  for(const family of expectedFamilies){
-    assert.match(js,new RegExp(`\\['${family}',\\s*'`),`Family "${family}" should appear in CARD_FAMILIES`);
-  }
-  assert.match(js,/listAuthoritativeCards\(\)/);
-  assert.match(js,/cards\.filter\(c => c\.family === family\)/);
 });
 
 test('cardFaceFamilyFor returns correct family for any identity',()=>{

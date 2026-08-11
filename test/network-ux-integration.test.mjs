@@ -33,18 +33,19 @@ async function playSrc(rel) {
   return readFile(path.join(root, 'apps/lab-web/src/play', rel), 'utf8');
 }
 
-// ── Section 1: Play Hub — Direct Duel card ──
+// ── Section 1: Play routes — Direct Duel entry ──
+// The #/play hub has been removed; Direct Duel is accessed from the
+// homepage mode selector which navigates directly to #/play/online.
 
-test('network-ux: play hub includes Direct Duel card with data-action', async () => {
-  const js = await playSrc('ranked-duel-hub.mjs');
-  assert.match(js, /data-action="online-duel"/);
-  assert.match(js, /Direct Duel/);
-  assert.match(js, /remote human opponent/);
+test('network-ux: play-app.js routes /online to renderNetworkLobbyHub', async () => {
+  const js = await playSrc('play-app.js');
+  assert.match(js, /renderNetworkLobbyHub/);
+  assert.match(js, /#\/play\/online/);
 });
 
-test('network-ux: play hub has data-testid for online-duel', async () => {
-  const js = await playSrc('ranked-duel-hub.mjs');
-  assert.match(js, /data-testid="online-duel"/);
+test('network-ux: play-app.js redirects bare /play to /play/new', async () => {
+  const js = await playSrc('play-app.js');
+  assert.match(js, /#\/play\/new/);
 });
 
 // ── Section 2: Play app routes ──
@@ -58,9 +59,8 @@ test('network-ux: play-app.js routes include /online sub-routes', async () => {
   assert.match(js, /renderNetworkActiveMatch/);
 });
 
-test('network-ux: play-app.js binds online-duel hub action', async () => {
+test('network-ux: play-app.js routes /play/online for Direct Duel', async () => {
   const js = await playSrc('play-app.js');
-  assert.match(js, /online-duel/);
   assert.match(js, /#\/play\/online/);
 });
 

@@ -1,6 +1,6 @@
 {
   "name": "@intrilex/simulation-runtime",
-  "version": "0.24.2",
+  "version": "0.27.0",
   "type": "module",
   "exports": {
     ".": "./src/runtime.mjs",

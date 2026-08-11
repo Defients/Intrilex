@@ -1,0 +1,46 @@
+# Intrilex Match Server — systemd unit
+#
+# Install:
+#   sudo cp intrilex-match-server.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable intrilex-match-server
+#   sudo systemctl start intrilex-match-server
+#
+# The service runs as the 'intrilex' user from /opt/intrilex.
+# Environment is loaded from /etc/intrilex/match-server.env (permission 600).
+
+[Unit]
+Description=Intrilex Match Authority Server
+Documentation=https://github.com/cognition/intrilex
+After=network.target
+
+[Service]
+Type=simple
+User=intrilex
+Group=intrilex
+WorkingDirectory=/opt/intrilex
+EnvironmentFile=/etc/intrilex/match-server.env
+ExecStart=/usr/bin/node /opt/intrilex/apps/match-server/src/server.mjs
+Restart=on-failure
+RestartSec=3
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+# Graceful shutdown — give the server time to close WebSocket connections
+KillSignal=SIGTERM
+TimeoutStopSec=15
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=intrilex-match-server
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/intrilex/runtime
+
+[Install]
+WantedBy=multi-user.target

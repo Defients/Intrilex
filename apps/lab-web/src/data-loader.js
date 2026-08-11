@@ -5,8 +5,10 @@
 import { state,   shell,   landingContainer,   data,   text,   parseNdjsonSafe,   computeVariantAnalyticsFromSummaries } from './state.js';
 import { route, isPlayRoute, LANDING_MODES, renderNavigation } from './router.js';
 import { renderExperimentControls, bindGlobal } from './experiment-controls.js';
+import { ensureReplayFrames } from './replay-frames.js';
 
 // ── Replay loading ────────────────────────────────────────────────
+const _warnedReplays = new Set();
 export async function loadReplay(fixtureId) {
   try {
     const kind = state.replayKind;
@@ -17,10 +19,16 @@ export async function loadReplay(fixtureId) {
       ? `data/autonomy/replays/public/${record.fixtureId}.public.replay.json`
       : `data/certified-replays/${record.fixtureId}.certified.replay.json`;
     state.replay = await data(url);
+    // Certified replay envelopes store initialState + commands but not a
+    // pre-computed frames array. Reconstruct frames so the Watch workspace
+    // (which consumes state.replay.frames) can render the replay.
+    await ensureReplayFrames(state.replay);
     state.authorized = null;
     if (state.visibility !== 'public') await loadAuthorized();
   } catch (err) {
-    console.warn('loadReplay failed:', fixtureId, err.message);
+    // Replay blobs are excluded from the build by default (saves ~670MB).
+    // The HTML response is the dev server's SPA fallback (index.html).
+    // Silently set replay to null without console spam.
     state.replay = null;
     state.authorized = null;
   }
@@ -53,13 +61,44 @@ export async function loadTraceData(matchId) {
 }
 
 // ── Boot sequence ─────────────────────────────────────────────────
+
+// Background observatory boot promise — started by boot() for landing/play
+// routes so the data is ready when the user navigates to an observatory route.
+// render() awaits this before rendering any observatory workspace.
+// Set to null once complete so render() knows the data is ready.
+let _observatoryBootPromise = null;
+
+export function getObservatoryBootPromise() { return _observatoryBootPromise; }
+
 export async function boot() {
   const r = route();
   if (isPlayRoute(r)) {
     if (shell) shell.style.display = 'none';
     if (landingContainer) landingContainer.style.display = 'block';
+    // Start observatory data loading in the background (non-blocking)
+    _observatoryBootPromise = loadObservatoryData();
     return;
   }
+  if (LANDING_MODES.has(r)) {
+    // Landing/play routes don't need observatory data to render.
+    // Start loading it in the background so it's ready if the user
+    // navigates to an observatory route, but don't block the landing render.
+    _observatoryBootPromise = loadObservatoryData();
+    return;
+  }
+  // Observatory route loaded directly — must load data before rendering
+  await loadObservatoryData();
+}
+
+async function loadObservatoryData() {
+  try {
+    await _loadObservatoryDataInner();
+  } finally {
+    _observatoryBootPromise = null;
+  }
+}
+
+async function _loadObservatoryDataInner() {
   const summariesText = await text('data/autonomy/match-summaries.ndjson');
   const summaries = parseNdjsonSafe(summariesText);
   [state.index, state.autonomyIndex, state.corpusAnalytics, state.aggregate, state.observatory, state.capabilities, state.rankAuthority] = await Promise.all([
@@ -96,5 +135,6 @@ export async function boot() {
   renderNavigation();
   renderExperimentControls();
   bindGlobal();
-  if (!LANDING_MODES.has(r)) await loadReplay(state.fixtureId);
+  const r = route();
+  if (!LANDING_MODES.has(r) && !isPlayRoute(r)) await loadReplay(state.fixtureId);
 }

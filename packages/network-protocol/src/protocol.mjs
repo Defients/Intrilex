@@ -5,7 +5,7 @@
 import { PROTOCOL_VERSION, MAX_MESSAGE_SIZE } from './validation.mjs';
 export { PROTOCOL_VERSION, MAX_MESSAGE_SIZE };
 export { ReasonCode, reasonCategory } from './reason-codes.mjs';
-export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateAuthenticate, validateAuthRefresh, checkMessageSize, SUPPORTED_PROFILE_IDS, isSupportedProfileId, SUPPORTED_QUEUE_IDS, MATCH_MODES, isSupportedQueueId } from './validation.mjs';
+export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateAuthenticate, validateAuthRefresh, validateMigrateGuest, checkMessageSize, SUPPORTED_PROFILE_IDS, isSupportedProfileId, SUPPORTED_QUEUE_IDS, MATCH_MODES, isSupportedQueueId } from './validation.mjs';
 
 /**
  * @typedef {Object} ProtocolEnvelope
@@ -429,4 +429,35 @@ export function authRefresh(accessToken, requestId) {
  */
 export function authenticated(account, expiresAt, requestId) {
   return envelope('AUTHENTICATED', { account, expiresAt }, requestId);
+}
+
+// ── Guest migration message builders (v2) ──
+
+/**
+ * Build a MIGRATE_GUEST message (client → server).
+ * Sent by the browser after a guest links their Discord account, to transfer
+ * local achievements and stats from the anonymous identity to the permanent one.
+ * @param {string} sourceIdentity - Guest/anonymous Supabase user UUID
+ * @param {string} targetIdentity - Permanent Supabase user UUID
+ * @param {Array<{ achievementId: string, unlockedAt: string, provenance?: string }>} achievements - Local achievements to migrate
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function migrateGuest(sourceIdentity, targetIdentity, achievements, requestId) {
+  return envelope('MIGRATE_GUEST', { sourceIdentity, targetIdentity, achievements }, requestId);
+}
+
+/**
+ * Build a MIGRATION_RESULT message (server → client).
+ * Sent in response to a MIGRATE_GUEST request, indicating success or failure
+ * of the guest→permanent account data migration.
+ * @param {boolean} success - Whether the migration succeeded
+ * @param {string} migrationId - Deterministic migration ID (mig_{source}_{target})
+ * @param {number} achievementsTransferred - Number of achievements written
+ * @param {boolean} alreadyMigrated - Whether this migration was already completed
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function migrationResult(success, migrationId, achievementsTransferred, alreadyMigrated, requestId) {
+  return envelope('MIGRATION_RESULT', { success, migrationId, achievementsTransferred, alreadyMigrated }, requestId);
 }

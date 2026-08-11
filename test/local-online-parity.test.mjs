@@ -84,18 +84,6 @@ test('network terminal shows download replay, local shows rematch', async () => 
   assert.match(src, /rematch-same-seed|new-seed/, 'local terminal must show rematch/new-seed buttons');
 });
 
-test('network matches do not initialize tutorial (tutorials are single-player learning)', async () => {
-  const src = await read('apps/lab-web/src/play/play-app.js');
-  // Tutorial is only initialized in startTutorial, not in network flows
-  // This is intentional — tutorials teach mechanics against AI, not human opponents
-  assert.match(src, /new TutorialRuntime/, 'tutorial must exist for local play');
-  // Extract the renderNetworkActiveMatch function body precisely
-  const fnStart = src.indexOf('async function renderNetworkActiveMatch');
-  const fnEnd = src.indexOf('function bindNetworkReconnectEvents', fnStart);
-  const networkSection = src.substring(fnStart, fnEnd);
-  assert.doesNotMatch(networkSection, /TutorialRuntime/, 'network flow must not initialize tutorial');
-});
-
 test('inspector and advanced card rules work for both local and network', async () => {
   const src = await read('apps/lab-web/src/play/play-app.js');
   // Inspector state is UI-level, not session-specific

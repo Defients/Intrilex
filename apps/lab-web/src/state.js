@@ -26,11 +26,40 @@ export const fxLayer = document.querySelector('#fx-layer');
 export const pageTitle = document.querySelector('#page-title');
 export const pageSubtitle = document.querySelector('#page-subtitle');
 
+// ── Persisted settings ───────────────────────────────────────────
+// User preferences that survive page reloads. Stored under the
+// `intrilex:settings` localStorage key as a single JSON blob so we
+// don't litter localStorage with one key per setting.
+const SETTINGS_KEY = 'intrilex:settings';
+const PERSISTABLE_SETTINGS = ['reducedMotion', 'reducedSensory', 'fx', 'layout', 'visibility'];
+const SETTINGS_DEFAULTS = { reducedMotion: false, reducedSensory: false, fx: true, layout: 'observatory', visibility: 'public' };
+
+function loadPersistedSettings() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch { /* corrupt or missing — ignore */ }
+  const merged = { ...SETTINGS_DEFAULTS, ...saved };
+  // Apply body classes for visual settings
+  if (merged.reducedMotion) document.body.classList.add('reduced-motion');
+  if (merged.reducedSensory) document.body.classList.add('reduced-sensory');
+  if (!merged.fx) document.body.classList.add('fx-off');
+  return merged;
+}
+
+function persistSetting(key, value) {
+  if (!PERSISTABLE_SETTINGS.includes(key)) return;
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch { /* ignore */ }
+  saved[key] = value;
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(saved)); } catch { /* storage full or unavailable — ignore */ }
+}
+
 // ── Application state ────────────────────────────────────────────
+const _persisted = loadPersistedSettings();
 export const state = {
   index:null, autonomyIndex:null, corpusAnalytics:null, aggregate:null, observatory:null, capabilities:null,
-  replay:null, authorized:null, replayKind:'corpus', fixtureId:'CT-001', frame:0, visibility:'public', viewer:'P1',
-  playing:false, timer:null, speed:1, layout:'observatory', showOrchestration:false, reducedMotion:false, reducedSensory:false, fx:true,
+  replay:null, authorized:null, replayKind:'corpus', fixtureId:'CT-001', frame:0, visibility:_persisted.visibility, viewer:'P1',
+  _replayLoadedFor:null,
+  playing:false, timer:null, speed:1, layout:_persisted.layout, showOrchestration:false, reducedMotion:_persisted.reducedMotion, reducedSensory:_persisted.reducedSensory, fx:_persisted.fx,
   selectedTimelineIndex:null, selectedMechanic:null, selectedSynergy:null, selectedPolicy:null, comparePolicyRight:null,
   filters:{profile:'all',evidence:'all'}, campaignWorker:null,
   lastCampaignResult:null, historyPage:0, historyFilterTerm:'', historyFilterReason:'all', historyFilterPolicy:'all',
@@ -39,7 +68,6 @@ export const state = {
   branchLegalActions:null, branchSelectedActionId:null, branchLegalActionsLoading:false, branchLegalActionsError:null,
   branchAllActionsResult:null, branchAllActionsRunning:false,
   diagBaseline:null, diagCandidate:null, lastDiagResult:null,
-  cardFaceView:'board', cardFaceFamily:'ace', cardFaceSelected:'A♣',
   selectedRank:null, rankPower:null, rankAuthority:null, swapMatrix:null,
   variantAnalytics:null, variantProfileFilter:'all',
   rankAnatomyRegistry:null, anatomyTab:'overall', originFilter:'all', _rankAnatomyModule:null,
@@ -47,6 +75,10 @@ export const state = {
   synergiesSortColumn:null, synergiesSortPhase:0,
   tournament:null, tournamentSelectedPolicies:null, tournamentBestOf:1, tournamentRunning:false
 };
+
+// Re-exported so workspace modules can persist settings without importing
+// the private persistSetting function by name from this module's internals.
+export { persistSetting };
 
 // ── Helper functions ─────────────────────────────────────────────
 export const esc = (value='') => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

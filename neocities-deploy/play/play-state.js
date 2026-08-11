@@ -11,7 +11,6 @@ import { GuidanceMode } from './intelligence/action-explanation.js';
 export const state = {
   session: null,
   networkSession: null, // v0.24.1: NetworkPlaySession for online Direct Duel
-  tutorial: null,
   selectedActionId: null,
   selectedSourceCardId: null,
   selectedTargetIds: [],
@@ -49,7 +48,6 @@ export const state = {
 export function resetState() {
   state.session = null;
   state.networkSession = null;
-  state.tutorial = null;
   state.selectedActionId = null;
   state.selectedSourceCardId = null;
   state.selectedTargetIds = [];

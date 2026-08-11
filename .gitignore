@@ -35,3 +35,5 @@ supabase/.temp/
 terminal-outbox.sqlite
 # Self-audit TAP output temp file (generated during self-audit:generate)
 reports/.self-audit-tap-output.txt
+# Neocities credentials (local only — never commit)
+neocities.config.js

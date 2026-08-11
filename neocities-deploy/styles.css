@@ -7,4 +7,6 @@
 @import './css/pages-polish.css';
 @import './css/advanced-card-rules.css';
 @import './play/rank/rank-glyph.css';
+@import './play/rank/ranking-system-overlay.css';
 @import './play/ranked/leaderboard.css';
+@import './play/play-v3.css';

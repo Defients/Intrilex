@@ -424,4 +424,83 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
     // Supabase client doesn't have an explicit close in v2
     // The HTTP connection pool is managed by the runtime
   }
+
+  /**
+   * Check if a guest→permanent migration has already been completed.
+   * @param {string} migrationId - Deterministic migration ID
+   * @returns {Promise<boolean>}
+   */
+  async isMigrationCompleted(migrationId) {
+    const { data, error } = await this._client
+      .from('account_migrations')
+      .select('migration_id')
+      .eq('migration_id', migrationId)
+      .maybeSingle();
+    if (error) return false;
+    return !!data;
+  }
+
+  /**
+   * Execute a guest→permanent account migration.
+   * Copies local achievements from the guest identity to the permanent identity
+   * and writes an account_migrations row for idempotency.
+   *
+   * The achievements are written with LOCAL_DEVICE provenance (not SERVER)
+   * because they were earned locally on the guest's device. The migration
+   * record prevents re-running.
+   *
+   * @param {object} plan - Migration plan
+   * @param {string} plan.migrationId - Deterministic migration ID
+   * @param {string} plan.sourceIdentity - Guest user UUID
+   * @param {string} plan.targetIdentity - Permanent user UUID
+   * @param {Array<{ achievementId: string, unlockedAt: string, provenance?: string }>} achievements - Local achievements to migrate
+   * @returns {Promise<{ success: boolean, error: string|null, migrationId: string, achievementsTransferred: number, alreadyMigrated: boolean }>}
+   */
+  async executeGuestMigration(plan, achievements) {
+    // Idempotency gate: if already migrated, return success without re-writing
+    if (await this.isMigrationCompleted(plan.migrationId)) {
+      return { success: true, error: null, migrationId: plan.migrationId, achievementsTransferred: 0, alreadyMigrated: true };
+    }
+
+    // Step 1: Write achievements to the target account
+    let achievementsTransferred = 0;
+    if (achievements && achievements.length > 0) {
+      const rows = achievements.map(a => ({
+        user_id: plan.targetIdentity,
+        achievement_id: a.achievementId,
+        unlocked_at: a.unlockedAt,
+        provenance: a.provenance ?? 'LOCAL_DEVICE',
+      }));
+
+      const { error: achError } = await this._client
+        .from('account_achievements')
+        .upsert(rows, { onConflict: 'user_id,achievement_id' });
+
+      if (achError) {
+        return { success: false, error: `account_achievements migration upsert failed: ${achError.message}`, migrationId: plan.migrationId, achievementsTransferred: 0, alreadyMigrated: false };
+      }
+      achievementsTransferred = rows.length;
+    }
+
+    // Step 2: Write the migration record (idempotency for future re-runs)
+    const { error: migError } = await this._client
+      .from('account_migrations')
+      .insert({
+        migration_id: plan.migrationId,
+        source_identity: plan.sourceIdentity,
+        target_identity: plan.targetIdentity,
+        migration_version: plan.migrationVersion ?? 1,
+      });
+
+    if (migError) {
+      // If the migration row already exists (race condition), the achievements
+      // were already written — this is a safe state. Return success.
+      if (migError.code === '23505') { // unique_violation
+        return { success: true, error: null, migrationId: plan.migrationId, achievementsTransferred, alreadyMigrated: true };
+      }
+      return { success: false, error: `account_migrations insert failed: ${migError.message}`, migrationId: plan.migrationId, achievementsTransferred, alreadyMigrated: false };
+    }
+
+    return { success: true, error: null, migrationId: plan.migrationId, achievementsTransferred, alreadyMigrated: false };
+  }
 }

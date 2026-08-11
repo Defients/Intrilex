@@ -30,6 +30,7 @@ import {
   validateSpectateMatch, validateSpectateLeave,
   validateMatchHistory, validateGetReplay, validateSendChat,
   validateAuthenticate, validateAuthRefresh,
+  validateMigrateGuest,
   checkMessageSize, ReasonCode,
   matchCreated, matchJoined, matchView, actionResult,
   participantStatus, matchStarted, matchEnded, error as errorMsg,
@@ -40,9 +41,11 @@ import {
   sendChat as sendChatBuilder, chatMessage,
   authenticated as authenticatedBuilder,
   achievementsEarned,
+  migrationResult as migrationResultBuilder,
   SUPPORTED_PROFILE_IDS, SUPPORTED_QUEUE_IDS,
 } from '@intrilex/network-protocol';
 import { AuthMode, ConnectionAuthState, resolveCapabilities, toSafePublicProfile, RANKED_QUEUE_ID } from '@intrilex/account-domain';
+import { migrationId as computeMigrationId } from '@intrilex/account-domain';
 import { FakeIdentityVerifier } from './auth/fake-identity-verifier.mjs';
 import { evaluateMatchAchievements } from '@intrilex/match-authority/achievement-projection';
 import { MatchResultPersistor } from './persistence/match-result-persistor.mjs';
@@ -68,10 +71,11 @@ const RECONNECT_GRACE = 60000; // 1 min
 // When false, x-forwarded-for headers are IGNORED and the raw socket address is used.
 const TRUST_FORWARDED_IP = process.env.INTRILEX_TRUST_PROXY === '1' || false;
 // Allowed origins for WebSocket connections (CORS-like check)
-// When empty, only localhost connections are accepted in dev mode
-const ALLOWED_ORIGINS = process.env.INTRILEX_ALLOWED_ORIGINS
+// When empty, all origins are accepted (dev mode).
+// Can be overridden at startup via startServer({ allowedOrigins: [...] })
+let ALLOWED_ORIGINS = process.env.INTRILEX_ALLOWED_ORIGINS
   ? process.env.INTRILEX_ALLOWED_ORIGINS.split(',').map(s => s.trim())
-  : []; // Empty = localhost-only default for invite-alpha
+  : []; // Empty = all origins accepted (set INTRILEX_ALLOWED_ORIGINS in production!)
 // Public history/spectator discovery — disabled by default for invite-alpha
 // Enable explicitly with INTRILEX_PUBLIC_HISTORY=1 for trusted environments
 const PUBLIC_HISTORY_ENABLED = process.env.INTRILEX_PUBLIC_HISTORY === '1' || false;
@@ -376,12 +380,18 @@ function checkRateLimit(connectionId) {
  * @param {object} [opts.identityVerifier] - IdentityVerifier instance (for testing or custom verification)
  * @param {string} [opts.supabaseUrl] - Supabase project URL (for production verifier)
  * @param {string} [opts.supabaseSecretKey] - Supabase service role key (for production verifier)
+ * @param {string[]} [opts.allowedOrigins] - Override allowed WebSocket origins (for testing)
  * @returns {Promise<{ httpServer, wss, close }>}
  */
 export function startServer(opts = {}) {
   const port = opts.port ?? DEFAULT_PORT;
   const host = opts.host ?? DEFAULT_HOST;
   const persistent = opts.persistent ?? true;
+
+  // Override allowed origins if provided (for testing / dynamic configuration)
+  if (opts.allowedOrigins !== undefined) {
+    ALLOWED_ORIGINS = opts.allowedOrigins;
+  }
 
   // ── Auth initialization ──
   _authMode = opts.authMode ?? AUTH_MODE;
@@ -605,7 +615,7 @@ export function startServer(opts = {}) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         server: 'Intrilex Match Authority',
-        version: '0.24.2',
+        version: '0.27.0',
         protocolVersion: 2,
         ...getHealthMetrics(),
       }));
@@ -919,6 +929,7 @@ function handleMessage(connectionId, ws, raw) {
       case 'MATCH_HISTORY': handlerResult = handleMatchHistory(connectionId, ws, payload, requestId); break;
       case 'GET_REPLAY': handlerResult = handleGetReplay(connectionId, ws, payload, requestId); break;
       case 'SEND_CHAT': handlerResult = handleSendChat(connectionId, ws, payload, requestId); break;
+      case 'MIGRATE_GUEST': handlerResult = handleMigrateGuest(connectionId, ws, payload, requestId); break;
       default:
         return send(ws, errorMsg(ReasonCode.MESSAGE_TYPE_UNKNOWN, `Unknown type: ${type}`, requestId));
     }
@@ -1054,6 +1065,70 @@ async function handleAuthRefresh(connectionId, ws, payload, requestId) {
       capabilities: conn.account.capabilities,
     },
     result.identity.expiresAt,
+    requestId,
+  ));
+}
+
+// ── Guest migration handler ──
+
+/**
+ * Handle a MIGRATE_GUEST request from a client.
+ * The client sends this after linking a guest account to Discord, to transfer
+ * local achievements from the anonymous identity to the permanent one.
+ *
+ * Security model:
+ *   - The connection MUST be authenticated as the targetIdentity (permanent account)
+ *   - The sourceIdentity is the guest UUID (not verified server-side — trust the client)
+ *   - Achievements are written with LOCAL_DEVICE provenance (not SERVER)
+ *   - The migration record prevents replay (idempotency)
+ *
+ * @param {string} connectionId
+ * @param {WebSocket} ws
+ * @param {Record<string, *>} payload
+ * @param {string} requestId
+ */
+async function handleMigrateGuest(connectionId, ws, payload, requestId) {
+  const conn = connections.get(connectionId);
+  if (!conn) return;
+
+  // Must be authenticated
+  if (conn.authState !== ConnectionAuthState.AUTHENTICATED || !conn.account) {
+    return send(ws, errorMsg(ReasonCode.AUTH_REQUIRED, 'Authentication required for migration', requestId));
+  }
+
+  const check = validateMigrateGuest(payload);
+  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
+
+  // Security: the connection's authenticated account MUST be the target identity
+  if (conn.account.accountId !== payload.targetIdentity) {
+    logEvent('migrationIdentityMismatch', { connectionId, authenticated: conn.account.accountId, target: payload.targetIdentity });
+    return send(ws, errorMsg(ReasonCode.MIGRATION_IDENTITY_MISMATCH, 'Authenticated account does not match migration target', requestId));
+  }
+
+  // Build the migration plan (deterministic ID for idempotency)
+  const plan = {
+    migrationId: computeMigrationId(payload.sourceIdentity, payload.targetIdentity),
+    sourceIdentity: payload.sourceIdentity,
+    targetIdentity: payload.targetIdentity,
+    migrationVersion: 1,
+  };
+
+  logEvent('migrationRequest', { connectionId, migrationId: plan.migrationId, achievementCount: payload.achievements.length });
+
+  const result = await matchResultPersistor.executeGuestMigration(plan, payload.achievements);
+
+  if (!result.success) {
+    logEvent('migrationFailure', { connectionId, migrationId: plan.migrationId, error: result.error });
+    return send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, result.error ?? 'Migration failed', requestId));
+  }
+
+  logEvent('migrationSuccess', { connectionId, migrationId: plan.migrationId, transferred: result.achievementsTransferred, alreadyMigrated: result.alreadyMigrated });
+
+  send(ws, migrationResultBuilder(
+    result.success,
+    result.migrationId,
+    result.achievementsTransferred,
+    result.alreadyMigrated,
     requestId,
   ));
 }
@@ -1791,10 +1866,24 @@ try {
   const _isMain = _scriptPath === _argvPath || _scriptPath.replace(/\\/g, '/') === _argvPath.replace(/\\/g, '/');
   if (_isMain && _argvPath) {
     const port = parseInt(process.env.PORT || process.argv[2], 10) || DEFAULT_PORT;
-    const host = process.env.HOST || DEFAULT_HOST;
+    // Production: bind to 0.0.0.0 (all interfaces) so the server is reachable
+    // behind a reverse proxy or container port mapping.
+    // Development: bind to 127.0.0.1 (localhost only) for safety.
+    const isProduction = process.env.NODE_ENV === 'production';
+    const host = process.env.HOST || (isProduction ? '0.0.0.0' : DEFAULT_HOST);
+    const allowedOriginsSummary = ALLOWED_ORIGINS.length > 0
+      ? ALLOWED_ORIGINS.join(', ')
+      : '(all origins accepted — set INTRILEX_ALLOWED_ORIGINS in production!)';
     startServer({ port, host }).then(() => {
-      console.log(`Intrilex Match Authority Server running on ws://${host}:${port}`);
-      console.log(`HTTP health: http://${host}:${port}`);
+      console.log(`Intrilex Match Authority Server v${LAB_VERSION} running on ws://${host}:${port}`);
+      console.log(`HTTP health: http://${host}:${port}/health`);
+      console.log(`Environment: ${isProduction ? 'production' : 'development'}`);
+      console.log(`Auth mode: ${AUTH_MODE}`);
+      console.log(`Allowed origins: ${allowedOriginsSummary}`);
+      if (isProduction && ALLOWED_ORIGINS.length === 0) {
+        console.warn('WARNING: INTRILEX_ALLOWED_ORIGINS is not set. All WebSocket origins are accepted.');
+        console.warn('         Set INTRILEX_ALLOWED_ORIGINS to restrict access to known frontend origins.');
+      }
     });
   }
 } catch { /* not running as CLI — imported as a module */ }

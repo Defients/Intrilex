@@ -77,61 +77,85 @@ export function renderNetworkLobby(options = {}) {
   const connecting = options.connecting ?? false;
 
   const serverStatus = connecting
-    ? `<span class="network-server-status connecting" data-testid="network-server-status">Connecting…</span>`
+    ? `<span class="network-server-status connecting" data-testid="network-server-status"><span class="network-server-status-dot" aria-hidden="true"></span>Connecting…</span>`
     : serverReachable === true
-      ? `<span class="network-server-status online" data-testid="network-server-status">● Online</span>`
+      ? `<span class="network-server-status online" data-testid="network-server-status"><span class="network-server-status-dot" aria-hidden="true"></span>Online</span>`
       : serverReachable === false
-        ? `<span class="network-server-status offline" data-testid="network-server-status">● Offline</span>`
-        : `<span class="network-server-status unknown" data-testid="network-server-status">● Unknown</span>`;
+        ? `<span class="network-server-status offline" data-testid="network-server-status"><span class="network-server-status-dot" aria-hidden="true"></span>Offline</span>`
+        : `<span class="network-server-status unknown" data-testid="network-server-status"><span class="network-server-status-dot" aria-hidden="true"></span>Unknown</span>`;
 
   const reconnectCard = hasSavedMatch && savedMatchInfo
     ? `<div class="network-reconnect-card" data-testid="network-reconnect-card">
-        <h2>Reconnect to Match</h2>
-        <p>You have an in-progress online match.</p>
-        <p class="network-reconnect-detail">Match: <code>${esc(savedMatchInfo.matchId?.slice(0, 12) ?? '—')}…</code></p>
-        <button class="primary-button" data-testid="network-reconnect" data-action="network-reconnect">Reconnect</button>
-        <button class="text-button" data-testid="network-abandon" data-action="network-abandon">Abandon match</button>
+        <div class="network-reconnect-card-icon" aria-hidden="true">⚡</div>
+        <div class="network-reconnect-card-body">
+          <h2>Reconnect to Match</h2>
+          <p>You have an in-progress online match.</p>
+          <p class="network-reconnect-detail">Match: <code>${esc(savedMatchInfo.matchId?.slice(0, 12) ?? '—')}…</code></p>
+        </div>
+        <div class="network-reconnect-card-actions">
+          <button class="primary-button" data-testid="network-reconnect" data-action="network-reconnect">Reconnect</button>
+          <button class="text-button" data-testid="network-abandon" data-action="network-abandon">Abandon match</button>
+        </div>
       </div>`
     : '';
 
   return `<div class="network-lobby" data-testid="network-lobby">
-    <a class="play-hub-back" href="#/play" aria-label="Back to Play hub">← Back</a>
-    <h1 class="network-lobby-title">Direct Duel <span class="network-lobby-badge">Online</span></h1>
-    <p class="network-lobby-subtitle">Play a server-authoritative 1v1 match against a remote human opponent. Share an invite code to start.</p>
+    <a class="play-hub-back" href="#/" aria-label="Back to home">← Back</a>
+    <header class="network-lobby-hero">
+      <div class="network-lobby-hero-glow" aria-hidden="true"></div>
+      <div class="network-lobby-hero-grid" aria-hidden="true"></div>
+      <div class="network-lobby-hero-content">
+        <span class="network-lobby-eyebrow">Server-Authoritative · 1v1 · Ranked</span>
+        <h1 class="network-lobby-title">Direct Duel <span class="network-lobby-badge"><span class="network-lobby-badge-dot" aria-hidden="true"></span>Online</span></h1>
+        <p class="network-lobby-subtitle">Challenge a remote human opponent in a server-authoritative ranked duel. Share an invite code, queue for a match, or spectate live games.</p>
+      </div>
+    </header>
     <div class="network-server-info" data-testid="network-server-info">
-      <span class="network-server-label">Authority server:</span>
+      <span class="network-server-label">Authority server</span>
       <code class="network-server-url" data-testid="network-server-url">${esc(serverUrl)}</code>
       ${serverStatus}
+    </div>
+    <div class="network-lobby-features" aria-hidden="true">
+      <span class="network-lobby-feature"><span class="network-lobby-feature-icon">⚡</span>Real-time</span>
+      <span class="network-lobby-feature"><span class="network-lobby-feature-icon">🔒</span>Anti-cheat</span>
+      <span class="network-lobby-feature"><span class="network-lobby-feature-icon">🔄</span>Reconnect anytime</span>
+      <span class="network-lobby-feature"><span class="network-lobby-feature-icon">🏆</span>Ranked</span>
     </div>
     ${reconnectCard}
     <div class="network-lobby-grid">
       <button class="play-hub-card network-lobby-card" data-testid="network-create" data-action="network-create">
+        <span class="network-lobby-card-glow" aria-hidden="true"></span>
         <span class="play-hub-icon" aria-hidden="true">⚔</span>
         <strong>Create Duel</strong>
         <p>Start a new match and invite an opponent with a code.</p>
+        <span class="network-lobby-card-arrow" aria-hidden="true">→</span>
       </button>
       <button class="play-hub-card network-lobby-card" data-testid="network-join" data-action="network-join">
+        <span class="network-lobby-card-glow" aria-hidden="true"></span>
         <span class="play-hub-icon" aria-hidden="true">🔗</span>
         <strong>Join with Code</strong>
         <p>Enter a 6-character invite code from a friend.</p>
+        <span class="network-lobby-card-arrow" aria-hidden="true">→</span>
       </button>
-      <button class="play-hub-card network-lobby-card" data-testid="network-queue" data-action="network-queue">
-        <span class="play-hub-icon" aria-hidden="true">🎯</span>
+      <button class="play-hub-card network-lobby-card network-lobby-card-featured" data-testid="network-queue" data-action="network-queue">
+        <span class="network-lobby-card-glow" aria-hidden="true"></span>
+        <span class="network-lobby-card-shimmer" aria-hidden="true"></span>
+        <span class="network-lobby-card-ranked-badge" aria-hidden="true">RANKED</span>
+        <span class="play-hub-icon" aria-hidden="true">�</span>
         <strong>Find Match</strong>
-        <p>Auto-pair with a random opponent from the queue.</p>
+        <p>Auto-pair with a random opponent. Climb the ranked ladder.</p>
+        <span class="network-lobby-card-arrow" aria-hidden="true">→</span>
       </button>
       <button class="play-hub-card network-lobby-card" data-testid="network-spectate" data-action="network-spectate">
+        <span class="network-lobby-card-glow" aria-hidden="true"></span>
         <span class="play-hub-icon" aria-hidden="true">👁</span>
         <strong>Spectate</strong>
         <p>Watch a live match by entering a Match ID.</p>
-      </button>
-      <button class="play-hub-card network-lobby-card" data-testid="network-history" data-action="network-history">
-        <span class="play-hub-icon" aria-hidden="true">📜</span>
-        <strong>Match History</strong>
-        <p>Browse recent matches and spectate completed games.</p>
+        <span class="network-lobby-card-arrow" aria-hidden="true">→</span>
       </button>
     </div>
     <div class="network-lobby-notice">
+      <span class="network-lobby-notice-icon" aria-hidden="true">🛡</span>
       <p>All gameplay is server-authoritative. The server owns the engine, RNG, and command vault. Your client only receives authorized views and submits action IDs.</p>
     </div>
   </div>`;
@@ -167,7 +191,7 @@ export function renderNetworkCreateWaiting(session, options = {}) {
     <div class="network-invite-card" data-testid="network-invite-card">
       <h2>Invite Code</h2>
       <div class="network-invite-code" data-testid="network-invite-code" role="textbox" aria-readonly="true" aria-label="Invite code">${esc(inviteCode)}</div>
-      <button class="secondary-button" data-testid="network-copy-invite" data-action="network-copy-invite">Copy code</button>
+      <button class="secondary-button" data-testid="network-copy-invite" data-action="network-copy-invite"><span aria-hidden="true">📋</span> Copy code</button>
       <p class="network-invite-hint">Share this code with your opponent. They can join via “Join with Code.”</p>
     </div>
     <div class="network-waiting-status" data-testid="network-waiting-status">
@@ -301,7 +325,49 @@ export function renderNetworkError(options = {}) {
     <p class="network-error-message">${esc(message)}</p>
     <div class="network-error-actions">
       ${canRetry ? `<button class="primary-button" data-testid="network-retry" data-action="network-retry">Try again</button>` : ''}
-      <a href="#/play" class="secondary-button">Back to Play</a>
+      <a href="#/" class="secondary-button">Back to Home</a>
+    </div>
+  </div>`;
+}
+
+/**
+ * Render an "Online Direct Duel unavailable" screen.
+ * Used when the match server URL is not configured (production without
+ * INTRILEX_MATCH_SERVER_URL) or when the URL is invalid (mixed-content).
+ *
+ * @param {object} options — { reason, detail }
+ *   reason: 'configuration-error' | 'invalid-url' | 'server-unreachable'
+ *   detail: optional technical detail (shown only in dev mode)
+ * @returns {string} HTML
+ */
+export function renderNetworkUnavailable(options = {}) {
+  const reason = options.reason ?? 'server-unreachable';
+  const isDev = typeof location !== 'undefined'
+    && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+
+  const titles = {
+    'configuration-error': 'Online Duel Unavailable',
+    'invalid-url': 'Connection Configuration Error',
+    'server-unreachable': 'Match Server Unreachable',
+  };
+  const messages = {
+    'configuration-error': 'The Intrilex match server is not configured for this deployment. Local play and other modes remain fully available.',
+    'invalid-url': 'The match server URL is not valid for this page. Local play and other modes remain fully available.',
+    'server-unreachable': 'The Intrilex match server cannot currently be reached. Local play and other modes remain fully available.',
+  };
+
+  const title = titles[reason] ?? titles['server-unreachable'];
+  const message = messages[reason] ?? messages['server-unreachable'];
+
+  return `<div class="network-error-screen network-unavailable" data-testid="network-unavailable" role="alert">
+    <a class="play-hub-back" href="#/" aria-label="Back to home">← Back to Home</a>
+    <h1>${esc(title)}</h1>
+    <p class="network-error-message">${esc(message)}</p>
+    ${isDev && options.detail ? `<p class="network-error-detail" data-testid="network-error-detail">${esc(options.detail)}</p>` : ''}
+    <div class="network-error-actions">
+      <button class="primary-button" data-testid="network-retry" data-action="network-retry">Retry</button>
+      <a href="#/play/new" class="secondary-button">Play vs AI</a>
+      <a href="#/" class="secondary-button">Back to Home</a>
     </div>
   </div>`;
 }
@@ -424,55 +490,4 @@ export function renderNetworkSpectating(options = {}) {
   </div>`;
 }
 
-/**
- * Render the match history / replay browser screen.
- * Shows a list of recent matches with status, creation time, and a spectate button.
- * @param {object} options — { matches, loading, error }
- * @returns {string} HTML
- */
-export function renderNetworkMatchHistory(options = {}) {
-  const matches = options.matches ?? [];
-  const loading = options.loading ?? false;
-  const error = options.error ?? null;
 
-  const matchList = loading
-    ? `<div class="network-history-loading" data-testid="network-history-loading">Loading match history…</div>`
-    : matches.length === 0
-      ? `<div class="network-history-empty" data-testid="network-history-empty">
-          <p>No matches found. Create or join a match to see it here.</p>
-        </div>`
-      : `<div class="network-history-list" data-testid="network-history-list">
-          ${matches.map(m => {
-            const ageSec = Math.floor((Date.now() - m.updatedAt) / 1000);
-            const ageStr = ageSec < 60 ? `${ageSec}s ago`
-              : ageSec < 3600 ? `${Math.floor(ageSec / 60)}m ago`
-              : ageSec < 86400 ? `${Math.floor(ageSec / 3600)}h ago`
-              : `${Math.floor(ageSec / 86400)}d ago`;
-            const canSpectate = m.status === 'RUNNING' || m.status === 'TERMINAL';
-            return `<div class="network-history-item" data-testid="network-history-item">
-              <div class="network-history-item-info">
-                <code class="network-history-match-id">${esc(m.matchId?.slice(0, 16) ?? '—')}</code>
-                <span class="network-history-status status-${esc(m.status?.toLowerCase() ?? 'unknown')}">${esc(m.status)}</span>
-                <span class="network-history-age">${esc(ageStr)}</span>
-                <span class="network-history-players">${m.participants?.length ?? 0} players</span>
-              </div>
-              <div class="network-history-item-actions">
-                ${canSpectate
-                  ? `<button class="secondary-button" data-testid="network-history-spectate" data-match-id="${esc(m.matchId)}">Spectate</button>`
-                  : `<span class="network-history-no-spectate">Not spectatable</span>`}
-              </div>
-            </div>`;
-          }).join('')}
-        </div>`;
-
-  return `<div class="network-history" data-testid="network-history">
-    <a class="play-hub-back" href="#/play/online" aria-label="Back to lobby">← Back</a>
-    <h1>Match History</h1>
-    <p class="network-history-subtitle">Recent matches on this server. Spectate any running or completed match.</p>
-    ${error ? `<div class="network-error" role="alert" data-testid="network-error">${esc(error)}</div>` : ''}
-    ${matchList}
-    <div class="network-history-actions">
-      <button class="text-button" data-testid="network-history-refresh" data-action="network-history-refresh">Refresh</button>
-    </div>
-  </div>`;
-}

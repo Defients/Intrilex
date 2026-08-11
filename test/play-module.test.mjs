@@ -153,68 +153,6 @@ test('action-presenter: auditPresentationCoverage identifies uncovered families'
 });
 
 // ═══════════════════════════════════════════════════════════════
-// Tutorial Runtime Tests (pure data module — works in Node.js)
-// ═══════════════════════════════════════════════════════════════
-
-test('tutorial-runtime: getTutorialDefinition returns valid definition', async () => {
-  const { getTutorialDefinition } = await import('../apps/lab-web/src/play/tutorial-runtime.js');
-  const def = getTutorialDefinition();
-  assert.equal(def.tutorialId, 'first-contact-introduction');
-  assert.equal(def.version, '1.0.0');
-  assert.equal(def.profileId, 'first-contact-trigger-closure');
-  assert.ok(def.chapters.length > 10, 'tutorial should have many chapters');
-  assert.ok(def.contentHash, 'tutorial must have content hash');
-});
-
-test('tutorial-runtime: getTutorialSetup returns valid setup', async () => {
-  const { getTutorialSetup } = await import('../apps/lab-web/src/play/tutorial-runtime.js');
-  const setup = getTutorialSetup();
-  assert.equal(setup.profileId, 'first-contact-trigger-closure');
-  assert.equal(setup.humanPlayerId, 'P1');
-  assert.equal(setup.mode, 'TUTORIAL');
-  assert.ok(setup.tutorial, 'setup must have tutorial metadata');
-});
-
-test('tutorial-runtime: TutorialRuntime advances chapters', async () => {
-  const { TutorialRuntime } = await import('../apps/lab-web/src/play/tutorial-runtime.js');
-  const t = new TutorialRuntime();
-  assert.equal(t.currentChapterIndex, 0);
-  assert.ok(t.currentChapter, 'should have a current chapter');
-  t.advance();
-  assert.equal(t.currentChapterIndex, 1);
-  assert.ok(t.progress > 0, 'progress should increase');
-});
-
-test('tutorial-runtime: TutorialRuntime skip jumps to end', async () => {
-  const { TutorialRuntime } = await import('../apps/lab-web/src/play/tutorial-runtime.js');
-  const t = new TutorialRuntime();
-  t.skip();
-  assert.ok(t.skipped, 'should be marked skipped');
-  assert.ok(t.isComplete, 'should be complete after skip');
-});
-
-test('tutorial-runtime: checkCompletion detects action family match', async () => {
-  const { TutorialRuntime } = await import('../apps/lab-web/src/play/tutorial-runtime.js');
-  const t = new TutorialRuntime();
-  // Advance to the "draw a card" chapter (index 3)
-  t.advance(); t.advance(); t.advance();
-  const isComplete = t.checkCompletion({ family: 'draw' }, null);
-  assert.ok(isComplete, 'draw action should complete the draw chapter');
-});
-
-test('tutorial-runtime: getSaveState and restore round-trip', async () => {
-  const { TutorialRuntime } = await import('../apps/lab-web/src/play/tutorial-runtime.js');
-  const t = new TutorialRuntime();
-  t.advance();
-  t.advance();
-  const state = t.getSaveState();
-  const t2 = new TutorialRuntime();
-  t2.restore(state);
-  assert.equal(t2.currentChapterIndex, 2);
-  assert.deepEqual([...t2.completedChapters], [...t.completedChapters]);
-});
-
-// ═══════════════════════════════════════════════════════════════
 // Privacy Tests (pure data module — works in Node.js)
 // ═══════════════════════════════════════════════════════════════
 
@@ -340,7 +278,7 @@ test('replay-library: renderReplayLibrary renders table with replays', async () 
 test('play module: all play source files exist', async () => {
   const files = [
     'action-presenter.js', 'play-controller.js', 'ranked-duel-renderer.mjs',
-    'persistence.js', 'replay-library.js', 'tutorial-runtime.js',
+    'persistence.js', 'replay-library.js',
     'play-privacy.js', 'play-app.js', 'play-v3.css', 'save-integrity.js',
   ];
   for (const file of files) {
@@ -364,14 +302,12 @@ test('play module: persistence has no node: imports', async () => {
   assert.doesNotMatch(js, /node:/, 'persistence must not import node: modules');
 });
 
-test('play module: play-renderer-v3 exports renderBoard and renderPlayHub', async () => {
+test('play module: play-renderer-v3 exports renderBoard and renderNewMatchSetup', async () => {
   const js = await playSrc('ranked-duel-renderer.mjs');
   assert.match(js, /export function renderBoard/);
-  // renderPlayHub and renderNewMatchSetup are now in ranked-duel-hub.mjs, re-exported
-  assert.match(js, /renderPlayHub/);
+  // renderNewMatchSetup is in ranked-duel-hub.mjs, re-exported
   assert.match(js, /renderNewMatchSetup/);
   const hubJs = await playSrc('ranked-duel-hub.mjs');
-  assert.match(hubJs, /export function renderPlayHub/);
   assert.match(hubJs, /export function renderNewMatchSetup/);
 });
 
@@ -457,21 +393,6 @@ test('play module: persistence has autosave and quarantine support', async () =>
   const js = await playSrc('persistence.js');
   assert.match(js, /getAutosave/);
   assert.match(js, /quarantineSave/);
-});
-
-test('play module: tutorial-runtime has semantic predicates', async () => {
-  const js = await playSrc('tutorial-runtime.js');
-  assert.match(js, /acceptedFamily/);
-  assert.match(js, /checkCompletion/);
-  assert.match(js, /acknowledge/);
-  assert.match(js, /card-inspected/);
-  assert.match(js, /match-complete/);
-});
-
-test('play module: tutorial-runtime never uses card IDs in completion checks', async () => {
-  const js = await playSrc('tutorial-runtime.js');
-  // Completion checks should use family/event-type, not card IDs
-  assert.doesNotMatch(js, /C-\d{3}/, 'tutorial completion must not check for specific card IDs');
 });
 
 test('play module: play-privacy has DOM leak checking', async () => {
