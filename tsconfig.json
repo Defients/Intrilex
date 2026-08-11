@@ -29,7 +29,8 @@
   "include": [
     "packages/shared/src/**/*.mjs",
     "packages/statistics/src/**/*.mjs",
-    "packages/match-authority/src/**/*.mjs"
+    "packages/match-authority/src/**/*.mjs",
+    "packages/achievements/src/**/*.mjs"
   ],
   "exclude": [
     "node_modules",

@@ -75,10 +75,10 @@ Otherwise `test/test-coverage-meta.test.mjs` will fail.
 - `scripts/browser-e2e-certification.mjs` and `scripts/browser-network-e2e.mjs` have a file-specific override for `document`/`location` (CDP scripts serialize arrow functions via `.toString()` and evaluate them in the browser)
 
 ## TypeScript (checkJs)
-- `tsconfig.json` enables `checkJs` (strict mode) — all `.mjs`/`.js` files are type-checked by `tsc --noEmit`
-- **0 type errors** across the entire project
+- `tsconfig.json` enables `checkJs` (strict mode) for the packages listed in its `include` array — currently `packages/shared`, `packages/statistics`, `packages/match-authority`, and `packages/achievements` (`apps/`, `test/`, `scripts/`, `runtime/`, `vendor/`, `upstream/`, and `release/` are excluded)
+- **0 type errors** within the type-checked scope; run `npx tsc --noEmit` to verify
 - Type annotations are added via JSDoc (`@param`, `@returns`, `@typedef`, `@type`) — no `@ts-nocheck` or `@ts-ignore`
-- Packages with full JSDoc type coverage: `packages/statistics`, `packages/match-authority`, `packages/network-protocol`, `packages/engine-adapter`
+- Packages with full JSDoc type coverage: `packages/statistics`, `packages/match-authority`, `packages/network-protocol`, `packages/engine-adapter`, `packages/achievements`
 - Run `npx tsc --noEmit` to verify type safety
 
 ## Archived Scripts
