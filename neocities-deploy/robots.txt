@@ -1,9 +1,10 @@
-# Intrilex Simulation Lab — robots.txt
-# All crawlers are welcome to index the site.
+# Intrilex — robots.txt
+# All crawlers are welcome to index the root page.
 # The app is a hash-routed SPA served from the root URL,
-# so there are no disallowed paths.
+# so there are no path-based disallowed routes.
 
 User-agent: *
 Allow: /
 
-# Crawl-delay omitted — static hosting can handle frequent fetches.
+# Sitemap
+Sitemap: https://intrilex.cards/sitemap.xml

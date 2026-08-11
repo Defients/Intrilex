@@ -161,6 +161,9 @@ export function openAdvancedCardRules(identity, options = {}) {
   const html = renderAdvancedCardRulesView(identity, { currentMatch: options.currentMatch ?? null });
   contentEl.innerHTML = html;
   if (titleEl) titleEl.textContent = identity;
+  // Populate the eyebrow text (kept empty in static HTML for crawler hygiene)
+  const eyebrowEl = dialog.querySelector('.acr-dialog-head .eyebrow');
+  if (eyebrowEl) eyebrowEl.textContent = 'Advanced Card Details';
 
   if (typeof dialog.showModal === 'function' && !dialog.open) {
     dialog.showModal();

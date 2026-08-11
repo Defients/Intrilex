@@ -6,6 +6,7 @@ import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting 
 import { WORKSPACES, route, policyOptions } from './router.js';
 import { showIntegrity } from './integrity.js';
 import { RULES_VERSION, LAB_VERSION } from './version.js';
+import { populateDialogHeading } from './seo-metadata.js';
 
 // ── Experiment panel ──────────────────────────────────────────────
 export function renderExperimentControls() {
@@ -67,11 +68,13 @@ export function bindGlobal() {
   });
   document.querySelector('#integrity-button').addEventListener('click', showIntegrity);
   const palette = document.querySelector('#command-palette');
-  document.querySelector('#command-palette-button').addEventListener('click', () => {
+  const openCommandPalette = () => {
+    populateDialogHeading('command-palette', 'QUICK NAVIGATION', 'Command palette');
     palette.showModal();
     renderCommandResults();
     setTimeout(() => document.querySelector('#command-search').focus(), 0);
-  });
+  };
+  document.querySelector('#command-palette-button').addEventListener('click', openCommandPalette);
   document.querySelector('#command-search').addEventListener('input', renderCommandResults);
   // Keyboard navigation for command palette results
   palette.addEventListener('keydown', (e) => {
@@ -81,9 +84,7 @@ export function bindGlobal() {
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      palette.showModal();
-      renderCommandResults();
-      document.querySelector('#command-search').focus();
+      openCommandPalette();
     }
     // "/" focuses the workspace nav search (when not already in an input)
     if (e.key === '/' && !['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement.tagName)) {

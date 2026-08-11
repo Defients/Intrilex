@@ -1,7 +1,7 @@
 {
-  "name": "Intrilex Simulation Lab",
+  "name": "Intrilex",
   "short_name": "Intrilex",
-  "description": "Deterministic match watching, interactive play vs AI, replay investigation, decision traces, counterfactual branch lab, mechanics, synergy, rank power, comparison, policy diagnostics, and evidence.",
+  "description": "Intrilex — a tactical competitive playing card game. Play local vs AI or online Direct Duel.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
