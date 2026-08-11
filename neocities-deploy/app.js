@@ -305,6 +305,16 @@ function openAuthOverlay() {
     closeBtn.addEventListener('click', closeLandingOverlay);
     authHeader.appendChild(closeBtn);
   }
+
+  // The Continue to Lobby button should also close this overlay; the
+  // wireAuthActions handler in auth.js will navigate the hash to
+  // #/play/online. Use event delegation because renderAuth re-renders
+  // the auth-card when auth state changes, replacing the button and
+  // any listener attached directly to it.
+  body.addEventListener('click', (e) => {
+    const continueBtn = e.target.closest('#auth-continue');
+    if (continueBtn) closeLandingOverlay();
+  });
 }
 
 function openAchievementsOverlay() {

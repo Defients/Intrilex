@@ -183,6 +183,7 @@ const STAGES = [
   ['profile-domain', 'node', ['--test', 'test/profile-domain.test.mjs']],
   ['profile-schema', 'node', ['--test', 'test/profile-schema.test.mjs']],
   ['profile-projection', 'node', ['--test', 'test/profile-projection.test.mjs']],
+  ['player-directory', 'node', ['--test', 'test/player-directory.test.mjs']],
   ['sec-01-secret-containment', 'node', ['--test', 'test/sec-01-secret-containment.test.mjs']],
   ['release-identity', 'node', ['--test', 'test/release-identity.test.mjs']],
   ['engine-manifest', 'node', ['--test', 'test/engine-manifest.test.mjs']],

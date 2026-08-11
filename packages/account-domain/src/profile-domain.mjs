@@ -734,6 +734,7 @@ export function buildSelfProfile(input) {
     recentMatches: input.recentMatches ?? [],
     seasonHistory: input.seasonHistory ?? [],
     privacy: input.privacy ?? { ...DEFAULT_PRIVACY },
+    directoryVisible: input.directoryVisible === true,
     onlineStats: input.onlineStats ?? null,
     localStats: input.localStats ?? null,
     ownedCosmetics: {

@@ -117,7 +117,10 @@ function renderAccountSection(authState, profile, configured) {
         <small>${esc(profile?.publicPlayerId ?? '')}</small>
         <span class="settings-account-badge ${isAnon ? 'guest' : 'verified'}">${isAnon ? 'Guest' : providerLabel(profile?.provider)}</span>
       </div>
-      <button class="settings-button danger" id="settings-signout">Sign Out</button>
+      <div class="settings-account-actions">
+        ${isAnon ? `<a class="settings-button primary" href="#/auth">Link Account →</a>` : ''}
+        <button class="settings-button danger" id="settings-signout">Sign Out</button>
+      </div>
     </div>`;
   }
   return `<div class="settings-account-signedout">

@@ -55,6 +55,10 @@ export function getSupabaseClient() {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // Use PKCE for OAuth instead of implicit grant. This gives a proper
+      // long-lived refresh token and avoids the implicit-flow sign-out bug
+      // where the short refresh token fails validation immediately.
+      flowType: 'pkce',
     },
   });
   return _client;

@@ -19,6 +19,7 @@ export const WORKSPACES = [
   ['/evidence','◎','Evidence','Integrity'],
   ['/release-notes','✧','Release Notes','What\'s new'],
   ['/profile','👤','Profile','Player profile'],
+  ['/players','⌕','Players','Player directory'],
   ['/intelligence','✦','Analytics AI','Ollama interpretation'],
   ['/achievements','🏆','Achievements','56 launch achievements'],
   ['/settings','⚙','Settings','Display, network, and account'],
@@ -43,6 +44,7 @@ export const SUBTITLES = {
   '/diagnostics':'Decision margins, self-counter rates, response conservation, timing, and win rates.',
   '/tournament':'Single-elimination AI-vs-AI bracket with deterministic matches and champion crowning.',
   '/profile':'Player profile — identity, ranked, achievements, showcase, customization, and privacy.',
+  '/players':'Player directory — discover players, search by name or handle, and inspect public profiles, rankings, and battle history.',
   '/achievements':'56 launch achievements with deterministic detection, career tracking, and hidden discoveries.',
   '/settings':'Display, accessibility, network, account, and data settings.',
   '/auth':'Sign in with Discord or Google, or continue as a guest to play online.'
@@ -70,6 +72,7 @@ export function renderNavigation() {
   const SECTIONS = [
     { label: 'Analysis', routes: ['/watch', '/replays', '/history', '/mechanics', '/synergies'] },
     { label: 'Investigation', routes: ['/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament'] },
+    { label: 'Community', routes: ['/players', '/profile'] },
     { label: 'System', routes: ['/evidence', '/release-notes', '/intelligence'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));

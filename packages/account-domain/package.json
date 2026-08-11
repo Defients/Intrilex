@@ -10,6 +10,7 @@
     "./rank-tier": "./src/rank-tier.mjs",
     "./profile-domain": "./src/profile-domain.mjs",
     "./leaderboard": "./src/leaderboard.mjs",
+    "./directory": "./src/directory.mjs",
     "./rating": "./src/rating.mjs",
     "./glicko2": "./src/glicko2.mjs",
     "./seasons": "./src/seasons.mjs"

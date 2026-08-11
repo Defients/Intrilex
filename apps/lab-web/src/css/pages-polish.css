@@ -520,6 +520,7 @@ button:active:not(:disabled){transform:translateY(1px)}
 .settings-button.primary{background:linear-gradient(135deg,var(--cyan),var(--cyan-2));border:none;color:#0a1218}
 .settings-account{display:flex;flex-direction:column;gap:12px}
 .settings-account-info{display:flex;align-items:center;gap:14px;padding:12px;background:var(--surface-2);border-radius:10px}
+.settings-account-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .settings-account-avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border)}
 .settings-account-avatar img{width:100%;height:100%;object-fit:cover}
 .settings-account-avatar svg{width:26px;height:26px;color:var(--muted)}

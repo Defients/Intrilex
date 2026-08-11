@@ -37,6 +37,7 @@ import {
   renderNetworkStatusBanner, renderNetworkUnavailable,
 } from './network/network-lobby-renderer.mjs';
 import { getMatchServerUrl, isMatchServerConfigured, validateMatchServerUrl } from './network/match-server-config.js';
+import { getAccessToken } from './network/auth-controller.js';
 import { getAchievementRuntime } from './achievements/achievement-runtime.js';
 import { getAchievementPresenter } from './achievements/achievement-presenter.js';
 
@@ -682,6 +683,9 @@ async function renderNetworkCreateFlow(container) {
       return;
     }
     const session = new NetworkPlaySession(serverUrl);
+    // v2: wire the Supabase access token before connect() so the server's
+    // auth gate accepts CREATE_MATCH when authMode='required'.
+    session.accessToken = getAccessToken();
     session.onStateChange = () => {
       // Re-render the waiting room on state changes (opponent connect, ready, etc.)
       const activeContainer = state.activeContainer;
@@ -778,6 +782,9 @@ function bindNetworkJoinFormEvents(container) {
         return;
       }
       const session = new NetworkPlaySession(serverUrl);
+      // v2: wire the Supabase access token before connect() so the server's
+      // auth gate accepts JOIN_MATCH when authMode='required'.
+      session.accessToken = getAccessToken();
       session.onStateChange = () => {
         const activeContainer = state.activeContainer;
         if (!activeContainer) return;
@@ -901,26 +908,53 @@ function bindNetworkWaitingEvents(container) {
  * Render the matchmaking queue flow — joins the queue and waits for pairing.
  */
 async function renderNetworkQueueFlow(container) {
-  const { queueJoin, queueLeave } = await import('./network/network-protocol-client.mjs');
+  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs');
   const serverUrl = getNetworkServerUrl();
   if (!serverUrl) {
     container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
     bindNetworkErrorEvents(container);
     return;
   }
+
+  // v2: the server gates QUEUE_JOIN behind AUTHENTICATE when authMode='required'.
+  // We must send AUTHENTICATE on open and wait for AUTHENTICATED before queueing.
+  const accessToken = getAccessToken();
+  if (!accessToken) {
+    container.innerHTML = renderNetworkError({
+      title: 'Sign In Required',
+      message: 'You must sign in before joining the matchmaking queue.',
+    });
+    bindNetworkErrorEvents(container);
+    return;
+  }
+
   const ws = new WebSocket(serverUrl);
 
   container.innerHTML = renderNetworkQueueWaiting({ position: 1, estimatedWaitMs: 5000 });
 
   let matched = false;
+  let authenticated = false;
 
   ws.addEventListener('open', () => {
-    ws.send(JSON.stringify(queueJoin('core-unrestricted-authority', 'req-queue-1')));
+    ws.send(JSON.stringify(authenticate(accessToken)));
   });
 
   ws.addEventListener('message', (event) => {
     try {
       const msg = JSON.parse(event.data);
+      if (msg.type === 'AUTHENTICATED') {
+        authenticated = true;
+        ws.send(JSON.stringify(queueJoin('core-unrestricted-authority')));
+        return;
+      }
+      // Auth failure before QUEUE_JOIN — surface a clear sign-in message
+      if (!authenticated && msg.type === 'ERROR') {
+        container.innerHTML = renderNetworkQueueWaiting({
+          error: msg.payload?.message ?? 'Authentication failed. Please sign in again.',
+        });
+        bindQueueLeaveAction(container, ws);
+        return;
+      }
       if (msg.type === 'QUEUE_JOINED') {
         container.innerHTML = renderNetworkQueueWaiting({
           position: msg.payload.position,
@@ -1216,6 +1250,15 @@ async function reconnectToSavedMatch(container) {
   container.innerHTML = '<div class="play-loading">Reconnecting to match…</div>';
   try {
     const session = new NetworkPlaySession(saved.url);
+    // v2: wire the Supabase access token before connect() so the server's
+    // auth gate accepts RESUME_MATCH when authMode='required'.
+    session.accessToken = getAccessToken();
+    // Restore match identity from the saved record — reconnect() guards on
+    // these being set and uses them to build the RESUME_MATCH payload.
+    session.matchId = saved.matchId;
+    session.participantToken = saved.participantToken;
+    if (saved.playerId) session.playerId = saved.playerId;
+    if (saved.inviteCode) session.inviteCode = saved.inviteCode;
     session.onStateChange = () => {
       const activeContainer = state.activeContainer;
       if (!activeContainer) return;
@@ -1224,6 +1267,13 @@ async function reconnectToSavedMatch(container) {
         state.session = session;
         location.hash = '#/play/online/match';
         return;
+      }
+      if (session.status === NetworkSessionState.IN_LOBBY || session.status === NetworkSessionState.READY) {
+        if (session.inviteCode) {
+          renderNetworkCreateWaitingRoom(activeContainer);
+        } else {
+          renderNetworkJoinWaitingRoom(activeContainer);
+        }
       }
     };
     session.onError = (err) => {

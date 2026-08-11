@@ -57,21 +57,22 @@ export async function initAuth() {
     const { data: { session } } = await client.auth.getSession();
     if (session) {
       _session = session;
-      _profile = deriveProfile(session.user);
+      _profile = await fetchProfile(client, session.user);
       setState(session.user?.is_anonymous ? 'ANONYMOUS' : 'AUTHENTICATED');
     } else {
       setState('SIGNED_OUT');
     }
 
     // Subscribe to future changes
-    client.auth.onAuthStateChange((_event, newSession) => {
+    client.auth.onAuthStateChange(async (_event, newSession) => {
+      console.log('[auth] onAuthStateChange:', _event, 'hasSession:', !!newSession);
       const wasAnonymous = _state === 'ANONYMOUS';
       _session = newSession;
       if (!newSession) {
         _profile = null;
         setState('SIGNED_OUT');
       } else {
-        _profile = deriveProfile(newSession.user);
+        _profile = await fetchProfile(client, newSession.user);
         const nowAuthenticated = !newSession.user?.is_anonymous;
         // Detect ANONYMOUS→AUTHENTICATED transition (guest linked Discord)
         if (wasAnonymous && nowAuthenticated) {
@@ -149,7 +150,11 @@ async function signInWithOAuthProvider(provider, redirectPath) {
 
   const { error } = await client.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: window.location.origin + redirectPath },
+    // OAuth providers append access-token hash params to the redirect URL.
+    // Hash-routing cannot receive a clean token if the redirect URL itself
+    // contains a hash (e.g. /#/auth#access_token=...). Use the origin only
+    // and let the app consume the token on the homepage.
+    options: { redirectTo: window.location.origin },
   });
   return !error;
 }
@@ -252,6 +257,43 @@ function setState(newState) {
   }
 }
 
+/**
+ * Fetch the authoritative public.profiles row for a user and merge it
+ * with OAuth metadata fallbacks. The server-side profile owns the real
+ * public_player_id; the metadata fields (name, avatar) are fallbacks.
+ * @param {import('@supabase/supabase-js').SupabaseClient} client
+ * @param {import('@supabase/supabase-js').User} user
+ * @returns {Promise<ReturnType<deriveProfile>>}
+ */
+async function fetchProfile(client, user) {
+  if (!user) return null;
+  const fallback = deriveProfile(user);
+  try {
+    const { data, error } = await client
+      .from('profiles')
+      .select('public_player_id, display_name, handle, avatar_url')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (error) {
+      console.warn('[auth] fetchProfile failed, using metadata fallback:', error.message);
+      return fallback;
+    }
+    if (data) {
+      return {
+        publicPlayerId: data.public_player_id ?? fallback.publicPlayerId,
+        displayName: data.display_name ?? fallback.displayName,
+        handle: data.handle ?? fallback.handle,
+        avatarUrl: data.avatar_url ?? fallback.avatarUrl,
+        isAnonymous: fallback.isAnonymous,
+        provider: fallback.provider,
+      };
+    }
+  } catch (err) {
+    console.warn('[auth] fetchProfile error, using metadata fallback:', err?.message ?? err);
+  }
+  return fallback;
+}
+
 function deriveProfile(user) {
   if (!user) return null;
   const meta = user.user_metadata ?? {};
@@ -263,7 +305,7 @@ function deriveProfile(user) {
     ?? null;
   return {
     publicPlayerId: meta.public_player_id ?? `PLY_${(user.id ?? '').slice(0, 12)}`,
-    displayName: meta.display_name ?? meta.user_name ?? 'Player',
+    displayName: meta.display_name ?? meta.user_name ?? meta.full_name ?? meta.name ?? 'Player',
     handle: meta.handle ?? null,
     avatarUrl: meta.avatar_url ?? null,
     isAnonymous: Boolean(user.is_anonymous),

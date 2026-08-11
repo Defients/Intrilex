@@ -128,6 +128,22 @@ export {
 } from './rank-tier.mjs';
 
 export {
+  DirectorySort,
+  DIRECTORY_SORTS,
+  DIRECTORY_SORT_LABELS,
+  DEFAULT_DIRECTORY_LIMIT,
+  MAX_DIRECTORY_LIMIT,
+  DIRECTORY_PAGE_SIZE,
+  MIN_DIRECTORY_SEARCH_LENGTH,
+  MAX_DIRECTORY_SEARCH_LENGTH,
+  normalizeDirectorySearch,
+  validateDirectorySort,
+  validateDirectoryTierFilter,
+  toDirectoryEntry,
+  processDirectoryRows,
+} from './directory.mjs';
+
+export {
   Visibility,
   ShowcaseItemType,
   DEFAULT_PRIVACY,

@@ -49,6 +49,7 @@ test('schema: all migration files exist and are non-empty', async () => {
     '0010_profile_customization.sql',
     '0011_tier_helpers_and_indexes.sql',
     '0012_atomic_persist_match_result.sql',
+    '0013_player_directory.sql',
   ];
   for (const name of expected) {
     assert.ok(files.includes(name), `migration ${name} must exist`);

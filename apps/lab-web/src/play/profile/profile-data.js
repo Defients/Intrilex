@@ -210,6 +210,22 @@ export async function updatePrivacy(privacy) {
 }
 
 /**
+ * Set the signed-in player's directory discoverability flag.
+ * Owner-only; validated server-side. Distinct from updatePrivacy so
+ * the four visibility fields can never accidentally reset the flag.
+ * @param {boolean} visible
+ * @returns {Promise<{ ok: boolean, error?: string, directoryVisible?: boolean }>}
+ */
+export async function setDirectoryVisible(visible) {
+  const client = getSupabaseClient();
+  if (!client) return { ok: false, error: 'Supabase not configured' };
+  const { data, error } = await client.rpc('set_directory_visible', { p_visible: visible });
+  if (error) return { ok: false, error: error.message };
+  const result = data ?? { ok: false, error: 'UNKNOWN' };
+  return result;
+}
+
+/**
  * Equip a title. Ownership is validated server-side.
  * @param {string} titleId
  * @returns {Promise<{ ok: boolean, error?: string }>}
@@ -312,6 +328,7 @@ function mapSelfProfile(data) {
     recentMatches: mapRecentMatches(data.recentMatches),
     seasonHistory: mapSeasonHistory(data.seasonHistory),
     privacy: coercePrivacy(data.privacy),
+    directoryVisible: data.directoryVisible === true,
     onlineStats: data.onlineStats ?? null,
     localStats: null, // merged by UI from local-profile
   });

@@ -820,6 +820,11 @@ export class NetworkPlaySession {
     } else if (view.status === 'RUNNING') {
       // Only transition to RUNNING — never regress from TERMINAL
       this._transition(NetworkSessionState.RUNNING);
+    } else if (view.status === 'READY_CHECK' || view.status === 'WAITING_FOR_OPPONENT') {
+      // Match exists but hasn't started — show the waiting room so players
+      // can mark ready. This covers queue-matched sessions that reconnect
+      // via RESUME_MATCH before either player has sent READY.
+      this._transition(NetworkSessionState.IN_LOBBY);
     }
   }
 

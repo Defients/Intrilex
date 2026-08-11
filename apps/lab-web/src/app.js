@@ -20,6 +20,7 @@ import { renderReleaseNotes } from './workspaces/release-notes.js';
 import { renderIntelligence } from './workspaces/intelligence.js';
 import { renderTournament } from './workspaces/tournament.js';
 import { renderProfile } from './workspaces/profile.js';
+import { renderPlayers, destroyPlayers } from './workspaces/players.js';
 import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.js';
 import { renderAchievementsWorkspace } from './play/achievements/achievement-ui.js';
 import { renderAuth } from './workspaces/auth.js';
@@ -124,7 +125,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app), '/settings': renderSettings
+    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/players': renderPlayers, '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app), '/settings': renderSettings
   };
   try {
     const result = (renderers[r] ?? renderEvidence)();
@@ -305,6 +306,16 @@ function openAuthOverlay() {
     closeBtn.addEventListener('click', closeLandingOverlay);
     authHeader.appendChild(closeBtn);
   }
+
+  // The Continue to Lobby button should also close this overlay; the
+  // wireAuthActions handler in auth.js will navigate the hash to
+  // #/play/online. Use event delegation because renderAuth re-renders
+  // the auth-card when auth state changes, replacing the button and
+  // any listener attached directly to it.
+  body.addEventListener('click', (e) => {
+    const continueBtn = e.target.closest('#auth-continue');
+    if (continueBtn) closeLandingOverlay();
+  });
 }
 
 function openAchievementsOverlay() {
@@ -571,6 +582,19 @@ function renderLanding() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/>
                   <path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/>
+                </svg>
+              </span>
+            </a>
+            <a class="landing-rail-card players" href="#/players" data-testid="landing-players-card">
+              <span class="landing-rail-body">
+                <strong>PLAYERS</strong>
+                <p>Find players &middot; search by name or @handle &middot; inspect profiles &amp; rankings</p>
+                <span class="landing-rail-cta">Browse the directory &rarr;</span>
+              </span>
+              <span class="landing-rail-emblem players-emblem" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="7"/>
+                  <path d="M21 21l-4.3-4.3"/>
                 </svg>
               </span>
             </a>
