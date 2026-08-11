@@ -99,10 +99,16 @@ test('Gate 1: save-integrity.js PRODUCT_VERSION matches release identity', async
   assert.match(saveIntegrity, new RegExp(`SAVE_FORMAT_VERSION = ${EXPECTED.saveFormatVersion}`));
 });
 
-test('Gate 1: index.html title and meta description match release identity', async () => {
+test('Gate 1: index.html contains version via application-version meta and JSON-LD softwareVersion', async () => {
   const html = await readFile(path.join(root, 'apps/lab-web/src/index.html'), 'utf8');
-  assert.match(html, new RegExp(`Intrilex Simulation Lab v${EXPECTED.version}`));
-  assert.match(html, new RegExp(`SIMULATION LAB · v${EXPECTED.version}`));
+  // Version is present in the application-version meta tag and JSON-LD
+  assert.match(html, new RegExp(`application-version" content="${EXPECTED.version}"`));
+  assert.match(html, new RegExp(`"softwareVersion": "${EXPECTED.version}"`));
+  // Homepage identity — title must be game-focused, not Lab-focused
+  assert.match(html, /Intrilex — Competitive Playing Card Game/);
+  assert.doesNotMatch(html, /Intrilex Simulation Lab v/);
+  // Lab text is NOT in the static HTML (populated by JS at runtime)
+  assert.doesNotMatch(html, /SIMULATION LAB · v/);
 });
 
 test('Gate 1: campaign.mjs uses LAB_VERSION from version module, not hardcoded', async () => {

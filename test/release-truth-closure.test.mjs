@@ -43,9 +43,10 @@ test('release-truth: save-integrity.js PRODUCT_VERSION is 0.27.0', async () => {
     'save-integrity.js PRODUCT_VERSION must be 0.27.0');
 });
 
-test('release-truth: index.html title references v0.27.0', async () => {
+test('release-truth: index.html references 0.27.0 via application-version meta', async () => {
   const html = await readText('apps/lab-web/src/index.html');
-  assert.ok(html.includes('v0.27.0'), 'index.html must reference v0.27.0');
+  assert.ok(html.includes('0.27.0'), 'index.html must reference version 0.27.0');
+  assert.match(html, /application-version" content="0.27.0"/);
 });
 
 test('release-truth: config/release-identity.json version is 0.27.0', async () => {

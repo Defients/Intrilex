@@ -244,7 +244,7 @@ test('match-history: lobby hub does NOT include Match History button', () => {
 
 test('match-history: lobby hub has 4 cards (create, join, queue, spectate)', () => {
   const html = renderNetworkLobby({ serverUrl: 'ws://localhost:3099' });
-  const cards = html.match(/class="play-hub-card network-lobby-card"/g) || [];
+  const cards = html.match(/class="play-hub-card network-lobby-card[^"]*"/g) || [];
   assert.equal(cards.length, 4, 'Lobby must have 4 cards');
 });
 

@@ -44,6 +44,7 @@ const STAGES = [
   ['mimic-ten-diamond', 'node', ['--test', 'test/mimic-ten-diamond.test.mjs']],
   ['advanced-continuations', 'node', ['--test', 'test/advanced-continuations.test.mjs']],
   ['landing-page', 'node', ['--test', 'test/landing-page.test.mjs']],
+  ['metadata-isolation', 'node', ['--test', 'test/metadata-isolation.test.mjs']],
   ['ranking-system-overlay', 'node', ['--test', 'test/ranking-system-overlay.test.mjs']],
   ['release-notes-workspace', 'node', ['--test', 'test/release-notes-workspace.test.mjs']],
   ['unrestricted-core', 'node', ['--test', 'test/unrestricted-core.test.mjs']],

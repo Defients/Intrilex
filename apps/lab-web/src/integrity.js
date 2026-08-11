@@ -4,8 +4,10 @@
 
 import { state,  fmt,  short,  definitionList } from './state.js';
 import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION } from './version.js';
+import { populateDialogHeading } from './seo-metadata.js';
 
 export function showIntegrity() {
+  populateDialogHeading('integrity-dialog', 'RELEASE AUTHORITY', 'Integrity and capability');
   const c = state.capabilities, a = state.aggregate, o = state.observatory;
   const labVersion = c.labVersion ?? c.engine?.labVersion ?? LAB_VERSION;
   const hasCapabilityHash = !!c.capabilityHash;

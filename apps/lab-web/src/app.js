@@ -31,6 +31,7 @@ import { initAccountStore, subscribe as subscribeToAccount } from './play/networ
 import { runMigrationIfPending, onMigrationStatusChange } from './play/network/migration-controller.js';
 import { renderPrivacyPage, renderTermsPage } from './legal-pages.js';
 import { renderRankingSystemOverlay } from './play/rank/ranking-system-overlay.js';
+import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading } from './seo-metadata.js';
 
 // Install global error boundary at module load time
 installGlobalErrorBoundary();
@@ -38,35 +39,59 @@ installGlobalErrorBoundary();
 // ═══════════════════════════════════════════════════════════════
 // MAIN RENDER DISPATCH
 // ═══════════════════════════════════════════════════════════════
+
+/**
+ * Hide the observatory shell using the `hidden` attribute + `inert` +
+ * `aria-hidden` for strong semantic exclusion. This prevents the Lab's
+ * text content from contaminating crawler-visible content and removes
+ * it from the accessibility tree and tab order.
+ */
+function hideShell() {
+  if (!shell) return;
+  shell.setAttribute('hidden', '');
+  shell.setAttribute('inert', '');
+  shell.setAttribute('aria-hidden', 'true');
+  shell.style.display = 'none';
+  // Redirect skip-link to the landing container (the visible content region)
+  const skip = document.querySelector('.skip-link');
+  if (skip) skip.setAttribute('href', '#landing-app');
+}
+
+/**
+ * Show the observatory shell, populate its Lab-specific text content
+ * from version constants, and remove the semantic hiding attributes.
+ */
+function showShell() {
+  if (!shell) return;
+  shell.removeAttribute('hidden');
+  shell.removeAttribute('inert');
+  shell.removeAttribute('aria-hidden');
+  shell.style.display = '';
+  // Restore skip-link target to the observatory main region
+  const skip = document.querySelector('.skip-link');
+  if (skip) skip.setAttribute('href', '#main');
+  populateObservatoryShellText();
+}
+
 export function render() {
   const r = route();
-  // Restore default SEO meta when leaving legal routes
-  if (r !== '/privacy' && r !== '/terms') {
-    const defaultDesc = 'Intrilex Simulation Lab — deterministic card-game simulation, replay forensics, rank anatomy observatory, and interactive play vs AI. Server-authoritative online Direct Duel invite alpha.';
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc && metaDesc.getAttribute('content') !== defaultDesc) metaDesc.setAttribute('content', defaultDesc);
-    const ogDesc = document.querySelector('meta[property="og:description"]');
-    if (ogDesc) ogDesc.setAttribute('content', defaultDesc);
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle) ogTitle.setAttribute('content', 'Intrilex Simulation Lab — Deterministic Card-Game Simulation & Replay Forensics');
-    const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical && canonical.getAttribute('href') !== 'https://intrilex.cards/') canonical.setAttribute('href', 'https://intrilex.cards/');
-  }
+  // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
+  // This replaces the old ad-hoc metadata restore block and ensures every
+  // route owns its own identity with no cross-route leakage.
+  applyRouteMetadata(r);
   if (isPlayRoute(r)) {
-    shell.style.display = 'none';
+    hideShell();
     if (landingContainer) landingContainer.style.display = 'block';
-    document.title = 'Intrilex — Play';
     renderPlayMode(r);
     return;
   }
   if (LANDING_MODES.has(r)) {
-    shell.style.display = 'none';
+    hideShell();
     if (landingContainer) landingContainer.style.display = 'block';
-    document.title = r === '/' ? 'Intrilex — Play' : r === '/rules' ? 'Intrilex — Rules' : r === '/privacy' ? 'Intrilex — Privacy Policy' : r === '/terms' ? 'Intrilex — Terms of Service' : r === '/auth' ? 'Intrilex — Sign In' : 'Intrilex';
     renderLandingMode(r);
     return;
   }
-  shell.style.display = '';
+  showShell();
   if (landingContainer) landingContainer.style.display = 'none';
   // If observatory data is still loading in the background (started by boot()
   // for landing/play routes), wait for it to complete before rendering.
@@ -134,32 +159,17 @@ function renderLandingMode(r) {
 /**
  * Render a legal page (Privacy Policy or Terms of Service) inside the
  * landing container using the same reading layout as the rules page.
- * Also updates SEO meta tags (description, canonical, OG) for the route.
+ * Metadata is handled by applyRouteMetadata() in the render() dispatch.
  * @param {string} r - Route ('/privacy' or '/terms')
  */
 function renderLegalPage(r) {
-  const isPrivacy = r === '/privacy';
-  const description = isPrivacy
-    ? 'Intrilex Privacy Policy — how Intrilex, operated by Deffy Pyah Urz, handles personal information, account data, gameplay records, and your privacy rights.'
-    : 'Intrilex Terms of Service — the terms governing your use of Intrilex, including account rules, acceptable use, competitive integrity, creator policy, and dispute provisions.';
-  // Update meta description for SEO
-  const metaDesc = document.querySelector('meta[name="description"]');
-  if (metaDesc) metaDesc.setAttribute('content', description);
-  const ogDesc = document.querySelector('meta[property="og:description"]');
-  if (ogDesc) ogDesc.setAttribute('content', description);
-  const ogTitle = document.querySelector('meta[property="og:title"]');
-  if (ogTitle) ogTitle.setAttribute('content', isPrivacy ? 'Intrilex — Privacy Policy' : 'Intrilex — Terms of Service');
-  // Canonical reflects the legal route
-  const canonical = document.querySelector('link[rel="canonical"]');
-  if (canonical) canonical.setAttribute('href', `https://intrilex.cards/#${r}`);
-
   landingContainer.innerHTML = `<div class="landing-app rules-app">
     <a class="skip skip-link" href="#legal-content">Skip to content</a>
     <a class="back-button" href="#/" aria-label="Back to landing">&larr; Back</a>
     <div id="legal-page-root"></div>
   </div>`;
   const root = landingContainer.querySelector('#legal-page-root');
-  if (isPrivacy) renderPrivacyPage(root);
+  if (r === '/privacy') renderPrivacyPage(root);
   else renderTermsPage(root);
 }
 
