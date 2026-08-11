@@ -91,6 +91,13 @@ const ROUTE_META = {
     canonicalPath: '/#/auth',
     ogType: 'website',
   },
+  // Player Directory
+  '/players': {
+    title: 'Intrilex — Players',
+    description: 'Discover Intrilex players — search by name or handle, filter by tier, and inspect public profiles, rankings, and battle history.',
+    canonicalPath: '/#/players',
+    ogType: 'website',
+  },
 };
 
 // Simulation Lab metadata — used for all observatory workspace routes

@@ -86,6 +86,11 @@ export class NetworkPlaySession {
     this._connectSettled = false; // Guard: connect() settles exactly once
     this._disposed = false;
 
+    // v2 auth-pending state — when connect() awaits AUTHENTICATED
+    this._authResolve = null;
+    this._authReject = null;
+    this._authTimeout = null;
+
     // Public state
     this.status = NetworkSessionState.DISCONNECTED;
     this.matchId = null;
@@ -172,15 +177,35 @@ export class NetworkPlaySession {
 
       this._ws.onopen = () => {
         if (this._connectSettled) return;
-        this._connectSettled = true;
         clearTimeout(connectTimeout);
         // v2: Send AUTHENTICATE immediately on connect if we have an access token.
         // The server gates privileged commands (CREATE_MATCH, JOIN_MATCH, etc.)
         // behind successful authentication when authMode='required'.
         // When authMode='disabled' (dev), the server accepts this as a no-op.
-        this._sendAuthenticate();
-        // Don't set status here — caller will drive via createDuel/joinDuel/reconnect
-        resolve();
+        const sent = this._sendAuthenticate();
+        if (sent) {
+          // Wait for AUTHENTICATED before resolving — the server's
+          // handleAuthenticate is async (verifies the token with Supabase),
+          // so any privileged command sent before AUTHENTICATED arrives
+          // would be rejected by the auth gate.
+          this._authResolve = resolve;
+          this._authReject = reject;
+          this._authTimeout = setTimeout(() => {
+            if (this._authResolve) {
+              this._authResolve = null;
+              this._authReject = null;
+              this._authTimeout = null;
+              this._connectSettled = true;
+              this.status = NetworkSessionState.ERROR;
+              this.error = 'Authentication timeout';
+              reject(new Error('Authentication timeout'));
+            }
+          }, 10000);
+        } else {
+          // No token (dev mode) — resolve immediately
+          this._connectSettled = true;
+          resolve();
+        }
       };
 
       this._ws.onmessage = (event) => {
@@ -195,6 +220,10 @@ export class NetworkPlaySession {
 
       this._ws.onclose = () => {
         clearTimeout(connectTimeout);
+        if (this._authTimeout) {
+          clearTimeout(this._authTimeout);
+          this._authTimeout = null;
+        }
         // Reject all pending requests immediately on terminal socket close
         this._rejectAllPending('Connection closed');
         if (!this._connectSettled) {
@@ -226,6 +255,12 @@ export class NetworkPlaySession {
       clearTimeout(this._reconnectTimer);
       this._reconnectTimer = null;
     }
+    if (this._authTimeout) {
+      clearTimeout(this._authTimeout);
+      this._authTimeout = null;
+    }
+    this._authResolve = null;
+    this._authReject = null;
     this._rejectAllPending('Session disconnected');
     if (this._ws) {
       // Remove listeners to prevent stale callbacks
@@ -682,6 +717,16 @@ export class NetworkPlaySession {
         // v2 auth handshake — server confirmed our identity
         this.authenticatedAccount = msg.payload?.account ?? null;
         this.tokenExpiresAt = msg.payload?.expiresAt ?? null;
+        // Resolve connect() if it's waiting for authentication
+        if (this._authResolve) {
+          clearTimeout(this._authTimeout);
+          const resolve = this._authResolve;
+          this._authResolve = null;
+          this._authReject = null;
+          this._authTimeout = null;
+          this._connectSettled = true;
+          resolve();
+        }
         this._notifyStateChange();
         break;
       case 'MATCH_VIEW':
@@ -784,6 +829,19 @@ export class NetworkPlaySession {
         this._clearReconnectInfo();
         break;
       case 'ERROR':
+        // If auth is pending, reject connect() with the auth error
+        if (this._authReject && !this._connectSettled) {
+          clearTimeout(this._authTimeout);
+          const reject = this._authReject;
+          this._authResolve = null;
+          this._authReject = null;
+          this._authTimeout = null;
+          this._connectSettled = true;
+          this.status = NetworkSessionState.ERROR;
+          this.error = msg.payload?.message ?? 'Authentication failed';
+          reject(new Error(this.error));
+          return;
+        }
         // Server-pushed error (no requestId match)
         if (msg.payload?.code === 'CONNECTION_SUPERSEDED') {
           this.disconnect();

@@ -32,6 +32,7 @@ import {
   updateDisplayName,
   changeHandle,
   updatePrivacy,
+  setDirectoryVisible,
   equipTitle,
   equipProfileFrame,
   equipCardBack,
@@ -1151,6 +1152,7 @@ function renderCustomizeSection(label, kind, items, equippedId, nameField, idFie
 
 function renderPrivacyPanel(profile, triggerEl) {
   const privacy = profile.privacy ?? DEFAULT_PRIVACY;
+  const directoryVisible = profile.directoryVisible === true;
   const content = `<div class="profile-modal" style="background:var(--bg,#0d1117);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;max-width:480px;width:100%;padding:24px" data-testid="profile-privacy-modal">
     <h3 style="margin:0 0 16px;font-size:18px;color:var(--text,#e0f0ff)">Privacy Settings</h3>
     <form id="profile-privacy-form" style="display:flex;flex-direction:column;gap:16px">
@@ -1158,6 +1160,17 @@ function renderPrivacyPanel(profile, triggerEl) {
       ${renderPrivacyToggle('Achievements', 'achievements', privacy.achievements, 'Show your achievement list publicly')}
       ${renderPrivacyToggle('Online Status', 'onlineStatus', privacy.onlineStatus, 'Show when you are online')}
       ${renderPrivacyToggle('Local Stats', 'localStats', privacy.localStats, 'Show local AI practice statistics')}
+      <div style="border-top:1px solid var(--border,rgba(255,255,255,0.1));padding-top:16px;margin-top:4px">
+        <label style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div>
+            <div style="color:var(--text,#e0f0ff);font-size:14px">Player Directory</div>
+            <small style="color:var(--text-dim)">Let other players find and view your profile in the Player Directory.</small>
+          </div>
+          <input type="checkbox" id="privacy-directory-visible" ${directoryVisible ? 'checked' : ''}
+            aria-label="Show my profile in the Player Directory"
+            data-testid="privacy-directory-visible" style="width:18px;height:18px;accent-color:var(--accent,#00c8dc);cursor:pointer" />
+        </label>
+      </div>
       <div id="profile-privacy-error" role="alert" aria-live="polite" style="color:var(--danger,#e55);font-size:13px;min-height:18px"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button type="button" class="btn btn-sm" data-action="cancel-privacy">Cancel</button>
@@ -1186,12 +1199,20 @@ function renderPrivacyPanel(profile, triggerEl) {
           onlineStatus: get('onlineStatus'),
           localStats: get('localStats'),
         };
+        const dirCheckbox = /** @type {HTMLInputElement|null} */ (overlay.querySelector('#privacy-directory-visible'));
+        const wantDirectory = dirCheckbox ? dirCheckbox.checked : false;
         const errEl = /** @type {HTMLElement} */ (overlay.querySelector('#profile-privacy-error'));
         errEl.textContent = '';
         const saveBtn = /** @type {HTMLButtonElement} */ (overlay.querySelector('[data-action="save-privacy"]'));
         const restoreBtn = setButtonLoading(saveBtn);
         const r = await updatePrivacy(settings);
         if (!r.ok) { restoreBtn(); errEl.textContent = r.error ?? 'Failed to save privacy settings'; return; }
+        // Persist directory visibility separately so the four visibility
+        // fields can never accidentally reset the directory flag.
+        if (wantDirectory !== directoryVisible) {
+          const dr = await setDirectoryVisible(wantDirectory);
+          if (!dr.ok) { restoreBtn(); errEl.textContent = dr.error ?? 'Failed to update directory visibility'; return; }
+        }
         /** @type {any} */ (overlay)._closeModal();
         invalidateTabCache();
         _ws.selfProfile = null;
