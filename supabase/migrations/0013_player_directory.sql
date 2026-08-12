@@ -236,28 +236,20 @@ BEGIN
       OR (p_tier_filter = 'INTRILEX'  AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating >= 2400)
     )
   ORDER BY
-    -- Primary sort key (descending sorts use NEGATE for numeric, epoch for timestamps)
-    CASE
-      WHEN v_sort = 'rating'  THEN -COALESCE(pr.rating, -1)
-      WHEN v_sort = 'games'   THEN -COALESCE(pr.rated_matches, 0)
-      WHEN v_sort = 'recent'  THEN -EXTRACT(EPOCH FROM COALESCE(pr.last_rated_at, '1970-01-01'::timestamptz))::bigint
-      WHEN v_sort = 'newest'  THEN -EXTRACT(EPOCH FROM p.created_at)::bigint
-      WHEN v_sort = 'name'    THEN p.display_name
-    END,
+    -- Primary sort key (each CASE is single-typed to avoid bigint/text mismatch)
+    CASE WHEN v_sort = 'rating' THEN pr.rating END DESC NULLS LAST,
+    CASE WHEN v_sort = 'games'  THEN pr.rated_matches END DESC NULLS LAST,
+    CASE WHEN v_sort = 'recent' THEN pr.last_rated_at END DESC NULLS LAST,
+    CASE WHEN v_sort = 'newest' THEN p.created_at END DESC,
+    CASE WHEN v_sort = 'name'   THEN p.display_name END ASC,
     -- Secondary sort key
-    CASE
-      WHEN v_sort = 'rating'  THEN -COALESCE(pr.rated_matches, 0)
-      WHEN v_sort = 'games'   THEN -COALESCE(pr.rating, -1)
-      WHEN v_sort = 'recent'  THEN -EXTRACT(EPOCH FROM p.created_at)::bigint
-      WHEN v_sort = 'newest'  THEN p.public_player_id
-      WHEN v_sort = 'name'    THEN COALESCE(p.handle, '')
-    END,
+    CASE WHEN v_sort = 'rating' THEN pr.rated_matches END DESC NULLS LAST,
+    CASE WHEN v_sort = 'games'  THEN pr.rating END DESC NULLS LAST,
+    CASE WHEN v_sort = 'recent' THEN p.created_at END DESC,
+    CASE WHEN v_sort = 'newest' THEN p.public_player_id END ASC,
+    CASE WHEN v_sort = 'name'   THEN COALESCE(p.handle, '') END ASC,
     -- Tertiary sort key (tiebreaker)
-    CASE
-      WHEN v_sort IN ('rating','games','recent') THEN p.public_player_id
-      WHEN v_sort = 'newest' THEN p.public_player_id
-      ELSE p.public_player_id
-    END
+    p.public_player_id ASC
   LIMIT v_limit
   OFFSET v_offset;
 END;
