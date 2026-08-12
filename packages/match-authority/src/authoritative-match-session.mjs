@@ -101,6 +101,7 @@ export const ConnectionState = Object.freeze({
  * @property {string} playerId
  * @property {string} token
  * @property {string|null} [accountId] - Account ID that owns this participant (v3 — absent in v2 snapshots)
+ * @property {{ displayName: string, handle: (string|null), avatarUrl: (string|null), rating: (number|null), rank: (string|null) }|null} [publicProfile] - Public profile for opponent display (v3+ — absent in old snapshots)
  * @property {string} connectionState
  * @property {boolean} ready
  */
@@ -234,9 +235,10 @@ export class AuthoritativeMatchSession {
    * @param {string} participantId
    * @param {string} token
    * @param {string|null} [accountId] - Account ID that owns this participant (for account-bound reconnect)
+   * @param {{ displayName: string, handle: (string|null), avatarUrl: (string|null), rating: (number|null), rank: (string|null) }|null} [publicProfile] - Public profile for opponent display
    * @returns {{ participantId: string, token: string, playerId: string, accountId: string|null }}
    */
-  addParticipant(participantId, token, accountId = null) {
+  addParticipant(participantId, token, accountId = null, publicProfile = null) {
     if (this.participants.size >= 2) {
       throw Object.assign(new Error('Match is full'), { code: ReasonCode.MATCH_FULL });
     }
@@ -248,6 +250,7 @@ export class AuthoritativeMatchSession {
       playerId,
       token,
       accountId: accountId ?? null,
+      publicProfile: publicProfile ?? null,
       connectionState: ConnectionState.CONNECTED,
       ready: false,
     });
@@ -590,10 +593,17 @@ export class AuthoritativeMatchSession {
       matchId: this.matchId,
       status: this.status,
       profileId: this.profileId,
+      participantId,
       playerId,
+      // RANK-01: Server-owned match classification — included in view so
+      // the client can derive the correct header label (not hardcoded).
+      matchMode: this.matchMode,
+      queueId: this.queueId,
       opponent: opponentParticipant ? {
         playerId: opponentId,
         connectionState: opponentParticipant.connectionState,
+        // Public profile for opponent display (displayName, rating, rank, etc.)
+        publicProfile: opponentParticipant.publicProfile ?? null,
       } : null,
       match: {
         fullTurnSequence: this.state?.fullTurnSequence ?? 0,
@@ -757,6 +767,8 @@ export class AuthoritativeMatchSession {
         token: p.token,
         // Account ID that owns this participant (v3 — absent in v2 snapshots)
         accountId: p.accountId ?? null,
+        // Public profile for opponent display (v3+ — absent in old snapshots → null)
+        publicProfile: p.publicProfile ?? null,
         connectionState: p.connectionState,
         ready: p.ready,
       })),
@@ -869,6 +881,8 @@ export class AuthoritativeMatchSession {
         token: p.token,
         // accountId is v3 — absent in v2 snapshots, tolerate null
         accountId: p.accountId ?? null,
+        // publicProfile is v3+ — absent in old snapshots, tolerate null
+        publicProfile: p.publicProfile ?? null,
         connectionState: p.connectionState ?? ConnectionState.DISCONNECTED,
         ready: p.ready ?? false,
       });

@@ -34,6 +34,9 @@ let _session = null;       // Supabase session (access_token, user, etc.)
 let _profile = null;       // Safe public profile
 let _migrationPending = false;  // True when guest→permanent migration is needed
 let _guestIdentity = null;      // Saved guest UUID for migration (read from localStorage)
+let _initialized = false;       // Guard: initAuth runs once
+let _authUnsubscribe = null;    // Unsubscribe from Supabase onAuthStateChange
+let _authEventSeq = 0;          // Monotonic sequence to reject stale fetchProfile results
 const _subscribers = new Set();
 
 /**
@@ -42,6 +45,12 @@ const _subscribers = new Set();
  * @returns {Promise<AuthState>}
  */
 export async function initAuth() {
+  // Re-entry guard: if initAuth was already called, return the current
+  // state without subscribing again. Multiple subscriptions would cause
+  // duplicate event handling and a memory leak.
+  if (_initialized) return _state;
+  _initialized = true;
+
   if (!isSupabaseConfigured()) {
     setState('UNCONFIGURED');
     return _state;
@@ -64,26 +73,35 @@ export async function initAuth() {
     }
 
     // Subscribe to future changes
-    client.auth.onAuthStateChange(async (_event, newSession) => {
-      console.log('[auth] onAuthStateChange:', _event, 'hasSession:', !!newSession);
+    const { data: subscription } = client.auth.onAuthStateChange(async (_event, newSession) => {
       const wasAnonymous = _state === 'ANONYMOUS';
       _session = newSession;
       if (!newSession) {
         _profile = null;
         setState('SIGNED_OUT');
-      } else {
-        _profile = await fetchProfile(client, newSession.user);
-        const nowAuthenticated = !newSession.user?.is_anonymous;
-        // Detect ANONYMOUS→AUTHENTICATED transition (guest linked Discord)
-        if (wasAnonymous && nowAuthenticated) {
-          _guestIdentity = _readGuestIdentity();
-          if (_guestIdentity && _guestIdentity !== newSession.user.id) {
-            _migrationPending = true;
-          }
-        }
-        setState(nowAuthenticated ? 'AUTHENTICATED' : 'ANONYMOUS');
+        return;
       }
+      // Monotonic sequence: if a newer auth event arrives while this
+      // fetchProfile is in flight, discard the stale result so a slow
+      // older fetch doesn't overwrite a fresher profile.
+      const seq = ++_authEventSeq;
+      const profile = await fetchProfile(client, newSession.user);
+      if (seq === _authEventSeq) {
+        _profile = profile;
+      }
+      const nowAuthenticated = !newSession.user?.is_anonymous;
+      // Detect ANONYMOUS→AUTHENTICATED transition (guest linked Discord)
+      if (wasAnonymous && nowAuthenticated) {
+        _guestIdentity = _readGuestIdentity();
+        if (_guestIdentity && _guestIdentity !== newSession.user.id) {
+          _migrationPending = true;
+        }
+      }
+      setState(nowAuthenticated ? 'AUTHENTICATED' : 'ANONYMOUS');
     });
+    // Capture unsubscribe for clean teardown (currently never called at
+    // runtime, but prevents leaks if initAuth is ever reset for testing).
+    _authUnsubscribe = subscription?.unsubscribe ?? null;
   } catch (err) {
     // Network error, CSP block, or Supabase unreachable — degrade gracefully
     // to SIGNED_OUT so the UI still renders sign-in options.
@@ -334,4 +352,24 @@ function _clearGuestIdentity() {
   } catch {
     // Ignore — localStorage may be unavailable
   }
+}
+
+/**
+ * Reset all auth controller state (for testing or config change).
+ * Unsubscribes from Supabase auth state changes and clears all
+ * cached state so initAuth can be called fresh.
+ */
+export function _resetAuthState() {
+  if (_authUnsubscribe) {
+    try { _authUnsubscribe(); } catch { /* ignore */ }
+    _authUnsubscribe = null;
+  }
+  _initialized = false;
+  _state = 'UNCONFIGURED';
+  _session = null;
+  _profile = null;
+  _migrationPending = false;
+  _guestIdentity = null;
+  _authEventSeq = 0;
+  _subscribers.clear();
 }

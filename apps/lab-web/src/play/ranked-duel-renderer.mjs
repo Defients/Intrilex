@@ -22,7 +22,7 @@ import { getCardDefinition, getSuit } from '../card-face-data.js';
 import { getCardArtBoardPath, getCardArtBoardPosition } from '../card-art-registry.js';
 import { getArchetypePersonality } from './ai-personality.js';
 import { renderNewMatchSetup } from './ranked-duel-hub.mjs';
-import { renderTerminal, renderError, renderKeyboardHelp, formatPhase, formatTerminationReason } from './ranked-duel-terminal.mjs';
+import { renderTerminal, renderError, renderKeyboardHelp, renderRulesHelp, renderMatchStats, formatPhase, formatTerminationReason } from './ranked-duel-terminal.mjs';
 import { ratingToTierDivision } from '@intrilex/account-domain/rank-tier';
 import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
 
@@ -94,6 +94,11 @@ function adaptSnapshotForViewModel(controllerSnapshot) {
       enduringRow: opp.er ?? [],
       displayName: controllerSnapshot.opponent?.displayName ?? 'AI',
       aiRating: controllerSnapshot.opponent?.aiRating ?? null,
+      // Network match participant data (v0.28)
+      isHuman: controllerSnapshot.opponent?.isHuman ?? false,
+      rating: controllerSnapshot.opponent?.rating ?? null,
+      rank: controllerSnapshot.opponent?.rank ?? null,
+      connectionState: controllerSnapshot.opponent?.connectionState ?? null,
     };
   }
 
@@ -138,17 +143,68 @@ export function renderBoard(snapshot, options = {}) {
 }
 
 /**
+ * Derive the match mode info from the snapshot and options.
+ * For network matches, uses the server-authoritative matchMode/queueId
+ * to produce the correct header label (not hardcoded "DIRECT DUEL").
+ * @param {object} snapshot — Authorized player snapshot
+ * @param {object} options — Render options
+ * @returns {{ kind: string, label: string, networkRanked: boolean, isNetwork: boolean } | null}
+ */
+function deriveModeInfo(snapshot, options) {
+  if (!options.isNetworkMatch && !snapshot?.isNetworkMatch) return null; // null = default LOCAL_AI
+
+  const matchMode = snapshot?.matchMode ?? 'private';
+  const queueId = snapshot?.queueId ?? null;
+
+  // Derive the canonical label from the actual match classification
+  let label;
+  switch (matchMode) {
+    case 'ranked':
+      label = 'ONLINE \u00b7 RANKED DUEL';
+      break;
+    case 'casual':
+      label = 'ONLINE \u00b7 CASUAL DUEL';
+      break;
+    case 'private':
+    default:
+      label = 'ONLINE \u00b7 DIRECT DUEL';
+      break;
+  }
+
+  return {
+    kind: 'NETWORK',
+    label,
+    networkRanked: matchMode === 'ranked',
+    isNetwork: true,
+    matchMode,
+    queueId,
+  };
+}
+
+/**
  * @param {object} snapshot — Authorized player snapshot from PlaySession
  * @param {object} options — { selectedActionId, selectedSourceCardId, selectedTargets, inspectorCardId, guidanceMode, showKeyboardHelp, chatMessages, soundMuted }
  * @returns {string} HTML
  */
 export function renderRankedDuel(snapshot, options = {}) {
-  const profile = loadProfile();
+  let profile = loadProfile();
   const adapted = adaptSnapshotForViewModel(snapshot);
-  // Derive mode info from options (network match flag, etc.)
-  const modeInfo = options.isNetworkMatch
-    ? { kind: 'NETWORK', label: 'ONLINE \u00b7 DIRECT DUEL', networkRanked: true }
-    : null; // null = default LOCAL_AI
+  // Derive mode info from the actual match type (not hardcoded).
+  // For network matches, use the server-authoritative matchMode/queueId.
+  const modeInfo = deriveModeInfo(snapshot, options);
+
+  // For network matches, merge the authenticated account's display name
+  // and rating into the local profile so the player plate shows real identity.
+  if (modeInfo?.isNetwork && snapshot?.human) {
+    profile = {
+      ...profile,
+      displayName: snapshot.human.displayName ?? profile.displayName,
+      rating: snapshot.human.rating != null
+        ? { ...profile.rating, value: snapshot.human.rating, scope: 'NETWORK', provisional: false }
+        : profile.rating,
+    };
+  }
+
   const vm = buildRankedDuelViewModel(adapted, profile, modeInfo);
 
   if (vm.status === 'ERROR') {
@@ -168,6 +224,7 @@ function renderMatch(vm, opts, snapshot) {
   const isReadOnly = opts.leaseMode === 'READ_ONLY';
   const isHumanTurn = vm.status === 'HUMAN_DECISION';
   const isAiTurn = vm.status === 'AI_DECISION';
+  const isNetwork = vm.mode?.isNetwork === true;
 
   // v0.17.0: Derive priority context from authority for the priority banner
   const priorityContext = snapshot ? derivePriorityContext(snapshot, snapshot.decision) : null;
@@ -213,9 +270,6 @@ function renderMatch(vm, opts, snapshot) {
     <section class="rd-cell rd-stack" data-grid="stack" data-stack-depth="${vm.stack?.length ?? 0}" aria-label="Resolution stack">
       ${renderResolutionStack(vm)}
     </section>
-    <section class="rd-cell rd-chat" data-grid="chat" aria-label="Match chat">
-      ${renderChatPanel(vm, opts, isReadOnly, (opts.chatMessages || []).slice(-30))}
-    </section>
     <section class="rd-cell rd-player-enduring" data-grid="playerE" aria-label="Your Enduring">
       ${renderEnduringRow(humER, 'human')}
     </section>
@@ -224,7 +278,7 @@ function renderMatch(vm, opts, snapshot) {
     </section>
     <section class="rd-cell rd-gamelog" data-grid="gamelog" data-log-empty="${(snapshot?.recentEvents?.length ?? 0) === 0}" aria-label="Game log">
       <div class="rd-rail-section-header">GAME LOG</div>
-      ${renderGameLog(snapshot?.recentEvents ?? [])}
+      ${renderGameLog(snapshot?.recentEvents ?? [], snapshot?.systemEvents ?? [])}
     </section>
     <section class="rd-cell rd-score-rail" data-grid="scoreRail" aria-label="Score rail" data-testid="score-rail">
       ${renderScoreRail(vm)}
@@ -235,11 +289,58 @@ function renderMatch(vm, opts, snapshot) {
     <section class="rd-cell rd-player-hand" data-grid="playerH" aria-label="Your hand">
       ${renderHumanHand(vm.battlefield.humanHand, opts)}
     </section>
-    <section class="rd-cell rd-actions" data-grid="actions" aria-label="Contextual actions">
-      ${renderActionBar(vm, opts, isHumanTurn, isAiTurn, isReadOnly, priorityContext, immediate)}
+    <section class="rd-cell rd-right-rail-bottom" data-grid="rightRailBottom" aria-label="Actions and chat">
+      ${renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, priorityContext, immediate, isNetwork)}
     </section>
+    ${isNetwork ? renderDisconnectOverlay(vm, snapshot) : ''}
     ${opts.inspectorCardId ? renderInspector(opts.inspectorCardId, cardRegistry, [], guidanceMode, opts.inspectorFaceView) : ''}
     ${opts.showKeyboardHelp ? renderKeyboardHelp() : ''}
+    ${opts.showRulesHelp ? renderRulesHelp(snapshot) : ''}
+    ${opts.showMatchStats ? renderMatchStats(snapshot) : ''}
+  </div>`;
+}
+
+// ── Right Rail Bottom (Actions + Chat with draggable divider) ──
+// v0.28: Swapped layout — Actions on top (larger region), Chat on bottom.
+// The divider between them is draggable. Chat can be completely hidden.
+
+function renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, priorityContext, immediate, isNetwork) {
+  const chatHidden = opts.chatHidden === true;
+  const chatSplit = opts.chatSplit ?? 40; // percentage for chat (0-100 of the container)
+
+  const actionsHtml = renderActionBar(vm, opts, isHumanTurn, isAiTurn, isReadOnly, priorityContext, immediate);
+  const chatHtml = renderChatPanel(vm, opts, isReadOnly, (opts.chatMessages || []).slice(-30));
+
+  // Draggable divider between Actions (top) and Chat (bottom)
+  const dividerHtml = isNetwork && !chatHidden
+    ? `<div class="rd-rail-divider" data-action="rail-drag" role="separator" aria-orientation="horizontal" aria-label="Drag to resize Actions and Chat" tabindex="0" data-testid="rail-divider"><div class="rd-rail-divider-handle"></div></div>`
+    : '';
+
+  return `<div class="rd-right-rail-bottom-inner" data-chat-hidden="${chatHidden}" data-chat-split="${chatSplit}">
+    <div class="rd-rail-actions-section" style="flex: ${chatHidden ? '1 1 100%' : `${100 - chatSplit} 1 0`}">
+      ${actionsHtml}
+    </div>
+    ${dividerHtml}
+    ${!chatHidden ? `<div class="rd-rail-chat-section" style="flex: ${chatSplit} 1 0">${chatHtml}</div>` : ''}
+  </div>`;
+}
+
+// ── Disconnect Overlay (network matches only) ──────────────────
+
+function renderDisconnectOverlay(vm, snapshot) {
+  if (!snapshot) return '';
+  const oppConn = snapshot.opponent?.connectionState ?? vm.opponent?.connectionState;
+  const isTerminal = vm.status === 'TERMINAL';
+
+  // Only show overlay for opponent disconnect during active match
+  if (oppConn !== 'DISCONNECTED' || isTerminal) return '';
+
+  return `<div class="rd-disconnect-overlay" role="dialog" aria-modal="true" aria-labelledby="rd-disconnect-title" data-testid="disconnect-overlay">
+    <div class="rd-disconnect-content">
+      <h2 id="rd-disconnect-title" class="rd-disconnect-title">Opponent Disconnected</h2>
+      <p class="rd-disconnect-msg">Waiting for the match server to determine the outcome\u2026</p>
+      <div class="rd-disconnect-spinner" aria-hidden="true"></div>
+    </div>
   </div>`;
 }
 
@@ -250,19 +351,23 @@ function renderHeader(vm, opts, priorityContext, immediate) {
   const phaseLabel = formatPhase(vm.match.phase);
   const isHumanTurn = vm.status === 'HUMAN_DECISION';
   const isAiTurn = vm.status === 'AI_DECISION';
+  const isNetwork = vm.mode?.isNetwork === true;
 
   // Compact match-state center: turn · phase · priority owner
   const priorityOwner = vm.match.priorityOwnerId;
   const isHumanPriority = priorityOwner === vm.human.playerId;
+  // For network human-vs-human, use human-neutral status text, not "AI is choosing…"
   const ownerLabel = isHumanTurn
     ? 'Your action'
     : isAiTurn
       ? 'AI is choosing\u2026'
-      : isHumanPriority
-        ? 'Your priority'
-        : priorityOwner
-          ? `${esc(vm.opponent.displayName)} has priority`
-          : phaseLabel || vm.match.phase;
+      : (isNetwork && !isHumanPriority && priorityOwner)
+        ? `${esc(vm.opponent.displayName)} is choosing\u2026`
+        : isHumanPriority
+          ? 'Your priority'
+          : priorityOwner
+            ? `${esc(vm.opponent.displayName)} has priority`
+            : phaseLabel || vm.match.phase;
 
   const windowLabel = priorityContext ? windowTypeLabel(priorityContext.windowType) : '';
   const stackDepth = vm.stack?.length ?? 0;
@@ -271,9 +376,22 @@ function renderHeader(vm, opts, priorityContext, immediate) {
     ? `<span class="rd-header-states">${globalStates.map(s => `<span class="rd-state-badge rd-state-${esc(s.key)}" title="${esc(s.label)}">${esc(s.icon)} ${esc(s.label)}</span>`).join('')}</span>`
     : '';
 
+  // During active network PvP, remove the Back button — leaving must go
+  // through the forfeit flow (X button → confirmation dialog).
+  const isTerminal = vm.status === 'TERMINAL';
+  const showBack = !isNetwork || isTerminal;
+  const backHtml = showBack
+    ? `<a class="rd-header-back" href="#/" aria-label="Back to home" title="Back to home">\u2190</a>`
+    : '';
+
+  // X/exit button: for network PvP, triggers forfeit confirmation;
+  // for local/AI, exits to hub.
+  const exitTitle = isNetwork && !isTerminal ? 'Forfeit match' : 'Return to hub';
+  const exitAction = isNetwork && !isTerminal ? 'forfeit-match' : 'exit-match';
+
   return `<header class="rd-header" role="banner">
     <div class="rd-header-left">
-      <a class="rd-header-back" href="#/" aria-label="Back to home" title="Back to home">\u2190</a>
+      ${backHtml}
       <span class="rd-header-logo">INTRILEX</span>
       <span class="rd-header-mode">${esc(vm.mode.label)}</span>
     </div>
@@ -293,7 +411,7 @@ function renderHeader(vm, opts, priorityContext, immediate) {
         <button class="rd-toolbar-btn" data-action="toggle-rules" title="Rules / Help" aria-label="Rules and help">\u2139</button>
         <button class="rd-toolbar-btn" data-action="toggle-stats" title="Match stats" aria-label="Match statistics">\u25C8</button>
         <button class="rd-toolbar-btn" data-action="toggle-inspector" title="Inspector" aria-label="Card inspector">\u25A4</button>
-        <button class="rd-toolbar-btn" data-action="exit-match" title="Return to hub" aria-label="Exit match">\u2715</button>
+        <button class="rd-toolbar-btn" data-action="${exitAction}" data-testid="exit-match-btn" title="${exitTitle}" aria-label="${exitTitle}">\u2715</button>
       </div>
     </div>
   </header>`;
@@ -1103,10 +1221,32 @@ function renderRightRail(vm, opts, isReadOnly, snapshot, priorityContext, immedi
 
 function renderChatPanel(vm, opts, isReadOnly, chatMessages) {
   const modeLabel = vm.mode?.label ?? 'LOCAL VS AI';
+  const isNetwork = vm.mode?.isNetwork === true;
+  const chatHidden = opts.chatHidden === true;
+
+  // Determine authorship from participantId, NOT from isHuman boolean.
+  // The local player's participantId is vm.human.playerId.
+  // For network matches, each message has a participantId that identifies the sender.
+  const localParticipantId = vm.human.playerId;
+  const opponentParticipantId = vm.opponent.playerId;
+
   const messages = chatMessages.map(m => {
-    const cls = m.isHuman ? 'rd-chat-msg human' : (m.isSystem ? 'rd-chat-msg system' : 'rd-chat-msg ai');
-    const author = m.isHuman ? vm.human.displayName : (m.isSystem ? 'System' : vm.opponent.displayName);
-    return `<div class="${cls}">
+    // Determine the message class and author from the stable participantId
+    let cls, author;
+    if (m.isSystem) {
+      cls = 'rd-chat-msg system';
+      author = 'System';
+    } else if (isNetwork && m.participantId) {
+      // Network match: use participantId to determine sender
+      const isLocal = m.participantId === localParticipantId || m.isHuman === true;
+      cls = isLocal ? 'rd-chat-msg human' : 'rd-chat-msg opponent';
+      author = isLocal ? vm.human.displayName : vm.opponent.displayName;
+    } else {
+      // Local AI match: use isHuman flag
+      cls = m.isHuman ? 'rd-chat-msg human' : 'rd-chat-msg ai';
+      author = m.isHuman ? vm.human.displayName : vm.opponent.displayName;
+    }
+    return `<div class="${cls}" data-message-id="${esc(m.messageId ?? '')}">
       <div class="rd-chat-author">${esc(author)}</div>
       <div class="rd-chat-text">${esc(m.text)}</div>
     </div>`;
@@ -1119,10 +1259,24 @@ function renderChatPanel(vm, opts, isReadOnly, chatMessages) {
   </form>`;
 
   const hasMessages = chatMessages.length > 0;
-  return `<div class="rd-chat-panel" data-chat-empty="${!hasMessages}">
+  // Chat hide/show toggle for network matches
+  const hideToggleHtml = isNetwork ? `<button class="rd-chat-toggle-btn" data-action="${chatHidden ? 'chat-show' : 'chat-hide'}" data-testid="chat-toggle-btn" title="${chatHidden ? 'Show Match Chat' : 'Hide Match Chat'}" aria-label="${chatHidden ? 'Show Match Chat' : 'Hide Match Chat'}">${chatHidden ? '\u25B6' : '\u25BC'}</button>` : '';
+
+  if (chatHidden) {
+    return `<div class="rd-chat-panel rd-chat-hidden" data-chat-empty="${!hasMessages}" data-testid="match-chat-panel">
+      <div class="rd-chat-header">
+        <span class="rd-chat-title">MATCH CHAT</span>
+        <span class="rd-chat-mode">HIDDEN</span>
+        ${hideToggleHtml}
+      </div>
+    </div>`;
+  }
+
+  return `<div class="rd-chat-panel" data-chat-empty="${!hasMessages}" data-testid="match-chat-panel">
     <div class="rd-chat-header">
       <span class="rd-chat-title">MATCH CHAT</span>
       <span class="rd-chat-mode">${esc(modeLabel)} \u00b7 LIVE</span>
+      ${hideToggleHtml}
     </div>
     <div class="rd-chat-messages" data-testid="match-chat-messages">
       ${messages || '<div class="rd-chat-empty">No messages yet</div>'}
@@ -1133,36 +1287,51 @@ function renderChatPanel(vm, opts, isReadOnly, chatMessages) {
 
 // ── Game Log (player-readable, no engine diagnostics) ──────────
 
-function renderGameLog(events) {
-  if (!events || events.length === 0) {
-    return `<div class="rd-game-log" data-testid="event-log" role="log">
-      <div class="rd-game-log-empty">No events yet</div>
-    </div>`;
+function renderGameLog(events, systemEvents) {
+  // Build player-readable gameplay events
+  let logEntries = [];
+  if (events && events.length > 0) {
+    const log = buildEventLog(events, null);
+    const playerReadable = log.filter(e => {
+      const desc = e.description ?? e.text ?? '';
+      const type = e.type ?? '';
+      if (type.includes('PHASE') && desc.includes('unknown')) return false;
+      if (type.includes('CORE') || type.includes('SNAPSHOT') || type.includes('VOLTAGE')) return false;
+      if (type.includes('INIT') || type.includes('PREPARE') || type.includes('PREPARED')) return false;
+      if (desc.includes('core start') || desc.includes('snapshot captured') || desc.includes('voltage snapshot')) return false;
+      if (desc.includes('core initialized') || desc.includes('core prepared')) return false;
+      if (desc === `${type.replace(/_/g, ' ').toLowerCase()}.`) return false;
+      return true;
+    });
+    logEntries = playerReadable.map(e => ({
+      description: e.description ?? e.text ?? '',
+      isSystem: false,
+    }));
   }
-  const log = buildEventLog(events, null);
-  // Filter out developer diagnostics — only show player-readable gameplay events
-  const playerReadable = log.filter(e => {
-    const desc = e.description ?? e.text ?? '';
-    const type = e.type ?? '';
-    // Hide phase transitions, core/snapshot/voltage diagnostics, and unknown fallbacks
-    if (type.includes('PHASE') && desc.includes('unknown')) return false;
-    if (type.includes('CORE') || type.includes('SNAPSHOT') || type.includes('VOLTAGE')) return false;
-    if (type.includes('INIT') || type.includes('PREPARE') || type.includes('PREPARED')) return false;
-    if (desc.includes('core start') || desc.includes('snapshot captured') || desc.includes('voltage snapshot')) return false;
-    if (desc.includes('core initialized') || desc.includes('core prepared')) return false;
-    // Hide generic fallbacks that are just lowercased type names
-    if (desc === `${type.replace(/_/g, ' ').toLowerCase()}.`) return false;
-    return true;
-  });
-  const recent = [...playerReadable].reverse().slice(0, 40);
+
+  // Add system events (chat visibility changes, etc.)
+  if (systemEvents && systemEvents.length > 0) {
+    for (const evt of systemEvents) {
+      if (evt.type === 'CHAT_VISIBILITY') {
+        const name = evt.displayName ?? 'Opponent';
+        const action = evt.hidden ? 'has hidden Match Chat.' : 'has restored Match Chat.';
+        logEntries.push({
+          description: `${name} ${action}`,
+          isSystem: true,
+        });
+      }
+    }
+  }
+
+  const recent = [...logEntries].reverse().slice(0, 40);
   if (recent.length === 0) {
     return `<div class="rd-game-log" data-testid="event-log" role="log">
       <div class="rd-game-log-empty">No events yet</div>
     </div>`;
   }
   return `<div class="rd-game-log" data-testid="event-log" role="log">
-    ${recent.map(e => `<div class="rd-log-entry">
-      <span class="event-description">${esc(e.description ?? e.text ?? '')}</span>
+    ${recent.map(e => `<div class="rd-log-entry${e.isSystem ? ' rd-log-system' : ''}">
+      <span class="event-description">${esc(e.description)}</span>
     </div>`).join('')}
   </div>`;
 }
@@ -1321,18 +1490,34 @@ function renderScoreSpine(vm) {
 
 function renderProfileBlock(plate, side, vm) {
   const badgeHtml = renderBadges(plate.badges);
+  const isNetwork = vm.mode?.isNetwork === true;
+  const isLocal = side === 'human' || plate.isLocalPlayer === true;
+
+  // Rating display: for human players show their rating value;
+  // for AI opponents show "AI {rating}"; for network human opponents show their rating.
   const ratingHtml = plate.rating
     ? `<span class="rd-plate-rating">${plate.rating.value}${plate.rating.provisional ? '?' : ''}</span>`
-    : (plate.aiRating ? `<span class="rd-plate-rating">AI ${plate.aiRating}</span>` : '');
+    : (plate.aiRating != null ? `<span class="rd-plate-rating">AI ${plate.aiRating}</span>` : '');
+
   const isActive = vm.match.activePlayerId === plate.playerId;
-  const sideLabel = side === 'opponent' ? (plate.isHuman ? 'Human' : 'AI Opponent') : 'You';
+
+  // Side label: for local player in network matches, show their name with a
+  // subtle "You" indicator; for network human opponents, show "Human";
+  // for AI opponents, show "AI Opponent".
+  let sideLabel;
+  if (isLocal) {
+    sideLabel = isNetwork ? 'You' : 'You';
+  } else {
+    sideLabel = plate.isHuman ? 'Human' : 'AI Opponent';
+  }
+
   // Rank label for human players (e.g. "Vanguard II"). AI shows no rank label.
   const rankLabelHtml = plate.isHuman && plate.rating
     ? (() => {
         const a = ratingToTierDivision(plate.rating.value, { ratedMatches: plate.rating.ratedMatches });
         return a.isPlacement ? '' : `<span class="rd-prestige-rank" data-testid="profile-rank-label-${side}">${esc(rankLabel(a.tier, a.division))}</span>`;
       })()
-    : '';
+    : (plate.isHuman && plate.rank ? `<span class="rd-prestige-rank" data-testid="profile-rank-label-${side}">${esc(plate.rank)}</span>` : '');
 
   // v0.25: Prestige banner is identity-only (name, rating, badges, cosmetics).
   // Score has been moved to the dedicated Score Rail between Game Log and Active Stage.

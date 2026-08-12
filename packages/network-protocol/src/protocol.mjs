@@ -5,7 +5,7 @@
 import { PROTOCOL_VERSION, MAX_MESSAGE_SIZE } from './validation.mjs';
 export { PROTOCOL_VERSION, MAX_MESSAGE_SIZE };
 export { ReasonCode, reasonCategory } from './reason-codes.mjs';
-export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateAuthenticate, validateAuthRefresh, validateMigrateGuest, checkMessageSize, SUPPORTED_PROFILE_IDS, isSupportedProfileId, SUPPORTED_QUEUE_IDS, MATCH_MODES, isSupportedQueueId } from './validation.mjs';
+export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateChatVisibility, validateAuthenticate, validateAuthRefresh, validateMigrateGuest, checkMessageSize, SUPPORTED_PROFILE_IDS, isSupportedProfileId, SUPPORTED_QUEUE_IDS, MATCH_MODES, isSupportedQueueId } from './validation.mjs';
 
 /**
  * @typedef {Object} ProtocolEnvelope
@@ -244,6 +244,20 @@ export function sendChat(matchId, participantToken, text, requestId) {
   return envelope('SEND_CHAT', { matchId, participantToken, text }, requestId);
 }
 
+/**
+ * Build a CHAT_VISIBILITY message (client → server).
+ * Sent when a player hides or restores Match Chat. The server broadcasts
+ * a CHAT_VISIBILITY_CHANGE system event to the other participant's Game Log.
+ * @param {string} matchId - Match identifier
+ * @param {string} participantToken - Participant authentication token
+ * @param {boolean} hidden - True if chat is hidden, false if restored
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function chatVisibility(matchId, participantToken, hidden, requestId) {
+  return envelope('CHAT_VISIBILITY', { matchId, participantToken, hidden }, requestId);
+}
+
 // ── Server → Client message builders ──
 
 /**
@@ -358,11 +372,27 @@ export function replayData(matchId, replay, replayHash, requestId) {
  * @param {string} participantId - Sender participant ID
  * @param {string} text - Chat message text
  * @param {string} timestamp - ISO timestamp
+ * @param {string} [messageId] - Server-generated unique message ID for deduplication
  * @param {string} [requestId] - Optional request correlation ID
  * @returns {ProtocolEnvelope}
  */
-export function chatMessage(matchId, participantId, text, timestamp, requestId) {
-  return envelope('CHAT_MESSAGE', { matchId, participantId, text, timestamp }, requestId);
+export function chatMessage(matchId, participantId, text, timestamp, messageId, requestId) {
+  return envelope('CHAT_MESSAGE', { matchId, participantId, text, timestamp, messageId }, requestId);
+}
+
+/**
+ * Build a CHAT_VISIBILITY_CHANGE message (server → client).
+ * Broadcast to match participants when one player hides or restores chat.
+ * This is a system/presence event for the Game Log, NOT a chat message.
+ * @param {string} matchId - Match identifier
+ * @param {string} participantId - The participant who changed visibility
+ * @param {string} displayName - The participant's display name for the Game Log
+ * @param {boolean} hidden - True if chat was hidden, false if restored
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function chatVisibilityChange(matchId, participantId, displayName, hidden, requestId) {
+  return envelope('CHAT_VISIBILITY_CHANGE', { matchId, participantId, displayName, hidden }, requestId);
 }
 
 /**

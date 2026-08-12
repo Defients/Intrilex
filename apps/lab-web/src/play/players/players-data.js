@@ -37,6 +37,7 @@ import {
  * @property {number} count - Number of entries returned in this page.
  * @property {number} offset - The offset used for this page.
  * @property {number} limit - The limit used for this page.
+ * @property {number|null} total - Total matching players (for pagination summary), or null when unavailable.
  */
 
 /**
@@ -53,10 +54,10 @@ import {
  */
 export async function fetchDirectory(opts = {}) {
   if (!isSupabaseConfigured()) {
-    return { available: false, entries: [], count: 0, offset: 0, limit: 0 };
+    return { available: false, entries: [], count: 0, offset: 0, limit: 0, total: null };
   }
   const client = getSupabaseClient();
-  if (!client) return { available: false, entries: [], count: 0, offset: 0, limit: 0 };
+  if (!client) return { available: false, entries: [], count: 0, offset: 0, limit: 0, total: null };
 
   const limit = Math.min(Math.max(opts.limit ?? DEFAULT_DIRECTORY_LIMIT, 1), MAX_DIRECTORY_LIMIT);
   const offset = Math.max(opts.offset ?? 0, 0);
@@ -76,11 +77,32 @@ export async function fetchDirectory(opts = {}) {
   }, { signal: opts.signal ?? undefined });
 
   if (error) {
-    throw new Error(`Directory query failed (sort=${sort}, tier=${tier ?? 'ALL'}): ${error.message}`);
+    // Sanitize: don't expose internal parameter names (sort/tier values)
+    // to the user-facing error message. The raw error.message from
+    // Supabase is sufficient for diagnostics.
+    throw new Error(`Directory unavailable: ${error.message}`);
   }
 
   const rows = Array.isArray(data) ? data : [];
   const entries = rows.map((row) => toDirectoryEntry(row));
+
+  // Fetch total count in parallel for the pagination summary.
+  // This is a separate lightweight COUNT query (no row data).
+  // If it fails, we degrade gracefully — total stays null and the UI
+  // shows "Showing 1–25" without the "of N" suffix.
+  let total = null;
+  try {
+    const { data: countData, error: countError } = await client.rpc(
+      'get_player_directory_count',
+      { p_search: searchParam, p_tier_filter: tier },
+      { signal: opts.signal ?? undefined },
+    );
+    if (!countError && countData && typeof countData.count === 'number') {
+      total = countData.count;
+    }
+  } catch {
+    // AbortError or network failure — degrade gracefully (total = null)
+  }
 
   return {
     available: true,
@@ -88,6 +110,7 @@ export async function fetchDirectory(opts = {}) {
     count: entries.length,
     offset,
     limit,
+    total,
   };
 }
 

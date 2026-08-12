@@ -48,10 +48,18 @@ export function getMatchServerUrl() {
     return window.__INTRILEX_CONFIG__.matchServerUrl;
   }
 
-  // 2. User override via Settings UI (localStorage)
+  // 2. User override via Settings UI (localStorage).
+  // Validate before use — a stale ws:// override from a dev session
+  // would cause a mixed-content error on an HTTPS production page.
+  // If invalid for the current context, silently discard and fall through.
   try {
     const saved = localStorage.getItem('intrilex:network-server-url');
-    if (saved) return saved;
+    if (saved) {
+      const check = validateMatchServerUrl(saved);
+      if (check.valid) return saved;
+      // Stale override — clear it so the user isn't permanently stuck
+      localStorage.removeItem('intrilex:network-server-url');
+    }
   } catch { /* localStorage unavailable */ }
 
   // 3. Dev fallback — only for localhost origins
@@ -97,3 +105,42 @@ export function validateMatchServerUrl(url) {
 
 // Expose for settings UI and diagnostics
 export const __test = { isDevOrigin, isSecureContext, DEV_DEFAULT_PORT };
+
+/**
+ * Diagnose the runtime config state and log structured warnings for
+ * missing or incomplete configuration. Called once on app bootstrap
+ * to surface config issues early (e.g., config file failed to load,
+ * match server URL missing in production).
+ *
+ * @returns {{ configPresent: boolean, hasMatchServerUrl: boolean, hasSupabase: boolean, isDev: boolean, warnings: string[] }}
+ */
+export function diagnoseConfig() {
+  const warnings = [];
+  const isDev = isDevOrigin();
+  const hasConfig = typeof window !== 'undefined' && !!window.__INTRILEX_CONFIG__;
+  const hasMatchServerUrl = !!(hasConfig && window.__INTRILEX_CONFIG__.matchServerUrl);
+  const hasSupabase = !!(hasConfig && window.__INTRILEX_CONFIG__.supabase);
+
+  // Production with no __INTRILEX_CONFIG__ at all — the config file may
+  // have failed to load (404, CSP block, SW stale cache, etc.)
+  if (!isDev && !hasConfig) {
+    warnings.push('__INTRILEX_CONFIG__ is not set — runtime config file may have failed to load');
+  }
+
+  // Production with config but no match server URL
+  if (!isDev && hasConfig && !hasMatchServerUrl) {
+    warnings.push('matchServerUrl missing from __INTRILEX_CONFIG__ — online play will be unavailable');
+  }
+
+  // Production with config but no Supabase credentials
+  if (!isDev && hasConfig && !hasSupabase) {
+    warnings.push('supabase config missing from __INTRILEX_CONFIG__ — auth and cloud features will be unavailable');
+  }
+
+  // Log warnings to console for diagnostics
+  for (const w of warnings) {
+    console.warn('[intrilex:config] ' + w);
+  }
+
+  return { configPresent: hasConfig, hasMatchServerUrl, hasSupabase, isDev, warnings };
+}

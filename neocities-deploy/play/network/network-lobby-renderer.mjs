@@ -170,13 +170,17 @@ export function renderNetworkLobby(options = {}) {
 export function renderNetworkCreateWaiting(session, options = {}) {
   const inviteCode = session?.inviteCode ?? '';
   const matchId = session?.matchId ?? '';
-  const opponentConnected = session?.opponentConnectionState === 'CONNECTED';
+  const opponentState = session?.opponentConnectionState;
+  const opponentConnected = opponentState === 'CONNECTED';
+  const opponentDisconnected = opponentState === 'DISCONNECTED';
   const isReady = session?.status === NetworkSessionState.READY;
   const error = options.error ?? null;
 
-  const opponentStatus = opponentConnected
-    ? `<span class="network-opponent-status connected" data-testid="network-opponent-status">● Opponent connected</span>`
-    : `<span class="network-opponent-status waiting" data-testid="network-opponent-status">○ Waiting for opponent…</span>`;
+  const opponentStatus = opponentDisconnected
+    ? `<span class="network-opponent-status disconnected" data-testid="network-opponent-status">✕ Opponent disconnected</span>`
+    : opponentConnected
+      ? `<span class="network-opponent-status connected" data-testid="network-opponent-status">● Opponent connected</span>`
+      : `<span class="network-opponent-status waiting" data-testid="network-opponent-status">○ Waiting for opponent…</span>`;
 
   const readyButton = isReady
     ? `<button class="primary-button" disabled data-testid="network-ready">✓ Ready</button>`
@@ -256,12 +260,16 @@ export function renderNetworkJoinForm(options = {}) {
 export function renderNetworkJoinWaiting(session, options = {}) {
   const matchId = session?.matchId ?? '';
   const isReady = session?.status === NetworkSessionState.READY;
-  const opponentConnected = session?.opponentConnectionState === 'CONNECTED';
+  const opponentState = session?.opponentConnectionState;
+  const opponentConnected = opponentState === 'CONNECTED';
+  const opponentDisconnected = opponentState === 'DISCONNECTED';
   const error = options.error ?? null;
 
-  const opponentStatus = opponentConnected
-    ? `<span class="network-opponent-status connected" data-testid="network-opponent-status">● Opponent connected</span>`
-    : `<span class="network-opponent-status waiting" data-testid="network-opponent-status">○ Waiting for opponent…</span>`;
+  const opponentStatus = opponentDisconnected
+    ? `<span class="network-opponent-status disconnected" data-testid="network-opponent-status">✕ Opponent disconnected</span>`
+    : opponentConnected
+      ? `<span class="network-opponent-status connected" data-testid="network-opponent-status">● Opponent connected</span>`
+      : `<span class="network-opponent-status waiting" data-testid="network-opponent-status">○ Waiting for opponent…</span>`;
 
   const readyButton = isReady
     ? `<button class="primary-button" disabled data-testid="network-ready">✓ Ready</button>`
@@ -311,20 +319,26 @@ export function renderNetworkReconnectDialog(options = {}) {
 
 /**
  * Render a network error screen — for connection failures, server unreachable, etc.
- * @param {object} options — { title, message, canRetry }
+ * @param {object} options — { title, message, canRetry, signInLink }
+ *   signInLink: when true, show a "Sign In" primary action instead of "Try again"
  * @returns {string} HTML
  */
 export function renderNetworkError(options = {}) {
   const title = options.title ?? 'Network Error';
   const message = options.message ?? 'An unexpected error occurred.';
   const canRetry = options.canRetry ?? true;
+  const signInLink = options.signInLink ?? false;
 
   return `<div class="network-error-screen" data-testid="network-error-screen" role="alert">
     <a class="play-hub-back" href="#/play/online" aria-label="Back to lobby">← Back</a>
     <h1>${esc(title)}</h1>
     <p class="network-error-message">${esc(message)}</p>
     <div class="network-error-actions">
-      ${canRetry ? `<button class="primary-button" data-testid="network-retry" data-action="network-retry">Try again</button>` : ''}
+      ${signInLink
+        ? `<a href="#/auth" class="primary-button" data-testid="network-signin">Sign In</a>`
+        : canRetry
+          ? `<button class="primary-button" data-testid="network-retry" data-action="network-retry">Try again</button>`
+          : ''}
       <a href="#/" class="secondary-button">Back to Home</a>
     </div>
   </div>`;

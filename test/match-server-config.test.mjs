@@ -106,6 +106,37 @@ describe('match-server-config', () => {
       assert.equal(getMatchServerUrl(), 'ws://custom:8080');
     });
 
+    it('discards stale ws:// localStorage override on HTTPS production (mixed content)', async () => {
+      // Regression: a user who ran the dev server locally and then visited
+      // the production site would have a stale ws://localhost:3099 in
+      // localStorage. Without validation, this caused "Connection
+      // Configuration Error" instead of falling through to the build-time
+      // config or returning null.
+      setupBrowserEnv({
+        hostname: 'intrilex.neocities.org',
+        protocol: 'https:',
+        localStorageEntries: { 'intrilex:network-server-url': 'ws://localhost:3099' },
+      });
+      const { getMatchServerUrl } = await freshImport();
+      // Stale override must be discarded — should return null (no build-time config)
+      assert.equal(getMatchServerUrl(), null);
+      // And the stale entry should be removed from localStorage
+      assert.equal(globalThis.localStorage.getItem('intrilex:network-server-url'), null);
+    });
+
+    it('discards stale ws:// localStorage override when build-time config exists', async () => {
+      setupBrowserEnv({
+        hostname: 'intrilex.neocities.org',
+        protocol: 'https:',
+        config: { matchServerUrl: 'wss://match.intrilex.cards' },
+        localStorageEntries: { 'intrilex:network-server-url': 'ws://localhost:3099' },
+      });
+      const { getMatchServerUrl } = await freshImport();
+      // Build-time config takes priority anyway, but the stale override
+      // should also be cleaned up from localStorage
+      assert.equal(getMatchServerUrl(), 'wss://match.intrilex.cards');
+    });
+
     it('returns null in production with no config and no localStorage override', async () => {
       setupBrowserEnv({ hostname: 'intrilex.cards', protocol: 'https:' });
       const { getMatchServerUrl } = await freshImport();
@@ -180,6 +211,83 @@ describe('match-server-config', () => {
       assert.equal(validateMatchServerUrl(null).valid, false);
       assert.equal(validateMatchServerUrl('').valid, false);
       assert.equal(validateMatchServerUrl(undefined).valid, false);
+    });
+  });
+
+  describe('diagnoseConfig', () => {
+    it('returns no warnings in dev mode without config', async () => {
+      setupBrowserEnv({ hostname: 'localhost', protocol: 'http:' });
+      const { diagnoseConfig } = await freshImport();
+      const result = diagnoseConfig();
+      assert.equal(result.isDev, true);
+      assert.equal(result.configPresent, false);
+      assert.equal(result.warnings.length, 0, 'Dev mode should not warn about missing config');
+    });
+
+    it('warns when __INTRILEX_CONFIG__ is missing in production', async () => {
+      setupBrowserEnv({ hostname: 'intrilex.neocities.org', protocol: 'https:' });
+      const { diagnoseConfig } = await freshImport();
+      const result = diagnoseConfig();
+      assert.equal(result.configPresent, false);
+      assert.ok(result.warnings.length > 0, 'Should warn about missing config in production');
+      assert.ok(result.warnings.some(w => w.includes('__INTRILEX_CONFIG__')), 'Should mention __INTRILEX_CONFIG__');
+    });
+
+    it('warns when matchServerUrl is missing from config in production', async () => {
+      setupBrowserEnv({
+        hostname: 'intrilex.neocities.org',
+        protocol: 'https:',
+        config: { supabase: { url: 'https://x.supabase.co', publishableKey: 'key' } },
+      });
+      const { diagnoseConfig } = await freshImport();
+      const result = diagnoseConfig();
+      assert.equal(result.configPresent, true);
+      assert.equal(result.hasMatchServerUrl, false);
+      assert.ok(result.warnings.some(w => w.includes('matchServerUrl')), 'Should warn about missing matchServerUrl');
+    });
+
+    it('warns when supabase is missing from config in production', async () => {
+      setupBrowserEnv({
+        hostname: 'intrilex.neocities.org',
+        protocol: 'https:',
+        config: { matchServerUrl: 'wss://match.intrilex.cards' },
+      });
+      const { diagnoseConfig } = await freshImport();
+      const result = diagnoseConfig();
+      assert.equal(result.hasSupabase, false);
+      assert.ok(result.warnings.some(w => w.includes('supabase')), 'Should warn about missing supabase config');
+    });
+
+    it('returns no warnings when config is complete in production', async () => {
+      setupBrowserEnv({
+        hostname: 'intrilex.neocities.org',
+        protocol: 'https:',
+        config: {
+          matchServerUrl: 'wss://match.intrilex.cards',
+          supabase: { url: 'https://x.supabase.co', publishableKey: 'key' },
+        },
+      });
+      const { diagnoseConfig } = await freshImport();
+      const result = diagnoseConfig();
+      assert.equal(result.configPresent, true);
+      assert.equal(result.hasMatchServerUrl, true);
+      assert.equal(result.hasSupabase, true);
+      assert.equal(result.warnings.length, 0, 'Complete config should produce no warnings');
+    });
+
+    it('logs warnings to console.warn', async () => {
+      setupBrowserEnv({ hostname: 'intrilex.neocities.org', protocol: 'https:' });
+      const warnings = [];
+      const origWarn = console.warn;
+      console.warn = (msg) => warnings.push(msg);
+      try {
+        const { diagnoseConfig } = await freshImport();
+        diagnoseConfig();
+      } finally {
+        console.warn = origWarn;
+      }
+      assert.ok(warnings.length > 0, 'Should log warnings to console.warn');
+      assert.ok(warnings.every(w => w.includes('[intrilex:config]')), 'Warnings should be prefixed with [intrilex:config]');
     });
   });
 });

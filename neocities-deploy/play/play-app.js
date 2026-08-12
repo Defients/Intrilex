@@ -21,7 +21,7 @@ import { getAiBanter } from './ai-personality.js';
 import { SoundEngine } from './play-sound.js';
 import { ParticleSystem } from './play-particles.js';
 import { state, resetState } from './play-state.js';
-import { bindBoardEvents as bindBoardEventsModule } from './board-events.js';
+import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js';
 import {
   openAdvancedCardRules as openAdvancedCardRulesController,
   closeAdvancedCardRules,
@@ -250,6 +250,8 @@ function stopHeartbeat() {
 function teardownSession() {
   stopHeartbeat();
   stopAutosave();
+  // v0.28: Remove beforeunload protection when the session is torn down
+  removeBeforeUnloadProtection();
   if (state.sessionId && state.tabId) {
     releaseLease(state.sessionId, state.tabId);
   }
@@ -362,6 +364,8 @@ async function renderActiveMatch(container) {
   if (snapshot.status === 'TERMINAL' && state.session && !state.statsRecorded) {
     state.statsRecorded = true;
     updatePlayerStatsOnTerminal(snapshot);
+    // v0.28: Remove beforeunload protection when the match reaches terminal state
+    removeBeforeUnloadProtection();
   }
 
   // Build achievement summary HTML for terminal display.
@@ -387,6 +391,14 @@ async function renderActiveMatch(container) {
 
   let boardHtml;
   try {
+    const isNetworkMatch = state.networkSession instanceof NetworkPlaySession;
+    // v0.28: Add beforeunload protection for active network PvP matches.
+    // Removed when the match ends or the session is no longer active.
+    if (isNetworkMatch && state.networkSession?.status === NetworkSessionState.RUNNING) {
+      addBeforeUnloadProtection();
+    } else {
+      removeBeforeUnloadProtection();
+    }
     boardHtml = renderBoard(snapshot, {
       selectedActionId: state.selectedActionId,
       selectedIntentKey: state.selectedIntentKey,
@@ -396,11 +408,15 @@ async function renderActiveMatch(container) {
     inspectorFaceView: state.inspectorFaceView,
     guidanceMode: state.guidanceMode,
     showKeyboardHelp: state.showKeyboardHelp,
+    showRulesHelp: state.showRulesHelp,
+    showMatchStats: state.showMatchStats,
     chatMessages: (state.networkSession?.chatMessages ?? state.chatMessages).slice(-30),
     rightRailTab: state.rightRailTab || 'chat',
     soundMuted: state.soundMuted,
     achievementSummaryHtml,
-    isNetworkMatch: !!(state.networkSession && state.networkSession.constructor?.name === 'NetworkPlaySession'),
+    isNetworkMatch,
+    chatHidden: state.networkSession?.chatHidden ?? false,
+    chatSplit: state.chatSplit ?? 40,
     viewMode: state.viewMode,
   });
   } catch (renderError) {
@@ -923,6 +939,8 @@ async function renderNetworkQueueFlow(container) {
     container.innerHTML = renderNetworkError({
       title: 'Sign In Required',
       message: 'You must sign in before joining the matchmaking queue.',
+      canRetry: false,
+      signInLink: true,
     });
     bindNetworkErrorEvents(container);
     return;
@@ -952,7 +970,7 @@ async function renderNetworkQueueFlow(container) {
         container.innerHTML = renderNetworkQueueWaiting({
           error: msg.payload?.message ?? 'Authentication failed. Please sign in again.',
         });
-        bindQueueLeaveAction(container, ws);
+        bindQueueLeaveAction(container, ws, queueLeave);
         return;
       }
       if (msg.type === 'QUEUE_JOINED') {
@@ -960,7 +978,7 @@ async function renderNetworkQueueFlow(container) {
           position: msg.payload.position,
           estimatedWaitMs: msg.payload.estimatedWaitMs,
         });
-        bindQueueLeaveAction(container, ws);
+        bindQueueLeaveAction(container, ws, queueLeave);
       } else if (msg.type === 'QUEUE_MATCHED') {
         matched = true;
         // Save the match info and transition to the match
@@ -980,7 +998,7 @@ async function renderNetworkQueueFlow(container) {
         container.innerHTML = renderNetworkQueueWaiting({
           error: msg.payload.message ?? 'Queue error',
         });
-        bindQueueLeaveAction(container, ws);
+        bindQueueLeaveAction(container, ws, queueLeave);
       }
     } catch { /* ignore parse errors */ }
   });
@@ -1009,7 +1027,12 @@ function bindQueueLeaveAction(container, ws, queueLeave) {
   const leaveBtn = container.querySelector('[data-action="network-queue-leave"]');
   if (leaveBtn) {
     leaveBtn.addEventListener('click', () => {
-      try { ws.send(JSON.stringify(queueLeave('req-queue-leave-1'))); } catch { /* ignore */ }
+      // Send QUEUE_LEAVE so the server removes us from the queue promptly.
+      // Guard against queueLeave being undefined (defensive — all callers
+      // should pass it, but a missing send must not crash the leave flow).
+      if (typeof queueLeave === 'function') {
+        try { ws.send(JSON.stringify(queueLeave())); } catch { /* ignore */ }
+      }
       try { ws.close(); } catch { /* ignore */ }
       location.hash = '#/play/online';
     });
@@ -1182,6 +1205,8 @@ async function renderNetworkActiveMatch(container) {
       if (state.activeContainer !== container) return;
       // If the session transitioned to TERMINAL, apply server achievements
       if (session.status === NetworkSessionState.TERMINAL) {
+        // v0.28: Remove beforeunload protection — match is no longer active
+        removeBeforeUnloadProtection();
         if (session.achievementUnlocks && session.achievementUnlocks.length > 0 && !state._networkAchievementsApplied) {
           state._networkAchievementsApplied = true;
           try {
@@ -1497,7 +1522,12 @@ function openAdvancedCardRules(identity, cardId) {
  * Handle P key — pass priority (decline response or exhausted pass).
  */
 function handlePassShortcut(container) {
-  if (!state.session || state.session.status !== SessionState.HUMAN_DECISION) return;
+  if (!state.session) return;
+  // Network sessions use NetworkSessionState.RUNNING internally
+  const isHumanTurn = state.networkSession
+    ? state.networkSession.isAwaitingHumanAction()
+    : state.session.status === SessionState.HUMAN_DECISION;
+  if (!isHumanTurn) return;
   const snapshot = state.session.getSnapshot();
   const actions = snapshot?.decision?.legalActions ?? [];
   const passAction = actions.find(a => a.isDecline) ?? actions.find(a => a.isExhaustedPass);
@@ -1564,7 +1594,16 @@ function handleEscapeShortcut(container) {
     closeAdvancedCardRules();
     return;
   }
-  if (state.inspectorCardId) {
+  if (state.showKeyboardHelp) {
+    state.showKeyboardHelp = false;
+    renderActiveMatch(container);
+  } else if (state.showRulesHelp) {
+    state.showRulesHelp = false;
+    renderActiveMatch(container);
+  } else if (state.showMatchStats) {
+    state.showMatchStats = false;
+    renderActiveMatch(container);
+  } else if (state.inspectorCardId) {
     state.inspectorCardId = null;
     state.inspectorFaceView = 'board';
     renderActiveMatch(container);
@@ -1582,7 +1621,12 @@ function handleEscapeShortcut(container) {
  * v0.19.0: Handle Enter key — confirm the selected action.
  */
 function handleEnterShortcut(container) {
-  if (!state.session || state.session.status !== SessionState.HUMAN_DECISION) return;
+  if (!state.session) return;
+  // Network sessions use NetworkSessionState.RUNNING internally
+  const isHumanTurn = state.networkSession
+    ? state.networkSession.isAwaitingHumanAction()
+    : state.session.status === SessionState.HUMAN_DECISION;
+  if (!isHumanTurn) return;
   if (!state.selectedActionId) return;
   const confirmBtn = container.querySelector('[data-testid="confirm-action"]');
   if (confirmBtn) confirmBtn.click();

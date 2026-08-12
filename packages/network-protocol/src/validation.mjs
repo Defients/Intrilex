@@ -30,6 +30,7 @@ const KNOWN_TYPES = new Set([
   'MATCH_HISTORY',
   'GET_REPLAY',
   'SEND_CHAT',
+  'CHAT_VISIBILITY',
   // Client → Server (auth handshake — v2)
   'AUTHENTICATE', 'AUTH_REFRESH',
   // Client → Server (guest migration — v2)
@@ -43,6 +44,7 @@ const KNOWN_TYPES = new Set([
   'MATCH_HISTORY_RESULT',
   'REPLAY_AVAILABLE', 'REPLAY_DATA',
   'CHAT_MESSAGE',
+  'CHAT_VISIBILITY_CHANGE',
   'ACHIEVEMENTS_EARNED',
   // Server → Client (auth handshake — v2)
   'AUTHENTICATED',
@@ -393,6 +395,24 @@ export function validateSendChat(payload) {
   }
   if (typeof payload.text !== 'string' || payload.text.length === 0 || payload.text.length > 200) {
     return fail(ReasonCode.INVALID_FIELD_TYPE, 'text must be a string of 1-200 chars');
+  }
+  return ok();
+}
+
+/**
+ * Validate a CHAT_VISIBILITY payload.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateChatVisibility(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId is invalid');
+  }
+  if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 16) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken is invalid');
+  }
+  if (typeof payload.hidden !== 'boolean') {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'hidden must be a boolean');
   }
   return ok();
 }

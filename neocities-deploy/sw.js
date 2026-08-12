@@ -98,6 +98,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Runtime config (unhashed dev path) — network-first to prevent stale
+  // config from causing connection errors. In production builds, the config
+  // file is content-hashed (__intrilex-config.[hash].js) and is handled by
+  // the hashed-asset branch above as cache-first (immutable).
+  if (url.pathname === '/__intrilex-config.js') {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
   // HTML documents — network-first (always get latest version)
   if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(networkFirst(request));

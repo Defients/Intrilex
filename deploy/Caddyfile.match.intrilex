@@ -28,10 +28,19 @@ match.intrilex.cards {
     }
 
     # Basic security headers
+    # X-Frame-Options DENY and Content-Security-Policy frame-ancestors 'none'
+    # provide defense-in-depth against clickjacking. The CSP <meta> tag in the
+    # frontend's index.html cannot enforce frame-ancestors (ignored per CSP
+    # spec when delivered via <meta>), so it must be set as an HTTP header.
+    # The match server sets it here for any HTML it serves (e.g., /health
+    # responses, error pages). The frontend on Neocities relies on the
+    # _headers file (forward-compatible) since Neocities doesn't support
+    # custom HTTP headers.
     header {
         X-Content-Type-Options nosniff
         X-Frame-Options DENY
         Referrer-Policy strict-origin-when-cross-origin
+        Content-Security-Policy: frame-ancestors 'none'
     }
 
     # Log access

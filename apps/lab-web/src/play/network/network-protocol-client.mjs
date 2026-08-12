@@ -75,6 +75,10 @@ export function sendChat(matchId, participantToken, text) {
   return envelope('SEND_CHAT', { matchId, participantToken, text });
 }
 
+export function chatVisibility(matchId, participantToken, hidden) {
+  return envelope('CHAT_VISIBILITY', { matchId, participantToken, hidden });
+}
+
 // ── Auth handshake (v2) ──
 
 export function authenticate(accessToken) {

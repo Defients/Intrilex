@@ -1533,6 +1533,8 @@
 .network-opponent-status.connected::before { background: var(--tcg-success); box-shadow: 0 0 8px var(--tcg-success); }
 .network-opponent-status.waiting { color: var(--tcg-warning); background: rgba(240, 160, 64, 0.1); border: 1px solid rgba(240, 160, 64, 0.2); }
 .network-opponent-status.waiting::before { background: var(--tcg-warning); animation: network-status-pulse 1.5s ease-in-out infinite; }
+.network-opponent-status.disconnected { color: var(--tcg-danger, #ef4444); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); }
+.network-opponent-status.disconnected::before { background: var(--tcg-danger, #ef4444); }
 .network-waiting-actions { display: flex; gap: var(--tcg-space-3); justify-content: center; margin-bottom: var(--tcg-space-3); }
 .network-match-id { font-size: 0.72rem; color: var(--tcg-text-muted); font-family: var(--tcg-font-mono); padding: 4px 10px; background: rgba(255, 255, 255, 0.03); border-radius: var(--tcg-radius-sm); display: inline-block; }
 .network-joined-seat { font-size: 1rem; margin: 0 0 var(--tcg-space-3); }

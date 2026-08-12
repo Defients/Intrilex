@@ -13,6 +13,10 @@ const rendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/rank
 // Every direct child of the duel grid MUST have one of these named areas.
 // v0.25: Removed scoreSpine — score integrated into prestige banners
 // Phase 4A: Added scoreRail — the authoritative score display cell
+// v0.28: Combined chat + actions into rightRailBottom (Actions top, Chat bottom
+//        with draggable divider). The .rd-chat and .rd-actions selectors still
+//        have grid-area assignments for legacy compatibility, but the active
+//        layout uses rightRailBottom as a single grid area containing both.
 const requiredAreas = {
   '.rd-header': 'header',
   '.rd-enemy-enduring': 'enemyE',
@@ -22,14 +26,13 @@ const requiredAreas = {
   '.rd-swap': 'swap',
   '.rd-stage': 'stage',
   '.rd-stack': 'stack',
-  '.rd-chat': 'chat',
   '.rd-gamelog': 'gamelog',
   '.rd-score-rail': 'scoreRail',
   '.rd-player-enduring': 'playerE',
   '.rd-player-points': 'playerP',
   '.rd-player-profile': 'playerPro',
   '.rd-player-hand': 'playerH',
-  '.rd-actions': 'actions',
+  '.rd-right-rail-bottom': 'rightRailBottom',
 };
 
 // ── Tests ────────────────────────────────────────────────────────
@@ -159,12 +162,12 @@ test('CSS: responsive card size variables exist', () => {
   assert.ok(cssSrc.includes('clamp('), 'Card sizes must use clamp() for responsive scaling');
 });
 
-test('Renderer: all 15 grid cells are emitted with data-grid attributes (v0.25: scoreRail added)', () => {
+test('Renderer: all required grid cells are emitted with data-grid attributes (v0.28: rightRailBottom replaces chat+actions)', () => {
   const expectedDataGrids = [
     'enemyE', 'enemyP', 'enemyProfile',
-    'piles', 'swap', 'stage', 'stack', 'chat',
+    'piles', 'swap', 'stage', 'stack',
     'playerE', 'playerP', 'gamelog', 'scoreRail',
-    'playerPro', 'playerH', 'actions',
+    'playerPro', 'playerH', 'rightRailBottom',
   ];
   for (const area of expectedDataGrids) {
     assert.ok(

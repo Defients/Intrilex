@@ -1,15 +1,15 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-08-11T21:06:24.386Z",
+  "generatedAt": "2026-08-12T01:28:36.887Z",
   "assets": {
     "app": {
-      "file": "app.b9d1cf2d203e.js",
-      "hash": "b9d1cf2d203e",
+      "file": "app.0ba85948e585.js",
+      "hash": "0ba85948e585",
       "type": "js"
     },
     "styles": {
-      "file": "styles.2ca3ad4002d6.css",
-      "hash": "2ca3ad4002d6",
+      "file": "styles.c059e579197e.css",
+      "hash": "c059e579197e",
       "type": "css"
     }
   }

@@ -1,0 +1,20 @@
+# Intrilex — HTTP headers for static hosting platforms
+#
+# Neocities does NOT support custom HTTP headers or _headers files.
+# This file is included for forward compatibility: if the frontend
+# ever moves to a host that supports _headers (Netlify, Cloudflare
+# Pages, Vercel, etc.), these headers will be applied automatically.
+#
+# The CSP <meta> tag in index.html covers most directives, but
+# frame-ancestors is IGNORED in <meta> per the CSP spec — it MUST
+# be delivered via an HTTP header. This file provides that header.
+#
+# Format: Netlify/Cloudflare Pages _headers convention
+#   <path>
+#     Header-Name: value
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: frame-ancestors 'none'

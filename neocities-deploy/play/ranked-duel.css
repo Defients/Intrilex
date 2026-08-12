@@ -75,11 +75,11 @@
   grid-template-areas:
     "header    header    header    header    header    header    header    header    header    header    header    header    header    header    enemyProfile"
     "enemyE    enemyE    enemyE    enemyE    enemyE    enemyE    enemyE    enemyP    enemyP    enemyP    enemyP    enemyP    enemyP    enemyP    enemyProfile"
-    "piles     piles     piles     piles     piles     swap      swap      swap      swap      swap      swap      stack     stack     stack     chat"
-    "gamelog   gamelog   gamelog   gamelog   scoreRail stage     stage     stage     stage     stage     stage     stack     stack     stack     actions"
-    "gamelog   gamelog   gamelog   gamelog   scoreRail stage     stage     stage     stage     stage     stage     stack     stack     stack     actions"
-    "playerE   playerE   playerE   playerE   playerE   playerE    playerE   playerP   playerP   playerP   playerP   playerP   playerP   playerP   actions"
-    "playerPro playerPro playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   actions" !important;
+    "piles     piles     piles     piles     piles     swap      swap      swap      swap      swap      swap      stack     stack     stack     rightRailBottom"
+    "gamelog   gamelog   gamelog   gamelog   scoreRail stage     stage     stage     stage     stage     stage     stack     stack     stack     rightRailBottom"
+    "gamelog   gamelog   gamelog   gamelog   scoreRail stage     stage     stage     stage     stage     stage     stack     stack     stack     rightRailBottom"
+    "playerE   playerE   playerE   playerE   playerE   playerE    playerE   playerP   playerP   playerP   playerP   playerP   playerP   playerP   rightRailBottom"
+    "playerPro playerPro playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   playerH   rightRailBottom" !important;
   gap: 4px !important;
   padding: 4px !important;
 }
@@ -133,6 +133,7 @@
 .rd-player-profile  { grid-area: playerPro !important; }
 .rd-player-hand     { grid-area: playerH !important; }
 .rd-actions         { grid-area: actions !important; margin-top: -4px !important; }
+.rd-right-rail-bottom { grid-area: rightRailBottom !important; }
 /* v0.25: Score Rail — authoritative score display between Game Log and Active Stage */
 
 /* ── Enemy profile (right rail top — bigger, rival presence) ── */
@@ -2882,8 +2883,7 @@
       "playerP"
       "playerPro"
       "playerH"
-      "actions"
-      "chat"
+      "rightRailBottom"
       "gamelog" !important;
     gap: 4px !important;
     padding: 4px !important;
@@ -2972,8 +2972,8 @@
   .rd-hand { gap: 4px !important; padding: 4px 0 !important; overflow-x: auto !important; scroll-snap-type: x proximity !important; }
   .rd-hand .rd-card.hand-card { scroll-snap-align: center !important; }
 
-  /* Chat: compact */
-  .rd-chat { min-height: 100px !important; }
+  /* Chat: compact but tall enough for ~4 one-line messages */
+  .rd-chat { min-height: 180px !important; }
   .rd-chat-title { font-size: 11px !important; }
   .rd-chat-mode { font-size: 9px !important; }
   .rd-chat-text { font-size: 12px !important; }
@@ -3219,13 +3219,13 @@
       "stage        stack"
       "playerE      playerP"
       "playerPro    playerH"
-      "actions      actions"
-      "chat         gamelog" !important;
+      "rightRailBottom rightRailBottom"
+      "gamelog      gamelog" !important;
     --board-lane-h: clamp(60px, 18vh, 90px) !important;
   }
   .rd-stage { min-height: 120px !important; }
   .rd-player-hand { min-height: 70px !important; }
-  .rd-actions { min-height: 60px !important; }
+  .rd-right-rail-bottom { min-height: 120px !important; }
 }
 
 /* ── Touch device: pointer: coarse (no hover, fat fingers) ────── */
@@ -3296,4 +3296,320 @@
 .decision-window, .decision-phase, .decision-stack-depth, .decision-explainer,
 .decision-pass-info {
   display: none !important;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   v0.28: PvP Match Experience — Right Rail Bottom (Actions + Chat),
+   Draggable Divider, Chat Hide/Show, Disconnect Overlay, Forfeit Dialog,
+   Network Opponent Chat Class, System Game Log Entries
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Right Rail Bottom: combined Actions + Chat with divider ─── */
+.rd-right-rail-bottom {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+.rd-right-rail-bottom-inner {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  gap: 0 !important;
+}
+
+.rd-rail-actions-section {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 60px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(148,163,184,0.08) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(180deg, #0b1226 0%, #0a0e1a 100%) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.20) !important;
+}
+
+.rd-rail-actions-section .rd-actions {
+  /* .rd-actions is a flex child inside .rd-rail-actions-section, not a grid cell.
+     The grid-area assignment on .rd-actions is for legacy compatibility when
+     rendered as a direct grid child. Here we override it to be a flex item. */
+  flex: 1 !important;
+  min-height: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.rd-rail-chat-section {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 60px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(148,163,184,0.08) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(180deg, rgba(11,16,32,0.6) 0%, rgba(10,14,26,0.6) 100%) !important;
+}
+
+.rd-rail-chat-section .rd-chat-panel {
+  height: 100% !important;
+  border: none !important;
+  min-height: 0 !important;
+}
+
+/* Ensure chat messages fill the available space inside the rail chat section,
+   including when the "No messages yet" empty state is shown. */
+.rd-rail-chat-section .rd-chat-messages {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+/* Empty state fills the available chat area so dragging the divider
+   visibly resizes the empty content area, not just the border. */
+.rd-rail-chat-section .rd-chat-empty {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+
+/* ── Draggable Divider ────────────────────────────────────────── */
+.rd-rail-divider {
+  flex: 0 0 6px !important;
+  cursor: row-resize !important;
+  background: rgba(56,189,248,0.06) !important;
+  border: 1px solid rgba(56,189,248,0.10) !important;
+  border-radius: 3px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  z-index: 5 !important;
+  transition: background 0.15s ease, border-color 0.15s ease !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  touch-action: none !important;
+}
+.rd-rail-divider:hover,
+.rd-rail-divider.dragging {
+  background: rgba(56,189,248,0.15) !important;
+  border-color: rgba(56,189,248,0.30) !important;
+}
+.rd-rail-divider:focus-visible {
+  outline: 2px solid #22d3ee !important;
+  outline-offset: 1px !important;
+}
+.rd-rail-divider-handle {
+  width: 32px !important;
+  height: 3px !important;
+  border-radius: 2px !important;
+  background: rgba(56,189,248,0.30) !important;
+  transition: background 0.15s ease !important;
+}
+.rd-rail-divider:hover .rd-rail-divider-handle,
+.rd-rail-divider.dragging .rd-rail-divider-handle {
+  background: rgba(56,189,248,0.60) !important;
+}
+
+/* Prevent text selection during drag */
+.rd-right-rail-bottom-inner.dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* ── Chat Hide/Show Toggle ────────────────────────────────────── */
+.rd-chat-toggle-btn {
+  background: transparent !important;
+  border: 1px solid rgba(56,189,248,0.12) !important;
+  border-radius: 4px !important;
+  color: #64748b !important;
+  cursor: pointer !important;
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  margin-left: auto !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+}
+.rd-chat-toggle-btn:hover {
+  background: rgba(56,189,248,0.08) !important;
+  border-color: rgba(56,189,248,0.25) !important;
+  color: #22d3ee !important;
+}
+.rd-chat-toggle-btn:focus-visible {
+  outline: 2px solid #22d3ee !important;
+  outline-offset: 1px !important;
+}
+
+/* Chat hidden state — collapsed to just the header */
+.rd-chat-panel.rd-chat-hidden {
+  flex: 0 0 auto !important;
+}
+.rd-chat-panel.rd-chat-hidden .rd-chat-messages,
+.rd-chat-panel.rd-chat-hidden .rd-chat-input {
+  display: none !important;
+}
+.rd-chat-panel.rd-chat-hidden .rd-chat-header {
+  padding: 4px 12px !important;
+}
+
+/* ── Network Opponent Chat Message Class ──────────────────────── */
+.rd-chat-msg.opponent {
+  background: rgba(56,189,248,0.08) !important;
+  align-self: flex-start !important;
+}
+.rd-chat-msg.opponent .rd-chat-author {
+  color: #38bdf8 !important;
+}
+
+/* ── System Game Log Entries ──────────────────────────────────── */
+.rd-log-entry.rd-log-system {
+  border-left: 2px solid rgba(251,191,36,0.40) !important;
+  padding-left: 8px !important;
+  font-style: italic !important;
+}
+.rd-log-entry.rd-log-system .event-description {
+  color: #fbbf24 !important;
+}
+
+/* ── Disconnect Overlay ───────────────────────────────────────── */
+.rd-disconnect-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(5,8,16,0.85) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 150 !important;
+  animation: rd-overlay-fade 0.2s ease !important;
+}
+@keyframes rd-overlay-fade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.rd-disconnect-content {
+  background: #0a0e1a !important;
+  border: 1px solid rgba(248,113,113,0.30) !important;
+  border-radius: 12px !important;
+  padding: 32px 40px !important;
+  text-align: center !important;
+  max-width: 400px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+}
+.rd-disconnect-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #f87171 !important;
+  margin-bottom: 12px !important;
+}
+.rd-disconnect-msg {
+  font-size: 14px !important;
+  color: #94a3b8 !important;
+  margin-bottom: 20px !important;
+}
+.rd-disconnect-spinner {
+  width: 32px !important;
+  height: 32px !important;
+  border: 3px solid rgba(56,189,248,0.15) !important;
+  border-top-color: #22d3ee !important;
+  border-radius: 50% !important;
+  margin: 0 auto !important;
+  animation: rd-spinner 0.8s linear infinite !important;
+}
+@keyframes rd-spinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ── Forfeit Confirmation Dialog ──────────────────────────────── */
+.rd-forfeit-dialog {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(5,8,16,0.85) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 180 !important;
+  animation: rd-overlay-fade 0.2s ease !important;
+}
+.rd-forfeit-dialog-content {
+  background: #0a0e1a !important;
+  border: 1px solid rgba(248,113,113,0.30) !important;
+  border-radius: 12px !important;
+  padding: 28px 36px !important;
+  text-align: center !important;
+  max-width: 380px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+}
+.rd-forfeit-dialog-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #f87171 !important;
+  margin-bottom: 10px !important;
+}
+.rd-forfeit-dialog-msg {
+  font-size: 14px !important;
+  color: #94a3b8 !important;
+  margin-bottom: 24px !important;
+}
+.rd-forfeit-dialog-actions {
+  display: flex !important;
+  gap: 12px !important;
+  justify-content: center !important;
+}
+.rd-forfeit-dialog-actions button {
+  padding: 10px 22px !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  min-height: 44px !important;
+}
+.rd-forfeit-cancel {
+  border: 1px solid rgba(56,189,248,0.20) !important;
+  background: #0a0e1a !important;
+  color: #94a3b8 !important;
+}
+.rd-forfeit-cancel:hover {
+  border-color: rgba(56,189,248,0.40) !important;
+  color: #e2e8f0 !important;
+  background: rgba(56,189,248,0.04) !important;
+}
+.rd-forfeit-confirm {
+  border: 1px solid #f87171 !important;
+  background: linear-gradient(180deg, rgba(248,113,113,0.18) 0%, rgba(248,113,113,0.08) 100%) !important;
+  color: #f87171 !important;
+}
+.rd-forfeit-confirm:hover {
+  background: linear-gradient(180deg, rgba(248,113,113,0.28) 0%, rgba(248,113,113,0.14) 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(248,113,113,0.20) !important;
+}
+.rd-forfeit-confirm:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* ── Focus styles for new elements ────────────────────────────── */
+.rd-chat-toggle-btn:focus-visible,
+.rd-rail-divider:focus-visible,
+.rd-forfeit-cancel:focus-visible,
+.rd-forfeit-confirm:focus-visible {
+  outline: 2px solid #22d3ee !important;
+  outline-offset: 2px !important;
 }

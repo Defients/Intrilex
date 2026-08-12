@@ -208,7 +208,9 @@ const server = http.createServer(async (request, response) => {
   // Serve browser-safe runtime config as an external same-origin JS file (CSP-compliant).
   // Contains: Supabase publishable credentials + match server WebSocket URL.
   // NEVER include server secrets here — this file is browser-visible.
-  if (url.pathname === '/__intrilex-config.js') {
+  // Handles both the unhashed dev path (/__intrilex-config.js) and the
+  // content-hashed production path (/__intrilex-config.[hash].js).
+  if (url.pathname === '/__intrilex-config.js' || /^\/__intrilex-config\.[a-f0-9]+\.js$/.test(url.pathname)) {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
     // Dev default: ws://localhost:3099 unless overridden by INTRILEX_MATCH_SERVER_URL

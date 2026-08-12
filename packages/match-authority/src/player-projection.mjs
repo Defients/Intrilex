@@ -30,13 +30,16 @@ const FORBIDDEN_ACTION_FIELDS = new Set([
  * @property {string} [matchId]
  * @property {string} [status]
  * @property {string} [profileId]
+ * @property {string} [participantId]
  * @property {string} [playerId]
  * @property {string} [viewHash]
+ * @property {string} [matchMode] - Server-owned match classification (v0.28)
+ * @property {string|null} [queueId] - Server-owned queue ID (v0.28)
  * @property {Record<string, *>} [match]
  * @property {{ actorId: *, stateRevision: *, frameHash: *, isMyDecision: *, legalActions?: Array<Record<string, *>> }} [decision]
  * @property {Record<string, *>|null} [playerView]
  * @property {Array<{ type: string, controllerId?: string }>} [recentEvents]
- * @property {{ playerId: string, connectionState: string }|null} [opponent]
+ * @property {{ playerId: string, connectionState: string, publicProfile?: { displayName: string, handle: (string|null), avatarUrl: (string|null), rating: (number|null), rank: (string|null) }|null }|null} [opponent]
  */
 
 /**
@@ -53,8 +56,8 @@ export function buildNetworkPlayerView(authorizedView) {
   const safe = {};
 
   // Copy allowed top-level fields
-  /** @type {('matchId'|'status'|'profileId'|'playerId'|'viewHash')[]} */
-  const allowedFields = ['matchId', 'status', 'profileId', 'playerId', 'viewHash'];
+  /** @type {('matchId'|'status'|'profileId'|'participantId'|'playerId'|'viewHash'|'matchMode'|'queueId')[]} */
+  const allowedFields = ['matchId', 'status', 'profileId', 'participantId', 'playerId', 'viewHash', 'matchMode', 'queueId'];
   for (const key of allowedFields) {
     if (authorizedView[key] !== undefined) {
       safe[key] = authorizedView[key];
@@ -99,11 +102,13 @@ export function buildNetworkPlayerView(authorizedView) {
     }));
   }
 
-  // Opponent info (connection state only, no hand identities)
+  // Opponent info (connection state + public profile, no hand identities)
   if (authorizedView.opponent) {
     safe.opponent = {
       playerId: authorizedView.opponent.playerId,
       connectionState: authorizedView.opponent.connectionState,
+      // Public profile for opponent display (displayName, rating, rank, etc.)
+      publicProfile: authorizedView.opponent.publicProfile ?? null,
     };
   }
 

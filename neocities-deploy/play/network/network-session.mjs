@@ -11,7 +11,7 @@
 
 import {
   createMatch, joinMatch, resumeMatch, ready, submitAction,
-  requestSync, leaveMatch, sendChat,
+  requestSync, leaveMatch, sendChat, chatVisibility,
   authenticate, authRefresh,
   PROTOCOL_VERSION,
 } from './network-protocol-client.mjs';
@@ -96,6 +96,7 @@ export class NetworkPlaySession {
     this.matchId = null;
     this.inviteCode = null;
     this.participantToken = null;
+    this.participantId = null;
     this.playerId = null;
     this.opponentPlayerId = null;
     this.opponentConnectionState = null;
@@ -104,6 +105,22 @@ export class NetworkPlaySession {
     this.accessToken = null;       // Set before connect() for authenticated sessions
     this.authenticatedAccount = null;  // Set when AUTHENTICATED is received
     this.tokenExpiresAt = null;
+
+    // Participant profiles (populated from AUTHENTICATED + match views)
+    this.localProfile = null;      // { displayName, handle, avatarUrl, rating, rank }
+    this.opponentProfile = null;   // { displayName, handle, avatarUrl, rating, rank }
+    this.matchMode = null;         // 'private' | 'casual' | 'ranked'
+    this.queueId = null;           // 'private' | 'casual' | 'ranked' | null
+
+    // Chat visibility state (local player's preference)
+    this.chatHidden = false;
+    // Chat messages (network matches) — initialized early so the renderer
+    // can read state.networkSession.chatMessages before any message arrives
+    this.chatMessages = [];
+    // Dedup set for exactly-once chat message delivery (NET-UX-01)
+    this._seenChatMessageIds = new Set();
+    // Game log system events (chat visibility changes from opponent, etc.)
+    this.systemEvents = [];
 
     // Replay download metadata (set when REPLAY_AVAILABLE is received)
     this.replayUrl = null;
@@ -478,6 +495,47 @@ export class NetworkPlaySession {
     }
   }
 
+  /**
+   * Send a chat visibility change to the server.
+   * The server broadcasts a CHAT_VISIBILITY_CHANGE system event to the
+   * other participant's Game Log. This is a presence/UI-state event,
+   * NOT a chat message.
+   * @param {boolean} hidden - True if chat is hidden, false if restored
+   * @returns {boolean} true if sent successfully
+   */
+  sendChatVisibility(hidden) {
+    if (!this.matchId || !this.participantToken) return false;
+    if (typeof hidden !== 'boolean') return false;
+    try {
+      this.chatHidden = hidden;
+      const msg = chatVisibility(this.matchId, this.participantToken, hidden);
+      if (this._ws && this._ws.readyState === WebSocket.OPEN) {
+        this._ws.send(JSON.stringify(msg));
+      }
+      this._notifyStateChange();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Forfeit the current match — sends LEAVE_MATCH to the server and
+   * cleans up local state. The server determines the authoritative
+   * match outcome (opponent wins by forfeit).
+   * Prevents double-submit with a guard flag.
+   * @returns {Promise<void>}
+   */
+  async forfeit() {
+    if (this._forfeitSubmitted) return; // Prevent double-submit
+    this._forfeitSubmitted = true;
+    try {
+      await this.leave();
+    } finally {
+      this._forfeitSubmitted = false;
+    }
+  }
+
   // ── Auth handshake (v2) ──
 
   /**
@@ -717,6 +775,16 @@ export class NetworkPlaySession {
         // v2 auth handshake — server confirmed our identity
         this.authenticatedAccount = msg.payload?.account ?? null;
         this.tokenExpiresAt = msg.payload?.expiresAt ?? null;
+        // Store local profile for display in the match UI
+        if (this.authenticatedAccount) {
+          this.localProfile = {
+            displayName: this.authenticatedAccount.displayName ?? 'Player',
+            handle: this.authenticatedAccount.handle ?? null,
+            avatarUrl: this.authenticatedAccount.avatarUrl ?? null,
+            rating: this.authenticatedAccount.rating ?? null,
+            rank: this.authenticatedAccount.rank ?? null,
+          };
+        }
         // Resolve connect() if it's waiting for authentication
         if (this._authResolve) {
           clearTimeout(this._authTimeout);
@@ -776,23 +844,28 @@ export class NetworkPlaySession {
         break;
       case 'CHAT_MESSAGE':
         // v0.25: Network chat — received from server after participant broadcast.
-        // NET-UX-01: Exactly-once delivery with deduplication.
+        // NET-UX-01: Exactly-once delivery with deduplication using server messageId.
         // The server broadcasts CHAT_MESSAGE to all participants INCLUDING the sender.
         // The sender already has the message from optimistic local echo, so we
-        // deduplicate using a composite key of participantId + text + timestamp-window.
-        // Non-sender participants receive the message normally.
+        // deduplicate using the server-generated messageId.
         if (msg.payload?.text) {
           this.chatMessages = this.chatMessages || [];
-          // NET-UX-01: Dedup key — participantId + text + approximate timestamp
-          // The server may not echo back the exact same timestamp, so we use
-          // a 5-second window for matching optimistic echoes.
-          const dedupKey = `${msg.payload.participantId}:${msg.payload.text}`;
+          this._seenChatMessageIds = this._seenChatMessageIds || new Set();
+          const serverMessageId = msg.payload.messageId ?? null;
           const isFromSelf = msg.payload.participantId === this.participantId;
+
+          // Dedup by server messageId if available
+          if (serverMessageId) {
+            if (this._seenChatMessageIds.has(serverMessageId)) {
+              // Already have this message — skip
+              break;
+            }
+            this._seenChatMessageIds.add(serverMessageId);
+          }
 
           if (isFromSelf) {
             // Check if we already have this message from optimistic echo
             // Match on participantId + text within a 5-second window
-            const now = Date.now();
             const existing = this.chatMessages.find(m =>
               m.participantId === msg.payload.participantId &&
               m.text === msg.payload.text &&
@@ -804,6 +877,7 @@ export class NetworkPlaySession {
               // and mark it as confirmed (no longer optimistic)
               existing.timestamp = msg.payload.timestamp;
               existing.isOptimistic = false;
+              existing.messageId = serverMessageId ?? existing.messageId;
               this._notifyStateChange();
               break;
             }
@@ -813,6 +887,7 @@ export class NetworkPlaySession {
 
           // Add the message from server broadcast
           this.chatMessages.push({
+            messageId: serverMessageId,
             participantId: msg.payload.participantId,
             text: msg.payload.text,
             timestamp: msg.payload.timestamp,
@@ -822,6 +897,35 @@ export class NetworkPlaySession {
             time: msg.payload.timestamp,
           });
           this._notifyStateChange();
+        }
+        break;
+      case 'CHAT_VISIBILITY_CHANGE':
+        // System event: opponent hid or restored Match Chat.
+        // This goes into the Game Log, NOT the chat message list.
+        if (msg.payload && typeof msg.payload.hidden === 'boolean') {
+          this.systemEvents = this.systemEvents || [];
+          const evtId = `vis-${msg.payload.participantId}-${msg.payload.hidden ? 'hide' : 'show'}-${Date.now()}`;
+          // Dedup: don't add if we already have a recent visibility event from this participant
+          const recent = this.systemEvents.find(e =>
+            e.participantId === msg.payload.participantId &&
+            e.type === 'CHAT_VISIBILITY' &&
+            Math.abs(new Date(e.timestamp).getTime() - Date.now()) < 2000
+          );
+          if (!recent) {
+            this.systemEvents.push({
+              id: evtId,
+              type: 'CHAT_VISIBILITY',
+              participantId: msg.payload.participantId,
+              displayName: msg.payload.displayName ?? 'Opponent',
+              hidden: msg.payload.hidden,
+              timestamp: new Date().toISOString(),
+            });
+            // Keep only last 20 system events
+            if (this.systemEvents.length > 20) {
+              this.systemEvents = this.systemEvents.slice(-20);
+            }
+            this._notifyStateChange();
+          }
         }
         break;
       case 'LEFT_MATCH':
@@ -850,7 +954,25 @@ export class NetworkPlaySession {
           this._transition(NetworkSessionState.EXPIRED);
           this._clearReconnectInfo();
         }
-        if (this.onError) this.onError(msg.payload);
+        // Categorize errors: non-critical errors (e.g., MESSAGE_TYPE_UNKNOWN
+        // from an older server that doesn't recognize a newer client message
+        // like CHAT_VISIBILITY) should be logged as warnings, NOT passed to
+        // onError which triggers the fatal "Reconnect Failed" UI. Only
+        // connection-fatal errors (auth, match state, rate limit) should
+        // trigger the error callback.
+        {
+          const code = msg.payload?.code ?? '';
+          const isNonCritical = code === 'MESSAGE_TYPE_UNKNOWN' ||
+            code === 'INVALID_FIELD_TYPE' ||
+            code === 'MISSING_REQUIRED_FIELD';
+          if (isNonCritical) {
+            // Log as a warning — the match continues despite the server
+            // not understanding this particular message type
+            console.warn('[intrilex:network] Non-critical server error:', msg.payload?.message ?? code);
+            break;
+          }
+          if (this.onError) this.onError(msg.payload);
+        }
         break;
     }
   }
@@ -858,12 +980,26 @@ export class NetworkPlaySession {
   _applyView(view) {
     if (!view) return;
     this.currentView = view;
+    if (view.participantId) {
+      this.participantId = view.participantId;
+    }
     if (view.playerId) {
       this.playerId = view.playerId;
       this.opponentPlayerId = view.playerId === 'P1' ? 'P2' : 'P1';
     }
     if (view.opponent) {
       this.opponentConnectionState = view.opponent.connectionState;
+      // Store opponent's public profile for display
+      if (view.opponent.publicProfile) {
+        this.opponentProfile = view.opponent.publicProfile;
+      }
+    }
+    // Store match classification for header label
+    if (view.matchMode) {
+      this.matchMode = view.matchMode;
+    }
+    if (view.queueId !== undefined) {
+      this.queueId = view.queueId;
     }
     if (view.match) {
       if (view.match.winner) {
@@ -901,21 +1037,36 @@ export class NetworkPlaySession {
     if (!view) {
       return { schemaVersion: '1.0.0', sessionId: this.matchId, status: this.status, error: this.error };
     }
+    // Build local player profile from authenticated account
+    const localProfile = this.localProfile ?? {};
+    const opponentProfile = this.opponentProfile ?? {};
     return {
       schemaVersion: '1.0.0',
       sessionId: this.matchId,
       status: this._mapStatus(),
       mode: 'network-direct-duel',
+      // Server-authoritative match classification for header label
+      matchMode: this.matchMode ?? 'private',
+      queueId: this.queueId ?? null,
+      isNetworkMatch: true,
       profileId: view.profileId,
       human: {
         playerId: this.playerId,
         seat: this.playerId === 'P1' ? 1 : 2,
+        displayName: localProfile.displayName ?? 'You',
+        rating: localProfile.rating ?? null,
+        rank: localProfile.rank ?? null,
+        isHuman: true,
       },
       opponent: {
-        displayName: 'Opponent',
+        displayName: opponentProfile.displayName ?? 'Opponent',
+        rating: opponentProfile.rating ?? null,
+        rank: opponentProfile.rank ?? null,
         policyId: 'human',
         archetype: '',
         difficulty: '',
+        isHuman: true,
+        connectionState: this.opponentConnectionState ?? 'CONNECTED',
       },
       match: view.match || {},
       decision: view.decision ? {
@@ -935,8 +1086,10 @@ export class NetworkPlaySession {
       } : null,
       playerView: view.playerView,
       recentEvents: view.recentEvents || [],
+      systemEvents: this.systemEvents || [],
       viewHash: view.viewHash,
       pendingAction: this._pendingAction,
+      chatHidden: this.chatHidden,
     };
   }
 
@@ -951,5 +1104,17 @@ export class NetworkPlaySession {
       default:
         return this.status;
     }
+  }
+
+  /**
+   * Check if the network session is awaiting the local player's human action.
+   * This bridges the gap between the internal NetworkSessionState.RUNNING
+   * status and the SessionState.HUMAN_DECISION status that board-events.js
+   * checks via `state.session.status`.
+   * @returns {boolean}
+   */
+  isAwaitingHumanAction() {
+    return this.status === NetworkSessionState.RUNNING &&
+           this.currentView?.decision?.isMyDecision === true;
   }
 }

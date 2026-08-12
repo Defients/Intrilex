@@ -28,7 +28,7 @@ import {
   validateRequestSync, validateLeaveMatch,
   validateQueueJoin, validateQueueLeave,
   validateSpectateMatch, validateSpectateLeave,
-  validateMatchHistory, validateGetReplay, validateSendChat,
+  validateMatchHistory, validateGetReplay, validateSendChat, validateChatVisibility,
   validateAuthenticate, validateAuthRefresh,
   validateMigrateGuest,
   checkMessageSize, ReasonCode,
@@ -38,7 +38,7 @@ import {
   spectateMatch, spectateLeave, spectateJoined, spectateLeft,
   matchHistoryResult, envelope,
   replayAvailable, replayData,
-  sendChat as sendChatBuilder, chatMessage,
+  sendChat as sendChatBuilder, chatMessage, chatVisibilityChange,
   authenticated as authenticatedBuilder,
   achievementsEarned,
   migrationResult as migrationResultBuilder,
@@ -556,7 +556,8 @@ export function startServer(opts = {}) {
       const results = players.map(({ connectionId, accountId }) => {
         const participantToken = randomBytes(32).toString('base64url');
         const participantId = `P-${randomBytes(8).toString('base64url')}`;
-        match.addParticipant(participantId, participantToken, accountId ?? null);
+        const queueConn = connections.get(connectionId);
+        match.addParticipant(participantId, participantToken, accountId ?? null, buildPublicProfile(queueConn));
 
         // Bind connection to participant
         const conn = connections.get(connectionId);
@@ -929,6 +930,7 @@ function handleMessage(connectionId, ws, raw) {
       case 'MATCH_HISTORY': handlerResult = handleMatchHistory(connectionId, ws, payload, requestId); break;
       case 'GET_REPLAY': handlerResult = handleGetReplay(connectionId, ws, payload, requestId); break;
       case 'SEND_CHAT': handlerResult = handleSendChat(connectionId, ws, payload, requestId); break;
+      case 'CHAT_VISIBILITY': handlerResult = handleChatVisibility(connectionId, ws, payload, requestId); break;
       case 'MIGRATE_GUEST': handlerResult = handleMigrateGuest(connectionId, ws, payload, requestId); break;
       default:
         return send(ws, errorMsg(ReasonCode.MESSAGE_TYPE_UNKNOWN, `Unknown type: ${type}`, requestId));
@@ -1180,7 +1182,7 @@ function handleCreateMatch(connectionId, ws, payload, requestId) {
   // Bind connection to participant
   const conn = connections.get(connectionId);
 
-  match.addParticipant(participantId, participantToken, conn?.account?.accountId ?? null);
+  match.addParticipant(participantId, participantToken, conn?.account?.accountId ?? null, buildPublicProfile(conn));
   matchStore.save(match);
   matchStore.registerInvite(inviteCode, matchId);
 
@@ -1223,7 +1225,7 @@ function handleJoinMatch(connectionId, ws, payload, requestId) {
   const participantToken = randomBytes(32).toString('base64url');
   const participantId = `P-${randomBytes(8).toString('base64url')}`;
 
-  const result = match.addParticipant(participantId, participantToken, joinerAccountId);
+  const result = match.addParticipant(participantId, participantToken, joinerAccountId, buildPublicProfile(conn));
   matchStore.save(match);
 
   // Bind connection
@@ -1664,16 +1666,61 @@ function handleSendChat(connectionId, ws, payload, requestId) {
   // Build the chat message and broadcast to all participants
   const timestamp = new Date().toISOString();
   const text = String(payload.text).slice(0, 200); // hard cap at protocol limit
+  // Generate a server-authoritative message ID for deduplication
+  const messageId = `m-${Date.now()}-${randomBytes(6).toString('base64url')}`;
 
   // Broadcast to all participants in the match
   for (const [pid] of match.participants) {
     const targetConn = findConnectionByParticipant(pid, match.matchId);
     if (targetConn) {
-      send(targetConn.ws, chatMessage(match.matchId, participantId, text, timestamp));
+      send(targetConn.ws, chatMessage(match.matchId, participantId, text, timestamp, messageId));
     }
   }
 
   logEvent('chatMessage', { matchId: match.matchId, participantId, textLength: text.length });
+}
+
+/**
+ * Handle a CHAT_VISIBILITY message from a participant.
+ * The participant is reporting that they have hidden or restored Match Chat.
+ * The server broadcasts a CHAT_VISIBILITY_CHANGE system event to the OTHER
+ * participant so it appears in their Game Log (not as a chat message).
+ * @param {string} connectionId
+ * @param {object} ws
+ * @param {Record<string,*>} payload
+ * @param {string} requestId
+ */
+function handleChatVisibility(connectionId, ws, payload, requestId) {
+  const check = validateChatVisibility(payload);
+  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
+
+  const conn = connections.get(connectionId);
+  if (!conn) return send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, 'Connection not found', requestId));
+
+  if (conn.matchId !== payload.matchId) {
+    return send(ws, errorMsg(ReasonCode.CONNECTION_MATCH_MISMATCH, 'Connection is not bound to this match', requestId));
+  }
+
+  const match = matchStore.get(payload.matchId);
+  if (!match) return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Match not found', requestId));
+
+  const participantId = match.findParticipantByToken(payload.participantToken);
+  if (!participantId) return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_INVALID, 'Invalid participant token', requestId));
+
+  // Build display name from the participant's public profile
+  const participant = match.participants.get(participantId);
+  const displayName = participant?.publicProfile?.displayName ?? 'Player';
+
+  // Broadcast CHAT_VISIBILITY_CHANGE to the OTHER participant only (not the sender)
+  for (const [pid] of match.participants) {
+    if (pid === participantId) continue; // Don't echo back to sender
+    const targetConn = findConnectionByParticipant(pid, match.matchId);
+    if (targetConn) {
+      send(targetConn.ws, chatVisibilityChange(match.matchId, participantId, displayName, payload.hidden));
+    }
+  }
+
+  logEvent('chatVisibility', { matchId: match.matchId, participantId, hidden: payload.hidden });
 }
 
 /**
@@ -1756,6 +1803,25 @@ function findConnectionByParticipant(participantId, matchId) {
     }
   }
   return null;
+}
+
+/**
+ * Build a safe public profile from a connection's authenticated account.
+ * Used to populate opponent display info in the authorized match view.
+ * Returns null if the connection has no authenticated account.
+ * @param {{ account: object|null }|null} conn
+ * @returns {{ displayName: string, handle: (string|null), avatarUrl: (string|null), rating: (number|null), rank: (string|null) }|null}
+ */
+function buildPublicProfile(conn) {
+  if (!conn || !conn.account) return null;
+  const acct = conn.account;
+  return {
+    displayName: acct.displayName ?? 'Player',
+    handle: acct.handle ?? null,
+    avatarUrl: acct.avatarUrl ?? null,
+    rating: acct.rating ?? null,
+    rank: acct.rank ?? null,
+  };
 }
 
 function broadcastMatchEnded(match) {

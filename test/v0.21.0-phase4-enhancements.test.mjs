@@ -45,10 +45,13 @@ test('p4: CSP object-src is none', async () => {
   assert.match(csp, /object-src\s+'none'/);
 });
 
-test('p4: CSP frame-ancestors is none', async () => {
+test('p4: CSP does not include frame-ancestors (ignored via meta — use HTTP header instead)', async () => {
   const html = await readDist('index.html');
   const csp = html.match(/http-equiv="Content-Security-Policy"\s+content="([^"]+)"/)?.[1] ?? '';
-  assert.match(csp, /frame-ancestors\s+'none'/);
+  // frame-ancestors is ignored in <meta> CSP per the spec — it must be
+  // delivered via HTTP header. Keeping it generates a console warning.
+  // We verify it is absent to avoid console noise on production.
+  assert.doesNotMatch(csp, /frame-ancestors/);
 });
 
 test('p4: CSP worker-src allows self for service worker', async () => {
@@ -104,6 +107,46 @@ test('p4: browserslist excludes IE', async () => {
 test('p4: bundle.mjs documents browserslist alignment', async () => {
   const bundle = await readFile(path.join(root, 'scripts/bundle.mjs'), 'utf8');
   assert.match(bundle, /browserslist/i, 'bundle.mjs must document browserslist alignment');
+});
+
+test('p4: bundle.mjs content-hashes __intrilex-config file', async () => {
+  // The config file is content-hashed so the SW can cache it as immutable.
+  // When config changes between builds, the hash changes → new filename →
+  // SW fetches fresh config instead of serving a stale cached version.
+  const bundle = await readFile(path.join(root, 'scripts/bundle.mjs'), 'utf8');
+  assert.match(bundle, /configHash/, 'bundle.mjs must compute a config hash');
+  assert.match(bundle, /__intrilex-config\.\$\{configHash\}\.js/, 'bundle.mjs must write hashed config filename');
+});
+
+test('p4: dist index.html references hashed __intrilex-config file', async () => {
+  const html = await readDist('index.html');
+  assert.match(html, /__intrilex-config\.[a-f0-9]+\.js/, 'index.html must reference hashed config file');
+  // Must NOT reference the unhashed name in the <script> tag
+  assert.doesNotMatch(html, /<script[^>]+src="\/__intrilex-config\.js"/, 'index.html must not reference unhashed config in script tag');
+});
+
+test('p4: sync-neocities.mjs prunes stale hashed config files', async () => {
+  const sync = await readFile(path.join(root, 'scripts/sync-neocities.mjs'), 'utf8');
+  // The source contains a regex literal: __intrilex-config\.[a-f0-9]+\.js
+  // Match the literal text (backslashes are literal in the source).
+  assert.ok(sync.includes('__intrilex-config'), 'sync-neocities.mjs must reference __intrilex-config');
+  assert.ok(sync.includes('staleConfig'), 'sync-neocities.mjs must prune stale config files');
+  assert.ok(sync.includes('configJs'), 'sync-neocities.mjs must extract configJs ref from HTML');
+});
+
+// ── frame-ancestors via HTTP header (RFC2) ──────────────────────
+
+test('p4: _headers file exists in neocities-deploy for frame-ancestors', async () => {
+  const headersPath = path.join(root, 'neocities-deploy', '_headers');
+  const content = await readFile(headersPath, 'utf8');
+  assert.match(content, /frame-ancestors\s+'none'/, '_headers must set frame-ancestors none');
+  assert.match(content, /X-Frame-Options:\s*DENY/i, '_headers must set X-Frame-Options DENY');
+});
+
+test('p4: Caddyfile sets CSP frame-ancestors header for match server', async () => {
+  const caddy = await readFile(path.join(root, 'deploy', 'Caddyfile.match.intrilex'), 'utf8');
+  assert.match(caddy, /frame-ancestors\s+'none'/, 'Caddyfile must set frame-ancestors none header');
+  assert.match(caddy, /X-Frame-Options\s+DENY/i, 'Caddyfile must set X-Frame-Options DENY');
 });
 
 // ── P4.3: browser-analytics.js Modularization ───────────────────
@@ -274,6 +317,14 @@ test('p4: app.js imports error-boundary module', async () => {
 test('p4: app.js installs global error boundary', async () => {
   const src = await readSrc('app.js');
   assert.match(src, /installGlobalErrorBoundary/);
+});
+
+test('p4: app.js imports and calls diagnoseConfig on bootstrap', async () => {
+  const src = await readSrc('app.js');
+  assert.match(src, /from\s+['"]\.\/play\/network\/match-server-config\.js['"]/, 'app.js must import from match-server-config.js');
+  assert.match(src, /diagnoseConfig/, 'app.js must import diagnoseConfig');
+  // Must be called at module load time (not inside a function/route handler)
+  assert.match(src, /\ndiagnoseConfig\(\)/, 'app.js must call diagnoseConfig() at module load time');
 });
 
 test('p4: app.js uses withErrorBoundary for play route', async () => {

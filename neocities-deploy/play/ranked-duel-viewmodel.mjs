@@ -131,27 +131,44 @@ function buildPlayerPlate(state, playerId, seatIndex, isHuman, localProfile) {
   const secured = player.securedPoints ?? 0;
   const goal = player.goal ?? state.startingGoal ?? 21;
 
+  // For network matches, the opponent may be a real human player.
+  // The snapshot includes isHuman/rating/rank for network participants.
+  // For local AI matches, the opponent is always AI (isHuman stays false).
+  const opponentIsHuman = !isHuman && player.isHuman === true;
+
+  // Use network participant data when available, fall back to local profile or AI defaults
+  const displayName = isHuman
+    ? (localProfile?.displayName ?? 'You')
+    : (player.displayName ?? (opponentIsHuman ? 'Opponent' : 'AI'));
+
+  // For network human opponents, use their rating; for AI, use aiRating
+  const opponentRating = opponentIsHuman ? (player.rating ?? null) : null;
+  const opponentRank = opponentIsHuman ? (player.rank ?? null) : null;
+
   return {
     playerId,
     seatIndex,
-    displayName: isHuman ? (localProfile?.displayName ?? 'You') : (player.displayName ?? 'AI'),
-    isHuman,
-    monogram: isHuman ? 'H' : 'A',
+    displayName,
+    isHuman: isHuman || opponentIsHuman,
+    isLocalPlayer: isHuman, // Distinguish local player from remote human opponent
+    monogram: isHuman ? 'H' : (opponentIsHuman ? 'P' : 'A'),
     secured,
     goal,
     goalLabel: secured >= goal ? 'REACHED' : `${secured}/${goal}`,
-    rating: isHuman ? (localProfile?.rating ?? null) : null,
-    aiRating: !isHuman ? (player.aiRating ?? null) : null,
+    rating: isHuman ? (localProfile?.rating ?? null) : opponentRating,
+    rank: isHuman ? (localProfile?.rank ?? null) : opponentRank,
+    aiRating: !isHuman && !opponentIsHuman ? (player.aiRating ?? null) : null,
     badges: isHuman ? (localProfile?.badges ?? []) : [],
+    connectionState: player.connectionState ?? null,
     statusIndicators: buildStatusIndicators(player),
   };
 }
 
 function emptyPlayerPlate() {
   return {
-    playerId: '', seatIndex: 0, displayName: '', isHuman: true,
+    playerId: '', seatIndex: 0, displayName: '', isHuman: true, isLocalPlayer: true,
     monogram: '?', secured: 0, goal: 21, goalLabel: '0/21',
-    rating: null, aiRating: null, badges: [], statusIndicators: [],
+    rating: null, rank: null, aiRating: null, badges: [], connectionState: null, statusIndicators: [],
   };
 }
 

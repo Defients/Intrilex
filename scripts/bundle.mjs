@@ -105,11 +105,22 @@ async function bundle() {
         configParts.push(`matchServerUrl:${JSON.stringify(matchServerUrl)}`);
       }
       const configBody = `window.__INTRILEX_CONFIG__={${configParts.join(',')}};`;
+      // Content-hash the config file so the service worker can safely
+      // cache it as an immutable asset (like app.[hash].js). When the
+      // config changes between builds, the hash changes, the <script>
+      // src changes, and the SW fetches the new file instead of serving
+      // a stale cached version.
+      const configHash = createHash('sha256').update(configBody).digest('hex').slice(0, 12);
+      const configFileName = `__intrilex-config.${configHash}.js`;
+      await writeFile(path.join(dist, configFileName), configBody);
+      html = html.replace('</head>', `<script src="/${configFileName}"></script>\n</head>`);
+      // Also write the unhashed name for dev-server compatibility and
+      // as a fallback for SW versions that still special-case it.
       await writeFile(path.join(dist, '__intrilex-config.js'), configBody);
-      html = html.replace('</head>', '<script src="/__intrilex-config.js"></script>\n</head>');
       if (hasMatchServer) {
         console.log(`bundle: injected match server URL: ${matchServerUrl}`);
       }
+      console.log(`bundle: wrote ${configFileName}`);
     }
 
     // Inject production WebSocket endpoint into CSP connect-src directive.

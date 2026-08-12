@@ -166,3 +166,50 @@ export function renderKeyboardHelp() {
     <button class="keyboard-help-close" data-testid="keyboard-help-close" aria-label="Close keyboard help">Close</button>
   </div>`;
 }
+
+/**
+ * Render a rules/help overlay with quick reference for the current game phase.
+ * @param {object} [snapshot] — optional game snapshot for phase-aware help
+ * @returns {string} HTML
+ */
+export function renderRulesHelp(snapshot) {
+  const phase = snapshot?.decision?.kind ?? 'ACTION';
+  const phaseLabel = phase === 'RESPOND' ? 'Response Phase' : 'Action Phase';
+  return `<div class="keyboard-help-overlay" data-testid="rules-help" role="dialog" aria-label="Rules and help">
+    <h3>Quick Rules — ${phaseLabel}</h3>
+    <dl class="keyboard-help-list">
+      <dt>Goal</dt><dd>Reduce your opponent's Influence (IR) to 0, or have the higher IR when the Draw Pile is empty.</dd>
+      <dt>Draw</dt><dd>Take a card from the Draw Pile each turn. If empty, you must pass.</dd>
+      <dt>Score</dt><dd>Play a card to your Point Row for its rank value in IR.</dd>
+      <dt>Effects</dt><dd>Play cards for their rank effects (7=Scuttle, 6=Anchor, 5=Swap, 4=Peek, 3=Copy, J=Attach, Q=Ultra).</dd>
+      <dt>Respond</dt><dd>When the opponent acts, you may counter or decline (pass priority).</dd>
+      <dt>Confirm</dt><dd>Select an action, then click Confirm (or press Enter) to submit it.</dd>
+    </dl>
+    <p class="keyboard-help-hint">For the full rulebook, visit the <a href="#/rules">Rules page</a>.</p>
+    <button class="keyboard-help-close" data-testid="rules-help-close" aria-label="Close rules help">Close</button>
+  </div>`;
+}
+
+/**
+ * Render a match stats overlay showing the current game state summary.
+ * @param {object} snapshot — game snapshot with player data
+ * @returns {string} HTML
+ */
+export function renderMatchStats(snapshot) {
+  if (!snapshot) return '';
+  const human = snapshot.human ?? {};
+  const opponent = snapshot.opponent ?? {};
+  const match = snapshot.match ?? {};
+  const recentEvents = snapshot.recentEvents ?? [];
+  return `<div class="keyboard-help-overlay" data-testid="match-stats" role="dialog" aria-label="Match statistics">
+    <h3>Match Statistics</h3>
+    <dl class="keyboard-help-list">
+      <dt>Your IR</dt><dd>${human.ir ?? human.influence ?? '—'}</dd>
+      <dt>Opponent IR</dt><dd>${opponent.ir ?? opponent.influence ?? '—'}</dd>
+      <dt>Turn</dt><dd>${match.turn ?? '—'}</dd>
+      <dt>Phase</dt><dd>${snapshot.decision?.kind ?? '—'}</dd>
+      <dt>Recent Events</dt><dd>${recentEvents.length} event(s) this session</dd>
+    </dl>
+    <button class="keyboard-help-close" data-testid="match-stats-close" aria-label="Close match stats">Close</button>
+  </div>`;
+}

@@ -41,29 +41,42 @@ function runCmd(cmd, args) {
 
 /**
  * Extract the hashed bundle filenames referenced by index.html.
- * @param {string} html @returns {{ appJs: string|null, stylesCss: string|null }}
+ * @param {string} html @returns {{ appJs: string|null, stylesCss: string|null, configJs: string|null }}
  */
 function extractBundleRefs(html) {
   const appMatch = html.match(/<script[^>]+src="(app\.[a-f0-9]+\.js)"/);
   const cssMatch = html.match(/<link[^>]+rel="stylesheet"[^>]+href="(styles\.[a-f0-9]+\.css)"/);
-  return { appJs: appMatch ? appMatch[1] : null, stylesCss: cssMatch ? cssMatch[1] : null };
+  const configMatch = html.match(/<script[^>]+src="\/?(__intrilex-config\.[a-f0-9]+\.js)"/);
+  return {
+    appJs: appMatch ? appMatch[1] : null,
+    stylesCss: cssMatch ? cssMatch[1] : null,
+    configJs: configMatch ? configMatch[1] : null,
+  };
 }
 
 /**
- * List hashed bundle files in a directory matching `app.*.js` or `styles.*.css`.
- * @param {string} dir @returns {Promise<{app: string[], styles: string[]}>}
+ * List hashed bundle files in a directory matching `app.*.js`, `styles.*.css`,
+ * or `__intrilex-config.*.js`.
+ * @param {string} dir @returns {Promise<{app: string[], styles: string[], config: string[]}>}
  */
 async function listHashedBundles(dir) {
-  if (!existsSync(dir)) return { app: [], styles: [] };
+  if (!existsSync(dir)) return { app: [], styles: [], config: [] };
   const entries = await readdir(dir, { withFileTypes: true });
   const app = entries.filter((e) => e.isFile() && /^app\.[a-f0-9]+\.js$/.test(e.name)).map((e) => e.name);
   const styles = entries.filter((e) => e.isFile() && /^styles\.[a-f0-9]+\.css$/.test(e.name)).map((e) => e.name);
-  return { app, styles };
+  const config = entries.filter((e) => e.isFile() && /^__intrilex-config\.[a-f0-9]+\.js$/.test(e.name)).map((e) => e.name);
+  return { app, styles, config };
 }
 
 async function main() {
   if (runBuildFirst) {
     console.log('[neocities] Running build first...');
+    // Force the production WSS endpoint for Neocities builds.
+    // The .env file may contain the dev ws://localhost:3099 value;
+    // setting this in-process before spawning the build child ensures
+    // the production wss://match.intrilex.cards URL is injected into
+    // __intrilex-config.js and the CSP connect-src directive.
+    process.env.INTRILEX_MATCH_SERVER_URL = 'wss://match.intrilex.cards';
     await runCmd('pnpm', ['run', 'build']);
     console.log('[neocities] Build complete.\n');
   }
@@ -98,7 +111,8 @@ async function main() {
   const deployBundles = await listHashedBundles(deployDir);
   const staleApp = deployBundles.app.filter((f) => f !== refs.appJs);
   const staleStyles = deployBundles.styles.filter((f) => f !== refs.stylesCss);
-  for (const f of [...staleApp, ...staleStyles]) {
+  const staleConfig = deployBundles.config.filter((f) => f !== refs.configJs);
+  for (const f of [...staleApp, ...staleStyles, ...staleConfig]) {
     const p = path.join(deployDir, f);
     if (existsSync(p)) {
       await rm(p, { force: true });

@@ -75,6 +75,31 @@ test('pwa: sw.js implements network-first fallback for HTML', async () => {
   assert.match(sw, /networkFirst|network-first/i);
 });
 
+test('pwa: sw.js uses network-first for unhashed __intrilex-config.js (dev mode)', async () => {
+  // In dev mode, the config file is served unhashed at /__intrilex-config.js.
+  // The SW uses network-first for this path to prevent stale config.
+  // In production, the config is content-hashed (__intrilex-config.[hash].js)
+  // and handled by the hashed-asset branch as cache-first (immutable).
+  const sw = await readDist('sw.js');
+  assert.match(sw, /__intrilex-config\.js/, 'SW must special-case __intrilex-config.js');
+  // Verify the config exclusion appears BEFORE the generic .js handler
+  const configIdx = sw.indexOf('__intrilex-config.js');
+  const genericJsIdx = sw.indexOf("endsWith('.js')");
+  assert.ok(configIdx > 0 && genericJsIdx > 0, 'Both config and generic .js handlers must exist');
+  assert.ok(configIdx < genericJsIdx, 'Config handler must appear before generic .js handler');
+});
+
+test('pwa: hashed-asset regex matches __intrilex-config.[hash].js (production)', async () => {
+  // Verify the existing hashed-asset regex matches the production config
+  // file name so it's served cache-first (immutable).
+  const sw = await readDist('sw.js');
+  // The regex is: /\.[a-f0-9]{12}\.(js|css)$/
+  assert.ok(sw.includes('[a-f0-9]{12}'), 'SW must have 12-char hash regex');
+  // Test the regex against a sample hashed config filename
+  const regex = /\.[a-f0-9]{12}\.(js|css)$/;
+  assert.ok(regex.test('/__intrilex-config.abc123def456.js'), 'Hashed config must match SW immutable-asset regex');
+});
+
 test('pwa: sw.js has offline fallback for navigation requests', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /index\.html.*Offline|Offline.*index\.html|503/);
@@ -267,12 +292,14 @@ test('pwa: CSP restricts object-src to none', async () => {
     'CSP object-src must be none (no Flash/plugins)');
 });
 
-test('pwa: CSP restricts frame-ancestors to none', async () => {
+test('pwa: CSP does not include frame-ancestors (ignored via meta — removed to avoid console noise)', async () => {
   const csp = await readCsp();
-  const frameAncestorsMatch = csp.match(/frame-ancestors\s+([^;]+)/);
-  assert.ok(frameAncestorsMatch, 'CSP must include frame-ancestors directive');
-  assert.ok(frameAncestorsMatch[1].includes("'none'"),
-    'CSP frame-ancestors must be none (clickjacking protection)');
+  // frame-ancestors is ignored in <meta> CSP per the CSP spec — it must
+  // be delivered via an HTTP header. Neocities static hosting does not
+  // support custom headers, so the directive was removed to eliminate
+  // the console warning. Clickjacking protection relies on the browser's
+  // default same-origin policy for top-level navigation.
+  assert.doesNotMatch(csp, /frame-ancestors/);
 });
 
 test('pwa: CSP allows Google Fonts for style-src and font-src', async () => {

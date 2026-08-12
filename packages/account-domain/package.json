@@ -11,6 +11,7 @@
     "./profile-domain": "./src/profile-domain.mjs",
     "./leaderboard": "./src/leaderboard.mjs",
     "./directory": "./src/directory.mjs",
+    "./recent-opponents": "./src/recent-opponents.mjs",
     "./rating": "./src/rating.mjs",
     "./glicko2": "./src/glicko2.mjs",
     "./seasons": "./src/seasons.mjs"

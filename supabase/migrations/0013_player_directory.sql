@@ -42,6 +42,12 @@
 ALTER TABLE public.profile_privacy
   ADD COLUMN IF NOT EXISTS directory_visible boolean NOT NULL DEFAULT false;
 
+-- ── pg_trgm extension for trigram-based ILIKE search ──
+-- The directory RPC uses leading-wildcard ILIKE ('%query%') which cannot
+-- use a plain B-tree index. pg_trgm GIN indexes enable fast substring
+-- search on handle and display_name. Supabase ships pg_trgm by default.
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- ── Indexes for directory search/sort ──
 -- Case-insensitive handle search (functional index on lower(handle))
 CREATE INDEX IF NOT EXISTS profiles_handle_lower_idx
@@ -51,6 +57,17 @@ CREATE INDEX IF NOT EXISTS profiles_handle_lower_idx
 -- Display name search (case-insensitive)
 CREATE INDEX IF NOT EXISTS profiles_display_name_lower_idx
   ON public.profiles (lower(display_name));
+
+-- Trigram GIN indexes for fast leading-wildcard ILIKE substring search.
+-- These accelerate the `lower(p.handle) LIKE lower('%query%')` and
+-- `lower(p.display_name) LIKE lower('%query%')` predicates in the RPC.
+-- gin_trgm_ops supports both ILIKE and similarity-based queries.
+CREATE INDEX IF NOT EXISTS profiles_handle_trgm_idx
+  ON public.profiles USING gin (handle gin_trgm_ops)
+  WHERE handle IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS profiles_display_name_trgm_idx
+  ON public.profiles USING gin (display_name gin_trgm_ops);
 
 -- Newest-sort support
 CREATE INDEX IF NOT EXISTS profiles_created_at_idx
@@ -191,8 +208,9 @@ BEGIN
       THEN COALESCE(pr.wins,0)::double precision / (COALESCE(pr.wins,0) + COALESCE(pr.losses,0) + COALESCE(pr.draws,0))
       ELSE 0 END AS win_rate,
     COALESCE(pr.rated_matches, 0) AS rated_matches,
-    -- Achievement count only when the player's achievements are PUBLIC
-    CASE WHEN COALESCE(pp2.achievements, 'PUBLIC') = 'PUBLIC'
+    -- Achievement count only when the player's achievements are PUBLIC.
+    -- Reuses the already-joined pp row (no separate pp2 join needed).
+    CASE WHEN COALESCE(pp.achievements, 'PUBLIC') = 'PUBLIC'
       THEN (SELECT count(*) FROM public.account_achievements a WHERE a.user_id = p.user_id)
       ELSE NULL
     END AS earned_achievement_count
@@ -200,13 +218,12 @@ BEGIN
   JOIN public.profile_privacy pp ON pp.user_id = p.user_id
   LEFT JOIN public.player_ratings pr ON pr.user_id = p.user_id
     AND pr.queue_id = 'ranked' AND pr.season_id = v_season
-  LEFT JOIN public.profile_privacy pp2 ON pp2.user_id = p.user_id
   LEFT JOIN public.account_moderation m ON m.user_id = p.user_id
   WHERE COALESCE(pp.directory_visible, false) = true
     AND (m.status IS NULL OR m.status = 'ACTIVE')
     AND (v_search IS NULL
-         OR lower(p.handle) LIKE lower(v_search)
-         OR lower(p.display_name) LIKE lower(v_search))
+         OR p.handle ILIKE v_search
+         OR p.display_name ILIKE v_search)
     AND (
       p_tier_filter IS NULL OR p_tier_filter = 'ALL'
       OR (p_tier_filter = 'INITIATE'  AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating < 1200)
@@ -219,29 +236,98 @@ BEGIN
       OR (p_tier_filter = 'INTRILEX'  AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating >= 2400)
     )
   ORDER BY
+    -- Primary sort key (descending sorts use NEGATE for numeric, epoch for timestamps)
     CASE
-      WHEN v_sort = 'rating' THEN
-        COALESCE(pr.rating, -1) DESC,
-        COALESCE(pr.rated_matches, 0) DESC,
-        p.public_player_id ASC
-      WHEN v_sort = 'games' THEN
-        COALESCE(pr.rated_matches, 0) DESC,
-        COALESCE(pr.rating, -1) DESC,
-        p.public_player_id ASC
-      WHEN v_sort = 'recent' THEN
-        COALESCE(pr.last_rated_at, '1970-01-01'::timestamptz) DESC,
-        p.created_at DESC,
-        p.public_player_id ASC
-      WHEN v_sort = 'newest' THEN
-        p.created_at DESC,
-        p.public_player_id ASC
-      WHEN v_sort = 'name' THEN
-        p.display_name ASC,
-        p.handle ASC,
-        p.public_player_id ASC
+      WHEN v_sort = 'rating'  THEN -COALESCE(pr.rating, -1)
+      WHEN v_sort = 'games'   THEN -COALESCE(pr.rated_matches, 0)
+      WHEN v_sort = 'recent'  THEN -EXTRACT(EPOCH FROM COALESCE(pr.last_rated_at, '1970-01-01'::timestamptz))::bigint
+      WHEN v_sort = 'newest'  THEN -EXTRACT(EPOCH FROM p.created_at)::bigint
+      WHEN v_sort = 'name'    THEN p.display_name
+    END,
+    -- Secondary sort key
+    CASE
+      WHEN v_sort = 'rating'  THEN -COALESCE(pr.rated_matches, 0)
+      WHEN v_sort = 'games'   THEN -COALESCE(pr.rating, -1)
+      WHEN v_sort = 'recent'  THEN -EXTRACT(EPOCH FROM p.created_at)::bigint
+      WHEN v_sort = 'newest'  THEN p.public_player_id
+      WHEN v_sort = 'name'    THEN COALESCE(p.handle, '')
+    END,
+    -- Tertiary sort key (tiebreaker)
+    CASE
+      WHEN v_sort IN ('rating','games','recent') THEN p.public_player_id
+      WHEN v_sort = 'newest' THEN p.public_player_id
+      ELSE p.public_player_id
     END
   LIMIT v_limit
   OFFSET v_offset;
+END;
+$$;
+
+-- ═══════════════════════════════════════════════════════════════
+-- RPC: get_player_directory_count
+--
+-- Returns the total count of discoverable players matching the same
+-- search/tier filters as get_player_directory (without pagination).
+-- Enables "Showing 1–25 of 312" summary in the UI without a separate
+-- full query. Uses the same SECURITY DEFINER + search_path = public
+-- boundary. Returns jsonb { count: integer } for consistency.
+-- ═══════════════════════════════════════════════════════════════
+CREATE OR REPLACE FUNCTION public.get_player_directory_count(
+  p_search      text DEFAULT NULL,
+  p_tier_filter text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_search text;
+  v_count  integer;
+  v_season text;
+BEGIN
+  -- Resolve the active ranked season once (for the rating join)
+  SELECT season_id INTO v_season
+    FROM public.ranked_seasons
+    WHERE queue_id = 'ranked' AND status = 'ACTIVE'
+    ORDER BY starts_at ASC LIMIT 1;
+  IF v_season IS NULL THEN v_season := 'season-1'; END IF;
+
+  -- Sanitize search: trim + cap length (same logic as get_player_directory)
+  v_search := NULL;
+  IF p_search IS NOT NULL THEN
+    v_search := trim(p_search);
+    IF length(v_search) < 2 OR length(v_search) > 64 THEN
+      v_search := NULL;
+    ELSE
+      v_search := '%' || v_search || '%';
+    END IF;
+  END IF;
+
+  SELECT count(*) INTO v_count
+  FROM public.profiles p
+  JOIN public.profile_privacy pp ON pp.user_id = p.user_id
+  LEFT JOIN public.player_ratings pr ON pr.user_id = p.user_id
+    AND pr.queue_id = 'ranked' AND pr.season_id = v_season
+  LEFT JOIN public.account_moderation m ON m.user_id = p.user_id
+  WHERE COALESCE(pp.directory_visible, false) = true
+    AND (m.status IS NULL OR m.status = 'ACTIVE')
+    AND (v_search IS NULL
+         OR p.handle ILIKE v_search
+         OR p.display_name ILIKE v_search)
+    AND (
+      p_tier_filter IS NULL OR p_tier_filter = 'ALL'
+      OR (p_tier_filter = 'INITIATE'  AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating < 1200)
+      OR (p_tier_filter = 'CIPHER'    AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating >= 1200 AND pr.rating < 1400)
+      OR (p_tier_filter = 'WARDEN'    AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating >= 1400 AND pr.rating < 1600)
+      OR (p_tier_filter = 'VANGUARD'  AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating >= 1600 AND pr.rating < 1800)
+      OR (p_tier_filter = 'ASCENDANT' AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating >= 1800 AND pr.rating < 2000)
+      OR (p_tier_filter = 'PARAGON'   AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating >= 2000 AND pr.rating < 2200)
+      OR (p_tier_filter = 'SOVEREIGN' AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating >= 2200 AND pr.rating < 2400)
+      OR (p_tier_filter = 'INTRILEX'  AND pr.rating IS NOT NULL AND pr.provisional = false AND pr.placements_played >= 5 AND pr.rating >= 2400)
+    );
+
+  RETURN jsonb_build_object('count', v_count);
 END;
 $$;
 
@@ -275,8 +361,14 @@ BEGIN
 END;
 $$;
 
--- Grant execute on directory RPCs to authenticated users (read + self-toggle)
+-- Grant execute on directory RPCs.
+-- Read RPCs (get_player_directory, get_player_directory_count) are granted
+-- to both authenticated and anon roles so anonymous visitors can browse
+-- the directory. The set_directory_visible mutation is authenticated-only.
 GRANT EXECUTE ON FUNCTION public.get_player_directory TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_player_directory TO anon;
+GRANT EXECUTE ON FUNCTION public.get_player_directory_count TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_player_directory_count TO anon;
 GRANT EXECUTE ON FUNCTION public.set_directory_visible TO authenticated;
 
 -- ═══════════════════════════════════════════════════════════════

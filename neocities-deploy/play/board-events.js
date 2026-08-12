@@ -42,7 +42,14 @@ function clearSelection() {
  * @returns {Promise<boolean>} true if accepted, false otherwise
  */
 async function submitAction(container, actionId, renderActiveMatch) {
-  if (!state.session || state.session.status !== SessionState.HUMAN_DECISION) return false;
+  if (!state.session) return false;
+  // Network sessions use NetworkSessionState.RUNNING internally, not
+  // SessionState.HUMAN_DECISION. Use isAwaitingHumanAction() to check
+  // if it's the local player's turn.
+  const isHumanTurn = state.networkSession
+    ? state.networkSession.isAwaitingHumanAction()
+    : state.session.status === SessionState.HUMAN_DECISION;
+  if (!isHumanTurn) return false;
   const snapshot = state.session.getSnapshot();
   const submission = {
     sessionId: snapshot.sessionId,
@@ -405,26 +412,32 @@ export function bindBoardEvents(container, callbacks) {
     });
   }
 
-  // v0.19.0: Match chat form submit
-  const chatForm = container.querySelector('[data-testid="match-chat-form"]');
-  if (chatForm) {
-    chatForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const input = chatForm.querySelector('[data-testid="match-chat-input"]');
-      const text = input?.value?.trim();
-      if (!text) return;
-      state.chatMessages.push({ author: 'player', text, time: new Date().toLocaleTimeString() });
-      input.value = '';
+  // Rules/help overlay close button
+  const rulesHelpClose = container.querySelector('[data-testid="rules-help-close"]');
+  if (rulesHelpClose) {
+    rulesHelpClose.addEventListener('click', () => {
+      state.showRulesHelp = false;
       renderActiveMatch(container);
     });
   }
 
-  // v0.25: Chat send — routes to network session for online matches,
-  // or local echo for Local vs AI matches.
-  const chatSendBtn = container.querySelector('[data-action="chat-send"]');
-  if (chatSendBtn) {
-    chatSendBtn.addEventListener('click', async () => {
-      const input = container.querySelector('[data-chat-input]');
+  // Match stats overlay close button
+  const matchStatsClose = container.querySelector('[data-testid="match-stats-close"]');
+  if (matchStatsClose) {
+    matchStatsClose.addEventListener('click', () => {
+      state.showMatchStats = false;
+      renderActiveMatch(container);
+    });
+  }
+
+  // v0.28: Match chat form submit — unified handler for both network and local.
+  // Removed the duplicate form-submit handler that pushed with `author: 'player'`
+  // (which conflicted with the network session's chat messages).
+  const chatForm = container.querySelector('[data-testid="match-chat-form"]');
+  if (chatForm) {
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = chatForm.querySelector('[data-testid="match-chat-input"]');
       const text = input?.value?.trim();
       if (!text) return;
       input.value = '';
@@ -436,6 +449,15 @@ export function bindBoardEvents(container, callbacks) {
       renderActiveMatch(container);
     });
   }
+
+  // v0.25: Chat send button — routes to network session for online matches,
+  // or local echo for Local vs AI matches.
+  // NOTE: The send button is type="submit" inside the chat form, so the
+  // form submit handler above already handles button clicks. This separate
+  // click handler is NOT needed and would cause duplicate sends.
+  // Removed the click handler to prevent double-send issues.
+
+  // Chat input Enter key handler — sends message on Enter (prevents form submit)
   const chatInputEl = container.querySelector('[data-chat-input]');
   if (chatInputEl) {
     chatInputEl.addEventListener('keydown', async (e) => {
@@ -452,6 +474,26 @@ export function bindBoardEvents(container, callbacks) {
         renderActiveMatch(container);
       }
     });
+  }
+
+  // v0.28: Chat hide/show toggle — network matches only
+  const chatToggleBtn = container.querySelector('[data-action="chat-hide"], [data-action="chat-show"]');
+  if (chatToggleBtn) {
+    chatToggleBtn.addEventListener('click', () => {
+      const action = chatToggleBtn.dataset.action;
+      const hidden = action === 'chat-hide';
+      if (state.networkSession) {
+        state.networkSession.sendChatVisibility(hidden);
+      }
+      state.chatHidden = hidden;
+      renderActiveMatch(container);
+    });
+  }
+
+  // v0.28: Draggable divider between Actions and Chat
+  const divider = container.querySelector('[data-action="rail-drag"]');
+  if (divider) {
+    bindRailDividerDrag(divider, container);
   }
 
   // v0.22.0: Right rail tab switching
@@ -488,7 +530,12 @@ export function bindBoardEvents(container, callbacks) {
   const confirmBtn = container.querySelector('[data-testid="confirm-action"]');
   if (confirmBtn) {
     confirmBtn.addEventListener('click', async () => {
-      if (!state.session || state.session.status !== SessionState.HUMAN_DECISION) return;
+      if (!state.session) return;
+      // Network sessions use NetworkSessionState.RUNNING internally
+      const isHumanTurn = state.networkSession
+        ? state.networkSession.isAwaitingHumanAction()
+        : state.session.status === SessionState.HUMAN_DECISION;
+      if (!isHumanTurn) return;
       if (confirmBtn.dataset.submitting === 'true') return;
       confirmBtn.dataset.submitting = 'true';
       confirmBtn.disabled = true;
@@ -646,13 +693,41 @@ export function bindBoardEvents(container, callbacks) {
         const newSeed = (Math.random() * 4294967296) >>> 0 || 1;
         await startNewMatch({ ...state.session.setup, seed: newSeed }, container);
       } else if (action === 'return-to-hub' || action === 'exit-match') {
+        // v0.28: For network matches, exit-match is only available in terminal state.
+        // For active network matches, the X button triggers 'forfeit-match' instead.
         stopAutosave();
         state.session = null;
         state.inspectorCardId = null;
         state.inspectorFaceView = 'board';
+        // Clean up beforeunload protection before navigating away
+        if (typeof removeBeforeUnloadProtection === 'function') {
+          removeBeforeUnloadProtection();
+        }
         location.hash = '#/';
+      } else if (action === 'forfeit-match') {
+        // v0.28: Forfeit confirmation dialog for active network PvP matches.
+        // Shows an explicit confirmation; canceling keeps the player in the match.
+        showForfeitConfirmation(container, state);
       } else if (action === 'keyboard-help') {
         state.showKeyboardHelp = !state.showKeyboardHelp;
+        renderActiveMatch(container);
+      } else if (action === 'toggle-rules') {
+        // Toggle rules/help overlay
+        state.showRulesHelp = !state.showRulesHelp;
+        renderActiveMatch(container);
+      } else if (action === 'toggle-stats') {
+        // Toggle match stats overlay
+        state.showMatchStats = !state.showMatchStats;
+        renderActiveMatch(container);
+      } else if (action === 'toggle-inspector') {
+        // Toggle card inspector — open for selected card or close
+        if (state.inspectorCardId) {
+          state.inspectorCardId = null;
+          state.inspectorFaceView = 'board';
+        } else if (state.selectedSourceCardId) {
+          state.inspectorCardId = state.selectedSourceCardId;
+          state.inspectorFaceView = 'board';
+        }
         renderActiveMatch(container);
       } else if (action === 'toggle-chat') {
         state.rightRailTab = 'chat';
@@ -663,4 +738,192 @@ export function bindBoardEvents(container, callbacks) {
       }
     });
   });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// v0.28: PvP Match Experience — Forfeit confirmation, rail divider
+// drag, and beforeunload protection helpers.
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Show a forfeit confirmation dialog for active network PvP matches.
+ * Canceling keeps the player in the match. Confirming submits the
+ * authoritative leave/forfeit operation to the server.
+ * @param {HTMLElement} container
+ * @param {object} state
+ */
+export function showForfeitConfirmation(container, state) {
+  // Remove any existing dialog
+  const existing = container.querySelector('.rd-forfeit-dialog');
+  if (existing) existing.remove();
+
+  const dialog = document.createElement('div');
+  dialog.className = 'rd-forfeit-dialog';
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('aria-modal', 'true');
+  dialog.setAttribute('aria-labelledby', 'rd-forfeit-title');
+  dialog.setAttribute('data-testid', 'forfeit-dialog');
+  dialog.innerHTML = `
+    <div class="rd-forfeit-dialog-content">
+      <h2 id="rd-forfeit-title" class="rd-forfeit-dialog-title">Forfeit Match?</h2>
+      <p class="rd-forfeit-dialog-msg">This will count as a loss. Your opponent will be declared the winner by the server.</p>
+      <div class="rd-forfeit-dialog-actions">
+        <button class="rd-forfeit-cancel" data-action="forfeit-cancel" data-testid="forfeit-cancel">Stay in Match</button>
+        <button class="rd-forfeit-confirm" data-action="forfeit-confirm" data-testid="forfeit-confirm">Forfeit</button>
+      </div>
+    </div>
+  `;
+  container.appendChild(dialog);
+
+  const cancelBtn = dialog.querySelector('[data-action="forfeit-cancel"]');
+  const confirmBtn = dialog.querySelector('[data-action="forfeit-confirm"]');
+
+  cancelBtn.addEventListener('click', () => {
+    dialog.remove();
+    // Player stays in the match — no state change
+  });
+
+  confirmBtn.addEventListener('click', async () => {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Forfeiting…';
+    cancelBtn.disabled = true;
+    try {
+      // Submit the authoritative leave/forfeit to the server
+      if (state.networkSession && typeof state.networkSession.forfeit === 'function') {
+        await state.networkSession.forfeit();
+      }
+      // The server will broadcast the terminal state; the match will
+      // transition to the Results/terminal state via the normal view update.
+      // We remove the dialog but DON'T navigate away — the terminal state
+      // will handle the transition.
+      dialog.remove();
+    } catch (err) {
+      console.warn('Forfeit failed:', err.message);
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Forfeit';
+      cancelBtn.disabled = false;
+    }
+  });
+
+  // Focus the cancel button by default (safer choice)
+  cancelBtn.focus();
+}
+
+/**
+ * Bind drag behavior to the rail divider between Actions and Chat.
+ * Allows the user to resize the two sections by dragging.
+ * @param {HTMLElement} divider
+ * @param {HTMLElement} container
+ */
+export function bindRailDividerDrag(divider, container) {
+  const inner = container.querySelector('.rd-right-rail-bottom-inner');
+  if (!inner) return;
+
+  let dragging = false;
+  let startY = 0;
+  let startChatSplit = 40;
+
+  const onPointerDown = (e) => {
+    dragging = true;
+    divider.classList.add('dragging');
+    inner.classList.add('dragging');
+    startY = e.clientY ?? e.touches?.[0]?.clientY ?? 0;
+    const currentSplit = parseFloat(inner.dataset.chatSplit ?? '40');
+    startChatSplit = isNaN(currentSplit) ? 40 : currentSplit;
+    e.preventDefault();
+  };
+
+  const onPointerMove = (e) => {
+    if (!dragging) return;
+    const clientY = e.clientY ?? e.touches?.[0]?.clientY ?? 0;
+    const delta = clientY - startY;
+    const containerRect = inner.getBoundingClientRect();
+    if (containerRect.height === 0) return;
+    // Convert pixel delta to percentage.
+    // Dragging the divider DOWN (positive delta) moves the divider down,
+    // giving Actions (top) MORE space and Chat (bottom) LESS space.
+    // So chat percentage DECREASES when dragging down.
+    const deltaPct = (delta / containerRect.height) * 100;
+    let newSplit = startChatSplit - deltaPct;
+    // Clamp to reasonable bounds
+    newSplit = Math.max(10, Math.min(80, newSplit));
+    inner.dataset.chatSplit = newSplit.toFixed(1);
+    // Update flex values: chat gets newSplit%, actions gets the rest
+    const actionsSection = inner.querySelector('.rd-rail-actions-section');
+    const chatSection = inner.querySelector('.rd-rail-chat-section');
+    if (actionsSection) actionsSection.style.flex = `${100 - newSplit} 1 0`;
+    if (chatSection) chatSection.style.flex = `${newSplit} 1 0`;
+  };
+
+  const onPointerUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    divider.classList.remove('dragging');
+    inner.classList.remove('dragging');
+  };
+
+  divider.addEventListener('mousedown', onPointerDown);
+  document.addEventListener('mousemove', onPointerMove);
+  document.addEventListener('mouseup', onPointerUp);
+
+  // Touch support
+  divider.addEventListener('touchstart', onPointerDown, { passive: false });
+  document.addEventListener('touchmove', onPointerMove, { passive: false });
+  document.addEventListener('touchend', onPointerUp);
+
+  // Keyboard support: arrow keys to resize
+  divider.addEventListener('keydown', (e) => {
+    const currentSplit = parseFloat(inner.dataset.chatSplit ?? '40');
+    let newSplit = isNaN(currentSplit) ? 40 : currentSplit;
+    // ArrowUp = move divider up = Actions shrinks, Chat grows → split increases
+    // ArrowDown = move divider down = Actions grows, Chat shrinks → split decreases
+    if (e.key === 'ArrowUp') {
+      newSplit = Math.min(80, newSplit + 5);
+      e.preventDefault();
+    } else if (e.key === 'ArrowDown') {
+      newSplit = Math.max(10, newSplit - 5);
+      e.preventDefault();
+    } else {
+      return;
+    }
+    inner.dataset.chatSplit = newSplit.toFixed(1);
+    const actionsSection = inner.querySelector('.rd-rail-actions-section');
+    const chatSection = inner.querySelector('.rd-rail-chat-section');
+    if (actionsSection) actionsSection.style.flex = `${100 - newSplit} 1 0`;
+    if (chatSection) chatSection.style.flex = `${newSplit} 1 0`;
+  });
+}
+
+// ── beforeunload protection for active network matches ──────────
+
+let _beforeUnloadHandler = null;
+
+/**
+ * Add a beforeunload event listener that warns the user when they
+ * try to close/refresh the tab during an active network PvP match.
+ * The handler is removed when the match ends or the session is
+ * no longer active.
+ */
+export function addBeforeUnloadProtection() {
+  if (_beforeUnloadHandler) return; // Already protected
+  _beforeUnloadHandler = (e) => {
+    // Modern browsers ignore custom messages, but returning any
+    // non-empty string triggers the confirmation dialog.
+    e.preventDefault();
+    e.returnValue = 'You have an active online match. Leaving now may result in a forfeit.';
+    return e.returnValue;
+  };
+  window.addEventListener('beforeunload', _beforeUnloadHandler);
+}
+
+/**
+ * Remove the beforeunload protection listener. Must be called when
+ * the match ends, the session is no longer active, or the user
+ * explicitly confirms they want to leave.
+ */
+export function removeBeforeUnloadProtection() {
+  if (_beforeUnloadHandler) {
+    window.removeEventListener('beforeunload', _beforeUnloadHandler);
+    _beforeUnloadHandler = null;
+  }
 }

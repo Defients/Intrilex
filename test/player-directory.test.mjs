@@ -432,14 +432,36 @@ test('schema: get_self_profile augmented with directoryVisible (owner-readable)'
   assert.ok(sql.includes('v_dir_visible'), 'get_self_profile must read directory_visible');
 });
 
+test('schema: get_player_directory does not join profile_privacy twice (no pp2)', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  // The achievement privacy check should reuse the already-joined pp row,
+  // not a redundant pp2 join.
+  assert.ok(sql.includes('COALESCE(pp.achievements'), 'RPC should check pp.achievements (not pp2)');
+  assert.ok(!sql.includes('pp2.'), 'RPC must not join profile_privacy a second time as pp2');
+  assert.ok(!sql.includes('LEFT JOIN public.profile_privacy pp2'), 'no redundant pp2 join');
+});
+
+test('schema: set_directory_visible INSERT is safe with column defaults', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  // The INSERT only sets user_id + directory_visible; other privacy columns
+  // get their table defaults (match_history='PUBLIC', etc. from migration 0010).
+  assert.ok(sql.includes('INSERT INTO public.profile_privacy (user_id, directory_visible)'),
+    'set_directory_visible should INSERT only user_id + directory_visible');
+  assert.ok(sql.includes('ON CONFLICT (user_id) DO UPDATE SET'),
+    'set_directory_visible should upsert on conflict');
+});
+
 // ═══════════════════════════════════════════════════════════════
 // Section: Routing — /players route is registered
 // ═══════════════════════════════════════════════════════════════
 
-test('routing: /players route is registered in router.js', async () => {
+test('routing: /players is a landing mode (overlay), not an observatory workspace', async () => {
   const routerSrc = await readFile(path.join(root, 'apps/lab-web/src/router.js'), 'utf8');
-  assert.ok(routerSrc.includes("'/players'"), 'router.js must register /players');
-  assert.ok(routerSrc.includes('Players'), 'router.js must have a Players label');
+  assert.ok(routerSrc.includes("'/players'"), 'router.js must reference /players in LANDING_MODES');
+  assert.ok(routerSrc.includes('LANDING_MODES'), 'router.js must have LANDING_MODES set');
+  // Must NOT be in the WORKSPACES array (observatory nav)
+  const workspacesBlock = routerSrc.split('export const WORKSPACES')[1].split('];')[0];
+  assert.ok(!workspacesBlock.includes("'/players'"), '/players must not be in WORKSPACES (observatory)');
 });
 
 test('routing: /players has SEO metadata in seo-metadata.js', async () => {
@@ -448,10 +470,13 @@ test('routing: /players has SEO metadata in seo-metadata.js', async () => {
   assert.ok(seoSrc.includes('Discover Intrilex players'), 'seo-metadata.js must describe the directory');
 });
 
-test('routing: renderPlayers is wired in app.js renderers', async () => {
+test('routing: openPlayersOverlay is wired in app.js (overlay pattern, not observatory renderer)', async () => {
   const appSrc = await readFile(path.join(root, 'apps/lab-web/src/app.js'), 'utf8');
   assert.ok(appSrc.includes('renderPlayers'), 'app.js must import renderPlayers');
-  assert.ok(appSrc.includes("'/players': renderPlayers"), 'app.js must dispatch /players to renderPlayers');
+  assert.ok(appSrc.includes('openPlayersOverlay'), 'app.js must have openPlayersOverlay function');
+  assert.ok(appSrc.includes("r === '/players'"), 'app.js must handle /players in renderLandingMode');
+  assert.ok(!appSrc.includes("'/players': renderPlayers"), 'app.js must NOT dispatch /players as observatory renderer');
+  assert.ok(appSrc.includes('data-players-card'), 'app.js must have data-players-card on the rail card');
 });
 
 test('routing: players workspace file exists with data-testid hooks', async () => {
@@ -471,4 +496,197 @@ test('routing: players-data.js calls get_player_directory RPC', async () => {
 test('routing: players CSS imported in styles.css', async () => {
   const stylesSrc = await readFile(path.join(root, 'apps/lab-web/src/styles.css'), 'utf8');
   assert.ok(stylesSrc.includes('players/players.css'), 'styles.css must import players.css');
+});
+
+test('data: error message does not leak internal sort/tier parameter names', async () => {
+  const dataSrc = await readFile(path.join(root, 'apps/lab-web/src/play/players/players-data.js'), 'utf8');
+  // The error message should NOT contain the old format with sort=/tier= params
+  assert.ok(!dataSrc.includes('sort=${sort}'), 'error message must not leak sort param');
+  assert.ok(!dataSrc.includes('tier=${tier'), 'error message must not leak tier param');
+  assert.ok(dataSrc.includes('Directory unavailable:'), 'error message should be user-friendly');
+});
+
+test('ui: renderCard does not contain dead code (undefined : undefined ternary)', async () => {
+  const wsSrc = await readFile(path.join(root, 'apps/lab-web/src/workspaces/players.js'), 'utf8');
+  assert.ok(!wsSrc.includes('undefined : undefined'), 'renderCard must not have dead ternary');
+});
+
+test('ui: syncStateFromUrl resets offset to 0 on deep-link entry', async () => {
+  const wsSrc = await readFile(path.join(root, 'apps/lab-web/src/workspaces/players.js'), 'utf8');
+  // The sync function should reset offset to 0 to avoid stale pagination
+  const syncBlock = wsSrc.split('function syncStateFromUrl')[1].split('function ')[0];
+  assert.ok(syncBlock.includes('view.offset = 0'), 'syncStateFromUrl must reset offset to 0');
+});
+
+test('ui: search clear button uses delegation (no duplicate handler in updateSearchClear)', async () => {
+  const wsSrc = await readFile(path.join(root, 'apps/lab-web/src/workspaces/players.js'), 'utf8');
+  // The updateSearchClear function should set dataset.action on the dynamic button
+  // (delegated via the target-level click handler), NOT attach its own listener.
+  const fnStart = wsSrc.indexOf('function updateSearchClear');
+  const fnEnd = wsSrc.indexOf('function scrollToTop', fnStart);
+  const updateBlock = wsSrc.substring(fnStart, fnEnd);
+  assert.ok(updateBlock.includes('dataset.action'), 'clear button should use dataset.action delegation');
+  assert.ok(!updateBlock.includes('addEventListener'), 'clear button should not have inline listener');
+});
+
+test('ui: CSS has tier-colored rank text via data-tier attribute selectors', async () => {
+  const cssSrc = await readFile(path.join(root, 'apps/lab-web/src/play/players/players.css'), 'utf8');
+  assert.ok(cssSrc.includes('[data-tier="INTRILEX"]'), 'CSS must style INTRILEX tier');
+  assert.ok(cssSrc.includes('[data-tier="CIPHER"]'), 'CSS must style CIPHER tier');
+  assert.ok(cssSrc.includes('[data-tier="ASCENDANT"]'), 'CSS must style ASCENDANT tier');
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Section: pg_trgm GIN indexes for fast substring search
+// ═══════════════════════════════════════════════════════════════
+
+test('schema: pg_trgm extension is created for trigram search', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  assert.ok(sql.includes('CREATE EXTENSION IF NOT EXISTS pg_trgm'),
+    'migration must create pg_trgm extension');
+});
+
+test('schema: GIN trigram indexes exist on handle and display_name', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  assert.ok(sql.includes('profiles_handle_trgm_idx'), 'handle trigram GIN index must exist');
+  assert.ok(sql.includes('profiles_display_name_trgm_idx'), 'display_name trigram GIN index must exist');
+  assert.ok(sql.includes('gin_trgm_ops'), 'indexes must use gin_trgm_ops operator class');
+  assert.ok(sql.includes('USING gin'), 'indexes must be GIN type');
+});
+
+test('schema: get_player_directory uses ILIKE (not lower() LIKE) for trigram compatibility', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  assert.ok(sql.includes('p.handle ILIKE v_search'), 'RPC must use ILIKE on handle');
+  assert.ok(sql.includes('p.display_name ILIKE v_search'), 'RPC must use ILIKE on display_name');
+  assert.ok(!sql.includes('lower(p.handle) LIKE lower(v_search)'),
+    'RPC must not use lower() LIKE (replaced by ILIKE for trigram index compatibility)');
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Section: get_player_directory_count RPC
+// ═══════════════════════════════════════════════════════════════
+
+test('schema: get_player_directory_count RPC exists with SECURITY DEFINER', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  assert.ok(sql.includes('get_player_directory_count'), 'count RPC must exist');
+  // Extract the count RPC function body precisely (from its CREATE to the next RPC comment block)
+  const fnStart = sql.indexOf('CREATE OR REPLACE FUNCTION public.get_player_directory_count');
+  const fnEnd = sql.indexOf('-- ═══', fnStart + 10);
+  const countBlock = sql.substring(fnStart, fnEnd);
+  assert.ok(countBlock.includes('SECURITY DEFINER'), 'count RPC must be SECURITY DEFINER');
+  assert.ok(countBlock.includes("SET search_path = public"), 'count RPC must lock search_path');
+});
+
+test('schema: get_player_directory_count returns jsonb with count field', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  const fnStart = sql.indexOf('CREATE OR REPLACE FUNCTION public.get_player_directory_count');
+  const fnEnd = sql.indexOf('-- ═══', fnStart + 10);
+  const countBlock = sql.substring(fnStart, fnEnd);
+  assert.ok(countBlock.includes('RETURNS jsonb'), 'count RPC must return jsonb');
+  assert.ok(countBlock.includes("'count', v_count"), 'count RPC must return { count: N }');
+});
+
+test('schema: get_player_directory_count applies same privacy + moderation filters', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  const fnStart = sql.indexOf('CREATE OR REPLACE FUNCTION public.get_player_directory_count');
+  const fnEnd = sql.indexOf('-- ═══', fnStart + 10);
+  const countBlock = sql.substring(fnStart, fnEnd);
+  assert.ok(countBlock.includes("directory_visible"), 'count RPC must filter on directory_visible');
+  assert.ok(countBlock.includes("m.status IS NULL OR m.status = 'ACTIVE'"),
+    'count RPC must exclude suspended/banned players');
+  assert.ok(countBlock.includes('p_tier_filter'), 'count RPC must support tier filter');
+});
+
+test('schema: get_player_directory_count sanitizes search length (2-64)', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  const fnStart = sql.indexOf('CREATE OR REPLACE FUNCTION public.get_player_directory_count');
+  const fnEnd = sql.indexOf('-- ═══', fnStart + 10);
+  const countBlock = sql.substring(fnStart, fnEnd);
+  assert.ok(countBlock.includes("length(v_search) < 2"), 'count RPC must reject too-short search');
+  assert.ok(countBlock.includes("length(v_search) > 64"), 'count RPC must reject too-long search');
+});
+
+test('data: fetchDirectory returns total from count RPC', async () => {
+  const dataSrc = await readFile(path.join(root, 'apps/lab-web/src/play/players/players-data.js'), 'utf8');
+  assert.ok(dataSrc.includes('get_player_directory_count'), 'data layer must call count RPC');
+  assert.ok(dataSrc.includes('total'), 'data layer must return total field');
+  assert.ok(dataSrc.includes('total: null'), 'data layer must default total to null on error');
+});
+
+test('ui: renderSummary shows "of N" when total is available', async () => {
+  const wsSrc = await readFile(path.join(root, 'apps/lab-web/src/workspaces/players.js'), 'utf8');
+  assert.ok(wsSrc.includes('totalSuffix'), 'summary must include total suffix');
+  assert.ok(wsSrc.includes('of ${view.total}'), 'summary must show "of N" when total is present');
+});
+
+test('ui: view state tracks total field', async () => {
+  const wsSrc = await readFile(path.join(root, 'apps/lab-web/src/workspaces/players.js'), 'utf8');
+  assert.ok(wsSrc.includes('total: null'), 'view state must initialize total to null');
+  assert.ok(wsSrc.includes('view.total = res.total'), 'load must store total from response');
+});
+
+test('ui: pagination uses total for precise last-page detection', async () => {
+  const wsSrc = await readFile(path.join(root, 'apps/lab-web/src/workspaces/players.js'), 'utf8');
+  assert.ok(wsSrc.includes('view.offset + res.entries.length >= view.total'),
+    'pagination must use total for last-page detection when available');
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Section: Keyboard shortcut '/' to focus search
+// ═══════════════════════════════════════════════════════════════
+
+test('ui: keyboard shortcut "/" focuses search input', async () => {
+  const wsSrc = await readFile(path.join(root, 'apps/lab-web/src/workspaces/players.js'), 'utf8');
+  assert.ok(wsSrc.includes("ev.key !== '/'"), 'workspace must handle "/" keydown');
+  assert.ok(wsSrc.includes('s.focus()'), 'workspace must focus search on "/" key');
+  // Must guard against firing when already in an input
+  assert.ok(wsSrc.includes("tag === 'INPUT'"), 'must ignore "/" when already in an input');
+  assert.ok(wsSrc.includes("tag === 'TEXTAREA'"), 'must ignore "/" when in a textarea');
+  assert.ok(wsSrc.includes('ev.ctrlKey || ev.metaKey || ev.altKey'),
+    'must ignore "/" when modifier keys are held');
+});
+
+test('ui: search placeholder mentions "/" shortcut', async () => {
+  const wsSrc = await readFile(path.join(root, 'apps/lab-web/src/workspaces/players.js'), 'utf8');
+  assert.ok(wsSrc.includes('press / to focus'), 'placeholder should hint at "/" shortcut');
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Section: Anonymous directory access
+// ═══════════════════════════════════════════════════════════════
+
+test('schema: get_player_directory granted to anon (anonymous browsing)', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  assert.ok(sql.includes('GRANT EXECUTE ON FUNCTION public.get_player_directory TO anon'),
+    'get_player_directory must be executable by anon role');
+});
+
+test('schema: get_player_directory_count granted to anon', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  assert.ok(sql.includes('GRANT EXECUTE ON FUNCTION public.get_player_directory_count TO anon'),
+    'get_player_directory_count must be executable by anon role');
+});
+
+test('schema: set_directory_visible NOT granted to anon (mutation is authenticated-only)', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  assert.ok(!sql.includes('GRANT EXECUTE ON FUNCTION public.set_directory_visible TO anon'),
+    'set_directory_visible must NOT be granted to anon (owner-only mutation)');
+  assert.ok(sql.includes('GRANT EXECUTE ON FUNCTION public.set_directory_visible TO authenticated'),
+    'set_directory_visible must remain authenticated-only');
+});
+
+test('schema: get_player_directory does not expose auth.uid or email (anonymous-safe)', async () => {
+  const sql = await readMigration('0013_player_directory.sql');
+  const returnsBlock = sql.split('RETURNS TABLE')[1].split('LANGUAGE')[0];
+  // These fields must never be in the return columns — anonymous access
+  // makes this even more critical
+  assert.ok(!returnsBlock.includes('user_id'), 'must not return user_id (anonymous-safe)');
+  assert.ok(!returnsBlock.includes('email'), 'must not return email (anonymous-safe)');
+  assert.ok(!returnsBlock.includes('rating_deviation'), 'must not return RD (anonymous-safe)');
+  assert.ok(!returnsBlock.includes('volatility'), 'must not return volatility (anonymous-safe)');
+});
+
+test('ui: unavailable state mentions anonymous browsing is supported', async () => {
+  const wsSrc = await readFile(path.join(root, 'apps/lab-web/src/workspaces/players.js'), 'utf8');
+  assert.ok(wsSrc.includes('no sign-in required'), 'unavailable state should mention no sign-in needed');
 });

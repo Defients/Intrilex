@@ -33,9 +33,16 @@ import { runMigrationIfPending, onMigrationStatusChange } from './play/network/m
 import { renderPrivacyPage, renderTermsPage } from './legal-pages.js';
 import { renderRankingSystemOverlay } from './play/rank/ranking-system-overlay.js';
 import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading } from './seo-metadata.js';
+import { diagnoseConfig } from './play/network/match-server-config.js';
 
 // Install global error boundary at module load time
 installGlobalErrorBoundary();
+
+// Diagnose runtime config on bootstrap — logs structured warnings to
+// console if __INTRILEX_CONFIG__ is missing or incomplete in production.
+// This helps diagnose config-file load failures (404, CSP block, SW stale
+// cache) without adding heavy telemetry infrastructure.
+diagnoseConfig();
 
 // ═══════════════════════════════════════════════════════════════
 // MAIN RENDER DISPATCH
@@ -125,7 +132,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/players': renderPlayers, '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app), '/settings': renderSettings
+    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app), '/settings': renderSettings
   };
   try {
     const result = (renderers[r] ?? renderEvidence)();
@@ -154,6 +161,16 @@ function renderLandingMode(r) {
     // Render the landing page first, then open the auth overlay on top.
     renderLanding();
     openAuthOverlay();
+  }
+  else if (r === '/players') {
+    // Players is an overlay on the homepage, not a Simulation Lab workspace.
+    renderLanding();
+    openPlayersOverlay();
+  }
+  else if (r === '/leaderboard') {
+    // Leaderboard is an overlay on the homepage, not a Simulation Lab workspace.
+    renderLanding();
+    openLeaderboardOverlay();
   }
 }
 
@@ -328,6 +345,10 @@ function openReleaseNotesOverlay() {
 
 function openLeaderboardOverlay() {
   openLandingOverlay('Leaderboard', (c) => renderLeaderboard(c), destroyLeaderboard);
+}
+
+function openPlayersOverlay() {
+  openLandingOverlay('Players', (c) => renderPlayers(c), destroyPlayers);
 }
 
 function openRankingSystemOverlay() {
@@ -585,7 +606,7 @@ function renderLanding() {
                 </svg>
               </span>
             </a>
-            <a class="landing-rail-card players" href="#/players" data-testid="landing-players-card">
+            <a class="landing-rail-card players" href="#/players" data-players-card data-testid="landing-players-card">
               <span class="landing-rail-body">
                 <strong>PLAYERS</strong>
                 <p>Find players &middot; search by name or @handle &middot; inspect profiles &amp; rankings</p>
@@ -821,6 +842,15 @@ function bindLandingEvents() {
     leaderboardLink.addEventListener('click', (e) => {
       e.preventDefault();
       openLeaderboardOverlay();
+    });
+  }
+
+  // ── PLAYERS card → overlay ──
+  const playersLink = landingContainer.querySelector('[data-players-card]');
+  if (playersLink) {
+    playersLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openPlayersOverlay();
     });
   }
 
