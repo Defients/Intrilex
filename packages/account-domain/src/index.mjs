@@ -144,6 +144,28 @@ export {
 } from './directory.mjs';
 
 export {
+  RelationshipKind,
+  RELATIONSHIP_KINDS,
+  RivalryIntensity,
+  DEFAULT_RELATIONSHIPS_LIMIT,
+  MAX_RELATIONSHIPS_LIMIT,
+  RELATIONSHIPS_PAGE_SIZE,
+  RIVALRY_EMERGING_THRESHOLD,
+  RIVALRY_HEATED_THRESHOLD,
+  RIVALRY_DEEP_THRESHOLD,
+  validateRelationshipKind,
+  deriveRivalryIntensity,
+  rivalryScore,
+  toRelationshipEntry,
+  processRelationshipRows,
+  toRelationshipStatus,
+  formatRelationshipHeadToHead,
+  relationshipKindLabel,
+  rivalryIntensityLabel,
+  isSelfRelationship,
+} from './relationships.mjs';
+
+export {
   Visibility,
   ShowcaseItemType,
   DEFAULT_PRIVACY,

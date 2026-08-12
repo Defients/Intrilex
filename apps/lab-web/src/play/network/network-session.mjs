@@ -389,7 +389,7 @@ export class NetworkPlaySession {
 
   // ── Gameplay ──
 
-  async submitAction(actionId, clientCommandId) {
+  async submitAction(actionId, clientCommandId, overrides = {}) {
     if (!this.currentView?.decision) {
       return { accepted: false, error: 'NO_DECISION_PENDING', reasonCode: 'NO_DECISION_PENDING' };
     }
@@ -413,7 +413,9 @@ export class NetworkPlaySession {
     try {
       const resp = await this._request(submitAction(
         this.matchId, this.participantToken, clientCommandId,
-        dec.stateRevision, dec.frameHash, actionId,
+        overrides.expectedRevision ?? dec.stateRevision,
+        overrides.decisionFrameHash ?? dec.frameHash,
+        actionId,
       ));
 
       this._pendingAction = null;
@@ -439,7 +441,14 @@ export class NetworkPlaySession {
   async submitHumanAction(submission) {
     const actionId = submission.actionId;
     const clientCommandId = `cmd-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-    return this.submitAction(actionId, clientCommandId);
+    // Pass through revision and frame hash from the submission so the
+    // server receives the exact values the client used when building the
+    // submission. This prevents stale-frame mismatches if the current
+    // view was updated between the snapshot read and the submit.
+    return this.submitAction(actionId, clientCommandId, {
+      expectedRevision: submission.stateRevision,
+      decisionFrameHash: submission.decisionFrameHash,
+    });
   }
 
   async requestSync() {
@@ -988,6 +997,16 @@ export class NetworkPlaySession {
 
   _applyView(view) {
     if (!view) return;
+    // Stale view guard: skip if the incoming view has an older revision than
+    // the current view. This prevents race conditions where an older
+    // MATCH_VIEW (e.g. from a sync response) overwrites a newer ACTION_RESULT
+    // view, which would cause both clients to display incorrect turn state.
+    const incomingRev = view.playerView?.revision ?? view.decision?.stateRevision ?? 0;
+    const currentRev = this.currentView?.playerView?.revision
+      ?? this.currentView?.decision?.stateRevision ?? 0;
+    if (this.currentView && incomingRev > 0 && currentRev > 0 && incomingRev < currentRev) {
+      return;
+    }
     this.currentView = view;
     if (view.participantId) {
       this.participantId = view.participantId;
@@ -1099,6 +1118,7 @@ export class NetworkPlaySession {
       viewHash: view.viewHash,
       pendingAction: this._pendingAction,
       chatHidden: this.chatHidden,
+      chat: (this.chatMessages || []).slice(-30),
     };
   }
 

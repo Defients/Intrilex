@@ -45,7 +45,14 @@ import {
   getBadgeDefinition,
 } from '../play/profile/profile-data.js';
 import { isSupabaseConfigured } from '../play/network/supabase-client.js';
-import { getAuthState } from '../play/network/auth-controller.js';
+import { getAuthState, getProfile as getAuthProfile } from '../play/network/auth-controller.js';
+import {
+  fetchRelationshipStatus,
+  followPlayer,
+  unfollowPlayer,
+  setRival,
+  unsetRival,
+} from '../play/players/relationships-data.js';
 
 const BADGE_ICONS = {
   shield: '🛡', trophy: '🏆', star: '⭐', crown: '👑', flame: '🔥',
@@ -53,7 +60,7 @@ const BADGE_ICONS = {
 };
 
 // ── Profile workspace state ─────────────────────────────────────
-/** @type {{ mode: 'self'|'public', handleOrId: string|null, tab: string, loading: boolean, error: string|null, selfProfile: any, publicProfile: any, localProfile: any, editMode: boolean, customizeMode: boolean, privacyMode: boolean }} */
+/** @type {{ mode: 'self'|'public', handleOrId: string|null, tab: string, loading: boolean, error: string|null, selfProfile: any, publicProfile: any, localProfile: any, editMode: boolean, customizeMode: boolean, privacyMode: boolean, relationshipStatus: any, relationshipLoading: boolean, isOwnPublicProfile: boolean }} */
 const _ws = {
   mode: 'self',
   handleOrId: null,
@@ -66,6 +73,11 @@ const _ws = {
   editMode: false,
   customizeMode: false,
   privacyMode: false,
+  /** Caller's relationship status to the viewed public profile (null = not loaded / not applicable). */
+  relationshipStatus: null,
+  relationshipLoading: false,
+  /** True when viewing your own profile via the public route (hide relationship buttons). */
+  isOwnPublicProfile: false,
   /** @type {Map<string, string>} Cached tab HTML keyed by `${profileKey}:${tabName}` */
   _tabCache: new Map(),
 };
@@ -124,6 +136,9 @@ export async function renderProfile(container = app) {
   _ws.loading = true;
   _ws.selfProfile = null;
   _ws.publicProfile = null;
+  _ws.relationshipStatus = null;
+  _ws.relationshipLoading = false;
+  _ws.isOwnPublicProfile = false;
   _ws._tabCache.clear(); // invalidate tab cache for new profile
   _ws.localProfile = isStorageAvailable() ? loadProfile() : null;
 
@@ -154,6 +169,25 @@ async function loadProfileData() {
         return;
       }
       _ws.publicProfile = result.profile;
+      // Determine whether the viewer is looking at their own profile via
+      // the public route. If so, hide the relationship action buttons.
+      const myPid = getAuthProfile()?.publicPlayerId ?? null;
+      _ws.isOwnPublicProfile = !!myPid && myPid === result.profile.identity?.publicPlayerId;
+      // Fetch the viewer's relationship status to this profile (only when
+      // authenticated and not viewing self). Used to render the correct
+      // Follow/Rival button state. Failures degrade gracefully — the
+      // profile still renders, just without relationship state.
+      if (getAuthState() === 'AUTHENTICATED' && !_ws.isOwnPublicProfile) {
+        _ws.relationshipLoading = true;
+        try {
+          _ws.relationshipStatus = await fetchRelationshipStatus(result.profile.identity.publicPlayerId);
+        } catch (err) {
+          console.warn('[profile] fetchRelationshipStatus failed:', err?.message ?? err);
+          _ws.relationshipStatus = null;
+        } finally {
+          _ws.relationshipLoading = false;
+        }
+      }
     } catch (err) {
       _ws.error = err?.message ?? 'Could not reach the profile server.';
     }
@@ -302,6 +336,7 @@ function renderPublicProfile(profile) {
     </div>
   </div>`;
   wireTabNav(false);
+  wireRelationshipActions(profile);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -327,6 +362,12 @@ function renderHero(profile, isSelf) {
       <button class="btn btn-sm" data-action="privacy" data-testid="profile-privacy-btn">Privacy</button>
     </div>` : '';
 
+  // Relationship action buttons (public profile only, authenticated viewer,
+  // not viewing self). Render a placeholder while loading and the real
+  // buttons once the status is known. When not authenticated, show a
+  // sign-in prompt instead.
+  const relationshipButtons = (!isSelf && !_ws.isOwnPublicProfile) ? renderRelationshipButtons() : '';
+
   return `<section class="panel profile-hero ${frameClass}" data-testid="profile-hero">
     <div class="profile-hero-body">
       <div class="profile-hero-avatar">${avatarHtml}</div>
@@ -337,12 +378,108 @@ function renderHero(profile, isSelf) {
         ${joinedDate ? `<div class="profile-hero-joined">Joined ${esc(joinedDate)}</div>` : ''}
         ${id.accountType === 'GUEST' ? `<div class="profile-hero-guest"><span class="badge-tag">Guest</span></div>` : ''}
         ${editButtons}
+        ${relationshipButtons}
       </div>
       <div class="profile-hero-ranked">
         ${rankedHero}
       </div>
     </div>
   </section>`;
+}
+
+/**
+ * Render the Follow/Rival action buttons for a public profile, based on
+ * the loaded relationship status. Shows a loading placeholder while the
+ * status is being fetched, a sign-in prompt when not authenticated, and
+ * the appropriate toggle buttons once the status is known.
+ * @returns {string}
+ */
+function renderRelationshipButtons() {
+  if (!isSupabaseConfigured()) return ''; // no online relationships in local mode
+  const authState = getAuthState();
+  if (authState !== 'AUTHENTICATED') {
+    return `<div class="profile-hero-actions profile-relationship-actions" data-testid="profile-relationship-actions">
+      <a class="btn btn-sm" href="#/auth" data-testid="profile-signin-to-follow">Sign in to Follow</a>
+    </div>`;
+  }
+  if (_ws.relationshipLoading) {
+    return `<div class="profile-hero-actions profile-relationship-actions" data-testid="profile-relationship-actions" aria-busy="true">
+      <span class="profile-relationship-loading" data-testid="profile-relationship-loading">Loading…</span>
+    </div>`;
+  }
+  const s = _ws.relationshipStatus;
+  if (!s) return ''; // status fetch failed — degrade silently
+  const following = s.following;
+  const rivaling = s.rivaling;
+  const followBtn = following
+    ? `<button class="btn btn-sm profile-rel-btn profile-rel-btn-active" data-action="unfollow" data-testid="profile-unfollow-btn" aria-pressed="true">✓ Following</button>`
+    : `<button class="btn btn-sm profile-rel-btn" data-action="follow" data-testid="profile-follow-btn" aria-pressed="false">+ Follow</button>`;
+  const rivalBtn = rivaling
+    ? `<button class="btn btn-sm profile-rel-btn profile-rel-btn-rival-active" data-action="unset-rival" data-testid="profile-unset-rival-btn" aria-pressed="true">⚡ Rival</button>`
+    : `<button class="btn btn-sm profile-rel-btn profile-rel-btn-rival" data-action="set-rival" data-testid="profile-set-rival-btn" aria-pressed="false">+ Rival</button>`;
+  const mutualTag = s.isMutualRival
+    ? `<span class="profile-mutual-rival-tag" data-testid="profile-mutual-rival-tag" title="You both rival each other">⇌ Mutual Rival</span>`
+    : '';
+  return `<div class="profile-hero-actions profile-relationship-actions" data-testid="profile-relationship-actions">
+    ${followBtn}${rivalBtn}${mutualTag}
+  </div>`;
+}
+
+/**
+ * Wire the Follow/Rival action buttons in the public profile hero.
+ * Each action calls the relationships data layer, updates the in-memory
+ * status, and re-renders just the hero (not the whole profile) so the
+ * tab cache and scroll position are preserved.
+ * @param {object} profile - The public profile being viewed.
+ */
+function wireRelationshipActions(profile) {
+  if (!profile?.identity) return;
+  if (!isSupabaseConfigured()) return;
+  const pid = profile.identity.publicPlayerId;
+  const actions = _container.querySelectorAll('[data-action="follow"],[data-action="unfollow"],[data-action="set-rival"],[data-action="unset-rival"]');
+  for (const btn of actions) {
+    btn.addEventListener('click', async () => {
+      const action = btn.dataset.action;
+      btn.disabled = true;
+      try {
+        if (action === 'follow') {
+          const res = await followPlayer(pid);
+          if (res.ok && _ws.relationshipStatus) _ws.relationshipStatus.following = true;
+        } else if (action === 'unfollow') {
+          const res = await unfollowPlayer(pid);
+          if (res.ok && _ws.relationshipStatus) {
+            _ws.relationshipStatus.following = false;
+            // Unfollowing also clears rival (rival implies follow).
+            _ws.relationshipStatus.rivaling = false;
+          }
+        } else if (action === 'set-rival') {
+          const res = await setRival(pid);
+          if (res.ok && _ws.relationshipStatus) {
+            _ws.relationshipStatus.rivaling = true;
+            _ws.relationshipStatus.following = true; // rival implies follow
+          }
+        } else if (action === 'unset-rival') {
+          const res = await unsetRival(pid);
+          if (res.ok && _ws.relationshipStatus) _ws.relationshipStatus.rivaling = false;
+        }
+      } catch (err) {
+        console.warn('[profile] relationship action failed:', err?.message ?? err);
+      } finally {
+        btn.disabled = false;
+        // Re-render the hero in place (preserves tab content + scroll).
+        const hero = _container.querySelector('[data-testid="profile-hero"]');
+        if (hero) {
+          const updated = renderHero(profile, false);
+          // renderHero returns a full <section>; replace the existing one.
+          const tmp = document.createElement('div');
+          tmp.innerHTML = updated;
+          const newHero = tmp.firstElementChild;
+          if (newHero) hero.replaceWith(newHero);
+          wireRelationshipActions(profile);
+        }
+      }
+    });
+  }
 }
 
 function renderRankedHero(ranked) {

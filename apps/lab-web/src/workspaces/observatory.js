@@ -201,6 +201,7 @@ const SYNERGY_COLUMNS = [
 export function renderSynergies() {
   const o = state.observatory;
   const synergies = o.synergies ?? [];
+  const synergyDiagnostics = o.synergyDiagnostics ?? [];
   const motifs = o.motifs ?? [];
   const selectedSynergy = state.selectedSynergy;
   if (selectedSynergy) {
@@ -228,10 +229,20 @@ export function renderSynergies() {
     return `<th data-sort-column="${col.key}" ${sortAttr} tabindex="0" role="button">${col.label}${arrow}</th>`;
   }).join('');
   const healthHtml = renderCampaignHealthBanner(o);
+  // Near-threshold pairs: rejected for INSUFFICIENT_BOTH but with both ≥ 10
+  // (half the default threshold). These are the closest candidates that would
+  // become eligible with a larger campaign. Shown in a separate, clearly
+  // labelled section so users understand they are NOT proven synergies.
+  const nearThreshold = synergyDiagnostics
+    .filter(d => d.reasonCode === 'INSUFFICIENT_BOTH' && (d.cohortN?.both ?? 0) >= 10)
+    .sort((a, b) => (b.cohortN?.both ?? 0) - (a.cohortN?.both ?? 0));
   const emptyMsg = synergies.length === 0
     ? `<div class="notice warning" style="margin-bottom:12px"><strong>No eligible synergy pairs.</strong> No pairs met the minimum cohort thresholds (Both ≥ 20, single cohorts ≥ 10, total N ≥ 50). Run a larger campaign or lower thresholds to see pairs.</div>`
     : '';
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Synergy Observatory</h2><p>Four-cohort logistic A×B interaction (odds-ratio scale) — ${synergies.length} pairs</p></div></div><div class="panel-body">${healthHtml}${emptyMsg}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(s => `<tr class="clickable-row" data-synergy="${esc(s.id)}"><td><b>${esc(s.displayName ?? s.id)}</b></td><td>${s.effect != null ? `${s.effect.toFixed(3)}` : '—'}</td><td>${s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(1)} pp` : '—'}</td><td>${s.interval?.[0] != null ? `${s.interval[0].toFixed(3)} to ${s.interval[1].toFixed(3)}` : '—'}</td><td>${s.neitherN ?? '—'}/${s.aOnlyN ?? '—'}/${s.bOnlyN ?? '—'}/${s.bothN ?? '—'}</td><td>${s.pValue?.toFixed(4) ?? '—'}</td><td>${s.qValue?.toFixed(4) ?? '—'}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${motifs.length ? `<h3 style="margin-top:16px">Motifs (${motifs.length})</h3><div class="grid two">${motifs.map(m => `<div class="notice info"><strong>${esc(m.motif)}</strong><p>${m.count} occurrence(s) across ${m.matchIds?.length ?? 0} match(es).</p></div>`).join('')}</div>` : ''}</div></section>`;
+  const nearThresholdHtml = (synergies.length === 0 && nearThreshold.length > 0)
+    ? renderNearThresholdPairs(nearThreshold)
+    : '';
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Synergy Observatory</h2><p>Four-cohort logistic A×B interaction (odds-ratio scale) — ${synergies.length} pairs</p></div></div><div class="panel-body">${healthHtml}${emptyMsg}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(s => `<tr class="clickable-row" data-synergy="${esc(s.id)}"><td><b>${esc(s.displayName ?? s.id)}</b></td><td>${s.effect != null ? `${s.effect.toFixed(3)}` : '—'}</td><td>${s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(1)} pp` : '—'}</td><td>${s.interval?.[0] != null ? `${s.interval[0].toFixed(3)} to ${s.interval[1].toFixed(3)}` : '—'}</td><td>${s.neitherN ?? '—'}/${s.aOnlyN ?? '—'}/${s.bOnlyN ?? '—'}/${s.bothN ?? '—'}</td><td>${s.pValue?.toFixed(4) ?? '—'}</td><td>${s.qValue?.toFixed(4) ?? '—'}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${nearThresholdHtml}${motifs.length ? `<h3 style="margin-top:16px">Motifs (${motifs.length})</h3><div class="grid two">${motifs.map(m => `<div class="notice info"><strong>${esc(m.motif)}</strong><p>${m.count} occurrence(s) across ${m.matchIds?.length ?? 0} match(es).</p></div>`).join('')}</div>` : ''}</div></section>`;
   document.querySelectorAll('[data-sort-column]').forEach(th => {
     const handler = () => {
       const col = th.dataset.sortColumn;
@@ -243,6 +254,28 @@ export function renderSynergies() {
     th.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } };
   });
   document.querySelectorAll('[data-synergy]').forEach(row => row.onclick = () => { state.selectedSynergy = row.dataset.synergy; import('../app.js').then(m => m.render()); });
+}
+
+// ── Near-threshold pairs (diagnostic view) ─────────────────────────
+//
+// When no synergy pairs meet the full cohort threshold (Both ≥ 20), the
+// observatory surfaces the closest candidates — pairs where both mechanics
+// co-occurred in ≥ 10 participant-matches. These are NOT proven synergies;
+// they are pairs that would likely become eligible with a larger campaign.
+// The section is clearly labelled as exploratory/diagnostic.
+function renderNearThresholdPairs(nearThreshold) {
+  const SYNERGY_THRESHOLD_BOTH = 20;
+  const rows = nearThreshold.map(d => {
+    const both = d.cohortN?.both ?? 0;
+    const aOnly = d.cohortN?.aOnly ?? 0;
+    const bOnly = d.cohortN?.bOnly ?? 0;
+    const neither = d.cohortN?.neither ?? 0;
+    const totalN = neither + aOnly + bOnly + both;
+    const pct = Math.round((both / SYNERGY_THRESHOLD_BOTH) * 100);
+    const barWidth = Math.min(100, pct);
+    return `<tr><td class="mono">${esc(d.id)}</td><td>${both}</td><td>${aOnly}</td><td>${bOnly}</td><td>${neither}</td><td>${totalN}</td><td><div class="threshold-bar" title="${both}/${SYNERGY_THRESHOLD_BOTH} co-occurrences (${pct}% of threshold)"><div class="threshold-bar-fill" style="width:${barWidth}%"></div></div><span class="threshold-bar-label">${both}/${SYNERGY_THRESHOLD_BOTH}</span></td></tr>`;
+  }).join('');
+  return `<h3 style="margin-top:16px">Near-threshold pairs (${nearThreshold.length})</h3><div class="notice info" style="margin-bottom:12px"><strong>Exploratory view.</strong> These ${nearThreshold.length} mechanic pairs co-occurred in ≥ 10 participant-matches but did not reach the full threshold of ${SYNERGY_THRESHOLD_BOTH}. They are <em>not</em> proven synergies — they are the strongest candidates that would likely become eligible with a larger campaign (≥ 200 matches).</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Pair</th><th>Both</th><th>A-only</th><th>B-only</th><th>Neither</th><th>Total N</th><th>Progress to threshold</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderSynergyDetail(s) {

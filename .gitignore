@@ -21,6 +21,7 @@ release/archives/
 lint-tmp.txt
 # Scratch / debug output
 tsc-errors.txt
+full-test-output.txt
 # Local screenshots
 reports/v25-local-board-screenshot.png
 # Debug / scratch scripts

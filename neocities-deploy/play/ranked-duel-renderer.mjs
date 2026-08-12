@@ -109,7 +109,7 @@ function adaptSnapshotForViewModel(controllerSnapshot) {
     isNetworkMatch: controllerSnapshot.isNetworkMatch === true,
     decision: controllerSnapshot.decision ?? null,
     legalActions: controllerSnapshot.decision?.legalActions ?? [],
-    chat: [],
+    chat: controllerSnapshot.chat ?? [],
     state: {
       seatOrder,
       fullTurnSequence: pv.fullTurnSequence ?? controllerSnapshot.match?.fullTurnSequence ?? 0,
@@ -1265,8 +1265,11 @@ function renderChatPanel(vm, opts, isReadOnly, chatMessages) {
       cls = 'rd-chat-msg system';
       author = 'System';
     } else if (isNetwork && m.participantId) {
-      // Network match: use participantId to determine sender
-      const isLocal = m.participantId === localParticipantId || m.isHuman === true;
+      // Network match: use isHuman flag (set by the network session) to
+      // determine sender. The participantId is a long server-generated ID
+      // (e.g. "P-SbLijgtngcc") that does NOT match vm.human.playerId
+      // (which is "P1" or "P2"), so we rely on isHuman instead.
+      const isLocal = m.isHuman === true;
       cls = isLocal ? 'rd-chat-msg human' : 'rd-chat-msg opponent';
       author = isLocal ? vm.human.displayName : vm.opponent.displayName;
     } else {

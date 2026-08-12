@@ -622,7 +622,8 @@ export function buildPairedABBAAnalysis(summaries) {
 
 export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregate=null}){
   const mechanics=buildMechanicsAtlas(summaries,detailedMatches);
-  const synergies=analyzeSynergies(summaries);
+  const synergies=analyzeSynergies(summaries,{includeDiagnostics:true});
+  const synergyDiagnostics=synergies.diagnostics??[];
   const motifs=mineCausalMotifs(detailedMatches);
   const policies=buildPolicyFingerprints(summaries);
   const anomalies=detectAnomalies(summaries,detailedMatches);
@@ -662,6 +663,14 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
   const unmappedDiagnostics = mechanics.filter(m => m.dimension === 'diagnostic' && !m.registryVerified).length;
   const incompleteABBA = pairedABBA?.incompletePairs ?? 0;
   const eligibleSynergyPairs = synergies.length;
+  // Near-threshold pairs: rejected for INSUFFICIENT_BOTH but with both ≥ 10
+  // (half the default threshold). These are the closest candidates that would
+  // become eligible with a larger campaign. The UI surfaces them in a separate
+  // "Near-threshold" section so the Synergy Observatory is informative even
+  // when no pairs meet the full threshold.
+  const nearThresholdPairs = synergyDiagnostics.filter(
+    d => d.reasonCode === 'INSUFFICIENT_BOTH' && (d.cohortN?.both ?? 0) >= 10
+  ).length;
   const campaignHealth = {
     trackedEntities: mechanics.length,
     canonicalMechanics: canonicalCount,
@@ -671,13 +680,14 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
     entitiesWithAdjustedAssociation: withAdjustedAssociation,
     entitiesWithPointImpact: withPointImpact,
     eligibleSynergyPairs,
+    nearThresholdPairs,
     successfullyModeledSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length,
     unmappedDiagnostics,
     incompleteABBA,
   };
   const core={
     schemaVersion:ANALYTICS_SCHEMA_VERSION,metricRegistry:metricRegistryWithHashes(),summaryCount:summaries.length,
-    aggregateHash:aggregate?.aggregateHash??null,mechanics,synergies,motifs,policies,anomalies,
+    aggregateHash:aggregate?.aggregateHash??null,mechanics,synergies,synergyDiagnostics,motifs,policies,anomalies,
     rankPower:rankAnalytics.rankPower,
     swapMatrix:rankAnalytics.swapMatrix,
     rankCounters:rankAnalytics.rankCounters,

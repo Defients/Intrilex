@@ -12,6 +12,7 @@
     "./leaderboard": "./src/leaderboard.mjs",
     "./directory": "./src/directory.mjs",
     "./recent-opponents": "./src/recent-opponents.mjs",
+    "./relationships": "./src/relationships.mjs",
     "./rating": "./src/rating.mjs",
     "./glicko2": "./src/glicko2.mjs",
     "./seasons": "./src/seasons.mjs"

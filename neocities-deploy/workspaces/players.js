@@ -38,10 +38,22 @@ import {
   formatHeadToHead,
   formatLastPlayed,
 } from '@intrilex/account-domain/recent-opponents';
+import {
+  RelationshipKind,
+  RELATIONSHIPS_PAGE_SIZE,
+  formatRelationshipHeadToHead,
+  rivalryIntensityLabel,
+} from '@intrilex/account-domain/relationships';
 import { fetchDirectory } from '../play/players/players-data.js';
 import { fetchRecentOpponents } from '../play/players/recent-opponents-data.js';
+import {
+  fetchRelationships,
+  fetchSuggestedRivals,
+  DEFAULT_SUGGESTED_RIVALS_LIMIT,
+} from '../play/players/relationships-data.js';
 
-/** @typedef {'directory'|'opponents'} PlayerTab */
+/** @typedef {'directory'|'opponents'|'rivals'} PlayerTab */
+/** @typedef {'rivals'|'following'|'suggested'} RivalsSegment */
 
 const TIER_FILTERS = [
   { value: 'ALL', label: 'All Tiers' },
@@ -74,6 +86,21 @@ const view = {
   total: null,
   // ── Recent Opponents tab state ──
   opp: {
+    offset: 0,
+    loading: true,
+    error: null,
+    entries: [],
+    available: true,
+    authenticated: false,
+    isLastPage: false,
+    _loadId: 0,
+    _abortCtrl: null,
+    _loaded: false,
+  },
+  // ── Rivals tab state ──
+  rivals: {
+    /** @type {RivalsSegment} */
+    segment: 'rivals',
     offset: 0,
     loading: true,
     error: null,
@@ -127,6 +154,7 @@ export function destroyPlayers() {
   view._mounted = false;
   if (view._abortCtrl) { view._abortCtrl.abort(); view._abortCtrl = null; }
   if (view.opp._abortCtrl) { view.opp._abortCtrl.abort(); view.opp._abortCtrl = null; }
+  if (view.rivals._abortCtrl) { view.rivals._abortCtrl.abort(); view.rivals._abortCtrl = null; }
 }
 
 /**
@@ -141,6 +169,8 @@ function loadActiveTab(target) {
     load(target);
   } else if (view.tab === 'opponents') {
     loadOpponents(target);
+  } else if (view.tab === 'rivals') {
+    loadRivals(target);
   }
 }
 
@@ -154,18 +184,21 @@ function syncStateFromUrl() {
   const hash = location.hash.replace(/^#\/players\??/, '');
   const params = new URLSearchParams(hash);
   const tab = params.get('tab');
-  if (tab === 'opponents' || tab === 'directory') view.tab = tab;
+  if (tab === 'opponents' || tab === 'directory' || tab === 'rivals') view.tab = tab;
   const q = params.get('q');
   if (q != null) view.search = q;
   const rank = params.get('rank');
   if (rank != null) view.tier = TIER_FILTERS.some(t => t.value === rank) ? rank : 'ALL';
   const sort = params.get('sort');
   if (sort != null) view.sort = DIRECTORY_SORTS.includes(sort) ? sort : DirectorySort.RATING;
+  const seg = params.get('seg');
+  if (seg === 'rivals' || seg === 'following' || seg === 'suggested') view.rivals.segment = seg;
   // offset is not URL-persisted (avoids stale deep-links to empty pages).
   // Reset on every sync so a deep-link entry doesn't carry over a stale
   // offset from a previous directory session.
   view.offset = 0;
   view.opp.offset = 0;
+  view.rivals.offset = 0;
 }
 
 /**
@@ -176,6 +209,10 @@ function syncStateFromUrl() {
 function syncUrlFromState() {
   const params = new URLSearchParams();
   if (view.tab === 'opponents') params.set('tab', 'opponents');
+  else if (view.tab === 'rivals') params.set('tab', 'rivals');
+  if (view.tab === 'rivals' && view.rivals.segment !== 'rivals') {
+    params.set('seg', view.rivals.segment);
+  }
   if (view.search) params.set('q', view.search);
   if (view.tier && view.tier !== 'ALL') params.set('rank', view.tier);
   if (view.sort && view.sort !== DirectorySort.RATING) params.set('sort', view.sort);
@@ -195,10 +232,21 @@ function renderShell() {
     `<option value="${t.value}"${t.value === view.tier ? ' selected' : ''}>${esc(t.label)}</option>`).join('');
 
   const isDir = view.tab === 'directory';
+  const isOpp = view.tab === 'opponents';
+  const isRiv = view.tab === 'rivals';
   const dirSelected = isDir ? 'true' : 'false';
-  const oppSelected = isDir ? 'false' : 'true';
+  const oppSelected = isOpp ? 'true' : 'false';
+  const rivSelected = isRiv ? 'true' : 'false';
   const dirTabindex = isDir ? '0' : '-1';
-  const oppTabindex = isDir ? '-1' : '0';
+  const oppTabindex = isOpp ? '0' : '-1';
+  const rivTabindex = isRiv ? '0' : '-1';
+
+  // Rivals tab segmented control (Rivals / Following / Suggested)
+  const seg = view.rivals.segment;
+  const segBtn = (value, label, testid) =>
+    `<button class="pd-seg-btn ${seg === value ? 'pd-seg-btn-active' : ''}" type="button"
+       data-action="rivals-segment" data-segment="${value}" data-testid="${testid}"
+       aria-pressed="${seg === value ? 'true' : 'false'}">${label}</button>`;
 
   return `<section class="panel pd-panel" data-testid="players-panel">
     <div class="panel-header pd-header">
@@ -214,10 +262,15 @@ function renderShell() {
           data-action="switch-tab" data-tab="directory" data-testid="pd-tab-directory">
           <span class="pd-tab-icon" aria-hidden="true">◈</span> All Players
         </button>
-        <button class="pd-tab ${!isDir ? 'pd-tab-active' : ''}" role="tab" id="pd-tab-opponents"
+        <button class="pd-tab ${isOpp ? 'pd-tab-active' : ''}" role="tab" id="pd-tab-opponents"
           aria-selected="${oppSelected}" aria-controls="pd-tabpanel-opponents" tabindex="${oppTabindex}"
           data-action="switch-tab" data-tab="opponents" data-testid="pd-tab-opponents">
           <span class="pd-tab-icon" aria-hidden="true">⚔</span> Recent Opponents
+        </button>
+        <button class="pd-tab ${isRiv ? 'pd-tab-active' : ''}" role="tab" id="pd-tab-rivals"
+          aria-selected="${rivSelected}" aria-controls="pd-tabpanel-rivals" tabindex="${rivTabindex}"
+          data-action="switch-tab" data-tab="rivals" data-testid="pd-tab-rivals">
+          <span class="pd-tab-icon" aria-hidden="true">⚡</span> Rivals
         </button>
       </div>
       <div id="pd-tabpanel-directory" role="tabpanel" aria-labelledby="pd-tab-directory" data-testid="pd-tabpanel-directory" ${isDir ? '' : 'hidden'}>
@@ -242,10 +295,20 @@ function renderShell() {
         <div class="pd-content" data-testid="pd-content" aria-busy="true"></div>
         <div class="pd-pagination" data-testid="pd-pagination"></div>
       </div>
-      <div id="pd-tabpanel-opponents" role="tabpanel" aria-labelledby="pd-tab-opponents" data-testid="pd-tabpanel-opponents" ${isDir ? 'hidden' : ''}>
+      <div id="pd-tabpanel-opponents" role="tabpanel" aria-labelledby="pd-tab-opponents" data-testid="pd-tabpanel-opponents" ${isOpp ? '' : 'hidden'}>
         <div class="pd-summary" data-testid="pd-opp-summary" aria-live="polite"></div>
         <div class="pd-opp-content" data-testid="pd-opp-content" aria-live="polite" aria-busy="true"></div>
         <div class="pd-pagination" data-testid="pd-opp-pagination"></div>
+      </div>
+      <div id="pd-tabpanel-rivals" role="tabpanel" aria-labelledby="pd-tab-rivals" data-testid="pd-tabpanel-rivals" ${isRiv ? '' : 'hidden'}>
+        <div class="pd-seg" role="group" aria-label="Rivals view segment">
+          ${segBtn('rivals', 'Rivals', 'pd-seg-rivals')}
+          ${segBtn('following', 'Following', 'pd-seg-following')}
+          ${segBtn('suggested', 'Suggested', 'pd-seg-suggested')}
+        </div>
+        <div class="pd-summary" data-testid="pd-riv-summary" aria-live="polite"></div>
+        <div class="pd-riv-content" data-testid="pd-riv-content" aria-live="polite" aria-busy="true"></div>
+        <div class="pd-pagination" data-testid="pd-riv-pagination"></div>
       </div>
     </div>
   </section>`;
@@ -663,6 +726,300 @@ function renderOpponentsPagination(target) {
   </div>`;
 }
 
+// ── Rivals tab data loading ──
+
+/**
+ * Load the active Rivals segment. The 'suggested' segment is a single
+ * page (no pagination — it's a bounded recommendation list); 'rivals'
+ * and 'following' are paginated lists of the caller's relationships.
+ * @param {HTMLElement} target
+ */
+async function loadRivals(target) {
+  const seg = view.rivals.segment;
+  if (seg === 'suggested') {
+    await loadSuggestedRivals(target);
+    return;
+  }
+  const kind = seg === 'rivals' ? RelationshipKind.RIVAL : RelationshipKind.FOLLOW;
+  const loadId = ++view.rivals._loadId;
+  if (view.rivals._abortCtrl) view.rivals._abortCtrl.abort();
+  const abortCtrl = new AbortController();
+  view.rivals._abortCtrl = abortCtrl;
+  const signal = abortCtrl.signal;
+
+  view.rivals.loading = true;
+  view.rivals.error = null;
+  renderRivalsContent(target);
+  try {
+    const res = await fetchRelationships({
+      kind,
+      limit: RELATIONSHIPS_PAGE_SIZE,
+      offset: view.rivals.offset,
+      signal,
+    });
+    if (loadId !== view.rivals._loadId) return; // stale
+    view.rivals.available = res.available;
+    view.rivals.authenticated = res.authenticated;
+    view.rivals.entries = res.entries;
+    view.rivals.isLastPage = res.entries.length < RELATIONSHIPS_PAGE_SIZE;
+    view.rivals._loaded = true;
+  } catch (err) {
+    if (loadId !== view.rivals._loadId) return; // stale
+    if (err?.name === 'AbortError') return;
+    view.rivals.error = err?.message ?? 'Relationships temporarily unavailable.';
+  } finally {
+    if (loadId === view.rivals._loadId) {
+      view.rivals.loading = false;
+      renderRivalsContent(target);
+      renderRivalsSummary(target);
+      renderRivalsPagination(target);
+    }
+  }
+}
+
+/**
+ * Load the suggested-rivals list (single page, no pagination).
+ * @param {HTMLElement} target
+ */
+async function loadSuggestedRivals(target) {
+  const loadId = ++view.rivals._loadId;
+  if (view.rivals._abortCtrl) view.rivals._abortCtrl.abort();
+  const abortCtrl = new AbortController();
+  view.rivals._abortCtrl = abortCtrl;
+  const signal = abortCtrl.signal;
+
+  view.rivals.loading = true;
+  view.rivals.error = null;
+  renderRivalsContent(target);
+  try {
+    const res = await fetchSuggestedRivals({ limit: DEFAULT_SUGGESTED_RIVALS_LIMIT, signal });
+    if (loadId !== view.rivals._loadId) return; // stale
+    view.rivals.available = res.available;
+    view.rivals.authenticated = res.authenticated;
+    view.rivals.entries = res.entries;
+    view.rivals.isLastPage = true; // suggested is a single bounded page
+    view.rivals._loaded = true;
+  } catch (err) {
+    if (loadId !== view.rivals._loadId) return; // stale
+    if (err?.name === 'AbortError') return;
+    view.rivals.error = err?.message ?? 'Suggested rivals temporarily unavailable.';
+  } finally {
+    if (loadId === view.rivals._loadId) {
+      view.rivals.loading = false;
+      renderRivalsContent(target);
+      renderRivalsSummary(target);
+      renderRivalsPagination(target);
+    }
+  }
+}
+
+// ── Rivals tab rendering ──
+
+function renderRivalsSummary(target) {
+  const el = target.querySelector('[data-testid="pd-riv-summary"]');
+  if (!el) return;
+  if (!view.rivals.available || view.rivals.loading) { el.innerHTML = ''; return; }
+  if (view.rivals.error) { el.innerHTML = ''; return; }
+  const n = view.rivals.entries.length;
+  if (n === 0) { el.innerHTML = ''; return; }
+  const seg = view.rivals.segment;
+  if (seg === 'suggested') {
+    el.innerHTML = `<div class="pd-count" data-testid="pd-riv-count">Top ${n} suggested rival${n === 1 ? '' : 's'} by head-to-head intensity</div>`;
+    return;
+  }
+  const pageStart = view.rivals.offset + 1;
+  const pageEnd = view.rivals.offset + n;
+  const label = seg === 'rivals' ? 'Rivals' : 'Followed players';
+  el.innerHTML = `<div class="pd-count" data-testid="pd-riv-count">${label} ${pageStart}–${pageEnd}</div>`;
+}
+
+function renderRivalsContent(target) {
+  const el = target.querySelector('[data-testid="pd-riv-content"]');
+  if (!el) return;
+  el.setAttribute('aria-busy', String(view.rivals.loading));
+
+  if (view.rivals.loading) {
+    el.innerHTML = renderRivalsSkeleton();
+    return;
+  }
+  if (!view.rivals.available) {
+    el.innerHTML = view.rivals.authenticated
+      ? renderRivalsUnavailable()
+      : renderRivalsSignInRequired();
+    return;
+  }
+  if (view.rivals.error) {
+    el.innerHTML = renderRivalsError(view.rivals.error);
+    return;
+  }
+  if (view.rivals.entries.length === 0) {
+    el.innerHTML = renderRivalsEmpty();
+    return;
+  }
+  el.innerHTML = renderRivalsCards(view.rivals.entries);
+}
+
+function renderRivalsSkeleton() {
+  const cards = Array.from({ length: 6 }, () =>
+    `<div class="pd-card pd-skeleton-card" aria-hidden="true">
+      <span class="pd-skeleton pd-sk-avatar"></span>
+      <div class="pd-skeleton-rows">
+        <span class="pd-skeleton pd-sk-name"></span>
+        <span class="pd-skeleton pd-sk-meta"></span>
+        <span class="pd-skeleton pd-sk-stats"></span>
+      </div>
+    </div>`).join('');
+  return `<div class="pd-grid" role="status" aria-label="Loading relationships">${cards}</div>`;
+}
+
+function renderRivalsUnavailable() {
+  return `<div class="pd-empty" data-testid="pd-riv-unavailable">
+    <strong>Rivals unavailable in local mode.</strong>
+    <p>Connect to Intrilex Online and sign in to track your rivals and follows.</p>
+  </div>`;
+}
+
+function renderRivalsSignInRequired() {
+  return `<div class="pd-empty" data-testid="pd-riv-signin-required">
+    <span class="pd-empty-icon" aria-hidden="true">⊕</span>
+    <strong>Sign in to manage your rivals and follows.</strong>
+    <p>Relationships are tied to your account. Sign in with Discord or Google to track players you compete with.</p>
+    <a class="btn btn-sm" href="#/auth" data-testid="pd-riv-signin-link">Sign In</a>
+  </div>`;
+}
+
+function renderRivalsError(msg) {
+  return `<div class="pd-empty pd-error" role="alert" data-testid="pd-riv-error">
+    <strong>Relationships temporarily unavailable.</strong>
+    <p class="pd-error-detail mono">${esc(msg)}</p>
+    <button class="btn btn-sm" data-action="riv-retry" data-testid="pd-riv-retry">Retry</button>
+  </div>`;
+}
+
+function renderRivalsEmpty() {
+  const seg = view.rivals.segment;
+  if (seg === 'suggested') {
+    return `<div class="pd-empty" data-testid="pd-riv-empty-suggested">
+      <span class="pd-empty-icon" aria-hidden="true">⚡</span>
+      <strong>No suggested rivals yet.</strong>
+      <p>Play online matches to build a head-to-head history. We'll surface your most competitive opponents here.</p>
+      <a class="btn btn-sm" href="#/play/online" data-testid="pd-riv-play-link">Play Online</a>
+    </div>`;
+  }
+  if (seg === 'rivals') {
+    return `<div class="pd-empty" data-testid="pd-riv-empty-rivals">
+      <span class="pd-empty-icon" aria-hidden="true">⚡</span>
+      <strong>No rivals yet.</strong>
+      <p>Mark a player as a rival from their profile to track your head-to-head here. Rivals are players you want to beat.</p>
+      <a class="btn btn-sm" href="#/players" data-testid="pd-riv-browse-link">Browse Players</a>
+    </div>`;
+  }
+  return `<div class="pd-empty" data-testid="pd-riv-empty-following">
+    <span class="pd-empty-icon" aria-hidden="true">◈</span>
+    <strong>Not following anyone yet.</strong>
+    <p>Follow players from their profile to keep them in one place. Following is private — only you see your list.</p>
+    <a class="btn btn-sm" href="#/players" data-testid="pd-riv-browse-link2">Browse Players</a>
+  </div>`;
+}
+
+function renderRivalsCards(entries) {
+  const cards = entries.map(renderRivalsCard).join('');
+  return `<ul class="pd-grid pd-riv-grid" data-testid="pd-riv-grid" role="list">${cards}</ul>`;
+}
+
+/**
+ * Render a single relationship card. Shows the safe public projection
+ * plus the head-to-head (caller's perspective), rivalry intensity
+ * badge, and mutual-rival marker. The whole card links to the target's
+ * public profile. Suggested-rival cards include a "Rival" button.
+ * @param {import('@intrilex/account-domain/relationships').RelationshipEntry} entry
+ */
+function renderRivalsCard(entry) {
+  const id = entry.player;
+  const rank = entry.rank;
+  const h2h = entry.headToHead;
+  const pid = esc(id.publicPlayerId);
+  const name = esc(id.displayName || 'Player');
+  const handle = id.handle ? `<span class="pd-handle">@${esc(id.handle)}</span>` : '<span class="pd-handle pd-handle-none">no handle</span>';
+
+  // Rank glyph + label
+  const glyphSize = 40;
+  const glyph = rank.isPlacement
+    ? renderRankGlyph({ tier: RankTier.UNRANKED, size: glyphSize, decorative: true })
+    : renderRankGlyph({
+        tier: rank.tier, division: rank.division, size: glyphSize,
+        showDivision: true, decorative: true,
+      });
+  const rankText = rank.isPlacement
+    ? 'UNRANKED'
+    : rank.isApex
+      ? apexLabel(null)
+      : rankLabel(rank.tier, rank.division);
+  const irText = rank.rating != null ? `${rank.rating} IR` : 'No ranked history';
+
+  // Head-to-head (caller's perspective)
+  const h2hText = formatRelationshipHeadToHead(h2h);
+  const h2hWinRate = h2h.games > 0 ? pct(h2h.winRate) : '—';
+  const h2hLine = h2h.games > 0
+    ? `<span class="pd-h2h-record mono">${esc(h2hText)}</span> <span class="pd-h2h-meta">· ${esc(h2hWinRate)} win rate</span>`
+    : '<span class="pd-h2h-record pd-h2h-none">No completed games</span>';
+
+  // Rivalry intensity badge (only meaningful for rivals/suggested)
+  const seg = view.rivals.segment;
+  const showIntensity = seg === 'rivals' || seg === 'suggested';
+  const intensityBadge = showIntensity && h2h.games > 0
+    ? `<span class="pd-intensity-badge pd-intensity-${esc(entry.intensity)}" data-testid="pd-intensity">${esc(rivalryIntensityLabel(entry.intensity))}</span>`
+    : '';
+
+  // Mutual rival marker
+  const mutualBadge = entry.isMutualRival
+    ? `<span class="pd-mutual-badge" data-testid="pd-mutual-rival" title="You both rival each other">⇌ Mutual Rival</span>`
+    : '';
+
+  // Achievements (only when public — null means hidden)
+  const achLine = entry.earnedAchievements != null
+    ? `<span class="pd-ach">${entry.earnedAchievements} achievement${entry.earnedAchievements === 1 ? '' : 's'}</span>`
+    : '';
+
+  // Suggested-rival cards get a "Rival" button to act immediately
+  const actionBtn = seg === 'suggested'
+    ? `<button class="btn btn-sm pd-riv-action" data-action="riv-add-rival" data-pid="${pid}" data-testid="pd-riv-add-rival" aria-label="Mark ${name} as rival">+ Rival</button>`
+    : '';
+
+  return `<li class="pd-card pd-riv-card" role="listitem" data-testid="pd-riv-card" data-pid="${pid}">
+    <a class="pd-card-link" href="#/player/${encodeURIComponent(id.publicPlayerId)}" data-testid="pd-riv-card-link" aria-label="View ${name}'s profile — head-to-head ${esc(h2hText)}">
+      <span class="pd-card-glyph" aria-hidden="true">${glyph}</span>
+      <span class="pd-card-body">
+        <span class="pd-card-name">${name}</span>
+        ${handle}
+        <span class="pd-card-rank" data-tier="${esc(rank.tier)}">${esc(rankText)}</span>
+        <span class="pd-card-ir mono">${esc(irText)}</span>
+        <span class="pd-h2h mono" data-testid="pd-riv-h2h">${h2hLine}</span>
+        ${intensityBadge}${mutualBadge}
+        ${achLine}
+      </span>
+    </a>
+    ${actionBtn}
+  </li>`;
+}
+
+function renderRivalsPagination(target) {
+  const el = target.querySelector('[data-testid="pd-riv-pagination"]');
+  if (!el) return;
+  // Suggested segment is a single bounded page — no pagination.
+  if (view.rivals.segment === 'suggested') { el.innerHTML = ''; return; }
+  if (!view.rivals.available || view.rivals.loading || view.rivals.error) { el.innerHTML = ''; return; }
+  const hasPrev = view.rivals.offset > 0;
+  const hasNext = view.rivals.entries.length >= RELATIONSHIPS_PAGE_SIZE && !view.rivals.isLastPage;
+  if (!hasPrev && !hasNext) { el.innerHTML = ''; return; }
+  const page = Math.floor(view.rivals.offset / RELATIONSHIPS_PAGE_SIZE) + 1;
+  el.innerHTML = `<div class="pd-pagination-bar">
+    <button class="btn btn-sm pd-page-btn" data-action="riv-prev" data-testid="pd-riv-prev" ${hasPrev ? '' : 'disabled aria-disabled="true"'}>&larr; Prev</button>
+    <span class="pd-page-num" aria-label="Page ${page}">Page ${page}</span>
+    <button class="btn btn-sm pd-page-btn" data-action="riv-next" data-testid="pd-riv-next" ${hasNext ? '' : 'disabled aria-disabled="true"'}>Next &rarr;</button>
+  </div>`;
+}
+
 // ── Events ──
 
 function wireEvents(target) {
@@ -747,8 +1104,18 @@ function wireEvents(target) {
       const action = btn.dataset.action;
       if (action === 'switch-tab') {
         const newTab = btn.dataset.tab;
-        if (newTab !== view.tab && (newTab === 'directory' || newTab === 'opponents')) {
+        if (newTab !== view.tab && (newTab === 'directory' || newTab === 'opponents' || newTab === 'rivals')) {
           switchTab(target, newTab);
+        }
+      } else if (action === 'rivals-segment') {
+        const newSeg = btn.dataset.segment;
+        if (newSeg !== view.rivals.segment && (newSeg === 'rivals' || newSeg === 'following' || newSeg === 'suggested')) {
+          view.rivals.segment = newSeg;
+          view.rivals.offset = 0;
+          view.rivals._loaded = false; // force reload on segment change
+          syncUrlFromState();
+          updateRivalsSegmentButtons(target);
+          loadRivals(target);
         }
       } else if (action === 'prev') {
         view.offset = Math.max(0, view.offset - DIRECTORY_PAGE_SIZE);
@@ -766,10 +1133,27 @@ function wireEvents(target) {
         view.opp.offset = view.opp.offset + RECENT_OPPONENTS_PAGE_SIZE;
         loadOpponents(target);
         scrollToTop(target);
+      } else if (action === 'riv-prev') {
+        view.rivals.offset = Math.max(0, view.rivals.offset - RELATIONSHIPS_PAGE_SIZE);
+        loadRivals(target);
+        scrollToTop(target);
+      } else if (action === 'riv-next') {
+        view.rivals.offset = view.rivals.offset + RELATIONSHIPS_PAGE_SIZE;
+        loadRivals(target);
+        scrollToTop(target);
+      } else if (action === 'riv-add-rival') {
+        // Suggested-rival quick action: mark as rival and remove the card.
+        // The button lives inside the card <li>; we don't navigate (the
+        // click is on the button, not the anchor).
+        ev.stopPropagation();
+        const pid = btn.dataset.pid;
+        if (pid) handleQuickRival(target, pid, btn);
       } else if (action === 'retry') {
         load(target);
       } else if (action === 'opp-retry') {
         loadOpponents(target);
+      } else if (action === 'riv-retry') {
+        loadRivals(target);
       } else if (action === 'clear-search') {
         view.search = '';
         view.offset = 0;
@@ -804,37 +1188,103 @@ function wireEvents(target) {
 }
 
 /**
- * Switch between the Directory and Recent Opponents tabs. Updates the
- * tab attributes (aria-selected, tabindex, hidden), persists the active
- * tab to the URL, and lazy-loads the opponents data on first visit.
+ * Switch between the Directory, Recent Opponents, and Rivals tabs.
+ * Updates the tab attributes (aria-selected, tabindex, hidden),
+ * persists the active tab to the URL, and lazy-loads the tab's data
+ * on first visit.
  * @param {HTMLElement} target
  * @param {PlayerTab} newTab
  */
 function switchTab(target, newTab) {
   view.tab = newTab;
   syncUrlFromState();
-  // Update tab button states
-  const dirTab = target.querySelector('#pd-tab-directory');
-  const oppTab = target.querySelector('#pd-tab-opponents');
-  const dirPanel = target.querySelector('#pd-tabpanel-directory');
-  const oppPanel = target.querySelector('#pd-tabpanel-opponents');
-  if (dirTab && oppTab && dirPanel && oppPanel) {
-    const isDir = newTab === 'directory';
-    dirTab.classList.toggle('pd-tab-active', isDir);
-    oppTab.classList.toggle('pd-tab-active', !isDir);
-    dirTab.setAttribute('aria-selected', String(isDir));
-    oppTab.setAttribute('aria-selected', String(!isDir));
-    dirTab.setAttribute('tabindex', isDir ? '0' : '-1');
-    oppTab.setAttribute('tabindex', isDir ? '-1' : '0');
-    dirPanel.hidden = !isDir;
-    oppPanel.hidden = isDir;
-    // Focus the newly-active tab button for WAI-ARIA roving tabindex
-    const activeTab = isDir ? dirTab : oppTab;
-    activeTab.focus();
+  const tabs = [
+    ['directory', '#pd-tab-directory', '#pd-tabpanel-directory'],
+    ['opponents', '#pd-tab-opponents', '#pd-tabpanel-opponents'],
+    ['rivals', '#pd-tab-rivals', '#pd-tabpanel-rivals'],
+  ];
+  let activeTabEl = null;
+  for (const [name, tabSel, panelSel] of tabs) {
+    const tabEl = target.querySelector(tabSel);
+    const panelEl = target.querySelector(panelSel);
+    if (!tabEl || !panelEl) continue;
+    const isActive = name === newTab;
+    tabEl.classList.toggle('pd-tab-active', isActive);
+    tabEl.setAttribute('aria-selected', String(isActive));
+    tabEl.setAttribute('tabindex', isActive ? '0' : '-1');
+    panelEl.hidden = !isActive;
+    if (isActive) activeTabEl = tabEl;
   }
-  // Lazy-load opponents on first visit
+  // Focus the newly-active tab button for WAI-ARIA roving tabindex
+  if (activeTabEl) activeTabEl.focus();
+  // Lazy-load on first visit
   if (newTab === 'opponents' && !view.opp._loaded) {
     loadOpponents(target);
+  } else if (newTab === 'rivals' && !view.rivals._loaded) {
+    loadRivals(target);
+  }
+}
+
+/**
+ * Update the segmented-control button states for the Rivals tab without
+ * re-rendering the whole shell.
+ * @param {HTMLElement} target
+ */
+function updateRivalsSegmentButtons(target) {
+  const seg = view.rivals.segment;
+  for (const btn of target.querySelectorAll('[data-action="rivals-segment"]')) {
+    const isActive = btn.dataset.segment === seg;
+    btn.classList.toggle('pd-seg-btn-active', isActive);
+    btn.setAttribute('aria-pressed', String(isActive));
+  }
+}
+
+/**
+ * Handle the "quick add rival" action from a suggested-rival card.
+ * Calls setRival and removes the card on success (the player moves to
+ * the Rivals segment). Shows inline feedback on failure.
+ * @param {HTMLElement} target
+ * @param {string} pid - The target's public player id.
+ * @param {HTMLButtonElement} btn - The clicked button.
+ */
+async function handleQuickRival(target, pid, btn) {
+  // Lazy import to avoid loading the data layer until first interaction.
+  const { setRival } = await import('../play/players/relationships-data.js');
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = 'Adding…';
+  try {
+    const res = await setRival(pid);
+    if (res.ok) {
+      // Remove the card from the suggested list (it's now a rival).
+      const card = btn.closest('[data-testid="pd-riv-card"]');
+      if (card) {
+        card.style.transition = 'opacity 180ms ease, transform 180ms ease';
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(8px)';
+        setTimeout(() => {
+          card.remove();
+          // If the grid is now empty, re-render the empty state.
+          const grid = target.querySelector('[data-testid="pd-riv-grid"]');
+          if (grid && grid.children.length === 0) {
+            view.rivals.entries = [];
+            renderRivalsContent(target);
+            renderRivalsSummary(target);
+          }
+        }, 200);
+      }
+    } else {
+      btn.disabled = false;
+      btn.textContent = original;
+      // Brief inline error; the next render will clear it.
+      btn.classList.add('pd-riv-action-error');
+      btn.title = res.error ?? 'Could not mark as rival';
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = original;
+    btn.classList.add('pd-riv-action-error');
+    btn.title = err?.message ?? 'Could not mark as rival';
   }
 }
 

@@ -31,6 +31,7 @@ import { initAuth, getAuthState, getProfile, signOut, subscribe as subscribeToAu
 import { initAccountStore, subscribe as subscribeToAccount } from './play/network/account-store.js';
 import { runMigrationIfPending, onMigrationStatusChange } from './play/network/migration-controller.js';
 import { renderPrivacyPage, renderTermsPage } from './legal-pages.js';
+import { handlePuzzleRoute } from './play/puzzle/puzzle-app.mjs';
 import { renderRankingSystemOverlay } from './play/rank/ranking-system-overlay.js';
 import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading } from './seo-metadata.js';
 import { diagnoseConfig } from './play/network/match-server-config.js';
@@ -166,6 +167,14 @@ function renderLandingMode(r) {
     // Players is an overlay on the homepage, not a Simulation Lab workspace.
     renderLanding();
     openPlayersOverlay();
+  }
+  else if (r === '/dev/puzzles') {
+    // Puzzle Mode v0.1.0 — hidden developer experimental route.
+    // Renders into the landing container (homepage shell hidden) so it
+    // stays out of production navigation and matchmaking flows.
+    if (landingContainer) landingContainer.innerHTML = '<div id="puzzle-root"></div>';
+    const root = landingContainer?.querySelector('#puzzle-root');
+    if (root) handlePuzzleRoute(root);
   }
   else if (r === '/leaderboard') {
     // Leaderboard is an overlay on the homepage, not a Simulation Lab workspace.

@@ -535,3 +535,57 @@ test('CC: Evidence grade — SUPPORTED requires CI excluding zero + effect + q �
   });
   assert.equal(grade2, 'INSUFFICIENT', 'CI including zero must be INSUFFICIENT');
 });
+
+// Test DD: buildObservatoryAnalytics includes synergy diagnostics
+test('DD: buildObservatoryAnalytics includes synergyDiagnostics and nearThresholdPairs', () => {
+  // Create a campaign where no synergy pairs meet the threshold (Both ≥ 20)
+  // but several pairs have both ≥ 10 (near-threshold).
+  const rows = [];
+  for (let i = 0; i < 100; i++) {
+    // Three mechanics with varying co-occurrence
+    const a = i < 60 ? 'scuttle' : 'counter';
+    const b = i < 30 || (i >= 50 && i < 70) ? 'draw' : 'ultra';
+    rows.push(makeUnit(i, a, b, i % 2 === 0));
+  }
+  const result = buildObservatoryAnalytics({ summaries: rows, detailedMatches: [] });
+  assert.ok(Array.isArray(result.synergyDiagnostics), 'synergyDiagnostics should be an array');
+  assert.ok(result.synergyDiagnostics.length > 0, 'Should have synergy diagnostics when no pairs meet threshold');
+  // All diagnostics should have a reasonCode
+  for (const d of result.synergyDiagnostics) {
+    assert.ok(d.reasonCode, 'Each diagnostic should have a reasonCode');
+    assert.ok(d.cohortN, 'Each diagnostic should have cohortN');
+  }
+  // campaignHealth should include nearThresholdPairs
+  assert.ok('nearThresholdPairs' in result.campaignHealth, 'campaignHealth should include nearThresholdPairs');
+  assert.equal(typeof result.campaignHealth.nearThresholdPairs, 'number');
+  // nearThresholdPairs counts INSUFFICIENT_BOTH with both ≥ 10
+  const manualNearThreshold = result.synergyDiagnostics.filter(
+    d => d.reasonCode === 'INSUFFICIENT_BOTH' && (d.cohortN?.both ?? 0) >= 10
+  ).length;
+  assert.equal(result.campaignHealth.nearThresholdPairs, manualNearThreshold,
+    'nearThresholdPairs should match manual count of INSUFFICIENT_BOTH with both ≥ 10');
+});
+
+// Test EE: Near-threshold pairs are NOT proven synergies
+test('EE: Near-threshold pairs are clearly distinct from eligible synergies', () => {
+  // When synergies exist, near-threshold pairs may still be present in diagnostics
+  // but they are NOT included in the synergies array.
+  const rows = [];
+  for (let i = 0; i < 200; i++) {
+    const a = i < 100 ? 'scuttle' : 'counter';
+    const b = i < 50 || (i >= 100 && i < 150) ? 'draw' : 'ultra';
+    rows.push(makeUnit(i, a, b, i % 2 === 0));
+  }
+  const result = buildObservatoryAnalytics({ summaries: rows, detailedMatches: [] });
+  // synergies and synergyDiagnostics are separate arrays
+  assert.ok(Array.isArray(result.synergies));
+  assert.ok(Array.isArray(result.synergyDiagnostics));
+  // Diagnostics have status 'rejected' — they are NOT synergies
+  for (const d of result.synergyDiagnostics) {
+    assert.equal(d.status, 'rejected');
+  }
+  // Synergies (if any) have status that is NOT 'rejected'
+  for (const s of result.synergies) {
+    assert.notEqual(s.status, 'rejected');
+  }
+});

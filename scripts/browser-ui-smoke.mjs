@@ -193,6 +193,12 @@ try{
   if(!playOk.shellHidden||!playOk.playHubVisible||playOk.cardCount<3)throw new Error(`Play hub check failed: ${JSON.stringify(playOk)}`);
   landingProof.play=true;
 
+  // ── Puzzle Mode v0.1.0 (hidden dev route) ──
+  await cdp.evaluate(`location.hash='#/dev/puzzles'`);await new Promise(r=>setTimeout(r,800));
+  const puzzleOk=await cdp.evaluate(`(()=>({workspaceVisible:Boolean(document.querySelector('.puzzle-workspace')),headerVisible:Boolean(document.querySelector('.puzzle-header h1')?.textContent?.includes('Puzzle Mode')),fixtureSelect:Boolean(document.querySelector('#puzzle-select')),objectiveVisible:Boolean(document.querySelector('.puzzle-objective-text'))}))()`);
+  if(!puzzleOk.workspaceVisible||!puzzleOk.headerVisible||!puzzleOk.fixtureSelect||!puzzleOk.objectiveVisible)throw new Error(`Puzzle Mode route check failed: ${JSON.stringify(puzzleOk)}`);
+  landingProof.puzzle=true;
+
   await cdp.evaluate(`location.hash='#/rules'`);await new Promise(r=>setTimeout(r,500));
   const rulesOk=await cdp.evaluate(`(()=>({shellHidden:getComputedStyle(document.querySelector('.observatory-shell')).display==='none',rulesVisible:Boolean(document.querySelector('.rules-page')),tocVisible:Boolean(document.querySelector('.rules-toc')),contentVisible:Boolean(document.querySelector('.rules-content'))}))()`);
   if(!rulesOk.shellHidden||!rulesOk.rulesVisible||!rulesOk.tocVisible||!rulesOk.contentVisible)throw new Error(`Rules page check failed: ${JSON.stringify(rulesOk)}`);

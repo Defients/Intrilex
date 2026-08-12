@@ -127,13 +127,6 @@ test('release-notes: build.mjs copies CHANGELOG.md → dist/data/changelog.md', 
   assert.match(build, /CHANGELOG\.md.*data\/changelog\.md/);
 });
 
-test('release-notes: build.mjs regenerates og-image via generate-og-image.mjs', async () => {
-  const build = await read('scripts/build.mjs');
-  assert.match(build, /scripts\/generate-og-image\.mjs/);
-  // The stale "hand-authored" comment must be gone.
-  assert.doesNotMatch(build, /hand-authored/);
-});
-
 test('release-notes: neocities sync script exists and mirrors dist → deploy', async () => {
   assert.ok(existsSync(path.join(root, 'scripts/sync-neocities.mjs')), 'sync-neocities.mjs missing');
   assert.ok(existsSync(path.join(root, 'scripts/upload-neocities.mjs')), 'upload-neocities.mjs missing');

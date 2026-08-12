@@ -121,3 +121,41 @@ test('BL-16: styles.css contains swap matrix heatmap styles', async () => {
   assert.ok(css.includes('.swap-legend'), 'styles.css must have .swap-legend class');
   assert.ok(css.includes('.swap-diagonal'), 'styles.css must have .swap-diagonal class for self-swap cells');
 });
+
+// BL-17: Synergy Observatory surfaces near-threshold pairs when no synergies meet the full threshold
+test('BL-17: renderSynergies includes near-threshold pairs section', async () => {
+  const code = await src('workspaces/observatory.js');
+  // Must read synergyDiagnostics from observatory state
+  assert.ok(code.includes('synergyDiagnostics'),
+    'renderSynergies must read synergyDiagnostics from observatory state');
+  // Must have a near-threshold rendering function
+  assert.ok(code.includes('renderNearThresholdPairs'),
+    'observatory.js must define renderNearThresholdPairs');
+  // Must filter for INSUFFICIENT_BOTH with both >= 10
+  assert.ok(code.includes('INSUFFICIENT_BOTH'),
+    'near-threshold filter must check for INSUFFICIENT_BOTH reasonCode');
+  // Must include progress-to-threshold bar
+  assert.ok(code.includes('threshold-bar'),
+    'near-threshold UI must include threshold-bar visual');
+});
+
+// BL-17: observatory analytics.json must contain synergyDiagnostics
+test('BL-17: observatory analytics.json contains synergyDiagnostics', async () => {
+  const analytics = JSON.parse(await readFile(path.join(root, 'apps/lab-web/dist/data/observatory/analytics.json'), 'utf8'));
+  assert.ok(Array.isArray(analytics.synergyDiagnostics),
+    'analytics.json must contain synergyDiagnostics array');
+  assert.ok(analytics.synergyDiagnostics.length > 0,
+    'synergyDiagnostics should have entries when no synergies meet threshold');
+  assert.ok('nearThresholdPairs' in analytics.campaignHealth,
+    'campaignHealth must include nearThresholdPairs count');
+  assert.ok(analytics.campaignHealth.nearThresholdPairs > 0,
+    'nearThresholdPairs should be > 0 for the 100-match campaign');
+});
+
+// BL-17: threshold-bar CSS must be present
+test('BL-17: CSS contains threshold-bar styles', async () => {
+  const css = await cssSrc();
+  assert.ok(css.includes('.threshold-bar'), 'CSS must have .threshold-bar class');
+  assert.ok(css.includes('.threshold-bar-fill'), 'CSS must have .threshold-bar-fill class');
+  assert.ok(css.includes('.threshold-bar-label'), 'CSS must have .threshold-bar-label class');
+});

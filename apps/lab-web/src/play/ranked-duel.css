@@ -24,9 +24,10 @@
   --active-card-h: clamp(140px, 11vh, 200px);
   --swap-slot-w: clamp(72px, 5vw, 96px);
   --swap-slot-h: clamp(72px, 7vh, 96px);
-  --board-lane-h: clamp(110px, 13vh, 150px);
-  --utility-row-h: clamp(150px, 16vh, 190px);
-  --bottom-band-h: clamp(170px, 24vh, 230px);
+  --board-lane-h: clamp(90px, 11vh, 130px);
+  --utility-row-h: clamp(110px, 13vh, 160px);
+  --bottom-band-h: clamp(140px, 18vh, 210px);
+  --stage-row-h: clamp(160px, 20vh, 260px);
 
   /* ── Visual hierarchy tokens (v0.25) ── */
   /* Tier 1: Immediate gameplay (strongest) */
@@ -59,7 +60,8 @@
   display: grid !important;
   width: 100vw !important;
   height: 100vh !important;
-  min-width: 1100px !important;
+  height: 100dvh !important;
+  min-width: 1024px !important;
   background: #050810 !important;
   color: #e2e8f0 !important;
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
@@ -71,7 +73,7 @@
   /* v0.25: Score Rail inserted between Game Log and Active Stage (row 4 only).
      Game Log shrinks 5→4 cols; Active Stage stays 6 cols; Stack stays 3 cols. */
   grid-template-columns: repeat(14, minmax(0, 1fr)) clamp(290px, 18vw, 360px) !important;
-  grid-template-rows: 36px var(--board-lane-h) var(--utility-row-h) 330px 1fr var(--board-lane-h) var(--bottom-band-h) !important;
+  grid-template-rows: 36px var(--board-lane-h) var(--utility-row-h) var(--stage-row-h) 1fr var(--board-lane-h) var(--bottom-band-h) !important;
   grid-template-areas:
     "header    header    header    header    header    header    header    header    header    header    header    header    header    header    enemyProfile"
     "enemyE    enemyE    enemyE    enemyE    enemyE    enemyE    enemyE    enemyP    enemyP    enemyP    enemyP    enemyP    enemyP    enemyP    enemyProfile"
@@ -2850,6 +2852,16 @@
     --board-card-w: clamp(80px, 5.5vw, 112px);
     --active-card-w: clamp(100px, 8vw, 150px);
     --active-card-h: clamp(120px, 9vh, 170px);
+  }
+}
+
+/* ── Responsive: short viewport (height ≤ 800px) ─────────────── */
+@media (max-height: 800px) {
+  .ranked-duel-shell {
+    --board-lane-h: clamp(80px, 10vh, 110px);
+    --utility-row-h: clamp(100px, 12vh, 140px);
+    --stage-row-h: clamp(140px, 18vh, 220px);
+    --bottom-band-h: clamp(120px, 16vh, 180px);
   }
 }
 
