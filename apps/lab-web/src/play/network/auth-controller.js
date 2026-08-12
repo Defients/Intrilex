@@ -67,7 +67,20 @@ export async function initAuth() {
     if (session) {
       _session = session;
       _profile = await fetchProfile(client, session.user);
-      setState(session.user?.is_anonymous ? 'ANONYMOUS' : 'AUTHENTICATED');
+      const isAnonymous = Boolean(session.user?.is_anonymous);
+      // Detect guest→permanent migration on page load. OAuth redirects
+      // reload the page, so the in-memory ANONYMOUS state is lost and the
+      // onAuthStateChange handler's wasAnonymous check never fires. Check
+      // the saved guest identity here so the migration controller can
+      // transfer local achievements to the permanent account.
+      if (!isAnonymous) {
+        const savedGuestId = _readGuestIdentity();
+        if (savedGuestId && savedGuestId !== session.user.id) {
+          _guestIdentity = savedGuestId;
+          _migrationPending = true;
+        }
+      }
+      setState(isAnonymous ? 'ANONYMOUS' : 'AUTHENTICATED');
     } else {
       setState('SIGNED_OUT');
     }

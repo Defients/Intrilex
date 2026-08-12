@@ -192,6 +192,7 @@ const STAGES = [
   // Guest→permanent account migration (domain contracts, server execution, E2E)
   ['guest-migration-plan', 'node', ['--test', 'test/guest-migration-plan.test.mjs']],
   ['guest-migration-e2e', 'node', ['--test', 'test/guest-migration-e2e.test.mjs']],
+  ['auth-controller-migration', 'node', ['--test', 'test/auth-controller-migration.test.mjs']],
   // Match server production configuration (deployment hardening)
   ['match-server-config', 'node', ['--test', 'test/match-server-config.test.mjs']],
   ['match-server-production', 'node', ['--test', 'test/match-server-production.test.mjs']],
