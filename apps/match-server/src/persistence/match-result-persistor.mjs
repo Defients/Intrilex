@@ -75,7 +75,7 @@
 export class MatchResultPersistor {
   /**
    * Persist a terminal match result to the authoritative store.
-   * @param {MatchResultRecord} record
+   * @param {MatchResultRecord} _record
    * @returns {Promise<PersistedMatchResult>}
    */
   async persistMatchResult(_record) {
@@ -85,9 +85,9 @@ export class MatchResultPersistor {
   /**
    * Get the current rating state for a player.
    * Used to fetch ratingBefore before computing the update.
-   * @param {string} accountId
-   * @param {string} queueId
-   * @param {string} [seasonId] - Active season id (defaults to canonical)
+   * @param {string} _accountId
+   * @param {string} _queueId
+   * @param {string} [_seasonId] - Active season id (defaults to canonical)
    * @returns {Promise<{rating: number, ratingDeviation: number, volatility: number, ratedMatches: number, provisional: boolean, placementsPlayed: number, peakRating: number} | null>}
    */
   async getRatingState(_accountId, _queueId, _seasonId) {
@@ -96,7 +96,7 @@ export class MatchResultPersistor {
 
   /**
    * Resolve the active season id for a queue. Returns a stable season id.
-   * @param {string} queueId
+   * @param {string} _queueId
    * @returns {Promise<string>}
    */
   async resolveActiveSeasonId(_queueId) {
@@ -107,7 +107,7 @@ export class MatchResultPersistor {
    * Check whether a match result has already been persisted (idempotency
    * gate). Returns true if the matchId is already in the authoritative
    * store, so re-persisting is a safe no-op that does NOT re-apply ratings.
-   * @param {string} matchId
+   * @param {string} _matchId
    * @returns {Promise<boolean>}
    */
   async isMatchPersisted(_matchId) {
@@ -119,11 +119,22 @@ export class MatchResultPersistor {
    * Only called for participants with an accountId (authenticated players).
    * Uses SERVER provenance — these rows can only be written by the service role.
    * Idempotent: re-persisting the same (accountId, achievementId) is a no-op.
-   * @param {Array<AchievementUnlockRecord>} unlocks
+   * @param {Array<AchievementUnlockRecord>} _unlocks
    * @returns {Promise<{ success: boolean, error: string|null, persisted: number }>}
    */
   async persistAchievementUnlocks(_unlocks) {
     throw new Error('MatchResultPersistor.persistAchievementUnlocks() not implemented');
+  }
+
+  /**
+   * Persist achievement progress updates (IRX-H31).
+   * Writes progress rows for multi-step achievements (counters, sets).
+   * Idempotent: re-persisting the same (accountId, achievementId) upserts.
+   * @param {Array<{ accountId: string, achievementId: string, progress: number, target: number|null, updatedAt: string, matchId: string }>} _progress
+   * @returns {Promise<{ success: boolean, error: string|null, persisted: number }>}
+   */
+  async persistAchievementProgress(_progress) {
+    throw new Error('MatchResultPersistor.persistAchievementProgress() not implemented');
   }
 
   /**
@@ -135,7 +146,7 @@ export class MatchResultPersistor {
    * @param {string} plan.migrationId - Deterministic migration ID
    * @param {string} plan.sourceIdentity - Guest user UUID
    * @param {string} plan.targetIdentity - Permanent user UUID
-   * @param {Array<{ achievementId: string, unlockedAt: string, provenance?: string }>} achievements - Local achievements to migrate
+   * @param {Array<{ achievementId: string, unlockedAt: string, provenance?: string }>} _achievements - Local achievements to migrate
    * @returns {Promise<{ success: boolean, error: string|null, migrationId: string, achievementsTransferred: number, alreadyMigrated: boolean }>}
    */
   async executeGuestMigration(_plan, _achievements) {
@@ -144,7 +155,7 @@ export class MatchResultPersistor {
 
   /**
    * Check if a guest→permanent migration has already been completed.
-   * @param {string} migrationId - Deterministic migration ID
+   * @param {string} _migrationId - Deterministic migration ID
    * @returns {Promise<boolean>}
    */
   async isMigrationCompleted(_migrationId) {

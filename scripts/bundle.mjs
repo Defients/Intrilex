@@ -11,7 +11,7 @@
  * cache headers, while non-hashed assets get shorter cache durations.
  */
 import esbuild from 'esbuild';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
@@ -30,14 +30,22 @@ async function bundle() {
   }
 
   // Bundle and minify JS — all imports resolve from dist/ where engine files exist
+  // IRX-M32: Enable code splitting so dynamic import() creates separate chunks.
+  // This reduces the initial bundle by splitting the play module into a lazy chunk.
+  // Use outdir (required by esbuild when splitting is enabled) with a temp dir,
+  // then hash and rename the outputs.
+  const splitDir = path.join(dist, '.split-tmp');
   const jsResult = await esbuild.build({
     entryPoints: [entryJs],
     bundle: true,
+    splitting: true,
+    chunkNames: 'chunk-[name]-[hash]',
     minify: true,
     target: 'es2020', // Aligned with browserslist: last 2 versions, >0.2%, not dead
     format: 'esm',
     sourcemap: true,
-    write: false,
+    outdir: splitDir,
+    write: true,
     logLevel: 'info',
     absWorkingDir: dist
   });
@@ -54,7 +62,12 @@ async function bundle() {
   });
 
   // Hash the outputs
-  const jsContent = jsResult.outputFiles[0].contents;
+  // IRX-M32: With splitting enabled, esbuild writes to splitDir.
+  // The main entry is app.js, chunks are chunk-*.js, source maps are *.map.
+  const splitFiles = await readdir(splitDir);
+  const entryFile = splitFiles.find(f => f === 'app.js');
+  if (!entryFile) throw new Error('bundle: esbuild did not produce app.js entry');
+  const jsContent = await readFile(path.join(splitDir, entryFile));
   const cssContent = cssResult.outputFiles[0].text;
   const jsHash = createHash('sha256').update(jsContent).digest('hex').slice(0, 12);
   const cssHash = createHash('sha256').update(cssContent).digest('hex').slice(0, 12);
@@ -62,14 +75,31 @@ async function bundle() {
   const jsFileName = `app.${jsHash}.js`;
   const cssFileName = `styles.${cssHash}.css`;
 
-  // Write hashed files to dist
+  // Write hashed main entry to dist
   await writeFile(path.join(dist, jsFileName), jsContent);
   await writeFile(path.join(dist, cssFileName), cssContent);
 
-  // Write source map
-  if (jsResult.outputFiles[1]) {
-    await writeFile(path.join(dist, `${jsFileName}.map`), jsResult.outputFiles[1].contents);
+  // IRX-M32: Copy chunk files and source maps from splitDir to dist
+  const chunkFiles = [];
+  for (const f of splitFiles) {
+    if (f === entryFile) {
+      // Main entry source map
+      const mapFile = `${f}.map`;
+      if (splitFiles.includes(mapFile)) {
+        await writeFile(path.join(dist, `${jsFileName}.map`), await readFile(path.join(splitDir, mapFile)));
+      }
+    } else if (f.endsWith('.js')) {
+      // Chunk file — copy to dist with esbuild's hashed name
+      await writeFile(path.join(dist, f), await readFile(path.join(splitDir, f)));
+      chunkFiles.push(f);
+    } else if (f.endsWith('.map') && f !== `${entryFile}.map`) {
+      // Chunk source map — copy to dist
+      await writeFile(path.join(dist, f), await readFile(path.join(splitDir, f)));
+    }
   }
+
+  // Clean up the temp split directory
+  await rm(splitDir, { recursive: true, force: true });
 
   // Write bundle manifest
   const manifest = {
@@ -77,7 +107,9 @@ async function bundle() {
     generatedAt: new Date().toISOString(),
     assets: {
       app: { file: jsFileName, hash: jsHash, type: 'js' },
-      styles: { file: cssFileName, hash: cssHash, type: 'css' }
+      styles: { file: cssFileName, hash: cssHash, type: 'css' },
+      // IRX-M32: List lazy-loaded chunks in the manifest for cache management
+      ...(chunkFiles.length > 0 ? { chunks: chunkFiles.map(f => ({ file: f, type: 'js' })) } : {})
     }
   };
   await writeFile(path.join(dist, 'BUNDLE_MANIFEST.json'), JSON.stringify(manifest, null, 2) + '\n');
@@ -145,6 +177,65 @@ async function bundle() {
   console.log(`bundle: wrote ${jsFileName} (${(jsContent.length / 1024).toFixed(1)} KB)`);
   console.log(`bundle: wrote ${cssFileName} (${(cssContent.length / 1024).toFixed(1)} KB)`);
   console.log(`bundle: manifest at BUNDLE_MANIFEST.json`);
+
+  // ── Cache-bust all module imports in dist ───────────────────────────
+  // A stale service worker from a previous deployment may still be active
+  // and serving old cached raw source files (e.g. supabase-client.js with
+  // a bare '@supabase/supabase-js' import). The SW matches cache entries by
+  // full URL including query string. By appending ?v=[hash] to every
+  // relative module import path (both static and dynamic), the SW never
+  // finds a cached match and is forced to fetch from network, which serves
+  // the clean rewritten file.
+  {
+    const bustHash = jsHash; // reuse the bundle content hash
+    let bustedCount = 0;
+
+    // Patterns to rewrite (relative paths only — ./ or ../):
+    //   import { x } from "./path"        →  from "./path?v=HASH"
+    //   import "./path"                   →  import "./path?v=HASH"
+    //   export { x } from "./path"        →  from "./path?v=HASH"
+    //   export * from "./path"            →  from "./path?v=HASH"
+    //   import("./path")                  →  import("./path?v=HASH")
+    const fromRegex = /(\b(?:from|import|export\s+\*|export\s*\{[^}]*\})\s*)(["'])((?:\.\/|\.\.\/)[^"']+?)\2/g;
+    const dynImportRegex = /import\(\s*(["'])((?:\.\/|\.\.\/)[^"']+?)\1\s*\)/g;
+
+    async function bustImports(dir) {
+      const entries = await readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name === 'data' || entry.name === 'assets' ||
+              entry.name === '.split-tmp' || entry.name === 'engine') continue;
+          await bustImports(fullPath);
+        } else if (entry.isFile() && entry.name.endsWith('.js')) {
+          let content = await readFile(fullPath, 'utf8');
+          let modified = false;
+
+          // Rewrite static import/export...from and bare side-effect import
+          content = content.replace(fromRegex, (match, kw, quote, p) => {
+            if (p.includes('?')) return match;
+            modified = true;
+            return `${kw}${quote}${p}?v=${bustHash}${quote}`;
+          });
+
+          // Rewrite dynamic import()
+          content = content.replace(dynImportRegex, (match, quote, p) => {
+            if (p.includes('?')) return match;
+            modified = true;
+            return `import(${quote}${p}?v=${bustHash}${quote})`;
+          });
+
+          if (modified) {
+            await writeFile(fullPath, content);
+            bustedCount++;
+          }
+        }
+      }
+    }
+
+    await bustImports(dist);
+    console.log(`bundle: cache-busted module imports in ${bustedCount} dist file(s) ?v=${bustHash}`);
+  }
 
   return manifest;
 }

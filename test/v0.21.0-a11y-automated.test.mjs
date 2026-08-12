@@ -19,7 +19,11 @@ const readBundleJs = async () => {
   const files = await readdir(distDir);
   const bundle = files.find(f => /^app\.[a-f0-9]+\.js$/.test(f));
   if (!bundle) throw new Error('No hashed app bundle found in dist');
-  return readFile(path.join(distDir, bundle), 'utf8');
+  const bundleJs = await readFile(path.join(distDir, bundle), 'utf8');
+  // Include chunk files — code splitting moves a11y features into dynamically loaded chunks
+  const chunks = files.filter(f => /^chunk-.*\.js$/.test(f) && !f.endsWith('.map'));
+  const chunkJs = await Promise.all(chunks.map(f => readFile(path.join(distDir, f), 'utf8')));
+  return [bundleJs, ...chunkJs].join('\n');
 };
 const readCss = async () => (await Promise.all([
   ...['tokens-base', 'feature-components', 'pages-polish'].map(f =>

@@ -373,7 +373,7 @@ function wireEvents(target) {
       if (!row) return;
       const pid = row.dataset.pid;
       if (pid) {
-        location.hash = `#/profile?player=${encodeURIComponent(pid)}`;
+        location.hash = `#/player/${encodeURIComponent(pid)}`;
       }
     });
     // Keyboard activation for rows
@@ -383,7 +383,7 @@ function wireEvents(target) {
       if (!row) return;
       ev.preventDefault();
       const pid = row.dataset.pid;
-      if (pid) location.hash = `#/profile?player=${encodeURIComponent(pid)}`;
+      if (pid) location.hash = `#/player/${encodeURIComponent(pid)}`;
     });
   }
 }

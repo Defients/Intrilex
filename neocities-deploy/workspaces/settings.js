@@ -8,9 +8,10 @@
 //   - Data: clear local saves, reset settings
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, state, showToast, persistSetting } from '../state.js';
-import { getAuthState, getProfile, signOut, subscribe } from '../play/network/auth-controller.js';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js';
+import { app, esc, state, showToast, persistSetting } from '../state.js?v=659a089d50b6';
+import { getAuthState, getProfile, signOut, subscribe } from '../play/network/auth-controller.js?v=659a089d50b6';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=659a089d50b6';
+import { validateMatchServerUrl } from '../play/network/match-server-config.js?v=659a089d50b6';
 
 let _unsub = null;
 
@@ -169,9 +170,22 @@ function wireSettingsActions(container) {
     serverUrlInput.addEventListener('change', () => {
       const val = serverUrlInput.value.trim();
       try {
-        if (val) localStorage.setItem('intrilex:network-server-url', val);
-        else localStorage.removeItem('intrilex:network-server-url');
-        showToast('Network server URL saved', { type: 'success' });
+        if (val) {
+          // IRX-M11: Validate the URL before saving to prevent invalid/ineffective URLs
+          const check = validateMatchServerUrl(val);
+          if (!check.valid) {
+            showToast(`Invalid server URL: ${check.reason}`, { type: 'error' });
+            // Reset the input to the current stored value
+            const current = localStorage.getItem('intrilex:network-server-url') || '';
+            serverUrlInput.value = current;
+            return;
+          }
+          localStorage.setItem('intrilex:network-server-url', val);
+          showToast('Network server URL saved', { type: 'success' });
+        } else {
+          localStorage.removeItem('intrilex:network-server-url');
+          showToast('Network server URL cleared', { type: 'info' });
+        }
       } catch {
         showToast('Could not save setting', { type: 'error' });
       }
@@ -182,7 +196,7 @@ function wireSettingsActions(container) {
     clearSavesBtn.addEventListener('click', async () => {
       if (!confirm('Clear all local match saves? This cannot be undone.')) return;
       try {
-        const { isIndexedDBAvailable, listSaves, deleteSave } = await import('../play/persistence.js');
+        const { isIndexedDBAvailable, listSaves, deleteSave } = await import('../play/persistence.js?v=659a089d50b6');
         if (!isIndexedDBAvailable()) { showToast('No local saves found', { type: 'info' }); return; }
         const saves = await listSaves();
         if (!saves || saves.length === 0) { showToast('No local saves found', { type: 'info' }); return; }

@@ -2,8 +2,8 @@
 // workspaces/diagnostics.js — /diagnostics workspace
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, short, definitionList } from '../state.js';
-import { loadTraceIndex, loadTraceData } from '../data-loader.js';
+import { state, app, esc, pct, short, definitionList } from '../state.js?v=659a089d50b6';
+import { loadTraceIndex, loadTraceData } from '../data-loader.js?v=659a089d50b6';
 
 export function renderDiagnostics() {
   const summaries = state.observatory?.summaries ?? [];

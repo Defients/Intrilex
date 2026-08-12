@@ -1,7 +1,7 @@
-import { RULES_VERSION } from './version.js';
-const engineModule = import('./engine/browser-entry.js');
-const autonomyModule = import('./autonomy-runtime.js');
-const analyticsModule = import('./browser-analytics.js');
+import { RULES_VERSION } from './version.js?v=659a089d50b6';
+const engineModule = import('./engine/browser-entry.js?v=659a089d50b6');
+const autonomyModule = import('./autonomy-runtime.js?v=659a089d50b6');
+const analyticsModule = import('./browser-analytics.js?v=659a089d50b6');
 
 const fetchJson = async (url) => {
   const response = await fetch(url);
@@ -85,7 +85,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-counterfactual') {
     try {
-      const { runCounterfactualBranch } = await import('./decision-intelligence.js');
+      const { runCounterfactualBranch } = await import('./decision-intelligence.js?v=659a089d50b6');
       const result = runCounterfactualBranch(event.data.config ?? {});
       self.postMessage({ type: 'counterfactual-result', ok: true, result });
     } catch (error) { self.postMessage({ type: 'counterfactual-result', ok: false, error: error?.stack ?? String(error) }); }
@@ -93,7 +93,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-paired-counterfactual') {
     try {
-      const { runPairedCounterfactual } = await import('./decision-intelligence.js');
+      const { runPairedCounterfactual } = await import('./decision-intelligence.js?v=659a089d50b6');
       const cfg = event.data.config ?? {};
       // Load the authorized replay if not already provided in config
       if (!cfg.replay && cfg.fixtureId) {
@@ -109,7 +109,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'get-legal-actions') {
     try {
-      const { getCheckpointLegalActions } = await import('./decision-intelligence.js');
+      const { getCheckpointLegalActions } = await import('./decision-intelligence.js?v=659a089d50b6');
       const { replay, checkpointIndex, profileId, fixtureId, replayKind } = event.data;
       let replayObj = replay;
       if (!replayObj && fixtureId) {
@@ -125,7 +125,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-all-actions') {
     try {
-      const { getCheckpointLegalActions, runCounterfactualBranch } = await import('./decision-intelligence.js');
+      const { getCheckpointLegalActions, runCounterfactualBranch } = await import('./decision-intelligence.js?v=659a089d50b6');
       const { replay, checkpointIndex, profileId, fixtureId, replayKind, rolloutCount, continuationPolicyIds, baseSeed, seatOrder, matchId } = event.data;
       let replayObj = replay;
       if (!replayObj && fixtureId) {
@@ -186,7 +186,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-diagnostics') {
     try {
-      const { diagnosePolicy } = await import('./decision-intelligence.js');
+      const { diagnosePolicy } = await import('./decision-intelligence.js?v=659a089d50b6');
       const summaries = JSON.parse(event.data.summariesJson ?? '[]');
       const decisions = JSON.parse(event.data.decisionsJson ?? '[]');
       const baseline = diagnosePolicy(summaries, decisions, event.data.baselinePolicyId);

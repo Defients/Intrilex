@@ -11,13 +11,13 @@
 // renderRankGlyph() instead so the tier→image mapping stays centralized.
 // ═══════════════════════════════════════════════════════════════
 
-import { RankTier, Division, isApexTier, tierHasDivisions } from '@intrilex/account-domain/rank-tier';
+import { RankTier, Division, isApexTier, tierHasDivisions } from "../../account-domain/rank-tier.mjs";
 import {
   resolveGlyphPath,
   rankLabel,
   presentationFor,
   hasGlyph,
-} from './rank-presentation.mjs';
+} from './rank-presentation.mjs?v=659a089d50b6';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

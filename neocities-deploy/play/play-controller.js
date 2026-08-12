@@ -4,8 +4,8 @@
 // Action IDs resolve through a private command vault.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from '../engine/browser-entry.js';
-import { classifyDecisionKind, presentAction } from './action-presenter.js';
+import { hashCanonical } from '../engine/browser-entry.js?v=659a089d50b6';
+import { classifyDecisionKind, presentAction } from './action-presenter.js?v=659a089d50b6';
 import {
   PRODUCT_VERSION,
   PLAYER_RUNTIME_VERSION,
@@ -17,8 +17,8 @@ import {
   validateSaveEnvelope,
   canMigrateSave,
   migrateSave,
-} from './save-integrity.js';
-import { createPolicyRng, computePlayerStats } from './session-utils.js';
+} from './save-integrity.js?v=659a089d50b6';
+import { createPolicyRng, computePlayerStats } from './session-utils.js?v=659a089d50b6';
 
 // Re-export for backward compatibility (other modules import from play-controller)
 export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope, canMigrateSave, migrateSave };
@@ -40,7 +40,7 @@ export const SessionState = Object.freeze({
 let _engineModule = null;
 async function engine() {
   if (!_engineModule) {
-    _engineModule = await import('../engine/browser-entry.js');
+    _engineModule = await import('../engine/browser-entry.js?v=659a089d50b6');
   }
   return _engineModule;
 }
@@ -48,7 +48,7 @@ async function engine() {
 let _autonomyModule = null;
 async function autonomy() {
   if (!_autonomyModule) {
-    _autonomyModule = await import('../autonomy-runtime.js');
+    _autonomyModule = await import('../autonomy-runtime.js?v=659a089d50b6');
   }
   return _autonomyModule;
 }
@@ -747,7 +747,7 @@ export class PlaySession {
     // Wire candidate into the session temporarily for replay
     this.status = SessionState.ADVANCING;
     this.sessionId = save.sessionId;
-    this.setup = { profileId: save.profileId, seed: save.setup.seed, humanPlayerId: save.setup.humanPlayerId, aiPolicyId: save.setup.aiPolicyId, aiArchetype: '', aiDifficulty: '', mode: save.mode, tutorial: save.tutorial };
+    this.setup = { profileId: save.profileId, seed: save.setup.seed, humanPlayerId: save.setup.humanPlayerId, aiPolicyId: save.setup.aiPolicyId, aiArchetype: save.setup.aiArchetype ?? '', aiDifficulty: save.setup.aiDifficulty ?? '', mode: save.mode, tutorial: save.tutorial };
     this.engine = candidateEngine;
     this.state = candidateState;
     this._decisionIndex = 0;

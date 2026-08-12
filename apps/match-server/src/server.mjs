@@ -67,6 +67,10 @@ const MAX_MATCHES = 100;
 const LOBBY_TTL = 300000; // 5 min
 const MATCH_TTL = 1800000; // 30 min
 const RECONNECT_GRACE = 60000; // 1 min
+// IRX-H10: Pending forfeit timeouts — when a participant disconnects during
+// a RUNNING match, a timeout is scheduled. If they don't reconnect within
+// RECONNECT_GRACE, the match is terminalized as a forfeit.
+const pendingForfeits = new Map(); // matchId → { timer, forfeitingParticipantId }
 // Trusted proxy — only set to true when behind a known reverse proxy (nginx, Cloudflare, etc.)
 // When false, x-forwarded-for headers are IGNORED and the raw socket address is used.
 const TRUST_FORWARDED_IP = process.env.INTRILEX_TRUST_PROXY === '1' || false;
@@ -115,6 +119,7 @@ let identityVerifier = null; // IdentityVerifier instance (set by startServer)
 let matchResultPersistor = null; // MatchResultPersistor instance (set by startServer)
 let ratingService = null; // RatingService instance (set by startServer) — RANK-01/3C
 let terminalOutbox = null; // TerminalOutbox instance (set by startServer) — DATA-01
+let blockChecker = null; // IRX-H19: Block-check function (accountIdA, accountIdB) → Promise<boolean>
 let _authMode = AUTH_MODE; // Active auth mode (can be overridden by startServer opts)
 let _isProductionMode = false; // True when authMode=required (DATA-04: fail-closed persistence)
 const connections = new Map(); // connectionId → { ws, authState, account, participantId, matchId, lastHeartbeat, isSpectator, spectatingMatchId, rateLimit, ip }
@@ -135,7 +140,15 @@ const _eventCounters = {
 const LOG_ENABLED = process.env.INTRILEX_LOG !== '0'; // set INTRILEX_LOG=0 to silence
 
 /**
- * Emit a structured JSON log entry to stderr (stdout reserved for CLI banner).
+ * Emit a structured JSON log entry to stderr.
+ *
+ * stderr is used (not stdout) because:
+ *   - stdout is reserved for the CLI startup banner and health-endpoint output,
+ *     so structured logs on stderr avoid interleaving with human-readable output
+ *   - log aggregators and process managers (systemd, Docker) capture stderr
+ *     separately, allowing log-level filtering without affecting stdout pipes
+ *   - JSON Lines on stderr is a common convention for server-side structured logging
+ *
  * Format: {"ts":"2024-01-01T00:00:00.000Z","event":"connection.open","data":{...}}
  */
 function logEvent(event, data = {}) {
@@ -168,6 +181,31 @@ function getHealthMetrics() {
     },
     persistence: {
       persistorType: matchResultPersistor?.constructor.name ?? 'none',
+    },
+  };
+}
+
+/**
+ * IRX-M02: Sanitized health metrics for public endpoints.
+ * Removes internal event counter names, persistor type, and banned IP count
+ * that could reveal implementation details to attackers.
+ */
+function getPublicHealthMetrics() {
+  const memUsage = process.memoryUsage();
+  return {
+    uptime: Date.now() - _startTime,
+    activeMatches: matchStore?.count ?? 0,
+    activeConnections: connections.size,
+    queueSize: matchmakingQueue?.size ?? 0,
+    memory: {
+      rssMB: Math.round(memUsage.rss / 1048576),
+      heapUsedMB: Math.round(memUsage.heapUsed / 1048576),
+      heapTotalMB: Math.round(memUsage.heapTotal / 1048576),
+    },
+    totalEvents: Object.values(_eventCounters).reduce((sum, val) => sum + val, 0),
+    auth: {
+      mode: _authMode,
+      verifierConfigured: identityVerifier !== null,
     },
   };
 }
@@ -381,6 +419,7 @@ function checkRateLimit(connectionId) {
  * @param {string} [opts.supabaseUrl] - Supabase project URL (for production verifier)
  * @param {string} [opts.supabaseSecretKey] - Supabase service role key (for production verifier)
  * @param {string[]} [opts.allowedOrigins] - Override allowed WebSocket origins (for testing)
+ * @param {function} [opts.blockChecker] - IRX-H19: async (accountIdA, accountIdB) → boolean, checks if either player blocked the other
  * @returns {Promise<{ httpServer, wss, close }>}
  */
 export function startServer(opts = {}) {
@@ -442,13 +481,26 @@ export function startServer(opts = {}) {
   // Override rate limit capacity for testing (default: 10)
   _rateLimitCapacity = opts.rateLimitCapacity ?? RATE_LIMIT_CAPACITY;
 
+  // IRX-H19: Block checker — async function (accountIdA, accountIdB) → boolean
+  // When provided, the server checks if either player has blocked the other
+  // before allowing match join or matchmaking pairing. When not provided,
+  // block enforcement is disabled (dev mode only — production should always
+  // provide a blockChecker).
+  blockChecker = opts.blockChecker ?? null;
+  if (_authMode === AuthMode.REQUIRED && !blockChecker && LOG_ENABLED) {
+    process.stderr.write(
+      '\n⚠  WARNING: No blockChecker configured — blocked players can join matches.\n' +
+      '   Provide opts.blockChecker in production to enforce player blocks.\n\n'
+    );
+  }
+
   // Initialize match store
   if (persistent) {
     const dbPath = opts.dbPath ?? DEFAULT_DB_PATH;
     // Ensure directory exists for file-based DB
     if (dbPath !== ':memory:') {
       const dir = dirname(dbPath);
-      try { mkdirSync(dir, { recursive: true }); } catch { /* may already exist */ }
+      try { mkdirSync(dir, { recursive: true }); } catch (err) { if (err.code !== 'EEXIST') logEvent('mkdirError', { path: dir, error: err.message }); }
     }
     matchStore = new SqliteMatchStore({ path: dbPath });
   } else {
@@ -522,7 +574,7 @@ export function startServer(opts = {}) {
   const outboxPath = opts.outboxPath ?? (opts.dbPath ? dirname(opts.dbPath) + '/terminal-outbox.sqlite' : 'runtime/match-server/terminal-outbox.sqlite');
   if (outboxDurable) {
     const outboxDir = dirname(outboxPath);
-    try { mkdirSync(outboxDir, { recursive: true }); } catch { /* may already exist */ }
+    try { mkdirSync(outboxDir, { recursive: true }); } catch (err) { if (err.code !== 'EEXIST') logEvent('mkdirError', { path: outboxDir, error: err.message }); }
   }
   terminalOutbox = new TerminalOutbox({
     durable: outboxDurable,
@@ -618,14 +670,14 @@ export function startServer(opts = {}) {
         server: 'Intrilex Match Authority',
         version: '0.27.0',
         protocolVersion: 2,
-        ...getHealthMetrics(),
+        ...getPublicHealthMetrics(),
       }));
       return;
     }
-    // Metrics endpoint at /metrics — same data, optimized for monitoring scrapers
+    // Metrics endpoint at /metrics — sanitized for public exposure (IRX-M02)
     if (req.url === '/metrics') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(getHealthMetrics()));
+      res.end(JSON.stringify(getPublicHealthMetrics()));
       return;
     }
     // NOTE: Unauthenticated HTTP replay download was removed in v0.24.2
@@ -642,6 +694,10 @@ export function startServer(opts = {}) {
   // The ws library negotiates permessage-deflate automatically during the
   // WebSocket handshake. These thresholds prevent compressing tiny messages
   // (where the deflate header overhead exceeds the savings).
+  // IRX-M35: Compression attack surface — explicit budgets.
+  // maxPayload limits the COMPRESSED frame size to 64KB.
+  // The decompressed budget (1MB) is enforced per-message in the message handler.
+  const MAX_DECOMPRESSED_SIZE = 1024 * 1024; // 1MB decompressed budget
   const wss = new WebSocketServer({
     server: httpServer,
     maxPayload: 65536,
@@ -683,9 +739,13 @@ export function startServer(opts = {}) {
     }
 
     // Origin validation — when ALLOWED_ORIGINS is configured, reject unknown origins
+    // IRX-M33: Previously, an empty/missing Origin header bypassed the check
+    // entirely (the `origin && ...` condition skipped validation when origin
+    // was falsy). Now, when ALLOWED_ORIGINS is configured, a missing Origin
+    // header is rejected — non-browser clients must send an allowed Origin.
     if (ALLOWED_ORIGINS.length > 0) {
       const origin = req?.headers?.origin ?? '';
-      if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+      if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
         ws.close(1008, 'Origin not allowed');
         return;
       }
@@ -696,6 +756,13 @@ export function startServer(opts = {}) {
     logEvent('connectionOpen', { connectionId, ip, total: connections.size });
 
     ws.on('message', (raw) => {
+      // IRX-M35: Enforce decompressed size budget to prevent compression bombs.
+      // maxPayload limits compressed size, but a small compressed frame can
+      // decompress to a very large payload. Reject messages exceeding 1MB.
+      if (raw.length > MAX_DECOMPRESSED_SIZE) {
+        logEvent('messageTooLarge', { connectionId, size: raw.length, limit: MAX_DECOMPRESSED_SIZE });
+        return;
+      }
       // NET-01: Promise-aware dispatch — observe the returned promise so
       // async handler rejections are contained at the WebSocket boundary
       // rather than escaping as unhandled rejections. The sync try/catch
@@ -732,10 +799,10 @@ export function startServer(opts = {}) {
     for (const [cid, conn] of connections) {
       if (now - conn.lastHeartbeat > HEARTBEAT_INTERVAL * 2) {
         // Dead peer detected — perform disconnect bookkeeping before terminating
-        try { handleDisconnect(cid); } catch { /* ignore */ }
-        try { conn.ws.terminate(); } catch { /* ignore */ }
+        try { handleDisconnect(cid); } catch (err) { logEvent('heartbeatDisconnectError', { cid, error: err?.message }); }
+        try { conn.ws.terminate(); } catch { /* ignore — ws may already be closed */ }
       } else {
-        try { conn.ws.ping(); } catch { /* ignore */ }
+        try { conn.ws.ping(); } catch { /* ignore — ws may be closing */ }
       }
     }
   }, HEARTBEAT_INTERVAL);
@@ -782,10 +849,16 @@ export function startServer(opts = {}) {
             try { conn.ws.terminate(); } catch { /* ignore */ }
           }
           connections.clear();
+          // IRX-H10: Clear all pending forfeit timers
+          for (const { timer } of pendingForfeits.values()) {
+            clearTimeout(timer);
+          }
+          pendingForfeits.clear();
           if (matchmakingQueue) matchmakingQueue = null;
           if (matchStore) matchStore.close();
           matchStore = null;
           if (identityVerifier) { identityVerifier.close?.(); identityVerifier = null; }
+          blockChecker = null; // IRX-H19: Clear block checker on shutdown
           // DATA-01: Drain terminal outbox before closing persistor.
           // Bound shutdown drain time, persist unfinished work, then close.
           return (async () => {
@@ -880,6 +953,23 @@ function handleMessage(connectionId, ws, raw) {
     if (!connAuth || connAuth.authState !== ConnectionAuthState.AUTHENTICATED) {
       logEvent('authRequired', { connectionId, type });
       return send(ws, errorMsg(ReasonCode.AUTH_REQUIRED, 'Authentication required before this command', requestId));
+    }
+    // IRX-H03: Revalidate token expiry on every privileged action.
+    // Previously, token expiry was checked only at handshake time. A player
+    // whose token expired mid-match could continue playing indefinitely.
+    if (connAuth.account?.tokenExpiresAt && Date.now() > connAuth.account.tokenExpiresAt) {
+      logEvent('authTokenExpired', { connectionId, type, accountId: connAuth.account.accountId });
+      return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_EXPIRED, 'Token expired — please re-authenticate', requestId));
+    }
+    // IRX-H03: Revalidate account status on every privileged action.
+    // A player suspended/banned mid-match must not continue playing.
+    if (connAuth.account?.accountStatus === 'SUSPENDED') {
+      logEvent('authAccountSuspendedMidMatch', { connectionId, type, accountId: connAuth.account.accountId });
+      return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_SUSPENDED, 'Account suspended — session terminated', requestId));
+    }
+    if (connAuth.account?.accountStatus === 'BANNED') {
+      logEvent('authAccountBannedMidMatch', { connectionId, type, accountId: connAuth.account.accountId });
+      return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_BANNED, 'Account banned — session terminated', requestId));
     }
   }
 
@@ -977,6 +1067,16 @@ async function handleAuthenticate(connectionId, ws, payload, requestId) {
   // Bind verified identity to connection
   const conn = connections.get(connectionId);
   if (!conn) return;
+  // IRX-H01: Prevent re-authentication from switching to a different account.
+  // If the connection is already authenticated and bound to a match seat,
+  // a re-AUTHENTICATE with a different accountId must be rejected to prevent
+  // seat hijacking. The same subject may re-authenticate (e.g. token refresh).
+  if (conn.authState === ConnectionAuthState.AUTHENTICATED && conn.account) {
+    if (conn.account.accountId !== result.identity.accountId) {
+      logEvent('authFailure', { connectionId, code: 'AUTH_ACCOUNT_SWITCH', reason: 're_auth_different_account', existingAccount: conn.account.accountId, newAccount: result.identity.accountId });
+      return send(ws, errorMsg(ReasonCode.AUTH_REQUIRED, 'Already authenticated as a different account — disconnect and reconnect to switch accounts', requestId));
+    }
+  }
   conn.authState = ConnectionAuthState.AUTHENTICATED;
   conn.account = {
     accountId: result.identity.accountId,
@@ -992,6 +1092,21 @@ async function handleAuthenticate(connectionId, ws, payload, requestId) {
   };
 
   logEvent('authSuccess', { connectionId, accountId: result.identity.accountId, isAnonymous: result.identity.isAnonymous });
+
+  // IRX-H12: Enforce account status — reject suspended/banned accounts
+  const acctStatus = conn.account.accountStatus ?? 'ACTIVE';
+  if (acctStatus === 'SUSPENDED') {
+    logEvent('authRejected', { connectionId, code: 'AUTH_ACCOUNT_SUSPENDED', accountId: result.identity.accountId });
+    conn.authState = ConnectionAuthState.SIGNED_OUT;
+    conn.account = null;
+    return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_SUSPENDED, 'This account is suspended', requestId));
+  }
+  if (acctStatus === 'BANNED') {
+    logEvent('authRejected', { connectionId, code: 'AUTH_ACCOUNT_BANNED', accountId: result.identity.accountId });
+    conn.authState = ConnectionAuthState.SIGNED_OUT;
+    conn.account = null;
+    return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_BANNED, 'This account is banned', requestId));
+  }
 
   // Send AUTHENTICATED with safe public profile — NEVER echo the access token
   send(ws, authenticatedBuilder(
@@ -1115,13 +1230,32 @@ async function handleMigrateGuest(connectionId, ws, payload, requestId) {
     migrationVersion: 1,
   };
 
-  logEvent('migrationRequest', { connectionId, migrationId: plan.migrationId, achievementCount: payload.achievements.length });
+  logEvent('migrationRequest', { connectionId, migrationId: plan.migrationId, achievementCount: payload.achievements.length, hasProgress: Boolean(payload.achievementProgress) });
 
   const result = await matchResultPersistor.executeGuestMigration(plan, payload.achievements);
 
   if (!result.success) {
     logEvent('migrationFailure', { connectionId, migrationId: plan.migrationId, error: result.error });
     return send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, result.error ?? 'Migration failed', requestId));
+  }
+
+  // IRX-H31: Also persist achievement progress if provided
+  if (payload.achievementProgress && payload.achievementProgress.length > 0) {
+    try {
+      const progressRows = payload.achievementProgress.map(p => ({
+        accountId: payload.targetIdentity,
+        achievementId: p.achievementId,
+        progress: p.progress,
+        target: p.target ?? null,
+        updatedAt: new Date().toISOString(),
+        matchId: null,
+      }));
+      await matchResultPersistor.persistAchievementProgress(progressRows);
+      logEvent('migrationProgressTransferred', { connectionId, migrationId: plan.migrationId, progressCount: progressRows.length });
+    } catch (err) {
+      // Non-fatal — unlocks were already transferred successfully
+      logEvent('migrationProgressError', { connectionId, migrationId: plan.migrationId, error: err?.message ?? String(err) });
+    }
   }
 
   logEvent('migrationSuccess', { connectionId, migrationId: plan.migrationId, transferred: result.achievementsTransferred, alreadyMigrated: result.alreadyMigrated });
@@ -1193,7 +1327,7 @@ function handleCreateMatch(connectionId, ws, payload, requestId) {
   logEvent('matchCreate', { matchId, profileId: payload.profileId, matchMode: match.matchMode, queueId: match.queueId, accountId: conn?.account?.accountId ?? null });
 }
 
-function handleJoinMatch(connectionId, ws, payload, requestId) {
+async function handleJoinMatch(connectionId, ws, payload, requestId) {
   // Prevent conflicting bindings
   const existingConn = connections.get(connectionId);
   if (existingConn && (existingConn.participantId || existingConn.isSpectator)) {
@@ -1218,6 +1352,14 @@ function handleJoinMatch(connectionId, ws, payload, requestId) {
     for (const [, p] of match.participants) {
       if (p.accountId === joinerAccountId) {
         return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_MISMATCH, 'Cannot join your own match', requestId));
+      }
+      // IRX-H19: Check if either player has blocked the other
+      if (blockChecker && p.accountId) {
+        const blocked = await blockChecker(joinerAccountId, p.accountId);
+        if (blocked) {
+          logEvent('blockJoinRejected', { matchId: match.matchId, joiner: joinerAccountId, existing: p.accountId });
+          return send(ws, errorMsg(ReasonCode.BLOCKED_BY_PLAYER, 'Cannot join a match with this player', requestId));
+        }
       }
     }
   }
@@ -1295,6 +1437,14 @@ function handleResumeMatch(connectionId, ws, payload, requestId) {
 
   match.reconnectParticipant(participantId);
   matchStore.save(match);
+
+  // IRX-H10: Cancel any pending forfeit timer for this match
+  const pendingForfeit = pendingForfeits.get(match.matchId);
+  if (pendingForfeit) {
+    clearTimeout(pendingForfeit.timer);
+    pendingForfeits.delete(match.matchId);
+    logEvent('forfeitTimerCancelled', { matchId: match.matchId, participantId });
+  }
 
   // Send fresh view
   const view = match.getAuthorizedView(participantId);
@@ -1421,7 +1571,7 @@ async function handleSubmitAction(connectionId, ws, payload, requestId) {
 
     // If terminal, send MATCH_ENDED to both
     if (match.status === 'TERMINAL') {
-      broadcastMatchEnded(match);
+      await broadcastMatchEnded(match);
       logEvent('matchEnd', { matchId: match.matchId, winner: match.winner, reason: match.terminalReason });
     }
 
@@ -1501,7 +1651,7 @@ function handleLeaveMatch(connectionId, ws, payload, requestId) {
 
 // ── Matchmaking queue handlers ──
 
-function handleQueueJoin(connectionId, ws, payload, requestId) {
+async function handleQueueJoin(connectionId, ws, payload, requestId) {
   const check = validateQueueJoin(payload);
   if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
 
@@ -1521,6 +1671,39 @@ function handleQueueJoin(connectionId, ws, payload, requestId) {
   const result = matchmakingQueue.enqueue(connectionId, payload.profileId, accountId, payload.queueId ?? null);
   if (!result.queued) {
     return send(ws, errorMsg(result.code || ReasonCode.INTERNAL_ERROR, result.error || 'Failed to join queue', requestId));
+  }
+
+  // IRX-H19: If paired immediately, check if either player has blocked the other.
+  // If so, cancel the match and notify both players.
+  if (result.paired && blockChecker && accountId) {
+    const pair = Array.isArray(result.paired) ? result.paired : [result.paired];
+    const partnerConnId = pair.find(r => r.connectionId !== connectionId)?.connectionId;
+    const partnerConn = partnerConnId ? connections.get(partnerConnId) : null;
+    const partnerAccountId = partnerConn?.account?.accountId ?? null;
+    if (partnerAccountId) {
+      try {
+        const blocked = await blockChecker(accountId, partnerAccountId);
+        if (blocked) {
+          logEvent('blockQueuePairRejected', { accountId, partnerAccountId });
+          // Notify both players that the match was cancelled due to a block
+          send(ws, errorMsg(ReasonCode.BLOCKED_BY_PLAYER, 'Matchmaking cancelled — cannot match with this player', requestId));
+          if (partnerConnId && partnerConn?.ws) {
+            send(partnerConn.ws, errorMsg(ReasonCode.BLOCKED_BY_PLAYER, 'Matchmaking cancelled — cannot match with this player'));
+          }
+          // Clean up the match that was just created
+          const matchId = pair[0]?.matchId;
+          if (matchId && matchStore) {
+            matchStore.delete(matchId);
+          }
+          return;
+        }
+      } catch {
+        // Block check failed — fail closed (cancel the match)
+        logEvent('blockQueueCheckError', { accountId, partnerAccountId });
+        send(ws, errorMsg(ReasonCode.BLOCKED_BY_PLAYER, 'Unable to verify player eligibility', requestId));
+        return;
+      }
+    }
   }
 
   // If paired immediately, the onCreateMatch callback already sent QUEUE_MATCHED
@@ -1554,6 +1737,12 @@ function handleSpectateMatch(connectionId, ws, payload, requestId) {
   // Only allow spectating if the match has started (RUNNING or TERMINAL)
   if (match.status !== 'RUNNING' && match.status !== 'TERMINAL') {
     return send(ws, errorMsg(ReasonCode.MATCH_NOT_RUNNING, 'Match is not running', requestId));
+  }
+
+  // IRX-M19: Reject spectators for private matches.
+  // Private matches require explicit invitation — no spectator consent exists yet.
+  if (match.matchMode === 'private') {
+    return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Match not found', requestId));
   }
 
   // Enforce spectator count limit per match
@@ -1797,6 +1986,45 @@ function handleDisconnect(connectionId) {
           }));
         }
       }
+
+      // IRX-H10: If the match is RUNNING and the opponent is still connected,
+      // schedule a forfeit timeout. If the disconnected player doesn't reconnect
+      // within RECONNECT_GRACE, the match is terminalized as a forfeit.
+      if (match.status === 'RUNNING' && opponentId) {
+        const oppConn = findConnectionByParticipant(opponentId, conn.matchId);
+        if (oppConn) {
+          // Cancel any existing forfeit timer for this match
+          const existing = pendingForfeits.get(match.matchId);
+          if (existing) clearTimeout(existing.timer);
+          // Schedule forfeit
+          const timer = setTimeout(async () => {
+            const pending = pendingForfeits.get(match.matchId);
+            if (!pending) return;
+            pendingForfeits.delete(match.matchId);
+            // Guard: server may have been shut down
+            if (!matchStore) return;
+            const currentMatch = matchStore.get(match.matchId);
+            if (!currentMatch || currentMatch.status !== 'RUNNING') return;
+            // Verify the participant is still disconnected
+            const p = currentMatch.participants.get(conn.participantId);
+            if (!p || p.connectionState !== 'DISCONNECTED') return;
+            // Forfeit — the remaining player wins
+            const forfeited = currentMatch.forfeit(conn.participantId);
+            if (forfeited) {
+              matchStore.save(currentMatch);
+              logEvent('matchForfeit', { matchId: currentMatch.matchId, forfeitingParticipant: conn.participantId, winner: currentMatch.winner });
+              await broadcastMatchEnded(currentMatch);
+              // Notify the remaining player
+              const winnerConn = findConnectionByParticipant(opponentId, currentMatch.matchId);
+              if (winnerConn) {
+                send(winnerConn.ws, matchEnded(currentMatch.matchId, currentMatch.terminalReason, currentMatch.winner));
+              }
+            }
+          }, RECONNECT_GRACE);
+          pendingForfeits.set(match.matchId, { timer, forfeitingParticipantId: conn.participantId });
+          logEvent('forfeitTimerStarted', { matchId: match.matchId, participantId: conn.participantId, graceMs: RECONNECT_GRACE });
+        }
+      }
     }
   }
 
@@ -1852,13 +2080,26 @@ function buildPublicProfile(conn) {
   };
 }
 
-function broadcastMatchEnded(match) {
+async function broadcastMatchEnded(match) {
   // Generate the replay ONCE and compute its hash from the actual replay object.
   // Do NOT hash an empty-string fallback — if replay generation fails, send no hash.
   const replay = match.getReplay();
-  const replayHash = replay
-    ? createHash('sha256').update(JSON.stringify(replay)).digest('hex')
-    : null;
+  // IRX-H41: Verify the replay before sending it to clients. If the replay
+  // fails verification (tampered, corrupted, or inconsistent), do NOT send
+  // a replay hash — clients will know no certified replay is available.
+  let replayHash = null;
+  if (replay) {
+    try {
+      const verification = match.verifyReplay();
+      if (verification.valid) {
+        replayHash = createHash('sha256').update(JSON.stringify(replay)).digest('hex');
+      } else {
+        logEvent('replayVerificationFailed', { matchId: match.matchId, error: verification.error });
+      }
+    } catch (err) {
+      logEvent('replayVerificationError', { matchId: match.matchId, error: err?.message ?? String(err) });
+    }
+  }
   // replayUrl is null — HTTP replay download was removed in v0.24.2.
   // Replays are retrieved via the authenticated WebSocket GET_REPLAY flow only.
   const replayUrl = null;
@@ -1883,10 +2124,129 @@ function broadcastMatchEnded(match) {
     logEvent('achievementEvalError', { matchId: match.matchId, error: err.message });
   }
 
+  // IRX-H13: DURABLE PERSISTENCE BEFORE BROADCAST.
+  // The terminal result MUST be durably enqueued BEFORE clients are told
+  // the match is terminal. Previously, the broadcast happened first and the
+  // outbox enqueue was a fire-and-forget .then() — if the server crashed
+  // after broadcasting but before the async enqueue completed, clients
+  // observed finality that could vanish on crash. Now we await the build
+  // and enqueue first, then broadcast.
+  //
+  // RANK-01: Use the server-owned match.queueId (not profileId.includes('ranked')).
+  // The outbox routes ranked records through RatingService.applyRatedResult()
+  // which fails closed for ineligible records.
+  if (terminalOutbox && matchResultPersistor) {
+    /** @type {Awaited<ReturnType<typeof buildMatchResultRecord>> | null} */
+    let record = null;
+    try {
+      let effectiveQueueId = match.queueId ?? 'casual';
+      let effectiveSeasonId = match.seasonId && match.seasonId !== 'pending' ? match.seasonId : undefined;
+
+      // IRX-H07: If this is a ranked match and the season cannot be resolved,
+      // downgrade to casual rather than fabricating a season. A ranked record
+      // without a valid season must never enter account truth.
+      if (effectiveQueueId === 'ranked' && !effectiveSeasonId && matchResultPersistor?.resolveActiveSeasonId) {
+        try {
+          effectiveSeasonId = await matchResultPersistor.resolveActiveSeasonId('ranked');
+        } catch (err) {
+          logEvent('rankedSeasonResolveError', { matchId: match.matchId, error: err?.message });
+          effectiveSeasonId = null;
+        }
+        if (!effectiveSeasonId) {
+          logEvent('rankedSeasonMissing', { matchId: match.matchId, action: 'downgrade_to_casual' });
+          effectiveQueueId = 'casual';
+        }
+      }
+
+      record = await buildMatchResultRecord({
+        match,
+        persistor: matchResultPersistor,
+        queueId: effectiveQueueId,
+        seasonId: effectiveSeasonId,
+        serverVersion: LAB_VERSION,
+      });
+      ratingRecord = record;
+      if (record) {
+        // Enqueue result job — idempotency key is matchId
+        terminalOutbox.enqueueResult(record);
+
+        // Enqueue achievement jobs — idempotency key is matchId:accountId
+        const achUnlocks = [];
+        const achProgress = [];
+        for (const [pid] of match.participants) {
+          const achResult = achievementResults[pid];
+          if (!achResult) continue;
+          const participant = match.participants.get(pid);
+          const accountId = participant?.accountId;
+          if (!accountId) continue; // Skip anonymous players
+          // IRX-H31: Persist both unlocks AND progress updates.
+          // Previously, participants with no new unlocks were skipped entirely,
+          // discarding their progress updates (e.g., counters, set progress).
+          for (const unlock of achResult.newUnlocks) {
+            achUnlocks.push({
+              accountId,
+              achievementId: unlock.achievementId,
+              unlockedAt: unlock.unlockedAt || new Date().toISOString(),
+              provenance: 'SERVER',
+              matchId: match.matchId,
+              rulesVersion: unlock.rulesVersion || null,
+              productVersion: unlock.productVersion || null,
+            });
+          }
+          for (const prog of (achResult.progressUpdates || [])) {
+            achProgress.push({
+              accountId,
+              achievementId: prog.achievementId,
+              progress: prog.progress,
+              target: prog.target || null,
+              updatedAt: new Date().toISOString(),
+              matchId: match.matchId,
+            });
+          }
+        }
+        if (achUnlocks.length > 0) {
+          terminalOutbox.enqueueAchievements(achUnlocks, match.matchId);
+        }
+        if (achProgress.length > 0) {
+          terminalOutbox.enqueueAchievementProgress(achProgress, match.matchId);
+        }
+        // Trigger an immediate drain attempt (don't wait for the interval)
+        terminalOutbox._drainOnce().catch(err => {
+          logEvent('outboxDrainError', { matchId: match.matchId, error: err?.message ?? String(err) });
+        });
+      }
+    } catch (err) {
+      logEvent('matchResultBuildError', { matchId: match.matchId, error: err?.message ?? String(err) });
+    }
+  }
+
+  // IRX-H13: Broadcast to clients AFTER durable persistence is enqueued.
+  // Clients only learn the match is terminal once the result is durably stored.
+  // IRX-H23: Include per-participant rating data in MATCH_ENDED for ranked matches.
+  /** @type {Awaited<ReturnType<typeof buildMatchResultRecord>> | null} */
+  let ratingRecord = null;
+  let ratingData = null;
+  try {
+    if (ratingRecord && ratingRecord.participants) {
+      ratingData = ratingRecord.participants
+        .filter(p => p.ratingBefore !== null || p.ratingAfter !== null)
+        .map(p => ({
+          participantId: p.participantId,
+          ratingBefore: p.ratingBefore ?? null,
+          ratingAfter: p.ratingAfter ?? null,
+          ratingDelta: p.ratingDelta ?? null,
+        }));
+      if (ratingData.length === 0) ratingData = null;
+    }
+  } catch (err) {
+    logEvent('ratingDataExtractError', { matchId: match.matchId, error: err?.message });
+    ratingData = null;
+  }
+
   for (const [pid] of match.participants) {
     const targetConn = findConnectionByParticipant(pid, match.matchId);
     if (targetConn) {
-      send(targetConn.ws, matchEnded(match.matchId, match.terminalReason, match.winner));
+      send(targetConn.ws, matchEnded(match.matchId, match.terminalReason, match.winner, undefined, ratingData));
       // Send REPLAY_AVAILABLE so clients know they can request the certified replay
       send(targetConn.ws, replayAvailable(match.matchId, replayUrl, replayHash));
       // Send server-authoritative achievement unlocks for this participant
@@ -1895,59 +2255,6 @@ function broadcastMatchEnded(match) {
         send(targetConn.ws, achievementsEarned(match.matchId, achResult.newUnlocks, achResult.progressUpdates));
       }
     }
-  }
-
-  // DATA-01: Durable terminal lifecycle — persist via the terminal outbox
-  // instead of fire-and-forget. The outbox ensures terminal effects are
-  // recoverable, idempotent, retryable, and auditable. The result is
-  // queued BEFORE clients are told the match is terminal (above), so
-  // completion is durable.
-  //
-  // RANK-01: Use the server-owned match.queueId (not profileId.includes('ranked')).
-  // The outbox routes ranked records through RatingService.applyRatedResult()
-  // which fails closed for ineligible records.
-  if (terminalOutbox && matchResultPersistor) {
-    buildMatchResultRecord({
-      match,
-      persistor: matchResultPersistor,
-      queueId: match.queueId ?? 'casual',
-      seasonId: match.seasonId && match.seasonId !== 'pending' ? match.seasonId : undefined,
-      serverVersion: LAB_VERSION,
-    }).then(record => {
-      if (!record) return;
-      // Enqueue result job — idempotency key is matchId
-      terminalOutbox.enqueueResult(record);
-
-      // Enqueue achievement jobs — idempotency key is matchId:accountId
-      const achUnlocks = [];
-      for (const [pid] of match.participants) {
-        const achResult = achievementResults[pid];
-        if (!achResult || achResult.newUnlocks.length === 0) continue;
-        const participant = match.participants.get(pid);
-        const accountId = participant?.accountId;
-        if (!accountId) continue; // Skip anonymous players
-        for (const unlock of achResult.newUnlocks) {
-          achUnlocks.push({
-            accountId,
-            achievementId: unlock.achievementId,
-            unlockedAt: unlock.unlockedAt || new Date().toISOString(),
-            provenance: 'SERVER',
-            matchId: match.matchId,
-            rulesVersion: unlock.rulesVersion || null,
-            productVersion: unlock.productVersion || null,
-          });
-        }
-      }
-      if (achUnlocks.length > 0) {
-        terminalOutbox.enqueueAchievements(achUnlocks, match.matchId);
-      }
-      // Trigger an immediate drain attempt (don't wait for the interval)
-      terminalOutbox._drainOnce().catch(err => {
-        logEvent('outboxDrainError', { matchId: match.matchId, error: err?.message ?? String(err) });
-      });
-    }).catch(err => {
-      logEvent('matchResultBuildError', { matchId: match.matchId, error: err?.message ?? String(err) });
-    });
   }
 }
 
@@ -1965,6 +2272,20 @@ try {
     // Development: bind to 127.0.0.1 (localhost only) for safety.
     const isProduction = process.env.NODE_ENV === 'production';
     const host = process.env.HOST || (isProduction ? '0.0.0.0' : DEFAULT_HOST);
+    // IRX-H02: In production, auth must be explicitly required.
+    // Missing, misspelled, or 'optional' auth mode in production is fail-closed.
+    if (isProduction && AUTH_MODE !== AuthMode.REQUIRED) {
+      console.error(`FATAL: NODE_ENV=production but INTRILEX_AUTH_MODE is '${AUTH_MODE}' (not 'required').`);
+      console.error('       Production servers must have INTRILEX_AUTH_MODE=required.');
+      process.exit(1);
+    }
+    // IRX-H02: Validate auth mode against closed enum — reject unknown values.
+    const validAuthModes = new Set([AuthMode.REQUIRED, AuthMode.DISABLED]);
+    if (!validAuthModes.has(AUTH_MODE)) {
+      console.error(`FATAL: INTRILEX_AUTH_MODE='${AUTH_MODE}' is not a valid mode.`);
+      console.error(`       Valid modes: 'required' (production), 'disabled' (development).`);
+      process.exit(1);
+    }
     const allowedOriginsSummary = ALLOWED_ORIGINS.length > 0
       ? ALLOWED_ORIGINS.join(', ')
       : '(all origins accepted — set INTRILEX_ALLOWED_ORIGINS in production!)';
@@ -1978,6 +2299,20 @@ try {
         console.warn('WARNING: INTRILEX_ALLOWED_ORIGINS is not set. All WebSocket origins are accepted.');
         console.warn('         Set INTRILEX_ALLOWED_ORIGINS to restrict access to known frontend origins.');
       }
+    }).catch(err => {
+      // IRX-M37: Log sanitized fatal error and exit nonzero on startup failure.
+      console.error('FATAL: Server startup failed:', err.message);
+      process.exit(1);
     });
   }
-} catch { /* not running as CLI — imported as a module */ }
+} catch (err) {
+  // IRX-M37: Don't silently swallow startup errors. If this is a CLI invocation,
+  // log the error and exit nonzero. If imported as a module, re-throw.
+  const _scriptPath = fileURLToPath(import.meta.url);
+  const _argvPath = process.argv[1] || '';
+  const _isMain = _scriptPath === _argvPath || _scriptPath.replace(/\\/g, '/') === _argvPath.replace(/\\/g, '/');
+  if (_isMain && _argvPath) {
+    console.error('FATAL: Server initialization error:', err.message);
+    process.exit(1);
+  }
+}

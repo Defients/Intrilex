@@ -76,6 +76,13 @@ Otherwise `test/test-coverage-meta.test.mjs` will fail.
 - Node globals are declared for `packages/**/*.mjs`, `scripts/**/*.mjs`, `test/**/*.mjs`
 - `scripts/browser-e2e-certification.mjs` and `scripts/browser-network-e2e.mjs` have a file-specific override for `document`/`location` (CDP scripts serialize arrow functions via `.toString()` and evaluate them in the browser)
 
+## CSS Architecture (lab-web)
+- `styles.css` is the entry point; `@import` directives are inlined by esbuild at build time
+- Import order matters for cascade: `tokens-base` → `feature-components` → `pages-polish` → `landing-revamp` → `landing-mobile` → `advanced-card-rules` → play-specific CSS
+- `landing-revamp.css` — desktop homepage override layer (1920×1080 zero-overflow viewport lock, two-column grid, premium polish)
+- `landing-mobile.css` — mobile-first responsive override layer (320–1024px); loaded AFTER `landing-revamp.css` to override the desktop `position:fixed; overflow:hidden` viewport lock. Breakpoints: ≤1024px (tablet), ≤768px (phone: single-column stack, bottom-sheet account dropdown, touch targets), ≤430px (small phone), ≤375px (tiny phone), landscape phone, foldable/dual-screen. Includes `prefers-reduced-data`, `prefers-reduced-motion`, and `pointer:coarse` enhancements.
+- `test/landing-page.test.mjs` `cssSrc()` concatenates all 5 landing CSS files for assertion testing
+
 ## TypeScript (checkJs)
 - `tsconfig.json` enables `checkJs` (strict mode) for the packages listed in its `include` array — currently `packages/shared`, `packages/statistics`, `packages/match-authority`, and `packages/achievements` (`apps/`, `test/`, `scripts/`, `runtime/`, `vendor/`, `upstream/`, and `release/` are excluded)
 - **0 type errors** within the type-checked scope; run `npx tsc --noEmit` to verify

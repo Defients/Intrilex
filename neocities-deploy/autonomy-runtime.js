@@ -8,11 +8,11 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js';
-import { rankPolicyActions } from './policy-scoring.js';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js';
-import { attributeAction,   isNoAttributionAction} from './browser-analytics.js';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js';
+} from './engine/browser-entry.js?v=659a089d50b6';
+import { rankPolicyActions } from './policy-scoring.js?v=659a089d50b6';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=659a089d50b6';
+import { attributeAction,   isNoAttributionAction} from './browser-analytics.js?v=659a089d50b6';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=659a089d50b6';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];

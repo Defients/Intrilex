@@ -129,7 +129,11 @@ export async function loadCertifiedReplay(file) {
 export function projectFrame(frame, mode, viewerId) {
   if (mode === 'public') return views.publicStateView(frame.state);
   if (mode === 'player') return views.privateStateView(frame.state, viewerId);
-  return frame.state;
+  // IRX-M23: Spectator mode must use publicStateView (hides all hands),
+  // NOT raw frame.state (which contains seed, RNG, all hand identities).
+  // Unknown modes must throw — never fall through to raw state.
+  if (mode === 'spectator') return views.publicStateView(frame.state);
+  throw new Error(`Unknown projection mode: ${mode}`);
 }
 
 /**

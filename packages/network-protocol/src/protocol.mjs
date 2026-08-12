@@ -37,10 +37,14 @@ export function envelope(type, payload, requestId) {
  * Build a CREATE_MATCH message.
  * @param {string} profileId - Profile identifier (e.g. "core-*")
  * @param {string} [requestId] - Optional request correlation ID
+ * @param {{ queueId?: string }} [opts] - Optional match options (e.g. { queueId: 'casual' })
  * @returns {ProtocolEnvelope}
  */
-export function createMatch(profileId, requestId) {
-  return envelope('CREATE_MATCH', { profileId }, requestId);
+export function createMatch(profileId, requestId, opts) {
+  /** @type {Record<string, *>} */
+  const payload = { profileId };
+  if (opts?.queueId) payload.queueId = opts.queueId;
+  return envelope('CREATE_MATCH', payload, requestId);
 }
 
 /**
@@ -330,14 +334,21 @@ export function matchStarted(matchId, view, requestId) {
 
 /**
  * Build a MATCH_ENDED message.
+ * IRX-H23: Optionally includes per-participant rating data for ranked matches.
  * @param {string} matchId - Match identifier
  * @param {string} reason - Reason the match ended
  * @param {?string} winner - Winner identifier or null
  * @param {string} [requestId] - Optional request correlation ID
+ * @param {Array<{ participantId: string, ratingBefore: number|null, ratingAfter: number|null, ratingDelta: number|null, ratedMatchesBefore: number|null, ratedMatchesAfter: number|null }>} [ratingData] - Per-participant rating data for ranked matches
  * @returns {ProtocolEnvelope}
  */
-export function matchEnded(matchId, reason, winner, requestId) {
-  return envelope('MATCH_ENDED', { matchId, reason, winner }, requestId);
+export function matchEnded(matchId, reason, winner, requestId, ratingData) {
+  /** @type {Record<string, unknown>} */
+  const payload = { matchId, reason, winner };
+  if (ratingData && ratingData.length > 0) {
+    payload.ratingData = ratingData;
+  }
+  return envelope('MATCH_ENDED', payload, requestId);
 }
 
 /**
@@ -471,10 +482,16 @@ export function authenticated(account, expiresAt, requestId) {
  * @param {string} targetIdentity - Permanent Supabase user UUID
  * @param {Array<{ achievementId: string, unlockedAt: string, provenance?: string }>} achievements - Local achievements to migrate
  * @param {string} [requestId] - Optional request correlation ID
+ * @param {Array<{ achievementId: string, progress: number, target: number|null }>} [achievementProgress] - Local achievement progress (IRX-H31)
  * @returns {ProtocolEnvelope}
  */
-export function migrateGuest(sourceIdentity, targetIdentity, achievements, requestId) {
-  return envelope('MIGRATE_GUEST', { sourceIdentity, targetIdentity, achievements }, requestId);
+export function migrateGuest(sourceIdentity, targetIdentity, achievements, requestId, achievementProgress) {
+  /** @type {Record<string, unknown>} */
+  const payload = { sourceIdentity, targetIdentity, achievements };
+  if (achievementProgress && achievementProgress.length > 0) {
+    payload.achievementProgress = achievementProgress;
+  }
+  return envelope('MIGRATE_GUEST', payload, requestId);
 }
 
 /**

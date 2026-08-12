@@ -359,7 +359,7 @@ input::placeholder{color:var(--faint);opacity:.85}
 .landing-nav-status small{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--green);font-weight:600}
 
 /* ── Main content: two-column layout ── */
-.landing-hero{flex:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;text-align:left;padding:clamp(24px,4vh,48px) 40px var(--space-6);min-height:0}
+.landing-hero{flex:1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;text-align:left;padding:clamp(24px,4vh,48px) 40px var(--space-6);min-height:0;overflow-y:auto}
 .landing-content{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(340px,1fr);gap:32px;flex:1;max-width:1760px;width:100%;margin:0 auto;align-items:stretch}
 
 /* ── Primary Play panel (left, dominant) ── */

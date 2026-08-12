@@ -3,7 +3,7 @@
 //   Compare, Mechanics, Synergies, History, Replays, Traces
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct, short, definitionList } from '../state.js';
+import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=659a089d50b6';
 
 // ── /compare ──────────────────────────────────────────────────────
 export function renderCompare() {
@@ -14,8 +14,8 @@ export function renderCompare() {
   const policyMap = Object.fromEntries(policies.map(p => [p.policyId, p]));
   const left = policyMap[selectedPolicy], right = policyMap[rightPolicy];
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Policy Comparison</h2><p>Side-by-side policy metrics with uncertainty quantification</p></div><div class="toolbar"><select id="compare-left">${policies.map(p => `<option value="${esc(p.policyId)}" ${p.policyId === selectedPolicy ? 'selected' : ''}>${esc(p.policyId)}</option>`).join('')}</select><span>vs</span><select id="compare-right">${policies.map(p => `<option value="${esc(p.policyId)}" ${p.policyId === rightPolicy ? 'selected' : ''}>${esc(p.policyId)}</option>`).join('')}</select></div></div><div class="panel-body"><div class="grid two">${[left, right].map(p => p ? `<div>${definitionList([['Policy', p.policyId], ['Matches', p.matchCount], ['Win rate', pct(p.winRate)], ['Win rate 95% CI', p.winWilson95 ? `${pct(p.winWilson95[0])} to ${pct(p.winWilson95[1])}` : '—'], ['Avg score margin', p.avgScoreMargin?.toFixed(1)], ['Exhausted pass rate', pct(p.exhaustedPassRate)], ['Response play rate', pct(p.responsePlayRate)]])}</div>` : '<div class="notice warning">No data</div>').join('')}</div></div></section>`;
-  document.querySelector('#compare-left').onchange = e => { state.selectedPolicy = e.target.value; import('../app.js').then(m => m.render()); };
-  document.querySelector('#compare-right').onchange = e => { state.comparePolicyRight = e.target.value; import('../app.js').then(m => m.render()); };
+  document.querySelector('#compare-left').onchange = e => { state.selectedPolicy = e.target.value; import('../app.js?v=659a089d50b6').then(m => m.render()); };
+  document.querySelector('#compare-right').onchange = e => { state.comparePolicyRight = e.target.value; import('../app.js?v=659a089d50b6').then(m => m.render()); };
 }
 
 // ── /mechanics ────────────────────────────────────────────────────
@@ -158,32 +158,32 @@ export function renderMechanics() {
   const filterHtml = `<div class="toolbar"><label for="dimension-filter">Dimension:</label><select id="dimension-filter">${DIMENSION_FILTERS.map(f => `<option value="${f.value}" ${f.value === dimensionFilter ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}</select></div>`;
   const healthHtml = renderCampaignHealthBanner(o);
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Mechanics Atlas</h2><p>Prevalence, pick rate, win association, and evidence by mechanic — ${filtered.length} of ${mechanics.length} entities</p></div>${filterHtml}</div><div class="panel-body">${healthHtml}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(m => `<tr class="clickable-row" data-mechanic="${esc(m.mechanic)}"><td><b>${esc(m.displayName ?? m.mechanic)}</b></td><td>${esc(m.dimension ?? 'canonical-mechanic')}</td><td>${fmt(m.selectionCount ?? 0)}</td><td>${fmt(m.legalOpportunityCount ?? 0)}</td><td>${renderPickRateCell(m)}</td><td>${pct(m.participantPrevalence ?? m.matchUsageRate)}</td><td>${pct(m.matchPrevalence ?? 0)}</td><td>${renderWinAssocCell(m, 'rawWinAssociation', 'rawWinAssociationStatus')}</td><td>${renderWinAssocCell(m, 'adjustedWinAssociation', 'adjustedWinAssociationStatus')}</td><td>${renderPointImpactCell(m)}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div></div></section>`;
-  document.querySelector('#dimension-filter').onchange = e => { state.mechanicsDimensionFilter = e.target.value; import('../app.js').then(m => m.render()); };
+  document.querySelector('#dimension-filter').onchange = e => { state.mechanicsDimensionFilter = e.target.value; import('../app.js?v=659a089d50b6').then(m => m.render()); };
   document.querySelectorAll('[data-sort-column]').forEach(th => {
     const handler = () => {
       const col = th.dataset.sortColumn;
       if (state.mechanicsSortColumn === col) { state.mechanicsSortPhase = (state.mechanicsSortPhase + 1) % 3; }
       else { state.mechanicsSortColumn = col; state.mechanicsSortPhase = 1; }
-      import('../app.js').then(m => m.render());
+      import('../app.js?v=659a089d50b6').then(m => m.render());
     };
     th.onclick = handler;
     th.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } };
   });
-  document.querySelectorAll('[data-mechanic]').forEach(row => row.onclick = () => { state.selectedMechanic = row.dataset.mechanic; import('../app.js').then(m => m.render()); });
+  document.querySelectorAll('[data-mechanic]').forEach(row => row.onclick = () => { state.selectedMechanic = row.dataset.mechanic; import('../app.js?v=659a089d50b6').then(m => m.render()); });
 }
 
 function renderMechanicDetail(m) {
   const evidenceClass = (EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 3 ? 'supported' : 'warning';
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="mechanics-back">← Back to atlas</button><h2>${esc(m.displayName ?? m.mechanic)}</h2><p>${esc(m.category ?? '')} · ${esc(m.dimension ?? 'canonical-mechanic')}</p></div><span class="status-badge ${evidenceClass}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Selections', m.selectionCount], ['Legal opportunities', m.legalOpportunityCount ?? 'N/A'], ['Pick rate when legal', m.pickRateWhenLegal != null ? pct(m.pickRateWhenLegal) : 'N/A'], ['Participant prevalence', pct(m.participantPrevalence ?? m.matchUsageRate)], ['Participant prevalence 95% CI', (m.participantPrevalenceWilson95 ?? m.matchUsageWilson95) ? `${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[0])} to ${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[1])}` : '—'], ['Match prevalence', pct(m.matchPrevalence)], ['Raw win association', m.rawWinAssociation != null ? `${(m.rawWinAssociation * 100).toFixed(1)} pp` : '—'], ['Adjusted win association', m.adjustedWinAssociation != null ? `${(m.adjustedWinAssociation * 100).toFixed(1)} pp` : '—'], ['Actor point impact mean', (m.actorPointImpact ?? m.immediatePointImpact)?.mean?.toFixed(2) ?? '—'], ['Actor point impact median', (m.actorPointImpact ?? m.immediatePointImpact)?.median?.toFixed(2) ?? '—'], ['Sample size', m.sampleSize], ['P-value', m.pValue?.toFixed(4)], ['Registry verified', m.registryVerified ? 'Yes' : 'No']])}${m.limitations ? `<div class="notice info" style="margin-top:12px"><strong>Limitations:</strong><ul>${m.limitations.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}</div></section>`;
-  document.querySelector('#mechanics-back').onclick = () => { state.selectedMechanic = null; import('../app.js').then(m => m.render()); };
+  document.querySelector('#mechanics-back').onclick = () => { state.selectedMechanic = null; import('../app.js?v=659a089d50b6').then(m => m.render()); };
 }
 
 function renderAggregatedMechanicDetail(m) {
   const variants = m._variants ?? [];
   const rows = variants.map(v => `<tr class="clickable-row" data-mechanic="${esc(v.mechanic)}"><td class="mono">${esc(v.mechanic)}</td><td>${fmt(v.selectionCount ?? 0)}</td><td>${pct(v.matchUsageRate)}</td><td>${v.outcomeAssociation != null ? `${(v.outcomeAssociation * 100).toFixed(1)} pp` : '—'}</td><td>${v.sampleSize ?? '—'}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[v.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[v.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(v.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('');
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="mechanics-back">← Back to atlas</button><h2>${esc(m.displayName ?? m.mechanic)}</h2><p>${esc(m.category ?? '')} · aggregated from ${variants.length} card-specific variants</p></div><span class="status-badge ${(EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Variants', variants.length], ['Total selections', fmt(m.selectionCount)], ['Aggregated prevalence', pct(m.matchUsageRate)], ['Win rate association (sample-weighted)', m.outcomeAssociation != null ? `${(m.outcomeAssociation * 100).toFixed(1)} pp` : '—'], ['Total sample size', fmt(m.sampleSize)], ['Registry verified', m.registryVerified ? 'Yes' : 'No']])}<h3 style="margin-top:16px">Card-specific variants</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Variant</th><th>Selections</th><th>Prevalence</th><th>Win rate</th><th>Sample</th><th>Evidence</th></tr></thead><tbody>${rows}</tbody></table></div></div></section>`;
-  document.querySelector('#mechanics-back').onclick = () => { state.selectedMechanic = null; import('../app.js').then(m => m.render()); };
-  document.querySelectorAll('[data-mechanic]').forEach(row => row.onclick = () => { state.selectedMechanic = row.dataset.mechanic; import('../app.js').then(m => m.render()); });
+  document.querySelector('#mechanics-back').onclick = () => { state.selectedMechanic = null; import('../app.js?v=659a089d50b6').then(m => m.render()); };
+  document.querySelectorAll('[data-mechanic]').forEach(row => row.onclick = () => { state.selectedMechanic = row.dataset.mechanic; import('../app.js?v=659a089d50b6').then(m => m.render()); });
 }
 
 // ── /synergies ────────────────────────────────────────────────────
@@ -201,6 +201,7 @@ const SYNERGY_COLUMNS = [
 export function renderSynergies() {
   const o = state.observatory;
   const synergies = o.synergies ?? [];
+  const synergyDiagnostics = o.synergyDiagnostics ?? [];
   const motifs = o.motifs ?? [];
   const selectedSynergy = state.selectedSynergy;
   if (selectedSynergy) {
@@ -228,27 +229,59 @@ export function renderSynergies() {
     return `<th data-sort-column="${col.key}" ${sortAttr} tabindex="0" role="button">${col.label}${arrow}</th>`;
   }).join('');
   const healthHtml = renderCampaignHealthBanner(o);
+  // Near-threshold pairs: rejected for INSUFFICIENT_BOTH but with both ≥ 10
+  // (half the default threshold). These are the closest candidates that would
+  // become eligible with a larger campaign. Shown in a separate, clearly
+  // labelled section so users understand they are NOT proven synergies.
+  const nearThreshold = synergyDiagnostics
+    .filter(d => d.reasonCode === 'INSUFFICIENT_BOTH' && (d.cohortN?.both ?? 0) >= 10)
+    .sort((a, b) => (b.cohortN?.both ?? 0) - (a.cohortN?.both ?? 0));
   const emptyMsg = synergies.length === 0
     ? `<div class="notice warning" style="margin-bottom:12px"><strong>No eligible synergy pairs.</strong> No pairs met the minimum cohort thresholds (Both ≥ 20, single cohorts ≥ 10, total N ≥ 50). Run a larger campaign or lower thresholds to see pairs.</div>`
     : '';
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Synergy Observatory</h2><p>Four-cohort logistic A×B interaction (odds-ratio scale) — ${synergies.length} pairs</p></div></div><div class="panel-body">${healthHtml}${emptyMsg}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(s => `<tr class="clickable-row" data-synergy="${esc(s.id)}"><td><b>${esc(s.displayName ?? s.id)}</b></td><td>${s.effect != null ? `${s.effect.toFixed(3)}` : '—'}</td><td>${s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(1)} pp` : '—'}</td><td>${s.interval?.[0] != null ? `${s.interval[0].toFixed(3)} to ${s.interval[1].toFixed(3)}` : '—'}</td><td>${s.neitherN ?? '—'}/${s.aOnlyN ?? '—'}/${s.bOnlyN ?? '—'}/${s.bothN ?? '—'}</td><td>${s.pValue?.toFixed(4) ?? '—'}</td><td>${s.qValue?.toFixed(4) ?? '—'}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${motifs.length ? `<h3 style="margin-top:16px">Motifs (${motifs.length})</h3><div class="grid two">${motifs.map(m => `<div class="notice info"><strong>${esc(m.motif)}</strong><p>${m.count} occurrence(s) across ${m.matchIds?.length ?? 0} match(es).</p></div>`).join('')}</div>` : ''}</div></section>`;
+  const nearThresholdHtml = (synergies.length === 0 && nearThreshold.length > 0)
+    ? renderNearThresholdPairs(nearThreshold)
+    : '';
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Synergy Observatory</h2><p>Four-cohort logistic A×B interaction (odds-ratio scale) — ${synergies.length} pairs</p></div></div><div class="panel-body">${healthHtml}${emptyMsg}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(s => `<tr class="clickable-row" data-synergy="${esc(s.id)}"><td><b>${esc(s.displayName ?? s.id)}</b></td><td>${s.effect != null ? `${s.effect.toFixed(3)}` : '—'}</td><td>${s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(1)} pp` : '—'}</td><td>${s.interval?.[0] != null ? `${s.interval[0].toFixed(3)} to ${s.interval[1].toFixed(3)}` : '—'}</td><td>${s.neitherN ?? '—'}/${s.aOnlyN ?? '—'}/${s.bOnlyN ?? '—'}/${s.bothN ?? '—'}</td><td>${s.pValue?.toFixed(4) ?? '—'}</td><td>${s.qValue?.toFixed(4) ?? '—'}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${nearThresholdHtml}${motifs.length ? `<h3 style="margin-top:16px">Motifs (${motifs.length})</h3><div class="grid two">${motifs.map(m => `<div class="notice info"><strong>${esc(m.motif)}</strong><p>${m.count} occurrence(s) across ${m.matchIds?.length ?? 0} match(es).</p></div>`).join('')}</div>` : ''}</div></section>`;
   document.querySelectorAll('[data-sort-column]').forEach(th => {
     const handler = () => {
       const col = th.dataset.sortColumn;
       if (state.synergiesSortColumn === col) { state.synergiesSortPhase = (state.synergiesSortPhase + 1) % 3; }
       else { state.synergiesSortColumn = col; state.synergiesSortPhase = 1; }
-      import('../app.js').then(m => m.render());
+      import('../app.js?v=659a089d50b6').then(m => m.render());
     };
     th.onclick = handler;
     th.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } };
   });
-  document.querySelectorAll('[data-synergy]').forEach(row => row.onclick = () => { state.selectedSynergy = row.dataset.synergy; import('../app.js').then(m => m.render()); });
+  document.querySelectorAll('[data-synergy]').forEach(row => row.onclick = () => { state.selectedSynergy = row.dataset.synergy; import('../app.js?v=659a089d50b6').then(m => m.render()); });
+}
+
+// ── Near-threshold pairs (diagnostic view) ─────────────────────────
+//
+// When no synergy pairs meet the full cohort threshold (Both ≥ 20), the
+// observatory surfaces the closest candidates — pairs where both mechanics
+// co-occurred in ≥ 10 participant-matches. These are NOT proven synergies;
+// they are pairs that would likely become eligible with a larger campaign.
+// The section is clearly labelled as exploratory/diagnostic.
+function renderNearThresholdPairs(nearThreshold) {
+  const SYNERGY_THRESHOLD_BOTH = 20;
+  const rows = nearThreshold.map(d => {
+    const both = d.cohortN?.both ?? 0;
+    const aOnly = d.cohortN?.aOnly ?? 0;
+    const bOnly = d.cohortN?.bOnly ?? 0;
+    const neither = d.cohortN?.neither ?? 0;
+    const totalN = neither + aOnly + bOnly + both;
+    const pct = Math.round((both / SYNERGY_THRESHOLD_BOTH) * 100);
+    const barWidth = Math.min(100, pct);
+    return `<tr><td class="mono">${esc(d.id)}</td><td>${both}</td><td>${aOnly}</td><td>${bOnly}</td><td>${neither}</td><td>${totalN}</td><td><div class="threshold-bar" title="${both}/${SYNERGY_THRESHOLD_BOTH} co-occurrences (${pct}% of threshold)"><div class="threshold-bar-fill" style="width:${barWidth}%"></div></div><span class="threshold-bar-label">${both}/${SYNERGY_THRESHOLD_BOTH}</span></td></tr>`;
+  }).join('');
+  return `<h3 style="margin-top:16px">Near-threshold pairs (${nearThreshold.length})</h3><div class="notice info" style="margin-bottom:12px"><strong>Exploratory view.</strong> These ${nearThreshold.length} mechanic pairs co-occurred in ≥ 10 participant-matches but did not reach the full threshold of ${SYNERGY_THRESHOLD_BOTH}. They are <em>not</em> proven synergies — they are the strongest candidates that would likely become eligible with a larger campaign (≥ 200 matches).</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Pair</th><th>Both</th><th>A-only</th><th>B-only</th><th>Neither</th><th>Total N</th><th>Progress to threshold</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderSynergyDetail(s) {
   const evidenceClass = (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : 'warning';
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="synergy-back">← Back to observatory</button><h2>${esc(s.displayName ?? s.id)}</h2><p>${esc(s.relationshipClass ?? '')} · ${esc(s.direction ?? 'bidirectional')}</p></div><span class="status-badge ${evidenceClass}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Interaction (odds-ratio)', s.effect != null ? s.effect.toFixed(4) : '—'], ['Log-estimate', s.logEstimate != null ? s.logEstimate.toFixed(4) : '—'], ['Marginal interaction', s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(2)} pp` : '—'], ['95% CI (OR)', s.interval?.[0] != null ? `${s.interval[0].toFixed(4)} to ${s.interval[1].toFixed(4)}` : '—'], ['Standard error', s.standardError != null ? s.standardError.toFixed(4) : '—'], ['P-value', s.pValue?.toFixed(6) ?? '—'], ['Q-value', s.qValue?.toFixed(6) ?? '—'], ['Neither cohort', s.neitherN ?? '—'], ['A-only cohort', s.aOnlyN ?? '—'], ['B-only cohort', s.bOnlyN ?? '—'], ['Both cohort', s.bothN ?? '—'], ['Effective N', s.effectiveN ?? '—'], ['Cohort balance', s.cohortBalance != null ? s.cohortBalance.toFixed(3) : '—'], ['Separation detected', s.separation ? 'Yes (corrected)' : 'No'], ['Strata pooled', s.strataCount ?? '—'], ['Status', s.status ?? '—']])}${s.limitations ? `<div class="notice info" style="margin-top:12px"><strong>Limitations:</strong><ul>${s.limitations.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}</div></section>`;
-  document.querySelector('#synergy-back').onclick = () => { state.selectedSynergy = null; import('../app.js').then(m => m.render()); };
+  document.querySelector('#synergy-back').onclick = () => { state.selectedSynergy = null; import('../app.js?v=659a089d50b6').then(m => m.render()); };
 }
 
 // ── /history ──────────────────────────────────────────────────────
@@ -269,11 +302,11 @@ export function renderHistory() {
   const reasons = [...new Set(summaries.map(s => s.terminationReason))].sort();
   const allPolicies = [...new Set(summaries.flatMap(s => s.policyIds ?? []))].sort();
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Match History</h2><p>${filtered.length} matches · page ${page + 1}/${Math.max(1, totalPages)}</p></div><div class="toolbar"><input id="history-search" type="search" placeholder="Search match ID or ordinal…" value="${esc(state.historyFilterTerm)}"><select id="history-reason"><option value="all">All outcomes</option>${reasons.map(r => `<option value="${esc(r)}" ${r === reason ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select><select id="history-policy"><option value="all">All policies</option>${allPolicies.map(p => `<option value="${esc(p)}" ${p === policy ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select></div></div><div class="panel-body"><div class="table-wrap"><table class="data-table"><thead><tr><th>Ordinal</th><th>Match ID</th><th>Outcome</th><th>Winner</th><th>Score</th><th>Turns</th><th>Policies</th></tr></thead><tbody>${pageItems.map(s => `<tr class="clickable-row" data-match-id="${esc(s.matchId)}"><td>${s.matchOrdinal ?? '—'}</td><td class="mono">${short(s.matchId)}</td><td>${esc(s.terminationReason ?? '—')}</td><td>${esc(s.winner ?? '—')}</td><td>${s.scoreMargin?.toFixed(0) ?? '—'}</td><td>${s.completedFullTurns ?? '—'}</td><td>${esc((s.policyIds ?? []).join(', '))}</td></tr>`).join('')}</tbody></table></div>${totalPages > 1 ? `<div class="pagination"><button id="history-prev" ${page === 0 ? 'disabled' : ''}>← Prev</button><span>Page ${page + 1} of ${totalPages}</span><button id="history-next" ${page >= totalPages - 1 ? 'disabled' : ''}>Next →</button></div>` : ''}</div></section>`;
-  document.querySelector('#history-search')?.addEventListener('input', e => { state.historyFilterTerm = e.target.value; state.historyPage = 0; import('../app.js').then(m => m.render()); });
-  document.querySelector('#history-reason')?.addEventListener('change', e => { state.historyFilterReason = e.target.value; state.historyPage = 0; import('../app.js').then(m => m.render()); });
-  document.querySelector('#history-policy')?.addEventListener('change', e => { state.historyFilterPolicy = e.target.value; state.historyPage = 0; import('../app.js').then(m => m.render()); });
-  document.querySelector('#history-prev')?.addEventListener('click', () => { if (page > 0) { state.historyPage = page - 1; import('../app.js').then(m => m.render()); } });
-  document.querySelector('#history-next')?.addEventListener('click', () => { if (page < totalPages - 1) { state.historyPage = page + 1; import('../app.js').then(m => m.render()); } });
+  document.querySelector('#history-search')?.addEventListener('input', e => { state.historyFilterTerm = e.target.value; state.historyPage = 0; import('../app.js?v=659a089d50b6').then(m => m.render()); });
+  document.querySelector('#history-reason')?.addEventListener('change', e => { state.historyFilterReason = e.target.value; state.historyPage = 0; import('../app.js?v=659a089d50b6').then(m => m.render()); });
+  document.querySelector('#history-policy')?.addEventListener('change', e => { state.historyFilterPolicy = e.target.value; state.historyPage = 0; import('../app.js?v=659a089d50b6').then(m => m.render()); });
+  document.querySelector('#history-prev')?.addEventListener('click', () => { if (page > 0) { state.historyPage = page - 1; import('../app.js?v=659a089d50b6').then(m => m.render()); } });
+  document.querySelector('#history-next')?.addEventListener('click', () => { if (page < totalPages - 1) { state.historyPage = page + 1; import('../app.js?v=659a089d50b6').then(m => m.render()); } });
   document.querySelectorAll('[data-match-id]').forEach(row => row.onclick = () => { state.fixtureId = row.dataset.matchId; state.replayKind = 'autonomy'; state.replay = null; state.frame = 0; location.hash = '#/watch'; });
 }
 
@@ -303,11 +336,11 @@ export function renderTraces() {
     const r = records.find(x => x.matchId === selectedId);
     if (r) {
       app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="traces-back">← Back to index</button><h2>Decision traces: ${esc(r.matchId)}</h2><p>Policy: ${esc(r.policyId ?? '—')} · ${r.traceCount ?? 0} traces</p></div></div><div class="panel-body"><div class="notice">Trace detail loading from shard files. Full trace inspection available after campaign run.</div></div></section>`;
-      document.querySelector('#traces-back').onclick = () => { state.traceSelectedId = null; import('../app.js').then(m => m.render()); };
+      document.querySelector('#traces-back').onclick = () => { state.traceSelectedId = null; import('../app.js?v=659a089d50b6').then(m => m.render()); };
       return;
     }
   }
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Decision Traces</h2><p>${filtered.length} match trace records</p></div><div class="toolbar"><select id="trace-filter-policy"><option value="all">All policies</option>${policies.map(p => `<option value="${esc(p)}" ${p === filterPolicy ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select></div></div><div class="panel-body"><div class="table-wrap"><table class="data-table"><thead><tr><th>Match ID</th><th>Policy</th><th>Traces</th><th>Seat</th></tr></thead><tbody>${filtered.map(r => `<tr class="clickable-row" data-match-id="${esc(r.matchId)}"><td class="mono">${short(r.matchId)}</td><td>${esc(r.policyId ?? '—')}</td><td>${r.traceCount ?? '—'}</td><td>${r.seat ?? '—'}</td></tr>`).join('')}</tbody></table></div></div></section>`;
-  document.querySelector('#trace-filter-policy')?.addEventListener('change', e => { state.traceFilterPolicy = e.target.value; import('../app.js').then(m => m.render()); });
-  document.querySelectorAll('[data-match-id]').forEach(row => row.onclick = () => { state.traceSelectedId = row.dataset.matchId; import('../app.js').then(m => m.render()); });
+  document.querySelector('#trace-filter-policy')?.addEventListener('change', e => { state.traceFilterPolicy = e.target.value; import('../app.js?v=659a089d50b6').then(m => m.render()); });
+  document.querySelectorAll('[data-match-id]').forEach(row => row.onclick = () => { state.traceSelectedId = row.dataset.matchId; import('../app.js?v=659a089d50b6').then(m => m.render()); });
 }

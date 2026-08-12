@@ -15,13 +15,13 @@
 // result so the UI can show a graceful state.
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js';
-import { getAuthState } from '../network/auth-controller.js';
+import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=659a089d50b6';
+import { getAuthState } from '../network/auth-controller.js?v=659a089d50b6';
 import {
   toOpponentEntry,
   DEFAULT_RECENT_OPPONENTS_LIMIT,
   MAX_RECENT_OPPONENTS_LIMIT,
-} from '@intrilex/account-domain/recent-opponents';
+} from "../../account-domain/recent-opponents.mjs";
 
 /**
  * @typedef {import('@intrilex/account-domain/recent-opponents').OpponentEntry} OpponentEntry

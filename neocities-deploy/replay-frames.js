@@ -25,7 +25,7 @@ export async function reconstructReplayFrames(certifiedReplay) {
   if (!certifiedReplay || !certifiedReplay.initialState || !Array.isArray(certifiedReplay.commands)) {
     return [];
   }
-  const { IntrilexEngine } = await import('./engine/browser-entry.js');
+  const { IntrilexEngine } = await import('./engine/browser-entry.js?v=659a089d50b6');
   const engine = new IntrilexEngine();
   let state = structuredClone(certifiedReplay.initialState);
   const frames = [{ state, events: [], command: null, commandIndex: -1, accepted: null }];

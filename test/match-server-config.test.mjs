@@ -100,10 +100,11 @@ describe('match-server-config', () => {
       setupBrowserEnv({
         hostname: 'localhost',
         protocol: 'http:',
-        localStorageEntries: { 'intrilex:network-server-url': 'ws://custom:8080' },
+        // IRX-H38: override must be an allowlisted host (localhost is allowed)
+        localStorageEntries: { 'intrilex:network-server-url': 'ws://localhost:8080' },
       });
       const { getMatchServerUrl } = await freshImport();
-      assert.equal(getMatchServerUrl(), 'ws://custom:8080');
+      assert.equal(getMatchServerUrl(), 'ws://localhost:8080');
     });
 
     it('discards stale ws:// localStorage override on HTTPS production (mixed content)', async () => {
@@ -211,6 +212,44 @@ describe('match-server-config', () => {
       assert.equal(validateMatchServerUrl(null).valid, false);
       assert.equal(validateMatchServerUrl('').valid, false);
       assert.equal(validateMatchServerUrl(undefined).valid, false);
+    });
+
+    // IRX-H38: JWT exfiltration prevention — only allowlisted hosts permitted
+    it('IRX-H38: rejects attacker-controlled host (JWT exfiltration prevention)', async () => {
+      setupBrowserEnv({ hostname: 'intrilex.cards', protocol: 'https:' });
+      const { validateMatchServerUrl } = await freshImport();
+      const result = validateMatchServerUrl('wss://evil.example.com');
+      assert.equal(result.valid, false);
+      assert.match(result.reason, /allowlist/i);
+    });
+
+    it('IRX-H38: rejects lookalike host that is not the official match server', async () => {
+      setupBrowserEnv({ hostname: 'intrilex.cards', protocol: 'https:' });
+      const { validateMatchServerUrl } = await freshImport();
+      const result = validateMatchServerUrl('wss://match.intrilex.cards.evil.example.com');
+      assert.equal(result.valid, false);
+      assert.match(result.reason, /allowlist/i);
+    });
+
+    it('IRX-H38: allows official production host match.intrilex.cards', async () => {
+      setupBrowserEnv({ hostname: 'intrilex.cards', protocol: 'https:' });
+      const { validateMatchServerUrl } = await freshImport();
+      const result = validateMatchServerUrl('wss://match.intrilex.cards');
+      assert.equal(result.valid, true);
+    });
+
+    it('IRX-H38: allows localhost for dev', async () => {
+      setupBrowserEnv({ hostname: 'localhost', protocol: 'http:' });
+      const { validateMatchServerUrl } = await freshImport();
+      const result = validateMatchServerUrl('ws://localhost:3099');
+      assert.equal(result.valid, true);
+    });
+
+    it('IRX-H38: allows 127.0.0.1 for dev', async () => {
+      setupBrowserEnv({ hostname: '127.0.0.1', protocol: 'http:' });
+      const { validateMatchServerUrl } = await freshImport();
+      const result = validateMatchServerUrl('ws://127.0.0.1:3099');
+      assert.equal(result.valid, true);
     });
   });
 

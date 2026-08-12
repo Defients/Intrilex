@@ -12,14 +12,14 @@
 // without crashing Online Play (section 80).
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js';
+import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=659a089d50b6';
 import {
   toLeaderboardEntry,
   normalizeSearchQuery,
   validateTierFilter,
   DEFAULT_LEADERBOARD_LIMIT,
   MAX_LEADERBOARD_LIMIT,
-} from '@intrilex/account-domain/leaderboard';
+} from "../../account-domain/leaderboard.mjs";
 
 /**
  * @typedef {import('@intrilex/account-domain').LeaderboardEntry} LeaderboardEntry

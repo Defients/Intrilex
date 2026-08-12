@@ -50,6 +50,12 @@ test('schema: all migration files exist and are non-empty', async () => {
     '0011_tier_helpers_and_indexes.sql',
     '0012_atomic_persist_match_result.sql',
     '0013_player_directory.sql',
+    '0014_authenticated_grants.sql',
+    '0015_recent_opponents.sql',
+    '0016_player_relationships.sql',
+    '0017_revoke_public_execute_on_security_definer_functions.sql',
+    '0018_achievement_catalog_constraint.sql',
+    '0019_remove_season_fabrication.sql',
   ];
   for (const name of expected) {
     assert.ok(files.includes(name), `migration ${name} must exist`);
@@ -234,4 +240,178 @@ test('schema: first season is seeded idempotently', async () => {
   assert.ok(sql.includes("season-1"), 'first season must be seeded');
   assert.ok(sql.includes("ON CONFLICT (season_id) DO NOTHING"), 'season seed must be idempotent');
   assert.ok(sql.includes("'ACTIVE'"), 'seeded season must be ACTIVE');
+});
+
+// ── IRX-C09 / IRX-H44: Privilege hardening (migration 0017) ──
+
+test('IRX-C09: migration 0017 revokes PUBLIC EXECUTE on persist_match_result', async () => {
+  const sql = await readMigration('0017_revoke_public_execute_on_security_definer_functions.sql');
+  assert.ok(sql.includes('REVOKE EXECUTE ON FUNCTION public.persist_match_result(jsonb) FROM PUBLIC'),
+    'must revoke PUBLIC EXECUTE on persist_match_result');
+  assert.ok(sql.includes('GRANT EXECUTE ON FUNCTION public.persist_match_result(jsonb) TO service_role'),
+    'must grant EXECUTE to service_role only');
+  // Must NOT grant to authenticated or anon
+  assert.ok(!sql.match(/GRANT EXECUTE.*persist_match_result.*TO (authenticated|anon)/),
+    'must NOT grant persist_match_result to client roles');
+});
+
+test('IRX-H44: migration 0017 revokes PUBLIC EXECUTE on _resolve_target_user_id', async () => {
+  const sql = await readMigration('0017_revoke_public_execute_on_security_definer_functions.sql');
+  assert.ok(sql.includes('REVOKE EXECUTE ON FUNCTION public._resolve_target_user_id(text) FROM PUBLIC'),
+    'must revoke PUBLIC EXECUTE on _resolve_target_user_id');
+  // Must NOT grant to any client role — internal helper only
+  assert.ok(!sql.match(/GRANT EXECUTE.*_resolve_target_user_id.*TO (authenticated|anon|service_role)/),
+    'must NOT grant _resolve_target_user_id to any role — internal only');
+});
+
+test('IRX-C09/H44: migration 0017 revokes PUBLIC EXECUTE on every SECURITY DEFINER function', async () => {
+  const sql = await readMigration('0017_revoke_public_execute_on_security_definer_functions.sql');
+  // Every SECURITY DEFINER function must have a REVOKE FROM PUBLIC line
+  const secDefFunctions = [
+    'handle_new_user()',
+    'update_updated_at()',
+    'get_ranked_leaderboard(text, text, text, text, integer, integer)',
+    'get_player_standing(text, text, uuid)',
+    'get_ranked_seasons(text)',
+    'get_player_season_history(text, uuid)',
+    'get_self_profile()',
+    'update_display_name(text)',
+    'change_handle(text)',
+    'update_profile_privacy(text, text, text, text)',
+    'equip_title(text)',
+    'equip_profile_frame(text)',
+    'equip_card_back(text)',
+    'set_showcase_slot(integer, text, text)',
+    'clear_showcase_slot(integer)',
+    'persist_match_result(jsonb)',
+    'get_player_directory(text, text, text, integer, integer)',
+    'get_player_directory_count(text, text)',
+    'set_directory_visible(boolean)',
+    'get_public_profile(text)',
+    'get_recent_opponents(integer, integer)',
+    '_resolve_target_user_id(text)',
+    'follow_player(text)',
+    'unfollow_player(text)',
+    'set_rival(text)',
+    'unset_rival(text)',
+    'block_player(text)',
+    'unblock_player(text)',
+    'get_relationships(text, integer, integer)',
+    'get_relationship_status(text)',
+    'get_suggested_rivals(integer)',
+  ];
+  for (const sig of secDefFunctions) {
+    assert.ok(
+      sql.includes(`REVOKE EXECUTE ON FUNCTION public.${sig} FROM PUBLIC`),
+      `must revoke PUBLIC EXECUTE on ${sig}`,
+    );
+  }
+});
+
+test('IRX-C09/H44: migration 0017 does not leave any function with only PUBLIC grant', async () => {
+  const sql = await readMigration('0017_revoke_public_execute_on_security_definer_functions.sql');
+  // Count REVOKE FROM PUBLIC statements — must cover all SECURITY DEFINER functions
+  const revokeCount = (sql.match(/REVOKE EXECUTE ON FUNCTION public\.\S+.*FROM PUBLIC/g) || []).length;
+  assert.ok(revokeCount >= 31, `expected at least 31 REVOKE FROM PUBLIC statements, got ${revokeCount}`);
+  // Helper functions (non-SECURITY DEFINER) should also be hardened
+  assert.ok(sql.includes('REVOKE EXECUTE ON FUNCTION public.tier_for_rating(integer) FROM PUBLIC'),
+    'tier_for_rating must revoke PUBLIC EXECUTE');
+  assert.ok(sql.includes('REVOKE EXECUTE ON FUNCTION public.division_for_rating(integer) FROM PUBLIC'),
+    'division_for_rating must revoke PUBLIC EXECUTE');
+  assert.ok(sql.includes('REVOKE EXECUTE ON FUNCTION public.is_apex_rating(integer) FROM PUBLIC'),
+    'is_apex_rating must revoke PUBLIC EXECUTE');
+});
+
+test('IRX-C09/H44: migration 0017 preserves intended access patterns', async () => {
+  const sql = await readMigration('0017_revoke_public_execute_on_security_definer_functions.sql');
+  // Service-role only
+  assert.ok(sql.includes('GRANT EXECUTE ON FUNCTION public.persist_match_result(jsonb) TO service_role'));
+  // Authenticated-only RPCs
+  const authGrants = [
+    'get_self_profile()',
+    'update_display_name(text)',
+    'change_handle(text)',
+    'get_ranked_leaderboard(text, text, text, text, integer, integer)',
+    'get_player_standing(text, text, uuid)',
+    'get_recent_opponents(integer, integer)',
+    'follow_player(text)',
+    'block_player(text)',
+    'get_relationships(text, integer, integer)',
+  ];
+  for (const sig of authGrants) {
+    assert.ok(
+      sql.includes(`GRANT EXECUTE ON FUNCTION public.${sig} TO authenticated`),
+      `must grant EXECUTE to authenticated for ${sig}`,
+    );
+  }
+  // Public + authenticated (anon can call)
+  assert.ok(sql.includes('GRANT EXECUTE ON FUNCTION public.get_player_directory(text, text, text, integer, integer) TO anon'),
+    'get_player_directory must be callable by anon');
+  assert.ok(sql.includes('GRANT EXECUTE ON FUNCTION public.get_player_directory_count(text, text) TO anon'),
+    'get_player_directory_count must be callable by anon');
+});
+
+// ── IRX-H42: Achievement catalog constraint (migration 0018) ──
+
+test('IRX-H42: migration 0018 creates achievement_catalog with FK constraints', async () => {
+  const sql = await readMigration('0018_achievement_catalog_constraint.sql');
+  assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.achievement_catalog'),
+    'must create achievement_catalog table');
+  assert.ok(sql.includes('ENABLE ROW LEVEL SECURITY'),
+    'catalog must have RLS enabled');
+  // FK from account_achievements to catalog
+  assert.ok(sql.includes('account_achievements_achievement_id_fk'),
+    'must add FK from account_achievements to catalog');
+  assert.ok(sql.includes('achievement_progress_achievement_id_fk'),
+    'must add FK from achievement_progress to catalog');
+  // No client writes to catalog
+  assert.ok(!sql.match(/FOR (INSERT|UPDATE|DELETE) TO authenticated.*achievement_catalog/s),
+    'catalog must not allow client writes');
+});
+
+test('IRX-H42: migration 0018 seeds all 56 authoritative achievement IDs', async () => {
+  const sql = await readMigration('0018_achievement_catalog_constraint.sql');
+  // The 56 known achievement IDs from packages/achievements
+  const expectedIds = [
+    'welcome-to-intrilex', 'first-blood', 'twenty-one', 'exactly-enough',
+    'read-the-card', 'other-side-of-the-card', 'the-stack-exists', 'not-so-fast',
+    'miniature-warfare', 'no-longer-new', 'fair-trade', 'upgrade',
+    'gone-forever', 'drop-anchor', 'hold-fast', 'supercharged',
+    'two-become-one', 'digging-deeper', 'clean-sweep', 'know-the-table',
+    'stack-student', 'denied', 'double-denied', 'nope-three',
+    'the-stackening', 'perfect-timing', 'sequence-breaker', 'clean-kill',
+    'lucky-seven', 'topdeck-sorcery', 'found-money', 'recursive-seven',
+    'seven-heaven', 'queens-court', 'ace-in-the-hole', 'super-authority',
+    'stack-theft', 'wild-card', 'photo-finish', 'from-behind',
+    'overkill', 'last-card-standing', 'empty-handed-victory', 'plan-b-was-plan-a',
+    'turnabout', 'no-shovel-required', 'big-number-good', 'reading-is-overpowered',
+    'controlled-chaos', 'window-shopper', 'absolutely-excessive', 'black-magic',
+    'getting-dangerous', 'intrilexian', 'spades-scholar', 'card-savant',
+  ];
+  for (const id of expectedIds) {
+    assert.ok(sql.includes(`'${id}'`),
+      `migration must seed achievement ID "${id}"`);
+  }
+  // Must clean up invalid existing rows before adding FK
+  assert.ok(sql.includes('DELETE FROM public.account_achievements'),
+    'must clean up invalid existing achievement rows');
+  assert.ok(sql.includes('DELETE FROM public.achievement_progress'),
+    'must clean up invalid existing progress rows');
+});
+
+// ── IRX-H07: Migration 0019 removes season fabrication ──
+
+test('IRX-H07: migration 0019 removes season-1 fabrication from RPCs', async () => {
+  const sql = await readMigration('0019_remove_season_fabrication.sql');
+  // The migration must NOT add any new 'season-1' fabrication
+  // (it should remove existing ones by patching the functions)
+  assert.ok(sql.includes('IRX-H07'), 'must reference IRX-H07');
+  assert.ok(sql.includes('RETURN;'), 'must return empty when no active season');
+  // Must revoke PUBLIC execute on patched functions
+  assert.ok(sql.includes('REVOKE EXECUTE ON FUNCTION public.get_ranked_leaderboard'),
+    'must revoke PUBLIC on get_ranked_leaderboard');
+  assert.ok(sql.includes('REVOKE EXECUTE ON FUNCTION public.get_player_standing'),
+    'must revoke PUBLIC on get_player_standing');
+  assert.ok(sql.includes('REVOKE EXECUTE ON FUNCTION public.get_recent_opponents'),
+    'must revoke PUBLIC on get_recent_opponents');
 });

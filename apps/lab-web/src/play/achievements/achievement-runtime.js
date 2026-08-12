@@ -61,13 +61,16 @@ export class AchievementRuntime {
   /**
    * Initialize by loading persisted state.
    * Runs legacy migration if needed.
+   * IRX-H30: Supports account-scoped storage via optional accountId.
    * @param {object} [legacyProfile] - Legacy local profile for migration
    * @param {object} [legacyStats] - Legacy player stats for migration
+   * @param {string} [accountId] - Optional account ID for account-scoped storage
    * @returns {Promise<void>}
    */
-  async init(legacyProfile, legacyStats) {
+  async init(legacyProfile, legacyStats, accountId) {
     if (this._initialized) return;
-    this._profileState = await getAchievementState();
+    this._accountId = accountId ?? null;
+    this._profileState = await getAchievementState(this._accountId);
 
     if (!this._profileState) {
       this._profileState = createAchievementProfileState();
@@ -84,12 +87,32 @@ export class AchievementRuntime {
 
   /**
    * Persist current state to IndexedDB.
+   * IRX-H30: Uses account-scoped storage if accountId was set during init.
    * @returns {Promise<void>}
    */
   async _persist() {
     if (!this._profileState) return;
     this._profileState.updatedAt = new Date().toISOString();
-    await saveAchievementState(this._profileState);
+    await saveAchievementState(this._profileState, this._accountId);
+  }
+
+  /**
+   * IRX-H30: Switch the runtime to a different account's achievement state.
+   * Persists the current state, loads the new account's state, and reinitializes.
+   * Pass null to switch to the legacy device-global profile (guest/anonymous).
+   * @param {string|null} accountId - The account ID to switch to, or null for guest
+   * @returns {Promise<void>}
+   */
+  async switchAccount(accountId) {
+    // Persist current state before switching
+    if (this._profileState) {
+      await this._persist();
+    }
+    this._accountId = accountId ?? null;
+    this._initialized = false;
+    this._profileState = null;
+    this._pendingUnlocks = [];
+    await this.init(null, null, this._accountId);
   }
 
   /**

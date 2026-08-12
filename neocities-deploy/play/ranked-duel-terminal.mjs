@@ -5,7 +5,7 @@
 
 import { getTerminalBanter } from './ai-personality.js';
 import { loadProfile } from './local-profile.mjs';
-import { ratingToTierDivision, compareRank } from '@intrilex/account-domain/rank-tier';
+import { ratingToTierDivision, compareRank } from "../account-domain/rank-tier.mjs";
 import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

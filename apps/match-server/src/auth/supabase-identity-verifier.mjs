@@ -129,12 +129,20 @@ export class SupabaseIdentityVerifier {
     }
 
     // Step 4: Check moderation status
+    // IRX-H04: Moderation lookup must fail CLOSED, not open. If the query
+    // errors (network issue, permissions, etc.), we cannot assume the account
+    // is active. For safety, treat a query error as SUSPENDED — the server
+    // can re-check later. A false positive (temporarily blocking an active
+    // user) is safer than a false negative (allowing a banned user).
     let accountStatus = 'ACTIVE';
-    const { data: mod } = await this._client
+    let moderationError = null;
+    const modResult = await this._client
       .from('account_moderation')
       .select('status, expires_at')
       .eq('user_id', accountId)
       .maybeSingle();
+    const mod = modResult.data;
+    moderationError = modResult.error;
 
     if (mod) {
       // Check if ban/suspension has expired
@@ -143,6 +151,16 @@ export class SupabaseIdentityVerifier {
       } else {
         accountStatus = mod.status ?? 'ACTIVE';
       }
+    }
+
+    // IRX-H04: If the moderation query itself errored, fail closed.
+    // Do NOT assume the account is active when we couldn't verify it.
+    if (moderationError) {
+      return {
+        valid: false,
+        code: ReasonCode.AUTH_CONFIG_UNAVAILABLE,
+        message: 'Moderation status check failed — access denied for safety',
+      };
     }
 
     if (accountStatus === 'BANNED') {

@@ -222,6 +222,28 @@ export class FakeMatchResultPersistor extends MatchResultPersistor {
     return { success: true, error: null, persisted };
   }
 
+  /**
+   * @param {Array<{ accountId: string, achievementId: string, progress: number, target: number|null, updatedAt: string, matchId: string }>} progress
+   */
+  async persistAchievementProgress(progress) {
+    let persisted = 0;
+    for (const p of progress) {
+      if (!p.accountId || !p.achievementId) continue;
+      const key = `${p.accountId}:${p.achievementId}`;
+      this._achievementProgress = this._achievementProgress || new Map();
+      this._achievementProgress.set(key, {
+        accountId: p.accountId,
+        achievementId: p.achievementId,
+        progress: p.progress,
+        target: p.target ?? null,
+        updatedAt: p.updatedAt,
+        matchId: p.matchId ?? null,
+      });
+      persisted++;
+    }
+    return { success: true, error: null, persisted };
+  }
+
   // ── Inspection helpers for tests ──
 
   /** @returns {import('./match-result-persistor.mjs').MatchResultRecord | null} */

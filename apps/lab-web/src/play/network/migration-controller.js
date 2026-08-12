@@ -91,6 +91,26 @@ function extractAchievements(state) {
 }
 
 /**
+ * Extract achievement progress updates from local state (IRX-H31).
+ * @param {object} state - Achievement profile state from IndexedDB
+ * @returns {Array<{ achievementId: string, progress: number, target: number|null }>}
+ */
+function extractAchievementProgress(state) {
+  if (!state || !state.progress) return [];
+  const progress = [];
+  for (const [achievementId, info] of Object.entries(state.progress)) {
+    if (info && typeof info.progress === 'number') {
+      progress.push({
+        achievementId,
+        progress: info.progress,
+        target: info.target ?? null,
+      });
+    }
+  }
+  return progress;
+}
+
+/**
  * Attempt to run the guest→permanent migration if pending.
  * This is called after auth state changes to AUTHENTICATED.
  *
@@ -115,13 +135,16 @@ export async function runMigrationIfPending(opts = {}) {
 
   // Read local achievements from IndexedDB
   let achievements = [];
+  let achievementProgress = [];
   try {
     const achState = await getAchievementState();
     achievements = extractAchievements(achState);
+    achievementProgress = extractAchievementProgress(achState);
   } catch {
     // If we can't read achievements, still try the migration with an empty array
     // — the migration record will be written for idempotency
     achievements = [];
+    achievementProgress = [];
   }
 
   const serverUrl = opts.serverUrl ?? getMatchServerUrl();
@@ -150,8 +173,11 @@ export async function runMigrationIfPending(opts = {}) {
       if (settled) return;
       settled = true;
       cleanup();
-      clearMigrationPending();
       if (result && result.success) {
+        // IRX-H32: Only clear migration pending state on SUCCESS.
+        // On failure, preserve guest identity and pending flag so the
+        // user can retry the migration later.
+        clearMigrationPending();
         // Mark local achievements as migrated (backup — data is not deleted)
         if (result.migrationId) {
           markAchievementsMigrated(result.migrationId).catch(() => {
@@ -160,6 +186,8 @@ export async function runMigrationIfPending(opts = {}) {
         }
         setStatus('DONE', result);
       } else {
+        // IRX-H32: Do NOT clearMigrationPending() on failure.
+        // The guest identity and pending flag remain so the user can retry.
         setStatus('ERROR', result);
       }
       resolve(result);
@@ -202,7 +230,7 @@ export async function runMigrationIfPending(opts = {}) {
         // Authentication confirmed — send the migration request
         setStatus('MIGRATING');
         try {
-          ws.send(JSON.stringify(migrateGuest(sourceIdentity, targetIdentity, achievements)));
+          ws.send(JSON.stringify(migrateGuest(sourceIdentity, targetIdentity, achievements, undefined, achievementProgress)));
         } catch {
           finish(null);
         }

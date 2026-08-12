@@ -23,7 +23,7 @@ import { getCardArtBoardPath, getCardArtBoardPosition } from '../card-art-regist
 import { getArchetypePersonality } from './ai-personality.js';
 import { renderNewMatchSetup } from './ranked-duel-hub.mjs';
 import { renderTerminal, renderError, renderKeyboardHelp, renderRulesHelp, renderMatchStats, formatPhase, formatTerminationReason } from './ranked-duel-terminal.mjs';
-import { ratingToTierDivision } from '@intrilex/account-domain/rank-tier';
+import { ratingToTierDivision } from "../account-domain/rank-tier.mjs";
 import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
 
 // Re-export hub and terminal functions for backward compatibility

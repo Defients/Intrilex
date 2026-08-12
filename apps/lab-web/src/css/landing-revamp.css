@@ -1,0 +1,648 @@
+/* ═══════════════════════════════════════════════════════════════════
+   HOMEPAGE REVAMP — 1920×1080 zero-overflow, elevated visual polish
+   Override-only layer. Locks layout to viewport with no vertical
+   scrollbar and elevates every surface, interaction, and motion cue.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   §1 — VIEWPORT LOCK: zero vertical scrollbar at 1920×1080
+   ═══════════════════════════════════════════════════════════════ */
+.landing-app{
+  position:fixed; inset:0;
+  height:100vh; height:100dvh;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+}
+
+/* ── Background layers: richer, more atmospheric ── */
+.landing-video-bg{opacity:.18; filter:saturate(1.1) contrast(1.05)}
+.landing-video-overlay{
+  background:linear-gradient(180deg,
+    rgba(5,8,14,.62) 0%,
+    rgba(5,8,14,.32) 35%,
+    rgba(5,8,14,.55) 70%,
+    rgba(5,8,14,.72) 100%);
+}
+.landing-aurora{
+  filter:blur(120px); opacity:.7;
+  background:conic-gradient(from 200deg at 50% 50%,
+    rgba(90,215,232,.08),
+    rgba(167,139,250,.06),
+    rgba(238,108,183,.04),
+    rgba(90,215,232,.08));
+  animation-duration:32s;
+}
+.landing-grid-bg{
+  background-size:56px 56px;
+  background-image:linear-gradient(rgba(90,215,232,.04) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(90,215,232,.04) 1px,transparent 1px);
+  mask-image:radial-gradient(ellipse at 50% 35%,#000 25%,transparent 72%);
+}
+.landing-orbital{
+  background:radial-gradient(ellipse at 72% 45%,rgba(90,215,232,.06),transparent 48%),
+             radial-gradient(ellipse at 28% 75%,rgba(167,139,250,.04),transparent 42%),
+             radial-gradient(ellipse at 50% 110%,rgba(241,189,93,.03),transparent 40%);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §2 — TOPBAR: compact, refined glassmorphism
+   ═══════════════════════════════════════════════════════════════ */
+.landing-topbar{
+  position:relative; z-index:2;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:24px; padding:6px 44px 4px;
+  flex-shrink:0;
+  background:linear-gradient(180deg,rgba(5,11,17,.6) 0%,rgba(5,11,17,.2) 70%,transparent 100%);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.landing-brand{gap:3px}
+.landing-brand-logo{
+  width:clamp(192px,17.5vw,266px);
+  filter:drop-shadow(0 0 24px rgba(90,215,232,.22)) drop-shadow(0 2px 8px rgba(0,0,0,.3));
+  transition:filter 400ms var(--ease);
+}
+.landing-brand:hover .landing-brand-logo{
+  filter:drop-shadow(0 0 32px rgba(90,215,232,.32)) drop-shadow(0 2px 8px rgba(0,0,0,.3));
+}
+.landing-brand-sub{
+  font-size:9px; letter-spacing:.24em;
+  color:var(--cyan); opacity:.82;
+  font-weight:600;
+}
+.landing-utility-nav{gap:18px; align-items:center}
+
+/* ── Continue Duel button (compact, in topbar) ── */
+#landing-continue-slot{display:flex; align-items:center}
+#landing-continue-slot:empty{display:none}
+.landing-continue-btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 14px 6px 10px;
+  border:1px solid rgba(90,215,232,.45);
+  border-radius:10px;
+  background:linear-gradient(135deg,rgba(20,44,56,.9),rgba(12,24,34,.85));
+  color:var(--cyan);
+  font-size:11.5px; font-weight:700; letter-spacing:.06em;
+  cursor:pointer; font:inherit; white-space:nowrap;
+  box-shadow:0 1px 3px rgba(0,0,0,.25),inset 0 1px 0 rgba(90,215,232,.1);
+  transition:border-color var(--fast) var(--ease),background var(--fast) var(--ease),
+             box-shadow var(--fast) var(--ease),transform var(--fast) var(--ease);
+}
+.landing-continue-btn:hover{
+  border-color:rgba(90,215,232,.65);
+  background:linear-gradient(135deg,rgba(24,52,66,.95),rgba(16,32,44,.9));
+  box-shadow:0 2px 14px rgba(90,215,232,.2),inset 0 1px 0 rgba(90,215,232,.18);
+  transform:translateY(-1px);
+}
+.landing-continue-btn:active{transform:translateY(0) scale(.97)}
+.landing-continue-btn:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
+.landing-continue-icon{width:15px; height:15px; flex-shrink:0; color:var(--cyan)}
+.landing-continue-label{line-height:1}
+.landing-continue-meta{
+  font-size:10px; font-weight:500; letter-spacing:.02em;
+  color:var(--muted-bright); text-transform:none;
+  max-width:180px; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* ── Lab button: more refined ── */
+.lab-button{
+  padding:6px 13px 6px 11px;
+  border-color:rgba(90,215,232,.18);
+  border-radius:9px;
+  font-size:11.5px; letter-spacing:.07em;
+  box-shadow:0 1px 3px rgba(0,0,0,.25),inset 0 1px 0 rgba(90,215,232,.06);
+  transition:border-color var(--fast) var(--ease),background var(--fast) var(--ease),
+             box-shadow var(--fast) var(--ease),color var(--fast) var(--ease),
+             transform var(--fast) var(--ease);
+}
+.lab-button:hover{
+  border-color:rgba(90,215,232,.42);
+  box-shadow:0 2px 14px rgba(90,215,232,.18),inset 0 1px 0 rgba(90,215,232,.14);
+  transform:translateY(-1px);
+}
+.lab-button:active{transform:translateY(0) scale(.97)}
+.lab-button-icon{width:14px; height:14px}
+
+/* ── Account trigger: refined ── */
+.account-trigger{
+  padding:5px 11px 5px 5px;
+  border-radius:999px;
+  font-size:11.5px;
+  box-shadow:0 1px 3px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.03);
+  transition:border-color var(--fast) var(--ease),background var(--fast) var(--ease),
+             box-shadow var(--fast) var(--ease),transform var(--fast) var(--ease);
+}
+.account-trigger:hover{transform:translateY(-1px)}
+.account-avatar{
+  width:26px; height:26px;
+  border-color:rgba(90,215,232,.22);
+}
+.account-avatar svg{width:16px; height:16px}
+.account-name{font-size:11.5px}
+
+/* ═══════════════════════════════════════════════════════════════
+   §3 — HERO: fill remaining space, no overflow
+   ═══════════════════════════════════════════════════════════════ */
+.landing-hero{
+  flex:1; min-height:0;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  align-items:stretch; justify-content:stretch;
+  text-align:left;
+  padding:10px 44px 0;
+}
+
+/* ── Content grid: two columns, centered vertically ── */
+.landing-content{
+  flex:1; min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,1.65fr) minmax(340px,1fr);
+  gap:24px;
+  max-width:1760px; width:100%;
+  margin:0 auto;
+  align-items:center;
+  overflow:hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §4 — PLAY PANEL: dominant left card, vertically balanced
+   ═══════════════════════════════════════════════════════════════ */
+.landing-play-panel{
+  position:relative;
+  display:flex; flex-direction:column;
+  justify-content:center;
+  gap:0;
+  padding:clamp(36px,5.5vh,72px) clamp(32px,3.5vw,52px);
+  min-height:clamp(420px,62vh,620px);
+  border:1px solid rgba(40,64,80,.38);
+  border-radius:var(--radius-xl);
+  background:linear-gradient(160deg,rgba(18,33,46,.9) 0%,rgba(10,20,30,.95) 100%);
+  box-shadow:0 20px 56px rgba(0,0,0,.36),
+             var(--inner-highlight),
+             inset 0 1px 0 rgba(90,215,232,.07);
+  overflow:hidden;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  min-height:0; height:auto;
+  align-self:center;
+  transition:box-shadow 400ms var(--ease),border-color 400ms var(--ease);
+}
+.landing-play-panel::before{
+  content:""; position:absolute; inset:0; border-radius:inherit;
+  background:radial-gradient(ellipse at 70% 45%,rgba(90,215,232,.08),transparent 55%),
+             radial-gradient(ellipse at 50% 0%,rgba(241,189,93,.05),transparent 60%);
+  opacity:1; pointer-events:none;
+}
+.landing-play-panel::after{
+  content:""; position:absolute; left:0; right:0; top:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(90,215,232,.28),rgba(167,139,250,.1),transparent);
+  pointer-events:none; opacity:.9;
+}
+
+/* ── Crest: softer, more atmospheric — reduced opacity, dimmer upper region ── */
+.landing-play-crest{
+  width:clamp(320px,46%,560px);
+  opacity:.12;
+  filter:drop-shadow(0 0 80px rgba(90,215,232,.22)) saturate(1.05) brightness(.98);
+  mask-image:radial-gradient(ellipse 60% 70% at 50% 60%,#000 45%,transparent 88%);
+  -webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 60%,#000 45%,transparent 88%);
+  transition:opacity 500ms var(--ease),filter 500ms var(--ease),transform 500ms var(--ease);
+}
+.landing-play-panel:hover .landing-play-crest{
+  opacity:.18;
+  filter:drop-shadow(0 0 100px rgba(90,215,232,.32)) saturate(1.2) brightness(1.04);
+  transform:translateY(-50%) scale(1.015);
+}
+
+.landing-play-content{
+  position:relative; z-index:1;
+  display:flex; flex-direction:column;
+  gap:0; max-width:680px;
+  justify-content:center;
+}
+
+/* ── Play panel typography: refined hierarchy ── */
+.landing-play-panel .landing-eyebrow{
+  font-size:11.5px; letter-spacing:.32em;
+  color:var(--cyan); margin:0 0 14px;
+  font-weight:700; text-transform:uppercase;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.landing-play-panel .landing-eyebrow::before{
+  content:""; width:18px; height:1.5px; border-radius:2px;
+  background:linear-gradient(90deg,var(--cyan),transparent);
+  opacity:.8; flex-shrink:0;
+}
+.landing-play-panel .landing-title{
+  font-family:'Pepsi',sans-serif;
+  font-size:clamp(42px,5.2vw,72px);
+  font-weight:800; letter-spacing:.008em;
+  margin:0 0 14px; line-height:1;
+  background:linear-gradient(180deg,#f4f9fc 0%,#c8dae6 55%,var(--muted) 135%);
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent;
+  text-shadow:0 0 60px rgba(90,215,232,.14),0 1px 0 rgba(255,255,255,.04);
+}
+.landing-play-panel .landing-tagline{
+  font-size:clamp(14.5px,1.5vw,17.5px);
+  line-height:1.55; color:var(--muted-bright);
+  margin:0 0 28px; max-width:540px;
+}
+
+/* ── Mode selection: refined tiles ── */
+.landing-mode-section{margin-bottom:22px}
+.landing-mode-label{
+  font-size:10.5px; letter-spacing:.24em;
+  color:var(--cyan); text-transform:uppercase;
+  margin:0 0 10px; font-weight:700;
+}
+.landing-mode-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.landing-mode-tile{
+  display:flex; align-items:center; gap:12px;
+  padding:14px 14px;
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius);
+  background:rgba(12,24,34,.65);
+  color:var(--text);
+  cursor:pointer; text-align:left; font:inherit;
+  min-height:72px;
+  transition:border-color var(--fast) var(--ease),background var(--fast) var(--ease),
+             box-shadow var(--fast) var(--ease),transform var(--fast) var(--ease);
+  position:relative; overflow:hidden;
+}
+.landing-mode-tile::before{
+  content:""; position:absolute; left:0; top:50%;
+  transform:translateY(-50%); width:3px; height:0;
+  border-radius:0 3px 3px 0;
+  background:linear-gradient(180deg,var(--cyan),var(--cyan-2));
+  transition:height 220ms var(--ease); opacity:0;
+}
+.landing-mode-tile:hover{
+  border-color:rgba(90,215,232,.28);
+  background:rgba(20,36,50,.7);
+  transform:translateY(-1px);
+  box-shadow:var(--shadow-soft);
+}
+/* Selected mode: calmer glow than CTA — use muted cyan, not bright cyan */
+.landing-mode-tile.selected{
+  border-color:rgba(90,215,232,.4);
+  background:linear-gradient(135deg,rgba(90,215,232,.06),rgba(16,29,42,.85));
+  box-shadow:0 0 0 1px rgba(90,215,232,.12),0 4px 14px rgba(90,215,232,.08),
+             inset 0 0 20px rgba(90,215,232,.03);
+}
+.landing-mode-tile.selected::before{height:56%; opacity:1}
+.landing-mode-icon{
+  width:40px; height:40px;
+  border-radius:10px;
+  font-size:18px;
+  border:1px solid var(--border);
+  background:rgba(20,36,50,.55);
+}
+.landing-mode-tile.selected .landing-mode-icon{
+  border-color:rgba(90,215,232,.32);
+  box-shadow:0 0 10px rgba(90,215,232,.1),var(--inner-highlight);
+  background:linear-gradient(145deg,rgba(90,215,232,.08),rgba(20,36,50,.7));
+}
+.landing-mode-body strong{font-size:13.5px; font-weight:650}
+.landing-mode-body small{font-size:10.5px; line-height:1.3}
+.landing-mode-check{top:8px; right:10px; width:16px; height:16px; font-size:10px}
+
+/* ── Primary CTA: premium, with shine sweep ── */
+.landing-play-cta{
+  display:flex; align-items:center; justify-content:center;
+  gap:12px; width:100%; max-width:540px;
+  padding:16px 30px;
+  border:1px solid rgba(90,215,232,.5);
+  border-radius:13px;
+  background:linear-gradient(180deg,#0a1a22 0%,#0e2a35 28%,#1e8ba3 72%,#3fc1d8 100%);
+  color:#e8f6fa; font-size:16px; font-weight:700; letter-spacing:.06em;
+  cursor:pointer; position:relative; overflow:hidden;
+  box-shadow:0 0 0 1px rgba(90,215,232,.15),0 12px 34px rgba(90,215,232,.22),
+             var(--inner-highlight),inset 0 -1px 0 rgba(0,0,0,.3);
+  text-shadow:0 1px 2px rgba(0,0,0,.5);
+  transition:transform var(--normal) var(--ease),box-shadow var(--normal) var(--ease),
+             border-color var(--normal) var(--ease);
+}
+.landing-play-cta::before{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg,rgba(90,215,232,.08),transparent 40%);
+  pointer-events:none;
+}
+.landing-play-cta::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.1) 50%,transparent 70%);
+  transform:translateX(-120%); pointer-events:none;
+  transition:transform 620ms var(--ease);
+}
+.landing-play-cta:hover{
+  transform:translateY(-2px);
+  border-color:rgba(90,215,232,.7);
+  box-shadow:0 0 0 1px rgba(90,215,232,.28),0 18px 48px rgba(90,215,232,.3),
+             var(--inner-highlight),inset 0 -1px 0 rgba(0,0,0,.3);
+}
+.landing-play-cta:hover::after{transform:translateX(120%)}
+.landing-play-cta:active{transform:translateY(0)}
+.landing-cta-arrow{
+  font-size:19px; color:var(--cyan);
+  text-shadow:0 0 0 rgba(90,215,232,0);
+  transition:transform var(--normal) var(--ease),text-shadow var(--normal) var(--ease),filter var(--normal) var(--ease);
+}
+.landing-play-cta:hover .landing-cta-arrow{
+  transform:translateX(6px);
+  text-shadow:0 0 12px rgba(90,215,232,.7),0 0 24px rgba(90,215,232,.35);
+  filter:brightness(1.15);
+}
+.landing-play-subline{
+  margin:12px 0 0; font-size:12px;
+  color:var(--faint); letter-spacing:.04em;
+  text-align:center; max-width:540px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §5 — SECONDARY RAIL: 2-column grid of premium cards
+   Row 1: What's New | Rules
+   Row 2: Ranking System (full width)
+   Row 3: Players | Leaderboard
+   Row 4: Official Forums (full width)
+   ═══════════════════════════════════════════════════════════════ */
+.landing-secondary-rail{
+  display:flex; flex-direction:column;
+  min-width:0; min-height:0; height:100%;
+  overflow:hidden;
+}
+.landing-content .landing-cards{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px; max-width:none; width:100%;
+  align-content:center;
+}
+/* Full-width rows: Ranking System (3rd card) and Forums (6th card) */
+.landing-rail-card.ranking-system{
+  grid-column:1 / -1;
+}
+.landing-rail-card{
+  display:flex; align-items:center; gap:12px;
+  padding:12px 18px;
+  border:1px solid var(--hairline);
+  border-radius:var(--radius);
+  background:linear-gradient(180deg,rgba(18,33,46,.88),rgba(12,24,34,.9));
+  color:var(--text); text-decoration:none;
+  cursor:pointer; font:inherit; text-align:left;
+  position:relative; overflow:hidden;
+  box-shadow:var(--shadow-soft),var(--inner-highlight);
+  transition:border-color var(--fast) var(--ease),background var(--fast) var(--ease),
+             transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease);
+  min-height:0;
+}
+.landing-rail-card::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:linear-gradient(180deg,var(--card-accent,var(--cyan)),transparent);
+  opacity:0; transition:opacity var(--fast) var(--ease);
+}
+.landing-rail-card:hover{
+  border-color:rgba(90,215,232,.28);
+  background:linear-gradient(180deg,rgba(22,40,54,.92),rgba(14,28,40,.94));
+  transform:translateX(2px);
+  box-shadow:var(--shadow-float),inset 0 1px 0 rgba(90,215,232,.08);
+}
+.landing-rail-card:hover::before{opacity:.7}
+.landing-rail-card:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
+.landing-rail-body{
+  display:flex; flex-direction:column; gap:2px;
+  min-width:0; flex:1;
+}
+.landing-rail-card strong{
+  font-size:13px; font-weight:700; letter-spacing:.03em;
+  color:var(--text-bright);
+}
+.landing-rail-card p{
+  font-size:11px; line-height:1.4;
+  color:var(--muted-bright); margin:0;
+}
+.landing-rail-sub{font-size:10px; color:var(--faint); letter-spacing:.02em}
+.landing-rail-cta{
+  font-size:11px; font-weight:600; letter-spacing:.03em;
+  color:var(--cyan); margin-top:3px;
+  transition:transform var(--fast) var(--ease);
+}
+.landing-rail-card:hover .landing-rail-cta{transform:translateX(3px)}
+.landing-rail-chevron{
+  font-size:20px; color:var(--muted); flex-shrink:0;
+  transition:transform var(--fast) var(--ease),color var(--fast);
+}
+.landing-rail-card:hover .landing-rail-chevron{transform:translateX(3px); color:var(--cyan)}
+
+/* ── Rail emblems: balanced size ── */
+.landing-rail-emblem{
+  width:34px; height:34px;
+  font-size:16px;
+  border-radius:9px;
+}
+.landing-rail-emblem.subtle{width:28px; height:28px; font-size:13px}
+.landing-rail-emblem.ranking-system-emblem,
+.landing-rail-emblem.leaderboard-emblem{
+  width:34px; height:34px; border-radius:9px;
+}
+.landing-rail-emblem.ranking-system-emblem svg,
+.landing-rail-emblem.leaderboard-emblem svg{width:18px; height:18px}
+.landing-rail-forums-icon{
+  width:34px; height:34px; border-radius:9px;
+}
+.landing-rail-forums-icon svg{width:18px; height:18px}
+
+/* ── Continue button (now in topbar — see §2 for base styles) ── */
+
+/* ── Rail card variant refinements ── */
+/* What's New: dim white-ish yellow accent, reduced prominence */
+.landing-rail-card.whats-new{opacity:.88}
+.landing-rail-card.whats-new strong{color:#ffd700; font-size:11px}
+.landing-rail-card.whats-new:hover{border-color:rgba(212,207,168,.3); opacity:1}
+.landing-rail-card.whats-new::before{background:linear-gradient(180deg,#d4cfa8,transparent)}
+.landing-rail-card.whats-new .landing-rail-cta{color:#b8b8b8}
+.landing-rail-card.whats-new p{color:#9a956e}
+
+/* Rules: strongest secondary — full violet accent, larger text */
+.landing-rail-card.rules{
+  border-color:rgba(167,139,250,.28);
+  background:linear-gradient(180deg,rgba(22,28,46,.92),rgba(14,20,34,.94));
+}
+.landing-rail-card.rules:hover{
+  border-color:rgba(167,139,250,.5);
+  box-shadow:0 8px 24px rgba(167,139,250,.14),var(--shadow-soft);
+}
+.landing-rail-card.rules::before{background:linear-gradient(180deg,var(--violet),transparent); opacity:.4}
+.landing-rail-card.rules strong{color:var(--violet); font-size:13px; letter-spacing:.02em}
+.landing-rail-card.rules p{font-size:11px; line-height:1.35}
+
+/* Ranking System: strongest secondary — full cyan accent, larger text */
+.landing-rail-card.ranking-system{
+  border-color:rgba(90,215,232,.28);
+  background:linear-gradient(180deg,rgba(18,33,46,.92),rgba(12,24,34,.94));
+}
+.landing-rail-card.ranking-system:hover{
+  border-color:rgba(90,215,232,.5);
+  box-shadow:0 8px 24px rgba(90,215,232,.14),var(--shadow-soft);
+}
+.landing-rail-card.ranking-system::before{background:linear-gradient(180deg,var(--cyan),transparent); opacity:.4}
+.landing-rail-card.ranking-system strong{color:var(--cyan); font-size:13px; letter-spacing:.02em}
+.landing-rail-card.ranking-system p{font-size:11px; line-height:1.35; margin:1px 0 0}
+.landing-rail-card.ranking-system .landing-rail-cta{color:var(--cyan)}
+
+/* Players + Leaderboard: paired — shared violet accent, medium weight */
+.landing-rail-card.players{
+  border-color:rgba(139,92,246,.18);
+}
+.landing-rail-card.players:hover{border-color:rgba(139,92,246,.38)}
+.landing-rail-card.players::before{background:linear-gradient(180deg,var(--violet),transparent)}
+.landing-rail-card.players strong{color:var(--violet); font-size:12px; letter-spacing:.02em}
+.landing-rail-card.players p{font-size:10.5px; line-height:1.3; margin:1px 0 0}
+.landing-rail-card.players .landing-rail-cta{color:var(--violet)}
+.landing-rail-card.leaderboard{border-color:rgba(139,92,246,.18)}
+.landing-rail-card.leaderboard:hover{
+  border-color:rgba(139,92,246,.38);
+  box-shadow:0 6px 20px rgba(139,92,246,.12),var(--shadow-soft);
+}
+.landing-rail-card.leaderboard::before{background:linear-gradient(180deg,var(--violet),transparent)}
+.landing-rail-card.leaderboard strong{color:var(--violet); font-size:12px; letter-spacing:.02em}
+.landing-rail-card.leaderboard p{font-size:10.5px; line-height:1.3; margin:1px 0 0}
+.landing-rail-card.leaderboard .landing-rail-cta{color:var(--violet)}
+
+/* Forums: reduced prominence — muted blue, smaller text */
+.landing-rail-card.forums{opacity:.82; border-color:rgba(91,156,240,.16)}
+.landing-rail-card.forums:hover{border-color:rgba(91,156,240,.32); opacity:1}
+.landing-rail-card.forums::before{background:linear-gradient(180deg,var(--blue),transparent)}
+.landing-rail-card.forums strong{color:var(--blue); font-size:11px; letter-spacing:.02em}
+.landing-rail-card.forums p{font-size:10px; line-height:1.3; margin:1px 0 0}
+
+/* Subreddit: Reddit-tinted companion to Forums */
+.landing-rail-card.subreddit{opacity:.88; border-color:rgba(255,69,0,.16)}
+.landing-rail-card.subreddit:hover{border-color:rgba(255,69,0,.34); opacity:1}
+.landing-rail-card.subreddit::before{background:linear-gradient(180deg,#ff4500,transparent)}
+.landing-rail-card.subreddit strong{color:#ff5f3e; font-size:11px; letter-spacing:.02em}
+.landing-rail-card.subreddit p{font-size:10px; line-height:1.3; margin:1px 0 0}
+.landing-rail-emblem.reddit-emblem{
+  width:34px; height:34px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:transparent; border:none;
+  flex-shrink:0; padding:0; overflow:hidden;
+}
+.landing-rail-emblem.reddit-emblem svg{width:34px; height:34px; border-radius:50%; display:block}
+
+/* ═══════════════════════════════════════════════════════════════
+   §6 — FOOTER: minimal, refined
+   ═══════════════════════════════════════════════════════════════ */
+.landing-app .landing-footer{
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px; flex-wrap:wrap;
+  padding:10px 44px;
+  border-top:1px solid transparent;
+  border-image:linear-gradient(90deg,transparent,var(--hairline-strong) 20%,var(--hairline-strong) 80%,transparent) 1;
+  background:linear-gradient(180deg,rgba(5,11,17,.72),rgba(5,11,17,.55));
+  font-size:11.5px; color:var(--muted-bright);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.landing-footer-brand{
+  display:flex; align-items:center; gap:8px;
+  font-weight:700; letter-spacing:.14em; color:var(--text-bright);
+  font-size:12px;
+}
+.landing-footer-crest{width:13px; height:13px}
+.landing-footer-legal{display:inline-flex; align-items:center; gap:18px}
+.landing-footer-legal a{
+  font-size:11.5px; color:var(--muted-bright); text-decoration:none;
+  letter-spacing:.04em; transition:color var(--fast);
+}
+.landing-footer-legal a:hover{color:var(--text-bright)}
+.landing-footer-credit{gap:6px}
+.landing-footer-credit-prefix{font-size:13px}
+.landing-footer-credit-name{font-size:13px}
+
+/* ═══════════════════════════════════════════════════════════════
+   §7 — ENTRANCE ANIMATIONS: subtle, premium
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes revamp-fade-up{
+  from{opacity:0; transform:translateY(12px)}
+  to{opacity:1; transform:translateY(0)}
+}
+@keyframes revamp-fade-in{
+  from{opacity:0}
+  to{opacity:1}
+}
+.landing-topbar{animation:revamp-fade-in 500ms var(--ease) both}
+.landing-play-panel{
+  animation:revamp-fade-up 600ms var(--ease) both;
+  animation-delay:80ms;
+}
+.landing-secondary-rail{animation:revamp-fade-in 600ms var(--ease) both; animation-delay:160ms}
+/* Use backwards fill-mode (not both) so the from-state applies during the
+   delay but the to-state is released after completion — otherwise the
+   retained transform:translateY(0) would override :hover transforms. */
+.landing-rail-card{
+  animation:revamp-fade-up 500ms var(--ease) backwards;
+}
+.landing-rail-card:nth-child(1){animation-delay:200ms}
+.landing-rail-card:nth-child(2){animation-delay:260ms}
+.landing-rail-card:nth-child(3){animation-delay:320ms}
+.landing-rail-card:nth-child(4){animation-delay:380ms}
+.landing-rail-card:nth-child(5){animation-delay:440ms}
+.landing-rail-card:nth-child(6){animation-delay:500ms}
+.landing-rail-card:nth-child(7){animation-delay:560ms}
+.landing-footer{animation:revamp-fade-in 500ms var(--ease) both; animation-delay:300ms}
+
+/* ═══════════════════════════════════════════════════════════════
+   §8 — RESPONSIVE GUARD: maintain zero-overflow on smaller desktops
+   ═══════════════════════════════════════════════════════════════ */
+@media(max-height:880px){
+  .landing-play-panel{padding:clamp(18px,3vh,36px) clamp(28px,3vw,48px)}
+  .landing-play-panel .landing-title{font-size:clamp(38px,4.8vw,64px)}
+  .landing-play-panel .landing-tagline{margin-bottom:22px; font-size:clamp(13.5px,1.4vw,16px)}
+  .landing-mode-section{margin-bottom:18px}
+  .landing-mode-tile{min-height:64px; padding:12px 12px}
+  .landing-mode-icon{width:36px; height:36px; font-size:16px}
+  .landing-play-cta{padding:14px 28px; font-size:15px}
+  .landing-rail-card{padding:8px 16px}
+  .landing-rail-card strong{font-size:12px}
+  .landing-rail-card p{font-size:10px}
+  .landing-rail-emblem,
+  .landing-rail-emblem.ranking-system-emblem,
+  .landing-rail-emblem.leaderboard-emblem,
+  .landing-rail-emblem.reddit-emblem{width:28px; height:28px}
+  .landing-rail-emblem.reddit-emblem svg{width:28px; height:28px}
+  .landing-rail-forums-icon{width:28px; height:28px}
+}
+
+@media(max-width:1100px){
+  .landing-content{grid-template-columns:minmax(0,1.4fr) minmax(300px,1fr); gap:20px}
+  .landing-hero{padding:8px 32px 0}
+  .landing-topbar{padding:6px 32px 4px}
+  .landing-app .landing-footer{padding:10px 32px}
+}
+
+/* ── Touch devices: neutralize hover lifts ── */
+@media(pointer:coarse){
+  .landing-rail-card:hover{transform:none}
+  .landing-mode-tile:hover{transform:none}
+  .landing-play-cta:hover{transform:none}
+  .lab-button:hover{transform:none}
+  .account-trigger:hover{transform:none}
+  .landing-continue-btn:hover{transform:none}
+}
+
+/* ── Reduced motion: neutralize entrance + micro-affordances ── */
+@media(prefers-reduced-motion:reduce){
+  .landing-topbar,.landing-play-panel,.landing-secondary-rail,
+  .landing-rail-card,.landing-footer{
+    animation:none !important;
+  }
+  .landing-rail-card:hover{transform:none}
+  .landing-mode-tile:hover{transform:none}
+  .landing-play-cta:hover{transform:none}
+  .landing-play-cta::after{display:none}
+  .lab-button:hover{transform:none}
+  .account-trigger:hover{transform:none}
+  .landing-continue-btn:hover{transform:none}
+  .landing-brand:hover .landing-brand-logo{filter:drop-shadow(0 0 24px rgba(90,215,232,.22))}
+}

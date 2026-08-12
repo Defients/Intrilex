@@ -8,6 +8,7 @@
 // and terminal actions.
 // ═══════════════════════════════════════════════════════════════
 import { state } from './play-state.js';
+import { esc } from '../state.js';
 import { SessionState } from './play-controller.js';
 import { GuidanceMode } from './intelligence/action-explanation.js';
 import { getReasonCode } from './authority/reason-code-registry.js';
@@ -659,11 +660,44 @@ export function bindBoardEvents(container, callbacks) {
     el.addEventListener('click', async () => {
       const action = el.dataset.action;
       if (action === 'watch-replay') {
-        // Save replay and redirect
-        const { createReplayRecord, saveReplay } = await import('./replay-library.js');
-        const record = await createReplayRecord(state.session);
-        await saveReplay(record);
-        location.hash = '#/play/replays';
+        // IRX-H24: For network matches, fetch the certified replay from the
+        // server and play it directly in the Watch workspace. For local matches,
+        // save to IndexedDB and navigate to the replays list.
+        if (state.networkSession && state.networkSession.status === 'TERMINAL' && state.networkSession.matchId) {
+          // Network match — fetch replay from server and play directly
+          try {
+            container.innerHTML = '<div class="play-loading">Loading replay from server…</div>';
+            const { ensureReplayFrames } = await import('../replay-frames.js');
+            const { state: observatoryState } = await import('../state.js');
+            const replay = await state.networkSession.getReplay();
+            if (!replay) {
+              container.innerHTML = '<div class="play-error" role="alert"><h2>Replay unavailable</h2><p>The server could not provide a certified replay for this match.</p><a href="#/play/online" class="secondary-button">Back to Online</a></div>';
+              return;
+            }
+            const replayObj = { ...replay, frames: undefined };
+            await ensureReplayFrames(replayObj);
+            if (!replayObj.frames || replayObj.frames.length === 0) {
+              throw new Error('Frame reconstruction produced no frames');
+            }
+            observatoryState.replay = replayObj;
+            observatoryState.authorized = null;
+            observatoryState.fixtureId = state.networkSession.matchId;
+            observatoryState._replayLoadedFor = state.networkSession.matchId;
+            observatoryState.frame = 0;
+            observatoryState.playing = false;
+            observatoryState.replayKind = 'corpus';
+            observatoryState.visibility = 'public';
+            location.hash = '#/watch';
+          } catch (err) {
+            container.innerHTML = `<div class="play-error" role="alert"><h2>Failed to load replay</h2><p>${esc(err.message)}</p><a href="#/play/online" class="secondary-button">Back to Online</a></div>`;
+          }
+        } else {
+          // Local match — save replay and redirect
+          const { createReplayRecord, saveReplay } = await import('./replay-library.js');
+          const record = await createReplayRecord(state.session);
+          await saveReplay(record);
+          location.hash = '#/play/replays';
+        }
       } else if (action === 'download-replay') {
         // Download certified replay from the network server via authenticated WebSocket
         // (HTTP replay download was removed in v0.24.2 — GET_REPLAY is the canonical path)

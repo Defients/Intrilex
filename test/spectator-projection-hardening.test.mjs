@@ -183,3 +183,64 @@ test('spectator-hardening: spectator view does not expose reconnect tokens', () 
     !specJson.includes('participantToken'),
     'spectator view must not contain participantToken field');
 });
+
+// IRX-C02: Spectator knownCards must not include hand-zone card identities.
+// The engine uses uppercase zone names like "P1_HAND", "P2_HAND".
+// The previous filter only checked for lowercase "hand", allowing hand card
+// identities to survive into the spectator view.
+test('spectator-hardening: knownCards filters out P1_HAND/P2_HAND zone cards', () => {
+  const mockView = {
+    matchId: 'M-test',
+    status: 'RUNNING',
+    profileId: 'core-unrestricted-authority',
+    playerId: 'P1',
+    match: { fullTurnSequence: 3, phase: 'ACTION', activePlayerId: 'P1', winner: null, terminationReason: null },
+    decision: { actorId: 'P1', stateRevision: 2, frameHash: 'abc', isMyDecision: true },
+    playerView: {
+      own: { hand: [{ id: 'c1', identity: 'A♠' }], securedPoints: 0, goal: 21, pr: [], er: [] },
+      opponents: [{ playerId: 'P2', handCount: 1, securedPoints: 0, goal: 21, pr: [], er: [] }],
+      knownCards: {
+        'c1': { id: 'c1', identity: 'A♠', zone: 'P1_HAND' },
+        'c2': { id: 'c2', identity: 'K♥', zone: 'P2_HAND' },
+        'c3': { id: 'c3', identity: 'Q♦', zone: 'P1_PR' },
+        'c4': { id: 'c4', identity: 'J♣', zone: 'P2_ER' },
+        'c5': { id: 'c5', identity: '10♠', zone: 'hand' },
+      },
+      activePlayerId: 'P1',
+      phase: 'ACTION',
+    },
+    recentEvents: [],
+    opponent: null,
+  };
+  const specView = buildSpectatorView(mockView);
+  const pv = specView.playerView;
+  assert.ok(pv, 'spectator view must have playerView');
+  assert.ok(pv.knownCards, 'spectator view must have knownCards');
+  // Hand-zone cards must be filtered out
+  assert.ok(!pv.knownCards['c1'], 'P1_HAND card must not be in spectator knownCards');
+  assert.ok(!pv.knownCards['c2'], 'P2_HAND card must not be in spectator knownCards');
+  assert.ok(!pv.knownCards['c5'], 'lowercase hand card must not be in spectator knownCards');
+  // Public-zone cards must remain
+  assert.ok(pv.knownCards['c3'], 'P1_PR card must remain in spectator knownCards');
+  assert.ok(pv.knownCards['c4'], 'P2_ER card must remain in spectator knownCards');
+});
+
+// IRX-C02: Spectator view must not include viewHash or frameHash
+// (participant-specific state oracles).
+test('spectator-hardening: spectator view excludes viewHash and frameHash', () => {
+  const mockView = {
+    matchId: 'M-test',
+    status: 'RUNNING',
+    profileId: 'core-unrestricted-authority',
+    viewHash: 'participant-specific-hash-abc',
+    playerId: 'P1',
+    match: { fullTurnSequence: 3, phase: 'ACTION', activePlayerId: 'P1', winner: null, terminationReason: null },
+    decision: { actorId: 'P1', stateRevision: 2, frameHash: 'frame-hash-xyz', isMyDecision: true },
+    playerView: { own: { hand: [], pr: [], er: [] }, opponents: [], knownCards: {} },
+    recentEvents: [],
+    opponent: null,
+  };
+  const specView = buildSpectatorView(mockView);
+  assert.ok(!('viewHash' in specView), 'spectator view must not include viewHash');
+  assert.ok(!('frameHash' in (specView.decision ?? {})), 'spectator decision must not include frameHash');
+});

@@ -135,6 +135,12 @@ console.log('Step 4: Typecheck (npx tsc --noEmit)');
 runStep('tsc --noEmit', 'npx', ['tsc', '--noEmit'], { timeout: 120000 });
 console.log();
 
+// 4b. Build verification (IRX-M27: The script claims to verify the build
+// but previously never executed it. Now it does.)
+console.log('Step 4b: Build verification (pnpm run build)');
+runStep('pnpm run build', 'pnpm', ['run', 'build'], { timeout: 300000 });
+console.log();
+
 // 5. Secret containment scan
 console.log('Step 5: Secret containment scan');
 runStep('secret-containment-scan', process.execPath, ['scripts/secret-containment-scan.mjs'], { timeout: 60000 });

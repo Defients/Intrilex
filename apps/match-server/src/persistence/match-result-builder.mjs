@@ -49,17 +49,24 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
   const participants = [...match.participants.values()];
   if (participants.length === 0) return null;
 
-  // Resolve the active season for rated queues (server-authoritative, never
-  // browser-derived). For casual queues the season is irrelevant to rating.
+  // IRX-H07: Resolve the active season for rated queues (server-authoritative,
+  // never browser-derived). For casual queues the season is irrelevant.
+  // CRITICAL: Never fabricate a season. If a ranked match has no resolvable
+  // active season, the seasonId remains null and the caller must handle the
+  // failure (downgrade to casual or abort). Fabricating 'season-1' would
+  // create fake ranked records against a non-existent season.
   let resolvedSeasonId = seasonId;
   if (!resolvedSeasonId && persistor && typeof persistor.resolveActiveSeasonId === 'function' && queueId === RANKED_QUEUE_ID) {
     try {
       resolvedSeasonId = await persistor.resolveActiveSeasonId(queueId);
-    } catch {
-      resolvedSeasonId = 'season-1';
+    } catch (err) {
+      // IRX-H07: Fail closed — do NOT fabricate 'season-1'.
+      console.error('[match-result-builder] Season resolution failed:', err?.message ?? err);
+      resolvedSeasonId = null;
     }
   }
-  if (!resolvedSeasonId) resolvedSeasonId = 'season-1';
+  // For ranked matches, a null seasonId is a hard failure — the caller must
+  // check and downgrade/abort. For casual/private, null is expected.
 
   // Sort by seat (P1 first, P2 second) for deterministic ordering
   const sorted = participants.sort((a, b) => a.playerId.localeCompare(b.playerId));
@@ -88,8 +95,12 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
   /** @type {MatchParticipantRecord[]} */
   const participantRecords = [];
 
-  if (dbStatus === 'COMPLETED' && sorted.length === 2) {
-    // Rated match — compute Elo updates
+  if (dbStatus === 'COMPLETED' && sorted.length === 2 && queueId === RANKED_QUEUE_ID) {
+    // IRX-H09: Only ranked matches compute rating updates.
+    // Casual/private matches record the result but do NOT mutate ratings.
+    // Previously, any completed match with two authenticated players would
+    // get rating updates computed, allowing casual/private play to corrupt
+    // the ranked ladder.
     const [p1, p2] = sorted;
 
     // Both must have accountIds to be rated
@@ -172,6 +183,21 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
         });
       }
     }
+  } else if (dbStatus === 'COMPLETED') {
+    // IRX-H09: Completed non-ranked match (casual/private) — record
+    // WIN/LOSS/DRAW without rating changes. Casual/private matches
+    // must never mutate ratings.
+    for (const p of sorted) {
+      participantRecords.push({
+        accountId: p.accountId,
+        participantId: [...match.participants.keys()].find(k => match.participants.get(k) === p) ?? 'unknown',
+        seat: p.playerId,
+        result: match.winner === p.playerId ? 'WIN' : match.winner === null ? 'DRAW' : 'LOSS',
+        ratingBefore: null,
+        ratingAfter: null,
+        ratingDelta: null,
+      });
+    }
   } else {
     // Aborted/expired — record with ABORT result
     for (const p of sorted) {
@@ -201,5 +227,7 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
     participants: participantRecords,
     queueId,
     seasonId: resolvedSeasonId,
+    // IRX-H39: Preserve match mode for statistics stratification and narrative.
+    matchMode: match.matchMode ?? 'private',
   };
 }

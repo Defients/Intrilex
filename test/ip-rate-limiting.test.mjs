@@ -163,7 +163,7 @@ test('ip-rate-limit: spectator count limit is enforced', async () => {
     // Wait a bit to ensure connection is registered
     await new Promise(r => setTimeout(r, 100));
 
-    p1.send(JSON.stringify(createMatch('core-unrestricted-authority', 'req-create')));
+    p1.send(JSON.stringify(createMatch('core-unrestricted-authority', 'req-create', { queueId: 'casual' })));
     const createResp = await waitForMessage(p1, 10000);
     assert.ok(createResp, 'Should receive create match response');
     assert.equal(createResp.type, 'MATCH_CREATED');

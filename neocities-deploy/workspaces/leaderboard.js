@@ -10,13 +10,13 @@
 // (semantic table, aria-sort, keyboard, reduced motion, textual tier names).
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct } from '../state.js';
-import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js';
-import { RankTier } from '@intrilex/account-domain/rank-tier';
-import { apexLabel, LeaderboardType } from '@intrilex/account-domain/leaderboard';
+import { app, esc, pct } from '../state.js?v=659a089d50b6';
+import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=659a089d50b6';
+import { RankTier } from "../account-domain/rank-tier.mjs";
+import { apexLabel, LeaderboardType } from "../account-domain/leaderboard.mjs";
 import {
   fetchLeaderboard, fetchPlayerStanding, fetchSeasons,
-} from '../play/ranked/leaderboard-data.js';
+} from '../play/ranked/leaderboard-data.js?v=659a089d50b6';
 
 const TIER_FILTERS = [
   { value: 'ALL', label: 'All Tiers' },
@@ -373,7 +373,7 @@ function wireEvents(target) {
       if (!row) return;
       const pid = row.dataset.pid;
       if (pid) {
-        location.hash = `#/profile?player=${encodeURIComponent(pid)}`;
+        location.hash = `#/player/${encodeURIComponent(pid)}`;
       }
     });
     // Keyboard activation for rows
@@ -383,7 +383,7 @@ function wireEvents(target) {
       if (!row) return;
       ev.preventDefault();
       const pid = row.dataset.pid;
-      if (pid) location.hash = `#/profile?player=${encodeURIComponent(pid)}`;
+      if (pid) location.hash = `#/player/${encodeURIComponent(pid)}`;
     });
   }
 }

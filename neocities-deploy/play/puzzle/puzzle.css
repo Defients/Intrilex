@@ -1,0 +1,118 @@
+/* puzzle.css - Puzzle Mode v0.1.0 dev surface styles.
+   Functional, not beautiful. Correctness > observability > ergonomics > aesthetics. */
+
+.puzzle-workspace {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  color: var(--text, #e7e9ee);
+  background: var(--bg, #0e1116);
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+.puzzle-workspace * { box-sizing: border-box; }
+
+.puzzle-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.puzzle-header h1 { font-size: 1.4rem; margin: 0; }
+.puzzle-dev-tag {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  background: #2a2f3a; color: #9aa4b2; padding: 2px 8px; border-radius: 4px;
+}
+.puzzle-intro { color: #9aa4b2; font-size: 0.9rem; margin: 0 0 16px; }
+
+.puzzle-selector {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.puzzle-selector label { font-size: 0.85rem; color: #9aa4b2; }
+.puzzle-selector select {
+  background: #161b22; color: #e7e9ee; border: 1px solid #2a2f3a;
+  border-radius: 4px; padding: 6px 8px; min-width: 320px;
+}
+.puzzle-selector button {
+  background: #1f6feb; color: #fff; border: none; border-radius: 4px;
+  padding: 6px 12px; cursor: pointer; font-size: 0.85rem;
+}
+.puzzle-selector button:disabled { opacity: 0.45; cursor: not-allowed; }
+.puzzle-selector button:hover:not(:disabled) { background: #388bfd; }
+
+.puzzle-objective {
+  background: #11161d; border: 1px solid #2a2f3a; border-radius: 6px;
+  padding: 12px 14px; margin-bottom: 12px;
+}
+.puzzle-objective h2 { margin: 0 0 6px; font-size: 1.1rem; }
+.puzzle-objective-text { margin: 2px 0; }
+.puzzle-objective-progress { margin: 2px 0; color: #9aa4b2; font-size: 0.85rem; }
+.puzzle-objective-desc { margin: 4px 0 0; color: #9aa4b2; font-size: 0.85rem; }
+.puzzle-status-line { margin: 8px 0 0; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+
+.puzzle-status-badge {
+  font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.puzzle-status--idle { background: #2a2f3a; color: #9aa4b2; }
+.puzzle-status--ready { background: #1f6feb; color: #fff; }
+.puzzle-status--playing { background: #1f6feb; color: #fff; }
+.puzzle-status--won { background: #238636; color: #fff; }
+.puzzle-status--failed { background: #da3633; color: #fff; }
+.puzzle-status--error { background: #7d2e2e; color: #fff; }
+
+.puzzle-banner {
+  padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-weight: 600;
+}
+.puzzle-banner--won { background: #0d2818; color: #3fb950; border: 1px solid #238636; }
+.puzzle-banner--failed { background: #2a0e0e; color: #f85149; border: 1px solid #da3633; }
+.puzzle-banner--error { background: #2a0e0e; color: #f85149; border: 1px solid #7d2e2e; }
+
+.puzzle-board {
+  display: flex; flex-direction: column; gap: 12px;
+  background: #0b0f14; border: 1px solid #2a2f3a; border-radius: 6px; padding: 12px;
+  margin-bottom: 12px;
+}
+.puzzle-board-side { display: flex; flex-direction: column; gap: 6px; }
+.puzzle-board-side--self { border-top: 1px dashed #2a2f3a; padding-top: 12px; }
+.puzzle-side-header { display: flex; gap: 12px; align-items: center; font-size: 0.85rem; }
+.puzzle-side-name { font-weight: 600; }
+.puzzle-side-score { color: #3fb950; }
+.puzzle-side-hand { color: #9aa4b2; }
+.puzzle-zone-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #6e7681; margin-top: 4px; }
+.puzzle-card-row { display: flex; gap: 6px; flex-wrap: wrap; min-height: 40px; }
+.puzzle-card-row--empty { color: #6e7681; font-size: 0.8rem; font-style: italic; }
+
+.puzzle-actions { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.puzzle-actions-empty { color: #9aa4b2; font-size: 0.85rem; margin-bottom: 12px; }
+.puzzle-action {
+  display: flex; flex-direction: column; gap: 2px; text-align: left;
+  background: #161b22; color: #e7e9ee; border: 1px solid #2a2f3a;
+  border-radius: 4px; padding: 8px 10px; cursor: pointer;
+}
+.puzzle-action:hover { border-color: #1f6feb; background: #1c232c; }
+.puzzle-action-label { font-weight: 600; font-size: 0.9rem; }
+.puzzle-action-meta { font-size: 0.75rem; color: #9aa4b2; }
+
+.puzzle-solver {
+  background: #11161d; border: 1px solid #2a2f3a; border-radius: 6px;
+  padding: 12px 14px; margin-bottom: 12px;
+}
+.puzzle-solver h3 { margin: 0 0 8px; font-size: 1rem; }
+.puzzle-solver-note { font-size: 0.8rem; color: #9aa4b2; }
+.puzzle-solver-line { font-size: 0.8rem; }
+
+.puzzle-diagnostics { margin-top: 12px; }
+.puzzle-diagnostics summary { cursor: pointer; font-size: 0.9rem; color: #9aa4b2; }
+.puzzle-diag-table { border-collapse: collapse; margin-top: 8px; font-size: 0.8rem; }
+.puzzle-diag-table th { text-align: left; color: #9aa4b2; padding: 2px 12px 2px 0; white-space: nowrap; }
+.puzzle-diag-table td { font-family: ui-monospace, SFMono-Regular, monospace; word-break: break-all; }
+
+.puzzle-issues { list-style: none; padding: 0; margin: 8px 0 0; }
+.puzzle-issue { font-size: 0.8rem; padding: 4px 0; }
+.puzzle-issue--error { color: #f85149; }
+.puzzle-issue--warning { color: #d29922; }
+.puzzle-issue code { font-family: ui-monospace, monospace; }
+.puzzle-issue-path { color: #6e7681; }
+
+.puzzle-error {
+  background: #2a0e0e; color: #f85149; border: 1px solid #7d2e2e;
+  border-radius: 4px; padding: 8px 10px; margin-bottom: 12px; font-size: 0.85rem;
+}
+.puzzle-board-empty { color: #9aa4b2; padding: 16px; text-align: center; }

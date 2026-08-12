@@ -2,8 +2,8 @@
 // workspaces/evidence.js — /evidence workspace: integrity and provenance
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   app,   esc,   short,   definitionList } from '../state.js';
-import { ENGINE_VERSION, RULES_VERSION } from '../version.js';
+import { state,   app,   esc,   short,   definitionList } from '../state.js?v=659a089d50b6';
+import { ENGINE_VERSION, RULES_VERSION } from '../version.js?v=659a089d50b6';
 
 export function renderEvidence() {
   const c = state.capabilities, o = state.observatory, registry = o.metricRegistry ?? {}, anomalies = o.anomalies ?? [];

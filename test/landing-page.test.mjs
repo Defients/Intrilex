@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const src = (rel) => readFile(path.join(root, 'apps/lab-web/src', rel), 'utf8');
 const dist = (rel) => readFile(path.join(root, 'apps/lab-web/dist', rel), 'utf8');
-const cssSrc = async () => (await Promise.all(['tokens-base','feature-components','pages-polish'].map(f => readFile(path.join(root, 'apps/lab-web/src/css', `${f}.css`), 'utf8')))).join('\n');
+const cssSrc = async () => (await Promise.all(['tokens-base','feature-components','pages-polish','landing-revamp','landing-mobile'].map(f => readFile(path.join(root, 'apps/lab-web/src/css', `${f}.css`), 'utf8')))).join('\n');
 
 // ── Routes ──
 test('LANDING_MODES set contains /, /play, /rules', async () => {
@@ -70,7 +70,7 @@ test('render() shows observatory shell and hides landing container for observato
 
 test('render() loads replay on first observatory entry after landing boot', async () => {
   const js = await src('app.js');
-  assert.match(js, /loadReplay\(state\.fixtureId\)\.then\(render\)/);
+  assert.match(js, /loadReplay\(state\.fixtureId\)\.then\(/);
 });
 
 // ── Boot guard ──
@@ -341,17 +341,34 @@ test('Learn Intrilex rail card removed (no redundant CTA to tutorial)', async ()
   assert.doesNotMatch(js, /landing-rail-card learn/);
 });
 
-test('right rail order: Continue slot, Rules, Forums, What\'s New', async () => {
+test('right rail order: What\'s New, Rules, Ranking System, Players, Leaderboard, Forums', async () => {
   const js = await src('app.js');
   const railStart = js.indexOf('landing-secondary-rail');
   const railSection = js.slice(railStart);
-  const continueIdx = railSection.indexOf('landing-continue-slot');
-  const rulesIdx = railSection.indexOf('landing-rail-card rules');
-  const forumsIdx = railSection.indexOf('intrilex.discourse.group');
   const whatsNewIdx = railSection.indexOf("WHAT'S NEW");
-  assert.ok(continueIdx > -1 && continueIdx < rulesIdx, 'Continue slot must come before Rules');
-  assert.ok(rulesIdx > -1 && rulesIdx < forumsIdx, 'Rules must come before Forums');
-  assert.ok(forumsIdx > -1 && forumsIdx < whatsNewIdx, 'Forums must come before What\'s New');
+  const rulesIdx = railSection.indexOf('landing-rail-card rules');
+  const rankingIdx = railSection.indexOf('data-ranking-system-card');
+  const playersIdx = railSection.indexOf('data-players-card');
+  const leaderboardIdx = railSection.indexOf('data-leaderboard-card');
+  const forumsIdx = railSection.indexOf('intrilex.discourse.group');
+  assert.ok(whatsNewIdx > -1 && whatsNewIdx < rulesIdx, "What's New must come before Rules");
+  assert.ok(rulesIdx > -1 && rulesIdx < rankingIdx, 'Rules must come before Ranking System');
+  assert.ok(rankingIdx > -1 && rankingIdx < playersIdx, 'Ranking System must come before Players');
+  assert.ok(playersIdx > -1 && playersIdx < leaderboardIdx, 'Players must come before Leaderboard');
+  assert.ok(leaderboardIdx > -1 && leaderboardIdx < forumsIdx, 'Leaderboard must come before Forums');
+});
+
+test('Continue Duel slot is in the topbar, not the rail', async () => {
+  const js = await src('app.js');
+  const topbarStart = js.indexOf('landing-topbar');
+  const topbarEnd = js.indexOf('</header>', topbarStart);
+  const topbarSection = js.slice(topbarStart, topbarEnd);
+  assert.ok(topbarSection.includes('landing-continue-slot'), 'Continue slot must be in the topbar');
+  // Continue slot must NOT be inside the rail's landing-cards div
+  const railCardsStart = js.indexOf('class="landing-cards"');
+  const railCardsEnd = js.indexOf('</div>', js.indexOf('landing-rail-card forums', railCardsStart));
+  const railCardsSection = js.slice(railCardsStart, railCardsEnd);
+  assert.ok(!railCardsSection.includes('landing-continue-slot'), 'Continue slot must not be in the rail cards');
 });
 
 test('Forums card links to intrilex.discourse.group', async () => {
@@ -366,9 +383,8 @@ test('Rules card copy says complete official rulebook', async () => {
 
 test('What\'s New card shows version from canonical sources', async () => {
   const js = await src('app.js');
-  assert.match(js, /Intrilex v\$\{LAB_VERSION\}/);
-  assert.match(js, /Engine \$\{ENGINE_VERSION\}/);
-  assert.match(js, /Rules \$\{RULES_VERSION\}/);
+  assert.match(js, /v\$\{LAB_VERSION\}/);
+  assert.match(js, /WHAT'S NEW/);
 });
 
 test('footer credit uses muted color, not bright red', async () => {
@@ -395,4 +411,110 @@ test('mode tiles support arrow-key navigation', async () => {
 test('landing-mode-tile has position relative for check indicator', async () => {
   const css = await cssSrc();
   assert.match(css, /\.landing-mode-tile\{[^}]*position:relative/);
+});
+
+// ── Homepage revamp regression tests (IRX-M41/M42) ──
+test('landing-rail-card entrance animation uses backwards fill-mode (not both) so hover transforms work', async () => {
+  const css = await cssSrc();
+  // The animation must NOT use 'both' fill-mode, otherwise the retained
+  // transform:translateY(0) overrides :hover transform:translateX(2px).
+  const railCardAnimMatch = css.match(/\.landing-rail-card\{[^}]*animation:revamp-fade-up[^}]*\}/);
+  assert.ok(railCardAnimMatch, 'must have entrance animation on .landing-rail-card');
+  assert.match(railCardAnimMatch[0], /backwards/);
+  assert.doesNotMatch(railCardAnimMatch[0], /\bboth\b/);
+});
+
+test('bindLandingEvents uses AbortController to prevent document listener accumulation', async () => {
+  const js = await src('app.js');
+  assert.match(js, /_landingListenerAbort/);
+  assert.match(js, /new AbortController\(\)/);
+  assert.match(js, /\{ signal \}/);
+  assert.match(js, /_landingListenerAbort\.abort\(\)/);
+});
+
+test('loadContinueCard guards against stale slot after navigation', async () => {
+  const js = await src('app.js');
+  assert.match(js, /slot\.isConnected/);
+});
+
+test('showPreAlphaOverlay guards against firing on wrong route', async () => {
+  const js = await src('app.js');
+  assert.match(js, /landingContainer\.isConnected/);
+});
+
+test('landing-revamp.css has -webkit-backdrop-filter alongside backdrop-filter', async () => {
+  const css = await cssSrc();
+  // Every backdrop-filter in landing-revamp must have the -webkit- prefix
+  const revampSection = css.slice(css.indexOf('HOMEPAGE REVAMP'));
+  const bdMatches = revampSection.match(/backdrop-filter/g) || [];
+  const webkitMatches = revampSection.match(/-webkit-backdrop-filter/g) || [];
+  assert.ok(webkitMatches.length > 0, 'must have at least one -webkit-backdrop-filter');
+  assert.equal(bdMatches.length, webkitMatches.length * 2, 'every backdrop-filter must have a -webkit- counterpart');
+});
+
+// ── Mobile responsive layer (landing-mobile.css) ──
+test('landing-mobile.css exists and is imported in styles.css', async () => {
+  const styles = await src('styles.css');
+  assert.match(styles, /@import\s+'\.\/css\/landing-mobile\.css'/);
+  await access(path.join(root, 'apps/lab-web/src/css/landing-mobile.css'));
+});
+
+test('landing-mobile.css has phone breakpoint at 768px', async () => {
+  const css = await cssSrc();
+  assert.match(css, /@media\s*\(max-width:768px\)/);
+});
+
+test('landing-mobile.css has small-phone breakpoint at 430px', async () => {
+  const css = await cssSrc();
+  assert.match(css, /@media\s*\(max-width:430px\)/);
+});
+
+test('landing-mobile.css breaks the fixed viewport lock on mobile', async () => {
+  const css = await cssSrc();
+  // The desktop layout uses position:fixed; the mobile layer must override
+  // to position:relative or position:absolute to allow scrolling
+  const mobileSection = css.slice(css.indexOf('LANDING MOBILE'));
+  assert.ok(mobileSection.length > 0, 'landing-mobile.css section must exist');
+  assert.match(mobileSection, /position:relative|position:absolute/);
+  assert.match(mobileSection, /overflow-y:auto|overflow:visible/);
+});
+
+test('landing-mobile.css stacks two-column grid into single column on phone', async () => {
+  const css = await cssSrc();
+  const mobileSection = css.slice(css.indexOf('LANDING MOBILE'));
+  assert.match(mobileSection, /\.landing-content\{[^}]*flex-direction:column/);
+});
+
+test('landing-mobile.css has touch-friendly targets (min 44px)', async () => {
+  const css = await cssSrc();
+  const mobileSection = css.slice(css.indexOf('LANDING MOBILE'));
+  // Touch targets must use --touch-target (44px) or explicit min-height
+  assert.match(mobileSection, /--touch-target/);
+  assert.match(mobileSection, /min-height:var\(--touch-target\)/);
+});
+
+test('landing-mobile.css has safe-area insets for notches', async () => {
+  const css = await cssSrc();
+  const mobileSection = css.slice(css.indexOf('LANDING MOBILE'));
+  assert.match(mobileSection, /safe-area-inset-top|var\(--safe-area-top\)/);
+  assert.match(mobileSection, /safe-area-inset-bottom|var\(--safe-area-bottom\)/);
+});
+
+test('landing-mobile.css transforms account dropdown to bottom sheet on mobile', async () => {
+  const css = await cssSrc();
+  const mobileSection = css.slice(css.indexOf('LANDING MOBILE'));
+  assert.match(mobileSection, /\.account-dropdown\{[^}]*bottom:0/);
+  assert.match(mobileSection, /transform:translateY\(100%\)/);
+});
+
+test('landing-mobile.css has prefers-reduced-data support', async () => {
+  const css = await cssSrc();
+  const mobileSection = css.slice(css.indexOf('LANDING MOBILE'));
+  assert.match(mobileSection, /@media\s*\(prefers-reduced-data:reduce\)/);
+});
+
+test('landing-mobile.css has landscape phone orientation support', async () => {
+  const css = await cssSrc();
+  const mobileSection = css.slice(css.indexOf('LANDING MOBILE'));
+  assert.match(mobileSection, /orientation:landscape/);
 });

@@ -2,9 +2,9 @@
 // workspaces/tournament.js — /tournament workspace: AI tournament mode
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, short, definitionList, showToast, clamp } from '../state.js';
-import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js';
-import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js';
+import { state, app, esc, pct, short, definitionList, showToast, clamp } from '../state.js?v=659a089d50b6';
+import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=659a089d50b6';
+import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=659a089d50b6';
 
 const ALL_POLICIES = [
   'random-legal','score-rush','control','tempo','value',
@@ -62,7 +62,7 @@ async function renderTournamentSetup() {
           state.tournament = saved;
           state.tournamentRunning = false;
           state.tournamentAutoPlaying = false;
-          import('../app.js').then(m => m.render());
+          import('../app.js?v=659a089d50b6').then(m => m.render());
         }
       } catch (err) {
         showToast(err.message, { type: 'error', title: 'Failed to load tournament' });
@@ -90,7 +90,7 @@ async function renderTournamentSetup() {
       if (isIndexedDBAvailable()) {
         try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
       }
-      import('../app.js').then(m => m.render());
+      import('../app.js?v=659a089d50b6').then(m => m.render());
     } catch (err) {
       app.innerHTML = `<div class="notice danger"><strong>Error:</strong> ${esc(err.message)}</div>`;
     }
@@ -131,7 +131,7 @@ function renderTournamentBracket(tournament) {
     state.tournament = null;
     state.tournamentRunning = false;
     state.tournamentAutoPlaying = false;
-    import('../app.js').then(m => m.render());
+    import('../app.js?v=659a089d50b6').then(m => m.render());
   };
   const playBtn = document.querySelector('#tournament-play-next');
   if (playBtn) playBtn.onclick = () => playNextMatch(tournament);
@@ -221,7 +221,7 @@ async function playNextMatch(tournament) {
   const nextMatch = getNextMatch(tournament);
   if (!nextMatch) return;
   state.tournamentRunning = true;
-  import('../app.js').then(m => m.render());
+  import('../app.js?v=659a089d50b6').then(m => m.render());
 
   const worker = new Worker('worker.js', { type: 'module' });
   try {
@@ -232,12 +232,12 @@ async function playNextMatch(tournament) {
     if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
       try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
     }
-    import('../app.js').then(m => m.render());
+    import('../app.js?v=659a089d50b6').then(m => m.render());
   } catch (err) {
     state.tournamentRunning = false;
     state.tournamentAutoPlaying = false;
     showToast(err.message, { type: 'error', title: 'Tournament error' });
-    import('../app.js').then(m => m.render());
+    import('../app.js?v=659a089d50b6').then(m => m.render());
   } finally {
     worker.terminate();
   }
@@ -247,7 +247,7 @@ async function autoPlayTournament(tournament) {
   if (state.tournamentRunning) return;
   state.tournamentAutoPlaying = true;
   state.tournamentRunning = true;
-  import('../app.js').then(m => m.render());
+  import('../app.js?v=659a089d50b6').then(m => m.render());
 
   const worker = new Worker('worker.js', { type: 'module' });
   try {
@@ -259,7 +259,7 @@ async function autoPlayTournament(tournament) {
       if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
         try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
       }
-      import('../app.js').then(m => m.render());
+      import('../app.js?v=659a089d50b6').then(m => m.render());
     }
     state.tournamentAutoPlaying = false;
     state.tournamentRunning = false;
@@ -267,12 +267,12 @@ async function autoPlayTournament(tournament) {
     if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
       try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
     }
-    import('../app.js').then(m => m.render());
+    import('../app.js?v=659a089d50b6').then(m => m.render());
   } catch (err) {
     state.tournamentAutoPlaying = false;
     state.tournamentRunning = false;
     showToast(err.message, { type: 'error', title: 'Tournament auto-play error' });
-    import('../app.js').then(m => m.render());
+    import('../app.js?v=659a089d50b6').then(m => m.render());
   } finally {
     worker.terminate();
   }
@@ -318,7 +318,7 @@ async function runMatchGames(tournament, match, worker) {
     else if (winningPolicy === match.seat2Policy) seat2Wins += 1;
 
     state.tournament = recordMatchResult(state.tournament, match.matchId, winningPolicy, summary);
-    import('../app.js').then(m => m.render());
+    import('../app.js?v=659a089d50b6').then(m => m.render());
   }
 }
 
@@ -438,7 +438,7 @@ function liveSemanticLabel(command) {
 // ── Frame reconstruction from replay ────────────────────────────
 
 async function reconstructFrames(replay) {
-  const { IntrilexEngine } = await import('../engine/browser-entry.js');
+  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=659a089d50b6');
   const engine = new IntrilexEngine();
   let s = structuredClone(replay.initialState);
   const frames = [{ state: s, events: [], command: null, commandIndex: -1 }];
@@ -591,7 +591,7 @@ async function watchLiveMatch(tournament) {
     matchId: nextMatch.matchId,
     cancelled: false,
   };
-  import('../app.js').then(m => m.render());
+  import('../app.js?v=659a089d50b6').then(m => m.render());
 
   const worker = new Worker('worker.js', { type: 'module' });
   try {
@@ -602,14 +602,14 @@ async function watchLiveMatch(tournament) {
     if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
       try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
     }
-    import('../app.js').then(m => m.render());
+    import('../app.js?v=659a089d50b6').then(m => m.render());
   } catch (err) {
     state.tournamentRunning = false;
     state.tournamentAutoPlaying = false;
     stopLivePlayback();
     state.tournamentLiveView = null;
     showToast(err.message, { type: 'error', title: 'Tournament live error' });
-    import('../app.js').then(m => m.render());
+    import('../app.js?v=659a089d50b6').then(m => m.render());
   } finally {
     worker.terminate();
   }
@@ -637,7 +637,7 @@ async function runLiveMatchGames(tournament, match, worker) {
     lv.gameWinner = null;
     lv.gameSummary = null;
     lv.awaitingContinue = false;
-    import('../app.js').then(m => m.render());
+    import('../app.js?v=659a089d50b6').then(m => m.render());
 
     // Run match with replay recording
     const result = await new Promise((resolve) => {
@@ -683,7 +683,7 @@ async function runLiveMatchGames(tournament, match, worker) {
     lv.hasMoreGames = (lv.seat1Wins < winsNeeded) && (lv.seat2Wins < winsNeeded) && (g + 1 < bestOf);
     lv.awaitingContinue = false;
     lv.playing = false;
-    import('../app.js').then(m => m.render());
+    import('../app.js?v=659a089d50b6').then(m => m.render());
 
     // Auto-start playback
     toggleLivePlay();

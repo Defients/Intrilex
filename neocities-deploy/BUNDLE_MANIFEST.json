@@ -1,16 +1,214 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-08-12T03:23:02.862Z",
+  "generatedAt": "2026-08-12T23:14:55.910Z",
   "assets": {
     "app": {
-      "file": "app.c32912db35ca.js",
-      "hash": "c32912db35ca",
+      "file": "app.659a089d50b6.js",
+      "hash": "659a089d50b6",
       "type": "js"
     },
     "styles": {
-      "file": "styles.4ee3003d0c61.css",
-      "hash": "4ee3003d0c61",
+      "file": "styles.834e0fdfbdd5.css",
+      "hash": "834e0fdfbdd5",
       "type": "css"
-    }
+    },
+    "chunks": [
+      {
+        "file": "chunk-account-store-YGND5NJO.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-achievement-runtime-FLBHTUKT.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-achievement-ui-BXKM735E.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-advanced-card-rules-controller-N5M4U27T.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-auth-controller-F3KTUYZG.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-autonomy-runtime-WQF67YBW.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-browser-analytics-6TGG6NBE.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-browser-entry-4ZZCL4VN.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-3X52OURH.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-4TQT2SU7.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-572RKULT.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-5SRELWZH.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-6BCRE7Q2.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-6LJOCKSK.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-ADZVJ5OC.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-AL7CGOVD.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-AYKJ7LII.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-B4ETQVEV.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-BEER2LR4.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-BLPMTUIE.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-DIWKH3U5.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-GHHCMB5M.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-IMCT4ZEQ.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-JURF65AW.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-LTMYJF64.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-NLRD5THF.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-OABQQAKB.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-SCHTEBVY.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-SOZ76MXY.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-TB45ROLV.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-UHBLBPMZ.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-UISMPKH5.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-VNJCWMAF.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-WLUADAQ3.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-data-loader-GP5TIUAY.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-match-server-config-HEDF7JVV.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-migration-controller-MIZOL4LV.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-network-protocol-client-DZHI3U5Z.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-persistence-GCUI5JI2.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-play-app-6E3BQHQA.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-profile-data-UUL7JH54.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-puzzle-app-FNRNJ7KU.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-rank-anatomy-workspace-UXW365NQ.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-ranking-system-overlay-Y62EKZJP.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-relationships-data-5V6K3MRI.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-replay-frames-Z3C7HQVS.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-replay-library-DRNOEHGS.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-save-integrity-T65XPCYF.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-state-ZMCNBLXT.js",
+        "type": "js"
+      }
+    ]
   }
 }

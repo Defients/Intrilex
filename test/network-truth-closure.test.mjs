@@ -104,9 +104,9 @@ test('P0.1: spectator action submission is rejected', async () => {
   const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
 
   try {
-    // Create a match
+    // Create a match (casual mode — private matches reject spectators per IRX-M19)
     const ws1 = await connectWs(port);
-    sendMsg(ws1, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
+    sendMsg(ws1, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority', queueId: 'casual' } });
     const created = await waitForMessage(ws1);
     const { matchId, participantToken } = created.payload;
 

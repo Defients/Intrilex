@@ -50,14 +50,23 @@ class InMemoryOutboxStorage {
     this._jobs = new Map();
   }
 
+  /** @param {TerminalJob} job */
   put(job) {
     this._jobs.set(job.jobId, { ...job });
   }
 
+  /**
+   * @param {string} jobId
+   * @returns {TerminalJob|null}
+   */
   get(jobId) {
     return this._jobs.get(jobId) ?? null;
   }
 
+  /**
+   * @param {string} jobId
+   * @param {Partial<TerminalJob>} updates
+   */
   update(jobId, updates) {
     const job = this._jobs.get(jobId);
     if (job) {
@@ -65,6 +74,7 @@ class InMemoryOutboxStorage {
     }
   }
 
+  /** @returns {TerminalJob[]} */
   listPending() {
     const now = Date.now();
     return [...this._jobs.values()].filter(
@@ -107,6 +117,7 @@ class SqliteOutboxStorage {
     `);
   }
 
+  /** @param {TerminalJob} job */
   put(job) {
     this._db.prepare(
       `INSERT OR REPLACE INTO terminal_outbox (jobId, matchId, jobType, status, payload, attempts, maxAttempts, nextRetryAt, createdAt, updatedAt, lastError)
@@ -118,12 +129,20 @@ class SqliteOutboxStorage {
     );
   }
 
+  /**
+   * @param {string} jobId
+   * @returns {TerminalJob|null}
+   */
   get(jobId) {
     const row = this._db.prepare('SELECT * FROM terminal_outbox WHERE jobId = ?').get(jobId);
     if (!row) return null;
     return { ...row, payload: JSON.parse(row.payload) };
   }
 
+  /**
+   * @param {string} jobId
+   * @param {Partial<TerminalJob>} updates
+   */
   update(jobId, updates) {
     const job = this.get(jobId);
     if (!job) return;
@@ -133,6 +152,7 @@ class SqliteOutboxStorage {
     ).run(merged.status, merged.attempts, merged.nextRetryAt, merged.updatedAt, merged.lastError ?? null, jobId);
   }
 
+  /** @returns {TerminalJob[]} */
   listPending() {
     const now = Date.now();
     const rows = this._db.prepare(
@@ -141,6 +161,7 @@ class SqliteOutboxStorage {
     return rows.map(r => ({ ...r, payload: JSON.parse(r.payload) }));
   }
 
+  /** @returns {TerminalJob[]} */
   listAll() {
     const rows = this._db.prepare('SELECT * FROM terminal_outbox').all();
     return rows.map(r => ({ ...r, payload: JSON.parse(r.payload) }));
@@ -244,6 +265,44 @@ export class TerminalOutbox {
   }
 
   /**
+   * Enqueue an achievement progress persistence job.
+   * Idempotency key: matchId:achprog:accountId (per-account per-match).
+   * @param {Array} progress - Achievement progress records
+   * @param {string} matchId
+   */
+  enqueueAchievementProgress(progress, matchId) {
+    if (!progress || progress.length === 0) return;
+    const byAccount = new Map();
+    for (const p of progress) {
+      const key = `${p.accountId}`;
+      if (!byAccount.has(key)) byAccount.set(key, []);
+      byAccount.get(key).push(p);
+    }
+    for (const [accountId, accountProgress] of byAccount) {
+      const jobId = `achprog:${matchId}:${accountId}`;
+      const existing = this._storage.get(jobId);
+      if (existing && (existing.status === 'completed' || existing.status === 'in_progress')) {
+        continue;
+      }
+      const job = {
+        jobId,
+        matchId,
+        jobType: 'achievement_progress',
+        status: 'pending',
+        payload: accountProgress,
+        attempts: 0,
+        maxAttempts: DEFAULT_MAX_ATTEMPTS,
+        nextRetryAt: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        lastError: null,
+      };
+      this._storage.put(job);
+      this._log('outboxEnqueued', { jobId, matchId, jobType: 'achievement_progress', count: accountProgress.length });
+    }
+  }
+
+  /**
    * Start the drain loop — processes pending jobs with bounded backoff.
    * @param {number} [intervalMs=2000] - Drain check interval
    */
@@ -292,6 +351,8 @@ export class TerminalOutbox {
         await this._processResultJob(job);
       } else if (job.jobType === 'achievements') {
         await this._processAchievementsJob(job);
+      } else if (job.jobType === 'achievement_progress') {
+        await this._processAchievementProgressJob(job);
       }
       // Success — mark completed
       this._storage.update(job.jobId, { status: 'completed', lastError: null });
@@ -345,6 +406,18 @@ export class TerminalOutbox {
     const result = await this._persistor.persistAchievementUnlocks(unlocks);
     if (!result.success) {
       throw new Error(`Achievement persist failed: ${result.error ?? 'unknown'}`);
+    }
+  }
+
+  /**
+   * Process an achievement progress job — persist progress updates.
+   * @param {TerminalJob} job
+   */
+  async _processAchievementProgressJob(job) {
+    const progress = job.payload;
+    const result = await this._persistor.persistAchievementProgress(progress);
+    if (!result.success) {
+      throw new Error(`Achievement progress persist failed: ${result.error ?? 'unknown'}`);
     }
   }
 

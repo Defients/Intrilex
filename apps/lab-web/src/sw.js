@@ -8,6 +8,13 @@
 // v0.24.2: CACHE_VERSION is now derived from the build identity in
 // BUILD_INFO.json, not manually maintained. This prevents cache-version
 // drift when the product version is bumped.
+//
+// v0.27.1: Non-hashed .js and .css files now use networkFirst instead of
+// staleWhileRevalidate. This prevents a stale SW from serving old cached
+// raw source files (e.g., app.js, workspaces/*.js) that contain bare
+// @intrilex/* imports the browser cannot resolve. Hashed assets
+// (app.[hash].js, styles.[hash].css) remain cache-first (immutable).
+// BUILD_SW_STAMP is injected by build.mjs to force SW re-installation.
 // ═══════════════════════════════════════════════════════════════
 
 // Fallback version if BUILD_INFO.json is not yet fetched.
@@ -113,17 +120,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Non-hashed .js and .css files — network-first to prevent stale SW
+  // from serving old cached raw source files with bare @intrilex/* imports.
+  // (Hashed assets were already handled above as cache-first/immutable.)
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
   // Engine modules, data files, card art — cache-first with background refresh
   if (
     url.pathname.startsWith('/engine/') ||
     url.pathname.startsWith('/data/') ||
     url.pathname.startsWith('/assets/') ||
     url.pathname.startsWith('/hybrix/') ||
-    url.pathname.startsWith('/play/') ||
-    url.pathname.startsWith('/css/') ||
     url.pathname.endsWith('.json') ||
-    url.pathname.endsWith('.js') ||
-    url.pathname.endsWith('.css') ||
     url.pathname.endsWith('.webp') ||
     url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.svg')

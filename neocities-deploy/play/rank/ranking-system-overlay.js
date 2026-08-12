@@ -41,23 +41,23 @@ import {
   isApexTier,
   tierHasDivisions,
   progressInTier,
-} from '@intrilex/account-domain/rank-tier';
+} from "../../account-domain/rank-tier.mjs";
 import {
   DEFAULT_RATING,
   PROVISIONAL_THRESHOLD,
   computeRatingUpdate,
   initialRatingState,
-} from '@intrilex/account-domain/rating';
+} from "../../account-domain/rating.mjs";
 import {
   GLICKO2_TAU,
   DEFAULT_RATING_DEVIATION,
   DEFAULT_VOLATILITY,
-} from '@intrilex/account-domain/glicko2';
+} from "../../account-domain/glicko2.mjs";
 import {
   rankLabel,
   presentationFor,
-} from './rank-presentation.mjs';
-import { renderRankGlyph } from './rank-glyph.js';
+} from './rank-presentation.mjs?v=659a089d50b6';
+import { renderRankGlyph } from './rank-glyph.js?v=659a089d50b6';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmtIr = (n) => Math.round(n).toLocaleString('en-US');
@@ -586,7 +586,7 @@ function wireCta(container) {
  */
 async function loadPlayerRankState() {
   try {
-    const { fetchSelfProfile } = await import('../../play/profile/profile-data.js');
+    const { fetchSelfProfile } = await import('../../play/profile/profile-data.js?v=659a089d50b6');
     const result = await fetchSelfProfile();
     if (!result || !result.available || !result.profile) {
       return unavailableState();

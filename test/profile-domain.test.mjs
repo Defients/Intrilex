@@ -64,8 +64,9 @@ test('profile-domain: ShowcaseItemType enum is frozen with ACHIEVEMENT + BADGE',
 });
 
 test('profile-domain: DEFAULT_PRIVACY has correct defaults', () => {
-  assert.equal(DEFAULT_PRIVACY.matchHistory, Visibility.PUBLIC);
-  assert.equal(DEFAULT_PRIVACY.achievements, Visibility.PUBLIC);
+  // IRX-M20: All privacy defaults are PRIVATE — users must explicitly opt-in to public.
+  assert.equal(DEFAULT_PRIVACY.matchHistory, Visibility.PRIVATE);
+  assert.equal(DEFAULT_PRIVACY.achievements, Visibility.PRIVATE);
   assert.equal(DEFAULT_PRIVACY.onlineStatus, Visibility.PRIVATE);
   assert.equal(DEFAULT_PRIVACY.localStats, Visibility.PRIVATE);
   assert.ok(Object.isFrozen(DEFAULT_PRIVACY));

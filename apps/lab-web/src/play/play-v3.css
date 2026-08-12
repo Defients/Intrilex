@@ -1535,7 +1535,14 @@
 .network-opponent-status.waiting::before { background: var(--tcg-warning); animation: network-status-pulse 1.5s ease-in-out infinite; }
 .network-opponent-status.disconnected { color: var(--tcg-danger, #ef4444); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); }
 .network-opponent-status.disconnected::before { background: var(--tcg-danger, #ef4444); }
+.network-opponent-status.ready { color: var(--tcg-accent); background: rgba(90, 215, 232, 0.1); border: 1px solid rgba(90, 215, 232, 0.25); }
+.network-opponent-status.ready::before { background: var(--tcg-accent); box-shadow: 0 0 8px var(--tcg-accent); }
 .network-waiting-actions { display: flex; gap: var(--tcg-space-3); justify-content: center; margin-bottom: var(--tcg-space-3); }
+
+/* ── Ready button ── */
+.network-ready-btn { min-width: 180px; font-size: 1.05rem; font-weight: 700; padding: var(--tcg-space-3) var(--tcg-space-5); transition: all 0.2s ease; }
+.network-ready-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(90, 215, 232, 0.3); }
+.network-ready-btn.ready { background: linear-gradient(135deg, rgba(90, 215, 232, 0.15), rgba(168, 85, 247, 0.1)); border-color: rgba(90, 215, 232, 0.4); color: var(--tcg-accent); }
 .network-match-id { font-size: 0.72rem; color: var(--tcg-text-muted); font-family: var(--tcg-font-mono); padding: 4px 10px; background: rgba(255, 255, 255, 0.03); border-radius: var(--tcg-radius-sm); display: inline-block; }
 .network-joined-seat { font-size: 1rem; margin: 0 0 var(--tcg-space-3); }
 .network-joined-seat strong { color: var(--tcg-accent); }
@@ -1577,9 +1584,36 @@
 /* ── Matchmaking queue waiting ── */
 .network-queue-waiting { max-width: 480px; margin: 0 auto; padding: var(--tcg-space-6) var(--tcg-space-4); text-align: center; }
 .network-queue-waiting h1 { font-size: 1.6rem; margin: 0 0 var(--tcg-space-5); }
-.network-queue-spinner { margin: 0 auto var(--tcg-space-5); width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
+.network-queue-spinner { margin: 0 auto var(--tcg-space-4); width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
 .network-queue-spinner-icon { font-size: 2.5rem; animation: queue-spin 2s linear infinite; }
 @keyframes queue-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ── Queue waiting clock ── */
+.network-queue-clock {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  margin: 0 auto var(--tcg-space-4);
+  padding: var(--tcg-space-3) var(--tcg-space-5);
+  background: linear-gradient(135deg, rgba(90, 215, 232, 0.06), rgba(168, 85, 247, 0.06));
+  border: 1px solid rgba(90, 215, 232, 0.18);
+  border-radius: var(--tcg-radius-lg);
+  width: fit-content;
+}
+.network-queue-clock-label {
+  font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--tcg-text-muted);
+}
+.network-queue-clock-time {
+  font-family: var(--tcg-font-mono); font-size: 2rem; font-weight: 700;
+  font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: 0.02em;
+  color: var(--tcg-accent);
+  text-shadow: 0 0 20px rgba(90, 215, 232, 0.35);
+  animation: queue-clock-pulse 2s ease-in-out infinite;
+}
+@keyframes queue-clock-pulse {
+  0%, 100% { text-shadow: 0 0 20px rgba(90, 215, 232, 0.35); }
+  50% { text-shadow: 0 0 28px rgba(90, 215, 232, 0.55); }
+}
+
 .network-queue-info { padding: var(--tcg-space-4); background: var(--tcg-bg-panel); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(90, 215, 232, 0.2); border-radius: var(--tcg-radius-lg); margin-bottom: var(--tcg-space-4); }
 .network-queue-position { font-size: 1rem; margin: 0 0 var(--tcg-space-2); }
 .network-queue-position strong { color: var(--tcg-accent); font-size: 1.3rem; }

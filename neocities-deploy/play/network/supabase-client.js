@@ -9,7 +9,7 @@
 // for local development.
 // ═══════════════════════════════════════════════════════════════
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '../../vendor/supabase-js.js?v=659a089d50b6';
 
 let _client = null;
 
@@ -43,7 +43,7 @@ function readConfig() {
  * Get or create the singleton Supabase browser client.
  * Uses the publishable (anon) key — never the service role key.
  *
- * @returns {import('@supabase/supabase-js').SupabaseClient | null}
+ * @returns {import("../../vendor/supabase-js.js").SupabaseClient | null}
  *   Returns null when Supabase is not configured (offline/local-only mode).
  */
 export function getSupabaseClient() {

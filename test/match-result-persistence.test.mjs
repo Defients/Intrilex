@@ -244,7 +244,8 @@ test('builder: builds correct record for completed match with two accounts', asy
   match.winner = 'P1';
 
   const persistor = new FakeMatchResultPersistor();
-  const record = await buildMatchResultRecord({ match, persistor, queueId: 'casual' });
+  // IRX-H09: Rating updates only for ranked matches — use 'ranked' here
+  const record = await buildMatchResultRecord({ match, persistor, queueId: 'ranked', seasonId: 'season-1' });
 
   assert.ok(record);
   assert.equal(record.matchId, match.matchId);
@@ -297,10 +298,11 @@ test('builder: uses persistor to fetch current rating state', async () => {
 
   const persistor = new FakeMatchResultPersistor();
   // Pre-seed ratings so the builder fetches them
-  persistor.seedRating(ACC_A, 'casual', 1500, 20);
-  persistor.seedRating(ACC_B, 'casual', 1000, 20);
+  // IRX-H09: Rating updates only for ranked — seed with 'ranked' queue
+  persistor.seedRating(ACC_A, 'ranked', 1500, 20);
+  persistor.seedRating(ACC_B, 'ranked', 1000, 20);
 
-  const record = await buildMatchResultRecord({ match, persistor, queueId: 'casual' });
+  const record = await buildMatchResultRecord({ match, persistor, queueId: 'ranked', seasonId: 'season-1' });
 
   assert.ok(record);
   const p1 = record.participants.find(p => p.seat === 'P1');
@@ -384,8 +386,13 @@ test('server: health endpoint reports persistor type', async () => {
   try {
     const resp = await fetch(`http://127.0.0.1:${port}/health`);
     const health = await resp.json();
-    assert.ok(health.persistence);
-    assert.equal(health.persistence.persistorType, 'FakeMatchResultPersistor');
+    // IRX-M02: Public health endpoint no longer exposes persistorType
+    // (internal implementation detail). Verify sanitized metrics instead.
+    assert.ok(health.uptime >= 0, 'health endpoint reports uptime');
+    assert.ok(typeof health.activeMatches === 'number', 'health endpoint reports activeMatches');
+    assert.ok(typeof health.activeConnections === 'number', 'health endpoint reports activeConnections');
+    assert.ok(!health.persistence, 'public health endpoint must NOT expose persistence internals');
+    assert.ok(!health.events, 'public health endpoint must NOT expose internal event counters');
   } finally {
     await server.close();
   }

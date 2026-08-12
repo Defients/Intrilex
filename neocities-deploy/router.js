@@ -2,7 +2,7 @@
 // router.js — Workspace definitions, routing, navigation rendering
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from './state.js';
+import { esc } from './state.js?v=659a089d50b6';
 
 export const WORKSPACES = [
   ['/watch','◈','Watch','Match theatre'],
@@ -50,7 +50,7 @@ export const SUBTITLES = {
 
 export const LEGAL_MODES = new Set(['/privacy', '/terms']);
 
-export const LANDING_MODES = new Set(['/', '/play', '/play/new', '/play/match', '/play/replays', '/rules', '/privacy', '/terms', '/auth', '/players']);
+export const LANDING_MODES = new Set(['/', '/play', '/play/new', '/play/match', '/play/replays', '/rules', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles']);
 
 export const isPlayRoute = (r) => r === '/play' || r.startsWith('/play/');
 

@@ -1,5 +1,76 @@
 # Changelog
 
+## v0.27.2 — Homepage Revamp: Zero-Overflow Layout & Visual Polish
+
+### Summary
+
+Complete redesign of the Intrilex landing page for a 1920×1080 viewport at
+100% zoom with zero vertical scrollbar. The page now fits entirely within the
+viewport height with no overflow. Every surface, interaction, and motion cue
+has been elevated to feel deliberate and high-end.
+
+### Layout
+
+- **Viewport-locked shell** — `.landing-app` locked to `100dvh` with
+  `overflow:hidden`. No vertical scrollbar at 1920×1080.
+- **Two-column content grid** — play panel (dominant left) + secondary rail
+  (right), vertically centered.
+- **Rail reorganized into 2-column card grid** — What's New | Rules, Ranking
+  System (full width), Players | Leaderboard, Official Forums (full width).
+- **CONTINUE DUEL moved to header** — compact pill button in the topbar with
+  contextual metadata (turn + score), collapses when no save exists.
+- **Hero card sized to content** — no longer stretches to fill the viewport;
+  scaled to 125% natural height for visual dominance over the rail.
+
+### Visual Polish
+
+- **Crest softened** — opacity reduced 25%, mask shifted to dim upper region
+  while preserving the bottom taper. No longer competes with PLAY NOW.
+- **Rail card differentiation** — Rules + Ranking System are strongest
+  secondary destinations (full accent, larger text); Players + Leaderboard
+  are explicitly paired (shared violet); What's New + Forums have reduced
+  prominence (muted, smaller, slight opacity reduction).
+- **Mode selector glow calmed** — selected state uses muted cyan instead of
+  bright cyan, reserving the most luminous treatment for the CTA. Clear
+  choose → commit visual sequence.
+- **Logo scale increased ~14%** — brand establishes itself before PLAY NOW
+  takes over without becoming a giant masthead.
+- **Cyan/violet color language unified** — What's New gold accent removed,
+  play panel top hairline switched from amber to violet tint.
+- **Footer contrast increased** — muted-bright text, stronger background.
+- **Rail text brightened** — body text upgraded from `--muted` to
+  `--muted-bright` for legibility at scale.
+
+### Hero Copy
+
+- "exactly-when spending" → "perfectly timed commitment"
+- Removed redundant "Every decision matters." from tagline
+- Removed redundant "Choose your mode. Make every decision count." subline
+  (mode-specific sublines still appear on selection)
+
+### Reliability Fixes
+
+- **CSS animation fill-mode bug** — rail card entrance animation used `both`
+  fill-mode, retaining `transform:translateY(0)` and overriding `:hover`
+  transforms. Fixed to `backwards`.
+- **Document click listener leak** — `bindLandingEvents` accumulated
+  `document.addEventListener('click')` on every re-render. Fixed with
+  `AbortController` pattern.
+- **`loadContinueCard` race condition** — async import/listSaves could write
+  to a detached slot after navigation. Added `isConnected` guard.
+- **`showPreAlphaOverlay` timer** — could fire on wrong route after
+  navigation. Added `landingContainer.isConnected` guard.
+- **Safari compatibility** — added missing `-webkit-backdrop-filter` prefixes.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `apps/lab-web/src/css/landing-revamp.css` | New override layer: viewport lock, topbar, hero, play panel, rail grid, footer, animations, responsive guards |
+| `apps/lab-web/src/styles.css` | Import `landing-revamp.css` |
+| `apps/lab-web/src/app.js` | Continue slot moved to header, rail card reorder, `loadContinueCard` compact button, `bindLandingEvents` AbortController, race condition guards, hero copy updates |
+| `test/landing-page.test.mjs` | Updated rail order test, added regression tests for fill-mode, listener leak, race conditions, Safari prefixes |
+
 ## v0.27.1 — Pre-Deploy Polish & UX Consistency
 
 ### Summary

@@ -176,9 +176,17 @@ const audit = {
   //   - unaccounted === 0 (test arithmetic reconciles exactly)
   //   - all critical gates pass (including testAccountingReconciled)
   // v0.25: quickMode reports are never canonical (written to .quick.json)
+  // IRX-M29: Explicit scorePassed and criticalGatesPassed fields prevent the
+  // apparent contradiction where score meets threshold but status is FAIL.
+  // A report can have scorePassed=true but criticalGatesPassed=false → status=FAIL.
   status: (totalFail === 0 && score >= threshold && unaccounted === 0 && Object.values(criticalGates).every(v => v === true)) ? 'PASS' : 'FAIL',
   score,
   threshold,
+  // IRX-M29: Explicit sub-status fields for non-contradictory semantics
+  scorePassed: score >= threshold,
+  criticalGatesPassed: Object.values(criticalGates).every(v => v === true),
+  noTestFailures: totalFail === 0,
+  testAccountingReconciled: unaccounted === 0,
   generatedAt: new Date().toISOString(),
   generatedBy: `generate-self-audit.mjs v3.1.0 (package v${rootPkg.version})`,
   // v0.25: Provenance for freshness verification — the canonical audit must

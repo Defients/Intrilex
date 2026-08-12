@@ -321,10 +321,20 @@ test('p4: app.js installs global error boundary', async () => {
 
 test('p4: app.js imports and calls diagnoseConfig on bootstrap', async () => {
   const src = await readSrc('app.js');
-  assert.match(src, /from\s+['"]\.\/play\/network\/match-server-config\.js['"]/, 'app.js must import from match-server-config.js');
-  assert.match(src, /diagnoseConfig/, 'app.js must import diagnoseConfig');
-  // Must be called at module load time (not inside a function/route handler)
-  assert.match(src, /\ndiagnoseConfig\(\)/, 'app.js must call diagnoseConfig() at module load time');
+  // Accept both static import and lazy-loaded dynamic import patterns
+  // (IRX-M32: match-server-config was moved to lazy loading to reduce initial bundle)
+  assert.ok(
+    /from\s+['"]\.\/play\/network\/match-server-config\.js['"]/.test(src) ||
+    /import\s*\(\s*['"]\.\/play\/network\/match-server-config\.js['"]\s*\)/.test(src),
+    'app.js must import from match-server-config.js (static or dynamic)'
+  );
+  assert.match(src, /diagnoseConfig/, 'app.js must reference diagnoseConfig');
+  // Must be called at module load time — either directly or via lazy-load + .then()
+  assert.ok(
+    /\ndiagnoseConfig\(\)/.test(src) ||
+    /\(\{[^}]*diagnoseConfig[^}]*\}\)\s*=>\s*diagnoseConfig\(\)/.test(src),
+    'app.js must call diagnoseConfig() at module load time (directly or via lazy-load)'
+  );
 });
 
 test('p4: app.js uses withErrorBoundary for play route', async () => {

@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5,user-scalable=yes">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#05080e">
+  <!-- IRX-M40: Frame-busting script — Neocities doesn't support _headers,
+       so X-Frame-Options/CSP frame-ancestors can't be set via HTTP headers.
+       This JS fallback prevents clickjacking by breaking out of iframes. -->
+  <script>(function(){if(window.top!==window.self){try{window.top.location=window.self.location;}catch(e){document.body.style.display='none';}}}());</script>
 
   <!-- Primary SEO — homepage identity (the competitive playing card game) -->
   <title>Intrilex — Competitive Playing Card Game</title>
@@ -58,7 +62,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=Dancing+Script:wght@500;600;700&family=Great+Vibes&display=swap">
-  <link rel="stylesheet" href="styles.4ee3003d0c61.css">
+  <link rel="stylesheet" href="styles.834e0fdfbdd5.css">
 
   <!-- Structured data (JSON-LD is not executed as script, so CSP script-src does not apply) -->
   <script type="application/ld+json">
@@ -181,7 +185,7 @@
     </div>
     <div id="advanced-card-rules-content"></div>
   </dialog>
-  <script type="module" src="app.c32912db35ca.js"></script>
-  <script src="sw-register.js"></script>
+  <script type="module" src="app.659a089d50b6.js"></script>
+  <script src="sw-kill.js"></script>
 </body>
 </html>

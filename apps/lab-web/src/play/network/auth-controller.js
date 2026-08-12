@@ -37,6 +37,8 @@ let _guestIdentity = null;      // Saved guest UUID for migration (read from loc
 let _initialized = false;       // Guard: initAuth runs once
 let _authUnsubscribe = null;    // Unsubscribe from Supabase onAuthStateChange
 let _authEventSeq = 0;          // Monotonic sequence to reject stale fetchProfile results
+let _signingOut = false;        // IRX-H28: Guard against auth callback race after signOut
+let _tokenRefreshCallback = null; // IRX-H27: Called when access token is refreshed
 const _subscribers = new Set();
 
 /**
@@ -81,12 +83,29 @@ export async function initAuth() {
         }
       }
       setState(isAnonymous ? 'ANONYMOUS' : 'AUTHENTICATED');
+      // IRX-H36: After OAuth callback, navigate to the saved redirect path
+      if (!isAnonymous) {
+        try {
+          const savedRedirect = sessionStorage.getItem('intrilex:oauth-redirect');
+          if (savedRedirect) {
+            sessionStorage.removeItem('intrilex:oauth-redirect');
+            // Defer navigation to allow app to initialize first
+            setTimeout(() => { if (location.hash !== '#' + savedRedirect) location.hash = '#' + savedRedirect; }, 100);
+          }
+        } catch { /* non-fatal */ }
+      }
     } else {
       setState('SIGNED_OUT');
     }
 
     // Subscribe to future changes
     const { data: subscription } = client.auth.onAuthStateChange(async (_event, newSession) => {
+      // IRX-H28: Guard against auth callback race resurrecting a signed-out profile.
+      // If the user explicitly signed out, ignore any pending OAuth callbacks
+      // that arrive within the sign-out grace window.
+      if (_signingOut) {
+        return;
+      }
       const wasAnonymous = _state === 'ANONYMOUS';
       _session = newSession;
       if (!newSession) {
@@ -103,6 +122,11 @@ export async function initAuth() {
         _profile = profile;
       }
       const nowAuthenticated = !newSession.user?.is_anonymous;
+      // IRX-H27: Notify registered callback when access token changes (refresh).
+      // This keeps live network match sessions authenticated with the latest token.
+      if (_tokenRefreshCallback && newSession?.access_token) {
+        try { _tokenRefreshCallback(newSession.access_token); } catch { /* ignore callback errors */ }
+      }
       // Detect ANONYMOUS→AUTHENTICATED transition (guest linked Discord)
       if (wasAnonymous && nowAuthenticated) {
         _guestIdentity = _readGuestIdentity();
@@ -187,6 +211,12 @@ async function signInWithOAuthProvider(provider, redirectPath) {
     // and let the app consume the token on the homepage.
     options: { redirectTo: window.location.origin },
   });
+  // IRX-H36: Preserve the requested redirect path so the app can navigate
+  // to it after the OAuth callback completes. We can't put it in the OAuth
+  // redirect URL (hash-routing conflict), so we stash it in sessionStorage.
+  if (!error && redirectPath && redirectPath !== '/') {
+    try { sessionStorage.setItem('intrilex:oauth-redirect', redirectPath); } catch { /* non-fatal */ }
+  }
   return !error;
 }
 
@@ -197,12 +227,18 @@ async function signInWithOAuthProvider(provider, redirectPath) {
 export async function signOut() {
   const client = getSupabaseClient();
   if (!client) return false;
+  // IRX-H28: Set guard flag to prevent auth callback race from resurrecting
+  // the signed-out profile. The flag is cleared after a short grace period.
+  _signingOut = true;
   const { error } = await client.auth.signOut();
   if (!error) {
     _session = null;
     _profile = null;
     setState('SIGNED_OUT');
   }
+  // Clear the guard after 3 seconds — enough time for pending OAuth callbacks
+  // to be rejected, but short enough that a legitimate re-login works.
+  setTimeout(() => { _signingOut = false; }, 3000);
   return !error;
 }
 
@@ -213,6 +249,16 @@ export async function signOut() {
  */
 export function getAccessToken() {
   return _session?.access_token ?? null;
+}
+
+/**
+ * IRX-H27: Register a callback to be notified when the access token is refreshed.
+ * The network session uses this to send AUTH_REFRESH to the match server
+ * so live matches stay authenticated when Supabase refreshes the token.
+ * @param {function(string): void} callback - Called with the new access token
+ */
+export function onTokenRefresh(callback) {
+  _tokenRefreshCallback = callback;
 }
 
 /**
@@ -283,6 +329,17 @@ export function subscribe(callback) {
 function setState(newState) {
   if (_state === newState) return;
   _state = newState;
+  // IRX-H30: Switch achievement runtime to account-scoped storage on auth changes.
+  // AUTHENTICATED → use the user's accountId. ANONYMOUS/SIGNED_OUT → use guest/legacy.
+  try {
+    const accountId = (newState === 'AUTHENTICATED' && _session?.user?.id) ? _session.user.id : null;
+    import('../achievements/achievement-runtime.js').then(({ getAchievementRuntime }) => {
+      const runtime = getAchievementRuntime();
+      if (runtime._initialized) {
+        runtime.switchAccount(accountId).catch(() => { /* non-fatal */ });
+      }
+    }).catch(() => { /* module load failure — non-fatal */ });
+  } catch { /* non-fatal */ }
   for (const cb of _subscribers) {
     try { cb(_state, _profile); } catch { /* subscriber error — ignore */ }
   }

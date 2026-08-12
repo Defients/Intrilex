@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5,user-scalable=yes">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#05080e">
+  <!-- IRX-M40: Frame-busting script — Neocities doesn't support _headers,
+       so X-Frame-Options/CSP frame-ancestors can't be set via HTTP headers.
+       This JS fallback prevents clickjacking by breaking out of iframes. -->
+  <script>(function(){if(window.top!==window.self){try{window.top.location=window.self.location;}catch(e){document.body.style.display='none';}}}());</script>
 
   <!-- Primary SEO — homepage identity (the competitive playing card game) -->
   <title>Intrilex — Competitive Playing Card Game</title>
@@ -181,6 +185,6 @@
     <div id="advanced-card-rules-content"></div>
   </dialog>
   <script type="module" src="app.js"></script>
-  <script src="sw-register.js"></script>
+  <script src="sw-kill.js"></script>
 </body>
 </html>

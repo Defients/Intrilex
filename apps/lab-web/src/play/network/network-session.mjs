@@ -229,8 +229,8 @@ export class NetworkPlaySession {
         try {
           const msg = JSON.parse(event.data);
           this._handleMessage(msg);
-        } catch {
-          // Ignore malformed server messages
+        } catch (err) {
+          console.warn('[NetworkPlaySession] Failed to parse server message:', err?.message ?? err);
           if (this.onError) this.onError({ code: 'MALFORMED_JSON', message: 'Received malformed JSON from server' });
         }
       };
@@ -460,10 +460,16 @@ export class NetworkPlaySession {
   }
 
   async leave() {
-    this._clearReconnectInfo();
+    // IRX-H26: Notify the server BEFORE clearing local reconnect state.
+    // If the server notification fails, we still clear local state (so the
+    // user can leave the UI), but the server's forfeit timeout will handle
+    // the orphaned participant. Previously, clearing local state first meant
+    // the client couldn't retry the leave notification if the server was
+    // temporarily unreachable.
     try {
       await this._request(leaveMatch(this.matchId, this.participantToken));
-    } catch { /* ignore — server may be unreachable */ }
+    } catch { /* ignore — server may be unreachable; forfeit timeout handles it */ }
+    this._clearReconnectInfo();
     this.disconnect();
   }
 
@@ -479,6 +485,11 @@ export class NetworkPlaySession {
   async sendChatMessage(text) {
     if (!this.matchId || !this.participantToken) return false;
     if (typeof text !== 'string' || text.length === 0 || text.length > 200) return false;
+    // IRX-H37: Require an OPEN socket before sending or showing optimistic echo.
+    // Previously, if the socket was not open, the message was never sent but
+    // was still added as an optimistic local echo and the function returned true,
+    // making unsent messages appear as sent.
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return false;
     try {
       // NET-UX-01: Generate a client-side message ID for exactly-once delivery.
       // The optimistic local echo uses this ID, and the server broadcast
@@ -486,11 +497,12 @@ export class NetworkPlaySession {
       const messageId = `c-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const timestamp = new Date().toISOString();
       const msg = sendChat(this.matchId, this.participantToken, text);
+      // IRX-H37: Include clientMessageId in the payload so the server can
+      // ACK/deduplicate properly instead of relying on text+time matching.
+      msg.payload.clientMessageId = messageId;
       // Chat is fire-and-forget — the server broadcasts CHAT_MESSAGE back.
       // We don't wait for a response (there is no ACK for SEND_CHAT).
-      if (this._ws && this._ws.readyState === WebSocket.OPEN) {
-        this._ws.send(JSON.stringify(msg));
-      }
+      this._ws.send(JSON.stringify(msg));
       // Add to local chat messages immediately (optimistic) with messageId
       this.chatMessages = this.chatMessages || [];
       // NET-UX-01: Track seen message IDs for exactly-once display
@@ -508,7 +520,8 @@ export class NetworkPlaySession {
       });
       this._notifyStateChange();
       return true;
-    } catch {
+    } catch (err) {
+      console.warn('[NetworkPlaySession] sendChatMessage failed:', err?.message ?? err);
       return false;
     }
   }
@@ -527,12 +540,16 @@ export class NetworkPlaySession {
     try {
       this.chatHidden = hidden;
       const msg = chatVisibility(this.matchId, this.participantToken, hidden);
+      // IRX-H37: Return false if not connected — don't claim success when unsent.
       if (this._ws && this._ws.readyState === WebSocket.OPEN) {
         this._ws.send(JSON.stringify(msg));
+        this._notifyStateChange();
+        return true;
       }
       this._notifyStateChange();
-      return true;
-    } catch {
+      return false;
+    } catch (err) {
+      console.warn('[NetworkPlaySession] sendChatVisibility failed:', err?.message ?? err);
       return false;
     }
   }
@@ -845,6 +862,10 @@ export class NetworkPlaySession {
           this.currentView.match.winner = msg.payload?.winner ?? null;
           this.currentView.match.terminationReason = msg.payload?.reason ?? null;
         }
+        // IRX-H23: Extract rating data from MATCH_ENDED payload
+        if (msg.payload?.ratingData && Array.isArray(msg.payload.ratingData)) {
+          this.rankResult = msg.payload.ratingData;
+        }
         this._clearReconnectInfo();
         this._notifyStateChange();
         break;
@@ -1017,6 +1038,8 @@ export class NetworkPlaySession {
     }
     if (view.opponent) {
       this.opponentConnectionState = view.opponent.connectionState;
+      // Track opponent's ready status for the waiting room UI
+      this.opponentReady = view.opponent.ready ?? false;
       // Store opponent's public profile for display
       if (view.opponent.publicProfile) {
         this.opponentProfile = view.opponent.publicProfile;
@@ -1046,7 +1069,13 @@ export class NetworkPlaySession {
       // Match exists but hasn't started — show the waiting room so players
       // can mark ready. This covers queue-matched sessions that reconnect
       // via RESUME_MATCH before either player has sent READY.
-      this._transition(NetworkSessionState.IN_LOBBY);
+      // If the local participant is already marked ready, transition to
+      // READY so the UI shows the correct state (ready button disabled).
+      if (view.ready) {
+        this._transition(NetworkSessionState.READY);
+      } else {
+        this._transition(NetworkSessionState.IN_LOBBY);
+      }
     }
   }
 

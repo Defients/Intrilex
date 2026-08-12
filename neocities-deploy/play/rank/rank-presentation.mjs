@@ -16,7 +16,7 @@
 // are resolved by resolveGlyphPath() so there is ONE filename mapping.
 // ═══════════════════════════════════════════════════════════════
 
-import { RankTier, Division, isApexTier, tierHasDivisions } from '@intrilex/account-domain/rank-tier';
+import { RankTier, Division, isApexTier, tierHasDivisions } from "../../account-domain/rank-tier.mjs";
 
 /**
  * Base URL for ranked glyph derivatives (served from /assets/ranked/glyphs).

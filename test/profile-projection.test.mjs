@@ -248,8 +248,9 @@ test('profile-projection: buildPublicProfile uses DEFAULT_PRIVACY when not speci
     achievements: BASE_ACHIEVEMENTS,
     showcase: BASE_SHOWCASE,
   });
-  assert.equal(p.privacy.achievementsVisible, true);
-  assert.equal(p.privacy.matchHistoryVisible, true);
+  // IRX-M20: DEFAULT_PRIVACY is now all PRIVATE
+  assert.equal(p.privacy.achievementsVisible, false);
+  assert.equal(p.privacy.matchHistoryVisible, false);
 });
 
 test('profile-projection: buildPublicProfile handles null ranked', () => {

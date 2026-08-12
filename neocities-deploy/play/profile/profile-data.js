@@ -14,7 +14,7 @@
 // user. Public profile RPC applies privacy filtering server-side.
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js';
+import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=659a089d50b6';
 import {
   Visibility,
   ShowcaseItemType,
@@ -38,7 +38,7 @@ import {
   BADGE_CATALOG,
   MAX_FEATURED_ACHIEVEMENTS,
   MAX_FEATURED_BADGES,
-} from '@intrilex/account-domain/profile-domain';
+} from "../../account-domain/profile-domain.mjs";
 
 /**
  * @typedef {import('@intrilex/account-domain/profile-domain').PublicPlayerProfile} PublicPlayerProfile

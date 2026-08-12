@@ -18,8 +18,8 @@
 // the UI can show a graceful state.
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js';
-import { getAuthState } from '../network/auth-controller.js';
+import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=659a089d50b6';
+import { getAuthState } from '../network/auth-controller.js?v=659a089d50b6';
 import {
   toRelationshipEntry,
   toRelationshipStatus,
@@ -27,7 +27,7 @@ import {
   DEFAULT_RELATIONSHIPS_LIMIT,
   MAX_RELATIONSHIPS_LIMIT,
   RelationshipKind,
-} from '@intrilex/account-domain/relationships';
+} from "../../account-domain/relationships.mjs";
 
 /**
  * @typedef {import('@intrilex/account-domain/relationships').RelationshipEntry} RelationshipEntry

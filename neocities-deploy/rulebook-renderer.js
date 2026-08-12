@@ -9,7 +9,7 @@
 
 const esc = (value = '') => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-import { RULES_VERSION } from './version.js';
+import { RULES_VERSION } from './version.js?v=659a089d50b6';
 
 // Inline formatting: bold, italic, inline code. Order matters — code first
 // so its contents are not formatted, then bold (longer **), then italic (*).

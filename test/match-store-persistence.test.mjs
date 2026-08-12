@@ -214,7 +214,11 @@ test('match-store: fromSnapshot reconstructs lobby match', () => {
   const p = restored.participants.get('P-A');
   assert.ok(p);
   assert.equal(p.playerId, 'P1');
-  assert.equal(p.token, token1);
+  // IRX-H15: Token is now stored as a hash, not plaintext.
+  // validateToken should still work with the original token.
+  assert.ok(p.tokenHash, 'tokenHash must be present');
+  assert.notEqual(p.tokenHash, token1, 'stored token must not be plaintext');
+  assert.ok(restored.validateToken('P-A', token1), 'validateToken must work with original token');
 });
 
 test('match-store: fromSnapshot reconstructs started match with engine state', () => {

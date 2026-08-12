@@ -83,6 +83,8 @@ export function isMatchServerConfigured() {
 /**
  * Validate that a WebSocket URL is safe for the current page context.
  * Prevents mixed-content violations (ws:// from an https:// page).
+ * IRX-H38: Restrict localStorage override to known-safe hosts to prevent
+ * JWT exfiltration to attacker-controlled servers.
  * @param {string} url
  * @returns {{ valid: boolean, reason?: string }}
  */
@@ -99,6 +101,25 @@ export function validateMatchServerUrl(url) {
       valid: false,
       reason: 'Insecure ws:// WebSocket from an HTTPS page is blocked by the browser (mixed content). Use wss:// instead.',
     };
+  }
+  // IRX-H38: Allowlist check for localStorage overrides.
+  // The build-time injected URL (window.__INTRILEX_CONFIG__) is trusted
+  // and not subject to this check. But a user-entered URL from localStorage
+  // must be restricted to known-safe hosts to prevent JWT exfiltration.
+  // Allowed: localhost, 127.0.0.1 (dev), and match.intrilex.cards (prod).
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+    const isOfficialProd = host === 'match.intrilex.cards';
+    if (!isLocalhost && !isOfficialProd) {
+      return {
+        valid: false,
+        reason: `Match server URL host "${host}" is not in the allowlist. Only localhost (dev) and match.intrilex.cards (production) are permitted.`,
+      };
+    }
+  } catch {
+    return { valid: false, reason: 'Invalid URL' };
   }
   return { valid: true };
 }

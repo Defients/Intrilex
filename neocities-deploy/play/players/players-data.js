@@ -16,7 +16,7 @@
 // a structured "unavailable" result so the UI can show a graceful state.
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js';
+import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=659a089d50b6';
 import {
   toDirectoryEntry,
   normalizeDirectorySearch,
@@ -24,7 +24,7 @@ import {
   validateDirectoryTierFilter,
   DEFAULT_DIRECTORY_LIMIT,
   MAX_DIRECTORY_LIMIT,
-} from '@intrilex/account-domain/directory';
+} from "../../account-domain/directory.mjs";
 
 /**
  * @typedef {import('@intrilex/account-domain/directory').DirectoryEntry} DirectoryEntry

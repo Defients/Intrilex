@@ -171,6 +171,7 @@ export function renderNetworkCreateWaiting(session, options = {}) {
   const inviteCode = session?.inviteCode ?? '';
   const matchId = session?.matchId ?? '';
   const opponentState = session?.opponentConnectionState;
+  const opponentReady = session?.opponentReady ?? false;
   // P1 (creator): null means the opponent hasn't joined yet — show "Waiting…"
   // This is intentionally different from renderNetworkJoinWaiting (P2/joiner),
   // where null is treated as CONNECTED because P1 must be connected for the
@@ -183,14 +184,16 @@ export function renderNetworkCreateWaiting(session, options = {}) {
   const opponentStatus = opponentDisconnected
     ? `<span class="network-opponent-status disconnected" data-testid="network-opponent-status">✕ Opponent disconnected</span>`
     : opponentConnected
-      ? `<span class="network-opponent-status connected" data-testid="network-opponent-status">● Opponent connected</span>`
+      ? opponentReady
+        ? `<span class="network-opponent-status ready" data-testid="network-opponent-status">✓ Opponent is ready</span>`
+        : `<span class="network-opponent-status connected" data-testid="network-opponent-status">● Opponent connected</span>`
       : `<span class="network-opponent-status waiting" data-testid="network-opponent-status">○ Waiting for opponent…</span>`;
 
   const readyButton = isReady
-    ? `<button class="primary-button" disabled data-testid="network-ready">✓ Ready</button>`
+    ? `<button class="primary-button network-ready-btn ready" disabled data-testid="network-ready"><span aria-hidden="true">✓</span> Ready</button>`
     : opponentConnected
-      ? `<button class="primary-button" data-testid="network-ready" data-action="network-ready">Mark Ready</button>`
-      : `<button class="primary-button" disabled data-testid="network-ready" aria-disabled="true">Mark Ready</button>`;
+      ? `<button class="primary-button network-ready-btn" data-testid="network-ready" data-action="network-ready">Mark Ready</button>`
+      : `<button class="primary-button network-ready-btn" disabled data-testid="network-ready" aria-disabled="true">Mark Ready</button>`;
 
   return `<div class="network-waiting" data-testid="network-waiting">
     <a class="play-hub-back" href="#/play/online" aria-label="Back to lobby">← Cancel</a>
@@ -265,6 +268,7 @@ export function renderNetworkJoinWaiting(session, options = {}) {
   const matchId = session?.matchId ?? '';
   const isReady = session?.status === NetworkSessionState.READY;
   const opponentState = session?.opponentConnectionState;
+  const opponentReady = session?.opponentReady ?? false;
   // P2 (joiner) — the opponent (P1/creator) must have been connected for the
   // join to succeed. Treat null (no status received yet) as CONNECTED rather
   // than "Waiting…", which is only meaningful for the creator (P1).
@@ -275,12 +279,14 @@ export function renderNetworkJoinWaiting(session, options = {}) {
   const opponentStatus = opponentDisconnected
     ? `<span class="network-opponent-status disconnected" data-testid="network-opponent-status">✕ Opponent disconnected</span>`
     : opponentConnected
-      ? `<span class="network-opponent-status connected" data-testid="network-opponent-status">● Opponent connected</span>`
+      ? opponentReady
+        ? `<span class="network-opponent-status ready" data-testid="network-opponent-status">✓ Opponent is ready</span>`
+        : `<span class="network-opponent-status connected" data-testid="network-opponent-status">● Opponent connected</span>`
       : `<span class="network-opponent-status waiting" data-testid="network-opponent-status">○ Waiting for opponent…</span>`;
 
   const readyButton = isReady
-    ? `<button class="primary-button" disabled data-testid="network-ready">✓ Ready</button>`
-    : `<button class="primary-button" data-testid="network-ready" data-action="network-ready">Mark Ready</button>`;
+    ? `<button class="primary-button network-ready-btn ready" disabled data-testid="network-ready"><span aria-hidden="true">✓</span> Ready</button>`
+    : `<button class="primary-button network-ready-btn" data-testid="network-ready" data-action="network-ready">Mark Ready</button>`;
 
   return `<div class="network-waiting" data-testid="network-join-waiting">
     <a class="play-hub-back" href="#/play/online" aria-label="Back to lobby">← Cancel</a>
@@ -427,6 +433,10 @@ export function renderNetworkQueueWaiting(options = {}) {
     <h1>Finding Match…</h1>
     <div class="network-queue-spinner" data-testid="network-queue-spinner" aria-label="Searching for opponent">
       <span class="network-queue-spinner-icon">🎯</span>
+    </div>
+    <div class="network-queue-clock" data-testid="network-queue-clock" aria-label="Time in queue">
+      <span class="network-queue-clock-label">In Queue</span>
+      <span class="network-queue-clock-time" data-queue-clock-time>0:00</span>
     </div>
     <div class="network-queue-info" data-testid="network-queue-info">
       <p class="network-queue-position" data-testid="network-queue-position">Position in queue: <strong>${position}</strong></p>

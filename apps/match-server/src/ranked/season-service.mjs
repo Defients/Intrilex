@@ -70,7 +70,9 @@ export class SeasonService {
    */
   async resolveActiveSeasonId(queueId = RANKED_QUEUE_ID) {
     const season = await this._provider.getActiveSeason(queueId);
-    return season?.seasonId ?? 'season-1';
+    // IRX-H07: Return null when no active season exists. The caller must
+    // handle this (downgrade ranked to casual, or abort). Never fabricate.
+    return season?.seasonId ?? null;
   }
 
   /**

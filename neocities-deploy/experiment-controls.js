@@ -2,11 +2,11 @@
 // experiment-controls.js — Experiment panel, campaign runner, global bindings
 // ═══════════════════════════════════════════════════════════════
 
-import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting } from './state.js';
-import { WORKSPACES, route, policyOptions } from './router.js';
-import { showIntegrity } from './integrity.js';
-import { RULES_VERSION, LAB_VERSION } from './version.js';
-import { populateDialogHeading } from './seo-metadata.js';
+import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting } from './state.js?v=659a089d50b6';
+import { WORKSPACES, route, policyOptions } from './router.js?v=659a089d50b6';
+import { showIntegrity } from './integrity.js?v=659a089d50b6';
+import { RULES_VERSION, LAB_VERSION } from './version.js?v=659a089d50b6';
+import { populateDialogHeading } from './seo-metadata.js?v=659a089d50b6';
 
 // ── Experiment panel ──────────────────────────────────────────────
 export function renderExperimentControls() {
@@ -50,21 +50,21 @@ export function updatePreflight() {
 
 // ── Global bindings ───────────────────────────────────────────────
 export function bindGlobal() {
-  window.addEventListener('hashchange', () => { import('./app.js').then(m => m.render()); });
+  window.addEventListener('hashchange', () => { import('./app.js?v=659a089d50b6').then(m => m.render()); });
   document.querySelector('#layout-preset').addEventListener('change', e => {
     state.layout = e.target.value;
     document.querySelector('.observatory-shell').dataset.preset = state.layout;
     persistSetting('layout', state.layout);
-    import('./app.js').then(m => m.render());
+    import('./app.js?v=659a089d50b6').then(m => m.render());
   });
   document.querySelector('#global-visibility').addEventListener('change', async e => {
     state.visibility = e.target.value;
     persistSetting('visibility', state.visibility);
     if (state.visibility !== 'public') {
-      const { loadAuthorized } = await import('./data-loader.js');
+      const { loadAuthorized } = await import('./data-loader.js?v=659a089d50b6');
       await loadAuthorized();
     }
-    import('./app.js').then(m => m.render());
+    import('./app.js?v=659a089d50b6').then(m => m.render());
   });
   document.querySelector('#integrity-button').addEventListener('click', showIntegrity);
   const palette = document.querySelector('#command-palette');
@@ -93,7 +93,7 @@ export function bindGlobal() {
     }
     if (e.key === ' ' && route() === '/watch' && !['INPUT', 'SELECT', 'BUTTON'].includes(document.activeElement.tagName)) {
       e.preventDefault();
-      import('./app.js').then(m => m.togglePlay());
+      import('./app.js?v=659a089d50b6').then(m => m.togglePlay());
     }
   });
   document.querySelector('#collapse-experiment').addEventListener('click', () => {
@@ -108,10 +108,10 @@ function renderCommandResults() {
     { label: 'Toggle reduced motion', detail: 'Accessibility', run: () => { state.reducedMotion = !state.reducedMotion; document.body.classList.toggle('reduced-motion', state.reducedMotion); persistSetting('reducedMotion', state.reducedMotion); } },
     { label: 'Toggle reduced sensory', detail: 'Accessibility', run: () => { state.reducedSensory = !state.reducedSensory; document.body.classList.toggle('reduced-sensory', state.reducedSensory); persistSetting('reducedSensory', state.reducedSensory); } },
     { label: 'Toggle FX', detail: 'Presentation', run: () => { state.fx = !state.fx; document.body.classList.toggle('fx-off', !state.fx); persistSetting('fx', state.fx); } },
-    { label: 'Show priority orchestration', detail: 'Developer evidence', run: () => { state.showOrchestration = !state.showOrchestration; import('./app.js').then(m => m.render()); } },
-    { label: 'Restart replay', detail: 'Identical seed / source replay', run: () => { import('./app.js').then(m => { m.stop(); state.frame = 0; m.render(); }); } },
-    { label: 'Extract analysis (JSON)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js').then(m => m.showExtract('json')); } },
-    { label: 'Extract analysis (Markdown)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js').then(m => m.showExtract('markdown')); } }
+    { label: 'Show priority orchestration', detail: 'Developer evidence', run: () => { state.showOrchestration = !state.showOrchestration; import('./app.js?v=659a089d50b6').then(m => m.render()); } },
+    { label: 'Restart replay', detail: 'Identical seed / source replay', run: () => { import('./app.js?v=659a089d50b6').then(m => { m.stop(); state.frame = 0; m.render(); }); } },
+    { label: 'Extract analysis (JSON)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js?v=659a089d50b6').then(m => m.showExtract('json')); } },
+    { label: 'Extract analysis (Markdown)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js?v=659a089d50b6').then(m => m.showExtract('markdown')); } }
   ].filter(item => !q || `${item.label} ${item.detail}`.toLowerCase().includes(q));
   const root = document.querySelector('#command-results');
   root.innerHTML = commands.map((item, i) => `<button type="button" class="command-result" data-command="${i}" role="option"><span>${esc(item.label)}</span><small>${esc(item.detail)}</small></button>`).join('') || '<div class="empty-state"><strong>No command found</strong>Try a workspace or accessibility setting.</div>';
@@ -181,7 +181,7 @@ async function runBrowserCampaign() {
             if (!state.observatory.mechanics?.length && summaries.length > 0) {
               console.warn('[campaign] Worker observatory has 0 mechanics — rebuilding on main thread from', summaries.length, 'summaries');
               try {
-                const { buildObservatoryAnalytics, campaignAggregate } = await import('./browser-analytics.js');
+                const { buildObservatoryAnalytics, campaignAggregate } = await import('./browser-analytics.js?v=659a089d50b6');
                 const semantic = { experimentHash: r.canonicalResultHash, profileId: r.profileId, engineVersion: r.engineVersion, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, canonicalResultHash: r.canonicalResultHash };
                 const fallbackAggregate = x.aggregateJson ? JSON.parse(x.aggregateJson) : campaignAggregate(summaries, semantic);
                 const fallbackObs = buildObservatoryAnalytics({ summaries, aggregate: fallbackAggregate });
@@ -203,7 +203,7 @@ async function runBrowserCampaign() {
       renderCampaignSummary(x);
       // Re-render the current workspace so Mechanics/Synergies/Compare/etc.
       // reflect the freshly updated state.observatory immediately.
-      import('./app.js').then(m => m.render());
+      import('./app.js?v=659a089d50b6').then(m => m.render());
     }
   };
   worker.onerror = e => {
@@ -235,7 +235,7 @@ function resetCampaignResults() {
   state.aggregate = state.bootState?.aggregate ? structuredClone(state.bootState.aggregate) : state.aggregate;
   document.querySelector('#campaign-summary').innerHTML = '';
   document.querySelector('#experiment-status').textContent = 'Ready.';
-  import('./app.js').then(m => m.render());
+  import('./app.js?v=659a089d50b6').then(m => m.render());
 }
 
 function renderCampaignSummary(result) {

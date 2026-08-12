@@ -5,9 +5,9 @@
 // Rank attribution extracted to rank-attribution-browser.js (P4.3).
 // Rank power model extracted to rank-power-model.js (P4.3).
 
-import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js';
-import { hashCanonical, sha256Text } from './engine/browser-entry.js';
-import { RULES_VERSION, ENGINE_VERSION } from './version.js';
+import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=659a089d50b6';
+import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=659a089d50b6';
+import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=659a089d50b6';
 import {
   CANONICAL_RANKS,
   classifyPlayForm,
@@ -15,7 +15,7 @@ import {
   buildSourceCards,
   attributeRankAction,
   attributeAction,
-} from './rank-attribution-browser.js';
+} from './rank-attribution-browser.js?v=659a089d50b6';
 import {
   RANK_POWER_SCHEMA_VERSION,
   RPI_AXIS_WEIGHTS,
@@ -26,7 +26,7 @@ import {
   computeDecisionPower,
   buildBalanceWatchlist,
   buildRankPowerModel,
-} from './rank-power-model.js';
+} from './rank-power-model.js?v=659a089d50b6';
 import {
   buildMechanicsAtlas,
   analyzeSynergies,
@@ -35,11 +35,11 @@ import {
   detectAnomalies,
   mcnemarPairedTest,
   pairedBootstrapABBA,
-} from './observatory-analytics-browser.js';
+} from './observatory-analytics-browser.js?v=659a089d50b6';
 import {
   mechanicRegistryHash,
   quarantineUnknownTags,
-} from './mechanic-registry-browser.js';
+} from './mechanic-registry-browser.js?v=659a089d50b6';
 
 // Re-export for backward compatibility (other modules import from browser-analytics)
 export {
@@ -1038,7 +1038,8 @@ export function extractAnalysis({ analytics, aggregate = null }) {
 // ── Observatory analytics (browser-safe port) ─────────────────────
 export function buildObservatoryAnalytics({ summaries, detailedMatches = [], aggregate = null }) {
   const mechanics = buildMechanicsAtlas(summaries, detailedMatches);
-  const synergies = analyzeSynergies(summaries);
+  const synergies = analyzeSynergies(summaries, { includeDiagnostics: true });
+  const synergyDiagnostics = synergies.diagnostics ?? [];
   const motifs = mineCausalMotifs(detailedMatches);
   const policies = buildPolicyFingerprints(summaries);
   const anomalies = detectAnomalies(summaries, detailedMatches);
@@ -1056,8 +1057,9 @@ export function buildObservatoryAnalytics({ summaries, detailedMatches = [], agg
   catch (error) { console.error('buildObservatoryAnalytics: ten-suit expansion failed:', error); }
   const pairedABBA = buildPairedABBAAnalysis(summaries);
   const _f = (p) => mechanics.filter(p).length;
-  const campaignHealth = { trackedEntities: mechanics.length, canonicalMechanics: _f(m => m.dimension === 'canonical-mechanic'), entitiesWithOpportunityData: _f(m => m.hasOpportunityData), entitiesWithValidPickRate: _f(m => m.pickRateStatus?.status === 'available'), entitiesWithRawAssociation: _f(m => m.rawWinAssociationStatus?.status === 'available'), entitiesWithAdjustedAssociation: _f(m => m.adjustedWinAssociationStatus?.status === 'available'), entitiesWithPointImpact: _f(m => m.pointImpactStatus?.status === 'available' && m.actorPointImpact != null), eligibleSynergyPairs: synergies.length, successfullyModeledSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length, unmappedDiagnostics: _f(m => m.dimension === 'diagnostic' && !m.registryVerified), incompleteABBA: pairedABBA?.incompletePairs ?? 0 };
-  const core = { schemaVersion: ANALYTICS_SCHEMA_VERSION, metricRegistry: metricRegistryWithHashes(), summaryCount: summaries.length, aggregateHash: aggregate?.aggregateHash ?? null, mechanics, synergies, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
+  const nearThresholdPairs = synergyDiagnostics.filter(d => d.reasonCode === 'INSUFFICIENT_BOTH' && (d.cohortN?.both ?? 0) >= 10).length;
+  const campaignHealth = { trackedEntities: mechanics.length, canonicalMechanics: _f(m => m.dimension === 'canonical-mechanic'), entitiesWithOpportunityData: _f(m => m.hasOpportunityData), entitiesWithValidPickRate: _f(m => m.pickRateStatus?.status === 'available'), entitiesWithRawAssociation: _f(m => m.rawWinAssociationStatus?.status === 'available'), entitiesWithAdjustedAssociation: _f(m => m.adjustedWinAssociationStatus?.status === 'available'), entitiesWithPointImpact: _f(m => m.pointImpactStatus?.status === 'available' && m.actorPointImpact != null), eligibleSynergyPairs: synergies.length, nearThresholdPairs, successfullyModeledSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length, unmappedDiagnostics: _f(m => m.dimension === 'diagnostic' && !m.registryVerified), incompleteABBA: pairedABBA?.incompletePairs ?? 0 };
+  const core = { schemaVersion: ANALYTICS_SCHEMA_VERSION, metricRegistry: metricRegistryWithHashes(), summaryCount: summaries.length, aggregateHash: aggregate?.aggregateHash ?? null, mechanics, synergies, synergyDiagnostics, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
   return { ...core, observatoryHash: hashCanonical(core) };
 }
 

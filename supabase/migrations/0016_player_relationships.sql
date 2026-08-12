@@ -390,7 +390,10 @@ BEGIN
     FROM public.ranked_seasons
     WHERE queue_id = 'ranked' AND status = 'ACTIVE'
     ORDER BY starts_at ASC LIMIT 1;
-  IF v_season IS NULL THEN v_season := 'season-1'; END IF;
+  -- IRX-H07: Do not fabricate 'season-1'. If no active season exists,
+  -- rating/tier/division columns will be NULL (UNRANKED), which is
+  -- the correct conservative projection.
+  -- IF v_season IS NULL THEN v_season := 'season-1'; END IF;
 
   RETURN QUERY
   WITH rels AS (
@@ -597,7 +600,10 @@ BEGIN
     FROM public.ranked_seasons
     WHERE queue_id = 'ranked' AND status = 'ACTIVE'
     ORDER BY starts_at ASC LIMIT 1;
-  IF v_season IS NULL THEN v_season := 'season-1'; END IF;
+  -- IRX-H07: Do not fabricate 'season-1'. If no active season exists,
+  -- rating/tier/division columns will be NULL (UNRANKED), which is
+  -- the correct conservative projection.
+  -- IF v_season IS NULL THEN v_season := 'season-1'; END IF;
 
   RETURN QUERY
   WITH opponent_matches AS (

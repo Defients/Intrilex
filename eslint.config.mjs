@@ -79,7 +79,7 @@ export default [
     }
   },
   {
-    files: ['packages/**/*.mjs', 'scripts/**/*.mjs', 'test/**/*.mjs', 'apps/batch-cli/src/**/*.mjs'],
+    files: ['packages/**/*.mjs', 'scripts/**/*.mjs', 'test/**/*.mjs', 'apps/batch-cli/src/**/*.mjs', 'apps/match-server/src/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: 'module',

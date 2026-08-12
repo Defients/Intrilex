@@ -4,42 +4,42 @@
 // Never owns authoritative state — delegates to PlaySession.
 // ═══════════════════════════════════════════════════════════════
 
-import { createSession, restoreSession, SessionState } from './play-controller.js';
-import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs';
-import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js';
-import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js';
-import { ensureReplayFrames } from '../replay-frames.js';
-import { state as observatoryState } from '../state.js';
-import { buildSaveIntegrityPayload } from './save-integrity.js';
-import { validateSnapshotPrivacy } from './play-privacy.js';
-import { POLICY_IDS } from '../autonomy-runtime.js';
-import { GuidanceMode } from './intelligence/action-explanation.js';
-import './orchestration/declaration-flow.js';
-import './state/play-lifecycle.js';
-import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js';
-import { getAiBanter } from './ai-personality.js';
-import { SoundEngine } from './play-sound.js';
-import { ParticleSystem } from './play-particles.js';
-import { state, resetState } from './play-state.js';
-import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js';
+import { createSession, restoreSession, SessionState } from './play-controller.js?v=659a089d50b6';
+import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=659a089d50b6';
+import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=659a089d50b6';
+import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=659a089d50b6';
+import { ensureReplayFrames } from '../replay-frames.js?v=659a089d50b6';
+import { state as observatoryState } from '../state.js?v=659a089d50b6';
+import { buildSaveIntegrityPayload } from './save-integrity.js?v=659a089d50b6';
+import { validateSnapshotPrivacy } from './play-privacy.js?v=659a089d50b6';
+import { POLICY_IDS } from '../autonomy-runtime.js?v=659a089d50b6';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=659a089d50b6';
+import './orchestration/declaration-flow.js?v=659a089d50b6';
+import './state/play-lifecycle.js?v=659a089d50b6';
+import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=659a089d50b6';
+import { getAiBanter } from './ai-personality.js?v=659a089d50b6';
+import { SoundEngine } from './play-sound.js?v=659a089d50b6';
+import { ParticleSystem } from './play-particles.js?v=659a089d50b6';
+import { state, resetState } from './play-state.js?v=659a089d50b6';
+import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js?v=659a089d50b6';
 import {
   openAdvancedCardRules as openAdvancedCardRulesController,
   closeAdvancedCardRules,
   isCardInspectable,
   buildCurrentMatchContext,
   getOpenIdentity,
-} from './advanced-card-rules/advanced-card-rules-controller.mjs';
-import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs';
+} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=659a089d50b6';
+import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=659a089d50b6';
 import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
   renderNetworkQueueWaiting, renderNetworkSpectateForm, renderNetworkSpectating,
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
   renderNetworkStatusBanner, renderNetworkUnavailable,
-} from './network/network-lobby-renderer.mjs';
-import { getMatchServerUrl, isMatchServerConfigured, validateMatchServerUrl } from './network/match-server-config.js';
-import { getAccessToken } from './network/auth-controller.js';
-import { getAchievementRuntime } from './achievements/achievement-runtime.js';
-import { getAchievementPresenter } from './achievements/achievement-presenter.js';
+} from './network/network-lobby-renderer.mjs?v=659a089d50b6';
+import { getMatchServerUrl, isMatchServerConfigured, validateMatchServerUrl } from './network/match-server-config.js?v=659a089d50b6';
+import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=659a089d50b6';
+import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=659a089d50b6';
+import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=659a089d50b6';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -55,6 +55,19 @@ export async function handlePlayRoute(route, container) {
     if (saved) state.guidanceMode = saved;
   }
   const sub = route.replace(/^\/play/, '') || '';
+
+  // IRX-H25: Clean up network session when navigating away from online play routes.
+  // Without this, WebSocket connections leak when the user navigates via browser
+  // back button, manual hash change, or external link instead of clicking "Leave".
+  const isOnlineRoute = sub.startsWith('/online');
+  if (!isOnlineRoute && state.networkSession) {
+    // Only disconnect — don't call leave() (which notifies the server) because
+    // the user may be navigating to a different play mode, not abandoning.
+    // The reconnect info in localStorage allows rejoining if they return.
+    state.networkSession.disconnect();
+    state.networkSession = null;
+  }
+
   if (sub === '' || sub === '/') {
     // #/play hub has been removed — redirect to new match setup
     location.hash = '#/play/new';
@@ -72,7 +85,7 @@ export async function handlePlayRoute(route, container) {
           return;
         }
       }
-    } catch { /* sessionStorage unavailable — ignore */ }
+    } catch (err) { console.warn('[play-app] sessionStorage unavailable:', err?.message ?? err); }
     await renderActiveMatch(container);
   } else if (sub === '/replays') {
     await renderReplays(container);
@@ -154,7 +167,7 @@ async function startNewMatch(setup, container) {
       state.session.setAchievementConsumer((events, snapshot) => {
         achRuntime.consumeEvents(events, null, snapshot);
       });
-    } catch { /* achievement tracking is non-fatal */ }
+    } catch (err) { console.warn('[play-app] achievement tracking init failed:', err?.message ?? err); }
     // Initialize sound engine
     state.sound = state.sound || new SoundEngine();
     state.particles = state.particles || new ParticleSystem();
@@ -199,7 +212,7 @@ async function continueMatch(saveId, container) {
       state.session.setAchievementConsumer((events, snapshot) => {
         achRuntime.consumeEvents(events, null, snapshot);
       });
-    } catch { /* achievement tracking is non-fatal */ }
+    } catch (err) { console.warn('[play-app] achievement tracking init failed:', err?.message ?? err); }
     // Initialize sound + particles
     state.sound = state.sound || new SoundEngine();
     state.particles = state.particles || new ParticleSystem();
@@ -343,8 +356,9 @@ async function renderActiveMatch(container) {
     state.isAdvancing = false;
     // Check if another AI decision is needed
     if (state.session.status === SessionState.AI_DECISION) {
-      // Use setTimeout to allow UI to update
-      setTimeout(() => renderActiveMatch(container), 300);
+      // Use setTimeout to allow UI to update. IRX-M07: Skip delay for reduced motion.
+      const delay = state.reducedMotion ? 0 : 300;
+      setTimeout(() => renderActiveMatch(container), delay);
       return;
     }
   }
@@ -384,7 +398,7 @@ async function renderActiveMatch(container) {
           presenter.queueUnlocks(unlocks);
           achievementSummaryHtml = presenter.buildTerminalSummaryHtml(unlocks);
         }
-      } catch { /* achievement finalization is non-fatal */ }
+      } catch (err) { console.warn('[play-app] achievement finalization failed:', err?.message ?? err); }
       state._achievementSummaryHtml = achievementSummaryHtml;
     }
   }
@@ -418,6 +432,18 @@ async function renderActiveMatch(container) {
     chatHidden: state.networkSession?.chatHidden ?? false,
     chatSplit: state.chatSplit ?? 40,
     viewMode: state.viewMode,
+    // IRX-H23: Pass rating data from MATCH_ENDED to the terminal renderer.
+    // Extract the current participant's rating data from the array.
+    rankResult: (() => {
+      if (!isNetworkMatch || !state.networkSession?.rankResult) return null;
+      const ratingData = state.networkSession.rankResult;
+      if (Array.isArray(ratingData)) {
+        const myPid = state.networkSession.participantId;
+        const myData = ratingData.find(r => r.participantId === myPid);
+        return myData ?? null;
+      }
+      return ratingData; // Already a single object
+    })(),
   });
   } catch (renderError) {
     console.error('renderBoard threw:', renderError);
@@ -483,7 +509,7 @@ async function renderActiveMatch(container) {
   // inspected card is no longer inspectable, the controller sanitizes
   // (closes) the view to avoid leaking stale information.
   if (getOpenIdentity() && state.advancedRulesCardId) {
-    import('./advanced-card-rules/advanced-card-rules-controller.mjs').then(({ refreshCurrentMatch }) => {
+    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=659a089d50b6').then(({ refreshCurrentMatch }) => {
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     });
   }
@@ -533,7 +559,7 @@ function bindReplayLibraryEvents(container) {
       } else if (action === 'delete-replay') {
         const confirmed = await showConfirmDialog('Delete replay', `Delete replay ${replayId}? This cannot be undone.`);
         if (confirmed) {
-          const { deleteReplay } = await import('./persistence.js');
+          const { deleteReplay } = await import('./persistence.js?v=659a089d50b6');
           await deleteReplay(replayId);
           await renderReplays(container);
         }
@@ -702,6 +728,8 @@ async function renderNetworkCreateFlow(container) {
     // v2: wire the Supabase access token before connect() so the server's
     // auth gate accepts CREATE_MATCH when authMode='required'.
     session.accessToken = getAccessToken();
+    // IRX-H27: Wire token refresh so live matches stay authenticated.
+    onTokenRefresh((newToken) => { session.refreshAccessToken(newToken); });
     session.onStateChange = () => {
       // Re-render the waiting room on state changes (opponent connect, ready, etc.)
       const activeContainer = state.activeContainer;
@@ -801,6 +829,8 @@ function bindNetworkJoinFormEvents(container) {
       // v2: wire the Supabase access token before connect() so the server's
       // auth gate accepts JOIN_MATCH when authMode='required'.
       session.accessToken = getAccessToken();
+      // IRX-H27: Wire token refresh so live matches stay authenticated.
+      onTokenRefresh((newToken) => { session.refreshAccessToken(newToken); });
       session.onStateChange = () => {
         const activeContainer = state.activeContainer;
         if (!activeContainer) return;
@@ -913,7 +943,13 @@ function bindNetworkWaitingEvents(container) {
         try {
           await navigator.clipboard.writeText(code);
           el.textContent = '✓ Copied';
-          setTimeout(() => { el.textContent = 'Copy code'; }, 2000);
+          // IRX-M07: Reset button text immediately for reduced motion users
+          const resetDelay = state.reducedMotion ? 0 : 2000;
+          if (resetDelay > 0) {
+            setTimeout(() => { el.textContent = 'Copy code'; }, resetDelay);
+          } else {
+            el.textContent = 'Copy code';
+          }
         } catch { /* clipboard may be blocked */ }
       }
     });
@@ -924,7 +960,7 @@ function bindNetworkWaitingEvents(container) {
  * Render the matchmaking queue flow — joins the queue and waits for pairing.
  */
 async function renderNetworkQueueFlow(container) {
-  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs');
+  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=659a089d50b6');
   const serverUrl = getNetworkServerUrl();
   if (!serverUrl) {
     container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
@@ -946,81 +982,139 @@ async function renderNetworkQueueFlow(container) {
     return;
   }
 
-  const ws = new WebSocket(serverUrl);
-
-  container.innerHTML = renderNetworkQueueWaiting({ position: 1, estimatedWaitMs: 5000 });
+  // ── Live queue timer ───────────────────────────────────────────
+  const queueStartTime = Date.now();
+  let queueTimerId = null;
+  function startQueueTimer() {
+    stopQueueTimer();
+    queueTimerId = setInterval(() => {
+      const el = container.querySelector('[data-queue-clock-time]');
+      if (!el) return;
+      const elapsed = Math.floor((Date.now() - queueStartTime) / 1000);
+      const m = Math.floor(elapsed / 60);
+      const s = elapsed % 60;
+      el.textContent = `${m}:${String(s).padStart(2, '0')}`;
+    }, 1000);
+  }
+  function stopQueueTimer() {
+    if (queueTimerId) { clearInterval(queueTimerId); queueTimerId = null; }
+  }
 
   let matched = false;
-  let authenticated = false;
+  let retryCount = 0;
+  const MAX_RETRIES = 5;
+  const RETRY_DELAY_MS = 3000;
 
-  ws.addEventListener('open', () => {
-    ws.send(JSON.stringify(authenticate(accessToken)));
-  });
+  // ── Queue connection lifecycle ────────────────────────────────
+  // Encapsulated in a function so we can retry with a fresh WebSocket
+  // when the server reports ALREADY_IN_QUEUE (stale entry from a
+  // previous connection that hasn't timed out yet).
+  function connectAndQueue() {
+    const ws = new WebSocket(serverUrl);
+    let authenticated = false;
+    let abandoned = false;  // set when we intentionally close to retry
 
-  ws.addEventListener('message', (event) => {
-    try {
-      const msg = JSON.parse(event.data);
-      if (msg.type === 'AUTHENTICATED') {
-        authenticated = true;
-        ws.send(JSON.stringify(queueJoin('core-unrestricted-authority')));
-        return;
-      }
-      // Auth failure before QUEUE_JOIN — surface a clear sign-in message
-      if (!authenticated && msg.type === 'ERROR') {
-        container.innerHTML = renderNetworkQueueWaiting({
-          error: msg.payload?.message ?? 'Authentication failed. Please sign in again.',
-        });
-        bindQueueLeaveAction(container, ws, queueLeave);
-        return;
-      }
-      if (msg.type === 'QUEUE_JOINED') {
-        container.innerHTML = renderNetworkQueueWaiting({
-          position: msg.payload.position,
-          estimatedWaitMs: msg.payload.estimatedWaitMs,
-        });
-        bindQueueLeaveAction(container, ws, queueLeave);
-      } else if (msg.type === 'QUEUE_MATCHED') {
-        matched = true;
-        // Save the match info and transition to the match
-        // Use canonical `url` field (not `serverUrl`) for reconnect-record consistency
-        const { matchId, participantToken } = msg.payload;
-        try {
-          localStorage.setItem('intrilex:network-match', JSON.stringify({
-            schemaVersion: 2,
-            url: serverUrl,
-            matchId, participantToken, savedAt: Date.now(),
-          }));
-        } catch { /* ignore */ }
-        ws.close();
-        // Reconnect as a participant via the standard resume flow
-        reconnectToSavedMatch(container);
-      } else if (msg.type === 'ERROR') {
-        container.innerHTML = renderNetworkQueueWaiting({
-          error: msg.payload.message ?? 'Queue error',
-        });
-        bindQueueLeaveAction(container, ws, queueLeave);
-      }
-    } catch { /* ignore parse errors */ }
-  });
+    container.innerHTML = renderNetworkQueueWaiting({ position: 1, estimatedWaitMs: 5000 });
+    startQueueTimer();
 
-  ws.addEventListener('close', () => {
-    if (!matched) {
-      // If closed without being matched, return to lobby
-      // (only if we're still on the queue page)
-      if (location.hash === '#/play/online/queue') {
-        location.hash = '#/play/online';
-      }
-    }
-  });
-
-  ws.addEventListener('error', () => {
-    container.innerHTML = renderNetworkQueueWaiting({
-      error: 'Connection to server failed. Please try again.',
+    ws.addEventListener('open', () => {
+      ws.send(JSON.stringify(authenticate(accessToken)));
     });
-  });
 
-  // Bind the leave/cancel action
-  bindQueueLeaveAction(container, ws, queueLeave);
+    ws.addEventListener('message', (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'AUTHENTICATED') {
+          authenticated = true;
+          ws.send(JSON.stringify(queueJoin('core-unrestricted-authority')));
+          return;
+        }
+        // Auth failure before QUEUE_JOIN — surface a clear sign-in message
+        if (!authenticated && msg.type === 'ERROR') {
+          container.innerHTML = renderNetworkQueueWaiting({
+            error: msg.payload?.message ?? 'Authentication failed. Please sign in again.',
+          });
+          bindQueueLeaveAction(container, ws, queueLeave);
+          return;
+        }
+        if (msg.type === 'QUEUE_JOINED') {
+          retryCount = 0;  // reset retry counter on success
+          container.innerHTML = renderNetworkQueueWaiting({
+            position: msg.payload.position,
+            estimatedWaitMs: msg.payload.estimatedWaitMs,
+          });
+          bindQueueLeaveAction(container, ws, queueLeave);
+        } else if (msg.type === 'QUEUE_MATCHED') {
+          matched = true;
+          stopQueueTimer();
+          // Save the match info and transition to the match
+          // Use canonical `url` field (not `serverUrl`) for reconnect-record consistency
+          const { matchId, participantToken } = msg.payload;
+          try {
+            localStorage.setItem('intrilex:network-match', JSON.stringify({
+              schemaVersion: 2,
+              url: serverUrl,
+              matchId, participantToken, savedAt: Date.now(),
+            }));
+          } catch { /* ignore */ }
+          ws.close();
+          // Reconnect as a participant via the standard resume flow
+          reconnectToSavedMatch(container);
+        } else if (msg.type === 'ERROR') {
+          const errorCode = msg.payload?.code ?? '';
+          const errorMsg = msg.payload?.message ?? 'Queue error';
+          // ALREADY_IN_QUEUE: a stale entry from a previous connection is
+          // still in the queue (the old connection's heartbeat hasn't timed
+          // out yet). Auto-retry with a fresh WebSocket after a short delay.
+          // The stale entry will be removed when the old connection's
+          // heartbeat times out (typically 30-60s) or when the server is
+          // updated with the supersede-stale-entry fix.
+          if (errorCode === 'ALREADY_IN_QUEUE' && retryCount < MAX_RETRIES) {
+            retryCount++;
+            abandoned = true;
+            container.innerHTML = renderNetworkQueueWaiting({
+              error: `Clearing previous session… retry ${retryCount}/${MAX_RETRIES}`,
+            });
+            try { ws.close(); } catch { /* ignore */ }
+            setTimeout(() => {
+              if (!matched && location.hash === '#/play/online/queue') {
+                connectAndQueue();
+              }
+            }, RETRY_DELAY_MS);
+            return;
+          }
+          container.innerHTML = renderNetworkQueueWaiting({
+            error: errorMsg,
+          });
+          bindQueueLeaveAction(container, ws, queueLeave);
+        }
+      } catch { /* ignore parse errors */ }
+    });
+
+    ws.addEventListener('close', () => {
+      if (abandoned) return;  // intentional close for retry — don't navigate away
+      stopQueueTimer();
+      if (!matched) {
+        // If closed without being matched, return to lobby
+        // (only if we're still on the queue page)
+        if (location.hash === '#/play/online/queue') {
+          location.hash = '#/play/online';
+        }
+      }
+    });
+
+    ws.addEventListener('error', () => {
+      if (abandoned) return;
+      container.innerHTML = renderNetworkQueueWaiting({
+        error: 'Connection to server failed. Please try again.',
+      });
+    });
+
+    // Bind the leave/cancel action
+    bindQueueLeaveAction(container, ws, queueLeave);
+  }
+
+  connectAndQueue();
 }
 
 function bindQueueLeaveAction(container, ws, queueLeave) {
@@ -1043,7 +1137,7 @@ function bindQueueLeaveAction(container, ws, queueLeave) {
  * Render the spectate flow — enter a Match ID and spectate.
  */
 async function renderNetworkSpectateFlow(container) {
-  const { spectateMatch, spectateLeave } = await import('./network/network-protocol-client.mjs');
+  const { spectateMatch, spectateLeave } = await import('./network/network-protocol-client.mjs?v=659a089d50b6');
   container.innerHTML = renderNetworkSpectateForm({});
 
   const form = container.querySelector('#network-spectate-form-element');
@@ -1186,7 +1280,7 @@ async function renderNetworkActiveMatch(container) {
         if (newUnlocks.length > 0) {
           presenter.queueUnlocks(newUnlocks);
         }
-      } catch { /* achievement merge is non-fatal */ }
+      } catch (err) { console.warn('[play-app] achievement merge failed:', err?.message ?? err); }
     }
   }
 
@@ -1216,7 +1310,7 @@ async function renderNetworkActiveMatch(container) {
             if (newUnlocks.length > 0) {
               presenter.queueUnlocks(newUnlocks);
             }
-          } catch { /* achievement merge is non-fatal */ }
+          } catch (err) { console.warn('[play-app] achievement merge failed:', err?.message ?? err); }
         }
       }
       // Re-render the board with the latest authoritative view
@@ -1278,6 +1372,8 @@ async function reconnectToSavedMatch(container) {
     // v2: wire the Supabase access token before connect() so the server's
     // auth gate accepts RESUME_MATCH when authMode='required'.
     session.accessToken = getAccessToken();
+    // IRX-H27: Wire token refresh so live matches stay authenticated.
+    onTokenRefresh((newToken) => { session.refreshAccessToken(newToken); });
     // Restore match identity from the saved record — reconnect() guards on
     // these being set and uses them to build the RESUME_MATCH payload.
     session.matchId = saved.matchId;
@@ -1326,6 +1422,25 @@ async function reconnectToSavedMatch(container) {
       } else {
         await renderNetworkJoinWaitingRoom(container);
       }
+    } else if (session.status === NetworkSessionState.RECONNECTING) {
+      // Still reconnecting — the onStateChange callback will handle the
+      // transition when the server response arrives. Don't navigate to
+      // the match page (which would show a stuck "Reconnecting…" screen).
+      // Show the waiting room instead — it's the correct destination for
+      // a READY_CHECK match, and the state change callback will re-render
+      // if the match is already RUNNING.
+      if (session.inviteCode) {
+        await renderNetworkCreateWaitingRoom(container);
+      } else {
+        await renderNetworkJoinWaitingRoom(container);
+      }
+    } else if (session.status === NetworkSessionState.ERROR) {
+      // Reconnect failed — show the error, don't navigate to match page
+      container.innerHTML = renderNetworkError({
+        title: 'Reconnect Failed',
+        message: session.error ?? 'Could not reconnect to the match.',
+      });
+      bindNetworkErrorEvents(container);
     } else {
       location.hash = '#/play/online/match';
     }
@@ -1638,6 +1753,10 @@ function handleEnterShortcut(container) {
  */
 function generateBanterFromEvents(snapshot) {
   if (!state.session) return;
+  // IRX-H22: Never generate AI banter for PvP (network) sessions.
+  // In PvP, the opponent is a human — inventing AI personality/banter
+  // is deceptive and corrupts the chat identity.
+  if (state.networkSession) return;
   const events = snapshot.recentEvents ?? [];
   const currentEventCount = events.length;
   if (currentEventCount <= state.lastEventCount) return;

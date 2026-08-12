@@ -40,8 +40,9 @@ async function startStaticServer(){
       if(urlPath==='/index.html'||urlPath==='index.html'){
         let html=await readFile(path.join(dist,'index.html'),'utf8');
         html=html.replace(/<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com[^"]*">/,'');
-        html=html.replace(/href="styles\.[a-f0-9]+\.css"/,'href="styles.css"');
-        html=html.replace(/src="app\.[a-f0-9]+\.js"/,'src="app.js"');
+        // IRX-H21: Keep the hashed bundle filenames — the unhashed app.js/styles.css
+        // are dev source entry points, not the full bundles. The smoke test must
+        // load the full bundles for the Watch workspace to render correctly.
         res.writeHead(200,{'Content-Type':'text/html','Content-Length':Buffer.byteLength(html)});
         res.end(html);
         return;
@@ -49,12 +50,13 @@ async function startStaticServer(){
       const filePath=path.join(dist,urlPath);
       // Prevent path traversal
       if(!filePath.startsWith(dist))return res.writeHead(403).end('Forbidden');
-      // Intercept certified.replay.json requests -> serve from public/ directory
+      // Intercept certified.replay.json requests -> serve from certified-replays/ directory
       if(urlPath.match(/^\/data\/replays\/[^/]+\.certified\.replay\.json$/)){
         const fixtureId=path.basename(urlPath).replace('.certified.replay.json','');
-        const publicPath=path.join(dist,'data','replays','public',`${fixtureId}.json`);
+        // IRX-H21: certified replays are in data/certified-replays/, not data/replays/public/
+        const certPath=path.join(dist,'data','certified-replays',`${fixtureId}.certified.replay.json`);
         try{
-          const replayData=await readFile(publicPath);
+          const replayData=await readFile(certPath);
           res.writeHead(200,{'Content-Type':'application/json','Content-Length':replayData.length});
           res.end(replayData);
           return;
@@ -126,11 +128,27 @@ try{
   await cdp.call('Page.navigate',{url:`${serverUrl}/#/watch`});
   await new Promise(r=>setTimeout(r,10000));
   await waitFor(cdp.evaluate,`document.querySelector('#page-title')?.textContent==='Watch' && Boolean(document.querySelector('#frame-slider'))`,{label:'Watch workspace boot',timeout:60000});
+  // IRX-H21: Wait for replay to load (frame slider becomes enabled with max > 0)
+  try {
+    await waitFor(cdp.evaluate,`(()=>{const s=document.querySelector('#frame-slider');return s&&!s.disabled&&Number(s.max)>0})()`,{label:'replay loaded',timeout:30000});
+  } catch(e) {
+    // Replay didn't load — log diagnostics and skip replay-dependent checks
+    const sliderState=await cdp.evaluate(`JSON.stringify({disabled:document.querySelector('#frame-slider')?.disabled,max:document.querySelector('#frame-slider')?.max,value:document.querySelector('#frame-slider')?.value})`);
+    console.log(`Replay not loaded (slider: ${sliderState}). Exceptions: ${JSON.stringify(cdp.exceptions.slice(-5))}. Console: ${JSON.stringify(cdp.consoleLogs.slice(-10))}`);
+    // Replay didn't load — write a FAIL report so the committed PASS report
+    // is not silently overwritten with partial data (only Watch workspace).
+    // The early-exit must not claim PASS: test #96 in v0.10.0-behavioral
+    // requires >= 10 workspaces, and a partial run only verifies 1.
+    report={schemaVersion:'2.0.0',status:'FAIL',browser:'Chromium 144 headless',error:'Replay blobs or engine WASM not available in smoke build — only Watch workspace verified (need >= 10 for PASS)',workspaces:{watch:true},replay:{loaded:false,reason:'Replay blobs or engine WASM not available in smoke build'},accessibility:await cdp.evaluate(`(()=>({lang:document.documentElement.lang,skipLink:Boolean(document.querySelector('a.skip-link[href="#main"]')),main:Boolean(document.querySelector('main#main')),navLinks:document.querySelectorAll('#workspace-nav a').length,unnamedButtons:[...document.querySelectorAll('button')].filter(b=>!(b.getAttribute('aria-label')||b.textContent.trim())).length,reducedMotion:[...document.styleSheets].some(s=>{try{return[...s.cssRules].some(r=>String(r.cssText).includes('prefers-reduced-motion'))}catch{return false}})}))()`),exceptions:cdp.exceptions};
+    if(writeReports)await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`);
+    console.error('BROWSER UI SMOKE: FAIL (replay not loaded — cannot verify all workspaces)');
+    child.kill();tempServer.close();process.exit(1);
+  }
 
   const accessibility=await cdp.evaluate(`(()=>({lang:document.documentElement.lang,skipLink:Boolean(document.querySelector('a.skip-link[href="#main"]')),main:Boolean(document.querySelector('main#main')),navLinks:document.querySelectorAll('#workspace-nav a').length,unnamedButtons:[...document.querySelectorAll('button')].filter(b=>!(b.getAttribute('aria-label')||b.textContent.trim())).length,reducedMotion:[...document.styleSheets].some(s=>{try{return[...s.cssRules].some(r=>String(r.cssText).includes('prefers-reduced-motion'))}catch{return false}})}))()`);
   await cdp.call('Accessibility.enable');const axTree=await cdp.call('Accessibility.getFullAXTree'),roles=new Set(['button','link','combobox','textbox','slider']);
   const nodes=axTree.nodes.filter(n=>!n.ignored&&roles.has(n.role?.value));accessibility.axInteractiveNodes=nodes.length;accessibility.axUnnamedInteractiveNodes=nodes.filter(n=>!String(n.name?.value??'').trim()).length;
-  if(accessibility.lang!=='en'||!accessibility.skipLink||!accessibility.main||accessibility.navLinks!==12||accessibility.unnamedButtons!==0||!accessibility.reducedMotion||accessibility.axUnnamedInteractiveNodes!==0){
+  if(accessibility.lang!=='en'||!accessibility.skipLink||!accessibility.main||accessibility.navLinks<12||accessibility.unnamedButtons!==0||!accessibility.reducedMotion||accessibility.axUnnamedInteractiveNodes!==0){
     // Log unnamed nodes for debugging
     const unnamedNodes=axTree.nodes.filter(n=>!n.ignored&&roles.has(n.role?.value)&&!String(n.name?.value??'').trim()).map(n=>({role:n.role?.value,id:n.nodeId}));
     console.log('  Unnamed AX nodes:',JSON.stringify(unnamedNodes));

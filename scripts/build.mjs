@@ -241,8 +241,11 @@ if (!observatoryReady) {
 // Tests verify `record.summary` from sample-data/ (the source), not dist/.
 async function slimIndexFile(filePath, label) {
   const abs = path.join(dist, 'data', filePath);
-  if (!existsSync(abs)) return;
-  const raw = JSON.parse(await readFile(abs, 'utf8'));
+  if (!existsSync(abs)) { console.log(`build: skipped slimming ${label} — file not present`); return; }
+  let raw;
+  try {
+    raw = JSON.parse(await readFile(abs, 'utf8'));
+  } catch { console.log(`build: skipped slimming ${label} — unreadable`); return; }
   if (!raw.records) return;
   let stripped = 0;
   raw.records = raw.records.map((r) => {
@@ -253,8 +256,12 @@ async function slimIndexFile(filePath, label) {
   const core = { ...raw };
   delete core.indexHash;
   raw.indexHash = hashCanonical(core);
-  await writeFile(abs, JSON.stringify(raw) + '\n');
-  console.log(`build: slimmed ${label} — stripped ${stripped} record summaries, ${label} is now ${JSON.stringify(raw).length} bytes`);
+  try {
+    await writeFile(abs, JSON.stringify(raw) + '\n');
+    console.log(`build: slimmed ${label} — stripped ${stripped} record summaries, ${label} is now ${JSON.stringify(raw).length} bytes`);
+  } catch (e) {
+    console.log(`build: could not write slimmed ${label} — ${e.code}`);
+  }
 }
 await slimIndexFile('replay-index.json', 'replay-index.json');
 await slimIndexFile('autonomy/lab-replay-index.json', 'lab-replay-index.json');
@@ -390,4 +397,256 @@ console.log(`BUILD PASS: ${dist}; browserModules=${requiredModules.size + 2}; ce
 // ── Bundle and minify JS/CSS with esbuild (hashed, cache-friendly) ──
 const bundleResult = spawnSync(process.execPath, ['scripts/bundle.mjs'], { cwd: root, stdio: 'inherit' });
 if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
+
+// ── Rewrite bare @intrilex/account-domain/* imports in raw dist files ────
+// esbuild bundles app.js and all its imports into app.[hash].js + chunks.
+// However, the raw source files remain in dist (copied from src) and are
+// used by tests that import from dist/. These raw files contain bare
+// @intrilex/account-domain/* specifiers that browsers cannot resolve. If a
+// stale service worker serves these raw files instead of the hashed bundle,
+// the browser fails with "Failed to resolve module specifier" errors.
+//
+// Fix: copy the account-domain package modules into dist/account-domain/
+// and rewrite the bare imports to relative paths. This makes the raw files
+// browser-safe (no bare specifiers) while keeping them functional for tests.
+{
+  const accountDomainSrc = path.join(root, 'packages/account-domain/src');
+  const accountDomainDist = path.join(dist, 'account-domain');
+  await mkdir(accountDomainDist, { recursive: true });
+  const accountModules = (await readdir(accountDomainSrc)).filter(f => f.endsWith('.mjs'));
+  for (const mod of accountModules) {
+    await cp(path.join(accountDomainSrc, mod), path.join(accountDomainDist, mod));
+  }
+
+  // Map of bare import specifiers → account-domain module filenames
+  // (mirrors packages/account-domain/package.json exports)
+  const accountDomainExports = {
+    '@intrilex/account-domain/rank-tier': 'rank-tier.mjs',
+    '@intrilex/account-domain/leaderboard': 'leaderboard.mjs',
+    '@intrilex/account-domain/directory': 'directory.mjs',
+    '@intrilex/account-domain/recent-opponents': 'recent-opponents.mjs',
+    '@intrilex/account-domain/relationships': 'relationships.mjs',
+    '@intrilex/account-domain/profile-domain': 'profile-domain.mjs',
+    '@intrilex/account-domain/rating': 'rating.mjs',
+    '@intrilex/account-domain/glicko2': 'glicko2.mjs',
+    '@intrilex/account-domain/seasons': 'seasons.mjs',
+    '@intrilex/account-domain/identity': 'identity.mjs',
+    '@intrilex/account-domain/capabilities': 'capabilities.mjs',
+    '@intrilex/account-domain/validation': 'validation.mjs',
+  };
+
+  // Recursively find and rewrite .js and .mjs files in dist that contain
+  // bare @intrilex/account-domain/* imports.
+  let rewrittenCount = 0;
+  async function rewriteBareImports(dir) {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        // Skip directories that don't need rewriting
+        if (entry.name === 'engine' || entry.name === 'data' || entry.name === 'assets' ||
+            entry.name === 'hybrix' || entry.name === 'achievements' || entry.name === 'analytics-ai' ||
+            entry.name === 'account-domain') continue;
+        await rewriteBareImports(fullPath);
+      } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.mjs'))) {
+        let content = await readFile(fullPath, 'utf8');
+        let modified = false;
+        const fileDir = path.dirname(fullPath);
+        const relBase = path.relative(fileDir, accountDomainDist).replace(/\\/g, '/');
+        for (const [specifier, moduleFile] of Object.entries(accountDomainExports)) {
+          const importRegex = new RegExp(
+            `from\\s+["']${specifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`,
+            'g'
+          );
+          if (importRegex.test(content)) {
+            content = content.replace(importRegex, `from "${relBase}/${moduleFile}"`);
+            modified = true;
+          }
+        }
+        // Also handle the bare package import (no subpath): @intrilex/account-domain
+        const bareImportRegex = /from\s+["']@intrilex\/account-domain["']/g;
+        if (bareImportRegex.test(content)) {
+          content = content.replace(bareImportRegex, `from "${relBase}/index.mjs"`);
+          modified = true;
+        }
+        if (modified) {
+          await writeFile(fullPath, content);
+          rewrittenCount++;
+        }
+      }
+    }
+  }
+  await rewriteBareImports(dist);
+  if (rewrittenCount > 0) console.log(`build: rewrote bare @intrilex/account-domain/* imports in ${rewrittenCount} raw dist file(s) → ./account-domain/*.mjs`);
+}
+
+// ── Rewrite bare @supabase/supabase-js imports in raw dist files ────────
+// Same defense-in-depth pattern as @intrilex/account-domain above.
+// esbuild bundles supabase into chunks for the main app, but raw dist files
+// (e.g. play/network/supabase-client.js) still have the bare import. If a
+// stale service worker serves these raw files, the browser fails with
+// "Failed to resolve module specifier" errors.
+//
+// Fix: use esbuild to create a proper standalone ESM bundle of
+// @supabase/supabase-js that exports createClient, write it to
+// dist/vendor/supabase-js.js, then rewrite bare imports to point to it.
+{
+  const vendorDir = path.join(dist, 'vendor');
+  await mkdir(vendorDir, { recursive: true });
+  const supabaseBundlePath = path.join(vendorDir, 'supabase-js.js');
+
+  // Use esbuild to bundle @supabase/supabase-js into a standalone ESM module
+  // that exports createClient. This is the same library esbuild bundles into
+  // the app chunks, but as a standalone file with proper export names.
+  const supabaseEntry = path.join(vendorDir, '_supabase-entry.js');
+  await writeFile(supabaseEntry, 'export { createClient } from "@supabase/supabase-js";\n');
+
+  const esbuildResult = spawnSync(process.execPath, [
+    'node_modules/esbuild/bin/esbuild',
+    supabaseEntry,
+    '--bundle',
+    '--format=esm',
+    '--outfile=' + supabaseBundlePath,
+    '--minify',
+    '--target=es2020',
+    '--platform=browser',
+  ], { cwd: root, stdio: 'pipe', encoding: 'utf8' });
+
+  // Clean up the temporary entry file
+  await rm(supabaseEntry, { force: true });
+
+  if (esbuildResult.status !== 0) {
+    console.error('build: WARNING — esbuild failed to create supabase standalone bundle');
+    console.error(esbuildResult.stderr);
+    // Fallback: write a stub that exports a no-op createClient
+    await writeFile(supabaseBundlePath, [
+      '// Browser-safe supabase-js stub (esbuild fallback)',
+      'export function createClient() {',
+      '  console.warn("[supabase] Stub createClient called — bundled chunk not loaded.");',
+      '  return null;',
+      '}',
+      ''
+    ].join('\n'));
+  }
+
+  // Rewrite bare @supabase/supabase-js imports in raw dist files to point
+  // to the standalone vendor bundle. Matches both spaced (`from '...'`) and
+  // minified (`from"..."`) forms, and both static and dynamic imports.
+  const BARE_SUPABASE_PATTERNS = [
+    // static:  from '@supabase/supabase-js'   /   from"@supabase/supabase-js"
+    /from\s*(["'])@supabase\/supabase-js\1/g,
+    // bare side-effect: import '@supabase/supabase-js'
+    /import\s*(["'])@supabase\/supabase-js\1/g,
+    // dynamic: import('@supabase/supabase-js')
+    /import\(\s*(["'])@supabase\/supabase-js\1\s*\)/g,
+  ];
+
+  let supabaseRewrittenCount = 0;
+  async function rewriteSupabaseImports(dir) {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === 'engine' || entry.name === 'data' || entry.name === 'assets' ||
+            entry.name === 'hybrix' || entry.name === 'achievements' || entry.name === 'analytics-ai' ||
+            entry.name === 'account-domain' || entry.name === 'vendor' ||
+            entry.name === '.split-tmp') continue;
+        await rewriteSupabaseImports(fullPath);
+      } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.mjs'))) {
+        let content = await readFile(fullPath, 'utf8');
+        const fileDir = path.dirname(fullPath);
+        const relBase = path.relative(fileDir, vendorDir).replace(/\\/g, '/');
+        const target = `${relBase}/supabase-js.js`;
+        let modified = false;
+        for (const pattern of BARE_SUPABASE_PATTERNS) {
+          if (!pattern.test(content)) continue;
+          pattern.lastIndex = 0;
+          content = content.replace(pattern, (match) => {
+            if (match.startsWith('import(')) return `import("${target}")`;
+            if (match.startsWith('import')) return `import "${target}"`;
+            return `from "${target}"`;
+          });
+          modified = true;
+        }
+        if (modified) {
+          await writeFile(fullPath, content);
+          supabaseRewrittenCount++;
+        }
+      }
+    }
+  }
+
+  await rewriteSupabaseImports(dist);
+  if (supabaseRewrittenCount > 0) console.log(`build: rewrote bare @supabase/supabase-js imports in ${supabaseRewrittenCount} raw dist file(s) → ./vendor/supabase-js.js`);
+
+  // ── Fail-closed gate: no browser-served module may contain a bare
+  // '@supabase/supabase-js' import statement. String literals (e.g.
+  // Symbol.for("@supabase/supabase-js.traceContextExtractor")) and JSDoc
+  // comments are fine — only executable import statements are rejected.
+  {
+    const offenders = [];
+    async function auditBareImports(dir) {
+      const entries = await readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name === 'data' || entry.name === 'assets' || entry.name === '.split-tmp') continue;
+          await auditBareImports(fullPath);
+        } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.mjs'))) {
+          const content = await readFile(fullPath, 'utf8');
+          for (const pattern of BARE_SUPABASE_PATTERNS) {
+            pattern.lastIndex = 0;
+            if (pattern.test(content)) {
+              offenders.push(path.relative(dist, fullPath));
+              break;
+            }
+          }
+        }
+      }
+    }
+    await auditBareImports(dist);
+    if (offenders.length > 0) {
+      console.error('BUILD FAIL: bare @supabase/supabase-js import statements found in browser-served modules:');
+      for (const f of offenders) console.error(`  - ${f}`);
+      process.exit(1);
+    }
+    console.log('build: verified 0 bare @supabase/supabase-js import statements in dist');
+  }
+}
+
+// ── Replace sw.js with a self-unregistering kill switch ────────────────
+// The service worker was removed in v0.27.1 because stale caches served
+// raw source files with bare package imports the browser cannot resolve.
+// We overwrite sw.js with a minimal script that immediately unregisters
+// itself and clears all caches. This ensures that even if an old SW is
+// still active and fetches this file for update detection, installing it
+// will clean up all stale caches and remove the SW registration entirely.
+{
+  const swPath = path.join(dist, 'sw.js');
+  const killScript = [
+    '// sw.js — self-unregistering kill switch (v0.27.1+)',
+    '// The service worker was removed because stale caches served raw',
+    '// source files with bare package imports the browser cannot resolve.',
+    '// This file exists only to ensure old SWs update to a version that',
+    '// immediately unregisters itself and clears all caches.',
+    '',
+    'self.addEventListener("install", (e) => {',
+    '  e.waitUntil(self.skipWaiting());',
+    '});',
+    '',
+    'self.addEventListener("activate", (e) => {',
+    '  e.waitUntil((async () => {',
+    '    const keys = await caches.keys();',
+    '    await Promise.all(keys.map((k) => caches.delete(k)));',
+    '    await self.registration.unregister();',
+    '    const clients = await self.clients.claim();',
+    '    const allClients = await self.clients.matchAll();',
+    '    allClients.forEach((c) => c.navigate(c.url));',
+    '  })());',
+    '});',
+    '',
+  ].join('\n');
+  await writeFile(swPath, killScript);
+  console.log('build: wrote self-unregistering sw.js kill switch');
+}
 

@@ -469,14 +469,29 @@ export async function exportReplay(replayId, kind = 'private') {
 const ACHIEVEMENT_KEY = 'profile';
 
 /**
+ * Resolve the storage key for achievement state.
+ * IRX-H30: When an accountId is provided, use an account-scoped key so
+ * achievements are separated per account. When no accountId is provided,
+ * fall back to the legacy device-global key for backward compatibility.
+ * @param {string} [accountId] - Optional account ID for account-scoped storage
+ * @returns {string} The storage key
+ */
+function achievementKey(accountId) {
+  return accountId ? `achievements:${accountId}` : ACHIEVEMENT_KEY;
+}
+
+/**
  * Get the achievement profile state from IndexedDB.
  * Falls back to localStorage if IndexedDB is unavailable.
+ * IRX-H30: Supports account-scoped storage via optional accountId parameter.
+ * @param {string} [accountId] - Optional account ID for account-scoped storage
  * @returns {Promise<object|null>}
  */
-export async function getAchievementState() {
+export async function getAchievementState(accountId) {
+  const key = achievementKey(accountId);
   if (!isIndexedDBAvailable()) {
     try {
-      const raw = localStorage.getItem('intrilex-achievements-v1');
+      const raw = localStorage.getItem(accountId ? `intrilex-achievements-${accountId}` : 'intrilex-achievements-v1');
       return raw ? JSON.parse(raw) : null;
     } catch (err) {
       console.error('[achievements] Failed to load state from localStorage:', err);
@@ -485,7 +500,7 @@ export async function getAchievementState() {
   }
   try {
     const { store } = await tx(STORES.ACHIEVEMENTS, 'readonly');
-    const result = await promisifyRequest(store.get(ACHIEVEMENT_KEY));
+    const result = await promisifyRequest(store.get(key));
     return result?.value ?? null;
   } catch (err) {
     console.error('[achievements] Failed to load state from IndexedDB:', err);
@@ -496,13 +511,16 @@ export async function getAchievementState() {
 /**
  * Save the achievement profile state to IndexedDB.
  * Falls back to localStorage if IndexedDB is unavailable.
+ * IRX-H30: Supports account-scoped storage via optional accountId parameter.
  * @param {object} state - The achievement profile state
+ * @param {string} [accountId] - Optional account ID for account-scoped storage
  * @returns {Promise<boolean>}
  */
-export async function saveAchievementState(state) {
+export async function saveAchievementState(state, accountId) {
+  const key = achievementKey(accountId);
   if (!isIndexedDBAvailable()) {
     try {
-      localStorage.setItem('intrilex-achievements-v1', JSON.stringify(state));
+      localStorage.setItem(accountId ? `intrilex-achievements-${accountId}` : 'intrilex-achievements-v1', JSON.stringify(state));
       return true;
     } catch (err) {
       console.error('[achievements] Failed to save state to localStorage:', err);
@@ -511,7 +529,7 @@ export async function saveAchievementState(state) {
   }
   try {
     const { store, transaction } = await tx(STORES.ACHIEVEMENTS, 'readwrite');
-    await promisifyRequest(store.put({ key: ACHIEVEMENT_KEY, value: state }));
+    await promisifyRequest(store.put({ key, value: state }));
     await awaitTx(transaction);
     return true;
   } catch (err) {
@@ -523,12 +541,15 @@ export async function saveAchievementState(state) {
 /**
  * Reset the achievement profile state (developer testing).
  * Only resets achievement state — does not touch saves, replays, profile, or stats.
+ * IRX-H30: Supports account-scoped storage via optional accountId parameter.
+ * @param {string} [accountId] - Optional account ID for account-scoped storage
  * @returns {Promise<boolean>}
  */
-export async function resetAchievementState() {
+export async function resetAchievementState(accountId) {
+  const key = achievementKey(accountId);
   if (!isIndexedDBAvailable()) {
     try {
-      localStorage.removeItem('intrilex-achievements-v1');
+      localStorage.removeItem(accountId ? `intrilex-achievements-${accountId}` : 'intrilex-achievements-v1');
       return true;
     } catch (err) {
       console.error('[achievements] Failed to reset state in localStorage:', err);
@@ -537,7 +558,7 @@ export async function resetAchievementState() {
   }
   try {
     const { store, transaction } = await tx(STORES.ACHIEVEMENTS, 'readwrite');
-    await promisifyRequest(store.delete(ACHIEVEMENT_KEY));
+    await promisifyRequest(store.delete(key));
     await awaitTx(transaction);
     return true;
   } catch (err) {
@@ -554,14 +575,16 @@ export async function resetAchievementState() {
  * @param {string} migrationId - The migration ID for provenance
  * @returns {Promise<boolean>}
  */
-export async function markAchievementsMigrated(migrationId) {
+export async function markAchievementsMigrated(migrationId, accountId) {
+  const key = achievementKey(accountId);
+  const lsKey = accountId ? `intrilex-achievements-${accountId}` : 'intrilex-achievements-v1';
   if (!isIndexedDBAvailable()) {
     try {
-      const raw = localStorage.getItem('intrilex-achievements-v1');
+      const raw = localStorage.getItem(lsKey);
       const state = raw ? JSON.parse(raw) : {};
       state.migratedAt = new Date().toISOString();
       state.migrationId = migrationId ?? null;
-      localStorage.setItem('intrilex-achievements-v1', JSON.stringify(state));
+      localStorage.setItem(lsKey, JSON.stringify(state));
       return true;
     } catch (err) {
       console.error('[achievements] Failed to mark migrated in localStorage:', err);
@@ -569,12 +592,12 @@ export async function markAchievementsMigrated(migrationId) {
     }
   }
   try {
-    const currentState = await getAchievementState();
+    const currentState = await getAchievementState(accountId);
     if (!currentState) return true; // Nothing to mark
     currentState.migratedAt = new Date().toISOString();
     currentState.migrationId = migrationId ?? null;
     const { store, transaction } = await tx(STORES.ACHIEVEMENTS, 'readwrite');
-    await promisifyRequest(store.put({ key: ACHIEVEMENT_KEY, value: currentState }));
+    await promisifyRequest(store.put({ key, value: currentState }));
     await awaitTx(transaction);
     return true;
   } catch (err) {

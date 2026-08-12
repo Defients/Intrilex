@@ -48,12 +48,16 @@ export class MatchmakingQueue {
   /**
    * @param {object} [opts]
    * @param {function} [opts.onCreateMatch]
+   * @param {(function(string, string): Promise<boolean>)|null} [opts.blockChecker] - IRX-H19: async (accountIdA, accountIdB) → boolean
+   *   When provided, pairs where either player has blocked the other are skipped.
    */
-  constructor({ onCreateMatch } = {}) {
+  constructor({ onCreateMatch, blockChecker = null } = {}) {
     /** @type {QueueEntry[]} */
     this._queue = []; // [{ connectionId, profileId, joinedAt }]
     this._byConnection = new Map(); // connectionId → queue index
     this._onCreateMatch = onCreateMatch;
+    /** @type {(function(string, string): Promise<boolean>)|null} */
+    this._blockChecker = blockChecker;
   }
 
   /**
@@ -68,11 +72,16 @@ export class MatchmakingQueue {
     if (this._byConnection.has(connectionId)) {
       return { queued: false, error: 'Already in queue', code: 'ALREADY_IN_QUEUE' };
     }
-    // One active queue entry per account (prevents multi-queue abuse)
+    // One active queue entry per account (prevents multi-queue abuse).
+    // If the same account is already queued, supersede the stale entry —
+    // this happens when a player's connection drops and they reconnect
+    // with a new connectionId before the old connection's disconnect
+    // handler has fired.
     if (accountId) {
       for (const entry of this._queue) {
         if (entry.accountId && entry.accountId === accountId) {
-          return { queued: false, error: 'Account already in queue', code: 'ALREADY_IN_QUEUE' };
+          this.dequeue(entry.connectionId);
+          break;
         }
       }
     }

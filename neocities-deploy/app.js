@@ -3,37 +3,69 @@
 // routing to workspace renderers, and owns the Watch workspace.
 // ═══════════════════════════════════════════════════════════════
 
-import { getCardDefinition } from './card-face-data.js';
-import { openAdvancedCardRules } from './play/advanced-card-rules/advanced-card-rules-controller.mjs';
-import { renderRulesPage } from './rulebook-renderer.js';
-import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js';
-import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js';
-import { TITLES,   SUBTITLES,   LANDING_MODES,   isPlayRoute,   route} from './router.js';
-import { boot,   loadReplay,   getObservatoryBootPromise} from './data-loader.js';
-import {} from './experiment-controls.js';
-import {} from './integrity.js';
-import { renderRanks } from './workspaces/ranks.js';
-import { renderDiagnostics } from './workspaces/diagnostics.js';
-import { renderBranches} from './workspaces/branches.js';
-import { renderEvidence } from './workspaces/evidence.js';
-import { renderReleaseNotes } from './workspaces/release-notes.js';
-import { renderIntelligence } from './workspaces/intelligence.js';
-import { renderTournament } from './workspaces/tournament.js';
-import { renderProfile } from './workspaces/profile.js';
-import { renderPlayers, destroyPlayers } from './workspaces/players.js';
-import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.js';
-import { renderAchievementsWorkspace } from './play/achievements/achievement-ui.js';
-import { renderAuth } from './workspaces/auth.js';
-import { renderSettings } from './workspaces/settings.js';
-import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js';
-import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js';
-import { initAuth, getAuthState, getProfile, signOut, subscribe as subscribeToAuth, isMigrationPending } from './play/network/auth-controller.js';
-import { initAccountStore, subscribe as subscribeToAccount } from './play/network/account-store.js';
-import { runMigrationIfPending, onMigrationStatusChange } from './play/network/migration-controller.js';
-import { renderPrivacyPage, renderTermsPage } from './legal-pages.js';
-import { renderRankingSystemOverlay } from './play/rank/ranking-system-overlay.js';
-import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading } from './seo-metadata.js';
-import { diagnoseConfig } from './play/network/match-server-config.js';
+import { getCardDefinition } from './card-face-data.js?v=659a089d50b6';
+import { renderRulesPage } from './rulebook-renderer.js?v=659a089d50b6';
+import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js?v=659a089d50b6';
+import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js?v=659a089d50b6';
+import { TITLES,   SUBTITLES,   LANDING_MODES,   isPlayRoute,   route} from './router.js?v=659a089d50b6';
+import { boot,   loadReplay,   getObservatoryBootPromise} from './data-loader.js?v=659a089d50b6';
+import {} from './experiment-controls.js?v=659a089d50b6';
+import {} from './integrity.js?v=659a089d50b6';
+import { renderRanks } from './workspaces/ranks.js?v=659a089d50b6';
+import { renderDiagnostics } from './workspaces/diagnostics.js?v=659a089d50b6';
+import { renderBranches} from './workspaces/branches.js?v=659a089d50b6';
+import { renderEvidence } from './workspaces/evidence.js?v=659a089d50b6';
+import { renderReleaseNotes } from './workspaces/release-notes.js?v=659a089d50b6';
+import { renderIntelligence } from './workspaces/intelligence.js?v=659a089d50b6';
+import { renderTournament } from './workspaces/tournament.js?v=659a089d50b6';
+import { renderProfile } from './workspaces/profile.js?v=659a089d50b6';
+import { renderPlayers, destroyPlayers } from './workspaces/players.js?v=659a089d50b6';
+import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.js?v=659a089d50b6';
+import { renderAuth } from './workspaces/auth.js?v=659a089d50b6';
+import { renderSettings } from './workspaces/settings.js?v=659a089d50b6';
+import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js?v=659a089d50b6';
+import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js?v=659a089d50b6';
+import { renderPrivacyPage, renderTermsPage } from './legal-pages.js?v=659a089d50b6';
+import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading } from './seo-metadata.js?v=659a089d50b6';
+
+// IRX-M32: Play-related modules are dynamically imported to enable code splitting.
+// The esbuild bundler (splitting: true) creates separate lazy chunks for these
+// modules, keeping them out of the initial bundle. They are loaded on-demand
+// when the user navigates to a play route or opens a play-related overlay.
+// The lazyLoad helper caches the import promise so concurrent calls share a
+// single dynamic import() — no repeated module fetches. The import() call
+// must be passed as a thunk (not a string) so esbuild can statically analyze
+// the literal module path and emit a separate chunk.
+
+/**
+ * Create a lazy-loaded module accessor that caches the import promise.
+ * @param {() => Promise<typeof import('*')>} importFn - Thunk that calls `import('./literal-path.js?v=659a089d50b6')`
+ * @returns {() => Promise<typeof import('*')>} Async getter with `.cached` property (null until resolved)
+ */
+function lazyLoad(importFn) {
+  /** @type {Promise<typeof import('*')> | null} */
+  let promise = null;
+  /** @type {Record<string, any> | null} */
+  let resolved = null;
+  /** @type {(() => Promise<typeof import('*')>) & { cached: Record<string, any> | null }} */
+  const getter = async () => {
+    if (!promise) {
+      promise = importFn().then(mod => { resolved = mod; return mod; });
+    }
+    return promise;
+  };
+  Object.defineProperty(getter, 'cached', { get: () => resolved });
+  return getter;
+}
+
+const getAdvancedCardRules = lazyLoad(() => import('./play/advanced-card-rules/advanced-card-rules-controller.mjs?v=659a089d50b6'));
+const getAchievementUi = lazyLoad(() => import('./play/achievements/achievement-ui.js?v=659a089d50b6'));
+const getPuzzleApp = lazyLoad(() => import('./play/puzzle/puzzle-app.mjs?v=659a089d50b6'));
+const getRankingOverlay = lazyLoad(() => import('./play/rank/ranking-system-overlay.js?v=659a089d50b6'));
+const getMatchServerConfig = lazyLoad(() => import('./play/network/match-server-config.js?v=659a089d50b6'));
+const getAuthController = lazyLoad(() => import('./play/network/auth-controller.js?v=659a089d50b6'));
+const getAccountStore = lazyLoad(() => import('./play/network/account-store.js?v=659a089d50b6'));
+const getMigrationController = lazyLoad(() => import('./play/network/migration-controller.js?v=659a089d50b6'));
 
 // Install global error boundary at module load time
 installGlobalErrorBoundary();
@@ -42,7 +74,37 @@ installGlobalErrorBoundary();
 // console if __INTRILEX_CONFIG__ is missing or incomplete in production.
 // This helps diagnose config-file load failures (404, CSP block, SW stale
 // cache) without adding heavy telemetry infrastructure.
-diagnoseConfig();
+// IRX-M32: Deferred to a dynamic import so the config module is lazy-loaded.
+getMatchServerConfig().then(({ diagnoseConfig }) => diagnoseConfig()).catch(() => {});
+
+// ═══════════════════════════════════════════════════════════════
+// CACHED SHELL ELEMENTS — queried once, reused across renders
+// ═══════════════════════════════════════════════════════════════
+// These elements live in the static shell HTML and are never replaced
+// by innerHTML, so they're safe to cache. Lazy-init avoids timing issues
+// if app.js loads before the shell DOM is parsed.
+let _breadcrumbEl = null;
+let _visibilityEl = null;
+let _layoutPresetEl = null;
+let _workspaceLinks = null;
+let _filterBarEl = null;
+let _clearFiltersEl = null;
+
+function cachedBreadcrumb() {
+  return _breadcrumbEl ??= document.querySelector('#breadcrumb-current');
+}
+function cachedVisibility() {
+  return _visibilityEl ??= document.querySelector('#global-visibility');
+}
+function cachedLayoutPreset() {
+  return _layoutPresetEl ??= document.querySelector('#layout-preset');
+}
+function cachedWorkspaceLinks() {
+  return _workspaceLinks ??= document.querySelectorAll('.workspace-link');
+}
+function cachedFilterBar() {
+  return _filterBarEl ??= document.querySelector('#global-filter-bar');
+}
 
 // ═══════════════════════════════════════════════════════════════
 // MAIN RENDER DISPATCH
@@ -81,6 +143,17 @@ function showShell() {
   populateObservatoryShellText();
 }
 
+/**
+ * Main render dispatch — routes to the appropriate workspace renderer
+ * based on the current hash route. Handles three top-level modes:
+ *   1. Play routes (#/play/*) → hideShell + renderPlayMode (lazy-loaded)
+ *   2. Landing routes (#/, #/rules, #/auth, etc.) → hideShell + renderLandingMode
+ *   3. Observatory workspaces (#/watch, #/mechanics, etc.) → showShell + renderer map
+ *
+ * Async renderers are caught and display an error notice in the app container.
+ * The Watch workspace loads replays in the background without blocking render.
+ * @param {string} [r] - Route to render (defaults to current route from router)
+ */
 export function render() {
   const r = route();
   // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
@@ -115,16 +188,29 @@ export function render() {
   // silently fails and would otherwise cause an infinite render loop.
   if (r === '/watch' && !state.replay && state._replayLoadedFor !== state.fixtureId) {
     state._replayLoadedFor = state.fixtureId;
-    loadReplay(state.fixtureId).then(render);
-    return;
+    // IRX-H21: Don't block the Watch workspace if replay loading fails.
+    // Attempt to load the replay in the background. If it succeeds, re-render.
+    // If it fails (e.g. replay blobs excluded from build), the Watch workspace
+    // still renders with its title and frame-slider placeholder (renderWatch
+    // handles the null replay case).
+    loadReplay(state.fixtureId).then(() => {
+      if (state.replay) render();
+    }).catch(() => {
+      // Replay load failed — render() will show the empty-state Watch workspace
+    });
+    // Don't return — fall through to render the Watch workspace immediately
+    // with the empty state (frame-slider placeholder). When loadReplay resolves,
+    // render() will be called again with the loaded replay.
   }
   pageTitle.textContent = TITLES[r];
   pageSubtitle.textContent = SUBTITLES[r];
-  const breadcrumbCurrent = document.querySelector('#breadcrumb-current');
+  const breadcrumbCurrent = cachedBreadcrumb();
   if (breadcrumbCurrent) breadcrumbCurrent.textContent = TITLES[r] ?? 'Observatory';
-  document.querySelectorAll('.workspace-link').forEach(link => link.classList.toggle('active', link.dataset.route === r));
-  document.querySelector('#global-visibility').value = state.visibility;
-  document.querySelector('#layout-preset').value = state.layout;
+  cachedWorkspaceLinks().forEach(link => link.classList.toggle('active', link.dataset.route === r));
+  const visEl = cachedVisibility();
+  if (visEl) visEl.value = state.visibility;
+  const layoutEl = cachedLayoutPreset();
+  if (layoutEl) layoutEl.value = state.layout;
   shell.dataset.preset = state.layout;
   renderFilters();
   stopTransientFx();
@@ -132,7 +218,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': () => renderAchievementsWorkspace(app), '/settings': renderSettings
+    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
   };
   try {
     const result = (renderers[r] ?? renderEvidence)();
@@ -150,6 +236,11 @@ export function render() {
   }
 }
 
+/**
+ * Render a landing-mode route (homepage, rules, auth, players, puzzles, leaderboard).
+ * These routes render into the landing container with the observatory shell hidden.
+ * @param {string} r - Route path (e.g. '/', '/rules', '/auth')
+ */
 function renderLandingMode(r) {
   if (!landingContainer) return;
   if (r === '/') renderLanding();
@@ -166,6 +257,17 @@ function renderLandingMode(r) {
     // Players is an overlay on the homepage, not a Simulation Lab workspace.
     renderLanding();
     openPlayersOverlay();
+  }
+  else if (r === '/dev/puzzles') {
+    // Puzzle Mode v0.1.0 — hidden developer experimental route.
+    // Renders into the landing container (homepage shell hidden) so it
+    // stays out of production navigation and matchmaking flows.
+    if (landingContainer) landingContainer.innerHTML = '<div id="puzzle-root"></div>';
+    const root = landingContainer?.querySelector('#puzzle-root');
+    if (root) {
+      getPuzzleApp().then(({ handlePuzzleRoute }) => handlePuzzleRoute(root))
+        .catch((err) => console.error('[puzzle] failed to load puzzle module:', err));
+    }
   }
   else if (r === '/leaderboard') {
     // Leaderboard is an overlay on the homepage, not a Simulation Lab workspace.
@@ -199,6 +301,7 @@ function renderLegalPage(r) {
 let _landingOverlay = null;
 let _landingOverlayTeardown = null;
 
+/** Close the active landing overlay, running its teardown callback and removing the DOM node. */
 function closeLandingOverlay() {
   if (!_landingOverlay) return;
   // Run any registered teardown (e.g. abort in-flight requests, clear timers)
@@ -209,9 +312,17 @@ function closeLandingOverlay() {
   _landingOverlay.classList.remove('landing-overlay--visible');
   const el = _landingOverlay;
   _landingOverlay = null;
-  setTimeout(() => el.remove(), 300);
+  // IRX-M07: Respect reduced motion — remove immediately instead of animating
+  const delay = state.reducedMotion ? 0 : 300;
+  setTimeout(() => el.remove(), delay);
 }
 
+/**
+ * Open a full-screen landing overlay with the given title and content renderer.
+ * @param {string} title - Overlay title shown in the header
+ * @param {(container: HTMLElement) => void|Promise<void>} renderer - Renders overlay content into the container
+ * @param {() => void} [teardown] - Optional cleanup callback (abort requests, clear timers) called on close
+ */
 function openLandingOverlay(title, renderer, teardown) {
   // Remove any existing overlay (and run its teardown)
   if (_landingOverlay) {
@@ -243,6 +354,28 @@ function openLandingOverlay(title, renderer, teardown) {
   overlay.querySelectorAll('[data-overlay-close]').forEach(el =>
     el.addEventListener('click', closeLandingOverlay));
   document.addEventListener('keydown', _overlayEscHandler);
+
+  // IRX-M08: Focus trap — keep Tab/Shift+Tab within the dialog
+  const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  /** @param {KeyboardEvent} e */
+  function _overlayTabTrap(e) {
+    if (e.key !== 'Tab') return;
+    const focusable = overlay.querySelectorAll(focusableSelector);
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+  overlay.addEventListener('keydown', _overlayTabTrap);
+  // Focus the first focusable element to enter the dialog
+  const initialFocus = overlay.querySelector(focusableSelector);
+  if (initialFocus) initialFocus.focus();
 
   // Render content
   const body = overlay.querySelector('.landing-overlay-body');
@@ -336,7 +469,10 @@ function openAuthOverlay() {
 }
 
 function openAchievementsOverlay() {
-  openLandingOverlay('Achievements', (c) => renderAchievementsWorkspace(c));
+  openLandingOverlay('Achievements', async (c) => {
+    const { renderAchievementsWorkspace } = await getAchievementUi();
+    return renderAchievementsWorkspace(c);
+  });
 }
 
 function openReleaseNotesOverlay() {
@@ -352,14 +488,17 @@ function openPlayersOverlay() {
 }
 
 function openRankingSystemOverlay() {
-  openLandingOverlay('Ranking System', (c) => renderRankingSystemOverlay(c));
+  openLandingOverlay('Ranking System', async (c) => {
+    const { renderRankingSystemOverlay } = await getRankingOverlay();
+    return renderRankingSystemOverlay(c);
+  });
 }
 
 async function openMatchHistoryOverlay() {
   openLandingOverlay('Match History', async (container) => {
     container.innerHTML = '<div class="loading-state"><span class="loading-spinner" aria-hidden="true"></span><strong>Loading match history…</strong></div>';
     try {
-      const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js');
+      const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js?v=659a089d50b6');
       if (!isIndexedDBAvailable()) {
         container.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">⚙</span><strong>No local match history.</strong><p>Match saves require IndexedDB, which is not available in this browser.</p></div>';
         return;
@@ -405,10 +544,15 @@ async function openMatchHistoryOverlay() {
 // ═══════════════════════════════════════════════════════════════
 let _playModule = null;
 let _boardCssLoaded = false;
+/**
+ * Render a play route by lazy-loading the play module and delegating to it.
+ * Loads base play CSS on first call, ranked-duel CSS only for match routes.
+ * @param {string} r - Play route path (e.g. '/play', '/play/match', '/play/online')
+ */
 async function renderPlayMode(r) {
   if (!landingContainer) return;
   if (!_playModule) {
-    _playModule = await import('./play/play-app.js');
+    _playModule = await import('./play/play-app.js?v=659a089d50b6');
     // Load base play CSS (tokens, hub, setup, network lobby, terminal) — needed for all play routes
     if (!document.querySelector('link[data-play-css]')) {
       const link = document.createElement('link');
@@ -424,7 +568,7 @@ async function renderPlayMode(r) {
     _boardCssLoaded = true;
     const rdLink = document.createElement('link');
     rdLink.rel = 'stylesheet';
-    rdLink.href = 'play/ranked-duel.css?v=' + Date.now();
+    rdLink.href = 'play/ranked-duel.css?v=' + LAB_VERSION;
     rdLink.dataset.playCss = '1';
     document.head.appendChild(rdLink);
   }
@@ -439,7 +583,16 @@ async function renderPlayMode(r) {
 // Play dominant · Learn secondary · Rules available · Lab hidden
 // ═══════════════════════════════════════════════════════════════
 let _landingSelectedMode = 'local';
+// AbortController for the current landing page's document-level listeners.
+// Aborted on each re-render to prevent listener accumulation (IRX-M41).
+let _landingListenerAbort = null;
 
+/**
+ * Render the player-first landing page (v0.24.2 redesign).
+ * Layout: Play dominant, Learn secondary, Rules available, Lab hidden.
+ * Includes mode selector (local/online), account dropdown, and overlay triggers.
+ * Binds all landing-page event listeners (mode cards, account menu, overlays).
+ */
 function renderLanding() {
   _landingSelectedMode = 'local';
   landingContainer.innerHTML = `<div class="landing-app">
@@ -457,6 +610,7 @@ function renderLanding() {
         <small class="landing-brand-sub">TACTICAL PLAYING CARD GAME</small>
       </a>
       <nav class="landing-utility-nav" aria-label="Utility navigation">
+        <div id="landing-continue-slot" aria-live="polite"></div>
         <a href="#/sim" class="lab-button" aria-label="Open Simulation Lab">
           <svg class="lab-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 3h6M10 3v6.5L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 9.5V3"/>
@@ -527,7 +681,7 @@ function renderLanding() {
           <div class="landing-play-content">
             <p class="landing-eyebrow">BUILD &middot; COUNTER &middot; OUTTHINK &middot; WIN</p>
             <h1 class="landing-title" id="play-heading">PLAY NOW</h1>
-            <p class="landing-tagline">A tactical card game of public score, disruption, and exactly-when spending. Every decision matters.</p>
+            <p class="landing-tagline">A tactical card game of public score, disruption, and perfectly timed commitment.</p>
             <div class="landing-mode-section">
               <p class="landing-mode-label" id="mode-label">CHOOSE MODE</p>
               <div class="landing-mode-grid" role="radiogroup" aria-labelledby="mode-label">
@@ -546,12 +700,19 @@ function renderLanding() {
             <button class="landing-play-cta" data-testid="landing-cta" data-href="#/play/new">
               <span>START LOCAL DUEL</span><span class="landing-cta-arrow" aria-hidden="true">&rarr;</span>
             </button>
-            <p class="landing-play-subline" data-mode-subline>Choose your mode. Make every decision count.</p>
+            <p class="landing-play-subline" data-mode-subline></p>
           </div>
         </section>
         <aside class="landing-secondary-rail" aria-label="Secondary navigation">
           <div class="landing-cards">
-            <div id="landing-continue-slot" aria-live="polite"></div>
+            <a class="landing-rail-card whats-new" href="#/release-notes">
+              <span class="landing-rail-body">
+                <strong>WHAT'S NEW</strong>
+                <p>Homepage revamp &middot; zero-overflow layout &middot; visual polish</p>
+                <span class="landing-rail-cta">v${LAB_VERSION} release details &rarr;</span>
+              </span>
+              <span class="landing-rail-emblem gold subtle" aria-hidden="true">&#10022;</span>
+            </a>
             <a class="landing-rail-card rules landing-card rules" href="#/rules">
               <span class="landing-rail-body">
                 <strong>&sect; Rules</strong>
@@ -573,25 +734,18 @@ function renderLanding() {
               </span>
               <span class="landing-rail-chevron" aria-hidden="true">&rsaquo;</span>
             </button>
-            <a class="landing-rail-card forums" href="https://intrilex.discourse.group/" target="_blank" rel="noopener noreferrer">
-              <span class="landing-rail-forums-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            <a class="landing-rail-card players" href="#/players" data-players-card data-testid="landing-players-card">
+              <span class="landing-rail-body">
+                <strong>PLAYERS</strong>
+                <p>Find players &middot; search by name &middot; inspect profiles &amp; rankings</p>
+                <span class="landing-rail-cta">Browse the directory &rarr;</span>
+              </span>
+              <span class="landing-rail-emblem players-emblem" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="7"/>
+                  <path d="M21 21l-4.3-4.3"/>
                 </svg>
               </span>
-              <span class="landing-rail-body">
-                <strong>Official Forums</strong>
-                <p>Join the community. Discuss strategy, report issues, and connect with other players.</p>
-              </span>
-              <span class="landing-rail-chevron" aria-hidden="true">&rsaquo;</span>
-            </a>
-            <a class="landing-rail-card whats-new" href="#/release-notes">
-              <span class="landing-rail-body">
-                <strong>WHAT'S NEW</strong>
-                <p>Intrilex v${LAB_VERSION} &middot; Engine ${ENGINE_VERSION} &middot; Rules ${RULES_VERSION}</p>
-                <span class="landing-rail-cta">Release details &rarr;</span>
-              </span>
-              <span class="landing-rail-emblem gold subtle" aria-hidden="true">&#10022;</span>
             </a>
             <a class="landing-rail-card leaderboard" href="#/leaderboard" data-leaderboard-card>
               <span class="landing-rail-body">
@@ -606,18 +760,30 @@ function renderLanding() {
                 </svg>
               </span>
             </a>
-            <a class="landing-rail-card players" href="#/players" data-players-card data-testid="landing-players-card">
-              <span class="landing-rail-body">
-                <strong>PLAYERS</strong>
-                <p>Find players &middot; search by name or @handle &middot; inspect profiles &amp; rankings</p>
-                <span class="landing-rail-cta">Browse the directory &rarr;</span>
-              </span>
-              <span class="landing-rail-emblem players-emblem" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="11" cy="11" r="7"/>
-                  <path d="M21 21l-4.3-4.3"/>
+            <a class="landing-rail-card forums" href="https://intrilex.discourse.group/" target="_blank" rel="noopener noreferrer">
+              <span class="landing-rail-forums-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
                 </svg>
               </span>
+              <span class="landing-rail-body">
+                <strong>Official Forums</strong>
+                <p>Discuss strategy, report issues, and connect with players.</p>
+              </span>
+              <span class="landing-rail-chevron" aria-hidden="true">&rsaquo;</span>
+            </a>
+            <a class="landing-rail-card subreddit" href="https://reddit.com/r/intrilex" target="_blank" rel="noopener noreferrer">
+              <span class="landing-rail-emblem reddit-emblem" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="34" height="34" role="presentation">
+                  <circle cx="12" cy="12" r="12" fill="#FF4500"/>
+                  <path fill="#fff" d="M19.9 12a1.6 1.6 0 0 0-2.7-1.1 7.9 7.9 0 0 0-4.3-1.4l.9-2.9 2.4.6a1.2 1.2 0 1 0 .1-.6l-2.8-.7a.3.3 0 0 0-.4.2l-1 3.4a7.9 7.9 0 0 0-4.3 1.4A1.6 1.6 0 1 0 6 13.4a3 3 0 0 0 0 .5c0 2.4 2.7 4.3 6 4.3s6-1.9 6-4.3a3 3 0 0 0 0-.5 1.6 1.6 0 0 0 1.9-1.4zM9.3 13a1.1 1.1 0 1 1 1.1 1.1A1.1 1.1 0 0 1 9.3 13zm6.1 2.9a4 4 0 0 1-2.6.8h-1.6a4 4 0 0 1-2.6-.8.3.3 0 0 1 .4-.4 3.4 3.4 0 0 0 2.2.6h1.6a3.4 3.4 0 0 0 2.2-.6.3.3 0 0 1 .4.4zm-.8-1.8A1.1 1.1 0 1 1 15.7 13a1.1 1.1 0 0 1-1.1 1.1z"/>
+                </svg>
+              </span>
+              <span class="landing-rail-body">
+                <strong>r/intrilex</strong>
+                <p>Reddit community &middot; posts, polls, and discussion.</p>
+              </span>
+              <span class="landing-rail-chevron" aria-hidden="true">&rsaquo;</span>
             </a>
           </div>
         </aside>
@@ -666,6 +832,7 @@ function maybeSkipLandingVideo() {
 
 let _preAlphaOverlayTimer = null;
 
+/** Show the pre-alpha announcement overlay (dismissable, shown once per session). */
 function showPreAlphaOverlay() {
   if (_preAlphaOverlayTimer) { clearTimeout(_preAlphaOverlayTimer); _preAlphaOverlayTimer = null; }
   const existing = document.getElementById('prealpha-overlay');
@@ -683,6 +850,9 @@ function showPreAlphaOverlay() {
   const waitSeconds = firstTime ? 5 : 2;
 
   _preAlphaOverlayTimer = setTimeout(() => {
+    // Guard: if the user navigated away from the landing page during the
+    // delay, skip showing the overlay — it would appear on the wrong route.
+    if (!landingContainer.isConnected || landingContainer.style.display === 'none') return;
     const overlay = document.createElement('div');
     overlay.id = 'prealpha-overlay';
     overlay.className = 'prealpha-overlay';
@@ -741,6 +911,13 @@ function showPreAlphaOverlay() {
  * Wire up mode-tile selection and primary CTA on the landing page.
  */
 function bindLandingEvents() {
+  // Abort any document-level listeners from a previous landing render to
+  // prevent accumulation (each re-render would otherwise add a new
+  // document click listener that is never removed).
+  if (_landingListenerAbort) _landingListenerAbort.abort();
+  _landingListenerAbort = new AbortController();
+  const { signal } = _landingListenerAbort;
+
   const tiles = [...landingContainer.querySelectorAll('.landing-mode-tile')];
   const cta = landingContainer.querySelector('.landing-play-cta');
   if (!tiles.length || !cta) return;
@@ -761,7 +938,7 @@ function bindLandingEvents() {
         local: 'Fast matches. Adaptive AI. Deterministic outcomes.',
         online: 'Server-authoritative. Real opponents. Verified replays.',
       };
-      subline.textContent = sublines[_landingSelectedMode] || 'Choose your mode. Make every decision count.';
+      subline.textContent = sublines[_landingSelectedMode] || '';
     }
   };
   tiles.forEach(tile => {
@@ -790,10 +967,10 @@ function bindLandingEvents() {
       accountTrigger.setAttribute('aria-expanded', String(isOpen));
     };
     accountTrigger.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
-    // Close on outside click
+    // Close on outside click (signal-scoped to prevent listener accumulation)
     document.addEventListener('click', (e) => {
       if (!accountMenu.contains(e.target)) toggleMenu(false);
-    });
+    }, { signal });
     // Close on Escape
     accountMenu.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { toggleMenu(false); accountTrigger.focus(); }
@@ -807,8 +984,11 @@ function bindLandingEvents() {
         // The sign-in/sign-out link is dual-purpose: when signed out it opens
         // the auth overlay; when signed in it signs the user out directly.
         if (item.hasAttribute('data-account-signin')) {
-          if (getAuthState() === 'AUTHENTICATED' || getAuthState() === 'ANONYMOUS') {
-            signOut().then((ok) => {
+          // IRX-M32: Auth module is lazy-loaded. Check cached state synchronously
+          // via the module ref if already loaded; otherwise open the auth overlay.
+          const authMod = getAuthController.cached;
+          if (authMod && (authMod.getAuthState() === 'AUTHENTICATED' || authMod.getAuthState() === 'ANONYMOUS')) {
+            authMod.signOut().then((ok) => {
               if (ok) showToast('Signed out', { type: 'info' });
               else showToast('Sign-out failed', { type: 'error' });
             }).catch(() => showToast('Sign-out failed', { type: 'error' }));
@@ -871,9 +1051,13 @@ async function loadContinueCard() {
   const slot = landingContainer.querySelector('#landing-continue-slot');
   if (!slot) return;
   try {
-    const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js');
+    const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js?v=659a089d50b6');
     if (!isIndexedDBAvailable()) return;
     const saves = await listSaves();
+    // Guard: user may have navigated away during the async import/listSaves.
+    // If the slot is no longer in the DOM, skip rendering to avoid writing
+    // to a detached node (IRX-M42).
+    if (!slot.isConnected) return;
     if (!saves || saves.length === 0) return;
     const save = saves.find(s => s.stableBoundary?.decisionFrameHash) ?? saves[0];
     if (!save) return;
@@ -882,17 +1066,14 @@ async function loadContinueCard() {
     const mode = sum?.mode ?? (save.mode ? String(save.mode).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : 'Local vs AI');
     const turn = sum?.turn ? `Turn ${sum.turn}` : (save.stableBoundary?.turn ? `Turn ${save.stableBoundary.turn}` : '');
     const score = (sum && typeof sum.humanScore === 'number') ? `${sum.humanScore}\u2013${sum.opponentScore}` : '';
-    const opponent = sum?.opponentLabel ?? '';
-    const parts = [mode, turn, score].filter(Boolean);
+    const parts = [turn, score].filter(Boolean);
     const meta = parts.join(' &middot; ');
-    slot.innerHTML = `<button class="landing-rail-card continue" data-save-id="${esc(save.saveId)}">
-      <span class="landing-rail-body">
-        <strong>CONTINUE DUEL</strong>
-        <p>Pick up where you left off.${meta ? `<br><span class="landing-rail-sub">${meta}</span>` : ''}</p>
-        <span class="landing-resume-btn">RESUME &rarr;</span>
-      </span>
+    slot.innerHTML = `<button class="landing-continue-btn" data-save-id="${esc(save.saveId)}" aria-label="Continue duel${meta ? ': ' + meta.replace(/&middot;/g, '·') : ''}">
+      <svg class="landing-continue-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>
+      <span class="landing-continue-label">CONTINUE DUEL</span>
+      ${meta ? `<span class="landing-continue-meta">${meta}</span>` : ''}
     </button>`;
-    const continueBtn = slot.querySelector('.landing-rail-card.continue');
+    const continueBtn = slot.querySelector('.landing-continue-btn');
     if (continueBtn) {
       continueBtn.addEventListener('click', () => {
         const saveId = continueBtn.dataset.saveId;
@@ -902,11 +1083,10 @@ async function loadContinueCard() {
         location.hash = '#/play/match';
       });
     }
-    // Continue slot is already first in the rail; no promotion needed
-    // (Learn Intrilex card was removed — Continue Duel is the top rail card)
   } catch { /* persistence unavailable — silently omit Continue card */ }
 }
 
+/** Render the rules/rulebook page inside the landing container with a reading layout. */
 function renderRules() {
   landingContainer.innerHTML = `<div class="landing-app rules-app">
     <a class="skip skip-link" href="#rules-main">Skip to content</a>
@@ -919,15 +1099,20 @@ function renderRules() {
 // ═══════════════════════════════════════════════════════════════
 // FILTERS
 // ═══════════════════════════════════════════════════════════════
+/** Render the global filter bar (cohort chips + clear button) in the shell footer. */
 function renderFilters() {
   const chips = [];
   if (state.filters.profile !== 'all') chips.push(['Profile', state.filters.profile, () => state.filters.profile = 'all']);
   if (state.selectedMechanic) chips.push(['Mechanic', state.selectedMechanic, () => state.selectedMechanic = null]);
   if (state.selectedPolicy) chips.push(['Policy', state.selectedPolicy, () => state.selectedPolicy = null]);
   if (state.filters.evidence !== 'all') chips.push(['Evidence', state.filters.evidence, () => state.filters.evidence = 'all']);
-  document.querySelector('#global-filter-bar').innerHTML = `<span class="eyebrow">COHORT</span>${chips.length ? `<span class="filter-count-badge" aria-label="${chips.length} active filters">${chips.length}</span>` : ''}${chips.length ? chips.map(([k, v], i) => `<span class="filter-chip"><b>${esc(k)}</b>${esc(v)}<button data-remove-filter="${i}" aria-label="Remove ${esc(k)} filter: ${esc(v)}">×</button></span>`).join('') : '<span class="footer-note">All compatible v' + RULES_VERSION + ' / Engine ' + ENGINE_VERSION + ' observations</span>'}<button id="clear-filters" class="ghost-button" ${chips.length ? '' : 'disabled'}>Clear</button>`;
-  document.querySelectorAll('[data-remove-filter]').forEach(button => button.addEventListener('click', () => { chips[Number(button.dataset.removeFilter)][2](); render(); }));
-  document.querySelector('#clear-filters').addEventListener('click', () => { state.selectedMechanic = null; state.selectedPolicy = null; state.filters = { profile: 'all', policy: 'all', outcome: 'all', evidence: 'all', search: '' }; render(); });
+  const filterBar = cachedFilterBar();
+  if (!filterBar) return;
+  filterBar.innerHTML = `<span class="eyebrow">COHORT</span>${chips.length ? `<span class="filter-count-badge" aria-label="${chips.length} active filters">${chips.length}</span>` : ''}${chips.length ? chips.map(([k, v], i) => `<span class="filter-chip"><b>${esc(k)}</b>${esc(v)}<button data-remove-filter="${i}" aria-label="Remove ${esc(k)} filter: ${esc(v)}">×</button></span>`).join('') : '<span class="footer-note">All compatible v' + RULES_VERSION + ' / Engine ' + ENGINE_VERSION + ' observations</span>'}<button id="clear-filters" class="ghost-button" ${chips.length ? '' : 'disabled'}>Clear</button>`;
+  // Re-query after innerHTML replaces child nodes — these can't be cached
+  filterBar.querySelectorAll('[data-remove-filter]').forEach(button => button.addEventListener('click', () => { chips[Number(button.dataset.removeFilter)][2](); render(); }));
+  const clearBtn = filterBar.querySelector('#clear-filters');
+  if (clearBtn) clearBtn.addEventListener('click', () => { state.selectedMechanic = null; state.selectedPolicy = null; state.filters = { profile: 'all', policy: 'all', outcome: 'all', evidence: 'all', search: '' }; render(); });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -935,7 +1120,9 @@ function renderFilters() {
 // ═══════════════════════════════════════════════════════════════
 function currentFrame() { return state.visibility === 'public' ? state.replay.frames[state.frame] : state.authorized?.frames[state.frame]; }
 function currentState() { const frame = currentFrame(); if (!frame) return {}; if (state.visibility === 'public') return frame.state; if (state.visibility === 'player') return frame.playerViews?.[state.viewer] ?? {}; return frame.omniscientState ?? {}; }
+/** Stop replay playback and clear the playback timer. */
 export function stop() { state.playing = false; if (state.timer) clearInterval(state.timer); state.timer = null; }
+/** Toggle replay playback (play/pause). Re-renders after state change. */
 export function togglePlay() { if (state.playing) { stop(); render(); return; } state.playing = true; state.timer = setInterval(() => { if (state.frame >= state.replay.frames.length - 1) { stop(); render(); return; } stepTo(state.frame + 1); }, Math.max(65, 700 / state.speed)); render(); }
 function stepTo(index) { state.frame = clamp(index, 0, state.replay.frames.length - 1); state.selectedTimelineIndex = null; triggerFxForFrame(); render(); }
 function commandAt(index) { return state.replay.commands?.[Math.max(0, index - 1)] ?? null; }
@@ -980,8 +1167,19 @@ function playerBoard(s, player, id) {
   const points = secured(s, player);
   return `<div class="player-board"><div class="player-header"><span class="player-seat">${esc(id)}</span><span class="player-score">${points} pts · Goal ${player.goal ?? 0}</span></div><div class="player-zones">${zone(s, 'Point Row', player.pr ?? [], 'pr')}${zone(s, 'Effect Row', player.er ?? [], 'er')}${zone(s, 'Hand', player.hand ?? [], 'hand')}</div></div>`;
 }
+/**
+ * Render the Watch workspace — replay playback with transport controls,
+ * frame slider, board visualization, and timeline.
+ * Shows an empty-state placeholder when no replay is loaded (IRX-H21).
+ */
 function renderWatch() {
-  if (!state.replay || !state.replay.frames) { app.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">◈</span><strong>No replay loaded.</strong><p>Select a replay from the Replays workspace or run a campaign.</p><a class="primary-button empty-action" href="#/replays">Browse replays</a></div>'; return; }
+  if (!state.replay || !state.replay.frames) {
+    // IRX-H21: Render a minimal Watch workspace shell with a frame-slider
+    // placeholder so the workspace is still functional even when replay
+    // blobs are excluded from the build (~670MB savings).
+    app.innerHTML = '<div class="watch-layout"><div class="watch-controls"><div class="transport" role="group" aria-label="Playback transport"><button id="step-prev" disabled title="Previous frame" aria-label="Previous frame">◀</button><button id="play-toggle" aria-label="Play">▶</button><button id="step-next" disabled title="Next frame" aria-label="Next frame">▶</button><button id="step-end" disabled title="Skip to end" aria-label="Skip to end">⏭</button></div><div class="progress"><input type="range" id="frame-slider" aria-label="Replay frame slider" min="0" max="0" value="0" disabled><span>0/0</span></div><div class="speed-control"><label>Speed<select id="play-speed" disabled><option value="1">1×</option></select></label></div><div class="current-action"><span class="action-label">No replay loaded</span></div></div><div class="watch-board"><div class="empty-state" style="grid-column:1/-1"><span class="empty-state-icon" aria-hidden="true">◈</span><strong>No replay loaded.</strong><p>Select a replay from the Replays workspace or run a campaign.</p><a class="primary-button empty-action" href="#/replays">Browse replays</a></div></div></div>';
+    return;
+  }
   const frame = currentFrame(), s = currentState(), timeline = visibleTimeline(), total = state.replay.frames.length - 1;
   const players = s.turnOrder ?? Object.keys(s.players ?? {});
   const currentCmd = commandAt(state.frame);
@@ -1014,7 +1212,9 @@ function renderWatch() {
       const def = getCardDefinition(identity);
       if (def) {
         // Open the Advanced Card Rules View (replaces the old card-face dialog).
-        openAdvancedCardRules(identity);
+        // IRX-M32: Lazy-load the advanced card rules module on first card click.
+        getAdvancedCardRules().then(({ openAdvancedCardRules }) => openAdvancedCardRules(identity))
+          .catch((err) => console.error('[card-rules] failed to load module:', err));
       }
     }
   });
@@ -1023,6 +1223,10 @@ function renderWatch() {
 // ═══════════════════════════════════════════════════════════════
 // EXTRACT — analysis export
 // ═══════════════════════════════════════════════════════════════
+/**
+ * Export the current observatory analysis to the clipboard as JSON or Markdown.
+ * @param {'json'|'markdown'} format - Output format
+ */
 export async function showExtract(format) {
   if (!state._extractModule) {
     app.innerHTML = '<div class="notice warning"><strong>Extract module not loaded.</strong></div>';
@@ -1049,8 +1253,11 @@ export async function showExtract(format) {
  * current auth state. Called on boot and whenever auth state changes.
  */
 function updateAccountDropdown() {
-  const authState = getAuthState();
-  const profile = getProfile();
+  // IRX-M32: Auth module is lazy-loaded — guard against null ref before bootstrap completes.
+  const authMod = getAuthController.cached;
+  if (!authMod) return;
+  const authState = authMod.getAuthState();
+  const profile = authMod.getProfile();
   const signedIn = authState === 'AUTHENTICATED' || authState === 'ANONYMOUS';
 
   // Update account name in the trigger button
@@ -1097,7 +1304,12 @@ window.addEventListener('hashchange', () => { render(); });
 // initAuth reads the Supabase session and subscribes to changes.
 // initAccountStore syncs the reactive store with auth-controller.
 // Both are safe to call when Supabase is not configured (they return UNCONFIGURED).
-initAuth().then(() => {
+// IRX-M32: Auth, account-store, and migration modules are lazy-loaded via
+// dynamic import() so they stay out of the initial bundle. The bootstrap
+// sequence is unchanged — it just loads the modules first.
+getAuthController().then(async ({ initAuth, isMigrationPending }) => {
+  await initAuth();
+  const { initAccountStore, subscribe: subscribeToAccount } = await getAccountStore();
   initAccountStore();
   // Subscribe to auth state changes to update the account dropdown reactively
   subscribeToAccount(() => updateAccountDropdown());
@@ -1107,6 +1319,7 @@ initAuth().then(() => {
   // local achievements to the permanent account via the match server.
   if (isMigrationPending()) {
     showToast('Transferring your progress to your permanent account…', { type: 'info' });
+    const { runMigrationIfPending } = await getMigrationController();
     runMigrationIfPending().then((result) => {
       if (result && result.success) {
         if (result.alreadyMigrated) {

@@ -89,7 +89,7 @@ async function connectAndCreateMatch(port) {
     ws.on('error', reject);
   });
 
-  const createMsg = createMatch('core-unrestricted-authority', 'req-create');
+  const createMsg = createMatch('core-unrestricted-authority', 'req-create', { queueId: 'casual' });
   const createResp = await new Promise((resolve) => {
     ws.on('message', (data) => resolve(JSON.parse(data.toString())));
     ws.send(JSON.stringify(createMsg));

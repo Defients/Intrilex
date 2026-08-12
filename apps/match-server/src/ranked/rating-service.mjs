@@ -64,6 +64,16 @@ export class RatingService {
       this._log('ratingUpdateRejectedNotRanked', { matchId: record?.matchId, reason: check.reason });
       return { success: true, alreadyPersisted: false, rated: false, reason: check.reason, error: null };
     }
+    // IRX-H08: If a RANKED record fails eligibility (self-match, anonymous,
+    // not-two-rated-accounts, non-COMPLETED), REJECT it entirely. Do NOT
+    // persist it as a ranked match — an ineligible ranked record must never
+    // enter account truth. Previously, such records fell through to
+    // persistMatchResult and were stored as ranked matches without rating
+    // updates, polluting match history with invalid ranked results.
+    if (!check.eligible && record?.queueId === RANKED_QUEUE_ID) {
+      this._log('rankedResultRejectedIneligible', { matchId: record?.matchId, reason: check.reason });
+      return { success: false, alreadyPersisted: false, rated: false, reason: check.reason, error: `Ineligible ranked result rejected: ${check.reason}` };
+    }
 
     // Persist (the persistor is the idempotency gate + writes rating state).
     const result = await this._persistor.persistMatchResult(record);

@@ -23,34 +23,34 @@
 // (no presence infrastructure). No fake social actions.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct } from '../state.js';
-import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js';
-import { RankTier } from '@intrilex/account-domain/rank-tier';
-import { apexLabel } from '@intrilex/account-domain/leaderboard';
+import { app, esc, pct } from '../state.js?v=659a089d50b6';
+import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=659a089d50b6';
+import { RankTier } from "../account-domain/rank-tier.mjs";
+import { apexLabel } from "../account-domain/leaderboard.mjs";
 import {
   DIRECTORY_SORTS,
   DIRECTORY_SORT_LABELS,
   DIRECTORY_PAGE_SIZE,
   DirectorySort,
-} from '@intrilex/account-domain/directory';
+} from "../account-domain/directory.mjs";
 import {
   RECENT_OPPONENTS_PAGE_SIZE,
   formatHeadToHead,
   formatLastPlayed,
-} from '@intrilex/account-domain/recent-opponents';
+} from "../account-domain/recent-opponents.mjs";
 import {
   RelationshipKind,
   RELATIONSHIPS_PAGE_SIZE,
   formatRelationshipHeadToHead,
   rivalryIntensityLabel,
-} from '@intrilex/account-domain/relationships';
-import { fetchDirectory } from '../play/players/players-data.js';
-import { fetchRecentOpponents } from '../play/players/recent-opponents-data.js';
+} from "../account-domain/relationships.mjs";
+import { fetchDirectory } from '../play/players/players-data.js?v=659a089d50b6';
+import { fetchRecentOpponents } from '../play/players/recent-opponents-data.js?v=659a089d50b6';
 import {
   fetchRelationships,
   fetchSuggestedRivals,
   DEFAULT_SUGGESTED_RIVALS_LIMIT,
-} from '../play/players/relationships-data.js';
+} from '../play/players/relationships-data.js?v=659a089d50b6';
 
 /** @typedef {'directory'|'opponents'|'rivals'} PlayerTab */
 /** @typedef {'rivals'|'following'|'suggested'} RivalsSegment */
@@ -1249,7 +1249,7 @@ function updateRivalsSegmentButtons(target) {
  */
 async function handleQuickRival(target, pid, btn) {
   // Lazy import to avoid loading the data layer until first interaction.
-  const { setRival } = await import('../play/players/relationships-data.js');
+  const { setRival } = await import('../play/players/relationships-data.js?v=659a089d50b6');
   btn.disabled = true;
   const original = btn.textContent;
   btn.textContent = 'Adding…';

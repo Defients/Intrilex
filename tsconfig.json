@@ -23,14 +23,21 @@
       "@intrilex/match-authority": ["./packages/match-authority/src/authoritative-match-session.mjs"],
       "@intrilex/match-authority/match-store": ["./packages/match-authority/src/match-store.mjs"],
       "@intrilex/match-authority/matchmaking-queue": ["./packages/match-authority/src/matchmaking-queue.mjs"],
-      "@intrilex/match-authority/player-projection": ["./packages/match-authority/src/player-projection.mjs"]
+      "@intrilex/match-authority/player-projection": ["./packages/match-authority/src/player-projection.mjs"],
+      "@intrilex/network-protocol": ["./packages/network-protocol/src/protocol.mjs"],
+      "@intrilex/network-protocol/reason-codes": ["./packages/network-protocol/src/reason-codes.mjs"],
+      "@intrilex/network-protocol/validation": ["./packages/network-protocol/src/validation.mjs"],
+      "@intrilex/achievements": ["./packages/achievements/src/index.mjs"],
+      "@intrilex/account-domain": ["./packages/account-domain/src/index.mjs"],
+      "@intrilex/account-domain/profile-domain": ["./packages/account-domain/src/profile-domain.mjs"]
     }
   },
   "include": [
     "packages/shared/src/**/*.mjs",
     "packages/statistics/src/**/*.mjs",
     "packages/match-authority/src/**/*.mjs",
-    "packages/achievements/src/**/*.mjs"
+    "packages/achievements/src/**/*.mjs",
+    "packages/network-protocol/src/**/*.mjs"
   ],
   "exclude": [
     "node_modules",

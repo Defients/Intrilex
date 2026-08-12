@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false
+  },
+  "include": [
+    "packages/shared/src/**/*.mjs",
+    "packages/statistics/src/**/*.mjs",
+    "packages/match-authority/src/**/*.mjs",
+    "packages/achievements/src/**/*.mjs",
+    "packages/network-protocol/src/**/*.mjs",
+    "packages/account-domain/src/**/*.mjs",
+    "apps/match-server/src/**/*.mjs"
+  ],
+  "exclude": [
+    "node_modules",
+    "test",
+    "scripts",
+    "runtime",
+    "vendor",
+    "upstream",
+    "release"
+  ]
+}

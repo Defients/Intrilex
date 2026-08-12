@@ -9,17 +9,17 @@
  * runtime. Also works standalone for real-time games.
  */
 
-import { createPerception } from "./perception.js";
-import { createPersonality, updateMorale, decayMorale, describePersonality } from "./personality.js";
-import { createMemory } from "./memory.js";
-import { createCognition } from "./cognition.js";
-import { createSharedBlackboard, evaluateCoordination } from "./coordination.js";
-import { createFailsafe, determineLodTier } from "./failsafe.js";
-import { createDebugSystem } from "./debug.js";
-import { getDifficultyConfig, getReactionMultiplier, getAdaptationRate, isCoordinationEnabled, auditDifficultyConfig } from "./difficulty.js";
-import { evaluateRankStrategy } from "./rank-strategy.js";
-import { DeterministicPolicyRng } from "./browser-policy-sdk.js";
-import { scorePolicyAction } from "../policy-scoring.js";
+import { createPerception } from "./perception.js?v=659a089d50b6";
+import { createPersonality, updateMorale, decayMorale, describePersonality } from "./personality.js?v=659a089d50b6";
+import { createMemory } from "./memory.js?v=659a089d50b6";
+import { createCognition } from "./cognition.js?v=659a089d50b6";
+import { createSharedBlackboard, evaluateCoordination } from "./coordination.js?v=659a089d50b6";
+import { createFailsafe, determineLodTier } from "./failsafe.js?v=659a089d50b6";
+import { createDebugSystem } from "./debug.js?v=659a089d50b6";
+import { getDifficultyConfig, getReactionMultiplier, getAdaptationRate, isCoordinationEnabled, auditDifficultyConfig } from "./difficulty.js?v=659a089d50b6";
+import { evaluateRankStrategy } from "./rank-strategy.js?v=659a089d50b6";
+import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=659a089d50b6";
+import { scorePolicyAction } from "../policy-scoring.js?v=659a089d50b6";
 
 export const ARCHETYPE_TO_SCORING_POLICY = Object.freeze({
   rusher: 'score-rush',

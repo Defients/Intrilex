@@ -35,11 +35,12 @@ const FORBIDDEN_ACTION_FIELDS = new Set([
  * @property {string} [viewHash]
  * @property {string} [matchMode] - Server-owned match classification (v0.28)
  * @property {string|null} [queueId] - Server-owned queue ID (v0.28)
+ * @property {boolean} [ready] - Local participant's ready status (v0.27.1)
  * @property {Record<string, *>} [match]
  * @property {{ actorId: *, stateRevision: *, frameHash: *, isMyDecision: *, legalActions?: Array<Record<string, *>> }} [decision]
  * @property {Record<string, *>|null} [playerView]
  * @property {Array<{ type: string, controllerId?: string }>} [recentEvents]
- * @property {{ playerId: string, connectionState: string, publicProfile?: { displayName: string, handle: (string|null), avatarUrl: (string|null), rating: (number|null), rank: (string|null) }|null }|null} [opponent]
+ * @property {{ playerId: string, connectionState: string, ready?: boolean, publicProfile?: { displayName: string, handle: (string|null), avatarUrl: (string|null), rating: (number|null), rank: (string|null) }|null }|null} [opponent]
  */
 
 /**
@@ -56,8 +57,8 @@ export function buildNetworkPlayerView(authorizedView) {
   const safe = {};
 
   // Copy allowed top-level fields
-  /** @type {('matchId'|'status'|'profileId'|'participantId'|'playerId'|'viewHash'|'matchMode'|'queueId')[]} */
-  const allowedFields = ['matchId', 'status', 'profileId', 'participantId', 'playerId', 'viewHash', 'matchMode', 'queueId'];
+  /** @type {('matchId'|'status'|'profileId'|'participantId'|'playerId'|'viewHash'|'matchMode'|'queueId'|'ready')[]} */
+  const allowedFields = ['matchId', 'status', 'profileId', 'participantId', 'playerId', 'viewHash', 'matchMode', 'queueId', 'ready'];
   for (const key of allowedFields) {
     if (authorizedView[key] !== undefined) {
       safe[key] = authorizedView[key];
@@ -102,11 +103,12 @@ export function buildNetworkPlayerView(authorizedView) {
     }));
   }
 
-  // Opponent info (connection state + public profile, no hand identities)
+  // Opponent info (connection state + ready + public profile, no hand identities)
   if (authorizedView.opponent) {
     safe.opponent = {
       playerId: authorizedView.opponent.playerId,
       connectionState: authorizedView.opponent.connectionState,
+      ready: authorizedView.opponent.ready ?? false,
       // Public profile for opponent display (displayName, rating, rank, etc.)
       publicProfile: authorizedView.opponent.publicProfile ?? null,
     };
@@ -198,9 +200,10 @@ export function buildSpectatorView(authorizedView) {
   /** @type {Record<string, *>} */
   const safe = {};
 
-  // Copy allowed top-level fields (no playerId — spectator has no seat)
-  /** @type {('matchId'|'status'|'profileId'|'viewHash')[]} */
-  const allowedFields = ['matchId', 'status', 'profileId', 'viewHash'];
+  // Copy allowed top-level fields (no playerId, no viewHash — spectator has no seat)
+  // IRX-C02: viewHash is participant-specific and must NOT leak to spectators.
+  /** @type {('matchId'|'status'|'profileId')[]} */
+  const allowedFields = ['matchId', 'status', 'profileId'];
   for (const key of allowedFields) {
     if (authorizedView[key] !== undefined) {
       safe[key] = authorizedView[key];
@@ -220,15 +223,15 @@ export function buildSpectatorView(authorizedView) {
     };
   }
 
-  // Decision metadata — actor and revision only, NO legal actions
+  // Decision metadata — actor and revision only, NO legal actions, NO frameHash
+  // IRX-C02: frameHash is participant-specific and must NOT leak to spectators.
   if (authorizedView.decision) {
     safe.decision = {
       actorId: authorizedView.decision.actorId,
       stateRevision: authorizedView.decision.stateRevision,
-      frameHash: authorizedView.decision.frameHash,
       isMyDecision: false, // Spectator never has a decision
     };
-    // legalActions intentionally omitted
+    // legalActions and frameHash intentionally omitted
   }
 
   // Build a neutral board view from the playerView, hiding BOTH hands
@@ -307,15 +310,24 @@ function buildNeutralBoardView(pv) {
   }
 
   // Hide known cards that include hand identities
+  // IRX-C02: The engine uses uppercase zone names like "P1_HAND", "P2_HAND".
+  // The previous check only matched lowercase "hand", allowing hand card
+  // identities to survive into the spectator view. Now we check case-insensitively
+  // and also match any zone ending with "_HAND".
   if (safe.knownCards) {
     // Keep only public-zone cards (PR, ER, GY, exile, swap-bar face-up)
     // Remove any cards that are in a hand zone
     /** @type {Record<string, *>} */
     const filtered = {};
     for (const [id, card] of Object.entries(safe.knownCards)) {
-      if (card && card.zone && card.zone !== 'hand') {
-        filtered[id] = card;
+      if (card && card.zone) {
+        const zoneLower = String(card.zone).toLowerCase();
+        // Reject any hand zone: "hand", "p1_hand", "p2_hand", etc.
+        if (zoneLower === 'hand' || zoneLower.endsWith('_hand')) {
+          continue;
+        }
       }
+      filtered[id] = card;
     }
     safe.knownCards = filtered;
   }

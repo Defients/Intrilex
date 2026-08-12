@@ -678,10 +678,8 @@ $$;
 -- RPC: equip_title / equip_profile_frame / equip_card_back
 -- Owner-only. Ownership is validated against account_achievements:
 -- a cosmetic whose title_id/frame_id/card_back_id maps to an
--- achievement requires that achievement to be earned. The mapping
--- is enforced in the application layer (profile-domain.mjs catalogs).
--- The DB enforces: known IDs, owner-only, and presence in the
--- achievement table for achievement-gated cosmetics.
+-- achievement requires that achievement to be earned.
+-- IRX-H34: The DB now enforces ownership, not just known IDs.
 -- ═══════════════════════════════════════════════════════════════
 CREATE OR REPLACE FUNCTION public.equip_title(p_title_id text)
 RETURNS jsonb
@@ -689,10 +687,28 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  v_achievement_id text;
 BEGIN
   IF auth.uid() IS NULL THEN RETURN jsonb_build_object('ok', false, 'error', 'NOT_AUTHENTICATED'); END IF;
   IF p_title_id NOT IN ('none','initiate','twenty-one','lucky-vii','stack-thief','intrilexian','card-savant','sovereign') THEN
     RETURN jsonb_build_object('ok', false, 'error', 'UNKNOWN_TITLE');
+  END IF;
+  -- IRX-H34: Validate achievement ownership for achievement-gated titles
+  v_achievement_id := CASE p_title_id
+    WHEN 'initiate' THEN 'welcome-to-intrilex'
+    WHEN 'twenty-one' THEN 'twenty-one'
+    WHEN 'lucky-vii' THEN 'lucky-seven'
+    WHEN 'stack-thief' THEN 'stack-theft'
+    WHEN 'intrilexian' THEN 'intrilexian'
+    WHEN 'card-savant' THEN 'card-savant'
+    WHEN 'sovereign' THEN 'sovereign'
+    ELSE NULL
+  END;
+  IF v_achievement_id IS NOT NULL THEN
+    IF NOT EXISTS (SELECT 1 FROM public.account_achievements WHERE user_id = auth.uid() AND achievement_id = v_achievement_id) THEN
+      RETURN jsonb_build_object('ok', false, 'error', 'ACHIEVEMENT_NOT_OWNED');
+    END IF;
   END IF;
   INSERT INTO public.profile_customization (user_id, title_id) VALUES (auth.uid(), p_title_id)
     ON CONFLICT (user_id) DO UPDATE SET title_id = EXCLUDED.title_id, updated_at = now();
@@ -706,10 +722,27 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  v_achievement_id text;
 BEGIN
   IF auth.uid() IS NULL THEN RETURN jsonb_build_object('ok', false, 'error', 'NOT_AUTHENTICATED'); END IF;
   IF p_frame_id NOT IN ('none','initiate-frame','cipher-frame','warden-frame','vanguard-frame','ascendant-frame','intrilex-frame') THEN
     RETURN jsonb_build_object('ok', false, 'error', 'UNKNOWN_FRAME');
+  END IF;
+  -- IRX-H34: Validate achievement ownership for achievement-gated frames
+  v_achievement_id := CASE p_frame_id
+    WHEN 'initiate-frame' THEN 'welcome-to-intrilex'
+    WHEN 'cipher-frame' THEN 'first-counter'
+    WHEN 'warden-frame' THEN 'stack-theft'
+    WHEN 'vanguard-frame' THEN 'flawless-victory'
+    WHEN 'ascendant-frame' THEN 'ranked-initiate'
+    WHEN 'intrilex-frame' THEN 'intrilexian'
+    ELSE NULL
+  END;
+  IF v_achievement_id IS NOT NULL THEN
+    IF NOT EXISTS (SELECT 1 FROM public.account_achievements WHERE user_id = auth.uid() AND achievement_id = v_achievement_id) THEN
+      RETURN jsonb_build_object('ok', false, 'error', 'ACHIEVEMENT_NOT_OWNED');
+    END IF;
   END IF;
   INSERT INTO public.profile_customization (user_id, profile_frame_id) VALUES (auth.uid(), p_frame_id)
     ON CONFLICT (user_id) DO UPDATE SET profile_frame_id = EXCLUDED.profile_frame_id, updated_at = now();
@@ -723,10 +756,26 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  v_achievement_id text;
 BEGIN
   IF auth.uid() IS NULL THEN RETURN jsonb_build_object('ok', false, 'error', 'NOT_AUTHENTICATED'); END IF;
   IF p_card_back_id NOT IN ('default','initiate-back','cipher-back','seven-back','theft-back','intrilex-back') THEN
     RETURN jsonb_build_object('ok', false, 'error', 'UNKNOWN_CARD_BACK');
+  END IF;
+  -- IRX-H34: Validate achievement ownership for achievement-gated card backs
+  v_achievement_id := CASE p_card_back_id
+    WHEN 'initiate-back' THEN 'welcome-to-intrilex'
+    WHEN 'cipher-back' THEN 'first-counter'
+    WHEN 'seven-back' THEN 'lucky-seven'
+    WHEN 'theft-back' THEN 'stack-theft'
+    WHEN 'intrilex-back' THEN 'intrilexian'
+    ELSE NULL
+  END;
+  IF v_achievement_id IS NOT NULL THEN
+    IF NOT EXISTS (SELECT 1 FROM public.account_achievements WHERE user_id = auth.uid() AND achievement_id = v_achievement_id) THEN
+      RETURN jsonb_build_object('ok', false, 'error', 'ACHIEVEMENT_NOT_OWNED');
+    END IF;
   END IF;
   INSERT INTO public.profile_customization (user_id, card_back_id) VALUES (auth.uid(), p_card_back_id)
     ON CONFLICT (user_id) DO UPDATE SET card_back_id = EXCLUDED.card_back_id, updated_at = now();

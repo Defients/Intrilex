@@ -747,7 +747,7 @@ export class PlaySession {
     // Wire candidate into the session temporarily for replay
     this.status = SessionState.ADVANCING;
     this.sessionId = save.sessionId;
-    this.setup = { profileId: save.profileId, seed: save.setup.seed, humanPlayerId: save.setup.humanPlayerId, aiPolicyId: save.setup.aiPolicyId, aiArchetype: '', aiDifficulty: '', mode: save.mode, tutorial: save.tutorial };
+    this.setup = { profileId: save.profileId, seed: save.setup.seed, humanPlayerId: save.setup.humanPlayerId, aiPolicyId: save.setup.aiPolicyId, aiArchetype: save.setup.aiArchetype ?? '', aiDifficulty: save.setup.aiDifficulty ?? '', mode: save.mode, tutorial: save.tutorial };
     this.engine = candidateEngine;
     this.state = candidateState;
     this._decisionIndex = 0;

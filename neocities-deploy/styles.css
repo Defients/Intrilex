@@ -5,9 +5,11 @@
 @import './css/tokens-base.css';
 @import './css/feature-components.css';
 @import './css/pages-polish.css';
+@import './css/landing-revamp.css';
 @import './css/advanced-card-rules.css';
 @import './play/rank/rank-glyph.css';
 @import './play/rank/ranking-system-overlay.css';
 @import './play/ranked/leaderboard.css';
 @import './play/players/players.css';
 @import './play/play-v3.css';
+@import './play/puzzle/puzzle.css';

@@ -26,6 +26,17 @@ import {
 } from '@intrilex/engine-adapter';
 
 import { ReasonCode, PROTOCOL_VERSION } from '@intrilex/network-protocol';
+import { createHash } from 'node:crypto';
+
+/**
+ * IRX-H15: Hash a participant token for secure storage in snapshots.
+ * The plaintext token is never persisted — only its SHA-256 hash.
+ * @param {string} token
+ * @returns {string}
+ */
+function _hashToken(token) {
+  return createHash('sha256').update(token).digest('hex');
+}
 
 // ── Match status constants ──
 
@@ -99,7 +110,8 @@ export const ConnectionState = Object.freeze({
  * @typedef {object} MatchSnapshotParticipant
  * @property {string} participantId
  * @property {string} playerId
- * @property {string} token
+ * @property {string} [token] - Plaintext token (deprecated — only in old snapshots, IRX-H15)
+ * @property {string} [tokenHash] - SHA-256 hash of token (IRX-H15 — new snapshots)
  * @property {string|null} [accountId] - Account ID that owns this participant (v3 — absent in v2 snapshots)
  * @property {{ displayName: string, handle: (string|null), avatarUrl: (string|null), rating: (number|null), rank: (string|null) }|null} [publicProfile] - Public profile for opponent display (v3+ — absent in old snapshots)
  * @property {string} connectionState
@@ -249,6 +261,10 @@ export class AuthoritativeMatchSession {
     this.participants.set(participantId, {
       playerId,
       token,
+      // IRX-H15: Store hash for token validation. The plaintext token is kept
+      // in memory for the live session (returned to the client) but only the
+      // hash is persisted in snapshots.
+      tokenHash: _hashToken(token),
       accountId: accountId ?? null,
       publicProfile: publicProfile ?? null,
       connectionState: ConnectionState.CONNECTED,
@@ -599,9 +615,14 @@ export class AuthoritativeMatchSession {
       // the client can derive the correct header label (not hardcoded).
       matchMode: this.matchMode,
       queueId: this.queueId,
+      // Local participant's ready status — lets the client show the correct
+      // ready button state after reconnecting to a READY_CHECK match.
+      ready: participant.ready ?? false,
       opponent: opponentParticipant ? {
         playerId: opponentId,
         connectionState: opponentParticipant.connectionState,
+        // Opponent ready status — lets the client show "Opponent is ready"
+        ready: opponentParticipant.ready ?? false,
         // Public profile for opponent display (displayName, rating, rank, etc.)
         publicProfile: opponentParticipant.publicProfile ?? null,
       } : null,
@@ -721,6 +742,35 @@ export class AuthoritativeMatchSession {
 
   // ── Cleanup ──
 
+  /**
+   * Forfeit the match due to a participant disconnect timeout.
+   * The remaining (connected) participant is declared the winner.
+   * IRX-H10: Without this, a player about to lose can simply disconnect
+   * and avoid the rating loss — the match never terminalizes.
+   * @param {string} forfeitingParticipantId - The participant who forfeited
+   * @returns {boolean} true if the match was terminalized by this call
+   */
+  forfeit(forfeitingParticipantId) {
+    if (this.status === MatchStatus.TERMINAL || this.status === MatchStatus.ABORTED) {
+      return false; // Already terminal
+    }
+    if (this.status !== MatchStatus.RUNNING && this.status !== MatchStatus.STARTING) {
+      return false; // Can only forfeit an active match
+    }
+    // Find the winner — the other participant
+    const winnerId = [...this.participants.keys()]
+      .find(pid => pid !== forfeitingParticipantId);
+    if (!winnerId) return false;
+
+    this.status = MatchStatus.TERMINAL;
+    this.terminalReason = 'FORFEIT';
+    this.winner = this.participants.get(winnerId)?.playerId ?? null;
+    this.updatedAt = Date.now();
+    this.commandVault = null;
+    this.legalActionFrame = null;
+    return true;
+  }
+
   close() {
     this.commandVault = null;
     this.legalActionFrame = null;
@@ -763,8 +813,10 @@ export class AuthoritativeMatchSession {
       participants: [...this.participants.entries()].map(([pid, p]) => ({
         participantId: pid,
         playerId: p.playerId,
-        // Token stored for reconnection validation — server-side only, never exposed to clients
-        token: p.token,
+        // IRX-H15: Store SHA-256 hash of token instead of plaintext.
+        // The token itself is never persisted — only its hash. On reconnect,
+        // the server hashes the presented token and compares it to the stored hash.
+        tokenHash: p.tokenHash ?? _hashToken(p.token),
         // Account ID that owns this participant (v3 — absent in v2 snapshots)
         accountId: p.accountId ?? null,
         // Public profile for opponent display (v3+ — absent in old snapshots → null)
@@ -878,12 +930,20 @@ export class AuthoritativeMatchSession {
     for (const p of snapshot.participants ?? []) {
       match.participants.set(p.participantId, {
         playerId: p.playerId,
-        token: p.token,
+        // IRX-H15: New snapshots store tokenHash; old snapshots store plaintext token.
+        // For new snapshots, store the hash directly. For old snapshots, hash the
+        // plaintext token at restore time so we never keep plaintext in memory after
+        // restore.
+        token: p.tokenHash ?? (p.token ? _hashToken(p.token) : null),
+        tokenHash: p.tokenHash ?? (p.token ? _hashToken(p.token) : null),
         // accountId is v3 — absent in v2 snapshots, tolerate null
         accountId: p.accountId ?? null,
         // publicProfile is v3+ — absent in old snapshots, tolerate null
         publicProfile: p.publicProfile ?? null,
-        connectionState: p.connectionState ?? ConnectionState.DISCONNECTED,
+        // IRX-M36: After a server restart, no participant is actually
+        // connected, even if the snapshot says they were. Force DISCONNECTED
+        // so the reconnect grace / forfeit logic applies correctly.
+        connectionState: ConnectionState.DISCONNECTED,
         ready: p.ready ?? false,
       });
     }
@@ -980,32 +1040,39 @@ export class AuthoritativeMatchSession {
 
   /**
    * Validate that a token matches the participant.
+   * IRX-H15: Compares the hash of the presented token against the stored hash.
+   * For live sessions (before snapshot), the stored value IS the hash of the
+   * original token, so we hash the incoming token first.
    * @param {string} participantId
    * @param {string} token
    */
   validateToken(participantId, token) {
     const p = this.participants.get(participantId);
     if (!p) return false;
-    // Constant-time-ish comparison
-    if (typeof token !== 'string' || typeof p.token !== 'string') return false;
-    if (token.length !== p.token.length) return false;
+    if (typeof token !== 'string' || !p.tokenHash) return false;
+    const hashedInput = _hashToken(token);
+    // Constant-time-ish comparison on the hash
+    if (hashedInput.length !== p.tokenHash.length) return false;
     let diff = 0;
-    for (let i = 0; i < token.length; i++) {
-      diff |= token.charCodeAt(i) ^ p.token.charCodeAt(i);
+    for (let i = 0; i < hashedInput.length; i++) {
+      diff |= hashedInput.charCodeAt(i) ^ p.tokenHash.charCodeAt(i);
     }
     return diff === 0;
   }
 
   /**
    * Find participant ID by token.
+   * IRX-H15: Hashes the incoming token and compares against stored hashes.
    * @param {string} token
    */
   findParticipantByToken(token) {
+    if (typeof token !== 'string') return null;
+    const hashedInput = _hashToken(token);
     for (const [pid, p] of this.participants) {
-      if (typeof token === 'string' && typeof p.token === 'string' && token.length === p.token.length) {
+      if (p.tokenHash && hashedInput.length === p.tokenHash.length) {
         let diff = 0;
-        for (let i = 0; i < token.length; i++) {
-          diff |= token.charCodeAt(i) ^ p.token.charCodeAt(i);
+        for (let i = 0; i < hashedInput.length; i++) {
+          diff |= hashedInput.charCodeAt(i) ^ p.tokenHash.charCodeAt(i);
         }
         if (diff === 0) return pid;
       }

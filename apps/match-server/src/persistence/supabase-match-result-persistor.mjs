@@ -52,7 +52,10 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
       .order('starts_at', { ascending: true })
       .limit(1)
       .maybeSingle();
-    if (error || !data) return 'season-1';
+    // IRX-H07: Fail closed — return null when season resolution fails.
+    // The caller (buildMatchResultRecord / broadcastMatchEnded) handles
+    // null by downgrading ranked to casual. Never fabricate 'season-1'.
+    if (error || !data) return null;
     return data.season_id;
   }
 
@@ -237,7 +240,18 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
 
     // Step 2: Insert match_participants rows + update ratings/stats
     const queueId = record.queueId ?? 'casual';
-    const seasonId = record.seasonId ?? (queueId === 'ranked' ? await this.resolveActiveSeasonId(queueId) : 'season-1');
+    // IRX-H07: Never fabricate 'season-1'. If a ranked record arrives without
+    // a seasonId, resolve it; if that fails, the record should not have been
+    // built as ranked (the builder now downgrades to casual when season is
+    // unresolvable). For non-ranked, seasonId is null.
+    let seasonId = record.seasonId ?? null;
+    if (!seasonId && queueId === 'ranked') {
+      try {
+        seasonId = await this.resolveActiveSeasonId(queueId);
+      } catch {
+        seasonId = null;
+      }
+    }
 
     for (const p of record.participants) {
       // Skip participants without an account (anonymous play)
@@ -415,6 +429,45 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
 
     if (error) {
       return { success: false, error: `account_achievements upsert failed: ${error.message}`, persisted: 0 };
+    }
+
+    return { success: true, error: null, persisted: rows.length };
+  }
+
+  /**
+   * Persist achievement progress updates (IRX-H31).
+   * @param {Array<{ accountId: string, achievementId: string, progress: number, target: number|null, updatedAt: string, matchId: string }>} progress
+   * @returns {Promise<{ success: boolean, error: string|null, persisted: number }>}
+   */
+  async persistAchievementProgress(progress) {
+    if (!progress || progress.length === 0) {
+      return { success: true, error: null, persisted: 0 };
+    }
+
+    const rows = [];
+    for (const p of progress) {
+      if (!p.accountId || !p.achievementId) continue;
+      rows.push({
+        user_id: p.accountId,
+        achievement_id: p.achievementId,
+        progress: p.progress,
+        target: p.target ?? null,
+        updated_at: p.updatedAt,
+        last_match_id: p.matchId ?? null,
+      });
+    }
+
+    if (rows.length === 0) {
+      return { success: true, error: null, persisted: 0 };
+    }
+
+    // Upsert with onConflict on (user_id, achievement_id) for idempotency.
+    const { error } = await this._client
+      .from('achievement_progress')
+      .upsert(rows, { onConflict: 'user_id,achievement_id' });
+
+    if (error) {
+      return { success: false, error: `achievement_progress upsert failed: ${error.message}`, persisted: 0 };
     }
 
     return { success: true, error: null, persisted: rows.length };
