@@ -18,6 +18,9 @@ const SessionState = Object.freeze({
   ADVANCING: 'ADVANCING',
   HUMAN_DECISION: 'HUMAN_DECISION',
   AI_DECISION: 'AI_DECISION',
+  // Network human-vs-human: the remote opponent is deciding. Distinct from
+  // AI_DECISION so the UI can show "Opponent is choosing…" vs "AI is choosing…"
+  OPPONENT_DECISION: 'OPPONENT_DECISION',
   TERMINAL: 'TERMINAL',
   SAVING: 'SAVING',
   RESTORING: 'RESTORING',
@@ -95,6 +98,13 @@ export function mapToLifecycleState(sessionStatus, uiContext = {}) {
 
   // AI decision
   if (sessionStatus === SessionState.AI_DECISION) {
+    return LifecycleState.RESPONSE_WINDOW;
+  }
+
+  // Network opponent decision — same lifecycle state as AI decision
+  // (response window / waiting for opponent), but the UI differentiates
+  // the label via the viewmodel's OPPONENT_DECISION status.
+  if (sessionStatus === SessionState.OPPONENT_DECISION) {
     return LifecycleState.RESPONSE_WINDOW;
   }
 

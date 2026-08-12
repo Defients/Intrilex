@@ -543,12 +543,19 @@ function extractGlobalStates(state) {
 
 function deriveStatus(state, snapshot) {
   if (state.terminationReason) return 'TERMINAL';
-  // The decision frame's isHuman flag is authoritative — in response windows,
-  // the active player may be the AI (who acted) but the human has a response action.
+  // Network matches: distinguish between "local human's turn" and "remote
+  // opponent's turn". The decision frame's isHuman flag (mapped from
+  // isMyDecision) tells us whose turn it is. When it's the opponent's turn,
+  // return OPPONENT_DECISION — NOT AI_DECISION — so the renderer shows
+  // "Opponent is choosing…" instead of "AI is choosing…".
+  const isNetwork = snapshot.isNetworkMatch === true;
   const isHuman = snapshot.decision?.isHuman;
   if (isHuman === true) return 'HUMAN_DECISION';
-  if (isHuman === false) return 'AI_DECISION';
+  if (isHuman === false) {
+    return isNetwork ? 'OPPONENT_DECISION' : 'AI_DECISION';
+  }
   // Fallback: infer from active player when no decision frame is present
   const humanId = snapshot.humanPlayerId ?? state.seatOrder?.[0];
-  return state.activePlayerId === humanId ? 'HUMAN_DECISION' : 'AI_DECISION';
+  if (state.activePlayerId === humanId) return 'HUMAN_DECISION';
+  return isNetwork ? 'OPPONENT_DECISION' : 'AI_DECISION';
 }

@@ -1329,6 +1329,7 @@
 }
 .rd-stage-glow.ai { background: radial-gradient(circle, rgba(232,121,249,0.12) 0%, transparent 70%) !important; }
 .rd-stage-glow.human { background: radial-gradient(circle, rgba(34,211,238,0.12) 0%, transparent 70%) !important; }
+.rd-stage-glow.opponent { background: radial-gradient(circle, rgba(251,113,133,0.12) 0%, transparent 70%) !important; }
 
 /* ── Active Stage card (enlarged, dominant) ──────────────────── */
 .rd-stage-card {
@@ -1895,6 +1896,7 @@
   border-top: 1px solid rgba(56,189,248,0.10) !important;
   flex-shrink: 0 !important;
   background: rgba(56,189,248,0.02) !important;
+  margin-top: auto !important;
 }
 
 .rd-chat-input input {
@@ -2019,7 +2021,8 @@
 
 .rd-contextual-actions.read-only,
 .rd-contextual-actions.empty,
-.rd-contextual-actions.ai-thinking {
+.rd-contextual-actions.ai-thinking,
+.rd-contextual-actions.opponent-thinking {
   justify-content: flex-start !important;
   padding-top: 16px !important;
 }

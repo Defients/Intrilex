@@ -106,6 +106,7 @@ function adaptSnapshotForViewModel(controllerSnapshot) {
     sessionId: controllerSnapshot.sessionId,
     humanPlayerId: humanId,
     status: controllerSnapshot.status,
+    isNetworkMatch: controllerSnapshot.isNetworkMatch === true,
     decision: controllerSnapshot.decision ?? null,
     legalActions: controllerSnapshot.decision?.legalActions ?? [],
     chat: [],
@@ -224,6 +225,7 @@ function renderMatch(vm, opts, snapshot) {
   const isReadOnly = opts.leaseMode === 'READ_ONLY';
   const isHumanTurn = vm.status === 'HUMAN_DECISION';
   const isAiTurn = vm.status === 'AI_DECISION';
+  const isOpponentTurn = vm.status === 'OPPONENT_DECISION';
   const isNetwork = vm.mode?.isNetwork === true;
 
   // v0.17.0: Derive priority context from authority for the priority banner
@@ -290,7 +292,7 @@ function renderMatch(vm, opts, snapshot) {
       ${renderHumanHand(vm.battlefield.humanHand, opts)}
     </section>
     <section class="rd-cell rd-right-rail-bottom" data-grid="rightRailBottom" aria-label="Actions and chat">
-      ${renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, priorityContext, immediate, isNetwork)}
+      ${renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, isOpponentTurn, priorityContext, immediate, isNetwork)}
     </section>
     ${isNetwork ? renderDisconnectOverlay(vm, snapshot) : ''}
     ${opts.inspectorCardId ? renderInspector(opts.inspectorCardId, cardRegistry, [], guidanceMode, opts.inspectorFaceView) : ''}
@@ -304,11 +306,11 @@ function renderMatch(vm, opts, snapshot) {
 // v0.28: Swapped layout — Actions on top (larger region), Chat on bottom.
 // The divider between them is draggable. Chat can be completely hidden.
 
-function renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, priorityContext, immediate, isNetwork) {
+function renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, isOpponentTurn, priorityContext, immediate, isNetwork) {
   const chatHidden = opts.chatHidden === true;
   const chatSplit = opts.chatSplit ?? 40; // percentage for chat (0-100 of the container)
 
-  const actionsHtml = renderActionBar(vm, opts, isHumanTurn, isAiTurn, isReadOnly, priorityContext, immediate);
+  const actionsHtml = renderActionBar(vm, opts, isHumanTurn, isAiTurn, isOpponentTurn, isReadOnly, priorityContext, immediate);
   const chatHtml = renderChatPanel(vm, opts, isReadOnly, (opts.chatMessages || []).slice(-30));
 
   // Draggable divider between Actions (top) and Chat (bottom)
@@ -351,6 +353,7 @@ function renderHeader(vm, opts, priorityContext, immediate) {
   const phaseLabel = formatPhase(vm.match.phase);
   const isHumanTurn = vm.status === 'HUMAN_DECISION';
   const isAiTurn = vm.status === 'AI_DECISION';
+  const isOpponentTurn = vm.status === 'OPPONENT_DECISION';
   const isNetwork = vm.mode?.isNetwork === true;
 
   // Compact match-state center: turn · phase · priority owner
@@ -359,15 +362,17 @@ function renderHeader(vm, opts, priorityContext, immediate) {
   // For network human-vs-human, use human-neutral status text, not "AI is choosing…"
   const ownerLabel = isHumanTurn
     ? 'Your action'
-    : isAiTurn
-      ? 'AI is choosing\u2026'
-      : (isNetwork && !isHumanPriority && priorityOwner)
-        ? `${esc(vm.opponent.displayName)} is choosing\u2026`
-        : isHumanPriority
-          ? 'Your priority'
-          : priorityOwner
-            ? `${esc(vm.opponent.displayName)} has priority`
-            : phaseLabel || vm.match.phase;
+    : isOpponentTurn
+      ? `${esc(vm.opponent.displayName)} is choosing\u2026`
+      : isAiTurn
+        ? 'AI is choosing\u2026'
+        : (isNetwork && !isHumanPriority && priorityOwner)
+          ? `${esc(vm.opponent.displayName)} is choosing\u2026`
+          : isHumanPriority
+            ? 'Your priority'
+            : priorityOwner
+              ? `${esc(vm.opponent.displayName)} has priority`
+              : phaseLabel || vm.match.phase;
 
   const windowLabel = priorityContext ? windowTypeLabel(priorityContext.windowType) : '';
   const stackDepth = vm.stack?.length ?? 0;
@@ -629,6 +634,7 @@ function renderActiveStage(vm, opts, snapshot, priorityContext, immediate) {
   const topStack = stack[0];
   const isHumanTurn = vm.status === 'HUMAN_DECISION';
   const isAiTurn = vm.status === 'AI_DECISION';
+  const isOpponentTurn = vm.status === 'OPPONENT_DECISION';
   const isResponseWindow = priorityContext?.windowType === 'response' || priorityContext?.windowType === 'interrupt';
 
   // If there's a resolving/declared card on the stack, show it enlarged
@@ -646,7 +652,7 @@ function renderActiveStage(vm, opts, snapshot, priorityContext, immediate) {
     </div>`;
   }
 
-  // AI thinking state
+  // AI thinking state (local AI matches only)
   if (isAiTurn) {
     return `<div class="rd-active-stage ai-thinking" aria-label="AI is deciding" role="region">
       <div class="rd-stage-glow ai"></div>
@@ -654,6 +660,20 @@ function renderActiveStage(vm, opts, snapshot, priorityContext, immediate) {
       <div class="rd-stage-thinking">
         <span class="rd-ai-dots"><span class="rd-ai-dot"></span><span class="rd-ai-dot"></span><span class="rd-ai-dot"></span></span>
         <span>is deciding\u2026</span>
+      </div>
+    </div>`;
+  }
+
+  // Network opponent thinking state — shows the opponent is choosing, but
+  // does NOT hide the board. The stack/card is already rendered above if
+  // present. This only fires when there's no stack item to show.
+  if (isOpponentTurn) {
+    return `<div class="rd-active-stage opponent-thinking" aria-label="Opponent is deciding" role="region">
+      <div class="rd-stage-glow opponent"></div>
+      <div class="rd-stage-actor">${esc(vm.opponent.displayName)}</div>
+      <div class="rd-stage-thinking">
+        <span class="rd-ai-dots"><span class="rd-ai-dot"></span><span class="rd-ai-dot"></span><span class="rd-ai-dot"></span></span>
+        <span>is choosing\u2026</span>
       </div>
     </div>`;
   }
@@ -757,7 +777,7 @@ function renderResolutionStack(vm) {
 //   Intent → Variant → Target → Confirmation
 // Uses action-presentation.mjs for semantic grouping.
 
-function renderActionBar(vm, opts, isHumanTurn, isAiTurn, isReadOnly, priorityContext, immediate) {
+function renderActionBar(vm, opts, isHumanTurn, isAiTurn, isOpponentTurn, isReadOnly, priorityContext, immediate) {
   const passAction = vm.actions.find(a => a.isPass);
   const passHtml = (passAction && !isReadOnly) ? `<button class="rd-action-pass" data-action-id="${esc(passAction.actionId)}" data-key="P">Pass</button>` : '';
 
@@ -765,6 +785,14 @@ function renderActionBar(vm, opts, isHumanTurn, isAiTurn, isReadOnly, priorityCo
     return `<div class="rd-contextual-actions ai-thinking" aria-label="Actions" role="region">
       <div class="rd-actions-header">ACTIONS</div>
       <div class="rd-action-status">${esc(vm.opponent.displayName)} is deciding\u2026</div>
+    </div>`;
+  }
+
+  // Network opponent's turn — show waiting state, no actions available
+  if (isOpponentTurn) {
+    return `<div class="rd-contextual-actions opponent-thinking" aria-label="Actions" role="region">
+      <div class="rd-actions-header">ACTIONS</div>
+      <div class="rd-action-status">${esc(vm.opponent.displayName)} is choosing\u2026</div>
     </div>`;
   }
 

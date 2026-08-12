@@ -696,12 +696,12 @@ function showPreAlphaOverlay() {
       <button class="prealpha-acknowledge" id="prealpha-acknowledge" disabled aria-disabled="true">
         <span class="prealpha-acknowledge-text">Please wait ${waitSeconds}s&hellip;</span>
       </button>
-      <div class="prealpha-dev-stamp" aria-label="Last development date: August 11, 2026">
+      <div class="prealpha-dev-stamp" aria-label="Last development date: August 12, 2026">
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
         <span class="prealpha-dev-stamp-content">
           <span class="prealpha-dev-stamp-dot" aria-hidden="true"></span>
           <span class="prealpha-dev-stamp-label">Last development</span>
-          <time class="prealpha-dev-stamp-date" datetime="2026-08-11">Aug 11, 2026</time>
+          <time class="prealpha-dev-stamp-date" datetime="2026-08-12">Aug 12, 2026</time>
         </span>
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
       </div>

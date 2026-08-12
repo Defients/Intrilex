@@ -147,12 +147,17 @@ test('server handleSendChat broadcasts to all match participants', async () => {
     // P1 sends a chat message
     ws1.send(JSON.stringify(sendChat(matchId, p1Token, 'Hello from P1!')));
 
-    // Both clients should receive the CHAT_MESSAGE
-    const p1Received = await waitForMessage(ws1, 'CHAT_MESSAGE');
+    // Both clients should receive the CHAT_MESSAGE.
+    // Set up BOTH listeners before awaiting either — the server broadcasts
+    // simultaneously, so CHAT_MESSAGE can arrive on ws2 before the ws1 await
+    // resolves. Without parallel listeners, that message is lost (race).
+    const p1Promise = waitForMessage(ws1, 'CHAT_MESSAGE');
+    const p2Promise = waitForMessage(ws2, 'CHAT_MESSAGE');
+    const p1Received = await p1Promise;
     assert.equal(p1Received.payload.text, 'Hello from P1!');
     assert.ok(p1Received.payload.participantId, 'participantId must be present');
 
-    const p2Received = await waitForMessage(ws2, 'CHAT_MESSAGE');
+    const p2Received = await p2Promise;
     assert.equal(p2Received.payload.text, 'Hello from P1!');
     assert.equal(p2Received.payload.participantId, p1Received.payload.participantId);
 

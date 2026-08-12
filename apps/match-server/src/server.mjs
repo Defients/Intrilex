@@ -1235,9 +1235,17 @@ function handleJoinMatch(connectionId, ws, payload, requestId) {
   send(ws, matchJoined(match.matchId, participantToken, result.playerId, requestId));
   logEvent('matchJoin', { matchId: match.matchId, participantId, accountId: joinerAccountId });
 
-  // Notify the opponent (P1) that P2 has connected
+  // Notify the opponent (P1) that P2 has connected, AND notify P2 of the
+  // opponent's (P1's) current connection state. Without the latter, P2's
+  // lobby UI stays stuck on "Waiting for opponent…" even though P1 is
+  // already in the lobby — because P2 never receives a PARTICIPANT_STATUS
+  // for P1.
   const opponentId = [...match.participants.keys()].find(pid => pid !== participantId);
   if (opponentId) {
+    const opponentParticipant = match.participants.get(opponentId);
+    const opponentConnState = opponentParticipant?.connectionState ?? 'DISCONNECTED';
+
+    // Tell P1 that P2 connected
     const oppConn = findConnectionByParticipant(opponentId, match.matchId);
     if (oppConn) {
       send(oppConn.ws, participantStatus(match.matchId, {
@@ -1245,6 +1253,12 @@ function handleJoinMatch(connectionId, ws, payload, requestId) {
         status: 'CONNECTED',
       }));
     }
+
+    // Tell P2 about P1's current connection state
+    send(ws, participantStatus(match.matchId, {
+      participantId: opponentId,
+      status: opponentConnState,
+    }));
   }
 }
 
@@ -1287,6 +1301,20 @@ function handleResumeMatch(connectionId, ws, payload, requestId) {
   const safeView = buildNetworkPlayerView(view);
   send(ws, matchView(match.matchId, safeView, requestId));
   logEvent('reconnect', { matchId: match.matchId, participantId, accountId: reconnectAccountId });
+
+  // Notify the opponent that this participant has reconnected.
+  // Without this, the opponent's UI stays stuck on "Opponent disconnected"
+  // even after the player successfully reconnects.
+  const opponentId = [...match.participants.keys()].find(pid => pid !== participantId);
+  if (opponentId) {
+    const oppConn = findConnectionByParticipant(opponentId, match.matchId);
+    if (oppConn) {
+      send(oppConn.ws, participantStatus(match.matchId, {
+        participantId,
+        status: 'CONNECTED',
+      }));
+    }
+  }
 }
 
 function handleReady(connectionId, ws, payload, requestId) {

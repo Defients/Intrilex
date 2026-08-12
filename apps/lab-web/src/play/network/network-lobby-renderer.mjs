@@ -171,6 +171,10 @@ export function renderNetworkCreateWaiting(session, options = {}) {
   const inviteCode = session?.inviteCode ?? '';
   const matchId = session?.matchId ?? '';
   const opponentState = session?.opponentConnectionState;
+  // P1 (creator): null means the opponent hasn't joined yet — show "Waiting…"
+  // This is intentionally different from renderNetworkJoinWaiting (P2/joiner),
+  // where null is treated as CONNECTED because P1 must be connected for the
+  // join to succeed.
   const opponentConnected = opponentState === 'CONNECTED';
   const opponentDisconnected = opponentState === 'DISCONNECTED';
   const isReady = session?.status === NetworkSessionState.READY;
@@ -261,7 +265,10 @@ export function renderNetworkJoinWaiting(session, options = {}) {
   const matchId = session?.matchId ?? '';
   const isReady = session?.status === NetworkSessionState.READY;
   const opponentState = session?.opponentConnectionState;
-  const opponentConnected = opponentState === 'CONNECTED';
+  // P2 (joiner) — the opponent (P1/creator) must have been connected for the
+  // join to succeed. Treat null (no status received yet) as CONNECTED rather
+  // than "Waiting…", which is only meaningful for the creator (P1).
+  const opponentConnected = opponentState === 'CONNECTED' || opponentState == null;
   const opponentDisconnected = opponentState === 'DISCONNECTED';
   const error = options.error ?? null;
 

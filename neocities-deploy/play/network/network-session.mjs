@@ -335,6 +335,15 @@ export class NetworkPlaySession {
     this.participantToken = resp.payload.participantToken;
     this.playerId = resp.payload.seat;
     this.opponentPlayerId = this.playerId === 'P1' ? 'P2' : 'P1';
+    // Fallback: assume the opponent (creator) is connected. The server sends
+    // a PARTICIPANT_STATUS message immediately after MATCH_JOINED that will
+    // set the correct state. This default prevents the lobby UI from
+    // flashing "Waiting for opponent…" when the opponent is already there.
+    // If the opponent is actually disconnected, the server's
+    // PARTICIPANT_STATUS(DISCONNECTED) will correct this.
+    if (this.opponentConnectionState === null) {
+      this.opponentConnectionState = 'CONNECTED';
+    }
     this._transition(NetworkSessionState.IN_LOBBY);
     this._saveReconnectInfo();
     this._notifyStateChange();
@@ -1096,7 +1105,11 @@ export class NetworkPlaySession {
   _mapStatus() {
     switch (this.status) {
       case NetworkSessionState.RUNNING:
-        return this.currentView?.decision?.isMyDecision ? 'HUMAN_DECISION' : 'WAITING';
+        // Map to HUMAN_DECISION or OPPONENT_DECISION (not AI_DECISION) —
+        // network matches are human-vs-human. The viewmodel's deriveStatus()
+        // also uses OPPONENT_DECISION for network matches when isMyDecision
+        // is false, so this keeps the snapshot status consistent.
+        return this.currentView?.decision?.isMyDecision ? 'HUMAN_DECISION' : 'OPPONENT_DECISION';
       case NetworkSessionState.TERMINAL:
         return 'TERMINAL';
       case NetworkSessionState.ERROR:
