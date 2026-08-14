@@ -1,0 +1,7 @@
+import{a as u,b as o,c as k,d as x}from"./chunk-chunk-PBGS4XC6.js?v=79ba5ea811bf";import{a as p,b as t,e as l,f as g}from"./chunk-chunk-P6IEULPW.js?v=79ba5ea811bf";var s=(a="")=>String(a).replace(/[&<>"']/g,n=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[n]);function E(a={}){let n=a.tier??p.UNRANKED,e=a.division??t.NONE,i=Math.max(8,Math.floor(a.size??128)),y=a.showDivision===!0&&g(n),r=a.decorative===!0,c=a.className?` ${s(a.className)}`:"",d=k(n)?.glowClass??"tier-unranked",h=y&&e!==t.NONE?` division-${String(e).toLowerCase()}`:"",$=`width:${i}px;height:${i}px;--rank-glyph-size:${i}px`;if(!x(n)){let w=o(n,e),C=r?"":a.altText??`${w} rank`;return`<span class="rank-glyph rank-glyph-unranked ${d}${h}${c}" style="${$}" role="img" aria-label="${s(C)}">
+      <span class="rank-glyph-placeholder" aria-hidden="true">?</span>
+    </span>`}let v=u(n,i),m=r?"":a.altText??`${o(n,e)} rank`,N=a.loading??(i>=128?"eager":"lazy"),f=l(n)?" rank-glyph-apex":"",b=l(n)&&a.leaderboardPosition?`<span class="rank-glyph-apex-position" aria-hidden="true">${s(String(a.leaderboardPosition))}</span>`:"";return`<span class="rank-glyph ${d}${f}${h}${c}" style="${$}" data-tier="${s(n)}" data-size="${i}">
+    <img class="rank-glyph-img" src="${s(v??"")}" alt="${s(m)}" width="${i}" height="${i}" loading="${N}" decoding="async"${r?' aria-hidden="true"':""} />
+    ${b}
+  </span>`}export{E as a};
+//# sourceMappingURL=chunk-chunk-RNFCMMYE.js.map
