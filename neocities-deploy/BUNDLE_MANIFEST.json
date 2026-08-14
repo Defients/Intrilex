@@ -1,15 +1,15 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-08-14T10:54:07.820Z",
+  "generatedAt": "2026-08-14T17:16:26.864Z",
   "assets": {
     "app": {
-      "file": "app.73b458295383.js",
-      "hash": "73b458295383",
+      "file": "app.e2bd7e8507fa.js",
+      "hash": "e2bd7e8507fa",
       "type": "js"
     },
     "styles": {
-      "file": "styles.420a2f510ede.css",
-      "hash": "420a2f510ede",
+      "file": "styles.5d1131dcf39f.css",
+      "hash": "5d1131dcf39f",
       "type": "css"
     },
     "chunks": [
@@ -46,7 +46,7 @@
         "type": "js"
       },
       {
-        "file": "chunk-chunk-44SUZKB5.js",
+        "file": "chunk-chunk-2J3MNG4C.js",
         "type": "js"
       },
       {
@@ -110,6 +110,10 @@
         "type": "js"
       },
       {
+        "file": "chunk-chunk-SMHUOC3E.js",
+        "type": "js"
+      },
+      {
         "file": "chunk-chunk-SOZ76MXY.js",
         "type": "js"
       },
@@ -130,10 +134,6 @@
         "type": "js"
       },
       {
-        "file": "chunk-chunk-TYLXU6TJ.js",
-        "type": "js"
-      },
-      {
         "file": "chunk-chunk-VU7DDZGL.js",
         "type": "js"
       },
@@ -150,7 +150,7 @@
         "type": "js"
       },
       {
-        "file": "chunk-data-loader-H5JS4ZWF.js",
+        "file": "chunk-data-loader-P7RQWHDU.js",
         "type": "js"
       },
       {
@@ -162,11 +162,11 @@
         "type": "js"
       },
       {
-        "file": "chunk-migration-controller-PRHQLMMS.js",
+        "file": "chunk-migration-controller-L64ZVTCH.js",
         "type": "js"
       },
       {
-        "file": "chunk-network-protocol-client-KYAVVWWP.js",
+        "file": "chunk-network-protocol-client-4G54S7LA.js",
         "type": "js"
       },
       {
@@ -174,7 +174,7 @@
         "type": "js"
       },
       {
-        "file": "chunk-play-app-6YUTZRNI.js",
+        "file": "chunk-play-app-XXWU3CBZ.js",
         "type": "js"
       },
       {

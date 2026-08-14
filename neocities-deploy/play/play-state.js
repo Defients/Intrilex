@@ -6,7 +6,7 @@
 // (board-events.js, etc.) can read and write the same state
 // without circular imports or prop-drilling.
 // ═══════════════════════════════════════════════════════════════
-import { GuidanceMode } from './intelligence/action-explanation.js?v=73b458295383';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=e2bd7e8507fa';
 
 export const state = {
   session: null,
@@ -39,6 +39,7 @@ export const state = {
   selectedIntentKey: null, // Currently selected intent group key
   viewMode: null, // Current view mode (e.g. 'start')
   rightRailTab: 'chat', // Active right rail tab ('chat' | 'debug')
+  academyLessonId: null, // Current Academy lesson ID (null for non-academy matches)
 };
 
 /**
@@ -77,4 +78,5 @@ export function resetState() {
   state.rightRailTab = 'chat';
   state._networkAchievementsApplied = false;
   state._achievementSummaryHtml = undefined;
+  state.academyLessonId = null;
 }

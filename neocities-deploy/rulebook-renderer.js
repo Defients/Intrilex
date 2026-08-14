@@ -14,8 +14,8 @@
 
 const esc = (value = '') => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-import { RULES_VERSION } from './version.js?v=73b458295383';
-import { persistSetting, state } from './state.js?v=73b458295383';
+import { RULES_VERSION } from './version.js?v=e2bd7e8507fa';
+import { persistSetting, state } from './state.js?v=e2bd7e8507fa';
 
 // ── Illustrated mode state (persisted, default true) ──────────────
 let RULES_ILLUSTRATED = state.rulesIllustrated !== false;

@@ -11,7 +11,7 @@
 // accessible, and offline-capable (bundled into the app, no fetch).
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from './state.js?v=73b458295383';
+import { esc } from './state.js?v=e2bd7e8507fa';
 
 const EFFECTIVE_DATE = 'August 11, 2026';
 const LAST_UPDATED = 'August 11, 2026';

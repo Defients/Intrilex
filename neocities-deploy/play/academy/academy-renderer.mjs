@@ -29,7 +29,7 @@ export const ACADEMY_LESSONS = [
       'Play a card to your Point Row for its rank value',
       'Reach your Influence goal (21) to win',
     ],
-    aiPolicy: 'score-rush-easy',
+    aiPolicy: 'score-rush',
   },
   {
     id: 'card-effects',
@@ -41,7 +41,7 @@ export const ACADEMY_LESSONS = [
       'Play a 6 to anchor a card (permanent points)',
       'Play a 5 to swap the Swap Bar',
     ],
-    aiPolicy: 'control-easy',
+    aiPolicy: 'control',
   },
   {
     id: 'respond-and-counter',
@@ -53,7 +53,7 @@ export const ACADEMY_LESSONS = [
       'Counter an opponent\'s action with a matching rank',
       'Decline (pass priority) to let the action resolve',
     ],
-    aiPolicy: 'tempo-easy',
+    aiPolicy: 'tempo',
   },
   {
     id: 'royal-cards',
@@ -65,7 +65,7 @@ export const ACADEMY_LESSONS = [
       'Play a Queen for a powerful Ultra effect',
       'Understand that royals use your full turn commitment',
     ],
-    aiPolicy: 'value-easy',
+    aiPolicy: 'value',
   },
   {
     id: 'win-the-game',

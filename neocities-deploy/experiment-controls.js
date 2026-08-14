@@ -2,11 +2,11 @@
 // experiment-controls.js — Experiment panel, campaign runner, global bindings
 // ═══════════════════════════════════════════════════════════════
 
-import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting } from './state.js?v=73b458295383';
-import { WORKSPACES, route, policyOptions } from './router.js?v=73b458295383';
-import { showIntegrity } from './integrity.js?v=73b458295383';
-import { RULES_VERSION, LAB_VERSION } from './version.js?v=73b458295383';
-import { populateDialogHeading } from './seo-metadata.js?v=73b458295383';
+import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting } from './state.js?v=e2bd7e8507fa';
+import { WORKSPACES, route, policyOptions } from './router.js?v=e2bd7e8507fa';
+import { showIntegrity } from './integrity.js?v=e2bd7e8507fa';
+import { RULES_VERSION, LAB_VERSION } from './version.js?v=e2bd7e8507fa';
+import { populateDialogHeading } from './seo-metadata.js?v=e2bd7e8507fa';
 
 // ── Experiment panel ──────────────────────────────────────────────
 export function renderExperimentControls() {
@@ -50,21 +50,21 @@ export function updatePreflight() {
 
 // ── Global bindings ───────────────────────────────────────────────
 export function bindGlobal() {
-  window.addEventListener('hashchange', () => { import('./app.js?v=73b458295383').then(m => m.render()); });
+  window.addEventListener('hashchange', () => { import('./app.js?v=e2bd7e8507fa').then(m => m.render()); });
   document.querySelector('#layout-preset').addEventListener('change', e => {
     state.layout = e.target.value;
     document.querySelector('.observatory-shell').dataset.preset = state.layout;
     persistSetting('layout', state.layout);
-    import('./app.js?v=73b458295383').then(m => m.render());
+    import('./app.js?v=e2bd7e8507fa').then(m => m.render());
   });
   document.querySelector('#global-visibility').addEventListener('change', async e => {
     state.visibility = e.target.value;
     persistSetting('visibility', state.visibility);
     if (state.visibility !== 'public') {
-      const { loadAuthorized } = await import('./data-loader.js?v=73b458295383');
+      const { loadAuthorized } = await import('./data-loader.js?v=e2bd7e8507fa');
       await loadAuthorized();
     }
-    import('./app.js?v=73b458295383').then(m => m.render());
+    import('./app.js?v=e2bd7e8507fa').then(m => m.render());
   });
   document.querySelector('#integrity-button').addEventListener('click', showIntegrity);
   const palette = document.querySelector('#command-palette');
@@ -93,7 +93,7 @@ export function bindGlobal() {
     }
     if (e.key === ' ' && route() === '/watch' && !['INPUT', 'SELECT', 'BUTTON'].includes(document.activeElement.tagName)) {
       e.preventDefault();
-      import('./app.js?v=73b458295383').then(m => m.togglePlay());
+      import('./app.js?v=e2bd7e8507fa').then(m => m.togglePlay());
     }
   });
   document.querySelector('#collapse-experiment').addEventListener('click', () => {
@@ -108,10 +108,10 @@ function renderCommandResults() {
     { label: 'Toggle reduced motion', detail: 'Accessibility', run: () => { state.reducedMotion = !state.reducedMotion; document.body.classList.toggle('reduced-motion', state.reducedMotion); persistSetting('reducedMotion', state.reducedMotion); } },
     { label: 'Toggle reduced sensory', detail: 'Accessibility', run: () => { state.reducedSensory = !state.reducedSensory; document.body.classList.toggle('reduced-sensory', state.reducedSensory); persistSetting('reducedSensory', state.reducedSensory); } },
     { label: 'Toggle FX', detail: 'Presentation', run: () => { state.fx = !state.fx; document.body.classList.toggle('fx-off', !state.fx); persistSetting('fx', state.fx); } },
-    { label: 'Show priority orchestration', detail: 'Developer evidence', run: () => { state.showOrchestration = !state.showOrchestration; import('./app.js?v=73b458295383').then(m => m.render()); } },
-    { label: 'Restart replay', detail: 'Identical seed / source replay', run: () => { import('./app.js?v=73b458295383').then(m => { m.stop(); state.frame = 0; m.render(); }); } },
-    { label: 'Extract analysis (JSON)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js?v=73b458295383').then(m => m.showExtract('json')); } },
-    { label: 'Extract analysis (Markdown)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js?v=73b458295383').then(m => m.showExtract('markdown')); } }
+    { label: 'Show priority orchestration', detail: 'Developer evidence', run: () => { state.showOrchestration = !state.showOrchestration; import('./app.js?v=e2bd7e8507fa').then(m => m.render()); } },
+    { label: 'Restart replay', detail: 'Identical seed / source replay', run: () => { import('./app.js?v=e2bd7e8507fa').then(m => { m.stop(); state.frame = 0; m.render(); }); } },
+    { label: 'Extract analysis (JSON)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js?v=e2bd7e8507fa').then(m => m.showExtract('json')); } },
+    { label: 'Extract analysis (Markdown)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js?v=e2bd7e8507fa').then(m => m.showExtract('markdown')); } }
   ].filter(item => !q || `${item.label} ${item.detail}`.toLowerCase().includes(q));
   const root = document.querySelector('#command-results');
   root.innerHTML = commands.map((item, i) => `<button type="button" class="command-result" data-command="${i}" role="option"><span>${esc(item.label)}</span><small>${esc(item.detail)}</small></button>`).join('') || '<div class="empty-state"><strong>No command found</strong>Try a workspace or accessibility setting.</div>';
@@ -228,8 +228,8 @@ async function runBrowserCampaign() {
       if (Array.isArray(seg)) summaries.push(...seg);
     }
     try {
-      const { buildCampaignCore } = await import('./autonomy-runtime.js?v=73b458295383');
-      const { campaignAggregate, buildObservatoryAnalytics } = await import('./browser-analytics.js?v=73b458295383');
+      const { buildCampaignCore } = await import('./autonomy-runtime.js?v=e2bd7e8507fa');
+      const { campaignAggregate, buildObservatoryAnalytics } = await import('./browser-analytics.js?v=e2bd7e8507fa');
       const core = buildCampaignCore(summaries, { profileId: profile, policyIds: [p1, p2], matchCount: count });
       const semantic = { experimentHash: core.canonicalResultHash, profileId: core.profileId, engineVersion: core.engineVersion, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, canonicalResultHash: core.canonicalResultHash };
       const aggregate = campaignAggregate(summaries, semantic);
@@ -324,7 +324,7 @@ async function finalizeCampaignResult(x, count, workers) {
         if (!state.observatory.mechanics?.length && summaries.length > 0) {
           console.warn('[campaign] Worker observatory has 0 mechanics — rebuilding on main thread from', summaries.length, 'summaries');
           try {
-            const { buildObservatoryAnalytics, campaignAggregate } = await import('./browser-analytics.js?v=73b458295383');
+            const { buildObservatoryAnalytics, campaignAggregate } = await import('./browser-analytics.js?v=e2bd7e8507fa');
             const semantic = { experimentHash: r.canonicalResultHash, profileId: r.profileId, engineVersion: r.engineVersion, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, canonicalResultHash: r.canonicalResultHash };
             const fallbackAggregate = x.aggregateJson ? JSON.parse(x.aggregateJson) : campaignAggregate(summaries, semantic);
             const fallbackObs = buildObservatoryAnalytics({ summaries, aggregate: fallbackAggregate });
@@ -334,6 +334,15 @@ async function finalizeCampaignResult(x, count, workers) {
           } catch (rebuildErr) { console.error('[campaign] Main-thread observatory rebuild failed:', rebuildErr); }
         }
       }
+      // Sync derived state fields that some workspaces read directly rather
+      // than via state.observatory. At boot, data-loader.js extracts these
+      // from the loaded observatory (lines 114-123). After a campaign run
+      // replaces state.observatory, they must be re-synced or the Ranks
+      // workspace (rankPower, swapMatrix, variantAnalytics) will show stale
+      // boot-time data instead of the freshly computed campaign analytics.
+      state.rankPower = state.observatory.rankPower ?? null;
+      state.swapMatrix = state.observatory.swapMatrix ?? null;
+      state.variantAnalytics = state.observatory.variantAnalytics ?? state.variantAnalytics;
     } catch (err) { console.warn('Failed to update state from campaign result:', err); }
     const mechCount = state.observatory?.mechanics?.length ?? 0;
     const synCount = state.observatory?.synergies?.length ?? 0;
@@ -346,7 +355,7 @@ async function finalizeCampaignResult(x, count, workers) {
   renderCampaignSummary(x);
   // Re-render the current workspace so Mechanics/Synergies/Compare/etc.
   // reflect the freshly updated state.observatory immediately.
-  import('./app.js?v=73b458295383').then(m => m.render());
+  import('./app.js?v=e2bd7e8507fa').then(m => m.render());
 }
 
 function cancelBrowserCampaign() {
@@ -365,9 +374,15 @@ function resetCampaignResults() {
   state.lastCampaignResult = null;
   state.observatory = state.bootState?.observatory ? structuredClone(state.bootState.observatory) : state.observatory;
   state.aggregate = state.bootState?.aggregate ? structuredClone(state.bootState.aggregate) : state.aggregate;
+  // Re-sync derived fields that some workspaces read directly. Without this,
+  // the Ranks workspace would still show the last campaign's rankPower/
+  // swapMatrix/variantAnalytics after a reset instead of the boot data.
+  state.rankPower = state.bootState?.rankPower != null ? structuredClone(state.bootState.rankPower) : state.observatory?.rankPower ?? null;
+  state.swapMatrix = state.bootState?.swapMatrix != null ? structuredClone(state.bootState.swapMatrix) : state.observatory?.swapMatrix ?? null;
+  state.variantAnalytics = state.bootState?.variantAnalytics != null ? structuredClone(state.bootState.variantAnalytics) : state.observatory?.variantAnalytics ?? state.variantAnalytics;
   document.querySelector('#campaign-summary').innerHTML = '';
   document.querySelector('#experiment-status').textContent = 'Ready.';
-  import('./app.js?v=73b458295383').then(m => m.render());
+  import('./app.js?v=e2bd7e8507fa').then(m => m.render());
 }
 
 function renderCampaignSummary(result) {

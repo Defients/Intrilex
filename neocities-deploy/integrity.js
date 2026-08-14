@@ -2,9 +2,9 @@
 // integrity.js — Integrity dialog (release authority verification)
 // ═══════════════════════════════════════════════════════════════
 
-import { state,  fmt,  short,  definitionList } from './state.js?v=73b458295383';
-import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION } from './version.js?v=73b458295383';
-import { populateDialogHeading } from './seo-metadata.js?v=73b458295383';
+import { state,  fmt,  short,  definitionList } from './state.js?v=e2bd7e8507fa';
+import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION } from './version.js?v=e2bd7e8507fa';
+import { populateDialogHeading } from './seo-metadata.js?v=e2bd7e8507fa';
 
 export function showIntegrity() {
   populateDialogHeading('integrity-dialog', 'RELEASE AUTHORITY', 'Integrity and capability');

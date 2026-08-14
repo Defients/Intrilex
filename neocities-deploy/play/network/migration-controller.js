@@ -19,16 +19,16 @@
 // NetworkPlaySession — it opens its own connection.
 // ═══════════════════════════════════════════════════════════════
 
-import { getAchievementState, markAchievementsMigrated } from '../persistence.js?v=73b458295383';
-import { migrateGuest, authenticate } from './network-protocol-client.mjs?v=73b458295383';
+import { getAchievementState, markAchievementsMigrated } from '../persistence.js?v=e2bd7e8507fa';
+import { migrateGuest, authenticate, bindGuestIdentity } from './network-protocol-client.mjs?v=e2bd7e8507fa';
 import {
   isMigrationPending,
   getGuestIdentity,
   getAccountId,
   getAccessToken,
   clearMigrationPending,
-} from './auth-controller.js?v=73b458295383';
-import { getMatchServerUrl } from './match-server-config.js?v=73b458295383';
+} from './auth-controller.js?v=e2bd7e8507fa';
+import { getMatchServerUrl } from './match-server-config.js?v=e2bd7e8507fa';
 
 /** @typedef {'IDLE'|'CONNECTING'|'AUTHENTICATING'|'MIGRATING'|'DONE'|'ERROR'} MigrationStatus */
 
@@ -209,6 +209,15 @@ export async function runMigrationIfPending(opts = {}) {
     });
 
     ws.addEventListener('open', () => {
+      // IRX-C04: Send BIND_GUEST_IDENTITY BEFORE AUTHENTICATE so the server
+      // can verify the sourceIdentity during MIGRATE_GUEST. Without this,
+      // the server rejects the migration with MIGRATION_PLAN_INVALID.
+      try {
+        ws.send(JSON.stringify(bindGuestIdentity(sourceIdentity)));
+      } catch {
+        finish(null);
+        return;
+      }
       setStatus('AUTHENTICATING');
       // Send AUTHENTICATE with the current access token
       try {

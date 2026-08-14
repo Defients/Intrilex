@@ -4,44 +4,44 @@
 // Never owns authoritative state — delegates to PlaySession.
 // ═══════════════════════════════════════════════════════════════
 
-import { createSession, restoreSession, SessionState } from './play-controller.js?v=73b458295383';
-import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=73b458295383';
-import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=73b458295383';
-import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=73b458295383';
-import { ensureReplayFrames } from '../replay-frames.js?v=73b458295383';
-import { state as observatoryState } from '../state.js?v=73b458295383';
-import { buildSaveIntegrityPayload } from './save-integrity.js?v=73b458295383';
-import { validateSnapshotPrivacy } from './play-privacy.js?v=73b458295383';
-import { POLICY_IDS } from '../autonomy-runtime.js?v=73b458295383';
-import { GuidanceMode } from './intelligence/action-explanation.js?v=73b458295383';
-import './orchestration/declaration-flow.js?v=73b458295383';
-import './state/play-lifecycle.js?v=73b458295383';
-import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=73b458295383';
-import { getAiBanter } from './ai-personality.js?v=73b458295383';
-import { SoundEngine } from './play-sound.js?v=73b458295383';
-import { ParticleSystem } from './play-particles.js?v=73b458295383';
-import { renderAcademy, findLesson, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=73b458295383';
-import { state, resetState } from './play-state.js?v=73b458295383';
-import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js?v=73b458295383';
+import { createSession, restoreSession, SessionState } from './play-controller.js?v=e2bd7e8507fa';
+import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=e2bd7e8507fa';
+import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=e2bd7e8507fa';
+import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=e2bd7e8507fa';
+import { ensureReplayFrames } from '../replay-frames.js?v=e2bd7e8507fa';
+import { state as observatoryState } from '../state.js?v=e2bd7e8507fa';
+import { buildSaveIntegrityPayload } from './save-integrity.js?v=e2bd7e8507fa';
+import { validateSnapshotPrivacy } from './play-privacy.js?v=e2bd7e8507fa';
+import { POLICY_IDS } from '../autonomy-runtime.js?v=e2bd7e8507fa';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=e2bd7e8507fa';
+import './orchestration/declaration-flow.js?v=e2bd7e8507fa';
+import './state/play-lifecycle.js?v=e2bd7e8507fa';
+import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=e2bd7e8507fa';
+import { getAiBanter } from './ai-personality.js?v=e2bd7e8507fa';
+import { SoundEngine } from './play-sound.js?v=e2bd7e8507fa';
+import { ParticleSystem } from './play-particles.js?v=e2bd7e8507fa';
+import { renderAcademy, findLesson, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=e2bd7e8507fa';
+import { state, resetState } from './play-state.js?v=e2bd7e8507fa';
+import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js?v=e2bd7e8507fa';
 import {
   openAdvancedCardRules as openAdvancedCardRulesController,
   closeAdvancedCardRules,
   isCardInspectable,
   buildCurrentMatchContext,
   getOpenIdentity,
-} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=73b458295383';
-import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=73b458295383';
+} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=e2bd7e8507fa';
+import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=e2bd7e8507fa';
 import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
   renderNetworkQueueWaiting, renderNetworkSpectateForm, renderNetworkSpectating,
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
   renderNetworkStatusBanner, renderNetworkUnavailable,
-} from './network/network-lobby-renderer.mjs?v=73b458295383';
-import { getMatchServerUrl, isMatchServerConfigured, validateMatchServerUrl } from './network/match-server-config.js?v=73b458295383';
-import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=73b458295383';
-import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=73b458295383';
-import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=73b458295383';
-import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=73b458295383';
+} from './network/network-lobby-renderer.mjs?v=e2bd7e8507fa';
+import { getMatchServerUrl, isMatchServerConfigured, validateMatchServerUrl } from './network/match-server-config.js?v=e2bd7e8507fa';
+import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=e2bd7e8507fa';
+import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=e2bd7e8507fa';
+import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=e2bd7e8507fa';
+import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=e2bd7e8507fa';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -50,6 +50,13 @@ const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<':
 // updates it every second so the player sees a live deadline. The ticker is
 // self-cleaning: if no countdown element is present, the interval is cleared.
 let _graceCountdownTimerId = null;
+
+// IRX-C12 (residual): Track the previous play sub-route so we can clean up
+// resources (autosave timers, keyboard shortcuts, visibility handlers, sound
+// and particle engines) when navigating between play sub-routes. Without this,
+// navigating from /play/match to /play/new leaves the old match's timers,
+// listeners, and engines running in the background.
+let _previousPlaySub = null;
 function tickReconnectGraceCountdown(container) {
   const el = container.querySelector('[data-testid="reconnect-grace-countdown"]');
   if (!el) {
@@ -86,6 +93,17 @@ export async function handlePlayRoute(route, container) {
     if (saved) state.guidanceMode = saved;
   }
   const sub = route.replace(/^\/play/, '') || '';
+
+  // IRX-C12 (residual): Clean up previous sub-route's resources when the
+  // play sub-route changes. Without this, navigating from /play/match to
+  // /play/new leaves the old match's autosave timer, keyboard shortcuts,
+  // visibility handler, and sound/particle engines running. We preserve
+  // state.session so the user can return to an active match via /play/match.
+  if (_previousPlaySub !== null && _previousPlaySub !== sub) {
+    try { cleanupPlayResources(); }
+    catch (e) { console.warn('[play-app] sub-route cleanup error:', e?.message ?? e); }
+  }
+  _previousPlaySub = sub;
 
   // IRX-H25: Clean up network session when navigating away from online play routes.
   // Without this, WebSocket connections leak when the user navigates via browser
@@ -186,14 +204,22 @@ function bindAcademyEvents(container) {
 async function startAcademyLesson(lessonId, container) {
   const lesson = findLesson(lessonId);
   if (!lesson) return;
-  state.academyLessonId = lessonId;
   state.guidanceMode = GuidanceMode.GUIDED;
+  // Derive a deterministic numeric seed from the lesson ID so each lesson
+  // starts from a different shuffled deck. String seeds are coerced to 0 by
+  // the engine's `>>> 0` conversion, which would make every lesson identical.
+  let seed = 0;
+  for (let i = 0; i < lessonId.length; i++) {
+    seed = ((seed * 31) + lessonId.charCodeAt(i)) >>> 0;
+  }
+  seed = seed || 1;
   await startNewMatch({
     profileId: 'first-contact-trigger-closure',
-    seed: `academy-${lessonId}`,
+    seed,
     humanPlayerId: 'P1',
     aiPolicyId: lesson.aiPolicy,
     mode: 'ADVANCED_CORE',
+    academyLessonId: lessonId,
   }, container);
 }
 
@@ -228,6 +254,14 @@ function bindNewMatchForm(container) {
  */
 async function startNewMatch(setup, container) {
   resetState();
+  // Restore academy lesson ID after reset so terminal/exit handlers know
+  // to route back to the Academy page instead of the homepage.
+  state.academyLessonId = setup.academyLessonId ?? null;
+  // Academy lessons always use GUIDED mode regardless of saved preference.
+  if (setup.academyLessonId) {
+    state.guidanceMode = GuidanceMode.GUIDED;
+    state.guidancePrefLoaded = true; // prevent handlePlayRoute from overriding
+  }
   container.innerHTML = '<div class="play-loading">Creating match...</div>';
   try {
     state.session = await createSession(setup);
@@ -544,6 +578,8 @@ async function renderActiveMatch(container) {
     // v0.28.0: Pass rematch invite from the opponent to the renderer for the
     // accept/decline overlay.
     rematchInvite: isNetworkMatch ? (state.networkSession?.rematchInvite ?? null) : null,
+    // Academy: pass lesson ID so the terminal screen can show a "Back to Academy" button.
+    academyLessonId: state.academyLessonId ?? null,
   });
   } catch (renderError) {
     console.error('renderBoard threw:', renderError);
@@ -610,7 +646,7 @@ async function renderActiveMatch(container) {
   // inspected card is no longer inspectable, the controller sanitizes
   // (closes) the view to avoid leaking stale information.
   if (getOpenIdentity() && state.advancedRulesCardId) {
-    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=73b458295383').then(({ refreshCurrentMatch }) => {
+    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=e2bd7e8507fa').then(({ refreshCurrentMatch }) => {
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     });
   }
@@ -660,7 +696,7 @@ function bindReplayLibraryEvents(container) {
       } else if (action === 'delete-replay') {
         const confirmed = await showConfirmDialog('Delete replay', `Delete replay ${replayId}? This cannot be undone.`);
         if (confirmed) {
-          const { deleteReplay } = await import('./persistence.js?v=73b458295383');
+          const { deleteReplay } = await import('./persistence.js?v=e2bd7e8507fa');
           await deleteReplay(replayId);
           await renderReplays(container);
         }
@@ -1064,7 +1100,7 @@ function bindNetworkWaitingEvents(container) {
  * Render the matchmaking queue flow — joins the queue and waits for pairing.
  */
 async function renderNetworkQueueFlow(container) {
-  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=73b458295383');
+  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=e2bd7e8507fa');
   const serverUrl = getNetworkServerUrl();
   if (!serverUrl) {
     container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
@@ -1245,7 +1281,7 @@ function bindQueueLeaveAction(container, ws, queueLeave) {
  * Render the spectate flow — enter a Match ID and spectate.
  */
 async function renderNetworkSpectateFlow(container) {
-  const { spectateMatch, spectateLeave } = await import('./network/network-protocol-client.mjs?v=73b458295383');
+  const { spectateMatch, spectateLeave } = await import('./network/network-protocol-client.mjs?v=e2bd7e8507fa');
   container.innerHTML = renderNetworkSpectateForm({});
 
   const form = container.querySelector('#network-spectate-form-element');
@@ -1620,26 +1656,46 @@ function stopAutosave() {
 }
 
 /**
- * Clean up the play module.
+ * Clean up play resources (timers, listeners, engines) without clearing the
+ * session reference. Used when navigating between play sub-routes so the user
+ * can return to an active match via /play/match, while still releasing the
+ * previous sub-route's timers, keyboard shortcuts, visibility handlers, and
+ * sound/particle engines.
  */
-export function cleanupPlay() {
+function cleanupPlayResources() {
   stopAutosave();
   removeKeyboardShortcuts();
   removeVisibilityHandler();
+  // Stop the reconnect-grace countdown ticker if active
+  if (_graceCountdownTimerId) { clearInterval(_graceCountdownTimerId); _graceCountdownTimerId = null; }
+  // Destroy sound and particle engines — they will be re-created on demand
+  // if the user returns to /play/match.
   if (state.sound) { state.sound.destroy(); state.sound = null; }
   if (state.particles) { state.particles.destroy(); state.particles = null; }
-  state.session = null;
+  // Clear transient UI state (selections, inspector, chat) but preserve
+  // state.session so /play/match can restore the active match.
   state.selectedActionId = null;
   state.selectedSourceCardId = null;
   state.selectedTargetIds = [];
   state.inspectorCardId = null;
   state.inspectorFaceView = 'board';
-  state.chatMessages = [];
   state.lastEventCount = 0;
   state.soundInitialized = false;
   state.prevHandCount = 0;
   state.activeContainer = null;
+}
+
+/**
+ * Clean up the play module entirely — resources plus session and all state.
+ * Called on play → non-play route transitions (IRX-C12).
+ */
+export function cleanupPlay() {
+  cleanupPlayResources();
+  state.session = null;
+  state.chatMessages = [];
   state.statsRecorded = false;
+  // Reset sub-route tracking so re-entering play doesn't trigger a stale cleanup
+  _previousPlaySub = null;
 }
 
 /**

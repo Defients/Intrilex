@@ -2,10 +2,10 @@
 // data-loader.js — Observatory data bootstrapping and replay loading
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   shell,   landingContainer,   data,   text,   parseNdjsonSafe,   computeVariantAnalyticsFromSummaries } from './state.js?v=73b458295383';
-import { route, isPlayRoute, LANDING_MODES, renderNavigation } from './router.js?v=73b458295383';
-import { renderExperimentControls, bindGlobal } from './experiment-controls.js?v=73b458295383';
-import { ensureReplayFrames } from './replay-frames.js?v=73b458295383';
+import { state,   shell,   landingContainer,   data,   text,   parseNdjsonSafe,   computeVariantAnalyticsFromSummaries } from './state.js?v=e2bd7e8507fa';
+import { route, isPlayRoute, LANDING_MODES, renderNavigation } from './router.js?v=e2bd7e8507fa';
+import { renderExperimentControls, bindGlobal } from './experiment-controls.js?v=e2bd7e8507fa';
+import { ensureReplayFrames } from './replay-frames.js?v=e2bd7e8507fa';
 
 // ── Replay loading ────────────────────────────────────────────────
 const _warnedReplays = new Set();
@@ -113,7 +113,7 @@ async function _loadObservatoryDataInner() {
   state.observatory.summaries ??= summaries;
   state.rankPower = state.observatory.rankPower ?? null;
   state.swapMatrix = state.observatory.swapMatrix ?? null;
-  state._extractModule = await import('./browser-analytics.js?v=73b458295383');
+  state._extractModule = await import('./browser-analytics.js?v=e2bd7e8507fa');
   state._variantModule = state._extractModule;
   // Load pre-computed variant analytics from server-side pipeline (P5.5)
   // Falls back to null if the file doesn't exist (graceful degradation)
@@ -123,8 +123,8 @@ async function _loadObservatoryDataInner() {
     state.variantAnalytics = await computeVariantAnalyticsFromSummaries(state.observatory.summaries ?? []);
   }
   state.rankAnatomyRegistry = await data('data/observatory/rank-anatomy-registry.json', null);
-  state._rankAnatomyModule = await import('./workspaces/ranks/rank-anatomy-workspace.js?v=73b458295383');
-  state.bootState = { aggregate: structuredClone(state.aggregate), observatory: structuredClone(state.observatory) };
+  state._rankAnatomyModule = await import('./workspaces/ranks/rank-anatomy-workspace.js?v=e2bd7e8507fa');
+  state.bootState = { aggregate: structuredClone(state.aggregate), observatory: structuredClone(state.observatory), rankPower: structuredClone(state.rankPower), swapMatrix: structuredClone(state.swapMatrix), variantAnalytics: structuredClone(state.variantAnalytics) };
   if (state.autonomyIndex?.records?.length) {
     state.replayKind = 'autonomy';
     state.fixtureId = state.autonomyIndex.records[0].fixtureId;

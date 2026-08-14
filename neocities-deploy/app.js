@@ -3,33 +3,33 @@
 // routing to workspace renderers, and owns the Watch workspace.
 // ═══════════════════════════════════════════════════════════════
 
-import { getCardDefinition } from './card-face-data.js?v=73b458295383';
-import { renderRulesPage } from './rulebook-renderer.js?v=73b458295383';
-import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js?v=73b458295383';
-import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js?v=73b458295383';
-import { TITLES,   SUBTITLES,   LANDING_MODES,   isPlayRoute,   route} from './router.js?v=73b458295383';
-import { boot,   loadReplay,   getObservatoryBootPromise} from './data-loader.js?v=73b458295383';
-import {} from './experiment-controls.js?v=73b458295383';
-import {} from './integrity.js?v=73b458295383';
-import { renderRanks } from './workspaces/ranks.js?v=73b458295383';
-import { renderDiagnostics } from './workspaces/diagnostics.js?v=73b458295383';
-import { renderBranches} from './workspaces/branches.js?v=73b458295383';
-import { renderEvidence } from './workspaces/evidence.js?v=73b458295383';
-import { renderReleaseNotes } from './workspaces/release-notes.js?v=73b458295383';
-import { renderIntelligence } from './workspaces/intelligence.js?v=73b458295383';
-import { renderTournament } from './workspaces/tournament.js?v=73b458295383';
-import { renderProfile } from './workspaces/profile.js?v=73b458295383';
-import { renderPlayers, destroyPlayers } from './workspaces/players.js?v=73b458295383';
-import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.js?v=73b458295383';
-import { renderSeasonArchive } from './workspaces/season-archive.js?v=73b458295383';
-import { renderMetaReport } from './workspaces/meta-report.js?v=73b458295383';
-import { renderHumanTournaments } from './workspaces/human-tournaments.js?v=73b458295383';
-import { renderAuth } from './workspaces/auth.js?v=73b458295383';
-import { renderSettings } from './workspaces/settings.js?v=73b458295383';
-import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js?v=73b458295383';
-import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js?v=73b458295383';
-import { renderPrivacyPage, renderTermsPage } from './legal-pages.js?v=73b458295383';
-import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading } from './seo-metadata.js?v=73b458295383';
+import { getCardDefinition } from './card-face-data.js?v=e2bd7e8507fa';
+import { renderRulesPage } from './rulebook-renderer.js?v=e2bd7e8507fa';
+import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js?v=e2bd7e8507fa';
+import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js?v=e2bd7e8507fa';
+import { TITLES,   SUBTITLES,   LANDING_MODES,   isPlayRoute,   route} from './router.js?v=e2bd7e8507fa';
+import { boot,   loadReplay,   getObservatoryBootPromise} from './data-loader.js?v=e2bd7e8507fa';
+import {} from './experiment-controls.js?v=e2bd7e8507fa';
+import {} from './integrity.js?v=e2bd7e8507fa';
+import { renderRanks } from './workspaces/ranks.js?v=e2bd7e8507fa';
+import { renderDiagnostics } from './workspaces/diagnostics.js?v=e2bd7e8507fa';
+import { renderBranches} from './workspaces/branches.js?v=e2bd7e8507fa';
+import { renderEvidence } from './workspaces/evidence.js?v=e2bd7e8507fa';
+import { renderReleaseNotes } from './workspaces/release-notes.js?v=e2bd7e8507fa';
+import { renderIntelligence } from './workspaces/intelligence.js?v=e2bd7e8507fa';
+import { renderTournament } from './workspaces/tournament.js?v=e2bd7e8507fa';
+import { renderProfile } from './workspaces/profile.js?v=e2bd7e8507fa';
+import { renderPlayers, destroyPlayers } from './workspaces/players.js?v=e2bd7e8507fa';
+import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.js?v=e2bd7e8507fa';
+import { renderSeasonArchive } from './workspaces/season-archive.js?v=e2bd7e8507fa';
+import { renderMetaReport } from './workspaces/meta-report.js?v=e2bd7e8507fa';
+import { renderHumanTournaments } from './workspaces/human-tournaments.js?v=e2bd7e8507fa';
+import { renderAuth } from './workspaces/auth.js?v=e2bd7e8507fa';
+import { renderSettings } from './workspaces/settings.js?v=e2bd7e8507fa';
+import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js?v=e2bd7e8507fa';
+import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js?v=e2bd7e8507fa';
+import { renderPrivacyPage, renderTermsPage } from './legal-pages.js?v=e2bd7e8507fa';
+import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading } from './seo-metadata.js?v=e2bd7e8507fa';
 
 // IRX-M32: Play-related modules are dynamically imported to enable code splitting.
 // The esbuild bundler (splitting: true) creates separate lazy chunks for these
@@ -42,7 +42,7 @@ import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading
 
 /**
  * Create a lazy-loaded module accessor that caches the import promise.
- * @param {() => Promise<typeof import('*')>} importFn - Thunk that calls `import('./literal-path.js?v=73b458295383')`
+ * @param {() => Promise<typeof import('*')>} importFn - Thunk that calls `import('./literal-path.js?v=e2bd7e8507fa')`
  * @returns {() => Promise<typeof import('*')>} Async getter with `.cached` property (null until resolved)
  */
 function lazyLoad(importFn) {
@@ -61,14 +61,14 @@ function lazyLoad(importFn) {
   return getter;
 }
 
-const getAdvancedCardRules = lazyLoad(() => import('./play/advanced-card-rules/advanced-card-rules-controller.mjs?v=73b458295383'));
-const getAchievementUi = lazyLoad(() => import('./play/achievements/achievement-ui.js?v=73b458295383'));
-const getPuzzleApp = lazyLoad(() => import('./play/puzzle/puzzle-app.mjs?v=73b458295383'));
-const getRankingOverlay = lazyLoad(() => import('./play/rank/ranking-system-overlay.js?v=73b458295383'));
-const getMatchServerConfig = lazyLoad(() => import('./play/network/match-server-config.js?v=73b458295383'));
-const getAuthController = lazyLoad(() => import('./play/network/auth-controller.js?v=73b458295383'));
-const getAccountStore = lazyLoad(() => import('./play/network/account-store.js?v=73b458295383'));
-const getMigrationController = lazyLoad(() => import('./play/network/migration-controller.js?v=73b458295383'));
+const getAdvancedCardRules = lazyLoad(() => import('./play/advanced-card-rules/advanced-card-rules-controller.mjs?v=e2bd7e8507fa'));
+const getAchievementUi = lazyLoad(() => import('./play/achievements/achievement-ui.js?v=e2bd7e8507fa'));
+const getPuzzleApp = lazyLoad(() => import('./play/puzzle/puzzle-app.mjs?v=e2bd7e8507fa'));
+const getRankingOverlay = lazyLoad(() => import('./play/rank/ranking-system-overlay.js?v=e2bd7e8507fa'));
+const getMatchServerConfig = lazyLoad(() => import('./play/network/match-server-config.js?v=e2bd7e8507fa'));
+const getAuthController = lazyLoad(() => import('./play/network/auth-controller.js?v=e2bd7e8507fa'));
+const getAccountStore = lazyLoad(() => import('./play/network/account-store.js?v=e2bd7e8507fa'));
+const getMigrationController = lazyLoad(() => import('./play/network/migration-controller.js?v=e2bd7e8507fa'));
 
 // Install global error boundary at module load time
 installGlobalErrorBoundary();
@@ -159,6 +159,18 @@ function showShell() {
  */
 export function render() {
   const r = route();
+  // IRX-C12: Route lifecycle cleanup — when navigating away from a play route
+  // to a non-play route, clean up play resources (WebSockets, timers, listeners,
+  // sound/particle engines). Without this, navigating from /play/match to /rules
+  // leaves queue WebSockets, spectator WebSockets, heartbeat timers, autosave
+  // timers, reconnect-grace countdowns, keyboard listeners, visibility listeners,
+  // beforeunload handlers, and AI work all running in the background.
+  if (_previousRoute && isPlayRoute(_previousRoute) && !isPlayRoute(r)) {
+    if (_playModule && typeof _playModule.cleanupPlay === 'function') {
+      try { _playModule.cleanupPlay(); } catch (e) { console.warn('[render] cleanupPlay error:', e); }
+    }
+  }
+  _previousRoute = r;
   // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
   // This replaces the old ad-hoc metadata restore block and ensures every
   // route owns its own identity with no cross-route leakage.
@@ -531,7 +543,7 @@ async function openMatchHistoryOverlay() {
   openLandingOverlay('Match History', async (container) => {
     container.innerHTML = '<div class="loading-state"><span class="loading-spinner" aria-hidden="true"></span><strong>Loading match history…</strong></div>';
     try {
-      const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js?v=73b458295383');
+      const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js?v=e2bd7e8507fa');
       if (!isIndexedDBAvailable()) {
         container.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">⚙</span><strong>No local match history.</strong><p>Match saves require IndexedDB, which is not available in this browser.</p></div>';
         return;
@@ -577,6 +589,8 @@ async function openMatchHistoryOverlay() {
 // ═══════════════════════════════════════════════════════════════
 let _playModule = null;
 let _boardCssLoaded = false;
+// IRX-C12: Route lifecycle tracking — previous route for cleanup on navigation
+let _previousRoute = null;
 /**
  * Render a play route by lazy-loading the play module and delegating to it.
  * Loads base play CSS on first call, ranked-duel CSS only for match routes.
@@ -585,7 +599,7 @@ let _boardCssLoaded = false;
 async function renderPlayMode(r) {
   if (!landingContainer) return;
   if (!_playModule) {
-    _playModule = await import('./play/play-app.js?v=73b458295383');
+    _playModule = await import('./play/play-app.js?v=e2bd7e8507fa');
     // Load base play CSS (tokens, hub, setup, network lobby, terminal) — needed for all play routes
     if (!document.querySelector('link[data-play-css]')) {
       const link = document.createElement('link');
@@ -1213,7 +1227,15 @@ function showDevBlogOverlay(delay = 2000) {
     // uses RMS silence detection + DP forced alignment to map each text line
     // to its actual time range in the audio. Falls back to proportional
     // character-count distribution if the JSON fails to load.
-    const textEls = [...content.querySelectorAll('p, h2, h3, button.devblog-rules-cta')];
+    // Include the h1 title ("You're Early. Quite Early.") as the first text
+    // element — the audio reads the title before the body, so the timing
+    // JSON's first entry corresponds to the title. Without this, every
+    // highlight is off by one (visuals trail ahead of the audio at first).
+    const titleEl = overlay.querySelector('#devblog-title');
+    const textEls = [
+      ...(titleEl ? [titleEl] : []),
+      ...content.querySelectorAll('p, h2, h3, button.devblog-rules-cta'),
+    ];
     let timingMap = [];
     let fallbackDur = 426.80; // default = Developer voice; updated when voice changes
     let timingData = null;   // parsed JSON: { [voiceId]: { timings: [...] } }
@@ -1366,12 +1388,18 @@ function showDevBlogOverlay(delay = 2000) {
         if (found) {
           found.classList.add('devblog-line-active');
           // Auto-scroll the highlighted line into view within the content area.
-          const elTop = found.offsetTop;
-          const elBottom = elTop + found.offsetHeight;
-          const viewTop = content.scrollTop;
-          const viewBottom = viewTop + content.clientHeight;
-          if (elTop < viewTop + 60 || elBottom > viewBottom - 60) {
-            content.scrollTo({ top: Math.max(0, elTop - content.clientHeight * 0.35), behavior: 'smooth' });
+          // The h1 title lives in the header (outside #devblog-content), so
+          // when it's highlighted, scroll the content to the very top.
+          if (found === titleEl) {
+            content.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            const elTop = found.offsetTop;
+            const elBottom = elTop + found.offsetHeight;
+            const viewTop = content.scrollTop;
+            const viewBottom = viewTop + content.clientHeight;
+            if (elTop < viewTop + 60 || elBottom > viewBottom - 60) {
+              content.scrollTo({ top: Math.max(0, elTop - content.clientHeight * 0.35), behavior: 'smooth' });
+            }
           }
         }
       }
@@ -1642,7 +1670,7 @@ async function loadContinueCard() {
   const slot = landingContainer.querySelector('#landing-continue-slot');
   if (!slot) return;
   try {
-    const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js?v=73b458295383');
+    const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js?v=e2bd7e8507fa');
     if (!isIndexedDBAvailable()) return;
     const saves = await listSaves();
     // Guard: user may have navigated away during the async import/listSaves.
@@ -1930,6 +1958,12 @@ getAuthController().then(async ({ initAuth, isMigrationPending }) => {
 }).catch((err) => {
   console.warn('[app] initAuth failed, continuing without auth:', err?.message ?? err);
 });
+
+// IRX-C06: Register render function with the rerender bus so workspace
+// modules can trigger re-renders without dynamically importing app.js.
+// This breaks the backedge from workspace modules to the entry point.
+import { setRenderer } from './rerender.js?v=e2bd7e8507fa';
+setRenderer(render);
 
 boot().then(() => {
   render();

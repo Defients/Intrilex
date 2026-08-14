@@ -134,13 +134,17 @@ export function countByes(playerCount) {
  * Generate a single-elimination bracket from a seeded player list.
  * BYEs are inserted so that top seeds get the BYEs (standard seeding).
  * Returns the first-round matches only — subsequent rounds are PENDING
- * and filled in as prior rounds complete.
+ * and filled in as prior rounds complete via advanceSingleElimRound().
+ *
+ * IRX-C10: Match IDs include the tournament ID to prevent collisions
+ * across concurrent tournaments. Format: ${tournamentId}_R${round}_M${matchNum}
  *
  * @param {TournamentPlayer[]} players - Sorted by seed (seed 1 first)
  * @param {number} bestOf
+ * @param {string} [tournamentId] - Tournament ID for unique match IDs
  * @returns {TournamentMatch[]} First-round matches
  */
-export function generateSingleElimBracket(players, _bestOf = 1) {
+export function generateSingleElimBracket(players, _bestOf = 1, tournamentId = 'TR') {
   const n = players.length;
   if (n < 2) return [];
   const bracketSize = nextPowerOfTwo(n);
@@ -159,7 +163,7 @@ export function generateSingleElimBracket(players, _bestOf = 1) {
   for (const p of byePlayers) {
     matchNum++;
     matches.push({
-      matchId: `TM_R1_M${matchNum}`,
+      matchId: `${tournamentId}_R1_M${matchNum}`,
       round: 1,
       playerAId: p.publicPlayerId,
       playerBId: null,
@@ -177,7 +181,7 @@ export function generateSingleElimBracket(players, _bestOf = 1) {
     const a = playingPlayers[i];
     const b = playingPlayers[i + 1];
     matches.push({
-      matchId: `TM_R1_M${matchNum}`,
+      matchId: `${tournamentId}_R1_M${matchNum}`,
       round: 1,
       playerAId: a?.publicPlayerId ?? null,
       playerBId: b?.publicPlayerId ?? null,
@@ -190,6 +194,68 @@ export function generateSingleElimBracket(players, _bestOf = 1) {
   }
 
   return matches;
+}
+
+/**
+ * IRX-C08: Advance a single-elimination tournament to the next round.
+ * Called after all matches in the current round are completed.
+ * Generates the next round's matches by pairing winners from the
+ * current round. If only one winner remains, the tournament is complete.
+ *
+ * @param {TournamentDefinition} tournament
+ * @returns {TournamentDefinition} Updated tournament with next round matches or completed status
+ */
+export function advanceSingleElimRound(tournament) {
+  if (tournament.format !== TournamentFormat.SINGLE_ELIM) return tournament;
+
+  const currentRound = Math.max(...tournament.matches.map(m => m.round));
+  const currentRoundMatches = tournament.matches
+    .filter(m => m.round === currentRound)
+    .sort((a, b) => {
+      // Sort by match number for deterministic pairing
+      const aNum = parseInt(a.matchId.split('_M')[1] || '0', 10);
+      const bNum = parseInt(b.matchId.split('_M')[1] || '0', 10);
+      return aNum - bNum;
+    });
+
+  // Collect winners in order
+  const winners = currentRoundMatches.map(m => m.winnerId).filter(Boolean);
+
+  // If only one winner, tournament is complete
+  if (winners.length <= 1) {
+    return {
+      ...tournament,
+      status: TournamentStatus.COMPLETED,
+      completedAt: new Date().toISOString(),
+    };
+  }
+
+  // Generate next round matches
+  const nextRound = currentRound + 1;
+  const nextMatches = [];
+  const tid = tournament.tournamentId || 'TR';
+
+  for (let i = 0; i < winners.length; i += 2) {
+    const aId = winners[i];
+    const bId = winners[i + 1] ?? null;
+    const matchNum = Math.floor(i / 2) + 1;
+    nextMatches.push({
+      matchId: `${tid}_R${nextRound}_M${matchNum}`,
+      round: nextRound,
+      playerAId: aId,
+      playerBId: bId,
+      status: (aId && bId) ? TournamentMatchStatus.SCHEDULED : TournamentMatchStatus.BYE,
+      winnerId: (aId && !bId) ? aId : (bId && !aId) ? bId : null,
+      scoreA: null,
+      scoreB: null,
+      matchRef: null,
+    });
+  }
+
+  return {
+    ...tournament,
+    matches: [...tournament.matches, ...nextMatches],
+  };
 }
 
 /**
@@ -289,18 +355,20 @@ export function startTournament(tournament) {
   }
 
   let matches;
+  const tid = tournament.tournamentId || 'TR';
   if (tournament.format === TournamentFormat.SINGLE_ELIM) {
     const seeded = [...tournament.players].sort((a, b) => a.seed - b.seed);
-    matches = generateSingleElimBracket(seeded, tournament.bestOf);
+    matches = generateSingleElimBracket(seeded, tournament.bestOf, tid);
   } else {
     // Swiss: first round pairs by seed (1v2, 3v4, etc.)
+    // IRX-C10: Use tournament-scoped match IDs
     matches = [];
     const sorted = [...tournament.players].sort((a, b) => a.seed - b.seed);
     for (let i = 0; i < sorted.length; i += 2) {
       const a = sorted[i];
       const b = sorted[i + 1];
       matches.push({
-        matchId: `TM_R1_M${matches.length + 1}`,
+        matchId: `${tid}_R1_M${matches.length + 1}`,
         round: 1,
         playerAId: a?.publicPlayerId ?? null,
         playerBId: b?.publicPlayerId ?? null,
@@ -342,23 +410,162 @@ export function recordTournamentResult(tournament, matchId, winnerId, scoreA, sc
     throw new Error('Cannot record result for a BYE match');
   }
 
+  // IRX-C08: Validate winner is a participant in this match
+  if (winnerId !== match.playerAId && winnerId !== match.playerBId) {
+    throw new Error('Winner must be a participant in this match');
+  }
+
+  // IRX-C08: Validate score consistency with best-of
+  const bestOf = tournament.bestOf || 1;
+  const winsNeeded = Math.ceil(bestOf / 2);
+  const winnerScore = winnerId === match.playerAId ? scoreA : scoreB;
+  const loserScore = winnerId === match.playerAId ? scoreB : scoreA;
+  if (winnerScore < winsNeeded) {
+    throw new Error(`Winner must have at least ${winsNeeded} wins for best-of-${bestOf}`);
+  }
+  if (winnerScore <= loserScore) {
+    throw new Error('Winner score must exceed loser score');
+  }
+
   const updatedMatches = tournament.matches.map(m =>
     m.matchId === matchId
       ? { ...m, status: TournamentMatchStatus.COMPLETED, winnerId, scoreA, scoreB, matchRef }
       : m
   );
 
-  // Check if tournament is complete (single-elim: all non-BYE matches completed)
-  const pendingMatches = updatedMatches.filter(
-    m => m.status !== TournamentMatchStatus.COMPLETED && m.status !== TournamentMatchStatus.BYE
-  );
-
-  const isComplete = pendingMatches.length === 0;
-  return {
+  let updatedTournament = {
     ...tournament,
     matches: updatedMatches,
-    status: isComplete ? TournamentStatus.COMPLETED : tournament.status,
-    completedAt: isComplete ? new Date().toISOString() : tournament.completedAt,
+  };
+
+  // IRX-C08: For single-elim, check if the current round is complete and advance
+  if (tournament.format === TournamentFormat.SINGLE_ELIM) {
+    const currentRound = match.round;
+    const roundMatches = updatedMatches.filter(m => m.round === currentRound);
+    const pendingInRound = roundMatches.filter(
+      m => m.status !== TournamentMatchStatus.COMPLETED && m.status !== TournamentMatchStatus.BYE
+    );
+
+    if (pendingInRound.length === 0) {
+      // All matches in this round are done — advance to next round
+      updatedTournament = advanceSingleElimRound(updatedTournament);
+    }
+  }
+
+  // IRX-C08: For Swiss, check if all matches in the current round are done
+  if (tournament.format === TournamentFormat.SWISS) {
+    const currentRound = match.round;
+    const roundMatches = updatedMatches.filter(m => m.round === currentRound);
+    const pendingInRound = roundMatches.filter(
+      m => m.status !== TournamentMatchStatus.COMPLETED && m.status !== TournamentMatchStatus.BYE
+    );
+
+    if (pendingInRound.length === 0) {
+      const totalRounds = tournament.swissRounds || swissRoundCount(tournament.players.length);
+      if (currentRound >= totalRounds) {
+        // All Swiss rounds complete
+        updatedTournament = {
+          ...updatedTournament,
+          status: TournamentStatus.COMPLETED,
+          completedAt: new Date().toISOString(),
+        };
+      } else {
+        // Generate next Swiss round via Swiss pairing
+        updatedTournament = advanceSwissRound(updatedTournament);
+      }
+    }
+  }
+
+  return updatedTournament;
+}
+
+/**
+ * IRX-C08: Advance a Swiss tournament to the next round.
+ * Pairs players with similar records, avoiding rematch where possible.
+ * @param {TournamentDefinition} tournament
+ * @returns {TournamentDefinition}
+ */
+export function advanceSwissRound(tournament) {
+  if (tournament.format !== TournamentFormat.SWISS) return tournament;
+
+  const currentRound = Math.max(...tournament.matches.map(m => m.round));
+  const nextRound = currentRound + 1;
+  const totalRounds = tournament.swissRounds || swissRoundCount(tournament.players.length);
+
+  if (nextRound > totalRounds) {
+    return {
+      ...tournament,
+      status: TournamentStatus.COMPLETED,
+      completedAt: new Date().toISOString(),
+    };
+  }
+
+  // Get standings to pair by record
+  const standings = getSwissStandings(tournament);
+  const tid = tournament.tournamentId || 'TR';
+
+  // Track previous pairings to avoid rematches
+  const previousPairs = new Set();
+  for (const m of tournament.matches) {
+    if (m.playerAId && m.playerBId) {
+      const key = [m.playerAId, m.playerBId].sort().join('|');
+      previousPairs.add(key);
+    }
+  }
+
+  // Simple Swiss pairing: pair adjacent players in standings, skip rematches
+  const paired = new Set();
+  const nextMatches = [];
+  let matchNum = 0;
+
+  for (let i = 0; i < standings.length; i++) {
+    if (paired.has(standings[i].player.publicPlayerId)) continue;
+    for (let j = i + 1; j < standings.length; j++) {
+      if (paired.has(standings[j].player.publicPlayerId)) continue;
+      const aId = standings[i].player.publicPlayerId;
+      const bId = standings[j].player.publicPlayerId;
+      const pairKey = [aId, bId].sort().join('|');
+      if (!previousPairs.has(pairKey)) {
+        matchNum++;
+        nextMatches.push({
+          matchId: `${tid}_R${nextRound}_M${matchNum}`,
+          round: nextRound,
+          playerAId: aId,
+          playerBId: bId,
+          status: TournamentMatchStatus.SCHEDULED,
+          winnerId: null,
+          scoreA: null,
+          scoreB: null,
+          matchRef: null,
+        });
+        paired.add(aId);
+        paired.add(bId);
+        break;
+      }
+    }
+  }
+
+  // Handle unpaired players (odd count or all rematches) — give BYE
+  for (const s of standings) {
+    if (!paired.has(s.player.publicPlayerId)) {
+      matchNum++;
+      nextMatches.push({
+        matchId: `${tid}_R${nextRound}_M${matchNum}`,
+        round: nextRound,
+        playerAId: s.player.publicPlayerId,
+        playerBId: null,
+        status: TournamentMatchStatus.BYE,
+        winnerId: s.player.publicPlayerId,
+        scoreA: null,
+        scoreB: null,
+        matchRef: null,
+      });
+    }
+  }
+
+  return {
+    ...tournament,
+    matches: [...tournament.matches, ...nextMatches],
   };
 }
 
@@ -371,13 +578,16 @@ export function recordTournamentResult(tournament, matchId, winnerId, scoreA, sc
 export function getChampion(tournament) {
   if (tournament.status !== TournamentStatus.COMPLETED) return null;
   if (tournament.format !== TournamentFormat.SINGLE_ELIM) return null;
-  // The champion is the winner of the last completed match
-  const completedMatches = tournament.matches
-    .filter(m => m.status === TournamentMatchStatus.COMPLETED)
-    .sort((a, b) => b.round - a.round);
-  if (completedMatches.length === 0) return null;
-  const championId = completedMatches[0].winnerId;
-  return tournament.players.find(p => p.publicPlayerId === championId) ?? null;
+  // IRX-C08: The champion is the winner of the FINAL match (the highest round).
+  // Previously this took the first completed match in the latest round, which
+  // could be a semifinal if the final hadn't been played yet. Now we require
+  // the final match to be completed.
+  const maxRound = Math.max(...tournament.matches.map(m => m.round));
+  const finalMatch = tournament.matches.find(
+    m => m.round === maxRound && m.status === TournamentMatchStatus.COMPLETED
+  );
+  if (!finalMatch) return null;
+  return tournament.players.find(p => p.publicPlayerId === finalMatch.winnerId) ?? null;
 }
 
 /**
