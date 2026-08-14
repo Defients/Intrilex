@@ -123,6 +123,12 @@ export function authRefresh(accessToken) {
   return envelope('AUTH_REFRESH', { accessToken });
 }
 
+// IRX-C04: Bind guest identity before authentication so the server can
+// verify the sourceIdentity during MIGRATE_GUEST. Must be sent BEFORE AUTHENTICATE.
+export function bindGuestIdentity(guestIdentity) {
+  return envelope('BIND_GUEST_IDENTITY', { guestIdentity });
+}
+
 // ── Guest migration (v2) ──
 
 export function migrateGuest(sourceIdentity, targetIdentity, achievements) {

@@ -10,17 +10,32 @@
 -- active season exists, which produces the correct conservative projection
 -- (UNRANKED tier, NULL rating) instead of fabricating a season.
 --
--- Functions patched:
+-- IRX-C03: PostgreSQL cannot change a function's return type via
+-- CREATE OR REPLACE. The functions below have different return column
+-- shapes than their 0009/0011/0015 originals, so we must DROP FUNCTION
+-- CASCADE first, then CREATE FUNCTION. Grants are re-asserted afterward.
+--
+-- Functions patched (return type changed — DROP + CREATE):
 --   0009: get_ranked_leaderboard, get_player_standing
+--   0015: get_recent_opponents
+--
+-- Functions patched (body only — CREATE OR REPLACE is safe):
 --   0010: get_self_profile (match history seasonId)
 --   0011: get_match_history, get_match_detail
 --   0012: persist_match_result (internal season resolution)
 --   0013: get_player_directory, get_player_directory_count
---   0015: get_recent_opponents
 -- ═══════════════════════════════════════════════════════════════
 
+-- ── IRX-C03: DROP functions whose return types changed ──
+-- PostgreSQL identifies functions by (name, argument_types). The
+-- argument types are identical to the originals, so we drop by signature.
+-- CASCADE ensures dependent views/grants are cleaned up before recreation.
+DROP FUNCTION IF EXISTS public.get_ranked_leaderboard(text, text, text, text, integer, integer) CASCADE;
+DROP FUNCTION IF EXISTS public.get_player_standing(text, text, uuid) CASCADE;
+DROP FUNCTION IF EXISTS public.get_recent_opponents(integer, integer) CASCADE;
+
 -- ── 0009: get_ranked_leaderboard ──
-CREATE OR REPLACE FUNCTION public.get_ranked_leaderboard(
+CREATE FUNCTION public.get_ranked_leaderboard(
   p_queue_id text DEFAULT 'ranked',
   p_season_id text DEFAULT NULL,
   p_tier text DEFAULT NULL,
@@ -128,7 +143,7 @@ END;
 $$;
 
 -- ── 0009: get_player_standing ──
-CREATE OR REPLACE FUNCTION public.get_player_standing(
+CREATE FUNCTION public.get_player_standing(
   p_queue_id text DEFAULT 'ranked',
   p_season_id text DEFAULT NULL,
   p_target_user_id uuid DEFAULT NULL
@@ -237,7 +252,7 @@ END;
 $$;
 
 -- ── 0015: get_recent_opponents ──
-CREATE OR REPLACE FUNCTION public.get_recent_opponents(
+CREATE FUNCTION public.get_recent_opponents(
   p_limit integer DEFAULT 25,
   p_offset integer DEFAULT 0
 )

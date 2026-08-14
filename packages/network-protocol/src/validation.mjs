@@ -71,10 +71,19 @@ const KNOWN_TYPES = new Set([
   'AUTHENTICATE', 'AUTH_REFRESH',
   // Client → Server (guest migration — v2)
   'MIGRATE_GUEST',
+  // Client → Server (guest identity binding — IRX-C04)
+  'BIND_GUEST_IDENTITY',
+  // Server → Client (guest identity binding confirmation — IRX-C04)
+  'GUEST_IDENTITY_BOUND',
   // Client → Server (rematch — v0.28.0)
   'REMATCH',
   // Client → Server (spectator discovery — v0.28.0)
   'LIST_SPECTATABLE',
+  // Client → Server (tournament — IRX-C07: previously missing, handlers unreachable)
+  'TOURNAMENT_LIST', 'TOURNAMENT_GET', 'TOURNAMENT_REGISTER',
+  'TOURNAMENT_START', 'TOURNAMENT_REPORT_RESULT',
+  // Client → Server (player report — IRX-C07: previously missing)
+  'REPORT_PLAYER',
   // Server → Client
   'MATCH_CREATED', 'MATCH_JOINED', 'MATCH_VIEW',
   'ACTION_RESULT', 'PARTICIPANT_STATUS', 'MATCH_STARTED',
@@ -86,6 +95,11 @@ const KNOWN_TYPES = new Set([
   'CHAT_MESSAGE',
   'CHAT_VISIBILITY_CHANGE',
   'ACHIEVEMENTS_EARNED',
+  // Server → Client (tournament responses — IRX-C07: previously missing)
+  'TOURNAMENT_VIEW', 'TOURNAMENT_REGISTERED', 'TOURNAMENT_STARTED',
+  'TOURNAMENT_RESULT_RECORDED',
+  // Server → Client (player report response — IRX-C07: previously missing)
+  'REPORT_SUBMITTED',
   // Server → Client (auth handshake — v2)
   'AUTHENTICATED',
   // Server → Client (guest migration — v2)
@@ -724,6 +738,26 @@ export function validateMigrateGuest(payload) {
     }
     if (typeof a.unlockedAt !== 'string' || a.unlockedAt.length === 0) {
       return fail(ReasonCode.INVALID_FIELD_TYPE, 'each achievement must have an unlockedAt ISO string');
+    }
+  }
+  // IRX-C04: Validate achievementProgress array if present
+  if (payload.achievementProgress !== undefined && payload.achievementProgress !== null) {
+    if (!Array.isArray(payload.achievementProgress)) {
+      return fail(ReasonCode.INVALID_FIELD_TYPE, 'achievementProgress must be an array if provided');
+    }
+    if (payload.achievementProgress.length > MAX_MIGRATION_ACHIEVEMENTS) {
+      return fail(ReasonCode.MESSAGE_TOO_LARGE, `achievementProgress array exceeds maximum of ${MAX_MIGRATION_ACHIEVEMENTS}`);
+    }
+    for (const p of payload.achievementProgress) {
+      if (!p || typeof p.achievementId !== 'string' || p.achievementId.length === 0) {
+        return fail(ReasonCode.INVALID_FIELD_TYPE, 'each progress entry must have a non-empty achievementId');
+      }
+      if (typeof p.progress !== 'number' || p.progress < 0 || !Number.isFinite(p.progress)) {
+        return fail(ReasonCode.INVALID_FIELD_TYPE, 'each progress entry must have a non-negative finite progress number');
+      }
+      if (p.target !== null && p.target !== undefined && (typeof p.target !== 'number' || p.target < 1 || !Number.isFinite(p.target))) {
+        return fail(ReasonCode.INVALID_FIELD_TYPE, 'progress target must be a positive number or null');
+      }
     }
   }
   return ok();

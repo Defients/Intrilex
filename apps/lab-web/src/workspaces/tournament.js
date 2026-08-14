@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { state, app, esc, pct, short, definitionList, showToast, clamp } from '../state.js';
+import { rerender } from '../rerender.js';
 import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js';
 import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js';
 import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js';
@@ -63,7 +64,7 @@ async function renderTournamentSetup() {
           state.tournament = saved;
           state.tournamentRunning = false;
           state.tournamentAutoPlaying = false;
-          import('../app.js').then(m => m.render());
+          rerender();
         }
       } catch (err) {
         showToast(err.message, { type: 'error', title: 'Failed to load tournament' });
@@ -91,7 +92,7 @@ async function renderTournamentSetup() {
       if (isIndexedDBAvailable()) {
         try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
       }
-      import('../app.js').then(m => m.render());
+      rerender();
     } catch (err) {
       app.innerHTML = `<div class="notice danger"><strong>Error:</strong> ${esc(err.message)}</div>`;
     }
@@ -132,7 +133,7 @@ function renderTournamentBracket(tournament) {
     state.tournament = null;
     state.tournamentRunning = false;
     state.tournamentAutoPlaying = false;
-    import('../app.js').then(m => m.render());
+    rerender();
   };
   const playBtn = document.querySelector('#tournament-play-next');
   if (playBtn) playBtn.onclick = () => playNextMatch(tournament);
@@ -281,7 +282,7 @@ async function playNextMatch(tournament) {
   const nextMatch = getNextMatch(tournament);
   if (!nextMatch) return;
   state.tournamentRunning = true;
-  import('../app.js').then(m => m.render());
+  rerender();
 
   const worker = new Worker('worker.js', { type: 'module' });
   try {
@@ -292,12 +293,12 @@ async function playNextMatch(tournament) {
     if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
       try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
     }
-    import('../app.js').then(m => m.render());
+    rerender();
   } catch (err) {
     state.tournamentRunning = false;
     state.tournamentAutoPlaying = false;
     showToast(err.message, { type: 'error', title: 'Tournament error' });
-    import('../app.js').then(m => m.render());
+    rerender();
   } finally {
     worker.terminate();
   }
@@ -307,7 +308,7 @@ async function autoPlayTournament(tournament) {
   if (state.tournamentRunning) return;
   state.tournamentAutoPlaying = true;
   state.tournamentRunning = true;
-  import('../app.js').then(m => m.render());
+  rerender();
 
   const worker = new Worker('worker.js', { type: 'module' });
   try {
@@ -319,7 +320,7 @@ async function autoPlayTournament(tournament) {
       if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
         try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
       }
-      import('../app.js').then(m => m.render());
+      rerender();
     }
     state.tournamentAutoPlaying = false;
     state.tournamentRunning = false;
@@ -327,12 +328,12 @@ async function autoPlayTournament(tournament) {
     if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
       try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
     }
-    import('../app.js').then(m => m.render());
+    rerender();
   } catch (err) {
     state.tournamentAutoPlaying = false;
     state.tournamentRunning = false;
     showToast(err.message, { type: 'error', title: 'Tournament auto-play error' });
-    import('../app.js').then(m => m.render());
+    rerender();
   } finally {
     worker.terminate();
   }
@@ -378,7 +379,7 @@ async function runMatchGames(tournament, match, worker) {
     else if (winningPolicy === match.seat2Policy) seat2Wins += 1;
 
     state.tournament = recordMatchResult(state.tournament, match.matchId, winningPolicy, summary);
-    import('../app.js').then(m => m.render());
+    rerender();
   }
 }
 
@@ -651,7 +652,7 @@ async function watchLiveMatch(tournament) {
     matchId: nextMatch.matchId,
     cancelled: false,
   };
-  import('../app.js').then(m => m.render());
+  rerender();
 
   const worker = new Worker('worker.js', { type: 'module' });
   try {
@@ -662,14 +663,14 @@ async function watchLiveMatch(tournament) {
     if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
       try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
     }
-    import('../app.js').then(m => m.render());
+    rerender();
   } catch (err) {
     state.tournamentRunning = false;
     state.tournamentAutoPlaying = false;
     stopLivePlayback();
     state.tournamentLiveView = null;
     showToast(err.message, { type: 'error', title: 'Tournament live error' });
-    import('../app.js').then(m => m.render());
+    rerender();
   } finally {
     worker.terminate();
   }
@@ -697,7 +698,7 @@ async function runLiveMatchGames(tournament, match, worker) {
     lv.gameWinner = null;
     lv.gameSummary = null;
     lv.awaitingContinue = false;
-    import('../app.js').then(m => m.render());
+    rerender();
 
     // Run match with replay recording
     const result = await new Promise((resolve) => {
@@ -743,7 +744,7 @@ async function runLiveMatchGames(tournament, match, worker) {
     lv.hasMoreGames = (lv.seat1Wins < winsNeeded) && (lv.seat2Wins < winsNeeded) && (g + 1 < bestOf);
     lv.awaitingContinue = false;
     lv.playing = false;
-    import('../app.js').then(m => m.render());
+    rerender();
 
     // Auto-start playback
     toggleLivePlay();

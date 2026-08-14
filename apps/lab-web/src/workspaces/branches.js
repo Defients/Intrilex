@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { state,   app,   esc,   pct,   definitionList } from '../state.js';
+import { rerender } from '../rerender.js';
 import { POLICY_IDS } from '../autonomy-runtime.js';
 
 // Build a human-readable label for a policy ID
@@ -59,7 +60,7 @@ export function renderBranches() {
     state.branchLegalActions = null;
     state.branchSelectedActionId = null;
     state.branchAltAction = null;
-    import('../app.js').then(m => m.render());
+    rerender();
   };
   document.querySelector('#branch-checkpoint').onchange = e => {
     state.branchCheckpoint = Number(e.target.value);
@@ -169,7 +170,7 @@ function renderBranchComparison(c) {
 function loadLegalActions() {
   state.branchLegalActionsLoading = true;
   state.branchLegalActionsError = null;
-  import('../app.js').then(m => m.render());
+  rerender();
   const replayKind = state.replayKind ?? 'autonomy';
   const profileId = state.capabilities?.defaultSimulationProfile ?? 'core-advanced-authority';
   const worker = new Worker('worker.js', { type: 'module' });
@@ -194,7 +195,7 @@ function loadLegalActions() {
       state.branchSelectedActionId = null;
       state.branchLegalActionsError = x.error ?? 'worker error';
     }
-    import('../app.js').then(m => m.render());
+    rerender();
   };
   worker.onerror = e => {
     worker.terminate();
@@ -202,7 +203,7 @@ function loadLegalActions() {
     state.branchLegalActions = null;
     state.branchSelectedActionId = null;
     state.branchLegalActionsError = e.message ?? 'worker error';
-    import('../app.js').then(m => m.render());
+    rerender();
   };
   worker.postMessage({
     type: 'get-legal-actions',
@@ -215,7 +216,7 @@ function loadLegalActions() {
 
 export async function runPairedCounterfactual() {
   state.branchRunning = true;
-  import('../app.js').then(m => m.render());
+  rerender();
   try {
     const replayKind = state.replayKind ?? 'autonomy';
     const profileId = state.capabilities?.defaultSimulationProfile ?? 'core-advanced-authority';
@@ -242,20 +243,20 @@ export async function runPairedCounterfactual() {
         const errResult = { status: 'NOT_SUPPORTED', reason: x.error ?? 'worker error', missingAuthority: 'worker' };
         state.branchResult = errResult; state.branchResultB = errResult;
       }
-      import('../app.js').then(m => m.render());
+      rerender();
     };
     worker.onerror = e => {
       worker.terminate(); state.branchRunning = false;
       const errResult = { status: 'NOT_SUPPORTED', reason: e.message, missingAuthority: 'worker' };
       state.branchResult = errResult; state.branchResultB = errResult;
-      import('../app.js').then(m => m.render());
+      rerender();
     };
     worker.postMessage({ type: 'run-paired-counterfactual', config });
   } catch (err) {
     state.branchRunning = false;
     const errResult = { status: 'NOT_SUPPORTED', reason: String(err?.message ?? err), missingAuthority: 'replay-loader' };
     state.branchResult = errResult; state.branchResultB = errResult;
-    import('../app.js').then(m => m.render());
+    rerender();
   }
 }
 
@@ -269,7 +270,7 @@ function runAllActionsAnalysis() {
   state.branchResult = null;
   state.branchResultB = null;
   state.branchComparison = null;
-  import('../app.js').then(m => m.render());
+  rerender();
   const replayKind = state.replayKind ?? 'autonomy';
   const profileId = state.capabilities?.defaultSimulationProfile ?? 'core-advanced-authority';
   const worker = new Worker('worker.js', { type: 'module' });
@@ -286,13 +287,13 @@ function runAllActionsAnalysis() {
     } else {
       state.branchAllActionsResult = { error: x.error ?? 'worker error', rankings: [] };
     }
-    import('../app.js').then(m => m.render());
+    rerender();
   };
   worker.onerror = e => {
     worker.terminate();
     state.branchAllActionsRunning = false;
     state.branchAllActionsResult = { error: e.message ?? 'worker error', rankings: [] };
-    import('../app.js').then(m => m.render());
+    rerender();
   };
   worker.postMessage({
     type: 'run-all-actions',

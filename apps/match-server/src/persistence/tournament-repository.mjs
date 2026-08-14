@@ -184,64 +184,79 @@ export class SupabaseTournamentRepository {
       completed_at: tournament.completedAt,
     };
 
-    // Upsert tournament row
+    // IRX-C11: Try atomic RPC first (single transaction for all 3 tables).
+    // Falls back to sequential upserts with error propagation if RPC is unavailable.
+    const participantRows = (tournament.players ?? []).map(p => ({
+      tournament_id: tournament.tournamentId,
+      user_id: p.userId ?? null,
+      public_player_id: p.publicPlayerId,
+      display_name: p.displayName,
+      handle: p.handle,
+      seed: p.seed,
+    }));
+    const matchRows = (tournament.matches ?? []).map(m => ({
+      match_id: m.matchId,
+      tournament_id: tournament.tournamentId,
+      round: m.round,
+      player_a_id: m.playerAId,
+      player_b_id: m.playerBId,
+      status: m.status,
+      winner_id: m.winnerId,
+      score_a: m.scoreA,
+      score_b: m.scoreB,
+      match_ref: m.matchRef,
+    }));
+
+    // Attempt atomic save via RPC
+    try {
+      const { data: rpcResult, error: rpcErr } = await this._client.rpc('upsert_tournament_atomic', {
+        p_tournament: tournamentRow,
+        p_participants: participantRows,
+        p_matches: matchRows,
+      });
+      if (rpcErr) {
+        // RPC doesn't exist or failed — fall through to sequential fallback
+        throw rpcErr;
+      }
+      if (rpcResult && rpcResult.success === false) {
+        throw new Error(`Atomic tournament save failed: ${rpcResult.error ?? 'unknown error'}`);
+      }
+      // Atomic save succeeded — tournament, participants, and matches are all committed
+      return;
+    } catch (rpcError) {
+      // RPC unavailable (migration not applied yet) — use sequential fallback
+      // This maintains backward compatibility while the migration is deployed
+    }
+
+    // Sequential fallback (IRX-C09/C11: upsert with error propagation)
+    // IRX-C11: Propagate ALL errors — never silently continue after a failure
     const { error: tErr } = await this._client
       .from('tournaments')
       .upsert(tournamentRow, { onConflict: 'tournament_id' });
     if (tErr) {
-      console.error('[TournamentRepo] save tournament failed:', tErr.message);
       throw new Error(`Tournament save failed: ${tErr.message}`);
     }
 
-    // Replace participants (delete + insert)
-    await this._client
-      .from('tournament_participants')
-      .delete()
-      .eq('tournament_id', tournament.tournamentId);
-    if (tournament.players.length > 0) {
-      const participantRows = tournament.players.map(p => ({
-        tournament_id: tournament.tournamentId,
-        user_id: p.userId ?? null, // userId may not always be available
-        public_player_id: p.publicPlayerId,
-        display_name: p.displayName,
-        handle: p.handle,
-        seed: p.seed,
-      }));
-      // Filter out rows without user_id (Supabase requires it)
-      const validRows = participantRows.filter(r => r.user_id);
-      if (validRows.length > 0) {
-        const { error: pErr } = await this._client
-          .from('tournament_participants')
-          .insert(validRows);
-        if (pErr) {
-          console.error('[TournamentRepo] save participants failed:', pErr.message);
-        }
+    // IRX-C09: Use upsert instead of delete/reinsert to preserve existing
+    // registrants and their registered_at timestamps.
+    const validRows = participantRows.filter(r => r.user_id);
+    if (validRows.length > 0) {
+      const { error: pErr } = await this._client
+        .from('tournament_participants')
+        .upsert(validRows, { onConflict: 'tournament_id,user_id' });
+      // IRX-C11: Propagate ALL errors — never silently continue after a failure
+      if (pErr) {
+        throw new Error(`Tournament participant save failed: ${pErr.message}`);
       }
     }
 
-    // Replace matches (delete + insert)
-    await this._client
-      .from('tournament_matches')
-      .delete()
-      .eq('tournament_id', tournament.tournamentId);
-    if (tournament.matches.length > 0) {
-      const matchRows = tournament.matches.map(m => ({
-        match_id: m.matchId,
-        tournament_id: tournament.tournamentId,
-        round: m.round,
-        player_a_id: m.playerAId,
-        player_b_id: m.playerBId,
-        status: m.status,
-        winner_id: m.winnerId,
-        score_a: m.scoreA,
-        score_b: m.scoreB,
-        match_ref: m.matchRef,
-      }));
+    if (matchRows.length > 0) {
       const { error: mErr } = await this._client
         .from('tournament_matches')
-        .insert(matchRows);
+        .upsert(matchRows, { onConflict: 'match_id' });
+      // IRX-C11: Propagate ALL errors
       if (mErr) {
-        console.error('[TournamentRepo] save matches failed:', mErr.message);
+        throw new Error(`Tournament match save failed: ${mErr.message}`);
       }
     }
   }

@@ -59,7 +59,10 @@ try {
   run('pnpm-install-offline', 'pnpm', ['install', '--offline', '--frozen-lockfile', '--ignore-scripts']);
   run('manifest-verify-pre-ci', 'pnpm', ['run', 'manifest:verify']);
   run('build-determinism-read-only', 'pnpm', ['run', 'test:build-determinism'], temp, { INTRILEX_WRITE_REPORTS: '0' });
-  run('full-ci-read-only', 'pnpm', ['run', 'ci'], temp, { INTRILEX_WRITE_REPORTS: '0' });
+  // IRX-C05: Removed full-ci-read-only step — it recursed into the full CI pipeline,
+  // which would re-package the release and re-verify, causing infinite recursion.
+  // Instead, run focused verification tests only.
+  run('focused-tests-read-only', 'pnpm', ['run', 'test:unit'], temp, { INTRILEX_WRITE_REPORTS: '0' });
   run('manifest-verify-post-ci', 'pnpm', ['run', 'manifest:verify']);
   run('cli-verify-corpus', 'pnpm', ['run', 'cli', '--', 'verify-corpus']);
   run('cli-advanced-core-match', 'pnpm', ['run', 'cli', '--', 'match', '--profile', 'core-advanced-authority', '--seed', '123', '--p1', 'score-rush', '--p2', 'control']);

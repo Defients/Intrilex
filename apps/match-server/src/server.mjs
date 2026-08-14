@@ -924,7 +924,7 @@ export function startServer(opts = {}) {
     }
 
     const connectionId = randomUUID();
-    connections.set(connectionId, { ws, authState: ConnectionAuthState.UNAUTHENTICATED, account: null, participantId: null, matchId: null, lastHeartbeat: Date.now(), isSpectator: false, spectatingMatchId: null, ip });
+    connections.set(connectionId, { ws, authState: ConnectionAuthState.UNAUTHENTICATED, account: null, participantId: null, matchId: null, lastHeartbeat: Date.now(), isSpectator: false, spectatingMatchId: null, ip, boundGuestIdentity: null });
     logEvent('connectionOpen', { connectionId, ip, total: connections.size });
 
     ws.on('message', (raw) => {
@@ -1191,8 +1191,8 @@ function handleMessage(connectionId, ws, raw) {
   const { type, payload, requestId } = msg;
 
   // ── Auth gate: when authMode='required', reject privileged commands before AUTHENTICATE ──
-  // Pre-auth messages: AUTHENTICATE, AUTH_REFRESH only
-  const PRE_AUTH_TYPES = new Set(['AUTHENTICATE', 'AUTH_REFRESH']);
+  // Pre-auth messages: AUTHENTICATE, AUTH_REFRESH, BIND_GUEST_IDENTITY (IRX-C04)
+  const PRE_AUTH_TYPES = new Set(['AUTHENTICATE', 'AUTH_REFRESH', 'BIND_GUEST_IDENTITY']);
   if (_authMode === AuthMode.REQUIRED && !PRE_AUTH_TYPES.has(type)) {
     const connAuth = connections.get(connectionId);
     if (!connAuth || connAuth.authState !== ConnectionAuthState.AUTHENTICATED) {
@@ -1251,6 +1251,7 @@ function handleMessage(connectionId, ws, raw) {
     switch (type) {
       case 'AUTHENTICATE': handlerResult = _authHandlers.handleAuthenticate(connectionId, ws, payload, requestId); break;
       case 'AUTH_REFRESH': handlerResult = _authHandlers.handleAuthRefresh(connectionId, ws, payload, requestId); break;
+      case 'BIND_GUEST_IDENTITY': handlerResult = handleBindGuestIdentity(connectionId, ws, payload, requestId); break;
       case 'CREATE_MATCH': handlerResult = _matchHandlers.handleCreateMatch(connectionId, ws, payload, requestId); break;
       case 'JOIN_MATCH': handlerResult = _matchHandlers.handleJoinMatch(connectionId, ws, payload, requestId); break;
       case 'RESUME_MATCH': handlerResult = _matchHandlers.handleResumeMatch(connectionId, ws, payload, requestId); break;
@@ -1302,6 +1303,49 @@ function handleMessage(connectionId, ws, raw) {
 // Matchmaking handlers (handleQueueJoin, handleQueueLeave) are extracted
 // to handlers/matchmaking-handlers.mjs.
 
+// ── Guest identity binding (IRX-C04) ──
+
+/**
+ * Handle a BIND_GUEST_IDENTITY request from a client.
+ * Called BEFORE AUTHENTICATE, this binds the guest's local UUID to the
+ * connection so that MIGRATE_GUEST can verify the sourceIdentity server-side.
+ *
+ * Security model:
+ *   - The guest UUID is generated client-side and stored in localStorage
+ *   - The client sends it here BEFORE authenticating as the permanent account
+ *   - The server stores it on the connection object
+ *   - During MIGRATE_GUEST, the server verifies payload.sourceIdentity === conn.boundGuestIdentity
+ *   - This prevents a client from claiming an arbitrary guest identity
+ *
+ * @param {string} connectionId
+ * @param {WebSocket} ws
+ * @param {Record<string, *>} payload
+ * @param {string} requestId
+ */
+function handleBindGuestIdentity(connectionId, ws, payload, requestId) {
+  const conn = connections.get(connectionId);
+  if (!conn) return;
+
+  // Validate payload — must have a UUID-format guestIdentity
+  const guestIdentity = payload?.guestIdentity;
+  if (!guestIdentity || typeof guestIdentity !== 'string') {
+    return send(ws, errorMsg(ReasonCode.MIGRATION_PLAN_INVALID, 'guestIdentity is required', requestId));
+  }
+  // UUID format validation
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(guestIdentity)) {
+    return send(ws, errorMsg(ReasonCode.MIGRATION_PLAN_INVALID, 'guestIdentity must be a valid UUID', requestId));
+  }
+  // Reject if already bound to a different identity
+  if (conn.boundGuestIdentity && conn.boundGuestIdentity !== guestIdentity) {
+    return send(ws, errorMsg(ReasonCode.MIGRATION_PLAN_INVALID, 'Connection already bound to a different guest identity', requestId));
+  }
+
+  conn.boundGuestIdentity = guestIdentity;
+  logEvent('guestIdentityBound', { connectionId, guestIdentity });
+  send(ws, envelope('GUEST_IDENTITY_BOUND', { guestIdentity }, requestId));
+}
+
 // ── Guest migration handler ──
 
 /**
@@ -1311,7 +1355,7 @@ function handleMessage(connectionId, ws, raw) {
  *
  * Security model:
  *   - The connection MUST be authenticated as the targetIdentity (permanent account)
- *   - The sourceIdentity is the guest UUID (not verified server-side — trust the client)
+ *   - IRX-C04: The sourceIdentity MUST match the boundGuestIdentity from BIND_GUEST_IDENTITY
  *   - Achievements are written with LOCAL_DEVICE provenance (not SERVER)
  *   - The migration record prevents replay (idempotency)
  *
@@ -1336,6 +1380,18 @@ async function handleMigrateGuest(connectionId, ws, payload, requestId) {
   if (conn.account.accountId !== payload.targetIdentity) {
     logEvent('migrationIdentityMismatch', { connectionId, authenticated: conn.account.accountId, target: payload.targetIdentity });
     return send(ws, errorMsg(ReasonCode.MIGRATION_IDENTITY_MISMATCH, 'Authenticated account does not match migration target', requestId));
+  }
+
+  // IRX-C04: Verify sourceIdentity matches the bound guest identity.
+  // The client must have sent BIND_GUEST_IDENTITY before authenticating.
+  // This prevents a client from claiming an arbitrary guest identity.
+  if (!conn.boundGuestIdentity) {
+    logEvent('migrationNoGuestBinding', { connectionId, sourceIdentity: payload.sourceIdentity });
+    return send(ws, errorMsg(ReasonCode.MIGRATION_PLAN_INVALID, 'Guest identity not bound — send BIND_GUEST_IDENTITY before migration', requestId));
+  }
+  if (conn.boundGuestIdentity !== payload.sourceIdentity) {
+    logEvent('migrationSourceMismatch', { connectionId, bound: conn.boundGuestIdentity, claimed: payload.sourceIdentity });
+    return send(ws, errorMsg(ReasonCode.MIGRATION_IDENTITY_MISMATCH, 'Source identity does not match bound guest identity', requestId));
   }
 
   // Build the migration plan (deterministic ID for idempotency)
@@ -1735,6 +1791,13 @@ async function broadcastMatchEnded(match) {
   // RANK-01: Use the server-owned match.queueId (not profileId.includes('ranked')).
   // The outbox routes ranked records through RatingService.applyRatedResult()
   // which fails closed for ineligible records.
+  //
+  // IRX-C02: ratingRecord is declared at function scope so the rating-data
+  // extraction section below can read it. Previously the assignment at the
+  // persistence site wrote to an implicit global while a separate block-scoped
+  // declaration below shadowed it — causing rating data to never reach clients.
+  /** @type {Awaited<ReturnType<typeof buildMatchResultRecord>> | null} */
+  let ratingRecord = null;
   if (terminalOutbox && matchResultPersistor) {
     /** @type {Awaited<ReturnType<typeof buildMatchResultRecord>> | null} */
     let record = null;
@@ -1823,8 +1886,7 @@ async function broadcastMatchEnded(match) {
   // IRX-H13: Broadcast to clients AFTER durable persistence is enqueued.
   // Clients only learn the match is terminal once the result is durably stored.
   // IRX-H23: Include per-participant rating data in MATCH_ENDED for ranked matches.
-  /** @type {Awaited<ReturnType<typeof buildMatchResultRecord>> | null} */
-  let ratingRecord = null;
+  // IRX-C02: ratingRecord was declared at function scope above — no shadow here.
   let ratingData = null;
   try {
     if (ratingRecord && ratingRecord.participants) {

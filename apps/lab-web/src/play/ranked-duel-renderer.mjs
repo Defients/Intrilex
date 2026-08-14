@@ -422,8 +422,10 @@ function renderHeader(vm, opts, priorityContext, immediate) {
   // through the forfeit flow (X button → confirmation dialog).
   const isTerminal = vm.status === 'TERMINAL';
   const showBack = !isNetwork || isTerminal;
+  const backHref = opts.academyLessonId ? '#/play/academy' : '#/';
+  const backLabel = opts.academyLessonId ? 'Back to Academy' : 'Back to home';
   const backHtml = showBack
-    ? `<a class="rd-header-back" href="#/" aria-label="Back to home" title="Back to home">\u2190</a>`
+    ? `<a class="rd-header-back" href="${backHref}" aria-label="${esc(backLabel)}" title="${esc(backLabel)}">\u2190</a>`
     : '';
 
   // X/exit button: for network PvP, triggers forfeit confirmation;
@@ -1287,7 +1289,8 @@ function renderRightRail(vm, opts, isReadOnly, snapshot, priorityContext, immedi
 
 // ── Game Log (player-readable, no engine diagnostics) ──────────
 
-function renderGameLog(events, systemEvents, cardRegistry) {
+function renderGameLog(events, systemEvents) {
+  const cardRegistry = arguments[2] ?? null;
   // Build player-readable gameplay events
   let logEntries = [];
   if (events && events.length > 0) {

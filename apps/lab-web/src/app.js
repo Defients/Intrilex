@@ -159,6 +159,18 @@ function showShell() {
  */
 export function render() {
   const r = route();
+  // IRX-C12: Route lifecycle cleanup — when navigating away from a play route
+  // to a non-play route, clean up play resources (WebSockets, timers, listeners,
+  // sound/particle engines). Without this, navigating from /play/match to /rules
+  // leaves queue WebSockets, spectator WebSockets, heartbeat timers, autosave
+  // timers, reconnect-grace countdowns, keyboard listeners, visibility listeners,
+  // beforeunload handlers, and AI work all running in the background.
+  if (_previousRoute && isPlayRoute(_previousRoute) && !isPlayRoute(r)) {
+    if (_playModule && typeof _playModule.cleanupPlay === 'function') {
+      try { _playModule.cleanupPlay(); } catch (e) { console.warn('[render] cleanupPlay error:', e); }
+    }
+  }
+  _previousRoute = r;
   // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
   // This replaces the old ad-hoc metadata restore block and ensures every
   // route owns its own identity with no cross-route leakage.
@@ -577,6 +589,8 @@ async function openMatchHistoryOverlay() {
 // ═══════════════════════════════════════════════════════════════
 let _playModule = null;
 let _boardCssLoaded = false;
+// IRX-C12: Route lifecycle tracking — previous route for cleanup on navigation
+let _previousRoute = null;
 /**
  * Render a play route by lazy-loading the play module and delegating to it.
  * Loads base play CSS on first call, ranked-duel CSS only for match routes.
@@ -1944,6 +1958,12 @@ getAuthController().then(async ({ initAuth, isMigrationPending }) => {
 }).catch((err) => {
   console.warn('[app] initAuth failed, continuing without auth:', err?.message ?? err);
 });
+
+// IRX-C06: Register render function with the rerender bus so workspace
+// modules can trigger re-renders without dynamically importing app.js.
+// This breaks the backedge from workspace modules to the entry point.
+import { setRenderer } from './rerender.js';
+setRenderer(render);
 
 boot().then(() => {
   render();

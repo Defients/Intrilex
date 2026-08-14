@@ -24,8 +24,16 @@ async function bundle() {
   const entryJs = path.join(dist, 'app.js');
   const entryCss = path.join(dist, 'styles.css');
 
-  if (!existsSync(entryJs)) {
-    console.error('bundle: dist/app.js not found — run build.mjs first');
+  // Windows filesystem sync race: build.mjs may complete async file copies
+  // (cp, writeFile) that haven't flushed to disk before this process starts.
+  // Retry with backoff to avoid false-negative "file not found" errors.
+  let entryReady = false;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    if (existsSync(entryJs)) { entryReady = true; break; }
+    await new Promise(r => setTimeout(r, 200));
+  }
+  if (!entryReady) {
+    console.error('bundle: dist/app.js not found after 10 retries — run build.mjs first');
     process.exit(1);
   }
 

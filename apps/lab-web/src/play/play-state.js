@@ -39,6 +39,7 @@ export const state = {
   selectedIntentKey: null, // Currently selected intent group key
   viewMode: null, // Current view mode (e.g. 'start')
   rightRailTab: 'chat', // Active right rail tab ('chat' | 'debug')
+  academyLessonId: null, // Current Academy lesson ID (null for non-academy matches)
 };
 
 /**
@@ -77,4 +78,5 @@ export function resetState() {
   state.rightRailTab = 'chat';
   state._networkAchievementsApplied = false;
   state._achievementSummaryHtml = undefined;
+  state.academyLessonId = null;
 }

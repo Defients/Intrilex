@@ -1,5 +1,5 @@
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, cpSync, rmSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -77,9 +77,12 @@ if (rankedGlyphs.status !== 0) process.exit(rankedGlyphs.status ?? 1);
 // do not overwrite the committed asset. Copied to dist/ by the recursive
 // src→dist copy below, and to neocities-deploy/ by sync-neocities.mjs.
 
-await rm(dist, { recursive: true, force: true });
-await mkdir(dist, { recursive: true });
-await cp(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
+// Use synchronous fs operations for the initial dist creation to avoid
+// Windows filesystem sync races where async cp/rm promises resolve before
+// the OS has committed the changes, causing spawnSync (bundle.mjs) to fail.
+rmSync(dist, { recursive: true, force: true });
+mkdirSync(dist, { recursive: true });
+cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
 // ── Analytics AI core: copy isomorphic package modules into dist/analytics-ai ──
 // The browser UI adapters (apps/lab-web/src/analytics-ai/*.js) import these
 // .mjs modules via relative paths. The package is self-contained (no workspace
@@ -220,17 +223,18 @@ for (let attempt = 0; attempt < 3; attempt++) {
   }
 }
 if (!cpSuccess) throw new Error('Failed to copy observatory directory after 3 retries');
-// Wait for filesystem sync and verify the critical file is readable
+// Wait for filesystem sync and verify the critical file is actually readable
+// (not just present — on Windows, stat may report size > 0 before content is flushed)
 let observatoryReady = false;
-for (let attempt = 0; attempt < 20; attempt++) {
+for (let attempt = 0; attempt < 30; attempt++) {
   try {
-    const stat = await (await import('node:fs/promises')).stat(path.join(observatoryDistDir, 'analytics.json'));
-    if (stat.size > 0) { observatoryReady = true; break; }
-  } catch { /* not ready yet */ }
+    const data = await readFile(path.join(observatoryDistDir, 'analytics.json'), 'utf8');
+    if (data.length > 0) { observatoryReady = true; break; }
+  } catch { /* not ready yet — content not flushed */ }
   await new Promise(r => setTimeout(r, 500));
 }
 if (!observatoryReady) {
-  throw new Error('Observatory analytics.json could not be copied and verified after 20 retries');
+  throw new Error('Observatory analytics.json could not be read and verified after 30 retries');
 }
 
 // ── Slim index files for browser deploy ──────────────────────────────────
@@ -374,15 +378,25 @@ await writeFile(path.join(rankAuthorityDir, 'rank-authority.json'), JSON.stringi
 
 // ── Rank Power data liveness assertion (prevents silent /ranks data loss) ──
 const observatoryAnalyticsPath = path.join(dist, 'data', 'observatory', 'analytics.json');
+// Diagnostic: check if the file exists before attempting to read it
+if (!existsSync(observatoryAnalyticsPath)) {
+  console.error(`build: WARNING — analytics.json missing before rank power assertion, re-copying observatory...`);
+  // Re-copy the observatory directory as a workaround
+  await rm(path.join(dist, 'data', 'observatory'), { recursive: true, force: true });
+  await cp(observatorySrcDir, path.join(dist, 'data', 'observatory'), { recursive: true });
+  // Wait for flush
+  await new Promise(r => setTimeout(r, 1000));
+}
 let rankPowerAssertion = null;
 try {
   // Retry reads for up to ~5s — on Windows external/mapped drives, large files
   // (analytics.json is ~37MB) may not be readable immediately after cp completes.
   let observatoryRaw = null;
-  for (let attempt = 0; attempt < 10; attempt++) {
-    try { observatoryRaw = await readFile(observatoryAnalyticsPath, 'utf8'); break; } catch { await new Promise(r => setTimeout(r, 500)); }
+  let lastErr = null;
+  for (let attempt = 0; attempt < 20; attempt++) {
+    try { observatoryRaw = await readFile(observatoryAnalyticsPath, 'utf8'); break; } catch (e) { lastErr = e; if (attempt === 0) console.error(`build: analytics.json read retry — ${e.code ?? e.message}`); await new Promise(r => setTimeout(r, 500)); }
   }
-  if (!observatoryRaw) throw new Error(`Unable to read ${observatoryAnalyticsPath} after 10 retries (filesystem sync race)`);
+  if (!observatoryRaw) throw new Error(`Unable to read ${observatoryAnalyticsPath} after 20 retries (filesystem sync race) — last error: ${lastErr?.code ?? lastErr?.message}`);
   const observatoryJson = JSON.parse(observatoryRaw);
   const rankCount = observatoryJson.rankPower?.ranks ? Object.keys(observatoryJson.rankPower.ranks).length : 0;
   const ladderLength = observatoryJson.rankPower?.ladder?.length ?? 0;
@@ -419,6 +433,72 @@ try {
 }
 
 console.log(`BUILD PASS: ${dist}; browserModules=${requiredModules.size + 2}; certifiedReplays=${certifiedReplayFiles.length}; rankPower=[${rankPowerAssertion}]`);
+
+// Windows filesystem sync race: async fs operations (cp, writeFile) may not
+// have flushed to disk before the child process starts. Verify ALL critical
+// files exist before invoking bundle.mjs. If any are missing, re-copy
+// SYNCHRONOUSLY (cpSync) to guarantee the files are on disk before spawnSync.
+const criticalFiles = [
+  'app.js',
+  'styles.css',
+  'shared-browser.js',
+  'engine/browser-entry.js',
+  'engine/hash.js',
+  'engine/ranks.js',
+  'engine/canonical-json.js',
+  'play/achievements/achievement-ui.js',
+  'policy-scoring.js',
+  'hybrix/policy-adapter.js',
+  'analytics-ai/browser-controller.js',
+  'analytics-ai/config.mjs',
+  'analytics-ai/ollama-client.mjs',
+  'analytics-ai/model-discovery.mjs',
+  'analytics-ai/deterministic-statistics.mjs',
+  'analytics-ai/analysis-controller.mjs',
+  'analytics-ai/analysis-cache.mjs',
+  'achievements/index.mjs',
+];
+let missingFiles = criticalFiles.filter(f => !existsSync(path.join(dist, f)));
+if (missingFiles.length > 0) {
+  console.error(`build: ${missingFiles.length} critical files missing — re-copying synchronously...`);
+  // Re-copy src synchronously (includes app.js, play/, achievements/, etc.)
+  cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true, force: true });
+  // Re-copy analytics-ai modules synchronously
+  const aaiSrcDir = path.join(root, 'packages/analytics-ai/src');
+  const aaiDistDir = path.join(dist, 'analytics-ai');
+  if (existsSync(aaiSrcDir)) {
+    cpSync(aaiSrcDir, aaiDistDir, { recursive: true, force: true });
+  }
+  // Re-copy achievements modules synchronously (from packages/achievements/src)
+  const achSrcDir = path.join(root, 'packages/achievements/src');
+  const achDistDir = path.join(dist, 'achievements');
+  if (existsSync(achSrcDir)) {
+    cpSync(achSrcDir, achDistDir, { recursive: true, force: true });
+  }
+  // Re-copy engine files synchronously
+  cpSync(path.join(root, 'packages/browser-crypto-shim/src/hash.js'), path.join(dist, 'engine/hash.js'), { force: true });
+  // Re-write shared-browser.js and browser-entry.js synchronously
+  const { writeFileSync } = await import('node:fs');
+  writeFileSync(path.join(dist, 'shared-browser.js'), [
+    "// shared-browser.js — Browser-safe replacement for @intrilex/shared canonical.mjs.",
+    "export { canonicalize, canonicalClone } from './engine/canonical-json.js';",
+    "export { sha256Text, hashCanonical } from './engine/hash.js';",
+    "export function sanitizeCsvCell(value) {",
+    "  const text = value == null ? '' : String(value);",
+    "  const safe = /^[=+\\-@]/.test(text) ? `'${text}` : text;",
+    "  return /[\",\\n\\r]/.test(safe) ? `\"${safe.replaceAll('\"', '\"\"')}\"` : safe;",
+    "}",
+    "export function stableSortBy(items, selector) {",
+    "  return [...items].sort((a, b) => String(selector(a)).localeCompare(String(selector(b))));",
+    "}",
+    '',
+  ].join('\n'));
+  // Verify the re-copy worked
+  const stillMissing = criticalFiles.filter(f => !existsSync(path.join(dist, f)));
+  if (stillMissing.length > 0) {
+    console.error(`build: WARNING — ${stillMissing.length} files still missing after re-copy: ${stillMissing.join(', ')}`);
+  }
+}
 
 // ── Bundle and minify JS/CSS with esbuild (hashed, cache-friendly) ──
 const bundleResult = spawnSync(process.execPath, ['scripts/bundle.mjs'], { cwd: root, stdio: 'inherit' });

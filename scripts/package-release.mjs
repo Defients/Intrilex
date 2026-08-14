@@ -12,6 +12,10 @@ for(const name of await readdir(release))if(/^Intrilex_Simulation_Lab_v.+\.zip(?
 let r=spawnSync(process.execPath,['scripts/secret-containment-scan.mjs'],{cwd:root,stdio:'inherit'});if(r.status!==0){console.error('SEC-01 FAIL: secret containment scan failed — refusing to package release');process.exit(r.status??1);}
 r=spawnSync(process.execPath,['scripts/package-engine-patch.mjs'],{cwd:root,stdio:'inherit'});if(r.status!==0)process.exit(r.status??1);
 await copyFile(path.join(root,'reports/BUILD_PROOF.md'),path.join(release,'BUILD_PROOF.md'));
+// IRX-C05: Generate manifest BEFORE creating ZIP so it is embedded in the archive.
+// Previously the manifest was generated after the ZIP, so it was never in the archive,
+// making the extracted-verification step fail to find it.
+r=spawnSync(process.execPath,['scripts/manifest.mjs','generate'],{cwd:root,stdio:'inherit'});if(r.status!==0)process.exit(r.status??1);
 const python=process.platform==='win32'?'python':'python3';
 // IRX-C01: Exclude .env and all secret-bearing files from the release archive.
 // The secret-containment-scan only scans git-tracked files; .env is gitignored
@@ -51,8 +55,8 @@ r=spawnSync(python,[path.join(root,'scripts/deterministic_zip.py'),root,zip,...S
 // IRX-C01: Post-zip secret scan — verify no secrets leaked into the final archive.
 r=spawnSync(process.execPath,['scripts/scan-archive-secrets.mjs',zip],{cwd:root,stdio:'inherit'});if(r.status!==0){console.error('SEC-01 FAIL: secret detected in release archive — refusing to package');process.exit(r.status??1);}
 const digest=createHash('sha256').update(await readFile(zip)).digest('hex');await writeFile(`${zip}.sha256`,`${digest}  ${zipName}\n`);
-// Generate manifest first, then write version-scoped certification and release manifest copies.
-r=spawnSync(process.execPath,['scripts/manifest.mjs','generate'],{cwd:root,stdio:'inherit'});if(r.status!==0)process.exit(r.status??1);
+// IRX-C05: Manifest was already generated before ZIP creation (embedded in archive).
+// Now read it for certification binding.
 const manifest=JSON.parse(await readFile(path.join(release,'RELEASE_MANIFEST.json'),'utf8'));
 const versionedManifestPath=path.join(release,`v${version}-release-manifest.json`);
 await writeFile(versionedManifestPath,JSON.stringify(manifest,null,2)+'\n');

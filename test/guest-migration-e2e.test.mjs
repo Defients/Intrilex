@@ -24,6 +24,7 @@ import { FakeMatchResultPersistor } from '../apps/match-server/src/persistence/f
 import {
   authenticate,
   migrateGuest,
+  envelope,
 } from '../packages/network-protocol/src/protocol.mjs';
 import { migrationId } from '../packages/account-domain/src/guest-migration.mjs';
 
@@ -130,6 +131,12 @@ function connectWs() {
 async function authenticateConn(ws, token) {
   sendMsg(ws, authenticate(token));
   return waitForMessage(ws, 'AUTHENTICATED');
+}
+
+// IRX-C04: Bind guest identity before authentication so MIGRATE_GUEST can verify sourceIdentity
+async function bindGuestIdentity(ws, guestIdentity) {
+  sendMsg(ws, envelope('BIND_GUEST_IDENTITY', { guestIdentity }));
+  return waitForMessage(ws, 'GUEST_IDENTITY_BOUND');
 }
 
 // ── Section 1: FakeMatchResultPersistor unit tests ──
@@ -259,6 +266,9 @@ test('migration: MIGRATE_GUEST with valid auth + achievements → MIGRATION_RESU
     ws.on('error', reject);
   });
 
+  // IRX-C04: Bind guest identity before authenticating
+  await bindGuestIdentity(ws, ACCOUNT_GUEST);
+
   // Authenticate as the permanent account
   await authenticateConn(ws, TOKEN_PERMANENT);
 
@@ -287,6 +297,9 @@ test('migration: idempotent — re-running MIGRATE_GUEST is a no-op', async () =
     ws.on('open', resolve);
     ws.on('error', reject);
   });
+
+  // IRX-C04: Bind guest identity before authenticating
+  await bindGuestIdentity(ws, ACCOUNT_GUEST);
 
   await authenticateConn(ws, TOKEN_PERMANENT);
 
@@ -368,6 +381,9 @@ test('migration: MIGRATE_GUEST with empty achievements → success with 0 transf
     ws.on('open', resolve);
     ws.on('error', reject);
   });
+
+  // IRX-C04: Bind guest identity before authenticating
+  await bindGuestIdentity(ws, ACCOUNT_GUEST);
 
   await authenticateConn(ws, TOKEN_OTHER);
 

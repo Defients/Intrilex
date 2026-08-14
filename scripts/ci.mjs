@@ -117,12 +117,14 @@ const STAGES = [
   ['hybrix-benchmark', 'node', ['scripts/benchmark-hybrix.mjs'], { BENCH_MATCHES: '20' }],
   ['package-graph', 'node', ['scripts/check-package-graph.mjs']],
   ['typecheck', 'node', ['scripts/typecheck.mjs']],
+  // IRX-C05: self-audit must run BEFORE release-package so the manifest
+  // can compute its verdict from the actual self-audit results.
+  ['self-audit-generate', 'node', ['scripts/generate-self-audit.mjs']],
   ['release-package', 'node', ['scripts/package-release.mjs']],
   ['falsification-sweep', 'node', ['scripts/falsification-sweep.mjs']],
   ['browser-e2e-certification', 'node', ['scripts/browser-e2e-certification.mjs']],
   ['release-verify-extracted', 'node', ['scripts/verify-extracted.mjs']],
   ['manifest-verify', 'node', ['scripts/manifest.mjs', 'verify']],
-  ['self-audit-generate', 'node', ['scripts/generate-self-audit.mjs']],
   ['truth-drift-check', 'node', ['scripts/truth-drift-check.mjs', '--no-staleness']],
   ['v0.21.0-version-contract', 'node', ['--test', 'test/v0.21.0-version-contract.test.mjs']],
   ['v0.21.0-browser-version-parity', 'node', ['--test', 'test/v0.21.0-browser-version-parity.test.mjs']],
@@ -225,6 +227,14 @@ const STAGES = [
   // Match server production configuration (deployment hardening)
   ['match-server-config', 'node', ['--test', 'test/match-server-config.test.mjs']],
   ['match-server-production', 'node', ['--test', 'test/match-server-production.test.mjs']],
+  // IRX forensic remediation behavioral proof
+  ['irx-c07-protocol-registry', 'node', ['--test', 'test/irx-c07-protocol-registry.test.mjs']],
+  ['irx-c02-terminal-finality', 'node', ['--test', 'test/irx-c02-terminal-finality.test.mjs']],
+  ['irx-c08-tournament-progression', 'node', ['--test', 'test/irx-c08-tournament-progression.test.mjs']],
+  ['irx-c12-route-lifecycle', 'node', ['--test', 'test/irx-c12-route-lifecycle.test.mjs']],
+  ['irx-c06-browser-graph', 'node', ['--test', 'test/irx-c06-browser-graph.test.mjs']],
+  ['irx-c04-guest-migration-identity', 'node', ['--test', 'test/irx-c04-guest-migration-identity.test.mjs']],
+  ['irx-c11-tournament-transactional', 'node', ['--test', 'test/irx-c11-tournament-transactional.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

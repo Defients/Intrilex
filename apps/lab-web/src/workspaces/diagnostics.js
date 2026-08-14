@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { state, app, esc, pct, short, definitionList } from '../state.js';
+import { rerender } from '../rerender.js';
 import { loadTraceIndex, loadTraceData } from '../data-loader.js';
 import { renderPolicyArchetypes, renderMatchupMatrix, renderTempoCurve, renderEndgameAnalysis, renderActionDistribution } from './observatory.js';
 
@@ -70,7 +71,7 @@ export function renderDiagnostics() {
   document.querySelectorAll('[data-section-tab]').forEach(tab => {
     tab.onclick = () => {
       state.diagActiveSection = tab.dataset.sectionTab;
-      import('../app.js').then(m => m.render());
+      rerender();
     };
   });
 }

@@ -20,7 +20,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getAchievementState, markAchievementsMigrated } from '../persistence.js';
-import { migrateGuest, authenticate } from './network-protocol-client.mjs';
+import { migrateGuest, authenticate, bindGuestIdentity } from './network-protocol-client.mjs';
 import {
   isMigrationPending,
   getGuestIdentity,
@@ -209,6 +209,15 @@ export async function runMigrationIfPending(opts = {}) {
     });
 
     ws.addEventListener('open', () => {
+      // IRX-C04: Send BIND_GUEST_IDENTITY BEFORE AUTHENTICATE so the server
+      // can verify the sourceIdentity during MIGRATE_GUEST. Without this,
+      // the server rejects the migration with MIGRATION_PLAN_INVALID.
+      try {
+        ws.send(JSON.stringify(bindGuestIdentity(sourceIdentity)));
+      } catch {
+        finish(null);
+        return;
+      }
       setStatus('AUTHENTICATING');
       // Send AUTHENTICATE with the current access token
       try {

@@ -28,6 +28,10 @@ terminal-outbox.sqlite
 .env
 .env.local
 .env.*.local
+.env.production
+.env.production.local
+.env.staging
+.env.staging.local
 neocities.config.js
 
 # Version control

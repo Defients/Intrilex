@@ -780,7 +780,14 @@ export function bindBoardEvents(container, callbacks) {
         if (typeof removeBeforeUnloadProtection === 'function') {
           removeBeforeUnloadProtection();
         }
-        location.hash = '#/';
+        // Academy: return to the Academy page instead of the homepage
+        // so the player can continue with the next lesson.
+        if (state.academyLessonId) {
+          state.academyLessonId = null;
+          location.hash = '#/play/academy';
+        } else {
+          location.hash = '#/';
+        }
       } else if (action === 'forfeit-match') {
         // v0.28: Forfeit confirmation dialog for active network PvP matches.
         // Shows an explicit confirmation; canceling keeps the player in the match.

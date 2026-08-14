@@ -4,6 +4,12 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env.production
+.env.production.local
+.env.staging
+.env.staging.local
+# Allowlist: explicit public templates are tracked intentionally
+!.env.example
 _baseline-extract/
 *.zip
 # Large generated/binary trees tracked separately by build

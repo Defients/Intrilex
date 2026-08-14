@@ -450,10 +450,12 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
       rows.push({
         user_id: p.accountId,
         achievement_id: p.achievementId,
-        progress: p.progress,
-        target: p.target ?? null,
-        updated_at: p.updatedAt,
-        last_match_id: p.matchId ?? null,
+        // IRX-C04: Fix field name mismatches with achievement_progress schema
+        // Schema (migration 0005) expects: current_value, target_value
+        // Previously used: progress, target, last_match_id (nonexistent column)
+        current_value: p.progress,
+        target_value: p.target ?? 1,
+        updated_at: p.updatedAt || new Date().toISOString(),
       });
     }
 

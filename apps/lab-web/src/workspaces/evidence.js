@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { state,   app,   esc,   short,   definitionList } from '../state.js';
+import { rerender } from '../rerender.js';
 import { ENGINE_VERSION, RULES_VERSION } from '../version.js';
 import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js';
 
@@ -71,9 +72,9 @@ export function renderEvidence() {
   <section class="panel" style="margin-top:16px"><div class="panel-header"><div><h2>Release provenance</h2><p>Build information and artifact integrity</p></div></div><div class="panel-body">${definitionList([['Capability hash', short(c.capabilityHash)], ['Observatory hash', short(o.observatoryHash)], ['Campaign hash', short(state.aggregate?.canonicalResultHash)], ['Engine version', c.engine?.version ?? ENGINE_VERSION], ['Rules version', c.engine?.rulesVersion ?? RULES_VERSION], ['Lab version', labVersion]])}</div></section>`;
   // Depth II Phase 3: anomaly explorer event handlers
   const anomalyTypeEl = document.querySelector('#anomaly-type-filter');
-  if (anomalyTypeEl) anomalyTypeEl.onchange = e => { state.anomalyTypeFilter = e.target.value; import('../app.js').then(m => m.render()); };
+  if (anomalyTypeEl) anomalyTypeEl.onchange = e => { state.anomalyTypeFilter = e.target.value; rerender(); };
   const anomalySevEl = document.querySelector('#anomaly-severity-filter');
-  if (anomalySevEl) anomalySevEl.onchange = e => { state.anomalySeverityFilter = e.target.value; import('../app.js').then(m => m.render()); };
+  if (anomalySevEl) anomalySevEl.onchange = e => { state.anomalySeverityFilter = e.target.value; rerender(); };
   document.querySelectorAll('[data-anomaly-match]').forEach(row => row.onclick = () => {
     const matchId = row.dataset.anomalyMatch;
     if (!matchId) return;

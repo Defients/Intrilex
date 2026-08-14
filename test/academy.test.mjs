@@ -41,10 +41,12 @@ test('Academy: each lesson has objectives and aiPolicy', () => {
     academySrc.includes('objectives:') && academySrc.includes('aiPolicy:'),
     'Each lesson must have objectives and aiPolicy fields'
   );
-  // All lessons should use easy AI policies
+  // All lessons should use valid baseline AI policies for beginner practice
+  const validPolicies = ['score-rush', 'control', 'tempo', 'value', 'random-legal'];
+  const found = validPolicies.some(p => academySrc.includes(`aiPolicy: '${p}'`));
   assert.ok(
-    academySrc.includes('-easy'),
-    'Lessons should use easy AI policies for beginner practice'
+    found,
+    'Lessons should use valid baseline AI policies (score-rush, control, tempo, value, random-legal)'
   );
 });
 

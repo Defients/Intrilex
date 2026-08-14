@@ -40,7 +40,8 @@ const SECRET_PATTERNS = [
   {
     name: 'Supabase service key',
     // Supabase service role keys are JWTs starting with eyJ and containing 'service_role'
-    pattern: /sb_secret_[A-Za-z0-9]{20,}/,
+    // IRX-C01 fix: include underscores and hyphens so modern tokens are not truncated
+    pattern: /sb_secret_[A-Za-z0-9_\-]{20,}/,
     severity: 'critical',
   },
   {
@@ -257,16 +258,20 @@ export function runSecretContainmentScan() {
     allViolations.push(...violations);
   }
 
-  // Check that .env files exist but are gitignored (not tracked)
+  // Check that .env files (and all secret-bearing variants) are gitignored, not tracked.
+  // IRX-C01 fix: also check .env.production and nested variants.
   const envChecks = [];
-  const envPath = join(ROOT, '.env');
-  if (existsSync(envPath)) {
-    try {
-      const tracked = execSync('git ls-files --error-unmatch .env', { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
-      // If git succeeds, .env is tracked — that's a violation
-      envChecks.push({ file: '.env', issue: '.env file is git-tracked (should be gitignored)', severity: 'critical' });
-    } catch {
-      // .env exists but is NOT tracked — correct behavior
+  const envVariants = ['.env', '.env.local', '.env.production', '.env.production.local', '.env.staging', '.env.staging.local'];
+  for (const envName of envVariants) {
+    const envPath = join(ROOT, envName);
+    if (existsSync(envPath)) {
+      try {
+        execSync(`git ls-files --error-unmatch ${envName}`, { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+        // If git succeeds, the env file is tracked — that's a violation
+        envChecks.push({ file: envName, issue: `${envName} file is git-tracked (should be gitignored)`, severity: 'critical' });
+      } catch {
+        // env file exists but is NOT tracked — correct behavior
+      }
     }
   }
 
