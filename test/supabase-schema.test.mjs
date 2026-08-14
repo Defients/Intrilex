@@ -134,6 +134,28 @@ test('schema: moderation table blocks all client access except owner SELECT', as
   // Only SELECT — no INSERT/UPDATE/DELETE for authenticated
   assert.ok(!sql.includes('FOR INSERT TO authenticated'), 'moderation must not allow client INSERT');
   assert.ok(!sql.includes('FOR UPDATE TO authenticated'), 'moderation must not allow client UPDATE');
+  // service_role must have explicit GRANT (strict role model)
+  assert.ok(sql.includes('GRANT') && sql.includes('service_role'),
+    'moderation must grant service_role access (caused production outage without it)');
+});
+
+test('schema: migration 0025 grants service_role on all server-owned tables', async () => {
+  const sql = await readMigration('0025_service_role_grants_followup.sql');
+  assert.ok(sql, '0025_service_role_grants_followup.sql must exist');
+  assert.ok(sql.includes('GRANT') && sql.includes('account_moderation'),
+    '0025 must grant on account_moderation');
+  assert.ok(sql.includes('GRANT') && sql.includes('tournaments'),
+    '0025 must grant on tournaments');
+  assert.ok(sql.includes('GRANT') && sql.includes('tournament_participants'),
+    '0025 must grant on tournament_participants');
+  assert.ok(sql.includes('GRANT') && sql.includes('tournament_matches'),
+    '0025 must grant on tournament_matches');
+  assert.ok(sql.includes('GRANT') && sql.includes('player_reports'),
+    '0025 must grant on player_reports');
+  assert.ok(sql.includes('GRANT') && sql.includes('player_relationships'),
+    '0025 must grant on player_relationships');
+  assert.ok(sql.includes('GRANT EXECUTE') && sql.includes('upsert_tournament_atomic'),
+    '0025 must grant EXECUTE on upsert_tournament_atomic to service_role');
 });
 
 test('schema: config.toml has required sections', async () => {

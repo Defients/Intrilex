@@ -26,6 +26,10 @@ CREATE POLICY account_moderation_owner_select ON public.account_moderation
 -- NO INSERT/UPDATE/DELETE for authenticated role.
 -- Only the service role (admin server) can manage moderation.
 
+-- Grant service_role full access (strict role model — service_role does not
+-- automatically bypass RLS on newer Supabase projects).
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.account_moderation TO service_role;
+
 -- ── updated_at trigger ──
 DROP TRIGGER IF EXISTS account_moderation_updated_at ON public.account_moderation;
 CREATE TRIGGER account_moderation_updated_at

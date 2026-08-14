@@ -96,3 +96,10 @@ CREATE INDEX IF NOT EXISTS idx_tournament_matches_tournament_id
   ON public.tournament_matches(tournament_id, round);
 CREATE INDEX IF NOT EXISTS idx_tournament_participants_tournament_id
   ON public.tournament_participants(tournament_id);
+
+-- ── service_role grants (strict role model) ──
+-- The match server (service role) owns tournament lifecycle: creation,
+-- registration, bracket generation, and result recording.
+GRANT ALL PRIVILEGES ON TABLE public.tournaments TO service_role;
+GRANT ALL PRIVILEGES ON TABLE public.tournament_participants TO service_role;
+GRANT ALL PRIVILEGES ON TABLE public.tournament_matches TO service_role;
