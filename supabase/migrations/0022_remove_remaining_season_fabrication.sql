@@ -113,7 +113,7 @@ BEGIN
   -- ── Step 2: Process each participant ──
   v_p_count := jsonb_array_length(v_participants);
 
-  FOR v_i := 0 TO v_p_count - 1 LOOP
+  FOR v_i IN 0..v_p_count - 1 LOOP
     v_participant := v_participants->v_i;
     v_account_id := v_participant->>'accountId';
 
