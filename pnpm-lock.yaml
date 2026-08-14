@@ -146,6 +146,9 @@ importers:
 
   packages/engine-adapter:
     dependencies:
+      '@intrilex/decision-intelligence':
+        specifier: workspace:*
+        version: link:../decision-intelligence
       '@intrilex/shared':
         specifier: workspace:*
         version: link:../shared
