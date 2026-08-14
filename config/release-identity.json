@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
   "productName": "Intrilex Simulation Lab",
-  "version": "0.27.0",
-  "releaseTitle": "Version Bump",
+  "version": "0.28.0",
+  "releaseTitle": "UX/Visual Polish",
   "buildKind": "RANKED_DUEL_PLAYER_SHELL",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
@@ -29,7 +29,7 @@
     "deploy",
     "evidence"
   ],
-  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.27.0",
-  "releaseDate": "2026-08-12",
-  "integrityHash": "c158b209b96dd2e957a4821dfc856869"
+  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.28.0",
+  "releaseDate": "2026-08-14",
+  "integrityHash": "8af677ecc6bc86f40a4b09804576d522"
 }

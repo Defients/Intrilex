@@ -58,6 +58,9 @@ const types = {
   '.map': 'application/json; charset=utf-8',
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
+  '.ogg': 'audio/ogg',
   '.ttf': 'font/ttf',
   '.otf': 'font/otf',
   '.txt': 'text/plain; charset=utf-8'

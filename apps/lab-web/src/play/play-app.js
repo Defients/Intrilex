@@ -20,6 +20,7 @@ import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId }
 import { getAiBanter } from './ai-personality.js';
 import { SoundEngine } from './play-sound.js';
 import { ParticleSystem } from './play-particles.js';
+import { renderAcademy, findLesson, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs';
 import { state, resetState } from './play-state.js';
 import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js';
 import {
@@ -37,11 +38,41 @@ import {
   renderNetworkStatusBanner, renderNetworkUnavailable,
 } from './network/network-lobby-renderer.mjs';
 import { getMatchServerUrl, isMatchServerConfigured, validateMatchServerUrl } from './network/match-server-config.js';
+import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js';
 import { getAccessToken, onTokenRefresh } from './network/auth-controller.js';
 import { getAchievementRuntime } from './achievements/achievement-runtime.js';
 import { getAchievementPresenter } from './achievements/achievement-presenter.js';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// IRX-H10: Reconnect-grace countdown ticker for the waiting player. The
+// disconnect overlay renders a static remaining-time value; this interval
+// updates it every second so the player sees a live deadline. The ticker is
+// self-cleaning: if no countdown element is present, the interval is cleared.
+let _graceCountdownTimerId = null;
+function tickReconnectGraceCountdown(container) {
+  const el = container.querySelector('[data-testid="reconnect-grace-countdown"]');
+  if (!el) {
+    if (_graceCountdownTimerId) { clearInterval(_graceCountdownTimerId); _graceCountdownTimerId = null; }
+    return;
+  }
+  if (_graceCountdownTimerId) return; // already ticking
+  _graceCountdownTimerId = setInterval(() => {
+    const deadline = Number(el.getAttribute('data-grace-deadline-ms'));
+    if (!Number.isFinite(deadline)) return;
+    const remainingSec = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    const strong = el.querySelector('strong');
+    if (strong) {
+      strong.textContent = `${remainingSec}s`;
+    } else {
+      el.textContent = `Reconnect grace: ${remainingSec}s remaining`;
+    }
+    if (remainingSec <= 0 && _graceCountdownTimerId) {
+      clearInterval(_graceCountdownTimerId);
+      _graceCountdownTimerId = null;
+    }
+  }, 1000);
+}
 
 /**
  * Route handler for #/play and sub-routes.
@@ -64,7 +95,8 @@ export async function handlePlayRoute(route, container) {
     // Only disconnect — don't call leave() (which notifies the server) because
     // the user may be navigating to a different play mode, not abandoning.
     // The reconnect info in localStorage allows rejoining if they return.
-    state.networkSession.disconnect();
+    try { state.networkSession.disconnect(); }
+    catch (err) { console.warn('[play-app] session disconnect failed:', err?.message ?? err); }
     state.networkSession = null;
   }
 
@@ -101,6 +133,8 @@ export async function handlePlayRoute(route, container) {
     await renderNetworkSpectateFlow(container);
   } else if (sub === '/online/match') {
     await renderNetworkActiveMatch(container);
+  } else if (sub === '/academy') {
+    await renderAcademyHub(container);
   } else {
     // Unknown play sub-route — redirect to new match setup
     location.hash = '#/play/new';
@@ -116,8 +150,51 @@ async function renderNewMatch(container) {
     policyId: id,
     traits: { archetype: id.replace('hybrix-', '').replace(/-(hard|easy|nightmare|normal)$/, ''), difficulty: id.includes('-hard') ? 'hard' : id.includes('-easy') ? 'easy' : id.includes('-nightmare') ? 'nightmare' : 'normal' },
   }));
-  container.innerHTML = renderNewMatchSetup(catalog);
+  // U7: First-run funnel banner for new players
+  const funnelBanner = renderFunnelBanner();
+  container.innerHTML = funnelBanner + renderNewMatchSetup(catalog);
+  if (funnelBanner) wireFunnelBanner(container);
   bindNewMatchForm(container);
+}
+
+/**
+ * Render the Academy hub — tutorial lesson list.
+ */
+async function renderAcademyHub(container) {
+  const completed = getCompletedLessons();
+  // U7: Mark tutorial started in the first-run funnel
+  if (getCurrentStep() === FunnelStep.LANDING) advanceToStep(FunnelStep.TUTORIAL_STARTED);
+  container.innerHTML = renderAcademy({ completedLessons: completed });
+  bindAcademyEvents(container);
+}
+
+/**
+ * Bind Academy hub events.
+ */
+function bindAcademyEvents(container) {
+  container.querySelectorAll('[data-action="academy-start"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const lessonId = btn.dataset.lessonId;
+      await startAcademyLesson(lessonId, container);
+    });
+  });
+}
+
+/**
+ * Start an Academy lesson — launches a first-contact match with the lesson's AI policy.
+ */
+async function startAcademyLesson(lessonId, container) {
+  const lesson = findLesson(lessonId);
+  if (!lesson) return;
+  state.academyLessonId = lessonId;
+  state.guidanceMode = GuidanceMode.GUIDED;
+  await startNewMatch({
+    profileId: 'first-contact-trigger-closure',
+    seed: `academy-${lessonId}`,
+    humanPlayerId: 'P1',
+    aiPolicyId: lesson.aiPolicy,
+    mode: 'ADVANCED_CORE',
+  }, container);
 }
 
 /**
@@ -263,6 +340,8 @@ function stopHeartbeat() {
 function teardownSession() {
   stopHeartbeat();
   stopAutosave();
+  // Clear reconnect-grace countdown interval to prevent timer leaks
+  if (_graceCountdownTimerId) { clearInterval(_graceCountdownTimerId); _graceCountdownTimerId = null; }
   // v0.28: Remove beforeunload protection when the session is torn down
   removeBeforeUnloadProtection();
   if (state.sessionId && state.tabId) {
@@ -380,6 +459,24 @@ async function renderActiveMatch(container) {
     updatePlayerStatsOnTerminal(snapshot);
     // v0.28: Remove beforeunload protection when the match reaches terminal state
     removeBeforeUnloadProtection();
+    // Academy: mark lesson complete on win
+    if (state.academyLessonId) {
+      const humanId = snapshot.humanPlayerId ?? 'P1';
+      if (snapshot.state?.winner === humanId) {
+        markLessonComplete(state.academyLessonId);
+        // U7: Advance first-run funnel when tutorial is complete
+        completeStep(FunnelStep.TUTORIAL_STARTED);
+        advanceToStep(FunnelStep.TUTORIAL_COMPLETE);
+      }
+    }
+    // U7: Advance first-run funnel on first AI win (non-academy match)
+    if (!state.academyLessonId && !state.networkSession) {
+      const humanId = snapshot.humanPlayerId ?? 'P1';
+      if (snapshot.state?.winner === humanId) {
+        completeStep(FunnelStep.FIRST_AI_WIN);
+        advanceToStep(FunnelStep.ACCOUNT_PROMPT);
+      }
+    }
   }
 
   // Build achievement summary HTML for terminal display.
@@ -444,6 +541,9 @@ async function renderActiveMatch(container) {
       }
       return ratingData; // Already a single object
     })(),
+    // v0.28.0: Pass rematch invite from the opponent to the renderer for the
+    // accept/decline overlay.
+    rematchInvite: isNetworkMatch ? (state.networkSession?.rematchInvite ?? null) : null,
   });
   } catch (renderError) {
     console.error('renderBoard threw:', renderError);
@@ -495,6 +595,7 @@ async function renderActiveMatch(container) {
   bindBoardEvents(container);
   bindKeyboardShortcuts(container);
   bindVisibilityHandler();
+  tickReconnectGraceCountdown(container);
 
   // Phase 4C: Restore focus after re-render
   if (_focusSelector) {
@@ -636,6 +737,9 @@ function getNetworkServerUrl() {
  */
 async function renderNetworkLobbyHub(container) {
   const serverUrl = getNetworkServerUrl();
+  // U7: Advance first-run funnel when player enters online lobby
+  completeStep(FunnelStep.ACCOUNT_PROMPT);
+  advanceToStep(FunnelStep.FIRST_ONLINE_DUEL);
 
   // Fail visibly when no match server is configured (production without INTRILEX_MATCH_SERVER_URL)
   if (!serverUrl) {
@@ -1004,6 +1108,7 @@ async function renderNetworkQueueFlow(container) {
   let retryCount = 0;
   const MAX_RETRIES = 5;
   const RETRY_DELAY_MS = 3000;
+  let retryTimerId = null;  // stored so we can cancel on close/navigation
 
   // ── Queue connection lifecycle ────────────────────────────────
   // Encapsulated in a function so we can retry with a fresh WebSocket
@@ -1026,7 +1131,7 @@ async function renderNetworkQueueFlow(container) {
         const msg = JSON.parse(event.data);
         if (msg.type === 'AUTHENTICATED') {
           authenticated = true;
-          ws.send(JSON.stringify(queueJoin('core-unrestricted-authority')));
+          ws.send(JSON.stringify(queueJoin('core-unrestricted-authority', 'ranked')));
           return;
         }
         // Auth failure before QUEUE_JOIN — surface a clear sign-in message
@@ -1076,7 +1181,9 @@ async function renderNetworkQueueFlow(container) {
               error: `Clearing previous session… retry ${retryCount}/${MAX_RETRIES}`,
             });
             try { ws.close(); } catch { /* ignore */ }
-            setTimeout(() => {
+            if (retryTimerId) clearTimeout(retryTimerId);
+            retryTimerId = setTimeout(() => {
+              retryTimerId = null;
               if (!matched && location.hash === '#/play/online/queue') {
                 connectAndQueue();
               }
@@ -1094,6 +1201,7 @@ async function renderNetworkQueueFlow(container) {
     ws.addEventListener('close', () => {
       if (abandoned) return;  // intentional close for retry — don't navigate away
       stopQueueTimer();
+      if (retryTimerId) { clearTimeout(retryTimerId); retryTimerId = null; }
       if (!matched) {
         // If closed without being matched, return to lobby
         // (only if we're still on the queue page)

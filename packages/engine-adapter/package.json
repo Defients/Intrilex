@@ -1,12 +1,15 @@
 {
   "name": "@intrilex/engine-adapter",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "type": "module",
   "exports": {
     ".": "./src/adapter.mjs",
-    "./public-projection": "./src/public-projection.mjs"
+    "./public-projection": "./src/public-projection.mjs",
+    "./engine-fuzz-harness": "./src/engine-fuzz-harness.mjs",
+    "./action-introspection": "./src/action-introspection.mjs"
   },
   "dependencies": {
-    "@intrilex/shared": "workspace:*"
+    "@intrilex/shared": "workspace:*",
+    "@intrilex/decision-intelligence": "workspace:*"
   }
 }

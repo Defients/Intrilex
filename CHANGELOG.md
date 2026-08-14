@@ -1,5 +1,108 @@
 # Changelog
 
+## v0.28.0 — UX/Visual Polish & Social Graph
+
+### Added
+
+- **Player directory workspace** — browsable directory of players with
+  recent-opponents, rivals/follows/blocks social graph (migrations 0013/0015/0016),
+  backed by `@intrilex/account-domain/relationships` scoring.
+- **Leaderboard overlay** — leaderboard rows integrated into the play hub with
+  rank glyphs and tier/division projection.
+- **Players & leaderboard overlays** wired into the SPA with offline/unavailable
+  states and OAuth-gated access.
+- **Puzzle mode experimental route** (`/dev/puzzles`) — engine-true puzzle
+  runtime with generated fixtures, surfaced as a dev-only surface ahead of a
+  player-facing Academy promotion.
+- **SEO metadata centralization** — canonical SEO metadata management and
+  homepage rebrand from "Lab" to game identity.
+- **Pre-alpha notice overlay** and auth/settings workspaces enabled.
+
+### Changed
+
+- **OAuth flow improvements** — guest→permanent migration is now detected on
+  page load after an OAuth redirect, preserving progress for converting guests.
+- **Network lobby UI polish** — versus cards, ranked "Find Match" featured card,
+  queue waiting screen with live queue clock, server-reachability status.
+- **Match config diagnosis on bootstrap** — structured warnings when
+  `__INTRILEX_CONFIG__` is missing or incomplete in production.
+
+### Fixed
+
+- **Matchmaking stale-entry supersede** — a stale queue entry from a previous
+  connection is now superseded instead of stranding the player in
+  `ALREADY_IN_QUEUE` retry loops; reconnect flow hardened.
+- **Network lobby UI flashing** and opponent-status display races in
+  multiplayer matches resolved.
+- **Player directory `ORDER BY` type mismatch** — split `ORDER BY CASE` to
+  avoid bigint/text type mismatch on Supabase.
+
+### Tests
+
+- Achievements package added to `tsc` typecheck scope.
+- `terminal-outbox.sqlite` and supabase CLI `.temp` scratch files gitignored.
+
+## v0.27.4 — Network Session Reliability Fixes
+
+### Fixed
+
+- **`reconnect()` socket leak on server error** — when `reconnect()` received
+  an ERROR response (e.g. MATCH_NOT_FOUND), the WebSocket stayed open and
+  `state.networkSession` held a broken session with an active socket. Now
+  `reconnect()` calls `disconnect()` to close the socket and clean up
+  listeners, then transitions back to ERROR so the caller can still detect
+  the failure.
+- **`ALREADY_IN_QUEUE` retry timer not clearable** — the `setTimeout` for
+  auto-retry was anonymous, so navigating away before the delay expired
+  could race with a new queue flow. The timer ID is now stored and cleared
+  on socket close.
+
+### Changed
+
+- **`_sendAuthenticate` and `refreshAccessToken` error logging** — both
+  methods previously swallowed all errors silently. Now they emit a
+  `console.warn` with the error message, improving debuggability without
+  changing behavior.
+
+### Tests
+
+- Added 2 source-level regression tests in
+  `test/network-ux-integration.test.mjs`:
+  - "reconnect() disconnects socket on ERROR response"
+  - "ALREADY_IN_QUEUE retry timer is stored and clearable"
+
+## v0.27.3 — Matchmaking Block-Rejection Reliability Fix
+
+### Fixed
+
+- **`handleQueueJoin` block-check catch path** — when `blockChecker` threw an
+  error, only the joining player was notified and the orphaned match was left in
+  the store. The partner received `QUEUE_MATCHED` and was stuck waiting. Now the
+  catch path fails closed identically to the blocked path: both players are
+  notified with `BLOCKED_BY_PLAYER`, the match is deleted, and both connections
+  are unbound.
+- **Stale connection state after block rejection** — both the blocked and
+  fail-closed paths now clear `participantId`/`matchId` on both connections so
+  neither player is left bound to a deleted match. Previously the connections
+  retained stale match bindings, causing confusing errors on subsequent actions.
+
+### Changed
+
+- **`MatchmakingQueue` `blockChecker` JSDoc** — corrected misleading
+  documentation that claimed the queue itself skips blocked pairs. The queue
+  accepts the option for injection-point compatibility but never invokes it;
+  block enforcement is performed by the match server's `handleQueueJoin` after
+  pairing.
+
+### Tests
+
+- Added two behavioral regression tests in
+  `test/forensic-phase2-remediation.test.mjs`:
+  - "blocked matchmaking pair notifies both players and deletes match"
+  - "blockChecker throw fails closed — both players notified, match deleted"
+  Both verify that both players receive `BLOCKED_BY_PLAYER`, the match is
+  deleted, and connections are unbound (proven by successful re-queue).
+
 ## v0.27.2 — Homepage Revamp: Zero-Overflow Layout & Visual Polish
 
 ### Summary

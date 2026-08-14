@@ -43,6 +43,9 @@ import {
   RELATIONSHIPS_PAGE_SIZE,
   formatRelationshipHeadToHead,
   rivalryIntensityLabel,
+  deriveRivalMilestones,
+  detectNemesis,
+  detectKryptonite,
 } from '@intrilex/account-domain/relationships';
 import { fetchDirectory } from '../play/players/players-data.js';
 import { fetchRecentOpponents } from '../play/players/recent-opponents-data.js';
@@ -976,6 +979,22 @@ function renderRivalsCard(entry) {
     ? `<span class="pd-mutual-badge" data-testid="pd-mutual-rival" title="You both rival each other">⇌ Mutual Rival</span>`
     : '';
 
+  // Nemesis / Kryptonite badges (v0.28.0 — Epoch 4)
+  const nemesis = detectNemesis(h2h);
+  const kryptonite = detectKryptonite(h2h);
+  const nemesisBadge = nemesis
+    ? `<span class="pd-nemesis-badge pd-nemesis" data-testid="pd-nemesis" title="${esc(nemesis.description)}">${nemesis.icon} ${esc(nemesis.label)}</span>`
+    : '';
+  const kryptoniteBadge = kryptonite
+    ? `<span class="pd-nemesis-badge pd-kryptonite" data-testid="pd-kryptonite" title="${esc(kryptonite.description)}">${kryptonite.icon} ${esc(kryptonite.label)}</span>`
+    : '';
+
+  // Rival milestones (v0.28.0 — Epoch 4) — show top 3 earned milestones
+  const milestones = deriveRivalMilestones(h2h);
+  const milestoneBadges = milestones.slice(0, 3).map(m =>
+    `<span class="pd-milestone-badge" data-testid="pd-milestone" title="${esc(m.description)}">${m.icon} ${esc(m.label)}</span>`
+  ).join('');
+
   // Achievements (only when public — null means hidden)
   const achLine = entry.earnedAchievements != null
     ? `<span class="pd-ach">${entry.earnedAchievements} achievement${entry.earnedAchievements === 1 ? '' : 's'}</span>`
@@ -995,7 +1014,8 @@ function renderRivalsCard(entry) {
         <span class="pd-card-rank" data-tier="${esc(rank.tier)}">${esc(rankText)}</span>
         <span class="pd-card-ir mono">${esc(irText)}</span>
         <span class="pd-h2h mono" data-testid="pd-riv-h2h">${h2hLine}</span>
-        ${intensityBadge}${mutualBadge}
+        ${intensityBadge}${mutualBadge}${nemesisBadge}${kryptoniteBadge}
+        ${milestoneBadges}
         ${achLine}
       </span>
     </a>

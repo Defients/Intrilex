@@ -1,6 +1,6 @@
 {
   "name": "@intrilex/account-domain",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "type": "module",
   "exports": {
     ".": "./src/index.mjs",
@@ -15,6 +15,13 @@
     "./relationships": "./src/relationships.mjs",
     "./rating": "./src/rating.mjs",
     "./glicko2": "./src/glicko2.mjs",
-    "./seasons": "./src/seasons.mjs"
+    "./seasons": "./src/seasons.mjs",
+    "./tournament-domain": "./src/tournament-domain.mjs",
+    "./strategic-fingerprint": "./src/strategic-fingerprint.mjs",
+    "./meta-report": "./src/meta-report.mjs",
+    "./replay-branching": "./src/replay-branching.mjs",
+    "./match-stats-aggregator": "./src/match-stats-aggregator.mjs",
+    "./ranked-entry-requirements": "./src/ranked-entry-requirements.mjs",
+    "./season-countdown": "./src/season-countdown.mjs"
   }
 }

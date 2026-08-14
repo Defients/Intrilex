@@ -35,6 +35,14 @@ async function bundle() {
   // Use outdir (required by esbuild when splitting is enabled) with a temp dir,
   // then hash and rename the outputs.
   const splitDir = path.join(dist, '.split-tmp');
+  // Alias @intrilex/shared to the browser-safe shim (written by build.mjs).
+  // packages/shared/src/canonical.mjs imports `node:crypto`, which esbuild
+  // cannot resolve when bundling for the browser platform. Browser modules
+  // (e.g. @intrilex/decision-intelligence/*) transitively import
+  // @intrilex/shared, so without this alias the bundle fails with
+  // "Could not resolve node:crypto". The shim re-exports the browser crypto
+  // shim's hash primitives and defines the pure helpers.
+  const sharedBrowserShim = path.join(dist, 'shared-browser.js');
   const jsResult = await esbuild.build({
     entryPoints: [entryJs],
     bundle: true,
@@ -47,7 +55,8 @@ async function bundle() {
     outdir: splitDir,
     write: true,
     logLevel: 'info',
-    absWorkingDir: dist
+    absWorkingDir: dist,
+    alias: { '@intrilex/shared': sharedBrowserShim }
   });
 
   // Bundle and minify CSS — inline @import statements

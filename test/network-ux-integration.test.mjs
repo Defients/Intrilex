@@ -434,3 +434,28 @@ test('network-ux: network-protocol-client has no node: imports', async () => {
   const js = await playSrc('network/network-protocol-client.mjs');
   assert.doesNotMatch(js, /from ['"]node:/);
 });
+
+// ── Section 13: Reconnect error cleanup (BUG-001 regression) ──
+
+test('network-ux: reconnect() disconnects socket on ERROR response', async () => {
+  const js = await playSrc('network/network-session.mjs');
+  // Extract the reconnect method body
+  const reconnectMatch = js.match(/async reconnect\(\)[\s\S]*?^\s{2}}/m);
+  assert.ok(reconnectMatch, 'reconnect method must exist');
+  const body = reconnectMatch[0];
+  // Must call disconnect() in the ERROR branch to prevent socket leak
+  assert.match(body, /disconnect\(\)/, 'reconnect must call disconnect() on ERROR');
+  // Must transition to ERROR after disconnect so caller can detect failure
+  assert.match(body, /_transition\(NetworkSessionState\.ERROR\)/, 'reconnect must transition to ERROR');
+});
+
+// ── Section 14: Queue retry timer cleanup (BUG-002 regression) ──
+
+test('network-ux: ALREADY_IN_QUEUE retry timer is stored and clearable', async () => {
+  const js = await playSrc('play-app.js');
+  // The retry timer ID must be stored in a variable (not anonymous setTimeout)
+  assert.match(js, /retryTimerId/, 'retry timer ID must be stored in a variable');
+  // Must clear the timer on close to prevent stale retries
+  assert.match(js, /if \(retryTimerId\)\s*\{\s*clearTimeout\(retryTimerId\)/,
+    'retry timer must be cleared on close');
+});

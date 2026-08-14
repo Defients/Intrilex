@@ -202,3 +202,101 @@ test('self-match: different accounts can join private duel', async () => {
     ws1.close();
   } finally { await stopTestServer(); }
 });
+
+// ── IRX-H20: Participant token rotation on reconnect ──
+
+test('reconnect: successful reconnect returns a new participant token', async () => {
+  await startAuthServer(IDENTITIES);
+  try {
+    // Alice creates a match
+    const ws1 = await connectWs();
+    await authenticateConn(ws1, TOKEN_ALICE);
+    sendMsg(ws1, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
+    const created = await waitForMessage(ws1, 'MATCH_CREATED');
+    const matchId = created.payload.matchId;
+    const originalToken = created.payload.participantToken;
+
+    // Alice disconnects
+    ws1.close();
+    await new Promise(r => setTimeout(r, 200));
+
+    // Alice reconnects — should get a new token in the MATCH_VIEW response
+    const ws2 = await connectWs();
+    await authenticateConn(ws2, TOKEN_ALICE);
+    sendMsg(ws2, { protocolVersion: 2, type: 'RESUME_MATCH', requestId: 'r2', payload: { matchId, participantToken: originalToken } });
+    const view = await waitForMessage(ws2, 'MATCH_VIEW');
+    assert.equal(view.payload.matchId, matchId);
+    assert.ok(view.payload.newParticipantToken, 'MATCH_VIEW on reconnect must include newParticipantToken');
+    assert.notEqual(view.payload.newParticipantToken, originalToken, 'New token must differ from original');
+    ws2.close();
+  } finally { await stopTestServer(); }
+});
+
+test('reconnect: old token is invalid after token rotation', async () => {
+  await startAuthServer(IDENTITIES);
+  try {
+    // Alice creates a match
+    const ws1 = await connectWs();
+    await authenticateConn(ws1, TOKEN_ALICE);
+    sendMsg(ws1, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
+    const created = await waitForMessage(ws1, 'MATCH_CREATED');
+    const matchId = created.payload.matchId;
+    const originalToken = created.payload.participantToken;
+
+    // Alice disconnects and reconnects (first rotation)
+    ws1.close();
+    await new Promise(r => setTimeout(r, 200));
+    const ws2 = await connectWs();
+    await authenticateConn(ws2, TOKEN_ALICE);
+    sendMsg(ws2, { protocolVersion: 2, type: 'RESUME_MATCH', requestId: 'r2', payload: { matchId, participantToken: originalToken } });
+    const view = await waitForMessage(ws2, 'MATCH_VIEW');
+    const rotatedToken = view.payload.newParticipantToken;
+    assert.ok(rotatedToken, 'First reconnect must return a rotated token');
+
+    // Alice disconnects again
+    ws2.close();
+    await new Promise(r => setTimeout(r, 200));
+
+    // Alice tries to reconnect with the ORIGINAL token — must fail
+    const ws3 = await connectWs();
+    await authenticateConn(ws3, TOKEN_ALICE);
+    sendMsg(ws3, { protocolVersion: 2, type: 'RESUME_MATCH', requestId: 'r3', payload: { matchId, participantToken: originalToken } });
+    const err = await waitForMessage(ws3, 'ERROR');
+    assert.equal(err.payload.code, ReasonCode.AUTH_TOKEN_INVALID, 'Old token must be invalid after rotation');
+
+    // Alice reconnects with the ROTATED token — must succeed
+    sendMsg(ws3, { protocolVersion: 2, type: 'RESUME_MATCH', requestId: 'r4', payload: { matchId, participantToken: rotatedToken } });
+    const view2 = await waitForMessage(ws3, 'MATCH_VIEW');
+    assert.equal(view2.payload.matchId, matchId, 'Rotated token must allow reconnect');
+    assert.ok(view2.payload.newParticipantToken, 'Second reconnect must also return a new token');
+    ws3.close();
+  } finally { await stopTestServer(); }
+});
+
+test('reconnect: token rotation works without auth (dev mode)', async () => {
+  // In dev mode (auth disabled), token rotation still works — it's a
+  // defense-in-depth measure, not tied to auth mode.
+  testPort = await findFreePort();
+  const { startServer } = await import('../apps/match-server/src/server.mjs');
+  server = await startServer({
+    port: testPort, host: '127.0.0.1', dbPath: ':memory:', persistent: false,
+    rateLimitCapacity: 10000, authMode: 'disabled', allowFakePersistor: true,
+  });
+  try {
+    const ws1 = await connectWs();
+    sendMsg(ws1, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
+    const created = await waitForMessage(ws1, 'MATCH_CREATED');
+    const matchId = created.payload.matchId;
+    const originalToken = created.payload.participantToken;
+
+    ws1.close();
+    await new Promise(r => setTimeout(r, 200));
+
+    const ws2 = await connectWs();
+    sendMsg(ws2, { protocolVersion: 2, type: 'RESUME_MATCH', requestId: 'r2', payload: { matchId, participantToken: originalToken } });
+    const view = await waitForMessage(ws2, 'MATCH_VIEW');
+    assert.ok(view.payload.newParticipantToken, 'Token rotation must work in dev mode too');
+    assert.notEqual(view.payload.newParticipantToken, originalToken);
+    ws2.close();
+  } finally { await stopTestServer(); }
+});

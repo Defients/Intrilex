@@ -163,7 +163,55 @@ export {
   relationshipKindLabel,
   rivalryIntensityLabel,
   isSelfRelationship,
+  RivalMilestone,
+  deriveRivalMilestones,
+  detectNemesis,
+  detectKryptonite,
 } from './relationships.mjs';
+
+export {
+  TournamentFormat,
+  TournamentStatus,
+  TournamentMatchStatus,
+  validateTournamentFormat,
+  validateBestOf,
+  nextPowerOfTwo,
+  countByes,
+  generateSingleElimBracket,
+  singleElimRoundCount,
+  swissRoundCount,
+  createTournament,
+  registerPlayer,
+  startTournament,
+  recordTournamentResult,
+  getChampion,
+  getSwissStandings,
+} from './tournament-domain.mjs';
+
+export {
+  StrategicTrait,
+  deriveStrategicTraits,
+  derivePrimaryArchetype,
+  buildStrategicFingerprint,
+} from './strategic-fingerprint.mjs';
+
+export {
+  buildMetaReport,
+  formatTierPercentage,
+  getTierDistributionChart,
+} from './meta-report.mjs';
+
+export {
+  isPlayerReplayBranchable,
+  extractReplayCheckpoints,
+  buildReplayBranchSummary,
+  selectSampleCheckpoints,
+} from './replay-branching.mjs';
+
+export {
+  aggregateMatchStats,
+  buildEnrichedStats,
+} from './match-stats-aggregator.mjs';
 
 export {
   Visibility,

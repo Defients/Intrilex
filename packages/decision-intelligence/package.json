@@ -1,6 +1,6 @@
 {
   "name": "@intrilex/decision-intelligence",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "type": "module",
   "exports": {
     ".": "./src/index.mjs",
@@ -9,7 +9,10 @@
     "./mechanic-registry": "./src/mechanic-registry.mjs",
     "./counterfactual": "./src/counterfactual.mjs",
     "./anchor": "./src/anchor.mjs",
-    "./policy-diagnostics": "./src/policy-diagnostics.mjs"
+    "./policy-diagnostics": "./src/policy-diagnostics.mjs",
+    "./teaching-moments": "./src/teaching-moments.mjs",
+    "./mastery-tracks": "./src/mastery-tracks.mjs",
+    "./replay-lesson": "./src/replay-lesson.mjs"
   },
   "dependencies": {
     "@intrilex/shared": "workspace:*"

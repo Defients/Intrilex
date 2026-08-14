@@ -13,6 +13,7 @@ import { NetworkSessionState } from './network-session.mjs';
 import { loadProfile } from '../local-profile.mjs';
 import { ratingToTierDivision, RankTier } from "../../account-domain/rank-tier.mjs";
 import { renderRankGlyph, rankLabel } from '../rank/rank-glyph.js';
+import { computeSeasonCountdown, renderSeasonCountdown } from '@intrilex/account-domain/season-countdown';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -121,6 +122,46 @@ export function renderNetworkLobby(options = {}) {
       <span class="network-lobby-feature"><span class="network-lobby-feature-icon">🔄</span>Reconnect anytime</span>
       <span class="network-lobby-feature"><span class="network-lobby-feature-icon">🏆</span>Ranked</span>
     </div>
+    <div class="network-integrity-info" data-testid="network-integrity-info">
+      <h3 class="network-integrity-title">Competitive Integrity</h3>
+      <div class="network-integrity-grid">
+        <div class="network-integrity-item" data-testid="integrity-deterministic">
+          <span class="network-integrity-icon" aria-hidden="true">⚙</span>
+          <div>
+            <strong>Deterministic</strong>
+            <p>Every match runs on the same authoritative engine. Same seed, same commands, same result — every time.</p>
+          </div>
+        </div>
+        <div class="network-integrity-item" data-testid="integrity-certifiable">
+          <span class="network-integrity-icon" aria-hidden="true">✓</span>
+          <div>
+            <strong>Certifiable</strong>
+            <p>Each completed match produces a certified replay with a cryptographic hash. Verify integrity independently.</p>
+          </div>
+        </div>
+        <div class="network-integrity-item" data-testid="integrity-replayable">
+          <span class="network-integrity-icon" aria-hidden="true">↻</span>
+          <div>
+            <strong>Replayable</strong>
+            <p>Download replays from your match history. Every game is reconstructable to the command level.</p>
+          </div>
+        </div>
+        <div class="network-integrity-item" data-testid="integrity-glicko">
+          <span class="network-integrity-icon" aria-hidden="true">📊</span>
+          <div>
+            <strong>Glicko-2 Rated</strong>
+            <p>Rank is computed with the Glicko-2 algorithm. RD and volatility are tracked per-player, per-season.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${(() => {
+      // P11: Season countdown — show remaining time and reward preview
+      const seasonEnd = options.seasonEndDate;
+      if (!seasonEnd) return '';
+      const countdown = computeSeasonCountdown(seasonEnd);
+      return renderSeasonCountdown(countdown);
+    })()}
     ${reconnectCard}
     <div class="network-lobby-grid">
       <button class="play-hub-card network-lobby-card" data-testid="network-create" data-action="network-create">
@@ -141,7 +182,7 @@ export function renderNetworkLobby(options = {}) {
         <span class="network-lobby-card-glow" aria-hidden="true"></span>
         <span class="network-lobby-card-shimmer" aria-hidden="true"></span>
         <span class="network-lobby-card-ranked-badge" aria-hidden="true">RANKED</span>
-        <span class="play-hub-icon" aria-hidden="true">�</span>
+        <span class="play-hub-icon" aria-hidden="true">⚔</span>
         <strong>Find Match</strong>
         <p>Auto-pair with a random opponent. Climb the ranked ladder.</p>
         <span class="network-lobby-card-arrow" aria-hidden="true">→</span>

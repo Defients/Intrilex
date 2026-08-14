@@ -217,6 +217,183 @@ test('IRX-H19: non-blocked player can join match (behavioral)', async () => {
   }
 });
 
+// ── IRX-H19: Block enforcement via matchmaking queue (behavioral) ──
+//
+// Regression coverage for the queue-pairing block-rejection flow. The
+// onCreateMatch callback sends QUEUE_MATCHED to both players before the
+// block check runs, so both must be notified with BLOCKED_BY_PLAYER and
+// the orphaned match must be deleted + both connections unbound. This
+// covers both the "blocked=true" path and the fail-closed "checker
+// throws" path (previously the latter left the partner stuck with a
+// QUEUE_MATCHED and an orphaned match).
+
+/**
+ * Build a fake identity verifier mapping two tokens to two accounts.
+ * @param {object} opts
+ * @param {string} opts.tokenA
+ * @param {string} opts.tokenB
+ * @param {string} opts.accA
+ * @param {string} opts.accB
+ * @param {string} opts.plyA
+ * @param {string} opts.plyB
+ */
+function makeFakeVerifier({ tokenA, tokenB, accA, accB, plyA, plyB }) {
+  return {
+    verify: async (token) => {
+      const tokenMap = {
+        [tokenA]: { accountId: accA, publicPlayerId: plyA, isAnonymous: false, provider: 'test', expiresAt: Date.now() + 3600000, capabilities: {}, accountStatus: 'ACTIVE', publicProfile: { publicPlayerId: plyA, displayName: plyA, handle: plyA.toLowerCase(), avatarUrl: null } },
+        [tokenB]: { accountId: accB, publicPlayerId: plyB, isAnonymous: false, provider: 'test', expiresAt: Date.now() + 3600000, capabilities: {}, accountStatus: 'ACTIVE', publicProfile: { publicPlayerId: plyB, displayName: plyB, handle: plyB.toLowerCase(), avatarUrl: null } },
+      };
+      const identity = tokenMap[token];
+      if (!identity) return { valid: false, code: 'AUTH_TOKEN_INVALID', message: 'Unknown token' };
+      return { valid: true, identity };
+    },
+    close: () => {},
+  };
+}
+
+/** Resolve with the first message of `type` (or matching `predicate`) received on `ws`. */
+function waitForType(ws, type, label, timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timeout`)), timeoutMs);
+    ws.on('message', (data) => {
+      const msg = JSON.parse(data.toString());
+      if (msg.type === type) { clearTimeout(timer); resolve(msg); }
+    });
+  });
+}
+
+/** Resolve with the first ERROR message whose payload.code matches `code`. */
+function waitForErrorCode(ws, code, label, timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timeout`)), timeoutMs);
+    ws.on('message', (data) => {
+      const msg = JSON.parse(data.toString());
+      if (msg.type === 'ERROR' && msg.payload?.code === code) { clearTimeout(timer); resolve(msg); }
+    });
+  });
+}
+
+test('IRX-H19: blocked matchmaking pair notifies both players and deletes match', async () => {
+  const { startServer } = await import('../apps/match-server/src/server.mjs');
+  const { WebSocket } = await import('ws');
+  const { createServer } = await import('node:net');
+
+  const findFreePort = () => new Promise((resolve) => {
+    const srv = createServer();
+    srv.listen(0, '127.0.0.1', () => { const p = srv.address().port; srv.close(() => resolve(p)); });
+  });
+  const port = await findFreePort();
+
+  const server = await startServer({
+    port, host: '127.0.0.1', dbPath: ':memory:', persistent: false,
+    authMode: 'required',
+    identityVerifier: makeFakeVerifier({ tokenA: 't.A.B', tokenB: 't.B.C', accA: 'acc-A', accB: 'acc-B', plyA: 'PLY_A', plyB: 'PLY_B' }),
+    allowFakePersistor: true, // DATA-04: testing only
+    publicMatchmaking: true, // enable QUEUE_JOIN handler
+    blockChecker: async (a, b) => {
+      return (a === 'acc-A' && b === 'acc-B') || (a === 'acc-B' && b === 'acc-A');
+    },
+  });
+
+  try {
+    // Player A authenticates
+    const wsA = new WebSocket(`ws://127.0.0.1:${port}`);
+    await new Promise(r => wsA.on('open', r));
+    wsA.send(JSON.stringify({ protocolVersion: 2, type: 'AUTHENTICATE', payload: { accessToken: 't.A.B' }, requestId: 'authA' }));
+    await waitForType(wsA, 'AUTHENTICATED', 'A AUTHENTICATED');
+
+    // Player B authenticates
+    const wsB = new WebSocket(`ws://127.0.0.1:${port}`);
+    await new Promise(r => wsB.on('open', r));
+    wsB.send(JSON.stringify({ protocolVersion: 2, type: 'AUTHENTICATE', payload: { accessToken: 't.B.C' }, requestId: 'authB' }));
+    await waitForType(wsB, 'AUTHENTICATED', 'B AUTHENTICATED');
+
+    // A joins queue first (no pair yet → QUEUE_JOINED)
+    wsA.send(JSON.stringify({ protocolVersion: 2, type: 'QUEUE_JOIN', payload: { profileId: 'core-unrestricted-authority' }, requestId: 'qA' }));
+    await waitForType(wsA, 'QUEUE_JOINED', 'A QUEUE_JOINED');
+
+    // B joins queue → immediate pair → QUEUE_MATCHED then BLOCKED_BY_PLAYER to both.
+    // Attach both listeners BEFORE awaiting either, so neither message is missed.
+    wsB.send(JSON.stringify({ protocolVersion: 2, type: 'QUEUE_JOIN', payload: { profileId: 'core-unrestricted-authority' }, requestId: 'qB' }));
+    const blockedBPromise = waitForErrorCode(wsB, 'BLOCKED_BY_PLAYER', 'B BLOCKED_BY_PLAYER');
+    const blockedAPromise = waitForErrorCode(wsA, 'BLOCKED_BY_PLAYER', 'A BLOCKED_BY_PLAYER');
+    const blockedB = await blockedBPromise;
+    assert.equal(blockedB.payload.code, 'BLOCKED_BY_PLAYER', 'B must be told the match was cancelled');
+    const blockedA = await blockedAPromise;
+    assert.equal(blockedA.payload.code, 'BLOCKED_BY_PLAYER', 'A must be told the match was cancelled');
+
+    // A must be able to re-join the queue cleanly (connection unbound, match deleted).
+    // If the connection were still bound to the deleted match, QUEUE_JOIN would
+    // either fail or behave unexpectedly.
+    wsA.send(JSON.stringify({ protocolVersion: 2, type: 'QUEUE_JOIN', payload: { profileId: 'core-unrestricted-authority' }, requestId: 'qA2' }));
+    const rejoined = await waitForType(wsA, 'QUEUE_JOINED', 'A re-QUEUE_JOINED');
+    assert.ok(rejoined, 'A must be able to re-join the queue (connection unbound, match deleted)');
+
+    wsA.close();
+    wsB.close();
+  } finally {
+    await server.close();
+  }
+});
+
+test('IRX-H19: blockChecker throw fails closed — both players notified, match deleted', async () => {
+  const { startServer } = await import('../apps/match-server/src/server.mjs');
+  const { WebSocket } = await import('ws');
+  const { createServer } = await import('node:net');
+
+  const findFreePort = () => new Promise((resolve) => {
+    const srv = createServer();
+    srv.listen(0, '127.0.0.1', () => { const p = srv.address().port; srv.close(() => resolve(p)); });
+  });
+  const port = await findFreePort();
+
+  const server = await startServer({
+    port, host: '127.0.0.1', dbPath: ':memory:', persistent: false,
+    authMode: 'required',
+    identityVerifier: makeFakeVerifier({ tokenA: 't.A.B', tokenB: 't.B.C', accA: 'acc-A', accB: 'acc-B', plyA: 'PLY_A', plyB: 'PLY_B' }),
+    allowFakePersistor: true, // DATA-04: testing only
+    publicMatchmaking: true,
+    blockChecker: async () => { throw new Error('supabase unavailable'); }, // fail-closed path
+  });
+
+  try {
+    const wsA = new WebSocket(`ws://127.0.0.1:${port}`);
+    await new Promise(r => wsA.on('open', r));
+    wsA.send(JSON.stringify({ protocolVersion: 2, type: 'AUTHENTICATE', payload: { accessToken: 't.A.B' }, requestId: 'authA' }));
+    await waitForType(wsA, 'AUTHENTICATED', 'A AUTHENTICATED');
+
+    const wsB = new WebSocket(`ws://127.0.0.1:${port}`);
+    await new Promise(r => wsB.on('open', r));
+    wsB.send(JSON.stringify({ protocolVersion: 2, type: 'AUTHENTICATE', payload: { accessToken: 't.B.C' }, requestId: 'authB' }));
+    await waitForType(wsB, 'AUTHENTICATED', 'B AUTHENTICATED');
+
+    wsA.send(JSON.stringify({ protocolVersion: 2, type: 'QUEUE_JOIN', payload: { profileId: 'core-unrestricted-authority' }, requestId: 'qA' }));
+    await waitForType(wsA, 'QUEUE_JOINED', 'A QUEUE_JOINED');
+
+    wsB.send(JSON.stringify({ protocolVersion: 2, type: 'QUEUE_JOIN', payload: { profileId: 'core-unrestricted-authority' }, requestId: 'qB' }));
+
+    // Both players must be notified (previously only the joiner was told).
+    // Attach both listeners BEFORE awaiting either, so neither message is missed.
+    const blockedBPromise = waitForErrorCode(wsB, 'BLOCKED_BY_PLAYER', 'B BLOCKED_BY_PLAYER (fail-closed)');
+    const blockedAPromise = waitForErrorCode(wsA, 'BLOCKED_BY_PLAYER', 'A BLOCKED_BY_PLAYER (fail-closed)');
+    const blockedB = await blockedBPromise;
+    assert.equal(blockedB.payload.code, 'BLOCKED_BY_PLAYER', 'B must be told the match was cancelled (fail-closed)');
+    const blockedA = await blockedAPromise;
+    assert.equal(blockedA.payload.code, 'BLOCKED_BY_PLAYER', 'A must be told the match was cancelled (fail-closed)');
+
+    // A must be able to re-join (match deleted + connection unbound).
+    wsA.send(JSON.stringify({ protocolVersion: 2, type: 'QUEUE_JOIN', payload: { profileId: 'core-unrestricted-authority' }, requestId: 'qA2' }));
+    const rejoined = await waitForType(wsA, 'QUEUE_JOINED', 'A re-QUEUE_JOINED (fail-closed)');
+    assert.ok(rejoined, 'A must be able to re-join the queue after fail-closed cancellation');
+
+    wsA.close();
+    wsB.close();
+  } finally {
+    await server.close();
+  }
+});
+
 // ── IRX-H07: Migration 0019 removes season fabrication ──
 
 test('IRX-H07: migration 0019 exists and patches season fabrication', async () => {

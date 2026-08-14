@@ -21,6 +21,42 @@ export const MAX_MESSAGE_SIZE = 65536; // 64 KB
  * @property {*} [payload]
  */
 
+/**
+ * Forbidden property names that enable prototype pollution attacks.
+ * A payload containing any of these keys (at any depth) is rejected before
+ * further validation. This prevents `{"__proto__": {...}}` from poisoning
+ * Object.prototype, `{"constructor": {"prototype": {...}}}` style attacks,
+ * and `prototype`-based pollution vectors.
+ */
+const FORBIDDEN_PROTO_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/**
+ * Recursively check a value for prototype-pollution property names.
+ * Rejects any object (at any nesting depth) that contains `__proto__`,
+ * `constructor`, or `prototype` as an own enumerable key. Arrays are
+ * traversed element-wise. Non-objects are safe.
+ *
+ * @param {*} value - The parsed JSON value to check
+ * @param {number} [depth=0] - Current recursion depth (guard against stack overflow)
+ * @returns {boolean} True if a forbidden key is found
+ */
+function containsPrototypePollution(value, depth = 0) {
+  if (depth > 32) return false; // depth guard — JSON.parse already bounds nesting
+  if (value === null || typeof value !== 'object') return false;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      if (containsPrototypePollution(item, depth + 1)) return true;
+    }
+    return false;
+  }
+  // Check own enumerable keys
+  for (const key of Object.keys(value)) {
+    if (FORBIDDEN_PROTO_KEYS.has(key)) return true;
+    if (containsPrototypePollution(value[key], depth + 1)) return true;
+  }
+  return false;
+}
+
 const KNOWN_TYPES = new Set([
   // Client → Server
   'CREATE_MATCH', 'JOIN_MATCH', 'RESUME_MATCH',
@@ -35,6 +71,10 @@ const KNOWN_TYPES = new Set([
   'AUTHENTICATE', 'AUTH_REFRESH',
   // Client → Server (guest migration — v2)
   'MIGRATE_GUEST',
+  // Client → Server (rematch — v0.28.0)
+  'REMATCH',
+  // Client → Server (spectator discovery — v0.28.0)
+  'LIST_SPECTATABLE',
   // Server → Client
   'MATCH_CREATED', 'MATCH_JOINED', 'MATCH_VIEW',
   'ACTION_RESULT', 'PARTICIPANT_STATUS', 'MATCH_STARTED',
@@ -50,6 +90,10 @@ const KNOWN_TYPES = new Set([
   'AUTHENTICATED',
   // Server → Client (guest migration — v2)
   'MIGRATION_RESULT',
+  // Server → Client (rematch — v0.28.0)
+  'REMATCH_INVITE',
+  // Server → Client (spectator discovery — v0.28.0)
+  'SPECTATABLE_LIST',
 ]);
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{4,64}$/;
@@ -163,6 +207,13 @@ function ok() { return { valid: true }; }
 export function validateEnvelope(msg) {
   if (!msg || typeof msg !== 'object' || Array.isArray(msg)) {
     return fail(ReasonCode.MALFORMED_JSON, 'Message must be a JSON object');
+  }
+  // Prototype-pollution firewall — reject any message whose envelope or
+  // payload contains __proto__, constructor, or prototype keys at any depth.
+  // This is checked BEFORE any other field access to prevent pollution from
+  // reaching downstream validators or handlers.
+  if (containsPrototypePollution(msg)) {
+    return fail(ReasonCode.PROTOTYPE_POLLUTION_DETECTED, 'Message contains forbidden prototype-pollution keys');
   }
   if (typeof msg.protocolVersion !== 'number' || msg.protocolVersion !== PROTOCOL_VERSION) {
     return fail(ReasonCode.PROTOCOL_VERSION_UNSUPPORTED, `Unsupported protocol version: ${msg.protocolVersion}`);
@@ -381,6 +432,128 @@ export function validateGetReplay(payload) {
 }
 
 /**
+ * Validate a REMATCH payload.
+ * Requires a matchId (the completed match) and a participant token.
+ * The server validates that the match is TERMINAL, the requester is a
+ * participant, and the opponent is still connected before creating a
+ * new match.
+ * @param {Record<string,*>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateRematch(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId must be a valid identifier');
+  }
+  if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 10) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken must be a non-empty string');
+  }
+  return ok();
+}
+
+/**
+ * Validate a LIST_SPECTATABLE payload. The payload is empty — the server
+ * returns all currently spectatable matches. No client-side filtering.
+ * @param {Record<string,*>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateListSpectatable(payload) {
+  if (payload !== null && typeof payload !== 'object') {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'payload must be a JSON object');
+  }
+  return ok();
+}
+
+/**
+ * Validate a TOURNAMENT_LIST payload.
+ * Optional fields: status (filter), limit (max results, default 20)
+ * @param {Record<string,*>} payload
+ * @returns {ValidationResult}
+ */
+export function validateTournamentList(payload) {
+  if (payload !== null && typeof payload !== 'object') {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'payload must be a JSON object');
+  }
+  if (payload.status !== undefined && payload.status !== null && typeof payload.status !== 'string') {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'status must be a string or null');
+  }
+  if (payload.limit !== undefined && payload.limit !== null) {
+    if (typeof payload.limit !== 'number' || payload.limit < 1 || payload.limit > 100) {
+      return fail(ReasonCode.INVALID_FIELD_TYPE, 'limit must be a number between 1 and 100');
+    }
+  }
+  return ok();
+}
+
+/**
+ * Validate a TOURNAMENT_REGISTER payload.
+ * Requires a tournamentId.
+ * @param {Record<string,*>} payload
+ * @returns {ValidationResult}
+ */
+export function validateTournamentRegister(payload) {
+  if (!isValidId(payload.tournamentId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'tournamentId must be a valid identifier');
+  }
+  return ok();
+}
+
+/**
+ * Validate a TOURNAMENT_GET payload.
+ * Requires a tournamentId.
+ * @param {Record<string,*>} payload
+ * @returns {ValidationResult}
+ */
+export function validateTournamentGet(payload) {
+  if (!isValidId(payload.tournamentId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'tournamentId must be a valid identifier');
+  }
+  return ok();
+}
+
+/**
+ * Validate a TOURNAMENT_START payload.
+ * Requires a tournamentId. Operator-only — the server checks authorization
+ * separately (not via protocol validation).
+ * @param {Record<string,*>} payload
+ * @returns {ValidationResult}
+ */
+export function validateTournamentStart(payload) {
+  if (!isValidId(payload.tournamentId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'tournamentId must be a valid identifier');
+  }
+  return ok();
+}
+
+/**
+ * Validate a TOURNAMENT_REPORT_RESULT payload.
+ * Requires tournamentId, matchId, winnerId, scoreA, scoreB.
+ * @param {Record<string,*>} payload
+ * @returns {ValidationResult}
+ */
+export function validateTournamentReportResult(payload) {
+  if (!isValidId(payload.tournamentId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'tournamentId must be a valid identifier');
+  }
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId must be a valid identifier');
+  }
+  if (typeof payload.winnerId !== 'string' || payload.winnerId.length === 0) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'winnerId must be a non-empty string');
+  }
+  if (payload.scoreA !== undefined && payload.scoreA !== null) {
+    if (typeof payload.scoreA !== 'number' || payload.scoreA < 0 || !Number.isInteger(payload.scoreA)) {
+      return fail(ReasonCode.INVALID_FIELD_TYPE, 'scoreA must be a non-negative integer');
+    }
+  }
+  if (payload.scoreB !== undefined && payload.scoreB !== null) {
+    if (typeof payload.scoreB !== 'number' || payload.scoreB < 0 || !Number.isInteger(payload.scoreB)) {
+      return fail(ReasonCode.INVALID_FIELD_TYPE, 'scoreB must be a non-negative integer');
+    }
+  }
+  return ok();
+}
+
+/**
  * Validate a SEND_CHAT payload.
  * Chat messages are short text (1-200 chars) from authenticated participants.
  * @param {Record<string, *>} payload - Message payload
@@ -474,6 +647,42 @@ export function validateAuthRefresh(payload) {
   const parts = payload.accessToken.split('.');
   if (parts.length !== 3) {
     return fail(ReasonCode.AUTH_TOKEN_INVALID, 'accessToken must be a JWT with 3 segments');
+  }
+  return ok();
+}
+
+// ── Player report validator (B12) ──
+
+/** Valid reason codes for player reports */
+const VALID_REPORT_REASONS = new Set([
+  'HARASSMENT', 'CHEATING', 'INAPPROPRIATE_NAME',
+  'SPAM', 'DISCONNECT_ABUSE', 'OTHER',
+]);
+
+/**
+ * Validate a REPORT_PLAYER payload.
+ * @param {Record<string,*>} payload
+ * @returns {ValidationResult}
+ */
+export function validateReportPlayer(payload) {
+  if (typeof payload.reportedPlayerId !== 'string' || payload.reportedPlayerId.length === 0) {
+    return fail(ReasonCode.MISSING_REQUIRED_FIELD, 'reportedPlayerId is required');
+  }
+  if (typeof payload.reasonCode !== 'string' || !VALID_REPORT_REASONS.has(payload.reasonCode)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'reasonCode must be a valid report reason');
+  }
+  if (payload.description !== undefined && payload.description !== null) {
+    if (typeof payload.description !== 'string') {
+      return fail(ReasonCode.INVALID_FIELD_TYPE, 'description must be a string');
+    }
+    if (payload.description.length > 1000) {
+      return fail(ReasonCode.MESSAGE_TOO_LARGE, 'description must be at most 1000 characters');
+    }
+  }
+  if (payload.matchRef !== undefined && payload.matchRef !== null) {
+    if (typeof payload.matchRef !== 'string' || payload.matchRef.length > 64) {
+      return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchRef must be a string of at most 64 characters');
+    }
   }
   return ok();
 }

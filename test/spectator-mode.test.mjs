@@ -371,3 +371,42 @@ test('spectator: cannot submit actions (rejected with PARTICIPANT_NOT_AUTHORIZED
     await server.close();
   }
 });
+
+// ── IRX-M19+: Spectator authentication tests ──
+
+test('spectator: unauthenticated SPECTATE_MATCH rejected when auth is required', async () => {
+  const { createServer } = await import('node:net');
+  const findFreePort = () => new Promise((resolve) => {
+    const srv = createServer();
+    srv.listen(0, '127.0.0.1', () => { const p = srv.address().port; srv.close(() => resolve(p)); });
+  });
+  const port = await findFreePort();
+  const { startServer } = await import('../apps/match-server/src/server.mjs');
+  const { FakeIdentityVerifier } = await import('../apps/match-server/src/auth/fake-identity-verifier.mjs');
+  const verifier = new FakeIdentityVerifier();
+  const server = await startServer({
+    port, host: '127.0.0.1', dbPath: ':memory:',
+    authMode: 'required', identityVerifier: verifier, allowFakePersistor: true,
+    rateLimitCapacity: 10000,
+  });
+
+  try {
+    // Unauthenticated spectator tries to spectate — auth gate rejects before handler runs
+    const specWs = new WebSocket(`ws://127.0.0.1:${port}`);
+    await new Promise((resolve, reject) => { specWs.on('open', resolve); specWs.on('error', reject); });
+    specWs.send(JSON.stringify({ protocolVersion: 2, type: 'SPECTATE_MATCH', requestId: 'spec', payload: { matchId: 'M-fake' } }));
+    const resp = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('SPECTATE_MATCH response timeout')), 5000);
+      specWs.on('message', (data) => { clearTimeout(timer); resolve(JSON.parse(data.toString())); });
+    });
+
+    assert.equal(resp.type, 'ERROR', 'Unauthenticated spectate should return ERROR');
+    assert.equal(resp.payload.code, ReasonCode.AUTH_REQUIRED, 'Should reject with AUTH_REQUIRED');
+
+    specWs.close();
+  } finally {
+    await server.close();
+    verifier.close();
+    await new Promise(r => setTimeout(r, 200));
+  }
+});

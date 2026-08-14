@@ -7,15 +7,15 @@
 // inspector, chat, guidance toggle, sound, confirm/cancel,
 // and terminal actions.
 // ═══════════════════════════════════════════════════════════════
-import { state } from './play-state.js?v=659a089d50b6';
-import { esc } from '../state.js?v=659a089d50b6';
-import { SessionState } from './play-controller.js?v=659a089d50b6';
-import { GuidanceMode } from './intelligence/action-explanation.js?v=659a089d50b6';
-import { getReasonCode } from './authority/reason-code-registry.js?v=659a089d50b6';
-import { setPreference } from './persistence.js?v=659a089d50b6';
-import { parseCardIdentity } from './play-card-component.js?v=659a089d50b6';
-import { getSuitParticleColor } from './play-particles.js?v=659a089d50b6';
-import { buildActionGroups, resolveAction } from './action-presentation.mjs?v=659a089d50b6';
+import { state } from './play-state.js?v=42162e3d88b3';
+import { esc } from '../state.js?v=42162e3d88b3';
+import { SessionState } from './play-controller.js?v=42162e3d88b3';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=42162e3d88b3';
+import { getReasonCode } from './authority/reason-code-registry.js?v=42162e3d88b3';
+import { setPreference } from './persistence.js?v=42162e3d88b3';
+import { parseCardIdentity } from './play-card-component.js?v=42162e3d88b3';
+import { getSuitParticleColor } from './play-particles.js?v=42162e3d88b3';
+import { buildActionGroups, resolveAction } from './action-presentation.mjs?v=42162e3d88b3';
 
 // Lazy-loaded module reference for the group button handler
 const _actionPresentationModule = { buildActionGroups, resolveAction };
@@ -667,8 +667,8 @@ export function bindBoardEvents(container, callbacks) {
           // Network match — fetch replay from server and play directly
           try {
             container.innerHTML = '<div class="play-loading">Loading replay from server…</div>';
-            const { ensureReplayFrames } = await import('../replay-frames.js?v=659a089d50b6');
-            const { state: observatoryState } = await import('../state.js?v=659a089d50b6');
+            const { ensureReplayFrames } = await import('../replay-frames.js?v=42162e3d88b3');
+            const { state: observatoryState } = await import('../state.js?v=42162e3d88b3');
             const replay = await state.networkSession.getReplay();
             if (!replay) {
               container.innerHTML = '<div class="play-error" role="alert"><h2>Replay unavailable</h2><p>The server could not provide a certified replay for this match.</p><a href="#/play/online" class="secondary-button">Back to Online</a></div>';
@@ -693,7 +693,7 @@ export function bindBoardEvents(container, callbacks) {
           }
         } else {
           // Local match — save replay and redirect
-          const { createReplayRecord, saveReplay } = await import('./replay-library.js?v=659a089d50b6');
+          const { createReplayRecord, saveReplay } = await import('./replay-library.js?v=42162e3d88b3');
           const record = await createReplayRecord(state.session);
           await saveReplay(record);
           location.hash = '#/play/replays';
@@ -703,7 +703,7 @@ export function bindBoardEvents(container, callbacks) {
         // (HTTP replay download was removed in v0.24.2 — GET_REPLAY is the canonical path)
         if (state.networkSession && state.networkSession.status === 'TERMINAL' && state.networkSession.matchId) {
           try {
-            const { createNetworkReplayRecord, saveReplay } = await import('./replay-library.js?v=659a089d50b6');
+            const { createNetworkReplayRecord, saveReplay } = await import('./replay-library.js?v=42162e3d88b3');
             const record = await createNetworkReplayRecord(state.networkSession);
             if (record) {
               // Save to local IndexedDB replay library
@@ -720,6 +720,49 @@ export function bindBoardEvents(container, callbacks) {
           } catch (err) {
             console.warn('Failed to download replay:', err.message);
           }
+        }
+      } else if (action === 'network-rematch') {
+        // Request a rematch from the terminal screen of a completed network match.
+        // The server creates a new match and sends a REMATCH_INVITE to the opponent.
+        if (state.networkSession && state.networkSession.status === 'TERMINAL') {
+          try {
+            const result = await state.networkSession.requestRematch();
+            if (result.ok) {
+              // Session has transitioned to IN_LOBBY for the new match — re-render
+              await renderActiveMatch(container);
+            } else {
+              // Show error briefly on the button
+              const btn = el;
+              const orig = btn.textContent;
+              btn.textContent = result.error ?? 'Rematch failed';
+              btn.disabled = true;
+              setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
+            }
+          } catch (err) {
+            console.warn('Rematch request failed:', err?.message ?? err);
+          }
+        }
+      } else if (action === 'accept-rematch') {
+        // Accept a rematch invite from the opponent. Sends JOIN_MATCH with the
+        // invite code from the REMATCH_INVITE message.
+        if (state.networkSession && state.networkSession.rematchInvite) {
+          const inviteCode = el.getAttribute('data-invite-code') ?? state.networkSession.rematchInvite.inviteCode;
+          try {
+            const result = await state.networkSession.acceptRematchInvite(inviteCode);
+            if (result.ok) {
+              await renderActiveMatch(container);
+            } else {
+              console.warn('Failed to accept rematch:', result.error);
+            }
+          } catch (err) {
+            console.warn('Accept rematch failed:', err?.message ?? err);
+          }
+        }
+      } else if (action === 'decline-rematch') {
+        // Decline a rematch invite — just clears the pending invite.
+        if (state.networkSession) {
+          state.networkSession.declineRematchInvite();
+          await renderActiveMatch(container);
         }
       } else if (action === 'rematch-same-seed') {
         await startNewMatch({ ...state.session.setup }, container);

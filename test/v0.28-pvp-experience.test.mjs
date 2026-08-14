@@ -19,15 +19,21 @@ import { join } from 'node:path';
 
 const cssSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel.css'), 'utf8');
 const rendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
+// T1: Chat panel was extracted to chat-panel.js — tests check both sources
+const chatPanelSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/chat-panel.js'), 'utf8');
+const rendererOrChatSrc = rendererSrc + '\n' + chatPanelSrc;
 const viewmodelSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-viewmodel.mjs'), 'utf8');
 const networkSessionSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/network/network-session.mjs'), 'utf8');
 const boardEventsSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/board-events.js'), 'utf8');
+const terminalSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-terminal.mjs'), 'utf8');
 const playAppSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-app.js'), 'utf8');
 const protocolSrc = readFileSync(join(process.cwd(), 'packages/network-protocol/src/protocol.mjs'), 'utf8');
 const validationSrc = readFileSync(join(process.cwd(), 'packages/network-protocol/src/validation.mjs'), 'utf8');
 const authoritySrc = readFileSync(join(process.cwd(), 'packages/match-authority/src/authoritative-match-session.mjs'), 'utf8');
 const projectionSrc = readFileSync(join(process.cwd(), 'packages/match-authority/src/player-projection.mjs'), 'utf8');
 const serverSrc = readFileSync(join(process.cwd(), 'apps/match-server/src/server.mjs'), 'utf8');
+const matchHandlersSrc = readFileSync(join(process.cwd(), 'apps/match-server/src/handlers/match-handlers.mjs'), 'utf8');
+const spectatorHandlersSrc = readFileSync(join(process.cwd(), 'apps/match-server/src/handlers/spectator-handlers.mjs'), 'utf8');
 const authControllerSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/network/auth-controller.js'), 'utf8');
 const lobbyRendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/network/network-lobby-renderer.mjs'), 'utf8');
 
@@ -80,8 +86,12 @@ test('Server: buildPublicProfile helper exists', () => {
 });
 
 test('Server: addParticipant calls pass buildPublicProfile', () => {
-  const calls = serverSrc.match(/addParticipant\(/g) || [];
-  const profileCalls = serverSrc.match(/buildPublicProfile\(/g) || [];
+  // addParticipant is invoked from server.mjs (matchmaking onCreateMatch) and
+  // from the extracted handlers/match-handlers.mjs (CREATE_MATCH + JOIN_MATCH).
+  // Count across both to reflect the handler-module extraction architecture.
+  const combined = serverSrc + '\n' + matchHandlersSrc;
+  const calls = combined.match(/addParticipant\(/g) || [];
+  const profileCalls = combined.match(/buildPublicProfile\(/g) || [];
   assert.ok(calls.length >= 3, 'Server must call addParticipant at least 3 times');
   assert.ok(profileCalls.length >= 3, 'Server must call buildPublicProfile at least 3 times');
 });
@@ -92,6 +102,179 @@ test('Protocol: chatVisibility builder exists', () => {
   assert.ok(
     protocolSrc.includes('export function chatVisibility'),
     'Protocol must export chatVisibility builder'
+  );
+});
+
+// ── Protocol: REMATCH + REMATCH_INVITE (v0.28.0) ──
+
+test('Protocol: rematch builder exists', () => {
+  assert.ok(
+    protocolSrc.includes('export function rematch'),
+    'Protocol must export rematch builder'
+  );
+  assert.ok(
+    protocolSrc.includes("envelope('REMATCH'"),
+    'rematch builder must create REMATCH envelope'
+  );
+});
+
+test('Protocol: rematchInvite builder exists', () => {
+  assert.ok(
+    protocolSrc.includes('export function rematchInvite'),
+    'Protocol must export rematchInvite builder'
+  );
+  assert.ok(
+    protocolSrc.includes("envelope('REMATCH_INVITE'"),
+    'rematchInvite builder must create REMATCH_INVITE envelope'
+  );
+});
+
+test('Validation: validateRematch exists and is re-exported', () => {
+  assert.ok(
+    validationSrc.includes('export function validateRematch'),
+    'validation.mjs must export validateRematch'
+  );
+  assert.ok(
+    protocolSrc.includes('validateRematch'),
+    'protocol.mjs must re-export validateRematch'
+  );
+});
+
+test('Validation: REMATCH and REMATCH_INVITE in KNOWN_TYPES', () => {
+  assert.ok(
+    validationSrc.includes("'REMATCH'"),
+    'REMATCH must be in KNOWN_TYPES'
+  );
+  assert.ok(
+    validationSrc.includes("'REMATCH_INVITE'"),
+    'REMATCH_INVITE must be in KNOWN_TYPES'
+  );
+});
+
+test('ReasonCode: PARTICIPANT_DISCONNECTED exists', () => {
+  const reasonCodeSrc = readFileSync(join(process.cwd(), 'packages/network-protocol/src/reason-codes.mjs'), 'utf8');
+  assert.ok(
+    reasonCodeSrc.includes('PARTICIPANT_DISCONNECTED'),
+    'ReasonCode must include PARTICIPANT_DISCONNECTED for rematch opponent-gone errors'
+  );
+});
+
+// ── Server: rematch handler ──
+
+test('Server: handleRematch exists in match-handlers', () => {
+  assert.ok(
+    matchHandlersSrc.includes('handleRematch'),
+    'match-handlers.mjs must define handleRematch'
+  );
+});
+
+test('Server: REMATCH dispatched in server.mjs', () => {
+  assert.ok(
+    serverSrc.includes("case 'REMATCH'"),
+    'server.mjs must dispatch REMATCH to the match handlers'
+  );
+});
+
+test('Server: rematch handler validates terminal + opponent connected', () => {
+  assert.ok(
+    matchHandlersSrc.includes("oldMatch.status !== 'TERMINAL'"),
+    'Rematch handler must check the old match is TERMINAL'
+  );
+  assert.ok(
+    matchHandlersSrc.includes('PARTICIPANT_DISCONNECTED'),
+    'Rematch handler must reject when opponent is disconnected'
+  );
+  assert.ok(
+    matchHandlersSrc.includes('rematchInvite'),
+    'Rematch handler must send rematchInvite to the opponent'
+  );
+});
+
+// ── Client: rematch protocol builder + session methods ──
+
+test('Client: rematch builder exists in network-protocol-client', () => {
+  const clientProtoSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/network/network-protocol-client.mjs'), 'utf8');
+  assert.ok(
+    clientProtoSrc.includes('export function rematch'),
+    'network-protocol-client.mjs must export rematch builder'
+  );
+});
+
+test('Client: NetworkPlaySession has requestRematch + acceptRematchInvite', () => {
+  assert.ok(
+    networkSessionSrc.includes('async requestRematch'),
+    'NetworkPlaySession must have requestRematch method'
+  );
+  assert.ok(
+    networkSessionSrc.includes('async acceptRematchInvite'),
+    'NetworkPlaySession must have acceptRematchInvite method'
+  );
+  assert.ok(
+    networkSessionSrc.includes('declineRematchInvite'),
+    'NetworkPlaySession must have declineRematchInvite method'
+  );
+});
+
+test('Client: REMATCH_INVITE handler in network session', () => {
+  assert.ok(
+    networkSessionSrc.includes("case 'REMATCH_INVITE'"),
+    'NetworkPlaySession must handle REMATCH_INVITE messages'
+  );
+  assert.ok(
+    networkSessionSrc.includes('this.rematchInvite'),
+    'NetworkPlaySession must store the rematch invite'
+  );
+});
+
+// ── Renderer: rematch button + invite overlay ──
+
+test('Renderer: terminal has network-rematch button', () => {
+  assert.ok(
+    terminalSrc.includes('data-testid="network-rematch"'),
+    'Terminal must have a network-rematch button for network matches'
+  );
+  assert.ok(
+    terminalSrc.includes('data-action="network-rematch"'),
+    'Terminal network-rematch button must have data-action'
+  );
+});
+
+test('Renderer: rematch invite overlay exists', () => {
+  assert.ok(
+    rendererSrc.includes('renderRematchInviteOverlay'),
+    'Renderer must have renderRematchInviteOverlay function'
+  );
+  assert.ok(
+    rendererSrc.includes('rematch-invite-overlay'),
+    'Renderer must render rematch-invite-overlay'
+  );
+  assert.ok(
+    rendererSrc.includes('accept-rematch') && rendererSrc.includes('decline-rematch'),
+    'Rematch invite overlay must have accept and decline buttons'
+  );
+});
+
+// ── Board events: rematch action wiring ──
+
+test('Board events: network-rematch action wired', () => {
+  assert.ok(
+    boardEventsSrc.includes("action === 'network-rematch'"),
+    'board-events.js must handle network-rematch action'
+  );
+  assert.ok(
+    boardEventsSrc.includes('requestRematch'),
+    'board-events.js must call requestRematch'
+  );
+});
+
+test('Board events: accept-rematch + decline-rematch wired', () => {
+  assert.ok(
+    boardEventsSrc.includes("action === 'accept-rematch'"),
+    'board-events.js must handle accept-rematch action'
+  );
+  assert.ok(
+    boardEventsSrc.includes("action === 'decline-rematch'"),
+    'board-events.js must handle decline-rematch action'
   );
 });
 
@@ -402,14 +585,14 @@ test('Renderer: actions section is on top, chat on bottom', () => {
 
 test('Renderer: chat hide/show toggle exists', () => {
   assert.ok(
-    rendererSrc.includes("'chat-hide'") && rendererSrc.includes("'chat-show'"),
+    rendererOrChatSrc.includes("'chat-hide'") && rendererOrChatSrc.includes("'chat-show'"),
     'Renderer must include chat-hide and chat-show toggle buttons'
   );
 });
 
 test('Renderer: chat hidden state renders collapsed panel', () => {
   assert.ok(
-    rendererSrc.includes('rd-chat-hidden'),
+    rendererOrChatSrc.includes('rd-chat-hidden'),
     'Renderer must render collapsed chat panel when hidden'
   );
 });
@@ -418,14 +601,14 @@ test('Renderer: chat hidden state renders collapsed panel', () => {
 
 test('Renderer: chat authorship uses participantId for network matches', () => {
   assert.ok(
-    rendererSrc.includes('m.participantId') && rendererSrc.includes('localParticipantId'),
+    rendererOrChatSrc.includes('m.participantId') && rendererOrChatSrc.includes('localParticipantId'),
     'Chat authorship must use participantId, not just isHuman boolean'
   );
 });
 
 test('Renderer: network opponent chat has opponent class', () => {
   assert.ok(
-    rendererSrc.includes("rd-chat-msg opponent"),
+    rendererOrChatSrc.includes("rd-chat-msg opponent"),
     'Network opponent chat messages must have opponent class'
   );
 });
@@ -443,6 +626,37 @@ test('Renderer: disconnect overlay shows for DISCONNECTED opponent', () => {
   assert.ok(
     rendererSrc.includes("'DISCONNECTED'") && rendererSrc.includes('rd-disconnect-overlay'),
     'Disconnect overlay must show when opponent connectionState is DISCONNECTED'
+  );
+});
+
+// ── Renderer: reconnect-grace countdown (IRX-H10, quick win #11) ──
+
+test('Renderer: disconnect overlay surfaces reconnect-grace countdown', () => {
+  assert.ok(
+    rendererSrc.includes('reconnect-grace-countdown') && rendererSrc.includes('data-grace-deadline-ms'),
+    'Disconnect overlay must render a reconnect-grace countdown element with a deadline'
+  );
+  assert.ok(rendererSrc.includes('graceMs'), 'Overlay must read opponent graceMs');
+});
+
+test('Network session: captures opponent graceMs on DISCONNECTED', () => {
+  assert.ok(
+    networkSessionSrc.includes('opponentGraceMs') && networkSessionSrc.includes('graceMs'),
+    'NetworkPlaySession must capture the server-supplied reconnect-grace window'
+  );
+});
+
+test('Server: sends graceMs in DISCONNECTED notification for RUNNING matches', () => {
+  assert.ok(
+    serverSrc.includes('statusObj.graceMs = RECONNECT_GRACE'),
+    'Server must annotate RUNNING-match DISCONNECTED notifications with the grace window'
+  );
+});
+
+test('play-app: ticks the reconnect-grace countdown live', () => {
+  assert.ok(
+    playAppSrc.includes('tickReconnectGraceCountdown') && playAppSrc.includes('reconnect-grace-countdown'),
+    'play-app must update the reconnect-grace countdown each second'
   );
 });
 
@@ -765,5 +979,197 @@ test('Protocol client: chatVisibility builder exported', () => {
   assert.ok(
     protocolClientSrc.includes('export function chatVisibility'),
     'Network protocol client must export chatVisibility builder'
+  );
+});
+
+// ── Spectator Discovery: LIST_SPECTATABLE + SPECTATABLE_LIST (v0.28.0) ──
+
+test('Protocol: listSpectatable builder exists', () => {
+  assert.ok(
+    protocolSrc.includes('export function listSpectatable'),
+    'Protocol must export listSpectatable builder'
+  );
+  assert.ok(
+    protocolSrc.includes("envelope('LIST_SPECTATABLE'"),
+    'listSpectatable builder must create LIST_SPECTATABLE envelope'
+  );
+});
+
+test('Protocol: spectatableList builder exists', () => {
+  assert.ok(
+    protocolSrc.includes('export function spectatableList'),
+    'Protocol must export spectatableList builder'
+  );
+  assert.ok(
+    protocolSrc.includes("envelope('SPECTATABLE_LIST'"),
+    'spectatableList builder must create SPECTATABLE_LIST envelope'
+  );
+});
+
+test('Validation: LIST_SPECTATABLE + SPECTATABLE_LIST in KNOWN_TYPES', () => {
+  assert.ok(
+    validationSrc.includes("'LIST_SPECTATABLE'"),
+    'LIST_SPECTATABLE must be in KNOWN_TYPES'
+  );
+  assert.ok(
+    validationSrc.includes("'SPECTATABLE_LIST'"),
+    'SPECTATABLE_LIST must be in KNOWN_TYPES'
+  );
+});
+
+test('Validation: validateListSpectatable exists and re-exported', () => {
+  assert.ok(
+    validationSrc.includes('export function validateListSpectatable'),
+    'validation.mjs must export validateListSpectatable'
+  );
+  assert.ok(
+    protocolSrc.includes('validateListSpectatable'),
+    'protocol.mjs must re-export validateListSpectatable'
+  );
+});
+
+test('Server: handleListSpectatable exists in spectator-handlers', () => {
+  assert.ok(
+    spectatorHandlersSrc.includes('handleListSpectatable'),
+    'spectator-handlers.mjs must define handleListSpectatable'
+  );
+  assert.ok(
+    spectatorHandlersSrc.includes('spectatableList'),
+    'handleListSpectatable must send spectatableList response'
+  );
+});
+
+test('Server: LIST_SPECTATABLE dispatched in server.mjs', () => {
+  assert.ok(
+    serverSrc.includes("case 'LIST_SPECTATABLE'"),
+    'server.mjs must dispatch LIST_SPECTATABLE to spectator handlers'
+  );
+});
+
+test('Server: handleListSpectatable filters private + non-running matches', () => {
+  assert.ok(
+    spectatorHandlersSrc.includes("match.status !== 'RUNNING'") ||
+    spectatorHandlersSrc.includes("status: 'RUNNING'"),
+    'handleListSpectatable must filter for RUNNING matches only'
+  );
+  assert.ok(
+    spectatorHandlersSrc.includes("match.matchMode === 'private'"),
+    'handleListSpectatable must exclude private matches'
+  );
+});
+
+test('Client: listSpectatable builder in network-protocol-client', () => {
+  const clientProtoSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/network/network-protocol-client.mjs'), 'utf8');
+  assert.ok(
+    clientProtoSrc.includes('export function listSpectatable'),
+    'network-protocol-client.mjs must export listSpectatable builder'
+  );
+});
+
+test('Client: NetworkPlaySession has requestSpectatableList', () => {
+  assert.ok(
+    networkSessionSrc.includes('async requestSpectatableList'),
+    'NetworkPlaySession must have requestSpectatableList method'
+  );
+});
+
+// ── Post-Match Intelligence Card (v0.28.0) ──
+
+test('Terminal: renderIntelligenceCard function exists', () => {
+  assert.ok(
+    terminalSrc.includes('renderIntelligenceCard'),
+    'Terminal must have renderIntelligenceCard function'
+  );
+});
+
+test('Terminal: intelligence card rendered in terminal output', () => {
+  assert.ok(
+    terminalSrc.includes('renderIntelligenceCard(vm, opts)'),
+    'Terminal must call renderIntelligenceCard in the output'
+  );
+  assert.ok(
+    terminalSrc.includes('data-testid="match-intelligence-card"'),
+    'Intelligence card must have data-testid for testing'
+  );
+});
+
+test('Terminal: intelligence card shows deterministic stats', () => {
+  assert.ok(
+    terminalSrc.includes('data-testid="intel-turns"'),
+    'Intelligence card must show turn count'
+  );
+  assert.ok(
+    terminalSrc.includes('data-testid="intel-margin"'),
+    'Intelligence card must show IR margin'
+  );
+  assert.ok(
+    terminalSrc.includes('data-testid="intel-draw-remaining"'),
+    'Intelligence card must show draw pile remaining'
+  );
+  assert.ok(
+    terminalSrc.includes('data-testid="intel-discard"'),
+    'Intelligence card must show cards played (discard count)'
+  );
+  assert.ok(
+    terminalSrc.includes('data-testid="intel-termination"'),
+    'Intelligence card must show termination reason'
+  );
+});
+
+test('Terminal: intelligence card has goal progress bars', () => {
+  assert.ok(
+    terminalSrc.includes('intel-goal-bar-human') && terminalSrc.includes('intel-goal-bar-opponent'),
+    'Intelligence card must have goal progress bars for both players'
+  );
+  assert.ok(
+    terminalSrc.includes('intel-goal-bar-fill'),
+    'Intelligence card must have goal bar fill elements'
+  );
+});
+
+test('CSS: intelligence card styles exist', () => {
+  assert.ok(
+    cssSrc.includes('.intel-card'),
+    'CSS must have .intel-card styles'
+  );
+  assert.ok(
+    cssSrc.includes('.intel-grid'),
+    'CSS must have .intel-grid styles'
+  );
+  assert.ok(
+    cssSrc.includes('.intel-goal-bar-fill'),
+    'CSS must have .intel-goal-bar-fill styles'
+  );
+});
+
+// ── Integrity Transparency UX (v0.28.0) ──
+
+test('Lobby: competitive integrity info section exists', () => {
+  assert.ok(
+    lobbyRendererSrc.includes('network-integrity-info'),
+    'Lobby renderer must have competitive integrity info section'
+  );
+  assert.ok(
+    lobbyRendererSrc.includes('data-testid="network-integrity-info"'),
+    'Integrity info must have data-testid'
+  );
+});
+
+test('Lobby: integrity section shows 4 guarantees', () => {
+  assert.ok(
+    lobbyRendererSrc.includes('data-testid="integrity-deterministic"'),
+    'Integrity section must show deterministic guarantee'
+  );
+  assert.ok(
+    lobbyRendererSrc.includes('data-testid="integrity-certifiable"'),
+    'Integrity section must show certifiable guarantee'
+  );
+  assert.ok(
+    lobbyRendererSrc.includes('data-testid="integrity-replayable"'),
+    'Integrity section must show replayable guarantee'
+  );
+  assert.ok(
+    lobbyRendererSrc.includes('data-testid="integrity-glicko"'),
+    'Integrity section must show Glicko-2 rating guarantee'
   );
 });

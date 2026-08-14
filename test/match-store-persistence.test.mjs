@@ -17,7 +17,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
-import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -412,4 +412,35 @@ test('match-store: SqliteMatchStore upsert (save same match twice)', () => {
   store.save(match);
   assert.equal(store.count, 1, 'Upsert should not duplicate');
   store.close();
+});
+
+// ── Section 9: SQLite integrity check at startup ──
+
+test('match-store: SqliteMatchStore passes integrity check on clean :memory: DB', () => {
+  const store = new SqliteMatchStore({ path: ':memory:' });
+  assert.ok(store, 'Store should construct successfully on clean DB');
+  const { match } = createLobbyMatch();
+  store.save(match);
+  assert.equal(store.count, 1);
+  store.close();
+});
+
+test('match-store: SqliteMatchStore fails closed on corrupt database file', () => {
+  const tmpDir = mkdtempSync(join(tmpdir(), 'intrilex-corrupt-'));
+  const dbPath = join(tmpDir, 'corrupt.sqlite');
+  try {
+    // Write garbage to the database file — not a valid SQLite database
+    writeFileSync(dbPath, Buffer.from('NOT A SQLITE DATABASE FILE - CORRUPT GARBAGE'));
+    // Fail-closed behavior: either DatabaseSync rejects ("file is not a database")
+    // or the integrity_check pragma returns non-"ok". Both are valid rejections.
+    assert.throws(
+      () => new SqliteMatchStore({ path: dbPath }),
+      /integrity_check failed|file is not a database/i,
+      'Constructor must throw on corrupt database',
+    );
+  } finally {
+    // Windows: SQLite file handle may not release synchronously after close().
+    // Best-effort cleanup — temp dir will be cleaned by OS eventually.
+    try { rmSync(tmpDir, { recursive: true, force: true }); } catch { /* Windows EBUSY — ignore */ }
+  }
 });

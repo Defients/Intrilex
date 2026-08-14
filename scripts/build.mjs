@@ -310,6 +310,32 @@ await writeFile(path.join(browserEngine, 'browser-entry.js'), [
   ''
 ].join('\n'));
 
+// ── Browser-safe @intrilex/shared shim ─────────────────────────────────
+// packages/shared/src/canonical.mjs imports `node:crypto`, which esbuild
+// cannot resolve when bundling for the browser platform. Several browser
+// modules (e.g. @intrilex/decision-intelligence/* imported by profile.js
+// and ranked-duel-terminal.mjs) transitively import @intrilex/shared.
+// This shim re-exports the browser crypto shim's hash primitives and
+// defines the pure helpers (sanitizeCsvCell, stableSortBy) so the browser
+// bundle never reaches node:crypto. bundle.mjs aliases @intrilex/shared
+// to this file.
+await writeFile(path.join(dist, 'shared-browser.js'), [
+  "// shared-browser.js — Browser-safe replacement for @intrilex/shared canonical.mjs.",
+  "// Re-exports hash primitives from the browser crypto shim and defines pure",
+  "// helpers so the browser bundle never pulls in node:crypto.",
+  "export { canonicalize, canonicalClone } from './engine/canonical-json.js';",
+  "export { sha256Text, hashCanonical } from './engine/hash.js';",
+  "export function sanitizeCsvCell(value) {",
+  "  const text = value == null ? '' : String(value);",
+  "  const safe = /^[=+\\-@]/.test(text) ? `'${text}` : text;",
+  "  return /[\",\\n\\r]/.test(safe) ? `\"${safe.replaceAll('\"', '\"\"')}\"` : safe;",
+  "}",
+  "export function stableSortBy(items, selector) {",
+  "  return [...items].sort((a, b) => String(selector(a)).localeCompare(String(selector(b))));",
+  "}",
+  ''
+].join('\n'));
+
 await mkdir(certifiedReplayDist, { recursive: true });
 const certifiedReplayFiles = (await readdir(certifiedReplaySource))
   .filter((name) => name.endsWith('.certified.replay.json') && !name.includes('.public.certified.'))

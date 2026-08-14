@@ -19,6 +19,30 @@ const readDist = (rel) => readFile(path.join(distDir, rel), 'utf8');
 const readSrc = (rel) => readFile(path.join(srcDir, rel), 'utf8');
 const exists = (rel) => access(path.join(distDir, rel)).then(() => true).catch(() => false);
 
+// v0.27.1+: The PWA service worker was replaced with a self-unregistering
+// kill switch (dist/sw.js) because stale caches served raw source files
+// with bare package imports the browser cannot resolve. Tests that verify
+// full SW functionality are skipped when the kill switch is detected.
+async function isKillSwitch() {
+  try {
+    const sw = await readDist('sw.js');
+    return sw.includes('self-unregistering kill switch');
+  } catch {
+    return false;
+  }
+}
+
+// Helper: skip a test if the dist SW is the kill switch
+function testIfFullSW(name, fn) {
+  test(name, async (t) => {
+    if (await isKillSwitch()) {
+      t.skip('PWA kill switch active — full SW tests skipped');
+      return;
+    }
+    await fn(t);
+  });
+}
+
 // ── Service Worker file ─────────────────────────────────────────
 
 test('pwa: sw.js exists in dist', async () => {
@@ -39,43 +63,43 @@ test('pwa: sw.js has activate event handler', async () => {
   assert.match(sw, /addEventListener\s*\(\s*['"]activate['"]/);
 });
 
-test('pwa: sw.js has fetch event handler', async () => {
+testIfFullSW('pwa: sw.js has fetch event handler', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /addEventListener\s*\(\s*['"]fetch['"]/);
 });
 
-test('pwa: sw.js has cache version key for cache invalidation', async () => {
+testIfFullSW('pwa: sw.js has cache version key for cache invalidation', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /CACHE_VERSION|CACHE_NAME/i);
 });
 
-test('pwa: sw.js cleans old caches on activate', async () => {
+testIfFullSW('pwa: sw.js cleans old caches on activate', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /caches\.keys\s*\(/);
   assert.match(sw, /caches\.delete\s*\(/);
 });
 
-test('pwa: sw.js uses skipWaiting for immediate activation', async () => {
+testIfFullSW('pwa: sw.js uses skipWaiting for immediate activation', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /skipWaiting/);
 });
 
-test('pwa: sw.js claims clients on activate', async () => {
+testIfFullSW('pwa: sw.js claims clients on activate', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /clients\.claim/);
 });
 
-test('pwa: sw.js implements stale-while-revalidate strategy', async () => {
+testIfFullSW('pwa: sw.js implements stale-while-revalidate strategy', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /staleWhileRevalidate|stale-while-revalidate/i);
 });
 
-test('pwa: sw.js implements network-first fallback for HTML', async () => {
+testIfFullSW('pwa: sw.js implements network-first fallback for HTML', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /networkFirst|network-first/i);
 });
 
-test('pwa: sw.js uses network-first for unhashed __intrilex-config.js (dev mode)', async () => {
+testIfFullSW('pwa: sw.js uses network-first for unhashed __intrilex-config.js (dev mode)', async () => {
   // In dev mode, the config file is served unhashed at /__intrilex-config.js.
   // The SW uses network-first for this path to prevent stale config.
   // In production, the config is content-hashed (__intrilex-config.[hash].js)
@@ -89,7 +113,7 @@ test('pwa: sw.js uses network-first for unhashed __intrilex-config.js (dev mode)
   assert.ok(configIdx < genericJsIdx, 'Config handler must appear before generic .js handler');
 });
 
-test('pwa: hashed-asset regex matches __intrilex-config.[hash].js (production)', async () => {
+testIfFullSW('pwa: hashed-asset regex matches __intrilex-config.[hash].js (production)', async () => {
   // Verify the existing hashed-asset regex matches the production config
   // file name so it's served cache-first (immutable).
   const sw = await readDist('sw.js');
@@ -100,22 +124,22 @@ test('pwa: hashed-asset regex matches __intrilex-config.[hash].js (production)',
   assert.ok(regex.test('/__intrilex-config.abc123def456.js'), 'Hashed config must match SW immutable-asset regex');
 });
 
-test('pwa: sw.js has offline fallback for navigation requests', async () => {
+testIfFullSW('pwa: sw.js has offline fallback for navigation requests', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /index\.html.*Offline|Offline.*index\.html|503/);
 });
 
-test('pwa: sw.js only intercepts GET requests', async () => {
+testIfFullSW('pwa: sw.js only intercepts GET requests', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /method.*GET|GET.*method/i);
 });
 
-test('pwa: sw.js skips cross-origin requests', async () => {
+testIfFullSW('pwa: sw.js skips cross-origin requests', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /origin.*location\.origin|self\.location\.origin/i);
 });
 
-test('pwa: sw.js has cache eviction to prevent unbounded growth', async () => {
+testIfFullSW('pwa: sw.js has cache eviction to prevent unbounded growth', async () => {
   const sw = await readDist('sw.js');
   assert.match(sw, /MAX_CACHE|evict/i);
 });
@@ -202,9 +226,11 @@ test('pwa: index.html links manifest.json', async () => {
   assert.match(html, /rel="manifest"\s+href="manifest\.json"/);
 });
 
-test('pwa: index.html has service worker registration', async () => {
+test('pwa: index.html has service worker registration or kill switch', async () => {
   const html = await readDist('index.html');
-  assert.match(html, /src="sw-register\.js"/);
+  // v0.27.1+: May reference sw-register.js (full PWA) or sw-kill.js (kill switch)
+  assert.ok(html.match(/src="sw-register\.js"/) || html.match(/src="sw-kill\.js"/),
+    'index.html must reference either sw-register.js or sw-kill.js');
 });
 
 test('pwa: sw-register.js exists in dist', async () => {
@@ -253,9 +279,11 @@ test('pwa: src/index.html has manifest link', async () => {
   assert.match(html, /rel="manifest"\s+href="manifest\.json"/);
 });
 
-test('pwa: src/index.html has SW registration script reference', async () => {
+test('pwa: src/index.html has SW registration or kill switch script reference', async () => {
   const html = await readSrc('index.html');
-  assert.match(html, /src="sw-register\.js"/);
+  // v0.27.1+: May reference sw-register.js (full PWA) or sw-kill.js (kill switch)
+  assert.ok(html.match(/src="sw-register\.js"/) || html.match(/src="sw-kill\.js"/),
+    'src/index.html must reference either sw-register.js or sw-kill.js');
 });
 
 // ── Content Security Policy ─────────────────────────────────────

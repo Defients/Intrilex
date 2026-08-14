@@ -4,10 +4,10 @@
 // function, not duplicated test logic.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from '../engine/browser-entry.js?v=659a089d50b6';
+import { hashCanonical } from '../engine/browser-entry.js?v=42162e3d88b3';
 
 // ── Release identity (single source — Gate 4 canonical location) ──
-export const PRODUCT_VERSION = '0.27.0';
+export const PRODUCT_VERSION = '0.28.0';
 export const PLAYER_RUNTIME_VERSION = '1.2.0';
 export const ENGINE_VERSION = '4.2.6';
 export const RULES_VERSION = '4.3.1';

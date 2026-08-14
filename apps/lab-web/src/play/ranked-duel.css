@@ -3533,6 +3533,16 @@
   color: #94a3b8 !important;
   margin-bottom: 20px !important;
 }
+.rd-disconnect-grace {
+  font-size: 13px !important;
+  color: #fbbf24 !important;
+  margin-bottom: 16px !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.rd-disconnect-grace strong {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
 .rd-disconnect-spinner {
   width: 32px !important;
   height: 32px !important;
@@ -3545,6 +3555,141 @@
 @keyframes rd-spinner {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* ── Rematch Invite Overlay ───────────────────────────────────── */
+.rd-rematch-invite-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(5,8,16,0.85) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 160 !important;
+  animation: rd-overlay-fade 0.2s ease !important;
+}
+.rd-rematch-invite-content {
+  background: #0a0e1a !important;
+  border: 1px solid rgba(90,215,232,0.30) !important;
+  border-radius: 12px !important;
+  padding: 32px 40px !important;
+  text-align: center !important;
+  max-width: 400px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+}
+.rd-rematch-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #22d3ee !important;
+  margin-bottom: 12px !important;
+}
+.rd-rematch-msg {
+  font-size: 15px !important;
+  color: #cbd5e1 !important;
+  margin-bottom: 24px !important;
+}
+.rd-rematch-msg strong { color: #f0f9ff !important; }
+.rd-rematch-actions {
+  display: flex !important;
+  gap: 12px !important;
+  justify-content: center !important;
+}
+
+/* ── Post-Match Intelligence Card ─────────────────────────────── */
+.intel-card {
+  margin: 16px auto !important;
+  max-width: 480px !important;
+  padding: 16px 20px !important;
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 8px !important;
+}
+.intel-title {
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.5px !important;
+  color: var(--text-dim, #8b949e) !important;
+  margin: 0 0 12px !important;
+}
+.intel-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 12px !important;
+  margin-bottom: 14px !important;
+}
+.intel-stat {
+  text-align: center !important;
+}
+.intel-stat-label {
+  display: block !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  color: var(--text-dim, #8b949e) !important;
+  margin-bottom: 2px !important;
+}
+.intel-stat-value {
+  display: block !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: var(--text, #e0f0ff) !important;
+}
+.intel-margin-positive { color: #22d3ee !important; }
+.intel-margin-negative { color: #f87171 !important; }
+.intel-margin-neutral { color: var(--text-dim, #8b949e) !important; }
+.intel-goal-bars {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  margin-bottom: 10px !important;
+}
+.intel-goal-bar-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+}
+.intel-goal-bar-label {
+  width: 70px !important;
+  color: var(--text-dim, #8b949e) !important;
+  flex-shrink: 0 !important;
+}
+.intel-goal-bar-track {
+  flex: 1 !important;
+  height: 6px !important;
+  background: rgba(255,255,255,0.06) !important;
+  border-radius: 3px !important;
+  overflow: hidden !important;
+}
+.intel-goal-bar-fill {
+  height: 100% !important;
+  border-radius: 3px !important;
+  transition: width 0.4s ease !important;
+}
+.intel-goal-bar-human {
+  background: linear-gradient(90deg, #0891b2, #22d3ee) !important;
+}
+.intel-goal-bar-opponent {
+  background: linear-gradient(90deg, #b91c1c, #f87171) !important;
+}
+.intel-goal-bar-value {
+  width: 50px !important;
+  text-align: right !important;
+  color: var(--text, #e0f0ff) !important;
+  font-variant-numeric: tabular-nums !important;
+  flex-shrink: 0 !important;
+}
+.intel-termination {
+  font-size: 11px !important;
+  color: var(--text-dim, #8b949e) !important;
+  margin: 0 !important;
+  text-align: center !important;
+  font-style: italic !important;
+}
+@media (max-width: 480px) {
+  .intel-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
 /* ── Forfeit Confirmation Dialog ──────────────────────────────── */

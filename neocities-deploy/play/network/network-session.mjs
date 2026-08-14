@@ -12,7 +12,9 @@
 import {
   createMatch, joinMatch, resumeMatch, ready, submitAction,
   requestSync, leaveMatch, sendChat, chatVisibility,
-  authenticate, authRefresh,
+  authenticate, authRefresh, rematch, listSpectatable,
+  tournamentList, tournamentGet, tournamentRegister,
+  tournamentStart, tournamentReportResult, reportPlayer,
   PROTOCOL_VERSION,
 } from './network-protocol-client.mjs';
 
@@ -100,6 +102,11 @@ export class NetworkPlaySession {
     this.playerId = null;
     this.opponentPlayerId = null;
     this.opponentConnectionState = null;
+    // IRX-H10: Reconnect-grace countdown for the waiting player
+    this.opponentGraceMs = null;          // server-supplied grace window (ms)
+    this.opponentDisconnectedAt = null;   // local timestamp of DISCONNECTED event
+    // Rematch invite received from the opponent (set by REMATCH_INVITE handler)
+    this.rematchInvite = null;
 
     // v2 auth state
     this.accessToken = null;       // Set before connect() for authenticated sessions
@@ -376,13 +383,30 @@ export class NetworkPlaySession {
     this._transition(NetworkSessionState.RECONNECTING);
     const resp = await this._request(resumeMatch(this.matchId, this.participantToken));
     if (resp.type === 'ERROR') {
-      this._transition(NetworkSessionState.ERROR);
       this.error = resp.payload?.message ?? 'Reconnect failed';
+      // Close the socket to prevent a leak — a failed reconnect (e.g.
+      // MATCH_NOT_FOUND) is unrecoverable on this connection. Without
+      // this, the WebSocket stays open and state.networkSession holds a
+      // broken session with an active socket. We disconnect (which
+      // transitions to DISCONNECTED and closes the socket) then
+      // transition back to ERROR so the caller can distinguish "reconnect
+      // failed" from "user intentionally disconnected".
+      this.disconnect();
+      this._transition(NetworkSessionState.ERROR);
       this._notifyStateChange();
       return;
     }
     if (resp.payload?.view) {
       this._applyView(resp.payload.view);
+    }
+    // IRX-H20: Accept rotated participant token from server on reconnect.
+    // The server rotates the token on every successful RESUME_MATCH to prevent
+    // replay attacks. The new token must be stored and used for all subsequent
+    // requests (READY, SUBMIT_ACTION, etc.) and saved to localStorage for
+    // future reconnects.
+    if (resp.payload?.newParticipantToken) {
+      this.participantToken = resp.payload.newParticipantToken;
+      this._saveReconnectInfo();
     }
     this._notifyStateChange();
   }
@@ -586,7 +610,8 @@ export class NetworkPlaySession {
       const msg = authenticate(this.accessToken);
       this._ws.send(JSON.stringify(msg));
       return true;
-    } catch {
+    } catch (err) {
+      console.warn('[NetworkPlaySession] _sendAuthenticate failed:', err?.message ?? err);
       return false;
     }
   }
@@ -604,7 +629,8 @@ export class NetworkPlaySession {
       const msg = authRefresh(newToken);
       this._ws.send(JSON.stringify(msg));
       return true;
-    } catch {
+    } catch (err) {
+      console.warn('[NetworkPlaySession] refreshAccessToken failed:', err?.message ?? err);
       return false;
     }
   }
@@ -635,6 +661,229 @@ export class NetworkPlaySession {
       }
     }
     return replay;
+  }
+
+  // ── Rematch ──
+
+  /**
+   * Request a rematch from the terminal screen of a completed network match.
+   * The server creates a new match with the same profile + queue, binds this
+   * player as P1, and sends a REMATCH_INVITE to the opponent. On success,
+   * the session transitions to IN_LOBBY for the new match.
+   * @returns {Promise<{ ok: boolean, error?: string, matchId?: string, inviteCode?: string }>}
+   */
+  async requestRematch() {
+    if (this.status !== NetworkSessionState.TERMINAL) {
+      return { ok: false, error: 'Rematch only available for completed matches' };
+    }
+    if (!this.matchId || !this.participantToken) {
+      return { ok: false, error: 'No match to rematch' };
+    }
+    const resp = await this._request(rematch(this.matchId, this.participantToken));
+    if (resp.type === 'ERROR') {
+      return { ok: false, error: resp.payload?.message ?? 'Rematch failed' };
+    }
+    // MATCH_CREATED response — transition to the new match's lobby
+    const oldMatchId = this.matchId;
+    this.matchId = resp.payload.matchId;
+    this.inviteCode = resp.payload.inviteCode;
+    this.participantToken = resp.payload.participantToken;
+    this.playerId = 'P1';
+    this.opponentPlayerId = 'P2';
+    this.opponentConnectionState = 'DISCONNECTED'; // opponent hasn't joined yet
+    this.opponentGraceMs = null;
+    this.opponentDisconnectedAt = null;
+    this.currentView = null;
+    this.chatMessages = [];
+    this._seenChatMessageIds = new Set();
+    this._transition(NetworkSessionState.IN_LOBBY);
+    this._saveReconnectInfo();
+    this._notifyStateChange();
+    return { ok: true, matchId: this.matchId, inviteCode: this.inviteCode, oldMatchId };
+  }
+
+  /**
+   * Accept a rematch invite received from the opponent. Sends JOIN_MATCH with
+   * the invite code from the REMATCH_INVITE message.
+   * @param {string} inviteCode - The invite code from the REMATCH_INVITE
+   * @returns {Promise<{ ok: boolean, error?: string }>}
+   */
+  async acceptRematchInvite(inviteCode) {
+    if (!inviteCode) return { ok: false, error: 'No invite code' };
+    // Clear the pending invite
+    this.rematchInvite = null;
+    const result = await this.joinDuel(inviteCode);
+    if (result.error) return { ok: false, error: result.error };
+    return { ok: true };
+  }
+
+  /**
+   * Decline a rematch invite. Just clears the pending invite — no server
+   * notification needed (the opponent's lobby will show "waiting for opponent"
+   * and they can leave).
+   */
+  declineRematchInvite() {
+    this.rematchInvite = null;
+    this._notifyStateChange();
+  }
+
+  // ── Spectator discovery ──
+
+  /**
+   * Request the list of currently spectatable matches from the server.
+   * Returns the list of matches (matchId, profileId, participants, spectatorCount,
+   * matchMode, queueId) or null on error.
+   * @returns {Promise<Array<object>|null>}
+   */
+  async requestSpectatableList() {
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return null;
+    try {
+      const resp = await this._request(listSpectatable());
+      if (resp.type === 'ERROR') return null;
+      return resp.payload?.matches ?? [];
+    } catch {
+      return null;
+    }
+  }
+
+  // ── Tournament (v0.28.0 — Epoch 7) ──
+
+  /**
+   * Request the list of tournaments from the server.
+   * @param {number} [limit=20] - Max results (1-100)
+   * @param {string|null} [status=null] - Optional status filter
+   * @returns {Promise<Array<object>|null>} Array of tournament summaries or null on error
+   */
+  async requestTournamentList(limit = 20, status = null) {
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return null;
+    try {
+      const resp = await this._request(tournamentList(limit, status));
+      if (resp.type === 'ERROR') return null;
+      return resp.payload?.tournaments ?? [];
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get full tournament details from the server.
+   * @param {string} tournamentId
+   * @returns {Promise<object|null>} Tournament details or null on error
+   */
+  async requestTournamentGet(tournamentId) {
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return null;
+    try {
+      const resp = await this._request(tournamentGet(tournamentId));
+      if (resp.type === 'ERROR') return null;
+      return resp.payload?.tournament ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Register the authenticated player for a tournament.
+   * @param {string} tournamentId
+   * @returns {Promise<{ success: boolean, error?: string, seed?: number }>}
+   */
+  async requestTournamentRegister(tournamentId) {
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) {
+      return { success: false, error: 'Not connected to server' };
+    }
+    try {
+      const resp = await this._request(tournamentRegister(tournamentId));
+      if (resp.type === 'ERROR') {
+        return { success: false, error: resp.payload?.message ?? 'Registration failed' };
+      }
+      return {
+        success: true,
+        seed: resp.payload?.seed,
+        registeredPlayers: resp.payload?.registeredPlayers,
+        maxPlayers: resp.payload?.maxPlayers,
+      };
+    } catch (err) {
+      return { success: false, error: err.message ?? 'Connection error' };
+    }
+  }
+
+  /**
+   * Request to start a tournament (operator-only).
+   * @param {string} tournamentId
+   * @returns {Promise<{ success: boolean, error?: string, matchCount?: number, status?: string }>}
+   */
+  async requestTournamentStart(tournamentId) {
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) {
+      return { success: false, error: 'Not connected to server' };
+    }
+    try {
+      const resp = await this._request(tournamentStart(tournamentId));
+      if (resp.type === 'ERROR') {
+        return { success: false, error: resp.payload?.message ?? 'Start failed' };
+      }
+      return {
+        success: true,
+        matchCount: resp.payload?.matchCount,
+        status: resp.payload?.status,
+        startedAt: resp.payload?.startedAt,
+      };
+    } catch (err) {
+      return { success: false, error: err.message ?? 'Connection error' };
+    }
+  }
+
+  /**
+   * Report a tournament match result (operator-only).
+   * @param {string} tournamentId
+   * @param {string} matchId
+   * @param {string} winnerId
+   * @param {number} scoreA
+   * @param {number} scoreB
+   * @param {string|null} [matchRef]
+   * @returns {Promise<{ success: boolean, error?: string, tournamentComplete?: boolean, tournamentStatus?: string }>}
+   */
+  async requestTournamentReportResult(tournamentId, matchId, winnerId, scoreA, scoreB, matchRef = null) {
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) {
+      return { success: false, error: 'Not connected to server' };
+    }
+    try {
+      const resp = await this._request(tournamentReportResult(tournamentId, matchId, winnerId, scoreA, scoreB, matchRef));
+      if (resp.type === 'ERROR') {
+        return { success: false, error: resp.payload?.message ?? 'Report failed' };
+      }
+      return {
+        success: true,
+        tournamentComplete: resp.payload?.tournamentComplete,
+        tournamentStatus: resp.payload?.tournamentStatus,
+      };
+    } catch (err) {
+      return { success: false, error: err.message ?? 'Connection error' };
+    }
+  }
+
+  /**
+   * Report a player for misconduct (B12).
+   * @param {string} reportedPlayerId - The account ID of the reported player
+   * @param {string} reasonCode - One of: HARASSMENT, CHEATING, INAPPROPRIATE_NAME, SPAM, DISCONNECT_ABUSE, OTHER
+   * @param {string|null} [description] - Optional description (max 1000 chars)
+   * @param {string|null} [matchRef] - Optional match reference
+   * @returns {Promise<{ success: boolean, error?: string, reportId?: string }>}
+   */
+  async requestReportPlayer(reportedPlayerId, reasonCode, description = null, matchRef = null) {
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) {
+      return { success: false, error: 'Not connected to server' };
+    }
+    try {
+      const resp = await this._request(reportPlayer(reportedPlayerId, reasonCode, description, matchRef));
+      if (resp.type === 'ERROR') {
+        return { success: false, error: resp.payload?.message ?? 'Report failed' };
+      }
+      return {
+        success: true,
+        reportId: resp.payload?.reportId,
+      };
+    } catch (err) {
+      return { success: false, error: err.message ?? 'Connection error' };
+    }
   }
 
   /**
@@ -764,6 +1013,63 @@ export class NetworkPlaySession {
   }
 
   /**
+   * Epoch 7: Collect match-level statistics from the terminal view model
+   * and persist them to IndexedDB for strategic fingerprint enrichment.
+   * This is called automatically when MATCH_ENDED is received.
+   * @param {object} endedPayload - The MATCH_ENDED payload
+   */
+  async _collectMatchStats(endedPayload) {
+    try {
+      const vm = this.currentView;
+      if (!vm || !vm.match) return;
+      const human = vm.human ?? {};
+      const opponent = vm.opponent ?? {};
+      const zones = vm.zones ?? {};
+      const match = vm.match ?? {};
+      const humanIR = human.securedPoints ?? human.ir ?? 0;
+      const oppIR = opponent.securedPoints ?? opponent.ir ?? 0;
+      const humanGoal = human.goal ?? 21;
+      const drawRemaining = zones.drawPile?.count ?? zones.drawPile?.length ?? 0;
+      const goalProgress = humanGoal > 0 ? Math.min(1, humanIR / humanGoal) : 0;
+      const winnerId = endedPayload?.winner ?? match.winner ?? null;
+      const isHumanWinner = winnerId === this.playerId;
+      const wasBehindAtMidpoint = (() => {
+        // Heuristic: if human IR < opponent IR at the midpoint turn
+        const totalTurns = match.fullTurnSequence ?? 0;
+        if (totalTurns < 4) return false;
+        // We don't have midpoint state, so we approximate: if the human
+        // won but had a lower final IR than opponent at some point...
+        // For now, use a simple heuristic based on final margin.
+        // This will be enriched in the future with midpoint snapshots.
+        return isHumanWinner && humanIR < oppIR;
+      })();
+
+      const statsRecord = {
+        matchId: this.matchId,
+        winnerId: winnerId ?? null,
+        humanPlayerId: this.participantId ?? this.playerId,
+        turns: match.fullTurnSequence ?? 0,
+        humanIR,
+        oppIR,
+        drawPileRemaining: drawRemaining,
+        goalProgress,
+        terminationReason: match.terminationReason ?? endedPayload?.reason ?? 'UNKNOWN',
+        wasBehindAtMidpoint,
+        completedAt: new Date().toISOString(),
+        queueId: this.queueId ?? 'ranked',
+        profileId: this.profileId ?? null,
+      };
+
+      // Persist to IndexedDB (non-blocking — failures are logged but don't break the match)
+      const { putMatchStats } = await import('../persistence.js');
+      await putMatchStats(statsRecord);
+    } catch (err) {
+      // Non-fatal — match stats are best-effort enrichment
+      console.warn('[NetworkPlaySession] _collectMatchStats failed:', err?.message ?? err);
+    }
+  }
+
+  /**
    * Validate an incoming envelope before processing.
    * Rejects malformed, unknown, oversized, or mismatched messages.
    */
@@ -849,9 +1155,17 @@ export class NetworkPlaySession {
       case 'PARTICIPANT_STATUS':
         if (msg.payload?.status?.status === 'DISCONNECTED') {
           this.opponentConnectionState = 'DISCONNECTED';
+          // IRX-H10: Capture the server-supplied reconnect-grace window so the
+          // waiting player can see a countdown instead of an indefinite spinner.
+          this.opponentGraceMs = typeof msg.payload?.status?.graceMs === 'number'
+            ? msg.payload.status.graceMs
+            : null;
+          this.opponentDisconnectedAt = Date.now();
           this._notifyStateChange();
         } else if (msg.payload?.status?.status === 'CONNECTED') {
           this.opponentConnectionState = 'CONNECTED';
+          this.opponentGraceMs = null;
+          this.opponentDisconnectedAt = null;
           this._notifyStateChange();
         }
         break;
@@ -866,6 +1180,8 @@ export class NetworkPlaySession {
         if (msg.payload?.ratingData && Array.isArray(msg.payload.ratingData)) {
           this.rankResult = msg.payload.ratingData;
         }
+        // Epoch 7: Collect match stats for strategic fingerprint enrichment
+        this._collectMatchStats(msg.payload);
         this._clearReconnectInfo();
         this._notifyStateChange();
         break;
@@ -879,6 +1195,18 @@ export class NetworkPlaySession {
         // Server-authoritative achievement unlocks for this participant
         this.achievementUnlocks = msg.payload?.unlocks ?? [];
         this.achievementProgressUpdates = msg.payload?.progressUpdates ?? {};
+        this._notifyStateChange();
+        break;
+      case 'REMATCH_INVITE':
+        // The opponent requested a rematch. Store the invite so the UI can
+        // show an accept/decline dialog. The player accepts via
+        // acceptRematchInvite(inviteCode) which sends JOIN_MATCH.
+        this.rematchInvite = {
+          fromMatchId: msg.payload?.fromMatchId ?? null,
+          newMatchId: msg.payload?.newMatchId ?? null,
+          inviteCode: msg.payload?.inviteCode ?? null,
+          fromDisplayName: msg.payload?.fromDisplayName ?? 'Opponent',
+        };
         this._notifyStateChange();
         break;
       case 'CHAT_MESSAGE':
@@ -1124,6 +1452,8 @@ export class NetworkPlaySession {
         difficulty: '',
         isHuman: true,
         connectionState: this.opponentConnectionState ?? 'CONNECTED',
+        graceMs: this.opponentGraceMs ?? null,
+        disconnectedAt: this.opponentDisconnectedAt ?? null,
       },
       match: view.match || {},
       decision: view.decision ? {

@@ -58,6 +58,36 @@ const ROUTE_META = {
     canonicalPath: '/#/play/match',
     ogType: 'website',
   },
+  '/play/academy': {
+    title: 'Intrilex — Academy',
+    description: 'Learn Intrilex step by step with guided lessons. Draw, score, use card effects, master response windows, and win games.',
+    canonicalPath: '/#/play/academy',
+    ogType: 'website',
+  },
+  '/puzzles': {
+    title: 'Intrilex — Puzzle Ladder',
+    description: 'Solve tactical Intrilex puzzles. Each puzzle is a constrained game state with a specific objective — find the winning move, survive under pressure, or prove a position.',
+    canonicalPath: '/#/puzzles',
+    ogType: 'website',
+  },
+  '/seasons': {
+    title: 'Intrilex — Season Archive',
+    description: 'Browse past Intrilex ranked seasons. View champions, final standings, and season history for every completed ranked season.',
+    canonicalPath: '/#/seasons',
+    ogType: 'website',
+  },
+  '/meta': {
+    title: 'Intrilex — Meta Report',
+    description: 'Competitive meta report: tier distribution, rating statistics, activity metrics, and competitive health for the current ranked season.',
+    canonicalPath: '/#/meta',
+    ogType: 'website',
+  },
+  '/tournaments': {
+    title: 'Intrilex — Tournaments',
+    description: 'Human ranked tournaments. Register, compete, and climb the bracket. View active and upcoming tournament events.',
+    canonicalPath: '/#/tournaments',
+    ogType: 'website',
+  },
   '/play/online': {
     title: 'Intrilex — Online Direct Duel',
     description: 'Server-authoritative online Direct Duel for Intrilex. Create or join a match with an invite code, or find a match via public matchmaking.',

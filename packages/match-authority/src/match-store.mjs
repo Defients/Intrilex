@@ -212,6 +212,18 @@ export class SqliteMatchStore {
     this._db.exec(`
       PRAGMA journal_mode = WAL;
       PRAGMA synchronous = NORMAL;
+    `);
+    // Integrity check — fail closed on corrupt database. For ':memory:'
+    // databases this is always clean; for file-backed databases this catches
+    // corruption before the server starts serving traffic.
+    const integrity = this._db.prepare('PRAGMA integrity_check').get();
+    const integrityResult = integrity && typeof integrity === 'object' ? integrity.integrity_check : integrity;
+    if (integrityResult !== 'ok') {
+      this._db.close();
+      const msg = typeof integrityResult === 'string' ? integrityResult.slice(0, 200) : 'unknown integrity error';
+      throw new Error(`SqliteMatchStore: database integrity check failed — ${msg}`);
+    }
+    this._db.exec(`
       CREATE TABLE IF NOT EXISTS matches (
         match_id TEXT PRIMARY KEY,
         snapshot TEXT NOT NULL,

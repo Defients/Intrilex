@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 const DB_NAME = 'intrilex-player';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const STORES = Object.freeze({
   SAVES: 'saves',
   REPLAYS: 'replays',
@@ -13,6 +13,7 @@ const STORES = Object.freeze({
   PLAYER_STATS: 'player-stats',
   TOURNAMENTS: 'tournaments',
   ACHIEVEMENTS: 'achievements',
+  MATCH_STATS: 'match-stats',
 });
 
 let _db = null;
@@ -64,6 +65,9 @@ export async function openDB() {
       }
       if (!db.objectStoreNames.contains(STORES.ACHIEVEMENTS)) {
         db.createObjectStore(STORES.ACHIEVEMENTS, { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains(STORES.MATCH_STATS)) {
+        db.createObjectStore(STORES.MATCH_STATS, { keyPath: 'matchId' });
       }
     };
   });
@@ -413,11 +417,11 @@ export async function importSave(jsonString) {
 
   // v1 legacy saves: attempt migration to v2 authority model before rejecting
   if (data.version === 1) {
-    const { canMigrateSave, migrateSave } = await import('./save-integrity.js?v=659a089d50b6');
+    const { canMigrateSave, migrateSave } = await import('./save-integrity.js?v=42162e3d88b3');
     const migration = canMigrateSave(data);
     if (migration.canMigrate) {
-      const engineModule = await import('../engine/browser-entry.js?v=659a089d50b6');
-      const autonomyModule = await import('../autonomy-runtime.js?v=659a089d50b6');
+      const engineModule = await import('../engine/browser-entry.js?v=42162e3d88b3');
+      const autonomyModule = await import('../autonomy-runtime.js?v=42162e3d88b3');
       const result = await migrateSave(data, engineModule, autonomyModule);
       if (result.ok) {
         await putSave(result.save);
@@ -429,14 +433,14 @@ export async function importSave(jsonString) {
   }
 
   // v2+ saves: route through canonical validator
-  const { validateSaveEnvelope, canMigrateSave: canMigrate, migrateSave: migrate } = await import('./save-integrity.js?v=659a089d50b6');
+  const { validateSaveEnvelope, canMigrateSave: canMigrate, migrateSave: migrate } = await import('./save-integrity.js?v=42162e3d88b3');
   const validation = validateSaveEnvelope(data);
   if (!validation.valid) {
     // Attempt migration for version mismatches before quarantining
     const migration = canMigrate(data);
     if (migration.canMigrate) {
-      const engineModule = await import('../engine/browser-entry.js?v=659a089d50b6');
-      const autonomyModule = await import('../autonomy-runtime.js?v=659a089d50b6');
+      const engineModule = await import('../engine/browser-entry.js?v=42162e3d88b3');
+      const autonomyModule = await import('../autonomy-runtime.js?v=42162e3d88b3');
       const result = await migrate(data, engineModule, autonomyModule);
       if (result.ok) {
         await putSave(result.save);
@@ -604,4 +608,59 @@ export async function markAchievementsMigrated(migrationId, accountId) {
     console.error('[achievements] Failed to mark migrated in IndexedDB:', err);
     return false;
   }
+}
+
+// ── Match Stats (v0.28.0 — Epoch 7) ──
+// Per-match statistics for strategic fingerprint enrichment.
+// Stored separately from replays (which are full command logs) —
+// match stats are lightweight aggregates suitable for quick lookup.
+
+/**
+ * Save a match stats record to IndexedDB.
+ * @param {object} statsRecord - { matchId, winnerId, humanPlayerId, turns, humanIR, oppIR, drawPileRemaining, goalProgress, terminationReason, wasBehindAtMidpoint, completedAt }
+ * @returns {Promise<string>} The matchId
+ */
+export async function putMatchStats(statsRecord) {
+  if (!isIndexedDBAvailable()) throw new Error('IDB_UNAVAILABLE');
+  if (!statsRecord?.matchId) throw new Error('MATCH_STATS_NO_ID');
+  const { store, transaction } = await tx(STORES.MATCH_STATS, 'readwrite');
+  await promisifyRequest(store.put(statsRecord));
+  await awaitTx(transaction);
+  return statsRecord.matchId;
+}
+
+/**
+ * Get a match stats record by matchId.
+ * @param {string} matchId
+ * @returns {Promise<object|null>}
+ */
+export async function getMatchStats(matchId) {
+  if (!isIndexedDBAvailable()) return null;
+  const { store } = await tx(STORES.MATCH_STATS, 'readonly');
+  return promisifyRequest(store.get(matchId));
+}
+
+/**
+ * List all match stats records, sorted by completedAt desc.
+ * @param {number} [limit=100] - Max records to return
+ * @returns {Promise<Array<object>>}
+ */
+export async function listMatchStats(limit = 100) {
+  if (!isIndexedDBAvailable()) return [];
+  const { store } = await tx(STORES.MATCH_STATS, 'readonly');
+  const all = await promisifyRequest(store.getAll());
+  return all
+    .sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''))
+    .slice(0, limit);
+}
+
+/**
+ * Delete a match stats record.
+ * @param {string} matchId
+ */
+export async function deleteMatchStats(matchId) {
+  if (!isIndexedDBAvailable()) return;
+  const { store, transaction } = await tx(STORES.MATCH_STATS, 'readwrite');
+  await promisifyRequest(store.delete(matchId));
+  await awaitTx(transaction);
 }

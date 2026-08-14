@@ -31,8 +31,8 @@ export const pageSubtitle = document.querySelector('#page-subtitle');
 // `intrilex:settings` localStorage key as a single JSON blob so we
 // don't litter localStorage with one key per setting.
 const SETTINGS_KEY = 'intrilex:settings';
-const PERSISTABLE_SETTINGS = ['reducedMotion', 'reducedSensory', 'fx', 'layout', 'visibility'];
-const SETTINGS_DEFAULTS = { reducedMotion: false, reducedSensory: false, fx: true, layout: 'observatory', visibility: 'public' };
+const PERSISTABLE_SETTINGS = ['reducedMotion', 'reducedSensory', 'fx', 'layout', 'visibility', 'rulesIllustrated', 'haptics', 'highContrast', 'seasonalThemes'];
+const SETTINGS_DEFAULTS = { reducedMotion: false, reducedSensory: false, fx: true, layout: 'observatory', visibility: 'public', rulesIllustrated: true, haptics: true, highContrast: false, seasonalThemes: true };
 
 function loadPersistedSettings() {
   let saved = {};
@@ -42,6 +42,7 @@ function loadPersistedSettings() {
   if (merged.reducedMotion) document.body.classList.add('reduced-motion');
   if (merged.reducedSensory) document.body.classList.add('reduced-sensory');
   if (!merged.fx) document.body.classList.add('fx-off');
+  if (merged.highContrast) document.body.classList.add('high-contrast');
   return merged;
 }
 
@@ -59,7 +60,7 @@ export const state = {
   index:null, autonomyIndex:null, corpusAnalytics:null, aggregate:null, observatory:null, capabilities:null,
   replay:null, authorized:null, replayKind:'corpus', fixtureId:'CT-001', frame:0, visibility:_persisted.visibility, viewer:'P1',
   _replayLoadedFor:null,
-  playing:false, timer:null, speed:1, layout:_persisted.layout, showOrchestration:false, reducedMotion:_persisted.reducedMotion, reducedSensory:_persisted.reducedSensory, fx:_persisted.fx,
+  playing:false, timer:null, speed:1, layout:_persisted.layout, showOrchestration:false, reducedMotion:_persisted.reducedMotion, reducedSensory:_persisted.reducedSensory, fx:_persisted.fx, rulesIllustrated:_persisted.rulesIllustrated, haptics:_persisted.haptics, highContrast:_persisted.highContrast, seasonalThemes:_persisted.seasonalThemes,
   selectedTimelineIndex:null, selectedMechanic:null, selectedSynergy:null, selectedPolicy:null, comparePolicyRight:null,
   filters:{profile:'all',evidence:'all'}, campaignWorker:null, campaignWorkers:[],
   lastCampaignResult:null, historyPage:0, historyFilterTerm:'', historyFilterReason:'all', historyFilterPolicy:'all',
@@ -73,6 +74,21 @@ export const state = {
   rankAnatomyRegistry:null, anatomyTab:'overall', originFilter:'all', _rankAnatomyModule:null,
   mechanicsSortColumn:null, mechanicsSortPhase:0,
   synergiesSortColumn:null, synergiesSortPhase:0,
+  // Phase 3: cross-workspace linking + interactive filtering
+  mechanicsRankFilter:'all', mechanicsEvidenceFilter:'all', mechanicsMinSelections:0,
+  synergiesMechanicFilter:'all', synergiesDirectionFilter:'all', synergiesMinCohort:0,
+  // Phase 6: workspace section tab navigation (within-workspace UI only)
+  diagActiveSection:'diagnostics', tracesActiveSection:'traces', compareActiveSection:'compare',
+  // Observatory Depth II — Phase 1: motif flow
+  motifNodeFilter:null, motifOutcomeFilter:'all',
+  // Observatory Depth II — Phase 2: action distribution tab
+  actionsDistributionTab:'overview',
+  // Observatory Depth II — Phase 3: anomaly explorer
+  anomalyTypeFilter:'all', anomalySeverityFilter:'all',
+  // Observatory Depth II — Phase 5: match detail inspector
+  historySelectedMatch:null,
+  // Observatory Depth II — Phase 6: enhanced cross-workspace linking
+  historyFilterMatchIds:null,
   tournament:null, tournamentSelectedPolicies:null, tournamentBestOf:1, tournamentRunning:false
 };
 

@@ -51,8 +51,8 @@ export function leaveMatch(matchId, participantToken) {
   return envelope('LEAVE_MATCH', { matchId, participantToken });
 }
 
-export function queueJoin(profileId) {
-  return envelope('QUEUE_JOIN', { profileId });
+export function queueJoin(profileId, queueId = 'ranked') {
+  return envelope('QUEUE_JOIN', { profileId, queueId });
 }
 
 export function queueLeave() {
@@ -67,6 +67,10 @@ export function spectateLeave() {
   return envelope('SPECTATE_LEAVE', {});
 }
 
+export function listSpectatable() {
+  return envelope('LIST_SPECTATABLE', {});
+}
+
 export function matchHistory(limit = 20, status = null) {
   return envelope('MATCH_HISTORY', { limit, status });
 }
@@ -77,6 +81,36 @@ export function sendChat(matchId, participantToken, text) {
 
 export function chatVisibility(matchId, participantToken, hidden) {
   return envelope('CHAT_VISIBILITY', { matchId, participantToken, hidden });
+}
+
+export function rematch(matchId, participantToken) {
+  return envelope('REMATCH', { matchId, participantToken });
+}
+
+// ── Tournament (v0.28.0 — Epoch 7) ──
+
+export function tournamentList(limit = 20, status = null) {
+  return envelope('TOURNAMENT_LIST', { limit, status });
+}
+
+export function tournamentGet(tournamentId) {
+  return envelope('TOURNAMENT_GET', { tournamentId });
+}
+
+export function tournamentRegister(tournamentId) {
+  return envelope('TOURNAMENT_REGISTER', { tournamentId });
+}
+
+export function tournamentStart(tournamentId) {
+  return envelope('TOURNAMENT_START', { tournamentId });
+}
+
+export function tournamentReportResult(tournamentId, matchId, winnerId, scoreA, scoreB, matchRef = null) {
+  return envelope('TOURNAMENT_REPORT_RESULT', { tournamentId, matchId, winnerId, scoreA, scoreB, matchRef });
+}
+
+export function reportPlayer(reportedPlayerId, reasonCode, description = null, matchRef = null) {
+  return envelope('REPORT_PLAYER', { reportedPlayerId, reasonCode, description, matchRef });
 }
 
 // ── Auth handshake (v2) ──

@@ -70,6 +70,33 @@ function renderSettingsInner(container) {
           </span>
         </label>
       </div>
+      <div class="settings-row">
+        <label class="settings-toggle">
+          <input type="checkbox" id="settings-haptics" ${state.haptics ? 'checked' : ''} />
+          <span class="settings-toggle-label">
+            <strong>Haptic Feedback</strong>
+            <small>Vibration on key game events (mobile only)</small>
+          </span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <label class="settings-toggle">
+          <input type="checkbox" id="settings-high-contrast" ${state.highContrast ? 'checked' : ''} />
+          <span class="settings-toggle-label">
+            <strong>High Contrast</strong>
+            <small>Maximize color contrast for readability</small>
+          </span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <label class="settings-toggle">
+          <input type="checkbox" id="settings-seasonal" ${state.seasonalThemes ? 'checked' : ''} />
+          <span class="settings-toggle-label">
+            <strong>Seasonal Themes</strong>
+            <small>Adjust ambient colors for the current season</small>
+          </span>
+        </label>
+      </div>
     </section>
 
     <section class="settings-section">
@@ -134,6 +161,9 @@ function wireSettingsActions(container) {
   const reducedMotion = container.querySelector('#settings-reduced-motion');
   const reducedSensory = container.querySelector('#settings-reduced-sensory');
   const fxToggle = container.querySelector('#settings-fx');
+  const hapticsToggle = container.querySelector('#settings-haptics');
+  const highContrastToggle = container.querySelector('#settings-high-contrast');
+  const seasonalToggle = container.querySelector('#settings-seasonal');
   const serverUrlInput = container.querySelector('#settings-server-url');
   const clearSavesBtn = container.querySelector('#settings-clear-saves');
   const resetBtn = container.querySelector('#settings-reset');
@@ -163,6 +193,37 @@ function wireSettingsActions(container) {
       document.body.classList.toggle('fx-off', !state.fx);
       persistSetting('fx', state.fx);
       showToast(`Frame effects ${state.fx ? 'enabled' : 'disabled'}`, { type: 'info' });
+    });
+  }
+
+  if (hapticsToggle) {
+    hapticsToggle.addEventListener('change', () => {
+      state.haptics = hapticsToggle.checked;
+      persistSetting('haptics', state.haptics);
+      try { import('../play/touch/haptics.js').then(m => m.setHapticsEnabled(state.haptics)); } catch { /* ignore */ }
+      showToast(`Haptic feedback ${state.haptics ? 'enabled' : 'disabled'}`, { type: 'info' });
+    });
+  }
+
+  if (highContrastToggle) {
+    highContrastToggle.addEventListener('change', () => {
+      state.highContrast = highContrastToggle.checked;
+      document.body.classList.toggle('high-contrast', state.highContrast);
+      persistSetting('highContrast', state.highContrast);
+      showToast(`High contrast ${state.highContrast ? 'enabled' : 'disabled'}`, { type: 'info' });
+    });
+  }
+
+  if (seasonalToggle) {
+    seasonalToggle.addEventListener('change', () => {
+      state.seasonalThemes = seasonalToggle.checked;
+      persistSetting('seasonalThemes', state.seasonalThemes);
+      if (state.seasonalThemes) {
+        import('../landing/seasonal-theme.js').then(m => m.applySeasonalTheme()).catch(() => {});
+      } else {
+        document.documentElement.removeAttribute('data-season');
+      }
+      showToast(`Seasonal themes ${state.seasonalThemes ? 'enabled' : 'disabled'}`, { type: 'info' });
     });
   }
 
@@ -218,9 +279,12 @@ function wireSettingsActions(container) {
       state.reducedMotion = false;
       state.reducedSensory = false;
       state.fx = true;
+      state.haptics = true;
+      state.highContrast = false;
+      state.seasonalThemes = true;
       state.layout = 'observatory';
       state.visibility = 'public';
-      document.body.classList.remove('reduced-motion', 'reduced-sensory', 'fx-off');
+      document.body.classList.remove('reduced-motion', 'reduced-sensory', 'fx-off', 'high-contrast');
       try { localStorage.removeItem('intrilex:settings'); } catch { /* ignore */ }
       try { localStorage.removeItem('intrilex:network-server-url'); } catch { /* ignore */ }
       renderSettingsInner(container);

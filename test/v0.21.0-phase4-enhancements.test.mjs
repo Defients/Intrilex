@@ -75,9 +75,12 @@ test('p4: sw-register.js registers service worker', async () => {
   assert.match(js, /serviceWorker.*register\s*\(\s*['"]sw\.js['"]/);
 });
 
-test('p4: index.html references sw-register.js (no inline script)', async () => {
+test('p4: index.html references sw-register.js or sw-kill.js (no inline script)', async () => {
   const html = await readDist('index.html');
-  assert.match(html, /src="sw-register\.js"/);
+  // v0.27.1+: PWA was replaced with a self-unregistering kill switch.
+  // index.html may reference either sw-register.js (full PWA) or sw-kill.js (kill switch).
+  assert.ok(html.match(/src="sw-register\.js"/) || html.match(/src="sw-kill\.js"/),
+    'index.html must reference either sw-register.js or sw-kill.js');
   // Verify no inline SW registration script remains
   assert.doesNotMatch(html, /<script>\s*if\s*\(\s*['"]serviceWorker['"]/,
     'index.html must not have inline SW registration script');

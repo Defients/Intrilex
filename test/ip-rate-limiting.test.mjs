@@ -213,10 +213,16 @@ test('ip-rate-limit: spectator count limit is enforced', async () => {
     assert.ok(specResp, 'Spectator should receive a response');
     assert.equal(specResp.type, 'SPECTATE_JOINED');
 
-    // Verify the source has the spectator limit check
+    // Verify the source has the spectator limit check. The constant is defined
+    // in server.mjs and the rejection message lives in the extracted
+    // handlers/spectator-handlers.mjs (handler-module extraction architecture).
     const source = readFileSync(new URL('../apps/match-server/src/server.mjs', import.meta.url), 'utf8');
+    const spectatorHandlersSrc = readFileSync(new URL('../apps/match-server/src/handlers/spectator-handlers.mjs', import.meta.url), 'utf8');
     assert.ok(source.includes('MAX_SPECTATORS_PER_MATCH'), 'Server must define MAX_SPECTATORS_PER_MATCH');
-    assert.ok(source.includes('Spectator limit reached'), 'Server must reject with spectator limit message');
+    assert.ok(
+      source.includes('Spectator limit reached') || spectatorHandlersSrc.includes('Spectator limit reached'),
+      'Server must reject with spectator limit message'
+    );
 
     try { spec.close(); } catch { /* ignore */ }
     try { p1.close(); } catch { /* ignore */ }

@@ -12,7 +12,8 @@ import { analyzePuzzle } from './puzzle-solver.mjs';
 import { listPuzzleDefinitions, getPuzzleDefinition } from './puzzle-fixtures.mjs';
 import { renderPuzzleWorkspace } from './puzzle-renderer.mjs';
 import { reconstructInitialState } from './puzzle-runtime.mjs';
-import { PuzzleRuntimeStatus } from './puzzle-types.mjs';
+import { PuzzleRuntimeStatus, PuzzleResultKind } from './puzzle-types.mjs';
+import { recordPuzzleAttempt, getPuzzleProgress } from './puzzle-progress.mjs';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -21,6 +22,8 @@ let _currentId = null;
 let _solverResult = null;
 let _analyzing = false;
 let _analysisFingerprint = null;
+let _lastRecordedId = null;
+let _lastRecordedResult = null;
 
 async function ensureAutonomy() {
   // Inject the autonomy-runtime module so the AI opponent policy works.
@@ -37,12 +40,26 @@ function rerender(container) {
   const snap = _runtime ? _runtime.getSnapshot() : { status: PuzzleRuntimeStatus.UNLOADED };
   const diagnostics = _runtime ? _runtime.getDiagnostics() : null;
   const fixtures = listPuzzleDefinitions();
+  // Record puzzle attempt result when the puzzle reaches a terminal state
+  if (_runtime && _currentId && _runtime.attempt) {
+    const result = _runtime.attempt.result;
+    if (result === PuzzleResultKind.SUCCESS || result === PuzzleResultKind.FAILURE) {
+      // Only record once per attempt — check if we already recorded this result
+      if (_lastRecordedId !== _currentId || _lastRecordedResult !== result) {
+        recordPuzzleAttempt(_currentId, result);
+        _lastRecordedId = _currentId;
+        _lastRecordedResult = result;
+      }
+    }
+  }
+  const progress = getPuzzleProgress();
   container.innerHTML = renderPuzzleWorkspace(snap, {
     fixtures,
     currentId: _currentId,
     diagnostics,
     solverResult: _solverResult,
     analyzing: _analyzing,
+    puzzleProgress: progress,
   });
   bindEvents(container);
 }
@@ -85,6 +102,8 @@ function loadPuzzle(container, id) {
   _currentId = id;
   _solverResult = null;
   _analyzing = false;
+  _lastRecordedId = null;
+  _lastRecordedResult = null;
   if (!_runtime) _runtime = new PuzzleRuntime({ autoAdvance: true });
   const result = _runtime.load(def);
   if (!result.valid) console.warn('[puzzle] validation issues:', result.issues);

@@ -21,7 +21,7 @@
 // with Online Ranked IR/record.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct } from '../state.js';
+import { app, esc, pct, state } from '../state.js';
 import { loadProfile, isStorageAvailable } from '../play/local-profile.mjs';
 import { getAchievementRuntime, getDefinition } from '../play/achievements/achievement-runtime.js';
 import { ratingToTierDivision, RankTier } from '@intrilex/account-domain/rank-tier';
@@ -45,6 +45,12 @@ import {
   getBadgeDefinition,
 } from '../play/profile/profile-data.js';
 import { isSupabaseConfigured } from '../play/network/supabase-client.js';
+import { getReplay, listMatchStats, listReplays } from '../play/persistence.js';
+import { downloadReplay } from '../play/replay-library.js';
+import { buildStrategicFingerprint } from '@intrilex/account-domain/strategic-fingerprint';
+import { buildEnrichedStats } from '@intrilex/account-domain/match-stats-aggregator';
+import { renderMasterySection, computeUsageFromReplays } from '@intrilex/decision-intelligence/mastery-tracks';
+import { generateReplayLesson, renderLessonStep, getLessonSummary } from '@intrilex/decision-intelligence/replay-lesson';
 import { getAuthState, getProfile as getAuthProfile } from '../play/network/auth-controller.js';
 import {
   fetchRelationshipStatus,
@@ -210,6 +216,23 @@ async function loadProfileData() {
   }
   // localProfile was already loaded at the start of renderProfile();
   // no need to re-read from storage here.
+
+  // Epoch 7: Load match stats from IndexedDB for fingerprint enrichment
+  if (isStorageAvailable()) {
+    try {
+      const stats = await listMatchStats(100);
+      _ws.localProfile = _ws.localProfile || {};
+      _ws.localProfile.replayStats = stats;
+      // G2: Load replays and compute mechanic usage for mastery tracks
+      const replays = await listReplays();
+      _ws.localProfile.mechanicUsage = computeUsageFromReplays(replays);
+    } catch (err) {
+      console.warn('[profile] listMatchStats failed:', err?.message ?? err);
+      _ws.localProfile = _ws.localProfile || {};
+      _ws.localProfile.replayStats = [];
+      _ws.localProfile.mechanicUsage = {};
+    }
+  }
 }
 
 // ── Skeleton ────────────────────────────────────────────────────
@@ -420,8 +443,12 @@ function renderRelationshipButtons() {
   const mutualTag = s.isMutualRival
     ? `<span class="profile-mutual-rival-tag" data-testid="profile-mutual-rival-tag" title="You both rival each other">⇌ Mutual Rival</span>`
     : '';
+  // C3i: Challenge button — creates a private duel invite for this player
+  const challengeBtn = s.blocking
+    ? '' // Don't show challenge button if you've blocked them
+    : `<button class="btn btn-sm profile-rel-btn profile-rel-btn-challenge" data-action="challenge" data-testid="profile-challenge-btn" aria-label="Challenge to a duel">⚔ Challenge</button>`;
   return `<div class="profile-hero-actions profile-relationship-actions" data-testid="profile-relationship-actions">
-    ${followBtn}${rivalBtn}${mutualTag}
+    ${followBtn}${rivalBtn}${challengeBtn}${mutualTag}
   </div>`;
 }
 
@@ -436,7 +463,7 @@ function wireRelationshipActions(profile) {
   if (!profile?.identity) return;
   if (!isSupabaseConfigured()) return;
   const pid = profile.identity.publicPlayerId;
-  const actions = _container.querySelectorAll('[data-action="follow"],[data-action="unfollow"],[data-action="set-rival"],[data-action="unset-rival"]');
+  const actions = _container.querySelectorAll('[data-action="follow"],[data-action="unfollow"],[data-action="set-rival"],[data-action="unset-rival"],[data-action="challenge"]');
   for (const btn of actions) {
     btn.addEventListener('click', async () => {
       const action = btn.dataset.action;
@@ -461,6 +488,22 @@ function wireRelationshipActions(profile) {
         } else if (action === 'unset-rival') {
           const res = await unsetRival(pid);
           if (res.ok && _ws.relationshipStatus) _ws.relationshipStatus.rivaling = false;
+        } else if (action === 'challenge') {
+          // C3i: Challenge flow — navigate to play with a pre-filled invite
+          // The challenge creates a private duel; the invite code is shared
+          // via the profile page (copied to clipboard or shown in a dialog).
+          const targetAccountId = profile?.identity?.accountId;
+          const targetName = profile?.identity?.displayName ?? 'this player';
+          // Navigate to the play page with challenge context
+          window.location.hash = `#/play?challenge=${encodeURIComponent(targetName)}`;
+          if (targetAccountId) {
+            sessionStorage.setItem('intrilex:challenge-target', JSON.stringify({
+              accountId: targetAccountId,
+              displayName: targetName,
+              publicPlayerId: pid,
+            }));
+          }
+          return; // Don't re-render the profile hero — we're navigating away
         }
       } catch (err) {
         console.warn('[profile] relationship action failed:', err?.message ?? err);
@@ -692,6 +735,9 @@ function renderOverviewTab(profile, isSelf) {
   const recentHtml = recentMatches.length > 0 ? renderRecentMatches(recentMatches.slice(0, 5), isSelf) : '';
   const seasonHtml = seasonHistory.length > 0 ? renderSeasonHistoryMini(seasonHistory) : '';
   const localSection = isSelf && _ws.localProfile ? renderLocalPlaySection(_ws.localProfile) : '';
+  // G2: Mastery tracks from mechanic usage data computed from local replays
+  const usageByMechanic = _ws.localProfile?.mechanicUsage ?? {};
+  const masteryHtml = isSelf && Object.keys(usageByMechanic).length > 0 ? renderMasterySection(usageByMechanic) : '';
 
   return `<div class="profile-overview" data-testid="profile-overview">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:16px">
@@ -699,6 +745,7 @@ function renderOverviewTab(profile, isSelf) {
       ${achievementSummary}
     </div>
     ${showcaseHtml}
+    ${masteryHtml}
     ${recentHtml}
     ${seasonHtml}
     ${localSection}
@@ -791,7 +838,7 @@ function raritySymbol(rarity) {
 }
 
 function renderRecentMatches(matches, _isSelf) {
-  const items = matches.map(m => renderMatchItem(m)).join('');
+  const items = matches.map(m => renderMatchItem(m, _isSelf)).join('');
   return `<section class="panel" style="margin-bottom:16px" data-testid="profile-recent-matches"><div class="panel-body">
     <h3 style="margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">Recent Ranked Matches</h3>
     <div style="display:flex;flex-direction:column;gap:8px">${items}</div>
@@ -799,20 +846,40 @@ function renderRecentMatches(matches, _isSelf) {
   </div></section>`;
 }
 
-function renderMatchItem(m) {
+function renderMatchItem(m, isSelf) {
   const resultClass = m.result === 'WIN' ? 'color:var(--accent,#00c8dc)' : m.result === 'LOSS' ? 'color:var(--danger,#e55)' : 'color:var(--text-dim)';
   const delta = m.ratingDelta != null ? (m.ratingDelta >= 0 ? `+${m.ratingDelta}` : `${m.ratingDelta}`) : '';
   const deltaClass = m.ratingDelta > 0 ? 'color:var(--accent,#00c8dc)' : m.ratingDelta < 0 ? 'color:var(--danger,#e55)' : '';
   const date = m.timestamp ? formatMatchDate(m.timestamp) : '';
   const opponent = m.opponentDisplayName || m.opponentHandle || 'Opponent';
+  // Replay download button — only for the profile owner. Replays are fetched
+  // from local IndexedDB (saved during the terminal screen via
+  // createNetworkReplayRecord + saveReplay). If not saved locally, the button
+  // shows a tooltip explaining the replay is unavailable.
+  const replayBtn = isSelf && m.matchId
+    ? `<button class="btn btn-sm profile-match-replay-btn" data-action="download-match-replay" data-match-id="${esc(m.matchId)}" title="Download certified replay" aria-label="Download replay for match ${esc(m.matchId)}" style="font-size:11px;padding:2px 8px;margin-left:8px;color:var(--text-dim);border-color:rgba(255,255,255,0.1)">⬇ Replay</button>`
+    : '';
+  // Epoch 7: Branch button — explore alternate lines from this match's replay
+  const branchBtn = isSelf && m.matchId
+    ? `<button class="btn btn-sm profile-match-branch-btn" data-action="branch-match-replay" data-match-id="${esc(m.matchId)}" title="Explore alternate lines from this match" aria-label="Branch replay for match ${esc(m.matchId)}" style="font-size:11px;padding:2px 8px;margin-left:4px;color:var(--text-dim);border-color:rgba(255,255,255,0.1)">⎇ Branch</button>`
+    : '';
+  // L6: Replay lesson button — guided replay commentary
+  const lessonBtn = isSelf && m.matchId
+    ? `<button class="btn btn-sm profile-match-lesson-btn" data-action="view-replay-lesson" data-match-id="${esc(m.matchId)}" title="View guided replay lesson" aria-label="View lesson for match ${esc(m.matchId)}" style="font-size:11px;padding:2px 8px;margin-left:4px;color:var(--text-dim);border-color:rgba(255,255,255,0.1)">📖 Lesson</button>`
+    : '';
   return `<div class="match-item" data-testid="profile-match-item" style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:6px">
     <div>
       <span style="${resultClass};font-weight:500">${esc(m.result)}</span>
       <span style="color:var(--text-dim);margin-left:8px">vs ${esc(opponent)}</span>
     </div>
-    <div style="text-align:right">
-      ${delta ? `<span style="${deltaClass};font-weight:500">${esc(delta)} IR</span><br>` : ''}
-      <small style="color:var(--text-dim)">${esc(date)}</small>
+    <div style="text-align:right;display:flex;align-items:center;gap:4px">
+      <div>
+        ${delta ? `<span style="${deltaClass};font-weight:500">${esc(delta)} IR</span><br>` : ''}
+        <small style="color:var(--text-dim)">${esc(date)}</small>
+      </div>
+      ${replayBtn}
+      ${branchBtn}
+      ${lessonBtn}
     </div>
   </div>`;
 }
@@ -883,9 +950,65 @@ function renderRankedTab(profile, isSelf) {
 
   return `<div class="profile-ranked-tab" data-testid="profile-ranked-tab">
     ${renderRankedDetailCard(ranked)}
+    ${renderStrategicFingerprintCard(ranked, isSelf)}
     ${ratingHistory.length >= 2 ? renderRatingHistoryChart(ratingHistory) : ''}
     ${seasonHistory.length > 0 ? renderSeasonHistoryFull(seasonHistory) : ''}
   </div>`;
+}
+
+/**
+ * Render the strategic fingerprint card from ranked stats.
+ * Shows the player's playstyle archetype and top traits.
+ * @param {Object} ranked - The ranked profile data
+ * @returns {string}
+ */
+function renderStrategicFingerprintCard(ranked, isSelf) {
+  if (!ranked || ranked.isPlacement || ranked.games === 0) return '';
+  // Build enriched stats from ranked DTO + any available local replay data.
+  // When match-level data is available (from IndexedDB replays), we use
+  // real averages for turns, IR margin, draw pile, and goal progress.
+  // Otherwise we fall back to sensible defaults.
+  const localReplays = isSelf && _ws.localProfile?.replayStats ? _ws.localProfile.replayStats : [];
+  const playerPublicId = _ws.profile?.player?.publicPlayerId ?? '';
+  let stats, fingerprint;
+  try {
+    stats = buildEnrichedStats(ranked, localReplays, playerPublicId);
+    fingerprint = buildStrategicFingerprint(stats);
+  } catch (err) {
+    console.warn('[profile] fingerprint generation failed:', err?.message ?? err);
+    return '';
+  }
+  if (fingerprint.traits.length === 0) return '';
+
+  // Coverage indicator: how many match-level records are available
+  const coverageCount = localReplays.length;
+  const coverageLabel = coverageCount > 0
+    ? `Based on ${coverageCount} match${coverageCount === 1 ? '' : 's'}`
+    : 'Estimated from ranked record';
+
+  const traitBadges = fingerprint.traits.slice(0, 4).map(t => {
+    const pctScore = Math.round(t.score * 100);
+    return `<span class="profile-fingerprint-trait" data-testid="profile-fingerprint-trait" title="${esc(t.description)}">
+      <span class="profile-fingerprint-icon" aria-hidden="true">${t.icon}</span>
+      <span class="profile-fingerprint-label">${esc(t.label)}</span>
+      <span class="profile-fingerprint-score">${pctScore}%</span>
+    </span>`;
+  }).join('');
+
+  return `<section class="panel" style="margin-bottom:16px" data-testid="profile-fingerprint">
+    <div class="panel-body">
+      <h3 style="margin:0 0 8px;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">Strategic Fingerprint</h3>
+      <div class="profile-fingerprint-archetype">
+        <span class="profile-fingerprint-archetype-icon" aria-hidden="true">${esc(fingerprint.archetypeIcon)}</span>
+        <div>
+          <div class="profile-fingerprint-archetype-name" data-testid="profile-fingerprint-archetype">${esc(fingerprint.primaryArchetype)}</div>
+          <div class="profile-fingerprint-summary">${esc(fingerprint.summary)}</div>
+        </div>
+      </div>
+      <div class="profile-fingerprint-traits">${traitBadges}</div>
+      <div class="profile-fingerprint-coverage" data-testid="profile-fingerprint-coverage">${esc(coverageLabel)}</div>
+    </div>
+  </section>`;
 }
 
 function renderRankedDetailCard(ranked) {
@@ -899,6 +1022,10 @@ function renderRankedDetailCard(ranked) {
   const peakLine = ranked.peakRating != null && ranked.peakTier
     ? `${rankLabel(ranked.peakTier, ranked.peakDivision)} · ${ranked.peakRating} IR`
     : '—';
+  // Leaderboard link — shows when the player has a leaderboard position
+  const leaderboardLink = !ranked.isPlacement && ranked.leaderboardPosition
+    ? `<a href="#/leaderboard" class="profile-leaderboard-link" data-testid="profile-leaderboard-link">View on Leaderboard →</a>`
+    : '';
 
   return `<section class="panel" style="margin-bottom:16px" data-testid="profile-ranked-detail"><div class="panel-body">
     <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
@@ -908,6 +1035,7 @@ function renderRankedDetailCard(ranked) {
         <h3 style="margin:0;font-size:24px;color:var(--text,#e0f0ff)" data-testid="profile-ranked-tier">${esc(rankLine)}</h3>
         <div style="color:var(--text-dim);margin:4px 0">${ranked.rating} IR</div>
         ${ranked.leaderboardPosition ? `<div style="color:var(--accent,#00c8dc)">Season Rank #${ranked.leaderboardPosition}</div>` : ''}
+        ${leaderboardLink}
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px">
@@ -976,6 +1104,7 @@ function renderSeasonHistoryFull(seasons) {
   return `<section class="panel" style="margin-bottom:16px" data-testid="profile-season-history-full"><div class="panel-body">
     <h3 style="margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">Season History</h3>
     ${items}
+    <a href="#/seasons" class="profile-leaderboard-link" data-testid="profile-season-archive-link" style="margin-top:12px">View All Seasons →</a>
   </div></section>`;
 }
 
@@ -1034,7 +1163,7 @@ function renderMatchesTab(profile, isSelf) {
       ${isSelf ? '<p style="color:var(--text-dim);margin:12px 0">Play Ranked matches to build your history.</p>' : ''}
     </div>`;
   }
-  const items = matches.map(m => renderMatchItem(m)).join('');
+  const items = matches.map(m => renderMatchItem(m, isSelf)).join('');
   return `<div class="profile-matches-tab" data-testid="profile-matches-tab">
     <section class="panel"><div class="panel-body">
       <h3 style="margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)">Match History</h3>
@@ -1136,6 +1265,205 @@ function wireHeroActions(profile) {
   if (customizeBtn) customizeBtn.addEventListener('click', () => { _ws.customizeMode = true; renderCustomizePanel(profile, customizeBtn); });
   if (privacyBtn) privacyBtn.addEventListener('click', () => { _ws.privacyMode = true; renderPrivacyPanel(profile, privacyBtn); });
   if (matchesLink) matchesLink.addEventListener('click', () => { _ws.tab = 'matches'; renderCurrent(); });
+  wireMatchReplayButtons();
+  wireMatchBranchButtons();
+  wireMatchLessonButtons();
+}
+
+/**
+ * Bind replay download buttons on match items. Fetches the certified replay
+ * from local IndexedDB (saved during the terminal screen) and triggers a file
+ * download. If the replay wasn't saved locally, shows an inline message.
+ */
+function wireMatchReplayButtons() {
+  const btns = _container.querySelectorAll('[data-action="download-match-replay"]');
+  btns.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const matchId = btn.getAttribute('data-match-id');
+      if (!matchId) return;
+      const replayId = `R-${matchId}`;
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+      btn.style.opacity = '0.6';
+      try {
+        const record = await getReplay(replayId);
+        if (!record || !record.certifiedReplay) {
+          btn.textContent = 'Not saved';
+          btn.style.color = 'var(--text-dim)';
+          btn.title = 'Replay was not saved locally. Download replays from the match terminal immediately after each game.';
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+            btn.style.opacity = '';
+            btn.style.color = '';
+            btn.title = 'Download certified replay';
+          }, 3000);
+          return;
+        }
+        downloadReplay(record, 'private');
+        btn.textContent = 'Downloaded ✓';
+        btn.style.color = 'var(--accent,#00c8dc)';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = originalText;
+          btn.style.opacity = '';
+          btn.style.color = '';
+        }, 2000);
+      } catch (err) {
+        btn.textContent = 'Error';
+        btn.style.color = 'var(--danger,#e55)';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = originalText;
+          btn.style.opacity = '';
+          btn.style.color = '';
+        }, 3000);
+      }
+    });
+  });
+}
+
+/**
+ * Epoch 7: Bind branch buttons on match items. Loads the replay from
+ * local IndexedDB, validates it with the replay-branching domain module,
+ * and navigates to /branches with the player replay context.
+ */
+function wireMatchBranchButtons() {
+  const btns = _container.querySelectorAll('[data-action="branch-match-replay"]');
+  btns.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const matchId = btn.getAttribute('data-match-id');
+      if (!matchId) return;
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+      try {
+        const replayId = `R-${matchId}`;
+        const record = await getReplay(replayId);
+        if (!record || !record.certifiedReplay) {
+          btn.textContent = 'No replay';
+          btn.style.color = 'var(--text-dim)';
+          btn.title = 'Replay was not saved locally. Download replays from the match terminal immediately after each game.';
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+            btn.style.color = '';
+          }, 3000);
+          return;
+        }
+        // Import the replay-branching domain module
+        const { buildReplayBranchSummary } = await import('@intrilex/account-domain/replay-branching');
+        const replay = record.certifiedReplay;
+        const summary = buildReplayBranchSummary({
+          replayId,
+          contentHash: replay.contentHash ?? record.contentHash ?? '',
+          commands: replay.commands ?? [],
+        });
+        if (!summary.supported) {
+          btn.textContent = 'Unsupported';
+          btn.style.color = 'var(--text-dim)';
+          btn.title = `Replay branching not supported: ${summary.unsupportedReason}`;
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+            btn.style.color = '';
+          }, 3000);
+          return;
+        }
+        // Store the branch context and navigate to /branches
+        if (!state.branchContext) state.branchContext = {};
+        state.branchContext.playerReplay = {
+          replayId,
+          matchId,
+          contentHash: summary.contentHash,
+          commands: replay.commands,
+          checkpoints: summary.checkpoints,
+          source: 'player',
+        };
+        // Navigate to /branches
+        location.hash = '#/branches';
+      } catch {
+        btn.textContent = 'Error';
+        btn.style.color = 'var(--danger,#e55)';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = originalText;
+          btn.style.color = '';
+        }, 3000);
+      }
+    });
+  });
+}
+
+/**
+ * L6: Bind replay lesson buttons on match items. Loads the replay from
+ * local IndexedDB, generates a guided lesson, and displays it in a modal.
+ */
+function wireMatchLessonButtons() {
+  const btns = _container.querySelectorAll('[data-action="view-replay-lesson"]');
+  btns.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const matchId = btn.getAttribute('data-match-id');
+      if (!matchId) return;
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+      try {
+        const replayId = `R-${matchId}`;
+        const record = await getReplay(replayId);
+        if (!record || !record.replay) {
+          btn.textContent = 'No replay';
+          btn.style.color = 'var(--text-dim)';
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+            btn.style.color = '';
+          }, 3000);
+          return;
+        }
+        const replay = record.replay;
+        const steps = generateReplayLesson(replay);
+        if (steps.length === 0) {
+          btn.textContent = 'Unavailable';
+          btn.style.color = 'var(--text-dim)';
+          btn.title = 'This replay cannot be converted to a lesson. It may be from an older version or lack command data.';
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+            btn.style.color = '';
+          }, 3000);
+          return;
+        }
+        const summary = getLessonSummary(steps);
+        const stepsHtml = steps.map(renderLessonStep).join('');
+        const overlay = document.createElement('div');
+        overlay.className = 'profile-modal-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10000';
+        overlay.innerHTML = `<div style="background:var(--bg,#0d1117);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:8px;max-width:640px;width:90%;max-height:80vh;overflow-y:auto;padding:24px" data-testid="replay-lesson-modal">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="margin:0;font-size:18px;color:var(--text,#e0f0ff)">Replay Lesson — ${esc(matchId)}</h3>
+            <button class="btn btn-sm" data-action="close-lesson-modal" style="color:var(--text-dim)">✕</button>
+          </div>
+          <p style="margin:0 0 16px;color:var(--text-dim);font-size:13px">${summary.commentedSteps} commented steps across ${summary.mechanics.length} mechanics</p>
+          <div style="display:flex;flex-direction:column;gap:8px">${stepsHtml}</div>
+        </div>`;
+        document.body.appendChild(overlay);
+        overlay.querySelector('[data-action="close-lesson-modal"]')?.addEventListener('click', () => overlay.remove());
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        btn.disabled = false;
+        btn.textContent = originalText;
+      } catch {
+        btn.textContent = 'Error';
+        btn.style.color = 'var(--danger,#e55)';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = originalText;
+          btn.style.color = '';
+        }, 3000);
+      }
+    });
+  });
 }
 
 // ── Edit Profile panel ──────────────────────────────────────────

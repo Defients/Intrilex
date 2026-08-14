@@ -21,6 +21,9 @@ import { renderTournament } from './workspaces/tournament.js';
 import { renderProfile } from './workspaces/profile.js';
 import { renderPlayers, destroyPlayers } from './workspaces/players.js';
 import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.js';
+import { renderSeasonArchive } from './workspaces/season-archive.js';
+import { renderMetaReport } from './workspaces/meta-report.js';
+import { renderHumanTournaments } from './workspaces/human-tournaments.js';
 import { renderAuth } from './workspaces/auth.js';
 import { renderSettings } from './workspaces/settings.js';
 import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js';
@@ -258,10 +261,10 @@ function renderLandingMode(r) {
     renderLanding();
     openPlayersOverlay();
   }
-  else if (r === '/dev/puzzles') {
-    // Puzzle Mode v0.1.0 — hidden developer experimental route.
-    // Renders into the landing container (homepage shell hidden) so it
-    // stays out of production navigation and matchmaking flows.
+  else if (r === '/dev/puzzles' || r === '/puzzles') {
+    // Puzzle Mode — promoted to player-facing /puzzles route (v0.28.0).
+    // The /dev/puzzles route is kept for backward compatibility.
+    // Renders into the landing container (homepage shell hidden).
     if (landingContainer) landingContainer.innerHTML = '<div id="puzzle-root"></div>';
     const root = landingContainer?.querySelector('#puzzle-root');
     if (root) {
@@ -273,6 +276,36 @@ function renderLandingMode(r) {
     // Leaderboard is an overlay on the homepage, not a Simulation Lab workspace.
     renderLanding();
     openLeaderboardOverlay();
+  }
+  else if (r === '/seasons') {
+    // Season Archive — player-facing summary of all past ranked seasons.
+    if (landingContainer) {
+      landingContainer.innerHTML = '';
+      renderSeasonArchive().catch((err) => {
+        console.error('[season-archive] failed to render:', err);
+        landingContainer.innerHTML = `<div class="notice danger"><strong>Season archive error.</strong><pre>${esc(err.stack ?? err.message)}</pre></div>`;
+      });
+    }
+  }
+  else if (r === '/meta') {
+    // Meta Report — competitive landscape aggregate view.
+    if (landingContainer) {
+      landingContainer.innerHTML = '';
+      renderMetaReport().catch((err) => {
+        console.error('[meta-report] failed to render:', err);
+        landingContainer.innerHTML = `<div class="notice danger"><strong>Meta report error.</strong><pre>${esc(err.stack ?? err.message)}</pre></div>`;
+      });
+    }
+  }
+  else if (r === '/tournaments') {
+    // Human Tournaments — discovery, registration, and bracket viewer.
+    if (landingContainer) {
+      landingContainer.innerHTML = '';
+      renderHumanTournaments().catch((err) => {
+        console.error('[human-tournaments] failed to render:', err);
+        landingContainer.innerHTML = `<div class="notice danger"><strong>Tournament error.</strong><pre>${esc(err.stack ?? err.message)}</pre></div>`;
+      });
+    }
   }
 }
 
@@ -803,7 +836,10 @@ function renderLanding() {
   </div>`;
   bindLandingEvents();
   loadContinueCard();
-  showPreAlphaOverlay();
+  const preAlphaScheduled = showPreAlphaOverlay();
+  // If the pre-alpha notice was already acknowledged (skipped), show the
+  // developer blog directly — otherwise it appears after the pre-alpha dismiss.
+  if (!preAlphaScheduled) showDevBlogOverlay(2000);
   maybeSkipLandingVideo();
 }
 
@@ -836,7 +872,12 @@ function maybeSkipLandingVideo() {
 
 let _preAlphaOverlayTimer = null;
 
-/** Show the pre-alpha announcement overlay (dismissable, shown once per session). */
+/**
+ * Show the pre-alpha announcement overlay (dismissable, shown once per session).
+ * Returns true if the overlay was scheduled, false if it was skipped because
+ * the user already acknowledged it within the 12-hour window.
+ * @returns {boolean}
+ */
 function showPreAlphaOverlay() {
   if (_preAlphaOverlayTimer) { clearTimeout(_preAlphaOverlayTimer); _preAlphaOverlayTimer = null; }
   const existing = document.getElementById('prealpha-overlay');
@@ -848,7 +889,7 @@ function showPreAlphaOverlay() {
   const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
   const lastAck = Number(localStorage.getItem('intrilex-prealpha-acknowledged-at') || 0);
   const acknowledged = lastAck > 0 && (Date.now() - lastAck) < TWELVE_HOURS_MS;
-  if (acknowledged) return; // still within the 12-hour window — skip overlay
+  if (acknowledged) return false; // still within the 12-hour window — skip overlay
 
   const firstTime = lastAck === 0;
   const waitSeconds = firstTime ? 5 : 2;
@@ -903,12 +944,558 @@ function showPreAlphaOverlay() {
       localStorage.setItem('intrilex-prealpha-acknowledged-at', String(Date.now()));
       overlay.classList.remove('prealpha-overlay--visible');
       setTimeout(() => overlay.remove(), 400);
+      // After dismissing the pre-alpha notice, surface the developer blog
+      // ("You're Early. Quite Early." — a note from Deffy).
+      showDevBlogOverlay(600);
     });
 
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay && !btn.disabled) btn.click();
     });
   }, 2000);
+  return true;
+}
+
+let _devBlogOverlayTimer = null;
+
+/**
+ * Show the developer blog overlay — "You're Early. Quite Early.", a personal
+ * note from Deffy, the creator of Intrilex. Shown once per browser: it appears
+ * either right after the pre-alpha notice is acknowledged, or directly on
+ * landing render if the pre-alpha notice was already acknowledged within its
+ * 12-hour window. Dismissal is permanent (localStorage flag).
+ * @param {number} [delay=2000] - ms to wait before showing the overlay.
+ */
+function showDevBlogOverlay(delay = 2000) {
+  if (_devBlogOverlayTimer) { clearTimeout(_devBlogOverlayTimer); _devBlogOverlayTimer = null; }
+  // Permanent flag — the blog is a one-time welcome message.
+  if (localStorage.getItem('intrilex-devblog-acknowledged-at')) return;
+
+  _devBlogOverlayTimer = setTimeout(() => {
+    // Guard: if the user navigated away from the landing page during the
+    // delay, skip showing the overlay — it would appear on the wrong route.
+    if (!landingContainer.isConnected || landingContainer.style.display === 'none') return;
+    const existing = document.getElementById('devblog-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'devblog-overlay';
+    overlay.className = 'devblog-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', 'devblog-title');
+    overlay.innerHTML = `<div class="devblog-card">
+      <div class="devblog-progress" aria-hidden="true"><div class="devblog-progress-fill" id="devblog-progress-fill"></div></div>
+      <button class="devblog-close" id="devblog-close" aria-label="Close note">&times;</button>
+      <header class="devblog-header">
+        <div class="devblog-monogram" aria-hidden="true">D</div>
+        <div class="devblog-badge"><span class="devblog-badge-dot" aria-hidden="true"></span>FROM THE CREATOR</div>
+        <h1 class="devblog-title" id="devblog-title">You&rsquo;re Early. Quite Early.</h1>
+        <p class="devblog-subtitle">A note from <strong>Deffy</strong>, Creator of Intrilex</p>
+      </header>
+      <div class="devblog-audio" id="devblog-audio">
+        <div class="devblog-audio-top">
+          <div class="devblog-audio-label"><span class="devblog-audio-icon" aria-hidden="true">&#9835;</span>Listen to this note</div>
+          <div class="devblog-voices" id="devblog-voices" role="tablist" aria-label="Choose a reader">
+            <button class="devblog-voice devblog-voice--woman" data-voice="woman" data-src="assets/dev-note-woman.wav" data-duration="414.70" data-accent="--magenta" data-accent-rgb="238,108,183" role="tab" aria-selected="false">
+              <span class="devblog-voice-name">Woman</span>
+              <span class="devblog-voice-dur">6:55</span>
+            </button>
+            <button class="devblog-voice devblog-voice--streamer" data-voice="streamer" data-src="assets/dev-note-streamer.wav" data-duration="479.90" data-accent="--blue" data-accent-rgb="91,156,240" role="tab" aria-selected="false">
+              <span class="devblog-voice-name">Male Streamer</span>
+              <span class="devblog-voice-dur">8:00</span>
+            </button>
+            <button class="devblog-voice devblog-voice--ymzo" data-voice="ymzo" data-src="assets/dev-note-ymzo.wav" data-duration="609.13" data-accent="--violet" data-accent-rgb="167,139,250" role="tab" aria-selected="false">
+              <span class="devblog-voice-name">Ymzo</span>
+              <span class="devblog-voice-dur">10:09</span>
+            </button>
+            <button class="devblog-voice devblog-voice--developer devblog-voice--active" data-voice="developer" data-src="assets/dev-note.wav" data-duration="426.80" data-accent="--amber" data-accent-rgb="241,189,93" role="tab" aria-selected="true">
+              <span class="devblog-voice-name">Developer</span>
+              <span class="devblog-voice-dur">7:07</span>
+            </button>
+          </div>
+        </div>
+        <div class="devblog-audio-controls">
+          <button class="devblog-audio-btn devblog-audio-skip" id="devblog-audio-back" aria-label="Skip back 10 seconds" title="Skip back 10s">&#9664;&#9664;</button>
+          <button class="devblog-audio-btn devblog-audio-play" id="devblog-audio-play" aria-label="Play audio" title="Play">
+            <span class="devblog-audio-play-icon" aria-hidden="true">&#9654;</span>
+            <span class="devblog-audio-pause-icon" aria-hidden="true">&#10074;&#10074;</span>
+          </button>
+          <button class="devblog-audio-btn devblog-audio-skip" id="devblog-audio-fwd" aria-label="Skip forward 10 seconds" title="Skip forward 10s">&#9654;&#9654;</button>
+          <div class="devblog-audio-time" id="devblog-audio-current">0:00</div>
+          <div class="devblog-audio-seek-wrap">
+            <input type="range" class="devblog-audio-seek" id="devblog-audio-seek" min="0" max="426.8" step="0.1" value="0" aria-label="Seek" />
+            <div class="devblog-audio-seek-buffer" id="devblog-audio-buffer" aria-hidden="true"></div>
+            <div class="devblog-audio-seek-progress" id="devblog-audio-seek-progress" aria-hidden="true"></div>
+          </div>
+          <div class="devblog-audio-time devblog-audio-duration" id="devblog-audio-duration">7:07</div>
+          <div class="devblog-audio-vol-wrap">
+            <button class="devblog-audio-btn devblog-audio-mute" id="devblog-audio-mute" aria-label="Mute" title="Mute">
+              <span class="devblog-audio-vol-icon" aria-hidden="true">&#128266;</span>
+              <span class="devblog-audio-mute-icon" aria-hidden="true">&#128263;</span>
+            </button>
+            <input type="range" class="devblog-audio-vol" id="devblog-audio-vol" min="0" max="1" step="0.01" value="1" aria-label="Volume" />
+          </div>
+        </div>
+        <audio id="devblog-audio-el" preload="metadata" src="assets/dev-note.wav"></audio>
+      </div>
+      <div class="devblog-content" id="devblog-content">
+        <p class="devblog-lede">Hey.</p>
+        <p>I&rsquo;m <strong>Deffy</strong>, the creator of Intrilex.</p>
+        <p>And, uh&hellip;</p>
+        <p class="devblog-pull"><strong>I see you.</strong></p>
+        <p>More of you have been finding this site than I expected&mdash;especially considering I haven&rsquo;t exactly gone out of my way to announce that it&rsquo;s here yet.</p>
+        <p>Which is exciting.</p>
+        <p>And slightly terrifying.</p>
+        <p>Because you&rsquo;ve caught Intrilex at a very specific moment:</p>
+        <p class="devblog-pull"><strong>the arena exists, but I&rsquo;m still building the damn doors.</strong></p>
+        <p>Right now, Intrilex is under extremely active development. The website is online, the rules are taking their proper form, and a large amount of the infrastructure underneath the game already exists&mdash;but the actual public gameplay experience is <strong>not reliable enough yet for me to call it playable.</strong></p>
+        <p>I know.</p>
+        <p>You find a competitive card game, hit <strong>Play</strong>, and naturally expect to be able to&hellip; y&rsquo;know&hellip;</p>
+        <p class="devblog-pull"><strong>play the card game.</strong></p>
+        <p>Fair.</p>
+        <p>So rather than pretend otherwise, I want to tell you exactly what you&rsquo;ve stumbled into.</p>
+        <hr class="devblog-rule" />
+        <h2 class="devblog-heading">What <em>is</em> Intrilex?</h2>
+        <p>At its foundation, Intrilex uses something almost absurdly familiar:</p>
+        <p class="devblog-pull"><strong>a normal deck of playing cards.</strong></p>
+        <p>No proprietary 300-card collection required. No booster packs. No rotating pile of cardboard you need to purchase before you can understand what is happening.</p>
+        <p>Just the deck humanity already knows.</p>
+        <p>And then Intrilex asks:</p>
+        <p class="devblog-pull"><strong>How much game can we actually extract from it?</strong></p>
+        <p>Cards aren&rsquo;t merely numbers you throw onto a pile.</p>
+        <p>Ranks can carry distinct tactical functions. Cards can be played for <strong>Points or Effects</strong>. Actions can create responses. Responses can create counterplay. Persistent states can reshape future turns. Combinations reward planning. Timing matters. Resource management matters. Reading another player matters.</p>
+        <p>The same card that looks useless in one position can become exactly what you needed several decisions later.</p>
+        <p>The objective is understandable.</p>
+        <p>The path toward mastering it is very much not.</p>
+        <p>That&rsquo;s intentional.</p>
+        <p>Intrilex is meant to live in that wonderful territory where you can learn how to play&hellip;</p>
+        <p>&hellip;and then realize much later that you&rsquo;re only beginning to understand <strong>how to play well.</strong></p>
+        <hr class="devblog-rule" />
+        <h2 class="devblog-heading">This Didn&rsquo;t Appear Overnight</h2>
+        <p>Intrilex isn&rsquo;t something I decided to generate over a weekend because card games looked interesting.</p>
+        <p>This idea has been mutating, breaking, rebuilding, renaming itself, being reconsidered, and getting dragged forward by me for <strong>years</strong>.</p>
+        <p>A frankly unreasonable amount of my creative life has ended up somewhere inside it.</p>
+        <p>What you&rsquo;re seeing now is the point where a long-running private passion project is finally becoming an actual public system:</p>
+        <p class="devblog-pull"><strong>rules, software, identity, competition, players, and eventually a living game around all of it.</strong></p>
+        <p>And somehow&hellip;</p>
+        <p>some of you found it <strong>while I&rsquo;m still putting the pieces together.</strong></p>
+        <p>I wasn&rsquo;t quite prepared for that.</p>
+        <p>But I&rsquo;m very glad you&rsquo;re here.</p>
+        <hr class="devblog-rule" />
+        <h2 class="devblog-heading">So When Can I Actually Play?</h2>
+        <p>That is currently my priority.</p>
+        <p>Not one of my priorities.</p>
+        <p class="devblog-pull"><strong>The priority.</strong></p>
+        <p>I&rsquo;ve temporarily pushed my other projects aside so I can focus on getting Intrilex&rsquo;s playable experience across the line.</p>
+        <p>Could that take a few days?</p>
+        <p>Yep.</p>
+        <p>Could it take a week?</p>
+        <p>Yep.</p>
+        <p>Could I discover some horrible little networking goblin hiding underneath everything and need longer?</p>
+        <p class="devblog-pull"><strong>Also yep.</strong></p>
+        <p>I don&rsquo;t want to give you a fake countdown just because countdowns look good on websites.</p>
+        <p>I want the first real public duels to demonstrate why I&rsquo;ve spent all this time building Intrilex in the first place.</p>
+        <hr class="devblog-rule" />
+        <h2 class="devblog-heading">What Happens After That?</h2>
+        <p>First:</p>
+        <h3 class="devblog-subheading"><strong>You duel someone.</strong></h3>
+        <p>A real person.</p>
+        <p>Two players sitting across the same strange little battlefield, working from the same ancient deck of cards and trying to outthink each other.</p>
+        <p>That&rsquo;s the center of everything.</p>
+        <p>Then the world around those matches begins growing.</p>
+        <p>Player identities. Competition. Rankings. Rivalries. Social systems. Ways of finding the people you actually <em>want</em> to duel again.</p>
+        <p>And I&rsquo;m already experimenting with ways Intrilex can become more than straightforward PvP&mdash;including ideas like <strong>Puzzle Mode</strong>, where specific game states become problems to solve rather than ordinary matches to win.</p>
+        <p>There is an uncomfortable amount I want to build.</p>
+        <p>The difference now is that it finally has somewhere to live.</p>
+        <hr class="devblog-rule" />
+        <h2 class="devblog-chapter">You Have One Advantage</h2>
+        <p>Since you found Intrilex this early, you can do something future players won&rsquo;t be able to do:</p>
+        <p class="devblog-pull"><strong>learn it before they arrive.</strong></p>
+        <p>The <strong>Rules</strong> are currently the most complete part of the public experience.</p>
+        <p>So go snoop.</p>
+        <p>Study the ranks.</p>
+        <p>Figure out the scoring system.</p>
+        <p>Look at the Effects.</p>
+        <p>Start noticing the interactions.</p>
+        <p>Come up with something clever.</p>
+        <p>Because once the doors actually open, I&rsquo;d much rather discover that the people who wandered in early spent this awkward construction period preparing to absolutely ruin somebody&rsquo;s first match.</p>
+        <div class="devblog-cta-wrap">
+          <button class="devblog-rules-cta" id="devblog-rules-cta">Explore the Rules <span aria-hidden="true">&rarr;</span></button>
+        </div>
+        <hr class="devblog-rule" />
+        <h2 class="devblog-heading">One More Thing.</h2>
+        <p>If you&rsquo;re here during the beginning, I want the game to remember that.</p>
+        <p class="devblog-pull"><strong>Accounts created during Intrilex&rsquo;s first month will receive an exclusive early-user badge.</strong></p>
+        <p>Nothing that gives you a gameplay advantage.</p>
+        <p>Just proof that when Intrilex was still held together by ambition, debugging, and one increasingly sleep-deprived creator&hellip;</p>
+        <p class="devblog-pull"><strong>you were already here.</strong></p>
+        <p>And yes&mdash;</p>
+        <p>for the moment, this really is mostly <strong>just me</strong> building it.</p>
+        <p>So if you&rsquo;re looking around thinking:</p>
+        <p class="devblog-quote"><em>&ldquo;Wait. One guy is trying to build all of this?&rdquo;</em></p>
+        <p>Correct.</p>
+        <p>I have questioned this arrangement as well.</p>
+        <hr class="devblog-rule" />
+        <p>Anyway.</p>
+        <p class="devblog-pull"><strong>You&rsquo;re early. Quite early.</strong></p>
+        <p>Earlier than I expected you to be, actually.</p>
+        <p>I see you finding Intrilex.</p>
+        <p>I&rsquo;m nervous that the game isn&rsquo;t ready for you yet.</p>
+        <p>I&rsquo;m also more motivated than ever to make sure that when you come back&hellip;</p>
+        <p class="devblog-pull"><strong>it is.</strong></p>
+        <p>Take a look around.</p>
+        <p>Read the Rules&hellip;.</p>
+        <p>Get ahead while you still can.</p>
+        <p>And check back soon.</p>
+        <p>I&rsquo;m building.</p>
+        <div class="devblog-signature">
+          <p class="devblog-signoff">&mdash; <strong>Deffy</strong></p>
+          <p class="devblog-signoff-role">Creator of Intrilex</p>
+          <p class="devblog-pyah">PYAH.</p>
+        </div>
+      </div>
+      <footer class="devblog-footer">
+        <button class="devblog-dismiss" id="devblog-dismiss">Take me to the lab</button>
+      </footer>
+    </div>`;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('devblog-overlay--visible'));
+
+    const content = overlay.querySelector('#devblog-content');
+    const progressFill = overlay.querySelector('#devblog-progress-fill');
+    const closeBtn = overlay.querySelector('#devblog-close');
+    const dismissBtn = overlay.querySelector('#devblog-dismiss');
+    const rulesCta = overlay.querySelector('#devblog-rules-cta');
+
+    /** Permanently dismiss the blog overlay (also pauses audio if playing). */
+    const dismiss = () => {
+      const ae = overlay.querySelector('#devblog-audio-el');
+      if (ae) { try { ae.pause(); } catch { /* noop */ } }
+      localStorage.setItem('intrilex-devblog-acknowledged-at', String(Date.now()));
+      overlay.classList.remove('devblog-overlay--visible');
+      setTimeout(() => overlay.remove(), 420);
+    };
+
+    closeBtn.addEventListener('click', dismiss);
+    dismissBtn.addEventListener('click', dismiss);
+    const rulesCtaHandler = () => { dismiss(); location.hash = '#/rules'; };
+    rulesCta.addEventListener('click', rulesCtaHandler);
+
+    // ── Audio player: play/pause, seek, volume, skip, karaoke highlighting ──
+    const audioEl = overlay.querySelector('#devblog-audio-el');
+    const playBtn = overlay.querySelector('#devblog-audio-play');
+    const backBtn = overlay.querySelector('#devblog-audio-back');
+    const fwdBtn = overlay.querySelector('#devblog-audio-fwd');
+    const seekEl = overlay.querySelector('#devblog-audio-seek');
+    const seekProgress = overlay.querySelector('#devblog-audio-seek-progress');
+    const currentEl = overlay.querySelector('#devblog-audio-current');
+    const durationEl = overlay.querySelector('#devblog-audio-duration');
+    const volEl = overlay.querySelector('#devblog-audio-vol');
+    const muteBtn = overlay.querySelector('#devblog-audio-mute');
+    const audioSection = overlay.querySelector('#devblog-audio');
+    // Set initial accent color for the default Developer voice (amber).
+    // Variables are set on the overlay (root) so they cascade to both the
+    // audio controls and the content highlight bar.
+    overlay.style.setProperty('--devblog-accent', 'var(--amber)');
+    overlay.style.setProperty('--devblog-accent-rgb', '241,189,93');
+
+    /** Format seconds as M:SS. */
+    const fmtTime = (s) => {
+      if (!isFinite(s) || s < 0) s = 0;
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+    };
+
+    // ── Karaoke timing: load pre-computed alignment from silence detection ──
+    // The timing data is generated by scripts/analyze-devblog-audio.mjs which
+    // uses RMS silence detection + DP forced alignment to map each text line
+    // to its actual time range in the audio. Falls back to proportional
+    // character-count distribution if the JSON fails to load.
+    const textEls = [...content.querySelectorAll('p, h2, h3, button.devblog-rules-cta')];
+    let timingMap = [];
+    let fallbackDur = 426.80; // default = Developer voice; updated when voice changes
+    let timingData = null;   // parsed JSON: { [voiceId]: { timings: [...] } }
+    let currentVoiceId = 'developer';
+
+    /** Build timing map from pre-computed JSON data for the current voice. */
+    const buildTimingMapFromJson = () => {
+      if (!timingData || !timingData[currentVoiceId]) return false;
+      const voiceData = timingData[currentVoiceId];
+      const jsonTimings = voiceData.timings;
+      // Filter to text entries only (skip hr), in order
+      const textTimings = jsonTimings.filter(t => t.t === 'text');
+      // Match each JSON text entry to a DOM element by order
+      timingMap = [];
+      const count = Math.min(textTimings.length, textEls.length);
+      for (let i = 0; i < count; i++) {
+        timingMap.push({
+          el: textEls[i],
+          start: textTimings[i].s,
+          end: textTimings[i].e,
+        });
+      }
+      return timingMap.length > 0;
+    };
+
+    /** Fallback: proportional distribution by character count. */
+    const buildTimingMapFallback = () => {
+      const dur = (audioEl.duration && isFinite(audioEl.duration)) ? audioEl.duration : fallbackDur;
+      const totalChars = textEls.reduce((s, el) => {
+        const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        return s + text.length;
+      }, 0);
+      const charRate = totalChars > 0 ? dur / totalChars : 0;
+      let t = 0;
+      timingMap = textEls.map(el => {
+        const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        const segDur = text.length * charRate;
+        const seg = { el, start: t, end: t + segDur };
+        t += segDur;
+        return seg;
+      });
+    };
+
+    /** Build timing map — tries JSON first, falls back to proportional. */
+    const buildTimingMap = () => {
+      if (!buildTimingMapFromJson()) buildTimingMapFallback();
+    };
+    buildTimingMap();
+
+    // Fetch the pre-computed timing JSON (generated by analyze-devblog-audio.mjs).
+    // This uses actual silence detection + DP alignment for accurate highlighting.
+    fetch('assets/devblog-timings.json')
+      .then(r => r.json())
+      .then(data => {
+        timingData = data;
+        buildTimingMap(); // rebuild with real data
+      })
+      .catch(() => { /* fallback to proportional distribution already in place */ });
+
+    // ── Voice selector: switch between 4 readers (preserves position) ──
+    const voiceBtns = [...overlay.querySelectorAll('.devblog-voice')];
+    const seekBuffer = overlay.querySelector('#devblog-audio-buffer');
+    let pendingSeekTime = null;
+    let pendingPlay = false;
+
+    /** Switch the audio source to a different reader's recording.
+     *  Preserves the current reading position by mapping the active line
+     *  index to the new voice's timing data. */
+    const switchVoice = (btn, autoPlay) => {
+      if (btn.classList.contains('devblog-voice--active')) return; // already active
+      const wasPlaying = !audioEl.paused;
+      const newSrc = btn.dataset.src;
+      const newDur = Number(btn.dataset.duration) || fallbackDur;
+      const oldDur = audioEl.duration || fallbackDur;
+      const oldTime = audioEl.currentTime;
+
+      // Find current line index from the timing map
+      let lineIndex = 0;
+      for (let i = 0; i < timingMap.length; i++) {
+        if (oldTime >= timingMap[i].start && oldTime < timingMap[i].end) {
+          lineIndex = i;
+          break;
+        }
+        if (oldTime >= timingMap[i].end) lineIndex = i;
+      }
+
+      // Update active state + theme on all voice buttons
+      voiceBtns.forEach(b => {
+        b.classList.remove('devblog-voice--active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('devblog-voice--active');
+      btn.setAttribute('aria-selected', 'true');
+
+      // Apply the voice's accent color to the overlay for dynamic theming
+      // (cascades to audio controls + content highlight bar)
+      const accentVar = btn.dataset.accent || '--amber';
+      overlay.style.setProperty('--devblog-accent', `var(${accentVar})`);
+      overlay.style.setProperty('--devblog-accent-rgb', btn.dataset.accentRgb || '241,189,93');
+
+      // Swap the audio source
+      audioEl.src = newSrc;
+      fallbackDur = newDur;
+      currentVoiceId = btn.dataset.voice || 'developer';
+
+      // Rebuild the karaoke timing map for the new voice
+      buildTimingMap();
+
+      // Find the start time of the same line in the new voice's timing
+      let seekToTime = 0;
+      if (lineIndex >= 0 && lineIndex < timingMap.length) {
+        seekToTime = timingMap[lineIndex].start;
+      } else if (oldDur > 0) {
+        // Fallback: proportional position
+        seekToTime = (oldTime / oldDur) * newDur;
+      }
+
+      // Update UI to reflect the new position immediately
+      seekEl.max = String(newDur);
+      seekEl.value = String(seekToTime);
+      currentEl.textContent = fmtTime(seekToTime);
+      durationEl.textContent = fmtTime(newDur);
+      seekProgress.style.width = `${(seekToTime / newDur) * 100}%`;
+      if (seekBuffer) seekBuffer.style.width = '0%';
+
+      // Update highlight for the new position
+      if (activeHighlight) { activeHighlight.classList.remove('devblog-line-active'); activeHighlight = null; }
+      updateHighlight(seekToTime);
+
+      // Load the new audio, then seek + play once metadata is ready
+      pendingSeekTime = seekToTime;
+      pendingPlay = autoPlay || wasPlaying;
+      audioEl.load();
+    };
+    voiceBtns.forEach(btn => {
+      btn.addEventListener('click', () => switchVoice(btn, false));
+    });
+
+    let activeHighlight = null;
+    /** Highlight the text element currently being read and auto-scroll to it. */
+    const updateHighlight = (time) => {
+      let found = null;
+      for (const seg of timingMap) {
+        if (time >= seg.start && time < seg.end) { found = seg.el; break; }
+        if (time >= seg.end) found = seg.el; // keep last as fallback
+      }
+      if (found !== activeHighlight) {
+        if (activeHighlight) activeHighlight.classList.remove('devblog-line-active');
+        activeHighlight = found;
+        if (found) {
+          found.classList.add('devblog-line-active');
+          // Auto-scroll the highlighted line into view within the content area.
+          const elTop = found.offsetTop;
+          const elBottom = elTop + found.offsetHeight;
+          const viewTop = content.scrollTop;
+          const viewBottom = viewTop + content.clientHeight;
+          if (elTop < viewTop + 60 || elBottom > viewBottom - 60) {
+            content.scrollTo({ top: Math.max(0, elTop - content.clientHeight * 0.35), behavior: 'smooth' });
+          }
+        }
+      }
+    };
+
+    // ── Play / Pause ──
+    const setPlaying = (playing) => {
+      playBtn.classList.toggle('devblog-audio-playing', playing);
+      playBtn.setAttribute('aria-label', playing ? 'Pause audio' : 'Play audio');
+      playBtn.title = playing ? 'Pause' : 'Play';
+    };
+    playBtn.addEventListener('click', () => {
+      if (audioEl.paused) audioEl.play().catch(() => {});
+      else audioEl.pause();
+    });
+    audioEl.addEventListener('play', () => setPlaying(true));
+    audioEl.addEventListener('pause', () => setPlaying(false));
+    audioEl.addEventListener('ended', () => setPlaying(false));
+
+    // ── Skip back / forward 10s ──
+    backBtn.addEventListener('click', () => { audioEl.currentTime = Math.max(0, audioEl.currentTime - 10); });
+    fwdBtn.addEventListener('click', () => { audioEl.currentTime = Math.min(audioEl.duration || fallbackDur, audioEl.currentTime + 10); });
+
+    // ── Seek bar ──
+    seekEl.addEventListener('input', () => {
+      audioEl.currentTime = Number(seekEl.value);
+      updateHighlight(Number(seekEl.value));
+    });
+
+    // ── Volume + Mute ──
+    volEl.addEventListener('input', () => {
+      audioEl.volume = Number(volEl.value);
+      audioEl.muted = audioEl.volume === 0;
+      muteBtn.classList.toggle('devblog-audio-muted', audioEl.muted);
+    });
+    muteBtn.addEventListener('click', () => {
+      audioEl.muted = !audioEl.muted;
+      muteBtn.classList.toggle('devblog-audio-muted', audioEl.muted);
+      if (!audioEl.muted && audioEl.volume === 0) {
+        audioEl.volume = 0.5;
+        volEl.value = '0.5';
+      }
+    });
+
+    // ── Time updates ──
+    audioEl.addEventListener('loadedmetadata', () => {
+      const dur = audioEl.duration;
+      if (isFinite(dur)) {
+        seekEl.max = String(dur);
+        durationEl.textContent = fmtTime(dur);
+        buildTimingMap();
+      }
+      // Apply pending seek from a voice switch (preserves reading position)
+      if (pendingSeekTime != null) {
+        audioEl.currentTime = pendingSeekTime;
+        updateHighlight(pendingSeekTime);
+        pendingSeekTime = null;
+      }
+      if (pendingPlay) {
+        audioEl.play().catch(() => {});
+        pendingPlay = false;
+      }
+    });
+    audioEl.addEventListener('timeupdate', () => {
+      const t = audioEl.currentTime;
+      const dur = audioEl.duration || fallbackDur;
+      seekEl.value = String(t);
+      currentEl.textContent = fmtTime(t);
+      const pct = (t / dur) * 100;
+      seekProgress.style.width = `${pct}%`;
+      updateHighlight(t);
+    });
+    audioEl.addEventListener('progress', () => {
+      // Update buffered indicator if ranges are available
+      if (audioEl.buffered.length > 0) {
+        const buffered = audioEl.buffered.end(audioEl.buffered.length - 1);
+        const dur = audioEl.duration || fallbackDur;
+        const bufPct = (buffered / dur) * 100;
+        const bufEl = overlay.querySelector('#devblog-audio-buffer');
+        if (bufEl) bufEl.style.width = `${bufPct}%`;
+      }
+    });
+    audioEl.addEventListener('error', () => {
+      audioSection.classList.add('devblog-audio-error');
+      const label = overlay.querySelector('.devblog-audio-label');
+      if (label) label.textContent = 'Audio unavailable — read the note below.';
+    });
+
+    // Audio pause on dismiss is handled inside the dismiss() function itself.
+
+    // Update the scroll-progress bar as the user reads.
+    const updateProgress = () => {
+      const max = content.scrollHeight - content.clientHeight;
+      const ratio = max > 0 ? Math.min(1, content.scrollTop / max) : 1;
+      progressFill.style.transform = `scaleX(${ratio})`;
+    };
+    content.addEventListener('scroll', updateProgress, { passive: true });
+    requestAnimationFrame(updateProgress);
+
+    // Click on the backdrop (outside the card) dismisses the overlay.
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) dismiss(); });
+
+    // ESC dismisses the overlay. Space toggles play/pause. Arrows seek.
+    const onKey = (e) => {
+      if (e.key === 'Escape') { dismiss(); document.removeEventListener('keydown', onKey); }
+      else if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+        e.preventDefault();
+        if (audioEl.paused) audioEl.play().catch(() => {}); else audioEl.pause();
+      }
+      else if (e.key === 'ArrowLeft' && e.target.tagName !== 'INPUT') {
+        e.preventDefault();
+        audioEl.currentTime = Math.max(0, audioEl.currentTime - 5);
+      }
+      else if (e.key === 'ArrowRight' && e.target.tagName !== 'INPUT') {
+        e.preventDefault();
+        audioEl.currentTime = Math.min(audioEl.duration || fallbackDur, audioEl.currentTime + 5);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+
+    // Focus the dismiss button for keyboard users, then scroll content to top.
+    dismissBtn.focus({ preventScroll: true });
+    content.scrollTop = 0;
+  }, delay);
 }
 
 /**

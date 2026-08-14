@@ -50,7 +50,7 @@ export const SUBTITLES = {
 
 export const LEGAL_MODES = new Set(['/privacy', '/terms']);
 
-export const LANDING_MODES = new Set(['/', '/play', '/play/new', '/play/match', '/play/replays', '/rules', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles']);
+export const LANDING_MODES = new Set(['/', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles']);
 
 export const isPlayRoute = (r) => r === '/play' || r.startsWith('/play/');
 

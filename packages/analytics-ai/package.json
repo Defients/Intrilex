@@ -1,6 +1,6 @@
 {
   "name": "@intrilex/analytics-ai",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "type": "module",
   "description": "Optional local-LLM analytics intelligence layer powered by Ollama. Grounded interpretation of deterministic simulation analytics.",
   "exports": {

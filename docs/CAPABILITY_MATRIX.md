@@ -1,16 +1,21 @@
 # Capability Matrix
 
+> Reconciled against code truth for v0.28.0 (Official Rules v4.3.1 on Engine v4.2.6).
+> Source of truth: `apps/lab-web/src/play/save-integrity.js` (`RULES_VERSION`, `ENGINE_VERSION`),
+> `README.md`, `packages/network-protocol/src/validation.mjs`, and the live match server.
+
 | Capability | Status |
 |---|---|
 | Engine v4.2.6 source integrity | SUPPORTED |
-| Official Rules v4.2.0 Queen's Court | SUPPORTED |
-| Rules v4.2.0 Pass/Priority canon | SUPPORTED |
-| Engine-implemented rules version | v4.2.0 |
-| Canonized Official Rules version | v4.2.0 |
+| Official Rules v4.3.1 (K Wild Sovereignty + Black Joker Board Lock Quick) | SUPPORTED |
+| Rules v4.3.1 Pass/Priority canon | SUPPORTED |
+| Engine-implemented rules version | v4.3.1 |
+| Canonized Official Rules version | v4.3.1 |
 | Governing 121-replay compatibility corpus | SUPPORTED |
 | 25 semantic Pass/Priority fixtures | SUPPORTED |
 | Complete First Contact | SUPPORTED |
-| Bounded Advanced Core | SUPPORTED |
+| Complete Advanced Core | SUPPORTED |
+| Complete Unrestricted Core (human-playable) | SUPPORTED |
 | 10♦ Mimic Closure (⭐4, ⭐8, ⭐J) | SUPPORTED |
 | 10♣ Foundation | SUPPORTED |
 | ⭐2 Hold disposition | SUPPORTED |
@@ -31,7 +36,8 @@
 | Counterfactual branch lab (paired seeds, focal-seat utility) | SUPPORTED |
 | Policy diagnostics (normalized, decisionId-based) | SUPPORTED |
 | HYBRIX domain-native AI (no spatial vocabulary) | SUPPORTED |
-| Complete unrestricted Core | REPLAY_ONLY |
-| Optional modules | BLOCKED |
-| Multiplayer | BLOCKED |
+| Server-authoritative online Direct Duel (1v1 PvP) | SUPPORTED |
+| Ranked queue + Glicko-2 + seasons + placements | SUPPORTED (server) |
+| Spectator mode (neutral projection) | SUPPORTED |
+| Optional modules (3–4 player) | BLOCKED (scope freeze — engine authority unavailable) |
 | Event-level canonical state snapshots | BLOCKED |

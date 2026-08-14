@@ -23,6 +23,9 @@ import { getCardArtBoardPath, getCardArtBoardPosition } from '../card-art-regist
 import { getArchetypePersonality } from './ai-personality.js';
 import { renderNewMatchSetup } from './ranked-duel-hub.mjs';
 import { renderTerminal, renderError, renderKeyboardHelp, renderRulesHelp, renderMatchStats, formatPhase, formatTerminationReason } from './ranked-duel-terminal.mjs';
+import { renderChatPanel as renderChatPanelModule } from './chat-panel.js';
+// T1: Chat panel rendering is delegated to chat-panel.js
+const renderChatPanel = renderChatPanelModule;
 import { ratingToTierDivision } from "../account-domain/rank-tier.mjs";
 import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
 
@@ -295,6 +298,7 @@ function renderMatch(vm, opts, snapshot) {
       ${renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, isOpponentTurn, priorityContext, immediate, isNetwork)}
     </section>
     ${isNetwork ? renderDisconnectOverlay(vm, snapshot) : ''}
+    ${isNetwork ? renderRematchInviteOverlay(vm, snapshot, opts) : ''}
     ${opts.inspectorCardId ? renderInspector(opts.inspectorCardId, cardRegistry, [], guidanceMode, opts.inspectorFaceView) : ''}
     ${opts.showKeyboardHelp ? renderKeyboardHelp() : ''}
     ${opts.showRulesHelp ? renderRulesHelp(snapshot) : ''}
@@ -337,16 +341,49 @@ function renderDisconnectOverlay(vm, snapshot) {
   // Only show overlay for opponent disconnect during active match
   if (oppConn !== 'DISCONNECTED' || isTerminal) return '';
 
+  // IRX-H10: Reconnect-grace countdown. The server gives the opponent a
+  // RECONNECT_GRACE (60s) window before forfeiting. Surface it so the waiting
+  // player sees a concrete deadline instead of an indefinite spinner.
+  const graceMs = snapshot.opponent?.graceMs ?? vm.opponent?.graceMs ?? null;
+  const disconnectedAt = snapshot.opponent?.disconnectedAt ?? vm.opponent?.disconnectedAt ?? null;
+  let countdownHtml = '';
+  if (typeof graceMs === 'number' && typeof disconnectedAt === 'number') {
+    const deadlineMs = disconnectedAt + graceMs;
+    const remainingMs = Math.max(0, deadlineMs - Date.now());
+    const remainingSec = Math.ceil(remainingMs / 1000);
+    countdownHtml = `<p class="rd-disconnect-grace" data-testid="reconnect-grace-countdown" data-grace-deadline-ms="${deadlineMs}">Reconnect grace: <strong>${remainingSec}s</strong> remaining</p>`;
+  }
+
   return `<div class="rd-disconnect-overlay" role="dialog" aria-modal="true" aria-labelledby="rd-disconnect-title" data-testid="disconnect-overlay">
     <div class="rd-disconnect-content">
       <h2 id="rd-disconnect-title" class="rd-disconnect-title">Opponent Disconnected</h2>
       <p class="rd-disconnect-msg">Waiting for the match server to determine the outcome\u2026</p>
+      ${countdownHtml}
       <div class="rd-disconnect-spinner" aria-hidden="true"></div>
     </div>
   </div>`;
 }
 
-// ── Header ─────────────────────────────────────────────────────
+// ── Rematch Invite Overlay (network matches only) ───────────────
+
+function renderRematchInviteOverlay(vm, snapshot, opts) {
+  if (!snapshot) return '';
+  // The rematch invite is stored on the network session and passed via opts
+  const invite = opts.rematchInvite ?? snapshot.rematchInvite ?? vm.rematchInvite;
+  if (!invite) return '';
+
+  const fromName = invite.fromDisplayName ?? 'Opponent';
+  return `<div class="rd-rematch-invite-overlay" role="dialog" aria-modal="true" aria-labelledby="rd-rematch-title" data-testid="rematch-invite-overlay">
+    <div class="rd-rematch-invite-content">
+      <h2 id="rd-rematch-title" class="rd-rematch-title">Rematch Request</h2>
+      <p class="rd-rematch-msg"><strong>${esc(fromName)}</strong> wants to play again.</p>
+      <div class="rd-rematch-actions">
+        <button class="primary-button" data-testid="accept-rematch" data-action="accept-rematch" data-invite-code="${esc(invite.inviteCode ?? '')}">Accept</button>
+        <button class="secondary-button" data-testid="decline-rematch" data-action="decline-rematch">Decline</button>
+      </div>
+    </div>
+  </div>`;
+}
 
 function renderHeader(vm, opts, priorityContext, immediate) {
   const turn = vm.match.fullTurnSequence;
@@ -1246,75 +1283,7 @@ function renderRightRail(vm, opts, isReadOnly, snapshot, priorityContext, immedi
 }
 
 // ── Chat panel (persistent, always present) ────────────────────
-
-function renderChatPanel(vm, opts, isReadOnly, chatMessages) {
-  const modeLabel = vm.mode?.label ?? 'LOCAL VS AI';
-  const isNetwork = vm.mode?.isNetwork === true;
-  const chatHidden = opts.chatHidden === true;
-
-  // Determine authorship from participantId, NOT from isHuman boolean.
-  // The local player's participantId is vm.human.playerId.
-  // For network matches, each message has a participantId that identifies the sender.
-  const localParticipantId = vm.human.playerId;
-  const opponentParticipantId = vm.opponent.playerId;
-
-  const messages = chatMessages.map(m => {
-    // Determine the message class and author from the stable participantId
-    let cls, author;
-    if (m.isSystem) {
-      cls = 'rd-chat-msg system';
-      author = 'System';
-    } else if (isNetwork && m.participantId) {
-      // Network match: use isHuman flag (set by the network session) to
-      // determine sender. The participantId is a long server-generated ID
-      // (e.g. "P-SbLijgtngcc") that does NOT match vm.human.playerId
-      // (which is "P1" or "P2"), so we rely on isHuman instead.
-      const isLocal = m.isHuman === true;
-      cls = isLocal ? 'rd-chat-msg human' : 'rd-chat-msg opponent';
-      author = isLocal ? vm.human.displayName : vm.opponent.displayName;
-    } else {
-      // Local AI match: use isHuman flag
-      cls = m.isHuman ? 'rd-chat-msg human' : 'rd-chat-msg ai';
-      author = m.isHuman ? vm.human.displayName : vm.opponent.displayName;
-    }
-    return `<div class="${cls}" data-message-id="${esc(m.messageId ?? '')}">
-      <div class="rd-chat-author">${esc(author)}</div>
-      <div class="rd-chat-text">${esc(m.text)}</div>
-    </div>`;
-  }).join('');
-
-  const inputHtml = isReadOnly ? '' : `<form class="rd-chat-input" data-testid="match-chat-form">
-    <input type="text" placeholder="Message..." data-chat-input maxlength="200" aria-label="Chat message" data-testid="match-chat-input">
-    <button type="button" class="rd-chat-emote-btn" data-action="chat-emote" aria-label="Emotes" data-testid="chat-emote-btn" title="Emotes">\u263A</button>
-    <button type="submit" data-action="chat-send" aria-label="Send">\u27A4</button>
-  </form>`;
-
-  const hasMessages = chatMessages.length > 0;
-  // Chat hide/show toggle for network matches
-  const hideToggleHtml = isNetwork ? `<button class="rd-chat-toggle-btn" data-action="${chatHidden ? 'chat-show' : 'chat-hide'}" data-testid="chat-toggle-btn" title="${chatHidden ? 'Show Match Chat' : 'Hide Match Chat'}" aria-label="${chatHidden ? 'Show Match Chat' : 'Hide Match Chat'}">${chatHidden ? '\u25B6' : '\u25BC'}</button>` : '';
-
-  if (chatHidden) {
-    return `<div class="rd-chat-panel rd-chat-hidden" data-chat-empty="${!hasMessages}" data-testid="match-chat-panel">
-      <div class="rd-chat-header">
-        <span class="rd-chat-title">MATCH CHAT</span>
-        <span class="rd-chat-mode">HIDDEN</span>
-        ${hideToggleHtml}
-      </div>
-    </div>`;
-  }
-
-  return `<div class="rd-chat-panel" data-chat-empty="${!hasMessages}" data-testid="match-chat-panel">
-    <div class="rd-chat-header">
-      <span class="rd-chat-title">MATCH CHAT</span>
-      <span class="rd-chat-mode">${esc(modeLabel)} \u00b7 LIVE</span>
-      ${hideToggleHtml}
-    </div>
-    <div class="rd-chat-messages" data-testid="match-chat-messages">
-      ${messages || '<div class="rd-chat-empty">No messages yet</div>'}
-    </div>
-    ${inputHtml}
-  </div>`;
-}
+// T1: renderChatPanel is imported from chat-panel.js (see top of file)
 
 // ── Game Log (player-readable, no engine diagnostics) ──────────
 

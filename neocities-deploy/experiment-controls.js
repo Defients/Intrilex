@@ -2,11 +2,11 @@
 // experiment-controls.js — Experiment panel, campaign runner, global bindings
 // ═══════════════════════════════════════════════════════════════
 
-import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting } from './state.js?v=659a089d50b6';
-import { WORKSPACES, route, policyOptions } from './router.js?v=659a089d50b6';
-import { showIntegrity } from './integrity.js?v=659a089d50b6';
-import { RULES_VERSION, LAB_VERSION } from './version.js?v=659a089d50b6';
-import { populateDialogHeading } from './seo-metadata.js?v=659a089d50b6';
+import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting } from './state.js?v=42162e3d88b3';
+import { WORKSPACES, route, policyOptions } from './router.js?v=42162e3d88b3';
+import { showIntegrity } from './integrity.js?v=42162e3d88b3';
+import { RULES_VERSION, LAB_VERSION } from './version.js?v=42162e3d88b3';
+import { populateDialogHeading } from './seo-metadata.js?v=42162e3d88b3';
 
 // ── Experiment panel ──────────────────────────────────────────────
 export function renderExperimentControls() {
@@ -50,21 +50,21 @@ export function updatePreflight() {
 
 // ── Global bindings ───────────────────────────────────────────────
 export function bindGlobal() {
-  window.addEventListener('hashchange', () => { import('./app.js?v=659a089d50b6').then(m => m.render()); });
+  window.addEventListener('hashchange', () => { import('./app.js?v=42162e3d88b3').then(m => m.render()); });
   document.querySelector('#layout-preset').addEventListener('change', e => {
     state.layout = e.target.value;
     document.querySelector('.observatory-shell').dataset.preset = state.layout;
     persistSetting('layout', state.layout);
-    import('./app.js?v=659a089d50b6').then(m => m.render());
+    import('./app.js?v=42162e3d88b3').then(m => m.render());
   });
   document.querySelector('#global-visibility').addEventListener('change', async e => {
     state.visibility = e.target.value;
     persistSetting('visibility', state.visibility);
     if (state.visibility !== 'public') {
-      const { loadAuthorized } = await import('./data-loader.js?v=659a089d50b6');
+      const { loadAuthorized } = await import('./data-loader.js?v=42162e3d88b3');
       await loadAuthorized();
     }
-    import('./app.js?v=659a089d50b6').then(m => m.render());
+    import('./app.js?v=42162e3d88b3').then(m => m.render());
   });
   document.querySelector('#integrity-button').addEventListener('click', showIntegrity);
   const palette = document.querySelector('#command-palette');
@@ -93,7 +93,7 @@ export function bindGlobal() {
     }
     if (e.key === ' ' && route() === '/watch' && !['INPUT', 'SELECT', 'BUTTON'].includes(document.activeElement.tagName)) {
       e.preventDefault();
-      import('./app.js?v=659a089d50b6').then(m => m.togglePlay());
+      import('./app.js?v=42162e3d88b3').then(m => m.togglePlay());
     }
   });
   document.querySelector('#collapse-experiment').addEventListener('click', () => {
@@ -108,10 +108,10 @@ function renderCommandResults() {
     { label: 'Toggle reduced motion', detail: 'Accessibility', run: () => { state.reducedMotion = !state.reducedMotion; document.body.classList.toggle('reduced-motion', state.reducedMotion); persistSetting('reducedMotion', state.reducedMotion); } },
     { label: 'Toggle reduced sensory', detail: 'Accessibility', run: () => { state.reducedSensory = !state.reducedSensory; document.body.classList.toggle('reduced-sensory', state.reducedSensory); persistSetting('reducedSensory', state.reducedSensory); } },
     { label: 'Toggle FX', detail: 'Presentation', run: () => { state.fx = !state.fx; document.body.classList.toggle('fx-off', !state.fx); persistSetting('fx', state.fx); } },
-    { label: 'Show priority orchestration', detail: 'Developer evidence', run: () => { state.showOrchestration = !state.showOrchestration; import('./app.js?v=659a089d50b6').then(m => m.render()); } },
-    { label: 'Restart replay', detail: 'Identical seed / source replay', run: () => { import('./app.js?v=659a089d50b6').then(m => { m.stop(); state.frame = 0; m.render(); }); } },
-    { label: 'Extract analysis (JSON)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js?v=659a089d50b6').then(m => m.showExtract('json')); } },
-    { label: 'Extract analysis (Markdown)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js?v=659a089d50b6').then(m => m.showExtract('markdown')); } }
+    { label: 'Show priority orchestration', detail: 'Developer evidence', run: () => { state.showOrchestration = !state.showOrchestration; import('./app.js?v=42162e3d88b3').then(m => m.render()); } },
+    { label: 'Restart replay', detail: 'Identical seed / source replay', run: () => { import('./app.js?v=42162e3d88b3').then(m => { m.stop(); state.frame = 0; m.render(); }); } },
+    { label: 'Extract analysis (JSON)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js?v=42162e3d88b3').then(m => m.showExtract('json')); } },
+    { label: 'Extract analysis (Markdown)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js?v=42162e3d88b3').then(m => m.showExtract('markdown')); } }
   ].filter(item => !q || `${item.label} ${item.detail}`.toLowerCase().includes(q));
   const root = document.querySelector('#command-results');
   root.innerHTML = commands.map((item, i) => `<button type="button" class="command-result" data-command="${i}" role="option"><span>${esc(item.label)}</span><small>${esc(item.detail)}</small></button>`).join('') || '<div class="empty-state"><strong>No command found</strong>Try a workspace or accessibility setting.</div>';
@@ -133,97 +133,229 @@ function renderCommandResults() {
 }
 
 // ── Campaign runner (browser worker-based) ────────────────────────
+// Spawns N browser workers and splits the ordinal range across them so matches
+// run in true parallel (one worker per segment). Progress is aggregated across
+// all workers and reported frequently so the UI never looks frozen.
 async function runBrowserCampaign() {
   const status = document.querySelector('#experiment-status');
   const profile = document.querySelector('#exp-profile').value;
   const p1 = document.querySelector('#exp-p1').value;
   const p2 = document.querySelector('#exp-p2').value;
   const count = Number(document.querySelector('#exp-count').value);
-  const workers = Number(document.querySelector('#exp-workers').value);
+  const workers = Math.max(1, Number(document.querySelector('#exp-workers').value));
+  const seedSel = document.querySelector('#exp-seed');
+  const seedStrategy = seedSel ? seedSel.value : 'ordinal-hash';
   status.textContent = `Running ${count} matches with ${workers} worker(s)…`;
   document.querySelector('#run-experiment').disabled = true;
   document.querySelector('#cancel-experiment').disabled = false;
 
-  const worker = new Worker('worker.js', { type: 'module' });
-  state.campaignWorker = worker;
-  worker.onmessage = async e => {
-    const x = e.data;
-    if (x.type === 'autonomy-campaign-progress') {
-      const p = x.progress ?? {};
-      status.textContent = `Progress: ${p.completed ?? 0}/${p.total ?? count} matches (${workers} workers)`;
-      const bar = document.querySelector('#campaign-progress');
-      const fill = bar?.querySelector('.campaign-progress-bar-fill');
-      if (bar && fill) { bar.hidden = false; fill.style.width = `${Math.round(((p.completed ?? 0) / (p.total ?? count)) * 100)}%`; }
-    } else if (x.type === 'autonomy-campaign-result') {
+  // Single-worker path: keep the original in-worker aggregation (returns a
+  // fully-built campaign result incl. aggregate + observatory JSON).
+  if (workers === 1) {
+    const worker = new Worker('worker.js', { type: 'module' });
+    state.campaignWorker = worker;
+    state.campaignWorkers = [worker];
+    worker.onmessage = async e => {
+      const x = e.data;
+      if (x.type === 'autonomy-campaign-progress') {
+        const p = x.progress ?? {};
+        const done = p.completed ?? 0, total = p.total ?? count;
+        status.textContent = `Progress: ${done}/${total} matches (1 worker)`;
+        const bar = document.querySelector('#campaign-progress');
+        const fill = bar?.querySelector('.campaign-progress-bar-fill');
+        if (bar && fill) { bar.hidden = false; fill.style.width = `${Math.round((done / Math.max(1, total)) * 100)}%`; }
+      } else if (x.type === 'autonomy-campaign-result') {
+        worker.terminate();
+        state.campaignWorker = null;
+        state.campaignWorkers = [];
+        await finalizeCampaignResult(x, count, 1);
+      }
+    };
+    worker.onerror = e => {
       worker.terminate();
       state.campaignWorker = null;
-      state.lastCampaignResult = x;
+      state.campaignWorkers = [];
+      status.textContent = `Worker error: ${e.message}`;
       document.querySelector('#run-experiment').disabled = false;
       document.querySelector('#cancel-experiment').disabled = true;
-      const bar = document.querySelector('#campaign-progress');
-      if (bar) bar.hidden = true;
-      if (x.ok) {
-        const r = x.result ?? {};
-        // Update state with campaign-derived data so workspaces reflect the new campaign
-        try {
-          if (x.summariesJson) {
-            const summaries = JSON.parse(x.summariesJson);
-            state.observatory = state.observatory ?? {};
-            state.observatory.summaries = summaries;
-            state.aggregate = x.aggregateJson ? JSON.parse(x.aggregateJson) : state.aggregate;
-            if (x.observatoryJson) {
-              const obs = JSON.parse(x.observatoryJson);
-              state.observatory = { ...obs, summaries };
-            }
-            // Fallback: if the worker's observatory arrived with 0 mechanics (e.g.
-            // stale cached worker module), rebuild observatory analytics on the
-            // main thread from the campaign summaries so Mechanics/Synergies propagate.
-            if (!state.observatory.mechanics?.length && summaries.length > 0) {
-              console.warn('[campaign] Worker observatory has 0 mechanics — rebuilding on main thread from', summaries.length, 'summaries');
-              try {
-                const { buildObservatoryAnalytics, campaignAggregate } = await import('./browser-analytics.js?v=659a089d50b6');
-                const semantic = { experimentHash: r.canonicalResultHash, profileId: r.profileId, engineVersion: r.engineVersion, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, canonicalResultHash: r.canonicalResultHash };
-                const fallbackAggregate = x.aggregateJson ? JSON.parse(x.aggregateJson) : campaignAggregate(summaries, semantic);
-                const fallbackObs = buildObservatoryAnalytics({ summaries, aggregate: fallbackAggregate });
-                state.observatory = { ...fallbackObs, summaries };
-                state.aggregate = fallbackAggregate;
-                console.info(`[campaign] Main-thread observatory rebuild: ${fallbackObs.mechanics?.length} mechanics, ${fallbackObs.synergies?.length} synergies`);
-              } catch (rebuildErr) { console.error('[campaign] Main-thread observatory rebuild failed:', rebuildErr); }
-            }
-          }
-        } catch (err) { console.warn('Failed to update state from campaign result:', err); }
-        const mechCount = state.observatory?.mechanics?.length ?? 0;
-        const synCount = state.observatory?.synergies?.length ?? 0;
-        status.textContent = `PASS · ${count} matches, ${r.aborts ?? 0} aborts, ${r.durationMs ?? 0}ms · ${mechCount} mechanics, ${synCount} synergies`;
-        showToast(`${count} matches · ${r.aborts ?? 0} aborts · ${mechCount} mechanics · ${synCount} synergies`, { type: 'success', title: 'Campaign complete' });
-      } else {
-        status.textContent = `Failed: ${x.error ?? 'unknown error'}`;
-        showToast(x.error ?? 'Campaign failed', { type: 'error', title: 'Campaign failed' });
-      }
-      renderCampaignSummary(x);
-      // Re-render the current workspace so Mechanics/Synergies/Compare/etc.
-      // reflect the freshly updated state.observatory immediately.
-      import('./app.js?v=659a089d50b6').then(m => m.render());
+      showToast(e.message ?? 'Worker error', { type: 'error', title: 'Worker error' });
+    };
+    worker.postMessage({ type: 'run-autonomy-campaign', config: { matchCount: count, policyIds: [p1, p2], profileId: profile, seedStrategy, workerCount: workers } });
+    return;
+  }
+
+  // Multi-worker path: split the ordinal range into `workers` contiguous
+  // segments and dispatch `run-autonomy-segment` to each. Each segment runs
+  // `runBrowserCampaign` over its [ordinalStart, ordinalEnd) slice, preserving
+  // the absolute-ordinal AB/BA seat-swap design. Summaries are reassembled in
+  // ordinal order on the main thread, then the campaign core + aggregate +
+  // observatory are built here.
+  const segments = splitOrdinals(count, workers);
+  const startedAt = performance.now();
+  const segmentSummaries = new Array(segments.length).fill(null);
+  const segmentDone = new Array(segments.length).fill(0);
+  const segmentTotal = segments.map(s => s.size);
+  let completedSegments = 0, failedSegment = null, finalized = false;
+  const totalTotal = segmentTotal.reduce((a, b) => a + b, 0);
+  const spawned = [];
+  state.campaignWorkers = spawned;
+  state.campaignWorker = null; // multi-worker: tracked via campaignWorkers
+
+  const reportAggregateProgress = () => {
+    const done = segmentDone.reduce((a, b) => a + b, 0);
+    status.textContent = `Progress: ${done}/${totalTotal} matches (${workers} workers)`;
+    const bar = document.querySelector('#campaign-progress');
+    const fill = bar?.querySelector('.campaign-progress-bar-fill');
+    if (bar && fill) { bar.hidden = false; fill.style.width = `${Math.round((done / Math.max(1, totalTotal)) * 100)}%`; }
+  };
+
+  const maybeFinalize = async () => {
+    if (finalized || completedSegments < segments.length) return;
+    finalized = true;
+    // All segments done — terminate workers and assemble the campaign result.
+    for (const w of spawned) { try { w.terminate(); } catch (_) { /* already terminated */ } }
+    state.campaignWorker = null;
+    state.campaignWorkers = [];
+    if (failedSegment) {
+      await finalizeCampaignResult({ type: 'autonomy-campaign-result', ok: false, error: failedSegment }, count, workers);
+      return;
+    }
+    // Concatenate segment summaries in ordinal order (segments are contiguous
+    // and assigned in order, so index order == ordinal order).
+    const summaries = [];
+    for (let i = 0; i < segmentSummaries.length; i += 1) {
+      const seg = segmentSummaries[i];
+      if (Array.isArray(seg)) summaries.push(...seg);
+    }
+    try {
+      const { buildCampaignCore } = await import('./autonomy-runtime.js?v=42162e3d88b3');
+      const { campaignAggregate, buildObservatoryAnalytics } = await import('./browser-analytics.js?v=42162e3d88b3');
+      const core = buildCampaignCore(summaries, { profileId: profile, policyIds: [p1, p2], matchCount: count });
+      const semantic = { experimentHash: core.canonicalResultHash, profileId: core.profileId, engineVersion: core.engineVersion, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, canonicalResultHash: core.canonicalResultHash };
+      const aggregate = campaignAggregate(summaries, semantic);
+      const observatory = buildObservatoryAnalytics({ summaries, aggregate });
+      const result = { ...core, durationMs: Math.round(performance.now() - startedAt) };
+      const x = { type: 'autonomy-campaign-result', ok: true, result, aggregateJson: JSON.stringify(aggregate), observatoryJson: JSON.stringify(observatory), summariesJson: JSON.stringify(summaries) };
+      await finalizeCampaignResult(x, count, workers);
+    } catch (err) {
+      await finalizeCampaignResult({ type: 'autonomy-campaign-result', ok: false, error: err?.stack ?? String(err) }, count, workers);
     }
   };
-  worker.onerror = e => {
-    worker.terminate();
-    state.campaignWorker = null;
-    status.textContent = `Worker error: ${e.message}`;
-    document.querySelector('#run-experiment').disabled = false;
-    document.querySelector('#cancel-experiment').disabled = true;
-    showToast(e.message ?? 'Worker error', { type: 'error', title: 'Worker error' });
-  };
-  const seedSel = document.querySelector('#exp-seed');
-  const seedStrategy = seedSel ? seedSel.value : 'ordinal-hash';
-  worker.postMessage({ type: 'run-autonomy-campaign', config: { matchCount: count, policyIds: [p1, p2], profileId: profile, seedStrategy, workerCount: workers } });
+
+  segments.forEach((seg, i) => {
+    const worker = new Worker('worker.js', { type: 'module' });
+    spawned.push(worker);
+    worker.onmessage = e => {
+      const x = e.data;
+      if (x.type === 'autonomy-campaign-progress') {
+        const p = x.progress ?? {};
+        segmentDone[i] = p.completed ?? segmentDone[i];
+        reportAggregateProgress();
+      } else if (x.type === 'autonomy-segment-result') {
+        if (x.ok) {
+          try { segmentSummaries[i] = JSON.parse(x.summariesJson ?? '[]'); }
+          catch (_) { segmentSummaries[i] = []; }
+        } else if (!failedSegment) {
+          failedSegment = x.error ?? `Worker ${i} failed`;
+        }
+        completedSegments += 1;
+        segmentDone[i] = segmentTotal[i];
+        reportAggregateProgress();
+        maybeFinalize();
+      }
+    };
+    worker.onerror = e => {
+      if (!failedSegment) failedSegment = e.message ?? `Worker ${i} error`;
+      if (segmentSummaries[i] === null) { segmentSummaries[i] = []; completedSegments += 1; }
+      reportAggregateProgress();
+      maybeFinalize();
+    };
+    worker.postMessage({
+      type: 'run-autonomy-segment',
+      workerIndex: i,
+      config: { matchCount: count, policyIds: [p1, p2], profileId: profile, seedStrategy, ordinalStart: seg.start, ordinalEnd: seg.end },
+    });
+  });
+  reportAggregateProgress();
+}
+
+// Split `count` ordinals into `workers` contiguous, near-equal segments.
+// Each segment is {start, end, size} with start inclusive and end exclusive.
+function splitOrdinals(count, workers) {
+  const n = Math.max(1, Math.floor(count));
+  const w = Math.max(1, Math.min(workers, n));
+  const base = Math.floor(n / w);
+  const rem = n % w;
+  const segments = [];
+  let cursor = 0;
+  for (let i = 0; i < w; i += 1) {
+    const size = base + (i < rem ? 1 : 0);
+    segments.push({ start: cursor, end: cursor + size, size });
+    cursor += size;
+  }
+  return segments;
+}
+
+// Shared finalization for both single- and multi-worker paths: updates state,
+// renders the campaign summary, and re-renders the current workspace.
+async function finalizeCampaignResult(x, count, workers) {
+  state.lastCampaignResult = x;
+  document.querySelector('#run-experiment').disabled = false;
+  document.querySelector('#cancel-experiment').disabled = true;
+  const bar = document.querySelector('#campaign-progress');
+  if (bar) bar.hidden = true;
+  const status = document.querySelector('#experiment-status');
+  if (x.ok) {
+    const r = x.result ?? {};
+    // Update state with campaign-derived data so workspaces reflect the new campaign
+    try {
+      if (x.summariesJson) {
+        const summaries = JSON.parse(x.summariesJson);
+        state.observatory = state.observatory ?? {};
+        state.observatory.summaries = summaries;
+        state.aggregate = x.aggregateJson ? JSON.parse(x.aggregateJson) : state.aggregate;
+        if (x.observatoryJson) {
+          const obs = JSON.parse(x.observatoryJson);
+          state.observatory = { ...obs, summaries };
+        }
+        // Fallback: if the worker's observatory arrived with 0 mechanics (e.g.
+        // stale cached worker module), rebuild observatory analytics on the
+        // main thread from the campaign summaries so Mechanics/Synergies propagate.
+        if (!state.observatory.mechanics?.length && summaries.length > 0) {
+          console.warn('[campaign] Worker observatory has 0 mechanics — rebuilding on main thread from', summaries.length, 'summaries');
+          try {
+            const { buildObservatoryAnalytics, campaignAggregate } = await import('./browser-analytics.js?v=42162e3d88b3');
+            const semantic = { experimentHash: r.canonicalResultHash, profileId: r.profileId, engineVersion: r.engineVersion, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, canonicalResultHash: r.canonicalResultHash };
+            const fallbackAggregate = x.aggregateJson ? JSON.parse(x.aggregateJson) : campaignAggregate(summaries, semantic);
+            const fallbackObs = buildObservatoryAnalytics({ summaries, aggregate: fallbackAggregate });
+            state.observatory = { ...fallbackObs, summaries };
+            state.aggregate = fallbackAggregate;
+            console.info(`[campaign] Main-thread observatory rebuild: ${fallbackObs.mechanics?.length} mechanics, ${fallbackObs.synergies?.length} synergies`);
+          } catch (rebuildErr) { console.error('[campaign] Main-thread observatory rebuild failed:', rebuildErr); }
+        }
+      }
+    } catch (err) { console.warn('Failed to update state from campaign result:', err); }
+    const mechCount = state.observatory?.mechanics?.length ?? 0;
+    const synCount = state.observatory?.synergies?.length ?? 0;
+    status.textContent = `PASS · ${count} matches, ${r.abortCount ?? r.aborts ?? 0} aborts, ${r.durationMs ?? 0}ms · ${mechCount} mechanics, ${synCount} synergies`;
+    showToast(`${count} matches · ${r.abortCount ?? r.aborts ?? 0} aborts · ${mechCount} mechanics · ${synCount} synergies`, { type: 'success', title: 'Campaign complete' });
+  } else {
+    status.textContent = `Failed: ${x.error ?? 'unknown error'}`;
+    showToast(x.error ?? 'Campaign failed', { type: 'error', title: 'Campaign failed' });
+  }
+  renderCampaignSummary(x);
+  // Re-render the current workspace so Mechanics/Synergies/Compare/etc.
+  // reflect the freshly updated state.observatory immediately.
+  import('./app.js?v=42162e3d88b3').then(m => m.render());
 }
 
 function cancelBrowserCampaign() {
   if (state.campaignWorker) {
-    state.campaignWorker.terminate();
+    try { state.campaignWorker.terminate(); } catch (_) { /* already terminated */ }
     state.campaignWorker = null;
   }
+  for (const w of state.campaignWorkers ?? []) { try { w.terminate(); } catch (_) { /* already terminated */ } }
+  state.campaignWorkers = [];
   document.querySelector('#experiment-status').textContent = 'Cancelled.';
   document.querySelector('#run-experiment').disabled = false;
   document.querySelector('#cancel-experiment').disabled = true;
@@ -235,14 +367,14 @@ function resetCampaignResults() {
   state.aggregate = state.bootState?.aggregate ? structuredClone(state.bootState.aggregate) : state.aggregate;
   document.querySelector('#campaign-summary').innerHTML = '';
   document.querySelector('#experiment-status').textContent = 'Ready.';
-  import('./app.js?v=659a089d50b6').then(m => m.render());
+  import('./app.js?v=42162e3d88b3').then(m => m.render());
 }
 
 function renderCampaignSummary(result) {
   if (!result || !result.ok) return;
   const r = result.result ?? {};
   const matches = r.matchCount ?? r.matches ?? 0;
-  const aborts = r.aborts ?? 0;
+  const aborts = r.abortCount ?? r.aborts ?? 0;
   const winRateP1 = r.winRateP1 ?? r.winRates?.P1 ?? null;
   const expHash = r.experimentHash ?? r.canonicalResultHash ?? null;
   document.querySelector('#campaign-summary').innerHTML = `<div class="notice supported"><strong>Campaign complete</strong>

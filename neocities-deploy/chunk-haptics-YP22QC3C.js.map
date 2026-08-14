@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../play/touch/haptics.js"],
+  "sourcesContent": ["// Haptic feedback controller for touch devices.\n// Gates navigator.vibrate() behind the user's persisted `haptics` setting\n// (see state.js SETTINGS_DEFAULTS). Dynamically imported by workspaces/settings.js\n// so the rest of the app does not pay the cost on non-touch devices.\n\nlet _enabled = true;\n\n/** @param {boolean} enabled */\nexport function setHapticsEnabled(enabled) {\n  _enabled = !!enabled;\n}\n\n/**\n * Trigger a vibration pattern if haptics are enabled and the platform supports it.\n * @param {number | number[]} pattern - Milliseconds or pattern array for navigator.vibrate.\n * @returns {boolean} true if a vibration was actually issued.\n */\nexport function vibrate(pattern) {\n  if (!_enabled) return false;\n  if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return false;\n  try { return navigator.vibrate(pattern); } catch { return false; }\n}\n"],
+  "mappings": "kCAKA,IAAIA,EAAW,GAGR,SAASC,EAAkBC,EAAS,CACzCF,EAAW,CAAC,CAACE,CACf,CAOO,SAASC,EAAQC,EAAS,CAE/B,GADI,CAACJ,GACD,OAAO,UAAc,KAAe,OAAO,UAAU,SAAY,WAAY,MAAO,GACxF,GAAI,CAAE,OAAO,UAAU,QAAQI,CAAO,CAAG,MAAQ,CAAE,MAAO,EAAO,CACnE",
+  "names": ["_enabled", "setHapticsEnabled", "enabled", "vibrate", "pattern"]
+}

@@ -268,6 +268,56 @@
   border-radius: 999px;
 }
 
+/* Nemesis / Kryptonite badges (v0.28.0 — Epoch 4) */
+.pd-nemesis-badge {
+  display: inline-block; margin-left: 6px; margin-top: 4px;
+  padding: 2px 8px; font-size: 0.7em; font-weight: 700;
+  border-radius: 999px;
+}
+.pd-nemesis {
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,0.4);
+  background: rgba(248,113,113,0.10);
+  text-shadow: 0 0 6px rgba(248,113,113,0.25);
+}
+.pd-kryptonite {
+  color: #22d3ee;
+  border: 1px solid rgba(34,211,238,0.4);
+  background: rgba(34,211,238,0.10);
+  text-shadow: 0 0 6px rgba(34,211,238,0.25);
+}
+
+/* Rival milestone badges (v0.28.0 — Epoch 4) */
+.pd-milestone-badge {
+  display: inline-block; margin-left: 4px; margin-top: 4px;
+  padding: 2px 6px; font-size: 0.68em; font-weight: 600;
+  color: var(--text-dim, #8b949e);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+}
+
+/* Profile leaderboard link (v0.28.0 — Epoch 4) */
+.profile-leaderboard-link {
+  display: inline-block; margin-top: 6px;
+  font-size: 0.82em; font-weight: 600;
+  color: var(--accent, #00c8dc);
+  text-decoration: none;
+}
+.profile-leaderboard-link:hover { text-decoration: underline; }
+
+/* Strategic fingerprint (v0.28.0 — Epoch 6) */
+.profile-fingerprint-archetype { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.profile-fingerprint-archetype-icon { font-size: 2rem; line-height: 1; }
+.profile-fingerprint-archetype-name { font-size: 1.1rem; font-weight: 700; color: var(--text, #e0f0ff); }
+.profile-fingerprint-summary { font-size: 0.82rem; color: var(--text-dim, #8b949e); margin-top: 2px; }
+.profile-fingerprint-traits { display: flex; flex-wrap: wrap; gap: 8px; }
+.profile-fingerprint-coverage { font-size: 0.72rem; color: var(--text-dim, #8b949e); margin-top: 10px; font-style: italic; }
+.profile-fingerprint-trait { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; font-size: 0.78rem; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); border-radius: 999px; }
+.profile-fingerprint-icon { font-size: 0.9rem; }
+.profile-fingerprint-label { font-weight: 600; color: var(--text, #e0f0ff); }
+.profile-fingerprint-score { color: var(--text-dim, #8b949e); font-size: 0.72rem; }
+
 /* ═══════════════════════════════════════════════════════════════
    Profile hero — relationship action buttons (Follow / Rival)
    ═══════════════════════════════════════════════════════════════ */

@@ -135,6 +135,18 @@ test('protocol-client: queueJoin builds correct message', () => {
   assert.ok(msg.requestId, 'Must have a request ID');
 });
 
+test('protocol-client: queueJoin defaults to ranked queueId (H1 ranked-loop closure)', () => {
+  const msg = queueJoin('core-unrestricted-authority');
+  assert.equal(msg.payload.queueId, 'ranked', 'Find Match must request the ranked queue by default');
+});
+
+test('protocol-client: queueJoin accepts an explicit queueId', () => {
+  const casual = queueJoin('core-unrestricted-authority', 'casual');
+  assert.equal(casual.payload.queueId, 'casual');
+  const ranked = queueJoin('core-unrestricted-authority', 'ranked');
+  assert.equal(ranked.payload.queueId, 'ranked');
+});
+
 test('protocol-client: queueLeave builds correct message', () => {
   const msg = queueLeave();
   assert.equal(msg.type, 'QUEUE_LEAVE');

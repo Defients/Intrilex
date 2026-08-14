@@ -4,6 +4,7 @@
 
 import { state, app, esc, pct, short, definitionList } from '../state.js';
 import { loadTraceIndex, loadTraceData } from '../data-loader.js';
+import { renderPolicyArchetypes, renderMatchupMatrix, renderTempoCurve, renderEndgameAnalysis, renderActionDistribution } from './observatory.js';
 
 export function renderDiagnostics() {
   const summaries = state.observatory?.summaries ?? [];
@@ -14,7 +15,21 @@ export function renderDiagnostics() {
   }
   const baselineId = state.diagBaseline ?? policies[0];
   const candidateId = state.diagCandidate ?? policies.find(p => p !== baselineId) ?? policies[0];
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Policy Diagnostics</h2><p>Decision margins, self-counter rates, response conservation, timing, and win rates</p></div><div class="toolbar"><select id="diag-baseline">${policies.map(p => `<option value="${esc(p)}" ${p === baselineId ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select><span>vs</span><select id="diag-candidate">${policies.map(p => `<option value="${esc(p)}" ${p === candidateId ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select><button id="diag-run" class="primary-button">Run diagnostics</button></div></div><div class="panel-body" id="diag-output"><div class="notice">Select two policies and click <strong>Run diagnostics</strong>. Diagnostics uses retained decision traces as evidence.</div></div></section>`;
+  const archetypeHtml = renderPolicyArchetypes();
+  const tempoHtml = renderTempoCurve();
+  const endgameHtml = renderEndgameAnalysis();
+  const actionsHtml = renderActionDistribution();
+  // Phase 6B: section tab navigation — persisted in state.diagActiveSection
+  const activeSection = state.diagActiveSection ?? 'diagnostics';
+  const tabs = [
+    { id: 'diagnostics', label: 'Diagnostics' },
+    { id: 'archetypes', label: 'Archetypes' },
+    { id: 'tempo', label: 'Tempo' },
+    { id: 'endgame', label: 'Endgame' },
+    { id: 'actions', label: 'Actions' },
+  ];
+  const tabHtml = `<nav class="ix-section-tabs" data-testid="diag-section-tabs" role="tablist">${tabs.map(t => `<button role="tab" data-section-tab="${t.id}" aria-selected="${t.id === activeSection}" aria-controls="diag-section-${t.id}" id="diag-tab-${t.id}" class="ix-section-tab ${t.id === activeSection ? 'active' : ''}">${esc(t.label)}</button>`).join('')}</nav>`;
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Policy Diagnostics</h2><p>Decision margins, self-counter rates, response conservation, timing, and win rates</p></div><div class="toolbar"><select id="diag-baseline">${policies.map(p => `<option value="${esc(p)}" ${p === baselineId ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select><span>vs</span><select id="diag-candidate">${policies.map(p => `<option value="${esc(p)}" ${p === candidateId ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select><button id="diag-run" class="primary-button">Run diagnostics</button></div></div>${tabHtml}<div class="panel-body" id="diag-output" role="tabpanel" aria-labelledby="diag-tab-diagnostics" id="diag-section-diagnostics" ${activeSection !== 'diagnostics' ? 'hidden' : ''}><div class="notice">Select two policies and click <strong>Run diagnostics</strong>. Diagnostics uses retained decision traces as evidence.</div></div></section><div role="tabpanel" aria-labelledby="diag-tab-archetypes" id="diag-section-archetypes" ${activeSection !== 'archetypes' ? 'hidden' : ''}>${archetypeHtml}</div><div role="tabpanel" aria-labelledby="diag-tab-tempo" id="diag-section-tempo" ${activeSection !== 'tempo' ? 'hidden' : ''}>${tempoHtml}</div><div role="tabpanel" aria-labelledby="diag-tab-endgame" id="diag-section-endgame" ${activeSection !== 'endgame' ? 'hidden' : ''}>${endgameHtml}</div><div role="tabpanel" aria-labelledby="diag-tab-actions" id="diag-section-actions" ${activeSection !== 'actions' ? 'hidden' : ''}>${actionsHtml}</div>`;
   document.querySelector('#diag-baseline').onchange = e => { state.diagBaseline = e.target.value; };
   document.querySelector('#diag-candidate').onchange = e => { state.diagCandidate = e.target.value; };
   document.querySelector('#diag-run').onclick = () => {
@@ -23,6 +38,41 @@ export function renderDiagnostics() {
     runDiagnostics(b, c);
   };
   if (state.lastDiagResult) renderDiagOutput(state.lastDiagResult);
+  bindDiagChartToggle('#policy-archetypes-chart');
+  bindDiagChartToggle('#tempo-curve-chart');
+  bindDiagChartToggle('#endgame-analysis-chart');
+  // Depth II Phase 2: Actions tab chart toggles
+  bindDiagChartToggle('#action-modes-chart');
+  bindDiagChartToggle('#decision-families-chart');
+  bindDiagChartToggle('#timing-classes-chart');
+  bindDiagChartToggle('#event-types-chart');
+  bindDiagChartToggle('#response-actions-chart');
+  // Depth II Phase 6: archetype cluster → policy compare
+  document.querySelectorAll('[data-archetype-policy]').forEach(row => {
+    row.onclick = () => {
+      const policyId = row.getAttribute('data-archetype-policy');
+      const cluster = row.getAttribute('data-archetype-cluster');
+      // Find another policy in the same cluster to compare against
+      const allRows = document.querySelectorAll('[data-archetype-cluster]');
+      let otherPolicyId = null;
+      for (const r of allRows) {
+        if (r.getAttribute('data-archetype-cluster') === cluster && r.getAttribute('data-archetype-policy') !== policyId) {
+          otherPolicyId = r.getAttribute('data-archetype-policy');
+          break;
+        }
+      }
+      state.selectedPolicy = policyId;
+      state.comparePolicyRight = otherPolicyId ?? policyId;
+      location.hash = '#/compare';
+    };
+  });
+  // Phase 6B: section tab navigation handlers
+  document.querySelectorAll('[data-section-tab]').forEach(tab => {
+    tab.onclick = () => {
+      state.diagActiveSection = tab.dataset.sectionTab;
+      import('../app.js').then(m => m.render());
+    };
+  });
 }
 
 export async function runDiagnostics(baselineId, candidateId) {
@@ -86,4 +136,18 @@ function renderDiagComparison(base, cand) {
   const scDelta = (cand.metrics?.selfCounterRate ?? 0) - (base.metrics?.selfCounterRate ?? 0);
   const dmDelta = (cand.metrics?.decisionMarginMean ?? 0) - (base.metrics?.decisionMarginMean ?? 0);
   return `<section class="panel" style="margin-top:16px"><div class="panel-header"><div><h2>Policy comparison</h2><p>${esc(base.policyId)} vs ${esc(cand.policyId)}</p></div></div><div class="grid four">${[['Win rate Δ', wrDelta, 'percent'], ['Self-counter Δ', scDelta, 'percent'], ['Margin Δ', dmDelta, 'number']].map(([label, v, type]) => `<div class="metric-card"><small>${esc(label)}</small><div class="metric-value ${v >= 0 ? 'positive' : 'negative'}">${type === 'percent' ? `${(v * 100).toFixed(1)} pp` : v.toFixed(2)}</div></div>`).join('')}</div><div class="notice warning"><strong>Interpretation:</strong> Policy comparison is descriptive. Win-rate differences require uncertainty quantification and multiple opponents before promotion.</div></section>`;
+}
+
+// ── Chart "View as table" toggle helper (Phase 6C) ────────────────
+function bindDiagChartToggle(selector) {
+  const container = document.querySelector(selector);
+  if (!container) return;
+  const btn = container.querySelector('[data-chart-toggle]');
+  const table = container.querySelector('[data-chart-table]');
+  if (!btn || !table) return;
+  btn.onclick = () => {
+    const hidden = table.hasAttribute('hidden');
+    if (hidden) { table.removeAttribute('hidden'); btn.setAttribute('aria-expanded', 'true'); btn.textContent = 'Hide table'; }
+    else { table.setAttribute('hidden', ''); btn.setAttribute('aria-expanded', 'false'); btn.textContent = 'View as table'; }
+  };
 }

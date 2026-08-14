@@ -49,15 +49,27 @@ export class MatchmakingQueue {
    * @param {object} [opts]
    * @param {function} [opts.onCreateMatch]
    * @param {(function(string, string): Promise<boolean>)|null} [opts.blockChecker] - IRX-H19: async (accountIdA, accountIdB) → boolean
-   *   When provided, pairs where either player has blocked the other are skipped.
+   *   Accepted for injection-point compatibility but NOT used inside the queue.
+   *   Block enforcement is performed by the match server's `handleQueueJoin`
+   *   after pairing (it calls `blockChecker(accountId, partnerAccountId)` and
+   *   cancels the match if either player has blocked the other). Kept here so
+   *   callers can pass it through without a conditional.
+   * @param {(function(string): { rating: number, rd: number }|null)|null} [opts.ratingProvider]
+   *   P6: Optional async function that returns a player's rating + RD for
+   *   rating-band matchmaking. If provided, ranked queue entries will be
+   *   paired preferentially within a rating band. Falls back to FIFO if
+   *   no rating is available or the band is empty.
    */
-  constructor({ onCreateMatch, blockChecker = null } = {}) {
+  constructor({ onCreateMatch, blockChecker = null, ratingProvider = null } = {}) {
     /** @type {QueueEntry[]} */
     this._queue = []; // [{ connectionId, profileId, joinedAt }]
     this._byConnection = new Map(); // connectionId → queue index
     this._onCreateMatch = onCreateMatch;
+    // Stored for caller introspection only; the queue itself never invokes it.
     /** @type {(function(string, string): Promise<boolean>)|null} */
     this._blockChecker = blockChecker;
+    /** @type {(function(string): { rating: number, rd: number }|null)|null} */
+    this._ratingProvider = ratingProvider;
   }
 
   /**
@@ -196,6 +208,39 @@ export class MatchmakingQueue {
       const different2 = sameQueue.find(e => !a.accountId || !e.accountId || e.accountId !== a.accountId);
       if (!different2) return null;
       b = different2;
+    }
+
+    // P6: Rating-band matchmaking — for ranked queue, prefer opponents within
+    // a rating band computed from RD (rating deviation). Wider RD = wider band.
+    // Falls back to FIFO if no rating provider or no rating available.
+    if (a.queueId === 'ranked' && this._ratingProvider && a.accountId) {
+      const aRating = this._ratingProvider(a.accountId);
+      if (aRating && typeof aRating.rating === 'number') {
+        // Band = 2 * RD + 100 baseline (ensures even tight-RD players get some band)
+        const band = (aRating.rd ?? 50) * 2 + 100;
+        const sameQueue = candidates.filter(e =>
+          (e.queueId ?? 'casual') === 'ranked' &&
+          e.connectionId !== a.connectionId &&
+          (!a.accountId || !e.accountId || e.accountId !== a.accountId)
+        );
+        // Find the closest opponent within the band
+        let bestMatch = null;
+        let bestDistance = Infinity;
+        for (const candidate of sameQueue) {
+          if (!candidate.accountId) continue;
+          const cRating = this._ratingProvider(candidate.accountId);
+          if (!cRating || typeof cRating.rating !== 'number') continue;
+          const distance = Math.abs(cRating.rating - aRating.rating);
+          if (distance <= band && distance < bestDistance) {
+            bestDistance = distance;
+            bestMatch = candidate;
+          }
+        }
+        if (bestMatch) {
+          b = bestMatch;
+        }
+        // If no one in band, fall through to FIFO (b is already set above)
+      }
     }
 
     // Remove both from queue

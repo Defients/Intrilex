@@ -379,5 +379,187 @@ export function isSelfRelationship(callerPublicPlayerId, targetPublicPlayerId) {
   return callerPublicPlayerId === targetPublicPlayerId;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// RIVAL MILESTONES + NEMESIS DETECTION (v0.28.0 — Epoch 4)
+//
+// Derived from head-to-head data. Pure functions — no I/O, no DB.
+// Milestones are badges that surface meaningful moments in a rivalry.
+// Nemesis detection identifies a rival who consistently beats you.
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * @readonly
+ * @enum {string} Rival milestone type.
+ */
+export const RivalMilestone = Object.freeze({
+  FIRST_BLOOD: 'first_blood',         // First win against this rival
+  FIRST_LOSS: 'first_loss',           // First loss against this rival
+  FIVE_GAMES: 'five_games',           // Played 5+ games
+  TEN_GAMES: 'ten_games',             // Played 10+ games (deep rivalry)
+  EVEN_STEVEN: 'even_steven',         // Record is perfectly even (min 4 games)
+  DOMINANT: 'dominant',               // 75%+ win rate (min 4 games)
+  DOMINATED: 'dominated',             // 25%- win rate (min 4 games) — nemesis signal
+  COMEBACK_KING: 'comeback_king',     // Won after being down 0-2 (min 3 wins, 2+ losses)
+  WIN_STREAK: 'win_streak',           // 3+ win streak against this rival
+  LOSS_STREAK: 'loss_streak',         // 3+ loss streak — nemesis signal
+});
+
+/**
+ * @typedef {Object} MilestoneResult
+ * @property {string} type - One of RivalMilestone
+ * @property {string} label - Human-readable label
+ * @property {string} icon - Emoji icon
+ * @property {string} description - What this milestone means
+ */
+
+/**
+ * Derive rival milestones from head-to-head data. Returns an array of
+ * earned milestones, sorted by significance. Pure function.
+ * @param {HeadToHead} h2h - Head-to-head record from the caller's perspective
+ * @returns {MilestoneResult[]}
+ */
+export function deriveRivalMilestones(h2h) {
+  if (!h2h || h2h.games === 0) return [];
+  const { wins, losses, games, winRate } = h2h;
+  const milestones = [];
+
+  if (wins >= 1) {
+    milestones.push({
+      type: RivalMilestone.FIRST_BLOOD,
+      label: 'First Blood',
+      icon: '🩸',
+      description: 'Your first win against this rival.',
+    });
+  }
+  if (losses >= 1) {
+    milestones.push({
+      type: RivalMilestone.FIRST_LOSS,
+      label: 'First Loss',
+      icon: '💔',
+      description: 'Your first loss to this rival.',
+    });
+  }
+  if (games >= 5) {
+    milestones.push({
+      type: RivalMilestone.FIVE_GAMES,
+      label: '5 Games',
+      icon: '⚔',
+      description: 'You\'ve played 5+ games against this rival.',
+    });
+  }
+  if (games >= 10) {
+    milestones.push({
+      type: RivalMilestone.TEN_GAMES,
+      label: '10 Games',
+      icon: '🔥',
+      description: 'A deep rivalry — 10+ games played.',
+    });
+  }
+  // Even record: wins === losses, at least 4 games (2-2, 3-3, etc.)
+  if (games >= 4 && wins === losses && wins >= 2) {
+    milestones.push({
+      type: RivalMilestone.EVEN_STEVEN,
+      label: 'Even Steven',
+      icon: '⚖',
+      description: 'A perfectly even record — nobody has the edge.',
+    });
+  }
+  // Dominant: 75%+ win rate, min 4 decided games
+  const decided = wins + losses;
+  if (decided >= 4 && winRate >= 0.75) {
+    milestones.push({
+      type: RivalMilestone.DOMINANT,
+      label: 'Dominant',
+      icon: '👑',
+      description: 'You dominate this rivalry (75%+ win rate).',
+    });
+  }
+  // Dominated: 25%- win rate, min 4 decided games
+  if (decided >= 4 && winRate <= 0.25) {
+    milestones.push({
+      type: RivalMilestone.DOMINATED,
+      label: 'Dominated',
+      icon: '💀',
+      description: 'This rival dominates you (75%+ loss rate).',
+    });
+  }
+  // Comeback King: 3+ wins and 2+ losses (implies you lost early, came back)
+  if (wins >= 3 && losses >= 2) {
+    milestones.push({
+      type: RivalMilestone.COMEBACK_KING,
+      label: 'Comeback King',
+      icon: '🔄',
+      description: 'You bounced back from early losses in this rivalry.',
+    });
+  }
+  // Win streak: 3+ wins (simplified — no sequential data, so we use total wins as proxy)
+  if (wins >= 3 && losses === 0) {
+    milestones.push({
+      type: RivalMilestone.WIN_STREAK,
+      label: 'Unbeaten',
+      icon: '🏆',
+      description: 'You\'ve never lost to this rival (3+ wins, 0 losses).',
+    });
+  }
+  // Loss streak: 3+ losses, 0 wins
+  if (losses >= 3 && wins === 0) {
+    milestones.push({
+      type: RivalMilestone.LOSS_STREAK,
+      label: 'Winless',
+      icon: '😞',
+      description: 'You\'ve never beaten this rival (3+ losses, 0 wins).',
+    });
+  }
+
+  return milestones;
+}
+
+/**
+ * Determine if a rival is a "nemesis" — someone who consistently beats you.
+ * A nemesis is defined as:
+ *   - At least 3 decided games (wins + losses)
+ *   - Win rate <= 0.33 (you win at most 1/3 of decided games)
+ *   - At least 2 more losses than wins
+ *
+ * Returns the nemesis badge or null if the rivalry doesn't qualify.
+ * @param {HeadToHead} h2h - Head-to-head from the caller's perspective
+ * @returns {MilestoneResult|null}
+ */
+export function detectNemesis(h2h) {
+  if (!h2h || h2h.games === 0) return null;
+  const { wins, losses, winRate } = h2h;
+  const decided = wins + losses;
+  if (decided < 3) return null;
+  if (winRate > 0.33) return null;
+  if (losses - wins < 2) return null;
+  return {
+    type: 'nemesis',
+    label: 'Nemesis',
+    icon: '🗡',
+    description: `This rival dominates you (${wins}–${losses}). Time to study their replays and adapt.`,
+  };
+}
+
+/**
+ * Determine if you are the "kryptonite" of a rival — you consistently beat them.
+ * The mirror of nemesis detection.
+ * @param {HeadToHead} h2h - Head-to-head from the caller's perspective
+ * @returns {MilestoneResult|null}
+ */
+export function detectKryptonite(h2h) {
+  if (!h2h || h2h.games === 0) return null;
+  const { wins, losses, winRate } = h2h;
+  const decided = wins + losses;
+  if (decided < 3) return null;
+  if (winRate < 0.67) return null;
+  if (wins - losses < 2) return null;
+  return {
+    type: 'kryptonite',
+    label: 'Kryptonite',
+    icon: '💎',
+    description: `You dominate this rival (${wins}–${losses}). You are their weakness.`,
+  };
+}
+
 // Re-export Division for DTO consumers.
 export { Division };

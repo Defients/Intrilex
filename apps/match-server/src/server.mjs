@@ -54,6 +54,14 @@ import { buildMatchResultRecord } from './persistence/match-result-builder.mjs';
 import { RatingService } from './ranked/rating-service.mjs';
 import { TerminalOutbox } from './persistence/terminal-outbox.mjs';
 import { LAB_VERSION } from '@intrilex/shared/version';
+import { createAuthHandlers, checkAuthAttemptRate } from './handlers/auth-handlers.mjs';
+import { createSpectatorHandlers } from './handlers/spectator-handlers.mjs';
+import { createMatchmakingHandlers } from './handlers/matchmaking-handlers.mjs';
+import { createMatchHandlers } from './handlers/match-handlers.mjs';
+import { createTournamentHandlers } from './handlers/tournament-handlers.mjs';
+import { createReportHandlers } from './handlers/report-handlers.mjs';
+import { InMemoryTournamentRepository, SupabaseTournamentRepository } from './persistence/tournament-repository.mjs';
+import { startHealthMonitor } from './monitoring/health-monitor.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -111,6 +119,19 @@ const MAX_CONNECTIONS_PER_IP = 10; // max concurrent connections per IP
 const MAX_SPECTATORS_PER_MATCH = 50; // max spectators per match
 const MAX_GLOBAL_CONNECTIONS = 500; // global connection cap — prevents botnet flooding from many IPs
 
+// Auth-attempt rate limiting: per-IP sliding window.
+// Prevents DoS via Supabase API exhaustion — an attacker flooding AUTHENTICATE
+// requests could trigger Supabase rate limits that lock out all legitimate users.
+// Tracked per-IP (not per-connection) because the attack vector is opening many
+// connections from one IP. Each failed or successful auth attempt counts.
+const AUTH_ATTEMPT_WINDOW_MS = 60000; // 1 min sliding window
+const AUTH_ATTEMPT_MAX = 10; // max 10 auth attempts per IP per window
+const AUTH_ATTEMPT_BAN_MS = 300000; // 5 min ban on threshold breach
+// Configurable for testing (overridden by startServer opts)
+let _authAttemptMax = AUTH_ATTEMPT_MAX;
+let _authAttemptWindowMs = AUTH_ATTEMPT_WINDOW_MS;
+let _authAttemptBanMs = AUTH_ATTEMPT_BAN_MS;
+
 // ── Server state ──
 
 let matchStore = null;
@@ -120,12 +141,25 @@ let matchResultPersistor = null; // MatchResultPersistor instance (set by startS
 let ratingService = null; // RatingService instance (set by startServer) — RANK-01/3C
 let terminalOutbox = null; // TerminalOutbox instance (set by startServer) — DATA-01
 let blockChecker = null; // IRX-H19: Block-check function (accountIdA, accountIdB) → Promise<boolean>
+// IRX-H19: Block enforcement uses BLOCKED_BY_PLAYER reason code in handler modules
+// (match-handlers.mjs for join/create, matchmaking-handlers.mjs for queue).
+// handleJoinMatch calls blockChecker(joinerAccountId, p.accountId) in match-handlers.mjs.
+// handleQueueJoin calls blockChecker(accountId, partnerAccountId) in matchmaking-handlers.mjs.
 let _authMode = AUTH_MODE; // Active auth mode (can be overridden by startServer opts)
 let _isProductionMode = false; // True when authMode=required (DATA-04: fail-closed persistence)
 const connections = new Map(); // connectionId → { ws, authState, account, participantId, matchId, lastHeartbeat, isSpectator, spectatingMatchId, rateLimit, ip }
 const bannedIps = new Map(); // ip → banExpiresAt
 const ipConnectionCounts = new Map(); // ip → active connection count
 const _httpRateLimit = new Map(); // ip → { count, windowStart } — v0.24.2 HTTP rate limiter
+const _authAttempts = new Map(); // ip → number[] (timestamps of recent auth attempts)
+// Extracted handler modules — set by startServer() via create*Handlers()
+let _authHandlers = null;
+let _spectatorHandlers = null;
+let _matchmakingHandlers = null;
+let _matchHandlers = null;
+let _tournamentHandlers = null;
+let _tournamentRepository = null; // TournamentRepository (InMemory or Supabase)
+let _reportHandlers = null;
 
 // ── Observability: structured event logger + metrics counters ──
 const _startTime = Date.now();
@@ -480,6 +514,10 @@ export function startServer(opts = {}) {
   _featureFlags.publicMatchmaking = publicMatchmaking;
   // Override rate limit capacity for testing (default: 10)
   _rateLimitCapacity = opts.rateLimitCapacity ?? RATE_LIMIT_CAPACITY;
+  // Auth-attempt rate limiting overrides for testing
+  _authAttemptMax = opts.authAttemptMax ?? AUTH_ATTEMPT_MAX;
+  _authAttemptWindowMs = opts.authAttemptWindowMs ?? AUTH_ATTEMPT_WINDOW_MS;
+  _authAttemptBanMs = opts.authAttemptBanMs ?? AUTH_ATTEMPT_BAN_MS;
 
   // IRX-H19: Block checker — async function (accountIdA, accountIdB) → boolean
   // When provided, the server checks if either player has blocked the other
@@ -518,6 +556,33 @@ export function startServer(opts = {}) {
   // result persistor is configured. FakeMatchResultPersistor is allowed
   // ONLY in explicit dev/test modes (authMode=disabled or opts.allowFakePersistor).
   _isProductionMode = _authMode === AuthMode.REQUIRED;
+
+  // T3: node:sqlite startup probe — verify the experimental API is functional.
+  // node:sqlite is experimental in Node 22; a version drift or missing flag
+  // could silently break restart recovery. This probe fails loudly at startup
+  // in production rather than corrupting match state later.
+  // Only probe SqliteMatchStore instances — InMemoryMatchStore is used in tests/dev.
+  // Skip when allowFakePersistor is set (explicit test/dev mode).
+  if (persistent && matchStore && matchStore.constructor?.name === 'SqliteMatchStore' && !opts.allowFakePersistor) {
+    try {
+      const requiredMethods = ['get', 'save', 'delete'];
+      for (const m of requiredMethods) {
+        if (typeof matchStore[m] !== 'function') {
+          throw new Error(`SqliteMatchStore missing required method: ${m}`);
+        }
+      }
+      logEvent('sqliteStartupProbeOk', { storeType: matchStore.constructor.name });
+    } catch (probeErr) {
+      logEvent('sqliteStartupProbeFailed', { error: probeErr?.message });
+      if (_isProductionMode) {
+        throw new Error(`SQLite startup probe failed: ${probeErr?.message}. ` +
+          'The node:sqlite experimental API may be unavailable on this Node version. ' +
+          'Consider pinning Node 22+ or using --experimental-sqlite flag.');
+      }
+      console.warn('⚠  SQLite startup probe failed, falling back to InMemoryMatchStore:', probeErr?.message);
+      matchStore = new InMemoryMatchStore();
+    }
+  }
 
   // Resolve the canonical service key from one source (DATA-04):
   // Precedence: opts.supabaseServiceKey > opts.supabaseSecretKey (deprecated alias) > env
@@ -668,7 +733,7 @@ export function startServer(opts = {}) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         server: 'Intrilex Match Authority',
-        version: '0.27.0',
+        version: '0.28.0',
         protocolVersion: 2,
         ...getPublicHealthMetrics(),
       }));
@@ -688,6 +753,113 @@ export function startServer(opts = {}) {
     // See handleGetReplay() for the canonical authenticated path.
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Not found' }));
+  });
+
+  // ── Create extracted handler modules (auth, spectator, matchmaking) ──
+  // These were extracted from server.mjs to reduce file size and improve
+  // testability. Each module receives a context object with shared server
+  // state and helper functions. Getters are used for state that is reassigned
+  // by startServer (matchStore, matchmakingQueue, identityVerifier, etc.).
+  _authHandlers = createAuthHandlers({
+    connections,
+    authAttempts: _authAttempts,
+    bannedIps,
+    getIdentityVerifier: () => identityVerifier,
+    getAuthMode: () => _authMode,
+    authAttemptMax: _authAttemptMax,
+    authAttemptWindowMs: _authAttemptWindowMs,
+    authAttemptBanMs: _authAttemptBanMs,
+    send,
+    logEvent,
+  });
+  _spectatorHandlers = createSpectatorHandlers({
+    connections,
+    getMatchStore: () => matchStore,
+    maxSpectatorsPerMatch: MAX_SPECTATORS_PER_MATCH,
+    getAuthMode: () => _authMode,
+    send,
+    logEvent,
+  });
+  _matchmakingHandlers = createMatchmakingHandlers({
+    connections,
+    getMatchStore: () => matchStore,
+    getMatchmakingQueue: () => matchmakingQueue,
+    getBlockChecker: () => blockChecker,
+    getPublicMatchmaking: () => _featureFlags.publicMatchmaking,
+    maxMatches: MAX_MATCHES,
+    send,
+    logEvent,
+  });
+  _matchHandlers = createMatchHandlers({
+    connections,
+    getMatchStore: () => matchStore,
+    getAuthMode: () => _authMode,
+    getBlockChecker: () => blockChecker,
+    pendingForfeits,
+    maxMatches: MAX_MATCHES,
+    buildPublicProfile,
+    classifyMatchForCreate,
+    findConnectionByParticipant,
+    supersedeOldConnection,
+    broadcastMatchEnded,
+    broadcastToSpectators: (match) => _spectatorHandlers?.broadcastToSpectators(match),
+    send,
+    logEvent,
+  });
+  // Tournament repository: Supabase in production, in-memory in dev
+  if (opts.tournamentRepository) {
+    _tournamentRepository = opts.tournamentRepository;
+  } else if (matchResultPersistor && opts.supabaseUrl && _resolvedServiceKey) {
+    // Reuse the same Supabase client configuration for tournament persistence
+    const { createClient } = require('@supabase/supabase-js');
+    const tournamentClient = createClient(opts.supabaseUrl, _resolvedServiceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    _tournamentRepository = new SupabaseTournamentRepository({ client: tournamentClient });
+  } else if (process.env.SUPABASE_URL && _resolvedServiceKey) {
+    const { createClient } = require('@supabase/supabase-js');
+    const tournamentClient = createClient(process.env.SUPABASE_URL, _resolvedServiceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    _tournamentRepository = new SupabaseTournamentRepository({ client: tournamentClient });
+  } else {
+    _tournamentRepository = new InMemoryTournamentRepository();
+  }
+
+  // Operator account IDs for TOURNAMENT_START / TOURNAMENT_REPORT_RESULT
+  const _operatorAccountIds = new Set(opts.operatorAccountIds ?? []);
+  if (process.env.INTRILEX_OPERATOR_ACCOUNTS) {
+    for (const id of process.env.INTRILEX_OPERATOR_ACCOUNTS.split(',').map(s => s.trim()).filter(Boolean)) {
+      _operatorAccountIds.add(id);
+    }
+  }
+
+  _tournamentHandlers = createTournamentHandlers({
+    connections,
+    tournamentRepository: _tournamentRepository,
+    operatorAccountIds: _operatorAccountIds,
+    send,
+    logEvent,
+  });
+
+  // B12: Report handler — requires Supabase client for the submit_player_report RPC
+  let _reportSupabaseClient = null;
+  if (opts.supabaseUrl && _resolvedServiceKey) {
+    const { createClient: _createReportClient } = require('@supabase/supabase-js');
+    _reportSupabaseClient = _createReportClient(opts.supabaseUrl, _resolvedServiceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  } else if (process.env.SUPABASE_URL && _resolvedServiceKey) {
+    const { createClient: _createReportClient } = require('@supabase/supabase-js');
+    _reportSupabaseClient = _createReportClient(process.env.SUPABASE_URL, _resolvedServiceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+  _reportHandlers = createReportHandlers({
+    connections,
+    supabaseClient: _reportSupabaseClient,
+    send,
+    logEvent,
   });
 
   // WebSocket server with permessage-deflate compression.
@@ -827,7 +999,23 @@ export function startServer(opts = {}) {
     for (const [ip, expires] of bannedIps) {
       if (now > expires) bannedIps.delete(ip);
     }
+    // Clean stale auth-attempt trackers (no attempts in the window)
+    const authCutoff = now - _authAttemptWindowMs;
+    for (const [ip, attempts] of _authAttempts) {
+      // Remove entries outside the window; if none remain, drop the IP entirely
+      while (attempts.length > 0 && attempts[0] < authCutoff) attempts.shift();
+      if (attempts.length === 0) _authAttempts.delete(ip);
+    }
   }, 60000);
+
+  // ── Health monitor — periodic threshold checks + structured alerts ──
+  const healthMonitor = startHealthMonitor({
+    getHealthMetrics,
+    logEvent,
+    intervalMs: opts.healthMonitorIntervalMs ?? 60000,
+    maxGlobalConnections: MAX_GLOBAL_CONNECTIONS,
+    maxMatches: MAX_MATCHES,
+  });
 
   return new Promise((resolve) => {
     httpServer.listen(port, host, () => {
@@ -841,6 +1029,7 @@ export function startServer(opts = {}) {
         close() {
           clearInterval(heartbeatTimer);
           clearInterval(cleanupTimer);
+          healthMonitor.stop();
           // v0.25: Remove signal handlers on explicit close
           process.removeListener('SIGTERM', signalHandler);
           process.removeListener('SIGINT', signalHandler);
@@ -870,6 +1059,16 @@ export function startServer(opts = {}) {
             ratingService = null;
             // Clear module-level state to prevent cross-instance contamination in tests
             bannedIps.clear();
+            _authAttempts.clear();
+            _authHandlers = null;
+            _spectatorHandlers = null;
+            _matchmakingHandlers = null;
+            _matchHandlers = null;
+            _tournamentHandlers = null;
+            _reportHandlers = null;
+            if (_tournamentRepository && typeof _tournamentRepository.clear === 'function') {
+              _tournamentRepository.clear();
+            }
             // Force-close with a timeout fallback
             return new Promise((resolve) => {
               let resolved = false;
@@ -1004,19 +1203,27 @@ function handleMessage(connectionId, ws, raw) {
   try {
     let handlerResult;
     switch (type) {
-      case 'AUTHENTICATE': handlerResult = handleAuthenticate(connectionId, ws, payload, requestId); break;
-      case 'AUTH_REFRESH': handlerResult = handleAuthRefresh(connectionId, ws, payload, requestId); break;
-      case 'CREATE_MATCH': handlerResult = handleCreateMatch(connectionId, ws, payload, requestId); break;
-      case 'JOIN_MATCH': handlerResult = handleJoinMatch(connectionId, ws, payload, requestId); break;
-      case 'RESUME_MATCH': handlerResult = handleResumeMatch(connectionId, ws, payload, requestId); break;
-      case 'READY': handlerResult = handleReady(connectionId, ws, payload, requestId); break;
-      case 'SUBMIT_ACTION': handlerResult = handleSubmitAction(connectionId, ws, payload, requestId); break;
-      case 'REQUEST_SYNC': handlerResult = handleRequestSync(connectionId, ws, payload, requestId); break;
-      case 'LEAVE_MATCH': handlerResult = handleLeaveMatch(connectionId, ws, payload, requestId); break;
-      case 'QUEUE_JOIN': handlerResult = handleQueueJoin(connectionId, ws, payload, requestId); break;
-      case 'QUEUE_LEAVE': handlerResult = handleQueueLeave(connectionId, ws, payload, requestId); break;
-      case 'SPECTATE_MATCH': handlerResult = handleSpectateMatch(connectionId, ws, payload, requestId); break;
-      case 'SPECTATE_LEAVE': handlerResult = handleSpectateLeave(connectionId, ws, payload, requestId); break;
+      case 'AUTHENTICATE': handlerResult = _authHandlers.handleAuthenticate(connectionId, ws, payload, requestId); break;
+      case 'AUTH_REFRESH': handlerResult = _authHandlers.handleAuthRefresh(connectionId, ws, payload, requestId); break;
+      case 'CREATE_MATCH': handlerResult = _matchHandlers.handleCreateMatch(connectionId, ws, payload, requestId); break;
+      case 'JOIN_MATCH': handlerResult = _matchHandlers.handleJoinMatch(connectionId, ws, payload, requestId); break;
+      case 'RESUME_MATCH': handlerResult = _matchHandlers.handleResumeMatch(connectionId, ws, payload, requestId); break;
+      case 'READY': handlerResult = _matchHandlers.handleReady(connectionId, ws, payload, requestId); break;
+      case 'SUBMIT_ACTION': handlerResult = _matchHandlers.handleSubmitAction(connectionId, ws, payload, requestId); break;
+      case 'REQUEST_SYNC': handlerResult = _matchHandlers.handleRequestSync(connectionId, ws, payload, requestId); break;
+      case 'LEAVE_MATCH': handlerResult = _matchHandlers.handleLeaveMatch(connectionId, ws, payload, requestId); break;
+      case 'REMATCH': handlerResult = _matchHandlers.handleRematch(connectionId, ws, payload, requestId); break;
+      case 'QUEUE_JOIN': handlerResult = _matchmakingHandlers.handleQueueJoin(connectionId, ws, payload, requestId); break;
+      case 'QUEUE_LEAVE': handlerResult = _matchmakingHandlers.handleQueueLeave(connectionId, ws, payload, requestId); break;
+      case 'SPECTATE_MATCH': handlerResult = _spectatorHandlers.handleSpectateMatch(connectionId, ws, payload, requestId); break;
+      case 'SPECTATE_LEAVE': handlerResult = _spectatorHandlers.handleSpectateLeave(connectionId, ws, payload, requestId); break;
+      case 'LIST_SPECTATABLE': handlerResult = _spectatorHandlers.handleListSpectatable(connectionId, ws, payload, requestId); break;
+      case 'TOURNAMENT_LIST': handlerResult = _tournamentHandlers.handleTournamentList(connectionId, ws, payload, requestId); break;
+      case 'TOURNAMENT_GET': handlerResult = _tournamentHandlers.handleTournamentGet(connectionId, ws, payload, requestId); break;
+      case 'TOURNAMENT_REGISTER': handlerResult = _tournamentHandlers.handleTournamentRegister(connectionId, ws, payload, requestId); break;
+      case 'TOURNAMENT_START': handlerResult = _tournamentHandlers.handleTournamentStart(connectionId, ws, payload, requestId); break;
+      case 'TOURNAMENT_REPORT_RESULT': handlerResult = _tournamentHandlers.handleTournamentReportResult(connectionId, ws, payload, requestId); break;
+      case 'REPORT_PLAYER': handlerResult = _reportHandlers.handleReportPlayer(connectionId, ws, payload, requestId); break;
       case 'MATCH_HISTORY': handlerResult = handleMatchHistory(connectionId, ws, payload, requestId); break;
       case 'GET_REPLAY': handlerResult = handleGetReplay(connectionId, ws, payload, requestId); break;
       case 'SEND_CHAT': handlerResult = handleSendChat(connectionId, ws, payload, requestId); break;
@@ -1042,149 +1249,12 @@ function handleMessage(connectionId, ws, raw) {
 }
 
 // ── Handlers ──
-
-// ── Auth handshake handlers ──
-
-async function handleAuthenticate(connectionId, ws, payload, requestId) {
-  // When auth is disabled, accept silently (no-op)
-  if (_authMode !== AuthMode.REQUIRED) {
-    return send(ws, authenticatedBuilder(
-      { publicPlayerId: 'PLY_dev', displayName: 'DevPlayer', handle: null, avatarUrl: null, isAnonymous: false, capabilities: resolveCapabilities({}, true) },
-      Date.now() + 3600000,
-      requestId,
-    ));
-  }
-
-  const check = validateAuthenticate(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const result = await identityVerifier.verify(payload.accessToken);
-  if (!result.valid) {
-    logEvent('authFailure', { connectionId, code: result.code });
-    return send(ws, errorMsg(result.code, result.message, requestId));
-  }
-
-  // Bind verified identity to connection
-  const conn = connections.get(connectionId);
-  if (!conn) return;
-  // IRX-H01: Prevent re-authentication from switching to a different account.
-  // If the connection is already authenticated and bound to a match seat,
-  // a re-AUTHENTICATE with a different accountId must be rejected to prevent
-  // seat hijacking. The same subject may re-authenticate (e.g. token refresh).
-  if (conn.authState === ConnectionAuthState.AUTHENTICATED && conn.account) {
-    if (conn.account.accountId !== result.identity.accountId) {
-      logEvent('authFailure', { connectionId, code: 'AUTH_ACCOUNT_SWITCH', reason: 're_auth_different_account', existingAccount: conn.account.accountId, newAccount: result.identity.accountId });
-      return send(ws, errorMsg(ReasonCode.AUTH_REQUIRED, 'Already authenticated as a different account — disconnect and reconnect to switch accounts', requestId));
-    }
-  }
-  conn.authState = ConnectionAuthState.AUTHENTICATED;
-  conn.account = {
-    accountId: result.identity.accountId,
-    publicPlayerId: result.identity.publicProfile.publicPlayerId,
-    isAnonymous: result.identity.isAnonymous,
-    provider: result.identity.provider,
-    tokenExpiresAt: result.identity.expiresAt,
-    capabilities: result.identity.capabilities,
-    accountStatus: result.identity.accountStatus ?? 'ACTIVE',
-    displayName: result.identity.publicProfile.displayName,
-    handle: result.identity.publicProfile.handle,
-    avatarUrl: result.identity.publicProfile.avatarUrl,
-  };
-
-  logEvent('authSuccess', { connectionId, accountId: result.identity.accountId, isAnonymous: result.identity.isAnonymous });
-
-  // IRX-H12: Enforce account status — reject suspended/banned accounts
-  const acctStatus = conn.account.accountStatus ?? 'ACTIVE';
-  if (acctStatus === 'SUSPENDED') {
-    logEvent('authRejected', { connectionId, code: 'AUTH_ACCOUNT_SUSPENDED', accountId: result.identity.accountId });
-    conn.authState = ConnectionAuthState.SIGNED_OUT;
-    conn.account = null;
-    return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_SUSPENDED, 'This account is suspended', requestId));
-  }
-  if (acctStatus === 'BANNED') {
-    logEvent('authRejected', { connectionId, code: 'AUTH_ACCOUNT_BANNED', accountId: result.identity.accountId });
-    conn.authState = ConnectionAuthState.SIGNED_OUT;
-    conn.account = null;
-    return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_BANNED, 'This account is banned', requestId));
-  }
-
-  // Send AUTHENTICATED with safe public profile — NEVER echo the access token
-  send(ws, authenticatedBuilder(
-    toSafePublicProfile(result.identity) ? {
-      publicPlayerId: result.identity.publicProfile.publicPlayerId,
-      displayName: result.identity.publicProfile.displayName,
-      handle: result.identity.publicProfile.handle,
-      avatarUrl: result.identity.publicProfile.avatarUrl,
-      isAnonymous: result.identity.isAnonymous,
-      capabilities: result.identity.capabilities,
-    } : {
-      publicPlayerId: result.identity.publicProfile.publicPlayerId,
-      displayName: result.identity.publicProfile.displayName,
-      handle: null,
-      avatarUrl: null,
-      isAnonymous: result.identity.isAnonymous,
-      capabilities: result.identity.capabilities,
-    },
-    result.identity.expiresAt,
-    requestId,
-  ));
-}
-
-async function handleAuthRefresh(connectionId, ws, payload, requestId) {
-  // When auth is disabled, no-op
-  if (_authMode !== AuthMode.REQUIRED) {
-    return send(ws, authenticatedBuilder(
-      { publicPlayerId: 'PLY_dev', displayName: 'DevPlayer', handle: null, avatarUrl: null, isAnonymous: false, capabilities: resolveCapabilities({}, true) },
-      Date.now() + 3600000,
-      requestId,
-    ));
-  }
-
-  const check = validateAuthRefresh(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const conn = connections.get(connectionId);
-  if (!conn) return;
-
-  // Must already be authenticated to refresh
-  if (conn.authState !== ConnectionAuthState.AUTHENTICATED || !conn.account) {
-    return send(ws, errorMsg(ReasonCode.AUTH_REQUIRED, 'Must authenticate before refresh', requestId));
-  }
-
-  const result = await identityVerifier.verify(payload.accessToken);
-  if (!result.valid) {
-    logEvent('authFailure', { connectionId, code: result.code, reason: 'refresh' });
-    return send(ws, errorMsg(result.code, result.message, requestId));
-  }
-
-  // Refreshed token sub must match already-bound account
-  if (result.identity.accountId !== conn.account.accountId) {
-    logEvent('authFailure', { connectionId, code: 'AUTH_ACCOUNT_MISMATCH', reason: 'refresh_different_account' });
-    // Disconnect — do not allow account switching via refresh
-    send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_MISMATCH, 'Token refresh account mismatch — disconnecting', requestId));
-    // Use close() not terminate() to allow the ERROR message to flush
-    ws.close();
-    connections.delete(connectionId);
-    return;
-  }
-
-  // Update token expiration on the connection
-  conn.account.tokenExpiresAt = result.identity.expiresAt;
-  logEvent('authRefresh', { connectionId, accountId: conn.account.accountId });
-
-  send(ws, authenticatedBuilder(
-    {
-      publicPlayerId: conn.account.publicPlayerId,
-      displayName: conn.account.displayName,
-      handle: conn.account.handle,
-      avatarUrl: conn.account.avatarUrl,
-      isAnonymous: conn.account.isAnonymous,
-      capabilities: conn.account.capabilities,
-    },
-    result.identity.expiresAt,
-    requestId,
-  ));
-}
+// Auth handshake handlers (handleAuthenticate, handleAuthRefresh) are
+// extracted to handlers/auth-handlers.mjs and wired via createAuthHandlers().
+// Spectator handlers (handleSpectateMatch, handleSpectateLeave,
+// broadcastToSpectators) are extracted to handlers/spectator-handlers.mjs.
+// Matchmaking handlers (handleQueueJoin, handleQueueLeave) are extracted
+// to handlers/matchmaking-handlers.mjs.
 
 // ── Guest migration handler ──
 
@@ -1269,520 +1339,14 @@ async function handleMigrateGuest(connectionId, ws, payload, requestId) {
   ));
 }
 
-// ── Match lifecycle handlers ──
-
-function handleCreateMatch(connectionId, ws, payload, requestId) {
-  if (matchStore.count >= MAX_MATCHES) {
-    return send(ws, errorMsg(ReasonCode.RATE_LIMITED, 'Server at match capacity', requestId));
-  }
-
-  // Prevent conflicting bindings — one connection cannot create/join/queue simultaneously
-  const existingConn = connections.get(connectionId);
-  if (existingConn && (existingConn.participantId || existingConn.isSpectator)) {
-    return send(ws, errorMsg(ReasonCode.MATCH_ALREADY_JOINED, 'Connection already bound to a match or spectating', requestId));
-  }
-
-  const check = validateCreateMatch(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const matchId = `M-${randomBytes(12).toString('base64url')}`;
-  const participantToken = randomBytes(32).toString('base64url');
-  const participantId = `P-${randomBytes(8).toString('base64url')}`;
-  const seed = randomBytes(4).readUInt32BE(0);
-
-  // Generate a unique 6-character invite code (uppercase alphanumeric)
-  // 36^6 ≈ 2.2B possibilities — sufficient for invite-alpha
-  // Retry on collision — never overwrite an existing invite mapping
-  const CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let inviteCode;
-  let attempts = 0;
-  do {
-    inviteCode = Array.from(randomBytes(6), b => CODE_ALPHABET[b % CODE_ALPHABET.length]).join('');
-    attempts++;
-    if (attempts > 10) {
-      return send(ws, errorMsg(ReasonCode.INTERNAL_ERROR, 'Failed to generate unique invite code', requestId));
-    }
-  } while (matchStore.findByInviteCode(inviteCode));
-
-  const match = createAuthoritativeMatch({
-    matchId,
-    profileId: payload.profileId,
-    seed,
-    // RANK-01: Server-owned match classification — client may request a
-    // queue, but the server validates and creates authoritative classification.
-    ...classifyMatchForCreate(payload),
-  });
-
-  // Bind connection to participant
-  const conn = connections.get(connectionId);
-
-  match.addParticipant(participantId, participantToken, conn?.account?.accountId ?? null, buildPublicProfile(conn));
-  matchStore.save(match);
-  matchStore.registerInvite(inviteCode, matchId);
-
-  conn.participantId = participantId;
-  conn.matchId = matchId;
-
-  send(ws, matchCreated(matchId, inviteCode, participantToken, requestId));
-  logEvent('matchCreate', { matchId, profileId: payload.profileId, matchMode: match.matchMode, queueId: match.queueId, accountId: conn?.account?.accountId ?? null });
-}
-
-async function handleJoinMatch(connectionId, ws, payload, requestId) {
-  // Prevent conflicting bindings
-  const existingConn = connections.get(connectionId);
-  if (existingConn && (existingConn.participantId || existingConn.isSpectator)) {
-    return send(ws, errorMsg(ReasonCode.MATCH_ALREADY_JOINED, 'Connection already bound to a match or spectating', requestId));
-  }
-
-  const check = validateJoinMatch(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const match = matchStore.findByInviteCode(payload.inviteCode);
-  if (!match) {
-    return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Invalid invite code', requestId));
-  }
-  if (match.participants.size >= 2) {
-    return send(ws, errorMsg(ReasonCode.MATCH_FULL, 'Match is full', requestId));
-  }
-
-  // Prevent self-join: same account cannot occupy both seats (when auth enabled)
-  const conn = connections.get(connectionId);
-  const joinerAccountId = conn?.account?.accountId ?? null;
-  if (joinerAccountId) {
-    for (const [, p] of match.participants) {
-      if (p.accountId === joinerAccountId) {
-        return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_MISMATCH, 'Cannot join your own match', requestId));
-      }
-      // IRX-H19: Check if either player has blocked the other
-      if (blockChecker && p.accountId) {
-        const blocked = await blockChecker(joinerAccountId, p.accountId);
-        if (blocked) {
-          logEvent('blockJoinRejected', { matchId: match.matchId, joiner: joinerAccountId, existing: p.accountId });
-          return send(ws, errorMsg(ReasonCode.BLOCKED_BY_PLAYER, 'Cannot join a match with this player', requestId));
-        }
-      }
-    }
-  }
-
-  const participantToken = randomBytes(32).toString('base64url');
-  const participantId = `P-${randomBytes(8).toString('base64url')}`;
-
-  const result = match.addParticipant(participantId, participantToken, joinerAccountId, buildPublicProfile(conn));
-  matchStore.save(match);
-
-  // Bind connection
-  conn.participantId = participantId;
-  conn.matchId = match.matchId;
-
-  send(ws, matchJoined(match.matchId, participantToken, result.playerId, requestId));
-  logEvent('matchJoin', { matchId: match.matchId, participantId, accountId: joinerAccountId });
-
-  // Notify the opponent (P1) that P2 has connected, AND notify P2 of the
-  // opponent's (P1's) current connection state. Without the latter, P2's
-  // lobby UI stays stuck on "Waiting for opponent…" even though P1 is
-  // already in the lobby — because P2 never receives a PARTICIPANT_STATUS
-  // for P1.
-  const opponentId = [...match.participants.keys()].find(pid => pid !== participantId);
-  if (opponentId) {
-    const opponentParticipant = match.participants.get(opponentId);
-    const opponentConnState = opponentParticipant?.connectionState ?? 'DISCONNECTED';
-
-    // Tell P1 that P2 connected
-    const oppConn = findConnectionByParticipant(opponentId, match.matchId);
-    if (oppConn) {
-      send(oppConn.ws, participantStatus(match.matchId, {
-        participantId,
-        status: 'CONNECTED',
-      }));
-    }
-
-    // Tell P2 about P1's current connection state
-    send(ws, participantStatus(match.matchId, {
-      participantId: opponentId,
-      status: opponentConnState,
-    }));
-  }
-}
-
-function handleResumeMatch(connectionId, ws, payload, requestId) {
-  const check = validateResumeMatch(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const match = matchStore.get(payload.matchId);
-  if (!match) return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Match not found', requestId));
-
-  const participantId = match.findParticipantByToken(payload.participantToken);
-  if (!participantId) return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_INVALID, 'Invalid participant token', requestId));
-
-  // ── Account-bound reconnect security ──
-  // When auth is enabled, the verified accountId must match the participant's accountId.
-  // A stolen participant token alone cannot be reused by an unrelated authenticated account.
-  const conn = connections.get(connectionId);
-  const participant = match.participants.get(participantId);
-  const reconnectAccountId = conn?.account?.accountId ?? null;
-  if (_authMode === AuthMode.REQUIRED && reconnectAccountId && participant?.accountId) {
-    if (reconnectAccountId !== participant.accountId) {
-      logEvent('authFailure', { connectionId, code: 'AUTH_ACCOUNT_MISMATCH', reason: 'reconnect' });
-      return send(ws, errorMsg(ReasonCode.AUTH_ACCOUNT_MISMATCH, 'This match belongs to another Intrilex account', requestId));
-    }
-  }
-
-  // Bind new connection FIRST, then supersede old — eliminates the race window
-  // where neither connection is bound during reconnection.
-  conn.participantId = participantId;
-  conn.matchId = match.matchId;
-
-  // Supersede old connection for this participant (now safe — new conn is bound)
-  supersedeOldConnection(participantId, match.matchId, connectionId);
-
-  match.reconnectParticipant(participantId);
-  matchStore.save(match);
-
-  // IRX-H10: Cancel any pending forfeit timer for this match
-  const pendingForfeit = pendingForfeits.get(match.matchId);
-  if (pendingForfeit) {
-    clearTimeout(pendingForfeit.timer);
-    pendingForfeits.delete(match.matchId);
-    logEvent('forfeitTimerCancelled', { matchId: match.matchId, participantId });
-  }
-
-  // Send fresh view
-  const view = match.getAuthorizedView(participantId);
-  const safeView = buildNetworkPlayerView(view);
-  send(ws, matchView(match.matchId, safeView, requestId));
-  logEvent('reconnect', { matchId: match.matchId, participantId, accountId: reconnectAccountId });
-
-  // Notify the opponent that this participant has reconnected.
-  // Without this, the opponent's UI stays stuck on "Opponent disconnected"
-  // even after the player successfully reconnects.
-  const opponentId = [...match.participants.keys()].find(pid => pid !== participantId);
-  if (opponentId) {
-    const oppConn = findConnectionByParticipant(opponentId, match.matchId);
-    if (oppConn) {
-      send(oppConn.ws, participantStatus(match.matchId, {
-        participantId,
-        status: 'CONNECTED',
-      }));
-    }
-  }
-}
-
-function handleReady(connectionId, ws, payload, requestId) {
-  const check = validateReady(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const conn = connections.get(connectionId);
-  // v0.24.2: Defense-in-depth — connection must be bound to this match.
-  // Check BEFORE match lookup so a fake matchId can't bypass the binding.
-  if (conn.matchId !== payload.matchId) {
-    return send(ws, errorMsg(ReasonCode.CONNECTION_MATCH_MISMATCH, 'Connection is not bound to this match', requestId));
-  }
-
-  const match = matchStore.get(payload.matchId);
-  if (!match) return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Match not found', requestId));
-
-  if (!match.validateToken(conn.participantId, payload.participantToken)) {
-    return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_INVALID, 'Invalid participant token', requestId));
-  }
-
-  match.setReady(conn.participantId);
-
-  // If all ready, start the match
-  if (match.allReady() && match.status === 'READY_CHECK') {
-    match.start();
-    matchStore.save(match);
-    logEvent('matchStart', { matchId: match.matchId, profileId: match.profileId });
-
-    // Broadcast MATCH_STARTED to both participants
-    for (const [pid, p] of match.participants) {
-      const view = match.getAuthorizedView(pid);
-      const safeView = buildNetworkPlayerView(view);
-      const targetConn = findConnectionByParticipant(pid, match.matchId);
-      if (targetConn) {
-        send(targetConn.ws, matchStarted(match.matchId, safeView));
-      }
-    }
-  }
-  matchStore.save(match);
-
-  // Send current view
-  const view = match.getAuthorizedView(conn.participantId);
-  const safeView = buildNetworkPlayerView(view);
-  send(ws, matchView(match.matchId, safeView, requestId));
-
-  // Notify spectators if any
-  broadcastToSpectators(match);
-}
-
-async function handleSubmitAction(connectionId, ws, payload, requestId) {
-  // Spectators cannot submit actions — reject before any validation or match access
-  const conn = connections.get(connectionId);
-  if (conn?.isSpectator) {
-    return send(ws, errorMsg(ReasonCode.PARTICIPANT_NOT_AUTHORIZED, 'Spectators cannot submit actions', requestId));
-  }
-
-  const check = validateSubmitAction(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  // v0.24.2: Defense-in-depth — connection must be bound to this match.
-  // Check BEFORE match lookup so a fake matchId can't bypass the binding.
-  if (conn.matchId !== payload.matchId) {
-    return send(ws, errorMsg(ReasonCode.CONNECTION_MATCH_MISMATCH, 'Connection is not bound to this match', requestId));
-  }
-
-  const match = matchStore.get(payload.matchId);
-  if (!match) return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Match not found', requestId));
-
-  if (!match.validateToken(conn.participantId, payload.participantToken)) {
-    return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_INVALID, 'Invalid participant token', requestId));
-  }
-
-  const result = await match.submitAction(conn.participantId, {
-    clientCommandId: payload.clientCommandId,
-    expectedRevision: payload.expectedRevision,
-    decisionFrameHash: payload.decisionFrameHash,
-    actionId: payload.actionId,
-  });
-
-  // Send result to the actor
-  const actorView = match.getAuthorizedView(conn.participantId);
-  const safeActorView = buildNetworkPlayerView(actorView);
-  send(ws, actionResult(match.matchId, {
-    accepted: result.accepted,
-    reasonCode: result.reasonCode ?? null,
-    error: result.error ?? null,
-    view: safeActorView,
-  }, requestId));
-  logEvent(result.accepted ? 'actionSubmit' : 'actionReject', { matchId: match.matchId, participantId: conn.participantId, reasonCode: result.reasonCode ?? null });
-
-  // If accepted, send updated view to the opponent
-  if (result.accepted) {
-    matchStore.save(match);
-
-    const opponentId = [...match.participants.keys()].find(pid => pid !== conn.participantId);
-    if (opponentId) {
-      const oppView = match.getAuthorizedView(opponentId);
-      const safeOppView = buildNetworkPlayerView(oppView);
-      const oppConn = findConnectionByParticipant(opponentId, match.matchId);
-      if (oppConn) {
-        send(oppConn.ws, matchView(match.matchId, safeOppView));
-      }
-    }
-
-    // If terminal, send MATCH_ENDED to both
-    if (match.status === 'TERMINAL') {
-      await broadcastMatchEnded(match);
-      logEvent('matchEnd', { matchId: match.matchId, winner: match.winner, reason: match.terminalReason });
-    }
-
-    // Notify spectators of the state change
-    broadcastToSpectators(match);
-  }
-}
-
-function handleRequestSync(connectionId, ws, payload, requestId) {
-  const check = validateRequestSync(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const conn = connections.get(connectionId);
-  // v0.24.2: Defense-in-depth — connection must be bound to this match.
-  // Check BEFORE match lookup so a fake matchId can't bypass the binding.
-  if (conn.matchId !== payload.matchId) {
-    return send(ws, errorMsg(ReasonCode.CONNECTION_MATCH_MISMATCH, 'Connection is not bound to this match', requestId));
-  }
-
-  const match = matchStore.get(payload.matchId);
-  if (!match) return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Match not found', requestId));
-
-  if (!match.validateToken(conn.participantId, payload.participantToken)) {
-    return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_INVALID, 'Invalid participant token', requestId));
-  }
-
-  const view = match.getAuthorizedView(conn.participantId);
-  const safeView = buildNetworkPlayerView(view);
-  send(ws, matchView(match.matchId, safeView, requestId));
-}
-
-function handleLeaveMatch(connectionId, ws, payload, requestId) {
-  const check = validateLeaveMatch(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const conn = connections.get(connectionId);
-  // v0.24.2: Defense-in-depth — connection must be bound to this match.
-  // Check BEFORE match lookup so a fake matchId can't bypass the binding.
-  // This prevents a stale/malicious payload from disconnecting a participant
-  // from a different match than the one their connection is bound to.
-  if (conn.matchId !== payload.matchId) {
-    return send(ws, errorMsg(ReasonCode.CONNECTION_MATCH_MISMATCH, 'Connection is not bound to this match', requestId));
-  }
-
-  const match = matchStore.get(payload.matchId);
-
-  // v0.24.2: Authenticate the participant token before disconnecting.
-  // Previously, LEAVE_MATCH accepted a participantToken in validation but
-  // the handler never checked it — any connection could leave any match
-  // by simply knowing the matchId.
-  if (match && conn) {
-    if (!match.validateToken(conn.participantId, payload.participantToken)) {
-      return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_INVALID, 'Invalid participant token', requestId));
-    }
-
-    match.disconnectParticipant(conn.participantId);
-    matchStore.save(match);
-
-    // Notify opponent
-    const opponentId = [...match.participants.keys()].find(pid => pid !== conn.participantId);
-    if (opponentId) {
-      const oppConn = findConnectionByParticipant(opponentId, match.matchId);
-      if (oppConn) {
-        send(oppConn.ws, participantStatus(match.matchId, {
-          participantId: conn.participantId,
-          status: 'DISCONNECTED',
-        }));
-      }
-    }
-  }
-
-  conn.participantId = null;
-  conn.matchId = null;
-  // Send a LEFT_MATCH acknowledgment, not an ERROR with code 'OK'
-  send(ws, envelope('LEFT_MATCH', { matchId: payload.matchId }, requestId));
-}
-
-// ── Matchmaking queue handlers ──
-
-async function handleQueueJoin(connectionId, ws, payload, requestId) {
-  const check = validateQueueJoin(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  // Public matchmaking is disabled by default in v0.24.1 invite-alpha
-  if (!_featureFlags.publicMatchmaking) {
-    return send(ws, errorMsg(ReasonCode.QUEUE_FULL, 'Public matchmaking is disabled in invite-alpha', requestId));
-  }
-
-  if (matchStore.count >= MAX_MATCHES) {
-    return send(ws, errorMsg(ReasonCode.RATE_LIMITED, 'Server at match capacity', requestId));
-  }
-
-  // Use accountId for queue identity when auth is enabled (prevents multi-queue abuse + self-match)
-  const conn = connections.get(connectionId);
-  const accountId = conn?.account?.accountId ?? null;
-  // RANK-01: Pass client-requested queueId — server validates ranked admission
-  const result = matchmakingQueue.enqueue(connectionId, payload.profileId, accountId, payload.queueId ?? null);
-  if (!result.queued) {
-    return send(ws, errorMsg(result.code || ReasonCode.INTERNAL_ERROR, result.error || 'Failed to join queue', requestId));
-  }
-
-  // IRX-H19: If paired immediately, check if either player has blocked the other.
-  // If so, cancel the match and notify both players.
-  if (result.paired && blockChecker && accountId) {
-    const pair = Array.isArray(result.paired) ? result.paired : [result.paired];
-    const partnerConnId = pair.find(r => r.connectionId !== connectionId)?.connectionId;
-    const partnerConn = partnerConnId ? connections.get(partnerConnId) : null;
-    const partnerAccountId = partnerConn?.account?.accountId ?? null;
-    if (partnerAccountId) {
-      try {
-        const blocked = await blockChecker(accountId, partnerAccountId);
-        if (blocked) {
-          logEvent('blockQueuePairRejected', { accountId, partnerAccountId });
-          // Notify both players that the match was cancelled due to a block
-          send(ws, errorMsg(ReasonCode.BLOCKED_BY_PLAYER, 'Matchmaking cancelled — cannot match with this player', requestId));
-          if (partnerConnId && partnerConn?.ws) {
-            send(partnerConn.ws, errorMsg(ReasonCode.BLOCKED_BY_PLAYER, 'Matchmaking cancelled — cannot match with this player'));
-          }
-          // Clean up the match that was just created
-          const matchId = pair[0]?.matchId;
-          if (matchId && matchStore) {
-            matchStore.delete(matchId);
-          }
-          return;
-        }
-      } catch {
-        // Block check failed — fail closed (cancel the match)
-        logEvent('blockQueueCheckError', { accountId, partnerAccountId });
-        send(ws, errorMsg(ReasonCode.BLOCKED_BY_PLAYER, 'Unable to verify player eligibility', requestId));
-        return;
-      }
-    }
-  }
-
-  // If paired immediately, the onCreateMatch callback already sent QUEUE_MATCHED
-  if (!result.paired) {
-    send(ws, queueJoined(result.position, result.estimatedWaitMs, requestId));
-  }
-}
-
-function handleQueueLeave(connectionId, ws, payload, requestId) {
-  const check = validateQueueLeave(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const result = matchmakingQueue.dequeue(connectionId);
-  if (!result.removed) {
-    return send(ws, errorMsg(ReasonCode.NOT_IN_QUEUE, 'Not in queue', requestId));
-  }
-  send(ws, queueLeft(requestId));
-}
-
-// ── Spectator handlers ──
-
-function handleSpectateMatch(connectionId, ws, payload, requestId) {
-  const check = validateSpectateMatch(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const match = matchStore.get(payload.matchId);
-  if (!match) {
-    return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Match not found', requestId));
-  }
-
-  // Only allow spectating if the match has started (RUNNING or TERMINAL)
-  if (match.status !== 'RUNNING' && match.status !== 'TERMINAL') {
-    return send(ws, errorMsg(ReasonCode.MATCH_NOT_RUNNING, 'Match is not running', requestId));
-  }
-
-  // IRX-M19: Reject spectators for private matches.
-  // Private matches require explicit invitation — no spectator consent exists yet.
-  if (match.matchMode === 'private') {
-    return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Match not found', requestId));
-  }
-
-  // Enforce spectator count limit per match
-  let spectatorCount = 0;
-  for (const c of connections.values()) {
-    if (c.isSpectator && c.spectatingMatchId === payload.matchId) spectatorCount++;
-  }
-  if (spectatorCount >= MAX_SPECTATORS_PER_MATCH) {
-    return send(ws, errorMsg(ReasonCode.QUEUE_FULL, 'Spectator limit reached for this match', requestId));
-  }
-
-  const conn = connections.get(connectionId);
-  conn.isSpectator = true;
-  conn.spectatingMatchId = payload.matchId;
-
-  // Send a spectate-joined message with a NEUTRAL spectator view.
-  // Spectators never see either player's hand, private decisions, legal actions,
-  // command IDs, RNG state, seed, tokens, or role-private engine data.
-  const view = match.getAuthorizedView([...match.participants.keys()][0]);
-  const safeView = buildSpectatorView(view);
-  send(ws, spectateJoined(payload.matchId, safeView, requestId));
-  logEvent('spectateJoin', { matchId: payload.matchId, spectatorCount: spectatorCount + 1 });
-}
-
-function handleSpectateLeave(connectionId, ws, payload, requestId) {
-  const check = validateSpectateLeave(payload);
-  if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
-
-  const conn = connections.get(connectionId);
-  if (!conn || !conn.isSpectator) {
-    return send(ws, errorMsg(ReasonCode.NOT_IN_QUEUE, 'Not spectating', requestId));
-  }
-
-  // v0.24.2 fix: capture matchId BEFORE nulling the field for correct logging
-  const spectatingMatchId = conn.spectatingMatchId;
-  conn.isSpectator = false;
-  conn.spectatingMatchId = null;
-  send(ws, spectateLeft(requestId));
-  logEvent('spectateLeave', { matchId: spectatingMatchId });
-}
+// Match lifecycle handlers (handleCreateMatch, handleJoinMatch, handleResumeMatch,
+// handleReady, handleSubmitAction, handleRequestSync, handleLeaveMatch) are
+// extracted to handlers/match-handlers.mjs and wired via createMatchHandlers().
+
+// Matchmaking queue handlers (handleQueueJoin, handleQueueLeave) are extracted
+// to handlers/matchmaking-handlers.mjs and wired via createMatchmakingHandlers().
+// Spectator handlers (handleSpectateMatch, handleSpectateLeave,
+// broadcastToSpectators) are extracted to handlers/spectator-handlers.mjs.
 
 // ── Match history handler ──
 
@@ -1940,23 +1504,6 @@ function handleChatVisibility(connectionId, ws, payload, requestId) {
   logEvent('chatVisibility', { matchId: match.matchId, participantId, hidden: payload.hidden });
 }
 
-/**
- * Broadcast the current match view to all spectators of a match.
- * Called after state changes (action submission, match start, etc.)
- */
-function broadcastToSpectators(match) {
-  if (!match) return;
-  // Spectators receive a NEUTRAL view — no player hands, legal actions, or private data
-  const view = match.getAuthorizedView([...match.participants.keys()][0]);
-  const safeView = buildSpectatorView(view);
-
-  for (const [cid, conn] of connections) {
-    if (conn.isSpectator && conn.spectatingMatchId === match.matchId) {
-      send(conn.ws, matchView(match.matchId, safeView));
-    }
-  }
-}
-
 // ── Helpers ──
 
 function send(ws, msg) {
@@ -1980,10 +1527,17 @@ function handleDisconnect(connectionId) {
       if (opponentId) {
         const oppConn = findConnectionByParticipant(opponentId, conn.matchId);
         if (oppConn) {
-          send(oppConn.ws, participantStatus(match.matchId, {
+          // IRX-H10: For a RUNNING match, include the reconnect-grace window so
+          // the waiting client can show a countdown. The forfeit timer is
+          // scheduled below using the same RECONNECT_GRACE value.
+          const statusObj = {
             participantId: conn.participantId,
             status: 'DISCONNECTED',
-          }));
+          };
+          if (match.status === 'RUNNING') {
+            statusObj.graceMs = RECONNECT_GRACE;
+          }
+          send(oppConn.ws, participantStatus(match.matchId, statusObj));
         }
       }
 

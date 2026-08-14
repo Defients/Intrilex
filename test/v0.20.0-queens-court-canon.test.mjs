@@ -22,7 +22,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel) => readFile(path.join(root, rel), 'utf8');
 
 const V42 = 'docs/INTRILEX_v4.3.1_COMPLETE_PLAYER_RULEBOOK.md';
-const V412 = 'docs/INTRILEX_v4.1.2_COMPLETE_PLAYER_RULEBOOK.md';
+const V412 = 'docs/historical/INTRILEX_v4.1.2_COMPLETE_PLAYER_RULEBOOK.md';
 
 let rulebook = '';
 let historical = '';
@@ -234,7 +234,7 @@ test('v4.2.0: release identity has officialRulesVersion 4.3.1 and engine rulesVe
   assert.equal(identity.officialRulesVersion, '4.3.1');
   assert.equal(identity.rulesVersion, '4.3.1');
   assert.equal(identity.engineVersion, '4.2.6');
-  assert.equal(identity.version, '0.27.0');
+  assert.equal(identity.version, '0.28.0');
 });
 
 test('v4.2.0: generated version modules export OFFICIAL_RULES_VERSION 4.3.1 and RULES_VERSION 4.3.1', async () => {

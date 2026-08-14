@@ -241,6 +241,23 @@ test('profile workspace renders badge gallery', async () => {
   assert.ok(source.includes('renderShowcaseSection'), 'must have showcase section for badges');
 });
 
+// ── Profile Matches tab: replay download (Epoch 2) ──
+
+test('profile workspace has replay download on match items', async () => {
+  const source = await readFile(path.join(root, 'apps/lab-web/src/workspaces/profile.js'), 'utf8');
+  assert.ok(source.includes('download-match-replay'), 'match items must have replay download action');
+  assert.ok(source.includes('wireMatchReplayButtons'), 'must wire replay download buttons');
+  assert.ok(source.includes('getReplay'), 'must import getReplay from persistence');
+  assert.ok(source.includes('downloadReplay'), 'must import downloadReplay from replay-library');
+});
+
+test('profile workspace replay download only for self (not public)', async () => {
+  const source = await readFile(path.join(root, 'apps/lab-web/src/workspaces/profile.js'), 'utf8');
+  // renderMatchItem must accept isSelf and conditionally render the button
+  assert.ok(source.includes('function renderMatchItem(m, isSelf)'), 'renderMatchItem must accept isSelf parameter');
+  assert.ok(source.includes('isSelf && m.matchId'), 'replay button must be gated on isSelf && matchId');
+});
+
 test('profile workspace renders archetype breakdown', async () => {
   const source = await readFile(path.join(root, 'apps/lab-web/src/workspaces/profile.js'), 'utf8');
   // Archetype breakdown was replaced by the ranked detail card in the v0.25

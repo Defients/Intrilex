@@ -2,9 +2,10 @@
 // workspaces/tournament.js — /tournament workspace: AI tournament mode
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, short, definitionList, showToast, clamp } from '../state.js?v=659a089d50b6';
-import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=659a089d50b6';
-import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=659a089d50b6';
+import { state, app, esc, pct, short, definitionList, showToast, clamp } from '../state.js?v=42162e3d88b3';
+import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=42162e3d88b3';
+import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=42162e3d88b3';
+import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=42162e3d88b3';
 
 const ALL_POLICIES = [
   'random-legal','score-rush','control','tempo','value',
@@ -62,7 +63,7 @@ async function renderTournamentSetup() {
           state.tournament = saved;
           state.tournamentRunning = false;
           state.tournamentAutoPlaying = false;
-          import('../app.js?v=659a089d50b6').then(m => m.render());
+          import('../app.js?v=42162e3d88b3').then(m => m.render());
         }
       } catch (err) {
         showToast(err.message, { type: 'error', title: 'Failed to load tournament' });
@@ -90,7 +91,7 @@ async function renderTournamentSetup() {
       if (isIndexedDBAvailable()) {
         try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
       }
-      import('../app.js?v=659a089d50b6').then(m => m.render());
+      import('../app.js?v=42162e3d88b3').then(m => m.render());
     } catch (err) {
       app.innerHTML = `<div class="notice danger"><strong>Error:</strong> ${esc(err.message)}</div>`;
     }
@@ -131,7 +132,7 @@ function renderTournamentBracket(tournament) {
     state.tournament = null;
     state.tournamentRunning = false;
     state.tournamentAutoPlaying = false;
-    import('../app.js?v=659a089d50b6').then(m => m.render());
+    import('../app.js?v=42162e3d88b3').then(m => m.render());
   };
   const playBtn = document.querySelector('#tournament-play-next');
   if (playBtn) playBtn.onclick = () => playNextMatch(tournament);
@@ -143,6 +144,24 @@ function renderTournamentBracket(tournament) {
   if (stopBtn) stopBtn.onclick = () => { state.tournamentAutoPlaying = false; };
   const exportBtn = document.querySelector('#tournament-export');
   if (exportBtn) exportBtn.onclick = () => exportTournament(tournament);
+  // Chart "View as table" toggles inside the analytics panel
+  ['#tournament-donut-chart', '#tournament-bar-chart'].forEach(sel => {
+    const container = document.querySelector(sel);
+    if (!container) return;
+    const btn = container.querySelector('[data-chart-toggle]');
+    const table = container.querySelector('[data-chart-table]');
+    if (!btn || !table) return;
+    btn.onclick = () => {
+      const hidden = table.hasAttribute('hidden');
+      if (hidden) { table.removeAttribute('hidden'); btn.setAttribute('aria-expanded', 'true'); btn.textContent = 'Hide table'; }
+      else { table.setAttribute('hidden', ''); btn.setAttribute('aria-expanded', 'false'); btn.textContent = 'View as table'; }
+    };
+  });
+  // Tournament → Compare cross-workspace navigation (Phase 3A)
+  document.querySelectorAll('[data-compare-policy]').forEach(row => row.onclick = () => {
+    state.selectedPolicy = row.dataset.comparePolicy;
+    location.hash = '#/compare';
+  });
 }
 
 function renderProgress(summary) {
@@ -196,6 +215,44 @@ function renderMatch(match, tournament) {
 
 function renderTournamentAnalytics(tournament) {
   const a = getTournamentAnalytics(tournament);
+  const policyEntries = Object.entries(a.policyPerformance).sort(([,x],[,y]) => y.matchWins - x.matchWins || y.wins - x.wins);
+  // Donut chart of policy win distribution (match wins)
+  const donutSegments = policyEntries
+    .filter(([, s]) => s.matchWins > 0)
+    .map(([id, s]) => ({ label: POLICY_LABEL(id), value: s.matchWins }));
+  const donutSvg = donutSegments.length > 0
+    ? donutChart({ segments: donutSegments, size: 180, title: 'Policy match-win distribution', ariaLabel: 'Donut chart of policy match-win distribution' })
+    : '';
+  // Bar chart of per-policy game win rates
+  const barItems = policyEntries.map(([id, s]) => ({
+    label: POLICY_LABEL(id),
+    value: s.gamesPlayed > 0 ? s.wins / s.gamesPlayed : 0,
+    color: s.wins >= s.losses ? '#4fd387' : '#f0786f',
+  }));
+  const barSvg = barItems.length > 0
+    ? barChart({ items: barItems, maxValue: 1, width: 480, barHeight: 22, title: 'Per-policy game win rate', ariaLabel: 'Bar chart of per-policy game win rates' })
+    : '';
+  // Sparkline per policy showing cumulative wins across rounds.
+  // Reconstruct cumulative wins from the bracket round structure.
+  const sparkPerPolicy = policyEntries.map(([id, s]) => {
+    // Build a cumulative win count by walking rounds in order.
+    const cumulative = [];
+    let running = 0;
+    for (const round of tournament.rounds ?? []) {
+      for (const m of round.matches ?? []) {
+        if (m.status === 'completed' && m.winner === id) { running += 1; }
+      }
+      cumulative.push(running);
+    }
+    if (tournament.thirdPlaceMatch?.status === 'completed' && tournament.thirdPlaceMatch.winner === id) {
+      running += 1;
+      cumulative.push(running);
+    }
+    return { id, label: POLICY_LABEL(id), values: cumulative.length ? cumulative : [0] };
+  });
+  const sparkHtml = sparkPerPolicy.map(sp => `<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="min-width:140px;font-size:12px;color:var(--text-bright)">${esc(sp.label)}</span>${sparkline({ values: sp.values, width: 120, height: 28, color: '#4fd387', title: `Cumulative wins for ${sp.label}`, ariaLabel: `Sparkline of cumulative wins for ${sp.label}` })}</div>`).join('');
+  const donutTable = donutSegments.length > 0 ? chartTableAlternative({ headers: ['Policy', 'Match wins'], rows: donutSegments.map(s => [s.label, s.value]), caption: 'Policy match-win distribution' }) : '';
+  const barTable = barItems.length > 0 ? chartTableAlternative({ headers: ['Policy', 'Game win rate'], rows: barItems.map(b => [b.label, (b.value * 100).toFixed(1) + '%']), caption: 'Per-policy game win rates' }) : '';
   return `<section class="panel" style="margin-top:16px"><div class="panel-header"><h3>Tournament Analytics</h3></div><div class="panel-body">
     <div class="experiment-grid">
       <div class="stat-card"><span class="stat-value">${a.upsetIndex}</span><span class="stat-label">Upsets (${pct(a.upsetRate)})</span></div>
@@ -204,7 +261,10 @@ function renderTournamentAnalytics(tournament) {
       <div class="stat-card"><span class="stat-value">${pct(a.bracketEfficiency)}</span><span class="stat-label">Bracket Efficiency</span></div>
     </div>
     ${a.longestMatch.matchId ? `<div class="notice" style="margin-top:8px"><strong>Longest match:</strong> ${esc(a.longestMatch.matchId)} (${a.longestMatch.games} games)</div>` : ''}
-    <div class="table-wrap" style="margin-top:12px"><table class="data-table"><thead><tr><th>Policy</th><th>Match W</th><th>Match L</th><th>Game W</th><th>Game L</th><th>Game Rate</th></tr></thead><tbody>${Object.entries(a.policyPerformance).sort(([,x],[,y]) => y.matchWins - x.matchWins || y.wins - x.wins).map(([id, s]) => `<tr><td>${esc(POLICY_LABEL(id))}</td><td>${s.matchWins}</td><td>${s.matchLosses}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.gamesPlayed > 0 ? pct(s.wins / s.gamesPlayed) : '—'}</td></tr>`).join('')}</tbody></table></div>
+    ${donutSvg ? `<details class="ix-chart-container" data-testid="tournament-donut-chart" open><summary class="ix-chart-header"><h4>Match-win distribution</h4></summary>${donutSvg}<button class="ix-chart-toggle" data-chart-toggle="tournament-donut" aria-expanded="false">View as table</button><div class="ix-chart-table-alt" data-chart-table="tournament-donut" hidden>${donutTable}</div></details>` : ''}
+    ${barSvg ? `<details class="ix-chart-container" data-testid="tournament-bar-chart" open><summary class="ix-chart-header"><h4>Per-policy game win rate</h4></summary>${barSvg}<button class="ix-chart-toggle" data-chart-toggle="tournament-bar" aria-expanded="false">View as table</button><div class="ix-chart-table-alt" data-chart-table="tournament-bar" hidden>${barTable}</div></details>` : ''}
+    ${sparkHtml ? `<details class="ix-chart-container" data-testid="tournament-sparklines" open><summary class="ix-chart-header"><h4>Cumulative wins by round</h4></summary>${sparkHtml}</details>` : ''}
+    <div class="table-wrap" style="margin-top:12px"><table class="data-table"><thead><tr><th>Policy</th><th>Match W</th><th>Match L</th><th>Game W</th><th>Game L</th><th>Game Rate</th></tr></thead><tbody>${policyEntries.map(([id, s]) => `<tr class="clickable-row" data-compare-policy="${esc(id)}"><td>${esc(POLICY_LABEL(id))}</td><td>${s.matchWins}</td><td>${s.matchLosses}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.gamesPlayed > 0 ? pct(s.wins / s.gamesPlayed) : '—'}</td></tr>`).join('')}</tbody></table></div>
   </div></section>`;
 }
 
@@ -221,7 +281,7 @@ async function playNextMatch(tournament) {
   const nextMatch = getNextMatch(tournament);
   if (!nextMatch) return;
   state.tournamentRunning = true;
-  import('../app.js?v=659a089d50b6').then(m => m.render());
+  import('../app.js?v=42162e3d88b3').then(m => m.render());
 
   const worker = new Worker('worker.js', { type: 'module' });
   try {
@@ -232,12 +292,12 @@ async function playNextMatch(tournament) {
     if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
       try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
     }
-    import('../app.js?v=659a089d50b6').then(m => m.render());
+    import('../app.js?v=42162e3d88b3').then(m => m.render());
   } catch (err) {
     state.tournamentRunning = false;
     state.tournamentAutoPlaying = false;
     showToast(err.message, { type: 'error', title: 'Tournament error' });
-    import('../app.js?v=659a089d50b6').then(m => m.render());
+    import('../app.js?v=42162e3d88b3').then(m => m.render());
   } finally {
     worker.terminate();
   }
@@ -247,7 +307,7 @@ async function autoPlayTournament(tournament) {
   if (state.tournamentRunning) return;
   state.tournamentAutoPlaying = true;
   state.tournamentRunning = true;
-  import('../app.js?v=659a089d50b6').then(m => m.render());
+  import('../app.js?v=42162e3d88b3').then(m => m.render());
 
   const worker = new Worker('worker.js', { type: 'module' });
   try {
@@ -259,7 +319,7 @@ async function autoPlayTournament(tournament) {
       if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
         try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
       }
-      import('../app.js?v=659a089d50b6').then(m => m.render());
+      import('../app.js?v=42162e3d88b3').then(m => m.render());
     }
     state.tournamentAutoPlaying = false;
     state.tournamentRunning = false;
@@ -267,12 +327,12 @@ async function autoPlayTournament(tournament) {
     if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
       try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
     }
-    import('../app.js?v=659a089d50b6').then(m => m.render());
+    import('../app.js?v=42162e3d88b3').then(m => m.render());
   } catch (err) {
     state.tournamentAutoPlaying = false;
     state.tournamentRunning = false;
     showToast(err.message, { type: 'error', title: 'Tournament auto-play error' });
-    import('../app.js?v=659a089d50b6').then(m => m.render());
+    import('../app.js?v=42162e3d88b3').then(m => m.render());
   } finally {
     worker.terminate();
   }
@@ -318,7 +378,7 @@ async function runMatchGames(tournament, match, worker) {
     else if (winningPolicy === match.seat2Policy) seat2Wins += 1;
 
     state.tournament = recordMatchResult(state.tournament, match.matchId, winningPolicy, summary);
-    import('../app.js?v=659a089d50b6').then(m => m.render());
+    import('../app.js?v=42162e3d88b3').then(m => m.render());
   }
 }
 
@@ -438,7 +498,7 @@ function liveSemanticLabel(command) {
 // ── Frame reconstruction from replay ────────────────────────────
 
 async function reconstructFrames(replay) {
-  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=659a089d50b6');
+  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=42162e3d88b3');
   const engine = new IntrilexEngine();
   let s = structuredClone(replay.initialState);
   const frames = [{ state: s, events: [], command: null, commandIndex: -1 }];
@@ -591,7 +651,7 @@ async function watchLiveMatch(tournament) {
     matchId: nextMatch.matchId,
     cancelled: false,
   };
-  import('../app.js?v=659a089d50b6').then(m => m.render());
+  import('../app.js?v=42162e3d88b3').then(m => m.render());
 
   const worker = new Worker('worker.js', { type: 'module' });
   try {
@@ -602,14 +662,14 @@ async function watchLiveMatch(tournament) {
     if (isIndexedDBAvailable() && state.tournament?.tournamentId) {
       try { await saveTournament(state.tournament); } catch { /* non-fatal */ }
     }
-    import('../app.js?v=659a089d50b6').then(m => m.render());
+    import('../app.js?v=42162e3d88b3').then(m => m.render());
   } catch (err) {
     state.tournamentRunning = false;
     state.tournamentAutoPlaying = false;
     stopLivePlayback();
     state.tournamentLiveView = null;
     showToast(err.message, { type: 'error', title: 'Tournament live error' });
-    import('../app.js?v=659a089d50b6').then(m => m.render());
+    import('../app.js?v=42162e3d88b3').then(m => m.render());
   } finally {
     worker.terminate();
   }
@@ -637,7 +697,7 @@ async function runLiveMatchGames(tournament, match, worker) {
     lv.gameWinner = null;
     lv.gameSummary = null;
     lv.awaitingContinue = false;
-    import('../app.js?v=659a089d50b6').then(m => m.render());
+    import('../app.js?v=42162e3d88b3').then(m => m.render());
 
     // Run match with replay recording
     const result = await new Promise((resolve) => {
@@ -683,7 +743,7 @@ async function runLiveMatchGames(tournament, match, worker) {
     lv.hasMoreGames = (lv.seat1Wins < winsNeeded) && (lv.seat2Wins < winsNeeded) && (g + 1 < bestOf);
     lv.awaitingContinue = false;
     lv.playing = false;
-    import('../app.js?v=659a089d50b6').then(m => m.render());
+    import('../app.js?v=42162e3d88b3').then(m => m.render());
 
     // Auto-start playback
     toggleLivePlay();

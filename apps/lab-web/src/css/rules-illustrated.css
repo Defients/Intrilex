@@ -1,0 +1,316 @@
+/* ═══════════════════════════════════════════════════════════════
+   rules-illustrated.css — Illustrated Rules Page visual layer.
+   Loaded after pages-polish.css. All illustrated-mode decorations
+   (SVG headers, themed PART backgrounds, callout boxes, icon list
+   bullets, mechanic diagrams, toggle styling) live here.
+   Elements are hidden via body:not(.rules-illustrated) so the
+   original strict-text view is restored by removing the body class.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Break the homepage viewport lock for the rules page ── */
+/* landing-revamp.css locks .landing-app to position:fixed; overflow:hidden
+   for the zero-overflow homepage. The rules page needs to scroll.
+   Using .landing-app.rules-app (specificity 0,2,0) beats .landing-app
+   (0,1,0) from landing-revamp.css regardless of cascade order. */
+.landing-app.rules-app{
+  position:relative;
+  inset:auto;
+  height:auto;
+  min-height:100vh;
+  min-height:100dvh;
+  overflow:visible;
+  display:block;
+}
+
+/* ── Toggle: segmented Illustrated / Text control ── */
+.rules-illustrated-toggle{
+  display:inline-flex;
+  align-items:stretch;
+  gap:0;
+  margin:14px 0 4px;
+  padding:3px;
+  border:1px solid var(--border-soft);
+  border-radius:999px;
+  background:rgba(12,24,34,.7);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.rules-illustrated-toggle .rules-toggle-btn{
+  appearance:none;
+  -webkit-appearance:none;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-family:Inter,sans-serif;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.04em;
+  padding:7px 16px;
+  border-radius:999px;
+  cursor:pointer;
+  transition:background var(--fast),color var(--fast);
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.rules-illustrated-toggle .rules-toggle-btn .rules-toggle-icon{
+  width:14px;height:14px;display:inline-block;
+}
+.rules-illustrated-toggle .rules-toggle-btn:hover{color:var(--text-bright)}
+.rules-illustrated-toggle .rules-toggle-btn[aria-pressed="true"]{
+  background:linear-gradient(135deg,var(--cyan-2),var(--cyan));
+  color:#031015;
+}
+.rules-illustrated-toggle .rules-toggle-btn:focus-visible{
+  outline:3px solid var(--focus);
+  outline-offset:2px;
+}
+
+/* ── Themed PART container ── */
+.rules-part[data-part-theme]{
+  --part-accent:var(--cyan);
+  --part-accent-rgb:90,215,232;
+  border-color:rgba(var(--part-accent-rgb),.22);
+}
+.rules-part[data-part-theme][open]{
+  background:linear-gradient(180deg,rgba(var(--part-accent-rgb),.05),rgba(12,24,34,.7) 120px);
+}
+.rules-part[data-part-theme] .rules-part-summary{color:var(--text-bright)}
+.rules-part[data-part-theme] .rules-part-summary::before{color:var(--part-accent)}
+
+/* ── SVG part header banner ── */
+.rules-part-header-svg{
+  display:block;
+  width:100%;
+  height:auto;
+  max-height:96px;
+  margin:0 0 14px;
+  border-radius:12px;
+  overflow:hidden;
+}
+.rules-part-header-svg .part-header-bg{fill:rgba(var(--part-accent-rgb),.06)}
+.rules-part-header-svg .part-header-accent{stroke:var(--part-accent);fill:none}
+.rules-part-header-svg .part-header-accent-fill{fill:var(--part-accent)}
+.rules-part-header-svg .part-header-roman{
+  font-family:Georgia,serif;
+  font-weight:700;
+  fill:var(--part-accent);
+}
+.rules-part-header-svg .part-header-title{
+  font-family:Inter,sans-serif;
+  font-weight:700;
+  fill:var(--text-bright);
+}
+.rules-part-header-svg .part-header-subtitle{
+  font-family:Inter,sans-serif;
+  font-weight:500;
+  fill:var(--muted-bright);
+}
+
+/* ── Inline icon in part summary ── */
+.rules-part-summary .part-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:22px;height:22px;
+  margin-right:8px;
+  vertical-align:-5px;
+  color:var(--part-accent,var(--cyan));
+}
+.rules-part-summary .part-icon svg{width:100%;height:100%;display:block}
+
+/* ── Callout boxes (blockquote enhancement) ── */
+.rules-illustrated .rules-content blockquote.rules-callout{
+  position:relative;
+  margin:0 0 18px;
+  padding:14px 18px 14px 46px;
+  border:1px solid rgba(241,189,93,.22);
+  border-left:4px solid var(--amber);
+  border-radius:0 12px 12px 0;
+  background:linear-gradient(90deg,rgba(241,189,93,.08),rgba(241,189,93,.02) 60%,transparent);
+}
+.rules-illustrated .rules-content blockquote.rules-callout::before{
+  content:"";
+  position:absolute;
+  left:14px;top:14px;
+  width:20px;height:20px;
+  background:var(--amber);
+  -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2a7 7 0 0 0-4 12.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26A7 7 0 0 0 12 2zm-1 19h2a1 1 0 0 1 0 2h-2a1 1 0 0 1 0-2z'/></svg>") center/contain no-repeat;
+  mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2a7 7 0 0 0-4 12.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26A7 7 0 0 0 12 2zm-1 19h2a1 1 0 0 1 0 2h-2a1 1 0 0 1 0-2z'/></svg>") center/contain no-repeat;
+}
+.rules-illustrated .rules-content blockquote.rules-callout .rules-callout-label{
+  display:block;
+  font-family:Inter,sans-serif;
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--amber);
+  margin-bottom:4px;
+}
+.rules-illustrated .rules-content blockquote.rules-callout p{margin:0;font-size:15px}
+
+/* ── Key rule highlight box ── */
+.rules-illustrated .rules-key-rule{
+  position:relative;
+  margin:0 0 18px;
+  padding:14px 18px 14px 20px;
+  border:1px solid rgba(90,215,232,.28);
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(90,215,232,.07),rgba(90,215,232,.02));
+  box-shadow:inset 3px 0 0 var(--cyan);
+}
+.rules-illustrated .rules-key-rule .rules-key-rule-label{
+  display:block;
+  font-family:Inter,sans-serif;
+  font-size:10.5px;
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  margin-bottom:4px;
+}
+.rules-illustrated .rules-key-rule p{margin:0;font-size:15px}
+
+/* ── Mechanic diagram container ── */
+.rules-diagram{
+  margin:18px 0 22px;
+  padding:16px 18px 12px;
+  border:1px solid var(--border-soft);
+  border-radius:14px;
+  background:rgba(12,24,34,.55);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+.rules-diagram .rules-diagram-caption{
+  margin:10px 0 0;
+  font-family:Inter,sans-serif;
+  font-size:11.5px;
+  font-weight:600;
+  letter-spacing:.04em;
+  color:var(--muted-bright);
+  text-align:center;
+}
+.rules-diagram svg{display:block;width:100%;height:auto;max-width:680px;margin:0 auto}
+.rules-diagram .diagram-label{font-family:Inter,sans-serif;font-size:11px;font-weight:600;fill:var(--text-bright)}
+.rules-diagram .diagram-sub{font-family:Inter,sans-serif;font-size:9.5px;fill:var(--muted)}
+.rules-diagram .diagram-zone{fill:rgba(20,36,50,.7);stroke:var(--border-soft);stroke-width:1}
+.rules-diagram .diagram-zone-accent{fill:rgba(90,215,232,.08);stroke:var(--cyan);stroke-width:1.2}
+.rules-diagram .diagram-arrow{stroke:var(--cyan);stroke-width:1.6;fill:none;marker-end:url(#diagramArrow)}
+.rules-diagram .diagram-node{fill:var(--surface-2);stroke:var(--cyan-2);stroke-width:1.4}
+.rules-diagram .diagram-node-text{font-family:Inter,sans-serif;font-size:10px;font-weight:600;fill:var(--text-bright);text-anchor:middle}
+
+/* ── Numbered circle badges for ordered lists ── */
+.rules-illustrated .rules-content ol{
+  list-style:none;
+  padding-left:0;
+  counter-reset:rules-ol;
+}
+.rules-illustrated .rules-content ol > li{
+  position:relative;
+  padding-left:38px;
+  margin:0 0 10px;
+  counter-increment:rules-ol;
+}
+.rules-illustrated .rules-content ol > li::before{
+  content:counter(rules-ol);
+  position:absolute;
+  left:0;top:1px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;height:24px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--cyan-2),var(--cyan));
+  color:#031015;
+  font-family:Inter,sans-serif;
+  font-size:11.5px;
+  font-weight:700;
+}
+
+/* ── Icon bullets for unordered lists ── */
+.rules-illustrated .rules-content ul{
+  list-style:none;
+  padding-left:0;
+}
+.rules-illustrated .rules-content ul > li{
+  position:relative;
+  padding-left:26px;
+  margin:0 0 8px;
+}
+.rules-illustrated .rules-content ul > li::before{
+  content:"";
+  position:absolute;
+  left:4px;top:9px;
+  width:8px;height:8px;
+  border-radius:2px;
+  background:var(--part-accent,var(--cyan));
+  transform:rotate(45deg);
+  opacity:.85;
+}
+
+/* ── Section divider ── */
+.rules-section-divider{
+  display:block;
+  width:100%;
+  max-width:520px;
+  height:24px;
+  margin:26px auto 22px;
+  opacity:.5;
+}
+.rules-section-divider line,.rules-section-divider path{stroke:var(--border);stroke-width:1;fill:none}
+.rules-section-divider .divider-dot{fill:var(--cyan)}
+
+/* ── Table row icons (illustrated mode) ── */
+.rules-illustrated .rules-content table tbody tr:nth-child(odd) td{background:rgba(20,36,50,.25)}
+.rules-illustrated .rules-content table tbody tr td:first-child{
+  position:relative;
+  padding-left:30px;
+}
+.rules-illustrated .rules-content table tbody tr td:first-child::before{
+  content:"";
+  position:absolute;
+  left:12px;top:50%;
+  transform:translateY(-50%);
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--part-accent,var(--cyan));
+  opacity:.7;
+}
+
+/* ── Hide illustrated decorations in text mode ── */
+body:not(.rules-illustrated) .rules-part-header-svg,
+body:not(.rules-illustrated) .rules-diagram,
+body:not(.rules-illustrated) .rules-section-divider,
+body:not(.rules-illustrated) .rules-part-summary .part-icon,
+body:not(.rules-illustrated) .rules-illustrated-toggle{display:none!important}
+body:not(.rules-illustrated) .rules-content blockquote.rules-callout{padding-left:18px}
+body:not(.rules-illustrated) .rules-content blockquote.rules-callout::before{display:none}
+body:not(.rules-illustrated) .rules-content ol{list-style:decimal;padding-left:28px}
+body:not(.rules-illustrated) .rules-content ol > li{padding-left:0}
+body:not(.rules-illustrated) .rules-content ol > li::before{display:none}
+body:not(.rules-illustrated) .rules-content ul{list-style:disc;padding-left:28px}
+body:not(.rules-illustrated) .rules-content ul > li{padding-left:0}
+body:not(.rules-illustrated) .rules-content ul > li::before{display:none}
+body:not(.rules-illustrated) .rules-content table tbody tr td:first-child{padding-left:12px}
+body:not(.rules-illustrated) .rules-content table tbody tr td:first-child::before{display:none}
+body:not(.rules-illustrated) .rules-part[data-part-theme]{background:rgba(12,24,34,.5)}
+body:not(.rules-illustrated) .rules-part[data-part-theme][open]{background:rgba(12,24,34,.7)}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .rules-part-header-svg{max-height:72px}
+  .rules-diagram{padding:12px 12px 8px}
+  .rules-diagram svg{max-width:100%}
+  .rules-illustrated .rules-content ol > li{padding-left:34px}
+  .rules-illustrated .rules-content ul > li{padding-left:24px}
+}
+@media(max-width:600px){
+  .rules-part-header-svg{max-height:56px;border-radius:10px}
+  .rules-illustrated-toggle .rules-toggle-btn{padding:6px 12px;font-size:11px}
+  .rules-diagram .diagram-label{font-size:10px}
+  .rules-diagram .diagram-sub{font-size:8.5px}
+}
+@media(prefers-reduced-motion:reduce){
+  .rules-illustrated-toggle .rules-toggle-btn{transition:none}
+}

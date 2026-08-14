@@ -8,11 +8,11 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=659a089d50b6';
-import { rankPolicyActions } from './policy-scoring.js?v=659a089d50b6';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=659a089d50b6';
-import { attributeAction,   isNoAttributionAction} from './browser-analytics.js?v=659a089d50b6';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=659a089d50b6';
+} from './engine/browser-entry.js?v=42162e3d88b3';
+import { rankPolicyActions } from './policy-scoring.js?v=42162e3d88b3';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=42162e3d88b3';
+import { attributeAction,   isNoAttributionAction} from './browser-analytics.js?v=42162e3d88b3';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=42162e3d88b3';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];
@@ -143,6 +143,20 @@ export function validateMatchCount(requested){
   if(n>MAX_BROWSER_MATCH_COUNT)throw new Error(`MATCH_COUNT_EXCEEDS_MAXIMUM: requested ${n}, maximum ${MAX_BROWSER_MATCH_COUNT}. Reduce the match count or use the batch CLI for larger campaigns.`);
   return n;
 }
+// Builds the campaign-level result core from a fully-collected, ordinal-ordered
+// summaries array. Exported so the main thread can assemble the campaign result
+// from per-worker segment summaries (multi-worker parallel campaigns) without
+// re-running the engine.
+export function buildCampaignCore(summaries,{profileId=DEFAULT_PROFILE_ID,policyIds=['random-legal','random-legal'],matchCount=summaries.length,engineVersion=ENGINE_VERSION}={}){
+  const count=Number(matchCount)||summaries.length;
+  const completed=summaries.filter(item=>COMPLETE_REASONS.has(item.terminationReason));
+  const seat1Wins=completed.filter(item=>item.winningSeat===1).length;
+  const drawCount=completed.filter(item=>item.terminationReason==='CANONICAL_DRAW').length;
+  const totals=(key)=>summaries.reduce((sum,item)=>sum+Number(item[key]??0),0);
+  const core={schemaVersion:'4.0.0',engineVersion,profileId,policyIds,requestedMatchCount:count,effectiveMatchCount:count,matchCount:count,completedMatchCount:completed.length,abortCount:summaries.length-completed.length,drawCount,seat1Wins,seat2Wins:completed.length-seat1Wins-drawCount,meanFullTurns:completed.length?totals('completedFullTurns')/completed.length:null,responseDecisionCount:totals('responseDecisionCount'),privateChoiceDecisionCount:totals('privateChoiceDecisionCount'),advancedDecisionCount:totals('advancedDecisionCount'),voltageDecisionCount:totals('voltageDecisionCount'),ultraDecisionCount:totals('ultraDecisionCount'),triggerCount:totals('triggerCount'),canonicalResultHash:hashCanonical(summaries.map(item=>item.matchResultHash))};
+  return{...core,status:core.abortCount===0?'PASS':'FAIL',aggregateHash:hashCanonical(core),summaries};
+}
+
 export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','random-legal'],seedCatalogId='browser-v5',profileId=DEFAULT_PROFILE_ID,seedStrategy='ordinal-hash',fixedSeed=12345,ordinalStart=0,ordinalEnd=null},onProgress=()=>{}){
   const requestedMatchCount=validateMatchCount(matchCount);
   const count=requestedMatchCount;
@@ -152,13 +166,24 @@ export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','ra
   // AB/BA seat-swap design: even ordinals use ['P1','P2'], odd ordinals use ['P2','P1'].
   // This mirrors the Node campaign's seat-swap logic and enables paired AB/BA analysis.
   // The pairedRunId links AB and BA runs: ordinals 2k and 2k+1 form a matched pair.
+  // Progress reporting: report frequently so the UI never looks frozen.
+  // - At least every `reportInterval` matches (caps total messages to ~200)
+  // - At least every 500ms (wall-clock) so slow matches still show life
+  // - Always on the final match
+  const reportInterval=Math.max(1,Math.min(100,Math.floor(segmentSize/200)));
+  const reportPeriodMs=500;
+  let lastReportTime=typeof performance!=='undefined'?performance.now():Date.now();
+  const maybeReport=(force)=>{const now=typeof performance!=='undefined'?performance.now():Date.now();if(force||now-lastReportTime>=reportPeriodMs){lastReportTime=now;return true;}return false;};
   for(let ordinal=start;ordinal<end;ordinal+=1){
     const seatSwapped=ordinal%2===1;
     const seatOrder=seatSwapped?['P2','P1']:['P1','P2'];
     const seed=seedStrategy==='fixed'?(Number(fixedSeed)>>>0)||1:uint32FromHash({seedCatalogId,ordinal,policyIds,profileId,engineVersion:ENGINE_VERSION});
     const pairedRunId=`PR-browser-${policyIds[0]}-${policyIds[1]}-block-${Math.floor(ordinal/2)}`;
-    summaries.push(runBrowserPolicyMatch({seed,policyIds,ordinal,profileId,seatOrder,seatSwapped,pairedRunId}));if(ordinal===end-1||(ordinal-start)%Math.max(1,Math.floor(segmentSize/10))===0)onProgress({completed:ordinal-start+1,total:segmentSize});}
-  const completed=summaries.filter(item=>COMPLETE_REASONS.has(item.terminationReason)),seat1Wins=completed.filter(item=>item.winningSeat===1).length,drawCount=completed.filter(item=>item.terminationReason==='CANONICAL_DRAW').length;const totals=(key)=>summaries.reduce((sum,item)=>sum+Number(item[key]??0),0);
-  const core={schemaVersion:'4.0.0',engineVersion:ENGINE_VERSION,profileId,policyIds,requestedMatchCount,effectiveMatchCount:count,matchCount:count,completedMatchCount:completed.length,abortCount:segmentSize-completed.length,drawCount,seat1Wins,seat2Wins:completed.length-seat1Wins-drawCount,meanFullTurns:completed.length?totals('completedFullTurns')/completed.length:null,responseDecisionCount:totals('responseDecisionCount'),privateChoiceDecisionCount:totals('privateChoiceDecisionCount'),advancedDecisionCount:totals('advancedDecisionCount'),voltageDecisionCount:totals('voltageDecisionCount'),ultraDecisionCount:totals('ultraDecisionCount'),triggerCount:totals('triggerCount'),canonicalResultHash:hashCanonical(summaries.map(item=>item.matchResultHash))};
-  return{...core,status:core.abortCount===0?'PASS':'FAIL',aggregateHash:hashCanonical(core),summaries};
+    summaries.push(runBrowserPolicyMatch({seed,policyIds,ordinal,profileId,seatOrder,seatSwapped,pairedRunId}));
+    const done=ordinal-start+1;
+    if(done%reportInterval===0||ordinal===end-1||maybeReport(false))onProgress({completed:done,total:segmentSize});
+  }
+  // Always emit a final progress tick (covers segmentSize===0 and last-match races)
+  onProgress({completed:segmentSize,total:segmentSize});
+  return buildCampaignCore(summaries,{profileId,policyIds,matchCount:count,engineVersion:ENGINE_VERSION});
 }

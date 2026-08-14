@@ -1,0 +1,29 @@
+# Intrilex Match DB Backup — systemd timer
+#
+# Runs the backup service daily at 3:00 AM server time.
+# The timer fires the oneshot backup service, which creates a VACUUM INTO
+# snapshot, optionally compresses it, optionally copies it offsite, and
+# prunes old backups per the retention policy (default: 7 days).
+#
+# Install:
+#   sudo cp intrilex-match-backup.timer /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now intrilex-match-backup.timer
+#
+# Check status:
+#   systemctl status intrilex-match-backup.timer
+#   journalctl -u intrilex-match-backup.service -e
+#
+# To manually trigger a backup:
+#   sudo systemctl start intrilex-match-backup.service
+
+[Unit]
+Description=Daily Intrilex Match Database Backup
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

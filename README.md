@@ -1,4 +1,4 @@
-# Intrilex Simulation Lab v0.27.0 — Version Bump
+# Intrilex Simulation Lab v0.28.0 — UX/Visual Polish
 
 A local, static-hostable deterministic match theatre, replay laboratory, rank anatomy observatory, decision intelligence system, counterfactual branch lab, mechanics atlas, synergy observatory, comparison system, evidence registry, batch simulator, and **interactive player experience** built on **Intrilex Engine v4.2.6** under **Official Rules v4.3.1** (K♠ Wild Sovereignty + Black Joker Board Lock Quick). The engine implements v4.3.1 semantics including Queen's Court legal-action generation, stack resolution, the corrected counter-target classification, K♠ Wild Sovereignty, and Black Joker Board Lock as a Quick Effect. Complete Advanced and Unrestricted Core are supported. Save format v2 with full-envelope integrity binding. Session ownership prevents duplicate-tab conflicts.
 

@@ -135,9 +135,9 @@ test('persistence.js has TOURNAMENTS store', async () => {
   assert.ok(source.includes("STORES.TOURNAMENTS"), 'must use TOURNAMENTS store');
 });
 
-test('persistence.js DB_VERSION is 4', async () => {
+test('persistence.js DB_VERSION is 5', async () => {
   const source = await readFile(path.join(root, 'apps/lab-web/src/play/persistence.js'), 'utf8');
-  assert.ok(source.includes('DB_VERSION = 4'), 'DB_VERSION must be 4 for tournament store');
+  assert.ok(source.includes('DB_VERSION = 5'), 'DB_VERSION must be 5 for achievements store');
 });
 
 // ── Tournament UI integration ────────────────────────────────────

@@ -26,7 +26,7 @@ import {
 } from '@intrilex/engine-adapter';
 
 import { ReasonCode, PROTOCOL_VERSION } from '@intrilex/network-protocol';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 
 /**
  * IRX-H15: Hash a participant token for secure storage in snapshots.
@@ -696,6 +696,28 @@ export class AuthoritativeMatchSession {
     const p = this._getParticipant(participantId);
     p.connectionState = ConnectionState.CONNECTED;
     this.updatedAt = Date.now();
+  }
+
+  /**
+   * Rotate the participant token for a participant.
+   *
+   * IRX-H20: Token rotation on reconnect prevents replay attacks. If a
+   * participant token is stolen (e.g., from localStorage on a shared
+   * machine), it can only be used once — the next successful reconnect
+   * invalidates it and issues a fresh token. The old token's hash is
+   * overwritten, so any subsequent reconnect attempt with the old token
+   * will fail token validation.
+   *
+   * @param {string} participantId
+   * @returns {string} The new plaintext participant token
+   */
+  rotateParticipantToken(participantId) {
+    const p = this._getParticipant(participantId);
+    const newToken = randomBytes(32).toString('base64url');
+    p.token = newToken;
+    p.tokenHash = _hashToken(newToken);
+    this.updatedAt = Date.now();
+    return newToken;
   }
 
   // ── Replay ──

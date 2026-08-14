@@ -433,6 +433,105 @@ sudo ufw status
 
 ---
 
+## Ranked Season Provisioning
+
+Ranked admission in `classifyMatch()` fails **closed** when no `ACTIVE` season
+row exists in `ranked_seasons` for the `ranked` queue — the player sees a
+rejection with no obvious cause. Before opening ranked play, an operator must
+provision and activate a season. The `ranked_seasons_one_active` unique index
+permits exactly one `ACTIVE` season per queue.
+
+The `scripts/provision-season.mjs` CLI manages the season lifecycle using the
+Supabase service-role key (set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in the
+environment, e.g. source `deploy/match-server.env`).
+
+```bash
+# ── List all seasons ──
+node scripts/provision-season.mjs list
+
+# ── Show the currently-active ranked season (or "none") ──
+node scripts/provision-season.mjs current
+
+# ── Provision Season 1 and activate it immediately ──
+node scripts/provision-season.mjs provision --ordinal 1 --activate --rules-version 4.3.1
+
+# ── Provision a future season (UPCOMING, 90-day default duration) ──
+node scripts/provision-season.mjs provision --ordinal 2 --name "Season 2" --starts-at 2026-04-01T00:00:00Z
+
+# ── Activate an existing season (archives any currently-active season first) ──
+node scripts/provision-season.mjs activate --season-id season-2
+
+# ── Finalize (archive) a season and activate the next one ──
+node scripts/provision-season.mjs finalize --season-id season-1 --activate-next season-2
+
+# ── Atomic rollover: finalize active + activate next upcoming ──
+# Automatically finds the ACTIVE season, archives it, and activates the
+# lowest-ordinal UPCOMING season. Use --auto-provision to create the next
+# season if none exists yet.
+node scripts/provision-season.mjs rollover
+node scripts/provision-season.mjs rollover --auto-provision --duration-days 90
+```
+
+### Season 0 launch checklist
+
+1. Apply migrations `0001`–`0019` to the Supabase project.
+2. Set `INTRILEX_AUTH_MODE=required`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY` on
+   the match server (production mode fails closed without a durable persistor
+   and `RatingService`).
+3. Run `provision --ordinal 1 --activate --rules-version 4.3.1`.
+4. Verify with `current` — it must print an `ACTIVE` season.
+5. Confirm `classifyMatch` ranked admission: a queued match should classify as
+   `matchMode: 'ranked'`, not be downgraded to casual.
+
+### Rollover runbook
+
+Season transitions use the canonical Glicko-2 **soft reset** (increase RD via
+`SEASON_SOFT_RESET_RD_MULTIPLIER`) — never a destructive hard reset. To roll
+over:
+
+1. `provision --ordinal N+1` the next season (UPCOMING).
+2. `rollover` — atomically archives the active season and activates the next
+   UPCOMING season. Use `--auto-provision` to create the next season if none
+   exists yet: `rollover --auto-provision --duration-days 90`.
+3. Alternatively, `finalize --season-id season-N --activate-next season-(N+1)`
+   archives the old season and activates the new one in one step.
+4. The `SeasonService.finalizeSeason()` path (server-side) snapshots standings
+   and processes pending matches before archiving; the CLI is the operator
+   escape hatch for direct DB control.
+
+---
+
+## Ranked Admission Reason Codes
+
+`classifyMatch()` in `apps/match-server/src/server.mjs` is the server-owned
+gate for ranked admission. It fails **closed** — an unadmitted match is
+downgraded to `private` or rejected entirely. The following reason codes are
+returned in the `reason` field of the classification result:
+
+| Reason Code | Trigger | Effect |
+|---|---|---|
+| `RANKED_REQUIRES_AUTH` | Auth mode is not `REQUIRED` (dev mode) | Match downgraded to private |
+| `RANKED_REQUIRES_DURABLE_PERSISTENCE` | No persistor or `FakeMatchResultPersistor` in production | Match downgraded to private |
+| `RANKED_REQUIRES_RATING_SERVICE` | `RatingService` not configured | Match downgraded to private |
+| `RANKED_REQUIRES_SEASON_AUTHORITY` | No season persistor/authority available | Match downgraded to private |
+| `UNKNOWN_QUEUE` | `queueId` is not `ranked`, `casual`, or `private` | Match rejected |
+| `RANKED_REQUIRES_TWO_PLAYERS` | `validateRankedParticipants`: not exactly 2 participants | Match rejected |
+| `RANKED_REQUIRES_AUTHENTICATED_PLAYERS` | A participant has no `accountId` | Match rejected |
+| `RANKED_REQUIRES_DISTINCT_ACCOUNTS` | Both participants share the same account | Match rejected |
+
+When ranked admission fails, the match is classified as `private` (for the
+first five codes) or rejected (for the last three, which are checked at
+`validateRankedParticipants` after match creation). The client sees a
+human-readable rejection message; the server logs the reason code.
+
+**Operator checklist for ranked readiness:**
+1. `INTRILEX_AUTH_MODE=required` (not `optional`)
+2. `SUPABASE_URL` + `SUPABASE_SECRET_KEY` set (durable persistor + identity verifier)
+3. `RatingService` configured (requires the above)
+4. An `ACTIVE` season exists in `ranked_seasons` (see Season Provisioning above)
+
+---
+
 ## Troubleshooting
 
 ### Browser says "WebSocket connection failed"

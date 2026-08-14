@@ -5,7 +5,7 @@
 import { PROTOCOL_VERSION, MAX_MESSAGE_SIZE } from './validation.mjs';
 export { PROTOCOL_VERSION, MAX_MESSAGE_SIZE };
 export { ReasonCode, reasonCategory } from './reason-codes.mjs';
-export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateChatVisibility, validateAuthenticate, validateAuthRefresh, validateMigrateGuest, checkMessageSize, SUPPORTED_PROFILE_IDS, isSupportedProfileId, SUPPORTED_QUEUE_IDS, MATCH_MODES, isSupportedQueueId } from './validation.mjs';
+export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateChatVisibility, validateAuthenticate, validateAuthRefresh, validateMigrateGuest, validateRematch, validateListSpectatable, validateTournamentList, validateTournamentRegister, validateTournamentGet, validateTournamentStart, validateTournamentReportResult, validateReportPlayer, checkMessageSize, SUPPORTED_PROFILE_IDS, isSupportedProfileId, SUPPORTED_QUEUE_IDS, MATCH_MODES, isSupportedQueueId } from './validation.mjs';
 
 /**
  * @typedef {Object} ProtocolEnvelope
@@ -124,10 +124,16 @@ export function leaveMatch(matchId, participantToken, requestId) {
  * Build a QUEUE_JOIN message.
  * @param {string} profileId - Profile identifier
  * @param {string} [requestId] - Optional request correlation ID
+ * @param {string} [queueId] - Optional queue ID ('ranked' | 'casual' | 'private').
+ *   RANK-01: the client may request a queue, but the server validates ranked
+ *   admission and owns the authoritative match classification.
  * @returns {ProtocolEnvelope}
  */
-export function queueJoin(profileId, requestId) {
-  return envelope('QUEUE_JOIN', { profileId }, requestId);
+export function queueJoin(profileId, requestId, queueId) {
+  /** @type {{ profileId: string, queueId?: string }} */
+  const payload = { profileId };
+  if (queueId !== undefined) payload.queueId = queueId;
+  return envelope('QUEUE_JOIN', payload, requestId);
 }
 
 /**
@@ -293,10 +299,14 @@ export function matchJoined(matchId, participantToken, seat, requestId) {
  * @param {string} matchId - Match identifier
  * @param {Record<string, *>} view - Current match view
  * @param {string} [requestId] - Optional request correlation ID
+ * @param {string} [newParticipantToken] - Optional rotated token (sent on successful RESUME_MATCH, IRX-H20)
  * @returns {ProtocolEnvelope}
  */
-export function matchView(matchId, view, requestId) {
-  return envelope('MATCH_VIEW', { matchId, view }, requestId);
+export function matchView(matchId, view, requestId, newParticipantToken) {
+  /** @type {Record<string, *>} */
+  const payload = { matchId, view };
+  if (newParticipantToken) payload.newParticipantToken = newParticipantToken;
+  return envelope('MATCH_VIEW', payload, requestId);
 }
 
 /**
@@ -507,4 +517,62 @@ export function migrateGuest(sourceIdentity, targetIdentity, achievements, reque
  */
 export function migrationResult(success, migrationId, achievementsTransferred, alreadyMigrated, requestId) {
   return envelope('MIGRATION_RESULT', { success, migrationId, achievementsTransferred, alreadyMigrated }, requestId);
+}
+
+// ── Rematch message builders (v0.28.0) ──
+
+/**
+ * Build a REMATCH message (client → server).
+ * Sent by a player on the terminal screen of a completed network match to
+ * request a new match with the same opponent, profile, and queue. The server
+ * creates a new match, binds the requester as P1, and sends a REMATCH_INVITE
+ * to the opponent. The requester receives a MATCH_CREATED response.
+ * @param {string} matchId - The completed match's ID
+ * @param {string} participantToken - The requester's participant token
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function rematch(matchId, participantToken, requestId) {
+  return envelope('REMATCH', { matchId, participantToken }, requestId);
+}
+
+/**
+ * Build a REMATCH_INVITE message (server → client).
+ * Sent to the opponent when the other player requests a rematch. Contains
+ * the new match's invite code so the opponent can join via JOIN_MATCH.
+ * @param {string} fromMatchId - The original completed match's ID
+ * @param {string} newMatchId - The new match's ID
+ * @param {string} inviteCode - The new match's invite code
+ * @param {string} fromDisplayName - The requesting player's display name
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function rematchInvite(fromMatchId, newMatchId, inviteCode, fromDisplayName, requestId) {
+  return envelope('REMATCH_INVITE', { fromMatchId, newMatchId, inviteCode, fromDisplayName }, requestId);
+}
+
+// ── Spectator discovery message builders (v0.28.0) ──
+
+/**
+ * Build a LIST_SPECTATABLE message (client → server).
+ * Requests a list of currently spectatable matches (RUNNING, non-private,
+ * with spectator capacity remaining).
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function listSpectatable(requestId) {
+  return envelope('LIST_SPECTATABLE', {}, requestId);
+}
+
+/**
+ * Build a SPECTATABLE_LIST message (server → client).
+ * Response to LIST_SPECTATABLE — contains a list of matches available for
+ * spectating. Each entry includes the matchId, profileId, participant display
+ * names, current spectator count, and match mode.
+ * @param {Array<{ matchId: string, profileId: string, participants: Array<{ displayName: string }>, spectatorCount: number, matchMode: string, queueId: string }>} matches
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function spectatableList(matches, requestId) {
+  return envelope('SPECTATABLE_LIST', { matches }, requestId);
 }

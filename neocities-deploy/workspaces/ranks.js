@@ -2,7 +2,8 @@
 // workspaces/ranks.js — /ranks workspace: rank power observatory
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   app,   esc,   short,   definitionList } from '../state.js?v=659a089d50b6';
+import { state,   app,   esc,   short,   definitionList } from '../state.js?v=42162e3d88b3';
+import { radarChart } from '../chart-toolkit.js?v=42162e3d88b3';
 
 function displayRankGlyph(rank) {
   if (rank.startsWith('10:')) {
@@ -54,14 +55,50 @@ export function renderRanks() {
     const isSelected = entry.rank === selectedRank;
     const confClass = `confidence-${(entry.confidence ?? 'INSUFFICIENT').toLowerCase()}`;
     return `<button class="rank-row ${isSelected ? 'selected' : ''} ${confClass}" data-rank="${entry.rank}"><span class="rank-glyph">${glyph}</span><div class="rank-bar-container"><div class="rank-bar-fill" style="width:${rpct}%"></div></div><span class="rank-rpi">${rpct}</span></button>`;
-  }).join('')}</div></div></section><section class="panel"><div class="panel-header"><div><h2>Selected rank: ${displayRankGlyph(selectedRank)}</h2><p>Six-axis power profile and decision value</p></div><span class="${confidenceClass}">${profile.confidence ?? 'INSUFFICIENT'}</span></div><div class="panel-body"><div class="rank-profile">${rankAxisBar('Selection', axes.selectionPower, profile.raw?.selectionRate != null ? `${(profile.raw.selectionRate * 100).toFixed(1)}% participation rate` : null, profile.axisStatus?.selectionPower)}${rankAxisBar('Victory', axes.victoryPower, profile.raw?.victoryRate != null ? `${(profile.raw.victoryRate * 100).toFixed(1)}% victory rate` : null, profile.axisStatus?.victoryPower)}${rankAxisBar('Score', axes.scorePower, profile.raw?.scorePerSelection != null ? `${profile.raw.scorePerSelection.toFixed(2)} pts/observed action` : null, profile.axisStatus?.scorePower)}${rankAxisBar('Board', axes.boardPower, profile.raw?.boardPerSelection != null ? `${profile.raw.boardPerSelection.toFixed(4)} board/observed action` : null, profile.axisStatus?.boardPower)}${rankAxisBar('Response', axes.responsePower, profile.raw?.responseRate != null ? `${(profile.raw.responseRate * 100).toFixed(1)}% response rate` : null, profile.axisStatus?.responsePower)}${rankAxisBar('Observed Rank Value', observedRankValueAxis, observedRankValueRaw != null && Number.isFinite(observedRankValueRaw) ? observedRankValueRaw.toFixed(3) : null, profile.axisStatus?.observedRankValue)}</div><div class="rank-metrics-grid">${definitionList([['RPI', profile.rpi?.toFixed(4)], ['Decision Power', profile.decisionPower?.toFixed(4)], ['Rank Participations', profile.metrics?.selectionCount], ['Opportunities', profile.metrics?.opportunityCount], ['Victories', profile.metrics?.victoryContributionCount], ['Defeats', profile.metrics?.defeatExposureCount], ['Secured Points', profile.metrics?.securedPointContribution?.toFixed(1)], ['Board Presence', profile.metrics?.boardPresenceContribution?.toFixed(1)], ['Causal Delta Coverage', profile.metrics?.causalCoverage != null ? `${(profile.metrics.causalCoverage * 100).toFixed(1)}%` : '—']])}</div>${orv ? `<div class="rank-cdv"><h3>Observed Rank Value</h3>${definitionList([['Average ORV', orv.averageDecisionValue?.toFixed(4)], ['Rank comparisons', orv.swapCount], ['Observations', orv.sampleSize ?? orv.observationalSampleCount ?? orv.totalRollouts], ['ORV Confidence', orv.confidence]])}<p class="footer-note">Descriptive cohort association; not a paired counterfactual.</p></div>` : '<div class="notice"><strong>No observed rank value</strong>There is not enough cohort evidence to estimate ORV for this rank.</div>'}</div></section></div>${anatomyHtml}<div class="grid two" style="margin-top:16px"><section class="panel"><div class="panel-header"><div><h2>Balance watchlist</h2><p>Ranks flagged for potential balance review (HIGH confidence only)</p></div></div><div class="panel-body">${rankWatchlistSection(watch)}</div></section><section class="panel"><div class="panel-header"><div><h2>Rank authority</h2><p>Engine-derived canonical rank definitions</p></div></div><div class="panel-body">${rankAuthoritySection()}</div></section></div>${rankSwapMatrixSection()}`;
+  }).join('')}</div></div></section><section class="panel"><div class="panel-header"><div><h2>Selected rank: ${displayRankGlyph(selectedRank)}</h2><p>Six-axis power profile and decision value</p></div><span class="${confidenceClass}">${profile.confidence ?? 'INSUFFICIENT'}</span></div><div class="panel-body">${rankPowerRadar(profile, axes, observedRankValueAxis, observedRankValueRaw)}<div class="rank-profile">${rankAxisBar('Selection', axes.selectionPower, profile.raw?.selectionRate != null ? `${(profile.raw.selectionRate * 100).toFixed(1)}% participation rate` : null, profile.axisStatus?.selectionPower)}${rankAxisBar('Victory', axes.victoryPower, profile.raw?.victoryRate != null ? `${(profile.raw.victoryRate * 100).toFixed(1)}% victory rate` : null, profile.axisStatus?.victoryPower)}${rankAxisBar('Score', axes.scorePower, profile.raw?.scorePerSelection != null ? `${profile.raw.scorePerSelection.toFixed(2)} pts/observed action` : null, profile.axisStatus?.scorePower)}${rankAxisBar('Board', axes.boardPower, profile.raw?.boardPerSelection != null ? `${profile.raw.boardPerSelection.toFixed(4)} board/observed action` : null, profile.axisStatus?.boardPower)}${rankAxisBar('Response', axes.responsePower, profile.raw?.responseRate != null ? `${(profile.raw.responseRate * 100).toFixed(1)}% response rate` : null, profile.axisStatus?.responsePower)}${rankAxisBar('Observed Rank Value', observedRankValueAxis, observedRankValueRaw != null && Number.isFinite(observedRankValueRaw) ? observedRankValueRaw.toFixed(3) : null, profile.axisStatus?.observedRankValue)}</div><div class="rank-metrics-grid">${definitionList([['RPI', profile.rpi?.toFixed(4)], ['Decision Power', profile.decisionPower?.toFixed(4)], ['Rank Participations', profile.metrics?.selectionCount], ['Opportunities', profile.metrics?.opportunityCount], ['Victories', profile.metrics?.victoryContributionCount], ['Defeats', profile.metrics?.defeatExposureCount], ['Secured Points', profile.metrics?.securedPointContribution?.toFixed(1)], ['Board Presence', profile.metrics?.boardPresenceContribution?.toFixed(1)], ['Causal Delta Coverage', profile.metrics?.causalCoverage != null ? `${(profile.metrics.causalCoverage * 100).toFixed(1)}%` : '—']])}</div><button id="rank-view-mechanics" class="ix-cross-link" data-testid="rank-view-mechanics" aria-label="View mechanics for this rank in the Mechanics Atlas">⌁ View mechanics for this rank</button>${orv ? `<div class="rank-cdv"><h3>Observed Rank Value</h3>${definitionList([['Average ORV', orv.averageDecisionValue?.toFixed(4)], ['Rank comparisons', orv.swapCount], ['Observations', orv.sampleSize ?? orv.observationalSampleCount ?? orv.totalRollouts], ['ORV Confidence', orv.confidence]])}<p class="footer-note">Descriptive cohort association; not a paired counterfactual.</p></div>` : '<div class="notice"><strong>No observed rank value</strong>There is not enough cohort evidence to estimate ORV for this rank.</div>'}</div></section></div>${anatomyHtml}<div class="grid two" style="margin-top:16px"><section class="panel"><div class="panel-header"><div><h2>Balance watchlist</h2><p>Ranks flagged for potential balance review (HIGH confidence only)</p></div></div><div class="panel-body">${rankWatchlistSection(watch)}</div></section><section class="panel"><div class="panel-header"><div><h2>Rank authority</h2><p>Engine-derived canonical rank definitions</p></div></div><div class="panel-body">${rankAuthoritySection()}</div></section></div>${rankSwapMatrixSection()}`;
 
-  document.querySelectorAll('[data-rank]').forEach(button => button.onclick = () => { state.selectedRank = button.dataset.rank; state.anatomyTab = 'overall'; import('../app.js?v=659a089d50b6').then(m => m.render()); });
+  document.querySelectorAll('[data-rank]').forEach(button => button.onclick = () => { state.selectedRank = button.dataset.rank; state.anatomyTab = 'overall'; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
   const profileFilter = document.querySelector('#variant-profile-filter');
-  if (profileFilter) profileFilter.onchange = () => { state.variantProfileFilter = profileFilter.value; import('../app.js?v=659a089d50b6').then(m => m.render()); };
+  if (profileFilter) profileFilter.onchange = () => { state.variantProfileFilter = profileFilter.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
   const originFilter = document.querySelector('#origin-filter');
-  if (originFilter) originFilter.onchange = () => { state.originFilter = originFilter.value; import('../app.js?v=659a089d50b6').then(m => m.render()); };
-  document.querySelectorAll('[data-anatomy-tab]').forEach(button => button.onclick = () => { state.anatomyTab = button.dataset.anatomyTab; import('../app.js?v=659a089d50b6').then(m => m.render()); });
+  if (originFilter) originFilter.onchange = () => { state.originFilter = originFilter.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  document.querySelectorAll('[data-anatomy-tab]').forEach(button => button.onclick = () => { state.anatomyTab = button.dataset.anatomyTab; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
+  // Phase 3A: Rank → Mechanics cross-workspace navigation
+  const viewMechanicsBtn = document.querySelector('#rank-view-mechanics');
+  if (viewMechanicsBtn) viewMechanicsBtn.onclick = () => {
+    state.mechanicsRankFilter = selectedRank;
+    state.selectedMechanic = null;
+    location.hash = '#/mechanics';
+  };
+}
+
+function rankPowerRadar(profile, axes, observedRankValueAxis, observedRankValueRaw) {
+  // Build the 6-axis radar for the selected rank. Axes that are not observable
+  // (status === 'not-observable' / 'insufficient') are clamped to 0 so the
+  // polygon still renders but visually flags the missing dimension.
+  const axisStatus = profile.axisStatus ?? {};
+  const safe = (val, key) => {
+    const st = axisStatus[key];
+    if (st === 'not-observable' || st === 'insufficient') return 0;
+    return Number.isFinite(Number(val)) ? Number(val) : 0;
+  };
+  const radarAxes = [
+    { label: 'Selection', value: safe(axes.selectionPower, 'selectionPower'), rawText: profile.raw?.selectionRate != null ? `${(profile.raw.selectionRate * 100).toFixed(1)}%` : null },
+    { label: 'Victory', value: safe(axes.victoryPower, 'victoryPower'), rawText: profile.raw?.victoryRate != null ? `${(profile.raw.victoryRate * 100).toFixed(1)}%` : null },
+    { label: 'Score', value: safe(axes.scorePower, 'scorePower'), rawText: profile.raw?.scorePerSelection != null ? profile.raw.scorePerSelection.toFixed(2) : null },
+    { label: 'Board', value: safe(axes.boardPower, 'boardPower'), rawText: profile.raw?.boardPerSelection != null ? profile.raw.boardPerSelection.toFixed(4) : null },
+    { label: 'Response', value: safe(axes.responsePower, 'responsePower'), rawText: profile.raw?.responseRate != null ? `${(profile.raw.responseRate * 100).toFixed(1)}%` : null },
+    { label: 'Observed Rank Value', value: safe(observedRankValueAxis, 'observedRankValue'), rawText: observedRankValueRaw != null && Number.isFinite(observedRankValueRaw) ? observedRankValueRaw.toFixed(3) : null },
+  ];
+  const svg = radarChart({
+    axes: radarAxes,
+    max: 1,
+    size: 260,
+    color: '#4fd387',
+    title: `Rank power radar for ${profile.rankId ?? ''}`,
+    ariaLabel: `Six-axis rank power radar chart for the selected rank`,
+  });
+  return `<div class="ix-chart-container" data-testid="rank-power-radar"><div class="ix-chart-header"><h4>Power profile radar</h4></div>${svg}</div>`;
 }
 
 function rankAxisBar(label, normalized, rawText, status = 'observed') {

@@ -92,3 +92,49 @@ test('achievementsEarned with empty unlocks is valid', () => {
   const result = validateEnvelope(msg);
   assert.ok(result.valid);
 });
+
+// ── Prototype-pollution firewall tests ──
+
+test('validateEnvelope rejects __proto__ in payload', () => {
+  // JSON.parse creates __proto__ as an own enumerable property (the attack vector).
+  // Object literal { __proto__: ... } would set the prototype instead, which is not the attack.
+  const msg = JSON.parse('{"protocolVersion":2,"type":"CREATE_MATCH","payload":{"__proto__":{"polluted":true}}}');
+  const result = validateEnvelope(msg);
+  assert.equal(result.valid, false);
+  assert.equal(result.code, ReasonCode.PROTOTYPE_POLLUTION_DETECTED);
+});
+
+test('validateEnvelope rejects constructor.prototype in nested payload', () => {
+  const msg = {
+    protocolVersion: 2,
+    type: 'CREATE_MATCH',
+    payload: { profileId: 'core-advanced-authority', nested: { constructor: { prototype: { polluted: true } } } },
+  };
+  const result = validateEnvelope(msg);
+  assert.equal(result.valid, false);
+  assert.equal(result.code, ReasonCode.PROTOTYPE_POLLUTION_DETECTED);
+});
+
+test('validateEnvelope rejects prototype key in array element', () => {
+  const msg = {
+    protocolVersion: 2,
+    type: 'MIGRATE_GUEST',
+    payload: { sourceIdentity: '00000000-0000-0000-0000-000000000001', targetIdentity: '00000000-0000-0000-0000-000000000002', achievements: [{ prototype: true }] },
+  };
+  const result = validateEnvelope(msg);
+  assert.equal(result.valid, false);
+  assert.equal(result.code, ReasonCode.PROTOTYPE_POLLUTION_DETECTED);
+});
+
+test('validateEnvelope accepts clean messages without pollution keys', () => {
+  const msg = createMatch('core-advanced-authority', 'req-clean');
+  const result = validateEnvelope(msg);
+  assert.ok(result.valid, `clean message should pass: ${JSON.stringify(result)}`);
+});
+
+test('prototype-pollution check does not mutate Object.prototype', () => {
+  const msg = { protocolVersion: 2, type: 'CREATE_MATCH', payload: { __proto__: { injected: true } } };
+  validateEnvelope(msg);
+  assert.equal(({}).injected, undefined, 'Object.prototype must not be polluted');
+  assert.equal(({}).polluted, undefined);
+});

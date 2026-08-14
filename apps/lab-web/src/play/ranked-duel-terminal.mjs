@@ -7,6 +7,7 @@ import { getTerminalBanter } from './ai-personality.js';
 import { loadProfile } from './local-profile.mjs';
 import { ratingToTierDivision, compareRank } from '@intrilex/account-domain/rank-tier';
 import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
+import { generateTeachingMoment, generateBeginnerTrapTip, renderTeachingMoment } from '@intrilex/decision-intelligence/teaching-moments';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -55,9 +56,12 @@ export function renderTerminal(vm, opts) {
     </dl>
     ${renderRankResultBlock(opts)}
     ${opts.achievementSummaryHtml || ''}
+    ${renderIntelligenceCard(vm, opts)}
+    ${renderTeachingMoment(generateTeachingMoment(vm) || generateBeginnerTrapTip(vm))}
     <div class="terminal-actions">
       <button class="primary-button" data-testid="watch-replay" data-action="watch-replay">Watch replay</button>
       ${opts.isNetworkMatch ? '<button class="secondary-button" data-testid="download-replay" data-action="download-replay">Download certified replay</button>' : ''}
+      ${opts.isNetworkMatch ? '<button class="secondary-button" data-testid="network-rematch" data-action="network-rematch">Request rematch</button>' : ''}
       ${opts.isNetworkMatch ? '' : '<button class="secondary-button" data-testid="rematch-same-seed" data-action="rematch">Rematch same seed</button>'}
       ${opts.isNetworkMatch ? '' : '<button class="secondary-button" data-testid="new-seed" data-action="new-seed">New seed</button>'}
       <a class="secondary-button" data-testid="open-rank-anatomy" href="#/ranks">Open Rank Anatomy</a>
@@ -76,6 +80,75 @@ export function renderError(vm, opts) {
     <h2>Session Error</h2>
     <p>${esc(vm.error?.reason || vm.error || 'Unknown error')}</p>
     <button class="secondary-button" data-action="return-to-hub">Return to Play hub</button>
+  </div>`;
+}
+
+/**
+ * Render a post-match intelligence card with deterministic stats derived
+ * from the authoritative final game state. All values are computed from
+ * the view model — no replay reconstruction required.
+ * @param {object} vm - The view model
+ * @param {object} opts - Terminal render options
+ * @returns {string} HTML
+ */
+function renderIntelligenceCard(vm, opts) {
+  if (!vm || !vm.match) return '';
+  const human = vm.human ?? {};
+  const opponent = vm.opponent ?? {};
+  const zones = vm.zones ?? {};
+  const match = vm.match ?? {};
+
+  const turns = match.fullTurnSequence ?? 0;
+  const humanIR = human.secured ?? 0;
+  const oppIR = opponent.secured ?? 0;
+  const irMargin = humanIR - oppIR;
+  const humanGoal = human.goal ?? 21;
+  const oppGoal = opponent.goal ?? 21;
+  const humanGoalPct = humanGoal > 0 ? Math.min(100, Math.round((humanIR / humanGoal) * 100)) : 0;
+  const oppGoalPct = oppGoal > 0 ? Math.min(100, Math.round((oppIR / oppGoal) * 100)) : 0;
+  const drawRemaining = zones.drawPile?.count ?? zones.drawPile?.length ?? 0;
+  const discardCount = zones.discard?.count ?? zones.discard?.length ?? 0;
+  const termination = formatTerminationReason(match.terminationReason || 'UNKNOWN');
+
+  const marginLabel = irMargin > 0 ? `+${irMargin}` : String(irMargin);
+  const marginClass = irMargin > 0 ? 'intel-margin-positive' : irMargin < 0 ? 'intel-margin-negative' : 'intel-margin-neutral';
+
+  const isNetwork = opts.isNetworkMatch === true;
+  const opponentLabel = isNetwork ? 'Opponent' : 'AI';
+
+  return `<div class="intel-card" data-testid="match-intelligence-card">
+    <h3 class="intel-title">Match Intelligence</h3>
+    <div class="intel-grid">
+      <div class="intel-stat" data-testid="intel-turns">
+        <span class="intel-stat-label">Turns</span>
+        <span class="intel-stat-value">${turns}</span>
+      </div>
+      <div class="intel-stat" data-testid="intel-margin">
+        <span class="intel-stat-label">IR Margin</span>
+        <span class="intel-stat-value ${marginClass}">${esc(marginLabel)}</span>
+      </div>
+      <div class="intel-stat" data-testid="intel-draw-remaining">
+        <span class="intel-stat-label">Draw Pile</span>
+        <span class="intel-stat-value">${drawRemaining}</span>
+      </div>
+      <div class="intel-stat" data-testid="intel-discard">
+        <span class="intel-stat-label">Cards Played</span>
+        <span class="intel-stat-value">${discardCount}</span>
+      </div>
+    </div>
+    <div class="intel-goal-bars">
+      <div class="intel-goal-bar-row">
+        <span class="intel-goal-bar-label">You</span>
+        <div class="intel-goal-bar-track"><div class="intel-goal-bar-fill intel-goal-bar-human" style="width:${humanGoalPct}%"></div></div>
+        <span class="intel-goal-bar-value">${humanIR}/${humanGoal}</span>
+      </div>
+      <div class="intel-goal-bar-row">
+        <span class="intel-goal-bar-label">${esc(opponentLabel)}</span>
+        <div class="intel-goal-bar-track"><div class="intel-goal-bar-fill intel-goal-bar-opponent" style="width:${oppGoalPct}%"></div></div>
+        <span class="intel-goal-bar-value">${oppIR}/${oppGoal}</span>
+      </div>
+    </div>
+    <p class="intel-termination" data-testid="intel-termination">Ended: ${esc(termination)}</p>
   </div>`;
 }
 

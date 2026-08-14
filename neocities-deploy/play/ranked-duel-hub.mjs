@@ -34,6 +34,11 @@ export function renderNewMatchSetup(policyCatalog) {
   return `<div class="play-setup" data-testid="play-setup">
     <a class="play-setup-back" href="#/" aria-label="Back to home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg> Back</a>
     <h1>New Match</h1>
+    <a class="academy-entry-link" href="#/play/academy" data-testid="academy-entry-link">
+      <span class="academy-entry-icon" aria-hidden="true">🎓</span>
+      <span class="academy-entry-body"><strong>Academy</strong><small>New to Intrilex? Start with guided lessons.</small></span>
+      <span class="academy-entry-arrow" aria-hidden="true">→</span>
+    </a>
     <form id="new-match-form" data-testid="new-match-form">
       <fieldset class="setup-section">
         <legend>Mode</legend>

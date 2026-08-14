@@ -55,7 +55,7 @@ importers:
         specifier: 9.15.0
         version: 9.15.0
       '@types/node':
-        specifier: ^26.2.0
+        specifier: 26.2.0
         version: 26.2.0
       esbuild:
         specifier: 0.24.0
@@ -70,7 +70,7 @@ importers:
         specifier: file:vendor/toolchain/typescript-5.8.3
         version: file:vendor/toolchain/typescript-5.8.3
       ws:
-        specifier: ^8.21.3
+        specifier: 8.21.3
         version: 8.21.3
 
   apps/batch-cli:

@@ -1,0 +1,862 @@
+/* ═══════════════════════════════════════════════════════════════════
+   LANDING MOBILE — Mobile-first responsive override layer
+   Transforms the desktop "zero-overflow viewport lock" homepage into
+   a fluid, scrollable, touch-first experience for 320–1024px devices.
+
+   Cascade position: loaded AFTER landing-revamp.css so these overrides
+   win over the desktop constraints (position:fixed, overflow:hidden,
+   two-column grid, 44px padding, tiny touch targets).
+
+   Breakpoint strategy:
+     ≤1024px  — Tablet: relax viewport lock, compact spacing
+     ≤768px   — Phone: single-column stack, touch targets, bottom sheet
+     ≤430px   — Small phone: tighter spacing, simplified footer
+     ≤375px   — Tiny phone (SE/fold): minimal padding, stacked nav
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   §1 — TABLET (≤1024px): Relax the viewport lock, compact spacing
+   The desktop layout uses position:fixed + overflow:hidden to achieve
+   zero-scroll at 1920×1080. On tablets this crushes content; we relax
+   to a scrollable flex column that fills the dynamic viewport.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width:1024px){
+  /* ── Break the fixed viewport lock ── */
+  .landing-app{
+    position:absolute;
+    inset:auto;
+    min-height:100vh;
+    min-height:100dvh;
+    height:auto;
+    overflow-y:auto;
+    overflow-x:hidden;
+  }
+
+  /* ── Topbar: reduce horizontal padding ── */
+  .landing-topbar{
+    padding:6px 24px 4px;
+    padding-top:max(6px,var(--safe-area-top));
+    gap:16px;
+  }
+  .landing-brand-logo{
+    width:clamp(160px,22vw,220px);
+  }
+
+  /* ── Hero: reduce padding ── */
+  .landing-hero{
+    padding:8px 24px 0;
+  }
+
+  /* ── Content grid: narrow the secondary rail minimum ── */
+  .landing-content{
+    grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);
+    gap:18px;
+  }
+
+  /* ── Play panel: slightly less padding ── */
+  .landing-play-panel{
+    padding:clamp(28px,4.5vh,52px) clamp(24px,3vw,40px);
+  }
+
+  /* ── Footer: reduce padding ── */
+  .landing-app .landing-footer{
+    padding:10px 24px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §2 — PHONE (≤768px): Single-column stack, touch-first, bottom sheet
+   The core mobile transformation. Everything stacks vertically, touch
+   targets grow to 44px+, the account dropdown becomes a bottom sheet,
+   and the CTA becomes full-width.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width:768px){
+  /* ── Viewport lock fully released: scrollable page ── */
+  .landing-app{
+    position:relative;
+    display:block;
+    min-height:100vh;
+    min-height:100dvh;
+    height:auto;
+    overflow:visible;
+  }
+
+  /* ── Background layers: reduce opacity for readability/perf ── */
+  .landing-video-bg{opacity:.12}
+  .landing-video-overlay{
+    background:linear-gradient(180deg,
+      rgba(5,8,14,.68) 0%,
+      rgba(5,8,14,.42) 40%,
+      rgba(5,8,14,.62) 80%,
+      rgba(5,8,14,.78) 100%);
+  }
+  .landing-aurora{
+    filter:blur(80px);
+    opacity:.5;
+    animation-duration:40s;
+  }
+  .landing-grid-bg{background-size:48px 48px}
+
+  /* ══ TOPBAR: compact, safe-area-aware, wrapping ══ */
+  .landing-topbar{
+    position:sticky;
+    top:0;
+    z-index:50;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:8px 16px 6px;
+    padding-top:max(8px,var(--safe-area-top));
+    padding-left:max(16px,var(--safe-area-left));
+    padding-right:max(16px,var(--safe-area-right));
+    background:linear-gradient(180deg,rgba(5,11,17,.82) 0%,rgba(5,11,17,.5) 70%,transparent 100%);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+  }
+  .landing-brand{
+    gap:2px;
+    flex-shrink:0;
+  }
+  .landing-brand-logo{
+    width:clamp(140px,38vw,190px);
+  }
+  .landing-brand-sub{
+    font-size:8px;
+    letter-spacing:.18em;
+  }
+  .landing-utility-nav{
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  /* ── Continue Duel button: touch-friendly in topbar ── */
+  .landing-continue-btn{
+    min-height:var(--touch-target);
+    padding:8px 12px 8px 10px;
+    font-size:11px;
+  }
+  .landing-continue-meta{
+    display:none; /* hide meta on phone — too cramped */
+  }
+
+  /* ── Lab button: touch target ── */
+  .lab-button{
+    min-height:var(--touch-target);
+    padding:8px 12px 8px 10px;
+    font-size:11px;
+  }
+  .lab-button-icon{width:16px;height:16px}
+
+  /* ── Account trigger: touch target, hide name on narrow ── */
+  .account-trigger{
+    min-height:var(--touch-target);
+    min-width:var(--touch-target);
+    padding:5px 10px 5px 5px;
+    font-size:11px;
+  }
+  .account-avatar{width:28px;height:28px}
+  .account-name{
+    display:none; /* show avatar only on phone to save space */
+  }
+  .account-chevron{display:none}
+
+  /* ══ ACCOUNT DROPDOWN → Bottom sheet on mobile ══ */
+  .account-dropdown{
+    position:fixed;
+    top:auto;
+    bottom:0;
+    left:0;
+    right:0;
+    min-width:0;
+    width:100%;
+    max-width:100%;
+    max-height:100vh;
+    max-height:100dvh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:8px 12px calc(12px + var(--safe-area-bottom));
+    border-radius:20px 20px 0 0;
+    border-bottom:none;
+    border-left:none;
+    border-right:none;
+    transform:translateY(100%);
+    transform-origin:bottom center;
+    transition:transform 320ms var(--ease),opacity 320ms var(--ease),visibility 320ms;
+    box-shadow:0 -12px 40px rgba(0,0,0,.5),0 0 0 1px rgba(90,215,232,.06);
+    z-index:60;
+  }
+  .account-menu.open .account-dropdown{
+    transform:translateY(0);
+    opacity:1;
+    visibility:visible;
+  }
+  /* Bottom sheet backdrop/dimmer — appears behind the sheet when open */
+  .account-menu.open::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(3,6,12,.5);
+    z-index:55;
+    pointer-events:none;
+  }
+  /* Bottom sheet grab handle */
+  .account-dropdown::before{
+    content:"";
+    display:block;
+    width:40px;
+    height:4px;
+    margin:0 auto 8px;
+    border-radius:2px;
+    background:rgba(90,215,232,.25);
+    flex-shrink:0;
+  }
+  .account-dropdown-header{padding:8px 8px 10px}
+  .account-dropdown-item{
+    min-height:var(--touch-target);
+    padding:12px 14px;
+    font-size:14px;
+  }
+  .account-dropdown-item svg{width:20px;height:20px}
+
+  /* ══ HERO: single-column, scrollable ══ */
+  .landing-hero{
+    flex:none;
+    min-height:0;
+    padding:12px 16px 0;
+    padding-bottom:max(12px,var(--safe-area-bottom));
+    overflow:visible;
+  }
+
+  /* ── Content grid: stack into single column ── */
+  .landing-content{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    max-width:none;
+    align-items:stretch;
+  }
+
+  /* ══ PLAY PANEL: full-width, reduced padding ══ */
+  .landing-play-panel{
+    padding:clamp(24px,5vw,36px) clamp(18px,4vw,28px);
+    min-height:0;
+    border-radius:var(--radius-lg);
+  }
+  .landing-play-crest{
+    width:clamp(220px,60%,360px);
+    opacity:.08;
+  }
+  .landing-play-content{max-width:none}
+
+  /* ── Play panel typography: fluid, readable on small screens ── */
+  .landing-play-panel .landing-eyebrow{
+    font-size:10.5px;
+    letter-spacing:.24em;
+    margin-bottom:10px;
+  }
+  .landing-play-panel .landing-title{
+    font-size:clamp(32px,9vw,52px);
+    margin-bottom:10px;
+  }
+  .landing-play-panel .landing-tagline{
+    font-size:clamp(13.5px,3.5vw,16px);
+    line-height:1.5;
+    margin-bottom:20px;
+    max-width:none;
+  }
+
+  /* ── Mode selection: touch-friendly tiles ── */
+  .landing-mode-section{margin-bottom:18px}
+  .landing-mode-label{
+    font-size:10px;
+    letter-spacing:.2em;
+    margin-bottom:8px;
+  }
+  .landing-mode-grid{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  .landing-mode-tile{
+    min-height:var(--touch-target);
+    padding:12px 14px;
+    gap:12px;
+    -webkit-tap-highlight-color:rgba(90,215,232,.12);
+  }
+  .landing-mode-icon{
+    width:38px;
+    height:38px;
+    font-size:17px;
+    border-radius:10px;
+  }
+  .landing-mode-body strong{font-size:14px}
+  .landing-mode-body small{font-size:11.5px;line-height:1.35}
+  .landing-mode-check{top:10px;right:12px;width:18px;height:18px}
+
+  /* ── Primary CTA: full-width, large touch target ── */
+  .landing-play-cta{
+    width:100%;
+    max-width:none;
+    min-height:52px;
+    padding:16px 24px;
+    font-size:15px;
+    letter-spacing:.05em;
+    -webkit-tap-highlight-color:rgba(90,215,232,.15);
+  }
+  .landing-cta-arrow{font-size:18px}
+  .landing-play-subline{
+    font-size:11px;
+    margin-top:10px;
+    max-width:none;
+  }
+
+  /* ══ SECONDARY RAIL: single-column, touch-friendly cards ══ */
+  .landing-secondary-rail{
+    height:auto;
+    overflow:visible;
+  }
+  .landing-content .landing-cards{
+    grid-template-columns:1fr;
+    gap:10px;
+    align-content:stretch;
+  }
+  .landing-rail-card{
+    min-height:var(--touch-target);
+    padding:14px 16px;
+    gap:12px;
+    -webkit-tap-highlight-color:rgba(90,215,232,.1);
+  }
+  .landing-rail-card strong{font-size:13px}
+  .landing-rail-card p{
+    font-size:11.5px;
+    line-height:1.4;
+  }
+  .landing-rail-cta{font-size:11px}
+  .landing-rail-emblem{
+    width:36px;
+    height:36px;
+    font-size:17px;
+    border-radius:10px;
+  }
+  .landing-rail-emblem.subtle{width:32px;height:32px;font-size:14px}
+  .landing-rail-emblem.ranking-system-emblem,
+  .landing-rail-emblem.leaderboard-emblem{
+    width:36px;
+    height:36px;
+  }
+  .landing-rail-emblem.ranking-system-emblem svg,
+  .landing-rail-emblem.leaderboard-emblem svg{width:20px;height:20px}
+  .landing-rail-forums-icon{width:36px;height:36px}
+  .landing-rail-forums-icon svg{width:20px;height:20px}
+  .landing-rail-emblem.reddit-emblem{width:36px;height:36px}
+  .landing-rail-emblem.reddit-emblem svg{width:36px;height:36px}
+  .landing-rail-chevron{font-size:22px}
+
+  /* ── Variant text sizes: ensure readability on mobile ── */
+  .landing-rail-card.whats-new strong{font-size:12px}
+  .landing-rail-card.rules strong{font-size:13px}
+  .landing-rail-card.ranking-system strong{font-size:13px}
+  .landing-rail-card.players strong{font-size:12.5px}
+  .landing-rail-card.leaderboard strong{font-size:12.5px}
+  .landing-rail-card.forums strong{font-size:12px}
+  .landing-rail-card.subreddit strong{font-size:12px}
+
+  /* ══ FOOTER: stack vertically, safe-area-aware ══ */
+  .landing-app .landing-footer{
+    flex-direction:column;
+    gap:10px;
+    padding:14px 16px;
+    padding-bottom:max(14px,var(--safe-area-bottom));
+    padding-left:max(16px,var(--safe-area-left));
+    padding-right:max(16px,var(--safe-area-right));
+    text-align:center;
+    font-size:11.5px;
+  }
+  .landing-footer-brand{font-size:11px}
+  .landing-footer-legal{
+    gap:16px;
+    justify-content:center;
+  }
+  .landing-footer-legal a{font-size:11.5px}
+  .landing-footer-credit{
+    justify-content:center;
+  }
+
+  /* ══ ENTRANCE ANIMATIONS: faster, less motion on mobile ══ */
+  .landing-topbar{animation-duration:300ms}
+  .landing-play-panel{
+    animation-duration:400ms;
+    animation-delay:40ms;
+  }
+  .landing-secondary-rail{
+    animation-duration:400ms;
+    animation-delay:80ms;
+  }
+  .landing-rail-card{animation-duration:300ms}
+  .landing-rail-card:nth-child(1){animation-delay:120ms}
+  .landing-rail-card:nth-child(2){animation-delay:160ms}
+  .landing-rail-card:nth-child(3){animation-delay:200ms}
+  .landing-rail-card:nth-child(4){animation-delay:240ms}
+  .landing-rail-card:nth-child(5){animation-delay:280ms}
+  .landing-rail-card:nth-child(6){animation-delay:320ms}
+  .landing-rail-card:nth-child(7){animation-delay:360ms}
+  .landing-footer{animation-delay:200ms}
+
+  /* ══ OVERLAYS: full-screen sheets on mobile ══ */
+  .landing-overlay{
+    padding:0;
+    align-items:stretch;
+  }
+  .landing-overlay-card{
+    max-width:100%;
+    max-height:100vh;
+    max-height:100dvh;
+    border-radius:0;
+    border-left:none;
+    border-right:none;
+    border-bottom:none;
+    transform:translateY(100%);
+    transition:transform 320ms var(--ease);
+  }
+  .landing-overlay--visible .landing-overlay-card{
+    transform:translateY(0);
+  }
+  .landing-overlay-header{
+    padding:14px 16px;
+    padding-top:max(14px,var(--safe-area-top));
+    position:sticky;
+    top:0;
+    background:linear-gradient(180deg,rgba(18,33,46,.98),rgba(18,33,46,.95));
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    z-index:1;
+  }
+  .landing-overlay-header h2{font-size:18px}
+  .landing-overlay-close{
+    width:var(--touch-target);
+    height:var(--touch-target);
+    border-radius:10px;
+    font-size:24px;
+  }
+  .landing-overlay-body{
+    padding:16px;
+    padding-bottom:max(24px,var(--safe-area-bottom));
+  }
+
+  /* ── Bare overlay (auth): full-screen on mobile ── */
+  .landing-overlay--bare .landing-overlay-body--bare{
+    padding:0;
+    padding-top:var(--safe-area-top);
+    align-items:stretch;
+  }
+  .landing-overlay--bare .auth-card{
+    max-width:100%;
+    border-radius:0;
+    min-height:100vh;
+    min-height:100dvh;
+    transform:translateY(100%);
+  }
+  .landing-overlay--visible.landing-overlay--bare .auth-card{
+    transform:translateY(0);
+  }
+
+  /* ── Pre-alpha overlay: safe-area-aware ── */
+  .prealpha-overlay{
+    padding:16px;
+    padding-top:max(16px,var(--safe-area-top));
+    padding-bottom:max(16px,var(--safe-area-bottom));
+    align-items:center;
+  }
+  .prealpha-card{
+    max-width:100%;
+    padding:28px 20px;
+    gap:18px;
+    border-radius:18px;
+    max-height:90vh;
+    max-height:90dvh;
+    overflow-y:auto;
+  }
+  .prealpha-title{font-size:20px}
+  .prealpha-body{font-size:14px;line-height:1.55}
+  .prealpha-acknowledge{
+    min-height:52px;
+    padding:16px 24px;
+    font-size:15px;
+    width:100%;
+  }
+
+  /* ── Rules/Legal pages: single column on mobile ── */
+  .rules-page,
+  .legal-page{
+    grid-template-columns:1fr;
+    gap:16px;
+    padding:16px;
+    padding-top:max(16px,var(--safe-area-top));
+  }
+  .rules-toc,
+  .legal-toc{
+    position:relative;
+    top:auto;
+    max-height:none;
+    overflow:visible;
+  }
+  .rules-main{
+    padding:16px;
+    padding-top:max(16px,var(--safe-area-top));
+  }
+  .rules-part-body{
+    padding:16px 18px;
+  }
+  .rules-content h1{font-size:24px}
+  .rules-content h2{font-size:20px}
+  .rules-content h3{font-size:16px}
+  .rules-content p{font-size:15px}
+  .rules-content li{font-size:15px}
+  .back-button{
+    top:12px;
+    left:12px;
+    min-height:var(--touch-target);
+    padding:10px 16px;
+    font-size:13px;
+  }
+
+  /* ── Release notes: single column ── */
+  .release-notes-body{
+    grid-template-columns:1fr;
+    gap:12px;
+    padding:16px;
+  }
+  .release-notes-nav{
+    max-height:200px;
+    overflow-y:auto;
+  }
+
+  /* ── Match history: touch-friendly items ── */
+  .match-history-item{
+    min-height:var(--touch-target);
+    padding:14px 16px;
+    gap:12px;
+  }
+  .match-history-item-info strong{font-size:15px}
+  .match-history-item-info small{font-size:12.5px}
+
+  /* ── Profile workspace: stack hero ── */
+  .profile-hero-body{
+    flex-direction:column;
+    gap:14px;
+    padding:16px;
+  }
+  .profile-hero-identity h2{font-size:22px}
+  .profile-hero-actions{width:100%}
+
+  /* ── Achievements: single column ── */
+  .achievements-grid{
+    grid-template-columns:1fr !important;
+  }
+  .achievements-summary{
+    flex-direction:column;
+    gap:8px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §3 — SMALL PHONE (≤430px): Tighter spacing, simplified layout
+   For iPhone SE, Galaxy Fold cover screen, and similar narrow devices.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width:430px){
+  /* ── Topbar: minimal padding ── */
+  .landing-topbar{
+    padding:6px 12px 4px;
+    padding-top:max(6px,var(--safe-area-top));
+    gap:6px;
+  }
+  .landing-brand-logo{
+    width:clamp(120px,42vw,160px);
+  }
+  .landing-brand-sub{
+    font-size:7.5px;
+    letter-spacing:.14em;
+  }
+  .landing-utility-nav{gap:8px}
+
+  /* ── Lab button: icon-only on very narrow screens ── */
+  .lab-button-label{display:none}
+  .lab-button-arrow{display:none}
+  .lab-button{
+    padding:8px 10px;
+    min-width:var(--touch-target);
+  }
+
+  /* ── Hero: minimal padding ── */
+  .landing-hero{
+    padding:10px 12px 0;
+  }
+
+  /* ── Play panel: tight padding ── */
+  .landing-play-panel{
+    padding:20px 16px;
+    border-radius:var(--radius);
+  }
+  .landing-play-panel .landing-title{
+    font-size:clamp(28px,10vw,40px);
+  }
+  .landing-play-panel .landing-tagline{
+    font-size:13.5px;
+    margin-bottom:16px;
+  }
+
+  /* ── Mode tiles: compact but still 44px+ ── */
+  .landing-mode-tile{
+    padding:10px 12px;
+    min-height:var(--touch-target);
+  }
+  .landing-mode-icon{width:34px;height:34px;font-size:15px}
+  .landing-mode-body strong{font-size:13px}
+  .landing-mode-body small{font-size:11px}
+
+  /* ── CTA: full-width, prominent ── */
+  .landing-play-cta{
+    min-height:50px;
+    padding:14px 20px;
+    font-size:14px;
+  }
+
+  /* ── Rail cards: tight padding ── */
+  .landing-rail-card{
+    padding:12px 14px;
+    gap:10px;
+  }
+  .landing-rail-emblem{width:32px;height:32px;font-size:15px}
+  .landing-rail-emblem.subtle{width:28px;height:28px;font-size:12px}
+  .landing-rail-emblem.ranking-system-emblem,
+  .landing-rail-emblem.leaderboard-emblem{width:32px;height:32px}
+  .landing-rail-emblem.ranking-system-emblem svg,
+  .landing-rail-emblem.leaderboard-emblem svg{width:18px;height:18px}
+  .landing-rail-forums-icon{width:32px;height:32px}
+  .landing-rail-forums-icon svg{width:18px;height:18px}
+  .landing-rail-emblem.reddit-emblem{width:32px;height:32px}
+  .landing-rail-emblem.reddit-emblem svg{width:32px;height:32px}
+
+  /* ── Footer: minimal ── */
+  .landing-app .landing-footer{
+    padding:12px 12px;
+    padding-bottom:max(12px,var(--safe-area-bottom));
+    font-size:11px;
+  }
+  .landing-footer-legal{gap:12px}
+  .landing-footer-credit-prefix{font-size:12px}
+  .landing-footer-credit-name{font-size:12px}
+
+  /* ── Account dropdown items: larger touch targets ── */
+  .account-dropdown-item{
+    min-height:48px;
+    padding:14px 12px;
+    font-size:14px;
+  }
+  .account-dropdown-header{padding:6px 6px 8px}
+  .account-dropdown-avatar{width:36px;height:36px}
+  .account-dropdown-avatar svg{width:20px;height:20px}
+  .account-dropdown-id strong{font-size:13px}
+  .account-dropdown-id small{font-size:11px}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §4 — TINY PHONE (≤375px): SE/fold cover screen minimal mode
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width:375px){
+  .landing-topbar{
+    padding:5px 10px 3px;
+    padding-top:max(5px,var(--safe-area-top));
+  }
+  .landing-brand-logo{width:110px}
+  .landing-brand-sub{display:none}
+  .landing-hero{padding:8px 10px 0}
+  .landing-play-panel{padding:18px 14px}
+  .landing-play-panel .landing-eyebrow{font-size:9.5px;letter-spacing:.18em}
+  .landing-play-panel .landing-title{font-size:clamp(24px,11vw,34px)}
+  .landing-play-panel .landing-tagline{font-size:13px;margin-bottom:14px}
+  .landing-mode-section{margin-bottom:14px}
+  .landing-mode-tile{padding:10px 10px;gap:10px}
+  .landing-mode-icon{width:32px;height:32px;font-size:14px}
+  .landing-mode-body strong{font-size:12.5px}
+  .landing-mode-body small{font-size:10.5px}
+  .landing-play-cta{font-size:13px;min-height:48px;padding:13px 18px}
+  .landing-rail-card{padding:11px 12px}
+  .landing-rail-card strong{font-size:12px}
+  .landing-rail-card p{font-size:11px}
+  .landing-app .landing-footer{padding:10px 10px;font-size:10.5px}
+  .landing-footer-legal{gap:10px}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §5 — LANDSCAPE PHONE: use the wider viewport efficiently
+   On landscape phones (short height), reduce vertical padding so the
+   hero + CTA fit without excessive scrolling.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width:1024px) and (max-height:500px) and (orientation:landscape){
+  .landing-topbar{padding:4px 16px 2px}
+  .landing-brand-logo{width:clamp(100px,18vw,150px)}
+  .landing-brand-sub{display:none}
+  .landing-hero{padding:4px 16px 0}
+  .landing-play-panel{
+    padding:14px 18px;
+    min-height:0;
+  }
+  .landing-play-panel .landing-eyebrow{margin-bottom:6px}
+  .landing-play-panel .landing-title{font-size:clamp(24px,6vw,36px);margin-bottom:6px}
+  .landing-play-panel .landing-tagline{margin-bottom:12px;font-size:13px}
+  .landing-mode-section{margin-bottom:12px}
+  .landing-mode-grid{grid-template-columns:1fr 1fr;gap:6px}
+  .landing-mode-tile{min-height:44px;padding:8px 10px}
+  .landing-mode-icon{width:32px;height:32px;font-size:14px}
+  .landing-mode-body strong{font-size:12px}
+  .landing-mode-body small{display:none}
+  .landing-play-cta{min-height:44px;padding:10px 18px;font-size:13px}
+  .landing-content .landing-cards{
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+  }
+  .landing-rail-card{padding:8px 10px;min-height:44px}
+  .landing-rail-card p{display:none}
+  .landing-rail-emblem{width:28px;height:28px;font-size:13px}
+  .landing-app .landing-footer{padding:4px 16px;font-size:10px}
+  .landing-footer-legal{gap:10px}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §6 — TOUCH DEVICE ENHANCEMENTS (pointer:coarse)
+   Ensure all interactive elements have proper tap feedback and no
+   hover-only states. Extends the existing pointer:coarse block in
+   landing-revamp.css with mobile-specific touch affordances.
+   ═══════════════════════════════════════════════════════════════ */
+@media (pointer:coarse) and (max-width:1024px){
+  /* ── Active state feedback for touch (replaces hover lift) ── */
+  .landing-mode-tile:active{
+    transform:scale(.97);
+    background:rgba(20,36,50,.85);
+  }
+  .landing-rail-card:active{
+    transform:scale(.98);
+    border-color:rgba(90,215,232,.35);
+  }
+  .landing-play-cta:active{
+    transform:scale(.98);
+  }
+  .lab-button:active{
+    transform:scale(.95);
+  }
+  .account-trigger:active{
+    transform:scale(.95);
+  }
+  .landing-continue-btn:active{
+    transform:scale(.97);
+  }
+
+  /* ── Larger focus rings for touch ── */
+  .landing-mode-tile:focus-visible,
+  .landing-rail-card:focus-visible,
+  .landing-play-cta:focus-visible,
+  .lab-button:focus-visible,
+  .account-trigger:focus-visible{
+    outline:3px solid var(--focus);
+    outline-offset:3px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §7 — PERFORMANCE: Reduce visual effects on mobile
+   Backdrop-filter blur is GPU-expensive on mobile. Reduce blur radii
+   and disable expensive decorative animations on smaller screens.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width:768px){
+  /* ── Reduce backdrop blur cost ── */
+  .landing-topbar{
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  .landing-play-panel{
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+  }
+  .landing-app .landing-footer{
+    backdrop-filter:blur(4px);
+    -webkit-backdrop-filter:blur(4px);
+  }
+
+  /* ── Simplify aurora animation (less GPU work) ── */
+  .landing-aurora{
+    animation-duration:48s;
+  }
+
+  /* ── Hide the crest image on very small screens (saves paint) ── */
+  /* The crest is decorative (aria-hidden) and low-opacity; removing it
+     on tiny screens saves a compositing layer and paint time. */
+}
+
+@media (max-width:430px){
+  .landing-play-crest{display:none}
+  /* ── Further reduce blur on weak GPUs ── */
+  .landing-play-panel{
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §8 — REDUCED DATA: Strip decorative layers on metered connections
+   ═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-data:reduce){
+  .landing-aurora{display:none}
+  .landing-grid-bg{display:none}
+  .landing-orbital{display:none}
+  .landing-play-crest{display:none}
+  .landing-topbar,
+  .landing-play-panel,
+  .landing-app .landing-footer{
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §9 — REDUCED MOTION: Mobile-specific motion neutralization
+   Extends the existing prefers-reduced-motion block with mobile-
+   specific overrides for entrance animations and sheet transitions.
+   ═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion:reduce){
+  .landing-overlay-card,
+  .landing-overlay--bare .auth-card,
+  .account-dropdown{
+    transition:opacity .001ms,visibility .001ms,transform .001ms !important;
+  }
+  .landing-overlay-card,
+  .landing-overlay--bare .auth-card{
+    transform:none !important;
+  }
+  .landing-aurora{animation:none !important}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §10 — HIGH CONTRAST: Ensure readability on bright screens
+   Boost text contrast slightly on mobile where ambient light varies.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width:768px){
+  .landing-rail-card p{color:var(--muted-bright)}
+  .landing-play-subline{color:var(--muted-bright)}
+  .landing-mode-body small{color:var(--muted-bright)}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   §11 — FOLDABLE / DUAL-SCREEN: span the fold gracefully
+   On foldable devices in spanned mode, add a column-gap that aligns
+   with the hinge so content doesn't straddle the fold.
+   ═══════════════════════════════════════════════════════════════ */
+@media (spanning single-fold-vertical){
+  .landing-content{
+    column-gap:env(fold-width,0px);
+  }
+  .landing-topbar,
+  .landing-app .landing-footer{
+    padding-left:max(16px,env(fold-left,0px));
+    padding-right:max(16px,env(fold-right,0px));
+  }
+}

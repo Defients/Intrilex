@@ -4,7 +4,7 @@
 // Respects reduced-motion, aria-live, and mute settings.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDefinition, RARITY_SYMBOL, AP_BY_RARITY } from '../../achievements/index.mjs?v=659a089d50b6';
+import { getDefinition, RARITY_SYMBOL, AP_BY_RARITY } from '../../achievements/index.mjs?v=42162e3d88b3';
 
 /**
  * AchievementPresenter manages the unlock toast notification queue.
