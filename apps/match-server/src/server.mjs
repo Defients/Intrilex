@@ -1889,7 +1889,11 @@ try {
     const allowedOriginsSummary = ALLOWED_ORIGINS.length > 0
       ? ALLOWED_ORIGINS.join(', ')
       : '(all origins accepted — set INTRILEX_ALLOWED_ORIGINS in production!)';
-    startServer({ port, host }).then(() => {
+    startServer({
+      port,
+      host,
+      skipModerationProbe: process.env.INTRILEX_SKIP_MODERATION_PROBE === '1',
+    }).then(() => {
       console.log(`Intrilex Match Authority Server v${LAB_VERSION} running on ws://${host}:${port}`);
       console.log(`HTTP health: http://${host}:${port}/health`);
       console.log(`Environment: ${isProduction ? 'production' : 'development'}`);
