@@ -1,4 +1,4 @@
-import { sha256Text } from "./engine/hash.js?v=42162e3d88b3";
+import { sha256Text } from "./engine/hash.js?v=73b458295383";
 
 // ── Default scoring weights (parameterized for tuning and sensitivity analysis) ──
 // Provenance: hand-tuned baseline from v0.10.0. Each weight can be overridden

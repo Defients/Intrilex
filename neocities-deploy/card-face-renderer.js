@@ -1,5 +1,5 @@
-import { CARD_FACE_REGISTRY_META, getCardDefinition, getSuit, listAuthoritativeCards } from './card-face-data.js?v=42162e3d88b3';
-import { getCardArtAlt, getCardArtBoardPosition } from './card-art-registry.js?v=42162e3d88b3';
+import { CARD_FACE_REGISTRY_META, getCardDefinition, getSuit, listAuthoritativeCards } from './card-face-data.js?v=73b458295383';
+import { getCardArtAlt, getCardArtBoardPosition } from './card-art-registry.js?v=73b458295383';
 
 const escapeHtml=(value='')=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const slug=value=>String(value??'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');

@@ -2,7 +2,7 @@
 // router.js — Workspace definitions, routing, navigation rendering
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from './state.js?v=42162e3d88b3';
+import { esc } from './state.js?v=73b458295383';
 
 export const WORKSPACES = [
   ['/watch','◈','Watch','Match theatre'],

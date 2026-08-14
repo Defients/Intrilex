@@ -3,8 +3,8 @@
 //   Compare, Mechanics, Synergies, History, Replays, Traces
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=42162e3d88b3';
-import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow } from '../chart-toolkit.js?v=42162e3d88b3';
+import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=73b458295383';
+import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow } from '../chart-toolkit.js?v=73b458295383';
 
 // ── /compare ──────────────────────────────────────────────────────
 export function renderCompare() {
@@ -16,8 +16,8 @@ export function renderCompare() {
   const left = policyMap[selectedPolicy], right = policyMap[rightPolicy];
   const matchupHtml = renderMatchupMatrix();
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Policy Comparison</h2><p>Side-by-side policy metrics with uncertainty quantification</p></div><div class="toolbar"><select id="compare-left">${policies.map(p => `<option value="${esc(p.policyId)}" ${p.policyId === selectedPolicy ? 'selected' : ''}>${esc(p.policyId)}</option>`).join('')}</select><span>vs</span><select id="compare-right">${policies.map(p => `<option value="${esc(p.policyId)}" ${p.policyId === rightPolicy ? 'selected' : ''}>${esc(p.policyId)}</option>`).join('')}</select></div></div><div class="panel-body"><div class="grid two">${[left, right].map(p => p ? `<div>${definitionList([['Policy', p.policyId], ['Matches', p.matchCount], ['Win rate', pct(p.winRate)], ['Win rate 95% CI', p.winWilson95 ? `${pct(p.winWilson95[0])} to ${pct(p.winWilson95[1])}` : '—'], ['Avg score margin', p.avgScoreMargin?.toFixed(1)], ['Exhausted pass rate', pct(p.exhaustedPassRate)], ['Response play rate', pct(p.responsePlayRate)]])}</div>` : '<div class="notice warning">No data</div>').join('')}</div>${matchupHtml}</div></section>`;
-  document.querySelector('#compare-left').onchange = e => { state.selectedPolicy = e.target.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
-  document.querySelector('#compare-right').onchange = e => { state.comparePolicyRight = e.target.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  document.querySelector('#compare-left').onchange = e => { state.selectedPolicy = e.target.value; import('../app.js?v=73b458295383').then(m => m.render()); };
+  document.querySelector('#compare-right').onchange = e => { state.comparePolicyRight = e.target.value; import('../app.js?v=73b458295383').then(m => m.render()); };
   bindChartToggle('#matchup-matrix-chart');
   // Depth II Phase 6: matchup cell → filtered history
   document.querySelectorAll('[data-policy-a][data-policy-b]').forEach(cell => {
@@ -381,7 +381,7 @@ export async function renderOpeningPatterns() {
   let idx = state.traceIndex;
   if (!idx) {
     try {
-      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=42162e3d88b3');
+      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=73b458295383');
       idx = await loadTraceIndex();
       if (!idx || !idx.records) {
         return `<div class="ix-chart-empty" data-testid="opening-patterns-empty">No decision traces available. Run a campaign with decision traces enabled to analyze opening patterns.</div>`;
@@ -394,7 +394,7 @@ export async function renderOpeningPatterns() {
     }
   }
   // If traceIndex exists but trace data isn't preloaded, load it
-  const { loadTraceData } = await import('../data-loader.js?v=42162e3d88b3');
+  const { loadTraceData } = await import('../data-loader.js?v=73b458295383');
   const traceFiles = await Promise.all(idx.records.map(r => loadTraceData(r.matchId)));
   return _renderOpeningPatternsFromTraces(idx.records, traceFiles);
 }
@@ -946,37 +946,37 @@ export function renderMechanics() {
   const chartHtml = renderMechanicsPickRateChart(filtered);
   const quarantineHtml = renderQuarantineLedger(o);
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Mechanics Atlas</h2><p>Prevalence, pick rate, win association, and evidence by mechanic — ${filtered.length} of ${mechanics.length} entities</p></div>${filterHtml}</div><div class="panel-body">${healthHtml}${chartHtml}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(m => `<tr class="clickable-row" data-mechanic="${esc(m.mechanic)}"><td><b>${esc(m.displayName ?? m.mechanic)}</b></td><td>${esc(m.dimension ?? 'canonical-mechanic')}</td><td>${fmt(m.selectionCount ?? 0)}</td><td>${fmt(m.legalOpportunityCount ?? 0)}</td><td>${renderPickRateCell(m)}</td><td>${pct(m.participantPrevalence ?? m.matchUsageRate)}</td><td>${pct(m.matchPrevalence ?? 0)}</td><td>${renderWinAssocCell(m, 'rawWinAssociation', 'rawWinAssociationStatus')}</td><td>${renderWinAssocCell(m, 'adjustedWinAssociation', 'adjustedWinAssociationStatus')}</td><td>${renderPointImpactCell(m)}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${quarantineHtml}</div></section>`;
-  document.querySelector('#dimension-filter').onchange = e => { state.mechanicsDimensionFilter = e.target.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  document.querySelector('#dimension-filter').onchange = e => { state.mechanicsDimensionFilter = e.target.value; import('../app.js?v=73b458295383').then(m => m.render()); };
   // Phase 3B: enhanced filter handlers
   const rankFilterEl = document.querySelector('#mechanics-rank-filter');
-  if (rankFilterEl) rankFilterEl.onchange = e => { state.mechanicsRankFilter = e.target.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  if (rankFilterEl) rankFilterEl.onchange = e => { state.mechanicsRankFilter = e.target.value; import('../app.js?v=73b458295383').then(m => m.render()); };
   const evidenceFilterEl = document.querySelector('#mechanics-evidence-filter');
-  if (evidenceFilterEl) evidenceFilterEl.onchange = e => { state.mechanicsEvidenceFilter = e.target.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  if (evidenceFilterEl) evidenceFilterEl.onchange = e => { state.mechanicsEvidenceFilter = e.target.value; import('../app.js?v=73b458295383').then(m => m.render()); };
   const minSelEl = document.querySelector('#mechanics-min-selections');
   const minSelOut = document.querySelector('#mechanics-min-selections-out');
   if (minSelEl) minSelEl.oninput = e => {
     state.mechanicsMinSelections = Number(e.target.value);
     if (minSelOut) minSelOut.textContent = e.target.value;
   };
-  if (minSelEl) minSelEl.onchange = e => { state.mechanicsMinSelections = Number(e.target.value); import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  if (minSelEl) minSelEl.onchange = e => { state.mechanicsMinSelections = Number(e.target.value); import('../app.js?v=73b458295383').then(m => m.render()); };
   document.querySelectorAll('[data-sort-column]').forEach(th => {
     const handler = () => {
       const col = th.dataset.sortColumn;
       if (state.mechanicsSortColumn === col) { state.mechanicsSortPhase = (state.mechanicsSortPhase + 1) % 3; }
       else { state.mechanicsSortColumn = col; state.mechanicsSortPhase = 1; }
-      import('../app.js?v=42162e3d88b3').then(m => m.render());
+      import('../app.js?v=73b458295383').then(m => m.render());
     };
     th.onclick = handler;
     th.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } };
   });
-  document.querySelectorAll('[data-mechanic]').forEach(row => row.onclick = () => { state.selectedMechanic = row.dataset.mechanic; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
+  document.querySelectorAll('[data-mechanic]').forEach(row => row.onclick = () => { state.selectedMechanic = row.dataset.mechanic; import('../app.js?v=73b458295383').then(m => m.render()); });
   bindChartToggle('#mechanics-pickrate-chart');
 }
 
 function renderMechanicDetail(m) {
   const evidenceClass = (EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 3 ? 'supported' : 'warning';
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="mechanics-back">← Back to atlas</button><h2>${esc(m.displayName ?? m.mechanic)}</h2><p>${esc(m.category ?? '')} · ${esc(m.dimension ?? 'canonical-mechanic')}</p></div><span class="status-badge ${evidenceClass}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Selections', m.selectionCount], ['Legal opportunities', m.legalOpportunityCount ?? 'N/A'], ['Pick rate when legal', m.pickRateWhenLegal != null ? pct(m.pickRateWhenLegal) : 'N/A'], ['Participant prevalence', pct(m.participantPrevalence ?? m.matchUsageRate)], ['Participant prevalence 95% CI', (m.participantPrevalenceWilson95 ?? m.matchUsageWilson95) ? `${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[0])} to ${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[1])}` : '—'], ['Match prevalence', pct(m.matchPrevalence)], ['Raw win association', m.rawWinAssociation != null ? `${(m.rawWinAssociation * 100).toFixed(1)} pp` : '—'], ['Adjusted win association', m.adjustedWinAssociation != null ? `${(m.adjustedWinAssociation * 100).toFixed(1)} pp` : '—'], ['Actor point impact mean', (m.actorPointImpact ?? m.immediatePointImpact)?.mean?.toFixed(2) ?? '—'], ['Actor point impact median', (m.actorPointImpact ?? m.immediatePointImpact)?.median?.toFixed(2) ?? '—'], ['Sample size', m.sampleSize], ['P-value', m.pValue?.toFixed(4)], ['Registry verified', m.registryVerified ? 'Yes' : 'No']])}<button id="mechanic-view-synergies" class="ix-cross-link" data-testid="mechanic-view-synergies" aria-label="View synergies involving this mechanic in the Synergy Observatory">⟷ View synergies involving this mechanic</button>${m.limitations ? `<div class="notice info" style="margin-top:12px"><strong>Limitations:</strong><ul>${m.limitations.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}</div></section>`;
-  document.querySelector('#mechanics-back').onclick = () => { state.selectedMechanic = null; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  document.querySelector('#mechanics-back').onclick = () => { state.selectedMechanic = null; import('../app.js?v=73b458295383').then(m => m.render()); };
   // Phase 3A: Mechanic → Synergy cross-workspace navigation
   const viewSynergiesBtn = document.querySelector('#mechanic-view-synergies');
   if (viewSynergiesBtn) viewSynergiesBtn.onclick = () => {
@@ -990,8 +990,8 @@ function renderAggregatedMechanicDetail(m) {
   const variants = m._variants ?? [];
   const rows = variants.map(v => `<tr class="clickable-row" data-mechanic="${esc(v.mechanic)}"><td class="mono">${esc(v.mechanic)}</td><td>${fmt(v.selectionCount ?? 0)}</td><td>${pct(v.matchUsageRate)}</td><td>${v.outcomeAssociation != null ? `${(v.outcomeAssociation * 100).toFixed(1)} pp` : '—'}</td><td>${v.sampleSize ?? '—'}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[v.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[v.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(v.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('');
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="mechanics-back">← Back to atlas</button><h2>${esc(m.displayName ?? m.mechanic)}</h2><p>${esc(m.category ?? '')} · aggregated from ${variants.length} card-specific variants</p></div><span class="status-badge ${(EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Variants', variants.length], ['Total selections', fmt(m.selectionCount)], ['Aggregated prevalence', pct(m.matchUsageRate)], ['Win rate association (sample-weighted)', m.outcomeAssociation != null ? `${(m.outcomeAssociation * 100).toFixed(1)} pp` : '—'], ['Total sample size', fmt(m.sampleSize)], ['Registry verified', m.registryVerified ? 'Yes' : 'No']])}<h3 style="margin-top:16px">Card-specific variants</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Variant</th><th>Selections</th><th>Prevalence</th><th>Win rate</th><th>Sample</th><th>Evidence</th></tr></thead><tbody>${rows}</tbody></table></div></div></section>`;
-  document.querySelector('#mechanics-back').onclick = () => { state.selectedMechanic = null; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
-  document.querySelectorAll('[data-mechanic]').forEach(row => row.onclick = () => { state.selectedMechanic = row.dataset.mechanic; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
+  document.querySelector('#mechanics-back').onclick = () => { state.selectedMechanic = null; import('../app.js?v=73b458295383').then(m => m.render()); };
+  document.querySelectorAll('[data-mechanic]').forEach(row => row.onclick = () => { state.selectedMechanic = row.dataset.mechanic; import('../app.js?v=73b458295383').then(m => m.render()); });
 }
 
 // ── /synergies ────────────────────────────────────────────────────
@@ -1237,37 +1237,37 @@ export function renderSynergies() {
       const col = th.dataset.sortColumn;
       if (state.synergiesSortColumn === col) { state.synergiesSortPhase = (state.synergiesSortPhase + 1) % 3; }
       else { state.synergiesSortColumn = col; state.synergiesSortPhase = 1; }
-      import('../app.js?v=42162e3d88b3').then(m => m.render());
+      import('../app.js?v=73b458295383').then(m => m.render());
     };
     th.onclick = handler;
     th.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } };
   });
-  document.querySelectorAll('[data-synergy]').forEach(row => row.onclick = () => { state.selectedSynergy = row.dataset.synergy; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
+  document.querySelectorAll('[data-synergy]').forEach(row => row.onclick = () => { state.selectedSynergy = row.dataset.synergy; import('../app.js?v=73b458295383').then(m => m.render()); });
   bindChartToggle('#synergy-heatmap');
   // Phase 3C: enhanced synergies filter handlers
   const synMechFilterEl = document.querySelector('#synergies-mechanic-filter');
-  if (synMechFilterEl) synMechFilterEl.onchange = e => { state.synergiesMechanicFilter = e.target.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  if (synMechFilterEl) synMechFilterEl.onchange = e => { state.synergiesMechanicFilter = e.target.value; import('../app.js?v=73b458295383').then(m => m.render()); };
   const synDirFilterEl = document.querySelector('#synergies-direction-filter');
-  if (synDirFilterEl) synDirFilterEl.onchange = e => { state.synergiesDirectionFilter = e.target.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  if (synDirFilterEl) synDirFilterEl.onchange = e => { state.synergiesDirectionFilter = e.target.value; import('../app.js?v=73b458295383').then(m => m.render()); };
   const synMinCohortEl = document.querySelector('#synergies-min-cohort');
   const synMinCohortOut = document.querySelector('#synergies-min-cohort-out');
   if (synMinCohortEl) synMinCohortEl.oninput = e => {
     state.synergiesMinCohort = Number(e.target.value);
     if (synMinCohortOut) synMinCohortOut.textContent = e.target.value;
   };
-  if (synMinCohortEl) synMinCohortEl.onchange = e => { state.synergiesMinCohort = Number(e.target.value); import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  if (synMinCohortEl) synMinCohortEl.onchange = e => { state.synergiesMinCohort = Number(e.target.value); import('../app.js?v=73b458295383').then(m => m.render()); };
   // Depth II Phase 1: motif flow event handlers
   bindChartToggle('#motif-flow-chart');
   const motifOutcomeEl = document.querySelector('#motif-outcome-filter');
-  if (motifOutcomeEl) motifOutcomeEl.onchange = e => { state.motifOutcomeFilter = e.target.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  if (motifOutcomeEl) motifOutcomeEl.onchange = e => { state.motifOutcomeFilter = e.target.value; import('../app.js?v=73b458295383').then(m => m.render()); };
   const motifClearEl = document.querySelector('#motif-node-clear');
-  if (motifClearEl) motifClearEl.onclick = () => { state.motifNodeFilter = null; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  if (motifClearEl) motifClearEl.onclick = () => { state.motifNodeFilter = null; import('../app.js?v=73b458295383').then(m => m.render()); };
   // Click a Sankey node to filter motifs by that mechanic
   document.querySelectorAll('.ix-sankey-node').forEach(node => {
     node.onclick = () => {
       const id = node.getAttribute('data-node-id');
       state.motifNodeFilter = state.motifNodeFilter === id ? null : id;
-      import('../app.js?v=42162e3d88b3').then(m => m.render());
+      import('../app.js?v=73b458295383').then(m => m.render());
     };
   });
   // Depth II Phase 6: motif → match history filter
@@ -1323,7 +1323,7 @@ function renderNearThresholdPairs(nearThreshold) {
 function renderSynergyDetail(s) {
   const evidenceClass = (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : 'warning';
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="synergy-back">← Back to observatory</button><h2>${esc(s.displayName ?? s.id)}</h2><p>${esc(s.relationshipClass ?? '')} · ${esc(s.direction ?? 'bidirectional')}</p></div><span class="status-badge ${evidenceClass}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Interaction (odds-ratio)', s.effect != null ? s.effect.toFixed(4) : '—'], ['Log-estimate', s.logEstimate != null ? s.logEstimate.toFixed(4) : '—'], ['Marginal interaction', s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(2)} pp` : '—'], ['95% CI (OR)', s.interval?.[0] != null ? `${s.interval[0].toFixed(4)} to ${s.interval[1].toFixed(4)}` : '—'], ['Standard error', s.standardError != null ? s.standardError.toFixed(4) : '—'], ['P-value', s.pValue?.toFixed(6) ?? '—'], ['Q-value', s.qValue?.toFixed(6) ?? '—'], ['Neither cohort', s.neitherN ?? '—'], ['A-only cohort', s.aOnlyN ?? '—'], ['B-only cohort', s.bOnlyN ?? '—'], ['Both cohort', s.bothN ?? '—'], ['Effective N', s.effectiveN ?? '—'], ['Cohort balance', s.cohortBalance != null ? s.cohortBalance.toFixed(3) : '—'], ['Separation detected', s.separation ? 'Yes (corrected)' : 'No'], ['Strata pooled', s.strataCount ?? '—'], ['Status', s.status ?? '—']])}${s.limitations ? `<div class="notice info" style="margin-top:12px"><strong>Limitations:</strong><ul>${s.limitations.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}</div></section>`;
-  document.querySelector('#synergy-back').onclick = () => { state.selectedSynergy = null; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+  document.querySelector('#synergy-back').onclick = () => { state.selectedSynergy = null; import('../app.js?v=73b458295383').then(m => m.render()); };
 }
 
 // ── Match detail inspector (Depth II Phase 5) ────────────────────
@@ -1389,7 +1389,7 @@ export function renderHistory() {
     const summary = summaries.find(s => s.matchId === selectedMatchId);
     if (summary) {
       app.innerHTML = renderMatchDetail(summary);
-      document.querySelector('#history-detail-back').onclick = () => { state.historySelectedMatch = null; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+      document.querySelector('#history-detail-back').onclick = () => { state.historySelectedMatch = null; import('../app.js?v=73b458295383').then(m => m.render()); };
       const watchBtn = document.querySelector('#match-detail-watch');
       if (watchBtn) watchBtn.onclick = () => { state.fixtureId = summary.matchId; state.replayKind = 'autonomy'; state.replay = null; state.frame = 0; location.hash = '#/watch'; };
       const tracesBtn = document.querySelector('#match-detail-traces');
@@ -1421,14 +1421,14 @@ export function renderHistory() {
     ? `<div class="notice info" style="margin-bottom:8px"><strong>Filtered to ${matchIdFilter.length} match(es).</strong> <button id="history-clear-matchid-filter" class="ix-chart-toggle">Clear filter</button></div>`
     : '';
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Match History</h2><p>${filtered.length} matches · page ${page + 1}/${Math.max(1, totalPages)}</p></div><div class="toolbar"><input id="history-search" type="search" placeholder="Search match ID or ordinal…" value="${esc(state.historyFilterTerm)}"><select id="history-reason"><option value="all">All outcomes</option>${reasons.map(r => `<option value="${esc(r)}" ${r === reason ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select><select id="history-policy"><option value="all">All policies</option>${allPolicies.map(p => `<option value="${esc(p)}" ${p === policy ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select></div></div><div class="panel-body">${matchIdFilterBanner}<div class="table-wrap"><table class="data-table"><thead><tr><th>Ordinal</th><th>Match ID</th><th>Outcome</th><th>Winner</th><th>Score</th><th>Turns</th><th>Policies</th></tr></thead><tbody>${pageItems.map(s => `<tr class="clickable-row" data-match-id="${esc(s.matchId)}"><td>${s.matchOrdinal ?? '—'}</td><td class="mono">${short(s.matchId)}</td><td>${esc(s.terminationReason ?? '—')}</td><td>${esc(s.winner ?? '—')}</td><td>${s.scoreMargin?.toFixed(0) ?? '—'}</td><td>${s.completedFullTurns ?? '—'}</td><td>${esc((s.policyIds ?? []).join(', '))}</td></tr>`).join('')}</tbody></table></div>${totalPages > 1 ? `<div class="pagination"><button id="history-prev" ${page === 0 ? 'disabled' : ''}>← Prev</button><span>Page ${page + 1} of ${totalPages}</span><button id="history-next" ${page >= totalPages - 1 ? 'disabled' : ''}>Next →</button></div>` : ''}</div></section>`;
-  document.querySelector('#history-search')?.addEventListener('input', e => { state.historyFilterTerm = e.target.value; state.historyPage = 0; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
-  document.querySelector('#history-reason')?.addEventListener('change', e => { state.historyFilterReason = e.target.value; state.historyPage = 0; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
-  document.querySelector('#history-policy')?.addEventListener('change', e => { state.historyFilterPolicy = e.target.value; state.historyPage = 0; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
-  document.querySelector('#history-clear-matchid-filter')?.addEventListener('click', () => { state.historyFilterMatchIds = null; state.historyPage = 0; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
-  document.querySelector('#history-prev')?.addEventListener('click', () => { if (page > 0) { state.historyPage = page - 1; import('../app.js?v=42162e3d88b3').then(m => m.render()); } });
-  document.querySelector('#history-next')?.addEventListener('click', () => { if (page < totalPages - 1) { state.historyPage = page + 1; import('../app.js?v=42162e3d88b3').then(m => m.render()); } });
+  document.querySelector('#history-search')?.addEventListener('input', e => { state.historyFilterTerm = e.target.value; state.historyPage = 0; import('../app.js?v=73b458295383').then(m => m.render()); });
+  document.querySelector('#history-reason')?.addEventListener('change', e => { state.historyFilterReason = e.target.value; state.historyPage = 0; import('../app.js?v=73b458295383').then(m => m.render()); });
+  document.querySelector('#history-policy')?.addEventListener('change', e => { state.historyFilterPolicy = e.target.value; state.historyPage = 0; import('../app.js?v=73b458295383').then(m => m.render()); });
+  document.querySelector('#history-clear-matchid-filter')?.addEventListener('click', () => { state.historyFilterMatchIds = null; state.historyPage = 0; import('../app.js?v=73b458295383').then(m => m.render()); });
+  document.querySelector('#history-prev')?.addEventListener('click', () => { if (page > 0) { state.historyPage = page - 1; import('../app.js?v=73b458295383').then(m => m.render()); } });
+  document.querySelector('#history-next')?.addEventListener('click', () => { if (page < totalPages - 1) { state.historyPage = page + 1; import('../app.js?v=73b458295383').then(m => m.render()); } });
   // Depth II Phase 5: clicking a match row shows the detail inspector
-  document.querySelectorAll('[data-match-id]').forEach(row => row.onclick = () => { state.historySelectedMatch = row.dataset.matchId; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
+  document.querySelectorAll('[data-match-id]').forEach(row => row.onclick = () => { state.historySelectedMatch = row.dataset.matchId; import('../app.js?v=73b458295383').then(m => m.render()); });
 }
 
 // ── /replays ──────────────────────────────────────────────────────
@@ -1457,13 +1457,13 @@ export function renderTraces() {
     const r = records.find(x => x.matchId === selectedId);
     if (r) {
       app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="traces-back">← Back to index</button><h2>Decision traces: ${esc(r.matchId)}</h2><p>Policy: ${esc(r.policyId ?? '—')} · ${r.traceCount ?? 0} traces</p></div></div><div class="panel-body"><div class="notice">Trace detail loading from shard files. Full trace inspection available after campaign run.</div></div></section>`;
-      document.querySelector('#traces-back').onclick = () => { state.traceSelectedId = null; import('../app.js?v=42162e3d88b3').then(m => m.render()); };
+      document.querySelector('#traces-back').onclick = () => { state.traceSelectedId = null; import('../app.js?v=73b458295383').then(m => m.render()); };
       return;
     }
   }
   app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Decision Traces</h2><p>${filtered.length} match trace records</p></div><div class="toolbar"><select id="trace-filter-policy"><option value="all">All policies</option>${policies.map(p => `<option value="${esc(p)}" ${p === filterPolicy ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select></div></div><div class="panel-body"><div class="table-wrap"><table class="data-table"><thead><tr><th>Match ID</th><th>Policy</th><th>Traces</th><th>Seat</th></tr></thead><tbody>${filtered.map(r => `<tr class="clickable-row" data-match-id="${esc(r.matchId)}"><td class="mono">${short(r.matchId)}</td><td>${esc(r.policyId ?? '—')}</td><td>${r.traceCount ?? '—'}</td><td>${r.seat ?? '—'}</td></tr>`).join('')}</tbody></table></div></div></section><div id="opening-patterns-slot"><div class="ix-chart-empty">Loading opening move patterns…</div></div>`;
-  document.querySelector('#trace-filter-policy')?.addEventListener('change', e => { state.traceFilterPolicy = e.target.value; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
-  document.querySelectorAll('[data-match-id]').forEach(row => row.onclick = () => { state.traceSelectedId = row.dataset.matchId; import('../app.js?v=42162e3d88b3').then(m => m.render()); });
+  document.querySelector('#trace-filter-policy')?.addEventListener('change', e => { state.traceFilterPolicy = e.target.value; import('../app.js?v=73b458295383').then(m => m.render()); });
+  document.querySelectorAll('[data-match-id]').forEach(row => row.onclick = () => { state.traceSelectedId = row.dataset.matchId; import('../app.js?v=73b458295383').then(m => m.render()); });
   // Phase 5B: async-load opening move patterns into the slot below the table
   renderOpeningPatterns().then(html => {
     const slot = document.querySelector('#opening-patterns-slot');

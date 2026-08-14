@@ -7,7 +7,7 @@ import { getTerminalBanter } from './ai-personality.js';
 import { loadProfile } from './local-profile.mjs';
 import { ratingToTierDivision, compareRank } from "../account-domain/rank-tier.mjs";
 import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
-import { generateTeachingMoment, generateBeginnerTrapTip, renderTeachingMoment } from '@intrilex/decision-intelligence/teaching-moments';
+import { generateTeachingMoment, generateBeginnerTrapTip, renderTeachingMoment } from "../decision-intelligence/teaching-moments.mjs";
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

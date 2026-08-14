@@ -70,7 +70,7 @@ export function renderNavigation() {
   const SECTIONS = [
     { label: 'Analysis', routes: ['/watch', '/replays', '/history', '/mechanics', '/synergies'] },
     { label: 'Investigation', routes: ['/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament'] },
-    { label: 'System', routes: ['/evidence', '/release-notes', '/intelligence'] },
+    { label: 'System', routes: ['/evidence', '/intelligence'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));
   const nav = document.querySelector('#workspace-nav');

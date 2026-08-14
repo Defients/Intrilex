@@ -911,12 +911,12 @@ function showPreAlphaOverlay() {
       <button class="prealpha-acknowledge" id="prealpha-acknowledge" disabled aria-disabled="true">
         <span class="prealpha-acknowledge-text">Please wait ${waitSeconds}s&hellip;</span>
       </button>
-      <div class="prealpha-dev-stamp" aria-label="Last development date: August 12, 2026">
+      <div class="prealpha-dev-stamp" aria-label="Last development date: August 14, 2026">
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
         <span class="prealpha-dev-stamp-content">
           <span class="prealpha-dev-stamp-dot" aria-hidden="true"></span>
           <span class="prealpha-dev-stamp-label">Last development</span>
-          <time class="prealpha-dev-stamp-date" datetime="2026-08-12">Aug 12, 2026</time>
+          <time class="prealpha-dev-stamp-date" datetime="2026-08-14">Aug 14, 2026</time>
         </span>
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
       </div>
@@ -1213,7 +1213,15 @@ function showDevBlogOverlay(delay = 2000) {
     // uses RMS silence detection + DP forced alignment to map each text line
     // to its actual time range in the audio. Falls back to proportional
     // character-count distribution if the JSON fails to load.
-    const textEls = [...content.querySelectorAll('p, h2, h3, button.devblog-rules-cta')];
+    // Include the h1 title ("You're Early. Quite Early.") as the first text
+    // element — the audio reads the title before the body, so the timing
+    // JSON's first entry corresponds to the title. Without this, every
+    // highlight is off by one (visuals trail ahead of the audio at first).
+    const titleEl = overlay.querySelector('#devblog-title');
+    const textEls = [
+      ...(titleEl ? [titleEl] : []),
+      ...content.querySelectorAll('p, h2, h3, button.devblog-rules-cta'),
+    ];
     let timingMap = [];
     let fallbackDur = 426.80; // default = Developer voice; updated when voice changes
     let timingData = null;   // parsed JSON: { [voiceId]: { timings: [...] } }
@@ -1366,12 +1374,18 @@ function showDevBlogOverlay(delay = 2000) {
         if (found) {
           found.classList.add('devblog-line-active');
           // Auto-scroll the highlighted line into view within the content area.
-          const elTop = found.offsetTop;
-          const elBottom = elTop + found.offsetHeight;
-          const viewTop = content.scrollTop;
-          const viewBottom = viewTop + content.clientHeight;
-          if (elTop < viewTop + 60 || elBottom > viewBottom - 60) {
-            content.scrollTo({ top: Math.max(0, elTop - content.clientHeight * 0.35), behavior: 'smooth' });
+          // The h1 title lives in the header (outside #devblog-content), so
+          // when it's highlighted, scroll the content to the very top.
+          if (found === titleEl) {
+            content.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            const elTop = found.offsetTop;
+            const elBottom = elTop + found.offsetHeight;
+            const viewTop = content.scrollTop;
+            const viewBottom = viewTop + content.clientHeight;
+            if (elTop < viewTop + 60 || elBottom > viewBottom - 60) {
+              content.scrollTo({ top: Math.max(0, elTop - content.clientHeight * 0.35), behavior: 'smooth' });
+            }
           }
         }
       }

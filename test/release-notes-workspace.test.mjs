@@ -29,11 +29,14 @@ test('release-notes: rulebook-renderer exports slugify for reuse', async () => {
   assert.match(js, /export function slugify\(text\)/);
 });
 
-test('release-notes: router defines /release-notes route under System section', async () => {
+test('release-notes: router defines /release-notes route (reachable from homepage, not in nav)', async () => {
   const js = await read('apps/lab-web/src/router.js');
+  // The route is still declared in WORKSPACES so route() resolves it, but it
+  // is intentionally excluded from the SECTIONS nav (the homepage links to it).
   assert.match(js, /\['\/release-notes','✧','Release Notes','What\\?'s new'\]/);
-  assert.match(js, /System.*routes: \['\/evidence', '\/release-notes', '\/intelligence'\]/);
   assert.match(js, /'\/release-notes':'What\\?'s new/);
+  // Must NOT appear in the rendered nav sections.
+  assert.doesNotMatch(js, /routes: \['\/evidence', '\/release-notes/);
 });
 
 test('release-notes: app.js imports and dispatches /release-notes', async () => {

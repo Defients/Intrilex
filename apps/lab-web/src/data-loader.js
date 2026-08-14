@@ -124,7 +124,7 @@ async function _loadObservatoryDataInner() {
   }
   state.rankAnatomyRegistry = await data('data/observatory/rank-anatomy-registry.json', null);
   state._rankAnatomyModule = await import('./workspaces/ranks/rank-anatomy-workspace.js');
-  state.bootState = { aggregate: structuredClone(state.aggregate), observatory: structuredClone(state.observatory) };
+  state.bootState = { aggregate: structuredClone(state.aggregate), observatory: structuredClone(state.observatory), rankPower: structuredClone(state.rankPower), swapMatrix: structuredClone(state.swapMatrix), variantAnalytics: structuredClone(state.variantAnalytics) };
   if (state.autonomyIndex?.records?.length) {
     state.replayKind = 'autonomy';
     state.fixtureId = state.autonomyIndex.records[0].fixtureId;

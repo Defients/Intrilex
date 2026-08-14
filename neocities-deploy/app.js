@@ -3,33 +3,33 @@
 // routing to workspace renderers, and owns the Watch workspace.
 // ═══════════════════════════════════════════════════════════════
 
-import { getCardDefinition } from './card-face-data.js?v=42162e3d88b3';
-import { renderRulesPage } from './rulebook-renderer.js?v=42162e3d88b3';
-import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js?v=42162e3d88b3';
-import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js?v=42162e3d88b3';
-import { TITLES,   SUBTITLES,   LANDING_MODES,   isPlayRoute,   route} from './router.js?v=42162e3d88b3';
-import { boot,   loadReplay,   getObservatoryBootPromise} from './data-loader.js?v=42162e3d88b3';
-import {} from './experiment-controls.js?v=42162e3d88b3';
-import {} from './integrity.js?v=42162e3d88b3';
-import { renderRanks } from './workspaces/ranks.js?v=42162e3d88b3';
-import { renderDiagnostics } from './workspaces/diagnostics.js?v=42162e3d88b3';
-import { renderBranches} from './workspaces/branches.js?v=42162e3d88b3';
-import { renderEvidence } from './workspaces/evidence.js?v=42162e3d88b3';
-import { renderReleaseNotes } from './workspaces/release-notes.js?v=42162e3d88b3';
-import { renderIntelligence } from './workspaces/intelligence.js?v=42162e3d88b3';
-import { renderTournament } from './workspaces/tournament.js?v=42162e3d88b3';
-import { renderProfile } from './workspaces/profile.js?v=42162e3d88b3';
-import { renderPlayers, destroyPlayers } from './workspaces/players.js?v=42162e3d88b3';
-import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.js?v=42162e3d88b3';
-import { renderSeasonArchive } from './workspaces/season-archive.js?v=42162e3d88b3';
-import { renderMetaReport } from './workspaces/meta-report.js?v=42162e3d88b3';
-import { renderHumanTournaments } from './workspaces/human-tournaments.js?v=42162e3d88b3';
-import { renderAuth } from './workspaces/auth.js?v=42162e3d88b3';
-import { renderSettings } from './workspaces/settings.js?v=42162e3d88b3';
-import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js?v=42162e3d88b3';
-import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js?v=42162e3d88b3';
-import { renderPrivacyPage, renderTermsPage } from './legal-pages.js?v=42162e3d88b3';
-import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading } from './seo-metadata.js?v=42162e3d88b3';
+import { getCardDefinition } from './card-face-data.js?v=73b458295383';
+import { renderRulesPage } from './rulebook-renderer.js?v=73b458295383';
+import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js?v=73b458295383';
+import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js?v=73b458295383';
+import { TITLES,   SUBTITLES,   LANDING_MODES,   isPlayRoute,   route} from './router.js?v=73b458295383';
+import { boot,   loadReplay,   getObservatoryBootPromise} from './data-loader.js?v=73b458295383';
+import {} from './experiment-controls.js?v=73b458295383';
+import {} from './integrity.js?v=73b458295383';
+import { renderRanks } from './workspaces/ranks.js?v=73b458295383';
+import { renderDiagnostics } from './workspaces/diagnostics.js?v=73b458295383';
+import { renderBranches} from './workspaces/branches.js?v=73b458295383';
+import { renderEvidence } from './workspaces/evidence.js?v=73b458295383';
+import { renderReleaseNotes } from './workspaces/release-notes.js?v=73b458295383';
+import { renderIntelligence } from './workspaces/intelligence.js?v=73b458295383';
+import { renderTournament } from './workspaces/tournament.js?v=73b458295383';
+import { renderProfile } from './workspaces/profile.js?v=73b458295383';
+import { renderPlayers, destroyPlayers } from './workspaces/players.js?v=73b458295383';
+import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.js?v=73b458295383';
+import { renderSeasonArchive } from './workspaces/season-archive.js?v=73b458295383';
+import { renderMetaReport } from './workspaces/meta-report.js?v=73b458295383';
+import { renderHumanTournaments } from './workspaces/human-tournaments.js?v=73b458295383';
+import { renderAuth } from './workspaces/auth.js?v=73b458295383';
+import { renderSettings } from './workspaces/settings.js?v=73b458295383';
+import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js?v=73b458295383';
+import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js?v=73b458295383';
+import { renderPrivacyPage, renderTermsPage } from './legal-pages.js?v=73b458295383';
+import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading } from './seo-metadata.js?v=73b458295383';
 
 // IRX-M32: Play-related modules are dynamically imported to enable code splitting.
 // The esbuild bundler (splitting: true) creates separate lazy chunks for these
@@ -42,7 +42,7 @@ import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading
 
 /**
  * Create a lazy-loaded module accessor that caches the import promise.
- * @param {() => Promise<typeof import('*')>} importFn - Thunk that calls `import('./literal-path.js?v=42162e3d88b3')`
+ * @param {() => Promise<typeof import('*')>} importFn - Thunk that calls `import('./literal-path.js?v=73b458295383')`
  * @returns {() => Promise<typeof import('*')>} Async getter with `.cached` property (null until resolved)
  */
 function lazyLoad(importFn) {
@@ -61,14 +61,14 @@ function lazyLoad(importFn) {
   return getter;
 }
 
-const getAdvancedCardRules = lazyLoad(() => import('./play/advanced-card-rules/advanced-card-rules-controller.mjs?v=42162e3d88b3'));
-const getAchievementUi = lazyLoad(() => import('./play/achievements/achievement-ui.js?v=42162e3d88b3'));
-const getPuzzleApp = lazyLoad(() => import('./play/puzzle/puzzle-app.mjs?v=42162e3d88b3'));
-const getRankingOverlay = lazyLoad(() => import('./play/rank/ranking-system-overlay.js?v=42162e3d88b3'));
-const getMatchServerConfig = lazyLoad(() => import('./play/network/match-server-config.js?v=42162e3d88b3'));
-const getAuthController = lazyLoad(() => import('./play/network/auth-controller.js?v=42162e3d88b3'));
-const getAccountStore = lazyLoad(() => import('./play/network/account-store.js?v=42162e3d88b3'));
-const getMigrationController = lazyLoad(() => import('./play/network/migration-controller.js?v=42162e3d88b3'));
+const getAdvancedCardRules = lazyLoad(() => import('./play/advanced-card-rules/advanced-card-rules-controller.mjs?v=73b458295383'));
+const getAchievementUi = lazyLoad(() => import('./play/achievements/achievement-ui.js?v=73b458295383'));
+const getPuzzleApp = lazyLoad(() => import('./play/puzzle/puzzle-app.mjs?v=73b458295383'));
+const getRankingOverlay = lazyLoad(() => import('./play/rank/ranking-system-overlay.js?v=73b458295383'));
+const getMatchServerConfig = lazyLoad(() => import('./play/network/match-server-config.js?v=73b458295383'));
+const getAuthController = lazyLoad(() => import('./play/network/auth-controller.js?v=73b458295383'));
+const getAccountStore = lazyLoad(() => import('./play/network/account-store.js?v=73b458295383'));
+const getMigrationController = lazyLoad(() => import('./play/network/migration-controller.js?v=73b458295383'));
 
 // Install global error boundary at module load time
 installGlobalErrorBoundary();
@@ -531,7 +531,7 @@ async function openMatchHistoryOverlay() {
   openLandingOverlay('Match History', async (container) => {
     container.innerHTML = '<div class="loading-state"><span class="loading-spinner" aria-hidden="true"></span><strong>Loading match history…</strong></div>';
     try {
-      const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js?v=42162e3d88b3');
+      const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js?v=73b458295383');
       if (!isIndexedDBAvailable()) {
         container.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">⚙</span><strong>No local match history.</strong><p>Match saves require IndexedDB, which is not available in this browser.</p></div>';
         return;
@@ -585,7 +585,7 @@ let _boardCssLoaded = false;
 async function renderPlayMode(r) {
   if (!landingContainer) return;
   if (!_playModule) {
-    _playModule = await import('./play/play-app.js?v=42162e3d88b3');
+    _playModule = await import('./play/play-app.js?v=73b458295383');
     // Load base play CSS (tokens, hub, setup, network lobby, terminal) — needed for all play routes
     if (!document.querySelector('link[data-play-css]')) {
       const link = document.createElement('link');
@@ -911,12 +911,12 @@ function showPreAlphaOverlay() {
       <button class="prealpha-acknowledge" id="prealpha-acknowledge" disabled aria-disabled="true">
         <span class="prealpha-acknowledge-text">Please wait ${waitSeconds}s&hellip;</span>
       </button>
-      <div class="prealpha-dev-stamp" aria-label="Last development date: August 12, 2026">
+      <div class="prealpha-dev-stamp" aria-label="Last development date: August 14, 2026">
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
         <span class="prealpha-dev-stamp-content">
           <span class="prealpha-dev-stamp-dot" aria-hidden="true"></span>
           <span class="prealpha-dev-stamp-label">Last development</span>
-          <time class="prealpha-dev-stamp-date" datetime="2026-08-12">Aug 12, 2026</time>
+          <time class="prealpha-dev-stamp-date" datetime="2026-08-14">Aug 14, 2026</time>
         </span>
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
       </div>
@@ -1642,7 +1642,7 @@ async function loadContinueCard() {
   const slot = landingContainer.querySelector('#landing-continue-slot');
   if (!slot) return;
   try {
-    const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js?v=42162e3d88b3');
+    const { isIndexedDBAvailable, listSaves } = await import('./play/persistence.js?v=73b458295383');
     if (!isIndexedDBAvailable()) return;
     const saves = await listSaves();
     // Guard: user may have navigated away during the async import/listSaves.

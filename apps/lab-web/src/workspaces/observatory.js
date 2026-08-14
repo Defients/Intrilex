@@ -1017,10 +1017,14 @@ function renderSynergyHeatmap(synergies) {
     return rank >= 2 && s.effect != null && Number.isFinite(Number(s.effect));
   });
   if (eligible.length === 0) return '';
-  // Collect the unique mechanic set. Synergy ids typically encode the pair
-  // (e.g. "mechA×mechB" or "mechA_mechB"). Fall back to displayName parsing.
+  // Collect the unique mechanic set. Synergy objects carry explicit
+  // source/target mechanic names; fall back to parsing displayName only
+  // for legacy objects that lack those fields. (The id uses "::" as a
+  // separator, which the older split regex did not match — leading to the
+  // heatmap rendering blank because pairParts returned a single element.)
   const pairParts = (s) => {
-    const raw = s.id ?? s.displayName ?? '';
+    if (s.source && s.target) return [s.source, s.target];
+    const raw = s.displayName ?? s.id ?? '';
     return raw.split(/[×_×+]/).map(p => p.trim()).filter(Boolean);
   };
   const mechanics = [...new Set(eligible.flatMap(pairParts))].sort();
@@ -1173,7 +1177,8 @@ export function renderSynergies() {
   const directionFilter = state.synergiesDirectionFilter ?? 'all';
   const minCohort = Number(state.synergiesMinCohort ?? 0);
   const synergyPairParts = (s) => {
-    const raw = s.id ?? s.displayName ?? '';
+    if (s.source && s.target) return [s.source, s.target];
+    const raw = s.displayName ?? s.id ?? '';
     return raw.split(/[×_×+]/).map(p => p.trim()).filter(Boolean);
   };
   let filteredSynergies = synergies;

@@ -144,7 +144,7 @@ let _buildVariantAnalytics = null;
 export async function computeVariantAnalyticsFromSummaries(summaries) {
   if (!summaries || summaries.length === 0) return null;
   if (!_buildVariantAnalytics) {
-    const mod = await import('./browser-analytics.js?v=42162e3d88b3');
+    const mod = await import('./browser-analytics.js?v=73b458295383');
     _buildVariantAnalytics = mod.buildVariantAnalytics;
   }
   return _buildVariantAnalytics({ summaries });

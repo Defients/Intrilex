@@ -13,7 +13,7 @@ import { NetworkSessionState } from './network-session.mjs';
 import { loadProfile } from '../local-profile.mjs';
 import { ratingToTierDivision, RankTier } from "../../account-domain/rank-tier.mjs";
 import { renderRankGlyph, rankLabel } from '../rank/rank-glyph.js';
-import { computeSeasonCountdown, renderSeasonCountdown } from '@intrilex/account-domain/season-countdown';
+import { computeSeasonCountdown, renderSeasonCountdown } from "../../account-domain/season-countdown.mjs";
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

@@ -283,7 +283,7 @@ function renderMatch(vm, opts, snapshot) {
     </section>
     <section class="rd-cell rd-gamelog" data-grid="gamelog" data-log-empty="${(snapshot?.recentEvents?.length ?? 0) === 0}" aria-label="Game log">
       <div class="rd-rail-section-header">GAME LOG</div>
-      ${renderGameLog(snapshot?.recentEvents ?? [], snapshot?.systemEvents ?? [])}
+      ${renderGameLog(snapshot?.recentEvents ?? [], snapshot?.systemEvents ?? [], cardRegistry)}
     </section>
     <section class="rd-cell rd-score-rail" data-grid="scoreRail" aria-label="Score rail" data-testid="score-rail">
       ${renderScoreRail(vm)}
@@ -1287,11 +1287,11 @@ function renderRightRail(vm, opts, isReadOnly, snapshot, priorityContext, immedi
 
 // ── Game Log (player-readable, no engine diagnostics) ──────────
 
-function renderGameLog(events, systemEvents) {
+function renderGameLog(events, systemEvents, cardRegistry) {
   // Build player-readable gameplay events
   let logEntries = [];
   if (events && events.length > 0) {
-    const log = buildEventLog(events, null);
+    const log = buildEventLog(events, cardRegistry);
     const playerReadable = log.filter(e => {
       const desc = e.description ?? e.text ?? '';
       const type = e.type ?? '';

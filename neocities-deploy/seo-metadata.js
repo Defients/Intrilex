@@ -16,7 +16,7 @@
 // previously scattered across app.js render() and renderLegalPage().
 // ═══════════════════════════════════════════════════════════════
 
-import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION } from './version.js?v=42162e3d88b3';
+import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION } from './version.js?v=73b458295383';
 
 const ORIGIN = 'https://intrilex.cards';
 

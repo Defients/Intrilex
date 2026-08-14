@@ -459,6 +459,13 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
     '@intrilex/account-domain/identity': 'identity.mjs',
     '@intrilex/account-domain/capabilities': 'capabilities.mjs',
     '@intrilex/account-domain/validation': 'validation.mjs',
+    '@intrilex/account-domain/tournament-domain': 'tournament-domain.mjs',
+    '@intrilex/account-domain/strategic-fingerprint': 'strategic-fingerprint.mjs',
+    '@intrilex/account-domain/meta-report': 'meta-report.mjs',
+    '@intrilex/account-domain/replay-branching': 'replay-branching.mjs',
+    '@intrilex/account-domain/match-stats-aggregator': 'match-stats-aggregator.mjs',
+    '@intrilex/account-domain/ranked-entry-requirements': 'ranked-entry-requirements.mjs',
+    '@intrilex/account-domain/season-countdown': 'season-countdown.mjs',
   };
 
   // Recursively find and rewrite .js and .mjs files in dist that contain
@@ -504,6 +511,101 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
   }
   await rewriteBareImports(dist);
   if (rewrittenCount > 0) console.log(`build: rewrote bare @intrilex/account-domain/* imports in ${rewrittenCount} raw dist file(s) → ./account-domain/*.mjs`);
+}
+
+// ── Rewrite bare @intrilex/decision-intelligence/* imports in raw dist files ──
+// Same defense-in-depth pattern as @intrilex/account-domain above. The
+// decision-intelligence package modules are copied into dist/decision-intelligence/
+// and bare imports are rewritten to relative paths.
+{
+  const diSrc = path.join(root, 'packages/decision-intelligence/src');
+  const diDist = path.join(dist, 'decision-intelligence');
+  await mkdir(diDist, { recursive: true });
+  const diModules = (await readdir(diSrc)).filter(f => f.endsWith('.mjs'));
+  for (const mod of diModules) {
+    await cp(path.join(diSrc, mod), path.join(diDist, mod));
+  }
+
+  // Map of bare import specifiers → decision-intelligence module filenames
+  // (mirrors packages/decision-intelligence/package.json exports)
+  const diExports = {
+    '@intrilex/decision-intelligence/decision-trace': 'decision-trace.mjs',
+    '@intrilex/decision-intelligence/reason-codes': 'reason-codes.mjs',
+    '@intrilex/decision-intelligence/mechanic-registry': 'mechanic-registry.mjs',
+    '@intrilex/decision-intelligence/counterfactual': 'counterfactual.mjs',
+    '@intrilex/decision-intelligence/anchor': 'anchor.mjs',
+    '@intrilex/decision-intelligence/policy-diagnostics': 'policy-diagnostics.mjs',
+    '@intrilex/decision-intelligence/teaching-moments': 'teaching-moments.mjs',
+    '@intrilex/decision-intelligence/mastery-tracks': 'mastery-tracks.mjs',
+    '@intrilex/decision-intelligence/replay-lesson': 'replay-lesson.mjs',
+  };
+
+  // The decision-intelligence modules themselves import @intrilex/shared
+  // (hashCanonical). In the browser bundle this is aliased to shared-browser.js
+  // by bundle.mjs. For the raw dist copies, rewrite @intrilex/shared to the
+  // shared-browser.js shim at the dist root.
+  const sharedBrowserPath = path.join(dist, 'shared-browser.js');
+
+  let diRewrittenCount = 0;
+  async function rewriteDiBareImports(dir) {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        // Skip directories that don't need rewriting
+        if (entry.name === 'engine' || entry.name === 'data' || entry.name === 'assets' ||
+            entry.name === 'hybrix' || entry.name === 'achievements' || entry.name === 'analytics-ai' ||
+            entry.name === 'account-domain' || entry.name === 'decision-intelligence' ||
+            entry.name === 'vendor') continue;
+        await rewriteDiBareImports(fullPath);
+      } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.mjs'))) {
+        let content = await readFile(fullPath, 'utf8');
+        let modified = false;
+        const fileDir = path.dirname(fullPath);
+        const relBase = path.relative(fileDir, diDist).replace(/\\/g, '/');
+        for (const [specifier, moduleFile] of Object.entries(diExports)) {
+          const importRegex = new RegExp(
+            `from\\s+["']${specifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`,
+            'g'
+          );
+          if (importRegex.test(content)) {
+            content = content.replace(importRegex, `from "${relBase}/${moduleFile}"`);
+            modified = true;
+          }
+        }
+        // Also handle the bare package import (no subpath)
+        const bareImportRegex = /from\s+["']@intrilex\/decision-intelligence["']/g;
+        if (bareImportRegex.test(content)) {
+          content = content.replace(bareImportRegex, `from "${relBase}/index.mjs"`);
+          modified = true;
+        }
+        if (modified) {
+          await writeFile(fullPath, content);
+          diRewrittenCount++;
+        }
+      }
+    }
+  }
+  await rewriteDiBareImports(dist);
+
+  // Rewrite @intrilex/shared imports inside the copied decision-intelligence
+  // modules themselves (they import hashCanonical from @intrilex/shared).
+  // Point them to the shared-browser.js shim at the dist root.
+  const sharedRelBase = path.relative(diDist, dist).replace(/\\/g, '/');
+  let diSharedRewritten = 0;
+  for (const mod of diModules) {
+    const modPath = path.join(diDist, mod);
+    let content = await readFile(modPath, 'utf8');
+    const sharedRegex = /from\s+["']@intrilex\/shared["']/g;
+    if (sharedRegex.test(content)) {
+      content = content.replace(sharedRegex, `from "${sharedRelBase}/shared-browser.js"`);
+      await writeFile(modPath, content);
+      diSharedRewritten++;
+    }
+  }
+
+  if (diRewrittenCount > 0) console.log(`build: rewrote bare @intrilex/decision-intelligence/* imports in ${diRewrittenCount} raw dist file(s) → ./decision-intelligence/*.mjs`);
+  if (diSharedRewritten > 0) console.log(`build: rewrote @intrilex/shared imports in ${diSharedRewritten} decision-intelligence module(s) → shared-browser.js`);
 }
 
 // ── Rewrite bare @supabase/supabase-js imports in raw dist files ────────

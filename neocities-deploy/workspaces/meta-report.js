@@ -11,10 +11,10 @@
 // The server-side RPC already ranked the rows; we only aggregate.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct } from '../state.js?v=42162e3d88b3';
-import { fetchLeaderboard } from '../play/ranked/leaderboard-data.js?v=42162e3d88b3';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=42162e3d88b3';
-import { buildMetaReport, formatTierPercentage } from '@intrilex/account-domain/meta-report';
+import { app, esc, pct } from '../state.js?v=73b458295383';
+import { fetchLeaderboard } from '../play/ranked/leaderboard-data.js?v=73b458295383';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=73b458295383';
+import { buildMetaReport, formatTierPercentage } from "../account-domain/meta-report.mjs";
 import { RankTier } from "../account-domain/rank-tier.mjs";
 
 const TIER_LABELS = {

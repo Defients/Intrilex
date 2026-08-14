@@ -2,9 +2,9 @@
 // workspaces/diagnostics.js — /diagnostics workspace
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, short, definitionList } from '../state.js?v=42162e3d88b3';
-import { loadTraceIndex, loadTraceData } from '../data-loader.js?v=42162e3d88b3';
-import { renderPolicyArchetypes, renderMatchupMatrix, renderTempoCurve, renderEndgameAnalysis, renderActionDistribution } from './observatory.js?v=42162e3d88b3';
+import { state, app, esc, pct, short, definitionList } from '../state.js?v=73b458295383';
+import { loadTraceIndex, loadTraceData } from '../data-loader.js?v=73b458295383';
+import { renderPolicyArchetypes, renderMatchupMatrix, renderTempoCurve, renderEndgameAnalysis, renderActionDistribution } from './observatory.js?v=73b458295383';
 
 export function renderDiagnostics() {
   const summaries = state.observatory?.summaries ?? [];
@@ -70,7 +70,7 @@ export function renderDiagnostics() {
   document.querySelectorAll('[data-section-tab]').forEach(tab => {
     tab.onclick = () => {
       state.diagActiveSection = tab.dataset.sectionTab;
-      import('../app.js?v=42162e3d88b3').then(m => m.render());
+      import('../app.js?v=73b458295383').then(m => m.render());
     };
   });
 }

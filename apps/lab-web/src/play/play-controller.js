@@ -578,6 +578,7 @@ export class PlaySession {
       recentEvents: this.recentEvents.slice(-10).map(e => ({
         type: e.type,
         controllerId: e.controllerId ?? e.payload?.controllerId ?? null,
+        payload: e.payload ?? null,
       })),
       viewHash: playerView ? hashCanonical(playerView).slice(0, 16) : null,
       humanStats,

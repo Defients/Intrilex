@@ -156,6 +156,19 @@ export class SupabaseIdentityVerifier {
     // IRX-H04: If the moderation query itself errored, fail closed.
     // Do NOT assume the account is active when we couldn't verify it.
     if (moderationError) {
+      // Surface the underlying Supabase error so operators can diagnose the
+      // cause (e.g. missing account_moderation table, RLS misconfiguration,
+      // network issue). Without this, the failure is silent server-side and
+      // only manifests as the opaque client-facing message below.
+      console.error(JSON.stringify({
+        ts: new Date().toISOString(),
+        event: 'moderationCheckFailed',
+        accountId,
+        code: moderationError.code,
+        message: moderationError.message,
+        details: moderationError.details,
+        hint: moderationError.hint,
+      }));
       return {
         valid: false,
         code: ReasonCode.AUTH_CONFIG_UNAVAILABLE,
@@ -188,6 +201,36 @@ export class SupabaseIdentityVerifier {
     };
 
     return { valid: true, identity };
+  }
+
+  /**
+   * Startup probe — verify the account_moderation table exists and is
+   * queryable with the configured service-role key. Without this table,
+   * every authentication fails closed (IRX-H04) with an opaque message.
+   * Calling this at boot surfaces the misconfiguration loudly instead of
+   * per-connection.
+   *
+   * @returns {Promise<{ ok: boolean, error?: { code?: string, message: string, hint?: string } }>}
+   */
+  async probeModerationTable() {
+    if (!this._client) {
+      return { ok: false, error: { message: 'Verifier closed' } };
+    }
+    try {
+      // Limit 1 — we only care that the table exists and is selectable.
+      // The service role bypasses RLS, so a failure here means the table
+      // is missing or the credentials/URL are wrong.
+      const { error } = await this._client
+        .from('account_moderation')
+        .select('status')
+        .limit(1);
+      if (error) {
+        return { ok: false, error: { code: error.code, message: error.message, hint: error.hint } };
+      }
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: { message: err?.message ?? String(err) } };
+    }
   }
 
   /**

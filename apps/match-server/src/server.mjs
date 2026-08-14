@@ -1017,84 +1017,130 @@ export function startServer(opts = {}) {
     maxMatches: MAX_MATCHES,
   });
 
-  return new Promise((resolve) => {
-    httpServer.listen(port, host, () => {
-      const api = {
-        httpServer,
-        wss,
-        get matchStore() { return matchStore; },
-        get matchResultPersistor() { return matchResultPersistor; },
-        get ratingService() { return ratingService; },
-        get terminalOutbox() { return terminalOutbox; },
-        close() {
-          clearInterval(heartbeatTimer);
-          clearInterval(cleanupTimer);
-          healthMonitor.stop();
-          // v0.25: Remove signal handlers on explicit close
-          process.removeListener('SIGTERM', signalHandler);
-          process.removeListener('SIGINT', signalHandler);
-          // Close all active connections
-          for (const conn of connections.values()) {
-            try { conn.ws.terminate(); } catch { /* ignore */ }
+  // IRX-H04: Moderation table startup probe — verify account_moderation exists
+  // and is queryable with the configured service-role key. Without this table,
+  // every authentication fails closed with an opaque client-facing message.
+  // Probing at boot surfaces the misconfiguration loudly (in production, the
+  // server refuses to start) instead of silently failing per-connection.
+  // Skip when: no verifier (dev mode), explicit opt-out, or a non-Supabase
+  // verifier (e.g. FakeIdentityVerifier in tests).
+  const skipModerationProbe = opts.skipModerationProbe === true
+    || !identityVerifier
+    || typeof identityVerifier.probeModerationTable !== 'function';
+
+  return new Promise((resolve, reject) => {
+    (async () => {
+      if (!skipModerationProbe) {
+        let probeResult;
+        try {
+          probeResult = await identityVerifier.probeModerationTable();
+        } catch (err) {
+          probeResult = { ok: false, error: { message: err?.message ?? String(err) } };
+        }
+        if (!probeResult.ok) {
+          const errInfo = probeResult.error ?? {};
+          logEvent('moderationProbeFailed', {
+            code: errInfo.code,
+            message: errInfo.message,
+            hint: errInfo.hint,
+          });
+          if (_isProductionMode) {
+            reject(new Error(
+              'Moderation table startup probe failed: ' + (errInfo.message ?? 'unknown error') +
+              (errInfo.hint ? ` (hint: ${errInfo.hint})` : '') +
+              '. Ensure the account_moderation table exists (migration 0006) and the ' +
+              'service-role key has access. Set opts.skipModerationProbe=true to bypass ' +
+              '(NOT recommended in production).'
+            ));
+            return;
           }
-          connections.clear();
-          // IRX-H10: Clear all pending forfeit timers
-          for (const { timer } of pendingForfeits.values()) {
-            clearTimeout(timer);
-          }
-          pendingForfeits.clear();
-          if (matchmakingQueue) matchmakingQueue = null;
-          if (matchStore) matchStore.close();
-          matchStore = null;
-          if (identityVerifier) { identityVerifier.close?.(); identityVerifier = null; }
-          blockChecker = null; // IRX-H19: Clear block checker on shutdown
-          // DATA-01: Drain terminal outbox before closing persistor.
-          // Bound shutdown drain time, persist unfinished work, then close.
-          return (async () => {
-            if (terminalOutbox) {
-              try { await terminalOutbox.shutdown(5000); } catch { /* ignore */ }
-              terminalOutbox = null;
+          process.stderr.write(
+            '\n⚠  WARNING: Moderation table probe failed: ' + (errInfo.message ?? 'unknown error') + '\n' +
+            '   Authentication will fail closed (IRX-H04) until this is fixed.\n\n'
+          );
+        } else {
+          logEvent('moderationProbeOk', {});
+        }
+      }
+
+      httpServer.listen(port, host, () => {
+        const api = {
+          httpServer,
+          wss,
+          get matchStore() { return matchStore; },
+          get matchResultPersistor() { return matchResultPersistor; },
+          get ratingService() { return ratingService; },
+          get terminalOutbox() { return terminalOutbox; },
+          close() {
+            clearInterval(heartbeatTimer);
+            clearInterval(cleanupTimer);
+            healthMonitor.stop();
+            // v0.25: Remove signal handlers on explicit close
+            process.removeListener('SIGTERM', signalHandler);
+            process.removeListener('SIGINT', signalHandler);
+            // Close all active connections
+            for (const conn of connections.values()) {
+              try { conn.ws.terminate(); } catch { /* ignore */ }
             }
-            if (matchResultPersistor) { matchResultPersistor.close?.(); matchResultPersistor = null; }
-            ratingService = null;
-            // Clear module-level state to prevent cross-instance contamination in tests
-            bannedIps.clear();
-            _authAttempts.clear();
-            _authHandlers = null;
-            _spectatorHandlers = null;
-            _matchmakingHandlers = null;
-            _matchHandlers = null;
-            _tournamentHandlers = null;
-            _reportHandlers = null;
-            if (_tournamentRepository && typeof _tournamentRepository.clear === 'function') {
-              _tournamentRepository.clear();
+            connections.clear();
+            // IRX-H10: Clear all pending forfeit timers
+            for (const { timer } of pendingForfeits.values()) {
+              clearTimeout(timer);
             }
-            // Force-close with a timeout fallback
-            return new Promise((resolve) => {
-              let resolved = false;
-              const done = () => { if (!resolved) { resolved = true; resolve(); } };
-              setTimeout(done, 2000); // fallback timeout
-              wss.close(() => {
-                httpServer.close(() => done());
+            pendingForfeits.clear();
+            if (matchmakingQueue) matchmakingQueue = null;
+            if (matchStore) matchStore.close();
+            matchStore = null;
+            if (identityVerifier) { identityVerifier.close?.(); identityVerifier = null; }
+            blockChecker = null; // IRX-H19: Clear block checker on shutdown
+            // DATA-01: Drain terminal outbox before closing persistor.
+            // Bound shutdown drain time, persist unfinished work, then close.
+            return (async () => {
+              if (terminalOutbox) {
+                try { await terminalOutbox.shutdown(5000); } catch { /* ignore */ }
+                terminalOutbox = null;
+              }
+              if (matchResultPersistor) { matchResultPersistor.close?.(); matchResultPersistor = null; }
+              ratingService = null;
+              // Clear module-level state to prevent cross-instance contamination in tests
+              bannedIps.clear();
+              _authAttempts.clear();
+              _authHandlers = null;
+              _spectatorHandlers = null;
+              _matchmakingHandlers = null;
+              _matchHandlers = null;
+              _tournamentHandlers = null;
+              _reportHandlers = null;
+              if (_tournamentRepository && typeof _tournamentRepository.clear === 'function') {
+                _tournamentRepository.clear();
+              }
+              // Force-close with a timeout fallback
+              return new Promise((resolve) => {
+                let resolved = false;
+                const done = () => { if (!resolved) { resolved = true; resolve(); } };
+                setTimeout(done, 2000); // fallback timeout
+                wss.close(() => {
+                  httpServer.close(() => done());
+                });
               });
-            });
-          })();
-        },
-      };
+            })();
+          },
+        };
 
-      // v0.25: Graceful shutdown on SIGTERM/SIGINT
-      // Stop accepting new connections, close existing WebSockets cleanly,
-      // flush/close SQLite, and exit deterministically.
-      const signalHandler = async (sig) => {
-        console.log(`\n${sig} received — shutting down match server...`);
-        try { await api.close(); } catch { /* ignore */ }
-        process.exit(0);
-      };
-      process.on('SIGTERM', signalHandler);
-      process.on('SIGINT', signalHandler);
+        // v0.25: Graceful shutdown on SIGTERM/SIGINT
+        // Stop accepting new connections, close existing WebSockets cleanly,
+        // flush/close SQLite, and exit deterministically.
+        const signalHandler = async (sig) => {
+          console.log(`\n${sig} received — shutting down match server...`);
+          try { await api.close(); } catch { /* ignore */ }
+          process.exit(0);
+        };
+        process.on('SIGTERM', signalHandler);
+        process.on('SIGINT', signalHandler);
 
-      resolve(api);
-    });
+        resolve(api);
+      });
+    })().catch(reject);
   });
 }
 

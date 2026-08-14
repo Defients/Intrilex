@@ -334,6 +334,15 @@ async function finalizeCampaignResult(x, count, workers) {
           } catch (rebuildErr) { console.error('[campaign] Main-thread observatory rebuild failed:', rebuildErr); }
         }
       }
+      // Sync derived state fields that some workspaces read directly rather
+      // than via state.observatory. At boot, data-loader.js extracts these
+      // from the loaded observatory (lines 114-123). After a campaign run
+      // replaces state.observatory, they must be re-synced or the Ranks
+      // workspace (rankPower, swapMatrix, variantAnalytics) will show stale
+      // boot-time data instead of the freshly computed campaign analytics.
+      state.rankPower = state.observatory.rankPower ?? null;
+      state.swapMatrix = state.observatory.swapMatrix ?? null;
+      state.variantAnalytics = state.observatory.variantAnalytics ?? state.variantAnalytics;
     } catch (err) { console.warn('Failed to update state from campaign result:', err); }
     const mechCount = state.observatory?.mechanics?.length ?? 0;
     const synCount = state.observatory?.synergies?.length ?? 0;
@@ -365,6 +374,12 @@ function resetCampaignResults() {
   state.lastCampaignResult = null;
   state.observatory = state.bootState?.observatory ? structuredClone(state.bootState.observatory) : state.observatory;
   state.aggregate = state.bootState?.aggregate ? structuredClone(state.bootState.aggregate) : state.aggregate;
+  // Re-sync derived fields that some workspaces read directly. Without this,
+  // the Ranks workspace would still show the last campaign's rankPower/
+  // swapMatrix/variantAnalytics after a reset instead of the boot data.
+  state.rankPower = state.bootState?.rankPower != null ? structuredClone(state.bootState.rankPower) : state.observatory?.rankPower ?? null;
+  state.swapMatrix = state.bootState?.swapMatrix != null ? structuredClone(state.bootState.swapMatrix) : state.observatory?.swapMatrix ?? null;
+  state.variantAnalytics = state.bootState?.variantAnalytics != null ? structuredClone(state.bootState.variantAnalytics) : state.observatory?.variantAnalytics ?? state.variantAnalytics;
   document.querySelector('#campaign-summary').innerHTML = '';
   document.querySelector('#experiment-status').textContent = 'Ready.';
   import('./app.js').then(m => m.render());
