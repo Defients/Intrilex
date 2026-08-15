@@ -495,9 +495,9 @@
 @keyframes tcg-foil { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* Card back — privacy-safe, uses project cardback image */
-.tcg-card-back { position: relative; display: inline-flex; align-items: center; justify-content: center; width: var(--tcg-card-w); min-width: var(--tcg-card-w); min-height: var(--tcg-card-h); background: url('assets/intrilex-cardback1.png') center/cover no-repeat, linear-gradient(135deg, #1a1f3a, #0a0d1a); border: 1.5px solid rgba(90, 215, 232, 0.3); border-radius: var(--tcg-radius-md); overflow: hidden; box-shadow: var(--tcg-shadow-card); }
+.tcg-card-back { position: relative; display: inline-flex; align-items: center; justify-content: center; width: var(--tcg-card-w); min-width: var(--tcg-card-w); min-height: var(--tcg-card-h); background: url('../assets/intrilex-cardback1.png') center/cover no-repeat, linear-gradient(135deg, #1a1f3a, #0a0d1a); border: 1.5px solid rgba(90, 215, 232, 0.3); border-radius: var(--tcg-radius-md); overflow: hidden; box-shadow: var(--tcg-shadow-card); }
 .tcg-card-back::before { content: ''; position: absolute; inset: 0; background: linear-gradient(120deg, transparent 30%, rgba(90, 215, 232, 0.08) 50%, transparent 70%); background-size: 200% 100%; animation: tcg-shimmer-2 5s linear infinite; }
-.tcg-card-back.mini { background: url('assets/intrilex-cardback1_mini.png') center/cover no-repeat, linear-gradient(135deg, #1a1f3a, #0a0d1a); }
+.tcg-card-back.mini { background: url('../assets/intrilex-cardback1_mini.png') center/cover no-repeat, linear-gradient(135deg, #1a1f3a, #0a0d1a); }
 .tcg-card-back-monogram { position: relative; z-index: 1; font-weight: 800; font-size: 1.1rem; letter-spacing: 0.05em; color: var(--tcg-accent); text-shadow: 0 0 8px rgba(90, 215, 232, 0.5); }
 @keyframes tcg-shimmer { 0% { transform: translateX(-10px); } 100% { transform: translateX(10px); } }
 @keyframes tcg-shimmer-2 { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
