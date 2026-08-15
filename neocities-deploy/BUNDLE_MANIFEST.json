@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-08-14T17:22:00.487Z",
+  "generatedAt": "2026-08-15T01:06:25.612Z",
   "assets": {
     "app": {
       "file": "app.e2bd7e8507fa.js",
@@ -8,8 +8,8 @@
       "type": "js"
     },
     "styles": {
-      "file": "styles.5d1131dcf39f.css",
-      "hash": "5d1131dcf39f",
+      "file": "styles.d9ab18868b13.css",
+      "hash": "d9ab18868b13",
       "type": "css"
     },
     "chunks": [

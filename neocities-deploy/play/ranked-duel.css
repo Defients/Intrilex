@@ -1013,7 +1013,7 @@
 .rd-pile-cardback.mini {
   position: absolute !important;
   inset: 0 !important;
-  background: url('assets/intrilex-cardback1_mini.png') center/cover no-repeat !important;
+  background: url('../assets/intrilex-cardback1_mini.png') center/cover no-repeat !important;
   border-radius: 7px !important;
   pointer-events: none !important;
   z-index: 0 !important;
@@ -1714,7 +1714,7 @@
 .rd-card-back {
   width: 28px !important;
   height: 40px !important;
-  background: url('assets/intrilex-cardback1.png') center/cover no-repeat, linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%) !important;
+  background: url('../assets/intrilex-cardback1.png') center/cover no-repeat, linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%) !important;
   border: 1px solid rgba(99,102,241,0.30) !important;
   border-radius: 4px !important;
   flex-shrink: 0 !important;

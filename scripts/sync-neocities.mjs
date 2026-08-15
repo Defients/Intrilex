@@ -124,6 +124,38 @@ async function main() {
   await cp(distDir, deployDir, { recursive: true, force: true });
   console.log('[neocities] Copied dist -> neocities-deploy');
 
+  // 4a. Neutralize raw source .js files in the deploy root that could be
+  // loaded by stale service workers serving old index.html files. These raw
+  // files (app.js, error-boundary.js, state.js, router.js, etc.) are copied
+  // from src by build.mjs but must NOT execute in production — the real code
+  // lives in the bundled chunks (chunk-*.js, app.<hash>.js). Overwrite them
+  // with empty stubs to prevent duplicate app instances.
+  // EXCEPTION: app.js gets a re-export stub pointing to the real bundle,
+  // because some bundled chunks do `import('./app.js')` to access render().
+  const { writeFile: wf } = await import('node:fs/promises');
+  const rawSourceFiles = [
+    'error-boundary.js', 'state.js', 'router.js', 'rerender.js',
+    'data-loader.js', 'version.js', 'integrity.js', 'anchor.js',
+    'card-face-data.js', 'card-face-renderer.js', 'card-art-registry.js',
+    'chart-toolkit.js', 'experiment-controls.js', 'legal-pages.js',
+    'mechanic-registry-browser.js', 'observatory-analytics-browser.js',
+    'rank-attribution-browser.js', 'rank-power-model.js', 'replay-frames.js',
+    'rulebook-renderer.js', 'seo-metadata.js', 'shared-browser.js',
+    'browser-analytics.js', 'browser-proof.js', 'policy-scoring.js',
+    'autonomy-runtime.js', 'decision-intelligence.js', 'worker.js',
+  ];
+  for (const f of rawSourceFiles) {
+    const p = path.join(deployDir, f);
+    if (existsSync(p)) {
+      await wf(p, '// Neutralized stub — real code is in the bundled chunks.\nexport {};\n', 'utf8');
+    }
+  }
+  // app.js: re-export from the real bundle so dynamic import('./app.js') works
+  const appJsPath = path.join(deployDir, 'app.js');
+  const appStub = `// Re-export from the real bundled app (defense-in-depth for stale SWs)\nexport { render, showExtract, stop, togglePlay } from './${refs.appJs}';\n`;
+  await wf(appJsPath, appStub, 'utf8');
+  console.log(`[neocities] Neutralized ${rawSourceFiles.length} raw source files + app.js re-export stub`);
+
   // 4b. Prune stale data files/dirs in deploy that no longer exist in dist.
   // The cp above overwrites changed files but does NOT delete files removed from
   // dist (e.g. when build.mjs excludes unused data artifacts). Without this, old

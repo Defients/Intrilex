@@ -254,6 +254,43 @@ async function bundle() {
     console.log(`bundle: cache-busted module imports in ${bustedCount} dist file(s) ?v=${bustHash}`);
   }
 
+  // ── Rewrite dynamic import("./app.js?v=HASH") → import("./app.HASH.js?v=HASH") ──
+  // esbuild keeps `import('./app.js')` in chunks because app.js is the entry
+  // point. The cache-bust step adds ?v=HASH but the path still points to the
+  // raw app.js stub (which is neutralized in production). Rewrite these to
+  // point to the actual hashed bundle so chunk→app dynamic imports resolve
+  // to the real bundled code.
+  {
+    const appBundleName = jsFileName; // e.g. "app.36d69c26795b.js"
+    const appImportRegex = /import\(\s*(["'])\.\/app\.js\?v=[^"']+\1\s*\)/g;
+    let rewrittenAppImports = 0;
+
+    async function rewriteAppImports(dir) {
+      const entries = await readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name === 'data' || entry.name === 'assets' ||
+              entry.name === '.split-tmp' || entry.name === 'engine') continue;
+          await rewriteAppImports(fullPath);
+        } else if (entry.isFile() && entry.name.endsWith('.js') && entry.name !== appBundleName) {
+          let content = await readFile(fullPath, 'utf8');
+          if (appImportRegex.test(content)) {
+            content = content.replace(appImportRegex, (m, q) =>
+              `import(${q}./${appBundleName}?v=${jsHash}${q})`);
+            await writeFile(fullPath, content);
+            rewrittenAppImports++;
+          }
+        }
+      }
+    }
+
+    await rewriteAppImports(dist);
+    if (rewrittenAppImports > 0) {
+      console.log(`bundle: rewrote import("./app.js") → import("./${appBundleName}") in ${rewrittenAppImports} file(s)`);
+    }
+  }
+
   return manifest;
 }
 
