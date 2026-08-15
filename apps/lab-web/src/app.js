@@ -618,6 +618,14 @@ async function renderPlayMode(r) {
     rdLink.href = 'play/ranked-duel.css?v=' + LAB_VERSION;
     rdLink.dataset.playCss = '1';
     document.head.appendChild(rdLink);
+    // Gameplay skin system (Light/Dark/CosmoTech/Corrupture) — loaded
+    // alongside the board CSS so the first paint already carries the
+    // correct skin. Must load AFTER ranked-duel.css for override specificity.
+    const skinLink = document.createElement('link');
+    skinLink.rel = 'stylesheet';
+    skinLink.href = 'play/gameplay-skins.css?v=' + LAB_VERSION;
+    skinLink.dataset.playCss = '1';
+    document.head.appendChild(skinLink);
   }
   landingContainer.innerHTML = '<div id="play-root" class="play-root" tabindex="-1"></div>';
   const playRoot = landingContainer.querySelector('#play-root');

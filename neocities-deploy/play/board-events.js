@@ -7,15 +7,15 @@
 // inspector, chat, guidance toggle, sound, confirm/cancel,
 // and terminal actions.
 // ═══════════════════════════════════════════════════════════════
-import { state } from './play-state.js?v=e2bd7e8507fa';
-import { esc } from '../state.js?v=e2bd7e8507fa';
-import { SessionState } from './play-controller.js?v=e2bd7e8507fa';
-import { GuidanceMode } from './intelligence/action-explanation.js?v=e2bd7e8507fa';
-import { getReasonCode } from './authority/reason-code-registry.js?v=e2bd7e8507fa';
-import { setPreference } from './persistence.js?v=e2bd7e8507fa';
-import { parseCardIdentity } from './play-card-component.js?v=e2bd7e8507fa';
-import { getSuitParticleColor } from './play-particles.js?v=e2bd7e8507fa';
-import { buildActionGroups, resolveAction } from './action-presentation.mjs?v=e2bd7e8507fa';
+import { state } from './play-state.js?v=9ea1c2f9e91d';
+import { esc } from '../state.js?v=9ea1c2f9e91d';
+import { SessionState } from './play-controller.js?v=9ea1c2f9e91d';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=9ea1c2f9e91d';
+import { getReasonCode } from './authority/reason-code-registry.js?v=9ea1c2f9e91d';
+import { setPreference } from './persistence.js?v=9ea1c2f9e91d';
+import { parseCardIdentity } from './play-card-component.js?v=9ea1c2f9e91d';
+import { getSuitParticleColor } from './play-particles.js?v=9ea1c2f9e91d';
+import { buildActionGroups, resolveAction } from './action-presentation.mjs?v=9ea1c2f9e91d';
 
 // Lazy-loaded module reference for the group button handler
 const _actionPresentationModule = { buildActionGroups, resolveAction };
@@ -151,7 +151,7 @@ export function bindBoardEvents(container, callbacks) {
   container.querySelectorAll('[data-action-id]').forEach(el => {
     if (el.dataset.testid === 'confirm-action') return;
     if (el.disabled) return; // Skip disabled actions
-    el.addEventListener('click', () => {
+    el.addEventListener('click', async () => {
       const actionId = el.dataset.actionId;
       state.selectedActionId = actionId;
       state.selectedTargetIds = []; // Reset targets on new action selection
@@ -160,6 +160,16 @@ export function bindBoardEvents(container, callbacks) {
       const action = snapshot?.decision?.legalActions?.find(a => a.actionId === actionId);
       if (action?.sourceHandles?.length === 1) {
         state.selectedSourceCardId = action.sourceHandles[0];
+      }
+      // Auto-submit if the action doesn't require targets (1-click flow)
+      if (action) {
+        const needsTargets = action.targets?.required === true &&
+          (action.targets?.legalTargetIds?.length ?? 0) > 0;
+        if (!needsTargets) {
+          clearSelection();
+          await submitAction(container, actionId, renderActiveMatch);
+          return;
+        }
       }
       renderActiveMatch(container);
     });
@@ -184,17 +194,31 @@ export function bindBoardEvents(container, callbacks) {
         });
         const group = groups.find(g => g.id === groupId);
         if (group) {
+          let concrete = null;
           // If a source card is selected, try to resolve with it
           if (state.selectedSourceCardId) {
-            const concrete = resolveAction(group, state.selectedSourceCardId);
-            if (concrete) {
-              state.selectedActionId = concrete.actionId;
-              state.selectedIntentKey = null;
-            }
-          } else if (group.selectionType === 'direct' || group.actions.length === 1) {
-            // Direct or single-action group — auto-select
-            state.selectedActionId = group.actions[0].actionId;
+            concrete = resolveAction(group, state.selectedSourceCardId);
+          }
+          // Auto-select single-variant groups (skip variant selection screen)
+          if (!concrete && (group.selectionType === 'direct' || group.actions.length === 1)) {
+            concrete = group.actions[0];
+          }
+          // For variant-type groups with exactly 1 variant, auto-select it
+          if (!concrete && group.variants?.length === 1) {
+            concrete = group.actions[0];
+          }
+          if (concrete) {
+            state.selectedActionId = concrete.actionId;
             state.selectedIntentKey = null;
+            // Auto-submit if the action doesn't require targets (1-click flow)
+            const needsTargets = concrete.targets?.required === true &&
+              (concrete.targets?.legalTargetIds?.length ?? 0) > 0;
+            if (!needsTargets) {
+              const actionId = concrete.actionId;
+              clearSelection();
+              await submitAction(container, actionId, renderActiveMatch);
+              return;
+            }
           }
           // Auto-submit phase/enter-action — no confirm step needed
           if (group.family === 'phase' && state.selectedActionId) {
@@ -212,7 +236,7 @@ export function bindBoardEvents(container, callbacks) {
 
   // Variant buttons — click to select a specific variant within a group
   container.querySelectorAll('[data-variant-action-id]').forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', async () => {
       const actionId = el.dataset.variantActionId;
       state.selectedActionId = actionId;
       state.selectedIntentKey = null; // Exit variant selection
@@ -222,6 +246,16 @@ export function bindBoardEvents(container, callbacks) {
       const action = snapshot?.decision?.legalActions?.find(a => a.actionId === actionId);
       if (action?.sourceHandles?.length === 1) {
         state.selectedSourceCardId = action.sourceHandles[0];
+      }
+      // Auto-submit if the action doesn't require targets (streamlined flow)
+      if (action) {
+        const needsTargets = action.targets?.required === true &&
+          (action.targets?.legalTargetIds?.length ?? 0) > 0;
+        if (!needsTargets) {
+          clearSelection();
+          await submitAction(container, actionId, renderActiveMatch);
+          return;
+        }
       }
       renderActiveMatch(container);
     });
@@ -667,8 +701,8 @@ export function bindBoardEvents(container, callbacks) {
           // Network match — fetch replay from server and play directly
           try {
             container.innerHTML = '<div class="play-loading">Loading replay from server…</div>';
-            const { ensureReplayFrames } = await import('../replay-frames.js?v=e2bd7e8507fa');
-            const { state: observatoryState } = await import('../state.js?v=e2bd7e8507fa');
+            const { ensureReplayFrames } = await import('../replay-frames.js?v=9ea1c2f9e91d');
+            const { state: observatoryState } = await import('../state.js?v=9ea1c2f9e91d');
             const replay = await state.networkSession.getReplay();
             if (!replay) {
               container.innerHTML = '<div class="play-error" role="alert"><h2>Replay unavailable</h2><p>The server could not provide a certified replay for this match.</p><a href="#/play/online" class="secondary-button">Back to Online</a></div>';
@@ -693,7 +727,7 @@ export function bindBoardEvents(container, callbacks) {
           }
         } else {
           // Local match — save replay and redirect
-          const { createReplayRecord, saveReplay } = await import('./replay-library.js?v=e2bd7e8507fa');
+          const { createReplayRecord, saveReplay } = await import('./replay-library.js?v=9ea1c2f9e91d');
           const record = await createReplayRecord(state.session);
           await saveReplay(record);
           location.hash = '#/play/replays';
@@ -703,7 +737,7 @@ export function bindBoardEvents(container, callbacks) {
         // (HTTP replay download was removed in v0.24.2 — GET_REPLAY is the canonical path)
         if (state.networkSession && state.networkSession.status === 'TERMINAL' && state.networkSession.matchId) {
           try {
-            const { createNetworkReplayRecord, saveReplay } = await import('./replay-library.js?v=e2bd7e8507fa');
+            const { createNetworkReplayRecord, saveReplay } = await import('./replay-library.js?v=9ea1c2f9e91d');
             const record = await createNetworkReplayRecord(state.networkSession);
             if (record) {
               // Save to local IndexedDB replay library

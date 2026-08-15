@@ -492,8 +492,67 @@ export function renderNetworkQueueWaiting(options = {}) {
 }
 
 /**
- * Render the spectate match form — enter a Match ID to spectate.
- * @param {object} options — { error, connecting }
+ * Render the live matches section of the spectate screen — the discovery
+ * list backed by the server's LIST_SPECTATABLE protocol message.
+ *
+ * States:
+ *   - loading:   liveLoading === true → scanning indicator
+ *   - error:     liveError set → non-blocking notice (manual form still works)
+ *   - empty:     liveMatches is an empty array → "no live matches" notice
+ *   - populated: liveMatches has entries → one-click Watch cards
+ *   - idle:      liveMatches is null/undefined and not loading → section hidden
+ *
+ * @param {object} options — { liveMatches, liveLoading, liveError }
+ * @returns {string} HTML
+ */
+export function renderLiveMatchesSection(options = {}) {
+  const liveMatches = options.liveMatches ?? null;
+  const liveLoading = options.liveLoading ?? false;
+  const liveError = options.liveError ?? null;
+
+  if (!liveLoading && liveError == null && liveMatches == null) return '';
+
+  const refreshButton = `<button class="text-button network-live-refresh" data-action="network-live-refresh" data-testid="network-live-refresh" ${liveLoading ? 'disabled' : ''} aria-label="Refresh live matches"><span aria-hidden="true">↻</span> Refresh</button>`;
+
+  let body;
+  if (liveLoading) {
+    body = `<p class="network-live-loading" data-testid="network-live-loading" role="status">Scanning for live matches…</p>`;
+  } else if (liveError) {
+    body = `<p class="network-live-error" data-testid="network-live-error" role="alert">${esc(liveError)}</p>`;
+  } else if (!liveMatches || liveMatches.length === 0) {
+    body = `<p class="network-live-empty" data-testid="network-live-empty">No live matches right now. Check back soon, or enter a Match ID above.</p>`;
+  } else {
+    const items = liveMatches.map((m) => {
+      const names = (m.participants ?? []).map((p) => esc(p?.displayName ?? 'Player'));
+      const versus = names.length >= 2 ? `${names[0]} vs ${names[1]}` : (names[0] ?? 'Match in progress');
+      const isRanked = m.queueId === 'ranked';
+      const queueBadge = isRanked
+        ? `<span class="network-live-badge ranked" data-testid="network-live-badge">Ranked</span>`
+        : `<span class="network-live-badge casual" data-testid="network-live-badge">Casual</span>`;
+      const watchers = m.spectatorCount ?? 0;
+      return `<li class="network-live-item" data-testid="network-live-item">
+        <div class="network-live-item-info">
+          <span class="network-live-versus">${versus}</span>
+          <span class="network-live-meta">${queueBadge}<span class="network-live-watchers" aria-label="${watchers} spectators"><span aria-hidden="true">👁</span> ${watchers}</span></span>
+        </div>
+        <button class="secondary-button network-live-watch" data-action="network-spectate-live" data-match-id="${esc(m.matchId)}" data-testid="network-live-watch">Watch</button>
+      </li>`;
+    }).join('');
+    body = `<ul class="network-live-list" data-testid="network-live-list">${items}</ul>`;
+  }
+
+  return `<section class="network-live-matches" data-testid="network-live-matches" aria-label="Live matches">
+    <div class="network-live-header">
+      <h2 class="network-live-title"><span class="network-live-dot" aria-hidden="true"></span>Live Matches</h2>
+      ${refreshButton}
+    </div>
+    ${body}
+  </section>`;
+}
+
+/**
+ * Render the spectate match form — live match browser + manual Match ID entry.
+ * @param {object} options — { error, connecting, liveMatches, liveLoading, liveError }
  * @returns {string} HTML
  */
 export function renderNetworkSpectateForm(options = {}) {
@@ -503,7 +562,8 @@ export function renderNetworkSpectateForm(options = {}) {
   return `<div class="network-spectate" data-testid="network-spectate-form">
     <a class="play-hub-back" href="#/play/online" aria-label="Back to lobby">← Back</a>
     <h1>Spectate Match</h1>
-    <p class="network-spectate-subtitle">Enter a Match ID to watch a live game (read-only).</p>
+    <p class="network-spectate-subtitle">Watch a live game (read-only). Pick one below, or enter a Match ID.</p>
+    ${renderLiveMatchesSection(options)}
     <form id="network-spectate-form-element" data-testid="network-spectate-form-element">
       <input
         type="text"

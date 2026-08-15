@@ -2,10 +2,10 @@
 // workspaces/diagnostics.js — /diagnostics workspace
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, short, definitionList } from '../state.js?v=e2bd7e8507fa';
-import { rerender } from '../rerender.js?v=e2bd7e8507fa';
-import { loadTraceIndex, loadTraceData } from '../data-loader.js?v=e2bd7e8507fa';
-import { renderPolicyArchetypes, renderMatchupMatrix, renderTempoCurve, renderEndgameAnalysis, renderActionDistribution } from './observatory.js?v=e2bd7e8507fa';
+import { state, app, esc, pct, short, definitionList } from '../state.js?v=9ea1c2f9e91d';
+import { rerender } from '../rerender.js?v=9ea1c2f9e91d';
+import { loadTraceIndex, loadTraceData } from '../data-loader.js?v=9ea1c2f9e91d';
+import { renderPolicyArchetypes, renderMatchupMatrix, renderTempoCurve, renderEndgameAnalysis, renderActionDistribution } from './observatory.js?v=9ea1c2f9e91d';
 
 export function renderDiagnostics() {
   const summaries = state.observatory?.summaries ?? [];

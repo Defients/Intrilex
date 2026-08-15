@@ -16,6 +16,7 @@ import { setPreference } from './persistence.js';
 import { parseCardIdentity } from './play-card-component.js';
 import { getSuitParticleColor } from './play-particles.js';
 import { buildActionGroups, resolveAction } from './action-presentation.mjs';
+import { setGameplaySkin, GAMEPLAY_SKINS } from './gameplay-skin.js';
 
 // Lazy-loaded module reference for the group button handler
 const _actionPresentationModule = { buildActionGroups, resolveAction };
@@ -137,9 +138,10 @@ async function submitAction(container, actionId, renderActiveMatch) {
  * @param {function} callbacks.openAdvancedCardRules — open the Advanced Card Rules View
  * @param {function} callbacks.startNewMatch — start a new match with setup
  * @param {function} callbacks.stopAutosave — stop the autosave timer
+ * @param {function} [callbacks.renderAcademyRecap] — render the academy recap screen
  */
 export function bindBoardEvents(container, callbacks) {
-  const { renderActiveMatch, openAdvancedCardRules, startNewMatch, stopAutosave } = callbacks;
+  const { renderActiveMatch, openAdvancedCardRules, startNewMatch, stopAutosave, renderAcademyRecap } = callbacks;
 
   // Initialize sound on first user interaction (browser autoplay policy)
   if (state.sound && !state.soundInitialized) {
@@ -151,7 +153,7 @@ export function bindBoardEvents(container, callbacks) {
   container.querySelectorAll('[data-action-id]').forEach(el => {
     if (el.dataset.testid === 'confirm-action') return;
     if (el.disabled) return; // Skip disabled actions
-    el.addEventListener('click', () => {
+    el.addEventListener('click', async () => {
       const actionId = el.dataset.actionId;
       state.selectedActionId = actionId;
       state.selectedTargetIds = []; // Reset targets on new action selection
@@ -160,6 +162,16 @@ export function bindBoardEvents(container, callbacks) {
       const action = snapshot?.decision?.legalActions?.find(a => a.actionId === actionId);
       if (action?.sourceHandles?.length === 1) {
         state.selectedSourceCardId = action.sourceHandles[0];
+      }
+      // Auto-submit if the action doesn't require targets (1-click flow)
+      if (action) {
+        const needsTargets = action.targets?.required === true &&
+          (action.targets?.legalTargetIds?.length ?? 0) > 0;
+        if (!needsTargets) {
+          clearSelection();
+          await submitAction(container, actionId, renderActiveMatch);
+          return;
+        }
       }
       renderActiveMatch(container);
     });
@@ -184,17 +196,31 @@ export function bindBoardEvents(container, callbacks) {
         });
         const group = groups.find(g => g.id === groupId);
         if (group) {
+          let concrete = null;
           // If a source card is selected, try to resolve with it
           if (state.selectedSourceCardId) {
-            const concrete = resolveAction(group, state.selectedSourceCardId);
-            if (concrete) {
-              state.selectedActionId = concrete.actionId;
-              state.selectedIntentKey = null;
-            }
-          } else if (group.selectionType === 'direct' || group.actions.length === 1) {
-            // Direct or single-action group — auto-select
-            state.selectedActionId = group.actions[0].actionId;
+            concrete = resolveAction(group, state.selectedSourceCardId);
+          }
+          // Auto-select single-variant groups (skip variant selection screen)
+          if (!concrete && (group.selectionType === 'direct' || group.actions.length === 1)) {
+            concrete = group.actions[0];
+          }
+          // For variant-type groups with exactly 1 variant, auto-select it
+          if (!concrete && group.variants?.length === 1) {
+            concrete = group.actions[0];
+          }
+          if (concrete) {
+            state.selectedActionId = concrete.actionId;
             state.selectedIntentKey = null;
+            // Auto-submit if the action doesn't require targets (1-click flow)
+            const needsTargets = concrete.targets?.required === true &&
+              (concrete.targets?.legalTargetIds?.length ?? 0) > 0;
+            if (!needsTargets) {
+              const actionId = concrete.actionId;
+              clearSelection();
+              await submitAction(container, actionId, renderActiveMatch);
+              return;
+            }
           }
           // Auto-submit phase/enter-action — no confirm step needed
           if (group.family === 'phase' && state.selectedActionId) {
@@ -212,7 +238,7 @@ export function bindBoardEvents(container, callbacks) {
 
   // Variant buttons — click to select a specific variant within a group
   container.querySelectorAll('[data-variant-action-id]').forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', async () => {
       const actionId = el.dataset.variantActionId;
       state.selectedActionId = actionId;
       state.selectedIntentKey = null; // Exit variant selection
@@ -222,6 +248,16 @@ export function bindBoardEvents(container, callbacks) {
       const action = snapshot?.decision?.legalActions?.find(a => a.actionId === actionId);
       if (action?.sourceHandles?.length === 1) {
         state.selectedSourceCardId = action.sourceHandles[0];
+      }
+      // Auto-submit if the action doesn't require targets (streamlined flow)
+      if (action) {
+        const needsTargets = action.targets?.required === true &&
+          (action.targets?.legalTargetIds?.length ?? 0) > 0;
+        if (!needsTargets) {
+          clearSelection();
+          await submitAction(container, actionId, renderActiveMatch);
+          return;
+        }
       }
       renderActiveMatch(container);
     });
@@ -527,6 +563,54 @@ export function bindBoardEvents(container, callbacks) {
     });
   }
 
+  // Gameplay skin selector — toggle popover + select skin
+  const skinTrigger = container.querySelector('[data-testid="skin-selector-trigger"]');
+  const skinMenu = container.querySelector('[data-testid="skin-selector-menu"]');
+  if (skinTrigger && skinMenu) {
+    skinTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = skinMenu.classList.toggle('open');
+      skinTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    // Close on outside click
+    const outsideClickHandler = (e) => {
+      if (!skinMenu.classList.contains('open')) return;
+      if (!skinTrigger.contains(e.target) && !skinMenu.contains(e.target)) {
+        skinMenu.classList.remove('open');
+        skinTrigger.setAttribute('aria-expanded', 'false');
+      }
+    };
+    document.addEventListener('click', outsideClickHandler, { once: false });
+    // Clean up on re-render via a container-bound marker
+    container._skinOutsideClickHandler = outsideClickHandler;
+    // Skin selection
+    container.querySelectorAll('[data-action="select-skin"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const skin = btn.dataset.skin;
+        if (GAMEPLAY_SKINS.includes(skin)) {
+          setGameplaySkin(skin);
+          // Apply to the shell root immediately for instant visual feedback
+          const shell = container.querySelector('.ranked-duel-shell');
+          if (shell) shell.setAttribute('data-gameplay-skin', skin);
+          // Close the menu
+          skinMenu.classList.remove('open');
+          skinTrigger.setAttribute('aria-expanded', 'false');
+          // Re-render to update the trigger icon + active state
+          renderActiveMatch(container);
+        }
+      });
+    });
+    // Close on Escape
+    skinMenu.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        skinMenu.classList.remove('open');
+        skinTrigger.setAttribute('aria-expanded', 'false');
+        skinTrigger.focus();
+      }
+    });
+  }
+
   // Confirm button
   const confirmBtn = container.querySelector('[data-testid="confirm-action"]');
   if (confirmBtn) {
@@ -659,6 +743,9 @@ export function bindBoardEvents(container, callbacks) {
   container.querySelectorAll('[data-action]').forEach(el => {
     el.addEventListener('click', async () => {
       const action = el.dataset.action;
+      // Skin selector actions are handled by dedicated listeners above;
+      // skip them here to avoid double-firing.
+      if (action === 'toggle-skin-menu' || action === 'select-skin') return;
       if (action === 'watch-replay') {
         // IRX-H24: For network matches, fetch the certified replay from the
         // server and play it directly in the Watch workspace. For local matches,
@@ -769,6 +856,37 @@ export function bindBoardEvents(container, callbacks) {
       } else if (action === 'new-seed') {
         const newSeed = (Math.random() * 4294967296) >>> 0 || 1;
         await startNewMatch({ ...state.session.setup, seed: newSeed }, container);
+      } else if (action === 'academy-toggle-panel') {
+        // Academy Phase 2: toggle the objective panel collapse state
+        if (state.academyController) {
+          state.academyController.togglePanel();
+          renderActiveMatch();
+        }
+      } else if (action === 'academy-hint') {
+        // Academy Phase 2: request a hint for the current state
+        if (state.academyController) {
+          const hint = state.academyController.requestHint();
+          // Show hint as a transient coachmark-like overlay
+          if (hint) {
+            const hintEl = container.querySelector('[data-testid="academy-hint-display"]');
+            if (hintEl) {
+              hintEl.textContent = hint.text;
+              hintEl.classList.add('visible');
+              setTimeout(() => hintEl.classList.remove('visible'), 5000);
+            }
+          }
+        }
+      } else if (action === 'academy-dismiss-coachmark') {
+        // Academy Phase 2: dismiss the current coachmark
+        if (state.academyController) {
+          state.academyController.dismissCurrentCoachmark();
+          renderActiveMatch();
+        }
+      } else if (action === 'view-academy-recap') {
+        // Academy: render the post-lesson recap screen
+        if (state._academyRecap && typeof renderAcademyRecap === 'function') {
+          renderAcademyRecap(state._academyRecap, container);
+        }
       } else if (action === 'return-to-hub' || action === 'exit-match') {
         // v0.28: For network matches, exit-match is only available in terminal state.
         // For active network matches, the X button triggers 'forfeit-match' instead.
@@ -780,10 +898,16 @@ export function bindBoardEvents(container, callbacks) {
         if (typeof removeBeforeUnloadProtection === 'function') {
           removeBeforeUnloadProtection();
         }
-        // Academy: return to the Academy page instead of the homepage
-        // so the player can continue with the next lesson.
+        // Academy: clean up the controller and return to the Academy page
+        // instead of the homepage so the player can continue with the next lesson.
         if (state.academyLessonId) {
+          if (state.academyController) {
+            state.academyController.destroy();
+            state.academyController = null;
+          }
           state.academyLessonId = null;
+          state.academyPhase = null;
+          state._academyRecap = null;
           location.hash = '#/play/academy';
         } else {
           location.hash = '#/';

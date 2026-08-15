@@ -317,6 +317,14 @@ export function enumerateCoreResponseActions(state, actorId) {
     if (![CORE_RESPONSE_AUTHORITY_PROFILE.id, CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id, CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(runtime?.profileId) || priorityActor !== actorId)
         return { stateRevision: state.revision, actorId, actions: [], frameHash: hashCanonical([]) };
     const target = currentCoreStackTarget(state);
+    // Self-response guard: after the opponent has auto-passed priority
+    // (consecutivePasses >= 1), the original declarer must NOT be offered a
+    // response window to their own stack item. Returning empty actions causes
+    // advanceCoreToDecision to auto-pass for the declarer too, and the stack
+    // resolves immediately.
+    if (target && target.controllerId === actorId && (state.priority?.consecutivePasses ?? 0) >= 1) {
+        return { stateRevision: state.revision, actorId, actions: [], frameHash: hashCanonical([]) };
+    }
     const candidates = [];
     if (target) {
         for (const sourceId of [...state.players[actorId].hand].sort()) {

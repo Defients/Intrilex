@@ -12,6 +12,7 @@ import {
   buildActionGroups, categoryLabel, categoryIcon, activeCategories,
   groupsByCategory, isResponseWindow as isResponseWindowGroups,
   resolveAction, ACTION_CATEGORY, SELECTION_TYPE, variantLabel,
+  familyIcon,
 } from './action-presentation.mjs';
 import { derivePriorityContext, priorityBannerText, priorityTimeline, windowTypeLabel } from './authority/priority-projection.js';
 import { buildLegalActionContract, groupActionsByTiming, actionsForCard } from './authority/legal-action-adapter.js';
@@ -24,6 +25,7 @@ import { getArchetypePersonality } from './ai-personality.js';
 import { renderNewMatchSetup } from './ranked-duel-hub.mjs';
 import { renderTerminal, renderError, renderKeyboardHelp, renderRulesHelp, renderMatchStats, formatPhase, formatTerminationReason } from './ranked-duel-terminal.mjs';
 import { renderChatPanel as renderChatPanelModule } from './chat-panel.js';
+import { GAMEPLAY_SKINS, GAMEPLAY_SKIN_LABELS, GAMEPLAY_SKIN_ICONS } from './gameplay-skin.js';
 // T1: Chat panel rendering is delegated to chat-panel.js
 const renderChatPanel = renderChatPanelModule;
 import { ratingToTierDivision } from '@intrilex/account-domain/rank-tier';
@@ -246,7 +248,7 @@ function renderMatch(vm, opts, snapshot) {
   const humER = vm?.battlefield?.bottomER ?? [];
   [...oppPR, ...oppER, ...humPR, ...humER].forEach(c => { if (c?.entityId) cardRegistry[c.entityId] = c; });
 
-  return `<div class="ranked-duel-shell" role="main" aria-label="Ranked Duel Match" data-testid="play-board">
+  return `<div class="ranked-duel-shell" role="main" aria-label="Ranked Duel Match" data-testid="play-board" data-gameplay-skin="${esc(opts.gameplaySkin)}">
     ${renderHeader(vm, opts, priorityContext, immediate)}
     <section class="rd-cell rd-enemy-enduring" data-grid="enemyE" aria-label="Opponent Enduring">
       ${renderEnduringRow(oppER, 'opponent')}
@@ -297,6 +299,9 @@ function renderMatch(vm, opts, snapshot) {
     <section class="rd-cell rd-right-rail-bottom" data-grid="rightRailBottom" aria-label="Actions and chat">
       ${renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, isOpponentTurn, priorityContext, immediate, isNetwork)}
     </section>
+    ${opts.academyPanelHtml ? `<section class="rd-cell rd-academy-panel" data-grid="academyPanel" aria-label="Lesson objectives">${opts.academyPanelHtml}</section>` : ''}
+    ${opts.academyCoachmarkHtml ? opts.academyCoachmarkHtml : ''}
+    ${opts.academyPanelHtml ? '<div class="academy-hint-display" data-testid="academy-hint-display" role="status" aria-live="polite"></div>' : ''}
     ${isNetwork ? renderDisconnectOverlay(vm, snapshot) : ''}
     ${isNetwork ? renderRematchInviteOverlay(vm, snapshot, opts) : ''}
     ${opts.inspectorCardId ? renderInspector(opts.inspectorCardId, cardRegistry, [], guidanceMode, opts.inspectorFaceView) : ''}
@@ -385,6 +390,28 @@ function renderRematchInviteOverlay(vm, snapshot, opts) {
   </div>`;
 }
 
+// ── Skin selector (Light / Dark / CosmoTech™ / Corrupture™) ─────
+// Compact icon trigger + popover menu, integrated into the toolbar.
+// The trigger shows the current skin's icon; clicking opens a menu
+// listing all four skins with their display names. Selecting a skin
+// dispatches the 'select-skin' data-action with the skin id.
+function renderSkinSelector(currentSkin) {
+  const skin = GAMEPLAY_SKINS.includes(currentSkin) ? currentSkin : 'dark';
+  const triggerIcon = GAMEPLAY_SKIN_ICONS[skin] || GAMEPLAY_SKIN_ICONS.dark;
+  const items = GAMEPLAY_SKINS.map(id => {
+    const isActive = id === skin;
+    return `<button class="rd-skin-menu-item ${isActive ? 'active' : ''}" data-action="select-skin" data-skin="${esc(id)}" role="menuitemradio" aria-checked="${isActive ? 'true' : 'false'}">
+      <span class="rd-skin-menu-icon" aria-hidden="true">${GAMEPLAY_SKIN_ICONS[id]}</span>
+      <span class="rd-skin-menu-label">${esc(GAMEPLAY_SKIN_LABELS[id])}</span>
+      <span class="rd-skin-menu-check" aria-hidden="true">\u2713</span>
+    </button>`;
+  }).join('');
+  return `<div class="rd-skin-selector" style="position:relative;display:inline-flex;">
+    <button class="rd-skin-trigger" data-action="toggle-skin-menu" data-testid="skin-selector-trigger" title="Appearance: ${esc(GAMEPLAY_SKIN_LABELS[skin])}" aria-label="Select appearance skin" aria-haspopup="menu" aria-expanded="false">${triggerIcon}</button>
+    <div class="rd-skin-menu" role="menu" aria-label="Appearance skins" data-testid="skin-selector-menu">${items}</div>
+  </div>`;
+}
+
 function renderHeader(vm, opts, priorityContext, immediate) {
   const turn = vm.match.fullTurnSequence;
   const phaseLabel = formatPhase(vm.match.phase);
@@ -455,6 +482,7 @@ function renderHeader(vm, opts, priorityContext, immediate) {
         <button class="rd-toolbar-btn" data-action="toggle-rules" title="Rules / Help" aria-label="Rules and help">\u2139</button>
         <button class="rd-toolbar-btn" data-action="toggle-stats" title="Match stats" aria-label="Match statistics">\u25C8</button>
         <button class="rd-toolbar-btn" data-action="toggle-inspector" title="Inspector" aria-label="Card inspector">\u25A4</button>
+        ${renderSkinSelector(opts.gameplaySkin)}
         <button class="rd-toolbar-btn" data-action="${exitAction}" data-testid="exit-match-btn" title="${exitTitle}" aria-label="${exitTitle}">\u2715</button>
       </div>
     </div>
@@ -860,25 +888,16 @@ function renderActionBar(vm, opts, isHumanTurn, isAiTurn, isOpponentTurn, isRead
   const humER = vm?.battlefield?.bottomER ?? [];
   [...oppPR, ...oppER, ...humPR, ...humER].forEach(c => { if (c?.entityId) cardRegistry[c.entityId] = c; });
   // Include swap bar cards — face-down cards need slot labels for target display.
-  // Apply the SAME visual reordering as renderSwapBar (face-up → center first)
-  // so labels match what the player sees on the board.
+  // Use raw engine slot order (no reordering) so labels match the fixed board positions.
   const swapSlots = vm?.zones?.swap ?? [];
   const slotLabels = ['Left', 'Center', 'Right'];
-  const visualOrder = [null, null, null];
-  const faceUpSlots = swapSlots.filter(s => s && s.card);
-  const faceDownOrEmpty = swapSlots.filter(s => !s || !s.card);
-  if (faceUpSlots.length > 0) visualOrder[1] = faceUpSlots[0];
-  if (faceUpSlots.length > 1) visualOrder[0] = faceUpSlots[1];
-  if (faceUpSlots.length > 2) visualOrder[2] = faceUpSlots[2];
-  let fdIdx = 0;
   for (let i = 0; i < 3; i++) {
-    if (!visualOrder[i]) visualOrder[i] = faceDownOrEmpty[fdIdx++] || null;
-  }
-  visualOrder.forEach((s, i) => {
-    if (s?.card?.entityId) {
+    const s = swapSlots[i] ?? null;
+    if (!s) continue;
+    if (s.card?.entityId) {
       cardRegistry[s.card.entityId] = s.card;
     }
-    if (s?.entityId) {
+    if (s.entityId) {
       cardRegistry[s.entityId] = {
         entityId: s.entityId,
         identity: s.faceDown ? (slotLabels[i] ?? `Slot ${i + 1}`) : (s.card?.identity ?? `Slot ${i + 1}`),
@@ -886,7 +905,7 @@ function renderActionBar(vm, opts, isHumanTurn, isAiTurn, isOpponentTurn, isRead
         slotIndex: i,
       };
     }
-  });
+  }
 
   // Build semantic action groups
   const groups = buildActionGroups(actions, {
@@ -966,27 +985,47 @@ function renderActionBarOverview(vm, opts, groups, passHtml, priorityContext, im
     </div>`;
   }
 
-  // Build category sections
-  const sectionsHtml = cats.map(cat => {
-    const catGroups = groupsByCategory(groups, cat);
-    if (catGroups.length === 0) return '';
+  // Build category sections — card-centric layout when a source card is selected
+  let sectionsHtml = '';
+  if (selectedSourceCardId) {
+    // Card-centric: show only matching groups, no category headers
+    const matchingGroups = groups.filter(g => g.selectedCardMatch);
+    if (matchingGroups.length > 0) {
+      sectionsHtml = `<div class="rd-action-category rd-card-centric" data-testid="action-card-centric">
+        <div class="rd-action-category-body">
+          ${matchingGroups.map(group => renderGroupButton(group, selectedSourceCardId, cardRegistry, false)).join('')}
+        </div>
+      </div>`;
+    } else {
+      sectionsHtml = `<div class="rd-action-category rd-card-centric" data-testid="action-card-centric">
+        <div class="rd-action-category-body">
+          <div class="rd-group-empty">No actions available for this card.</div>
+        </div>
+      </div>`;
+    }
+  } else {
+    // Category overview: show all groups organized by category
+    sectionsHtml = cats.map(cat => {
+      const catGroups = groupsByCategory(groups, cat);
+      if (catGroups.length === 0) return '';
 
-    const catLabel = categoryLabel(cat);
-    const catIcon = categoryIcon(cat);
-    const isResponseCat = cat === ACTION_CATEGORY.RESPOND;
+      const catLabel = categoryLabel(cat);
+      const catIcon = categoryIcon(cat);
+      const isResponseCat = cat === ACTION_CATEGORY.RESPOND;
 
-    const groupButtons = catGroups.map(group => {
-      return renderGroupButton(group, selectedSourceCardId, cardRegistry, isResponseCat);
+      const groupButtons = catGroups.map(group => {
+        return renderGroupButton(group, selectedSourceCardId, cardRegistry, isResponseCat);
+      }).join('');
+
+      return `<div class="rd-action-category" data-testid="action-category-${esc(cat)}">
+        <div class="rd-action-category-header">
+          <span class="rd-action-category-icon" aria-hidden="true">${catIcon}</span>
+          <span class="rd-action-category-label">${esc(catLabel)}</span>
+        </div>
+        <div class="rd-action-category-body">${groupButtons}</div>
+      </div>`;
     }).join('');
-
-    return `<div class="rd-action-category" data-testid="action-category-${esc(cat)}">
-      <div class="rd-action-category-header">
-        <span class="rd-action-category-icon" aria-hidden="true">${catIcon}</span>
-        <span class="rd-action-category-label">${esc(catLabel)}</span>
-      </div>
-      <div class="rd-action-category-body">${groupButtons}</div>
-    </div>`;
-  }).join('');
+  }
 
   // In the Start phase, show preview buttons for Action-phase intents that
   // will become available after entering the Action Phase.
@@ -1092,6 +1131,7 @@ function renderGroupButton(group, selectedSourceCardId, cardRegistry, isResponse
 
   return `<button class="${cls.join(' ')}" data-group-id="${esc(group.id)}" data-action-family="${esc(group.family)}" aria-label="${esc(group.label)}${group.variantCount > 1 ? ` — ${group.variantCount} options` : ''}" ${disabledAttr}>
     <span class="rd-group-main">
+      <span class="rd-group-icon" aria-hidden="true">${esc(familyIcon(group.family))}</span>
       <span class="rd-group-label">${esc(group.label)}</span>
       ${countBadge}${scoreBadge}
     </span>
@@ -1203,6 +1243,12 @@ function renderActionBarWithTargetSelection(vm, opts, action, groups, passHtml, 
   }).join('');
 
   const actionLabel = action.displayLabel ?? action.shortLabel ?? 'Action';
+  const selectedCount = opts.selectedTargets?.length ?? 0;
+  // For swap-bar face-down, the selectedActionId is updated when a target is
+  // clicked (the engine pre-pairs source+target). For other actions, the
+  // actionId stays the same. Use the current selectedActionId for the Play button.
+  const playActionId = opts.selectedActionId ?? action.actionId;
+  const playDisabled = selectedCount === 0 ? 'disabled aria-disabled="true"' : '';
 
   return `<div class="rd-contextual-actions target-mode" aria-label="Actions" role="region" data-testid="action-rail">
     <div class="rd-actions-header">
@@ -1212,6 +1258,7 @@ function renderActionBarWithTargetSelection(vm, opts, action, groups, passHtml, 
     <div class="rd-target-prompt">Select a target <span class="rd-target-count">(${targets.length} available)</span></div>
     <div class="rd-target-list" role="group" aria-label="Select a target">${targetButtons}</div>
     <div class="rd-action-footer">
+      <button class="rd-play-btn" data-testid="confirm-action" data-action-id="${esc(playActionId)}" aria-label="Play ${esc(actionLabel)}" ${playDisabled}>Play</button>
       <button class="rd-cancel-btn" data-action="cancel-target" aria-label="Cancel target selection">Cancel</button>
     </div>
   </div>`;
@@ -1257,9 +1304,19 @@ function renderActionBarWithConfirm(vm, opts, action, groups, passHtml, priority
 function renderRightRail(vm, opts, isReadOnly, snapshot, priorityContext, immediate, guidanceMode, isHumanTurn, isAiTurn) {
   const chatMessages = (opts.chatMessages || []).slice(-30);
 
+  // Build card registry from vm for game log card identity lookups
+  const logCardRegistry = {};
+  const logHandCards = vm?.battlefield?.humanHand ?? [];
+  for (const c of logHandCards) { if (c.entityId) logCardRegistry[c.entityId] = c; }
+  const logOppPR = vm?.battlefield?.topPR ?? [];
+  const logOppER = vm?.battlefield?.topER ?? [];
+  const logHumPR = vm?.battlefield?.bottomPR ?? [];
+  const logHumER = vm?.battlefield?.bottomER ?? [];
+  [...logOppPR, ...logOppER, ...logHumPR, ...logHumER].forEach(c => { if (c?.entityId) logCardRegistry[c.entityId] = c; });
+
   // Game log: player-readable events (no engine diagnostics)
   const events = snapshot?.recentEvents ?? [];
-  const gameLogHtml = renderGameLog(events);
+  const gameLogHtml = renderGameLog(events, null, logCardRegistry);
 
   // Chat panel
   const chatHtml = renderChatPanel(vm, opts, isReadOnly, chatMessages);
@@ -1295,15 +1352,21 @@ function renderGameLog(events, systemEvents) {
   let logEntries = [];
   if (events && events.length > 0) {
     const log = buildEventLog(events, cardRegistry);
+    // Only filter out internal/technical event types — keep all gameplay events
     const playerReadable = log.filter(e => {
       const desc = e.description ?? e.text ?? '';
       const type = e.type ?? '';
-      if (type.includes('PHASE') && desc.includes('unknown')) return false;
-      if (type.includes('CORE') || type.includes('SNAPSHOT') || type.includes('VOLTAGE')) return false;
-      if (type.includes('INIT') || type.includes('PREPARE') || type.includes('PREPARED')) return false;
-      if (desc.includes('core start') || desc.includes('snapshot captured') || desc.includes('voltage snapshot')) return false;
-      if (desc.includes('core initialized') || desc.includes('core prepared')) return false;
-      if (desc === `${type.replace(/_/g, ' ').toLowerCase()}.`) return false;
+      // Filter internal engine bookkeeping events
+      if (type.includes('SNAPSHOT') || type.includes('VOLTAGE')) return false;
+      if (type.includes('CORE_INIT') || type.includes('CORE_PREPARE') || type.includes('CORE_PREPARED')) return false;
+      if (type.includes('CORE_SETUP') || type.includes('CORE_APPLY')) return false;
+      if (type.includes('AUTONOMY_INIT') || type.includes('AUTONOMY_PREPARE')) return false;
+      // Filter generic fallback descriptions for truly unknown types
+      if (desc === `${type.replace(/_/g, ' ').toLowerCase()}.`) {
+        // Keep gameplay-relevant fallbacks, filter only technical ones
+        if (type.includes('CORE_') && !type.includes('RESOLVED') && !type.includes('ENTERED')) return false;
+        if (type.includes('AUTONOMY_')) return false;
+      }
       return true;
     });
     logEntries = playerReadable.map(e => ({
@@ -1657,18 +1720,11 @@ function renderSwapBar(vm, opts, isHumanTurn, isReadOnly) {
     if (tid) faceUpDrawByTarget.set(tid, a);
   }
 
-  // Ensure exactly 3 slots; reorder so any face-up card is in the MIDDLE slot
+  // Render slots in raw engine order: rawSlots[0] → Left, [1] → Center, [2] → Right.
+  // No reordering — fixed positions so drawing a card doesn't shift others.
   const slots = [null, null, null];
-  const cards = rawSlots.filter(s => s && s.card);
-  const empties = rawSlots.filter(s => !s || !s.card);
-  // Place first card in middle (index 1), remaining cards in left/right
-  if (cards.length > 0) slots[1] = cards[0];
-  if (cards.length > 1) slots[0] = cards[1];
-  if (cards.length > 2) slots[2] = cards[2];
-  // Fill remaining empties
-  let emptyIdx = 0;
   for (let i = 0; i < 3; i++) {
-    if (!slots[i]) slots[i] = empties[emptyIdx++] || null;
+    slots[i] = rawSlots[i] ?? null;
   }
   const slotHtml = Array.from({ length: 3 }, (_, i) => {
     const s = slots[i];

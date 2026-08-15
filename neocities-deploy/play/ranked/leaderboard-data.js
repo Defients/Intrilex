@@ -12,7 +12,7 @@
 // without crashing Online Play (section 80).
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=e2bd7e8507fa';
+import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=9ea1c2f9e91d';
 import {
   toLeaderboardEntry,
   normalizeSearchQuery,

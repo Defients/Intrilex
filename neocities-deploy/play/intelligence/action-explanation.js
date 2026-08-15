@@ -10,8 +10,8 @@
 // It never exposes AI chain-of-thought.
 // ═══════════════════════════════════════════════════════════════
 
-import { reasonShortText,  reasonDetailedText,  reasonRuleRef } from '../authority/reason-code-registry.js?v=e2bd7e8507fa';
-import { classifyActionForm,  isSuperDeclaration,  isSpadesVariant } from '../authority/legal-action-adapter.js?v=e2bd7e8507fa';
+import { reasonShortText,  reasonDetailedText,  reasonRuleRef } from '../authority/reason-code-registry.js?v=9ea1c2f9e91d';
+import { classifyActionForm,  isSuperDeclaration,  isSpadesVariant } from '../authority/legal-action-adapter.js?v=9ea1c2f9e91d';
 
 /**
  * Guidance modes.

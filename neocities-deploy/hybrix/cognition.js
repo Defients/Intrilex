@@ -9,9 +9,9 @@
  * GOAP provides lightweight macro planning (≤3 goals, depth ≤2).
  */
 
-import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=e2bd7e8507fa";
-import { applyPersonalityToScore } from "./personality.js?v=e2bd7e8507fa";
-import { applyDifficultySelection } from "./difficulty.js?v=e2bd7e8507fa";
+import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=9ea1c2f9e91d";
+import { applyPersonalityToScore } from "./personality.js?v=9ea1c2f9e91d";
+import { applyDifficultySelection } from "./difficulty.js?v=9ea1c2f9e91d";
 
 /**
  * Create the cognition engine for a bot.

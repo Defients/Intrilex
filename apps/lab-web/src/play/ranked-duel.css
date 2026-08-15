@@ -2412,9 +2412,56 @@
   align-items: center !important;
   gap: 6px !important;
 }
+.rd-group-icon {
+  font-size: 14px !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+  opacity: 0.85 !important;
+}
 .rd-group-label {
   font-weight: 600 !important;
   font-size: 12px !important;
+}
+/* Card-centric layout — bigger buttons when a card is selected */
+.rd-card-centric .rd-group-btn {
+  min-height: 48px !important;
+  padding: 10px 12px !important;
+}
+.rd-card-centric .rd-group-label {
+  font-size: 13px !important;
+}
+.rd-group-empty {
+  font-size: 11px !important;
+  color: #64748b !important;
+  padding: 8px !important;
+  text-align: center !important;
+}
+/* Play button — combines target selection + confirm */
+.rd-play-btn {
+  padding: 8px 24px !important;
+  border: 1px solid #22d3ee !important;
+  border-radius: 6px !important;
+  background: linear-gradient(180deg, rgba(34,211,238,0.18) 0%, rgba(34,211,238,0.08) 100%) !important;
+  color: #22d3ee !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.2px !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+}
+.rd-play-btn:hover:not([disabled]) {
+  background: linear-gradient(180deg, rgba(34,211,238,0.28) 0%, rgba(34,211,238,0.14) 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 14px rgba(34,211,238,0.25) !important;
+}
+.rd-play-btn[disabled] {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+.rd-play-btn:focus-visible {
+  outline: 2px solid #22d3ee !important;
+  outline-offset: 2px !important;
 }
 .rd-group-count {
   font-size: 9px !important;

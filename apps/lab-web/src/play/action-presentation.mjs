@@ -39,12 +39,76 @@ const CATEGORY_LABELS = Object.freeze({
 });
 
 const CATEGORY_ICONS = Object.freeze({
-  [ACTION_CATEGORY.PLAY]: '\u25B8',
+  [ACTION_CATEGORY.PLAY]: '\u2663',
   [ACTION_CATEGORY.SCORE]: '\u2605',
   [ACTION_CATEGORY.MANIPULATE]: '\u21C4',
-  [ACTION_CATEGORY.RESPOND]: '\u21A9',
+  [ACTION_CATEGORY.RESPOND]: '\u26E8',
   [ACTION_CATEGORY.SYSTEM]: '\u2699',
 });
+
+// ── Per-family icons ───────────────────────────────────────────
+
+/**
+ * Unique unicode icon for each effect/action family.
+ * Used on group buttons so players can distinguish effects at a glance.
+ */
+const FAMILY_ICONS = Object.freeze({
+  // Effect families (rank-based single-card effects)
+  'effect-three': '\u21AF',        // ↯ bounce
+  'effect-four': '\u2610',         // ☐ row clear
+  'effect-five': '\u21BA',         // ♺ recycle
+  'effect-six': '\u26CF',          // ⛏ dig
+  'effect-seven': '\u21DF',        // ↟ topdeck
+  'effect-nine': '\u22A5',         // ⊥ tap
+  'effect-ace': '\u2726',          // ✦ purge
+  'effect-red-joker': '\u{1F0CF}', // 🃏 red joker
+  'effect-board-lock': '\u{1F512}', // 🔒 board lock
+  'effect-row-clear': '\u232B',    // ⌫ row clear
+  'effect-bounce': '\u21A9',       // ↩ bounce
+  'effect-tap': '\u{1F446}',       // 👆 tap
+  'effect-goal-shift': '\u{1F3AF}', // 🎯 goal shift
+  'effect-jack-control': '\u2693', // ⚓ jack attachment
+  'effect-private-choice': '?',    // ? private choice
+  // Play families
+  'anchor': '\u2693',              // ⚓ anchor
+  'anchor-guard': '\u2693',        // ⚓ anchor guard
+  'anchor-private-choice': '\u2693', // ⚓ anchor choice
+  'attachment': '\u{1F517}',       // 🔗 attachment
+  'scuttle': '\u2694',             // ⚔ scuttle
+  'score': '\u2605',               // ★ score
+  'play-for-points': '\u2605',     // ★ score
+  'swap-bar': '\u21C4',            // ⇄ swap
+  'draw': '\u2193',                // ↓ draw
+  'counter': '\u{1F6E1}',          // 🛡 counter
+  'disrupt': '\u{1F4A5}',          // 💥 disrupt
+  'interrupt': '\u26A1',           // ⚡ interrupt
+  'instant': '\u26A1',             // ⚡ instant
+  'quick': '\u26A1',               // ⚡ quick
+  'voltage': '\u26A1',             // ⚡ voltage
+  'solo-wild': '\u{1F0CF}',        // 🃏 wild
+  'ultra': '\u{1F48E}',            // 💎 ultra
+  'rank10': '\u2469',              // ⑩ rank 10
+  'response-decline': '\u2298',    // ⊘ decline
+  'exhausted-pass': '\u2298',      // ⊘ pass
+  'phase': '\u23ED',               // ⏭ phase
+  'private-choice': '?',           // ? private choice
+  'royal-marriage': '\u26AD',      // ⚭ marriage
+  'queens-court': '\u2655',        // ♕ queen's court
+  'wild-sovereignty': '\u{1F0CF}', // 🃏 wild sovereignty
+  'super-ace': '\u2726',           // ✦ super ace
+  'king-spade-counter': '\u2693',  // ⚓ king spade
+  'board-lock': '\u{1F512}',       // 🔒 board lock
+  'sudden-death-autonomy': '\u2620', // ☠ sudden death
+});
+
+/**
+ * Get the icon for an action family.
+ * @param {string} family
+ * @returns {string} A unicode icon (or empty string if unknown)
+ */
+export function familyIcon(family) {
+  return FAMILY_ICONS[family] ?? '';
+}
 
 // ── Family → category mapping ──────────────────────────────────
 
@@ -134,6 +198,8 @@ function groupKeyForAction(action) {
   if (family === 'swap-bar') return `swap-bar|${mode}`;
   // phase modes are genuinely different (enter-action vs others)
   if (family === 'phase') return `phase|${mode}`;
+  // anchor modes are genuinely different intents (King/Queen/Ace → ER)
+  if (family === 'anchor') return `anchor|${mode}`;
   // private-choice families: group by family only (mode is choice-specific)
   if (family === 'private-choice' || family === 'effect-private-choice') return family;
   // All other families: group by family alone
@@ -287,6 +353,10 @@ function groupDescription(group) {
   }
 
   if (family === 'anchor' || family === 'anchor-guard') {
+    const mode = group.mode;
+    if (mode === 'king') return 'Place the King on the Enduring Row as an Anchor (anchor value 7/9).';
+    if (mode === 'queen') return 'Place the Queen on the Enduring Row as an Anchor with Aegis.';
+    if (mode === 'ace') return 'Place the Ace on the Enduring Row as an Anchor (anchor value 0).';
     return 'Place an Anchor on the Enduring Row for persistent defense.';
   }
 
@@ -360,6 +430,11 @@ export function buildActionGroups(actions, options = {}) {
     // For phase, use mode-specific label
     if (family === 'phase') {
       groupLabel = 'Enter Action Phase';
+    }
+    // For anchor, use mode-specific label (King/Queen/Ace → Enduring Row)
+    if (family === 'anchor') {
+      const modeLbl = modeLabel(family, first.mode);
+      groupLabel = modeLbl ? `${modeLbl} Anchor` : 'Anchor';
     }
     // For response-decline
     if (family === 'response-decline') {
