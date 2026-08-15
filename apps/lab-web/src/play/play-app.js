@@ -6,6 +6,7 @@
 
 import { createSession, restoreSession, SessionState } from './play-controller.js';
 import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs';
+import { getGameplaySkin } from './gameplay-skin.js';
 import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js';
 import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js';
 import { ensureReplayFrames } from '../replay-frames.js';
@@ -20,7 +21,12 @@ import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId }
 import { getAiBanter } from './ai-personality.js';
 import { SoundEngine } from './play-sound.js';
 import { ParticleSystem } from './play-particles.js';
-import { renderAcademy, findLesson, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs';
+import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs';
+import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs';
+import { findLesson as findLessonV2 } from './academy/curriculum.mjs';
+import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs';
+import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs';
+import { renderRecap } from './academy/academy-recap.mjs';
 import { state, resetState } from './play-state.js';
 import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js';
 import {
@@ -176,7 +182,7 @@ async function renderNewMatch(container) {
 }
 
 /**
- * Render the Academy hub — tutorial lesson list.
+ * Render the Academy hub — tiered tutorial curriculum.
  */
 async function renderAcademyHub(container) {
   const completed = getCompletedLessons();
@@ -199,28 +205,111 @@ function bindAcademyEvents(container) {
 }
 
 /**
- * Start an Academy lesson — launches a first-contact match with the lesson's AI policy.
+ * Start an Academy lesson — routes through AcademyController:
+ * briefing → match → recap. If the player has opted to skip the briefing
+ * for this lesson, jump straight to the match.
  */
 async function startAcademyLesson(lessonId, container) {
-  const lesson = findLesson(lessonId);
-  if (!lesson) return;
-  state.guidanceMode = GuidanceMode.GUIDED;
-  // Derive a deterministic numeric seed from the lesson ID so each lesson
-  // starts from a different shuffled deck. String seeds are coerced to 0 by
-  // the engine's `>>> 0` conversion, which would make every lesson identical.
-  let seed = 0;
-  for (let i = 0; i < lessonId.length; i++) {
-    seed = ((seed * 31) + lessonId.charCodeAt(i)) >>> 0;
+  const lessonV2 = findLessonV2(lessonId);
+  if (!lessonV2) return;
+  // Build the controller
+  let controller;
+  try {
+    controller = new AcademyController(lessonId, {
+      onPhaseChange: (phase) => { state.academyPhase = phase; },
+      onObjectivesChanged: (metIds) => {
+        // Play a satisfying chime when the player meets an objective
+        if (metIds && metIds.length > 0 && state.sound) {
+          try { state.sound.playObjectiveMet(); } catch { /* ignore */ }
+        }
+      },
+    });
+  } catch (err) {
+    console.error('[academy] failed to create controller:', err);
+    return;
   }
-  seed = seed || 1;
-  await startNewMatch({
-    profileId: 'first-contact-trigger-closure',
-    seed,
-    humanPlayerId: 'P1',
-    aiPolicyId: lesson.aiPolicy,
-    mode: 'ADVANCED_CORE',
-    academyLessonId: lessonId,
-  }, container);
+  state.academyController = controller;
+  state.academyLessonId = lessonId;
+  state.academyPhase = AcademyPhase.BRIEFING;
+  controller.beginBriefing();
+
+  // Skip briefing if the player opted out for this lesson
+  if (shouldSkipBriefing(lessonId)) {
+    await launchAcademyMatch(controller, container);
+    return;
+  }
+  renderAcademyBriefing(controller, container);
+}
+
+/**
+ * Render the pre-lesson briefing screen and wire its buttons.
+ */
+function renderAcademyBriefing(controller, container) {
+  container.innerHTML = renderBriefing(controller.lesson, { isReplay: controller.isReplay });
+  // Start button
+  const startBtn = container.querySelector('[data-action="academy-start-lesson"]');
+  if (startBtn) {
+    startBtn.addEventListener('click', async () => {
+      await launchAcademyMatch(controller, container);
+    });
+  }
+  // Skip briefing button (replays only)
+  const skipBtn = container.querySelector('[data-action="academy-skip-briefing"]');
+  if (skipBtn) {
+    skipBtn.addEventListener('click', async () => {
+      setSkipBriefing(controller.lessonId, true);
+      await launchAcademyMatch(controller, container);
+    });
+  }
+}
+
+/**
+ * Launch the academy match via the controller's setup config.
+ */
+async function launchAcademyMatch(controller, container) {
+  state.guidanceMode = academyGuidanceMode();
+  state.guidancePrefLoaded = true; // prevent handlePlayRoute from overriding
+  const setup = controller.buildMatchSetup();
+  controller.beginMatch();
+  state.academyPhase = AcademyPhase.MATCH;
+  await startNewMatch(setup, container);
+}
+
+/**
+ * Render the post-lesson recap screen and wire its buttons.
+ * Called from the terminal handler when an academy match ends.
+ * @param {object} recap - recap input from controller.onMatchEnd()
+ */
+function renderAcademyRecap(recap, container) {
+  container.innerHTML = renderRecap(recap);
+  const controller = state.academyController;
+
+  // Next lesson button
+  const nextBtn = container.querySelector('[data-action="academy-next-lesson"]');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', async () => {
+      const nextId = nextBtn.dataset.lessonId;
+      // Clean up the current controller before starting the next lesson
+      if (controller) controller.destroy();
+      state.academyController = null;
+      state.academyLessonId = null;
+      state.academyPhase = null;
+      await startAcademyLesson(nextId, container);
+    });
+  }
+
+  // Retry / replay button
+  const retryBtn = container.querySelector('[data-action="academy-retry-lesson"]');
+  if (retryBtn) {
+    retryBtn.addEventListener('click', async () => {
+      if (!controller) return;
+      const setup = controller.retry();
+      state.guidanceMode = academyGuidanceMode();
+      state.guidancePrefLoaded = true;
+      state.academyPhase = AcademyPhase.MATCH;
+      await startNewMatch(setup, container);
+    });
+  }
 }
 
 /**
@@ -277,6 +366,10 @@ async function startNewMatch(setup, container) {
       achRuntime.onUnlock((unlocks) => presenter.queueUnlocks(unlocks));
       state.session.setAchievementConsumer((events, snapshot) => {
         achRuntime.consumeEvents(events, null, snapshot);
+        // Academy Phase 2: forward events to the academy controller for live objective detection
+        if (state.academyController && state.academyPhase === AcademyPhase.MATCH) {
+          try { state.academyController.onSessionEvents(events, snapshot); } catch { /* ignore */ }
+        }
       });
     } catch (err) { console.warn('[play-app] achievement tracking init failed:', err?.message ?? err); }
     // Initialize sound engine
@@ -322,6 +415,10 @@ async function continueMatch(saveId, container) {
       achRuntime.onUnlock((unlocks) => presenter.queueUnlocks(unlocks));
       state.session.setAchievementConsumer((events, snapshot) => {
         achRuntime.consumeEvents(events, null, snapshot);
+        // Academy Phase 2: forward events to the academy controller for live objective detection
+        if (state.academyController && state.academyPhase === AcademyPhase.MATCH) {
+          try { state.academyController.onSessionEvents(events, snapshot); } catch { /* ignore */ }
+        }
       });
     } catch (err) { console.warn('[play-app] achievement tracking init failed:', err?.message ?? err); }
     // Initialize sound + particles
@@ -493,12 +590,22 @@ async function renderActiveMatch(container) {
     updatePlayerStatsOnTerminal(snapshot);
     // v0.28: Remove beforeunload protection when the match reaches terminal state
     removeBeforeUnloadProtection();
-    // Academy: mark lesson complete on win
-    if (state.academyLessonId) {
+    // Academy: route through AcademyController for completion + recap
+    if (state.academyLessonId && state.academyController) {
+      const humanId = snapshot.humanPlayerId ?? 'P1';
+      const { passed, recap } = state.academyController.onMatchEnd(snapshot, humanId);
+      // U7: Advance first-run funnel when the foundations tier is complete
+      if (passed && isFoundationsComplete(loadProgress())) {
+        completeStep(FunnelStep.TUTORIAL_STARTED);
+        advanceToStep(FunnelStep.TUTORIAL_COMPLETE);
+      }
+      // Stash the recap for the terminal renderer to render via a button
+      state._academyRecap = recap;
+    } else if (state.academyLessonId) {
+      // Legacy fallback: no controller (shouldn't happen, but keep behavior)
       const humanId = snapshot.humanPlayerId ?? 'P1';
       if (snapshot.state?.winner === humanId) {
         markLessonComplete(state.academyLessonId);
-        // U7: Advance first-run funnel when tutorial is complete
         completeStep(FunnelStep.TUTORIAL_STARTED);
         advanceToStep(FunnelStep.TUTORIAL_COMPLETE);
       }
@@ -580,6 +687,19 @@ async function renderActiveMatch(container) {
     rematchInvite: isNetworkMatch ? (state.networkSession?.rematchInvite ?? null) : null,
     // Academy: pass lesson ID so the terminal screen can show a "Back to Academy" button.
     academyLessonId: state.academyLessonId ?? null,
+    // Academy: in-match objective panel HTML (rendered by AcademyController)
+    academyPanelHtml: (state.academyController && state.academyPhase === AcademyPhase.MATCH)
+      ? state.academyController.getPanelHtml()
+      : '',
+    // Academy Phase 2: coachmark overlay HTML
+    academyCoachmarkHtml: (state.academyController && state.academyPhase === AcademyPhase.MATCH)
+      ? state.academyController.getCoachmarkHtml()
+      : '',
+    // Academy: recap data so the terminal screen can show a "View Recap" button
+    academyRecap: state._academyRecap ?? null,
+    // Gameplay skin (Light/Dark/CosmoTech/Corrupture) — read synchronously
+    // so the first paint carries the correct data-gameplay-skin attribute.
+    gameplaySkin: getGameplaySkin(),
   });
   } catch (renderError) {
     console.error('renderBoard threw:', renderError);
@@ -632,6 +752,8 @@ async function renderActiveMatch(container) {
   bindKeyboardShortcuts(container);
   bindVisibilityHandler();
   tickReconnectGraceCountdown(container);
+  positionAcademyCoachmarks(container);
+  bindAcademyCoachmarkDismiss(container);
 
   // Phase 4C: Restore focus after re-render
   if (_focusSelector) {
@@ -653,6 +775,83 @@ async function renderActiveMatch(container) {
 }
 
 /**
+ * Position academy coachmark overlays near their target elements.
+ * Called after every render to keep coachmarks aligned with their targets.
+ */
+function positionAcademyCoachmarks(container) {
+  const coachmarkEl = container.querySelector('[data-testid="academy-coachmark"]');
+  if (!coachmarkEl) return;
+
+  const targetSelector = coachmarkEl.dataset.target;
+  const position = coachmarkEl.dataset.position || 'top';
+  if (!targetSelector) return;
+
+  const targetEl = container.querySelector(targetSelector);
+  if (!targetEl) {
+    coachmarkEl.style.display = 'none';
+    return;
+  }
+
+  coachmarkEl.style.display = '';
+  const targetRect = targetEl.getBoundingClientRect();
+  const cmRect = coachmarkEl.getBoundingClientRect();
+  const gap = 12;
+
+  let top, left;
+  switch (position) {
+    case 'bottom':
+      top = targetRect.bottom + gap;
+      left = targetRect.left + (targetRect.width - cmRect.width) / 2;
+      break;
+    case 'left':
+      top = targetRect.top + (targetRect.height - cmRect.height) / 2;
+      left = targetRect.left - cmRect.width - gap;
+      break;
+    case 'right':
+      top = targetRect.top + (targetRect.height - cmRect.height) / 2;
+      left = targetRect.right + gap;
+      break;
+    case 'top':
+    default:
+      top = targetRect.top - cmRect.height - gap;
+      left = targetRect.left + (targetRect.width - cmRect.width) / 2;
+      break;
+  }
+
+  // Clamp to viewport
+  const margin = 8;
+  top = Math.max(margin, Math.min(top, window.innerHeight - cmRect.height - margin));
+  left = Math.max(margin, Math.min(left, window.innerWidth - cmRect.width - margin));
+
+  coachmarkEl.style.position = 'fixed';
+  coachmarkEl.style.top = `${top}px`;
+  coachmarkEl.style.left = `${left}px`;
+  coachmarkEl.style.zIndex = '9000';
+}
+
+/**
+ * Bind auto-dismiss for academy coachmarks when the player clicks
+ * the target element (they're following the guidance).
+ */
+function bindAcademyCoachmarkDismiss(container) {
+  const coachmarkEl = container.querySelector('[data-testid="academy-coachmark"]');
+  if (!coachmarkEl) return;
+
+  const targetSelector = coachmarkEl.dataset.target;
+  if (!targetSelector) return;
+
+  const targetEls = container.querySelectorAll(targetSelector);
+  targetEls.forEach((el) => {
+    el.addEventListener('click', () => {
+      if (state.academyController) {
+        state.academyController.dismissCurrentCoachmark();
+        renderActiveMatch(container);
+      }
+    }, { once: true });
+  });
+}
+
+/**
  * Bind board events — delegates to board-events.js module.
  * Callbacks are passed so the extracted module can trigger re-renders
  * and access play-app.js internal functions without circular imports.
@@ -663,6 +862,7 @@ function bindBoardEvents(container) {
     openAdvancedCardRules,
     startNewMatch,
     stopAutosave,
+    renderAcademyRecap,
   });
 }
 
@@ -1278,25 +1478,120 @@ function bindQueueLeaveAction(container, ws, queueLeave) {
 }
 
 /**
- * Render the spectate flow — enter a Match ID and spectate.
+ * Fetch the list of spectatable matches over a short-lived WebSocket.
+ * Sends LIST_SPECTATABLE and resolves with the matches array from
+ * SPECTATABLE_LIST. Rejects on ERROR, connection failure, or timeout.
+ * @param {string} serverUrl
+ * @param {() => object} listSpectatable - protocol builder
+ * @returns {Promise<Array<object>>}
+ */
+function fetchSpectatableList(serverUrl, listSpectatable) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(serverUrl);
+    const timer = setTimeout(() => {
+      try { ws.close(); } catch { /* ignore */ }
+      reject(new Error('Timed out waiting for the live match list.'));
+    }, 6000);
+    ws.addEventListener('open', () => {
+      ws.send(JSON.stringify(listSpectatable()));
+    });
+    ws.addEventListener('message', (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'SPECTATABLE_LIST') {
+          clearTimeout(timer);
+          try { ws.close(); } catch { /* ignore */ }
+          resolve(msg.payload?.matches ?? []);
+        } else if (msg.type === 'ERROR') {
+          clearTimeout(timer);
+          try { ws.close(); } catch { /* ignore */ }
+          reject(new Error(msg.payload?.message ?? 'Failed to load live matches.'));
+        }
+      } catch { /* ignore parse errors */ }
+    });
+    ws.addEventListener('error', () => {
+      clearTimeout(timer);
+      reject(new Error('Connection to server failed.'));
+    });
+  });
+}
+
+/**
+ * Render the spectate flow — live match browser + manual Match ID entry.
+ * On entry the screen requests the server's spectatable match list
+ * (LIST_SPECTATABLE) and renders one-click Watch cards; the manual
+ * Match ID form remains available as a fallback and for private shares.
  */
 async function renderNetworkSpectateFlow(container) {
-  const { spectateMatch, spectateLeave } = await import('./network/network-protocol-client.mjs');
-  container.innerHTML = renderNetworkSpectateForm({});
+  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs');
 
-  const form = container.querySelector('#network-spectate-form-element');
-  if (!form) return;
+  // Live-list state for the discovery section
+  let liveState = { liveMatches: null, liveLoading: false, liveError: null };
+  // Once the player commits to spectating a match, stop re-rendering the form
+  let spectating = false;
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const input = form.querySelector('input[name="matchId"]');
-    const matchId = input?.value?.trim();
-    if (!matchId || matchId.length < 4) {
-      container.innerHTML = renderNetworkSpectateForm({ error: 'Please enter a valid Match ID.' });
+  function renderScreen(extra = {}) {
+    container.innerHTML = renderNetworkSpectateForm({ ...liveState, ...extra });
+    bindScreenEvents();
+  }
+
+  function bindScreenEvents() {
+    const form = container.querySelector('#network-spectate-form-element');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = form.querySelector('input[name="matchId"]');
+        const matchId = input?.value?.trim();
+        if (!matchId || matchId.length < 4) {
+          renderScreen({ error: 'Please enter a valid Match ID.' });
+          return;
+        }
+        spectateById(matchId);
+      });
+    }
+    const refreshBtn = container.querySelector('[data-action="network-live-refresh"]');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => { refreshLiveMatches(); });
+    container.querySelectorAll('[data-action="network-spectate-live"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const matchId = btn.dataset.matchId;
+        if (matchId) spectateById(matchId);
+      });
+    });
+  }
+
+  async function refreshLiveMatches() {
+    const serverUrl = getNetworkServerUrl();
+    if (!serverUrl) {
+      liveState = { liveMatches: null, liveLoading: false, liveError: 'Match server is not configured.' };
+      if (!spectating) renderScreen();
       return;
     }
+    liveState = { ...liveState, liveLoading: true, liveError: null };
+    if (!spectating) renderScreen();
+    try {
+      // Prefer the authenticated session's connection when available —
+      // required in production where the auth gate rejects raw connections.
+      let matches = null;
+      if (state.networkSession) {
+        matches = await state.networkSession.requestSpectatableList();
+      }
+      if (matches == null) {
+        matches = await fetchSpectatableList(serverUrl, listSpectatable);
+      }
+      liveState = { liveMatches: matches, liveLoading: false, liveError: null };
+    } catch (err) {
+      liveState = { liveMatches: null, liveLoading: false, liveError: err?.message ?? 'Failed to load live matches.' };
+    }
+    // Don't clobber the screen if the player already started spectating
+    // or navigated away from the spectate form.
+    if (!spectating && container.querySelector('[data-testid="network-spectate-form"]')) {
+      renderScreen();
+    }
+  }
 
-    container.innerHTML = renderNetworkSpectateForm({ connecting: true });
+  function spectateById(matchId) {
+    spectating = true;
+    renderScreen({ connecting: true });
 
     const serverUrl = getNetworkServerUrl();
     if (!serverUrl) {
@@ -1306,6 +1601,19 @@ async function renderNetworkSpectateFlow(container) {
     }
     const ws = new WebSocket(serverUrl);
 
+    const bindLeave = (notifyServer) => {
+      const leaveBtn = container.querySelector('[data-action="network-spectate-leave"]');
+      if (leaveBtn) {
+        leaveBtn.addEventListener('click', () => {
+          if (notifyServer) {
+            try { ws.send(JSON.stringify(spectateLeave('req-spectate-leave-1'))); } catch { /* ignore */ }
+          }
+          try { ws.close(); } catch { /* ignore */ }
+          location.hash = '#/play/online';
+        });
+      }
+    };
+
     ws.addEventListener('open', () => {
       ws.send(JSON.stringify(spectateMatch(matchId, 'req-spectate-1')));
     });
@@ -1313,62 +1621,35 @@ async function renderNetworkSpectateFlow(container) {
     ws.addEventListener('message', (event) => {
       try {
         const msg = JSON.parse(event.data);
-        if (msg.type === 'SPECTATE_JOINED') {
+        if (msg.type === 'SPECTATE_JOINED' || msg.type === 'MATCH_VIEW') {
           container.innerHTML = renderNetworkSpectating({
             matchId,
             view: msg.payload.view,
           });
-          // Bind leave action
-          const leaveBtn = container.querySelector('[data-action="network-spectate-leave"]');
-          if (leaveBtn) {
-            leaveBtn.addEventListener('click', () => {
-              try { ws.send(JSON.stringify(spectateLeave('req-spectate-leave-1'))); } catch { /* ignore */ }
-              try { ws.close(); } catch { /* ignore */ }
-              location.hash = '#/play/online';
-            });
-          }
-        } else if (msg.type === 'MATCH_VIEW') {
-          // Update the spectating view
-          container.innerHTML = renderNetworkSpectating({
-            matchId,
-            view: msg.payload.view,
-          });
-          const leaveBtn = container.querySelector('[data-action="network-spectate-leave"]');
-          if (leaveBtn) {
-            leaveBtn.addEventListener('click', () => {
-              try { ws.send(JSON.stringify(spectateLeave('req-spectate-leave-1'))); } catch { /* ignore */ }
-              try { ws.close(); } catch { /* ignore */ }
-              location.hash = '#/play/online';
-            });
-          }
+          bindLeave(true);
         } else if (msg.type === 'MATCH_ENDED') {
           // Match ended — update view with winner
           container.innerHTML = renderNetworkSpectating({
             matchId,
             view: { status: 'TERMINAL', match: { winner: msg.payload.winner, phase: 'Ended' } },
           });
-          const leaveBtn = container.querySelector('[data-action="network-spectate-leave"]');
-          if (leaveBtn) {
-            leaveBtn.addEventListener('click', () => {
-              try { ws.close(); } catch { /* ignore */ }
-              location.hash = '#/play/online';
-            });
-          }
+          bindLeave(false);
         } else if (msg.type === 'ERROR') {
-          container.innerHTML = renderNetworkSpectateForm({
-            error: msg.payload.message ?? 'Failed to spectate match.',
-          });
+          spectating = false;
+          renderScreen({ error: msg.payload.message ?? 'Failed to spectate match.' });
           try { ws.close(); } catch { /* ignore */ }
         }
       } catch { /* ignore parse errors */ }
     });
 
     ws.addEventListener('error', () => {
-      container.innerHTML = renderNetworkSpectateForm({
-        error: 'Connection to server failed. Please try again.',
-      });
+      spectating = false;
+      renderScreen({ error: 'Connection to server failed. Please try again.' });
     });
-  });
+  }
+
+  renderScreen();
+  refreshLiveMatches();
 }
 
 /**
@@ -1732,6 +2013,14 @@ function bindKeyboardShortcuts(container) {
       // v0.19.0: Enter-to-confirm — natural UX for card game players
       e.preventDefault();
       handleEnterShortcut(container);
+    } else if (key === 'h') {
+      // Academy: request a hint
+      e.preventDefault();
+      handleHintShortcut(container);
+    } else if (key === 'z' && e.ctrlKey) {
+      // Academy: undo last action (only when allowUndo adaptation is active)
+      e.preventDefault();
+      handleUndoShortcut(container);
     }
   };
   document.addEventListener('keydown', state.keyboardHandler);
@@ -1909,6 +2198,46 @@ function handleEnterShortcut(container) {
   if (!state.selectedActionId) return;
   const confirmBtn = container.querySelector('[data-testid="confirm-action"]');
   if (confirmBtn) confirmBtn.click();
+}
+
+/**
+ * Academy: Handle H key — request a hint for the current lesson state.
+ * Only active during academy matches when the controller is available.
+ */
+function handleHintShortcut(container) {
+  if (!state.academyController || state.academyPhase !== 'match') return;
+  const hintBtn = container.querySelector('[data-action="academy-hint"]');
+  if (hintBtn) {
+    hintBtn.click();
+  } else {
+    // Fallback: directly request hint and show in the display element
+    const hint = state.academyController.requestHint();
+    if (hint) {
+      const hintEl = container.querySelector('[data-testid="academy-hint-display"]');
+      if (hintEl) {
+        hintEl.textContent = hint.text;
+        hintEl.classList.add('visible');
+        setTimeout(() => hintEl.classList.remove('visible'), 5000);
+      }
+    }
+  }
+}
+
+/**
+ * Academy: Handle Ctrl+Z — undo the last action.
+ * Only active during academy matches where adaptation.allowUndo is true.
+ * Works by re-launching the match from the original scenario setup.
+ */
+async function handleUndoShortcut(container) {
+  if (!state.academyController || state.academyPhase !== 'match') return;
+  const adaptation = state.academyController.lesson?.adaptation;
+  if (!adaptation?.allowUndo) return;
+  // Re-launch the match from the original scenario
+  const setup = state.academyController.buildMatchSetup();
+  state.guidanceMode = 'GUIDED';
+  state.guidancePrefLoaded = true;
+  state.academyController._retriesThisAttempt += 1;
+  await startNewMatch(setup, container);
 }
 
 /**

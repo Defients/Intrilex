@@ -75,6 +75,7 @@ const MODE_LABELS = Object.freeze({
   'queen-aegis': 'Queen Aegis',
   'queen': 'Queen',
   'king': 'King',
+  'ace': 'Ace',
   'jack': 'Jack',
   'jack-pr': 'Jack to Point Row',
   'nine': 'Nine',

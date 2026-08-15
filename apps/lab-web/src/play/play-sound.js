@@ -196,4 +196,13 @@ export class SoundEngine {
     this._tone(175, 'triangle', 0.2, 0.1, 0.4);
     this._tone(147, 'triangle', 0.4, 0.1, 0.6);
   }
+
+  /**
+   * Academy objective met — bright ascending chime.
+   * Two-note ping (E5 → A5) with a soft sine wave.
+   */
+  playObjectiveMet() {
+    this._tone(659, 'sine', 0.15, 0.08, 0);
+    this._tone(880, 'sine', 0.15, 0.1, 0.1);
+  }
 }

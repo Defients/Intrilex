@@ -60,7 +60,7 @@ const ROUTE_META = {
   },
   '/play/academy': {
     title: 'Intrilex — Academy',
-    description: 'Learn Intrilex step by step with guided lessons. Draw, score, use card effects, master response windows, and win games.',
+    description: 'Learn Intrilex step by step across three tiers: Foundations, Mechanics, and Applied Play. Guided lessons teach drawing, scoring, card effects, response windows, royals, and combos against an easy AI.',
     canonicalPath: '/#/play/academy',
     ogType: 'website',
   },

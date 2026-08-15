@@ -68,6 +68,7 @@ export function renderTerminal(vm, opts) {
       <a class="secondary-button" data-testid="open-history" href="#/history">Open History</a>
       <a class="secondary-button" data-testid="open-achievements" href="#/achievements">View Achievements</a>
       ${opts.academyLessonId ? '<a class="primary-button" data-testid="back-to-academy" href="#/play/academy">Back to Academy</a>' : '<button class="secondary-button" data-testid="return-to-hub" data-action="return-to-hub">Return to Play hub</button>'}
+      ${opts.academyLessonId && opts.academyRecap ? '<button class="primary-button" data-testid="view-academy-recap" data-action="view-academy-recap">View lesson recap</button>' : ''}
     </div>
   </div>`;
 }

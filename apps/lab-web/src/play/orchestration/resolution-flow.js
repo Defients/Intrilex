@@ -84,6 +84,35 @@ function describeEvent(event, cardRegistry) {
   }
   if (type.includes('PURGE')) return `${describeActor(event)} purged a card.`;
   if (type.includes('ROW_CLEAR')) return `${describeActor(event)} cleared a row.`;
+  // Core engine effect events (anchor, attachment, joker, board lock, etc.)
+  // These must be checked BEFORE the generic RESOLVE/CANCEL patterns below,
+  // since their event types include "RESOLVED" (e.g. CORE_JACK_ATTACHMENT_RESOLVED).
+  if (type.includes('ANCHOR_ENTERED')) {
+    const card = describeCard(payload.sourceCardId, cardRegistry);
+    return `${describeActor(event)} placed ${card} as an anchor on the Enduring Row.`;
+  }
+  if (type.includes('ATTACHMENT_RESOLVED')) {
+    const jack = describeCard(payload.jackCardId, cardRegistry);
+    const host = describeCard(payload.hostCardId, cardRegistry);
+    return `${describeActor(event)} attached ${jack} to ${host}.`;
+  }
+  if (type.includes('RED_JOKER')) return `${describeActor(event)} used a Red Joker effect.`;
+  if (type.includes('BOARD_LOCK')) return `${describeActor(event)} activated Board Lock.`;
+  if (type.includes('ENTER_ACTION')) return `Entered the Action Phase.`;
+  if (type.includes('BEGIN_START')) return `Start phase began.`;
+  if (type.includes('CARD_MOVED')) return `A card was moved.`;
+  if (type.includes('CARD_TAKEN')) return `${describeActor(event)} took a card.`;
+  if (type.includes('GOAL_CHANGED')) return `${describeActor(event)}'s goal changed.`;
+  if (type.includes('TARGET_REMOVED')) return `A target was removed.`;
+  if (type.includes('MARKER_SET')) return `A marker was set on a card.`;
+  if (type.includes('TRIGGER_QUEUED')) return `A trigger was queued.`;
+  if (type.includes('STACK_ITEM_REBOUND')) return `A stack item rebounded.`;
+  if (type.includes('RESPONSE_WINDOW_CLOSED') || type.includes('PRIORITY_CLOSED')) {
+    return `The response window closed.`;
+  }
+  if (type.includes('RESPONSE_DECLINED') || type.includes('PRIORITY_PASSED')) {
+    return `${describeActor(event)} passed priority.`;
+  }
   if (type.includes('RESOLVE')) {
     const kind = payload.kind ?? 'effect';
     return `${kind} resolved.`;
@@ -99,7 +128,7 @@ function describeEvent(event, cardRegistry) {
     return `Match ended. Winner: ${payload.winner ?? 'unknown'}.`;
   }
   if (type.includes('SUPER')) return `${describeActor(event)} declared a Super.`;
-  if (type.includes('DECLARATION')) {
+  if (type.includes('DECLARATION') || type.includes('DECLARE_PRIMARY')) {
     const kind = payload.kind ?? 'action';
     return `${describeActor(event)} declared ${kind}.`;
   }

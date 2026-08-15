@@ -1,0 +1,1341 @@
+/* ═══════════════════════════════════════════════════════════════
+   gameplay-skins.css — Four-skin gameplay appearance system.
+
+   SKINS: light · dark (canonical baseline) · cosmotech · corrupture
+
+   ARCHITECTURE:
+   - The .ranked-duel-shell root carries data-gameplay-skin="...".
+   - Dark is the existing default — NO overrides needed (the base
+     ranked-duel.css already produces the canonical dark appearance).
+   - Each non-dark skin overrides only what changes, using
+     [data-gameplay-skin="..."] attribute selectors which are more
+     specific than the bare .rd-* rules in ranked-duel.css.
+   - Semantic tokens (--gp-*) are defined per-skin so components
+     consume meaning, not raw colors.
+   - Theme-specific ornamentation uses ::before/::after pseudo-elements
+     with pointer-events:none so they never intercept clicks.
+
+   SPECIFICITY STRATEGY:
+   ranked-duel.css uses `.rd-cell { background: #0b1020 !important }`.
+   Our override `[data-gameplay-skin="light"] .rd-cell { background: X !important }`
+   wins because the attribute selector adds specificity (0,2,0) > (0,1,0).
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────────
+   SEMANTIC TOKENS — defined on the shell root, overridden per-skin.
+   Components should reference these where practical.
+   ─────────────────────────────────────────────────────────────── */
+.ranked-duel-shell {
+  /* Dark baseline tokens (match existing hardcoded values) */
+  --gp-bg: #050810;
+  --gp-surface: linear-gradient(180deg, #0b1020 0%, #0a0e1a 100%);
+  --gp-surface-raised: linear-gradient(180deg, #0c1226 0%, #0a0e1a 100%);
+  --gp-surface-inset: rgba(10,14,26,0.50);
+  --gp-border: rgba(148,163,184,0.08);
+  --gp-border-emphasis: rgba(56,189,248,0.12);
+  --gp-text: #e2e8f0;
+  --gp-text-bright: #e8f0f4;
+  --gp-text-muted: #94a3b8;
+  --gp-text-faint: #475569;
+  --gp-accent: #22d3ee;
+  --gp-accent-soft: rgba(56,189,248,0.10);
+  --gp-accent-glow: rgba(34,211,238,0.40);
+  --gp-opponent: #e879f9;
+  --gp-opponent-soft: rgba(232,121,249,0.10);
+  --gp-warning: #fbbf24;
+  --gp-warning-soft: rgba(251,191,36,0.12);
+  --gp-danger: #f87171;
+  --gp-danger-soft: rgba(248,113,113,0.10);
+  --gp-success: #4ade80;
+  --gp-success-soft: rgba(74,222,128,0.12);
+  --gp-focus: #ffdc7a;
+  --gp-shadow: 0 1px 3px rgba(0,0,0,0.20);
+  --gp-shadow-strong: 0 4px 16px rgba(0,0,0,0.50);
+  --gp-overlay: rgba(5,8,16,0.85);
+  --gp-ornament-opacity: 0;
+  --gp-fx-color: rgba(34,211,238,0.55);
+  --gp-fx-glow: rgba(34,211,238,0.40);
+  --gp-ornament-display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT — clean premium daylight, tactical, highly legible
+   ═══════════════════════════════════════════════════════════════ */
+[data-gameplay-skin="light"] {
+  --gp-bg: #eef2f7;
+  --gp-surface: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  --gp-surface-raised: linear-gradient(180deg, #ffffff 0%, #e8eef5 100%);
+  --gp-surface-inset: rgba(241,245,249,0.80);
+  --gp-border: rgba(100,116,139,0.18);
+  --gp-border-emphasis: rgba(56,128,200,0.25);
+  --gp-text: #1e293b;
+  --gp-text-bright: #0f172a;
+  --gp-text-muted: #475569;
+  --gp-text-faint: #94a3b8;
+  --gp-accent: #0284c7;
+  --gp-accent-soft: rgba(14,165,233,0.10);
+  --gp-accent-glow: rgba(14,165,233,0.30);
+  --gp-opponent: #a855f7;
+  --gp-opponent-soft: rgba(168,85,247,0.10);
+  --gp-warning: #d97706;
+  --gp-warning-soft: rgba(217,119,6,0.12);
+  --gp-danger: #dc2626;
+  --gp-danger-soft: rgba(220,38,38,0.10);
+  --gp-success: #16a34a;
+  --gp-success-soft: rgba(22,163,74,0.12);
+  --gp-focus: #1d4ed8;
+  --gp-shadow: 0 1px 3px rgba(15,23,42,0.10);
+  --gp-shadow-strong: 0 4px 16px rgba(15,23,42,0.18);
+  --gp-overlay: rgba(241,245,249,0.90);
+  --gp-ornament-opacity: 0;
+  --gp-fx-color: rgba(14,165,233,0.50);
+  --gp-fx-glow: rgba(14,165,233,0.25);
+  --gp-ornament-display: none;
+}
+
+/* Light — shell background */
+[data-gameplay-skin="light"].ranked-duel-shell {
+  background: linear-gradient(160deg, #eef2f7 0%, #e2e8f0 50%, #dde5ee 100%) !important;
+  color: #1e293b !important;
+}
+[data-gameplay-skin="light"].ranked-duel-shell::before {
+  background: radial-gradient(ellipse 60% 35% at 50% 35%, rgba(14,165,233,0.05) 0%, transparent 70%) !important;
+}
+
+/* Light — base cell surface */
+[data-gameplay-skin="light"] .rd-cell {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%) !important;
+  border: 1px solid rgba(100,116,139,0.15) !important;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.08) !important;
+}
+
+/* Light — header */
+[data-gameplay-skin="light"] .rd-header {
+  background: linear-gradient(180deg, #ffffff 0%, #e8eef5 100%) !important;
+  border: 1px solid rgba(56,128,200,0.20) !important;
+  box-shadow: 0 1px 4px rgba(15,23,42,0.10) !important;
+}
+[data-gameplay-skin="light"] .rd-header-logo { color: #0f172a !important; }
+[data-gameplay-skin="light"] .rd-header-mode {
+  background: rgba(14,165,233,0.10) !important; color: #0284c7 !important;
+  border: 1px solid rgba(14,165,233,0.20) !important;
+}
+[data-gameplay-skin="light"] .rd-header-turn { color: #0f172a !important; }
+[data-gameplay-skin="light"] .rd-header-sep { color: #94a3b8 !important; }
+[data-gameplay-skin="light"] .rd-header-phase { color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-header-center { color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-header-back {
+  color: #1e293b !important; background: rgba(241,245,249,0.90) !important;
+  border: 1px solid rgba(100,116,139,0.25) !important;
+}
+[data-gameplay-skin="light"] .rd-header-back:hover {
+  background: #e8eef5 !important; border-color: #0284c7 !important; color: #0284c7 !important;
+}
+[data-gameplay-skin="light"] .rd-header-back:focus-visible {
+  outline: 3px solid #1d4ed8 !important; outline-offset: 2px !important;
+}
+[data-gameplay-skin="light"] .rd-header-window.human {
+  background: rgba(14,165,233,0.12) !important; color: #0284c7 !important;
+}
+[data-gameplay-skin="light"] .rd-header-window.opponent {
+  background: rgba(168,85,247,0.12) !important; color: #a855f7 !important;
+}
+[data-gameplay-skin="light"] .rd-header-stack {
+  background: rgba(217,119,6,0.12) !important; color: #d97706 !important;
+}
+[data-gameplay-skin="light"] .rd-header-owner {
+  background: rgba(15,23,42,0.04) !important; border: 1px solid rgba(100,116,139,0.15) !important;
+}
+[data-gameplay-skin="light"] .rd-header-owner.human {
+  background: rgba(14,165,233,0.10) !important; border-color: rgba(14,165,233,0.30) !important; color: #0284c7 !important;
+}
+[data-gameplay-skin="light"] .rd-header-owner.ai {
+  background: rgba(168,85,247,0.10) !important; border-color: rgba(168,85,247,0.30) !important; color: #a855f7 !important;
+}
+
+/* Light — state badges */
+[data-gameplay-skin="light"] .rd-state-badge {
+  background: rgba(217,119,6,0.12) !important; border: 1px solid rgba(217,119,6,0.25) !important; color: #d97706 !important;
+}
+[data-gameplay-skin="light"] .rd-state-voltage { background: rgba(217,119,6,0.12) !important; border-color: rgba(217,119,6,0.25) !important; color: #d97706 !important; }
+[data-gameplay-skin="light"] .rd-state-boardLock { background: rgba(100,116,139,0.12) !important; border-color: rgba(100,116,139,0.25) !important; color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-state-suddenDeath { background: rgba(220,38,38,0.12) !important; border-color: rgba(220,38,38,0.25) !important; color: #dc2626 !important; }
+[data-gameplay-skin="light"] .rd-state-timeBomb { background: rgba(220,38,38,0.12) !important; border-color: rgba(220,38,38,0.25) !important; color: #dc2626 !important; }
+[data-gameplay-skin="light"] .rd-state-responseWindow { background: rgba(14,165,233,0.12) !important; border-color: rgba(14,165,233,0.25) !important; color: #0284c7 !important; }
+
+/* Light — toolbar */
+[data-gameplay-skin="light"] .rd-toolbar {
+  background: rgba(15,23,42,0.04) !important; border: 1px solid rgba(100,116,139,0.15) !important;
+}
+[data-gameplay-skin="light"] .rd-toolbar-btn { color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-toolbar-btn:hover {
+  background: rgba(14,165,233,0.10) !important; color: #0284c7 !important; border-color: rgba(14,165,233,0.20) !important;
+}
+
+/* Light — enduring/point rows */
+[data-gameplay-skin="light"] .rd-enduring-row {
+  background: linear-gradient(135deg, rgba(168,85,247,0.06) 0%, rgba(168,85,247,0.02) 100%) !important;
+  border: 1px solid rgba(168,85,247,0.18) !important;
+}
+[data-gameplay-skin="light"] .rd-point-row {
+  background: linear-gradient(135deg, rgba(14,165,233,0.06) 0%, rgba(14,165,233,0.02) 100%) !important;
+  border: 1px solid rgba(14,165,233,0.18) !important;
+}
+[data-gameplay-skin="light"] .rd-row-label { color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-row-score { color: #0f172a !important; }
+[data-gameplay-skin="light"] .rd-row-goal { color: #64748b !important; }
+[data-gameplay-skin="light"] .rd-row-empty-text { color: #94a3b8 !important; }
+
+/* Light — profile blocks */
+[data-gameplay-skin="light"] .rd-profile-block.opponent {
+  background: linear-gradient(180deg, rgba(168,85,247,0.06) 0%, transparent 100%) !important;
+}
+[data-gameplay-skin="light"] .rd-profile-block.human {
+  background: linear-gradient(0deg, rgba(14,165,233,0.06) 0%, transparent 100%) !important;
+}
+[data-gameplay-skin="light"] .rd-profile-avatar.opponent {
+  background: radial-gradient(circle, rgba(168,85,247,0.20) 0%, rgba(168,85,247,0.08) 100%) !important;
+}
+[data-gameplay-skin="light"] .rd-profile-avatar.human {
+  background: radial-gradient(circle, rgba(14,165,233,0.20) 0%, rgba(14,165,233,0.08) 100%) !important;
+}
+[data-gameplay-skin="light"] .rd-profile-name { color: #0f172a !important; }
+[data-gameplay-skin="light"] .rd-profile-meta { color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-profile-score { color: #0f172a !important; }
+
+/* Light — piles */
+[data-gameplay-skin="light"] .rd-piles-label { color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-pile-card {
+  background: linear-gradient(180deg, #ffffff 0%, #e8eef5 100%) !important;
+  border: 1px solid rgba(100,116,139,0.18) !important;
+}
+[data-gameplay-skin="light"] .rd-pile-card.exile {
+  background: linear-gradient(180deg, rgba(100,116,139,0.08) 0%, rgba(100,116,139,0.03) 100%) !important;
+  border-color: rgba(100,116,139,0.25) !important;
+}
+[data-gameplay-skin="light"] .rd-pile-label { color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-pile-count { color: #0f172a !important; }
+
+/* Light — swap bar */
+[data-gameplay-skin="light"] .rd-swap-slot {
+  background: linear-gradient(180deg, #ffffff 0%, #e8eef5 100%) !important;
+  border: 1px solid rgba(14,165,233,0.20) !important;
+}
+[data-gameplay-skin="light"] .rd-swap-slot.active {
+  background: linear-gradient(180deg, rgba(14,165,233,0.15) 0%, rgba(14,165,233,0.06) 100%) !important;
+  border-color: rgba(14,165,233,0.40) !important;
+  box-shadow: 0 0 12px rgba(14,165,233,0.20) !important;
+}
+[data-gameplay-skin="light"] .rd-swap-label { color: #475569 !important; }
+
+/* Light — stage */
+[data-gameplay-skin="light"] .rd-stage {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%) !important;
+  border: 1px solid rgba(56,128,200,0.15) !important;
+}
+[data-gameplay-skin="light"] .rd-active-stage.idle {
+  background: radial-gradient(ellipse 50% 60% at 50% 50%, rgba(14,165,233,0.05) 0%, transparent 70%) !important;
+}
+[data-gameplay-skin="light"] .rd-stage-idle-content {
+  background: rgba(241,245,249,0.80) !important;
+  border: 1px solid rgba(100,116,139,0.15) !important;
+  box-shadow: inset 0 1px 3px rgba(15,23,42,0.08) !important;
+}
+[data-gameplay-skin="light"] .rd-stage-board-art {
+  background:
+    linear-gradient(45deg, transparent 48%, rgba(14,165,233,0.03) 49%, rgba(14,165,233,0.03) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(168,85,247,0.025) 49%, rgba(168,85,247,0.025) 51%, transparent 52%) !important;
+}
+[data-gameplay-skin="light"] .rd-stage-glow.ai { background: radial-gradient(circle, rgba(168,85,247,0.10) 0%, transparent 70%) !important; }
+[data-gameplay-skin="light"] .rd-stage-glow.human { background: radial-gradient(circle, rgba(14,165,233,0.10) 0%, transparent 70%) !important; }
+[data-gameplay-skin="light"] .rd-stage-glow.opponent { background: radial-gradient(circle, rgba(220,38,38,0.10) 0%, transparent 70%) !important; }
+[data-gameplay-skin="light"] .rd-stage-status.pending { background: rgba(217,119,6,0.12) !important; color: #d97706 !important; }
+[data-gameplay-skin="light"] .rd-stage-status { background: rgba(22,163,74,0.12) !important; color: #16a34a !important; }
+
+/* Light — bubble FX (darker glow for visibility on bright bg) */
+[data-gameplay-skin="light"] .rd-bubble {
+  background: rgba(14,165,233,0.45) !important;
+  box-shadow: 0 0 10px rgba(14,165,233,0.25) !important;
+}
+[data-gameplay-skin="light"] .rd-stage-bubble-fx { border-top-color: rgba(14,165,233,0.12) !important; }
+
+/* Light — resolution stack */
+[data-gameplay-skin="light"] .rd-stack {
+  background: linear-gradient(180deg, #ffffff 0%, #e8eef5 100%) !important;
+  border: 1px solid rgba(100,116,139,0.15) !important;
+}
+[data-gameplay-skin="light"] .rd-stack-header { color: #475569 !important; border-bottom-color: rgba(100,116,139,0.15) !important; }
+[data-gameplay-skin="light"] .rd-stack-empty { color: #94a3b8 !important; }
+[data-gameplay-skin="light"] .rd-stack-item {
+  background: rgba(241,245,249,0.80) !important; border: 1px solid rgba(100,116,139,0.15) !important;
+}
+[data-gameplay-skin="light"] .rd-stack-item.active {
+  background: linear-gradient(180deg, rgba(217,119,6,0.12) 0%, rgba(217,119,6,0.04) 100%) !important;
+  border-color: rgba(217,119,6,0.30) !important;
+}
+
+/* Light — game log */
+[data-gameplay-skin="light"] .rd-gamelog {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%) !important;
+  border: 1px solid rgba(100,116,139,0.15) !important;
+}
+[data-gameplay-skin="light"] .rd-rail-section-header { color: #475569 !important; border-bottom-color: rgba(100,116,139,0.12) !important; }
+[data-gameplay-skin="light"] .rd-game-log-entry { color: #1e293b !important; }
+[data-gameplay-skin="light"] .rd-game-log-entry .log-turn { color: #94a3b8 !important; }
+[data-gameplay-skin="light"] .rd-game-log-entry .log-actor.human { color: #0284c7 !important; }
+[data-gameplay-skin="light"] .rd-game-log-entry .log-actor.ai { color: #a855f7 !important; }
+[data-gameplay-skin="light"] .rd-game-log-empty { color: #94a3b8 !important; }
+
+/* Light — chat */
+[data-gameplay-skin="light"] .rd-chat {
+  background: linear-gradient(180deg, rgba(255,255,255,0.80) 0%, rgba(241,245,249,0.80) 100%) !important;
+  border: 1px solid rgba(100,116,139,0.15) !important;
+}
+[data-gameplay-skin="light"] .rd-chat-header { color: #475569 !important; border-bottom-color: rgba(100,116,139,0.12) !important; }
+[data-gameplay-skin="light"] .rd-chat-msg.human { background: rgba(14,165,233,0.10) !important; color: #0f172a !important; }
+[data-gameplay-skin="light"] .rd-chat-msg.ai { background: rgba(168,85,247,0.10) !important; color: #0f172a !important; }
+[data-gameplay-skin="light"] .rd-chat-msg.system { background: rgba(15,23,42,0.05) !important; color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-chat-input {
+  background: rgba(255,255,255,0.90) !important; border: 1px solid rgba(100,116,139,0.20) !important; color: #1e293b !important;
+}
+
+/* Light — actions panel */
+[data-gameplay-skin="light"] .rd-actions {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%) !important;
+  border: 1px solid rgba(100,116,139,0.15) !important;
+}
+[data-gameplay-skin="light"] .rd-actions-header { color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-action-btn {
+  background: linear-gradient(180deg, #ffffff 0%, #e8eef5 100%) !important;
+  border: 1px solid rgba(100,116,139,0.20) !important; color: #1e293b !important;
+}
+[data-gameplay-skin="light"] .rd-action-btn:hover {
+  background: linear-gradient(180deg, rgba(14,165,233,0.10) 0%, rgba(14,165,233,0.04) 100%) !important;
+  border-color: rgba(14,165,233,0.30) !important;
+}
+[data-gameplay-skin="light"] .rd-action-btn.primary {
+  background: linear-gradient(180deg, rgba(14,165,233,0.18) 0%, rgba(14,165,233,0.08) 100%) !important;
+  border-color: rgba(14,165,233,0.40) !important;
+}
+[data-gameplay-skin="light"] .rd-action-btn.selected {
+  background: linear-gradient(180deg, rgba(14,165,233,0.20) 0%, rgba(14,165,233,0.08) 100%) !important;
+  border-color: rgba(14,165,233,0.50) !important;
+  box-shadow: 0 0 0 2px rgba(14,165,233,0.20) !important;
+}
+[data-gameplay-skin="light"] .rd-action-btn.disabled,
+[data-gameplay-skin="light"] .rd-action-btn[disabled] {
+  background: rgba(241,245,249,0.60) !important; border-color: rgba(100,116,139,0.10) !important; color: #94a3b8 !important;
+}
+[data-gameplay-skin="light"] .rd-action-pass {
+  background: linear-gradient(180deg, rgba(220,38,38,0.10) 0%, rgba(220,38,38,0.04) 100%) !important;
+  border: 1px solid rgba(220,38,38,0.20) !important; color: #dc2626 !important;
+}
+[data-gameplay-skin="light"] .rd-action-pass:hover {
+  background: linear-gradient(180deg, rgba(220,38,38,0.18) 0%, rgba(220,38,38,0.08) 100%) !important;
+}
+[data-gameplay-skin="light"] .rd-intent-btn {
+  background: linear-gradient(180deg, #ffffff 0%, #e8eef5 100%) !important;
+  border: 1px solid rgba(100,116,139,0.18) !important; color: #1e293b !important;
+}
+[data-gameplay-skin="light"] .rd-intent-btn:hover {
+  background: linear-gradient(180deg, rgba(14,165,233,0.10) 0%, rgba(14,165,233,0.04) 100%) !important;
+}
+[data-gameplay-skin="light"] .rd-intent-btn.selected {
+  background: linear-gradient(180deg, rgba(14,165,233,0.15) 0%, rgba(14,165,233,0.06) 100%) !important;
+  border-color: rgba(14,165,233,0.40) !important;
+}
+[data-gameplay-skin="light"] .rd-intent-btn.dimmed:hover { background: #e8eef5 !important; }
+
+/* Light — selected card / targetable / legal-action states */
+[data-gameplay-skin="light"] .rd-card.selected,
+[data-gameplay-skin="light"] .tcg-card.selected {
+  box-shadow: 0 0 0 2px rgba(14,165,233,0.50), 0 0 16px rgba(14,165,233,0.20) !important;
+}
+[data-gameplay-skin="light"] .rd-card.targetable,
+[data-gameplay-skin="light"] .tcg-card.targetable {
+  box-shadow: 0 0 0 2px rgba(22,163,74,0.40), 0 0 12px rgba(22,163,74,0.15) !important;
+}
+[data-gameplay-skin="light"] .rd-card.illegal,
+[data-gameplay-skin="light"] .tcg-card.illegal {
+  opacity: 0.55 !important;
+}
+
+/* Light — overlays / dialogs */
+[data-gameplay-skin="light"] .rd-forfeit-dialog {
+  background: rgba(241,245,249,0.95) !important;
+  border: 1px solid rgba(100,116,139,0.25) !important;
+  box-shadow: 0 24px 64px rgba(15,23,42,0.25) !important;
+}
+[data-gameplay-skin="light"] .rd-forfeit-dialog-title { color: #0f172a !important; }
+[data-gameplay-skin="light"] .rd-forfeit-dialog-msg { color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-forfeit-cancel {
+  background: #e8eef5 !important; border: 1px solid rgba(100,116,139,0.25) !important; color: #1e293b !important;
+}
+[data-gameplay-skin="light"] .rd-forfeit-confirm {
+  background: linear-gradient(180deg, rgba(220,38,38,0.18) 0%, rgba(220,38,38,0.08) 100%) !important;
+  border: 1px solid rgba(220,38,38,0.40) !important; color: #dc2626 !important;
+}
+
+/* Light — scrollbars */
+[data-gameplay-skin="light"] .rd-gamelog::-webkit-scrollbar-track,
+[data-gameplay-skin="light"] .rd-chat::-webkit-scrollbar-track {
+  background: rgba(100,116,139,0.05) !important;
+}
+[data-gameplay-skin="light"] .rd-gamelog::-webkit-scrollbar-thumb,
+[data-gameplay-skin="light"] .rd-chat::-webkit-scrollbar-thumb {
+  background: rgba(100,116,139,0.25) !important; border-radius: 3px !important;
+}
+
+/* Light — focus ring */
+[data-gameplay-skin="light"] .rd-toolbar-btn:focus-visible,
+[data-gameplay-skin="light"] .rd-action-btn:focus-visible,
+[data-gameplay-skin="light"] .rd-intent-btn:focus-visible,
+[data-gameplay-skin="light"] .rd-swap-slot:focus-visible,
+[data-gameplay-skin="light"] .rd-card:focus-visible,
+[data-gameplay-skin="light"] .tcg-card:focus-visible {
+  outline: 3px solid #1d4ed8 !important; outline-offset: 2px !important;
+}
+
+/* Light — skin selector menu */
+[data-gameplay-skin="light"] .rd-skin-menu {
+  background: rgba(255,255,255,0.98) !important;
+  border: 1px solid rgba(100,116,139,0.25) !important;
+  box-shadow: 0 12px 36px rgba(15,23,42,0.20) !important;
+}
+[data-gameplay-skin="light"] .rd-skin-menu-item { color: #1e293b !important; }
+[data-gameplay-skin="light"] .rd-skin-menu-item:hover {
+  background: rgba(14,165,233,0.08) !important;
+}
+[data-gameplay-skin="light"] .rd-skin-menu-item.active {
+  background: rgba(14,165,233,0.12) !important; color: #0284c7 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COSMOTECH — celestial engineering, crystalline, orbital, luminous
+   ═══════════════════════════════════════════════════════════════ */
+[data-gameplay-skin="cosmotech"] {
+  --gp-bg: #030514;
+  --gp-surface: linear-gradient(180deg, rgba(12,18,42,0.85) 0%, rgba(8,12,32,0.85) 100%);
+  --gp-surface-raised: linear-gradient(180deg, rgba(18,26,56,0.90) 0%, rgba(12,18,42,0.90) 100%);
+  --gp-surface-inset: rgba(8,12,32,0.60);
+  --gp-border: rgba(120,180,255,0.12);
+  --gp-border-emphasis: rgba(120,180,255,0.25);
+  --gp-text: #c8d6f5;
+  --gp-text-bright: #e8f0ff;
+  --gp-text-muted: #8a9ec8;
+  --gp-text-faint: #5a6e9a;
+  --gp-accent: #7dd3fc;
+  --gp-accent-soft: rgba(125,211,252,0.10);
+  --gp-accent-glow: rgba(125,211,252,0.40);
+  --gp-opponent: #c4b5fd;
+  --gp-opponent-soft: rgba(196,181,253,0.10);
+  --gp-warning: #fcd34d;
+  --gp-warning-soft: rgba(252,211,77,0.12);
+  --gp-danger: #fb7185;
+  --gp-danger-soft: rgba(251,113,133,0.10);
+  --gp-success: #6ee7b7;
+  --gp-success-soft: rgba(110,231,183,0.12);
+  --gp-focus: #f0e68c;
+  --gp-shadow: 0 1px 4px rgba(0,0,0,0.40);
+  --gp-shadow-strong: 0 4px 20px rgba(0,0,0,0.60);
+  --gp-overlay: rgba(3,5,20,0.88);
+  --gp-ornament-opacity: 1;
+  --gp-fx-color: rgba(125,211,252,0.55);
+  --gp-fx-glow: rgba(125,211,252,0.40);
+  --gp-ornament-display: block;
+}
+
+/* CosmoTech — shell background (deep void navy with starfield depth) */
+[data-gameplay-skin="cosmotech"].ranked-duel-shell {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(56,78,140,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 30% 100%, rgba(120,80,200,0.08) 0%, transparent 50%),
+    linear-gradient(180deg, #030514 0%, #050a1e 50%, #030514 100%) !important;
+  color: #c8d6f5 !important;
+}
+[data-gameplay-skin="cosmotech"].ranked-duel-shell::before {
+  background:
+    radial-gradient(ellipse 60% 35% at 50% 35%, rgba(125,211,252,0.06) 0%, transparent 70%),
+    radial-gradient(circle at 15% 20%, rgba(255,255,255,0.15) 0.5px, transparent 1px),
+    radial-gradient(circle at 85% 15%, rgba(255,255,255,0.10) 0.5px, transparent 1px),
+    radial-gradient(circle at 45% 80%, rgba(255,255,255,0.08) 0.5px, transparent 1px),
+    radial-gradient(circle at 70% 60%, rgba(255,255,255,0.06) 0.5px, transparent 1px) !important;
+}
+
+/* CosmoTech — base cell (translucent observatory glass) */
+[data-gameplay-skin="cosmotech"] .rd-cell {
+  background: linear-gradient(180deg, rgba(12,18,42,0.75) 0%, rgba(8,12,32,0.75) 100%) !important;
+  border: 1px solid rgba(120,180,255,0.12) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.40), inset 0 1px 0 rgba(125,211,252,0.06) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+/* CosmoTech — header (celestial control surface) */
+[data-gameplay-skin="cosmotech"] .rd-header {
+  background: linear-gradient(180deg, rgba(18,26,56,0.90) 0%, rgba(12,18,42,0.90) 100%) !important;
+  border: 1px solid rgba(125,211,252,0.20) !important;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.40), inset 0 1px 0 rgba(125,211,252,0.08) !important;
+  backdrop-filter: blur(8px) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-header-logo { color: #e8f0ff !important; }
+[data-gameplay-skin="cosmotech"] .rd-header-mode {
+  background: rgba(125,211,252,0.10) !important; color: #7dd3fc !important;
+  border: 1px solid rgba(125,211,252,0.25) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-header-turn { color: #e8f0ff !important; }
+[data-gameplay-skin="cosmotech"] .rd-header-sep { color: #5a6e9a !important; }
+[data-gameplay-skin="cosmotech"] .rd-header-phase { color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-header-center { color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-header-back {
+  color: #c8d6f5 !important; background: rgba(12,18,42,0.80) !important;
+  border: 1px solid rgba(120,180,255,0.20) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-header-back:hover {
+  background: rgba(18,26,56,0.90) !important; border-color: #7dd3fc !important; color: #7dd3fc !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-header-back:focus-visible {
+  outline: 3px solid #f0e68c !important; outline-offset: 2px !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-header-window.human {
+  background: rgba(125,211,252,0.12) !important; color: #7dd3fc !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-header-window.opponent {
+  background: rgba(196,181,253,0.12) !important; color: #c4b5fd !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-header-stack {
+  background: rgba(252,211,77,0.12) !important; color: #fcd34d !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-header-owner {
+  background: rgba(125,211,252,0.06) !important; border: 1px solid rgba(125,211,252,0.15) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-header-owner.human {
+  background: rgba(125,211,252,0.10) !important; border-color: rgba(125,211,252,0.30) !important; color: #7dd3fc !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-header-owner.ai {
+  background: rgba(196,181,253,0.10) !important; border-color: rgba(196,181,253,0.30) !important; color: #c4b5fd !important;
+}
+
+/* CosmoTech — state badges */
+[data-gameplay-skin="cosmotech"] .rd-state-badge {
+  background: rgba(252,211,77,0.12) !important; border: 1px solid rgba(252,211,77,0.25) !important; color: #fcd34d !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-state-voltage { background: rgba(252,211,77,0.12) !important; border-color: rgba(252,211,77,0.25) !important; color: #fcd34d !important; }
+[data-gameplay-skin="cosmotech"] .rd-state-boardLock { background: rgba(138,158,200,0.12) !important; border-color: rgba(138,158,200,0.25) !important; color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-state-suddenDeath { background: rgba(251,113,133,0.12) !important; border-color: rgba(251,113,133,0.25) !important; color: #fb7185 !important; }
+[data-gameplay-skin="cosmotech"] .rd-state-timeBomb { background: rgba(251,113,133,0.12) !important; border-color: rgba(251,113,133,0.25) !important; color: #fb7185 !important; }
+[data-gameplay-skin="cosmotech"] .rd-state-responseWindow { background: rgba(125,211,252,0.12) !important; border-color: rgba(125,211,252,0.25) !important; color: #7dd3fc !important; }
+
+/* CosmoTech — toolbar (crystalline instrument housing) */
+[data-gameplay-skin="cosmotech"] .rd-toolbar {
+  background: rgba(125,211,252,0.04) !important; border: 1px solid rgba(125,211,252,0.15) !important;
+  box-shadow: inset 0 1px 0 rgba(125,211,252,0.06) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-toolbar-btn { color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-toolbar-btn:hover {
+  background: rgba(125,211,252,0.10) !important; color: #7dd3fc !important;
+  border-color: rgba(125,211,252,0.25) !important;
+  box-shadow: 0 0 8px rgba(125,211,252,0.15) !important;
+}
+
+/* CosmoTech — enduring/point rows (luminous containment rails) */
+[data-gameplay-skin="cosmotech"] .rd-enduring-row {
+  background: linear-gradient(135deg, rgba(196,181,253,0.06) 0%, rgba(196,181,253,0.02) 100%) !important;
+  border: 1px solid rgba(196,181,253,0.18) !important;
+  box-shadow: inset 0 0 12px rgba(196,181,253,0.04) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-point-row {
+  background: linear-gradient(135deg, rgba(125,211,252,0.06) 0%, rgba(125,211,252,0.02) 100%) !important;
+  border: 1px solid rgba(125,211,252,0.18) !important;
+  box-shadow: inset 0 0 12px rgba(125,211,252,0.04) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-row-label { color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-row-score { color: #e8f0ff !important; text-shadow: 0 0 12px rgba(125,211,252,0.20) !important; }
+[data-gameplay-skin="cosmotech"] .rd-row-goal { color: #5a6e9a !important; }
+[data-gameplay-skin="cosmotech"] .rd-row-empty-text { color: #5a6e9a !important; }
+
+/* CosmoTech — profile blocks (celestial frames) */
+[data-gameplay-skin="cosmotech"] .rd-profile-block.opponent {
+  background: linear-gradient(180deg, rgba(196,181,253,0.06) 0%, transparent 100%) !important;
+  border-left: 1px solid rgba(196,181,253,0.15) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-profile-block.human {
+  background: linear-gradient(0deg, rgba(125,211,252,0.06) 0%, transparent 100%) !important;
+  border-left: 1px solid rgba(125,211,252,0.15) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-profile-avatar.opponent {
+  background: radial-gradient(circle, rgba(196,181,253,0.22) 0%, rgba(196,181,253,0.08) 100%) !important;
+  box-shadow: 0 0 16px rgba(196,181,253,0.15) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-profile-avatar.human {
+  background: radial-gradient(circle, rgba(125,211,252,0.22) 0%, rgba(125,211,252,0.08) 100%) !important;
+  box-shadow: 0 0 16px rgba(125,211,252,0.15) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-profile-name { color: #e8f0ff !important; }
+[data-gameplay-skin="cosmotech"] .rd-profile-meta { color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-profile-score { color: #e8f0ff !important; text-shadow: 0 0 10px rgba(125,211,252,0.20) !important; }
+
+/* CosmoTech — piles (charged / depleted / phase-shifted) */
+[data-gameplay-skin="cosmotech"] .rd-piles-label { color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-pile-card {
+  background: linear-gradient(180deg, rgba(12,18,42,0.80) 0%, rgba(8,12,32,0.80) 100%) !important;
+  border: 1px solid rgba(120,180,255,0.15) !important;
+  box-shadow: inset 0 1px 0 rgba(125,211,252,0.06) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-pile-card.draw {
+  box-shadow: 0 0 12px rgba(125,211,252,0.10), inset 0 1px 0 rgba(125,211,252,0.08) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-pile-card.exile {
+  background: linear-gradient(180deg, rgba(20,12,40,0.60) 0%, rgba(12,8,28,0.60) 100%) !important;
+  border-color: rgba(196,181,253,0.15) !important;
+  opacity: 0.85 !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-pile-label { color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-pile-count { color: #e8f0ff !important; }
+
+/* CosmoTech — swap bar (celestial exchange mechanism) */
+[data-gameplay-skin="cosmotech"] .rd-swap-slot {
+  background: linear-gradient(180deg, rgba(12,18,42,0.80) 0%, rgba(8,12,32,0.80) 100%) !important;
+  border: 1px solid rgba(125,211,252,0.20) !important;
+  box-shadow: inset 0 1px 0 rgba(125,211,252,0.08) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-swap-slot.active {
+  background: linear-gradient(180deg, rgba(125,211,252,0.18) 0%, rgba(125,211,252,0.06) 100%) !important;
+  border-color: rgba(125,211,252,0.50) !important;
+  box-shadow: 0 0 16px rgba(125,211,252,0.25), inset 0 1px 0 rgba(125,211,252,0.15) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-swap-label { color: #8a9ec8 !important; }
+
+/* CosmoTech — stage (cosmic tactical instrument center) */
+[data-gameplay-skin="cosmotech"] .rd-stage {
+  background:
+    radial-gradient(ellipse 40% 50% at 50% 50%, rgba(125,211,252,0.06) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(12,18,42,0.75) 0%, rgba(8,12,32,0.75) 100%) !important;
+  border: 1px solid rgba(125,211,252,0.18) !important;
+  box-shadow: inset 0 0 24px rgba(125,211,252,0.04) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-active-stage.idle {
+  background:
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(125,211,252,0.08) 0%, transparent 70%),
+    radial-gradient(circle 120px at 50% 50%, transparent 40%, rgba(125,211,252,0.04) 41%, rgba(125,211,252,0.04) 43%, transparent 44%) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-stage-idle-content {
+  background: rgba(8,12,32,0.60) !important;
+  border: 1px solid rgba(125,211,252,0.15) !important;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.30), inset 0 0 16px rgba(125,211,252,0.04) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-stage-board-art {
+  background:
+    linear-gradient(45deg, transparent 48%, rgba(125,211,252,0.025) 49%, rgba(125,211,252,0.025) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(196,181,253,0.02) 49%, rgba(196,181,253,0.02) 51%, transparent 52%),
+    radial-gradient(circle 100px at 50% 50%, transparent 38%, rgba(125,211,252,0.03) 39%, rgba(125,211,252,0.03) 40%, transparent 41%) !important;
+  background-size: 64px 64px, 64px 64px, 200px 200px !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-stage-glow.ai { background: radial-gradient(circle, rgba(196,181,253,0.12) 0%, transparent 70%) !important; }
+[data-gameplay-skin="cosmotech"] .rd-stage-glow.human { background: radial-gradient(circle, rgba(125,211,252,0.12) 0%, transparent 70%) !important; }
+[data-gameplay-skin="cosmotech"] .rd-stage-glow.opponent { background: radial-gradient(circle, rgba(251,113,133,0.10) 0%, transparent 70%) !important; }
+[data-gameplay-skin="cosmotech"] .rd-stage-status.pending { background: rgba(252,211,77,0.12) !important; color: #fcd34d !important; }
+[data-gameplay-skin="cosmotech"] .rd-stage-status { background: rgba(110,231,183,0.12) !important; color: #6ee7b7 !important; }
+
+/* CosmoTech — bubble FX (luminous cyan particles) */
+[data-gameplay-skin="cosmotech"] .rd-bubble {
+  background: rgba(125,211,252,0.55) !important;
+  box-shadow: 0 0 12px rgba(125,211,252,0.40) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-stage-bubble-fx { border-top-color: rgba(125,211,252,0.12) !important; }
+
+/* CosmoTech — resolution stack (celestial processing channel) */
+[data-gameplay-skin="cosmotech"] .rd-stack {
+  background: linear-gradient(180deg, rgba(12,18,42,0.75) 0%, rgba(8,12,32,0.75) 100%) !important;
+  border: 1px solid rgba(125,211,252,0.15) !important;
+  box-shadow: inset 0 0 16px rgba(125,211,252,0.03) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-stack-header { color: #8a9ec8 !important; border-bottom-color: rgba(125,211,252,0.12) !important; }
+[data-gameplay-skin="cosmotech"] .rd-stack-empty { color: #5a6e9a !important; }
+[data-gameplay-skin="cosmotech"] .rd-stack-item {
+  background: rgba(12,18,42,0.70) !important; border: 1px solid rgba(120,180,255,0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(125,211,252,0.05) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-stack-item.active {
+  background: linear-gradient(180deg, rgba(252,211,77,0.12) 0%, rgba(252,211,77,0.04) 100%) !important;
+  border-color: rgba(252,211,77,0.30) !important;
+  box-shadow: 0 0 12px rgba(252,211,77,0.15) !important;
+}
+
+/* CosmoTech — game log (celestial instrumentation) */
+[data-gameplay-skin="cosmotech"] .rd-gamelog {
+  background: linear-gradient(180deg, rgba(12,18,42,0.75) 0%, rgba(8,12,32,0.75) 100%) !important;
+  border: 1px solid rgba(120,180,255,0.12) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-rail-section-header { color: #8a9ec8 !important; border-bottom-color: rgba(125,211,252,0.12) !important; }
+[data-gameplay-skin="cosmotech"] .rd-game-log-entry { color: #c8d6f5 !important; }
+[data-gameplay-skin="cosmotech"] .rd-game-log-entry .log-turn { color: #5a6e9a !important; }
+[data-gameplay-skin="cosmotech"] .rd-game-log-entry .log-actor.human { color: #7dd3fc !important; }
+[data-gameplay-skin="cosmotech"] .rd-game-log-entry .log-actor.ai { color: #c4b5fd !important; }
+[data-gameplay-skin="cosmotech"] .rd-game-log-empty { color: #5a6e9a !important; }
+
+/* CosmoTech — chat (understated glass) */
+[data-gameplay-skin="cosmotech"] .rd-chat {
+  background: linear-gradient(180deg, rgba(12,18,42,0.70) 0%, rgba(8,12,32,0.70) 100%) !important;
+  border: 1px solid rgba(120,180,255,0.12) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-chat-header { color: #8a9ec8 !important; border-bottom-color: rgba(125,211,252,0.12) !important; }
+[data-gameplay-skin="cosmotech"] .rd-chat-msg.human { background: rgba(125,211,252,0.10) !important; color: #e8f0ff !important; }
+[data-gameplay-skin="cosmotech"] .rd-chat-msg.ai { background: rgba(196,181,253,0.10) !important; color: #e8f0ff !important; }
+[data-gameplay-skin="cosmotech"] .rd-chat-msg.system { background: rgba(125,211,252,0.04) !important; color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-chat-input {
+  background: rgba(12,18,42,0.80) !important; border: 1px solid rgba(125,211,252,0.20) !important; color: #c8d6f5 !important;
+}
+
+/* CosmoTech — actions panel (authoritative crystalline buttons) */
+[data-gameplay-skin="cosmotech"] .rd-actions {
+  background: linear-gradient(180deg, rgba(12,18,42,0.75) 0%, rgba(8,12,32,0.75) 100%) !important;
+  border: 1px solid rgba(120,180,255,0.12) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-actions-header { color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-action-btn {
+  background: linear-gradient(180deg, rgba(18,26,56,0.80) 0%, rgba(12,18,42,0.80) 100%) !important;
+  border: 1px solid rgba(120,180,255,0.15) !important; color: #c8d6f5 !important;
+  box-shadow: inset 0 1px 0 rgba(125,211,252,0.05) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-action-btn:hover {
+  background: linear-gradient(180deg, rgba(125,211,252,0.12) 0%, rgba(125,211,252,0.04) 100%) !important;
+  border-color: rgba(125,211,252,0.30) !important;
+  box-shadow: 0 0 12px rgba(125,211,252,0.12), inset 0 1px 0 rgba(125,211,252,0.10) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-action-btn.primary {
+  background: linear-gradient(180deg, rgba(125,211,252,0.20) 0%, rgba(125,211,252,0.08) 100%) !important;
+  border-color: rgba(125,211,252,0.40) !important;
+  box-shadow: 0 0 16px rgba(125,211,252,0.15), inset 0 1px 0 rgba(125,211,252,0.15) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-action-btn.selected {
+  background: linear-gradient(180deg, rgba(125,211,252,0.22) 0%, rgba(125,211,252,0.08) 100%) !important;
+  border-color: rgba(125,211,252,0.50) !important;
+  box-shadow: 0 0 0 2px rgba(125,211,252,0.20), 0 0 20px rgba(125,211,252,0.15) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-action-btn.disabled,
+[data-gameplay-skin="cosmotech"] .rd-action-btn[disabled] {
+  background: rgba(12,18,42,0.50) !important; border-color: rgba(120,180,255,0.06) !important; color: #5a6e9a !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-action-pass {
+  background: linear-gradient(180deg, rgba(251,113,133,0.10) 0%, rgba(251,113,133,0.04) 100%) !important;
+  border: 1px solid rgba(251,113,133,0.20) !important; color: #fb7185 !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-action-pass:hover {
+  background: linear-gradient(180deg, rgba(251,113,133,0.18) 0%, rgba(251,113,133,0.08) 100%) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-intent-btn {
+  background: linear-gradient(180deg, rgba(18,26,56,0.80) 0%, rgba(12,18,42,0.80) 100%) !important;
+  border: 1px solid rgba(120,180,255,0.15) !important; color: #c8d6f5 !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-intent-btn:hover {
+  background: linear-gradient(180deg, rgba(125,211,252,0.10) 0%, rgba(125,211,252,0.04) 100%) !important;
+  box-shadow: 0 0 10px rgba(125,211,252,0.10) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-intent-btn.selected {
+  background: linear-gradient(180deg, rgba(125,211,252,0.15) 0%, rgba(125,211,252,0.06) 100%) !important;
+  border-color: rgba(125,211,252,0.40) !important;
+  box-shadow: 0 0 12px rgba(125,211,252,0.12) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-intent-btn.dimmed:hover { background: rgba(18,26,56,0.80) !important; }
+
+/* CosmoTech — selected/targetable states (luminous halo) */
+[data-gameplay-skin="cosmotech"] .rd-card.selected,
+[data-gameplay-skin="cosmotech"] .tcg-card.selected {
+  box-shadow: 0 0 0 2px rgba(125,211,252,0.60), 0 0 20px rgba(125,211,252,0.25), 0 0 8px rgba(196,181,253,0.15) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-card.targetable,
+[data-gameplay-skin="cosmotech"] .tcg-card.targetable {
+  box-shadow: 0 0 0 2px rgba(110,231,183,0.45), 0 0 14px rgba(110,231,183,0.15) !important;
+  animation: gp-cosmo-target-pulse 2s ease-in-out infinite !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-card.illegal,
+[data-gameplay-skin="cosmotech"] .tcg-card.illegal { opacity: 0.50 !important; }
+
+@keyframes gp-cosmo-target-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(110,231,183,0.35), 0 0 10px rgba(110,231,183,0.10) !important; }
+  50% { box-shadow: 0 0 0 2px rgba(110,231,183,0.55), 0 0 18px rgba(110,231,183,0.20) !important; }
+}
+
+/* CosmoTech — overlays / dialogs */
+[data-gameplay-skin="cosmotech"] .rd-forfeit-dialog {
+  background: rgba(12,18,42,0.95) !important;
+  border: 1px solid rgba(125,211,252,0.25) !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.60), 0 0 32px rgba(125,211,252,0.08) !important;
+  backdrop-filter: blur(12px) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-forfeit-dialog-title { color: #e8f0ff !important; }
+[data-gameplay-skin="cosmotech"] .rd-forfeit-dialog-msg { color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-forfeit-cancel {
+  background: rgba(18,26,56,0.90) !important; border: 1px solid rgba(120,180,255,0.20) !important; color: #c8d6f5 !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-forfeit-confirm {
+  background: linear-gradient(180deg, rgba(251,113,133,0.18) 0%, rgba(251,113,133,0.08) 100%) !important;
+  border: 1px solid rgba(251,113,133,0.40) !important; color: #fb7185 !important;
+}
+
+/* CosmoTech — scrollbars (luminous thin) */
+[data-gameplay-skin="cosmotech"] .rd-gamelog::-webkit-scrollbar-thumb,
+[data-gameplay-skin="cosmotech"] .rd-chat::-webkit-scrollbar-thumb {
+  background: rgba(125,211,252,0.20) !important; border-radius: 3px !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-gamelog::-webkit-scrollbar-track,
+[data-gameplay-skin="cosmotech"] .rd-chat::-webkit-scrollbar-track {
+  background: rgba(8,12,32,0.40) !important;
+}
+
+/* CosmoTech — focus ring (pale gold) */
+[data-gameplay-skin="cosmotech"] .rd-toolbar-btn:focus-visible,
+[data-gameplay-skin="cosmotech"] .rd-action-btn:focus-visible,
+[data-gameplay-skin="cosmotech"] .rd-intent-btn:focus-visible,
+[data-gameplay-skin="cosmotech"] .rd-swap-slot:focus-visible,
+[data-gameplay-skin="cosmotech"] .rd-card:focus-visible,
+[data-gameplay-skin="cosmotech"] .tcg-card:focus-visible {
+  outline: 3px solid #f0e68c !important; outline-offset: 2px !important;
+}
+
+/* CosmoTech — skin selector menu */
+[data-gameplay-skin="cosmotech"] .rd-skin-menu {
+  background: rgba(12,18,42,0.96) !important;
+  border: 1px solid rgba(125,211,252,0.25) !important;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.60), 0 0 24px rgba(125,211,252,0.08) !important;
+  backdrop-filter: blur(12px) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-skin-menu-item { color: #c8d6f5 !important; }
+[data-gameplay-skin="cosmotech"] .rd-skin-menu-item:hover {
+  background: rgba(125,211,252,0.10) !important;
+}
+[data-gameplay-skin="cosmotech"] .rd-skin-menu-item.active {
+  background: rgba(125,211,252,0.15) !important; color: #7dd3fc !important;
+}
+
+/* CosmoTech — orbital ornament on stage (subtle ring) */
+[data-gameplay-skin="cosmotech"] .rd-stage::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 50% !important; left: 50% !important;
+  width: 60% !important; height: 80% !important;
+  transform: translate(-50%, -50%) !important;
+  border: 1px solid rgba(125,211,252,0.06) !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  display: var(--gp-ornament-display) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CORRUPTURE — beautiful damage, fracture as structure, obsidian + gold
+   ═══════════════════════════════════════════════════════════════ */
+[data-gameplay-skin="corrupture"] {
+  --gp-bg: #0a0608;
+  --gp-surface: linear-gradient(180deg, rgba(18,12,16,0.85) 0%, rgba(12,8,10,0.85) 100%);
+  --gp-surface-raised: linear-gradient(180deg, rgba(24,16,20,0.90) 0%, rgba(18,12,16,0.90) 100%);
+  --gp-surface-inset: rgba(12,8,10,0.60);
+  --gp-border: rgba(180,140,80,0.12);
+  --gp-border-emphasis: rgba(200,160,90,0.25);
+  --gp-text: #d4c8c0;
+  --gp-text-bright: #f0e8e0;
+  --gp-text-muted: #9a8a80;
+  --gp-text-faint: #6a5a50;
+  --gp-accent: #c8a050;
+  --gp-accent-soft: rgba(200,160,80,0.10);
+  --gp-accent-glow: rgba(200,160,80,0.35);
+  --gp-opponent: #b87ad0;
+  --gp-opponent-soft: rgba(184,122,208,0.10);
+  --gp-warning: #e0a040;
+  --gp-warning-soft: rgba(224,160,64,0.12);
+  --gp-danger: #e05060;
+  --gp-danger-soft: rgba(224,80,96,0.10);
+  --gp-success: #60c080;
+  --gp-success-soft: rgba(96,192,128,0.12);
+  --gp-focus: #e8c060;
+  --gp-shadow: 0 1px 4px rgba(0,0,0,0.50);
+  --gp-shadow-strong: 0 4px 20px rgba(0,0,0,0.70);
+  --gp-overlay: rgba(10,6,8,0.90);
+  --gp-ornament-opacity: 1;
+  --gp-fx-color: rgba(184,122,208,0.50);
+  --gp-fx-glow: rgba(200,160,80,0.30);
+  --gp-ornament-display: block;
+}
+
+/* Corrupture — shell background (obsidian with scar topology) */
+[data-gameplay-skin="corrupture"].ranked-duel-shell {
+  background:
+    radial-gradient(ellipse 70% 40% at 60% 20%, rgba(60,30,50,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 30% at 20% 80%, rgba(80,50,20,0.08) 0%, transparent 50%),
+    linear-gradient(160deg, #0a0608 0%, #0e080a 50%, #0a0608 100%) !important;
+  color: #d4c8c0 !important;
+}
+[data-gameplay-skin="corrupture"].ranked-duel-shell::before {
+  background:
+    linear-gradient(135deg, transparent 48%, rgba(200,160,80,0.015) 49%, rgba(200,160,80,0.015) 50%, transparent 51%),
+    linear-gradient(45deg, transparent 48%, rgba(184,122,208,0.01) 49%, rgba(184,122,208,0.01) 50%, transparent 51%),
+    radial-gradient(ellipse 60% 35% at 50% 35%, rgba(200,160,80,0.04) 0%, transparent 70%) !important;
+  background-size: 120px 120px, 180px 180px, 100% 100% !important;
+}
+
+/* Corrupture — base cell (broken black crystal stabilized) */
+[data-gameplay-skin="corrupture"] .rd-cell {
+  background: linear-gradient(180deg, rgba(18,12,16,0.80) 0%, rgba(12,8,10,0.80) 100%) !important;
+  border: 1px solid rgba(180,140,80,0.10) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.50), inset 0 1px 0 rgba(200,160,80,0.04) !important;
+}
+
+/* Corrupture — header (fractured ceremonial machinery) */
+[data-gameplay-skin="corrupture"] .rd-header {
+  background: linear-gradient(180deg, rgba(24,16,20,0.90) 0%, rgba(18,12,16,0.90) 100%) !important;
+  border: 1px solid rgba(200,160,80,0.18) !important;
+  border-left: 2px solid rgba(200,160,80,0.25) !important;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.50), inset 0 1px 0 rgba(200,160,80,0.06) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-header-logo { color: #f0e8e0 !important; }
+[data-gameplay-skin="corrupture"] .rd-header-mode {
+  background: rgba(200,160,80,0.10) !important; color: #c8a050 !important;
+  border: 1px solid rgba(200,160,80,0.25) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-header-turn { color: #f0e8e0 !important; }
+[data-gameplay-skin="corrupture"] .rd-header-sep { color: #6a5a50 !important; }
+[data-gameplay-skin="corrupture"] .rd-header-phase { color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-header-center { color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-header-back {
+  color: #d4c8c0 !important; background: rgba(18,12,16,0.80) !important;
+  border: 1px solid rgba(180,140,80,0.20) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-header-back:hover {
+  background: rgba(24,16,20,0.90) !important; border-color: #c8a050 !important; color: #c8a050 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-header-back:focus-visible {
+  outline: 3px solid #e8c060 !important; outline-offset: 2px !important;
+}
+[data-gameplay-skin="corrupture"] .rd-header-window.human {
+  background: rgba(200,160,80,0.12) !important; color: #c8a050 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-header-window.opponent {
+  background: rgba(184,122,208,0.12) !important; color: #b87ad0 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-header-stack {
+  background: rgba(224,160,64,0.12) !important; color: #e0a040 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-header-owner {
+  background: rgba(200,160,80,0.06) !important; border: 1px solid rgba(200,160,80,0.15) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-header-owner.human {
+  background: rgba(200,160,80,0.10) !important; border-color: rgba(200,160,80,0.30) !important; color: #c8a050 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-header-owner.ai {
+  background: rgba(184,122,208,0.10) !important; border-color: rgba(184,122,208,0.30) !important; color: #b87ad0 !important;
+}
+
+/* Corrupture — state badges */
+[data-gameplay-skin="corrupture"] .rd-state-badge {
+  background: rgba(224,160,64,0.12) !important; border: 1px solid rgba(224,160,64,0.25) !important; color: #e0a040 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-state-voltage { background: rgba(224,160,64,0.12) !important; border-color: rgba(224,160,64,0.25) !important; color: #e0a040 !important; }
+[data-gameplay-skin="corrupture"] .rd-state-boardLock { background: rgba(154,138,128,0.12) !important; border-color: rgba(154,138,128,0.25) !important; color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-state-suddenDeath { background: rgba(224,80,96,0.12) !important; border-color: rgba(224,80,96,0.25) !important; color: #e05060 !important; }
+[data-gameplay-skin="corrupture"] .rd-state-timeBomb { background: rgba(224,80,96,0.12) !important; border-color: rgba(224,80,96,0.25) !important; color: #e05060 !important; }
+[data-gameplay-skin="corrupture"] .rd-state-responseWindow { background: rgba(200,160,80,0.12) !important; border-color: rgba(200,160,80,0.25) !important; color: #c8a050 !important; }
+
+/* Corrupture — toolbar (damaged instrument) */
+[data-gameplay-skin="corrupture"] .rd-toolbar {
+  background: rgba(200,160,80,0.04) !important; border: 1px solid rgba(200,160,80,0.15) !important;
+  box-shadow: inset 0 1px 0 rgba(200,160,80,0.05) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-toolbar-btn { color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-toolbar-btn:hover {
+  background: rgba(200,160,80,0.10) !important; color: #c8a050 !important;
+  border-color: rgba(200,160,80,0.25) !important;
+  box-shadow: 0 0 8px rgba(200,160,80,0.12) !important;
+}
+
+/* Corrupture — enduring/point rows (damaged containment rails) */
+[data-gameplay-skin="corrupture"] .rd-enduring-row {
+  background: linear-gradient(135deg, rgba(184,122,208,0.06) 0%, rgba(184,122,208,0.02) 100%) !important;
+  border: 1px solid rgba(184,122,208,0.15) !important;
+  border-left: 2px solid rgba(200,160,80,0.12) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-point-row {
+  background: linear-gradient(135deg, rgba(200,160,80,0.06) 0%, rgba(200,160,80,0.02) 100%) !important;
+  border: 1px solid rgba(200,160,80,0.15) !important;
+  border-left: 2px solid rgba(200,160,80,0.12) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-row-label { color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-row-score { color: #f0e8e0 !important; text-shadow: 0 0 10px rgba(200,160,80,0.15) !important; }
+[data-gameplay-skin="corrupture"] .rd-row-goal { color: #6a5a50 !important; }
+[data-gameplay-skin="corrupture"] .rd-row-empty-text { color: #6a5a50 !important; }
+
+/* Corrupture — profile blocks (fractured prestige) */
+[data-gameplay-skin="corrupture"] .rd-profile-block.opponent {
+  background: linear-gradient(180deg, rgba(184,122,208,0.06) 0%, transparent 100%) !important;
+  border-left: 1px solid rgba(184,122,208,0.15) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-profile-block.human {
+  background: linear-gradient(0deg, rgba(200,160,80,0.06) 0%, transparent 100%) !important;
+  border-left: 1px solid rgba(200,160,80,0.15) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-profile-avatar.opponent {
+  background: radial-gradient(circle, rgba(184,122,208,0.20) 0%, rgba(184,122,208,0.06) 100%) !important;
+  box-shadow: 0 0 14px rgba(184,122,208,0.12) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-profile-avatar.human {
+  background: radial-gradient(circle, rgba(200,160,80,0.20) 0%, rgba(200,160,80,0.06) 100%) !important;
+  box-shadow: 0 0 14px rgba(200,160,80,0.12) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-profile-name { color: #f0e8e0 !important; }
+[data-gameplay-skin="corrupture"] .rd-profile-meta { color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-profile-score { color: #f0e8e0 !important; text-shadow: 0 0 8px rgba(200,160,80,0.15) !important; }
+
+/* Corrupture — piles (concealed instability / depleted / displaced) */
+[data-gameplay-skin="corrupture"] .rd-piles-label { color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-pile-card {
+  background: linear-gradient(180deg, rgba(18,12,16,0.80) 0%, rgba(12,8,10,0.80) 100%) !important;
+  border: 1px solid rgba(180,140,80,0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(200,160,80,0.04) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-pile-card.draw {
+  box-shadow: 0 0 10px rgba(200,160,80,0.08), inset 0 1px 0 rgba(200,160,80,0.06) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-pile-card.exile {
+  background: linear-gradient(180deg, rgba(20,12,24,0.60) 0%, rgba(14,8,16,0.60) 100%) !important;
+  border-color: rgba(184,122,208,0.15) !important;
+  opacity: 0.80 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-pile-label { color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-pile-count { color: #f0e8e0 !important; }
+
+/* Corrupture — swap bar (dangerous exchange held by repair) */
+[data-gameplay-skin="corrupture"] .rd-swap-slot {
+  background: linear-gradient(180deg, rgba(18,12,16,0.80) 0%, rgba(12,8,10,0.80) 100%) !important;
+  border: 1px solid rgba(200,160,80,0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(200,160,80,0.06) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-swap-slot.active {
+  background: linear-gradient(180deg, rgba(200,160,80,0.18) 0%, rgba(200,160,80,0.06) 100%) !important;
+  border-color: rgba(200,160,80,0.45) !important;
+  box-shadow: 0 0 14px rgba(200,160,80,0.20), inset 0 1px 0 rgba(200,160,80,0.12) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-swap-label { color: #9a8a80 !important; }
+
+/* Corrupture — stage (containment plane that survived rupture) */
+[data-gameplay-skin="corrupture"] .rd-stage {
+  background:
+    radial-gradient(ellipse 40% 50% at 50% 50%, rgba(200,160,80,0.04) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(18,12,16,0.75) 0%, rgba(12,8,10,0.75) 100%) !important;
+  border: 1px solid rgba(200,160,80,0.15) !important;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.30) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-active-stage.idle {
+  background:
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(200,160,80,0.05) 0%, transparent 70%),
+    linear-gradient(135deg, transparent 48%, rgba(200,160,80,0.02) 49%, rgba(200,160,80,0.02) 50%, transparent 51%) !important;
+  background-size: 100% 100%, 100px 100px !important;
+}
+[data-gameplay-skin="corrupture"] .rd-stage-idle-content {
+  background: rgba(12,8,10,0.60) !important;
+  border: 1px solid rgba(200,160,80,0.12) !important;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.40), inset 0 0 12px rgba(200,160,80,0.03) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-stage-board-art {
+  background:
+    linear-gradient(45deg, transparent 48%, rgba(200,160,80,0.02) 49%, rgba(200,160,80,0.02) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(184,122,208,0.015) 49%, rgba(184,122,208,0.015) 51%, transparent 52%) !important;
+  background-size: 80px 80px, 120px 120px !important;
+}
+[data-gameplay-skin="corrupture"] .rd-stage-glow.ai { background: radial-gradient(circle, rgba(184,122,208,0.12) 0%, transparent 70%) !important; }
+[data-gameplay-skin="corrupture"] .rd-stage-glow.human { background: radial-gradient(circle, rgba(200,160,80,0.12) 0%, transparent 70%) !important; }
+[data-gameplay-skin="corrupture"] .rd-stage-glow.opponent { background: radial-gradient(circle, rgba(224,80,96,0.10) 0%, transparent 70%) !important; }
+[data-gameplay-skin="corrupture"] .rd-stage-status.pending { background: rgba(224,160,64,0.12) !important; color: #e0a040 !important; }
+[data-gameplay-skin="corrupture"] .rd-stage-status { background: rgba(96,192,128,0.12) !important; color: #60c080 !important; }
+
+/* Corrupture — bubble FX (violet energy leaking through) */
+[data-gameplay-skin="corrupture"] .rd-bubble {
+  background: rgba(184,122,208,0.45) !important;
+  box-shadow: 0 0 10px rgba(200,160,80,0.20) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-stage-bubble-fx { border-top-color: rgba(200,160,80,0.10) !important; }
+
+/* Corrupture — resolution stack (unstable events in surviving structure) */
+[data-gameplay-skin="corrupture"] .rd-stack {
+  background: linear-gradient(180deg, rgba(18,12,16,0.75) 0%, rgba(12,8,10,0.75) 100%) !important;
+  border: 1px solid rgba(200,160,80,0.12) !important;
+  border-left: 2px solid rgba(200,160,80,0.15) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-stack-header { color: #9a8a80 !important; border-bottom-color: rgba(200,160,80,0.10) !important; }
+[data-gameplay-skin="corrupture"] .rd-stack-empty { color: #6a5a50 !important; }
+[data-gameplay-skin="corrupture"] .rd-stack-item {
+  background: rgba(18,12,16,0.70) !important; border: 1px solid rgba(180,140,80,0.10) !important;
+  box-shadow: inset 0 1px 0 rgba(200,160,80,0.04) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-stack-item.active {
+  background: linear-gradient(180deg, rgba(224,160,64,0.12) 0%, rgba(224,160,64,0.04) 100%) !important;
+  border-color: rgba(224,160,64,0.30) !important;
+  box-shadow: 0 0 10px rgba(200,160,80,0.12) !important;
+}
+
+/* Corrupture — game log (forensic recording) */
+[data-gameplay-skin="corrupture"] .rd-gamelog {
+  background: linear-gradient(180deg, rgba(18,12,16,0.75) 0%, rgba(12,8,10,0.75) 100%) !important;
+  border: 1px solid rgba(180,140,80,0.10) !important;
+  border-left: 2px solid rgba(200,160,80,0.08) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-rail-section-header { color: #9a8a80 !important; border-bottom-color: rgba(200,160,80,0.10) !important; }
+[data-gameplay-skin="corrupture"] .rd-game-log-entry { color: #d4c8c0 !important; }
+[data-gameplay-skin="corrupture"] .rd-game-log-entry .log-turn { color: #6a5a50 !important; }
+[data-gameplay-skin="corrupture"] .rd-game-log-entry .log-actor.human { color: #c8a050 !important; }
+[data-gameplay-skin="corrupture"] .rd-game-log-entry .log-actor.ai { color: #b87ad0 !important; }
+[data-gameplay-skin="corrupture"] .rd-game-log-empty { color: #6a5a50 !important; }
+
+/* Corrupture — chat (smoked glass) */
+[data-gameplay-skin="corrupture"] .rd-chat {
+  background: linear-gradient(180deg, rgba(18,12,16,0.70) 0%, rgba(12,8,10,0.70) 100%) !important;
+  border: 1px solid rgba(180,140,80,0.10) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-chat-header { color: #9a8a80 !important; border-bottom-color: rgba(200,160,80,0.10) !important; }
+[data-gameplay-skin="corrupture"] .rd-chat-msg.human { background: rgba(200,160,80,0.10) !important; color: #f0e8e0 !important; }
+[data-gameplay-skin="corrupture"] .rd-chat-msg.ai { background: rgba(184,122,208,0.10) !important; color: #f0e8e0 !important; }
+[data-gameplay-skin="corrupture"] .rd-chat-msg.system { background: rgba(200,160,80,0.04) !important; color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-chat-input {
+  background: rgba(18,12,16,0.80) !important; border: 1px solid rgba(200,160,80,0.18) !important; color: #d4c8c0 !important;
+}
+
+/* Corrupture — actions panel (dangerous, deliberate, tactile) */
+[data-gameplay-skin="corrupture"] .rd-actions {
+  background: linear-gradient(180deg, rgba(18,12,16,0.75) 0%, rgba(12,8,10,0.75) 100%) !important;
+  border: 1px solid rgba(180,140,80,0.10) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-actions-header { color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-action-btn {
+  background: linear-gradient(180deg, rgba(24,16,20,0.80) 0%, rgba(18,12,16,0.80) 100%) !important;
+  border: 1px solid rgba(180,140,80,0.12) !important; color: #d4c8c0 !important;
+  box-shadow: inset 0 1px 0 rgba(200,160,80,0.04) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-action-btn:hover {
+  background: linear-gradient(180deg, rgba(200,160,80,0.12) 0%, rgba(200,160,80,0.04) 100%) !important;
+  border-color: rgba(200,160,80,0.25) !important;
+  box-shadow: 0 0 10px rgba(200,160,80,0.10), inset 0 1px 0 rgba(200,160,80,0.08) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-action-btn.primary {
+  background: linear-gradient(180deg, rgba(200,160,80,0.18) 0%, rgba(200,160,80,0.06) 100%) !important;
+  border-color: rgba(200,160,80,0.35) !important;
+  box-shadow: 0 0 14px rgba(200,160,80,0.12), inset 0 1px 0 rgba(200,160,80,0.12) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-action-btn.selected {
+  background: linear-gradient(180deg, rgba(200,160,80,0.20) 0%, rgba(200,160,80,0.06) 100%) !important;
+  border-color: rgba(200,160,80,0.45) !important;
+  box-shadow: 0 0 0 2px rgba(200,160,80,0.20), 0 0 16px rgba(200,160,80,0.12) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-action-btn.disabled,
+[data-gameplay-skin="corrupture"] .rd-action-btn[disabled] {
+  background: rgba(12,8,10,0.50) !important; border-color: rgba(180,140,80,0.05) !important; color: #6a5a50 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-action-pass {
+  background: linear-gradient(180deg, rgba(224,80,96,0.10) 0%, rgba(224,80,96,0.04) 100%) !important;
+  border: 1px solid rgba(224,80,96,0.20) !important; color: #e05060 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-action-pass:hover {
+  background: linear-gradient(180deg, rgba(224,80,96,0.18) 0%, rgba(224,80,96,0.08) 100%) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-intent-btn {
+  background: linear-gradient(180deg, rgba(24,16,20,0.80) 0%, rgba(18,12,16,0.80) 100%) !important;
+  border: 1px solid rgba(180,140,80,0.12) !important; color: #d4c8c0 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-intent-btn:hover {
+  background: linear-gradient(180deg, rgba(200,160,80,0.10) 0%, rgba(200,160,80,0.04) 100%) !important;
+  box-shadow: 0 0 8px rgba(200,160,80,0.08) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-intent-btn.selected {
+  background: linear-gradient(180deg, rgba(200,160,80,0.15) 0%, rgba(200,160,80,0.06) 100%) !important;
+  border-color: rgba(200,160,80,0.35) !important;
+  box-shadow: 0 0 10px rgba(200,160,80,0.10) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-intent-btn.dimmed:hover { background: rgba(24,16,20,0.80) !important; }
+
+/* Corrupture — selected/targetable states (gold seam + violet glow) */
+[data-gameplay-skin="corrupture"] .rd-card.selected,
+[data-gameplay-skin="corrupture"] .tcg-card.selected {
+  box-shadow: 0 0 0 2px rgba(200,160,80,0.55), 0 0 16px rgba(184,122,208,0.15), 0 0 8px rgba(200,160,80,0.15) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-card.targetable,
+[data-gameplay-skin="corrupture"] .tcg-card.targetable {
+  box-shadow: 0 0 0 2px rgba(96,192,128,0.35), 0 0 10px rgba(96,192,128,0.10) !important;
+  animation: gp-corr-target-pulse 2.5s ease-in-out infinite !important;
+}
+[data-gameplay-skin="corrupture"] .rd-card.illegal,
+[data-gameplay-skin="corrupture"] .tcg-card.illegal { opacity: 0.50 !important; }
+
+@keyframes gp-corr-target-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(96,192,128,0.25), 0 0 8px rgba(96,192,128,0.08) !important; }
+  50% { box-shadow: 0 0 0 2px rgba(96,192,128,0.45), 0 0 14px rgba(96,192,128,0.15) !important; }
+}
+
+/* Corrupture — overlays / dialogs */
+[data-gameplay-skin="corrupture"] .rd-forfeit-dialog {
+  background: rgba(18,12,16,0.95) !important;
+  border: 1px solid rgba(200,160,80,0.25) !important;
+  border-left: 2px solid rgba(200,160,80,0.30) !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.70), 0 0 24px rgba(200,160,80,0.06) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-forfeit-dialog-title { color: #f0e8e0 !important; }
+[data-gameplay-skin="corrupture"] .rd-forfeit-dialog-msg { color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-forfeit-cancel {
+  background: rgba(24,16,20,0.90) !important; border: 1px solid rgba(180,140,80,0.20) !important; color: #d4c8c0 !important;
+}
+[data-gameplay-skin="corrupture"] .rd-forfeit-confirm {
+  background: linear-gradient(180deg, rgba(224,80,96,0.18) 0%, rgba(224,80,96,0.08) 100%) !important;
+  border: 1px solid rgba(224,80,96,0.40) !important; color: #e05060 !important;
+}
+
+/* Corrupture — scrollbars (gold-seam thin) */
+[data-gameplay-skin="corrupture"] .rd-gamelog::-webkit-scrollbar-thumb,
+[data-gameplay-skin="corrupture"] .rd-chat::-webkit-scrollbar-thumb {
+  background: rgba(200,160,80,0.18) !important; border-radius: 3px !important;
+}
+[data-gameplay-skin="corrupture"] .rd-gamelog::-webkit-scrollbar-track,
+[data-gameplay-skin="corrupture"] .rd-chat::-webkit-scrollbar-track {
+  background: rgba(12,8,10,0.40) !important;
+}
+
+/* Corrupture — focus ring (gold) */
+[data-gameplay-skin="corrupture"] .rd-toolbar-btn:focus-visible,
+[data-gameplay-skin="corrupture"] .rd-action-btn:focus-visible,
+[data-gameplay-skin="corrupture"] .rd-intent-btn:focus-visible,
+[data-gameplay-skin="corrupture"] .rd-swap-slot:focus-visible,
+[data-gameplay-skin="corrupture"] .rd-card:focus-visible,
+[data-gameplay-skin="corrupture"] .tcg-card:focus-visible {
+  outline: 3px solid #e8c060 !important; outline-offset: 2px !important;
+}
+
+/* Corrupture — skin selector menu */
+[data-gameplay-skin="corrupture"] .rd-skin-menu {
+  background: rgba(18,12,16,0.96) !important;
+  border: 1px solid rgba(200,160,80,0.25) !important;
+  border-left: 2px solid rgba(200,160,80,0.30) !important;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.70), 0 0 20px rgba(200,160,80,0.06) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-skin-menu-item { color: #d4c8c0 !important; }
+[data-gameplay-skin="corrupture"] .rd-skin-menu-item:hover {
+  background: rgba(200,160,80,0.10) !important;
+}
+[data-gameplay-skin="corrupture"] .rd-skin-menu-item.active {
+  background: rgba(200,160,80,0.15) !important; color: #c8a050 !important;
+}
+
+/* Corrupture — fracture seam ornament on stage */
+[data-gameplay-skin="corrupture"] .rd-stage::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 10% !important; left: 15% !important;
+  width: 70% !important; height: 1px !important;
+  background: linear-gradient(90deg, transparent, rgba(200,160,80,0.08), transparent) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  display: var(--gp-ornament-display) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SKIN SELECTOR — shared menu styling (all skins)
+   The menu is rendered inside .rd-header-right and positioned
+   absolutely relative to the trigger button.
+   ═══════════════════════════════════════════════════════════════ */
+.rd-skin-trigger {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 26px !important;
+  height: 22px !important;
+  border: 1px solid transparent !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  color: var(--gp-text-muted, #94a3b8) !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  transition: all 0.18s ease !important;
+  position: relative !important;
+}
+.rd-skin-trigger:hover {
+  background: var(--gp-accent-soft, rgba(56,189,248,0.08)) !important;
+  color: var(--gp-accent, #22d3ee) !important;
+  border-color: var(--gp-border-emphasis, rgba(56,189,248,0.20)) !important;
+}
+.rd-skin-trigger:active { transform: scale(0.95) !important; }
+.rd-skin-trigger:focus-visible {
+  outline: 3px solid var(--gp-focus, #ffdc7a) !important;
+  outline-offset: 2px !important;
+}
+.rd-skin-trigger[aria-expanded="true"] {
+  background: var(--gp-accent-soft, rgba(56,189,248,0.12)) !important;
+  color: var(--gp-accent, #22d3ee) !important;
+  border-color: var(--gp-border-emphasis, rgba(56,189,248,0.25)) !important;
+}
+
+.rd-skin-menu {
+  position: absolute !important;
+  top: calc(100% + 4px) !important;
+  right: 0 !important;
+  min-width: 168px !important;
+  padding: 4px !important;
+  border-radius: 8px !important;
+  z-index: 1000 !important;
+  display: none !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+.rd-skin-menu.open { display: flex !important; }
+.rd-skin-menu-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 7px 10px !important;
+  border-radius: 5px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  width: 100% !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+}
+.rd-skin-menu-item:hover { border-color: var(--gp-border-emphasis, rgba(56,189,248,0.20)) !important; }
+.rd-skin-menu-item.active { font-weight: 700 !important; }
+.rd-skin-menu-item .rd-skin-menu-icon {
+  font-size: 14px !important;
+  width: 18px !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+}
+.rd-skin-menu-item .rd-skin-menu-check {
+  margin-left: auto !important;
+  font-size: 11px !important;
+  opacity: 0.7 !important;
+}
+.rd-skin-menu-item:not(.active) .rd-skin-menu-check { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   REDUCED MOTION — disable theme-specific animations
+   Respects prefers-reduced-motion AND body.reduced-motion class
+   (the existing site-wide reduced-motion convention).
+   Essential state feedback (selection rings, target outlines) is
+   preserved — only decorative pulses and shimmers are removed.
+   ═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  [data-gameplay-skin="cosmotech"] .rd-card.targetable,
+  [data-gameplay-skin="cosmotech"] .tcg-card.targetable,
+  [data-gameplay-skin="corrupture"] .rd-card.targetable,
+  [data-gameplay-skin="corrupture"] .tcg-card.targetable {
+    animation: none !important;
+  }
+  [data-gameplay-skin="cosmotech"] .rd-stage::after,
+  [data-gameplay-skin="corrupture"] .rd-stage::after {
+    animation: none !important;
+  }
+}
+body.reduced-motion [data-gameplay-skin="cosmotech"] .rd-card.targetable,
+body.reduced-motion [data-gameplay-skin="cosmotech"] .tcg-card.targetable,
+body.reduced-motion [data-gameplay-skin="corrupture"] .rd-card.targetable,
+body.reduced-motion [data-gameplay-skin="corrupture"] .tcg-card.targetable {
+  animation: none !important;
+}
+body.reduced-motion [data-gameplay-skin="cosmotech"] .rd-stage::after,
+body.reduced-motion [data-gameplay-skin="corrupture"] .rd-stage::after {
+  animation: none !important;
+}

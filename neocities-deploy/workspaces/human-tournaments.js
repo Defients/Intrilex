@@ -12,9 +12,9 @@
 // handlers.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, state } from '../state.js?v=e2bd7e8507fa';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=e2bd7e8507fa';
-import { renderTournamentBroadcast } from './tournament-broadcast.mjs?v=e2bd7e8507fa';
+import { app, esc, state } from '../state.js?v=9ea1c2f9e91d';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=9ea1c2f9e91d';
+import { renderTournamentBroadcast } from './tournament-broadcast.mjs?v=9ea1c2f9e91d';
 
 const _state = {
   loading: true,
