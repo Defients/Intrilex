@@ -25,6 +25,7 @@ import { getArchetypePersonality } from './ai-personality.js';
 import { renderNewMatchSetup } from './ranked-duel-hub.mjs';
 import { renderTerminal, renderError, renderKeyboardHelp, renderRulesHelp, renderMatchStats, formatPhase, formatTerminationReason } from './ranked-duel-terminal.mjs';
 import { renderChatPanel as renderChatPanelModule } from './chat-panel.js';
+import { GAMEPLAY_SKINS, GAMEPLAY_SKIN_LABELS, GAMEPLAY_SKIN_ICONS } from './gameplay-skin.js';
 // T1: Chat panel rendering is delegated to chat-panel.js
 const renderChatPanel = renderChatPanelModule;
 import { ratingToTierDivision } from "../account-domain/rank-tier.mjs";
@@ -247,7 +248,7 @@ function renderMatch(vm, opts, snapshot) {
   const humER = vm?.battlefield?.bottomER ?? [];
   [...oppPR, ...oppER, ...humPR, ...humER].forEach(c => { if (c?.entityId) cardRegistry[c.entityId] = c; });
 
-  return `<div class="ranked-duel-shell" role="main" aria-label="Ranked Duel Match" data-testid="play-board">
+  return `<div class="ranked-duel-shell" role="main" aria-label="Ranked Duel Match" data-testid="play-board" data-gameplay-skin="${esc(opts.gameplaySkin)}">
     ${renderHeader(vm, opts, priorityContext, immediate)}
     <section class="rd-cell rd-enemy-enduring" data-grid="enemyE" aria-label="Opponent Enduring">
       ${renderEnduringRow(oppER, 'opponent')}
@@ -298,6 +299,9 @@ function renderMatch(vm, opts, snapshot) {
     <section class="rd-cell rd-right-rail-bottom" data-grid="rightRailBottom" aria-label="Actions and chat">
       ${renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, isOpponentTurn, priorityContext, immediate, isNetwork)}
     </section>
+    ${opts.academyPanelHtml ? `<section class="rd-cell rd-academy-panel" data-grid="academyPanel" aria-label="Lesson objectives">${opts.academyPanelHtml}</section>` : ''}
+    ${opts.academyCoachmarkHtml ? opts.academyCoachmarkHtml : ''}
+    ${opts.academyPanelHtml ? '<div class="academy-hint-display" data-testid="academy-hint-display" role="status" aria-live="polite"></div>' : ''}
     ${isNetwork ? renderDisconnectOverlay(vm, snapshot) : ''}
     ${isNetwork ? renderRematchInviteOverlay(vm, snapshot, opts) : ''}
     ${opts.inspectorCardId ? renderInspector(opts.inspectorCardId, cardRegistry, [], guidanceMode, opts.inspectorFaceView) : ''}
@@ -386,6 +390,28 @@ function renderRematchInviteOverlay(vm, snapshot, opts) {
   </div>`;
 }
 
+// ── Skin selector (Light / Dark / CosmoTech™ / Corrupture™) ─────
+// Compact icon trigger + popover menu, integrated into the toolbar.
+// The trigger shows the current skin's icon; clicking opens a menu
+// listing all four skins with their display names. Selecting a skin
+// dispatches the 'select-skin' data-action with the skin id.
+function renderSkinSelector(currentSkin) {
+  const skin = GAMEPLAY_SKINS.includes(currentSkin) ? currentSkin : 'dark';
+  const triggerIcon = GAMEPLAY_SKIN_ICONS[skin] || GAMEPLAY_SKIN_ICONS.dark;
+  const items = GAMEPLAY_SKINS.map(id => {
+    const isActive = id === skin;
+    return `<button class="rd-skin-menu-item ${isActive ? 'active' : ''}" data-action="select-skin" data-skin="${esc(id)}" role="menuitemradio" aria-checked="${isActive ? 'true' : 'false'}">
+      <span class="rd-skin-menu-icon" aria-hidden="true">${GAMEPLAY_SKIN_ICONS[id]}</span>
+      <span class="rd-skin-menu-label">${esc(GAMEPLAY_SKIN_LABELS[id])}</span>
+      <span class="rd-skin-menu-check" aria-hidden="true">\u2713</span>
+    </button>`;
+  }).join('');
+  return `<div class="rd-skin-selector" style="position:relative;display:inline-flex;">
+    <button class="rd-skin-trigger" data-action="toggle-skin-menu" data-testid="skin-selector-trigger" title="Appearance: ${esc(GAMEPLAY_SKIN_LABELS[skin])}" aria-label="Select appearance skin" aria-haspopup="menu" aria-expanded="false">${triggerIcon}</button>
+    <div class="rd-skin-menu" role="menu" aria-label="Appearance skins" data-testid="skin-selector-menu">${items}</div>
+  </div>`;
+}
+
 function renderHeader(vm, opts, priorityContext, immediate) {
   const turn = vm.match.fullTurnSequence;
   const phaseLabel = formatPhase(vm.match.phase);
@@ -456,6 +482,7 @@ function renderHeader(vm, opts, priorityContext, immediate) {
         <button class="rd-toolbar-btn" data-action="toggle-rules" title="Rules / Help" aria-label="Rules and help">\u2139</button>
         <button class="rd-toolbar-btn" data-action="toggle-stats" title="Match stats" aria-label="Match statistics">\u25C8</button>
         <button class="rd-toolbar-btn" data-action="toggle-inspector" title="Inspector" aria-label="Card inspector">\u25A4</button>
+        ${renderSkinSelector(opts.gameplaySkin)}
         <button class="rd-toolbar-btn" data-action="${exitAction}" data-testid="exit-match-btn" title="${exitTitle}" aria-label="${exitTitle}">\u2715</button>
       </div>
     </div>

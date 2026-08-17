@@ -11,9 +11,9 @@
 // The server-side RPC already ranked the rows; we only aggregate.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct } from '../state.js?v=9ea1c2f9e91d';
-import { fetchLeaderboard } from '../play/ranked/leaderboard-data.js?v=9ea1c2f9e91d';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=9ea1c2f9e91d';
+import { app, esc, pct } from '../state.js?v=4f30833b427f';
+import { fetchLeaderboard } from '../play/ranked/leaderboard-data.js?v=4f30833b427f';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=4f30833b427f';
 import { buildMetaReport, formatTierPercentage } from "../account-domain/meta-report.mjs";
 import { RankTier } from "../account-domain/rank-tier.mjs";
 
