@@ -417,11 +417,11 @@ export async function importSave(jsonString) {
 
   // v1 legacy saves: attempt migration to v2 authority model before rejecting
   if (data.version === 1) {
-    const { canMigrateSave, migrateSave } = await import('./save-integrity.js?v=9ea1c2f9e91d');
+    const { canMigrateSave, migrateSave } = await import('./save-integrity.js?v=4f30833b427f');
     const migration = canMigrateSave(data);
     if (migration.canMigrate) {
-      const engineModule = await import('../engine/browser-entry.js?v=9ea1c2f9e91d');
-      const autonomyModule = await import('../autonomy-runtime.js?v=9ea1c2f9e91d');
+      const engineModule = await import('../engine/browser-entry.js?v=4f30833b427f');
+      const autonomyModule = await import('../autonomy-runtime.js?v=4f30833b427f');
       const result = await migrateSave(data, engineModule, autonomyModule);
       if (result.ok) {
         await putSave(result.save);
@@ -433,14 +433,14 @@ export async function importSave(jsonString) {
   }
 
   // v2+ saves: route through canonical validator
-  const { validateSaveEnvelope, canMigrateSave: canMigrate, migrateSave: migrate } = await import('./save-integrity.js?v=9ea1c2f9e91d');
+  const { validateSaveEnvelope, canMigrateSave: canMigrate, migrateSave: migrate } = await import('./save-integrity.js?v=4f30833b427f');
   const validation = validateSaveEnvelope(data);
   if (!validation.valid) {
     // Attempt migration for version mismatches before quarantining
     const migration = canMigrate(data);
     if (migration.canMigrate) {
-      const engineModule = await import('../engine/browser-entry.js?v=9ea1c2f9e91d');
-      const autonomyModule = await import('../autonomy-runtime.js?v=9ea1c2f9e91d');
+      const engineModule = await import('../engine/browser-entry.js?v=4f30833b427f');
+      const autonomyModule = await import('../autonomy-runtime.js?v=4f30833b427f');
       const result = await migrate(data, engineModule, autonomyModule);
       if (result.ok) {
         await putSave(result.save);
