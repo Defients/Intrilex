@@ -237,6 +237,8 @@ const STAGES = [
   ['irx-c06-browser-graph', 'node', ['--test', 'test/irx-c06-browser-graph.test.mjs']],
   ['irx-c04-guest-migration-identity', 'node', ['--test', 'test/irx-c04-guest-migration-identity.test.mjs']],
   ['irx-c11-tournament-transactional', 'node', ['--test', 'test/irx-c11-tournament-transactional.test.mjs']],
+  // Replay Caster v0.1 — live broadcast experience with Ollama commentary
+  ['replay-caster', 'node', ['--test', 'test/replay-caster.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;
