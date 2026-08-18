@@ -20,6 +20,11 @@
 
 ### Changed
 
+- **Game Log panel overhaul** — entries now render with actor badges
+  (P1=blue, P2=purple, SYS=amber), event-type icons per category, color-coded
+  left-border accents, alternating row backgrounds, and a fade-in animation on
+  new entries. Skin themes (light, cosmotech, corrupture) updated with matching
+  badge/icon/accent overrides.
 - **OAuth flow improvements** — guest→permanent migration is now detected on
   page load after an OAuth redirect, preserving progress for converting guests.
 - **Network lobby UI polish** — versus cards, ranked "Find Match" featured card,
@@ -29,6 +34,13 @@
 
 ### Fixed
 
+- **Game Log CSS class mismatch** — skin themes targeted `.rd-game-log-entry`
+  but HTML rendered `.rd-log-entry`; all 3 skin blocks corrected.
+- **Game Log event count capped at 10** — `play-controller` sent only 10
+  events to the renderer instead of 40; fixed to `slice(-40)`.
+- **Game Log `PRIORITY_PASSED` miscategorization** — the `PASS` substring in
+  `PRIORITY_PASSED` matched the `phase` category before the `priority` check;
+  reordered category checks so priority is evaluated first.
 - **Matchmaking stale-entry supersede** — a stale queue entry from a previous
   connection is now superseded instead of stranding the player in
   `ALREADY_IN_QUEUE` retry loops; reconnect flow hardened.
@@ -39,6 +51,10 @@
 
 ### Tests
 
+- **Game Log regression tests** — 12 new tests in `v0.28-pvp-experience.test.mjs`
+  covering `categorizeEvent`, `PRIORITY_PASSED` ordering, actor badges,
+  `data-event-category`, event-type icons, `rd-log-new` animation, event count
+  fix, and CSS accent/animation presence.
 - Achievements package added to `tsc` typecheck scope.
 - `terminal-outbox.sqlite` and supabase CLI `.temp` scratch files gitignored.
 

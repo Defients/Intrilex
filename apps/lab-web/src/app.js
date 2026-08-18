@@ -258,19 +258,20 @@ export function render() {
  */
 function renderLandingMode(r) {
   if (!landingContainer) return;
-  if (r === '/') renderLanding();
+  if (r === '/') renderWipLanding();
+  else if (r === '/dev') renderLanding();
   else if (r === '/rules') renderRules();
   else if (r === '/privacy') renderLegalPage(r);
   else if (r === '/terms') renderLegalPage(r);
   else if (r === '/auth') {
     // Sign In is an overlay on the homepage, not a Simulation Lab workspace.
     // Render the landing page first, then open the auth overlay on top.
-    renderLanding();
+    renderWipLanding();
     openAuthOverlay();
   }
   else if (r === '/players') {
     // Players is an overlay on the homepage, not a Simulation Lab workspace.
-    renderLanding();
+    renderWipLanding();
     openPlayersOverlay();
   }
   else if (r === '/dev/puzzles' || r === '/puzzles') {
@@ -286,7 +287,7 @@ function renderLandingMode(r) {
   }
   else if (r === '/leaderboard') {
     // Leaderboard is an overlay on the homepage, not a Simulation Lab workspace.
-    renderLanding();
+    renderWipLanding();
     openLeaderboardOverlay();
   }
   else if (r === '/seasons') {
@@ -933,12 +934,12 @@ function showPreAlphaOverlay() {
       <button class="prealpha-acknowledge" id="prealpha-acknowledge" disabled aria-disabled="true">
         <span class="prealpha-acknowledge-text">Please wait ${waitSeconds}s&hellip;</span>
       </button>
-      <div class="prealpha-dev-stamp" aria-label="Last development date: August 14, 2026">
+      <div class="prealpha-dev-stamp" aria-label="Last development date: August 15, 2026">
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
         <span class="prealpha-dev-stamp-content">
           <span class="prealpha-dev-stamp-dot" aria-hidden="true"></span>
           <span class="prealpha-dev-stamp-label">Last development</span>
-          <time class="prealpha-dev-stamp-date" datetime="2026-08-14">Aug 14, 2026</time>
+          <time class="prealpha-dev-stamp-date" datetime="2026-08-15">Aug 15, 2026</time>
         </span>
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
       </div>
@@ -1711,6 +1712,195 @@ async function loadContinueCard() {
       });
     }
   } catch { /* persistence unavailable — silently omit Continue card */ }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// W.I.P. CINEMATIC LANDING PAGE — Coming Soon & Development Hub
+// ═══════════════════════════════════════════════════════════════
+let _wipLandingListenerAbort = null;
+
+/**
+ * Render the cinematic "Coming Soon" W.I.P. landing page.
+ * Homepage (#/) displaying the under-construction / coming-soon state with
+ * newsletter capture, feature previews, and links to the Developer Preview (#/dev).
+ */
+function renderWipLanding() {
+  landingContainer.innerHTML = `<div class="landing-app wip-landing">
+    <video class="landing-video-bg" autoplay muted loop playsinline preload="metadata" aria-hidden="true" data-mobile-skip>
+      <source src="assets/landing1.mp4" type="video/mp4" />
+    </video>
+    <div class="landing-video-overlay" aria-hidden="true"></div>
+    <div class="landing-aurora" aria-hidden="true"></div>
+    <div class="landing-grid-bg" aria-hidden="true"></div>
+    <div class="landing-orbital" aria-hidden="true"></div>
+    <a class="skip skip-link" href="#wip-main">Skip to content</a>
+    <header class="landing-topbar wip-topbar">
+      <a class="landing-brand wip-brand" href="#/" aria-label="Intrilex home">
+        <img src="assets/intrilex-name.png" alt="INTRILEX" class="landing-brand-logo wip-topbar-logo" />
+        <small class="landing-brand-sub">TACTICAL PLAYING CARD GAME</small>
+      </a>
+      <nav class="wip-topbar-nav" aria-label="Preview navigation">
+        <a href="#/rules" class="wip-topbar-rules-link" aria-label="Rulebook">
+          <span aria-hidden="true">&sect;</span>
+          <span>Rulebook</span>
+        </a>
+        <a href="#/dev" class="wip-dev-preview-btn" aria-label="Open Developer Preview">
+          <span class="wip-dev-preview-dot" aria-hidden="true"></span>
+          <span>Developer Preview</span>
+          <svg class="wip-dev-preview-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 3l5 5-5 5"/>
+          </svg>
+        </a>
+      </nav>
+    </header>
+    <main id="wip-main" class="wip-hero" tabindex="-1">
+      <div class="wip-hero-inner">
+        <div class="wip-coming-soon">
+          <span class="wip-coming-soon-dot" aria-hidden="true"></span>
+          <span class="wip-coming-soon-text">COMING SOON</span>
+        </div>
+        <div class="wip-logo-container">
+          <img src="assets/intrilex-name.png" alt="INTRILEX" class="wip-logo" />
+        </div>
+        <p class="wip-tagline">
+          A tactical competitive playing card game of public score, disruption, and exactly-when spending.
+        </p>
+        <div class="wip-notice" role="status">
+          <div class="wip-notice-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+          <div class="wip-notice-content">
+            <strong class="wip-notice-heading">Under Active Development</strong>
+            <p class="wip-notice-text">
+              Intrilex is under active development. The game is not yet playable. Follow along as we build.
+            </p>
+          </div>
+        </div>
+        <div class="wip-features" role="list" aria-label="Key Features">
+          <div class="wip-feature-pill" role="listitem">
+            <span class="wip-feature-icon" aria-hidden="true">⚔</span>
+            <span class="wip-feature-label">Tactical Card Duels</span>
+          </div>
+          <div class="wip-feature-pill" role="listitem">
+            <span class="wip-feature-icon" aria-hidden="true">★</span>
+            <span class="wip-feature-label">Ranked Online Play</span>
+          </div>
+          <div class="wip-feature-pill" role="listitem">
+            <span class="wip-feature-icon" aria-hidden="true">🤖</span>
+            <span class="wip-feature-label">AI Opponents</span>
+          </div>
+          <div class="wip-feature-pill" role="listitem">
+            <span class="wip-feature-icon" aria-hidden="true">📊</span>
+            <span class="wip-feature-label">Match Replay &amp; Analysis</span>
+          </div>
+        </div>
+        <div class="wip-newsletter" aria-labelledby="wip-newsletter-title">
+          <h2 id="wip-newsletter-title" class="wip-newsletter-title">Stay Updated on Launch</h2>
+          <p class="wip-newsletter-desc">Sign up to receive early playtest invites and major development updates.</p>
+          <form class="wip-newsletter-form" id="wip-newsletter-form" novalidate>
+            <div class="wip-newsletter-input-wrap">
+              <svg class="wip-newsletter-mail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+              <input type="email" id="wip-newsletter-email" class="wip-newsletter-input" placeholder="Enter your email address…" aria-label="Email address for updates" required autocomplete="email" spellcheck="false" />
+            </div>
+            <button type="submit" class="wip-newsletter-btn" id="wip-newsletter-submit">
+              <span>Notify Me</span>
+              <svg class="wip-newsletter-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 3l5 5-5 5"/>
+              </svg>
+            </button>
+          </form>
+          <div class="wip-newsletter-feedback" id="wip-newsletter-feedback" aria-live="polite"></div>
+        </div>
+        <div class="wip-community" aria-label="Community Links">
+          <a class="wip-community-btn rules" href="#/rules">
+            <span class="wip-community-icon" aria-hidden="true">&sect;</span>
+            <span class="wip-community-label">Official Rulebook</span>
+          </a>
+          <a class="wip-community-btn forums" href="https://intrilex.discourse.group/" target="_blank" rel="noopener noreferrer">
+            <svg class="wip-community-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+            <span class="wip-community-label">Official Forums</span>
+          </a>
+          <a class="wip-community-btn reddit" href="https://reddit.com/r/intrilex" target="_blank" rel="noopener noreferrer">
+            <svg class="wip-community-icon reddit-emblem" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="12" fill="#FF4500"/>
+              <path fill="#fff" d="M19.9 12a1.6 1.6 0 0 0-2.7-1.1 7.9 7.9 0 0 0-4.3-1.4l.9-2.9 2.4.6a1.2 1.2 0 1 0 .1-.6l-2.8-.7a.3.3 0 0 0-.4.2l-1 3.4a7.9 7.9 0 0 0-4.3 1.4A1.6 1.6 0 1 0 6 13.4a3 3 0 0 0 0 .5c0 2.4 2.7 4.3 6 4.3s6-1.9 6-4.3a3 3 0 0 0 0-.5 1.6 1.6 0 0 0 1.9-1.4zM9.3 13a1.1 1.1 0 1 1 1.1 1.1A1.1 1.1 0 0 1 9.3 13zm6.1 2.9a4 4 0 0 1-2.6.8h-1.6a4 4 0 0 1-2.6-.8.3.3 0 0 1 .4-.4 3.4 3.4 0 0 0 2.2.6h1.6a3.4 3.4 0 0 0 2.2-.6.3.3 0 0 1 .4.4zm-.8-1.8A1.1 1.1 0 1 1 15.7 13a1.1 1.1 0 0 1-1.1 1.1z"/>
+            </svg>
+            <span class="wip-community-label">r/intrilex</span>
+          </a>
+        </div>
+      </div>
+    </main>
+    <footer class="landing-footer wip-footer">
+      <span class="landing-footer-brand"><img src="assets/intrilex-icon.png" alt="IX" class="landing-footer-crest" /> INTRILEX</span>
+      <nav class="landing-footer-legal" aria-label="Legal">
+        <a href="#/privacy">Privacy</a>
+        <a href="#/terms">Terms</a>
+        <a href="#/dev">Developer Preview</a>
+      </nav>
+      <a class="landing-footer-credit" href="https://deffy.me" target="_blank" rel="noopener noreferrer" aria-label="Created and Designed by Ðeffy Urz">
+        <span class="landing-footer-credit-prefix">Created &amp; Designed by</span>
+        <span class="landing-footer-credit-name">Ðeffy Urz</span>
+      </a>
+    </footer>
+  </div>`;
+  bindWipLandingEvents();
+  maybeSkipLandingVideo();
+}
+
+/**
+ * Bind event handlers for the W.I.P. landing page.
+ * Handles newsletter subscription with localStorage storage and toast confirmation.
+ */
+function bindWipLandingEvents() {
+  if (_wipLandingListenerAbort) _wipLandingListenerAbort.abort();
+  _wipLandingListenerAbort = new AbortController();
+
+  const form = landingContainer.querySelector('#wip-newsletter-form');
+  const input = landingContainer.querySelector('#wip-newsletter-email');
+  const feedback = landingContainer.querySelector('#wip-newsletter-feedback');
+
+  const savedEmail = localStorage.getItem('intrilex:newsletter-email');
+  if (savedEmail && feedback) {
+    feedback.innerHTML = `<span class="wip-newsletter-success">&check; You are subscribed (${esc(savedEmail)})</span>`;
+  }
+
+  if (form && input) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = input.value.trim();
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailPattern.test(email)) {
+        showToast('Please enter a valid email address.', { type: 'warning' });
+        if (feedback) {
+          feedback.innerHTML = '<span class="wip-newsletter-error">Please enter a valid email address.</span>';
+        }
+        input.focus();
+        return;
+      }
+      try {
+        localStorage.setItem('intrilex:newsletter-email', email);
+        const list = JSON.parse(localStorage.getItem('intrilex:newsletter-list') || '[]');
+        if (!list.includes(email)) {
+          list.push(email);
+          localStorage.setItem('intrilex:newsletter-list', JSON.stringify(list));
+        }
+      } catch (err) {
+        console.warn('[newsletter] failed to save to localStorage:', err);
+      }
+      showToast('Thank you for subscribing! We\'ll notify you when Intrilex launches.', { type: 'success' });
+      input.value = '';
+      if (feedback) {
+        feedback.innerHTML = `<span class="wip-newsletter-success">&check; Thank you! We'll notify you at <strong>${esc(email)}</strong>.</span>`;
+      }
+    });
+  }
 }
 
 /** Render the rules/rulebook page inside the landing container with a reading layout. */

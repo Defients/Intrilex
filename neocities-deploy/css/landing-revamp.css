@@ -646,3 +646,349 @@
   .landing-continue-btn:hover{transform:none}
   .landing-brand:hover .landing-brand-logo{filter:drop-shadow(0 0 24px rgba(90,215,232,.22))}
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   §9 — W.I.P. CINEMATIC LANDING PAGE STYLES
+   Coming Soon & Development Hub (#/)
+   ═══════════════════════════════════════════════════════════════ */
+
+.wip-landing{
+  position:fixed; inset:0;
+  height:100vh; height:100dvh;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+}
+
+/* ── Topbar: W.I.P. refinement ── */
+.wip-topbar{
+  position:relative; z-index:2;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:20px; padding:8px 44px 6px;
+  flex-shrink:0;
+}
+
+.wip-topbar-nav{
+  display:flex; align-items:center; gap:14px;
+}
+
+.wip-topbar-rules-link{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 14px;
+  border-radius:9px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(12,22,34,.5);
+  color:var(--muted-bright);
+  font-size:11.5px; font-weight:600; text-decoration:none;
+  letter-spacing:.03em;
+  transition:all var(--fast) var(--ease);
+}
+.wip-topbar-rules-link:hover{
+  color:#fff;
+  border-color:rgba(90,215,232,.3);
+  background:rgba(18,34,50,.7);
+  transform:translateY(-1px);
+}
+
+.wip-dev-preview-btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 14px 6px 12px;
+  border-radius:10px;
+  border:1px solid rgba(241,189,93,.4);
+  background:linear-gradient(135deg,rgba(36,28,14,.85),rgba(22,18,10,.9));
+  color:var(--amber);
+  font-size:11.5px; font-weight:700; letter-spacing:.05em;
+  text-decoration:none;
+  box-shadow:0 1px 4px rgba(0,0,0,.3),0 0 12px rgba(241,189,93,.08),inset 0 1px 0 rgba(241,189,93,.15);
+  transition:all var(--fast) var(--ease);
+}
+.wip-dev-preview-btn:hover{
+  border-color:rgba(241,189,93,.7);
+  background:linear-gradient(135deg,rgba(48,38,18,.95),rgba(28,22,12,.95));
+  box-shadow:0 2px 14px rgba(241,189,93,.25),inset 0 1px 0 rgba(241,189,93,.25);
+  transform:translateY(-1px);
+}
+.wip-dev-preview-btn:active{transform:translateY(0) scale(.98)}
+.wip-dev-preview-dot{
+  width:7px; height:7px; border-radius:50%;
+  background:var(--amber);
+  box-shadow:0 0 8px var(--amber);
+  animation:wip-dot-pulse 2s ease-in-out infinite;
+}
+.wip-dev-preview-arrow{width:12px; height:12px; transition:transform var(--fast)}
+.wip-dev-preview-btn:hover .wip-dev-preview-arrow{transform:translateX(2px)}
+
+/* ── Hero Center ── */
+.wip-hero{
+  flex:1;
+  display:flex; align-items:center; justify-content:center;
+  padding:6px 24px 8px;
+  position:relative; z-index:1;
+  overflow-y:auto; overflow-x:hidden;
+}
+
+.wip-hero-inner{
+  max-width:760px; width:100%;
+  display:flex; flex-direction:column; align-items:center;
+  text-align:center; margin:auto;
+  padding:8px 0;
+}
+
+/* ── Status Badge / Coming Soon ── */
+.wip-coming-soon{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:4px 14px;
+  border-radius:999px;
+  background:rgba(90,215,232,.08);
+  border:1px solid rgba(90,215,232,.28);
+  box-shadow:0 0 18px rgba(90,215,232,.12),inset 0 1px 0 rgba(90,215,232,.15);
+  margin-bottom:10px;
+  animation:revamp-fade-up 500ms var(--ease) both;
+}
+.wip-coming-soon-dot{
+  width:7px; height:7px; border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 10px var(--cyan),0 0 16px rgba(90,215,232,.6);
+  animation:wip-dot-pulse 1.8s ease-in-out infinite;
+}
+.wip-coming-soon-text{
+  font-size:10.5px; font-weight:750;
+  letter-spacing:.22em;
+  color:var(--cyan);
+  text-transform:uppercase;
+}
+
+/* ── Logo ── */
+.wip-logo-container{
+  margin:4px 0 8px;
+  animation:revamp-fade-up 550ms var(--ease) both;
+  animation-delay:60ms;
+}
+.wip-logo{
+  width:clamp(240px,28vw,380px);
+  max-width:100%;
+  filter:drop-shadow(0 0 32px rgba(90,215,232,.3)) drop-shadow(0 4px 16px rgba(0,0,0,.6));
+  transition:filter 400ms var(--ease);
+}
+.wip-logo-container:hover .wip-logo{
+  filter:drop-shadow(0 0 44px rgba(90,215,232,.45)) drop-shadow(0 4px 20px rgba(0,0,0,.7));
+}
+
+/* ── Tagline ── */
+.wip-tagline{
+  font-size:clamp(14px,1.4vw,17px);
+  line-height:1.45;
+  color:var(--text-bright);
+  max-width:580px;
+  margin:0 auto 12px;
+  font-weight:450;
+  text-shadow:0 2px 8px rgba(0,0,0,.6);
+  animation:revamp-fade-up 550ms var(--ease) both;
+  animation-delay:120ms;
+}
+
+/* ── Notice Card ── */
+.wip-notice{
+  display:flex; align-items:center; gap:12px;
+  padding:10px 18px;
+  border-radius:12px;
+  background:linear-gradient(135deg,rgba(16,26,38,.75),rgba(10,18,28,.85));
+  border:1px solid rgba(241,189,93,.25);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 6px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(241,189,93,.1);
+  max-width:580px; width:100%;
+  margin-bottom:14px;
+  text-align:left;
+  animation:revamp-fade-up 550ms var(--ease) both;
+  animation-delay:180ms;
+}
+.wip-notice-badge{
+  width:32px; height:32px; border-radius:8px;
+  background:rgba(241,189,93,.12);
+  border:1px solid rgba(241,189,93,.3);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; color:var(--amber);
+}
+.wip-notice-badge svg{width:16px; height:16px}
+.wip-notice-heading{
+  font-size:11.5px; font-weight:700;
+  color:var(--amber); letter-spacing:.04em;
+  text-transform:uppercase; display:block;
+}
+.wip-notice-text{
+  font-size:11.5px; line-height:1.35;
+  color:var(--muted-bright); margin:2px 0 0;
+}
+
+/* ── Feature Pills ── */
+.wip-features{
+  display:flex; flex-wrap:wrap; justify-content:center;
+  gap:8px; margin-bottom:16px; max-width:680px;
+  animation:revamp-fade-up 550ms var(--ease) both;
+  animation-delay:240ms;
+}
+.wip-feature-pill{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:6px 14px;
+  border-radius:999px;
+  background:rgba(14,26,40,.55);
+  border:1px solid rgba(90,215,232,.16);
+  color:var(--text-bright);
+  font-size:11.5px; font-weight:600; letter-spacing:.02em;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+  transition:all 220ms var(--ease);
+}
+.wip-feature-pill:hover{
+  border-color:rgba(90,215,232,.4);
+  background:rgba(20,38,58,.75);
+  transform:translateY(-1px);
+  box-shadow:0 4px 14px rgba(90,215,232,.18);
+}
+.wip-feature-icon{font-size:12px; color:var(--cyan)}
+
+/* ── Newsletter Card ── */
+.wip-newsletter{
+  width:100%; max-width:540px;
+  padding:16px 20px;
+  border-radius:14px;
+  background:linear-gradient(135deg,rgba(14,26,40,.82),rgba(8,16,26,.9));
+  border:1px solid rgba(90,215,232,.22);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 10px 36px rgba(0,0,0,.45),0 0 20px rgba(90,215,232,.06),inset 0 1px 0 rgba(90,215,232,.14);
+  margin-bottom:14px;
+  position:relative;
+  animation:revamp-fade-up 550ms var(--ease) both;
+  animation-delay:300ms;
+}
+.wip-newsletter-title{
+  font-size:15px; font-weight:700; color:#fff;
+  letter-spacing:.02em; margin-bottom:3px;
+}
+.wip-newsletter-desc{
+  font-size:11.5px; color:var(--muted-bright);
+  margin-bottom:12px;
+}
+.wip-newsletter-form{
+  display:flex; gap:8px; width:100%;
+  align-items:stretch;
+}
+.wip-newsletter-input-wrap{
+  flex:1; position:relative;
+  display:flex; align-items:center;
+}
+.wip-newsletter-mail-icon{
+  position:absolute; left:12px;
+  width:16px; height:16px;
+  color:var(--muted); pointer-events:none;
+}
+.wip-newsletter-input{
+  width:100%; height:42px;
+  padding:0 14px 0 38px;
+  border-radius:9px;
+  border:1px solid rgba(90,215,232,.25);
+  background:rgba(5,11,18,.85);
+  color:#fff;
+  font-size:12.5px; font-family:inherit;
+  outline:none;
+  transition:border-color var(--fast),box-shadow var(--fast);
+}
+.wip-newsletter-input:focus{
+  border-color:var(--cyan);
+  box-shadow:0 0 0 3px rgba(90,215,232,.2),0 0 14px rgba(90,215,232,.15);
+}
+.wip-newsletter-btn{
+  height:42px; padding:0 20px;
+  border-radius:9px;
+  border:1px solid rgba(90,215,232,.5);
+  background:linear-gradient(135deg,rgba(90,215,232,.95),rgba(50,155,195,.95));
+  color:#050d18;
+  font-weight:750; font-size:12.5px; letter-spacing:.04em;
+  cursor:pointer;
+  display:inline-flex; align-items:center; gap:6px;
+  white-space:nowrap;
+  box-shadow:0 2px 10px rgba(90,215,232,.3);
+  transition:all var(--fast) var(--ease);
+}
+.wip-newsletter-btn:hover{
+  background:linear-gradient(135deg,#7fe8f8,#48b8df);
+  transform:translateY(-1px);
+  box-shadow:0 4px 18px rgba(90,215,232,.45);
+}
+.wip-newsletter-btn:active{transform:translateY(0) scale(.98)}
+.wip-newsletter-btn:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
+.wip-newsletter-arrow{width:13px; height:13px; transition:transform var(--fast)}
+.wip-newsletter-btn:hover .wip-newsletter-arrow{transform:translateX(2px)}
+.wip-newsletter-feedback{
+  min-height:18px; font-size:11.5px;
+  margin-top:7px; text-align:left;
+}
+.wip-newsletter-success{color:var(--cyan); font-weight:600}
+.wip-newsletter-error{color:var(--danger,#f87171); font-weight:600}
+
+/* ── Community Links ── */
+.wip-community{
+  display:flex; gap:10px; justify-content:center;
+  flex-wrap:wrap; margin-bottom:4px;
+  animation:revamp-fade-up 550ms var(--ease) both;
+  animation-delay:360ms;
+}
+.wip-community-btn{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:7px 15px;
+  border-radius:9px;
+  background:rgba(12,22,34,.55);
+  border:1px solid rgba(255,255,255,.08);
+  color:var(--muted-bright);
+  text-decoration:none;
+  font-size:11.5px; font-weight:600;
+  transition:all 200ms var(--ease);
+}
+.wip-community-btn:hover{
+  color:#fff;
+  border-color:rgba(90,215,232,.3);
+  background:rgba(18,34,52,.75);
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+.wip-community-icon{width:15px; height:15px; flex-shrink:0}
+.wip-community-icon.reddit-emblem{width:16px; height:16px}
+
+/* ── Keyframe Animations ── */
+@keyframes wip-dot-pulse{
+  0%,100%{opacity:1; transform:scale(1)}
+  50%{opacity:.45; transform:scale(.85)}
+}
+
+/* ── Responsive adjustments for compact screens ── */
+@media(max-height:860px){
+  .wip-hero-inner{padding:4px 0}
+  .wip-coming-soon{margin-bottom:6px}
+  .wip-logo-container{margin:2px 0 4px}
+  .wip-logo{width:clamp(200px,22vw,300px)}
+  .wip-tagline{margin-bottom:8px; font-size:13.5px}
+  .wip-notice{padding:8px 14px; margin-bottom:10px}
+  .wip-features{margin-bottom:10px; gap:6px}
+  .wip-feature-pill{padding:4px 10px; font-size:11px}
+  .wip-newsletter{padding:12px 16px; margin-bottom:10px}
+  .wip-newsletter-title{font-size:13.5px}
+  .wip-newsletter-desc{margin-bottom:8px}
+  .wip-newsletter-input{height:36px; font-size:11.5px}
+  .wip-newsletter-btn{height:36px; padding:0 16px; font-size:11.5px}
+  .wip-community-btn{padding:5px 12px; font-size:11px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .wip-coming-soon,.wip-logo-container,.wip-tagline,
+  .wip-notice,.wip-features,.wip-newsletter,.wip-community{
+    animation:none !important;
+  }
+  .wip-dev-preview-dot,.wip-coming-soon-dot{
+    animation:none !important;
+  }
+  .wip-dev-preview-btn:hover,.wip-topbar-rules-link:hover,
+  .wip-feature-pill:hover,.wip-newsletter-btn:hover,
+  .wip-community-btn:hover{
+    transform:none !important;
+  }
+}
+

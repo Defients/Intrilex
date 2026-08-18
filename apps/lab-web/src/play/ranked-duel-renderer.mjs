@@ -1346,6 +1346,54 @@ function renderRightRail(vm, opts, isReadOnly, snapshot, priorityContext, immedi
 
 // ── Game Log (player-readable, no engine diagnostics) ──────────
 
+/**
+ * Map an event type string to a semantic category for styling.
+ * Categories: draw | score | action | effect | phase | priority | terminal | system
+ */
+function categorizeEvent(type) {
+  if (!type) return 'system';
+  const t = String(type).toUpperCase();
+  if (t.includes('DRAW')) return 'draw';
+  if (t.includes('SCORE') || t.includes('POINTS')) return 'score';
+  if (t.includes('SCUTTLE') || t.includes('SWAP') || t.includes('COUNTER') ||
+      t.includes('DISCARD') || t.includes('EXILE') || t.includes('BOUNCE') ||
+      t.includes('TAP') || t.includes('PURGE') || t.includes('ROW_CLEAR') ||
+      t.includes('SUPER') || t.includes('DECLARATION') || t.includes('DECLARE_PRIMARY')) return 'action';
+  if (t.includes('ANCHOR_ENTERED') || t.includes('ATTACHMENT_RESOLVED') ||
+      t.includes('RED_JOKER') || t.includes('BOARD_LOCK') ||
+      t.includes('RESOLVE') || t.includes('CANCEL')) return 'effect';
+  // Priority must be checked before phase — PRIORITY_PASSED includes 'PASS'
+  if (t.includes('RESPONSE_WINDOW_CLOSED') || t.includes('PRIORITY_CLOSED') ||
+      t.includes('RESPONSE_DECLINED') || t.includes('PRIORITY_PASSED')) return 'priority';
+  if (t.includes('ENTER_ACTION') || t.includes('BEGIN_START') ||
+      t.includes('PHASE') || t.includes('TURN') || t.includes('PASS')) return 'phase';
+  if (t.includes('TERMINAL') || t.includes('GAME_OVER')) return 'terminal';
+  return 'system';
+}
+
+/**
+ * Map an event category to a compact unicode glyph icon.
+ */
+const CATEGORY_ICONS = {
+  draw: '🃏',
+  score: '★',
+  action: '↯',
+  effect: '✦',
+  phase: '◆',
+  priority: '⋯',
+  terminal: '🏁',
+  system: '•',
+};
+
+/**
+ * Map an actorId to a short badge label.
+ */
+function actorBadgeLabel(actorId) {
+  if (actorId === 'P1') return 'P1';
+  if (actorId === 'P2') return 'P2';
+  return 'SYS';
+}
+
 function renderGameLog(events, systemEvents) {
   const cardRegistry = arguments[2] ?? null;
   // Build player-readable gameplay events
@@ -1371,6 +1419,9 @@ function renderGameLog(events, systemEvents) {
     });
     logEntries = playerReadable.map(e => ({
       description: e.description ?? e.text ?? '',
+      type: e.type ?? '',
+      actorId: e.actorId ?? null,
+      category: categorizeEvent(e.type),
       isSystem: false,
     }));
   }
@@ -1383,22 +1434,37 @@ function renderGameLog(events, systemEvents) {
         const action = evt.hidden ? 'has hidden Match Chat.' : 'has restored Match Chat.';
         logEntries.push({
           description: `${name} ${action}`,
+          type: 'CHAT_VISIBILITY',
+          actorId: null,
+          category: 'system',
           isSystem: true,
         });
       }
     }
   }
 
-  const recent = [...logEntries].reverse().slice(0, 40);
+  const recent = logEntries.slice(-40).reverse();
   if (recent.length === 0) {
     return `<div class="rd-game-log" data-testid="event-log" role="log">
-      <div class="rd-game-log-empty">No events yet</div>
+      <div class="rd-game-log-empty"><span class="rd-log-empty-icon">⋯</span>No events yet</div>
     </div>`;
   }
   return `<div class="rd-game-log" data-testid="event-log" role="log">
-    ${recent.map(e => `<div class="rd-log-entry${e.isSystem ? ' rd-log-system' : ''}">
-      <span class="event-description">${esc(e.description)}</span>
-    </div>`).join('')}
+    ${recent.map((e, i) => {
+      const icon = CATEGORY_ICONS[e.category] ?? CATEGORY_ICONS.system;
+      const actor = actorBadgeLabel(e.actorId);
+      const isNew = i === 0;
+      const classes = [
+        'rd-log-entry',
+        e.isSystem ? 'rd-log-system' : '',
+        isNew ? 'rd-log-new' : '',
+      ].filter(Boolean).join(' ');
+      return `<div class="${classes}" data-event-category="${esc(e.category)}">
+        <span class="rd-log-actor" data-actor="${esc(actor)}">${esc(actor)}</span>
+        <span class="rd-log-icon">${icon}</span>
+        <span class="event-description">${esc(e.description)}</span>
+      </div>`;
+    }).join('')}
   </div>`;
 }
 

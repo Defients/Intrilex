@@ -35,8 +35,15 @@ const ROUTE_META = {
   // Homepage — the competitive playing card game
   '/': {
     title: 'Intrilex — Competitive Playing Card Game',
-    description: 'Intrilex is a tactical competitive playing card game of public score, disruption, and exactly-when spending. Play local vs AI or online Direct Duel. Every decision matters.',
+    description: 'Intrilex is a tactical competitive playing card game of public score, disruption, and exactly-when spending. Follow along as we build.',
     canonicalPath: '/',
+    ogType: 'website',
+  },
+  // Developer preview — prototype and simulation lab interface
+  '/dev': {
+    title: 'Intrilex — Developer Preview',
+    description: 'Intrilex Developer Preview — playable simulation and prototype interface.',
+    canonicalPath: '/#/dev',
     ogType: 'website',
   },
   // Play routes

@@ -36,6 +36,7 @@ const matchHandlersSrc = readFileSync(join(process.cwd(), 'apps/match-server/src
 const spectatorHandlersSrc = readFileSync(join(process.cwd(), 'apps/match-server/src/handlers/spectator-handlers.mjs'), 'utf8');
 const authControllerSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/network/auth-controller.js'), 'utf8');
 const lobbyRendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/network/network-lobby-renderer.mjs'), 'utf8');
+const playControllerSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-controller.js'), 'utf8');
 
 // ── Server: matchMode/queueId/publicProfile in authorized view ──
 
@@ -680,6 +681,108 @@ test('Renderer: system log entries have rd-log-system class', () => {
   assert.ok(
     rendererSrc.includes('rd-log-system'),
     'System log entries must have rd-log-system class'
+  );
+});
+
+// ── Renderer: game log panel overhaul (badges, icons, categories) ──
+
+test('Renderer: categorizeEvent helper exists', () => {
+  assert.ok(
+    rendererSrc.includes('function categorizeEvent'),
+    'renderGameLog must use categorizeEvent helper for event classification'
+  );
+});
+
+test('Renderer: PRIORITY_PASSED categorized as priority not phase', () => {
+  // Regression: PRIORITY_PASSED includes 'PASS' which would match the phase
+  // category if checked first. Priority check must come before phase check.
+  const priorityIdx = rendererSrc.indexOf("t.includes('RESPONSE_WINDOW_CLOSED')");
+  const phaseIdx = rendererSrc.indexOf("t.includes('ENTER_ACTION')");
+  assert.ok(priorityIdx > 0 && phaseIdx > 0, 'Both priority and phase checks must exist');
+  assert.ok(
+    priorityIdx < phaseIdx,
+    'Priority category check must come before phase check (PRIORITY_PASSED includes PASS)'
+  );
+});
+
+test('Renderer: game log entries have data-event-category attribute', () => {
+  assert.ok(
+    rendererSrc.includes('data-event-category'),
+    'Game log entries must have data-event-category attribute for CSS targeting'
+  );
+});
+
+test('Renderer: game log entries have actor badge with data-actor', () => {
+  assert.ok(
+    rendererSrc.includes('rd-log-actor') && rendererSrc.includes('data-actor'),
+    'Game log entries must have actor badge with data-actor attribute'
+  );
+});
+
+test('Renderer: game log entries have event-type icon span', () => {
+  assert.ok(
+    rendererSrc.includes('rd-log-icon'),
+    'Game log entries must have event-type icon span'
+  );
+});
+
+test('Renderer: game log has new-entry animation class', () => {
+  assert.ok(
+    rendererSrc.includes('rd-log-new'),
+    'Most recent game log entry must have rd-log-new class for fade-in animation'
+  );
+});
+
+test('Renderer: actorBadgeLabel maps P1/P2/SYS', () => {
+  assert.ok(
+    rendererSrc.includes("actorId === 'P1'") &&
+    rendererSrc.includes("actorId === 'P2'") &&
+    rendererSrc.includes("return 'SYS'"),
+    'actorBadgeLabel must map P1, P2, and default to SYS'
+  );
+});
+
+test('Renderer: game log caps at 40 entries via slice(-40)', () => {
+  assert.ok(
+    rendererSrc.includes('slice(-40)'),
+    'Game log must cap at 40 entries using slice(-40) for efficiency'
+  );
+});
+
+test('play-controller: recentEvents sends 40 events not 10', () => {
+  assert.ok(
+    playControllerSrc.includes('this.recentEvents.slice(-40)'),
+    'play-controller must send 40 recent events to renderer, not 10'
+  );
+  assert.ok(
+    !playControllerSrc.includes('this.recentEvents.slice(-10)'),
+    'play-controller must not retain the old slice(-10) limit'
+  );
+});
+
+test('CSS: actor badge styles exist for P1/P2/SYS', () => {
+  assert.ok(
+    cssSrc.includes('.rd-log-actor[data-actor="P1"]') &&
+    cssSrc.includes('.rd-log-actor[data-actor="P2"]') &&
+    cssSrc.includes('.rd-log-actor[data-actor="SYS"]'),
+    'CSS must have actor badge styles for P1, P2, and SYS'
+  );
+});
+
+test('CSS: category accent styles exist', () => {
+  assert.ok(
+    cssSrc.includes('[data-event-category="score"]') &&
+    cssSrc.includes('[data-event-category="action"]') &&
+    cssSrc.includes('[data-event-category="terminal"]'),
+    'CSS must have category accent styles for score, action, and terminal'
+  );
+});
+
+test('CSS: fade-in keyframe animation exists', () => {
+  assert.ok(
+    cssSrc.includes('@keyframes rd-log-fade-in') &&
+    cssSrc.includes('.rd-log-new'),
+    'CSS must have rd-log-fade-in keyframe animation and rd-log-new class'
   );
 });
 
