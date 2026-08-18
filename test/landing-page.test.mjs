@@ -10,9 +10,10 @@ const dist = (rel) => readFile(path.join(root, 'apps/lab-web/dist', rel), 'utf8'
 const cssSrc = async () => (await Promise.all(['tokens-base','feature-components','pages-polish','landing-revamp','landing-mobile'].map(f => readFile(path.join(root, 'apps/lab-web/src/css', `${f}.css`), 'utf8')))).join('\n');
 
 // ── Routes ──
-test('LANDING_MODES set contains /, /play, /rules', async () => {
+test('LANDING_MODES set contains /, /dev, /play, /rules', async () => {
   const js = await src('router.js');
   assert.match(js, /LANDING_MODES\s*=\s*new Set\(\['\/'/);
+  assert.match(js, /'\/dev'/);
   assert.match(js, /'\/play'/);
   assert.match(js, /'\/rules'/);
 });
@@ -28,6 +29,14 @@ test('route() returns landing modes for /, /play, /rules', async () => {
 });
 
 // ── Render functions ──
+test('renderWipLanding() exists and renders WIP coming soon hero and newsletter', async () => {
+  const js = await src('app.js');
+  assert.match(js, /function renderWipLanding\(\)/);
+  assert.match(js, /wip-coming-soon/);
+  assert.match(js, /wip-newsletter/);
+  assert.match(js, /wip-dev-preview-btn/);
+});
+
 test('renderLanding() exists and renders play panel and rules card', async () => {
   const js = await src('app.js');
   assert.match(js, /function renderLanding\(\)/);
@@ -47,10 +56,11 @@ test('renderRules() exists and calls renderRulesPage', async () => {
   assert.match(js, /renderRulesPage/);
 });
 
-test('renderLandingMode() dispatches to render functions for / and /rules', async () => {
+test('renderLandingMode() dispatches to render functions for /, /dev, and /rules', async () => {
   const js = await src('app.js');
   assert.ok(js.includes('function renderLandingMode(r)'), 'must have renderLandingMode function');
-  assert.ok(js.includes("if (r === '/') renderLanding()"), 'must dispatch / to renderLanding');
+  assert.ok(js.includes("if (r === '/') renderWipLanding()"), 'must dispatch / to renderWipLanding');
+  assert.ok(js.includes("else if (r === '/dev') renderLanding()"), 'must dispatch /dev to renderLanding');
   assert.ok(js.includes("if (r === '/rules') renderRules()"), 'must dispatch /rules to renderRules');
 });
 
@@ -518,3 +528,54 @@ test('landing-mobile.css has landscape phone orientation support', async () => {
   const mobileSection = css.slice(css.indexOf('LANDING MOBILE'));
   assert.match(mobileSection, /orientation:landscape/);
 });
+
+// ── W.I.P. Landing Page (Coming Soon) ──
+test('WIP landing page has required elements in app.js', async () => {
+  const js = await src('app.js');
+  assert.match(js, /class="landing-app wip-landing"/);
+  assert.match(js, /class="wip-coming-soon"/);
+  assert.match(js, /class="wip-tagline"/);
+  assert.match(js, /class="wip-notice"/);
+  assert.match(js, /class="wip-features"/);
+  assert.match(js, /class="wip-newsletter"/);
+  assert.match(js, /class="wip-community"/);
+  assert.match(js, /class="wip-dev-preview-btn"/);
+  assert.match(js, /href="#\/dev"/);
+});
+
+test('WIP newsletter binds form submission and localStorage save', async () => {
+  const js = await src('app.js');
+  assert.match(js, /function bindWipLandingEvents\(\)/);
+  assert.match(js, /localStorage\.setItem\('intrilex:newsletter-email'/);
+  assert.match(js, /showToast\(.*thank you/i);
+});
+
+test('WIP landing CSS classes exist in landing-revamp.css', async () => {
+  const css = await cssSrc();
+  assert.match(css, /\.wip-landing/);
+  assert.match(css, /\.wip-topbar/);
+  assert.match(css, /\.wip-dev-preview-btn/);
+  assert.match(css, /\.wip-hero/);
+  assert.match(css, /\.wip-coming-soon/);
+  assert.match(css, /\.wip-logo/);
+  assert.match(css, /\.wip-tagline/);
+  assert.match(css, /\.wip-notice/);
+  assert.match(css, /\.wip-features/);
+  assert.match(css, /\.wip-feature-pill/);
+  assert.match(css, /\.wip-newsletter/);
+  assert.match(css, /\.wip-newsletter-form/);
+  assert.match(css, /\.wip-newsletter-input/);
+  assert.match(css, /\.wip-newsletter-btn/);
+  assert.match(css, /\.wip-community/);
+  assert.match(css, /\.wip-community-btn/);
+});
+
+test('WIP landing responsive styles exist in landing-mobile.css', async () => {
+  const css = await cssSrc();
+  const mobileSection = css.slice(css.indexOf('W.I.P. CINEMATIC LANDING RESPONSIVE OVERRIDES'));
+  assert.ok(mobileSection.length > 0, 'WIP responsive section must exist in landing-mobile.css');
+  assert.match(mobileSection, /\.wip-landing/);
+  assert.match(mobileSection, /\.wip-features/);
+  assert.match(mobileSection, /\.wip-newsletter-form/);
+});
+

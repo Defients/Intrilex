@@ -2,10 +2,10 @@
 // workspaces/evidence.js — /evidence workspace: integrity and provenance
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   app,   esc,   short,   definitionList } from '../state.js?v=4f30833b427f';
-import { rerender } from '../rerender.js?v=4f30833b427f';
-import { ENGINE_VERSION, RULES_VERSION } from '../version.js?v=4f30833b427f';
-import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=4f30833b427f';
+import { state,   app,   esc,   short,   definitionList } from '../state.js?v=73653ac8207b';
+import { rerender } from '../rerender.js?v=73653ac8207b';
+import { ENGINE_VERSION, RULES_VERSION } from '../version.js?v=73653ac8207b';
+import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=73653ac8207b';
 
 // ── Anomaly Explorer (Depth II Phase 3) ──────────────────────────
 // Elevate the 30 anomalies from a flat table to an interactive explorer

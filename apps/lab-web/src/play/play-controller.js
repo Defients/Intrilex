@@ -575,7 +575,7 @@ export class PlaySession {
         isHuman,
       } : null,
       playerView,
-      recentEvents: this.recentEvents.slice(-10).map(e => ({
+      recentEvents: this.recentEvents.slice(-40).map(e => ({
         type: e.type,
         controllerId: e.controllerId ?? e.payload?.controllerId ?? null,
         payload: e.payload ?? null,

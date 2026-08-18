@@ -4,8 +4,8 @@
 // Action IDs resolve through a private command vault.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from '../engine/browser-entry.js?v=4f30833b427f';
-import { classifyDecisionKind, presentAction } from './action-presenter.js?v=4f30833b427f';
+import { hashCanonical } from '../engine/browser-entry.js?v=73653ac8207b';
+import { classifyDecisionKind, presentAction } from './action-presenter.js?v=73653ac8207b';
 import {
   PRODUCT_VERSION,
   PLAYER_RUNTIME_VERSION,
@@ -17,8 +17,8 @@ import {
   validateSaveEnvelope,
   canMigrateSave,
   migrateSave,
-} from './save-integrity.js?v=4f30833b427f';
-import { createPolicyRng, computePlayerStats } from './session-utils.js?v=4f30833b427f';
+} from './save-integrity.js?v=73653ac8207b';
+import { createPolicyRng, computePlayerStats } from './session-utils.js?v=73653ac8207b';
 
 // Re-export for backward compatibility (other modules import from play-controller)
 export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope, canMigrateSave, migrateSave };
@@ -40,7 +40,7 @@ export const SessionState = Object.freeze({
 let _engineModule = null;
 async function engine() {
   if (!_engineModule) {
-    _engineModule = await import('../engine/browser-entry.js?v=4f30833b427f');
+    _engineModule = await import('../engine/browser-entry.js?v=73653ac8207b');
   }
   return _engineModule;
 }
@@ -48,7 +48,7 @@ async function engine() {
 let _autonomyModule = null;
 async function autonomy() {
   if (!_autonomyModule) {
-    _autonomyModule = await import('../autonomy-runtime.js?v=4f30833b427f');
+    _autonomyModule = await import('../autonomy-runtime.js?v=73653ac8207b');
   }
   return _autonomyModule;
 }
@@ -575,7 +575,7 @@ export class PlaySession {
         isHuman,
       } : null,
       playerView,
-      recentEvents: this.recentEvents.slice(-10).map(e => ({
+      recentEvents: this.recentEvents.slice(-40).map(e => ({
         type: e.type,
         controllerId: e.controllerId ?? e.payload?.controllerId ?? null,
         payload: e.payload ?? null,

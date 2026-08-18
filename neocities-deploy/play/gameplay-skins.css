@@ -280,10 +280,15 @@
   border: 1px solid rgba(100,116,139,0.15) !important;
 }
 [data-gameplay-skin="light"] .rd-rail-section-header { color: #475569 !important; border-bottom-color: rgba(100,116,139,0.12) !important; }
-[data-gameplay-skin="light"] .rd-game-log-entry { color: #1e293b !important; }
-[data-gameplay-skin="light"] .rd-game-log-entry .log-turn { color: #94a3b8 !important; }
-[data-gameplay-skin="light"] .rd-game-log-entry .log-actor.human { color: #0284c7 !important; }
-[data-gameplay-skin="light"] .rd-game-log-entry .log-actor.ai { color: #a855f7 !important; }
+[data-gameplay-skin="light"] .rd-log-entry { color: #1e293b !important; border-bottom-color: rgba(100,116,139,0.08) !important; }
+[data-gameplay-skin="light"] .rd-log-entry:nth-child(even) { background: rgba(100,116,139,0.04) !important; }
+[data-gameplay-skin="light"] .rd-log-entry:hover { background: rgba(2,132,199,0.08) !important; border-left-color: rgba(2,132,199,0.4) !important; }
+[data-gameplay-skin="light"] .rd-log-actor { background: rgba(100,116,139,0.15) !important; color: #475569 !important; }
+[data-gameplay-skin="light"] .rd-log-actor[data-actor="P1"] { background: rgba(2,132,199,0.15) !important; color: #0284c7 !important; }
+[data-gameplay-skin="light"] .rd-log-actor[data-actor="P2"] { background: rgba(168,85,247,0.15) !important; color: #a855f7 !important; }
+[data-gameplay-skin="light"] .rd-log-actor[data-actor="SYS"] { background: rgba(217,119,6,0.15) !important; color: #d97706 !important; }
+[data-gameplay-skin="light"] .rd-log-icon { opacity: 0.85 !important; }
+[data-gameplay-skin="light"] .event-description { color: #1e293b !important; }
 [data-gameplay-skin="light"] .rd-game-log-empty { color: #94a3b8 !important; }
 
 /* Light — chat */
@@ -667,10 +672,15 @@
   border: 1px solid rgba(120,180,255,0.12) !important;
 }
 [data-gameplay-skin="cosmotech"] .rd-rail-section-header { color: #8a9ec8 !important; border-bottom-color: rgba(125,211,252,0.12) !important; }
-[data-gameplay-skin="cosmotech"] .rd-game-log-entry { color: #c8d6f5 !important; }
-[data-gameplay-skin="cosmotech"] .rd-game-log-entry .log-turn { color: #5a6e9a !important; }
-[data-gameplay-skin="cosmotech"] .rd-game-log-entry .log-actor.human { color: #7dd3fc !important; }
-[data-gameplay-skin="cosmotech"] .rd-game-log-entry .log-actor.ai { color: #c4b5fd !important; }
+[data-gameplay-skin="cosmotech"] .rd-log-entry { color: #c8d6f5 !important; border-bottom-color: rgba(125,211,252,0.06) !important; }
+[data-gameplay-skin="cosmotech"] .rd-log-entry:nth-child(even) { background: rgba(125,211,252,0.03) !important; }
+[data-gameplay-skin="cosmotech"] .rd-log-entry:hover { background: rgba(125,211,252,0.08) !important; border-left-color: rgba(125,211,252,0.4) !important; }
+[data-gameplay-skin="cosmotech"] .rd-log-actor { background: rgba(90,110,154,0.2) !important; color: #8a9ec8 !important; }
+[data-gameplay-skin="cosmotech"] .rd-log-actor[data-actor="P1"] { background: rgba(125,211,252,0.18) !important; color: #7dd3fc !important; }
+[data-gameplay-skin="cosmotech"] .rd-log-actor[data-actor="P2"] { background: rgba(196,181,253,0.18) !important; color: #c4b5fd !important; }
+[data-gameplay-skin="cosmotech"] .rd-log-actor[data-actor="SYS"] { background: rgba(251,191,36,0.15) !important; color: #fcd34d !important; }
+[data-gameplay-skin="cosmotech"] .rd-log-icon { opacity: 0.8 !important; }
+[data-gameplay-skin="cosmotech"] .event-description { color: #c8d6f5 !important; }
 [data-gameplay-skin="cosmotech"] .rd-game-log-empty { color: #5a6e9a !important; }
 
 /* CosmoTech — chat (understated glass) */
@@ -1078,10 +1088,15 @@
   border-left: 2px solid rgba(200,160,80,0.08) !important;
 }
 [data-gameplay-skin="corrupture"] .rd-rail-section-header { color: #9a8a80 !important; border-bottom-color: rgba(200,160,80,0.10) !important; }
-[data-gameplay-skin="corrupture"] .rd-game-log-entry { color: #d4c8c0 !important; }
-[data-gameplay-skin="corrupture"] .rd-game-log-entry .log-turn { color: #6a5a50 !important; }
-[data-gameplay-skin="corrupture"] .rd-game-log-entry .log-actor.human { color: #c8a050 !important; }
-[data-gameplay-skin="corrupture"] .rd-game-log-entry .log-actor.ai { color: #b87ad0 !important; }
+[data-gameplay-skin="corrupture"] .rd-log-entry { color: #d4c8c0 !important; border-bottom-color: rgba(200,160,80,0.06) !important; }
+[data-gameplay-skin="corrupture"] .rd-log-entry:nth-child(even) { background: rgba(200,160,80,0.03) !important; }
+[data-gameplay-skin="corrupture"] .rd-log-entry:hover { background: rgba(200,160,80,0.07) !important; border-left-color: rgba(200,160,80,0.4) !important; }
+[data-gameplay-skin="corrupture"] .rd-log-actor { background: rgba(106,90,80,0.25) !important; color: #9a8a80 !important; }
+[data-gameplay-skin="corrupture"] .rd-log-actor[data-actor="P1"] { background: rgba(200,160,80,0.18) !important; color: #c8a050 !important; }
+[data-gameplay-skin="corrupture"] .rd-log-actor[data-actor="P2"] { background: rgba(184,122,208,0.18) !important; color: #b87ad0 !important; }
+[data-gameplay-skin="corrupture"] .rd-log-actor[data-actor="SYS"] { background: rgba(180,140,80,0.18) !important; color: #b48c50 !important; }
+[data-gameplay-skin="corrupture"] .rd-log-icon { opacity: 0.8 !important; }
+[data-gameplay-skin="corrupture"] .event-description { color: #d4c8c0 !important; }
 [data-gameplay-skin="corrupture"] .rd-game-log-empty { color: #6a5a50 !important; }
 
 /* Corrupture — chat (smoked glass) */
