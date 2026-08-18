@@ -96,6 +96,21 @@ cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
     await cp(path.join(aaiSrc, mod), path.join(aaiDist, mod));
   }
 }
+// ── Replay Caster: copy browser-bundleable package modules into dist/replay-caster ──
+// The browser UI (apps/lab-web/src/workspaces/caster-workspace.js) imports these
+// .mjs modules via the browser-entry.js adapter. The package imports
+// @intrilex/shared (aliased to the browser shim by bundle.mjs) and uses
+// string-concatenated dynamic imports for Node-only packages (so esbuild
+// leaves them as runtime dynamic imports, never bundled for the browser).
+{
+  const rcSrc = path.join(root, 'packages/replay-caster/src');
+  const rcDist = path.join(dist, 'replay-caster');
+  await mkdir(rcDist, { recursive: true });
+  const rcModules = (await readdir(rcSrc)).filter(f => f.endsWith('.mjs'));
+  for (const mod of rcModules) {
+    await cp(path.join(rcSrc, mod), path.join(rcDist, mod));
+  }
+}
 // ── Achievements: copy isomorphic package modules into dist/achievements ──
 // The browser UI adapters (apps/lab-web/src/achievements/*.js) import these
 // .mjs modules via relative paths. The package is self-contained (no workspace

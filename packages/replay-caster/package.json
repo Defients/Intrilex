@@ -1,0 +1,27 @@
+{
+  "name": "@intrilex/replay-caster",
+  "version": "0.28.0",
+  "type": "module",
+  "description": "Replay Caster v0.1 — observability instrument disguised as a broadcast experience. Replays a completed deterministic AI-vs-AI Intrilex match with live-style pacing and optional Ollama commentary. Pure observational layer; never mutates gameplay, replay data, or engine authority.",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./schemas": "./src/schemas.mjs",
+    "./beat-builder": "./src/beat-builder.mjs",
+    "./importance": "./src/importance.mjs",
+    "./playback-director": "./src/playback-director.mjs",
+    "./narrative-thread": "./src/narrative-thread.mjs",
+    "./diagnostics": "./src/diagnostics.mjs",
+    "./commentary-planner": "./src/commentary-planner.mjs",
+    "./commentary-provider": "./src/commentary-provider.mjs",
+    "./ollama-provider": "./src/ollama-provider.mjs",
+    "./commentary-validator": "./src/commentary-validator.mjs",
+    "./wait-what": "./src/wait-what.mjs",
+    "./caster-session": "./src/caster-session.mjs"
+  },
+  "dependencies": {
+    "@intrilex/shared": "workspace:*",
+    "@intrilex/engine-adapter": "workspace:*",
+    "@intrilex/simulation-runtime": "workspace:*",
+    "@intrilex/analytics-ai": "workspace:*"
+  }
+}

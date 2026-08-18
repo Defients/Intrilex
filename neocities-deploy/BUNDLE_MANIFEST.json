@@ -1,28 +1,28 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-08-17T18:49:52.307Z",
+  "generatedAt": "2026-08-17T23:39:45.048Z",
   "assets": {
     "app": {
-      "file": "app.73653ac8207b.js",
-      "hash": "73653ac8207b",
+      "file": "app.3dca2dc8fde5.js",
+      "hash": "3dca2dc8fde5",
       "type": "js"
     },
     "styles": {
-      "file": "styles.382946313ed8.css",
-      "hash": "382946313ed8",
+      "file": "styles.0c2a0d839cd0.css",
+      "hash": "0c2a0d839cd0",
       "type": "css"
     },
     "chunks": [
       {
-        "file": "chunk-account-store-J6VHLCJA.js",
+        "file": "chunk-account-store-NEBZWBQH.js",
         "type": "js"
       },
       {
-        "file": "chunk-achievement-runtime-BQLNXQIM.js",
+        "file": "chunk-achievement-runtime-ZJZASHXG.js",
         "type": "js"
       },
       {
-        "file": "chunk-achievement-ui-T57COJ5D.js",
+        "file": "chunk-achievement-ui-FUMHFKBL.js",
         "type": "js"
       },
       {
@@ -30,31 +30,39 @@
         "type": "js"
       },
       {
-        "file": "chunk-auth-controller-XBOO3MQM.js",
+        "file": "chunk-auth-controller-N4OHVSGK.js",
         "type": "js"
       },
       {
-        "file": "chunk-autonomy-runtime-QTKZMHD3.js",
+        "file": "chunk-autonomy-runtime-FZY42X7W.js",
         "type": "js"
       },
       {
-        "file": "chunk-browser-analytics-Q6HGIHUD.js",
+        "file": "chunk-browser-analytics-HIMVSZCG.js",
         "type": "js"
       },
       {
-        "file": "chunk-browser-entry-UXZZMFMC.js",
+        "file": "chunk-browser-entry-57QFPGSE.js",
         "type": "js"
       },
       {
-        "file": "chunk-chunk-2ZM5N2YH.js",
+        "file": "chunk-browser-entry-DSGBOX6R.js",
         "type": "js"
       },
       {
-        "file": "chunk-chunk-3YFWG6CU.js",
+        "file": "chunk-chunk-2RSQAPV7.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-4M2GPIOW.js",
         "type": "js"
       },
       {
         "file": "chunk-chunk-4TQT2SU7.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-5IXF5DKV.js",
         "type": "js"
       },
       {
@@ -66,14 +74,6 @@
         "type": "js"
       },
       {
-        "file": "chunk-chunk-7CLETCON.js",
-        "type": "js"
-      },
-      {
-        "file": "chunk-chunk-AF257Y4V.js",
-        "type": "js"
-      },
-      {
         "file": "chunk-chunk-AYKJ7LII.js",
         "type": "js"
       },
@@ -82,15 +82,11 @@
         "type": "js"
       },
       {
-        "file": "chunk-chunk-BSHRJYUC.js",
+        "file": "chunk-chunk-CDOYP5MU.js",
         "type": "js"
       },
       {
         "file": "chunk-chunk-CXSKEMWU.js",
-        "type": "js"
-      },
-      {
-        "file": "chunk-chunk-D6BAAHXS.js",
         "type": "js"
       },
       {
@@ -106,11 +102,15 @@
         "type": "js"
       },
       {
-        "file": "chunk-chunk-JJTD5O45.js",
+        "file": "chunk-chunk-INOP2AOA.js",
         "type": "js"
       },
       {
-        "file": "chunk-chunk-JNZDUFO6.js",
+        "file": "chunk-chunk-KJ4G7K7L.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-MMKDW46B.js",
         "type": "js"
       },
       {
@@ -118,7 +118,11 @@
         "type": "js"
       },
       {
-        "file": "chunk-chunk-SCTBN64W.js",
+        "file": "chunk-chunk-RLG57CNG.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-SM2HU3BU.js",
         "type": "js"
       },
       {
@@ -130,11 +134,19 @@
         "type": "js"
       },
       {
-        "file": "chunk-chunk-SPVAGYMP.js",
+        "file": "chunk-chunk-TB45ROLV.js",
         "type": "js"
       },
       {
-        "file": "chunk-chunk-TB45ROLV.js",
+        "file": "chunk-chunk-UAJDPZES.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-UIVYMLJG.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-VVV5T2NW.js",
         "type": "js"
       },
       {
@@ -142,15 +154,15 @@
         "type": "js"
       },
       {
-        "file": "chunk-chunk-YRAOGPLH.js",
+        "file": "chunk-chunk-XIDRTSLF.js",
         "type": "js"
       },
       {
-        "file": "chunk-chunk-ZTI75VAM.js",
+        "file": "chunk-chunk-ZHMSNVIT.js",
         "type": "js"
       },
       {
-        "file": "chunk-data-loader-4BXX7URU.js",
+        "file": "chunk-data-loader-4KAK76SI.js",
         "type": "js"
       },
       {
@@ -162,7 +174,7 @@
         "type": "js"
       },
       {
-        "file": "chunk-migration-controller-IH3YHGDK.js",
+        "file": "chunk-migration-controller-ME5B4K7Z.js",
         "type": "js"
       },
       {
@@ -170,11 +182,11 @@
         "type": "js"
       },
       {
-        "file": "chunk-persistence-ULPKJXVA.js",
+        "file": "chunk-persistence-7MHZ3VWN.js",
         "type": "js"
       },
       {
-        "file": "chunk-play-app-MGF47IDP.js",
+        "file": "chunk-play-app-VSGV7JLY.js",
         "type": "js"
       },
       {
@@ -182,7 +194,7 @@
         "type": "js"
       },
       {
-        "file": "chunk-puzzle-app-CRDRYJUH.js",
+        "file": "chunk-puzzle-app-ECOYW6VL.js",
         "type": "js"
       },
       {
@@ -194,7 +206,7 @@
         "type": "js"
       },
       {
-        "file": "chunk-relationships-data-MROK3HBW.js",
+        "file": "chunk-relationships-data-Z3A64CMI.js",
         "type": "js"
       },
       {
@@ -202,19 +214,19 @@
         "type": "js"
       },
       {
-        "file": "chunk-replay-frames-QHEKCHMM.js",
+        "file": "chunk-replay-frames-VLMUINA3.js",
         "type": "js"
       },
       {
-        "file": "chunk-replay-library-YM2BCTYM.js",
+        "file": "chunk-replay-library-YLPNJM73.js",
         "type": "js"
       },
       {
-        "file": "chunk-save-integrity-PQONQMZR.js",
+        "file": "chunk-save-integrity-ZI6MF4CH.js",
         "type": "js"
       },
       {
-        "file": "chunk-state-Y7MUPI7R.js",
+        "file": "chunk-state-C2OYVJ2B.js",
         "type": "js"
       }
     ]

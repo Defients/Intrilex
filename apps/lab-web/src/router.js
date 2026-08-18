@@ -6,6 +6,7 @@ import { esc } from './state.js';
 
 export const WORKSPACES = [
   ['/watch','◈','Watch','Match theatre'],
+  ['/caster','🎙','Caster','Live replay broadcast'],
   ['/replays','▶','Replays','Verification'],
   ['/history','☰','History','Match ledger'],
   ['/mechanics','⌁','Mechanics','Atlas'],
@@ -29,6 +30,7 @@ export const TITLES = Object.fromEntries(WORKSPACES.map(([route,,label]) => [rou
 
 export const SUBTITLES = {
   '/watch':'Canonical match truth with semantic stepping and causal evidence.',
+  '/caster':'Watch a completed AI-vs-AI match unfold live with synchronized Ollama commentary. An observability instrument disguised as a broadcast experience.',
   '/replays':'Verify, search, compare, and investigate retained match evidence.',
   '/mechanics':'Opportunity, usage, impact, uncertainty, and replay evidence by mechanic.',
   '/synergies':'Stratified synergy, anti-synergy, motifs, and counterexamples.',
@@ -68,7 +70,7 @@ export function route() {
 export function renderNavigation() {
   // Group workspaces into sections for visual hierarchy
   const SECTIONS = [
-    { label: 'Analysis', routes: ['/watch', '/replays', '/history', '/mechanics', '/synergies'] },
+    { label: 'Analysis', routes: ['/watch', '/caster', '/replays', '/history', '/mechanics', '/synergies'] },
     { label: 'Investigation', routes: ['/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament'] },
     { label: 'System', routes: ['/evidence', '/intelligence'] },
   ];

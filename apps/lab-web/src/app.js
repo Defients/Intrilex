@@ -18,6 +18,7 @@ import { renderEvidence } from './workspaces/evidence.js';
 import { renderReleaseNotes } from './workspaces/release-notes.js';
 import { renderIntelligence } from './workspaces/intelligence.js';
 import { renderTournament } from './workspaces/tournament.js';
+import { renderCaster, cleanupCaster } from './workspaces/caster-workspace.js';
 import { renderProfile } from './workspaces/profile.js';
 import { renderPlayers, destroyPlayers } from './workspaces/players.js';
 import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.js';
@@ -170,6 +171,10 @@ export function render() {
       try { _playModule.cleanupPlay(); } catch (e) { console.warn('[render] cleanupPlay error:', e); }
     }
   }
+  // Caster workspace cleanup: stop playback timer and terminate worker on route change.
+  if (_previousRoute === '/caster' && r !== '/caster') {
+    try { cleanupCaster(); } catch (e) { console.warn('[render] cleanupCaster error:', e); }
+  }
   _previousRoute = r;
   // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
   // This replaces the old ad-hoc metadata restore block and ensures every
@@ -233,7 +238,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
+    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/caster': () => renderCaster(app), '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
   };
   try {
     const result = (renderers[r] ?? renderEvidence)();

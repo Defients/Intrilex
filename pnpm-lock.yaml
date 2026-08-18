@@ -35,6 +35,9 @@ importers:
       '@intrilex/policy-sdk':
         specifier: workspace:*
         version: link:packages/policy-sdk
+      '@intrilex/replay-caster':
+        specifier: workspace:*
+        version: link:packages/replay-caster
       '@intrilex/shared':
         specifier: workspace:*
         version: link:packages/shared
@@ -199,6 +202,21 @@ importers:
       '@intrilex/shared':
         specifier: workspace:*
         version: link:../shared
+
+  packages/replay-caster:
+    dependencies:
+      '@intrilex/analytics-ai':
+        specifier: workspace:*
+        version: link:../analytics-ai
+      '@intrilex/engine-adapter':
+        specifier: workspace:*
+        version: link:../engine-adapter
+      '@intrilex/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@intrilex/simulation-runtime':
+        specifier: workspace:*
+        version: link:../simulation-runtime
 
   packages/shared: {}
 
