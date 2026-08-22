@@ -16,6 +16,8 @@
 
 import { esc } from '../state.js';
 import { policyOptions } from '../router.js';
+import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js';
+import { reconstructReplayFrames } from '../replay-frames.js';
 
 // Lazy-loaded @intrilex/replay-caster (browser-bundleable subset).
 let casterModule = null;
@@ -52,7 +54,9 @@ const casterState = {
   timer: null,
   ollamaEnabled: false,
   ollamaModel: '',
-  ollamaStatus: null
+  ollamaStatus: null,
+  savedReplays: [],
+  replaysLoaded: false
 };
 
 // ── Main render entry point ───────────────────────────────────────
@@ -60,6 +64,9 @@ const casterState = {
 export async function renderCaster(appEl) {
   // Ensure the module is loaded (for the browser entry).
   await getCaster();
+
+  // Load saved replays from IndexedDB for the library section.
+  await loadSavedReplays();
 
   if (casterState.error) {
     renderError(appEl, casterState.error);
@@ -77,6 +84,39 @@ export async function renderCaster(appEl) {
   }
 
   renderTheatre(appEl);
+}
+
+// ── Replay library section ────────────────────────────────────────
+
+async function loadSavedReplays() {
+  if (casterState.replaysLoaded) return;
+  if (!isIndexedDBAvailable()) {
+    casterState.replaysLoaded = true;
+    return;
+  }
+  try {
+    const replays = await listReplays();
+    casterState.savedReplays = replays.filter(r => r.certifiedReplay?.initialState && Array.isArray(r.certifiedReplay?.commands));
+  } catch { /* IDB unavailable */ }
+  casterState.replaysLoaded = true;
+}
+
+function renderReplayLibrarySection() {
+  if (!casterState.replaysLoaded || casterState.savedReplays.length === 0) return '';
+  const items = casterState.savedReplays.slice(0, 20).map(r => {
+    const label = `${r.replayId} · ${r.winner || '?'} · ${r.decisionCount ?? '?'} decisions`;
+    return `<option value="${esc(r.replayId)}">${esc(label)}</option>`;
+  }).join('');
+  return `<div class="caster-setup-section">
+    <h3>Or load from Replay Library</h3>
+    <div class="caster-setup-row">
+      <label>Saved replay<select id="caster-replay-select">
+        <option value="">— Select a saved replay —</option>
+        ${items}
+      </select></label>
+      <button id="caster-load-replay" class="secondary-button" disabled>Load & Cast</button>
+    </div>
+  </div>`;
 }
 
 // ── Setup screen (match configuration) ────────────────────────────
@@ -131,6 +171,7 @@ function renderSetup(appEl) {
         <div class="caster-setup-actions">
           <button id="caster-start" class="primary-button">Generate & Cast Match</button>
         </div>
+        ${renderReplayLibrarySection()}
         <div class="caster-setup-note">
           <p>The match is fully generated before playback begins. Commentary never generates or resolves gameplay.
           Disabling Caster or Ollama does not change match results or hashes.</p>
@@ -155,6 +196,17 @@ function renderSetup(appEl) {
   $('caster-ollama-model').onchange = (e) => { casterState.ollamaModel = e.target.value; };
   $('caster-ollama-test').onclick = () => testOllama(appEl);
   $('caster-start').onclick = () => startMatch(appEl);
+
+  // Replay library wiring
+  const replaySelect = $('caster-replay-select');
+  const replayLoadBtn = $('caster-load-replay');
+  if (replaySelect && replayLoadBtn) {
+    replaySelect.onchange = (e) => { replayLoadBtn.disabled = !e.target.value; };
+    replayLoadBtn.onclick = () => {
+      const replayId = replaySelect.value;
+      if (replayId) loadSavedReplayIntoCaster(appEl, replayId);
+    };
+  }
 }
 
 // ── Loading screen ────────────────────────────────────────────────
@@ -403,16 +455,26 @@ async function onBeatChange(appEl) {
   const session = casterState.session;
   if (!session) return;
 
-  // Re-render the theatre (updates beat display, slider, timeline)
-  renderTheatre(appEl);
-
-  // Generate commentary asynchronously (never blocks playback)
+  // Show loading state and re-render the theatre immediately
+  // (updates beat display, slider, timeline, clears old commentary)
   casterState.commentaryLoading = true;
   casterState.commentaryError = null;
   renderTheatre(appEl);
 
   try {
-    const result = await session.generateCommentaryForCurrentBeat();
+    const result = await session.generateCommentaryForCurrentBeat({
+      onToken: (chunk) => {
+        // Incremental streaming update — append to commentary body text.
+        // Only update the DOM textContent (safe, no re-render needed).
+        const bodyEl = appEl.querySelector('[data-testid="caster-commentary-body"]');
+        if (bodyEl) {
+          const current = bodyEl.textContent || '';
+          bodyEl.textContent = current + chunk;
+        }
+        // Track streaming text so the final render preserves it.
+        casterState.commentaryText = (casterState.commentaryText || '') + chunk;
+      }
+    });
     casterState.commentaryLoading = false;
     if (result.skipped) {
       casterState.commentaryText = '';
@@ -435,7 +497,7 @@ async function onBeatChange(appEl) {
     casterState.commentaryError = err?.message || String(err);
   }
 
-  // Re-render with commentary (safe text rendering)
+  // Re-render with final commentary state (safe text rendering)
   renderTheatre(appEl);
 
   // Render WAIT WHAT commentary text safely
@@ -471,6 +533,38 @@ function stopTimer() {
 
 // ── Match generation (via Web Worker) ─────────────────────────────
 
+async function buildProvider() {
+  const { DeterministicCommentaryProvider, OllamaCommentaryProvider } = await getCaster();
+  if (casterState.ollamaEnabled && casterState.ollamaModel) {
+    const client = await getBrowserOllamaClient();
+    return new OllamaCommentaryProvider({
+      model: casterState.ollamaModel,
+      client,
+      temperature: 0.4,
+      stream: true
+    });
+  }
+  return new DeterministicCommentaryProvider();
+}
+
+async function buildAndLoadSession(appEl, matchResult, frames) {
+  const { CasterSession, COMMENTARY_MODE, VIEWER_MODE } = await getCaster();
+  const c = casterState.config;
+  const provider = await buildProvider();
+  const session = new CasterSession({
+    provider,
+    mode: c.mode === 'DEV_OBSERVATORY' ? COMMENTARY_MODE.DEV_OBSERVATORY : COMMENTARY_MODE.BROADCAST,
+    viewerMode: c.viewerMode === 'omniscient' ? VIEWER_MODE.OMNISCIENT : VIEWER_MODE.PUBLIC,
+    settings: { model: casterState.ollamaModel || null, density: 'normal' }
+  });
+  session.loadCompletedMatch(matchResult, frames);
+  session.setSpeed(c.speed);
+  casterState.session = session;
+  casterState.loading = false;
+  renderTheatre(appEl);
+  await onBeatChange(appEl);
+}
+
 async function startMatch(appEl) {
   const c = casterState.config;
   casterState.loading = true;
@@ -479,8 +573,6 @@ async function startMatch(appEl) {
   renderLoading(appEl);
 
   try {
-    const { CasterSession, DeterministicCommentaryProvider, OllamaCommentaryProvider, COMMENTARY_MODE, VIEWER_MODE } = await getCaster();
-
     // Run the match in a Web Worker (reuses the tournament worker protocol).
     const matchResult = await runMatchInWorker({
       seed: c.seed,
@@ -490,38 +582,60 @@ async function startMatch(appEl) {
     });
 
     // Reconstruct frames in the main thread using the browser engine.
-    const frames = await reconstructFrames(matchResult.replay);
+    const frames = await reconstructReplayFrames(matchResult.replay);
 
-    // Build the provider: deterministic by default, Ollama if enabled.
-    let provider;
-    if (casterState.ollamaEnabled && casterState.ollamaModel) {
-      // Inject the browser Ollama client (from analytics-ai browser controller).
-      const client = await getBrowserOllamaClient();
-      provider = new OllamaCommentaryProvider({
-        model: casterState.ollamaModel,
-        client,
-        temperature: 0.4
-      });
-    } else {
-      provider = new DeterministicCommentaryProvider();
+    await buildAndLoadSession(appEl, matchResult, frames);
+  } catch (err) {
+    casterState.loading = false;
+    casterState.error = err?.message || String(err);
+    renderError(appEl, casterState.error);
+  }
+}
+
+// ── Load a saved replay from IndexedDB ────────────────────────────
+
+async function loadSavedReplayIntoCaster(appEl, replayId) {
+  casterState.loading = true;
+  casterState.loadingMessage = `Loading replay ${replayId}…`;
+  casterState.error = null;
+  renderLoading(appEl);
+
+  try {
+    const record = await getReplay(replayId);
+    if (!record || !record.certifiedReplay) {
+      throw new Error('Replay not found or missing certified replay data');
     }
 
-    // Create the session and load the completed match.
-    const session = new CasterSession({
-      provider,
-      mode: c.mode === 'DEV_OBSERVATORY' ? COMMENTARY_MODE.DEV_OBSERVATORY : COMMENTARY_MODE.BROADCAST,
-      viewerMode: c.viewerMode === 'omniscient' ? VIEWER_MODE.OMNISCIENT : VIEWER_MODE.PUBLIC,
-      settings: { model: casterState.ollamaModel || null, density: 'normal' }
-    });
-    session.loadCompletedMatch(matchResult, frames);
-    session.setSpeed(c.speed);
+    // Reconstruct frames from the certified replay.
+    const frames = await reconstructReplayFrames(record.certifiedReplay);
+    if (frames.length === 0) {
+      throw new Error('Could not reconstruct frames from certified replay');
+    }
 
-    casterState.session = session;
-    casterState.loading = false;
+    // Build a matchResult shape that loadCompletedMatch expects.
+    // Certified replays store initialState + commands but not a full
+    // summary. We derive a minimal summary from the replay record.
+    const certified = record.certifiedReplay;
+    const matchResult = {
+      summary: {
+        matchId: record.sessionId || replayId,
+        seed: record.seed ?? certified.seed ?? null,
+        profileId: record.profileId || 'core-advanced-authority',
+        seatOrder: ['P1', 'P2'],
+        policyIds: record.aiPolicyId ? [record.humanPlayerId || 'human', record.aiPolicyId] : ['unknown', 'unknown'],
+        winner: record.winner || null,
+        terminationReason: record.terminationReason || null,
+        finalStateHash: certified.finalStateHash ?? null,
+        matchResultHash: certified.integrityHash ?? certified.contentHash ?? null,
+        finalScores: certified.finalScores ?? {},
+        completedFullTurns: record.fullTurnSequence ?? null
+      },
+      decisions: [],
+      replay: certified,
+      decisionTraces: null
+    };
 
-    // Start at beat 0 and generate initial commentary
-    renderTheatre(appEl);
-    await onBeatChange(appEl);
+    await buildAndLoadSession(appEl, matchResult, frames);
   } catch (err) {
     casterState.loading = false;
     casterState.error = err?.message || String(err);
@@ -553,19 +667,6 @@ function runMatchInWorker(config) {
       enableTraces: true
     });
   });
-}
-
-async function reconstructFrames(replay) {
-  const { IntrilexEngine } = await import('../engine/browser-entry.js');
-  const engine = new IntrilexEngine();
-  let s = structuredClone(replay.initialState);
-  const frames = [{ state: s, events: [], command: null, commandIndex: -1 }];
-  for (const [index, command] of replay.commands.entries()) {
-    const result = engine.execute(s, command);
-    s = result.state;
-    frames.push({ state: s, events: result.events, command, commandIndex: index, accepted: result.accepted });
-  }
-  return frames;
 }
 
 // ── Minimal browser Ollama client ─────────────────────────────────
@@ -642,7 +743,7 @@ class BrowserOllamaClient {
     }
   }
 
-  async chat({ model, messages, options = {}, stream = false, signal } = {}) {
+  async chat({ model, messages, options = {}, stream = false, onToken, signal } = {}) {
     if (!model) throw Object.assign(new Error('No model selected'), { category: 'MODEL_NOT_FOUND' });
     const body = { model, messages, stream, options: { temperature: options.temperature ?? 0.4, num_predict: options.num_predict ?? 512, ...options } };
     const res = await this._request('/api/chat', { method: 'POST', body, signal });
@@ -679,7 +780,7 @@ class BrowserOllamaClient {
           const chunk = JSON.parse(line);
           rawChunks.push(chunk);
           if (chunk.message?.content) text += chunk.message.content;
-          if (typeof opts.onToken === 'function') opts.onToken(chunk.message?.content || '');
+          if (typeof onToken === 'function') onToken(chunk.message?.content || '');
         } catch { /* skip malformed line */ }
       }
     }
@@ -723,6 +824,11 @@ function beatLabel(beat) {
 }
 
 // ── Cleanup (called on route change) ──────────────────────────────
+//
+// Preserves the session so the user can return to the Caster and resume
+// playback where they left off. Only stops the timer and terminates any
+// in-flight worker. The session, commentary cache, commentary history,
+// and playback position all survive the route change.
 
 export function cleanupCaster() {
   stopTimer();
@@ -730,8 +836,9 @@ export function cleanupCaster() {
     casterState.worker.terminate();
     casterState.worker = null;
   }
-  casterState.session = null;
-  casterState.commentaryText = '';
-  casterState.waitWhatCapture = null;
+  // Pause playback but preserve the session for resume.
+  if (casterState.session) {
+    try { casterState.session.pause(); } catch { /* ignore */ }
+  }
   casterState.waitWhatVisible = false;
 }
