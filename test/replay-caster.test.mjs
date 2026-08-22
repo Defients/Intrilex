@@ -620,6 +620,60 @@ describe('Replay Caster v0.1 — Ollama Provider', () => {
     assert.equal(result.record.commentary, 'A solid play from seat 1.');
   });
 
+  test('OllamaCommentaryProvider streaming mode invokes onToken callback', async () => {
+    const validJson = JSON.stringify({
+      commentary: 'A solid play from seat 1.',
+      importance: 0.6,
+      headline: 'Seat 1 acts',
+      tone: 'ANALYTICAL',
+      spoilerCheck: 'PASS'
+    });
+    const tokens = validJson.split('');
+    const fakeClient = {
+      chat: async ({ onToken }) => {
+        if (typeof onToken === 'function') {
+          for (const t of tokens) onToken(t);
+        }
+        return { text: validJson, done: true, rawChunks: [] };
+      }
+    };
+    const received = [];
+    const provider = new OllamaCommentaryProvider({ model: 'test-model', client: fakeClient, stream: true });
+    const result = await provider.generateCommentary({
+      beat: { beatId: 'x', beatKind: 'DECISION', importance: 0.5, publicSummary: {} },
+      presentContext: { scores: {} },
+      futureContext: { visibleToViewer: false },
+      diagnostics: []
+    }, { onToken: (chunk) => received.push(chunk) });
+    assert.equal(result.ok, true);
+    assert.ok(received.length > 0, 'onToken should have been called');
+    assert.equal(received.join(''), validJson);
+  });
+
+  test('OllamaCommentaryProvider streaming disabled when no onToken provided', async () => {
+    const validJson = JSON.stringify({
+      commentary: 'Test.',
+      importance: 0.5,
+      headline: 'Test',
+      tone: 'MEASURED',
+      spoilerCheck: 'PASS'
+    });
+    let streamRequested = null;
+    const fakeClient = {
+      chat: async ({ stream }) => {
+        streamRequested = stream;
+        return { text: validJson };
+      }
+    };
+    const provider = new OllamaCommentaryProvider({ model: 'test-model', client: fakeClient, stream: true });
+    await provider.generateCommentary({
+      beat: { beatId: 'x', beatKind: 'DECISION', importance: 0.5, publicSummary: {} },
+      presentContext: {}, futureContext: { visibleToViewer: false }, diagnostics: []
+    });
+    // stream should be false because no onToken callback was provided
+    assert.equal(streamRequested, false);
+  });
+
   test('OllamaCommentaryProvider rejects malformed JSON', async () => {
     const fakeClient = { chat: async () => ({ text: 'not json' }) };
     const provider = new OllamaCommentaryProvider({ model: 'test', client: fakeClient });
