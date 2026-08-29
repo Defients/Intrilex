@@ -123,6 +123,7 @@ export function validateBeat(beat) {
     seat: beat.seat ?? null,
     turn: beat.turn ?? null,
     phase: beat.phase ?? null,
+    frameIndex: Number.isInteger(beat.frameIndex) ? beat.frameIndex : 0,
     decisionId: beat.decisionId ?? null,
     checkpointHashBefore: beat.checkpointHashBefore ?? null,
     checkpointHashAfter: beat.checkpointHashAfter ?? null,

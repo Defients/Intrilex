@@ -28,11 +28,11 @@ export async function reconstructReplayFrames(certifiedReplay) {
   const { IntrilexEngine } = await import('./engine/browser-entry.js');
   const engine = new IntrilexEngine();
   let state = structuredClone(certifiedReplay.initialState);
-  const frames = [{ state, events: [], command: null, commandIndex: -1, accepted: null }];
+  const frames = [{ state, events: [], command: null, commandIndex: -1, frameIndex: 0, accepted: null }];
   for (const [index, command] of certifiedReplay.commands.entries()) {
     const result = engine.execute(state, command);
     state = result.state;
-    frames.push({ state, events: result.events, command, commandIndex: index, accepted: result.accepted });
+    frames.push({ state, events: result.events, command, commandIndex: index, frameIndex: index + 1, accepted: result.accepted });
   }
   return frames;
 }

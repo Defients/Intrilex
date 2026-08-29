@@ -160,6 +160,20 @@ describe('Replay Caster v0.1 — Beat Building & Determinism', () => {
     assert.equal(session.beats[session.beats.length - 1].beatKind, BEAT_KIND.MATCH_END);
   });
 
+  test('RC-S01b: beats carry frameIndex for board state lookup', async () => {
+    const session = await makeSession();
+    for (const beat of session.beats) {
+      assert.ok(Number.isInteger(beat.frameIndex), `beat ${beat.beatId} should have integer frameIndex`);
+      assert.ok(beat.frameIndex >= 0, `beat ${beat.beatId} frameIndex should be non-negative`);
+    }
+    // MATCH_START beat should point to frame 0 (initial state)
+    assert.equal(session.beats[0].frameIndex, 0);
+    // The frameIndex should be within the frames array bounds
+    for (const beat of session.beats) {
+      assert.ok(beat.frameIndex < session.frames.length, `beat ${beat.beatId} frameIndex ${beat.frameIndex} out of bounds (frames: ${session.frames.length})`);
+    }
+  });
+
   test('RC-S02: canonical replay evidence preserved (replayHash present)', async () => {
     const session = await makeSession();
     assert.ok(session.replayHash, 'replayHash must be present');
