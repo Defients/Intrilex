@@ -285,6 +285,9 @@ function renderTheatre(appEl) {
     return `<button class="caster-tl-item ${cls} ${isCurrent ? 'current' : ''}" data-idx="${i}" title="${esc(label)}"><span class="caster-tl-dot"></span></button>`;
   }).join('');
 
+  // Board layout (game state for current beat)
+  const boardHtml = renderBoard(session, beat);
+
   // WAIT WHAT panel
   const ww = casterState.waitWhatVisible && casterState.waitWhatCapture
     ? renderWaitWhatPanel(casterState.waitWhatCapture)
@@ -346,6 +349,7 @@ function renderTheatre(appEl) {
           </div>
         </div>
         <div class="caster-scores" data-testid="caster-scores">${scoreBars}</div>
+        ${boardHtml}
         ${commentaryBlock}
         ${commentaryLoading}
         ${commentaryErr}
@@ -809,6 +813,127 @@ async function testOllama(appEl) {
     casterState.ollamaStatus = `Error: ${err.message}`;
   }
   if (statusEl) statusEl.textContent = casterState.ollamaStatus;
+}
+
+// ── Board layout ─────────────────────────────────────────────────
+//
+// Renders the game state for the current beat. Respects viewer mode:
+//   PUBLIC: shows only public information (card backs for opponent hands,
+//           no hidden hand identities, no future outcomes).
+//   OMNISCIENT: shows full card identities for both players.
+//
+// Authority: this is a pure viewer; it never mutates state.
+
+function getBoardStateForBeat(session, beat) {
+  if (!session || !beat) return null;
+  const frame = session.frames?.[beat.frameIndex ?? 0];
+  if (!frame) return null;
+  const rawState = frame.state ?? frame.omniscientState ?? {};
+  const omniscient = casterState.config.viewerMode === 'omniscient';
+  const seatOrder = session.matchResult?.summary?.seatOrder || ['P1', 'P2'];
+  return { rawState, omniscient, seatOrder };
+}
+
+function renderBoard(session, beat) {
+  const board = getBoardStateForBeat(session, beat);
+  if (!board) return '<div class="caster-board-empty">No board state available.</div>';
+
+  const { rawState, omniscient, seatOrder } = board;
+  const cards = rawState.cards ?? {};
+  const players = rawState.players ?? {};
+  const stack = Array.isArray(rawState.stack) ? rawState.stack : [];
+  const zones = rawState.zones ?? {};
+  const phase = rawState.phase ?? beat.phase ?? '—';
+  const turn = rawState.fullTurnSequence ?? beat.turn ?? '—';
+  const dpCount = Array.isArray(zones.dp) ? zones.dp.length : 0;
+  const gyCount = Array.isArray(zones.gy) ? zones.gy.length : 0;
+
+  const renderCard = (cardId, showFace) => {
+    const card = cardId != null ? cards[cardId] : null;
+    if (!card) return '<div class="caster-card caster-card-empty"></div>';
+    const identity = card.identity ?? '';
+    const rank = String(identity).replace(/[♣♦♥♠]/u, '').trim();
+    const suit = String(identity).match(/[♣♦♥♠]/u)?.[0] ?? '';
+    const pointValue = card.state?.pointValue ?? '';
+    const cls = showFace
+      ? `caster-card caster-card-face${suit === '♥' || suit === '♦' ? ' red' : ''}`
+      : 'caster-card caster-card-back';
+    const title = showFace ? `${esc(identity)}${pointValue !== '' ? ` · ${pointValue}pt` : ''}` : 'Hidden card';
+    const inner = showFace
+      ? `<div class="caster-card-rank">${esc(rank)}</div><div class="caster-card-suit">${esc(suit)}</div>`
+      : '<div class="caster-card-back-pattern"></div>';
+    return `<div class="${cls}" title="${esc(title)}">${inner}</div>`;
+  };
+
+  const renderCardRow = (rowIds, label, showFace) => {
+    const ids = Array.isArray(rowIds) ? rowIds : [];
+    const items = ids.map(id => renderCard(id, showFace)).join('');
+    return `<div class="caster-card-row" data-row="${esc(label)}">
+      <div class="caster-row-label">${esc(label)}</div>
+      <div class="caster-row-cards">${items}</div>
+    </div>`;
+  };
+
+  const renderHand = (playerId, label) => {
+    const player = players[playerId] ?? {};
+    const hand = Array.isArray(player.hand) ? player.hand : (player.hand?.count ? Array(player.hand.count).fill(null) : []);
+    const showFace = omniscient;
+    // In public mode, hide hand identity by not passing the real card id.
+    const items = hand.map((id) => renderCard(showFace ? id : null, showFace)).join('');
+    const count = hand.length;
+    return `<div class="caster-card-row caster-hand" data-row="${esc(label)}">
+      <div class="caster-row-label">${esc(label)} (${count})</div>
+      <div class="caster-row-cards">${items}</div>
+    </div>`;
+  };
+
+  const renderPlayerBoard = (playerId, seatLabel) => {
+    const player = players[playerId] ?? {};
+    const er = player.enduringRow ?? player.er ?? [];
+    const pr = player.pointRow ?? player.pr ?? [];
+    const secured = player.securedPoints ?? 0;
+    const goal = player.goal ?? rawState.startingGoal ?? 21;
+    return `<div class="caster-player-board" data-seat="${esc(seatLabel)}">
+      <div class="caster-player-header">
+        <span class="caster-player-name">${esc(seatLabel)}</span>
+        <span class="caster-player-goal">${secured} / ${goal} secured</span>
+      </div>
+      ${renderCardRow(er, 'Enduring', true)}
+      ${renderCardRow(pr, 'Point', true)}
+      ${renderHand(playerId, 'Hand')}
+    </div>`;
+  };
+
+  // Stack items are objects with sourceCardIds (array of card IDs).
+  // Show the first source card face-up for each stack entry.
+  const stackCards = stack.map(s => {
+    const sourceIds = Array.isArray(s.sourceCardIds) ? s.sourceCardIds : [];
+    const cardId = sourceIds[0] ?? null;
+    return renderCard(cardId, true);
+  }).join('');
+  const stackHtml = stack.length > 0
+    ? `<div class="caster-stack"><div class="caster-row-label">Stack (${stack.length})</div><div class="caster-row-cards">${stackCards}</div></div>`
+    : '';
+
+  // Zone summary (draw pile + graveyard counts are public information).
+  const zoneHtml = `<div class="caster-zones">
+    <span class="caster-zone" data-testid="caster-dp-count">Draw Pile: ${dpCount}</span>
+    <span class="caster-zone" data-testid="caster-gy-count">Graveyard: ${gyCount}</span>
+  </div>`;
+
+  const p1 = seatOrder[0] || 'P1';
+  const p2 = seatOrder[1] || 'P2';
+
+  return `<div class="caster-board" data-testid="caster-board" data-viewer="${omniscient ? 'omniscient' : 'public'}">
+    <div class="caster-board-status">
+      <span class="caster-board-phase" data-testid="caster-board-phase">Phase: ${esc(phase)}</span>
+      <span class="caster-board-turn" data-testid="caster-board-turn">Turn: ${esc(turn)}</span>
+    </div>
+    ${renderPlayerBoard(p2, 'Seat 2')}
+    ${stackHtml}
+    ${renderPlayerBoard(p1, 'Seat 1')}
+    ${zoneHtml}
+  </div>`;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────

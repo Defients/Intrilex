@@ -2,7 +2,7 @@
 // workspaces/tournament.js — /tournament workspace: AI tournament mode
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, short, definitionList, showToast, clamp } from '../state.js';
+import { state, app, esc, pct, definitionList, showToast, clamp } from '../state.js';
 import { rerender } from '../rerender.js';
 import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js';
 import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js';

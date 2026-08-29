@@ -383,11 +383,11 @@ export function reconstructAuthorityCheckpoints(replay) {
   verifyAuthorityCertifiedReplay(replay);
   const engine = new engineModule.IntrilexEngine();
   let state = structuredClone(replay.initialState);
-  const frames = [{ commandIndex: -1, state, events: [], accepted: null, error: null }];
+  const frames = [{ commandIndex: -1, frameIndex: 0, state, events: [], accepted: null, error: null }];
   for (const [index, command] of replay.commands.entries()) {
     const result = engine.execute(state, command);
     state = result.state;
-    frames.push({ commandIndex: index, accepted: result.accepted, state, events: result.events, error: result.error ?? null });
+    frames.push({ commandIndex: index, frameIndex: index + 1, accepted: result.accepted, state, events: result.events, error: result.error ?? null });
   }
   return frames;
 }
