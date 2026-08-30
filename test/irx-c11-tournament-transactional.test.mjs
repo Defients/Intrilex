@@ -3,8 +3,8 @@
 //
 // Proves:
 //   1. SupabaseTournamentRepository.save() attempts atomic RPC first
-//   2. Falls back to sequential upserts with error propagation if RPC unavailable
-//   3. All error paths throw (no silent failures)
+//   2. Fails closed if the atomic RPC is unavailable
+//   3. RPC errors are not exposed to clients
 //   4. Migration 0024 defines upsert_tournament_atomic RPC function
 //   5. RPC function wraps all 3 writes in a single transaction
 // ═══════════════════════════════════════════════════════════════
@@ -19,36 +19,21 @@ const repoSrc = readFileSync(join(root, 'apps/match-server/src/persistence/tourn
 test('IRX-C11: save() attempts atomic RPC first', () => {
   assert.ok(
     repoSrc.includes("this._client.rpc('upsert_tournament_atomic'"),
-    'save() must attempt upsert_tournament_atomic RPC before sequential fallback'
+    'save() must use upsert_tournament_atomic'
   );
 });
 
-test('IRX-C11: save() falls back to sequential upserts when RPC unavailable', () => {
-  assert.ok(
-    repoSrc.includes('Sequential fallback'),
-    'save() must have sequential fallback path for backward compatibility'
-  );
-  assert.ok(
-    repoSrc.includes('upsert(tournamentRow') &&
-    repoSrc.includes("upsert(validRows") &&
-    repoSrc.includes('upsert(matchRows'),
-    'Sequential fallback must upsert tournament, participants, and matches'
-  );
+test('IRX-C11: save() has no partial-commit sequential fallback', () => {
+  assert.doesNotMatch(repoSrc, /\.from\('tournaments'\)[\s\S]*?\.upsert\(tournamentRow/);
+  assert.doesNotMatch(repoSrc, /\.upsert\(participantRows|\.upsert\(matchRows/);
 });
 
-test('IRX-C11: all error paths throw (no silent failures)', () => {
-  // Check that all 3 sequential fallback error paths throw
+test('IRX-C11: atomic RPC errors fail closed without leaking database details', () => {
   assert.ok(
-    repoSrc.includes('throw new Error(`Tournament save failed:') &&
-    repoSrc.includes('throw new Error(`Tournament participant save failed:') &&
-    repoSrc.includes('throw new Error(`Tournament match save failed:'),
-    'All 3 sequential fallback error paths must throw'
-  );
-  // Check that RPC failure also throws
-  assert.ok(
-    repoSrc.includes('throw new Error(`Atomic tournament save failed:'),
+    repoSrc.includes("throw new Error('Atomic tournament save failed')"),
     'RPC failure path must throw'
   );
+  assert.doesNotMatch(repoSrc, /rpcErr\.message|rpcResult\.error/);
 });
 
 test('IRX-C11: migration 0024 exists and defines atomic RPC', () => {

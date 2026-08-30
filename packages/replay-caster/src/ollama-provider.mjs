@@ -98,6 +98,7 @@ export class OllamaCommentaryProvider {
     }
     const { messages } = buildCommentaryPrompt(input);
     const useStream = this._stream && typeof onToken === 'function';
+    const bufferedChunks = [];
     let result;
     try {
       result = await client.chat({
@@ -105,7 +106,9 @@ export class OllamaCommentaryProvider {
         messages,
         stream: useStream,
         options: { temperature: this._temperature, num_predict: 512 },
-        onToken: useStream ? onToken : undefined,
+        // Model tokens are untrusted until the complete JSON record passes
+        // schema validation and spoiler lint. Never expose raw partial output.
+        onToken: useStream ? (chunk) => bufferedChunks.push(String(chunk ?? '')) : undefined,
         signal
       });
     } catch (err) {
@@ -119,6 +122,7 @@ export class OllamaCommentaryProvider {
     if (!accepted.accepted) {
       return { ok: false, record: accepted.record, error: accepted.error || OLLAMA_ERROR.MALFORMED_RESPONSE, cached: false };
     }
+    if (useStream) onToken(accepted.record.commentary);
     return { ok: true, record: accepted.record, error: null, cached: false };
   }
 }

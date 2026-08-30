@@ -141,6 +141,8 @@ let matchResultPersistor = null; // MatchResultPersistor instance (set by startS
 let ratingService = null; // RatingService instance (set by startServer) — RANK-01/3C
 let terminalOutbox = null; // TerminalOutbox instance (set by startServer) — DATA-01
 let blockChecker = null; // IRX-H19: Block-check function (accountIdA, accountIdB) → Promise<boolean>
+let activeRankedSeasonId = null;
+let seasonRefreshTimer = null;
 // IRX-H19: Block enforcement uses BLOCKED_BY_PLAYER reason code in handler modules
 // (match-handlers.mjs for join/create, matchmaking-handlers.mjs for queue).
 // handleJoinMatch calls blockChecker(joinerAccountId, p.accountId) in match-handlers.mjs.
@@ -328,17 +330,12 @@ function classifyMatch({ requestedQueueId, profileId, isMatchmaking = false }) {
     if (!ratingService) {
       return { matchMode: 'private', queueId: null, seasonId: null, admitted: false, reason: 'RANKED_REQUIRES_RATING_SERVICE' };
     }
-    // Requirement 4: active season resolved server-side
-    let seasonId = null;
-    if (matchResultPersistor && typeof matchResultPersistor.resolveActiveSeasonId === 'function') {
-      // Season resolution is async — we attempt it here but classification
-      // is sync. The season is resolved at terminal time in buildMatchResultRecord.
-      // For admission, we check that the persistor CAN resolve seasons.
-      seasonId = 'pending'; // Will be resolved at terminal time
-    } else {
+    // Requirement 4: an actual active season was resolved server-side.
+    // Never admit against a capability promise or a sentinel value.
+    if (!activeRankedSeasonId) {
       return { matchMode: 'private', queueId: null, seasonId: null, admitted: false, reason: 'RANKED_REQUIRES_SEASON_AUTHORITY' };
     }
-    return { matchMode: 'ranked', queueId: 'ranked', seasonId, admitted: true, reason: null };
+    return { matchMode: 'ranked', queueId: 'ranked', seasonId: activeRankedSeasonId, admitted: true, reason: null };
   }
 
   // Unknown queue — fail closed
@@ -456,10 +453,14 @@ function checkRateLimit(connectionId) {
  * @param {function} [opts.blockChecker] - IRX-H19: async (accountIdA, accountIdB) → boolean, checks if either player blocked the other
  * @returns {Promise<{ httpServer, wss, close }>}
  */
-export function startServer(opts = {}) {
+export async function startServer(opts = {}) {
   const port = opts.port ?? DEFAULT_PORT;
   const host = opts.host ?? DEFAULT_HOST;
   const persistent = opts.persistent ?? true;
+  const resolvedServiceKey = opts.supabaseServiceKey
+    ?? opts.supabaseSecretKey
+    ?? process.env.SUPABASE_SECRET_KEY
+    ?? null;
 
   // Override allowed origins if provided (for testing / dynamic configuration)
   if (opts.allowedOrigins !== undefined) {
@@ -473,18 +474,18 @@ export function startServer(opts = {}) {
     // Production: must have a verifier
     if (opts.identityVerifier) {
       identityVerifier = opts.identityVerifier;
-    } else if (opts.supabaseUrl && opts.supabaseSecretKey) {
+    } else if (opts.supabaseUrl && resolvedServiceKey) {
       // Dynamically import to avoid loading supabase-js when auth is disabled
       const { SupabaseIdentityVerifier } = require('./auth/supabase-identity-verifier.mjs');
       identityVerifier = new SupabaseIdentityVerifier({
         supabaseUrl: opts.supabaseUrl,
-        supabaseSecretKey: opts.supabaseSecretKey,
+        supabaseSecretKey: resolvedServiceKey,
       });
-    } else if (process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY) {
+    } else if (process.env.SUPABASE_URL && resolvedServiceKey) {
       const { SupabaseIdentityVerifier } = require('./auth/supabase-identity-verifier.mjs');
       identityVerifier = new SupabaseIdentityVerifier({
         supabaseUrl: process.env.SUPABASE_URL,
-        supabaseSecretKey: process.env.SUPABASE_SECRET_KEY,
+        supabaseSecretKey: resolvedServiceKey,
       });
     } else {
       // FAIL STARTUP LOUDLY — never silently run insecure multiplayer
@@ -525,12 +526,6 @@ export function startServer(opts = {}) {
   // block enforcement is disabled (dev mode only — production should always
   // provide a blockChecker).
   blockChecker = opts.blockChecker ?? null;
-  if (_authMode === AuthMode.REQUIRED && !blockChecker && LOG_ENABLED) {
-    process.stderr.write(
-      '\n⚠  WARNING: No blockChecker configured — blocked players can join matches.\n' +
-      '   Provide opts.blockChecker in production to enforce player blocks.\n\n'
-    );
-  }
 
   // Initialize match store
   if (persistent) {
@@ -586,10 +581,6 @@ export function startServer(opts = {}) {
 
   // Resolve the canonical service key from one source (DATA-04):
   // Precedence: opts.supabaseServiceKey > opts.supabaseSecretKey (deprecated alias) > env
-  const _resolvedServiceKey = opts.supabaseServiceKey
-    ?? opts.supabaseSecretKey
-    ?? process.env.SUPABASE_SECRET_KEY
-    ?? null;
   if (opts.supabaseSecretKey && opts.supabaseServiceKey && opts.supabaseSecretKey !== opts.supabaseServiceKey) {
     process.stderr.write('⚠  WARNING: Both supabaseSecretKey and supabaseServiceKey provided with different values. Using supabaseServiceKey (canonical). supabaseSecretKey is deprecated.\n');
   } else if (opts.supabaseSecretKey && !opts.supabaseServiceKey) {
@@ -598,18 +589,18 @@ export function startServer(opts = {}) {
 
   if (opts.matchResultPersistor) {
     matchResultPersistor = opts.matchResultPersistor;
-  } else if (opts.supabaseUrl && _resolvedServiceKey) {
+  } else if (opts.supabaseUrl && resolvedServiceKey) {
     // Dynamically import to avoid loading supabase-js when persistence is not needed
     const { SupabaseMatchResultPersistor } = require('./persistence/supabase-match-result-persistor.mjs');
     matchResultPersistor = new SupabaseMatchResultPersistor({
       supabaseUrl: opts.supabaseUrl,
-      supabaseServiceKey: _resolvedServiceKey,
+      supabaseServiceKey: resolvedServiceKey,
     });
-  } else if (process.env.SUPABASE_URL && _resolvedServiceKey) {
+  } else if (process.env.SUPABASE_URL && resolvedServiceKey) {
     const { SupabaseMatchResultPersistor } = require('./persistence/supabase-match-result-persistor.mjs');
     matchResultPersistor = new SupabaseMatchResultPersistor({
       supabaseUrl: process.env.SUPABASE_URL,
-      supabaseServiceKey: _resolvedServiceKey,
+      supabaseServiceKey: resolvedServiceKey,
     });
   } else if (_isProductionMode && !opts.allowFakePersistor) {
     // DATA-04: FAIL LOUDLY in production — never silently use fake persistence
@@ -624,6 +615,43 @@ export function startServer(opts = {}) {
     matchResultPersistor = new FakeMatchResultPersistor();
   }
   logEvent('persistorConfigured', { type: matchResultPersistor.constructor.name, productionMode: _isProductionMode });
+
+  // Safety blocks are mandatory in production. Build the canonical checker
+  // from the same service-role configuration when one was not injected.
+  if (_authMode === AuthMode.REQUIRED && !blockChecker && !opts.allowFakePersistor) {
+    const supabaseUrl = opts.supabaseUrl ?? process.env.SUPABASE_URL;
+    if (!supabaseUrl || !resolvedServiceKey) {
+      throw new Error('Production auth requires a blockChecker or Supabase service-role configuration.');
+    }
+    const { createClient } = require('@supabase/supabase-js');
+    const relationshipClient = createClient(supabaseUrl, resolvedServiceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    blockChecker = async (accountIdA, accountIdB) => {
+      const { data, error } = await relationshipClient
+        .from('player_relationships')
+        .select('follower_id')
+        .eq('kind', 'block')
+        .or(`and(follower_id.eq.${accountIdA},target_id.eq.${accountIdB}),and(follower_id.eq.${accountIdB},target_id.eq.${accountIdA})`)
+        .limit(1);
+      if (error) throw new Error('Block authority unavailable');
+      return (data?.length ?? 0) > 0;
+    };
+  }
+
+  // Capture a concrete season before ranked admission. Refreshing only changes
+  // future admissions; an admitted match keeps its original seasonId forever.
+  activeRankedSeasonId = null;
+  const refreshRankedSeason = async () => {
+    if (typeof matchResultPersistor?.resolveActiveSeasonId !== 'function') return;
+    try {
+      activeRankedSeasonId = await matchResultPersistor.resolveActiveSeasonId('ranked') || null;
+    } catch (err) {
+      activeRankedSeasonId = null;
+      logEvent('rankedSeasonResolveError', { error: err?.message ?? String(err) });
+    }
+  };
+  await refreshRankedSeason();
 
   // RANK-01/3C: Wire RatingService in production server orchestration.
   // RatingService is the canonical rated-result application owner.
@@ -809,16 +837,16 @@ export function startServer(opts = {}) {
   // Tournament repository: Supabase in production, in-memory in dev
   if (opts.tournamentRepository) {
     _tournamentRepository = opts.tournamentRepository;
-  } else if (matchResultPersistor && opts.supabaseUrl && _resolvedServiceKey) {
+  } else if (matchResultPersistor && opts.supabaseUrl && resolvedServiceKey) {
     // Reuse the same Supabase client configuration for tournament persistence
     const { createClient } = require('@supabase/supabase-js');
-    const tournamentClient = createClient(opts.supabaseUrl, _resolvedServiceKey, {
+    const tournamentClient = createClient(opts.supabaseUrl, resolvedServiceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     _tournamentRepository = new SupabaseTournamentRepository({ client: tournamentClient });
-  } else if (process.env.SUPABASE_URL && _resolvedServiceKey) {
+  } else if (process.env.SUPABASE_URL && resolvedServiceKey) {
     const { createClient } = require('@supabase/supabase-js');
-    const tournamentClient = createClient(process.env.SUPABASE_URL, _resolvedServiceKey, {
+    const tournamentClient = createClient(process.env.SUPABASE_URL, resolvedServiceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     _tournamentRepository = new SupabaseTournamentRepository({ client: tournamentClient });
@@ -844,14 +872,14 @@ export function startServer(opts = {}) {
 
   // B12: Report handler — requires Supabase client for the submit_player_report RPC
   let _reportSupabaseClient = null;
-  if (opts.supabaseUrl && _resolvedServiceKey) {
+  if (opts.supabaseUrl && resolvedServiceKey) {
     const { createClient: _createReportClient } = require('@supabase/supabase-js');
-    _reportSupabaseClient = _createReportClient(opts.supabaseUrl, _resolvedServiceKey, {
+    _reportSupabaseClient = _createReportClient(opts.supabaseUrl, resolvedServiceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-  } else if (process.env.SUPABASE_URL && _resolvedServiceKey) {
+  } else if (process.env.SUPABASE_URL && resolvedServiceKey) {
     const { createClient: _createReportClient } = require('@supabase/supabase-js');
-    _reportSupabaseClient = _createReportClient(process.env.SUPABASE_URL, _resolvedServiceKey, {
+    _reportSupabaseClient = _createReportClient(process.env.SUPABASE_URL, resolvedServiceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
   }
@@ -1089,6 +1117,11 @@ export function startServer(opts = {}) {
             }
             pendingForfeits.clear();
             if (matchmakingQueue) matchmakingQueue = null;
+            if (seasonRefreshTimer) {
+              clearInterval(seasonRefreshTimer);
+              seasonRefreshTimer = null;
+            }
+            activeRankedSeasonId = null;
             if (matchStore) matchStore.close();
             matchStore = null;
             if (identityVerifier) { identityVerifier.close?.(); identityVerifier = null; }
@@ -1138,6 +1171,11 @@ export function startServer(opts = {}) {
         process.on('SIGTERM', signalHandler);
         process.on('SIGINT', signalHandler);
 
+        // Start background season refresh only after every startup dependency
+        // is wired and the socket is listening. Failed startup must not leak a
+        // timer that mutates module-level admission state.
+        seasonRefreshTimer = setInterval(() => { void refreshRankedSeason(); }, opts.seasonRefreshIntervalMs ?? 30000);
+        seasonRefreshTimer.unref?.();
         resolve(api);
       });
     })().catch(reject);
@@ -1184,7 +1222,13 @@ function handleMessage(connectionId, ws, raw) {
   // Validate envelope
   const envCheck = validateEnvelope(msg);
   if (!envCheck.valid) {
-    return send(ws, errorMsg(envCheck.code, envCheck.message, msg.requestId));
+    // `validateEnvelope` deliberately accepts unknown JSON values so it can
+    // return a typed protocol error. Do not dereference malformed primitives
+    // (for example, the valid JSON value `null`) while building that response.
+    const malformedRequestId = msg && typeof msg === 'object' && !Array.isArray(msg)
+      ? msg.requestId
+      : undefined;
+    return send(ws, errorMsg(envCheck.code, envCheck.message, malformedRequestId));
   }
 
   // Route by type
@@ -1670,11 +1714,6 @@ function handleDisconnect(connectionId) {
               matchStore.save(currentMatch);
               logEvent('matchForfeit', { matchId: currentMatch.matchId, forfeitingParticipant: conn.participantId, winner: currentMatch.winner });
               await broadcastMatchEnded(currentMatch);
-              // Notify the remaining player
-              const winnerConn = findConnectionByParticipant(opponentId, currentMatch.matchId);
-              if (winnerConn) {
-                send(winnerConn.ws, matchEnded(currentMatch.matchId, currentMatch.terminalReason, currentMatch.winner));
-              }
             }
           }, RECONNECT_GRACE);
           pendingForfeits.set(match.matchId, { timer, forfeitingParticipantId: conn.participantId });
@@ -1798,27 +1837,16 @@ async function broadcastMatchEnded(match) {
   // declaration below shadowed it — causing rating data to never reach clients.
   /** @type {Awaited<ReturnType<typeof buildMatchResultRecord>> | null} */
   let ratingRecord = null;
+  let terminalEnqueued = false;
   if (terminalOutbox && matchResultPersistor) {
     /** @type {Awaited<ReturnType<typeof buildMatchResultRecord>> | null} */
     let record = null;
     try {
-      let effectiveQueueId = match.queueId ?? 'casual';
-      let effectiveSeasonId = match.seasonId && match.seasonId !== 'pending' ? match.seasonId : undefined;
+      const effectiveQueueId = match.queueId ?? 'casual';
+      const effectiveSeasonId = match.seasonId || undefined;
 
-      // IRX-H07: If this is a ranked match and the season cannot be resolved,
-      // downgrade to casual rather than fabricating a season. A ranked record
-      // without a valid season must never enter account truth.
-      if (effectiveQueueId === 'ranked' && !effectiveSeasonId && matchResultPersistor?.resolveActiveSeasonId) {
-        try {
-          effectiveSeasonId = await matchResultPersistor.resolveActiveSeasonId('ranked');
-        } catch (err) {
-          logEvent('rankedSeasonResolveError', { matchId: match.matchId, error: err?.message });
-          effectiveSeasonId = null;
-        }
-        if (!effectiveSeasonId) {
-          logEvent('rankedSeasonMissing', { matchId: match.matchId, action: 'downgrade_to_casual' });
-          effectiveQueueId = 'casual';
-        }
+      if (effectiveQueueId === 'ranked' && !effectiveSeasonId) {
+        throw new Error('Ranked match is missing its admission-time season authority');
       }
 
       record = await buildMatchResultRecord({
@@ -1831,7 +1859,10 @@ async function broadcastMatchEnded(match) {
       ratingRecord = record;
       if (record) {
         // Enqueue result job — idempotency key is matchId
-        terminalOutbox.enqueueResult(record);
+        terminalEnqueued = terminalOutbox.enqueueResult(record) === true;
+        if (!terminalEnqueued) {
+          throw new Error('Terminal result job is a dead letter');
+        }
 
         // Enqueue achievement jobs — idempotency key is matchId:accountId
         const achUnlocks = [];
@@ -1883,6 +1914,17 @@ async function broadcastMatchEnded(match) {
     }
   }
 
+  if (!terminalEnqueued) {
+    logEvent('matchFinalizationDeferred', { matchId: match.matchId });
+    for (const [pid] of match.participants) {
+      const targetConn = findConnectionByParticipant(pid, match.matchId);
+      if (targetConn) {
+        send(targetConn.ws, errorMsg(ReasonCode.INTERNAL_ERROR, 'Match finalization is pending; reconnect to retry'));
+      }
+    }
+    return false;
+  }
+
   // IRX-H13: Broadcast to clients AFTER durable persistence is enqueued.
   // Clients only learn the match is terminal once the result is durably stored.
   // IRX-H23: Include per-participant rating data in MATCH_ENDED for ranked matches.
@@ -1918,6 +1960,7 @@ async function broadcastMatchEnded(match) {
       }
     }
   }
+  return true;
 }
 
 // ── CLI entry point ──

@@ -661,7 +661,33 @@ describe('Replay Caster v0.1 — Ollama Provider', () => {
     }, { onToken: (chunk) => received.push(chunk) });
     assert.equal(result.ok, true);
     assert.ok(received.length > 0, 'onToken should have been called');
-    assert.equal(received.join(''), validJson);
+    assert.equal(received.join(''), 'A solid play from seat 1.');
+  });
+
+  test('OllamaCommentaryProvider never emits streamed tokens before spoiler lint', async () => {
+    const unsafeJson = JSON.stringify({
+      commentary: 'Seat P1 wins the match',
+      importance: 0.8,
+      headline: 'The ending',
+      tone: 'ANALYTICAL',
+      spoilerCheck: 'PASS'
+    });
+    const fakeClient = {
+      chat: async ({ onToken }) => {
+        for (const token of unsafeJson) onToken?.(token);
+        return { text: unsafeJson };
+      }
+    };
+    const received = [];
+    const provider = new OllamaCommentaryProvider({ model: 'test-model', client: fakeClient, stream: true });
+    const result = await provider.generateCommentary({
+      beat: { beatId: 'x', beatKind: 'DECISION', importance: 0.5, publicSummary: {} },
+      presentContext: {},
+      futureContext: { visibleToViewer: false, matchOutcome: { winnerSeat: 'P1' } },
+      diagnostics: []
+    }, { onToken: chunk => received.push(chunk) });
+    assert.equal(result.ok, false);
+    assert.deepEqual(received, [], 'rejected output must never reach the display callback');
   });
 
   test('OllamaCommentaryProvider streaming disabled when no onToken provided', async () => {

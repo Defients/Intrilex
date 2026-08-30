@@ -70,6 +70,10 @@ const getMatchServerConfig = lazyLoad(() => import('./play/network/match-server-
 const getAuthController = lazyLoad(() => import('./play/network/auth-controller.js'));
 const getAccountStore = lazyLoad(() => import('./play/network/account-store.js'));
 const getMigrationController = lazyLoad(() => import('./play/network/migration-controller.js'));
+// 3D Mind Map Brain — lazy-loaded Three.js visualization on the homepage.
+// Three.js lands in a separate esbuild chunk via the dynamic import chain
+// (brain-controller → brain-scene/nodes/edges/interaction → three).
+const getBrain = lazyLoad(() => import('./brain/brain-controller.js'));
 
 // Install global error boundary at module load time
 installGlobalErrorBoundary();
@@ -174,6 +178,14 @@ export function render() {
   // Caster workspace cleanup: stop playback timer and terminate worker on route change.
   if (_previousRoute === '/caster' && r !== '/caster') {
     try { cleanupCaster(); } catch (e) { console.warn('[render] cleanupCaster error:', e); }
+  }
+  // 3D Brain cleanup: dispose Three.js scene/renderer/listeners when leaving
+  // the homepage (#/) so the WebGL context and rAF loop don't leak.
+  if (_previousRoute === '/') {
+    const brainMod = getBrain.cached;
+    if (brainMod && typeof brainMod.destroyBrain === 'function') {
+      try { brainMod.destroyBrain(); } catch (e) { console.warn('[render] destroyBrain error:', e); }
+    }
   }
   _previousRoute = r;
   // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
@@ -1801,6 +1813,11 @@ function renderWipLanding() {
             <span class="wip-feature-label">Match Replay &amp; Analysis</span>
           </div>
         </div>
+        <section class="wip-brain-section" aria-labelledby="wip-brain-title">
+          <h2 id="wip-brain-title" class="wip-brain-title">Explore the Intrilex Brain</h2>
+          <p class="wip-brain-desc">An interactive 3D mind map of mechanics, synergies, card interactions, and workspaces. Drag to orbit, scroll to zoom, click nodes for details.</p>
+          <div id="brain-container" aria-label="3D interactive mind map" role="region"></div>
+        </section>
         <div class="wip-newsletter" aria-labelledby="wip-newsletter-title">
           <h2 id="wip-newsletter-title" class="wip-newsletter-title">Stay Updated on Launch</h2>
           <p class="wip-newsletter-desc">Sign up to receive early playtest invites and major development updates.</p>
@@ -1857,6 +1874,14 @@ function renderWipLanding() {
   </div>`;
   bindWipLandingEvents();
   maybeSkipLandingVideo();
+  // Lazy-load the 3D Mind Map Brain into #brain-container. Three.js is in a
+  // separate esbuild chunk; if WebGL is unavailable the controller renders a
+  // 2D SVG fallback. The controller verifies the async host is still connected.
+  const brainHost = document.querySelector('#brain-container');
+  if (brainHost) {
+    getBrain().then(({ initBrain }) => brainHost.isConnected ? initBrain(brainHost) : null)
+      .catch((err) => console.error('[brain] failed to load:', err));
+  }
 }
 
 /**

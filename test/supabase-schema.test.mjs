@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const migrationsDir = path.join(root, 'supabase', 'migrations');
 const configPath = path.join(root, 'supabase', 'config.toml');
+const hardeningMigration = '20260830074714_harden_authority_and_persistence.sql';
 
 async function readMigration(name) {
   const filePath = path.join(migrationsDir, name);
@@ -180,6 +181,30 @@ test('schema: .env.example documents required variables', async () => {
   assert.ok(envExample.includes('SUPABASE_SECRET_KEY'), '.env.example must document SUPABASE_SECRET_KEY');
   assert.ok(envExample.includes('INTRILEX_AUTH_MODE'), '.env.example must document INTRILEX_AUTH_MODE');
   assert.ok(envExample.includes('NEVER'), '.env.example must warn about secrets');
+});
+
+test('schema: authority hardening migration is forward-only and service-role gated', async () => {
+  const sql = await readMigration(hardeningMigration);
+  assert.ok(sql && sql.length > 1000, `${hardeningMigration} must exist and be non-trivial`);
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS queue_id text NOT NULL DEFAULT 'casual'/);
+  assert.match(sql, /ADD COLUMN IF NOT EXISTS season_id text/);
+  assert.match(sql, /pg_advisory_xact_lock/g, 'concurrent result, report, and tournament writes need transaction locks');
+  assert.match(sql, /RANKED_SEASON_REQUIRED/, 'ranked persistence must fail closed without a real season');
+  assert.match(sql, /ALTER FUNCTION public\.persist_match_result_unlocked\(jsonb\) SET search_path = ''/);
+  assert.match(sql, /REVOKE ALL ON FUNCTION public\.persist_match_result\(jsonb\)[\s\S]*FROM PUBLIC, anon, authenticated/);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.persist_match_result\(jsonb\) TO service_role/);
+});
+
+test('schema: report and tournament authority never expose service RPCs to clients', async () => {
+  const sql = await readMigration(hardeningMigration);
+  assert.match(sql, /submit_player_report_server/);
+  assert.match(sql, /REVOKE ALL ON FUNCTION public\.submit_player_report_server\(uuid, uuid, text, text, text\)[\s\S]*FROM PUBLIC, anon, authenticated/);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.submit_player_report_server\(uuid, uuid, text, text, text\)[\s\S]*TO service_role/);
+  assert.match(sql, /CREATE OR REPLACE FUNCTION public\.upsert_tournament_atomic/);
+  assert.match(sql, /SET search_path = ''/g);
+  assert.match(sql, /REVOKE ALL ON FUNCTION public\.upsert_tournament_atomic\(jsonb, jsonb, jsonb\)[\s\S]*FROM PUBLIC, anon, authenticated/);
+  assert.match(sql, /REVOKE SELECT ON public\.tournament_participants FROM anon, authenticated/);
+  assert.match(sql, /DROP POLICY IF EXISTS tournament_participants_select/);
 });
 
 // ── Migration 0009: Ranked Leaderboard ecosystem ──

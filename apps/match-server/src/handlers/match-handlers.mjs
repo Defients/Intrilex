@@ -419,8 +419,8 @@ export function createMatchHandlers(ctx) {
 
       // If terminal, send MATCH_ENDED to both
       if (match.status === 'TERMINAL') {
-        await broadcastMatchEnded(match);
-        logEvent('matchEnd', { matchId: match.matchId, winner: match.winner, reason: match.terminalReason });
+        const finalized = await broadcastMatchEnded(match);
+        logEvent(finalized ? 'matchEnd' : 'matchEndDeferred', { matchId: match.matchId, winner: match.winner, reason: match.terminalReason });
       }
 
       // Notify spectators of the state change

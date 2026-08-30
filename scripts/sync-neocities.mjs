@@ -221,9 +221,9 @@ async function main() {
   if (refs.stylesCss) console.log(`  styles     : ${refs.stylesCss}`);
   if (preserved.length) console.log(`  preserved  : ${preserved.join(', ')}`);
   console.log('');
-  console.log('Next step — upload with your neocities credentials:');
-  console.log('  neocities-cli --username=YOUR_USER --password=YOUR_PASS --upload=neocities-deploy');
-  console.log('  (or use a ./neocities.config.js file — see scripts/sync-neocities.mjs header)');
+  console.log('Next step — upload using environment-only credentials:');
+  console.log('  $env:NEOCITIES_API_KEY="..."; pnpm run upload:neocities');
+  console.log('  Run `node scripts/upload-neocities.mjs --dry-run` first.');
 }
 
 try {

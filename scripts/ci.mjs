@@ -239,6 +239,8 @@ const STAGES = [
   ['irx-c11-tournament-transactional', 'node', ['--test', 'test/irx-c11-tournament-transactional.test.mjs']],
   // Replay Caster v0.1 — live broadcast experience with Ollama commentary
   ['replay-caster', 'node', ['--test', 'test/replay-caster.test.mjs']],
+  // 3D Mind Map Brain — Three.js homepage visualization
+  ['brain-3d', 'node', ['--test', 'test/brain-3d.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;
