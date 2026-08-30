@@ -204,18 +204,28 @@ test('IRX-C08: 4-player Swiss advances through configured rounds', () => {
   assert.ok(standings.length > 0, 'standings should exist');
 });
 
-// ── IRX-C09: Repository uses upsert (not delete/reinsert) ──
+// ── IRX-C09/C11: Repository uses one atomic authority boundary ──
 
-test('IRX-C09: tournament repository uses upsert not delete for participants', async () => {
+test('IRX-C09: tournament repository uses the atomic RPC without a sequential fallback', async () => {
   const { readFileSync } = await import('node:fs');
   const { resolve } = await import('node:path');
   const src = readFileSync(
     resolve('apps/match-server/src/persistence/tournament-repository.mjs'), 'utf8'
   );
 
-  // The file should use upsert for both participants and matches
-  assert.match(src, /\.upsert\(.*onConflict.*tournament_id,user_id/, 'should upsert participants with onConflict');
-  assert.match(src, /\.upsert\(.*onConflict.*match_id/, 'should upsert matches with onConflict');
+  assert.match(src, /\.rpc\('upsert_tournament_atomic'/, 'should use the atomic tournament RPC');
+  assert.match(src, /p_participants:\s*participantRows/, 'should send participant rows through the atomic RPC');
+  assert.match(src, /p_matches:\s*matchRows/, 'should send match rows through the atomic RPC');
+  assert.doesNotMatch(
+    src,
+    /from\('tournament_participants'\)\.upsert/,
+    'must not retain a non-atomic participant fallback',
+  );
+  assert.doesNotMatch(
+    src,
+    /from\('tournament_matches'\)\.upsert/,
+    'must not retain a non-atomic match fallback',
+  );
 
   // The file should NOT have delete + insert pattern for participants or matches in save()
   // The only delete() should be in the delete() method for the tournament row itself
@@ -224,22 +234,21 @@ test('IRX-C09: tournament repository uses upsert not delete for participants', a
   assert.equal(deleteCalls.length, 1, 'only 1 delete() call allowed (in delete method for tournament row)');
 });
 
-// ── IRX-C11: Repository propagates all errors ──
+// ── IRX-C11: Repository fails closed without leaking backend details ──
 
-test('IRX-C11: tournament repository propagates all errors', async () => {
+test('IRX-C11: tournament repository fails closed with sanitized atomic errors', async () => {
   const { readFileSync } = await import('node:fs');
   const { resolve } = await import('node:path');
   const src = readFileSync(
     resolve('apps/match-server/src/persistence/tournament-repository.mjs'), 'utf8'
   );
 
-  // Should have throw statements for error propagation
-  const throwCount = (src.match(/throw new Error/g) || []).length;
-  assert.ok(throwCount >= 3, `repository should have >= 3 throw statements (found ${throwCount})`);
-
-  // The save method should not silently log errors — it should throw
-  // Check that there are no console.error calls in save() by verifying
-  // the IRX-C11 comment is present (we added it during the fix)
-  assert.match(src, /IRX-C11/, 'IRX-C11 fix comment should be present');
-  assert.match(src, /Propagate ALL errors/, 'error propagation comment should be present');
+  assert.match(src, /Atomic RPC is the only production-safe write path/, 'atomicity rationale should remain explicit');
+  assert.match(src, /throw new Error\('Atomic tournament save failed'\)/, 'RPC failures should reject');
+  assert.match(
+    src,
+    /throw new Error\('Atomic tournament save returned an invalid result'\)/,
+    'invalid RPC acknowledgements should reject',
+  );
+  assert.doesNotMatch(src, /rpcErr\.message/, 'backend error details must not be reflected to callers');
 });

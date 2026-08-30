@@ -10,6 +10,16 @@ const LAYER_LABELS = [
   { id: LAYER_IDS.COMBINED, label: 'All' },
 ];
 
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+}[char]));
+
+const safeColor = (value) => /^#[0-9a-f]{3,8}$/i.test(String(value ?? ''))
+  ? String(value)
+  : '#8ea5b2';
+
+/** @typedef {{id:string,label:string,category:string,color:string,route?:string,data?:{route?:string,description?:string}}} OverlayNode */
+
 /**
  * Build the DOM overlay (layer switcher, search, tooltip, detail panel,
  * cluster controls, help hint) inside a container.
@@ -18,14 +28,14 @@ const LAYER_LABELS = [
  * @param {(layer:string)=>void} handlers.onLayerChange
  * @param {(query:string)=>void} handlers.onSearch
  * @param {(category:string,collapsed:boolean)=>void} handlers.onToggleCluster
- * @returns {{root:HTMLElement,tooltip:HTMLElement,detailPanel:HTMLElement,destroy:()=>void,showTooltip:*,hideTooltip:*,showDetail:*,hideDetail:*,setLayer:*,setCategories:*}}
+ * @returns {{root:HTMLElement,tooltip:HTMLElement,detailPanel:HTMLElement,clusterControls:HTMLElement,searchInput:HTMLInputElement,destroy:()=>void,showTooltip:(text:string,x:number,y:number)=>void,hideTooltip:()=>void,showDetail:(node:OverlayNode,connectedNodes?:OverlayNode[])=>void,hideDetail:()=>void,setLayer:(layerId:string)=>void,setCategories:(categories:string[])=>void,setNodes:(nodes:OverlayNode[])=>void}}
  */
 export function buildOverlay(container, handlers) {
   const root = document.createElement('div');
   root.className = 'brain-overlay';
   root.innerHTML = `
     <div class="brain-layer-switcher" role="tablist" aria-label="Mind map layers">
-      ${LAYER_LABELS.map((l, i) => `<button class="brain-layer-btn${i === 0 ? ' active' : ''}" data-layer="${l.id}" role="tab" aria-selected="${i === 0}">${l.label}</button>`).join('')}
+      ${LAYER_LABELS.map((l, i) => `<button class="brain-layer-btn${i === 0 ? ' active' : ''}" data-layer="${escapeHtml(l.id)}" role="tab" aria-selected="${i === 0}">${escapeHtml(l.label)}</button>`).join('')}
     </div>
     <div class="brain-search-wrap">
       <input type="search" class="brain-search" placeholder="Filter nodes…  (press /)" aria-label="Filter mind map nodes" autocomplete="off" spellcheck="false" />
@@ -41,24 +51,25 @@ export function buildOverlay(container, handlers) {
   `;
   container.appendChild(root);
 
-  const layerBtns = root.querySelectorAll('.brain-layer-btn');
-  const searchInput = root.querySelector('.brain-search');
-  const tooltip = root.querySelector('.brain-tooltip');
-  const detailPanel = root.querySelector('.brain-detail-panel');
-  const clusterControls = root.querySelector('.brain-cluster-controls');
-  const nodeAccessList = root.querySelector('.brain-node-access-list');
+  const layerBtns = /** @type {NodeListOf<HTMLButtonElement>} */ (root.querySelectorAll('.brain-layer-btn'));
+  const searchInput = /** @type {HTMLInputElement} */ (root.querySelector('.brain-search'));
+  const tooltip = /** @type {HTMLElement} */ (root.querySelector('.brain-tooltip'));
+  const detailPanel = /** @type {HTMLElement} */ (root.querySelector('.brain-detail-panel'));
+  const clusterControls = /** @type {HTMLElement} */ (root.querySelector('.brain-cluster-controls'));
+  const nodeAccessList = /** @type {HTMLElement} */ (root.querySelector('.brain-node-access-list'));
 
   layerBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       layerBtns.forEach((b) => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
       btn.classList.add('active');
       btn.setAttribute('aria-selected', 'true');
-      handlers.onLayerChange(btn.dataset.layer);
+      handlers.onLayerChange(btn.dataset.layer ?? LAYER_IDS.MECHANICS);
     });
   });
 
   searchInput.addEventListener('input', () => handlers.onSearch(searchInput.value));
 
+  /** @param {string} text @param {number} x @param {number} y */
   function showTooltip(text, x, y) {
     tooltip.textContent = text;
     tooltip.hidden = false;
@@ -67,26 +78,28 @@ export function buildOverlay(container, handlers) {
   }
   function hideTooltip() { tooltip.hidden = true; }
 
+  /** @param {OverlayNode} node @param {OverlayNode[]} [connectedNodes] */
   function showDetail(node, connectedNodes) {
     const route = node.route ?? node.data?.route;
-    const exploreLink = route ? `<a class="brain-detail-explore" href="#${route}">Explore in workspace →</a>` : '';
+    const exploreLink = route ? `<a class="brain-detail-explore" href="#${escapeHtml(route)}">Explore in workspace →</a>` : '';
     const connected = (connectedNodes ?? []).slice(0, 12)
-      .map((n) => `<button class="brain-detail-connected" data-node-id="${n.id}">${n.label}</button>`).join('');
+      .map((n) => `<button class="brain-detail-connected" data-node-id="${escapeHtml(n.id)}">${escapeHtml(n.label)}</button>`).join('');
     detailPanel.innerHTML = `
       <div class="brain-detail-header">
-        <span class="brain-detail-badge" style="background:${node.color}"></span>
-        <h3 class="brain-detail-title">${node.label}</h3>
+        <span class="brain-detail-badge" style="background:${safeColor(node.color)}"></span>
+        <h3 class="brain-detail-title">${escapeHtml(node.label)}</h3>
         <button class="brain-detail-close" aria-label="Close details">&times;</button>
       </div>
-      <p class="brain-detail-category">${node.category}</p>
-      ${node.data?.description ? `<p class="brain-detail-desc">${node.data.description}</p>` : ''}
+      <p class="brain-detail-category">${escapeHtml(node.category)}</p>
+      ${node.data?.description ? `<p class="brain-detail-desc">${escapeHtml(node.data.description)}</p>` : ''}
       ${exploreLink}
       ${connected ? `<div class="brain-detail-connected-wrap"><h4>Connected</h4><div class="brain-detail-connected-list">${connected}</div></div>` : ''}
     `;
     detailPanel.hidden = false;
     detailPanel.classList.add('open');
     detailPanel.querySelector('.brain-detail-close')?.addEventListener('click', hideDetail);
-    detailPanel.querySelectorAll('.brain-detail-connected').forEach((b) => {
+    const connectedButtons = /** @type {NodeListOf<HTMLButtonElement>} */ (detailPanel.querySelectorAll('.brain-detail-connected'));
+    connectedButtons.forEach((b) => {
       b.addEventListener('click', () => {
         const id = b.dataset.nodeId;
         detailPanel.dispatchEvent(new CustomEvent('brain:select', { detail: { id } }));
@@ -99,6 +112,7 @@ export function buildOverlay(container, handlers) {
     detailPanel.innerHTML = '';
   }
 
+  /** @param {string} layerId */
   function setLayer(layerId) {
     layerBtns.forEach((b) => {
       const active = b.dataset.layer === layerId;
@@ -107,18 +121,21 @@ export function buildOverlay(container, handlers) {
     });
   }
 
+  /** @param {string[]} categories */
   function setCategories(categories) {
     clusterControls.innerHTML = categories.map((c) =>
-      `<button class="brain-cluster-btn" data-category="${c}" aria-pressed="false">${c}</button>`).join('');
-    clusterControls.querySelectorAll('.brain-cluster-btn').forEach((btn) => {
+      `<button class="brain-cluster-btn" data-category="${escapeHtml(c)}" aria-pressed="false">${escapeHtml(c)}</button>`).join('');
+    const clusterButtons = /** @type {NodeListOf<HTMLButtonElement>} */ (clusterControls.querySelectorAll('.brain-cluster-btn'));
+    clusterButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         const pressed = btn.getAttribute('aria-pressed') === 'true';
         btn.setAttribute('aria-pressed', String(!pressed));
-        handlers.onToggleCluster(btn.dataset.category, !pressed);
+        handlers.onToggleCluster(btn.dataset.category ?? '', !pressed);
       });
     });
   }
 
+  /** @param {OverlayNode[]} nodes */
   function setNodes(nodes) {
     nodeAccessList.replaceChildren(...nodes.map((node) => {
       const button = document.createElement('button');

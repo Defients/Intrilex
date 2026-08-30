@@ -20,6 +20,14 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rootPkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 const quick = process.argv.includes('--quick');
+const configuredConcurrency = Number.parseInt(process.env.INTRILEX_TEST_CONCURRENCY ?? '4', 10);
+const testConcurrency = Number.isInteger(configuredConcurrency) && configuredConcurrency > 0
+  ? configuredConcurrency
+  : 4;
+const configuredTimeoutMs = Number.parseInt(process.env.INTRILEX_SELF_AUDIT_TIMEOUT_MS ?? '1200000', 10);
+const auditTimeoutMs = Number.isInteger(configuredTimeoutMs) && configuredTimeoutMs >= 60000
+  ? configuredTimeoutMs
+  : 1200000;
 
 // ── Collect test files ──
 const testDir = path.join(root, 'test');
@@ -37,7 +45,7 @@ const subset = quick
 
 const testArgs = subset.map(f => path.join('test', f));
 
-console.log(`generate-self-audit: running ${testArgs.length} test files${quick ? ' (quick mode)' : ''}...`);
+console.log(`generate-self-audit: running ${testArgs.length} test files${quick ? ' (quick mode)' : ''}; concurrency=${testConcurrency}; timeout=${auditTimeoutMs}ms...`);
 
 // ── Execute the test suite ──
 // Redirect stdout to a temp file via file descriptor to avoid maxBuffer limits —
@@ -46,10 +54,10 @@ console.log(`generate-self-audit: running ${testArgs.length} test files${quick ?
 const tmpOutput = path.join(root, 'reports/.self-audit-tap-output.txt');
 await rm(tmpOutput, { force: true });
 const fd = openSync(tmpOutput, 'w');
-const result = spawnSync(process.execPath, ['--test', ...testArgs], {
+const result = spawnSync(process.execPath, ['--test', `--test-concurrency=${testConcurrency}`, ...testArgs], {
   cwd: root,
   encoding: 'utf8',
-  timeout: 600000, // 10 minutes max
+  timeout: auditTimeoutMs,
   stdio: ['ignore', fd, 'pipe'],
 });
 closeSync(fd);
@@ -57,7 +65,6 @@ closeSync(fd);
 // Read the full TAP output from the temp file
 let fileOutput = '';
 try { fileOutput = await readFile(tmpOutput, 'utf8'); } catch { /* file may not exist if redirect failed */ }
-await rm(tmpOutput, { force: true });
 const output = fileOutput + '\n' + (result.stderr ?? '');
 
 // ── Parse TAP summary ──
@@ -86,6 +93,10 @@ const totalSkip = skipMatch ? parseInt(skipMatch[1]) : 0;
 const totalCancelled = cancelledMatch ? parseInt(cancelledMatch[1]) : 0;
 const totalTodo = todoMatch ? parseInt(todoMatch[1]) : 0;
 const durationMs = durationMatch ? parseFloat(durationMatch[1]) : 0;
+const failedTests = [...new Set(
+  [...output.matchAll(/^not ok \d+ - (.+)$/gm)]
+    .map(match => match[1].trim())
+)];
 
 if (totalTests === 0) {
   console.error('generate-self-audit: FAILED to parse test count from output');
@@ -197,6 +208,8 @@ const audit = {
     mode: quick ? 'quick' : 'full',
     testFileCount: allTestFiles.length,
     filesExecuted: testArgs.length,
+    testConcurrency,
+    timeoutMs: auditTimeoutMs,
     gitCommit: (() => { try { return spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })(),
     gitBranch: (() => { try { return spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })(),
   },
@@ -211,10 +224,13 @@ const audit = {
     totalSkip,
     totalCancelled,
     totalTodo,
+    failedTests,
     unaccounted,
     durationMs,
     testFileCount,
     filesExecuted: testArgs.length,
+    testConcurrency,
+    timeoutMs: auditTimeoutMs,
     quickMode: quick
   }
 };
@@ -229,8 +245,16 @@ const outputPath = quick
 await writeFile(outputPath, JSON.stringify(audit, null, 2) + '\n');
 console.log(`generate-self-audit: wrote ${outputPath} (status=${audit.status}, score=${score}/${threshold}${quick ? ' [QUICK]' : ' [CANONICAL]'})`);
 
+// The complete TAP stream can exceed hundreds of megabytes, so it is not kept
+// as a report artifact. Preserve the useful failure identities in the JSON
+// report and stderr before removing the temporary stream.
+await rm(tmpOutput, { force: true });
+
 if (totalFail > 0) {
   console.error(`generate-self-audit: ${totalFail} tests failed — self-audit status is FAIL`);
+  for (const failedTest of failedTests) {
+    console.error(`  - ${failedTest}`);
+  }
   process.exit(1);
 }
 // v0.24.2: Non-zero unaccounted is a truth violation — fail in release/CI mode

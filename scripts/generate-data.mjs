@@ -18,6 +18,19 @@ const output = path.join(root, 'sample-data');
 const publicDir = path.join(output, 'replays/public');
 const authorizedDir = path.join(output, 'replays/authorized');
 
+async function writeFileWithRetry(filePath, data, retries = 5) {
+  for (let attempt = 0; attempt < retries; attempt += 1) {
+    try {
+      await writeFile(filePath, data);
+      return;
+    } catch (error) {
+      const retryable = ['UNKNOWN', 'EPERM', 'EBUSY'].includes(error?.code);
+      if (!retryable || attempt === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1)));
+    }
+  }
+}
+
 function sanitizePublic(value){
   if(Array.isArray(value))return value.map(sanitizePublic);
   if(!value||typeof value!=='object')return value;
@@ -47,8 +60,8 @@ for (const name of files) {
   const publicCore = { schemaVersion:'4.0.0', fixtureId:replay.fixtureId, replayKind:'GOVERNING_CONFORMANCE_V4_1_2', provenance:{kind:'LAB_PUBLIC_CHECKPOINT_PROJECTION',certifiedReplayContentHash:replay.contentHash,engineVersion:replay.engineVersion,rulesVersion:'4.1.2'}, viewers, commands:commandSummaries, events:replay.events.map((event)=>({type:publicEventType(event.type),visibility:event.visibility,sequence:event.sequence})), frames:publicFrames };
   const authorizedCore = { schemaVersion:'4.0.0', fixtureId:replay.fixtureId, replayKind:'GOVERNING_CONFORMANCE_V4_1_2', provenance:{kind:'LAB_AUTHORIZED_CHECKPOINT_RECONSTRUCTION',certifiedReplayContentHash:replay.contentHash,engineVersion:replay.engineVersion,rulesVersion:'4.1.2'}, viewers, commands:replay.commands, accepted:replay.accepted, events:replay.events, frames:authorizedFrames };
   const publicArtifact={...publicCore,artifactHash:hashCanonical(publicCore)}, authorizedArtifact={...authorizedCore,artifactHash:hashCanonical(authorizedCore)};
-  await writeFile(path.join(publicDir,`${replay.fixtureId}.json`),JSON.stringify(publicArtifact)+'\n');
-  await writeFile(path.join(authorizedDir,`${replay.fixtureId}.json`),JSON.stringify(authorizedArtifact)+'\n');
+  await writeFileWithRetry(path.join(publicDir,`${replay.fixtureId}.json`),JSON.stringify(publicArtifact)+'\n');
+  await writeFileWithRetry(path.join(authorizedDir,`${replay.fixtureId}.json`),JSON.stringify(authorizedArtifact)+'\n');
   index.push({ fixtureId:replay.fixtureId, replayKind:'GOVERNING_CONFORMANCE_V4_1_2', commandCount:replay.commands.length, eventCount:replay.events.length, acceptedCount:replay.accepted.filter(Boolean).length, rejectedCount:replay.accepted.filter((x)=>!x).length, viewerIds:viewers, publicArtifactHash:publicArtifact.artifactHash, authorizedArtifactHash:authorizedArtifact.artifactHash, certifiedReplayContentHash:replay.contentHash, finalStateHash:authorityHashCanonical(verified.state) });
   records.push(replay);
 }
@@ -61,8 +74,8 @@ try {
 } catch { /* autonomy index may not exist yet */ }
 const allRecords = [...index, ...autonomyRecords];
 const indexCore={schemaVersion:'4.0.0',rulesVersion:'4.1.2',replayCount:allRecords.length,records:allRecords};
-await writeFile(path.join(output,'replay-index.json'),JSON.stringify({...indexCore,indexHash:hashCanonical(indexCore)},null,2)+'\n');
-await writeFile(path.join(output,'corpus-analytics.json'),JSON.stringify(analytics,null,2)+'\n');
-await writeFile(path.join(output,'README.md'),`# Sample data\n\nGenerated from ${index.length} governing v4.1.2 certified replay envelopes plus Advanced Core campaign evidence.\n`);
+await writeFileWithRetry(path.join(output,'replay-index.json'),JSON.stringify({...indexCore,indexHash:hashCanonical(indexCore)},null,2)+'\n');
+await writeFileWithRetry(path.join(output,'corpus-analytics.json'),JSON.stringify(analytics,null,2)+'\n');
+await writeFileWithRetry(path.join(output,'README.md'),`# Sample data\n\nGenerated from ${index.length} governing v4.1.2 certified replay envelopes plus Advanced Core campaign evidence.\n`);
 console.log(`DATA PASS: verified=${index.length}; aggregate=${analytics.aggregateHash}`);
 

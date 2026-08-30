@@ -26,7 +26,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
-import { join, relative, dirname, sep } from 'node:path';
+import { join, relative, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 

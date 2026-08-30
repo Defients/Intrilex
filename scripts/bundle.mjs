@@ -121,7 +121,6 @@ async function bundle() {
   // Write bundle manifest
   const manifest = {
     schemaVersion: '1.0.0',
-    generatedAt: new Date().toISOString(),
     assets: {
       app: { file: jsFileName, hash: jsHash, type: 'js' },
       styles: { file: cssFileName, hash: cssHash, type: 'css' },

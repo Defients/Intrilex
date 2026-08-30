@@ -255,9 +255,9 @@ test('artifact: rank-analytics.json must not contain NaN or Infinity', async () 
   assert.doesNotMatch(raw, /\bInfinity\b/, 'rank-analytics.json must not contain Infinity');
 });
 
-test('artifact: rank-analytics.json must have current provenance', async () => {
+test('artifact: rank-analytics.json must have deterministic provenance', async () => {
   const data = JSON.parse(await readFile(__('sample-data/observatory/rank-analytics.json'), 'utf8'));
-  assert.ok(data.generatedAt, 'must have generatedAt timestamp');
+  assert.equal(data.generatedAt, undefined, 'reproducible artifact must not embed a wall-clock timestamp');
   // Provenance is carried in rankPower.aggregateHash (the canonical hash of
   // the rank power model inputs) and rankPower.schemaVersion.
   assert.ok(data.rankPower?.aggregateHash || data.aggregateHash,

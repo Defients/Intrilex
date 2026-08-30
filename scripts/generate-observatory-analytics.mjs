@@ -80,8 +80,7 @@ if (full.rankPower || full.rankCounters) {
     schemaVersion: '1.0.0',
     rankPower: full.rankPower,
     swapMatrix: full.swapMatrix,
-    rankCounters: full.rankCounters,
-    generatedAt: new Date().toISOString()
+    rankCounters: full.rankCounters
   };
   await writeFileWithRetry(path.join(out,'rank-analytics.json'),JSON.stringify(rankAnalyticsExport,null,2)+'\n');
   console.log(`RANK ANALYTICS PASS: rankPower=${full.rankPower ? Object.keys(full.rankPower).length : 0} ranks; swapMatrix=${full.swapMatrix ? Object.keys(full.swapMatrix).length : 0} entries`);
