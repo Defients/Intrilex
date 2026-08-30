@@ -89,6 +89,30 @@ const SECRET_PATTERNS = [
     severity: 'high',
     allowlist: /example|placeholder|test|fake|dummy|sample|<token>|<your/i,
   },
+  {
+    name: 'Credential literal assignment',
+    pattern: /(?:password|passwd|api[_-]?key|access[_-]?token|client[_-]?secret|credential)\s*[:=]\s*["'`]([^"'`\r\n]{8,})["'`]/i,
+    severity: 'critical',
+    allowlist: /example|placeholder|test|fake|dummy|sample|your[_-]|<|xxx|change[_-]?me|process\.env|not-a-jwt|two\.parts|four\.parts|token\.[A-Z]\.[A-Z]|alice-sig/i,
+  },
+  {
+    name: 'Credential embedded in URL',
+    pattern: /https?:\/\/[^\s:@/]+:[^\s@/]{8,}@[^\s/]+/i,
+    severity: 'critical',
+    allowlist: /example|placeholder|test|fake|dummy|sample|your[_-]|<|xxx/i,
+  },
+  {
+    name: 'Neocities credential constructor',
+    pattern: /new\s+neocities\s*\(\s*["'][^"']+["']\s*,\s*["'][^"']{8,}["']\s*\)/i,
+    severity: 'critical',
+    allowlist: /example|placeholder|test|fake|dummy|sample|your[_-]|<|xxx/i,
+  },
+  {
+    name: 'Password command-line argument',
+    pattern: /--password(?:=|\s+)["']?[^\s"']{8,}/i,
+    severity: 'critical',
+    allowlist: /example|placeholder|test|fake|dummy|sample|your[_-]|<|xxx/i,
+  },
 ];
 
 // Secret-bearing environment variable names (checked in .env-style assignments)
@@ -106,6 +130,13 @@ const SECRET_ENV_NAMES = new Set([
   'AWS_SECRET_ACCESS_KEY',
   'PRIVATE_KEY',
   'ENCRYPTION_KEY',
+  'NEOCITIES_API_KEY',
+  'NEOCITIES_PASSWORD',
+]);
+
+const FORBIDDEN_TRACKED_PATHS = new Set([
+  'scripts/upload-key.cjs',
+  'upload-key.cjs',
 ]);
 
 // Directories to skip entirely
@@ -249,13 +280,49 @@ function scanFile(filePath) {
 
 // ── Main ──
 
-export function runSecretContainmentScan() {
+function scanHistoryForKnownLeaks() {
+  const historyChecks = [];
+  for (const relPath of FORBIDDEN_TRACKED_PATHS) {
+    try {
+      const commits = execSync(`git log --all --format=%H -- ${relPath}`, {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      }).trim().split('\n').filter(Boolean);
+      if (commits.length > 0) {
+        historyChecks.push({
+          file: relPath,
+          issue: `credential-bearing path remains in ${commits.length} reachable commit(s); rotate the credential and purge Git history`,
+          severity: 'critical',
+        });
+      }
+    } catch {
+      historyChecks.push({ file: relPath, issue: 'Git history scan failed closed', severity: 'critical' });
+    }
+  }
+  return historyChecks;
+}
+
+export function runSecretContainmentScan({ includeHistory = false } = {}) {
   const files = getFilesToScan();
   const allViolations = [];
 
   for (const file of files) {
     const violations = scanFile(file);
     allViolations.push(...violations);
+  }
+
+  const trackedPaths = new Set();
+  try {
+    const tracked = execSync('git ls-files', { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+    for (const file of tracked.split('\n').filter(Boolean)) trackedPaths.add(file.replace(/\\/g, '/'));
+  } catch {
+    allViolations.push({ file: '.git', line: 0, name: 'Tracked-file enumeration failed closed', severity: 'critical', snippet: '' });
+  }
+  for (const forbidden of FORBIDDEN_TRACKED_PATHS) {
+    if (trackedPaths.has(forbidden) && existsSync(join(ROOT, forbidden))) {
+      allViolations.push({ file: forbidden, line: 0, name: 'Forbidden credential-bearing file is tracked', severity: 'critical', snippet: '' });
+    }
   }
 
   // Check that .env files (and all secret-bearing variants) are gitignored, not tracked.
@@ -275,18 +342,20 @@ export function runSecretContainmentScan() {
     }
   }
 
-  return { filesScanned: files.length, violations: allViolations, envChecks };
+  const historyChecks = includeHistory ? scanHistoryForKnownLeaks() : [];
+  return { filesScanned: files.length, violations: allViolations, envChecks, historyChecks };
 }
 
 // CLI entry point
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const { filesScanned, violations, envChecks } = runSecretContainmentScan();
-  const allIssues = [...violations, ...envChecks];
+  const { filesScanned, violations, envChecks, historyChecks } = runSecretContainmentScan({ includeHistory: true });
+  const allIssues = [...violations, ...envChecks, ...historyChecks];
 
   console.log(`SEC-01 Secret Containment Scan`);
   console.log(`  Files scanned: ${filesScanned}`);
   console.log(`  Violations: ${violations.length}`);
   console.log(`  Env checks: ${envChecks.length}`);
+  console.log(`  History checks: ${historyChecks.length}`);
 
   if (allIssues.length > 0) {
     console.log('\n❌ FAIL — secrets or env issues detected:\n');

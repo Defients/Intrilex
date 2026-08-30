@@ -4,7 +4,7 @@
 // the real engine at load time.
 export default {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-12T03:50:47.969Z",
+  "generatedAt": "2026-08-30T07:56:09.479Z",
   "profileId": "core-advanced-authority",
   "fixtures": [
     {
@@ -91,49 +91,79 @@ export default {
           }
         },
         {
-          "id": "CORE-16-1-P2-counter-ace-base-CORE-008-",
+          "id": "CORE-20-1-P2-response-decline-decline--CORE-SI-000013-P1-ROOT-play-for-effect-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
-            "kind": "core-declare-base-ace-counter",
-            "sourceCardId": "CORE-008",
-            "targetStackItemId": "CORE-SI-000014-P2-JACK-DISRUPT-1",
-            "sourceMode": "hand"
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
           }
         },
         {
-          "id": "CORE-27-1-P2-private-choice-rank3-present--CORE-007-CORE-011",
+          "id": "CORE-25-1-P2-private-choice-rank3-present--CORE-006-CORE-008",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "f283085a54e2cd91159cb312671996b9cd78f3578a2094772a2449d1daf97997",
+            "token": "02c657f424401a6fe4703e1f9728b3b48ad201a2067aa5c0990f5e1c9689a3eb",
             "submission": {
               "kind": "core-rank3-present",
               "selectedCardIds": [
-                "CORE-007",
-                "CORE-011"
+                "CORE-006",
+                "CORE-008"
               ]
             }
           }
         },
         {
-          "id": "CORE-29-1-P1-private-choice-rank3-take--",
+          "id": "CORE-27-1-P1-private-choice-rank3-take--CORE-008",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "217cb20275e01a9f74d6dd1f66f10c07bef970ef5b8f0c13f8be4e01fea2a975",
+            "token": "985d0957cf6489c527f110760349363c2992bffc9de925da7470fe0090a91746",
             "submission": {
               "kind": "core-rank3-take",
-              "selectedCardIds": []
+              "selectedCardIds": [
+                "CORE-008"
+              ]
             }
           }
         },
         {
-          "id": "CORE-30-1-P1-draw-top--",
+          "id": "CORE-28-1-P1-score-points-CORE-008-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-008"
+            }
+          }
+        },
+        {
+          "id": "CORE-39-2-P2-swap-bar-face-down-CORE-011-CORE-012",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-face-down-swap",
+            "handCardId": "CORE-011",
+            "swapCardId": "CORE-012"
+          }
+        },
+        {
+          "id": "CORE-40-2-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-41-2-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
@@ -142,42 +172,7 @@ export default {
           }
         },
         {
-          "id": "CORE-41-2-P2-swap-bar-face-down-CORE-007-CORE-012",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-face-down-swap",
-            "handCardId": "CORE-007",
-            "swapCardId": "CORE-012"
-          }
-        },
-        {
-          "id": "CORE-42-2-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-43-2-P2-effect-four-clear-pr-CORE-010-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "four-row-clear",
-                "sourceCardId": "CORE-010",
-                "targetPlayerId": "P1",
-                "row": "pr"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-54-3-P1-phase-enter-action--",
+          "id": "CORE-53-3-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -185,26 +180,19 @@ export default {
           }
         },
         {
-          "id": "CORE-55-3-P1-solo-wild-recycle-five-♥-CORE-017-",
+          "id": "CORE-54-3-P1-swap-bar-face-up-draw--CORE-001",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-resolve-rank-action",
-              "action": {
-                "kind": "solo-wild-copy",
-                "sourceCardId": "CORE-017",
-                "targetRank": "5",
-                "copiedAction": {
-                  "kind": "recycle-five"
-                }
-              }
+              "kind": "core-face-up-swap-draw",
+              "swapCardId": "CORE-001"
             }
           }
         },
         {
-          "id": "CORE-66-4-P2-phase-enter-action--",
+          "id": "CORE-65-4-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -212,19 +200,28 @@ export default {
           }
         },
         {
-          "id": "CORE-67-4-P2-score-points-CORE-011-",
+          "id": "CORE-66-4-P2-quick-board-lock-CORE-007-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-board-lock-quick",
+            "sourceCardId": "CORE-007"
+          }
+        },
+        {
+          "id": "CORE-71-4-P2-score-points-CORE-006-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
               "kind": "core-score",
-              "cardId": "CORE-011"
+              "cardId": "CORE-006"
             }
           }
         },
         {
-          "id": "CORE-78-5-P1-phase-enter-action--",
+          "id": "CORE-82-5-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -232,7 +229,7 @@ export default {
           }
         },
         {
-          "id": "CORE-79-5-P1-score-points-CORE-016-",
+          "id": "CORE-83-5-P1-score-points-CORE-016-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -244,28 +241,7 @@ export default {
           }
         },
         {
-          "id": "CORE-81-5-P1-response-decline-decline--CORE-SI-000079-P1-ROOT-play-for-points-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-90-6-P2-voltage-three-hand--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-three",
-              "disposition": "hand"
-            }
-          }
-        },
-        {
-          "id": "CORE-91-6-P2-phase-enter-action--",
+          "id": "CORE-95-6-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -273,9 +249,198 @@ export default {
           }
         },
         {
-          "id": "CORE-92-6-P2-effect-private-choice-seven-topdeck-CORE-020-",
+          "id": "CORE-96-6-P2-swap-bar-face-up-draw--CORE-014",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-face-up-swap-draw",
+              "swapCardId": "CORE-014"
+            }
+          }
+        },
+        {
+          "id": "CORE-97-6-P1-instant-nine-tap-CORE-015-CORE-006",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-nine-tap",
+            "sourceCardId": "CORE-015",
+            "targetCardId": "CORE-006"
+          }
+        },
+        {
+          "id": "CORE-114-7-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-115-7-P1-effect-three-bounce-top-CORE-001-CORE-006",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "three-bounce",
+                "sourceCardId": "CORE-001",
+                "targetCardId": "CORE-006"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-116-7-P2-ultra-three-red-counter-CORE-012-CORE-014-CORE-017-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-ultra-three-red",
+            "sourceCardIds": [
+              "CORE-012",
+              "CORE-014",
+              "CORE-017"
+            ],
+            "targetStackItemId": "CORE-SI-000115-P1-ROOT-play-for-effect-0"
+          }
+        },
+        {
+          "id": "CORE-125-8-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-126-8-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-137-9-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-138-9-P1-swap-bar-face-up-draw--CORE-011",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-face-up-swap-draw",
+              "swapCardId": "CORE-011"
+            }
+          }
+        },
+        {
+          "id": "CORE-149-10-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-150-10-P2-effect-red-joker-opponent-attack-CORE-019-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "red-joker",
+                "sourceCardId": "CORE-019",
+                "mode": "opponent-attack",
+                "targetPlayerId": "P1"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-161-11-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-162-11-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-173-12-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-174-12-P2-effect-private-choice-five-recycle-CORE-002-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "five-recycle",
+                "sourceCardId": "CORE-002"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-182-12-P2-private-choice-rank5-rummage--CORE-017",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-submit-private-choice",
+            "token": "a60a2898430c2a2796136ee67bbab16b3d905b506655d2d778c648d82966491c",
+            "submission": {
+              "kind": "core-rank5-rummage",
+              "selectedCardIds": [
+                "CORE-017"
+              ]
+            }
+          }
+        },
+        {
+          "id": "CORE-187-13-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-188-13-P1-effect-private-choice-seven-topdeck-CORE-020-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
@@ -288,321 +453,45 @@ export default {
           }
         },
         {
-          "id": "CORE-93-6-P1-response-decline-decline--CORE-SI-000092-P2-ROOT-play-for-effect-0",
+          "id": "CORE-196-13-P1-private-choice-rank7-hand-and-effect--CORE-024-CORE-025",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-100-6-P2-private-choice-rank7-hand-and-effect--CORE-021-CORE-022",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
             "kind": "core-submit-private-choice",
-            "token": "a19f7b37800adf45eb91309e76dbe9e7f86d788db840b83b4adad82c51ed818a",
+            "token": "6df2d74a9b6889f29bfea847afa97420d66bec4c0bd1d8f460d0e8d2b5bd71c1",
             "submission": {
               "kind": "core-rank7-assign",
               "mode": "hand-and-effect",
               "selectedCardIds": [
-                "CORE-021",
-                "CORE-022"
+                "CORE-024",
+                "CORE-025"
               ]
             }
           }
         },
         {
-          "id": "CORE-102-6-P2-private-choice-rank7-generated-unavailable--CORE-022",
+          "id": "CORE-198-13-P1-private-choice-rank7-generated-jack-attach--CORE-025",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
+          "actorId": "P1",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "371d295745fcfdb98d4c18861152b1d4d2bee64720b9d71dc4eaee5b359ef032",
+            "token": "cef4ad49e5af86e03145d5fe4ede4db98185d20c5285a9618057838596913703",
             "submission": {
               "kind": "core-rank7-generated-effect",
               "selectedCardIds": [
-                "CORE-022"
-              ]
-            }
-          }
-        },
-        {
-          "id": "CORE-107-7-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-108-7-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-110-7-P1-response-decline-decline--CORE-SI-000108-P1-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-120-8-P2-voltage-three-points--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-three",
-              "disposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-121-8-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-122-8-P2-swap-bar-face-up-draw--CORE-007",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-007"
-            }
-          }
-        },
-        {
-          "id": "CORE-123-8-P1-response-decline-decline--CORE-SI-000122-P2-ROOT-face-up-swap-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-133-9-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-134-9-P1-scuttle-ordinary-CORE-002-CORE-011",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-002",
-              "targetCardId": "CORE-011"
-            }
-          }
-        },
-        {
-          "id": "CORE-136-9-P1-response-decline-decline--CORE-SI-000134-P1-ROOT-scuttle-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-145-10-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-146-10-P2-score-points-CORE-021-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-021"
-            }
-          }
-        },
-        {
-          "id": "CORE-147-10-P1-response-decline-decline--CORE-SI-000146-P2-ROOT-play-for-points-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-157-11-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-158-11-P1-anchor-private-choice-nine-CORE-015-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "nine-anchor",
-                "sourceCardId": "CORE-015",
-                "targetPlayerId": "P2"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-159-11-P2-counter-king-anchor-CORE-012-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-king-counter",
-            "sourceCardId": "CORE-012",
-            "targetStackItemId": "CORE-SI-000158-P1-ROOT-play-for-effect-0"
-          }
-        },
-        {
-          "id": "CORE-168-12-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-169-12-P2-swap-bar-face-up-draw--CORE-014",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-014"
-            }
-          }
-        },
-        {
-          "id": "CORE-180-13-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-181-13-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-192-14-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-193-14-P2-effect-private-choice-three-force-discard-CORE-006-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "three-hand-raid",
-                "sourceCardId": "CORE-006",
-                "targetPlayerId": "P1",
-                "mode": "force-discard"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-194-14-P1-response-decline-decline--CORE-SI-000193-P2-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-200-14-P1-private-choice-rank3-discard--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "a9a8d6ad0e9bdc7101533f56cdf8e5563cc923e60c42c4b70485fc8a4b9a8bbd",
-            "submission": {
-              "kind": "core-rank3-discard",
-              "selectedCardIds": []
-            }
-          }
-        },
-        {
-          "id": "CORE-205-15-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-206-15-P1-attachment-jack-pr-CORE-025-CORE-024",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
+                "CORE-025"
+              ],
+              "generatedEffect": {
                 "kind": "jack-attach",
+                "row": "pr",
                 "sourceCardId": "CORE-025",
-                "targetCardId": "CORE-024",
-                "row": "pr"
+                "targetCardId": "CORE-006"
               }
             }
           }
         },
         {
-          "id": "CORE-217-16-P2-phase-enter-action--",
+          "id": "CORE-211-14-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -610,105 +499,7 @@ export default {
           }
         },
         {
-          "id": "CORE-218-16-P2-scuttle-ordinary-CORE-014-CORE-016",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-014",
-              "targetCardId": "CORE-016"
-            }
-          }
-        },
-        {
-          "id": "CORE-229-17-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-230-17-P1-swap-bar-face-up-draw--CORE-001",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-001"
-            }
-          }
-        },
-        {
-          "id": "CORE-241-18-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-242-18-P2-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-253-19-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-254-19-P1-effect-private-choice-three-force-discard-CORE-001-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "three-hand-raid",
-                "sourceCardId": "CORE-001",
-                "targetPlayerId": "P2",
-                "mode": "force-discard"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-261-19-P2-private-choice-rank3-discard--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "82dcddf8892129b9c13fd627e87ae1245c2f021bfa9e1bd1f234996f638dd4d6",
-            "submission": {
-              "kind": "core-rank3-discard",
-              "selectedCardIds": []
-            }
-          }
-        },
-        {
-          "id": "CORE-266-20-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-267-20-P2-wild-sovereignty-three-bounce-CORE-026-CORE-021",
+          "id": "CORE-212-14-P2-solo-wild-three-bounce-♥-CORE-017-CORE-006",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -716,19 +507,19 @@ export default {
             "action": {
               "kind": "core-resolve-rank-action",
               "action": {
-                "kind": "wild-sovereignty",
-                "sourceCardId": "CORE-026",
+                "kind": "solo-wild-copy",
+                "sourceCardId": "CORE-017",
                 "targetRank": "3",
                 "copiedAction": {
                   "kind": "three-bounce",
-                  "targetCardId": "CORE-021"
+                  "targetCardId": "CORE-006"
                 }
               }
             }
           }
         },
         {
-          "id": "CORE-278-21-P1-phase-enter-action--",
+          "id": "CORE-225-15-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -736,7 +527,7 @@ export default {
           }
         },
         {
-          "id": "CORE-279-21-P1-draw-top--",
+          "id": "CORE-226-15-P1-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -747,7 +538,7 @@ export default {
           }
         },
         {
-          "id": "CORE-290-22-P2-phase-enter-action--",
+          "id": "CORE-237-16-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -755,18 +546,35 @@ export default {
           }
         },
         {
-          "id": "CORE-291-22-P2-draw-top--",
+          "id": "CORE-238-16-P2-ultra-three-black-clear-pr-CORE-003-CORE-010-CORE-018-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-resolve-advanced",
+              "advanced": {
+                "kind": "advanced-ultra-three-black",
+                "sourceCardIds": [
+                  "CORE-003",
+                  "CORE-010",
+                  "CORE-018"
+                ],
+                "scoreCardId": "CORE-003",
+                "castCardId": "CORE-010",
+                "exileCardId": "CORE-018",
+                "castEffect": {
+                  "kind": "four-row-clear",
+                  "sourceCardId": "CORE-010",
+                  "targetPlayerId": "P1",
+                  "row": "pr"
+                }
+              }
             }
           }
         },
         {
-          "id": "CORE-302-23-P1-phase-enter-action--",
+          "id": "CORE-250-17-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -774,7 +582,7 @@ export default {
           }
         },
         {
-          "id": "CORE-303-23-P1-solo-wild-four-row-clear-er-♦-CORE-021-",
+          "id": "CORE-251-17-P1-solo-wild-recycle-five-♦-CORE-021-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -784,18 +592,16 @@ export default {
               "action": {
                 "kind": "solo-wild-copy",
                 "sourceCardId": "CORE-021",
-                "targetRank": "4",
+                "targetRank": "5",
                 "copiedAction": {
-                  "kind": "four-row-clear",
-                  "targetPlayerId": "P2",
-                  "row": "er"
+                  "kind": "recycle-five"
                 }
               }
             }
           }
         },
         {
-          "id": "CORE-314-24-P2-phase-enter-action--",
+          "id": "CORE-262-18-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -803,7 +609,7 @@ export default {
           }
         },
         {
-          "id": "CORE-315-24-P2-draw-top--",
+          "id": "CORE-263-18-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -814,7 +620,7 @@ export default {
           }
         },
         {
-          "id": "CORE-326-25-P1-phase-enter-action--",
+          "id": "CORE-274-19-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -822,7 +628,153 @@ export default {
           }
         },
         {
-          "id": "CORE-327-25-P1-effect-private-choice-five-recycle-CORE-023-",
+          "id": "CORE-275-19-P1-score-points-CORE-006-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-006"
+            }
+          }
+        },
+        {
+          "id": "CORE-286-20-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-287-20-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-298-21-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-299-21-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-310-22-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-311-22-P2-scuttle-ordinary-CORE-030-CORE-006",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-scuttle",
+              "sourceCardId": "CORE-030",
+              "targetCardId": "CORE-006"
+            }
+          }
+        },
+        {
+          "id": "CORE-312-22-P1-response-decline-decline--CORE-SI-000311-P2-ROOT-scuttle-0",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-322-23-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-323-23-P1-anchor-private-choice-nine-CORE-031-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "nine-anchor",
+                "sourceCardId": "CORE-031",
+                "targetPlayerId": "P2"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-331-23-P2-private-choice-nine-anchor-discard--CORE-029",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-submit-private-choice",
+            "token": "b209abec46140ee9cdb0e21bdcc7ef415521b402d46813a9d84dd7cbf3e2c985",
+            "submission": {
+              "kind": "core-nine-anchor-discard",
+              "selectedCardIds": [
+                "CORE-029"
+              ]
+            }
+          }
+        },
+        {
+          "id": "CORE-336-24-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-337-24-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-348-25-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-349-25-P1-effect-private-choice-five-recycle-CORE-005-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -831,28 +783,37 @@ export default {
               "kind": "core-resolve-effect",
               "effect": {
                 "kind": "five-recycle",
-                "sourceCardId": "CORE-023"
+                "sourceCardId": "CORE-005"
               }
             }
           }
         },
         {
-          "id": "CORE-335-25-P1-private-choice-rank5-rummage--CORE-009",
+          "id": "CORE-350-25-P2-response-decline-decline--CORE-SI-000349-P1-ROOT-play-for-effect-0",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-357-25-P1-private-choice-rank5-rummage--CORE-027",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "0872be64f9cdc9846c242a5417dac1c66400bdcb8796257d4521e73703970781",
+            "token": "486cb622e2442977cb5787eb66423db96171bc5ca8f8626c2f918fd90522639e",
             "submission": {
               "kind": "core-rank5-rummage",
               "selectedCardIds": [
-                "CORE-009"
+                "CORE-027"
               ]
             }
           }
         },
         {
-          "id": "CORE-340-26-P2-phase-enter-action--",
+          "id": "CORE-362-26-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -860,48 +821,19 @@ export default {
           }
         },
         {
-          "id": "CORE-341-26-P2-effect-private-choice-six-dig-CORE-028-",
+          "id": "CORE-363-26-P2-score-points-CORE-028-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "six-dig",
-                "sourceCardId": "CORE-028"
-              }
+              "kind": "core-score",
+              "cardId": "CORE-028"
             }
           }
         },
         {
-          "id": "CORE-342-26-P1-response-decline-decline--CORE-SI-000341-P2-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-348-26-P2-private-choice-rank6-keep-return-bottom--CORE-031-CORE-032",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "260ba3371d27ee536f4b89c277fb3b27cebed5ac55b34cb04ae0b303c7077991",
-            "submission": {
-              "kind": "core-rank6-dig",
-              "mode": "keep-return-bottom",
-              "selectedCardIds": [
-                "CORE-031",
-                "CORE-032"
-              ]
-            }
-          }
-        },
-        {
-          "id": "CORE-354-27-P1-phase-enter-action--",
+          "id": "CORE-375-27-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -909,105 +841,39 @@ export default {
           }
         },
         {
-          "id": "CORE-355-27-P1-quick-queen-aegis-CORE-003-CORE-025",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-queen-aegis-quick",
-            "sourceCardId": "CORE-003",
-            "targetCardId": "CORE-025"
-          }
-        },
-        {
-          "id": "CORE-356-27-P2-instant-nine-tap-CORE-031-CORE-024",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-nine-tap",
-            "sourceCardId": "CORE-031",
-            "targetCardId": "CORE-024"
-          }
-        },
-        {
-          "id": "CORE-365-27-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-366-27-P2-response-decline-decline--CORE-SI-000365-P1-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-376-28-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-377-28-P2-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-378-28-P1-response-decline-decline--CORE-SI-000377-P2-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-389-29-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-390-29-P1-score-points-CORE-009-",
+          "id": "CORE-376-27-P1-score-points-CORE-027-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
               "kind": "core-score",
-              "cardId": "CORE-009"
+              "cardId": "CORE-027"
             }
           }
         },
         {
-          "id": "CORE-391-29-P2-disrupt-jack-CORE-032-",
+          "id": "CORE-377-27-P2-disrupt-jack-CORE-032-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-jack-disrupt",
             "sourceCardId": "CORE-032",
-            "targetStackItemId": "CORE-SI-000390-P1-ROOT-play-for-points-0"
+            "targetStackItemId": "CORE-SI-000376-P1-ROOT-play-for-points-0"
           }
         },
         {
-          "id": "CORE-407-30-P2-phase-enter-action--",
+          "id": "CORE-378-27-P1-counter-ace-spade-CORE-013-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-spade-ace-counter",
+            "sourceCardId": "CORE-013",
+            "targetStackItemId": "CORE-SI-000377-P2-JACK-DISRUPT-1"
+          }
+        },
+        {
+          "id": "CORE-393-28-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1015,29 +881,18 @@ export default {
           }
         },
         {
-          "id": "CORE-408-30-P2-scuttle-ordinary-CORE-027-CORE-009",
+          "id": "CORE-394-28-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-027",
-              "targetCardId": "CORE-009"
+              "kind": "core-draw"
             }
           }
         },
         {
-          "id": "CORE-410-30-P2-response-decline-decline--CORE-SI-000408-P2-ROOT-scuttle-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-420-31-P1-phase-enter-action--",
+          "id": "CORE-405-29-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1045,22 +900,18 @@ export default {
           }
         },
         {
-          "id": "CORE-421-31-P1-anchor-king-CORE-034-",
+          "id": "CORE-406-29-P1-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "king-anchor",
-                "sourceCardId": "CORE-034"
-              }
+              "kind": "core-draw"
             }
           }
         },
         {
-          "id": "CORE-432-32-P2-phase-enter-action--",
+          "id": "CORE-417-30-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1068,7 +919,7 @@ export default {
           }
         },
         {
-          "id": "CORE-433-32-P2-effect-four-clear-er-CORE-035-",
+          "id": "CORE-418-30-P2-effect-four-clear-er-CORE-035-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1085,16 +936,7 @@ export default {
           }
         },
         {
-          "id": "CORE-435-32-P2-quick-eight-aegis-field-CORE-036-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-eight-aegis-field",
-            "sourceCardId": "CORE-036"
-          }
-        },
-        {
-          "id": "CORE-451-33-P1-phase-enter-action--",
+          "id": "CORE-429-31-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1102,18 +944,19 @@ export default {
           }
         },
         {
-          "id": "CORE-452-33-P1-draw-top--",
+          "id": "CORE-430-31-P1-score-points-CORE-037-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-score",
+              "cardId": "CORE-037"
             }
           }
         },
         {
-          "id": "CORE-463-34-P2-phase-enter-action--",
+          "id": "CORE-441-32-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1121,16 +964,7 @@ export default {
           }
         },
         {
-          "id": "CORE-464-34-P2-quick-board-lock-CORE-007-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-board-lock-quick",
-            "sourceCardId": "CORE-007"
-          }
-        },
-        {
-          "id": "CORE-469-34-P2-draw-top--",
+          "id": "CORE-442-32-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1141,7 +975,7 @@ export default {
           }
         },
         {
-          "id": "CORE-480-35-P1-phase-enter-action--",
+          "id": "CORE-453-33-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1149,90 +983,29 @@ export default {
           }
         },
         {
-          "id": "CORE-481-35-P1-draw-top--",
+          "id": "CORE-454-33-P1-scuttle-ordinary-CORE-024-CORE-028",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-scuttle",
+              "sourceCardId": "CORE-024",
+              "targetCardId": "CORE-028"
             }
           }
         },
         {
-          "id": "CORE-493-36-P2-phase-enter-action--",
+          "id": "CORE-455-33-P2-response-decline-decline--CORE-SI-000454-P1-ROOT-scuttle-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-494-36-P2-score-points-CORE-039-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-039"
-            }
-          }
-        },
-        {
-          "id": "CORE-507-37-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-508-37-P1-solo-wild-four-row-clear-pr-♠-CORE-037-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-rank-action",
-              "action": {
-                "kind": "solo-wild-copy",
-                "sourceCardId": "CORE-037",
-                "targetRank": "4",
-                "copiedAction": {
-                  "kind": "four-row-clear",
-                  "targetPlayerId": "P2",
-                  "row": "pr"
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-510-37-P1-response-decline-decline--CORE-SI-000508-P1-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
           "action": {
             "kind": "core-pass-priority",
             "semantic": "DECLINE_RESPONSE"
           }
         },
         {
-          "id": "CORE-519-38-P2-voltage-four-guess-3-♠--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "3",
-              "guessSuit": "♠",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-520-38-P2-phase-enter-action--",
+          "id": "CORE-465-34-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1240,82 +1013,9 @@ export default {
           }
         },
         {
-          "id": "CORE-521-38-P2-score-points-CORE-040-",
+          "id": "CORE-466-34-P2-solo-wild-three-bounce-♣-CORE-038-CORE-003",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-040"
-            }
-          }
-        },
-        {
-          "id": "CORE-532-39-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-533-39-P1-score-points-CORE-041-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-041"
-            }
-          }
-        },
-        {
-          "id": "CORE-544-40-P2-voltage-four-guess-A-♥--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "A",
-              "guessSuit": "♥",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-545-40-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-546-40-P2-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-557-41-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-558-41-P1-solo-wild-three-bounce-♣-CORE-038-CORE-041",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
@@ -1326,57 +1026,14 @@ export default {
                 "targetRank": "3",
                 "copiedAction": {
                   "kind": "three-bounce",
-                  "targetCardId": "CORE-041"
+                  "targetCardId": "CORE-003"
                 }
               }
             }
           }
         },
         {
-          "id": "CORE-559-41-P2-response-decline-decline--CORE-SI-000558-P1-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-569-42-P2-voltage-four-guess-10-♣--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "10",
-              "guessSuit": "♣",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-570-42-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-571-42-P2-score-points-CORE-043-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-043"
-            }
-          }
-        },
-        {
-          "id": "CORE-582-43-P1-phase-enter-action--",
+          "id": "CORE-477-35-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1384,7 +1041,7 @@ export default {
           }
         },
         {
-          "id": "CORE-583-43-P1-draw-top--",
+          "id": "CORE-478-35-P1-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1395,21 +1052,7 @@ export default {
           }
         },
         {
-          "id": "CORE-594-44-P2-voltage-four-guess-K-♥--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "K",
-              "guessSuit": "♥",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-595-44-P2-phase-enter-action--",
+          "id": "CORE-489-36-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1417,7 +1060,123 @@ export default {
           }
         },
         {
-          "id": "CORE-596-44-P2-effect-four-clear-pr-CORE-042-",
+          "id": "CORE-490-36-P2-quick-eight-aegis-field-CORE-036-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-eight-aegis-field",
+            "sourceCardId": "CORE-036"
+          }
+        },
+        {
+          "id": "CORE-495-36-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-506-37-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-507-37-P1-anchor-queen-CORE-003-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "queen-anchor",
+                "sourceCardId": "CORE-003"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-518-38-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-519-38-P2-effect-ace-purge-aegis-CORE-041-CORE-003",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "ace-purge",
+                "sourceCardId": "CORE-041",
+                "targetCardId": "CORE-003",
+                "mode": "scrap-aegis"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-530-39-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-531-39-P1-effect-four-clear-pr-CORE-039-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "four-row-clear",
+                "sourceCardId": "CORE-039",
+                "targetPlayerId": "P2",
+                "row": "pr"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-542-40-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-543-40-P2-rank10-heart-tempo-CORE-040-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-advanced",
+              "advanced": {
+                "kind": "advanced-rank10-heart-tempo",
+                "sourceCardId": "CORE-040"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-550-40-P2-effect-four-clear-er-CORE-042-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1428,13 +1187,63 @@ export default {
                 "kind": "four-row-clear",
                 "sourceCardId": "CORE-042",
                 "targetPlayerId": "P1",
-                "row": "pr"
+                "row": "er"
               }
             }
           }
         },
         {
-          "id": "CORE-597-44-P1-response-decline-decline--CORE-SI-000596-P2-ROOT-play-for-effect-0",
+          "id": "CORE-557-40-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-568-41-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-569-41-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-580-42-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-581-42-P2-score-points-CORE-044-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-044"
+            }
+          }
+        },
+        {
+          "id": "CORE-582-42-P1-response-decline-decline--CORE-SI-000581-P2-ROOT-play-for-points-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1443,7 +1252,7 @@ export default {
           }
         },
         {
-          "id": "CORE-607-45-P1-phase-enter-action--",
+          "id": "CORE-592-43-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1451,7 +1260,167 @@ export default {
           }
         },
         {
-          "id": "CORE-608-45-P1-rank10-diamond-mimic-row-exchange-pr-CORE-044-",
+          "id": "CORE-593-43-P1-score-points-CORE-046-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-046"
+            }
+          }
+        },
+        {
+          "id": "CORE-604-44-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-605-44-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-606-44-P1-response-decline-decline--CORE-SI-000605-P2-ROOT-draw-0",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-616-45-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-617-45-P1-attachment-jack-pr-CORE-045-CORE-044",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "jack-attach",
+                "sourceCardId": "CORE-045",
+                "targetCardId": "CORE-044",
+                "row": "pr"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-618-45-P2-instant-eight-spade-free-scuttle-CORE-047-CORE-046",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-eight-spade-free-scuttle",
+            "sourceCardId": "CORE-047",
+            "targetCardId": "CORE-046"
+          }
+        },
+        {
+          "id": "CORE-624-45-P2-counter-ace-base-CORE-043-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-base-ace-counter",
+            "sourceCardId": "CORE-043",
+            "targetStackItemId": "CORE-SI-000617-P1-ROOT-play-for-effect-0",
+            "sourceMode": "hand"
+          }
+        },
+        {
+          "id": "CORE-633-46-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-634-46-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-645-47-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-646-47-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-647-47-P2-response-decline-decline--CORE-SI-000646-P1-ROOT-draw-0",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-657-48-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-658-48-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-669-49-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-670-49-P1-rank10-spade-recovery-CORE-050-CORE-018",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1459,21 +1428,25 @@ export default {
             "action": {
               "kind": "core-resolve-advanced",
               "advanced": {
-                "kind": "advanced-rank10-diamond-mimic",
-                "sourceCardId": "CORE-044",
-                "mimickedRank": "4",
-                "effectKey": "row-exchange",
-                "mimicAction": {
-                  "kind": "row-exchange",
-                  "targetPlayerId": "P2",
-                  "row": "pr"
-                }
+                "kind": "advanced-rank10-spade-recovery",
+                "sourceCardId": "CORE-050",
+                "recoverCardId": "CORE-018"
               }
             }
           }
         },
         {
-          "id": "CORE-620-46-P2-phase-enter-action--",
+          "id": "CORE-671-49-P2-instant-nine-tap-CORE-048-CORE-027",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-nine-tap",
+            "sourceCardId": "CORE-048",
+            "targetCardId": "CORE-027"
+          }
+        },
+        {
+          "id": "CORE-686-50-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1481,7 +1454,57 @@ export default {
           }
         },
         {
-          "id": "CORE-621-46-P2-draw-top--",
+          "id": "CORE-687-50-P2-scuttle-ordinary-CORE-049-CORE-037",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-scuttle",
+              "sourceCardId": "CORE-049",
+              "targetCardId": "CORE-037"
+            }
+          }
+        },
+        {
+          "id": "CORE-699-51-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-700-51-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-711-52-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-712-52-P2-quick-queen-aegis-CORE-052-CORE-044",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-queen-aegis-quick",
+            "sourceCardId": "CORE-052",
+            "targetCardId": "CORE-044"
+          }
+        },
+        {
+          "id": "CORE-717-52-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1492,21 +1515,7 @@ export default {
           }
         },
         {
-          "id": "CORE-635-47-P1-voltage-four-guess-9-♥--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "9",
-              "guessSuit": "♥",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-636-47-P1-phase-enter-action--",
+          "id": "CORE-729-53-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1514,27 +1523,37 @@ export default {
           }
         },
         {
-          "id": "CORE-637-47-P1-draw-top--",
+          "id": "CORE-730-53-P1-effect-private-choice-five-recycle-CORE-051-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "five-recycle",
+                "sourceCardId": "CORE-051"
+              }
             }
           }
         },
         {
-          "id": "CORE-638-47-P2-response-decline-decline--CORE-SI-000637-P1-ROOT-draw-0",
+          "id": "CORE-738-53-P1-private-choice-rank5-rummage--CORE-037",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
+          "actorId": "P1",
           "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
+            "kind": "core-submit-private-choice",
+            "token": "26540f3f6f52309234dcbce07e9a3d82d1e8a73fa8edbdbac059e3d77fca1708",
+            "submission": {
+              "kind": "core-rank5-rummage",
+              "selectedCardIds": [
+                "CORE-037"
+              ]
+            }
           }
         },
         {
-          "id": "CORE-648-48-P2-phase-enter-action--",
+          "id": "CORE-745-54-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1542,24 +1561,35 @@ export default {
           }
         },
         {
-          "id": "CORE-649-48-P2-score-points-CORE-045-",
+          "id": "CORE-746-54-P2-effect-private-choice-six-dig-CORE-054-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-score",
-              "cardId": "CORE-045"
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "six-dig",
+                "sourceCardId": "CORE-054"
+              }
             }
           }
         },
         {
-          "id": "CORE-651-48-P2-response-decline-decline--CORE-SI-000649-P2-ROOT-play-for-points-0",
+          "id": "CORE-747-54-P1-response-decline-decline--CORE-SI-000746-P2-ROOT-play-for-effect-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
+          "actorId": "P1",
           "action": {
             "kind": "core-pass-priority",
             "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-759-55-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
           }
         }
       ],
@@ -1663,49 +1693,79 @@ export default {
           }
         },
         {
-          "id": "CORE-16-1-P2-counter-ace-base-CORE-008-",
+          "id": "CORE-20-1-P2-response-decline-decline--CORE-SI-000013-P1-ROOT-play-for-effect-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
-            "kind": "core-declare-base-ace-counter",
-            "sourceCardId": "CORE-008",
-            "targetStackItemId": "CORE-SI-000014-P2-JACK-DISRUPT-1",
-            "sourceMode": "hand"
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
           }
         },
         {
-          "id": "CORE-27-1-P2-private-choice-rank3-present--CORE-007-CORE-011",
+          "id": "CORE-25-1-P2-private-choice-rank3-present--CORE-006-CORE-008",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "f283085a54e2cd91159cb312671996b9cd78f3578a2094772a2449d1daf97997",
+            "token": "02c657f424401a6fe4703e1f9728b3b48ad201a2067aa5c0990f5e1c9689a3eb",
             "submission": {
               "kind": "core-rank3-present",
               "selectedCardIds": [
-                "CORE-007",
-                "CORE-011"
+                "CORE-006",
+                "CORE-008"
               ]
             }
           }
         },
         {
-          "id": "CORE-29-1-P1-private-choice-rank3-take--",
+          "id": "CORE-27-1-P1-private-choice-rank3-take--CORE-008",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "217cb20275e01a9f74d6dd1f66f10c07bef970ef5b8f0c13f8be4e01fea2a975",
+            "token": "985d0957cf6489c527f110760349363c2992bffc9de925da7470fe0090a91746",
             "submission": {
               "kind": "core-rank3-take",
-              "selectedCardIds": []
+              "selectedCardIds": [
+                "CORE-008"
+              ]
             }
           }
         },
         {
-          "id": "CORE-30-1-P1-draw-top--",
+          "id": "CORE-28-1-P1-score-points-CORE-008-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-008"
+            }
+          }
+        },
+        {
+          "id": "CORE-39-2-P2-swap-bar-face-down-CORE-011-CORE-012",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-face-down-swap",
+            "handCardId": "CORE-011",
+            "swapCardId": "CORE-012"
+          }
+        },
+        {
+          "id": "CORE-40-2-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-41-2-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
@@ -1714,42 +1774,7 @@ export default {
           }
         },
         {
-          "id": "CORE-41-2-P2-swap-bar-face-down-CORE-007-CORE-012",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-face-down-swap",
-            "handCardId": "CORE-007",
-            "swapCardId": "CORE-012"
-          }
-        },
-        {
-          "id": "CORE-42-2-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-43-2-P2-effect-four-clear-pr-CORE-010-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "four-row-clear",
-                "sourceCardId": "CORE-010",
-                "targetPlayerId": "P1",
-                "row": "pr"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-54-3-P1-phase-enter-action--",
+          "id": "CORE-53-3-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1757,26 +1782,19 @@ export default {
           }
         },
         {
-          "id": "CORE-55-3-P1-solo-wild-recycle-five-♥-CORE-017-",
+          "id": "CORE-54-3-P1-swap-bar-face-up-draw--CORE-001",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-resolve-rank-action",
-              "action": {
-                "kind": "solo-wild-copy",
-                "sourceCardId": "CORE-017",
-                "targetRank": "5",
-                "copiedAction": {
-                  "kind": "recycle-five"
-                }
-              }
+              "kind": "core-face-up-swap-draw",
+              "swapCardId": "CORE-001"
             }
           }
         },
         {
-          "id": "CORE-66-4-P2-phase-enter-action--",
+          "id": "CORE-65-4-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1784,19 +1802,28 @@ export default {
           }
         },
         {
-          "id": "CORE-67-4-P2-score-points-CORE-011-",
+          "id": "CORE-66-4-P2-quick-board-lock-CORE-007-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-board-lock-quick",
+            "sourceCardId": "CORE-007"
+          }
+        },
+        {
+          "id": "CORE-71-4-P2-score-points-CORE-006-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
               "kind": "core-score",
-              "cardId": "CORE-011"
+              "cardId": "CORE-006"
             }
           }
         },
         {
-          "id": "CORE-78-5-P1-phase-enter-action--",
+          "id": "CORE-82-5-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1804,7 +1831,7 @@ export default {
           }
         },
         {
-          "id": "CORE-79-5-P1-score-points-CORE-016-",
+          "id": "CORE-83-5-P1-score-points-CORE-016-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -1816,28 +1843,7 @@ export default {
           }
         },
         {
-          "id": "CORE-81-5-P1-response-decline-decline--CORE-SI-000079-P1-ROOT-play-for-points-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-90-6-P2-voltage-three-hand--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-three",
-              "disposition": "hand"
-            }
-          }
-        },
-        {
-          "id": "CORE-91-6-P2-phase-enter-action--",
+          "id": "CORE-95-6-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -1845,9 +1851,198 @@ export default {
           }
         },
         {
-          "id": "CORE-92-6-P2-effect-private-choice-seven-topdeck-CORE-020-",
+          "id": "CORE-96-6-P2-swap-bar-face-up-draw--CORE-014",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-face-up-swap-draw",
+              "swapCardId": "CORE-014"
+            }
+          }
+        },
+        {
+          "id": "CORE-97-6-P1-instant-nine-tap-CORE-015-CORE-006",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-nine-tap",
+            "sourceCardId": "CORE-015",
+            "targetCardId": "CORE-006"
+          }
+        },
+        {
+          "id": "CORE-114-7-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-115-7-P1-effect-three-bounce-top-CORE-001-CORE-006",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "three-bounce",
+                "sourceCardId": "CORE-001",
+                "targetCardId": "CORE-006"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-116-7-P2-ultra-three-red-counter-CORE-012-CORE-014-CORE-017-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-ultra-three-red",
+            "sourceCardIds": [
+              "CORE-012",
+              "CORE-014",
+              "CORE-017"
+            ],
+            "targetStackItemId": "CORE-SI-000115-P1-ROOT-play-for-effect-0"
+          }
+        },
+        {
+          "id": "CORE-125-8-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-126-8-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-137-9-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-138-9-P1-swap-bar-face-up-draw--CORE-011",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-face-up-swap-draw",
+              "swapCardId": "CORE-011"
+            }
+          }
+        },
+        {
+          "id": "CORE-149-10-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-150-10-P2-effect-red-joker-opponent-attack-CORE-019-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "red-joker",
+                "sourceCardId": "CORE-019",
+                "mode": "opponent-attack",
+                "targetPlayerId": "P1"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-161-11-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-162-11-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-173-12-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-174-12-P2-effect-private-choice-five-recycle-CORE-002-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "five-recycle",
+                "sourceCardId": "CORE-002"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-182-12-P2-private-choice-rank5-rummage--CORE-017",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-submit-private-choice",
+            "token": "a60a2898430c2a2796136ee67bbab16b3d905b506655d2d778c648d82966491c",
+            "submission": {
+              "kind": "core-rank5-rummage",
+              "selectedCardIds": [
+                "CORE-017"
+              ]
+            }
+          }
+        },
+        {
+          "id": "CORE-187-13-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-188-13-P1-effect-private-choice-seven-topdeck-CORE-020-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
@@ -1860,321 +2055,45 @@ export default {
           }
         },
         {
-          "id": "CORE-93-6-P1-response-decline-decline--CORE-SI-000092-P2-ROOT-play-for-effect-0",
+          "id": "CORE-196-13-P1-private-choice-rank7-hand-and-effect--CORE-024-CORE-025",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-100-6-P2-private-choice-rank7-hand-and-effect--CORE-021-CORE-022",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
             "kind": "core-submit-private-choice",
-            "token": "a19f7b37800adf45eb91309e76dbe9e7f86d788db840b83b4adad82c51ed818a",
+            "token": "6df2d74a9b6889f29bfea847afa97420d66bec4c0bd1d8f460d0e8d2b5bd71c1",
             "submission": {
               "kind": "core-rank7-assign",
               "mode": "hand-and-effect",
               "selectedCardIds": [
-                "CORE-021",
-                "CORE-022"
+                "CORE-024",
+                "CORE-025"
               ]
             }
           }
         },
         {
-          "id": "CORE-102-6-P2-private-choice-rank7-generated-unavailable--CORE-022",
+          "id": "CORE-198-13-P1-private-choice-rank7-generated-jack-attach--CORE-025",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
+          "actorId": "P1",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "371d295745fcfdb98d4c18861152b1d4d2bee64720b9d71dc4eaee5b359ef032",
+            "token": "cef4ad49e5af86e03145d5fe4ede4db98185d20c5285a9618057838596913703",
             "submission": {
               "kind": "core-rank7-generated-effect",
               "selectedCardIds": [
-                "CORE-022"
-              ]
-            }
-          }
-        },
-        {
-          "id": "CORE-107-7-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-108-7-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-110-7-P1-response-decline-decline--CORE-SI-000108-P1-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-120-8-P2-voltage-three-points--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-three",
-              "disposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-121-8-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-122-8-P2-swap-bar-face-up-draw--CORE-007",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-007"
-            }
-          }
-        },
-        {
-          "id": "CORE-123-8-P1-response-decline-decline--CORE-SI-000122-P2-ROOT-face-up-swap-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-133-9-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-134-9-P1-scuttle-ordinary-CORE-002-CORE-011",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-002",
-              "targetCardId": "CORE-011"
-            }
-          }
-        },
-        {
-          "id": "CORE-136-9-P1-response-decline-decline--CORE-SI-000134-P1-ROOT-scuttle-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-145-10-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-146-10-P2-score-points-CORE-021-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-021"
-            }
-          }
-        },
-        {
-          "id": "CORE-147-10-P1-response-decline-decline--CORE-SI-000146-P2-ROOT-play-for-points-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-157-11-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-158-11-P1-anchor-private-choice-nine-CORE-015-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "nine-anchor",
-                "sourceCardId": "CORE-015",
-                "targetPlayerId": "P2"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-159-11-P2-counter-king-anchor-CORE-012-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-king-counter",
-            "sourceCardId": "CORE-012",
-            "targetStackItemId": "CORE-SI-000158-P1-ROOT-play-for-effect-0"
-          }
-        },
-        {
-          "id": "CORE-168-12-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-169-12-P2-swap-bar-face-up-draw--CORE-014",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-014"
-            }
-          }
-        },
-        {
-          "id": "CORE-180-13-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-181-13-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-192-14-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-193-14-P2-effect-private-choice-three-force-discard-CORE-006-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "three-hand-raid",
-                "sourceCardId": "CORE-006",
-                "targetPlayerId": "P1",
-                "mode": "force-discard"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-194-14-P1-response-decline-decline--CORE-SI-000193-P2-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-200-14-P1-private-choice-rank3-discard--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "a9a8d6ad0e9bdc7101533f56cdf8e5563cc923e60c42c4b70485fc8a4b9a8bbd",
-            "submission": {
-              "kind": "core-rank3-discard",
-              "selectedCardIds": []
-            }
-          }
-        },
-        {
-          "id": "CORE-205-15-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-206-15-P1-attachment-jack-pr-CORE-025-CORE-024",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
+                "CORE-025"
+              ],
+              "generatedEffect": {
                 "kind": "jack-attach",
+                "row": "pr",
                 "sourceCardId": "CORE-025",
-                "targetCardId": "CORE-024",
-                "row": "pr"
+                "targetCardId": "CORE-006"
               }
             }
           }
         },
         {
-          "id": "CORE-217-16-P2-phase-enter-action--",
+          "id": "CORE-211-14-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2182,105 +2101,7 @@ export default {
           }
         },
         {
-          "id": "CORE-218-16-P2-scuttle-ordinary-CORE-014-CORE-016",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-014",
-              "targetCardId": "CORE-016"
-            }
-          }
-        },
-        {
-          "id": "CORE-229-17-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-230-17-P1-swap-bar-face-up-draw--CORE-001",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-001"
-            }
-          }
-        },
-        {
-          "id": "CORE-241-18-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-242-18-P2-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-253-19-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-254-19-P1-effect-private-choice-three-force-discard-CORE-001-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "three-hand-raid",
-                "sourceCardId": "CORE-001",
-                "targetPlayerId": "P2",
-                "mode": "force-discard"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-261-19-P2-private-choice-rank3-discard--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "82dcddf8892129b9c13fd627e87ae1245c2f021bfa9e1bd1f234996f638dd4d6",
-            "submission": {
-              "kind": "core-rank3-discard",
-              "selectedCardIds": []
-            }
-          }
-        },
-        {
-          "id": "CORE-266-20-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-267-20-P2-wild-sovereignty-three-bounce-CORE-026-CORE-021",
+          "id": "CORE-212-14-P2-solo-wild-three-bounce-♥-CORE-017-CORE-006",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2288,19 +2109,19 @@ export default {
             "action": {
               "kind": "core-resolve-rank-action",
               "action": {
-                "kind": "wild-sovereignty",
-                "sourceCardId": "CORE-026",
+                "kind": "solo-wild-copy",
+                "sourceCardId": "CORE-017",
                 "targetRank": "3",
                 "copiedAction": {
                   "kind": "three-bounce",
-                  "targetCardId": "CORE-021"
+                  "targetCardId": "CORE-006"
                 }
               }
             }
           }
         },
         {
-          "id": "CORE-278-21-P1-phase-enter-action--",
+          "id": "CORE-225-15-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2308,7 +2129,7 @@ export default {
           }
         },
         {
-          "id": "CORE-279-21-P1-draw-top--",
+          "id": "CORE-226-15-P1-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2319,7 +2140,7 @@ export default {
           }
         },
         {
-          "id": "CORE-290-22-P2-phase-enter-action--",
+          "id": "CORE-237-16-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2327,18 +2148,35 @@ export default {
           }
         },
         {
-          "id": "CORE-291-22-P2-draw-top--",
+          "id": "CORE-238-16-P2-ultra-three-black-clear-pr-CORE-003-CORE-010-CORE-018-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-resolve-advanced",
+              "advanced": {
+                "kind": "advanced-ultra-three-black",
+                "sourceCardIds": [
+                  "CORE-003",
+                  "CORE-010",
+                  "CORE-018"
+                ],
+                "scoreCardId": "CORE-003",
+                "castCardId": "CORE-010",
+                "exileCardId": "CORE-018",
+                "castEffect": {
+                  "kind": "four-row-clear",
+                  "sourceCardId": "CORE-010",
+                  "targetPlayerId": "P1",
+                  "row": "pr"
+                }
+              }
             }
           }
         },
         {
-          "id": "CORE-302-23-P1-phase-enter-action--",
+          "id": "CORE-250-17-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2346,7 +2184,7 @@ export default {
           }
         },
         {
-          "id": "CORE-303-23-P1-solo-wild-four-row-clear-er-♦-CORE-021-",
+          "id": "CORE-251-17-P1-solo-wild-recycle-five-♦-CORE-021-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2356,18 +2194,16 @@ export default {
               "action": {
                 "kind": "solo-wild-copy",
                 "sourceCardId": "CORE-021",
-                "targetRank": "4",
+                "targetRank": "5",
                 "copiedAction": {
-                  "kind": "four-row-clear",
-                  "targetPlayerId": "P2",
-                  "row": "er"
+                  "kind": "recycle-five"
                 }
               }
             }
           }
         },
         {
-          "id": "CORE-314-24-P2-phase-enter-action--",
+          "id": "CORE-262-18-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2375,7 +2211,7 @@ export default {
           }
         },
         {
-          "id": "CORE-315-24-P2-draw-top--",
+          "id": "CORE-263-18-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2386,7 +2222,7 @@ export default {
           }
         },
         {
-          "id": "CORE-326-25-P1-phase-enter-action--",
+          "id": "CORE-274-19-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2394,7 +2230,153 @@ export default {
           }
         },
         {
-          "id": "CORE-327-25-P1-effect-private-choice-five-recycle-CORE-023-",
+          "id": "CORE-275-19-P1-score-points-CORE-006-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-006"
+            }
+          }
+        },
+        {
+          "id": "CORE-286-20-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-287-20-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-298-21-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-299-21-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-310-22-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-311-22-P2-scuttle-ordinary-CORE-030-CORE-006",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-scuttle",
+              "sourceCardId": "CORE-030",
+              "targetCardId": "CORE-006"
+            }
+          }
+        },
+        {
+          "id": "CORE-312-22-P1-response-decline-decline--CORE-SI-000311-P2-ROOT-scuttle-0",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-322-23-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-323-23-P1-anchor-private-choice-nine-CORE-031-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "nine-anchor",
+                "sourceCardId": "CORE-031",
+                "targetPlayerId": "P2"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-331-23-P2-private-choice-nine-anchor-discard--CORE-029",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-submit-private-choice",
+            "token": "b209abec46140ee9cdb0e21bdcc7ef415521b402d46813a9d84dd7cbf3e2c985",
+            "submission": {
+              "kind": "core-nine-anchor-discard",
+              "selectedCardIds": [
+                "CORE-029"
+              ]
+            }
+          }
+        },
+        {
+          "id": "CORE-336-24-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-337-24-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-348-25-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-349-25-P1-effect-private-choice-five-recycle-CORE-005-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2403,28 +2385,37 @@ export default {
               "kind": "core-resolve-effect",
               "effect": {
                 "kind": "five-recycle",
-                "sourceCardId": "CORE-023"
+                "sourceCardId": "CORE-005"
               }
             }
           }
         },
         {
-          "id": "CORE-335-25-P1-private-choice-rank5-rummage--CORE-009",
+          "id": "CORE-350-25-P2-response-decline-decline--CORE-SI-000349-P1-ROOT-play-for-effect-0",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-357-25-P1-private-choice-rank5-rummage--CORE-027",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "0872be64f9cdc9846c242a5417dac1c66400bdcb8796257d4521e73703970781",
+            "token": "486cb622e2442977cb5787eb66423db96171bc5ca8f8626c2f918fd90522639e",
             "submission": {
               "kind": "core-rank5-rummage",
               "selectedCardIds": [
-                "CORE-009"
+                "CORE-027"
               ]
             }
           }
         },
         {
-          "id": "CORE-340-26-P2-phase-enter-action--",
+          "id": "CORE-362-26-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2432,48 +2423,19 @@ export default {
           }
         },
         {
-          "id": "CORE-341-26-P2-effect-private-choice-six-dig-CORE-028-",
+          "id": "CORE-363-26-P2-score-points-CORE-028-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "six-dig",
-                "sourceCardId": "CORE-028"
-              }
+              "kind": "core-score",
+              "cardId": "CORE-028"
             }
           }
         },
         {
-          "id": "CORE-342-26-P1-response-decline-decline--CORE-SI-000341-P2-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-348-26-P2-private-choice-rank6-keep-return-bottom--CORE-031-CORE-032",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "260ba3371d27ee536f4b89c277fb3b27cebed5ac55b34cb04ae0b303c7077991",
-            "submission": {
-              "kind": "core-rank6-dig",
-              "mode": "keep-return-bottom",
-              "selectedCardIds": [
-                "CORE-031",
-                "CORE-032"
-              ]
-            }
-          }
-        },
-        {
-          "id": "CORE-354-27-P1-phase-enter-action--",
+          "id": "CORE-375-27-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2481,105 +2443,39 @@ export default {
           }
         },
         {
-          "id": "CORE-355-27-P1-quick-queen-aegis-CORE-003-CORE-025",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-queen-aegis-quick",
-            "sourceCardId": "CORE-003",
-            "targetCardId": "CORE-025"
-          }
-        },
-        {
-          "id": "CORE-356-27-P2-instant-nine-tap-CORE-031-CORE-024",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-nine-tap",
-            "sourceCardId": "CORE-031",
-            "targetCardId": "CORE-024"
-          }
-        },
-        {
-          "id": "CORE-365-27-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-366-27-P2-response-decline-decline--CORE-SI-000365-P1-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-376-28-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-377-28-P2-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-378-28-P1-response-decline-decline--CORE-SI-000377-P2-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-389-29-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-390-29-P1-score-points-CORE-009-",
+          "id": "CORE-376-27-P1-score-points-CORE-027-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
               "kind": "core-score",
-              "cardId": "CORE-009"
+              "cardId": "CORE-027"
             }
           }
         },
         {
-          "id": "CORE-391-29-P2-disrupt-jack-CORE-032-",
+          "id": "CORE-377-27-P2-disrupt-jack-CORE-032-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-jack-disrupt",
             "sourceCardId": "CORE-032",
-            "targetStackItemId": "CORE-SI-000390-P1-ROOT-play-for-points-0"
+            "targetStackItemId": "CORE-SI-000376-P1-ROOT-play-for-points-0"
           }
         },
         {
-          "id": "CORE-407-30-P2-phase-enter-action--",
+          "id": "CORE-378-27-P1-counter-ace-spade-CORE-013-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-spade-ace-counter",
+            "sourceCardId": "CORE-013",
+            "targetStackItemId": "CORE-SI-000377-P2-JACK-DISRUPT-1"
+          }
+        },
+        {
+          "id": "CORE-393-28-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2587,29 +2483,18 @@ export default {
           }
         },
         {
-          "id": "CORE-408-30-P2-scuttle-ordinary-CORE-027-CORE-009",
+          "id": "CORE-394-28-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-027",
-              "targetCardId": "CORE-009"
+              "kind": "core-draw"
             }
           }
         },
         {
-          "id": "CORE-410-30-P2-response-decline-decline--CORE-SI-000408-P2-ROOT-scuttle-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-420-31-P1-phase-enter-action--",
+          "id": "CORE-405-29-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2617,22 +2502,18 @@ export default {
           }
         },
         {
-          "id": "CORE-421-31-P1-anchor-king-CORE-034-",
+          "id": "CORE-406-29-P1-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "king-anchor",
-                "sourceCardId": "CORE-034"
-              }
+              "kind": "core-draw"
             }
           }
         },
         {
-          "id": "CORE-432-32-P2-phase-enter-action--",
+          "id": "CORE-417-30-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2640,7 +2521,7 @@ export default {
           }
         },
         {
-          "id": "CORE-433-32-P2-effect-four-clear-er-CORE-035-",
+          "id": "CORE-418-30-P2-effect-four-clear-er-CORE-035-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2657,16 +2538,7 @@ export default {
           }
         },
         {
-          "id": "CORE-435-32-P2-quick-eight-aegis-field-CORE-036-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-eight-aegis-field",
-            "sourceCardId": "CORE-036"
-          }
-        },
-        {
-          "id": "CORE-451-33-P1-phase-enter-action--",
+          "id": "CORE-429-31-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2674,18 +2546,19 @@ export default {
           }
         },
         {
-          "id": "CORE-452-33-P1-draw-top--",
+          "id": "CORE-430-31-P1-score-points-CORE-037-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-score",
+              "cardId": "CORE-037"
             }
           }
         },
         {
-          "id": "CORE-463-34-P2-phase-enter-action--",
+          "id": "CORE-441-32-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2693,16 +2566,7 @@ export default {
           }
         },
         {
-          "id": "CORE-464-34-P2-quick-board-lock-CORE-007-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-board-lock-quick",
-            "sourceCardId": "CORE-007"
-          }
-        },
-        {
-          "id": "CORE-469-34-P2-draw-top--",
+          "id": "CORE-442-32-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2713,7 +2577,7 @@ export default {
           }
         },
         {
-          "id": "CORE-480-35-P1-phase-enter-action--",
+          "id": "CORE-453-33-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2721,90 +2585,29 @@ export default {
           }
         },
         {
-          "id": "CORE-481-35-P1-draw-top--",
+          "id": "CORE-454-33-P1-scuttle-ordinary-CORE-024-CORE-028",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-scuttle",
+              "sourceCardId": "CORE-024",
+              "targetCardId": "CORE-028"
             }
           }
         },
         {
-          "id": "CORE-493-36-P2-phase-enter-action--",
+          "id": "CORE-455-33-P2-response-decline-decline--CORE-SI-000454-P1-ROOT-scuttle-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-494-36-P2-score-points-CORE-039-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-039"
-            }
-          }
-        },
-        {
-          "id": "CORE-507-37-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-508-37-P1-solo-wild-four-row-clear-pr-♠-CORE-037-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-rank-action",
-              "action": {
-                "kind": "solo-wild-copy",
-                "sourceCardId": "CORE-037",
-                "targetRank": "4",
-                "copiedAction": {
-                  "kind": "four-row-clear",
-                  "targetPlayerId": "P2",
-                  "row": "pr"
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-510-37-P1-response-decline-decline--CORE-SI-000508-P1-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
           "action": {
             "kind": "core-pass-priority",
             "semantic": "DECLINE_RESPONSE"
           }
         },
         {
-          "id": "CORE-519-38-P2-voltage-four-guess-3-♠--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "3",
-              "guessSuit": "♠",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-520-38-P2-phase-enter-action--",
+          "id": "CORE-465-34-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2812,82 +2615,9 @@ export default {
           }
         },
         {
-          "id": "CORE-521-38-P2-score-points-CORE-040-",
+          "id": "CORE-466-34-P2-solo-wild-three-bounce-♣-CORE-038-CORE-003",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-040"
-            }
-          }
-        },
-        {
-          "id": "CORE-532-39-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-533-39-P1-score-points-CORE-041-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-041"
-            }
-          }
-        },
-        {
-          "id": "CORE-544-40-P2-voltage-four-guess-A-♥--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "A",
-              "guessSuit": "♥",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-545-40-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-546-40-P2-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-557-41-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-558-41-P1-solo-wild-three-bounce-♣-CORE-038-CORE-041",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
@@ -2898,57 +2628,14 @@ export default {
                 "targetRank": "3",
                 "copiedAction": {
                   "kind": "three-bounce",
-                  "targetCardId": "CORE-041"
+                  "targetCardId": "CORE-003"
                 }
               }
             }
           }
         },
         {
-          "id": "CORE-559-41-P2-response-decline-decline--CORE-SI-000558-P1-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-569-42-P2-voltage-four-guess-10-♣--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "10",
-              "guessSuit": "♣",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-570-42-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-571-42-P2-score-points-CORE-043-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-043"
-            }
-          }
-        },
-        {
-          "id": "CORE-582-43-P1-phase-enter-action--",
+          "id": "CORE-477-35-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2956,7 +2643,7 @@ export default {
           }
         },
         {
-          "id": "CORE-583-43-P1-draw-top--",
+          "id": "CORE-478-35-P1-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -2967,21 +2654,7 @@ export default {
           }
         },
         {
-          "id": "CORE-594-44-P2-voltage-four-guess-K-♥--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "K",
-              "guessSuit": "♥",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-595-44-P2-phase-enter-action--",
+          "id": "CORE-489-36-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -2989,7 +2662,123 @@ export default {
           }
         },
         {
-          "id": "CORE-596-44-P2-effect-four-clear-pr-CORE-042-",
+          "id": "CORE-490-36-P2-quick-eight-aegis-field-CORE-036-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-eight-aegis-field",
+            "sourceCardId": "CORE-036"
+          }
+        },
+        {
+          "id": "CORE-495-36-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-506-37-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-507-37-P1-anchor-queen-CORE-003-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "queen-anchor",
+                "sourceCardId": "CORE-003"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-518-38-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-519-38-P2-effect-ace-purge-aegis-CORE-041-CORE-003",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "ace-purge",
+                "sourceCardId": "CORE-041",
+                "targetCardId": "CORE-003",
+                "mode": "scrap-aegis"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-530-39-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-531-39-P1-effect-four-clear-pr-CORE-039-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "four-row-clear",
+                "sourceCardId": "CORE-039",
+                "targetPlayerId": "P2",
+                "row": "pr"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-542-40-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-543-40-P2-rank10-heart-tempo-CORE-040-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-advanced",
+              "advanced": {
+                "kind": "advanced-rank10-heart-tempo",
+                "sourceCardId": "CORE-040"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-550-40-P2-effect-four-clear-er-CORE-042-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3000,13 +2789,63 @@ export default {
                 "kind": "four-row-clear",
                 "sourceCardId": "CORE-042",
                 "targetPlayerId": "P1",
-                "row": "pr"
+                "row": "er"
               }
             }
           }
         },
         {
-          "id": "CORE-597-44-P1-response-decline-decline--CORE-SI-000596-P2-ROOT-play-for-effect-0",
+          "id": "CORE-557-40-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-568-41-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-569-41-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-580-42-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-581-42-P2-score-points-CORE-044-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-044"
+            }
+          }
+        },
+        {
+          "id": "CORE-582-42-P1-response-decline-decline--CORE-SI-000581-P2-ROOT-play-for-points-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3015,7 +2854,7 @@ export default {
           }
         },
         {
-          "id": "CORE-607-45-P1-phase-enter-action--",
+          "id": "CORE-592-43-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3023,7 +2862,167 @@ export default {
           }
         },
         {
-          "id": "CORE-608-45-P1-rank10-diamond-mimic-row-exchange-pr-CORE-044-",
+          "id": "CORE-593-43-P1-score-points-CORE-046-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-046"
+            }
+          }
+        },
+        {
+          "id": "CORE-604-44-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-605-44-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-606-44-P1-response-decline-decline--CORE-SI-000605-P2-ROOT-draw-0",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-616-45-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-617-45-P1-attachment-jack-pr-CORE-045-CORE-044",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "jack-attach",
+                "sourceCardId": "CORE-045",
+                "targetCardId": "CORE-044",
+                "row": "pr"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-618-45-P2-instant-eight-spade-free-scuttle-CORE-047-CORE-046",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-eight-spade-free-scuttle",
+            "sourceCardId": "CORE-047",
+            "targetCardId": "CORE-046"
+          }
+        },
+        {
+          "id": "CORE-624-45-P2-counter-ace-base-CORE-043-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-base-ace-counter",
+            "sourceCardId": "CORE-043",
+            "targetStackItemId": "CORE-SI-000617-P1-ROOT-play-for-effect-0",
+            "sourceMode": "hand"
+          }
+        },
+        {
+          "id": "CORE-633-46-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-634-46-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-645-47-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-646-47-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-647-47-P2-response-decline-decline--CORE-SI-000646-P1-ROOT-draw-0",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-657-48-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-658-48-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-669-49-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-670-49-P1-rank10-spade-recovery-CORE-050-CORE-018",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3031,21 +3030,25 @@ export default {
             "action": {
               "kind": "core-resolve-advanced",
               "advanced": {
-                "kind": "advanced-rank10-diamond-mimic",
-                "sourceCardId": "CORE-044",
-                "mimickedRank": "4",
-                "effectKey": "row-exchange",
-                "mimicAction": {
-                  "kind": "row-exchange",
-                  "targetPlayerId": "P2",
-                  "row": "pr"
-                }
+                "kind": "advanced-rank10-spade-recovery",
+                "sourceCardId": "CORE-050",
+                "recoverCardId": "CORE-018"
               }
             }
           }
         },
         {
-          "id": "CORE-620-46-P2-phase-enter-action--",
+          "id": "CORE-671-49-P2-instant-nine-tap-CORE-048-CORE-027",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-nine-tap",
+            "sourceCardId": "CORE-048",
+            "targetCardId": "CORE-027"
+          }
+        },
+        {
+          "id": "CORE-686-50-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3053,7 +3056,57 @@ export default {
           }
         },
         {
-          "id": "CORE-621-46-P2-draw-top--",
+          "id": "CORE-687-50-P2-scuttle-ordinary-CORE-049-CORE-037",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-scuttle",
+              "sourceCardId": "CORE-049",
+              "targetCardId": "CORE-037"
+            }
+          }
+        },
+        {
+          "id": "CORE-699-51-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-700-51-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-711-52-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-712-52-P2-quick-queen-aegis-CORE-052-CORE-044",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-queen-aegis-quick",
+            "sourceCardId": "CORE-052",
+            "targetCardId": "CORE-044"
+          }
+        },
+        {
+          "id": "CORE-717-52-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3064,21 +3117,7 @@ export default {
           }
         },
         {
-          "id": "CORE-635-47-P1-voltage-four-guess-9-♥--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "9",
-              "guessSuit": "♥",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-636-47-P1-phase-enter-action--",
+          "id": "CORE-729-53-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3086,27 +3125,37 @@ export default {
           }
         },
         {
-          "id": "CORE-637-47-P1-draw-top--",
+          "id": "CORE-730-53-P1-effect-private-choice-five-recycle-CORE-051-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "five-recycle",
+                "sourceCardId": "CORE-051"
+              }
             }
           }
         },
         {
-          "id": "CORE-638-47-P2-response-decline-decline--CORE-SI-000637-P1-ROOT-draw-0",
+          "id": "CORE-738-53-P1-private-choice-rank5-rummage--CORE-037",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
+          "actorId": "P1",
           "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
+            "kind": "core-submit-private-choice",
+            "token": "26540f3f6f52309234dcbce07e9a3d82d1e8a73fa8edbdbac059e3d77fca1708",
+            "submission": {
+              "kind": "core-rank5-rummage",
+              "selectedCardIds": [
+                "CORE-037"
+              ]
+            }
           }
         },
         {
-          "id": "CORE-648-48-P2-phase-enter-action--",
+          "id": "CORE-745-54-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3114,24 +3163,35 @@ export default {
           }
         },
         {
-          "id": "CORE-649-48-P2-score-points-CORE-045-",
+          "id": "CORE-746-54-P2-effect-private-choice-six-dig-CORE-054-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-score",
-              "cardId": "CORE-045"
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "six-dig",
+                "sourceCardId": "CORE-054"
+              }
             }
           }
         },
         {
-          "id": "CORE-651-48-P2-response-decline-decline--CORE-SI-000649-P2-ROOT-play-for-points-0",
+          "id": "CORE-747-54-P1-response-decline-decline--CORE-SI-000746-P2-ROOT-play-for-effect-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
+          "actorId": "P1",
           "action": {
             "kind": "core-pass-priority",
             "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-759-55-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
           }
         }
       ],
@@ -3236,49 +3296,79 @@ export default {
           }
         },
         {
-          "id": "CORE-16-1-P2-counter-ace-base-CORE-008-",
+          "id": "CORE-20-1-P2-response-decline-decline--CORE-SI-000013-P1-ROOT-play-for-effect-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
-            "kind": "core-declare-base-ace-counter",
-            "sourceCardId": "CORE-008",
-            "targetStackItemId": "CORE-SI-000014-P2-JACK-DISRUPT-1",
-            "sourceMode": "hand"
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
           }
         },
         {
-          "id": "CORE-27-1-P2-private-choice-rank3-present--CORE-007-CORE-011",
+          "id": "CORE-25-1-P2-private-choice-rank3-present--CORE-006-CORE-008",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "f283085a54e2cd91159cb312671996b9cd78f3578a2094772a2449d1daf97997",
+            "token": "02c657f424401a6fe4703e1f9728b3b48ad201a2067aa5c0990f5e1c9689a3eb",
             "submission": {
               "kind": "core-rank3-present",
               "selectedCardIds": [
-                "CORE-007",
-                "CORE-011"
+                "CORE-006",
+                "CORE-008"
               ]
             }
           }
         },
         {
-          "id": "CORE-29-1-P1-private-choice-rank3-take--",
+          "id": "CORE-27-1-P1-private-choice-rank3-take--CORE-008",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "217cb20275e01a9f74d6dd1f66f10c07bef970ef5b8f0c13f8be4e01fea2a975",
+            "token": "985d0957cf6489c527f110760349363c2992bffc9de925da7470fe0090a91746",
             "submission": {
               "kind": "core-rank3-take",
-              "selectedCardIds": []
+              "selectedCardIds": [
+                "CORE-008"
+              ]
             }
           }
         },
         {
-          "id": "CORE-30-1-P1-draw-top--",
+          "id": "CORE-28-1-P1-score-points-CORE-008-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-008"
+            }
+          }
+        },
+        {
+          "id": "CORE-39-2-P2-swap-bar-face-down-CORE-011-CORE-012",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-face-down-swap",
+            "handCardId": "CORE-011",
+            "swapCardId": "CORE-012"
+          }
+        },
+        {
+          "id": "CORE-40-2-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-41-2-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
@@ -3287,42 +3377,7 @@ export default {
           }
         },
         {
-          "id": "CORE-41-2-P2-swap-bar-face-down-CORE-007-CORE-012",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-face-down-swap",
-            "handCardId": "CORE-007",
-            "swapCardId": "CORE-012"
-          }
-        },
-        {
-          "id": "CORE-42-2-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-43-2-P2-effect-four-clear-pr-CORE-010-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "four-row-clear",
-                "sourceCardId": "CORE-010",
-                "targetPlayerId": "P1",
-                "row": "pr"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-54-3-P1-phase-enter-action--",
+          "id": "CORE-53-3-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3330,26 +3385,19 @@ export default {
           }
         },
         {
-          "id": "CORE-55-3-P1-solo-wild-recycle-five-♥-CORE-017-",
+          "id": "CORE-54-3-P1-swap-bar-face-up-draw--CORE-001",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-resolve-rank-action",
-              "action": {
-                "kind": "solo-wild-copy",
-                "sourceCardId": "CORE-017",
-                "targetRank": "5",
-                "copiedAction": {
-                  "kind": "recycle-five"
-                }
-              }
+              "kind": "core-face-up-swap-draw",
+              "swapCardId": "CORE-001"
             }
           }
         },
         {
-          "id": "CORE-66-4-P2-phase-enter-action--",
+          "id": "CORE-65-4-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3357,19 +3405,28 @@ export default {
           }
         },
         {
-          "id": "CORE-67-4-P2-score-points-CORE-011-",
+          "id": "CORE-66-4-P2-quick-board-lock-CORE-007-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-board-lock-quick",
+            "sourceCardId": "CORE-007"
+          }
+        },
+        {
+          "id": "CORE-71-4-P2-score-points-CORE-006-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
               "kind": "core-score",
-              "cardId": "CORE-011"
+              "cardId": "CORE-006"
             }
           }
         },
         {
-          "id": "CORE-78-5-P1-phase-enter-action--",
+          "id": "CORE-82-5-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3377,7 +3434,7 @@ export default {
           }
         },
         {
-          "id": "CORE-79-5-P1-score-points-CORE-016-",
+          "id": "CORE-83-5-P1-score-points-CORE-016-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3389,28 +3446,7 @@ export default {
           }
         },
         {
-          "id": "CORE-81-5-P1-response-decline-decline--CORE-SI-000079-P1-ROOT-play-for-points-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-90-6-P2-voltage-three-hand--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-three",
-              "disposition": "hand"
-            }
-          }
-        },
-        {
-          "id": "CORE-91-6-P2-phase-enter-action--",
+          "id": "CORE-95-6-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3418,9 +3454,198 @@ export default {
           }
         },
         {
-          "id": "CORE-92-6-P2-effect-private-choice-seven-topdeck-CORE-020-",
+          "id": "CORE-96-6-P2-swap-bar-face-up-draw--CORE-014",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-face-up-swap-draw",
+              "swapCardId": "CORE-014"
+            }
+          }
+        },
+        {
+          "id": "CORE-97-6-P1-instant-nine-tap-CORE-015-CORE-006",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-nine-tap",
+            "sourceCardId": "CORE-015",
+            "targetCardId": "CORE-006"
+          }
+        },
+        {
+          "id": "CORE-114-7-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-115-7-P1-effect-three-bounce-top-CORE-001-CORE-006",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "three-bounce",
+                "sourceCardId": "CORE-001",
+                "targetCardId": "CORE-006"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-116-7-P2-ultra-three-red-counter-CORE-012-CORE-014-CORE-017-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-ultra-three-red",
+            "sourceCardIds": [
+              "CORE-012",
+              "CORE-014",
+              "CORE-017"
+            ],
+            "targetStackItemId": "CORE-SI-000115-P1-ROOT-play-for-effect-0"
+          }
+        },
+        {
+          "id": "CORE-125-8-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-126-8-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-137-9-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-138-9-P1-swap-bar-face-up-draw--CORE-011",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-face-up-swap-draw",
+              "swapCardId": "CORE-011"
+            }
+          }
+        },
+        {
+          "id": "CORE-149-10-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-150-10-P2-effect-red-joker-opponent-attack-CORE-019-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "red-joker",
+                "sourceCardId": "CORE-019",
+                "mode": "opponent-attack",
+                "targetPlayerId": "P1"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-161-11-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-162-11-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-173-12-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-174-12-P2-effect-private-choice-five-recycle-CORE-002-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "five-recycle",
+                "sourceCardId": "CORE-002"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-182-12-P2-private-choice-rank5-rummage--CORE-017",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-submit-private-choice",
+            "token": "a60a2898430c2a2796136ee67bbab16b3d905b506655d2d778c648d82966491c",
+            "submission": {
+              "kind": "core-rank5-rummage",
+              "selectedCardIds": [
+                "CORE-017"
+              ]
+            }
+          }
+        },
+        {
+          "id": "CORE-187-13-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-188-13-P1-effect-private-choice-seven-topdeck-CORE-020-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
@@ -3433,321 +3658,45 @@ export default {
           }
         },
         {
-          "id": "CORE-93-6-P1-response-decline-decline--CORE-SI-000092-P2-ROOT-play-for-effect-0",
+          "id": "CORE-196-13-P1-private-choice-rank7-hand-and-effect--CORE-024-CORE-025",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-100-6-P2-private-choice-rank7-hand-and-effect--CORE-021-CORE-022",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
             "kind": "core-submit-private-choice",
-            "token": "a19f7b37800adf45eb91309e76dbe9e7f86d788db840b83b4adad82c51ed818a",
+            "token": "6df2d74a9b6889f29bfea847afa97420d66bec4c0bd1d8f460d0e8d2b5bd71c1",
             "submission": {
               "kind": "core-rank7-assign",
               "mode": "hand-and-effect",
               "selectedCardIds": [
-                "CORE-021",
-                "CORE-022"
+                "CORE-024",
+                "CORE-025"
               ]
             }
           }
         },
         {
-          "id": "CORE-102-6-P2-private-choice-rank7-generated-unavailable--CORE-022",
+          "id": "CORE-198-13-P1-private-choice-rank7-generated-jack-attach--CORE-025",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
+          "actorId": "P1",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "371d295745fcfdb98d4c18861152b1d4d2bee64720b9d71dc4eaee5b359ef032",
+            "token": "cef4ad49e5af86e03145d5fe4ede4db98185d20c5285a9618057838596913703",
             "submission": {
               "kind": "core-rank7-generated-effect",
               "selectedCardIds": [
-                "CORE-022"
-              ]
-            }
-          }
-        },
-        {
-          "id": "CORE-107-7-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-108-7-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-110-7-P1-response-decline-decline--CORE-SI-000108-P1-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-120-8-P2-voltage-three-points--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-three",
-              "disposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-121-8-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-122-8-P2-swap-bar-face-up-draw--CORE-007",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-007"
-            }
-          }
-        },
-        {
-          "id": "CORE-123-8-P1-response-decline-decline--CORE-SI-000122-P2-ROOT-face-up-swap-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-133-9-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-134-9-P1-scuttle-ordinary-CORE-002-CORE-011",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-002",
-              "targetCardId": "CORE-011"
-            }
-          }
-        },
-        {
-          "id": "CORE-136-9-P1-response-decline-decline--CORE-SI-000134-P1-ROOT-scuttle-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-145-10-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-146-10-P2-score-points-CORE-021-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-021"
-            }
-          }
-        },
-        {
-          "id": "CORE-147-10-P1-response-decline-decline--CORE-SI-000146-P2-ROOT-play-for-points-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-157-11-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-158-11-P1-anchor-private-choice-nine-CORE-015-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "nine-anchor",
-                "sourceCardId": "CORE-015",
-                "targetPlayerId": "P2"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-159-11-P2-counter-king-anchor-CORE-012-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-king-counter",
-            "sourceCardId": "CORE-012",
-            "targetStackItemId": "CORE-SI-000158-P1-ROOT-play-for-effect-0"
-          }
-        },
-        {
-          "id": "CORE-168-12-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-169-12-P2-swap-bar-face-up-draw--CORE-014",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-014"
-            }
-          }
-        },
-        {
-          "id": "CORE-180-13-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-181-13-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-192-14-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-193-14-P2-effect-private-choice-three-force-discard-CORE-006-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "three-hand-raid",
-                "sourceCardId": "CORE-006",
-                "targetPlayerId": "P1",
-                "mode": "force-discard"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-194-14-P1-response-decline-decline--CORE-SI-000193-P2-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-200-14-P1-private-choice-rank3-discard--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "a9a8d6ad0e9bdc7101533f56cdf8e5563cc923e60c42c4b70485fc8a4b9a8bbd",
-            "submission": {
-              "kind": "core-rank3-discard",
-              "selectedCardIds": []
-            }
-          }
-        },
-        {
-          "id": "CORE-205-15-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-206-15-P1-attachment-jack-pr-CORE-025-CORE-024",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
+                "CORE-025"
+              ],
+              "generatedEffect": {
                 "kind": "jack-attach",
+                "row": "pr",
                 "sourceCardId": "CORE-025",
-                "targetCardId": "CORE-024",
-                "row": "pr"
+                "targetCardId": "CORE-006"
               }
             }
           }
         },
         {
-          "id": "CORE-217-16-P2-phase-enter-action--",
+          "id": "CORE-211-14-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3755,105 +3704,7 @@ export default {
           }
         },
         {
-          "id": "CORE-218-16-P2-scuttle-ordinary-CORE-014-CORE-016",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-014",
-              "targetCardId": "CORE-016"
-            }
-          }
-        },
-        {
-          "id": "CORE-229-17-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-230-17-P1-swap-bar-face-up-draw--CORE-001",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-001"
-            }
-          }
-        },
-        {
-          "id": "CORE-241-18-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-242-18-P2-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-253-19-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-254-19-P1-effect-private-choice-three-force-discard-CORE-001-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "three-hand-raid",
-                "sourceCardId": "CORE-001",
-                "targetPlayerId": "P2",
-                "mode": "force-discard"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-261-19-P2-private-choice-rank3-discard--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "82dcddf8892129b9c13fd627e87ae1245c2f021bfa9e1bd1f234996f638dd4d6",
-            "submission": {
-              "kind": "core-rank3-discard",
-              "selectedCardIds": []
-            }
-          }
-        },
-        {
-          "id": "CORE-266-20-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-267-20-P2-wild-sovereignty-three-bounce-CORE-026-CORE-021",
+          "id": "CORE-212-14-P2-solo-wild-three-bounce-♥-CORE-017-CORE-006",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3861,19 +3712,19 @@ export default {
             "action": {
               "kind": "core-resolve-rank-action",
               "action": {
-                "kind": "wild-sovereignty",
-                "sourceCardId": "CORE-026",
+                "kind": "solo-wild-copy",
+                "sourceCardId": "CORE-017",
                 "targetRank": "3",
                 "copiedAction": {
                   "kind": "three-bounce",
-                  "targetCardId": "CORE-021"
+                  "targetCardId": "CORE-006"
                 }
               }
             }
           }
         },
         {
-          "id": "CORE-278-21-P1-phase-enter-action--",
+          "id": "CORE-225-15-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3881,7 +3732,7 @@ export default {
           }
         },
         {
-          "id": "CORE-279-21-P1-draw-top--",
+          "id": "CORE-226-15-P1-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3892,7 +3743,7 @@ export default {
           }
         },
         {
-          "id": "CORE-290-22-P2-phase-enter-action--",
+          "id": "CORE-237-16-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3900,18 +3751,35 @@ export default {
           }
         },
         {
-          "id": "CORE-291-22-P2-draw-top--",
+          "id": "CORE-238-16-P2-ultra-three-black-clear-pr-CORE-003-CORE-010-CORE-018-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-resolve-advanced",
+              "advanced": {
+                "kind": "advanced-ultra-three-black",
+                "sourceCardIds": [
+                  "CORE-003",
+                  "CORE-010",
+                  "CORE-018"
+                ],
+                "scoreCardId": "CORE-003",
+                "castCardId": "CORE-010",
+                "exileCardId": "CORE-018",
+                "castEffect": {
+                  "kind": "four-row-clear",
+                  "sourceCardId": "CORE-010",
+                  "targetPlayerId": "P1",
+                  "row": "pr"
+                }
+              }
             }
           }
         },
         {
-          "id": "CORE-302-23-P1-phase-enter-action--",
+          "id": "CORE-250-17-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3919,7 +3787,7 @@ export default {
           }
         },
         {
-          "id": "CORE-303-23-P1-solo-wild-four-row-clear-er-♦-CORE-021-",
+          "id": "CORE-251-17-P1-solo-wild-recycle-five-♦-CORE-021-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3929,18 +3797,16 @@ export default {
               "action": {
                 "kind": "solo-wild-copy",
                 "sourceCardId": "CORE-021",
-                "targetRank": "4",
+                "targetRank": "5",
                 "copiedAction": {
-                  "kind": "four-row-clear",
-                  "targetPlayerId": "P2",
-                  "row": "er"
+                  "kind": "recycle-five"
                 }
               }
             }
           }
         },
         {
-          "id": "CORE-314-24-P2-phase-enter-action--",
+          "id": "CORE-262-18-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3948,7 +3814,7 @@ export default {
           }
         },
         {
-          "id": "CORE-315-24-P2-draw-top--",
+          "id": "CORE-263-18-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -3959,7 +3825,7 @@ export default {
           }
         },
         {
-          "id": "CORE-326-25-P1-phase-enter-action--",
+          "id": "CORE-274-19-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3967,7 +3833,153 @@ export default {
           }
         },
         {
-          "id": "CORE-327-25-P1-effect-private-choice-five-recycle-CORE-023-",
+          "id": "CORE-275-19-P1-score-points-CORE-006-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-006"
+            }
+          }
+        },
+        {
+          "id": "CORE-286-20-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-287-20-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-298-21-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-299-21-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-310-22-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-311-22-P2-scuttle-ordinary-CORE-030-CORE-006",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-scuttle",
+              "sourceCardId": "CORE-030",
+              "targetCardId": "CORE-006"
+            }
+          }
+        },
+        {
+          "id": "CORE-312-22-P1-response-decline-decline--CORE-SI-000311-P2-ROOT-scuttle-0",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-322-23-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-323-23-P1-anchor-private-choice-nine-CORE-031-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "nine-anchor",
+                "sourceCardId": "CORE-031",
+                "targetPlayerId": "P2"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-331-23-P2-private-choice-nine-anchor-discard--CORE-029",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-submit-private-choice",
+            "token": "b209abec46140ee9cdb0e21bdcc7ef415521b402d46813a9d84dd7cbf3e2c985",
+            "submission": {
+              "kind": "core-nine-anchor-discard",
+              "selectedCardIds": [
+                "CORE-029"
+              ]
+            }
+          }
+        },
+        {
+          "id": "CORE-336-24-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-337-24-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-348-25-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-349-25-P1-effect-private-choice-five-recycle-CORE-005-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -3976,28 +3988,37 @@ export default {
               "kind": "core-resolve-effect",
               "effect": {
                 "kind": "five-recycle",
-                "sourceCardId": "CORE-023"
+                "sourceCardId": "CORE-005"
               }
             }
           }
         },
         {
-          "id": "CORE-335-25-P1-private-choice-rank5-rummage--CORE-009",
+          "id": "CORE-350-25-P2-response-decline-decline--CORE-SI-000349-P1-ROOT-play-for-effect-0",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
+          }
+        },
+        {
+          "id": "CORE-357-25-P1-private-choice-rank5-rummage--CORE-027",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "0872be64f9cdc9846c242a5417dac1c66400bdcb8796257d4521e73703970781",
+            "token": "486cb622e2442977cb5787eb66423db96171bc5ca8f8626c2f918fd90522639e",
             "submission": {
               "kind": "core-rank5-rummage",
               "selectedCardIds": [
-                "CORE-009"
+                "CORE-027"
               ]
             }
           }
         },
         {
-          "id": "CORE-340-26-P2-phase-enter-action--",
+          "id": "CORE-362-26-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4005,48 +4026,19 @@ export default {
           }
         },
         {
-          "id": "CORE-341-26-P2-effect-private-choice-six-dig-CORE-028-",
+          "id": "CORE-363-26-P2-score-points-CORE-028-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "six-dig",
-                "sourceCardId": "CORE-028"
-              }
+              "kind": "core-score",
+              "cardId": "CORE-028"
             }
           }
         },
         {
-          "id": "CORE-342-26-P1-response-decline-decline--CORE-SI-000341-P2-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-348-26-P2-private-choice-rank6-keep-return-bottom--CORE-031-CORE-032",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "260ba3371d27ee536f4b89c277fb3b27cebed5ac55b34cb04ae0b303c7077991",
-            "submission": {
-              "kind": "core-rank6-dig",
-              "mode": "keep-return-bottom",
-              "selectedCardIds": [
-                "CORE-031",
-                "CORE-032"
-              ]
-            }
-          }
-        },
-        {
-          "id": "CORE-354-27-P1-phase-enter-action--",
+          "id": "CORE-375-27-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4054,105 +4046,39 @@ export default {
           }
         },
         {
-          "id": "CORE-355-27-P1-quick-queen-aegis-CORE-003-CORE-025",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-queen-aegis-quick",
-            "sourceCardId": "CORE-003",
-            "targetCardId": "CORE-025"
-          }
-        },
-        {
-          "id": "CORE-356-27-P2-instant-nine-tap-CORE-031-CORE-024",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-nine-tap",
-            "sourceCardId": "CORE-031",
-            "targetCardId": "CORE-024"
-          }
-        },
-        {
-          "id": "CORE-365-27-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-366-27-P2-response-decline-decline--CORE-SI-000365-P1-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-376-28-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-377-28-P2-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-378-28-P1-response-decline-decline--CORE-SI-000377-P2-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-389-29-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-390-29-P1-score-points-CORE-009-",
+          "id": "CORE-376-27-P1-score-points-CORE-027-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
               "kind": "core-score",
-              "cardId": "CORE-009"
+              "cardId": "CORE-027"
             }
           }
         },
         {
-          "id": "CORE-391-29-P2-disrupt-jack-CORE-032-",
+          "id": "CORE-377-27-P2-disrupt-jack-CORE-032-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-jack-disrupt",
             "sourceCardId": "CORE-032",
-            "targetStackItemId": "CORE-SI-000390-P1-ROOT-play-for-points-0"
+            "targetStackItemId": "CORE-SI-000376-P1-ROOT-play-for-points-0"
           }
         },
         {
-          "id": "CORE-407-30-P2-phase-enter-action--",
+          "id": "CORE-378-27-P1-counter-ace-spade-CORE-013-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-spade-ace-counter",
+            "sourceCardId": "CORE-013",
+            "targetStackItemId": "CORE-SI-000377-P2-JACK-DISRUPT-1"
+          }
+        },
+        {
+          "id": "CORE-393-28-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4160,29 +4086,18 @@ export default {
           }
         },
         {
-          "id": "CORE-408-30-P2-scuttle-ordinary-CORE-027-CORE-009",
+          "id": "CORE-394-28-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-027",
-              "targetCardId": "CORE-009"
+              "kind": "core-draw"
             }
           }
         },
         {
-          "id": "CORE-410-30-P2-response-decline-decline--CORE-SI-000408-P2-ROOT-scuttle-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-420-31-P1-phase-enter-action--",
+          "id": "CORE-405-29-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4190,22 +4105,18 @@ export default {
           }
         },
         {
-          "id": "CORE-421-31-P1-anchor-king-CORE-034-",
+          "id": "CORE-406-29-P1-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "king-anchor",
-                "sourceCardId": "CORE-034"
-              }
+              "kind": "core-draw"
             }
           }
         },
         {
-          "id": "CORE-432-32-P2-phase-enter-action--",
+          "id": "CORE-417-30-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4213,7 +4124,7 @@ export default {
           }
         },
         {
-          "id": "CORE-433-32-P2-effect-four-clear-er-CORE-035-",
+          "id": "CORE-418-30-P2-effect-four-clear-er-CORE-035-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4230,16 +4141,7 @@ export default {
           }
         },
         {
-          "id": "CORE-435-32-P2-quick-eight-aegis-field-CORE-036-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-eight-aegis-field",
-            "sourceCardId": "CORE-036"
-          }
-        },
-        {
-          "id": "CORE-451-33-P1-phase-enter-action--",
+          "id": "CORE-429-31-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4247,18 +4149,19 @@ export default {
           }
         },
         {
-          "id": "CORE-452-33-P1-draw-top--",
+          "id": "CORE-430-31-P1-score-points-CORE-037-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-score",
+              "cardId": "CORE-037"
             }
           }
         },
         {
-          "id": "CORE-463-34-P2-phase-enter-action--",
+          "id": "CORE-441-32-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4266,16 +4169,7 @@ export default {
           }
         },
         {
-          "id": "CORE-464-34-P2-quick-board-lock-CORE-007-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-board-lock-quick",
-            "sourceCardId": "CORE-007"
-          }
-        },
-        {
-          "id": "CORE-469-34-P2-draw-top--",
+          "id": "CORE-442-32-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4286,7 +4180,7 @@ export default {
           }
         },
         {
-          "id": "CORE-480-35-P1-phase-enter-action--",
+          "id": "CORE-453-33-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4294,90 +4188,29 @@ export default {
           }
         },
         {
-          "id": "CORE-481-35-P1-draw-top--",
+          "id": "CORE-454-33-P1-scuttle-ordinary-CORE-024-CORE-028",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-scuttle",
+              "sourceCardId": "CORE-024",
+              "targetCardId": "CORE-028"
             }
           }
         },
         {
-          "id": "CORE-493-36-P2-phase-enter-action--",
+          "id": "CORE-455-33-P2-response-decline-decline--CORE-SI-000454-P1-ROOT-scuttle-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-494-36-P2-score-points-CORE-039-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-039"
-            }
-          }
-        },
-        {
-          "id": "CORE-507-37-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-508-37-P1-solo-wild-four-row-clear-pr-♠-CORE-037-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-rank-action",
-              "action": {
-                "kind": "solo-wild-copy",
-                "sourceCardId": "CORE-037",
-                "targetRank": "4",
-                "copiedAction": {
-                  "kind": "four-row-clear",
-                  "targetPlayerId": "P2",
-                  "row": "pr"
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-510-37-P1-response-decline-decline--CORE-SI-000508-P1-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
           "action": {
             "kind": "core-pass-priority",
             "semantic": "DECLINE_RESPONSE"
           }
         },
         {
-          "id": "CORE-519-38-P2-voltage-four-guess-3-♠--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "3",
-              "guessSuit": "♠",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-520-38-P2-phase-enter-action--",
+          "id": "CORE-465-34-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4385,82 +4218,9 @@ export default {
           }
         },
         {
-          "id": "CORE-521-38-P2-score-points-CORE-040-",
+          "id": "CORE-466-34-P2-solo-wild-three-bounce-♣-CORE-038-CORE-003",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-040"
-            }
-          }
-        },
-        {
-          "id": "CORE-532-39-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-533-39-P1-score-points-CORE-041-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-041"
-            }
-          }
-        },
-        {
-          "id": "CORE-544-40-P2-voltage-four-guess-A-♥--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "A",
-              "guessSuit": "♥",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-545-40-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-546-40-P2-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-557-41-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-558-41-P1-solo-wild-three-bounce-♣-CORE-038-CORE-041",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
@@ -4471,57 +4231,14 @@ export default {
                 "targetRank": "3",
                 "copiedAction": {
                   "kind": "three-bounce",
-                  "targetCardId": "CORE-041"
+                  "targetCardId": "CORE-003"
                 }
               }
             }
           }
         },
         {
-          "id": "CORE-559-41-P2-response-decline-decline--CORE-SI-000558-P1-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-569-42-P2-voltage-four-guess-10-♣--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "10",
-              "guessSuit": "♣",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-570-42-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-571-42-P2-score-points-CORE-043-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-043"
-            }
-          }
-        },
-        {
-          "id": "CORE-582-43-P1-phase-enter-action--",
+          "id": "CORE-477-35-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4529,7 +4246,7 @@ export default {
           }
         },
         {
-          "id": "CORE-583-43-P1-draw-top--",
+          "id": "CORE-478-35-P1-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4540,21 +4257,7 @@ export default {
           }
         },
         {
-          "id": "CORE-594-44-P2-voltage-four-guess-K-♥--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "K",
-              "guessSuit": "♥",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-595-44-P2-phase-enter-action--",
+          "id": "CORE-489-36-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4562,7 +4265,123 @@ export default {
           }
         },
         {
-          "id": "CORE-596-44-P2-effect-four-clear-pr-CORE-042-",
+          "id": "CORE-490-36-P2-quick-eight-aegis-field-CORE-036-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-eight-aegis-field",
+            "sourceCardId": "CORE-036"
+          }
+        },
+        {
+          "id": "CORE-495-36-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-506-37-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-507-37-P1-anchor-queen-CORE-003-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "queen-anchor",
+                "sourceCardId": "CORE-003"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-518-38-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-519-38-P2-effect-ace-purge-aegis-CORE-041-CORE-003",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "ace-purge",
+                "sourceCardId": "CORE-041",
+                "targetCardId": "CORE-003",
+                "mode": "scrap-aegis"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-530-39-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-531-39-P1-effect-four-clear-pr-CORE-039-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "four-row-clear",
+                "sourceCardId": "CORE-039",
+                "targetPlayerId": "P2",
+                "row": "pr"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-542-40-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-543-40-P2-rank10-heart-tempo-CORE-040-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-advanced",
+              "advanced": {
+                "kind": "advanced-rank10-heart-tempo",
+                "sourceCardId": "CORE-040"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-550-40-P2-effect-four-clear-er-CORE-042-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4573,60 +4392,13 @@ export default {
                 "kind": "four-row-clear",
                 "sourceCardId": "CORE-042",
                 "targetPlayerId": "P1",
-                "row": "pr"
+                "row": "er"
               }
             }
           }
         },
         {
-          "id": "CORE-597-44-P1-response-decline-decline--CORE-SI-000596-P2-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-607-45-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-608-45-P1-rank10-diamond-mimic-row-exchange-pr-CORE-044-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-advanced",
-              "advanced": {
-                "kind": "advanced-rank10-diamond-mimic",
-                "sourceCardId": "CORE-044",
-                "mimickedRank": "4",
-                "effectKey": "row-exchange",
-                "mimicAction": {
-                  "kind": "row-exchange",
-                  "targetPlayerId": "P2",
-                  "row": "pr"
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-620-46-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-621-46-P2-draw-top--",
+          "id": "CORE-557-40-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4637,21 +4409,7 @@ export default {
           }
         },
         {
-          "id": "CORE-635-47-P1-voltage-four-guess-9-♥--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "9",
-              "guessSuit": "♥",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-636-47-P1-phase-enter-action--",
+          "id": "CORE-568-41-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4659,7 +4417,7 @@ export default {
           }
         },
         {
-          "id": "CORE-637-47-P1-draw-top--",
+          "id": "CORE-569-41-P1-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4670,16 +4428,7 @@ export default {
           }
         },
         {
-          "id": "CORE-638-47-P2-response-decline-decline--CORE-SI-000637-P1-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-648-48-P2-phase-enter-action--",
+          "id": "CORE-580-42-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4687,42 +4436,28 @@ export default {
           }
         },
         {
-          "id": "CORE-649-48-P2-score-points-CORE-045-",
+          "id": "CORE-581-42-P2-score-points-CORE-044-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
               "kind": "core-score",
-              "cardId": "CORE-045"
+              "cardId": "CORE-044"
             }
           }
         },
         {
-          "id": "CORE-651-48-P2-response-decline-decline--CORE-SI-000649-P2-ROOT-play-for-points-0",
+          "id": "CORE-582-42-P1-response-decline-decline--CORE-SI-000581-P2-ROOT-play-for-points-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
+          "actorId": "P1",
           "action": {
             "kind": "core-pass-priority",
             "semantic": "DECLINE_RESPONSE"
           }
         },
         {
-          "id": "CORE-660-49-P1-voltage-four-guess-J-♣--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "J",
-              "guessSuit": "♣",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-661-49-P1-phase-enter-action--",
+          "id": "CORE-592-43-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4730,48 +4465,19 @@ export default {
           }
         },
         {
-          "id": "CORE-662-49-P1-quick-eight-aegis-field-CORE-047-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-eight-aegis-field",
-            "sourceCardId": "CORE-047"
-          }
-        },
-        {
-          "id": "CORE-663-49-P2-instant-nine-tap-CORE-046-CORE-043",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-nine-tap",
-            "sourceCardId": "CORE-046",
-            "targetCardId": "CORE-043"
-          }
-        },
-        {
-          "id": "CORE-664-49-P1-counter-ace-base-CORE-041-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-base-ace-counter",
-            "sourceCardId": "CORE-041",
-            "targetStackItemId": "CORE-SI-000663-P2-NINE-TAP-1",
-            "sourceMode": "hand"
-          }
-        },
-        {
-          "id": "CORE-673-49-P1-draw-top--",
+          "id": "CORE-593-43-P1-score-points-CORE-046-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-score",
+              "cardId": "CORE-046"
             }
           }
         },
         {
-          "id": "CORE-684-50-P2-phase-enter-action--",
+          "id": "CORE-604-44-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4779,7 +4485,7 @@ export default {
           }
         },
         {
-          "id": "CORE-685-50-P2-draw-top--",
+          "id": "CORE-605-44-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4790,31 +4496,16 @@ export default {
           }
         },
         {
-          "id": "CORE-686-50-P1-instant-nine-tap-CORE-048-CORE-045",
+          "id": "CORE-606-44-P1-response-decline-decline--CORE-SI-000605-P2-ROOT-draw-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
-            "kind": "core-declare-nine-tap",
-            "sourceCardId": "CORE-048",
-            "targetCardId": "CORE-045"
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
           }
         },
         {
-          "id": "CORE-704-51-P1-voltage-four-guess-K-♣--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "K",
-              "guessSuit": "♣",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-705-51-P1-phase-enter-action--",
+          "id": "CORE-616-45-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4822,7 +4513,7 @@ export default {
           }
         },
         {
-          "id": "CORE-706-51-P1-anchor-king-CORE-049-",
+          "id": "CORE-617-45-P1-attachment-jack-pr-CORE-045-CORE-044",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4830,14 +4521,75 @@ export default {
             "action": {
               "kind": "core-resolve-effect",
               "effect": {
-                "kind": "king-anchor",
-                "sourceCardId": "CORE-049"
+                "kind": "jack-attach",
+                "sourceCardId": "CORE-045",
+                "targetCardId": "CORE-044",
+                "row": "pr"
               }
             }
           }
         },
         {
-          "id": "CORE-707-51-P2-response-decline-decline--CORE-SI-000706-P1-ROOT-play-for-effect-0",
+          "id": "CORE-618-45-P2-instant-eight-spade-free-scuttle-CORE-047-CORE-046",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-eight-spade-free-scuttle",
+            "sourceCardId": "CORE-047",
+            "targetCardId": "CORE-046"
+          }
+        },
+        {
+          "id": "CORE-624-45-P2-counter-ace-base-CORE-043-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-base-ace-counter",
+            "sourceCardId": "CORE-043",
+            "targetStackItemId": "CORE-SI-000617-P1-ROOT-play-for-effect-0",
+            "sourceMode": "hand"
+          }
+        },
+        {
+          "id": "CORE-633-46-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-634-46-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-645-47-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-646-47-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-647-47-P2-response-decline-decline--CORE-SI-000646-P1-ROOT-draw-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4846,7 +4598,7 @@ export default {
           }
         },
         {
-          "id": "CORE-717-52-P2-phase-enter-action--",
+          "id": "CORE-657-48-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4854,7 +4606,7 @@ export default {
           }
         },
         {
-          "id": "CORE-718-52-P2-draw-top--",
+          "id": "CORE-658-48-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4865,21 +4617,7 @@ export default {
           }
         },
         {
-          "id": "CORE-729-53-P1-voltage-four-guess-9-♥--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "9",
-              "guessSuit": "♥",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-730-53-P1-phase-enter-action--",
+          "id": "CORE-669-49-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4887,18 +4625,33 @@ export default {
           }
         },
         {
-          "id": "CORE-731-53-P1-draw-top--",
+          "id": "CORE-670-49-P1-rank10-spade-recovery-CORE-050-CORE-018",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-resolve-advanced",
+              "advanced": {
+                "kind": "advanced-rank10-spade-recovery",
+                "sourceCardId": "CORE-050",
+                "recoverCardId": "CORE-018"
+              }
             }
           }
         },
         {
-          "id": "CORE-742-54-P2-phase-enter-action--",
+          "id": "CORE-671-49-P2-instant-nine-tap-CORE-048-CORE-027",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-nine-tap",
+            "sourceCardId": "CORE-048",
+            "targetCardId": "CORE-027"
+          }
+        },
+        {
+          "id": "CORE-686-50-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -4906,20 +4659,129 @@ export default {
           }
         },
         {
-          "id": "CORE-743-54-P2-scuttle-ordinary-CORE-052-CORE-040",
+          "id": "CORE-687-50-P2-scuttle-ordinary-CORE-049-CORE-037",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
               "kind": "core-scuttle",
-              "sourceCardId": "CORE-052",
-              "targetCardId": "CORE-040"
+              "sourceCardId": "CORE-049",
+              "targetCardId": "CORE-037"
             }
           }
         },
         {
-          "id": "CORE-744-54-P1-response-decline-decline--CORE-SI-000743-P2-ROOT-scuttle-0",
+          "id": "CORE-699-51-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-700-51-P1-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-711-52-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-712-52-P2-quick-queen-aegis-CORE-052-CORE-044",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-queen-aegis-quick",
+            "sourceCardId": "CORE-052",
+            "targetCardId": "CORE-044"
+          }
+        },
+        {
+          "id": "CORE-717-52-P2-draw-top--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-draw"
+            }
+          }
+        },
+        {
+          "id": "CORE-729-53-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-730-53-P1-effect-private-choice-five-recycle-CORE-051-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "five-recycle",
+                "sourceCardId": "CORE-051"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-738-53-P1-private-choice-rank5-rummage--CORE-037",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-submit-private-choice",
+            "token": "26540f3f6f52309234dcbce07e9a3d82d1e8a73fa8edbdbac059e3d77fca1708",
+            "submission": {
+              "kind": "core-rank5-rummage",
+              "selectedCardIds": [
+                "CORE-037"
+              ]
+            }
+          }
+        },
+        {
+          "id": "CORE-745-54-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-746-54-P2-effect-private-choice-six-dig-CORE-054-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-resolve-effect",
+              "effect": {
+                "kind": "six-dig",
+                "sourceCardId": "CORE-054"
+              }
+            }
+          }
+        },
+        {
+          "id": "CORE-747-54-P1-response-decline-decline--CORE-SI-000746-P2-ROOT-play-for-effect-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -4928,36 +4790,11 @@ export default {
           }
         },
         {
-          "id": "CORE-754-55-P1-voltage-four-guess-J-♣--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-four",
-              "guessRank": "J",
-              "guessSuit": "♣",
-              "rankMatchDisposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-755-55-P1-phase-enter-action--",
+          "id": "CORE-759-55-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-756-55-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
           }
         }
       ],
@@ -5064,97 +4901,28 @@ export default {
           }
         },
         {
-          "id": "CORE-16-1-P2-counter-ace-base-CORE-008-",
+          "id": "CORE-20-1-P2-response-decline-decline--CORE-SI-000013-P1-ROOT-play-for-effect-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
-            "kind": "core-declare-base-ace-counter",
-            "sourceCardId": "CORE-008",
-            "targetStackItemId": "CORE-SI-000014-P2-JACK-DISRUPT-1",
-            "sourceMode": "hand"
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
           }
         },
         {
-          "id": "CORE-27-1-P2-private-choice-rank3-present--CORE-007-CORE-011",
+          "id": "CORE-25-1-P2-private-choice-rank3-present--CORE-006-CORE-008",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "f283085a54e2cd91159cb312671996b9cd78f3578a2094772a2449d1daf97997",
+            "token": "02c657f424401a6fe4703e1f9728b3b48ad201a2067aa5c0990f5e1c9689a3eb",
             "submission": {
               "kind": "core-rank3-present",
               "selectedCardIds": [
-                "CORE-007",
-                "CORE-011"
+                "CORE-006",
+                "CORE-008"
               ]
             }
-          }
-        },
-        {
-          "id": "CORE-29-1-P1-private-choice-rank3-take--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "217cb20275e01a9f74d6dd1f66f10c07bef970ef5b8f0c13f8be4e01fea2a975",
-            "submission": {
-              "kind": "core-rank3-take",
-              "selectedCardIds": []
-            }
-          }
-        },
-        {
-          "id": "CORE-30-1-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-41-2-P2-swap-bar-face-down-CORE-007-CORE-012",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-face-down-swap",
-            "handCardId": "CORE-007",
-            "swapCardId": "CORE-012"
-          }
-        },
-        {
-          "id": "CORE-42-2-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-43-2-P2-effect-four-clear-pr-CORE-010-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "four-row-clear",
-                "sourceCardId": "CORE-010",
-                "targetPlayerId": "P1",
-                "row": "pr"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-54-3-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
           }
         }
       ],
@@ -5259,68 +5027,69 @@ export default {
           }
         },
         {
-          "id": "CORE-16-1-P2-counter-ace-base-CORE-008-",
+          "id": "CORE-20-1-P2-response-decline-decline--CORE-SI-000013-P1-ROOT-play-for-effect-0",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
-            "kind": "core-declare-base-ace-counter",
-            "sourceCardId": "CORE-008",
-            "targetStackItemId": "CORE-SI-000014-P2-JACK-DISRUPT-1",
-            "sourceMode": "hand"
+            "kind": "core-pass-priority",
+            "semantic": "DECLINE_RESPONSE"
           }
         },
         {
-          "id": "CORE-27-1-P2-private-choice-rank3-present--CORE-007-CORE-011",
+          "id": "CORE-25-1-P2-private-choice-rank3-present--CORE-006-CORE-008",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "f283085a54e2cd91159cb312671996b9cd78f3578a2094772a2449d1daf97997",
+            "token": "02c657f424401a6fe4703e1f9728b3b48ad201a2067aa5c0990f5e1c9689a3eb",
             "submission": {
               "kind": "core-rank3-present",
               "selectedCardIds": [
-                "CORE-007",
-                "CORE-011"
+                "CORE-006",
+                "CORE-008"
               ]
             }
           }
         },
         {
-          "id": "CORE-29-1-P1-private-choice-rank3-take--",
+          "id": "CORE-27-1-P1-private-choice-rank3-take--CORE-008",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-submit-private-choice",
-            "token": "217cb20275e01a9f74d6dd1f66f10c07bef970ef5b8f0c13f8be4e01fea2a975",
+            "token": "985d0957cf6489c527f110760349363c2992bffc9de925da7470fe0090a91746",
             "submission": {
               "kind": "core-rank3-take",
-              "selectedCardIds": []
+              "selectedCardIds": [
+                "CORE-008"
+              ]
             }
           }
         },
         {
-          "id": "CORE-30-1-P1-draw-top--",
+          "id": "CORE-28-1-P1-score-points-CORE-008-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-score",
+              "cardId": "CORE-008"
             }
           }
         },
         {
-          "id": "CORE-41-2-P2-swap-bar-face-down-CORE-007-CORE-012",
+          "id": "CORE-39-2-P2-swap-bar-face-down-CORE-011-CORE-012",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-face-down-swap",
-            "handCardId": "CORE-007",
+            "handCardId": "CORE-011",
             "swapCardId": "CORE-012"
           }
         },
         {
-          "id": "CORE-42-2-P2-phase-enter-action--",
+          "id": "CORE-40-2-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -5328,186 +5097,9 @@ export default {
           }
         },
         {
-          "id": "CORE-43-2-P2-effect-four-clear-pr-CORE-010-",
+          "id": "CORE-41-2-P2-draw-top--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "four-row-clear",
-                "sourceCardId": "CORE-010",
-                "targetPlayerId": "P1",
-                "row": "pr"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-54-3-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-55-3-P1-solo-wild-recycle-five-♥-CORE-017-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-rank-action",
-              "action": {
-                "kind": "solo-wild-copy",
-                "sourceCardId": "CORE-017",
-                "targetRank": "5",
-                "copiedAction": {
-                  "kind": "recycle-five"
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-66-4-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-67-4-P2-score-points-CORE-011-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-011"
-            }
-          }
-        },
-        {
-          "id": "CORE-78-5-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-79-5-P1-score-points-CORE-016-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-016"
-            }
-          }
-        },
-        {
-          "id": "CORE-81-5-P1-response-decline-decline--CORE-SI-000079-P1-ROOT-play-for-points-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-90-6-P2-voltage-three-hand--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-three",
-              "disposition": "hand"
-            }
-          }
-        },
-        {
-          "id": "CORE-91-6-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-92-6-P2-effect-private-choice-seven-topdeck-CORE-020-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "seven-topdeck",
-                "sourceCardId": "CORE-020"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-93-6-P1-response-decline-decline--CORE-SI-000092-P2-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-100-6-P2-private-choice-rank7-hand-and-effect--CORE-021-CORE-022",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "a19f7b37800adf45eb91309e76dbe9e7f86d788db840b83b4adad82c51ed818a",
-            "submission": {
-              "kind": "core-rank7-assign",
-              "mode": "hand-and-effect",
-              "selectedCardIds": [
-                "CORE-021",
-                "CORE-022"
-              ]
-            }
-          }
-        },
-        {
-          "id": "CORE-102-6-P2-private-choice-rank7-generated-unavailable--CORE-022",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "371d295745fcfdb98d4c18861152b1d4d2bee64720b9d71dc4eaee5b359ef032",
-            "submission": {
-              "kind": "core-rank7-generated-effect",
-              "selectedCardIds": [
-                "CORE-022"
-              ]
-            }
-          }
-        },
-        {
-          "id": "CORE-107-7-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-108-7-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
           "action": {
             "kind": "core-declare-primary",
             "action": {
@@ -5516,57 +5108,7 @@ export default {
           }
         },
         {
-          "id": "CORE-110-7-P1-response-decline-decline--CORE-SI-000108-P1-ROOT-draw-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-120-8-P2-voltage-three-points--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-resolve-advanced",
-            "advanced": {
-              "kind": "advanced-voltage-three",
-              "disposition": "points"
-            }
-          }
-        },
-        {
-          "id": "CORE-121-8-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-122-8-P2-swap-bar-face-up-draw--CORE-007",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-007"
-            }
-          }
-        },
-        {
-          "id": "CORE-123-8-P1-response-decline-decline--CORE-SI-000122-P2-ROOT-face-up-swap-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-133-9-P1-phase-enter-action--",
+          "id": "CORE-53-3-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -5574,232 +5116,7 @@ export default {
           }
         },
         {
-          "id": "CORE-134-9-P1-scuttle-ordinary-CORE-002-CORE-011",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-002",
-              "targetCardId": "CORE-011"
-            }
-          }
-        },
-        {
-          "id": "CORE-136-9-P1-response-decline-decline--CORE-SI-000134-P1-ROOT-scuttle-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-145-10-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-146-10-P2-score-points-CORE-021-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-score",
-              "cardId": "CORE-021"
-            }
-          }
-        },
-        {
-          "id": "CORE-147-10-P1-response-decline-decline--CORE-SI-000146-P2-ROOT-play-for-points-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-157-11-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-158-11-P1-anchor-private-choice-nine-CORE-015-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "nine-anchor",
-                "sourceCardId": "CORE-015",
-                "targetPlayerId": "P2"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-159-11-P2-counter-king-anchor-CORE-012-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-king-counter",
-            "sourceCardId": "CORE-012",
-            "targetStackItemId": "CORE-SI-000158-P1-ROOT-play-for-effect-0"
-          }
-        },
-        {
-          "id": "CORE-168-12-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-169-12-P2-swap-bar-face-up-draw--CORE-014",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-face-up-swap-draw",
-              "swapCardId": "CORE-014"
-            }
-          }
-        },
-        {
-          "id": "CORE-180-13-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-181-13-P1-draw-top--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-draw"
-            }
-          }
-        },
-        {
-          "id": "CORE-192-14-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-193-14-P2-effect-private-choice-three-force-discard-CORE-006-",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "three-hand-raid",
-                "sourceCardId": "CORE-006",
-                "targetPlayerId": "P1",
-                "mode": "force-discard"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-194-14-P1-response-decline-decline--CORE-SI-000193-P2-ROOT-play-for-effect-0",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-pass-priority",
-            "semantic": "DECLINE_RESPONSE"
-          }
-        },
-        {
-          "id": "CORE-200-14-P1-private-choice-rank3-discard--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-submit-private-choice",
-            "token": "a9a8d6ad0e9bdc7101533f56cdf8e5563cc923e60c42c4b70485fc8a4b9a8bbd",
-            "submission": {
-              "kind": "core-rank3-discard",
-              "selectedCardIds": []
-            }
-          }
-        },
-        {
-          "id": "CORE-205-15-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-206-15-P1-attachment-jack-pr-CORE-025-CORE-024",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-resolve-effect",
-              "effect": {
-                "kind": "jack-attach",
-                "sourceCardId": "CORE-025",
-                "targetCardId": "CORE-024",
-                "row": "pr"
-              }
-            }
-          }
-        },
-        {
-          "id": "CORE-217-16-P2-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-218-16-P2-scuttle-ordinary-CORE-014-CORE-016",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P2",
-          "action": {
-            "kind": "core-declare-primary",
-            "action": {
-              "kind": "core-scuttle",
-              "sourceCardId": "CORE-014",
-              "targetCardId": "CORE-016"
-            }
-          }
-        },
-        {
-          "id": "CORE-229-17-P1-phase-enter-action--",
-          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
-          "actorId": "P1",
-          "action": {
-            "kind": "core-enter-action"
-          }
-        },
-        {
-          "id": "CORE-230-17-P1-swap-bar-face-up-draw--CORE-001",
+          "id": "CORE-54-3-P1-swap-bar-face-up-draw--CORE-001",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {
@@ -5811,7 +5128,7 @@ export default {
           }
         },
         {
-          "id": "CORE-241-18-P2-phase-enter-action--",
+          "id": "CORE-65-4-P2-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
@@ -5819,18 +5136,78 @@ export default {
           }
         },
         {
-          "id": "CORE-242-18-P2-draw-top--",
+          "id": "CORE-66-4-P2-quick-board-lock-CORE-007-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-board-lock-quick",
+            "sourceCardId": "CORE-007"
+          }
+        },
+        {
+          "id": "CORE-71-4-P2-score-points-CORE-006-",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P2",
           "action": {
             "kind": "core-declare-primary",
             "action": {
-              "kind": "core-draw"
+              "kind": "core-score",
+              "cardId": "CORE-006"
             }
           }
         },
         {
-          "id": "CORE-253-19-P1-phase-enter-action--",
+          "id": "CORE-82-5-P1-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-83-5-P1-score-points-CORE-016-",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-score",
+              "cardId": "CORE-016"
+            }
+          }
+        },
+        {
+          "id": "CORE-95-6-P2-phase-enter-action--",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-enter-action"
+          }
+        },
+        {
+          "id": "CORE-96-6-P2-swap-bar-face-up-draw--CORE-014",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P2",
+          "action": {
+            "kind": "core-declare-primary",
+            "action": {
+              "kind": "core-face-up-swap-draw",
+              "swapCardId": "CORE-014"
+            }
+          }
+        },
+        {
+          "id": "CORE-97-6-P1-instant-nine-tap-CORE-015-CORE-006",
+          "type": "RESOLVE_CORE_AUTHORITY_ACTION",
+          "actorId": "P1",
+          "action": {
+            "kind": "core-declare-nine-tap",
+            "sourceCardId": "CORE-015",
+            "targetCardId": "CORE-006"
+          }
+        },
+        {
+          "id": "CORE-114-7-P1-phase-enter-action--",
           "type": "RESOLVE_CORE_AUTHORITY_ACTION",
           "actorId": "P1",
           "action": {

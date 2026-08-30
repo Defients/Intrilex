@@ -49,8 +49,10 @@ export function createReportHandlers(ctx) {
     }
 
     try {
-      // Call the SECURITY DEFINER RPC
-      const { data, error: rpcError } = await supabaseClient.rpc('submit_player_report', {
+      // Service-role gateway: reporter identity comes from the authenticated
+      // connection, never from the client payload or auth.uid() on the service client.
+      const { data, error: rpcError } = await supabaseClient.rpc('submit_player_report_server', {
+        p_reporter_id: reporterAccountId,
         p_reported_id: reportedPlayerId,
         p_reason_code: payload.reasonCode,
         p_description: payload.description ?? null,
@@ -63,7 +65,7 @@ export function createReportHandlers(ctx) {
           reporterId: reporterAccountId,
           error: rpcError.message,
         });
-        return send(ws, errorMsg('REPORT_SUBMIT_FAILED', rpcError.message, requestId));
+        return send(ws, errorMsg('REPORT_SUBMIT_FAILED', 'Report could not be submitted', requestId));
       }
 
       send(ws, {

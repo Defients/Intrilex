@@ -121,6 +121,45 @@ test('IRX-C02: duplicate terminal invocation does not double-enqueue result', as
   outbox.stopDrain();
 });
 
+test('IRX-C02: overlapping drains process a job exactly once', async () => {
+  let calls = 0;
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  const persistor = {
+    async persistMatchResult() {
+      calls++;
+      await gate;
+      return { success: true };
+    },
+  };
+  const outbox = new TerminalOutbox({ durable: false, persistor, logger: { debug: () => {} } });
+  outbox.enqueueResult({ matchId: 'M-concurrent-drain', queueId: 'casual' });
+
+  const first = outbox._drainOnce();
+  const second = outbox._drainOnce();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(calls, 1, 'a concurrent drain must join the active drain');
+  release();
+  await Promise.all([first, second]);
+  assert.equal(outbox.listJobs()[0].status, 'completed');
+});
+
+test('IRX-C02: exhausted jobs are dead letters, not pending work', async () => {
+  const outbox = new TerminalOutbox({
+    durable: false,
+    persistor: { async persistMatchResult() { return { success: false, error: 'down' }; } },
+    logger: { debug: () => {} },
+  });
+  outbox.enqueueResult({ matchId: 'M-dead-letter', queueId: 'casual' });
+  const job = outbox.listJobs()[0];
+  outbox._storage.update(job.jobId, { attempts: job.maxAttempts - 1 });
+  await outbox._drainOnce();
+  assert.equal(outbox.listJobs()[0].status, 'failed');
+  assert.equal(outbox._storage.listPending().length, 0);
+  assert.equal(outbox.enqueueResult({ matchId: 'M-dead-letter', queueId: 'casual' }), false,
+    'dead-letter re-enqueue must fail closed');
+});
+
 // IRX-C02: Prove outbox restart recovery
 test('IRX-C02: outbox restart recovery resets in_progress jobs to pending', async () => {
   const dbPath = join(tmpdir(), `intrilex-outbox-test-${process.pid}-${Date.now()}.sqlite`);

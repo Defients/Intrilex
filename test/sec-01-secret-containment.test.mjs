@@ -97,3 +97,15 @@ test('SEC-01: .env.example contains only placeholder values', () => {
     );
   }
 });
+
+test('SEC-01: credential-bearing uploader script is absent from the release tree', () => {
+  assert.ok(!existsSync(join(ROOT, 'scripts/upload-key.cjs')), 'scripts/upload-key.cjs must not exist');
+});
+
+test('SEC-01: safe Neocities uploader requires environment credentials', () => {
+  const uploader = readFileSync(join(ROOT, 'scripts/upload-neocities.mjs'), 'utf8');
+  assert.match(uploader, /NEOCITIES_API_KEY/);
+  assert.match(uploader, /process\.env/);
+  assert.doesNotMatch(uploader, /neocities\.config\.js/);
+  assert.doesNotMatch(uploader, /upload-key\.cjs/);
+});

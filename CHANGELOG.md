@@ -357,10 +357,9 @@ migration protocol. No gameplay or engine changes.
   neocities.org with correct relative paths (walks the folder and uploads
   each file at its path relative to the deploy root, avoiding the
   `neocities-deploy/` subdirectory problem the upstream CLI creates).
-  Credentials from CLI args, `neocities.config.js`, or env vars. Supports
-  `--dry-run`, `--prune` (deletes stale hashed bundles on remote), and
-  `--only=` filters. Makes real network calls — intentionally not run by
-  the build.
+  Credentials are read only from `NEOCITIES_API_KEY` (preferred) or the
+  `NEOCITIES_USERNAME` + `NEOCITIES_PASSWORD` environment pair. Supports
+  `--dry-run`. Makes real network calls — intentionally not run by the build.
 - **New scripts** in `package.json`: `build:neocities` (build + sync),
   `sync:neocities` (sync only), `upload:neocities` (upload only).
 

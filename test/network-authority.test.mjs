@@ -524,8 +524,14 @@ test('duel: two automated players can reach terminal state', async () => {
   }
 
   assert.equal(match.status, MatchStatus.TERMINAL, `Match did not reach terminal after ${steps} steps`);
-  assert.ok(match.winner, 'Match should have a winner');
   assert.ok(match.terminalReason, 'Match should have a terminal reason');
+  // Seed 123456 currently resolves to a legitimate canonical draw. Terminal
+  // authority must represent draws honestly instead of inventing a winner.
+  if (match.winner === null) {
+    assert.equal(match.terminalReason, 'CANONICAL_DRAW');
+  } else {
+    assert.ok(match.winner === 'P1' || match.winner === 'P2', 'Winner must be a canonical seat');
+  }
 });
 
 // ── Section 9: Replay ──
@@ -860,6 +866,16 @@ test('server: rejects malformed message', async () => {
   const ws = new WebSocket(`ws://127.0.0.1:${TEST_PORT}`);
   await new Promise(resolve => ws.on('open', resolve));
   ws.send('not json');
+  const resp = await new Promise(resolve => ws.on('message', data => resolve(JSON.parse(data.toString()))));
+  assert.equal(resp.type, 'ERROR');
+  assert.equal(resp.payload.code, ReasonCode.MALFORMED_JSON);
+  ws.close();
+});
+
+test('server: rejects valid JSON primitives without throwing', async () => {
+  const ws = new WebSocket(`ws://127.0.0.1:${TEST_PORT}`);
+  await new Promise(resolve => ws.on('open', resolve));
+  ws.send('null');
   const resp = await new Promise(resolve => ws.on('message', data => resolve(JSON.parse(data.toString()))));
   assert.equal(resp.type, 'ERROR');
   assert.equal(resp.payload.code, ReasonCode.MALFORMED_JSON);

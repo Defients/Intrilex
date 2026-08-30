@@ -148,10 +148,12 @@ This:
 pnpm run upload:neocities
 ```
 
-Requires credentials via one of:
-- `neocities.config.js` in repo root: `module.exports = { username, password }`
-- Env vars: `NEOCITIES_USERNAME`, `NEOCITIES_PASSWORD`
-- CLI args: `--username=... --password=...`
+Requires environment-only credentials:
+- Preferred: `NEOCITIES_API_KEY`
+- Compatibility: both `NEOCITIES_USERNAME` and `NEOCITIES_PASSWORD`
+
+Never place credentials in repository files or command-line arguments. Rotate
+the credential immediately if it has ever been committed or printed in logs.
 
 Use `--dry-run` first to verify the file list:
 ```bash

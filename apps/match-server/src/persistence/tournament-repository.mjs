@@ -184,8 +184,8 @@ export class SupabaseTournamentRepository {
       completed_at: tournament.completedAt,
     };
 
-    // IRX-C11: Try atomic RPC first (single transaction for all 3 tables).
-    // Falls back to sequential upserts with error propagation if RPC is unavailable.
+    // IRX-C11: Atomic RPC is the only production-safe write path. A sequential
+    // fallback can commit a tournament without its participants or bracket.
     const participantRows = (tournament.players ?? []).map(p => ({
       tournament_id: tournament.tournamentId,
       user_id: p.userId ?? null,
@@ -207,57 +207,16 @@ export class SupabaseTournamentRepository {
       match_ref: m.matchRef,
     }));
 
-    // Attempt atomic save via RPC
-    try {
-      const { data: rpcResult, error: rpcErr } = await this._client.rpc('upsert_tournament_atomic', {
-        p_tournament: tournamentRow,
-        p_participants: participantRows,
-        p_matches: matchRows,
-      });
-      if (rpcErr) {
-        // RPC doesn't exist or failed — fall through to sequential fallback
-        throw rpcErr;
-      }
-      if (rpcResult && rpcResult.success === false) {
-        throw new Error(`Atomic tournament save failed: ${rpcResult.error ?? 'unknown error'}`);
-      }
-      // Atomic save succeeded — tournament, participants, and matches are all committed
-      return;
-    } catch (rpcError) {
-      // RPC unavailable (migration not applied yet) — use sequential fallback
-      // This maintains backward compatibility while the migration is deployed
+    const { data: rpcResult, error: rpcErr } = await this._client.rpc('upsert_tournament_atomic', {
+      p_tournament: tournamentRow,
+      p_participants: participantRows,
+      p_matches: matchRows,
+    });
+    if (rpcErr) {
+      throw new Error('Atomic tournament save failed');
     }
-
-    // Sequential fallback (IRX-C09/C11: upsert with error propagation)
-    // IRX-C11: Propagate ALL errors — never silently continue after a failure
-    const { error: tErr } = await this._client
-      .from('tournaments')
-      .upsert(tournamentRow, { onConflict: 'tournament_id' });
-    if (tErr) {
-      throw new Error(`Tournament save failed: ${tErr.message}`);
-    }
-
-    // IRX-C09: Use upsert instead of delete/reinsert to preserve existing
-    // registrants and their registered_at timestamps.
-    const validRows = participantRows.filter(r => r.user_id);
-    if (validRows.length > 0) {
-      const { error: pErr } = await this._client
-        .from('tournament_participants')
-        .upsert(validRows, { onConflict: 'tournament_id,user_id' });
-      // IRX-C11: Propagate ALL errors — never silently continue after a failure
-      if (pErr) {
-        throw new Error(`Tournament participant save failed: ${pErr.message}`);
-      }
-    }
-
-    if (matchRows.length > 0) {
-      const { error: mErr } = await this._client
-        .from('tournament_matches')
-        .upsert(matchRows, { onConflict: 'match_id' });
-      // IRX-C11: Propagate ALL errors
-      if (mErr) {
-        throw new Error(`Tournament match save failed: ${mErr.message}`);
-      }
+    if (!rpcResult || rpcResult.success !== true) {
+      throw new Error('Atomic tournament save returned an invalid result');
     }
   }
 
