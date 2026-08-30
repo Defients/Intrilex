@@ -8,7 +8,7 @@ import { hashCanonical } from '@intrilex/shared';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const writeReports = process.env.INTRILEX_WRITE_REPORTS !== '0';
 
-async function treeHash(relativeRoot) {
+async function treeSnapshot(relativeRoot) {
   const base = path.join(root, relativeRoot);
   const files = {};
   async function walk(dir) {
@@ -22,7 +22,17 @@ async function treeHash(relativeRoot) {
     }
   }
   await walk(base);
-  return { fileCount: Object.keys(files).length, treeHash: hashCanonical(files) };
+  return { files, fileCount: Object.keys(files).length, treeHash: hashCanonical(files) };
+}
+
+function publicSnapshot(snapshot) {
+  return { fileCount: snapshot.fileCount, treeHash: snapshot.treeHash };
+}
+
+function changedFiles(first, second) {
+  return [...new Set([...Object.keys(first.files), ...Object.keys(second.files)])]
+    .filter(file => first.files[file] !== second.files[file])
+    .sort();
 }
 
 function build(label) {
@@ -31,11 +41,22 @@ function build(label) {
 }
 
 build('build-1');
-const first = { dist: await treeHash('apps/lab-web/dist'), sampleData: await treeHash('sample-data') };
+const first = { dist: await treeSnapshot('apps/lab-web/dist'), sampleData: await treeSnapshot('sample-data') };
 build('build-2');
-const second = { dist: await treeHash('apps/lab-web/dist'), sampleData: await treeHash('sample-data') };
+const second = { dist: await treeSnapshot('apps/lab-web/dist'), sampleData: await treeSnapshot('sample-data') };
 const identical = first.dist.treeHash === second.dist.treeHash && first.sampleData.treeHash === second.sampleData.treeHash;
-const report = { schemaVersion: '1.0', status: identical ? 'PASS' : 'FAIL', buildRuns: 2, first, second, identical };
+const report = {
+  schemaVersion: '1.1',
+  status: identical ? 'PASS' : 'FAIL',
+  buildRuns: 2,
+  first: { dist: publicSnapshot(first.dist), sampleData: publicSnapshot(first.sampleData) },
+  second: { dist: publicSnapshot(second.dist), sampleData: publicSnapshot(second.sampleData) },
+  changedFiles: {
+    dist: changedFiles(first.dist, second.dist),
+    sampleData: changedFiles(first.sampleData, second.sampleData),
+  },
+  identical,
+};
 if (writeReports) await writeFile(path.join(root, 'reports/build-determinism.json'), `${JSON.stringify(report, null, 2)}\n`);
 console.log(`BUILD DETERMINISM ${report.status}: dist=${second.dist.treeHash}; sample=${second.sampleData.treeHash}`);
 if (!identical) process.exit(1);

@@ -156,9 +156,10 @@ test('rate-limit: RATE_LIMITED reason code exists', () => {
 test('rate-limit: auth-attempt config exists in server source', () => {
   const source = readFileSync(new URL('../apps/match-server/src/server.mjs', import.meta.url), 'utf8');
   assert.ok(source.includes('AUTH_ATTEMPT_MAX'), 'Server must define AUTH_ATTEMPT_MAX');
-  assert.ok(source.includes('checkAuthAttemptRate'), 'Server must import checkAuthAttemptRate');
-  // auth_attempt_flood logging is in the extracted auth-handlers module
+  assert.ok(source.includes('createAuthHandlers'), 'Server must install the extracted auth handlers');
+  // The extracted handler owns the rate-check implementation and flood logging.
   const authHandlersSource = readFileSync(new URL('../apps/match-server/src/handlers/auth-handlers.mjs', import.meta.url), 'utf8');
+  assert.ok(authHandlersSource.includes('checkAuthAttemptRate'), 'auth-handlers must apply the auth-attempt rate check');
   assert.ok(authHandlersSource.includes('auth_attempt_flood'), 'auth-handlers must log auth_attempt_flood ban reason');
 });
 

@@ -256,7 +256,13 @@ test('replay from recordReplay can be reconstructed into frames', async () => {
   }
   assert.ok(frames.length > 1, 'must produce multiple frames');
   assert.ok(frames.slice(1).every(f => f.accepted), 'all commands must be accepted');
-  // Final frame winner must match match result
+  // The summary preserves the legacy ABORTED/DRAW outcome sentinels, while
+  // engine state keeps winner nullable unless a player actually won.
   const finalState = frames[frames.length - 1].state;
-  assert.equal(finalState.winner, result.winner, 'final frame winner must match match winner');
+  if (result.winner === 'P1' || result.winner === 'P2') {
+    assert.equal(finalState.winner, result.winner, 'decisive final frame winner must match match winner');
+  } else {
+    assert.ok(['ABORTED', 'DRAW'].includes(result.winner), 'non-decisive result must use a known outcome sentinel');
+    assert.equal(finalState.winner, null, 'non-decisive engine state must not fabricate a player winner');
+  }
 });

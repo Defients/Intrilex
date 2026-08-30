@@ -52,7 +52,7 @@ import { AuthMode } from '@intrilex/account-domain';
  * @property {(participantId: string, matchId: string, newConnectionId: string) => void} supersedeOldConnection - supersede an old connection for a participant
  * @property {(match: object) => Promise<void>} broadcastMatchEnded - broadcast match end to both participants
  * @property {(match: object) => void} broadcastToSpectators - broadcast match view to spectators
- * @property {(ws: object, msg: object) => void} send - send a JSON message to a WebSocket
+ * @property {(ws: object, msg: object, onSent?: (error?: Error) => void) => void} send - send a JSON message to a WebSocket
  * @property {(event: string, data?: object) => void} logEvent - structured log emitter
  */
 
@@ -394,13 +394,25 @@ export function createMatchHandlers(ctx) {
         }
       } catch { /* introspection is optional enrichment — fail silently */ }
     }
-    send(ws, actionResult(match.matchId, {
+    const actorResultMessage = actionResult(match.matchId, {
       accepted: result.accepted,
       reasonCode: result.reasonCode ?? null,
       error: result.error ?? null,
       view: safeActorView,
       introspection: introspection,
-    }, requestId));
+    }, requestId);
+    const terminalAccepted = result.accepted && match.status === 'TERMINAL';
+    if (terminalAccepted) {
+      // Do not begin CPU-heavy replay/finality construction until ws has
+      // handed the actor acknowledgement to the socket. This prevents a local
+      // or heavily loaded client from timing out on the terminal action while
+      // preserving the stronger rule that MATCH_ENDED waits for durable outbox
+      // admission.
+      await new Promise(resolve => send(ws, actorResultMessage, () => resolve()));
+      await new Promise(resolve => setImmediate(resolve));
+    } else {
+      send(ws, actorResultMessage);
+    }
     logEvent(result.accepted ? 'actionSubmit' : 'actionReject', { matchId: match.matchId, participantId: conn.participantId, reasonCode: result.reasonCode ?? null });
 
     // If accepted, send updated view to the opponent

@@ -265,18 +265,20 @@ test('T6: migration runner supports --dry-run flag', () => {
   assert.ok(migrationRunnerSrc.includes('dryRun'), 'Must handle dryRun option');
 });
 
-test('T6: migration runner tracks applied migrations', () => {
-  assert.ok(migrationRunnerSrc.includes('_migrations'), 'Must use _migrations tracking table');
-  assert.ok(migrationRunnerSrc.includes('applied_at'), 'Must track applied_at timestamp');
+test('T6: migration runner delegates migration tracking to the official Supabase CLI', () => {
+  assert.ok(migrationRunnerSrc.includes("spawnSync('supabase'"), 'Must invoke the official Supabase CLI');
+  assert.ok(migrationRunnerSrc.includes("['db', 'push'"), 'Must use supabase db push');
+  assert.ok(!migrationRunnerSrc.includes('_migrations'), 'Must not maintain a competing client-side migration ledger');
 });
 
 test('T6: migration runner applies in order', () => {
   assert.ok(migrationRunnerSrc.includes('.sort()'), 'Must sort migrations');
 });
 
-test('T6: migration runner handles env vars', () => {
-  assert.ok(migrationRunnerSrc.includes('SUPABASE_URL'), 'Must read SUPABASE_URL from env');
-  assert.ok(migrationRunnerSrc.includes('SUPABASE_SECRET_KEY') || migrationRunnerSrc.includes('SUPABASE_SERVICE_KEY'), 'Must read service key from env');
+test('T6: migration runner relies on CLI project configuration instead of handling service credentials', () => {
+  assert.ok(migrationRunnerSrc.includes('--linked'), 'Must support the linked Supabase project target');
+  assert.ok(!migrationRunnerSrc.includes('SUPABASE_SECRET_KEY'), 'Must not ingest a service key');
+  assert.ok(!migrationRunnerSrc.includes('SUPABASE_SERVICE_KEY'), 'Must not ingest a legacy service key');
 });
 
 test('T6: listMigrations returns array of migration files', () => {
@@ -289,11 +291,12 @@ test('T6: listMigrations returns array of migration files', () => {
   }
 });
 
-test('T6: migration runner stops on first failure', () => {
-  assert.ok(migrationRunnerSrc.includes('break'), 'Must stop on first failure');
+test('T6: migration runner returns the CLI failure status', () => {
+  assert.ok(migrationRunnerSrc.includes('if (result.error) throw result.error'), 'Spawn errors must fail closed');
+  assert.ok(migrationRunnerSrc.includes('return result.status ?? 1'), 'CLI failures must propagate');
 });
 
-test('T6: migration runner uses service role client', () => {
-  assert.ok(migrationRunnerSrc.includes('createClient'), 'Must create Supabase client');
-  assert.ok(migrationRunnerSrc.includes('persistSession: false'), 'Must not persist session');
+test('T6: migration runner does not expose an arbitrary-SQL service-role path', () => {
+  assert.ok(!migrationRunnerSrc.includes('createClient'), 'Must not create a service-role client');
+  assert.ok(!migrationRunnerSrc.includes('exec_sql'), 'Must not depend on an arbitrary-SQL RPC');
 });

@@ -1,26 +1,30 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "1.1",
   "status": "PASS",
   "buildRuns": 2,
   "first": {
     "dist": {
-      "fileCount": 548,
-      "treeHash": "977b38762f4d70e45971b4e4006b07a80cd696d7afda9602d160eda0e63dcd07"
+      "fileCount": 765,
+      "treeHash": "5002cb0d494ed1ee5cd90321d7dab375c4432d3c775e4c605e0dd40299e85e81"
     },
     "sampleData": {
-      "fileCount": 388,
-      "treeHash": "043a65d07d7ed0688784ee9422a63522fe76d33ba7d8c3cce7410aeb1fb3e3e3"
+      "fileCount": 771,
+      "treeHash": "c48bf9e127c57fcc18b8b8e27f2e0531bd8e5b930a587c55e8d3b956e202001a"
     }
   },
   "second": {
     "dist": {
-      "fileCount": 548,
-      "treeHash": "977b38762f4d70e45971b4e4006b07a80cd696d7afda9602d160eda0e63dcd07"
+      "fileCount": 765,
+      "treeHash": "5002cb0d494ed1ee5cd90321d7dab375c4432d3c775e4c605e0dd40299e85e81"
     },
     "sampleData": {
-      "fileCount": 388,
-      "treeHash": "043a65d07d7ed0688784ee9422a63522fe76d33ba7d8c3cce7410aeb1fb3e3e3"
+      "fileCount": 771,
+      "treeHash": "c48bf9e127c57fcc18b8b8e27f2e0531bd8e5b930a587c55e8d3b956e202001a"
     }
+  },
+  "changedFiles": {
+    "dist": [],
+    "sampleData": []
   },
   "identical": true
 }

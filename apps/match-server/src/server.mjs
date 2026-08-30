@@ -21,40 +21,28 @@ import { WebSocketServer } from 'ws';
 import { createAuthoritativeMatch } from '@intrilex/match-authority';
 import { InMemoryMatchStore, SqliteMatchStore } from '@intrilex/match-authority/match-store';
 import { MatchmakingQueue } from '@intrilex/match-authority/matchmaking-queue';
-import { buildNetworkPlayerView, buildSpectatorView } from '@intrilex/match-authority/player-projection';
 import {
-  validateEnvelope, validateCreateMatch, validateJoinMatch,
-  validateResumeMatch, validateSubmitAction, validateReady,
-  validateRequestSync, validateLeaveMatch,
-  validateQueueJoin, validateQueueLeave,
-  validateSpectateMatch, validateSpectateLeave,
+  validateEnvelope,
   validateMatchHistory, validateGetReplay, validateSendChat, validateChatVisibility,
-  validateAuthenticate, validateAuthRefresh,
   validateMigrateGuest,
   checkMessageSize, ReasonCode,
-  matchCreated, matchJoined, matchView, actionResult,
-  participantStatus, matchStarted, matchEnded, error as errorMsg,
-  queueJoined, queueLeft, queueMatched,
-  spectateMatch, spectateLeave, spectateJoined, spectateLeft,
+  participantStatus, matchEnded, error as errorMsg,
+  queueMatched,
   matchHistoryResult, envelope,
   replayAvailable, replayData,
-  sendChat as sendChatBuilder, chatMessage, chatVisibilityChange,
-  authenticated as authenticatedBuilder,
+  chatMessage, chatVisibilityChange,
   achievementsEarned,
   migrationResult as migrationResultBuilder,
-  SUPPORTED_PROFILE_IDS, SUPPORTED_QUEUE_IDS,
 } from '@intrilex/network-protocol';
-import { AuthMode, ConnectionAuthState, resolveCapabilities, toSafePublicProfile, RANKED_QUEUE_ID } from '@intrilex/account-domain';
+import { AuthMode, ConnectionAuthState } from '@intrilex/account-domain';
 import { migrationId as computeMigrationId } from '@intrilex/account-domain';
-import { FakeIdentityVerifier } from './auth/fake-identity-verifier.mjs';
 import { evaluateMatchAchievements } from '@intrilex/match-authority/achievement-projection';
-import { MatchResultPersistor } from './persistence/match-result-persistor.mjs';
 import { FakeMatchResultPersistor } from './persistence/fake-match-result-persistor.mjs';
 import { buildMatchResultRecord } from './persistence/match-result-builder.mjs';
 import { RatingService } from './ranked/rating-service.mjs';
 import { TerminalOutbox } from './persistence/terminal-outbox.mjs';
 import { LAB_VERSION } from '@intrilex/shared/version';
-import { createAuthHandlers, checkAuthAttemptRate } from './handlers/auth-handlers.mjs';
+import { createAuthHandlers } from './handlers/auth-handlers.mjs';
 import { createSpectatorHandlers } from './handlers/spectator-handlers.mjs';
 import { createMatchmakingHandlers } from './handlers/matchmaking-handlers.mjs';
 import { createMatchHandlers } from './handlers/match-handlers.mjs';
@@ -151,7 +139,6 @@ let _authMode = AUTH_MODE; // Active auth mode (can be overridden by startServer
 let _isProductionMode = false; // True when authMode=required (DATA-04: fail-closed persistence)
 const connections = new Map(); // connectionId → { ws, authState, account, participantId, matchId, lastHeartbeat, isSpectator, spectatingMatchId, rateLimit, ip }
 const bannedIps = new Map(); // ip → banExpiresAt
-const ipConnectionCounts = new Map(); // ip → active connection count
 const _httpRateLimit = new Map(); // ip → { count, windowStart } — v0.24.2 HTTP rate limiter
 const _authAttempts = new Map(); // ip → number[] (timestamps of recent auth attempts)
 // Extracted handler modules — set by startServer() via create*Handlers()
@@ -305,7 +292,7 @@ function banIp(ip) {
  * @param {boolean} [opts.isMatchmaking] - Whether this match is from public matchmaking
  * @returns {{ matchMode: string, queueId: string|null, seasonId: string|null, admitted: boolean, reason: string|null }}
  */
-function classifyMatch({ requestedQueueId, profileId, isMatchmaking = false }) {
+function classifyMatch({ requestedQueueId, profileId: _profileId, isMatchmaking = false }) {
   // Default: private duel (invite-based)
   if (!requestedQueueId || requestedQueueId === 'private') {
     return { matchMode: 'private', queueId: 'private', seasonId: null, admitted: true, reason: null };
@@ -340,32 +327,6 @@ function classifyMatch({ requestedQueueId, profileId, isMatchmaking = false }) {
 
   // Unknown queue — fail closed
   return { matchMode: 'private', queueId: null, seasonId: null, admitted: false, reason: 'UNKNOWN_QUEUE' };
-}
-
-/**
- * Validate ranked admission for a specific match with both participants present.
- * Called when the second player joins/ready-checks a ranked match.
- *
- * @param {import('@intrilex/match-authority').AuthoritativeMatchSession} match
- * @returns {{ admitted: boolean, reason: string|null }}
- */
-function validateRankedAdmission(match) {
-  if (match.queueId !== RANKED_QUEUE_ID) return { admitted: true, reason: null };
-
-  // Both participants must be authenticated with distinct permanent accounts
-  const participants = [...match.participants.values()];
-  if (participants.length !== 2) {
-    return { admitted: false, reason: 'RANKED_REQUIRES_TWO_PLAYERS' };
-  }
-  const [p1, p2] = participants;
-  if (!p1.accountId || !p2.accountId) {
-    return { admitted: false, reason: 'RANKED_REQUIRES_AUTHENTICATED_PLAYERS' };
-  }
-  if (p1.accountId === p2.accountId) {
-    return { admitted: false, reason: 'RANKED_REQUIRES_DISTINCT_ACCOUNTS' };
-  }
-
-  return { admitted: true, reason: null };
 }
 
 /**
@@ -1006,6 +967,7 @@ export async function startServer(opts = {}) {
       }
     }
   }, HEARTBEAT_INTERVAL);
+  heartbeatTimer.unref?.();
 
   // Cleanup timer — uses status-specific TTL policies
   const cleanupTimer = setInterval(() => {
@@ -1035,15 +997,11 @@ export async function startServer(opts = {}) {
       if (attempts.length === 0) _authAttempts.delete(ip);
     }
   }, 60000);
+  cleanupTimer.unref?.();
 
-  // ── Health monitor — periodic threshold checks + structured alerts ──
-  const healthMonitor = startHealthMonitor({
-    getHealthMetrics,
-    logEvent,
-    intervalMs: opts.healthMonitorIntervalMs ?? 60000,
-    maxGlobalConnections: MAX_GLOBAL_CONNECTIONS,
-    maxMatches: MAX_MATCHES,
-  });
+  // Created only after the HTTP/WebSocket listener is live. A failed startup
+  // must not leave observability timers behind in a test worker or operator CLI.
+  let healthMonitor = null;
 
   // IRX-H04: Moderation table startup probe — verify account_moderation exists
   // and is queryable with the configured service-role key. Without this table,
@@ -1092,6 +1050,14 @@ export async function startServer(opts = {}) {
       }
 
       httpServer.listen(port, host, () => {
+        // ── Health monitor — periodic threshold checks + structured alerts ──
+        healthMonitor = startHealthMonitor({
+          getHealthMetrics,
+          logEvent,
+          intervalMs: opts.healthMonitorIntervalMs ?? 60000,
+          maxGlobalConnections: MAX_GLOBAL_CONNECTIONS,
+          maxMatches: MAX_MATCHES,
+        });
         const api = {
           httpServer,
           wss,
@@ -1102,7 +1068,8 @@ export async function startServer(opts = {}) {
           close() {
             clearInterval(heartbeatTimer);
             clearInterval(cleanupTimer);
-            healthMonitor.stop();
+            healthMonitor?.stop();
+            healthMonitor = null;
             // v0.25: Remove signal handlers on explicit close
             process.removeListener('SIGTERM', signalHandler);
             process.removeListener('SIGINT', signalHandler);
@@ -1652,9 +1619,11 @@ function handleChatVisibility(connectionId, ws, payload, requestId) {
 
 // ── Helpers ──
 
-function send(ws, msg) {
+function send(ws, msg, onSent) {
   if (ws.readyState === ws.OPEN) {
-    ws.send(JSON.stringify(msg));
+    ws.send(JSON.stringify(msg), onSent);
+  } else if (onSent) {
+    onSent(new Error('WebSocket is not open'));
   }
 }
 
