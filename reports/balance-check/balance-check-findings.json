@@ -1,0 +1,486 @@
+{
+  "authority": {
+    "productVersion": "0.28.0",
+    "engineVersion": "4.2.6",
+    "rulesVersion": "4.3.1",
+    "repositoryCommit": "e4c22228cca43c948f315603614030565fe5c7a8",
+    "simulationReadiness": "PARTIAL"
+  },
+  "overallAssessment": "The core mechanical decision loop of Intrilex (Points vs. Anchors vs. Scuttle vs. Counters) is strategically sound, deep, and asymmetric. Zero gameplay balance changes are warranted. All observed balance anomalies stem from implementation defects (IMPL-01 scoring riders, IMPL-12 counter class mapping, DEG-01 Sudden Death in Unrestricted) and one-ply AI policy evaluation bias.",
+  "exactIdentityCount": 54,
+  "mechanicalEquivalenceClasses": [
+    {
+      "classId": "A-BASE",
+      "cards": ["A♣", "A♦", "A♥"],
+      "distinguishingMechanics": ["4 PR Points", "PR Scuttle/Jack immune", "Base counter", "Purge", "Anchor Ace", "⭐A component"]
+    },
+    {
+      "classId": "A-SPADE",
+      "cards": ["A♠"],
+      "distinguishingMechanics": ["4 PR Points", "PR Scuttle/Jack immune", "Exile counter (exiles sources)", "Uncounterable by Base Ace", "⭐A component"]
+    },
+    {
+      "classId": "2-BASE",
+      "cards": ["2♣", "2♦", "2♥"],
+      "distinguishingMechanics": ["2 PR Points", "Solo Wild Base copy (ranks 3-7)", "⭐2 Commandeer component", "Paired 10♦ Mimic component"]
+    },
+    {
+      "classId": "2-SPADE",
+      "cards": ["2♠"],
+      "distinguishingMechanics": ["2 PR Points", "Solo Wild Base copy", "Copies 4♠ Total Clear & 6♠ Deep Draw", "⭐2 component", "10♦ component"]
+    },
+    {
+      "classId": "3-BASE",
+      "cards": ["3♣", "3♦", "3♥", "3♠"],
+      "distinguishingMechanics": ["3 PR Points", "Hand Raid (present-take <=2)", "Force Discard (<=2)", "Bounce (top DP)", "⭐3 component (Unrestricted)"]
+    },
+    {
+      "classId": "4-BASE",
+      "cards": ["4♣", "4♦", "4♥"],
+      "distinguishingMechanics": ["4 PR Points", "PR Effect-target immune", "Row Clear (PR or ER)", "⭐4 Row Exchange component"]
+    },
+    {
+      "classId": "4-SPADE",
+      "cards": ["4♠"],
+      "distinguishingMechanics": ["4 PR Points", "PR Effect-target immune", "Total Clear (hard structural bypass of Guard/Aegis/Q♠/immunity)", "⭐4 component"]
+    },
+    {
+      "classId": "5-BASE",
+      "cards": ["5♣", "5♦", "5♥", "5♠"],
+      "distinguishingMechanics": ["5 PR Points", "PR Scuttle immune", "Recycle (mill 2, GY rummage, GY bottom draw)", "⭐5 component (Unrestricted)"]
+    },
+    {
+      "classId": "6-BASE",
+      "cards": ["6♣", "6♦", "6♥"],
+      "distinguishingMechanics": ["6 PR Points", "Dig (draw 3, keep 2/3)", "⭐6 component (Unrestricted)"]
+    },
+    {
+      "classId": "6-SPADE",
+      "cards": ["6♠"],
+      "distinguishingMechanics": ["6 PR Points", "Deep Draw (discard 1-2, draw 6, keep 3-4)", "⭐6 component (Unrestricted)"]
+    },
+    {
+      "classId": "7-BASE",
+      "cards": ["7♣", "7♦", "7♥", "7♠"],
+      "distinguishingMechanics": ["0 PR Points AS-EXECUTED (IMPL-01)", "Topdeck Casting (reveal 2, 1 hand, 1 generated play)", "⭐7 component (Unrestricted)"]
+    },
+    {
+      "classId": "8-BASE",
+      "cards": ["8♣", "8♦", "8♥"],
+      "distinguishingMechanics": ["8 PR Points", "PR Effect-target immune", "Quick Aegis Field", "Instant Scuttle Counter", "⭐8 Absolute Scuttle component"]
+    },
+    {
+      "classId": "8-SPADE",
+      "cards": ["8♠"],
+      "distinguishingMechanics": ["8 PR Points", "PR Effect-target immune", "Quick Aegis Field", "Instant Scuttle Counter", "Instant Free Scuttle", "⭐8 component"]
+    },
+    {
+      "classId": "9-BASE",
+      "cards": ["9♣", "9♦", "9♥", "9♠"],
+      "distinguishingMechanics": ["9 PR Points", "Never gains Aegis", "Instant Tap", "Nine Anchor (reveal + discard)"]
+    },
+    {
+      "classId": "10-CLUB",
+      "cards": ["10♣"],
+      "distinguishingMechanics": ["10 PR Points via Foundation effect", "Entry Aegis", "Bonus score at 0 points", "Rank-10 limit", "Exile-Bound"]
+    },
+    {
+      "classId": "10-DIAMOND",
+      "cards": ["10♦"],
+      "distinguishingMechanics": ["10 PR Points", "Mimic solo (⭐4)", "Mimic paired with Two (⭐4/⭐8/⭐J)", "Rank-10 limit", "Exile-Bound"]
+    },
+    {
+      "classId": "10-HEART",
+      "cards": ["10♥"],
+      "distinguishingMechanics": ["10 PR Points", "Tempo Spike (+2 Mini-Turns, draw 1)", "Rank-10 limit", "Exile destination"]
+    },
+    {
+      "classId": "10-SPADE",
+      "cards": ["10♠"],
+      "distinguishingMechanics": ["10 PR Points", "Interrupt Stack Theft (both skip FT)", "Exile Recovery (Action)", "Rank-10 limit", "Exile-Bound"]
+    },
+    {
+      "classId": "J-BASE",
+      "cards": ["J♣", "J♦", "J♥"],
+      "distinguishingMechanics": ["3 PR Points", "Scuttle rank 11", "Instant Disrupt (+1 card)", "PR Attachment (+1 point, control)", "⭐J Tempo Force component"]
+    },
+    {
+      "classId": "J-SPADE",
+      "cards": ["J♠"],
+      "distinguishingMechanics": ["3 PR Points", "Scuttle rank 11", "Instant Disrupt", "PR Attachment", "ER Anchor Attachment (steals Queen/King)", "⭐J component"]
+    },
+    {
+      "classId": "Q-BASE",
+      "cards": ["Q♣", "Q♦", "Q♥"],
+      "distinguishingMechanics": ["2 PR Points / 0 ER Anchor", "Scuttle rank 12", "ER Guard", "Protected Entry Aegis", "Quick Aegis", "Queen's Court component", "Royal Marriage component"]
+    },
+    {
+      "classId": "Q-SPADE",
+      "cards": ["Q♠"],
+      "distinguishingMechanics": ["2 PR Points / 0 ER Anchor", "Scuttle rank 12", "ER Guard", "Protected Entry Aegis", "Quick Aegis", "Immune to non-total clears", "Queen's Court component", "Royal Marriage component"]
+    },
+    {
+      "classId": "K-BASE",
+      "cards": ["K♣", "K♦", "K♥"],
+      "distinguishingMechanics": ["8 PR Points / 7 ER Anchor", "Scuttle rank 13", "Instant Anchor Counter", "Royal Marriage component"]
+    },
+    {
+      "classId": "K-SPADE",
+      "cards": ["K♠"],
+      "distinguishingMechanics": ["8 PR Points / 9 ER Anchor", "Scuttle rank 13", "Instant Counter Multi-Play", "Wild Sovereignty (copies 3/4/5/6/7 Base; 4♠ costs 1 discard; source Exiled)", "Royal Marriage component"]
+    },
+    {
+      "classId": "RJ",
+      "cards": ["RJ"],
+      "distinguishingMechanics": ["5 PR Points", "Scuttle rank 14", "PR Scuttle/Jack immune", "Hand Swap", "Self Reset", "Opponent Attack", "Shuffle Reset"]
+    },
+    {
+      "classId": "BJ",
+      "cards": ["BJ"],
+      "distinguishingMechanics": ["0 PR Points AS-EXECUTED (IMPL-01)", "Scuttle rank 15", "Quick Board Lock (free 2-turn lockdown)", "Only ⭐A authority counters"]
+    }
+  ],
+  "ranks": [
+    {
+      "rank": "A",
+      "status": "STRONG BUT HEALTHY",
+      "confidence": "VERY_HIGH",
+      "evidenceGrade": "A",
+      "mechanicalPowerSummary": "Foundational reactive counter authority with high scoring fallback (4 pts, scuttle/jack immune).",
+      "policyRealizedPowerSummary": "High activation (A-base 29/38, A♠ 14/17, ⭐A 14/23); policy over-fires without retention modeling.",
+      "humanRealizablePowerSummary": "Extremely high latent threat and tactical preservation value in expert hands.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "EXCELLENT",
+      "strengths": ["Instant timing", "Scuttle/Jack immune PR score", "A♠ uncounterable by Base Ace", "⭐A absolute counter"],
+      "concerns": ["Heuristic policies burn Aces prematurely"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "2",
+      "status": "NICHE BUT HEALTHY",
+      "confidence": "HIGH",
+      "evidenceGrade": "B",
+      "mechanicalPowerSummary": "Wild utility rank with high-leverage 2♠ Total Clear copy and Guard-bypassing ⭐2 Commandeer.",
+      "policyRealizedPowerSummary": "Suppressed by policy scoring bias; ⭐2 Hold conversion high (9/11).",
+      "humanRealizablePowerSummary": "Valued highly for 2♠ board wipe access and 10♦ mimic pairing.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "HEALTHY",
+      "strengths": ["2♠ accesses Total Clear", "⭐2 bypasses Guard", "Low opportunity cost on 2 points"],
+      "concerns": ["2 Quick and Wild Catalyst unimplemented in engine (IMPL-06)"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "3",
+      "status": "HEALTHY",
+      "confidence": "HIGH",
+      "evidenceGrade": "B",
+      "mechanicalPowerSummary": "Tactical hand raid, discard, and bounce utility.",
+      "policyRealizedPowerSummary": "Consistent utility play across 43 match executions.",
+      "humanRealizablePowerSummary": "Solid hand disruption against low-resource opponents.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "HEALTHY",
+      "strengths": ["Flexible modal effect", "Can bounce high-value enemy Anchors"],
+      "concerns": ["3♠ Enhancement unimplemented in Core (IMPL-07)"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "4",
+      "status": "HEALTHY",
+      "confidence": "VERY_HIGH",
+      "evidenceGrade": "A",
+      "mechanicalPowerSummary": "Board reset and structural exchange specialist. 4♠ Total Clear is the premier reset.",
+      "policyRealizedPowerSummary": "Row Clear: 11, Total Clear: 16 executions. Effectively resets runaway boards.",
+      "humanRealizablePowerSummary": "Defines match pacing and limits unconstrained board commitment.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "EXCELLENT",
+      "strengths": ["PR effect-target immunity", "4♠ hard structural bypass", "⭐4 comeback swing"],
+      "concerns": ["4♠ wipe accessibility across 4♠/2♠/K♠ reaches 63.2% by 15 cards seen"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "5",
+      "status": "HEALTHY",
+      "confidence": "HIGH",
+      "evidenceGrade": "B",
+      "mechanicalPowerSummary": "Graveyard recursion and resilient scoring (5 pts, Scuttle immune).",
+      "policyRealizedPowerSummary": "11 Recycle executions in corpus. Steady resource engine.",
+      "humanRealizablePowerSummary": "Reliable mid-game card advantage generator.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "HEALTHY",
+      "strengths": ["Scuttle immune PR score", "Net +1 card advantage Recycle", "Voltage 5 enabler"],
+      "concerns": ["Suit-specific Exile rummage windows unimplemented in engine (IMPL-07)"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "6",
+      "status": "HEALTHY",
+      "confidence": "HIGH",
+      "evidenceGrade": "B",
+      "mechanicalPowerSummary": "Premier resource sculpting engine via 3-card Dig and 6♠ 6-card Deep Draw.",
+      "policyRealizedPowerSummary": "High usage: 37 Dig executions. Strong card selection.",
+      "humanRealizablePowerSummary": "Key enabler for assembling multi-card combos and response suites.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "HEALTHY",
+      "strengths": ["6 Secured PR Points", "6♠ 6-card lookahead", "Positive net card advantage"],
+      "concerns": ["⭐6 Super Dig enumerated defective in Unrestricted (IMPL-03)"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "7",
+      "status": "BLOCKED BY CORRECTNESS DEFECT",
+      "confidence": "HIGH",
+      "evidenceGrade": "X",
+      "mechanicalPowerSummary": "Topdeck Casting engine; direct Play-for-Points blocked by CORE_SCORING_RIDER_UNSUPPORTED.",
+      "policyRealizedPowerSummary": "Severely depressed (30/736 conversion = 4.1%) due to missing scoring fallback.",
+      "humanRealizablePowerSummary": "High volatility playmaker as written; unplayable for points as executed.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "SHALLOW",
+      "strengths": ["Topdeck generation", "Immediate card play"],
+      "concerns": ["IMPL-01 blocks 7 PR points; 7♠ reveal-3 and recursion unimplemented"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "8",
+      "status": "STRONG BUT HEALTHY",
+      "confidence": "VERY_HIGH",
+      "evidenceGrade": "A",
+      "mechanicalPowerSummary": "High scoring anchor (8 pts, effect-immune) with Free Quick Aegis and Instant removal.",
+      "policyRealizedPowerSummary": "Very high utilization (76 Quick Aegis, 24 8♠ Free Scuttle).",
+      "humanRealizablePowerSummary": "Critical dual-timing resource balancing points against board protection.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "EXCELLENT",
+      "strengths": ["8 Secured PR Points", "Quick Aegis Field", "8♠ Free Scuttle", "PR effect-target immunity"],
+      "concerns": ["8 Scuttle Bonus GY draw unimplemented (IMPL-07)"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "9",
+      "status": "HEALTHY",
+      "confidence": "HIGH",
+      "evidenceGrade": "B",
+      "mechanicalPowerSummary": "High scoring burst (9 pts, never Aegis) and tactical Instant Tap disruption.",
+      "policyRealizedPowerSummary": "80 Instant Tap activations; 6 Nine Anchor deployments.",
+      "humanRealizablePowerSummary": "Powerful tempo interruption and high scoring pressure.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "HEALTHY",
+      "strengths": ["9 Secured PR Points", "Instant Tap shuts down enemy points until they score", "Hand reveal anchor"],
+      "concerns": ["Goal Shift modes (+3/+5) unenumerated in Core engine (IMPL-05)"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "10",
+      "status": "WATCHLIST",
+      "confidence": "VERY_HIGH",
+      "evidenceGrade": "A",
+      "mechanicalPowerSummary": "Four completely distinct singleton cards. Counterplay narrowed by IMPL-12.",
+      "policyRealizedPowerSummary": "High execution across suits (Foundation: 39, Tempo: 29, Theft: 11, Recovery: 8).",
+      "humanRealizablePowerSummary": "Game-defining power spikes across tempo, theft, and scoring.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "EXCELLENT",
+      "strengths": ["10♥ +2 Mini-Turns", "10♣ Foundation Aegis entry", "10♠ Stack Theft", "10♦ Mimic"],
+      "concerns": ["IMPL-12 grants solo Rank-10 plays immunity to Base Ace and A♠ counters"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "J",
+      "status": "HEALTHY",
+      "confidence": "VERY_HIGH",
+      "evidenceGrade": "A",
+      "mechanicalPowerSummary": "Top-tier tactical control rank via Instant Disrupt, PR/ER Attachments, and Scuttle 11.",
+      "policyRealizedPowerSummary": "160 Disrupt activations in corpus. Strong tempo limiter.",
+      "humanRealizablePowerSummary": "High-leverage disruption and anchor theft via J♠.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "HEALTHY",
+      "strengths": ["Scuttle rank 11", "Disrupt draws 1 card", "J♠ steals Queens and Kings", "⭐J tempo"],
+      "concerns": ["Disrupt usage is near-automatic in one-ply heuristics"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "Q",
+      "status": "STRONG BUT HEALTHY",
+      "confidence": "VERY_HIGH",
+      "evidenceGrade": "A",
+      "mechanicalPowerSummary": "The defensive backbone of Intrilex. Provides Guard, Protected Entry Aegis, and Two-Queen Defense.",
+      "policyRealizedPowerSummary": "44 Quick Aegis, 4 Queen Anchors, 0 Queen's Court (pair preserved in hand).",
+      "humanRealizablePowerSummary": "Central to control archetypes and building unassailable boards.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "HEALTHY",
+      "strengths": ["Guard protects all other friendly cards", "Q♠ survives non-total clears", "Queen's Court"],
+      "concerns": ["Queen Fortress can create unanswerable windows against opponents lacking 4♠"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "K",
+      "status": "STRONG BUT HEALTHY",
+      "confidence": "VERY_HIGH",
+      "evidenceGrade": "A",
+      "mechanicalPowerSummary": "Massive 8-point score, Anchor 7/9, single-anchor counter, and K♠ multi-play counter hub.",
+      "policyRealizedPowerSummary": "61 K-Anchor deployments, 2 K♠ multi-counters, 1 Royal Marriage.",
+      "humanRealizablePowerSummary": "Highest-leverage single card in Intrilex (K♠); vital defensive threat.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "EXCELLENT",
+      "strengths": ["K♠ counters Queen's Court and Royal Marriage", "K♠ Wild Sovereignty", "High points"],
+      "concerns": ["K♠ Wild Sovereignty under-evaluated by heuristic AI"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "RJ",
+      "status": "HEALTHY",
+      "confidence": "MODERATE",
+      "evidenceGrade": "B",
+      "mechanicalPowerSummary": "Scuttle rank 14 singleton with 4 extreme hand-reset modes and scuttle/jack immunity.",
+      "policyRealizedPowerSummary": "8 Opponent Attack activations in corpus.",
+      "humanRealizablePowerSummary": "Powerful comeback equalizer when trailing on hand resources.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "HEALTHY",
+      "strengths": ["Scuttle rank 14", "Scuttle/Jack immune in PR", "Hand Swap / Opponent Attack"],
+      "concerns": ["Low empirical sample size (8 activations)"],
+      "proposedChanges": []
+    },
+    {
+      "rank": "BJ",
+      "status": "BLOCKED BY CORRECTNESS DEFECT",
+      "confidence": "VERY_HIGH",
+      "evidenceGrade": "A",
+      "mechanicalPowerSummary": "Top Scuttle rank 15 and Free Quick Board Lock. 11-point scoring blocked by IMPL-01.",
+      "policyRealizedPowerSummary": "25 Board Lock activations out of 166 opportunities.",
+      "humanRealizablePowerSummary": "Decisive game-closing lockdown when activator holds a point lead.",
+      "humanPowerBasis": "INFERRED",
+      "decisionQuality": "DOMINATED",
+      "strengths": ["Board Lock freezes all enemy effects", "Top Scuttle rank 15", "⭐A only counter"],
+      "concerns": ["IMPL-01 blocks 11 PR points; Board Lock snowballing (DEG-07)"],
+      "proposedChanges": []
+    }
+  ],
+  "simulationDatasets": [
+    {
+      "datasetId": "mechanics-observatory-twelve-policy-100",
+      "admissibility": "B",
+      "reason": "Current engine 4.2.6 and profile core-advanced-authority, but limited sample (100 matches), asymmetric Hybrix seat pairing, one-ply heuristic policies, and Unrestricted-only mechanics fail closed."
+    },
+    {
+      "datasetId": "legacy-certified-replays-121",
+      "admissibility": "D",
+      "reason": "Scripted engine conformance test fixtures under legacy rules 4.1.2; invalid for current balance inference."
+    }
+  ],
+  "policyArtifacts": [
+    {
+      "findingId": "POL-A1",
+      "policyId": "scoring.mjs / core policies",
+      "affectedCards": ["2♣", "2♦", "2♥", "2♠", "K♠"],
+      "description": "Solo Wild Copy and K♠ Wild Sovereignty fall to the fallback default weight (~100), causing heuristic policies to ignore them almost completely (5.3% and 2.8% conversion)."
+    },
+    {
+      "findingId": "POL-A2",
+      "policyId": "scoring.mjs / core policies",
+      "affectedCards": ["A♣", "A♦", "A♥", "A♠", "8♣", "8♦", "8♥", "8♠"],
+      "description": "Lack of future-turn lookahead or hand-retention modeling causes heuristic policies to burn counters on low-value initial targets (76.3% A-base conversion), zeroing latent threat value."
+    },
+    {
+      "findingId": "POL-A3",
+      "policyId": "scoring.mjs / core policies",
+      "affectedCards": ["All red cards", "3-Red Ultra"],
+      "description": "Aggressive flat scoring bonuses cause heuristic policies to over-activate 3-Red Ultra (97 activations in 100 matches) as a generic counter, heavily distorting effect resolution rates."
+    }
+  ],
+  "confirmedDegeneracies": [
+    {
+      "findingId": "DEG-01",
+      "mechanic": "Sudden Death Declaration in Unrestricted",
+      "evidence": [
+        "core-advanced.js:732-733 enumerates sudden-death/declare with sourceCardIds: []",
+        "core-authority.js:528 consumes the Mini-Turn",
+        "core-authority.js:1049-1100 never decrements phase8.suddenDeath in core-complete-turn",
+        "Probe probe-scoring-and-sudden-death.mjs confirmed timer remains 3 and winner null after 12 completed turns"
+      ]
+    },
+    {
+      "findingId": "IMPL-01",
+      "mechanic": "Play for Points for Rank 7, 10♣, and Black Joker",
+      "evidence": [
+        "core-authority.js:440-441 throws CORE_SCORING_RIDER_UNSUPPORTED in Advanced and Unrestricted profiles",
+        "core-autonomy.js:260-261 filters out these scoring actions from legal action frames",
+        "Probe probe-scoring-and-sudden-death.mjs confirmed direct scoring is refused"
+      ]
+    },
+    {
+      "findingId": "IMPL-12",
+      "mechanic": "Counter Authority Mapping by Stack Class",
+      "evidence": [
+        "core-authority.js:258-275 restricts Base Ace and A♠ counters to stackClass === 'ordinary-effect'",
+        "core-response.js:33 and core-advanced.js:107-112 assign stackClass 'rank10' and 'super'",
+        "Solo Rank-10 plays and Supers are immune to Base Ace and A♠ counters"
+      ]
+    }
+  ],
+  "watchlist": [
+    {
+      "findingId": "WL-01",
+      "mechanic": "2B2R Ultra Tempo Compression (DEG-06)",
+      "hypothesis": "High opening accessibility (60.1-77.3%) and +2 Mini-Turns may grant excessive action economy.",
+      "falsificationCriterion": "Falsified if EXP-01 shows holding components yields higher win rate under lookahead policies."
+    },
+    {
+      "findingId": "WL-02",
+      "mechanic": "10♥ Tempo Spike (DEG-08)",
+      "hypothesis": "+2 Mini-Turns and draw 1 with immunity to Base Ace counters provides unanswerable tempo acceleration.",
+      "falsificationCriterion": "Falsified if fixing IMPL-12 restores 38% Ace counter threat and balances conversion."
+    },
+    {
+      "findingId": "WL-03",
+      "mechanic": "10♣ Foundation + BJ Bonus Turn-1 Line (DEG-03)",
+      "hypothesis": "Turn-1 21-point burst via Foundation bonus scoring Black Joker.",
+      "falsificationCriterion": "Falsified by natural ~0.7% reachability and restoring Base Ace counterability to Foundation."
+    },
+    {
+      "findingId": "WL-04",
+      "mechanic": "4♠ Total Clear Triple-Access (DEG-10)",
+      "hypothesis": "Reachable via 4♠, 2♠, and K♠ (63.2% by 15 cards seen), enabling excessive board wipe consistency.",
+      "falsificationCriterion": "Falsified by robust Ace counterplay and symmetrical self-wipe cost."
+    },
+    {
+      "findingId": "WL-05",
+      "mechanic": "Black Joker Board Lock Snowballing (DEG-07)",
+      "hypothesis": "Activator with a point lead freezes opponent comeback effects for 2 Full Turns.",
+      "falsificationCriterion": "Falsified by opponent retaining full ability to draw and score points to victory."
+    }
+  ],
+  "recommendedExperiments": [
+    {
+      "experimentId": "EXP-01",
+      "hypothesis": "Policy over-activation of 2B2R Ultra leads to sub-optimal win rates due to hand quality dilution.",
+      "falsificationCriterion": "Policy suppressing early 2B2R achieves equal or higher win rate across 200 paired matches."
+    },
+    {
+      "experimentId": "EXP-02",
+      "hypothesis": "Black Joker Board Lock functions primarily as an asymmetric snowball finisher when ahead.",
+      "falsificationCriterion": "Trailing players activating Board Lock win >= 45% of matches across 80 declarations."
+    },
+    {
+      "experimentId": "EXP-03",
+      "hypothesis": "Playing 10♥ for Tempo Spike is only superior to scoring 10 points when converting to >= 10 points.",
+      "falsificationCriterion": "Scoring 10 points consistently yields higher win rate regardless of hand composition."
+    },
+    {
+      "experimentId": "EXP-04",
+      "hypothesis": "Establishing 2 untapped ER Queens creates an unanswerable endgame lock.",
+      "falsificationCriterion": "Opponents breach the fortress in >= 40% of cases using 4 Row Clear, Total Clear, or ⭐2."
+    },
+    {
+      "experimentId": "EXP-05",
+      "hypothesis": "4♠ Total Clear functions primarily as a comeback equalizer rather than a snowball finisher.",
+      "falsificationCriterion": "Total Clear win rate is significantly higher when declared while ahead."
+    },
+    {
+      "experimentId": "EXP-06",
+      "hypothesis": "Core Unrestricted preserves equal seat balance when Sudden Death and Super enumeration are fixed.",
+      "falsificationCriterion": "Seat 1 win rate falls outside [0.45, 0.55] with p < 0.01 across 576 matches."
+    },
+    {
+      "experimentId": "EXP-07",
+      "hypothesis": "Valuing counter retention in AI policy heuristics increases win rate over reactive firing.",
+      "falsificationCriterion": "Retaining counters yields lower win rate across 100 paired matches."
+    }
+  ]
+}
