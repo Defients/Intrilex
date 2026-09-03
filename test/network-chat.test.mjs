@@ -97,8 +97,6 @@ test('validateEnvelope accepts CHAT_MESSAGE type', () => {
 
 // ── Server handler integration tests ──
 
-const TEST_PORT = 3198;
-
 function waitForMessage(ws, type, timeout = 5000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`Timeout waiting for ${type}`)), timeout);
@@ -115,11 +113,12 @@ function waitForMessage(ws, type, timeout = 5000) {
 
 test('server handleSendChat broadcasts to all match participants', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const server = await startServer({ port: TEST_PORT, host: '127.0.0.1', dbPath: ':memory:', rateLimitCapacity: 100 });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', rateLimitCapacity: 100 });
+  const port = server.httpServer.address().port;
 
   try {
-    const ws1 = new WebSocket(`ws://127.0.0.1:${TEST_PORT}`);
-    const ws2 = new WebSocket(`ws://127.0.0.1:${TEST_PORT}`);
+    const ws1 = new WebSocket(`ws://127.0.0.1:${port}`);
+    const ws2 = new WebSocket(`ws://127.0.0.1:${port}`);
     await Promise.all([
       new Promise(r => ws1.on('open', r)),
       new Promise(r => ws2.on('open', r)),
@@ -172,10 +171,11 @@ test('server handleSendChat broadcasts to all match participants', async () => {
 
 test('server handleSendChat rejects chat from non-participant (connection-match binding)', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const server = await startServer({ port: TEST_PORT + 1, host: '127.0.0.1', dbPath: ':memory:', rateLimitCapacity: 100 });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', rateLimitCapacity: 100 });
+  const port = server.httpServer.address().port;
 
   try {
-    const ws = new WebSocket(`ws://127.0.0.1:${TEST_PORT + 1}`);
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
     await new Promise(r => ws.on('open', r));
 
     // Try to send chat with a fake match — connection is not bound to any match
@@ -192,10 +192,11 @@ test('server handleSendChat rejects chat from non-participant (connection-match 
 
 test('server handleSendChat rejects empty text', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const server = await startServer({ port: TEST_PORT + 2, host: '127.0.0.1', dbPath: ':memory:', rateLimitCapacity: 100 });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', rateLimitCapacity: 100 });
+  const port = server.httpServer.address().port;
 
   try {
-    const ws = new WebSocket(`ws://127.0.0.1:${TEST_PORT + 2}`);
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
     await new Promise(r => ws.on('open', r));
 
     // Send a chat with empty text (bypass client validation)

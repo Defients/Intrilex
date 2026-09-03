@@ -23,6 +23,7 @@ import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId }
 const persistenceSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/persistence.js'), 'utf8');
 const controllerSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-controller.js'), 'utf8');
 const saveIntegritySrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/save-integrity.js'), 'utf8');
+const sessionLeaseSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/state/session-lease.js'), 'utf8');
 
 // ─── Session Lease Tests ────────────────────────────────────────
 
@@ -83,6 +84,12 @@ test('releaseLease: releases the lease', async () => {
   releaseLease('test-session-5', tabId);
   const result = checkLease('test-session-5', tabId);
   assert.equal(result.leased, false);
+});
+
+test('session lease: discarded documents release control while BFCache pages retain it', () => {
+  assert.match(sessionLeaseSrc, /addEventListener\('pagehide'/, 'lease lifecycle must observe document discard');
+  assert.match(sessionLeaseSrc, /event\.persisted\s*\|\|\s*!_currentLease/, 'BFCache pagehide must preserve the live lease');
+  assert.match(sessionLeaseSrc, /releaseLease\(sessionId, tabId\)/, 'discarded documents must synchronously release their current lease');
 });
 
 // ─── Persistence Structure Tests ────────────────────────────────

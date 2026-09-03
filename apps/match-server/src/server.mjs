@@ -16,6 +16,7 @@ import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Worker } from 'node:worker_threads';
 import { WebSocketServer } from 'ws';
 
 import { createAuthoritativeMatch } from '@intrilex/match-authority';
@@ -1744,6 +1745,44 @@ function buildPublicProfile(conn) {
   };
 }
 
+/**
+ * Verify a certified replay without monopolizing the WebSocket event loop.
+ * The worker is single-use so no replay state or hidden match data survives
+ * beyond this verification. It fails closed on startup errors, crashes, and
+ * timeouts.
+ *
+ * @param {object} replay
+ * @param {number} [timeoutMs]
+ * @returns {Promise<{valid: boolean, error?: string}>}
+ */
+function verifyReplayOffThread(replay, timeoutMs = 60000) {
+  return new Promise(resolve => {
+    let settled = false;
+    const worker = new Worker(
+      new URL('./workers/replay-verification-worker.mjs', import.meta.url),
+      { workerData: replay, execArgv: [] },
+    );
+
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      void worker.terminate();
+      resolve(result);
+    };
+
+    const timer = setTimeout(() => {
+      finish({ valid: false, error: `Replay verification exceeded ${timeoutMs}ms` });
+    }, timeoutMs);
+
+    worker.once('message', result => finish(result));
+    worker.once('error', error => finish({ valid: false, error: error.message }));
+    worker.once('exit', code => {
+      if (!settled) finish({ valid: false, error: `Replay verification worker exited with code ${code}` });
+    });
+  });
+}
+
 async function broadcastMatchEnded(match) {
   // Generate the replay ONCE and compute its hash from the actual replay object.
   // Do NOT hash an empty-string fallback — if replay generation fails, send no hash.
@@ -1754,7 +1793,7 @@ async function broadcastMatchEnded(match) {
   let replayHash = null;
   if (replay) {
     try {
-      const verification = match.verifyReplay();
+      const verification = await verifyReplayOffThread(replay);
       if (verification.valid) {
         replayHash = createHash('sha256').update(JSON.stringify(replay)).digest('hex');
       } else {
@@ -1824,6 +1863,7 @@ async function broadcastMatchEnded(match) {
         queueId: effectiveQueueId,
         seasonId: effectiveSeasonId,
         serverVersion: LAB_VERSION,
+        replayHash,
       });
       ratingRecord = record;
       if (record) {

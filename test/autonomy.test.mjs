@@ -99,8 +99,16 @@ test('selected Advanced Core policy matches terminate canonically and exercise a
 
 test('bounded campaign result hash is independent of worker count',async()=>{
   const policyPairs=[['random-legal','value'],['control','tempo'],['score-rush','score-rush']];
-  const two=await runCampaign({profileId:'core-advanced-authority',matchCount:12,policyPairs,workerCount:2,decisionLimit:1800});
-  const four=await runCampaign({profileId:'core-advanced-authority',matchCount:12,policyPairs,workerCount:4,decisionLimit:1800});
+  // Six ordinals are the minimal complete parity matrix: all three policy
+  // pairs once in the declared seat order and once with seats swapped.
+  const two=await runCampaign({profileId:'core-advanced-authority',matchCount:6,policyPairs,workerCount:2,decisionLimit:1800});
+  const four=await runCampaign({profileId:'core-advanced-authority',matchCount:6,policyPairs,workerCount:4,decisionLimit:1800});
+  assert.equal(two.campaignStatus,'PASS');
+  assert.equal(four.campaignStatus,'PASS');
+  assert.equal(two.accountingInvariant,true);
+  assert.equal(four.accountingInvariant,true);
+  assert.equal(two.completedCount,6);
+  assert.equal(four.completedCount,6);
   assert.equal(two.experimentHash,four.experimentHash);
   assert.equal(two.canonicalResultHash,four.canonicalResultHash);
 });

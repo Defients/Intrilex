@@ -198,6 +198,29 @@ export function render() {
     renderPlayMode(r);
     return;
   }
+  // Caster workspace: full-screen landing mode using the authentic game UI.
+  // Renders into #landing-app (shell hidden) with ranked-duel.css + gameplay-skins.css
+  // loaded on demand. Remains in the observatory sidebar nav for discovery.
+  if (r === '/caster') {
+    hideShell();
+    if (landingContainer) landingContainer.style.display = 'block';
+    // Load ranked-duel.css + gameplay-skins.css (same pattern as renderPlayMode match routes)
+    if (!_boardCssLoaded) {
+      _boardCssLoaded = true;
+      const rdLink = document.createElement('link');
+      rdLink.rel = 'stylesheet';
+      rdLink.href = 'play/ranked-duel.css?v=' + LAB_VERSION;
+      rdLink.dataset.playCss = '1';
+      document.head.appendChild(rdLink);
+      const skinLink = document.createElement('link');
+      skinLink.rel = 'stylesheet';
+      skinLink.href = 'play/gameplay-skins.css?v=' + LAB_VERSION;
+      skinLink.dataset.playCss = '1';
+      document.head.appendChild(skinLink);
+    }
+    renderCaster(landingContainer);
+    return;
+  }
   if (LANDING_MODES.has(r)) {
     hideShell();
     if (landingContainer) landingContainer.style.display = 'block';
@@ -250,7 +273,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/caster': () => renderCaster(app), '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
+    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
   };
   try {
     const result = (renderers[r] ?? renderEvidence)();

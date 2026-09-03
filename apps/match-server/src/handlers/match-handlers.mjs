@@ -24,6 +24,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { randomBytes } from 'node:crypto';
+import { setImmediate } from 'node:timers';
 import {
   validateCreateMatch, validateJoinMatch, validateResumeMatch,
   validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch,

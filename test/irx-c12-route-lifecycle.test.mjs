@@ -144,3 +144,15 @@ test('IRX-C12: sub-route cleanup is wrapped in try/catch for safety', () => {
     'cleanupPlayResources call in handlePlayRoute must be wrapped in try/catch'
   );
 });
+
+test('IRX-C12: entering the canonical local match route re-arms persistence resources', () => {
+  const matchBranch = playAppSrc.match(/else if \(sub === '\/match'\) \{([\s\S]*?)\n\s*await renderActiveMatch\(container\);/);
+  assert.ok(matchBranch, 'handlePlayRoute must have a /match branch');
+  const body = matchBranch[1];
+  assert.ok(
+    body.includes("state.leaseMode === 'CONTROLLED'"),
+    'only the tab controlling the local session may re-arm persistence resources'
+  );
+  assert.ok(body.includes('startHeartbeat()'), '/match must re-arm the session lease heartbeat after sub-route cleanup');
+  assert.ok(body.includes('startAutosave()'), '/match must re-arm rolling autosave after sub-route cleanup');
+});
