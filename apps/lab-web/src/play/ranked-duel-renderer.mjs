@@ -248,7 +248,7 @@ function renderMatch(vm, opts, snapshot) {
   const humER = vm?.battlefield?.bottomER ?? [];
   [...oppPR, ...oppER, ...humPR, ...humER].forEach(c => { if (c?.entityId) cardRegistry[c.entityId] = c; });
 
-  return `<div class="ranked-duel-shell" role="main" aria-label="Ranked Duel Match" data-testid="play-board" data-gameplay-skin="${esc(opts.gameplaySkin)}">
+  return `<div class="ranked-duel-shell" role="main" aria-label="Ranked Duel Match" data-testid="play-board" data-gameplay-skin="${esc(opts.gameplaySkin)}"${opts.isCaster === true ? ' data-caster="1"' : ''}>
     ${renderHeader(vm, opts, priorityContext, immediate)}
     <section class="rd-cell rd-enemy-enduring" data-grid="enemyE" aria-label="Opponent Enduring">
       ${renderEnduringRow(oppER, 'opponent')}
@@ -258,7 +258,7 @@ function renderMatch(vm, opts, snapshot) {
     </section>
     <section class="rd-cell rd-enemy-profile" data-grid="enemyProfile" aria-label="Opponent profile">
       ${renderProfileBlock(vm.opponent, 'opponent', vm)}
-      ${renderOpponentHand(vm.battlefield.opponentHandCount)}
+      ${renderOpponentHand(vm.battlefield.opponentHandCount, opts.opponentHandCards)}
     </section>
     <section class="rd-cell rd-piles" data-grid="piles" aria-label="Shared piles">
       <div class="rd-piles-label">SHARED PILES</div>
@@ -297,7 +297,7 @@ function renderMatch(vm, opts, snapshot) {
       ${renderHumanHand(vm.battlefield.humanHand, opts)}
     </section>
     <section class="rd-cell rd-right-rail-bottom" data-grid="rightRailBottom" aria-label="Actions and chat">
-      ${renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, isOpponentTurn, priorityContext, immediate, isNetwork)}
+      ${opts.rightRailHtml ? opts.rightRailHtml : renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, isOpponentTurn, priorityContext, immediate, isNetwork)}
     </section>
     ${opts.academyPanelHtml ? `<section class="rd-cell rd-academy-panel" data-grid="academyPanel" aria-label="Lesson objectives">${opts.academyPanelHtml}</section>` : ''}
     ${opts.academyCoachmarkHtml ? opts.academyCoachmarkHtml : ''}
@@ -448,17 +448,17 @@ function renderHeader(vm, opts, priorityContext, immediate) {
   // During active network PvP, remove the Back button — leaving must go
   // through the forfeit flow (X button → confirmation dialog).
   const isTerminal = vm.status === 'TERMINAL';
-  const showBack = !isNetwork || isTerminal;
-  const backHref = opts.academyLessonId ? '#/play/academy' : '#/';
-  const backLabel = opts.academyLessonId ? 'Back to Academy' : 'Back to home';
+  const showBack = !isNetwork || isTerminal || opts.isCaster === true;
+  const backHref = opts.isCaster === true ? '#/watch' : (opts.academyLessonId ? '#/play/academy' : '#/');
+  const backLabel = opts.isCaster === true ? 'Back to Observatory' : (opts.academyLessonId ? 'Back to Academy' : 'Back to home');
   const backHtml = showBack
     ? `<a class="rd-header-back" href="${backHref}" aria-label="${esc(backLabel)}" title="${esc(backLabel)}">\u2190</a>`
     : '';
 
   // X/exit button: for network PvP, triggers forfeit confirmation;
-  // for local/AI, exits to hub.
-  const exitTitle = isNetwork && !isTerminal ? 'Forfeit match' : 'Return to hub';
-  const exitAction = isNetwork && !isTerminal ? 'forfeit-match' : 'exit-match';
+  // for local/AI, exits to hub. For Caster, exits to observatory.
+  const exitTitle = opts.isCaster === true ? 'Exit to Observatory' : (isNetwork && !isTerminal ? 'Forfeit match' : 'Return to hub');
+  const exitAction = opts.isCaster === true ? 'exit-caster' : (isNetwork && !isTerminal ? 'forfeit-match' : 'exit-match');
 
   return `<header class="rd-header" role="banner">
     <div class="rd-header-left">
@@ -1680,7 +1680,16 @@ function renderProfileBlock(plate, side, vm) {
   </div>`;
 }
 
-function renderOpponentHand(count) {
+function renderOpponentHand(count, faceUpCards = null) {
+  // Omniscient mode (e.g. Caster): render opponent hand face-up when card views are provided
+  if (faceUpCards && Array.isArray(faceUpCards) && faceUpCards.length > 0) {
+    const cards = faceUpCards.slice(0, 7).map(c => renderCard(c)).join('');
+    const overflow = faceUpCards.length > 7 ? `<span class="rd-opponent-hand-count">+${faceUpCards.length - 7}</span>` : '';
+    return `<div class="rd-opponent-hand rd-opponent-hand-omniscient" aria-label="Opponent hand, ${faceUpCards.length} cards (face-up)">
+      ${cards}
+      ${overflow}
+    </div>`;
+  }
   const backs = Array.from({ length: Math.min(count, 7) }, () => '<div class="rd-card-back" aria-hidden="true"></div>').join('');
   return `<div class="rd-opponent-hand" aria-label="Opponent hand, ${count} cards">
     ${backs}

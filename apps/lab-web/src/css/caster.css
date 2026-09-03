@@ -130,4 +130,356 @@
   .caster-ww-context { flex-direction: column; }
   .caster-controls { flex-direction: column; align-items: stretch; }
   .caster-controls .progress { width: 100%; }
+  .caster-setup-game-vs-card { flex-direction: column; gap: 8px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Caster Full-Screen Spectator — Right Rail + Setup Restyle
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Right rail (commentary + transport) ───────────────────────── */
+/* The right rail replaces Actions + Chat inside rd-right-rail-bottom-inner */
+.caster-right-rail {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+}
+
+.caster-rail-section-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(148,163,184,0.6);
+  padding: 6px 10px 4px;
+  border-bottom: 1px solid rgba(148,163,184,0.08);
+  text-transform: uppercase;
+}
+
+/* Commentary section (top, larger) */
+.caster-rail-commentary-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 60%;
+  min-height: 80px;
+  overflow-y: auto;
+  border: 1px solid rgba(148,163,184,0.08);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #0b1226 0%, #0a0e1a 100%);
+}
+
+/* Transport controls section (bottom, smaller) */
+.caster-rail-transport-section {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 60px;
+  border: 1px solid rgba(148,163,184,0.08);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #0b1226 0%, #0a0e1a 100%);
+}
+
+/* Commentary display inside right rail */
+.caster-rail-commentary-section .caster-commentary {
+  flex: 1;
+  border-left: 3px solid var(--accent-1, #6cf);
+  border-radius: 0;
+  background: transparent;
+}
+
+.caster-rail-commentary-section .caster-commentary-silent {
+  border-left-color: rgba(148,163,184,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(148,163,184,0.4);
+  font-size: 1.2rem;
+}
+
+.caster-rail-commentary-section .caster-commentary-loading,
+.caster-rail-commentary-section .caster-commentary-error {
+  border-left: none;
+  padding-left: 10px;
+}
+
+.caster-rail-commentary-section .caster-actions {
+  padding: 4px 10px 8px;
+}
+
+/* WAIT WHAT panel inside right rail */
+.caster-rail-commentary-section .caster-wait-what {
+  margin: 0 8px 8px;
+  border-radius: 6px;
+}
+
+/* Transport controls inside right rail */
+.caster-rail-transport-section .caster-controls {
+  background: transparent;
+  border-radius: 0;
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+.caster-rail-transport-section .caster-controls .transport button {
+  min-width: 32px;
+  height: 32px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  border: 1px solid rgba(148,163,184,0.15);
+  background: rgba(15,23,42,0.8);
+  color: rgba(226,232,240,0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.caster-rail-transport-section .caster-controls .transport button:hover:not(:disabled) {
+  background: rgba(30,41,59,0.9);
+  border-color: rgba(148,163,184,0.3);
+}
+
+.caster-rail-transport-section .caster-controls .transport button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.caster-rail-transport-section .caster-controls .progress input[type="range"] {
+  accent-color: var(--accent-1, #6cf);
+}
+
+.caster-rail-transport-section .caster-controls .speed-control select {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(148,163,184,0.15);
+  background: rgba(15,23,42,0.8);
+  color: rgba(226,232,240,0.9);
+  font-size: 0.8rem;
+}
+
+.caster-rail-transport-section .caster-current-beat {
+  font-size: 0.75rem;
+}
+
+/* Timeline inside right rail */
+.caster-rail-transport-section .caster-timeline {
+  background: transparent;
+  border-radius: 0;
+  padding: 4px 10px 8px;
+}
+
+.caster-rail-transport-section .caster-timeline-items {
+  gap: 1px;
+}
+
+.caster-rail-transport-section .caster-tl-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.caster-rail-transport-section .caster-tl-turn .caster-tl-dot {
+  width: 5px;
+  height: 5px;
+}
+
+.caster-rail-transport-section .caster-tl-start .caster-tl-dot,
+.caster-rail-transport-section .caster-tl-end .caster-tl-dot {
+  width: 10px;
+  height: 10px;
+}
+
+/* Footer with New Match button */
+.caster-rail-footer {
+  padding: 4px 10px 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.caster-rail-footer .secondary-button {
+  font-size: 0.8rem;
+  padding: 4px 12px;
+}
+
+/* ── Card interaction disabling for caster (read-only) ─────────── */
+.ranked-duel-shell[data-caster="1"] .rd-card {
+  pointer-events: none;
+  cursor: default;
+}
+
+.ranked-duel-shell[data-caster="1"] .rd-hand-card {
+  pointer-events: none;
+}
+
+.ranked-duel-shell[data-caster="1"] .rd-swap-slot {
+  pointer-events: none;
+}
+
+/* ── Game-style setup screen ───────────────────────────────────── */
+.caster-setup-game {
+  max-width: 680px;
+  margin: 40px auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.caster-setup-game-header {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.caster-setup-game-header h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.02em;
+}
+
+.caster-setup-game-header p {
+  font-size: 0.9rem;
+  color: rgba(148,163,184,0.7);
+  margin: 0;
+}
+
+.caster-setup-game-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* VS matchup card */
+.caster-setup-game-vs-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid rgba(148,163,184,0.12);
+  border-radius: 12px;
+}
+
+.caster-setup-game-vs-seat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.caster-setup-game-vs-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(148,163,184,0.5);
+  text-transform: uppercase;
+}
+
+.caster-setup-game-vs-divider {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--accent-2, #fc6);
+  letter-spacing: 0.1em;
+  padding: 0 8px;
+}
+
+.caster-setup-game-select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(148,163,184,0.2);
+  background: rgba(15,23,42,0.9);
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.caster-setup-game-select:hover {
+  border-color: rgba(148,163,184,0.4);
+}
+
+.caster-setup-game-select:focus {
+  outline: none;
+  border-color: var(--accent-1, #6cf);
+  box-shadow: 0 0 0 2px rgba(108,204,255,0.15);
+}
+
+/* Game-style sections */
+.caster-setup-game-section {
+  background: linear-gradient(180deg, #0f172a 0%, #0d1525 100%);
+  border: 1px solid rgba(148,163,184,0.1);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.caster-setup-game-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(148,163,184,0.8);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.caster-setup-game-section .caster-setup-row select,
+.caster-setup-game-section .caster-setup-row input {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(148,163,184,0.15);
+  background: rgba(15,23,42,0.9);
+  color: #e2e8f0;
+}
+
+.caster-setup-game-section .caster-setup-row select:focus,
+.caster-setup-game-section .caster-setup-row input:focus {
+  outline: none;
+  border-color: var(--accent-1, #6cf);
+}
+
+/* Start button */
+.caster-setup-game-actions {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.caster-setup-game-start {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  padding: 14px 40px !important;
+  border-radius: 10px !important;
+  letter-spacing: 0.03em;
+}
+
+/* Loading state */
+.caster-setup-game-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.caster-setup-game-loading strong {
+  font-size: 1rem;
+  color: #e2e8f0;
+}
+
+.caster-setup-game-loading small {
+  font-size: 0.85rem;
+  color: rgba(148,163,184,0.6);
+}
+
+/* Omniscient opponent hand (face-up cards in caster) */
+.rd-opponent-hand-omniscient {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.rd-opponent-hand-omniscient .rd-card {
+  width: clamp(50px, 4vw, 72px);
+  height: auto;
 }

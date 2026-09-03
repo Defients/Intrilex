@@ -18,6 +18,7 @@ import { esc } from '../state.js';
 import { policyOptions } from '../router.js';
 import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js';
 import { reconstructReplayFrames } from '../replay-frames.js';
+import { renderRankedDuel } from '../play/ranked-duel-renderer.mjs';
 
 // Lazy-loaded @intrilex/replay-caster (browser-bundleable subset).
 let casterModule = null;
@@ -26,6 +27,149 @@ async function getCaster() {
     casterModule = await import('../replay-caster/browser-entry.js');
   }
   return casterModule;
+}
+
+// Lazy-loaded strictView from autonomy-runtime (for building authorized player views
+// from raw engine state). Cached after first load.
+let _strictViewFn = null;
+async function getStrictView() {
+  if (!_strictViewFn) {
+    const mod = await import('../autonomy-runtime.js');
+    _strictViewFn = mod.strictView;
+  }
+  return _strictViewFn;
+}
+
+// ── Frame state → Snapshot adapter ────────────────────────────────
+//
+// Converts a raw engine frame state (from CasterSession.frames[beat.frameIndex])
+// into the snapshot shape expected by buildRankedDuelViewModel via
+// renderRankedDuel(). This bridges the gap between the Caster's frame-based
+// playback and the authentic game UI renderer.
+//
+// The adapter uses strictView() from autonomy-runtime to build authorized
+// player views (same function used by the play controller), ensuring the
+// snapshot shape matches exactly what the viewmodel expects.
+//
+// @param {object} frameState - Raw engine state from a replay frame
+// @param {object} session - CasterSession instance
+// @param {object} beat - Current playback beat
+// @returns {object} Snapshot in buildRankedDuelViewModel format
+
+export async function frameStateToSnapshot(frameState, session, beat) {
+  if (!frameState) return null;
+
+  const omniscient = casterState.config.viewerMode === 'omniscient';
+  const seatOrder = session.matchResult?.summary?.seatOrder || ['P1', 'P2'];
+  const humanPlayerId = seatOrder[0] || 'P1';
+  const opponentPlayerId = seatOrder[1] || 'P2';
+  const isFinished = beat?.beatKind === 'MATCH_END';
+
+  // Use strictView to build the authorized player view for the human player.
+  // This produces the exact {own, opponents, ...} shape that adaptSnapshotForViewModel
+  // converts into the viewmodel's expected format.
+  const strictView = await getStrictView();
+  const pv = strictView(frameState, humanPlayerId);
+
+  // Build players map in viewmodel format
+  const players = {};
+  players[humanPlayerId] = {
+    securedPoints: pv.own?.securedPoints ?? 0,
+    goal: pv.own?.goal ?? 21,
+    hand: pv.own?.hand ?? [],
+    pointRow: pv.own?.pr ?? [],
+    enduringRow: pv.own?.er ?? [],
+    isActive: pv.activePlayerId === humanPlayerId,
+    hasPriority: pv.priority?.ownerId === humanPlayerId,
+  };
+
+  // Opponent: in public mode, hand is {count} (card backs).
+  // In omniscient mode, hand is {count} for the snapshot (privacy check),
+  // but the full hand card views are passed separately via opts.opponentHandCards.
+  const oppView = pv.opponents?.[0] ?? {};
+  players[opponentPlayerId] = {
+    securedPoints: oppView.securedPoints ?? 0,
+    goal: oppView.goal ?? 21,
+    hand: { count: oppView.handCount ?? 0 },
+    pointRow: oppView.pr ?? [],
+    enduringRow: oppView.er ?? [],
+    isActive: pv.activePlayerId === opponentPlayerId,
+    hasPriority: pv.priority?.ownerId === opponentPlayerId,
+    displayName: session.policyIds?.[1]?.replace(/-/g, ' ') || 'Seat 2',
+  };
+
+  // Build the snapshot in the format that adaptSnapshotForViewModel passes through
+  // (it checks for `snapshot.state` and passes through if present).
+  const snapshot = {
+    humanPlayerId,
+    status: isFinished ? 'AI_DECISION' : 'AI_DECISION', // Keep board visible (not TERMINAL)
+    isNetworkMatch: false,
+    decision: null,
+    legalActions: [],
+    state: {
+      seatOrder,
+      fullTurnSequence: pv.fullTurnSequence ?? frameState.fullTurnSequence ?? 0,
+      phase: pv.phase ?? frameState.phase ?? '',
+      activePlayerId: pv.activePlayerId ?? frameState.activePlayerId ?? null,
+      priorityOwnerId: pv.priority?.ownerId ?? null,
+      windowLabel: pv.priority?.windowLabel ?? '',
+      startingGoal: pv.own?.goal ?? 21,
+      players,
+      drawPile: { count: pv.dpCount ?? frameState.zones?.dp?.length ?? 0 },
+      graveyard: { count: pv.gyCount ?? frameState.zones?.gy?.length ?? 0, topCard: pv.gyTopCard ?? null },
+      exile: { count: pv.exileCount ?? frameState.zones?.exile?.length ?? 0, newestVisibleCard: null },
+      swapBar: pv.swapBar ?? [],
+      stack: pv.stack ?? [],
+      swapAvailable: true,
+      // Do NOT set terminationReason — that would trigger renderTerminal instead of renderMatch.
+      // The caster always shows the board, even for MATCH_END beats.
+      terminationReason: null,
+      winner: null,
+    },
+    // Pass beat events as recentEvents for the game log
+    recentEvents: (beat?.visibleEvents ?? []).slice(-20).map(e => ({
+      type: e.type,
+      controllerId: e.controllerId ?? e.payload?.controllerId ?? null,
+      payload: e.payload ?? null,
+    })),
+  };
+
+  // In omniscient mode, build opponent hand card views for face-up rendering.
+  // These are passed via opts.opponentHandCards to the renderer, bypassing
+  // the viewmodel's privacy check (which requires opponent hand = {count}).
+  let opponentHandCards = null;
+  if (omniscient) {
+    const oppPv = strictView(frameState, opponentPlayerId);
+    opponentHandCards = (oppPv.own?.hand ?? []).map(cardViewToViewModelCard);
+  }
+
+  return { snapshot, opponentHandCards };
+}
+
+// Convert a strictView card object ({id, identity, controllerId, zone, pointValue, tapped, ...})
+// into the viewmodel's public card view format ({entityId, identity, rank, suit, pointValue, statusMarkers, ...})
+// so renderCard() can render it face-up.
+function cardViewToViewModelCard(card) {
+  if (!card) return null;
+  const identity = card.identity ?? '';
+  const suit = String(identity).match(/[♣♦♥♠]/u)?.[0] ?? null;
+  const rank = String(identity).replace(/[♣♦♥♠]/u, '').trim() || null;
+  const markers = [];
+  if (card.tapped) markers.push({ type: 'TAPPED', label: 'Tapped' });
+  if (card.aegis) markers.push({ type: 'AEGIS', label: 'Aegis' });
+  if (card.providesGuard) markers.push({ type: 'GUARD', label: 'Guard' });
+  if (card.exileBound) markers.push({ type: 'EXILE_BOUND', label: 'Exile-Bound' });
+  return {
+    entityId: card.id,
+    identity: card.identity,
+    rank,
+    suit,
+    pointValue: card.pointValue ?? null,
+    isGeneratedCopy: false,
+    statusMarkers: markers,
+    zone: card.zone ?? 'HAND',
+    ownerId: card.controllerId ?? null,
+  };
 }
 
 // ── Caster workspace state ────────────────────────────────────────
@@ -56,7 +200,9 @@ const casterState = {
   ollamaModel: '',
   ollamaStatus: null,
   savedReplays: [],
-  replaysLoaded: false
+  replaysLoaded: false,
+  gameplaySkin: 'dark',
+  renderToken: 0
 };
 
 // ── Main render entry point ───────────────────────────────────────
@@ -64,6 +210,9 @@ const casterState = {
 export async function renderCaster(appEl) {
   // Ensure the module is loaded (for the browser entry).
   await getCaster();
+
+  // Pre-load strictView so frameStateToSnapshot is fast on subsequent calls.
+  await getStrictView();
 
   // Load saved replays from IndexedDB for the library section.
   await loadSavedReplays();
@@ -107,14 +256,14 @@ function renderReplayLibrarySection() {
     const label = `${r.replayId} · ${r.winner || '?'} · ${r.decisionCount ?? '?'} decisions`;
     return `<option value="${esc(r.replayId)}">${esc(label)}</option>`;
   }).join('');
-  return `<div class="caster-setup-section">
+  return `<div class="caster-setup-game-section">
     <h3>Or load from Replay Library</h3>
     <div class="caster-setup-row">
       <label>Saved replay<select id="caster-replay-select">
         <option value="">— Select a saved replay —</option>
         ${items}
       </select></label>
-      <button id="caster-load-replay" class="secondary-button" disabled>Load & Cast</button>
+      <button id="caster-load-replay" class="secondary-button" disabled>Load &amp; Cast</button>
     </div>
   </div>`;
 }
@@ -123,59 +272,67 @@ function renderReplayLibrarySection() {
 
 function renderSetup(appEl) {
   const c = casterState.config;
-  appEl.innerHTML = `<section class="panel">
-    <div class="panel-header"><div><h2>Replay Caster</h2><p>Watch a completed AI-vs-AI match unfold live with synchronized commentary.</p></div></div>
-    <div class="panel-body">
-      <div class="caster-setup">
-        <div class="caster-setup-section">
-          <h3>Match Configuration</h3>
-          <div class="caster-setup-row">
-            <label>Policy A (Seat 1)<select id="caster-p1">${policyOptions(c.p1Policy)}</select></label>
-            <label>Policy B (Seat 2)<select id="caster-p2">${policyOptions(c.p2Policy)}</select></label>
-          </div>
-          <div class="caster-setup-row">
-            <label>Seed<input type="number" id="caster-seed" value="${c.seed}" min="0" max="999999"></label>
-            <label>Decision Limit<input type="number" id="caster-decision-limit" value="${c.decisionLimit}" min="50" max="5000"></label>
-          </div>
+  appEl.innerHTML = `<section class="caster-setup-game">
+    <div class="caster-setup-game-header">
+      <h2>🎙 Replay Caster</h2>
+      <p>Watch a completed AI-vs-AI match unfold live with synchronized commentary.</p>
+    </div>
+    <div class="caster-setup-game-body">
+      <div class="caster-setup-game-vs-card">
+        <div class="caster-setup-game-vs-seat">
+          <div class="caster-setup-game-vs-label">SEAT 1</div>
+          <select id="caster-p1" class="caster-setup-game-select">${policyOptions(c.p1Policy)}</select>
         </div>
-        <div class="caster-setup-section">
-          <h3>Commentary</h3>
-          <div class="caster-setup-row">
-            <label>Mode<select id="caster-mode">
-              <option value="BROADCAST" ${c.mode === 'BROADCAST' ? 'selected' : ''}>Broadcast (play-by-play + colour)</option>
-              <option value="DEV_OBSERVATORY" ${c.mode === 'DEV_OBSERVATORY' ? 'selected' : ''}>Dev Observatory (anomaly-focused)</option>
-            </select></label>
-            <label>Viewer Mode<select id="caster-viewer-mode">
-              <option value="public" ${c.viewerMode === 'public' ? 'selected' : ''}>Public (no hidden cards)</option>
-              <option value="omniscient" ${c.viewerMode === 'omniscient' ? 'selected' : ''}>Omniscient (dev trace access)</option>
-            </select></label>
-          </div>
-          <div class="caster-setup-row">
-            <label>Speed<select id="caster-speed">
-              <option value="0.5" ${c.speed === 0.5 ? 'selected' : ''}>0.5×</option>
-              <option value="1" ${c.speed === 1 ? 'selected' : ''}>1×</option>
-              <option value="1.5" ${c.speed === 1.5 ? 'selected' : ''}>1.5×</option>
-              <option value="2" ${c.speed === 2 ? 'selected' : ''}>2×</option>
-            </select></label>
-            <label class="caster-ollama-toggle">
-              <input type="checkbox" id="caster-ollama-enabled" ${casterState.ollamaEnabled ? 'checked' : ''}>
-              Use Ollama commentator (optional, local)
-            </label>
-          </div>
-          <div class="caster-ollama-config" id="caster-ollama-config" style="${casterState.ollamaEnabled ? '' : 'display:none'}">
-            <label>Model<input type="text" id="caster-ollama-model" value="${esc(casterState.ollamaModel)}" placeholder="e.g. llama3.2"></label>
-            <button id="caster-ollama-test" class="secondary-button">Test Connection</button>
-            <span id="caster-ollama-status" class="caster-ollama-status">${casterState.ollamaStatus ? esc(casterState.ollamaStatus) : ''}</span>
-          </div>
+        <div class="caster-setup-game-vs-divider">VS</div>
+        <div class="caster-setup-game-vs-seat">
+          <div class="caster-setup-game-vs-label">SEAT 2</div>
+          <select id="caster-p2" class="caster-setup-game-select">${policyOptions(c.p2Policy)}</select>
         </div>
-        <div class="caster-setup-actions">
-          <button id="caster-start" class="primary-button">Generate & Cast Match</button>
+      </div>
+      <div class="caster-setup-game-section">
+        <h3>Match Parameters</h3>
+        <div class="caster-setup-row">
+          <label>Seed<input type="number" id="caster-seed" value="${c.seed}" min="0" max="999999"></label>
+          <label>Decision Limit<input type="number" id="caster-decision-limit" value="${c.decisionLimit}" min="50" max="5000"></label>
         </div>
-        ${renderReplayLibrarySection()}
-        <div class="caster-setup-note">
-          <p>The match is fully generated before playback begins. Commentary never generates or resolves gameplay.
-          Disabling Caster or Ollama does not change match results or hashes.</p>
+      </div>
+      <div class="caster-setup-game-section">
+        <h3>Commentary Settings</h3>
+        <div class="caster-setup-row">
+          <label>Mode<select id="caster-mode">
+            <option value="BROADCAST" ${c.mode === 'BROADCAST' ? 'selected' : ''}>Broadcast (play-by-play + colour)</option>
+            <option value="DEV_OBSERVATORY" ${c.mode === 'DEV_OBSERVATORY' ? 'selected' : ''}>Dev Observatory (anomaly-focused)</option>
+          </select></label>
+          <label>Viewer Mode<select id="caster-viewer-mode">
+            <option value="public" ${c.viewerMode === 'public' ? 'selected' : ''}>Public (no hidden cards)</option>
+            <option value="omniscient" ${c.viewerMode === 'omniscient' ? 'selected' : ''}>Omniscient (dev trace access)</option>
+          </select></label>
         </div>
+        <div class="caster-setup-row">
+          <label>Speed<select id="caster-speed">
+            <option value="0.5" ${c.speed === 0.5 ? 'selected' : ''}>0.5×</option>
+            <option value="1" ${c.speed === 1 ? 'selected' : ''}>1×</option>
+            <option value="1.5" ${c.speed === 1.5 ? 'selected' : ''}>1.5×</option>
+            <option value="2" ${c.speed === 2 ? 'selected' : ''}>2×</option>
+          </select></label>
+          <label class="caster-ollama-toggle">
+            <input type="checkbox" id="caster-ollama-enabled" ${casterState.ollamaEnabled ? 'checked' : ''}>
+            Use Ollama commentator (optional, local)
+          </label>
+        </div>
+        <div class="caster-ollama-config" id="caster-ollama-config" style="${casterState.ollamaEnabled ? '' : 'display:none'}">
+          <label>Model<input type="text" id="caster-ollama-model" value="${esc(casterState.ollamaModel)}" placeholder="e.g. llama3.2"></label>
+          <button id="caster-ollama-test" class="secondary-button">Test Connection</button>
+          <span id="caster-ollama-status" class="caster-ollama-status">${casterState.ollamaStatus ? esc(casterState.ollamaStatus) : ''}</span>
+        </div>
+      </div>
+      <div class="caster-setup-game-actions">
+        <button id="caster-start" class="primary-button caster-setup-game-start">Generate &amp; Cast Match</button>
+      </div>
+      ${renderReplayLibrarySection()}
+      <div class="caster-setup-note">
+        <p>The match is fully generated before playback begins. Commentary never generates or resolves gameplay.
+        Disabling Caster or Ollama does not change match results or hashes.</p>
       </div>
     </div>
   </section>`;
@@ -212,10 +369,12 @@ function renderSetup(appEl) {
 // ── Loading screen ────────────────────────────────────────────────
 
 function renderLoading(appEl) {
-  appEl.innerHTML = `<section class="panel">
-    <div class="panel-header"><div><h2>Replay Caster — Generating Match…</h2></div></div>
-    <div class="panel-body">
-      <div class="loading-state">
+  appEl.innerHTML = `<section class="caster-setup-game">
+    <div class="caster-setup-game-header">
+      <h2>🎙 Replay Caster — Generating Match…</h2>
+    </div>
+    <div class="caster-setup-game-body">
+      <div class="caster-setup-game-loading">
         <span class="loading-spinner" aria-hidden="true"></span>
         <strong>${esc(casterState.loadingMessage || 'Running match in worker…')}</strong>
         <small>The completed match will be replayed with live-style pacing.</small>
@@ -227,9 +386,11 @@ function renderLoading(appEl) {
 // ── Error screen ──────────────────────────────────────────────────
 
 function renderError(appEl, error) {
-  appEl.innerHTML = `<section class="panel">
-    <div class="panel-header"><div><h2>Replay Caster — Error</h2></div></div>
-    <div class="panel-body">
+  appEl.innerHTML = `<section class="caster-setup-game">
+    <div class="caster-setup-game-header">
+      <h2>🎙 Replay Caster — Error</h2>
+    </div>
+    <div class="caster-setup-game-body">
       <div class="notice danger"><strong>Match generation failed.</strong><pre>${esc(String(error))}</pre></div>
       <button id="caster-back-setup" class="secondary-button">← Back to Setup</button>
     </div>
@@ -241,8 +402,12 @@ function renderError(appEl, error) {
 }
 
 // ── Theatre (main playback view) ──────────────────────────────────
+//
+// Renders the authentic game board using renderRankedDuel() with a custom
+// right rail containing commentary (top) and replay transport controls (bottom).
+// The board is read-only — no card interactions, no action bar.
 
-function renderTheatre(appEl) {
+async function renderTheatre(appEl) {
   const session = casterState.session;
   const beat = session.currentBeat;
   if (!beat) {
@@ -254,116 +419,51 @@ function renderTheatre(appEl) {
   const idx = session.index;
   const total = beats.length - 1;
   const ps = beat.publicSummary || {};
-  const scores = ps.scores || {};
-  const goals = ps.goals || {};
-  const seatOrder = session.matchResult?.summary?.seatOrder || ['P1', 'P2'];
   const policyIds = session.policyIds || [];
-  const isFinished = beat.beatKind === 'MATCH_END';
-  const winner = ps.winner;
 
-  // Score bars
-  const scoreBars = seatOrder.map((id, i) => {
-    const score = scores[id] ?? 0;
-    const goal = goals[id] ?? 21;
-    const pct = Math.min(100, (score / goal) * 100);
-    const policyLabel = policyIds[i] ? policyIds[i].replace(/-/g, ' ') : id;
-    return `<div class="caster-score-bar">
-      <div class="caster-score-label"><span class="caster-seat">Seat ${i + 1}</span> <span class="caster-policy">${esc(policyLabel)}</span></div>
-      <div class="caster-score-track"><div class="caster-score-fill" style="width:${pct}%"></div></div>
-      <div class="caster-score-value">${score} / ${goal}</div>
-    </div>`;
-  }).join('');
+  // Render token: prevents stale async renders from overwriting newer content
+  const myToken = ++casterState.renderToken;
 
-  // Timeline
-  const timelineItems = beats.map((b, i) => {
-    const isCurrent = i === idx;
-    const label = beatLabel(b);
-    const cls = b.beatKind === 'MATCH_END' ? 'caster-tl-end' :
-                b.beatKind === 'MATCH_START' ? 'caster-tl-start' :
-                b.beatKind === 'TURN_START' ? 'caster-tl-turn' :
-                b.beatKind === 'RESPONSE' ? 'caster-tl-response' : 'caster-tl-decision';
-    return `<button class="caster-tl-item ${cls} ${isCurrent ? 'current' : ''}" data-idx="${i}" title="${esc(label)}"><span class="caster-tl-dot"></span></button>`;
-  }).join('');
+  // Build snapshot from current beat's frame state
+  const frame = session.frames?.[beat.frameIndex ?? 0];
+  const frameState = frame?.state ?? frame?.omniscientState ?? null;
+  if (!frameState) {
+    if (myToken === casterState.renderToken) {
+      appEl.innerHTML = '<div class="notice">No frame state available for this beat.</div>';
+    }
+    return;
+  }
 
-  // Board layout (game state for current beat)
-  const boardHtml = renderBoard(session, beat);
+  let snapshot, opponentHandCards;
+  try {
+    const adapted = await frameStateToSnapshot(frameState, session, beat);
+    snapshot = adapted.snapshot;
+    opponentHandCards = adapted.opponentHandCards;
+  } catch (err) {
+    if (myToken === casterState.renderToken) {
+      appEl.innerHTML = `<div class="notice danger"><strong>Failed to build game view.</strong><pre>${esc(String(err?.message || err))}</pre></div>`;
+    }
+    return;
+  }
 
-  // WAIT WHAT panel
-  const ww = casterState.waitWhatVisible && casterState.waitWhatCapture
-    ? renderWaitWhatPanel(casterState.waitWhatCapture)
-    : '';
+  // Guard: if a newer render was triggered while we were building the snapshot, abort
+  if (myToken !== casterState.renderToken) return;
 
-  // Commentary error
-  const commentaryErr = casterState.commentaryError
-    ? `<div class="caster-commentary-error" data-testid="caster-commentary-error">Commentary unavailable: ${esc(casterState.commentaryError)}</div>`
-    : '';
+  // ── Build custom right rail HTML (commentary + transport controls) ──
+  const rightRailHtml = buildCasterRightRail(session, beat, idx, total, ps, policyIds);
 
-  // Commentary loading
-  const commentaryLoading = casterState.commentaryLoading
-    ? '<div class="caster-commentary-loading">Generating commentary…</div>'
-    : '';
+  // ── Render the authentic game board ──
+  const gameplaySkin = casterState.gameplaySkin || 'dark';
+  const boardHtml = renderRankedDuel(snapshot, {
+    rightRailHtml,
+    isReadOnly: true,
+    isCaster: true,
+    gameplaySkin,
+    opponentHandCards,
+    soundMuted: true, // Caster is a spectator — no sound interactions
+  });
 
-  // Commentary display (safe text rendering via textContent after innerHTML)
-  const commentaryBlock = casterState.commentaryText
-    ? `<div class="caster-commentary" data-testid="caster-commentary">
-        <div class="caster-commentary-headline" data-testid="caster-commentary-headline"></div>
-        <div class="caster-commentary-body" data-testid="caster-commentary-body"></div>
-        <div class="caster-commentary-meta"><span class="caster-tone">${esc(casterState.commentaryTone || '')}</span></div>
-      </div>`
-    : '<div class="caster-commentary caster-commentary-silent">—</div>';
-
-  appEl.innerHTML = `<section class="panel caster-panel">
-    <div class="panel-header">
-      <div><h2>Replay Caster ${isFinished && winner ? '— Match Complete' : ''}</h2>
-      <p>${esc(policyIds[0]?.replace(/-/g, ' ') || 'Policy A')} vs ${esc(policyIds[1]?.replace(/-/g, ' ') || 'Policy B')} · ${total} beats · ${session.beats.length} total</p></div>
-      <div class="toolbar">
-        <button id="caster-back-setup" class="secondary-button">← New Match</button>
-      </div>
-    </div>
-    <div class="panel-body">
-      <div class="caster-theatre">
-        <div class="caster-controls">
-          <div class="transport" role="group" aria-label="Playback transport">
-            <button id="caster-prev" ${idx <= 0 ? 'disabled' : ''} title="Previous beat" aria-label="Previous beat">◀</button>
-            <button id="caster-play" aria-label="${session.director.playing ? 'Pause' : 'Play'}">${session.director.playing ? '⏸' : '▶'}</button>
-            <button id="caster-next" ${idx >= total ? 'disabled' : ''} title="Next beat" aria-label="Next beat">▶</button>
-            <button id="caster-end" ${idx >= total ? 'disabled' : ''} title="Skip to end" aria-label="Skip to end">⏭</button>
-          </div>
-          <div class="progress">
-            <input type="range" id="caster-slider" aria-label="Beat slider" min="0" max="${total}" value="${idx}">
-            <span data-testid="caster-progress">${idx}/${total}</span>
-          </div>
-          <div class="speed-control">
-            <label>Speed<select id="caster-speed-ctrl">
-              <option value="0.5" ${session.director.speed === 0.5 ? 'selected' : ''}>0.5×</option>
-              <option value="1" ${session.director.speed === 1 ? 'selected' : ''}>1×</option>
-              <option value="1.5" ${session.director.speed === 1.5 ? 'selected' : ''}>1.5×</option>
-              <option value="2" ${session.director.speed === 2 ? 'selected' : ''}>2×</option>
-            </select></label>
-          </div>
-          <div class="caster-current-beat" data-testid="caster-current-beat">
-            <span class="caster-beat-kind">${esc(beat.beatKind)}</span>
-            ${beat.seat ? `<span class="caster-beat-seat">Seat ${beat.seat}</span>` : ''}
-            ${beat.turn != null ? `<span class="caster-beat-turn">Turn ${beat.turn}</span>` : ''}
-            ${ps.scoreDelta ? `<span class="caster-beat-delta">+${ps.scoreDelta} pts</span>` : ''}
-          </div>
-        </div>
-        <div class="caster-scores" data-testid="caster-scores">${scoreBars}</div>
-        ${boardHtml}
-        ${commentaryBlock}
-        ${commentaryLoading}
-        ${commentaryErr}
-        <div class="caster-actions">
-          <button id="caster-wait-what" class="caster-wait-what-btn" data-testid="caster-wait-what">WAIT WHAT?</button>
-        </div>
-        ${ww}
-        <div class="caster-timeline" data-testid="caster-timeline">
-          <div class="caster-timeline-label">Timeline</div>
-          <div class="caster-timeline-items">${timelineItems}</div>
-        </div>
-      </div>
-    </div>
-  </section>`;
+  appEl.innerHTML = boardHtml;
 
   // ── Safe text rendering for commentary (avoid innerHTML with model output) ──
   if (casterState.commentaryText) {
@@ -373,34 +473,24 @@ function renderTheatre(appEl) {
     if (bodyEl) bodyEl.textContent = casterState.commentaryText || '';
   }
 
-  // ── Wire up controls ──
-  const $ = (id) => appEl.querySelector(`#${id}`);
-  $('caster-back-setup').onclick = () => {
-    stopTimer();
-    if (casterState.worker) { casterState.worker.terminate(); casterState.worker = null; }
-    casterState.session = null;
-    casterState.commentaryText = '';
-    casterState.waitWhatCapture = null;
-    casterState.waitWhatVisible = false;
-    renderSetup(appEl);
-  };
-  $('caster-prev').onclick = () => { session.stepBackward(); onBeatChange(appEl); };
-  $('caster-play').onclick = () => { session.toggle(); startTimer(appEl); renderTheatre(appEl); };
-  $('caster-next').onclick = () => { session.stepForward(); onBeatChange(appEl); };
-  $('caster-end').onclick = () => { session.skipToEnd(); onBeatChange(appEl); };
-  $('caster-slider').oninput = (e) => { session.director.stepTo(Number(e.target.value)); onBeatChange(appEl); };
-  $('caster-speed-ctrl').onchange = (e) => { session.setSpeed(Number(e.target.value)); };
-  appEl.querySelectorAll('.caster-tl-item').forEach(btn => {
-    btn.onclick = () => { session.director.stepTo(Number(btn.dataset.idx)); onBeatChange(appEl); };
-  });
-  $('caster-wait-what').onclick = () => {
-    const capture = session.waitWhat();
-    casterState.waitWhatCapture = capture;
-    casterState.waitWhatVisible = true;
-    renderTheatre(appEl);
-  };
+  // ── Wire up controls within the right rail ──
+  wireCasterRightRail(appEl, session, idx, total);
 
-  // If WAIT WHAT panel is visible, wire its jump buttons
+  // ── Wire header exit button (data-action="exit-caster") ──
+  const exitBtn = appEl.querySelector('[data-action="exit-caster"]');
+  if (exitBtn) {
+    exitBtn.onclick = () => {
+      stopTimer();
+      if (casterState.worker) { casterState.worker.terminate(); casterState.worker = null; }
+      casterState.session = null;
+      casterState.commentaryText = '';
+      casterState.waitWhatCapture = null;
+      casterState.waitWhatVisible = false;
+      renderSetup(appEl);
+    };
+  }
+
+  // ── Wire WAIT WHAT panel if visible ──
   if (casterState.waitWhatVisible && casterState.waitWhatCapture) {
     appEl.querySelectorAll('.caster-ww-jump').forEach(btn => {
       btn.onclick = () => {
@@ -413,7 +503,154 @@ function renderTheatre(appEl) {
     });
     const closeWw = appEl.querySelector('#caster-ww-close');
     if (closeWw) closeWw.onclick = () => { casterState.waitWhatVisible = false; renderTheatre(appEl); };
+
+    // Render WAIT WHAT commentary text safely
+    if (casterState.waitWhatCapture?.commentary) {
+      const wwTextEl = appEl.querySelector('#caster-ww-commentary-text');
+      if (wwTextEl) wwTextEl.textContent = casterState.waitWhatCapture.commentary;
+    }
   }
+}
+
+// ── Build the custom right rail HTML ───────────────────────────────
+//
+// Replaces the Actions + Chat right rail with:
+//   Top section (larger): Commentary display + WAIT WHAT
+//   Bottom section (smaller): Replay transport controls + timeline
+
+function buildCasterRightRail(session, beat, idx, total, ps, policyIds) {
+  const isFinished = beat.beatKind === 'MATCH_END';
+  const winner = ps.winner;
+
+  // ── Commentary section (top, larger) ──
+  const commentaryErr = casterState.commentaryError
+    ? `<div class="caster-commentary-error" data-testid="caster-commentary-error">Commentary unavailable: ${esc(casterState.commentaryError)}</div>`
+    : '';
+
+  const commentaryLoading = casterState.commentaryLoading
+    ? '<div class="caster-commentary-loading">Generating commentary…</div>'
+    : '';
+
+  const commentaryBlock = casterState.commentaryText
+    ? `<div class="caster-commentary" data-testid="caster-commentary">
+        <div class="caster-commentary-headline" data-testid="caster-commentary-headline"></div>
+        <div class="caster-commentary-body" data-testid="caster-commentary-body"></div>
+        <div class="caster-commentary-meta"><span class="caster-tone">${esc(casterState.commentaryTone || '')}</span></div>
+      </div>`
+    : '<div class="caster-commentary caster-commentary-silent">—</div>';
+
+  // WAIT WHAT panel
+  const ww = casterState.waitWhatVisible && casterState.waitWhatCapture
+    ? renderWaitWhatPanel(casterState.waitWhatCapture)
+    : '';
+
+  // ── Transport controls section (bottom, smaller) ──
+
+  // Timeline dots
+  const timelineItems = session.beats.map((b, i) => {
+    const isCurrent = i === idx;
+    const label = beatLabel(b);
+    const cls = b.beatKind === 'MATCH_END' ? 'caster-tl-end' :
+                b.beatKind === 'MATCH_START' ? 'caster-tl-start' :
+                b.beatKind === 'TURN_START' ? 'caster-tl-turn' :
+                b.beatKind === 'RESPONSE' ? 'caster-tl-response' : 'caster-tl-decision';
+    return `<button class="caster-tl-item ${cls} ${isCurrent ? 'current' : ''}" data-idx="${i}" title="${esc(label)}"><span class="caster-tl-dot"></span></button>`;
+  }).join('');
+
+  return `<div class="rd-right-rail-bottom-inner caster-right-rail" data-caster-rail="1">
+    <div class="caster-rail-commentary-section">
+      <div class="caster-rail-section-header">COMMENTARY ${isFinished && winner ? '· MATCH COMPLETE' : ''}</div>
+      ${commentaryBlock}
+      ${commentaryLoading}
+      ${commentaryErr}
+      <div class="caster-actions">
+        <button id="caster-wait-what" class="caster-wait-what-btn" data-testid="caster-wait-what">WAIT WHAT?</button>
+      </div>
+      ${ww}
+    </div>
+    <div class="caster-rail-transport-section">
+      <div class="caster-rail-section-header">REPLAY CONTROLS</div>
+      <div class="caster-controls">
+        <div class="transport" role="group" aria-label="Playback transport">
+          <button id="caster-prev" ${idx <= 0 ? 'disabled' : ''} title="Previous beat" aria-label="Previous beat">◀</button>
+          <button id="caster-play" aria-label="${session.director.playing ? 'Pause' : 'Play'}">${session.director.playing ? '⏸' : '▶'}</button>
+          <button id="caster-next" ${idx >= total ? 'disabled' : ''} title="Next beat" aria-label="Next beat">▶</button>
+          <button id="caster-end" ${idx >= total ? 'disabled' : ''} title="Skip to end" aria-label="Skip to end">⏭</button>
+        </div>
+        <div class="progress">
+          <input type="range" id="caster-slider" aria-label="Beat slider" min="0" max="${total}" value="${idx}">
+          <span data-testid="caster-progress">${idx}/${total}</span>
+        </div>
+        <div class="speed-control">
+          <label>Speed<select id="caster-speed-ctrl">
+            <option value="0.5" ${session.director.speed === 0.5 ? 'selected' : ''}>0.5×</option>
+            <option value="1" ${session.director.speed === 1 ? 'selected' : ''}>1×</option>
+            <option value="1.5" ${session.director.speed === 1.5 ? 'selected' : ''}>1.5×</option>
+            <option value="2" ${session.director.speed === 2 ? 'selected' : ''}>2×</option>
+          </select></label>
+        </div>
+        <div class="caster-current-beat" data-testid="caster-current-beat">
+          <span class="caster-beat-kind">${esc(beat.beatKind)}</span>
+          ${beat.seat ? `<span class="caster-beat-seat">Seat ${beat.seat}</span>` : ''}
+          ${beat.turn != null ? `<span class="caster-beat-turn">Turn ${beat.turn}</span>` : ''}
+          ${ps.scoreDelta ? `<span class="caster-beat-delta">+${ps.scoreDelta} pts</span>` : ''}
+        </div>
+      </div>
+      <div class="caster-timeline" data-testid="caster-timeline">
+        <div class="caster-timeline-items">${timelineItems}</div>
+      </div>
+      <div class="caster-rail-footer">
+        <button id="caster-back-setup" class="secondary-button">← New Match</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Wire up right rail transport controls ──────────────────────────
+
+function wireCasterRightRail(appEl, session, idx, total) {
+  const $ = (id) => appEl.querySelector(`#${id}`);
+
+  const prevBtn = $('caster-prev');
+  if (prevBtn) prevBtn.onclick = () => { session.stepBackward(); onBeatChange(appEl); };
+
+  const playBtn = $('caster-play');
+  if (playBtn) playBtn.onclick = () => { session.toggle(); startTimer(appEl); renderTheatre(appEl); };
+
+  const nextBtn = $('caster-next');
+  if (nextBtn) nextBtn.onclick = () => { session.stepForward(); onBeatChange(appEl); };
+
+  const endBtn = $('caster-end');
+  if (endBtn) endBtn.onclick = () => { session.skipToEnd(); onBeatChange(appEl); };
+
+  const slider = $('caster-slider');
+  if (slider) slider.oninput = (e) => { session.director.stepTo(Number(e.target.value)); onBeatChange(appEl); };
+
+  const speedCtrl = $('caster-speed-ctrl');
+  if (speedCtrl) speedCtrl.onchange = (e) => { session.setSpeed(Number(e.target.value)); };
+
+  appEl.querySelectorAll('.caster-tl-item').forEach(btn => {
+    btn.onclick = () => { session.director.stepTo(Number(btn.dataset.idx)); onBeatChange(appEl); };
+  });
+
+  const waitWhatBtn = $('caster-wait-what');
+  if (waitWhatBtn) waitWhatBtn.onclick = () => {
+    const capture = session.waitWhat();
+    casterState.waitWhatCapture = capture;
+    casterState.waitWhatVisible = true;
+    renderTheatre(appEl);
+  };
+
+  const backSetupBtn = $('caster-back-setup');
+  if (backSetupBtn) backSetupBtn.onclick = () => {
+    stopTimer();
+    if (casterState.worker) { casterState.worker.terminate(); casterState.worker = null; }
+    casterState.session = null;
+    casterState.commentaryText = '';
+    casterState.waitWhatCapture = null;
+    casterState.waitWhatVisible = false;
+    renderSetup(appEl);
+  };
 }
 
 // ── WAIT WHAT panel ───────────────────────────────────────────────
@@ -565,7 +802,7 @@ async function buildAndLoadSession(appEl, matchResult, frames) {
   session.setSpeed(c.speed);
   casterState.session = session;
   casterState.loading = false;
-  renderTheatre(appEl);
+  await renderTheatre(appEl);
   await onBeatChange(appEl);
 }
 
@@ -813,127 +1050,6 @@ async function testOllama(appEl) {
     casterState.ollamaStatus = `Error: ${err.message}`;
   }
   if (statusEl) statusEl.textContent = casterState.ollamaStatus;
-}
-
-// ── Board layout ─────────────────────────────────────────────────
-//
-// Renders the game state for the current beat. Respects viewer mode:
-//   PUBLIC: shows only public information (card backs for opponent hands,
-//           no hidden hand identities, no future outcomes).
-//   OMNISCIENT: shows full card identities for both players.
-//
-// Authority: this is a pure viewer; it never mutates state.
-
-function getBoardStateForBeat(session, beat) {
-  if (!session || !beat) return null;
-  const frame = session.frames?.[beat.frameIndex ?? 0];
-  if (!frame) return null;
-  const rawState = frame.state ?? frame.omniscientState ?? {};
-  const omniscient = casterState.config.viewerMode === 'omniscient';
-  const seatOrder = session.matchResult?.summary?.seatOrder || ['P1', 'P2'];
-  return { rawState, omniscient, seatOrder };
-}
-
-function renderBoard(session, beat) {
-  const board = getBoardStateForBeat(session, beat);
-  if (!board) return '<div class="caster-board-empty">No board state available.</div>';
-
-  const { rawState, omniscient, seatOrder } = board;
-  const cards = rawState.cards ?? {};
-  const players = rawState.players ?? {};
-  const stack = Array.isArray(rawState.stack) ? rawState.stack : [];
-  const zones = rawState.zones ?? {};
-  const phase = rawState.phase ?? beat.phase ?? '—';
-  const turn = rawState.fullTurnSequence ?? beat.turn ?? '—';
-  const dpCount = Array.isArray(zones.dp) ? zones.dp.length : 0;
-  const gyCount = Array.isArray(zones.gy) ? zones.gy.length : 0;
-
-  const renderCard = (cardId, showFace) => {
-    const card = cardId != null ? cards[cardId] : null;
-    if (!card) return '<div class="caster-card caster-card-empty"></div>';
-    const identity = card.identity ?? '';
-    const rank = String(identity).replace(/[♣♦♥♠]/u, '').trim();
-    const suit = String(identity).match(/[♣♦♥♠]/u)?.[0] ?? '';
-    const pointValue = card.state?.pointValue ?? '';
-    const cls = showFace
-      ? `caster-card caster-card-face${suit === '♥' || suit === '♦' ? ' red' : ''}`
-      : 'caster-card caster-card-back';
-    const title = showFace ? `${esc(identity)}${pointValue !== '' ? ` · ${pointValue}pt` : ''}` : 'Hidden card';
-    const inner = showFace
-      ? `<div class="caster-card-rank">${esc(rank)}</div><div class="caster-card-suit">${esc(suit)}</div>`
-      : '<div class="caster-card-back-pattern"></div>';
-    return `<div class="${cls}" title="${esc(title)}">${inner}</div>`;
-  };
-
-  const renderCardRow = (rowIds, label, showFace) => {
-    const ids = Array.isArray(rowIds) ? rowIds : [];
-    const items = ids.map(id => renderCard(id, showFace)).join('');
-    return `<div class="caster-card-row" data-row="${esc(label)}">
-      <div class="caster-row-label">${esc(label)}</div>
-      <div class="caster-row-cards">${items}</div>
-    </div>`;
-  };
-
-  const renderHand = (playerId, label) => {
-    const player = players[playerId] ?? {};
-    const hand = Array.isArray(player.hand) ? player.hand : (player.hand?.count ? Array(player.hand.count).fill(null) : []);
-    const showFace = omniscient;
-    // In public mode, hide hand identity by not passing the real card id.
-    const items = hand.map((id) => renderCard(showFace ? id : null, showFace)).join('');
-    const count = hand.length;
-    return `<div class="caster-card-row caster-hand" data-row="${esc(label)}">
-      <div class="caster-row-label">${esc(label)} (${count})</div>
-      <div class="caster-row-cards">${items}</div>
-    </div>`;
-  };
-
-  const renderPlayerBoard = (playerId, seatLabel) => {
-    const player = players[playerId] ?? {};
-    const er = player.enduringRow ?? player.er ?? [];
-    const pr = player.pointRow ?? player.pr ?? [];
-    const secured = player.securedPoints ?? 0;
-    const goal = player.goal ?? rawState.startingGoal ?? 21;
-    return `<div class="caster-player-board" data-seat="${esc(seatLabel)}">
-      <div class="caster-player-header">
-        <span class="caster-player-name">${esc(seatLabel)}</span>
-        <span class="caster-player-goal">${secured} / ${goal} secured</span>
-      </div>
-      ${renderCardRow(er, 'Enduring', true)}
-      ${renderCardRow(pr, 'Point', true)}
-      ${renderHand(playerId, 'Hand')}
-    </div>`;
-  };
-
-  // Stack items are objects with sourceCardIds (array of card IDs).
-  // Show the first source card face-up for each stack entry.
-  const stackCards = stack.map(s => {
-    const sourceIds = Array.isArray(s.sourceCardIds) ? s.sourceCardIds : [];
-    const cardId = sourceIds[0] ?? null;
-    return renderCard(cardId, true);
-  }).join('');
-  const stackHtml = stack.length > 0
-    ? `<div class="caster-stack"><div class="caster-row-label">Stack (${stack.length})</div><div class="caster-row-cards">${stackCards}</div></div>`
-    : '';
-
-  // Zone summary (draw pile + graveyard counts are public information).
-  const zoneHtml = `<div class="caster-zones">
-    <span class="caster-zone" data-testid="caster-dp-count">Draw Pile: ${dpCount}</span>
-    <span class="caster-zone" data-testid="caster-gy-count">Graveyard: ${gyCount}</span>
-  </div>`;
-
-  const p1 = seatOrder[0] || 'P1';
-  const p2 = seatOrder[1] || 'P2';
-
-  return `<div class="caster-board" data-testid="caster-board" data-viewer="${omniscient ? 'omniscient' : 'public'}">
-    <div class="caster-board-status">
-      <span class="caster-board-phase" data-testid="caster-board-phase">Phase: ${esc(phase)}</span>
-      <span class="caster-board-turn" data-testid="caster-board-turn">Turn: ${esc(turn)}</span>
-    </div>
-    ${renderPlayerBoard(p2, 'Seat 2')}
-    ${stackHtml}
-    ${renderPlayerBoard(p1, 'Seat 1')}
-    ${zoneHtml}
-  </div>`;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────

@@ -361,7 +361,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log('\n❌ FAIL — secrets or env issues detected:\n');
     for (const v of allIssues) {
       const loc = v.line ? `:${v.line}` : '';
-      console.log(`  [${v.severity.toUpperCase()}] ${v.file}${loc}: ${v.name}`);
+      const description = v.name ?? v.issue ?? 'Unspecified secret containment violation';
+      console.log(`  [${v.severity.toUpperCase()}] ${v.file}${loc}: ${description}`);
       if (v.snippet) console.log(`    ${v.snippet}`);
     }
     process.exit(1);

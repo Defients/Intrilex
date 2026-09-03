@@ -2,8 +2,8 @@
 
 Status: **PASS**
 
-- Twelve smoke-tested workspaces including Card Faces, Ranks, Traces, Branches, and Diagnostics: PASS
-- Landing page (Play · Rules · Sim): PASS
+- Eleven smoke-tested workspaces including Caster, Ranks, Traces, Branches, and Diagnostics: PASS
+- Landing page (Play · Puzzles · Rules · Sim): PASS
 - Semantic checkpoint stepping: PASS
 - Player-authorized hidden-hand projection: PASS
 - Browser Worker campaign: 1/1 complete

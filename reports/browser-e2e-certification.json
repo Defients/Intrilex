@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-08-10T02:24:48.269Z",
-  "chromeVersion": "Chrome/151.0.7922.76",
+  "timestamp": "2026-09-02T19:16:52.916Z",
+  "chromeVersion": "Chrome/152.0.7977.75",
   "chromePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "baseUrl": "http://127.0.0.1:8787",
   "debugPort": 9222,
@@ -16,7 +16,7 @@
       "details": {
         "formRendered": true,
         "matchStarted": true,
-        "actionCount": 2,
+        "actionCount": 4,
         "stateText": null
       }
     },
@@ -28,27 +28,28 @@
         "tabBOpened": true,
         "leaseInfoA": {
           "leaseKeys": [
-            "intrilex-session-lease:S-eb05bbe1e55c87a3",
-            "intrilex-session-lease:S-b86fef52cdc9b3e7"
+            "intrilex-session-lease:S-300970f103aa1835",
+            "intrilex-session-lease:S-c75c0627df3f726f"
           ],
           "leaseData": {
-            "intrilex-session-lease:S-eb05bbe1e55c87a3": {
-              "tabId": "tab-1786328663606-ebl8dq",
-              "sessionId": "S-eb05bbe1e55c87a3",
-              "acquiredAt": 1786328663608,
-              "lastHeartbeat": 1786328663608
+            "intrilex-session-lease:S-300970f103aa1835": {
+              "tabId": "tab-1788376580880-mbd3f0",
+              "sessionId": "S-300970f103aa1835",
+              "acquiredAt": 1788376581050,
+              "lastHeartbeat": 1788376581050
             },
-            "intrilex-session-lease:S-b86fef52cdc9b3e7": {
-              "tabId": "tab-1786328664003-k4cdhg",
-              "sessionId": "S-b86fef52cdc9b3e7",
-              "acquiredAt": 1786328664011,
-              "lastHeartbeat": 1786328664011
+            "intrilex-session-lease:S-c75c0627df3f726f": {
+              "tabId": "tab-1788376582513-niiggd",
+              "sessionId": "S-c75c0627df3f726f",
+              "acquiredAt": 1788376582519,
+              "lastHeartbeat": 1788376582519
             }
           },
-          "leaseKeyCount": 2
+          "leaseKeyCount": 2,
+          "activeSessionId": "S-c75c0627df3f726f"
         },
         "conflictResult": {
-          "sessionId": "S-eb05bbe1e55c87a3",
+          "sessionId": "S-c75c0627df3f726f",
           "acquired": false,
           "conflict": true,
           "checkResult": {
@@ -64,12 +65,29 @@
       "details": {
         "matchStarted": true,
         "idbAvailable": true,
-        "saveCount": 0,
-        "saves": [],
+        "saveCount": 1,
+        "saves": [
+          {
+            "saveId": "AUTOSAVE-S-a0dc2b434a37df4a",
+            "profileId": "core-advanced-authority",
+            "mode": "ADVANCED_CORE",
+            "sessionId": "S-a0dc2b434a37df4a",
+            "hasContentHash": true,
+            "contentHashPrefix": "25e4002361077eb2",
+            "expectedStateHash": "cd7d52a20a7fc5ad282e19507e04379fc3d032ff06f0cce004f670010db00004",
+            "version": 2
+          }
+        ],
         "pageReloaded": true,
-        "hubRendered": true,
-        "hasContinueButton": false,
-        "continueSaveId": null
+        "setupRendered": true,
+        "resumedSaveId": "AUTOSAVE-S-a0dc2b434a37df4a",
+        "resumeIntegrityValidated": true,
+        "resumeInfo": {
+          "hash": "#/play/match",
+          "hasBoard": true,
+          "hasSessionError": false,
+          "pendingContinueSave": null
+        }
       }
     },
     {
@@ -123,15 +141,17 @@
       "passed": true,
       "details": {
         "privacy": {
-          "privateMarkersFound": [],
+          "privateMarkersFound": [
+            "face-down"
+          ],
           "privateElementCount": 0,
           "visiblePrivateCount": 0
         },
         "accessibility": {
           "hasSkipLink": true,
-          "ariaLabelCount": 88,
-          "roleCount": 37,
-          "buttonCount": 16,
+          "ariaLabelCount": 92,
+          "roleCount": 42,
+          "buttonCount": 23,
           "buttonsWithoutLabel": 0,
           "hasLangAttr": true,
           "lang": "en",
@@ -152,14 +172,29 @@
       "scenario": "terminal-evidence-navigation",
       "passed": true,
       "details": {
-        "advanceCount": 41,
+        "advanceCount": 15,
+        "actionTally": {
+          "group": 11,
+          "none": 3,
+          "variant": 1
+        },
         "reachedTerminal": true,
-        "terminalText": "💀\n      Match Complete\n      You lost.\n      Well played.\n    \n    \n      WinnerAI\n      TerminationNormal Victory\n      Full Turns10\n    \n    \n      Watch replay\n      \n      Rematch same seed\n     ",
+        "terminalText": "💀\n      Match Complete\n      You lost.\n      GG!\n    \n    \n      WinnerAI\n      TerminationNormal Victory\n      Full Turns12\n    \n    \n        \n      ?\n    \n        Unranked\n        0 / 5 Placements\n",
         "hasWinner": true,
         "winnerText": "AI",
-        "hasEvidenceLink": true,
+        "hasEvidenceLink": false,
         "hasReplayLink": true,
-        "evidenceNavigated": false
+        "replayNavigated": true,
+        "replayNavigation": {
+          "hash": "#/watch",
+          "replaySurfaceVisible": true,
+          "terminalStillVisible": false,
+          "library": {
+            "hasReplayLibrary": true,
+            "hasPersistedReplay": true
+          },
+          "hasReplayLibrary": true
+        }
       }
     }
   ]

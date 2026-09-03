@@ -6,23 +6,24 @@
     "replays": true,
     "history": true,
     "mechanics": true,
-    "cards": true,
     "synergies": true,
     "ranks": true,
     "compare": true,
     "traces": true,
     "branches": true,
     "diagnostics": true,
-    "evidence": true
+    "evidence": true,
+    "caster": true
   },
   "landing": {
     "landing": true,
     "play": true,
+    "puzzle": true,
     "rules": true,
     "sim": true
   },
   "campaign": {
-    "status": "PASS · 1 matches, 0 aborts, 304ms",
+    "status": "PASS · 1 matches, 0 aborts, 2247ms · 16 mechanics, 0 synergies",
     "matchCount": 1,
     "abortCount": 0
   },
@@ -35,10 +36,10 @@
     "lang": "en",
     "skipLink": true,
     "main": true,
-    "navLinks": 12,
+    "navLinks": 14,
     "unnamedButtons": 0,
     "reducedMotion": true,
-    "axInteractiveNodes": 45,
+    "axInteractiveNodes": 50,
     "axUnnamedInteractiveNodes": 0
   },
   "responsive": [
@@ -48,7 +49,7 @@
       "height": 844,
       "scrollWidth": 390,
       "clientWidth": 390,
-      "scrollHeight": 844,
+      "scrollHeight": 3374,
       "workspace": "Mechanics",
       "screenshot": "reports/visual-qa/mobile-390.png"
     },
@@ -57,8 +58,8 @@
       "width": 768,
       "height": 1024,
       "scrollWidth": 758,
-      "clientWidth": 768,
-      "scrollHeight": 1024,
+      "clientWidth": 758,
+      "scrollHeight": 1325,
       "workspace": "Mechanics",
       "screenshot": "reports/visual-qa/tablet-768.png"
     },
@@ -68,8 +69,8 @@
       "height": 768,
       "scrollWidth": 1356,
       "clientWidth": 1356,
-      "scrollHeight": 1313,
-      "workspace": "Card Faces",
+      "scrollHeight": 1599,
+      "workspace": "Watch",
       "screenshot": "reports/visual-qa/desktop-1366.png"
     },
     {
@@ -78,7 +79,7 @@
       "height": 1080,
       "scrollWidth": 1910,
       "clientWidth": 1910,
-      "scrollHeight": 1444,
+      "scrollHeight": 1579,
       "workspace": "Watch",
       "screenshot": "reports/visual-qa/theatre-1920.png"
     }

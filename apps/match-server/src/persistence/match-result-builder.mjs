@@ -39,9 +39,10 @@ import { MatchStatus } from '@intrilex/match-authority';
  * @param {string} [opts.queueId='casual'] - 'casual' or 'ranked'
  * @param {string} [opts.serverVersion] - Intrilex version string
  * @param {boolean} [opts.isAborted=false] - Whether the match was aborted (no rating change)
+ * @param {string|null} [opts.replayHash] - Precomputed verified replay hash; when omitted the builder computes it for backwards compatibility
  * @returns {Promise<MatchResultRecord | null>} null if match is not terminal or has no rated participants
  */
-export async function buildMatchResultRecord({ match, persistor, queueId = 'casual', serverVersion, isAborted = false, seasonId }) {
+export async function buildMatchResultRecord({ match, persistor, queueId = 'casual', serverVersion, isAborted = false, seasonId, replayHash: suppliedReplayHash }) {
   if (match.status !== MatchStatus.TERMINAL && match.status !== MatchStatus.ABORTED && match.status !== MatchStatus.EXPIRED) {
     return null;
   }
@@ -79,10 +80,14 @@ export async function buildMatchResultRecord({ match, persistor, queueId = 'casu
       : 'COMPLETED';
 
   // Compute replay hash (same as broadcastMatchEnded)
-  const replay = match.getReplay();
-  const replayHash = replay
-    ? createHash('sha256').update(JSON.stringify(replay)).digest('hex')
-    : null;
+  const replayHash = suppliedReplayHash !== undefined
+    ? suppliedReplayHash
+    : (() => {
+        const replay = match.getReplay();
+        return replay
+          ? createHash('sha256').update(JSON.stringify(replay)).digest('hex')
+          : null;
+      })();
 
   // Determine winner userId
   let winnerUserId = null;

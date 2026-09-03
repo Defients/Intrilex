@@ -123,7 +123,7 @@ async function cdpConnect(wsUrl) {
   function on(method, handler) {
     ws.addEventListener('message', (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.method === method) handler(msg.params);
+      if (msg.method === method) handler(msg.params, msg.sessionId);
     });
   }
 
@@ -225,6 +225,26 @@ const FILL_FORM_JS = `
 
 function fillFormJS(seed) {
   return FILL_FORM_JS.replace('__SEED__', String(seed));
+}
+
+function fillFirstContactFormJS(seed) {
+  return `
+    const form = document.querySelector('#new-match-form');
+    if (!form) throw new Error('Form not found');
+    const profile = form.querySelector('[name="profile"][value="first-contact-trigger-closure"]');
+    if (!profile) throw new Error('First Contact profile not found');
+    profile.checked = true;
+    const firstSeat = form.querySelector('[name="seat"][value="P1"]');
+    if (firstSeat) firstSeat.checked = true;
+    const easyPolicy = form.querySelector('.difficulty-group[data-difficulty="easy"] [name="ai-policy"]');
+    const fallbackPolicy = form.querySelector('[name="ai-policy"]');
+    if (easyPolicy) easyPolicy.checked = true;
+    else if (fallbackPolicy) fallbackPolicy.checked = true;
+    const seedInput = form.querySelector('[name="seed"]');
+    if (seedInput) seedInput.value = '${String(seed)}';
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    true;
+  `;
 }
 
 // ── Scenario implementations ──────────────────────────────────
@@ -339,10 +359,14 @@ async function scenario2_TwoTabLease(cdp, baseUrl) {
         for (const k of leaseKeys) {
           try { leaseData[k] = JSON.parse(localStorage.getItem(k)); } catch { leaseData[k] = localStorage.getItem(k); }
         }
+        const activeLease = Object.values(leaseData)
+          .filter(value => value && typeof value === 'object' && value.sessionId)
+          .sort((a, b) => (b.lastHeartbeat ?? b.acquiredAt ?? 0) - (a.lastHeartbeat ?? a.acquiredAt ?? 0))[0] ?? null;
         return {
           leaseKeys,
           leaseData,
           leaseKeyCount: leaseKeys.length,
+          activeSessionId: activeLease?.sessionId ?? null,
         };
       })()
     `);
@@ -353,8 +377,8 @@ async function scenario2_TwoTabLease(cdp, baseUrl) {
     const tabB = await newTab(cdp, `${baseUrl}/#/play`);
 
     try {
-      // Wait for the play hub to render
-      await waitFor(cdp, tabB.sessionId, () => document.querySelector('[data-action="new-game"], .play-hub, [data-testid="new-game"]') !== null, 10000);
+      // /play intentionally redirects to the canonical new-match setup route.
+      await waitFor(cdp, tabB.sessionId, () => location.hash === '#/play/new' && document.querySelector('[data-testid="play-setup"]') !== null, 10000);
 
       // Directly test the lease conflict by trying to acquire the same session's lease
       const conflictResult = await evaluate(cdp, tabB.sessionId, `
@@ -363,18 +387,10 @@ async function scenario2_TwoTabLease(cdp, baseUrl) {
           const leaseMod = await import('/play/state/session-lease.js');
           const { acquireLease, generateTabId, checkLease } = leaseMod;
 
-          // Find the session ID from tab A's lease in localStorage
+          // Use the exact lease Tab A just acquired. Older crash-recovery lease
+          // records may coexist in localStorage and are not valid test targets.
           const leaseKeys = Object.keys(localStorage).filter(k => k.includes('lease'));
-          let sessionId = null;
-          for (const k of leaseKeys) {
-            try {
-              const data = JSON.parse(localStorage.getItem(k));
-              if (data && data.sessionId) {
-                sessionId = data.sessionId;
-                break;
-              }
-            } catch {}
-          }
+          const sessionId = ${JSON.stringify(leaseInfoA.activeSessionId)};
 
           if (!sessionId) {
             return { error: 'No lease found in localStorage', leaseKeys };
@@ -426,9 +442,28 @@ async function scenario2_TwoTabLease(cdp, baseUrl) {
 async function scenario3_SaveReload(cdp, baseUrl) {
   const { targetId, sessionId } = await newTab(cdp, `${baseUrl}/#/play/new`);
   let postNavDiag = 'not yet navigated';
+  const consoleMessages = [];
+  cdp.on('Runtime.consoleAPICalled', (params, eventSessionId) => {
+    if (eventSessionId !== sessionId) return;
+    const text = (params.args ?? []).map(arg => arg.value ?? arg.description ?? '').join(' ');
+    consoleMessages.push(`${params.type}: ${text}`);
+  });
 
   try {
+    // Keep this tab foregrounded so Chrome does not throttle the production
+    // five-second autosave interval while other certification targets exist.
+    await cdp.send('Page.bringToFront', {}, sessionId);
     await waitFor(cdp, sessionId, () => document.querySelector('#new-match-form') !== null);
+
+    // Isolate this scenario from saves created by earlier certification tabs.
+    await evaluate(cdp, sessionId, `
+      (async () => {
+        const persistence = await import('/play/persistence.js');
+        const saves = await persistence.listSaves();
+        await Promise.all(saves.map(save => persistence.deleteSave(save.saveId)));
+        return saves.length;
+      })()
+    `);
 
     // Start a match
     await evaluate(cdp, sessionId, fillFormJS(777));
@@ -437,15 +472,15 @@ async function scenario3_SaveReload(cdp, baseUrl) {
       return document.querySelector('.play-board, .tcg-board, [data-testid="play-board"], [data-play-state]') !== null;
     }, 20000);
 
-    // Wait for autosave to fire (or manually trigger save)
-    await new Promise(r => setTimeout(r, 3000));
+    // Autosave interval is five seconds. Allow one full interval plus IDB commit.
+    await new Promise(r => setTimeout(r, 8000));
 
     // Check IndexedDB for saves
     const saveInfo = await evaluate(cdp, sessionId, `
       (async () => {
         return new Promise((resolve) => {
           if (!indexedDB) { resolve({ idbAvailable: false, saveCount: 0 }); return; }
-          const req = indexedDB.open('intrilex-play');
+          const req = indexedDB.open('intrilex-player');
           req.onsuccess = (e) => {
             const db = e.target.result;
             if (!db.objectStoreNames.contains('saves')) {
@@ -464,8 +499,10 @@ async function scenario3_SaveReload(cdp, baseUrl) {
                   saveId: s.saveId,
                   profileId: s.profileId,
                   mode: s.mode,
+                  sessionId: s.sessionId,
                   hasContentHash: !!s.contentHash,
                   contentHashPrefix: s.contentHash?.substring(0, 16),
+                  expectedStateHash: s.expectedStateHash,
                   version: s.version,
                 })),
               });
@@ -473,20 +510,33 @@ async function scenario3_SaveReload(cdp, baseUrl) {
             allReq.onerror = () => resolve({ idbAvailable: true, saveCount: 0, error: 'getAll failed' });
           };
           req.onerror = () => resolve({ idbAvailable: false, error: 'open failed' });
-          req.onupgradeneeded = (e) => {
-            // If DB doesn't exist yet, create the store
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains('saves')) {
-              db.createObjectStore('saves', { keyPath: 'saveId' });
-            }
+          req.onupgradeneeded = () => {
+            req.transaction.abort();
+            resolve({ idbAvailable: true, saveCount: 0, error: 'production database schema missing' });
           };
         });
       })()
     `);
 
-    // Reload the page by navigating to the play hub URL
+    const saveId = saveInfo.saves?.[0]?.saveId ?? null;
+    if (!saveInfo.idbAvailable || saveInfo.saveCount !== 1 || !saveId) {
+      const runtimeInfo = await evaluate(cdp, sessionId, `
+        (() => ({
+          hash: location.hash,
+          hasBoard: document.querySelector('.play-board, .tcg-board, [data-testid="play-board"], [data-play-state]') !== null,
+          hasError: document.querySelector('[data-testid="play-error"]') !== null,
+          visibilityState: document.visibilityState,
+          leaseKeys: Object.keys(localStorage).filter(key => key.startsWith('intrilex-session-lease:')),
+        }))()
+      `);
+      throw new Error(`Fresh autosave unavailable: ${JSON.stringify({ saveInfo, runtimeInfo, consoleMessages: consoleMessages.slice(-10) })}`);
+    }
+
+    // Navigate to the canonical setup route, then perform a real document reload.
     await cdp.send('Page.navigate', { url: `${baseUrl}/#/play` }, sessionId);
-    await new Promise(r => setTimeout(r, 5000));
+    await new Promise(r => setTimeout(r, 1000));
+    await cdp.send('Page.reload', { ignoreCache: true }, sessionId);
+    await new Promise(r => setTimeout(r, 3000));
 
     // Re-enable runtime after navigation
     await cdp.send('Runtime.enable', {}, sessionId);
@@ -498,36 +548,45 @@ async function scenario3_SaveReload(cdp, baseUrl) {
       landingDisplay: document.querySelector('#landing-app')?.style?.display,
       shellDisplay: document.querySelector('.observatory-shell')?.style?.display,
       playRoot: document.querySelector('#play-root')?.innerHTML?.substring(0, 300) || 'NOT_FOUND',
-      newGameBtn: document.querySelector('[data-testid="new-game"]')?.outerHTML?.substring(0, 100) || 'NOT_FOUND',
+      setup: document.querySelector('[data-testid="play-setup"]')?.outerHTML?.substring(0, 100) || 'NOT_FOUND',
       allButtons: document.querySelectorAll('button').length,
     })`).catch(() => 'eval failed');
 
-    await waitFor(cdp, sessionId, () => document.querySelector('.play-hub, [data-testid="new-game"], [data-action="new-game"]') !== null, 15000);
+    await waitFor(cdp, sessionId, () => location.hash === '#/play/new' && document.querySelector('[data-testid="play-setup"]') !== null, 15000);
 
-    const hubInfo = await evaluate(cdp, sessionId, `
+    // Exercise the production continue-match handoff. PlayController.resume()
+    // rejects content/state hash drift before the board can render.
+    await evaluate(cdp, sessionId, `
       (() => {
-        const continueBtn = document.querySelector('[data-action="continue-match"], [data-testid="continue-match"]');
-        const newGameBtn = document.querySelector('[data-action="new-game"], [data-testid="new-game"]');
-        return {
-          hasContinueButton: continueBtn !== null,
-          hasNewGameButton: newGameBtn !== null,
-          continueSaveId: continueBtn?.dataset?.saveId || null,
-        };
+        sessionStorage.setItem('intrilex-continue-save', ${JSON.stringify(saveId)});
+        location.hash = '#/play/match';
+        return true;
       })()
+    `);
+    await waitFor(cdp, sessionId, () => location.hash === '#/play/match' && document.querySelector('.play-board, .tcg-board, [data-testid="play-board"], [data-play-state]') !== null, 20000);
+
+    const resumeInfo = await evaluate(cdp, sessionId, `
+      (() => ({
+        hash: location.hash,
+        hasBoard: document.querySelector('.play-board, .tcg-board, [data-testid="play-board"], [data-play-state]') !== null,
+        hasSessionError: document.querySelector('[data-testid="play-error"]') !== null,
+        pendingContinueSave: sessionStorage.getItem('intrilex-continue-save'),
+      }))()
     `);
 
     return {
       scenario: 'save-reload-roundtrip',
-      passed: true,
+      passed: saveInfo.idbAvailable === true && saveInfo.saveCount === 1 && resumeInfo.hasBoard === true && resumeInfo.hasSessionError === false && resumeInfo.pendingContinueSave === null,
       details: {
         matchStarted: true,
         idbAvailable: saveInfo.idbAvailable,
         saveCount: saveInfo.saveCount,
         saves: saveInfo.saves?.slice(0, 3) || [],
         pageReloaded: true,
-        hubRendered: true,
-        hasContinueButton: hubInfo.hasContinueButton,
-        continueSaveId: hubInfo.continueSaveId,
+        setupRendered: true,
+        resumedSaveId: saveId,
+        resumeIntegrityValidated: resumeInfo.hasBoard && !resumeInfo.hasSessionError,
+        resumeInfo,
       },
     };
   } catch (error) {
@@ -544,10 +603,10 @@ async function scenario3_SaveReload(cdp, baseUrl) {
  * verify the production validation path rejects it.
  */
 async function scenario4_TamperedImport(cdp, baseUrl) {
-  const { targetId, sessionId } = await newTab(cdp, `${baseUrl}/#/play`);
+  const { targetId, sessionId } = await newTab(cdp, `${baseUrl}/#/play/new`);
 
   try {
-    await waitFor(cdp, sessionId, () => document.querySelector('.play-hub, [data-action="new-game"]') !== null, 10000);
+    await waitFor(cdp, sessionId, () => document.querySelector('[data-testid="play-setup"]') !== null, 10000);
 
     // Test the production validateSaveEnvelope function directly in the browser
     const tamperResults = await evaluate(cdp, sessionId, `
@@ -767,8 +826,9 @@ async function scenario6_TerminalEvidence(cdp, baseUrl) {
   try {
     await waitFor(cdp, sessionId, () => document.querySelector('#new-match-form') !== null);
 
-    // Start a match
-    await evaluate(cdp, sessionId, fillFormJS(314));
+    // Use the shortest complete profile against an easy policy so this remains
+    // a real UI-driven terminal test without turning certification into a soak.
+    await evaluate(cdp, sessionId, fillFirstContactFormJS(314));
 
     await waitFor(cdp, sessionId, () => {
       return document.querySelector('.play-board, .tcg-board, [data-testid="play-board"], [data-play-state]') !== null;
@@ -777,15 +837,16 @@ async function scenario6_TerminalEvidence(cdp, baseUrl) {
     // Auto-advance through decisions by clicking the first action repeatedly
     // until terminal state is reached
     let advanceCount = 0;
-    const maxAdvances = 200;
+    const maxAdvances = 600;
+    const actionTally = {};
 
     while (advanceCount < maxAdvances) {
       const state = await evaluate(cdp, sessionId, `
         (() => {
           const terminal = document.querySelector('.play-terminal, [data-testid="play-terminal"], [data-play-state="TERMINAL"], .match-complete');
           if (terminal) return { terminal: true };
-          // Check for confirm button first (two-step action flow)
-          const confirmBtn = document.querySelector('[data-testid="confirm-action"]');
+          // Confirm a fully specified action.
+          const confirmBtn = document.querySelector('[data-testid="confirm-action"]:not([disabled])');
           if (confirmBtn) {
             confirmBtn.click();
             return { terminal: false, clicked: true, type: 'confirm' };
@@ -796,21 +857,21 @@ async function scenario6_TerminalEvidence(cdp, baseUrl) {
             targetBtns[0].click();
             return { terminal: false, clicked: true, type: 'target' };
           }
-          // Check if a source card is already selected
-          const selectedCard = document.querySelector('.hand-card.selected');
-          // If no card is selected and there are legal hand cards, select one first
-          const legalHandCards = document.querySelectorAll('.hand-card.legal-source');
-          if (!selectedCard && legalHandCards.length > 0) {
-            legalHandCards[0].click();
-            return { terminal: false, clicked: true, type: 'card' };
+          // Progressive-disclosure flow: choose a concrete variant after a
+          // group with multiple legal actions has been opened.
+          const variant = document.querySelector('[data-variant-action-id]:not([disabled])');
+          if (variant) {
+            variant.click();
+            return { terminal: false, clicked: true, type: 'variant' };
           }
-          // Click first available intent button
-          const intentBtns = document.querySelectorAll('[data-intent-key]:not([disabled])');
-          if (intentBtns.length > 0) {
-            const nonPass = Array.from(intentBtns).find(b => !b.classList.contains('pass'));
-            const target = nonPass || intentBtns[0];
+          // Choose an action group. Single-action groups auto-submit; grouped
+          // variants re-render into the variant selection handled above.
+          const groupBtns = document.querySelectorAll('[data-group-id]:not([disabled])');
+          if (groupBtns.length > 0) {
+            const nonPass = Array.from(groupBtns).find(b => b.dataset.actionFamily !== 'pass');
+            const target = nonPass || groupBtns[0];
             target.click();
-            return { terminal: false, clicked: true, type: 'intent' };
+            return { terminal: false, clicked: true, type: 'group' };
           }
           // Click first available action button
           const actions = document.querySelectorAll('[data-testid="action-button"]:not([disabled]), [data-action-id]:not([disabled])');
@@ -835,12 +896,13 @@ async function scenario6_TerminalEvidence(cdp, baseUrl) {
       `);
 
       if (state.terminal) break;
+      actionTally[state.type ?? 'none'] = (actionTally[state.type ?? 'none'] ?? 0) + 1;
       if (!state.clicked) {
         // No action or advance button — wait a bit for AI turn
         await new Promise(r => setTimeout(r, 500));
       }
       advanceCount++;
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 100));
     }
 
     // Check if we reached terminal or timed out
@@ -849,8 +911,8 @@ async function scenario6_TerminalEvidence(cdp, baseUrl) {
         const terminal = document.querySelector('.play-terminal, [data-testid="play-terminal"], [data-play-state="TERMINAL"], .match-complete');
         const winnerEl = document.querySelector('[data-testid="terminal-winner"], [data-winner], .winner-display');
         const resultEl = document.querySelector('[data-testid="terminal-result"]');
-        const evidenceLink = document.querySelector('[data-action="view-evidence"], a[href*="evidence"], .evidence-link, [data-testid="watch-replay"]');
-        const replayLink = document.querySelector('[data-action="view-replay"], a[href*="replay"], .replay-link, [data-testid="watch-replay"]');
+        const evidenceLink = terminal?.querySelector('[data-action="view-evidence"], a[href*="evidence"], .evidence-link') ?? null;
+        const replayLink = terminal?.querySelector('[data-testid="watch-replay"]') ?? null;
         return {
           hasTerminal: terminal !== null,
           terminalText: terminal?.textContent?.trim()?.substring(0, 200) || null,
@@ -863,38 +925,55 @@ async function scenario6_TerminalEvidence(cdp, baseUrl) {
       })()
     `);
 
-    // Try navigating to evidence workspace
-    let evidenceNav = null;
-    if (terminalInfo.hasEvidenceLink) {
+    // Exercise the production terminal replay control.
+    let replayNav = null;
+    if (terminalInfo.hasReplayLink) {
       await evaluate(cdp, sessionId, `
-        const link = document.querySelector('[data-action="view-evidence"], a[href*="evidence"]');
+        const link = document.querySelector('[data-testid="play-terminal"] [data-testid="watch-replay"]');
         if (link) link.click();
         true;
       `);
-      await new Promise(r => setTimeout(r, 1500));
-      evidenceNav = await evaluate(cdp, sessionId, `
+      await waitFor(cdp, sessionId, () => location.hash === '#/play/replays' && document.querySelector('[data-testid="replay-library"]') !== null, 15000);
+      const libraryInfo = await evaluate(cdp, sessionId, `
         (() => {
-          const evidencePanel = document.querySelector('.evidence-panel, [data-workspace="evidence"], #evidence-workspace');
+          const replay = document.querySelector('[data-testid="replay-row"] [data-action="watch-replay"]');
+          if (replay) replay.click();
           return {
-            evidencePanelVisible: evidencePanel !== null,
-            evidenceText: evidencePanel?.textContent?.trim()?.substring(0, 100) || null,
+            hasReplayLibrary: document.querySelector('[data-testid="replay-library"]') !== null,
+            hasPersistedReplay: replay !== null,
           };
         })()
       `);
+      if (libraryInfo.hasPersistedReplay) {
+        await waitFor(cdp, sessionId, () => location.hash === '#/watch' && document.querySelector('.watch-layout #frame-slider') !== null, 20000);
+      }
+      replayNav = await evaluate(cdp, sessionId, `
+        (() => {
+          return {
+            hash: location.hash,
+            replaySurfaceVisible: location.hash === '#/watch' && document.querySelector('.watch-layout #frame-slider') !== null,
+            terminalStillVisible: document.querySelector('[data-testid="play-terminal"]') !== null,
+          };
+        })()
+      `);
+      replayNav.library = libraryInfo;
+      replayNav.hasReplayLibrary = libraryInfo.hasReplayLibrary;
     }
 
     return {
       scenario: 'terminal-evidence-navigation',
-      passed: terminalInfo.hasTerminal,
+      passed: terminalInfo.hasTerminal && terminalInfo.hasWinner && terminalInfo.hasReplayLink && replayNav?.replaySurfaceVisible === true,
       details: {
         advanceCount,
+        actionTally,
         reachedTerminal: terminalInfo.hasTerminal,
         terminalText: terminalInfo.terminalText,
         hasWinner: terminalInfo.hasWinner,
         winnerText: terminalInfo.winnerText,
         hasEvidenceLink: terminalInfo.hasEvidenceLink,
         hasReplayLink: terminalInfo.hasReplayLink,
-        evidenceNavigated: evidenceNav?.evidencePanelVisible || false,
+        replayNavigated: replayNav?.replaySurfaceVisible || false,
+        replayNavigation: replayNav,
       },
     };
   } finally {

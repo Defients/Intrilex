@@ -142,6 +142,17 @@ export async function handlePlayRoute(route, container) {
         }
       }
     } catch (err) { console.warn('[play-app] sessionStorage unavailable:', err?.message ?? err); }
+    // A /new -> /match hash transition runs the sub-route cleanup above after
+    // startNewMatch() has armed these timers. Re-arm controlled local-session
+    // resources here so the canonical match route always owns a live lease
+    // heartbeat and rolling autosave. start* functions are idempotent: each
+    // clears its previous interval before creating a replacement.
+    if (state.session && state.leaseMode === 'CONTROLLED') {
+      state.sound = state.sound || new SoundEngine();
+      state.particles = state.particles || new ParticleSystem();
+      startHeartbeat();
+      startAutosave();
+    }
     await renderActiveMatch(container);
   } else if (sub === '/replays') {
     await renderReplays(container);
