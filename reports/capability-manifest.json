@@ -1,6 +1,6 @@
 {
   "schemaVersion": "4.1.0",
-  "labVersion": "0.31.0",
+  "labVersion": "0.32.0",
   "rulesVersion": "4.3.1",
   "telemetryVersion": "4.1.0",
   "analyticsVersion": "4.2.0",
@@ -316,5 +316,5 @@
     "reasonCode": "SCOPE_FREEZE_AND_MULTIPLAYER_AUTHORITY_UNAVAILABLE",
     "note": "Online 1v1 Direct Duel is supported via networkAuthority. This entry blocks the canonical 3-4 player Multiplayer rules module only."
   },
-  "capabilityHash": "9ca3e940d953a8fb71bb80a50cbedf2fbe9bb58506fde26a2a2637ad4a5384c8"
+  "capabilityHash": "f84d46a391ca97bf578ca23f562a4c562f78afe29ec14e56d8dd3ca34e3669d9"
 }

@@ -1,7 +1,7 @@
 # Browser Parity Certification
 
 - Status: **PASS**
-- Lab: **v0.31.0**
+- Lab: **v0.32.0**
 - Engine/rules: **4.2.6 / 4.3.1**
 - Profile: **core-advanced-authority**
 - Certified replay corpus: **221/221** in Chromium main and Web Worker

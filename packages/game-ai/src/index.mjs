@@ -18,3 +18,9 @@ export { createHybrixAgent, ARCHETYPE_TO_SCORING_POLICY } from './agent.mjs';
 export { evaluateRankStrategy } from './rank-strategy.mjs';
 export { createHybrixPolicy, HYBRIX_POLICIES, HYBRIX_RUSHER_NORMAL, HYBRIX_DEFENDER_NORMAL, HYBRIX_TRICKSTER_NORMAL, HYBRIX_SNIPER_NORMAL, HYBRIX_RUSHER_HARD, HYBRIX_DEFENDER_HARD, HYBRIX_TRICKSTER_HARD, HYBRIX_SNIPER_HARD, HYBRIX_RUSHER_EASY, HYBRIX_DEFENDER_EASY, HYBRIX_RUSHER_NIGHTMARE, HYBRIX_DEFENDER_NIGHTMARE, HYBRIX_SUPPORT_NORMAL, HYBRIX_TANK_NORMAL } from './policy-adapter.mjs';
 export { extractHybrixTraces, explainHybrixTrace, summarizeHybrixDecisions, mapHybrixReasonCodes } from './trace-adapter.mjs';
+export {
+  LOOKAHEAD_STRENGTH_TIER, DEFAULT_LOOKAHEAD_CONFIG, defaultEvaluation,
+  createBoundedLookahead, runLookaheadBenchmark, createLookaheadPolicy,
+  LOOKAHEAD_STANDARD, LOOKAHEAD_DEEP, LOOKAHEAD_SHALLOW,
+  LOOKAHEAD_POLICIES, LOOKAHEAD_POLICY_IDS
+} from './bounded-lookahead.mjs';

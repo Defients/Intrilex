@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.32.0 — Intelligence, Better AI, and Replay Caster v1
+
+- **Bounded lookahead policy**: deterministic minimax search with fixed node/time budgets, opponent response sets, evaluation separated from search, and a benchmark suite. The policy is NOT labelled "expert" — benchmark evidence must justify that claim.
+- **Replay Caster commentary contract**: fact-level authorization, versioned prompt provenance, deterministic fallback labels, and malformed-stream handling. Commentary never asserts facts not authorized by the replay/view data.
+- **WAIT WHAT investigation workflow**: complete lifecycle (bookmark → preserve context → inspect alternatives → branch → compare → annotate → export) with automatic invalidation on authority hash change.
+- **Brain topology formalization**: the Brain's job is now formally defined as a mechanic/evidence topology explorer, with a complete 2D SVG equivalent that requires no WebGL.
+- **Evidence-honest player intelligence**: uncertainty labels, sample-size disclaimers, season/version boundaries, and human vs AI distinction. Player intelligence displays are now evidence-honest.
+- New modules: `packages/game-ai/src/bounded-lookahead.mjs`, `packages/replay-caster/src/commentary-contract.mjs`, `packages/replay-caster/src/investigation-workflow.mjs`, `apps/lab-web/src/brain/brain-topology.mjs`, `packages/statistics/src/evidence-honest.mjs`.
+- Tests: `test/v0.32.0-intelligence-caster.test.mjs` (59 tests).
+
+
 ## v0.31.0 — Competitive Operations
 
 ### Added
