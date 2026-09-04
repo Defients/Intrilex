@@ -78,10 +78,11 @@ export function advancedSourceIds(a:CoreAdvancedAction):CardId[]{
     case "advanced-super-two":case "advanced-super-four-exchange":case "advanced-super-eight-scuttle":case "advanced-super-j-tempo":case "advanced-super-three-raid":case "advanced-super-five-recycle":case "advanced-super-six-dig":case "advanced-super-seven-topdeck":case "advanced-ultra-three-black":case "advanced-ultra-two-black-two-red": return [...a.sourceCardIds];
     case "advanced-rank10-club-foundation":case "advanced-rank10-heart-tempo":case "advanced-rank10-spade-recovery": return [a.sourceCardId];
     case "advanced-rank10-diamond-mimic": { const ids:CardId[]=[a.sourceCardId]; if(a.pairedTwoId!==undefined) ids.push(a.pairedTwoId); return ids; }
+    case "advanced-sudden-death-declare": return [...a.sourceCardIds];
     default:return [];
   }
 }
-export function advancedTargetIds(a:CoreAdvancedAction):CardId[]{switch(a.kind){case "advanced-super-two":case "advanced-super-eight-scuttle":return [a.targetCardId];case "advanced-rank10-club-foundation":return a.bonusScoreCardId!==undefined?[a.bonusScoreCardId]:[];case "advanced-rank10-spade-recovery":return [a.recoverCardId];case "advanced-rank10-diamond-mimic":return a.mimicAction.kind==="absolute-scuttle"?[a.mimicAction.targetCardId]:[];default:return [];}}
+export function advancedTargetIds(a:CoreAdvancedAction):CardId[]{switch(a.kind){case "advanced-super-two":case "advanced-super-eight-scuttle":return [a.targetCardId];case "advanced-rank10-club-foundation":return a.bonusScoreCardId!==undefined?[a.bonusScoreCardId]:[];case "advanced-rank10-spade-recovery":return [a.recoverCardId];case "advanced-rank10-diamond-mimic":return a.mimicAction.kind==="absolute-scuttle"?[a.mimicAction.targetCardId]:[];case "advanced-sudden-death-declare":return [a.scrapTargetCardId];default:return [];}}
 export function advancedStackClass(a:CoreAdvancedAction):"super"|"ultra"|"royal-marriage"|"queens-court"|"rank10"|"voltage"{if(a.kind==="advanced-royal-marriage")return "royal-marriage";if(a.kind==="advanced-queens-court")return "queens-court";if(a.kind.startsWith("advanced-super"))return "super";if(a.kind.startsWith("advanced-ultra"))return "ultra";if(a.kind.startsWith("advanced-rank10"))return "rank10";return "voltage";}
 
 export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:CoreAdvancedAction):AdvancedResolution{
@@ -286,9 +287,34 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
       if (rt.suddenDeath) return fail("SUDDEN_DEATH_ACTIVE", "Sudden Death is already active");
       if (a.targetPlayerId === actorId) return fail("SUDDEN_DEATH_TARGET", "Cannot declare Sudden Death on yourself");
       if (!s.players[a.targetPlayerId]) return fail("SUDDEN_DEATH_TARGET", "Target player does not exist");
-      rt.suddenDeath = { activatorId: actorId, remaining: 3, activationFullTurnSequence: s.fullTurnSequence ?? 0 };
+      // Recipe validation: Red Joker + Black Joker, or four cards of the same rank.
+      // Per rulebook v4.3.1 §11.1: "Declare Sudden Death as one multi-card play using either:
+      //   Red Joker + Black Joker; or four cards of the same rank."
+      const sources = a.sourceCardIds;
+      if (!sourceSet(sources) || !sources.every((id) => inHand(s, id, actorId)))
+        return fail("SUDDEN_DEATH_SOURCE", "Sudden Death sources must be distinct controlled hand cards");
+      const isRjBj = sources.length === 2 && sources.every((id) => s.cards[id]?.identity === "RJ" || s.cards[id]?.identity === "BJ") &&
+        sources.some((id) => s.cards[id]?.identity === "RJ") && sources.some((id) => s.cards[id]?.identity === "BJ");
+      const isFourOfAKind = sources.length === 4 && sources.every((id) => rank(s, id) !== null && rank(s, id) === rank(s, sources[0]!));
+      if (!isRjBj && !isFourOfAKind)
+        return fail("SUDDEN_DEATH_RECIPE", "Sudden Death requires Red Joker + Black Joker, or four cards of the same rank");
+      // Scrap target: one Vulnerable enemy OTT card.
+      // Per rulebook v4.3.1 §11.1: "Choose one Vulnerable enemy OTT card as the Scrap target."
+      // Per rulebook v4.3.1 §17: "A card is Vulnerable to a particular interaction only when it is
+      //   a legal target, has no Aegis, has no relevant rank/state immunity."
+      const scrap = s.cards[a.scrapTargetCardId];
+      if (!scrap) return fail("SUDDEN_DEATH_SCRAP", "Scrap target does not exist");
+      if (scrap.controllerId === actorId) return fail("SUDDEN_DEATH_SCRAP", "Scrap target must be an enemy card");
+      if (!scrap.zone.endsWith("_PR") && !scrap.zone.endsWith("_ER")) return fail("SUDDEN_DEATH_SCRAP", "Scrap target must be an OTT card");
+      if (hasAegis(scrap)) return fail("SUDDEN_DEATH_SCRAP", "Scrap target must be Vulnerable (no Aegis)");
+      // Move source cards to GY (they are spent)
+      for (const id of sources) moveCard(s, id, "GY");
+      // Scrap the target
+      moveCard(s, a.scrapTargetCardId, "GY");
+      // Set Sudden Counter to 2 per rulebook §11.2
+      rt.suddenDeath = { activatorId: actorId, remaining: 2, activationFullTurnSequence: s.fullTurnSequence ?? 0 };
       s.metadata.phase8 = rt;
-      events.push({ type: "CORE_ADVANCED_SUDDEN_DEATH_DECLARED", payload: { declaredBy: actorId, targetPlayerId: a.targetPlayerId } });
+      events.push({ type: "CORE_ADVANCED_SUDDEN_DEATH_DECLARED", payload: { declaredBy: actorId, targetPlayerId: a.targetPlayerId, scrapTargetCardId: a.scrapTargetCardId, sourceCardIds: sources, remaining: 2 } });
       break;
     }
   }
@@ -418,18 +444,63 @@ export function enumerateAdvancedCoreCandidates(state:Readonly<EngineState>,acto
       for(const d1 of otherHand)out.push({family:"super",mode:"six-dig",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[d1],advanced:{kind:"advanced-super-six-dig",sourceCardIds:pair as [CardId,CardId],discardCardIds:[d1],keepCardIds:[]},featureVector:{dig:true,draw:8}});
     }
     for(const pair of combos(byRank("7"),2))out.push({family:"super",mode:"seven-topdeck",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[],advanced:{kind:"advanced-super-seven-topdeck",sourceCardIds:pair as [CardId,CardId],handCardIds:[],effectCardIds:[],scoreCardIds:[]},featureVector:{topdeck:true,reveal:4}});
-    // Generated effect copy: 10♦ Mimic with topdeck-seven and recycle-five
+    // 10♦ Mimic — per rulebook v4.3.1 §10♦:
+    //   Solo: mimic one ⭐ effect from ranks 3-7
+    //   Paired with any 2: mimic one ⭐ effect from ranks 3-8, Ace, Jack
+    // The resolver supports: row-exchange (4), absolute-scuttle (8), super-j-tempo (J),
+    // topdeck-seven (7), recycle-five (5).
     for(const id of byRank("10"))if(suit(s,id)==="♦"&&!p.limits.rank10PlayedThisFT){
+      // Solo mimic options (ranks 3-7)
       out.push({family:"rank10",mode:"diamond-mimic-topdeck-seven",timingClass:"ACTION",sourceCardIds:[id],targetCardIds:[],advanced:{kind:"advanced-rank10-diamond-mimic",sourceCardId:id,mimickedRank:"7",effectKey:"topdeck-seven",mimicAction:{kind:"topdeck-seven"}},featureVector:{mimic:true,generatedEffect:true}});
       out.push({family:"rank10",mode:"diamond-mimic-recycle-five",timingClass:"ACTION",sourceCardIds:[id],targetCardIds:[],advanced:{kind:"advanced-rank10-diamond-mimic",sourceCardId:id,mimickedRank:"5",effectKey:"recycle-five",mimicAction:{kind:"recycle-five"}},featureVector:{mimic:true,generatedEffect:true}});
+      // Solo row-exchange (rank 4) — requires an opponent
+      for(const oid of opponents)for(const row of ["pr","er"] as const){
+        out.push({family:"rank10",mode:`diamond-mimic-row-exchange-${row}`,timingClass:"ACTION",sourceCardIds:[id],targetCardIds:[],advanced:{kind:"advanced-rank10-diamond-mimic",sourceCardId:id,mimickedRank:"4",effectKey:"row-exchange",mimicAction:{kind:"row-exchange",targetPlayerId:oid,row}},featureVector:{mimic:true,generatedEffect:true}});
+      }
       const twosInHand=p.hand.filter(twoId=>rank(s,twoId)==="2"&&twoId!==id);
       for(const twoId of twosInHand){
+        // Paired mimic options (ranks 3-8, A, J)
         out.push({family:"rank10",mode:"diamond-mimic-paired-topdeck-seven",timingClass:"ACTION",sourceCardIds:[id,twoId],targetCardIds:[],advanced:{kind:"advanced-rank10-diamond-mimic",sourceCardId:id,pairedTwoId:twoId,mimickedRank:"7",effectKey:"topdeck-seven",mimicAction:{kind:"topdeck-seven"}},featureVector:{mimic:true,paired:true,generatedEffect:true}});
         out.push({family:"rank10",mode:"diamond-mimic-paired-recycle-five",timingClass:"ACTION",sourceCardIds:[id,twoId],targetCardIds:[],advanced:{kind:"advanced-rank10-diamond-mimic",sourceCardId:id,pairedTwoId:twoId,mimickedRank:"5",effectKey:"recycle-five",mimicAction:{kind:"recycle-five"}},featureVector:{mimic:true,paired:true,generatedEffect:true}});
+        // Paired row-exchange (rank 4)
+        for(const oid of opponents)for(const row of ["pr","er"] as const){
+          out.push({family:"rank10",mode:`diamond-mimic-paired-row-exchange-${row}`,timingClass:"ACTION",sourceCardIds:[id,twoId],targetCardIds:[],advanced:{kind:"advanced-rank10-diamond-mimic",sourceCardId:id,pairedTwoId:twoId,mimickedRank:"4",effectKey:"row-exchange",mimicAction:{kind:"row-exchange",targetPlayerId:oid,row}},featureVector:{mimic:true,paired:true,generatedEffect:true}});
+        }
+        // Paired absolute-scuttle (rank 8) — requires enemy PR target
+        for(const oid of opponents)for(const targetId of s.players[oid]!.pr){
+          out.push({family:"rank10",mode:"diamond-mimic-paired-absolute-scuttle",timingClass:"ACTION",sourceCardIds:[id,twoId],targetCardIds:[targetId],advanced:{kind:"advanced-rank10-diamond-mimic",sourceCardId:id,pairedTwoId:twoId,mimickedRank:"8",effectKey:"absolute-scuttle",mimicAction:{kind:"absolute-scuttle",targetCardId:targetId}},featureVector:{mimic:true,paired:true,generatedEffect:true}});
+        }
+        // Paired super-j-tempo (rank J)
+        out.push({family:"rank10",mode:"diamond-mimic-paired-super-j-tempo",timingClass:"ACTION",sourceCardIds:[id,twoId],targetCardIds:[],advanced:{kind:"advanced-rank10-diamond-mimic",sourceCardId:id,pairedTwoId:twoId,mimickedRank:"J",effectKey:"super-j-tempo",mimicAction:{kind:"super-j-tempo"}},featureVector:{mimic:true,paired:true,generatedEffect:true}});
       }
     }
-    // Sudden Death declaration
-    for(const oid of opponents)out.push({family:"sudden-death",mode:"declare",timingClass:"INTERRUPT",sourceCardIds:[],targetCardIds:[],advanced:{kind:"advanced-sudden-death-declare",targetPlayerId:oid},featureVector:{suddenDeath:true,interrupt:true}});
+    // Sudden Death declaration — requires RJ+BJ or four-of-a-kind, plus a Vulnerable enemy OTT scrap target.
+    // Per rulebook v4.3.1 §11.1.
+    const rjInHand = p.hand.find((id) => s.cards[id]?.identity === "RJ");
+    const bjInHand = p.hand.find((id) => s.cards[id]?.identity === "BJ");
+    const rjBjSources: CardId[] = [];
+    if (rjInHand && bjInHand) rjBjSources.push(rjInHand, bjInHand);
+    const fourOfAKindSources: CardId[][] = [];
+    for (const r of ["A","2","3","4","5","6","7","8","9","10","J","Q","K"] as const) {
+      const sameRank = p.hand.filter((id) => rank(s, id) === r);
+      if (sameRank.length >= 4) fourOfAKindSources.push(sameRank.slice(0, 4));
+    }
+    const sdSources = [rjBjSources, ...fourOfAKindSources].filter((arr) => arr.length > 0);
+    if (sdSources.length > 0) {
+      // Find Vulnerable enemy OTT cards (no Aegis, enemy PR or ER)
+      for (const oid of opponents) {
+        const enemyOtt: CardId[] = [];
+        for (const id of [...s.players[oid]!.pr, ...s.players[oid]!.er]) {
+          const c = s.cards[id];
+          if (c && !hasAegis(c)) enemyOtt.push(id);
+        }
+        for (const sources of sdSources) {
+          for (const scrapTargetId of enemyOtt) {
+            out.push({family:"sudden-death",mode:"declare",timingClass:"INTERRUPT",sourceCardIds:[...sources],targetCardIds:[scrapTargetId],advanced:{kind:"advanced-sudden-death-declare",targetPlayerId:oid,sourceCardIds:[...sources],scrapTargetCardId:scrapTargetId},featureVector:{suddenDeath:true,interrupt:true}});
+          }
+        }
+      }
+    }
   }
   return out;
 }

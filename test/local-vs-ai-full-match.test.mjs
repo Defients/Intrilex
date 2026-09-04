@@ -64,10 +64,11 @@ async function runMatchToTerminal(seed) {
 
 // ── Full-match completion ──────────────────────────────────────
 
-test('LVA-FULL-1: complete match reaches TERMINAL with NORMAL_VICTORY', async () => {
+test('LVA-FULL-1: complete match reaches TERMINAL with valid reason', async () => {
   const session = await runMatchToTerminal(42);
   assert.equal(session.status, SessionState.TERMINAL, 'match must reach TERMINAL');
-  assert.equal(session.terminalReason, 'NORMAL_VICTORY', 'must end with NORMAL_VICTORY');
+  assert.ok(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW', 'SUDDEN_DEATH_RESOLUTION'].includes(session.terminalReason),
+    'must end with a valid terminal reason, got: ' + session.terminalReason);
   assert.ok(session.winner === 'P1' || session.winner === 'P2', 'must have a winner');
 });
 

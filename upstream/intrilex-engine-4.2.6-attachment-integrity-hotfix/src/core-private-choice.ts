@@ -137,7 +137,7 @@ function clearChoice(state: EngineState): void {
   if (core) core.privateChoice = null;
 }
 
-function beginChoice(
+export function beginChoice(
   state: EngineState,
   input: Omit<CorePrivateChoiceState, "schemaVersion" | "choiceId" | "token" | "createdRevision" | "optionsHash">,
   events: CorePrivateChoiceTransition["events"]

@@ -723,7 +723,7 @@ export async function startServer(opts = {}) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         server: 'Intrilex Match Authority',
-        version: '0.28.0',
+        version: '0.28.1',
         protocolVersion: 2,
         ...getPublicHealthMetrics(),
       }));

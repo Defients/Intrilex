@@ -131,9 +131,15 @@ test('unrestricted profile: Sudden Death enumerates as interrupt', () => {
   let state = createSimulationState(setup);
   let d = advanceSimulationToDecision(state);
   state = engine.execute(d.state, d.legalActionFrame.actions.find((a) => a.mode === 'enter-action').command).state;
+  // Sudden Death requires RJ+BJ or four-of-a-kind recipe. Place RJ+BJ in hand.
+  const by = Object.fromEntries(Object.values(state.cards).map((c) => [c.identity, c.id]));
+  for (const id of ['RJ', 'BJ']) moveCard(state, by[id], 'P1_HAND', 'P1');
+  // Also need a Vulnerable enemy OTT card as target — place one in opponent PR
+  const tenId = by['10♣'];
+  if (tenId) moveCard(state, tenId, 'P2_PR', 'P2');
   d = advanceSimulationToDecision(state);
   const suddenDeath = d.legalActionFrame.actions.find((a) => a.family === 'sudden-death');
-  assert.ok(suddenDeath, 'Sudden Death should be enumerated as an available action');
+  assert.ok(suddenDeath, 'Sudden Death should be enumerated when RJ+BJ are in hand and a Vulnerable target exists');
   const r = engine.execute(d.state, suddenDeath.command);
   assert.equal(r.accepted, true, 'Sudden Death declaration should be engine-accepted');
 });

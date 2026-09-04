@@ -28,6 +28,7 @@ export interface CorePrivateChoiceFailure {
 }
 export declare function isCorePrivateChoiceProfile(state: Readonly<EngineState>): boolean;
 export declare function activeCorePrivateChoice(state: Readonly<EngineState>): CorePrivateChoiceState | null;
+export declare function beginChoice(state: EngineState, input: Omit<CorePrivateChoiceState, "schemaVersion" | "choiceId" | "token" | "createdRevision" | "optionsHash">, events: CorePrivateChoiceTransition["events"]): CorePrivateChoiceState;
 export declare function isCorePrivateChoiceEffect(effect: CoreEffectAction): boolean;
 export declare function resolveCorePrivateChoiceRoot(input: EngineState, actorId: PlayerId, effect: CoreEffectAction): CorePrivateChoiceTransition | CorePrivateChoiceFailure;
 export declare function generatedCoreEffectCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): CoreEffectAction[];

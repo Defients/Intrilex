@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
   "productName": "Intrilex Simulation Lab",
-  "version": "0.28.0",
-  "releaseTitle": "UX/Visual Polish",
+  "version": "0.28.1",
+  "releaseTitle": "Rules-Parity Hotfix",
   "buildKind": "RANKED_DUEL_PLAYER_SHELL",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
@@ -29,7 +29,7 @@
     "deploy",
     "evidence"
   ],
-  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.28.0",
+  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.28.1",
   "releaseDate": "2026-09-04",
-  "integrityHash": "8af677ecc6bc86f40a4b09804576d522"
+  "integrityHash": "cef7ee72dab583d41ec37ee3fec7ab6c"
 }

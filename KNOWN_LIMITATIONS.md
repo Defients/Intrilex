@@ -1,4 +1,4 @@
-# Known Limitations — Intrilex Simulation Lab v0.28.0
+# Known Limitations — Intrilex Simulation Lab v0.28.1
 
 ## Browser-Dependent Tests
 

@@ -276,7 +276,7 @@ export type CoreAdvancedAction =
   | { kind: "advanced-voltage-three"; chosenCardId?: CardId; disposition: "hand" | "points" }
   | { kind: "advanced-voltage-four"; guessRank: string; guessSuit: string; rankMatchDisposition: "points" }
   | { kind: "advanced-voltage-five"; branch: "refine" | "gy-bottom"; discardCardId?: CardId }
-  | { kind: "advanced-sudden-death-declare"; targetPlayerId: PlayerId };
+  | { kind: "advanced-sudden-death-declare"; targetPlayerId: PlayerId; sourceCardIds: CardId[]; scrapTargetCardId: CardId };
 
 export type CorePrimaryAction =
   | { kind: "core-draw" }

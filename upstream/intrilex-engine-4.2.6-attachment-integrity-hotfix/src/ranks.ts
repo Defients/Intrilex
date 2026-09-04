@@ -467,7 +467,7 @@ export function resolveRankAction(input: EngineState, actorId: PlayerId, action:
       state.players[actorId]!.limits.rank10PlayedThisFT = true;
       const ten = state.cards[action.sourceCardId]!; markExileBound(ten);
       if (action.pairedTwoId !== undefined) moveCard(state, action.pairedTwoId, "GY");
-      moveCard(state, action.sourceCardId, "GY");
+      moveCard(state, action.sourceCardId, "EXILE");
       state.metadata.lastMimic = { controllerId: actorId, mimickedRank: action.mimickedRank, effectKey: action.effectKey, paired: action.pairedTwoId ?? null };
       if (mimic === undefined) break;
       switch (mimic.kind) {

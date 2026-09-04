@@ -543,7 +543,7 @@ export function resolveRankAction(input, actorId, action) {
             markExileBound(ten);
             if (action.pairedTwoId !== undefined)
                 moveCard(state, action.pairedTwoId, "GY");
-            moveCard(state, action.sourceCardId, "GY");
+            moveCard(state, action.sourceCardId, "EXILE");
             state.metadata.lastMimic = { controllerId: actorId, mimickedRank: action.mimickedRank, effectKey: action.effectKey, paired: action.pairedTwoId ?? null };
             if (mimic === undefined)
                 break;
