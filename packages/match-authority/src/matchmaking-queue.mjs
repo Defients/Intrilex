@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
 // matchmaking-queue.mjs — Public matchmaking queue for the match server
 //
-// Provides a simple FIFO queue that pairs two waiting players into
-// a new match. No MMR, no accounts — just first-come-first-served
-// pairing by profile.
+// Provides a FIFO queue that pairs two waiting players into a new match.
+// Supports optional rating-based pairing, account-bound queue entries,
+// and queue segmentation by queueId (ranked vs casual).
 //
 // Lifecycle:
 //   1. Player sends QUEUE_JOIN → added to queue, receives QUEUE_JOINED

@@ -7,7 +7,7 @@
 //   IRX-M19: Private matches reject spectators
 //   IRX-M20: New accounts default to PRIVATE privacy
 //   IRX-M27: Clean-room verifier executes build
-//   IRX-M30: THIRD-PARTY-NOTICES.md exists and is complete
+//   IRX-M30: THIRD_PARTY_NOTICES.md exists and is complete
 //   IRX-M35: Decompression size limit enforced
 // ═══════════════════════════════════════════════════════════════
 import test from 'node:test';
@@ -350,34 +350,34 @@ test('IRX-M27: clean-room verifier header documents build verification', () => {
   assert.ok(script.includes('build') || script.includes('Build'), 'Header should document build verification');
 });
 
-// ── IRX-M30: THIRD-PARTY-NOTICES.md exists and is complete ────
+// ── IRX-M30: THIRD_PARTY_NOTICES.md exists and is complete ────
 
-test('IRX-M30: THIRD-PARTY-NOTICES.md exists at repository root', () => {
-  assert.ok(existsSync('THIRD-PARTY-NOTICES.md'), 'THIRD-PARTY-NOTICES.md must exist at repository root');
+test('IRX-M30: THIRD_PARTY_NOTICES.md exists at repository root', () => {
+  assert.ok(existsSync('THIRD_PARTY_NOTICES.md'), 'THIRD_PARTY_NOTICES.md must exist at repository root');
 });
 
-test('IRX-M30: THIRD-PARTY-NOTICES.md lists runtime dependencies', () => {
-  const content = readFileSync('THIRD-PARTY-NOTICES.md', 'utf8');
+test('IRX-M30: THIRD_PARTY_NOTICES.md lists runtime dependencies', () => {
+  const content = readFileSync('THIRD_PARTY_NOTICES.md', 'utf8');
   assert.ok(content.includes('@supabase/supabase-js'), 'Must list @supabase/supabase-js');
   assert.ok(content.includes('ws'), 'Must list ws');
 });
 
-test('IRX-M30: THIRD-PARTY-NOTICES.md lists development dependencies', () => {
-  const content = readFileSync('THIRD-PARTY-NOTICES.md', 'utf8');
+test('IRX-M30: THIRD_PARTY_NOTICES.md lists development dependencies', () => {
+  const content = readFileSync('THIRD_PARTY_NOTICES.md', 'utf8');
   assert.ok(content.includes('esbuild'), 'Must list esbuild');
   assert.ok(content.includes('eslint'), 'Must list eslint');
   assert.ok(content.includes('typescript'), 'Must list typescript');
 });
 
-test('IRX-M30: THIRD-PARTY-NOTICES.md includes license information', () => {
-  const content = readFileSync('THIRD-PARTY-NOTICES.md', 'utf8');
+test('IRX-M30: THIRD_PARTY_NOTICES.md includes license information', () => {
+  const content = readFileSync('THIRD_PARTY_NOTICES.md', 'utf8');
   assert.ok(content.includes('MIT'), 'Must include MIT license');
   assert.ok(content.includes('Apache'), 'Must include Apache license');
 });
 
-test('IRX-M30: THIRD-PARTY-NOTICES.md is non-trivial', () => {
-  const stat = statSync('THIRD-PARTY-NOTICES.md');
-  assert.ok(stat.size > 500, 'THIRD-PARTY-NOTICES.md should be non-trivial (>500 bytes)');
+test('IRX-M30: THIRD_PARTY_NOTICES.md is non-trivial', () => {
+  const stat = statSync('THIRD_PARTY_NOTICES.md');
+  assert.ok(stat.size > 500, 'THIRD_PARTY_NOTICES.md should be non-trivial (>500 bytes)');
 });
 
 // ── IRX-M35: Decompression size limit enforced ────────────────

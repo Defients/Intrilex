@@ -247,6 +247,8 @@ const STAGES = [
   ['v0.28.1-rules-parity-defects', 'node', ['--test', 'test/v0.28.1-rules-parity-defects.test.mjs']],
   // v0.28.2 Evidence Recalibration — evidence epoch, policy tiers, self-play exclusion
   ['v0.28.2-evidence-recalibration', 'node', ['--test', 'test/v0.28.2-evidence-recalibration.test.mjs']],
+  // v0.29.0 Product Truth — capability truth, three-lanes navigation, doc drift
+  ['v0.29.0-product-truth', 'node', ['--test', 'test/v0.29.0-product-truth.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

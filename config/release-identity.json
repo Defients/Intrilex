@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
   "productName": "Intrilex Simulation Lab",
-  "version": "0.28.2",
-  "releaseTitle": "Evidence Recalibration",
+  "version": "0.29.0",
+  "releaseTitle": "Product Truth & Release Candidate",
   "buildKind": "RANKED_DUEL_PLAYER_SHELL",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
@@ -29,7 +29,7 @@
     "deploy",
     "evidence"
   ],
-  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.28.2",
+  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.29.0",
   "releaseDate": "2026-09-04",
-  "integrityHash": "a00c688f34832a92232e00a3831d3b82"
+  "integrityHash": "c3bb0f6a165e41b072f5de17cb3664e4"
 }

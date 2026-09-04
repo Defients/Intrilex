@@ -1,5 +1,41 @@
 # Changelog
 
+## v0.29.0 — Product Truth & Release Candidate
+
+### Added
+
+- **Generated capability truth** — A single machine-readable capability
+  contract (`config/capability-truth.json`) now generates the feature
+  matrix, known limitations, and README truth sections. Run
+  `pnpm run capability:generate` to regenerate.
+- **Three-lane navigation** — The observatory navigation is reorganized
+  into three product lanes: **Play** (local, ranked, tournaments,
+  replays), **Learn** (academy, puzzles, rules, card reference), and
+  **Lab** (watch, caster, mechanics, ranks, evidence, traces, branches,
+  diagnostics). An **Account** section groups profile, achievements,
+  release notes, settings, and auth.
+- **Feature matrix** — `docs/FEATURE_MATRIX.md` is auto-generated from
+  the capability truth and documents all profiles, network features,
+  product lanes, and limitations in a single place.
+- **Product truth test suite** — 12 tests verify capability truth
+  consistency, three-lanes navigation, and documentation drift prevention.
+
+### Changed
+
+- **README rewritten** — Replaced stale version prose (going back to
+  v0.10.0) with a concise, current summary generated from capability
+  truth. The new README accurately describes ranked matchmaking,
+  accounts, seasons, tournaments, and all current capabilities.
+- **KNOWN_LIMITATIONS.md regenerated** — Now auto-generated from the
+  capability truth with accurate, categorized limitations.
+- Version surfaces updated to 0.29.0.
+
+### Removed
+
+- Stale version prose from v0.10.0 through v0.16.1 in README.md.
+- Old "Analysis/Investigation/System" navigation sections replaced by
+  the three-lane organization.
+
 ## v0.28.2 — Evidence Recalibration
 
 ### Added

@@ -1,0 +1,453 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-09-04T13:49:59.503Z",
+  "source": {
+    "capabilityManifest": "reports/capability-manifest.json",
+    "releaseIdentity": "config/release-identity.json",
+    "selfAudit": "reports/self-audit.json",
+    "packageJson": "package.json"
+  },
+  "product": {
+    "name": "Intrilex Simulation Lab",
+    "version": "0.29.0",
+    "releaseTitle": "Product Truth & Release Candidate",
+    "engineVersion": "4.2.6",
+    "rulesVersion": "4.3.1",
+    "officialRulesVersion": "4.3.1",
+    "labVersion": "0.28.2",
+    "schemaVersion": "4.1.0",
+    "telemetryVersion": "4.1.0",
+    "analyticsVersion": "4.2.0",
+    "replayVersion": {
+      "legacy": 1,
+      "certified": 2,
+      "labSemantic": 4
+    },
+    "playerRuntimeVersion": "1.2.0",
+    "saveFormatVersion": 2,
+    "defaultSimulationProfile": "core-advanced-authority"
+  },
+  "profiles": [
+    {
+      "id": "CORE_ADVANCED_2P",
+      "displayName": "Advanced Core Authority — Two Player",
+      "engineProfileId": "core-advanced-authority",
+      "autonomy": "SUPPORTED",
+      "playerCounts": [
+        2
+      ],
+      "covered": [
+        "core-foundation",
+        "public-effects",
+        "responses",
+        "private-choices",
+        "selected-supers",
+        "royal-marriage",
+        "queens-court",
+        "selected-rank10",
+        "three-ultra-recipes",
+        "public-voltage",
+        "voltage-3-choice",
+        "voltage-4-prediction",
+        "voltage-5-refine",
+        "10-club-foundation",
+        "10-diamond-mimic",
+        "exhausted-pass"
+      ],
+      "replayOnly": [
+        "complete-core",
+        "hidden-choice-supers",
+        "generated-effect-copy",
+        "sudden-death"
+      ],
+      "blocked": [
+        "optional-modules",
+        "multiplayer"
+      ]
+    },
+    {
+      "id": "CORE_UNRESTRICTED_2P",
+      "displayName": "Unrestricted Core Authority — Two Player",
+      "engineProfileId": "core-unrestricted-authority",
+      "autonomy": "SUPPORTED",
+      "playerCounts": [
+        2
+      ],
+      "covered": [
+        "core-foundation",
+        "public-effects",
+        "responses",
+        "private-choices",
+        "all-supers",
+        "royal-marriage",
+        "queens-court",
+        "all-rank10",
+        "three-ultra-recipes",
+        "public-voltage",
+        "voltage-3-choice",
+        "voltage-4-prediction",
+        "voltage-5-refine",
+        "10-club-foundation",
+        "10-diamond-mimic",
+        "hidden-choice-supers",
+        "generated-effect-copy",
+        "sudden-death",
+        "exhausted-pass"
+      ],
+      "replayOnly": [],
+      "blocked": [
+        "optional-modules",
+        "multiplayer"
+      ]
+    },
+    {
+      "id": "FIRST_CONTACT_GENERIC_2P",
+      "displayName": "Complete Generic Two-Player First Contact",
+      "engineProfileId": "first-contact-trigger-closure",
+      "autonomy": "SUPPORTED",
+      "playerCounts": [
+        2
+      ],
+      "covered": [
+        "draw",
+        "play-for-points",
+        "play-for-effect",
+        "scuttle",
+        "exhausted-pass",
+        "responses",
+        "private-choices",
+        "seven-scoring-trigger"
+      ],
+      "replayOnly": [],
+      "blocked": [
+        "optional-modules",
+        "multiplayer",
+        "Core-only systems"
+      ]
+    }
+  ],
+  "surfaces": {
+    "execute": true,
+    "legalActionEnumeration": true,
+    "completeMatchOrchestration": true,
+    "deterministicMatchSetup": true,
+    "privateCommandVault": true,
+    "responseAuthority": true,
+    "privateChoiceAuthority": true,
+    "advancedCoreAuthority": true,
+    "semanticTelemetry": true,
+    "causalFactGraph": true,
+    "mechanicsAtlas": true,
+    "synergyAnalytics": true,
+    "observerInvariance": true,
+    "legacyReplay": true,
+    "certifiedReplayV2": true,
+    "publicStateView": true,
+    "playerAuthorizedStateView": true,
+    "nodeAutonomousExecution": "SUPPORTED",
+    "nodeWorkerExecution": "SUPPORTED",
+    "browserExecution": "SUPPORTED",
+    "browserWorkerExecution": "SUPPORTED",
+    "browserNodeHashParity": "SUPPORTED"
+  },
+  "networkAuthority": {
+    "status": "SUPPORTED",
+    "transport": "WEBSOCKET",
+    "authority": "SERVER",
+    "features": {
+      "serverAuthoritative": true,
+      "hiddenInfoFirewall": true,
+      "idempotentSubmission": true,
+      "disconnectReconnect": true,
+      "certifiedReplay": true,
+      "deterministicParity": true,
+      "lobbyUI": true,
+      "inviteCodeSharing": true,
+      "reconnectPersistence": true,
+      "persistentStorage": true,
+      "publicMatchmaking": {
+        "supported": true,
+        "enabledByDefault": false,
+        "enableFlag": "INTRILEX_PUBLIC_MATCHMAKING"
+      },
+      "webSocketCompression": true,
+      "spectatorMode": true,
+      "rateLimiting": true,
+      "ipRateLimiting": true,
+      "spectatorLimit": true,
+      "matchHistory": {
+        "supported": true,
+        "enabledByDefault": false,
+        "enableFlag": "INTRILEX_PUBLIC_HISTORY"
+      }
+    },
+    "uxIntegration": {
+      "lobbyHub": true,
+      "createFlow": true,
+      "joinFlow": true,
+      "waitingRoom": true,
+      "readyCheck": true,
+      "reconnectDialog": true,
+      "errorScreen": true,
+      "statusBanner": true
+    }
+  },
+  "multiplayer": {
+    "status": "BLOCKED",
+    "reasonCode": "SCOPE_FREEZE_AND_MULTIPLAYER_AUTHORITY_UNAVAILABLE",
+    "note": "Online 1v1 Direct Duel is supported via networkAuthority. This entry blocks the canonical 3-4 player Multiplayer rules module only."
+  },
+  "unsupportedCombinations": [
+    {
+      "kind": "COMPLETE_CORE_AUTONOMY",
+      "status": "SUPPORTED",
+      "reasonCode": "UNRESTRICTED_CORE_AUTHORITY_IMPLEMENTED"
+    },
+    {
+      "kind": "OPTIONAL_MODULE_AUTONOMY",
+      "status": "BLOCKED",
+      "reasonCode": "SCOPE_FREEZE_AND_ENGINE_AUTHORITY_UNAVAILABLE"
+    },
+    {
+      "kind": "MULTIPLAYER_AUTONOMY",
+      "status": "BLOCKED",
+      "reasonCode": "SCOPE_FREEZE_AND_MULTIPLAYER_AUTHORITY_UNAVAILABLE"
+    },
+    {
+      "kind": "EVENT_LEVEL_STATE_STEPPING",
+      "status": "BLOCKED",
+      "reasonCode": "EVENT_STATE_SNAPSHOTS_UNAVAILABLE"
+    }
+  ],
+  "evidence": {
+    "certifiedReplayCount": 121,
+    "semanticHotfixFixtureCount": 25,
+    "browserParity": {
+      "report": "reports/browser-parity.json",
+      "proofKind": "REAL_CHROMIUM_CDP_MAIN_THREAD_AND_WEB_WORKER",
+      "certifiedReplayCount": 121,
+      "autonomousProfile": "core-advanced-authority"
+    },
+    "testFileCount": 183,
+    "testCount": 4475,
+    "testPassCount": 4461,
+    "ciStageCount": null,
+    "selfAuditStatus": "PASS"
+  },
+  "lanes": {
+    "play": {
+      "label": "Play",
+      "description": "Local, ranked, tournaments, replays",
+      "routes": [
+        {
+          "route": "/play",
+          "label": "Play Hub",
+          "description": "Game start, resume, and new match setup"
+        },
+        {
+          "route": "/play/new",
+          "label": "New Game",
+          "description": "Configure a match vs AI or online"
+        },
+        {
+          "route": "/play/academy",
+          "label": "Academy",
+          "description": "5 sequential interactive lessons"
+        },
+        {
+          "route": "/puzzles",
+          "label": "Puzzles",
+          "description": "Progressive puzzle ladder"
+        },
+        {
+          "route": "/play/replays",
+          "label": "Replay Library",
+          "description": "Browse, watch, and verify replays"
+        },
+        {
+          "route": "/tournaments",
+          "label": "Tournaments",
+          "description": "AI bracket tournaments"
+        },
+        {
+          "route": "/seasons",
+          "label": "Ranked Seasons",
+          "description": "Ranked play, placements, and leaderboards"
+        }
+      ]
+    },
+    "learn": {
+      "label": "Learn",
+      "description": "Academy, puzzles, rules, card reference",
+      "routes": [
+        {
+          "route": "/rules",
+          "label": "Rulebook",
+          "description": "Complete player rulebook"
+        },
+        {
+          "route": "/play/academy",
+          "label": "Academy",
+          "description": "Interactive tutorial lessons"
+        },
+        {
+          "route": "/puzzles",
+          "label": "Puzzles",
+          "description": "Puzzle ladder with progression"
+        },
+        {
+          "route": "/cards",
+          "label": "Card Reference",
+          "description": "All 54 canonical card faces"
+        }
+      ]
+    },
+    "lab": {
+      "label": "Lab",
+      "description": "Watch, Caster, mechanics, ranks, evidence, traces, branches, diagnostics",
+      "routes": [
+        {
+          "route": "/watch",
+          "label": "Watch",
+          "description": "Match theatre"
+        },
+        {
+          "route": "/caster",
+          "label": "Caster",
+          "description": "Live replay broadcast"
+        },
+        {
+          "route": "/replays",
+          "label": "Replays",
+          "description": "Verification"
+        },
+        {
+          "route": "/history",
+          "label": "History",
+          "description": "Match ledger"
+        },
+        {
+          "route": "/mechanics",
+          "label": "Mechanics",
+          "description": "Atlas"
+        },
+        {
+          "route": "/synergies",
+          "label": "Synergies",
+          "description": "Relationships"
+        },
+        {
+          "route": "/ranks",
+          "label": "Ranks",
+          "description": "Power observatory"
+        },
+        {
+          "route": "/compare",
+          "label": "Compare",
+          "description": "Matched cohorts"
+        },
+        {
+          "route": "/traces",
+          "label": "Traces",
+          "description": "Decision intelligence"
+        },
+        {
+          "route": "/branches",
+          "label": "Branches",
+          "description": "Counterfactual lab"
+        },
+        {
+          "route": "/diagnostics",
+          "label": "Diagnostics",
+          "description": "Policy behavior"
+        },
+        {
+          "route": "/tournament",
+          "label": "Tournament",
+          "description": "AI bracket"
+        },
+        {
+          "route": "/evidence",
+          "label": "Evidence",
+          "description": "Integrity and provenance"
+        },
+        {
+          "route": "/intelligence",
+          "label": "Analytics AI",
+          "description": "Ollama interpretation"
+        }
+      ]
+    }
+  },
+  "limitations": [
+    {
+      "id": "MULTIPLAYER-01",
+      "severity": "by-design",
+      "title": "Canonical 3-4 player Multiplayer module is not available",
+      "detail": "Online 1v1 Direct Duel is supported via networkAuthority. This entry blocks the canonical 3-4 player Multiplayer rules module only.",
+      "reasonCode": "SCOPE_FREEZE_AND_MULTIPLAYER_AUTHORITY_UNAVAILABLE"
+    },
+    {
+      "id": "OPTMODULES-01",
+      "severity": "by-design",
+      "title": "Optional modules are not available",
+      "detail": "Optional game modules are blocked by scope freeze. The engine authority for optional modules is unavailable.",
+      "reasonCode": "SCOPE_FREEZE_AND_ENGINE_AUTHORITY_UNAVAILABLE"
+    },
+    {
+      "id": "EVENTSTEP-01",
+      "severity": "technical",
+      "title": "Event-level state stepping is not available",
+      "detail": "The engine does not expose event-level state snapshots. Replay stepping operates at the command level.",
+      "reasonCode": "EVENT_STATE_SNAPSHOTS_UNAVAILABLE"
+    },
+    {
+      "id": "ADVANCED-REPLAY-ONLY",
+      "severity": "profile-scope",
+      "title": "Advanced Core has replay-only systems",
+      "detail": "In Advanced Core, the following systems are replay-only (not autonomously playable): complete-core, hidden-choice-supers, generated-effect-copy, sudden-death. Use Unrestricted Core for full autonomous play of these systems.",
+      "items": [
+        "complete-core",
+        "hidden-choice-supers",
+        "generated-effect-copy",
+        "sudden-death"
+      ]
+    },
+    {
+      "id": "BROWSER-TESTS-01",
+      "severity": "environment",
+      "title": "Browser UI smoke and E2E certification require Chromium",
+      "detail": "scripts/browser-ui-smoke.mjs and scripts/browser-e2e-certification.mjs require a Chromium binary. Without it, they write FAIL reports. Do not leave orphaned processes running."
+    },
+    {
+      "id": "VENDOR-01",
+      "severity": "environment",
+      "title": "Vendor engine directory may not be present in all workspaces",
+      "detail": "The integration test for 121 certified replays skips gracefully when vendor/intrilex-engine-4.1.0/ is absent."
+    },
+    {
+      "id": "SEC-01-HISTORY",
+      "severity": "security-debt",
+      "title": "Git history contains a credential-bearing path (scripts/upload-key.cjs)",
+      "detail": "The secret containment scan detects a credential-bearing path in 2 reachable commits. This requires Git history rewriting to fully resolve. The current working tree does not contain the credential."
+    },
+    {
+      "id": "POLICY-TIER-01",
+      "severity": "evidence",
+      "title": "Lookahead, Tournament, and Human-meta-proxy policy tiers are not yet established",
+      "detail": "All 20 policies are classified as Fixture, Baseline, or Heuristic. No policy has been benchmarked to Lookahead, Tournament, or Human-meta-proxy tier. Claims are qualified by the highest established tier."
+    },
+    {
+      "id": "BALANCE-01",
+      "severity": "design",
+      "title": "No numerical card balance changes have been introduced",
+      "detail": "The balance investigation found that engine correctness and policy quality must be established before balance tuning. No card values, costs, or effects have been changed for balance reasons."
+    },
+    {
+      "id": "SPECTATOR-01",
+      "severity": "technical",
+      "title": "Spectator mode uses NEUTRAL projection with a 50-spectator limit",
+      "detail": "Spectators see a NEUTRAL projection of the game state — they do not see either player's authorized view. Spectator capacity is limited to 50 spectators per match."
+    }
+  ]
+}
