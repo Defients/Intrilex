@@ -1,6 +1,6 @@
 # Capability Matrix
 
-> Reconciled against code truth for v0.32.0 (Official Rules v4.3.1 on Engine v4.2.6).
+> Reconciled against code truth for v1.0.0 (Official Rules v4.3.1 on Engine v4.2.6).
 > Source of truth: `apps/lab-web/src/play/save-integrity.js` (`RULES_VERSION`, `ENGINE_VERSION`),
 > `README.md`, `packages/network-protocol/src/validation.mjs`, and the live match server.
 

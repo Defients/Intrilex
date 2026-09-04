@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "productSummary": "Intrilex Simulation Lab v0.32.0 — Player Experience. Built on Intrilex Engine v4.2.6 under Official Rules v4.3.1.",
+  "productSummary": "Intrilex Simulation Lab v1.0.0 — Certified Public Baseline. Built on Intrilex Engine v4.2.6 under Official Rules v4.3.1.",
   "keyFacts": {
-    "version": "0.32.0",
+    "version": "1.0.0",
     "engineVersion": "4.2.6",
     "rulesVersion": "4.3.1",
     "profileCount": 3,
@@ -13,7 +13,7 @@
     ],
     "networkStatus": "SUPPORTED",
     "multiplayerStatus": "BLOCKED",
-    "testFileCount": 185,
+    "testFileCount": 187,
     "certifiedReplayCount": 121
   },
   "lanes": {
@@ -211,6 +211,36 @@
       "id": "SPECTATOR-01",
       "title": "Spectator mode uses NEUTRAL projection with a 50-spectator limit",
       "severity": "technical"
+    },
+    {
+      "id": "CERT-LOOKAHEAD-01",
+      "title": "Bounded lookahead policy is NOT labelled \"expert\"",
+      "severity": "evidence"
+    },
+    {
+      "id": "CERT-WAITWHAT-01",
+      "title": "WAIT WHAT investigation workflow is not wired into CasterSession UI",
+      "severity": "technical"
+    },
+    {
+      "id": "CERT-BRAIN-2D-01",
+      "title": "2D brain topology renderer is not the default",
+      "severity": "technical"
+    },
+    {
+      "id": "CERT-EVIDENCE-DISPLAY-01",
+      "title": "Evidence-honest intelligence labels not displayed in all player-facing surfaces",
+      "severity": "technical"
+    },
+    {
+      "id": "CERT-TTS-01",
+      "title": "Local TTS is not implemented",
+      "severity": "technical"
+    },
+    {
+      "id": "CERT-HUMAN-VALIDATION-01",
+      "title": "Human validation sessions documented but not yet conducted",
+      "severity": "manual"
     }
   ]
 }

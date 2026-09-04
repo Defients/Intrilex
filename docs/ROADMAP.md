@@ -13,7 +13,7 @@
 - **v0.30.0 — Player Experience**
 - **v0.31.0 — Competitive Operations**
 - **v0.32.0 — Intelligence & Caster**
-- **v1.0.0 — Certified Public Baseline**
+- **v1.0.0 — Certified Public Baseline** ✅ Certified
 
 ---
 

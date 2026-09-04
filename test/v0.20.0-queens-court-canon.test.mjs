@@ -234,7 +234,7 @@ test('v4.2.0: release identity has officialRulesVersion 4.3.1 and engine rulesVe
   assert.equal(identity.officialRulesVersion, '4.3.1');
   assert.equal(identity.rulesVersion, '4.3.1');
   assert.equal(identity.engineVersion, '4.2.6');
-  assert.equal(identity.version, '0.32.0');
+  assert.equal(identity.version, '1.0.0');
 });
 
 test('v4.2.0: generated version modules export OFFICIAL_RULES_VERSION 4.3.1 and RULES_VERSION 4.3.1', async () => {

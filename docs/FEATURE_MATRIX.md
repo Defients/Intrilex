@@ -1,8 +1,8 @@
 # Feature Matrix
 
 > **AUTO-GENERATED** by `scripts/generate-capability-truth.mjs` from `config/capability-truth.json`.
-> Generated: 2026-09-04T15:18:45.583Z
-> Version: 0.32.0 (Player Experience)
+> Generated: 2026-09-04T17:55:11.093Z
+> Version: 1.0.0 (Certified Public Baseline)
 
 ## Simulation Profiles
 
@@ -139,3 +139,39 @@
 - **ID:** SPECTATOR-01
 - **Severity:** technical
 - **Detail:** Spectators see a NEUTRAL projection of the game state — they do not see either player's authorized view. Spectator capacity is limited to 50 spectators per match.
+
+### Bounded lookahead policy is NOT labelled "expert"
+
+- **ID:** CERT-LOOKAHEAD-01
+- **Severity:** evidence
+- **Detail:** The bounded lookahead policy has not been benchmarked to justify an "expert" strength claim. The default evaluation function is a placeholder heuristic.
+
+### WAIT WHAT investigation workflow is not wired into CasterSession UI
+
+- **ID:** CERT-WAITWHAT-01
+- **Severity:** technical
+- **Detail:** The investigation workflow is a complete pure-function module but has not been integrated into the CasterSession UI. It is available as a library API.
+
+### 2D brain topology renderer is not the default
+
+- **ID:** CERT-BRAIN-2D-01
+- **Severity:** technical
+- **Detail:** A complete 2D SVG brain topology renderer exists but has not replaced the 3D Three.js renderer as the default.
+
+### Evidence-honest intelligence labels not displayed in all player-facing surfaces
+
+- **ID:** CERT-EVIDENCE-DISPLAY-01
+- **Severity:** technical
+- **Detail:** Evidence-honest labels are computed by the statistics package but not yet displayed in every player-facing UI surface.
+
+### Local TTS is not implemented
+
+- **ID:** CERT-TTS-01
+- **Severity:** technical
+- **Detail:** Textual commentary is the validated contract. Local text-to-speech has been deferred.
+
+### Human validation sessions documented but not yet conducted
+
+- **ID:** CERT-HUMAN-VALIDATION-01
+- **Severity:** manual
+- **Detail:** The human validation protocol is documented in ROADMAP.md with measurement criteria, but actual sessions have not yet been conducted and recorded by the developer.
