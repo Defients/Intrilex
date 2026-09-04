@@ -205,18 +205,18 @@ test('v0.30.0: CSS includes academy recommendation styles', async () => {
 
 // ── Version surface ────────────────────────────────────────────
 
-test('v0.30.0: package.json version is 0.31.0', async () => {
+test('v0.30.0: package.json version is 0.32.0', async () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.equal(pkg.version, '0.31.0');
+  assert.equal(pkg.version, '0.32.0');
 });
 
-test('v0.30.0: save-integrity.js PRODUCT_VERSION is 0.31.0', async () => {
+test('v0.30.0: save-integrity.js PRODUCT_VERSION is 0.32.0', async () => {
   const src = read('apps/lab-web/src/play/save-integrity.js');
-  assert.ok(src.includes("PRODUCT_VERSION = '0.31.0'"));
+  assert.ok(src.includes("PRODUCT_VERSION = '0.32.0'"));
 });
 
-test('v0.30.0: release-identity.json version is 0.31.0', async () => {
+test('v0.30.0: release-identity.json version is 0.32.0', async () => {
   const ri = JSON.parse(read('config/release-identity.json'));
-  assert.equal(ri.version, '0.31.0');
-  assert.equal(ri.releaseTitle, 'Competitive Operations');
+  assert.equal(ri.version, '0.32.0');
+  assert.equal(ri.releaseTitle, 'Intelligence, Better AI, and Replay Caster v1');
 });

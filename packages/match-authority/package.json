@@ -1,6 +1,6 @@
 {
   "name": "@intrilex/match-authority",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "type": "module",
   "exports": {
     ".": "./src/authoritative-match-session.mjs",

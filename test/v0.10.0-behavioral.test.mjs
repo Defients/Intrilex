@@ -1138,7 +1138,7 @@ describe('Adversarial: Browser Evidence', () => {
 
   it('95. Browser parity report has correct version', () => {
     const report = JSON.parse(read('reports/browser-parity.json'));
-    assert.equal(report.labVersion, '0.31.0', 'Browser parity must be v0.31.0');
+    assert.equal(report.labVersion, '0.32.0', 'Browser parity must be v0.32.0');
   });
 
   it('96. Browser UI smoke report has at least 10 workspaces', () => {

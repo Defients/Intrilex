@@ -1,5 +1,13 @@
 # Known Limitations — Intrilex Simulation Lab v0.31.0
 
+## v0.32.0 — Intelligence, Better AI, and Replay Caster v1
+
+- The bounded lookahead policy is NOT labelled "expert". Benchmark results must be reviewed before making any strength claims. The default evaluation function is a placeholder heuristic.
+- The WAIT WHAT investigation workflow is a pure-function module; UI integration is not yet wired into the CasterSession.
+- The 2D brain topology renderer is a complete SVG implementation but has not replaced the 3D Three.js renderer as the default.
+- Evidence-honest player intelligence labels are computed but not yet displayed in all player-facing surfaces.
+- Local TTS is not implemented; textual commentary is the validated contract.
+
 > **AUTO-GENERATED** by `scripts/generate-capability-truth.mjs` from `config/capability-truth.json`.
 > Generated: 2026-09-04T15:18:45.583Z
 > Do not edit manually — run `pnpm run capability:generate` to regenerate.

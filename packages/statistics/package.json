@@ -1,9 +1,10 @@
 {
   "name": "@intrilex/statistics",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "type": "module",
   "exports": {
-    ".": "./src/statistics.mjs"
+    ".": "./src/statistics.mjs",
+    "./evidence-honest": "./src/evidence-honest.mjs"
   },
   "dependencies": {}
 }

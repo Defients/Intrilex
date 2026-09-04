@@ -253,6 +253,8 @@ const STAGES = [
   ['v0.30.0-player-experience', 'node', ['--test', 'test/v0.30.0-player-experience.test.mjs']],
   // v0.31.0 Competitive Operations — tournament check-in, abandonment, broadcast, moderation, migrations
   ['v0.31.0-competitive-operations', 'node', ['--test', 'test/v0.31.0-competitive-operations.test.mjs']],
+  // v0.32.0 Intelligence, Better AI, and Replay Caster v1 — bounded lookahead, commentary contract, investigation workflow, brain topology, evidence-honest intelligence
+  ['v0.32.0-intelligence-caster', 'node', ['--test', 'test/v0.32.0-intelligence-caster.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;
