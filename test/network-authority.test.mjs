@@ -892,10 +892,18 @@ function createMessageCollector(ws) {
   const buffer = [];
   const handler = (data) => buffer.push(JSON.parse(data.toString()));
   ws.on('message', handler);
+  // Phase 1.2: Track active timers/intervals so stop() can clean up all
+  // pending waitFor() calls. Without this, a timeout reject leaves the
+  // polling interval running forever, leaking a handle that prevents
+  // the process from exiting cleanly (the combined-suite stall root cause).
+  const activeTimers = new Set();
+  const activeIntervals = new Set();
   return {
     buffer,
     waitFor(type, timeoutMs = 10000) {
       return new Promise((resolve, reject) => {
+        // Single-settlement flag prevents resolve/reject races
+        let settled = false;
         // Check if already in buffer
         const existing = buffer.find(m => m.type === type);
         if (existing) {
@@ -903,19 +911,40 @@ function createMessageCollector(ws) {
           buffer.splice(buffer.indexOf(existing), 1);
           return resolve(existing);
         }
-        const timer = setTimeout(() => reject(new Error(`Timeout waiting for ${type}`)), timeoutMs);
+        const timer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          clearInterval(interval);
+          activeTimers.delete(timer);
+          activeIntervals.delete(interval);
+          reject(new Error(`Timeout waiting for ${type}`));
+        }, timeoutMs);
         const interval = setInterval(() => {
           const idx = buffer.findIndex(m => m.type === type);
           if (idx >= 0) {
+            if (settled) return;
+            settled = true;
             clearTimeout(timer);
             clearInterval(interval);
+            activeTimers.delete(timer);
+            activeIntervals.delete(interval);
             const msg = buffer.splice(idx, 1)[0];
             resolve(msg);
           }
         }, 50);
+        activeTimers.add(timer);
+        activeIntervals.add(interval);
       });
     },
-    stop() { ws.off('message', handler); },
+    stop() {
+      ws.off('message', handler);
+      for (const t of activeTimers) clearTimeout(t);
+      for (const i of activeIntervals) clearInterval(i);
+      activeTimers.clear();
+      activeIntervals.clear();
+    },
+    // Phase 1.2: Expose active handle count for regression testing
+    get activeHandleCount() { return activeTimers.size + activeIntervals.size; },
   };
 }
 
@@ -1073,6 +1102,41 @@ test('server: full WebSocket match with GET_REPLAY round-trip', async () => {
   ws1.close();
   ws2.close();
   // Don't close the server — the cleanup test at the end handles it
+});
+
+// ── Phase 1.2: Regression test for message collector timeout cleanup ──
+// The createMessageCollector's waitFor() must clear its polling interval
+// when it times out. Previously, the timeout handler rejected without
+// clearing the interval, leaking a handle that prevented process exit
+// (the combined-suite stall root cause).
+test('message collector: timeout clears interval (no handle leak)', async () => {
+  // Create a mock WebSocket that never receives messages
+  const handlers = [];
+  const mockWs = {
+    on: (_event, handler) => handlers.push(handler),
+    off: () => { handlers.length = 0; },
+  };
+  const mc = createMessageCollector(mockWs);
+  assert.equal(mc.activeHandleCount, 0, 'no active handles before waitFor');
+
+  // waitFor will time out since no messages arrive
+  const waitPromise = mc.waitFor('NONEXISTENT_TYPE', 100);
+  assert.ok(mc.activeHandleCount > 0, 'active handles exist during waitFor');
+
+  let timedOut = false;
+  try {
+    await waitPromise;
+  } catch (e) {
+    timedOut = e.message.includes('Timeout');
+  }
+  assert.ok(timedOut, 'waitFor should have timed out');
+
+  // After timeout, the interval must have been cleared
+  assert.equal(mc.activeHandleCount, 0, 'no active handles after timeout (interval cleared)');
+
+  // stop() should also be clean
+  mc.stop();
+  assert.equal(mc.activeHandleCount, 0, 'no active handles after stop()');
 });
 
 // ── Cleanup ──

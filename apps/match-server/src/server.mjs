@@ -63,7 +63,7 @@ const HEARTBEAT_INTERVAL = 15000; // 15s
 const MAX_MATCHES = 100;
 const LOBBY_TTL = 300000; // 5 min
 const MATCH_TTL = 1800000; // 30 min
-const RECONNECT_GRACE = 60000; // 1 min
+let RECONNECT_GRACE = 60000; // 1 min (configurable via opts.reconnectGraceMs for testing)
 // IRX-H10: Pending forfeit timeouts — when a participant disconnects during
 // a RUNNING match, a timeout is scheduled. If they don't reconnect within
 // RECONNECT_GRACE, the match is terminalized as a forfeit.
@@ -427,6 +427,10 @@ export async function startServer(opts = {}) {
   // Override allowed origins if provided (for testing / dynamic configuration)
   if (opts.allowedOrigins !== undefined) {
     ALLOWED_ORIGINS = opts.allowedOrigins;
+  }
+  // Phase 3: Allow configurable reconnect grace period for testing
+  if (opts.reconnectGraceMs !== undefined) {
+    RECONNECT_GRACE = opts.reconnectGraceMs;
   }
 
   // ── Auth initialization ──

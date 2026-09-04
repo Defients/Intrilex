@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-09-04T20:24:39.791Z",
+  "generatedAt": "2026-09-04T17:55:11.093Z",
   "source": {
     "capabilityManifest": "reports/capability-manifest.json",
     "releaseIdentity": "config/release-identity.json",
@@ -14,7 +14,7 @@
     "engineVersion": "4.2.6",
     "rulesVersion": "4.3.1",
     "officialRulesVersion": "4.3.1",
-    "labVersion": "1.0.0",
+    "labVersion": "0.32.0",
     "schemaVersion": "4.1.0",
     "telemetryVersion": "4.1.0",
     "analyticsVersion": "4.2.0",
@@ -228,11 +228,11 @@
       "certifiedReplayCount": 121,
       "autonomousProfile": "core-advanced-authority"
     },
-    "testFileCount": 189,
-    "testCount": 4681,
-    "testPassCount": 4663,
+    "testFileCount": 187,
+    "testCount": 4626,
+    "testPassCount": 4612,
     "ciStageCount": null,
-    "selfAuditStatus": "FAIL"
+    "selfAuditStatus": "PASS"
   },
   "lanes": {
     "play": {
