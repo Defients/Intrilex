@@ -1,5 +1,39 @@
 # Changelog
 
+## v0.30.0 — Player Experience
+
+### Added
+
+- **Game-start experience overhaul** — Rule profiles now have full
+  player-language explanations with active systems and recommended
+  audience. AI difficulty tiers show descriptions (Easy: forgiving,
+  Hard: skilled, Nightmare: ruthless). Seed controls are hidden under
+  an "Advanced options" disclosure. A resume prompt appears when a
+  saved match exists. Compatibility warnings surface for old
+  saves/replays.
+- **Card Inspector educational bridge** — The inspector now shows
+  protection and targeting status chips (Aegis, Guard, Tapped,
+  Exile-Bound, Attachment). Unavailable action reasons include
+  detailed text and rule references. Learning links connect each card
+  to Academy lessons, Puzzle Ladder practice, and Rank Anatomy.
+- **Academy explanation-first completion** — Foundations and Mechanics
+  tier lessons now use OBJECTIVES completion mode: players demonstrate
+  understanding of the mechanic without needing to win the match.
+  Applied Play tier uses OBJECTIVES_AND_WIN for both demonstration and
+  victory. A new `markUnderstood()` method on AcademyController allows
+  explanation-first completion.
+- **Puzzle → lesson recommendations** — The Academy hub now shows
+  recommended lessons based on puzzle performance. When a player
+  struggles with a puzzle (2+ failed attempts), the corresponding
+  Academy lesson is recommended with a contextual reason.
+
+### Changed
+
+- 8 lessons switched from WIN to OBJECTIVES completion mode
+- 2 lessons switched from WIN to OBJECTIVES_AND_WIN completion mode
+- AI personality cards now show description text alongside archetype name
+- Profile explainer updates dynamically when switching rule profiles
+
 ## v0.29.0 — Product Truth & Release Candidate
 
 ### Added

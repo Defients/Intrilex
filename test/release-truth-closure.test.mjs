@@ -24,46 +24,46 @@ async function readText(p) {
 
 // ── Tests ──
 
-test('release-truth: package.json version is 0.29.0', async () => {
+test('release-truth: package.json version is 0.30.0', async () => {
   const pkg = await readJson('package.json');
-  assert.equal(pkg.version, '0.29.0', 'package.json version must be 0.29.0');
+  assert.equal(pkg.version, '0.30.0', 'package.json version must be 0.30.0');
 });
 
-test('release-truth: package.json description references v0.29.0, not stale v0.24.2', async () => {
+test('release-truth: package.json description references v0.30.0, not stale v0.24.2', async () => {
   const pkg = await readJson('package.json');
-  assert.ok(pkg.description.includes('0.29.0'),
-    `description must reference v0.29.0, got: ${pkg.description.slice(0, 80)}...`);
+  assert.ok(pkg.description.includes('0.30.0'),
+    `description must reference v0.30.0, got: ${pkg.description.slice(0, 80)}...`);
   assert.ok(!pkg.description.includes('v0.24.2'),
     'description must not reference stale v0.24.2');
 });
 
-test('release-truth: save-integrity.js PRODUCT_VERSION is 0.29.0', async () => {
+test('release-truth: save-integrity.js PRODUCT_VERSION is 0.30.0', async () => {
   const src = await readText('apps/lab-web/src/play/save-integrity.js');
-  assert.ok(src.includes("PRODUCT_VERSION = '0.29.0'"),
-    'save-integrity.js PRODUCT_VERSION must be 0.29.0');
+  assert.ok(src.includes("PRODUCT_VERSION = '0.30.0'"),
+    'save-integrity.js PRODUCT_VERSION must be 0.30.0');
 });
 
-test('release-truth: index.html references 0.29.0 via application-version meta', async () => {
+test('release-truth: index.html references 0.30.0 via application-version meta', async () => {
   const html = await readText('apps/lab-web/src/index.html');
-  assert.ok(html.includes('0.29.0'), 'index.html must reference version 0.29.0');
-  assert.match(html, /application-version" content="0.29.0"/);
+  assert.ok(html.includes('0.30.0'), 'index.html must reference version 0.30.0');
+  assert.match(html, /application-version" content="0.30.0"/);
 });
 
-test('release-truth: config/release-identity.json version is 0.29.0', async () => {
+test('release-truth: config/release-identity.json version is 0.30.0', async () => {
   const ri = await readJson('config/release-identity.json');
-  assert.equal(ri.version, '0.29.0');
-  assert.ok(ri.canonicalArchivePrefix.includes('0.29.0'),
-    `canonicalArchivePrefix must include 0.29.0, got: ${ri.canonicalArchivePrefix}`);
+  assert.equal(ri.version, '0.30.0');
+  assert.ok(ri.canonicalArchivePrefix.includes('0.30.0'),
+    `canonicalArchivePrefix must include 0.30.0, got: ${ri.canonicalArchivePrefix}`);
 });
 
-test('release-truth: README title references v0.29.0', async () => {
+test('release-truth: README title references v0.30.0', async () => {
   const readme = await readText('README.md');
-  assert.ok(readme.includes('v0.29.0'), 'README must reference v0.29.0');
+  assert.ok(readme.includes('v0.30.0'), 'README must reference v0.30.0');
 });
 
-test('release-truth: KNOWN_LIMITATIONS references v0.29.0', async () => {
+test('release-truth: KNOWN_LIMITATIONS references v0.30.0', async () => {
   const kl = await readText('KNOWN_LIMITATIONS.md');
-  assert.ok(kl.includes('v0.29.0'), 'KNOWN_LIMITATIONS must reference v0.29.0');
+  assert.ok(kl.includes('v0.30.0'), 'KNOWN_LIMITATIONS must reference v0.30.0');
 });
 
 test('release-truth: service worker does NOT contain stale hardcoded v0.22.0 cache version', async () => {
@@ -120,6 +120,6 @@ test('release-truth: capability manifest separates capability from default state
 
 test('release-truth: server health endpoint reports v0.28.0', async () => {
   const serverSrc = await readText('apps/match-server/src/server.mjs');
-  assert.ok(serverSrc.includes("version: '0.29.0'"),
+  assert.ok(serverSrc.includes("version: '0.30.0'"),
     'server.mjs health endpoint must report version 0.28.0');
 });

@@ -249,6 +249,8 @@ const STAGES = [
   ['v0.28.2-evidence-recalibration', 'node', ['--test', 'test/v0.28.2-evidence-recalibration.test.mjs']],
   // v0.29.0 Product Truth — capability truth, three-lanes navigation, doc drift
   ['v0.29.0-product-truth', 'node', ['--test', 'test/v0.29.0-product-truth.test.mjs']],
+  // v0.30.0 Player Experience — game-start, card inspector, academy progression
+  ['v0.30.0-player-experience', 'node', ['--test', 'test/v0.30.0-player-experience.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

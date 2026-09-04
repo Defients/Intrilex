@@ -1,7 +1,7 @@
-# Known Limitations — Intrilex Simulation Lab v0.29.0
+# Known Limitations — Intrilex Simulation Lab v0.30.0
 
 > **AUTO-GENERATED** by `scripts/generate-capability-truth.mjs` from `config/capability-truth.json`.
-> Generated: 2026-09-04T13:49:59.503Z
+> Generated: 2026-09-04T14:31:28.123Z
 > Do not edit manually — run `pnpm run capability:generate` to regenerate.
 
 ## By Design (Scope Freeze)

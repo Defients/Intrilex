@@ -2283,9 +2283,16 @@ function renderInspector(cardId, cardRegistry, contracts, guidanceMode, _faceVie
     </li>`;
   }).join('');
 
+  // v0.30.0: Richer unavailable explanation with reason detail
   const unavailableExplanation = !hasLegalActions
     ? buildUnavailableExplanation('SOURCE_NOT_AVAILABLE', guidanceMode)
     : null;
+
+  // v0.30.0: Protection and targeting status
+  const protectionStatus = renderInspectorProtectionStatus(card);
+
+  // v0.30.0: Learning links (Academy / Puzzle)
+  const learningLinks = renderInspectorLearningLinks(card);
 
   // Render the inline Essentials summary (replaces old Board/Lite card-face gfx).
   const essentialsHtml = renderInspectorEssentials(card, cardRuntimeState(card));
@@ -2296,13 +2303,67 @@ function renderInspector(cardId, cardRegistry, contracts, guidanceMode, _faceVie
       <button class="inspector-face-tab advanced-rules" data-inspector-advanced-rules="${esc(identity ?? '')}" data-card-id="${esc(cardId)}" role="button" aria-label="Open advanced card rules" ${identity ? '' : 'disabled'}>Advanced Rules</button>
     </div>
     <div class="inspector-face-stage" data-inspector-face-view="essentials">${essentialsHtml}</div>
+    ${protectionStatus}
     <div class="inspector-actions">
       <h4>Legal actions for this card</h4>
       ${hasLegalActions ? `<ul class="inspector-action-list">${actionList}</ul>` : '<p class="inspector-no-actions">No legal actions for this card right now.</p>'}
-      ${unavailableExplanation ? `<p class="inspector-unavailable-reason">${esc(unavailableExplanation.shortText)}</p>` : ''}
+      ${unavailableExplanation ? `<div class="inspector-unavailable-detail" data-testid="inspector-unavailable-detail"><p class="inspector-unavailable-reason">${esc(unavailableExplanation.shortText)}</p>${unavailableExplanation.detailedText ? `<p class="inspector-unavailable-detail-text">${esc(unavailableExplanation.detailedText)}</p>` : ''}${unavailableExplanation.ruleRef ? `<p class="inspector-unavailable-rule-ref">${esc(unavailableExplanation.ruleRef)}</p>` : ''}</div>` : ''}
     </div>
+    ${learningLinks}
     <button class="inspector-close" data-testid="inspector-close" aria-label="Close inspector">Close</button>
   </aside>`;
+}
+
+/**
+ * v0.30.0: Render protection and targeting status for a card.
+ * Shows Aegis, Guard, Tapped, Exile-Bound, Attachment status in a dedicated section.
+ */
+function renderInspectorProtectionStatus(card) {
+  if (!card) return '';
+  const markers = card.statusMarkers ?? [];
+  if (markers.length === 0) return '';
+  const statusItems = markers.map(m => {
+    const label = m.label ?? m.type ?? 'Unknown';
+    const icon = {
+      AEGIS: '🛡',
+      GUARD: '🛡',
+      TAPPED: '✕',
+      EXILE_BOUND: '⟁',
+      ATTACHMENT: '🔗',
+    }[m.type] ?? '◆';
+    return `<span class="inspector-protection-chip" data-status-type="${esc(m.type)}"><b aria-hidden="true">${icon}</b>${esc(label)}</span>`;
+  }).join('');
+  return `<div class="inspector-protection-status" data-testid="inspector-protection-status" role="region" aria-label="Protection and targeting status">
+    <h4>Status</h4>
+    <div class="inspector-protection-chips">${statusItems}</div>
+  </div>`;
+}
+
+/**
+ * v0.30.0: Render learning links (Academy / Puzzle) for a card.
+ * Links to Academy lessons and Puzzle ladder for the card's rank.
+ */
+function renderInspectorLearningLinks(card) {
+  if (!card) return '';
+  const def = card.definition ?? card;
+  const rank = def.rank ?? null;
+  const suit = def.suit ?? null;
+  const identity = card.identity ?? null;
+  if (!rank) return '';
+  const links = [];
+  // Academy link — general, since academy lessons aren't per-card
+  links.push({ href: '#/play/academy', label: 'Learn in Academy', icon: '🎓', testId: 'inspector-academy-link' });
+  // Puzzle link — general puzzle ladder
+  links.push({ href: '#/puzzles', label: 'Practice in Puzzles', icon: '🧩', testId: 'inspector-puzzle-link' });
+  // Rank anatomy link for Lab mode
+  if (rank && suit) {
+    links.push({ href: `#/ranks?rank=${esc(rank)}&suit=${esc(suit)}`, label: 'Rank Anatomy', icon: '📊', testId: 'inspector-rank-link' });
+  }
+  const linkHtml = links.map(l => `<a class="inspector-learning-link" href="${esc(l.href)}" data-testid="${esc(l.testId)}" role="link"><span class="inspector-learning-link-icon" aria-hidden="true">${l.icon}</span><span>${esc(l.label)}</span></a>`).join('');
+  return `<div class="inspector-learning-links" data-testid="inspector-learning-links" role="region" aria-label="Learning links">
+    <h4>Learn this card</h4>
+    <div class="inspector-learning-link-list">${linkHtml}</div>
+  </div>`;
 }
 
 /**
