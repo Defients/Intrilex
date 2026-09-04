@@ -2,7 +2,7 @@
   "schemaVersion": "3.0",
   "status": "PASS",
   "proofKind": "REAL_CHROMIUM_CDP_MAIN_THREAD_AND_WEB_WORKER",
-  "labVersion": "0.32.0",
+  "labVersion": "1.0.0",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
   "profileId": "core-advanced-authority",
@@ -54,7 +54,7 @@
         "P2": 0
       }
     },
-    "durationMs": 1269
+    "durationMs": 1529
   },
   "worker": {
     "replayCount": 121,
@@ -78,7 +78,7 @@
         "P2": 0
       }
     },
-    "durationMs": 1278
+    "durationMs": 2033
   },
   "parity": {
     "aggregateHashesEqual": true,
@@ -91,5 +91,5 @@
     "policyBrowserMatchesNode": true,
     "policyTerminatesCanonically": true
   },
-  "generatedAt": "2026-09-04T15:19:34.129Z"
+  "generatedAt": "2026-09-04T18:15:16.812Z"
 }

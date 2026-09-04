@@ -1,15 +1,7 @@
-# Known Limitations — Intrilex Simulation Lab v0.31.0
-
-## v0.32.0 — Intelligence, Better AI, and Replay Caster v1
-
-- The bounded lookahead policy is NOT labelled "expert". Benchmark results must be reviewed before making any strength claims. The default evaluation function is a placeholder heuristic.
-- The WAIT WHAT investigation workflow is a pure-function module; UI integration is not yet wired into the CasterSession.
-- The 2D brain topology renderer is a complete SVG implementation but has not replaced the 3D Three.js renderer as the default.
-- Evidence-honest player intelligence labels are computed but not yet displayed in all player-facing surfaces.
-- Local TTS is not implemented; textual commentary is the validated contract.
+# Known Limitations — Intrilex Simulation Lab v1.0.0
 
 > **AUTO-GENERATED** by `scripts/generate-capability-truth.mjs` from `config/capability-truth.json`.
-> Generated: 2026-09-04T15:18:45.583Z
+> Generated: 2026-09-04T17:55:11.093Z
 > Do not edit manually — run `pnpm run capability:generate` to regenerate.
 
 ## By Design (Scope Freeze)
@@ -39,6 +31,26 @@
 - **ID:** SPECTATOR-01
 - **Detail:** Spectators see a NEUTRAL projection of the game state — they do not see either player's authorized view. Spectator capacity is limited to 50 spectators per match.
 
+### WAIT WHAT investigation workflow is not wired into CasterSession UI
+
+- **ID:** CERT-WAITWHAT-01
+- **Detail:** The investigation workflow is a complete pure-function module but has not been integrated into the CasterSession UI. It is available as a library API.
+
+### 2D brain topology renderer is not the default
+
+- **ID:** CERT-BRAIN-2D-01
+- **Detail:** A complete 2D SVG brain topology renderer exists but has not replaced the 3D Three.js renderer as the default.
+
+### Evidence-honest intelligence labels not displayed in all player-facing surfaces
+
+- **ID:** CERT-EVIDENCE-DISPLAY-01
+- **Detail:** Evidence-honest labels are computed by the statistics package but not yet displayed in every player-facing UI surface.
+
+### Local TTS is not implemented
+
+- **ID:** CERT-TTS-01
+- **Detail:** Textual commentary is the validated contract. Local text-to-speech has been deferred.
+
 ## Environment Limitations
 
 ### Browser UI smoke and E2E certification require Chromium
@@ -65,6 +77,11 @@
 - **ID:** POLICY-TIER-01
 - **Detail:** All 20 policies are classified as Fixture, Baseline, or Heuristic. No policy has been benchmarked to Lookahead, Tournament, or Human-meta-proxy tier. Claims are qualified by the highest established tier.
 
+### Bounded lookahead policy is NOT labelled "expert"
+
+- **ID:** CERT-LOOKAHEAD-01
+- **Detail:** The bounded lookahead policy has not been benchmarked to justify an "expert" strength claim. The default evaluation function is a placeholder heuristic.
+
 ## Design Decisions
 
 ### No numerical card balance changes have been introduced
@@ -79,6 +96,13 @@
 - **ID:** ADVANCED-REPLAY-ONLY
 - **Detail:** In Advanced Core, the following systems are replay-only (not autonomously playable): complete-core, hidden-choice-supers, generated-effect-copy, sudden-death. Use Unrestricted Core for full autonomous play of these systems.
 - **Items:** complete-core, hidden-choice-supers, generated-effect-copy, sudden-death
+
+## Manual Validation Pending
+
+### Human validation sessions documented but not yet conducted
+
+- **ID:** CERT-HUMAN-VALIDATION-01
+- **Detail:** The human validation protocol is documented in ROADMAP.md with measurement criteria, but actual sessions have not yet been conducted and recorded by the developer.
 
 ## Browser-Dependent Tests
 

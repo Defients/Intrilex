@@ -32,8 +32,8 @@ const EXPECTED = {
 test('Gate 1: config/release-identity.json is the canonical authority with all required fields', () => {
   assert.equal(identity.schemaVersion, '1.0.0', 'release identity schemaVersion must be 1.0.0');
   assert.equal(identity.productName, 'Intrilex Simulation Lab');
-  assert.equal(identity.version, '0.32.0');
-  assert.equal(identity.releaseTitle, 'Intelligence, Better AI, and Replay Caster v1');
+  assert.equal(identity.version, '1.0.0');
+  assert.equal(identity.releaseTitle, 'Certified Public Baseline');
   assert.equal(identity.buildKind, 'RANKED_DUEL_PLAYER_SHELL');
   assert.equal(identity.engineVersion, '4.2.6');
   assert.equal(identity.rulesVersion, '4.3.1');

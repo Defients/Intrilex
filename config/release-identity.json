@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
   "productName": "Intrilex Simulation Lab",
-  "version": "0.32.0",
-  "releaseTitle": "Intelligence, Better AI, and Replay Caster v1",
+  "version": "1.0.0",
+  "releaseTitle": "Certified Public Baseline",
   "buildKind": "RANKED_DUEL_PLAYER_SHELL",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
@@ -29,7 +29,7 @@
     "deploy",
     "evidence"
   ],
-  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.32.0",
+  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v1.0.0",
   "releaseDate": "2026-09-04",
-  "integrityHash": "00f13ddb43592491f344ad4d4a22bccc"
+  "integrityHash": "acbb9d386c748daded29119e3b0db889"
 }

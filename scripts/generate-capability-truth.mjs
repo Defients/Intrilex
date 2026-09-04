@@ -254,6 +254,44 @@ function deriveLimitations(manifest, releaseIdentity) {
     detail: 'Spectators see a NEUTRAL projection of the game state — they do not see either player\'s authorized view. Spectator capacity is limited to 50 spectators per match.'
   });
 
+  // v1.0.0 certification-specific limitations
+  limits.push({
+    id: 'CERT-LOOKAHEAD-01',
+    severity: 'evidence',
+    title: 'Bounded lookahead policy is NOT labelled "expert"',
+    detail: 'The bounded lookahead policy has not been benchmarked to justify an "expert" strength claim. The default evaluation function is a placeholder heuristic.'
+  });
+  limits.push({
+    id: 'CERT-WAITWHAT-01',
+    severity: 'technical',
+    title: 'WAIT WHAT investigation workflow is not wired into CasterSession UI',
+    detail: 'The investigation workflow is a complete pure-function module but has not been integrated into the CasterSession UI. It is available as a library API.'
+  });
+  limits.push({
+    id: 'CERT-BRAIN-2D-01',
+    severity: 'technical',
+    title: '2D brain topology renderer is not the default',
+    detail: 'A complete 2D SVG brain topology renderer exists but has not replaced the 3D Three.js renderer as the default.'
+  });
+  limits.push({
+    id: 'CERT-EVIDENCE-DISPLAY-01',
+    severity: 'technical',
+    title: 'Evidence-honest intelligence labels not displayed in all player-facing surfaces',
+    detail: 'Evidence-honest labels are computed by the statistics package but not yet displayed in every player-facing UI surface.'
+  });
+  limits.push({
+    id: 'CERT-TTS-01',
+    severity: 'technical',
+    title: 'Local TTS is not implemented',
+    detail: 'Textual commentary is the validated contract. Local text-to-speech has been deferred.'
+  });
+  limits.push({
+    id: 'CERT-HUMAN-VALIDATION-01',
+    severity: 'manual',
+    title: 'Human validation sessions documented but not yet conducted',
+    detail: 'The human validation protocol is documented in ROADMAP.md with measurement criteria, but actual sessions have not yet been conducted and recorded by the developer.'
+  });
+
   return limits;
 }
 
@@ -371,7 +409,7 @@ async function generateKnownLimitations(truth, root) {
     bySeverity[l.severity].push(l);
   }
 
-  const severityOrder = ['by-design', 'technical', 'environment', 'security-debt', 'evidence', 'design', 'profile-scope'];
+  const severityOrder = ['by-design', 'technical', 'environment', 'security-debt', 'evidence', 'design', 'profile-scope', 'manual'];
   const severityLabels = {
     'by-design': 'By Design (Scope Freeze)',
     'technical': 'Technical Limitations',
@@ -379,7 +417,8 @@ async function generateKnownLimitations(truth, root) {
     'security-debt': 'Security Debt',
     'evidence': 'Evidence Limitations',
     'design': 'Design Decisions',
-    'profile-scope': 'Profile Scope'
+    'profile-scope': 'Profile Scope',
+    'manual': 'Manual Validation Pending'
   };
 
   for (const sev of severityOrder) {
