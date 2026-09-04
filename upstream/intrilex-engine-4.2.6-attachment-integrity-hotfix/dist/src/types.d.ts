@@ -449,6 +449,8 @@ export type CoreAdvancedAction = {
 } | {
     kind: "advanced-sudden-death-declare";
     targetPlayerId: PlayerId;
+    sourceCardIds: CardId[];
+    scrapTargetCardId: CardId;
 };
 export type CorePrimaryAction = {
     kind: "core-draw";

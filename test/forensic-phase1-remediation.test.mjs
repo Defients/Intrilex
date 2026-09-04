@@ -49,7 +49,7 @@ test('IRX-H07: buildMatchResultRecord does not fabricate season-1 for ranked', a
     persistor: mockPersistor,
     queueId: 'ranked',
     seasonId: undefined,
-    serverVersion: '0.28.0',
+    serverVersion: '0.28.1',
   });
 
   // The record should have null seasonId, NOT 'season-1'
@@ -91,7 +91,7 @@ test('IRX-H07: buildMatchResultRecord returns null seasonId when resolveActiveSe
     persistor: mockPersistor,
     queueId: 'ranked',
     seasonId: undefined,
-    serverVersion: '0.28.0',
+    serverVersion: '0.28.1',
   });
 
   assert.ok(record, 'record should still be built');
@@ -130,7 +130,7 @@ test('IRX-H09: casual match does not compute rating updates', async () => {
     match: mockMatch,
     persistor: mockPersistor,
     queueId: 'casual',
-    serverVersion: '0.28.0',
+    serverVersion: '0.28.1',
   });
 
   assert.ok(record, 'record should be built for casual match');
@@ -176,7 +176,7 @@ test('IRX-H09: private match does not compute rating updates', async () => {
     match: mockMatch,
     persistor: mockPersistor,
     queueId: 'private',
-    serverVersion: '0.28.0',
+    serverVersion: '0.28.1',
   });
 
   assert.ok(record, 'record should be built for private match');

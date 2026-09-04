@@ -1,5 +1,50 @@
 # Changelog
 
+## v0.28.1 — Rules-Parity Hotfix
+
+### Fixed
+
+- **IMPL-01: Special scoring riders** — Seven (7♣), 10♣, and Black Joker
+  are no longer incorrectly rejected for scoring in Advanced and Unrestricted
+  Core profiles. The fail-closed Advanced/Unrestricted rejection was removed
+  from both the resolver and the enumerator.
+- **IMPL-12: Declaration-class counter matrix** — Base Ace, A♠, and K♠
+  counter authority now operates on declaration classes rather than
+  restricting to only primary `ordinary-effect` declarations. Preserved
+  constraints: Base Ace cannot counter A♠, Ultras, Sudden Death, Anchors,
+  or Goal-Mods; A♠ retains source validation and multi-card target
+  requirement; K♠ retains multi-card requirement and Ultra rejection.
+- **DEG-01: Sudden Death** — repaired recipe validation (RJ+BJ or
+  four-of-a-kind), target selection (Vulnerable enemy OTT card), timer
+  initialization (counter set to 2), countdown (ticks at Full-Turn
+  boundaries, excluded from activation Full Turn), and terminal behavior
+  (`SUDDEN_DEATH_RESOLUTION` terminal reason added).
+- **IMPL-03: ⭐6/⭐7 choice enumeration** — Super Dig and Sequential
+  Topdeck candidates are now enumerated with executable declarations.
+  Post-declaration choices flow through the existing private-choice
+  lifecycle.
+- **IMPL-04: 10♦ Mimic destination** — source card is now marked
+  Exile-Bound and moves to Exile (not GY) after effect resolution.
+  Expanded legal mimic menu to include solo rank-4, rank-5, rank-7,
+  and paired rank-8, rank-J modes.
+- **POL-A1: Solo Wild and Wild Sovereignty AI valuation** — added
+  context-aware scoring for Solo Wild Copy (recipe awareness, Commandeer
+  preservation) and Wild Sovereignty (Exile cost discounting, counter
+  preservation).
+- **POL-A2: Reactive card retention awareness** — added retention
+  penalties for 8 Scuttle Counter, 9 Tap, and J Disrupt when the current
+  threat doesn't justify spending them.
+- **POL-A3: 3-Red Ultra heuristic** — replaced flat +300 bonus for all
+  advanced families with context-dependent scaling based on opponent
+  pressure and own progress.
+
+### Changed
+
+- Regenerated autonomy campaign, observatory analytics, decision traces,
+  and replay artifacts from the clean post-repair engine epoch.
+- Reconciled engine manifest and release identity with current codebase.
+- Updated all version surfaces to 0.28.1.
+
 ## v0.28.0 — UX/Visual Polish & Social Graph
 
 ### Added

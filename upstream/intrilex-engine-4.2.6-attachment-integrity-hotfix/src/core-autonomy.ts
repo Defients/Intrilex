@@ -17,7 +17,7 @@ interface CoreRuntimeView {
   profileId?: string;
   setupComplete?: boolean;
   startPreparedFullTurnSequence?: number | null;
-  terminalReason?: "NORMAL_VICTORY" | "EXHAUSTED_RESOLUTION" | "CANONICAL_DRAW";
+  terminalReason?: "NORMAL_VICTORY" | "EXHAUSTED_RESOLUTION" | "CANONICAL_DRAW" | "SUDDEN_DEATH_RESOLUTION";
   disruptedActionTypesByPlayer?: Record<PlayerId, string[]>;
   qQuickResolvedFullTurnByPlayer?: Record<PlayerId, number>;
   privateChoice?: CorePrivateChoiceState | null;
@@ -232,7 +232,7 @@ export function enumerateCoreLegalActions(state: Readonly<EngineState>, actorId:
   } else if (state.phase === "Action" && state.players[actorId]!.limits.miniTurnsRemaining > 0) {
     if (state.zones.dp.length > 0) candidates.push(action(state as EngineState, actorId, "draw", "top", "ACTION", [], [], { kind: "core-draw" }, { cardsDrawn: state.players[actorId]!.hand.length === 0 ? Math.min(2, state.zones.dp.length) : 1 }));
     if (!state.players[actorId]!.limits.swapBarUsedThisFT) for (const id of state.zones.swapBar.filter((cardId) => state.cards[cardId]?.state.swapBarFaceUp === true)) candidates.push(action(state as EngineState, actorId, "swap-bar", "face-up-draw", "ACTION", [], [id], { kind: "core-face-up-swap-draw", swapCardId: id }));
-    for (const id of state.players[actorId]!.hand) { const c=state.cards[id]!; if([CORE_ADVANCED_AUTHORITY_PROFILE.id,CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId as any)&&(parseIdentity(c.identity)?.rank==="7"||c.identity==="10♣"||c.identity==="BJ"))continue; candidates.push(action(state as EngineState, actorId, "score", "points", "ACTION", [id], [], { kind: "core-score", cardId: id }, { immediatePoints: cardPointValue(c) })); }
+    for (const id of state.players[actorId]!.hand) { const c=state.cards[id]!; candidates.push(action(state as EngineState, actorId, "score", "points", "ACTION", [id], [], { kind: "core-score", cardId: id }, { immediatePoints: cardPointValue(c) })); }
     const boardLockActive = ((state.metadata.boardLock as any)?.turnsRemaining ?? 0) > 0;
     if (!boardLockActive) {
       for (const sourceId of state.players[actorId]!.hand) for (const opponentId of state.turnOrder.filter((id) => id !== actorId)) for (const targetId of state.players[opponentId]!.pr) candidates.push(action(state as EngineState, actorId, "scuttle", "ordinary", "ACTION", [sourceId], [targetId], { kind: "core-scuttle", sourceCardId: sourceId, targetCardId: targetId }));

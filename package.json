@@ -1,10 +1,10 @@
 {
   "name": "intrilex-simulation-lab",
-  "version": "0.28.0",
+  "version": "0.28.1",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.11.0",
-  "description": "Intrilex Simulation Lab v0.28.0 — UX/Visual Polish: deterministic card-game simulation, replay forensics, rank anatomy observatory, and interactive play vs AI. Server-authoritative online Direct Duel, Tournament workspace, and Replay Lab preserved.",
+  "description": "Intrilex Simulation Lab v0.28.1 — Rules-Parity Hotfix: deterministic card-game simulation, replay forensics, rank anatomy observatory, and interactive play vs AI. Server-authoritative online Direct Duel, Tournament workspace, and Replay Lab preserved.",
   "engines": {
     "node": ">=22"
   },

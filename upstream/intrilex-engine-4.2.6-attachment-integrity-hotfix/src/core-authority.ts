@@ -2,7 +2,7 @@ import { canonicalClone } from "./canonical-json.js";
 import { applyAegis, applyTap, markExileBound, processStartPhaseLifecycles, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js";
 import { CORE_EFFECT_DECLARATION_PROFILE, resolveCoreEffect } from "./core-effects.js";
 import { evaluateProtection, revalidateAttachments } from "./interactions.js";
-import { CORE_RESPONSE_AUTHORITY_PROFILE, primaryDescriptor } from "./core-response.js";
+import { CORE_RESPONSE_AUTHORITY_PROFILE, primaryDescriptor, targetAcceptsCounter } from "./core-response.js";
 import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, isCorePrivateChoiceEffect, resolveCorePrivateChoiceRoot, resolveCorePrivateChoiceSubmission } from "./core-private-choice.js";
 import { compareScuttle, cardPointValue, hasOrdinaryScuttleImmunity, parseIdentity, resolveRankAction } from "./ranks.js";
 import { nextIndex } from "./rng.js";
@@ -29,7 +29,7 @@ interface CoreRuntime {
   setupComplete: boolean;
   startPreparedFullTurnSequence: number | null;
   exhausted: { remaining: number; startedFullTurnSequence: number } | null;
-  terminalReason?: "NORMAL_VICTORY" | "EXHAUSTED_RESOLUTION" | "CANONICAL_DRAW";
+  terminalReason?: "NORMAL_VICTORY" | "EXHAUSTED_RESOLUTION" | "CANONICAL_DRAW" | "SUDDEN_DEATH_RESOLUTION";
   disruptedActionTypesByPlayer?: Record<PlayerId, CoreFoundationActionType[]>;
   qQuickResolvedFullTurnByPlayer?: Record<PlayerId, number>;
   privateChoice?: import("./types.js").CorePrivateChoiceState | null;
@@ -301,20 +301,10 @@ function responseSourceProblem(state: EngineState, actorId: PlayerId, cardId: Ca
   return hand || anchor ? null : `${cardId} is not an eligible response source`;
 }
 function targetAcceptsBaseAce(target: StackItem): boolean {
-  const payload = target.coreAuthority;
-  if (!payload) return false;
-  if (payload.kind === "primary") return payload.stackClass === "ordinary-effect";
-  // Board Lock may only be countered by ⭐A authority — Base Ace cannot counter it.
-  if (payload.responseKind === "board-lock-quick") return false;
-  return !["spade-ace-counter", "eight-spade-free-scuttle", "ultra-three-red"].includes(payload.responseKind);
+  return targetAcceptsCounter(target, "base-ace-counter");
 }
 function targetAcceptsSpadeAce(target: StackItem): boolean {
-  const payload = target.coreAuthority;
-  if (!payload) return false;
-  if (payload.kind === "primary") return payload.stackClass === "ordinary-effect";
-  // Board Lock may only be countered by ⭐A authority — A♠ cannot counter it.
-  if (payload.responseKind === "board-lock-quick") return false;
-  return !["spade-ace-counter","eight-spade-free-scuttle","ultra-three-red"].includes(payload.responseKind);
+  return targetAcceptsCounter(target, "spade-ace-counter");
 }
 function restoreDeclaredPrimary(state: EngineState, item: StackItem): void {
   for (const id of item.sourceCardIds) if (state.cards[id]?.zone === "ON_STACK") moveCard(state, id, `${item.controllerId}_HAND`, item.controllerId);
@@ -430,7 +420,6 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
       const problem = validateActionWindow(state, actorId); if (problem) return fail("CORE_ACTION", problem);
       const card = state.cards[action.cardId];
       if (!card || card.zone !== `${actorId}_HAND` || card.controllerId !== actorId) return fail("CORE_SCORE_SOURCE", "Play for Points requires a controlled hand card");
-      if ((runtime(state)?.profileId === CORE_ADVANCED_AUTHORITY_PROFILE.id || runtime(state)?.profileId === CORE_UNRESTRICTED_AUTHORITY_PROFILE.id) && (coreRank(state, card.id) === "7" || card.identity === "10♣" || card.identity === "BJ")) return fail("CORE_SCORING_RIDER_UNSUPPORTED", `${card.identity} requires an uncertified scoring rider in the Advanced Core profile`);
       card.state.pointValue = cardPointValue(card);
       moveCard(state, action.cardId, `${actorId}_PR`, actorId);
       const released = releaseNineTapsForScoring(state, actorId);
@@ -657,9 +646,9 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
       const problem = validatePriorityHolder(state, actorId); if (problem) return fail("CORE_PRIORITY", problem);
       const sourceProblem = responseSourceProblem(state, actorId, action.sourceCardId, "K"); if (sourceProblem || coreSuit(state,action.sourceCardId) !== "♠") return fail("CORE_KING_SPADE_SOURCE", sourceProblem ?? "K♠ counter requires K♠");
       const target = topStackItem(state, action.targetStackItemId); const tp = target?.coreAuthority;
-      // Board Lock may only be countered by ⭐A authority — K♠ cannot counter it.
-      if (tp?.kind === "response" && tp.responseKind === "board-lock-quick") return fail("CORE_KING_SPADE_TARGET", "K♠ cannot counter Board Lock — only ⭐A authority may directly counter Board Lock");
-      const eligible = !!target && target.sourceCardIds.length >= 2 && !(tp?.kind === "primary" && tp.stackClass === "ultra") && !(tp?.kind === "response" && tp.responseKind === "ultra-three-red");
+      // K♠ uses the declaration-class × counter-authority matrix, plus a multi-card requirement.
+      // Board Lock and Ultra are excluded by the matrix (only super, queens-court, royal-marriage accepted).
+      const eligible = !!target && targetAcceptsCounter(target, "king-spade-counter") && target.sourceCardIds.length >= 2;
       if (!eligible) return fail("CORE_KING_SPADE_TARGET", "K♠ requires the current eligible multi-card non-Ultra play");
       const item = declareCoreStackItem(state, actorId, "KING-SPADE", [action.sourceCardId], [], { kind: "response", responseKind: "king-spade-counter", targetStackItemId: target!.id });
       events.push({ type: "CORE_KING_SPADE_COUNTER_DECLARED", payload: { stackItemId:item.id,targetStackItemId:target!.id,sourceCardId:action.sourceCardId } });
@@ -670,7 +659,8 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
       const sourceProblem = responseSourceProblem(state, actorId, action.sourceCardId, "10"); if (sourceProblem || coreSuit(state,action.sourceCardId) !== "♠") return fail("CORE_STACK_THEFT_SOURCE", sourceProblem ?? "Stack Theft requires 10♠");
       if (state.players[actorId]!.limits.rank10PlayedThisFT) return fail("CORE_RANK10_LIMIT", "Rank-10 effect limit already used this FT");
       const target = topStackItem(state, action.targetStackItemId); const tp = target?.coreAuthority;
-      if (!target || tp?.kind !== "primary" || target.sourceCardIds.length !== 1 || !["ordinary-effect","anchor","rank10"].includes(tp.stackClass)) return fail("CORE_STACK_THEFT_TARGET", "Stack Theft requires a pending single effect play");
+      // 10♠ Stack Theft uses the declaration-class × counter-authority matrix, plus a single-card requirement.
+      if (!target || tp?.kind !== "primary" || target.sourceCardIds.length !== 1 || !targetAcceptsCounter(target, "rank10-stack-theft")) return fail("CORE_STACK_THEFT_TARGET", "Stack Theft requires a pending single effect play");
       state.players[actorId]!.limits.rank10PlayedThisFT = true;
       const item = declareCoreStackItem(state, actorId, "RANK10-STACK-THEFT", [action.sourceCardId], [], { kind: "response", responseKind: "rank10-stack-theft", targetStackItemId: target.id });
       events.push({ type: "CORE_RANK10_STACK_THEFT_DECLARED", payload: { stackItemId:item.id,targetStackItemId:target.id,sourceCardId:action.sourceCardId,interruptTax:false } });
@@ -788,12 +778,41 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
     case "core-complete-turn": {
       const core = requireRuntime(state); if (typeof core === "string") return fail("CORE_PROFILE", core);
       if (state.phase !== "End" || state.activePlayerId !== actorId) return fail("CORE_END", "Turn completion requires the active player's End phase");
+      // End Phase order per rulebook v4.3.1 §4.5:
+      //   1. Normal victory
+      //   2. Board Lock tick
+      //   3. Sudden Death tick
+      //   4. Exhausted tick
+      //   5. Finish the FT and pass the turn
       const points = deriveSecuredPoints(state, actorId);
       if (points >= state.players[actorId]!.goal) {
         state.winner = actorId; core.terminalReason = "NORMAL_VICTORY";
         events.push({ type: "CORE_NORMAL_VICTORY", payload: { playerId: actorId, securedPoints: points, goal: state.players[actorId]!.goal } });
         break;
       }
+      // 2. Board Lock tick (not on activation FT)
+      const boardLock = state.metadata.boardLock as { turnsRemaining?: number; activationFullTurnId?: number; activatorId?: PlayerId } | undefined;
+      if (boardLock && typeof boardLock.turnsRemaining === "number" && state.fullTurnSequence > (boardLock.activationFullTurnId ?? state.fullTurnSequence)) {
+        boardLock.turnsRemaining -= 1;
+        events.push({ type: "CORE_BOARD_LOCK_TICKED", payload: { turnsRemaining: boardLock.turnsRemaining, completedFullTurnSequence: state.fullTurnSequence, activatorId: boardLock.activatorId ?? null } });
+        if (boardLock.turnsRemaining <= 0) { delete state.metadata.boardLock; events.push({ type: "CORE_BOARD_LOCK_ENDED", payload: { completedFullTurnSequence: state.fullTurnSequence } }); }
+      }
+      // 3. Sudden Death tick (not on activation FT) — per rulebook v4.3.1 §11.3
+      const phase8 = state.metadata.phase8 as { suddenDeath?: { activatorId: PlayerId; remaining: number; activationFullTurnSequence: number } } | undefined;
+      const sd = phase8?.suddenDeath;
+      if (sd && state.fullTurnSequence > sd.activationFullTurnSequence) {
+        sd.remaining -= 1;
+        events.push({ type: "CORE_SUDDEN_DEATH_TICKED", payload: { remaining: sd.remaining, completedFullTurnSequence: state.fullTurnSequence, activatorId: sd.activatorId } });
+        if (sd.remaining <= 0) {
+          // At 0, the activator wins if nobody already won normally (checked above)
+          state.winner = sd.activatorId;
+          core.terminalReason = "SUDDEN_DEATH_RESOLUTION";
+          delete (state.metadata.phase8 as any).suddenDeath;
+          events.push({ type: "CORE_SUDDEN_DEATH_RESOLVED", payload: { winner: state.winner, completedFullTurnSequence: state.fullTurnSequence } });
+          break;
+        }
+      }
+      // 4. Exhausted tick
       if (core.exhausted) {
         core.exhausted.remaining -= 1;
         events.push({ type: "CORE_EXHAUSTED_TICKED", payload: { remaining: core.exhausted.remaining, completedFullTurnSequence: state.fullTurnSequence } });
@@ -804,12 +823,7 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
           break;
         }
       }
-      const boardLock = state.metadata.boardLock as { turnsRemaining?: number; activationFullTurnId?: number; activatorId?: PlayerId } | undefined;
-      if (boardLock && typeof boardLock.turnsRemaining === "number" && state.fullTurnSequence > (boardLock.activationFullTurnId ?? state.fullTurnSequence)) {
-        boardLock.turnsRemaining -= 1;
-        events.push({ type: "CORE_BOARD_LOCK_TICKED", payload: { turnsRemaining: boardLock.turnsRemaining, completedFullTurnSequence: state.fullTurnSequence, activatorId: boardLock.activatorId ?? null } });
-        if (boardLock.turnsRemaining <= 0) { delete state.metadata.boardLock; events.push({ type: "CORE_BOARD_LOCK_ENDED", payload: { completedFullTurnSequence: state.fullTurnSequence } }); }
-      }
+      // 5. Finish the FT and pass the turn
       const current = state.turnOrder.indexOf(actorId);
       let nextIndex=(current+1)%state.turnOrder.length; const consumedSkips:PlayerId[]=[]; let guard=0;
       while(state.players[state.turnOrder[nextIndex]!]!.limits.pendingFullTurnSkips>0&&guard<64){const skipped=state.turnOrder[nextIndex]!;state.players[skipped]!.limits.pendingFullTurnSkips-=1;consumedSkips.push(skipped);events.push({type:"CORE_FULL_TURN_SKIP_CONSUMED",payload:{playerId:skipped,remaining:state.players[skipped]!.limits.pendingFullTurnSkips}});nextIndex=(nextIndex+1)%state.turnOrder.length;guard+=1;}

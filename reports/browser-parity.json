@@ -2,7 +2,7 @@
   "schemaVersion": "3.0",
   "status": "PASS",
   "proofKind": "REAL_CHROMIUM_CDP_MAIN_THREAD_AND_WEB_WORKER",
-  "labVersion": "0.28.0",
+  "labVersion": "0.28.1",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
   "profileId": "core-advanced-authority",

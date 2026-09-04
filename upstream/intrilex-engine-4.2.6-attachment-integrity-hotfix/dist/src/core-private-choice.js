@@ -97,7 +97,7 @@ function clearChoice(state) {
     if (core)
         core.privateChoice = null;
 }
-function beginChoice(state, input, events) {
+export function beginChoice(state, input, events) {
     const choice = createChoice(state, input);
     setChoice(state, choice);
     events.push({
