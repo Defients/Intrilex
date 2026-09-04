@@ -34,7 +34,11 @@ export async function runCampaign(config) {
     schemaVersion: '4.1.0', profileId: config.profileId ?? 'core-advanced-authority', matchCount: config.matchCount,
     seatOrder: config.seatOrder ?? ['P1', 'P2'], policyPairs: config.policyPairs,
     decisionLimit: config.decisionLimit ?? 1800, engineVersion: ENGINE_VERSION, rulesVersion: RULES_VERSION,
-    labVersion: LAB_VERSION, policySurfaceVersion: '4.0.0', telemetrySchemaVersion: '4.1.0', analyticsSchemaVersion: '4.1.0'
+    labVersion: LAB_VERSION, policySurfaceVersion: '4.0.0', telemetrySchemaVersion: '4.1.0', analyticsSchemaVersion: '4.1.0',
+    evidenceEpoch: config.evidenceEpoch ?? 'post-rules-parity-repair-v0.28.1',
+    postRulesParityRepair: config.postRulesParityRepair ?? true,
+    authorityHash: config.authorityHash ?? null,
+    releaseIdentityHash: config.releaseIdentityHash ?? null
   };
   const experimentHash = hashCanonical(semantic);
   const ordinalStart = config.ordinalStart ?? 0, ordinalEnd = config.ordinalEnd ?? config.matchCount;
@@ -48,7 +52,7 @@ export async function runCampaign(config) {
     // form a matched AB/BA pair sharing the same pairedRunId.
     const pairBlockIndex = Math.floor(ordinal / config.policyPairs.length);
     const pairedRunId = `PR-${experimentHash.slice(0, 16)}-${pair[0]}-${pair[1]}-block-${Math.floor(pairBlockIndex / 2)}`;
-    return { ordinal, profileId: semantic.profileId, seed: deriveMatchSeed(experimentHash, ordinal), seatOrder, policyIds: pair, decisionLimit: semantic.decisionLimit, includeReplay: false, workerCount: config.workerCount ?? 1, runInstanceId: config.runInstanceId ?? experimentHash, pairedRunId, seatSwapped: swap };
+    return { ordinal, profileId: semantic.profileId, seed: deriveMatchSeed(experimentHash, ordinal), seatOrder, policyIds: pair, decisionLimit: semantic.decisionLimit, includeReplay: false, workerCount: config.workerCount ?? 1, runInstanceId: config.runInstanceId ?? experimentHash, pairedRunId, seatSwapped: swap, evidenceEpoch: semantic.evidenceEpoch, postRulesParityRepair: semantic.postRulesParityRepair, authorityHash: semantic.authorityHash, releaseIdentityHash: semantic.releaseIdentityHash };
   });
   const workerCount = Math.max(1, Math.min(config.workerCount ?? 1, specs.length));
   let records;
@@ -98,7 +102,11 @@ export async function runCampaign(config) {
     failures: failures.map((r) => ({ ordinal: r.ordinal, error: r.error })),
     records: campaignRecords,
     summaries, canonicalResultHash,
-    campaignStatus
+    campaignStatus,
+    evidenceEpoch: semantic.evidenceEpoch,
+    postRulesParityRepair: semantic.postRulesParityRepair,
+    authorityHash: semantic.authorityHash,
+    releaseIdentityHash: semantic.releaseIdentityHash
   };
 }
 
@@ -155,8 +163,10 @@ export function campaignAggregate(campaign) {
       ruleCompliance.failedMatchCount += 1;
       ruleCompliance.violationCount += Number(match.ruleCompliance?.violationCount ?? 1);
     }
-    for (const id of match.policyIds) policy[id] ??= { games: 0, wins: 0, draws: 0, aborts: 0, miniTurnActions:0, responsesPlayed:0, responsesDeclined:0 };
+    for (const id of match.policyIds) policy[id] ??= { games: 0, wins: 0, draws: 0, aborts: 0, miniTurnActions:0, responsesPlayed:0, responsesDeclined:0, selfPlayGames: 0 };
     policy[match.policyIds[0]].games += 1; policy[match.policyIds[1]].games += 1;
+    const isSelfPlay = match.policyIds[0] === match.policyIds[1];
+    if (isSelfPlay) { policy[match.policyIds[0]].selfPlayGames += 1; }
     const hasParticipants = Array.isArray(match.participants) && match.participants.length === 2;
     if (hasParticipants) {
       for (const p of match.participants) {
@@ -176,20 +186,24 @@ export function campaignAggregate(campaign) {
       policy[match.policyIds[1]].responsesDeclined += responsesDeclined;
     }
     const matchupKey = `${match.policyIds[0]}__vs__${match.policyIds[1]}`;
-    matchups[matchupKey] ??= { games: 0, seat1Wins: 0, seat2Wins: 0, draws: 0, aborts: 0, totalFullTurns:0, totalResponses:0, totalChoices:0 };
+    matchups[matchupKey] ??= { games: 0, seat1Wins: 0, seat2Wins: 0, draws: 0, aborts: 0, totalFullTurns:0, totalResponses:0, totalChoices:0, selfPlay: isSelfPlay };
     const matchup = matchups[matchupKey]; matchup.games += 1; matchup.totalFullTurns += match.completedFullTurns; matchup.totalResponses += match.meaningfulResponseDecisionCount ?? 0; matchup.totalChoices += match.privateChoiceDecisionCount ?? 0;
     if (!COMPLETE_REASONS.has(match.terminationReason)) {
-      matchup.aborts += 1; policy[match.policyIds[0]].aborts += 1; policy[match.policyIds[1]].aborts += 1;
+      matchup.aborts += 1; if (!isSelfPlay) { policy[match.policyIds[0]].aborts += 1; policy[match.policyIds[1]].aborts += 1; }
     } else if (match.terminationReason === 'CANONICAL_DRAW') {
-      matchup.draws += 1; policy[match.policyIds[0]].draws += 1; policy[match.policyIds[1]].draws += 1;
+      matchup.draws += 1; if (!isSelfPlay) { policy[match.policyIds[0]].draws += 1; policy[match.policyIds[1]].draws += 1; }
     } else {
       increment(seatWins, String(match.winningSeat)); matchup[match.winningSeat === 1 ? 'seat1Wins' : 'seat2Wins'] += 1;
-      const winnerIndex = match.seatOrder.indexOf(match.winner); policy[match.policyIds[winnerIndex]].wins += 1;
+      const winnerIndex = match.seatOrder.indexOf(match.winner);
+      // Exclude self-play from cross-policy superiority aggregates
+      if (!isSelfPlay) policy[match.policyIds[winnerIndex]].wins += 1;
     }
   }
   for (const item of Object.values(policy)) {
-    item.winRate = item.games ? item.wins / item.games : 0;
-    item.wilson95 = wilsonInterval(item.wins, Math.max(1, item.games - item.draws - item.aborts));
+    // selfPlayGames are excluded from win-rate denominator for cross-policy superiority
+    item.crossPolicyGames = item.games - (item.selfPlayGames ?? 0);
+    item.winRate = item.crossPolicyGames ? item.wins / item.crossPolicyGames : 0;
+    item.wilson95 = wilsonInterval(item.wins, Math.max(1, item.crossPolicyGames - item.draws - item.aborts));
   }
   for (const item of Object.values(matchups)) {
     item.meanFullTurns = item.games ? item.totalFullTurns / item.games : 0;
@@ -201,6 +215,10 @@ export function campaignAggregate(campaign) {
     schemaVersion: '4.1.0', telemetrySchemaVersion: '4.1.0', analyticsSchemaVersion: '4.1.0',
     experimentHash: campaign.experimentHash, profileId: campaign.semantic.profileId, engineVersion: campaign.semantic.engineVersion,
     rulesVersion: campaign.semantic.rulesVersion, labVersion: campaign.semantic.labVersion,
+    evidenceEpoch: campaign.evidenceEpoch ?? campaign.semantic.evidenceEpoch ?? 'unknown',
+    postRulesParityRepair: campaign.postRulesParityRepair ?? campaign.semantic.postRulesParityRepair ?? true,
+    authorityHash: campaign.authorityHash ?? campaign.semantic.authorityHash ?? null,
+    releaseIdentityHash: campaign.releaseIdentityHash ?? campaign.semantic.releaseIdentityHash ?? null,
     matchCount: campaign.summaries.length, completedMatchCount: completed.length, abortCount: campaign.summaries.length - completed.length,
     drawCount: terminations.CANONICAL_DRAW ?? 0, terminationCounts: Object.fromEntries(Object.entries(terminations).sort()),
     seatWins, seat1WinRate: decisive.length ? seatWins['1'] / decisive.length : 0,
@@ -219,7 +237,8 @@ export function campaignAggregate(campaign) {
     ruleCompliance: { ...ruleCompliance, status: ruleCompliance.failedMatchCount === 0 ? 'PASS' : 'FAIL' },
     policies: Object.fromEntries(Object.entries(policy).sort()), matchups: Object.fromEntries(Object.entries(matchups).sort()),
     canonicalResultHash: campaign.canonicalResultHash,
-    interpretationBoundary: 'Policy-conditioned Advanced Core observation. Associations are not causal proof; unsupported branches remain fail-closed.'
+    selfPlayExcluded: true,
+    interpretationBoundary: 'Policy-conditioned Advanced Core observation. Associations are not causal proof; unsupported branches remain fail-closed. Self-play matches excluded from cross-policy superiority aggregates.'
   };
   return { ...core, aggregateHash: hashCanonical(core) };
 }

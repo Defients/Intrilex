@@ -131,7 +131,9 @@ export function createRunProvenance(input) {
     seed: String(input.seed),
     policyIdsBySeat: input.policyIdsBySeat,
     workerCount: input.workerCount ?? 1,
-    authorizedScope: input.authorizedScope ?? 'omniscient'
+    authorizedScope: input.authorizedScope ?? 'omniscient',
+    evidenceEpoch: input.evidenceEpoch ?? 'post-rules-parity-repair-v0.28.1',
+    authorityHash: input.authorityHash ?? null
   };
   const errors = validateProvenanceShape(value);
   if (errors.length > 0) {

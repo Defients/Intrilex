@@ -245,6 +245,8 @@ const STAGES = [
   ['brain-3d', 'node', ['--test', 'test/brain-3d.test.mjs']],
   // v0.28.1 Rules-Parity Hotfix — failing behavioral tests for IMPL-01/03/04/12, DEG-01
   ['v0.28.1-rules-parity-defects', 'node', ['--test', 'test/v0.28.1-rules-parity-defects.test.mjs']],
+  // v0.28.2 Evidence Recalibration — evidence epoch, policy tiers, self-play exclusion
+  ['v0.28.2-evidence-recalibration', 'node', ['--test', 'test/v0.28.2-evidence-recalibration.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

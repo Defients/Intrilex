@@ -1,0 +1,30 @@
+{
+  "experimentId": "EXP-07-COUNTER-RETENTION-VALUE",
+  "schemaVersion": "1.0.0",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "hypothesis": "Modifying policy scoring heuristics to explicitly value holding an Ace or K♠ in hand (applying a retention bonus) increases match win rate against aggressive opponents compared to immediate reactive counter firing.",
+  "authorityProfile": "core-advanced-authority",
+  "independentVariable": "Policy counter retention bonus: 0 (default one-ply) vs +300 vs +600 hand-retention bonus",
+  "controlledVariables": ["core-advanced-authority", "engine 4.2.6"],
+  "policyPairs": [
+    ["control", "score-rush"],
+    ["control", "tempo"]
+  ],
+  "conditions": [
+    { "conditionId": "default-retention", "counterRetentionBonus": 0, "label": "Default (immediate firing)" },
+    { "conditionId": "moderate-retention", "counterRetentionBonus": 300, "label": "Moderate retention +300" },
+    { "conditionId": "high-retention", "counterRetentionBonus": 600, "label": "High retention +600" }
+  ],
+  "matchCountPerCondition": 100,
+  "seedCount": 100,
+  "decisionLimit": 3600,
+  "metrics": ["winRate", "averageTurnCounterExpended", "valueOfNegatedTarget"],
+  "stratification": ["target value (minor bounce vs lethal threat)"],
+  "replayRetention": "Certified replays of all matches",
+  "counterfactualUsage": "counterfactual.mjs evaluation at each counter decision point",
+  "falsificationCriterion": "If retaining counters yields a lower win rate across 100 paired matches, the hypothesis that AI undervalues counter retention is falsified.",
+  "minimumUsefulEvidence": "80 paired matches",
+  "stopCondition": "100 paired matches completed",
+  "prerequisiteGates": ["IMPL-12 fixed", "POL-A2 fixed (reactive-card retention awareness)"]
+}

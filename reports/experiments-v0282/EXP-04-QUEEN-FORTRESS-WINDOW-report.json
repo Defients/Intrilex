@@ -1,0 +1,190 @@
+{
+  "schemaVersion": "1.0.0",
+  "experimentId": "EXP-04-QUEEN-FORTRESS-WINDOW",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0",
+  "releaseIdentityHash": "cef7ee72dab583d41ec37ee3fec7ab6c",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "labVersion": "0.28.1",
+  "profileId": "core-advanced-authority",
+  "hypothesis": "Establishing 2 untapped ER Queens creates an unanswerable endgame lock by disabling star-Ace and establishing mutual Guard against single-target removal.",
+  "independentVariable": "Opponent board answer availability (presence of 4 Row Clear ER, 4♠ Total Clear, or star-2 Commandeer)",
+  "falsificationCriterion": "If opponents breach the fortress in >= 40% of cases using 4 Row Clear, Total Clear, or star-2, the unanswerable lock hypothesis is falsified.",
+  "prerequisiteGates": [
+    "IMPL-12 fixed"
+  ],
+  "policyStrengthTiers": {
+    "random-legal": "fixture",
+    "score-rush": "heuristic",
+    "control": "heuristic",
+    "tempo": "heuristic",
+    "value": "heuristic",
+    "hybrix-rusher": "heuristic",
+    "hybrix-defender": "heuristic",
+    "hybrix-trickster": "heuristic",
+    "hybrix-sniper": "heuristic",
+    "hybrix-rusher-hard": "heuristic",
+    "hybrix-defender-hard": "heuristic",
+    "hybrix-trickster-hard": "heuristic",
+    "hybrix-sniper-hard": "heuristic",
+    "hybrix-rusher-easy": "baseline",
+    "hybrix-defender-easy": "baseline",
+    "hybrix-rusher-nightmare": "heuristic",
+    "hybrix-defender-nightmare": "heuristic",
+    "hybrix-support": "heuristic",
+    "hybrix-tank": "heuristic",
+    "hybrix-baseline": "baseline"
+  },
+  "matchCount": 100,
+  "completedMatchCount": 100,
+  "durationMs": 195544,
+  "startedAt": "2026-09-04T12:41:00.629Z",
+  "experimentHash": "069acf715713e020b7546be889f1f369c31adf7280e59b0b2abbee83d8d8afa4",
+  "canonicalResultHash": "6e32933029014d6e70b626c3bad73fe2dd005319c2d0ccb3a7a1c36ae002efdc",
+  "aggregateHash": "fff2f858dca95cdd1d4d08088d278725f82a287d06ed068d9ec789c005a1b39f",
+  "seat1WinRate": 0.2717391304347826,
+  "seat1Wilson95": [
+    0.1913577564924533,
+    0.37041852992054786
+  ],
+  "selfPlayExcluded": true,
+  "terminationCounts": {
+    "CANONICAL_DRAW": 8,
+    "EXHAUSTED_RESOLUTION": 39,
+    "NORMAL_VICTORY": 53
+  },
+  "metrics": {
+    "totalMatches": 100,
+    "completedMatches": 100,
+    "averageTurns": 32.76,
+    "seat1WinRate": 0.2717391304347826,
+    "seat1Wilson95": [
+      0.1913577564924533,
+      0.37041852992054786
+    ],
+    "boardLockActivations": 0,
+    "totalClearActivations": 0,
+    "ultraActivations": 100,
+    "selfPlayMatches": 34,
+    "crossPolicyMatches": 66
+  },
+  "policies": {
+    "control": {
+      "games": 101,
+      "wins": 12,
+      "draws": 3,
+      "aborts": 0,
+      "miniTurnActions": 2520,
+      "responsesPlayed": 1052,
+      "responsesDeclined": 1,
+      "selfPlayGames": 34,
+      "crossPolicyGames": 67,
+      "winRate": 0.1791044776119403,
+      "wilson95": [
+        0.11064643172948806,
+        0.29974360564101526
+      ]
+    },
+    "hybrix-defender": {
+      "games": 66,
+      "wins": 18,
+      "draws": 3,
+      "aborts": 0,
+      "miniTurnActions": 1032,
+      "responsesPlayed": 441,
+      "responsesDeclined": 12,
+      "selfPlayGames": 0,
+      "crossPolicyGames": 66,
+      "winRate": 0.2727272727272727,
+      "wilson95": [
+        0.18903191986400805,
+        0.40702716567407127
+      ]
+    },
+    "hybrix-trickster": {
+      "games": 33,
+      "wins": 33,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 237,
+      "responsesPlayed": 76,
+      "responsesDeclined": 2,
+      "selfPlayGames": 0,
+      "crossPolicyGames": 33,
+      "winRate": 1,
+      "wilson95": [
+        0.895730002457548,
+        1
+      ]
+    }
+  },
+  "matchups": {
+    "control__vs__control": {
+      "games": 34,
+      "seat1Wins": 13,
+      "seat2Wins": 16,
+      "draws": 5,
+      "aborts": 0,
+      "totalFullTurns": 1639,
+      "totalResponses": 569,
+      "totalChoices": 199,
+      "selfPlay": true,
+      "meanFullTurns": 48.205882352941174,
+      "meanResponses": 16.735294117647058,
+      "meanPrivateChoices": 5.852941176470588,
+      "seat1Wilson95": [
+        0.28413168023037194,
+        0.6245203678902909
+      ]
+    },
+    "control__vs__hybrix-defender": {
+      "games": 33,
+      "seat1Wins": 12,
+      "seat2Wins": 18,
+      "draws": 3,
+      "aborts": 0,
+      "totalFullTurns": 1286,
+      "totalResponses": 480,
+      "totalChoices": 156,
+      "selfPlay": false,
+      "meanFullTurns": 38.96969696969697,
+      "meanResponses": 14.545454545454545,
+      "meanPrivateChoices": 4.7272727272727275,
+      "seat1Wilson95": [
+        0.24590628116801852,
+        0.5767963974667752
+      ]
+    },
+    "hybrix-defender__vs__hybrix-trickster": {
+      "games": 33,
+      "seat1Wins": 0,
+      "seat2Wins": 33,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 351,
+      "totalResponses": 169,
+      "totalChoices": 11,
+      "selfPlay": false,
+      "meanFullTurns": 10.636363636363637,
+      "meanResponses": 5.121212121212121,
+      "meanPrivateChoices": 0.3333333333333333,
+      "seat1Wilson95": [
+        0,
+        0.10426999754245206
+      ]
+    }
+  },
+  "interpretationBoundary": "Policy-conditioned Advanced Core observation. Associations are not causal proof; unsupported branches remain fail-closed. Self-play matches excluded from cross-policy superiority aggregates.",
+  "admissibilityDisclosure": {
+    "admissible": true,
+    "epoch": "post-rules-parity-repair-v0.28.1",
+    "profile": "core-advanced-authority",
+    "selfPlayExcluded": true,
+    "notes": [
+      "Prerequisite gates: IMPL-12 fixed",
+      "Policy strength tiers: claims qualified by tier (fixture/baseline/heuristic). No lookahead/tournament/human-meta-proxy policies established yet."
+    ]
+  }
+}

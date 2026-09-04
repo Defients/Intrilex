@@ -1,0 +1,25 @@
+{
+  "experimentId": "EXP-04-QUEEN-FORTRESS-WINDOW",
+  "schemaVersion": "1.0.0",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "hypothesis": "Establishing 2 untapped ER Queens creates an unanswerable endgame lock by disabling star-Ace and establishing mutual Guard against single-target removal.",
+  "authorityProfile": "core-advanced-authority",
+  "independentVariable": "Opponent board answer availability (presence of 4 Row Clear ER, 4♠ Total Clear, or star-2 Commandeer)",
+  "controlledVariables": ["core-advanced-authority", "engine 4.2.6"],
+  "policyPairs": [
+    ["control", "control"],
+    ["hybrix-defender", "hybrix-trickster"],
+    ["control", "hybrix-defender"]
+  ],
+  "matchCount": 120,
+  "decisionLimit": 3600,
+  "metrics": ["fortressBreachRateWithin2FullTurns", "fortressVictoryRate"],
+  "stratification": ["opponent draw-pile depth", "4♠ accessibility"],
+  "replayRetention": "Retain replays of all breached fortresses",
+  "counterfactualUsage": "Branch from fortress establishment evaluating opponent lines holding a Four vs holding an Ace",
+  "falsificationCriterion": "If opponents breach the fortress in >= 40% of cases using 4 Row Clear, Total Clear, or star-2, the unanswerable lock hypothesis is falsified.",
+  "minimumUsefulEvidence": "30 fortress occurrences",
+  "stopCondition": "40 fortress occurrences recorded",
+  "prerequisiteGates": ["IMPL-12 fixed"]
+}

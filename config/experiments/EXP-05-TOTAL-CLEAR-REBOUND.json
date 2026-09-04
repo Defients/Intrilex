@@ -1,0 +1,21 @@
+{
+  "experimentId": "EXP-05-TOTAL-CLEAR-REBOUND",
+  "schemaVersion": "1.0.0",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "hypothesis": "4♠ Total Clear functions primarily as a defensive comeback equalizer rather than a snowball finisher because it wipes the activator's own board and is held in check by standard Ace counterplay.",
+  "authorityProfile": "core-advanced-authority",
+  "independentVariable": "Board status of activator at Total Clear resolution (points behind vs points ahead)",
+  "controlledVariables": ["engine 4.2.6", "profile core-advanced-authority"],
+  "policyPairs": "full-12-policy-catalog",
+  "matchCount": 200,
+  "decisionLimit": 3600,
+  "metrics": ["counterRateByOpponentAces", "netScoreSwing", "winRateOfActivatorFollowingResolution"],
+  "stratification": ["natural 4♠ vs 2♠ Solo Wild vs K♠ Wild Sovereignty"],
+  "replayRetention": "All matches where Total Clear is declared",
+  "counterfactualUsage": "Branch from Total Clear declaration comparing resolution vs counter",
+  "falsificationCriterion": "If Total Clear win rate is significantly higher when declared while ahead, the comeback equalizer hypothesis is falsified.",
+  "minimumUsefulEvidence": "30 resolved Total Clears",
+  "stopCondition": "50 declarations logged",
+  "prerequisiteGates": ["IMPL-12 fixed (Ace counter targeting)"]
+}

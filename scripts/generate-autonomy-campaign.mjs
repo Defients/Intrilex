@@ -51,6 +51,13 @@ async function segmented(workerCount,executionId){
 }
 
 const identity=await loadReleaseIdentity();
+const engineManifest=JSON.parse(await readFile(path.join(root,'config/engine-manifest.json'),'utf8'));
+const authorityHash=engineManifest.rankAuthority?.authorityHash ?? null;
+const releaseIdentityHash=identity.integrityHash ?? null;
+config.evidenceEpoch='post-rules-parity-repair-v0.28.1';
+config.postRulesParityRepair=true;
+config.authorityHash=authorityHash;
+config.releaseIdentityHash=releaseIdentityHash;
 
 await rm(output,{recursive:true,force:true});if(!resume)await rm(replayCacheRoot,{recursive:true,force:true});await mkdir(replayCacheRoot,{recursive:true});await mkdir(path.join(output,'replays/authorized'),{recursive:true});await mkdir(path.join(output,'replays/public'),{recursive:true});await mkdir(reports,{recursive:true});
 const executions=[];let canonical=null;
@@ -59,7 +66,7 @@ for(const workers of workerCounts)await execute(workers,`workers-${workers}`);if
 const experimentHash=canonical.experimentHash,resultHash=canonical.canonicalResultHash;
 if(!executions.every(item=>item.experimentHash===experimentHash&&item.canonicalResultHash===resultHash&&item.matchCount===matchCount))throw new Error('CAMPAIGN_PARITY_FAILURE');
 const aggregate=campaignAggregate(canonical);if(aggregate.abortCount!==0)throw new Error(`CAMPAIGN_ABORTS:${aggregate.abortCount}`);
-const experimentCore={schemaVersion:'4.1.0',experimentId:`mechanics-observatory-twelve-policy-${matchCount}`,engine:{package:'@intrilex/headless-engine',version:identity.engineVersion,rulesVersion:identity.rulesVersion},rulesProfile:'core-advanced-authority',profileNature:'ENGINE_OWNED_BOUNDED_ADVANCED_CORE',enabledModules:[],playerCount:2,policyPairs,policyVersions:Object.fromEntries(POLICY_CATALOG.filter(policy=>OBSERVATORY_POLICY_IDS.includes(policy.policyId)).map(policy=>[policy.policyId,{version:policy.version,policyHash:policy.policyHash,traits:policy.traits}])),seedScheme:{kind:'HASH_DERIVED_UINT32_NONZERO',matchOrdinalStart:0},matchCount,safetyLimits:{maxPolicyDecisions:3600},telemetryLevel:'MECHANICS_OBSERVATORY_SEMANTIC_V4',diagnosticOmniscient:false};
+const experimentCore={schemaVersion:'4.1.0',experimentId:`mechanics-observatory-twelve-policy-${matchCount}`,engine:{package:'@intrilex/headless-engine',version:identity.engineVersion,rulesVersion:identity.rulesVersion},rulesProfile:'core-advanced-authority',profileNature:'ENGINE_OWNED_BOUNDED_ADVANCED_CORE',enabledModules:[],playerCount:2,policyPairs,policyVersions:Object.fromEntries(POLICY_CATALOG.filter(policy=>OBSERVATORY_POLICY_IDS.includes(policy.policyId)).map(policy=>[policy.policyId,{version:policy.version,policyHash:policy.policyHash,traits:policy.traits,strengthTier:policy.strengthTier ?? 'heuristic'}])),seedScheme:{kind:'HASH_DERIVED_UINT32_NONZERO',matchOrdinalStart:0},matchCount,safetyLimits:{maxPolicyDecisions:3600},telemetryLevel:'MECHANICS_OBSERVATORY_SEMANTIC_V4',diagnosticOmniscient:false,evidenceEpoch:'post-rules-parity-repair-v0.28.1',postRulesParityRepair:true,authorityHash,releaseIdentityHash};
 const experiment={...experimentCore,experimentHash,manifestContentHash:hashCanonical(experimentCore)};
 
 const completed=canonical.summaries;const retention=new Map();

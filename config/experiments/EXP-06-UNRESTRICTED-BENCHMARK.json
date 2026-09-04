@@ -1,0 +1,22 @@
+{
+  "experimentId": "EXP-06-UNRESTRICTED-BENCHMARK",
+  "schemaVersion": "1.0.0",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "hypothesis": "When Sudden Death (DEG-01) and star-6/star-7 enumeration (IMPL-03) are repaired, core-unrestricted-authority preserves equal seat balance and healthy game lengths.",
+  "authorityProfile": "core-unrestricted-authority",
+  "independentVariable": "Seat assignment (P1 vs P2) across a fully balanced 12x12 round-robin (every ordered pair played 4 times = 576 matches)",
+  "controlledVariables": ["repaired Unrestricted engine", "identical hardware and node worker threads"],
+  "policyPairs": "full-12-policy-round-robin",
+  "matchCount": 576,
+  "repetitionsPerPair": 4,
+  "decisionLimit": 3600,
+  "metrics": ["seat1WinRate with Wilson 95% CI", "terminationDistribution", "averageTurnCount", "hiddenSuperUsage (star-3, star-5, star-6, star-7)"],
+  "stratification": ["policy matchup", "seat order"],
+  "replayRetention": "100% replay retention with cryptographic verification",
+  "counterfactualUsage": "Selective counterfactual evaluation on close matches (score margin <= 3)",
+  "falsificationCriterion": "Seat 1 win rate outside [0.45, 0.55] with p < 0.01 indicates genuine mechanical seat bias.",
+  "minimumUsefulEvidence": "576 matches",
+  "stopCondition": "Full 576-match matrix completed",
+  "prerequisiteGates": ["DEG-01 fixed (Sudden Death)", "IMPL-03 fixed (star-6/star-7 enumeration)"]
+}

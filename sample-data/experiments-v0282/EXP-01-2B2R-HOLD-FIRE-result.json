@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "1.0.0",
+  "experimentId": "EXP-01-2B2R-HOLD-FIRE",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0",
+  "releaseIdentityHash": "cef7ee72dab583d41ec37ee3fec7ab6c",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "labVersion": "0.28.1",
+  "profileId": "core-advanced-authority",
+  "hypothesis": "Policy over-activation of 2B2R Ultra leads to sub-optimal long-term win rates due to hand dilution; holding components preserves strategic flexibility and improves match outcomes.",
+  "independentVariable": "AI policy 2B2R valuation weight (ultraBonus: default +300 vs ablated 0 vs negative -200)",
+  "falsificationCriterion": "If the policy that suppresses early 2B2R achieves an equal or higher win rate across 200 matches, the hypothesis of 2B2R mechanical overpoweredness is falsified (confirmed as an AI policy artifact).",
+  "prerequisiteGates": [
+    "IMPL-01 fixed",
+    "POL-A3 fixed"
+  ],
+  "policyStrengthTiers": {
+    "random-legal": "fixture",
+    "score-rush": "heuristic",
+    "control": "heuristic",
+    "tempo": "heuristic",
+    "value": "heuristic",
+    "hybrix-rusher": "heuristic",
+    "hybrix-defender": "heuristic",
+    "hybrix-trickster": "heuristic",
+    "hybrix-sniper": "heuristic",
+    "hybrix-rusher-hard": "heuristic",
+    "hybrix-defender-hard": "heuristic",
+    "hybrix-trickster-hard": "heuristic",
+    "hybrix-sniper-hard": "heuristic",
+    "hybrix-rusher-easy": "baseline",
+    "hybrix-defender-easy": "baseline",
+    "hybrix-rusher-nightmare": "heuristic",
+    "hybrix-defender-nightmare": "heuristic",
+    "hybrix-support": "heuristic",
+    "hybrix-tank": "heuristic",
+    "hybrix-baseline": "baseline"
+  },
+  "matchCount": 100,
+  "completedMatchCount": 100,
+  "durationMs": 90084,
+  "startedAt": "2026-09-04T12:40:52.628Z",
+  "experimentHash": "dc1b8eafe06411ffe9107b07f0e25c5966bda21b2bf553c5bf7e84112483e02d",
+  "canonicalResultHash": "d3a43509ff67ffb6d556f7df9ebfd89c4abe8380186309db68dd2257b0353ff1",
+  "aggregateHash": "7190a707312aa7bb337ef0f6ce03c9973c5b422cd2ff33e63d9db9a7ddbd60ea",
+  "seat1WinRate": 0.58,
+  "seat1Wilson95": [
+    0.4820648670304296,
+    0.6720161732564526
+  ],
+  "selfPlayExcluded": true,
+  "terminationCounts": {
+    "NORMAL_VICTORY": 100
+  },
+  "metrics": {
+    "totalMatches": 100,
+    "completedMatches": 100,
+    "averageTurns": 11.32,
+    "seat1WinRate": 0.58,
+    "seat1Wilson95": [
+      0.4820648670304296,
+      0.6720161732564526
+    ],
+    "boardLockActivations": 0,
+    "totalClearActivations": 0,
+    "ultraActivations": 98,
+    "selfPlayMatches": 0,
+    "crossPolicyMatches": 100
+  },
+  "policies": {
+    "control": {
+      "games": 50,
+      "wins": 8,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 490,
+      "responsesPlayed": 231,
+      "responsesDeclined": 0,
+      "selfPlayGames": 0,
+      "crossPolicyGames": 50,
+      "winRate": 0.16,
+      "wilson95": [
+        0.08337420678033404,
+        0.2851421606303499
+      ]
+    },
+    "score-rush": {
+      "games": 50,
+      "wins": 34,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 177,
+      "responsesPlayed": 72,
+      "responsesDeclined": 0,
+      "selfPlayGames": 0,
+      "crossPolicyGames": 50,
+      "winRate": 0.68,
+      "wilson95": [
+        0.5418970269185592,
+        0.7924178373934316
+      ]
+    },
+    "tempo": {
+      "games": 50,
+      "wins": 42,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 497,
+      "responsesPlayed": 105,
+      "responsesDeclined": 0,
+      "selfPlayGames": 0,
+      "crossPolicyGames": 50,
+      "winRate": 0.84,
+      "wilson95": [
+        0.7148578393696501,
+        0.916625793219666
+      ]
+    },
+    "value": {
+      "games": 50,
+      "wins": 16,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 200,
+      "responsesPlayed": 40,
+      "responsesDeclined": 0,
+      "selfPlayGames": 0,
+      "crossPolicyGames": 50,
+      "winRate": 0.32,
+      "wilson95": [
+        0.20758216260656848,
+        0.45810297308144077
+      ]
+    }
+  },
+  "matchups": {
+    "tempo__vs__control": {
+      "games": 50,
+      "seat1Wins": 42,
+      "seat2Wins": 8,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 844,
+      "totalResponses": 304,
+      "totalChoices": 32,
+      "selfPlay": false,
+      "meanFullTurns": 16.88,
+      "meanResponses": 6.08,
+      "meanPrivateChoices": 0.64,
+      "seat1Wilson95": [
+        0.7148578393696501,
+        0.916625793219666
+      ]
+    },
+    "value__vs__score-rush": {
+      "games": 50,
+      "seat1Wins": 16,
+      "seat2Wins": 34,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 288,
+      "totalResponses": 112,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5.76,
+      "meanResponses": 2.24,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20758216260656848,
+        0.45810297308144077
+      ]
+    }
+  },
+  "interpretationBoundary": "Policy-conditioned Advanced Core observation. Associations are not causal proof; unsupported branches remain fail-closed. Self-play matches excluded from cross-policy superiority aggregates.",
+  "admissibilityDisclosure": {
+    "admissible": true,
+    "epoch": "post-rules-parity-repair-v0.28.1",
+    "profile": "core-advanced-authority",
+    "selfPlayExcluded": true,
+    "notes": [
+      "Prerequisite gates: IMPL-01 fixed, POL-A3 fixed",
+      "Policy strength tiers: claims qualified by tier (fixture/baseline/heuristic). No lookahead/tournament/human-meta-proxy policies established yet."
+    ]
+  }
+}

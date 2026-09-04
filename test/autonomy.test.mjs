@@ -115,7 +115,7 @@ test('bounded campaign result hash is independent of worker count',async()=>{
 
 test('capability report supports bounded Advanced Core without claiming complete Core',async()=>{
   const report=JSON.parse(await readFile('reports/capability-manifest.json','utf8'));
-  assert.equal(report.labVersion,'0.28.1');
+  assert.equal(report.labVersion,'0.28.2');
   assert.equal(report.engine.version,'4.2.6');
   assert.equal(report.engine.rulesVersion,'4.3.1');
   assert.equal(report.defaultSimulationProfile,'core-advanced-authority');

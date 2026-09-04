@@ -1,0 +1,25 @@
+{
+  "experimentId": "EXP-03-TEN-HEART-OPPORTUNITY-COST",
+  "schemaVersion": "1.0.0",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "hypothesis": "Playing 10♥ for Tempo Spike (+2 MT, draw 1) is only mathematically superior to scoring 10 points when the active player can immediately score >= 10 points with the bonus actions.",
+  "authorityProfile": "core-advanced-authority",
+  "independentVariable": "Policy decision branch on holding 10♥: Play for Effect (Tempo) vs Play for Points (Score 10)",
+  "controlledVariables": ["identical match seeds", "identical board state at decision point"],
+  "policyPairs": [
+    ["score-rush", "score-rush"],
+    ["tempo", "tempo"],
+    ["value", "value"]
+  ],
+  "seedCount": 50,
+  "decisionLimit": 3600,
+  "metrics": ["netPRPointDelta2TurnsPostDecision", "winRateDelta"],
+  "stratification": ["hand point density at declaration (0 other scoring cards vs 2 other scoring cards)"],
+  "replayRetention": "Full decision trace and replay capture",
+  "counterfactualUsage": "Deterministic counterfactual branch evaluation using counterfactual.mjs",
+  "falsificationCriterion": "If scoring 10 points consistently yields higher win rates regardless of hand composition, 10♥ tempo mode is falsified as overtuned.",
+  "minimumUsefulEvidence": "40 counterfactual pairs",
+  "stopCondition": "50 branch evaluations completed",
+  "prerequisiteGates": ["IMPL-12 fixed (counter matrix)"]
+}

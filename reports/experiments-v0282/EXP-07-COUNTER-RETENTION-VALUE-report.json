@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "1.0.0",
+  "experimentId": "EXP-07-COUNTER-RETENTION-VALUE",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0",
+  "releaseIdentityHash": "cef7ee72dab583d41ec37ee3fec7ab6c",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "labVersion": "0.28.1",
+  "profileId": "core-advanced-authority",
+  "hypothesis": "Modifying policy scoring heuristics to explicitly value holding an Ace or K♠ in hand (applying a retention bonus) increases match win rate against aggressive opponents compared to immediate reactive counter firing.",
+  "independentVariable": "Policy counter retention bonus: 0 (default one-ply) vs +300 vs +600 hand-retention bonus",
+  "falsificationCriterion": "If retaining counters yields a lower win rate across 100 paired matches, the hypothesis that AI undervalues counter retention is falsified.",
+  "prerequisiteGates": [
+    "IMPL-12 fixed",
+    "POL-A2 fixed (reactive-card retention awareness)"
+  ],
+  "policyStrengthTiers": {
+    "random-legal": "fixture",
+    "score-rush": "heuristic",
+    "control": "heuristic",
+    "tempo": "heuristic",
+    "value": "heuristic",
+    "hybrix-rusher": "heuristic",
+    "hybrix-defender": "heuristic",
+    "hybrix-trickster": "heuristic",
+    "hybrix-sniper": "heuristic",
+    "hybrix-rusher-hard": "heuristic",
+    "hybrix-defender-hard": "heuristic",
+    "hybrix-trickster-hard": "heuristic",
+    "hybrix-sniper-hard": "heuristic",
+    "hybrix-rusher-easy": "baseline",
+    "hybrix-defender-easy": "baseline",
+    "hybrix-rusher-nightmare": "heuristic",
+    "hybrix-defender-nightmare": "heuristic",
+    "hybrix-support": "heuristic",
+    "hybrix-tank": "heuristic",
+    "hybrix-baseline": "baseline"
+  },
+  "matchCount": 100,
+  "completedMatchCount": 100,
+  "durationMs": 110510,
+  "startedAt": "2026-09-04T12:41:07.774Z",
+  "experimentHash": "edf0e584ec6f1051e57dc7d50944dcd120caab59f75ea589a2881517a4d82ea9",
+  "canonicalResultHash": "a6e6aea6542157b6d67d27e93b3f22d9abe943080a469e8ce97521585e6b3397",
+  "aggregateHash": "a904f1dd1cfda88b4e159008820fb6049d327ec91a3e1c7eb65a85a4365a5e9b",
+  "seat1WinRate": 0.09,
+  "seat1Wilson95": [
+    0.04807254000256515,
+    0.1622621285271631
+  ],
+  "selfPlayExcluded": true,
+  "terminationCounts": {
+    "EXHAUSTED_RESOLUTION": 3,
+    "NORMAL_VICTORY": 97
+  },
+  "metrics": {
+    "totalMatches": 100,
+    "completedMatches": 100,
+    "averageTurns": 16.61,
+    "seat1WinRate": 0.09,
+    "seat1Wilson95": [
+      0.04807254000256515,
+      0.1622621285271631
+    ],
+    "boardLockActivations": 0,
+    "totalClearActivations": 0,
+    "ultraActivations": 99,
+    "selfPlayMatches": 0,
+    "crossPolicyMatches": 100
+  },
+  "policies": {
+    "control": {
+      "games": 100,
+      "wins": 9,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 974,
+      "responsesPlayed": 317,
+      "responsesDeclined": 1,
+      "selfPlayGames": 0,
+      "crossPolicyGames": 100,
+      "winRate": 0.09,
+      "wilson95": [
+        0.04807254000256515,
+        0.1622621285271631
+      ]
+    },
+    "score-rush": {
+      "games": 50,
+      "wins": 47,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 444,
+      "responsesPlayed": 115,
+      "responsesDeclined": 0,
+      "selfPlayGames": 0,
+      "crossPolicyGames": 50,
+      "winRate": 0.94,
+      "wilson95": [
+        0.8378290831116182,
+        0.979385029651026
+      ]
+    },
+    "tempo": {
+      "games": 50,
+      "wins": 44,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 494,
+      "responsesPlayed": 128,
+      "responsesDeclined": 0,
+      "selfPlayGames": 0,
+      "crossPolicyGames": 50,
+      "winRate": 0.88,
+      "wilson95": [
+        0.7619518261679701,
+        0.9438239984906773
+      ]
+    }
+  },
+  "matchups": {
+    "control__vs__score-rush": {
+      "games": 50,
+      "seat1Wins": 3,
+      "seat2Wins": 47,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 794,
+      "totalResponses": 238,
+      "totalChoices": 28,
+      "selfPlay": false,
+      "meanFullTurns": 15.88,
+      "meanResponses": 4.76,
+      "meanPrivateChoices": 0.56,
+      "seat1Wilson95": [
+        0.02061497034897397,
+        0.16217091688838173
+      ]
+    },
+    "control__vs__tempo": {
+      "games": 50,
+      "seat1Wins": 6,
+      "seat2Wins": 44,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 867,
+      "totalResponses": 262,
+      "totalChoices": 33,
+      "selfPlay": false,
+      "meanFullTurns": 17.34,
+      "meanResponses": 5.24,
+      "meanPrivateChoices": 0.66,
+      "seat1Wilson95": [
+        0.05617600150932274,
+        0.23804817383202992
+      ]
+    }
+  },
+  "interpretationBoundary": "Policy-conditioned Advanced Core observation. Associations are not causal proof; unsupported branches remain fail-closed. Self-play matches excluded from cross-policy superiority aggregates.",
+  "admissibilityDisclosure": {
+    "admissible": true,
+    "epoch": "post-rules-parity-repair-v0.28.1",
+    "profile": "core-advanced-authority",
+    "selfPlayExcluded": true,
+    "notes": [
+      "Prerequisite gates: IMPL-12 fixed, POL-A2 fixed (reactive-card retention awareness)",
+      "Policy strength tiers: claims qualified by tier (fixture/baseline/heuristic). No lookahead/tournament/human-meta-proxy policies established yet."
+    ]
+  }
+}
