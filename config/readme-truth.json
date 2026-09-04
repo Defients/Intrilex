@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "productSummary": "Intrilex Simulation Lab v0.29.0 — Product Truth & Release Candidate. Built on Intrilex Engine v4.2.6 under Official Rules v4.3.1.",
+  "productSummary": "Intrilex Simulation Lab v0.30.0 — Player Experience. Built on Intrilex Engine v4.2.6 under Official Rules v4.3.1.",
   "keyFacts": {
-    "version": "0.29.0",
+    "version": "0.30.0",
     "engineVersion": "4.2.6",
     "rulesVersion": "4.3.1",
     "profileCount": 3,

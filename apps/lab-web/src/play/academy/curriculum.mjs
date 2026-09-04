@@ -240,7 +240,7 @@ export const CURRICULUM = [
         },
       },
     ],
-    completion: { mode: CompletionMode.WIN, requiredObjectives: ['draw-card', 'play-points', 'reach-goal'] },
+    completion: { mode: CompletionMode.OBJECTIVES, requiredObjectives: ['draw-card', 'play-points', 'reach-goal'] },
     adaptation: {
       hintThreshold: 2,
       masteryReps: 1,
@@ -280,7 +280,7 @@ export const CURRICULUM = [
       profileId: 'first-contact-trigger-closure',
     },
     steps: [],
-    completion: { mode: CompletionMode.WIN, requiredObjectives: ['play-to-point-row', 'reach-half-goal', 'win-match'] },
+    completion: { mode: CompletionMode.OBJECTIVES, requiredObjectives: ['play-to-point-row', 'reach-half-goal'] },
     adaptation: {
       hintThreshold: 2,
       masteryReps: 1,
@@ -319,7 +319,7 @@ export const CURRICULUM = [
       profileId: 'first-contact-trigger-closure',
     },
     steps: [],
-    completion: { mode: CompletionMode.WIN, requiredObjectives: ['reach-21', 'win-short-match'] },
+    completion: { mode: CompletionMode.OBJECTIVES, requiredObjectives: ['reach-21'] },
     adaptation: {
       hintThreshold: 2,
       masteryReps: 1,
@@ -358,7 +358,7 @@ export const CURRICULUM = [
       profileId: 'first-contact-trigger-closure',
     },
     steps: [],
-    completion: { mode: CompletionMode.WIN, requiredObjectives: ['complete-turns', 'win-full-match'] },
+    completion: { mode: CompletionMode.OBJECTIVES, requiredObjectives: ['complete-turns'] },
     adaptation: {
       hintThreshold: 2,
       masteryReps: 1,
@@ -418,7 +418,7 @@ export const CURRICULUM = [
         },
       },
     ],
-    completion: { mode: CompletionMode.WIN, requiredObjectives: ['scuttle-opponent', 'win-after-scuttle'] },
+    completion: { mode: CompletionMode.OBJECTIVES, requiredObjectives: ['scuttle-opponent'] },
     adaptation: {
       hintThreshold: 2,
       masteryReps: 1,
@@ -478,7 +478,7 @@ export const CURRICULUM = [
         },
       },
     ],
-    completion: { mode: CompletionMode.WIN, requiredObjectives: ['anchor-card', 'win-after-anchor'] },
+    completion: { mode: CompletionMode.OBJECTIVES, requiredObjectives: ['anchor-card'] },
     adaptation: {
       hintThreshold: 2,
       masteryReps: 1,
@@ -520,7 +520,7 @@ export const CURRICULUM = [
       profileId: 'first-contact-trigger-closure',
     },
     steps: [],
-    completion: { mode: CompletionMode.WIN, requiredObjectives: ['play-swap', 'play-peek', 'win-swap-peek'] },
+    completion: { mode: CompletionMode.OBJECTIVES, requiredObjectives: ['play-swap', 'play-peek'] },
     adaptation: {
       hintThreshold: 2,
       masteryReps: 1,
@@ -588,7 +588,7 @@ export const CURRICULUM = [
         },
       },
     ],
-    completion: { mode: CompletionMode.WIN, requiredObjectives: ['recognize-response', 'counter-action', 'decline-pass'] },
+    completion: { mode: CompletionMode.OBJECTIVES, requiredObjectives: ['recognize-response', 'counter-action', 'decline-pass'] },
     adaptation: {
       hintThreshold: 2,
       masteryReps: 1,
@@ -660,7 +660,7 @@ export const CURRICULUM = [
         },
       },
     ],
-    completion: { mode: CompletionMode.WIN, requiredObjectives: ['play-jack', 'play-queen', 'win-royals'] },
+    completion: { mode: CompletionMode.OBJECTIVES_AND_WIN, requiredObjectives: ['play-jack', 'play-queen', 'win-royals'] },
     adaptation: {
       hintThreshold: 2,
       masteryReps: 1,
@@ -699,7 +699,7 @@ export const CURRICULUM = [
       profileId: 'first-contact-trigger-closure',
     },
     steps: [],
-    completion: { mode: CompletionMode.WIN, requiredObjectives: ['use-two-effects', 'win-combo'] },
+    completion: { mode: CompletionMode.OBJECTIVES_AND_WIN, requiredObjectives: ['use-two-effects', 'win-combo'] },
     adaptation: {
       hintThreshold: 3,
       masteryReps: 1,

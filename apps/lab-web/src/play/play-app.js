@@ -185,11 +185,28 @@ async function renderNewMatch(container) {
     policyId: id,
     traits: { archetype: id.replace('hybrix-', '').replace(/-(hard|easy|nightmare|normal)$/, ''), difficulty: id.includes('-hard') ? 'hard' : id.includes('-easy') ? 'easy' : id.includes('-nightmare') ? 'nightmare' : 'normal' },
   }));
+  // v0.30.0: Check for existing save to show resume prompt
+  let saveInfo = null;
+  try {
+    if (isIndexedDBAvailable()) {
+      const autosave = await getSave('AUTOSAVE-current');
+      if (autosave && autosave.profileId) {
+        saveInfo = {
+          saveId: 'AUTOSAVE-current',
+          profileId: autosave.profileId,
+          seed: autosave.seed,
+          turnNumber: autosave.turnNumber ?? null,
+        };
+      }
+    }
+  } catch { /* ignore save detection errors */ }
   // U7: First-run funnel banner for new players
   const funnelBanner = renderFunnelBanner();
-  container.innerHTML = funnelBanner + renderNewMatchSetup(catalog);
+  container.innerHTML = funnelBanner + renderNewMatchSetup(catalog, { saveInfo });
   if (funnelBanner) wireFunnelBanner(container);
   bindNewMatchForm(container);
+  wireProfileExplainer(container);
+  wireResumePrompt(container);
 }
 
 /**
@@ -346,6 +363,37 @@ function bindNewMatchForm(container) {
       aiPolicyId: aiPolicy,
       mode: 'ADVANCED_CORE',
     }, container);
+  });
+}
+
+/**
+ * v0.30.0: Wire profile explainer to show/hide explanation based on selected profile.
+ */
+function wireProfileExplainer(container) {
+  const radios = container.querySelectorAll('input[name="profile"]');
+  const explanations = container.querySelectorAll('.profile-explanation');
+  if (!radios.length || !explanations.length) return;
+  const update = () => {
+    const selected = container.querySelector('input[name="profile"]:checked');
+    if (!selected) return;
+    const profileId = selected.value;
+    explanations.forEach(el => {
+      el.hidden = el.dataset.profile !== profileId;
+    });
+  };
+  radios.forEach(r => r.addEventListener('change', update));
+  update();
+}
+
+/**
+ * v0.30.0: Wire resume prompt button to continue a saved match.
+ */
+function wireResumePrompt(container) {
+  const btn = container.querySelector('[data-testid="resume-match"]');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    const saveId = btn.dataset.saveId;
+    if (saveId) await continueMatch(saveId, container);
   });
 }
 

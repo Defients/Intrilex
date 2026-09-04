@@ -1,6 +1,6 @@
 {
   "name": "@intrilex/achievements",
-  "version": "0.29.0",
+  "version": "0.30.0",
   "type": "module",
   "description": "Canonical Intrilex achievement domain — 56 launch achievements with deterministic detection, career tracking, and legacy migration. Self-contained for isomorphic browser transport.",
   "exports": {

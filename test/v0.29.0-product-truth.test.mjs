@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// v0.29.0-product-truth.test.mjs — Product truth and three-lanes tests
+// v0.30.0-product-truth.test.mjs — Product truth and three-lanes tests
 // ═══════════════════════════════════════════════════════════════
 
 import test from 'node:test';
@@ -15,7 +15,7 @@ const exists = async (p) => { try { await access(path.join(root, p)); return tru
 
 // ── Capability truth generation ──
 
-test('v0.29.0: capability-truth.json exists and has required fields', async () => {
+test('v0.30.0: capability-truth.json exists and has required fields', async () => {
   const truth = await readJson('config/capability-truth.json');
   assert.equal(truth.schemaVersion, '1.0.0');
   assert.ok(truth.product, 'must have product section');
@@ -25,7 +25,7 @@ test('v0.29.0: capability-truth.json exists and has required fields', async () =
   assert.ok(truth.networkAuthority, 'must have networkAuthority section');
 });
 
-test('v0.29.0: capability truth has three lanes (Play, Learn, Lab)', async () => {
+test('v0.30.0: capability truth has three lanes (Play, Learn, Lab)', async () => {
   const truth = await readJson('config/capability-truth.json');
   assert.ok(truth.lanes.play, 'must have play lane');
   assert.ok(truth.lanes.learn, 'must have learn lane');
@@ -35,7 +35,7 @@ test('v0.29.0: capability truth has three lanes (Play, Learn, Lab)', async () =>
   assert.ok(truth.lanes.lab.routes.length > 0, 'lab lane must have routes');
 });
 
-test('v0.29.0: capability truth product version matches release identity', async () => {
+test('v0.30.0: capability truth product version matches release identity', async () => {
   const truth = await readJson('config/capability-truth.json');
   const ri = await readJson('config/release-identity.json');
   assert.equal(truth.product.version, ri.version);
@@ -43,14 +43,14 @@ test('v0.29.0: capability truth product version matches release identity', async
   assert.equal(truth.product.rulesVersion, ri.rulesVersion);
 });
 
-test('v0.29.0: capability truth limitations include multiplayer blocked', async () => {
+test('v0.30.0: capability truth limitations include multiplayer blocked', async () => {
   const truth = await readJson('config/capability-truth.json');
   const mp = truth.limitations.find(l => l.id === 'MULTIPLAYER-01');
   assert.ok(mp, 'must have MULTIPLAYER-01 limitation');
   assert.equal(mp.severity, 'by-design');
 });
 
-test('v0.29.0: FEATURE_MATRIX.md is generated and contains profiles', async () => {
+test('v0.30.0: FEATURE_MATRIX.md is generated and contains profiles', async () => {
   const matrix = await read('docs/FEATURE_MATRIX.md');
   assert.match(matrix, /AUTO-GENERATED/);
   assert.match(matrix, /Simulation Profiles/);
@@ -61,14 +61,14 @@ test('v0.29.0: FEATURE_MATRIX.md is generated and contains profiles', async () =
   assert.match(matrix, /Limitations/);
 });
 
-test('v0.29.0: KNOWN_LIMITATIONS.md is generated and contains limitations', async () => {
+test('v0.30.0: KNOWN_LIMITATIONS.md is generated and contains limitations', async () => {
   const kl = await read('KNOWN_LIMITATIONS.md');
   assert.match(kl, /AUTO-GENERATED/);
   assert.match(kl, /By Design/);
   assert.match(kl, /MULTIPLAYER/);
 });
 
-test('v0.29.0: README is concise and does not contain stale v0.10/v0.11/v0.12 prose', async () => {
+test('v0.30.0: README is concise and does not contain stale v0.10/v0.11/v0.12 prose', async () => {
   const readme = await read('README.md');
   assert.match(readme, /Product truth/);
   assert.match(readme, /Three lanes|Play.*Learn.*Lab|three lanes/i);
@@ -81,20 +81,20 @@ test('v0.29.0: README is concise and does not contain stale v0.10/v0.11/v0.12 pr
   assert.doesNotMatch(readme, /v0\.13\.0 introduced/);
 });
 
-test('v0.29.0: generate-capability-truth.mjs script exists', async () => {
+test('v0.30.0: generate-capability-truth.mjs script exists', async () => {
   assert.ok(await exists('scripts/generate-capability-truth.mjs'));
 });
 
 // ── Three-lanes navigation ──
 
-test('v0.29.0: router.js has three-lane navigation (Play, Learn, Lab)', async () => {
+test('v0.30.0: router.js has three-lane navigation (Play, Learn, Lab)', async () => {
   const router = await read('apps/lab-web/src/router.js');
   assert.match(router, /label:\s*'Play'/);
   assert.match(router, /label:\s*'Learn'/);
   assert.match(router, /label:\s*'Lab'/);
 });
 
-test('v0.29.0: router.js WORKSPACES includes play and learn routes', async () => {
+test('v0.30.0: router.js WORKSPACES includes play and learn routes', async () => {
   const router = await read('apps/lab-web/src/router.js');
   assert.match(router, /\['\/play'/);
   assert.match(router, /\['\/play\/academy'/);
@@ -105,7 +105,7 @@ test('v0.29.0: router.js WORKSPACES includes play and learn routes', async () =>
   assert.match(router, /\['\/tournaments'/);
 });
 
-test('v0.29.0: router.js no longer uses Analysis/Investigation/System sections', async () => {
+test('v0.30.0: router.js no longer uses Analysis/Investigation/System sections', async () => {
   const router = await read('apps/lab-web/src/router.js');
   // The old sections should not be the primary grouping
   // (Account is fine as a fourth section)
@@ -115,7 +115,7 @@ test('v0.29.0: router.js no longer uses Analysis/Investigation/System sections',
 
 // ── Capability truth generator is runnable ──
 
-test('v0.29.0: package.json has capability:generate script', async () => {
+test('v0.30.0: package.json has capability:generate script', async () => {
   const pkg = await readJson('package.json');
   assert.ok(pkg.scripts['capability:generate'], 'must have capability:generate script');
   assert.match(pkg.scripts['capability:generate'], /generate-capability-truth/);
