@@ -189,6 +189,19 @@ export {
 } from './tournament-domain.mjs';
 
 export {
+  TournamentAuditAction,
+  checkInPlayer,
+  withdrawPlayer,
+  getCheckedInPlayers,
+  startTournamentWithCheckIn,
+  createAuditEntry,
+  adminCorrectResult,
+  adminDisqualifyPlayer,
+  adminVoidMatch,
+  getAuditLog,
+} from './tournament-operations.mjs';
+
+export {
   StrategicTrait,
   deriveStrategicTraits,
   derivePrimaryArchetype,

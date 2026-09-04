@@ -251,6 +251,8 @@ const STAGES = [
   ['v0.29.0-product-truth', 'node', ['--test', 'test/v0.29.0-product-truth.test.mjs']],
   // v0.30.0 Player Experience — game-start, card inspector, academy progression
   ['v0.30.0-player-experience', 'node', ['--test', 'test/v0.30.0-player-experience.test.mjs']],
+  // v0.31.0 Competitive Operations — tournament check-in, abandonment, broadcast, moderation, migrations
+  ['v0.31.0-competitive-operations', 'node', ['--test', 'test/v0.31.0-competitive-operations.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;
