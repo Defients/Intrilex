@@ -1,5 +1,57 @@
 # Changelog
 
+## v0.31.0 — Competitive Operations
+
+### Added
+
+- **Tournament check-in & admin correction** — New pure tournament
+  operations module (`tournament-operations.mjs`) with check-in
+  lifecycle, withdrawal with deterministic reseeding, check-in-gated
+  tournament start, admin result correction, player disqualification,
+  match voiding, and structured audit entries with before/after
+  snapshots. All operations preserve immutable-update conventions.
+- **Ranked disconnect/abandonment handling** — New abandonment tracker
+  (`abandonment-handler.mjs`) with configurable grace period (default
+  60s), minimum turn threshold before forfeit (default 4), state
+  machine (CONNECTED → GRACE_PERIOD → FORFEIT_PENDING → FORFEITED /
+  RESUMED), server-authoritative forfeit result construction, and
+  serializable state for recovery. Reconnect cancels forfeit.
+- **Delayed broadcast buffer** — New broadcast module
+  (`delayed-broadcast-buffer.mjs`) with configurable delay (default
+  30s), FIFO buffer with capacity eviction, public vs judge projection
+  types, caster handoff registry (one-caster-per-match invariant),
+  caster transfer, and bracket-to-broadcast navigation link builder.
+- **Social safety moderation service** — New moderation module
+  (`moderation-service.mjs`) with report filing (6 reason categories),
+  report review/action workflow, mute management with lazy expiry,
+  display-name validation (length, charset, leet-speak profanity
+  normalization, impersonation prevention), moderator audit log, and
+  full serialization for persistence.
+- **DB migration framework** — New migration runner
+  (`migration-runner.mjs`) with version tracking table, migration
+  registration and validation, ascending pending execution with
+  per-migration transactions, rollback by version, rollback-to-target,
+  status queries, and error wrapping with applied-before-failure
+  context.
+- **Monitoring dashboard endpoint** — New `/api/status` HTTP endpoint
+  on the match server exposing detailed health metrics (active matches,
+  connections, queue size, memory, event counters, auth/persistence
+  state) for monitoring dashboards. Existing `/health` and `/metrics`
+  remain sanitized for public exposure.
+- **v0.31.0 test suite** — 57 new tests covering tournament check-in,
+  withdrawal, admin correction, disqualification, match voiding, audit
+  log, abandonment tracking, forfeit computation, result record
+  building, broadcast buffer, caster handoff, bracket navigation,
+  moderation service, display-name validation, migration runner, and
+  monitoring endpoint.
+
+### Changed
+
+- Product version bumped from 0.30.0 to 0.31.0
+- All workspace package versions bumped to 0.31.0
+- Release identity, engine manifest, capability truth, and feature
+  matrix regenerated for v0.31.0
+
 ## v0.30.0 — Player Experience
 
 ### Added

@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
   "productName": "Intrilex Simulation Lab",
-  "version": "0.30.0",
-  "releaseTitle": "Player Experience",
+  "version": "0.31.0",
+  "releaseTitle": "Competitive Operations",
   "buildKind": "RANKED_DUEL_PLAYER_SHELL",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
@@ -29,7 +29,7 @@
     "deploy",
     "evidence"
   ],
-  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.30.0",
+  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.31.0",
   "releaseDate": "2026-09-04",
-  "integrityHash": "fb7cff6dc6a775092d010d25be05e821"
+  "integrityHash": "1a7df235431abdbb4591c1485a1c37f5"
 }

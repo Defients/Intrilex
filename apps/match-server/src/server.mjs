@@ -723,7 +723,7 @@ export async function startServer(opts = {}) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         server: 'Intrilex Match Authority',
-        version: '0.30.0',
+        version: '0.31.0',
         protocolVersion: 2,
         ...getPublicHealthMetrics(),
       }));
@@ -733,6 +733,29 @@ export async function startServer(opts = {}) {
     if (req.url === '/metrics') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(getPublicHealthMetrics()));
+      return;
+    }
+    // v0.31.0: Monitoring dashboard endpoint at /api/status — detailed metrics
+    // for operator dashboards. Returns full health metrics including event
+    // counters, persistence info, and server configuration. Intended for
+    // authenticated operators (protect via reverse proxy / firewall in prod).
+    if (req.url === '/api/status') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        server: 'Intrilex Match Authority',
+        version: '0.31.0',
+        protocolVersion: 2,
+        timestamp: new Date().toISOString(),
+        ...getHealthMetrics(),
+        config: {
+          maxConnections: MAX_GLOBAL_CONNECTIONS,
+          maxConnectionsPerIp: MAX_CONNECTIONS_PER_IP,
+          maxSpectatorsPerMatch: MAX_SPECTATORS_PER_MATCH,
+          rateLimitCapacity: _rateLimitCapacity,
+          authAttemptMax: _authAttemptMax,
+          isProduction: _isProductionMode,
+        },
+      }));
       return;
     }
     // NOTE: Unauthenticated HTTP replay download was removed in v0.24.2

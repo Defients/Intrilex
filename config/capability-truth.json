@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-09-04T14:31:28.123Z",
+  "generatedAt": "2026-09-04T15:18:45.583Z",
   "source": {
     "capabilityManifest": "reports/capability-manifest.json",
     "releaseIdentity": "config/release-identity.json",
@@ -9,12 +9,12 @@
   },
   "product": {
     "name": "Intrilex Simulation Lab",
-    "version": "0.30.0",
+    "version": "0.31.0",
     "releaseTitle": "Player Experience",
     "engineVersion": "4.2.6",
     "rulesVersion": "4.3.1",
     "officialRulesVersion": "4.3.1",
-    "labVersion": "0.29.0",
+    "labVersion": "0.30.0",
     "schemaVersion": "4.1.0",
     "telemetryVersion": "4.1.0",
     "analyticsVersion": "4.2.0",
@@ -228,9 +228,9 @@
       "certifiedReplayCount": 121,
       "autonomousProfile": "core-advanced-authority"
     },
-    "testFileCount": 183,
-    "testCount": 4487,
-    "testPassCount": 4473,
+    "testFileCount": 185,
+    "testCount": 4510,
+    "testPassCount": 4496,
     "ciStageCount": null,
     "selfAuditStatus": "PASS"
   },

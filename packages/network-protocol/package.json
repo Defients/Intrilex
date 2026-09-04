@@ -1,6 +1,6 @@
 {
   "name": "@intrilex/network-protocol",
-  "version": "0.30.0",
+  "version": "0.31.0",
   "type": "module",
   "exports": {
     ".": "./src/protocol.mjs",

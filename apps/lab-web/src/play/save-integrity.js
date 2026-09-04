@@ -7,7 +7,7 @@
 import { hashCanonical } from '../engine/browser-entry.js';
 
 // ── Release identity (single source — Gate 4 canonical location) ──
-export const PRODUCT_VERSION = '0.30.0';
+export const PRODUCT_VERSION = '0.31.0';
 export const PLAYER_RUNTIME_VERSION = '1.2.0';
 export const ENGINE_VERSION = '4.2.6';
 export const RULES_VERSION = '4.3.1';

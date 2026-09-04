@@ -2,12 +2,12 @@
   "schemaVersion": "3.0",
   "status": "PASS",
   "proofKind": "REAL_CHROMIUM_CDP_MAIN_THREAD_AND_WEB_WORKER",
-  "labVersion": "0.30.0",
+  "labVersion": "0.31.0",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
   "profileId": "core-advanced-authority",
   "certifiedReplayCount": 221,
-  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
   "sha256Vectors": 2,
   "nodeReference": {
     "replayCount": 121,
@@ -19,16 +19,16 @@
     "terminationReason": "NORMAL_VICTORY",
     "winner": "P1",
     "winningSeat": 1,
-    "decisionCount": 80,
-    "responseDecisionCount": 8,
+    "decisionCount": 57,
+    "responseDecisionCount": 5,
     "privateChoiceDecisionCount": 2,
-    "advancedDecisionCount": 6,
+    "advancedDecisionCount": 5,
     "ultraDecisionCount": 2,
     "voltageDecisionCount": 0,
-    "commandCount": 268,
-    "finalStateHash": "1c73e7bbf8db4334094fa5a7da9556f83881c7951ed76bab6fd03d73eadae413",
+    "commandCount": 198,
+    "finalStateHash": "b436187e4e7c13b116a0dec1f84a6a24c296c82ba0ef6bac063985d970c2afb4",
     "finalScores": {
-      "P1": 21,
+      "P1": 24,
       "P2": 0
     }
   },
@@ -41,20 +41,20 @@
       "terminationReason": "NORMAL_VICTORY",
       "winner": "P1",
       "winningSeat": 1,
-      "decisionCount": 80,
-      "responseDecisionCount": 8,
+      "decisionCount": 57,
+      "responseDecisionCount": 5,
       "privateChoiceDecisionCount": 2,
-      "advancedDecisionCount": 6,
+      "advancedDecisionCount": 5,
       "ultraDecisionCount": 2,
       "voltageDecisionCount": 0,
-      "commandCount": 268,
-      "finalStateHash": "1c73e7bbf8db4334094fa5a7da9556f83881c7951ed76bab6fd03d73eadae413",
+      "commandCount": 198,
+      "finalStateHash": "b436187e4e7c13b116a0dec1f84a6a24c296c82ba0ef6bac063985d970c2afb4",
       "finalScores": {
-        "P1": 21,
+        "P1": 24,
         "P2": 0
       }
     },
-    "durationMs": 563
+    "durationMs": 1269
   },
   "worker": {
     "replayCount": 121,
@@ -65,20 +65,20 @@
       "terminationReason": "NORMAL_VICTORY",
       "winner": "P1",
       "winningSeat": 1,
-      "decisionCount": 80,
-      "responseDecisionCount": 8,
+      "decisionCount": 57,
+      "responseDecisionCount": 5,
       "privateChoiceDecisionCount": 2,
-      "advancedDecisionCount": 6,
+      "advancedDecisionCount": 5,
       "ultraDecisionCount": 2,
       "voltageDecisionCount": 0,
-      "commandCount": 268,
-      "finalStateHash": "1c73e7bbf8db4334094fa5a7da9556f83881c7951ed76bab6fd03d73eadae413",
+      "commandCount": 198,
+      "finalStateHash": "b436187e4e7c13b116a0dec1f84a6a24c296c82ba0ef6bac063985d970c2afb4",
       "finalScores": {
-        "P1": 21,
+        "P1": 24,
         "P2": 0
       }
     },
-    "durationMs": 544
+    "durationMs": 1278
   },
   "parity": {
     "aggregateHashesEqual": true,
@@ -91,5 +91,5 @@
     "policyBrowserMatchesNode": true,
     "policyTerminatesCanonically": true
   },
-  "generatedAt": "2026-08-09T12:49:41.992Z"
+  "generatedAt": "2026-09-04T15:19:34.129Z"
 }
