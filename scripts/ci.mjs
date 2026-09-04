@@ -243,6 +243,8 @@ const STAGES = [
   ['caster-fullscreen', 'node', ['--test', 'test/caster-fullscreen.test.mjs']],
   // 3D Mind Map Brain — Three.js homepage visualization
   ['brain-3d', 'node', ['--test', 'test/brain-3d.test.mjs']],
+  // v0.28.1 Rules-Parity Hotfix — failing behavioral tests for IMPL-01/03/04/12, DEG-01
+  ['v0.28.1-rules-parity-defects', 'node', ['--test', 'test/v0.28.1-rules-parity-defects.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;
