@@ -18,8 +18,8 @@ const require = createRequire(import.meta.url);
 // ── Helpers ──
 
 function randomPort() {
-  // Use ephemeral port range (49152-65535) to avoid conflicts with other test files
-  return 49152 + Math.floor(Math.random() * 10000);
+  // Use full ephemeral port range (49152-65535) to minimize conflicts under concurrency
+  return 49152 + Math.floor(Math.random() * 16383);
 }
 
 function waitForMessage(ws, timeout = 5000) {

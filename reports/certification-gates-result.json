@@ -1,0 +1,510 @@
+{
+  "passed": false,
+  "gates": {
+    "rules-engine": {
+      "name": "Rules & Engine",
+      "passed": true,
+      "evidence": [
+        "Engine version 4.2.6 and rules version 4.3.1 agree across all surfaces.",
+        "Self-audit PASS (4691 tests, 4677 pass, provenance bound to 6873af8c).",
+        "Engine-patch integrity verification executed and passed.",
+        "Engine authority manifest verification executed and passed.",
+        "Build determinism report PASS (provenance matches current tree)."
+      ],
+      "gaps": [],
+      "controls": [
+        {
+          "name": "self-audit",
+          "status": "PASS",
+          "scope": "local",
+          "command": null,
+          "startedAt": null,
+          "completedAt": null,
+          "exitCode": null,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": "8a995210f0aa99728c8f0e120b69c58788c81a63f3036f25cac1c44e30789651",
+          "evidencePath": "reports/self-audit.json",
+          "summary": "Report reports/self-audit.json status=PASS, provenance matches current tree",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "engine-patch-integrity",
+          "status": "PASS",
+          "scope": "local",
+          "command": "node scripts/engine-patch-integrity.mjs verify",
+          "startedAt": "2026-09-04T20:54:21.828Z",
+          "completedAt": "2026-09-04T20:54:22.765Z",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "Control exited 0. PRIORITY/PASS MANIFEST PASS: files=1089; payload=e720a218577dc24e0c31d577ff1caefa8f5ca6cbad0908d2535450b4bab96d08",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "engine-manifest-verify",
+          "status": "PASS",
+          "scope": "local",
+          "command": "node scripts/generate-engine-manifest.mjs --verify",
+          "startedAt": "2026-09-04T20:54:22.766Z",
+          "completedAt": "2026-09-04T20:54:23.011Z",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "Control exited 0. Γ£à Engine manifest verified ΓÇö no drift",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "build-determinism",
+          "status": "PASS",
+          "scope": "local",
+          "command": null,
+          "startedAt": null,
+          "completedAt": null,
+          "exitCode": null,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": "c4141d9f0477a895c3bb79780c711e448c55ae1ca220fa649fe303539e5109fa",
+          "evidencePath": "reports/build-determinism.json",
+          "summary": "Report reports/build-determinism.json status=PASS, provenance matches current tree",
+          "blockers": [],
+          "residualRisks": []
+        }
+      ]
+    },
+    "local-experience": {
+      "name": "Local Player Experience",
+      "passed": true,
+      "evidence": [
+        "Self-audit PASS covers local experience test files (play-module, accessibility, academy, puzzle).",
+        "Local experience tests (play-module, accessibility) executed and passed.",
+        "All 7 required local-experience modules present.",
+        "Save compatibility checking exists ΓÇö old data fails with clear explanation."
+      ],
+      "gaps": [],
+      "controls": [
+        {
+          "name": "self-audit-local-experience",
+          "status": "PASS",
+          "scope": "local",
+          "command": null,
+          "startedAt": null,
+          "completedAt": null,
+          "exitCode": null,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": "8a995210f0aa99728c8f0e120b69c58788c81a63f3036f25cac1c44e30789651",
+          "evidencePath": "reports/self-audit.json",
+          "summary": "Report reports/self-audit.json status=PASS, provenance matches current tree",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "local-experience-tests",
+          "status": "PASS",
+          "scope": "local",
+          "command": "node --test test/play-module.test.mjs test/accessibility.test.mjs",
+          "startedAt": "2026-09-04T20:54:23.012Z",
+          "completedAt": "2026-09-04T20:54:24.515Z",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "Control exited 0. nd identities\n  ---\n  duration_ms: 16.3682\n  ...\n# Subtest: play integration: certified replay creation and verification\nok 60 - play integration: certified replay creation and verification\n  ---\n  duration_ms: 90.5076\n  ...\n# Subtest: play integration: public replay view redacts private info\nok 61 - play integration: public replay view redacts private info\n  ---\n  duration_ms: 21.2834\n  ...\n1..61\n# tests 61\n# suites 0\n# pass 61\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1429.9227",
+          "blockers": [],
+          "residualRisks": []
+        }
+      ]
+    },
+    "online-experience": {
+      "name": "Online Experience",
+      "passed": true,
+      "evidence": [
+        "Network authority tests executed and passed (includes message collector cleanup regression).",
+        "Self-audit PASS covers online experience test files (auth-reconnect, spectator, persistence, etc.).",
+        "All 8 required online-experience modules present.",
+        "Hidden information leak gate passed (from self-audit)."
+      ],
+      "gaps": [],
+      "controls": [
+        {
+          "name": "network-authority-tests",
+          "status": "PASS",
+          "scope": "local",
+          "command": "node --test test/network-authority.test.mjs",
+          "startedAt": "2026-09-04T20:54:24.517Z",
+          "completedAt": "2026-09-04T20:54:37.755Z",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "Control exited 0. 16Z\",\"event\":\"connectionClose\",\"connectionId\":\"7ccd3084-ea28-4f64-b3b5-7c594d4c56c2\",\"wasSpectator\":false,\"matchId\":\"M-V-OP2wgM_atHx9__\",\"total\":0}\n# Subtest: message collector: timeout clears interval (no handle leak)\nok 49 - message collector: timeout clears interval (no handle leak)\n  ---\n  duration_ms: 101.0499\n  ...\n# Subtest: cleanup\nok 50 - cleanup\n  ---\n  duration_ms: 101.2995\n  ...\n1..50\n# tests 50\n# suites 0\n# pass 50\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 13162.7706",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "self-audit-online-experience",
+          "status": "PASS",
+          "scope": "local",
+          "command": null,
+          "startedAt": null,
+          "completedAt": null,
+          "exitCode": null,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": "8a995210f0aa99728c8f0e120b69c58788c81a63f3036f25cac1c44e30789651",
+          "evidencePath": "reports/self-audit.json",
+          "summary": "Report reports/self-audit.json status=PASS, provenance matches current tree",
+          "blockers": [],
+          "residualRisks": []
+        }
+      ]
+    },
+    "laboratory": {
+      "name": "Laboratory",
+      "passed": true,
+      "evidence": [
+        "Self-audit PASS covers laboratory test files (decision-intelligence, replay, evidence).",
+        "Laboratory tests (decision-intelligence) executed and passed.",
+        "All 5 required laboratory modules present.",
+        "WAIT WHAT investigation workflow has automatic invalidation on authority hash change.",
+        "False analytic claim gate passed."
+      ],
+      "gaps": [],
+      "controls": [
+        {
+          "name": "self-audit-laboratory",
+          "status": "PASS",
+          "scope": "local",
+          "command": null,
+          "startedAt": null,
+          "completedAt": null,
+          "exitCode": null,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": "8a995210f0aa99728c8f0e120b69c58788c81a63f3036f25cac1c44e30789651",
+          "evidencePath": "reports/self-audit.json",
+          "summary": "Report reports/self-audit.json status=PASS, provenance matches current tree",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "laboratory-tests",
+          "status": "PASS",
+          "scope": "local",
+          "command": "node --test test/decision-intelligence.test.mjs",
+          "startedAt": "2026-09-04T20:54:37.757Z",
+          "completedAt": "2026-09-04T20:54:39.870Z",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "Control exited 0. parePolicyDiagnostics produces descriptive comparison\nok 23 - comparePolicyDiagnostics produces descriptive comparison\n  ---\n  duration_ms: 0.5801\n  ...\n# Subtest: runPolicyMatch with decisionTracesEnabled produces traces without affecting canonical output\nok 24 - runPolicyMatch with decisionTracesEnabled produces traces without affecting canonical output\n  ---\n  duration_ms: 1629.8959\n  ...\n1..24\n# tests 24\n# suites 0\n# pass 24\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 2021.4709",
+          "blockers": [],
+          "residualRisks": []
+        }
+      ]
+    },
+    "release-engineering": {
+      "name": "Release Engineering",
+      "passed": false,
+      "evidence": [
+        "Engine-patch integrity verification executed and passed.",
+        "Release identity verification executed and passed.",
+        "Engine authority manifest verification executed and passed.",
+        "Self-audit PASS (provenance bound to 6873af8c, tree 2e8ca5c8).",
+        "Build determinism report PASS.",
+        "All version surfaces agree: 1.0.0.",
+        "Test accounting reconciled.",
+        "Remote CI: NOT_RUN (no GitHub Actions run observed for this commit)."
+      ],
+      "gaps": [
+        "Secret scan: Control exited 1."
+      ],
+      "controls": [
+        {
+          "name": "engine-patch-integrity",
+          "status": "PASS",
+          "scope": "local",
+          "command": "node scripts/engine-patch-integrity.mjs verify",
+          "startedAt": "2026-09-04T20:54:39.872Z",
+          "completedAt": "2026-09-04T20:54:40.809Z",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "Control exited 0. PRIORITY/PASS MANIFEST PASS: files=1089; payload=e720a218577dc24e0c31d577ff1caefa8f5ca6cbad0908d2535450b4bab96d08",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "secret-scan",
+          "status": "FAIL",
+          "scope": "local",
+          "command": "node scripts/secret-containment-scan.mjs",
+          "startedAt": "2026-09-04T20:54:40.809Z",
+          "completedAt": "2026-09-04T20:55:13.401Z",
+          "exitCode": 1,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "Control exited 1.",
+          "blockers": [
+            "Control exited with status 1"
+          ],
+          "residualRisks": []
+        },
+        {
+          "name": "release-identity-verify",
+          "status": "PASS",
+          "scope": "local",
+          "command": "node scripts/generate-release-identity.mjs --verify",
+          "startedAt": "2026-09-04T20:55:13.401Z",
+          "completedAt": "2026-09-04T20:55:13.805Z",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "Control exited 0. Γ£à Release identity verified ΓÇö no drift",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "engine-manifest-verify",
+          "status": "PASS",
+          "scope": "local",
+          "command": "node scripts/generate-engine-manifest.mjs --verify",
+          "startedAt": "2026-09-04T20:55:13.805Z",
+          "completedAt": "2026-09-04T20:55:14.180Z",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "Control exited 0. Γ£à Engine manifest verified ΓÇö no drift",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "self-audit",
+          "status": "PASS",
+          "scope": "local",
+          "command": null,
+          "startedAt": null,
+          "completedAt": null,
+          "exitCode": null,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": "8a995210f0aa99728c8f0e120b69c58788c81a63f3036f25cac1c44e30789651",
+          "evidencePath": "reports/self-audit.json",
+          "summary": "Report reports/self-audit.json status=PASS, provenance matches current tree",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "build-determinism",
+          "status": "PASS",
+          "scope": "local",
+          "command": null,
+          "startedAt": null,
+          "completedAt": null,
+          "exitCode": null,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": "c4141d9f0477a895c3bb79780c711e448c55ae1ca220fa649fe303539e5109fa",
+          "evidencePath": "reports/build-determinism.json",
+          "summary": "Report reports/build-determinism.json status=PASS, provenance matches current tree",
+          "blockers": [],
+          "residualRisks": []
+        },
+        {
+          "name": "remote-ci",
+          "status": "NOT_RUN",
+          "scope": "ci",
+          "command": null,
+          "startedAt": null,
+          "completedAt": null,
+          "exitCode": null,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "Remote CI status not verified ΓÇö no GitHub Actions run observed for this commit.",
+          "blockers": [
+            "Remote CI must pass on the exact release commit before production readiness"
+          ],
+          "residualRisks": []
+        }
+      ]
+    },
+    "human-validation": {
+      "name": "Human Validation",
+      "passed": false,
+      "evidence": [
+        "Human validation protocol documented in ROADMAP.md.",
+        "All 5 human validation measurement criteria are documented.",
+        "NOTE: Protocol status is PASS (documented), but session status is NOT_RUN (BLOCKING). Release gate remains blocked."
+      ],
+      "gaps": [
+        "No human validation session records found ΓÇö sessions NOT_RUN (BLOCKING)."
+      ],
+      "controls": [
+        {
+          "name": "protocol-documentation",
+          "status": "PASS",
+          "scope": "human",
+          "command": null,
+          "startedAt": null,
+          "completedAt": null,
+          "exitCode": null,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": "docs/ROADMAP.md",
+          "summary": "Documentation check: Human validation protocol documentation",
+          "blockers": [],
+          "residualRisks": [
+            "Documentation-only check ΓÇö does not prove behavioral correctness"
+          ]
+        },
+        {
+          "name": "session-records",
+          "status": "NOT_RUN",
+          "scope": "human",
+          "command": null,
+          "startedAt": null,
+          "completedAt": null,
+          "exitCode": null,
+          "signal": null,
+          "timedOut": false,
+          "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+          "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+          "dirty": true,
+          "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+          "artifactSha256": null,
+          "evidencePath": null,
+          "summary": "No human validation session records found. Protocol exists but sessions have not been conducted.",
+          "blockers": [
+            "Actual human validation sessions must be conducted and recorded before release certification"
+          ],
+          "residualRisks": []
+        }
+      ]
+    }
+  },
+  "summary": {
+    "totalGates": 6,
+    "passedGates": 4,
+    "failedGates": 2,
+    "allPassed": false
+  },
+  "release": {
+    "version": "1.0.0",
+    "gitCommit": "6873af8cd1cf8bc26fe31de0cee255f86437a1e4",
+    "gitTree": "2e8ca5c88be95efab17c1f2d00e54d39c2013eb7",
+    "dirty": true,
+    "lockfileSha256": "4fd7a4ad30efe1116898cd0aa57e62cf602d2f302fd9893a14bfffacf854a998",
+    "generatedAt": "2026-09-04T20:55:14.186Z"
+  },
+  "failedCriticalGates": [
+    "release-engineering",
+    "human-validation"
+  ],
+  "externalBlockers": [
+    {
+      "gate": "release-engineering",
+      "control": "remote-ci",
+      "blocker": "Remote CI must pass on the exact release commit before production readiness"
+    },
+    {
+      "gate": "human-validation",
+      "control": "session-records",
+      "blocker": "Actual human validation sessions must be conducted and recorded before release certification"
+    }
+  ]
+}

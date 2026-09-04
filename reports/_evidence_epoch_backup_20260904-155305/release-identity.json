@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0.0",
+  "productName": "Intrilex Simulation Lab",
+  "version": "1.0.0",
+  "releaseTitle": "Certified Public Baseline",
+  "buildKind": "RANKED_DUEL_PLAYER_SHELL",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "officialRulesVersion": "4.3.1",
+  "coreSchemaVersion": "4.1.0",
+  "telemetrySchemaVersion": "4.1.0",
+  "analyticsSchemaVersion": "4.2.0",
+  "decisionTraceSchemaVersion": "2.0.0",
+  "playerRuntimeVersion": "1.2.0",
+  "saveFormatVersion": 2,
+  "replayDataVersion": "0.10.1",
+  "localProfileSchemaVersion": "1.1.0",
+  "defaultSimulationProfile": "core-advanced-authority",
+  "supportedProfileIds": [
+    "core-advanced-authority",
+    "core-effect-declaration-authority",
+    "core-foundation-authority",
+    "core-private-choice-authority",
+    "core-response-authority",
+    "core-unrestricted-authority"
+  ],
+  "artifactKinds": [
+    "source",
+    "deploy",
+    "evidence"
+  ],
+  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v1.0.0",
+  "releaseDate": "2026-09-04",
+  "integrityHash": "acbb9d386c748daded29119e3b0db889"
+}

@@ -67,6 +67,33 @@ let fileOutput = '';
 try { fileOutput = await readFile(tmpOutput, 'utf8'); } catch { /* file may not exist if redirect failed */ }
 const output = fileOutput + '\n' + (result.stderr ?? '');
 
+// ── Process status validation (Phase 1.3) ──
+// The audit must fail closed on ANY abnormal child-process termination.
+// A killed/timed-out process can leave partial TAP that parses as 0 failures,
+// which would produce a false PASS if we only checked totalFail.
+const processStatus = {
+  spawnError: result.error ? (result.error.message || String(result.error)) : null,
+  signal: result.signal ?? null,
+  timedOut: result.signal === 'SIGTERM' && result.status === null,
+  exitStatus: result.status,
+  abnormal: false,
+  reason: null,
+};
+if (processStatus.spawnError) {
+  processStatus.abnormal = true;
+  processStatus.reason = `spawn error: ${processStatus.spawnError}`;
+} else if (processStatus.signal) {
+  processStatus.abnormal = true;
+  processStatus.reason = `killed by signal ${processStatus.signal}${processStatus.timedOut ? ' (timeout)' : ''}`;
+} else if (processStatus.exitStatus === null) {
+  processStatus.abnormal = true;
+  processStatus.reason = 'process exited with null status (abnormal termination)';
+}
+if (processStatus.abnormal) {
+  console.error(`generate-self-audit: ABNORMAL PROCESS TERMINATION — ${processStatus.reason}`);
+  console.error(`Output tail: ${output.slice(-2000)}`);
+}
+
 // ── Parse TAP summary ──
 // When running multiple test files, node --test emits a summary block per
 // file AND a final aggregate summary. We must use the LAST (aggregate) match,
@@ -98,9 +125,14 @@ const failedTests = [...new Set(
     .map(match => match[1].trim())
 )];
 
-if (totalTests === 0) {
-  console.error('generate-self-audit: FAILED to parse test count from output');
-  console.error('Output tail:', output.slice(-2000));
+if (totalTests === 0 || processStatus.abnormal) {
+  if (totalTests === 0) {
+    console.error('generate-self-audit: FAILED to parse test count from output');
+    console.error('Output tail:', output.slice(-2000));
+  }
+  if (processStatus.abnormal) {
+    console.error(`generate-self-audit: REFUSING TO PASS — process terminated abnormally (${processStatus.reason})`);
+  }
   process.exit(1);
 }
 
@@ -127,13 +159,31 @@ if (hasVendorIntegrity) {
   } catch { vendorIntegrityPassed = false; }
 }
 
+// Phase 1.3: Check engine-patch-integrity report status (not just file existence)
+let enginePatchIntegrityPassed = false;
+if (hasEnginePatch) {
+  try {
+    const ep = JSON.parse(await readFile(path.join(root, 'reports/engine-patch-integrity.json'), 'utf8'));
+    enginePatchIntegrityPassed = ep.status === 'PASS';
+  } catch { enginePatchIntegrityPassed = false; }
+}
+
+// Phase 1.3: Check build-determinism report status (not just file existence)
+let buildDeterminismPassed = false;
+if (hasBuildDeterminism) {
+  try {
+    const bd = JSON.parse(await readFile(path.join(root, 'reports/build-determinism.json'), 'utf8'));
+    buildDeterminismPassed = bd.status === 'PASS' || bd.deterministic === true;
+  } catch { buildDeterminismPassed = false; }
+}
+
 // Check if privacy-related test files passed (search output for privacy test results)
 const privacyTestOutput = output.match(/privacy|hidden-information|visibility-projection/gi);
 const privacyTestsRan = privacyTestOutput !== null && privacyTestOutput.length > 0;
 const privacyGatePassed = privacyTestsRan && totalFail === 0;
 
 const dimensions = {
-  canonEngineDeterminism: hasEnginePatch && hasBuildDeterminism ? 20 : hasEnginePatch ? 15 : 10,
+  canonEngineDeterminism: enginePatchIntegrityPassed && buildDeterminismPassed ? 20 : enginePatchIntegrityPassed ? 15 : 10,
   analyticsStatistics: totalPass > 400 ? 19 : totalPass > 300 ? 16 : 12,
   evidencePrivacy: privacyGatePassed ? 20 : privacyTestsRan ? 15 : 10,
   guiUx: hasBrowserParity ? 14 : 10,
@@ -145,9 +195,27 @@ const dimensions = {
 const score = Object.values(dimensions).reduce((a, b) => a + b, 0);
 const threshold = 92;
 
+// Phase 1.3: filesCompleted — only count files as executed if the process
+// completed normally. If the process was killed/timed out, we cannot know
+// how many files completed, so we report 0 and fail the audit.
+const filesScheduled = testArgs.length;
+const filesDiscovered = allTestFiles.length;
+const filesStarted = processStatus.spawnError ? 0 : testArgs.length;
+const filesCompleted = processStatus.abnormal ? 0 : testArgs.length;
+
+// Phase 1.3: Compute provenance binding fields (tree hash, dirty, lockfile hash)
+// before constructing the audit object.
+const { createHash } = await import('node:crypto');
+let lockfileSha256 = null;
+try { lockfileSha256 = createHash('sha256').update(await readFile(path.join(root, 'pnpm-lock.yaml'))).digest('hex'); } catch { /* lockfile may not exist */ }
+const gitCommit = (() => { try { return spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })();
+const gitTree = (() => { try { return spawnSync('git', ['rev-parse', 'HEAD^{tree}'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })();
+const gitBranch = (() => { try { return spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })();
+const gitDirty = (() => { try { const s = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).stdout; return s.trim().length > 0 } catch { return null } })();
+
 const criticalGates = {
   canonDefect: totalFail === 0,
-  determinismMismatch: hasBuildDeterminism,
+  determinismMismatch: buildDeterminismPassed,
   hiddenInformationLeak: privacyGatePassed,
   falseAnalyticClaim: totalFail === 0 && score >= threshold,
   extractedVerificationPending: vendorIntegrityPassed,
@@ -156,13 +224,24 @@ const criticalGates = {
   // indicates a parsing error, a crashed test runner, or a silent skip that
   // the audit must not paper over with a PASS.
   testAccountingReconciled: unaccounted === 0,
+  // Phase 1.3: Process must have terminated normally. A killed/timed-out
+  // process can leave partial TAP that parses as 0 failures — a false PASS.
+  processTerminatedNormally: !processStatus.abnormal,
+  // Phase 1.3: Engine-patch integrity must actually PASS, not just exist.
+  enginePatchIntegrity: enginePatchIntegrityPassed,
+  // Phase 1.3: Nonzero cancelled tests indicate incomplete execution.
+  noCancelledTests: totalCancelled === 0,
+  // Phase 1.3: All scheduled files must have completed.
+  allFilesCompleted: filesCompleted === filesScheduled,
 };
 
 const gateEvidence = {
   canonDefect: `Test suite executed: ${totalTests} tests, ${totalPass} pass, ${totalFail} fail, ${totalSkip} skip, ${totalCancelled} cancelled, ${totalTodo} todo`,
-  determinismMismatch: hasBuildDeterminism
-    ? 'build-determinism.json exists; determinism verified by build verification'
-    : 'build-determinism.json missing — run pnpm run test:build-determinism',
+  determinismMismatch: buildDeterminismPassed
+    ? 'build-determinism.json reports PASS/deterministic=true'
+    : hasBuildDeterminism
+      ? 'build-determinism.json exists but does not report PASS'
+      : 'build-determinism.json missing — run pnpm run test:build-determinism',
   hiddenInformationLeak: privacyGatePassed
     ? 'Privacy tests ran and all tests passed'
     : privacyTestsRan
@@ -177,42 +256,70 @@ const gateEvidence = {
   testAccountingReconciled: unaccounted === 0
     ? `Test arithmetic reconciles exactly: ${totalTests} = ${totalPass} + ${totalFail} + ${totalSkip} + ${totalCancelled} + ${totalTodo}`
     : `Test arithmetic MISMATCH: ${totalTests} tests but accounted = ${accounted} (unaccounted = ${unaccounted}) — audit cannot PASS`,
+  processTerminatedNormally: !processStatus.abnormal
+    ? `Process exited normally (status=${processStatus.exitStatus}, signal=${processStatus.signal})`
+    : `ABNORMAL TERMINATION: ${processStatus.reason}`,
+  enginePatchIntegrity: enginePatchIntegrityPassed
+    ? 'engine-patch-integrity.json reports PASS'
+    : hasEnginePatch
+      ? 'engine-patch-integrity.json exists but does not report PASS'
+      : 'engine-patch-integrity.json missing — run pnpm run engine-patch:verify',
+  noCancelledTests: totalCancelled === 0
+    ? 'No cancelled tests'
+    : `${totalCancelled} cancelled tests — incomplete execution`,
+  allFilesCompleted: filesCompleted === filesScheduled
+    ? `All ${filesCompleted}/${filesScheduled} scheduled files completed`
+    : `Only ${filesCompleted}/${filesScheduled} scheduled files completed (process may have been killed)`,
 };
 
 const audit = {
-  schemaVersion: '3.1.0',
+  schemaVersion: '3.2.0',
   // v0.24.2: PASS requires ALL of:
   //   - totalFail === 0 (no test failures)
   //   - score >= threshold (dimensional score)
   //   - unaccounted === 0 (test arithmetic reconciles exactly)
   //   - all critical gates pass (including testAccountingReconciled)
+  //   - totalCancelled === 0 (no cancelled tests)
+  //   - process terminated normally (not killed/timed out)
   // v0.25: quickMode reports are never canonical (written to .quick.json)
   // IRX-M29: Explicit scorePassed and criticalGatesPassed fields prevent the
   // apparent contradiction where score meets threshold but status is FAIL.
   // A report can have scorePassed=true but criticalGatesPassed=false → status=FAIL.
-  status: (totalFail === 0 && score >= threshold && unaccounted === 0 && Object.values(criticalGates).every(v => v === true)) ? 'PASS' : 'FAIL',
+  // Phase 1.3: processTerminatedNormally prevents partial-run false PASS.
+  status: (totalFail === 0 && totalCancelled === 0 && score >= threshold && unaccounted === 0 && !processStatus.abnormal && Object.values(criticalGates).every(v => v === true)) ? 'PASS' : 'FAIL',
   score,
   threshold,
   // IRX-M29: Explicit sub-status fields for non-contradictory semantics
   scorePassed: score >= threshold,
   criticalGatesPassed: Object.values(criticalGates).every(v => v === true),
   noTestFailures: totalFail === 0,
+  noCancelledTests: totalCancelled === 0,
   testAccountingReconciled: unaccounted === 0,
+  processTerminatedNormally: !processStatus.abnormal,
   generatedAt: new Date().toISOString(),
-  generatedBy: `generate-self-audit.mjs v3.1.0 (package v${rootPkg.version})`,
+  generatedBy: `generate-self-audit.mjs v3.2.0 (package v${rootPkg.version})`,
   // v0.25: Provenance for freshness verification — the canonical audit must
   // correspond to the current repository state. These fields allow a release
   // gate to mechanically reject stale or incompatible audits.
+  // Phase 1.3: Added gitTree, dirty, lockfileSha256 for exact-tree binding.
   provenance: {
     labVersion: rootPkg.version,
     mode: quick ? 'quick' : 'full',
     testFileCount: allTestFiles.length,
-    filesExecuted: testArgs.length,
+    filesDiscovered,
+    filesScheduled,
+    filesStarted,
+    filesCompleted,
+    filesExecuted: filesCompleted,
     testConcurrency,
     timeoutMs: auditTimeoutMs,
-    gitCommit: (() => { try { return spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })(),
-    gitBranch: (() => { try { return spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })(),
+    gitCommit,
+    gitTree,
+    gitBranch,
+    dirty: gitDirty,
+    lockfileSha256,
   },
+  processStatus,
   dimensions,
   criticalGates,
   gateEvidence,
@@ -227,8 +334,12 @@ const audit = {
     failedTests,
     unaccounted,
     durationMs,
-    testFileCount,
-    filesExecuted: testArgs.length,
+    testFileCount: allTestFiles.length,
+    filesDiscovered,
+    filesScheduled,
+    filesStarted,
+    filesCompleted,
+    filesExecuted: filesCompleted,
     testConcurrency,
     timeoutMs: auditTimeoutMs,
     quickMode: quick
@@ -260,5 +371,16 @@ if (totalFail > 0) {
 // v0.24.2: Non-zero unaccounted is a truth violation — fail in release/CI mode
 if (unaccounted !== 0) {
   console.error(`generate-self-audit: ${unaccounted} unaccounted test results — arithmetic mismatch — self-audit status is FAIL`);
+  process.exit(1);
+}
+// Phase 1.3: Abnormal process termination is a truth violation — a killed/timed-out
+// process can leave partial TAP that parses as 0 failures. Fail closed.
+if (processStatus.abnormal) {
+  console.error(`generate-self-audit: process terminated abnormally (${processStatus.reason}) — self-audit status is FAIL`);
+  process.exit(1);
+}
+// Phase 1.3: Non-zero cancelled tests indicate incomplete execution — fail closed.
+if (totalCancelled > 0) {
+  console.error(`generate-self-audit: ${totalCancelled} cancelled tests — incomplete execution — self-audit status is FAIL`);
   process.exit(1);
 }

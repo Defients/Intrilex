@@ -257,6 +257,12 @@ const STAGES = [
   ['v0.32.0-intelligence-caster', 'node', ['--test', 'test/v0.32.0-intelligence-caster.test.mjs']],
   // v1.0.0 Certified Public Baseline — certification gates across rules/engine, local, online, laboratory, release engineering, human validation
   ['v1.0.0-certified-baseline', 'node', ['--test', 'test/v1.0.0-certified-baseline.test.mjs']],
+  // Phase 2: negative-path tests for certification gates (fail-closed on stale/failed/NOT_RUN evidence)
+  ['certification-negative-paths', 'node', ['--test', 'test/certification-negative-paths.test.mjs']],
+  // Phase 3: E2E competitive journey through real handlers
+  ['competitive-journey-e2e', 'node', ['--test', 'test/competitive-journey-e2e.test.mjs']],
+  // Phase 5: Supabase static schema/RLS/function analysis
+  ['supabase-static-analysis', 'node', ['--test', 'test/supabase-static-analysis.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

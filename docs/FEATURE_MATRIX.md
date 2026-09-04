@@ -1,7 +1,7 @@
 # Feature Matrix
 
 > **AUTO-GENERATED** by `scripts/generate-capability-truth.mjs` from `config/capability-truth.json`.
-> Generated: 2026-09-04T17:55:11.093Z
+> Generated: 2026-09-04T20:24:39.791Z
 > Version: 1.0.0 (Certified Public Baseline)
 
 ## Simulation Profiles
