@@ -1,0 +1,470 @@
+<!-- ═══ BOOT OVERLAY ═══ -->
+<div class="boot-overlay" id="bootOverlay">
+  <div class="boot-lines" id="bootLines"></div>
+</div>
+
+<!-- ═══ STICKY NAV ═══ -->
+<nav class="nav-bar">
+  <div class="nav-inner">
+    <div class="nav-brand">INTRILEX<span> // CORRUPTURE</span></div>
+    <div class="nav-links" id="navLinks">
+      <a class="nav-link" data-target="hero" tabindex="0" role="link">HERO</a>
+      <a class="nav-link" data-target="matt" tabindex="0" role="link">MATT</a>
+      <a class="nav-link" data-target="definitions" tabindex="0" role="link">01 // SIX DEFINITIONS</a>
+      <a class="nav-link" data-target="champions" tabindex="0" role="link">02 // CHAMPIONS</a>
+      <a class="nav-link" data-target="atlas" tabindex="0" role="link">03 // ATLAS</a>
+      <a class="nav-link" data-target="disagreement" tabindex="0" role="link">04 // DISAGREEMENT</a>
+      <a class="nav-link" data-target="scatter" tabindex="0" role="link">05 // CB/SB MAP</a>
+      <a class="nav-link" data-target="spades" tabindex="0" role="link">06 // SPADES</a>
+      <a class="nav-link" data-target="twospade" tabindex="0" role="link">07 // 2♠ PROBLEM</a>
+      <a class="nav-link" data-target="kspade" tabindex="0" role="link">08 // K♠ TREE</a>
+      <a class="nav-link" data-target="quiet" tabindex="0" role="link">09 // QUIET FILTH</a>
+      <a class="nav-link" data-target="tax" tabindex="0" role="link">10 // BIG BUTTON TAX</a>
+      <a class="nav-link" data-target="state" tabindex="0" role="link">11 // STATE META</a>
+      <a class="nav-link" data-target="pareto" tabindex="0" role="link">12 // PARETO</a>
+      <a class="nav-link" data-target="wve" tabindex="0" role="link">13 // W vs E</a>
+      <a class="nav-link" data-target="veteran" tabindex="0" role="link">14 // VETERAN</a>
+      <a class="nav-link" data-target="tldr" tabindex="0" role="link">15 // TL;DR</a>
+      <a class="nav-link" data-target="eli5" tabindex="0" role="link">16 // ELI5</a>
+      <a class="nav-link" data-target="tables" tabindex="0" role="link">17 // TABLES</a>
+      <a class="nav-link" data-target="compare" tabindex="0" role="link">18 // COMPARE</a>
+      <a class="nav-link" data-target="matrix" tabindex="0" role="link">19 // DEEP MATRIX</a>
+    </div>
+    <div class="nav-search">
+      <span class="nav-search-icon">⌕</span>
+      <input type="text" id="globalSearch" placeholder="Search effects... (/)" aria-label="Search effects">
+    </div>
+    <div class="nav-toggles">
+      <button class="nav-toggle" id="toggleAuthority" title="Toggle AS-WRITTEN / AS-EXECUTED">WRITTEN</button>
+      <button class="nav-toggle" id="togglePresentation" title="Toggle Veteran / ELI5 presentation">VETERAN</button>
+    </div>
+  </div>
+</nav>
+
+<div class="atlas-shell">
+
+<!-- ═══ HERO ═══ -->
+<section class="hero" id="hero" style="border-top:none">
+  <div class="hero-bg"></div>
+  <div class="hero-intrilex">INTRILEX</div>
+  <div class="hero-subtitle">CORRUPTURE™ // EFFECT ATLAS</div>
+  <h1 class="hero-title">WHAT THE GAME <span class="accent">BECAME</span></h1>
+  <p class="hero-tagline">75 primitives. 101 intended routes. 75 currently executable. Six different definitions of power.</p>
+  <div class="hero-quote">
+    <p>The biggest effect is not necessarily the best effect.</p>
+    <p>The best effect is not necessarily unhealthy.</p>
+    <p>And sometimes the strongest move is keeping the card in your hand.</p>
+  </div>
+  <div class="hero-buttons">
+    <button class="btn-primary" data-target="atlas">ENTER THE ATLAS</button>
+    <button class="btn-secondary" data-target="veteran">READ THE VETERAN ANALYSIS</button>
+  </div>
+  <div class="hero-authority">
+    RULEBOOK v4.3.1<span class="sep">//</span>ENGINE 4.2.6<span class="sep">//</span>SIMULATION READINESS: <span class="warn">PARTIAL</span>
+  </div>
+</section>
+
+<!-- ═══ MATT TRANSMISSION ═══ -->
+<section id="matt">
+  <div class="container">
+    <span class="section-num">INCOMING TRANSMISSION</span>
+    <h2 class="section-title">MATT // INCOMING TRANSMISSION</h2>
+    <div class="matt-panel">
+      <div class="matt-header">MATT // INCOMING TRANSMISSION</div>
+      <div class="matt-body">
+        <p>Matt—</p>
+        <p>You actually played versions of this thing before there were formal names for half of what it was doing.</p>
+        <p>Back then, a lot of Intrilex strategy lived in instinct: hold this card, don't waste that one, wait because he <span class="highlight">might</span> have the answer, score now because the window might disappear.</p>
+        <p>Years later, we finally tore the system apart mechanically.</p>
+        <p>And the strange part is that underneath all the accumulated bullshit—Supers, Ultras, Spades, Wilds, Anchors, Counters, Aegis, Guard, resets, steals, recursion and whatever else Deffy decided the game apparently needed—there is <span class="voidrot">considerably more structure</span> holding it together than either of us probably realized while actually playing it.</p>
+        <p>This isn't meant to tell you "the AI proved Intrilex is balanced."</p>
+        <p><span class="hostile">It didn't.</span></p>
+        <p>It did something more interesting:</p>
+        <p>It mapped <span class="highlight">why</span> certain ridiculous things aren't necessarily ridiculous once you account for what you sacrifice to use them—and exposed the places where that explanation stops being comfortable.</p>
+        <p>So this is the autopsy.</p>
+        <p>Not just <span class="highlight">what is strongest</span>.</p>
+        <p>What is strongest <span class="highlight">when</span>, <span class="highlight">why</span>, <span class="highlight">for what price</span>, and <span class="highlight">according to which definition of power</span>.</p>
+        <p>You knew the creature before we had instruments to dissect it.</p>
+        <p>Now we do.</p>
+        <p>Welcome back.</p>
+        <div class="matt-sign">— Vælix / Klÿz</div>
+        <div class="matt-signal">[ signal integrity: questionable ]</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 01 // SIX DEFINITIONS ═══ -->
+<section id="definitions">
+  <div class="container">
+    <span class="section-num">01 // THE SIX DEFINITIONS OF POWER</span>
+    <h2 class="section-title">Six Definitions of Power</h2>
+    <p class="section-sub">One universal tier list would be misleading. Intrilex effects have six distinct power dimensions — and the most interesting information is often the disagreement between them.</p>
+    <div class="definitions-grid" id="definitionsGrid"></div>
+  </div>
+</section>
+
+<!-- ═══ 02 // CHAMPIONS ═══ -->
+<section id="champions">
+  <div class="container">
+    <span class="section-num">02 // CHAMPIONS OF EACH AXIS</span>
+    <h2 class="section-title">Champions of Each Axis</h2>
+    <p class="section-sub">The leader of each power dimension, with full context: why it wins, what it costs, and its health verdict.</p>
+    <div class="champions-grid" id="championsGrid"></div>
+  </div>
+</section>
+
+<!-- ═══ 03 // COMPLETE POWER ATLAS ═══ -->
+<section id="atlas">
+  <div class="container">
+    <span class="section-num">03 // COMPLETE POWER ATLAS</span>
+    <h2 class="section-title">The Complete Power Atlas</h2>
+    <p class="section-sub">All 101 AS-WRITTEN declaration routes. Search, sort, filter. Click any row for full details.</p>
+    <div class="atlas-controls">
+      <div class="ctrl-group atlas-search">
+        <label>Search</label>
+        <input type="text" id="atlasSearch" placeholder="Effect name, source, primitive...">
+      </div>
+      <div class="ctrl-group">
+        <label>Sort by</label>
+        <select id="atlasSort">
+          <option value="practicalWritten">Practical (Written)</option>
+          <option value="practicalExecuted">Practical (Executed)</option>
+          <option value="efficiency">Efficiency</option>
+          <option value="threat">Threat</option>
+          <option value="comeback">Comeback</option>
+          <option value="snowball">Snowball</option>
+          <option value="pointsForgone">Points Forgone</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>Tier</label>
+        <select id="filterTier"><option value="">All Tiers</option></select>
+      </div>
+      <div class="ctrl-group">
+        <label>Timing</label>
+        <select id="filterTiming"><option value="">All Timings</option></select>
+      </div>
+      <div class="ctrl-group">
+        <label>Status</label>
+        <select id="filterStatus"><option value="">All Statuses</option></select>
+      </div>
+      <div class="ctrl-group">
+        <label>Health</label>
+        <select id="filterHealth"><option value="">All Health</option></select>
+      </div>
+      <div class="ctrl-group">
+        <label>Confidence</label>
+        <select id="filterConfidence"><option value="">All Confidence</option></select>
+      </div>
+    </div>
+    <div class="atlas-toggles" role="group" aria-label="Atlas filter toggles">
+      <span class="atlas-toggle" data-toggle="executable" role="button" tabindex="0" aria-pressed="false">Currently Executable Only</span>
+      <span class="atlas-toggle" data-toggle="spades" role="button" tabindex="0" aria-pressed="false">Spades Only</span>
+      <span class="atlas-toggle" data-toggle="quick" role="button" tabindex="0" aria-pressed="false">Quick/Instant Only</span>
+      <span class="atlas-toggle" data-toggle="watchlist" role="button" tabindex="0" aria-pressed="false">Watchlist Only</span>
+      <span class="atlas-toggle" data-toggle="pareto" role="button" tabindex="0" aria-pressed="false">Pareto Frontier Only</span>
+    </div>
+    <div class="atlas-count" id="atlasCount"></div>
+    <div class="atlas-table-wrap">
+      <table class="atlas-table" id="atlasTable">
+        <thead><tr id="atlasHead"></tr></thead>
+        <tbody id="atlasBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 04 // RANK DISAGREEMENT LAB ═══ -->
+<section id="disagreement">
+  <div class="container">
+    <span class="section-num">04 // RANK DISAGREEMENT LAB</span>
+    <h2 class="section-title">Rank Disagreement Lab</h2>
+    <p class="section-sub">The interesting information is often not the rank — it is the disagreement between ranks. These effects shift dramatically across power dimensions.</p>
+    <div id="disagreementLab"></div>
+    <blockquote style="margin-top:24px;padding:16px 24px;background:var(--surface);border-left:3px solid var(--hostile);border-radius:0 var(--r) var(--r) 0;font-size:16px;color:var(--white);font-style:italic;max-width:680px">
+      The interesting information is often not the rank — it is the disagreement between ranks.
+    </blockquote>
+  </div>
+</section>
+
+<!-- ═══ 05 // COMEBACK ↔ SNOWBALL MAP ═══ -->
+<section id="scatter">
+  <div class="container">
+    <span class="section-num">05 // COMEBACK ↔ SNOWBALL MAP</span>
+    <h2 class="section-title">Comeback ↔ Snowball Map</h2>
+    <p class="section-sub">Two almost opposite strategic economies. Behind → reset / destroy / invert. Ahead → protect / freeze / deny. Click any dot for details.</p>
+    <div class="scatter-wrap" id="scatterWrap"></div>
+  </div>
+</section>
+
+<!-- ═══ 06 // THE SPADES PROBLEM ═══ -->
+<section id="spades">
+  <div class="container">
+    <span class="section-num">06 // THE SPADES PROBLEM / SPADES PREMIUM</span>
+    <h2 class="section-title">The Spades Premium</h2>
+    <p class="section-sub">The top practical hierarchy is heavily dominated by exact Spade identities. This is not automatically imbalance — it is premium singleton tactical identity + scarcity + trackability.</p>
+    <div class="spades-grid" id="spadesGrid"></div>
+    <blockquote style="margin-top:24px;padding:16px 24px;background:var(--surface);border-left:3px solid var(--hostile);border-radius:0 var(--r) var(--r) 0;font-size:18px;color:var(--white);font-weight:700;max-width:500px">
+      Veteran Rule: Track the Spades.
+    </blockquote>
+    <p style="margin-top:16px;font-size:14px;color:var(--phosphor);max-width:680px;line-height:1.6">Knowing which premium Spades have been spent changes the opponent's legal/safe decision tree. Once K♠ disappears, entire classes of plays become safer. Once 4♠ and 2♠ disappear, board commitment becomes dramatically safer. The state of the remaining Spade pool is effectively part of the game board even when those cards aren't OTT.</p>
+  </div>
+</section>
+
+<!-- ═══ 07 // THE 2♠ PROBLEM ═══ -->
+<section id="twospade">
+  <div class="container">
+    <span class="section-num">07 // THE 2♠ PROBLEM</span>
+    <h2 class="section-title">The 2♠ Problem</h2>
+    <p class="section-sub">Same primitive. Completely different economics. Copying an effect does not copy its cost.</p>
+    <div class="compare-3" id="twospadeCompare"></div>
+    <blockquote style="padding:16px 24px;background:var(--surface);border-left:3px solid var(--hostile);border-radius:0 var(--r) var(--r) 0;font-size:18px;color:var(--white);font-weight:700;max-width:500px">
+      Copying an effect does not copy its cost.
+    </blockquote>
+    <p style="margin-top:16px;font-size:20px;color:var(--hostile);font-weight:800;letter-spacing:.05em">THE DISCOUNT APOCALYPSE</p>
+    <p style="margin-top:8px;font-size:14px;color:var(--phosphor);max-width:680px;line-height:1.6">2♠ obtains a premium primitive at bargain-bin opportunity cost. K♠ obtains the same premium primitive by setting fire to the Swiss Army knife. Treat 2♠ not as a two-point card, but as a latent answer card whose cash value happens to be 2.</p>
+  </div>
+</section>
+
+<!-- ═══ 08 // K♠ TREE ═══ -->
+<section id="kspade">
+  <div class="container">
+    <span class="section-num">08 // K♠: THE OPTION-VALUE CARD</span>
+    <h2 class="section-title">K♠: The Option-Value Card</h2>
+    <p class="section-sub">K♠ goes from elite to catastrophic depending on what you spend it doing. It does not provide eight simultaneous powers — it gives you one decision about which future powers you are willing to destroy.</p>
+    <div class="ks-tree" id="ksTree"></div>
+    <blockquote style="margin-top:24px;padding:16px 24px;background:var(--surface);border-left:3px solid var(--hostile);border-radius:0 var(--r) var(--r) 0;font-size:16px;color:var(--white);max-width:600px;line-height:1.6">
+      K♠ does not provide eight simultaneous powers. It gives you one decision about which future powers you are willing to destroy.
+    </blockquote>
+    <p style="margin-top:12px;font-size:14px;color:var(--amber);font-style:italic">"Swiss Army knife with nuclear authorization. Do not use it to open a can of beans."</p>
+  </div>
+</section>
+
+<!-- ═══ 09 // QUIET FILTH ═══ -->
+<section id="quiet">
+  <div class="container">
+    <span class="section-num">09 // QUIET FILTH</span>
+    <h2 class="section-title">Quiet Filth</h2>
+    <p class="section-sub">Effects whose strategic value greatly exceeds their apparent spectacle. Low Mini-Turn cost, sequencing disruption, latent threat, and option preservation can outperform visually dramatic Supers.</p>
+    <div class="quiet-grid" id="quietGrid"></div>
+  </div>
+</section>
+
+<!-- ═══ 10 // BIG BUTTON TAX ═══ -->
+<section id="tax">
+  <div class="container">
+    <span class="section-num">10 // BIG BUTTON TAX</span>
+    <h2 class="section-title">Big Button Tax</h2>
+    <p class="section-sub">Powerful effects that fall substantially when real commitment is applied.</p>
+    <div class="tax-flow">
+      <div class="tax-step"><span class="icon">⚡</span> RAW POWER</div>
+      <div class="tax-step arrow">↓</div>
+      <div class="tax-step"><span class="icon">🃏</span> CARDS SACRIFICED</div>
+      <div class="tax-step arrow">↓</div>
+      <div class="tax-step"><span class="icon">✕</span> POINTS FORGONE</div>
+      <div class="tax-step arrow">↓</div>
+      <div class="tax-step"><span class="icon">⊘</span> OPTIONS DESTROYED</div>
+      <div class="tax-step arrow">↓</div>
+      <div class="tax-step"><span class="icon">▣</span> REAL VALUE</div>
+    </div>
+    <div class="tax-grid" id="taxGrid"></div>
+    <blockquote style="margin-top:24px;padding:16px 24px;background:var(--surface);border-left:3px solid var(--hostile);border-radius:0 var(--r) var(--r) 0;font-size:16px;color:var(--white);font-style:italic;max-width:600px">
+      "I can make the combo" is not the same statement as "I should make the combo."
+    </blockquote>
+  </div>
+</section>
+
+<!-- ═══ 11 // STATE-DEPENDENT META ═══ -->
+<section id="state">
+  <div class="container">
+    <span class="section-num">11 // STATE-DEPENDENT META</span>
+    <h2 class="section-title">State-Dependent Meta</h2>
+    <p class="section-sub">"Best effect" is often the wrong question. The better question: best effect for this exact state?</p>
+    <div class="state-panels">
+      <div class="state-panel behind">
+        <h3>WHEN BEHIND</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Reset. Clear. Exchange. Steal. Reconstruct.</p>
+        <ul class="state-list" id="stateBehind"></ul>
+      </div>
+      <div class="state-panel ahead">
+        <h3>WHEN AHEAD</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Protect. Aegis. Guard. Counter. Lock. Deny.</p>
+        <ul class="state-list" id="stateAhead"></ul>
+      </div>
+    </div>
+    <blockquote style="margin-top:24px;padding:16px 24px;background:var(--surface);border-left:3px solid var(--hostile);border-radius:0 var(--r) var(--r) 0;font-size:18px;color:var(--white);font-weight:700;max-width:500px">
+      Best effect for this exact state?
+    </blockquote>
+  </div>
+</section>
+
+<!-- ═══ 12 // PARETO FRONTIER ═══ -->
+<section id="pareto">
+  <div class="container">
+    <span class="section-num">12 // PARETO FRONTIER</span>
+    <h2 class="section-title">Pareto Frontier</h2>
+    <p class="section-sub">A Pareto-frontier route retains some strategic advantage that no other route simply replaces across all evaluated dimensions. These aren't necessarily the highest-ranked cards — they're the cards that preserve strategically unique reasons to exist.</p>
+    <div class="pareto-grid" id="paretoGrid"></div>
+  </div>
+</section>
+
+<!-- ═══ 13 // WRITTEN VS EXECUTED ═══ -->
+<section id="wve">
+  <div class="container">
+    <span class="section-num">13 // WRITTEN VS EXECUTED</span>
+    <h2 class="section-title">Written vs Executed</h2>
+    <p class="section-sub">An implementation bug is not a balance verdict. The top strategic skeleton remains substantially stable across both views.</p>
+    <div class="wve-grid">
+      <div class="wve-card written">
+        <div class="wve-num">101</div>
+        <div class="wve-label">AS-WRITTEN Routes</div>
+        <div class="wve-authority">RULEBOOK v4.3.1</div>
+      </div>
+      <div class="wve-card executed">
+        <div class="wve-num">75</div>
+        <div class="wve-label">AS-EXECUTED Routes</div>
+        <div class="wve-authority">ENGINE 4.2.6</div>
+      </div>
+    </div>
+    <div class="wve-missing">
+      <div class="wve-missing-title">Missing / Not Implemented / Conflict Routes</div>
+      <div class="wve-missing-list" id="wveMissing"></div>
+    </div>
+    <blockquote style="margin-top:24px;padding:16px 24px;background:var(--surface);border-left:3px solid var(--voidrot);border-radius:0 var(--r) var(--r) 0;font-size:16px;color:var(--white);max-width:600px">
+      The Top 15 Practical effects are identical in AS-WRITTEN and AS-EXECUTED. The central strategic skeleton is already visible, while certain mid/high-level branches are missing or distorted.
+    </blockquote>
+  </div>
+</section>
+
+<!-- ═══ 14 // VETERAN META-ANALYSIS ═══ -->
+<section id="veteran">
+  <div class="container">
+    <span class="section-num">14 // VETERAN META-ANALYSIS</span>
+    <h2 class="section-title">Veteran Meta-Analysis</h2>
+    <p class="section-sub">A full editorial chapter. Not a summary — the complete analysis, in its original voice.</p>
+    <div class="vet-chapter" id="veteranChapter"></div>
+  </div>
+</section>
+
+<!-- ═══ 15 // TL;DR ═══ -->
+<section id="tldr">
+  <div class="container">
+    <span class="section-num">15 // TL;DR — VETERAN MODE</span>
+    <h2 class="section-title">TL;DR — Veteran Mode</h2>
+    <div class="tldr-grid" id="tldrGrid"></div>
+    <div class="tldr-mega">
+      "What future options am I destroying by <span class="accent">making this play now?</span>"
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 16 // ELI5 ═══ -->
+<section id="eli5">
+  <div class="container">
+    <span class="section-num">16 // ELI5: MAXIMUM DANK MODE</span>
+    <h2 class="section-title">ELI5: Maximum Dank Mode</h2>
+    <div class="eli5-grid" id="eli5Grid"></div>
+    <div class="eli5-final">
+      <p class="beginner"><strong>Beginner:</strong> What can this card do?</p>
+      <p class="good"><strong>Good player:</strong> What should this card do?</p>
+      <p class="veteran"><strong>Veteran:</strong> What does my opponent think this card might do, and how long can I profit from not choosing?</p>
+      <p class="eli5-sauce">THAT last line is the Intrilex sauce. 💛</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 17 // COMPLETE RANKING TABLES ═══ -->
+<section id="tables">
+  <div class="container">
+    <span class="section-num">17 // COMPLETE RANKING TABLES</span>
+    <h2 class="section-title">Complete Ranking Tables</h2>
+    <p class="section-sub">Switchable views across all seven ranking dimensions. All derived from one canonical embedded dataset — no stale values.</p>
+    <div class="rank-tabs" id="rankTabs"></div>
+    <div class="rank-table-wrap">
+      <table class="rank-table" id="rankTable">
+        <thead><tr id="rankHead"></tr></thead>
+        <tbody id="rankBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 18 // EFFECT COMPARISON LAB ═══ -->
+<section id="compare">
+  <div class="container">
+    <span class="section-num">18 // EFFECT COMPARISON LAB</span>
+    <h2 class="section-title">Effect Comparison Lab</h2>
+    <p class="section-sub">Select any two declaration routes for a side-by-side comparison across all dimensions, plus the audit's pairwise relationship.</p>
+    <div class="compare-lab">
+      <div class="compare-selects">
+        <div><label>Effect A</label><select id="compareA"></select></div>
+        <div class="compare-vs">VS</div>
+        <div><label>Effect B</label><select id="compareB"></select></div>
+      </div>
+      <div class="compare-results" id="compareResults"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 19 // DEEP MATRIX ═══ -->
+<section id="matrix">
+  <div class="container">
+    <span class="section-num">19 // OPTIONAL DEEP MATRIX</span>
+    <h2 class="section-title">Deep Matrix // 101×101</h2>
+    <p class="section-sub">The full pairwise relationship matrix from the audit. Dense, intimidating — the deep archive. Not the default view.</p>
+    <div class="matrix-toggle-wrap">
+      <button class="matrix-toggle" id="matrixToggle">OPEN DEEP MATRIX // 101×101</button>
+    </div>
+    <div class="matrix-wrap" id="matrixWrap"></div>
+    <div class="matrix-legend">
+      <span><b>++</b> Materially greater</span>
+      <span><b>+</b> Contextual advantage</span>
+      <span><b>≈</b> Comparable</span>
+      <span><b>↔</b> Strategically orthogonal</span>
+      <span><b>-</b> Contextual disadvantage</span>
+      <span><b>--</b> Materially less</span>
+      <span><b>?</b> Insufficient basis</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DATA INTEGRITY NOTE ═══ -->
+<section id="integrity">
+  <div class="container">
+    <div class="integrity-note" id="integrityNote"></div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="atlas-footer">
+  <p>INTRILEX // CORRUPTURE™ EFFECT ATLAS</p>
+  <p class="auth">RULEBOOK v4.3.1 // ENGINE 4.2.6 // SIMULATION READINESS: PARTIAL</p>
+  <p>75 PRIMITIVES // 101 AS-WRITTEN ROUTES // 75 AS-EXECUTED ROUTES // 20 PARETO-FRONTIER ROUTES</p>
+  <p style="margin-top:12px">Generated from canonical balance-check artifacts. No fabricated statistics.</p>
+</footer>
+
+</div><!-- /.atlas-shell -->
+
+<!-- ═══ DRAWER (detail panel) ═══ -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-label="Effect details" aria-hidden="true">
+  <button class="drawer-close" id="drawerClose" aria-label="Close">✕</button>
+  <div id="drawerContent"></div>
+</aside>
+
+<!-- ═══ SCROLL TOP ═══ -->
+<button class="scroll-top" id="scrollTop" aria-label="Scroll to top">↑</button>
+
+<!-- ═══ MUSIC PLAYER ═══ -->
+<div class="music-player" id="musicPlayer">
+  <button class="music-btn" id="musicBtn" aria-label="Play music" title="Play ambient track">▶</button>
+  <span class="music-pulse" id="musicPulse"></span>
+  <span class="music-label"><span class="title">Black Ass Index</span></span>
+  <audio id="audioPlayer" loop preload="none" crossorigin="anonymous">
+    <source src="https://deffy.me/indarys/Black%20ass%20Index.mp3" type="audio/mpeg">
+  </audio>
+</div>
+
+<!-- ═══ TOOLTIP ═══ -->
+<div class="tooltip" id="tooltip"></div>

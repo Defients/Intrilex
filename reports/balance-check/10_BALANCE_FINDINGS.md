@@ -172,3 +172,156 @@ BJ    --   ++   ++   --   --   --   ++   --   --   --   --   --   --   --    ≈
 
 ### Priority C: Follow-Up Targeted Experiments
 * Execute `EXP-01` through `EXP-07` as specified in `11_EXPERIMENT_PLAN.md`.
+
+---
+
+## 10.10 Phase 9 — Adversarial Red-Team Pass
+
+Per spec §44, the five most consequential findings were subjected to adversarial falsification review. Each is classified after re-examination against all accumulated evidence.
+
+### RT-01: `IMPL-12` — Rank-10 / Super Counter Immunity → **STRENGTHENED**
+
+* **Original concern:** Solo Rank-10 effects and all Supers are immune to Base Ace and A♠ due to counter-class mapping (`targetAcceptsBaseAce` / `targetAcceptsSpadeAce` exclude `stackClass: "rank10"`).
+* **Adversarial challenge:** Is this actually a balance problem, or does the rulebook intentionally restrict counter authority for high-investment plays?
+* **Evidence re-examined:** `07_COUNTERFACTUALS.md` CF-01 confirmed that in the turn-1 kill match (`M-db10a45b`), P2 held A♥ but could not counter 10♣ Foundation because of this immunity. Only 3-Red Ultra could answer, and P1 counter-countered with their own 3-Red. The rulebook (`docs/INTRILEX_v4.3.1_COMPLETE_PLAYER_RULEBOOK.md`) explicitly states Base Ace counters "any effect or counter play," with no Rank-10 exclusion. This is an engine defect, not a design intent.
+* **Verdict: STRENGTHENED.** The counterfactual forensic analysis confirmed the mechanical narrowing has real, observable game consequences. The defect amplifies 10♥, 10♣, and all Super declarations beyond their intended power.
+
+### RT-02: `DEG-06` — 2B2R Ultra Tempo Burst → **WEAKENED**
+
+* **Original concern:** 2B2R Ultra has 60.1–77.3% opening reachability, grants +2 Mini-Turns, and is fired in 54.1% of opportunities.
+* **Adversarial challenge:** Is the high fire rate a mechanical problem, or a policy heuristic artifact?
+* **Evidence re-examined:** `05_POLICY_AUDIT.md` showed policies assign 2B2R a flat score of ~1600–1770 vs decline at ~70–330, with no hand-quality dilution modeling. `07_COUNTERFACTUALS.md` CF-02 explicitly identified that a human or lookahead policy holding A♠, K♠, Q♠, and 4♠ would decline 2B2R to preserve game-defining singletons. The 32.2% zero-margin decision rate further suggests policies lack the depth to evaluate 2B2R's opportunity cost.
+* **Verdict: WEAKENED.** The concern is real in terms of reachability and policy over-activation, but the adversarial review revealed it is substantially a **policy artifact**, not a mechanical imbalance. `EXP-01` is required to settle whether holding components yields higher win rates under lookahead policies.
+
+### RT-03: `DEG-03` — 10♣ + BJ Turn-1 Kill → **WEAKENED**
+
+* **Original concern:** A turn-1 21-point burst via 10♣ Foundation + BJ bonus is possible and was observed in the corpus.
+* **Adversarial challenge:** Is this a degenerate interaction, or an extreme-rarity line that is self-correcting once IMPL-12 is fixed?
+* **Evidence re-examined:** `07_COUNTERFACTUALS.md` CF-01 confirmed the line is real (not a phantom calculation). Joint reachability of 10♣ + BJ in a 5-card opener is ~0.7%. The active player must also hold 3 Red cards to counter the opponent's 3-Red counter. Critically, the `IMPL-12` fix would restore Base Ace counterability to Foundation (a `stackClass: "rank10"` effect), meaning any Ace held by P2 (33–38% of hands) could answer it. The turn-1 kill is a **symptom of IMPL-12**, not a standalone balance concern.
+* **Verdict: WEAKENED.** Extreme natural rarity and dependency on the IMPL-12 defect mean this is not an independent balance problem. Fixing IMPL-12 dissolves the concern.
+
+### RT-04: `IMPL-01` — Rank 7 / 10♣ / BJ Scoring Refusal → **BLOCKED**
+
+* **Original concern:** Rank 7, 10♣, and Black Joker cannot be played for Points in either core profile due to `CORE_SCORING_RIDER_UNSUPPORTED`, while the manifest advertises `special-scoring-riders`.
+* **Adversarial challenge:** Is this a balance problem or a correctness defect?
+* **Evidence re-examined:** `01_MECHANICAL_INVENTORY.md` IMPL-01 confirmed this is a strict implementation gap — the rulebook describes scoring riders for these cards, but the engine refuses them. `12_EFFECT_POWER_RANKING.md` classifies `SEVEN_SCORING_TRIGGER` and `BLACK_JOKER_EXILE_RECYCLE` as `BLOCKED`. All empirical verdicts for Rank 7 and BJ scoring are invalidated. This is not a balance verdict; it is a correctness verdict that blocks balance analysis.
+* **Verdict: BLOCKED.** The finding is confirmed as a correctness defect. Balance verdicts on 7-scoring and BJ-scoring cannot be rendered until the defect is fixed. The empirical observation "7 has zero scoring" is an artifact, not a balance signal.
+
+### RT-05: `DEG-01` — Sudden Death Dead Action in Unrestricted → **UNCHANGED**
+
+* **Original concern:** In `core-unrestricted-authority`, Sudden Death is a zero-cost Mini-Turn sink that never ticks down, making it a dead action.
+* **Adversarial challenge:** Is Sudden Death intentionally disabled in the competitive profile, or is this a defect?
+* **Evidence re-examined:** `08_DEGENERACY_LEDGER.md` DEG-01 and the probe (`probes/probe-scoring-and-sudden-death.mjs`) confirmed the action exists, costs a Mini-Turn, but the timer never advances. The rulebook describes Sudden Death as a functional endgame timer with specific recipes (RJ+BJ or 4-of-a-kind). `12_EFFECT_POWER_RANKING.md` classifies `SUDDEN_DEATH_ACTION_DEFECT` as `IMPLEMENTATION-DAMAGED`. Zero simulation coverage exists for `core-unrestricted-authority`.
+* **Verdict: UNCHANGED.** The finding remains as initially characterized. It is a confirmed defect in the competitive profile with zero empirical coverage. It does not affect `core-advanced-authority` balance conclusions.
+
+### Red-Team Summary Table
+
+| Finding | Original Classification | Post-Red-Team | Action |
+|---|---|---|---|
+| `IMPL-12` Counter immunity | Implementation defect | **STRENGTHENED** | Priority A fix (§10.9) |
+| `DEG-06` 2B2R tempo burst | Watchlist concern | **WEAKENED** | EXP-01 required |
+| `DEG-03` 10♣+BJ turn-1 kill | Watchlist concern | **WEAKENED** | Resolved by IMPL-12 fix |
+| `IMPL-01` Scoring refusal | Implementation defect | **BLOCKED** | Priority A fix (§10.9) |
+| `DEG-01` Sudden Death dead | Implementation defect | **UNCHANGED** | Priority A fix (§10.9) |
+
+---
+
+## 10.11 Completion Standard — 28 Questions (Spec §45)
+
+### Authority & Scope
+
+**Q1: What is the exact authority boundary?**
+Engine 4.2.6 (built runtime at `runtime/autonomy-engine-dist/src`) is the executable authority. Rulebook v4.3.1 (`docs/INTRILEX_v4.3.1_COMPLETE_PLAYER_RULEBOOK.md`) is the design authority. `core-advanced-authority` is the simulation/local default; `core-unrestricted-authority` is the competitive online profile. Commit `e4c22228`. See `00_AUTHORITY.md`.
+
+**Q2: Is the simulation trustworthy?**
+Partially. The 100-match corpus is deterministic with worker-count parity and complete provenance hashes. It is admissible as Grade B descriptive evidence for heuristic policy play under `core-advanced-authority`. It is not trustworthy for causal balance claims, optimal play inference, or `core-unrestricted-authority` projection. See `04_SIMULATION_READINESS.md`.
+
+**Q3: Which datasets are admissible?**
+Only `sample-data/autonomy/` (100 matches, `core-advanced-authority`, engine 4.2.6). Legacy certified replays (121, engine 0.10.1) are admissible for regression/conformance only. Zero datasets exist for `core-unrestricted-authority`. See `04`, `06`.
+
+### Equivalence & Coverage
+
+**Q4: What are the mechanical equivalence classes?**
+26 AS-EXECUTED classes across 54 cards (per `02_EXACT_IDENTITY_MAP.md`). 32 AS-WRITTEN classes when including unimplemented modes. Spades variants create distinct classes for A, 2, 4, 6, 8, 10, J, Q, K. Jokers form two singleton classes.
+
+**Q5: What is every rank's role?**
+See `09_RANK_DOSSIERS.md` and §10.3 above. Summary: A=COUNTER/PROTECTION · 2=WILDCARD/CONTROL · 3=DENIAL/TEMPO · 4=BOARD_RESET/SCORING · 5=RECOVERY/SCORING · 6=RESOURCE/SELECTION · 7=GENERATION (BLOCKED) · 8=PROTECTION/REMOVAL · 9=DENIAL/SCORING · 10=SCORING/TEMPO/CONTROL (per-suit) · J=CONTROL/TEMPO · Q=PROTECTION/SETUP · K=COUNTER/ANCHOR/WILD · RJ=BOARD_RESET/VARIANCE · BJ=STRUCTURAL_CONTROL (BLOCKED scoring).
+
+**Q6: Which exact identities differ from their rank family?**
+All Spades variants (A♠, 2♠, 4♠, 6♠, 8♠, 10♠, J♠, Q♠, K♠) are mechanically distinct from their non-Spades siblings. 10♣, 10♦, 10♥ are each distinct from generic Tens. Red Joker and Black Joker are singleton classes with no rank-family peers. See `02_EXACT_IDENTITY_MAP.md`.
+
+### Power & Range
+
+**Q7: What are the floors and ceilings for each rank?**
+See §10.3 "Complete Rank Balance Table." Floors range from Zero (7, BJ — blocked by IMPL-01) to High (A=4, 8=8, 9=9, 10=10, K=8). Ceilings range from Moderate (3, 5) to Extreme (4♠, K♠, BJ Board Lock, 2B2R Ultra).
+
+**Q8: What is the flexibility and threat value?**
+Highest flexibility: A, 8, 10, K (dual-timing, broad modes). Highest threat value: K♠ (sole counter to QC/RM/Supers), BJ (Board Lock), 4♠ (Total Clear). Lowest flexibility: 7 (narrow, blocked), 3 (shallow). See §10.7 Interaction Hub Report.
+
+**Q9: How do Spades increment power over ordinary suits?**
+Spades provide access to escalated modes: A♠ (Exile counter, uncounterable by Base Ace), 2♠ (Solo Wild copies 4♠/6♠), 4♠ (Total Clear), 6♠ (Deep Draw), 8♠ (Free Scuttle), 10♠ (Stack Theft + Exile Recovery), J♠ (ER Attachment), Q♠ (Special Protection), K♠ (Multi-Counter + Wild Sovereignty). See §10.4 and `03_INTERACTION_GRAPH.md`.
+
+**Q10: What are the non-Spades suit distinctions?**
+Non-Spades suits are mechanically identical within rank except for: Ultra color recipes (2B2R requires Black+Red; 3-Red/3-Black require color homogeneity), 10♣ Foundation, 10♦ Mimic, 10♥ Tempo Spike. See `01_MECHANICAL_INVENTORY.md`.
+
+**Q11: Do Supers compensate for card concentration?**
+Yes, but variably. ⭐A (2 Aces) provides the highest counter authority. ⭐2/⭐4/⭐8/⭐J provide niche but healthy swing effects. ⭐3/⭐5/⭐6/⭐7 are INSUFFICIENT/DEFECT in the executable engine. Queen's Court and Royal Marriage provide structural fortresses. See §10.5.
+
+### Interactions & Counterplay
+
+**Q12: What are the interaction hubs?**
+Highest systemic leverage: BJ (Board Lock), 4♠ (Total Clear). Most enabling: 2♠, K♠ (Wild access), 10♦ (Mimic). Most countering: Ace family, 3-Red Ultra. Most protected: ER Queens. Greatest synergy density: Queens. See §10.7.
+
+**Q13: Which mechanics have insufficient practical counterplay?**
+10♥ and 10♣ Foundation have narrowed counterplay due to IMPL-12 (only ⭐A/3-Red/K♠ answer them, not ordinary Aces). Board Lock has only ⭐A as direct counter. Queen's Court has only K♠ as direct counter. All are watchlist items, not confirmed degeneracies. See §10.8.
+
+**Q14: Which mechanics have theoretical answers but weak agency?**
+2B2R Ultra (theoretical answer: don't fire it; weak agency: policies always fire). Counter retention (theoretical answer: hold Aces for lethal threats; weak agency: one-ply policies always fire). Solo Wild / Wild Sovereignty (theoretical answer: high-value copies; weak agency: policies score them at ~100, effectively blind). See `05_POLICY_AUDIT.md`.
+
+### Policy & Analytics
+
+**Q15: What are the policy artifacts?**
+12 heuristic policies (5 core, 7 Hybrix) using static weighted scoring. 32.2% zero-margin decisions. No lookahead, no hidden-hand modeling, no retention valuation. See `05_POLICY_AUDIT.md`.
+
+**Q16: What are reconstructed scores?**
+18,307 of 19,395 scored options have reconstructed decompositions (vs genuine policy scores). The `decision-trace.mjs` distinguishes `scoreSource: 'policy'` vs `'reconstructed'`. Reconstructed scores are analytic decompositions, not policy reasoning. See `05_POLICY_AUDIT.md`.
+
+**Q17: What are the stratification effects?**
+Seat 1 wins 37.8% raw, but 4 policies (support, tank, baseline, sniper) have zero or near-zero seat-1 games, confounding the aggregate. Policy-conditioned win rates range from 0.238 (control) to 0.667 (sniper). See `06_EMPIRICAL_EVIDENCE.md` §6.3.
+
+**Q18: Which suspicious interactions were rejected?**
+15 rejected hypotheses in `08_DEGENERACY_LEDGER.md` (REJ-01 through REJ-15), including: Aegis stacking dominance, Jack Disrupt loop, Voltage auto-win, 9♠ Goal Shift runaway, RJ Hand Swap determinism, and others. Each was investigated and falsified against engine authority.
+
+### Degeneracy & Changes
+
+**Q19: What degenerate legal interactions exist?**
+3 confirmed degeneracies: DEG-01 (Sudden Death dead action), DEG-06 (2B2R policy over-activation — weakened to policy artifact), DEG-07 (Board Lock snowball — watchlist). See `08_DEGENERACY_LEDGER.md`.
+
+**Q20: Which findings are blocked?**
+Rank 7 scoring verdict (IMPL-01), BJ scoring verdict (IMPL-01), 10♦ Mimic verdict (IMPL-04), ⭐6/⭐7 verdicts (IMPL-03), Sudden Death verdict (DEG-01). All blocked by correctness defects, not by insufficient analysis. See §10.10 RT-04.
+
+**Q21: Are any gameplay changes justified?**
+**No.** Zero gameplay balance changes are defensible from available evidence. All observed anomalies trace to implementation defects, documentation drift, or policy heuristic bias. See §10.9.
+
+**Q22: What are the smallest defensible changes?**
+The smallest defensible changes are **correctness repairs**, not balance changes: fix IMPL-01 (scoring riders), IMPL-12 (counter class mapping), DEG-01 (Sudden Death timer), IMPL-03 (⭐6/⭐7 enumeration), IMPL-04 (10♦ destination). These restore intended rulebook behavior without altering balance parameters. See §10.9 Priority A.
+
+**Q23: What is the falsification evidence?**
+Each watchlist item has a falsification criterion: 2B2R (EXP-01: if holding yields higher win rate, overpoweredness is falsified), 10♥ (IMPL-12 fix restores 38% Ace counter threat), 10♣+BJ (0.7% rarity + IMPL-12 fix), 4♠ (robust Ace counterplay + self-wipe cost), Board Lock (symmetrical lock + opponent can still score). See §10.8 and §10.10.
+
+**Q24: What are the next simulations?**
+EXP-01 through EXP-07 as specified in `11_EXPERIMENT_PLAN.md`: 2B2R hold-vs-fire, Board Lock ahead/behind, 10♥ opportunity cost, Queen fortress breach, Total Clear swing, seat-balanced Unrestricted round-robin (post-bugfix), counter retention calibration.
+
+### Strategic Integrity
+
+**Q25: Does the game preserve meaningful asymmetric strategic choice?**
+Yes. The interaction topology supports distinct strategic archetypes: rush (score-rush, tempo), control (control, hybrix-defender), trickster (hybrix-trickster), fortress (Queen's Court, Royal Marriage), and wildcard (2♠, K♠, 10♦). No single archetype dominates across all matchups. See §10.6 and `09_RANK_DOSSIERS.md`.
+
+**Q26: Are there mechanics with no observed usage that are not zero?**
+Yes. NOT_OBSERVABLE ≠ ZERO. Solo Wild (16/303), Wild Sovereignty (2/72), QC (0/12), RM (1/8), ⭐4 (0/15), ⭐8 (0/3), ⭐J (0/2) all have low or zero realized usage but nonzero mechanical existence. Sudden Death, ⭐3/⭐5/⭐6/⭐7 are NOT_OBSERVABLE in `core-advanced-authority`. See `06_EMPIRICAL_EVIDENCE.md`.
+
+**Q27: Is the seat asymmetry a balance problem?**
+Inconclusive. Raw seat-1 win rate is 37.8% (Wilson95 [0.288, 0.476]), but 4 policies have zero seat-1 games, confounding the aggregate. A seat-balanced round-robin on `core-unrestricted-authority` (EXP-06) is required after bugfixes. The asymmetry may be a policy-pairing artifact, not a mechanical bias. See `06` §6.3.
+
+**Q28: What is the overall balance health verdict?**
+**HEALTHY WITH IMPLEMENTATION DEBT.** The core mechanical decision loop preserves deep asymmetric strategic choice. The interaction topology is rich and robust against simple dominant strategies. All observed balance anomalies are traceable to implementation defects (IMPL-01/03/04/12, DEG-01), documentation drift (AUTH-04), or AI policy heuristic bias (POL-A1). Correcting the engine to match Rulebook v4.3.1 restores intended counterplay and system balance. No gameplay nerfs or buffs are warranted.
