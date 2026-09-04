@@ -1,0 +1,102 @@
+#,Effect ID,Source,Mode,Timing,Raw Primitive Rank,Practical Rank (Written),Practical Rank (Executed),Efficiency Rank,Tier,Points Forgone,Extra Cost,Setup,Counterplay,Reachability,Threat Value,Status,Profile Availability,Confidence
+1,A_SPADE_EXILE_COUNTER,"A♠","Exile Counter",Instant,N/A,1,1,6,S+,4,"None","Low (pending effect/counter)","NARROW (⭐A or 3-Red only)",RARE,VERY_HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+2,EIGHT_SPADE_FREE_SCUTTLE,"8♠ natural","Instant Free Scuttle",Instant,N/A,2,2,1,S+,8,"None","Enemy PR card (non-Aegis, non-immune)","ADEQUATE (8 Scuttle Counter, Aegis)",RARE,VERY_HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+3,KING_SPADE_INSTANT_MULTI_COUNTER,"K♠ natural","Counter Multi-Play",Instant,N/A,3,3,10,S+,8,"None","Pending multi-card play","ROBUST (Counter-counters, cannot counter Ultras)",RARE,VERY_HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+4,FOUR_SPADE_TOTAL_CLEAR,"4♠ natural","Total Clear",Action,N/A,4,4,13,S+,4,"None","OTT cards present","ROBUST (Aces)",RARE,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+5,TWO_SPADE_SOLO_WILD_TOTAL_CLEAR,"2♠","Solo Wild (Total Clear)",Action,N/A,5,5,5,S+,2,"None","OTT cards present","ROBUST (Aces)",RARE,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+6,A_BASE_COUNTER,"A♣ / A♦ / A♥","Base Counter",Instant,N/A,6,6,16,S,4,"None","Low (pending effect/counter)","ROBUST (Ace-family, 3-Red)",COMMON,VERY_HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+7,BLACK_JOKER_BOARD_LOCK,"Black Joker","Quick Board Lock",Quick,N/A,7,7,8,S,11,"AS-EXECUTED: 11-pt scoring blocked by IMPL-01","Empty stack and queue","NARROW (⭐A, 3-Red only)",RARE,VERY_HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+8,EIGHT_QUICK_AEGIS_FIELD,"Any Eight","Quick Aegis Field",Quick,N/A,8,8,18,S,8,"None","Friendly OTT cards","NARROW (Cannot be countered by Base Ace)",COMMON,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+9,TEN_HEART_TEMPO_SPIKE,"10♥ natural","Tempo Spike",Action,N/A,9,9,22,S,10,"10♥ exiled","Action phase","NARROW (⭐A, 3-Red only via IMPL-12)",RARE,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+10,KING_SPADE_WILD_TOTAL_CLEAR,"K♠ natural","Wild Sovereignty (Total Clear)",Action,N/A,10,10,45,S,8,"+1 discard, K♠ exiled",">=1 other hand card, OTT cards present","ROBUST (Aces)",RARE,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+11,QUEEN_ER_GUARD_ANCHOR,"Any Queen","ER Anchor (Guard)",Action,N/A,11,11,17,S,2,"None","Action phase","ADEQUATE (Clears, ⭐2, J♠, Kings on entry)",COMMON,VERY_HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+12,ULTRA_2B2R_DRAW,"2 Black + 2 Red cards","2B+2R Draw",Action,N/A,12,12,40,S,14,"4 cards committed","2 Black + 2 Red in hand","NARROW (⭐A, 3-Red only)",COMMON,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+13,JACK_INSTANT_DISRUPT,"Any Jack","Instant Disrupt",Instant,N/A,13,13,2,S,3,"None","Opponent Action declaration","ROBUST (Aces)",COMMON,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+14,ULTRA_THREE_RED_COUNTER,"3 Red cards (♦/♥)","3 Red Ultra Counter",Instant,N/A,14,14,47,S,10,"3 cards committed","3 red cards in hand, pending play","NARROW (Blocked by Two-Queen Defense)",COMMON,VERY_HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+15,TEN_CLUB_FOUNDATION,"10♣ natural","Foundation Entry & Bonus Score",Action,N/A,15,15,15,S,10,"None","Best at 0 PR points","NARROW (⭐A, 3-Red only via IMPL-12)",RARE,HIGH,CONFLICT,core-advanced-and-unrestricted,VERY_HIGH
+16,QUEEN_COURT,"2 Queens from hand","Queen's Court",Action,N/A,16,16,35,A+,4,"2 Queens committed","2 Queens in hand","NARROW (K♠ only standard counter)",RARE,VERY_HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+17,SEVEN_SCORING_TRIGGER,"Any Seven scored","Scoring Trigger",Trigger,N/A,17,N/A,3,A+,0,"None","Seven scored for Points","NARROW (Triggers don't use effect counters)",COMMON,MODERATE,NOT_IMPLEMENTED,written-only,LOW
+18,SIX_SPADE_DEEP_DRAW,"6♠ natural","Deep Draw",Action,N/A,18,17,42,A+,6,"None",">=1 other hand card","ROBUST (Aces)",RARE,LOW,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+19,TEN_DIAMOND_SOLO_MIMIC_ROW_EXCHANGE_PR,"10♦ natural","Solo Mimic ⭐4 PR",Action,N/A,19,18,39,A+,10,"10♦ Exile-Bound","PR rows present","NARROW (⭐A, 3-Red only via IMPL-12)",RARE,HIGH,MATCH,core-advanced-and-unrestricted,HIGH
+20,A_SUPER_COUNTER,"⭐A (2 Aces)","Super Counter",Instant,N/A,20,19,65,A+,8,"2 Aces committed","2 Aces in hand, pending play, <2 enemy Queens","NARROW (Blocked by Two-Queen Defense)",RARE,VERY_HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+21,QUEEN_QUICK_AEGIS,"Any Queen","Quick Aegis",Quick,N/A,21,20,11,A+,2,"None","Friendly OTT card","NARROW (Cannot be countered by Base Ace)",COMMON,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+22,ROYAL_MARRIAGE,"Same-suit King + Queen","Royal Marriage",Action,N/A,22,21,48,A+,10,"Same-suit K+Q committed","Same-suit K + Q in hand","NARROW (K♠ only standard counter)",RARE,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+23,TWO_QUICK_SCORE_DISCARD,"Any Two","Quick Score & Discard",Quick,N/A,23,N/A,4,A+,0,"None","Own Full Turn","ROBUST (Aces counter effect)",COMMON,MODERATE,NOT_IMPLEMENTED,written-only,LOW
+24,FOUR_BASE_ROW_CLEAR_PR,"Any Four","Row Clear PR",Action,N/A,24,22,27,A+,4,"None","Enemy PR cards present","ROBUST (Aces, Aegis)",COMMON,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+25,JACK_SPADE_ER_ATTACHMENT,"J♠ natural","ER Attachment",Action,N/A,25,23,23,A+,3,"None","Enemy ER Anchor","ROBUST (Aces, Aegis, Severance)",RARE,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+26,NINE_INSTANT_TAP,"Any Nine","Instant Tap",Instant,N/A,26,24,21,A+,9,"None","Enemy PR card","ROBUST (Aces, Guard, Scoring untaps)",COMMON,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+27,TEN_DIAMOND_PAIRED_MIMIC_SUPER_ACE,"10♦ + any Two","Paired Mimic ⭐A",Instant,N/A,27,N/A,70,A+,12,"10♦ Exile-Bound, +1 Two card","Pending play, <2 Queens","NARROW (Two-Queen Defense)",RARE,HIGH,NOT_IMPLEMENTED,written-only,LOW
+28,FOUR_SUPER_ROW_EXCHANGE_PR,"⭐4 (2 Fours)","Row Exchange PR",Action,N/A,28,25,57,A+,8,"2 Fours committed","PR rows present","NARROW (K♠)",RARE,HIGH,MATCH,core-advanced-and-unrestricted,HIGH
+29,KING_INSTANT_ANCHOR_COUNTER,"Any non-♠ King","Instant Anchor Counter",Instant,N/A,29,26,31,A+,8,"None","Pending single-card Anchor play","ROBUST (Counter-counters)",COMMON,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+30,TWO_SPADE_SOLO_WILD_DEEP_DRAW,"2♠","Solo Wild (Deep Draw)",Action,N/A,30,27,33,A+,2,"None",">=1 other hand card","ROBUST (Aces)",RARE,LOW,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+31,FOUR_BASE_ROW_CLEAR_ER,"Any Four","Row Clear ER",Action,N/A,31,28,29,A,4,"None","Enemy ER Anchors present","ROBUST (Aces, Aegis)",COMMON,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+32,TEN_SPADE_STACK_THEFT,"10♠ natural","Stack Theft (Interrupt)",Interrupt,N/A,32,29,52,A,10,"+1 Full-Turn skip","Pending single effect","NARROW (⭐A, 3-Red only via IMPL-12)",RARE,VERY_HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+33,A_ANCHOR_ENTRY,"Any Ace","Anchor Entry & Sacrifice",Action,N/A,33,30,44,A,4,"None","Requires ER deployment","ADEQUATE (Kings counter entry; Aces counter resolution)",COMMON,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+34,QUEEN_SPADE_CLEAR_IMMUNITY,"Q♠ OTT","Passive Clear Immunity",Passive,N/A,34,31,24,A,2,"None","Q♠ deployed OTT","NARROW (4♠, ⭐2, J♠)",RARE,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+35,BLACK_JOKER_EXILE_RECYCLE,"Black Joker scored","Scoring Trigger (Exile Recycle)",Trigger,N/A,35,N/A,12,A,0,"None","Non-empty Exile","None (Trigger)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+36,EIGHT_INSTANT_SCUTTLE_COUNTER,"Any Eight","Instant Scuttle Counter",Instant,N/A,36,32,34,A,8,"None","Pending Scuttle on stack","ROBUST (Counter-counters)",COMMON,HIGH,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+37,RED_JOKER_HAND_SWAP,"Red Joker","Hand Swap",Action,N/A,37,33,37,A,5,"None","Opponent has hand cards","ROBUST (Aces)",RARE,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+38,TWO_SUPER_COMMANDEER_HOLD,"⭐2 (2 Twos)","Commandeer Hold",Action,N/A,38,34,53,A,4,"2 Twos committed","Enemy OTT card (non-Aegis)","NARROW (K♠, Aegis)",RARE,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+39,KING_SPADE_ANCHOR,"K♠ natural","ER Anchor (9 pts)",Action,N/A,39,35,36,A,8,"None","Action phase","ADEQUATE (Kings counter, Clears, J♠)",RARE,LOW,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+40,RED_JOKER_SELF_RESET,"Red Joker","Self Reset",Action,N/A,40,36,32,A,5,"None","Action phase","ROBUST (Aces)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+41,TWO_SOLO_WILD_ROW_CLEAR,"Any suited Two","Solo Wild (4-Row Clear)",Action,N/A,41,37,25,A,2,"None","Enemy row present","ROBUST (Aces)",COMMON,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+42,ULTRA_2B2R_RUMMAGE_EXILE,"2 Black + 2 Red cards","2B+2R Rummage",Action,N/A,42,38,62,A,14,"4 cards committed","2 Black + 2 Red in hand, non-empty Exile","NARROW (⭐A, 3-Red only)",COMMON,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+43,EIGHT_SCUTTLE_BONUS,"Any Eight","Scuttle Bonus Draw",Trigger,N/A,43,N/A,19,A,8,"None","Resolve ordinary Scuttle with 8","None (Trigger)",COMMON,LOW,NOT_IMPLEMENTED,written-only,LOW
+44,JACK_PR_ATTACHMENT,"Any Jack","PR Attachment",Action,N/A,44,39,30,A,3,"None","Vulnerable enemy PR card","ROBUST (Aces, Guard, Aegis, Severance)",COMMON,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+45,RED_JOKER_OPPONENT_ATTACK,"Red Joker","Opponent Attack",Action,N/A,45,40,41,A,5,"None","Opponent has large hand","ROBUST (Aces)",RARE,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+46,TEN_DIAMOND_SOLO_MIMIC_ROW_EXCHANGE_ER,"10♦ natural","Solo Mimic ⭐4 ER",Action,N/A,46,41,56,A,10,"10♦ Exile-Bound","ER rows present","NARROW (⭐A, 3-Red only via IMPL-12)",RARE,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+47,ULTRA_THREE_BLACK,"3 Black cards (♣/♠)","3 Black Ultra",Action,N/A,47,42,67,A,12,"3 cards committed","3 black cards in hand","NARROW (⭐A, 3-Red only)",COMMON,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+48,FOUR_SUPER_ROW_EXCHANGE_ER,"⭐4 (2 Fours)","Row Exchange ER",Action,N/A,48,43,68,A,8,"2 Fours committed","ER rows present","NARROW (K♠)",RARE,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+49,NINE_SPADE_GOAL_SHIFT,"9♠","Goal Shift (+5, Discard, Own -2)",Instant,N/A,49,N/A,69,B+,9,"+1 discard",">=1 other hand card","ROBUST (Aces, Kings)",RARE,MODERATE,NOT_IMPLEMENTED,written-only,LOW
+50,ROYAL_SHIELD_PROTECTION,"Queen count advantage","Royal Shield Snapshot",Passive,N/A,50,N/A,14,B+,0,"None","Friendly Queens > enemy Queens","A♠, K♠, ⭐A",PLAUSIBLE,HIGH,NOT_IMPLEMENTED,written-only,LOW
+51,JACK_SUPER_TEMPO_FORCE,"⭐J (2 Jacks)","Tempo Force",Action,N/A,51,44,54,B+,6,"2 Jacks committed","Action phase","NARROW (K♠)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+52,THREE_INSTANT_BOUNCE,"Any Three","Instant Bounce",Instant,N/A,52,N/A,26,B+,3,"None","Response window, OTT target","ROBUST (Aces, Guard)",COMMON,MODERATE,NOT_IMPLEMENTED,written-only,LOW
+53,KING_BASE_ANCHOR,"Any non-♠ King","ER Anchor (7 pts)",Action,N/A,53,45,51,B+,8,"None","Action phase","ADEQUATE (Kings counter, Clears, J♠)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,VERY_HIGH
+54,SEVEN_RECURSIVE_TOPDECK,"Physical Seven revealed","Recursive Topdeck",Action,N/A,54,N/A,28,B+,0,"None","Topdeck casting active, physical 7 revealed","ROBUST (Aces)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+55,TEN_DIAMOND_PAIRED_MIMIC_ROW_EXCHANGE,"10♦ + any Two","Paired Mimic ⭐4",Action,N/A,55,46,73,B+,12,"10♦ Exile-Bound, +1 Two card","Rows present","NARROW (K♠, ⭐A)",RARE,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+56,EIGHT_SUPER_ABSOLUTE_SCUTTLE,"⭐8 (2 Eights)","Absolute Scuttle",Action,N/A,56,47,83,B+,16,"2 Eights committed","Enemy PR card (non-Aegis)","NARROW (K♠, Aegis)",RARE,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+57,SIX_BASE_DIG_RETURN,"Any Six","Dig Mode 1",Action,N/A,57,48,59,B+,6,"None","DP >= 3","ROBUST (Aces)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+58,FOUR_QUICK_NATURAL,"Any Four","Quick Natural",Quick,N/A,58,N/A,20,B+,4,"None","DP >= 4","ROBUST (Aces)",COMMON,LOW,NOT_IMPLEMENTED,written-only,LOW
+59,TEN_DIAMOND_PAIRED_MIMIC_ABSOLUTE_SCUTTLE,"10♦ + any Two","Paired Mimic ⭐8",Action,N/A,59,49,78,B+,12,"10♦ Exile-Bound, +1 Two card","Enemy PR card","NARROW (K♠, Aegis)",RARE,MODERATE,MATCH,core-advanced-and-unrestricted,HIGH
+60,VOLTAGE_FIVE_REFINEMENT,"Start Snapshot (PR Fives >= 5)","Voltage 5 Refinement",Instant Start,N/A,60,50,7,B+,0,"None","PR Fives >= 5 at Start","None (Start trigger)",PLAUSIBLE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+61,SIX_BASE_DIG_DISCARD,"Any Six","Dig Mode 2",Action,N/A,61,51,63,B+,6,"None","DP >= 3","ROBUST (Aces)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+62,TWO_SUPER_COMMANDEER_SCORE,"⭐2 (2 Twos)","Commandeer Score",Action,N/A,62,52,61,B+,4,"2 Twos committed","Enemy OTT card (non-Aegis)","NARROW (K♠, Aegis)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+63,SEVEN_SPADE_TOPDECK,"7♠","Topdeck Casting (Reveal 3)",Action,N/A,63,N/A,49,B+,7,"None","DP >= 3","ROBUST (Aces)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+64,THREE_SPADE_ENHANCEMENT,"3♠","Hand Raid Enhancement",Action,N/A,64,N/A,46,B+,3,"None","Opponent has hand cards","ROBUST (Aces)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+65,VOLTAGE_THREE_SLEIGHT,"Start Snapshot (PR Threes >= 3)","Voltage 3 Sleight",Instant Start,N/A,65,53,9,B+,0,"None","PR Threes >= 3 at Start","None (Start trigger)",PLAUSIBLE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+66,FIVE_SPADE_EXILE_RUMMAGE,"5♠","Suit Rummage (Any Card)",Action,N/A,66,N/A,66,B,5,"None","Exile >= 1","ROBUST (Aces)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+67,KING_SPADE_WILD_DEEP_DRAW,"K♠ natural","Wild Sovereignty (Deep Draw)",Action,N/A,67,54,88,B,8,"+1-2 discards, K♠ exiled",">=1 other hand card","ROBUST (Aces)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+68,RED_JOKER_SHUFFLE_RESET,"Red Joker","Shuffle Reset",Action,N/A,68,55,58,B,5,"None","Rich Graveyard","ROBUST (Aces)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+69,TEN_DIAMOND_PAIRED_MIMIC_SUPER_J_TEMPO,"10♦ + any Two","Paired Mimic ⭐J",Action,N/A,69,56,81,B,12,"10♦ Exile-Bound, +1 Two card","Action phase","NARROW (K♠)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+70,FIVE_BASE_RECYCLE,"Any Five","Recycle Line",Action,N/A,70,57,60,B,5,"None","DP >= 2","ROBUST (Aces)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+71,NINE_ANCHOR,"Any Nine","Anchor Entry & Hand Discard",Action,N/A,71,58,74,B,9,"None","Opponent has hand cards","ROBUST (Aces, Kings)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+72,KING_SPADE_WILD_ROW_CLEAR,"K♠ natural","Wild Sovereignty (4-Row Clear)",Action,N/A,72,59,85,B,8,"K♠ exiled","Enemy row present","ROBUST (Aces)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+73,TWO_SOLO_WILD_RECYCLE,"Any suited Two","Solo Wild (5-Recycle)",Action,N/A,73,60,50,B,2,"None","DP >= 2","ROBUST (Aces)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+74,SEVEN_BASE_TOPDECK,"Any Seven","Topdeck Casting",Action,N/A,74,61,55,B,7,"AS-EXECUTED: 7-pt scoring blocked by IMPL-01","DP >= 2","ROBUST (Aces)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+75,SIX_QUICK_SWAP_BAR_PEEK,"Any Six","Quick Swap Bar Peek",Quick,N/A,75,N/A,38,B,6,"None","Face-down Swap Bar card exists","ROBUST (Aces on cast)",COMMON,LOW,NOT_IMPLEMENTED,written-only,LOW
+76,FIVE_SUPER_RECYCLE,"⭐5 (2 Fives)","Super Recycle",Action,N/A,76,62,90,B,10,"2 Fives committed","DP >= 4","NARROW (K♠)",RARE,LOW,UNRESTRICTED_ONLY,core-unrestricted-only,MODERATE
+77,TEN_SPADE_EXILE_RECOVERY,"10♠ natural","Exile Recovery",Action,N/A,77,63,76,B,10,"10♠ exiled","Non-empty Exile","NARROW (⭐A, 3-Red only via IMPL-12)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+78,TWO_SOLO_WILD_TOPDECK,"Any suited Two","Solo Wild (Topdeck)",Action,N/A,78,64,64,B,2,"None","DP >= 2","ROBUST (Aces)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+79,THREE_BASE_HAND_RAID,"Any Three","Hand Raid (present-take)",Action,N/A,79,65,72,B,3,"None","Opponent has hand cards","ROBUST (Aces)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+80,A_PURGE_SCRAP_AEGIS,"Any Ace","Purge Mode 1",Action,N/A,80,66,80,B,4,"None","Aegised card OTT","ROBUST (Aces)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+81,NINE_INSTANT_GOAL_SHIFT_FIVE,"Any Nine","Goal Shift +5",Instant,N/A,81,N/A,86,C+,9,"+1 discard",">=1 other hand card","ROBUST (Aces, Kings)",COMMON,LOW,NOT_IMPLEMENTED,written-only,LOW
+82,THREE_SUPER_RAID,"⭐3 (2 Threes)","Super Raid",Action,N/A,82,67,91,C+,6,"2 Threes committed","Opponent has hand cards","NARROW (K♠)",RARE,LOW,UNRESTRICTED_ONLY,core-unrestricted-only,MODERATE
+83,FIVE_CLUB_EXILE_RUMMAGE,"5♣","Suit Rummage (Newest 2)",Action,N/A,83,N/A,75,C+,5,"None","Exile >= 1","ROBUST (Aces)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+84,FIVE_HEART_EXILE_RUMMAGE,"5♥","Suit Rummage (Oldest 2)",Action,N/A,84,N/A,77,C+,5,"None","Exile >= 1","ROBUST (Aces)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+85,TWO_SOLO_WILD_BOUNCE,"Any suited Two","Solo Wild (3-Bounce)",Action,N/A,85,68,71,C+,2,"None","OTT target","ROBUST (Aces, Guard)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+86,TEN_DIAMOND_PAIRED_MIMIC_SUPER_FIVE,"10♦ + any Two","Paired Mimic ⭐5",Action,N/A,86,N/A,92,C+,12,"10♦ Exile-Bound, +1 Two card","DP >= 4","NARROW (K♠)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+87,THREE_BASE_BOUNCE,"Any Three","Bounce OTT",Action,N/A,87,69,79,C+,3,"None","Vulnerable OTT target","ROBUST (Aces, Guard)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+88,A_PURGE_BOUNCE_ANCHOR,"Any Ace","Purge Mode 2",Action,N/A,88,70,87,C+,4,"None","Vulnerable enemy Anchor, no Aegised cards OTT","ROBUST (Aces, Guard)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+89,NINE_INSTANT_GOAL_SHIFT_THREE,"Any Nine","Goal Shift +3",Instant,N/A,89,N/A,89,C+,9,"None","Opponent target","ROBUST (Aces, Kings)",COMMON,LOW,NOT_IMPLEMENTED,written-only,LOW
+90,THREE_BASE_FORCE_DISCARD,"Any Three","Force Discard",Action,N/A,90,71,82,C+,3,"None","Opponent has hand cards","ROBUST (Aces)",COMMON,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+91,TEN_DIAMOND_PAIRED_MIMIC_SUPER_THREE,"10♦ + any Two","Paired Mimic ⭐3",Action,N/A,91,N/A,94,C,12,"10♦ Exile-Bound, +1 Two card","Opponent hand cards","NARROW (K♠)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+92,FIVE_DIAMOND_EXILE_RUMMAGE,"5♦","Suit Rummage (Middle, >=5)",Action,N/A,92,N/A,84,C,5,"None","Exile >= 5","ROBUST (Aces)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+93,VOLTAGE_FOUR_PREDICTABLE,"Start Snapshot (PR Fours >= 4)","Voltage 4 Predictable",Instant Start,N/A,93,72,43,C,0,"None","PR Fours >= 4 at Start","None (Start trigger)",PLAUSIBLE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+94,KING_SPADE_WILD_TOPDECK,"K♠ natural","Wild Sovereignty (Topdeck)",Action,N/A,94,73,93,C,8,"K♠ exiled","DP >= 2","ROBUST (Aces)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+95,TEN_DIAMOND_PAIRED_MIMIC_SUPER_SIX,"10♦ + any Two","Paired Mimic ⭐6",Action,N/A,95,N/A,97,C,12,"+1-2 discards for Deep Draw","Hand cards","NARROW (K♠)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+96,KING_SPADE_WILD_RECYCLE,"K♠ natural","Wild Sovereignty (5-Recycle)",Action,N/A,96,74,95,C,8,"K♠ exiled","DP >= 2","ROBUST (Aces)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+97,TEN_DIAMOND_PAIRED_MIMIC_SUPER_SEVEN,"10♦ + any Two","Paired Mimic ⭐7",Action,N/A,97,N/A,99,C,12,"10♦ Exile-Bound, +1 Two card","DP >= 4","NARROW (K♠)",RARE,LOW,NOT_IMPLEMENTED,written-only,LOW
+98,SUDDEN_DEATH_ACTIVATION,"RJ+BJ or 4-of-a-kind","Sudden Death Activation",Action,N/A,98,N/A,96,C,16,"Multi-card combo (RJ+BJ or 4-of-a-kind)","RJ+BJ or 4-of-a-kind, vulnerable enemy OTT","NARROW (⭐A only)",CONSTRUCTED_ONLY,VERY_HIGH,NOT_IMPLEMENTED,written-only,LOW
+99,KING_SPADE_WILD_BOUNCE,"K♠ natural","Wild Sovereignty (3-Bounce)",Action,N/A,99,75,98,D,8,"K♠ exiled","OTT target","ROBUST (Aces, Guard)",RARE,LOW,MATCH,core-advanced-and-unrestricted,HIGH
+100,SIX_SUPER_DIG,"⭐6 (2 Sixes)","Super Dig",Action,N/A,100,N/A,100,D,12,"2 Sixes committed",">=1 other hand card","NARROW (K♠)",RARE,LOW,DEFECT_CONTAMINATED,core-unrestricted-only,MODERATE
+101,SEVEN_SUPER_TOPDECK,"⭐7 (2 Sevens)","Sequential Topdeck",Action,N/A,101,N/A,101,D,14,"2 Sevens committed","DP >= 4","NARROW (K♠)",RARE,LOW,DEFECT_CONTAMINATED,core-unrestricted-only,MODERATE

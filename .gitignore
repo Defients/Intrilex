@@ -36,6 +36,10 @@ scripts/remove-debug2.cjs
 scripts/archive/add-debug.cjs
 scripts/archive/add-debug2.cjs
 scripts/archive/diag-*.mjs
+# One-off diagnostic scripts (read temporary local files; not permanent tooling)
+scripts/diag*.cjs
+# Balance-check scratch logs
+reports/balance-check/debug.log
 # Supabase CLI local scratch files
 supabase/.temp/
 # Terminal outbox SQLite (generated during testing)
