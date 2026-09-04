@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "productSummary": "Intrilex Simulation Lab v0.29.0 — Product Truth & Release Candidate. Built on Intrilex Engine v4.2.6 under Official Rules v4.3.1.",
+  "keyFacts": {
+    "version": "0.29.0",
+    "engineVersion": "4.2.6",
+    "rulesVersion": "4.3.1",
+    "profileCount": 3,
+    "supportedProfiles": [
+      "Advanced Core Authority — Two Player",
+      "Unrestricted Core Authority — Two Player",
+      "Complete Generic Two-Player First Contact"
+    ],
+    "networkStatus": "SUPPORTED",
+    "multiplayerStatus": "BLOCKED",
+    "testFileCount": 183,
+    "certifiedReplayCount": 121
+  },
+  "lanes": {
+    "play": {
+      "label": "Play",
+      "description": "Local, ranked, tournaments, replays",
+      "routes": [
+        {
+          "route": "/play",
+          "label": "Play Hub",
+          "description": "Game start, resume, and new match setup"
+        },
+        {
+          "route": "/play/new",
+          "label": "New Game",
+          "description": "Configure a match vs AI or online"
+        },
+        {
+          "route": "/play/academy",
+          "label": "Academy",
+          "description": "5 sequential interactive lessons"
+        },
+        {
+          "route": "/puzzles",
+          "label": "Puzzles",
+          "description": "Progressive puzzle ladder"
+        },
+        {
+          "route": "/play/replays",
+          "label": "Replay Library",
+          "description": "Browse, watch, and verify replays"
+        },
+        {
+          "route": "/tournaments",
+          "label": "Tournaments",
+          "description": "AI bracket tournaments"
+        },
+        {
+          "route": "/seasons",
+          "label": "Ranked Seasons",
+          "description": "Ranked play, placements, and leaderboards"
+        }
+      ]
+    },
+    "learn": {
+      "label": "Learn",
+      "description": "Academy, puzzles, rules, card reference",
+      "routes": [
+        {
+          "route": "/rules",
+          "label": "Rulebook",
+          "description": "Complete player rulebook"
+        },
+        {
+          "route": "/play/academy",
+          "label": "Academy",
+          "description": "Interactive tutorial lessons"
+        },
+        {
+          "route": "/puzzles",
+          "label": "Puzzles",
+          "description": "Puzzle ladder with progression"
+        },
+        {
+          "route": "/cards",
+          "label": "Card Reference",
+          "description": "All 54 canonical card faces"
+        }
+      ]
+    },
+    "lab": {
+      "label": "Lab",
+      "description": "Watch, Caster, mechanics, ranks, evidence, traces, branches, diagnostics",
+      "routes": [
+        {
+          "route": "/watch",
+          "label": "Watch",
+          "description": "Match theatre"
+        },
+        {
+          "route": "/caster",
+          "label": "Caster",
+          "description": "Live replay broadcast"
+        },
+        {
+          "route": "/replays",
+          "label": "Replays",
+          "description": "Verification"
+        },
+        {
+          "route": "/history",
+          "label": "History",
+          "description": "Match ledger"
+        },
+        {
+          "route": "/mechanics",
+          "label": "Mechanics",
+          "description": "Atlas"
+        },
+        {
+          "route": "/synergies",
+          "label": "Synergies",
+          "description": "Relationships"
+        },
+        {
+          "route": "/ranks",
+          "label": "Ranks",
+          "description": "Power observatory"
+        },
+        {
+          "route": "/compare",
+          "label": "Compare",
+          "description": "Matched cohorts"
+        },
+        {
+          "route": "/traces",
+          "label": "Traces",
+          "description": "Decision intelligence"
+        },
+        {
+          "route": "/branches",
+          "label": "Branches",
+          "description": "Counterfactual lab"
+        },
+        {
+          "route": "/diagnostics",
+          "label": "Diagnostics",
+          "description": "Policy behavior"
+        },
+        {
+          "route": "/tournament",
+          "label": "Tournament",
+          "description": "AI bracket"
+        },
+        {
+          "route": "/evidence",
+          "label": "Evidence",
+          "description": "Integrity and provenance"
+        },
+        {
+          "route": "/intelligence",
+          "label": "Analytics AI",
+          "description": "Ollama interpretation"
+        }
+      ]
+    }
+  },
+  "limitations": [
+    {
+      "id": "MULTIPLAYER-01",
+      "title": "Canonical 3-4 player Multiplayer module is not available",
+      "severity": "by-design"
+    },
+    {
+      "id": "OPTMODULES-01",
+      "title": "Optional modules are not available",
+      "severity": "by-design"
+    },
+    {
+      "id": "EVENTSTEP-01",
+      "title": "Event-level state stepping is not available",
+      "severity": "technical"
+    },
+    {
+      "id": "ADVANCED-REPLAY-ONLY",
+      "title": "Advanced Core has replay-only systems",
+      "severity": "profile-scope"
+    },
+    {
+      "id": "BROWSER-TESTS-01",
+      "title": "Browser UI smoke and E2E certification require Chromium",
+      "severity": "environment"
+    },
+    {
+      "id": "VENDOR-01",
+      "title": "Vendor engine directory may not be present in all workspaces",
+      "severity": "environment"
+    },
+    {
+      "id": "SEC-01-HISTORY",
+      "title": "Git history contains a credential-bearing path (scripts/upload-key.cjs)",
+      "severity": "security-debt"
+    },
+    {
+      "id": "POLICY-TIER-01",
+      "title": "Lookahead, Tournament, and Human-meta-proxy policy tiers are not yet established",
+      "severity": "evidence"
+    },
+    {
+      "id": "BALANCE-01",
+      "title": "No numerical card balance changes have been introduced",
+      "severity": "design"
+    },
+    {
+      "id": "SPECTATOR-01",
+      "title": "Spectator mode uses NEUTRAL projection with a 50-spectator limit",
+      "severity": "technical"
+    }
+  ]
+}

@@ -27,10 +27,10 @@ test('analytics-ai ui: evidence workspace no longer embeds the Analytics AI pane
   assert.doesNotMatch(js, /analytics-ai-mount/);
 });
 
-test('analytics-ai ui: router defines /intelligence route under System section', async () => {
+test('analytics-ai ui: router defines /intelligence route under Lab section', async () => {
   const js = await read('apps/lab-web/src/router.js');
   assert.match(js, /\['\/intelligence','✦','Analytics AI','Ollama interpretation'\]/);
-  assert.match(js, /System.*routes: \['\/evidence', '\/intelligence'\]/);
+  assert.match(js, /Lab.*routes:.*'\/intelligence'/);
   assert.match(js, /'\/intelligence':'Optional local-LLM/);
 });
 

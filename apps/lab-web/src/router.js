@@ -5,6 +5,16 @@
 import { esc } from './state.js';
 
 export const WORKSPACES = [
+  // Play lane
+  ['/play','🎮','Play','Local, ranked, and online'],
+  ['/play/academy','🎓','Academy','Interactive lessons'],
+  ['/puzzles','🧩','Puzzles','Progressive ladder'],
+  ['/tournaments','🏆','Tournaments','AI bracket play'],
+  ['/seasons','📅','Seasons','Ranked play and leaderboards'],
+  // Learn lane
+  ['/rules','📖','Rules','Complete rulebook'],
+  ['/cards','🃏','Cards','Card reference'],
+  // Lab lane
   ['/watch','◈','Watch','Match theatre'],
   ['/caster','🎙','Caster','Live replay broadcast'],
   ['/replays','▶','Replays','Verification'],
@@ -18,9 +28,10 @@ export const WORKSPACES = [
   ['/diagnostics','⚙','Diagnostics','Policy behavior'],
   ['/tournament','🏆','Tournament','AI bracket'],
   ['/evidence','◎','Evidence','Integrity'],
+  ['/intelligence','✦','Analytics AI','Ollama interpretation'],
+  // Account lane
   ['/release-notes','✧','Release Notes','What\'s new'],
   ['/profile','👤','Profile','Player profile'],
-  ['/intelligence','✦','Analytics AI','Ollama interpretation'],
   ['/achievements','🏆','Achievements','56 launch achievements'],
   ['/settings','⚙','Settings','Display, network, and account'],
   ['/auth','⊕','Sign In','Account authentication']
@@ -29,6 +40,16 @@ export const WORKSPACES = [
 export const TITLES = Object.fromEntries(WORKSPACES.map(([route,,label]) => [route,label]));
 
 export const SUBTITLES = {
+  // Play lane
+  '/play':'Game hub — local play vs AI, online Direct Duel, resume saves, and new match setup.',
+  '/play/academy':'5 sequential interactive lessons covering core mechanics, responses, counters, and royal cards.',
+  '/puzzles':'Progressive puzzle ladder with localStorage progress tracking and increasing difficulty.',
+  '/tournaments':'AI-vs-AI bracket tournaments with AB/BA seat-swap fairness and post-tournament analytics.',
+  '/seasons':'Ranked play with Glicko-2 ratings, seasons, placements, and public leaderboards.',
+  // Learn lane
+  '/rules':'The complete player rulebook with stylized typography, sticky table of contents, and collapsible parts.',
+  '/cards':'Inspect all 54 canonical card faces in Board, Lite, and Full Zoom modes.',
+  // Lab lane
   '/watch':'Canonical match truth with semantic stepping and causal evidence.',
   '/caster':'Watch a completed AI-vs-AI match unfold live with synchronized Ollama commentary. An observability instrument disguised as a broadcast experience.',
   '/replays':'Verify, search, compare, and investigate retained match evidence.',
@@ -37,7 +58,7 @@ export const SUBTITLES = {
   '/ranks':'Cohort-relative rank power profiles, counterfactual decision value, and balance watchlist.',
   '/compare':'Policy, seat, campaign, and matched-cohort differences without canon mixing.',
   '/history':'Per-match ledger with full telemetry, sortable columns, and detail inspector.',
-  '/evidence':'Formula registry, provenance, capabilities, anomalies, and release integrity.',
+  '/evidence':'Evidence epoch, policy-strength tiers, admissibility disclosure, formula registry, provenance, and release integrity.',
   '/release-notes':'What\'s new in each version — changelog with version summaries and release details.',
   '/intelligence':'Optional local-LLM analytics interpretation grounded in the active simulation dataset. Deterministic warnings are computed locally; LLM interpretations are clearly labelled.',
   '/traces':'Per-decision traces with score decomposition, reason codes, and rule audit.',
@@ -52,7 +73,7 @@ export const SUBTITLES = {
 
 export const LEGAL_MODES = new Set(['/privacy', '/terms']);
 
-export const LANDING_MODES = new Set(['/', '/dev', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles', '/caster']);
+export const LANDING_MODES = new Set(['/', '/dev', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/cards', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles', '/caster']);
 
 export const isPlayRoute = (r) => r === '/play' || r.startsWith('/play/');
 
@@ -68,11 +89,14 @@ export function route() {
 }
 
 export function renderNavigation() {
-  // Group workspaces into sections for visual hierarchy
+  // Three-lane product organization: PLAY, LEARN, LAB
+  // PLAY and LEARN routes link to landing/play pages; LAB routes are observatory workspaces.
+  // Profile/Settings/Auth remain in a System section at the bottom.
   const SECTIONS = [
-    { label: 'Analysis', routes: ['/watch', '/caster', '/replays', '/history', '/mechanics', '/synergies'] },
-    { label: 'Investigation', routes: ['/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament'] },
-    { label: 'System', routes: ['/evidence', '/intelligence'] },
+    { label: 'Play', routes: ['/play', '/play/academy', '/puzzles', '/tournaments', '/seasons'] },
+    { label: 'Learn', routes: ['/rules', '/cards'] },
+    { label: 'Lab', routes: ['/watch', '/caster', '/replays', '/history', '/mechanics', '/synergies', '/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament', '/evidence', '/intelligence'] },
+    { label: 'Account', routes: ['/profile', '/achievements', '/release-notes', '/settings', '/auth'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));
   const nav = document.querySelector('#workspace-nav');
