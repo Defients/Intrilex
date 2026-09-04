@@ -305,7 +305,9 @@ export function runPolicyMatch(config) {
     profileId, capabilityManifestHash: config.capabilityManifestHash ?? 'runtime-capability-manifest',
     analyticsSchemaVersion: ANALYTICS_SCHEMA_VERSION, seed: setup.seed,
     policyIdsBySeat: Object.fromEntries(policyIds.map((id, index) => [String(index + 1), id])),
-    workerCount: config.workerCount ?? 1, authorizedScope: config.authorizedScope ?? 'omniscient'
+    workerCount: config.workerCount ?? 1, authorizedScope: config.authorizedScope ?? 'omniscient',
+    evidenceEpoch: config.evidenceEpoch ?? 'post-rules-parity-repair-v0.28.1',
+    authorityHash: config.authorityHash ?? null
   });
 
   // Pending causality ledger: tracks the previous declaration's fact ID so that
@@ -560,6 +562,10 @@ export function runPolicyMatch(config) {
     matchId, matchOrdinal: config.ordinal ?? 0, seed: setup.seed, profileId, seatOrder, policyIds,
     pairedRunId: config.pairedRunId ?? null, seatSwapped: config.seatSwapped ?? false,
     engineVersion: ENGINE_VERSION, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, replayDataVersion: REPLAY_DATA_VERSION, provenanceHash: provenance.provenanceHash,
+    evidenceEpoch: config.evidenceEpoch ?? 'post-rules-parity-repair-v0.28.1',
+    postRulesParityRepair: config.postRulesParityRepair ?? true,
+    authorityHash: config.authorityHash ?? null,
+    isSelfPlay: policyIds[0] === policyIds[1],
     winner: state.winner ?? (terminationReason === 'CANONICAL_DRAW' ? 'DRAW' : 'ABORTED'), winningSeat: state.winner ? seatOrder.indexOf(state.winner) + 1 : null,
     terminationReason, completedFullTurns: Math.max(0, state.fullTurnSequence - 1),
     ...semanticCounters,
@@ -581,13 +587,15 @@ export function runPolicyMatch(config) {
     primaryMechanicOpportunityCounts: Object.fromEntries(Object.entries(primaryMechanicOpportunityCounts).sort()),
     ruleCompliance, errorCode
   };
-  const { provenanceHash: _executionProvenanceHash, labVersion: _labVersion, mechanicOpportunityCounts: _mechOppCounts, primaryMechanicOpportunityCounts: _primaryMechOppCounts, ...semanticResultCore } = summaryCore;
-  // Also strip labVersion and per-participant opportunity counts from the hash.
+  const { provenanceHash: _executionProvenanceHash, labVersion: _labVersion, mechanicOpportunityCounts: _mechOppCounts, primaryMechanicOpportunityCounts: _primaryMechOppCounts, evidenceEpoch: _evidenceEpoch, postRulesParityRepair: _postRepair, authorityHash: _authorityHash, isSelfPlay: _isSelfPlay, ...semanticResultCore } = summaryCore;
+  // Also strip labVersion, epoch metadata, and per-participant opportunity counts from the hash.
   // labVersion is a packaging label that bumps on every release (including UI/doc-only
   // changes) regardless of whether the engine changed; engineVersion and rulesVersion
   // already capture semantic identity. Including labVersion would invalidate every
   // stored matchResultHash on each version bump. Opportunity counts are diagnostic
   // telemetry that can vary with legal-action enumeration order, not core match results.
+  // evidenceEpoch/postRulesParityRepair/authorityHash/isSelfPlay are provenance metadata
+  // that describe the evidence context, not the match outcome itself.
   const hashInput = {
     ...semanticResultCore,
     participants: semanticResultCore.participants.map(p => {

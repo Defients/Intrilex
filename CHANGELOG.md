@@ -1,5 +1,55 @@
 # Changelog
 
+## v0.28.2 — Evidence Recalibration
+
+### Added
+
+- **Evidence epoch tagging** — Every match, trace, and report now carries
+  `evidenceEpoch`, `postRulesParityRepair`, `authorityHash`, and
+  `releaseIdentityHash` metadata. This prevents evidence from different
+  engine and policy epochs from being silently mixed.
+- **Policy-strength tiers** — All 20 policies are classified into tiers
+  (Fixture, Baseline, Heuristic). Lookahead, Tournament, and Human-meta
+  proxy tiers are declared but not yet established. Claims are qualified
+  by tier; no policy is called "experienced" or "expert" without
+  benchmark support.
+- **Self-play exclusion** — Self-play matches (same policy in both seats)
+  are now flagged with `isSelfPlay` and excluded from cross-policy
+  superiority aggregates in campaign analytics.
+- **Experiment preset infrastructure** — Seven experiment presets
+  (`config/experiments/EXP-01` through `EXP-07`) with reproducible
+  specifications, hypothesis, independent variable, metrics,
+  falsification criterion, and prerequisite gates.
+- **Experiment runner** — `scripts/run-experiment.mjs` executes
+  experiment presets against the repaired engine, producing
+  evidence-epoch-tagged results with admissibility disclosure.
+- **Seven post-repair experiments** — All seven proposed experiments
+  executed against the repaired engine:
+  - EXP-01: 2B2R Ultra hold-vs-fire policy ablation
+  - EXP-02: Black Joker Board Lock lead-vs-comeback
+  - EXP-03: 10♥ Tempo Spike opportunity cost
+  - EXP-04: Queen Fortress breach window
+  - EXP-05: 4♠ Total Clear rebound analysis
+  - EXP-06: Unrestricted seat-balance benchmark
+  - EXP-07: Counter retention value calibration
+- **Post-repair balance report** — `reports/balance-check-v0.28.2/`
+  contains the evidence recalibration report with missingness display,
+  invalidated-conclusion flags, and admissibility disclosure.
+- **Evidence epoch UI** — The `/evidence` workspace now shows evidence
+  epoch metadata, policy-strength tiers, and admissibility disclosure.
+- **Experiment preset selection** — The experiment controls panel now
+  includes a preset dropdown for reproducible experiment configuration.
+
+### Changed
+
+- Version surfaces updated to 0.28.2.
+- Campaign semantic object now includes `evidenceEpoch`,
+  `postRulesParityRepair`, `authorityHash`, and `releaseIdentityHash`.
+- Campaign aggregate now includes epoch fields and `selfPlayExcluded` flag.
+- Match summaries now include `evidenceEpoch`, `postRulesParityRepair`,
+  `authorityHash`, and `isSelfPlay` fields (excluded from matchResultHash).
+- Run provenance now includes `evidenceEpoch` and `authorityHash`.
+
 ## v0.28.1 — Rules-Parity Hotfix
 
 ### Fixed

@@ -1,0 +1,26 @@
+{
+  "experimentId": "EXP-02-BOARD-LOCK-LEAD",
+  "schemaVersion": "1.0.0",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "hypothesis": "Black Joker Board Lock functions primarily as an asymmetric snowball finisher when the activator already possesses a point lead, and offers low utility when trailing.",
+  "authorityProfile": "core-advanced-authority",
+  "independentVariable": "Point differential at Board Lock declaration (activator PR points - opponent PR points)",
+  "controlledVariables": ["profile core-advanced-authority", "engine 4.2.6"],
+  "policyPairs": "full-12-policy-round-robin",
+  "matchCount": 200,
+  "decisionLimit": 3600,
+  "metrics": [
+    "winConversionRateAhead (lead >= 5 pts)",
+    "winConversionRateEven (lead within +/-4 pts)",
+    "winConversionRateBehind (deficit >= 5 pts)",
+    "averagePointsScoredByTrailingPlayerDuringLock"
+  ],
+  "stratification": ["activator point lead", "presence of opponent 3-Red or star-Ace counter in hand"],
+  "replayRetention": "All matches with Board Lock activation",
+  "counterfactualUsage": "Replay branching from Board Lock declaration comparing Board Lock vs Hold BJ for Scuttle",
+  "falsificationCriterion": "If trailing players activating Board Lock win >= 45% of matches, the pure snowball hypothesis is falsified.",
+  "minimumUsefulEvidence": "50 observed activations stratified across point differentials",
+  "stopCondition": "100 total Board Lock activations recorded",
+  "prerequisiteGates": ["IMPL-01 fixed (BJ scoring rider)"]
+}

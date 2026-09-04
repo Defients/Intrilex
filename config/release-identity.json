@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
   "productName": "Intrilex Simulation Lab",
-  "version": "0.28.1",
-  "releaseTitle": "Rules-Parity Hotfix",
+  "version": "0.28.2",
+  "releaseTitle": "Evidence Recalibration",
   "buildKind": "RANKED_DUEL_PLAYER_SHELL",
   "engineVersion": "4.2.6",
   "rulesVersion": "4.3.1",
@@ -29,7 +29,7 @@
     "deploy",
     "evidence"
   ],
-  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.28.1",
+  "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v0.28.2",
   "releaseDate": "2026-09-04",
-  "integrityHash": "cef7ee72dab583d41ec37ee3fec7ab6c"
+  "integrityHash": "a00c688f34832a92232e00a3831d3b82"
 }

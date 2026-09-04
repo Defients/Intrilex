@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "1.0.0",
+  "experimentId": "EXP-03-TEN-HEART-OPPORTUNITY-COST",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0",
+  "releaseIdentityHash": "cef7ee72dab583d41ec37ee3fec7ab6c",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "labVersion": "0.28.1",
+  "profileId": "core-advanced-authority",
+  "hypothesis": "Playing 10♥ for Tempo Spike (+2 MT, draw 1) is only mathematically superior to scoring 10 points when the active player can immediately score >= 10 points with the bonus actions.",
+  "independentVariable": "Policy decision branch on holding 10♥: Play for Effect (Tempo) vs Play for Points (Score 10)",
+  "falsificationCriterion": "If scoring 10 points consistently yields higher win rates regardless of hand composition, 10♥ tempo mode is falsified as overtuned.",
+  "prerequisiteGates": [
+    "IMPL-12 fixed (counter matrix)"
+  ],
+  "policyStrengthTiers": {
+    "random-legal": "fixture",
+    "score-rush": "heuristic",
+    "control": "heuristic",
+    "tempo": "heuristic",
+    "value": "heuristic",
+    "hybrix-rusher": "heuristic",
+    "hybrix-defender": "heuristic",
+    "hybrix-trickster": "heuristic",
+    "hybrix-sniper": "heuristic",
+    "hybrix-rusher-hard": "heuristic",
+    "hybrix-defender-hard": "heuristic",
+    "hybrix-trickster-hard": "heuristic",
+    "hybrix-sniper-hard": "heuristic",
+    "hybrix-rusher-easy": "baseline",
+    "hybrix-defender-easy": "baseline",
+    "hybrix-rusher-nightmare": "heuristic",
+    "hybrix-defender-nightmare": "heuristic",
+    "hybrix-support": "heuristic",
+    "hybrix-tank": "heuristic",
+    "hybrix-baseline": "baseline"
+  },
+  "matchCount": 50,
+  "completedMatchCount": 50,
+  "durationMs": 31780,
+  "startedAt": "2026-09-04T12:40:57.239Z",
+  "experimentHash": "d013ae09d00708f069bed224ab025a4e389501e3659036c00ea638109d9393f6",
+  "canonicalResultHash": "aa0bc3fc981de58e28933b578fc1985ef3e9a91f91623928e955a6e4655cb9b3",
+  "aggregateHash": "39176f0f70508afd39a49e3f5fddf0af1b04ae4a2912ce53ddbc656eb2c1f98a",
+  "seat1WinRate": 0.28,
+  "seat1Wilson95": [
+    0.17474170665911232,
+    0.4166512369595657
+  ],
+  "selfPlayExcluded": true,
+  "terminationCounts": {
+    "NORMAL_VICTORY": 50
+  },
+  "metrics": {
+    "totalMatches": 50,
+    "completedMatches": 50,
+    "averageTurns": 6.76,
+    "seat1WinRate": 0.28,
+    "seat1Wilson95": [
+      0.17474170665911232,
+      0.4166512369595657
+    ],
+    "boardLockActivations": 0,
+    "totalClearActivations": 0,
+    "ultraActivations": 49,
+    "selfPlayMatches": 50,
+    "crossPolicyMatches": 0
+  },
+  "policies": {
+    "score-rush": {
+      "games": 34,
+      "wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 128,
+      "responsesPlayed": 45,
+      "responsesDeclined": 0,
+      "selfPlayGames": 17,
+      "crossPolicyGames": 17,
+      "winRate": 0,
+      "wilson95": [
+        0,
+        0.1843181350088518
+      ]
+    },
+    "tempo": {
+      "games": 34,
+      "wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 160,
+      "responsesPlayed": 60,
+      "responsesDeclined": 0,
+      "selfPlayGames": 17,
+      "crossPolicyGames": 17,
+      "winRate": 0,
+      "wilson95": [
+        0,
+        0.1843181350088518
+      ]
+    },
+    "value": {
+      "games": 32,
+      "wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 141,
+      "responsesPlayed": 40,
+      "responsesDeclined": 0,
+      "selfPlayGames": 16,
+      "crossPolicyGames": 16,
+      "winRate": 0,
+      "wilson95": [
+        0,
+        0.1936076805344365
+      ]
+    }
+  },
+  "matchups": {
+    "score-rush__vs__score-rush": {
+      "games": 17,
+      "seat1Wins": 6,
+      "seat2Wins": 11,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 109,
+      "totalResponses": 45,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 6.411764705882353,
+      "meanResponses": 2.6470588235294117,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.17309720397243744,
+        0.5869963651478132
+      ]
+    },
+    "tempo__vs__tempo": {
+      "games": 17,
+      "seat1Wins": 2,
+      "seat2Wins": 15,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 121,
+      "totalResponses": 60,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 7.117647058823529,
+      "meanResponses": 3.5294117647058822,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.03287977376379267,
+        0.3433635059488588
+      ]
+    },
+    "value__vs__value": {
+      "games": 16,
+      "seat1Wins": 6,
+      "seat2Wins": 10,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 108,
+      "totalResponses": 40,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 6.75,
+      "meanResponses": 2.5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.18481232558863633,
+        0.6135895945449727
+      ]
+    }
+  },
+  "interpretationBoundary": "Policy-conditioned Advanced Core observation. Associations are not causal proof; unsupported branches remain fail-closed. Self-play matches excluded from cross-policy superiority aggregates.",
+  "admissibilityDisclosure": {
+    "admissible": true,
+    "epoch": "post-rules-parity-repair-v0.28.1",
+    "profile": "core-advanced-authority",
+    "selfPlayExcluded": true,
+    "notes": [
+      "Prerequisite gates: IMPL-12 fixed (counter matrix)",
+      "Policy strength tiers: claims qualified by tier (fixture/baseline/heuristic). No lookahead/tournament/human-meta-proxy policies established yet."
+    ]
+  }
+}

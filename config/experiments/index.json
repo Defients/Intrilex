@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0.0",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "description": "Experiment presets for the v0.28.2 Evidence Recalibration sprint. Each preset defines a reproducible experiment with hypothesis, independent variable, metrics, falsification criterion, and prerequisite gates.",
+  "experiments": [
+    {
+      "experimentId": "EXP-01-2B2R-HOLD-FIRE",
+      "presetFile": "EXP-01-2B2R-HOLD-FIRE.json",
+      "category": "policy-ablation",
+      "watchlistItem": "WL-01",
+      "profile": "core-advanced-authority",
+      "estimatedMatches": 600
+    },
+    {
+      "experimentId": "EXP-02-BOARD-LOCK-LEAD",
+      "presetFile": "EXP-02-BOARD-LOCK-LEAD.json",
+      "category": "observational",
+      "watchlistItem": "WL-05",
+      "profile": "core-advanced-authority",
+      "estimatedMatches": 200
+    },
+    {
+      "experimentId": "EXP-03-TEN-HEART-OPPORTUNITY-COST",
+      "presetFile": "EXP-03-TEN-HEART-OPPORTUNITY-COST.json",
+      "category": "counterfactual",
+      "watchlistItem": "WL-02",
+      "profile": "core-advanced-authority",
+      "estimatedMatches": 150
+    },
+    {
+      "experimentId": "EXP-04-QUEEN-FORTRESS-WINDOW",
+      "presetFile": "EXP-04-QUEEN-FORTRESS-WINDOW.json",
+      "category": "observational",
+      "watchlistItem": "WL-03",
+      "profile": "core-advanced-authority",
+      "estimatedMatches": 120
+    },
+    {
+      "experimentId": "EXP-05-TOTAL-CLEAR-REBOUND",
+      "presetFile": "EXP-05-TOTAL-CLEAR-REBOUND.json",
+      "category": "observational",
+      "watchlistItem": "WL-04",
+      "profile": "core-advanced-authority",
+      "estimatedMatches": 200
+    },
+    {
+      "experimentId": "EXP-06-UNRESTRICTED-BENCHMARK",
+      "presetFile": "EXP-06-UNRESTRICTED-BENCHMARK.json",
+      "category": "seat-balance-benchmark",
+      "watchlistItem": null,
+      "profile": "core-unrestricted-authority",
+      "estimatedMatches": 576
+    },
+    {
+      "experimentId": "EXP-07-COUNTER-RETENTION-VALUE",
+      "presetFile": "EXP-07-COUNTER-RETENTION-VALUE.json",
+      "category": "policy-ablation",
+      "watchlistItem": null,
+      "profile": "core-advanced-authority",
+      "estimatedMatches": 600
+    }
+  ],
+  "policyStrengthTiers": {
+    "fixture": "Tests legality, not strategy",
+    "baseline": "Creates reproducible behavior",
+    "heuristic": "Makes locally informed choices",
+    "lookahead": "Evaluates limited continuations (not yet established)",
+    "tournament": "Passes defined competitive benchmarks (not yet established)",
+    "human-meta-proxy": "Approximates human play patterns (not yet established)"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "experimentId": "EXP-01-2B2R-HOLD-FIRE",
+  "schemaVersion": "1.0.0",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "hypothesis": "Policy over-activation of 2B2R Ultra leads to sub-optimal long-term win rates due to hand dilution; holding components preserves strategic flexibility and improves match outcomes.",
+  "authorityProfile": "core-advanced-authority",
+  "independentVariable": "AI policy 2B2R valuation weight (ultraBonus: default +300 vs ablated 0 vs negative -200)",
+  "controlledVariables": ["engine 4.2.6", "profile core-advanced-authority", "identical deck shuffles", "identical opponent policies"],
+  "policyPairs": [
+    ["tempo", "control"],
+    ["value", "score-rush"]
+  ],
+  "conditions": [
+    { "conditionId": "default-ultra-bonus", "ultraBonus": 300, "label": "Default +300" },
+    { "conditionId": "ablated-ultra-bonus", "ultraBonus": 0, "label": "Ablated 0" },
+    { "conditionId": "negative-ultra-bonus", "ultraBonus": -200, "label": "Negative -200" }
+  ],
+  "matchCountPerCondition": 200,
+  "seedCount": 100,
+  "decisionLimit": 3600,
+  "metrics": ["overallMatchWinRate", "averageTerminalTurns", "averageHandQualityAtTurn5"],
+  "stratification": ["seat (P1 vs P2)", "opening hand singleton count (holding A/K/Q vs not)"],
+  "replayRetention": "Certified replays retained for all matches ending in <= 4 Full Turns",
+  "counterfactualUsage": "Apply counterfactual.mjs at the 2B2R decision point to evaluate 3-turn downstream state projection",
+  "falsificationCriterion": "If the policy that suppresses early 2B2R achieves an equal or higher win rate across 200 matches, the hypothesis of 2B2R mechanical overpoweredness is falsified (confirmed as an AI policy artifact).",
+  "minimumUsefulEvidence": "100 paired matches with stat-sig p < 0.05",
+  "stopCondition": "Completion of 200 paired matches or early statistical significance boundary reached",
+  "prerequisiteGates": ["IMPL-01 fixed", "POL-A3 fixed"]
+}

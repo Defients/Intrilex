@@ -55,13 +55,24 @@ export function assertPolicySurfaceAvailable(capabilityManifest) {
 
 /**
  * Create an immutable policy definition with a content-hash fingerprint.
- * @param {{ policyId: string, version: string, traits: Record<string, unknown>, choose: Function }} def
- * @returns {{ policyId: string, version: string, traits: Record<string, unknown>, policyHash: string, choose: Function }}
+ * @param {{ policyId: string, version: string, traits: Record<string, unknown>, choose: Function, strengthTier?: string }} def
+ * @returns {{ policyId: string, version: string, traits: Record<string, unknown>, policyHash: string, choose: Function, strengthTier: string }}
  */
-export function createPolicyDefinition({ policyId, version, traits, choose }) {
+export function createPolicyDefinition({ policyId, version, traits, choose, strengthTier = 'heuristic' }) {
   const policyHash = hashCanonical({ policyId, version, traits, implementation: choose.toString() });
-  return Object.freeze({ policyId, version, traits: Object.freeze({ ...traits }), policyHash, choose });
+  return Object.freeze({ policyId, version, traits: Object.freeze({ ...traits }), policyHash, choose, strengthTier });
 }
+
+/**
+ * Valid policy-strength tiers for evidence admissibility classification.
+ * - fixture: tests legality, not strategy
+ * - baseline: creates reproducible behavior
+ * - heuristic: makes locally informed choices
+ * - lookahead: evaluates limited continuations
+ * - tournament: passes defined competitive benchmarks
+ * - human-meta-proxy: approximates human play patterns
+ */
+export const POLICY_STRENGTH_TIERS = Object.freeze(['fixture', 'baseline', 'heuristic', 'lookahead', 'tournament', 'human-meta-proxy']);
 
 /**
  * Validate that a policy decision selects a legal action.

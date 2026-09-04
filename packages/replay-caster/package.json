@@ -1,6 +1,6 @@
 {
   "name": "@intrilex/replay-caster",
-  "version": "0.28.1",
+  "version": "0.28.2",
   "type": "module",
   "description": "Replay Caster v0.1 — observability instrument disguised as a broadcast experience. Replays a completed deterministic AI-vs-AI Intrilex match with live-style pacing and optional Ollama commentary. Pure observational layer; never mutates gameplay, replay data, or engine authority.",
   "exports": {

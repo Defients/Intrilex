@@ -11,6 +11,7 @@ import { populateDialogHeading } from './seo-metadata.js';
 // ── Experiment panel ──────────────────────────────────────────────
 export function renderExperimentControls() {
   document.querySelector('#experiment-controls').innerHTML = `<div class="experiment-grid">
+    <label>Experiment preset<select id="exp-preset"><option value="">Custom (manual config)</option><option value="EXP-01-2B2R-HOLD-FIRE">EXP-01: 2B2R Hold vs Fire</option><option value="EXP-02-BOARD-LOCK-LEAD">EXP-02: Board Lock Lead vs Comeback</option><option value="EXP-03-TEN-HEART-OPPORTUNITY-COST">EXP-03: 10♥ Tempo Opportunity Cost</option><option value="EXP-04-QUEEN-FORTRESS-WINDOW">EXP-04: Queen Fortress Breach Window</option><option value="EXP-05-TOTAL-CLEAR-REBOUND">EXP-05: Total Clear Rebound</option><option value="EXP-06-UNRESTRICTED-BENCHMARK">EXP-06: Unrestricted Seat Balance</option><option value="EXP-07-COUNTER-RETENTION-VALUE">EXP-07: Counter Retention Value</option></select></label>
     <label>Profile<select id="exp-profile"><option value="core-advanced-authority">Advanced Core · supported</option><option value="core-unrestricted-authority">Unrestricted Core · hidden supers + sudden death</option><option value="first-contact-trigger-closure">Complete First Contact</option></select></label>
     <div class="inline-fields"><label>Seat 1<select id="exp-p1">${policyOptions('score-rush')}</select></label><label>Seat 2<select id="exp-p2">${policyOptions('control')}</select></label></div>
     <div class="inline-fields"><label>Matches<input id="exp-count" type="number" min="1" max="10000" value="100"></label><label>Workers<select id="exp-workers"><option>1</option><option selected>2</option><option>4</option></select></label></div>
@@ -24,7 +25,7 @@ export function renderExperimentControls() {
   document.querySelector('#run-experiment').addEventListener('click', runBrowserCampaign);
   document.querySelector('#cancel-experiment').addEventListener('click', cancelBrowserCampaign);
   document.querySelector('#reset-experiment').addEventListener('click', resetCampaignResults);
-  for (const id of ['exp-profile', 'exp-p1', 'exp-p2', 'exp-count', 'exp-workers', 'exp-seed'])
+  for (const id of ['exp-preset', 'exp-profile', 'exp-p1', 'exp-p2', 'exp-count', 'exp-workers', 'exp-seed'])
     document.querySelector(`#${id}`).addEventListener('change', updatePreflight);
 }
 
@@ -35,6 +36,7 @@ export function updatePreflight() {
   const seed = document.querySelector('#exp-seed').value;
   const p1 = document.querySelector('#exp-p1').value;
   const p2 = document.querySelector('#exp-p2').value;
+  const preset = document.querySelector('#exp-preset')?.value ?? '';
   const scope = p1 === p2 ? 'self-play focused pair' : 'focused pair';
   const valid = Number.isInteger(n) && n >= 1 && n <= 10000;
   const runBtn = document.querySelector('#run-experiment');
@@ -45,7 +47,8 @@ export function updatePreflight() {
   }
   runBtn.disabled = false;
   const seatDesign = p1 === p2 ? 'self-play' : 'matched AB/BA seat-swap';
-  document.querySelector('#preflight').innerHTML = `<b>Preflight:</b> ${esc(scope)} · ${esc(p1)} vs ${esc(p2)} · ${fmt(n)} matches · ${w} browser worker${w === 1 ? '' : 's'} · ${esc(seed === 'ordinal-hash' ? 'ordinal-hash seed' : 'fixed seed')} · ${esc(seatDesign)} · paired McNemar + bootstrap · semantic telemetry v4.1 · unsupported systems fail closed.`;
+  const presetLabel = preset ? `preset ${esc(preset)} · ` : '';
+  document.querySelector('#preflight').innerHTML = `<b>Preflight:</b> ${presetLabel}${esc(scope)} · ${esc(p1)} vs ${esc(p2)} · ${fmt(n)} matches · ${w} browser worker${w === 1 ? '' : 's'} · ${esc(seed === 'ordinal-hash' ? 'ordinal-hash seed' : 'fixed seed')} · ${esc(seatDesign)} · paired McNemar + bootstrap · semantic telemetry v4.1 · evidence epoch: post-rules-parity-repair · unsupported systems fail closed.`;
 }
 
 // ── Global bindings ───────────────────────────────────────────────
