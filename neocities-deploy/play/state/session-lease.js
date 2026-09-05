@@ -27,6 +27,7 @@ function getBroadcastChannel() {
 let _heartbeatTimer = null;
 let _currentLease = null;
 let _channel = null;
+let _pagehideReleaseInstalled = false;
 
 /**
  * Acquire a session lease for a match.
@@ -73,6 +74,7 @@ export async function acquireLease(sessionId, tabId) {
 
   // Listen for lease challenges from other tabs
   setupLeaseListener(key, tabId, sessionId);
+  installPagehideRelease();
 
   return { acquired: true, holder: null };
 }
@@ -163,6 +165,22 @@ export function generateTabId() {
 }
 
 // ─── Internal helpers ───────────────────────────────────────────
+
+/**
+ * Release the current lease when this document is actually discarded. A
+ * same-tab reload creates a fresh JS realm and tab id; without this release,
+ * the restored page mistakes its own still-live lease for another tab until
+ * TTL expiry. BFCache navigations retain the document and must retain control.
+ */
+function installPagehideRelease() {
+  if (_pagehideReleaseInstalled || typeof window === 'undefined') return;
+  _pagehideReleaseInstalled = true;
+  window.addEventListener('pagehide', (event) => {
+    if (event.persisted || !_currentLease) return;
+    const { sessionId, tabId } = _currentLease;
+    releaseLease(sessionId, tabId);
+  }, { capture: true });
+}
 
 function readLease(key) {
   try {

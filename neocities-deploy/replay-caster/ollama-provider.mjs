@@ -41,13 +41,15 @@ export const OLLAMA_ERROR = Object.freeze({
  * @param {number} [opts.temperature] - sampling temperature
  * @param {object} [opts.client] - inject an OllamaClient (browser/Node)
  * @param {function} [opts.fetchImpl] - inject fetch (Node default path)
+ * @param {boolean} [opts.stream] - enable streaming (default false)
  */
 export class OllamaCommentaryProvider {
-  constructor({ endpoint, model, timeoutMs, temperature, client, fetchImpl } = {}) {
+  constructor({ endpoint, model, timeoutMs, temperature, client, fetchImpl, stream } = {}) {
     this._model = model || '';
     this._temperature = Number.isFinite(temperature) ? temperature : 0.4;
     this._client = client || null;
     this._clientOpts = { endpoint, timeoutMs, fetchImpl };
+    this._stream = stream === true;
     this._providerName = 'ollama';
   }
 
@@ -80,10 +82,12 @@ export class OllamaCommentaryProvider {
   /**
    * Generate commentary for a single beat.
    * @param {object} input - output of buildCommentaryInput
-   * @param {AbortSignal} [signal]
+   * @param {object} [opts]
+   * @param {AbortSignal} [opts.signal]
+   * @param {function} [opts.onToken] - streaming callback (textChunk) => void
    * @returns {Promise<{ok, record, error, cached}>}
    */
-  async generateCommentary(input, { signal } = {}) {
+  async generateCommentary(input, { signal, onToken } = {}) {
     if (!this._model) {
       return { ok: false, record: null, error: OLLAMA_ERROR.MODEL_NOT_FOUND, cached: false };
     }
@@ -93,13 +97,18 @@ export class OllamaCommentaryProvider {
       return { ok: false, record: null, error: OLLAMA_ERROR.UNREACHABLE, cached: false };
     }
     const { messages } = buildCommentaryPrompt(input);
+    const useStream = this._stream && typeof onToken === 'function';
+    const bufferedChunks = [];
     let result;
     try {
       result = await client.chat({
         model: this._model,
         messages,
-        stream: false,
+        stream: useStream,
         options: { temperature: this._temperature, num_predict: 512 },
+        // Model tokens are untrusted until the complete JSON record passes
+        // schema validation and spoiler lint. Never expose raw partial output.
+        onToken: useStream ? (chunk) => bufferedChunks.push(String(chunk ?? '')) : undefined,
         signal
       });
     } catch (err) {
@@ -113,6 +122,7 @@ export class OllamaCommentaryProvider {
     if (!accepted.accepted) {
       return { ok: false, record: accepted.record, error: accepted.error || OLLAMA_ERROR.MALFORMED_RESPONSE, cached: false };
     }
+    if (useStream) onToken(accepted.record.commentary);
     return { ok: true, record: accepted.record, error: null, cached: false };
   }
 }

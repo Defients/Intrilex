@@ -20,8 +20,7 @@
 // ═══════════════════════════════════════════════════════════════
 import {
   CURRICULUM,
-  curriculumByTier,
-  findLesson as findLessonV2,
+  curriculumByTier,  findLesson as findLessonV2,
   V1_TO_V2_LESSON_MAP,
   TierId,
 } from './curriculum.mjs';
@@ -41,6 +40,7 @@ import {
   masteryTierDisplay,
   MasteryTier,
 } from './academy-mastery.mjs';
+import { getRecommendedLessons } from '../puzzle/puzzle-progress.mjs';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -238,6 +238,30 @@ export function renderAcademy(opts = {}) {
     .map((tier) => renderTierSection(tier, progress))
     .join('');
 
+  // v0.30.0: Puzzle → lesson recommendations
+  const recommendations = getRecommendedLessons(completed);
+  const recommendationsHtml = recommendations.length > 0
+    ? `<div class="academy-recommendations" data-testid="academy-recommendations" role="region" aria-label="Recommended lessons from puzzle performance">
+        <h3 class="academy-recommendations-title">Recommended for you</h3>
+        <p class="academy-recommendations-hint">Based on your puzzle performance, these lessons may help:</p>
+        <ul class="academy-recommendations-list">
+          ${recommendations.map(r => {
+            const lesson = CURRICULUM.find(l => l.id === r.lessonId);
+            if (!lesson) return '';
+            return `<li class="academy-recommendation-item">
+              <a href="#/play/academy?lesson=${esc(r.lessonId)}" data-testid="academy-recommendation-${esc(r.lessonId)}">
+                <span class="academy-recommendation-icon" aria-hidden="true">${esc(lesson.icon ?? '📖')}</span>
+                <span class="academy-recommendation-body">
+                  <strong>${esc(lesson.title)}</strong>
+                  <small>${esc(r.reason)}</small>
+                </span>
+              </a>
+            </li>`;
+          }).join('')}
+        </ul>
+      </div>`
+    : '';
+
   return `<div class="academy" data-testid="academy">
     <a class="play-setup-back" href="#/play/new" aria-label="Back to play hub">← Back</a>
     <header class="academy-header">
@@ -251,6 +275,7 @@ export function renderAcademy(opts = {}) {
       </div>
     </header>
     ${tiersHtml}
+    ${recommendationsHtml}
     <div class="academy-footer">
       <p class="academy-footer-text">All lessons use the <strong>First Contact</strong> profile — simplified rules with advanced systems disabled. You graduate to the full <strong>Advanced Core</strong> profile when ready.</p>
       <a class="academy-puzzle-link" href="#/puzzles" data-testid="academy-puzzle-link">

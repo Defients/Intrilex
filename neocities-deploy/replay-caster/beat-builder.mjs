@@ -74,11 +74,19 @@ export function buildBeats(matchResult, frames, opts = {}) {
     return { beats: [], matchId: matchResult.summary.matchId, errors: ['frames missing'] };
   }
   const summary = matchResult.summary;
-  const decisions = Array.isArray(matchResult.decisions) ? matchResult.decisions : [];
+  let decisions = Array.isArray(matchResult.decisions) ? matchResult.decisions : [];
   const traces = Array.isArray(matchResult.decisionTraces) ? matchResult.decisionTraces : [];
   const matchId = summary.matchId;
   const seatOrder = summary.seatOrder ?? ['P1', 'P2'];
   const goalBySeat = deriveGoals(frames, seatOrder);
+
+  // ── Fallback: derive decisions from replay frames when the match
+  //    result doesn't include a decisions array (e.g. the browser
+  //    runBrowserPolicyMatch doesn't expose per-decision records).
+  //    Each frame after the initial state corresponds to one command.
+  if (decisions.length === 0 && frames.length > 1) {
+    decisions = deriveDecisionsFromFrames(frames, seatOrder, summary);
+  }
 
   const beats = [];
   let sequence = 0;
@@ -153,6 +161,7 @@ function buildStructuralBeat({ matchId, sequence, kind, frame, seatOrder, goalBy
     seat: seat ?? null,
     turn: turn ?? state.fullTurnSequence ?? null,
     phase: state.phase ?? null,
+    frameIndex: frame?.frameIndex ?? 0,
     decisionId: null,
     checkpointHashBefore: null,
     checkpointHashAfter: hashCanonical(state),
@@ -227,6 +236,7 @@ function buildDecisionBeat({ matchId, sequence, decision, frame, beforeFrame, tr
     seat,
     turn,
     phase,
+    frameIndex: frame?.frameIndex ?? i,
     decisionId: trace?.decisionId ?? `DT-${matchId}-${i}`,
     checkpointHashBefore: decision.beforeStateHash ?? null,
     checkpointHashAfter: decision.afterStateHash ?? null,
@@ -312,4 +322,52 @@ function viewerVisibleEvents(events) {
       visibility: e.visibility ?? 'public',
       payload: e.payload ?? null
     }));
+}
+
+/**
+ * Derive per-decision records from replay frames when the match result
+ * doesn't include a decisions array (e.g. the browser
+ * runBrowserPolicyMatch doesn't expose per-decision records). Each
+ * frame after the initial state corresponds to one command/decision.
+ *
+ * The derived decision includes the actor (from the frame's state
+ * activePlayerId or priority), the action family/mode (from the
+ * command), and the legal action count (unknown, set to null).
+ */
+function deriveDecisionsFromFrames(frames, seatOrder, summary) {
+  const decisions = [];
+  const policyIds = summary.policyIds ?? [];
+  for (let i = 1; i < frames.length; i += 1) {
+    const frame = frames[i];
+    const beforeFrame = frames[i - 1];
+    const state = frame?.state ?? frame?.omniscientState;
+    const beforeState = beforeFrame?.state ?? beforeFrame?.omniscientState;
+    const command = frame.command ?? null;
+    const actorId = state?.activePlayerId ?? state?.priority ?? seatOrder[0];
+    const seatIndex = seatOrder.indexOf(actorId);
+    const family = command?.action?.family ?? command?.family ?? null;
+    const mode = command?.action?.mode ?? command?.mode ?? null;
+    const timingClass = command?.action?.timingClass ?? command?.timingClass ?? null;
+    const actionId = command?.action?.actionId ?? command?.actionId ?? null;
+    decisions.push({
+      decisionIndex: i - 1,
+      actorId,
+      policyId: policyIds[seatIndex] ?? null,
+      policyVersion: null,
+      phase: state?.phase ?? null,
+      turn: state?.fullTurnSequence ?? null,
+      family,
+      mode,
+      timingClass,
+      semanticClass: null,
+      actionId,
+      legalActionCount: null,
+      candidateScores: null,
+      reasonCode: null,
+      consumedMiniTurn: null,
+      beforeStateHash: beforeState ? hashCanonical(beforeState) : null,
+      afterStateHash: state ? hashCanonical(state) : null
+    });
+  }
+  return decisions;
 }

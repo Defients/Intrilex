@@ -4,50 +4,50 @@
 // Never owns authoritative state — delegates to PlaySession.
 // ═══════════════════════════════════════════════════════════════
 
-import { createSession, restoreSession, SessionState } from './play-controller.js?v=3dca2dc8fde5';
-import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=3dca2dc8fde5';
-import { getGameplaySkin } from './gameplay-skin.js?v=3dca2dc8fde5';
-import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=3dca2dc8fde5';
-import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=3dca2dc8fde5';
-import { ensureReplayFrames } from '../replay-frames.js?v=3dca2dc8fde5';
-import { state as observatoryState } from '../state.js?v=3dca2dc8fde5';
-import { buildSaveIntegrityPayload } from './save-integrity.js?v=3dca2dc8fde5';
-import { validateSnapshotPrivacy } from './play-privacy.js?v=3dca2dc8fde5';
-import { POLICY_IDS } from '../autonomy-runtime.js?v=3dca2dc8fde5';
-import { GuidanceMode } from './intelligence/action-explanation.js?v=3dca2dc8fde5';
-import './orchestration/declaration-flow.js?v=3dca2dc8fde5';
-import './state/play-lifecycle.js?v=3dca2dc8fde5';
-import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=3dca2dc8fde5';
-import { getAiBanter } from './ai-personality.js?v=3dca2dc8fde5';
-import { SoundEngine } from './play-sound.js?v=3dca2dc8fde5';
-import { ParticleSystem } from './play-particles.js?v=3dca2dc8fde5';
-import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=3dca2dc8fde5';
-import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=3dca2dc8fde5';
-import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=3dca2dc8fde5';
-import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=3dca2dc8fde5';
-import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=3dca2dc8fde5';
-import { renderRecap } from './academy/academy-recap.mjs?v=3dca2dc8fde5';
-import { state, resetState } from './play-state.js?v=3dca2dc8fde5';
-import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js?v=3dca2dc8fde5';
+import { createSession, restoreSession, SessionState } from './play-controller.js?v=75c53031ef21';
+import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=75c53031ef21';
+import { getGameplaySkin } from './gameplay-skin.js?v=75c53031ef21';
+import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=75c53031ef21';
+import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=75c53031ef21';
+import { ensureReplayFrames } from '../replay-frames.js?v=75c53031ef21';
+import { state as observatoryState } from '../state.js?v=75c53031ef21';
+import { buildSaveIntegrityPayload } from './save-integrity.js?v=75c53031ef21';
+import { validateSnapshotPrivacy } from './play-privacy.js?v=75c53031ef21';
+import { POLICY_IDS } from '../autonomy-runtime.js?v=75c53031ef21';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=75c53031ef21';
+import './orchestration/declaration-flow.js?v=75c53031ef21';
+import './state/play-lifecycle.js?v=75c53031ef21';
+import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=75c53031ef21';
+import { getAiBanter } from './ai-personality.js?v=75c53031ef21';
+import { SoundEngine } from './play-sound.js?v=75c53031ef21';
+import { ParticleSystem } from './play-particles.js?v=75c53031ef21';
+import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=75c53031ef21';
+import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=75c53031ef21';
+import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=75c53031ef21';
+import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=75c53031ef21';
+import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=75c53031ef21';
+import { renderRecap } from './academy/academy-recap.mjs?v=75c53031ef21';
+import { state, resetState } from './play-state.js?v=75c53031ef21';
+import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js?v=75c53031ef21';
 import {
   openAdvancedCardRules as openAdvancedCardRulesController,
   closeAdvancedCardRules,
   isCardInspectable,
   buildCurrentMatchContext,
   getOpenIdentity,
-} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=3dca2dc8fde5';
-import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=3dca2dc8fde5';
+} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=75c53031ef21';
+import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=75c53031ef21';
 import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
   renderNetworkQueueWaiting, renderNetworkSpectateForm, renderNetworkSpectating,
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
   renderNetworkStatusBanner, renderNetworkUnavailable,
-} from './network/network-lobby-renderer.mjs?v=3dca2dc8fde5';
-import { getMatchServerUrl, isMatchServerConfigured, validateMatchServerUrl } from './network/match-server-config.js?v=3dca2dc8fde5';
-import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=3dca2dc8fde5';
-import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=3dca2dc8fde5';
-import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=3dca2dc8fde5';
-import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=3dca2dc8fde5';
+} from './network/network-lobby-renderer.mjs?v=75c53031ef21';
+import { getMatchServerUrl, isMatchServerConfigured, validateMatchServerUrl } from './network/match-server-config.js?v=75c53031ef21';
+import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=75c53031ef21';
+import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=75c53031ef21';
+import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=75c53031ef21';
+import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=75c53031ef21';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -142,6 +142,17 @@ export async function handlePlayRoute(route, container) {
         }
       }
     } catch (err) { console.warn('[play-app] sessionStorage unavailable:', err?.message ?? err); }
+    // A /new -> /match hash transition runs the sub-route cleanup above after
+    // startNewMatch() has armed these timers. Re-arm controlled local-session
+    // resources here so the canonical match route always owns a live lease
+    // heartbeat and rolling autosave. start* functions are idempotent: each
+    // clears its previous interval before creating a replacement.
+    if (state.session && state.leaseMode === 'CONTROLLED') {
+      state.sound = state.sound || new SoundEngine();
+      state.particles = state.particles || new ParticleSystem();
+      startHeartbeat();
+      startAutosave();
+    }
     await renderActiveMatch(container);
   } else if (sub === '/replays') {
     await renderReplays(container);
@@ -174,11 +185,28 @@ async function renderNewMatch(container) {
     policyId: id,
     traits: { archetype: id.replace('hybrix-', '').replace(/-(hard|easy|nightmare|normal)$/, ''), difficulty: id.includes('-hard') ? 'hard' : id.includes('-easy') ? 'easy' : id.includes('-nightmare') ? 'nightmare' : 'normal' },
   }));
+  // v0.30.0: Check for existing save to show resume prompt
+  let saveInfo = null;
+  try {
+    if (isIndexedDBAvailable()) {
+      const autosave = await getSave('AUTOSAVE-current');
+      if (autosave && autosave.profileId) {
+        saveInfo = {
+          saveId: 'AUTOSAVE-current',
+          profileId: autosave.profileId,
+          seed: autosave.seed,
+          turnNumber: autosave.turnNumber ?? null,
+        };
+      }
+    }
+  } catch { /* ignore save detection errors */ }
   // U7: First-run funnel banner for new players
   const funnelBanner = renderFunnelBanner();
-  container.innerHTML = funnelBanner + renderNewMatchSetup(catalog);
+  container.innerHTML = funnelBanner + renderNewMatchSetup(catalog, { saveInfo });
   if (funnelBanner) wireFunnelBanner(container);
   bindNewMatchForm(container);
+  wireProfileExplainer(container);
+  wireResumePrompt(container);
 }
 
 /**
@@ -335,6 +363,37 @@ function bindNewMatchForm(container) {
       aiPolicyId: aiPolicy,
       mode: 'ADVANCED_CORE',
     }, container);
+  });
+}
+
+/**
+ * v0.30.0: Wire profile explainer to show/hide explanation based on selected profile.
+ */
+function wireProfileExplainer(container) {
+  const radios = container.querySelectorAll('input[name="profile"]');
+  const explanations = container.querySelectorAll('.profile-explanation');
+  if (!radios.length || !explanations.length) return;
+  const update = () => {
+    const selected = container.querySelector('input[name="profile"]:checked');
+    if (!selected) return;
+    const profileId = selected.value;
+    explanations.forEach(el => {
+      el.hidden = el.dataset.profile !== profileId;
+    });
+  };
+  radios.forEach(r => r.addEventListener('change', update));
+  update();
+}
+
+/**
+ * v0.30.0: Wire resume prompt button to continue a saved match.
+ */
+function wireResumePrompt(container) {
+  const btn = container.querySelector('[data-testid="resume-match"]');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    const saveId = btn.dataset.saveId;
+    if (saveId) await continueMatch(saveId, container);
   });
 }
 
@@ -768,7 +827,7 @@ async function renderActiveMatch(container) {
   // inspected card is no longer inspectable, the controller sanitizes
   // (closes) the view to avoid leaking stale information.
   if (getOpenIdentity() && state.advancedRulesCardId) {
-    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=3dca2dc8fde5').then(({ refreshCurrentMatch }) => {
+    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=75c53031ef21').then(({ refreshCurrentMatch }) => {
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     });
   }
@@ -896,7 +955,7 @@ function bindReplayLibraryEvents(container) {
       } else if (action === 'delete-replay') {
         const confirmed = await showConfirmDialog('Delete replay', `Delete replay ${replayId}? This cannot be undone.`);
         if (confirmed) {
-          const { deleteReplay } = await import('./persistence.js?v=3dca2dc8fde5');
+          const { deleteReplay } = await import('./persistence.js?v=75c53031ef21');
           await deleteReplay(replayId);
           await renderReplays(container);
         }
@@ -1300,7 +1359,7 @@ function bindNetworkWaitingEvents(container) {
  * Render the matchmaking queue flow — joins the queue and waits for pairing.
  */
 async function renderNetworkQueueFlow(container) {
-  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=3dca2dc8fde5');
+  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=75c53031ef21');
   const serverUrl = getNetworkServerUrl();
   if (!serverUrl) {
     container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
@@ -1523,7 +1582,7 @@ function fetchSpectatableList(serverUrl, listSpectatable) {
  * Match ID form remains available as a fallback and for private shares.
  */
 async function renderNetworkSpectateFlow(container) {
-  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=3dca2dc8fde5');
+  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=75c53031ef21');
 
   // Live-list state for the discovery section
   let liveState = { liveMatches: null, liveLoading: false, liveError: null };

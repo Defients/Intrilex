@@ -257,8 +257,6 @@ export function enumerateCoreLegalActions(state, actorId) {
                 candidates.push(action(state, actorId, "swap-bar", "face-up-draw", "ACTION", [], [id], { kind: "core-face-up-swap-draw", swapCardId: id }));
         for (const id of state.players[actorId].hand) {
             const c = state.cards[id];
-            if ([CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId) && (parseIdentity(c.identity)?.rank === "7" || c.identity === "10♣" || c.identity === "BJ"))
-                continue;
             candidates.push(action(state, actorId, "score", "points", "ACTION", [id], [], { kind: "core-score", cardId: id }, { immediatePoints: cardPointValue(c) }));
         }
         const boardLockActive = (state.metadata.boardLock?.turnsRemaining ?? 0) > 0;

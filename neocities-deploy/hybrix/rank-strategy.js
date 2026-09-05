@@ -262,9 +262,36 @@ function rankModeValuation(sources, mode, category, action, context, reasonCodes
       adj += 260;
       reasonCodes.push('KING_SPADE_MULTI_COUNTER');
     } else if (mode === 'wild-sovereignty') {
-      // K♠ Wild Sovereignty — copies a Spade Base effect, then Exiled
-      adj += 230;
-      reasonCodes.push('KING_SPADE_WILD_SOVEREIGNTY');
+      // K♠ Wild Sovereignty — copies a Spade Base effect of rank 3-7, then Exiled.
+      // The Exile cost is significant: K♠ is worth 9 as an Anchor and is a
+      // premium multi-card counter. Only use Wild Sovereignty when the copied
+      // effect's value justifies losing K♠ permanently.
+      const opponentPressure = estimateOpponentPressure(context);
+      const handCount = context?.authorizedView?.own?.hand?.length ?? 0;
+      if (opponentPressure > 0.5) {
+        // Under pressure, Wild Sovereignty for a defensive effect is valuable
+        adj += 250;
+        reasonCodes.push('WILD_SOVEREIGNTY_UNDER_PRESSURE');
+      } else if (handCount <= 2) {
+        // Low hand: fewer options, Wild Sovereignty provides flexibility
+        adj += 200;
+        reasonCodes.push('WILD_SOVEREIGNTY_LOW_HAND_FLEXIBILITY');
+      } else {
+        // Normal: base value minus the opportunity cost of losing K♠
+        adj += 160;
+        reasonCodes.push('WILD_SOVEREIGNTY_EXILE_COST_DISCOUNTED');
+      }
+      // Penalize if K♠ is the only counter available for multi-card threats
+      const ownHand = context?.authorizedView?.own?.hand ?? [];
+      const knownCards = context?.authorizedView?.knownCards ?? {};
+      const handParsed = ownHand.map(h => knownCards[h]?.identity).filter(Boolean).map(parseRank).filter(Boolean);
+      const hasOtherCounters = handParsed.some(p =>
+        p.rank === 'A' || (p.rank === 'K' && p.suit !== '♠')
+      );
+      if (!hasOtherCounters) {
+        adj -= 70;
+        reasonCodes.push('WILD_SOVEREIGNTY_PRESERVE_KSPADE_AS_ONLY_COUNTER');
+      }
     } else if (mode === 'royal-marriage') {
       adj += 300;
       reasonCodes.push('ROYAL_MARRIAGE_OPTION_VALUE');
@@ -409,6 +436,31 @@ function rankModeValuation(sources, mode, category, action, context, reasonCodes
       // Scoring a 2 is low value unless terminal — preserve for recipes
       adj -= 40;
       reasonCodes.push('TWO_PRESERVE_FOR_RECIPE');
+    } else if (mode === 'solo-wild-copy') {
+      // Solo Wild Copy: 2 copies a same-suit rank 3-7 Base effect.
+      // Value depends on the strategic value of the copied effect and
+      // whether the 2 has a better use (recipe component, commandeer).
+      const ownHandSw = context?.authorizedView?.own?.hand ?? [];
+      const knownCardsSw = context?.authorizedView?.knownCards ?? {};
+      const handParsedSw = ownHandSw.map(h => knownCardsSw[h]?.identity).filter(Boolean).map(parseRank).filter(Boolean);
+      const hasMatchingSuper = handParsedSw.some(p =>
+        ['3', '4', '5', '6', '7'].includes(p.rank) && p.suit === primarySuit && p.rank !== '2'
+      );
+      // If we have a matching same-suit card for a Super, Solo Wild is less valuable
+      if (hasMatchingSuper) {
+        adj -= 60;
+        reasonCodes.push('SOLO_WILD_LESS_VALUABLE_THAN_SUPER_RECIPE');
+      } else {
+        // Solo Wild has good option value when no Super recipe is available
+        adj += 140;
+        reasonCodes.push('SOLO_WILD_COPY_OPTION_VALUE');
+      }
+      // Penalize using 2♠ for Solo Wild when it could be saved for ⭐2 Commandeer
+      const twoCount = handParsedSw.filter(p => p.rank === '2').length;
+      if (twoCount >= 2 && primarySuit === '♠') {
+        adj -= 50;
+        reasonCodes.push('SOLO_WILD_PRESERVE_FOR_COMMANDEER');
+      }
     }
     return adj;
   }
@@ -459,6 +511,34 @@ function counterConservation(sources, mode, category, action, context, cognition
     if (sourceRecoverable > 0.5) {
       adj += 80;
       reasonCodes.push('SPADE_ACE_EXILE_PREVENTS_RECOVERY');
+    }
+  }
+
+  // ── Reactive card retention awareness (POL-A2) ──
+  // Reactive cards (8 Scuttle Counter, 9 Tap, J Disrupt) should be retained
+  // when the current threat doesn't justify spending them. These cards provide
+  // ongoing defensive value and shouldn't be spent on low-impact plays.
+  if (primaryRank === '8' && mode === 'scuttle-counter') {
+    const stackValue = estimateStackValue(context);
+    if (stackValue < 80) {
+      adj -= 70;
+      reasonCodes.push('PRESERVE_EIGHT_SCUTTLE_COUNTER_LOW_THREAT');
+    }
+  }
+  if (primaryRank === '9' && mode === 'tap') {
+    // Tapping is only valuable against high-point PR cards
+    const targetValue = Number(action.featureVector?.targetPointValue ?? 0);
+    if (targetValue < 5) {
+      adj -= 60;
+      reasonCodes.push('PRESERVE_NINE_TAP_LOW_VALUE_TARGET');
+    }
+  }
+  if (primaryRank === 'J' && mode === 'disrupt') {
+    // Jack Disrupt is only valuable against high-impact pending plays
+    const stackValue = estimateStackValue(context);
+    if (stackValue < 100) {
+      adj -= 80;
+      reasonCodes.push('PRESERVE_JACK_DISRUPT_LOW_IMPACT');
     }
   }
 

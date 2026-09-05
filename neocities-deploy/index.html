@@ -17,7 +17,7 @@
   <meta name="author" content="Intrilex">
   <meta name="publisher" content="Intrilex">
   <meta name="application-name" content="Intrilex">
-  <meta name="application-version" content="0.28.0">
+  <meta name="application-version" content="1.0.0">
   <meta name="format-detection" content="telephone=no">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="googlebot" content="index, follow">
@@ -62,7 +62,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=Dancing+Script:wght@500;600;700&family=Great+Vibes&display=swap">
-  <link rel="stylesheet" href="styles.0c2a0d839cd0.css">
+  <link rel="stylesheet" href="styles.9cce08a3fbdd.css">
 
   <!-- Structured data (JSON-LD is not executed as script, so CSP script-src does not apply) -->
   <script type="application/ld+json">
@@ -80,7 +80,7 @@
         "applicationSubCategory": "Card Game",
         "operatingSystem": "Any (web browser)",
         "browserRequirements": "Requires JavaScript. Requires a modern browser with ES modules, CSS grid, and IndexedDB support.",
-        "softwareVersion": "0.28.0",
+        "softwareVersion": "1.0.0",
         "image": "https://intrilex.cards/assets/og-image.png",
         "thumbnailUrl": "https://intrilex.cards/icon.svg",
         "inLanguage": "en",
@@ -132,7 +132,16 @@
   <a class="skip skip-link" href="#main">Skip to content</a>
   <div id="fx-layer" class="fx-layer" aria-hidden="true"></div>
   <div id="toast-stack" class="toast-stack" role="region" aria-label="Notifications" aria-live="polite"></div>
-  <div id="landing-app" class="landing-root"></div>
+  <div id="landing-app" class="landing-root">
+    <noscript>
+      <div style="max-width:640px;margin:2rem auto;padding:1.5rem;font-family:system-ui,sans-serif;line-height:1.6;color:#e8e8e8;background:#1a1a2e;border-radius:8px;">
+        <h1 style="margin-top:0;">Intrilex — Competitive Playing Card Game</h1>
+        <p>Intrilex is a deterministic card-game simulation lab and interactive player experience. It requires JavaScript to run.</p>
+        <p>Please enable JavaScript to play local matches against AI, join ranked online Direct Duels, explore the mechanics observatory, or watch replay broadcasts.</p>
+        <p>Engine v4.2.6 · Rules v4.3.1 · <a href="https://github.com/Defients/Intrilex" style="color:#5ad7e8;">Source on GitHub</a></p>
+      </div>
+    </noscript>
+  </div>
   <div class="observatory-shell" data-preset="observatory" hidden inert aria-hidden="true">
     <aside class="side-rail" aria-label="Observatory navigation and experiment controls">
       <a class="brand-block" href="#/" aria-label="Back to Intrilex home">
@@ -185,7 +194,7 @@
     </div>
     <div id="advanced-card-rules-content"></div>
   </dialog>
-  <script type="module" src="app.3dca2dc8fde5.js"></script>
+  <script type="module" src="app.75c53031ef21.js"></script>
   <script src="sw-kill.js"></script>
 </body>
 </html>

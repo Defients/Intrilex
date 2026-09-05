@@ -11,13 +11,14 @@ import { WORKSPACES } from '../router.js';
 import { state } from '../state.js';
 import {
   buildMechanicsLayer, buildWorkspaceLayer, buildCardLayer, buildCombinedLayer,
-  searchNodes, collectCategories, LAYER_IDS,
+  searchNodes, collectCategories, collectEdgeTypes, findShortestPath,
+  EDGE_TYPE_LABELS, LAYER_IDS,
 } from './brain-data.js';
 import { initialSpherePositions, settleLayout, applyZLayering, relaxAround } from './brain-layout.js';
 import { detectWebGL, renderFallback } from './brain-fallback.js';
 import { createScene } from './brain-scene.js';
 import { createNodeMesh, setHoverState, setSelectedState, setDimState } from './brain-nodes.js';
-import { createEdgeLine, updateEdgeLine, setEdgeHighlight } from './brain-edges.js';
+import { createEdgeLine, updateEdgeLine, setEdgeHighlight, setEdgeHover, createEdgeFlow } from './brain-edges.js';
 import { attachInteraction } from './brain-interaction.js';
 import { buildOverlay } from './brain-ui.js';
 
@@ -79,12 +80,23 @@ export async function initBrain(container) {
   let velocities = [];
   let selectedId = null;
   let hoveredId = null;
+  let hoveredEdgeLine = null;
   let collapsedCategories = new Set();
+  let hiddenEdgeTypes = new Set();
   let searchMatchIds = null;
   let rafId = null;
   let idToIndex = new Map();
   let idxEdges = [];
   const layoutCache = new Map();
+
+  // Shortest-path state.
+  let pathStart = null;
+  let pathEdges = new Set();
+
+  // Edge flow particles (active edges connected to selected/hovered node).
+  /** @type {Array<{mesh:THREE.Mesh,update:(t:number)=>void,dispose:()=>void}>} */
+  let edgeFlows = [];
+  let flowClock = 0;
 
   function disposeObject(object) {
     object.traverse?.((child) => {
@@ -102,6 +114,7 @@ export async function initBrain(container) {
     // Clear previous.
     for (const m of nodeMeshes) { scene.remove(m); disposeObject(m); }
     for (const l of edgeLines) { scene.remove(l); disposeObject(l); }
+    clearEdgeFlows();
     nodeMeshes = []; edgeLines = [];
 
     graph = layers[currentLayer];
@@ -144,10 +157,12 @@ export async function initBrain(container) {
     }
     overlay.setCategories(collectCategories(graph.nodes));
     overlay.setNodes(graph.nodes);
+    overlay.setEdgeTypes(collectEdgeTypes(graph.edges));
+    overlay.setStats(computeGraphStats(graph.nodes, graph.edges));
     applyFilter();
   }
 
-  // ── Filtering: search + collapsed clusters ──
+  // ── Filtering: search + collapsed clusters + edge-type filters ──
   function applyFilter() {
     const matchSet = searchMatchIds ?? new Set(graph.nodes.map((n) => n.id));
     for (const mesh of nodeMeshes) {
@@ -160,7 +175,32 @@ export async function initBrain(container) {
       const e = line.__brainEdge;
       const aOk = matchSet.has(e.source) && !collapsedCategories.has(graph.nodes.find((n) => n.id === e.source)?.category);
       const bOk = matchSet.has(e.target) && !collapsedCategories.has(graph.nodes.find((n) => n.id === e.target)?.category);
-      line.visible = aOk && bOk;
+      const typeOk = !hiddenEdgeTypes.has(e.type);
+      line.visible = aOk && bOk && typeOk;
+    }
+  }
+
+  // ── Edge flow particle management ──
+  function clearEdgeFlows() {
+    for (const f of edgeFlows) { scene.remove(f.mesh); f.dispose(); }
+    edgeFlows = [];
+  }
+
+  /** Rebuild flow particles for edges connected to the selected/hovered node. */
+  function rebuildEdgeFlows() {
+    clearEdgeFlows();
+    if (reducedMotion) return;
+    const focusId = selectedId ?? hoveredId;
+    if (!focusId) return;
+    for (const line of edgeLines) {
+      const e = line.__brainEdge;
+      if (!line.visible) continue;
+      if (e.source !== focusId && e.target !== focusId) continue;
+      const a = idToIndex.get(e.source), b = idToIndex.get(e.target);
+      if (a == null || b == null) continue;
+      const flow = createEdgeFlow(positions[a], positions[b], { color: e.color, weight: e.weight });
+      scene.add(flow.mesh);
+      edgeFlows.push(flow);
     }
   }
 
@@ -178,7 +218,8 @@ export async function initBrain(container) {
     for (const line of edgeLines) {
       const e = line.__brainEdge;
       const connected = id && (e.source === id || e.target === id);
-      setEdgeHighlight(line, !!connected, e.opacity);
+      const inPath = pathEdges.size > 0 && (pathEdges.has(`${e.source}|${e.target}`) || pathEdges.has(`${e.target}|${e.source}`));
+      setEdgeHighlight(line, !!connected || inPath, e.opacity);
     }
     if (id) {
       const node = graph.nodes.find((n) => n.id === id);
@@ -189,6 +230,107 @@ export async function initBrain(container) {
     } else {
       overlay.hideDetail();
     }
+    rebuildEdgeFlows();
+  }
+
+  // ── Graph statistics (inlined to avoid pulling brain-topology.mjs's
+  //    @intrilex/shared dependency into the lazy-loaded brain chunk) ──
+  /**
+   * @param {Array<object>} nodes
+   * @param {Array<object>} edges
+   * @returns {object}
+   */
+  function computeGraphStats(nodes, edges) {
+    const nodeCount = nodes.length;
+    const edgeCount = edges.length;
+    const maxPossible = nodeCount > 1 ? (nodeCount * (nodeCount - 1)) / 2 : 0;
+    const density = maxPossible > 0 ? edgeCount / maxPossible : 0;
+    const degree = new Map();
+    for (const n of nodes) degree.set(n.id, 0);
+    for (const e of edges) {
+      if (!degree.has(e.source)) degree.set(e.source, 0);
+      if (!degree.has(e.target)) degree.set(e.target, 0);
+      degree.set(e.source, degree.get(e.source) + 1);
+      degree.set(e.target, degree.get(e.target) + 1);
+    }
+    const degrees = [...degree.values()];
+    const averageDegree = degrees.length > 0 ? degrees.reduce((a, b) => a + b, 0) / degrees.length : 0;
+    const maxDegree = degrees.length > 0 ? Math.max(...degrees) : 0;
+    // Connected components (union-find).
+    const parent = new Map();
+    for (const id of degree.keys()) parent.set(id, id);
+    const find = (x) => { let r = x; while (parent.get(r) !== r) r = parent.get(r); let c = x; while (parent.get(c) !== r) { const n = parent.get(c); parent.set(c, r); c = n; } return r; };
+    for (const e of edges) {
+      if (degree.has(e.source) && degree.has(e.target)) {
+        const ra = find(e.source), rb = find(e.target);
+        if (ra !== rb) parent.set(ra, rb);
+      }
+    }
+    const compSizes = new Map();
+    for (const id of degree.keys()) { const r = find(id); compSizes.set(r, (compSizes.get(r) ?? 0) + 1); }
+    const clusterCount = compSizes.size;
+    const largestClusterSize = compSizes.size > 0 ? Math.max(...compSizes.values()) : 0;
+    const topHubs = nodes
+      .map((n) => ({ id: n.id, label: n.label, degree: degree.get(n.id) ?? 0 }))
+      .sort((a, b) => b.degree - a.degree || a.label.localeCompare(b.label))
+      .slice(0, 5);
+    return { nodeCount, edgeCount, density, averageDegree, maxDegree, clusterCount, largestClusterSize, topHubs };
+  }
+
+  // ── Shortest-path management ──
+  function clearPath() {
+    pathStart = null;
+    pathEdges = new Set();
+    overlay.hidePathInfo();
+    // Re-apply selection highlight to drop path styling.
+    setSelected(selectedId);
+  }
+
+  /**
+   * Handle shift-click: first click sets the path start; second click
+   * computes the shortest path and highlights it.
+   * @param {THREE.Mesh} node
+   */
+  function handleShiftClick(node) {
+    if (!node) return;
+    const id = node.__brainId;
+    if (!pathStart) {
+      pathStart = id;
+      const label = node.__brainDef?.label ?? id;
+      overlay.showPathInfo(label, '…', 0);
+      return;
+    }
+    if (pathStart === id) { clearPath(); return; }
+    const result = findShortestPath(graph.nodes, graph.edges, pathStart, id);
+    if (!result) {
+      // No path — reset start to the newly clicked node.
+      pathStart = id;
+      const label = node.__brainDef?.label ?? id;
+      overlay.showPathInfo(label, '…', 0);
+      return;
+    }
+    pathEdges = result.pathEdges;
+    const startNode = graph.nodes.find((n) => n.id === pathStart);
+    const endNode = graph.nodes.find((n) => n.id === id);
+    overlay.showPathInfo(startNode?.label ?? pathStart, endNode?.label ?? id, result.path.length - 1);
+    // Highlight path edges + rebuild flows along the path.
+    for (const line of edgeLines) {
+      const e = line.__brainEdge;
+      const inPath = pathEdges.has(`${e.source}|${e.target}`) || pathEdges.has(`${e.target}|${e.source}`);
+      setEdgeHighlight(line, inPath, e.opacity);
+    }
+    if (!reducedMotion) {
+      clearEdgeFlows();
+      for (const line of edgeLines) {
+        const e = line.__brainEdge;
+        if (!pathEdges.has(`${e.source}|${e.target}`) && !pathEdges.has(`${e.target}|${e.source}`)) continue;
+        const a = idToIndex.get(e.source), b = idToIndex.get(e.target);
+        if (a == null || b == null) continue;
+        const flow = createEdgeFlow(positions[a], positions[b], { color: e.color, weight: e.weight });
+        scene.add(flow.mesh);
+        edgeFlows.push(flow);
+      }
+    }
   }
 
   // ── UI overlay ──
@@ -196,6 +338,7 @@ export async function initBrain(container) {
     onLayerChange(layer) {
       currentLayer = layer;
       selectedId = null;
+      clearPath();
       overlay.hideDetail();
       buildGraph();
     },
@@ -208,6 +351,15 @@ export async function initBrain(container) {
       else collapsedCategories.delete(category);
       applyFilter();
     },
+    onToggleEdgeType(type, visible) {
+      if (visible) hiddenEdgeTypes.delete(type);
+      else hiddenEdgeTypes.add(type);
+      applyFilter();
+      rebuildEdgeFlows();
+    },
+    onClearPath() {
+      clearPath();
+    },
   });
   overlay.detailPanel.addEventListener('brain:select', (ev) => {
     const event = /** @type {CustomEvent<{id:string}>} */ (ev);
@@ -217,6 +369,7 @@ export async function initBrain(container) {
   // ── Interaction ──
   const interaction = attachInteraction(renderer, camera, scene, {
     getNodes: () => nodeMeshes,
+    getEdges: () => edgeLines,
     onHover(node) {
       const id = node?.__brainId ?? null;
       if (id === hoveredId) return;
@@ -230,12 +383,53 @@ export async function initBrain(container) {
         const def = node.__brainDef;
         const rect = renderer.domElement.getBoundingClientRect();
         overlay.showTooltip(def.label, rect.left + (pointerLast.x + 1) * rect.width / 2, rect.top - (pointerLast.y - 1) * rect.height / 2);
+        // Clear edge hover when a node is hovered.
+        if (hoveredEdgeLine) {
+          const e = hoveredEdgeLine.__brainEdge;
+          setEdgeHover(hoveredEdgeLine, false, e?.opacity);
+          hoveredEdgeLine = null;
+        }
+      } else {
+        overlay.hideTooltip();
+      }
+      rebuildEdgeFlows();
+    },
+    onEdgeHover(line) {
+      if (line === hoveredEdgeLine) return;
+      if (hoveredEdgeLine) {
+        const e = hoveredEdgeLine.__brainEdge;
+        setEdgeHover(hoveredEdgeLine, false, e?.opacity);
+      }
+      hoveredEdgeLine = line;
+      if (line) {
+        const e = line.__brainEdge;
+        setEdgeHover(line, true, e?.opacity);
+        const type = e?.type ?? 'unknown';
+        const label = EDGE_TYPE_LABELS[type] ?? type;
+        const weight = e?.weight ?? 0;
+        const evidence = e?.opacity ?? 0;
+        const rect = renderer.domElement.getBoundingClientRect();
+        overlay.showTooltip(
+          `${label} · weight ${weight.toFixed(2)} · evidence ${(evidence * 100).toFixed(0)}%`,
+          rect.left + (pointerLast.x + 1) * rect.width / 2,
+          rect.top - (pointerLast.y - 1) * rect.height / 2,
+        );
       } else {
         overlay.hideTooltip();
       }
     },
     onClick(node) {
       setSelected(node?.__brainId ?? null);
+    },
+    onShiftClick(node) {
+      handleShiftClick(node);
+    },
+    onDoubleClick(node) {
+      const def = node?.__brainDef;
+      const route = def?.route ?? def?.data?.route;
+      if (route) {
+        window.location.hash = route;
+      }
     },
     onDrag(node) {
       // Update connected edges + local relaxation.
@@ -271,6 +465,11 @@ export async function initBrain(container) {
     // or when a node is selected so the detail panel stays stable).
     if (!reducedMotion && !selectedId) {
       scene.rotation.y += 0.0009;
+    }
+    // Animate edge flow particles.
+    if (edgeFlows.length && !reducedMotion) {
+      flowClock += 0.016;
+      for (const f of edgeFlows) f.update(flowClock);
     }
     renderer.render(scene, camera);
   }
@@ -311,6 +510,7 @@ export async function initBrain(container) {
     renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
     for (const m of nodeMeshes) { scene.remove(m); disposeObject(m); }
     for (const l of edgeLines) { scene.remove(l); disposeObject(l); }
+    clearEdgeFlows();
     disposeScene();
     _activeBrain = null;
   }

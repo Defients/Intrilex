@@ -14,18 +14,32 @@ import * as THREE from 'three';
  *  - Scroll/pinch: dolly zoom
  *  - Touch: one-finger orbit, two-finger pan+zoom
  *
+ * Interaction callbacks:
+ *  - onHover(node|null) — pointer hovering over a node (or empty space)
+ *  - onEdgeHover(edge|null) — pointer hovering over an edge line (or empty)
+ *  - onClick(node|null) — node clicked (or empty space clicked)
+ *  - onShiftClick(node) — node shift-clicked (for shortest-path selection)
+ *  - onDoubleClick(node) — node double-clicked (for navigation)
+ *  - onDrag(node,x,y,z) — node dragged to a new position
+ *
  * @param {THREE.WebGLRenderer} renderer
  * @param {THREE.PerspectiveCamera} camera
  * @param {THREE.Scene} scene
  * @param {object} callbacks
  * @param {(node:THREE.Mesh|null)=>void} [callbacks.onHover]
+ * @param {(edge:THREE.Line|null)=>void} [callbacks.onEdgeHover]
  * @param {(node:THREE.Mesh|null)=>void} [callbacks.onClick]
+ * @param {(node:THREE.Mesh)=>void} [callbacks.onShiftClick]
+ * @param {(node:THREE.Mesh)=>void} [callbacks.onDoubleClick]
  * @param {(node:THREE.Mesh,x:number,y:number,z:number)=>void} [callbacks.onDrag]
  * @param {() => THREE.Mesh[]} [callbacks.getNodes]
+ * @param {() => THREE.Line[]} [callbacks.getEdges]
  */
 export function attachInteraction(renderer, camera, scene, callbacks = {}) {
   const dom = renderer.domElement;
   const raycaster = new THREE.Raycaster();
+  // Line picking threshold — edges are thin, so give the raycaster some slack.
+  raycaster.params.Line.threshold = 0.6;
   const pointer = new THREE.Vector2();
 
   // Spherical orbit state.
@@ -58,6 +72,15 @@ export function attachInteraction(renderer, camera, scene, callbacks = {}) {
     const nodes = callbacks.getNodes ? callbacks.getNodes() : [];
     raycaster.setFromCamera(pointer, camera);
     const hits = raycaster.intersectObjects(nodes, false);
+    return hits.length ? hits[0].object : null;
+  }
+
+  /** Pick the closest edge line under the pointer (nodes take priority). */
+  function pickEdge() {
+    const edges = callbacks.getEdges ? callbacks.getEdges() : [];
+    if (!edges.length) return null;
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObjects(edges, false);
     return hits.length ? hits[0].object : null;
   }
 
@@ -124,9 +147,15 @@ export function attachInteraction(renderer, camera, scene, callbacks = {}) {
       return;
     }
 
-    // Hover.
+    // Hover — nodes take priority over edges.
     const node = pickNode();
     callbacks.onHover?.(node);
+    if (!node) {
+      const edge = pickEdge();
+      callbacks.onEdgeHover?.(edge);
+    } else {
+      callbacks.onEdgeHover?.(null);
+    }
   }
 
   function onPointerUp(e) {
@@ -136,19 +165,32 @@ export function attachInteraction(renderer, camera, scene, callbacks = {}) {
       const clickedNode = draggedNode;
       isDraggingNode = false;
       draggedNode = null;
-      if (dragDistance <= 5) callbacks.onClick?.(clickedNode);
+      if (dragDistance <= 5) {
+        if (e.shiftKey && clickedNode) callbacks.onShiftClick?.(clickedNode);
+        else callbacks.onClick?.(clickedNode);
+      }
     } else if (isDragging) {
       isDragging = false;
       if (dragDistance <= 5) {
         setPointer(e);
-        callbacks.onClick?.(pickNode());
+        const node = pickNode();
+        if (e.shiftKey && node) callbacks.onShiftClick?.(node);
+        else callbacks.onClick?.(node);
       }
     } else {
       // Click without drag → select node or clear.
       setPointer(e);
       const node = pickNode();
-      callbacks.onClick?.(node);
+      if (e.shiftKey && node) callbacks.onShiftClick?.(node);
+      else callbacks.onClick?.(node);
     }
+  }
+
+  /** Double-click → navigate to the node's route. */
+  function onDoubleClick(e) {
+    setPointer(e);
+    const node = pickNode();
+    if (node) callbacks.onDoubleClick?.(node);
   }
 
   function onWheel(e) {
@@ -165,6 +207,7 @@ export function attachInteraction(renderer, camera, scene, callbacks = {}) {
   dom.addEventListener('pointercancel', onPointerUp);
   dom.addEventListener('wheel', onWheel, { passive: false });
   dom.addEventListener('contextmenu', onContextMenu);
+  dom.addEventListener('dblclick', onDoubleClick);
 
   /** Per-frame damping toward target spherical coords. */
   function update() {
@@ -189,6 +232,7 @@ export function attachInteraction(renderer, camera, scene, callbacks = {}) {
     dom.removeEventListener('pointercancel', onPointerUp);
     dom.removeEventListener('wheel', onWheel);
     dom.removeEventListener('contextmenu', onContextMenu);
+    dom.removeEventListener('dblclick', onDoubleClick);
     pointers.clear();
   }
 

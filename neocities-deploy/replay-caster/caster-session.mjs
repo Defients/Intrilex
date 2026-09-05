@@ -97,7 +97,7 @@ export class CasterSession {
     const cfg = {
       profileId: config.profileId,
       seatOrder: config.seatOrder ?? ['P1', 'P2'],
-      policyIds: config.policyIds ?? ['hybrix-baseline', 'hybrix-control'],
+      policyIds: config.policyIds ?? ['hybrix-baseline', 'hybrix-rusher'],
       seed: config.seed ?? 1,
       decisionLimit: config.decisionLimit ?? 1200,
       includeReplay: true,
@@ -127,7 +127,7 @@ export class CasterSession {
 
     const s = matchResult.summary;
     this.matchId = s.matchId;
-    this.replayHash = s.replayHash ?? matchResult.replay?.contentHash ?? null;
+    this.replayHash = s.replayHash ?? s.matchResultHash ?? matchResult.replay?.contentHash ?? null;
     this.finalStateHash = s.finalStateHash;
     this.engineVersion = matchResult.provenance?.engineVersion ?? null;
     this.rulesVersion = matchResult.provenance?.rulesVersion ?? null;
@@ -177,9 +177,11 @@ export class CasterSession {
    * Generate (or retrieve from cache) commentary for the current beat.
    * Never blocks playback; the UI calls this after a beat change.
    *
+   * @param {object} [opts]
+   * @param {function} [opts.onToken] - streaming callback (textChunk) => void
    * @returns {Promise<{ok, record, commentaryId, cached, error}>}
    */
-  async generateCommentaryForCurrentBeat() {
+  async generateCommentaryForCurrentBeat({ onToken } = {}) {
     if (!this.director) return { ok: false, record: null, commentaryId: null, cached: false, error: 'NO_SESSION' };
     const beat = this.director.currentBeat();
     if (!beat) return { ok: false, record: null, commentaryId: null, cached: false, error: 'NO_BEAT' };
@@ -217,7 +219,7 @@ export class CasterSession {
     }
     this._telemetry.cacheMisses += 1;
 
-    const result = await this._provider.generateCommentary(input);
+    const result = await this._provider.generateCommentary(input, { onToken });
     if (!result.ok || !result.record) {
       this._telemetry.failedGenerations += 1;
       return { ok: false, record: result.record, commentaryId: null, cached: false, error: result.error };

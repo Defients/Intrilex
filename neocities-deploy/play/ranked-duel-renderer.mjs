@@ -248,7 +248,7 @@ function renderMatch(vm, opts, snapshot) {
   const humER = vm?.battlefield?.bottomER ?? [];
   [...oppPR, ...oppER, ...humPR, ...humER].forEach(c => { if (c?.entityId) cardRegistry[c.entityId] = c; });
 
-  return `<div class="ranked-duel-shell" role="main" aria-label="Ranked Duel Match" data-testid="play-board" data-gameplay-skin="${esc(opts.gameplaySkin)}">
+  return `<div class="ranked-duel-shell" role="main" aria-label="Ranked Duel Match" data-testid="play-board" data-gameplay-skin="${esc(opts.gameplaySkin)}"${opts.isCaster === true ? ' data-caster="1"' : ''}>
     ${renderHeader(vm, opts, priorityContext, immediate)}
     <section class="rd-cell rd-enemy-enduring" data-grid="enemyE" aria-label="Opponent Enduring">
       ${renderEnduringRow(oppER, 'opponent')}
@@ -258,7 +258,7 @@ function renderMatch(vm, opts, snapshot) {
     </section>
     <section class="rd-cell rd-enemy-profile" data-grid="enemyProfile" aria-label="Opponent profile">
       ${renderProfileBlock(vm.opponent, 'opponent', vm)}
-      ${renderOpponentHand(vm.battlefield.opponentHandCount)}
+      ${renderOpponentHand(vm.battlefield.opponentHandCount, opts.opponentHandCards)}
     </section>
     <section class="rd-cell rd-piles" data-grid="piles" aria-label="Shared piles">
       <div class="rd-piles-label">SHARED PILES</div>
@@ -297,7 +297,7 @@ function renderMatch(vm, opts, snapshot) {
       ${renderHumanHand(vm.battlefield.humanHand, opts)}
     </section>
     <section class="rd-cell rd-right-rail-bottom" data-grid="rightRailBottom" aria-label="Actions and chat">
-      ${renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, isOpponentTurn, priorityContext, immediate, isNetwork)}
+      ${opts.rightRailHtml ? opts.rightRailHtml : renderRightRailBottom(vm, opts, snapshot, isReadOnly, isHumanTurn, isAiTurn, isOpponentTurn, priorityContext, immediate, isNetwork)}
     </section>
     ${opts.academyPanelHtml ? `<section class="rd-cell rd-academy-panel" data-grid="academyPanel" aria-label="Lesson objectives">${opts.academyPanelHtml}</section>` : ''}
     ${opts.academyCoachmarkHtml ? opts.academyCoachmarkHtml : ''}
@@ -448,17 +448,17 @@ function renderHeader(vm, opts, priorityContext, immediate) {
   // During active network PvP, remove the Back button — leaving must go
   // through the forfeit flow (X button → confirmation dialog).
   const isTerminal = vm.status === 'TERMINAL';
-  const showBack = !isNetwork || isTerminal;
-  const backHref = opts.academyLessonId ? '#/play/academy' : '#/';
-  const backLabel = opts.academyLessonId ? 'Back to Academy' : 'Back to home';
+  const showBack = !isNetwork || isTerminal || opts.isCaster === true;
+  const backHref = opts.isCaster === true ? '#/watch' : (opts.academyLessonId ? '#/play/academy' : '#/');
+  const backLabel = opts.isCaster === true ? 'Back to Observatory' : (opts.academyLessonId ? 'Back to Academy' : 'Back to home');
   const backHtml = showBack
     ? `<a class="rd-header-back" href="${backHref}" aria-label="${esc(backLabel)}" title="${esc(backLabel)}">\u2190</a>`
     : '';
 
   // X/exit button: for network PvP, triggers forfeit confirmation;
-  // for local/AI, exits to hub.
-  const exitTitle = isNetwork && !isTerminal ? 'Forfeit match' : 'Return to hub';
-  const exitAction = isNetwork && !isTerminal ? 'forfeit-match' : 'exit-match';
+  // for local/AI, exits to hub. For Caster, exits to observatory.
+  const exitTitle = opts.isCaster === true ? 'Exit to Observatory' : (isNetwork && !isTerminal ? 'Forfeit match' : 'Return to hub');
+  const exitAction = opts.isCaster === true ? 'exit-caster' : (isNetwork && !isTerminal ? 'forfeit-match' : 'exit-match');
 
   return `<header class="rd-header" role="banner">
     <div class="rd-header-left">
@@ -1680,7 +1680,16 @@ function renderProfileBlock(plate, side, vm) {
   </div>`;
 }
 
-function renderOpponentHand(count) {
+function renderOpponentHand(count, faceUpCards = null) {
+  // Omniscient mode (e.g. Caster): render opponent hand face-up when card views are provided
+  if (faceUpCards && Array.isArray(faceUpCards) && faceUpCards.length > 0) {
+    const cards = faceUpCards.slice(0, 7).map(c => renderCard(c)).join('');
+    const overflow = faceUpCards.length > 7 ? `<span class="rd-opponent-hand-count">+${faceUpCards.length - 7}</span>` : '';
+    return `<div class="rd-opponent-hand rd-opponent-hand-omniscient" aria-label="Opponent hand, ${faceUpCards.length} cards (face-up)">
+      ${cards}
+      ${overflow}
+    </div>`;
+  }
   const backs = Array.from({ length: Math.min(count, 7) }, () => '<div class="rd-card-back" aria-hidden="true"></div>').join('');
   return `<div class="rd-opponent-hand" aria-label="Opponent hand, ${count} cards">
     ${backs}
@@ -2274,9 +2283,16 @@ function renderInspector(cardId, cardRegistry, contracts, guidanceMode, _faceVie
     </li>`;
   }).join('');
 
+  // v0.30.0: Richer unavailable explanation with reason detail
   const unavailableExplanation = !hasLegalActions
     ? buildUnavailableExplanation('SOURCE_NOT_AVAILABLE', guidanceMode)
     : null;
+
+  // v0.30.0: Protection and targeting status
+  const protectionStatus = renderInspectorProtectionStatus(card);
+
+  // v0.30.0: Learning links (Academy / Puzzle)
+  const learningLinks = renderInspectorLearningLinks(card);
 
   // Render the inline Essentials summary (replaces old Board/Lite card-face gfx).
   const essentialsHtml = renderInspectorEssentials(card, cardRuntimeState(card));
@@ -2287,13 +2303,67 @@ function renderInspector(cardId, cardRegistry, contracts, guidanceMode, _faceVie
       <button class="inspector-face-tab advanced-rules" data-inspector-advanced-rules="${esc(identity ?? '')}" data-card-id="${esc(cardId)}" role="button" aria-label="Open advanced card rules" ${identity ? '' : 'disabled'}>Advanced Rules</button>
     </div>
     <div class="inspector-face-stage" data-inspector-face-view="essentials">${essentialsHtml}</div>
+    ${protectionStatus}
     <div class="inspector-actions">
       <h4>Legal actions for this card</h4>
       ${hasLegalActions ? `<ul class="inspector-action-list">${actionList}</ul>` : '<p class="inspector-no-actions">No legal actions for this card right now.</p>'}
-      ${unavailableExplanation ? `<p class="inspector-unavailable-reason">${esc(unavailableExplanation.shortText)}</p>` : ''}
+      ${unavailableExplanation ? `<div class="inspector-unavailable-detail" data-testid="inspector-unavailable-detail"><p class="inspector-unavailable-reason">${esc(unavailableExplanation.shortText)}</p>${unavailableExplanation.detailedText ? `<p class="inspector-unavailable-detail-text">${esc(unavailableExplanation.detailedText)}</p>` : ''}${unavailableExplanation.ruleRef ? `<p class="inspector-unavailable-rule-ref">${esc(unavailableExplanation.ruleRef)}</p>` : ''}</div>` : ''}
     </div>
+    ${learningLinks}
     <button class="inspector-close" data-testid="inspector-close" aria-label="Close inspector">Close</button>
   </aside>`;
+}
+
+/**
+ * v0.30.0: Render protection and targeting status for a card.
+ * Shows Aegis, Guard, Tapped, Exile-Bound, Attachment status in a dedicated section.
+ */
+function renderInspectorProtectionStatus(card) {
+  if (!card) return '';
+  const markers = card.statusMarkers ?? [];
+  if (markers.length === 0) return '';
+  const statusItems = markers.map(m => {
+    const label = m.label ?? m.type ?? 'Unknown';
+    const icon = {
+      AEGIS: '🛡',
+      GUARD: '🛡',
+      TAPPED: '✕',
+      EXILE_BOUND: '⟁',
+      ATTACHMENT: '🔗',
+    }[m.type] ?? '◆';
+    return `<span class="inspector-protection-chip" data-status-type="${esc(m.type)}"><b aria-hidden="true">${icon}</b>${esc(label)}</span>`;
+  }).join('');
+  return `<div class="inspector-protection-status" data-testid="inspector-protection-status" role="region" aria-label="Protection and targeting status">
+    <h4>Status</h4>
+    <div class="inspector-protection-chips">${statusItems}</div>
+  </div>`;
+}
+
+/**
+ * v0.30.0: Render learning links (Academy / Puzzle) for a card.
+ * Links to Academy lessons and Puzzle ladder for the card's rank.
+ */
+function renderInspectorLearningLinks(card) {
+  if (!card) return '';
+  const def = card.definition ?? card;
+  const rank = def.rank ?? null;
+  const suit = def.suit ?? null;
+  const identity = card.identity ?? null;
+  if (!rank) return '';
+  const links = [];
+  // Academy link — general, since academy lessons aren't per-card
+  links.push({ href: '#/play/academy', label: 'Learn in Academy', icon: '🎓', testId: 'inspector-academy-link' });
+  // Puzzle link — general puzzle ladder
+  links.push({ href: '#/puzzles', label: 'Practice in Puzzles', icon: '🧩', testId: 'inspector-puzzle-link' });
+  // Rank anatomy link for Lab mode
+  if (rank && suit) {
+    links.push({ href: `#/ranks?rank=${esc(rank)}&suit=${esc(suit)}`, label: 'Rank Anatomy', icon: '📊', testId: 'inspector-rank-link' });
+  }
+  const linkHtml = links.map(l => `<a class="inspector-learning-link" href="${esc(l.href)}" data-testid="${esc(l.testId)}" role="link"><span class="inspector-learning-link-icon" aria-hidden="true">${l.icon}</span><span>${esc(l.label)}</span></a>`).join('');
+  return `<div class="inspector-learning-links" data-testid="inspector-learning-links" role="region" aria-label="Learning links">
+    <h4>Learn this card</h4>
+    <div class="inspector-learning-link-list">${linkHtml}</div>
+  </div>`;
 }
 
 /**

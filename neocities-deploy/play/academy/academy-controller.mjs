@@ -331,6 +331,48 @@ export class AcademyController {
   }
 
   /**
+   * v0.30.0: Mark the lesson as "understood" without requiring a win.
+   * This is the explanation-first completion path. The player has
+   * demonstrated understanding of the mechanic by meeting all required
+   * objectives, but may not have won the match. For OBJECTIVES mode
+   * lessons, this completes the lesson. For WIN/OBJECTIVES_AND_WIN
+   * lessons, this records the understanding but does not complete.
+   * @returns {{ understood: boolean, completed: boolean }}
+   */
+  markUnderstood() {
+    const required = this.lesson.completion?.requiredObjectives ?? [];
+    const allObjectivesMet = required.every((id) => this._metObjectives.has(id));
+    const mode = this.lesson.completion?.mode ?? CompletionMode.WIN;
+
+    if (!allObjectivesMet) {
+      return { understood: false, completed: false };
+    }
+
+    // For OBJECTIVES mode, mark the lesson as complete
+    if (mode === CompletionMode.OBJECTIVES) {
+      const objectivesMet = [...this._metObjectives];
+      const masteryScore = computeMasteryScoreV3(
+        this._hintsUsedThisAttempt,
+        this._retriesThisAttempt,
+        this._metObjectives.size,
+        this._totalObjectives,
+      );
+      this._masteryTier = masteryTierFromScore(masteryScore);
+      markLessonComplete(this.lesson.id, {
+        objectivesMet,
+        hintsUsed: this._hintsUsedThisAttempt,
+        retries: this._retriesThisAttempt,
+        masteryScore,
+        understoodOnly: true,
+      });
+      return { understood: true, completed: true };
+    }
+
+    // For WIN or OBJECTIVES_AND_WIN, record understanding but don't complete
+    return { understood: true, completed: false };
+  }
+
+  /**
    * Clean up the controller. Called when the player exits the academy
    * (back to hub) or navigates away. Does NOT clear progress.
    */
