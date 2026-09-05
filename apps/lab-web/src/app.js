@@ -864,6 +864,22 @@ function renderLanding() {
                 </svg>
               </span>
             </a>
+            <a class="landing-rail-card tournaments" href="#/tournaments" data-testid="landing-tournaments-card">
+              <span class="landing-rail-body">
+                <strong>TOURNAMENTS</strong>
+                <p>Register &middot; compete &middot; climb the bracket</p>
+                <span class="landing-rail-cta">View events &rarr;</span>
+              </span>
+              <span class="landing-rail-emblem" aria-hidden="true">&#127942;</span>
+            </a>
+            <a class="landing-rail-card seasons" href="#/seasons" data-testid="landing-seasons-card">
+              <span class="landing-rail-body">
+                <strong>SEASONS</strong>
+                <p>Ranked history &middot; champions &middot; final standings</p>
+                <span class="landing-rail-cta">Browse archives &rarr;</span>
+              </span>
+              <span class="landing-rail-emblem" aria-hidden="true">&#128197;</span>
+            </a>
             <a class="landing-rail-card forums" href="https://intrilex.discourse.group/" target="_blank" rel="noopener noreferrer">
               <span class="landing-rail-forums-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">

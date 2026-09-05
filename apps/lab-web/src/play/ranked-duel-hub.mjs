@@ -117,6 +117,11 @@ export function renderNewMatchSetup(policyCatalog, options = {}) {
       <span class="academy-entry-body"><strong>Academy</strong><small>New to Intrilex? Start with guided lessons.</small></span>
       <span class="academy-entry-arrow" aria-hidden="true">→</span>
     </a>
+    <a class="academy-entry-link" href="#/puzzles" data-testid="puzzles-entry-link">
+      <span class="academy-entry-icon" aria-hidden="true">🧩</span>
+      <span class="academy-entry-body"><strong>Puzzles</strong><small>Tactical challenges &middot; progressive ladder</small></span>
+      <span class="academy-entry-arrow" aria-hidden="true">→</span>
+    </a>
     ${resumeHtml}
     ${compatHtml}
     <form id="new-match-form" data-testid="new-match-form">

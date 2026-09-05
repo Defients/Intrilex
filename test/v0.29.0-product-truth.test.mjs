@@ -85,13 +85,20 @@ test('v0.30.0: generate-capability-truth.mjs script exists', async () => {
   assert.ok(await exists('scripts/generate-capability-truth.mjs'));
 });
 
-// ── Three-lanes navigation ──
+// ── Lab navigation (Learn + Lab only; Play/Account accessed elsewhere) ──
 
-test('v0.30.0: router.js has three-lane navigation (Play, Learn, Lab)', async () => {
+test('v0.30.0: router.js has Learn and Lab nav sections', async () => {
   const router = await read('apps/lab-web/src/router.js');
-  assert.match(router, /label:\s*'Play'/);
   assert.match(router, /label:\s*'Learn'/);
   assert.match(router, /label:\s*'Lab'/);
+});
+
+test('v0.30.0: router.js Lab nav excludes Play and Account sections', async () => {
+  const router = await read('apps/lab-web/src/router.js');
+  // Play features are on the landing page / play hub, not the Lab nav
+  // Account features are in the account dropdown, not the Lab nav
+  assert.doesNotMatch(router, /label:\s*'Play'/);
+  assert.doesNotMatch(router, /label:\s*'Account'/);
 });
 
 test('v0.30.0: router.js WORKSPACES includes play and learn routes', async () => {

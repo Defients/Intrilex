@@ -89,14 +89,14 @@ export function route() {
 }
 
 export function renderNavigation() {
-  // Three-lane product organization: PLAY, LEARN, LAB
-  // PLAY and LEARN routes link to landing/play pages; LAB routes are observatory workspaces.
-  // Profile/Settings/Auth remain in a System section at the bottom.
+  // Lab nav — observatory tools and reference material only.
+  // Player-facing features (Play, Academy, Puzzles, Tournaments, Seasons)
+  // are accessed from the landing page and play hub.
+  // Account features (Profile, Achievements, Settings, Auth) are in the
+  // account dropdown on the landing page. Release Notes is on the landing rail.
   const SECTIONS = [
-    { label: 'Play', routes: ['/play', '/play/academy', '/puzzles', '/tournaments', '/seasons'] },
     { label: 'Learn', routes: ['/rules', '/cards'] },
     { label: 'Lab', routes: ['/watch', '/caster', '/replays', '/history', '/mechanics', '/synergies', '/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament', '/evidence', '/intelligence'] },
-    { label: 'Account', routes: ['/profile', '/achievements', '/release-notes', '/settings', '/auth'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));
   const nav = document.querySelector('#workspace-nav');
