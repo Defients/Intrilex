@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "1.0.0",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "results": [
+    {
+      "experimentId": "EXP-01-2B2R-HOLD-FIRE",
+      "file": "EXP-01-2B2R-HOLD-FIRE-result.json",
+      "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+      "profile": "core-advanced-authority",
+      "matchCount": 100,
+      "completedMatchCount": 100,
+      "seat1WinRate": 0.58
+    },
+    {
+      "experimentId": "EXP-02-BOARD-LOCK-LEAD",
+      "file": "EXP-02-BOARD-LOCK-LEAD-result.json",
+      "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+      "profile": "core-advanced-authority",
+      "matchCount": 144,
+      "completedMatchCount": 144,
+      "seat1WinRate": 0.3591549295774648
+    },
+    {
+      "experimentId": "EXP-03-TEN-HEART-OPPORTUNITY-COST",
+      "file": "EXP-03-TEN-HEART-OPPORTUNITY-COST-result.json",
+      "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+      "profile": "core-advanced-authority",
+      "matchCount": 50,
+      "completedMatchCount": 50,
+      "seat1WinRate": 0.28
+    },
+    {
+      "experimentId": "EXP-04-QUEEN-FORTRESS-WINDOW",
+      "file": "EXP-04-QUEEN-FORTRESS-WINDOW-result.json",
+      "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+      "profile": "core-advanced-authority",
+      "matchCount": 100,
+      "completedMatchCount": 100,
+      "seat1WinRate": 0.2717391304347826
+    },
+    {
+      "experimentId": "EXP-05-TOTAL-CLEAR-REBOUND",
+      "file": "EXP-05-TOTAL-CLEAR-REBOUND-result.json",
+      "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+      "profile": "core-advanced-authority",
+      "matchCount": 144,
+      "completedMatchCount": 144,
+      "seat1WinRate": 0.3591549295774648
+    },
+    {
+      "experimentId": "EXP-06-UNRESTRICTED-BENCHMARK",
+      "file": "EXP-06-UNRESTRICTED-BENCHMARK-result.json",
+      "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+      "profile": "core-unrestricted-authority",
+      "matchCount": 144,
+      "completedMatchCount": 144,
+      "seat1WinRate": 0.4154929577464789
+    },
+    {
+      "experimentId": "EXP-07-COUNTER-RETENTION-VALUE",
+      "file": "EXP-07-COUNTER-RETENTION-VALUE-result.json",
+      "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+      "profile": "core-advanced-authority",
+      "matchCount": 100,
+      "completedMatchCount": 100,
+      "seat1WinRate": 0.09
+    }
+  ]
+}

@@ -20,3 +20,14 @@ export { OllamaCommentaryProvider, OLLAMA_ERROR } from './ollama-provider.mjs';
 export { validateAndAccept, spoilerLint, parseJsonLoose } from './commentary-validator.mjs';
 export { captureWaitWhat } from './wait-what.mjs';
 export { CasterSession } from './caster-session.mjs';
+export {
+  InvestigationStatus,
+  createInvestigation, transitionToInvestigating, addBranch, addAnnotation, addComparison,
+  checkInvalidation, exportInvestigation, getInvestigationSummary,
+  validateInvestigation, investigationToJSON, investigationFromJSON
+} from './investigation-workflow.mjs';
+export {
+  FACT_TYPE, AUTHORIZATION_LEVEL,
+  authorizeFacts, buildPromptProvenance, createFallbackCommentary,
+  handleMalformedStream, isCommentaryAuthorized, validateCommentaryContract
+} from './commentary-contract.mjs';

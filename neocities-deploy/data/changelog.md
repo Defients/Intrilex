@@ -1,5 +1,264 @@
 # Changelog
 
+## v1.0.0 — Certified Public Baseline
+
+This is a certification release, not a feature release. It establishes that everything built in v0.28.1 → v0.32.0 is stable and trustworthy.
+
+### Certification Gates
+
+Six-domain certification framework (`scripts/certification-gates.mjs`) verifying:
+
+- **Rules & Engine**: version agreement across all surfaces, no known P0/P1 defects, canon determinism, engine adapter legal action enumeration, balance findings rerun.
+- **Local Player Experience**: Academy onboarding, HYBRIX AI matches, save integrity with compatibility checking, replay system, puzzle ladder, accessibility suite, bounded lookahead AI.
+- **Online Experience**: ranked season lifecycle, auth/reconnect, matchmaking, spectator projection, abandonment handling, durable persistence, backup, monitoring, moderation, privacy tests, tournament infrastructure.
+- **Laboratory**: stable deterministic beat IDs, evidence-honest intelligence, report reproducibility, stale-conclusion invalidation, commentary contract, brain topology.
+- **Release Engineering**: clean-room verification, deterministic build, CI, secret scan, release identity, engine manifest, self-audit PASS, capability truth, test accounting, version surface agreement.
+- **Human Validation**: protocol documented with measurement criteria, Academy and investigation workflow supporting the session types.
+
+### Acknowledged Limitations at Certification
+
+- Lookahead is not labelled "expert"
+- WAIT WHAT workflow is pure-function, not wired into CasterSession
+- 2D brain topology is not the default renderer
+- Evidence-honest labels not displayed in all player-facing surfaces
+- Local TTS not implemented
+- Human validation sessions documented but not yet conducted
+- Pre-existing secret scan finding from commit `8dbdde7`
+
+### New Files
+
+- `scripts/certification-gates.mjs` — six-domain certification gate runner
+- `test/v1.0.0-certified-baseline.test.mjs` — 49 certification tests
+
+
+## v0.32.0 — Intelligence, Better AI, and Replay Caster v1
+
+- **Bounded lookahead policy**: deterministic minimax search with fixed node/time budgets, opponent response sets, evaluation separated from search, and a benchmark suite. The policy is NOT labelled "expert" — benchmark evidence must justify that claim.
+- **Replay Caster commentary contract**: fact-level authorization, versioned prompt provenance, deterministic fallback labels, and malformed-stream handling. Commentary never asserts facts not authorized by the replay/view data.
+- **WAIT WHAT investigation workflow**: complete lifecycle (bookmark → preserve context → inspect alternatives → branch → compare → annotate → export) with automatic invalidation on authority hash change.
+- **Brain topology formalization**: the Brain's job is now formally defined as a mechanic/evidence topology explorer, with a complete 2D SVG equivalent that requires no WebGL.
+- **Evidence-honest player intelligence**: uncertainty labels, sample-size disclaimers, season/version boundaries, and human vs AI distinction. Player intelligence displays are now evidence-honest.
+- New modules: `packages/game-ai/src/bounded-lookahead.mjs`, `packages/replay-caster/src/commentary-contract.mjs`, `packages/replay-caster/src/investigation-workflow.mjs`, `apps/lab-web/src/brain/brain-topology.mjs`, `packages/statistics/src/evidence-honest.mjs`.
+- Tests: `test/v0.32.0-intelligence-caster.test.mjs` (59 tests).
+
+
+## v0.31.0 — Competitive Operations
+
+### Added
+
+- **Tournament check-in & admin correction** — New pure tournament
+  operations module (`tournament-operations.mjs`) with check-in
+  lifecycle, withdrawal with deterministic reseeding, check-in-gated
+  tournament start, admin result correction, player disqualification,
+  match voiding, and structured audit entries with before/after
+  snapshots. All operations preserve immutable-update conventions.
+- **Ranked disconnect/abandonment handling** — New abandonment tracker
+  (`abandonment-handler.mjs`) with configurable grace period (default
+  60s), minimum turn threshold before forfeit (default 4), state
+  machine (CONNECTED → GRACE_PERIOD → FORFEIT_PENDING → FORFEITED /
+  RESUMED), server-authoritative forfeit result construction, and
+  serializable state for recovery. Reconnect cancels forfeit.
+- **Delayed broadcast buffer** — New broadcast module
+  (`delayed-broadcast-buffer.mjs`) with configurable delay (default
+  30s), FIFO buffer with capacity eviction, public vs judge projection
+  types, caster handoff registry (one-caster-per-match invariant),
+  caster transfer, and bracket-to-broadcast navigation link builder.
+- **Social safety moderation service** — New moderation module
+  (`moderation-service.mjs`) with report filing (6 reason categories),
+  report review/action workflow, mute management with lazy expiry,
+  display-name validation (length, charset, leet-speak profanity
+  normalization, impersonation prevention), moderator audit log, and
+  full serialization for persistence.
+- **DB migration framework** — New migration runner
+  (`migration-runner.mjs`) with version tracking table, migration
+  registration and validation, ascending pending execution with
+  per-migration transactions, rollback by version, rollback-to-target,
+  status queries, and error wrapping with applied-before-failure
+  context.
+- **Monitoring dashboard endpoint** — New `/api/status` HTTP endpoint
+  on the match server exposing detailed health metrics (active matches,
+  connections, queue size, memory, event counters, auth/persistence
+  state) for monitoring dashboards. Existing `/health` and `/metrics`
+  remain sanitized for public exposure.
+- **v0.31.0 test suite** — 57 new tests covering tournament check-in,
+  withdrawal, admin correction, disqualification, match voiding, audit
+  log, abandonment tracking, forfeit computation, result record
+  building, broadcast buffer, caster handoff, bracket navigation,
+  moderation service, display-name validation, migration runner, and
+  monitoring endpoint.
+
+### Changed
+
+- Product version bumped from 0.30.0 to 0.31.0
+- All workspace package versions bumped to 0.31.0
+- Release identity, engine manifest, capability truth, and feature
+  matrix regenerated for v0.31.0
+
+## v0.30.0 — Player Experience
+
+### Added
+
+- **Game-start experience overhaul** — Rule profiles now have full
+  player-language explanations with active systems and recommended
+  audience. AI difficulty tiers show descriptions (Easy: forgiving,
+  Hard: skilled, Nightmare: ruthless). Seed controls are hidden under
+  an "Advanced options" disclosure. A resume prompt appears when a
+  saved match exists. Compatibility warnings surface for old
+  saves/replays.
+- **Card Inspector educational bridge** — The inspector now shows
+  protection and targeting status chips (Aegis, Guard, Tapped,
+  Exile-Bound, Attachment). Unavailable action reasons include
+  detailed text and rule references. Learning links connect each card
+  to Academy lessons, Puzzle Ladder practice, and Rank Anatomy.
+- **Academy explanation-first completion** — Foundations and Mechanics
+  tier lessons now use OBJECTIVES completion mode: players demonstrate
+  understanding of the mechanic without needing to win the match.
+  Applied Play tier uses OBJECTIVES_AND_WIN for both demonstration and
+  victory. A new `markUnderstood()` method on AcademyController allows
+  explanation-first completion.
+- **Puzzle → lesson recommendations** — The Academy hub now shows
+  recommended lessons based on puzzle performance. When a player
+  struggles with a puzzle (2+ failed attempts), the corresponding
+  Academy lesson is recommended with a contextual reason.
+
+### Changed
+
+- 8 lessons switched from WIN to OBJECTIVES completion mode
+- 2 lessons switched from WIN to OBJECTIVES_AND_WIN completion mode
+- AI personality cards now show description text alongside archetype name
+- Profile explainer updates dynamically when switching rule profiles
+
+## v0.29.0 — Product Truth & Release Candidate
+
+### Added
+
+- **Generated capability truth** — A single machine-readable capability
+  contract (`config/capability-truth.json`) now generates the feature
+  matrix, known limitations, and README truth sections. Run
+  `pnpm run capability:generate` to regenerate.
+- **Three-lane navigation** — The observatory navigation is reorganized
+  into three product lanes: **Play** (local, ranked, tournaments,
+  replays), **Learn** (academy, puzzles, rules, card reference), and
+  **Lab** (watch, caster, mechanics, ranks, evidence, traces, branches,
+  diagnostics). An **Account** section groups profile, achievements,
+  release notes, settings, and auth.
+- **Feature matrix** — `docs/FEATURE_MATRIX.md` is auto-generated from
+  the capability truth and documents all profiles, network features,
+  product lanes, and limitations in a single place.
+- **Product truth test suite** — 12 tests verify capability truth
+  consistency, three-lanes navigation, and documentation drift prevention.
+
+### Changed
+
+- **README rewritten** — Replaced stale version prose (going back to
+  v0.10.0) with a concise, current summary generated from capability
+  truth. The new README accurately describes ranked matchmaking,
+  accounts, seasons, tournaments, and all current capabilities.
+- **KNOWN_LIMITATIONS.md regenerated** — Now auto-generated from the
+  capability truth with accurate, categorized limitations.
+- Version surfaces updated to 0.29.0.
+
+### Removed
+
+- Stale version prose from v0.10.0 through v0.16.1 in README.md.
+- Old "Analysis/Investigation/System" navigation sections replaced by
+  the three-lane organization.
+
+## v0.28.2 — Evidence Recalibration
+
+### Added
+
+- **Evidence epoch tagging** — Every match, trace, and report now carries
+  `evidenceEpoch`, `postRulesParityRepair`, `authorityHash`, and
+  `releaseIdentityHash` metadata. This prevents evidence from different
+  engine and policy epochs from being silently mixed.
+- **Policy-strength tiers** — All 20 policies are classified into tiers
+  (Fixture, Baseline, Heuristic). Lookahead, Tournament, and Human-meta
+  proxy tiers are declared but not yet established. Claims are qualified
+  by tier; no policy is called "experienced" or "expert" without
+  benchmark support.
+- **Self-play exclusion** — Self-play matches (same policy in both seats)
+  are now flagged with `isSelfPlay` and excluded from cross-policy
+  superiority aggregates in campaign analytics.
+- **Experiment preset infrastructure** — Seven experiment presets
+  (`config/experiments/EXP-01` through `EXP-07`) with reproducible
+  specifications, hypothesis, independent variable, metrics,
+  falsification criterion, and prerequisite gates.
+- **Experiment runner** — `scripts/run-experiment.mjs` executes
+  experiment presets against the repaired engine, producing
+  evidence-epoch-tagged results with admissibility disclosure.
+- **Seven post-repair experiments** — All seven proposed experiments
+  executed against the repaired engine:
+  - EXP-01: 2B2R Ultra hold-vs-fire policy ablation
+  - EXP-02: Black Joker Board Lock lead-vs-comeback
+  - EXP-03: 10♥ Tempo Spike opportunity cost
+  - EXP-04: Queen Fortress breach window
+  - EXP-05: 4♠ Total Clear rebound analysis
+  - EXP-06: Unrestricted seat-balance benchmark
+  - EXP-07: Counter retention value calibration
+- **Post-repair balance report** — `reports/balance-check-v0.28.2/`
+  contains the evidence recalibration report with missingness display,
+  invalidated-conclusion flags, and admissibility disclosure.
+- **Evidence epoch UI** — The `/evidence` workspace now shows evidence
+  epoch metadata, policy-strength tiers, and admissibility disclosure.
+- **Experiment preset selection** — The experiment controls panel now
+  includes a preset dropdown for reproducible experiment configuration.
+
+### Changed
+
+- Version surfaces updated to 0.28.2.
+- Campaign semantic object now includes `evidenceEpoch`,
+  `postRulesParityRepair`, `authorityHash`, and `releaseIdentityHash`.
+- Campaign aggregate now includes epoch fields and `selfPlayExcluded` flag.
+- Match summaries now include `evidenceEpoch`, `postRulesParityRepair`,
+  `authorityHash`, and `isSelfPlay` fields (excluded from matchResultHash).
+- Run provenance now includes `evidenceEpoch` and `authorityHash`.
+
+## v0.28.1 — Rules-Parity Hotfix
+
+### Fixed
+
+- **IMPL-01: Special scoring riders** — Seven (7♣), 10♣, and Black Joker
+  are no longer incorrectly rejected for scoring in Advanced and Unrestricted
+  Core profiles. The fail-closed Advanced/Unrestricted rejection was removed
+  from both the resolver and the enumerator.
+- **IMPL-12: Declaration-class counter matrix** — Base Ace, A♠, and K♠
+  counter authority now operates on declaration classes rather than
+  restricting to only primary `ordinary-effect` declarations. Preserved
+  constraints: Base Ace cannot counter A♠, Ultras, Sudden Death, Anchors,
+  or Goal-Mods; A♠ retains source validation and multi-card target
+  requirement; K♠ retains multi-card requirement and Ultra rejection.
+- **DEG-01: Sudden Death** — repaired recipe validation (RJ+BJ or
+  four-of-a-kind), target selection (Vulnerable enemy OTT card), timer
+  initialization (counter set to 2), countdown (ticks at Full-Turn
+  boundaries, excluded from activation Full Turn), and terminal behavior
+  (`SUDDEN_DEATH_RESOLUTION` terminal reason added).
+- **IMPL-03: ⭐6/⭐7 choice enumeration** — Super Dig and Sequential
+  Topdeck candidates are now enumerated with executable declarations.
+  Post-declaration choices flow through the existing private-choice
+  lifecycle.
+- **IMPL-04: 10♦ Mimic destination** — source card is now marked
+  Exile-Bound and moves to Exile (not GY) after effect resolution.
+  Expanded legal mimic menu to include solo rank-4, rank-5, rank-7,
+  and paired rank-8, rank-J modes.
+- **POL-A1: Solo Wild and Wild Sovereignty AI valuation** — added
+  context-aware scoring for Solo Wild Copy (recipe awareness, Commandeer
+  preservation) and Wild Sovereignty (Exile cost discounting, counter
+  preservation).
+- **POL-A2: Reactive card retention awareness** — added retention
+  penalties for 8 Scuttle Counter, 9 Tap, and J Disrupt when the current
+  threat doesn't justify spending them.
+- **POL-A3: 3-Red Ultra heuristic** — replaced flat +300 bonus for all
+  advanced families with context-dependent scaling based on opponent
+  pressure and own progress.
+
+### Changed
+
+- Regenerated autonomy campaign, observatory analytics, decision traces,
+  and replay artifacts from the clean post-repair engine epoch.
+- Reconciled engine manifest and release identity with current codebase.
+- Updated all version surfaces to 0.28.1.
+
 ## v0.28.0 — UX/Visual Polish & Social Graph
 
 ### Added
@@ -357,10 +616,9 @@ migration protocol. No gameplay or engine changes.
   neocities.org with correct relative paths (walks the folder and uploads
   each file at its path relative to the deploy root, avoiding the
   `neocities-deploy/` subdirectory problem the upstream CLI creates).
-  Credentials from CLI args, `neocities.config.js`, or env vars. Supports
-  `--dry-run`, `--prune` (deletes stale hashed bundles on remote), and
-  `--only=` filters. Makes real network calls — intentionally not run by
-  the build.
+  Credentials are read only from `NEOCITIES_API_KEY` (preferred) or the
+  `NEOCITIES_USERNAME` + `NEOCITIES_PASSWORD` environment pair. Supports
+  `--dry-run`. Makes real network calls — intentionally not run by the build.
 - **New scripts** in `package.json`: `build:neocities` (build + sync),
   `sync:neocities` (sync only), `upload:neocities` (upload only).
 

@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // brain-ui.js — DOM overlay: layer switcher, search, tooltip, detail panel
 // ═══════════════════════════════════════════════════════════════
-import { LAYER_IDS } from './brain-data.js';
+import { LAYER_IDS, CATEGORY_COLORS, EDGE_COLORS, EDGE_TYPE_LABELS } from './brain-data.js';
 
 const LAYER_LABELS = [
   { id: LAYER_IDS.MECHANICS, label: 'Mechanics' },
@@ -22,13 +22,16 @@ const safeColor = (value) => /^#[0-9a-f]{3,8}$/i.test(String(value ?? ''))
 
 /**
  * Build the DOM overlay (layer switcher, search, tooltip, detail panel,
- * cluster controls, help hint) inside a container.
+ * cluster controls, edge filters, stats panel, legend, path info, help hint)
+ * inside a container.
  * @param {HTMLElement} container
  * @param {object} handlers
  * @param {(layer:string)=>void} handlers.onLayerChange
  * @param {(query:string)=>void} handlers.onSearch
  * @param {(category:string,collapsed:boolean)=>void} handlers.onToggleCluster
- * @returns {{root:HTMLElement,tooltip:HTMLElement,detailPanel:HTMLElement,clusterControls:HTMLElement,searchInput:HTMLInputElement,destroy:()=>void,showTooltip:(text:string,x:number,y:number)=>void,hideTooltip:()=>void,showDetail:(node:OverlayNode,connectedNodes?:OverlayNode[])=>void,hideDetail:()=>void,setLayer:(layerId:string)=>void,setCategories:(categories:string[])=>void,setNodes:(nodes:OverlayNode[])=>void}}
+ * @param {(type:string,visible:boolean)=>void} [handlers.onToggleEdgeType]
+ * @param {()=>void} [handlers.onClearPath]
+ * @returns {{root:HTMLElement,tooltip:HTMLElement,detailPanel:HTMLElement,clusterControls:HTMLElement,edgeFilters:HTMLElement,statsPanel:HTMLElement,legend:HTMLElement,pathInfo:HTMLElement,searchInput:HTMLInputElement,destroy:()=>void,showTooltip:(text:string,x:number,y:number)=>void,hideTooltip:()=>void,showDetail:(node:OverlayNode,connectedNodes?:OverlayNode[])=>void,hideDetail:()=>void,setLayer:(layerId:string)=>void,setCategories:(categories:string[])=>void,setNodes:(nodes:OverlayNode[])=>void,setEdgeTypes:(types:string[])=>void,setStats:(metrics:object)=>void,showPathInfo:(startLabel:string,endLabel:string,pathLength:number)=>void,hidePathInfo:()=>void}}
  */
 export function buildOverlay(container, handlers) {
   const root = document.createElement('div');
@@ -40,14 +43,25 @@ export function buildOverlay(container, handlers) {
     <div class="brain-search-wrap">
       <input type="search" class="brain-search" placeholder="Filter nodes…  (press /)" aria-label="Filter mind map nodes" autocomplete="off" spellcheck="false" />
     </div>
+    <div class="brain-path-info" hidden></div>
     <div class="brain-tooltip" role="tooltip" hidden></div>
     <aside class="brain-detail-panel" aria-label="Node details" hidden></aside>
     <div class="brain-cluster-controls" aria-label="Cluster collapse controls"></div>
+    <div class="brain-edge-filters" aria-label="Edge type filters"></div>
+    <details class="brain-legend" aria-label="Legend">
+      <summary>Legend</summary>
+      <div class="brain-legend-section" data-section="nodes"><h4>Node Categories</h4></div>
+      <div class="brain-legend-section" data-section="edges"><h4>Edge Types</h4></div>
+    </details>
+    <details class="brain-stats-panel" aria-label="Graph statistics">
+      <summary>Graph Stats</summary>
+      <div class="brain-stats-grid"></div>
+    </details>
     <details class="brain-node-access">
       <summary>Keyboard node list</summary>
       <div class="brain-node-access-list" role="list" aria-label="Nodes in the selected layer"></div>
     </details>
-    <div class="brain-help-hint" aria-hidden="true">Drag to orbit · Scroll to zoom · Click nodes for details</div>
+    <div class="brain-help-hint" aria-hidden="true">Drag to orbit · Scroll to zoom · Click nodes · Shift-click for path · Double-click to navigate</div>
   `;
   container.appendChild(root);
 
@@ -56,7 +70,29 @@ export function buildOverlay(container, handlers) {
   const tooltip = /** @type {HTMLElement} */ (root.querySelector('.brain-tooltip'));
   const detailPanel = /** @type {HTMLElement} */ (root.querySelector('.brain-detail-panel'));
   const clusterControls = /** @type {HTMLElement} */ (root.querySelector('.brain-cluster-controls'));
+  const edgeFilters = /** @type {HTMLElement} */ (root.querySelector('.brain-edge-filters'));
+  const statsPanel = /** @type {HTMLElement} */ (root.querySelector('.brain-stats-panel'));
+  const statsGrid = /** @type {HTMLElement} */ (root.querySelector('.brain-stats-grid'));
+  const legend = /** @type {HTMLElement} */ (root.querySelector('.brain-legend'));
+  const pathInfo = /** @type {HTMLElement} */ (root.querySelector('.brain-path-info'));
   const nodeAccessList = /** @type {HTMLElement} */ (root.querySelector('.brain-node-access-list'));
+
+  // ── Build the legend once (static color key) ──
+  const legendNodes = legend.querySelector('[data-section="nodes"]');
+  const legendEdges = legend.querySelector('[data-section="edges"]');
+  for (const [cat, color] of Object.entries(CATEGORY_COLORS)) {
+    const item = document.createElement('div');
+    item.className = 'brain-legend-item';
+    item.innerHTML = `<span class="brain-legend-dot" style="background:${safeColor(color)}"></span><span>${escapeHtml(cat)}</span>`;
+    legendNodes.appendChild(item);
+  }
+  for (const [type, color] of Object.entries(EDGE_COLORS)) {
+    const item = document.createElement('div');
+    item.className = 'brain-legend-item';
+    const label = EDGE_TYPE_LABELS[type] ?? type;
+    item.innerHTML = `<span class="brain-legend-line" style="background:${safeColor(color)}"></span><span>${escapeHtml(label)}</span>`;
+    legendEdges.appendChild(item);
+  }
 
   layerBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -149,8 +185,71 @@ export function buildOverlay(container, handlers) {
     }));
   }
 
+  /**
+   * Populate the edge-type filter bar with toggle buttons.
+   * @param {string[]} types - Sorted unique edge types
+   */
+  function setEdgeTypes(types) {
+    edgeFilters.innerHTML = types.map((t) => {
+      const label = EDGE_TYPE_LABELS[t] ?? t;
+      return `<button class="brain-edge-filter-btn active" data-type="${escapeHtml(t)}" aria-pressed="true">${escapeHtml(label)}</button>`;
+    }).join('');
+    const btns = /** @type {NodeListOf<HTMLButtonElement>} */ (edgeFilters.querySelectorAll('.brain-edge-filter-btn'));
+    btns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const pressed = btn.getAttribute('aria-pressed') === 'true';
+        btn.setAttribute('aria-pressed', String(!pressed));
+        btn.classList.toggle('active', !pressed);
+        handlers.onToggleEdgeType?.(btn.dataset.type ?? '', !pressed);
+      });
+    });
+  }
+
+  /**
+   * Render graph statistics into the stats panel.
+   * @param {object} metrics
+   */
+  function setStats(metrics) {
+    const hubs = (metrics.topHubs ?? []).slice(0, 5)
+      .map((h) => `<div class="brain-stat-hub">${escapeHtml(h.label)} <span>${h.degree}</span></div>`).join('');
+    statsGrid.innerHTML = `
+      <div class="brain-stat-item"><span class="brain-stat-label">Nodes</span><span class="brain-stat-value">${metrics.nodeCount ?? 0}</span></div>
+      <div class="brain-stat-item"><span class="brain-stat-label">Edges</span><span class="brain-stat-value">${metrics.edgeCount ?? 0}</span></div>
+      <div class="brain-stat-item"><span class="brain-stat-label">Density</span><span class="brain-stat-value">${(metrics.density ?? 0).toFixed(3)}</span></div>
+      <div class="brain-stat-item"><span class="brain-stat-label">Avg Degree</span><span class="brain-stat-value">${(metrics.averageDegree ?? 0).toFixed(1)}</span></div>
+      <div class="brain-stat-item"><span class="brain-stat-label">Max Degree</span><span class="brain-stat-value">${metrics.maxDegree ?? 0}</span></div>
+      <div class="brain-stat-item"><span class="brain-stat-label">Clusters</span><span class="brain-stat-value">${metrics.clusterCount ?? 0}</span></div>
+      <div class="brain-stat-item"><span class="brain-stat-label">Largest</span><span class="brain-stat-value">${metrics.largestClusterSize ?? 0}</span></div>
+      ${hubs ? `<div class="brain-stat-hubs"><span class="brain-stat-label">Top Hubs</span>${hubs}</div>` : ''}
+    `;
+  }
+
+  /**
+   * Show the shortest-path info bar with a Clear button.
+   * @param {string} startLabel
+   * @param {string} endLabel
+   * @param {number} pathLength
+   */
+  function showPathInfo(startLabel, endLabel, pathLength) {
+    pathInfo.innerHTML = `
+      <span class="brain-path-info-text">${escapeHtml(startLabel)} → ${escapeHtml(endLabel)} <span class="brain-path-info-len">${pathLength} hops</span></span>
+      <button class="brain-path-clear" aria-label="Clear path">Clear</button>
+    `;
+    pathInfo.hidden = false;
+    pathInfo.querySelector('.brain-path-clear')?.addEventListener('click', () => {
+      handlers.onClearPath?.();
+    });
+  }
+
+  /** Hide the path info bar. */
+  function hidePathInfo() {
+    pathInfo.hidden = true;
+    pathInfo.innerHTML = '';
+  }
+
   function destroy() { root.remove(); }
 
-  return { root, tooltip, detailPanel, clusterControls, searchInput,
-    showTooltip, hideTooltip, showDetail, hideDetail, setLayer, setCategories, setNodes, destroy };
+  return { root, tooltip, detailPanel, clusterControls, edgeFilters, statsPanel, legend, pathInfo, searchInput,
+    showTooltip, hideTooltip, showDetail, hideDetail, setLayer, setCategories, setNodes,
+    setEdgeTypes, setStats, showPathInfo, hidePathInfo, destroy };
 }

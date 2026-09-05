@@ -4,8 +4,8 @@
 // Action IDs resolve through a private command vault.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from '../engine/browser-entry.js?v=3dca2dc8fde5';
-import { classifyDecisionKind, presentAction } from './action-presenter.js?v=3dca2dc8fde5';
+import { hashCanonical } from '../engine/browser-entry.js?v=75c53031ef21';
+import { classifyDecisionKind, presentAction } from './action-presenter.js?v=75c53031ef21';
 import {
   PRODUCT_VERSION,
   PLAYER_RUNTIME_VERSION,
@@ -17,8 +17,8 @@ import {
   validateSaveEnvelope,
   canMigrateSave,
   migrateSave,
-} from './save-integrity.js?v=3dca2dc8fde5';
-import { createPolicyRng, computePlayerStats } from './session-utils.js?v=3dca2dc8fde5';
+} from './save-integrity.js?v=75c53031ef21';
+import { createPolicyRng, computePlayerStats } from './session-utils.js?v=75c53031ef21';
 
 // Re-export for backward compatibility (other modules import from play-controller)
 export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope, canMigrateSave, migrateSave };
@@ -40,7 +40,7 @@ export const SessionState = Object.freeze({
 let _engineModule = null;
 async function engine() {
   if (!_engineModule) {
-    _engineModule = await import('../engine/browser-entry.js?v=3dca2dc8fde5');
+    _engineModule = await import('../engine/browser-entry.js?v=75c53031ef21');
   }
   return _engineModule;
 }
@@ -48,7 +48,7 @@ async function engine() {
 let _autonomyModule = null;
 async function autonomy() {
   if (!_autonomyModule) {
-    _autonomyModule = await import('../autonomy-runtime.js?v=3dca2dc8fde5');
+    _autonomyModule = await import('../autonomy-runtime.js?v=75c53031ef21');
   }
   return _autonomyModule;
 }

@@ -10,9 +10,9 @@
  * isolates separate campaign executions even when they share matchIds.
  */
 
-import { createPolicyDefinition } from "./browser-policy-sdk.js?v=3dca2dc8fde5";
-import { createHybrixAgent} from "./agent.js?v=3dca2dc8fde5";
-import { DEFAULT_CONFIG } from "./config.js?v=3dca2dc8fde5";
+import { createPolicyDefinition } from "./browser-policy-sdk.js?v=75c53031ef21";
+import { createHybrixAgent} from "./agent.js?v=75c53031ef21";
+import { DEFAULT_CONFIG } from "./config.js?v=75c53031ef21";
 
 /**
  * Create a HYBRIX-backed policy definition.
@@ -23,10 +23,17 @@ import { DEFAULT_CONFIG } from "./config.js?v=3dca2dc8fde5";
  * @param {object} configOverride - Optional config overrides
  * @returns {object} Policy definition compatible with POLICY_BY_ID
  */
-export function createHybrixPolicy({ policyId, archetype, difficulty = 'normal', configOverride }) {
+export function createHybrixPolicy({ policyId, archetype, difficulty = 'normal', configOverride, strengthTier }) {
   const config = configOverride
     ? { ...DEFAULT_CONFIG, ...configOverride }
     : DEFAULT_CONFIG;
+
+  // Determine strength tier from difficulty if not explicitly provided.
+  // easy → baseline (reproducible but shallow)
+  // normal → heuristic (locally informed choices)
+  // hard → heuristic (stronger heuristic)
+  // nightmare → heuristic (strongest heuristic, not yet lookahead)
+  const resolvedTier = strengthTier ?? (difficulty === 'easy' ? 'baseline' : 'heuristic');
 
   // Agent cache: key = `${runInstanceId}:${matchId}:${actorId}` → agent instance
   // Persists memory, personality morale, and adaptive nudges across
@@ -38,6 +45,7 @@ export function createHybrixPolicy({ policyId, archetype, difficulty = 'normal',
   return createPolicyDefinition({
     policyId,
     version: '1.0.0',
+    strengthTier: resolvedTier,
     traits: {
       archetype,
       difficulty,
@@ -177,7 +185,8 @@ export const HYBRIX_TANK_NORMAL = createHybrixPolicy({
 export const HYBRIX_BASELINE_NORMAL = createHybrixPolicy({
   policyId: 'hybrix-baseline',
   archetype: 'baseline',
-  difficulty: 'normal'
+  difficulty: 'normal',
+  strengthTier: 'baseline'
 });
 
 export const HYBRIX_POLICIES = Object.freeze([

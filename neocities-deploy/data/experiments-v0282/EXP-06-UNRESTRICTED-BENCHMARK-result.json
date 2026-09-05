@@ -1,0 +1,2873 @@
+{
+  "schemaVersion": "1.0.0",
+  "experimentId": "EXP-06-UNRESTRICTED-BENCHMARK",
+  "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
+  "postRulesParityRepair": true,
+  "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0",
+  "releaseIdentityHash": "cef7ee72dab583d41ec37ee3fec7ab6c",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "labVersion": "0.28.1",
+  "profileId": "core-unrestricted-authority",
+  "hypothesis": "When Sudden Death (DEG-01) and star-6/star-7 enumeration (IMPL-03) are repaired, core-unrestricted-authority preserves equal seat balance and healthy game lengths.",
+  "independentVariable": "Seat assignment (P1 vs P2) across a fully balanced 12x12 round-robin (every ordered pair played 4 times = 576 matches)",
+  "falsificationCriterion": "Seat 1 win rate outside [0.45, 0.55] with p < 0.01 indicates genuine mechanical seat bias.",
+  "prerequisiteGates": [
+    "DEG-01 fixed (Sudden Death)",
+    "IMPL-03 fixed (star-6/star-7 enumeration)"
+  ],
+  "policyStrengthTiers": {
+    "random-legal": "fixture",
+    "score-rush": "heuristic",
+    "control": "heuristic",
+    "tempo": "heuristic",
+    "value": "heuristic",
+    "hybrix-rusher": "heuristic",
+    "hybrix-defender": "heuristic",
+    "hybrix-trickster": "heuristic",
+    "hybrix-sniper": "heuristic",
+    "hybrix-rusher-hard": "heuristic",
+    "hybrix-defender-hard": "heuristic",
+    "hybrix-trickster-hard": "heuristic",
+    "hybrix-sniper-hard": "heuristic",
+    "hybrix-rusher-easy": "baseline",
+    "hybrix-defender-easy": "baseline",
+    "hybrix-rusher-nightmare": "heuristic",
+    "hybrix-defender-nightmare": "heuristic",
+    "hybrix-support": "heuristic",
+    "hybrix-tank": "heuristic",
+    "hybrix-baseline": "baseline"
+  },
+  "matchCount": 144,
+  "completedMatchCount": 144,
+  "durationMs": 139390,
+  "startedAt": "2026-09-04T12:41:05.912Z",
+  "experimentHash": "ecde1e569c603b69287dac98744abe05eb45c1064dedfa74414beb99e7a5aee8",
+  "canonicalResultHash": "58dea4ad4a6138b1b48a0bfbbd52aacda13c5ce6906a40df52e703713c0274bf",
+  "aggregateHash": "e9e5db4b65f98439f66035cb771c8b6433f109b3f899b9435ab46522978fefa7",
+  "seat1WinRate": 0.4154929577464789,
+  "seat1Wilson95": [
+    0.3377073680202115,
+    0.4977303724270574
+  ],
+  "selfPlayExcluded": true,
+  "terminationCounts": {
+    "CANONICAL_DRAW": 2,
+    "EXHAUSTED_RESOLUTION": 6,
+    "NORMAL_VICTORY": 136
+  },
+  "metrics": {
+    "totalMatches": 144,
+    "completedMatches": 144,
+    "averageTurns": 12.777777777777779,
+    "seat1WinRate": 0.4154929577464789,
+    "seat1Wilson95": [
+      0.3377073680202115,
+      0.4977303724270574
+    ],
+    "boardLockActivations": 0,
+    "totalClearActivations": 0,
+    "ultraActivations": 137,
+    "selfPlayMatches": 12,
+    "crossPolicyMatches": 132
+  },
+  "policies": {
+    "control": {
+      "games": 24,
+      "wins": 5,
+      "draws": 1,
+      "aborts": 0,
+      "miniTurnActions": 344,
+      "responsesPlayed": 142,
+      "responsesDeclined": 0,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.21739130434782608,
+      "wilson95": [
+        0.10123039985248516,
+        0.4343995317522171
+      ]
+    },
+    "hybrix-baseline": {
+      "games": 24,
+      "wins": 17,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 168,
+      "responsesPlayed": 39,
+      "responsesDeclined": 0,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.7391304347826086,
+      "wilson95": [
+        0.5352999516257462,
+        0.8745138395501366
+      ]
+    },
+    "hybrix-defender": {
+      "games": 24,
+      "wins": 3,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 284,
+      "responsesPlayed": 118,
+      "responsesDeclined": 9,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.13043478260869565,
+      "wilson95": [
+        0.04537659093631238,
+        0.32127482270095964
+      ]
+    },
+    "hybrix-rusher": {
+      "games": 24,
+      "wins": 15,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 154,
+      "responsesPlayed": 45,
+      "responsesDeclined": 1,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.6521739130434783,
+      "wilson95": [
+        0.44890335377263,
+        0.8118872406120227
+      ]
+    },
+    "hybrix-sniper": {
+      "games": 24,
+      "wins": 12,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 172,
+      "responsesPlayed": 43,
+      "responsesDeclined": 5,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.5217391304347826,
+      "wilson95": [
+        0.32962737336427406,
+        0.7076284258335335
+      ]
+    },
+    "hybrix-support": {
+      "games": 24,
+      "wins": 15,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 140,
+      "responsesPlayed": 39,
+      "responsesDeclined": 5,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.6521739130434783,
+      "wilson95": [
+        0.44890335377263,
+        0.8118872406120227
+      ]
+    },
+    "hybrix-tank": {
+      "games": 24,
+      "wins": 4,
+      "draws": 1,
+      "aborts": 0,
+      "miniTurnActions": 301,
+      "responsesPlayed": 112,
+      "responsesDeclined": 0,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.17391304347826086,
+      "wilson95": [
+        0.07306884583422052,
+        0.38516607437126543
+      ]
+    },
+    "hybrix-trickster": {
+      "games": 24,
+      "wins": 18,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 171,
+      "responsesPlayed": 49,
+      "responsesDeclined": 0,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.782608695652174,
+      "wilson95": [
+        0.5809651698373599,
+        0.9033602197341379
+      ]
+    },
+    "random-legal": {
+      "games": 24,
+      "wins": 5,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 306,
+      "responsesPlayed": 152,
+      "responsesDeclined": 42,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.21739130434782608,
+      "wilson95": [
+        0.09663978026586204,
+        0.4190348301626401
+      ]
+    },
+    "score-rush": {
+      "games": 24,
+      "wins": 12,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 124,
+      "responsesPlayed": 36,
+      "responsesDeclined": 0,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.5217391304347826,
+      "wilson95": [
+        0.32962737336427406,
+        0.7076284258335335
+      ]
+    },
+    "tempo": {
+      "games": 24,
+      "wins": 12,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 140,
+      "responsesPlayed": 44,
+      "responsesDeclined": 0,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.5217391304347826,
+      "wilson95": [
+        0.32962737336427406,
+        0.7076284258335335
+      ]
+    },
+    "value": {
+      "games": 24,
+      "wins": 13,
+      "draws": 0,
+      "aborts": 0,
+      "miniTurnActions": 135,
+      "responsesPlayed": 30,
+      "responsesDeclined": 0,
+      "selfPlayGames": 1,
+      "crossPolicyGames": 23,
+      "winRate": 0.5652173913043478,
+      "wilson95": [
+        0.3681137508501646,
+        0.743653646743258
+      ]
+    }
+  },
+  "matchups": {
+    "control__vs__control": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 52,
+      "totalResponses": 17,
+      "totalChoices": 3,
+      "selfPlay": true,
+      "meanFullTurns": 52,
+      "meanResponses": 17,
+      "meanPrivateChoices": 3,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "control__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 21,
+      "totalResponses": 10,
+      "totalChoices": 2,
+      "selfPlay": false,
+      "meanFullTurns": 21,
+      "meanResponses": 10,
+      "meanPrivateChoices": 2,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "control__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 36,
+      "totalResponses": 13,
+      "totalChoices": 3,
+      "selfPlay": false,
+      "meanFullTurns": 36,
+      "meanResponses": 13,
+      "meanPrivateChoices": 3,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "control__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 20,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 20,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "control__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 39,
+      "totalResponses": 17,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 39,
+      "meanResponses": 17,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "control__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 13,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 13,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "control__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 0,
+      "draws": 1,
+      "aborts": 0,
+      "totalFullTurns": 41,
+      "totalResponses": 14,
+      "totalChoices": 3,
+      "selfPlay": false,
+      "meanFullTurns": 41,
+      "meanResponses": 14,
+      "meanPrivateChoices": 3,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "control__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 15,
+      "totalResponses": 8,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 15,
+      "meanResponses": 8,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "control__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 57,
+      "totalResponses": 22,
+      "totalChoices": 7,
+      "selfPlay": false,
+      "meanFullTurns": 57,
+      "meanResponses": 22,
+      "meanPrivateChoices": 7,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "control__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 1,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 1,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "control__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 21,
+      "totalResponses": 7,
+      "totalChoices": 2,
+      "selfPlay": false,
+      "meanFullTurns": 21,
+      "meanResponses": 7,
+      "meanPrivateChoices": 2,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "control__vs__value": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 11,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 11,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-baseline__vs__control": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 38,
+      "totalResponses": 15,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 38,
+      "meanResponses": 15,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-baseline__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 7,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-baseline__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 4,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 4,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-baseline__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 4,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 4,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-baseline__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 10,
+      "totalResponses": 7,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 10,
+      "meanResponses": 7,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-baseline__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 2,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 2,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-baseline__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 18,
+      "totalResponses": 9,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 18,
+      "meanResponses": 9,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-baseline__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-baseline__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 5,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 7,
+      "meanResponses": 5,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-baseline__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-baseline__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 8,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 8,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-baseline__vs__value": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 4,
+      "totalResponses": 0,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 4,
+      "meanResponses": 0,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-defender__vs__control": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 0,
+      "totalResponses": 0,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 0,
+      "meanResponses": 0,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-defender__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-defender__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 45,
+      "totalResponses": 17,
+      "totalChoices": 4,
+      "selfPlay": true,
+      "meanFullTurns": 45,
+      "meanResponses": 17,
+      "meanPrivateChoices": 4,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-defender__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-defender__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 7,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-defender__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 15,
+      "totalResponses": 9,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 15,
+      "meanResponses": 9,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-defender__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 1,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 1,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-defender__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 23,
+      "totalResponses": 8,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 23,
+      "meanResponses": 8,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-defender__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 42,
+      "totalResponses": 42,
+      "totalChoices": 3,
+      "selfPlay": false,
+      "meanFullTurns": 42,
+      "meanResponses": 42,
+      "meanPrivateChoices": 3,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-defender__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-defender__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 29,
+      "totalResponses": 14,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 29,
+      "meanResponses": 14,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-defender__vs__value": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-rusher__vs__control": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 18,
+      "totalResponses": 4,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 18,
+      "meanResponses": 4,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-rusher__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 8,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 8,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-rusher__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 9,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 9,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-rusher__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 7,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-rusher__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 9,
+      "totalResponses": 7,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 9,
+      "meanResponses": 7,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-rusher__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 4,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 4,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-rusher__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 18,
+      "totalResponses": 6,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 18,
+      "meanResponses": 6,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-rusher__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 3,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 3,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-rusher__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 1,
+      "totalChoices": 3,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 1,
+      "meanPrivateChoices": 3,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-rusher__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 6,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 6,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-rusher__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 9,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 9,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-rusher__vs__value": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-sniper__vs__control": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 16,
+      "totalResponses": 5,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 16,
+      "meanResponses": 5,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-sniper__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-sniper__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 6,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 6,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-sniper__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 7,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-sniper__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 6,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 6,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-sniper__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-sniper__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 27,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 27,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-sniper__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 17,
+      "totalResponses": 5,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 17,
+      "meanResponses": 5,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-sniper__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 10,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 10,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-sniper__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 7,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 7,
+      "meanResponses": 7,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-sniper__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 3,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 3,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-sniper__vs__value": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-support__vs__control": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 6,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 6,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-support__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 4,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 4,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-support__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 16,
+      "totalResponses": 10,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 16,
+      "meanResponses": 10,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-support__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 10,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 10,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-support__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-support__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 4,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 4,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-support__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 11,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 11,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-support__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-support__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 4,
+      "totalResponses": 7,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 4,
+      "meanResponses": 7,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-support__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 10,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 10,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-support__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 8,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 8,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-support__vs__value": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__control": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 9,
+      "totalResponses": 1,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 9,
+      "meanResponses": 1,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 11,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 11,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 44,
+      "totalResponses": 16,
+      "totalChoices": 3,
+      "selfPlay": false,
+      "meanFullTurns": 44,
+      "meanResponses": 16,
+      "meanPrivateChoices": 3,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 15,
+      "totalResponses": 6,
+      "totalChoices": 2,
+      "selfPlay": false,
+      "meanFullTurns": 15,
+      "meanResponses": 6,
+      "meanPrivateChoices": 2,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 1,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 1,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 3,
+      "totalChoices": 2,
+      "selfPlay": false,
+      "meanFullTurns": 7,
+      "meanResponses": 3,
+      "meanPrivateChoices": 2,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 0,
+      "draws": 1,
+      "aborts": 0,
+      "totalFullTurns": 41,
+      "totalResponses": 16,
+      "totalChoices": 6,
+      "selfPlay": true,
+      "meanFullTurns": 41,
+      "meanResponses": 16,
+      "meanPrivateChoices": 6,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 7,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 29,
+      "totalResponses": 19,
+      "totalChoices": 3,
+      "selfPlay": false,
+      "meanFullTurns": 29,
+      "meanResponses": 19,
+      "meanPrivateChoices": 3,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 23,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 23,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 3,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 3,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-tank__vs__value": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 19,
+      "totalResponses": 9,
+      "totalChoices": 3,
+      "selfPlay": false,
+      "meanFullTurns": 19,
+      "meanResponses": 9,
+      "meanPrivateChoices": 3,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-trickster__vs__control": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 8,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 8,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-trickster__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 3,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 3,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-trickster__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 9,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 9,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-trickster__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 9,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 9,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-trickster__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 8,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 8,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-trickster__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 3,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 3,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-trickster__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 8,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 8,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-trickster__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 9,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 9,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "hybrix-trickster__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 7,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 7,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-trickster__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 4,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 4,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-trickster__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 7,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 7,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "hybrix-trickster__vs__value": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "random-legal__vs__control": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 56,
+      "totalResponses": 29,
+      "totalChoices": 7,
+      "selfPlay": false,
+      "meanFullTurns": 56,
+      "meanResponses": 29,
+      "meanPrivateChoices": 7,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "random-legal__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 11,
+      "totalResponses": 13,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 11,
+      "meanResponses": 13,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "random-legal__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 36,
+      "totalResponses": 21,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 36,
+      "meanResponses": 21,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "random-legal__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "random-legal__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 11,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 11,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "random-legal__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 9,
+      "totalResponses": 7,
+      "totalChoices": 2,
+      "selfPlay": false,
+      "meanFullTurns": 9,
+      "meanResponses": 7,
+      "meanPrivateChoices": 2,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "random-legal__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 50,
+      "totalResponses": 18,
+      "totalChoices": 2,
+      "selfPlay": false,
+      "meanFullTurns": 50,
+      "meanResponses": 18,
+      "meanPrivateChoices": 2,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "random-legal__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 13,
+      "totalResponses": 7,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 13,
+      "meanResponses": 7,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "random-legal__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 42,
+      "totalResponses": 15,
+      "totalChoices": 3,
+      "selfPlay": true,
+      "meanFullTurns": 42,
+      "meanResponses": 15,
+      "meanPrivateChoices": 3,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "random-legal__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 11,
+      "totalResponses": 10,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 11,
+      "meanResponses": 10,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "random-legal__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 17,
+      "totalResponses": 2,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 17,
+      "meanResponses": 2,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "random-legal__vs__value": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 4,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 7,
+      "meanResponses": 4,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "score-rush__vs__control": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 50,
+      "totalResponses": 12,
+      "totalChoices": 2,
+      "selfPlay": false,
+      "meanFullTurns": 50,
+      "meanResponses": 12,
+      "meanPrivateChoices": 2,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "score-rush__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 7,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "score-rush__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 4,
+      "totalResponses": 7,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 4,
+      "meanResponses": 7,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "score-rush__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 9,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 9,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "score-rush__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "score-rush__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "score-rush__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 12,
+      "totalResponses": 3,
+      "totalChoices": 2,
+      "selfPlay": false,
+      "meanFullTurns": 12,
+      "meanResponses": 3,
+      "meanPrivateChoices": 2,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "score-rush__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 6,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 6,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "score-rush__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 4,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 4,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "score-rush__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 5,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "score-rush__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 8,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 8,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "score-rush__vs__value": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "tempo__vs__control": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 2,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 2,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "tempo__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 9,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 9,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "tempo__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 9,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 9,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "tempo__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "tempo__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 7,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "tempo__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "tempo__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 3,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 3,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "tempo__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 0,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 0,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "tempo__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 10,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 10,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "tempo__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 6,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 6,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "tempo__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 3,
+      "totalResponses": 1,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 3,
+      "meanResponses": 1,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "tempo__vs__value": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "value__vs__control": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 1,
+      "totalResponses": 4,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 1,
+      "meanResponses": 4,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "value__vs__hybrix-baseline": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 0,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 0,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "value__vs__hybrix-defender": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 10,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 10,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "value__vs__hybrix-rusher": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 10,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 10,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "value__vs__hybrix-sniper": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 9,
+      "totalResponses": 5,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 9,
+      "meanResponses": 5,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "value__vs__hybrix-support": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 7,
+      "totalResponses": 2,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 7,
+      "meanResponses": 2,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "value__vs__hybrix-tank": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 12,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 12,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "value__vs__hybrix-trickster": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 7,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 14,
+      "meanResponses": 7,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "value__vs__random-legal": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 16,
+      "totalResponses": 5,
+      "totalChoices": 1,
+      "selfPlay": false,
+      "meanFullTurns": 16,
+      "meanResponses": 5,
+      "meanPrivateChoices": 1,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    },
+    "value__vs__score-rush": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 9,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 9,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "value__vs__tempo": {
+      "games": 1,
+      "seat1Wins": 0,
+      "seat2Wins": 1,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 5,
+      "totalResponses": 3,
+      "totalChoices": 0,
+      "selfPlay": false,
+      "meanFullTurns": 5,
+      "meanResponses": 3,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0,
+        0.7934506856227626
+      ]
+    },
+    "value__vs__value": {
+      "games": 1,
+      "seat1Wins": 1,
+      "seat2Wins": 0,
+      "draws": 0,
+      "aborts": 0,
+      "totalFullTurns": 14,
+      "totalResponses": 8,
+      "totalChoices": 0,
+      "selfPlay": true,
+      "meanFullTurns": 14,
+      "meanResponses": 8,
+      "meanPrivateChoices": 0,
+      "seat1Wilson95": [
+        0.20654931437723745,
+        1
+      ]
+    }
+  },
+  "interpretationBoundary": "Policy-conditioned Advanced Core observation. Associations are not causal proof; unsupported branches remain fail-closed. Self-play matches excluded from cross-policy superiority aggregates.",
+  "admissibilityDisclosure": {
+    "admissible": true,
+    "epoch": "post-rules-parity-repair-v0.28.1",
+    "profile": "core-unrestricted-authority",
+    "selfPlayExcluded": true,
+    "notes": [
+      "Prerequisite gates: DEG-01 fixed (Sudden Death), IMPL-03 fixed (star-6/star-7 enumeration)",
+      "Policy strength tiers: claims qualified by tier (fixture/baseline/heuristic). No lookahead/tournament/human-meta-proxy policies established yet."
+    ]
+  }
+}

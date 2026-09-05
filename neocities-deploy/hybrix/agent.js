@@ -9,17 +9,17 @@
  * runtime. Also works standalone for real-time games.
  */
 
-import { createPerception } from "./perception.js?v=3dca2dc8fde5";
-import { createPersonality, updateMorale, decayMorale, describePersonality } from "./personality.js?v=3dca2dc8fde5";
-import { createMemory } from "./memory.js?v=3dca2dc8fde5";
-import { createCognition } from "./cognition.js?v=3dca2dc8fde5";
-import { createSharedBlackboard, evaluateCoordination } from "./coordination.js?v=3dca2dc8fde5";
-import { createFailsafe, determineLodTier } from "./failsafe.js?v=3dca2dc8fde5";
-import { createDebugSystem } from "./debug.js?v=3dca2dc8fde5";
-import { getDifficultyConfig, getReactionMultiplier, getAdaptationRate, isCoordinationEnabled, auditDifficultyConfig } from "./difficulty.js?v=3dca2dc8fde5";
-import { evaluateRankStrategy } from "./rank-strategy.js?v=3dca2dc8fde5";
-import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=3dca2dc8fde5";
-import { scorePolicyAction } from "../policy-scoring.js?v=3dca2dc8fde5";
+import { createPerception } from "./perception.js?v=75c53031ef21";
+import { createPersonality, updateMorale, decayMorale, describePersonality } from "./personality.js?v=75c53031ef21";
+import { createMemory } from "./memory.js?v=75c53031ef21";
+import { createCognition } from "./cognition.js?v=75c53031ef21";
+import { createSharedBlackboard, evaluateCoordination } from "./coordination.js?v=75c53031ef21";
+import { createFailsafe, determineLodTier } from "./failsafe.js?v=75c53031ef21";
+import { createDebugSystem } from "./debug.js?v=75c53031ef21";
+import { getDifficultyConfig, getReactionMultiplier, getAdaptationRate, isCoordinationEnabled, auditDifficultyConfig } from "./difficulty.js?v=75c53031ef21";
+import { evaluateRankStrategy } from "./rank-strategy.js?v=75c53031ef21";
+import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=75c53031ef21";
+import { scorePolicyAction } from "../policy-scoring.js?v=75c53031ef21";
 
 export const ARCHETYPE_TO_SCORING_POLICY = Object.freeze({
   rusher: 'score-rush',
@@ -759,9 +759,38 @@ function scoreLegalAction(action, view, context) {
     score -= 100;
   }
 
-  // Advanced mechanics
-  if (['royal-marriage', 'super', 'rank10', 'ultra', 'voltage'].includes(family)) {
-    score += 300;
+  // Advanced mechanics — context-dependent bonuses (POL-A3 fix)
+  // Previously all advanced families got a flat +300, which disproportionately
+  // activated 3-Red Ultra regardless of board state. Now each family gets a
+  // scaled bonus based on its strategic context.
+  if (family === 'royal-marriage') {
+    score += 300; // Royal Marriage is always high-value (dual Anchor + Aegis)
+  } else if (family === 'super') {
+    score += 250; // Supers are strong but situational
+  } else if (family === 'rank10') {
+    score += 220; // Rank-10 effects are valuable but vary by mode
+  } else if (family === 'ultra') {
+    // Ultra plays are high-investment (3-4 source cards). Scale the bonus
+    // based on board state to avoid disproportionate activation.
+    const opponents = view.opponents ?? [];
+    const maxOpponentScore = Math.max(0, ...opponents.map(o => Number(o.securedPoints ?? 0)));
+    const opponentGoal = opponents[0]?.goal ?? 21;
+    const opponentPressure = Math.min(1, maxOpponentScore / opponentGoal);
+    const ownSecured = own.securedPoints ?? 0;
+    const ownGoal = own.goal ?? 21;
+    const ownProgress = ownSecured / ownGoal;
+    if (ownProgress > 0.7) {
+      // Close to winning: Ultra is less necessary, reduce bonus
+      score += 150;
+    } else if (opponentPressure > 0.6) {
+      // Under pressure: Ultra for board control is justified
+      score += 280;
+    } else {
+      // Normal: moderate bonus, not a flat +300
+      score += 200;
+    }
+  } else if (family === 'voltage') {
+    score += 180; // Voltage is utility, not a primary win condition
   }
 
   return score;

@@ -11,8 +11,8 @@ const brainSrc = (rel) => readFile(path.join(root, 'apps/lab-web/src/brain', rel
 // ── Pure data adapters (importable in Node — no browser deps) ──
 import {
   buildMechanicsLayer, buildWorkspaceLayer, buildCardLayer, buildCombinedLayer,
-  searchNodes, collectCategories, clusterNodeIds, weightToRadius,
-  CATEGORY_COLORS, EDGE_COLORS, SUIT_COLORS, LAYER_IDS, WORKSPACE_RELATIONSHIPS,
+  searchNodes, collectCategories, collectEdgeTypes, clusterNodeIds, findShortestPath, weightToRadius,
+  CATEGORY_COLORS, EDGE_COLORS, EDGE_TYPE_LABELS, SUIT_COLORS, LAYER_IDS, WORKSPACE_RELATIONSHIPS,
 } from '../apps/lab-web/src/brain/brain-data.js';
 
 import {
@@ -203,6 +203,85 @@ test('weightToRadius maps weight to a radius within [base, max]', () => {
   assert.ok(weightToRadius(100) <= 5.0);
   assert.ok(weightToRadius(100) >= 2.0);
   assert.ok(weightToRadius(5) > weightToRadius(1));
+});
+
+// ═══════════════════════════════════════════════════════════════
+// brain-data.js — new pure helpers (edge types, shortest path, labels)
+// ═══════════════════════════════════════════════════════════════
+
+test('EDGE_TYPE_LABELS maps all edge types to human-readable labels', () => {
+  for (const type of ['synergy', 'anti-synergy', 'motif', 'navigation', 'card', 'cross']) {
+    assert.ok(EDGE_TYPE_LABELS[type], `missing label for ${type}`);
+    assert.equal(typeof EDGE_TYPE_LABELS[type], 'string');
+  }
+  assert.equal(EDGE_TYPE_LABELS.synergy, 'Synergy');
+  assert.equal(EDGE_TYPE_LABELS['anti-synergy'], 'Anti-Synergy');
+  assert.equal(EDGE_TYPE_LABELS.cross, 'Cross-Layer');
+});
+
+test('collectEdgeTypes returns sorted unique edge types', () => {
+  const edges = [
+    { source: 'a', target: 'b', type: 'synergy' },
+    { source: 'b', target: 'c', type: 'card' },
+    { source: 'c', target: 'd', type: 'synergy' },
+    { source: 'd', target: 'e', type: 'navigation' },
+  ];
+  assert.deepEqual(collectEdgeTypes(edges), ['card', 'navigation', 'synergy']);
+  assert.deepEqual(collectEdgeTypes([]), []);
+});
+
+test('findShortestPath returns a direct path for adjacent nodes', () => {
+  const nodes = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+  const edges = [
+    { source: 'a', target: 'b' },
+    { source: 'b', target: 'c' },
+  ];
+  const result = findShortestPath(nodes, edges, 'a', 'b');
+  assert.ok(result, 'must find a path');
+  assert.deepEqual(result.path, ['a', 'b']);
+  assert.ok(result.pathEdges.has('a|b'));
+});
+
+test('findShortestPath finds multi-hop paths via BFS', () => {
+  const nodes = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }];
+  const edges = [
+    { source: 'a', target: 'b' },
+    { source: 'b', target: 'c' },
+    { source: 'c', target: 'd' },
+  ];
+  const result = findShortestPath(nodes, edges, 'a', 'd');
+  assert.ok(result, 'must find a path');
+  assert.deepEqual(result.path, ['a', 'b', 'c', 'd']);
+  assert.equal(result.pathEdges.size, 6); // 3 edges × 2 directions
+});
+
+test('findShortestPath treats edges as undirected', () => {
+  const nodes = [{ id: 'a' }, { id: 'b' }];
+  const edges = [{ source: 'b', target: 'a' }]; // reverse direction
+  const result = findShortestPath(nodes, edges, 'a', 'b');
+  assert.ok(result, 'must find a path in reverse direction');
+  assert.deepEqual(result.path, ['a', 'b']);
+});
+
+test('findShortestPath returns null when no path exists', () => {
+  const nodes = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+  const edges = [{ source: 'a', target: 'b' }];
+  const result = findShortestPath(nodes, edges, 'a', 'c');
+  assert.equal(result, null);
+});
+
+test('findShortestPath returns null for same start and end', () => {
+  const nodes = [{ id: 'a' }];
+  const edges = [];
+  const result = findShortestPath(nodes, edges, 'a', 'a');
+  assert.equal(result, null);
+});
+
+test('findShortestPath returns null for unknown node ids', () => {
+  const nodes = [{ id: 'a' }, { id: 'b' }];
+  const edges = [{ source: 'a', target: 'b' }];
+  assert.equal(findShortestPath(nodes, edges, 'a', 'unknown'), null);
+  assert.equal(findShortestPath(nodes, edges, 'unknown', 'b'), null);
 });
 
 test('CATEGORY_COLORS covers all spec categories with design-token colors', () => {
@@ -421,6 +500,67 @@ test('brain-data.js defines all four layer ids', async () => {
   assert.match(js, /COMBINED:/);
 });
 
+test('brain-data.js exports EDGE_TYPE_LABELS, collectEdgeTypes, findShortestPath', async () => {
+  const js = await brainSrc('brain-data.js');
+  assert.match(js, /export const EDGE_TYPE_LABELS/);
+  assert.match(js, /export function collectEdgeTypes/);
+  assert.match(js, /export function findShortestPath/);
+});
+
+test('brain-edges.js exports setEdgeHover and createEdgeFlow', async () => {
+  const js = await brainSrc('brain-edges.js');
+  assert.match(js, /export function setEdgeHover/);
+  assert.match(js, /export function createEdgeFlow/);
+  assert.match(js, /SphereGeometry/);
+});
+
+test('brain-interaction.js supports edge hover, shift-click, and double-click', async () => {
+  const js = await brainSrc('brain-interaction.js');
+  assert.match(js, /onEdgeHover/);
+  assert.match(js, /onShiftClick/);
+  assert.match(js, /onDoubleClick/);
+  assert.match(js, /dblclick/);
+  assert.match(js, /getEdges/);
+  assert.match(js, /Line\.threshold/);
+});
+
+test('brain-ui.js builds edge filters, stats panel, legend, and path info', async () => {
+  const js = await brainSrc('brain-ui.js');
+  assert.match(js, /brain-edge-filters/);
+  assert.match(js, /brain-stats-panel/);
+  assert.match(js, /brain-legend/);
+  assert.match(js, /brain-path-info/);
+  assert.match(js, /setEdgeTypes/);
+  assert.match(js, /setStats/);
+  assert.match(js, /showPathInfo/);
+  assert.match(js, /hidePathInfo/);
+});
+
+test('brain-controller.js wires all seven enhancement features', async () => {
+  const js = await brainSrc('brain-controller.js');
+  // Edge hover tooltip.
+  assert.match(js, /onEdgeHover/);
+  // Animated edge flow.
+  assert.match(js, /createEdgeFlow/);
+  assert.match(js, /edgeFlows/);
+  // Edge type filtering.
+  assert.match(js, /hiddenEdgeTypes/);
+  assert.match(js, /onToggleEdgeType/);
+  // Graph stats panel.
+  assert.match(js, /computeGraphStats/);
+  assert.match(js, /setStats/);
+  // Shortest path finder.
+  assert.match(js, /findShortestPath/);
+  assert.match(js, /handleShiftClick/);
+  assert.match(js, /onShiftClick/);
+  assert.match(js, /clearPath/);
+  // Legend (built in UI, controller imports EDGE_TYPE_LABELS).
+  assert.match(js, /EDGE_TYPE_LABELS/);
+  // Double-click navigation.
+  assert.match(js, /onDoubleClick/);
+  assert.match(js, /window\.location\.hash/);
+});
+
 // ── CSS presence ──
 test('brain.css exists and is imported in styles.css', async () => {
   const styles = await src('styles.css');
@@ -438,6 +578,21 @@ test('brain.css has container, overlay, detail panel, and mobile styles', async 
   assert.match(css, /\.brain-cluster-controls/);
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /@media\s*\(max-width:768px\)/);
+});
+
+test('brain.css styles the new enhancement UI elements', async () => {
+  const css = await readFile(path.join(root, 'apps/lab-web/src/css/brain.css'), 'utf8');
+  assert.match(css, /\.brain-edge-filters/);
+  assert.match(css, /\.brain-edge-filter-btn/);
+  assert.match(css, /\.brain-stats-panel/);
+  assert.match(css, /\.brain-stats-grid/);
+  assert.match(css, /\.brain-stat-item/);
+  assert.match(css, /\.brain-legend/);
+  assert.match(css, /\.brain-legend-item/);
+  assert.match(css, /\.brain-legend-dot/);
+  assert.match(css, /\.brain-legend-line/);
+  assert.match(css, /\.brain-path-info/);
+  assert.match(css, /\.brain-path-clear/);
 });
 
 // ── three.js dependency ──

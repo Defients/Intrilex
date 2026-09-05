@@ -32,6 +32,19 @@ export const EDGE_COLORS = Object.freeze({
   cross: '#8ea5b2',         // --faint
 });
 
+/**
+ * Human-readable labels for each edge type (used by the legend + tooltips).
+ * @type {Readonly<Record<string,string>>}
+ */
+export const EDGE_TYPE_LABELS = Object.freeze({
+  synergy: 'Synergy',
+  'anti-synergy': 'Anti-Synergy',
+  motif: 'Motif',
+  navigation: 'Navigation',
+  card: 'Card Interaction',
+  cross: 'Cross-Layer',
+});
+
 // Suit → color mapping for the card layer.
 export const SUIT_COLORS = Object.freeze({
   '♣': '#4fd387', // clubs green
@@ -364,4 +377,83 @@ export function clusterNodeIds(nodes, category) {
  */
 export function collectCategories(nodes) {
   return [...new Set(nodes.map((n) => n.category))].sort();
+}
+
+/**
+ * Collect all unique edge types present in an edge set, sorted alphabetically.
+ * Used to populate the edge-type filter bar.
+ * @param {Array<GraphEdge>} edges
+ * @returns {string[]}
+ */
+export function collectEdgeTypes(edges) {
+  return [...new Set(edges.map((e) => e.type))].sort();
+}
+
+/**
+ * Build an undirected adjacency map from edges (nodeId → Set<neighborId>).
+ * @param {Array<GraphEdge>} edges
+ * @returns {Map<string,Set<string>>}
+ */
+function buildAdjacency(edges) {
+  const adj = new Map();
+  for (const e of edges) {
+    if (!adj.has(e.source)) adj.set(e.source, new Set());
+    if (!adj.has(e.target)) adj.set(e.target, new Set());
+    adj.get(e.source).add(e.target);
+    adj.get(e.target).add(e.source);
+  }
+  return adj;
+}
+
+/**
+ * Find the shortest path between two node ids via breadth-first search.
+ * Edges are treated as undirected. Returns the ordered list of node ids
+ * along the path and a Set of edge keys (`"${source}|${target}"`) covering
+ * the path, or null when no path exists.
+ * @param {Array<GraphNode>} nodes - Node set (used only to validate endpoints)
+ * @param {Array<GraphEdge>} edges - Edge set
+ * @param {string} startId
+ * @param {string} endId
+ * @returns {{path:string[],pathEdges:Set<string>}|null}
+ */
+export function findShortestPath(nodes, edges, startId, endId) {
+  if (!startId || !endId || startId === endId) return null;
+  const nodeIds = new Set(nodes.map((n) => n.id));
+  if (!nodeIds.has(startId) || !nodeIds.has(endId)) return null;
+
+  const adj = buildAdjacency(edges);
+  if (!adj.has(startId) || !adj.has(endId)) return null;
+
+  // BFS with predecessor tracking.
+  const visited = new Set([startId]);
+  const predecessor = new Map();
+  const queue = [startId];
+  while (queue.length) {
+    const cur = queue.shift();
+    if (cur === endId) break;
+    for (const next of adj.get(cur) ?? []) {
+      if (visited.has(next)) continue;
+      visited.add(next);
+      predecessor.set(next, cur);
+      queue.push(next);
+    }
+  }
+
+  if (!predecessor.has(endId)) return null;
+
+  // Reconstruct path.
+  const path = [endId];
+  let cur = endId;
+  while (predecessor.has(cur)) {
+    cur = predecessor.get(cur);
+    path.unshift(cur);
+  }
+
+  // Derive edge keys for the path (try both directions since undirected).
+  const pathEdges = new Set();
+  for (let i = 0; i < path.length - 1; i++) {
+    pathEdges.add(`${path[i]}|${path[i + 1]}`);
+    pathEdges.add(`${path[i + 1]}|${path[i]}`);
+  }
+  return { path, pathEdges };
 }

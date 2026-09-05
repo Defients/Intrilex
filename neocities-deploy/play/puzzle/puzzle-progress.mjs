@@ -60,3 +60,54 @@ export function getSolvedCount(allPuzzleIds) {
   const solved = getPuzzleProgress().solved;
   return allPuzzleIds.filter(id => solved.includes(id)).length;
 }
+
+// ── v0.30.0: Puzzle → Lesson recommendation engine ───────────
+//
+// Maps puzzle IDs to Academy lesson IDs. When a player struggles with
+// a puzzle (multiple failed attempts), the engine recommends the
+// corresponding Academy lesson to strengthen that mechanic.
+
+const PUZZLE_TO_LESSON_MAP = Object.freeze({
+  'puzzle-scuttle': 'mechanics-01-scuttle',
+  'puzzle-anchor': 'mechanics-02-anchor',
+  'puzzle-swap': 'mechanics-03-swap',
+  'puzzle-respond': 'mechanics-04-respond',
+  'puzzle-counter': 'mechanics-04-respond',
+  'puzzle-royals': 'applied-01-royals',
+  'puzzle-combo': 'applied-02-combo',
+  'puzzle-draw': 'foundations-01-draw',
+  'puzzle-score': 'foundations-02-score',
+  'puzzle-goal': 'foundations-03-goal',
+});
+
+/**
+ * Get recommended Academy lessons based on puzzle performance.
+ * A lesson is recommended if the player has 2+ failed attempts on
+ * a puzzle that maps to that lesson, and the lesson is not yet complete.
+ * @param {string[]} completedLessonIds - Lessons already completed
+ * @returns {Array<{ lessonId: string, puzzleId: string, reason: string }>}
+ */
+export function getRecommendedLessons(completedLessonIds = []) {
+  const progress = getPuzzleProgress();
+  const completed = new Set(completedLessonIds);
+  const recommendations = [];
+  const seen = new Set();
+
+  for (const [puzzleId, lessonId] of Object.entries(PUZZLE_TO_LESSON_MAP)) {
+    if (completed.has(lessonId)) continue;
+    if (seen.has(lessonId)) continue;
+    const attempts = progress.attempts[puzzleId] ?? 0;
+    const solved = progress.solved.includes(puzzleId);
+    // Recommend if player has 2+ failed attempts and hasn't solved the puzzle
+    if (attempts >= 2 && !solved) {
+      seen.add(lessonId);
+      recommendations.push({
+        lessonId,
+        puzzleId,
+        reason: `You've attempted "${puzzleId}" ${attempts} times. This lesson can help.`,
+      });
+    }
+  }
+
+  return recommendations;
+}

@@ -4,12 +4,12 @@
 // and the bridge between the Observatory state and the package core.
 // ═══════════════════════════════════════════════════════════════
 
-import { normalizeSettings, isLocalEndpoint, DEFAULT_SETTINGS, SYSTEM_PROMPT_VERSION } from './config.mjs?v=3dca2dc8fde5';
-import { OLLAMA_ERROR } from './ollama-client.mjs?v=3dca2dc8fde5';
-import { discoverOllama, verifyModel } from './model-discovery.mjs?v=3dca2dc8fde5';
-import { runDeterministicChecks, summarizeDeterministicChecks } from './deterministic-statistics.mjs?v=3dca2dc8fde5';
-import { AnalysisController, ANALYSIS_STATUS, ANALYSIS_MODE } from './analysis-controller.mjs?v=3dca2dc8fde5';
-import { AnalysisCache, deriveDatasetId } from './analysis-cache.mjs?v=3dca2dc8fde5';
+import { normalizeSettings, isLocalEndpoint, DEFAULT_SETTINGS, SYSTEM_PROMPT_VERSION } from './config.mjs?v=75c53031ef21';
+import { OLLAMA_ERROR } from './ollama-client.mjs?v=75c53031ef21';
+import { discoverOllama, verifyModel } from './model-discovery.mjs?v=75c53031ef21';
+import { runDeterministicChecks, summarizeDeterministicChecks } from './deterministic-statistics.mjs?v=75c53031ef21';
+import { AnalysisController, ANALYSIS_STATUS, ANALYSIS_MODE } from './analysis-controller.mjs?v=75c53031ef21';
+import { AnalysisCache, deriveDatasetId } from './analysis-cache.mjs?v=75c53031ef21';
 
 const SETTINGS_KEY = 'intrilex-analytics-ai-settings';
 

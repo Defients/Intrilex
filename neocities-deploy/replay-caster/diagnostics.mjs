@@ -155,11 +155,3 @@ function findDecisionBeat(beats, decisionIndex) {
   }
   return null;
 }
-
-function computeReplayFinalHash(replay) {
-  // Unused — retained for backward compatibility. The integrity check
-  // now compares the reconstructed final-frame state hash (same hash
-  // space as summary.finalStateHash) instead of the replay envelope
-  // contentHash (a different hash space).
-  return replay.integrityHash ?? replay.contentHash ?? null;
-}
