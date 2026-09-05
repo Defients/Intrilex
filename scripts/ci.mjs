@@ -208,6 +208,7 @@ const STAGES = [
   ['auth-server', 'node', ['--test', 'test/auth-server.test.mjs']],
   ['auth-reconnect', 'node', ['--test', 'test/auth-reconnect.test.mjs']],
   ['supabase-schema', 'node', ['--test', 'test/supabase-schema.test.mjs']],
+  ['supabase-rpc-contracts', 'node', ['--test', 'test/supabase-rpc-contracts.test.mjs']],
   ['ranked-leaderboard', 'node', ['--test', 'test/ranked-leaderboard.test.mjs']],
   ['match-result-persistence', 'node', ['--test', 'test/match-result-persistence.test.mjs']],
   // Canonical Ranked glyph integration (8 tier assets + presentation registry)
