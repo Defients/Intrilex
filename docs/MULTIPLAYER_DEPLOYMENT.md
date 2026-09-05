@@ -715,3 +715,73 @@ All deployment configuration files are in the `deploy/` directory:
 | `deploy/match-server.env` | Production environment template (no real secrets) |
 | `Dockerfile` | Alternative Docker deployment (at repo root) |
 | `.dockerignore` | Docker build exclusptions |
+
+---
+
+## Supabase RPC Caller Contract
+
+The following table maps each SECURITY DEFINER RPC to its application caller(s),
+the parameters the caller sends, and the return columns the caller reads.
+This contract is enforced by `test/supabase-rpc-contracts.test.mjs`.
+
+If you add a new RPC or change an existing one, update this table and the
+contract test. The `truth-drift-check` script does not yet assert this table,
+but the contract test does.
+
+### get_ranked_leaderboard
+
+| Field | Value |
+|-------|-------|
+| **Migration** | `0028_fix_rpc_caller_alignment.sql` (supersedes `0019`) |
+| **Callers** | `apps/lab-web/src/play/ranked/leaderboard-data.js:61-68`, `apps/match-server/src/ranked/leaderboard-repository.mjs:67-74` |
+| **Params** | `p_season_id text`, `p_queue_id text`, `p_tier_filter text`, `p_search text`, `p_limit integer`, `p_offset integer` |
+| **Returns** | `public_player_id`, `display_name`, `handle`, `avatar_url`, `rating`, `rated_matches`, `wins`, `losses`, `draws`, `tier`, `division`, `is_apex`, `is_placement`, `rank_position` |
+
+### get_player_standing
+
+| Field | Value |
+|-------|-------|
+| **Migration** | `0028_fix_rpc_caller_alignment.sql` (supersedes `0019`) |
+| **Callers** | `apps/lab-web/src/play/ranked/leaderboard-data.js:108-112`, `apps/match-server/src/ranked/leaderboard-repository.mjs:108-111` |
+| **Params** | `p_season_id text`, `p_queue_id text`, `p_user_id uuid` (NULL = auth.uid()) |
+| **Returns** | `public_player_id`, `display_name`, `handle`, `avatar_url`, `rating`, `rated_matches`, `wins`, `losses`, `draws`, `tier`, `division`, `is_apex`, `is_placement`, `peak_rating`, `placements_played`, `position`, `total_players` |
+
+### get_recent_opponents
+
+| Field | Value |
+|-------|-------|
+| **Migration** | `0028_fix_rpc_caller_alignment.sql` (supersedes `0019`) |
+| **Callers** | `apps/lab-web/src/play/players/recent-opponents-data.js:66-69` → `packages/account-domain/src/recent-opponents.mjs:toOpponentEntry` |
+| **Params** | `p_limit integer`, `p_offset integer` |
+| **Returns** | `opponent_public_id`, `opponent_display_name`, `opponent_handle`, `opponent_avatar_url`, `opponent_rating`, `opponent_rated_matches`, `opponent_wins`, `opponent_losses`, `opponent_draws`, `opponent_wins_h2h`, `opponent_losses_h2h`, `opponent_draws_h2h`, `match_count`, `last_played_at`, `earned_achievement_count` |
+
+### get_self_profile
+
+| Field | Value |
+|-------|-------|
+| **Migration** | `0028_fix_rpc_caller_alignment.sql` (supersedes `0022`) |
+| **Callers** | `apps/lab-web/src/play/profile/profile-data.js:111` |
+| **Params** | (none — uses auth.uid()) |
+| **Returns** | jsonb: `found`, `identity`, `ranked`, `achievements`, `showcase`, `recentMatches`, `seasonHistory`, `privacy`, `directoryVisible`, `onlineStats`, `isSelf` |
+
+### get_public_profile
+
+| Field | Value |
+|-------|-------|
+| **Migration** | `0028_fix_rpc_caller_alignment.sql` (supersedes `0010`) |
+| **Callers** | `apps/lab-web/src/play/profile/profile-data.js:140-142` |
+| **Params** | `p_handle_or_public_id text` |
+| **Returns** | jsonb: `found`, `identity`, `ranked`, `achievements` (null if private), `showcase` (filtered if private), `recentMatches` (null if private), `seasonHistory` (null if private), `privacy` |
+
+### Migration 0027 — search_path hardening
+
+Migration `0027_harden_all_security_definer_search_path.sql` sets `search_path = public`
+on all SECURITY DEFINER functions that don't already have it. All ALTER FUNCTION
+signatures must match the actual CREATE FUNCTION argument types exactly.
+
+Functions already hardened by `20260830074714_harden_authority_and_persistence.sql`
+with `search_path = ''` (more secure) are NOT touched by 0027:
+- `persist_match_result(jsonb)`
+- `submit_player_report(uuid, text, text, text)`
+- `upsert_tournament_atomic(jsonb, jsonb, jsonb)`
+- `submit_player_report_server(uuid, uuid, text, text, text)`
