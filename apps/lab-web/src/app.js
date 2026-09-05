@@ -25,6 +25,7 @@ import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.
 import { renderSeasonArchive } from './workspaces/season-archive.js';
 import { renderMetaReport } from './workspaces/meta-report.js';
 import { renderHumanTournaments } from './workspaces/human-tournaments.js';
+import { renderCardReference } from './workspaces/card-reference.js';
 import { renderAuth } from './workspaces/auth.js';
 import { renderSettings } from './workspaces/settings.js';
 import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js';
@@ -358,6 +359,13 @@ function renderLandingMode(r) {
         console.error('[human-tournaments] failed to render:', err);
         landingContainer.innerHTML = `<div class="notice danger"><strong>Tournament error.</strong><pre>${esc(err.stack ?? err.message)}</pre></div>`;
       });
+    }
+  }
+  else if (r === '/cards') {
+    // Card Reference — browsable gallery of all 54 canonical card faces.
+    if (landingContainer) {
+      landingContainer.innerHTML = '';
+      renderCardReference(landingContainer);
     }
   }
 }

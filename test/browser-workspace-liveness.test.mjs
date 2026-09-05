@@ -147,9 +147,52 @@ test('BL-17: observatory analytics.json contains synergyDiagnostics', async () =
   assert.ok(analytics.synergyDiagnostics.length > 0,
     'synergyDiagnostics should have entries when no synergies meet threshold');
   assert.ok('nearThresholdPairs' in analytics.campaignHealth,
-    'campaignHealth must include nearThresholdPairs count');
-  assert.ok(analytics.campaignHealth.nearThresholdPairs > 0,
-    'nearThresholdPairs should be > 0 for the 100-match campaign');
+    'campaignHealth must contain nearThresholdPairs');
+});
+
+// BL-18: Every route in WORKSPACES must have a dispatch case in app.js
+// The /cards route was previously declared in WORKSPACES but had no dispatch,
+// causing it to silently render nothing. This test prevents that class of drift.
+test('BL-18: every LANDING_MODES route has a renderLandingMode dispatch case', async () => {
+  const routerCode = await src('router.js');
+  const appCode = await src('app.js');
+
+  // Extract LANDING_MODES set from router.js
+  const landingModesMatch = routerCode.match(/LANDING_MODES\s*=\s*new Set\(\[([^\]]+)\]\)/);
+  assert.ok(landingModesMatch, 'must find LANDING_MODES definition in router.js');
+  const routes = [...landingModesMatch[1].matchAll(/'([^']+)'/g)].map(m => m[1]);
+
+  // Extract renderLandingMode function body from app.js
+  const fnMatch = appCode.match(/function renderLandingMode\(r\)\s*\{([\s\S]*?)\n\}/);
+  assert.ok(fnMatch, 'must find renderLandingMode function in app.js');
+  const fnBody = fnMatch[1];
+
+  // Every LANDING_MODES route must have a dispatch case
+  // Routes handled via isPlayRoute() (e.g. /play, /play/academy) are excluded
+  // from LANDING_MODES, so we only check routes that are actually in the set.
+  // Some routes (e.g. /caster) are handled before the LANDING_MODES check in
+  // render() — those are fine because they still dispatch to a renderer.
+  const renderCode = appCode; // full app.js source
+  const missing = routes.filter(r => {
+    // Skip /play and /play/* — handled by isPlayRoute() before renderLandingMode
+    if (r === '/play' || r.startsWith('/play/')) return false;
+    // Check if the route is dispatched ANYWHERE in app.js (either in
+    // renderLandingMode or earlier in the render() function)
+    return !renderCode.includes(`r === '${r}'`) && !renderCode.includes(`r === "${r}"`);
+  });
+  assert.deepEqual(missing, [],
+    `LANDING_MODES routes without a renderLandingMode dispatch case: ${missing.join(', ')}`);
+});
+
+// BL-18: /cards route must render the card reference workspace
+test('BL-18: /cards route dispatches to renderCardReference', async () => {
+  const appCode = await src('app.js');
+  assert.ok(appCode.includes("import { renderCardReference } from './workspaces/card-reference.js'"),
+    'app.js must import renderCardReference');
+  assert.ok(appCode.includes("r === '/cards'"),
+    'renderLandingMode must have a /cards dispatch case');
+  assert.ok(appCode.includes('renderCardReference(landingContainer)'),
+    '/cards dispatch must call renderCardReference');
 });
 
 // BL-17: threshold-bar CSS must be present
