@@ -108,6 +108,13 @@ const ROUTE_META = {
     canonicalPath: '/#/rules',
     ogType: 'article',
   },
+  // Card Reference
+  '/cards': {
+    title: 'Intrilex — Card Reference',
+    description: 'Inspect all 54 canonical Intrilex card faces. Browse by family, view abilities, point values, and rules for every card in the deck.',
+    canonicalPath: '/#/cards',
+    ogType: 'website',
+  },
   // Legal pages
   '/privacy': {
     title: 'Intrilex — Privacy Policy',
