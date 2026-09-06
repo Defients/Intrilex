@@ -17,6 +17,7 @@ import { WebSocket } from 'ws';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { setImmediate as nextTurn } from 'node:timers/promises';
 
 import { createAuthoritativeMatch, MatchStatus } from '../packages/match-authority/src/authoritative-match-session.mjs';
 import { FakeMatchResultPersistor } from '../apps/match-server/src/persistence/fake-match-result-persistor.mjs';
@@ -142,6 +143,125 @@ test('IRX-C02: overlapping drains process a job exactly once', async () => {
   release();
   await Promise.all([first, second]);
   assert.equal(outbox.listJobs()[0].status, 'completed');
+});
+
+for (const durable of [false, true]) {
+  test(`IRX-C02: shutdown counts deferred and interrupted work (durable=${durable})`, async (t) => {
+    const dbPath = join(tmpdir(), `intrilex-outbox-count-${process.pid}-${Date.now()}.sqlite`);
+    const events = [];
+    const outbox = new TerminalOutbox({
+      durable, path: dbPath,
+      persistor: { async persistMatchResult() { throw new Error('not due'); } },
+      logger: { debug: event => events.push(event) },
+    });
+    t.after(() => {
+      outbox._storage.close();
+      if (durable) rmSync(dbPath, { force: true });
+    });
+    for (const status of ['pending', 'in_progress', 'completed', 'failed']) {
+      outbox.enqueueResult({ matchId: `M-shutdown-${status}`, queueId: 'casual' });
+      outbox._storage.update(`result:M-shutdown-${status}`, { status, nextRetryAt: Date.now() + 60000 });
+    }
+
+    assert.equal(await outbox.shutdown(0), 2);
+    assert.equal(events.find(e => e.event === 'outboxShutdownWithPending')?.remaining, 2);
+  });
+
+  for (const alreadyDraining of [false, true]) {
+    for (const fails of [false, true]) {
+      test(`IRX-C02: shutdown bounds stalled writes and contains late settlement (durable=${durable}, active=${alreadyDraining}, fails=${fails})`, async (t) => {
+        t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+        const dbPath = join(tmpdir(), `intrilex-outbox-stall-${process.pid}-${durable}-${alreadyDraining}-${fails}.sqlite`);
+        const gate = Promise.withResolvers();
+        let calls = 0;
+        const outbox = new TerminalOutbox({
+          durable, path: dbPath,
+          persistor: {
+            async persistMatchResult() {
+              calls++;
+              await gate.promise;
+              if (fails) throw new Error('late failure');
+              return { success: true };
+            },
+          },
+          logger: { debug: () => {} },
+        });
+        let storageClosed = false;
+        let updatesAfterClose = 0;
+        const update = outbox._storage.update.bind(outbox._storage);
+        const close = outbox._storage.close.bind(outbox._storage);
+        outbox._storage.update = (...args) => {
+          if (storageClosed) updatesAfterClose++;
+          return update(...args);
+        };
+        outbox._storage.close = () => { storageClosed = true; close(); };
+        outbox.enqueueResult({ matchId: 'M-stalled', queueId: 'casual' });
+        outbox.enqueueResult({ matchId: 'M-next', queueId: 'casual' });
+        const drain = alreadyDraining ? outbox._drainOnce() : null;
+        const drainOutcome = drain?.catch(error => error);
+        let settled = false;
+        const shutdown = outbox.shutdown(25);
+        const shutdownOutcome = shutdown.then(result => { settled = true; return result; });
+        t.after(async () => {
+          gate.resolve();
+          await Promise.allSettled([shutdownOutcome, drainOutcome]);
+          close();
+          if (durable) rmSync(dbPath, { force: true });
+        });
+
+        await nextTurn();
+        assert.equal(calls, 1);
+        t.mock.timers.tick(25);
+        await nextTurn();
+        assert.equal(settled, true, 'shutdown must not wait for the stalled persistor');
+        assert.equal(await shutdownOutcome, 2, 'both the active and queued jobs remain unfinished');
+        assert.equal(storageClosed, true);
+        assert.equal(await outbox.shutdown(25), 2, 'shutdown is idempotent');
+        assert.equal(await outbox._drainOnce(), 0, 'closed outbox cannot restart delivery');
+        outbox.startDrain();
+        assert.equal(outbox._drainTimer, null);
+        assert.throws(() => outbox.enqueueResult({ matchId: 'M-too-late' }), /shut|clos/i);
+        assert.throws(() => outbox.enqueueAchievements([{ accountId: ACC_A }], 'M-too-late'), /shut|clos/i);
+        assert.throws(() => outbox.enqueueAchievementProgress([{ accountId: ACC_A }], 'M-too-late'), /shut|clos/i);
+
+        gate.resolve();
+        await drainOutcome;
+        await nextTurn();
+        assert.equal(updatesAfterClose, 0, 'late settlement must never touch closed storage');
+        assert.equal(calls, 1, 'the next job must not start after the deadline');
+
+        if (durable) {
+          const recovered = new TerminalOutbox({
+            durable: true, path: dbPath,
+            persistor: { async persistMatchResult() { return { success: true }; } },
+            logger: { debug: () => {} },
+          });
+          try {
+            assert.equal(recovered.recoverPending(), 1);
+            assert.equal(await recovered._drainOnce(), 2);
+            assert.ok(recovered.listJobs().every(job => job.status === 'completed'));
+          } finally {
+            await recovered.shutdown(0);
+          }
+        }
+      });
+    }
+  }
+}
+
+test('IRX-C02: shutdown drains ready work once and shares concurrent shutdown', async () => {
+  let calls = 0;
+  const outbox = new TerminalOutbox({
+    durable: false,
+    persistor: { async persistMatchResult() { calls++; return { success: true }; } },
+    logger: { debug: () => {} },
+  });
+  outbox.enqueueResult({ matchId: 'M-shutdown-ready', queueId: 'casual' });
+  const first = outbox.shutdown();
+  const second = outbox.shutdown();
+  assert.equal(first, second);
+  assert.deepEqual(await Promise.all([first, second]), [0, 0]);
+  assert.equal(calls, 1);
 });
 
 test('IRX-C02: exhausted jobs are dead letters, not pending work', async () => {

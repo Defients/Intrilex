@@ -86,6 +86,10 @@ class InMemoryOutboxStorage {
     return [...this._jobs.values()];
   }
 
+  countUnfinished() {
+    return [...this._jobs.values()].filter(j => j.status === 'pending' || j.status === 'in_progress').length;
+  }
+
   close() { /* no-op */ }
 }
 
@@ -167,6 +171,12 @@ class SqliteOutboxStorage {
     return rows.map(r => ({ ...r, payload: JSON.parse(r.payload) }));
   }
 
+  countUnfinished() {
+    return Number(this._db.prepare(
+      "SELECT COUNT(*) AS count FROM terminal_outbox WHERE status IN ('pending', 'in_progress')"
+    ).get().count);
+  }
+
   close() {
     try { this._db.close(); } catch { /* ignore */ }
   }
@@ -195,6 +205,13 @@ export class TerminalOutbox {
     this._drainTimer = null;
     this._drainPromise = null;
     this._shuttingDown = false;
+    this._shutdownPromise = null;
+    this._shutdownDeadline = Infinity;
+    this._closed = false;
+  }
+
+  _assertOpen() {
+    if (this._shuttingDown) throw new Error('TerminalOutbox is shutting down or closed');
   }
 
   /**
@@ -203,6 +220,7 @@ export class TerminalOutbox {
    * @param {object} record - MatchResultRecord
    */
   enqueueResult(record) {
+    this._assertOpen();
     const jobId = `result:${record.matchId}`;
     const existing = this._storage.get(jobId);
     if (existing) {
@@ -237,6 +255,7 @@ export class TerminalOutbox {
    * @param {string} matchId
    */
   enqueueAchievements(unlocks, matchId) {
+    this._assertOpen();
     if (!unlocks || unlocks.length === 0) return;
     // Group by accountId for per-account idempotency
     const byAccount = new Map();
@@ -276,6 +295,7 @@ export class TerminalOutbox {
    * @param {string} matchId
    */
   enqueueAchievementProgress(progress, matchId) {
+    this._assertOpen();
     if (!progress || progress.length === 0) return;
     const byAccount = new Map();
     for (const p of progress) {
@@ -312,7 +332,7 @@ export class TerminalOutbox {
    * @param {number} [intervalMs=2000] - Drain check interval
    */
   startDrain(intervalMs = 2000) {
-    if (this._drainTimer) return;
+    if (this._shuttingDown || this._drainTimer) return;
     this._drainTimer = setInterval(() => {
       void this._drainOnce().catch((err) => {
         this._log('outboxDrainFailed', { error: err?.message ?? String(err) });
@@ -337,7 +357,9 @@ export class TerminalOutbox {
    * @returns {Promise<number>} Number of jobs processed
    */
   async _drainOnce() {
+    if (this._closed) return 0;
     if (this._drainPromise) return this._drainPromise;
+    if (this._shuttingDown) return 0;
     this._drainPromise = this._drainBatch();
     try {
       return await this._drainPromise;
@@ -350,7 +372,7 @@ export class TerminalOutbox {
     const pending = this._storage.listPending();
     let processed = 0;
     for (const job of pending) {
-      if (this._shuttingDown) break;
+      if (this._closed || Date.now() >= this._shutdownDeadline) break;
       await this._processJob(job);
       processed++;
     }
@@ -374,10 +396,12 @@ export class TerminalOutbox {
         await this._processAchievementProgressJob(job);
       }
       // Success — mark completed
+      if (this._closed) return;
       this._storage.update(job.jobId, { status: 'completed', lastError: null });
       this._log('outboxJobCompleted', { jobId: job.jobId, matchId: job.matchId, jobType: job.jobType, attempts: job.attempts });
     } catch (err) {
-      const errorMsg = err?.message ?? String(err);
+      if (this._closed) return;
+      const errorMsg = err instanceof Error ? err.message : String(err);
       const attempts = job.attempts + 1;
       if (attempts >= job.maxAttempts) {
         // Exhausted retries — mark failed permanently
@@ -466,32 +490,36 @@ export class TerminalOutbox {
    * @param {number} [timeoutMs=5000] - Maximum drain time
    * @returns {Promise<number>} Number of jobs remaining (unprocessed)
    */
-  async shutdown(timeoutMs = SHUTDOWN_DRAIN_MS) {
+  shutdown(timeoutMs = SHUTDOWN_DRAIN_MS) {
+    if (this._shutdownPromise) return this._shutdownPromise;
+    if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
+      throw new RangeError('Shutdown timeout must be a finite non-negative number');
+    }
     this.stopDrain();
-    const deadline = Date.now() + timeoutMs;
-    if (this._drainPromise) {
-      await Promise.race([
-        this._drainPromise,
-        new Promise(resolve => setTimeout(resolve, Math.max(0, deadline - Date.now()))),
-      ]);
-    }
     this._shuttingDown = true;
-    let remaining = 0;
-    // Drain as many jobs as possible within the time budget
-    while (Date.now() < deadline) {
-      const pending = this._storage.listPending();
-      if (pending.length === 0) break;
-      for (const job of pending) {
-        if (Date.now() >= deadline) break;
-        await this._processJob(job);
+    this._shutdownDeadline = Date.now() + timeoutMs;
+    this._shutdownPromise = this._finishShutdown();
+    return this._shutdownPromise;
+  }
+
+  async _finishShutdown() {
+    let timer;
+    try {
+      // Drain as many jobs as possible within the time budget
+      await Promise.race([
+        this._drainPromise ?? this._drainBatch(),
+        new Promise(resolve => { timer = setTimeout(resolve, Math.max(0, this._shutdownDeadline - Date.now())); }),
+      ]);
+      const remaining = this._storage.countUnfinished();
+      if (remaining > 0) {
+        this._log('outboxShutdownWithPending', { remaining });
       }
+      return remaining;
+    } finally {
+      clearTimeout(timer);
+      this._closed = true;
+      this._storage.close();
     }
-    remaining = this._storage.listPending().length;
-    if (remaining > 0) {
-      this._log('outboxShutdownWithPending', { remaining });
-    }
-    this._storage.close();
-    return remaining;
   }
 
   /**
