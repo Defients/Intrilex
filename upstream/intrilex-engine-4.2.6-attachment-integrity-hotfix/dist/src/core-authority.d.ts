@@ -17,6 +17,11 @@ export interface CoreMatchSetup {
     seatOrder: readonly [PlayerId, PlayerId];
     enabledModules: readonly string[];
     seed: number;
+    /** Optional predetermined deck identities (54 unique). When provided, the
+     *  shuffle is bypassed and identities are dealt in the given order. This
+     *  enables authored scenario fixtures (Guided Exhibition, scripted puzzles).
+     *  Backward-compatible: when absent, the normal seed-based shuffle runs. */
+    predeterminedIdentities?: string[];
 }
 export interface CoreLegalAction {
     actionId: string;

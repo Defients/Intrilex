@@ -1,4 +1,4 @@
-import type { CardId, CoreEffectAction, CorePrivateChoiceState, CorePrivateChoiceSubmission, CorePrimaryAction, EngineState, PlayerId, Visibility } from "./types.js";
+import type { CardId, CoreAdvancedAction, CoreEffectAction, CorePrivateChoiceState, CorePrivateChoiceSubmission, CorePrimaryAction, EngineState, PlayerId, Visibility } from "./types.js";
 export declare const CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE: Readonly<{
     id: "core-private-choice-authority";
     displayName: "Core Private Choice Authority — Sealed Hidden Decisions";
@@ -32,4 +32,5 @@ export declare function beginChoice(state: EngineState, input: Omit<CorePrivateC
 export declare function isCorePrivateChoiceEffect(effect: CoreEffectAction): boolean;
 export declare function resolveCorePrivateChoiceRoot(input: EngineState, actorId: PlayerId, effect: CoreEffectAction): CorePrivateChoiceTransition | CorePrivateChoiceFailure;
 export declare function generatedCoreEffectCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): CoreEffectAction[];
+export declare function generatedAdvancedCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): CoreAdvancedAction[];
 export declare function resolveCorePrivateChoiceSubmission(input: EngineState, actorId: PlayerId, token: string, submission: CorePrivateChoiceSubmission): CorePrivateChoiceTransition | CorePrivateChoiceFailure;

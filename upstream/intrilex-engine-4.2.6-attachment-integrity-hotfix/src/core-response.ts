@@ -130,14 +130,33 @@ export function targetAcceptsCounter(target: StackItem, counterKind: CoreRespons
   const payload = target.coreAuthority;
   if (!payload) return false;
 
-  // ⭐A and 3-Red Ultra can counter any target (Queen defense check is separate)
-  if (counterKind === "super-ace-counter" || counterKind === "ultra-three-red") return true;
+  // ⭐A and 3-Red Ultra resolve with Super Ace authority: they counter what
+  // Base Ace can legally counter (Effect plays and rank10), plus A♠, Ultras,
+  // Sudden Death, and other responses (counter-counter chains). They do NOT
+  // counter point plays, scuttles, draws, swaps, passes, anchors, or goal-mods.
+  if (counterKind === "super-ace-counter" || counterKind === "ultra-three-red") {
+    if (payload.kind === "response") {
+      const blocklist = COUNTER_CHAIN_BLOCKLIST[counterKind];
+      if (!blocklist) return true;
+      return !blocklist.includes(payload.responseKind);
+    }
+    const declClass = declarationClassOf(payload);
+    if (!declClass) return false;
+    return ["ordinary-effect", "rank10"].includes(declClass);
+  }
 
   // Jack Disrupt can counter any opponent primary mini-turn action
   if (counterKind === "jack-disrupt") return payload.kind === "primary";
 
   // Board Lock may only be countered by ⭐A / 3-Red Ultra authority
   if (payload.kind === "response" && payload.responseKind === "board-lock-quick") return false;
+
+  // Royal Shield (rulebook §15): if the target play is Royal Shield-protected,
+  // Base Ace and Anchor Ace cannot counter it. A♠, K♠, and ⭐A still follow
+  // their own text. The flag is snapshotted at declaration time.
+  if (target.royalShieldProtected === true && (counterKind === "base-ace-counter" || counterKind === "anchor-ace-counter")) {
+    return false;
+  }
 
   // For response targets (counter-counter chains), use the blocklist
   if (payload.kind === "response") {

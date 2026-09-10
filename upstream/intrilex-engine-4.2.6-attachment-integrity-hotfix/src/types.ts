@@ -198,6 +198,7 @@ export interface StackItem {
   counterTargetId?: StackItemId;
   firstContactAuthority?: FirstContactStackPayload;
   coreAuthority?: CoreStackPayload;
+  royalShieldProtected?: boolean;
 }
 
 export interface PendingDeclaration {
@@ -325,6 +326,7 @@ export type CoreEffectAction =
   | { kind: "five-recycle"; sourceCardId: CardId }
   | { kind: "six-dig"; sourceCardId: CardId }
   | { kind: "seven-topdeck"; sourceCardId: CardId }
+  | { kind: "natural-four"; sourceCardId: CardId }
   | { kind: "nine-anchor"; sourceCardId: CardId; targetPlayerId: PlayerId };
 
 export type CorePrivateChoiceKind =
@@ -335,7 +337,10 @@ export type CorePrivateChoiceKind =
   | "core-rank6-dig"
   | "core-rank7-assign"
   | "core-rank7-generated-effect"
-  | "core-nine-anchor-discard";
+  | "core-nine-anchor-discard"
+  | "core-natural-four-reorder"
+  | "core-bj-exile-recycle"
+  | "core-seven-scoring-trigger";
 
 export interface CorePrivateChoiceState {
   schemaVersion: 1;
@@ -361,11 +366,14 @@ export type CorePrivateChoiceSubmission =
   | { kind: "core-rank5-rummage"; selectedCardIds: CardId[] }
   | { kind: "core-rank6-dig"; mode: "keep-return-top" | "keep-return-bottom" | "keep-all-discard"; selectedCardIds: CardId[] }
   | { kind: "core-rank7-assign"; mode: "hand-only" | "effect-only" | "hand-and-effect" | "score-only" | "hand-and-score"; selectedCardIds: CardId[] }
-  | { kind: "core-rank7-generated-effect"; selectedCardIds: CardId[]; generatedEffect?: CoreEffectAction; scoreInstead?: boolean }
-  | { kind: "core-nine-anchor-discard"; selectedCardIds: CardId[] };
+  | { kind: "core-rank7-generated-effect"; selectedCardIds: CardId[]; generatedEffect?: CoreEffectAction; generatedAdvanced?: CoreAdvancedAction; scoreInstead?: boolean }
+  | { kind: "core-nine-anchor-discard"; selectedCardIds: CardId[] }
+  | { kind: "core-natural-four-reorder"; reorderCardIds: CardId[]; drawTop: boolean }
+  | { kind: "core-bj-exile-recycle"; selectedCardIds: CardId[]; placements: ("top" | "bottom")[] }
+  | { kind: "core-seven-scoring-trigger"; takeCardId: CardId; returnOrderCardIds: CardId[] };
 
 export type CoreAuthorityAction =
-  | { kind: "core-apply-setup"; playerIds: [PlayerId, PlayerId]; profileId?: CoreAuthorityProfileId }
+  | { kind: "core-apply-setup"; playerIds: [PlayerId, PlayerId]; profileId?: CoreAuthorityProfileId; predeterminedIdentities?: string[] }
   | { kind: "core-begin-start"; playerId: PlayerId }
   | { kind: "core-face-down-swap"; handCardId: CardId; swapCardId: CardId }
   | { kind: "core-enter-action" }
@@ -456,6 +464,7 @@ export type RankAction =
   | { kind: "deep-draw-six-spade"; sourceCardId: CardId; discardCardIds: CardId[]; keepCardIds: CardId[] }
   | { kind: "topdeck-seven"; sourceCardId: CardId; handCardId?: CardId; effectCardId?: CardId; scoreCardId?: CardId }
   | { kind: "aegis-field-eight"; sourceCardId: CardId }
+  | { kind: "natural-four"; sourceCardId: CardId; reorderCardIds: CardId[]; drawTop: boolean }
   | { kind: "goal-shift-nine"; sourceCardId: CardId; targetPlayerId: PlayerId; delta: 3 | 5; discardCardId?: CardId; ownGoalDelta?: -2 }
   | { kind: "mimic-ten-diamond"; sourceCardId: CardId; pairedTwoId?: CardId; mimickedRank: string; effectKey: string; mimicAction: MimicCopiedAction }
   | { kind: "foundation-ten-club"; sourceCardId: CardId; bonusScoreCardId?: CardId }

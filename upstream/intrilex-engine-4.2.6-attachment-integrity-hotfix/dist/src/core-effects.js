@@ -76,6 +76,8 @@ export function enumerateCoreEffectCandidates(state, actorId) {
             out.push({ family: "effect-private-choice", mode: "six-dig", sourceCardIds: [sourceCardId], targetCardIds: [], effect: { kind: "six-dig", sourceCardId }, featureVector: { privateChoice: true, drawCount: Math.min(3, s.zones.dp.length) } });
         if (privateChoiceProfile(s) && r === "7")
             out.push({ family: "effect-private-choice", mode: "seven-topdeck", sourceCardIds: [sourceCardId], targetCardIds: [], effect: { kind: "seven-topdeck", sourceCardId }, featureVector: { privateChoice: true, revealCount: Math.min(2, s.zones.dp.length) } });
+        if (privateChoiceProfile(s) && r === "4")
+            out.push({ family: "effect-private-choice", mode: "natural-four", sourceCardIds: [sourceCardId], targetCardIds: [], effect: { kind: "natural-four", sourceCardId }, featureVector: { privateChoice: true, revealCount: Math.min(4, s.zones.dp.length) } });
         if (r === "J")
             for (const oid of opponents) {
                 for (const t of s.players[oid].pr.filter(id => !s.cards[id].state.attachedByJackId))

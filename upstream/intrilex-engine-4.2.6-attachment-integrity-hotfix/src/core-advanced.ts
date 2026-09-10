@@ -1,10 +1,10 @@
 import { canonicalClone } from "./canonical-json.js";
 import { applyAegis, applyTap, hasAegis, markExileBound, revealUntilStart } from "./lifecycle.js";
-import { evaluateProtection, revalidateAttachments } from "./interactions.js";
-import { cardPointValue, parseIdentity, resolveRankAction } from "./ranks.js";
+import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js";
+import { cardPointValue, parseIdentity, rankDefinition, resolveRankAction } from "./ranks.js";
 import { deriveSecuredPoints, moveCard } from "./state.js";
 import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js";
-import { isCorePrivateChoiceEffect } from "./core-private-choice.js";
+import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js";
 import { phase8Runtime } from "./phase8.js";
 import type { CardId, CoreAdvancedAction, EngineState, MimicCopiedAction, PlayerId, RankAction, Visibility } from "./types.js";
 
@@ -157,17 +157,44 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
       if(!isUnrestricted(input))return fail("UNRESTRICTED_REQUIRED","⭐7 Topdeck requires the unrestricted Core authority profile");
       if(!allRank(s,a.sourceCardIds,"7",actorId))return fail("SUPER_SEVEN_SOURCE","⭐7 requires two Sevens in hand");
       for(const id of a.sourceCardIds)moveCard(s,id,"GY");
-      const revealed=s.zones.dp.splice(0,Math.min(4,s.zones.dp.length));
+      const revealed=s.zones.dp.splice(0,Math.min(2,s.zones.dp.length));
       for(const id of revealed)s.cards[id]!.zone="VOID";
       const allChosen=[...a.handCardIds,...a.effectCardIds,...a.scoreCardIds];
       if(new Set(allChosen).size!==allChosen.length||allChosen.some(id=>!revealed.includes(id)))return fail("SUPER_SEVEN_CHOICE","⭐7 choices must be distinct revealed cards");
+      // Process hand and score assignments immediately.
+      // Effect cards are held for sequential generated Topdeck Play resolution per rulebook §⭐7.
       for(const id of revealed){
         if(a.handCardIds.includes(id)){moveCard(s,id,`${actorId}_HAND`,actorId);revealUntilStart(s.cards[id]!,futureStart(s,actorId));}
-        else if(a.effectCardIds.includes(id)){moveCard(s,id,"GY",actorId);s.metadata.lastGeneratedEffectCardId=id;}
         else if(a.scoreCardIds.includes(id)){moveCard(s,id,`${actorId}_PR`,actorId);s.cards[id]!.state.pointValue=cardPointValue(s.cards[id]!);}
+        else if(a.effectCardIds.includes(id)){
+          // Hold the effect card for generated play resolution — it will be moved to hand
+          // when the generated effect private choice is initiated.
+          s.cards[id]!.zone="VOID";
+        }
         else moveCard(s,id,"DP");
       }
       events.push({type:"CORE_ADVANCED_SUPER_SEVEN_TOPDECK_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,revealed,handCardIds:a.handCardIds,effectCardIds:a.effectCardIds,...(a.scoreCardIds.length>0?{scoreCardIds:a.scoreCardIds}:{})}});
+      // If there are effect cards, initiate a generated effect private choice for the first one.
+      // The remaining effect cards are stored in metadata for sequential processing.
+      if(a.effectCardIds.length>0){
+        s.metadata.lastGeneratedEffectCardId=a.effectCardIds[0];
+        s.metadata.pendingSuperSevenEffectQueue=[...a.effectCardIds];
+        s.metadata.superSevenSourceCardId=a.sourceCardIds[0];
+        // Mark the first effect card as held by the actor
+        s.cards[a.effectCardIds[0]!]!.state.privateChoiceHeldBy=actorId;
+        // Initiate the generated effect private choice for the first effect card
+        beginChoice(s, {
+          kind: "core-rank7-generated-effect" as const,
+          chooserId: actorId,
+          controllerId: actorId,
+          sourceCardId: a.sourceCardIds[0]!,
+          optionCardIds: [a.effectCardIds[0]!],
+          minSelections: 1,
+          maxSelections: 1,
+          stage: 2,
+          context: { generatedCardId: a.effectCardIds[0]! }
+        }, events as { type: string; payload: Record<string, unknown>; visibility?: import("./types.js").Visibility }[]);
+      }
       break;
     }
     case "advanced-rank10-club-foundation": {
@@ -246,12 +273,22 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
       const parsed = parseIdentity(topIdentity);
       const rankMatch = parsed?.rank === a.guessRank;
       const suitMatch = parsed?.suit === a.guessSuit;
-      if (rankMatch && suitMatch) {
+      // Rulebook §24: three match branches.
+      // - rank AND suit match → rank branch (score/effect per disposition)
+      // - rank only match → rank branch (score/effect per disposition)
+      // - suit only match → draw the card to hand
+      // - neither match → return card to top of DP (no effect)
+      // The guess is private — do not publish guessRank/guessSuit in the event.
+      if (rankMatch) {
         moveCard(s, top, `${actorId}_PR`, actorId);
         s.cards[top]!.state.pointValue = cardPointValue(s.cards[top]!);
-        events.push({ type: "CORE_ADVANCED_VOLTAGE_FOUR_RESOLVED", payload: { guessRank: a.guessRank, guessSuit: a.guessSuit, matched: true, cardId: top, disposition: a.rankMatchDisposition } });
+        events.push({ type: "CORE_ADVANCED_VOLTAGE_FOUR_RESOLVED", payload: { matched: "rank", cardId: top, disposition: a.rankMatchDisposition }, visibility: "authorized" });
+      } else if (suitMatch) {
+        moveCard(s, top, `${actorId}_HAND`, actorId);
+        events.push({ type: "CORE_ADVANCED_VOLTAGE_FOUR_RESOLVED", payload: { matched: "suit", cardId: top, disposition: "draw" }, visibility: "authorized" });
       } else {
-        events.push({ type: "CORE_ADVANCED_VOLTAGE_FOUR_RESOLVED", payload: { guessRank: a.guessRank, guessSuit: a.guessSuit, matched: false, cardId: top, disposition: null } });
+        // No match: card stays on top of DP (already there)
+        events.push({ type: "CORE_ADVANCED_VOLTAGE_FOUR_RESOLVED", payload: { matched: "none", cardId: top, disposition: null }, visibility: "authorized" });
       }
       break;
     }
@@ -307,6 +344,11 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
       if (scrap.controllerId === actorId) return fail("SUDDEN_DEATH_SCRAP", "Scrap target must be an enemy card");
       if (!scrap.zone.endsWith("_PR") && !scrap.zone.endsWith("_ER")) return fail("SUDDEN_DEATH_SCRAP", "Scrap target must be an OTT card");
       if (hasAegis(scrap)) return fail("SUDDEN_DEATH_SCRAP", "Scrap target must be Vulnerable (no Aegis)");
+      // Rulebook §17: Vulnerable also requires no Guard protection and no rank/state immunity.
+      const scrapProviders = guardProviderIds(s, scrap);
+      if (scrapProviders.length > 0) return fail("SUDDEN_DEATH_SCRAP", "Scrap target must be Vulnerable (no Guard)");
+      const scrapDef = rankDefinition(scrap);
+      if (scrapDef.prEffectTargetImmune === true) return fail("SUDDEN_DEATH_SCRAP", "Scrap target must be Vulnerable (no rank immunity)");
       // Move source cards to GY (they are spent)
       for (const id of sources) moveCard(s, id, "GY");
       // Scrap the target
@@ -443,7 +485,7 @@ export function enumerateAdvancedCoreCandidates(state:Readonly<EngineState>,acto
       const otherHand=[...p.hand].filter(id=>!pair.includes(id));
       for(const d1 of otherHand)out.push({family:"super",mode:"six-dig",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[d1],advanced:{kind:"advanced-super-six-dig",sourceCardIds:pair as [CardId,CardId],discardCardIds:[d1],keepCardIds:[]},featureVector:{dig:true,draw:8}});
     }
-    for(const pair of combos(byRank("7"),2))out.push({family:"super",mode:"seven-topdeck",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[],advanced:{kind:"advanced-super-seven-topdeck",sourceCardIds:pair as [CardId,CardId],handCardIds:[],effectCardIds:[],scoreCardIds:[]},featureVector:{topdeck:true,reveal:4}});
+    for(const pair of combos(byRank("7"),2))out.push({family:"super",mode:"seven-topdeck",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[],advanced:{kind:"advanced-super-seven-topdeck",sourceCardIds:pair as [CardId,CardId],handCardIds:[],effectCardIds:[],scoreCardIds:[]},featureVector:{topdeck:true,reveal:2}});
     // 10♦ Mimic — per rulebook v4.3.1 §10♦:
     //   Solo: mimic one ⭐ effect from ranks 3-7
     //   Paired with any 2: mimic one ⭐ effect from ranks 3-8, Ace, Jack
@@ -492,7 +534,8 @@ export function enumerateAdvancedCoreCandidates(state:Readonly<EngineState>,acto
         const enemyOtt: CardId[] = [];
         for (const id of [...s.players[oid]!.pr, ...s.players[oid]!.er]) {
           const c = s.cards[id];
-          if (c && !hasAegis(c)) enemyOtt.push(id);
+          // Rulebook §17: Vulnerable = no Aegis + no Guard + no rank/state immunity
+          if (c && !hasAegis(c) && guardProviderIds(s, c).length === 0 && rankDefinition(c).prEffectTargetImmune !== true) enemyOtt.push(id);
         }
         for (const sources of sdSources) {
           for (const scrapTargetId of enemyOtt) {

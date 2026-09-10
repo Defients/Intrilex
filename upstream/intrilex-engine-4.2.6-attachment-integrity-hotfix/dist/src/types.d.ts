@@ -310,6 +310,7 @@ export interface StackItem {
     counterTargetId?: StackItemId;
     firstContactAuthority?: FirstContactStackPayload;
     coreAuthority?: CoreStackPayload;
+    royalShieldProtected?: boolean;
 }
 export interface PendingDeclaration {
     commandId: CommandId;
@@ -549,11 +550,14 @@ export type CoreEffectAction = {
     kind: "seven-topdeck";
     sourceCardId: CardId;
 } | {
+    kind: "natural-four";
+    sourceCardId: CardId;
+} | {
     kind: "nine-anchor";
     sourceCardId: CardId;
     targetPlayerId: PlayerId;
 };
-export type CorePrivateChoiceKind = "core-rank3-present" | "core-rank3-take" | "core-rank3-discard" | "core-rank5-rummage" | "core-rank6-dig" | "core-rank7-assign" | "core-rank7-generated-effect" | "core-nine-anchor-discard";
+export type CorePrivateChoiceKind = "core-rank3-present" | "core-rank3-take" | "core-rank3-discard" | "core-rank5-rummage" | "core-rank6-dig" | "core-rank7-assign" | "core-rank7-generated-effect" | "core-nine-anchor-discard" | "core-natural-four-reorder" | "core-bj-exile-recycle" | "core-seven-scoring-trigger";
 export interface CorePrivateChoiceState {
     schemaVersion: 1;
     choiceId: string;
@@ -594,15 +598,29 @@ export type CorePrivateChoiceSubmission = {
     kind: "core-rank7-generated-effect";
     selectedCardIds: CardId[];
     generatedEffect?: CoreEffectAction;
+    generatedAdvanced?: CoreAdvancedAction;
     scoreInstead?: boolean;
 } | {
     kind: "core-nine-anchor-discard";
     selectedCardIds: CardId[];
+} | {
+    kind: "core-natural-four-reorder";
+    reorderCardIds: CardId[];
+    drawTop: boolean;
+} | {
+    kind: "core-bj-exile-recycle";
+    selectedCardIds: CardId[];
+    placements: ("top" | "bottom")[];
+} | {
+    kind: "core-seven-scoring-trigger";
+    takeCardId: CardId;
+    returnOrderCardIds: CardId[];
 };
 export type CoreAuthorityAction = {
     kind: "core-apply-setup";
     playerIds: [PlayerId, PlayerId];
     profileId?: CoreAuthorityProfileId;
+    predeterminedIdentities?: string[];
 } | {
     kind: "core-begin-start";
     playerId: PlayerId;
@@ -954,6 +972,11 @@ export type RankAction = {
 } | {
     kind: "aegis-field-eight";
     sourceCardId: CardId;
+} | {
+    kind: "natural-four";
+    sourceCardId: CardId;
+    reorderCardIds: CardId[];
+    drawTop: boolean;
 } | {
     kind: "goal-shift-nine";
     sourceCardId: CardId;
