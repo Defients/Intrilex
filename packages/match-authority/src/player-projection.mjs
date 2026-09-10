@@ -36,6 +36,8 @@ const FORBIDDEN_ACTION_FIELDS = new Set([
  * @property {string} [matchMode] - Server-owned match classification (v0.28)
  * @property {string|null} [queueId] - Server-owned queue ID (v0.28)
  * @property {boolean} [ready] - Local participant's ready status (v0.27.1)
+ * @property {string[]|null} [handOrder] - Cosmetic hand display order (card IDs)
+ * @property {number} [reorderEpoch] - Monotonically increasing reorder counter
  * @property {Record<string, *>} [match]
  * @property {{ actorId: *, stateRevision: *, frameHash: *, isMyDecision: *, legalActions?: Array<Record<string, *>> }} [decision]
  * @property {Record<string, *>|null} [playerView]
@@ -57,8 +59,8 @@ export function buildNetworkPlayerView(authorizedView) {
   const safe = {};
 
   // Copy allowed top-level fields
-  /** @type {('matchId'|'status'|'profileId'|'participantId'|'playerId'|'viewHash'|'matchMode'|'queueId'|'ready')[]} */
-  const allowedFields = ['matchId', 'status', 'profileId', 'participantId', 'playerId', 'viewHash', 'matchMode', 'queueId', 'ready'];
+  /** @type {('matchId'|'status'|'profileId'|'participantId'|'playerId'|'viewHash'|'matchMode'|'queueId'|'ready'|'handOrder'|'reorderEpoch')[]} */
+  const allowedFields = ['matchId', 'status', 'profileId', 'participantId', 'playerId', 'viewHash', 'matchMode', 'queueId', 'ready', 'handOrder', 'reorderEpoch'];
   for (const key of allowedFields) {
     if (authorizedView[key] !== undefined) {
       safe[key] = authorizedView[key];

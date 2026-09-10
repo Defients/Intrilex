@@ -1299,6 +1299,7 @@ function handleMessage(connectionId, ws, raw) {
       case 'REQUEST_SYNC': handlerResult = _matchHandlers.handleRequestSync(connectionId, ws, payload, requestId); break;
       case 'LEAVE_MATCH': handlerResult = _matchHandlers.handleLeaveMatch(connectionId, ws, payload, requestId); break;
       case 'REMATCH': handlerResult = _matchHandlers.handleRematch(connectionId, ws, payload, requestId); break;
+      case 'HAND_REORDER': handlerResult = _matchHandlers.handleHandReorder(connectionId, ws, payload, requestId); break;
       case 'QUEUE_JOIN': handlerResult = _matchmakingHandlers.handleQueueJoin(connectionId, ws, payload, requestId); break;
       case 'QUEUE_LEAVE': handlerResult = _matchmakingHandlers.handleQueueLeave(connectionId, ws, payload, requestId); break;
       case 'SPECTATE_MATCH': handlerResult = _spectatorHandlers.handleSpectateMatch(connectionId, ws, payload, requestId); break;

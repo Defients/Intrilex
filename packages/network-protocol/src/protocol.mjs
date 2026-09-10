@@ -5,7 +5,7 @@
 import { PROTOCOL_VERSION, MAX_MESSAGE_SIZE } from './validation.mjs';
 export { PROTOCOL_VERSION, MAX_MESSAGE_SIZE };
 export { ReasonCode, reasonCategory } from './reason-codes.mjs';
-export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateChatVisibility, validateAuthenticate, validateAuthRefresh, validateMigrateGuest, validateRematch, validateListSpectatable, validateTournamentList, validateTournamentRegister, validateTournamentGet, validateTournamentStart, validateTournamentReportResult, validateReportPlayer, checkMessageSize, SUPPORTED_PROFILE_IDS, isSupportedProfileId, SUPPORTED_QUEUE_IDS, MATCH_MODES, isSupportedQueueId } from './validation.mjs';
+export { validateEnvelope, validateCreateMatch, validateJoinMatch, validateResumeMatch, validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch, validateHandReorder, validateQueueJoin, validateQueueLeave, validateSpectateMatch, validateSpectateLeave, validateMatchHistory, validateGetReplay, validateSendChat, validateChatVisibility, validateAuthenticate, validateAuthRefresh, validateMigrateGuest, validateRematch, validateListSpectatable, validateTournamentList, validateTournamentRegister, validateTournamentGet, validateTournamentStart, validateTournamentReportResult, validateReportPlayer, checkMessageSize, SUPPORTED_PROFILE_IDS, isSupportedProfileId, SUPPORTED_QUEUE_IDS, MATCH_MODES, isSupportedQueueId } from './validation.mjs';
 
 /**
  * @typedef {Object} ProtocolEnvelope
@@ -116,6 +116,36 @@ export function requestSync(matchId, participantToken, requestId) {
  */
 export function leaveMatch(matchId, participantToken, requestId) {
   return envelope('LEAVE_MATCH', { matchId, participantToken }, requestId);
+}
+
+/**
+ * Build a HAND_REORDER message (client → server).
+ * Sent when a player drag-drop reorders cards in their hand. This is cosmetic
+ * — it does not affect engine state. The server stores the preferred order
+ * and broadcasts an OPPONENT_HAND_REORDER notification to the opponent.
+ * @param {string} matchId - Match identifier
+ * @param {string} participantToken - Participant authentication token
+ * @param {string[]} orderedIds - Card IDs in the new preferred display order
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function handReorder(matchId, participantToken, orderedIds, requestId) {
+  return envelope('HAND_REORDER', { matchId, participantToken, orderedIds }, requestId);
+}
+
+/**
+ * Build an OPPONENT_HAND_REORDER message (server → client).
+ * Sent to the opponent when the other player rearranges their hand. Contains
+ * only the hand count and a reorder epoch — no card identities leak. The
+ * opponent's client renders face-down card backs and plays a shuffle animation.
+ * @param {string} matchId - Match identifier
+ * @param {number} handCount - Number of face-down cards in the opponent's hand
+ * @param {number} reorderEpoch - Monotonically increasing reorder counter
+ * @param {string} [requestId] - Optional request correlation ID
+ * @returns {ProtocolEnvelope}
+ */
+export function opponentHandReorder(matchId, handCount, reorderEpoch, requestId) {
+  return envelope('OPPONENT_HAND_REORDER', { matchId, handCount, reorderEpoch }, requestId);
 }
 
 // ── Matchmaking queue message builders ──

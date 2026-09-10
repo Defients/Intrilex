@@ -28,11 +28,11 @@ import { setImmediate } from 'node:timers';
 import {
   validateCreateMatch, validateJoinMatch, validateResumeMatch,
   validateSubmitAction, validateReady, validateRequestSync, validateLeaveMatch,
-  validateRematch,
+  validateRematch, validateHandReorder,
   ReasonCode,
   matchCreated, matchJoined, matchView, actionResult,
   participantStatus, matchStarted, error as errorMsg,
-  rematchInvite,
+  rematchInvite, opponentHandReorder,
   envelope,
 } from '@intrilex/network-protocol';
 import { createAuthoritativeMatch } from '@intrilex/match-authority';
@@ -601,9 +601,50 @@ export function createMatchHandlers(ctx) {
     logEvent('rematchInvite', { fromMatchId: payload.matchId, newMatchId, inviteCode, sentTo: opponentId });
   }
 
+  // ── Hand reorder: cosmetic drag-drop within hand ──
+
+  function handleHandReorder(connectionId, ws, payload, requestId) {
+    const matchStore = getMatchStore();
+    const check = validateHandReorder(payload);
+    if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
+
+    const conn = connections.get(connectionId);
+    // Defense-in-depth — connection must be bound to this match.
+    if (conn.matchId !== payload.matchId) {
+      return send(ws, errorMsg(ReasonCode.CONNECTION_MATCH_MISMATCH, 'Connection is not bound to this match', requestId));
+    }
+
+    const match = matchStore.get(payload.matchId);
+    if (!match) return send(ws, errorMsg(ReasonCode.MATCH_NOT_FOUND, 'Match not found', requestId));
+
+    if (!match.validateToken(conn.participantId, payload.participantToken)) {
+      return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_INVALID, 'Invalid participant token', requestId));
+    }
+
+    const result = match.reorderHand(conn.participantId, payload.orderedIds);
+    if (!result) {
+      return send(ws, errorMsg(ReasonCode.PARTICIPANT_NOT_AUTHORIZED, 'Participant not found in match', requestId));
+    }
+    matchStore.save(match);
+
+    // Acknowledge to the requester
+    send(ws, envelope('HAND_REORDERED', { matchId: payload.matchId, reorderEpoch: result.reorderEpoch }, requestId));
+
+    // Notify the opponent — no card identities leak, only hand count + epoch
+    const opponentId = [...match.participants.keys()].find(pid => pid !== conn.participantId);
+    if (opponentId) {
+      const oppConn = findConnectionByParticipant(opponentId, match.matchId);
+      if (oppConn) {
+        send(oppConn.ws, opponentHandReorder(match.matchId, result.handCount, result.reorderEpoch));
+      }
+    }
+
+    logEvent('handReorder', { matchId: match.matchId, participantId: conn.participantId, handCount: result.handCount });
+  }
+
   return {
     handleCreateMatch, handleJoinMatch, handleResumeMatch,
     handleReady, handleSubmitAction, handleRequestSync, handleLeaveMatch,
-    handleRematch,
+    handleRematch, handleHandReorder,
   };
 }

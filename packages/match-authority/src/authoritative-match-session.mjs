@@ -146,6 +146,8 @@ export const ConnectionState = Object.freeze({
  * @property {string} [matchMode] - Server-owned product classification: 'private'|'casual'|'ranked'|'tutorial'|'simulation'|'local-ai' (v3+; absent in old snapshots → defaults to 'private')
  * @property {string|null} [queueId] - Server-recognized matchmaking/rating queue: 'ranked'|'casual'|'private'|null (v3+; absent → null)
  * @property {string|null} [seasonId] - Active server-resolved competitive season (ranked only; null otherwise)
+ * @property {Array<{ participantId: string, orderedIds: string[] }>} [handOrder] - Cosmetic hand reorder state per participant
+ * @property {number} [reorderEpoch] - Monotonically increasing reorder counter
  */
 
 const DEFAULT_PROFILE_ID = CORE_UNRESTRICTED_AUTHORITY_PROFILE?.id ?? 'core-unrestricted-authority';
@@ -238,6 +240,12 @@ export class AuthoritativeMatchSession {
 
     // Seed (generated server-side)
     this._seed = (seed ?? 0) >>> 0 || 1;
+
+    // Cosmetic hand reorder: participantId → string[] of preferred card ID order.
+    // Does not affect engine state — only display order. Persisted across reconnect.
+    this._handOrder = new Map();
+    // Monotonically increasing counter for opponent reorder notifications.
+    this._reorderEpoch = 0;
   }
 
   // ── Participant management ──
@@ -298,6 +306,43 @@ export class AuthoritativeMatchSession {
       if (!p.ready) return false;
     }
     return true;
+  }
+
+  /**
+   * Store a participant's preferred cosmetic hand display order.
+   * This does NOT affect engine state — only the display order of cards.
+   * The server persists this across reconnects and broadcasts a notification
+   * to the opponent (with no card identities — only a reorder epoch).
+   * @param {string} participantId
+   * @param {string[]} orderedIds - Card IDs in the new preferred display order
+   * @returns {{ reorderEpoch: number, handCount: number }|null}
+   */
+  reorderHand(participantId, orderedIds) {
+    const participant = this.participants.get(participantId);
+    if (!participant) return null;
+    this._handOrder.set(participantId, [...orderedIds]);
+    this._reorderEpoch += 1;
+    this.updatedAt = Date.now();
+    // Derive hand count from engine state if available, else use orderedIds length
+    const handCount = this.state?.players?.[participant.playerId]?.hand?.length ?? orderedIds.length;
+    return { reorderEpoch: this._reorderEpoch, handCount };
+  }
+
+  /**
+   * Get a participant's stored hand order (array of card IDs), or null.
+   * @param {string} participantId
+   * @returns {string[]|null}
+   */
+  getHandOrder(participantId) {
+    return this._handOrder.get(participantId) ?? null;
+  }
+
+  /**
+   * Get the current reorder epoch (incremented on each reorder).
+   * @returns {number}
+   */
+  getReorderEpoch() {
+    return this._reorderEpoch;
   }
 
   /**
@@ -618,6 +663,12 @@ export class AuthoritativeMatchSession {
       // Local participant's ready status — lets the client show the correct
       // ready button state after reconnecting to a READY_CHECK match.
       ready: participant.ready ?? false,
+      // Cosmetic hand reorder — the player's preferred display order for
+      // their own hand. Persisted across reconnects. Null if no reorder yet.
+      handOrder: this._handOrder.get(participantId) ?? null,
+      // Current reorder epoch — incremented on each hand reorder by either
+      // player. Used by the client to detect opponent reorder events.
+      reorderEpoch: this._reorderEpoch,
       opponent: opponentParticipant ? {
         playerId: opponentId,
         connectionState: opponentParticipant.connectionState,
@@ -870,6 +921,9 @@ export class AuthoritativeMatchSession {
       decisionIndex: this._decisionIndex,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      // Cosmetic hand reorder — persists across reconnect/restart
+      handOrder: [...this._handOrder.entries()].map(([pid, ids]) => ({ participantId: pid, orderedIds: ids })),
+      reorderEpoch: this._reorderEpoch,
       // Version binding — fail closed on mismatch
       versionBinding: {
         productVersion: '0.24.1',
@@ -1043,6 +1097,15 @@ export class AuthoritativeMatchSession {
       }
       match._idempotency.set(p.participantId, entries);
     }
+
+    // Restore cosmetic hand reorder state
+    match._handOrder = new Map();
+    for (const h of snapshot.handOrder ?? []) {
+      if (h.participantId && Array.isArray(h.orderedIds)) {
+        match._handOrder.set(h.participantId, [...h.orderedIds]);
+      }
+    }
+    match._reorderEpoch = snapshot.reorderEpoch ?? 0;
 
     return match;
   }

@@ -84,6 +84,12 @@ const KNOWN_TYPES = new Set([
   'TOURNAMENT_START', 'TOURNAMENT_REPORT_RESULT',
   // Client → Server (player report — IRX-C07: previously missing)
   'REPORT_PLAYER',
+  // Client → Server (hand reorder — cosmetic drag-drop within hand)
+  'HAND_REORDER',
+  // Server → Client (hand reorder acknowledgement)
+  'HAND_REORDERED',
+  // Server → Client (opponent hand reorder notification — face-down placeholders)
+  'OPPONENT_HAND_REORDER',
   // Server → Client
   'MATCH_CREATED', 'MATCH_JOINED', 'MATCH_VIEW',
   'ACTION_RESULT', 'PARTICIPANT_STATUS', 'MATCH_STARTED',
@@ -358,6 +364,31 @@ export function validateLeaveMatch(payload) {
   }
   if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 16) {
     return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken is invalid');
+  }
+  return ok();
+}
+
+/**
+ * Validate a HAND_REORDER payload.
+ * The client sends the new preferred display order of their hand as an array
+ * of card IDs. This is cosmetic — it does not affect engine state.
+ * @param {Record<string, *>} payload - Message payload
+ * @returns {ValidationResult}
+ */
+export function validateHandReorder(payload) {
+  if (!isValidId(payload.matchId)) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'matchId is invalid');
+  }
+  if (typeof payload.participantToken !== 'string' || payload.participantToken.length < 16) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'participantToken is invalid');
+  }
+  if (!Array.isArray(payload.orderedIds) || payload.orderedIds.length > 40) {
+    return fail(ReasonCode.INVALID_FIELD_TYPE, 'orderedIds must be an array of at most 40 card IDs');
+  }
+  for (const id of payload.orderedIds) {
+    if (typeof id !== 'string' || id.length === 0 || id.length > 128) {
+      return fail(ReasonCode.INVALID_FIELD_TYPE, 'orderedIds contains an invalid card ID');
+    }
   }
   return ok();
 }
