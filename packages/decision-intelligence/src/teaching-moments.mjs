@@ -252,15 +252,55 @@ function checkNoResponse(vm) {
 }
 
 /**
+ * Map a teaching moment category to actionable next-step recommendations.
+ * Each recommendation links to an existing Intrilex learning surface
+ * (Academy lessons or puzzles). This keeps the teaching moment
+ * deterministic while providing an educational pathway forward.
+ * @param {string} category - The teaching moment category
+ * @returns {Array<{label: string, href: string}>}
+ */
+function nextStepsForCategory(category) {
+  const steps = {
+    tempo: [
+      { label: 'Academy: Draw & Score', href: '#/play/academy' },
+      { label: 'Try Puzzles', href: '#/puzzles' },
+    ],
+    defense: [
+      { label: 'Academy: Respond & Counter', href: '#/play/academy' },
+      { label: 'Try Puzzles', href: '#/puzzles' },
+    ],
+    efficiency: [
+      { label: 'Academy: Card Effects', href: '#/play/academy' },
+      { label: 'Try Puzzles', href: '#/puzzles' },
+    ],
+    positioning: [
+      { label: 'Academy: Royal Cards', href: '#/play/academy' },
+      { label: 'Review Match Replay', href: '#/history' },
+    ],
+  };
+  return steps[category] ?? [{ label: 'Back to Academy', href: '#/play/academy' }];
+}
+
+/**
  * Render a teaching moment as HTML for the terminal screen.
+ * Includes an actionable "What to Try Next" section with links to
+ * Academy lessons and puzzles based on the teaching moment category.
  * @param {TeachingMoment} moment
  * @returns {string}
  */
 export function renderTeachingMoment(moment) {
   if (!moment) return '';
+  const nextSteps = nextStepsForCategory(moment.category);
+  const nextStepsHtml = nextSteps.map(s =>
+    `<a class="teaching-moment-next-step" href="${s.href}" data-testid="teaching-moment-next-step">${s.label} →</a>`
+  ).join('');
   return `<div class="teaching-moment" data-testid="teaching-moment" data-category="${moment.category}">
     <h3 class="teaching-moment-title">💡 ${moment.title}</h3>
     <p class="teaching-moment-insight">${moment.insight}</p>
     <p class="teaching-moment-tip" data-testid="teaching-moment-tip">${moment.tip}</p>
+    <div class="teaching-moment-next" data-testid="teaching-moment-next">
+      <span class="teaching-moment-next-label">What to try next:</span>
+      ${nextStepsHtml}
+    </div>
   </div>`;
 }

@@ -161,7 +161,8 @@ export function createSimulationState(setup) {
       playerIds: setup.playerIds,
       seatOrder: setup.seatOrder,
       enabledModules: setup.enabledModules ?? [],
-      seed: setup.seed
+      seed: setup.seed,
+      ...(setup.predeterminedIdentities ? { predeterminedIdentities: setup.predeterminedIdentities } : {})
     });
   }
   return firstContact.createMatchState({ ...setup, eventApprovedModules: setup.eventApprovedModules ?? [] });
