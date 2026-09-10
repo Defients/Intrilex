@@ -99,6 +99,8 @@ function adaptSnapshotForViewModel(controllerSnapshot) {
       enduringRow: opp.er ?? [],
       displayName: controllerSnapshot.opponent?.displayName ?? 'AI',
       aiRating: controllerSnapshot.opponent?.aiRating ?? null,
+      // v2.5 §4J: Pass difficulty through for the "AI · EASY" meta line.
+      difficulty: controllerSnapshot.opponent?.difficulty ?? '',
       // Network match participant data (v0.28)
       isHuman: controllerSnapshot.opponent?.isHuman ?? false,
       rating: controllerSnapshot.opponent?.rating ?? null,
@@ -248,6 +250,21 @@ function renderMatch(vm, opts, snapshot) {
   const humER = vm?.battlefield?.bottomER ?? [];
   [...oppPR, ...oppER, ...humPR, ...humER].forEach(c => { if (c?.entityId) cardRegistry[c.entityId] = c; });
 
+  // A-03: Build card action hints map from authorized actions for tooltips.
+  // Maps source card entityId → array of short action labels available for that card.
+  // This is grounded in the authorized legal-action state — no invented reasons.
+  const cardActionHints = new Map();
+  for (const action of vm.actions ?? []) {
+    for (const sid of action.sourceEntityIds ?? []) {
+      if (!cardActionHints.has(sid)) cardActionHints.set(sid, []);
+      const label = action.shortLabel || action.displayLabel || 'Action';
+      if (!cardActionHints.get(sid).includes(label)) {
+        cardActionHints.get(sid).push(label);
+      }
+    }
+  }
+  opts = { ...opts, cardActionHints, isHumanTurn, isResponseWindow: immediate?.isResponseWindow === true };
+
   return `<div class="ranked-duel-shell" role="main" aria-label="Ranked Duel Match" data-testid="play-board" data-gameplay-skin="${esc(opts.gameplaySkin)}"${opts.isCaster === true ? ' data-caster="1"' : ''}>
     ${renderHeader(vm, opts, priorityContext, immediate)}
     <section class="rd-cell rd-enemy-enduring" data-grid="enemyE" aria-label="Opponent Enduring">
@@ -258,6 +275,8 @@ function renderMatch(vm, opts, snapshot) {
     </section>
     <section class="rd-cell rd-enemy-profile" data-grid="enemyProfile" aria-label="Opponent profile">
       ${renderProfileBlock(vm.opponent, 'opponent', vm)}
+    </section>
+    <section class="rd-cell rd-enemy-meta" data-grid="enemyMeta" aria-label="Opponent hand and status">
       ${renderOpponentHand(vm.battlefield.opponentHandCount, opts.opponentHandCards)}
     </section>
     <section class="rd-cell rd-piles" data-grid="piles" aria-label="Shared piles">
@@ -285,13 +304,16 @@ function renderMatch(vm, opts, snapshot) {
     </section>
     <section class="rd-cell rd-gamelog" data-grid="gamelog" data-log-empty="${(snapshot?.recentEvents?.length ?? 0) === 0}" aria-label="Game log">
       <div class="rd-rail-section-header">GAME LOG</div>
-      ${renderGameLog(snapshot?.recentEvents ?? [], snapshot?.systemEvents ?? [], cardRegistry)}
+      ${renderGameLog(snapshot?.recentEvents ?? [], snapshot?.systemEvents ?? [], cardRegistry, buildActorLabelRewriter(vm.human.playerId, vm.opponent.displayName), vm.human.playerId)}
     </section>
     <section class="rd-cell rd-score-rail" data-grid="scoreRail" aria-label="Score rail" data-testid="score-rail">
       ${renderScoreRail(vm)}
     </section>
     <section class="rd-cell rd-player-profile" data-grid="playerPro" aria-label="Your profile">
       ${renderProfileBlock(vm.human, 'human', vm)}
+    </section>
+    <section class="rd-cell rd-player-meta" data-grid="playerMeta" aria-label="Your status">
+      ${renderPlayerMeta(vm.human, vm)}
     </section>
     <section class="rd-cell rd-player-hand" data-grid="playerH" aria-label="Your hand">
       ${renderHumanHand(vm.battlefield.humanHand, opts)}
@@ -482,6 +504,7 @@ function renderHeader(vm, opts, priorityContext, immediate) {
         <button class="rd-toolbar-btn" data-action="toggle-rules" title="Rules / Help" aria-label="Rules and help">\u2139</button>
         <button class="rd-toolbar-btn" data-action="toggle-stats" title="Match stats" aria-label="Match statistics">\u25C8</button>
         <button class="rd-toolbar-btn" data-action="toggle-inspector" title="Inspector" aria-label="Card inspector">\u25A4</button>
+        <button class="rd-toolbar-btn" data-action="toggle-board" data-testid="toggle-board" title="Switch to Astra board" aria-label="Switch to Astra board">\u25C6</button>
         ${renderSkinSelector(opts.gameplaySkin)}
         <button class="rd-toolbar-btn" data-action="${exitAction}" data-testid="exit-match-btn" title="${exitTitle}" aria-label="${exitTitle}">\u2715</button>
       </div>
@@ -639,20 +662,42 @@ function renderSharedBattlefield(vm, opts, snapshot, priorityContext, immediate)
 
 function renderPileCard(label, count, topCard, dataPile) {
   const isEmpty = count === 0;
+  // v2.5 §4G: Draw pile communicates depletion through thickness tiers.
+  // The exact count remains visible; the tier adds a tactile visual cue.
+  let depletionTier = '';
+  if (dataPile === 'draw') {
+    if (isEmpty) depletionTier = 'depleted';
+    else if (count <= 4) depletionTier = 'low';
+    else if (count <= 12) depletionTier = 'medium';
+    else depletionTier = 'high';
+  }
   const cls = isEmpty ? 'rd-pile-card empty' : 'rd-pile-card';
+  const depletionAttr = depletionTier ? ` data-depletion="${esc(depletionTier)}"` : '';
   const topHtml = topCard
     ? `<div class="rd-pile-top" aria-label="Top card">${esc(topCard.identity)}</div>`
     : '';
-  // Draw pile uses the mini cardback image as background with label overlaid
-  const drawBg = dataPile === 'draw' && !isEmpty
-    ? '<div class="rd-pile-cardback mini" aria-hidden="true"></div>'
+  // Draw pile uses stacked cardback layers to communicate thickness.
+  // The number of layers scales with the depletion tier (high → 4, medium → 3,
+  // low → 2, depleted → 0). Each layer is an absolutely-positioned cardback.
+  let drawBg = '';
+  if (dataPile === 'draw' && !isEmpty) {
+    const layerCount = depletionTier === 'high' ? 4 : depletionTier === 'medium' ? 3 : 2;
+    const layers = Array.from({ length: layerCount }, (_, i) =>
+      `<div class="rd-pile-cardback mini" style="--pile-layer:${i}" aria-hidden="true"></div>`
+    ).join('');
+    drawBg = `<div class="rd-pile-stack" data-tiers="${layerCount}" aria-hidden="true">${layers}</div>`;
+  }
+  // v2.5 §4G: Exhausted draw pile gets an explicit text cue.
+  const exhaustedHtml = (dataPile === 'draw' && isEmpty)
+    ? '<div class="rd-pile-exhausted" aria-label="Draw pile exhausted">Exhausted</div>'
     : '';
-  return `<div class="${cls}" data-pile="${dataPile}" aria-label="${label} pile, ${count} cards" role="button" tabindex="0">
+  return `<div class="${cls}" data-pile="${dataPile}"${depletionAttr} aria-label="${label} pile, ${count} cards" role="button" tabindex="0">
     ${drawBg}
     <div class="rd-pile-face">
       <div class="rd-pile-label">${label}</div>
       <div class="rd-pile-count">${count}</div>
       ${topHtml}
+      ${exhaustedHtml}
     </div>
   </div>`;
 }
@@ -812,9 +857,15 @@ function renderResolutionStack(vm) {
     (vm.match.priorityOwnerId === vm.opponent.playerId ? vm.opponent.displayName.toUpperCase() : '');
 
   if (items.length === 0) {
+    // v2.5 §4E: Calm, focal empty state. Communicate that nothing is
+    // pending and surface the current priority holder so the region
+    // remains informative without monopolizing attention.
+    const focalLine = priorityOwner
+      ? (priorityOwner === 'YOU' ? 'Your priority — no pending effects' : `${esc(priorityOwner)} has priority — no pending effects`)
+      : 'No pending effects';
     return `<div class="rd-resolution-stack empty" aria-label="Resolution stack" role="region" data-testid="resolution-stack">
       <div class="rd-stack-header">RESOLUTION STACK <span class="rd-stack-count">0</span></div>
-      <div class="rd-stack-empty">Stack is empty</div>
+      <div class="rd-stack-empty">${esc(focalLine)}</div>
       ${priorityOwner ? `<div class="rd-stack-priority">PRIORITY: ${esc(priorityOwner)}</div>` : ''}
     </div>`;
   }
@@ -1067,7 +1118,13 @@ function renderActionBarOverview(vm, opts, groups, passHtml, priorityContext, im
 
   // Prompt text
   const legalCount = groups.filter(g => !g.isPass).length;
-  const promptText = '';
+  // v2.5 §4D: Concise game-facing prompt with the legal action count.
+  // Uses "N legal actions" (not "N actions offered") per the spec copy rules.
+  // Only shown in overview mode (no card selected) so it doesn't clutter
+  // the card-centric or response views.
+  const promptText = (!selectedSourceCardId && legalCount > 0 && !isResponse)
+    ? `<div class="rd-action-prompt" data-testid="action-prompt">${legalCount} legal action${legalCount !== 1 ? 's' : ''}</div>`
+    : '';
 
   return `<div class="rd-contextual-actions" aria-label="Actions" role="region" data-testid="action-rail">
     <div class="rd-actions-header">${isResponse ? 'RESPONSE' : 'ACTIONS'}</div>
@@ -1316,7 +1373,7 @@ function renderRightRail(vm, opts, isReadOnly, snapshot, priorityContext, immedi
 
   // Game log: player-readable events (no engine diagnostics)
   const events = snapshot?.recentEvents ?? [];
-  const gameLogHtml = renderGameLog(events, null, logCardRegistry);
+  const gameLogHtml = renderGameLog(events, null, logCardRegistry, buildActorLabelRewriter(vm.human.playerId, vm.opponent.displayName), vm.human.playerId);
 
   // Chat panel
   const chatHtml = renderChatPanel(vm, opts, isReadOnly, chatMessages);
@@ -1394,8 +1451,42 @@ function actorBadgeLabel(actorId) {
   return 'SYS';
 }
 
+/**
+ * v2.5 §4F: Build a substitution map from raw actor labels ("Player 1",
+ * "Player 2") to player-facing labels ("You", opponent display name).
+ * This rewrites the event descriptions produced by buildEventLog so the
+ * game log reads "You scored 7♣" instead of "Player 1 scored 7♣".
+ */
+function buildActorLabelRewriter(humanPlayerId, opponentDisplayName) {
+  const humanLabel = 'You';
+  const oppLabel = opponentDisplayName || 'Opponent';
+  const map = {};
+  if (humanPlayerId === 'P1') {
+    map['Player 1'] = humanLabel;
+    map['Player 2'] = oppLabel;
+  } else if (humanPlayerId === 'P2') {
+    map['Player 2'] = humanLabel;
+    map['Player 1'] = oppLabel;
+  }
+  // Only rewrite when we have a definite mapping; otherwise leave as-is.
+  if (Object.keys(map).length === 0) return null;
+  return (text) => {
+    if (!text) return text;
+    let out = text;
+    // Replace at word boundaries to avoid partial matches.
+    for (const [from, to] of Object.entries(map)) {
+      out = out.replaceAll(from, to);
+    }
+    return out;
+  };
+}
+
 function renderGameLog(events, systemEvents) {
   const cardRegistry = arguments[2] ?? null;
+  // v2.5 §4F: Optional 4th arg — actor label rewriter (text → text)
+  const rewriteActorLabel = arguments[3] ?? null;
+  // v2.5 §4F: Optional 5th arg — human player ID for actor badge mapping
+  const humanPlayerId = arguments[4] ?? null;
   // Build player-readable gameplay events
   let logEntries = [];
   if (events && events.length > 0) {
@@ -1418,7 +1509,9 @@ function renderGameLog(events, systemEvents) {
       return true;
     });
     logEntries = playerReadable.map(e => ({
-      description: e.description ?? e.text ?? '',
+      description: rewriteActorLabel
+        ? rewriteActorLabel(e.description ?? e.text ?? '')
+        : (e.description ?? e.text ?? ''),
       type: e.type ?? '',
       actorId: e.actorId ?? null,
       category: categorizeEvent(e.type),
@@ -1452,7 +1545,9 @@ function renderGameLog(events, systemEvents) {
   return `<div class="rd-game-log" data-testid="event-log" role="log">
     ${recent.map((e, i) => {
       const icon = CATEGORY_ICONS[e.category] ?? CATEGORY_ICONS.system;
-      const actor = actorBadgeLabel(e.actorId);
+      const actor = humanPlayerId
+        ? (e.actorId === humanPlayerId ? 'YOU' : actorBadgeLabel(e.actorId))
+        : actorBadgeLabel(e.actorId);
       const isNew = i === 0;
       const classes = [
         'rd-log-entry',
@@ -1620,6 +1715,28 @@ function renderScoreSpine(vm) {
   </div>`;
 }
 
+/**
+ * v2.5 §1/§19: Player meta panel — displays status indicators (active,
+ * priority) and connection state for the human player. Sits in the
+ * playerMeta grid area, mirroring the enemyMeta area which holds the
+ * opponent hand.
+ */
+function renderPlayerMeta(plate, vm) {
+  const indicators = plate.statusIndicators ?? [];
+  const conn = plate.connectionState;
+  const parts = [];
+  for (const ind of indicators) {
+    parts.push(`<span class="rd-meta-indicator rd-meta-${esc(ind.type.toLowerCase())}" data-testid="player-meta-${esc(ind.type.toLowerCase())}">${esc(ind.label)}</span>`);
+  }
+  if (conn && conn !== 'CONNECTED') {
+    parts.push(`<span class="rd-meta-connection rd-meta-conn-${esc(conn.toLowerCase())}" data-testid="player-conn-state">${esc(conn)}</span>`);
+  }
+  if (parts.length === 0) {
+    return '<div class="rd-meta-empty" aria-hidden="true"></div>';
+  }
+  return `<div class="rd-meta-panel" data-testid="player-meta-panel">${parts.join('')}</div>`;
+}
+
 function renderProfileBlock(plate, side, vm) {
   const badgeHtml = renderBadges(plate.badges);
   const isNetwork = vm.mode?.isNetwork === true;
@@ -1630,6 +1747,13 @@ function renderProfileBlock(plate, side, vm) {
   const ratingHtml = plate.rating
     ? `<span class="rd-plate-rating">${plate.rating.value}${plate.rating.provisional ? '?' : ''}</span>`
     : (plate.aiRating != null ? `<span class="rd-plate-rating">AI ${plate.aiRating}</span>` : '');
+
+  // v2.5 §4J: AI difficulty chip (e.g. "EASY") — shown alongside the side
+  // label so the identity reads "AI · EASY" instead of leaking the raw
+  // policyId. Only applies to AI opponents with a difficulty label.
+  const difficultyChip = (!isLocal && !plate.isHuman && plate.difficulty)
+    ? `<span class="rd-plate-difficulty" aria-label="AI difficulty ${esc(plate.difficulty)}">${esc(plate.difficulty)}</span>`
+    : '';
 
   const isActive = vm.match.activePlayerId === plate.playerId;
 
@@ -1659,7 +1783,7 @@ function renderProfileBlock(plate, side, vm) {
     <div class="rd-prestige-banner-scrim" aria-hidden="true"></div>
     <div class="rd-prestige-banner-content">
       <span class="rd-prestige-banner-name">${esc(plate.displayName)}</span>
-      <span class="rd-prestige-banner-meta">${esc(sideLabel)} ${ratingHtml} ${rankLabelHtml} ${badgeHtml}</span>
+      <span class="rd-prestige-banner-meta">${esc(sideLabel)} ${difficultyChip} ${ratingHtml} ${rankLabelHtml} ${badgeHtml}</span>
     </div>
   </div>`;
 
@@ -1714,7 +1838,7 @@ function renderBoardRow(cards, label, rowType) {
 function renderHumanHand(cards, opts) {
   if (!cards || !cards.length) return `<div class="rd-hand hand-empty" aria-label="Your hand is empty"><span class="hand-empty">Your hand is empty.</span></div>`;
   return `<div class="rd-hand" aria-label="Your hand, ${cards.length} cards">
-    ${cards.map(c => renderCard(c, { isHand: true, selectedSourceCardId: opts.selectedSourceCardId, selectedActionId: opts.selectedActionId })).join('')}
+    ${cards.map(c => renderCard(c, { isHand: true, selectedSourceCardId: opts.selectedSourceCardId, selectedActionId: opts.selectedActionId, cardActionHints: opts.cardActionHints, isHumanTurn: opts.isHumanTurn, isResponseWindow: opts.isResponseWindow })).join('')}
   </div>`;
 }
 
@@ -1758,8 +1882,38 @@ function renderCard(card, handOpts = {}) {
   const superEligibleBadge = handOpts.isHand && card.isSuper
     ? `<span class="super-eligible-badge" aria-label="Super eligible">★</span>` : '';
 
+  // A-03: Decision-intelligence tooltip for hand cards.
+  // Shows available actions for legal cards, or a brief reason for illegal cards.
+  // Grounded in authorized legal-action state — no invented reasons.
+  let tooltipText = '';
+  if (handOpts.isHand) {
+    if (card.legalSource && handOpts.cardActionHints) {
+      const hints = handOpts.cardActionHints.get(card.entityId) ?? [];
+      if (hints.length > 0) {
+        // Limit to 4 action labels to keep the tooltip concise
+        const shown = hints.slice(0, 4);
+        const extra = hints.length > 4 ? `, +${hints.length - 4} more` : '';
+        tooltipText = `${card.identity ?? 'Card'} — available: ${shown.join(', ')}${extra}`;
+      } else {
+        tooltipText = `${card.identity ?? 'Card'} — has legal actions`;
+      }
+    } else if (!card.legalSource) {
+      // Provide a brief, grounded reason based on game state
+      const isTapped = card.statusMarkers?.some(m => m.type === 'TAPPED');
+      if (isTapped) {
+        tooltipText = `${card.identity ?? 'Card'} — tapped, cannot be used this turn`;
+      } else if (handOpts.isResponseWindow) {
+        tooltipText = `${card.identity ?? 'Card'} — cannot be used as a response right now`;
+      } else if (!handOpts.isHumanTurn) {
+        tooltipText = `${card.identity ?? 'Card'} — wait for your turn`;
+      } else {
+        tooltipText = `${card.identity ?? 'Card'} — no legal actions with this card right now`;
+      }
+    }
+  }
+
   const handAriaLabel = handOpts.isHand
-    ? `aria-label="Hand card ${esc(card.identity || '?')}${card.legalSource ? ' — has legal actions' : ''}"`
+    ? `aria-label="Hand card ${esc(tooltipText || (card.identity || 'Card'))}"`
     : '';
 
   // v0.20.0: Use renderTcgCard for the board card face (the "board" Card
@@ -1772,10 +1926,16 @@ function renderCard(card, handOpts = {}) {
     showMechanicIcons: handOpts.isHand === true,
   });
 
-  return `<div class="${classes.join(' ')}" data-card-id="${esc(card.entityId)}" data-card-identity="${esc(card.identity ?? '')}" data-testid="board-card" ${handAriaLabel} title="${esc(card.identity || 'Card')}">
+  // A-03: Rich tooltip element for hand cards (CSS hover/focus tooltip)
+  const tooltipElement = handOpts.isHand && tooltipText
+    ? `<div class="rd-card-tooltip" role="tooltip" data-testid="card-tooltip">${esc(tooltipText)}</div>`
+    : '';
+
+  return `<div class="${classes.join(' ')}" data-card-id="${esc(card.entityId)}" data-card-identity="${esc(card.identity ?? '')}" data-testid="board-card" ${handAriaLabel} title="${esc(tooltipText || card.identity || 'Card')}">
     ${tcgCardHtml}
     ${legalIndicator}${superEligibleBadge}
     ${card.isGeneratedCopy ? '<div class="rd-card-copy-badge">Copy</div>' : ''}
+    ${tooltipElement}
   </div>`;
 }
 

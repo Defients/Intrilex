@@ -172,7 +172,7 @@ test('analytics-ai ui: dev-server serves .mjs with javascript MIME and watches p
   const dev = await read('scripts/dev-server.mjs');
   assert.match(dev, /'\.mjs': 'text\/javascript/);
   assert.match(dev, /packages\/analytics-ai\/src/);
-  assert.match(dev, /\.\(js\|mjs\|css/);
+  assert.match(dev, /\.\(js\|mjs\|ts\|tsx\|css/);
 });
 
 test('analytics-ai ui: stylesheet exists and defines panel + badge classes', async () => {

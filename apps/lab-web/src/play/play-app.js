@@ -27,6 +27,7 @@ import { findLesson as findLessonV2 } from './academy/curriculum.mjs';
 import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs';
 import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs';
 import { renderRecap } from './academy/academy-recap.mjs';
+import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs';
 import { state, resetState } from './play-state.js';
 import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js';
 import {
@@ -48,8 +49,23 @@ import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getC
 import { getAccessToken, onTokenRefresh } from './network/auth-controller.js';
 import { getAchievementRuntime } from './achievements/achievement-runtime.js';
 import { getAchievementPresenter } from './achievements/achievement-presenter.js';
+import { getBoardPresentation, setBoardPresentation } from '../client/board-preference.js';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/**
+ * Dispose the tactical (Astra) board mount if active, releasing the React
+ * root and any subscriptions. Safe to call when no mount is active.
+ * Consolidates the six duplicate try/catch dispose blocks that were
+ * scattered across teardown, error paths, preference switches, and
+ * AI-step transitions.
+ */
+function disposeTacticalMount() {
+  if (state.tacticalMount) {
+    try { state.tacticalMount.dispose(); } catch { /* ignore */ }
+    state.tacticalMount = null;
+  }
+}
 
 // IRX-H10: Reconnect-grace countdown ticker for the waiting player. The
 // disconnect overlay renders a static remaining-time value; this interval
@@ -170,6 +186,8 @@ export async function handlePlayRoute(route, container) {
     await renderNetworkActiveMatch(container);
   } else if (sub === '/academy') {
     await renderAcademyHub(container);
+  } else if (sub === '/guided') {
+    await renderGuidedExhibition(container);
   } else {
     // Unknown play sub-route — redirect to new match setup
     location.hash = '#/play/new';
@@ -218,6 +236,17 @@ async function renderAcademyHub(container) {
   if (getCurrentStep() === FunnelStep.LANDING) advanceToStep(FunnelStep.TUTORIAL_STARTED);
   container.innerHTML = renderAcademy({ completedLessons: completed });
   bindAcademyEvents(container);
+}
+
+/**
+ * Render the Guided Exhibition — deterministic scripted match.
+ */
+async function renderGuidedExhibition(container) {
+  renderGuidedIntroScreen(container, {
+    onStart: async () => {
+      await startGuidedMatch(container, { guidanceLevel: 'full' });
+    },
+  });
 }
 
 /**
@@ -534,6 +563,8 @@ function teardownSession() {
   if (_graceCountdownTimerId) { clearInterval(_graceCountdownTimerId); _graceCountdownTimerId = null; }
   // v0.28: Remove beforeunload protection when the session is torn down
   removeBeforeUnloadProtection();
+  // Dispose tactical board mount if active
+  disposeTacticalMount();
   if (state.sessionId && state.tabId) {
     releaseLease(state.sessionId, state.tabId);
   }
@@ -564,6 +595,152 @@ function bindLeaseConflictEvents(container, sessionId) {
     state.session = null;
     location.hash = '#/';
   };
+}
+
+/**
+ * Build the chat config for the tactical (Astra) React board.
+ * Routes messages from the network session or local chat state, and
+ * sends through the network session or local echo accordingly.
+ * After any mutation (send/toggle), triggers a tactical board refresh
+ * so the React component sees the updated messages.
+ */
+function buildTacticalChatConfig(isNetworkMatch) {
+  const messages = (state.networkSession?.chatMessages ?? state.chatMessages ?? []).slice(-50);
+  const selfName = state.session?.setup?.humanDisplayName ?? 'You';
+  const opponentName = isNetworkMatch
+    ? (state.networkSession?.opponentDisplayName ?? 'Opponent')
+    : (state.session?.setup?.aiArchetype ?? 'AI');
+  const modeLabel = isNetworkMatch ? 'NETWORK · LIVE' : 'LOCAL VS AI';
+  const readOnly = state.leaseMode === 'READ_ONLY';
+  const hidden = state.networkSession?.chatHidden ?? state.chatHidden ?? false;
+  const notificationsMuted = state.chatNotificationsMuted ?? false;
+
+  function refreshTacticalChat() {
+    if (!state.tacticalMount || !state.session) return;
+    try {
+      const snap = state.session.getSnapshot();
+      state.tacticalMount.update(snap, state.leaseMode === 'READ_ONLY', buildTacticalChatConfig(isNetworkMatch));
+    } catch { /* session may be mid-transition */ }
+  }
+
+  const onSend = async (text) => {
+    if (state.networkSession && typeof state.networkSession.sendChatMessage === 'function') {
+      await state.networkSession.sendChatMessage(text);
+    } else {
+      state.chatMessages.push({ isHuman: true, text, time: new Date().toLocaleTimeString() });
+    }
+    refreshTacticalChat();
+  };
+
+  const onToggleHidden = (newHidden) => {
+    if (state.networkSession) {
+      state.networkSession.sendChatVisibility(newHidden);
+    }
+    state.chatHidden = newHidden;
+    refreshTacticalChat();
+  };
+
+  const onToggleMuted = (muted) => {
+    state.chatNotificationsMuted = muted;
+    refreshTacticalChat();
+  };
+
+  return { messages, onSend, selfName, opponentName, modeLabel, readOnly, hidden, onToggleHidden, notificationsMuted, onToggleMuted };
+}
+
+/**
+ * Render the tactical (Astra) React board.
+ *
+ * Incremental seam: receives the same authorized snapshot as the classic
+ * renderer and submits action intents through the same session path.
+ * Never owns authoritative state. Falls back to classic on error.
+ */
+async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
+  const readOnly = state.leaseMode === 'READ_ONLY';
+  const skin = getGameplaySkin();
+
+  const submitIntent = async (intent) => {
+    const session = state.session ?? state.networkSession;
+    if (!session) return { accepted: false, error: 'No active session' };
+    try {
+      const result = await session.submitHumanAction(intent);
+      // After a successful submit, re-render so the tactical store
+      // receives the new session snapshot and resets its
+      // acceptedBoundary flag. Without this, the store's select()
+      // silently returns on all future selections because
+      // acceptedBoundary stays true. setTimeout(0) lets store.submit()
+      // finish its internal state management first.
+      if (result.accepted) {
+        setTimeout(() => { renderActiveMatch(container); }, 0);
+      }
+      return result;
+    } catch (error) {
+      return { accepted: false, error: error?.message ?? 'Submission failed' };
+    }
+  };
+
+  const onClassic = () => {
+    setBoardPresentation('classic');
+    disposeTacticalMount();
+    renderActiveMatch(container);
+  };
+
+  const onSave = async () => {
+    if (!state.session?.getSaveEnvelope) return;
+    try {
+      const envelope = state.session.getSaveEnvelope();
+      if (envelope) await putSave(envelope);
+    } catch (error) {
+      console.warn('[tactical-board] save failed:', error?.message ?? error);
+      throw error;
+    }
+  };
+
+  const onInspect = (cardId) => {
+    if (!cardId) return;
+    state.inspectorCardId = cardId;
+    if (isCardInspectable(cardId)) {
+      openAdvancedCardRulesController({ cardId, snapshot });
+    }
+  };
+
+  const onReorderHand = async (orderedIds) => {
+    // Network match: send to server for persistence + opponent notification
+    if (isNetworkMatch && state.networkSession?.reorderHand) {
+      try {
+        await state.networkSession.reorderHand(orderedIds);
+      } catch (error) {
+        console.warn('[tactical-board] hand reorder failed:', error?.message ?? error);
+      }
+    }
+    // Local AI match: store in local state for UI persistence
+    if (!isNetworkMatch) {
+      state.handOrder = [...orderedIds];
+    }
+  };
+
+  try {
+    if (!state.tacticalMount) {
+      const { mountGameTable } = await import('../client/mount.tsx');
+      state.tacticalMount = mountGameTable(container, snapshot, {
+        submit: submitIntent,
+        onClassic,
+        onSave: state.session?.getSaveEnvelope ? onSave : undefined,
+        onInspect,
+        onReorderHand,
+        skin,
+        readOnly,
+        chat: buildTacticalChatConfig(isNetworkMatch),
+      });
+    } else {
+      state.tacticalMount.update(snapshot, readOnly, buildTacticalChatConfig(isNetworkMatch));
+    }
+  } catch (error) {
+    console.error('[tactical-board] mount failed, falling back to classic:', error);
+    disposeTacticalMount();
+    setBoardPresentation('classic');
+    renderActiveMatch(container);
+  }
 }
 
 /**
@@ -609,7 +786,16 @@ async function renderActiveMatch(container) {
   // If AI decision is pending, step it
   if (state.session.status === SessionState.AI_DECISION && !state.isAdvancing) {
     state.isAdvancing = true;
-    container.innerHTML = '<div class="play-loading">Opponent is thinking...</div>';
+    const isTactical = getBoardPresentation() === 'tactical';
+    if (isTactical && state.tacticalMount) {
+      // Update tactical board with current snapshot (shows "waiting"
+      // status) instead of destroying the React DOM with innerHTML.
+      const preSnapshot = state.session.getSnapshot();
+      state.tacticalMount.update(preSnapshot, state.leaseMode === 'READ_ONLY');
+    } else {
+      disposeTacticalMount();
+      container.innerHTML = '<div class="play-loading">Opponent is thinking...</div>';
+    }
     try {
       await state.session.stepAI();
     } catch (error) {
@@ -618,6 +804,7 @@ async function renderActiveMatch(container) {
         state.session.status = SessionState.ERROR;
         state.session.error = { code: 'AI_STEP_EXCEPTION', message: error.message };
       }
+      disposeTacticalMount();
       container.innerHTML = `<div class="play-error" role="alert"><h2>AI error</h2><p>${esc(error.message)}</p><a href="#/" class="secondary-button">Back to Home</a></div>`;
       state.isAdvancing = false;
       return;
@@ -647,6 +834,21 @@ async function renderActiveMatch(container) {
   if (snapshot.status === 'TERMINAL' && state.session && !state.statsRecorded) {
     state.statsRecorded = true;
     updatePlayerStatsOnTerminal(snapshot);
+    // IRX-TRACE: Cache the certified replay for trace-based teaching insights
+    // on the terminal screen. This is async but the result is cached on
+    // state._terminalCertifiedReplay and picked up on the next render.
+    // Guard against the promise resolving after navigation away by checking
+    // that the session identity hasn't changed.
+    if (!state._terminalCertifiedReplay) {
+      const sessionId = state.session.sessionId;
+      state.session.createCertifiedReplay?.()
+        .then(replay => {
+          if (state.session?.sessionId === sessionId) {
+            state._terminalCertifiedReplay = replay;
+          }
+        })
+        .catch(err => console.warn('[play-app] failed to cache terminal certified replay:', err?.message ?? err));
+    }
     // v0.28: Remove beforeunload protection when the match reaches terminal state
     removeBeforeUnloadProtection();
     // Academy: route through AcademyController for completion + recap
@@ -710,6 +912,21 @@ async function renderActiveMatch(container) {
     } else {
       removeBeforeUnloadProtection();
     }
+
+    // ── Tactical board (Astra) ──────────────────────────────────
+    // When the player has selected the tactical board preference,
+    // mount or update the React GameTable instead of the classic
+    // HTML renderer. The tactical board receives the same authorized
+    // snapshot and submits through the same action intent path.
+    // It never owns authoritative state.
+    if (getBoardPresentation() === 'tactical') {
+      await renderTacticalBoard(container, snapshot, isNetworkMatch);
+      return;
+    }
+
+    // If switching back from tactical, dispose any active mount.
+    disposeTacticalMount();
+
     boardHtml = renderBoard(snapshot, {
       selectedActionId: state.selectedActionId,
       selectedIntentKey: state.selectedIntentKey,
@@ -759,6 +976,9 @@ async function renderActiveMatch(container) {
     // Gameplay skin (Light/Dark/CosmoTech/Corrupture) — read synchronously
     // so the first paint carries the correct data-gameplay-skin attribute.
     gameplaySkin: getGameplaySkin(),
+    // IRX-TRACE: Pass the cached certified replay for trace-based teaching
+    // insights on the terminal screen.
+    certifiedReplay: state._terminalCertifiedReplay ?? null,
   });
   } catch (renderError) {
     console.error('renderBoard threw:', renderError);
