@@ -31,8 +31,8 @@ export const pageSubtitle = document.querySelector('#page-subtitle');
 // `intrilex:settings` localStorage key as a single JSON blob so we
 // don't litter localStorage with one key per setting.
 const SETTINGS_KEY = 'intrilex:settings';
-const PERSISTABLE_SETTINGS = ['reducedMotion', 'reducedSensory', 'fx', 'layout', 'visibility', 'rulesIllustrated', 'haptics', 'highContrast', 'seasonalThemes'];
-const SETTINGS_DEFAULTS = { reducedMotion: false, reducedSensory: false, fx: true, layout: 'observatory', visibility: 'public', rulesIllustrated: true, haptics: true, highContrast: false, seasonalThemes: true };
+const PERSISTABLE_SETTINGS = ['reducedMotion', 'reducedSensory', 'fx', 'layout', 'visibility', 'rulesIllustrated', 'rulesViewMode', 'haptics', 'highContrast', 'seasonalThemes'];
+const SETTINGS_DEFAULTS = { reducedMotion: false, reducedSensory: false, fx: true, layout: 'observatory', visibility: 'public', rulesIllustrated: true, rulesViewMode: 'illustrated', haptics: true, highContrast: false, seasonalThemes: true };
 
 function loadPersistedSettings() {
   let saved = {};
@@ -60,7 +60,7 @@ export const state = {
   index:null, autonomyIndex:null, corpusAnalytics:null, aggregate:null, observatory:null, capabilities:null,
   replay:null, authorized:null, replayKind:'corpus', fixtureId:'CT-001', frame:0, visibility:_persisted.visibility, viewer:'P1',
   _replayLoadedFor:null,
-  playing:false, timer:null, speed:1, layout:_persisted.layout, showOrchestration:false, reducedMotion:_persisted.reducedMotion, reducedSensory:_persisted.reducedSensory, fx:_persisted.fx, rulesIllustrated:_persisted.rulesIllustrated, haptics:_persisted.haptics, highContrast:_persisted.highContrast, seasonalThemes:_persisted.seasonalThemes,
+  playing:false, timer:null, speed:1, layout:_persisted.layout, showOrchestration:false, reducedMotion:_persisted.reducedMotion, reducedSensory:_persisted.reducedSensory, fx:_persisted.fx, rulesIllustrated:_persisted.rulesIllustrated, rulesViewMode:_persisted.rulesViewMode || (_persisted.rulesIllustrated === false ? 'text' : 'illustrated'), haptics:_persisted.haptics, highContrast:_persisted.highContrast, seasonalThemes:_persisted.seasonalThemes,
   selectedTimelineIndex:null, selectedMechanic:null, selectedSynergy:null, selectedPolicy:null, comparePolicyRight:null,
   filters:{profile:'all',evidence:'all'}, campaignWorker:null, campaignWorkers:[],
   lastCampaignResult:null, historyPage:0, historyFilterTerm:'', historyFilterReason:'all', historyFilterPolicy:'all',

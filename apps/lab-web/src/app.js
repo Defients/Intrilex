@@ -14,6 +14,8 @@ import {} from './integrity.js';
 import { renderRanks } from './workspaces/ranks.js';
 import { renderDiagnostics } from './workspaces/diagnostics.js';
 import { renderBranches} from './workspaces/branches.js';
+import { renderForensicWorkspace, initForensicViewer, getForensicState, setCurrentFrame, renderForensicSidebar, renderForensicComparisonOverlay, renderFrameCommentary, handleForensicAction } from './forensic/forensic-viewer.mjs';
+import { frameSummary as forensicFrameSummary, branchesAtFrame as forensicBranchesAtFrame, annotationsAtFrame as forensicAnnotationsAtFrame, sortedBookmarks as forensicSortedBookmarks } from './forensic/forensic-model.mjs';
 import { renderEvidence } from './workspaces/evidence.js';
 import { renderReleaseNotes } from './workspaces/release-notes.js';
 import { renderIntelligence } from './workspaces/intelligence.js';
@@ -75,6 +77,9 @@ const getMigrationController = lazyLoad(() => import('./play/network/migration-c
 // Three.js lands in a separate esbuild chunk via the dynamic import chain
 // (brain-controller → brain-scene/nodes/edges/interaction → three).
 const getBrain = lazyLoad(() => import('./brain/brain-controller.js'));
+// A-05: Lightweight 2D SVG brain (default) — no Three.js dependency.
+// This chunk is tiny since brain-data.js and brain-fallback.js are self-contained.
+const get2dBrain = lazyLoad(() => import('./brain/brain-2d.js'));
 
 // Install global error boundary at module load time
 installGlobalErrorBoundary();
@@ -274,7 +279,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
+    '/branches': renderBranches, '/forensic': renderForensic, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
   };
   try {
     const result = (renderers[r] ?? renderEvidence)();
@@ -366,6 +371,13 @@ function renderLandingMode(r) {
     if (landingContainer) {
       landingContainer.innerHTML = '';
       renderCardReference(landingContainer);
+    }
+  }
+  else if (r === '/forensic') {
+    // Forensic Replay Lab — bookmark, branch, annotate, and compare replays.
+    if (landingContainer) {
+      landingContainer.innerHTML = '';
+      renderForensicWorkspace(landingContainer);
     }
   }
 }
@@ -1784,6 +1796,108 @@ async function loadContinueCard() {
 let _wipLandingListenerAbort = null;
 
 /**
+ * Detect visitor state from localStorage to customize the landing page
+ * onboarding CTA. Checks the first-run funnel state and Academy progress
+ * to distinguish first-time visitors from returning players.
+ * @returns {{ state: 'first-time'|'returning-incomplete'|'returning-complete', academyCompleted: number, academyTotal: number }}
+ */
+function detectVisitorState() {
+  let funnelRaw = null;
+  let academyRaw = null;
+  try {
+    funnelRaw = localStorage.getItem('intrilex:funnel-state');
+    academyRaw = localStorage.getItem('intrilex:academy-progress-v2');
+  } catch { /* localStorage unavailable */ }
+
+  // First-time visitor: no funnel state and no academy progress
+  if (!funnelRaw && !academyRaw) {
+    return { state: 'first-time', academyCompleted: 0, academyTotal: 0 };
+  }
+
+  // Parse academy progress to determine completion
+  let academyCompleted = 0;
+  let academyTotal = 5; // default curriculum size
+  if (academyRaw) {
+    try {
+      const progress = JSON.parse(academyRaw);
+      if (progress && progress.lessons) {
+        const lessons = Object.values(progress.lessons);
+        academyTotal = Math.max(1, lessons.length); // guard against 0
+        academyCompleted = lessons.filter((l) => l?.status === 'completed').length;
+      }
+    } catch { /* ignore parse errors */ }
+  }
+
+  if (academyCompleted < academyTotal) {
+    return { state: 'returning-incomplete', academyCompleted, academyTotal };
+  }
+
+  return { state: 'returning-complete', academyCompleted, academyTotal };
+}
+
+/**
+ * Render the "Play Now" CTA section for the WIP landing page.
+ * Shows different CTAs based on visitor state:
+ *   - first-time: Academy primary, Free Play secondary
+ *   - returning-incomplete: Continue Academy primary, Play Now secondary
+ *   - returning-complete: Play Now primary, Review Academy secondary
+ * @returns {string} HTML string
+ */
+function renderPlayCtaSection() {
+  const visitor = detectVisitorState();
+
+  if (visitor.state === 'first-time') {
+    return `<section class="wip-play-cta" aria-labelledby="wip-play-title" data-testid="wip-play-cta">
+      <h2 id="wip-play-title" class="wip-play-cta-title">Ready to Play?</h2>
+      <p class="wip-play-cta-desc">Intrilex is playable right now. Start with the Academy to learn the basics in 5 interactive lessons, or jump straight into a free match against the AI.</p>
+      <div class="wip-play-cta-buttons">
+        <a class="wip-play-cta-primary" href="#/play/academy" data-testid="wip-cta-academy">
+          <span aria-hidden="true">🎓</span>
+          <span>Learn with Academy</span>
+        </a>
+        <a class="wip-play-cta-secondary" href="#/dev" data-testid="wip-cta-freeplay">
+          <span>Skip to Free Play</span>
+        </a>
+      </div>
+      <a class="wip-play-cta-tertiary" href="#/puzzles" data-testid="wip-cta-puzzles">Try Puzzles →</a>
+    </section>`;
+  }
+
+  if (visitor.state === 'returning-incomplete') {
+    return `<section class="wip-play-cta" aria-labelledby="wip-play-title" data-testid="wip-play-cta">
+      <h2 id="wip-play-title" class="wip-play-cta-title">Continue Learning</h2>
+      <p class="wip-play-cta-desc">You've completed ${visitor.academyCompleted} of ${visitor.academyTotal} Academy lessons. Pick up where you left off, or play a free match.</p>
+      <div class="wip-play-cta-buttons">
+        <a class="wip-play-cta-primary" href="#/play/academy" data-testid="wip-cta-academy">
+          <span aria-hidden="true">🎓</span>
+          <span>Continue Academy (${visitor.academyCompleted}/${visitor.academyTotal})</span>
+        </a>
+        <a class="wip-play-cta-secondary" href="#/dev" data-testid="wip-cta-freeplay">
+          <span>Play Now</span>
+        </a>
+      </div>
+      <a class="wip-play-cta-tertiary" href="#/puzzles" data-testid="wip-cta-puzzles">Try Puzzles →</a>
+    </section>`;
+  }
+
+  // returning-complete
+  return `<section class="wip-play-cta" aria-labelledby="wip-play-title" data-testid="wip-play-cta">
+    <h2 id="wip-play-title" class="wip-play-cta-title">Play Intrilex</h2>
+    <p class="wip-play-cta-desc">You've completed the Academy. Jump into a match, try puzzles, or review the rules.</p>
+    <div class="wip-play-cta-buttons">
+      <a class="wip-play-cta-primary" href="#/dev" data-testid="wip-cta-freeplay">
+        <span aria-hidden="true">▶</span>
+        <span>Play Now</span>
+      </a>
+      <a class="wip-play-cta-secondary" href="#/play/academy" data-testid="wip-cta-academy">
+        <span>Review Academy</span>
+      </a>
+    </div>
+    <a class="wip-play-cta-tertiary" href="#/puzzles" data-testid="wip-cta-puzzles">Try Puzzles →</a>
+  </section>`;
+}
+
+/**
  * Render the cinematic "Coming Soon" W.I.P. landing page.
  * Homepage (#/) displaying the under-construction / coming-soon state with
  * newsletter capture, feature previews, and links to the Developer Preview (#/dev).
@@ -1860,9 +1974,10 @@ function renderWipLanding() {
             <span class="wip-feature-label">Match Replay &amp; Analysis</span>
           </div>
         </div>
+        ${renderPlayCtaSection()}
         <section class="wip-brain-section" aria-labelledby="wip-brain-title">
           <h2 id="wip-brain-title" class="wip-brain-title">Explore the Intrilex Brain</h2>
-          <p class="wip-brain-desc">An interactive 3D mind map of mechanics, synergies, card interactions, and workspaces. Drag to orbit, scroll to zoom, click nodes for details.</p>
+          <p class="wip-brain-desc">An interactive mind map of mechanics, synergies, card interactions, and workspaces. Click nodes to navigate. Switch to 3D for orbit, zoom, and advanced filters.</p>
           <div id="brain-container" aria-label="3D interactive mind map" role="region"></div>
         </section>
         <div class="wip-newsletter" aria-labelledby="wip-newsletter-title">
@@ -1921,13 +2036,30 @@ function renderWipLanding() {
   </div>`;
   bindWipLandingEvents();
   maybeSkipLandingVideo();
-  // Lazy-load the 3D Mind Map Brain into #brain-container. Three.js is in a
-  // separate esbuild chunk; if WebGL is unavailable the controller renders a
-  // 2D SVG fallback. The controller verifies the async host is still connected.
+  // A-05: 2D SVG brain is the default (no Three.js loaded). 3D is opt-in
+  // via the "Switch to 3D" toggle. The mode preference is persisted in
+  // localStorage under 'intrilex:brain-mode'.
   const brainHost = document.querySelector('#brain-container');
   if (brainHost) {
-    getBrain().then(({ initBrain }) => brainHost.isConnected ? initBrain(brainHost) : null)
-      .catch((err) => console.error('[brain] failed to load:', err));
+    let brainMode = '2d';
+    try { brainMode = localStorage.getItem('intrilex:brain-mode') === '3d' ? '3d' : '2d'; } catch { /* ignore */ }
+
+    if (brainMode === '3d') {
+      // 3D mode — loads the Three.js chunk (561KB)
+      getBrain().then(({ initBrain }) => brainHost.isConnected ? initBrain(brainHost) : null)
+        .catch((err) => console.error('[brain] failed to load:', err));
+    } else {
+      // 2D mode (default) — lightweight SVG, no Three.js
+      get2dBrain().then(({ init2dBrain }) => brainHost.isConnected ? init2dBrain(brainHost) : null)
+        .catch((err) => console.error('[brain-2d] failed to load:', err));
+    }
+
+    // Listen for mode switch from 2D → 3D (dispatched by the toggle button)
+    brainHost.addEventListener('brain:switch-mode', (e) => {
+      if (e.detail?.mode !== '3d') return;
+      getBrain().then(({ initBrain }) => brainHost.isConnected ? initBrain(brainHost) : null)
+        .catch((err) => console.error('[brain] failed to load:', err));
+    });
   }
 }
 
@@ -2018,7 +2150,7 @@ function currentState() { const frame = currentFrame(); if (!frame) return {}; i
 export function stop() { state.playing = false; if (state.timer) clearInterval(state.timer); state.timer = null; }
 /** Toggle replay playback (play/pause). Re-renders after state change. */
 export function togglePlay() { if (state.playing) { stop(); render(); return; } state.playing = true; state.timer = setInterval(() => { if (state.frame >= state.replay.frames.length - 1) { stop(); render(); return; } stepTo(state.frame + 1); }, Math.max(65, 700 / state.speed)); render(); }
-function stepTo(index) { state.frame = clamp(index, 0, state.replay.frames.length - 1); state.selectedTimelineIndex = null; triggerFxForFrame(); render(); }
+function stepTo(index) { state.frame = clamp(index, 0, state.replay.frames.length - 1); state.selectedTimelineIndex = null; triggerFxForFrame(); setCurrentFrame(state.frame); render(); }
 function commandAt(index) { return state.replay.commands?.[Math.max(0, index - 1)] ?? null; }
 function commandAction(command) { return command?.action ?? command?.payload?.action ?? null; }
 function frameEventTypes(frame) { return (frame?.events ?? (frame?.eventTypes ?? []).map(type => ({ type }))).map(event => event.type); }
@@ -2066,6 +2198,14 @@ function playerBoard(s, player, id) {
  * frame slider, board visualization, and timeline.
  * Shows an empty-state placeholder when no replay is loaded (IRX-H21).
  */
+/**
+ * Render the Forensic workspace — replay forensics with bookmarks,
+ * branches, annotations, and puzzle generation.
+ */
+async function renderForensic() {
+  await renderForensicWorkspace(app);
+}
+
 function renderWatch() {
   if (!state.replay || !state.replay.frames) {
     // IRX-H21: Render a minimal Watch workspace shell with a frame-slider
@@ -2074,25 +2214,64 @@ function renderWatch() {
     app.innerHTML = '<div class="watch-layout"><div class="watch-controls"><div class="transport" role="group" aria-label="Playback transport"><button id="step-prev" disabled title="Previous frame" aria-label="Previous frame">◀</button><button id="play-toggle" aria-label="Play">▶</button><button id="step-next" disabled title="Next frame" aria-label="Next frame">▶</button><button id="step-end" disabled title="Skip to end" aria-label="Skip to end">⏭</button></div><div class="progress"><input type="range" id="frame-slider" aria-label="Replay frame slider" min="0" max="0" value="0" disabled><span>0/0</span></div><div class="speed-control"><label>Speed<select id="play-speed" disabled><option value="1">1×</option></select></label></div><div class="current-action"><span class="action-label">No replay loaded</span></div></div><div class="watch-board"><div class="empty-state" style="grid-column:1/-1"><span class="empty-state-icon" aria-hidden="true">◈</span><strong>No replay loaded.</strong><p>Select a replay from the Replays workspace or run a campaign.</p><a class="primary-button empty-action" href="#/replays">Browse replays</a></div></div></div>';
     return;
   }
+  // IRX-FORENSIC: Initialize forensic viewer for this replay if not already loaded.
+  // The forensic sidebar provides bookmarking, annotation, branching, and puzzle
+  // generation tools alongside the Watch workspace.
+  const forensicState = getForensicState();
+  const replayId = state.fixtureId ?? state.replay?.fixtureId ?? state.replay?.matchId ?? 'unknown';
+  if (!forensicState || forensicState?.session?.replayId !== replayId) {
+    initForensicViewer(replayId, state.replay, state.frame).then(() => render()).catch(() => {});
+    return; // Will re-render after async init
+  }
+  setCurrentFrame(state.frame);
+
   const frame = currentFrame(), s = currentState(), timeline = visibleTimeline(), total = state.replay.frames.length - 1;
   const players = s.turnOrder ?? Object.keys(s.players ?? {});
   const currentCmd = commandAt(state.frame);
   const currentLabel = state.frame === 0 ? 'Initial state' : semanticLabel(currentCmd, frame);
   const currentClass = state.frame === 0 ? '' : semanticForCommand(currentCmd, frame);
-  app.innerHTML = `<div class="watch-layout">
-    <div class="watch-controls">
-      <div class="transport" role="group" aria-label="Playback transport"><button id="step-prev" ${state.frame === 0 ? 'disabled' : ''} title="Previous frame" aria-label="Previous frame">◀</button><button id="play-toggle" aria-label="${state.playing ? 'Pause' : 'Play'}">${state.playing ? '⏸' : '▶'}</button><button id="step-next" ${state.frame >= total ? 'disabled' : ''} title="Next frame" aria-label="Next frame">▶</button><button id="step-end" ${state.frame >= total ? 'disabled' : ''} title="Skip to end" aria-label="Skip to end">⏭</button></div>
-      <div class="progress"><input type="range" id="frame-slider" aria-label="Replay frame slider" min="0" max="${total}" value="${state.frame}"><span>${state.frame}/${total}</span></div>
-      <div class="speed-control"><label>Speed<select id="play-speed"><option value="1" ${state.speed === 1 ? 'selected' : ''}>1×</option><option value="2" ${state.speed === 2 ? 'selected' : ''}>2×</option><option value="4" ${state.speed === 4 ? 'selected' : ''}>4×</option><option value="8" ${state.speed === 8 ? 'selected' : ''}>8×</option></select></label></div>
-      <div class="current-action ${currentClass}"><span class="action-label">${esc(currentLabel)}</span></div>
+  const forensicSidebarHtml = renderForensicSidebar();
+  app.innerHTML = `<div class="watch-layout watch-layout-forensic">
+    <div class="watch-main">
+      <div class="watch-controls">
+        <div class="transport" role="group" aria-label="Playback transport"><button id="step-prev" ${state.frame === 0 ? 'disabled' : ''} title="Previous frame" aria-label="Previous frame">◀</button><button id="play-toggle" aria-label="${state.playing ? 'Pause' : 'Play'}">${state.playing ? '⏸' : '▶'}</button><button id="step-next" ${state.frame >= total ? 'disabled' : ''} title="Next frame" aria-label="Next frame">▶</button><button id="step-end" ${state.frame >= total ? 'disabled' : ''} title="Skip to end" aria-label="Skip to end">⏭</button></div>
+        <div class="progress"><input type="range" id="frame-slider" aria-label="Replay frame slider" min="0" max="${total}" value="${state.frame}"><span>${state.frame}/${total}</span></div>
+        <div class="speed-control"><label>Speed<select id="play-speed"><option value="1" ${state.speed === 1 ? 'selected' : ''}>1×</option><option value="2" ${state.speed === 2 ? 'selected' : ''}>2×</option><option value="4" ${state.speed === 4 ? 'selected' : ''}>4×</option><option value="8" ${state.speed === 8 ? 'selected' : ''}>8×</option></select></label></div>
+        <div class="current-action ${currentClass}"><span class="action-label">${esc(currentLabel)}</span></div>
+      </div>
+      ${renderFrameCommentary(state.frame)}
+      <div class="watch-board">${players.map(id => playerBoard(s, s.players?.[id], id)).join('')}</div>
+      ${(() => {
+        // IRX-FORENSIC: Render branch previews below the board when branches exist at this frame.
+        if (!forensicState?.session) return '';
+        const frameBranches = forensicBranchesAtFrame(forensicState.session, state.frame);
+        if (frameBranches.length === 0) return '';
+        return `<div class="forensic-branch-previews" data-testid="forensic-branch-previews">${frameBranches.map(b => `
+          <div class="forensic-branch-preview" data-testid="forensic-branch-preview">
+            <div class="forensic-branch-preview-header">
+              <strong>⎇ Alternate Line</strong>
+              <span>${esc(b.label || 'Untitled branch')}</span>
+            </div>
+            <div class="forensic-branch-preview-commands">${b.alternateCommands.length > 0 ? `${b.alternateCommands.length} alternate command(s)` : '<span class="forensic-branch-preview-empty">No alternate commands yet — add commands to explore this line</span>'}</div>
+          </div>
+        `).join('')}</div>`;
+      })()}
+      <div class="watch-timeline"><div class="timeline-header">Timeline${forensicState?.session?.bookmarks?.length ? ` <span class="forensic-timeline-badge" aria-label="${forensicState.session.bookmarks.length} bookmarks">${forensicState.session.bookmarks.length}</span>` : ''}</div><div class="timeline-items">${timeline.map(item => {
+        const isCurrent = item.index === state.frame;
+        const label = item.index === 0 ? 'Start' : semanticLabel(item.command, item.frame);
+        // IRX-FORENSIC: Add bookmark/annotation/branch indicators to timeline items.
+        let forensicClasses = '';
+        if (forensicState?.session) {
+          const summary = forensicFrameSummary(forensicState.session, item.index);
+          if (summary.hasBookmark) forensicClasses += ' has-bookmark';
+          if (summary.annotationCount > 0) forensicClasses += ' has-annotation';
+          if (summary.branchCount > 0) forensicClasses += ' has-branch';
+        }
+        return `<button class="timeline-item ${item.class} ${isCurrent ? 'current' : ''}${forensicClasses}" data-frame="${item.index}" title="${esc(label)}" aria-current="${isCurrent ? 'true' : 'false'}"><span class="timeline-dot" aria-hidden="true"></span><span class="timeline-label">${esc(label)}</span></button>`;
+      }).join('')}</div></div>
     </div>
-    <div class="watch-board">${players.map(id => playerBoard(s, s.players?.[id], id)).join('')}</div>
-    <div class="watch-timeline"><div class="timeline-header">Timeline</div><div class="timeline-items">${timeline.map(item => {
-      const isCurrent = item.index === state.frame;
-      const label = item.index === 0 ? 'Start' : semanticLabel(item.command, item.frame);
-      return `<button class="timeline-item ${item.class} ${isCurrent ? 'current' : ''}" data-frame="${item.index}" title="${esc(label)}" aria-current="${isCurrent ? 'true' : 'false'}"><span class="timeline-dot" aria-hidden="true"></span><span class="timeline-label">${esc(label)}</span></button>`;
-    }).join('')}</div></div>
-  </div>`;
+    ${forensicSidebarHtml}
+  </div>${renderForensicComparisonOverlay()}`;
   document.querySelector('#play-toggle').onclick = togglePlay;
   document.querySelector('#step-prev').onclick = () => stepTo(state.frame - 1);
   document.querySelector('#step-next').onclick = () => stepTo(state.frame + 1);
@@ -2110,6 +2289,135 @@ function renderWatch() {
         getAdvancedCardRules().then(({ openAdvancedCardRules }) => openAdvancedCardRules(identity))
           .catch((err) => console.error('[card-rules] failed to load module:', err));
       }
+    }
+  });
+  // IRX-FORENSIC: Wire up forensic sidebar action handlers.
+  wireForensicSidebar();
+  // IRX-FORENSIC: Wire up comparison overlay close button (outside sidebar).
+  wireForensicOverlay();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FORENSIC — wire sidebar actions into the Watch workspace
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Wire up forensic sidebar action handlers in the Watch workspace.
+ * Delegates to handleForensicAction() and handles results:
+ *   - frameJump → stepTo() to navigate to a bookmarked frame
+ *   - puzzle → navigate to /puzzles with the generated puzzle
+ *   - exportJson → trigger a file download
+ *   - message → show a transient toast
+ */
+function wireForensicSidebar() {
+  const sidebar = document.querySelector('[data-testid="forensic-sidebar"]');
+  if (!sidebar) return;
+
+  sidebar.querySelectorAll('[data-forensic-action]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const action = btn.dataset.forensicAction;
+      const data = {};
+
+      // Gather input values based on action type
+      if (action === 'add-bookmark') {
+        const labelInput = sidebar.querySelector('#forensic-bookmark-label');
+        data.label = labelInput?.value?.trim() || '';
+      } else if (action === 'add-annotation') {
+        const textArea = sidebar.querySelector('#forensic-annotation-text');
+        data.text = textArea?.value?.trim() || '';
+        if (!data.text) return; // Don't submit empty annotations
+      } else if (action === 'create-branch') {
+        const labelInput = sidebar.querySelector('#forensic-branch-label');
+        data.label = labelInput?.value?.trim() || '';
+      } else if (action === 'generate-puzzle') {
+        // IRX-FORENSIC: Pass the actual frame state for better objective suggestions.
+        // Use the public state to avoid leaking hidden information into generated puzzles.
+        data.frameState = currentState();
+      } else if (action === 'remove-bookmark') {
+        data.bookmarkId = btn.dataset.bookmarkId;
+      } else if (action === 'jump-bookmark') {
+        data.frameIndex = Number(btn.dataset.frame);
+        data.bookmarkId = btn.dataset.bookmarkId;
+      } else if (action === 'remove-annotation') {
+        data.annotationId = btn.dataset.annotationId;
+      } else if (action === 'remove-branch') {
+        data.branchId = btn.dataset.branchId;
+      } else if (action === 'view-comparison') {
+        data.comparisonId = btn.dataset.comparisonId;
+      } else if (action === 'remove-comparison') {
+        data.comparisonId = btn.dataset.comparisonId;
+      } else if (action === 'add-bookmark-from-insight') {
+        data.frame = btn.dataset.frame;
+        data.label = btn.dataset.label;
+      } else if (action === 'practice-from-insight') {
+        data.frame = btn.dataset.frame;
+        data.category = btn.dataset.category;
+      }
+
+      const result = await handleForensicAction(action, data, () => render());
+
+      // Handle frame jump (bookmark navigation)
+      if (typeof result.frameJump === 'number') {
+        stepTo(result.frameJump);
+      }
+
+      // Handle puzzle generation — store puzzle and navigate to puzzles route
+      if (result.puzzle) {
+        try {
+          // Store the generated puzzle for the puzzle app to pick up
+          window._forensicGeneratedPuzzle = result.puzzle;
+          location.hash = '#/puzzles';
+        } catch (err) {
+          console.error('[forensic] puzzle navigation failed:', err);
+        }
+      }
+
+      // Handle export — trigger a file download
+      if (result.exportJson) {
+        try {
+          const blob = new Blob([result.exportJson], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `forensic-session-${state.fixtureId ?? 'replay'}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error('[forensic] export download failed:', err);
+        }
+      }
+    });
+  });
+}
+
+/**
+ * Wire up the forensic comparison overlay close button.
+ * The overlay renders outside the sidebar (fixed position), so it
+ * needs its own event wiring.
+ */
+function wireForensicOverlay() {
+  const overlay = document.querySelector('[data-testid="forensic-comparison-overlay"]');
+  if (!overlay) return;
+  const closeBtn = overlay.querySelector('[data-forensic-action="close-comparison"]');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', async () => {
+      await handleForensicAction('close-comparison', {}, () => render());
+    });
+  }
+  // Close on backdrop click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      handleForensicAction('close-comparison', {}, () => render()).catch(() => {});
+    }
+  });
+  // Close on Escape key
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      handleForensicAction('close-comparison', {}, () => render()).catch(() => {});
     }
   });
 }
@@ -2239,6 +2547,11 @@ getAuthController().then(async ({ initAuth, isMigrationPending }) => {
 // This breaks the backedge from workspace modules to the entry point.
 import { setRenderer } from './rerender.js';
 setRenderer(render);
+
+// IRX-FORENSIC: Expose state on window for the forensic viewer's open-session
+// flow, which needs to set replay state before navigating to Watch. This is
+// a minimal bridge — the forensic model itself is pure and framework-agnostic.
+window.__intrilexState = state;
 
 boot().then(() => {
   render();

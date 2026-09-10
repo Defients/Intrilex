@@ -22,6 +22,35 @@ import { createEdgeLine, updateEdgeLine, setEdgeHighlight, setEdgeHover, createE
 import { attachInteraction } from './brain-interaction.js';
 import { buildOverlay } from './brain-ui.js';
 
+// ── Brain mode preference (2D default, 3D optional) ──────────────
+// A-05: 2D SVG is the default visualization. 3D Three.js is opt-in
+// via a toggle button. This keeps Three.js (561KB) out of the initial
+// bundle unless the user explicitly requests the 3D experience.
+const BRAIN_MODE_KEY = 'intrilex:brain-mode';
+
+/**
+ * Get the saved brain visualization mode.
+ * @returns {'2d'|'3d'} '2d' (default) or '3d'
+ */
+export function getBrainMode() {
+  try {
+    const mode = localStorage.getItem(BRAIN_MODE_KEY);
+    return mode === '3d' ? '3d' : '2d';
+  } catch {
+    return '2d';
+  }
+}
+
+/**
+ * Persist the brain visualization mode preference.
+ * @param {'2d'|'3d'} mode
+ */
+export function setBrainMode(mode) {
+  try {
+    localStorage.setItem(BRAIN_MODE_KEY, mode === '3d' ? '3d' : '2d');
+  } catch { /* localStorage unavailable */ }
+}
+
 const SECTIONS = [
   { label: 'Analysis', routes: ['/watch', '/caster', '/replays', '/history', '/mechanics', '/synergies'] },
   { label: 'Investigation', routes: ['/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament'] },
@@ -58,12 +87,25 @@ export async function initBrain(container) {
   layers[LAYER_IDS.COMBINED] = buildCombinedLayer(
     layers[LAYER_IDS.MECHANICS], layers[LAYER_IDS.WORKSPACES], layers[LAYER_IDS.CARDS]);
 
-  // WebGL fallback.
+  // A-05: 2D SVG is the default. 3D is opt-in via toggle.
+  const brainMode = getBrainMode();
+
+  // 2D mode (default) — render SVG mind map with a "Switch to 3D" toggle.
+  if (brainMode === '2d') {
+    const fallbackNodes = layers[LAYER_IDS.COMBINED].nodes.slice(0, 60).map((n) => ({
+      id: n.id, label: n.label, color: n.color, route: n.route ?? n.data?.route,
+    }));
+    renderFallback(container, fallbackNodes, [], { showToggle: true });
+    _activeBrain = { container, destroy() { container.innerHTML = ''; _activeBrain = null; } };
+    return _activeBrain;
+  }
+
+  // 3D mode — but WebGL may still be unavailable. Fall back to 2D with a note.
   if (!detectWebGL()) {
     const fallbackNodes = layers[LAYER_IDS.COMBINED].nodes.slice(0, 60).map((n) => ({
       id: n.id, label: n.label, color: n.color, route: n.route ?? n.data?.route,
     }));
-    renderFallback(container, fallbackNodes, []);
+    renderFallback(container, fallbackNodes, [], { showToggle: false, note: '3D view unavailable — WebGL is not supported. Showing 2D mind map.' });
     _activeBrain = { container, destroy() { container.innerHTML = ''; _activeBrain = null; } };
     return _activeBrain;
   }
@@ -487,17 +529,31 @@ export async function initBrain(container) {
   const resizeObserver = new ResizeObserver(() => resize());
   resizeObserver.observe(container);
 
-  // WebGL context loss → fallback.
+  // WebGL context loss → fallback to 2D and reset mode preference.
   function onContextLost(e) {
     e.preventDefault();
     destroy();
+    setBrainMode('2d'); // A-05: reset preference so next load doesn't retry 3D
     const fallbackNodes = graph.nodes.slice(0, 60).map((n) => ({ id: n.id, label: n.label, color: n.color, route: n.route ?? n.data?.route }));
-    renderFallback(container, fallbackNodes, []);
+    renderFallback(container, fallbackNodes, [], { note: '3D view lost WebGL context — showing 2D mind map. Refresh to try 3D again.' });
   }
   renderer.domElement.addEventListener('webglcontextlost', onContextLost);
 
   buildGraph();
   render();
+
+  // A-05: "Switch to 2D" toggle button in 3D mode.
+  const toggle2dBtn = document.createElement('button');
+  toggle2dBtn.className = 'brain-mode-toggle brain-mode-toggle--2d';
+  toggle2dBtn.type = 'button';
+  toggle2dBtn.textContent = 'Switch to 2D';
+  toggle2dBtn.setAttribute('aria-label', 'Switch to 2D mind map view');
+  toggle2dBtn.addEventListener('click', () => {
+    setBrainMode('2d');
+    destroy();
+    initBrain(container);
+  });
+  container.appendChild(toggle2dBtn);
 
   /** Full cleanup — disposes all GPU resources and DOM listeners. */
   function destroy() {
@@ -506,6 +562,7 @@ export async function initBrain(container) {
     resizeObserver.disconnect();
     interaction.dispose();
     overlay.destroy();
+    toggle2dBtn.remove();
     container.removeEventListener('keydown', onKey);
     renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
     for (const m of nodeMeshes) { scene.remove(m); disposeObject(m); }

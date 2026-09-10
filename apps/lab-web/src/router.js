@@ -25,6 +25,7 @@ export const WORKSPACES = [
   ['/compare','⇄','Compare','Matched cohorts'],
   ['/traces','◇','Traces','Decision intelligence'],
   ['/branches','⎇','Branches','Counterfactual lab'],
+  ['/forensic','🔬','Forensic','Replay forensics'],
   ['/diagnostics','⚙','Diagnostics','Policy behavior'],
   ['/tournament','🏆','Tournament','AI bracket'],
   ['/evidence','◎','Evidence','Integrity'],
@@ -63,6 +64,7 @@ export const SUBTITLES = {
   '/intelligence':'Optional local-LLM analytics interpretation grounded in the active simulation dataset. Deterministic warnings are computed locally; LLM interpretations are clearly labelled.',
   '/traces':'Per-decision traces with score decomposition, reason codes, and rule audit.',
   '/branches':'Policy-conditioned counterfactual estimates from command checkpoints.',
+  '/forensic':'Bookmark, branch, annotate, and compare replays. Generate puzzles from key positions.',
   '/diagnostics':'Decision margins, self-counter rates, response conservation, timing, and win rates.',
   '/tournament':'Single-elimination AI-vs-AI bracket with deterministic matches and champion crowning.',
   '/profile':'Player profile — identity, ranked, achievements, showcase, customization, and privacy.',
@@ -73,7 +75,7 @@ export const SUBTITLES = {
 
 export const LEGAL_MODES = new Set(['/privacy', '/terms']);
 
-export const LANDING_MODES = new Set(['/', '/dev', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/cards', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles', '/caster']);
+export const LANDING_MODES = new Set(['/', '/dev', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/cards', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles', '/caster', '/forensic']);
 
 export const isPlayRoute = (r) => r === '/play' || r.startsWith('/play/');
 

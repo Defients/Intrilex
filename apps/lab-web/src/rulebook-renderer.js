@@ -17,11 +17,19 @@ const esc = (value = '') => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp
 import { RULES_VERSION } from './version.js';
 import { persistSetting, state } from './state.js';
 
-// ── Illustrated mode state (persisted, default true) ──────────────
-let RULES_ILLUSTRATED = state.rulesIllustrated !== false;
+// ── View mode state (persisted, default 'illustrated') ────────────
+// Tri-state: 'illustrated' | 'text' | 'showcase'. Backward-compatible
+// with the legacy rulesIllustrated boolean: if rulesViewMode is unset,
+// rulesIllustrated===false maps to 'text', otherwise 'illustrated'.
+let RULES_VIEW_MODE = state.rulesViewMode || (state.rulesIllustrated === false ? 'text' : 'illustrated');
+// Derived boolean kept for the existing enhanceContent()/renderCollapsibleParts() path.
+let RULES_ILLUSTRATED = RULES_VIEW_MODE === 'illustrated';
 
 // Inline formatting: bold, italic, inline code. Order matters — code first
 // so its contents are not formatted, then bold (longer **), then italic (*).
+// HTML entities in text content are escaped BEFORE formatting so literal
+// <, >, & in rulebook text (e.g. "A < 2 < 3") are displayed as text, not
+// interpreted as markup by the browser.
 function renderInline(text) {
   // Protect inline code spans first by extracting placeholders.
   const codeSpans = [];
@@ -29,6 +37,8 @@ function renderInline(text) {
     codeSpans.push(code);
     return `\uE000CODE${codeSpans.length - 1}\uE000`;
   });
+  // Escape HTML entities in the remaining text.
+  text = esc(text);
   // Bold (**text**) before italic (*text*) to avoid greedy overlap.
   text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   text = text.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
@@ -544,6 +554,683 @@ function renderCollapsibleParts(mdText) {
   return blocks.join('\n');
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SHOWCASE MODE — continuous scroll, heavy SVG decoration, mini-nav
+// ═══════════════════════════════════════════════════════════════
+
+// Large hero banner SVG for the top of the showcase page (~680×200).
+// Extracts the rulebook title from the first `# ` line.
+function generateShowcaseHero(mdText) {
+  const firstH1 = mdText.match(/^#\s+(.+?)\s*#*$/m);
+  const title = firstH1 ? firstH1[1] : 'Intrilex';
+  const t = esc(title);
+  const v = esc(RULES_VERSION);
+  return `<svg class="showcase-hero-svg" viewBox="0 0 680 200" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${t}">
+    <defs>
+      <linearGradient id="heroGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="rgba(90,215,232,.12)"/>
+        <stop offset="50%" stop-color="rgba(167,139,250,.08)"/>
+        <stop offset="100%" stop-color="rgba(12,24,34,.6)"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="680" height="200" rx="16" fill="url(#heroGrad)"/>
+    <g stroke="rgba(90,215,232,.18)" fill="none" stroke-width="1.2">
+      <path d="M540 100 A120 120 0 0 1 660 100"/>
+      <path d="M520 100 A140 140 0 0 1 660 100"/>
+      <path d="M500 100 A160 160 0 0 1 660 100"/>
+      <path d="M480 100 A180 180 0 0 1 660 100"/>
+    </g>
+    <g font-size="22" text-anchor="middle" fill="rgba(90,215,232,.5)">
+      <text x="430" y="70">&#9824;</text>
+      <text x="460" y="110">&#9829;</text>
+      <text x="490" y="70">&#9830;</text>
+      <text x="520" y="110">&#9827;</text>
+    </g>
+    <text x="32" y="78" font-family="Georgia,serif" font-size="30" font-weight="700" fill="var(--text-bright)">${t}</text>
+    <rect x="32" y="96" width="64" height="22" rx="11" fill="rgba(90,215,232,.18)" stroke="rgba(90,215,232,.4)"/>
+    <text x="64" y="111" font-family="Inter,sans-serif" font-size="11" font-weight="600" text-anchor="middle" fill="var(--cyan)">v${v}</text>
+    <text x="32" y="140" font-family="Inter,sans-serif" font-size="12" fill="var(--muted-bright)">Complete Player Rulebook</text>
+    <text x="32" y="160" font-family="Inter,sans-serif" font-size="10" fill="var(--muted)">10 parts · one continuous scroll</text>
+  </svg>`;
+}
+
+// Full-bleed per-part header for showcase mode (~680×160). Larger and
+// more elaborate than the illustrated-mode generatePartHeader().
+function generateShowcasePartHeader(partKey, partTitle) {
+  const theme = PART_THEMES[partKey];
+  if (!theme) return '';
+  const rgb = theme.accentRgb;
+  const motif = PART_HEADER_MOTIFS[theme.icon] || PART_HEADER_MOTIFS.compass;
+  const roman = esc(partKey);
+  const title = esc(theme.title);
+  const subtitle = esc(theme.subtitle);
+  const ariaLabel = esc(partTitle);
+  return `<svg class="showcase-part-header-svg" viewBox="0 0 680 160" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${ariaLabel}">
+    <defs>
+      <linearGradient id="partGrad${roman}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="rgba(${rgb},.14)"/>
+        <stop offset="60%" stop-color="rgba(${rgb},.04)"/>
+        <stop offset="100%" stop-color="rgba(12,24,34,.5)"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="680" height="160" rx="16" fill="url(#partGrad${roman})"/>
+    <rect x="0" y="0" width="8" height="160" rx="4" fill="rgba(${rgb},.6)"/>
+    <text x="36" y="72" font-family="Georgia,serif" font-size="52" font-weight="700" fill="rgba(${rgb},.85)">${roman}</text>
+    <text x="36" y="104" font-family="Inter,sans-serif" font-size="18" font-weight="700" fill="var(--text-bright)">${title}</text>
+    <text x="36" y="126" font-family="Inter,sans-serif" font-size="12" font-weight="500" fill="var(--muted-bright)">${subtitle}</text>
+    <g transform="translate(540,30) scale(1.4)" stroke="rgba(${rgb},.6)" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">${motif}</g>
+  </svg>`;
+}
+
+// Placeholder "card frame" SVG (~120×170) for codex sections (Part VI).
+// Stylized playing-card border with rank corners + suit center glyph.
+function generateShowcaseCardFrame(rankLabel, suitGlyph, accentRgb) {
+  const r = esc(rankLabel);
+  const s = esc(suitGlyph);
+  const rgb = accentRgb || '91,156,240';
+  return `<svg class="showcase-card-frame-svg" viewBox="0 0 120 170" role="img" aria-label="${r}${s}">
+    <rect x="6" y="6" width="108" height="158" rx="10" fill="rgba(12,24,34,.7)" stroke="rgba(${rgb},.5)" stroke-width="1.5"/>
+    <rect x="10" y="10" width="100" height="150" rx="8" fill="none" stroke="rgba(${rgb},.2)" stroke-width="1"/>
+    <text x="16" y="26" font-family="Georgia,serif" font-size="14" font-weight="700" fill="rgba(${rgb},.9)">${r}</text>
+    <text x="16" y="40" font-family="Georgia,serif" font-size="12" fill="rgba(${rgb},.8)">${s}</text>
+    <text x="60" y="92" font-family="Georgia,serif" font-size="40" text-anchor="middle" fill="rgba(${rgb},.7)">${s}</text>
+    <text x="104" y="154" font-family="Georgia,serif" font-size="14" font-weight="700" text-anchor="end" fill="rgba(${rgb},.9)" transform="rotate(180 104 148)">${r}</text>
+    <path d="M10 10 L18 10 L10 18 Z" fill="rgba(${rgb},.3)"/>
+    <path d="M110 160 L102 160 L110 152 Z" fill="rgba(${rgb},.3)"/>
+  </svg>`;
+}
+
+// Build a gallery of card-frame placeholders for the codex (Part VI).
+function generateShowcaseCardGallery(partKey) {
+  const theme = PART_THEMES[partKey];
+  if (!theme) return '';
+  const rgb = theme.accentRgb;
+  const ranks = ['A', 'K', 'Q', 'J', '10'];
+  const suits = ['\u2660', '\u2665', '\u2666', '\u2663'];
+  const cards = [];
+  for (const s of suits) {
+    for (const r of ranks) {
+      cards.push(generateShowcaseCardFrame(r, s, rgb));
+    }
+  }
+  return `<div class="showcase-card-gallery" aria-label="Card codex placeholder gallery">${cards.join('')}</div>`;
+}
+
+// Wrap the first letter of a paragraph in a decorative drop-cap span.
+// Skips leading HTML tags (e.g. <strong>) so the drop-cap wraps the
+// first actual text character, not a markup delimiter. Also skips
+// leading HTML entities like &lt; so the drop-cap doesn't split them.
+function applyDropCap(html) {
+  return html.replace(/<p>([\s\S]*?)<\/p>/, (m, inner) => {
+    let trimmed = inner.replace(/^\s+/, '');
+    if (!trimmed) return m;
+    // Capture any leading opening tags (e.g. <strong>, <em>) so we
+    // can re-insert them before the drop-cap span.
+    const leadingTags = [];
+    let tagMatch;
+    while ((tagMatch = trimmed.match(/^<([a-zA-Z][^>]*)>/))) {
+      leadingTags.push(tagMatch[0]);
+      trimmed = trimmed.slice(tagMatch[0].length);
+    }
+    if (!trimmed) return m;
+    // Skip leading HTML entities (&lt; &amp; etc.) — don't split them.
+    const entityMatch = trimmed.match(/^&[a-zA-Z]+;/);
+    if (entityMatch) return m; // leave entity-bearing starts alone
+    const first = trimmed[0];
+    if (!first || first === '<') return m; // safety: no text char to cap
+    const rest = trimmed.slice(1);
+    const prefix = leadingTags.join('');
+    return `<p>${prefix}<span class="showcase-drop-cap">${esc(first)}</span>${rest}</p>`;
+  });
+}
+
+// ── Showcase keyword highlighting ──────────────────────────────────────
+// Categorized game terms → colored spans. Longest-first ordering within
+// the combined regex prevents partial matches (e.g. "Point Row (PR)" wins
+// over "Point Row" and "PR"). Letter-boundary lookarounds avoid matching
+// inside longer words.
+const SHOWCASE_KEYWORDS = [
+  // Zones & table areas — cyan
+  ['kw-zone', ['Point Row (PR)', 'Enduring Row (ER)', 'Draw Pile (DP)',
+    'Secured PR Points', 'Point Row', 'Enduring Row', 'Draw Pile',
+    'Graveyard', 'Swap Bar', 'Exile', 'OTT', 'PR', 'ER', 'DP', 'GY']],
+  // Phases & turn structure — amber
+  ['kw-phase', ['Action-Phase skip', 'Full Turn (FT)',
+    'Action Phase', 'Start Phase', 'End Phase', 'Full Turn',
+    'Mini-Turn', 'FT']],
+  // Mechanics & systems — magenta
+  ['kw-mechanic', ['Wild Sovereignty', "Queen's Court", 'Royal Marriage',
+    'Sudden Death', 'Time Bomb', 'Tournament Seed', 'BattleRealm',
+    'Multiplayer', 'First Contact', 'Board Lock', 'Exhausted',
+    'Multi-card', 'Anchor Play', 'Anchor', 'Attachment', 'Voltage',
+    'Scuttle', 'Aegis', 'Untap', 'untap', 'Tapped', 'tapped',
+    'Tap', 'Combo', 'Ultra', 'Trap', 'Deffy']],
+  // Timing keywords — green italic
+  ['kw-timing', ['Special Interrupt', 'Interrupt', 'interrupt',
+    'Instant', 'Quick', 'quick', 'Free play']],
+  // Actions & scoring — blue
+  ['kw-action', ['Face-Down Swap', 'Face-Up Swap', 'Draw & Cast',
+    'Exhausted Pass', 'Play for Points', 'Play for Effect',
+    'Goal', 'Points', 'Draw', 'draw']],
+  // Jokers — violet
+  ['kw-rank', ['Red Joker', 'Black Joker']],
+];
+
+const _kwMap = new Map();
+for (const [cls, terms] of SHOWCASE_KEYWORDS) {
+  for (const t of terms) _kwMap.set(t, cls);
+}
+const _kwTerms = [..._kwMap.keys()].sort((a, b) => b.length - a.length);
+const _kwAlternation = _kwTerms
+  .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  .join('|');
+const KEYWORD_RE = new RegExp(`(?<![a-zA-Z])(${_kwAlternation})(?![a-zA-Z])`, 'g');
+
+// Card-rank notation: A♠, 10♥, 2♣, J♦, etc.
+const CARD_RANK_RE = /(?<![a-zA-Z0-9])(([AKQJ]|10|[2-9])[♠♥♦♣])(?![a-zA-Z0-9])/g;
+
+// Highlight game terms and card-rank notation in rendered HTML text nodes.
+// Skips content inside <code>, <pre>, and <a> tags to avoid breaking code
+// snippets, preformatted blocks, and anchor links.
+// Tag detection requires `<` followed by a letter or `/` — this prevents
+// literal `<` in text (e.g. "A < 2 < 3") from being treated as a tag
+// delimiter and consuming subsequent markup.
+function highlightKeywords(html) {
+  const parts = html.split(/(<\/?[a-zA-Z][^>]*>)/g);
+  let inCode = false, inPre = false, inAnchor = false, inSvg = false;
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 1) {
+      const tag = parts[i];
+      if (/^<code[\s>]/i.test(tag)) inCode = true;
+      if (/^<\/code>/i.test(tag)) inCode = false;
+      if (/^<pre[\s>]/i.test(tag)) inPre = true;
+      if (/^<\/pre>/i.test(tag)) inPre = false;
+      if (/^<a[\s>]/i.test(tag)) inAnchor = true;
+      if (/^<\/a>/i.test(tag)) inAnchor = false;
+      if (/^<svg[\s>]/i.test(tag)) inSvg = true;
+      if (/^<\/svg>/i.test(tag)) inSvg = false;
+      continue;
+    }
+    if (inCode || inPre || inAnchor || inSvg) continue;
+    // Card ranks first (longer, more specific pattern).
+    parts[i] = parts[i].replace(CARD_RANK_RE,
+      '<span class="kw kw-rank">$1</span>');
+    // Then game-term keywords.
+    parts[i] = parts[i].replace(KEYWORD_RE, (m) => {
+      const cls = _kwMap.get(m);
+      return cls ? `<span class="kw ${cls}">${m}</span>` : m;
+    });
+  }
+  return parts.join('');
+}
+
+// Ornamental section divider for showcase mode (larger, part-accent colored).
+function showcaseDivider(rgb) {
+  const c = rgb || '90,215,232';
+  return `<svg class="showcase-divider" viewBox="0 0 520 32" aria-hidden="true">
+    <line x1="40" y1="16" x2="220" y2="16" stroke="rgba(${c},.4)" stroke-width="1.5"/>
+    <path d="M240 16 L260 4 L280 16 L260 28 Z" fill="rgba(${c},.5)" stroke="rgba(${c},.6)" stroke-width="1"/>
+    <circle cx="260" cy="16" r="3" fill="rgba(${c},.8)"/>
+    <line x1="300" y1="16" x2="480" y2="16" stroke="rgba(${c},.4)" stroke-width="1.5"/>
+  </svg>`;
+}
+
+// Post-process rendered HTML with showcase-specific decorations.
+function enhanceShowcaseContent(html, partKey) {
+  const theme = partKey ? PART_THEMES[partKey] : null;
+  const rgb = theme ? theme.accentRgb : '90,215,232';
+
+  // 1. Blockquotes → large pull-quote callouts with ornamental quote mark.
+  let out = html.replace(/<blockquote>/g, `<blockquote class="showcase-pullquote"><span class="showcase-pullquote-mark" aria-hidden="true">&ldquo;</span>`);
+
+  // 2. Key-rule highlight boxes (gradient banners).
+  out = out.replace(/<p>(<strong>Golden Rule<\/strong>[\s\S]*?)<\/p>/g, `<div class="showcase-key-rule"><span class="showcase-key-rule-label">Key Rule</span><p>$1</p></div>`);
+  out = out.replace(/<p>(When two rules appear to conflict[\s\S]*?)<\/p>/g, `<div class="showcase-key-rule"><span class="showcase-key-rule-label">Key Rule</span><p>$1</p></div>`);
+
+  // 3. Inject mechanic diagrams after matching <h2> headers.
+  for (const slug of Object.keys(MECHANIC_DIAGRAM_SLUGS)) {
+    const diagram = generateMechanicDiagram(slug);
+    if (!diagram) continue;
+    const headerRe = new RegExp(`(<h2 id="${slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*>[\\s\\S]*?<\\/h2>)`);
+    out = out.replace(headerRe, `$1${diagram}`);
+  }
+
+  // 4. Insert ornamental dividers before each <h2> (except leading).
+  out = out.replace(/(<h2\s)/g, `${showcaseDivider(rgb)}$1`);
+  out = out.replace(/^<svg class="showcase-divider"[\s\S]*?<\/svg>(<h2\s)/, '$1');
+
+  // 5. Style tables with showcase class.
+  out = out.replace(/<table>/g, '<table class="showcase-table">');
+
+  // 6. Inject card-frame gallery before Part VI codex tables.
+  if (partKey === 'VI') {
+    const gallery = generateShowcaseCardGallery(partKey);
+    out = out.replace(/(<table class="showcase-table")/, `${gallery}$1`);
+  }
+
+  // 7. Drop-cap on the first paragraph of the block.
+  out = applyDropCap(out);
+
+  // 8. Keyword highlighting — colored spans for game terms & card ranks.
+  //     Run last so earlier regex-based enhancements see unmodified text.
+  out = highlightKeywords(out);
+
+  return out;
+}
+
+// Render all PARTs as one continuous expanded scroll (no <details>).
+// Each part is a <section> with a full-bleed SVG header + showcase
+// decorations. Front matter gets a hero banner.
+function renderShowcaseParts(mdText) {
+  const lines = mdText.replace(/\r\n/g, '\n').split('\n');
+  const blocks = [];
+  let current = [];
+  let partTitle = null;
+  let partKey = null;
+  let isFirstBlock = true;
+
+  const flush = () => {
+    if (!current.length) return;
+    const body = enhanceShowcaseContent(renderMarkdown(current.join('\n')), partKey);
+    if (partTitle) {
+      const slug = slugify(partTitle);
+      const theme = partKey ? PART_THEMES[partKey] : null;
+      const themeAttr = theme ? ` data-part-theme="${esc(partKey)}" style="--part-accent:${theme.accentColor};--part-accent-rgb:${theme.accentRgb}"` : '';
+      const headerSvg = theme ? generateShowcasePartHeader(partKey, partTitle) : '';
+      blocks.push(`<section class="showcase-part"${themeAttr} id="${slug}">${headerSvg}<div class="showcase-part-body">${body}</div></section>`);
+    } else {
+      const hero = generateShowcaseHero(mdText);
+      blocks.push(`<div class="showcase-frontmatter">${hero}<div class="showcase-frontmatter-body">${body}</div></div>`);
+    }
+    current = [];
+    isFirstBlock = false;
+  };
+
+  for (const line of lines) {
+    const h1 = line.match(/^#\s+(.+?)\s*#*$/);
+    if (h1 && /^PART/i.test(h1[1])) {
+      flush();
+      partTitle = h1[1];
+      partKey = extractPartKey(partTitle);
+    } else {
+      current.push(line);
+    }
+  }
+  flush();
+  return blocks.join('\n');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VERBOSE MODE — text-to-speech friendly prose rendering
+// Expands abbreviations, spells out card notation, converts tables
+// and terse bullet lists into flowing spoken-English sentences.
+// Pairs with the Read Aloud control (Web Speech API) so the entire
+// rulebook can be listened to as an audiobook for learning.
+// ═══════════════════════════════════════════════════════════════
+
+// Roman numeral → spoken ordinal word (for PART headers).
+const ROMAN_TO_WORD = {
+  I: 'One', II: 'Two', III: 'Three', IV: 'Four', V: 'Five',
+  VI: 'Six', VII: 'Seven', VIII: 'Eight', IX: 'Nine', X: 'Ten',
+};
+
+// Suit glyph → spoken suit name.
+const SUIT_WORDS = { '\u2660': 'Spades', '\u2665': 'Hearts', '\u2666': 'Diamonds', '\u2663': 'Clubs' };
+
+// Rank label → spoken rank word.
+const RANK_WORDS = {
+  A: 'Ace', K: 'King', Q: 'Queen', J: 'Jack',
+  '10': 'Ten', '9': 'Nine', '8': 'Eight', '7': 'Seven', '6': 'Six',
+  '5': 'Five', '4': 'Four', '3': 'Three', '2': 'Two',
+};
+
+// Game-term abbreviations → full spoken form. Applied to standalone
+// tokens only (word-boundary guarded) so "PR" expands but "PRO" does not.
+// Longer keys first to avoid partial overlaps.
+const ABBREV = [
+  ['Secured PR Points', 'Secured Point Row Points'],
+  ['Point Row (PR)', 'Point Row'],
+  ['Enduring Row (ER)', 'Enduring Row'],
+  ['Draw Pile (DP)', 'Draw Pile'],
+  ['Action-Phase skip', 'Action Phase skip'],
+  ['Full Turn (FT)', 'Full Turn'],
+  ['PR', 'Point Row'],
+  ['ER', 'Enduring Row'],
+  ['DP', 'Draw Pile'],
+  ['GY', 'Graveyard'],
+  ['OTT', 'On The Table'],
+  ['FT', 'Full Turn'],
+  ['Aegis', 'Aegis'],
+  ['Scuttle', 'Scuttle'],
+];
+const _abbrevTerms = ABBREV.map(([k]) => k).sort((a, b) => b.length - a.length);
+const _abbrevEscaped = _abbrevTerms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+const _abbrevRe = new RegExp(`(?<![A-Za-z])(${_abbrevEscaped})(?![A-Za-z])`, 'g');
+
+// Symbol → spoken-word substitutions. Applied after card-notation and
+// abbreviation expansion so the spelled-out text contains no glyphs that
+// a TTS engine would mispronounce or skip.
+const SYMBOL_WORDS = [
+  ['\u2192', ' then '],     // →
+  ['\u2194', ' and back to '], // ↔
+  ['\u2265', ' is at least '], // ≥
+  ['\u2264', ' is at most '],  // ≤
+  ['\u00b1', ' plus or minus '], // ±
+  ['\u00d7', ' by '],        // ×
+  ['\u2020', ' tapped '],    // †
+  ['\u2021', ' double-tapped '], // ‡
+  ['\u00b7', ', '],          // ·
+  ['\u2014', ', '],          // —
+  ['\u2013', ', '],          // –
+  ['\u2026', '... '],        // …
+  ['\u2660', ' spades'], ['\u2665', ' hearts'], ['\u2666', ' diamonds'], ['\u2663', ' clubs'],
+  ['\u2605', ' star '],      // ★
+  ['\u25c6', ' diamond '],   // ◆
+  ['\u25cf', ' dot '],       // ●
+  ['&', ' and '],
+];
+
+// Card-notation regex: A♠, 10♥, 2♣, J♦, K♠, Q♦. "Red Joker" and
+// "Black Joker" are already spoken-friendly plain words, so they need
+// no expansion and are intentionally not matched here.
+const _cardRankAlt = 'A|K|Q|J|10|[2-9]';
+const CARD_NOTATION_RE = new RegExp(
+  `(?<![A-Za-z0-9])(${_cardRankAlt})[\u2660\u2665\u2666\u2663](?![A-Za-z0-9])`,
+  'g'
+);
+
+// Expand a card-notation match (e.g. "A♠") into spoken words ("Ace of Spades").
+function expandCardNotation(match) {
+  const rank = match.replace(/[\u2660\u2665\u2666\u2663]/, '');
+  const suit = match.slice(-1);
+  const rankWord = RANK_WORDS[rank] || rank;
+  const suitWord = SUIT_WORDS[suit] || '';
+  return `${rankWord} of ${suitWord}`;
+}
+
+// Convert inline markdown text to verbose spoken-friendly plain text.
+// Strips bold/italic/code markers and expands all notation. Returns a
+// string with no HTML (safe to wrap in any element).
+function verboseInline(text) {
+  let t = String(text);
+  // Protect inline code spans — spell them out literally.
+  const codeSpans = [];
+  t = t.replace(/`([^`]+)`/g, (_, code) => { codeSpans.push(code); return `\uE000C${codeSpans.length - 1}\uE000`; });
+  // Strip bold/italic markers.
+  t = t.replace(/\*\*([^*]+)\*\*/g, '$1');
+  t = t.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, '$1$2');
+  // Card notation (before symbol pass so suit glyphs are consumed here).
+  t = t.replace(CARD_NOTATION_RE, (_, m) => expandCardNotation(m));
+  // Abbreviations.
+  t = t.replace(_abbrevRe, (m) => {
+    const entry = ABBREV.find(([k]) => k === m);
+    return entry ? entry[1] : m;
+  });
+  // Symbols → words.
+  for (const [sym, word] of SYMBOL_WORDS) t = t.split(sym).join(word);
+  // Restore code spans literally.
+  t = t.replace(/\uE000C(\d+)\uE000/g, (_, i) => codeSpans[Number(i)]);
+  // Collapse whitespace.
+  return t.replace(/\s+/g, ' ').trim();
+}
+
+// Ordinal word list for converting numbered list items to prose.
+const ORDINAL_WORDS = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth',
+  'Seventh', 'Eighth', 'Ninth', 'Tenth', 'Eleventh', 'Twelfth'];
+
+// Convert a markdown block (lines) into verbose prose HTML. Handles the
+// same block types as renderMarkdown but emits spoken-friendly prose.
+function renderVerboseBlock(mdText) {
+  const lines = mdText.replace(/\r\n/g, '\n').split('\n');
+  const html = [];
+  let i = 0;
+
+  const flushParagraph = (buffer) => {
+    if (buffer.length) {
+      const prose = verboseInline(buffer.join(' '));
+      html.push(`<p>${esc(prose)}</p>`);
+    }
+  };
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Fenced code block → <pre> (kept verbatim; rare in rulebook).
+    if (/^```/.test(line)) {
+      const code = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i])) { code.push(lines[i]); i++; }
+      i++;
+      html.push(`<pre class="verbose-code"><code>${esc(code.join('\n'))}</code></pre>`);
+      continue;
+    }
+
+    // ATX headers → spoken heading.
+    const headerMatch = line.match(/^(#{1,6})\s+(.+?)\s*#*$/);
+    if (headerMatch) {
+      const level = headerMatch[1].length;
+      const text = verboseInline(headerMatch[2]);
+      const slug = slugify(headerMatch[2]);
+      // Prepend "Section:" for h2+ to give the listener a verbal cue.
+      const spoken = level >= 2 ? `<span class="verbose-heading-cue">Section. </span>${esc(text)}` : esc(text);
+      html.push(`<h${level} id="${slug}" class="verbose-heading">${spoken}</h${level}>`);
+      i++;
+      continue;
+    }
+
+    // Horizontal rule → section break marker.
+    if (/^\s*---+\s*$/.test(line) || /^\s*\*\*\*+\s*$/.test(line)) {
+      html.push('<p class="verbose-break" aria-hidden="true">— section break —</p>');
+      i++;
+      continue;
+    }
+
+    // Blockquote → callout prose.
+    if (/^>\s?/.test(line)) {
+      const quote = [];
+      while (i < lines.length && /^>\s?/.test(lines[i])) {
+        quote.push(lines[i].replace(/^>\s?/, ''));
+        i++;
+      }
+      const prose = verboseInline(quote.join(' '));
+      html.push(`<p class="verbose-callout"><span class="verbose-callout-cue">Note. </span>${esc(prose)}</p>`);
+      continue;
+    }
+
+    // Table → prose sentences. Each row becomes "Column: value" sentences.
+    if (/\|/.test(line) && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
+      const header = parseTableRow(line);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && /\|/.test(lines[i]) && lines[i].trim() !== '') {
+        rows.push(parseTableRow(lines[i]));
+        i++;
+      }
+      // Lead-in sentence using the header nouns.
+      const headerWords = header.map(verboseInline);
+      const leadIn = `The ${headerWords.join(', ')} are as follows.`;
+      html.push(`<p>${esc(leadIn)}</p>`);
+      for (const row of rows) {
+        const parts = [];
+        for (let c = 0; c < header.length; c++) {
+          const h = headerWords[c] || header[c];
+          const v = verboseInline(row[c] || '');
+          parts.push(`${h}: ${v}`);
+        }
+        const rowSentence = parts.join('. ') + '.';
+        html.push('<p class="verbose-table-row">' + esc(rowSentence) + '</p>');
+      }
+      continue;
+    }
+
+    // Unordered list → prose with "Item:" lead-ins joined by semicolons.
+    if (/^\s*[-*+]\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*[-*+]\s+/, ''));
+        i++;
+      }
+      const spoken = items.map((it, idx) => {
+        const lead = idx === 0 ? 'First, ' : (idx === items.length - 1 && items.length > 1 ? 'and finally, ' : '');
+        return `${lead}${verboseInline(it)}`;
+      });
+      html.push(`<p>${esc(spoken.join('; '))}.</p>`);
+      continue;
+    }
+
+    // Ordered list → prose with ordinal lead-ins.
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*\d+\.\s+/, ''));
+        i++;
+      }
+      const spoken = items.map((it, idx) => {
+        const ord = ORDINAL_WORDS[idx] || `Step ${idx + 1}`;
+        return `${ord}, ${verboseInline(it)}`;
+      });
+      html.push(`<p>${esc(spoken.join('; '))}.</p>`);
+      continue;
+    }
+
+    // Blank line — paragraph break.
+    if (line.trim() === '') { i++; continue; }
+
+    // Paragraph: gather contiguous non-block lines.
+    const buffer = [];
+    while (i < lines.length
+      && lines[i].trim() !== ''
+      && !/^#{1,6}\s+/.test(lines[i])
+      && !/^```/.test(lines[i])
+      && !/^>\s?/.test(lines[i])
+      && !/^\s*[-*+]\s+/.test(lines[i])
+      && !/^\s*\d+\.\s+/.test(lines[i])
+      && !/^\s*---+\s*$/.test(lines[i])
+      && !(/^\s*\|/.test(lines[i]) && i + 1 < lines.length && isTableSeparator(lines[i + 1]))
+    ) {
+      buffer.push(lines[i].trim());
+      i++;
+    }
+    flushParagraph(buffer);
+  }
+
+  return html.join('\n');
+}
+
+// Render all PARTs as verbose prose sections. Each PART header is
+// announced with its spoken ordinal ("Part One: …"). Front matter is
+// rendered as a lead-in block.
+function renderVerboseParts(mdText) {
+  const lines = mdText.replace(/\r\n/g, '\n').split('\n');
+  const blocks = [];
+  let current = [];
+  let partTitle = null;
+  let partKey = null;
+
+  const flush = () => {
+    if (!current.length) return;
+    const body = renderVerboseBlock(current.join('\n'));
+    if (partTitle) {
+      const slug = slugify(partTitle);
+      const theme = partKey ? PART_THEMES[partKey] : null;
+      const themeAttr = theme ? ` data-part-theme="${esc(partKey)}" style="--part-accent:${theme.accentColor};--part-accent-rgb:${theme.accentRgb}"` : '';
+      const spokenOrd = partKey ? (ROMAN_TO_WORD[partKey] || partKey) : '';
+      const spokenTitle = verboseInline(partTitle.replace(/^PART\s+[IVXLCDM]+\s*—\s*/i, ''));
+      const header = spokenOrd
+        ? `<h1 id="${slug}" class="verbose-part-heading"><span class="verbose-part-cue">Part ${spokenOrd}. </span>${esc(spokenTitle)}</h1>`
+        : `<h1 id="${slug}" class="verbose-part-heading">${esc(verboseInline(partTitle))}</h1>`;
+      blocks.push(`<section class="verbose-part"${themeAttr}>${header}<div class="verbose-part-body">${body}</div></section>`);
+    } else {
+      blocks.push(`<div class="verbose-frontmatter">${body}</div>`);
+    }
+    current = [];
+  };
+
+  for (const line of lines) {
+    const h1 = line.match(/^#\s+(.+?)\s*#*$/);
+    if (h1 && /^PART/i.test(h1[1])) {
+      flush();
+      partTitle = h1[1];
+      partKey = extractPartKey(partTitle);
+    } else {
+      current.push(line);
+    }
+  }
+  flush();
+  return blocks.join('\n');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// READ ALOUD — Web Speech API integration for verbose mode
+// ═══════════════════════════════════════════════════════════════
+
+// Speak the text content of the verbose rules container. Returns a
+// controller object with pause/resume/stop and boundary tracking so the
+// currently-spoken paragraph can be highlighted. `opts.rateGetter` is a
+// function called per chunk so live rate changes take effect mid-session.
+function startReadAloud(container, opts = {}) {
+  const synth = window.speechSynthesis;
+  if (!synth) return null;
+  const rateGetter = opts.rateGetter || (() => 0.95);
+
+  // Collect speakable paragraphs in document order.
+  const paras = [...container.querySelectorAll('.verbose-part-body p, .verbose-part-heading, .verbose-frontmatter p')];
+  const chunks = paras.map(p => ({ el: p, text: p.textContent.replace(/\s+/g, ' ').trim() }))
+    .filter(c => c.text.length > 0);
+
+  let idx = 0;
+  let paused = false;
+  let stopped = false;
+  const onBoundaryCbs = new Set();
+  const onDoneCbs = new Set();
+
+  const clearHighlights = () => paras.forEach(p => p.classList.remove('verbose-speaking'));
+
+  const speakNext = () => {
+    if (stopped) return;
+    if (idx >= chunks.length) {
+      clearHighlights();
+      onDoneCbs.forEach(cb => { try { cb(); } catch { /* ignore */ } });
+      return;
+    }
+    const chunk = chunks[idx];
+    const utter = new window.SpeechSynthesisUtterance(chunk.text);
+    utter.rate = rateGetter();
+    utter.onstart = () => {
+      clearHighlights();
+      chunk.el.classList.add('verbose-speaking');
+      chunk.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      onBoundaryCbs.forEach(cb => { try { cb(idx, chunk); } catch { /* ignore */ } });
+    };
+    utter.onend = () => {
+      chunk.el.classList.remove('verbose-speaking');
+      idx++;
+      // Queue the next chunk on the next tick to avoid deep recursion.
+      setTimeout(speakNext, 0);
+    };
+    utter.onerror = () => {
+      chunk.el.classList.remove('verbose-speaking');
+      idx++;
+      setTimeout(speakNext, 0);
+    };
+    synth.speak(utter);
+  };
+
+  synth.cancel(); // clear any prior utterance
+  speakNext();
+
+  return {
+    pause() { if (!paused && !stopped) { synth.pause(); paused = true; } },
+    resume() { if (paused && !stopped) { synth.resume(); paused = false; } },
+    stop() { stopped = true; synth.cancel(); clearHighlights(); },
+    isPaused() { return paused; },
+    isStopped() { return stopped; },
+    progress() { return { index: idx, total: chunks.length }; },
+    onBoundary(cb) { onBoundaryCbs.add(cb); return () => onBoundaryCbs.delete(cb); },
+    onDone(cb) { onDoneCbs.add(cb); return () => onDoneCbs.delete(cb); },
+  };
+}
+
 // Render the full rules page into the container: sticky TOC sidebar +
 // scrollable content with collapsible parts. Includes an Illustrated /
 // Text toggle (persisted) that re-renders content without a full reload.
@@ -560,12 +1247,23 @@ export async function renderRulesPage(container) {
     return;
   }
 
-  // Apply the illustrated body class up-front so CSS shows/hides decorations.
+  // Apply the view-mode body class up-front so CSS shows/hides decorations.
   const applyBodyClass = () => {
-    if (RULES_ILLUSTRATED) document.body.classList.add('rules-illustrated');
-    else document.body.classList.remove('rules-illustrated');
+    document.body.classList.remove('rules-illustrated', 'rules-showcase', 'rules-verbose');
+    if (RULES_VIEW_MODE === 'illustrated') document.body.classList.add('rules-illustrated');
+    else if (RULES_VIEW_MODE === 'showcase') document.body.classList.add('rules-showcase');
+    else if (RULES_VIEW_MODE === 'verbose') document.body.classList.add('rules-verbose');
+    // text mode: neither class applied
   };
   applyBodyClass();
+
+  // Read-aloud controller lives in the outer scope so any re-render or
+  // navigation can cancel an in-flight speech session.
+  let readAloudController = null;
+  const stopReadAloud = () => {
+    if (readAloudController) { readAloudController.stop(); readAloudController = null; }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+  };
 
   const toc = buildToc(mdText);
 
@@ -596,35 +1294,70 @@ export async function renderRulesPage(container) {
   // once on load and again whenever the illustrated toggle changes.
   const render = () => {
     applyBodyClass();
-    const contentHtml = renderCollapsibleParts(mdText);
-    const illustratedPressed = RULES_ILLUSTRATED ? 'true' : 'false';
-    const textPressed = RULES_ILLUSTRATED ? 'false' : 'true';
+    stopReadAloud();
+    const isShowcase = RULES_VIEW_MODE === 'showcase';
+    const isVerbose = RULES_VIEW_MODE === 'verbose';
+    const contentHtml = isShowcase ? renderShowcaseParts(mdText)
+      : isVerbose ? renderVerboseParts(mdText)
+      : renderCollapsibleParts(mdText);
+    const pressed = (mode) => RULES_VIEW_MODE === mode ? 'true' : 'false';
+    const showcasePageClass = isShowcase ? ' rules-showcase-page' : '';
+    const verbosePageClass = isVerbose ? ' rules-verbose-page' : '';
 
     container.innerHTML = `
     <div class="reading-progress" id="rules-reading-progress" aria-hidden="true"></div>
-    <div class="rules-page">
+    <div class="rules-toolbar" role="toolbar" aria-label="Rulebook controls">
+      <div class="rules-illustrated-toggle" role="group" aria-label="Rules view mode">
+        <button type="button" class="rules-toggle-btn" id="rules-toggle-illustrated" aria-pressed="${pressed('illustrated')}">
+          <svg class="rules-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M3 17 L9 12 L14 16 L21 11"/></svg>
+          Illustrated
+        </button>
+        <button type="button" class="rules-toggle-btn" id="rules-toggle-text" aria-pressed="${pressed('text')}">
+          <svg class="rules-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="14" y2="17"/></svg>
+          Text
+        </button>
+        <button type="button" class="rules-toggle-btn" id="rules-toggle-showcase" aria-pressed="${pressed('showcase')}">
+          <svg class="rules-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 L13.5 9 L20 10.5 L13.5 12 L12 18 L10.5 12 L4 10.5 L10.5 9 Z"/><path d="M19 16 L19.7 18.5 L22 19 L19.7 19.5 L19 22 L18.3 19.5 L16 19 L18.3 18.5 Z"/></svg>
+          Showcase
+        </button>
+        <button type="button" class="rules-toggle-btn" id="rules-toggle-verbose" aria-pressed="${pressed('verbose')}">
+          <svg class="rules-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 10 V14 H7 L13 19 V5 L7 10 Z"/><path d="M16 8 C18 10 18 14 16 16" fill="none"/><path d="M18.5 5.5 C22 8.5 22 15.5 18.5 18.5" fill="none"/></svg>
+          Verbose
+        </button>
+      </div>
+      ${isVerbose ? `<div class="rules-readaloud-bar" role="group" aria-label="Read aloud controls">
+        <button type="button" class="rules-readaloud-btn" id="rules-readaloud-play" aria-label="Read aloud">
+          <svg class="rules-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 10 V14 H7 L13 19 V5 L7 10 Z"/><path d="M16 8 C18 10 18 14 16 16"/></svg>
+          <span class="rules-readaloud-label">Read Aloud</span>
+        </button>
+        <button type="button" class="rules-readaloud-btn" id="rules-readaloud-pause" aria-label="Pause reading" disabled>
+          <svg class="rules-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="7" y="5" width="3" height="14"/><rect x="14" y="5" width="3" height="14"/></svg>
+          <span class="rules-readaloud-label">Pause</span>
+        </button>
+        <button type="button" class="rules-readaloud-btn" id="rules-readaloud-stop" aria-label="Stop reading" disabled>
+          <svg class="rules-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="6" y="6" width="12" height="12"/></svg>
+          <span class="rules-readaloud-label">Stop</span>
+        </button>
+        <label class="rules-readaloud-rate">
+          <span>Speed</span>
+          <input type="range" id="rules-readaloud-rate" min="0.5" max="1.5" step="0.05" value="0.95" aria-label="Reading speed">
+        </label>
+        <span class="rules-readaloud-status" id="rules-readaloud-status" aria-live="polite"></span>
+      </div>` : ''}
+    </div>
+    <div class="rules-page${showcasePageClass}${verbosePageClass}">
       <aside class="rules-toc" aria-label="Rulebook table of contents">
         <div class="rules-toc-header">
           <p class="eyebrow">CONTENTS</p>
           <h2>Rulebook</h2>
           <p class="rules-toc-meta">v${RULES_VERSION} · 10 parts</p>
-          <div class="rules-illustrated-toggle" role="group" aria-label="Rules view mode">
-            <button type="button" class="rules-toggle-btn" id="rules-toggle-illustrated" aria-pressed="${illustratedPressed}">
-              <svg class="rules-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M3 17 L9 12 L14 16 L21 11"/></svg>
-              Illustrated
-            </button>
-            <button type="button" class="rules-toggle-btn" id="rules-toggle-text" aria-pressed="${textPressed}">
-              <svg class="rules-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="14" y2="17"/></svg>
-              Text
-            </button>
-          </div>
         </div>
         <nav class="rules-toc-nav">${tocHtml}</nav>
       </aside>
       <main class="rules-content" id="rules-content">
         ${contentHtml}
       </main>
-    </div>`;
+    </div>${isShowcase ? '<nav class="showcase-mini-nav" id="showcase-mini-nav" aria-label="Showcase part navigation"></nav>' : ''}`;
 
     wireInteractions(container);
   };
@@ -653,25 +1386,121 @@ export async function renderRulesPage(container) {
       });
     });
 
-    // Illustrated / Text toggle.
+    // Illustrated / Text / Showcase / Verbose quad-state toggle.
     const btnIllustrated = root.querySelector('#rules-toggle-illustrated');
     const btnText = root.querySelector('#rules-toggle-text');
-    const toggleTo = (illustrated) => {
-      if (illustrated === RULES_ILLUSTRATED) return;
-      RULES_ILLUSTRATED = illustrated;
-      state.rulesIllustrated = illustrated;
-      persistSetting('rulesIllustrated', illustrated);
+    const btnShowcase = root.querySelector('#rules-toggle-showcase');
+    const btnVerbose = root.querySelector('#rules-toggle-verbose');
+    const toggleTo = (mode) => {
+      if (mode === RULES_VIEW_MODE) return;
+      stopReadAloud();
+      RULES_VIEW_MODE = mode;
+      RULES_ILLUSTRATED = mode === 'illustrated';
+      state.rulesViewMode = mode;
+      state.rulesIllustrated = mode === 'illustrated';
+      persistSetting('rulesViewMode', mode);
+      persistSetting('rulesIllustrated', mode === 'illustrated');
       // Preserve scroll position across re-render.
       const scrollY = window.scrollY;
       render();
       window.scrollTo({ top: scrollY, behavior: 'auto' });
     };
-    if (btnIllustrated) btnIllustrated.addEventListener('click', () => toggleTo(true));
-    if (btnText) btnText.addEventListener('click', () => toggleTo(false));
+    if (btnIllustrated) btnIllustrated.addEventListener('click', () => toggleTo('illustrated'));
+    if (btnText) btnText.addEventListener('click', () => toggleTo('text'));
+    if (btnShowcase) btnShowcase.addEventListener('click', () => toggleTo('showcase'));
+    if (btnVerbose) btnVerbose.addEventListener('click', () => toggleTo('verbose'));
+
+    // Read Aloud controls (verbose mode only).
+    const btnPlay = root.querySelector('#rules-readaloud-play');
+    const btnPause = root.querySelector('#rules-readaloud-pause');
+    const btnStop = root.querySelector('#rules-readaloud-stop');
+    const rateInput = root.querySelector('#rules-readaloud-rate');
+    const statusEl = root.querySelector('#rules-readaloud-status');
+    if (btnPlay) {
+      const updateButtons = () => {
+        const active = readAloudController && !readAloudController.isStopped();
+        const paused = active && readAloudController.isPaused();
+        btnPlay.disabled = active && !paused;
+        btnPause.disabled = !active;
+        btnStop.disabled = !active;
+        if (paused) btnPause.querySelector('.rules-readaloud-label').textContent = 'Resume';
+        else btnPause.querySelector('.rules-readaloud-label').textContent = 'Pause';
+      };
+      btnPlay.addEventListener('click', () => {
+        if (readAloudController && readAloudController.isPaused()) {
+          readAloudController.resume();
+        } else {
+          stopReadAloud();
+          const content = root.querySelector('#rules-content');
+          if (!content || !window.speechSynthesis) {
+            if (statusEl) statusEl.textContent = 'Speech not supported in this browser.';
+            return;
+          }
+          readAloudController = startReadAloud(content, {
+            rateGetter: () => rateInput ? Number(rateInput.value) : 0.95,
+          });
+          if (!readAloudController) {
+            if (statusEl) statusEl.textContent = 'Speech not supported in this browser.';
+            return;
+          }
+          readAloudController.onDone(() => {
+            readAloudController = null;
+            updateButtons();
+            if (statusEl) statusEl.textContent = 'Finished.';
+          });
+        }
+        updateButtons();
+      });
+      if (btnPause) btnPause.addEventListener('click', () => {
+        if (!readAloudController) return;
+        if (readAloudController.isPaused()) readAloudController.resume();
+        else readAloudController.pause();
+        updateButtons();
+      });
+      if (btnStop) btnStop.addEventListener('click', () => {
+        stopReadAloud();
+        updateButtons();
+        if (statusEl) statusEl.textContent = '';
+      });
+      if (rateInput) rateInput.addEventListener('input', () => {
+        // Rate applies to the next utterance; live update is unreliable
+        // across engines, so we store it for the controller's next chunk.
+        if (statusEl) statusEl.textContent = `Speed: ${rateInput.value}× (applies to next sentence)`;
+      });
+      updateButtons();
+    }
+
+    // Showcase floating mini-nav with scroll-spy (built only in showcase mode).
+    const miniNav = root.querySelector('#showcase-mini-nav');
+    if (miniNav) {
+      const partSections = root.querySelectorAll('.showcase-part[id]');
+      const dots = [];
+      partSections.forEach((sec) => {
+        const slug = sec.id;
+        const partKey = sec.getAttribute('data-part-theme') || '';
+        const theme = PART_THEMES[partKey] || {};
+        const label = theme.title || slug;
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'showcase-mini-nav-dot';
+        dot.setAttribute('data-target', slug);
+        dot.setAttribute('aria-label', label);
+        dot.title = label;
+        dot.addEventListener('click', () => {
+          const target = root.querySelector(`#${CSS.escape(slug)}`);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        miniNav.appendChild(dot);
+        dots.push({ dot, slug });
+      });
+      // Scroll-spy for mini-nav dots will be driven by updateProgress below.
+      miniNav._dots = dots;
+    }
 
     // Reading progress indicator + TOC active section tracking
     const progressEl = root.querySelector('#rules-reading-progress');
     const tocLinks = root.querySelectorAll('.rules-toc-nav a[href^="#"]');
+    const miniNavDots = miniNav ? miniNav._dots : null;
     const updateProgress = () => {
       const scrollTop = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -688,6 +1517,17 @@ export async function renderRulesPage(container) {
         const slug = link.getAttribute('href').slice(1);
         link.classList.toggle('active', slug === activeSlug);
       });
+      // Scroll-spy for showcase mini-nav dots.
+      if (miniNavDots) {
+        let activePartSlug = null;
+        for (const { slug } of miniNavDots) {
+          const el = root.querySelector(`#${CSS.escape(slug)}`);
+          if (el && el.getBoundingClientRect().top <= 120) activePartSlug = slug;
+        }
+        miniNavDots.forEach(({ dot, slug }) => {
+          dot.classList.toggle('active', slug === activePartSlug);
+        });
+      }
     };
     window.addEventListener('scroll', updateProgress, { passive: true });
     updateProgress();

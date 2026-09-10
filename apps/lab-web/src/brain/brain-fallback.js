@@ -69,13 +69,32 @@ function escapeXml(s) {
 }
 
 /**
- * Render the fallback content into a container element.
+ * Render the fallback/2D content into a container element.
  * @param {HTMLElement} container
  * @param {Array<object>} nodes
  * @param {Array<object>} edges
+ * @param {{ showToggle?: boolean, note?: string }} [opts]
+ *   - showToggle: if true, render a "Switch to 3D" button (A-05)
+ *   - note: custom status note text (defaults to 2D view label)
  */
-export function renderFallback(container, nodes, edges) {
+export function renderFallback(container, nodes, edges, opts = {}) {
   if (!container) return;
   const svg = buildFallbackSVG(nodes, edges);
-  container.innerHTML = `<div class="brain-fallback-wrap" role="region" aria-label="Mind map (2D view — WebGL unavailable)"><p class="brain-fallback-note">3D view unavailable — showing 2D mind map.</p>${svg}</div>`;
+  const note = opts.note ?? '2D mind map — switch to 3D for interactive orbit, search, and filters.';
+  const toggle = opts.showToggle
+    ? '<button class="brain-mode-toggle brain-mode-toggle--3d" type="button" aria-label="Switch to 3D mind map view">Switch to 3D</button>'
+    : '';
+  container.innerHTML = `<div class="brain-fallback-wrap" role="region" aria-label="Mind map (2D view)"><p class="brain-fallback-note">${escapeXml(note)}</p>${svg}${toggle}</div>`;
+
+  // Wire the "Switch to 3D" toggle (A-05)
+  if (opts.showToggle) {
+    const toggleBtn = container.querySelector('.brain-mode-toggle--3d');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        try { localStorage.setItem('intrilex:brain-mode', '3d'); } catch { /* ignore */ }
+        // Re-initialize the brain — the controller will detect 3D mode
+        container.dispatchEvent(new CustomEvent('brain:switch-mode', { detail: { mode: '3d' } }));
+      });
+    }
+  }
 }

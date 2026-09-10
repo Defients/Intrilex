@@ -34,7 +34,7 @@ export class PolicyRng {
 const uint32FromHash=(value)=>Number.parseInt(hashCanonical(value).slice(0,8),16)>>>0||1;
 const pointValue=(card)=>{if(!card)return null;if(typeof card.state?.pointValue==='number')return card.state.pointValue;const rank=String(card.identity??'').replace(/[♣♦♥♠]/gu,'');if(/^\d+$/.test(rank))return Number(rank);return({A:4,J:3,Q:2,K:8,RJ:5,BJ:11})[rank]??0;};
 
-export function createState(setup){return isCore(setup.profileId)?createCoreMatchState({profileId:setup.profileId,playerIds:setup.playerIds,seatOrder:setup.seatOrder,enabledModules:[],seed:setup.seed}):createMatchState({...setup,eventApprovedModules:[]});}
+export function createState(setup){return isCore(setup.profileId)?createCoreMatchState({profileId:setup.profileId,playerIds:setup.playerIds,seatOrder:setup.seatOrder,enabledModules:[],seed:setup.seed,...(setup.predeterminedIdentities?{predeterminedIdentities:setup.predeterminedIdentities}:{})}):createMatchState({...setup,eventApprovedModules:[]});}
 export function advance(state){return state.metadata?.coreAuthority?advanceCoreToDecision(state):advanceToDecision(state);}
 export function actionView(action,profileId){return isCore(profileId)?toAuthorizedCoreAction(action):authorizedLegalActionView(action);}
 

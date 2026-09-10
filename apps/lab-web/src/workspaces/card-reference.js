@@ -108,6 +108,14 @@ function showCardDetail(container, identity) {
   const suit = getSuit(card.suit);
   const pv = pointValue(card.rank);
 
+  // A-02: Build "When to Play" guidance from ability timing data.
+  // This is educational — it helps new players understand when each ability
+  // can be used, derived from the card's printed timing keywords.
+  const whenToPlay = buildWhenToPlayGuidance(card);
+
+  // A-02: Build scoring summary from PR/ER values
+  const scoringSummary = buildScoringSummary(card, pv);
+
   contentEl.innerHTML = `
     <div class="card-ref-detail-header">
       <div class="card-ref-detail-face">${renderCardFace(identity, { view: 'board' })}</div>
@@ -119,6 +127,7 @@ function showCardDetail(container, identity) {
           <dt>Family</dt><dd>${esc(card.family)}</dd>
           <dt>Point Value</dt><dd>${pv}</dd>
         </dl>
+        ${scoringSummary ? `<div class="card-ref-scoring-summary" data-testid="card-ref-scoring">${scoringSummary}</div>` : ''}
       </div>
     </div>
     ${card.abilities && card.abilities.length > 0 ? `
@@ -127,17 +136,96 @@ function showCardDetail(container, identity) {
         ${card.abilities.map(a => `
           <div class="card-ref-ability">
             <div class="card-ref-ability-header">
-              <span class="card-ref-ability-name">${esc(a.name)}</span>
+              <span class="card-ref-ability-name">${esc(a.title)}</span>
               ${a.timing ? `<span class="card-ref-ability-timing">${esc(a.timing)}</span>` : ''}
             </div>
             <p class="card-ref-ability-summary">${esc(a.summary ?? '')}</p>
-            ${a.restrictions ? `<p class="card-ref-ability-restrictions">Restrictions: ${esc(a.restrictions)}</p>` : ''}
+            ${a.restrictions && a.restrictions.length > 0 ? `<ul class="card-ref-ability-restrictions">${a.restrictions.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
           </div>
         `).join('')}
       </div>
     ` : '<p class="card-ref-no-abilities">No special abilities.</p>'}
-    ${card.rules ? `<div class="card-ref-detail-rules"><h3>Rules</h3><p>${esc(card.rules)}</p></div>` : ''}
-    ${card.notes ? `<div class="card-ref-detail-notes"><h3>Notes</h3><p>${esc(card.notes)}</p></div>` : ''}
+    ${whenToPlay ? `
+      <div class="card-ref-detail-guidance" data-testid="card-ref-guidance">
+        <h3>When to Play</h3>
+        ${whenToPlay}
+      </div>
+    ` : ''}
+    ${card.rules ? `<div class="card-ref-detail-rules"><h3>Rules</h3><ul>${(Array.isArray(card.rules) ? card.rules : [card.rules]).map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>` : ''}
+    ${card.notes ? `<div class="card-ref-detail-notes"><h3>Notes</h3><ul>${(Array.isArray(card.notes) ? card.notes : [card.notes]).map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>` : ''}
+    <div class="card-ref-detail-legality-note" data-testid="card-ref-legality-note">
+      <strong>Legality:</strong> Printed abilities describe what a card <em>can</em> do. The engine authority determines what is <em>legal</em> in a specific game state. Some abilities may be restricted by phase, priority, timing, or board conditions.
+    </div>
+    <div class="card-ref-detail-cta">
+      <a class="card-ref-cta-btn" href="#/play/academy" data-testid="card-ref-cta-academy">Learn in Academy →</a>
+      <a class="card-ref-cta-btn secondary" href="#/dev" data-testid="card-ref-cta-play">Try in Free Play →</a>
+    </div>
   `;
   detailEl.hidden = false;
+}
+
+/**
+ * Build "When to Play" guidance from the card's ability timing keywords.
+ * Maps timing keywords to player-friendly advice.
+ * @param {object} card - Card definition
+ * @returns {string} HTML string
+ */
+function buildWhenToPlayGuidance(card) {
+  if (!card.abilities || card.abilities.length === 0) {
+    // Number cards with no abilities — just score them
+    if (card.prValue) {
+      return `<p>Score this card into your Point Row for ${card.prValue} IR during your turn.</p>`;
+    }
+    return '';
+  }
+
+  const guidance = [];
+  for (const ability of card.abilities) {
+    const timing = ability.timing ?? '';
+    const timingLower = timing.toLowerCase();
+    let advice = '';
+    if (timing.includes('Instant')) {
+      advice = `Can be played as a response during the opponent's turn to counter a pending play.`;
+    } else if (timing.includes('Interrupt')) {
+      advice = `Can interrupt a pending effect play. Watch for the right moment to steal or redirect.`;
+    } else if (timing.includes('Anchor')) {
+      advice = `Play during your turn to place this card in your Enduring Row as an Anchor.`;
+    } else if (timing.includes('Scoring')) {
+      advice = `Triggers when the card is scored into your Point Row.`;
+    } else if (timingLower.includes('multi-card')) {
+      advice = `Requires combining with another card. Plan both cards before declaring.`;
+    } else if (timing.includes('Super')) {
+      advice = `A Super-tier play. Requires meeting recipe conditions and spending the card face-up.`;
+    } else if (timing.includes('Quick')) {
+      advice = `Can be played quickly during your turn for immediate effect.`;
+    } else if (timing.includes('Passive')) {
+      advice = `Always active while this card is in play — no action needed to trigger it.`;
+    } else if (timing.includes('Effect')) {
+      advice = `Play during your turn for its effect. Costs and targets apply.`;
+    } else if (timing.includes('Action')) {
+      advice = `Play during your turn as an action.`;
+    } else {
+      advice = `Play during your turn.`;
+    }
+    guidance.push(`<li><strong>${esc(ability.title)}:</strong> ${esc(advice)}</li>`);
+  }
+  return `<ul class="card-ref-guidance-list">${guidance.join('')}</ul>`;
+}
+
+/**
+ * Build a brief scoring summary from PR/ER values.
+ * @param {object} card - Card definition
+ * @param {number} pv - Point value
+ * @returns {string} HTML string
+ */
+function buildScoringSummary(card, pv) {
+  const parts = [];
+  if (card.prValue != null) {
+    parts.push(`<span class="card-ref-scoring-pr">PR: ${card.prValue} IR</span>`);
+  }
+  if (card.erValue != null) {
+    parts.push(`<span class="card-ref-scoring-er">ER Anchor: ${card.erValue}</span>`);
+  }
+  if (parts.length === 0) return '';
+  return parts.join(' · ');
 }

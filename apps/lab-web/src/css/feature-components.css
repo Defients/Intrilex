@@ -532,9 +532,33 @@ input::placeholder{color:var(--faint);opacity:.85}
 .card-ref-detail-rules,.card-ref-detail-notes{margin-top:16px}
 .card-ref-detail-rules h3,.card-ref-detail-notes h3{font-size:14px;margin:0 0 6px}
 .card-ref-detail-rules p,.card-ref-detail-notes p{font-size:13px;color:var(--text-dim);margin:0}
+.card-ref-detail-rules ul,.card-ref-detail-notes ul{font-size:13px;color:var(--text-dim);margin:0;padding-left:18px}
+.card-ref-detail-rules li,.card-ref-detail-notes li{margin:3px 0}
+
+/* A-02: Educational guidance sections */
+.card-ref-scoring-summary{margin-top:8px;font-size:12px;color:var(--cyan);font-weight:600;letter-spacing:.02em}
+.card-ref-scoring-pr{color:var(--cyan)}
+.card-ref-scoring-er{color:var(--amber,#fbbf24)}
+.card-ref-detail-guidance{margin-top:16px;padding:12px 14px;border-radius:8px;background:rgba(90,215,232,.06);border:1px solid rgba(90,215,232,.16)}
+.card-ref-detail-guidance h3{font-size:13px;margin:0 0 8px;color:var(--cyan)}
+.card-ref-guidance-list{font-size:12px;color:var(--text-dim);margin:0;padding-left:16px}
+.card-ref-guidance-list li{margin:4px 0;line-height:1.4}
+.card-ref-guidance-list strong{color:var(--text);font-weight:600}
+.card-ref-ability-restrictions{font-size:11px;color:var(--text-dim);opacity:.8;margin:4px 0 0;padding-left:16px}
+.card-ref-ability-restrictions li{margin:2px 0}
+.card-ref-detail-legality-note{margin-top:16px;padding:10px 12px;border-radius:6px;background:rgba(241,189,93,.06);border:1px solid rgba(241,189,93,.16);font-size:11px;color:var(--text-dim);line-height:1.5}
+.card-ref-detail-legality-note strong{color:var(--amber,#fbbf24)}
+.card-ref-detail-legality-note em{color:var(--text);font-style:italic}
+.card-ref-detail-cta{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+.card-ref-cta-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:linear-gradient(135deg,rgba(90,215,232,.18),rgba(20,44,56,.9));border:1px solid rgba(90,215,232,.4);color:var(--cyan);font-size:12px;font-weight:600;text-decoration:none;transition:all 200ms}
+.card-ref-cta-btn:hover{border-color:rgba(90,215,232,.6);background:linear-gradient(135deg,rgba(90,215,232,.28),rgba(20,44,56,.95));transform:translateY(-1px)}
+.card-ref-cta-btn.secondary{background:rgba(14,26,40,.55);border-color:rgba(90,215,232,.2);color:var(--text-dim)}
+.card-ref-cta-btn.secondary:hover{border-color:rgba(90,215,232,.4);color:var(--text)}
 @media (max-width:768px){
   .card-ref-gallery{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
   .card-ref-detail{width:100vw;border-radius:16px 16px 0 0}
+  .card-ref-detail-cta{flex-direction:column}
+  .card-ref-cta-btn{width:100%;justify-content:center}
 }
 
 /* ── Landing overlay (large modal for account features) ── */
