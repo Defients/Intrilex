@@ -15,6 +15,7 @@ import {
   authenticate, authRefresh, rematch, listSpectatable,
   tournamentList, tournamentGet, tournamentRegister,
   tournamentStart, tournamentReportResult, reportPlayer,
+  handReorder,
   PROTOCOL_VERSION,
 } from './network-protocol-client.mjs';
 
@@ -727,6 +728,34 @@ export class NetworkPlaySession {
     this._notifyStateChange();
   }
 
+  // ── Hand reorder (cosmetic drag-drop) ──
+
+  /**
+   * Send the player's preferred cosmetic hand display order to the server.
+   * This does NOT affect engine state — only display order. The server
+   * persists it across reconnects and notifies the opponent with a
+   * face-down shuffle event (no card identities leak).
+   * @param {string[]} orderedIds - Card IDs in the new preferred display order
+   * @returns {Promise<{ ok: boolean, error?: string }>}
+   */
+  async reorderHand(orderedIds) {
+    if (!this.matchId || !this.participantToken) {
+      return { ok: false, error: 'No active match' };
+    }
+    if (this.status !== NetworkSessionState.RUNNING) {
+      return { ok: false, error: 'Match is not running' };
+    }
+    try {
+      const resp = await this._request(handReorder(this.matchId, this.participantToken, orderedIds));
+      if (resp.type === 'ERROR') {
+        return { ok: false, error: resp.payload?.message ?? 'Hand reorder failed' };
+      }
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error?.message ?? 'Hand reorder failed' };
+    }
+  }
+
   // ── Spectator discovery ──
 
   /**
@@ -1295,6 +1324,16 @@ export class NetworkPlaySession {
           }
         }
         break;
+      case 'OPPONENT_HAND_REORDER':
+        // The opponent rearranged their hand (cosmetic drag-drop). No card
+        // identities leak — only the hand count and a reorder epoch. The
+        // client uses this to trigger a face-down shuffle animation.
+        if (msg.payload) {
+          this.opponentHandReorderEpoch = msg.payload.reorderEpoch ?? 0;
+          this.opponentHandCount = msg.payload.handCount ?? this.opponentHandCount ?? 0;
+          this._notifyStateChange();
+        }
+        break;
       case 'LEFT_MATCH':
         // Server acknowledged leave — clean up
         this._clearReconnectInfo();
@@ -1478,6 +1517,10 @@ export class NetworkPlaySession {
       pendingAction: this._pendingAction,
       chatHidden: this.chatHidden,
       chat: (this.chatMessages || []).slice(-30),
+      // Cosmetic hand reorder — the player's preferred display order (from server)
+      handOrder: view.handOrder ?? null,
+      // Opponent hand reorder notification — triggers face-down shuffle animation
+      opponentHandReorderEpoch: this.opponentHandReorderEpoch ?? 0,
     };
   }
 

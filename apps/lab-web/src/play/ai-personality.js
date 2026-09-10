@@ -56,6 +56,42 @@ export function getArchetypePersonality(archetype) {
 }
 
 /**
+ * v2.5 §4J: Convert a raw AI policyId (e.g. "hybrix-rusher-easy") into a
+ * player-facing display name (e.g. "Hybrix Rusher"). Never leaks the raw
+ * internal enum identifier into the UI.
+ * @param {string} policyId - The AI policy ID
+ * @returns {string} Player-facing display name
+ */
+export function aiDisplayNameFromPolicyId(policyId) {
+  if (!policyId) return 'AI';
+  // Non-hybrix baseline policies (random-legal, score-rush, etc.) — present
+  // them as titled names without the hyphen.
+  if (!policyId.startsWith('hybrix-')) {
+    return policyId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+  const archetype = policyId.replace('hybrix-', '').replace(/-(hard|easy|nightmare|normal)$/, '');
+  const personality = ARCHETYPE_PERSONALITIES[archetype];
+  // Use the archetype key as the display name; fall back to "Baseline" if unknown.
+  const label = personality && archetype !== 'baseline' ? archetype : 'Baseline';
+  return `Hybrix ${label.charAt(0).toUpperCase() + label.slice(1)}`;
+}
+
+/**
+ * v2.5 §4J: Extract a player-facing difficulty label from a policyId.
+ * Returns "EASY", "HARD", "NIGHTMARE", "NORMAL", or "" for baseline.
+ * @param {string} policyId - The AI policy ID
+ * @returns {string} Uppercase difficulty label, or empty string
+ */
+export function aiDifficultyLabelFromPolicyId(policyId) {
+  if (!policyId || !policyId.startsWith('hybrix-')) return '';
+  if (policyId.endsWith('-easy')) return 'EASY';
+  if (policyId.endsWith('-hard')) return 'HARD';
+  if (policyId.endsWith('-nightmare')) return 'NIGHTMARE';
+  if (policyId.endsWith('-normal')) return 'NORMAL';
+  return ''; // default-difficulty hybrix policies have no suffix
+}
+
+/**
  * Banter message pools by archetype and event trigger.
  * Each pool is an array of personality-flavored messages.
  */

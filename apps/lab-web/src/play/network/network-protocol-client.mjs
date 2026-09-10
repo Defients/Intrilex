@@ -87,6 +87,10 @@ export function rematch(matchId, participantToken) {
   return envelope('REMATCH', { matchId, participantToken });
 }
 
+export function handReorder(matchId, participantToken, orderedIds) {
+  return envelope('HAND_REORDER', { matchId, participantToken, orderedIds });
+}
+
 // ── Tournament (v0.28.0 — Epoch 7) ──
 
 export function tournamentList(limit = 20, status = null) {

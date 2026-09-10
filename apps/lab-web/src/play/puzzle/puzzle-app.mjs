@@ -142,12 +142,31 @@ function runAnalysis(container) {
 }
 
 /**
- * Route handler for #/dev/puzzles.
+ * Route handler for #/dev/puzzles and #/puzzles.
+ * Checks for a forensic-generated puzzle on entry and loads it.
  * @param {HTMLElement} container
  */
 export async function handlePuzzleRoute(container) {
   await ensureAutonomy();
   if (!_runtime) _runtime = new PuzzleRuntime({ autoAdvance: true });
+
+  // IRX-FORENSIC: Check for a forensic-generated puzzle passed from the Watch workspace.
+  // The forensic viewer stores a generated puzzle on window._forensicGeneratedPuzzle
+  // and navigates to #/puzzles. We pick it up here and load it directly.
+  const forensicPuzzle = typeof window !== 'undefined' ? window._forensicGeneratedPuzzle : null;
+  if (forensicPuzzle) {
+    window._forensicGeneratedPuzzle = null; // Clear after pickup
+    _currentId = forensicPuzzle.id;
+    _solverResult = null;
+    _analyzing = false;
+    _lastRecordedId = null;
+    _lastRecordedResult = null;
+    const result = _runtime.load(forensicPuzzle);
+    if (!result.valid) console.warn('[puzzle] forensic puzzle validation issues:', result.issues);
+    rerender(container);
+    return;
+  }
+
   // Auto-load the first fixture on first entry so the surface is immediately functional.
   if (!_currentId) {
     const fixtures = listPuzzleDefinitions();

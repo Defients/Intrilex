@@ -17,6 +17,7 @@ import { parseCardIdentity } from './play-card-component.js';
 import { getSuitParticleColor } from './play-particles.js';
 import { buildActionGroups, resolveAction } from './action-presentation.mjs';
 import { setGameplaySkin, GAMEPLAY_SKINS } from './gameplay-skin.js';
+import { setBoardPresentation } from '../client/board-preference.js';
 
 // Lazy-loaded module reference for the group button handler
 const _actionPresentationModule = { buildActionGroups, resolveAction };
@@ -98,9 +99,33 @@ async function submitAction(container, actionId, renderActiveMatch) {
         const errEl = document.createElement('div');
         errEl.className = 'submission-error';
         errEl.setAttribute('role', 'alert');
-        errEl.textContent = reasonDef.shortText;
+        // v2.5 §4L: Teach recovery, not just "failed". Show the concise
+        // reason as a heading and the detailed explanation as a subline so
+        // the player understands how to correct the action. Pair the red
+        // accent with a warning glyph so the error is not color-only.
+        const shortText = reasonDef.shortText || 'Action was not accepted.';
+        const detailText = reasonDef.detailedText || '';
+        errEl.innerHTML = '';
+        const head = document.createElement('div');
+        head.className = 'submission-error-head';
+        const glyph = document.createElement('span');
+        glyph.className = 'submission-error-glyph';
+        glyph.setAttribute('aria-hidden', 'true');
+        glyph.textContent = '\u26A0';
+        const label = document.createElement('span');
+        label.className = 'submission-error-short';
+        label.textContent = shortText;
+        head.appendChild(glyph);
+        head.appendChild(label);
+        errEl.appendChild(head);
+        if (detailText) {
+          const detail = document.createElement('div');
+          detail.className = 'submission-error-detail';
+          detail.textContent = detailText;
+          errEl.appendChild(detail);
+        }
         banner.appendChild(errEl);
-        setTimeout(() => errEl.remove(), 3000);
+        setTimeout(() => errEl.remove(), 5000);
       }
     } else {
       // Phase 6: Play card-play sound + particle burst
@@ -936,6 +961,12 @@ export function bindBoardEvents(container, callbacks) {
           state.inspectorCardId = state.selectedSourceCardId;
           state.inspectorFaceView = 'board';
         }
+        renderActiveMatch(container);
+      } else if (action === 'toggle-board') {
+        // Switch to the Astra (tactical) React board.
+        // The board preference is persisted; renderActiveMatch will
+        // dynamically import and mount the React board on next render.
+        setBoardPresentation('tactical');
         renderActiveMatch(container);
       } else if (action === 'toggle-chat') {
         state.rightRailTab = 'chat';

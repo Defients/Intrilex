@@ -278,6 +278,9 @@ export function renderAcademy(opts = {}) {
     ${recommendationsHtml}
     <div class="academy-footer">
       <p class="academy-footer-text">All lessons use the <strong>First Contact</strong> profile — simplified rules with advanced systems disabled. You graduate to the full <strong>Advanced Core</strong> profile when ready.</p>
+      <a class="academy-puzzle-link" href="#/play/guided" data-testid="academy-guided-link">
+        <span aria-hidden="true">🎭</span> See a full match played with expert commentary →
+      </a>
       <a class="academy-puzzle-link" href="#/puzzles" data-testid="academy-puzzle-link">
         <span aria-hidden="true">🧩</span> Ready for challenges? Try the Puzzle Ladder →
       </a>

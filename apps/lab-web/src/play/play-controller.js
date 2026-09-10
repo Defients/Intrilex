@@ -6,6 +6,7 @@
 
 import { hashCanonical } from '../engine/browser-entry.js';
 import { classifyDecisionKind, presentAction } from './action-presenter.js';
+import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js';
 import {
   PRODUCT_VERSION,
   PLAYER_RUNTIME_VERSION,
@@ -554,10 +555,12 @@ export class PlaySession {
         seat: this.setup.humanPlayerId === 'P1' ? 1 : 2,
       },
       opponent: {
-        displayName: this.setup.aiPolicyId,
+        // v2.5 §4J: Never leak the raw policyId (e.g. "hybrix-rusher-easy")
+        // as the player-facing display name. Use a friendly, titled name.
+        displayName: aiDisplayNameFromPolicyId(this.setup.aiPolicyId),
         policyId: this.setup.aiPolicyId,
         archetype: this.setup.aiArchetype ?? '',
-        difficulty: this.setup.aiDifficulty ?? '',
+        difficulty: this.setup.aiDifficulty ?? aiDifficultyLabelFromPolicyId(this.setup.aiPolicyId),
       },
       match: {
         fullTurnSequence: this.state?.fullTurnSequence ?? 0,

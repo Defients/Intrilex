@@ -42,6 +42,10 @@ export const state = {
   academyLessonId: null, // Current Academy lesson ID (null for non-academy matches)
   academyController: null, // Active AcademyController instance (null when not in an academy lesson)
   academyPhase: null, // Current academy controller phase ('briefing' | 'match' | 'recap' | null)
+  guidedController: null, // Active GuidedController instance (null when not in guided exhibition)
+  guidedPhase: null, // Current guided exhibition phase ('intro' | 'match' | 'debrief' | null)
+  guidedTickInterval: null, // setInterval handle for hint escalation ticks
+  tacticalMount: null, // Active tactical board mount controller (null when classic or unmounted)
 };
 
 /**
@@ -84,4 +88,14 @@ export function resetState() {
   state.academyController = null;
   state.academyPhase = null;
   state._academyRecap = null;
+  state.guidedController = null;
+  state.guidedPhase = null;
+  if (state.tacticalMount) {
+    try { state.tacticalMount.dispose(); } catch { /* ignore */ }
+    state.tacticalMount = null;
+  }
+  if (state.guidedTickInterval) {
+    clearInterval(state.guidedTickInterval);
+    state.guidedTickInterval = null;
+  }
 }

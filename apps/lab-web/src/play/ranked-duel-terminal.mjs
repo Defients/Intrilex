@@ -8,6 +8,7 @@ import { loadProfile } from './local-profile.mjs';
 import { ratingToTierDivision, compareRank } from '@intrilex/account-domain/rank-tier';
 import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
 import { generateTeachingMoment, generateBeginnerTrapTip, renderTeachingMoment } from '@intrilex/decision-intelligence/teaching-moments';
+import { generateTraceInsights, renderTraceInsights } from '../forensic/trace-teaching.mjs';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -58,6 +59,7 @@ export function renderTerminal(vm, opts) {
     ${opts.achievementSummaryHtml || ''}
     ${renderIntelligenceCard(vm, opts)}
     ${renderTeachingMoment(generateTeachingMoment(vm) || generateBeginnerTrapTip(vm))}
+    ${renderTraceInsightsCard(opts)}
     <div class="terminal-actions">
       <button class="primary-button" data-testid="watch-replay" data-action="watch-replay">Watch replay</button>
       ${opts.isNetworkMatch ? '<button class="secondary-button" data-testid="download-replay" data-action="download-replay">Download certified replay</button>' : ''}
@@ -150,6 +152,26 @@ function renderIntelligenceCard(vm, opts) {
       </div>
     </div>
     <p class="intel-termination" data-testid="intel-termination">Ended: ${esc(termination)}</p>
+  </div>`;
+}
+
+/**
+ * Render trace-based teaching insights on the terminal screen.
+ * Uses the forensic trace-teaching module to generate frame-level insights
+ * from the certified replay, if available.
+ * @param {object} opts - Terminal render options (must include certifiedReplay)
+ * @returns {string} HTML
+ */
+function renderTraceInsightsCard(opts) {
+  const certifiedReplay = opts?.certifiedReplay;
+  if (!certifiedReplay?.frames?.length) return '';
+  const humanId = opts?.humanPlayerId ?? 'P1';
+  const insights = generateTraceInsights(certifiedReplay, { perspectivePlayerId: humanId });
+  if (insights.length === 0) return '';
+  return `<div class="trace-insights-card" data-testid="trace-insights-card">
+    <h3 class="trace-insights-card-title">Frame-Level Analysis</h3>
+    <p class="trace-insights-card-desc">Key moments from this match, with alternatives and consequences.</p>
+    ${renderTraceInsights(insights)}
   </div>`;
 }
 
