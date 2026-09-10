@@ -11,6 +11,7 @@
  * cache headers, while non-hashed assets get shorter cache durations.
  */
 import esbuild from 'esbuild';
+import { compile } from '@tailwindcss/node';
 import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -23,6 +24,20 @@ const dist = path.join(root, 'apps/lab-web/dist');
 async function bundle() {
   const entryJs = path.join(dist, 'app.js');
   const entryCss = path.join(dist, 'styles.css');
+  const clientDir = path.join(dist, 'client');
+  const clientCss = await readFile(path.join(clientDir, 'game-table.css'), 'utf8');
+  const clientSources = await Promise.all((await readdir(clientDir))
+    .filter(name => /\.tsx?$/.test(name))
+    .map(name => readFile(path.join(clientDir, name), 'utf8')));
+  const candidates = [...new Set(clientSources.join('\n').match(/irx:[a-zA-Z0-9_:/.[\]-]+/g) ?? [])];
+  const utilities = await compile('@import "tailwindcss/theme.css" layer(theme) prefix(irx);\n@import "tailwindcss/utilities.css" layer(utilities) prefix(irx);', {
+    base: root, onDependency() {},
+  });
+  const tacticalCss = (await esbuild.transform(utilities.build(candidates) + '\n' + clientCss, { loader: 'css', minify: true })).code;
+  const tacticalHash = createHash('sha256').update(tacticalCss).digest('hex').slice(0, 12);
+  const tacticalFileName = `tactical.${tacticalHash}.css`;
+  await writeFile(path.join(dist, tacticalFileName), tacticalCss);
+  console.log(`bundle: wrote ${tacticalFileName} (${(tacticalCss.length / 1024).toFixed(1)} KB)`);
 
   // Windows filesystem sync race: build.mjs may complete async file copies
   // (cp, writeFile) that haven't flushed to disk before this process starts.
@@ -64,7 +79,10 @@ async function bundle() {
     write: true,
     logLevel: 'info',
     absWorkingDir: dist,
-    alias: { '@intrilex/shared': sharedBrowserShim }
+    alias: { '@intrilex/shared': sharedBrowserShim },
+    jsx: 'automatic',
+    define: { __INTRILEX_TACTICAL_CSS__: JSON.stringify(`/${tacticalFileName}`) },
+    metafile: true,
   });
 
   // Bundle and minify CSS — inline @import statements
@@ -112,6 +130,9 @@ async function bundle() {
     } else if (f.endsWith('.map') && f !== `${entryFile}.map`) {
       // Chunk source map — copy to dist
       await writeFile(path.join(dist, f), await readFile(path.join(splitDir, f)));
+    } else if (f.endsWith('.css')) {
+      // CSS chunk (e.g. from import './style.css' in TSX) — copy to dist
+      await writeFile(path.join(dist, f), await readFile(path.join(splitDir, f)));
     }
   }
 
@@ -124,6 +145,7 @@ async function bundle() {
     assets: {
       app: { file: jsFileName, hash: jsHash, type: 'js' },
       styles: { file: cssFileName, hash: cssHash, type: 'css' },
+      tacticalStyles: { file: tacticalFileName, hash: tacticalHash, type: 'css' },
       // IRX-M32: List lazy-loaded chunks in the manifest for cache management
       ...(chunkFiles.length > 0 ? { chunks: chunkFiles.map(f => ({ file: f, type: 'js' })) } : {})
     }

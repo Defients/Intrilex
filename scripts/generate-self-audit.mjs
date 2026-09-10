@@ -287,6 +287,7 @@ const audit = {
   // A report can have scorePassed=true but criticalGatesPassed=false → status=FAIL.
   // Phase 1.3: processTerminatedNormally prevents partial-run false PASS.
   status: (totalFail === 0 && totalCancelled === 0 && score >= threshold && unaccounted === 0 && !processStatus.abnormal && Object.values(criticalGates).every(v => v === true)) ? 'PASS' : 'FAIL',
+  quickMode: quick,
   score,
   threshold,
   // IRX-M29: Explicit sub-status fields for non-contradictory semantics

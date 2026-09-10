@@ -51,6 +51,8 @@ const STAGES = [
   ['unrestricted-browser-smoke', 'node', ['--test', 'test/unrestricted-browser-smoke.test.mjs']],
   ['scoring-sensitivity', 'node', ['--test', 'test/scoring-sensitivity.test.mjs']],
   ['play-module', 'node', ['--test', 'test/play-module.test.mjs']],
+  ['astra-client', 'node', ['--test', 'test/astra-model.test.mjs', 'test/astra-client.test.mjs']],
+  ['client-types', 'node', ['node_modules/typescript/bin/tsc', '--noEmit', '--project', '.devin/tsconfig.client.json']],
   ['v0.17.0-authority-contracts', 'node', ['--test', 'test/v0.17.0-authority-contracts.test.mjs']],
   ['v0.17.0-orchestration', 'node', ['--test', 'test/v0.17.0-orchestration.test.mjs']],
   ['v0.17.0-play-interface', 'node', ['--test', 'test/v0.17.0-play-interface.test.mjs']],
@@ -158,6 +160,7 @@ const STAGES = [
   ['network-truth-closure', 'node', ['--test', 'test/network-truth-closure.test.mjs']],
   ['ai-official-rules-compliance', 'node', ['--test', 'test/ai-official-rules-compliance.test.mjs']],
   ['grid-layout-invariants', 'node', ['--test', 'test/grid-layout-invariants.test.mjs']],
+  ['v2.5-match-ui', 'node', ['--test', 'test/v2.5-match-ui.test.mjs']],
   // v0.24.2 Truth Closure II tests
   ['replay-privacy-closure', 'node', ['--test', 'test/replay-privacy-closure.test.mjs']],
   ['match-store-participants-truth', 'node', ['--test', 'test/match-store-participants-truth.test.mjs']],
@@ -186,6 +189,7 @@ const STAGES = [
   ['provision-season', 'node', ['--test', 'test/provision-season.test.mjs']],
   ['v0.28-pvp-experience', 'node', ['--test', 'test/v0.28-pvp-experience.test.mjs']],
   ['academy', 'node', ['--test', 'test/academy.test.mjs']],
+  ['guided-exhibition', 'node', ['--test', 'test/guided-exhibition.test.mjs']],
   ['puzzle-ladder', 'node', ['--test', 'test/puzzle-ladder.test.mjs']],
   ['gameplay-skin', 'node', ['--test', 'test/gameplay-skin.test.mjs']],
   ['social-activation', 'node', ['--test', 'test/social-activation.test.mjs']],
@@ -264,6 +268,16 @@ const STAGES = [
   ['competitive-journey-e2e', 'node', ['--test', 'test/competitive-journey-e2e.test.mjs']],
   // Phase 5: Supabase static schema/RLS/function analysis
   ['supabase-static-analysis', 'node', ['--test', 'test/supabase-static-analysis.test.mjs']],
+  // Phase 2: Player Experience Foundation — onboarding, card inspector, tooltips, 2D brain, teaching moments
+  ['phase2-player-experience', 'node', ['--test', 'test/phase2-player-experience.test.mjs']],
+  // Phase 4: Forensic replay layer — bookmarks, branches, annotations, comparisons, puzzle generation
+  ['forensic-replay', 'node', ['--test', 'test/forensic-replay.test.mjs']],
+  // Phase 5: Architectural consolidation — CSS token bridge, state store adapter, coexistence gates
+  ['architectural-consolidation', 'node', ['--test', 'test/architectural-consolidation.test.mjs']],
+  // Phase 7: Trace-based teaching — frame-level insights, replay commentary, practice recommendations
+  ['trace-teaching', 'node', ['--test', 'test/trace-teaching.test.mjs']],
+  // Divergence fixes: regression tests for all 10 implementation divergences
+  ['engine-divergence-fixes', 'node', ['--test', 'test/engine-divergence-fixes.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

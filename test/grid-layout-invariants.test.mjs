@@ -22,6 +22,7 @@ const requiredAreas = {
   '.rd-enemy-enduring': 'enemyE',
   '.rd-enemy-points': 'enemyP',
   '.rd-enemy-profile': 'enemyProfile',
+  '.rd-enemy-meta': 'enemyMeta',
   '.rd-piles': 'piles',
   '.rd-swap': 'swap',
   '.rd-stage': 'stage',
@@ -31,6 +32,7 @@ const requiredAreas = {
   '.rd-player-enduring': 'playerE',
   '.rd-player-points': 'playerP',
   '.rd-player-profile': 'playerPro',
+  '.rd-player-meta': 'playerMeta',
   '.rd-player-hand': 'playerH',
   '.rd-right-rail-bottom': 'rightRailBottom',
 };
@@ -124,13 +126,54 @@ test('CSS: gamelog is in the battlefield row (same row as stage)', () => {
   assert.ok(gamelogRow, 'gamelog should be in the same row as stage (battlefield row)');
 });
 
-test('CSS: playerPro is in the bottom row (same row as playerH)', () => {
+test('CSS: playerPro is in the player band row (same row as playerE/playerP)', () => {
+  // v2.5 layout patch: playerPro moved from the bottom row into the symmetric
+  // player band row, mirroring enemyProfile in the opponent band row.
   const areasBlock = cssSrc.match(/grid-template-areas:\s*([\s\S]*?)!/);
   assert.ok(areasBlock);
   const lines = areasBlock[1].split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-  const bottomRow = lines.find(l => l.includes('playerPro') && l.includes('playerH'));
-  assert.ok(bottomRow, 'playerPro should be in the bottom row with playerH');
+  const playerBandRow = lines.find(l => l.includes('playerPro') && l.includes('playerE') && l.includes('playerP'));
+  assert.ok(playerBandRow, 'playerPro should be in the player band row with playerE and playerP');
+});
+
+// ── v2.5 layout patch: symmetric band alignment (§1/§17/§18/§19) ──
+// The opponent and player band rows must use the SAME four logical column
+// groups (Identity | Enduring | Points | Meta) so gameplay zones align
+// vertically and identity/meta panels share identical widths.
+function bandColumnSpans(line, names) {
+  // Returns the [start, end) column index range for each named area in a row.
+  const tokens = line.split(/\s+/).filter(Boolean);
+  const out = {};
+  names.forEach(n => { out[n] = null; });
+  tokens.forEach((tok, i) => {
+    if (names.includes(tok) && out[tok] === null) out[tok] = [i, i];
+    if (names.includes(tok)) out[tok][1] = i;
+  });
+  return out;
+}
+
+test('CSS: opponent and player band rows share identical column boundaries (§1/§17/§18/§19)', () => {
+  const areasBlock = cssSrc.match(/grid-template-areas:\s*([\s\S]*?)!/);
+  assert.ok(areasBlock);
+  const lines = areasBlock[1].split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  const oppRow = lines.find(l => l.includes('enemyProfile') && l.includes('enemyE') && l.includes('enemyP') && l.includes('enemyMeta'));
+  const plRow = lines.find(l => l.includes('playerPro') && l.includes('playerE') && l.includes('playerP') && l.includes('playerMeta'));
+  assert.ok(oppRow, 'Must have an opponent band row with all four column groups');
+  assert.ok(plRow, 'Must have a player band row with all four column groups');
+
+  const opp = bandColumnSpans(oppRow, ['enemyProfile', 'enemyE', 'enemyP', 'enemyMeta']);
+  const pl = bandColumnSpans(plRow, ['playerPro', 'playerE', 'playerP', 'playerMeta']);
+
+  // Identity columns align
+  assert.deepEqual(opp.enemyProfile, pl.playerPro, 'Identity columns must align (enemyProfile === playerPro)');
+  // Enduring columns align
+  assert.deepEqual(opp.enemyE, pl.playerE, 'Enduring columns must align (enemyE === playerE)');
+  // Points columns align
+  assert.deepEqual(opp.enemyP, pl.playerP, 'Points columns must align (enemyP === playerP)');
+  // Meta columns align
+  assert.deepEqual(opp.enemyMeta, pl.playerMeta, 'Meta columns must align (enemyMeta === playerMeta)');
 });
 
 test('CSS: no dynamic :has() grid reorganization', () => {
@@ -164,10 +207,10 @@ test('CSS: responsive card size variables exist', () => {
 
 test('Renderer: all required grid cells are emitted with data-grid attributes (v0.28: rightRailBottom replaces chat+actions)', () => {
   const expectedDataGrids = [
-    'enemyE', 'enemyP', 'enemyProfile',
+    'enemyE', 'enemyP', 'enemyProfile', 'enemyMeta',
     'piles', 'swap', 'stage', 'stack',
     'playerE', 'playerP', 'gamelog', 'scoreRail',
-    'playerPro', 'playerH', 'rightRailBottom',
+    'playerPro', 'playerMeta', 'playerH', 'rightRailBottom',
   ];
   for (const area of expectedDataGrids) {
     assert.ok(

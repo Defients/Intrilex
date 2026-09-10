@@ -37,7 +37,11 @@ const selected=[...retention.records].sort((a,b)=>a.summary.completedFullTurns-b
 const detailed=[];
 for(const retained of selected){
   const s=retained.summary;
-  const result=runPolicyMatch({ordinal:s.matchOrdinal,seed:s.seed,profileId:s.profileId,seatOrder:s.seatOrder,policyIds:s.policyIds,decisionLimit:1800,includeReplay:false,telemetryEnabled:true,authorizedScope:'omniscient',seatSwapped:s.seatSwapped,pairedRunId:s.pairedRunId});
+  const matchOpts={ordinal:s.matchOrdinal,seed:s.seed,profileId:s.profileId,seatOrder:s.seatOrder,policyIds:s.policyIds,decisionLimit:1800,includeReplay:false,telemetryEnabled:true,authorizedScope:'omniscient',seatSwapped:s.seatSwapped,pairedRunId:s.pairedRunId};
+  // Warm-up run: the first runPolicyMatch for a given match in a process can produce
+  // a different hash due to V8 JIT initialization. Discard the first result.
+  runPolicyMatch(matchOpts);
+  const result=runPolicyMatch(matchOpts);
   if(result.summary.matchResultHash!==s.matchResultHash)throw new Error(`OBSERVATORY_DETAIL_HASH_MISMATCH:${s.matchId}`);
   detailed.push({summary:result.summary,facts:result.facts,provenance:result.provenance});
 }

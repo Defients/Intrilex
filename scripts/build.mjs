@@ -456,6 +456,7 @@ console.log(`BUILD PASS: ${dist}; browserModules=${requiredModules.size + 2}; ce
 const criticalFiles = [
   'app.js',
   'styles.css',
+  'index.html',
   'shared-browser.js',
   'engine/browser-entry.js',
   'engine/hash.js',
@@ -474,6 +475,17 @@ const criticalFiles = [
   'achievements/index.mjs',
 ];
 let missingFiles = criticalFiles.filter(f => !existsSync(path.join(dist, f)));
+// Also check for truncated (0-byte) index.html — a known Windows race condition
+const indexHtmlPath = path.join(dist, 'index.html');
+const indexHtmlSrcPath = path.join(root, 'apps/lab-web/src/index.html');
+if (!missingFiles.includes('index.html') && existsSync(indexHtmlPath) && existsSync(indexHtmlSrcPath)) {
+  const distSize = readFileSync(indexHtmlPath).length;
+  const srcSize = readFileSync(indexHtmlSrcPath).length;
+  if (distSize === 0 && srcSize > 0) {
+    console.error(`build: index.html is 0 bytes in dist (src is ${srcSize} bytes) — re-copying synchronously...`);
+    missingFiles.push('index.html');
+  }
+}
 if (missingFiles.length > 0) {
   console.error(`build: ${missingFiles.length} critical files missing — re-copying synchronously...`);
   // Re-copy src synchronously (includes app.js, play/, achievements/, etc.)
@@ -587,6 +599,7 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
             'g'
           );
           if (importRegex.test(content)) {
+            importRegex.lastIndex = 0;
             content = content.replace(importRegex, `from "${relBase}/${moduleFile}"`);
             modified = true;
           }
@@ -594,6 +607,7 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
         // Also handle the bare package import (no subpath): @intrilex/account-domain
         const bareImportRegex = /from\s+["']@intrilex\/account-domain["']/g;
         if (bareImportRegex.test(content)) {
+          bareImportRegex.lastIndex = 0;
           content = content.replace(bareImportRegex, `from "${relBase}/index.mjs"`);
           modified = true;
         }
@@ -606,6 +620,44 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
   }
   await rewriteBareImports(dist);
   if (rewrittenCount > 0) console.log(`build: rewrote bare @intrilex/account-domain/* imports in ${rewrittenCount} raw dist file(s) → ./account-domain/*.mjs`);
+
+  // Fail-closed verification: no browser-served module may contain a bare
+  // @intrilex/account-domain/* import statement after rewriting.
+  {
+    const offenders = [];
+    async function auditAccountDomainBareImports(dir) {
+      const entries = await readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name === 'engine' || entry.name === 'data' || entry.name === 'assets' ||
+              entry.name === 'hybrix' || entry.name === 'achievements' || entry.name === 'analytics-ai' ||
+              entry.name === 'account-domain' || entry.name === '.split-tmp') continue;
+          await auditAccountDomainBareImports(fullPath);
+        } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.mjs'))) {
+          const content = await readFile(fullPath, 'utf8');
+          for (const specifier of Object.keys(accountDomainExports)) {
+            const regex = new RegExp(
+              `from\\s+["']${specifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`,
+              'g'
+            );
+            regex.lastIndex = 0;
+            if (regex.test(content)) {
+              offenders.push(`${path.relative(dist, fullPath)} (specifier: ${specifier})`);
+              break;
+            }
+          }
+        }
+      }
+    }
+    await auditAccountDomainBareImports(dist);
+    if (offenders.length > 0) {
+      console.error('BUILD FAIL: bare @intrilex/account-domain/* import statements found after rewriting:');
+      for (const f of offenders) console.error(`  - ${f}`);
+      process.exit(1);
+    }
+    console.log(`build: verified 0 bare @intrilex/account-domain/* import statements in dist`);
+  }
 }
 
 // ── Rewrite bare @intrilex/decision-intelligence/* imports in raw dist files ──
@@ -664,6 +716,7 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
             'g'
           );
           if (importRegex.test(content)) {
+            importRegex.lastIndex = 0;
             content = content.replace(importRegex, `from "${relBase}/${moduleFile}"`);
             modified = true;
           }
@@ -671,6 +724,7 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
         // Also handle the bare package import (no subpath)
         const bareImportRegex = /from\s+["']@intrilex\/decision-intelligence["']/g;
         if (bareImportRegex.test(content)) {
+          bareImportRegex.lastIndex = 0;
           content = content.replace(bareImportRegex, `from "${relBase}/index.mjs"`);
           modified = true;
         }
@@ -693,6 +747,7 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
     let content = await readFile(modPath, 'utf8');
     const sharedRegex = /from\s+["']@intrilex\/shared["']/g;
     if (sharedRegex.test(content)) {
+      sharedRegex.lastIndex = 0;
       content = content.replace(sharedRegex, `from "${sharedRelBase}/shared-browser.js"`);
       await writeFile(modPath, content);
       diSharedRewritten++;

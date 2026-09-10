@@ -3,9 +3,11 @@
 // 2. No-unused-vars (dead code)
 // 3. No-undef (typos, missing imports)
 import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
 
 export default [
   js.configs.recommended,
+  ...tseslint.configs.recommended.map(config => ({ ...config, files: ['apps/lab-web/src/client/**/*.{ts,tsx}'] })),
   {
     files: ['apps/lab-web/src/**/*.{js,mjs}'],
     languageOptions: {

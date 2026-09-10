@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const upstream=path.join(root,'upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix');
 const compiler=path.join(root,'node_modules/.bin/tsc');
+// Clean dist directory before compilation to ensure deterministic output
+await rm(path.join(upstream,'dist'),{recursive:true,force:true});
 const build=spawnSync(compiler,['-p',path.join(upstream,'tsconfig.json')],{cwd:upstream,stdio:'inherit',shell:true});
 if(build.status!==0)process.exit(build.status??1);
 const runtime=path.join(root,'runtime/autonomy-engine-dist');

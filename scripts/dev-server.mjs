@@ -136,7 +136,7 @@ if (watchMode) {
         if (!filename) return;
         const fullPath = path.join(dir, filename);
         // Only trigger on source file changes
-        if (/\.(js|mjs|css|html|json|svg)$/.test(filename)) {
+        if (/\.(js|mjs|ts|tsx|css|html|json|svg)$/.test(filename)) {
           scheduleRebuild(filename);
         }
       });

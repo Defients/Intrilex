@@ -8,6 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const src = (rel) => readFile(path.join(root, 'apps/lab-web/src', rel), 'utf8');
 const dist = (rel) => readFile(path.join(root, 'apps/lab-web/dist', rel), 'utf8');
 const cssSrc = async () => (await Promise.all(['tokens-base','feature-components','pages-polish','landing-revamp','landing-mobile'].map(f => readFile(path.join(root, 'apps/lab-web/src/css', `${f}.css`), 'utf8')))).join('\n');
+const rulesCss = async () => readFile(path.join(root, 'apps/lab-web/src/css/rules-illustrated.css'), 'utf8');
 
 // ── Routes ──
 test('LANDING_MODES set contains /, /dev, /play, /rules', async () => {
@@ -577,5 +578,62 @@ test('WIP landing responsive styles exist in landing-mobile.css', async () => {
   assert.match(mobileSection, /\.wip-landing/);
   assert.match(mobileSection, /\.wip-features/);
   assert.match(mobileSection, /\.wip-newsletter-form/);
+});
+
+// ── Showcase view mode (tri-state toggle) ──
+test('rulebook-renderer.js has showcase mode functions', async () => {
+  const js = await src('rulebook-renderer.js');
+  assert.match(js, /function renderShowcaseParts/);
+  assert.match(js, /function generateShowcaseHero/);
+  assert.match(js, /function generateShowcasePartHeader/);
+  assert.match(js, /function generateShowcaseCardFrame/);
+  assert.match(js, /function enhanceShowcaseContent/);
+  assert.match(js, /rules-showcase/);
+});
+
+test('rulebook-renderer.js has tri-state toggle with showcase button', async () => {
+  const js = await src('rulebook-renderer.js');
+  assert.match(js, /rules-toggle-showcase/);
+  assert.match(js, /RULES_VIEW_MODE/);
+  assert.match(js, /toggleTo\('showcase'\)/);
+  assert.match(js, /toggleTo\('illustrated'\)/);
+  assert.match(js, /toggleTo\('text'\)/);
+});
+
+test('rulebook-renderer.js has showcase mini-nav with scroll-spy', async () => {
+  const js = await src('rulebook-renderer.js');
+  assert.match(js, /showcase-mini-nav/);
+  assert.match(js, /showcase-mini-nav-dot/);
+  assert.match(js, /showcase-part\[id\]/);
+});
+
+test('state.js persists rulesViewMode', async () => {
+  const js = await src('state.js');
+  assert.match(js, /rulesViewMode/);
+  assert.match(js, /PERSISTABLE_SETTINGS.*rulesViewMode/);
+  assert.match(js, /rulesViewMode:\s*'illustrated'/);
+});
+
+test('rules-illustrated.css has showcase mode classes', async () => {
+  const css = await rulesCss();
+  assert.match(css, /body\.rules-showcase/);
+  assert.match(css, /\.showcase-hero/);
+  assert.match(css, /\.showcase-part/);
+  assert.match(css, /\.showcase-drop-cap/);
+  assert.match(css, /\.showcase-pullquote/);
+  assert.match(css, /\.showcase-key-rule/);
+  assert.match(css, /\.showcase-card-gallery/);
+  assert.match(css, /\.showcase-divider/);
+  assert.match(css, /\.showcase-mini-nav/);
+  assert.match(css, /\.showcase-table/);
+});
+
+test('rules-illustrated.css showcase has responsive and reduced-motion support', async () => {
+  const css = await rulesCss();
+  const showcaseSection = css.slice(css.indexOf('SHOWCASE MODE'));
+  assert.ok(showcaseSection.length > 0, 'showcase CSS section must exist');
+  assert.match(showcaseSection, /@media\(max-width:900px\)/);
+  assert.match(showcaseSection, /@media\(max-width:600px\)/);
+  assert.match(showcaseSection, /@media\(prefers-reduced-motion:reduce\)/);
 });
 

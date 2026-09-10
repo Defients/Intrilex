@@ -21,7 +21,8 @@ apps/lab-web/dist/
 release/extracted-verification/
 release/archives/
 # Devin tooling
-.devin/
+.devin/*
+!.devin/tsconfig.client.json
 # Probe evidence is tracked explicitly when needed
 # Temporary lint output
 lint-tmp.txt
