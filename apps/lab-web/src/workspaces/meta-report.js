@@ -16,6 +16,7 @@ import { fetchLeaderboard } from '../play/ranked/leaderboard-data.js';
 import { isSupabaseConfigured } from '../play/network/supabase-client.js';
 import { buildMetaReport, formatTierPercentage } from '@intrilex/account-domain/meta-report';
 import { RankTier } from '@intrilex/account-domain/rank-tier';
+import { computeUncertaintyLabel } from '@intrilex/statistics/evidence-honest';
 
 const TIER_LABELS = {
   [RankTier.INITIATE]: 'Initiate',
@@ -129,10 +130,18 @@ function renderContent() {
   if (!_state.report || _state.report.totalPlayers === 0) return renderEmpty();
 
   const r = _state.report;
+  // Evidence-honest confidence label: shows the truth about sample size
+  const uncertainty = computeUncertaintyLabel({ sampleSize: r.totalPlayers });
+  const confidenceBadge = `<span class="meta-confidence-badge" data-testid="meta-confidence-badge" title="${esc(uncertainty.humanReadable)}">${esc(uncertainty.label)}</span>`;
+  const disclaimerHtml = uncertainty.level === 'INSUFFICIENT_DATA' || uncertainty.level === 'VERY_LOW_CONFIDENCE'
+    ? `<div class="meta-disclaimer" data-testid="meta-disclaimer">${esc(uncertainty.humanReadable)}. Treat all statistics as preliminary.</div>`
+    : '';
   return `<div class="meta-summary" data-testid="meta-summary">
     <p class="meta-summary-text" data-testid="meta-summary-text">${esc(r.summary)}</p>
     ${renderHealthBadge(r)}
+    ${confidenceBadge}
   </div>
+  ${disclaimerHtml}
   ${renderStatCards(r)}
   ${renderTierDistribution(r)}
   <div class="meta-footer" data-testid="meta-footer">

@@ -14,7 +14,7 @@
 // esc() — never raw innerHTML with model output.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js';
+import { esc, state } from '../state.js';
 import { policyOptions } from '../router.js';
 import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js';
 import { reconstructReplayFrames } from '../replay-frames.js';
@@ -27,6 +27,40 @@ async function getCaster() {
     casterModule = await import('../replay-caster/browser-entry.js');
   }
   return casterModule;
+}
+
+// Investigation workflow functions (lazy-loaded with caster module).
+let investigationFns = null;
+async function getInvestigation() {
+  if (!investigationFns) {
+    const mod = await getCaster();
+    investigationFns = {
+      createInvestigation: mod.createInvestigation,
+      transitionToInvestigating: mod.transitionToInvestigating,
+      addBranch: mod.addBranch,
+      addAnnotation: mod.addAnnotation,
+      addComparison: mod.addComparison,
+      checkInvalidation: mod.checkInvalidation,
+      exportInvestigation: mod.exportInvestigation,
+      getInvestigationSummary: mod.getInvestigationSummary,
+      InvestigationStatus: mod.InvestigationStatus,
+    };
+  }
+  return investigationFns;
+}
+
+// Current engine authority hash (from engine manifest, loaded once).
+let _authorityHash = null;
+async function getAuthorityHash() {
+  if (_authorityHash !== null) return _authorityHash;
+  try {
+    const res = await fetch('config/engine-manifest.json');
+    if (res.ok) {
+      const manifest = await res.json();
+      _authorityHash = manifest.authorityHash ?? null;
+    }
+  } catch { /* offline / dev — no manifest available */ }
+  return _authorityHash;
 }
 
 // Lazy-loaded strictView from autonomy-runtime (for building authorized player views
@@ -186,6 +220,10 @@ const casterState = {
   commentaryLoading: false,
   waitWhatCapture: null,
   waitWhatVisible: false,
+  waitWhatInvestigation: null,
+  waitWhatInvalidated: false,
+  waitWhatAnnotationText: '',
+  waitWhatExportResult: null,
   config: {
     p1Policy: 'hybrix-baseline',
     p2Policy: 'hybrix-rusher',
@@ -486,6 +524,8 @@ async function renderTheatre(appEl) {
       casterState.commentaryText = '';
       casterState.waitWhatCapture = null;
       casterState.waitWhatVisible = false;
+      casterState.waitWhatInvestigation = null;
+      casterState.waitWhatInvalidated = false;
       renderSetup(appEl);
     };
   }
@@ -502,13 +542,38 @@ async function renderTheatre(appEl) {
       };
     });
     const closeWw = appEl.querySelector('#caster-ww-close');
-    if (closeWw) closeWw.onclick = () => { casterState.waitWhatVisible = false; renderTheatre(appEl); };
+    if (closeWw) closeWw.onclick = () => {
+      casterState.waitWhatVisible = false;
+      casterState.waitWhatInvestigation = null;
+      casterState.waitWhatExportResult = null;
+      renderTheatre(appEl);
+    };
 
     // Render WAIT WHAT commentary text safely
     if (casterState.waitWhatCapture?.commentary) {
       const wwTextEl = appEl.querySelector('#caster-ww-commentary-text');
       if (wwTextEl) wwTextEl.textContent = casterState.waitWhatCapture.commentary;
     }
+
+    // Wire annotation form
+    wireWaitWhatAnnotation(appEl);
+
+    // Wire export buttons
+    wireWaitWhatExport(appEl);
+
+    // Wire branch navigation
+    appEl.querySelectorAll('.caster-ww-branch-btn').forEach(btn => {
+      btn.onclick = () => {
+        const actionId = btn.dataset.actionId;
+        // Store the investigation context in state for the branches workspace
+        state.branchContext = state.branchContext || {};
+        state.branchContext.waitWhatInvestigation = casterState.waitWhatInvestigation;
+        state.branchContext.waitWhatActionId = actionId;
+        state.branchContext.waitWhatCaptureId = casterState.waitWhatCapture?.captureId;
+        // Navigate to #/branches
+        window.location.hash = '#/branches';
+      };
+    });
   }
 }
 
@@ -541,7 +606,7 @@ function buildCasterRightRail(session, beat, idx, total, ps, policyIds) {
 
   // WAIT WHAT panel
   const ww = casterState.waitWhatVisible && casterState.waitWhatCapture
-    ? renderWaitWhatPanel(casterState.waitWhatCapture)
+    ? renderWaitWhatPanel(casterState.waitWhatCapture, casterState.waitWhatInvestigation, casterState.waitWhatInvalidated)
     : '';
 
   // ── Transport controls section (bottom, smaller) ──
@@ -634,10 +699,18 @@ function wireCasterRightRail(appEl, session, idx, total) {
   });
 
   const waitWhatBtn = $('caster-wait-what');
-  if (waitWhatBtn) waitWhatBtn.onclick = () => {
+  if (waitWhatBtn) waitWhatBtn.onclick = async () => {
     const capture = session.waitWhat();
     casterState.waitWhatCapture = capture;
     casterState.waitWhatVisible = true;
+    // Create an investigation from the capture
+    const { createInvestigation } = await getInvestigation();
+    const authHash = await getAuthorityHash();
+    casterState.waitWhatInvestigation = createInvestigation(capture, authHash);
+    casterState.waitWhatInvalidated = false;
+    casterState.waitWhatAnnotationText = '';
+    casterState.waitWhatAnnotationSeverity = '';
+    casterState.waitWhatExportResult = null;
     renderTheatre(appEl);
   };
 
@@ -649,13 +722,16 @@ function wireCasterRightRail(appEl, session, idx, total) {
     casterState.commentaryText = '';
     casterState.waitWhatCapture = null;
     casterState.waitWhatVisible = false;
+    casterState.waitWhatInvestigation = null;
+    casterState.waitWhatInvalidated = false;
+    casterState.waitWhatExportResult = null;
     renderSetup(appEl);
   };
 }
 
 // ── WAIT WHAT panel ───────────────────────────────────────────────
 
-function renderWaitWhatPanel(capture) {
+function renderWaitWhatPanel(capture, investigation, invalidated) {
   const beforeItems = (capture.contextBefore || []).map(b =>
     `<li><button class="caster-ww-jump" data-beat-id="${esc(b.beatId)}">${esc(beatLabel(b))}</button></li>`
   ).join('');
@@ -666,28 +742,160 @@ function renderWaitWhatPanel(capture) {
     `<li><strong>${esc(d.verdict)}</strong>: ${esc(d.observed)} <small>(${esc(d.category)})</small></li>`
   ).join('');
 
+  // Legal alternatives from the capture
+  const legalCount = capture.legalOptions?.[0]?.count;
+  const legalAlternativesHtml = legalCount != null && legalCount > 1
+    ? `<div class="caster-ww-alternatives" data-testid="caster-ww-alternatives">
+        <h4>Legal Alternatives (${legalCount} options)</h4>
+        <p class="caster-ww-alternatives-hint">${legalCount} legal actions were available at this decision point. Use the Branches workspace to explore counterfactual outcomes.</p>
+        <button class="caster-ww-branch-btn secondary-button" data-action-id="runner-up" data-testid="caster-ww-branch-btn">Branch Runner-Up Action →</button>
+      </div>`
+    : '';
+
+  // Investigation status and authority hash
+  const invStatus = investigation?.status || 'BOOKMARKED';
+  const authHash = investigation?.authorityHashAtCreation;
+  const invalidationBanner = invalidated
+    ? `<div class="caster-ww-invalidation notice danger" data-testid="caster-ww-invalidation">
+        <strong>⚠ Investigation Invalidated</strong>
+        <p>The engine authority hash has changed since this investigation was created. Branches and comparisons may be stale.</p>
+      </div>`
+    : '';
+
+  // Annotation form
+  const annotationText = casterState.waitWhatAnnotationText || '';
+  const annotationSeverity = casterState.waitWhatAnnotationSeverity || '';
+  const existingAnnotations = (investigation?.annotations || []).map(a =>
+    `<li><strong>${esc(a.beatId || 'general')}</strong>: ${esc(a.text)}</li>`
+  ).join('');
+
+  const annotationFormHtml = `<div class="caster-ww-annotation-form" data-testid="caster-ww-annotation-form">
+    <h4>Annotate</h4>
+    <textarea id="caster-ww-annotation-text" placeholder="What caught your attention?" rows="2">${esc(annotationText)}</textarea>
+    <select id="caster-ww-annotation-severity">
+      <option value="" ${annotationSeverity === '' ? 'selected' : ''}>— Severity —</option>
+      <option value="confirmed-defect" ${annotationSeverity === 'confirmed-defect' ? 'selected' : ''}>Confirmed defect</option>
+      <option value="policy-oddity" ${annotationSeverity === 'policy-oddity' ? 'selected' : ''}>Policy oddity</option>
+      <option value="legal-but-surprising" ${annotationSeverity === 'legal-but-surprising' ? 'selected' : ''}>Legal but surprising</option>
+      <option value="insufficient-evidence" ${annotationSeverity === 'insufficient-evidence' ? 'selected' : ''}>Insufficient evidence</option>
+    </select>
+    <button id="caster-ww-annotation-save" class="secondary-button" data-testid="caster-ww-annotation-save">Save Annotation</button>
+    ${existingAnnotations ? `<ul class="caster-ww-annotations-list">${existingAnnotations}</ul>` : ''}
+  </div>`;
+
+  // Export buttons
+  const exportResultHtml = casterState.waitWhatExportResult
+    ? `<div class="caster-ww-export-result notice" data-testid="caster-ww-export-result">
+        <strong>Exported as ${esc(casterState.waitWhatExportResult.format)}</strong>
+        <p>Investigation envelope downloaded.</p>
+      </div>`
+    : '';
+  const exportButtonsHtml = `<div class="caster-ww-export" data-testid="caster-ww-export">
+    <h4>Export Investigation</h4>
+    <button id="caster-ww-export-json" class="secondary-button" data-testid="caster-ww-export-json">Export JSON</button>
+    <button id="caster-ww-export-md" class="secondary-button" data-testid="caster-ww-export-md">Export Markdown</button>
+    ${exportResultHtml}
+  </div>`;
+
   return `<div class="caster-wait-what" data-testid="caster-wait-what-panel">
     <div class="caster-ww-header">
       <h3>WAIT WHAT — Investigation Envelope</h3>
       <button id="caster-ww-close" class="secondary-button">✕</button>
     </div>
     <div class="caster-ww-body">
+      ${invalidationBanner}
       <div class="caster-ww-meta">
         <p><strong>Capture:</strong> ${esc(capture.captureId)}</p>
+        <p><strong>Investigation:</strong> ${esc(investigation?.investigationId || '—')} · <strong>Status:</strong> ${esc(invStatus)}</p>
         <p><strong>Beat:</strong> ${esc(capture.casterBeatId || '—')} · <strong>Decision:</strong> ${esc(capture.decisionId || '—')}</p>
         <p><strong>Checkpoint:</strong> <code>${esc(capture.checkpointHash?.slice(0, 16) || '—')}</code></p>
         <p><strong>Viewer mode:</strong> ${esc(capture.viewerMode)} ${capture.redacted ? '· future redacted' : ''}</p>
+        ${authHash ? `<p><strong>Authority hash:</strong> <code>${esc(authHash.slice(0, 16))}</code></p>` : ''}
       </div>
       ${diags ? `<div class="caster-ww-diagnostics"><h4>Diagnostics</h4><ul>${diags}</ul></div>` : ''}
       <div class="caster-ww-context">
         <div class="caster-ww-before"><h4>Before</h4><ul>${beforeItems || '<li>—</li>'}</ul></div>
         <div class="caster-ww-after"><h4>After</h4><ul>${afterItems || '<li>—</li>'}</ul></div>
       </div>
+      ${legalAlternativesHtml}
       <div class="caster-ww-commentary">
         ${capture.commentary ? `<p><strong>Commentary:</strong> <span id="caster-ww-commentary-text"></span></p>` : '<p><em>No commentary for this beat.</em></p>'}
       </div>
+      ${annotationFormHtml}
+      ${exportButtonsHtml}
     </div>
   </div>`;
+}
+
+// ── WAIT WHAT annotation wiring ──────────────────────────────────
+
+async function wireWaitWhatAnnotation(appEl) {
+  const textArea = appEl.querySelector('#caster-ww-annotation-text');
+  const severitySelect = appEl.querySelector('#caster-ww-annotation-severity');
+  const saveBtn = appEl.querySelector('#caster-ww-annotation-save');
+  if (!textArea || !saveBtn) return;
+
+  textArea.oninput = (e) => { casterState.waitWhatAnnotationText = e.target.value; };
+  if (severitySelect) {
+    severitySelect.onchange = (e) => { casterState.waitWhatAnnotationSeverity = e.target.value; };
+  }
+
+  saveBtn.onclick = async () => {
+    const text = casterState.waitWhatAnnotationText.trim();
+    if (!text || !casterState.waitWhatInvestigation) return;
+    const { addAnnotation } = await getInvestigation();
+    const severityPrefix = casterState.waitWhatAnnotationSeverity
+      ? `[${casterState.waitWhatAnnotationSeverity}] `
+      : '';
+    casterState.waitWhatInvestigation = addAnnotation(casterState.waitWhatInvestigation, {
+      text: severityPrefix + text,
+      beatId: casterState.waitWhatCapture?.casterBeatId ?? null,
+    });
+    casterState.waitWhatAnnotationText = '';
+    casterState.waitWhatAnnotationSeverity = '';
+    renderTheatre(appEl);
+  };
+}
+
+// ── WAIT WHAT export wiring ──────────────────────────────────────
+
+async function wireWaitWhatExport(appEl) {
+  const jsonBtn = appEl.querySelector('#caster-ww-export-json');
+  const mdBtn = appEl.querySelector('#caster-ww-export-md');
+  if (!casterState.waitWhatInvestigation) return;
+
+  if (jsonBtn) jsonBtn.onclick = async () => {
+    const { exportInvestigation } = await getInvestigation();
+    const { investigation, exportData, exportFormat } = exportInvestigation(casterState.waitWhatInvestigation, 'json');
+    casterState.waitWhatInvestigation = investigation;
+    casterState.waitWhatExportResult = { format: exportFormat };
+    downloadInvestigation(exportData, 'json');
+    renderTheatre(appEl);
+  };
+
+  if (mdBtn) mdBtn.onclick = async () => {
+    const { exportInvestigation } = await getInvestigation();
+    const { investigation, exportData, exportFormat } = exportInvestigation(casterState.waitWhatInvestigation, 'markdown');
+    casterState.waitWhatInvestigation = investigation;
+    casterState.waitWhatExportResult = { format: exportFormat };
+    downloadInvestigation(exportData, 'md');
+    renderTheatre(appEl);
+  };
+}
+
+function downloadInvestigation(data, ext) {
+  try {
+    const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    const blob = new Blob([content], { type: ext === 'json' ? 'application/json' : 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `investigation-${Date.now()}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch { /* download not available */ }
 }
 
 // ── Beat change handler ───────────────────────────────────────────
@@ -740,6 +948,18 @@ async function onBeatChange(appEl) {
 
   // Re-render with final commentary state (safe text rendering)
   renderTheatre(appEl);
+
+  // Check WAIT WHAT investigation invalidation
+  if (casterState.waitWhatVisible && casterState.waitWhatInvestigation) {
+    const { checkInvalidation } = await getInvestigation();
+    const authHash = await getAuthorityHash();
+    const checked = checkInvalidation(casterState.waitWhatInvestigation, authHash);
+    if (checked.status === 'INVALIDATED' && !casterState.waitWhatInvalidated) {
+      casterState.waitWhatInvestigation = checked;
+      casterState.waitWhatInvalidated = true;
+      renderTheatre(appEl);
+    }
+  }
 
   // Render WAIT WHAT commentary text safely
   if (casterState.waitWhatVisible && casterState.waitWhatCapture?.commentary) {
@@ -1082,4 +1302,7 @@ export function cleanupCaster() {
     try { casterState.session.pause(); } catch { /* ignore */ }
   }
   casterState.waitWhatVisible = false;
+  casterState.waitWhatInvestigation = null;
+  casterState.waitWhatInvalidated = false;
+  casterState.waitWhatExportResult = null;
 }

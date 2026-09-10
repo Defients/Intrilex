@@ -10,6 +10,25 @@
 // runs simulated brackets. This workspace connects to the live
 // match server's TOURNAMENT_LIST / TOURNAMENT_GET / TOURNAMENT_REGISTER
 // handlers.
+//
+// ── Lifecycle Completeness (audit finding: P1-3) ───────────────
+// The following lifecycle stages are AVAILABLE in the UI:
+//   ✓ Tournament discovery (list + detail view)
+//   ✓ Registration (TOURNAMENT_REGISTER handler)
+//   ✓ Bracket display (read-only bracket viewer)
+//
+// The following lifecycle stages are NOT YET IMPLEMENTED and are
+// surfaced to players via the renderLifecycleNotice() banner:
+//   ✗ Check-in windows (no CHECK_IN / CHECK_IN_STATUS handlers)
+//   ✗ Match scheduling (no automated scheduling engine)
+//   ✗ Disconnect rulings (no adjudication system for mid-match disconnects)
+//   ✗ Admin correction (no admin override / correction handlers)
+//   ✗ Resumption after restart (no durable tournament state recovery)
+//
+// Until these stages are implemented, registered tournaments may
+// not progress beyond the registration phase. The UI honestly
+// discloses this via the lifecycle notice rather than overpromising
+// a complete tournament platform.
 // ═══════════════════════════════════════════════════════════════
 
 import { app, esc, state } from '../state.js';
@@ -195,11 +214,11 @@ function renderTournamentDetail() {
 }
 
 function renderContent() {
-  if (_state.selectedTournament) return renderTournamentDetail();
+  if (_state.selectedTournament) return renderLifecycleNotice() + renderTournamentDetail();
   if (_state.loading) return renderLoading();
   if (!_state.available) return renderOffline();
   if (_state.error) return renderError(_state.error);
-  return renderTournamentList();
+  return renderLifecycleNotice() + renderTournamentList();
 }
 
 export async function renderHumanTournaments() {
@@ -226,6 +245,36 @@ export async function renderHumanTournaments() {
       loadTournaments(body);
     }
   }
+}
+
+// ── Lifecycle status indicator ─────────────────────────────────
+//
+// The tournament system supports registration and basic bracket
+// display, but the full competitive lifecycle (check-in, scheduling,
+// disconnect rulings, admin correction, resumption after restart) is
+// still under development. This banner manages user expectations
+// honestly rather than implying a complete tournament platform.
+
+function renderLifecycleNotice() {
+  return `<div class="ht-lifecycle-notice" data-testid="ht-lifecycle-notice">
+    <div class="ht-lifecycle-header">
+      <span class="ht-lifecycle-icon" aria-hidden="true">🚧</span>
+      <strong>Tournament System — Partial Availability</strong>
+    </div>
+    <div class="ht-lifecycle-body">
+      <p>Tournament registration and bracket viewing are available. The full competitive lifecycle is in active development:</p>
+      <ul class="ht-lifecycle-features">
+        <li class="ht-feature-available"><span class="ht-feature-icon">✓</span> Registration & seeding</li>
+        <li class="ht-feature-available"><span class="ht-feature-icon">✓</span> Bracket display</li>
+        <li class="ht-feature-coming"><span class="ht-feature-icon">⏳</span> Check-in windows <span class="ht-feature-tag">Coming soon</span></li>
+        <li class="ht-feature-coming"><span class="ht-feature-icon">⏳</span> Match scheduling <span class="ht-feature-tag">Coming soon</span></li>
+        <li class="ht-feature-coming"><span class="ht-feature-icon">⏳</span> Disconnect rulings <span class="ht-feature-tag">Coming soon</span></li>
+        <li class="ht-feature-coming"><span class="ht-feature-icon">⏳</span> Admin correction <span class="ht-feature-tag">Coming soon</span></li>
+        <li class="ht-feature-coming"><span class="ht-feature-icon">⏳</span> Resumption after restart <span class="ht-feature-tag">Coming soon</span></li>
+      </ul>
+      <p class="ht-lifecycle-note">Registered tournaments may not progress beyond the registration phase until the full lifecycle is shipped. Follow announcements for updates.</p>
+    </div>
+  </div>`;
 }
 
 async function loadTournaments(body) {
@@ -360,7 +409,7 @@ function wireDetailButtons(body) {
       _state.registerResult = null;
       app.innerHTML = `<section class="panel ht-panel" data-testid="ht-panel">
         <div class="panel-header ht-header"><div><h2 data-testid="ht-title">TOURNAMENTS</h2><p class="ht-subtitle" data-testid="ht-subtitle">Human ranked tournaments — register, compete, and climb the bracket.</p></div></div>
-        <div class="panel-body ht-body" data-testid="ht-body">${renderContent()}</div>
+        <div class="panel-body ht-body" data-testid="ht-body">${renderLifecycleNotice() + renderContent()}</div>
       </section>`;
       const newBody = app.querySelector('[data-testid="ht-body"]');
       if (newBody) { wireListButtons(newBody); loadTournaments(newBody); }

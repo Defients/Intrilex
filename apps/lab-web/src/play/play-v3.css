@@ -1792,6 +1792,8 @@
 .meta-health-growing { color: #5ad7e8; border-color: rgba(90,215,232,0.4); background: rgba(90,215,232,0.10); }
 .meta-health-established { color: #4ade80; border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.10); }
 .meta-health-mature { color: #ffd700; border-color: rgba(255,215,0,0.4); background: rgba(255,215,0,0.10); }
+.meta-confidence-badge { display: inline-block; padding: 3px 10px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: var(--text-dim, #8b949e); cursor: help; }
+.meta-disclaimer { margin-bottom: 16px; padding: 10px 14px; font-size: 0.78rem; font-style: italic; color: var(--text-dim, #8b949e); background: rgba(255,200,50,0.06); border: 1px solid rgba(255,200,50,0.12); border-radius: 6px; }
 .meta-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
 .meta-stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; text-align: center; }
 .meta-stat-label { display: block; font-size: 0.72rem; color: var(--text-dim, #8b949e); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
@@ -1849,6 +1851,20 @@
 .ht-empty-icon { font-size: 2rem; display: block; margin-bottom: 8px; }
 .ht-back-btn { margin-bottom: 12px; }
 @media (max-width: 640px) { .ht-grid { grid-template-columns: 1fr; } .ht-bracket-match { grid-template-columns: 30px 1fr 60px; font-size: 0.76rem; } }
+
+/* ── Tournament lifecycle notice ── */
+.ht-lifecycle-notice { background: rgba(255,200,50,0.06); border: 1px solid rgba(255,200,50,0.15); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; }
+.ht-lifecycle-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ht-lifecycle-header strong { font-size: 0.95rem; color: #fbbf24; }
+.ht-lifecycle-icon { font-size: 1.2rem; }
+.ht-lifecycle-body p { font-size: 0.82rem; color: var(--text-dim, #8b949e); margin: 6px 0; }
+.ht-lifecycle-features { list-style: none; padding: 0; margin: 10px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; }
+.ht-lifecycle-features li { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 4px 0; }
+.ht-feature-available { color: #4ade80; }
+.ht-feature-coming { color: var(--text-dim, #8b949e); }
+.ht-feature-icon { font-size: 0.85rem; }
+.ht-feature-tag { display: inline-block; padding: 1px 8px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 999px; background: rgba(255,200,50,0.12); color: #fbbf24; border: 1px solid rgba(255,200,50,0.2); }
+.ht-lifecycle-note { font-style: italic; padding-top: 6px; border-top: 1px solid rgba(255,200,50,0.1); }
 
 /* ── Reconnect card ── */
 .network-reconnect-card { display: flex; align-items: center; gap: var(--tcg-space-4); padding: var(--tcg-space-3) var(--tcg-space-5); background: linear-gradient(135deg, rgba(22, 30, 52, 0.92), rgba(28, 22, 18, 0.88)); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(240, 160, 64, 0.35); border-radius: var(--tcg-radius-lg); margin-bottom: var(--tcg-space-4); box-shadow: 0 4px 24px rgba(240, 160, 64, 0.08), 0 2px 8px rgba(0, 0, 0, 0.3); flex-wrap: wrap; }

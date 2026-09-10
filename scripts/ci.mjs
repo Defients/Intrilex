@@ -161,6 +161,8 @@ const STAGES = [
   ['ai-official-rules-compliance', 'node', ['--test', 'test/ai-official-rules-compliance.test.mjs']],
   ['grid-layout-invariants', 'node', ['--test', 'test/grid-layout-invariants.test.mjs']],
   ['v2.5-match-ui', 'node', ['--test', 'test/v2.5-match-ui.test.mjs']],
+  // v2.5 Match UI behavioral — tests actual module behavior (viewmodel, renderer, ai-personality) instead of source-shape regex
+  ['v2.5-match-ui-behavioral', 'node', ['--test', 'test/v2.5-match-ui-behavioral.test.mjs']],
   // v0.24.2 Truth Closure II tests
   ['replay-privacy-closure', 'node', ['--test', 'test/replay-privacy-closure.test.mjs']],
   ['match-store-participants-truth', 'node', ['--test', 'test/match-store-participants-truth.test.mjs']],
@@ -260,6 +262,8 @@ const STAGES = [
   ['v0.31.0-competitive-operations', 'node', ['--test', 'test/v0.31.0-competitive-operations.test.mjs']],
   // v0.32.0 Intelligence, Better AI, and Replay Caster v1 — bounded lookahead, commentary contract, investigation workflow, brain topology, evidence-honest intelligence
   ['v0.32.0-intelligence-caster', 'node', ['--test', 'test/v0.32.0-intelligence-caster.test.mjs']],
+  // v1.0.0 Behavioral Play Journey — behavioral tests for save integrity, action presenter, evidence-honest labels, WAIT WHAT investigation, tournament lifecycle notice, caster UI wiring
+  ['v1.0.0-behavioral-play-journey', 'node', ['--test', 'test/v1.0.0-behavioral-play-journey.test.mjs']],
   // v1.0.0 Certified Public Baseline — certification gates across rules/engine, local, online, laboratory, release engineering, human validation
   ['v1.0.0-certified-baseline', 'node', ['--test', 'test/v1.0.0-certified-baseline.test.mjs']],
   // Phase 2: negative-path tests for certification gates (fail-closed on stale/failed/NOT_RUN evidence)
