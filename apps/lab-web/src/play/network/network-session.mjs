@@ -11,7 +11,7 @@
 
 import {
   createMatch, joinMatch, resumeMatch, ready, submitAction,
-  requestSync, leaveMatch, sendChat, chatVisibility,
+  requestSync, leaveMatch, getReplay, sendChat, chatVisibility,
   authenticate, authRefresh, rematch, listSpectatable,
   tournamentList, tournamentGet, tournamentRegister,
   tournamentStart, tournamentReportResult, reportPlayer,
@@ -331,6 +331,7 @@ export class NetworkPlaySession {
   }
 
   async joinDuel(inviteCode) {
+    const previousMatchId = this.matchId;
     this._transition(NetworkSessionState.JOINING);
     const resp = await this._request(joinMatch(inviteCode));
     if (resp.type === 'ERROR') {
@@ -343,6 +344,12 @@ export class NetworkPlaySession {
     this.participantToken = resp.payload.participantToken;
     this.playerId = resp.payload.seat;
     this.opponentPlayerId = this.playerId === 'P1' ? 'P2' : 'P1';
+    if (this.status === NetworkSessionState.TERMINAL && this.matchId !== previousMatchId) {
+      // A successful authenticated admission begins a different match. Keep
+      // unsolicited same-match messages subject to the monotonic guard.
+      this.status = NetworkSessionState.IN_LOBBY;
+      this.currentView = null;
+    }
     // Fallback: assume the opponent (creator) is connected. The server sends
     // a PARTICIPANT_STATUS message immediately after MATCH_JOINED that will
     // set the correct state. This default prevents the lobby UI from
@@ -581,16 +588,16 @@ export class NetworkPlaySession {
 
   /**
    * Forfeit the current match — sends LEAVE_MATCH to the server and
-   * cleans up local state. The server determines the authoritative
+   * retains the terminal connection for replay and rematch. The server determines the authoritative
    * match outcome (opponent wins by forfeit).
    * Prevents double-submit with a guard flag.
    * @returns {Promise<void>}
    */
   async forfeit() {
-    if (this._forfeitSubmitted) return; // Prevent double-submit
+    if (this._forfeitSubmitted || this.status === 'TERMINAL') return; // Prevent double-submit
     this._forfeitSubmitted = true;
     try {
-      await this.leave();
+      await this._request(leaveMatch(this.matchId, this.participantToken));
     } finally {
       this._forfeitSubmitted = false;
     }
@@ -647,7 +654,7 @@ export class NetworkPlaySession {
   async getReplay() {
     if (this.status !== NetworkSessionState.TERMINAL) return null;
     if (!this.matchId || !this.participantToken) return null;
-    const msg = { protocolVersion: 2, type: 'GET_REPLAY', payload: { matchId: this.matchId, participantToken: this.participantToken } };
+    const msg = getReplay(this.matchId, this.participantToken);
     const resp = await this._request(msg);
     if (resp.type === 'ERROR') return null;
     const replay = resp.payload?.replay ?? null;
@@ -697,7 +704,8 @@ export class NetworkPlaySession {
     this.currentView = null;
     this.chatMessages = [];
     this._seenChatMessageIds = new Set();
-    this._transition(NetworkSessionState.IN_LOBBY);
+    if (this.matchId !== oldMatchId) this.status = NetworkSessionState.IN_LOBBY;
+    else this._transition(NetworkSessionState.IN_LOBBY);
     this._saveReconnectInfo();
     this._notifyStateChange();
     return { ok: true, matchId: this.matchId, inviteCode: this.inviteCode, oldMatchId };
@@ -1507,6 +1515,7 @@ export class NetworkPlaySession {
           timingClass: a.timingClass,
           sourceHandles: a.sourceCardIds,
           targetHandles: a.targetCardIds,
+          ...(Number.isSafeInteger(a.swapSlot) ? { swapSlot: a.swapSlot } : {}),
         })),
         isHuman: view.decision.isMyDecision,
       } : null,

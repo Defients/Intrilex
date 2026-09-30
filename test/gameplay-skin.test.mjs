@@ -12,7 +12,6 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 const skinModuleSrc = readFileSync(join(root, 'apps/lab-web/src/play/gameplay-skin.js'), 'utf8');
-const rendererSrc = readFileSync(join(root, 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
 const boardEventsSrc = readFileSync(join(root, 'apps/lab-web/src/play/board-events.js'), 'utf8');
 const playAppSrc = readFileSync(join(root, 'apps/lab-web/src/play/play-app.js'), 'utf8');
 const appSrc = readFileSync(join(root, 'apps/lab-web/src/app.js'), 'utf8');
@@ -86,47 +85,6 @@ test('gameplay-skin.js: trademark labels include ™', () => {
   assert.ok(
     skinModuleSrc.includes('Corrupture\\u2122') || skinModuleSrc.includes('Corrupture\u2122'),
     'Corrupture must include ™ in display label'
-  );
-});
-
-// ── Renderer integration ──
-
-test('ranked-duel-renderer.mjs: imports gameplay-skin module', () => {
-  assert.ok(
-    rendererSrc.includes("from './gameplay-skin.js'"),
-    'renderer must import gameplay-skin.js'
-  );
-});
-
-test('ranked-duel-renderer.mjs: shell root has data-gameplay-skin attribute', () => {
-  assert.ok(
-    rendererSrc.includes('data-gameplay-skin="${esc(opts.gameplaySkin)}"'),
-    'shell root must carry data-gameplay-skin attribute from opts'
-  );
-});
-
-test('ranked-duel-renderer.mjs: renders skin selector trigger', () => {
-  assert.ok(
-    rendererSrc.includes('data-testid="skin-selector-trigger"'),
-    'must render skin selector trigger button'
-  );
-});
-
-test('ranked-duel-renderer.mjs: renders skin selector menu with all four skins', () => {
-  assert.ok(
-    rendererSrc.includes('data-testid="skin-selector-menu"'),
-    'must render skin selector menu'
-  );
-  assert.ok(
-    rendererSrc.includes('data-action="select-skin"'),
-    'must render skin selection buttons'
-  );
-});
-
-test('ranked-duel-renderer.mjs: renderSkinSelector function exists', () => {
-  assert.ok(
-    rendererSrc.includes('function renderSkinSelector'),
-    'must have renderSkinSelector function'
   );
 });
 

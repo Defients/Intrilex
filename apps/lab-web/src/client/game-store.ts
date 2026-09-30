@@ -69,6 +69,9 @@ export function createGameStore(submitIntent: Submit) {
   function update(input: unknown, options?: Options): void {
     if (disposed) return;
     const game = buildSemanticGame(input, options);
+    // Chat and cosmetic host refreshes often carry an identical authorized
+    // snapshot. Keep its identity stable so only the chat consumer re-renders.
+    if (JSON.stringify(game) === JSON.stringify(snapshot.game)) return;
     const changed = !sameBoundary(snapshot.game, game);
     const lostSelection = selected !== null && !isCurrent(game, selected);
     if (changed || lostSelection || game.status !== 'ready') {

@@ -98,12 +98,6 @@ test('PRIVACY: decision evidence does not expose private card data', () => {
   assert.ok(!decisionEvidenceSrc.includes('handContents'), 'Decision evidence must not expose hand contents');
 });
 
-test('PRIVACY: renderer does not render opponent hand cards', () => {
-  // The renderer should show card backs for opponent, not actual card faces
-  assert.ok(rendererSrc.includes('card-back'), 'Must render card backs for opponent');
-  assert.ok(rendererSrc.includes('aria-hidden="true"'), 'Card backs must be aria-hidden');
-});
-
 test('PRIVACY: resolution flow does not expose hidden card IDs', () => {
   // The resolution flow uses cardRegistry to describe cards, but only
   // for cards that are already public (on the stack, resolved, etc.)

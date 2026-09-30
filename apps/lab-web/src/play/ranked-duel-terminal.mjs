@@ -38,6 +38,7 @@ export function renderTerminal(vm, opts) {
   const outcome = isDraw ? 'draw' : winner === humanId ? 'win' : 'loss';
   const outcomeLabel = outcome === 'win' ? 'VICTORY' : outcome === 'loss' ? 'DEFEAT' : 'DRAW';
   const resultIcon = outcome === 'win' ? '🏆' : outcome === 'loss' ? '💀' : '🤝';
+  const winnerLabel = outcome === 'win' ? 'You' : outcome === 'loss' ? (opts.isNetworkMatch ? (vm.opponent?.displayName || 'Opponent') : 'AI') : 'Draw';
 
   // v0.19.0: AI banter on terminal
   const archetype = vm.opponent?.archetype ?? '';
@@ -51,7 +52,7 @@ export function renderTerminal(vm, opts) {
       <p class="terminal-banter" data-testid="terminal-banter">${esc(banter)}</p>
     </div>
     <dl class="terminal-details">
-      <dt>Winner</dt><dd data-testid="terminal-winner">${esc(outcome === 'win' ? 'You' : outcome === 'loss' ? 'AI' : 'Draw')}</dd>
+      <dt>Winner</dt><dd data-testid="terminal-winner">${esc(winnerLabel)}</dd>
       <dt>Termination</dt><dd>${esc(formatTerminationReason(vm.match.terminationReason || 'UNKNOWN'))}</dd>
       <dt>Full Turns</dt><dd>${vm.match.fullTurnSequence ?? 0}</dd>
     </dl>
@@ -60,6 +61,11 @@ export function renderTerminal(vm, opts) {
     ${renderIntelligenceCard(vm, opts)}
     ${renderTeachingMoment(generateTeachingMoment(vm) || generateBeginnerTrapTip(vm))}
     ${renderTraceInsightsCard(opts)}
+    ${opts.isNetworkMatch && opts.rematchInvite ? `<section class="terminal-rematch-invite" role="status">
+      <p>${esc(opts.rematchInvite.fromDisplayName || 'Opponent')} requested a rematch.</p>
+      <button class="primary-button" data-action="accept-rematch" data-invite-code="${esc(opts.rematchInvite.inviteCode)}">Accept rematch</button>
+      <button class="secondary-button" data-action="decline-rematch">Decline</button>
+    </section>` : ''}
     <div class="terminal-actions">
       <button class="primary-button" data-testid="watch-replay" data-action="watch-replay">Watch replay</button>
       ${opts.isNetworkMatch ? '<button class="secondary-button" data-testid="download-replay" data-action="download-replay">Download certified replay</button>' : ''}

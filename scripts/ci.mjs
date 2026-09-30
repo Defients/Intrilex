@@ -51,7 +51,7 @@ const STAGES = [
   ['unrestricted-browser-smoke', 'node', ['--test', 'test/unrestricted-browser-smoke.test.mjs']],
   ['scoring-sensitivity', 'node', ['--test', 'test/scoring-sensitivity.test.mjs']],
   ['play-module', 'node', ['--test', 'test/play-module.test.mjs']],
-  ['astra-client', 'node', ['--test', 'test/astra-model.test.mjs', 'test/astra-client.test.mjs']],
+  ['astra-client', 'node', ['--test', 'test/astra-model.test.mjs', 'test/astra-client.test.mjs', 'test/homecoming.test.mjs']],
   ['client-types', 'node', ['node_modules/typescript/bin/tsc', '--noEmit', '--project', '.devin/tsconfig.client.json']],
   ['v0.17.0-authority-contracts', 'node', ['--test', 'test/v0.17.0-authority-contracts.test.mjs']],
   ['v0.17.0-orchestration', 'node', ['--test', 'test/v0.17.0-orchestration.test.mjs']],

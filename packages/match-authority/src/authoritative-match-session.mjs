@@ -694,7 +694,7 @@ export class AuthoritativeMatchSession {
       playerView,
       recentEvents: this.recentSafeEvents.slice(-10).map(e => ({
         type: e.type,
-        controllerId: e.controllerId ?? e.payload?.controllerId ?? null,
+        controllerId: e.controllerId ?? e.payload?.controllerId ?? e.payload?.playerId ?? null,
       })),
       viewHash: playerView ? hashCanonical(playerView).slice(0, 16) : null,
       seed: undefined, // explicitly undefined — never sent to client

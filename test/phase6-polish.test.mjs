@@ -127,11 +127,6 @@ test('phase6: play-v3.css reduced motion disables new animations', async () => {
 // Renderer tests
 // ═══════════════════════════════════════════════════════════════
 
-test('phase6: play-renderer-v3 has sound toggle testid', async () => {
-  const js = await playSrc('ranked-duel-renderer.mjs');
-  assert.match(js, /data-testid="sound-toggle"/);
-});
-
 test('phase6: play-renderer-v3 has Enter key in keyboard help', async () => {
   const js = await playSrc('ranked-duel-terminal.mjs');
   assert.match(js, /Enter/);

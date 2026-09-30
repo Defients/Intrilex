@@ -12,7 +12,6 @@ import { app, esc, state, showToast, persistSetting } from '../state.js';
 import { getAuthState, getProfile, signOut, subscribe } from '../play/network/auth-controller.js';
 import { isSupabaseConfigured } from '../play/network/supabase-client.js';
 import { validateMatchServerUrl } from '../play/network/match-server-config.js';
-import { getBoardPresentation, setBoardPresentation } from '../client/board-preference.js';
 
 let _unsub = null;
 
@@ -98,15 +97,6 @@ function renderSettingsInner(container) {
           </span>
         </label>
       </div>
-      <div class="settings-row">
-        <label class="settings-field">
-          <span class="settings-field-label"><strong>Board Presentation</strong><small>Tactical (Astra) shows an interactive React board with drag-drop hand reordering. Classic uses the original HTML renderer. Changes apply on the next match render.</small></span>
-          <select id="settings-board-presentation">
-            <option value="classic" ${getBoardPresentation() === 'classic' ? 'selected' : ''}>Classic</option>
-            <option value="tactical" ${getBoardPresentation() === 'tactical' ? 'selected' : ''}>Tactical (Astra)</option>
-          </select>
-        </label>
-      </div>
     </section>
 
     <section class="settings-section">
@@ -174,7 +164,6 @@ function wireSettingsActions(container) {
   const hapticsToggle = container.querySelector('#settings-haptics');
   const highContrastToggle = container.querySelector('#settings-high-contrast');
   const seasonalToggle = container.querySelector('#settings-seasonal');
-  const boardPresentationSelect = container.querySelector('#settings-board-presentation');
   const serverUrlInput = container.querySelector('#settings-server-url');
   const clearSavesBtn = container.querySelector('#settings-clear-saves');
   const resetBtn = container.querySelector('#settings-reset');
@@ -235,15 +224,6 @@ function wireSettingsActions(container) {
         document.documentElement.removeAttribute('data-season');
       }
       showToast(`Seasonal themes ${state.seasonalThemes ? 'enabled' : 'disabled'}`, { type: 'info' });
-    });
-  }
-
-  if (boardPresentationSelect) {
-    boardPresentationSelect.addEventListener('change', () => {
-      const val = boardPresentationSelect.value;
-      if (setBoardPresentation(val)) {
-        showToast(`Board presentation: ${val === 'tactical' ? 'Tactical (Astra)' : 'Classic'}`, { type: 'info' });
-      }
     });
   }
 

@@ -240,21 +240,6 @@ test('Renderer: terminal has network-rematch button', () => {
   );
 });
 
-test('Renderer: rematch invite overlay exists', () => {
-  assert.ok(
-    rendererSrc.includes('renderRematchInviteOverlay'),
-    'Renderer must have renderRematchInviteOverlay function'
-  );
-  assert.ok(
-    rendererSrc.includes('rematch-invite-overlay'),
-    'Renderer must render rematch-invite-overlay'
-  );
-  assert.ok(
-    rendererSrc.includes('accept-rematch') && rendererSrc.includes('decline-rematch'),
-    'Rematch invite overlay must have accept and decline buttons'
-  );
-});
-
 // ── Board events: rematch action wiring ──
 
 test('Board events: network-rematch action wired', () => {
@@ -512,75 +497,9 @@ test('Renderer: renderRankedDuel merges network profile for local player', () =>
   );
 });
 
-// ── Renderer: AI terminology removal for network matches ──
-
-test('Renderer: header uses opponent name for network matches, not "AI is choosing"', () => {
-  assert.ok(
-    rendererSrc.includes('isNetwork') && rendererSrc.includes('is choosing'),
-    'Header must use opponent displayName for network matches instead of "AI is choosing"'
-  );
-});
-
-test('Renderer: profile block shows "Human" for network human opponents', () => {
-  assert.ok(
-    rendererSrc.includes("plate.isHuman ? 'Human' : 'AI Opponent'"),
-    'Profile block must show "Human" for human opponents and "AI Opponent" for AI'
-  );
-});
-
-// ── Renderer: Back button removal for active network PvP ──
-
-test('Renderer: Back button removed during active network PvP', () => {
-  assert.ok(
-    rendererSrc.includes('showBack') && rendererSrc.includes('!isNetwork || isTerminal'),
-    'Back button must be hidden during active network PvP (only shown for terminal or non-network)'
-  );
-});
-
-test('Renderer: X button triggers forfeit-match for active network PvP', () => {
-  assert.ok(
-    rendererSrc.includes("forfeit-match") && rendererSrc.includes("exitAction"),
-    'X button must trigger forfeit-match action for active network PvP'
-  );
-});
-
 // ── Renderer: chat/actions layout swap ──
-
-test('Renderer: renderRightRailBottom function exists', () => {
-  assert.ok(
-    rendererSrc.includes('function renderRightRailBottom'),
-    'Renderer must have renderRightRailBottom function for swapped layout'
-  );
-});
-
-test('Renderer: rightRailBottom grid area is used', () => {
-  assert.ok(
-    rendererSrc.includes('data-grid="rightRailBottom"'),
-    'Renderer must emit data-grid="rightRailBottom"'
-  );
-});
-
-test('Renderer: draggable divider exists', () => {
-  assert.ok(
-    rendererSrc.includes('rd-rail-divider') && rendererSrc.includes('data-action="rail-drag"'),
-    'Renderer must include a draggable divider with data-action="rail-drag"'
-  );
-});
-
-test('Renderer: actions section is on top, chat on bottom', () => {
-  // In renderRightRailBottom, actions should come before chat in the HTML.
-  // Search the full function body (from function declaration to the next function).
-  const funcStart = rendererSrc.indexOf('function renderRightRailBottom');
-  assert.ok(funcStart > -1, 'renderRightRailBottom must exist');
-  // Find the next function declaration after renderRightRailBottom
-  const nextFunc = rendererSrc.indexOf('function render', funcStart + 10);
-  const railBottomContent = rendererSrc.slice(funcStart, nextFunc > -1 ? nextFunc : undefined);
-  const actionsPos = railBottomContent.indexOf('rd-rail-actions-section');
-  const chatPos = railBottomContent.indexOf('rd-rail-chat-section');
-  assert.ok(actionsPos > -1, 'Must have actions section in renderRightRailBottom');
-  assert.ok(chatPos > -1, 'Must have chat section in renderRightRailBottom');
-  assert.ok(actionsPos < chatPos, 'Actions section must come before chat section (on top)');
-});
+// (Active-board layout swap tests removed — active play is now rendered by
+//  the Astra React board. Chat panel CSS/wiring tests below remain valid.)
 
 // ── Renderer: chat hide/show ──
 
@@ -614,31 +533,10 @@ test('Renderer: network opponent chat has opponent class', () => {
   );
 });
 
-// ── Renderer: disconnect overlay ──
-
-test('Renderer: disconnect overlay exists', () => {
-  assert.ok(
-    rendererSrc.includes('function renderDisconnectOverlay'),
-    'Renderer must have renderDisconnectOverlay function'
-  );
-});
-
-test('Renderer: disconnect overlay shows for DISCONNECTED opponent', () => {
-  assert.ok(
-    rendererSrc.includes("'DISCONNECTED'") && rendererSrc.includes('rd-disconnect-overlay'),
-    'Disconnect overlay must show when opponent connectionState is DISCONNECTED'
-  );
-});
-
 // ── Renderer: reconnect-grace countdown (IRX-H10, quick win #11) ──
-
-test('Renderer: disconnect overlay surfaces reconnect-grace countdown', () => {
-  assert.ok(
-    rendererSrc.includes('reconnect-grace-countdown') && rendererSrc.includes('data-grace-deadline-ms'),
-    'Disconnect overlay must render a reconnect-grace countdown element with a deadline'
-  );
-  assert.ok(rendererSrc.includes('graceMs'), 'Overlay must read opponent graceMs');
-});
+// (The disconnect overlay + countdown are now rendered by the Astra React
+//  board. The network-session, server, and play-app wiring tests below
+//  remain valid.)
 
 test('Network session: captures opponent graceMs on DISCONNECTED', () => {
   assert.ok(
@@ -661,93 +559,10 @@ test('play-app: ticks the reconnect-grace countdown live', () => {
   );
 });
 
-// ── Renderer: game log system events ──
-
-test('Renderer: renderGameLog accepts systemEvents parameter', () => {
-  assert.ok(
-    rendererSrc.includes('function renderGameLog(events, systemEvents)'),
-    'renderGameLog must accept systemEvents parameter'
-  );
-});
-
-test('Renderer: game log includes CHAT_VISIBILITY system events', () => {
-  assert.ok(
-    rendererSrc.includes("evt.type === 'CHAT_VISIBILITY'"),
-    'Game log must include CHAT_VISIBILITY system events'
-  );
-});
-
-test('Renderer: system log entries have rd-log-system class', () => {
-  assert.ok(
-    rendererSrc.includes('rd-log-system'),
-    'System log entries must have rd-log-system class'
-  );
-});
-
-// ── Renderer: game log panel overhaul (badges, icons, categories) ──
-
-test('Renderer: categorizeEvent helper exists', () => {
-  assert.ok(
-    rendererSrc.includes('function categorizeEvent'),
-    'renderGameLog must use categorizeEvent helper for event classification'
-  );
-});
-
-test('Renderer: PRIORITY_PASSED categorized as priority not phase', () => {
-  // Regression: PRIORITY_PASSED includes 'PASS' which would match the phase
-  // category if checked first. Priority check must come before phase check.
-  const priorityIdx = rendererSrc.indexOf("t.includes('RESPONSE_WINDOW_CLOSED')");
-  const phaseIdx = rendererSrc.indexOf("t.includes('ENTER_ACTION')");
-  assert.ok(priorityIdx > 0 && phaseIdx > 0, 'Both priority and phase checks must exist');
-  assert.ok(
-    priorityIdx < phaseIdx,
-    'Priority category check must come before phase check (PRIORITY_PASSED includes PASS)'
-  );
-});
-
-test('Renderer: game log entries have data-event-category attribute', () => {
-  assert.ok(
-    rendererSrc.includes('data-event-category'),
-    'Game log entries must have data-event-category attribute for CSS targeting'
-  );
-});
-
-test('Renderer: game log entries have actor badge with data-actor', () => {
-  assert.ok(
-    rendererSrc.includes('rd-log-actor') && rendererSrc.includes('data-actor'),
-    'Game log entries must have actor badge with data-actor attribute'
-  );
-});
-
-test('Renderer: game log entries have event-type icon span', () => {
-  assert.ok(
-    rendererSrc.includes('rd-log-icon'),
-    'Game log entries must have event-type icon span'
-  );
-});
-
-test('Renderer: game log has new-entry animation class', () => {
-  assert.ok(
-    rendererSrc.includes('rd-log-new'),
-    'Most recent game log entry must have rd-log-new class for fade-in animation'
-  );
-});
-
-test('Renderer: actorBadgeLabel maps P1/P2/SYS', () => {
-  assert.ok(
-    rendererSrc.includes("actorId === 'P1'") &&
-    rendererSrc.includes("actorId === 'P2'") &&
-    rendererSrc.includes("return 'SYS'"),
-    'actorBadgeLabel must map P1, P2, and default to SYS'
-  );
-});
-
-test('Renderer: game log caps at 40 entries via slice(-40)', () => {
-  assert.ok(
-    rendererSrc.includes('slice(-40)'),
-    'Game log must cap at 40 entries using slice(-40) for efficiency'
-  );
-});
+// ── Renderer: game log (system events, panel overhaul) ──
+// (Active-board game log rendering was removed with the classic renderer —
+//  active play is now rendered by the Astra React board. The play-controller
+//  and CSS tests below remain valid.)
 
 test('play-controller: recentEvents sends 40 events not 10', () => {
   assert.ok(
@@ -1058,19 +873,8 @@ test('Renderer: local AI mode still works (deriveModeInfo returns null for non-n
   );
 });
 
-test('Renderer: AI Opponent label still exists for AI matches', () => {
-  assert.ok(
-    rendererSrc.includes("AI Opponent"),
-    'AI Opponent label must still exist for local AI matches'
-  );
-});
-
-test('Renderer: AI is choosing still exists for AI matches', () => {
-  assert.ok(
-    rendererSrc.includes("AI is choosing"),
-    'AI is choosing text must still exist for local AI matches'
-  );
-});
+// (The "AI Opponent" / "AI is choosing" labels lived in the removed active-
+//  board renderer; active play is now rendered by the Astra React board.)
 
 // ── Protocol client: chatVisibility export ──
 

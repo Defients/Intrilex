@@ -1,0 +1,142 @@
+diff --git a/packages/engine-adapter/src/adapter.mjs b/packages/engine-adapter/src/adapter.mjs
+index ec0b99e..ea9c5e1 100644
+--- a/packages/engine-adapter/src/adapter.mjs
++++ b/packages/engine-adapter/src/adapter.mjs
+@@ -161,7 +161,8 @@ export function createSimulationState(setup) {
+       playerIds: setup.playerIds,
+       seatOrder: setup.seatOrder,
+       enabledModules: setup.enabledModules ?? [],
+-      seed: setup.seed
++      seed: setup.seed,
++      ...(setup.predeterminedIdentities ? { predeterminedIdentities: setup.predeterminedIdentities } : {})
+     });
+   }
+   return firstContact.createMatchState({ ...setup, eventApprovedModules: setup.eventApprovedModules ?? [] });
+diff --git a/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-authority.ts b/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-authority.ts
+index 6951090..e5aa51b 100644
+--- a/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-authority.ts
++++ b/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-authority.ts
+@@ -43,6 +43,11 @@ export interface CoreMatchSetup {
+   seatOrder: readonly [PlayerId, PlayerId];
+   enabledModules: readonly string[];
+   seed: number;
++  /** Optional predetermined deck identities (54 unique). When provided, the
++   *  shuffle is bypassed and identities are dealt in the given order. This
++   *  enables authored scenario fixtures (Guided Exhibition, scripted puzzles).
++   *  Backward-compatible: when absent, the normal seed-based shuffle runs. */
++  predeterminedIdentities?: string[];
+ }
+ 
+ export interface CoreLegalAction {
+@@ -126,9 +131,31 @@ function shuffledDeck(seed: number): { identities: string[]; rng: EngineState["r
+   return { identities, rng };
+ }
+ 
+-function setupCoreState(state: EngineState, playerIds: [PlayerId, PlayerId], seed: number, profileId: CoreAuthorityProfileId): void {
++function validatePredeterminedIdentities(identities: string[]): void {
++  const CANON = new Set([...SUITS.flatMap((suit) => RANKS.map((rank) => `${rank}${suit}`)), "RJ", "BJ"]);
++  if (identities.length !== 54) throw new Error(`predeterminedIdentities must contain exactly 54 entries (got ${identities.length})`);
++  const seen = new Set<string>();
++  for (const id of identities) {
++    if (!CANON.has(id)) throw new Error(`predeterminedIdentities contains invalid identity "${id}"`);
++    if (seen.has(id)) throw new Error(`predeterminedIdentities contains duplicate identity "${id}"`);
++    seen.add(id);
++  }
++}
++
++function setupCoreState(state: EngineState, playerIds: [PlayerId, PlayerId], seed: number, profileId: CoreAuthorityProfileId, predeterminedIdentities?: string[]): void {
+   if (Object.keys(state.cards).length > 0) throw new Error("Core setup requires an empty card registry");
+-  const { identities, rng } = shuffledDeck(seed);
++  let identities: string[];
++  let rng: EngineState["rng"];
++  if (predeterminedIdentities && predeterminedIdentities.length > 0) {
++    validatePredeterminedIdentities(predeterminedIdentities);
++    identities = [...predeterminedIdentities];
++    // Use the seed for any subsequent RNG operations during the match (not the shuffle).
++    rng = { algorithm: "xorshift32", seed: seed >>> 0, cursor: 0 };
++  } else {
++    const shuffled = shuffledDeck(seed);
++    identities = shuffled.identities;
++    rng = shuffled.rng;
++  }
+   state.rng = rng;
+   for (const [index, identity] of identities.entries()) {
+     addCard(state, { id: `CORE-${String(index + 1).padStart(3, "0")}`, identity, originalOwnerId: playerIds[index % 2]!, zone: "DP" });
+@@ -338,7 +365,7 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
+       if (action.playerIds.length !== 2 || new Set(action.playerIds).size !== 2 || !action.playerIds.every((id) => state.players[id])) return fail("CORE_SETUP_PLAYERS", "Core setup requires two distinct known players");
+       const profileId = action.profileId ?? CORE_FOUNDATION_AUTHORITY_PROFILE.id;
+       if (!isSupportedCoreProfile(profileId)) return fail("CORE_PROFILE", `Unsupported Core profile ${profileId}`);
+-      try { setupCoreState(state, action.playerIds, state.rng.seed, profileId); }
++      try { setupCoreState(state, action.playerIds, state.rng.seed, profileId, action.predeterminedIdentities); }
+       catch (error) { return fail("CORE_SETUP", error instanceof Error ? error.message : String(error)); }
+       events.push({ type: "CORE_FOUNDATION_SETUP_APPLIED", payload: { profileId, playerIds: action.playerIds, goals: 21, handSizes: [5, 6], swapBar: { faceDown: 2, faceUp: 1 }, dpCount: state.zones.dp.length } });
+       break;
+@@ -636,6 +663,7 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
+       const [a,b] = action.sourceCardIds;
+       if (a === b || ![a,b].every((id) => state.cards[id]?.controllerId === actorId && state.cards[id]?.zone === `${actorId}_HAND` && coreRank(state,id) === "A")) return fail("CORE_SUPER_ACE_SOURCE", "⭐A requires two distinct Aces in hand");
+       const target = topStackItem(state, action.targetStackItemId); if (!target) return fail("CORE_SUPER_ACE_TARGET", "⭐A requires the current pending item");
++      if (!targetAcceptsCounter(target, "super-ace-counter")) return fail("CORE_SUPER_ACE_TARGET", "⭐A cannot counter this declaration class");
+       const defendingQueens = state.players[target.controllerId]!.er.filter((id) => coreRank(state,id) === "Q" && state.cards[id]?.state.tapped !== true).length;
+       if (defendingQueens >= 2) return fail("CORE_SUPER_ACE_DEFENSE", "Two untapped Queens prohibit ⭐A declaration");
+       const item = declareCoreStackItem(state, actorId, "SUPER-ACE", [a,b], [], { kind: "response", responseKind: "super-ace-counter", targetStackItemId: target.id });
+@@ -672,6 +700,7 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
+       if (new Set(ids).size !== 3 || !ids.every((id) => state.cards[id]?.controllerId === actorId && state.cards[id]?.zone === `${actorId}_HAND` && ["♦","♥"].includes(coreSuit(state,id) ?? ""))) return fail("CORE_ULTRA_SOURCE", "3 Red Ultra requires three distinct red hand cards");
+       if (state.players[actorId]!.limits.ultraPlayedThisFT) return fail("CORE_ULTRA_LIMIT", "Ultra limit already used this FT");
+       const target = topStackItem(state, action.targetStackItemId); if (!target) return fail("CORE_ULTRA_TARGET", "3 Red Ultra requires a pending play");
++      if (!targetAcceptsCounter(target, "ultra-three-red")) return fail("CORE_ULTRA_TARGET", "3 Red Ultra cannot counter this declaration class");
+       const defendingQueens = state.players[target.controllerId]!.er.filter((id) => coreRank(state,id) === "Q" && state.cards[id]?.state.tapped !== true).length;
+       if (defendingQueens >= 2) return fail("CORE_ULTRA_TARGET", "3 Red Ultra uses Super Ace authority and cannot target a play defended by two untapped Queens");
+       state.players[actorId]!.limits.ultraPlayedThisFT = true;
+diff --git a/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-autonomy.ts b/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-autonomy.ts
+index dde01db..8db7e32 100644
+--- a/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-autonomy.ts
++++ b/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-autonomy.ts
+@@ -334,7 +334,7 @@ export function createCoreMatchState(setup: CoreMatchSetup): EngineState {
+   if (new Set(setup.playerIds).size !== 2 || new Set(setup.seatOrder).size !== 2 || setup.seatOrder.some((id) => !setup.playerIds.includes(id))) throw new Error("Core Foundation requires two distinct players and a complete seat order");
+   if (!Number.isInteger(setup.seed) || (setup.seed >>> 0) === 0) throw new Error("seed must be a nonzero uint32");
+   const state = createEmptyState([...setup.seatOrder]); state.rng = { algorithm: "xorshift32", seed: setup.seed >>> 0, cursor: 0 };
+-  const cmd: Extract<EngineCommand, { type: "RESOLVE_CORE_AUTHORITY_ACTION" }> = { id: `CORE-SETUP-${setup.seed >>> 0}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: setup.seatOrder[0], action: { kind: "core-apply-setup", playerIds: [...setup.seatOrder], profileId: setup.profileId as CoreAuthorityProfileId } };
++  const cmd: Extract<EngineCommand, { type: "RESOLVE_CORE_AUTHORITY_ACTION" }> = { id: `CORE-SETUP-${setup.seed >>> 0}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: setup.seatOrder[0], action: { kind: "core-apply-setup", playerIds: [...setup.seatOrder], profileId: setup.profileId as CoreAuthorityProfileId, ...(setup.predeterminedIdentities ? { predeterminedIdentities: [...setup.predeterminedIdentities] } : {}) } };
+   const result = new IntrilexEngine().execute(state, cmd);
+   if (!result.accepted) throw new Error(`Core setup rejected: ${result.error?.code}:${result.error?.message}`);
+   assertValidState(result.state); return result.state;
+diff --git a/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-response.ts b/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-response.ts
+index 71dcaab..ba67648 100644
+--- a/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-response.ts
++++ b/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-response.ts
+@@ -130,8 +130,20 @@ export function targetAcceptsCounter(target: StackItem, counterKind: CoreRespons
+   const payload = target.coreAuthority;
+   if (!payload) return false;
+ 
+-  // ⭐A and 3-Red Ultra can counter any target (Queen defense check is separate)
+-  if (counterKind === "super-ace-counter" || counterKind === "ultra-three-red") return true;
++  // ⭐A and 3-Red Ultra resolve with Super Ace authority: they counter what
++  // Base Ace can legally counter (Effect plays and rank10), plus A♠, Ultras,
++  // Sudden Death, and other responses (counter-counter chains). They do NOT
++  // counter point plays, scuttles, draws, swaps, passes, anchors, or goal-mods.
++  if (counterKind === "super-ace-counter" || counterKind === "ultra-three-red") {
++    if (payload.kind === "response") {
++      const blocklist = COUNTER_CHAIN_BLOCKLIST[counterKind];
++      if (!blocklist) return true;
++      return !blocklist.includes(payload.responseKind);
++    }
++    const declClass = declarationClassOf(payload);
++    if (!declClass) return false;
++    return ["ordinary-effect", "rank10"].includes(declClass);
++  }
+ 
+   // Jack Disrupt can counter any opponent primary mini-turn action
+   if (counterKind === "jack-disrupt") return payload.kind === "primary";
+diff --git a/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/types.ts b/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/types.ts
+index 6de5706..9eb6498 100644
+--- a/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/types.ts
++++ b/upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/types.ts
+@@ -365,7 +365,7 @@ export type CorePrivateChoiceSubmission =
+   | { kind: "core-nine-anchor-discard"; selectedCardIds: CardId[] };
+ 
+ export type CoreAuthorityAction =
+-  | { kind: "core-apply-setup"; playerIds: [PlayerId, PlayerId]; profileId?: CoreAuthorityProfileId }
++  | { kind: "core-apply-setup"; playerIds: [PlayerId, PlayerId]; profileId?: CoreAuthorityProfileId; predeterminedIdentities?: string[] }
+   | { kind: "core-begin-start"; playerId: PlayerId }
+   | { kind: "core-face-down-swap"; handCardId: CardId; swapCardId: CardId }
+   | { kind: "core-enter-action" }

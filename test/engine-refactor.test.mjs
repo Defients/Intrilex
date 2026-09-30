@@ -17,7 +17,6 @@ const fuzzSrc = readFileSync(join(process.cwd(), 'packages/engine-adapter/src/en
 const introspectionSrc = readFileSync(join(process.cwd(), 'packages/engine-adapter/src/action-introspection.mjs'), 'utf8');
 const chatPanelSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/chat-panel.js'), 'utf8');
 const migrationRunnerSrc = readFileSync(join(process.cwd(), 'scripts/run-migrations.mjs'), 'utf8');
-const rendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
 
 // ── E2: Engine fuzz harness imports ──
 import { fuzzOnce, fuzzCampaign, verifyDeterminism } from '../packages/engine-adapter/src/engine-fuzz-harness.mjs';
@@ -233,11 +232,10 @@ test('T1: chat-panel.js renders empty state', () => {
   assert.ok(html.includes('No messages yet'), 'Must show empty state');
 });
 
-test('T1: renderer still has renderChatPanel (delegation or inline)', () => {
-  // The renderer may still have its own copy or delegate to chat-panel.js
-  // Either way, the function must exist somewhere
-  assert.ok(rendererSrc.includes('renderChatPanel') || rendererSrc.includes('chat-panel'), 'Renderer must reference chat panel');
-});
+// Note: The chat panel was rendered by the classic active-board renderer.
+// Active match play (including the chat panel) is now rendered by the Astra
+// React board (client/mount.tsx + game-table.tsx). The chat-panel.js module
+// itself is tested above.
 
 // ═══════════════════════════════════════════════════════════════
 // T6: MIGRATION RUNNER

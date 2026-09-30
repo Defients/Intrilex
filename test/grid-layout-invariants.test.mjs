@@ -205,57 +205,6 @@ test('CSS: responsive card size variables exist', () => {
   assert.ok(cssSrc.includes('clamp('), 'Card sizes must use clamp() for responsive scaling');
 });
 
-test('Renderer: all required grid cells are emitted with data-grid attributes (v0.28: rightRailBottom replaces chat+actions)', () => {
-  const expectedDataGrids = [
-    'enemyE', 'enemyP', 'enemyProfile', 'enemyMeta',
-    'piles', 'swap', 'stage', 'stack',
-    'playerE', 'playerP', 'gamelog', 'scoreRail',
-    'playerPro', 'playerMeta', 'playerH', 'rightRailBottom',
-  ];
-  for (const area of expectedDataGrids) {
-    assert.ok(
-      rendererSrc.includes(`data-grid="${area}"`),
-      `Renderer must emit data-grid="${area}" for grid cell`
-    );
-  }
-});
-
-test('Renderer: scoreSpine removed, score integrated into prestige banners (v0.25)', () => {
-  assert.ok(
-    !rendererSrc.includes('class="rd-cell rd-score-spine"'),
-    'Score spine grid cell must be removed (v0.25 — score in prestige banners)'
-  );
-  assert.ok(
-    rendererSrc.includes('rd-prestige-banner'),
-    'Prestige banner must be rendered in profile blocks'
-  );
-});
-
-test('Renderer: swap bar is rendered as a grid cell (not auto-placed)', () => {
-  assert.ok(
-    rendererSrc.includes('class="rd-cell rd-swap"'),
-    'Swap bar must be rendered as rd-cell rd-swap with explicit grid area'
-  );
-});
-
-test('Renderer: actions panel shows meaningful prompt during human turn with no selection', () => {
-  assert.ok(
-    rendererSrc.includes('rd-stage-board-context'),
-    'Active stage must show board context when no card is selected'
-  );
-  assert.ok(
-    rendererSrc.includes('intent') && rendererSrc.includes('available'),
-    'Actions panel must show available intent count as a prompt'
-  );
-});
-
-test('Renderer: active stage shows phase info during human turn', () => {
-  assert.ok(
-    rendererSrc.includes('rd-stage-phase'),
-    'Active stage must show current phase info'
-  );
-});
-
 test('Renderer: active stage shows selected card preview when a card is selected', () => {
   assert.ok(
     rendererSrc.includes('selectedSourceCardId'),
@@ -284,35 +233,5 @@ test('CSS: score rail has responsive media queries (Phase 4A)', () => {
   assert.ok(
     scoreRailMediaPattern.test(cssSrc),
     'Must have responsive media queries for .rd-score-cell elements'
-  );
-});
-
-test('Renderer: score rail is rendered with OPP and YOU cells (Phase 4A)', () => {
-  assert.ok(
-    rendererSrc.includes('rd-score-rail'),
-    'Renderer must emit .rd-score-rail element'
-  );
-  assert.ok(
-    rendererSrc.includes('rd-score-cell opp'),
-    'Renderer must emit opponent score cell'
-  );
-  assert.ok(
-    rendererSrc.includes('rd-score-cell you'),
-    'Renderer must emit player score cell'
-  );
-  assert.ok(
-    rendererSrc.includes('data-testid="score-rail"'),
-    'Score rail must have data-testid="score-rail"'
-  );
-});
-
-test('Renderer: score rail cells have aria-label with score values (Phase 4A)', () => {
-  assert.ok(
-    rendererSrc.includes('aria-label="Opponent score'),
-    'Opponent score cell must have aria-label with score value'
-  );
-  assert.ok(
-    rendererSrc.includes('aria-label="Your score'),
-    'Player score cell must have aria-label with score value'
   );
 });

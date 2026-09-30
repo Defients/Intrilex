@@ -1,0 +1,2958 @@
+{
+  "createdAt": "2026-09-07T20:46:50.571Z",
+  "priorDirectory": "reports/article-policy-pilot-20260907T203340644Z",
+  "amendment": "Finish only primary16 and mirrors16. Dropping optional expansion/sensitivity decided from observed cost before examining study results. No seed/policy/outcome-based selection.",
+  "priorStudyGames": 216,
+  "intendedTotalStudyGames": 400,
+  "remainingGames": 184,
+  "maxAdditionalWallTimeMs": 720000,
+  "stopOnAnyDiagnosticFailure": true,
+  "sameInputHashesAsPrior": true,
+  "seedManifestSha256": "e438351f60ab8bc8a5aebd88f530ea76f0b0e2b49039f7ac0e7a1419e96c8c23",
+  "remaining": [
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "control"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "value"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "score-rush",
+        "tempo"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "tempo"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "score-rush",
+        "tempo"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "tempo",
+        "score-rush"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "score-rush",
+        "control"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "control"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "score-rush",
+        "control"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "control",
+        "score-rush"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "score-rush",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "value"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "score-rush",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "score-rush"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "score-rush"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "tempo",
+        "control"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "control"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "tempo",
+        "control"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "control",
+        "tempo"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "tempo",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "value"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "tempo",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "tempo"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "tempo"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "control",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "value"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "control",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "control"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "control"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "value"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "score-rush",
+        "tempo"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "tempo"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "score-rush",
+        "tempo"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "tempo",
+        "score-rush"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "score-rush",
+        "control"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "control"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "score-rush",
+        "control"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "control",
+        "score-rush"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "score-rush",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "value"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "score-rush",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "score-rush"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "score-rush"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "tempo",
+        "control"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "control"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "tempo",
+        "control"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "control",
+        "tempo"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "tempo",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "value"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "tempo",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "tempo"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "tempo"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "control",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "value"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "control",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "control"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "control"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "value"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "score-rush",
+        "tempo"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "tempo"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "score-rush",
+        "tempo"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "tempo",
+        "score-rush"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "score-rush",
+        "control"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "control"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "score-rush",
+        "control"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "control",
+        "score-rush"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "score-rush",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "value"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "score-rush",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "score-rush"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "score-rush"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "tempo",
+        "control"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "control"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "tempo",
+        "control"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "control",
+        "tempo"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "tempo",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "value"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "tempo",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "tempo"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "tempo"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "control",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "value"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "control",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "control"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "control"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "value"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "score-rush",
+        "tempo"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "tempo"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "score-rush",
+        "tempo"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "tempo",
+        "score-rush"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "score-rush",
+        "control"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "control"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "score-rush",
+        "control"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "control",
+        "score-rush"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "score-rush",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "value"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "score-rush",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "score-rush"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "score-rush"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "tempo",
+        "control"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "control"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "tempo",
+        "control"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "control",
+        "tempo"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "tempo",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "value"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "tempo",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "tempo"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "tempo"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "control",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "value"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "control",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "control"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "control"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "value"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "score-rush",
+        "tempo"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "tempo"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "score-rush",
+        "tempo"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "tempo",
+        "score-rush"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "score-rush",
+        "control"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "control"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "score-rush",
+        "control"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "control",
+        "score-rush"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "score-rush",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "value"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "score-rush",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "score-rush"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "score-rush",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "score-rush"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "tempo",
+        "control"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "control"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "tempo",
+        "control"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "control",
+        "tempo"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "tempo",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "value"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "tempo",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "tempo"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "tempo",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "tempo"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "control",
+        "value"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "value"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "control",
+        "value"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "value",
+        "control"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "control",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "control"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "AB",
+      "policyIds": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "primary16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "value",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "BA",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "value"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 0,
+      "seed": 2138330614,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "baff51acd49fc59a66d9628d16af4d6e16c3d9f8241a4dd7be32e380b3dfeb6c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 0,
+      "seed": 2138330614,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "baff51acd49fc59a66d9628d16af4d6e16c3d9f8241a4dd7be32e380b3dfeb6c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 0,
+      "seed": 2138330614,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "baff51acd49fc59a66d9628d16af4d6e16c3d9f8241a4dd7be32e380b3dfeb6c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 0,
+      "seed": 2138330614,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "baff51acd49fc59a66d9628d16af4d6e16c3d9f8241a4dd7be32e380b3dfeb6c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 0,
+      "seed": 2138330614,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "baff51acd49fc59a66d9628d16af4d6e16c3d9f8241a4dd7be32e380b3dfeb6c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 1,
+      "seed": 2914117583,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "565ed71481464836b84028bbea3a1345a10357ab0ee14f856384ba43fe5fd7d8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 1,
+      "seed": 2914117583,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "565ed71481464836b84028bbea3a1345a10357ab0ee14f856384ba43fe5fd7d8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 1,
+      "seed": 2914117583,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "565ed71481464836b84028bbea3a1345a10357ab0ee14f856384ba43fe5fd7d8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 1,
+      "seed": 2914117583,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "565ed71481464836b84028bbea3a1345a10357ab0ee14f856384ba43fe5fd7d8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 1,
+      "seed": 2914117583,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "565ed71481464836b84028bbea3a1345a10357ab0ee14f856384ba43fe5fd7d8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 2,
+      "seed": 932891787,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "2dc4bb31c7fd021b340d8f7f648f2951cc15f248d54f08e79d8a96bfa55b0ab4"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 2,
+      "seed": 932891787,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "2dc4bb31c7fd021b340d8f7f648f2951cc15f248d54f08e79d8a96bfa55b0ab4"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 2,
+      "seed": 932891787,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "2dc4bb31c7fd021b340d8f7f648f2951cc15f248d54f08e79d8a96bfa55b0ab4"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 2,
+      "seed": 932891787,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "2dc4bb31c7fd021b340d8f7f648f2951cc15f248d54f08e79d8a96bfa55b0ab4"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 2,
+      "seed": 932891787,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "2dc4bb31c7fd021b340d8f7f648f2951cc15f248d54f08e79d8a96bfa55b0ab4"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 3,
+      "seed": 4048858840,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "389eb6a38b40f01ca35f89596a398cd0cf99bc1531809ea3e60104d10b983a7f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 3,
+      "seed": 4048858840,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "389eb6a38b40f01ca35f89596a398cd0cf99bc1531809ea3e60104d10b983a7f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 3,
+      "seed": 4048858840,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "389eb6a38b40f01ca35f89596a398cd0cf99bc1531809ea3e60104d10b983a7f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 3,
+      "seed": 4048858840,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "389eb6a38b40f01ca35f89596a398cd0cf99bc1531809ea3e60104d10b983a7f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 3,
+      "seed": 4048858840,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "389eb6a38b40f01ca35f89596a398cd0cf99bc1531809ea3e60104d10b983a7f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 4,
+      "seed": 1959009644,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "ff0039e813be8f33512d4ce54d0cf7dccf0c8987103917c9df803b1ad4d2b522"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 4,
+      "seed": 1959009644,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "ff0039e813be8f33512d4ce54d0cf7dccf0c8987103917c9df803b1ad4d2b522"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 4,
+      "seed": 1959009644,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "ff0039e813be8f33512d4ce54d0cf7dccf0c8987103917c9df803b1ad4d2b522"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 4,
+      "seed": 1959009644,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "ff0039e813be8f33512d4ce54d0cf7dccf0c8987103917c9df803b1ad4d2b522"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 4,
+      "seed": 1959009644,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "ff0039e813be8f33512d4ce54d0cf7dccf0c8987103917c9df803b1ad4d2b522"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 5,
+      "seed": 2365251136,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "be1e0569ba6486903b10df02efab8541ff21a5512459dd1b22790b8c48186b11"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 5,
+      "seed": 2365251136,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "be1e0569ba6486903b10df02efab8541ff21a5512459dd1b22790b8c48186b11"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 5,
+      "seed": 2365251136,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "be1e0569ba6486903b10df02efab8541ff21a5512459dd1b22790b8c48186b11"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 5,
+      "seed": 2365251136,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "be1e0569ba6486903b10df02efab8541ff21a5512459dd1b22790b8c48186b11"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 5,
+      "seed": 2365251136,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "be1e0569ba6486903b10df02efab8541ff21a5512459dd1b22790b8c48186b11"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 6,
+      "seed": 2933134897,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "bb4213fc1c4bcfdfa4fb215ccbd41792808386216f2854357a7ed5a54e19092a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 6,
+      "seed": 2933134897,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "bb4213fc1c4bcfdfa4fb215ccbd41792808386216f2854357a7ed5a54e19092a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 6,
+      "seed": 2933134897,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "bb4213fc1c4bcfdfa4fb215ccbd41792808386216f2854357a7ed5a54e19092a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 6,
+      "seed": 2933134897,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "bb4213fc1c4bcfdfa4fb215ccbd41792808386216f2854357a7ed5a54e19092a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 6,
+      "seed": 2933134897,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "bb4213fc1c4bcfdfa4fb215ccbd41792808386216f2854357a7ed5a54e19092a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 7,
+      "seed": 674668040,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "4f9ebcc5a4eae62ec074deeefee989d7345cd97777f5d81e34953dc0e8fc474c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 7,
+      "seed": 674668040,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "4f9ebcc5a4eae62ec074deeefee989d7345cd97777f5d81e34953dc0e8fc474c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 7,
+      "seed": 674668040,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "4f9ebcc5a4eae62ec074deeefee989d7345cd97777f5d81e34953dc0e8fc474c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 7,
+      "seed": 674668040,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "4f9ebcc5a4eae62ec074deeefee989d7345cd97777f5d81e34953dc0e8fc474c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 7,
+      "seed": 674668040,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "4f9ebcc5a4eae62ec074deeefee989d7345cd97777f5d81e34953dc0e8fc474c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 8,
+      "seed": 1812012605,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "f0d14f69507a583e5d3c819e1ed1aaa2d8fa132a79a133fd9b68ed6429cc6fa8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 8,
+      "seed": 1812012605,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "f0d14f69507a583e5d3c819e1ed1aaa2d8fa132a79a133fd9b68ed6429cc6fa8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 8,
+      "seed": 1812012605,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "f0d14f69507a583e5d3c819e1ed1aaa2d8fa132a79a133fd9b68ed6429cc6fa8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 8,
+      "seed": 1812012605,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "f0d14f69507a583e5d3c819e1ed1aaa2d8fa132a79a133fd9b68ed6429cc6fa8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 8,
+      "seed": 1812012605,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "f0d14f69507a583e5d3c819e1ed1aaa2d8fa132a79a133fd9b68ed6429cc6fa8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 9,
+      "seed": 3446146341,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "3fcb9789fc064c4e4664bf346aeed6e9cc1a6eeff5c05fcc25b3f505b60fc006"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 9,
+      "seed": 3446146341,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "3fcb9789fc064c4e4664bf346aeed6e9cc1a6eeff5c05fcc25b3f505b60fc006"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 9,
+      "seed": 3446146341,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "3fcb9789fc064c4e4664bf346aeed6e9cc1a6eeff5c05fcc25b3f505b60fc006"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 9,
+      "seed": 3446146341,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "3fcb9789fc064c4e4664bf346aeed6e9cc1a6eeff5c05fcc25b3f505b60fc006"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 9,
+      "seed": 3446146341,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "3fcb9789fc064c4e4664bf346aeed6e9cc1a6eeff5c05fcc25b3f505b60fc006"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    }
+  ]
+}

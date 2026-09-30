@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode, type MouseEventHandler } from 'react';
 import { getCardArt } from '../card-art-registry.js';
 import { getCardDefinition, getSuit } from '../card-face-data.js';
 import type { GameStore } from './game-store.js';
@@ -92,13 +92,14 @@ export function splitIdentity(identity: string): { rank: string; suit: string } 
   return { rank: identity.slice(0, -1), suit: last };
 }
 
-export function CardFace({ card, size = 'row', selected = false, highlighted = false, availableCount, onClick, purpose = 'Inspect', disabled = false, scuttleReady = false, scuttleTarget = false, scuttleInvalid = false }: {
+export function CardFace({ card, size = 'row', variant, selected = false, highlighted = false, availableCount, onClick, purpose = 'Inspect', disabled = false, scuttleReady = false, scuttleTarget = false, scuttleInvalid = false }: {
   card: TableCard;
   size?: 'row' | 'hand' | 'small';
+  variant?: 'point-row';
   selected?: boolean;
   highlighted?: boolean;
   availableCount?: number;
-  onClick?: () => void;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   purpose?: string;
   disabled?: boolean;
   scuttleReady?: boolean;
@@ -111,7 +112,7 @@ export function CardFace({ card, size = 'row', selected = false, highlighted = f
     '--astra-card-accent': suit?.accent ?? '#a0b8c4',
     '--astra-art-position': art ? `${art.boardPosition.x * 100}% ${art.boardPosition.y * 100}%` : '50% 50%',
   } as CSSProperties;
-  const className = `astra-card astra-card--${size}${selected ? ' is-selected' : ''}${highlighted ? ' is-highlighted' : ''}${!identity ? ' is-concealed' : ''}${scuttleReady ? ' is-scuttle-ready' : ''}${scuttleTarget ? ' is-scuttle-target' : ''}${scuttleInvalid ? ' is-scuttle-invalid' : ''}`;
+  const className = `astra-card astra-card--${size}${variant === 'point-row' ? ' hc-point-card' : ''}${selected ? ' is-selected' : ''}${highlighted ? ' is-highlighted' : ''}${!identity ? ' is-concealed' : ''}${scuttleReady ? ' is-scuttle-ready' : ''}${scuttleTarget ? ' is-scuttle-target' : ''}${scuttleInvalid ? ' is-scuttle-invalid' : ''}`;
   const accessibleLabel = [displayName, identity && identity !== displayName ? identity : '', ...card.markers, availableCount !== undefined ? `${availableCount} offered actions` : ''].filter(Boolean).join('. ');
   const identityParts = identity ? splitIdentity(identity) : null;
   const identityNode = identityParts
@@ -184,11 +185,12 @@ export function CardLane({ title, owner, cards, selectedId, sourceIds = [], targ
   );
 }
 
-export function PlayerBanner({ player, opponent = false, active = false, priority = false }: {
+export function PlayerBanner({ player, opponent = false, active = false, priority = false, hideHandBacks = false }: {
   player: TablePlayer;
   opponent?: boolean;
   active?: boolean;
   priority?: boolean;
+  hideHandBacks?: boolean;
 }) {
   const progressMax = Number.isFinite(player.goal) && player.goal > 0 ? player.goal : 1;
   const progressValue = Math.max(0, Math.min(progressMax, Number.isFinite(player.score) ? player.score : 0));
@@ -201,7 +203,7 @@ export function PlayerBanner({ player, opponent = false, active = false, priorit
       </div>
       <div className="astra-player-presence">
         {priority && <Badge tone="cyan">Priority</Badge>}
-        {opponent && <span className="astra-hand-backs" aria-hidden="true">{Array.from({ length: Math.min(7, Math.max(0, player.handCount)) }, (_, index) => <i key={index} />)}</span>}
+        {opponent && !hideHandBacks && <span className="astra-hand-backs" aria-hidden="true">{Array.from({ length: Math.min(7, Math.max(0, player.handCount)) }, (_, index) => <i key={index} />)}</span>}
       </div>
       <div className="astra-score">
         <span className="astra-score-label">Secured points</span>

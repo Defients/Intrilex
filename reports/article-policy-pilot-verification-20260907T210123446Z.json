@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "createdAt": "2026-09-07T21:01:23.436Z",
+  "command": "node reports/article-policy-pilot-verify-20260907.mjs",
+  "verifierScriptSha256": "d8295cba7a78d87e47e7dcd854e2814109502b9c1c573788324875bcafdcd778",
+  "primaryMatches": 320,
+  "mirrorMatches": 28,
+  "completeSameSeedABBAClusters": 160,
+  "primarySeedsPerPair": 16,
+  "distinctPrimarySeeds": 16,
+  "decodedDecisions": 8788,
+  "totalCommands": 30012,
+  "totalTurns": 3044,
+  "artifactHashesVerified": 395,
+  "inputFilesVerified": 430,
+  "originalAndFinalInputTreeSha256": "86b41e1cc47fe4882250584bd28eda8b9e256004996d1dc9458d63d29f978ae2",
+  "notes": [
+    "No extra games run.",
+    "Verification checks recorded pairing/configuration, every retained study decision log hash/count, all artifact hashes, and unchanged local input files.",
+    "Does not certify every game by replay or compare TypeScript emission."
+  ]
+}

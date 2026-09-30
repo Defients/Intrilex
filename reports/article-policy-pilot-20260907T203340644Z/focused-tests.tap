@@ -1,0 +1,275 @@
+TAP version 13
+# Subtest: CORE_POLICY_CATALOG contains all 5 baseline policies
+ok 1 - CORE_POLICY_CATALOG contains all 5 baseline policies
+  ---
+  duration_ms: 7.5383
+  ...
+# Subtest: CORE_POLICY_BY_ID maps policy IDs to definitions
+ok 2 - CORE_POLICY_BY_ID maps policy IDs to definitions
+  ---
+  duration_ms: 1.7589
+  ...
+# Subtest: RANDOM_LEGAL policy selects from legal actions
+ok 3 - RANDOM_LEGAL policy selects from legal actions
+  ---
+  duration_ms: 77.2644
+  ...
+# Subtest: VARIANT_REGISTRY_SCHEMA_VERSION is "1.0.0"
+ok 4 - VARIANT_REGISTRY_SCHEMA_VERSION is "1.0.0"
+  ---
+  duration_ms: 2.0673
+  ...
+# Subtest: ALL_CORE_PROFILES contains advanced and unrestricted profile IDs
+ok 5 - ALL_CORE_PROFILES contains advanced and unrestricted profile IDs
+  ---
+  duration_ms: 1.811
+  ...
+# Subtest: ENTITY_TIER has 5 tiers
+ok 6 - ENTITY_TIER has 5 tiers
+  ---
+  duration_ms: 0.8284
+  ...
+# Subtest: VARIANT_ELIGIBLE_RANKS excludes jokers (13 ranks A–K)
+ok 7 - VARIANT_ELIGIBLE_RANKS excludes jokers (13 ranks A–K)
+  ---
+  duration_ms: 0.3365
+  ...
+# Subtest: entitiesForRank returns rank overall + normal + spade for suited ranks
+ok 8 - entitiesForRank returns rank overall + normal + spade for suited ranks
+  ---
+  duration_ms: 0.5695
+  ...
+# Subtest: entitiesForRank for jokers returns only rank overall
+ok 9 - entitiesForRank for jokers returns only rank overall
+  ---
+  duration_ms: 0.2403
+  ...
+# Subtest: allVariantEntities returns a non-empty array covering all 15 ranks
+ok 10 - allVariantEntities returns a non-empty array covering all 15 ranks
+  ---
+  duration_ms: 0.7595
+  ...
+# Subtest: allVariantKeys returns string array matching allVariantEntities
+ok 11 - allVariantKeys returns string array matching allVariantEntities
+  ---
+  duration_ms: 1.6534
+  ...
+# Subtest: hasSpadeVariant returns true for A–K and false for jokers
+ok 12 - hasSpadeVariant returns true for A–K and false for jokers
+  ---
+  duration_ms: 3.8623
+  ...
+# Subtest: resolveSuperEffect returns effect descriptor for known super action
+ok 13 - resolveSuperEffect returns effect descriptor for known super action
+  ---
+  duration_ms: 1.0552
+  ...
+# Subtest: resolveSuperEffect returns null for non-super action
+ok 14 - resolveSuperEffect returns null for non-super action
+  ---
+  duration_ms: 0.5093
+  ...
+# Subtest: classifyPlayForm identifies super plays
+ok 15 - classifyPlayForm identifies super plays
+  ---
+  duration_ms: 0.451
+  ...
+# Subtest: classifyPlayForm identifies ultra plays
+ok 16 - classifyPlayForm identifies ultra plays
+  ---
+  duration_ms: 1.3475
+  ...
+# Subtest: classifyPlayForm identifies score and swap plays
+ok 17 - classifyPlayForm identifies score and swap plays
+  ---
+  duration_ms: 2.3203
+  ...
+# Subtest: classifyPlayForm returns "other" for unknown forms
+ok 18 - classifyPlayForm returns "other" for unknown forms
+  ---
+  duration_ms: 0.9995
+  ...
+# Subtest: attributeRankAction returns not-observable for no source cards
+ok 19 - attributeRankAction returns not-observable for no source cards
+  ---
+  duration_ms: 2.5316
+  ...
+# Subtest: attributeRankAction returns exact for single-rank source
+ok 20 - attributeRankAction returns exact for single-rank source
+  ---
+  duration_ms: 0.988
+  ...
+# Subtest: attributeRankAction returns fractional for cross-rank source
+ok 21 - attributeRankAction returns fractional for cross-rank source
+  ---
+  duration_ms: 0.5589
+  ...
+# Subtest: attributeRankAction returns generated-origin for generated play form
+ok 22 - attributeRankAction returns generated-origin for generated play form
+  ---
+  duration_ms: 0.1834
+  ...
+# Subtest: attributeRankAction returns not-observable for hidden identities
+ok 23 - attributeRankAction returns not-observable for hidden identities
+  ---
+  duration_ms: 0.1805
+  ...
+# Subtest: POLICY_CATALOG is a non-empty frozen array
+ok 24 - POLICY_CATALOG is a non-empty frozen array
+  ---
+  duration_ms: 0.117
+  ...
+# Subtest: POLICY_BY_ID maps every catalog entry by policyId
+ok 25 - POLICY_BY_ID maps every catalog entry by policyId
+  ---
+  duration_ms: 0.1574
+  ...
+# Subtest: POLICY_BY_ID is frozen
+ok 26 - POLICY_BY_ID is frozen
+  ---
+  duration_ms: 0.1086
+  ...
+# Subtest: engine exposes bounded Advanced Core and retains complete First Contact
+ok 27 - engine exposes bounded Advanced Core and retains complete First Contact
+  ---
+  duration_ms: 5.0624
+  ...
+# Subtest: Core decision frame exposes semantic actions but not raw command vault
+ok 28 - Core decision frame exposes semantic actions but not raw command vault
+  ---
+  duration_ms: 221.1037
+  ...
+# Subtest: strict Core policy view preserves hidden information and exposes authorized Core systems
+ok 29 - strict Core policy view preserves hidden information and exposes authorized Core systems
+  ---
+  duration_ms: 10.8263
+  ...
+# Subtest: five policies remain deterministic and behaviorally distinct
+ok 30 - five policies remain deterministic and behaviorally distinct
+  ---
+  duration_ms: 21.5503
+  ...
+# Subtest: selected Advanced Core policy matches terminate canonically and exercise advanced authority
+ok 31 - selected Advanced Core policy matches terminate canonically and exercise advanced authority
+  ---
+  duration_ms: 15453.694
+  ...
+# Subtest: bounded campaign result hash is independent of worker count
+ok 32 - bounded campaign result hash is independent of worker count
+  ---
+  duration_ms: 24923.022
+  ...
+# Subtest: capability report supports bounded Advanced Core without claiming complete Core
+ok 33 - capability report supports bounded Advanced Core without claiming complete Core
+  ---
+  duration_ms: 8.1976
+  ...
+# Subtest: HYBRIX repeat: two identical runs produce identical first-decision envelopes
+ok 34 - HYBRIX repeat: two identical runs produce identical first-decision envelopes
+  ---
+  duration_ms: 2891.3586
+  ...
+# Subtest: HYBRIX repeat: two identical runs produce identical match result hashes
+ok 35 - HYBRIX repeat: two identical runs produce identical match result hashes
+  ---
+  duration_ms: 3418.2945
+  ...
+# Subtest: HYBRIX repeat: two identical runs produce identical canonical result hashes
+ok 36 - HYBRIX repeat: two identical runs produce identical canonical result hashes
+  ---
+  duration_ms: 2820.313
+  ...
+# Subtest: HYBRIX interleave: running match A between two runs of match B does not change B
+ok 37 - HYBRIX interleave: running match A between two runs of match B does not change B
+  ---
+  duration_ms: 5678.1948
+  ...
+# Subtest: HYBRIX interleave: different opponents produce different match outcomes
+ok 38 - HYBRIX interleave: different opponents produce different match outcomes
+  ---
+  duration_ms: 4000.4043
+  ...
+# Subtest: HYBRIX worker parity: single-worker and multi-worker produce identical results
+ok 39 - HYBRIX worker parity: single-worker and multi-worker produce identical results
+  ---
+  duration_ms: 3134.5499
+  ...
+# Subtest: HYBRIX self-play: both HYBRIX agents produce independent traces
+ok 40 - HYBRIX self-play: both HYBRIX agents produce independent traces
+  ---
+  duration_ms: 2975.5408
+  ...
+# Subtest: HYBRIX trace provenance: decision traces carry hybrixTrace evidence from agent
+ok 41 - HYBRIX trace provenance: decision traces carry hybrixTrace evidence from agent
+  ---
+  duration_ms: 2549.6294
+  ...
+# Subtest: HYBRIX trace provenance: hybrixTrace contains expected agent evidence fields
+ok 42 - HYBRIX trace provenance: hybrixTrace contains expected agent evidence fields
+  ---
+  duration_ms: 2642.8309
+  ...
+# Subtest: HYBRIX determinism: match result hash is stable across 8 consecutive runs
+ok 43 - HYBRIX determinism: match result hash is stable across 8 consecutive runs
+  ---
+  duration_ms: 12911.9266
+  ...
+# Subtest: createScoringWeights returns defaults when no overrides given
+ok 44 - createScoringWeights returns defaults when no overrides given
+  ---
+  duration_ms: 7.7366
+  ...
+# Subtest: createScoringWeights applies top-level overrides
+ok 45 - createScoringWeights applies top-level overrides
+  ---
+  duration_ms: 0.6507
+  ...
+# Subtest: createScoringWeights deep-merges nested objects
+ok 46 - createScoringWeights deep-merges nested objects
+  ---
+  duration_ms: 2.198
+  ...
+# Subtest: scoringWeightsHash is deterministic
+ok 47 - scoringWeightsHash is deterministic
+  ---
+  duration_ms: 0.8597
+  ...
+# Subtest: scoringWeightsHash differs for different weights
+ok 48 - scoringWeightsHash differs for different weights
+  ---
+  duration_ms: 0.6893
+  ...
+# Subtest: sensitivity: perturbing scuttle targetMultiplier changes scuttle scores
+ok 49 - sensitivity: perturbing scuttle targetMultiplier changes scuttle scores
+  ---
+  duration_ms: 2.556
+  ...
+# Subtest: sensitivity: perturbing phase weight changes phase action score
+ok 50 - sensitivity: perturbing phase weight changes phase action score
+  ---
+  duration_ms: 0.7886
+  ...
+# Subtest: sensitivity: perturbing exhaustedPass weight changes exhausted-pass score
+ok 51 - sensitivity: perturbing exhaustedPass weight changes exhausted-pass score
+  ---
+  duration_ms: 0.7453
+  ...
+# Subtest: sensitivity: rank order changes when weights shift
+ok 52 - sensitivity: rank order changes when weights shift
+  ---
+  duration_ms: 44.4569
+  ...
+# Subtest: sensitivity: ±10% perturbation of all multipliers keeps ranking stable (robustness)
+ok 53 - sensitivity: ±10% perturbation of all multipliers keeps ranking stable (robustness)
+  ---
+  duration_ms: 2.6422
+  ...
+1..53
+# tests 53
+# suites 0
+# pass 53
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 45817.944

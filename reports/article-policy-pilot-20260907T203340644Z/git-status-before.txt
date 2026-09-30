@@ -1,0 +1,494 @@
+ M .gitignore
+ M apps/lab-web/src/app.js
+ M apps/lab-web/src/autonomy-runtime.js
+ M apps/lab-web/src/brain/brain-controller.js
+ M apps/lab-web/src/brain/brain-fallback.js
+ M apps/lab-web/src/css/brain.css
+ M apps/lab-web/src/css/feature-components.css
+ M apps/lab-web/src/css/landing-mobile.css
+ M apps/lab-web/src/css/landing-revamp.css
+ M apps/lab-web/src/css/rules-illustrated.css
+ M apps/lab-web/src/play/academy/academy-renderer.mjs
+ M apps/lab-web/src/play/ai-personality.js
+ M apps/lab-web/src/play/board-events.js
+ M apps/lab-web/src/play/network/network-protocol-client.mjs
+ M apps/lab-web/src/play/network/network-session.mjs
+ M apps/lab-web/src/play/play-app.js
+ M apps/lab-web/src/play/play-controller.js
+ M apps/lab-web/src/play/play-state.js
+ M apps/lab-web/src/play/play-v3.css
+ M apps/lab-web/src/play/puzzle/puzzle-app.mjs
+ M apps/lab-web/src/play/ranked-duel-hub.mjs
+ M apps/lab-web/src/play/ranked-duel-renderer.mjs
+ M apps/lab-web/src/play/ranked-duel-terminal.mjs
+ M apps/lab-web/src/play/ranked-duel-viewmodel.mjs
+ M apps/lab-web/src/play/ranked-duel.css
+ M apps/lab-web/src/router.js
+ M apps/lab-web/src/rulebook-renderer.js
+ M apps/lab-web/src/state.js
+ M apps/lab-web/src/styles.css
+ M apps/lab-web/src/workspaces/card-reference.js
+ M apps/match-server/src/handlers/match-handlers.mjs
+ M apps/match-server/src/server.mjs
+ M config/lint-baseline.json
+ M config/release-identity.json
+ D docs/ROADMAP.md
+ M eslint.config.mjs
+ M neocities-deploy/BUNDLE_MANIFEST.json
+ M neocities-deploy/analytics-ai/browser-controller.js
+ M neocities-deploy/analytics-ai/intelligence-panel.js
+ M neocities-deploy/analytics-ai/settings.js
+ D neocities-deploy/app.75c53031ef21.js
+ M neocities-deploy/app.js
+ M neocities-deploy/brain/brain-controller.js
+ M neocities-deploy/brain/brain-data.js
+ M neocities-deploy/brain/brain-edges.js
+ M neocities-deploy/brain/brain-interaction.js
+ M neocities-deploy/brain/brain-nodes.js
+ M neocities-deploy/brain/brain-ui.js
+ M neocities-deploy/chunk-account-store-57BQEAI3.js
+ M neocities-deploy/chunk-achievement-runtime-FF6H5T5S.js
+ M neocities-deploy/chunk-achievement-ui-6IPXTQVU.js
+ M neocities-deploy/chunk-auth-controller-23LJKJJU.js
+ M neocities-deploy/chunk-autonomy-runtime-AFT7Q6BU.js
+ M neocities-deploy/chunk-browser-analytics-O5W6OYKF.js
+ M neocities-deploy/chunk-browser-entry-CPEQPV7I.js
+ M neocities-deploy/chunk-browser-entry-YD43H4R7.js
+ M neocities-deploy/chunk-chunk-4AOKWQKU.js
+ M neocities-deploy/chunk-chunk-5SRELWZH.js
+ M neocities-deploy/chunk-chunk-6HE3POHC.js
+ M neocities-deploy/chunk-chunk-DMAGHK2T.js
+ M neocities-deploy/chunk-chunk-GFGWOZYF.js
+ M neocities-deploy/chunk-chunk-ICAMS46B.js
+ M neocities-deploy/chunk-chunk-IIGPCKAX.js
+ M neocities-deploy/chunk-chunk-JTU5OSEK.js
+ M neocities-deploy/chunk-chunk-LGY775D2.js
+ M neocities-deploy/chunk-chunk-O4VMTXHJ.js
+ M neocities-deploy/chunk-chunk-OEVUVOKV.js
+ M neocities-deploy/chunk-chunk-P5MDGWOG.js
+ M neocities-deploy/chunk-chunk-PXF3DDKT.js
+ M neocities-deploy/chunk-chunk-SOZ76MXY.js
+ M neocities-deploy/chunk-chunk-TZCDKDCW.js
+ M neocities-deploy/chunk-chunk-YVTH6MUU.js
+ M neocities-deploy/chunk-haptics-YP22QC3C.js
+ M neocities-deploy/chunk-match-server-config-HEDF7JVV.js
+ M neocities-deploy/chunk-migration-controller-LYORP4OC.js
+ M neocities-deploy/chunk-network-protocol-client-4G54S7LA.js
+ M neocities-deploy/chunk-persistence-UDJGPF6U.js
+ M neocities-deploy/chunk-profile-data-6WL3ADYR.js
+ M neocities-deploy/chunk-rank-anatomy-workspace-UXW365NQ.js
+ M neocities-deploy/chunk-ranking-system-overlay-DDBBPKRJ.js
+ M neocities-deploy/chunk-relationships-data-G6NFSCAZ.js
+ M neocities-deploy/chunk-replay-branching-SPNIDQXO.js
+ M neocities-deploy/chunk-replay-frames-4BMB2BC3.js
+ M neocities-deploy/chunk-replay-library-ZK3J4UI7.js
+ M neocities-deploy/chunk-save-integrity-IYGCMTKE.js
+ M neocities-deploy/chunk-state-EUKCZVWB.js
+ M neocities-deploy/css/brain.css
+ M neocities-deploy/css/feature-components.css
+ M neocities-deploy/css/rules-illustrated.css
+ M neocities-deploy/engine/core-authority.js
+ M neocities-deploy/engine/core-autonomy.js
+ M neocities-deploy/hybrix/agent.js
+ M neocities-deploy/hybrix/browser-policy-sdk.js
+ M neocities-deploy/hybrix/browser-shared.js
+ M neocities-deploy/hybrix/cognition.js
+ M neocities-deploy/hybrix/perception.js
+ M neocities-deploy/hybrix/personality.js
+ M neocities-deploy/hybrix/policy-adapter.js
+ M neocities-deploy/index.html
+ M neocities-deploy/play/achievements/achievement-presenter.js
+ M neocities-deploy/play/achievements/achievement-runtime.js
+ M neocities-deploy/play/achievements/achievement-ui.js
+ M neocities-deploy/play/authority/legal-action-adapter.js
+ M neocities-deploy/play/authority/visibility-projection.js
+ M neocities-deploy/play/board-events.js
+ M neocities-deploy/play/intelligence/action-explanation.js
+ M neocities-deploy/play/network/account-store.js
+ M neocities-deploy/play/network/auth-controller.js
+ M neocities-deploy/play/network/migration-controller.js
+ M neocities-deploy/play/network/supabase-client.js
+ M neocities-deploy/play/orchestration/declaration-flow.js
+ M neocities-deploy/play/persistence.js
+ M neocities-deploy/play/play-app.js
+ M neocities-deploy/play/play-card-component.js
+ M neocities-deploy/play/play-controller.js
+ M neocities-deploy/play/play-sound.js
+ M neocities-deploy/play/play-state.js
+ M neocities-deploy/play/players/players-data.js
+ M neocities-deploy/play/players/recent-opponents-data.js
+ M neocities-deploy/play/players/relationships-data.js
+ M neocities-deploy/play/profile/profile-data.js
+ M neocities-deploy/play/rank/rank-glyph.js
+ M neocities-deploy/play/rank/ranking-system-overlay.js
+ M neocities-deploy/play/ranked-duel-hub.mjs
+ M neocities-deploy/play/ranked/leaderboard-data.js
+ M neocities-deploy/play/replay-library.js
+ M neocities-deploy/play/save-integrity.js
+ M neocities-deploy/replay-caster/browser-entry.js
+ D neocities-deploy/styles.9cce08a3fbdd.css
+ M neocities-deploy/workspaces/auth.js
+ M neocities-deploy/workspaces/branches.js
+ M neocities-deploy/workspaces/caster-workspace.js
+ M neocities-deploy/workspaces/diagnostics.js
+ M neocities-deploy/workspaces/evidence.js
+ M neocities-deploy/workspaces/human-tournaments.js
+ M neocities-deploy/workspaces/intelligence.js
+ M neocities-deploy/workspaces/leaderboard.js
+ M neocities-deploy/workspaces/meta-report.js
+ M neocities-deploy/workspaces/observatory.js
+ M neocities-deploy/workspaces/players.js
+ M neocities-deploy/workspaces/profile.js
+ M neocities-deploy/workspaces/ranks.js
+ M neocities-deploy/workspaces/release-notes.js
+ M neocities-deploy/workspaces/season-archive.js
+ M neocities-deploy/workspaces/settings.js
+ M neocities-deploy/workspaces/tournament.js
+ M package.json
+ M packages/decision-intelligence/src/teaching-moments.mjs
+ M packages/engine-adapter/src/adapter.mjs
+ M packages/match-authority/src/authoritative-match-session.mjs
+ M packages/match-authority/src/player-projection.mjs
+ M packages/network-protocol/src/protocol.mjs
+ M packages/network-protocol/src/validation.mjs
+ M pnpm-lock.yaml
+ M reports/self-audit.json
+ M reports/self-audit.quick.json
+ M sample-data/autonomy/decision-traces/M-01a5983455ae919f8a0b.json
+ M sample-data/autonomy/decision-traces/M-030616815bfed08a875f.json
+ M sample-data/autonomy/decision-traces/M-0fbb81ca3aeeda551d13.json
+ M sample-data/autonomy/decision-traces/M-116e5b92d1902f724f70.json
+ M sample-data/autonomy/decision-traces/M-1197243e3d684bf9b83d.json
+ M sample-data/autonomy/decision-traces/M-13a4ae5e72c9ed243842.json
+ M sample-data/autonomy/decision-traces/M-14103530f39e4c8fd523.json
+ M sample-data/autonomy/decision-traces/M-152dc2ebb7f84e8d1124.json
+ M sample-data/autonomy/decision-traces/M-162a3dd6e3f1dcc41083.json
+ M sample-data/autonomy/decision-traces/M-1b4ede32232a72df0a86.json
+ M sample-data/autonomy/decision-traces/M-1ea1d8ce019931620b14.json
+ M sample-data/autonomy/decision-traces/M-23b161f118906ca74279.json
+ M sample-data/autonomy/decision-traces/M-28d0b14f0f5d88c51a31.json
+ M sample-data/autonomy/decision-traces/M-2ed2f5a777fed1ed2bb2.json
+ M sample-data/autonomy/decision-traces/M-36cdf9aadecd635590c0.json
+ M sample-data/autonomy/decision-traces/M-3cb981c1175c545aa7bf.json
+ M sample-data/autonomy/decision-traces/M-4dbd281c5bbb2e29b64c.json
+ M sample-data/autonomy/decision-traces/M-56cb16e6cdcdf5dbd1a1.json
+ M sample-data/autonomy/decision-traces/M-5aad144e8c22f2c57840.json
+ M sample-data/autonomy/decision-traces/M-62d20c90d99ef0ffca09.json
+ M sample-data/autonomy/decision-traces/M-63a211056fedfa49a9a4.json
+ M sample-data/autonomy/decision-traces/M-63ffa5487eb8677b1b3e.json
+ M sample-data/autonomy/decision-traces/M-690e14c1ad1c3c20a4fe.json
+ M sample-data/autonomy/decision-traces/M-6eb96a20b1344ba12321.json
+ M sample-data/autonomy/decision-traces/M-6fde7fe703a4f13b5b61.json
+ M sample-data/autonomy/decision-traces/M-8d371b9bb7fea569d285.json
+ M sample-data/autonomy/decision-traces/M-941d10feb328a0f8bf3e.json
+ M sample-data/autonomy/decision-traces/M-946f016b3c900b654616.json
+ M sample-data/autonomy/decision-traces/M-94e7e26d6ee36b6e40bf.json
+ M sample-data/autonomy/decision-traces/M-9764f9a75800787b9cb7.json
+ M sample-data/autonomy/decision-traces/M-9802b9229c46aa107825.json
+ M sample-data/autonomy/decision-traces/M-9842c2873a237904997e.json
+ M sample-data/autonomy/decision-traces/M-9a56943fbd4791ff49d1.json
+ M sample-data/autonomy/decision-traces/M-a6002589304eda5d8923.json
+ M sample-data/autonomy/decision-traces/M-afdcc6f2781ba6f857b7.json
+ M sample-data/autonomy/decision-traces/M-b15f0ccdbc77e5d6ea16.json
+ M sample-data/autonomy/decision-traces/M-bc89088eea84e3c5dfa0.json
+ M sample-data/autonomy/decision-traces/M-c00e6419f4b77e47c82e.json
+ M sample-data/autonomy/decision-traces/M-c27e931b3ffd72a2bc10.json
+ M sample-data/autonomy/decision-traces/M-c37124f0bd32b32d2f71.json
+ M sample-data/autonomy/decision-traces/M-c3e39fc33a594c40202f.json
+ M sample-data/autonomy/decision-traces/M-cc027c6fff7bd178e037.json
+ M sample-data/autonomy/decision-traces/M-cdbb93aac376239f7748.json
+ M sample-data/autonomy/decision-traces/M-ce645ce7a5c5594556ee.json
+ M sample-data/autonomy/decision-traces/M-cf991a6fa1f6f6c7dacd.json
+ M sample-data/autonomy/decision-traces/M-d0bd4d4955859b96f1e3.json
+ M sample-data/autonomy/decision-traces/M-d854e1ad2e3c98faee9f.json
+ M sample-data/autonomy/decision-traces/M-dca045bdd34e77aba406.json
+ M sample-data/autonomy/decision-traces/M-dcc47c0a70b0e1ec0c2c.json
+ M sample-data/autonomy/decision-traces/M-dcc74be9d7b089f09fb7.json
+ M sample-data/autonomy/decision-traces/M-e32149ebf24466103ea9.json
+ M sample-data/autonomy/decision-traces/M-e8afd8ba50aa2cf5c2ef.json
+ M sample-data/autonomy/decision-traces/M-eb968361e3bdc82164ce.json
+ M sample-data/autonomy/decision-traces/M-ebc1b4121f20b128752f.json
+ M sample-data/autonomy/decision-traces/M-eea877acab1a61f410d4.json
+ M sample-data/autonomy/decision-traces/M-f23e0c2f7f0412abc92e.json
+ M sample-data/autonomy/decision-traces/M-f64ab908222f007aaf8d.json
+ M sample-data/autonomy/decision-traces/M-f6d290c5a5c388920148.json
+ M sample-data/autonomy/decision-traces/M-fbecf3ec38b4cc094d0e.json
+ M sample-data/autonomy/decision-traces/M-fd09f27fab6e7c7ca1fa.json
+ M sample-data/autonomy/decision-traces/M-fe2ff9f65c08231020eb.json
+ M sample-data/autonomy/lab-replay-index.json
+ M sample-data/autonomy/replays/authorized/M-01a5983455ae919f8a0b.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-030616815bfed08a875f.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-0fbb81ca3aeeda551d13.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-116e5b92d1902f724f70.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-1197243e3d684bf9b83d.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-13a4ae5e72c9ed243842.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-14103530f39e4c8fd523.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-152dc2ebb7f84e8d1124.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-162a3dd6e3f1dcc41083.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-1b4ede32232a72df0a86.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-1ea1d8ce019931620b14.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-23b161f118906ca74279.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-28d0b14f0f5d88c51a31.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-2ed2f5a777fed1ed2bb2.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-36cdf9aadecd635590c0.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-3cb981c1175c545aa7bf.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-4dbd281c5bbb2e29b64c.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-56cb16e6cdcdf5dbd1a1.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-5aad144e8c22f2c57840.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-62d20c90d99ef0ffca09.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-63a211056fedfa49a9a4.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-63ffa5487eb8677b1b3e.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-690e14c1ad1c3c20a4fe.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-6eb96a20b1344ba12321.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-6fde7fe703a4f13b5b61.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-8d371b9bb7fea569d285.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-941d10feb328a0f8bf3e.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-946f016b3c900b654616.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-94e7e26d6ee36b6e40bf.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-9764f9a75800787b9cb7.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-9802b9229c46aa107825.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-9842c2873a237904997e.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-9a56943fbd4791ff49d1.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-a6002589304eda5d8923.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-afdcc6f2781ba6f857b7.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-b15f0ccdbc77e5d6ea16.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-bc89088eea84e3c5dfa0.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-c00e6419f4b77e47c82e.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-c27e931b3ffd72a2bc10.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-c37124f0bd32b32d2f71.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-c3e39fc33a594c40202f.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-cc027c6fff7bd178e037.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-cdbb93aac376239f7748.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-ce645ce7a5c5594556ee.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-cf991a6fa1f6f6c7dacd.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-d0bd4d4955859b96f1e3.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-d854e1ad2e3c98faee9f.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-dca045bdd34e77aba406.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-dcc47c0a70b0e1ec0c2c.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-dcc74be9d7b089f09fb7.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-e32149ebf24466103ea9.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-e8afd8ba50aa2cf5c2ef.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-eb968361e3bdc82164ce.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-ebc1b4121f20b128752f.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-eea877acab1a61f410d4.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-f23e0c2f7f0412abc92e.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-f64ab908222f007aaf8d.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-f6d290c5a5c388920148.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-fbecf3ec38b4cc094d0e.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-fd09f27fab6e7c7ca1fa.authorized.replay.json
+ M sample-data/autonomy/replays/authorized/M-fe2ff9f65c08231020eb.authorized.replay.json
+ M sample-data/autonomy/replays/public/M-01a5983455ae919f8a0b.public.replay.json
+ M sample-data/autonomy/replays/public/M-030616815bfed08a875f.public.replay.json
+ M sample-data/autonomy/replays/public/M-0fbb81ca3aeeda551d13.public.replay.json
+ M sample-data/autonomy/replays/public/M-116e5b92d1902f724f70.public.replay.json
+ M sample-data/autonomy/replays/public/M-1197243e3d684bf9b83d.public.replay.json
+ M sample-data/autonomy/replays/public/M-13a4ae5e72c9ed243842.public.replay.json
+ M sample-data/autonomy/replays/public/M-14103530f39e4c8fd523.public.replay.json
+ M sample-data/autonomy/replays/public/M-152dc2ebb7f84e8d1124.public.replay.json
+ M sample-data/autonomy/replays/public/M-162a3dd6e3f1dcc41083.public.replay.json
+ M sample-data/autonomy/replays/public/M-1b4ede32232a72df0a86.public.replay.json
+ M sample-data/autonomy/replays/public/M-1ea1d8ce019931620b14.public.replay.json
+ M sample-data/autonomy/replays/public/M-23b161f118906ca74279.public.replay.json
+ M sample-data/autonomy/replays/public/M-28d0b14f0f5d88c51a31.public.replay.json
+ M sample-data/autonomy/replays/public/M-2ed2f5a777fed1ed2bb2.public.replay.json
+ M sample-data/autonomy/replays/public/M-36cdf9aadecd635590c0.public.replay.json
+ M sample-data/autonomy/replays/public/M-3cb981c1175c545aa7bf.public.replay.json
+ M sample-data/autonomy/replays/public/M-4dbd281c5bbb2e29b64c.public.replay.json
+ M sample-data/autonomy/replays/public/M-56cb16e6cdcdf5dbd1a1.public.replay.json
+ M sample-data/autonomy/replays/public/M-5aad144e8c22f2c57840.public.replay.json
+ M sample-data/autonomy/replays/public/M-62d20c90d99ef0ffca09.public.replay.json
+ M sample-data/autonomy/replays/public/M-63a211056fedfa49a9a4.public.replay.json
+ M sample-data/autonomy/replays/public/M-63ffa5487eb8677b1b3e.public.replay.json
+ M sample-data/autonomy/replays/public/M-690e14c1ad1c3c20a4fe.public.replay.json
+ M sample-data/autonomy/replays/public/M-6eb96a20b1344ba12321.public.replay.json
+ M sample-data/autonomy/replays/public/M-6fde7fe703a4f13b5b61.public.replay.json
+ M sample-data/autonomy/replays/public/M-8d371b9bb7fea569d285.public.replay.json
+ M sample-data/autonomy/replays/public/M-941d10feb328a0f8bf3e.public.replay.json
+ M sample-data/autonomy/replays/public/M-946f016b3c900b654616.public.replay.json
+ M sample-data/autonomy/replays/public/M-94e7e26d6ee36b6e40bf.public.replay.json
+ M sample-data/autonomy/replays/public/M-9764f9a75800787b9cb7.public.replay.json
+ M sample-data/autonomy/replays/public/M-9802b9229c46aa107825.public.replay.json
+ M sample-data/autonomy/replays/public/M-9842c2873a237904997e.public.replay.json
+ M sample-data/autonomy/replays/public/M-9a56943fbd4791ff49d1.public.replay.json
+ M sample-data/autonomy/replays/public/M-a6002589304eda5d8923.public.replay.json
+ M sample-data/autonomy/replays/public/M-afdcc6f2781ba6f857b7.public.replay.json
+ M sample-data/autonomy/replays/public/M-b15f0ccdbc77e5d6ea16.public.replay.json
+ M sample-data/autonomy/replays/public/M-bc89088eea84e3c5dfa0.public.replay.json
+ M sample-data/autonomy/replays/public/M-c00e6419f4b77e47c82e.public.replay.json
+ M sample-data/autonomy/replays/public/M-c27e931b3ffd72a2bc10.public.replay.json
+ M sample-data/autonomy/replays/public/M-c37124f0bd32b32d2f71.public.replay.json
+ M sample-data/autonomy/replays/public/M-c3e39fc33a594c40202f.public.replay.json
+ M sample-data/autonomy/replays/public/M-cc027c6fff7bd178e037.public.replay.json
+ M sample-data/autonomy/replays/public/M-cdbb93aac376239f7748.public.replay.json
+ M sample-data/autonomy/replays/public/M-ce645ce7a5c5594556ee.public.replay.json
+ M sample-data/autonomy/replays/public/M-cf991a6fa1f6f6c7dacd.public.replay.json
+ M sample-data/autonomy/replays/public/M-d0bd4d4955859b96f1e3.public.replay.json
+ M sample-data/autonomy/replays/public/M-d854e1ad2e3c98faee9f.public.replay.json
+ M sample-data/autonomy/replays/public/M-dca045bdd34e77aba406.public.replay.json
+ M sample-data/autonomy/replays/public/M-dcc47c0a70b0e1ec0c2c.public.replay.json
+ M sample-data/autonomy/replays/public/M-dcc74be9d7b089f09fb7.public.replay.json
+ M sample-data/autonomy/replays/public/M-e32149ebf24466103ea9.public.replay.json
+ M sample-data/autonomy/replays/public/M-e8afd8ba50aa2cf5c2ef.public.replay.json
+ M sample-data/autonomy/replays/public/M-eb968361e3bdc82164ce.public.replay.json
+ M sample-data/autonomy/replays/public/M-ebc1b4121f20b128752f.public.replay.json
+ M sample-data/autonomy/replays/public/M-eea877acab1a61f410d4.public.replay.json
+ M sample-data/autonomy/replays/public/M-f23e0c2f7f0412abc92e.public.replay.json
+ M sample-data/autonomy/replays/public/M-f64ab908222f007aaf8d.public.replay.json
+ M sample-data/autonomy/replays/public/M-f6d290c5a5c388920148.public.replay.json
+ M sample-data/autonomy/replays/public/M-fbecf3ec38b4cc094d0e.public.replay.json
+ M sample-data/autonomy/replays/public/M-fd09f27fab6e7c7ca1fa.public.replay.json
+ M sample-data/autonomy/replays/public/M-fe2ff9f65c08231020eb.public.replay.json
+ M sample-data/autonomy/retention-index.json
+ M sample-data/observatory/README.md
+ M sample-data/observatory/analytics.json
+ M sample-data/observatory/causal-edges.ndjson
+ M sample-data/observatory/decision-facts.ndjson
+ M sample-data/observatory/extract.json
+ M sample-data/observatory/extract.md
+ M sample-data/observatory/extract.test.json
+ M sample-data/observatory/extract.test.md
+ M sample-data/observatory/resolution-facts.ndjson
+ M sample-data/replay-index.json
+ M scripts/build.mjs
+ M scripts/bundle.mjs
+ M scripts/ci.mjs
+ M scripts/dev-server.mjs
+ M scripts/generate-self-audit.mjs
+ M test/grid-layout-invariants.test.mjs
+ M test/landing-page.test.mjs
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/dist/src/core-authority.d.ts
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/dist/src/core-authority.js
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/dist/src/core-authority.js.map
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/dist/src/core-autonomy.js
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/dist/src/core-autonomy.js.map
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/dist/src/core-response.js
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/dist/src/core-response.js.map
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/dist/src/types.d.ts
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-authority.ts
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-autonomy.ts
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-response.ts
+ M upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/types.ts
+?? .devin/
+?? apps/lab-web/src/brain/brain-2d.js
+?? apps/lab-web/src/client/
+?? apps/lab-web/src/css/forensic.css
+?? apps/lab-web/src/forensic/
+?? apps/lab-web/src/play/guided-exhibition/
+?? apps/lab-web/src/store-adapter.mjs
+?? neocities-deploy/app.26a2bd7c8cbd.js
+?? neocities-deploy/app.26a2bd7c8cbd.js.map
+?? neocities-deploy/app.6ebd56805af3.js.map
+?? neocities-deploy/app.e1443a7c3a9f.js.map
+?? neocities-deploy/chunk-account-store-YABKCDPC.js
+?? neocities-deploy/chunk-account-store-YABKCDPC.js.map
+?? neocities-deploy/chunk-achievement-runtime-BASICYLN.js
+?? neocities-deploy/chunk-achievement-runtime-BASICYLN.js.map
+?? neocities-deploy/chunk-achievement-ui-QJVQINBC.js
+?? neocities-deploy/chunk-achievement-ui-QJVQINBC.js.map
+?? neocities-deploy/chunk-advanced-card-rules-controller-M23JKDC3.js
+?? neocities-deploy/chunk-advanced-card-rules-controller-M23JKDC3.js.map
+?? neocities-deploy/chunk-auth-controller-4Q7MABYL.js
+?? neocities-deploy/chunk-auth-controller-4Q7MABYL.js.map
+?? neocities-deploy/chunk-autonomy-runtime-OH3CJZL3.js
+?? neocities-deploy/chunk-autonomy-runtime-OH3CJZL3.js.map
+?? neocities-deploy/chunk-brain-controller-47KBJCMI.js
+?? neocities-deploy/chunk-brain-controller-47KBJCMI.js.map
+?? neocities-deploy/chunk-brain-controller-FD6KSE2S.js
+?? neocities-deploy/chunk-brain-controller-FD6KSE2S.js.map
+?? neocities-deploy/chunk-brain-controller-LQBZOXME.js
+?? neocities-deploy/chunk-brain-controller-LQBZOXME.js.map
+?? neocities-deploy/chunk-browser-analytics-UWJ3ZSXN.js
+?? neocities-deploy/chunk-browser-analytics-UWJ3ZSXN.js.map
+?? neocities-deploy/chunk-browser-entry-VK2JKNGX.js
+?? neocities-deploy/chunk-browser-entry-VK2JKNGX.js.map
+?? neocities-deploy/chunk-chunk-26DC57WT.js
+?? neocities-deploy/chunk-chunk-26DC57WT.js.map
+?? neocities-deploy/chunk-chunk-2KYLX6EW.js
+?? neocities-deploy/chunk-chunk-2KYLX6EW.js.map
+?? neocities-deploy/chunk-chunk-3NO5TUMM.js
+?? neocities-deploy/chunk-chunk-3NO5TUMM.js.map
+?? neocities-deploy/chunk-chunk-4BUIBLDM.js
+?? neocities-deploy/chunk-chunk-4BUIBLDM.js.map
+?? neocities-deploy/chunk-chunk-4LVOF3CV.js
+?? neocities-deploy/chunk-chunk-4LVOF3CV.js.map
+?? neocities-deploy/chunk-chunk-BQ6BN2KL.js
+?? neocities-deploy/chunk-chunk-BQ6BN2KL.js.map
+?? neocities-deploy/chunk-chunk-DLXPERCE.js
+?? neocities-deploy/chunk-chunk-DLXPERCE.js.map
+?? neocities-deploy/chunk-chunk-GSSB3W6H.js
+?? neocities-deploy/chunk-chunk-GSSB3W6H.js.map
+?? neocities-deploy/chunk-chunk-HEXXTQUY.js
+?? neocities-deploy/chunk-chunk-HEXXTQUY.js.map
+?? neocities-deploy/chunk-chunk-HIGJM4IK.js
+?? neocities-deploy/chunk-chunk-HIGJM4IK.js.map
+?? neocities-deploy/chunk-chunk-HSRWCMXW.js
+?? neocities-deploy/chunk-chunk-HSRWCMXW.js.map
+?? neocities-deploy/chunk-chunk-INEVYYXI.js
+?? neocities-deploy/chunk-chunk-INEVYYXI.js.map
+?? neocities-deploy/chunk-chunk-KKK333DN.js
+?? neocities-deploy/chunk-chunk-KKK333DN.js.map
+?? neocities-deploy/chunk-chunk-M3TBIY44.js
+?? neocities-deploy/chunk-chunk-M3TBIY44.js.map
+?? neocities-deploy/chunk-chunk-NHWVI465.js
+?? neocities-deploy/chunk-chunk-NHWVI465.js.map
+?? neocities-deploy/chunk-chunk-SOA2LXCU.js
+?? neocities-deploy/chunk-chunk-SOA2LXCU.js.map
+?? neocities-deploy/chunk-chunk-TJXHBDTG.js
+?? neocities-deploy/chunk-chunk-TJXHBDTG.js.map
+?? neocities-deploy/chunk-chunk-UQLBGGVL.js
+?? neocities-deploy/chunk-chunk-UQLBGGVL.js.map
+?? neocities-deploy/chunk-chunk-UU2W5K3U.js
+?? neocities-deploy/chunk-chunk-UU2W5K3U.js.map
+?? neocities-deploy/chunk-chunk-VF35ZVH5.js
+?? neocities-deploy/chunk-chunk-VF35ZVH5.js.map
+?? neocities-deploy/chunk-chunk-WNZNJTPY.js
+?? neocities-deploy/chunk-chunk-WNZNJTPY.js.map
+?? neocities-deploy/chunk-chunk-WWMKMEEJ.js
+?? neocities-deploy/chunk-chunk-WWMKMEEJ.js.map
+?? neocities-deploy/chunk-data-loader-LGOWP6WG.js
+?? neocities-deploy/chunk-data-loader-LGOWP6WG.js.map
+?? neocities-deploy/chunk-data-loader-NAMMHRGA.js
+?? neocities-deploy/chunk-data-loader-NAMMHRGA.js.map
+?? neocities-deploy/chunk-data-loader-U4SSQYSU.js
+?? neocities-deploy/chunk-data-loader-U4SSQYSU.js.map
+?? neocities-deploy/chunk-migration-controller-UI7QZGN7.js
+?? neocities-deploy/chunk-migration-controller-UI7QZGN7.js.map
+?? neocities-deploy/chunk-persistence-O773FQN3.js
+?? neocities-deploy/chunk-persistence-O773FQN3.js.map
+?? neocities-deploy/chunk-play-app-IUOPDOKB.js
+?? neocities-deploy/chunk-play-app-IUOPDOKB.js.map
+?? neocities-deploy/chunk-play-app-KWJDZIC3.js
+?? neocities-deploy/chunk-play-app-KWJDZIC3.js.map
+?? neocities-deploy/chunk-play-app-S6VKYHNR.js
+?? neocities-deploy/chunk-play-app-S6VKYHNR.js.map
+?? neocities-deploy/chunk-puzzle-app-223NEU25.js
+?? neocities-deploy/chunk-puzzle-app-223NEU25.js.map
+?? neocities-deploy/chunk-puzzle-app-MXC5XPAZ.js
+?? neocities-deploy/chunk-puzzle-app-MXC5XPAZ.js.map
+?? neocities-deploy/chunk-relationships-data-TYFHCI6H.js
+?? neocities-deploy/chunk-relationships-data-TYFHCI6H.js.map
+?? neocities-deploy/chunk-replay-frames-HDNVZSCS.js
+?? neocities-deploy/chunk-replay-frames-HDNVZSCS.js.map
+?? neocities-deploy/chunk-replay-library-KIPS7QU3.js
+?? neocities-deploy/chunk-replay-library-KIPS7QU3.js.map
+?? neocities-deploy/chunk-save-integrity-J2ZA64BX.js
+?? neocities-deploy/chunk-save-integrity-J2ZA64BX.js.map
+?? neocities-deploy/chunk-state-CAAB5CQH.js
+?? neocities-deploy/chunk-state-CAAB5CQH.js.map
+?? neocities-deploy/chunk-state-G752KUI5.js
+?? neocities-deploy/chunk-state-G752KUI5.js.map
+?? neocities-deploy/play/guided-exhibition/
+?? neocities-deploy/styles.b6a0f6fa7489.css
+?? neocities-deploy/workspaces/card-reference.js
+?? poop.md
+?? reports/article-policy-pilot-20260907.mjs
+?? reports/article-policy-pilot-20260907T203340644Z/
+?? test/architectural-consolidation.test.mjs
+?? test/astra-client.test.mjs
+?? test/astra-model.test.mjs
+?? test/forensic-replay.test.mjs
+?? test/guided-exhibition.test.mjs
+?? test/phase2-player-experience.test.mjs
+?? test/trace-teaching.test.mjs
+?? test/v2.5-match-ui.test.mjs
+?? upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/scripts/__pycache__/

@@ -17,7 +17,6 @@ import { parseCardIdentity } from './play-card-component.js';
 import { getSuitParticleColor } from './play-particles.js';
 import { buildActionGroups, resolveAction } from './action-presentation.mjs';
 import { setGameplaySkin, GAMEPLAY_SKINS } from './gameplay-skin.js';
-import { setBoardPresentation } from '../client/board-preference.js';
 
 // Lazy-loaded module reference for the group button handler
 const _actionPresentationModule = { buildActionGroups, resolveAction };
@@ -961,12 +960,6 @@ export function bindBoardEvents(container, callbacks) {
           state.inspectorCardId = state.selectedSourceCardId;
           state.inspectorFaceView = 'board';
         }
-        renderActiveMatch(container);
-      } else if (action === 'toggle-board') {
-        // Switch to the Astra (tactical) React board.
-        // The board preference is persisted; renderActiveMatch will
-        // dynamically import and mount the React board on next render.
-        setBoardPresentation('tactical');
         renderActiveMatch(container);
       } else if (action === 'toggle-chat') {
         state.rightRailTab = 'chat';

@@ -353,10 +353,10 @@ test('Advanced Card Rules: board-events wires the Advanced Rules button + Shift+
   assert.ok(src.includes('openAdvancedCardRules'), 'board-events must call openAdvancedCardRules');
 });
 
-test('Advanced Card Rules: inspector renders an Advanced Rules affordance', () => {
-  const src = readFileSync(join(root, 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
-  assert.ok(src.includes('data-inspector-advanced-rules'), 'inspector must render an Advanced Rules button');
-});
+// Note: The inspector Advanced Rules affordance (data-inspector-advanced-rules)
+// was rendered by the classic active-board renderer. Active match play is now
+// rendered by the Astra React board (client/mount.tsx + game-table.tsx).
+// The board-events.js wiring for the Advanced Rules button is tested above.
 
 // ═══════════════════════════════════════════════════════════════
 // 6. Coverage audit (directive §21)

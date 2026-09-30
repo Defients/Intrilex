@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "checkJs": false,
+    "strict": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node", "react", "react-dom"],
+    "allowImportingTsExtensions": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["../apps/lab-web/src/client/**/*.ts", "../apps/lab-web/src/client/**/*.tsx"],
+  "exclude": ["../node_modules", "../apps/lab-web/dist"]
+}

@@ -1,0 +1,526 @@
+{
+  "generatedAt": "2026-09-07T20:53:37.199Z",
+  "system": "Intrilex",
+  "productVersion": "1.0.0",
+  "rulesVersion": "4.3.1",
+  "engineVersion": "4.2.6",
+  "profileId": "core-unrestricted-authority",
+  "nodeVersion": "v22.14.0",
+  "sourceHashes": {
+    "runtime/autonomy-engine-dist/src/core-authority.js": "40c2a5f9e79040b3842466cf293733559dad82c0c80245f7648271f9aba13c32",
+    "runtime/autonomy-engine-dist/src/core-response.js": "0b4cc031ca26573bf8373a83c9781c442ab9be6da6bfb855dd38cb4d174f983c",
+    "runtime/autonomy-engine-dist/src/core-advanced.js": "471cfd69ed5c8400ab98af512b4f652329da876fe0876acf7322e74a3424e33e",
+    "runtime/autonomy-engine-dist/src/core-autonomy.js": "be23db645b94ea4df35320232d5e36473dafc46a6051fc53a779f0d4f0a24ca0",
+    "runtime/autonomy-engine-dist/src/ranks.js": "39854ae3d0473a4dafc76ba9e0af82876291958c9e61b633a315d9b2ddd0ffbd",
+    "docs/INTRILEX_v4.3.1_COMPLETE_PLAYER_RULEBOOK.md": "1cfbd837f763fc436f4317b9164b802f1ea8ff57e18060fd436d8608e9f0bcf8"
+  },
+  "interpretation": "Constructed-state diagnostics, not random match samples or balance win-rate evidence. Counter matrix probes exported class predicate, not full declaration legality.",
+  "cap": {
+    "name": "two accelerators in one Full Turn",
+    "seed": 81001,
+    "predeterminedPrefix": [
+      "10♥",
+      "J♣",
+      "J♦",
+      "7♣",
+      "8♣",
+      "2♣",
+      "2♦",
+      "2♠",
+      "3♣",
+      "3♦",
+      "4♣"
+    ],
+    "firstPlayer": "P1",
+    "responsePolicy": "decline every optional response",
+    "declarations": [
+      {
+        "ordinal": 1,
+        "family": "rank10",
+        "mode": "heart-tempo",
+        "usedBefore": 0,
+        "remainingBefore": 1
+      },
+      {
+        "ordinal": 2,
+        "family": "super",
+        "mode": "jack-tempo",
+        "usedBefore": 1,
+        "remainingBefore": 2
+      },
+      {
+        "ordinal": 3,
+        "family": "score",
+        "mode": "points",
+        "usedBefore": 2,
+        "remainingBefore": 2
+      },
+      {
+        "ordinal": 4,
+        "family": "score",
+        "mode": "points",
+        "usedBefore": 3,
+        "remainingBefore": 1
+      }
+    ],
+    "events": [
+      {
+        "id": "EV-000005",
+        "sequence": 5,
+        "commandId": "CORE-4-1-P1-phase-enter-action--",
+        "type": "CORE_ACTION_PHASE_ENTERED",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "miniTurnsRemaining": 1
+        },
+        "previousStateHash": "f1c2b3b430205c94db4def180ca59ed774a8d2ac064edec30305caa15cb453bb",
+        "stateHash": "f7b3d0b7da2832648e6303cc8ca3780ce219f83f3f5903206dbbf776f314067b"
+      },
+      {
+        "id": "EV-000006",
+        "sequence": 6,
+        "commandId": "CORE-5-1-P1-rank10-heart-tempo-CORE-001-",
+        "type": "CORE_ACTION_DECLARED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-effect-0",
+          "playerId": "P1",
+          "actionType": "play-for-effect",
+          "stackClass": "rank10",
+          "sourceCardIds": [
+            "CORE-001"
+          ],
+          "targetCardIds": []
+        },
+        "previousStateHash": "f7b3d0b7da2832648e6303cc8ca3780ce219f83f3f5903206dbbf776f314067b",
+        "stateHash": "9a27b7db126bf35c64bcdd5dd04d941335b975b18ad303ee36403c65531268d7"
+      },
+      {
+        "id": "EV-000013",
+        "sequence": 13,
+        "commandId": "CORE-12-1-P1-super-jack-tempo-CORE-002-CORE-003-",
+        "type": "CORE_ACTION_DECLARED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000012-P1-ROOT-play-for-effect-0",
+          "playerId": "P1",
+          "actionType": "play-for-effect",
+          "stackClass": "super",
+          "sourceCardIds": [
+            "CORE-002",
+            "CORE-003"
+          ],
+          "targetCardIds": []
+        },
+        "previousStateHash": "6566e07a3f3e6ef56c0188785ced91984a7a65d4d22be6384b12fb3ce186550f",
+        "stateHash": "3931a4776a9a6c8b7cbf5092a1d9270b14f7996bb1dc81e5d85552bd8a4cd62d"
+      },
+      {
+        "id": "EV-000020",
+        "sequence": 20,
+        "commandId": "CORE-19-1-P1-score-points-CORE-005-",
+        "type": "CORE_ACTION_DECLARED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000019-P1-ROOT-play-for-points-0",
+          "playerId": "P1",
+          "actionType": "play-for-points",
+          "stackClass": "points",
+          "sourceCardIds": [
+            "CORE-005"
+          ],
+          "targetCardIds": []
+        },
+        "previousStateHash": "3abaf029dc4945d01829d51452242aa09c0761a48f84dd59a2bf3821d3a04934",
+        "stateHash": "730cc4622ca4b12489754add765e8f3023b84b53cfd866be9f978bf659469580"
+      },
+      {
+        "id": "EV-000027",
+        "sequence": 27,
+        "commandId": "CORE-26-1-P1-score-points-CORE-004-",
+        "type": "CORE_ACTION_DECLARED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000026-P1-ROOT-play-for-points-0",
+          "playerId": "P1",
+          "actionType": "play-for-points",
+          "stackClass": "points",
+          "sourceCardIds": [
+            "CORE-004"
+          ],
+          "targetCardIds": []
+        },
+        "previousStateHash": "324943f735d63d87256aae94c2192bd5610b9a90f48625ce09c18c40887e82a9",
+        "stateHash": "2372298ceb173b4a054ad403d7698c92530b0d20e51235168d05cb7fced2185c"
+      }
+    ],
+    "resultingFullTurnSequence": 2,
+    "firstPlayerLimits": {
+      "miniTurnsRemaining": 0,
+      "miniTurnsUsed": 4,
+      "pendingActionPhaseSkips": 0,
+      "pendingFullTurnSkips": 0,
+      "queensCourtPlayedThisFT": false,
+      "rank10PlayedThisFT": true,
+      "swapBarUsedThisFT": false,
+      "ultraPlayedThisFT": false
+    },
+    "firstPlayerHand": [
+      "A♠"
+    ],
+    "firstPlayerPR": [
+      {
+        "identity": "8♣",
+        "state": {
+          "pointValue": 8
+        }
+      },
+      {
+        "identity": "7♣",
+        "state": {
+          "pointValue": 7
+        }
+      }
+    ],
+    "winner": null
+  },
+  "scoring": [
+    {
+      "name": "ordinary score 7♣",
+      "seed": 81001,
+      "predeterminedPrefix": [
+        "7♣",
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣",
+        "2♦",
+        "3♦",
+        "4♦",
+        "5♦",
+        "6♦",
+        "9♦"
+      ],
+      "firstPlayer": "P1",
+      "responsePolicy": "decline every optional response",
+      "declarations": [
+        {
+          "ordinal": 1,
+          "family": "score",
+          "mode": "points",
+          "usedBefore": 0,
+          "remainingBefore": 1
+        }
+      ],
+      "events": [
+        {
+          "id": "EV-000005",
+          "sequence": 5,
+          "commandId": "CORE-4-1-P1-phase-enter-action--",
+          "type": "CORE_ACTION_PHASE_ENTERED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "miniTurnsRemaining": 1
+          },
+          "previousStateHash": "17f7b75b366418227b757d47b31711e5d68e0138ebca19c0081bd2823eca7826",
+          "stateHash": "2ce66c333184d56ff6866571bcdc69a1735b2c3a03fefc5f4b64d9ba1acea5bb"
+        },
+        {
+          "id": "EV-000006",
+          "sequence": 6,
+          "commandId": "CORE-5-1-P1-score-points-CORE-001-",
+          "type": "CORE_ACTION_DECLARED",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "playerId": "P1",
+            "actionType": "play-for-points",
+            "stackClass": "points",
+            "sourceCardIds": [
+              "CORE-001"
+            ],
+            "targetCardIds": []
+          },
+          "previousStateHash": "2ce66c333184d56ff6866571bcdc69a1735b2c3a03fefc5f4b64d9ba1acea5bb",
+          "stateHash": "2dc281710f66387c551b44dfb25adf00b71a2dc4f2a60eb609e2a3b54c16f08f"
+        }
+      ],
+      "resultingFullTurnSequence": 2,
+      "firstPlayerLimits": {
+        "miniTurnsRemaining": 0,
+        "miniTurnsUsed": 1,
+        "pendingActionPhaseSkips": 0,
+        "pendingFullTurnSkips": 0,
+        "queensCourtPlayedThisFT": false,
+        "rank10PlayedThisFT": false,
+        "swapBarUsedThisFT": false,
+        "ultraPlayedThisFT": false
+      },
+      "firstPlayerHand": [
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣"
+      ],
+      "firstPlayerPR": [
+        {
+          "identity": "7♣",
+          "state": {
+            "pointValue": 7
+          }
+        }
+      ],
+      "winner": null
+    },
+    {
+      "name": "ordinary score 10♣",
+      "seed": 81001,
+      "predeterminedPrefix": [
+        "10♣",
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣",
+        "2♦",
+        "3♦",
+        "4♦",
+        "5♦",
+        "6♦",
+        "9♦"
+      ],
+      "firstPlayer": "P1",
+      "responsePolicy": "decline every optional response",
+      "declarations": [
+        {
+          "ordinal": 1,
+          "family": "score",
+          "mode": "points",
+          "usedBefore": 0,
+          "remainingBefore": 1
+        }
+      ],
+      "events": [
+        {
+          "id": "EV-000005",
+          "sequence": 5,
+          "commandId": "CORE-4-1-P1-phase-enter-action--",
+          "type": "CORE_ACTION_PHASE_ENTERED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "miniTurnsRemaining": 1
+          },
+          "previousStateHash": "9d5a11287f22fb8f476052f799668639924114b2bda3f8c16540d35c380150f8",
+          "stateHash": "190323af6e5e6a3f891b394c9ca34f597be08e3791675ad511db002e578875be"
+        },
+        {
+          "id": "EV-000006",
+          "sequence": 6,
+          "commandId": "CORE-5-1-P1-score-points-CORE-001-",
+          "type": "CORE_ACTION_DECLARED",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "playerId": "P1",
+            "actionType": "play-for-points",
+            "stackClass": "points",
+            "sourceCardIds": [
+              "CORE-001"
+            ],
+            "targetCardIds": []
+          },
+          "previousStateHash": "190323af6e5e6a3f891b394c9ca34f597be08e3791675ad511db002e578875be",
+          "stateHash": "662a5625c9be2ecb47c3b4960ea483ca8a57ceaecaa00b1bc09489ca619ef514"
+        }
+      ],
+      "resultingFullTurnSequence": 2,
+      "firstPlayerLimits": {
+        "miniTurnsRemaining": 0,
+        "miniTurnsUsed": 1,
+        "pendingActionPhaseSkips": 0,
+        "pendingFullTurnSkips": 0,
+        "queensCourtPlayedThisFT": false,
+        "rank10PlayedThisFT": false,
+        "swapBarUsedThisFT": false,
+        "ultraPlayedThisFT": false
+      },
+      "firstPlayerHand": [
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣"
+      ],
+      "firstPlayerPR": [
+        {
+          "identity": "10♣",
+          "state": {
+            "pointValue": 10
+          }
+        }
+      ],
+      "winner": null
+    },
+    {
+      "name": "ordinary score BJ",
+      "seed": 81001,
+      "predeterminedPrefix": [
+        "BJ",
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣",
+        "2♦",
+        "3♦",
+        "4♦",
+        "5♦",
+        "6♦",
+        "9♦"
+      ],
+      "firstPlayer": "P1",
+      "responsePolicy": "decline every optional response",
+      "declarations": [
+        {
+          "ordinal": 1,
+          "family": "score",
+          "mode": "points",
+          "usedBefore": 0,
+          "remainingBefore": 1
+        }
+      ],
+      "events": [
+        {
+          "id": "EV-000005",
+          "sequence": 5,
+          "commandId": "CORE-4-1-P1-phase-enter-action--",
+          "type": "CORE_ACTION_PHASE_ENTERED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "miniTurnsRemaining": 1
+          },
+          "previousStateHash": "9754f8cc78e53c2df4c8a93211230ea0cf3bdbbef7c83ac3c44506d7241c0a49",
+          "stateHash": "ddcf2f1ad906390876eb621d526c68b02efeb034c7c25e7e2a988db699d14577"
+        },
+        {
+          "id": "EV-000006",
+          "sequence": 6,
+          "commandId": "CORE-5-1-P1-score-points-CORE-001-",
+          "type": "CORE_ACTION_DECLARED",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "playerId": "P1",
+            "actionType": "play-for-points",
+            "stackClass": "points",
+            "sourceCardIds": [
+              "CORE-001"
+            ],
+            "targetCardIds": []
+          },
+          "previousStateHash": "ddcf2f1ad906390876eb621d526c68b02efeb034c7c25e7e2a988db699d14577",
+          "stateHash": "5a21b2637bbb4460662b4a002c1bc3ce77b9cb27a7ff4a0728d739bfa89d70ad"
+        }
+      ],
+      "resultingFullTurnSequence": 2,
+      "firstPlayerLimits": {
+        "miniTurnsRemaining": 0,
+        "miniTurnsUsed": 1,
+        "pendingActionPhaseSkips": 0,
+        "pendingFullTurnSkips": 0,
+        "queensCourtPlayedThisFT": false,
+        "rank10PlayedThisFT": false,
+        "swapBarUsedThisFT": false,
+        "ultraPlayedThisFT": false
+      },
+      "firstPlayerHand": [
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣"
+      ],
+      "firstPlayerPR": [
+        {
+          "identity": "BJ",
+          "state": {
+            "pointValue": 11
+          }
+        }
+      ],
+      "winner": null
+    }
+  ],
+  "counterMatrix": {
+    "ordinary-effect": {
+      "base-ace-counter": true,
+      "spade-ace-counter": true,
+      "super-ace-counter": true,
+      "ultra-three-red": true,
+      "king-spade-counter": false
+    },
+    "rank10": {
+      "base-ace-counter": true,
+      "spade-ace-counter": true,
+      "super-ace-counter": true,
+      "ultra-three-red": true,
+      "king-spade-counter": false
+    },
+    "super": {
+      "base-ace-counter": true,
+      "spade-ace-counter": true,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": true
+    },
+    "ultra": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": false
+    },
+    "sudden-death": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": false
+    },
+    "anchor": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": false
+    },
+    "queens-court": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": true
+    },
+    "royal-marriage": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": true
+    },
+    "points": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": false
+    },
+    "scuttle": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": false
+    }
+  }
+}

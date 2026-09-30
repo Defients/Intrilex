@@ -17,6 +17,8 @@ The product is organized into three lanes:
 | **Learn** | Academy, puzzles, rules, card reference | `/rules`, `/play/academy`, `/puzzles`, `/cards` |
 | **Lab** | Watch, Caster, mechanics, ranks, evidence, traces, branches, diagnostics | `/watch`, `/caster`, `/replays`, `/history`, `/mechanics`, `/synergies`, `/ranks`, `/compare`, `/traces`, `/branches`, `/diagnostics`, `/tournament`, `/evidence`, `/intelligence` |
 
+Active Play now uses the **Homecoming rules-assisted board**: structured Action Families, exact Action Composer confirmation, board picking, visible-information suggestions, and a viewport-native battlefield. It runs through Intrilex's existing authority, AI, networking, and save contracts. See [the migration and validation guide](docs/INTRILEX_HOMECOMING.md) for architecture, checks, and retained parity fallbacks.
+
 ## Capabilities
 
 - **Complete Advanced Core** — human-playable, AI-playable, and replay-certified

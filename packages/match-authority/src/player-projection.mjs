@@ -88,7 +88,17 @@ export function buildNetworkPlayerView(authorizedView) {
       isMyDecision: dec.isMyDecision,
     };
     if (dec.isMyDecision && dec.legalActions) {
-      safe.decision.legalActions = dec.legalActions.map(action => sanitizeAction(action));
+      safe.decision.legalActions = dec.legalActions.map(action => {
+        const result = sanitizeAction(action);
+        // Resolve a public slot before hidden Swap Bar handles are scrubbed.
+        // No hidden identity or command is added to the transport contract.
+        if (action.family === 'swap-bar') {
+          const slots = authorizedView.playerView?.swapBar ?? [];
+          const index = slots.findIndex((/** @type {Record<string, *>} */ card) => card.id !== 'HIDDEN' && (action.targetCardIds ?? []).includes(card.id));
+          if (index >= 0) result.swapSlot = index;
+        }
+        return result;
+      });
     }
   }
 

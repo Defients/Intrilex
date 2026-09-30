@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const rendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
 const terminalSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-terminal.mjs'), 'utf8');
 const appSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-app.js'), 'utf8');
 const playStateSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-state.js'), 'utf8');
@@ -12,56 +11,8 @@ const cssSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-v3.c
 
 // ─── ARIA and Semantic Tests ────────────────────────────────────
 
-test('Renderer: has ARIA labels on key sections', () => {
-  assert.ok(rendererSrc.includes('aria-label="Opponent"'), 'Must label opponent section');
-  assert.ok(rendererSrc.includes('aria-label="Your board"'), 'Must label human section');
-  assert.ok(rendererSrc.includes('aria-label="Actions"'), 'Must label actions section');
-  assert.ok(rendererSrc.includes('aria-label="Recent events"'), 'Must label event log');
-});
-
-test('Renderer: has role=status on decision banner', () => {
-  assert.ok(rendererSrc.includes('role="status"'), 'Decision banner must have role=status');
-  assert.ok(rendererSrc.includes('aria-live="polite"'), 'Decision banner must have aria-live=polite');
-});
-
-test('Renderer: has role=log on event log', () => {
-  assert.ok(rendererSrc.includes('role="log"'), 'Event log must have role=log');
-});
-
-test('Renderer: has role=region on action dock', () => {
-  assert.ok(rendererSrc.includes('role="region"'), 'Action dock must have role=region');
-});
-
-test('Renderer: has role=group on target selection', () => {
-  assert.ok(rendererSrc.includes('role="group"'), 'Target selection must have role=group');
-});
-
 test('Renderer: has role=dialog on keyboard help', () => {
   assert.ok(terminalSrc.includes('role="dialog"'), 'Keyboard help must have role=dialog');
-});
-
-test('Renderer: has aria-hidden on decorative elements', () => {
-  assert.ok(rendererSrc.includes('aria-hidden="true"'), 'Must hide decorative elements from screen readers');
-});
-
-test('Renderer: card backs are aria-hidden', () => {
-  assert.ok(rendererSrc.includes('card-back'), 'Must have card backs');
-  // Card backs should be aria-hidden since they convey no information
-  assert.ok(rendererSrc.includes('aria-hidden="true"'), 'Card backs must be aria-hidden');
-});
-
-test('Renderer: hand cards have descriptive aria-labels', () => {
-  assert.ok(rendererSrc.includes('aria-label="Hand card'), 'Hand cards must have descriptive aria-labels');
-  assert.ok(rendererSrc.includes('has legal actions'), 'Hand card labels must indicate legal action status');
-});
-
-test('Renderer: action buttons have descriptive aria-labels', () => {
-  assert.ok(rendererSrc.includes('aria-label'), 'Action buttons must have aria-labels');
-});
-
-test('Renderer: inspector has close button with aria-label', () => {
-  assert.ok(rendererSrc.includes('inspector-close'), 'Inspector must have close button');
-  assert.ok(rendererSrc.includes('aria-label="Close inspector"'), 'Inspector close must have aria-label');
 });
 
 // ─── Keyboard Tests ─────────────────────────────────────────────
@@ -164,7 +115,7 @@ test('CSS: focus style uses outline with offset', () => {
 // ─── Keyboard Help Overlay Tests ────────────────────────────────
 
 test('Renderer: has keyboard help overlay', () => {
-  assert.ok(rendererSrc.includes('renderKeyboardHelp'), 'Must have renderKeyboardHelp function');
+  assert.ok(terminalSrc.includes('renderKeyboardHelp'), 'Must have renderKeyboardHelp function');
   assert.ok(terminalSrc.includes('keyboard-help-overlay'), 'Must have keyboard-help-overlay class');
 });
 

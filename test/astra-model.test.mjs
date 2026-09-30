@@ -172,7 +172,7 @@ test('allowlists output without reading private fields, payloads, or canonical s
   assert.equal(game.status, 'ready');
   assert.doesNotMatch(JSON.stringify(game), /SECRET|INJECTED|INVENTED|DO_NOT_EXPOSE|PRIVATE_EVENT_ID|"payload"|"command"|"seed"|"rng"/u);
   assert.deepEqual(Object.keys(game.self.hand[0]).sort(), ['id', 'identity', 'label', 'markers']);
-  assert.deepEqual(Object.keys(game.actions[0]).sort(), ['facts', 'family', 'id', 'label', 'mode', 'sources', 'targets', 'timing']);
+  assert.deepEqual(Object.keys(game.actions[0]).sort(), ['facts', 'family', 'id', 'label', 'mode', 'sources', 'targets', 'timing', 'timingClass']);
   assert.deepEqual(Object.keys(game.events[0]).sort(), ['actorId', 'cardRefs', 'id', 'label', 'type']);
 });
 

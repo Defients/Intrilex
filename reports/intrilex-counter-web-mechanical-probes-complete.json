@@ -1,0 +1,1529 @@
+{
+  "generatedAt": "2026-09-07T21:00:42.233Z",
+  "system": "Intrilex",
+  "productVersion": "1.0.0",
+  "rulesVersion": "4.3.1",
+  "engineVersion": "4.2.6",
+  "profileId": "core-unrestricted-authority",
+  "nodeVersion": "v22.14.0",
+  "sourceHashes": {
+    "runtime/autonomy-engine-dist/src/core-authority.js": "40c2a5f9e79040b3842466cf293733559dad82c0c80245f7648271f9aba13c32",
+    "runtime/autonomy-engine-dist/src/core-response.js": "0b4cc031ca26573bf8373a83c9781c442ab9be6da6bfb855dd38cb4d174f983c",
+    "runtime/autonomy-engine-dist/src/core-advanced.js": "471cfd69ed5c8400ab98af512b4f652329da876fe0876acf7322e74a3424e33e",
+    "runtime/autonomy-engine-dist/src/core-autonomy.js": "be23db645b94ea4df35320232d5e36473dafc46a6051fc53a779f0d4f0a24ca0",
+    "runtime/autonomy-engine-dist/src/ranks.js": "39854ae3d0473a4dafc76ba9e0af82876291958c9e61b633a315d9b2ddd0ffbd",
+    "docs/INTRILEX_v4.3.1_COMPLETE_PLAYER_RULEBOOK.md": "1cfbd837f763fc436f4317b9164b802f1ea8ff57e18060fd436d8608e9f0bcf8"
+  },
+  "interpretation": "Constructed-state diagnostics, not random match samples or balance win-rate evidence. Counter matrix probes exported class predicate, not full declaration legality.",
+  "cap": {
+    "name": "two accelerators in one Full Turn",
+    "seed": 81001,
+    "predeterminedPrefix": [
+      "10♥",
+      "J♣",
+      "J♦",
+      "7♣",
+      "8♣",
+      "2♣",
+      "2♦",
+      "2♠",
+      "3♣",
+      "3♦",
+      "4♣"
+    ],
+    "firstPlayer": "P1",
+    "responsePolicy": "decline every optional response",
+    "declarations": [
+      {
+        "ordinal": 1,
+        "family": "rank10",
+        "mode": "heart-tempo",
+        "usedBefore": 0,
+        "remainingBefore": 1
+      },
+      {
+        "ordinal": 2,
+        "family": "super",
+        "mode": "jack-tempo",
+        "usedBefore": 1,
+        "remainingBefore": 2
+      },
+      {
+        "ordinal": 3,
+        "family": "score",
+        "mode": "points",
+        "usedBefore": 2,
+        "remainingBefore": 2
+      },
+      {
+        "ordinal": 4,
+        "family": "score",
+        "mode": "points",
+        "usedBefore": 3,
+        "remainingBefore": 1
+      }
+    ],
+    "events": [
+      {
+        "id": "EV-000002",
+        "sequence": 2,
+        "commandId": "CORE-1-1-P1-ORCH-0-START",
+        "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "snapshot": {
+            "rank3": 0,
+            "rank4": 0,
+            "rank5": 0,
+            "capturedFullTurnSequence": 1
+          }
+        },
+        "previousStateHash": "bdd2b3861e3211170abbb8a5f8529bb3c1be5a5fcaae0f90d9854615a8d84078",
+        "stateHash": "14e4e1e6deefc5b8cea2d6d7b5c30f5fc626ed41f03911ffdd53793f57fa5912"
+      },
+      {
+        "id": "EV-000004",
+        "sequence": 3,
+        "commandId": "CORE-1-1-P1-ORCH-0-START",
+        "type": "CORE_START_PREPARED",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "fullTurnSequence": 1,
+          "automaticUntap": false
+        },
+        "previousStateHash": "14e4e1e6deefc5b8cea2d6d7b5c30f5fc626ed41f03911ffdd53793f57fa5912",
+        "stateHash": "0f15f2a1e56bb959adabee081c7a957e8482486363823c711f407ca9c6aa4554"
+      },
+      {
+        "id": "EV-000006",
+        "sequence": 4,
+        "commandId": "CORE-1-1-P1-ORCH-0-START",
+        "type": "START_PHASE_BEGAN",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "startSequence": 1
+        },
+        "previousStateHash": "0f15f2a1e56bb959adabee081c7a957e8482486363823c711f407ca9c6aa4554",
+        "stateHash": "f1c2b3b430205c94db4def180ca59ed774a8d2ac064edec30305caa15cb453bb"
+      },
+      {
+        "id": "EV-000005",
+        "sequence": 5,
+        "commandId": "CORE-4-1-P1-phase-enter-action--",
+        "type": "CORE_ACTION_PHASE_ENTERED",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "miniTurnsRemaining": 1
+        },
+        "previousStateHash": "f1c2b3b430205c94db4def180ca59ed774a8d2ac064edec30305caa15cb453bb",
+        "stateHash": "f7b3d0b7da2832648e6303cc8ca3780ce219f83f3f5903206dbbf776f314067b"
+      },
+      {
+        "id": "EV-000006",
+        "sequence": 6,
+        "commandId": "CORE-5-1-P1-rank10-heart-tempo-CORE-001-",
+        "type": "CORE_ACTION_DECLARED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-effect-0",
+          "playerId": "P1",
+          "actionType": "play-for-effect",
+          "stackClass": "rank10",
+          "sourceCardIds": [
+            "CORE-001"
+          ],
+          "targetCardIds": []
+        },
+        "previousStateHash": "f7b3d0b7da2832648e6303cc8ca3780ce219f83f3f5903206dbbf776f314067b",
+        "stateHash": "9a27b7db126bf35c64bcdd5dd04d941335b975b18ad303ee36403c65531268d7"
+      },
+      {
+        "id": "EV-000007",
+        "sequence": 7,
+        "commandId": "CORE-6-1-P2-ORCH-0-AUTO-PRIORITY",
+        "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P2",
+          "consecutiveDeclines": 1,
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "9a27b7db126bf35c64bcdd5dd04d941335b975b18ad303ee36403c65531268d7",
+        "stateHash": "fd12fbb877f8d8046885198c7070df0624081e5daed7b7a7ec060839b4b283b8"
+      },
+      {
+        "id": "EV-000008",
+        "sequence": 8,
+        "commandId": "CORE-7-1-P1-ORCH-1-AUTO-PRIORITY",
+        "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "consecutiveDeclines": 2,
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "fd12fbb877f8d8046885198c7070df0624081e5daed7b7a7ec060839b4b283b8",
+        "stateHash": "7e0c69d3568875abb7744512e5ae30784a4d1e63d747251862c913e3611b138a"
+      },
+      {
+        "id": "EV-000010",
+        "sequence": 9,
+        "commandId": "CORE-7-1-P1-ORCH-1-AUTO-PRIORITY",
+        "type": "CORE_RESPONSE_WINDOW_CLOSED",
+        "visibility": "public",
+        "payload": {
+          "stackDepth": 1,
+          "reason": "consecutive-declines-or-no-response",
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "7e0c69d3568875abb7744512e5ae30784a4d1e63d747251862c913e3611b138a",
+        "stateHash": "21e6660d2cf2273d12a5fa5589afb581f95ad49537fe47846d61f2eaf2dd9ec2"
+      },
+      {
+        "id": "EV-000010",
+        "sequence": 10,
+        "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_ROOT_RESOLUTION_BEGAN",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-effect-0",
+          "actionType": "play-for-effect",
+          "stackClass": "rank10"
+        },
+        "previousStateHash": "21e6660d2cf2273d12a5fa5589afb581f95ad49537fe47846d61f2eaf2dd9ec2",
+        "stateHash": "fb4aa77ec9a9e0f35bddefefa4a716e1f03d5f517d573333928d836d601e8751"
+      },
+      {
+        "id": "EV-000012",
+        "sequence": 11,
+        "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_ADVANCED_TEN_HEART_RESOLVED",
+        "visibility": "public",
+        "payload": {
+          "sourceCardId": "CORE-001",
+          "drawnCardId": "CORE-015",
+          "miniTurnsRemaining": 3
+        },
+        "previousStateHash": "fb4aa77ec9a9e0f35bddefefa4a716e1f03d5f517d573333928d836d601e8751",
+        "stateHash": "e094b7eea66a66bcf5996ecd8964b8a82587362349c717badf55e6f0cd3b0e6a"
+      },
+      {
+        "id": "EV-000014",
+        "sequence": 12,
+        "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_ROOT_RESOLVED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-effect-0",
+          "actionType": "play-for-effect"
+        },
+        "previousStateHash": "e094b7eea66a66bcf5996ecd8964b8a82587362349c717badf55e6f0cd3b0e6a",
+        "stateHash": "6566e07a3f3e6ef56c0188785ced91984a7a65d4d22be6384b12fb3ce186550f"
+      },
+      {
+        "id": "EV-000013",
+        "sequence": 13,
+        "commandId": "CORE-12-1-P1-super-jack-tempo-CORE-002-CORE-003-",
+        "type": "CORE_ACTION_DECLARED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000012-P1-ROOT-play-for-effect-0",
+          "playerId": "P1",
+          "actionType": "play-for-effect",
+          "stackClass": "super",
+          "sourceCardIds": [
+            "CORE-002",
+            "CORE-003"
+          ],
+          "targetCardIds": []
+        },
+        "previousStateHash": "6566e07a3f3e6ef56c0188785ced91984a7a65d4d22be6384b12fb3ce186550f",
+        "stateHash": "3931a4776a9a6c8b7cbf5092a1d9270b14f7996bb1dc81e5d85552bd8a4cd62d"
+      },
+      {
+        "id": "EV-000014",
+        "sequence": 14,
+        "commandId": "CORE-13-1-P2-ORCH-0-AUTO-PRIORITY",
+        "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P2",
+          "consecutiveDeclines": 1,
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "3931a4776a9a6c8b7cbf5092a1d9270b14f7996bb1dc81e5d85552bd8a4cd62d",
+        "stateHash": "e2b2bb91156ea1cb268fc0554deae602b6734ddf73109d2bf197afdd5e85fabb"
+      },
+      {
+        "id": "EV-000015",
+        "sequence": 15,
+        "commandId": "CORE-14-1-P1-ORCH-1-AUTO-PRIORITY",
+        "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "consecutiveDeclines": 2,
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "e2b2bb91156ea1cb268fc0554deae602b6734ddf73109d2bf197afdd5e85fabb",
+        "stateHash": "8d3ac9446275cb94dc47bad80fcbf1cb29ed8b49e2a819587e0ca5595946e63c"
+      },
+      {
+        "id": "EV-000017",
+        "sequence": 16,
+        "commandId": "CORE-14-1-P1-ORCH-1-AUTO-PRIORITY",
+        "type": "CORE_RESPONSE_WINDOW_CLOSED",
+        "visibility": "public",
+        "payload": {
+          "stackDepth": 1,
+          "reason": "consecutive-declines-or-no-response",
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "8d3ac9446275cb94dc47bad80fcbf1cb29ed8b49e2a819587e0ca5595946e63c",
+        "stateHash": "0fdbe8bc6c2bceddd24c3f82b38c4c94930f1126ef527524e231cb84a48e07e4"
+      },
+      {
+        "id": "EV-000017",
+        "sequence": 17,
+        "commandId": "CORE-16-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_ROOT_RESOLUTION_BEGAN",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000012-P1-ROOT-play-for-effect-0",
+          "actionType": "play-for-effect",
+          "stackClass": "super"
+        },
+        "previousStateHash": "0fdbe8bc6c2bceddd24c3f82b38c4c94930f1126ef527524e231cb84a48e07e4",
+        "stateHash": "814d302e1ce16dd7a3577daac7595b08598e7d0f44f305669d26a87ba27efa87"
+      },
+      {
+        "id": "EV-000019",
+        "sequence": 18,
+        "commandId": "CORE-16-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_ADVANCED_SUPER_J_RESOLVED",
+        "visibility": "public",
+        "payload": {
+          "sourceCardIds": [
+            "CORE-002",
+            "CORE-003"
+          ],
+          "miniTurnsRemaining": 3
+        },
+        "previousStateHash": "814d302e1ce16dd7a3577daac7595b08598e7d0f44f305669d26a87ba27efa87",
+        "stateHash": "db6fdb350b621a2c35b6fc47cd252f8f8c756260957f71ca60d17011f46330bf"
+      },
+      {
+        "id": "EV-000021",
+        "sequence": 19,
+        "commandId": "CORE-16-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_ROOT_RESOLVED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000012-P1-ROOT-play-for-effect-0",
+          "actionType": "play-for-effect"
+        },
+        "previousStateHash": "db6fdb350b621a2c35b6fc47cd252f8f8c756260957f71ca60d17011f46330bf",
+        "stateHash": "3abaf029dc4945d01829d51452242aa09c0761a48f84dd59a2bf3821d3a04934"
+      },
+      {
+        "id": "EV-000020",
+        "sequence": 20,
+        "commandId": "CORE-19-1-P1-score-points-CORE-005-",
+        "type": "CORE_ACTION_DECLARED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000019-P1-ROOT-play-for-points-0",
+          "playerId": "P1",
+          "actionType": "play-for-points",
+          "stackClass": "points",
+          "sourceCardIds": [
+            "CORE-005"
+          ],
+          "targetCardIds": []
+        },
+        "previousStateHash": "3abaf029dc4945d01829d51452242aa09c0761a48f84dd59a2bf3821d3a04934",
+        "stateHash": "730cc4622ca4b12489754add765e8f3023b84b53cfd866be9f978bf659469580"
+      },
+      {
+        "id": "EV-000021",
+        "sequence": 21,
+        "commandId": "CORE-20-1-P2-ORCH-0-AUTO-PRIORITY",
+        "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P2",
+          "consecutiveDeclines": 1,
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "730cc4622ca4b12489754add765e8f3023b84b53cfd866be9f978bf659469580",
+        "stateHash": "1dce85f34529a6ffc87409b5775ae2a1ca4ac60b64f577d7535f4745dcfb7b0f"
+      },
+      {
+        "id": "EV-000022",
+        "sequence": 22,
+        "commandId": "CORE-21-1-P1-ORCH-1-AUTO-PRIORITY",
+        "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "consecutiveDeclines": 2,
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "1dce85f34529a6ffc87409b5775ae2a1ca4ac60b64f577d7535f4745dcfb7b0f",
+        "stateHash": "aab16a8632ad71c0e4be0fdeb7a4aadb6e6028ccb75695280dde3376acbefe11"
+      },
+      {
+        "id": "EV-000024",
+        "sequence": 23,
+        "commandId": "CORE-21-1-P1-ORCH-1-AUTO-PRIORITY",
+        "type": "CORE_RESPONSE_WINDOW_CLOSED",
+        "visibility": "public",
+        "payload": {
+          "stackDepth": 1,
+          "reason": "consecutive-declines-or-no-response",
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "aab16a8632ad71c0e4be0fdeb7a4aadb6e6028ccb75695280dde3376acbefe11",
+        "stateHash": "628450b1d0353058db06c8cffb42e55c9c09f4797670493814de94bd319e590b"
+      },
+      {
+        "id": "EV-000024",
+        "sequence": 24,
+        "commandId": "CORE-23-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_ROOT_RESOLUTION_BEGAN",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000019-P1-ROOT-play-for-points-0",
+          "actionType": "play-for-points",
+          "stackClass": "points"
+        },
+        "previousStateHash": "628450b1d0353058db06c8cffb42e55c9c09f4797670493814de94bd319e590b",
+        "stateHash": "43bf7b75e0061f696bac302a164083707c219327f0e58088651ce614622e685c"
+      },
+      {
+        "id": "EV-000026",
+        "sequence": 25,
+        "commandId": "CORE-23-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_CARD_SCORED",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "cardId": "CORE-005",
+          "pointValue": 8
+        },
+        "previousStateHash": "43bf7b75e0061f696bac302a164083707c219327f0e58088651ce614622e685c",
+        "stateHash": "3b39b98611a0f6913f2feaad59bec7e85b28758b0cf19e351afcaa0836affeb5"
+      },
+      {
+        "id": "EV-000028",
+        "sequence": 26,
+        "commandId": "CORE-23-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_ROOT_RESOLVED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000019-P1-ROOT-play-for-points-0",
+          "actionType": "play-for-points"
+        },
+        "previousStateHash": "3b39b98611a0f6913f2feaad59bec7e85b28758b0cf19e351afcaa0836affeb5",
+        "stateHash": "324943f735d63d87256aae94c2192bd5610b9a90f48625ce09c18c40887e82a9"
+      },
+      {
+        "id": "EV-000027",
+        "sequence": 27,
+        "commandId": "CORE-26-1-P1-score-points-CORE-004-",
+        "type": "CORE_ACTION_DECLARED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000026-P1-ROOT-play-for-points-0",
+          "playerId": "P1",
+          "actionType": "play-for-points",
+          "stackClass": "points",
+          "sourceCardIds": [
+            "CORE-004"
+          ],
+          "targetCardIds": []
+        },
+        "previousStateHash": "324943f735d63d87256aae94c2192bd5610b9a90f48625ce09c18c40887e82a9",
+        "stateHash": "2372298ceb173b4a054ad403d7698c92530b0d20e51235168d05cb7fced2185c"
+      },
+      {
+        "id": "EV-000028",
+        "sequence": 28,
+        "commandId": "CORE-27-1-P2-ORCH-0-AUTO-PRIORITY",
+        "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P2",
+          "consecutiveDeclines": 1,
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "2372298ceb173b4a054ad403d7698c92530b0d20e51235168d05cb7fced2185c",
+        "stateHash": "347b2a39eceecaa0d899ce1bc059548d66fee9e2053e59f2f2aefef5759ff80f"
+      },
+      {
+        "id": "EV-000029",
+        "sequence": 29,
+        "commandId": "CORE-28-1-P1-ORCH-1-AUTO-PRIORITY",
+        "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "consecutiveDeclines": 2,
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "347b2a39eceecaa0d899ce1bc059548d66fee9e2053e59f2f2aefef5759ff80f",
+        "stateHash": "27fd905c18cfbf4a8325922ea0ffff4cdd44197a24995fbe8b9a512053360ad1"
+      },
+      {
+        "id": "EV-000031",
+        "sequence": 30,
+        "commandId": "CORE-28-1-P1-ORCH-1-AUTO-PRIORITY",
+        "type": "CORE_RESPONSE_WINDOW_CLOSED",
+        "visibility": "public",
+        "payload": {
+          "stackDepth": 1,
+          "reason": "consecutive-declines-or-no-response",
+          "semanticClass": "engine-orchestration"
+        },
+        "previousStateHash": "27fd905c18cfbf4a8325922ea0ffff4cdd44197a24995fbe8b9a512053360ad1",
+        "stateHash": "a18fd274e5b5c0833d59f6211b58d03238b52f761c6e380e7354cd2589722698"
+      },
+      {
+        "id": "EV-000031",
+        "sequence": 31,
+        "commandId": "CORE-30-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_ROOT_RESOLUTION_BEGAN",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000026-P1-ROOT-play-for-points-0",
+          "actionType": "play-for-points",
+          "stackClass": "points"
+        },
+        "previousStateHash": "a18fd274e5b5c0833d59f6211b58d03238b52f761c6e380e7354cd2589722698",
+        "stateHash": "0769458345bafd93dab9a01928fdf29a37bc4232ce138b3a88298cbcaa58dca5"
+      },
+      {
+        "id": "EV-000033",
+        "sequence": 32,
+        "commandId": "CORE-30-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_CARD_SCORED",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "cardId": "CORE-004",
+          "pointValue": 7
+        },
+        "previousStateHash": "0769458345bafd93dab9a01928fdf29a37bc4232ce138b3a88298cbcaa58dca5",
+        "stateHash": "2f3ae41f2d1fe525c15a69c751ab45f425af40ad6becf2044c2dd6757dc50948"
+      },
+      {
+        "id": "EV-000035",
+        "sequence": 33,
+        "commandId": "CORE-30-1-P1-ORCH-2-RESOLVE",
+        "type": "CORE_ROOT_RESOLVED",
+        "visibility": "public",
+        "payload": {
+          "stackItemId": "CORE-SI-000026-P1-ROOT-play-for-points-0",
+          "actionType": "play-for-points"
+        },
+        "previousStateHash": "2f3ae41f2d1fe525c15a69c751ab45f425af40ad6becf2044c2dd6757dc50948",
+        "stateHash": "70e58e210f2c6c54d536be1b06e2a5fa3bc4686a277e70aa7a4c4fc9a5bc173e"
+      },
+      {
+        "id": "EV-000034",
+        "sequence": 34,
+        "commandId": "CORE-33-1-P1-ORCH-3-END",
+        "type": "CORE_FULL_TURN_COMPLETED",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P1",
+          "nextPlayerId": "P2",
+          "consumedSkipSlots": [],
+          "completedFullTurnSequence": 1
+        },
+        "previousStateHash": "70e58e210f2c6c54d536be1b06e2a5fa3bc4686a277e70aa7a4c4fc9a5bc173e",
+        "stateHash": "baca03cfdfc11d19844ef496e2a46d334beeb6d34712aca01e593df0c9d5bcfe"
+      },
+      {
+        "id": "EV-000035",
+        "sequence": 35,
+        "commandId": "CORE-34-2-P2-ORCH-4-START",
+        "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P2",
+          "snapshot": {
+            "rank3": 0,
+            "rank4": 0,
+            "rank5": 0,
+            "capturedFullTurnSequence": 2
+          }
+        },
+        "previousStateHash": "baca03cfdfc11d19844ef496e2a46d334beeb6d34712aca01e593df0c9d5bcfe",
+        "stateHash": "742527462c50c548dc037b25072885d9995160bd3220c9694c5052d6b3762b85"
+      },
+      {
+        "id": "EV-000037",
+        "sequence": 36,
+        "commandId": "CORE-34-2-P2-ORCH-4-START",
+        "type": "CORE_START_PREPARED",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P2",
+          "fullTurnSequence": 2,
+          "automaticUntap": false
+        },
+        "previousStateHash": "742527462c50c548dc037b25072885d9995160bd3220c9694c5052d6b3762b85",
+        "stateHash": "a17312d087854248cd74377499685eab87f38cba296b259a8ce315ef582efab4"
+      },
+      {
+        "id": "EV-000039",
+        "sequence": 37,
+        "commandId": "CORE-34-2-P2-ORCH-4-START",
+        "type": "START_PHASE_BEGAN",
+        "visibility": "public",
+        "payload": {
+          "playerId": "P2",
+          "startSequence": 1
+        },
+        "previousStateHash": "a17312d087854248cd74377499685eab87f38cba296b259a8ce315ef582efab4",
+        "stateHash": "fc26f7b431a5df0f48a3ab070c02ce8024211c112c6a4dcf26e33ba82f83bc64"
+      }
+    ],
+    "resultingFullTurnSequence": 2,
+    "firstPlayerLimits": {
+      "miniTurnsRemaining": 0,
+      "miniTurnsUsed": 4,
+      "pendingActionPhaseSkips": 0,
+      "pendingFullTurnSkips": 0,
+      "queensCourtPlayedThisFT": false,
+      "rank10PlayedThisFT": true,
+      "swapBarUsedThisFT": false,
+      "ultraPlayedThisFT": false
+    },
+    "firstPlayerHand": [
+      "A♠"
+    ],
+    "firstPlayerPR": [
+      {
+        "identity": "8♣",
+        "state": {
+          "pointValue": 8
+        }
+      },
+      {
+        "identity": "7♣",
+        "state": {
+          "pointValue": 7
+        }
+      }
+    ],
+    "winner": null
+  },
+  "scoring": [
+    {
+      "name": "ordinary score 7♣",
+      "seed": 81001,
+      "predeterminedPrefix": [
+        "7♣",
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣",
+        "2♦",
+        "3♦",
+        "4♦",
+        "5♦",
+        "6♦",
+        "9♦"
+      ],
+      "firstPlayer": "P1",
+      "responsePolicy": "decline every optional response",
+      "declarations": [
+        {
+          "ordinal": 1,
+          "family": "score",
+          "mode": "points",
+          "usedBefore": 0,
+          "remainingBefore": 1
+        }
+      ],
+      "events": [
+        {
+          "id": "EV-000002",
+          "sequence": 2,
+          "commandId": "CORE-1-1-P1-ORCH-0-START",
+          "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "snapshot": {
+              "rank3": 0,
+              "rank4": 0,
+              "rank5": 0,
+              "capturedFullTurnSequence": 1
+            }
+          },
+          "previousStateHash": "d4e9ad018d76fd84114a798315bdd330d522798cb928d62a4e7de207deab64d2",
+          "stateHash": "263ffd2b4e00e88a62f112bfe47a9b7dd1bda28c898b12a0c419a899e37aa145"
+        },
+        {
+          "id": "EV-000004",
+          "sequence": 3,
+          "commandId": "CORE-1-1-P1-ORCH-0-START",
+          "type": "CORE_START_PREPARED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "fullTurnSequence": 1,
+            "automaticUntap": false
+          },
+          "previousStateHash": "263ffd2b4e00e88a62f112bfe47a9b7dd1bda28c898b12a0c419a899e37aa145",
+          "stateHash": "5ade4bdf2160f97d8d31a674b68a2c014055773c5ddc306b131b2d8da30c6489"
+        },
+        {
+          "id": "EV-000006",
+          "sequence": 4,
+          "commandId": "CORE-1-1-P1-ORCH-0-START",
+          "type": "START_PHASE_BEGAN",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "startSequence": 1
+          },
+          "previousStateHash": "5ade4bdf2160f97d8d31a674b68a2c014055773c5ddc306b131b2d8da30c6489",
+          "stateHash": "17f7b75b366418227b757d47b31711e5d68e0138ebca19c0081bd2823eca7826"
+        },
+        {
+          "id": "EV-000005",
+          "sequence": 5,
+          "commandId": "CORE-4-1-P1-phase-enter-action--",
+          "type": "CORE_ACTION_PHASE_ENTERED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "miniTurnsRemaining": 1
+          },
+          "previousStateHash": "17f7b75b366418227b757d47b31711e5d68e0138ebca19c0081bd2823eca7826",
+          "stateHash": "2ce66c333184d56ff6866571bcdc69a1735b2c3a03fefc5f4b64d9ba1acea5bb"
+        },
+        {
+          "id": "EV-000006",
+          "sequence": 6,
+          "commandId": "CORE-5-1-P1-score-points-CORE-001-",
+          "type": "CORE_ACTION_DECLARED",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "playerId": "P1",
+            "actionType": "play-for-points",
+            "stackClass": "points",
+            "sourceCardIds": [
+              "CORE-001"
+            ],
+            "targetCardIds": []
+          },
+          "previousStateHash": "2ce66c333184d56ff6866571bcdc69a1735b2c3a03fefc5f4b64d9ba1acea5bb",
+          "stateHash": "2dc281710f66387c551b44dfb25adf00b71a2dc4f2a60eb609e2a3b54c16f08f"
+        },
+        {
+          "id": "EV-000007",
+          "sequence": 7,
+          "commandId": "CORE-6-1-P2-ORCH-0-AUTO-PRIORITY",
+          "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "consecutiveDeclines": 1,
+            "semanticClass": "engine-orchestration"
+          },
+          "previousStateHash": "2dc281710f66387c551b44dfb25adf00b71a2dc4f2a60eb609e2a3b54c16f08f",
+          "stateHash": "5c97933d138a8b09fc770c269bc44e39bc625f60197d5312df4a40bcc08b93e1"
+        },
+        {
+          "id": "EV-000008",
+          "sequence": 8,
+          "commandId": "CORE-7-1-P1-ORCH-1-AUTO-PRIORITY",
+          "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "consecutiveDeclines": 2,
+            "semanticClass": "engine-orchestration"
+          },
+          "previousStateHash": "5c97933d138a8b09fc770c269bc44e39bc625f60197d5312df4a40bcc08b93e1",
+          "stateHash": "e198007fe4cf2ad35187bbcbc543da76eb7d2beaf8829d1199f99df032894438"
+        },
+        {
+          "id": "EV-000010",
+          "sequence": 9,
+          "commandId": "CORE-7-1-P1-ORCH-1-AUTO-PRIORITY",
+          "type": "CORE_RESPONSE_WINDOW_CLOSED",
+          "visibility": "public",
+          "payload": {
+            "stackDepth": 1,
+            "reason": "consecutive-declines-or-no-response",
+            "semanticClass": "engine-orchestration"
+          },
+          "previousStateHash": "e198007fe4cf2ad35187bbcbc543da76eb7d2beaf8829d1199f99df032894438",
+          "stateHash": "76a776b31d4fe96cc321704660e66f988aae4c96eea3cf4a07352f107fb1a319"
+        },
+        {
+          "id": "EV-000010",
+          "sequence": 10,
+          "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+          "type": "CORE_ROOT_RESOLUTION_BEGAN",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "actionType": "play-for-points",
+            "stackClass": "points"
+          },
+          "previousStateHash": "76a776b31d4fe96cc321704660e66f988aae4c96eea3cf4a07352f107fb1a319",
+          "stateHash": "53ab57cfb052644e0c5a161f24e0d20eb8711206f9fc7c077ef38648a80c3604"
+        },
+        {
+          "id": "EV-000012",
+          "sequence": 11,
+          "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+          "type": "CORE_CARD_SCORED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "cardId": "CORE-001",
+            "pointValue": 7
+          },
+          "previousStateHash": "53ab57cfb052644e0c5a161f24e0d20eb8711206f9fc7c077ef38648a80c3604",
+          "stateHash": "e22fba7463850a05ea71fdabd8e600a85b02f0a18f129e8dd7d8c713e31fe0a8"
+        },
+        {
+          "id": "EV-000014",
+          "sequence": 12,
+          "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+          "type": "CORE_ROOT_RESOLVED",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "actionType": "play-for-points"
+          },
+          "previousStateHash": "e22fba7463850a05ea71fdabd8e600a85b02f0a18f129e8dd7d8c713e31fe0a8",
+          "stateHash": "4aa783a8b3ffabaf24c1c6a9f20fd3fc44e4f6e577319d79e982f68088bf2633"
+        },
+        {
+          "id": "EV-000013",
+          "sequence": 13,
+          "commandId": "CORE-12-1-P1-ORCH-3-END",
+          "type": "CORE_FULL_TURN_COMPLETED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "nextPlayerId": "P2",
+            "consumedSkipSlots": [],
+            "completedFullTurnSequence": 1
+          },
+          "previousStateHash": "4aa783a8b3ffabaf24c1c6a9f20fd3fc44e4f6e577319d79e982f68088bf2633",
+          "stateHash": "0ba85c4b2cb69a70fff3069a65f32744b72e8c55e651e59aa5c6e1976cc4a3e2"
+        },
+        {
+          "id": "EV-000014",
+          "sequence": 14,
+          "commandId": "CORE-13-2-P2-ORCH-4-START",
+          "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "snapshot": {
+              "rank3": 0,
+              "rank4": 0,
+              "rank5": 0,
+              "capturedFullTurnSequence": 2
+            }
+          },
+          "previousStateHash": "0ba85c4b2cb69a70fff3069a65f32744b72e8c55e651e59aa5c6e1976cc4a3e2",
+          "stateHash": "06cddb0d190ea49578cecc297d1edc6cbb2e80f3a39cb44a5ad22440e7182150"
+        },
+        {
+          "id": "EV-000016",
+          "sequence": 15,
+          "commandId": "CORE-13-2-P2-ORCH-4-START",
+          "type": "CORE_START_PREPARED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "fullTurnSequence": 2,
+            "automaticUntap": false
+          },
+          "previousStateHash": "06cddb0d190ea49578cecc297d1edc6cbb2e80f3a39cb44a5ad22440e7182150",
+          "stateHash": "cf4b9033817ac4a77c96fb46890c50de837fe104e05f4c3836a4f6e5e9669230"
+        },
+        {
+          "id": "EV-000018",
+          "sequence": 16,
+          "commandId": "CORE-13-2-P2-ORCH-4-START",
+          "type": "START_PHASE_BEGAN",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "startSequence": 1
+          },
+          "previousStateHash": "cf4b9033817ac4a77c96fb46890c50de837fe104e05f4c3836a4f6e5e9669230",
+          "stateHash": "0c2e70bdc9c9566c73cbb06a0441d74300271bce66507990652791a2b8267297"
+        }
+      ],
+      "resultingFullTurnSequence": 2,
+      "firstPlayerLimits": {
+        "miniTurnsRemaining": 0,
+        "miniTurnsUsed": 1,
+        "pendingActionPhaseSkips": 0,
+        "pendingFullTurnSkips": 0,
+        "queensCourtPlayedThisFT": false,
+        "rank10PlayedThisFT": false,
+        "swapBarUsedThisFT": false,
+        "ultraPlayedThisFT": false
+      },
+      "firstPlayerHand": [
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣"
+      ],
+      "firstPlayerPR": [
+        {
+          "identity": "7♣",
+          "state": {
+            "pointValue": 7
+          }
+        }
+      ],
+      "winner": null
+    },
+    {
+      "name": "ordinary score 10♣",
+      "seed": 81001,
+      "predeterminedPrefix": [
+        "10♣",
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣",
+        "2♦",
+        "3♦",
+        "4♦",
+        "5♦",
+        "6♦",
+        "9♦"
+      ],
+      "firstPlayer": "P1",
+      "responsePolicy": "decline every optional response",
+      "declarations": [
+        {
+          "ordinal": 1,
+          "family": "score",
+          "mode": "points",
+          "usedBefore": 0,
+          "remainingBefore": 1
+        }
+      ],
+      "events": [
+        {
+          "id": "EV-000002",
+          "sequence": 2,
+          "commandId": "CORE-1-1-P1-ORCH-0-START",
+          "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "snapshot": {
+              "rank3": 0,
+              "rank4": 0,
+              "rank5": 0,
+              "capturedFullTurnSequence": 1
+            }
+          },
+          "previousStateHash": "6aca93b8aa7965df0e5937ff78579470a8c100154ff250f3e9d5b98b18b56efc",
+          "stateHash": "7a2f2f12b3745f34c72875b0daa20b04c7336490fb3e02507a41981c4f8e238b"
+        },
+        {
+          "id": "EV-000004",
+          "sequence": 3,
+          "commandId": "CORE-1-1-P1-ORCH-0-START",
+          "type": "CORE_START_PREPARED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "fullTurnSequence": 1,
+            "automaticUntap": false
+          },
+          "previousStateHash": "7a2f2f12b3745f34c72875b0daa20b04c7336490fb3e02507a41981c4f8e238b",
+          "stateHash": "b51d384b1525acfb0235ea08414bed860cf60d25aadae39737af2d868e88f8d6"
+        },
+        {
+          "id": "EV-000006",
+          "sequence": 4,
+          "commandId": "CORE-1-1-P1-ORCH-0-START",
+          "type": "START_PHASE_BEGAN",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "startSequence": 1
+          },
+          "previousStateHash": "b51d384b1525acfb0235ea08414bed860cf60d25aadae39737af2d868e88f8d6",
+          "stateHash": "9d5a11287f22fb8f476052f799668639924114b2bda3f8c16540d35c380150f8"
+        },
+        {
+          "id": "EV-000005",
+          "sequence": 5,
+          "commandId": "CORE-4-1-P1-phase-enter-action--",
+          "type": "CORE_ACTION_PHASE_ENTERED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "miniTurnsRemaining": 1
+          },
+          "previousStateHash": "9d5a11287f22fb8f476052f799668639924114b2bda3f8c16540d35c380150f8",
+          "stateHash": "190323af6e5e6a3f891b394c9ca34f597be08e3791675ad511db002e578875be"
+        },
+        {
+          "id": "EV-000006",
+          "sequence": 6,
+          "commandId": "CORE-5-1-P1-score-points-CORE-001-",
+          "type": "CORE_ACTION_DECLARED",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "playerId": "P1",
+            "actionType": "play-for-points",
+            "stackClass": "points",
+            "sourceCardIds": [
+              "CORE-001"
+            ],
+            "targetCardIds": []
+          },
+          "previousStateHash": "190323af6e5e6a3f891b394c9ca34f597be08e3791675ad511db002e578875be",
+          "stateHash": "662a5625c9be2ecb47c3b4960ea483ca8a57ceaecaa00b1bc09489ca619ef514"
+        },
+        {
+          "id": "EV-000007",
+          "sequence": 7,
+          "commandId": "CORE-6-1-P2-ORCH-0-AUTO-PRIORITY",
+          "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "consecutiveDeclines": 1,
+            "semanticClass": "engine-orchestration"
+          },
+          "previousStateHash": "662a5625c9be2ecb47c3b4960ea483ca8a57ceaecaa00b1bc09489ca619ef514",
+          "stateHash": "5e4b68177aa8b574726f0bb0e34396506f6fefd368dfff5a31648a2a59109f14"
+        },
+        {
+          "id": "EV-000008",
+          "sequence": 8,
+          "commandId": "CORE-7-1-P1-ORCH-1-AUTO-PRIORITY",
+          "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "consecutiveDeclines": 2,
+            "semanticClass": "engine-orchestration"
+          },
+          "previousStateHash": "5e4b68177aa8b574726f0bb0e34396506f6fefd368dfff5a31648a2a59109f14",
+          "stateHash": "7b5b05c7b58f918e17faef9e379d2650ca439bf584c3ed116bc8b9f03de830ca"
+        },
+        {
+          "id": "EV-000010",
+          "sequence": 9,
+          "commandId": "CORE-7-1-P1-ORCH-1-AUTO-PRIORITY",
+          "type": "CORE_RESPONSE_WINDOW_CLOSED",
+          "visibility": "public",
+          "payload": {
+            "stackDepth": 1,
+            "reason": "consecutive-declines-or-no-response",
+            "semanticClass": "engine-orchestration"
+          },
+          "previousStateHash": "7b5b05c7b58f918e17faef9e379d2650ca439bf584c3ed116bc8b9f03de830ca",
+          "stateHash": "16c7fee2dc4b648334c635f6ad7b435dc0ea18659982acb1166cc256bdf75047"
+        },
+        {
+          "id": "EV-000010",
+          "sequence": 10,
+          "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+          "type": "CORE_ROOT_RESOLUTION_BEGAN",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "actionType": "play-for-points",
+            "stackClass": "points"
+          },
+          "previousStateHash": "16c7fee2dc4b648334c635f6ad7b435dc0ea18659982acb1166cc256bdf75047",
+          "stateHash": "9b64fa28eb76b2303c1d708fee47e5ee37fa65e969dfaae5aa49236810a6481f"
+        },
+        {
+          "id": "EV-000012",
+          "sequence": 11,
+          "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+          "type": "CORE_CARD_SCORED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "cardId": "CORE-001",
+            "pointValue": 10
+          },
+          "previousStateHash": "9b64fa28eb76b2303c1d708fee47e5ee37fa65e969dfaae5aa49236810a6481f",
+          "stateHash": "58f70af1d2ac0630867369f1c5d678f499d2025d1ae30bf39301ab3db23859de"
+        },
+        {
+          "id": "EV-000014",
+          "sequence": 12,
+          "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+          "type": "CORE_ROOT_RESOLVED",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "actionType": "play-for-points"
+          },
+          "previousStateHash": "58f70af1d2ac0630867369f1c5d678f499d2025d1ae30bf39301ab3db23859de",
+          "stateHash": "fdba512b9f76bcdd91b0c2cf03deb7524c8935ce0e7662f43e8c6bfdfc1acb02"
+        },
+        {
+          "id": "EV-000013",
+          "sequence": 13,
+          "commandId": "CORE-12-1-P1-ORCH-3-END",
+          "type": "CORE_FULL_TURN_COMPLETED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "nextPlayerId": "P2",
+            "consumedSkipSlots": [],
+            "completedFullTurnSequence": 1
+          },
+          "previousStateHash": "fdba512b9f76bcdd91b0c2cf03deb7524c8935ce0e7662f43e8c6bfdfc1acb02",
+          "stateHash": "e761040e5d47775325eb64a27016bd4ccd85500ac9d468468a4b86f7dd4edced"
+        },
+        {
+          "id": "EV-000014",
+          "sequence": 14,
+          "commandId": "CORE-13-2-P2-ORCH-4-START",
+          "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "snapshot": {
+              "rank3": 0,
+              "rank4": 0,
+              "rank5": 0,
+              "capturedFullTurnSequence": 2
+            }
+          },
+          "previousStateHash": "e761040e5d47775325eb64a27016bd4ccd85500ac9d468468a4b86f7dd4edced",
+          "stateHash": "5ded5d53ba229ce5bc218694e1b55de34ce19ccc907cd3babcf962a71d6921e5"
+        },
+        {
+          "id": "EV-000016",
+          "sequence": 15,
+          "commandId": "CORE-13-2-P2-ORCH-4-START",
+          "type": "CORE_START_PREPARED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "fullTurnSequence": 2,
+            "automaticUntap": false
+          },
+          "previousStateHash": "5ded5d53ba229ce5bc218694e1b55de34ce19ccc907cd3babcf962a71d6921e5",
+          "stateHash": "b92bab9c320298b0e38030026d57bced121e41edd48c6c54769970a864917620"
+        },
+        {
+          "id": "EV-000018",
+          "sequence": 16,
+          "commandId": "CORE-13-2-P2-ORCH-4-START",
+          "type": "START_PHASE_BEGAN",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "startSequence": 1
+          },
+          "previousStateHash": "b92bab9c320298b0e38030026d57bced121e41edd48c6c54769970a864917620",
+          "stateHash": "1dac480f6ca1ee9ce87e5ab62af449af3ed1bfa3c9b54eb47405377cb7d045d4"
+        }
+      ],
+      "resultingFullTurnSequence": 2,
+      "firstPlayerLimits": {
+        "miniTurnsRemaining": 0,
+        "miniTurnsUsed": 1,
+        "pendingActionPhaseSkips": 0,
+        "pendingFullTurnSkips": 0,
+        "queensCourtPlayedThisFT": false,
+        "rank10PlayedThisFT": false,
+        "swapBarUsedThisFT": false,
+        "ultraPlayedThisFT": false
+      },
+      "firstPlayerHand": [
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣"
+      ],
+      "firstPlayerPR": [
+        {
+          "identity": "10♣",
+          "state": {
+            "pointValue": 10
+          }
+        }
+      ],
+      "winner": null
+    },
+    {
+      "name": "ordinary score BJ",
+      "seed": 81001,
+      "predeterminedPrefix": [
+        "BJ",
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣",
+        "2♦",
+        "3♦",
+        "4♦",
+        "5♦",
+        "6♦",
+        "9♦"
+      ],
+      "firstPlayer": "P1",
+      "responsePolicy": "decline every optional response",
+      "declarations": [
+        {
+          "ordinal": 1,
+          "family": "score",
+          "mode": "points",
+          "usedBefore": 0,
+          "remainingBefore": 1
+        }
+      ],
+      "events": [
+        {
+          "id": "EV-000002",
+          "sequence": 2,
+          "commandId": "CORE-1-1-P1-ORCH-0-START",
+          "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "snapshot": {
+              "rank3": 0,
+              "rank4": 0,
+              "rank5": 0,
+              "capturedFullTurnSequence": 1
+            }
+          },
+          "previousStateHash": "39b3f238517eeba41a0ab74a3c600f30a5453f227eeca35ef665d62815437e05",
+          "stateHash": "becb43d0e59a901db363b065969825a33c794a0a9201a2d372dee65be56391f3"
+        },
+        {
+          "id": "EV-000004",
+          "sequence": 3,
+          "commandId": "CORE-1-1-P1-ORCH-0-START",
+          "type": "CORE_START_PREPARED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "fullTurnSequence": 1,
+            "automaticUntap": false
+          },
+          "previousStateHash": "becb43d0e59a901db363b065969825a33c794a0a9201a2d372dee65be56391f3",
+          "stateHash": "f596899224dce28e5f885403dcc36de480265ca226d3d4249e22f5700d9478f3"
+        },
+        {
+          "id": "EV-000006",
+          "sequence": 4,
+          "commandId": "CORE-1-1-P1-ORCH-0-START",
+          "type": "START_PHASE_BEGAN",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "startSequence": 1
+          },
+          "previousStateHash": "f596899224dce28e5f885403dcc36de480265ca226d3d4249e22f5700d9478f3",
+          "stateHash": "9754f8cc78e53c2df4c8a93211230ea0cf3bdbbef7c83ac3c44506d7241c0a49"
+        },
+        {
+          "id": "EV-000005",
+          "sequence": 5,
+          "commandId": "CORE-4-1-P1-phase-enter-action--",
+          "type": "CORE_ACTION_PHASE_ENTERED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "miniTurnsRemaining": 1
+          },
+          "previousStateHash": "9754f8cc78e53c2df4c8a93211230ea0cf3bdbbef7c83ac3c44506d7241c0a49",
+          "stateHash": "ddcf2f1ad906390876eb621d526c68b02efeb034c7c25e7e2a988db699d14577"
+        },
+        {
+          "id": "EV-000006",
+          "sequence": 6,
+          "commandId": "CORE-5-1-P1-score-points-CORE-001-",
+          "type": "CORE_ACTION_DECLARED",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "playerId": "P1",
+            "actionType": "play-for-points",
+            "stackClass": "points",
+            "sourceCardIds": [
+              "CORE-001"
+            ],
+            "targetCardIds": []
+          },
+          "previousStateHash": "ddcf2f1ad906390876eb621d526c68b02efeb034c7c25e7e2a988db699d14577",
+          "stateHash": "5a21b2637bbb4460662b4a002c1bc3ce77b9cb27a7ff4a0728d739bfa89d70ad"
+        },
+        {
+          "id": "EV-000007",
+          "sequence": 7,
+          "commandId": "CORE-6-1-P2-ORCH-0-AUTO-PRIORITY",
+          "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "consecutiveDeclines": 1,
+            "semanticClass": "engine-orchestration"
+          },
+          "previousStateHash": "5a21b2637bbb4460662b4a002c1bc3ce77b9cb27a7ff4a0728d739bfa89d70ad",
+          "stateHash": "12eac7791f56da2a8b38cec0672bd3765b5f800f051d9101f4f5fb0188d1dd40"
+        },
+        {
+          "id": "EV-000008",
+          "sequence": 8,
+          "commandId": "CORE-7-1-P1-ORCH-1-AUTO-PRIORITY",
+          "type": "CORE_AUTOMATIC_PRIORITY_ADVANCE",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "consecutiveDeclines": 2,
+            "semanticClass": "engine-orchestration"
+          },
+          "previousStateHash": "12eac7791f56da2a8b38cec0672bd3765b5f800f051d9101f4f5fb0188d1dd40",
+          "stateHash": "d189e0556d2170a049aff49ce866cb77231a1f4b526fbac318afe56033441482"
+        },
+        {
+          "id": "EV-000010",
+          "sequence": 9,
+          "commandId": "CORE-7-1-P1-ORCH-1-AUTO-PRIORITY",
+          "type": "CORE_RESPONSE_WINDOW_CLOSED",
+          "visibility": "public",
+          "payload": {
+            "stackDepth": 1,
+            "reason": "consecutive-declines-or-no-response",
+            "semanticClass": "engine-orchestration"
+          },
+          "previousStateHash": "d189e0556d2170a049aff49ce866cb77231a1f4b526fbac318afe56033441482",
+          "stateHash": "f52f17fa229d37eebe8782caaca58a715b35eb8bae4198010c935de1d94d5c94"
+        },
+        {
+          "id": "EV-000010",
+          "sequence": 10,
+          "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+          "type": "CORE_ROOT_RESOLUTION_BEGAN",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "actionType": "play-for-points",
+            "stackClass": "points"
+          },
+          "previousStateHash": "f52f17fa229d37eebe8782caaca58a715b35eb8bae4198010c935de1d94d5c94",
+          "stateHash": "81d803a37efadc20bf501d0537efdb7d27fa22c9b5b8bd9a10a5b63e5bacbdf5"
+        },
+        {
+          "id": "EV-000012",
+          "sequence": 11,
+          "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+          "type": "CORE_CARD_SCORED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "cardId": "CORE-001",
+            "pointValue": 11
+          },
+          "previousStateHash": "81d803a37efadc20bf501d0537efdb7d27fa22c9b5b8bd9a10a5b63e5bacbdf5",
+          "stateHash": "691cf94d89c22f3fbd1b198036134f92ea17eb576d170549c5467df041ecb5aa"
+        },
+        {
+          "id": "EV-000014",
+          "sequence": 12,
+          "commandId": "CORE-9-1-P1-ORCH-2-RESOLVE",
+          "type": "CORE_ROOT_RESOLVED",
+          "visibility": "public",
+          "payload": {
+            "stackItemId": "CORE-SI-000005-P1-ROOT-play-for-points-0",
+            "actionType": "play-for-points"
+          },
+          "previousStateHash": "691cf94d89c22f3fbd1b198036134f92ea17eb576d170549c5467df041ecb5aa",
+          "stateHash": "7e2d63f850d885ab0f10e3f947d4f1c092a6129d02ed2ca5ac7596a5c3dd2d1c"
+        },
+        {
+          "id": "EV-000013",
+          "sequence": 13,
+          "commandId": "CORE-12-1-P1-ORCH-3-END",
+          "type": "CORE_FULL_TURN_COMPLETED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P1",
+            "nextPlayerId": "P2",
+            "consumedSkipSlots": [],
+            "completedFullTurnSequence": 1
+          },
+          "previousStateHash": "7e2d63f850d885ab0f10e3f947d4f1c092a6129d02ed2ca5ac7596a5c3dd2d1c",
+          "stateHash": "ea0f1a0c4114325f8954fbe245cbb406a6a5b837ce9bb6e2529e174c513a93e8"
+        },
+        {
+          "id": "EV-000014",
+          "sequence": 14,
+          "commandId": "CORE-13-2-P2-ORCH-4-START",
+          "type": "VOLTAGE_SNAPSHOT_CAPTURED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "snapshot": {
+              "rank3": 0,
+              "rank4": 0,
+              "rank5": 0,
+              "capturedFullTurnSequence": 2
+            }
+          },
+          "previousStateHash": "ea0f1a0c4114325f8954fbe245cbb406a6a5b837ce9bb6e2529e174c513a93e8",
+          "stateHash": "8e3ed0c42b9dd20600895668f5486ee84dc7c7386c564cc4b824306284d138d2"
+        },
+        {
+          "id": "EV-000016",
+          "sequence": 15,
+          "commandId": "CORE-13-2-P2-ORCH-4-START",
+          "type": "CORE_START_PREPARED",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "fullTurnSequence": 2,
+            "automaticUntap": false
+          },
+          "previousStateHash": "8e3ed0c42b9dd20600895668f5486ee84dc7c7386c564cc4b824306284d138d2",
+          "stateHash": "da295bc9de3b5142da3a22677e1c118fb748643d30fc310ba6ee8e12b758515d"
+        },
+        {
+          "id": "EV-000018",
+          "sequence": 16,
+          "commandId": "CORE-13-2-P2-ORCH-4-START",
+          "type": "START_PHASE_BEGAN",
+          "visibility": "public",
+          "payload": {
+            "playerId": "P2",
+            "startSequence": 1
+          },
+          "previousStateHash": "da295bc9de3b5142da3a22677e1c118fb748643d30fc310ba6ee8e12b758515d",
+          "stateHash": "acad1ed783f897985a4ab927bc7247a08d5e8de5212e1f8df6ddc3b3e707e877"
+        }
+      ],
+      "resultingFullTurnSequence": 2,
+      "firstPlayerLimits": {
+        "miniTurnsRemaining": 0,
+        "miniTurnsUsed": 1,
+        "pendingActionPhaseSkips": 0,
+        "pendingFullTurnSkips": 0,
+        "queensCourtPlayedThisFT": false,
+        "rank10PlayedThisFT": false,
+        "swapBarUsedThisFT": false,
+        "ultraPlayedThisFT": false
+      },
+      "firstPlayerHand": [
+        "2♣",
+        "3♣",
+        "4♣",
+        "5♣"
+      ],
+      "firstPlayerPR": [
+        {
+          "identity": "BJ",
+          "state": {
+            "pointValue": 11
+          }
+        }
+      ],
+      "winner": null
+    }
+  ],
+  "counterMatrix": {
+    "ordinary-effect": {
+      "base-ace-counter": true,
+      "spade-ace-counter": true,
+      "super-ace-counter": true,
+      "ultra-three-red": true,
+      "king-spade-counter": false
+    },
+    "rank10": {
+      "base-ace-counter": true,
+      "spade-ace-counter": true,
+      "super-ace-counter": true,
+      "ultra-three-red": true,
+      "king-spade-counter": false
+    },
+    "super": {
+      "base-ace-counter": true,
+      "spade-ace-counter": true,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": true
+    },
+    "ultra": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": false
+    },
+    "sudden-death": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": false
+    },
+    "anchor": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": false
+    },
+    "queens-court": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": true
+    },
+    "royal-marriage": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": true
+    },
+    "points": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": false
+    },
+    "scuttle": {
+      "base-ace-counter": false,
+      "spade-ace-counter": false,
+      "super-ace-counter": false,
+      "ultra-three-red": false,
+      "king-spade-counter": false
+    }
+  }
+}

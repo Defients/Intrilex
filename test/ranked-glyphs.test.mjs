@@ -406,11 +406,15 @@ test('wiring: profile workspace imports and renders rank glyph', async () => {
   assert.ok(src.includes('profile-ranked-hero'), 'profile must render a rank hero section');
 });
 
-test('wiring: ranked-duel-renderer imports rank glyph for player plate', async () => {
-  const src = await readFile(path.join(root, 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
-  assert.ok(src.includes('renderRankGlyph'), 'renderer must import renderRankGlyph');
-  assert.ok(src.includes('rd-plate-glyph'), 'player plate must include a rank glyph');
-  assert.ok(src.includes('ratingToTierDivision'), 'renderer must resolve tier from rating');
+test('wiring: ranked-duel-terminal imports rank glyph for terminal result block', async () => {
+  // The active player plate is now rendered by the Astra React board
+  // (client/mount.tsx + game-table.tsx). The terminal renderer
+  // (ranked-duel-terminal.mjs) imports renderRankGlyph and ratingToTierDivision
+  // for the post-match rank result block.
+  const src = await readFile(path.join(root, 'apps/lab-web/src/play/ranked-duel-terminal.mjs'), 'utf8');
+  assert.ok(src.includes('renderRankGlyph'), 'terminal renderer must import renderRankGlyph');
+  assert.ok(src.includes('rank-result-block'), 'terminal must render a rank result block');
+  assert.ok(src.includes('ratingToTierDivision'), 'terminal renderer must resolve tier from rating');
 });
 
 test('wiring: styles.css imports rank-glyph.css', async () => {

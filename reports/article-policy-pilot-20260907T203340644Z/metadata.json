@@ -1,0 +1,1297 @@
+{
+  "createdAt": "2026-09-07T20:33:40.644Z",
+  "gitHead": "c43edb98ac5de59111d8ae2b86c80a9493d44af3",
+  "node": "v22.14.0",
+  "nodeVersions": {
+    "node": "22.14.0",
+    "acorn": "8.14.0",
+    "ada": "2.9.2",
+    "amaro": "0.3.0",
+    "ares": "1.34.4",
+    "brotli": "1.1.0",
+    "cjs_module_lexer": "1.4.1",
+    "cldr": "46.0",
+    "icu": "76.1",
+    "llhttp": "9.2.1",
+    "modules": "127",
+    "napi": "10",
+    "nbytes": "0.1.1",
+    "ncrypto": "0.0.1",
+    "nghttp2": "1.64.0",
+    "nghttp3": "1.6.0",
+    "ngtcp2": "1.10.0",
+    "openssl": "3.0.15+quic",
+    "simdjson": "3.10.1",
+    "simdutf": "6.0.3",
+    "sqlite": "3.47.2",
+    "tz": "2024b",
+    "undici": "6.21.1",
+    "unicode": "16.0",
+    "uv": "1.49.2",
+    "uvwasi": "0.0.21",
+    "v8": "12.4.254.21-node.22",
+    "zlib": "1.3.0.1-motley-82a5fec"
+  },
+  "platform": "win32",
+  "arch": "x64",
+  "locale": {
+    "locale": "en-US",
+    "calendar": "gregory",
+    "numberingSystem": "latn",
+    "timeZone": "America/New_York",
+    "year": "numeric",
+    "month": "numeric",
+    "day": "numeric"
+  },
+  "command": "node reports/article-policy-pilot-20260907.mjs",
+  "scriptSha256": "4a1215fd03ddc1783e9f50fbd5968344511d81466d2ea2cf0dd2ef121f2547ca",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "rootPackage": "1.0.0",
+  "releaseIdentity": {
+    "schemaVersion": "1.0.0",
+    "productName": "Intrilex Simulation Lab",
+    "version": "1.0.0",
+    "releaseTitle": "Certified Public Baseline",
+    "buildKind": "RANKED_DUEL_PLAYER_SHELL",
+    "engineVersion": "4.2.6",
+    "rulesVersion": "4.3.1",
+    "officialRulesVersion": "4.3.1",
+    "coreSchemaVersion": "4.1.0",
+    "telemetrySchemaVersion": "4.1.0",
+    "analyticsSchemaVersion": "4.2.0",
+    "decisionTraceSchemaVersion": "2.0.0",
+    "playerRuntimeVersion": "1.2.0",
+    "saveFormatVersion": 2,
+    "replayDataVersion": "0.10.1",
+    "localProfileSchemaVersion": "1.1.0",
+    "defaultSimulationProfile": "core-advanced-authority",
+    "supportedProfileIds": [
+      "core-advanced-authority",
+      "core-effect-declaration-authority",
+      "core-foundation-authority",
+      "core-private-choice-authority",
+      "core-response-authority",
+      "core-unrestricted-authority"
+    ],
+    "artifactKinds": [
+      "source",
+      "deploy",
+      "evidence"
+    ],
+    "canonicalArchivePrefix": "Intrilex_Simulation_Lab_v1.0.0",
+    "releaseDate": "2026-09-07",
+    "integrityHash": "acbb9d386c748daded29119e3b0db889"
+  },
+  "engineManifest": {
+    "schemaVersion": "1.0.0",
+    "generatedAt": "2026-09-04T17:54:23.911Z",
+    "engineVersion": "4.2.6",
+    "rulesVersion": "4.3.1",
+    "officialRulesVersion": "4.3.1",
+    "defaultSimulationProfile": "core-advanced-authority",
+    "supportedProfileIds": [
+      "core-advanced-authority",
+      "core-effect-declaration-authority",
+      "core-foundation-authority",
+      "core-private-choice-authority",
+      "core-response-authority",
+      "core-unrestricted-authority"
+    ],
+    "canonicalRanks": [
+      "A",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "J",
+      "Q",
+      "K",
+      "RJ",
+      "BJ"
+    ],
+    "rankAuthority": {
+      "schemaVersion": "1.0.0",
+      "engineVersion": "4.2.6",
+      "rulesVersion": "4.3.1",
+      "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0",
+      "ranks": [
+        {
+          "rankId": "A",
+          "displayName": "A",
+          "prPoints": 4,
+          "scuttleOrder": 1,
+          "modes": [
+            "base-counter",
+            "purge",
+            "anchor-counter",
+            "spade-exile-counter",
+            "super-counter"
+          ],
+          "prScuttleImmune": true,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "A♠ and ⭐A use expanded counter authority."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "2",
+          "displayName": "2",
+          "prPoints": 2,
+          "scuttleOrder": 2,
+          "modes": [
+            "quick-score-discard",
+            "wild-catalyst",
+            "solo-wild-copy",
+            "commandeer"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "⭐2 bypasses Guard and rank control protection, never Aegis.",
+            "Solo Wild copies a same-suit rank 3-7 Base effect; wild for effect only, not points."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "3",
+          "displayName": "3",
+          "prPoints": 3,
+          "scuttleOrder": 3,
+          "modes": [
+            "hand-raid",
+            "instant-bounce",
+            "spade-enhancement",
+            "super-raid"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "Generated effect plays open their own response window."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "4",
+          "displayName": "4",
+          "prPoints": 4,
+          "scuttleOrder": 4,
+          "modes": [
+            "row-clear",
+            "natural",
+            "total-clear",
+            "row-exchange"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": true,
+          "notes": [
+            "4♠ and ⭐4 are structural operations."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "5",
+          "displayName": "5",
+          "prPoints": 5,
+          "scuttleOrder": 5,
+          "modes": [
+            "recycle",
+            "suit-rummage",
+            "super-recycle"
+          ],
+          "prScuttleImmune": true,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "Exile access is suit-position dependent."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "6",
+          "displayName": "6",
+          "prPoints": 6,
+          "scuttleOrder": 6,
+          "modes": [
+            "dig",
+            "swap-bar-peek",
+            "deep-draw",
+            "super-dig"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "6♠ requires at least one other hand card at declaration."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "7",
+          "displayName": "7",
+          "prPoints": 7,
+          "scuttleOrder": 7,
+          "modes": [
+            "topdeck-cast",
+            "scoring-trigger",
+            "spade-topdeck",
+            "sequential-topdeck"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "⭐7 uses suspended child plays."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "8",
+          "displayName": "8",
+          "prPoints": 8,
+          "scuttleOrder": 8,
+          "modes": [
+            "aegis-field",
+            "scuttle-counter",
+            "free-scuttle",
+            "absolute-scuttle"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": true,
+          "notes": [
+            "8♠ respects Scuttle immunity; ⭐8 ignores ordinary Scuttle immunity."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "9",
+          "displayName": "9",
+          "prPoints": 9,
+          "scuttleOrder": 9,
+          "modes": [
+            "tap",
+            "goal-shift",
+            "spade-goal-shift",
+            "anchor"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "Nines can never receive Aegis."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "10",
+          "displayName": "10",
+          "prPoints": 10,
+          "scuttleOrder": 10,
+          "modes": [
+            "club-foundation",
+            "diamond-mimic",
+            "heart-tempo",
+            "spade-stack-theft",
+            "spade-exile-recovery"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "Effect-play Tens become permanently Exile-Bound when resolution begins."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "J",
+          "displayName": "J",
+          "prPoints": 3,
+          "scuttleOrder": 11,
+          "modes": [
+            "disrupt",
+            "pr-attachment",
+            "er-attachment",
+            "tempo-force"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "Attachment validity is rechecked after relevant state changes."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "Q",
+          "displayName": "Q",
+          "prPoints": 2,
+          "scuttleOrder": 12,
+          "modes": [
+            "pr-score",
+            "guard-anchor",
+            "quick-aegis",
+            "spade-protection"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "A Queen entering ER receives exact future-Start Aegis."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "K",
+          "displayName": "K",
+          "prPoints": 8,
+          "scuttleOrder": 13,
+          "modes": [
+            "anchor-goal-counter",
+            "spade-multi-counter",
+            "wild-sovereignty",
+            "anchor",
+            "royal-marriage"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "Royal Marriage is not a Combo.",
+            "K♠ Wild Sovereignty copies one Spade Base effect of rank 3-7 and is Exiled after that Wild use."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "RJ",
+          "displayName": "RJ",
+          "prPoints": 5,
+          "scuttleOrder": 14,
+          "modes": [
+            "hand-swap",
+            "self-reset",
+            "opponent-attack",
+            "shuffle-reset"
+          ],
+          "prScuttleImmune": true,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "Shuffle Reset has narrow counter authority."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        },
+        {
+          "rankId": "BJ",
+          "displayName": "BJ",
+          "prPoints": 11,
+          "scuttleOrder": 15,
+          "modes": [
+            "board-lock-quick",
+            "exile-recycle"
+          ],
+          "prScuttleImmune": false,
+          "prEffectTargetImmune": false,
+          "notes": [
+            "Board Lock is a Quick Effect that costs no Mini-Turn.",
+            "Only ⭐A authority may directly counter Board Lock."
+          ],
+          "sourceEngineVersion": "4.2.6",
+          "sourceRulesVersion": "4.3.1"
+        }
+      ]
+    },
+    "capabilities": [
+      {
+        "profileId": "first-contact-baseline",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "completeActionFamilies": [
+          "draw",
+          "play-for-points",
+          "scuttle",
+          "exhausted-pass"
+        ],
+        "status": "SUPPORTED",
+        "reasonCodes": [
+          "FORMAL_FIRST_CONTACT_TEACHING_OVERRIDE",
+          "GENERIC_EFFECT_ALLOWLIST_EMPTY"
+        ]
+      },
+      {
+        "profileId": "first-contact-response",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "completeActionFamilies": [
+          "draw",
+          "play-for-points",
+          "play-for-effect",
+          "scuttle",
+          "exhausted-pass",
+          "A-base-counter",
+          "8-scuttle-counter",
+          "J-disrupt",
+          "K-anchor-goal-counter"
+        ],
+        "status": "SUPPORTED",
+        "reasonCodes": [
+          "FORMAL_FIRST_CONTACT_TEACHING_OVERRIDE",
+          "ENGINE_OWNED_PRIORITY",
+          "ENGINE_OWNED_COUNTER_AUTHORITY",
+          "PRIVATE_CHOICE_EFFECTS_EXCLUDED"
+        ]
+      },
+      {
+        "profileId": "first-contact-private-choice",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "completeActionFamilies": [
+          "draw",
+          "play-for-points",
+          "play-for-effect",
+          "scuttle",
+          "exhausted-pass",
+          "A-base-counter",
+          "8-scuttle-counter",
+          "J-disrupt",
+          "K-anchor-goal-counter",
+          "3-opponent-presentation",
+          "3-opponent-discard",
+          "3-caster-take",
+          "5-rummage",
+          "6-private-draw",
+          "7-topdeck-assignment",
+          "7-generated-effect",
+          "9-anchor-opponent-discard"
+        ],
+        "status": "SUPPORTED",
+        "reasonCodes": [
+          "FORMAL_FIRST_CONTACT_TEACHING_OVERRIDE",
+          "ENGINE_OWNED_PRIORITY",
+          "ENGINE_OWNED_COUNTER_AUTHORITY",
+          "SEALED_PRIVATE_CHOICE_TOKENS",
+          "VIEWER_AUTHORIZED_CHOICE_FRAMES",
+          "SEVEN_SCORING_TRIGGER_EXCLUDED"
+        ]
+      },
+      {
+        "profileId": "first-contact-trigger-closure",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "completeActionFamilies": [
+          "draw",
+          "play-for-points",
+          "play-for-effect",
+          "scuttle",
+          "exhausted-pass",
+          "A-base-counter",
+          "8-scuttle-counter",
+          "J-disrupt",
+          "K-anchor-goal-counter",
+          "3-opponent-presentation",
+          "3-opponent-discard",
+          "3-caster-take",
+          "5-rummage",
+          "6-private-draw",
+          "7-topdeck-assignment",
+          "7-generated-effect",
+          "7-scoring-trigger-take-return",
+          "9-anchor-opponent-discard"
+        ],
+        "status": "SUPPORTED",
+        "reasonCodes": [
+          "FORMAL_FIRST_CONTACT_TEACHING_OVERRIDE",
+          "ENGINE_OWNED_PRIORITY",
+          "ENGINE_OWNED_COUNTER_AUTHORITY",
+          "SEALED_PRIVATE_CHOICE_TOKENS",
+          "VIEWER_AUTHORIZED_CHOICE_FRAMES",
+          "ENGINE_OWNED_TRIGGER_QUEUE",
+          "SEVEN_SCORING_TRIGGER_SUPPORTED"
+        ]
+      },
+      {
+        "profileId": "first-contact-essentials",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "completeActionFamilies": [
+          "draw",
+          "play-for-points",
+          "play-for-effect",
+          "scuttle",
+          "exhausted-pass"
+        ],
+        "status": "SUPPORTED",
+        "reasonCodes": [
+          "FORMAL_FIRST_CONTACT_TEACHING_OVERRIDE",
+          "EXPLICIT_GENERIC_EFFECT_ALLOWLIST",
+          "RESPONSE_WINDOW_EFFECTS_EXCLUDED"
+        ]
+      },
+      {
+        "profileId": "core-foundation-authority",
+        "canonicalProfile": "CORE",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "status": "SUPPORTED",
+        "completeActionFamilies": [
+          "face-down-swap",
+          "draw",
+          "face-up-swap",
+          "play-for-points",
+          "scuttle",
+          "exhausted-pass"
+        ],
+        "reasonCodes": [
+          "STANDARD_CORE_SETUP",
+          "ENGINE_OWNED_SWAP_BAR",
+          "ENGINE_OWNED_ACTION_ECONOMY",
+          "ENGINE_OWNED_SCORING_SCUTTLE",
+          "ENGINE_OWNED_VICTORY_EXHAUSTED",
+          "ADVANCED_CORE_EFFECTS_FAIL_CLOSED"
+        ]
+      },
+      {
+        "profileId": "core-effect-declaration-authority",
+        "canonicalProfile": "CORE",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "status": "SUPPORTED",
+        "completeActionFamilies": [
+          "face-down-swap",
+          "draw",
+          "face-up-swap",
+          "play-for-points",
+          "scuttle",
+          "exhausted-pass",
+          "A-purge",
+          "A-anchor",
+          "3-bounce",
+          "4-row-clear",
+          "4-spade-total-clear",
+          "J-attachment",
+          "Q-anchor",
+          "K-anchor",
+          "RJ-four-modes",
+          "BJ-board-lock"
+        ],
+        "reasonCodes": [
+          "CORE_FOUNDATION_INHERITED",
+          "ENGINE_OWNED_PUBLIC_EFFECT_DECLARATIONS",
+          "ENGINE_SOUND_TARGET_ENUMERATION",
+          "PRIVATE_CHOICE_EFFECTS_FAIL_CLOSED",
+          "RESPONSE_TIMING_FAILS_CLOSED"
+        ]
+      },
+      {
+        "profileId": "core-response-authority",
+        "canonicalProfile": "CORE",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "status": "SUPPORTED",
+        "completeActionFamilies": [
+          "face-down-swap",
+          "draw",
+          "face-up-swap",
+          "play-for-points",
+          "scuttle",
+          "exhausted-pass",
+          "A-purge",
+          "A-anchor",
+          "3-bounce",
+          "4-row-clear",
+          "4-spade-total-clear",
+          "J-attachment",
+          "Q-anchor",
+          "K-anchor",
+          "RJ-four-modes",
+          "BJ-board-lock",
+          "A-base-counter",
+          "A-anchor-counter",
+          "A-spade-exile-counter",
+          "8-scuttle-counter",
+          "8-spade-free-scuttle",
+          "8-aegis-field-quick",
+          "9-tap",
+          "J-disrupt",
+          "Q-aegis-quick",
+          "K-anchor-counter"
+        ],
+        "reasonCodes": [
+          "CORE_EFFECT_AUTHORITY_INHERITED",
+          "ENGINE_OWNED_PRIORITY_CIRCULATION",
+          "COUNTER_ON_COUNTER_CHAINS",
+          "AUDITED_QUICK_AND_INSTANT_ACTIONS",
+          "PRIVATE_CHOICE_AND_INTERRUPT_FAMILIES_FAIL_CLOSED"
+        ]
+      },
+      {
+        "profileId": "core-private-choice-authority",
+        "canonicalProfile": "CORE",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "status": "SUPPORTED",
+        "completeActionFamilies": [
+          "face-down-swap",
+          "draw",
+          "face-up-swap",
+          "play-for-points",
+          "scuttle",
+          "exhausted-pass",
+          "A-purge",
+          "A-anchor",
+          "3-bounce",
+          "4-row-clear",
+          "4-spade-total-clear",
+          "J-attachment",
+          "Q-anchor",
+          "K-anchor",
+          "RJ-four-modes",
+          "BJ-board-lock",
+          "A-base-counter",
+          "A-anchor-counter",
+          "A-spade-exile-counter",
+          "8-scuttle-counter",
+          "8-spade-free-scuttle",
+          "8-aegis-field-quick",
+          "9-tap",
+          "J-disrupt",
+          "Q-aegis-quick",
+          "K-anchor-counter",
+          "3-present-take",
+          "3-force-discard",
+          "5-recycle-rummage",
+          "6-deep-dig",
+          "7-topdeck-casting",
+          "9-anchor-discard"
+        ],
+        "reasonCodes": [
+          "CORE_RESPONSE_AUTHORITY_INHERITED",
+          "SEALED_PRIVATE_CHOICE_TOKENS",
+          "VIEWER_AUTHORIZED_PROJECTIONS",
+          "ENGINE_OWNED_GENERATED_SEVEN_EFFECTS",
+          "QUICK_PRIVATE_CHOICE_AND_ADVANCED_CORE_FAIL_CLOSED"
+        ]
+      },
+      {
+        "profileId": "core-advanced-authority",
+        "canonicalProfile": "CORE",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "status": "SUPPORTED",
+        "completeActionFamilies": [
+          "face-down-swap",
+          "draw",
+          "face-up-swap",
+          "play-for-points",
+          "scuttle",
+          "exhausted-pass",
+          "A-purge",
+          "A-anchor",
+          "3-bounce",
+          "4-row-clear",
+          "4-spade-total-clear",
+          "J-attachment",
+          "Q-anchor",
+          "K-anchor",
+          "RJ-four-modes",
+          "BJ-board-lock",
+          "A-base-counter",
+          "A-anchor-counter",
+          "A-spade-exile-counter",
+          "8-scuttle-counter",
+          "8-spade-free-scuttle",
+          "8-aegis-field-quick",
+          "9-tap",
+          "J-disrupt",
+          "Q-aegis-quick",
+          "K-anchor-counter",
+          "3-present-take",
+          "3-force-discard",
+          "5-recycle-rummage",
+          "6-deep-dig",
+          "7-topdeck-casting",
+          "9-anchor-discard",
+          "royal-marriage",
+          "queens-court",
+          "super-two-score",
+          "super-two-hold",
+          "super-four-exchange",
+          "super-eight",
+          "super-jack",
+          "rank10-heart",
+          "rank10-spade-recovery",
+          "rank10-stack-theft",
+          "rank10-diamond-mimic",
+          "rank10-club-foundation",
+          "super-ace",
+          "king-spade-counter",
+          "wild-sovereignty",
+          "board-lock",
+          "ultra-three-black-public",
+          "ultra-three-red",
+          "ultra-two-black-two-red",
+          "voltage-five-gy-bottom",
+          "voltage-three-choice",
+          "voltage-four-prediction",
+          "voltage-five-refine",
+          "special-scoring-riders"
+        ],
+        "reasonCodes": [
+          "ENGINE_OWNED_ADVANCED_PUBLIC_SURFACE",
+          "RANK10_PRINTED_PENALTIES_ONLY",
+          "PUBLIC_SUPERS_ULTRAS_VOLTAGE_ROYAL_MARRIAGE",
+          "MIMIC_AND_HIDDEN_SUPER_BRANCHES_FAIL_CLOSED"
+        ]
+      },
+      {
+        "profileId": "core-unrestricted-authority",
+        "canonicalProfile": "CORE",
+        "playerCounts": [
+          2
+        ],
+        "moduleSets": [
+          []
+        ],
+        "status": "SUPPORTED",
+        "completeActionFamilies": [
+          "face-down-swap",
+          "draw",
+          "face-up-swap",
+          "play-for-points",
+          "scuttle",
+          "exhausted-pass",
+          "A-purge",
+          "A-anchor",
+          "3-bounce",
+          "4-row-clear",
+          "4-spade-total-clear",
+          "J-attachment",
+          "Q-anchor",
+          "K-anchor",
+          "RJ-four-modes",
+          "BJ-board-lock",
+          "A-base-counter",
+          "A-anchor-counter",
+          "A-spade-exile-counter",
+          "8-scuttle-counter",
+          "8-spade-free-scuttle",
+          "8-aegis-field-quick",
+          "9-tap",
+          "J-disrupt",
+          "Q-aegis-quick",
+          "K-anchor-counter",
+          "3-present-take",
+          "3-force-discard",
+          "5-recycle-rummage",
+          "6-deep-dig",
+          "7-topdeck-casting",
+          "9-anchor-discard",
+          "royal-marriage",
+          "queens-court",
+          "super-two-score",
+          "super-two-hold",
+          "super-four-exchange",
+          "super-eight",
+          "super-jack",
+          "super-three-raid",
+          "super-five-recycle",
+          "super-six-dig",
+          "super-seven-topdeck",
+          "rank10-heart",
+          "rank10-spade-recovery",
+          "rank10-stack-theft",
+          "rank10-diamond-mimic",
+          "rank10-club-foundation",
+          "rank10-generated-effect-copy",
+          "super-ace",
+          "king-spade-counter",
+          "wild-sovereignty",
+          "board-lock",
+          "ultra-three-black-public",
+          "ultra-three-red",
+          "ultra-two-black-two-red",
+          "voltage-five-gy-bottom",
+          "voltage-three-choice",
+          "voltage-four-prediction",
+          "voltage-five-refine",
+          "special-scoring-riders",
+          "sudden-death-autonomy"
+        ],
+        "reasonCodes": [
+          "ENGINE_OWNED_UNRESTRICTED_CORE",
+          "HIDDEN_SUPER_BRANCHES",
+          "SUDDEN_DEATH_AUTONOMY",
+          "GENERATED_EFFECT_COPY",
+          "OPTIONAL_MODULES_AND_MULTIPLAYER_FAIL_CLOSED"
+        ]
+      }
+    ],
+    "integrityHash": "db00ef3d0f67a35c95dd64de61c9c9b5"
+  },
+  "policyDefinitions": [
+    {
+      "policyId": "score-rush",
+      "version": "2.0.0",
+      "traits": {
+        "immediateScorePreference": 1,
+        "aggression": 0.35,
+        "counterConservation": 0.65
+      },
+      "policyHash": "18e4212324c689f0054cb235436ded3f962758e2559d1769acdca23ba4e4e389",
+      "strengthTier": "heuristic"
+    },
+    {
+      "policyId": "tempo",
+      "version": "2.0.0",
+      "traits": {
+        "aggression": 0.55,
+        "handValuePreservation": 0.35,
+        "counterConservation": 0.45
+      },
+      "policyHash": "8783e0188171464ae1c1c96d2769cc9f691524ea5f8d12d682d15249106453b7",
+      "strengthTier": "heuristic"
+    },
+    {
+      "policyId": "control",
+      "version": "2.0.0",
+      "traits": {
+        "disruptionPreference": 1,
+        "aggression": 0.85,
+        "counterConservation": 0.2
+      },
+      "policyHash": "f9928cfce25865a609f1033b4671ad3d45bc3d7f644ab6f3bdb3c9a4b2c431cf",
+      "strengthTier": "heuristic"
+    },
+    {
+      "policyId": "value",
+      "version": "2.0.0",
+      "traits": {
+        "handValuePreservation": 0.8,
+        "riskTolerance": 0.35,
+        "counterConservation": 0.55
+      },
+      "policyHash": "ceb6e2192c4495ac9bf7b135955e8f72cbbc795763e45aeaebeb0e337017c826",
+      "strengthTier": "heuristic"
+    },
+    {
+      "policyId": "hybrix-rusher-hard",
+      "version": "1.0.0",
+      "traits": {
+        "archetype": "rusher",
+        "difficulty": "hard",
+        "hybrix": true,
+        "traitVariance": 0.1,
+        "humanErrorRate": 0.05,
+        "moraleGainOnWin": 0.05,
+        "moraleLossOnLoss": 0.05,
+        "moraleDecayRate": 0.01,
+        "moraleMin": 0,
+        "moraleMax": 1,
+        "moraleBaseline": 0.5
+      },
+      "policyHash": "d08822851ad7918c6d6d81968233795bd0aa1a8ee2277caea6f6069120e3035d",
+      "strengthTier": "heuristic"
+    }
+  ],
+  "scoringWeightsSha256": "09f204b8f05bd2bca0bc4e5b9e427621037c085694747804825357038deaf4e6",
+  "scoringWeights": {
+    "choice": {
+      "base": {
+        "value": 820,
+        "tempo": 760,
+        "control": 740,
+        "default": 700
+      },
+      "valueMultiplier": 30,
+      "defaultMultiplier": 16,
+      "selectedBonus": 14,
+      "generatedBonus": 120
+    },
+    "advanced": {
+      "base": {
+        "score-rush": 1000,
+        "control": 1080,
+        "tempo": 1120,
+        "value": 1060,
+        "default": 900
+      },
+      "modeBonus": {
+        "ultra": 300,
+        "rank10": 240,
+        "royal-marriage": 220,
+        "super": 180,
+        "voltage": 160,
+        "special-scoring-riders": 200,
+        "sudden-death": 280
+      },
+      "targetMultiplier": 18,
+      "sourceMultiplierMulti": 3,
+      "sourceMultiplierSingle": 1,
+      "drawMultiplier": 55,
+      "miniMultiplier": 120,
+      "controlBonus": 200,
+      "recoveryBonus": 140,
+      "anchorMultiplier": 16,
+      "triggerBonus": 160,
+      "mimicBonus": 180,
+      "holdBonus": 150,
+      "privateChoiceBonus": 140,
+      "refineBonus": 120,
+      "predictionBonus": 130,
+      "suddenDeathBonus": 300
+    },
+    "phase": 5000,
+    "swapBar": {
+      "faceDownValue": {
+        "value": 900,
+        "default": 620
+      },
+      "faceDownSourcePenalty": -3,
+      "faceUpBase": 700,
+      "faceUpTargetMultiplier": 12
+    },
+    "responseDecline": {
+      "control": {
+        "opponent": 70,
+        "own": 720
+      },
+      "tempo": {
+        "opponent": 210,
+        "own": 760
+      },
+      "score-rush": {
+        "opponent": 330,
+        "own": 800
+      },
+      "default": {
+        "opponent": 270,
+        "own": 820
+      },
+      "ownTopBonus": 900
+    },
+    "counter": {
+      "premium": {
+        "super": 360,
+        "king-spade": 300,
+        "spade": 240
+      },
+      "base": {
+        "control": 1250,
+        "value": 1060,
+        "tempo": 980,
+        "default": 900
+      },
+      "opponentRootBonus": 320,
+      "ownRootPenalty": -500,
+      "depthMultiplier": 18
+    },
+    "disrupt": {
+      "special": {
+        "stack-theft": 600,
+        "scuttle": 280,
+        "tap": 220,
+        "aegis": 180,
+        "default": 100
+      },
+      "base": {
+        "control": 1080,
+        "tempo": 940,
+        "value": 880,
+        "default": 760
+      },
+      "hostileBonus": 240,
+      "quickBonus": 80,
+      "nonHostilePenalty": -280
+    },
+    "playForPoints": {
+      "winScore": 6000,
+      "base": {
+        "score-rush": 1300,
+        "value": 1200,
+        "tempo": 1040,
+        "default": 650
+      },
+      "controlMultiplier": 12,
+      "defaultMultiplier": 34
+    },
+    "scuttle": {
+      "base": {
+        "control": 1080,
+        "value": 930,
+        "default": 820
+      },
+      "targetMultiplier": 28,
+      "sourcePenalty": 7,
+      "absoluteBonus": 240
+    },
+    "draw": {
+      "lowHandThreshold": 2,
+      "lowHandScore": 1100,
+      "tempoScore": 620,
+      "defaultScore": 510
+    },
+    "exhaustedPass": -100,
+    "effect": {
+      "base": {
+        "control": 1050,
+        "value": 930,
+        "tempo": 900,
+        "default": 760
+      },
+      "targetMultiplier": 22,
+      "affectedMultiplier": 60,
+      "goalDeltaMultiplier": 40,
+      "drawMultiplier": 50,
+      "anchorMultiplier": 25,
+      "structuralBonus": 180
+    },
+    "default": {
+      "base": 100,
+      "targetMultiplier": 8,
+      "sourcePenalty": 2
+    }
+  },
+  "hybrixConfiguration": {
+    "configVersion": "1.0.0",
+    "perception": {
+      "visionRange": 40,
+      "visionConeAngleDeg": 120,
+      "soundRange": 20,
+      "soundNoise": 0.3,
+      "reactionDelayMs": 250,
+      "reactionDelayJitter": 0.3,
+      "missChance": 0.03,
+      "falsePositiveChance": 0.01,
+      "baseUncertainty": 0.1,
+      "threatThreshold": 0.4,
+      "opportunityThreshold": 0.3,
+      "fogOfWar": true,
+      "maxPerceivedEntities": 30
+    },
+    "cognition": {
+      "btSpine": [
+        {
+          "id": "SURVIVAL",
+          "priority": 100,
+          "condition": "criticalThreat"
+        },
+        {
+          "id": "COORDINATION",
+          "priority": 80,
+          "condition": "activeDirective"
+        },
+        {
+          "id": "MACRO_GOAL",
+          "priority": 60,
+          "condition": "activeGoal"
+        },
+        {
+          "id": "TACTICAL",
+          "priority": 40,
+          "condition": "enemiesInEngagementRange"
+        },
+        {
+          "id": "IDLE_ROAM",
+          "priority": 20,
+          "condition": "always"
+        }
+      ],
+      "commitThreshold": 15,
+      "topK": 3,
+      "maxEvaluatedActions": 20,
+      "cooldownMs": 500,
+      "hesitationChance": 0.05,
+      "scoreWeights": {
+        "terminal": 1000,
+        "points": 30,
+        "resource": 50,
+        "tempo": 20,
+        "defense": 40,
+        "synergy": 100,
+        "risk": -200,
+        "threat": 25,
+        "opportunity": 35
+      }
+    },
+    "goap": {
+      "maxActiveGoals": 3,
+      "maxPlanDepth": 2,
+      "maxPlanSteps": 4,
+      "budgetMs": 0.1
+    },
+    "memory": {
+      "windowSeconds": 15,
+      "tickRate": 60,
+      "decayFactor": 0.95,
+      "patternRepeatThreshold": 3,
+      "patternConfidenceCap": 1,
+      "nudgeClamps": {
+        "accuracy": [
+          -0.3,
+          0.3
+        ],
+        "aggression": [
+          -0.3,
+          0.3
+        ],
+        "spacing": [
+          -0.2,
+          0.2
+        ]
+      },
+      "maxPatterns": 10
+    },
+    "personality": {
+      "traitVariance": 0.1,
+      "humanErrorRate": 0.05,
+      "moraleGainOnWin": 0.05,
+      "moraleLossOnLoss": 0.05,
+      "moraleDecayRate": 0.01,
+      "moraleMin": 0,
+      "moraleMax": 1,
+      "moraleBaseline": 0.5
+    },
+    "difficulty": {
+      "levels": {
+        "easy": {
+          "reactionTimeMultiplier": 1.6,
+          "decisionDepth": "top1",
+          "errorInjectionRate": 0.15,
+          "coordinationEnabled": false,
+          "memoryAdaptationRate": 0.3,
+          "tacticalCreativity": 0.2,
+          "personalityIntensity": 1
+        },
+        "normal": {
+          "reactionTimeMultiplier": 1,
+          "decisionDepth": "top1",
+          "errorInjectionRate": 0.05,
+          "coordinationEnabled": true,
+          "memoryAdaptationRate": 0.6,
+          "tacticalCreativity": 0.5,
+          "personalityIntensity": 0.5
+        },
+        "hard": {
+          "reactionTimeMultiplier": 0.6,
+          "decisionDepth": "full",
+          "errorInjectionRate": 0.01,
+          "coordinationEnabled": true,
+          "memoryAdaptationRate": 1,
+          "tacticalCreativity": 0.8,
+          "personalityIntensity": 0.3
+        },
+        "nightmare": {
+          "reactionTimeMultiplier": 0.4,
+          "decisionDepth": "full",
+          "errorInjectionRate": 0,
+          "coordinationEnabled": true,
+          "memoryAdaptationRate": 1,
+          "tacticalCreativity": 1,
+          "personalityIntensity": 0.1
+        }
+      },
+      "defaultLevel": "normal"
+    },
+    "coordination": {
+      "blackboardTtlMs": 5000,
+      "maxAlliesTracked": 8,
+      "flankingEnabled": true,
+      "leaderFollowerEnabled": true,
+      "calloutCooldownMs": 2000
+    },
+    "performance": {
+      "decisionBudgetMs": 0.5,
+      "lodTiers": {
+        "full": {
+          "distance": 0,
+          "actionComplexity": "full"
+        },
+        "simplified": {
+          "distance": 30,
+          "actionComplexity": "simplified"
+        },
+        "distant": {
+          "distance": 60,
+          "actionComplexity": "minimal"
+        }
+      },
+      "maxBotsFullAI": 12,
+      "budgetExceededFallback": "IDLE"
+    },
+    "failsafe": {
+      "maxRepeatThreshold": 3,
+      "ditheringWindow": 4,
+      "suicideThreshold": -100,
+      "stuckLoopAction": "REPOSITION",
+      "fallbackAction": "IDLE"
+    },
+    "debug": {
+      "whyTracesEnabled": true,
+      "maxTraceHistory": 100,
+      "metricsEnabled": true,
+      "visualizationOverlays": [
+        "vision_cone",
+        "threat_rings",
+        "intent_arrow",
+        "bt_node_label",
+        "memory_echo",
+        "coordination_lines"
+      ]
+    }
+  },
+  "caveats": [
+    "Labels do not certify local engine bits; input hashes identify a dirty runtime snapshot.",
+    "Policy definition hashes omit imported scoring/helper implementations; source file hashes are therefore also retained.",
+    "Native runCampaign does not implement same-seed AB/BA and is not used."
+  ]
+}

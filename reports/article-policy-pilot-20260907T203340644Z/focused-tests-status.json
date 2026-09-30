@@ -1,0 +1,6 @@
+{
+  "command": "node --test --test-reporter=tap packages/policies/test/smoke.test.mjs packages/simulation-runtime/test/smoke.test.mjs test/scoring-sensitivity.test.mjs test/hybrix-evidence-envelope.test.mjs test/autonomy.test.mjs",
+  "status": 0,
+  "signal": null,
+  "error": null
+}

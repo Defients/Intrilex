@@ -21,7 +21,6 @@ import {
 
 const appSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/app.js'), 'utf8');
 const cardRefSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/workspaces/card-reference.js'), 'utf8');
-const rendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
 const brainCtrlSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/brain/brain-controller.js'), 'utf8');
 const brainFallbackSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/brain/brain-fallback.js'), 'utf8');
 const brain2dSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/brain/brain-2d.js'), 'utf8');
@@ -140,36 +139,6 @@ test('A-02: CSS has guidance and legality styles', () => {
 // ═══════════════════════════════════════════════════════════════
 // A-03: DECISION-INTELLIGENCE TOOLTIPS
 // ═══════════════════════════════════════════════════════════════
-
-test('A-03: cardActionHints map is built from vm.actions', () => {
-  assert.ok(rendererSrc.includes('cardActionHints'), 'Renderer must build cardActionHints');
-  assert.ok(rendererSrc.includes('sourceEntityIds'), 'Must iterate sourceEntityIds from actions');
-});
-
-test('A-03: cardActionHints passed to renderHumanHand', () => {
-  assert.ok(rendererSrc.includes('cardActionHints: opts.cardActionHints'), 'Must pass cardActionHints to hand rendering');
-});
-
-test('A-03: renderCard generates tooltip text for legal cards', () => {
-  assert.ok(rendererSrc.includes('tooltipText'), 'renderCard must generate tooltipText');
-  assert.ok(rendererSrc.includes('card.legalSource && handOpts.cardActionHints'), 'Must check legalSource and hints');
-});
-
-test('A-03: tooltip limits action hints to 4', () => {
-  assert.ok(rendererSrc.includes('hints.slice(0, 4)'), 'Must limit hints to 4');
-  assert.ok(rendererSrc.includes('+${hints.length - 4} more'), 'Must show overflow count');
-});
-
-test('A-03: tooltip provides grounded reasons for illegal cards', () => {
-  assert.ok(rendererSrc.includes('!card.legalSource'), 'Must handle illegal cards');
-  assert.ok(rendererSrc.includes("m.type === 'TAPPED'"), 'Must check tapped status');
-  assert.ok(rendererSrc.includes('isResponseWindow'), 'Must check response window');
-  assert.ok(rendererSrc.includes('isHumanTurn'), 'Must check whose turn it is');
-});
-
-test('A-03: tooltip element has testid', () => {
-  assert.ok(rendererSrc.includes('data-testid="card-tooltip"'), 'Tooltip must have testid');
-});
 
 test('A-03: CSS has tooltip styles', () => {
   assert.ok(rankedDuelCssSrc.includes('.rd-card-tooltip'), 'CSS must have .rd-card-tooltip');

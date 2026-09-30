@@ -1,0 +1,688 @@
+{
+  "schemaVersion": "1.0.0",
+  "system": "Intrilex",
+  "productVersion": "1.0.0",
+  "engineVersion": "4.2.6",
+  "rulesVersion": "4.3.1",
+  "generatedAt": "2026-09-07",
+  "methodology": {
+    "authority": {
+      "productVersion": "1.0.0",
+      "engineVersion": "4.2.6",
+      "rulesVersion": "4.3.1",
+      "officialRulesVersion": "4.3.1",
+      "defaultProfile": "core-advanced-authority",
+      "rankedProfile": "core-unrestricted-authority",
+      "source": "config/release-identity.json"
+    },
+    "evidenceSources": [
+      {
+        "id": "rulebook",
+        "path": "docs/INTRILEX_v4.3.1_COMPLETE_PLAYER_RULEBOOK.md",
+        "tier": "A",
+        "description": "Canonical v4.3.1 rulebook"
+      },
+      {
+        "id": "probe",
+        "path": "reports/intrilex-counter-web-mechanical-probes-complete.json",
+        "tier": "A",
+        "description": "Constructed-state mechanical probes: scoring riders, accelerator sequence, counter predicate matrix"
+      },
+      {
+        "id": "pilot-completion",
+        "path": "reports/article-policy-pilot-completion-20260907T204650571Z/RESULTS.md",
+        "tier": "B",
+        "description": "348-game exploratory policy pilot in core-advanced-authority; 16 seed clusters per pairing"
+      },
+      {
+        "id": "pilot-original",
+        "path": "reports/article-policy-pilot-20260907T203340644Z/RESULTS.md",
+        "tier": "B",
+        "description": "Original 216-game pilot run, combined into the 348-game completion set"
+      },
+      {
+        "id": "static-audit",
+        "path": "reports/article-policy-harness-audit-20260907.md",
+        "tier": "A",
+        "description": "Static read-only audit of current runtime vs rulebook vs upstream; identifies implementation divergences"
+      },
+      {
+        "id": "interaction-graph",
+        "path": "reports/balance-check/03_INTERACTION_GRAPH.md",
+        "tier": "B",
+        "description": "Mechanical interaction graph and hypergeometric reachability values (earlier evidence epoch)"
+      },
+      {
+        "id": "effect-ranking",
+        "path": "reports/balance-check/12_EFFECT_POWER_RANKING.md",
+        "tier": "B",
+        "description": "Effect power ranking (earlier evidence epoch)"
+      },
+      {
+        "id": "recalibration",
+        "path": "reports/balance-check-v0.28.2/EVIDENCE_RECALIBRATION_REPORT.md",
+        "tier": "B",
+        "description": "Post-parity-repair evidence recalibration report"
+      }
+    ],
+    "evidenceTiers": {
+      "A": "Direct source fact: rulebook, verified engine behavior, constructed-state probe, static audit",
+      "B": "Exploratory or earlier-epoch evidence: policy pilot, historical balance reports",
+      "C": "Inference from mechanics and reachability, not directly tested",
+      "D": "Weak or contradicted evidence; do not rely on alone",
+      "X": "No evidence; explicitly unknown"
+    },
+    "statisticalConventions": {
+      "winRate": "wins / decisive completed matches",
+      "wilson95": "Descriptive marginal intervals, not paired-data inferential intervals",
+      "pairedBootstrap": "Seed-cluster percentile bootstrap95 of mean win-credit (draw=0.5), 10000 resamples",
+      "signTest": "Exact two-sided sign test on positive vs negative seed AB/BA win-credit contrasts",
+      "holmCorrection": "Supplementary Holm-adjusted p-values; no multiplicity correction in original pilot",
+      "noPooling": "Different pairings reuse seeds; games must not be pooled as independent observations",
+      "noSelfPlayInference": "Self-play is not evidence of cross-policy superiority",
+      "notObservableIsNotZero": "Absence of evidence is not evidence of absence"
+    },
+    "pilotScope": {
+      "profile": "core-advanced-authority only",
+      "games": 348,
+      "seedClustersPerPairing": 16,
+      "policies": ["score-rush", "tempo", "control", "value", "hybrix-rusher-hard"],
+      "canonicalTerminations": "348/348",
+      "errors": 0,
+      "rejectedCommands": 0,
+      "complianceViolations": 0,
+      "mirrorsComplete": false,
+      "unrestrictedProfileStudied": false,
+      "label": "exploratory"
+    },
+    "confidenceConvention": "Confidence values are epistemic confidence (0-1), not win probability",
+    "sourceHandling": "Read-only treatment of canonical gameplay; SOURCE FACT separated from INFERENCE; policy behavior never treated as optimal play"
+  },
+  "definitions": {
+    "units": {
+      "physicalCard": "A single deck card (e.g., the 4♠)",
+      "effect": "What a card or play does when declared (e.g., Total Clear, Tap, Dig)",
+      "policy": "An implemented heuristic that selects legal actions; not a player and not optimal play",
+      "sequence": "A specific ordered set of declarations within a turn",
+      "strategicLine": "A coherent priority set and sequencing logic",
+      "archetype": "A cluster of lines sharing a primary axis",
+      "statisticalProfile": "The observed behavior and outcome pattern of a policy under pilot conditions"
+    },
+    "gameModel": {
+      "deck": "54 cards: 52 standard plus Red Joker and Black Joker",
+      "players": 2,
+      "defaultGoal": 21,
+      "initialHandP1": 5,
+      "initialHandP2": 6,
+      "swapBar": "Two face-down cards plus one face-up card",
+      "miniTurnCap": 3,
+      "victoryCondition": "Secured PR Points >= current Goal at end of player's own completed Full Turn"
+    },
+    "terminology": {
+      "PR": "Point Row",
+      "ER": "Enduring Row",
+      "DP": "Draw Pile",
+      "GY": "Graveyard",
+      "OTT": "On the Table",
+      "Aegis": "Temporary protection from many effects",
+      "QueenGuard": "Protects other friendly OTT cards from hostile single-target effects",
+      "BoardLock": "Global Black Joker lockdown of non-counter effects, Scuttle, and Trap",
+      "Exhausted": "Draw-pile depletion state",
+      "Ultras": "Official multi-card plays",
+      "Supers": "Two-card same-rank plays",
+      "RoyalMarriage": "King-Queen multi-card Anchor Play",
+      "QueensCourt": "Exactly two Queens from hand as one multi-card Anchor Play",
+      "Anchor": "A card committed to the Enduring Row",
+      "Vulnerable": "Aegis-absent and (rules-faithfully) Guard-absent target eligible for Sudden Death"
+    },
+    "declarationClasses": [
+      "ordinary-effect",
+      "rank10",
+      "super",
+      "ultra",
+      "sudden-death",
+      "anchor",
+      "queens-court",
+      "royal-marriage",
+      "points",
+      "scuttle"
+    ],
+    "counterTypes": [
+      "base-ace-counter",
+      "spade-ace-counter",
+      "super-ace-counter",
+      "ultra-three-red",
+      "king-spade-counter",
+      "king-counter"
+    ]
+  },
+  "archetypes": [
+    {
+      "id": "score-pressure",
+      "name": "Score-pressure / race",
+      "primaryAxis": "immediate scoring",
+      "priorities": ["Secure high-value points (BJ=11, 10=10, 9=9, 8=8, K=8) as fast as possible", "Use tempo only when it materially accelerates victory"],
+      "sequencing": "Score on consecutive Mini-Turns; spend 10♥ or 2B+2R only when extra actions convert directly into secured points",
+      "resourceConversion": "cards → PR points; minimal hand preservation",
+      "responsePatterns": ["Counter only what threatens the race (4♠, Board Lock, Sudden Death on key PR)", "Ignore disruption that does not reduce secured points below Goal"],
+      "interactionStructure": "Forces opponent to answer points rather than build; opponent must spend responses on a clock they did not choose",
+      "failureConditions": ["Structural reset erases PR lead", "Tap/Scuttle removes key cards", "Board Lock suppresses non-scoring tools", "Opponent scores back faster"],
+      "pivotLogic": "If opponent holds a reset, shift to preserving a second wave of scoring cards rather than overcommitting to the first wave",
+      "paretoProfile": {"immediateScoring": "high", "actionEconomy": "low", "disruption": "low", "resilience": "low", "responseRetention": "low", "lateGameReach": "low"},
+      "evidenceTier": "B",
+      "confidence": 0.8,
+      "pilotPolicy": "score-rush"
+    },
+    {
+      "id": "tempo-compression",
+      "name": "Tempo-compression",
+      "primaryAxis": "action economy",
+      "priorities": ["Convert 10♥ (+2 Mini-Turns, cap 3, draw 1) and 2B+2R Ultra (+2 Mini-Turns, draw 2 or rummage 1 Exile) into extra actions and cards"],
+      "sequencing": "Accelerator → setup/draw → scoring or disruption within same Full Turn",
+      "resourceConversion": "hand cards + accelerator → action economy → secured points or board control",
+      "responsePatterns": ["Counter the opponent's counter to the accelerator", "If accelerator is spent without terminal conversion, the line fails"],
+      "interactionStructure": "Compresses multiple turns of value into one Full Turn; strong when opponent cannot answer acceleration or when extra actions convert directly into secured points",
+      "failureConditions": ["Acceleration spent without terminal conversion", "Added hand value stranded", "Opponent answers the key scoring play the acceleration was building toward"],
+      "pivotLogic": "If accelerator is countered or fizzled, fall back to value/conversion line rather than forcing a second accelerator",
+      "paretoProfile": {"immediateScoring": "medium", "actionEconomy": "high", "disruption": "medium", "resilience": "low", "responseRetention": "low", "lateGameReach": "medium"},
+      "evidenceTier": "B",
+      "confidence": 0.75,
+      "pilotPolicy": "tempo"
+    },
+    {
+      "id": "control-suppression",
+      "name": "Control / suppression",
+      "primaryAxis": "disruption",
+      "priorities": ["9 Tap", "Jack Disrupt", "counters", "4 clears", "Queen Anchors", "Board Lock", "10♠ Stack Theft"],
+      "sequencing": "Disrupt opponent's key plays; lock the board; win the long game on accumulated advantage",
+      "resourceConversion": "cards → denied opponent value → eventual scoring advantage",
+      "responsePatterns": ["Hold counters for highest-value opponent plays", "Use structural resets at peak opponent commitment"],
+      "interactionStructure": "Suppresses opponent's plan rather than executing its own; strong when opponent cannot simply score through disruption",
+      "failureConditions": ["Opponent scores through disruption", "Control player falls behind in PR and cannot recover", "Control cards spent without reducing opponent secured points"],
+      "pivotLogic": "If behind in PR, abandon control and race; if opponent's hand is empty, shift to hand-attack or direct scoring",
+      "paretoProfile": {"immediateScoring": "low", "actionEconomy": "low", "disruption": "high", "resilience": "low", "responseRetention": "high", "lateGameReach": "medium"},
+      "evidenceTier": "B",
+      "confidence": 0.6,
+      "pilotPolicy": "control",
+      "pilotCaveat": "Implemented control policy underperformed heavily in the pilot; this is policy-behavior evidence, not strategic-line weakness evidence"
+    },
+    {
+      "id": "value-conversion",
+      "name": "Value / conversion",
+      "primaryAxis": "resource conservation and conversion",
+      "priorities": ["Preserve flexible cards", "Use Dig/Recycle/Deep Draw (5, 6, 6♠, ⭐6) to find higher-value conversions", "Wait for the right window"],
+      "sequencing": "Draw/filter → accumulate flexible resources → convert at peak value",
+      "resourceConversion": "low-value cards → draw/filter → high-value cards → secured points or board control",
+      "responsePatterns": ["Hold counters", "Respond only when opponent threatens a terminal play"],
+      "interactionStructure": "Trades early tempo for late-game card quality and flexibility",
+      "failureConditions": ["Immediate score pressure kills before saved resources convert", "Window closes before value line can deploy"],
+      "pivotLogic": "If under lethal pressure, convert saved resources into immediate scoring or a structural reset rather than continuing to filter",
+      "paretoProfile": {"immediateScoring": "medium", "actionEconomy": "low", "disruption": "low", "resilience": "medium", "responseRetention": "high", "lateGameReach": "medium"},
+      "evidenceTier": "B",
+      "confidence": 0.7,
+      "pilotPolicy": "value"
+    },
+    {
+      "id": "fortress-anchor",
+      "name": "Fortress / anchor",
+      "primaryAxis": "resilience and protected board state",
+      "priorities": ["Queen Anchors", "Queen's Court", "Guard", "Aegis (8/Q/10♣ Foundation)", "protected ER accumulation"],
+      "sequencing": "Establish Queen protection → anchor key cards → accumulate protected ER → win on durability",
+      "resourceConversion": "Queens + Aegis sources → protected board state → long-term scoring advantage",
+      "responsePatterns": ["Two-Queen Defense blocks ⭐A", "Guard blocks hostile single-target effects", "Aegis blocks many effects"],
+      "interactionStructure": "Makes board expensive to attack; opponent must find K♠, 4♠, ⭐4, or ⭐2 to breach",
+      "failureConditions": ["K♠ answers Queen's Court/Royal Marriage", "4♠ bypasses all ordinary protection", "⭐4 exchanges rows", "⭐2 commandeers anchors", "Opponent wins before fortress stabilizes"],
+      "pivotLogic": "If opponent holds K♠ or 4♠, do not overcommit to Queen's Court; shift to scoring or tempo",
+      "paretoProfile": {"immediateScoring": "medium", "actionEconomy": "low", "disruption": "medium", "resilience": "high", "responseRetention": "medium", "lateGameReach": "high"},
+      "evidenceTier": "B",
+      "confidence": 0.75,
+      "pilotPolicy": null
+    },
+    {
+      "id": "reset-structural",
+      "name": "Reset / structural",
+      "primaryAxis": "board state reset",
+      "priorities": ["4♠ Total Clear", "K♠ Wild Sovereignty", "⭐4 Row Exchange", "ordinary 4 Row Clear"],
+      "sequencing": "Wait for peak opponent commitment → reset → rebuild",
+      "resourceConversion": "single high-value card → full board state change",
+      "responsePatterns": ["None directly; structural effects are not counterable by ordinary Ace/King authority"],
+      "interactionStructure": "Erases opponent's board investment; particularly valuable against high-PR boards, Aegis-heavy states, and Queen fortresses",
+      "failureConditions": ["Reset erases user's own progress", "Reset spent at low opponent commitment", "Opponent rebuilds faster"],
+      "pivotLogic": "If reset would erase more of user's board than opponent's, hold it; if behind, use it to equalize rather than to gain advantage",
+      "paretoProfile": {"immediateScoring": "low", "actionEconomy": "low", "disruption": "high", "resilience": "low", "responseRetention": "low", "lateGameReach": "medium"},
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "pilotPolicy": null
+    },
+    {
+      "id": "late-resource-exhausted",
+      "name": "Late-resource / Exhausted",
+      "primaryAxis": "late-game resource conversion",
+      "priorities": ["Anchors", "GY/Exile access (5 Recycle, Exile recovery)", "non-DP resources"],
+      "sequencing": "Track DP depth → preserve anchor/point capacity → convert non-DP resources as DP empties",
+      "resourceConversion": "GY/Exile cards → playable cards when DP is empty",
+      "responsePatterns": ["Anchor lines remain live when Draw is constrained", "Recycle and Exile recovery bypass DP"],
+      "interactionStructure": "Gains value as DP approaches empty; can turn resource deficit into a race around Exhausted tiebreaks",
+      "failureConditions": ["Opponent wins before Exhausted", "Anchor/point capacity insufficient to close the game"],
+      "pivotLogic": "If opponent is racing and DP is not yet empty, do not wait for Exhausted; score or disrupt now",
+      "paretoProfile": {"immediateScoring": "low", "actionEconomy": "low", "disruption": "low", "resilience": "medium", "responseRetention": "medium", "lateGameReach": "high"},
+      "evidenceTier": "C",
+      "confidence": 0.6,
+      "pilotPolicy": null
+    },
+    {
+      "id": "niche-hand-board-attack",
+      "name": "Niche hand/board attack",
+      "primaryAxis": "exact-component denial",
+      "priorities": ["3 hand raid", "force discard", "⭐3 Super Raid", "9 Anchor discard", "RJ opponent attack"],
+      "sequencing": "Identify opponent's key component → attack it → exploit the gap",
+      "resourceConversion": "attack cards → denied opponent components → exploitable window",
+      "responsePatterns": ["None directly; opponent's answer is to play the component before it is discarded"],
+      "interactionStructure": "Denies exact components, not generic value; strategic job is to prevent a specific play",
+      "failureConditions": ["Opponent's hand already small", "Attack fails to prevent a meaningful conversion", "Attack card worth more than denied component"],
+      "pivotLogic": "If opponent's hand is empty or attack misses key component, do not repeat; shift to scoring or structural play",
+      "paretoProfile": {"immediateScoring": "low", "actionEconomy": "low", "disruption": "medium", "resilience": "low", "responseRetention": "low", "lateGameReach": "low"},
+      "evidenceTier": "C",
+      "confidence": 0.55,
+      "pilotPolicy": null
+    }
+  ],
+  "interaction_graph": {
+    "model": "conditional_counter_web",
+    "diagnosis": "Intrilex exhibits a conditional counter-web with local cycles and soft hierarchies, not a clean rock-paper-scissors or four-way cycle",
+    "diagnosisConfidence": 0.9,
+    "diagnosisEvidenceTier": "A",
+    "structuralReasons": [
+      "Counter relationships are typed by declaration class, not by generic card strength",
+      "Many effects transform into other lines (K♠ Wild, 10♦ copy, 7/⭐7 nested plays, 2B+2R conversion)",
+      "Structural effects bypass ordinary protection (4♠ bypasses Guard, Aegis, Q♠, ordinary immunity)",
+      "Protection is conditional (Aegis blocks many effects but not 4♠; Guard blocks single-target but not row-wide; Queen's Court answered only by K♠)",
+      "Line value changes with game state (PR total, opponent score, response class, DP depth, GY/Exile density, Queen fortress state, Board Lock status, Exhausted state, hand size, Mini-Turn spent)"
+    ],
+    "axes": [
+      {"id": "scoring-vs-disruption", "description": "Score-pressure forces opponent to answer points; control answers plays but does not score"},
+      {"id": "tempo-vs-conservation", "description": "Tempo-compression spends cards for extra actions; value/conversion preserves cards for higher-value later plays"},
+      {"id": "fortress-vs-reset", "description": "Fortress makes board expensive to attack; reset erases the board"},
+      {"id": "economy-vs-response", "description": "Spending an accelerator reduces hand; holding a counter preserves hand"},
+      {"id": "hand-attack-vs-reachability", "description": "Hand attack denies specific components; value is denial of exact card, not generic control"},
+      {"id": "late-conversion-vs-exhaustion", "description": "As DP empties, anchor lines and GY/Exile access become more valuable"}
+    ],
+    "localCycles": [
+      {
+        "cycle": "score-pressure → control → fortress → score-pressure",
+        "conditional": true,
+        "conditions": "Score-pressure beats control only if it scores through disruption; control beats fortress only if it lands disruption before stabilization; fortress beats score-pressure only if it locks the board"
+      },
+      {
+        "cycle": "tempo → control → value → tempo",
+        "conditional": true,
+        "conditions": "Tempo beats control if acceleration converts to points; value beats tempo if tempo strands its hand; tempo beats score-pressure if acceleration outpaces the race"
+      }
+    ],
+    "counterMatrix": {
+      "source": "reports/intrilex-counter-web-mechanical-probes-complete.json:1457-1528",
+      "evidenceTier": "A",
+      "note": "Predicate matrix from current runtime. Declaration-time gate for super-ace and ultra-three-red is missing (see implementation divergences), so in practice these can target any stack item in the current engine.",
+      "matrix": {
+        "ordinary-effect": {"base-ace-counter": true, "spade-ace-counter": true, "super-ace-counter": true, "ultra-three-red": true, "king-spade-counter": false},
+        "rank10": {"base-ace-counter": true, "spade-ace-counter": true, "super-ace-counter": true, "ultra-three-red": true, "king-spade-counter": false},
+        "super": {"base-ace-counter": true, "spade-ace-counter": true, "super-ace-counter": false, "ultra-three-red": false, "king-spade-counter": true},
+        "ultra": {"base-ace-counter": false, "spade-ace-counter": false, "super-ace-counter": false, "ultra-three-red": false, "king-spade-counter": false},
+        "sudden-death": {"base-ace-counter": false, "spade-ace-counter": false, "super-ace-counter": false, "ultra-three-red": false, "king-spade-counter": false},
+        "anchor": {"base-ace-counter": false, "spade-ace-counter": false, "super-ace-counter": false, "ultra-three-red": false, "king-spade-counter": false},
+        "queens-court": {"base-ace-counter": false, "spade-ace-counter": false, "super-ace-counter": false, "ultra-three-red": false, "king-spade-counter": true},
+        "royal-marriage": {"base-ace-counter": false, "spade-ace-counter": false, "super-ace-counter": false, "ultra-three-red": false, "king-spade-counter": true},
+        "points": {"base-ace-counter": false, "spade-ace-counter": false, "super-ace-counter": false, "ultra-three-red": false, "king-spade-counter": false},
+        "scuttle": {"base-ace-counter": false, "spade-ace-counter": false, "super-ace-counter": false, "ultra-three-red": false, "king-spade-counter": false}
+      }
+    },
+    "reachability": {
+      "source": "reports/balance-check/03_INTERACTION_GRAPH.md",
+      "evidenceTier": "B",
+      "note": "Hypergeometric reachability values, not win probabilities",
+      "values": {
+        "specificSingleton5": 0.093,
+        "specificSingleton6": 0.111,
+        "atLeastOneRank5": 0.330,
+        "atLeastOneRank6": 0.385,
+        "atLeastOneRank10": 0.571,
+        "atLeastOneRank15": 0.740,
+        "specificRankPair5": 0.039,
+        "specificRankPair6": 0.057,
+        "specificRankPair10": 0.152,
+        "specificRankPair15": 0.306,
+        "anySameRankPair5": 0.462,
+        "anySameRankPair6": 0.619,
+        "anySameRankPair10": 0.968,
+        "ultra2B2R5": 0.601,
+        "ultra2B2R6": 0.773,
+        "ultra2B2R10": 0.984,
+        "totalClearAccess5": 0.257,
+        "totalClearAccess6": 0.303,
+        "totalClearAccess10": 0.466,
+        "totalClearAccess15": 0.632,
+        "anyAceOrEight5": 0.567,
+        "anyAceOrEight6": 0.637,
+        "anyAceOrEight10": 0.830,
+        "anyAceOrEight15": 0.941
+      }
+    }
+  },
+  "metagame_model": {
+    "classification": "conditional_counter_web",
+    "alternativeClassificationsConsidered": [
+      {"name": "rock_paper_scissors", "rejected": true, "reason": "No stable three-way cycle; counter relationships are typed by declaration class and conditional on game state"},
+      {"name": "four_way_cycle", "rejected": true, "reason": "No stable four-way cycle; more than four functional lines exist and their interactions are typed and conditional"},
+      {"name": "hierarchy_with_soft_counters", "rejected": false, "partial": true, "reason": "Local soft hierarchies exist in specific game states (e.g., fortress with two untapped Queens is locally dominant against ordinary effects), but no universal dominance order exists"},
+      {"name": "no_stable_cyclical_structure", "rejected": false, "partial": true, "reason": "No stable global cycle, but local conditional cycles exist; 'no stable structure' overstates the absence of local structure"}
+    ],
+    "justification": "The interaction graph is typed (by declaration class), conditional (by game state), and asymmetric (by reachability). Local cycles exist but are conditional on timing and reachability. A soft hierarchy exists in specific local states, but no line is globally dominant. The structure is best described as a conditional counter-web with local cycles and soft hierarchies.",
+    "humanMetaEstablished": false,
+    "humanMetaNote": "No human play data exists. The pilot is policy-conditioned and exploratory. No metagame claim is justified without human validation."
+  },
+  "profile_leaders": {
+    "globallyStrong": {
+      "candidates": ["score-pressure", "hybrix-rusher-hard"],
+      "evidenceTier": "B",
+      "confidence": 0.6,
+      "note": "Pilot suggests score-rush and hybrix-rusher-hard are candidates, but evidence is exploratory and policy-conditioned. Mechanically, score-pressure is globally strong because it forces the opponent to answer a clock, but it is not universally dominant."
+    },
+    "broadlyReliable": {
+      "candidates": ["value-conversion"],
+      "evidenceTier": "B",
+      "confidence": 0.65,
+      "note": "Value was close to even against score-rush, hybrix-rusher-hard, and tempo in the pilot. Mechanically, value/conversion is reliable because it preserves flexibility, but it can lose to immediate pressure."
+    },
+    "matchupDominant": {
+      "candidates": ["tempo-compression"],
+      "evidenceTier": "B",
+      "confidence": 0.7,
+      "note": "Tempo dominated control (87.5%, Holm p=0.00439) but lost to value (40.6%) and hybrix-rusher-hard (34.4%). Mechanically, tempo-compression is matchup-dominant when opponent cannot answer acceleration."
+    },
+    "niche": {
+      "candidates": ["niche-hand-board-attack", "reset-structural", "late-resource-exhausted"],
+      "evidenceTier": "C",
+      "confidence": 0.55,
+      "note": "Niche lines have specific jobs under specific conditions; they are not weak, they are conditional."
+    }
+  },
+  "pareto_frontier": {
+    "dimensions": ["immediateScoring", "actionEconomy", "disruption", "resilience", "responseRetention", "lateGameReach"],
+    "frontier": ["score-pressure", "tempo-compression", "control-suppression", "fortress-anchor", "value-conversion"],
+    "dominated": ["reset-structural", "late-resource-exhausted", "niche-hand-board-attack"],
+    "note": "No line is high on all six dimensions. Reset and late-resource are on the frontier for specific axes but are dominated in some dimensions by fortress or control. Line choice is a bet on which dimensions will matter in the current game state.",
+    "matrix": {
+      "score-pressure": {"immediateScoring": "high", "actionEconomy": "low", "disruption": "low", "resilience": "low", "responseRetention": "low", "lateGameReach": "low"},
+      "tempo-compression": {"immediateScoring": "medium", "actionEconomy": "high", "disruption": "medium", "resilience": "low", "responseRetention": "low", "lateGameReach": "medium"},
+      "control-suppression": {"immediateScoring": "low", "actionEconomy": "low", "disruption": "high", "resilience": "low", "responseRetention": "high", "lateGameReach": "medium"},
+      "value-conversion": {"immediateScoring": "medium", "actionEconomy": "low", "disruption": "low", "resilience": "medium", "responseRetention": "high", "lateGameReach": "medium"},
+      "fortress-anchor": {"immediateScoring": "medium", "actionEconomy": "low", "disruption": "medium", "resilience": "high", "responseRetention": "medium", "lateGameReach": "high"},
+      "reset-structural": {"immediateScoring": "low", "actionEconomy": "low", "disruption": "high", "resilience": "low", "responseRetention": "low", "lateGameReach": "medium"},
+      "late-resource-exhausted": {"immediateScoring": "low", "actionEconomy": "low", "disruption": "low", "resilience": "medium", "responseRetention": "medium", "lateGameReach": "high"},
+      "niche-hand-board-attack": {"immediateScoring": "low", "actionEconomy": "low", "disruption": "medium", "resilience": "low", "responseRetention": "low", "lateGameReach": "low"}
+    }
+  },
+  "niche_lines": [
+    {
+      "id": "hand-raid",
+      "name": "Hand raid (3, ⭐3 Super Raid, 9 Anchor discard, RJ opponent attack)",
+      "purpose": "Deny opponent's exact component (Ace, K♠, Queen pair, Ultra ingredient)",
+      "target": "Large or overcommitted opponent hand holding a specific card",
+      "conditions": ["Opponent hand ≥5 cards", "Denied component is identifiable", "Attack card worth less than denied play"],
+      "cost": "A card and a Mini-Turn that do not directly score",
+      "failureSignal": "Opponent hand already small, or attack misses key component",
+      "pivot": "If attack misses, do not repeat; shift to scoring or structural play",
+      "evidenceTier": "C",
+      "confidence": 0.55
+    },
+    {
+      "id": "board-lock",
+      "name": "BoardLock (BJ Quick)",
+      "purpose": "Suppress non-counter effects, Scuttle, and Trap for one Full Turn",
+      "target": "Opponent who depends on effects/Scuttle/Trap to answer the board",
+      "conditions": ["Opponent plan relies on effects rather than scoring", "BJ not needed for 11-point scoring value", "Opponent lacks ⭐A or 3-Red to answer Board Lock"],
+      "cost": "BJ (11 points) spent on disruption rather than scoring",
+      "failureSignal": "Opponent scores through the lock, or holds ⭐A/3-Red",
+      "pivot": "If opponent scores through, abandon Board Lock and race; if opponent holds ⭐A, do not commit BJ to Board Lock",
+      "evidenceTier": "B",
+      "confidence": 0.65
+    },
+    {
+      "id": "sudden-death",
+      "name": "Sudden Death (RJ+BJ or four-of-a-kind, Unrestricted only)",
+      "purpose": "Scrap a Vulnerable enemy OTT card and start a 2-turn countdown to GY",
+      "target": "High-value enemy PR or ER card that is not Aegis-protected (and rules-faithfully not Guard-protected)",
+      "conditions": ["Unrestricted profile", "Target is Vulnerable", "Opponent cannot answer with ⭐A", "Countdown will complete before opponent can recover"],
+      "cost": "RJ+BJ or four cards of a rank — substantial resource investment",
+      "failureSignal": "Target has Aegis, opponent holds ⭐A, countdown will not complete before opponent wins",
+      "pivot": "If target is Aegis-protected, do not commit; if opponent holds ⭐A, hold Sudden Death for a window after ⭐A is spent",
+      "evidenceTier": "A",
+      "confidence": 0.75,
+      "implementationDivergence": "Engine target check is Aegis-only; rulebook Vulnerable should also respect Guard and rank/state immunity"
+    },
+    {
+      "id": "row-exchange",
+      "name": "⭐4 Row Exchange",
+      "purpose": "Swap rows with opponent, taking their PR/ER and giving them yours, plus Aegis on non-Nines",
+      "target": "Opponent with a superior board (high PR, strong ER, Queen fortress)",
+      "conditions": ["Opponent board strictly better", "User's board expendable", "Two 4s available"],
+      "cost": "Two 4s and the user's current board",
+      "failureSignal": "Opponent board not better than user's, or opponent can immediately reset or score back",
+      "pivot": "If exchange does not clearly improve position, hold the 4s for Total Clear or ordinary Row Clear instead",
+      "evidenceTier": "A",
+      "confidence": 0.8
+    },
+    {
+      "id": "stack-theft",
+      "name": "10♠ Stack Theft",
+      "purpose": "Steal the top of the opponent's stack mid-resolution",
+      "target": "High-value opponent effect or scoring play on the stack",
+      "conditions": ["Opponent has committed a valuable card to the stack", "10♠ available", "Stolen card worth more than 10♠"],
+      "cost": "10♠ (10 points if scored) spent on theft rather than scoring",
+      "failureSignal": "Stack empty or low-value, or opponent can counter the theft",
+      "pivot": "If stack is low-value, score the 10♠ instead",
+      "evidenceTier": "B",
+      "confidence": 0.65
+    }
+  ],
+  "pilot_results": {
+    "source": "reports/article-policy-pilot-completion-20260907T204650571Z/RESULTS.md",
+    "evidenceTier": "B",
+    "profile": "core-advanced-authority",
+    "totalGames": 348,
+    "seedClustersPerPairing": 16,
+    "label": "exploratory",
+    "pairwise": [
+      {"a": "score-rush", "b": "tempo", "aWins": 18, "bWins": 14, "draws": 0, "aWinPct": 0.563, "wilson95": [0.393, 0.718], "pairedBootstrap95": [0.438, 0.688], "holmP": 1.00},
+      {"a": "score-rush", "b": "control", "aWins": 28, "bWins": 4, "draws": 0, "aWinPct": 0.875, "wilson95": [0.719, 0.950], "pairedBootstrap95": [0.750, 0.969], "holmP": 0.00439},
+      {"a": "score-rush", "b": "value", "aWins": 18, "bWins": 14, "draws": 0, "aWinPct": 0.563, "wilson95": [0.393, 0.718], "pairedBootstrap95": [0.500, 0.656], "holmP": 1.00},
+      {"a": "score-rush", "b": "hybrix-rusher-hard", "aWins": 17, "bWins": 15, "draws": 0, "aWinPct": 0.531, "wilson95": [0.364, 0.691], "pairedBootstrap95": [0.406, 0.656], "holmP": 1.00},
+      {"a": "tempo", "b": "control", "aWins": 28, "bWins": 4, "draws": 0, "aWinPct": 0.875, "wilson95": [0.719, 0.950], "pairedBootstrap95": [0.750, 0.969], "holmP": 0.00439},
+      {"a": "tempo", "b": "value", "aWins": 13, "bWins": 19, "draws": 0, "aWinPct": 0.406, "wilson95": [0.255, 0.577], "pairedBootstrap95": [0.281, 0.531], "holmP": 1.00},
+      {"a": "tempo", "b": "hybrix-rusher-hard", "aWins": 11, "bWins": 21, "draws": 0, "aWinPct": 0.344, "wilson95": [0.204, 0.517], "pairedBootstrap95": [0.188, 0.500], "holmP": 1.00},
+      {"a": "control", "b": "value", "aWins": 6, "bWins": 26, "draws": 0, "aWinPct": 0.188, "wilson95": [0.089, 0.353], "pairedBootstrap95": [0.063, 0.344], "holmP": 0.0444},
+      {"a": "control", "b": "hybrix-rusher-hard", "aWins": 2, "bWins": 30, "draws": 0, "aWinPct": 0.063, "wilson95": [0.017, 0.201], "pairedBootstrap95": [0.000, 0.156], "holmP": 0.00122},
+      {"a": "value", "b": "hybrix-rusher-hard", "aWins": 16, "bWins": 16, "draws": 0, "aWinPct": 0.500, "wilson95": [0.336, 0.664], "pairedBootstrap95": [0.344, 0.656], "holmP": 1.00}
+    ],
+    "mirrors": [
+      {"policy": "score-rush", "games": 6, "p1Wins": 4, "p2Wins": 2, "draws": 0, "meanTurns": 4.00},
+      {"policy": "tempo", "games": 6, "p1Wins": 2, "p2Wins": 4, "draws": 0, "meanTurns": 6.33},
+      {"policy": "control", "games": 6, "p1Wins": 3, "p2Wins": 2, "draws": 1, "meanTurns": 46.83},
+      {"policy": "value", "games": 5, "p1Wins": 4, "p2Wins": 1, "draws": 0, "meanTurns": 5.00},
+      {"policy": "hybrix-rusher-hard", "games": 5, "p1Wins": 3, "p2Wins": 2, "draws": 0, "meanTurns": 4.40}
+    ],
+    "diagnostics": {
+      "canonicalTerminations": "348/348",
+      "capped": 0,
+      "invalid": 0,
+      "errors": 0,
+      "rejectedCommands": 0,
+      "complianceViolations": 0,
+      "totalPolicyDecisions": 8788,
+      "totalCommands": 30012,
+      "maxDecisionsPerGame": 142,
+      "decisionLimit": 1800
+    },
+    "policyDecisionCounts": {
+      "score-rush": {"decisions": 833, "scoringSelected": 303},
+      "tempo": {"decisions": 874, "ultra2B2RDrawSelected": 36, "tenHeartTempoSpikeSelected": 12},
+      "control": {"decisions": 1412, "boardLockSelected": 22, "queenAegisSelected": 48, "jackDisruptSelected": 32},
+      "value": {"decisions": 848, "ultra2B2RDrawSelected": 34, "scoringSelected": 299, "tenHeartSelected": 12}
+    },
+    "interpretation": {
+      "robustFindings": [
+        "Implemented control policy underperformed heavily against score-rush, tempo, value, and hybrix-rusher-hard",
+        "Only Holm-adjusted comparisons surviving multiplicity: score-rush vs control (p=0.00439) and control vs hybrix-rusher-hard (p=0.00122)",
+        "Tempo performed well against control but poorly against value and hybrix-rusher-hard",
+        "Score-rush was close to even against tempo, value, and hybrix-rusher-hard",
+        "No broad stable three-way cycle was established"
+      ],
+      "notSupported": [
+        "Control as a strategic line is weak — this is policy weakness, not line weakness",
+        "Scoring always beats control in human play — no human data exists",
+        "A global ranking of strategic lines — sample size and policy set are insufficient"
+      ]
+    }
+  },
+  "implementation_divergences": [
+    {
+      "id": "super-ace-three-red-target-gate",
+      "description": "super-ace and ultra-three-red declarations do not call targetAcceptsCounter at declaration time; can target any stack item including point plays and draws",
+      "rulebookSays": "⭐A and 3-Red have specific target-class restrictions; point plays, draws, swaps, and passes are not counterable by these authorities",
+      "engineDoes": "Allows ⭐A and 3-Red to target any top stack item",
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "source": "Static audit of core-authority.js declaration paths"
+    },
+    {
+      "id": "royal-shield-not-enforced",
+      "description": "No royalShieldProtected flag is set in Core; Base/Anchor Aces can counter Royal Shield-protected ordinary effects as if unprotected",
+      "rulebookSays": "When declarer controls more untapped Queens OTT than opponent, Base/Anchor Ace counters are blocked on protected plays",
+      "engineDoes": "Does not implement the pre-declaration Queen-count comparison",
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "source": "Static audit of core-response.js and core-authority.js"
+    },
+    {
+      "id": "voltage-4-exact-match-public",
+      "description": "Voltage 4 requires exact rank+suit match and publishes the guess in the public event",
+      "rulebookSays": "Rank-only match → score/effect; suit-only match → draw; both → rank branch; else return to top; guess is private",
+      "engineDoes": "Succeeds only if both rank and suit match; serializes guessRank/guessSuit in public event",
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "source": "Static audit of core-advanced.js:460-488"
+    },
+    {
+      "id": "generated-seven-truncated",
+      "description": "Generated Seven / Topdeck Casting supports only one generated effect card, no hand components, no Super/Combo, no physical-Seven recursion; ⭐7 scraps chosen effect cards",
+      "rulebookSays": "Revealed generated card may be played for effect, scored, or used in Super/Combo; may combine with hand cards; physical Seven may recurse",
+      "engineDoes": "Truncated to one generated effect; ⭐7 scraps effect cards instead of resolving them",
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "source": "Static audit of core-private-choice.js:465-571 and core-advanced.js:292-321"
+    },
+    {
+      "id": "bj-exile-recycle-missing",
+      "description": "Scoring BJ gives 11 points with no Exile Recycle follow-up",
+      "rulebookSays": "Scoring BJ triggers Exile Recycle (move up to 2 Exile cards to top/bottom of DP)",
+      "engineDoes": "core-score moves BJ to PR with no recycle trigger",
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "source": "Static audit of core-score path"
+    },
+    {
+      "id": "seven-scoring-trigger-missing",
+      "description": "Scoring a Seven gives 7 points with no reveal-top-2-take-one trigger",
+      "rulebookSays": "Scoring a Seven triggers reveal top 2, take one to hand",
+      "engineDoes": "core-score moves Seven to PR with no trigger",
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "source": "Static audit of core-score path"
+    },
+    {
+      "id": "ten-clubs-score-aegis-missing",
+      "description": "Only 10♣ Foundation effect grants Aegis, not the 10♣ point play",
+      "rulebookSays": "10♣ scored for points enters PR with Aegis until next Start",
+      "engineDoes": "core-score does not grant Aegis; only Foundation does",
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "source": "Static audit of core-advanced.js:324-345"
+    },
+    {
+      "id": "goal-9-absent",
+      "description": "Goal 9 is not available in current Core path",
+      "rulebookSays": "Ordinary +3 or +5 opponent goal shift; 9♠ also reduces own goal by 2",
+      "engineDoes": "ranks.js still resolves goal-shift-nine but core-effects.js does not enumerate it and core-autonomy.js does not list it",
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "source": "Static audit of core-effects.js and core-autonomy.js"
+    },
+    {
+      "id": "natural-4-not-implemented",
+      "description": "Natural 4 is not implemented in current unrestricted runtime",
+      "rulebookSays": "Natural 4 is a defined mechanic",
+      "engineDoes": "Listed in ranks.js modes and profile exclusions but no resolver or autonomy candidate exists",
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "source": "Static audit of ranks.js and core-response.js"
+    },
+    {
+      "id": "sudden-death-target-aegis-only",
+      "description": "Sudden Death target check is Aegis-only; does not check Guard or rank/state immunity",
+      "rulebookSays": "Target must be Vulnerable (Aegis-absent and Guard-absent and not rank/state-immune)",
+      "engineDoes": "Checks only !hasAegis(c)",
+      "evidenceTier": "A",
+      "confidence": 0.85,
+      "source": "Static audit of core-advanced.js:790-814"
+    }
+  ],
+  "unresolved_questions": [
+    {"id": "human-validation", "question": "No human play data exists; pilot results may not reflect human strategic value", "evidenceTier": "X", "confidence": 1.0},
+    {"id": "unrestricted-profile", "question": "Pilot studied core-advanced-authority only; Sudden Death, ⭐3/⭐5/⭐6/⭐7, and other Unrestricted-only tools were not tested in paired play", "evidenceTier": "X", "confidence": 1.0},
+    {"id": "adaptation-ablation", "question": "HYBRIX adapter calls choose only, not notifyOutcome/recordEnemyAction; opponent-learning is not validated", "evidenceTier": "B", "confidence": 0.9},
+    {"id": "larger-paired-seed", "question": "16 seed clusters per pairing is exploratory; 32 or 64 seeds would narrow bootstrap intervals", "evidenceTier": "B", "confidence": 0.85},
+    {"id": "counter-retention", "question": "How often does a player who holds the right counter class actually use it before it is discarded or stolen?", "evidenceTier": "X", "confidence": 0.5},
+    {"id": "fortress-breach", "question": "State-injection experiments placing a Queen fortress against various breach tools would measure breach probability and cost", "evidenceTier": "X", "confidence": 0.5},
+    {"id": "board-lock-4sp-injection", "question": "Inject Board Lock and 4♠ into controlled states and measure their effect on opponent conversion rates", "evidenceTier": "X", "confidence": 0.5},
+    {"id": "ten-heart-opportunity-cost", "question": "When is spending 10♥ on tempo worse than scoring it for 10 points?", "evidenceTier": "X", "confidence": 0.5},
+    {"id": "ultra-hold-fire", "question": "When is holding 2B+2R for a later turn better than firing it immediately?", "evidenceTier": "X", "confidence": 0.5},
+    {"id": "exhausted-state", "question": "Inject Exhausted states and measure the value of anchor lines, GY/Exile access, and non-DP resources", "evidenceTier": "X", "confidence": 0.5}
+  ],
+  "recommended_experiments": [
+    {"id": "exp-human-validation", "question": "human-validation", "design": "Human-vs-human or human-vs-policy study with recorded decisions and outcomes", "priority": "high"},
+    {"id": "exp-unrestricted-paired", "question": "unrestricted-profile", "design": "Paired-seed pilot in core-unrestricted-authority with Sudden Death, ⭐3/⭐5/⭐6/⭐7, and full Unrestricted tools", "priority": "high"},
+    {"id": "exp-adaptation-ablation", "question": "adaptation-ablation", "design": "Ablation enabling full HYBRIX adaptation (notifyOutcome/recordEnemyAction) vs choose-only baseline", "priority": "medium"},
+    {"id": "exp-larger-seeds", "question": "larger-paired-seed", "design": "32 or 64 seed clusters per pairing with same paired-seed bootstrap and sign-test framework", "priority": "high"},
+    {"id": "exp-counter-retention", "question": "counter-retention", "design": "State-injection experiments measuring how often the right counter class is used before being discarded or stolen", "priority": "medium"},
+    {"id": "exp-fortress-breach", "question": "fortress-breach", "design": "State-injection placing Queen fortress against K♠, 4♠, ⭐4, ⭐2, Sudden Death; measure breach probability and cost", "priority": "medium"},
+    {"id": "exp-board-lock-injection", "question": "board-lock-4sp-injection", "design": "Inject Board Lock and 4♠ into controlled states; measure effect on opponent conversion rates", "priority": "medium"},
+    {"id": "exp-ten-heart-counterfactual", "question": "ten-heart-opportunity-cost", "design": "Counterfactual study: same state, 10♥ spent on tempo vs 10♥ scored for points; measure win-rate delta", "priority": "medium"},
+    {"id": "exp-ultra-hold-fire", "question": "ultra-hold-fire", "design": "Ablation forcing hold vs fire of 2B+2R at each decision point; measure win-rate delta", "priority": "medium"},
+    {"id": "exp-exhausted-injection", "question": "exhausted-state", "design": "Inject Exhausted states with varying anchor/GY/Exile capacity; measure value of non-DP resources", "priority": "medium"}
+  ],
+  "claim_ledger": [
+    {"claim": "Intrilex is a conditional counter-web, not RPS or a four-way cycle", "source": "rulebook + probe + interaction-graph", "evidenceTier": "A", "confidence": 0.9, "type": "inference"},
+    {"claim": "Counter relationships are typed by declaration class", "source": "rulebook + probe:1457-1528", "evidenceTier": "A", "confidence": 0.95, "type": "source_fact"},
+    {"claim": "K♠ is the only standard direct counter to Queen's Court and Royal Marriage", "source": "probe:1500-1513", "evidenceTier": "A", "confidence": 0.95, "type": "source_fact"},
+    {"claim": "4♠ Total Clear bypasses Guard, Aegis, Q♠, and ordinary immunity", "source": "rulebook + engine core-effects.js four-total-clear", "evidenceTier": "A", "confidence": 0.9, "type": "source_fact"},
+    {"claim": "Score-pressure forces the opponent to answer a clock", "source": "mechanics + pilot", "evidenceTier": "B", "confidence": 0.8, "type": "inference"},
+    {"claim": "Implemented control policy underperformed in the pilot", "source": "pilot-completion RESULTS.md", "evidenceTier": "A", "confidence": 0.95, "type": "policy_conditioned_observation"},
+    {"claim": "Control as a strategic line is weak", "source": "pilot only", "evidenceTier": "D", "confidence": 0.3, "type": "not_supported"},
+    {"claim": "Tempo-compression is matchup-dominant against slow control", "source": "pilot + mechanics", "evidenceTier": "B", "confidence": 0.75, "type": "inference"},
+    {"claim": "No human metagame is established", "source": "no human data exists", "evidenceTier": "A", "confidence": 1.0, "type": "source_fact"},
+    {"claim": "⭐A/3-Red declaration-time gate is missing in current engine", "source": "static audit of core-authority.js", "evidenceTier": "A", "confidence": 0.85, "type": "source_fact_implementation"},
+    {"claim": "Royal Shield is not enforced in Core", "source": "static audit of core-response.js and core-authority.js", "evidenceTier": "A", "confidence": 0.85, "type": "source_fact_implementation"},
+    {"claim": "BJ scores 11 points with no Exile Recycle in current engine", "source": "static audit of core-score path", "evidenceTier": "A", "confidence": 0.85, "type": "source_fact_implementation"},
+    {"claim": "Probe confirmed ordinary scoring of 7♣, 10♣, and BJ reaches PR correctly", "source": "probe scoring section", "evidenceTier": "A", "confidence": 0.95, "type": "source_fact"},
+    {"claim": "Probe confirmed two-accelerator sequence used four declarations with no fizzle", "source": "probe cap section", "evidenceTier": "A", "confidence": 0.95, "type": "source_fact"},
+    {"claim": "Pilot produced 348/348 canonical terminations with zero errors", "source": "pilot-completion RESULTS.md diagnostics", "evidenceTier": "A", "confidence": 0.95, "type": "source_fact"},
+    {"claim": "Pilot mirrors were incomplete (5-6 games per policy, not planned 16)", "source": "pilot-completion RESULTS.md mirrors", "evidenceTier": "A", "confidence": 0.95, "type": "source_fact"},
+    {"claim": "No unrestricted-profile pilot was completed", "source": "pilot-completion RESULTS.md limitations", "evidenceTier": "A", "confidence": 0.95, "type": "source_fact"},
+    {"claim": "Reachability values are hypergeometric, not win probabilities", "source": "interaction-graph report", "evidenceTier": "B", "confidence": 0.9, "type": "source_fact"},
+    {"claim": "Specific singleton in opening 5-card hand is ~9.3%", "source": "interaction-graph report", "evidenceTier": "B", "confidence": 0.9, "type": "source_fact"},
+    {"claim": "Total Clear access (one of 4♠/2♠/K♠) in opening 5 is ~25.7%", "source": "interaction-graph report", "evidenceTier": "B", "confidence": 0.9, "type": "source_fact"},
+    {"claim": "2B+2R Ultra in opening 5 is ~60.1%", "source": "interaction-graph report", "evidenceTier": "B", "confidence": 0.9, "type": "source_fact"},
+    {"claim": "Product version is 1.0.0, engine 4.2.6, rules 4.3.1", "source": "config/release-identity.json:4-8", "evidenceTier": "A", "confidence": 1.0, "type": "source_fact"},
+    {"claim": "Default profile is core-advanced-authority, ranked is core-unrestricted-authority", "source": "config/release-identity.json:18,25", "evidenceTier": "A", "confidence": 1.0, "type": "source_fact"}
+  ]
+}

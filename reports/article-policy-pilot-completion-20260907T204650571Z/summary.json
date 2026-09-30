@@ -1,0 +1,2115 @@
+{
+  "createdAt": "2026-09-07T20:46:50.571Z",
+  "finishedAt": "2026-09-07T20:59:24.461Z",
+  "gitHead": "c43edb98ac5de59111d8ae2b86c80a9493d44af3",
+  "profileId": "core-advanced-authority",
+  "priorOutputDirectory": "reports/article-policy-pilot-20260907T203340644Z",
+  "outputDirectory": "reports/article-policy-pilot-completion-20260907T204650571Z",
+  "priorStudyGames": 216,
+  "additionalStudyGames": 132,
+  "studiedGames": 348,
+  "intendedStudyGames": 400,
+  "complete": false,
+  "stopReason": "COMPLETION_TIME_BUDGET",
+  "missingSpecs": [
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 5,
+      "seed": 2365251136,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "be1e0569ba6486903b10df02efab8541ff21a5512459dd1b22790b8c48186b11"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 5,
+      "seed": 2365251136,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "be1e0569ba6486903b10df02efab8541ff21a5512459dd1b22790b8c48186b11"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 6,
+      "seed": 2933134897,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "bb4213fc1c4bcfdfa4fb215ccbd41792808386216f2854357a7ed5a54e19092a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 6,
+      "seed": 2933134897,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "bb4213fc1c4bcfdfa4fb215ccbd41792808386216f2854357a7ed5a54e19092a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 6,
+      "seed": 2933134897,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "bb4213fc1c4bcfdfa4fb215ccbd41792808386216f2854357a7ed5a54e19092a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 6,
+      "seed": 2933134897,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "bb4213fc1c4bcfdfa4fb215ccbd41792808386216f2854357a7ed5a54e19092a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 6,
+      "seed": 2933134897,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "bb4213fc1c4bcfdfa4fb215ccbd41792808386216f2854357a7ed5a54e19092a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 7,
+      "seed": 674668040,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "4f9ebcc5a4eae62ec074deeefee989d7345cd97777f5d81e34953dc0e8fc474c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 7,
+      "seed": 674668040,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "4f9ebcc5a4eae62ec074deeefee989d7345cd97777f5d81e34953dc0e8fc474c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 7,
+      "seed": 674668040,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "4f9ebcc5a4eae62ec074deeefee989d7345cd97777f5d81e34953dc0e8fc474c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 7,
+      "seed": 674668040,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "4f9ebcc5a4eae62ec074deeefee989d7345cd97777f5d81e34953dc0e8fc474c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 7,
+      "seed": 674668040,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "4f9ebcc5a4eae62ec074deeefee989d7345cd97777f5d81e34953dc0e8fc474c"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 8,
+      "seed": 1812012605,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "f0d14f69507a583e5d3c819e1ed1aaa2d8fa132a79a133fd9b68ed6429cc6fa8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 8,
+      "seed": 1812012605,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "f0d14f69507a583e5d3c819e1ed1aaa2d8fa132a79a133fd9b68ed6429cc6fa8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 8,
+      "seed": 1812012605,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "f0d14f69507a583e5d3c819e1ed1aaa2d8fa132a79a133fd9b68ed6429cc6fa8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 8,
+      "seed": 1812012605,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "f0d14f69507a583e5d3c819e1ed1aaa2d8fa132a79a133fd9b68ed6429cc6fa8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 8,
+      "seed": 1812012605,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "f0d14f69507a583e5d3c819e1ed1aaa2d8fa132a79a133fd9b68ed6429cc6fa8"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 9,
+      "seed": 3446146341,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "3fcb9789fc064c4e4664bf346aeed6e9cc1a6eeff5c05fcc25b3f505b60fc006"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 9,
+      "seed": 3446146341,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "3fcb9789fc064c4e4664bf346aeed6e9cc1a6eeff5c05fcc25b3f505b60fc006"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 9,
+      "seed": 3446146341,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "3fcb9789fc064c4e4664bf346aeed6e9cc1a6eeff5c05fcc25b3f505b60fc006"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 9,
+      "seed": 3446146341,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "3fcb9789fc064c4e4664bf346aeed6e9cc1a6eeff5c05fcc25b3f505b60fc006"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 9,
+      "seed": 3446146341,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "3fcb9789fc064c4e4664bf346aeed6e9cc1a6eeff5c05fcc25b3f505b60fc006"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 10,
+      "seed": 3400374699,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "1cf4d691daf35448d1019061ec3d4b762bb7d338eaf58ca53e90527ea10f159e"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 11,
+      "seed": 684982894,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "c05034960f45503d582d5d9976d32674e77ae9bdd0066520854c2377a01f9e24"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 12,
+      "seed": 567018868,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "676f31a471c8d1cb5d8d2b3dc3c807e45aee106a306a48d9f6c2d8d01802715f"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 13,
+      "seed": 889403951,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "dfec581ae35bdb0d3467306392cc3a0370ea480df9611336bd64246835ae86a9"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 14,
+      "seed": 1016398453,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "5195fe7c8fbc0ad324a511a05f90c7350c0ab4b96a79aa85972a11bfe19ee20a"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "score-rush",
+        "score-rush"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "score-rush",
+        "score-rush"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "tempo",
+        "tempo"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "tempo",
+        "tempo"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "control",
+        "control"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "control",
+        "control"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "value",
+        "value"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "value",
+        "value"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    },
+    {
+      "stage": "mirrors16",
+      "profileId": "core-advanced-authority",
+      "seedIndex": 15,
+      "seed": 3027433302,
+      "pair": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "orientation": "MIRROR",
+      "policyIds": [
+        "hybrix-rusher-hard",
+        "hybrix-rusher-hard"
+      ],
+      "initialStateHash": "b5ace10f9e1dd90108e804fca8ef9c08ce2e224d60a7c018dccfc4bc379caa64"
+    }
+  ],
+  "snapshotStable": true,
+  "changedInputs": [],
+  "pairTable": [
+    {
+      "profileId": "core-advanced-authority",
+      "policyA": "score-rush",
+      "policyB": "tempo",
+      "games": 32,
+      "validGames": 32,
+      "invalidGames": 0,
+      "cappedGames": 0,
+      "winsA": 18,
+      "winsB": 14,
+      "draws": 0,
+      "aWinsAsP1": 9,
+      "aWinsAsP2": 9,
+      "p1Wins": 16,
+      "p2Wins": 16,
+      "marginalAWinRate": 0.5625,
+      "descriptiveWilson95": [
+        0.3932559113685198,
+        0.7183466888495963
+      ],
+      "completePairedSeeds": 16,
+      "pairedWinCredit": 0.5625,
+      "pairedSeedBootstrap95": [
+        0.4375,
+        0.6875
+      ],
+      "positiveSeedContrasts": 3,
+      "negativeSeedContrasts": 1,
+      "zeroSeedContrasts": 12,
+      "pairedSignTwoSidedP": 0.625,
+      "meanEndingScoreA": 18.75,
+      "meanEndingScoreB": 18.40625,
+      "meanSignedScoreMarginA": 0.34375,
+      "meanFullTurns": 4.59375,
+      "meanPolicyDecisions": 15.1875,
+      "maxPolicyDecisions": 25,
+      "pairedSignHolmP": 1
+    },
+    {
+      "profileId": "core-advanced-authority",
+      "policyA": "score-rush",
+      "policyB": "control",
+      "games": 32,
+      "validGames": 32,
+      "invalidGames": 0,
+      "cappedGames": 0,
+      "winsA": 28,
+      "winsB": 4,
+      "draws": 0,
+      "aWinsAsP1": 12,
+      "aWinsAsP2": 16,
+      "p1Wins": 12,
+      "p2Wins": 20,
+      "marginalAWinRate": 0.875,
+      "descriptiveWilson95": [
+        0.7193169451834978,
+        0.9502986561251991
+      ],
+      "completePairedSeeds": 16,
+      "pairedWinCredit": 0.875,
+      "pairedSeedBootstrap95": [
+        0.75,
+        0.96875
+      ],
+      "positiveSeedContrasts": 12,
+      "negativeSeedContrasts": 0,
+      "zeroSeedContrasts": 4,
+      "pairedSignTwoSidedP": 0.00048828125,
+      "meanEndingScoreA": 22.125,
+      "meanEndingScoreB": 5.90625,
+      "meanSignedScoreMarginA": 16.21875,
+      "meanFullTurns": 13.46875,
+      "meanPolicyDecisions": 35.6875,
+      "maxPolicyDecisions": 77,
+      "pairedSignHolmP": 0.00439453125
+    },
+    {
+      "profileId": "core-advanced-authority",
+      "policyA": "score-rush",
+      "policyB": "value",
+      "games": 32,
+      "validGames": 32,
+      "invalidGames": 0,
+      "cappedGames": 0,
+      "winsA": 18,
+      "winsB": 14,
+      "draws": 0,
+      "aWinsAsP1": 11,
+      "aWinsAsP2": 7,
+      "p1Wins": 20,
+      "p2Wins": 12,
+      "marginalAWinRate": 0.5625,
+      "descriptiveWilson95": [
+        0.3932559113685198,
+        0.7183466888495963
+      ],
+      "completePairedSeeds": 16,
+      "pairedWinCredit": 0.5625,
+      "pairedSeedBootstrap95": [
+        0.5,
+        0.65625
+      ],
+      "positiveSeedContrasts": 2,
+      "negativeSeedContrasts": 0,
+      "zeroSeedContrasts": 14,
+      "pairedSignTwoSidedP": 0.5,
+      "meanEndingScoreA": 19.5625,
+      "meanEndingScoreB": 18.625,
+      "meanSignedScoreMarginA": 0.9375,
+      "meanFullTurns": 4.78125,
+      "meanPolicyDecisions": 15.625,
+      "maxPolicyDecisions": 29,
+      "pairedSignHolmP": 1
+    },
+    {
+      "profileId": "core-advanced-authority",
+      "policyA": "score-rush",
+      "policyB": "hybrix-rusher-hard",
+      "games": 32,
+      "validGames": 32,
+      "invalidGames": 0,
+      "cappedGames": 0,
+      "winsA": 17,
+      "winsB": 15,
+      "draws": 0,
+      "aWinsAsP1": 10,
+      "aWinsAsP2": 7,
+      "p1Wins": 19,
+      "p2Wins": 13,
+      "marginalAWinRate": 0.53125,
+      "descriptiveWilson95": [
+        0.3644951711897464,
+        0.6913061289193116
+      ],
+      "completePairedSeeds": 16,
+      "pairedWinCredit": 0.53125,
+      "pairedSeedBootstrap95": [
+        0.40625,
+        0.65625
+      ],
+      "positiveSeedContrasts": 3,
+      "negativeSeedContrasts": 2,
+      "zeroSeedContrasts": 11,
+      "pairedSignTwoSidedP": 1,
+      "meanEndingScoreA": 19.71875,
+      "meanEndingScoreB": 20.15625,
+      "meanSignedScoreMarginA": -0.4375,
+      "meanFullTurns": 4.59375,
+      "meanPolicyDecisions": 15.8125,
+      "maxPolicyDecisions": 26,
+      "pairedSignHolmP": 1
+    },
+    {
+      "profileId": "core-advanced-authority",
+      "policyA": "tempo",
+      "policyB": "control",
+      "games": 32,
+      "validGames": 32,
+      "invalidGames": 0,
+      "cappedGames": 0,
+      "winsA": 28,
+      "winsB": 4,
+      "draws": 0,
+      "aWinsAsP1": 12,
+      "aWinsAsP2": 16,
+      "p1Wins": 12,
+      "p2Wins": 20,
+      "marginalAWinRate": 0.875,
+      "descriptiveWilson95": [
+        0.7193169451834978,
+        0.9502986561251991
+      ],
+      "completePairedSeeds": 16,
+      "pairedWinCredit": 0.875,
+      "pairedSeedBootstrap95": [
+        0.75,
+        0.96875
+      ],
+      "positiveSeedContrasts": 12,
+      "negativeSeedContrasts": 0,
+      "zeroSeedContrasts": 4,
+      "pairedSignTwoSidedP": 0.00048828125,
+      "meanEndingScoreA": 23.28125,
+      "meanEndingScoreB": 4.8125,
+      "meanSignedScoreMarginA": 18.46875,
+      "meanFullTurns": 15.65625,
+      "meanPolicyDecisions": 41.90625,
+      "maxPolicyDecisions": 92,
+      "pairedSignHolmP": 0.00439453125
+    },
+    {
+      "profileId": "core-advanced-authority",
+      "policyA": "tempo",
+      "policyB": "value",
+      "games": 32,
+      "validGames": 32,
+      "invalidGames": 0,
+      "cappedGames": 0,
+      "winsA": 13,
+      "winsB": 19,
+      "draws": 0,
+      "aWinsAsP1": 8,
+      "aWinsAsP2": 5,
+      "p1Wins": 19,
+      "p2Wins": 13,
+      "marginalAWinRate": 0.40625,
+      "descriptiveWilson95": [
+        0.2551963484266544,
+        0.5773997512461713
+      ],
+      "completePairedSeeds": 16,
+      "pairedWinCredit": 0.40625,
+      "pairedSeedBootstrap95": [
+        0.28125,
+        0.53125
+      ],
+      "positiveSeedContrasts": 1,
+      "negativeSeedContrasts": 4,
+      "zeroSeedContrasts": 11,
+      "pairedSignTwoSidedP": 0.375,
+      "meanEndingScoreA": 17.78125,
+      "meanEndingScoreB": 19.15625,
+      "meanSignedScoreMarginA": -1.375,
+      "meanFullTurns": 5.40625,
+      "meanPolicyDecisions": 17.15625,
+      "maxPolicyDecisions": 33,
+      "pairedSignHolmP": 1
+    },
+    {
+      "profileId": "core-advanced-authority",
+      "policyA": "tempo",
+      "policyB": "hybrix-rusher-hard",
+      "games": 32,
+      "validGames": 32,
+      "invalidGames": 0,
+      "cappedGames": 0,
+      "winsA": 11,
+      "winsB": 21,
+      "draws": 0,
+      "aWinsAsP1": 5,
+      "aWinsAsP2": 6,
+      "p1Wins": 15,
+      "p2Wins": 17,
+      "marginalAWinRate": 0.34375,
+      "descriptiveWilson95": [
+        0.20410437924433172,
+        0.5168891202103778
+      ],
+      "completePairedSeeds": 16,
+      "pairedWinCredit": 0.34375,
+      "pairedSeedBootstrap95": [
+        0.1875,
+        0.5
+      ],
+      "positiveSeedContrasts": 2,
+      "negativeSeedContrasts": 7,
+      "zeroSeedContrasts": 7,
+      "pairedSignTwoSidedP": 0.1796875,
+      "meanEndingScoreA": 16.84375,
+      "meanEndingScoreB": 21.28125,
+      "meanSignedScoreMarginA": -4.4375,
+      "meanFullTurns": 5,
+      "meanPolicyDecisions": 16.59375,
+      "maxPolicyDecisions": 29,
+      "pairedSignHolmP": 1
+    },
+    {
+      "profileId": "core-advanced-authority",
+      "policyA": "control",
+      "policyB": "value",
+      "games": 32,
+      "validGames": 32,
+      "invalidGames": 0,
+      "cappedGames": 0,
+      "winsA": 6,
+      "winsB": 26,
+      "draws": 0,
+      "aWinsAsP1": 1,
+      "aWinsAsP2": 5,
+      "p1Wins": 12,
+      "p2Wins": 20,
+      "marginalAWinRate": 0.1875,
+      "descriptiveWilson95": [
+        0.08889544689565954,
+        0.3530915520137596
+      ],
+      "completePairedSeeds": 16,
+      "pairedWinCredit": 0.1875,
+      "pairedSeedBootstrap95": [
+        0.0625,
+        0.34375
+      ],
+      "positiveSeedContrasts": 1,
+      "negativeSeedContrasts": 11,
+      "zeroSeedContrasts": 4,
+      "pairedSignTwoSidedP": 0.00634765625,
+      "meanEndingScoreA": 5.96875,
+      "meanEndingScoreB": 21.78125,
+      "meanSignedScoreMarginA": -15.8125,
+      "meanFullTurns": 12.6875,
+      "meanPolicyDecisions": 34.1875,
+      "maxPolicyDecisions": 75,
+      "pairedSignHolmP": 0.04443359375
+    },
+    {
+      "profileId": "core-advanced-authority",
+      "policyA": "control",
+      "policyB": "hybrix-rusher-hard",
+      "games": 32,
+      "validGames": 32,
+      "invalidGames": 0,
+      "cappedGames": 0,
+      "winsA": 2,
+      "winsB": 30,
+      "draws": 0,
+      "aWinsAsP1": 1,
+      "aWinsAsP2": 1,
+      "p1Wins": 16,
+      "p2Wins": 16,
+      "marginalAWinRate": 0.0625,
+      "descriptiveWilson95": [
+        0.017310567031640967,
+        0.2014712314415458
+      ],
+      "completePairedSeeds": 16,
+      "pairedWinCredit": 0.0625,
+      "pairedSeedBootstrap95": [
+        0,
+        0.15625
+      ],
+      "positiveSeedContrasts": 0,
+      "negativeSeedContrasts": 14,
+      "zeroSeedContrasts": 2,
+      "pairedSignTwoSidedP": 0.0001220703125,
+      "meanEndingScoreA": 4,
+      "meanEndingScoreB": 22.6875,
+      "meanSignedScoreMarginA": -18.6875,
+      "meanFullTurns": 12.03125,
+      "meanPolicyDecisions": 33.3125,
+      "maxPolicyDecisions": 72,
+      "pairedSignHolmP": 0.001220703125
+    },
+    {
+      "profileId": "core-advanced-authority",
+      "policyA": "value",
+      "policyB": "hybrix-rusher-hard",
+      "games": 32,
+      "validGames": 32,
+      "invalidGames": 0,
+      "cappedGames": 0,
+      "winsA": 16,
+      "winsB": 16,
+      "draws": 0,
+      "aWinsAsP1": 10,
+      "aWinsAsP2": 6,
+      "p1Wins": 20,
+      "p2Wins": 12,
+      "marginalAWinRate": 0.5,
+      "descriptiveWilson95": [
+        0.33630882869327483,
+        0.6636911713067252
+      ],
+      "completePairedSeeds": 16,
+      "pairedWinCredit": 0.5,
+      "pairedSeedBootstrap95": [
+        0.34375,
+        0.65625
+      ],
+      "positiveSeedContrasts": 3,
+      "negativeSeedContrasts": 3,
+      "zeroSeedContrasts": 10,
+      "pairedSignTwoSidedP": 1,
+      "meanEndingScoreA": 19.25,
+      "meanEndingScoreB": 20.0625,
+      "meanSignedScoreMarginA": -0.8125,
+      "meanFullTurns": 4.71875,
+      "meanPolicyDecisions": 16.09375,
+      "maxPolicyDecisions": 29,
+      "pairedSignHolmP": 1
+    }
+  ],
+  "mirrorTable": [
+    {
+      "policy": "score-rush",
+      "games": 6,
+      "p1Wins": 4,
+      "p2Wins": 2,
+      "draws": 0,
+      "invalidGames": 0,
+      "p1Wilson95": [
+        0.299993315138392,
+        0.9032285888942195
+      ],
+      "meanFullTurns": 4,
+      "meanPolicyDecisions": 13.166666666666666
+    },
+    {
+      "policy": "tempo",
+      "games": 6,
+      "p1Wins": 2,
+      "p2Wins": 4,
+      "draws": 0,
+      "invalidGames": 0,
+      "p1Wilson95": [
+        0.09677141110578041,
+        0.700006684861608
+      ],
+      "meanFullTurns": 6.333333333333333,
+      "meanPolicyDecisions": 18.833333333333332
+    },
+    {
+      "policy": "control",
+      "games": 6,
+      "p1Wins": 3,
+      "p2Wins": 2,
+      "draws": 1,
+      "invalidGames": 0,
+      "p1Wilson95": [
+        0.1876163064826506,
+        0.8123836935173494
+      ],
+      "meanFullTurns": 46.833333333333336,
+      "meanPolicyDecisions": 120
+    },
+    {
+      "policy": "value",
+      "games": 5,
+      "p1Wins": 4,
+      "p2Wins": 1,
+      "draws": 0,
+      "invalidGames": 0,
+      "p1Wilson95": [
+        0.37553462976252533,
+        0.9637758913675698
+      ],
+      "meanFullTurns": 5,
+      "meanPolicyDecisions": 15
+    },
+    {
+      "policy": "hybrix-rusher-hard",
+      "games": 5,
+      "p1Wins": 3,
+      "p2Wins": 2,
+      "draws": 0,
+      "invalidGames": 0,
+      "p1Wilson95": [
+        0.2307242812760128,
+        0.882379225767352
+      ],
+      "meanFullTurns": 4.4,
+      "meanPolicyDecisions": 14.2
+    }
+  ],
+  "diagnostics": {
+    "games": 348,
+    "canonicalGames": 348,
+    "cappedGames": 0,
+    "invalidGames": 0,
+    "errors": 0,
+    "rejectedCommands": 0,
+    "complianceViolations": 0,
+    "terminationCounts": {
+      "NORMAL_VICTORY": 343,
+      "EXHAUSTED_RESOLUTION": 4,
+      "CANONICAL_DRAW": 1
+    },
+    "policies": {
+      "score-rush": {
+        "decisions": 1354,
+        "familyCounts": {
+          "phase": 540,
+          "ultra": 76,
+          "score": 504,
+          "draw": 80,
+          "instant": 41,
+          "interrupt": 7,
+          "counter": 43,
+          "quick": 14,
+          "disrupt": 36,
+          "super": 11,
+          "response-decline": 1,
+          "private-choice": 1
+        },
+        "modeCounts": {
+          "phase:enter-action": 540,
+          "ultra:2-black-2-red-draw": 50,
+          "score:points": 504,
+          "draw:top": 80,
+          "instant:eight-spade-free-scuttle": 11,
+          "interrupt:rank10-stack-theft": 7,
+          "instant:nine-tap": 30,
+          "counter:ace-spade": 9,
+          "ultra:2-black-2-red-rummage": 5,
+          "quick:queen-aegis": 9,
+          "ultra:three-red-counter": 21,
+          "disrupt:jack": 36,
+          "counter:ace-base": 22,
+          "counter:eight-scuttle": 5,
+          "super:two-hold": 11,
+          "counter:super-ace": 5,
+          "quick:eight-aegis-field": 5,
+          "response-decline:decline": 1,
+          "counter:king-anchor": 2,
+          "private-choice:rank3-discard": 1
+        },
+        "reasonCounts": {
+          "MAX_SCORE_PRESSURE": 1354
+        },
+        "forcedDecisions": 68,
+        "multiOptionDecisions": 1286,
+        "tiesAtTop": 81,
+        "nonTopSelections": 0,
+        "selectedNotInTop8": 0,
+        "nonfiniteCandidateScores": 0,
+        "hybrixTraces": 0,
+        "nonzeroNudgeDecisions": 0,
+        "difficultyErrorDecisions": 0,
+        "failsafeDecisions": 0,
+        "nudgeValues": {},
+        "memoryPatternTypes": {}
+      },
+      "tempo": {
+        "decisions": 1535,
+        "familyCounts": {
+          "instant": 37,
+          "phase": 600,
+          "score": 465,
+          "ultra": 117,
+          "rank10": 52,
+          "draw": 121,
+          "disrupt": 46,
+          "interrupt": 7,
+          "counter": 39,
+          "quick": 37,
+          "super": 11,
+          "private-choice": 1,
+          "royal-marriage": 2
+        },
+        "modeCounts": {
+          "instant:nine-tap": 29,
+          "phase:enter-action": 600,
+          "score:points": 465,
+          "ultra:three-black-ace": 8,
+          "ultra:2-black-2-red-draw": 67,
+          "rank10:heart-tempo": 27,
+          "draw:top": 121,
+          "instant:eight-spade-free-scuttle": 8,
+          "disrupt:jack": 46,
+          "interrupt:rank10-stack-theft": 7,
+          "counter:ace-anchor": 3,
+          "counter:ace-spade": 12,
+          "ultra:three-black-bounce-top": 5,
+          "ultra:three-red-counter": 21,
+          "quick:queen-aegis": 28,
+          "quick:eight-aegis-field": 9,
+          "rank10:diamond-mimic-row-exchange-er": 6,
+          "counter:ace-base": 20,
+          "ultra:three-black-clear-er": 3,
+          "ultra:three-black-total-clear": 2,
+          "ultra:2-black-2-red-rummage": 2,
+          "super:two-hold": 11,
+          "rank10:diamond-mimic-row-exchange-pr": 6,
+          "rank10:club-foundation-bonus": 10,
+          "counter:super-ace": 2,
+          "counter:king-anchor": 2,
+          "ultra:three-black-queen": 5,
+          "private-choice:rank3-discard": 1,
+          "rank10:spade-recovery": 3,
+          "ultra:three-black-clear-pr": 4,
+          "royal-marriage:♠": 2
+        },
+        "reasonCounts": {
+          "MAX_TEMPO": 1535
+        },
+        "forcedDecisions": 80,
+        "multiOptionDecisions": 1455,
+        "tiesAtTop": 130,
+        "nonTopSelections": 0,
+        "selectedNotInTop8": 0,
+        "nonfiniteCandidateScores": 0,
+        "hybrixTraces": 0,
+        "nonzeroNudgeDecisions": 0,
+        "difficultyErrorDecisions": 0,
+        "failsafeDecisions": 0,
+        "nudgeValues": {},
+        "memoryPatternTypes": {}
+      },
+      "control": {
+        "decisions": 3094,
+        "familyCounts": {
+          "instant": 92,
+          "phase": 1190,
+          "ultra": 129,
+          "rank10": 104,
+          "scuttle": 203,
+          "draw": 545,
+          "anchor": 68,
+          "interrupt": 9,
+          "quick": 184,
+          "effect-four": 27,
+          "effect-private-choice": 111,
+          "private-choice": 97,
+          "counter": 55,
+          "effect-three": 81,
+          "swap-bar": 17,
+          "disrupt": 83,
+          "score": 50,
+          "super": 25,
+          "royal-marriage": 4,
+          "effect-ace": 5,
+          "anchor-private-choice": 6,
+          "response-decline": 3,
+          "effect-red-joker": 4,
+          "exhausted-pass": 2
+        },
+        "modeCounts": {
+          "instant:nine-tap": 69,
+          "phase:enter-action": 1190,
+          "ultra:three-black-ace": 13,
+          "rank10:spade-recovery": 17,
+          "scuttle:ordinary": 203,
+          "draw:top": 545,
+          "ultra:2-black-2-red-draw": 66,
+          "rank10:heart-tempo": 34,
+          "instant:eight-spade-free-scuttle": 23,
+          "anchor:king": 61,
+          "interrupt:rank10-stack-theft": 9,
+          "quick:queen-aegis": 46,
+          "effect-four:total-clear": 14,
+          "effect-private-choice:six-dig": 71,
+          "private-choice:rank6-keep-return-bottom": 36,
+          "rank10:diamond-mimic-row-exchange-er": 8,
+          "counter:ace-base": 23,
+          "effect-three:bounce-top": 81,
+          "private-choice:rank6-keep-return-top": 31,
+          "quick:eight-aegis-field": 100,
+          "counter:ace-anchor": 13,
+          "quick:board-lock": 38,
+          "swap-bar:face-up-draw": 17,
+          "disrupt:jack": 83,
+          "score:points": 50,
+          "rank10:club-foundation": 7,
+          "effect-private-choice:three-force-discard": 9,
+          "effect-private-choice:five-recycle": 17,
+          "private-choice:rank5-rummage": 11,
+          "ultra:2-black-2-red-rummage": 11,
+          "ultra:three-red-counter": 20,
+          "effect-private-choice:seven-topdeck": 14,
+          "private-choice:rank7-hand-and-effect": 7,
+          "private-choice:rank7-generated-unavailable": 1,
+          "rank10:diamond-mimic-row-exchange-pr": 12,
+          "ultra:three-black-total-clear": 6,
+          "super:four-exchange-pr": 1,
+          "super:two-hold": 21,
+          "super:eight-absolute-scuttle": 2,
+          "rank10:club-foundation-bonus": 25,
+          "effect-four:clear-pr": 7,
+          "royal-marriage:♥": 2,
+          "counter:ace-spade": 14,
+          "anchor:ace": 6,
+          "private-choice:rank7-hand-and-score": 3,
+          "counter:super-ace": 2,
+          "effect-ace:purge-aegis": 4,
+          "anchor-private-choice:nine": 6,
+          "private-choice:rank7-generated-queen-anchor": 2,
+          "ultra:three-black-queen": 7,
+          "private-choice:rank7-generated-jack-attach": 1,
+          "ultra:three-black-bounce-top": 1,
+          "effect-four:clear-er": 6,
+          "ultra:three-black-clear-pr": 4,
+          "response-decline:decline": 3,
+          "royal-marriage:♠": 2,
+          "rank10:diamond-mimic-paired-super-j-tempo": 1,
+          "effect-red-joker:self-reset": 2,
+          "private-choice:nine-anchor-discard": 2,
+          "ultra:three-black-purge-anchor-bounce": 1,
+          "effect-red-joker:hand-swap": 1,
+          "super:four-exchange-er": 1,
+          "private-choice:rank7-generated-score": 1,
+          "exhausted-pass:forced-mini-turn": 2,
+          "private-choice:rank7-generated-five-recycle": 1,
+          "private-choice:rank7-generated-four-row-clear": 1,
+          "counter:king-spade": 1,
+          "counter:king-anchor": 1,
+          "effect-ace:purge-anchor-bounce": 1,
+          "counter:eight-scuttle": 1,
+          "effect-red-joker:opponent-attack": 1,
+          "anchor:queen": 1
+        },
+        "reasonCounts": {
+          "MAX_BOARD_AND_RESPONSE_CONTROL": 3094
+        },
+        "forcedDecisions": 185,
+        "multiOptionDecisions": 2909,
+        "tiesAtTop": 328,
+        "nonTopSelections": 0,
+        "selectedNotInTop8": 0,
+        "nonfiniteCandidateScores": 0,
+        "hybrixTraces": 0,
+        "nonzeroNudgeDecisions": 0,
+        "difficultyErrorDecisions": 0,
+        "failsafeDecisions": 0,
+        "nudgeValues": {},
+        "memoryPatternTypes": {}
+      },
+      "value": {
+        "decisions": 1377,
+        "familyCounts": {
+          "instant": 32,
+          "phase": 542,
+          "score": 490,
+          "ultra": 90,
+          "rank10": 26,
+          "interrupt": 7,
+          "draw": 87,
+          "disrupt": 40,
+          "counter": 35,
+          "quick": 15,
+          "super": 11,
+          "private-choice": 2
+        },
+        "modeCounts": {
+          "instant:nine-tap": 23,
+          "phase:enter-action": 542,
+          "score:points": 490,
+          "ultra:2-black-2-red-draw": 64,
+          "rank10:heart-tempo": 26,
+          "interrupt:rank10-stack-theft": 7,
+          "draw:top": 87,
+          "instant:eight-spade-free-scuttle": 9,
+          "disrupt:jack": 40,
+          "counter:ace-spade": 11,
+          "ultra:three-black-bounce-top": 5,
+          "ultra:three-red-counter": 18,
+          "quick:queen-aegis": 7,
+          "quick:eight-aegis-field": 8,
+          "counter:ace-base": 19,
+          "ultra:2-black-2-red-rummage": 3,
+          "counter:eight-scuttle": 1,
+          "super:two-hold": 11,
+          "counter:super-ace": 3,
+          "private-choice:nine-anchor-discard": 1,
+          "counter:king-anchor": 1,
+          "private-choice:rank3-discard": 1
+        },
+        "reasonCounts": {
+          "MAX_EXPECTED_VALUE": 1377
+        },
+        "forcedDecisions": 64,
+        "multiOptionDecisions": 1313,
+        "tiesAtTop": 82,
+        "nonTopSelections": 0,
+        "selectedNotInTop8": 0,
+        "nonfiniteCandidateScores": 0,
+        "hybrixTraces": 0,
+        "nonzeroNudgeDecisions": 0,
+        "difficultyErrorDecisions": 0,
+        "failsafeDecisions": 0,
+        "nudgeValues": {},
+        "memoryPatternTypes": {}
+      },
+      "hybrix-rusher-hard": {
+        "decisions": 1428,
+        "familyCounts": {
+          "instant": 42,
+          "swap-bar": 218,
+          "phase": 520,
+          "score": 475,
+          "quick": 21,
+          "counter": 46,
+          "draw": 45,
+          "response-decline": 1,
+          "ultra": 15,
+          "disrupt": 41,
+          "interrupt": 3,
+          "private-choice": 1
+        },
+        "modeCounts": {
+          "instant:nine-tap": 34,
+          "swap-bar:face-down": 218,
+          "phase:enter-action": 520,
+          "score:points": 475,
+          "quick:queen-aegis": 17,
+          "counter:ace-spade": 12,
+          "draw:top": 45,
+          "response-decline:decline": 1,
+          "counter:ace-base": 17,
+          "ultra:three-red-counter": 15,
+          "counter:eight-scuttle": 4,
+          "counter:super-ace": 12,
+          "disrupt:jack": 41,
+          "instant:eight-spade-free-scuttle": 8,
+          "interrupt:rank10-stack-theft": 3,
+          "private-choice:nine-anchor-discard": 1,
+          "counter:king-anchor": 1,
+          "quick:eight-aegis-field": 4
+        },
+        "reasonCounts": {
+          "MAX_EXPECTED_VALUE": 566,
+          "SWAP_BAR_RESOURCE_CYCLE": 168,
+          "EFFECT_UTILITY": 376,
+          "MAX_SCORE_PRESSURE": 124,
+          "GOAL_PLAY_HIGH_VALUE": 185,
+          "GOAL_DISRUPT_OPPONENT": 5,
+          "LOW_MARGIN_ALTERNATIVE": 2,
+          "HAND_REFILL": 1,
+          "GOAL_CONSERVE_RESOURCES": 1
+        },
+        "forcedDecisions": 365,
+        "multiOptionDecisions": 1063,
+        "tiesAtTop": 205,
+        "nonTopSelections": 2,
+        "selectedNotInTop8": 1,
+        "nonfiniteCandidateScores": 0,
+        "hybrixTraces": 1428,
+        "nonzeroNudgeDecisions": 942,
+        "difficultyErrorDecisions": 2,
+        "failsafeDecisions": 0,
+        "nudgeValues": {
+          "{\"accuracy\":0,\"aggression\":0.010000000000000002,\"spacing\":0}": 125,
+          "{\"accuracy\":0,\"aggression\":0.020000000000000004,\"spacing\":0}": 115,
+          "{\"accuracy\":0,\"aggression\":0.03,\"spacing\":0}": 21,
+          "{\"accuracy\":0,\"aggression\":0.04000000000000001,\"spacing\":0}": 115,
+          "{\"accuracy\":0,\"aggression\":0.05,\"spacing\":0}": 86,
+          "{\"accuracy\":0,\"aggression\":0.06,\"spacing\":0}": 32,
+          "{\"accuracy\":0,\"aggression\":0.06999999999999999,\"spacing\":0}": 85,
+          "{\"accuracy\":0,\"aggression\":0.08000000000000002,\"spacing\":0}": 33,
+          "{\"accuracy\":0,\"aggression\":0,\"spacing\":0}": 486,
+          "{\"accuracy\":0,\"aggression\":0.09000000000000001,\"spacing\":0}": 14,
+          "{\"accuracy\":0,\"aggression\":-0.010000000000000002,\"spacing\":0}": 13,
+          "{\"accuracy\":0.06666666666666667,\"aggression\":0,\"spacing\":0}": 52,
+          "{\"accuracy\":0.13333333333333333,\"aggression\":0,\"spacing\":-0.05}": 30,
+          "{\"accuracy\":0.15000000000000002,\"aggression\":0,\"spacing\":-0.05}": 29,
+          "{\"accuracy\":0.16666666666666669,\"aggression\":0,\"spacing\":-0.05}": 17,
+          "{\"accuracy\":0.18333333333333335,\"aggression\":0,\"spacing\":-0.05}": 44,
+          "{\"accuracy\":0.2,\"aggression\":0,\"spacing\":-0.05}": 69,
+          "{\"accuracy\":0.06666666666666667,\"aggression\":0.1,\"spacing\":0}": 14,
+          "{\"accuracy\":0.08333333333333334,\"aggression\":0.1,\"spacing\":0}": 8,
+          "{\"accuracy\":0.15000000000000002,\"aggression\":0.1,\"spacing\":-0.05}": 4,
+          "{\"accuracy\":0.16666666666666669,\"aggression\":0.1,\"spacing\":-0.05}": 6,
+          "{\"accuracy\":0.18333333333333335,\"aggression\":0.1,\"spacing\":-0.05}": 9,
+          "{\"accuracy\":0.2,\"aggression\":0.1,\"spacing\":-0.05}": 9,
+          "{\"accuracy\":0.06666666666666667,\"aggression\":0.11000000000000001,\"spacing\":0}": 1,
+          "{\"accuracy\":0,\"aggression\":0.1,\"spacing\":0}": 5,
+          "{\"accuracy\":0.26666666666666666,\"aggression\":0,\"spacing\":-0.05}": 4,
+          "{\"accuracy\":0.26666666666666666,\"aggression\":0.1,\"spacing\":-0.05}": 1,
+          "{\"accuracy\":0.08333333333333334,\"aggression\":0,\"spacing\":0}": 1
+        },
+        "memoryPatternTypes": {
+          "AGGRESSION_PROFILE": 1428,
+          "RESPONSE_TENDENCY": 1428,
+          "REPEATED_TACTIC": 718
+        }
+      }
+    },
+    "totalPolicyDecisions": 8788,
+    "totalCommands": 30012,
+    "totalCompletedFullTurns": 3044,
+    "maxPolicyDecisions": 142,
+    "p1Wins": 177,
+    "p2Wins": 170
+  },
+  "crossPolicyDiagnostics": {
+    "games": 320,
+    "canonicalGames": 320,
+    "cappedGames": 0,
+    "invalidGames": 0,
+    "errors": 0,
+    "rejectedCommands": 0,
+    "complianceViolations": 0,
+    "terminationCounts": {
+      "NORMAL_VICTORY": 320
+    },
+    "policies": {
+      "score-rush": {
+        "decisions": 1275,
+        "familyCounts": {
+          "phase": 510,
+          "ultra": 70,
+          "score": 471,
+          "draw": 79,
+          "instant": 35,
+          "interrupt": 7,
+          "counter": 41,
+          "quick": 14,
+          "disrupt": 36,
+          "super": 10,
+          "response-decline": 1,
+          "private-choice": 1
+        },
+        "modeCounts": {
+          "phase:enter-action": 510,
+          "ultra:2-black-2-red-draw": 45,
+          "score:points": 471,
+          "draw:top": 79,
+          "instant:eight-spade-free-scuttle": 10,
+          "interrupt:rank10-stack-theft": 7,
+          "instant:nine-tap": 25,
+          "counter:ace-spade": 9,
+          "ultra:2-black-2-red-rummage": 5,
+          "quick:queen-aegis": 9,
+          "ultra:three-red-counter": 20,
+          "disrupt:jack": 36,
+          "counter:ace-base": 20,
+          "counter:eight-scuttle": 5,
+          "super:two-hold": 10,
+          "counter:super-ace": 5,
+          "quick:eight-aegis-field": 5,
+          "response-decline:decline": 1,
+          "counter:king-anchor": 2,
+          "private-choice:rank3-discard": 1
+        },
+        "reasonCounts": {
+          "MAX_SCORE_PRESSURE": 1275
+        },
+        "forcedDecisions": 67,
+        "multiOptionDecisions": 1208,
+        "tiesAtTop": 75,
+        "nonTopSelections": 0,
+        "selectedNotInTop8": 0,
+        "nonfiniteCandidateScores": 0,
+        "hybrixTraces": 0,
+        "nonzeroNudgeDecisions": 0,
+        "difficultyErrorDecisions": 0,
+        "failsafeDecisions": 0,
+        "nudgeValues": {},
+        "memoryPatternTypes": {}
+      },
+      "tempo": {
+        "decisions": 1422,
+        "familyCounts": {
+          "instant": 33,
+          "phase": 556,
+          "score": 432,
+          "ultra": 107,
+          "rank10": 48,
+          "draw": 114,
+          "disrupt": 44,
+          "interrupt": 6,
+          "counter": 35,
+          "quick": 34,
+          "super": 10,
+          "private-choice": 1,
+          "royal-marriage": 2
+        },
+        "modeCounts": {
+          "instant:nine-tap": 27,
+          "phase:enter-action": 556,
+          "score:points": 432,
+          "ultra:three-black-ace": 7,
+          "ultra:2-black-2-red-draw": 62,
+          "rank10:heart-tempo": 26,
+          "draw:top": 114,
+          "instant:eight-spade-free-scuttle": 6,
+          "disrupt:jack": 44,
+          "interrupt:rank10-stack-theft": 6,
+          "counter:ace-anchor": 2,
+          "counter:ace-spade": 12,
+          "ultra:three-black-bounce-top": 4,
+          "ultra:three-red-counter": 19,
+          "quick:queen-aegis": 25,
+          "quick:eight-aegis-field": 9,
+          "rank10:diamond-mimic-row-exchange-er": 5,
+          "counter:ace-base": 17,
+          "ultra:three-black-clear-er": 2,
+          "ultra:three-black-total-clear": 2,
+          "ultra:2-black-2-red-rummage": 2,
+          "super:two-hold": 10,
+          "rank10:diamond-mimic-row-exchange-pr": 5,
+          "rank10:club-foundation-bonus": 9,
+          "counter:super-ace": 2,
+          "counter:king-anchor": 2,
+          "ultra:three-black-queen": 5,
+          "private-choice:rank3-discard": 1,
+          "rank10:spade-recovery": 3,
+          "ultra:three-black-clear-pr": 4,
+          "royal-marriage:♠": 2
+        },
+        "reasonCounts": {
+          "MAX_TEMPO": 1422
+        },
+        "forcedDecisions": 78,
+        "multiOptionDecisions": 1344,
+        "tiesAtTop": 115,
+        "nonTopSelections": 0,
+        "selectedNotInTop8": 0,
+        "nonfiniteCandidateScores": 0,
+        "hybrixTraces": 0,
+        "nonzeroNudgeDecisions": 0,
+        "difficultyErrorDecisions": 0,
+        "failsafeDecisions": 0,
+        "nudgeValues": {},
+        "memoryPatternTypes": {}
+      },
+      "control": {
+        "decisions": 2374,
+        "familyCounts": {
+          "instant": 85,
+          "phase": 903,
+          "ultra": 105,
+          "rank10": 81,
+          "scuttle": 189,
+          "draw": 391,
+          "anchor": 46,
+          "interrupt": 6,
+          "quick": 148,
+          "effect-four": 19,
+          "effect-private-choice": 85,
+          "private-choice": 73,
+          "counter": 35,
+          "effect-three": 64,
+          "swap-bar": 13,
+          "disrupt": 61,
+          "score": 39,
+          "super": 20,
+          "royal-marriage": 4,
+          "effect-ace": 2,
+          "anchor-private-choice": 2,
+          "response-decline": 3
+        },
+        "modeCounts": {
+          "instant:nine-tap": 63,
+          "phase:enter-action": 903,
+          "ultra:three-black-ace": 11,
+          "rank10:spade-recovery": 14,
+          "scuttle:ordinary": 189,
+          "draw:top": 391,
+          "ultra:2-black-2-red-draw": 63,
+          "rank10:heart-tempo": 27,
+          "instant:eight-spade-free-scuttle": 22,
+          "anchor:king": 44,
+          "interrupt:rank10-stack-theft": 6,
+          "quick:queen-aegis": 38,
+          "effect-four:total-clear": 10,
+          "effect-private-choice:six-dig": 61,
+          "private-choice:rank6-keep-return-bottom": 32,
+          "rank10:diamond-mimic-row-exchange-er": 7,
+          "counter:ace-base": 16,
+          "effect-three:bounce-top": 64,
+          "private-choice:rank6-keep-return-top": 26,
+          "quick:eight-aegis-field": 80,
+          "counter:ace-anchor": 7,
+          "quick:board-lock": 30,
+          "swap-bar:face-up-draw": 13,
+          "disrupt:jack": 61,
+          "score:points": 39,
+          "rank10:club-foundation": 6,
+          "effect-private-choice:three-force-discard": 7,
+          "effect-private-choice:five-recycle": 10,
+          "private-choice:rank5-rummage": 4,
+          "ultra:2-black-2-red-rummage": 5,
+          "ultra:three-red-counter": 12,
+          "effect-private-choice:seven-topdeck": 7,
+          "private-choice:rank7-hand-and-effect": 4,
+          "private-choice:rank7-generated-unavailable": 1,
+          "rank10:diamond-mimic-row-exchange-pr": 10,
+          "ultra:three-black-total-clear": 4,
+          "super:four-exchange-pr": 1,
+          "super:two-hold": 17,
+          "super:eight-absolute-scuttle": 2,
+          "rank10:club-foundation-bonus": 16,
+          "effect-four:clear-pr": 6,
+          "royal-marriage:♥": 2,
+          "counter:ace-spade": 10,
+          "anchor:ace": 2,
+          "private-choice:rank7-hand-and-score": 3,
+          "counter:super-ace": 2,
+          "effect-ace:purge-aegis": 2,
+          "anchor-private-choice:nine": 2,
+          "private-choice:rank7-generated-queen-anchor": 2,
+          "ultra:three-black-queen": 5,
+          "private-choice:rank7-generated-jack-attach": 1,
+          "ultra:three-black-bounce-top": 1,
+          "effect-four:clear-er": 3,
+          "ultra:three-black-clear-pr": 4,
+          "response-decline:decline": 3,
+          "royal-marriage:♠": 2,
+          "rank10:diamond-mimic-paired-super-j-tempo": 1
+        },
+        "reasonCounts": {
+          "MAX_BOARD_AND_RESPONSE_CONTROL": 2374
+        },
+        "forcedDecisions": 162,
+        "multiOptionDecisions": 2212,
+        "tiesAtTop": 264,
+        "nonTopSelections": 0,
+        "selectedNotInTop8": 0,
+        "nonfiniteCandidateScores": 0,
+        "hybrixTraces": 0,
+        "nonzeroNudgeDecisions": 0,
+        "difficultyErrorDecisions": 0,
+        "failsafeDecisions": 0,
+        "nudgeValues": {},
+        "memoryPatternTypes": {}
+      },
+      "value": {
+        "decisions": 1302,
+        "familyCounts": {
+          "instant": 30,
+          "phase": 512,
+          "score": 464,
+          "ultra": 84,
+          "rank10": 24,
+          "interrupt": 6,
+          "draw": 85,
+          "disrupt": 38,
+          "counter": 33,
+          "quick": 14,
+          "super": 10,
+          "private-choice": 2
+        },
+        "modeCounts": {
+          "instant:nine-tap": 22,
+          "phase:enter-action": 512,
+          "score:points": 464,
+          "ultra:2-black-2-red-draw": 60,
+          "rank10:heart-tempo": 24,
+          "interrupt:rank10-stack-theft": 6,
+          "draw:top": 85,
+          "instant:eight-spade-free-scuttle": 8,
+          "disrupt:jack": 38,
+          "counter:ace-spade": 11,
+          "ultra:three-black-bounce-top": 4,
+          "ultra:three-red-counter": 17,
+          "quick:queen-aegis": 7,
+          "quick:eight-aegis-field": 7,
+          "counter:ace-base": 17,
+          "ultra:2-black-2-red-rummage": 3,
+          "counter:eight-scuttle": 1,
+          "super:two-hold": 10,
+          "counter:super-ace": 3,
+          "private-choice:nine-anchor-discard": 1,
+          "counter:king-anchor": 1,
+          "private-choice:rank3-discard": 1
+        },
+        "reasonCounts": {
+          "MAX_EXPECTED_VALUE": 1302
+        },
+        "forcedDecisions": 63,
+        "multiOptionDecisions": 1239,
+        "tiesAtTop": 79,
+        "nonTopSelections": 0,
+        "selectedNotInTop8": 0,
+        "nonfiniteCandidateScores": 0,
+        "hybrixTraces": 0,
+        "nonzeroNudgeDecisions": 0,
+        "difficultyErrorDecisions": 0,
+        "failsafeDecisions": 0,
+        "nudgeValues": {},
+        "memoryPatternTypes": {}
+      },
+      "hybrix-rusher-hard": {
+        "decisions": 1357,
+        "familyCounts": {
+          "instant": 38,
+          "swap-bar": 208,
+          "phase": 493,
+          "score": 448,
+          "quick": 19,
+          "counter": 45,
+          "draw": 45,
+          "response-decline": 1,
+          "ultra": 15,
+          "disrupt": 41,
+          "interrupt": 3,
+          "private-choice": 1
+        },
+        "modeCounts": {
+          "instant:nine-tap": 30,
+          "swap-bar:face-down": 208,
+          "phase:enter-action": 493,
+          "score:points": 448,
+          "quick:queen-aegis": 15,
+          "counter:ace-spade": 12,
+          "draw:top": 45,
+          "response-decline:decline": 1,
+          "counter:ace-base": 17,
+          "ultra:three-red-counter": 15,
+          "counter:eight-scuttle": 4,
+          "counter:super-ace": 11,
+          "disrupt:jack": 41,
+          "instant:eight-spade-free-scuttle": 8,
+          "interrupt:rank10-stack-theft": 3,
+          "private-choice:nine-anchor-discard": 1,
+          "counter:king-anchor": 1,
+          "quick:eight-aegis-field": 4
+        },
+        "reasonCounts": {
+          "MAX_EXPECTED_VALUE": 555,
+          "SWAP_BAR_RESOURCE_CYCLE": 160,
+          "EFFECT_UTILITY": 350,
+          "MAX_SCORE_PRESSURE": 115,
+          "GOAL_PLAY_HIGH_VALUE": 169,
+          "GOAL_DISRUPT_OPPONENT": 4,
+          "LOW_MARGIN_ALTERNATIVE": 2,
+          "HAND_REFILL": 1,
+          "GOAL_CONSERVE_RESOURCES": 1
+        },
+        "forcedDecisions": 340,
+        "multiOptionDecisions": 1017,
+        "tiesAtTop": 194,
+        "nonTopSelections": 2,
+        "selectedNotInTop8": 1,
+        "nonfiniteCandidateScores": 0,
+        "hybrixTraces": 1357,
+        "nonzeroNudgeDecisions": 904,
+        "difficultyErrorDecisions": 2,
+        "failsafeDecisions": 0,
+        "nudgeValues": {
+          "{\"accuracy\":0,\"aggression\":0.010000000000000002,\"spacing\":0}": 115,
+          "{\"accuracy\":0,\"aggression\":0.020000000000000004,\"spacing\":0}": 105,
+          "{\"accuracy\":0,\"aggression\":0.03,\"spacing\":0}": 21,
+          "{\"accuracy\":0,\"aggression\":0.04000000000000001,\"spacing\":0}": 105,
+          "{\"accuracy\":0,\"aggression\":0.05,\"spacing\":0}": 83,
+          "{\"accuracy\":0,\"aggression\":0.06,\"spacing\":0}": 31,
+          "{\"accuracy\":0,\"aggression\":0.06999999999999999,\"spacing\":0}": 81,
+          "{\"accuracy\":0,\"aggression\":0.08000000000000002,\"spacing\":0}": 33,
+          "{\"accuracy\":0,\"aggression\":0,\"spacing\":0}": 453,
+          "{\"accuracy\":0,\"aggression\":0.09000000000000001,\"spacing\":0}": 14,
+          "{\"accuracy\":0,\"aggression\":-0.010000000000000002,\"spacing\":0}": 13,
+          "{\"accuracy\":0.06666666666666667,\"aggression\":0,\"spacing\":0}": 52,
+          "{\"accuracy\":0.13333333333333333,\"aggression\":0,\"spacing\":-0.05}": 30,
+          "{\"accuracy\":0.15000000000000002,\"aggression\":0,\"spacing\":-0.05}": 29,
+          "{\"accuracy\":0.16666666666666669,\"aggression\":0,\"spacing\":-0.05}": 17,
+          "{\"accuracy\":0.18333333333333335,\"aggression\":0,\"spacing\":-0.05}": 44,
+          "{\"accuracy\":0.2,\"aggression\":0,\"spacing\":-0.05}": 69,
+          "{\"accuracy\":0.06666666666666667,\"aggression\":0.1,\"spacing\":0}": 14,
+          "{\"accuracy\":0.08333333333333334,\"aggression\":0.1,\"spacing\":0}": 8,
+          "{\"accuracy\":0.15000000000000002,\"aggression\":0.1,\"spacing\":-0.05}": 4,
+          "{\"accuracy\":0.16666666666666669,\"aggression\":0.1,\"spacing\":-0.05}": 6,
+          "{\"accuracy\":0.18333333333333335,\"aggression\":0.1,\"spacing\":-0.05}": 9,
+          "{\"accuracy\":0.2,\"aggression\":0.1,\"spacing\":-0.05}": 9,
+          "{\"accuracy\":0.06666666666666667,\"aggression\":0.11000000000000001,\"spacing\":0}": 1,
+          "{\"accuracy\":0,\"aggression\":0.1,\"spacing\":0}": 5,
+          "{\"accuracy\":0.26666666666666666,\"aggression\":0,\"spacing\":-0.05}": 4,
+          "{\"accuracy\":0.26666666666666666,\"aggression\":0.1,\"spacing\":-0.05}": 1,
+          "{\"accuracy\":0.08333333333333334,\"aggression\":0,\"spacing\":0}": 1
+        },
+        "memoryPatternTypes": {
+          "AGGRESSION_PROFILE": 1357,
+          "RESPONSE_TENDENCY": 1357,
+          "REPEATED_TACTIC": 711
+        }
+      }
+    },
+    "totalPolicyDecisions": 7730,
+    "totalCommands": 26403,
+    "totalCompletedFullTurns": 2654,
+    "maxPolicyDecisions": 92,
+    "p1Wins": 161,
+    "p2Wins": 159
+  },
+  "preflightExecutions": 12,
+  "preflightAllPassed": true,
+  "focusedTestsPassed": true,
+  "runtimeUpstreamDistMismatches": [],
+  "limitations": [
+    "Only 16 deterministic seed clusters per pairing; common seeds across comparisons; no independent 320-game sample.",
+    "Wilson intervals are descriptive marginal summaries, not paired-data inferential intervals. Paired bootstrap and exact sign tests use seed clusters. Holm correction is supplementary.",
+    "Existing heuristic configurations, not optimized or human-meta policies. HYBRIX memory receives own pending action records through this adapter; no opponent-learning or adaptation ablation claim.",
+    "Default bounded profile only. No unrestricted/full-rules pilot or optional 32-seed expansion performed because of cost.",
+    "Dirty snapshot: local runtime/upstream dist match byte-for-byte, but no build/transpile source certification performed.",
+    "Replay verification covers 10 preflight runs, not every study game. Full decision logs and hashes are retained for study runs."
+  ]
+}

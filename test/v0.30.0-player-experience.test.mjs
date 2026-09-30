@@ -105,28 +105,10 @@ test('v0.30.0: AI personality cards show description text', async () => {
 });
 
 // ── Card Inspector bridge ──────────────────────────────────────
-
-test('v0.30.0: ranked-duel-renderer includes protection status rendering', async () => {
-  const src = read('apps/lab-web/src/play/ranked-duel-renderer.mjs');
-  assert.ok(src.includes('renderInspectorProtectionStatus'), 'Must define renderInspectorProtectionStatus');
-  assert.ok(src.includes('inspector-protection-status'), 'Must include protection status container');
-  assert.ok(src.includes('inspector-protection-chip'), 'Must include protection chips');
-});
-
-test('v0.30.0: ranked-duel-renderer includes learning links', async () => {
-  const src = read('apps/lab-web/src/play/ranked-duel-renderer.mjs');
-  assert.ok(src.includes('renderInspectorLearningLinks'), 'Must define renderInspectorLearningLinks');
-  assert.ok(src.includes('inspector-learning-links'), 'Must include learning links container');
-  assert.ok(src.includes('inspector-academy-link'), 'Must include Academy link');
-  assert.ok(src.includes('inspector-puzzle-link'), 'Must include Puzzle link');
-});
-
-test('v0.30.0: inspector unavailable explanation includes detail text', async () => {
-  const src = read('apps/lab-web/src/play/ranked-duel-renderer.mjs');
-  assert.ok(src.includes('inspector-unavailable-detail'), 'Must include unavailable detail container');
-  assert.ok(src.includes('inspector-unavailable-detail-text'), 'Must include detailed text');
-  assert.ok(src.includes('inspector-unavailable-rule-ref'), 'Must include rule reference');
-});
+// Note: The card inspector (protection status, learning links, unavailable
+// detail) is now rendered by the Astra React board (client/mount.tsx +
+// game-table.tsx). The classic active-board renderer helpers have been
+// removed from ranked-duel-renderer.mjs. CSS styles are still verified below.
 
 test('v0.30.0: CSS includes protection status and learning link styles', async () => {
   const css = read('apps/lab-web/src/play/ranked-duel.css');

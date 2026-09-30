@@ -1,0 +1,81 @@
+[
+  {
+    "policy": "score-rush",
+    "kind": "isolated-mirror-repeat-and-replay",
+    "indices": [
+      0,
+      1
+    ],
+    "pass": true,
+    "resultHashes": [
+      "7a377547a9e4b71c97b0afa44d67b67825e941372166b25b1d034f7cb705b72c",
+      "7a377547a9e4b71c97b0afa44d67b67825e941372166b25b1d034f7cb705b72c"
+    ]
+  },
+  {
+    "policy": "tempo",
+    "kind": "isolated-mirror-repeat-and-replay",
+    "indices": [
+      2,
+      3
+    ],
+    "pass": true,
+    "resultHashes": [
+      "4332a54920c169a284ff54744f900a720603cf4443711d6925c18ee2394a9969",
+      "4332a54920c169a284ff54744f900a720603cf4443711d6925c18ee2394a9969"
+    ]
+  },
+  {
+    "policy": "control",
+    "kind": "isolated-mirror-repeat-and-replay",
+    "indices": [
+      4,
+      5
+    ],
+    "pass": true,
+    "resultHashes": [
+      "49af907315ef0c41c87d0e025032b70d2d51a78aa735dd19c7ad739d2dfd4e20",
+      "49af907315ef0c41c87d0e025032b70d2d51a78aa735dd19c7ad739d2dfd4e20"
+    ]
+  },
+  {
+    "policy": "value",
+    "kind": "isolated-mirror-repeat-and-replay",
+    "indices": [
+      6,
+      7
+    ],
+    "pass": true,
+    "resultHashes": [
+      "109e801e4aa7f9183d1cdaf7584dd7b61489676d648f0ad1bdfb0ae3ee408a3e",
+      "109e801e4aa7f9183d1cdaf7584dd7b61489676d648f0ad1bdfb0ae3ee408a3e"
+    ]
+  },
+  {
+    "policy": "hybrix-rusher-hard",
+    "kind": "isolated-mirror-repeat-and-replay",
+    "indices": [
+      8,
+      9
+    ],
+    "pass": true,
+    "resultHashes": [
+      "90c659410b994c8ed3dfd1eff4030f1e037b2ea3c8a0b97bf98c2208a965050d",
+      "90c659410b994c8ed3dfd1eff4030f1e037b2ea3c8a0b97bf98c2208a965050d"
+    ]
+  },
+  {
+    "kind": "native-same-run-instance-mirror-repeat",
+    "indices": [
+      10,
+      11
+    ],
+    "pass": true,
+    "resultHashes": [
+      "90c659410b994c8ed3dfd1eff4030f1e037b2ea3c8a0b97bf98c2208a965050d",
+      "90c659410b994c8ed3dfd1eff4030f1e037b2ea3c8a0b97bf98c2208a965050d"
+    ],
+    "requiredForStudy": false,
+    "mitigation": "Each study execution has a unique runInstanceId, and isolated repetition is gated above."
+  }
+]

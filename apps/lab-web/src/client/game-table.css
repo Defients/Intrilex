@@ -1,3 +1,5 @@
+@import './gameplay/gameplay.css';
+
 .astra-client {
   --astra-bg: #080d12;
   --astra-table: #0d141b;

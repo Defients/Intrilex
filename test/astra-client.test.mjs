@@ -5,10 +5,6 @@ import { build } from 'esbuild';
 import path from 'node:path';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import os from 'node:os';
-import {
-  getBoardPresentation,
-  setBoardPresentation,
-} from '../apps/lab-web/src/client/board-preference.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
@@ -35,9 +31,11 @@ export function useId() { return ':r0:'; }
 export function useCallback(fn) { return fn; }
 export function useSyncExternalStore(_subscribe, getSnapshot) { return getSnapshot(); }
 export function useMemo(fn) { return fn(); }
+export function memo(fn) { return fn; }
 export function useReducer(_reducer, initial) { return [initial, () => {}]; }
 export const createContext = () => ({ Provider: 'Provider' });
 export function useContext() { return null; }
+export function flushSync(fn) { if (fn) fn(); }
 `);
 
 const reactJsxMockPath = path.join(tmpDir, 'react-jsx-mock.mjs');
@@ -91,6 +89,7 @@ const bundle = await build({
   target: 'es2022',
   metafile: true,
   alias: {
+    'react-dom': reactMockPath,
     'react': reactMockPath,
     'react/jsx-runtime': reactJsxMockPath,
     'react-dom/client': reactDomClientMockPath,
@@ -240,95 +239,6 @@ function withDom(fn) {
   };
 }
 
-// ── Board preference tests ────────────────────────────────────────
-
-// NOTE: board-preference.js uses a module-level `override` variable that
-// persists across tests once setBoardPresentation is called. The override
-// always takes priority over localStorage. These tests account for that.
-
-test('board-preference rejects invalid values and returns false', () => {
-  assert.equal(setBoardPresentation('invalid'), false);
-  assert.equal(setBoardPresentation(''), false);
-  assert.equal(setBoardPresentation(null), false);
-  assert.equal(setBoardPresentation(undefined), false);
-  assert.equal(setBoardPresentation(42), false);
-});
-
-test('board-preference accepts classic and tactical, persists, and override is returned', () => {
-  const original = globalThis.localStorage;
-  const store = new Map();
-  globalThis.localStorage = {
-    store,
-    getItem(key) { return this.store.has(key) ? this.store.get(key) : null; },
-    setItem(key, value) { this.store.set(key, value); },
-    removeItem(key) { this.store.delete(key); },
-  };
-  try {
-    assert.equal(setBoardPresentation('tactical'), true);
-    assert.equal(store.get('intrilex:board-presentation'), 'tactical');
-    assert.equal(getBoardPresentation(), 'tactical');
-    assert.equal(setBoardPresentation('classic'), true);
-    assert.equal(store.get('intrilex:board-presentation'), 'classic');
-    assert.equal(getBoardPresentation(), 'classic');
-  } finally {
-    globalThis.localStorage = original;
-  }
-});
-
-test('board-preference override takes priority over localStorage', () => {
-  const original = globalThis.localStorage;
-  globalThis.localStorage = {
-    store: new Map([['intrilex:board-presentation', 'tactical']]),
-    getItem(key) { return this.store.has(key) ? this.store.get(key) : null; },
-    setItem(key, value) { this.store.set(key, value); },
-  };
-  try {
-    // Set override to classic; even though localStorage has tactical, override wins
-    setBoardPresentation('classic');
-    assert.equal(getBoardPresentation(), 'classic');
-    // Now set override to tactical; it should win over localStorage
-    setBoardPresentation('tactical');
-    assert.equal(getBoardPresentation(), 'tactical');
-  } finally {
-    globalThis.localStorage = original;
-  }
-});
-
-test('board-preference tolerates localStorage access failures', () => {
-  const original = globalThis.localStorage;
-  globalThis.localStorage = {
-    getItem() { throw new Error('Storage disabled'); },
-    setItem() { throw new Error('Storage disabled'); },
-  };
-  try {
-    // setBoardPresentation should still return true for valid values even if storage fails
-    assert.equal(setBoardPresentation('tactical'), true);
-    // Override is set in-memory, so getBoardPresentation returns tactical
-    assert.equal(getBoardPresentation(), 'tactical');
-    assert.equal(setBoardPresentation('classic'), true);
-    assert.equal(getBoardPresentation(), 'classic');
-  } finally {
-    globalThis.localStorage = original;
-  }
-});
-
-test('board-preference defaults to classic for invalid localStorage values', () => {
-  const original = globalThis.localStorage;
-  globalThis.localStorage = {
-    store: new Map([['intrilex:board-presentation', 'invalid-value']]),
-    getItem(key) { return this.store.has(key) ? this.store.get(key) : null; },
-    setItem(key, value) { this.store.set(key, value); },
-  };
-  try {
-    // The override from the previous test is 'classic', so this returns 'classic'.
-    // But even without an override, an invalid localStorage value would fall back to 'classic'.
-    setBoardPresentation('classic');
-    assert.equal(getBoardPresentation(), 'classic');
-  } finally {
-    globalThis.localStorage = original;
-  }
-});
-
 // ── Mount layer tests ─────────────────────────────────────────────
 
 test('mountGameTable creates a host element and replaces container contents', withDom(async (doc) => {
@@ -338,7 +248,6 @@ test('mountGameTable creates a host element and replaces container contents', wi
   assert.equal(container.children.length, 1);
   const ctrl = mountGameTable(container, fixture(), {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   assert.ok(container.children.length > 0);
   assert.notEqual(container.children[0], initialChild);
@@ -349,7 +258,6 @@ test('mountGameTable returns an object with update and dispose methods', withDom
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, fixture(), {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   assert.equal(typeof ctrl.update, 'function');
   assert.equal(typeof ctrl.dispose, 'function');
@@ -360,7 +268,6 @@ test('update forwards snapshots to the store without throwing on valid input', w
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, fixture(), {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   const next = fixture();
   next.decision.stateRevision = 8;
@@ -374,7 +281,6 @@ test('update with readOnly option does not throw', withDom(async (doc) => {
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, fixture(), {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
     readOnly: true,
   });
   assert.doesNotThrow(() => ctrl.update(fixture(), true));
@@ -385,7 +291,6 @@ test('dispose is idempotent and does not throw on double disposal', withDom(asyn
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, fixture(), {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   assert.doesNotThrow(() => ctrl.dispose());
   assert.doesNotThrow(() => ctrl.dispose());
@@ -395,7 +300,6 @@ test('update after dispose is a no-op and does not throw', withDom(async (doc) =
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, fixture(), {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   ctrl.dispose();
   assert.doesNotThrow(() => ctrl.update(fixture()));
@@ -405,7 +309,6 @@ test('mountGameTable with null snapshot does not throw', withDom(async (doc) => 
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, null, {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   assert.ok(container.children.length > 0);
   ctrl.dispose();
@@ -415,7 +318,6 @@ test('mountGameTable with malformed snapshot does not throw', withDom(async (doc
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, { invalid: true, noSession: true }, {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   assert.ok(container.children.length > 0);
   ctrl.dispose();
@@ -426,7 +328,6 @@ test('mountGameTable does not call submit during initial mount or update', withD
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, fixture(), {
     submit: async () => { submitCallCount++; return { accepted: true }; },
-    onClassic: () => {},
   });
   assert.equal(submitCallCount, 0);
   ctrl.update(fixture());
@@ -444,7 +345,6 @@ test('mountGameTable handles terminal snapshot without throwing', withDom(async 
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, terminal, {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   assert.ok(container.children.length > 0);
   ctrl.dispose();
@@ -457,7 +357,6 @@ test('mountGameTable handles AI_DECISION snapshot without throwing', withDom(asy
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, aiTurn, {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   assert.ok(container.children.length > 0);
   ctrl.dispose();
@@ -471,7 +370,6 @@ test('mountGameTable handles network OPPONENT_DECISION snapshot without throwing
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, opponentTurn, {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   assert.ok(container.children.length > 0);
   ctrl.dispose();
@@ -488,7 +386,6 @@ test('mountGameTable preserves privacy — hostile private fields do not cause e
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, input, {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   assert.ok(container.children.length > 0);
   ctrl.dispose();
@@ -498,7 +395,6 @@ test('mountGameTable with readOnly option renders without throwing', withDom(asy
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, fixture(), {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
     readOnly: true,
   });
   assert.ok(container.children.length > 0);
@@ -510,7 +406,6 @@ test('multiple mount/dispose cycles do not leak hosts or throw', withDom(async (
   for (let i = 0; i < 5; i++) {
     const ctrl = mountGameTable(container, fixture(), {
       submit: async () => ({ accepted: true }),
-      onClassic: () => {},
     });
     assert.ok(container.children.length > 0, `cycle ${i}: container should have a host`);
     ctrl.dispose();
@@ -521,7 +416,6 @@ test('update with a new session boundary transitions the store cleanly', withDom
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, fixture(), {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
   });
   const newSession = fixture();
   newSession.sessionId = 'session-2';
@@ -538,7 +432,6 @@ test('skin option is accepted without throwing', withDom(async (doc) => {
   for (const skin of ['dark', 'light', 'cosmotech', 'corrupture', undefined]) {
     const ctrl = mountGameTable(container, fixture(), {
       submit: async () => ({ accepted: true }),
-      onClassic: () => {},
       skin,
     });
     assert.ok(container.children.length > 0, `skin=${skin}: container should have a host`);
@@ -550,7 +443,6 @@ test('onSave and onInspect options are accepted without throwing', withDom(async
   const container = doc.createElement('div');
   const ctrl = mountGameTable(container, fixture(), {
     submit: async () => ({ accepted: true }),
-    onClassic: () => {},
     onSave: async () => {},
     onInspect: () => {},
   });

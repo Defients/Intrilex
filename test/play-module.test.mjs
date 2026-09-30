@@ -402,21 +402,10 @@ test('play module: play-privacy has DOM leak checking', async () => {
   assert.match(js, /TEXT_LEAK/);
 });
 
-test('play module: play-renderer-v3 has data-testid attributes', async () => {
-  const js = await playSrc('ranked-duel-renderer.mjs');
-  assert.match(js, /data-testid/);
-});
-
-test('play module: play-renderer-v3 has ARIA labels', async () => {
-  const js = await playSrc('ranked-duel-renderer.mjs');
-  assert.match(js, /aria-label/);
-  assert.match(js, /aria-live/);
-});
-
-test('play module: play-renderer-v3 has priority explainer', async () => {
-  const js = await playSrc('ranked-duel-renderer.mjs');
-  assert.match(js, /why-can-i-act/);
-});
+// Note: data-testid, ARIA labels, and priority explainer (why-can-i-act)
+// were active-board renderer concepts. Active match play is now rendered by
+// the Astra React board (client/mount.tsx + game-table.tsx). The terminal
+// and error states remain in ranked-duel-terminal.mjs, tested below.
 
 test('play module: play-renderer-v3 has terminal and error states', async () => {
   // Terminal/error states are now in ranked-duel-terminal.mjs, imported by the main renderer
@@ -445,7 +434,9 @@ test('play module: network-session has getReplay method and replayUrl property',
   assert.match(js, /replayUrl/, 'must store replayUrl from REPLAY_AVAILABLE');
   assert.match(js, /replayHash/, 'must store replayHash from REPLAY_AVAILABLE');
   assert.match(js, /REPLAY_AVAILABLE/, 'must handle REPLAY_AVAILABLE message type');
-  assert.match(js, /GET_REPLAY/, 'must send GET_REPLAY request type');
+  assert.match(js, /getReplay\(this.matchId, this.participantToken\)/, 'must use the correlated replay protocol builder');
+  const protocol = await playSrc('network/network-protocol-client.mjs');
+  assert.match(protocol, /envelope\('GET_REPLAY'/, 'builder must send GET_REPLAY through the request envelope');
 });
 
 test('play module: network-session verifies replay hash via SHA-256', async () => {

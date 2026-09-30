@@ -3,12 +3,18 @@
 //
 // Behavioral tests for the v2.5 Match UI:
 //   1. AI opponent identity (aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId)
-//   2. Draw pile depletion visual tiers (renderer)
-//   3. Event log actor labels (renderer shows YOU, not Player 1)
-//   4. Resolution stack empty state (renderer shows "no pending effects")
 //   5. Privacy/hidden information firewall (viewmodel rejects opponent hand)
 //   6. Viewmodel schema and structure
-//   7. Renderer output structure
+//   7. Renderer output structure (terminal/error rendering)
+//
+// NOTE: Active match play is now rendered by the Astra React board
+// (client/mount.tsx), tested by test/astra-client.test.mjs. The classic
+// active-board renderer (renderMatch and helpers) has been removed from
+// ranked-duel-renderer.mjs, which now only renders TERMINAL and ERROR
+// screens. The former behavioral sections for draw pile depletion tiers
+// (2), event log actor labels (3), and resolution stack empty state (4)
+// asserted on active-board DOM produced by renderRankedDuel with ACTIVE
+// snapshots (which now returns '') and have been removed.
 // ═══════════════════════════════════════════════════════════════
 
 import { test, describe } from 'node:test';
@@ -161,126 +167,6 @@ describe('AI opponent identity', () => {
   });
 });
 
-// ── 2. Draw pile depletion visual tiers ──────────────────────────
-
-describe('Draw pile depletion visual tiers', () => {
-  const { renderRankedDuel } = rankedDuelRenderer;
-
-  test('Draw pile with 0 cards shows "depleted" tier and "Exhausted" text', () => {
-    const snap = buildTestSnapshot();
-    snap.state.drawPile = { count: 0 };
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /data-depletion="depleted"/);
-    assert.match(html, /Exhausted/i);
-  });
-
-  test('Draw pile with 4 cards shows "low" tier', () => {
-    const snap = buildTestSnapshot();
-    snap.state.drawPile = { count: 4 };
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /data-depletion="low"/);
-  });
-
-  test('Draw pile with 12 cards shows "medium" tier', () => {
-    const snap = buildTestSnapshot();
-    snap.state.drawPile = { count: 12 };
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /data-depletion="medium"/);
-  });
-
-  test('Draw pile with 30 cards shows "high" tier', () => {
-    const snap = buildTestSnapshot();
-    snap.state.drawPile = { count: 30 };
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /data-depletion="high"/);
-  });
-
-  test('Draw pile count is visible in the rendered output', () => {
-    const snap = buildTestSnapshot();
-    snap.state.drawPile = { count: 17 };
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /17/);
-  });
-});
-
-// ── 3. Event log actor labels ────────────────────────────────────
-
-describe('Event log actor labels', () => {
-  const { renderRankedDuel } = rankedDuelRenderer;
-
-  test('Event log shows "YOU" for human player, not "Player 1"', () => {
-    const snap = buildTestSnapshot();
-    snap.humanPlayerId = 'P1';
-    snap.recentEvents = [
-      { type: 'SCORE', controllerId: 'P1', payload: { card: '7♣' } },
-    ];
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    // The game log should contain "YOU" somewhere as an actor label
-    assert.match(html, /YOU/);
-  });
-
-  test('Event log shows opponent display name, not "Player 2"', () => {
-    const snap = buildTestSnapshot();
-    snap.humanPlayerId = 'P1';
-    snap.state.players.P2.displayName = 'Hybrix Rusher';
-    snap.recentEvents = [
-      { type: 'SCORE', controllerId: 'P2', payload: { card: '5♦' } },
-    ];
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    // Should not contain the raw "Player 2" label as an actor
-    // (it may appear in ARIA or data attributes, but the visible actor label should be the display name)
-    assert.match(html, /Hybrix Rusher/i);
-  });
-
-  test('Score block shows "YOU" label for human player', () => {
-    const snap = buildTestSnapshot();
-    snap.humanPlayerId = 'P1';
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /YOU/);
-  });
-});
-
-// ── 4. Resolution stack empty state ──────────────────────────────
-
-describe('Resolution stack empty state', () => {
-  const { renderRankedDuel } = rankedDuelRenderer;
-
-  test('Empty resolution stack shows "no pending effects", not "Stack is empty"', () => {
-    const snap = buildTestSnapshot();
-    snap.state.stack = [];
-    snap.state.priorityOwnerId = null;
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /no pending effects/i);
-    // Must NOT say "Stack is empty"
-    assert.doesNotMatch(html, /Stack is empty/i);
-  });
-
-  test('Empty resolution stack with human priority shows "Your priority — no pending effects"', () => {
-    const snap = buildTestSnapshot();
-    snap.state.stack = [];
-    snap.state.priorityOwnerId = 'P1';
-    snap.humanPlayerId = 'P1';
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /Your priority.*no pending effects/i);
-  });
-
-  test('Resolution stack has data-testid="resolution-stack"', () => {
-    const snap = buildTestSnapshot();
-    snap.state.stack = [];
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /data-testid="resolution-stack"/);
-  });
-
-  test('Non-empty resolution stack shows count', () => {
-    const snap = buildTestSnapshot();
-    snap.state.stack = [
-      { entityId: 'e1', identity: 'K♥', isResolving: true, isHuman: true },
-    ];
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /RESOLUTION STACK/);
-  });
-});
-
 // ── 5. Privacy / hidden information firewall ─────────────────────
 
 describe('Privacy / hidden information firewall', () => {
@@ -399,17 +285,10 @@ describe('Viewmodel schema and structure', () => {
   });
 });
 
-// ── 7. Renderer output structure ─────────────────────────────────
+// ── 7. Renderer output structure (terminal/error) ────────────────
 
 describe('Renderer output structure', () => {
   const { renderRankedDuel } = rankedDuelRenderer;
-
-  test('Renderer returns non-empty HTML string for valid snapshot', () => {
-    const snap = buildTestSnapshot();
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.ok(typeof html === 'string');
-    assert.ok(html.length > 100, 'HTML should be substantial');
-  });
 
   test('Renderer returns error HTML for null snapshot', () => {
     const html = renderRankedDuel(null, { isReadOnly: true });
@@ -417,33 +296,5 @@ describe('Renderer output structure', () => {
     assert.ok(html.length > 0);
     // Should contain some error indication
     assert.match(html, /error|ERROR|missing|MISSING/i);
-  });
-
-  test('Renderer output includes opponent display name when set', () => {
-    const snap = buildTestSnapshot();
-    snap.state.players.P2.displayName = 'Hybrix Sniper';
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /Hybrix Sniper/);
-  });
-
-  test('Renderer output includes phase information', () => {
-    const snap = buildTestSnapshot();
-    snap.state.phase = 'ACTION';
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /ACTION/i);
-  });
-
-  test('Renderer output includes resolution stack region', () => {
-    const snap = buildTestSnapshot();
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /resolution-stack/);
-  });
-
-  test('Renderer output includes draw pile with count', () => {
-    const snap = buildTestSnapshot();
-    snap.state.drawPile = { count: 25 };
-    const html = renderRankedDuel(snap, { isReadOnly: true });
-    assert.match(html, /25/);
-    assert.match(html, /draw/i);
   });
 });

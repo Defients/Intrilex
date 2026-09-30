@@ -51,6 +51,10 @@ export function leaveMatch(matchId, participantToken) {
   return envelope('LEAVE_MATCH', { matchId, participantToken });
 }
 
+export function getReplay(matchId, participantToken) {
+  return envelope('GET_REPLAY', { matchId, participantToken });
+}
+
 export function queueJoin(profileId, queueId = 'ranked') {
   return envelope('QUEUE_JOIN', { profileId, queueId });
 }

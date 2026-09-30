@@ -1,16 +1,19 @@
-import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, type DragEvent, type MouseEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, type DragEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import type { GameStore } from './game-store.js';
 import { Badge, CardFace, CardLane, EmptyState, Icon, PlayerBanner, Wordmark, cardPresentation, formatLabel, type IconName, type TableCard, type TableEvent, type TableGame } from './primitives.js';
 
 export interface GameTableProps {
   store: GameStore;
-  onClassic: () => void;
   onSave?: () => Promise<void>;
   onInspect?: (cardId: string) => void;
   onReorderHand?: (orderedIds: readonly string[]) => void | Promise<void>;
   skin?: string;
   debug?: boolean;
   chat?: ChatConfig;
+  /** Face-up opponent hand cards (Caster/omniscient spectating mode). */
+  opponentHand?: readonly TableCard[];
+  /** Custom HTML injected into the sidebar actions area (Caster rail). */
+  railHtml?: string;
 }
 
 export type ChatMessage = Readonly<{
@@ -219,7 +222,7 @@ function SettingsPanel({ settings, onChange, onClose }: { settings: TableSetting
   );
 }
 
-function ChatPanel({ config, settings, matchStartRef }: { config: ChatConfig; settings?: TableSettings; matchStartRef?: React.MutableRefObject<number | null> }) {
+export function ChatPanel({ config, settings, matchStartRef }: { config: ChatConfig; settings?: TableSettings; matchStartRef?: React.MutableRefObject<number | null> }) {
   const { messages, onSend, selfName, opponentName, modeLabel, readOnly, hidden, onToggleHidden, notificationsMuted, onToggleMuted } = config;
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
@@ -265,7 +268,7 @@ function ChatPanel({ config, settings, matchStartRef }: { config: ChatConfig; se
     if (node) node.scrollTop = node.scrollHeight;
   }, [messages.length, hidden]);
 
-  function submit(event: MouseEvent | React.FormEvent) {
+  function submit(event: ReactMouseEvent | React.FormEvent) {
     event.preventDefault();
     const text = draft.trim();
     if (!text || text.length > 200 || sending) return;
@@ -688,7 +691,7 @@ function FullCardOverlay({ card, actions, blocked, onSelect, onClose }: {
   }, [onClose]);
 
   // Drag handlers
-  function handleHeaderDragStart(e: MouseEvent) {
+  function handleHeaderDragStart(e: ReactMouseEvent) {
     if ((e.target as HTMLElement).closest('button')) return;
     const overlay = overlayRef.current;
     if (!overlay) return;
@@ -822,10 +825,10 @@ function FullCardOverlay({ card, actions, blocked, onSelect, onClose }: {
               </div>
             </div>
           )}
-          {definition.notes && definition.notes.length > 0 && (
+          {'notes' in definition && Array.isArray(definition.notes) && definition.notes.length > 0 && (
             <div className="astra-full-card-notes">
               <span className="astra-eyebrow">Notes</span>
-              <ul>{definition.notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
+              <ul>{definition.notes.map((n: unknown, i: number) => <li key={i}>{String(n)}</li>)}</ul>
             </div>
           )}
         </div>
@@ -1117,7 +1120,7 @@ function loadSharedTableOrder(): SharedTableModuleId[] {
     if (!Array.isArray(parsed)) return SHARED_TABLE_MODULE_IDS;
     const seen = new Set<SharedTableModuleId>();
     const valid = parsed.filter((id): id is SharedTableModuleId =>
-      SHARED_TABLE_MODULE_IDS.includes(id) && !seen.has(id) && seen.add(id));
+      SHARED_TABLE_MODULE_IDS.includes(id) && !seen.has(id) && Boolean(seen.add(id)));
     for (const id of SHARED_TABLE_MODULE_IDS) if (!seen.has(id)) valid.push(id);
     return valid;
   } catch {
@@ -1259,7 +1262,7 @@ export function GameTable(props: GameTableProps) {
   return <TableSession key={snapshot.game?.sessionId || 'no-session'} {...props} snapshot={snapshot} />;
 }
 
-function TableSession({ store, onClassic, onSave, onReorderHand, skin = 'dark', debug = false, chat, snapshot }: GameTableProps & { snapshot: TableSnapshot }) {
+function TableSession({ store, onSave, onReorderHand, skin = 'dark', debug = false, chat, opponentHand, railHtml, snapshot }: GameTableProps & { snapshot: TableSnapshot }) {
   const { game, interaction } = snapshot;
   const [focusedCardId, setFocusedCardId] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
@@ -1413,7 +1416,7 @@ function TableSession({ store, onClassic, onSave, onReorderHand, skin = 'dark', 
     commitHandReorder(reordered);
   }
 
-  function jumpTo(event: MouseEvent<HTMLAnchorElement>, targetId: string) {
+  function jumpTo(event: ReactMouseEvent<HTMLAnchorElement>, targetId: string) {
     event.preventDefault();
     const target = event.currentTarget.closest('.astra-client')?.querySelector<HTMLElement>(`[id="${targetId}"]`);
     target?.focus({ preventScroll: true });
@@ -1431,7 +1434,7 @@ function TableSession({ store, onClassic, onSave, onReorderHand, skin = 'dark', 
   // Click on a hand card: if a combo is in progress and the card is not yet
   // selected, add it to the combo (continuing the multi-select). Otherwise
   // open the single-card action popover. ctrl+click toggles combo selection.
-  function handleHandCardClick(card: TableCard, e: MouseEvent, rect: DOMRect) {
+  function handleHandCardClick(card: TableCard, e: ReactMouseEvent, rect: DOMRect) {
     if (blocked || !card.identity) return;
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
@@ -1586,16 +1589,17 @@ function TableSession({ store, onClassic, onSave, onReorderHand, skin = 'dark', 
           {settings.timestampMode !== 'off' && game?.sessionId && <span className="astra-match-timestamp" data-testid="match-timestamp">{formatTimestamp(settings.timestampMode, matchStartRef)}</span>}
         </div>
         <div className="astra-sidebar-actions">
-          <button type="button" className="astra-button astra-button--quiet astra-settings-btn" onClick={() => setSettingsOpen(true)} aria-label="Table settings" title="Table settings"><Icon name="settings" /><span>Settings</span></button>
-          {onSave && <button type="button" className="astra-button astra-button--quiet" disabled={!game?.sessionId || saveState === 'saving' || submitting} onClick={() => void saveMatch()}><Icon name="save" /><span>{saveState === 'saving' ? 'Saving…' : saveState === 'failed' ? 'Retry save' : 'Save match'}</span></button>}
-          <button type="button" className="astra-button astra-button--quiet" onClick={onClassic}><Icon name="arrow" /><span>Back to classic</span></button>
+          {railHtml ? <div className="astra-sidebar-rail" data-testid="astra-rail" dangerouslySetInnerHTML={{ __html: railHtml }} /> : <>
+            <button type="button" className="astra-button astra-button--quiet astra-settings-btn" onClick={() => setSettingsOpen(true)} aria-label="Table settings" title="Table settings"><Icon name="settings" /><span>Settings</span></button>
+            {onSave && <button type="button" className="astra-button astra-button--quiet" disabled={!game?.sessionId || saveState === 'saving' || submitting} onClick={() => void saveMatch()}><Icon name="save" /><span>{saveState === 'saving' ? 'Saving…' : saveState === 'failed' ? 'Retry save' : 'Save match'}</span></button>}
+          </>}
         </div>
         {game?.sessionId && <div className="astra-sidebar-footer"><span><span className="astra-status-dot" aria-hidden="true" />Semantic view only</span><span>Rev {game.revision ?? '—'}<span aria-hidden="true"> / </span><span className="astra-sidebar-session">{game.sessionId}</span></span><span>No predicted outcomes</span></div>}
       </aside>
       <div className="astra-main">
       {problem && <Notice title="The table needs attention" tone="danger">{problem}</Notice>}
-      {!game || !game.sessionId ? <div className="astra-no-session"><EmptyState title={problem ? 'The table is unavailable' : 'Your next table awaits'}>No active game view is available. Return to classic to start or resume a match.</EmptyState><button type="button" className="astra-button astra-button--primary" onClick={onClassic}>Back to classic<Icon name="chevron" /></button></div> : <>
-        {game.status === 'unavailable' && <Notice title="Game view unavailable" tone="danger">This view cannot accept actions. Any visible cards are the supplied snapshot, not proof of a current connection. Return to classic to recover.</Notice>}
+      {!game || !game.sessionId ? <div className="astra-no-session"><EmptyState title={problem ? 'The table is unavailable' : 'Your next table awaits'}>No active game view is available. Start or resume a match from the hub.</EmptyState></div> : <>
+        {game.status === 'unavailable' && <Notice title="Game view unavailable" tone="danger">This view cannot accept actions. Any visible cards are the supplied snapshot, not proof of a current connection. Return to the hub to recover.</Notice>}
         {game.status === 'waiting' && <Notice title="Waiting for the session">The table will update when a new authorized view arrives. No waiting action is inferred or automatically submitted.</Notice>}
         {readOnly && <Notice title="Read-only table">You can inspect cards, evidence, and events. Action submission is disabled for this view.</Notice>}
         <nav className="astra-mobile-nav" aria-label="Table shortcuts"><a href={`#${handId}`} onClick={event => jumpTo(event, handId)}><Icon name="cards" />Your hand <span>{game.self.handCount}</span></a><a href={`#${actionsId}`} onClick={event => jumpTo(event, actionsId)}><Icon name="chevron" />Actions <span>{game.actions.length}</span></a></nav>
@@ -1603,7 +1607,8 @@ function TableSession({ store, onClassic, onSave, onReorderHand, skin = 'dark', 
           <div className="astra-battlefield" onClick={e => { if (e.target === e.currentTarget) { setComboSelection([]); setPopoverCardId(null); } }}>
             <div className="astra-stage-status" id={actionsId} tabIndex={-1}><span className="astra-status-dot" aria-hidden="true" data-pulse={game.status === 'ready' && !readOnly && nonSwapActions.length > 0 ? 'true' : 'false'} /><strong>{stageStatus}</strong>{nonSwapActions.length > 0 && <Badge tone={blocked ? 'neutral' : 'cyan'}>{nonSwapActions.length} offered{swapActions.length > 0 && ` · ${swapActions.length} swap`}</Badge>}</div>
             <section className="astra-side astra-side--opponent" aria-label="Opponent side">
-              <PlayerBanner player={game.opponent} opponent active={game.activePlayerId === game.opponent.id} priority={game.priorityOwnerId === game.opponent.id} />
+              <PlayerBanner player={game.opponent} opponent active={game.activePlayerId === game.opponent.id} priority={game.priorityOwnerId === game.opponent.id} hideHandBacks={Boolean(opponentHand && opponentHand.length > 0)} />
+              {opponentHand && opponentHand.length > 0 && <CardLane title="Hand" owner={game.opponent.name} cards={opponentHand} selectedId={focusedCardId} onCard={focusCard} />}
               <div className="astra-side-rows"><CardLane title="Point row" owner={game.opponent.name} cards={game.opponent.points} selectedId={focusedCardId} sourceIds={selected?.sources} targetIds={selected?.targets} onCard={focusCard} dragActive={dragCardId !== null} dropCardId={scuttleHoverId} dropCardValid={scuttleHoverId !== null && dragCardId !== null && canScuttle(dragCardId, scuttleHoverId)} scuttleReadyIds={dragCardId ? scuttleReadyTargetIds(dragCardId) : []} onCardDragOver={setScuttleHoverId} onCardDragLeave={() => setScuttleHoverId(null)} onCardDrop={targetCardId => { if (dragCardId) handleScuttleDrop(dragCardId, targetCardId); }} /><CardLane title="Enduring row" owner={game.opponent.name} cards={game.opponent.enduring} selectedId={focusedCardId} sourceIds={selected?.sources} targetIds={selected?.targets} onCard={focusCard} /></div>
             </section>
             <SharedTable game={game} onCard={focusCard} selectedCardId={focusedCardId} selected={selected} onSwapCard={card => setSwapModalCardId(card.id)} />

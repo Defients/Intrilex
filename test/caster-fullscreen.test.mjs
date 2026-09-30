@@ -3,13 +3,10 @@
 //
 // Regression tests for the Caster Full-Screen Spectator Experience.
 // Verifies:
-//   - frameStateToSnapshot adapter output shape
-//   - cardViewToViewModelCard conversion
+//   - frameStateToSnapshot adapter produces an Astra-format snapshot
+//   - cardViewToTableCard conversion (omniscient opponent hand)
 //   - Route changes (LANDING_MODES includes /caster)
-//   - renderRankedDuel supports rightRailHtml option
-//   - renderOpponentHand supports face-up cards (omniscient)
-//   - renderHeader supports isCaster option
-//   - caster-workspace uses renderRankedDuel (not custom renderBoard)
+//   - caster-workspace mounts Astra (mountGameTable) with a custom rail
 //   - Old custom board renderer is removed
 //
 // Source-text-based testing pattern (consistent with v0.28-pvp-experience.test.mjs)
@@ -25,7 +22,6 @@ const root = process.cwd();
 const casterSrc = readFileSync(join(root, 'apps/lab-web/src/workspaces/caster-workspace.js'), 'utf8');
 const routerSrc = readFileSync(join(root, 'apps/lab-web/src/router.js'), 'utf8');
 const appSrc = readFileSync(join(root, 'apps/lab-web/src/app.js'), 'utf8');
-const rendererSrc = readFileSync(join(root, 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
 const casterCssSrc = readFileSync(join(root, 'apps/lab-web/src/css/caster.css'), 'utf8');
 
 // ── Route changes ──
@@ -75,47 +71,32 @@ test('caster-workspace.js: frameStateToSnapshot is exported', () => {
   assert.match(casterSrc, /export async function frameStateToSnapshot/, 'frameStateToSnapshot must be exported');
 });
 
-test('caster-workspace.js: frameStateToSnapshot builds snapshot with state.seatOrder', () => {
-  assert.match(casterSrc, /seatOrder/, 'adapter must set seatOrder');
-  assert.match(casterSrc, /state:\s*\{/, 'adapter must build state object');
-  assert.match(casterSrc, /fullTurnSequence/, 'adapter must include fullTurnSequence');
-  assert.match(casterSrc, /phase/, 'adapter must include phase');
-  assert.match(casterSrc, /activePlayerId/, 'adapter must include activePlayerId');
-  assert.match(casterSrc, /priorityOwnerId/, 'adapter must include priorityOwnerId');
-});
-
-test('caster-workspace.js: frameStateToSnapshot maps players with required fields', () => {
-  assert.match(casterSrc, /securedPoints/, 'adapter must map securedPoints');
-  assert.match(casterSrc, /goal/, 'adapter must map goal');
-  assert.match(casterSrc, /hand/, 'adapter must map hand');
-  assert.match(casterSrc, /pointRow/, 'adapter must map pointRow');
-  assert.match(casterSrc, /enduringRow/, 'adapter must map enduringRow');
-  assert.match(casterSrc, /isActive/, 'adapter must map isActive');
-  assert.match(casterSrc, /hasPriority/, 'adapter must map hasPriority');
-});
-
-test('caster-workspace.js: frameStateToSnapshot maps zones (drawPile, graveyard, exile)', () => {
-  assert.match(casterSrc, /drawPile/, 'adapter must map drawPile');
-  assert.match(casterSrc, /graveyard/, 'adapter must map graveyard');
-  assert.match(casterSrc, /exile/, 'adapter must map exile');
+test('caster-workspace.js: frameStateToSnapshot builds an Astra-format snapshot', () => {
+  // Astra's buildSemanticGame consumes { sessionId, status, playerView, human, opponent, match, ... }.
+  assert.match(casterSrc, /playerView:\s*pv/, 'adapter must pass strictView output as playerView');
+  assert.match(casterSrc, /human:\s*\{\s*playerId/, 'adapter must build human with playerId');
+  assert.match(casterSrc, /opponent:\s*\{\s*displayName/, 'adapter must build opponent with displayName');
+  assert.match(casterSrc, /match:\s*\{\s*winner:\s*null/, 'adapter must build match with null winner');
+  assert.match(casterSrc, /sessionId:/, 'adapter must set sessionId');
+  assert.match(casterSrc, /decision:\s*null/, 'adapter must set decision: null (no legal actions for spectator)');
 });
 
 test('caster-workspace.js: frameStateToSnapshot sets humanPlayerId to seatOrder[0]', () => {
   assert.match(casterSrc, /humanPlayerId.*seatOrder\[0\]/, 'adapter must set humanPlayerId to seatOrder[0]');
 });
 
-test('caster-workspace.js: frameStateToSnapshot does NOT set terminationReason (keeps board visible)', () => {
-  // The adapter must not set terminationReason in the state, otherwise
-  // deriveStatus would return TERMINAL and renderTerminal would be used
-  // instead of renderMatch (the board).
+test('caster-workspace.js: frameStateToSnapshot keeps status non-TERMINAL (board visible)', () => {
+  // The adapter must not set TERMINAL/COMPLETED status or a terminationReason,
+  // otherwise Astra would render the terminal screen instead of the board.
+  assert.match(casterSrc, /status:\s*'AI_DECISION'/, 'adapter must use a non-terminal status');
   assert.match(casterSrc, /terminationReason:\s*null/, 'adapter must set terminationReason to null');
 });
 
 test('caster-workspace.js: frameStateToSnapshot handles public vs omniscient viewer modes', () => {
   assert.match(casterSrc, /omniscient/, 'adapter must check omniscient mode');
-  assert.match(casterSrc, /opponentHandCards/, 'adapter must build opponentHandCards for omniscient');
-  // In public mode, opponent hand must be {count} (no card IDs)
-  assert.match(casterSrc, /hand:\s*\{\s*count:/, 'adapter must use {count} for opponent hand in public mode');
+  assert.match(casterSrc, /opponentHand/, 'adapter must build opponentHand for omniscient');
+  // In public mode, opponentHand stays null (opponent hand concealed — card backs only).
+  assert.match(casterSrc, /opponentHand\s*=\s*null/, 'adapter must default opponentHand to null in public mode');
 });
 
 test('caster-workspace.js: frameStateToSnapshot passes recentEvents for game log', () => {
@@ -123,48 +104,36 @@ test('caster-workspace.js: frameStateToSnapshot passes recentEvents for game log
   assert.match(casterSrc, /visibleEvents/, 'adapter must use beat visibleEvents');
 });
 
-test('caster-workspace.js: cardViewToViewModelCard converts card views correctly', () => {
-  assert.match(casterSrc, /function cardViewToViewModelCard/, 'cardViewToViewModelCard must exist');
-  assert.match(casterSrc, /entityId.*card\.id/, 'must map id to entityId');
-  assert.match(casterSrc, /identity/, 'must map identity');
-  assert.match(casterSrc, /statusMarkers/, 'must build statusMarkers');
-  assert.match(casterSrc, /TAPPED/, 'must map tapped to TAPPED marker');
-  assert.match(casterSrc, /AEGIS/, 'must map aegis to AEGIS marker');
+test('caster-workspace.js: cardViewToTableCard converts card views to Astra TableCards', () => {
+  assert.match(casterSrc, /function cardViewToTableCard/, 'cardViewToTableCard must exist');
+  assert.match(casterSrc, /identity:\s*hidden\s*\?\s*null/, 'must conceal identity for hidden cards');
+  assert.match(casterSrc, /markers/, 'must build markers array');
+  assert.match(casterSrc, /'Tapped'/, 'must map tapped to Tapped marker');
+  assert.match(casterSrc, /'Aegis'/, 'must map aegis to Aegis marker');
 });
 
-// ── renderRankedDuel changes ──
+// ── caster-workspace.js mounts Astra ──
 
-test('ranked-duel-renderer.mjs: renderMatch supports opts.rightRailHtml', () => {
-  assert.match(rendererSrc, /opts\.rightRailHtml/, 'renderMatch must check opts.rightRailHtml');
-  assert.match(rendererSrc, /renderRightRailBottom/, 'renderRightRailBottom must still exist (fallback)');
+test('caster-workspace.js: imports mountGameTable from client/mount', () => {
+  assert.match(casterSrc, /import.*mountGameTable.*from.*client\/mount/, 'must import mountGameTable');
+  assert.doesNotMatch(casterSrc, /import.*renderRankedDuel.*from.*ranked-duel-renderer/, 'must not import renderRankedDuel');
 });
 
-test('ranked-duel-renderer.mjs: renderOpponentHand supports face-up cards', () => {
-  assert.match(rendererSrc, /function renderOpponentHand\(count,\s*faceUpCards/, 'renderOpponentHand must accept faceUpCards parameter');
-  assert.match(rendererSrc, /rd-opponent-hand-omniscient/, 'must have omniscient class for face-up opponent hand');
+test('caster-workspace.js: renderTheatre mounts Astra with caster rail + opponent hand', () => {
+  assert.match(casterSrc, /mountGameTable\(boardHost,\s*snapshot/, 'renderTheatre must mount Astra with the snapshot');
+  assert.match(casterSrc, /railHtml/, 'must pass railHtml option');
+  assert.match(casterSrc, /opponentHand/, 'must pass opponentHand option');
+  assert.match(casterSrc, /submit:\s*async\s*\(\)\s*=>\s*\(\{\s*accepted:\s*false\s*\}\)/, 'must pass a read-only submit (never accepts)');
 });
 
-test('ranked-duel-renderer.mjs: renderHeader supports opts.isCaster', () => {
-  assert.match(rendererSrc, /opts\.isCaster/, 'renderHeader must check opts.isCaster');
-  assert.match(rendererSrc, /Back to Observatory/, 'isCaster must show "Back to Observatory" label');
-  assert.match(rendererSrc, /exit-caster/, 'isCaster must use exit-caster action');
+test('caster-workspace.js: renderTheatre updates Astra in place on beat changes', () => {
+  assert.match(casterSrc, /tacticalMount\.update\(snapshot/, 'subsequent beats must call tacticalMount.update');
 });
 
-test('ranked-duel-renderer.mjs: data-caster attribute on shell', () => {
-  assert.match(rendererSrc, /data-caster/, 'Shell must have data-caster attribute when isCaster');
-});
-
-// ── caster-workspace.js uses renderRankedDuel ──
-
-test('caster-workspace.js: imports renderRankedDuel', () => {
-  assert.match(casterSrc, /import.*renderRankedDuel.*from.*ranked-duel-renderer/, 'must import renderRankedDuel');
-});
-
-test('caster-workspace.js: renderTheatre calls renderRankedDuel', () => {
-  assert.match(casterSrc, /renderRankedDuel\(snapshot/, 'renderTheatre must call renderRankedDuel with snapshot');
-  assert.match(casterSrc, /rightRailHtml/, 'must pass rightRailHtml option');
-  assert.match(casterSrc, /isReadOnly:\s*true/, 'must pass isReadOnly: true');
-  assert.match(casterSrc, /isCaster:\s*true/, 'must pass isCaster: true');
+test('caster-workspace.js: theatre header carries the exit-caster control', () => {
+  assert.match(casterSrc, /data-action="exit-caster"/, 'header must have exit-caster button');
+  assert.match(casterSrc, /Back to Observatory/, 'header must show "Back to Observatory" label');
+  assert.match(casterSrc, /data-caster="1"/, 'header must carry data-caster="1"');
 });
 
 test('caster-workspace.js: old custom renderBoard is removed', () => {

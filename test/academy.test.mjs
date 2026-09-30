@@ -31,7 +31,6 @@ const hubSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-du
 const seoSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/seo-metadata.js'), 'utf8');
 const cssSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-v3.css'), 'utf8');
 const terminalSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-terminal.mjs'), 'utf8');
-const rendererSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-renderer.mjs'), 'utf8');
 const boardEventsSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/board-events.js'), 'utf8');
 
 // ── Lesson definitions (v2 curriculum) ──
@@ -411,17 +410,10 @@ test('PlayState: academyController and academyPhase in state', () => {
 });
 
 // ── Board renderer integration ──
-
-test('Renderer: academyPanelHtml accepted in opts', () => {
-  assert.ok(
-    rendererSrc.includes('academyPanelHtml'),
-    'ranked-duel-renderer must accept academyPanelHtml in opts'
-  );
-  assert.ok(
-    rendererSrc.includes('rd-academy-panel'),
-    'ranked-duel-renderer must render academy panel section'
-  );
-});
+// Note: academyPanelHtml was an active-board renderer concept. The active
+// board is now rendered by Astra React (client/mount.tsx). The terminal
+// screen (ranked-duel-terminal.mjs) accepts academyLessonId/academyRecap
+// for the post-match recap button, tested below.
 
 test('Terminal: academy recap button rendered', () => {
   assert.ok(
@@ -730,19 +722,10 @@ test('Phase 2: board-events handles academy hint/toggle/coachmark actions', () =
   );
 });
 
-test('Phase 2: renderer renders coachmark HTML', () => {
-  assert.ok(
-    rendererSrc.includes('academyCoachmarkHtml'),
-    'Renderer must accept academyCoachmarkHtml opt'
-  );
-});
-
-test('Phase 2: renderer renders hint display element', () => {
-  assert.ok(
-    rendererSrc.includes('academy-hint-display'),
-    'Renderer must render hint display element'
-  );
-});
+// Note: Coachmark HTML and hint display are now rendered by the Astra React
+// board (client/mount.tsx + game-table.tsx). The classic active-board
+// renderer no longer accepts academyCoachmarkHtml or renders academy-hint-display.
+// CSS styles for coachmarks and hints are still verified below.
 
 test('Phase 2: CSS has coachmark styles', () => {
   assert.ok(cssSrc.includes('.academy-coachmark'), 'CSS must have coachmark styles');

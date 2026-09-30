@@ -17,77 +17,6 @@ const cssSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-v3.c
 
 // ─── Renderer Structure Tests ───────────────────────────────────
 
-test('renderBoard: imports v0.17.0 authority modules', () => {
-  assert.ok(rendererSrc.includes('priority-projection'), 'Must import priority projection');
-  assert.ok(rendererSrc.includes('legal-action-adapter'), 'Must import legal action adapter');
-  assert.ok(rendererSrc.includes('action-explanation'), 'Must import action explanation');
-  // reason-code-registry is imported transitively via action-explanation.js
-  assert.ok(rendererSrc.includes('resolution-flow'), 'Must import resolution flow');
-});
-
-test('renderBoard: uses priority banner instead of decision banner', () => {
-  assert.ok(rendererSrc.includes('renderPriorityBanner'), 'Must have renderPriorityBanner function');
-  assert.ok(rendererSrc.includes('priorityBannerText'), 'Must use priorityBannerText');
-  assert.ok(rendererSrc.includes('windowTypeLabel'), 'Must use windowTypeLabel');
-});
-
-test('renderBoard: uses action dock grouped by timing', () => {
-  assert.ok(rendererSrc.includes('renderActionDock'), 'Must have renderActionDock function');
-  assert.ok(rendererSrc.includes('groupActionsByTiming'), 'Must group actions by timing');
-  assert.ok(rendererSrc.includes('action-dock'), 'Must use action-dock class');
-});
-
-test('renderBoard: has target selection UI', () => {
-  assert.ok(rendererSrc.includes('renderTargetSelection'), 'Must have renderTargetSelection function');
-  assert.ok(rendererSrc.includes('target-selection'), 'Must have target-selection class');
-  assert.ok(rendererSrc.includes('target-button'), 'Must have target-button class');
-});
-
-test('renderBoard: has card inspector', () => {
-  assert.ok(rendererSrc.includes('renderInspector'), 'Must have renderInspector function');
-  assert.ok(rendererSrc.includes('card-inspector'), 'Must have card-inspector class');
-  assert.ok(rendererSrc.includes('inspector-close'), 'Must have inspector close button');
-});
-
-test('renderBoard: has discard pile top card', () => {
-  assert.ok(rendererSrc.includes('gyTopCard'), 'Must check for graveyard top card');
-  assert.ok(rendererSrc.includes('graveyard-top'), 'Must have graveyard-top testid');
-});
-
-test('renderBoard: has priority timeline', () => {
-  assert.ok(rendererSrc.includes('priority-timeline'), 'Must have priority timeline');
-  assert.ok(rendererSrc.includes('timeline-steps'), 'Must have timeline steps');
-});
-
-test('renderBoard: has pass info in banner', () => {
-  assert.ok(rendererSrc.includes('pass-info'), 'Must have pass-info element');
-  assert.ok(rendererSrc.includes('passInfo'), 'Must use passInfo from immediate explanation');
-});
-
-test('renderBoard: has structured event log', () => {
-  assert.ok(rendererSrc.includes('buildEventLog'), 'Must use buildEventLog from resolution-flow');
-  assert.ok(rendererSrc.includes('event-description'), 'Must have event-description class');
-  assert.ok(rendererSrc.includes('event-index'), 'Must have event-index class');
-});
-
-test('renderBoard: has confirmation with preview', () => {
-  assert.ok(rendererSrc.includes('renderConfirmationV17'), 'Must have renderConfirmationV17 function');
-  assert.ok(rendererSrc.includes('confirm-preview'), 'Must have confirm-preview element');
-  assert.ok(rendererSrc.includes('confirm-costs'), 'Must have confirm-costs element');
-  assert.ok(rendererSrc.includes('confirm-targets'), 'Must have confirm-targets element');
-});
-
-test('renderBoard: has Super and Spades badges in actions', () => {
-  assert.ok(rendererSrc.includes('super-badge'), 'Must have super-badge in action buttons');
-  assert.ok(rendererSrc.includes('spades-badge'), 'Must have spades-badge in action buttons');
-});
-
-test('renderBoard: has legal action indicators on hand cards', () => {
-  assert.ok(rendererSrc.includes('legal-action-indicator'), 'Must have legal-action-indicator');
-  assert.ok(rendererSrc.includes('has-legal-actions'), 'Must have has-legal-actions class');
-  assert.ok(rendererSrc.includes('super-eligible'), 'Must have super-eligible class');
-});
-
 test('renderBoard: terminal has Rank Anatomy and History links', () => {
   // Terminal functions extracted to ranked-duel-terminal.mjs
   assert.ok(terminalSrc.includes('open-rank-anatomy'), 'Terminal must link to Rank Anatomy');
@@ -183,8 +112,3 @@ test('CONSERVATION: renderer never constructs engine commands', () => {
   assert.ok(!rendererSrc.includes('engine.execute'), 'Renderer must not call engine.execute');
 });
 
-test('CONSERVATION: renderer derives actions from authority', () => {
-  assert.ok(rendererSrc.includes('buildLegalActionContract'), 'Must use buildLegalActionContract');
-  assert.ok(rendererSrc.includes('groupActionsByTiming'), 'Must use groupActionsByTiming');
-  assert.ok(rendererSrc.includes('actionsForCard'), 'Must use actionsForCard for hand indicators');
-});

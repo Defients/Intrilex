@@ -33,7 +33,11 @@ async function bundle() {
   const utilities = await compile('@import "tailwindcss/theme.css" layer(theme) prefix(irx);\n@import "tailwindcss/utilities.css" layer(utilities) prefix(irx);', {
     base: root, onDependency() {},
   });
-  const tacticalCss = (await esbuild.transform(utilities.build(candidates) + '\n' + clientCss, { loader: 'css', minify: true })).code;
+  const tacticalResult = await esbuild.build({
+    stdin: { contents: clientCss + '\n' + utilities.build(candidates), loader: 'css', resolveDir: clientDir },
+    bundle: true, minify: true, write: false,
+  });
+  const tacticalCss = tacticalResult.outputFiles[0].text;
   const tacticalHash = createHash('sha256').update(tacticalCss).digest('hex').slice(0, 12);
   const tacticalFileName = `tactical.${tacticalHash}.css`;
   await writeFile(path.join(dist, tacticalFileName), tacticalCss);

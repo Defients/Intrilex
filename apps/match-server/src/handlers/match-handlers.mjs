@@ -149,7 +149,7 @@ export function createMatchHandlers(ctx) {
     const matchStore = getMatchStore();
     // Prevent conflicting bindings
     const existingConn = connections.get(connectionId);
-    if (existingConn && (existingConn.participantId || existingConn.isSpectator)) {
+    if (existingConn && (existingConn.isSpectator || (existingConn.participantId && matchStore.get(existingConn.matchId)?.status !== 'TERMINAL'))) {
       return send(ws, errorMsg(ReasonCode.MATCH_ALREADY_JOINED, 'Connection already bound to a match or spectating', requestId));
     }
 
@@ -187,6 +187,11 @@ export function createMatchHandlers(ctx) {
     const participantToken = randomBytes(32).toString('base64url');
     const participantId = `P-${randomBytes(8).toString('base64url')}`;
 
+    // Authorization can await the block checker. Recheck before rebinding a
+    // terminal seat so concurrent admissions cannot occupy two active matches.
+    if (conn.isSpectator || (conn.participantId && matchStore.get(conn.matchId)?.status !== 'TERMINAL')) {
+      return send(ws, errorMsg(ReasonCode.MATCH_ALREADY_JOINED, 'Connection already bound to a match or spectating', requestId));
+    }
     const result = match.addParticipant(participantId, participantToken, joinerAccountId, buildPublicProfile(conn));
     matchStore.save(match);
 
@@ -465,7 +470,7 @@ export function createMatchHandlers(ctx) {
     send(ws, matchView(match.matchId, safeView, requestId));
   }
 
-  function handleLeaveMatch(connectionId, ws, payload, requestId) {
+  async function handleLeaveMatch(connectionId, ws, payload, requestId) {
     const matchStore = getMatchStore();
     const check = validateLeaveMatch(payload);
     if (!check.valid) return send(ws, errorMsg(check.code, check.message, requestId));
@@ -488,6 +493,27 @@ export function createMatchHandlers(ctx) {
     if (match && conn) {
       if (!match.validateToken(conn.participantId, payload.participantToken)) {
         return send(ws, errorMsg(ReasonCode.AUTH_TOKEN_INVALID, 'Invalid participant token', requestId));
+      }
+
+      // An explicit active-match departure is an authoritative forfeit.
+      // Keep the terminal binding so both seats receive finalization and the
+      // departing player can use authenticated replay/rematch operations.
+      if (match.forfeit(conn.participantId)) {
+        const pending = pendingForfeits.get(match.matchId);
+        if (pending) {
+          clearTimeout(pending.timer);
+          pendingForfeits.delete(match.matchId);
+        }
+        matchStore.save(match);
+        const finalized = await broadcastMatchEnded(match);
+        logEvent(finalized ? 'matchEnd' : 'matchEndDeferred', { matchId: match.matchId, winner: match.winner, reason: match.terminalReason });
+        broadcastToSpectators(match);
+        send(ws, envelope('LEFT_MATCH', { matchId: payload.matchId }, requestId));
+        return;
+      }
+      if (match.status === 'TERMINAL') {
+        send(ws, envelope('LEFT_MATCH', { matchId: payload.matchId }, requestId));
+        return;
       }
 
       match.disconnectParticipant(conn.participantId);

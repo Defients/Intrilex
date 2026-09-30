@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "primary16",
+    "planned": 320,
+    "executed": 216,
+    "status": "STOPPED",
+    "reason": "STUDY_TIME_BUDGET"
+  },
+  {
+    "stage": "mirrors16",
+    "planned": 80,
+    "executed": 0,
+    "status": "SKIPPED",
+    "reason": "STUDY_TIME_BUDGET"
+  },
+  {
+    "stage": "baseline32extension",
+    "planned": 192,
+    "executed": 0,
+    "status": "SKIPPED",
+    "reason": "STUDY_TIME_BUDGET"
+  },
+  {
+    "stage": "unrestrictedSensitivity16",
+    "planned": 96,
+    "executed": 0,
+    "status": "SKIPPED",
+    "reason": "STUDY_TIME_BUDGET"
+  }
+]

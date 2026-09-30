@@ -18,7 +18,7 @@ import { esc, state } from '../state.js';
 import { policyOptions } from '../router.js';
 import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js';
 import { reconstructReplayFrames } from '../replay-frames.js';
-import { renderRankedDuel } from '../play/ranked-duel-renderer.mjs';
+import { mountGameTable } from '../client/mount.tsx';
 
 // Lazy-loaded @intrilex/replay-caster (browser-bundleable subset).
 let casterModule = null;
@@ -77,18 +77,20 @@ async function getStrictView() {
 // ── Frame state → Snapshot adapter ────────────────────────────────
 //
 // Converts a raw engine frame state (from CasterSession.frames[beat.frameIndex])
-// into the snapshot shape expected by buildRankedDuelViewModel via
-// renderRankedDuel(). This bridges the gap between the Caster's frame-based
-// playback and the authentic game UI renderer.
+// into the snapshot shape expected by Astra's buildSemanticGame() (the React
+// board). The adapter uses strictView() from autonomy-runtime to build the
+// authorized player view (same function used by the play controller), so the
+// snapshot's playerView matches exactly what Astra consumes in live play.
 //
-// The adapter uses strictView() from autonomy-runtime to build authorized
-// player views (same function used by the play controller), ensuring the
-// snapshot shape matches exactly what the viewmodel expects.
+// The opponent's face-up hand (omniscient mode) is returned separately as
+// `opponentHand` (Astra TableCard[]) so it can be passed via mountGameTable's
+// opponentHand option, bypassing buildSemanticGame's privacy invariant
+// (opponent hand is always empty in the semantic game).
 //
 // @param {object} frameState - Raw engine state from a replay frame
 // @param {object} session - CasterSession instance
 // @param {object} beat - Current playback beat
-// @returns {object} Snapshot in buildRankedDuelViewModel format
+// @returns {{ snapshot: object, opponentHand: object[]|null }}
 
 export async function frameStateToSnapshot(frameState, session, beat) {
   if (!frameState) return null;
@@ -97,112 +99,65 @@ export async function frameStateToSnapshot(frameState, session, beat) {
   const seatOrder = session.matchResult?.summary?.seatOrder || ['P1', 'P2'];
   const humanPlayerId = seatOrder[0] || 'P1';
   const opponentPlayerId = seatOrder[1] || 'P2';
-  const isFinished = beat?.beatKind === 'MATCH_END';
 
   // Use strictView to build the authorized player view for the human player.
-  // This produces the exact {own, opponents, ...} shape that adaptSnapshotForViewModel
-  // converts into the viewmodel's expected format.
+  // strictView's output shape ({actorId, own, opponents, revision, phase, ...})
+  // is exactly Astra's playerView shape.
   const strictView = await getStrictView();
   const pv = strictView(frameState, humanPlayerId);
 
-  // Build players map in viewmodel format
-  const players = {};
-  players[humanPlayerId] = {
-    securedPoints: pv.own?.securedPoints ?? 0,
-    goal: pv.own?.goal ?? 21,
-    hand: pv.own?.hand ?? [],
-    pointRow: pv.own?.pr ?? [],
-    enduringRow: pv.own?.er ?? [],
-    isActive: pv.activePlayerId === humanPlayerId,
-    hasPriority: pv.priority?.ownerId === humanPlayerId,
-  };
+  const humanDisplayName = session.policyIds?.[0]?.replace(/-/g, ' ') || 'Seat 1';
+  const opponentDisplayName = session.policyIds?.[1]?.replace(/-/g, ' ') || 'Seat 2';
 
-  // Opponent: in public mode, hand is {count} (card backs).
-  // In omniscient mode, hand is {count} for the snapshot (privacy check),
-  // but the full hand card views are passed separately via opts.opponentHandCards.
-  const oppView = pv.opponents?.[0] ?? {};
-  players[opponentPlayerId] = {
-    securedPoints: oppView.securedPoints ?? 0,
-    goal: oppView.goal ?? 21,
-    hand: { count: oppView.handCount ?? 0 },
-    pointRow: oppView.pr ?? [],
-    enduringRow: oppView.er ?? [],
-    isActive: pv.activePlayerId === opponentPlayerId,
-    hasPriority: pv.priority?.ownerId === opponentPlayerId,
-    displayName: session.policyIds?.[1]?.replace(/-/g, ' ') || 'Seat 2',
-  };
-
-  // Build the snapshot in the format that adaptSnapshotForViewModel passes through
-  // (it checks for `snapshot.state` and passes through if present).
+  // Astra-format snapshot. status stays non-TERMINAL so the board renders
+  // (even for MATCH_END beats — the Caster always shows the board).
+  // decision is null → no legal actions → Astra shows a read-only table.
   const snapshot = {
-    humanPlayerId,
-    status: isFinished ? 'AI_DECISION' : 'AI_DECISION', // Keep board visible (not TERMINAL)
-    isNetworkMatch: false,
+    sessionId: session.matchId || `caster-${humanPlayerId}-${opponentPlayerId}`,
+    status: 'AI_DECISION',
+    playerView: pv,
+    human: { playerId: humanPlayerId, displayName: humanDisplayName },
+    opponent: { displayName: opponentDisplayName },
+    match: { winner: null, terminationReason: null },
     decision: null,
-    legalActions: [],
-    state: {
-      seatOrder,
-      fullTurnSequence: pv.fullTurnSequence ?? frameState.fullTurnSequence ?? 0,
-      phase: pv.phase ?? frameState.phase ?? '',
-      activePlayerId: pv.activePlayerId ?? frameState.activePlayerId ?? null,
-      priorityOwnerId: pv.priority?.ownerId ?? null,
-      windowLabel: pv.priority?.windowLabel ?? '',
-      startingGoal: pv.own?.goal ?? 21,
-      players,
-      drawPile: { count: pv.dpCount ?? frameState.zones?.dp?.length ?? 0 },
-      graveyard: { count: pv.gyCount ?? frameState.zones?.gy?.length ?? 0, topCard: pv.gyTopCard ?? null },
-      exile: { count: pv.exileCount ?? frameState.zones?.exile?.length ?? 0, newestVisibleCard: null },
-      swapBar: pv.swapBar ?? [],
-      stack: pv.stack ?? [],
-      swapAvailable: true,
-      // Do NOT set terminationReason — that would trigger renderTerminal instead of renderMatch.
-      // The caster always shows the board, even for MATCH_END beats.
-      terminationReason: null,
-      winner: null,
-    },
-    // Pass beat events as recentEvents for the game log
     recentEvents: (beat?.visibleEvents ?? []).slice(-20).map(e => ({
       type: e.type,
       controllerId: e.controllerId ?? e.payload?.controllerId ?? null,
       payload: e.payload ?? null,
     })),
+    handOrder: null,
+    opponentHandReorderEpoch: 0,
   };
 
-  // In omniscient mode, build opponent hand card views for face-up rendering.
-  // These are passed via opts.opponentHandCards to the renderer, bypassing
-  // the viewmodel's privacy check (which requires opponent hand = {count}).
-  let opponentHandCards = null;
+  // In omniscient mode, build face-up opponent hand cards (Astra TableCard[]).
+  // In public mode, the opponent hand stays concealed (card backs only).
+  let opponentHand = null;
   if (omniscient) {
     const oppPv = strictView(frameState, opponentPlayerId);
-    opponentHandCards = (oppPv.own?.hand ?? []).map(cardViewToViewModelCard);
+    opponentHand = (oppPv.own?.hand ?? []).map(cardViewToTableCard);
   }
 
-  return { snapshot, opponentHandCards };
+  return { snapshot, opponentHand };
 }
 
 // Convert a strictView card object ({id, identity, controllerId, zone, pointValue, tapped, ...})
-// into the viewmodel's public card view format ({entityId, identity, rank, suit, pointValue, statusMarkers, ...})
-// so renderCard() can render it face-up.
-function cardViewToViewModelCard(card) {
+// into Astra's SemanticCard / TableCard format ({id, identity, label, markers}) so the React
+// board can render it face-up in the opponent hand lane (Caster omniscient mode).
+function cardViewToTableCard(card) {
   if (!card) return null;
-  const identity = card.identity ?? '';
-  const suit = String(identity).match(/[♣♦♥♠]/u)?.[0] ?? null;
-  const rank = String(identity).replace(/[♣♦♥♠]/u, '').trim() || null;
+  const identity = card.identity ?? null;
+  const hidden = identity === null || identity === 'HIDDEN' || card.swapBarFaceDown || card.faceDown;
   const markers = [];
-  if (card.tapped) markers.push({ type: 'TAPPED', label: 'Tapped' });
-  if (card.aegis) markers.push({ type: 'AEGIS', label: 'Aegis' });
-  if (card.providesGuard) markers.push({ type: 'GUARD', label: 'Guard' });
-  if (card.exileBound) markers.push({ type: 'EXILE_BOUND', label: 'Exile-Bound' });
+  if (card.tapped) markers.push('Tapped');
+  if (card.aegis) markers.push('Aegis');
+  if (card.providesGuard) markers.push('Guard');
+  if (card.exileBound) markers.push('Exile-bound');
+  if (hidden) markers.push('Face down');
   return {
-    entityId: card.id,
-    identity: card.identity,
-    rank,
-    suit,
-    pointValue: card.pointValue ?? null,
-    isGeneratedCopy: false,
-    statusMarkers: markers,
-    zone: card.zone ?? 'HAND',
-    ownerId: card.controllerId ?? null,
+    id: hidden ? `hidden:caster:opp:${card.id}` : card.id,
+    identity: hidden ? null : identity,
+    label: hidden ? 'Hidden card' : identity,
+    markers,
   };
 }
 
@@ -240,7 +195,8 @@ const casterState = {
   savedReplays: [],
   replaysLoaded: false,
   gameplaySkin: 'dark',
-  renderToken: 0
+  renderToken: 0,
+  tacticalMount: null // Active Astra board mount controller (null when unmounted)
 };
 
 // ── Main render entry point ───────────────────────────────────────
@@ -256,21 +212,32 @@ export async function renderCaster(appEl) {
   await loadSavedReplays();
 
   if (casterState.error) {
+    disposeTacticalMount();
     renderError(appEl, casterState.error);
     return;
   }
 
   if (casterState.loading) {
+    disposeTacticalMount();
     renderLoading(appEl);
     return;
   }
 
   if (!casterState.session) {
+    disposeTacticalMount();
     renderSetup(appEl);
     return;
   }
 
   renderTheatre(appEl);
+}
+
+// Release the Astra board mount (if any) before rendering a non-theatre screen.
+function disposeTacticalMount() {
+  if (casterState.tacticalMount) {
+    try { casterState.tacticalMount.dispose(); } catch { /* ignore */ }
+    casterState.tacticalMount = null;
+  }
 }
 
 // ── Replay library section ────────────────────────────────────────
@@ -441,9 +408,10 @@ function renderError(appEl, error) {
 
 // ── Theatre (main playback view) ──────────────────────────────────
 //
-// Renders the authentic game board using renderRankedDuel() with a custom
+// Renders the authentic game board using Astra (mountGameTable) with a custom
 // right rail containing commentary (top) and replay transport controls (bottom).
-// The board is read-only — no card interactions, no action bar.
+// The board is read-only — no card interactions, no action bar. In omniscient
+// mode the opponent's hand is rendered face-up via the opponentHand option.
 
 async function renderTheatre(appEl) {
   const session = casterState.session;
@@ -472,11 +440,11 @@ async function renderTheatre(appEl) {
     return;
   }
 
-  let snapshot, opponentHandCards;
+  let snapshot, opponentHand;
   try {
     const adapted = await frameStateToSnapshot(frameState, session, beat);
     snapshot = adapted.snapshot;
-    opponentHandCards = adapted.opponentHandCards;
+    opponentHand = adapted.opponentHand;
   } catch (err) {
     if (myToken === casterState.renderToken) {
       appEl.innerHTML = `<div class="notice danger"><strong>Failed to build game view.</strong><pre>${esc(String(err?.message || err))}</pre></div>`;
@@ -488,22 +456,62 @@ async function renderTheatre(appEl) {
   if (myToken !== casterState.renderToken) return;
 
   // ── Build custom right rail HTML (commentary + transport controls) ──
-  const rightRailHtml = buildCasterRightRail(session, beat, idx, total, ps, policyIds);
+  const railHtml = buildCasterRightRail(session, beat, idx, total, ps, policyIds);
 
-  // ── Render the authentic game board ──
+  // ── Mount or update the Astra board ──
+  // The Caster owns a persistent header (exit control) above the Astra host.
+  // Astra renders the board + sidebar; the sidebar actions area is replaced
+  // by the Caster rail (commentary + transport + WAIT WHAT) via railHtml.
+  // In omniscient mode the opponent hand is shown face-up via opponentHand.
   const gameplaySkin = casterState.gameplaySkin || 'dark';
-  const boardHtml = renderRankedDuel(snapshot, {
-    rightRailHtml,
-    isReadOnly: true,
-    isCaster: true,
-    gameplaySkin,
-    opponentHandCards,
-    soundMuted: true, // Caster is a spectator — no sound interactions
-  });
+  const viewerLabel = casterState.config.viewerMode === 'omniscient' ? 'OMNISCIENT' : 'PUBLIC';
 
-  appEl.innerHTML = boardHtml;
+  if (!casterState.tacticalMount) {
+    // First theatre render: lay out the persistent header + board host, then mount Astra.
+    appEl.innerHTML = `<header class="caster-theatre-header" data-caster="1">
+      <button class="rd-header-back" data-action="exit-caster" aria-label="Back to Observatory">← Observatory</button>
+      <span class="caster-theatre-mode">${viewerLabel} · Caster</span>
+    </header>
+    <div class="caster-board-host" data-testid="caster-board-host"></div>`;
+
+    // Wire header exit button (persistent — wired once at mount).
+    const exitBtn = appEl.querySelector('[data-action="exit-caster"]');
+    if (exitBtn) {
+      exitBtn.onclick = () => {
+        stopTimer();
+        if (casterState.worker) { casterState.worker.terminate(); casterState.worker = null; }
+        casterState.session = null;
+        casterState.commentaryText = '';
+        casterState.waitWhatCapture = null;
+        casterState.waitWhatVisible = false;
+        casterState.waitWhatInvestigation = null;
+        casterState.waitWhatInvalidated = false;
+        casterState.tacticalMount?.dispose();
+        casterState.tacticalMount = null;
+        renderSetup(appEl);
+      };
+    }
+
+    const boardHost = appEl.querySelector('.caster-board-host');
+    try {
+      casterState.tacticalMount = mountGameTable(boardHost, snapshot, {
+        submit: async () => ({ accepted: false }), // Caster is read-only — never submits.
+        skin: gameplaySkin,
+        opponentHand: opponentHand ?? undefined,
+        railHtml,
+      });
+    } catch (err) {
+      appEl.innerHTML = `<div class="notice danger"><strong>Failed to render the Astra board.</strong><pre>${esc(String(err?.message || err))}</pre></div>`;
+      return;
+    }
+  } else {
+    // Subsequent beat changes: update Astra in place with the new snapshot + rail.
+    casterState.tacticalMount.update(snapshot, false, undefined, opponentHand ?? undefined, railHtml);
+  }
 
   // ── Safe text rendering for commentary (avoid innerHTML with model output) ──
+  // Astra re-renders the rail via flushSync in update(), so the commentary
+  // elements are present in the DOM by the time we reach here.
   if (casterState.commentaryText) {
     const headlineEl = appEl.querySelector('[data-testid="caster-commentary-headline"]');
     const bodyEl = appEl.querySelector('[data-testid="caster-commentary-body"]');
@@ -513,22 +521,6 @@ async function renderTheatre(appEl) {
 
   // ── Wire up controls within the right rail ──
   wireCasterRightRail(appEl, session, idx, total);
-
-  // ── Wire header exit button (data-action="exit-caster") ──
-  const exitBtn = appEl.querySelector('[data-action="exit-caster"]');
-  if (exitBtn) {
-    exitBtn.onclick = () => {
-      stopTimer();
-      if (casterState.worker) { casterState.worker.terminate(); casterState.worker = null; }
-      casterState.session = null;
-      casterState.commentaryText = '';
-      casterState.waitWhatCapture = null;
-      casterState.waitWhatVisible = false;
-      casterState.waitWhatInvestigation = null;
-      casterState.waitWhatInvalidated = false;
-      renderSetup(appEl);
-    };
-  }
 
   // ── Wire WAIT WHAT panel if visible ──
   if (casterState.waitWhatVisible && casterState.waitWhatCapture) {
@@ -725,6 +717,10 @@ function wireCasterRightRail(appEl, session, idx, total) {
     casterState.waitWhatInvestigation = null;
     casterState.waitWhatInvalidated = false;
     casterState.waitWhatExportResult = null;
+    if (casterState.tacticalMount) {
+      try { casterState.tacticalMount.dispose(); } catch { /* ignore */ }
+      casterState.tacticalMount = null;
+    }
     renderSetup(appEl);
   };
 }
@@ -1296,6 +1292,11 @@ export function cleanupCaster() {
   if (casterState.worker) {
     casterState.worker.terminate();
     casterState.worker = null;
+  }
+  // Dispose the Astra board mount (if active) to release its React root.
+  if (casterState.tacticalMount) {
+    try { casterState.tacticalMount.dispose(); } catch { /* ignore */ }
+    casterState.tacticalMount = null;
   }
   // Pause playback but preserve the session for resume.
   if (casterState.session) {

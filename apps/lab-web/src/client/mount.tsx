@@ -1,10 +1,15 @@
 import { Component } from 'react';
+import { flushSync } from 'react-dom';
 import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { GameTable } from './game-table';
 import type { ChatConfig } from './game-table';
+import type { TableCard } from './primitives';
 import { createGameStore } from './game-store';
 import type { ActionIntent } from './game-store';
+import { IntrilexGame } from './gameplay/IntrilexGame';
+import type { TeachingSupport } from './gameplay/IntrilexGame';
+import type { SuggestionRanker } from './gameplay/suggestions';
 
 declare const __INTRILEX_TACTICAL_CSS__: string;
 let stylesReady: Promise<void> | null = null;
@@ -32,7 +37,6 @@ export function loadTableStyles(): Promise<void> {
 
 export type TableOptions = {
   submit: (intent: ActionIntent) => Promise<{ accepted: boolean; error?: string }>;
-  onClassic: () => void;
   onSave?: () => Promise<void>;
   onInspect?: (cardId: string) => void;
   onReorderHand?: (orderedIds: readonly string[]) => void | Promise<void>;
@@ -40,6 +44,15 @@ export type TableOptions = {
   readOnly?: boolean;
   debug?: boolean;
   chat?: ChatConfig;
+  /** Face-up opponent hand cards (Caster/omniscient spectating mode). */
+  opponentHand?: readonly TableCard[];
+  /** Custom HTML injected into the sidebar actions area (Caster rail). */
+  railHtml?: string;
+  teaching?: TeachingSupport;
+  rankSuggestions?: SuggestionRanker;
+  onExit?: () => void;
+  /** Temporary parity fallback, shared with the existing Caster presentation. */
+  legacy?: boolean;
 };
 
 // The "Decision evidence" sidebar panel is an engine-fidelity audit surface
@@ -55,14 +68,13 @@ function resolveDebug(explicit?: boolean): boolean {
   }
 }
 
-class TableBoundary extends Component<{ children: ReactNode; onClassic: () => void }, { failed: boolean }> {
+class TableBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
   render() {
     if (this.state.failed) return <section className="astra-client" role="alert">
-      <h2>The tactical board could not be displayed.</h2>
+      <h2>The Intrilex board could not be displayed.</h2>
       <p>Your match remains in the existing session.</p>
-      <button type="button" onClick={this.props.onClassic}>Return to classic board</button>
     </section>;
     return this.props.children;
   }
@@ -70,14 +82,19 @@ class TableBoundary extends Component<{ children: ReactNode; onClassic: () => vo
 
 export function mountGameTable(container: HTMLElement, input: unknown, options: TableOptions) {
   const store = createGameStore(options.submit);
-  store.update(input, { readOnly: options.readOnly });
+  store.update(input, { readOnly: options.readOnly, coalesceIdenticalActions: true });
   const host = document.createElement('div');
   container.replaceChildren(host);
   const root = createRoot(host);
   const debug = resolveDebug(options.debug);
-  root.render(<TableBoundary onClassic={options.onClassic}>
-    <GameTable store={store} onClassic={options.onClassic} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} skin={options.skin} debug={debug} chat={options.chat} />
-  </TableBoundary>);
+  const renderTable = (chat: ChatConfig | undefined, opponentHand: readonly TableCard[] | undefined, railHtml: string | undefined, teaching = options.teaching) => {
+    root.render(<TableBoundary>
+      {options.legacy || opponentHand !== undefined || railHtml !== undefined
+        ? <GameTable store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} skin={options.skin} debug={debug} chat={chat} opponentHand={opponentHand} railHtml={railHtml} />
+        : <IntrilexGame store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} onExit={options.onExit} skin={options.skin} debug={debug} chat={chat} rankSuggestions={options.rankSuggestions} teaching={teaching ? { ...teaching, onAction: options.teaching?.onAction ?? teaching.onAction } : undefined} />}
+    </TableBoundary>);
+  };
+  flushSync(() => renderTable(options.chat, options.opponentHand, options.railHtml));
   let disposed = false;
   // Load the tactical CSS asynchronously. The CSS is compiled by
   // bundle.mjs into tactical.[hash].css and referenced via the
@@ -89,12 +106,17 @@ export function mountGameTable(container: HTMLElement, input: unknown, options: 
     console.warn('[tactical-board] CSS load failed:', error?.message ?? error);
   });
   return {
-    update(snapshot: unknown, readOnly = false, chat?: ChatConfig) {
+    update(snapshot: unknown, readOnly = false, chat?: ChatConfig, opponentHand?: readonly TableCard[], railHtml?: string, teaching?: TeachingSupport) {
       if (disposed) return;
-      store.update(snapshot, { readOnly });
-      if (chat !== undefined) root.render(<TableBoundary onClassic={options.onClassic}>
-        <GameTable store={store} onClassic={options.onClassic} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} skin={options.skin} debug={debug} chat={chat} />
-      </TableBoundary>);
+      store.update(snapshot, { readOnly, coalesceIdenticalActions: true });
+      // Re-render the root when presentational props change. The Caster
+      // passes opponentHand/railHtml on every beat; flushSync ensures the
+      // DOM is committed before the caller wires up rail controls via
+      // querySelector. The player path only re-renders when chat changes.
+      const needsRender = chat !== undefined || opponentHand !== undefined || railHtml !== undefined || teaching !== undefined;
+      if (needsRender) {
+        flushSync(() => renderTable(chat, opponentHand, railHtml, teaching));
+      }
     },
     dispose() {
       if (disposed) return;
