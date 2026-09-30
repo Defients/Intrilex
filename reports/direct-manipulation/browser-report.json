@@ -1,0 +1,48 @@
+{
+  "date": "2026-09-30",
+  "scope": "Actual React board, GameStore and canonical match authority. Ambiguity uses an explicitly controlled UI fixture. No public deployment.",
+  "browser": "154.0.8037.58",
+  "scenarios": [
+    {
+      "name": "Real King lifts, activates only its legal destinations and previews without changing game state",
+      "status": "PASS"
+    },
+    {
+      "name": "King release sends one existing action intent to real authority and updates hand, pending plays and log",
+      "status": "PASS"
+    },
+    {
+      "name": "Illegal Enduring Row drop stays quiet and cannot submit",
+      "status": "PASS"
+    },
+    {
+      "name": "Ambiguous release preserves preview and awaits an explicit keyboard choice",
+      "status": "PASS"
+    },
+    {
+      "name": "Confirm preference requires an explicit legal action confirmation and persists",
+      "status": "PASS"
+    },
+    {
+      "name": "Click below threshold retains card selection; Quick Play OFF leaves normal legal actions usable",
+      "status": "PASS"
+    },
+    {
+      "name": "Revision change, game ending, active-seat change, pointercancel, capture loss, blur and resize cancel without submission",
+      "status": "PASS"
+    },
+    {
+      "name": "Chooser invalidation and Escape never leave a stranded preview",
+      "status": "PASS"
+    },
+    {
+      "name": "Authority rejection restores presentation and surfaces the existing error",
+      "status": "PASS"
+    },
+    {
+      "name": "Narrow layout and transformed board use viewport geometry; reduced motion cancels cleanly",
+      "status": "PASS"
+    }
+  ],
+  "errors": []
+}

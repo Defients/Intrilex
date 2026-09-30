@@ -1,0 +1,46 @@
+{
+  "date": "2026-09-30",
+  "scope": "Actual React board and CSS with controlled UI fixtures; no engine commands or external writes",
+  "scenarios": [
+    {
+      "name": "Attachment label keeps rank and suit together in one compact wrapping text block",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete move plays once on click, including rapid duplicate events",
+      "status": "PASS"
+    },
+    {
+      "name": "Single target choice plays immediately without Confirm",
+      "status": "PASS"
+    },
+    {
+      "name": "The same single choice plays directly when picked on the battlefield",
+      "status": "PASS"
+    },
+    {
+      "name": "Editable source and target composition waits for its final commit",
+      "status": "PASS"
+    },
+    {
+      "name": "A legal smaller card set remains editable before committing the larger set",
+      "status": "PASS"
+    },
+    {
+      "name": "Expanded Pending Plays and history stay reachable in the left rail at short and tall desktop sizes",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "screenshots": [
+    "action-label-1440.png",
+    "action-label-1024.png",
+    "action-label-390.png",
+    "left-rail-expanded-1440x900.png",
+    "left-rail-expanded-1024x576.png",
+    "action-palette-desktop.png",
+    "action-family-hover.png",
+    "action-composer-styled.png",
+    "action-palette-narrow.png"
+  ]
+}

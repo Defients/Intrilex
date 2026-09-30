@@ -27,6 +27,7 @@ export const Fragment = 'Fragment';
 export function useState(initial) { return [typeof initial === 'function' ? initial() : initial, () => {}]; }
 export function useRef(initial) { return { current: initial }; }
 export function useEffect() {}
+export function useLayoutEffect() {}
 export function useId() { return ':r0:'; }
 export function useCallback(fn) { return fn; }
 export function useSyncExternalStore(_subscribe, getSnapshot) { return getSnapshot(); }
@@ -36,6 +37,7 @@ export function useReducer(_reducer, initial) { return [initial, () => {}]; }
 export const createContext = () => ({ Provider: 'Provider' });
 export function useContext() { return null; }
 export function flushSync(fn) { if (fn) fn(); }
+export function createPortal(children) { return children; }
 `);
 
 const reactJsxMockPath = path.join(tmpDir, 'react-jsx-mock.mjs');

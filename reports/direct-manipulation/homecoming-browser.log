@@ -1,0 +1,159 @@
+(node:21840) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED
+   DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION
+
+{"ts":"2026-09-30T11:57:53.177Z","event":"persistorConfigured","type":"FakeMatchResultPersistor","productionMode":false}
+{"ts":"2026-09-30T11:57:53.178Z","event":"ratingServiceConfigured","type":"RatingService"}
+{"ts":"2026-09-30T11:57:53.178Z","event":"terminalOutboxConfigured","durable":false,"recovered":0}
+{"ts":"2026-09-30T11:57:54.322Z","event":"connectionOpen","connectionId":"8e400ae0-9650-4ec0-bf80-e1763785f7c6","ip":"127.0.0.1","total":1}
+{"ts":"2026-09-30T11:57:54.456Z","event":"matchCreate","matchId":"M-R7OZkx28tVmh0cy3","profileId":"core-unrestricted-authority","matchMode":"private","queueId":"private","accountId":null}
+{"ts":"2026-09-30T11:57:55.290Z","event":"connectionOpen","connectionId":"6e886cf4-40d8-45a6-8465-a0999e0658d8","ip":"127.0.0.1","total":2}
+{"ts":"2026-09-30T11:57:55.299Z","event":"matchJoin","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-3uwN7KsqjsI","accountId":null}
+{"ts":"2026-09-30T11:57:55.760Z","event":"matchStart","matchId":"M-R7OZkx28tVmh0cy3","profileId":"core-unrestricted-authority"}
+{"ts":"2026-09-30T11:57:56.351Z","event":"chatVisibility","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-3uwN7KsqjsI","hidden":true}
+{"ts":"2026-09-30T11:57:56.824Z","event":"chatVisibility","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0","hidden":true}
+{"ts":"2026-09-30T11:57:57.070Z","event":"actionSubmit","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0","reasonCode":null}
+{"ts":"2026-09-30T11:57:57.356Z","event":"actionSubmit","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0","reasonCode":null}
+{"ts":"2026-09-30T11:57:57.775Z","event":"actionSubmit","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0","reasonCode":null}
+{"ts":"2026-09-30T11:57:57.881Z","event":"chatVisibility","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0","hidden":false}
+{"ts":"2026-09-30T11:57:57.921Z","event":"chatVisibility","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-3uwN7KsqjsI","hidden":false}
+{"ts":"2026-09-30T11:57:58.167Z","event":"chatMessage","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0","textLength":26}
+{"ts":"2026-09-30T11:57:58.189Z","event":"healthSnapshot","uptime":5014,"activeConnections":2,"activeMatches":1,"queueSize":0,"rssMB":124,"heapUsedMB":54,"alertCount":0}
+{"ts":"2026-09-30T11:57:58.218Z","event":"chatVisibility","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0","hidden":true}
+{"ts":"2026-09-30T11:57:58.254Z","event":"chatVisibility","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-3uwN7KsqjsI","hidden":true}
+{"ts":"2026-09-30T11:57:58.551Z","event":"forfeitTimerStarted","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0","graceMs":60000}
+{"ts":"2026-09-30T11:57:58.551Z","event":"connectionClose","connectionId":"8e400ae0-9650-4ec0-bf80-e1763785f7c6","wasSpectator":false,"matchId":"M-R7OZkx28tVmh0cy3","total":1}
+{"ts":"2026-09-30T11:57:58.861Z","event":"connectionOpen","connectionId":"4e2849cd-4ce7-4147-9e01-10ba6adbe4fb","ip":"127.0.0.1","total":2}
+{"ts":"2026-09-30T11:57:58.867Z","event":"forfeitTimerCancelled","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0"}
+{"ts":"2026-09-30T11:57:58.868Z","event":"reconnect","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0","accountId":null,"tokenRotated":true}
+{"ts":"2026-09-30T11:57:59.968Z","event":"outboxEnqueued","jobId":"result:M-R7OZkx28tVmh0cy3","matchId":"M-R7OZkx28tVmh0cy3","jobType":"result"}
+{"ts":"2026-09-30T11:57:59.968Z","event":"matchEnd","matchId":"M-R7OZkx28tVmh0cy3","winner":"P2","reason":"FORFEIT"}
+{"ts":"2026-09-30T11:57:59.969Z","event":"outboxJobCompleted","jobId":"result:M-R7OZkx28tVmh0cy3","matchId":"M-R7OZkx28tVmh0cy3","jobType":"result","attempts":0}
+{"ts":"2026-09-30T11:58:00.565Z","event":"replayDownload","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-vhIVq4GqrU0"}
+{"ts":"2026-09-30T11:58:00.628Z","event":"replayDownload","matchId":"M-R7OZkx28tVmh0cy3","participantId":"P-3uwN7KsqjsI"}
+{"ts":"2026-09-30T11:58:01.676Z","event":"rematchCreate","fromMatchId":"M-R7OZkx28tVmh0cy3","newMatchId":"M-FXvZwM93s2CtcfUS","profileId":"core-unrestricted-authority","matchMode":"private","queueId":"private","initiatedBy":"P-vhIVq4GqrU0"}
+{"ts":"2026-09-30T11:58:01.676Z","event":"rematchInvite","fromMatchId":"M-R7OZkx28tVmh0cy3","newMatchId":"M-FXvZwM93s2CtcfUS","inviteCode":"41WF9J","sentTo":"P-3uwN7KsqjsI"}
+{"ts":"2026-09-30T11:58:01.733Z","event":"matchJoin","matchId":"M-FXvZwM93s2CtcfUS","participantId":"P-1vOiy7ymPQM","accountId":null}
+{"ts":"2026-09-30T11:58:01.834Z","event":"matchStart","matchId":"M-FXvZwM93s2CtcfUS","profileId":"core-unrestricted-authority"}
+{"ts":"2026-09-30T11:58:01.974Z","event":"forfeitTimerStarted","matchId":"M-FXvZwM93s2CtcfUS","participantId":"P-1vOiy7ymPQM","graceMs":60000}
+{"ts":"2026-09-30T11:58:01.974Z","event":"connectionClose","connectionId":"6e886cf4-40d8-45a6-8465-a0999e0658d8","wasSpectator":false,"matchId":"M-FXvZwM93s2CtcfUS","total":1}
+{"ts":"2026-09-30T11:58:01.985Z","event":"connectionClose","connectionId":"4e2849cd-4ce7-4147-9e01-10ba6adbe4fb","wasSpectator":false,"matchId":"M-FXvZwM93s2CtcfUS","total":0}
+{
+  "date": "2026-09-30",
+  "browser": "154.0.8037.58",
+  "scenarios": [
+    {
+      "name": "Actual Play mounts Homecoming with the canonical session",
+      "status": "PASS"
+    },
+    {
+      "name": "Full tabletop presentation uses playing cards, slot tracks and the composed right rail",
+      "status": "PASS"
+    },
+    {
+      "name": "Desktop critical surfaces fit all six supported viewports",
+      "status": "PASS"
+    },
+    {
+      "name": "Keyboard opens Composer, Escape cancels, and focus returns to the family",
+      "status": "PASS"
+    },
+    {
+      "name": "Action family opens, board picks, exact confirmation advances the authority",
+      "status": "PASS"
+    },
+    {
+      "name": "Complete suggested moves play once on click without an extra confirmation",
+      "status": "PASS"
+    },
+    {
+      "name": "Card inspection and cosmetic hand reorder remain usable",
+      "status": "PASS"
+    },
+    {
+      "name": "Local authoritative save restores into the same board",
+      "status": "PASS"
+    },
+    {
+      "name": "Local AI play advances several authoritative turns",
+      "status": "PASS"
+    },
+    {
+      "name": "Narrow layouts retain reachable controls without horizontal document overflow",
+      "status": "PASS"
+    },
+    {
+      "name": "Academy objectives, hints, and coachmarks use the canonical controller",
+      "status": "PASS"
+    },
+    {
+      "name": "Guided Exhibition keeps its existing scripted teaching runtime",
+      "status": "PASS"
+    },
+    {
+      "name": "Two actual browser seats mount Homecoming through the existing network authority",
+      "status": "PASS"
+    },
+    {
+      "name": "Online Composer submits an enumerated action without a command body",
+      "status": "PASS"
+    },
+    {
+      "name": "Online drag uses one normal action request and synchronizes the same public card to both seats",
+      "status": "PASS"
+    },
+    {
+      "name": "Network chat updates the existing chat channel alongside playable controls",
+      "status": "PASS"
+    },
+    {
+      "name": "Refresh reconnects the same online match and drops Composer state",
+      "status": "PASS"
+    },
+    {
+      "name": "Online forfeit keeps the canonical terminal and replay flow",
+      "status": "PASS"
+    },
+    {
+      "name": "Online terminal rematch reuses the existing authenticated admission",
+      "status": "PASS"
+    }
+  ],
+  "screenshots": [
+    "desktop-1024x576.png",
+    "desktop-1280x720.png",
+    "desktop-1366x768.png",
+    "desktop-1440x900.png",
+    "desktop-1920x1080.png",
+    "desktop-2560x1440.png",
+    "composer-1440x900.png",
+    "midgame-1440x900.png",
+    "local-terminal-1440x900.png",
+    "narrow-390.png",
+    "narrow-history-390.png",
+    "narrow-768.png",
+    "narrow-history-768.png",
+    "academy-1440x900.png",
+    "online-1440x900.png",
+    "online-terminal-1440x900.png"
+  ],
+  "exercisedFamilies": [
+    "anchor-private-choice",
+    "response-decline",
+    "phase",
+    "draw",
+    "response-decline",
+    "phase",
+    "anchor",
+    "response-decline",
+    "phase",
+    "draw",
+    "response-decline",
+    "anchor-guard",
+    "swap-bar",
+    "phase"
+  ],
+  "errors": []
+}

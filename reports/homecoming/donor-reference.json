@@ -1,0 +1,11 @@
+{
+  "source": "H:\\myProjects\\Intrilex-MASTER\\browser-tabletop",
+  "head": "782966336509dcc816888a3918ece2fd515a3725",
+  "profile": "intrilex-full",
+  "server": "Local production build with isolated temporary SQLite database",
+  "screenshots": [
+    "donor-full-1440x900.png",
+    "donor-full-1920x1080.png"
+  ],
+  "errors": []
+}

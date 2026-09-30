@@ -1,0 +1,432 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-30",
+  "timezone": "America/New_York",
+  "workspace": "H:\\myProjects\\Intrilex-MASTER\\Intrilex_dev-current",
+  "baselineCommit": "5df83b0cf6778b6c025dcee4ebc325f0dc07aafa",
+  "checkoutCommit": "41feafd07a2ef6fc7e76ae854af3d3bc8ddc2aa8",
+  "dirty": true,
+  "donorCommit": "782966336509dcc816888a3918ece2fd515a3725",
+  "runtime": {
+    "node": "22.14.0",
+    "pnpm": "10.11.0",
+    "chrome": "154.0.8037.58"
+  },
+  "checks": [
+    {
+      "command": "pnpm test",
+      "status": "PREVIOUS_RUN_ONLY",
+      "metrics": {
+        "tests": 5245,
+        "suites": 93,
+        "pass": 5231,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 14,
+        "todo": 0,
+        "duration_ms": 368837.1975
+      },
+      "note": "Passed after the visual fidelity correction, before the move-label and direct-play changes; not rerun for this UI-only correction."
+    },
+    {
+      "command": "pnpm run test:client",
+      "status": "PREVIOUS_RUN_ONLY",
+      "metrics": {
+        "tests": 73,
+        "suites": 0,
+        "pass": 73,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 10318.2098
+      },
+      "note": "73 client tests passed after the move-label/direct-play correction; not repeated for the rail-layout-only change."
+    }
+  ],
+  "additionalChecks": [
+    {
+      "command": "pnpm run build",
+      "status": "PASS"
+    },
+    {
+      "command": "pnpm run typecheck",
+      "status": "PREVIOUS_RUN_ONLY",
+      "note": "Prior move-label correction; current layout checks use client typecheck and focused lint."
+    },
+    {
+      "command": "pnpm run typecheck:client",
+      "status": "PASS"
+    },
+    {
+      "command": "pnpm run lint",
+      "status": "PREVIOUS_RUN_ONLY",
+      "errors": 0,
+      "existingWarnings": 423,
+      "note": "Prior move-label correction; current layout checks use client typecheck and focused lint."
+    },
+    {
+      "command": "git diff --check",
+      "status": "PASS"
+    }
+  ],
+  "canonicalAudit": {
+    "command": "pnpm run self-audit:generate",
+    "status": "PREVIOUS_RUN_ONLY",
+    "score": 97,
+    "threshold": 92,
+    "results": {
+      "defaultTestSuite": "5228 tests, 5214 pass, 0 fail, 14 skip, 0 cancelled, 0 todo",
+      "totalTests": 5228,
+      "totalPass": 5214,
+      "totalFail": 0,
+      "totalSkip": 14,
+      "totalCancelled": 0,
+      "totalTodo": 0,
+      "failedTests": [],
+      "unaccounted": 0,
+      "durationMs": 344236.0702,
+      "testFileCount": 203,
+      "filesDiscovered": 203,
+      "filesScheduled": 202,
+      "filesStarted": 202,
+      "filesCompleted": 202,
+      "filesExecuted": 202,
+      "testConcurrency": 4,
+      "timeoutMs": 1200000,
+      "quickMode": false
+    },
+    "provenance": {
+      "labVersion": "1.0.0",
+      "mode": "full",
+      "testFileCount": 203,
+      "filesDiscovered": 203,
+      "filesScheduled": 202,
+      "filesStarted": 202,
+      "filesCompleted": 202,
+      "filesExecuted": 202,
+      "testConcurrency": 4,
+      "timeoutMs": 1200000,
+      "gitCommit": "41feafd07a2ef6fc7e76ae854af3d3bc8ddc2aa8",
+      "gitTree": "3e59229ef5ed90b9d9908ed32613953690529d13",
+      "gitBranch": "main",
+      "dirty": true,
+      "lockfileSha256": "fe8e547327daf46ef41bf178096e7373c08ee3b2d3a01e242b805456e9e1470b"
+    },
+    "note": "Passed before the visual fidelity correction; not rerun for this presentation pass. Current pnpm test results are recorded separately."
+  },
+  "browser": {
+    "command": "node scripts/homecoming-browser.mjs",
+    "status": "PASS",
+    "scenarios": 18,
+    "errors": 0,
+    "report": "browser-report.json"
+  },
+  "realFrames": {
+    "frames": 382,
+    "originalVariants": 2511,
+    "seeds": [
+      12345,
+      67890
+    ],
+    "profiles": [
+      "Advanced Core",
+      "Unrestricted Core",
+      "First Contact"
+    ]
+  },
+  "legacyStatus": "Classic board retained temporarily",
+  "productionDeploymentVerified": false,
+  "sourceSha256": [
+    {
+      "path": "apps/lab-web/src/client/gameplay/IntrilexGame.tsx",
+      "sha256": "af79a169a0bed77f8efd38632605d7c685032ddda1770a9ae334ba4d7ac08a12"
+    },
+    {
+      "path": "apps/lab-web/src/client/gameplay/ActionRail.tsx",
+      "sha256": "8fa12e670e255e2faef827efb248ab5d5e237d3ba1ce448667e1933c1f08432b"
+    },
+    {
+      "path": "apps/lab-web/src/client/gameplay/action-family.ts",
+      "sha256": "aa77cd122f0db827b2c1f2fee7724f2d88fbf9906bb94883d1a086b470bd115b"
+    },
+    {
+      "path": "apps/lab-web/src/client/gameplay/suggestions.ts",
+      "sha256": "d9931fa5018b4aaed69a6a7e6529a3b4012ac6502220911b2b4b37b52d0a4a06"
+    },
+    {
+      "path": "apps/lab-web/src/client/gameplay/gameplay.css",
+      "sha256": "5d2f41cc408886366edcb9dc92e801087e98208f65a7dc4a88ebb6992227cc15"
+    },
+    {
+      "path": "apps/lab-web/src/client/game-model.ts",
+      "sha256": "81776013b338545871c9bceabdd3252d33ba32911911e87d1d6aa32262547def"
+    },
+    {
+      "path": "apps/lab-web/src/client/game-store.ts",
+      "sha256": "4535e4e032ef5b1322969357c848255d8f8eb378d904627a05c39aa277ca8402"
+    },
+    {
+      "path": "apps/lab-web/src/client/mount.tsx",
+      "sha256": "809ce504b40610d943c207f75f0a9eca5fda604b3ed912f80889a2dfd417a7a8"
+    },
+    {
+      "path": "apps/lab-web/src/client/primitives.tsx",
+      "sha256": "118125ffc24e0c6658c2ced178c5d4758079a8da3b258fe5ab832db9a946e8bf"
+    },
+    {
+      "path": "apps/lab-web/src/client/game-table.tsx",
+      "sha256": "b48a09ff4697693993e2b98605af3b1073faa431e73952ed39bfe80ef5ee5e08"
+    },
+    {
+      "path": "apps/lab-web/src/client/game-table.css",
+      "sha256": "0bb1ae9c4e03715fa85764d613e587d07afc69f66bf08e9e20037481fbdd533d"
+    },
+    {
+      "path": "apps/lab-web/src/play/play-app.js",
+      "sha256": "330677b41b8e0171cc07a71f72bdc37b347cd2f7a230b2ecfcc91b66db801c05"
+    },
+    {
+      "path": "apps/lab-web/src/play/play-controller.js",
+      "sha256": "1e5e18cd3277fb0fc3553a29ece0fd7681bb2a129b2102fead92a4e04b656ca3"
+    },
+    {
+      "path": "apps/lab-web/src/play/action-presenter.js",
+      "sha256": "326dbca7c192fefa557613ee5c71be04d1cfa0331f115b9f484d919fd43ffb81"
+    },
+    {
+      "path": "apps/lab-web/src/play/network/network-session.mjs",
+      "sha256": "9357c5066fdbb23cca5645b11a202631b50498eedfee604f507f2c8d0b08ab33"
+    },
+    {
+      "path": "apps/lab-web/src/play/network/network-protocol-client.mjs",
+      "sha256": "90d4a7a632cda37bacaea8041c27bd66ed5561b72a479332d3cdaf06f81a5b54"
+    },
+    {
+      "path": "apps/lab-web/src/play/ranked-duel-terminal.mjs",
+      "sha256": "c10ec16d5fa227a7183709001ed7d8eb48596b41f326d5ff5a93f503c893dd74"
+    },
+    {
+      "path": "apps/lab-web/src/play/ranked-duel.css",
+      "sha256": "9e65de4f06ac37850ba9d4a3487cf5bb94c5f4eed7d420eb88a03cabb207b41d"
+    },
+    {
+      "path": "packages/match-authority/src/player-projection.mjs",
+      "sha256": "60e78b14a7c810af263a5a0bc9ac4fcae20676af5a15605f0abc16fb1a9b4af3"
+    },
+    {
+      "path": "packages/match-authority/src/authoritative-match-session.mjs",
+      "sha256": "823ca689492f1770599425bd0f411b12dc49405d69848fc9e83783aae4ec3830"
+    },
+    {
+      "path": "apps/match-server/src/handlers/match-handlers.mjs",
+      "sha256": "ccb307cc08de78c16f5f0e75b221ba500da88c523b1177bbff6afb3093f01961"
+    },
+    {
+      "path": "scripts/bundle.mjs",
+      "sha256": "caa41927a83b8ab009c6d4b5f12a5cba90f7d924759f5e73d6d6233c300ba606"
+    },
+    {
+      "path": "scripts/ci.mjs",
+      "sha256": "f4c2593f8fe6c234387a9f92f7c1aa031c5b6b4f36c02e8fe92a196787983e94"
+    },
+    {
+      "path": "scripts/homecoming-browser.mjs",
+      "sha256": "039978692bd4caa03b315ffcb1e1e37b8dae02c71216f44dea3121a0d7ca5ce2"
+    },
+    {
+      "path": "test/homecoming.test.mjs",
+      "sha256": "310834796b5a326d6ab6022ee9f9799dbdc6519491a4f77f5c132606daa1f987"
+    },
+    {
+      "path": "test/play-module.test.mjs",
+      "sha256": "93bfdbbc31d11447a09862171c66a3e5bffb2ae33cf2b91c64393a7b5553caec"
+    },
+    {
+      "path": "package.json",
+      "sha256": "6aaaa6ba81ef5397af71a82ccaf33ff0a002359f882b7df723627733196589a2"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "sha256": "fe8e547327daf46ef41bf178096e7373c08ee3b2d3a01e242b805456e9e1470b"
+    },
+    {
+      "path": "apps/lab-web/src/client/gameplay/TabletopCard.tsx",
+      "sha256": "bb3fb8d15ff9bb9a1b289076cb1ef44af95500eada8f2680b2077e1b0ba19393"
+    },
+    {
+      "path": "scripts/homecoming-action-rail-browser.mjs",
+      "sha256": "4480058f2ab25a739ea4e5130468bca829fb0d2e8f978e16389cafd22fcfdd3c"
+    }
+  ],
+  "previousStandaloneChecks": [
+    {
+      "command": "pnpm run test:network",
+      "status": "PASS",
+      "metrics": {
+        "tests": 307,
+        "suites": 12,
+        "pass": 307,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 45581.808
+      }
+    },
+    {
+      "command": "pnpm run test:privacy",
+      "status": "PASS",
+      "metrics": {
+        "tests": 3,
+        "suites": 0,
+        "pass": 3,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 296.7932
+      }
+    },
+    {
+      "command": "pnpm run test:determinism",
+      "status": "PASS",
+      "metrics": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 514.3448
+      }
+    },
+    {
+      "command": "node --test test/self-audit-truth.test.mjs",
+      "status": "PASS",
+      "metrics": {
+        "tests": 16,
+        "suites": 0,
+        "pass": 16,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 366.5993
+      }
+    },
+    {
+      "command": "node --test test/play-module.test.mjs",
+      "status": "PASS",
+      "metrics": {
+        "tests": 51,
+        "suites": 0,
+        "pass": 51,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 551.2338
+      }
+    },
+    {
+      "command": "node --test test/v0.21.0-a11y-automated.test.mjs",
+      "status": "PASS",
+      "metrics": {
+        "tests": 27,
+        "suites": 0,
+        "pass": 27,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "duration_ms": 350.303
+      }
+    }
+  ],
+  "visualCorrection": {
+    "date": "2026-09-30",
+    "reference": "donor-reference.json",
+    "comparison": "visual-comparison.md",
+    "status": "IMPLEMENTED_AND_LOCALLY_VERIFIED",
+    "note": "Direct presentation port with Intrilex host navigation and authorized projection. Current move-label and direct-play corrections are separately recorded. No pixel equality claim."
+  },
+  "actionRailCorrection": {
+    "date": "2026-09-30",
+    "status": "IMPLEMENTED_AND_LOCALLY_VERIFIED",
+    "policy": "Complete moves and suggestions play on click. Single scalar choices play on their final option, including board picks. Editable multi-parameter declarations, multi-card sets and Forfeit retain Confirm.",
+    "focusedBrowser": {
+      "command": "node scripts/homecoming-action-rail-browser.mjs",
+      "status": "PASS",
+      "scenarios": 6,
+      "errors": 0,
+      "report": "action-rail-report.json",
+      "scope": "Actual React board and CSS with controlled UI fixtures; no engine commands or external writes",
+      "note": "Current focused report retains six direct-play/label scenarios and adds a seventh rail-layout case."
+    },
+    "checks": [
+      "build",
+      "root/client typecheck",
+      "lint: zero errors, 423 existing warnings",
+      "focused final-file lint",
+      "73 client tests",
+      "18 canonical browser scenarios",
+      "git diff --check"
+    ],
+    "fullSuiteRepeated": false,
+    "screenshots": [
+      "action-label-1440.png",
+      "action-label-1024.png",
+      "action-label-390.png"
+    ]
+  },
+  "railLayoutCorrection": {
+    "date": "2026-09-30",
+    "status": "IMPLEMENTED_AND_LOCALLY_VERIFIED",
+    "layout": "One compact hand count in each seat summary. Left: players, Swap, Pending Plays, Academy support when present, then Game Log filling remaining height. Right: suggestions, moves and Composer from the top.",
+    "currentChecks": [
+      {
+        "command": "pnpm run build",
+        "status": "PASS"
+      },
+      {
+        "command": "pnpm run typecheck:client",
+        "status": "PASS"
+      },
+      {
+        "command": "pnpm exec eslint apps/lab-web/src/client/gameplay/IntrilexGame.tsx scripts/homecoming-browser.mjs scripts/homecoming-action-rail-browser.mjs",
+        "status": "PASS",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "command": "pnpm run test:homecoming:browser",
+        "status": "PASS",
+        "scenarios": 18,
+        "errors": 0,
+        "report": "browser-report.json"
+      },
+      {
+        "command": "node scripts/homecoming-action-rail-browser.mjs",
+        "status": "PASS",
+        "scenarios": 7,
+        "errors": 0,
+        "report": "action-rail-report.json",
+        "scope": "Actual React board and CSS with controlled UI fixtures; no engine commands or external writes"
+      },
+      {
+        "command": "git diff --check",
+        "status": "PASS"
+      }
+    ],
+    "fullSuiteRepeated": false,
+    "coverage": "Six desktop sizes and narrow 390/768px history reachability/collapse; fixture expands 12 pending plays and 40 public events at 1440x900 and 1024x576 and exercises independent scrolling, log collapse and filters.",
+    "screenshots": [
+      "left-rail-expanded-1440x900.png",
+      "left-rail-expanded-1024x576.png",
+      "narrow-history-390.png",
+      "narrow-history-768.png"
+    ]
+  }
+}

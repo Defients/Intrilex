@@ -7,6 +7,10 @@
       "status": "PASS"
     },
     {
+      "name": "Full tabletop presentation uses playing cards, slot tracks and the composed right rail",
+      "status": "PASS"
+    },
+    {
       "name": "Desktop critical surfaces fit all six supported viewports",
       "status": "PASS"
     },
@@ -19,7 +23,7 @@
       "status": "PASS"
     },
     {
-      "name": "Suggested moves are current options and preserve confirmation",
+      "name": "Complete suggested moves play once on click without an extra confirmation",
       "status": "PASS"
     },
     {
@@ -55,6 +59,10 @@
       "status": "PASS"
     },
     {
+      "name": "Online drag uses one normal action request and synchronizes the same public card to both seats",
+      "status": "PASS"
+    },
+    {
       "name": "Network chat updates the existing chat channel alongside playable controls",
       "status": "PASS"
     },
@@ -78,16 +86,18 @@
     "desktop-1440x900.png",
     "desktop-1920x1080.png",
     "desktop-2560x1440.png",
+    "composer-1440x900.png",
     "midgame-1440x900.png",
     "local-terminal-1440x900.png",
     "narrow-390.png",
+    "narrow-history-390.png",
     "narrow-768.png",
+    "narrow-history-768.png",
     "academy-1440x900.png",
     "online-1440x900.png",
     "online-terminal-1440x900.png"
   ],
   "exercisedFamilies": [
-    "phase",
     "anchor-private-choice",
     "response-decline",
     "phase",
@@ -100,7 +110,8 @@
     "draw",
     "response-decline",
     "anchor-guard",
-    "swap-bar"
+    "swap-bar",
+    "phase"
   ],
   "errors": []
 }

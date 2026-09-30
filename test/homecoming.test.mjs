@@ -142,6 +142,22 @@ function fixture() {
   };
 }
 
+test('Homecoming HUD reads only authorized own Mini-Turn and Swap limits', () => {
+  const input = fixture();
+  input.playerView.own.limits = { miniTurnsRemaining: 2, swapBarUsedThisFT: true, secret: 'never copy this' };
+  input.playerView.opponents[0].limits = { miniTurnsRemaining: 3, swapBarUsedThisFT: false };
+  const game = buildSemanticGame(input);
+  assert.equal(game.self.miniTurnsRemaining, 2);
+  assert.equal(game.self.swapUsed, true);
+  assert.equal(game.opponent.miniTurnsRemaining, undefined);
+  assert.equal(JSON.stringify(game).includes('never copy this'), false);
+  const publicGame = buildSemanticGame(input, { visibility: 'public' });
+  assert.equal(publicGame.self.miniTurnsRemaining, null);
+  assert.equal(publicGame.self.swapUsed, null);
+  input.playerView.own.limits.miniTurnsRemaining = -1;
+  assert.equal(buildSemanticGame(input).status, 'unavailable');
+});
+
 test('Homecoming groups structured families independently of display copy', () => {
   const actions = [action('a', ['h1'], ['t1']), action('b', ['h2'], ['t2'])];
   const before = buildActionEntries(actions);

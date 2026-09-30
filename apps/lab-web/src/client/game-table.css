@@ -1,4 +1,6 @@
 @import './gameplay/gameplay.css';
+@import './gameplay/direct-manipulation.css';
+@import './gameplay/action-rail.css';
 
 .astra-client {
   --astra-bg: #080d12;

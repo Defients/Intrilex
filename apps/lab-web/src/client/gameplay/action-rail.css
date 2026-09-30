@@ -1,0 +1,111 @@
+/* Possible Moves: family color, readable copy, and interaction light.
+ * Accents decorate engine-enumerated semantics; they never indicate legality. */
+.astra-client.hc-game {
+  :is(.hc-family, .hc-action, .hc-composer) {
+    --move-accent: #bba6ff;
+  }
+  [data-family="draw"] { --move-accent: var(--ct-cyan); }
+  :is([data-family="score"], [data-family="play-for-points"]) { --move-accent: var(--ct-teal); }
+  [data-family="swap-bar"] { --move-accent: #f18bdc; }
+  :is([data-family="scuttle"], [data-family="counter"], [data-family="disrupt"]) { --move-accent: #ff98a4; }
+  :is([data-family="super"], [data-family="voltage"], [data-family="anchor"], [data-family="anchor-guard"]) { --move-accent: #ffd184; }
+  :is([data-family="quick"], [data-family="instant"], [data-family="interrupt"]) { --move-accent: #ffba87; }
+  :is([data-family="private-choice"], [data-family="effect-private-choice"], [data-family="anchor-private-choice"]) { --move-accent: #91caff; }
+
+  .hc-action-list { gap: .38rem; padding: .12rem .2rem .25rem .06rem; }
+  :is(.hc-family, .hc-action) {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid color-mix(in srgb, var(--move-accent) 26%, var(--ct-border));
+    border-left: 3px solid var(--move-accent);
+    border-radius: 10px;
+    background: linear-gradient(115deg, color-mix(in srgb, var(--move-accent) 9%, #141a35), #10162c 78%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%), 0 2px 5px rgb(0 0 0 / 12%);
+    padding: .5rem .65rem;
+    transition: border-color var(--ct-dur-fast), background var(--ct-dur), box-shadow var(--ct-dur);
+  }
+  :is(.hc-family, .hc-action):is(:hover, :focus-visible):not(:disabled) {
+    border-color: color-mix(in srgb, var(--move-accent) 68%, var(--ct-border));
+    background: linear-gradient(115deg, color-mix(in srgb, var(--move-accent) 16%, #141a35), #151b35 78%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 9%), inset 0 0 20px color-mix(in srgb, var(--move-accent) 5%, transparent), 0 0 12px color-mix(in srgb, var(--move-accent) 13%, transparent);
+  }
+  :is(.hc-family, .hc-action):focus-visible { outline-color: var(--move-accent); outline-offset: 1px; }
+  :is(.hc-family, .hc-action):active:not(:disabled) { transform: none; background: color-mix(in srgb, var(--move-accent) 18%, #10162c); }
+  .hc-family { gap: .55rem; min-height: 2.7rem; }
+  .hc-family-icon, .hc-composer .fc-composer-ic {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 auto;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 7px;
+    color: var(--move-accent);
+    border: 1px solid color-mix(in srgb, var(--move-accent) 25%, transparent);
+    background: color-mix(in srgb, var(--move-accent) 9%, transparent);
+    font-size: .93rem;
+    text-shadow: 0 0 9px color-mix(in srgb, var(--move-accent) 30%, transparent);
+  }
+  .hc-family-title { min-width: 0; line-height: 1.35; overflow-wrap: break-word; }
+  .hc-family-title strong { font-size: .86rem; font-weight: 780; color: var(--move-accent); }
+  .hc-family-title em { font-size: .75rem; font-weight: 500; color: var(--ct-text-secondary); }
+  .hc-title-divider { color: var(--ct-text-muted); }
+  .hc-family > .hc-family-count {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    flex: 0 0 auto;
+    color: var(--move-accent);
+    background: color-mix(in srgb, var(--move-accent) 7%, transparent);
+    border-color: color-mix(in srgb, var(--move-accent) 22%, transparent);
+    font-variant-numeric: tabular-nums;
+    padding: .12rem .45rem;
+  }
+  .hc-family-count b { font-weight: 750; }
+  .hc-family-count > span { font-size: 1rem; line-height: 1; opacity: .65; }
+  .hc-action { gap: .35rem; font-size: .82rem; }
+  .hc-move-name { font-weight: 780; color: var(--move-accent); }
+  .hc-move-effect { font-weight: 450; color: #c3cbe5; }
+  .hc-move-ref { font-weight: 650; color: #edf1ff; }
+  .hc-move-target { color: var(--move-accent); }
+  .hc-move-slot { font-weight: 700; color: var(--move-accent); }
+  :is(.hc-action, .hc-composer) .hc-card-token {
+    padding: .02em .23em;
+    border-radius: 4px;
+    background: rgb(200 210 255 / 7%);
+    box-decoration-break: clone;
+    font-weight: 750;
+  }
+  :is(.hc-action, .hc-composer) .hc-move-text .suit-red { color: #ff98b0; }
+  :is(.hc-action, .hc-composer) .hc-move-text .suit-black { color: #dce5ff; }
+  .hc-action > .hc-move-meta { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .hc-timing {
+    font-size: .58rem;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border: 1px solid rgb(180 190 223 / 15%);
+    border-radius: 4px;
+    padding: .12rem .35rem;
+    color: #a9b5d5;
+    background: rgb(180 190 223 / 4%);
+    line-height: 1.2;
+  }
+  .hc-timing[data-timing="quick"], .hc-timing[data-timing="interrupt"] { color: #ffcb9e; border-color: rgb(255 186 135 / 28%); }
+  .hc-move-go { color: var(--move-accent); font-size: 1rem; line-height: 1; opacity: .5; }
+  .hc-action:is(:hover, :focus-visible):not(:disabled) .hc-move-go { opacity: 1; }
+
+  .hc-composer .fc-composer-head { border-color: color-mix(in srgb, var(--move-accent) 28%, transparent); background: linear-gradient(115deg, color-mix(in srgb, var(--move-accent) 10%, #141a35), #10162c); }
+  .hc-composer .fc-fam-count { color: var(--move-accent); border-color: color-mix(in srgb, var(--move-accent) 22%, transparent); }
+  .hc-composer .hc-parameter[data-active="true"] legend button { color: var(--move-accent); }
+  .hc-composer .hc-options button[aria-pressed="true"] { border-color: var(--move-accent); background: color-mix(in srgb, var(--move-accent) 13%, #10162c); box-shadow: inset 0 0 12px color-mix(in srgb, var(--move-accent) 10%, transparent); }
+  .hc-preview { border-left-color: var(--move-accent); border-radius: 0 8px 8px 0; padding: .55rem .65rem; background: color-mix(in srgb, var(--move-accent) 7%, transparent); color: var(--ct-text-secondary); line-height: 1.5; }
+  .hc-preview > strong { color: var(--move-accent); }
+  .hc-preview > em { font-size: .76rem; }
+  .fc-possible-heading { color: #b9c3e2; }
+  .fc-possible-heading::after { background: linear-gradient(90deg, var(--ct-border-active), transparent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    :is(.hc-family, .hc-action) { transition: none; }
+  }
+}

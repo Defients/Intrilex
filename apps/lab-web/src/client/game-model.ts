@@ -16,6 +16,9 @@ export type SemanticPlayer = Readonly<{
   hand: readonly SemanticCard[];
   points: readonly SemanticCard[];
   enduring: readonly SemanticCard[];
+  /** Only fields already authorized in the owning player's projected limits. */
+  miniTurnsRemaining?: number | null;
+  swapUsed?: boolean | null;
 }>;
 
 export type SemanticAction = Readonly<{
@@ -398,10 +401,16 @@ export function buildSemanticGame(input: unknown, options: Options = {}): Semant
     const ownHandCount = field(own, 'handCount');
     const handCount = ownHandCount === undefined ? list(ownHand).length : count(ownHandCount);
     if (!publicOnly && handCount !== hand.length) invalid();
+    const ownLimits = record(field(own, 'limits') ?? {});
+    const rawMiniTurns = publicOnly ? undefined : field(ownLimits, 'miniTurnsRemaining');
+    const rawSwapUsed = publicOnly ? undefined : field(ownLimits, 'swapBarUsedThisFT');
+    if (rawSwapUsed !== undefined && typeof rawSwapUsed !== 'boolean') invalid();
     const self: SemanticPlayer = {
       id: selfId, name: displayName(human, publicOnly ? selfId : 'You'),
       score: finite(field(own, 'securedPoints')), goal: finite(field(own, 'goal')),
       handCount, hand, points: cards(field(own, 'pr'), `${selfId}:points`), enduring: cards(field(own, 'er'), `${selfId}:enduring`),
+      miniTurnsRemaining: rawMiniTurns === undefined ? null : count(rawMiniTurns),
+      swapUsed: rawSwapUsed === undefined ? null : rawSwapUsed,
     };
     const opponent: SemanticPlayer = {
       id: opponentId, name: displayName(field(snapshot, 'opponent'), publicOnly ? opponentId : 'Opponent'),

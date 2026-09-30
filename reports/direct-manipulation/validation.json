@@ -1,0 +1,47 @@
+{
+  "date": "2026-09-30",
+  "scope": "Local implementation and verification in Intrilex_dev-current; existing uncommitted work retained; no public deployment",
+  "fullSuite": {
+    "method": "Full self-audit generator across 203 files, then the excluded self-audit-truth file",
+    "auditTests": 5239,
+    "auditPass": 5225,
+    "auditFail": 0,
+    "auditSkipped": 14,
+    "excludedTruthTests": 16,
+    "excludedTruthPass": 16,
+    "totalFiles": 204,
+    "combinedTests": 5255,
+    "combinedPass": 5241,
+    "combinedFail": 0,
+    "combinedSkipped": 14
+  },
+  "newUnitTests": 10,
+  "browser": {
+    "dragScenarios": 10,
+    "homecomingScenarios": 19,
+    "actionRailScenarios": 7,
+    "pageErrors": 0,
+    "liveWebSocketDragAndTwoSeatSynchronization": "PASS",
+    "ambiguity": "Controlled UI fixture; all actual commits use canonical authority"
+  },
+  "gates": {
+    "rootTypecheck": "PASS",
+    "strictClientTypecheck": "PASS",
+    "lint": "PASS: 0 errors, 423 existing warnings",
+    "lintRatchet": "PASS",
+    "productionBuild": "PASS",
+    "cleanRoomQuick": "PASS: includes build and 106 focused tests",
+    "releaseIdentity": "PASS: no drift",
+    "engineManifest": "PASS: no drift",
+    "fullSelfAudit": "PASS",
+    "selfAuditTruth": "PASS: 16/16",
+    "gitDiffCheck": "PASS"
+  },
+  "limits": [
+    "Touch dragging disabled; native touch scrolling and existing controls preserved",
+    "Chrome browser verification; no physical stylus hardware test",
+    "Publication and production multiplayer deployment were not performed"
+  ],
+  "gitHead": "41feafd07a2ef6fc7e76ae854af3d3bc8ddc2aa8",
+  "dirty": true
+}

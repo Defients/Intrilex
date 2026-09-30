@@ -1,0 +1,899 @@
+
+> intrilex-simulation-lab@1.0.0 verify:clean-room:quick H:\myProjects\Intrilex-MASTER\Intrilex_dev-current
+> node scripts/verify-clean-room.mjs --quick
+
+══════════════════════════════════════════════════════════
+Phase 2D: Clean-Room Reproduction Verification
+══════════════════════════════════════════════════════════
+
+Step 1: Essential file presence check
+  ✅ All essential files present
+
+Step 2: Version consistency check
+  ✅ All versions consistent: 1.0.0
+
+Step 4: Typecheck (npx tsc --noEmit)
+✅ tsc --noEmit (4934ms)
+
+Step 4b: Build verification (pnpm run build)
+
+> intrilex-simulation-lab@1.0.0 build H:\myProjects\Intrilex-MASTER\Intrilex_dev-current
+> pnpm run engine-patch:build && node scripts/build.mjs
+
+
+> intrilex-simulation-lab@1.0.0 engine-patch:build H:\myProjects\Intrilex-MASTER\Intrilex_dev-current
+> node scripts/build-engine-patch.mjs
+
+ENGINE PATCH BUILD PASS: H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\runtime\autonomy-engine-dist
+CAPABILITY MANIFEST PASS: 5327924cd5dab2d170bef3bb5a0af0befa879004a77a7bbdbf0a016b1fadd1b9
+generate-version: wrote Node version to H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\packages\shared\src\version.mjs (v1.0.0)
+generate-version: wrote browser version to H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\apps\lab-web\src\version.js (v1.0.0)
+DATA PASS: verified=121; aggregate=230017997cad8663c09c351cd0f648e136c282829735e1b6fd53c944b880c7f8
+REPLAY RESUME PASS: M-8f5ba7a1426637e83d01
+REPLAY RESUME PASS: M-eec6e8dbac8062940f40
+REPLAY RESUME PASS: M-eb968361e3bdc82164ce
+REPLAY RESUME PASS: M-d854e1ad2e3c98faee9f
+REPLAY RESUME PASS: M-bf73664f5127cc77a797
+REPLAY RESUME PASS: M-116e5b92d1902f724f70
+REPLAY RESUME PASS: M-c37124f0bd32b32d2f71
+REPLAY RESUME PASS: M-afdcc6f2781ba6f857b7
+REPLAY RESUME PASS: M-690e14c1ad1c3c20a4fe
+REPLAY RESUME PASS: M-8f654e4c1d345533ccbf
+REPLAY RESUME PASS: M-6eb96a20b1344ba12321
+REPLAY RESUME PASS: M-c9d2d8963a8026c2e2b0
+REPLAY RESUME PASS: M-44d7c9fa35f12273eb68
+REPLAY RESUME PASS: M-36cdf9aadecd635590c0
+REPLAY RESUME PASS: M-c27e931b3ffd72a2bc10
+REPLAY RESUME PASS: M-a9a7afa9ee474bf45536
+REPLAY RESUME PASS: M-9802b9229c46aa107825
+REPLAY RESUME PASS: M-c00e6419f4b77e47c82e
+REPLAY RESUME PASS: M-869d68e4cc2fc7ad3cae
+REPLAY RESUME PASS: M-e35cccea15951261a2cc
+REPLAY RESUME PASS: M-14103530f39e4c8fd523
+REPLAY RESUME PASS: M-5aad144e8c22f2c57840
+REPLAY RESUME PASS: M-4dbd281c5bbb2e29b64c
+REPLAY RESUME PASS: M-bc89088eea84e3c5dfa0
+REPLAY RESUME PASS: M-cdbb93aac376239f7748
+REPLAY RESUME PASS: M-fd09f27fab6e7c7ca1fa
+REPLAY RESUME PASS: M-cf05fedc6a076a2b8ce9
+REPLAY RESUME PASS: M-e32149ebf24466103ea9
+REPLAY RESUME PASS: M-63a211056fedfa49a9a4
+REPLAY RESUME PASS: M-941d10feb328a0f8bf3e
+REPLAY RESUME PASS: M-1197243e3d684bf9b83d
+REPLAY RESUME PASS: M-a526bfd4b58f3e7c1278
+REPLAY RESUME PASS: M-dca045bdd34e77aba406
+REPLAY RESUME PASS: M-cf0dc613991d03a1f8a6
+REPLAY RESUME PASS: M-56cb16e6cdcdf5dbd1a1
+REPLAY RESUME PASS: M-aa8f4a129617fe179fe4
+REPLAY RESUME PASS: M-e3e961e04b6b65b898c7
+REPLAY RESUME PASS: M-7856e24c1f36d9441ba1
+REPLAY RESUME PASS: M-ce099e622a899fa5cb74
+REPLAY RESUME PASS: M-9ac410d55ff6857e19e9
+REPLAY RESUME PASS: M-f23e0c2f7f0412abc92e
+REPLAY RESUME PASS: M-13a4ae5e72c9ed243842
+REPLAY RESUME PASS: M-5e4dcf25c4d23d2e66dc
+REPLAY RESUME PASS: M-e23351a3b5866db76481
+REPLAY RESUME PASS: M-f64ab908222f007aaf8d
+REPLAY RESUME PASS: M-23b161f118906ca74279
+REPLAY RESUME PASS: M-0496791615f3cfbfb548
+REPLAY RESUME PASS: M-657a4bf619e288635b74
+REPLAY RESUME PASS: M-cc0bcbd24dd43f95a1b9
+REPLAY RESUME PASS: M-a1e29c33aabdd60ee16f
+REPLAY RESUME PASS: M-1ea1d8ce019931620b14
+REPLAY RESUME PASS: M-b15f0ccdbc77e5d6ea16
+REPLAY RESUME PASS: M-162a3dd6e3f1dcc41083
+REPLAY RESUME PASS: M-cc027c6fff7bd178e037
+REPLAY RESUME PASS: M-9764f9a75800787b9cb7
+REPLAY RESUME PASS: M-e509e77b0eba15e480d1
+REPLAY RESUME PASS: M-23287ef301f13d4bcc02
+REPLAY RESUME PASS: M-62d20c90d99ef0ffca09
+REPLAY RESUME PASS: M-f6d290c5a5c388920148
+REPLAY RESUME PASS: M-2b0bf84b4df444eecc9c
+REPLAY RESUME PASS: M-fbecf3ec38b4cc094d0e
+REPLAY RESUME PASS: M-dcc74be9d7b089f09fb7
+REPLAY RESUME PASS: M-a6002589304eda5d8923
+REPLAY RESUME PASS: M-3cb981c1175c545aa7bf
+REPLAY RESUME PASS: M-e81dcb1f989a3c62c3ae
+REPLAY RESUME PASS: M-0a64cce5e87cfe339b3b
+REPLAY RESUME PASS: M-d0bd4d4955859b96f1e3
+REPLAY RESUME PASS: M-4706813840a74682b73a
+REPLAY RESUME PASS: M-9a56943fbd4791ff49d1
+REPLAY RESUME PASS: M-ba18599acbda2de20d91
+REPLAY RESUME PASS: M-28d0b14f0f5d88c51a31
+REPLAY RESUME PASS: M-ebc1b4121f20b128752f
+REPLAY RESUME PASS: M-e8afd8ba50aa2cf5c2ef
+REPLAY RESUME PASS: M-fe2ff9f65c08231020eb
+REPLAY RESUME PASS: M-6e75ba582c29437816eb
+REPLAY RESUME PASS: M-cf991a6fa1f6f6c7dacd
+REPLAY RESUME PASS: M-6fde7fe703a4f13b5b61
+REPLAY RESUME PASS: M-dcc47c0a70b0e1ec0c2c
+REPLAY RESUME PASS: M-946f016b3c900b654616
+REPLAY RESUME PASS: M-db10a45b83e5e68eb1fd
+REPLAY RESUME PASS: M-c04f8342320e37395ec0
+REPLAY RESUME PASS: M-1b4ede32232a72df0a86
+REPLAY RESUME PASS: M-030616815bfed08a875f
+REPLAY RESUME PASS: M-94e7e26d6ee36b6e40bf
+REPLAY RESUME PASS: M-f6d8aa25e78043fa3961
+REPLAY RESUME PASS: M-c3e39fc33a594c40202f
+REPLAY RESUME PASS: M-ce645ce7a5c5594556ee
+REPLAY RESUME PASS: M-01a5983455ae919f8a0b
+REPLAY RESUME PASS: M-257e716f34030889c9b8
+REPLAY RESUME PASS: M-cdac69cf264532483783
+REPLAY RESUME PASS: M-63ffa5487eb8677b1b3e
+REPLAY RESUME PASS: M-8d371b9bb7fea569d285
+REPLAY RESUME PASS: M-eea877acab1a61f410d4
+REPLAY RESUME PASS: M-0fbb81ca3aeeda551d13
+REPLAY RESUME PASS: M-de1b456110c82ac594d5
+REPLAY RESUME PASS: M-152dc2ebb7f84e8d1124
+REPLAY RESUME PASS: M-8811e3475a0078c9b67d
+REPLAY RESUME PASS: M-2ed2f5a777fed1ed2bb2
+REPLAY RESUME PASS: M-9842c2873a237904997e
+REPLAY RESUME PASS: M-d489bd6594b2deaa366a
+ADVANCED CORE REPLAY ARTIFACTS PASS: 100
+RANK ANATOMY REGISTRY PASS: ranks=15; spadesVariants=13; superEffects=9; hash=32e5d1631e24220f
+VARIANT ANALYTICS PASS: variants=61; metrics=["schemaVersion","telemetrySchemaVersion","profileId","variantKeys","entities","participantIds","variantMetrics","perParticipantVariantMetrics","variantPower","confidence","synergies","sensitivity","rankComparisons","perProfile","perPolicyMetrics","perSeatMetrics","perFirstPlayerMetrics","metricRegistry","metricRegistryHash","variantRegistry","aggregateHash"]
+RANK ANALYTICS PASS: rankPower=7 ranks; swapMatrix=18 entries
+OBSERVATORY ANALYTICS PASS: matches=100; detailed=12; mechanics=106; synergies=1; hash=c3175a49922a04045fdfae81f9132b754b5f46fd7b19b12b4dd9d373fd1dcb35
+EXTRACT JSON PASS: sample-data/observatory/extract.json; hash=d83198c3593ff1c051ba8d018020149c29db0fa06974c417af877741329da4b9
+EXTRACT MARKDOWN PASS: sample-data/observatory/extract.md
+CARD ART BUILD PASS: 54 cards → H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\apps\lab-web\src\assets\card-art
+  encoded=0 skipped=54 (unchanged)
+  manifest at apps\lab-web\src\assets\card-art\manifest.json
+RANKED GLYPH BUILD PASS: 8 tiers × 3 sizes → H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\apps\lab-web\src\assets\ranked\glyphs
+  encoded=0 skipped=24 (unchanged)
+  manifest at apps\lab-web\src\assets\ranked\glyphs\manifest.json
+build: excluded replay blob directories and unused data files (set INTRILEX_INCLUDE_REPLAY_BLOBS=1 to include) — saved ~670MB
+build: slimmed replay-index.json — stripped 100 record summaries, replay-index.json is now 124969 bytes
+build: slimmed lab-replay-index.json — stripped 100 record summaries, lab-replay-index.json is now 62106 bytes
+BUILD PASS: H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\apps\lab-web\dist; browserModules=29; certifiedReplays=121; rankPower=[18 ranks, ladder 18 entries]
+bundle: wrote tactical.745261475439.css (126.7 KB)
+
+  apps\lab-web\dist\.split-tmp\app.js                              625.1kb
+  apps\lab-web\dist\.split-tmp\chunk-brain-controller-PEDUDQLS.js  554.8kb
+  apps\lab-web\dist\.split-tmp\chunk-chunk-GTEGMPFP.js             359.0kb
+  apps\lab-web\dist\.split-tmp\chunk-play-app-ATHBH7Y7.js          341.7kb
+  apps\lab-web\dist\.split-tmp\chunk-chunk-NR3R37VJ.js             307.9kb
+  ...and 125 more output files...
+
+Done in 1006ms
+bundle: injected match server URL: wss://match.intrilex.cards
+bundle: wrote __intrilex-config.44c0dc2e83da.js
+bundle: added wss://match.intrilex.cards to CSP connect-src
+bundle: updated index.html with hashed asset references
+bundle: wrote app.f8d14b50f20e.js (625.1 KB)
+bundle: wrote styles.fbc728181374.css (515.6 KB)
+bundle: manifest at BUNDLE_MANIFEST.json
+bundle: cache-busted module imports in 135 dist file(s) ?v=f8d14b50f20e
+bundle: rewrote import("./app.js") → import("./app.f8d14b50f20e.js") in 2 file(s)
+build: rewrote bare @intrilex/account-domain/* imports in 15 raw dist file(s) → ./account-domain/*.mjs
+build: verified 0 bare @intrilex/account-domain/* import statements in dist
+build: rewrote bare @intrilex/decision-intelligence/* imports in 2 raw dist file(s) → ./decision-intelligence/*.mjs
+build: rewrote @intrilex/shared imports in 5 decision-intelligence module(s) → shared-browser.js
+build: rewrote bare @supabase/supabase-js imports in 2 raw dist file(s) → ./vendor/supabase-js.js
+build: verified 0 bare @supabase/supabase-js import statements in dist
+build: wrote self-unregistering sw.js kill switch
+✅ pnpm run build (51595ms)
+
+Step 5: Secret containment scan
+SEC-01 Secret Containment Scan
+  Files scanned: 9268
+  Violations: 0
+  Env checks: 0
+  History checks: 0
+
+✅ PASS — no secrets detected in tracked files, artifacts, or reports
+✅ secret-containment-scan (50925ms)
+
+Step 6: Release identity verification
+✅ Release identity verified — no drift
+✅ release-identity --verify (230ms)
+
+Step 7: Engine manifest verification
+✅ Engine manifest verified — no drift
+✅ engine-manifest --verify (221ms)
+
+Step 8: Focused test suite (canon + network + persistence + sec-01 + release-identity + engine-manifest)
+TAP version 13
+# ENGINE CANON COMPLIANCE: INCOMPLETE — 9 fixture(s) UNPROVEN:
+#   CRC-C3: scuttle not found in 200 seeds (requires both PRs non-empty)
+#   CRC-C4: response window not found in 200 seeds (requires pending stack)
+#   CRC-C7: Board Lock not found in 200 seeds (requires Black Joker in hand)
+#   CRC-C8: Rank 10 effect play not found in 200 seeds
+#   CRC-C9: Rank 7 effect not found in 200 seeds
+#   CRC-C10: 10♦ Mimic not found in 200 seeds
+#   CRC-C11: K♠ Wild Sovereignty not found in 200 seeds
+#   CRC-C12: Queen's Court pending on stack not found in 200 seeds
+#   CRC-C13: Anchor/Goal-Mod pending not found in 200 seeds
+# Subtest: CRC-S1: AI selector — chosen actionId always belongs to legal action frame
+ok 1 - CRC-S1: AI selector — chosen actionId always belongs to legal action frame
+  ---
+  duration_ms: 562.534
+  ...
+# Subtest: CRC-S2: AI selector — stale/unknown actionId fails closed via validateDecision
+ok 2 - CRC-S2: AI selector — stale/unknown actionId fails closed via validateDecision
+  ---
+  duration_ms: 0.6735
+  ...
+# Subtest: CRC-S3: AI selector — difficulty modifies preference, never legality
+ok 3 - CRC-S3: AI selector — difficulty modifies preference, never legality
+  ---
+  duration_ms: 18.7579
+  ...
+# Subtest: CRC-S4: AI selector — AI cannot mutate command payload or introduce targets
+ok 4 - CRC-S4: AI selector — AI cannot mutate command payload or introduce targets
+  ---
+  duration_ms: 12.5673
+  ...
+# Subtest: CRC-S5: AI selector — AI cannot access forbidden hidden information
+ok 5 - CRC-S5: AI selector — AI cannot access forbidden hidden information
+  ---
+  duration_ms: 1.3713
+  ...
+# Subtest: CRC-C1: Draw is available during Action Phase with cards in DP (canon §4.3)
+ok 6 - CRC-C1: Draw is available during Action Phase with cards in DP (canon §4.3)
+  ---
+  duration_ms: 133.1959
+  ...
+# Subtest: CRC-C2: Play for Points is available during Action Phase when hand is non-empty (canon §4.3)
+ok 7 - CRC-C2: Play for Points is available during Action Phase when hand is non-empty (canon §4.3)
+  ---
+  duration_ms: 66.9253
+  ...
+# Subtest: CRC-C3: Scuttle actions only target enemy PR cards (canon §19)
+ok 8 - CRC-C3: Scuttle actions only target enemy PR cards (canon §19)
+  ---
+  duration_ms: 2655.7596
+  ...
+# Subtest: CRC-C4: Response window — ordinary actions excluded when stack is non-empty
+ok 9 - CRC-C4: Response window — ordinary actions excluded when stack is non-empty
+  ---
+  duration_ms: 2613.8171
+  ...
+# Subtest: CRC-C5: Card conservation — no card exists in two zones simultaneously
+ok 10 - CRC-C5: Card conservation — no card exists in two zones simultaneously
+  ---
+  duration_ms: 12.6284
+  ...
+# Subtest: CRC-C6: Human/AI authority parity — same legal action frame structure for both seats
+ok 11 - CRC-C6: Human/AI authority parity — same legal action frame structure for both seats
+  ---
+  duration_ms: 11.2152
+  ...
+# Subtest: CRC-C7: Board Lock timing — only offered to active player during own turn (canon §BJ)
+ok 12 - CRC-C7: Board Lock timing — only offered to active player during own turn (canon §BJ)
+  ---
+  duration_ms: 2507.6463
+  ...
+# Subtest: CRC-C8: Exile-Bound marker — Rank 10 played for effect gains marker (canon §12.7)
+ok 13 - CRC-C8: Exile-Bound marker — Rank 10 played for effect gains marker (canon §12.7)
+  ---
+  duration_ms: 2456.4523
+  ...
+# Subtest: CRC-C9: Rank 7 topdeck — generated plays are engine-enumerated (canon §7)
+ok 14 - CRC-C9: Rank 7 topdeck — generated plays are engine-enumerated (canon §7)
+  ---
+  duration_ms: 2535.4325
+  ...
+# Subtest: CRC-C10: 10♦ Mimic — mimicked effects are engine-enumerated (canon §10♦)
+ok 15 - CRC-C10: 10♦ Mimic — mimicked effects are engine-enumerated (canon §10♦)
+  ---
+  duration_ms: 2468.2463
+  ...
+# Subtest: CRC-C11: K♠ Wild Sovereignty — wild effects are engine-enumerated (canon §K♠)
+ok 16 - CRC-C11: K♠ Wild Sovereignty — wild effects are engine-enumerated (canon §K♠)
+  ---
+  duration_ms: 2452.9774
+  ...
+# Subtest: CRC-C12: Queen's Court counter restriction — ordinary King cannot counter (canon §K vs §Queen's Court)
+ok 17 - CRC-C12: Queen's Court counter restriction — ordinary King cannot counter (canon §K vs §Queen's Court)
+  ---
+  duration_ms: 2396.5258
+  ...
+# Subtest: CRC-C13: Base Ace cannot counter Anchor/Goal-Mod plays (canon §A)
+ok 18 - CRC-C13: Base Ace cannot counter Anchor/Goal-Mod plays (canon §A)
+  ---
+  duration_ms: 2443.9173
+  ...
+# Subtest: CRC-SUMMARY: AI SELECTOR COMPLIANCE is CERTIFIED
+ok 19 - CRC-SUMMARY: AI SELECTOR COMPLIANCE is CERTIFIED
+  ---
+  duration_ms: 0.2034
+  ...
+# Subtest: CRC-SUMMARY: ENGINE CANON COMPLIANCE status is tracked per-fixture
+ok 20 - CRC-SUMMARY: ENGINE CANON COMPLIANCE status is tracked per-fixture
+  ---
+  duration_ms: 1.5317
+  ...
+# Subtest: Phase 2B: engine-manifest.json exists and is valid
+ok 21 - Phase 2B: engine-manifest.json exists and is valid
+  ---
+  duration_ms: 5.4643
+  ...
+# Subtest: Phase 2B: engine-manifest supportedProfileIds match engine-adapter exports
+ok 22 - Phase 2B: engine-manifest supportedProfileIds match engine-adapter exports
+  ---
+  duration_ms: 277.7751
+  ...
+# Subtest: Phase 2B: engine-manifest canonical ranks match engine-adapter
+ok 23 - Phase 2B: engine-manifest canonical ranks match engine-adapter
+  ---
+  duration_ms: 1.9557
+  ...
+# Subtest: Phase 2B: engine-manifest rank authority hash is stable
+ok 24 - Phase 2B: engine-manifest rank authority hash is stable
+  ---
+  duration_ms: 2.7725
+  ...
+# Subtest: Phase 2B: engine-manifest versions match engine-adapter
+ok 25 - Phase 2B: engine-manifest versions match engine-adapter
+  ---
+  duration_ms: 2.253
+  ...
+# Subtest: Phase 2B: supabase migrations 0001-0012 are present
+ok 26 - Phase 2B: supabase migrations 0001-0012 are present
+  ---
+  duration_ms: 1.0572
+  ...
+# Subtest: Phase 2B: ranked glyph manifest is complete (8 tiers, 3 sizes)
+ok 27 - Phase 2B: ranked glyph manifest is complete (8 tiers, 3 sizes)
+  ---
+  duration_ms: 2.7531
+  ...
+# Subtest: persistor: fake persistor stores match record
+ok 28 - persistor: fake persistor stores match record
+  ---
+  duration_ms: 3.1552
+  ...
+# Subtest: persistor: idempotent — re-persisting same matchId does not double-count
+ok 29 - persistor: idempotent — re-persisting same matchId does not double-count
+  ---
+  duration_ms: 0.6933
+  ...
+# Subtest: persistor: anonymous participants recorded without rating changes
+ok 30 - persistor: anonymous participants recorded without rating changes
+  ---
+  duration_ms: 0.423
+  ...
+# Subtest: persistor: aborted matches recorded with ABORT and no rating changes
+ok 31 - persistor: aborted matches recorded with ABORT and no rating changes
+  ---
+  duration_ms: 0.379
+  ...
+# Subtest: persistor: player stats updated correctly on win
+ok 32 - persistor: player stats updated correctly on win
+  ---
+  duration_ms: 0.2895
+  ...
+# Subtest: persistor: win streak tracked across multiple matches
+ok 33 - persistor: win streak tracked across multiple matches
+  ---
+  duration_ms: 0.2058
+  ...
+# Subtest: builder: returns null for non-terminal match
+ok 34 - builder: returns null for non-terminal match
+  ---
+  duration_ms: 1.2195
+  ...
+# Subtest: builder: builds correct record for completed match with two accounts
+ok 35 - builder: builds correct record for completed match with two accounts
+  ---
+  duration_ms: 66.685
+  ...
+# Subtest: builder: handles anonymous participants (no accountId)
+ok 36 - builder: handles anonymous participants (no accountId)
+  ---
+  duration_ms: 20.8035
+  ...
+# Subtest: builder: uses persistor to fetch current rating state
+ok 37 - builder: uses persistor to fetch current rating state
+  ---
+  duration_ms: 17.9456
+  ...
+# (node:40424) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED
+#    DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION
+# {"ts":"2026-09-30T11:56:57.199Z","event":"persistorConfigured","type":"FakeMatchResultPersistor","productionMode":false}
+# {"ts":"2026-09-30T11:56:57.201Z","event":"ratingServiceConfigured","type":"RatingService"}
+# {"ts":"2026-09-30T11:56:57.202Z","event":"terminalOutboxConfigured","durable":false,"recovered":0}
+# {"ts":"2026-09-30T11:56:57.217Z","event":"connectionOpen","connectionId":"ffcc718b-58db-4465-84e0-e00b86d847da","ip":"127.0.0.1","total":1}
+# {"ts":"2026-09-30T11:56:57.224Z","event":"matchCreate","matchId":"M-vqmGLj4D-lsk0ytf","profileId":"core-unrestricted-authority","matchMode":"private","queueId":"private","accountId":null}
+# {"ts":"2026-09-30T11:56:57.228Z","event":"connectionOpen","connectionId":"62e80ca1-e382-4bef-8b97-e6ee045b8302","ip":"127.0.0.1","total":2}
+# {"ts":"2026-09-30T11:56:57.232Z","event":"matchJoin","matchId":"M-vqmGLj4D-lsk0ytf","participantId":"P-h2Z6ieEKK6U","accountId":null}
+# {"ts":"2026-09-30T11:56:57.256Z","event":"matchStart","matchId":"M-vqmGLj4D-lsk0ytf","profileId":"core-unrestricted-authority"}
+# ⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED
+#    DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION
+# {"ts":"2026-09-30T11:56:57.751Z","event":"persistorConfigured","type":"FakeMatchResultPersistor","productionMode":false}
+# {"ts":"2026-09-30T11:56:57.751Z","event":"ratingServiceConfigured","type":"RatingService"}
+# {"ts":"2026-09-30T11:56:57.751Z","event":"terminalOutboxConfigured","durable":false,"recovered":0}
+# Subtest: server: terminal match triggers persistence via persistor
+ok 38 - server: terminal match triggers persistence via persistor
+  ---
+  duration_ms: 676.4711
+  ...
+# ⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED
+#    DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION
+# {"ts":"2026-09-30T11:56:57.784Z","event":"persistorConfigured","type":"FakeMatchResultPersistor","productionMode":false}
+# {"ts":"2026-09-30T11:56:57.784Z","event":"ratingServiceConfigured","type":"RatingService"}
+# {"ts":"2026-09-30T11:56:57.784Z","event":"terminalOutboxConfigured","durable":false,"recovered":0}
+# Subtest: server: health endpoint reports persistor type
+ok 39 - server: health endpoint reports persistor type
+  ---
+  duration_ms: 33.194
+  ...
+# ⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED
+#    DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION
+# {"ts":"2026-09-30T11:56:57.791Z","event":"persistorConfigured","type":"FakeMatchResultPersistor","productionMode":false}
+# {"ts":"2026-09-30T11:56:57.792Z","event":"ratingServiceConfigured","type":"RatingService"}
+# {"ts":"2026-09-30T11:56:57.792Z","event":"terminalOutboxConfigured","durable":false,"recovered":0}
+# Subtest: server: default persistor is FakeMatchResultPersistor when none provided
+ok 40 - server: default persistor is FakeMatchResultPersistor when none provided
+  ---
+  duration_ms: 5.2989
+  ...
+# Subtest: persistor: fake persistor stores achievement unlocks
+ok 41 - persistor: fake persistor stores achievement unlocks
+  ---
+  duration_ms: 0.5317
+  ...
+# Subtest: persistor: achievement persistence is idempotent
+ok 42 - persistor: achievement persistence is idempotent
+  ---
+  duration_ms: 0.3522
+  ...
+# Subtest: persistor: achievement persistence skips anonymous (no accountId)
+ok 43 - persistor: achievement persistence skips anonymous (no accountId)
+  ---
+  duration_ms: 0.1678
+  ...
+# Subtest: persistor: getAchievements returns rows for a player
+ok 44 - persistor: getAchievements returns rows for a player
+  ---
+  duration_ms: 0.3146
+  ...
+# Subtest: persistor: empty achievement unlocks returns success with 0
+ok 45 - persistor: empty achievement unlocks returns success with 0
+  ---
+  duration_ms: 0.101
+  ...
+# {"ts":"2026-09-30T11:56:57.805Z","event":"connectionOpen","connectionId":"dd3931b5-6b07-47f2-97be-ebe571052487","ip":"127.0.0.1","total":1}
+# {"ts":"2026-09-30T11:56:57.809Z","event":"matchCreate","matchId":"M-MYzqIHB74NX32O8p","profileId":"core-unrestricted-authority","matchMode":"private","queueId":"private","accountId":null}
+# {"ts":"2026-09-30T11:56:57.813Z","event":"connectionOpen","connectionId":"0269602d-248b-4587-93c5-ddae98739cd7","ip":"127.0.0.1","total":2}
+# {"ts":"2026-09-30T11:56:57.815Z","event":"matchJoin","matchId":"M-MYzqIHB74NX32O8p","participantId":"P-FulftAOsD2A","accountId":null}
+# {"ts":"2026-09-30T11:56:57.839Z","event":"matchStart","matchId":"M-MYzqIHB74NX32O8p","profileId":"core-unrestricted-authority"}
+# ⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED
+#    DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION
+# {"ts":"2026-09-30T11:56:58.322Z","event":"persistorConfigured","type":"FakeMatchResultPersistor","productionMode":false}
+# {"ts":"2026-09-30T11:56:58.322Z","event":"ratingServiceConfigured","type":"RatingService"}
+# {"ts":"2026-09-30T11:56:58.322Z","event":"terminalOutboxConfigured","durable":false,"recovered":0}
+# Subtest: server: terminal match sends ACHIEVEMENTS_EARNED to connected clients
+ok 46 - server: terminal match sends ACHIEVEMENTS_EARNED to connected clients
+  ---
+  duration_ms: 530.9203
+  ...
+# Subtest: server: broadcastMatchEnded persists achievements for authenticated participants
+ok 47 - server: broadcastMatchEnded persists achievements for authenticated participants
+  ---
+  duration_ms: 19.0073
+  ...
+# Subtest: protocol: valid envelope accepted
+ok 48 - protocol: valid envelope accepted
+  ---
+  duration_ms: 2.1334
+  ...
+# Subtest: protocol: unknown version rejected
+ok 49 - protocol: unknown version rejected
+  ---
+  duration_ms: 0.237
+  ...
+# Subtest: protocol: unknown type rejected
+ok 50 - protocol: unknown type rejected
+  ---
+  duration_ms: 0.2668
+  ...
+# Subtest: protocol: missing payload rejected
+ok 51 - protocol: missing payload rejected
+  ---
+  duration_ms: 0.1255
+  ...
+# Subtest: protocol: non-object payload rejected
+ok 52 - protocol: non-object payload rejected
+  ---
+  duration_ms: 0.1228
+  ...
+# Subtest: protocol: oversized message rejected
+ok 53 - protocol: oversized message rejected
+  ---
+  duration_ms: 0.2729
+  ...
+# Subtest: protocol: valid CREATE_MATCH accepted
+ok 54 - protocol: valid CREATE_MATCH accepted
+  ---
+  duration_ms: 0.2065
+  ...
+# Subtest: protocol: valid JOIN_MATCH accepted
+ok 55 - protocol: valid JOIN_MATCH accepted
+  ---
+  duration_ms: 0.2317
+  ...
+# Subtest: protocol: valid SUBMIT_ACTION accepted
+ok 56 - protocol: valid SUBMIT_ACTION accepted
+  ---
+  duration_ms: 1.2212
+  ...
+# Subtest: protocol: invalid SUBMIT_ACTION rejected
+ok 57 - protocol: invalid SUBMIT_ACTION rejected
+  ---
+  duration_ms: 0.7661
+  ...
+# Subtest: authority: creates match in WAITING_FOR_OPPONENT
+ok 58 - authority: creates match in WAITING_FOR_OPPONENT
+  ---
+  duration_ms: 0.6106
+  ...
+# Subtest: authority: adds participant and assigns seat
+ok 59 - authority: adds participant and assigns seat
+  ---
+  duration_ms: 1.0095
+  ...
+# Subtest: authority: rejects third participant
+ok 60 - authority: rejects third participant
+  ---
+  duration_ms: 0.7535
+  ...
+# Subtest: authority: transitions to READY_CHECK when full
+ok 61 - authority: transitions to READY_CHECK when full
+  ---
+  duration_ms: 0.1908
+  ...
+# Subtest: authority: starts match when all ready
+ok 62 - authority: starts match when all ready
+  ---
+  duration_ms: 50.3484
+  ...
+# Subtest: authority: getAuthorizedView returns safe view
+ok 63 - authority: getAuthorizedView returns safe view
+  ---
+  duration_ms: 17.4081
+  ...
+# Subtest: authority: getAuthorizedView does not expose opponent hand
+ok 64 - authority: getAuthorizedView does not expose opponent hand
+  ---
+  duration_ms: 20.554
+  ...
+# Subtest: authority: accepts valid action from correct actor
+ok 65 - authority: accepts valid action from correct actor
+  ---
+  duration_ms: 23.9529
+  ...
+# Subtest: authority: rejects action from wrong actor
+ok 66 - authority: rejects action from wrong actor
+  ---
+  duration_ms: 17.8113
+  ...
+# Subtest: authority: rejects stale revision
+ok 67 - authority: rejects stale revision
+  ---
+  duration_ms: 19.1002
+  ...
+# Subtest: authority: rejects stale frame hash
+ok 68 - authority: rejects stale frame hash
+  ---
+  duration_ms: 14.875
+  ...
+# Subtest: authority: rejects unknown action ID
+ok 69 - authority: rejects unknown action ID
+  ---
+  duration_ms: 12.3797
+  ...
+# Subtest: authority: idempotent replay returns prior result
+ok 70 - authority: idempotent replay returns prior result
+  ---
+  duration_ms: 15.4831
+  ...
+# Subtest: authority: same clientCommandId with different payload rejected
+ok 71 - authority: same clientCommandId with different payload rejected
+  ---
+  duration_ms: 15.5984
+  ...
+# Subtest: privacy: network view contains no seed
+ok 72 - privacy: network view contains no seed
+  ---
+  duration_ms: 12.2712
+  ...
+# Subtest: privacy: network view contains no raw command
+ok 73 - privacy: network view contains no raw command
+  ---
+  duration_ms: 17.5341
+  ...
+# Subtest: privacy: validateNetworkViewPrivacy passes on safe view
+ok 74 - privacy: validateNetworkViewPrivacy passes on safe view
+  ---
+  duration_ms: 12.1488
+  ...
+# Subtest: privacy: player tokens not in view
+ok 75 - privacy: player tokens not in view
+  ---
+  duration_ms: 12.0104
+  ...
+# Subtest: determinism: same seed produces same initial state
+ok 76 - determinism: same seed produces same initial state
+  ---
+  duration_ms: 29.8474
+  ...
+# Subtest: store: saves and retrieves matches
+ok 77 - store: saves and retrieves matches
+  ---
+  duration_ms: 0.503
+  ...
+# Subtest: store: findByInviteCode works
+ok 78 - store: findByInviteCode works
+  ---
+  duration_ms: 0.3442
+  ...
+# Subtest: store: delete removes match and invite
+ok 79 - store: delete removes match and invite
+  ---
+  duration_ms: 0.2959
+  ...
+# Subtest: duel: two automated players can reach terminal state
+ok 80 - duel: two automated players can reach terminal state
+  ---
+  duration_ms: 1160.9418
+  ...
+# Subtest: replay: terminal match produces verified replay
+ok 81 - replay: terminal match produces verified replay
+  ---
+  duration_ms: 5243.7154
+  ...
+# Subtest: determinism: two matches with same seed produce same terminal state
+ok 82 - determinism: two matches with same seed produce same terminal state
+  ---
+  duration_ms: 1438.4272
+  ...
+# Subtest: concurrency: simultaneous submissions serialize correctly
+ok 83 - concurrency: simultaneous submissions serialize correctly
+  ---
+  duration_ms: 16.7109
+  ...
+# Subtest: isolation: two matches cannot interfere
+ok 84 - isolation: two matches cannot interfere
+  ---
+  duration_ms: 27.5039
+  ...
+# (node:37152) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED
+#    DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION
+# {"ts":"2026-09-30T11:57:05.290Z","event":"sqliteStartupProbeOk","storeType":"SqliteMatchStore"}
+# {"ts":"2026-09-30T11:57:05.292Z","event":"persistorConfigured","type":"FakeMatchResultPersistor","productionMode":false}
+# {"ts":"2026-09-30T11:57:05.292Z","event":"ratingServiceConfigured","type":"RatingService"}
+# {"ts":"2026-09-30T11:57:05.299Z","event":"terminalOutboxConfigured","durable":true,"recovered":0}
+# ⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED
+#    DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION
+# {"ts":"2026-09-30T11:57:05.451Z","event":"sqliteStartupProbeOk","storeType":"SqliteMatchStore"}
+# {"ts":"2026-09-30T11:57:05.451Z","event":"persistorConfigured","type":"FakeMatchResultPersistor","productionMode":false}
+# {"ts":"2026-09-30T11:57:05.451Z","event":"ratingServiceConfigured","type":"RatingService"}
+# {"ts":"2026-09-30T11:57:05.456Z","event":"terminalOutboxConfigured","durable":true,"recovered":0}
+# Subtest: server: HTTP /replay/:matchId is removed — returns 404 (privacy closure v0.24.2)
+ok 85 - server: HTTP /replay/:matchId is removed — returns 404 (privacy closure v0.24.2)
+  ---
+  duration_ms: 310.9672
+  ...
+# {"ts":"2026-09-30T11:57:05.467Z","event":"connectionOpen","connectionId":"f47a789f-4e1a-4e1b-b09b-bb4f38bbddbd","ip":"127.0.0.1","total":1}
+# {"ts":"2026-09-30T11:57:05.475Z","event":"matchCreate","matchId":"M-9JDwdD4HPbSyBm4e","profileId":"core-unrestricted-authority","matchMode":"private","queueId":"private","accountId":null}
+# ⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED
+#    DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION
+# {"ts":"2026-09-30T11:57:05.589Z","event":"sqliteStartupProbeOk","storeType":"SqliteMatchStore"}
+# {"ts":"2026-09-30T11:57:05.589Z","event":"persistorConfigured","type":"FakeMatchResultPersistor","productionMode":false}
+# {"ts":"2026-09-30T11:57:05.589Z","event":"ratingServiceConfigured","type":"RatingService"}
+# {"ts":"2026-09-30T11:57:05.595Z","event":"terminalOutboxConfigured","durable":true,"recovered":0}
+# Subtest: server: HTTP /replay/:matchId returns 404 even for a real terminal match (privacy closure)
+ok 86 - server: HTTP /replay/:matchId returns 404 even for a real terminal match (privacy closure)
+  ---
+  duration_ms: 137.0042
+  ...
+# Subtest: server: GET_REPLAY validates participant token
+ok 87 - server: GET_REPLAY validates participant token
+  ---
+  duration_ms: 0.5031
+  ...
+# Subtest: protocol: REPLAY_AVAILABLE and REPLAY_DATA message types exist
+ok 88 - protocol: REPLAY_AVAILABLE and REPLAY_DATA message types exist
+  ---
+  duration_ms: 0.2925
+  ...
+# Subtest: server: starts and responds to health check
+ok 89 - server: starts and responds to health check
+  ---
+  duration_ms: 13.8162
+  ...
+# {"ts":"2026-09-30T11:57:05.605Z","event":"connectionOpen","connectionId":"96830e03-ecef-4647-99fe-db6f85c9d5e3","ip":"127.0.0.1","total":1}
+# {"ts":"2026-09-30T11:57:05.607Z","event":"matchCreate","matchId":"M-FxSkxfX1NEOhlkB2","profileId":"core-unrestricted-authority","matchMode":"private","queueId":"private","accountId":null}
+# {"ts":"2026-09-30T11:57:05.611Z","event":"connectionOpen","connectionId":"24504015-1c60-4948-8fe2-e347849d7424","ip":"127.0.0.1","total":2}
+# {"ts":"2026-09-30T11:57:05.614Z","event":"matchJoin","matchId":"M-FxSkxfX1NEOhlkB2","participantId":"P-l7xoZv2e9qI","accountId":null}
+# Subtest: server: WebSocket create and join duel
+ok 90 - server: WebSocket create and join duel
+  ---
+  duration_ms: 14.7757
+  ...
+# {"ts":"2026-09-30T11:57:05.621Z","event":"connectionOpen","connectionId":"731d9464-4186-42b5-a4df-774e40ee1dbd","ip":"127.0.0.1","total":3}
+# {"ts":"2026-09-30T11:57:05.624Z","event":"connectionClose","connectionId":"24504015-1c60-4948-8fe2-e347849d7424","wasSpectator":false,"matchId":"M-FxSkxfX1NEOhlkB2","total":2}
+# {"ts":"2026-09-30T11:57:05.625Z","event":"connectionClose","connectionId":"96830e03-ecef-4647-99fe-db6f85c9d5e3","wasSpectator":false,"matchId":"M-FxSkxfX1NEOhlkB2","total":1}
+# {"ts":"2026-09-30T11:57:05.627Z","event":"matchCreate","matchId":"M-hwhbt3gifRV7Zq8-","profileId":"core-unrestricted-authority","matchMode":"private","queueId":"private","accountId":null}
+# {"ts":"2026-09-30T11:57:05.630Z","event":"connectionOpen","connectionId":"e8ab2351-227f-4dda-9194-445d560cecf4","ip":"127.0.0.1","total":2}
+# {"ts":"2026-09-30T11:57:05.632Z","event":"matchJoin","matchId":"M-hwhbt3gifRV7Zq8-","participantId":"P-cIGJWvmSNzs","accountId":null}
+# {"ts":"2026-09-30T11:57:05.655Z","event":"matchStart","matchId":"M-hwhbt3gifRV7Zq8-","profileId":"core-unrestricted-authority"}
+# Subtest: server: full WebSocket duel flow
+ok 91 - server: full WebSocket duel flow
+  ---
+  duration_ms: 46.3627
+  ...
+# {"ts":"2026-09-30T11:57:05.668Z","event":"connectionOpen","connectionId":"62e299da-e1a8-4767-992a-982e8b4dd65b","ip":"127.0.0.1","total":3}
+# {"ts":"2026-09-30T11:57:05.669Z","event":"forfeitTimerStarted","matchId":"M-hwhbt3gifRV7Zq8-","participantId":"P-cIGJWvmSNzs","graceMs":60000}
+# {"ts":"2026-09-30T11:57:05.669Z","event":"connectionClose","connectionId":"e8ab2351-227f-4dda-9194-445d560cecf4","wasSpectator":false,"matchId":"M-hwhbt3gifRV7Zq8-","total":2}
+# {"ts":"2026-09-30T11:57:05.670Z","event":"connectionClose","connectionId":"731d9464-4186-42b5-a4df-774e40ee1dbd","wasSpectator":false,"matchId":"M-hwhbt3gifRV7Zq8-","total":1}
+# Subtest: server: rejects invalid invite code
+ok 92 - server: rejects invalid invite code
+  ---
+  duration_ms: 7.8388
+  ...
+# {"ts":"2026-09-30T11:57:05.675Z","event":"connectionOpen","connectionId":"5eb6f013-4481-48af-b21d-86a92643a7ad","ip":"127.0.0.1","total":2}
+# {"ts":"2026-09-30T11:57:05.677Z","event":"connectionClose","connectionId":"62e299da-e1a8-4767-992a-982e8b4dd65b","wasSpectator":false,"matchId":null,"total":1}
+# Subtest: server: rejects malformed message
+ok 93 - server: rejects malformed message
+  ---
+  duration_ms: 8.2248
+  ...
+# {"ts":"2026-09-30T11:57:05.683Z","event":"connectionOpen","connectionId":"dcc73c85-9e14-40da-bdfc-eeaee8ccb6d3","ip":"127.0.0.1","total":2}
+# {"ts":"2026-09-30T11:57:05.684Z","event":"connectionClose","connectionId":"5eb6f013-4481-48af-b21d-86a92643a7ad","wasSpectator":false,"matchId":null,"total":1}
+# Subtest: server: rejects valid JSON primitives without throwing
+ok 94 - server: rejects valid JSON primitives without throwing
+  ---
+  duration_ms: 6.0664
+  ...
+# ⚠  WARNING: ACCOUNT AUTHENTICATION DISABLED
+#    DEVELOPMENT USE ONLY — DO NOT RUN IN PRODUCTION
+# {"ts":"2026-09-30T11:57:05.888Z","event":"sqliteStartupProbeOk","storeType":"SqliteMatchStore"}
+# {"ts":"2026-09-30T11:57:05.888Z","event":"persistorConfigured","type":"FakeMatchResultPersistor","productionMode":false}
+# {"ts":"2026-09-30T11:57:05.888Z","event":"ratingServiceConfigured","type":"RatingService"}
+# {"ts":"2026-09-30T11:57:05.893Z","event":"terminalOutboxConfigured","durable":true,"recovered":0}
+# {"ts":"2026-09-30T11:57:05.898Z","event":"connectionOpen","connectionId":"c89da528-0da3-4141-b6de-6d6d2f3ce668","ip":"127.0.0.1","total":1}
+# {"ts":"2026-09-30T11:57:05.900Z","event":"matchCreate","matchId":"M-W6cssv0z8UzVNW88","profileId":"core-unrestricted-authority","matchMode":"private","queueId":"private","accountId":null}
+# {"ts":"2026-09-30T11:57:05.952Z","event":"connectionOpen","connectionId":"4af313e7-bc19-475f-b4de-e6edf4a26b3b","ip":"127.0.0.1","total":2}
+# {"ts":"2026-09-30T11:57:05.954Z","event":"matchJoin","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","accountId":null}
+# {"ts":"2026-09-30T11:57:06.019Z","event":"matchStart","matchId":"M-W6cssv0z8UzVNW88","profileId":"core-unrestricted-authority"}
+# {"ts":"2026-09-30T11:57:06.310Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:06.504Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:06.628Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:06.762Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:06.961Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:07.128Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:07.235Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:07.333Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:07.497Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:07.635Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:07.763Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:07.908Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:08.068Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:08.240Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:08.389Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:08.531Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:08.649Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:08.814Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:08.972Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:09.178Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:09.344Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:09.458Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:09.625Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:09.783Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:10.033Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:10.232Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:10.359Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:10.512Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:10.662Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:10.757Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:10.944Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:10.948Z","event":"healthSnapshot","uptime":5661,"activeConnections":2,"activeMatches":1,"queueSize":0,"rssMB":111,"heapUsedMB":32,"alertCount":0}
+# {"ts":"2026-09-30T11:57:11.105Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:11.265Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:11.417Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:11.548Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:11.620Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ","reasonCode":null}
+# {"ts":"2026-09-30T11:57:11.838Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:12.023Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:12.159Z","event":"actionSubmit","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-UCDQIlM3yrc","reasonCode":null}
+# {"ts":"2026-09-30T11:57:13.056Z","event":"outboxEnqueued","jobId":"result:M-W6cssv0z8UzVNW88","matchId":"M-W6cssv0z8UzVNW88","jobType":"result"}
+# {"ts":"2026-09-30T11:57:13.061Z","event":"matchEnd","matchId":"M-W6cssv0z8UzVNW88","winner":"P2","reason":"NORMAL_VICTORY"}
+# {"ts":"2026-09-30T11:57:13.065Z","event":"outboxJobCompleted","jobId":"result:M-W6cssv0z8UzVNW88","matchId":"M-W6cssv0z8UzVNW88","jobType":"result","attempts":0}
+# {"ts":"2026-09-30T11:57:13.280Z","event":"replayDownload","matchId":"M-W6cssv0z8UzVNW88","participantId":"P-ybUWGNP_llQ"}
+# Subtest: server: full WebSocket match with GET_REPLAY round-trip
+ok 95 - server: full WebSocket match with GET_REPLAY round-trip
+  ---
+  duration_ms: 7650.4021
+  ...
+# {"ts":"2026-09-30T11:57:13.341Z","event":"connectionClose","connectionId":"4af313e7-bc19-475f-b4de-e6edf4a26b3b","wasSpectator":false,"matchId":"M-W6cssv0z8UzVNW88","total":1}
+# {"ts":"2026-09-30T11:57:13.343Z","event":"connectionClose","connectionId":"c89da528-0da3-4141-b6de-6d6d2f3ce668","wasSpectator":false,"matchId":"M-W6cssv0z8UzVNW88","total":0}
+# Subtest: message collector: timeout clears interval (no handle leak)
+ok 96 - message collector: timeout clears interval (no handle leak)
+  ---
+  duration_ms: 101.3044
+  ...
+# Subtest: cleanup
+ok 97 - cleanup
+  ---
+  duration_ms: 103.184
+  ...
+# ✅ Release identity written to H:\\myProjects\\Intrilex-MASTER\\Intrilex_dev-current\\config\\release-identity.json
+#    version=1.0.0 engine=4.2.6 rules=4.3.1
+#    profiles=[core-advanced-authority, core-effect-declaration-authority, core-foundation-authority, core-private-choice-authority, core-response-authority, core-unrestricted-authority]
+#    integrityHash=acbb9d386c748daded29119e3b0db889
+# Subtest: Phase 2A: release-identity.json matches actual codebase state
+ok 98 - Phase 2A: release-identity.json matches actual codebase state
+  ---
+  duration_ms: 16.3988
+  ...
+# Subtest: Phase 2A: supportedProfileIds contains exactly 6 engine profiles
+ok 99 - Phase 2A: supportedProfileIds contains exactly 6 engine profiles
+  ---
+  duration_ms: 15.2599
+  ...
+# Subtest: Phase 2A: release identity has integrity hash
+ok 100 - Phase 2A: release identity has integrity hash
+  ---
+  duration_ms: 11.5909
+  ...
+# Subtest: Phase 2A: version surfaces are consistent
+ok 101 - Phase 2A: version surfaces are consistent
+  ---
+  duration_ms: 11.3687
+  ...
+# Subtest: SEC-01: no secrets in tracked files, artifacts, or reports
+ok 102 - SEC-01: no secrets in tracked files, artifacts, or reports
+  ---
+  duration_ms: 48095.9952
+  ...
+# Subtest: SEC-01: .env is gitignored and not tracked
+ok 103 - SEC-01: .env is gitignored and not tracked
+  ---
+  duration_ms: 104.1628
+  ...
+# Subtest: SEC-01: .env.example contains only placeholder values
+ok 104 - SEC-01: .env.example contains only placeholder values
+  ---
+  duration_ms: 2.0434
+  ...
+# Subtest: SEC-01: credential-bearing uploader script is absent from the release tree
+ok 105 - SEC-01: credential-bearing uploader script is absent from the release tree
+  ---
+  duration_ms: 0.498
+  ...
+# Subtest: SEC-01: safe Neocities uploader requires environment credentials
+ok 106 - SEC-01: safe Neocities uploader requires environment credentials
+  ---
+  duration_ms: 0.6516
+  ...
+1..106
+# tests 106
+# suites 0
+# pass 106
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 48465.2108
+✅ focused tests (48544ms)
+
+══════════════════════════════════════════════════════════
+Clean-Room Reproduction Summary
+══════════════════════════════════════════════════════════
+  ✅ Essential files (0ms)
+  ✅ Version consistency (0ms)
+  ✅ tsc --noEmit (4934ms)
+  ✅ pnpm run build (51595ms)
+  ✅ secret-containment-scan (50925ms)
+  ✅ release-identity --verify (230ms)
+  ✅ engine-manifest --verify (221ms)
+  ✅ focused tests (48544ms)
+
+✅ CLEAN-ROOM REPRODUCTION: PASS

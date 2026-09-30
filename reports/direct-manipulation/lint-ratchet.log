@@ -1,0 +1,20 @@
+TAP version 13
+# Subtest: Lint ratchet: baseline file exists
+ok 1 - Lint ratchet: baseline file exists
+  ---
+  duration_ms: 1.0808
+  ...
+# Subtest: Lint ratchet: current warning count does not exceed baseline
+ok 2 - Lint ratchet: current warning count does not exceed baseline
+  ---
+  duration_ms: 12982.8834
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13098.4046

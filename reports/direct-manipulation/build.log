@@ -1,0 +1,156 @@
+
+> intrilex-simulation-lab@1.0.0 build H:\myProjects\Intrilex-MASTER\Intrilex_dev-current
+> pnpm run engine-patch:build && node scripts/build.mjs
+
+
+> intrilex-simulation-lab@1.0.0 engine-patch:build H:\myProjects\Intrilex-MASTER\Intrilex_dev-current
+> node scripts/build-engine-patch.mjs
+
+ENGINE PATCH BUILD PASS: H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\runtime\autonomy-engine-dist
+CAPABILITY MANIFEST PASS: 5327924cd5dab2d170bef3bb5a0af0befa879004a77a7bbdbf0a016b1fadd1b9
+generate-version: wrote Node version to H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\packages\shared\src\version.mjs (v1.0.0)
+generate-version: wrote browser version to H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\apps\lab-web\src\version.js (v1.0.0)
+DATA PASS: verified=121; aggregate=230017997cad8663c09c351cd0f648e136c282829735e1b6fd53c944b880c7f8
+REPLAY RESUME PASS: M-8f5ba7a1426637e83d01
+REPLAY RESUME PASS: M-eec6e8dbac8062940f40
+REPLAY RESUME PASS: M-eb968361e3bdc82164ce
+REPLAY RESUME PASS: M-d854e1ad2e3c98faee9f
+REPLAY RESUME PASS: M-bf73664f5127cc77a797
+REPLAY RESUME PASS: M-116e5b92d1902f724f70
+REPLAY RESUME PASS: M-c37124f0bd32b32d2f71
+REPLAY RESUME PASS: M-afdcc6f2781ba6f857b7
+REPLAY RESUME PASS: M-690e14c1ad1c3c20a4fe
+REPLAY RESUME PASS: M-8f654e4c1d345533ccbf
+REPLAY RESUME PASS: M-6eb96a20b1344ba12321
+REPLAY RESUME PASS: M-c9d2d8963a8026c2e2b0
+REPLAY RESUME PASS: M-44d7c9fa35f12273eb68
+REPLAY RESUME PASS: M-36cdf9aadecd635590c0
+REPLAY RESUME PASS: M-c27e931b3ffd72a2bc10
+REPLAY RESUME PASS: M-a9a7afa9ee474bf45536
+REPLAY RESUME PASS: M-9802b9229c46aa107825
+REPLAY RESUME PASS: M-c00e6419f4b77e47c82e
+REPLAY RESUME PASS: M-869d68e4cc2fc7ad3cae
+REPLAY RESUME PASS: M-e35cccea15951261a2cc
+REPLAY RESUME PASS: M-14103530f39e4c8fd523
+REPLAY RESUME PASS: M-5aad144e8c22f2c57840
+REPLAY RESUME PASS: M-4dbd281c5bbb2e29b64c
+REPLAY RESUME PASS: M-bc89088eea84e3c5dfa0
+REPLAY RESUME PASS: M-cdbb93aac376239f7748
+REPLAY RESUME PASS: M-fd09f27fab6e7c7ca1fa
+REPLAY RESUME PASS: M-cf05fedc6a076a2b8ce9
+REPLAY RESUME PASS: M-e32149ebf24466103ea9
+REPLAY RESUME PASS: M-63a211056fedfa49a9a4
+REPLAY RESUME PASS: M-941d10feb328a0f8bf3e
+REPLAY RESUME PASS: M-1197243e3d684bf9b83d
+REPLAY RESUME PASS: M-a526bfd4b58f3e7c1278
+REPLAY RESUME PASS: M-dca045bdd34e77aba406
+REPLAY RESUME PASS: M-cf0dc613991d03a1f8a6
+REPLAY RESUME PASS: M-56cb16e6cdcdf5dbd1a1
+REPLAY RESUME PASS: M-aa8f4a129617fe179fe4
+REPLAY RESUME PASS: M-e3e961e04b6b65b898c7
+REPLAY RESUME PASS: M-7856e24c1f36d9441ba1
+REPLAY RESUME PASS: M-ce099e622a899fa5cb74
+REPLAY RESUME PASS: M-9ac410d55ff6857e19e9
+REPLAY RESUME PASS: M-f23e0c2f7f0412abc92e
+REPLAY RESUME PASS: M-13a4ae5e72c9ed243842
+REPLAY RESUME PASS: M-5e4dcf25c4d23d2e66dc
+REPLAY RESUME PASS: M-e23351a3b5866db76481
+REPLAY RESUME PASS: M-f64ab908222f007aaf8d
+REPLAY RESUME PASS: M-23b161f118906ca74279
+REPLAY RESUME PASS: M-0496791615f3cfbfb548
+REPLAY RESUME PASS: M-657a4bf619e288635b74
+REPLAY RESUME PASS: M-cc0bcbd24dd43f95a1b9
+REPLAY RESUME PASS: M-a1e29c33aabdd60ee16f
+REPLAY RESUME PASS: M-1ea1d8ce019931620b14
+REPLAY RESUME PASS: M-b15f0ccdbc77e5d6ea16
+REPLAY RESUME PASS: M-162a3dd6e3f1dcc41083
+REPLAY RESUME PASS: M-cc027c6fff7bd178e037
+REPLAY RESUME PASS: M-9764f9a75800787b9cb7
+REPLAY RESUME PASS: M-e509e77b0eba15e480d1
+REPLAY RESUME PASS: M-23287ef301f13d4bcc02
+REPLAY RESUME PASS: M-62d20c90d99ef0ffca09
+REPLAY RESUME PASS: M-f6d290c5a5c388920148
+REPLAY RESUME PASS: M-2b0bf84b4df444eecc9c
+REPLAY RESUME PASS: M-fbecf3ec38b4cc094d0e
+REPLAY RESUME PASS: M-dcc74be9d7b089f09fb7
+REPLAY RESUME PASS: M-a6002589304eda5d8923
+REPLAY RESUME PASS: M-3cb981c1175c545aa7bf
+REPLAY RESUME PASS: M-e81dcb1f989a3c62c3ae
+REPLAY RESUME PASS: M-0a64cce5e87cfe339b3b
+REPLAY RESUME PASS: M-d0bd4d4955859b96f1e3
+REPLAY RESUME PASS: M-4706813840a74682b73a
+REPLAY RESUME PASS: M-9a56943fbd4791ff49d1
+REPLAY RESUME PASS: M-ba18599acbda2de20d91
+REPLAY RESUME PASS: M-28d0b14f0f5d88c51a31
+REPLAY RESUME PASS: M-ebc1b4121f20b128752f
+REPLAY RESUME PASS: M-e8afd8ba50aa2cf5c2ef
+REPLAY RESUME PASS: M-fe2ff9f65c08231020eb
+REPLAY RESUME PASS: M-6e75ba582c29437816eb
+REPLAY RESUME PASS: M-cf991a6fa1f6f6c7dacd
+REPLAY RESUME PASS: M-6fde7fe703a4f13b5b61
+REPLAY RESUME PASS: M-dcc47c0a70b0e1ec0c2c
+REPLAY RESUME PASS: M-946f016b3c900b654616
+REPLAY RESUME PASS: M-db10a45b83e5e68eb1fd
+REPLAY RESUME PASS: M-c04f8342320e37395ec0
+REPLAY RESUME PASS: M-1b4ede32232a72df0a86
+REPLAY RESUME PASS: M-030616815bfed08a875f
+REPLAY RESUME PASS: M-94e7e26d6ee36b6e40bf
+REPLAY RESUME PASS: M-f6d8aa25e78043fa3961
+REPLAY RESUME PASS: M-c3e39fc33a594c40202f
+REPLAY RESUME PASS: M-ce645ce7a5c5594556ee
+REPLAY RESUME PASS: M-01a5983455ae919f8a0b
+REPLAY RESUME PASS: M-257e716f34030889c9b8
+REPLAY RESUME PASS: M-cdac69cf264532483783
+REPLAY RESUME PASS: M-63ffa5487eb8677b1b3e
+REPLAY RESUME PASS: M-8d371b9bb7fea569d285
+REPLAY RESUME PASS: M-eea877acab1a61f410d4
+REPLAY RESUME PASS: M-0fbb81ca3aeeda551d13
+REPLAY RESUME PASS: M-de1b456110c82ac594d5
+REPLAY RESUME PASS: M-152dc2ebb7f84e8d1124
+REPLAY RESUME PASS: M-8811e3475a0078c9b67d
+REPLAY RESUME PASS: M-2ed2f5a777fed1ed2bb2
+REPLAY RESUME PASS: M-9842c2873a237904997e
+REPLAY RESUME PASS: M-d489bd6594b2deaa366a
+ADVANCED CORE REPLAY ARTIFACTS PASS: 100
+RANK ANATOMY REGISTRY PASS: ranks=15; spadesVariants=13; superEffects=9; hash=32e5d1631e24220f
+VARIANT ANALYTICS PASS: variants=61; metrics=["schemaVersion","telemetrySchemaVersion","profileId","variantKeys","entities","participantIds","variantMetrics","perParticipantVariantMetrics","variantPower","confidence","synergies","sensitivity","rankComparisons","perProfile","perPolicyMetrics","perSeatMetrics","perFirstPlayerMetrics","metricRegistry","metricRegistryHash","variantRegistry","aggregateHash"]
+RANK ANALYTICS PASS: rankPower=7 ranks; swapMatrix=18 entries
+OBSERVATORY ANALYTICS PASS: matches=100; detailed=12; mechanics=106; synergies=1; hash=c3175a49922a04045fdfae81f9132b754b5f46fd7b19b12b4dd9d373fd1dcb35
+EXTRACT JSON PASS: sample-data/observatory/extract.json; hash=d83198c3593ff1c051ba8d018020149c29db0fa06974c417af877741329da4b9
+EXTRACT MARKDOWN PASS: sample-data/observatory/extract.md
+CARD ART BUILD PASS: 54 cards → H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\apps\lab-web\src\assets\card-art
+  encoded=0 skipped=54 (unchanged)
+  manifest at apps\lab-web\src\assets\card-art\manifest.json
+RANKED GLYPH BUILD PASS: 8 tiers × 3 sizes → H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\apps\lab-web\src\assets\ranked\glyphs
+  encoded=0 skipped=24 (unchanged)
+  manifest at apps\lab-web\src\assets\ranked\glyphs\manifest.json
+build: excluded replay blob directories and unused data files (set INTRILEX_INCLUDE_REPLAY_BLOBS=1 to include) — saved ~670MB
+build: slimmed replay-index.json — stripped 100 record summaries, replay-index.json is now 124969 bytes
+build: slimmed lab-replay-index.json — stripped 100 record summaries, lab-replay-index.json is now 62106 bytes
+BUILD PASS: H:\myProjects\Intrilex-MASTER\Intrilex_dev-current\apps\lab-web\dist; browserModules=29; certifiedReplays=121; rankPower=[18 ranks, ladder 18 entries]
+bundle: wrote tactical.745261475439.css (126.7 KB)
+
+  apps\lab-web\dist\.split-tmp\app.js                              625.1kb
+  apps\lab-web\dist\.split-tmp\chunk-brain-controller-PEDUDQLS.js  554.8kb
+  apps\lab-web\dist\.split-tmp\chunk-chunk-GTEGMPFP.js             359.0kb
+  apps\lab-web\dist\.split-tmp\chunk-play-app-ATHBH7Y7.js          341.7kb
+  apps\lab-web\dist\.split-tmp\chunk-chunk-NR3R37VJ.js             307.9kb
+  ...and 125 more output files...
+
+Done in 1101ms
+bundle: injected match server URL: wss://match.intrilex.cards
+bundle: wrote __intrilex-config.44c0dc2e83da.js
+bundle: added wss://match.intrilex.cards to CSP connect-src
+bundle: updated index.html with hashed asset references
+bundle: wrote app.f8d14b50f20e.js (625.1 KB)
+bundle: wrote styles.fbc728181374.css (515.6 KB)
+bundle: manifest at BUNDLE_MANIFEST.json
+bundle: cache-busted module imports in 135 dist file(s) ?v=f8d14b50f20e
+bundle: rewrote import("./app.js") → import("./app.f8d14b50f20e.js") in 2 file(s)
+build: rewrote bare @intrilex/account-domain/* imports in 15 raw dist file(s) → ./account-domain/*.mjs
+build: verified 0 bare @intrilex/account-domain/* import statements in dist
+build: rewrote bare @intrilex/decision-intelligence/* imports in 2 raw dist file(s) → ./decision-intelligence/*.mjs
+build: rewrote @intrilex/shared imports in 5 decision-intelligence module(s) → shared-browser.js
+build: rewrote bare @supabase/supabase-js imports in 2 raw dist file(s) → ./vendor/supabase-js.js
+build: verified 0 bare @supabase/supabase-js import statements in dist
+build: wrote self-unregistering sw.js kill switch

@@ -2,11 +2,42 @@
 
 September 30, 2026 — local implementation and verification; no deployment.
 
+## Left history and focused action rail
+
+- Remove the redundant top-right Opponent Hand panel and decorative player-summary fans. Keep one accessible hand-count indicator beside each player's name, score and goal.
+- Start Legal Actions at the top of the right rail and dedicate that column to suggestions, possible moves and Composer.
+- Move Game Log below Pending Plays and Academy support in the left column. Give history the remaining desktop height with an internal scroll area, preserving filters, stylized text, keyboard collapse and automatic following near the bottom.
+- Let expanded Pending Plays shrink and scroll while retaining visible history. On narrow screens, give history a bounded full-width block and retain the existing action sheet.
+- Extend browser checks to assert panel ownership, full-height space use and compact hand indicators at six desktop sizes; exercise an expanded stack and long history at 1440×900 and 1024×576 with controlled UI fixtures.
+
+## Move labels and unnecessary confirmations
+
+- Render move text as one wrapping block instead of separate text/suit flex items. Keep rank and suit together, including ten-value cards, while preserving red/black coloring.
+- Play complete move rows and suggestions on click through the existing guarded submission path.
+- Play a single scalar Composer choice immediately, whether selected in the rail or on the highlighted battlefield.
+- Keep action controls visibly disabled until submission finishes, even when the host publishes its next decision before the request resolves. Retain the existing duplicate and stale-frame guards.
+- Keep Confirm for editable multi-parameter moves and multi-card sets, and retain the existing Forfeit confirmation. Partial selections remain editable; no set is committed merely because a smaller legal subset exists.
+- Update the canonical browser journey for direct suggested moves and add focused browser coverage of label geometry, duplicate clicks, rail/board single choices, multi-part composition and nested card sets.
+
+## Visual fidelity correction
+
+The first Homecoming implementation preserved Astra's illustrated cards and substituted a different visual system, which missed the requested near-same browserTabletop interface. This correction ports the donor's actual presentation and updates the review evidence.
+
+- Use pale playing-card faces, red/black suit coloring, corner indices, large suit centers, landscape Point Row tiles, and the donor's blue card backs. The new `TabletopCard` reads only validated identities; classic/Caster retain their established cards.
+- Restore violet opponent and cyan player seat panels with badges, secured/goal values and compact hand counts. Place the Swap Bar between the opponent and player panels.
+- Render four visible slot tracks per battlefield row, expanding for additional public cards. Use the donor's rounded borders, panel gradients, dotted surface, and glowing Line of Scrimmage.
+- Restore stacked landscape Draw/Graveyard/Exile trays and a smaller hand strip with scroll arrows; retain cosmetic reorder controls.
+- Put Suggested Moves, Possible Moves, search/filter controls and Composer inside one Legal Actions panel, with tabbed Game Log in the left rail. Add donor-style visual card options to the Composer.
+- Click a card to focus legal moves; double-click or use the Inspect control to open the existing reference and Full inspector.
+- Read your Mini-Turn count and Swap use from the existing authorized projection. Keep opponent-only limits and unavailable pile contents out of the UI.
+- Use the donor's narrow-screen action sheet with explicit Show/Hide controls. Keep desktop density tied to viewport height and internal rail scrolling.
+- Capture a live donor Full-profile room using its existing build and an isolated temporary database, then compare it with rebuilt Intrilex screenshots. Add a browser regression scenario for playing-card faces, slot tracks, panel hierarchy, and card selection behavior.
+
 ## Gameplay presentation
 
 - Default active local Play, Direct Duel, and Academy to the new `IntrilexGame` presentation through the existing `mountGameTable` entry point.
-- Add the three-column battlefield: player summaries, Swap Bar and Pending Plays on the left; four battlefield rows, shared piles and hand in the center; decisions, log and chat on the right.
-- Add landscape Point Row tiles with prominent rank and suit, preserving canonical markers and the existing card art.
+- Add the three-column battlefield: player summaries, Swap Bar, Pending Plays and history on the left; four battlefield rows, shared piles and hand in the center; suggestions, decisions and Composer on the right, with floating match chat.
+- Add landscape Point Row tiles with prominent rank and suit, preserving canonical markers.
 - Keep opponent hands concealed. Display only the provided pile counts and visible Graveyard top.
 - Make empty Pending Plays compact. Keep populated regions internally scrollable and preserve desktop viewport fit.
 - Add narrow layouts that retain all controls and allow vertical scrolling.
@@ -22,6 +53,7 @@ September 30, 2026 — local implementation and verification; no deployment.
 - Highlight board cards that are current Composer options, and allow board-assisted picks through the same selection functions.
 - Render partial picks as selected without treating a subset as a completed declaration.
 - Submit only the current original action ID through the existing four-field intent contract.
+- Let the Draw Pile shortcut select directly only when exactly one draw action is offered. Multiple variants use Composer or the explicit Legal Actions list.
 - Invalidate Composer on session, seat, revision or frame changes. Preserve the store's submission lock and accepted-boundary checks.
 - Support keyboard activation and Escape cancellation. Restore family focus by stable family ID when React replaces its button.
 
@@ -31,7 +63,7 @@ September 30, 2026 — local implementation and verification; no deployment.
 - Resolve Swap Bar targets to public slot positions before network privacy scrubbing. Use synthetic positional references in the semantic model.
 - Expose only whitelisted private-choice option cards to their authorized chooser.
 - Allow the mount to coalesce repeated identical original action descriptors. Conflicting same-ID descriptors still fail closed; the semantic API remains strict by default.
-- Reuse the existing value-policy scorer for at most two current legal suggestions. Filter forged IDs and duplicates; never auto-submit or consume authoritative RNG.
+- Reuse the existing value-policy scorer for at most two current legal suggestions. Filter forged IDs and duplicates; submit only on the player's click and never consume authoritative RNG.
 - Attribute public events using the existing controller or player fields. Keep chronological, actor-colored logs with internal scrolling and conditional follow behavior.
 
 ## Host and mature product integration

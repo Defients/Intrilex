@@ -129,6 +129,11 @@ export function resolvedAction(family: ActionFamily, selection: Selection): Sema
   return exact.length === 1 ? exact[0] : undefined;
 }
 
+/** A single final option is a complete move; editable multi-part sets need a commit. */
+export function needsCompositionConfirmation(family: ActionFamily): boolean {
+  return family.parameters.length > 1 || family.parameters.some(parameter => parameter.multiple);
+}
+
 export function reconcileSelection(family: ActionFamily, selection: Selection): Selection {
   const result: Record<string, ParameterValue> = {};
   for (const parameter of family.parameters) {
