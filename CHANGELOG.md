@@ -11,7 +11,7 @@ Six-domain certification framework (`scripts/certification-gates.mjs`) verifying
 - **Rules & Engine**: version agreement across all surfaces, no known P0/P1 defects, canon determinism, engine adapter legal action enumeration, balance findings rerun.
 - **Local Player Experience**: Academy onboarding, HYBRIX AI matches, save integrity with compatibility checking, replay system, puzzle ladder, accessibility suite, bounded lookahead AI.
 - **Online Experience**: ranked season lifecycle, auth/reconnect, matchmaking, spectator projection, abandonment handling, durable persistence, backup, monitoring, moderation, privacy tests, tournament infrastructure.
-- **Laboratory**: stable deterministic beat IDs, evidence-honest intelligence, report reproducibility, stale-conclusion invalidation, commentary contract, brain topology.
+- **Laboratory**: stable deterministic beat IDs, evidence-honest intelligence, report reproducibility, stale-conclusion invalidation, and commentary contract.
 - **Release Engineering**: clean-room verification, deterministic build, CI, secret scan, release identity, engine manifest, self-audit PASS, capability truth, test accounting, version surface agreement.
 - **Human Validation**: protocol documented with measurement criteria, Academy and investigation workflow supporting the session types.
 
@@ -19,7 +19,6 @@ Six-domain certification framework (`scripts/certification-gates.mjs`) verifying
 
 - Lookahead is not labelled "expert"
 - WAIT WHAT workflow is pure-function, not wired into CasterSession
-- 2D brain topology is not the default renderer
 - Evidence-honest labels not displayed in all player-facing surfaces
 - Local TTS not implemented
 - Human validation sessions documented but not yet conducted
@@ -36,10 +35,8 @@ Six-domain certification framework (`scripts/certification-gates.mjs`) verifying
 - **Bounded lookahead policy**: deterministic minimax search with fixed node/time budgets, opponent response sets, evaluation separated from search, and a benchmark suite. The policy is NOT labelled "expert" — benchmark evidence must justify that claim.
 - **Replay Caster commentary contract**: fact-level authorization, versioned prompt provenance, deterministic fallback labels, and malformed-stream handling. Commentary never asserts facts not authorized by the replay/view data.
 - **WAIT WHAT investigation workflow**: complete lifecycle (bookmark → preserve context → inspect alternatives → branch → compare → annotate → export) with automatic invalidation on authority hash change.
-- **Brain topology formalization**: the Brain's job is now formally defined as a mechanic/evidence topology explorer, with a complete 2D SVG equivalent that requires no WebGL.
 - **Evidence-honest player intelligence**: uncertainty labels, sample-size disclaimers, season/version boundaries, and human vs AI distinction. Player intelligence displays are now evidence-honest.
-- New modules: `packages/game-ai/src/bounded-lookahead.mjs`, `packages/replay-caster/src/commentary-contract.mjs`, `packages/replay-caster/src/investigation-workflow.mjs`, `apps/lab-web/src/brain/brain-topology.mjs`, `packages/statistics/src/evidence-honest.mjs`.
-- Tests: `test/v0.32.0-intelligence-caster.test.mjs` (59 tests).
+- New modules: `packages/game-ai/src/bounded-lookahead.mjs`, `packages/replay-caster/src/commentary-contract.mjs`, `packages/replay-caster/src/investigation-workflow.mjs`, `packages/statistics/src/evidence-honest.mjs`.
 
 
 ## v0.31.0 — Competitive Operations

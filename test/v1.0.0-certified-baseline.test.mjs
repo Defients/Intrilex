@@ -155,10 +155,6 @@ test('v1.0.0 cert: commentary contract (fact-level authorization)', () => {
   assert.ok(exists('packages/replay-caster/src/commentary-contract.mjs'), 'Commentary contract must exist');
 });
 
-test('v1.0.0 cert: brain topology (mechanic/evidence topology explorer)', () => {
-  assert.ok(exists('apps/lab-web/src/brain/brain-topology.mjs'), 'Brain topology must exist');
-});
-
 // ── Gate 5: Release Engineering ─────────────────────────────────
 
 test('v1.0.0 cert: clean-room install and build', () => {

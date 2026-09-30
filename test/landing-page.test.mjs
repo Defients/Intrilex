@@ -38,6 +38,12 @@ test('renderWipLanding() exists and renders WIP coming soon hero and newsletter'
   assert.match(js, /wip-dev-preview-btn/);
 });
 
+test('retired Intrilex Brain feature is absent from the landing page', async () => {
+  const [js, styles] = await Promise.all([src('app.js'), src('styles.css')]);
+  assert.doesNotMatch(js, /Explore the Intrilex Brain|brain-container|brain-controller|brain-2d/);
+  assert.doesNotMatch(styles, /css\/brain\.css/);
+});
+
 test('renderLanding() exists and renders play panel and rules card', async () => {
   const js = await src('app.js');
   assert.match(js, /function renderLanding\(\)/);

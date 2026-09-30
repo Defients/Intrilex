@@ -38,6 +38,8 @@ export class ParticleSystem {
     this._mounted = false;
     this._resizeObserver = null;
     this._ambientTimer = null;
+    this._confettiTimer = null;
+    this._confettiGen = 0;
   }
 
   /**
@@ -76,6 +78,10 @@ export class ParticleSystem {
    */
   unmount() {
     this._stopAmbient();
+    // Cancel any in-flight confetti chain so a stale setTimeout closure can't
+    // resume pushing particles after this system is re-mounted (e.g. on reload).
+    if (this._confettiTimer) { clearTimeout(this._confettiTimer); this._confettiTimer = null; }
+    this._confettiGen++; // invalidate any captured generation tokens
     if (this._raf) {
       cancelAnimationFrame(this._raf);
       this._raf = null;
@@ -167,14 +173,22 @@ export class ParticleSystem {
    */
   confetti(durationMs = 3000) {
     if (!this._enabled || !this._ctx || !this._canvas) return;
+    // Invalidate any prior confetti chain so a stale closure from a previous
+    // mount/win can't resume after unmount→remount (e.g. on page reload).
+    this._confettiGen++;
+    const gen = this._confettiGen;
     const colors = ['#f05d78', '#5ad7e8', '#f0c74a', '#4fd387', '#b08cff', '#d8b25c'];
     const w = this._canvas.width / (window.devicePixelRatio || 1);
     const startTime = performance.now();
 
     const emit = () => {
-      if (!this._enabled || !this._ctx) return;
+      // Stop if disabled, unmounted, or superseded by a newer confetti call.
+      if (!this._enabled || !this._ctx || gen !== this._confettiGen) return;
       const elapsed = performance.now() - startTime;
-      if (elapsed > durationMs) return;
+      if (elapsed > durationMs) {
+        this._confettiTimer = null;
+        return;
+      }
 
       const count = Math.min(3, _effectiveMax - this._particles.length);
       for (let i = 0; i < count; i++) {
@@ -193,7 +207,7 @@ export class ParticleSystem {
           rotationSpeed: (Math.random() - 0.5) * 0.2,
         });
       }
-      setTimeout(emit, 60);
+      this._confettiTimer = setTimeout(emit, 60);
     };
     emit();
   }

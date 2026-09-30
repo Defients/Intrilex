@@ -3,7 +3,7 @@ import { applyAegis, applyTap, markExileBound, processStartPhaseLifecycles, rele
 import { CORE_EFFECT_DECLARATION_PROFILE, resolveCoreEffect } from "./core-effects.js";
 import { evaluateProtection, revalidateAttachments } from "./interactions.js";
 import { CORE_RESPONSE_AUTHORITY_PROFILE, primaryDescriptor, targetAcceptsCounter } from "./core-response.js";
-import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, isCorePrivateChoiceEffect, resolveCorePrivateChoiceRoot, resolveCorePrivateChoiceSubmission } from "./core-private-choice.js";
+import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, beginChoice, isCorePrivateChoiceEffect, resolveCorePrivateChoiceRoot, resolveCorePrivateChoiceSubmission } from "./core-private-choice.js";
 import { compareScuttle, cardPointValue, hasOrdinaryScuttleImmunity, parseIdentity, resolveRankAction } from "./ranks.js";
 import { nextIndex } from "./rng.js";
 import { addCard, deriveSecuredPoints, moveCard } from "./state.js";
@@ -46,10 +46,35 @@ function shuffledDeck(seed) {
     }
     return { identities, rng };
 }
-function setupCoreState(state, playerIds, seed, profileId) {
+function validatePredeterminedIdentities(identities) {
+    const CANON = new Set([...SUITS.flatMap((suit) => RANKS.map((rank) => `${rank}${suit}`)), "RJ", "BJ"]);
+    if (identities.length !== 54)
+        throw new Error(`predeterminedIdentities must contain exactly 54 entries (got ${identities.length})`);
+    const seen = new Set();
+    for (const id of identities) {
+        if (!CANON.has(id))
+            throw new Error(`predeterminedIdentities contains invalid identity "${id}"`);
+        if (seen.has(id))
+            throw new Error(`predeterminedIdentities contains duplicate identity "${id}"`);
+        seen.add(id);
+    }
+}
+function setupCoreState(state, playerIds, seed, profileId, predeterminedIdentities) {
     if (Object.keys(state.cards).length > 0)
         throw new Error("Core setup requires an empty card registry");
-    const { identities, rng } = shuffledDeck(seed);
+    let identities;
+    let rng;
+    if (predeterminedIdentities && predeterminedIdentities.length > 0) {
+        validatePredeterminedIdentities(predeterminedIdentities);
+        identities = [...predeterminedIdentities];
+        // Use the seed for any subsequent RNG operations during the match (not the shuffle).
+        rng = { algorithm: "xorshift32", seed: seed >>> 0, cursor: 0 };
+    }
+    else {
+        const shuffled = shuffledDeck(seed);
+        identities = shuffled.identities;
+        rng = shuffled.rng;
+    }
     state.rng = rng;
     for (const [index, identity] of identities.entries()) {
         addCard(state, { id: `CORE-${String(index + 1).padStart(3, "0")}`, identity, originalOwnerId: playerIds[index % 2], zone: "DP" });
@@ -150,6 +175,7 @@ function rankActionSourceIds(action) {
         case "deep-draw-six-spade": return [action.sourceCardId];
         case "topdeck-seven": return [action.sourceCardId];
         case "aegis-field-eight": return [action.sourceCardId];
+        case "natural-four": return [action.sourceCardId];
         case "goal-shift-nine": return [action.sourceCardId];
         case "mimic-ten-diamond": return [action.sourceCardId];
         case "foundation-ten-club": return [action.sourceCardId];
@@ -180,6 +206,7 @@ function rankActionTargetIds(action) {
         case "deep-draw-six-spade": return [];
         case "topdeck-seven": return [];
         case "aegis-field-eight": return [];
+        case "natural-four": return [];
         case "goal-shift-nine": return [];
         case "mimic-ten-diamond": return [];
         case "foundation-ten-club": return [];
@@ -218,11 +245,36 @@ function primaryTargetIds(action) {
 function declareCoreStackItem(state, actorId, tag, sourceCardIds, targetCardIds, payload) {
     for (const cardId of sourceCardIds)
         moveCard(state, cardId, "ON_STACK", actorId);
+    // Royal Shield (rulebook §15): when declaring a protected play, compare Queen counts.
+    // If the declarer controls more untapped Queens OTT than the relevant opponent,
+    // that opponent cannot use Base Ace or Anchor Ace against the play.
+    // We snapshot the flag at declaration time; later Queen-count changes do not alter it.
+    let royalShieldProtected = false;
+    if (payload.kind === "primary") {
+        const declarerQueens = state.players[actorId]?.er.filter((id) => {
+            const c = state.cards[id];
+            return c !== undefined && c.controllerId === actorId && parseIdentity(c.identity)?.rank === "Q" && c.state.tapped !== true;
+        }).length ?? 0;
+        // Two-player game: compare against the single opponent
+        for (const opponentId of state.turnOrder) {
+            if (opponentId === actorId)
+                continue;
+            const opponentQueens = state.players[opponentId]?.er.filter((id) => {
+                const c = state.cards[id];
+                return c !== undefined && c.controllerId === opponentId && parseIdentity(c.identity)?.rank === "Q" && c.state.tapped !== true;
+            }).length ?? 0;
+            if (declarerQueens > opponentQueens) {
+                royalShieldProtected = true;
+                break;
+            }
+        }
+    }
     const item = {
         id: `CORE-SI-${String(state.revision).padStart(6, "0")}-${actorId}-${tag}-${state.stack.length}`,
         controllerId: actorId,
         sourceCardIds: [...sourceCardIds], targetCardIds: [...targetCardIds], kind: `core-${payload.kind}`,
-        revalidationClass: targetCardIds.length === 1 ? "single-required-target" : "none", instructions: [], sourceDestination: "GY", status: "pending", coreAuthority: payload
+        revalidationClass: targetCardIds.length === 1 ? "single-required-target" : "none", instructions: [], sourceDestination: "GY", status: "pending", coreAuthority: payload,
+        royalShieldProtected
     };
     state.stack.push(item);
     openPriorityAfter(state, actorId);
@@ -245,6 +297,11 @@ function reopenCorePriority(state, controllerId) {
 }
 function coreRank(state, cardId) { return parseIdentity(state.cards[cardId]?.identity ?? "")?.rank ?? null; }
 function coreSuit(state, cardId) { return parseIdentity(state.cards[cardId]?.identity ?? "")?.suit ?? null; }
+function futureStart(state, playerId) { return { playerId, startSequence: (state.startPhaseSequenceByPlayer[playerId] ?? 0) + 1 }; }
+function isAdvancedProfile(state) {
+    const core = runtime(state);
+    return core !== null && (core.profileId === CORE_ADVANCED_AUTHORITY_PROFILE.id || core.profileId === CORE_UNRESTRICTED_AUTHORITY_PROFILE.id);
+}
 function responseSourceProblem(state, actorId, cardId, rank, allowAnchor = false) {
     const card = state.cards[cardId];
     if (!card || card.controllerId !== actorId)
@@ -302,7 +359,7 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
             if (!isSupportedCoreProfile(profileId))
                 return fail("CORE_PROFILE", `Unsupported Core profile ${profileId}`);
             try {
-                setupCoreState(state, action.playerIds, state.rng.seed, profileId);
+                setupCoreState(state, action.playerIds, state.rng.seed, profileId, action.predeterminedIdentities);
             }
             catch (error) {
                 return fail("CORE_SETUP", error instanceof Error ? error.message : String(error));
@@ -423,10 +480,46 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
                 return fail("CORE_SCORE_SOURCE", "Play for Points requires a controlled hand card");
             card.state.pointValue = cardPointValue(card);
             moveCard(state, action.cardId, `${actorId}_PR`, actorId);
+            // Rulebook §10♣: "When scored for Points, 10♣ enters PR with Aegis until its controller's recorded next Start Phase."
+            if (isAdvancedProfile(state) && card.identity === "10♣") {
+                applyAegis(card, "10♣-score", futureStart(state, actorId));
+            }
             const released = releaseNineTapsForScoring(state, actorId);
             consumeMiniTurn(state, actorId);
             events.push({ type: "CORE_CARD_SCORED", payload: { playerId: actorId, cardId: action.cardId, pointValue: card.state.pointValue } });
             events.push(...released.map((entry) => ({ type: entry.type, payload: entry.payload })));
+            // Rulebook §BJ: when Black Joker is scored, controller may move up to 2 cards from Exile to DP.
+            if (isAdvancedProfile(state) && card.identity === "BJ" && state.zones.exile.length > 0 && !activeCorePrivateChoice(state)) {
+                beginChoice(state, {
+                    kind: "core-bj-exile-recycle",
+                    chooserId: actorId,
+                    controllerId: actorId,
+                    sourceCardId: action.cardId,
+                    optionCardIds: [...state.zones.exile].sort(),
+                    minSelections: 0,
+                    maxSelections: Math.min(2, state.zones.exile.length),
+                    stage: 1,
+                    context: {}
+                }, events);
+            }
+            // Rulebook §7: when a Seven is scored, reveal top 2 DP cards, take 1 to hand, return the rest to top.
+            if (isAdvancedProfile(state) && coreRank(state, action.cardId) === "7" && state.zones.dp.length > 0 && !activeCorePrivateChoice(state)) {
+                const revealCount = Math.min(2, state.zones.dp.length);
+                const revealedIds = [];
+                for (let index = 0; index < revealCount; index += 1)
+                    revealedIds.push(state.zones.dp[index]);
+                beginChoice(state, {
+                    kind: "core-seven-scoring-trigger",
+                    chooserId: actorId,
+                    controllerId: actorId,
+                    sourceCardId: action.cardId,
+                    optionCardIds: revealedIds,
+                    minSelections: 1,
+                    maxSelections: 1,
+                    stage: 1,
+                    context: { revealedIds }
+                }, events);
+            }
             break;
         }
         case "core-scuttle": {
@@ -767,6 +860,8 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
             const target = topStackItem(state, action.targetStackItemId);
             if (!target)
                 return fail("CORE_SUPER_ACE_TARGET", "⭐A requires the current pending item");
+            if (!targetAcceptsCounter(target, "super-ace-counter"))
+                return fail("CORE_SUPER_ACE_TARGET", "⭐A cannot counter this declaration class");
             const defendingQueens = state.players[target.controllerId].er.filter((id) => coreRank(state, id) === "Q" && state.cards[id]?.state.tapped !== true).length;
             if (defendingQueens >= 2)
                 return fail("CORE_SUPER_ACE_DEFENSE", "Two untapped Queens prohibit ⭐A declaration");
@@ -823,6 +918,8 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
             const target = topStackItem(state, action.targetStackItemId);
             if (!target)
                 return fail("CORE_ULTRA_TARGET", "3 Red Ultra requires a pending play");
+            if (!targetAcceptsCounter(target, "ultra-three-red"))
+                return fail("CORE_ULTRA_TARGET", "3 Red Ultra cannot counter this declaration class");
             const defendingQueens = state.players[target.controllerId].er.filter((id) => coreRank(state, id) === "Q" && state.cards[id]?.state.tapped !== true).length;
             if (defendingQueens >= 2)
                 return fail("CORE_ULTRA_TARGET", "3 Red Ultra uses Super Ace authority and cannot target a play defended by two untapped Queens");
@@ -1025,6 +1122,36 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
                 const targets = primaryTargetIds(resolved.generatedPrimary);
                 const item = declareCoreStackItem(state, actorId, `SEVEN-GENERATED-${descriptor.actionType}`, sources, targets, { kind: "primary", action: canonicalClone(resolved.generatedPrimary), declaringPlayerId: actorId, actionType: descriptor.actionType, stackClass: descriptor.stackClass });
                 events.push({ type: "CORE_SEVEN_GENERATED_EFFECT_DECLARED", payload: { stackItemId: item.id, playerId: actorId, sourceCardIds: sources, actionKind: resolved.generatedPrimary.kind } });
+            }
+            // ⭐7 sequential effect processing: after a generated effect resolves, initiate the next one if any remain.
+            const pendingQueue = state.metadata.pendingSuperSevenEffectQueue;
+            if (pendingQueue && pendingQueue.length > 0 && !activeCorePrivateChoice(state)) {
+                // Remove the first card (just processed) and initiate the next
+                pendingQueue.shift();
+                if (pendingQueue.length > 0) {
+                    const nextCardId = pendingQueue[0];
+                    state.metadata.pendingSuperSevenEffectQueue = pendingQueue;
+                    state.metadata.lastGeneratedEffectCardId = nextCardId;
+                    // Mark the next card as held by the actor
+                    if (state.cards[nextCardId])
+                        state.cards[nextCardId].state.privateChoiceHeldBy = actorId;
+                    // Initiate the generated effect private choice
+                    beginChoice(state, {
+                        kind: "core-rank7-generated-effect",
+                        chooserId: actorId,
+                        controllerId: actorId,
+                        sourceCardId: String(state.metadata.superSevenSourceCardId ?? ""),
+                        optionCardIds: [nextCardId],
+                        minSelections: 1,
+                        maxSelections: 1,
+                        stage: 2,
+                        context: { generatedCardId: nextCardId }
+                    }, events);
+                }
+                else {
+                    delete state.metadata.pendingSuperSevenEffectQueue;
+                    delete state.metadata.superSevenSourceCardId;
+                }
             }
             break;
         }

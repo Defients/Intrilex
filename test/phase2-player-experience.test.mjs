@@ -5,7 +5,6 @@
 //   A-01 — Academy as default onboarding (landing page CTA)
 //   A-02 — Card Inspector as educational bridge
 //   A-03 — Decision-intelligence tooltips
-//   A-05 — 2D Brain as default visualization
 //   F-01 — Post-match teaching moments with next-step links
 // ═══════════════════════════════════════════════════════════════
 import { test } from 'node:test';
@@ -21,12 +20,8 @@ import {
 
 const appSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/app.js'), 'utf8');
 const cardRefSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/workspaces/card-reference.js'), 'utf8');
-const brainCtrlSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/brain/brain-controller.js'), 'utf8');
-const brainFallbackSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/brain/brain-fallback.js'), 'utf8');
-const brain2dSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/brain/brain-2d.js'), 'utf8');
 const teachingSrc = readFileSync(join(process.cwd(), 'packages/decision-intelligence/src/teaching-moments.mjs'), 'utf8');
 const landingRevampSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/css/landing-revamp.css'), 'utf8');
-const brainCssSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/css/brain.css'), 'utf8');
 const rankedDuelCssSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel.css'), 'utf8');
 const featureComponentsSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/css/feature-components.css'), 'utf8');
 
@@ -144,72 +139,6 @@ test('A-03: CSS has tooltip styles', () => {
   assert.ok(rankedDuelCssSrc.includes('.rd-card-tooltip'), 'CSS must have .rd-card-tooltip');
   assert.ok(rankedDuelCssSrc.includes('.rd-card:hover .rd-card-tooltip'), 'CSS must show tooltip on hover');
   assert.ok(rankedDuelCssSrc.includes('.rd-card.no-legal-actions .rd-card-tooltip'), 'CSS must style illegal card tooltips differently');
-});
-
-// ═══════════════════════════════════════════════════════════════
-// A-05: 2D BRAIN AS DEFAULT
-// ═══════════════════════════════════════════════════════════════
-
-test('A-05: getBrainMode function exists', () => {
-  assert.ok(brainCtrlSrc.includes('export function getBrainMode'), 'getBrainMode must be exported');
-});
-
-test('A-05: setBrainMode function exists', () => {
-  assert.ok(brainCtrlSrc.includes('export function setBrainMode'), 'setBrainMode must be exported');
-});
-
-test('A-05: brain mode defaults to 2d', () => {
-  assert.ok(brainCtrlSrc.includes("return '2d'"), 'Default mode must be 2d');
-});
-
-test('A-05: brain mode persisted in localStorage', () => {
-  assert.ok(brainCtrlSrc.includes("intrilex:brain-mode"), 'Must use intrilex:brain-mode key');
-});
-
-test('A-05: initBrain checks brain mode before loading 3D', () => {
-  assert.ok(brainCtrlSrc.includes('getBrainMode()'), 'initBrain must call getBrainMode()');
-  assert.ok(brainCtrlSrc.includes("brainMode === '2d'"), 'Must branch on 2d mode');
-});
-
-test('A-05: 2D mode renders fallback with toggle', () => {
-  assert.ok(brainCtrlSrc.includes('showToggle: true'), '2D mode must show toggle');
-});
-
-test('A-05: 3D mode has Switch to 2D toggle', () => {
-  assert.ok(brainCtrlSrc.includes('brain-mode-toggle--2d'), '3D mode must have 2D toggle button');
-  assert.ok(brainCtrlSrc.includes('Switch to 2D'), '3D mode must have Switch to 2D text');
-});
-
-test('A-05: WebGL context loss resets mode to 2d', () => {
-  assert.ok(brainCtrlSrc.includes("setBrainMode('2d')"), 'Context loss must reset mode to 2d');
-});
-
-test('A-05: brain-2d.js lightweight module exists', () => {
-  assert.ok(brain2dSrc.includes('export function init2dBrain'), 'brain-2d.js must export init2dBrain');
-  assert.ok(!brain2dSrc.includes('three'), 'brain-2d.js must not import three.js');
-  assert.ok(!brain2dSrc.includes('createScene'), 'brain-2d.js must not import brain-scene');
-});
-
-test('A-05: brain-2d.js uses same data modules as brain-controller', () => {
-  assert.ok(brain2dSrc.includes('brain-data.js'), 'Must import brain-data.js');
-  assert.ok(brain2dSrc.includes('brain-fallback.js'), 'Must import brain-fallback.js');
-});
-
-test('A-05: app.js uses 2D brain by default', () => {
-  assert.ok(appSrc.includes('get2dBrain'), 'app.js must have 2D brain lazy loader');
-  assert.ok(appSrc.includes("brainMode === '3d'"), 'app.js must branch on 3D mode');
-  assert.ok(appSrc.includes('brain:switch-mode'), 'app.js must listen for mode switch event');
-});
-
-test('A-05: renderFallback supports showToggle option', () => {
-  assert.ok(brainFallbackSrc.includes('opts = {}'), 'renderFallback must accept opts');
-  assert.ok(brainFallbackSrc.includes('opts.showToggle'), 'Must check showToggle option');
-  assert.ok(brainFallbackSrc.includes('brain-mode-toggle--3d'), 'Must render 3D toggle button');
-});
-
-test('A-05: CSS has brain mode toggle styles', () => {
-  assert.ok(brainCssSrc.includes('.brain-mode-toggle'), 'CSS must have .brain-mode-toggle');
-  assert.ok(brainCssSrc.includes('.brain-mode-toggle:hover'), 'CSS must have hover state');
 });
 
 // ═══════════════════════════════════════════════════════════════

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-09-04T20:24:39.791Z",
+  "generatedAt": "2026-09-30T14:45:17.753Z",
   "source": {
     "capabilityManifest": "reports/capability-manifest.json",
     "releaseIdentity": "config/release-identity.json",
@@ -228,11 +228,11 @@
       "certifiedReplayCount": 121,
       "autonomousProfile": "core-advanced-authority"
     },
-    "testFileCount": 189,
-    "testCount": 4681,
-    "testPassCount": 4663,
+    "testFileCount": 203,
+    "testCount": 5239,
+    "testPassCount": 5225,
     "ciStageCount": null,
-    "selfAuditStatus": "FAIL"
+    "selfAuditStatus": "PASS"
   },
   "lanes": {
     "play": {
@@ -460,12 +460,6 @@
       "severity": "technical",
       "title": "WAIT WHAT investigation workflow is not wired into CasterSession UI",
       "detail": "The investigation workflow is a complete pure-function module but has not been integrated into the CasterSession UI. It is available as a library API."
-    },
-    {
-      "id": "CERT-BRAIN-2D-01",
-      "severity": "technical",
-      "title": "2D brain topology renderer is not the default",
-      "detail": "A complete 2D SVG brain topology renderer exists but has not replaced the 3D Three.js renderer as the default."
     },
     {
       "id": "CERT-EVIDENCE-DISPLAY-01",

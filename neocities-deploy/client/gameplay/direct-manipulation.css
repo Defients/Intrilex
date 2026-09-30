@@ -1,0 +1,30 @@
+/* Local presentation only. Portals inherit the board's existing skin tokens. */
+.hc-gesture-announcement { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.hc-game .card[data-drag-source] { cursor: grab; touch-action: auto; }
+.hc-game .card[data-dragging] { opacity: .3; cursor: grabbing; }
+.hc-game .hc-card-target { display: inline-flex; position: relative; flex: none; }
+.hc-game .hc-drag-target { transition: outline-color 120ms, box-shadow 120ms; }
+.hc-game .hc-drag-target[data-drop-state="eligible"] { outline: 1px solid var(--ct-cyan); outline-offset: 2px; box-shadow: inset 0 0 16px rgba(99,226,255,.1); }
+.hc-game .hc-drag-target[data-drop-state="hovered"] { outline: 2px solid var(--ct-cyan); outline-offset: 2px; box-shadow: inset 0 0 22px rgba(99,226,255,.17), 0 0 14px rgba(99,226,255,.18); }
+.hc-game .hx-slot { position: relative; display: grid; place-items: center; }
+.hc-game .hc-drag-ghost { display: inline-flex; opacity: .5; pointer-events: none; }
+.hc-game .hc-drag-ghost .card { outline: 1px dashed var(--ct-cyan); outline-offset: 2px; }
+.hc-game .hc-card-target > .hc-drag-ghost { position: absolute; inset: 0; justify-content: center; align-items: center; }
+.hc-game .hc-row .fc-slot .tabletop-card { animation: hc-card-settle 140ms ease-out; }
+@keyframes hc-card-settle { from { opacity: .7; translate: 0 -3px; } to { opacity: 1; translate: 0 0; } }
+.astra-client.hc-game.hc-drag-portal { position: fixed; inset: 0; z-index: 70; height: auto; min-height: 0; width: auto; max-width: none; display: block; overflow: visible; pointer-events: none; background: transparent; margin: 0; padding: 0; }
+.hc-game .hc-drag-overlay { position: absolute; left: 0; top: 0; will-change: transform; pointer-events: none; }
+.hc-game .hc-drag-overlay .card { width: 100%; height: 100%; transform: scale(1.04); box-shadow: 0 10px 26px #0008; }
+.hc-game .hc-drag-token { display: grid; place-items: center; width: 100%; height: 100%; border: 1px solid var(--ct-cyan); border-radius: 8px; padding: .5rem; background: var(--ct-surface-1); }
+.hc-game .hc-drag-chooser { position: absolute; width: min(280px,calc(100vw - 16px)); padding: .65rem; background: var(--ct-surface-1); border: 1px solid var(--ct-border-active); border-radius: 10px; box-shadow: 0 8px 28px #0008; pointer-events: auto; overflow: auto; display: flex; flex-direction: column; gap: .4rem; }
+.hc-game .hc-drag-chooser strong { font-size: .8rem; }
+.hc-game .hc-drag-chooser button { text-align: left; font-size: .8rem; overflow-wrap: anywhere; }
+.hc-game .hc-gesture-settings { position: relative; font-size: .78rem; }
+.hc-game .hc-gesture-settings summary { cursor: pointer; padding: .35rem; }
+.hc-game .hc-gesture-settings > div { position: absolute; right: 0; top: 100%; z-index: 75; width: min(265px,calc(100vw - 16px)); background: var(--ct-surface-1); border: 1px solid var(--ct-border-active); border-radius: 9px; padding: .75rem; box-shadow: 0 8px 24px #0008; }
+.hc-game .hc-gesture-settings label { display: flex; align-items: center; gap: .4rem; margin-bottom: .5rem; }
+.hc-game .hc-gesture-settings small { display: block; color: var(--ct-text-muted); }
+@media (prefers-reduced-motion: reduce) {
+  .hc-game .hc-drag-target, .hc-game .hc-drag-overlay .card { transition: none; }
+  .hc-game .hc-row .fc-slot .tabletop-card { animation: none; }
+}

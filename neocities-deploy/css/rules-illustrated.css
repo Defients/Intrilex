@@ -22,12 +22,21 @@
   display:block;
 }
 
+/* ── Toolbar: holds the view-mode toggle, always visible above the page ── */
+.rules-toolbar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:8px 0 4px;
+  margin-bottom:8px;
+}
+
 /* ── Toggle: segmented Illustrated / Text control ── */
 .rules-illustrated-toggle{
   display:inline-flex;
   align-items:stretch;
   gap:0;
-  margin:14px 0 4px;
+  margin:0;
   padding:3px;
   border:1px solid var(--border-soft);
   border-radius:999px;
@@ -279,23 +288,23 @@
 }
 
 /* ── Hide illustrated decorations in text mode ── */
-body:not(.rules-illustrated) .rules-part-header-svg,
-body:not(.rules-illustrated) .rules-diagram,
-body:not(.rules-illustrated) .rules-section-divider,
-body:not(.rules-illustrated) .rules-part-summary .part-icon,
-body:not(.rules-illustrated) .rules-illustrated-toggle{display:none!important}
-body:not(.rules-illustrated) .rules-content blockquote.rules-callout{padding-left:18px}
-body:not(.rules-illustrated) .rules-content blockquote.rules-callout::before{display:none}
-body:not(.rules-illustrated) .rules-content ol{list-style:decimal;padding-left:28px}
-body:not(.rules-illustrated) .rules-content ol > li{padding-left:0}
-body:not(.rules-illustrated) .rules-content ol > li::before{display:none}
-body:not(.rules-illustrated) .rules-content ul{list-style:disc;padding-left:28px}
-body:not(.rules-illustrated) .rules-content ul > li{padding-left:0}
-body:not(.rules-illustrated) .rules-content ul > li::before{display:none}
-body:not(.rules-illustrated) .rules-content table tbody tr td:first-child{padding-left:12px}
-body:not(.rules-illustrated) .rules-content table tbody tr td:first-child::before{display:none}
-body:not(.rules-illustrated) .rules-part[data-part-theme]{background:rgba(12,24,34,.5)}
-body:not(.rules-illustrated) .rules-part[data-part-theme][open]{background:rgba(12,24,34,.7)}
+/* The toggle is always visible (tri-state: illustrated/text/showcase). */
+body:not(.rules-illustrated):not(.rules-showcase) .rules-part-header-svg,
+body:not(.rules-illustrated):not(.rules-showcase) .rules-diagram,
+body:not(.rules-illustrated):not(.rules-showcase) .rules-section-divider,
+body:not(.rules-illustrated):not(.rules-showcase) .rules-part-summary .part-icon{display:none!important}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-content blockquote.rules-callout{padding-left:18px}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-content blockquote.rules-callout::before{display:none}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-content ol{list-style:decimal;padding-left:28px}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-content ol > li{padding-left:0}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-content ol > li::before{display:none}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-content ul{list-style:disc;padding-left:28px}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-content ul > li{padding-left:0}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-content ul > li::before{display:none}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-content table tbody tr td:first-child{padding-left:12px}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-content table tbody tr td:first-child::before{display:none}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-part[data-part-theme]{background:rgba(12,24,34,.5)}
+body:not(.rules-illustrated):not(.rules-showcase) .rules-part[data-part-theme][open]{background:rgba(12,24,34,.7)}
 
 /* ── Responsive ── */
 @media(max-width:900px){
@@ -313,4 +322,537 @@ body:not(.rules-illustrated) .rules-part[data-part-theme][open]{background:rgba(
 }
 @media(prefers-reduced-motion:reduce){
   .rules-illustrated-toggle .rules-toggle-btn{transition:none}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHOWCASE MODE — continuous scroll, heavy SVG decoration, mini-nav.
+   All selectors scoped under body.rules-showcase to avoid polluting
+   the illustrated/text modes.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Showcase page layout: full-width single column, TOC hidden (mini-nav replaces it) ── */
+body.rules-showcase .rules-page.rules-showcase-page{
+  display:block;
+  grid-template-columns:none;
+  max-width:none;
+}
+body.rules-showcase .rules-page.rules-showcase-page .rules-toc{
+  display:none;
+}
+body.rules-showcase .rules-page.rules-showcase-page .rules-content{
+  max-width:880px;
+  margin:0 auto;
+}
+
+/* ── Showcase hero banner ── */
+.showcase-hero-svg{
+  display:block;
+  width:100%;
+  height:auto;
+  max-height:200px;
+  margin:0 0 28px;
+  border-radius:16px;
+  overflow:hidden;
+}
+.showcase-frontmatter{
+  margin:0 0 32px;
+}
+.showcase-frontmatter-body{padding:0 4px}
+
+/* ── Showcase part section ── */
+.showcase-part{
+  display:block;
+  padding:48px 0 56px;
+  border-top:2px solid rgba(var(--part-accent-rgb,90,215,232),.25);
+  scroll-margin-top:16px;
+}
+.showcase-part:first-of-type{border-top:0}
+.showcase-part-body{padding:0 4px}
+
+/* ── Showcase part header (full-bleed SVG) ── */
+.showcase-part-header-svg{
+  display:block;
+  width:100%;
+  height:auto;
+  max-height:160px;
+  margin:0 0 24px;
+  border-radius:16px;
+  overflow:hidden;
+}
+
+/* ── Showcase drop cap ── */
+.showcase-drop-cap{
+  float:left;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:56px;
+  height:56px;
+  margin:4px 10px 0 0;
+  font-family:Georgia,serif;
+  font-size:42px;
+  font-weight:700;
+  line-height:1;
+  color:var(--part-accent,var(--cyan));
+  background:linear-gradient(135deg,rgba(var(--part-accent-rgb,90,215,232),.12),rgba(var(--part-accent-rgb,90,215,232),.03));
+  border:1px solid rgba(var(--part-accent-rgb,90,215,232),.25);
+  border-radius:12px;
+}
+
+/* ── Showcase pull-quote (blockquote enhancement) ── */
+body.rules-showcase .rules-content blockquote.showcase-pullquote{
+  position:relative;
+  margin:0 0 22px;
+  padding:24px 28px 24px 64px;
+  border:1px solid rgba(var(--part-accent-rgb,90,215,232),.2);
+  border-left:4px solid var(--part-accent,var(--cyan));
+  border-radius:0 16px 16px 0;
+  background:linear-gradient(90deg,rgba(var(--part-accent-rgb,90,215,232),.08),rgba(var(--part-accent-rgb,90,215,232),.02) 60%,transparent);
+}
+body.rules-showcase .rules-content blockquote.showcase-pullquote .showcase-pullquote-mark{
+  position:absolute;
+  left:20px;
+  top:10px;
+  font-family:Georgia,serif;
+  font-size:48px;
+  font-weight:700;
+  color:var(--part-accent,var(--cyan));
+  opacity:.5;
+  line-height:1;
+}
+body.rules-showcase .rules-content blockquote.showcase-pullquote p{margin:0;font-size:16px;font-style:italic}
+
+/* ── Showcase key-rule banner ── */
+body.rules-showcase .showcase-key-rule{
+  position:relative;
+  margin:0 0 22px;
+  padding:18px 24px 18px 28px;
+  border:1px solid rgba(var(--part-accent-rgb,90,215,232),.3);
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(var(--part-accent-rgb,90,215,232),.1),rgba(var(--part-accent-rgb,90,215,232),.03));
+  box-shadow:inset 4px 0 0 var(--part-accent,var(--cyan));
+}
+body.rules-showcase .showcase-key-rule .showcase-key-rule-label{
+  display:block;
+  font-family:Inter,sans-serif;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--part-accent,var(--cyan));
+  margin-bottom:6px;
+}
+body.rules-showcase .showcase-key-rule p{margin:0;font-size:16px}
+
+/* ── Showcase card gallery (Part VI codex) ── */
+.showcase-card-gallery{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:12px;
+  margin:24px 0 32px;
+  padding:20px;
+  border:1px solid var(--border-soft);
+  border-radius:16px;
+  background:rgba(12,24,34,.4);
+}
+.showcase-card-frame-svg{
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:120/170;
+  transition:transform var(--fast);
+}
+.showcase-card-gallery:hover .showcase-card-frame-svg{transform:translateY(-2px)}
+
+/* ── Showcase ornamental divider ── */
+.showcase-divider{
+  display:block;
+  width:100%;
+  max-width:520px;
+  height:32px;
+  margin:32px auto 28px;
+}
+
+/* ── Showcase table styling ── */
+body.rules-showcase .rules-content table.showcase-table{
+  border:1px solid var(--border-soft);
+  border-radius:12px;
+  overflow:hidden;
+  margin:18px 0 24px;
+}
+body.rules-showcase .rules-content table.showcase-table thead th{
+  background:linear-gradient(180deg,rgba(var(--part-accent-rgb,90,215,232),.12),rgba(var(--part-accent-rgb,90,215,232),.05));
+}
+body.rules-showcase .rules-content table.showcase-table tbody tr:nth-child(odd) td{
+  background:rgba(20,36,50,.2);
+}
+
+/* ── Showcase keyword highlighting ── */
+body.rules-showcase .rules-content .kw{
+  font-weight:600;
+  letter-spacing:.01em;
+  border-radius:3px;
+  padding:0 1px;
+  transition:color var(--fast);
+}
+body.rules-showcase .rules-content .kw-zone{
+  color:var(--cyan);
+}
+body.rules-showcase .rules-content .kw-phase{
+  color:var(--amber);
+}
+body.rules-showcase .rules-content .kw-mechanic{
+  color:var(--magenta);
+}
+body.rules-showcase .rules-content .kw-timing{
+  color:var(--green);
+  font-style:italic;
+}
+body.rules-showcase .rules-content .kw-action{
+  color:var(--blue);
+}
+body.rules-showcase .rules-content .kw-rank{
+  color:var(--violet);
+  font-weight:700;
+  font-family:var(--font-mono);
+  font-size:.9em;
+  padding:1px 5px;
+  background:rgba(167,139,250,.1);
+  border:1px solid rgba(167,139,250,.18);
+  border-radius:5px;
+  letter-spacing:0;
+  white-space:nowrap;
+}
+/* When a keyword is already inside <strong>, keep it bold but still colored. */
+body.rules-showcase .rules-content strong > .kw{
+  font-weight:700;
+}
+
+/* ── Showcase typography polish ── */
+body.rules-showcase .rules-content{
+  font-size:16px;
+  line-height:1.72;
+  color:var(--text);
+  text-wrap:pretty;
+}
+body.rules-showcase .rules-content p{
+  margin:0 0 1.1em;
+}
+body.rules-showcase .rules-content h2{
+  font-size:clamp(22px,3vw,30px);
+  font-weight:700;
+  letter-spacing:-.015em;
+  color:var(--text-bright);
+  margin:44px 0 18px;
+  padding-bottom:10px;
+  border-bottom:1px solid rgba(var(--part-accent-rgb,90,215,232),.22);
+}
+body.rules-showcase .rules-content h3{
+  font-size:clamp(17px,2vw,21px);
+  font-weight:600;
+  color:var(--part-accent,var(--cyan));
+  margin:34px 0 12px;
+  letter-spacing:-.005em;
+}
+body.rules-showcase .rules-content h4{
+  font-size:16px;
+  font-weight:600;
+  color:var(--text-bright);
+  margin:26px 0 10px;
+}
+body.rules-showcase .rules-content strong{
+  color:var(--text-bright);
+  font-weight:700;
+}
+body.rules-showcase .rules-content em{
+  color:var(--muted-bright);
+  font-style:italic;
+}
+body.rules-showcase .rules-content ul,
+body.rules-showcase .rules-content ol{
+  margin:0 0 1.1em;
+  padding-left:26px;
+}
+body.rules-showcase .rules-content li{
+  margin:0 0 7px;
+  line-height:1.68;
+}
+body.rules-showcase .rules-content li::marker{
+  color:var(--part-accent,var(--cyan));
+  font-weight:700;
+}
+body.rules-showcase .rules-content code{
+  font-family:var(--font-mono);
+  font-size:.9em;
+  color:var(--cyan);
+  background:rgba(90,215,232,.08);
+  padding:1px 5px;
+  border-radius:4px;
+}
+body.rules-showcase .rules-content hr{
+  border:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(var(--part-accent-rgb,90,215,232),.3),transparent);
+  margin:36px 0;
+}
+
+/* ── Showcase floating mini-nav (right-side dots) ── */
+.showcase-mini-nav{
+  position:fixed;
+  right:24px;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  z-index:100;
+  padding:12px 8px;
+  border-radius:999px;
+  background:rgba(12,24,34,.6);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.showcase-mini-nav-dot{
+  appearance:none;
+  -webkit-appearance:none;
+  border:0;
+  width:12px;
+  height:12px;
+  padding:0;
+  border-radius:50%;
+  background:var(--border);
+  cursor:pointer;
+  transition:background var(--fast),box-shadow var(--fast),transform var(--fast);
+}
+.showcase-mini-nav-dot:hover{background:var(--muted-bright);transform:scale(1.2)}
+.showcase-mini-nav-dot.active{
+  background:var(--cyan);
+  box-shadow:0 0 0 3px rgba(90,215,232,.25),0 0 8px rgba(90,215,232,.4);
+}
+.showcase-mini-nav-dot:focus-visible{
+  outline:3px solid var(--focus);
+  outline-offset:2px;
+}
+
+/* ── Showcase responsive ── */
+@media(max-width:900px){
+  .showcase-mini-nav{display:none}
+  .showcase-part{padding:32px 0 40px}
+  .showcase-part-header-svg{max-height:120px}
+  .showcase-hero-svg{max-height:160px}
+}
+@media(max-width:600px){
+  .showcase-hero-svg{max-height:120px;border-radius:12px}
+  .showcase-drop-cap{width:42px;height:42px;font-size:30px;margin:2px 8px 0 0}
+  .showcase-part-header-svg{max-height:96px}
+  .showcase-card-gallery{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:14px}
+  .rules-illustrated-toggle .rules-toggle-btn{padding:6px 10px;font-size:10.5px}
+}
+
+/* ── Showcase reduced motion ── */
+@media(prefers-reduced-motion:reduce){
+  .showcase-card-gallery:hover .showcase-card-frame-svg{transform:none}
+  .showcase-mini-nav-dot{transition:none}
+  .showcase-mini-nav-dot:hover{transform:none}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VERBOSE MODE — text-to-speech friendly prose layout.
+   Large readable type, generous spacing, no decorative SVG.
+   The Read Aloud bar sits in the toolbar when verbose is active.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Verbose page: single readable column, no sidebar TOC needed. */
+body.rules-verbose .rules-page.rules-verbose-page{
+  display:block;
+  max-width:780px;
+  margin:0 auto;
+  padding:0 20px 80px;
+}
+body.rules-verbose .rules-toc{display:none}
+body.rules-verbose .rules-content{
+  max-width:none;
+  width:100%;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:19px;
+  line-height:1.85;
+  color:var(--text-bright);
+}
+
+/* Verbose part sections — generous vertical rhythm. */
+.verbose-part{
+  margin:0 0 48px;
+  padding:0;
+}
+.verbose-frontmatter{margin-bottom:40px}
+
+.verbose-part-heading{
+  font-family:Georgia,serif;
+  font-size:30px;
+  font-weight:700;
+  line-height:1.25;
+  margin:40px 0 20px;
+  padding-bottom:12px;
+  border-bottom:2px solid var(--border-soft);
+  color:var(--text-bright);
+  scroll-margin-top:24px;
+}
+.verbose-part-cue{
+  display:block;
+  font-family:Inter,sans-serif;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  margin-bottom:6px;
+}
+
+/* Section headings get a verbal cue prefix. */
+.verbose-heading{
+  font-family:Georgia,serif;
+  font-size:23px;
+  font-weight:700;
+  line-height:1.3;
+  margin:32px 0 14px;
+  color:var(--text-bright);
+  scroll-margin-top:24px;
+}
+.verbose-heading-cue{
+  font-family:Inter,sans-serif;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted-bright);
+  margin-right:4px;
+}
+
+/* Body prose — the heart of the verbose view. */
+.verbose-part-body p{
+  margin:0 0 16px;
+  text-align:left;
+  hyphens:auto;
+}
+.verbose-part-body p:last-child{margin-bottom:0}
+
+/* Callout (blockquote → spoken "Note." prose). */
+.verbose-callout{
+  padding:14px 18px;
+  border-left:3px solid var(--cyan);
+  background:rgba(90,215,232,.06);
+  border-radius:0 8px 8px 0;
+  margin:0 0 18px;
+}
+.verbose-callout-cue{
+  font-family:Inter,sans-serif;
+  font-weight:600;
+  color:var(--cyan);
+}
+
+/* Table rows rendered as prose get a subtle indent + accent. */
+.verbose-table-row{
+  padding-left:18px;
+  border-left:2px solid var(--border-soft);
+  margin:0 0 12px;
+  color:var(--text);
+}
+
+/* Section-break marker. */
+.verbose-break{
+  text-align:center;
+  color:var(--muted);
+  font-family:Inter,sans-serif;
+  font-size:12px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  margin:28px 0;
+  border:0;
+}
+
+/* Code blocks — kept verbatim, rare in rulebook. */
+.verbose-code{
+  font-family:"SF Mono",Consolas,monospace;
+  font-size:14px;
+  background:rgba(12,24,34,.6);
+  border:1px solid var(--border-soft);
+  border-radius:8px;
+  padding:14px;
+  overflow-x:auto;
+}
+
+/* ── Read Aloud control bar ── */
+.rules-readaloud-bar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:8px;
+  padding:8px 14px;
+  border:1px solid var(--border-soft);
+  border-radius:12px;
+  background:rgba(12,24,34,.7);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  flex-wrap:wrap;
+}
+.rules-readaloud-btn{
+  appearance:none;
+  -webkit-appearance:none;
+  border:1px solid var(--border-soft);
+  background:transparent;
+  color:var(--text-bright);
+  font-family:Inter,sans-serif;
+  font-size:12px;
+  font-weight:600;
+  padding:6px 12px;
+  border-radius:999px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  transition:background var(--fast),color var(--fast),opacity var(--fast);
+}
+.rules-readaloud-btn:hover:not(:disabled){background:rgba(90,215,232,.12);color:var(--cyan)}
+.rules-readaloud-btn:disabled{opacity:.4;cursor:not-allowed}
+.rules-readaloud-btn .rules-toggle-icon{width:14px;height:14px}
+.rules-readaloud-rate{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-family:Inter,sans-serif;
+  font-size:11px;
+  color:var(--muted-bright);
+}
+.rules-readaloud-rate input[type="range"]{
+  width:110px;
+  accent-color:var(--cyan);
+}
+.rules-readaloud-status{
+  font-family:Inter,sans-serif;
+  font-size:11px;
+  color:var(--muted);
+  margin-left:auto;
+}
+
+/* Currently-speaking paragraph highlight. */
+.verbose-speaking{
+  background:rgba(90,215,232,.12);
+  border-radius:6px;
+  box-shadow:0 0 0 2px rgba(90,215,232,.3);
+  transition:background .2s,box-shadow .2s;
+}
+
+/* ── Verbose responsive ── */
+@media(max-width:600px){
+  body.rules-verbose .rules-content{font-size:17px;line-height:1.8}
+  .verbose-part-heading{font-size:24px}
+  .verbose-heading{font-size:20px}
+  .rules-readaloud-bar{gap:6px;padding:8px 10px}
+  .rules-readaloud-btn{padding:5px 9px;font-size:11px}
+  .rules-readaloud-rate input[type="range"]{width:80px}
+}
+
+/* ── Verbose reduced motion ── */
+@media(prefers-reduced-motion:reduce){
+  .verbose-speaking{transition:none}
 }

@@ -506,7 +506,6 @@ function gateLaboratory() {
     { path: 'packages/statistics/src/evidence-honest.mjs', name: 'Evidence-honest intelligence' },
     { path: 'packages/replay-caster/src/investigation-workflow.mjs', name: 'Investigation workflow' },
     { path: 'packages/replay-caster/src/commentary-contract.mjs', name: 'Commentary contract' },
-    { path: 'apps/lab-web/src/brain/brain-topology.mjs', name: 'Brain topology' },
   ];
   for (const mod of requiredModules) {
     if (!fileExists(mod.path)) {

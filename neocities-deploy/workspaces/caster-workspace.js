@@ -14,19 +14,53 @@
 // esc() — never raw innerHTML with model output.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js?v=75c53031ef21';
-import { policyOptions } from '../router.js?v=75c53031ef21';
-import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=75c53031ef21';
-import { reconstructReplayFrames } from '../replay-frames.js?v=75c53031ef21';
-import { renderRankedDuel } from '../play/ranked-duel-renderer.mjs?v=75c53031ef21';
+import { esc, state } from '../state.js?v=20eae2e2c270';
+import { policyOptions } from '../router.js?v=20eae2e2c270';
+import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=20eae2e2c270';
+import { reconstructReplayFrames } from '../replay-frames.js?v=20eae2e2c270';
+import { mountGameTable } from '../client/mount.tsx?v=20eae2e2c270';
 
 // Lazy-loaded @intrilex/replay-caster (browser-bundleable subset).
 let casterModule = null;
 async function getCaster() {
   if (!casterModule) {
-    casterModule = await import('../replay-caster/browser-entry.js?v=75c53031ef21');
+    casterModule = await import('../replay-caster/browser-entry.js?v=20eae2e2c270');
   }
   return casterModule;
+}
+
+// Investigation workflow functions (lazy-loaded with caster module).
+let investigationFns = null;
+async function getInvestigation() {
+  if (!investigationFns) {
+    const mod = await getCaster();
+    investigationFns = {
+      createInvestigation: mod.createInvestigation,
+      transitionToInvestigating: mod.transitionToInvestigating,
+      addBranch: mod.addBranch,
+      addAnnotation: mod.addAnnotation,
+      addComparison: mod.addComparison,
+      checkInvalidation: mod.checkInvalidation,
+      exportInvestigation: mod.exportInvestigation,
+      getInvestigationSummary: mod.getInvestigationSummary,
+      InvestigationStatus: mod.InvestigationStatus,
+    };
+  }
+  return investigationFns;
+}
+
+// Current engine authority hash (from engine manifest, loaded once).
+let _authorityHash = null;
+async function getAuthorityHash() {
+  if (_authorityHash !== null) return _authorityHash;
+  try {
+    const res = await fetch('config/engine-manifest.json');
+    if (res.ok) {
+      const manifest = await res.json();
+      _authorityHash = manifest.authorityHash ?? null;
+    }
+  } catch { /* offline / dev — no manifest available */ }
+  return _authorityHash;
 }
 
 // Lazy-loaded strictView from autonomy-runtime (for building authorized player views
@@ -34,7 +68,7 @@ async function getCaster() {
 let _strictViewFn = null;
 async function getStrictView() {
   if (!_strictViewFn) {
-    const mod = await import('../autonomy-runtime.js?v=75c53031ef21');
+    const mod = await import('../autonomy-runtime.js?v=20eae2e2c270');
     _strictViewFn = mod.strictView;
   }
   return _strictViewFn;
@@ -43,18 +77,20 @@ async function getStrictView() {
 // ── Frame state → Snapshot adapter ────────────────────────────────
 //
 // Converts a raw engine frame state (from CasterSession.frames[beat.frameIndex])
-// into the snapshot shape expected by buildRankedDuelViewModel via
-// renderRankedDuel(). This bridges the gap between the Caster's frame-based
-// playback and the authentic game UI renderer.
+// into the snapshot shape expected by Astra's buildSemanticGame() (the React
+// board). The adapter uses strictView() from autonomy-runtime to build the
+// authorized player view (same function used by the play controller), so the
+// snapshot's playerView matches exactly what Astra consumes in live play.
 //
-// The adapter uses strictView() from autonomy-runtime to build authorized
-// player views (same function used by the play controller), ensuring the
-// snapshot shape matches exactly what the viewmodel expects.
+// The opponent's face-up hand (omniscient mode) is returned separately as
+// `opponentHand` (Astra TableCard[]) so it can be passed via mountGameTable's
+// opponentHand option, bypassing buildSemanticGame's privacy invariant
+// (opponent hand is always empty in the semantic game).
 //
 // @param {object} frameState - Raw engine state from a replay frame
 // @param {object} session - CasterSession instance
 // @param {object} beat - Current playback beat
-// @returns {object} Snapshot in buildRankedDuelViewModel format
+// @returns {{ snapshot: object, opponentHand: object[]|null }}
 
 export async function frameStateToSnapshot(frameState, session, beat) {
   if (!frameState) return null;
@@ -63,112 +99,65 @@ export async function frameStateToSnapshot(frameState, session, beat) {
   const seatOrder = session.matchResult?.summary?.seatOrder || ['P1', 'P2'];
   const humanPlayerId = seatOrder[0] || 'P1';
   const opponentPlayerId = seatOrder[1] || 'P2';
-  const isFinished = beat?.beatKind === 'MATCH_END';
 
   // Use strictView to build the authorized player view for the human player.
-  // This produces the exact {own, opponents, ...} shape that adaptSnapshotForViewModel
-  // converts into the viewmodel's expected format.
+  // strictView's output shape ({actorId, own, opponents, revision, phase, ...})
+  // is exactly Astra's playerView shape.
   const strictView = await getStrictView();
   const pv = strictView(frameState, humanPlayerId);
 
-  // Build players map in viewmodel format
-  const players = {};
-  players[humanPlayerId] = {
-    securedPoints: pv.own?.securedPoints ?? 0,
-    goal: pv.own?.goal ?? 21,
-    hand: pv.own?.hand ?? [],
-    pointRow: pv.own?.pr ?? [],
-    enduringRow: pv.own?.er ?? [],
-    isActive: pv.activePlayerId === humanPlayerId,
-    hasPriority: pv.priority?.ownerId === humanPlayerId,
-  };
+  const humanDisplayName = session.policyIds?.[0]?.replace(/-/g, ' ') || 'Seat 1';
+  const opponentDisplayName = session.policyIds?.[1]?.replace(/-/g, ' ') || 'Seat 2';
 
-  // Opponent: in public mode, hand is {count} (card backs).
-  // In omniscient mode, hand is {count} for the snapshot (privacy check),
-  // but the full hand card views are passed separately via opts.opponentHandCards.
-  const oppView = pv.opponents?.[0] ?? {};
-  players[opponentPlayerId] = {
-    securedPoints: oppView.securedPoints ?? 0,
-    goal: oppView.goal ?? 21,
-    hand: { count: oppView.handCount ?? 0 },
-    pointRow: oppView.pr ?? [],
-    enduringRow: oppView.er ?? [],
-    isActive: pv.activePlayerId === opponentPlayerId,
-    hasPriority: pv.priority?.ownerId === opponentPlayerId,
-    displayName: session.policyIds?.[1]?.replace(/-/g, ' ') || 'Seat 2',
-  };
-
-  // Build the snapshot in the format that adaptSnapshotForViewModel passes through
-  // (it checks for `snapshot.state` and passes through if present).
+  // Astra-format snapshot. status stays non-TERMINAL so the board renders
+  // (even for MATCH_END beats — the Caster always shows the board).
+  // decision is null → no legal actions → Astra shows a read-only table.
   const snapshot = {
-    humanPlayerId,
-    status: isFinished ? 'AI_DECISION' : 'AI_DECISION', // Keep board visible (not TERMINAL)
-    isNetworkMatch: false,
+    sessionId: session.matchId || `caster-${humanPlayerId}-${opponentPlayerId}`,
+    status: 'AI_DECISION',
+    playerView: pv,
+    human: { playerId: humanPlayerId, displayName: humanDisplayName },
+    opponent: { displayName: opponentDisplayName },
+    match: { winner: null, terminationReason: null },
     decision: null,
-    legalActions: [],
-    state: {
-      seatOrder,
-      fullTurnSequence: pv.fullTurnSequence ?? frameState.fullTurnSequence ?? 0,
-      phase: pv.phase ?? frameState.phase ?? '',
-      activePlayerId: pv.activePlayerId ?? frameState.activePlayerId ?? null,
-      priorityOwnerId: pv.priority?.ownerId ?? null,
-      windowLabel: pv.priority?.windowLabel ?? '',
-      startingGoal: pv.own?.goal ?? 21,
-      players,
-      drawPile: { count: pv.dpCount ?? frameState.zones?.dp?.length ?? 0 },
-      graveyard: { count: pv.gyCount ?? frameState.zones?.gy?.length ?? 0, topCard: pv.gyTopCard ?? null },
-      exile: { count: pv.exileCount ?? frameState.zones?.exile?.length ?? 0, newestVisibleCard: null },
-      swapBar: pv.swapBar ?? [],
-      stack: pv.stack ?? [],
-      swapAvailable: true,
-      // Do NOT set terminationReason — that would trigger renderTerminal instead of renderMatch.
-      // The caster always shows the board, even for MATCH_END beats.
-      terminationReason: null,
-      winner: null,
-    },
-    // Pass beat events as recentEvents for the game log
     recentEvents: (beat?.visibleEvents ?? []).slice(-20).map(e => ({
       type: e.type,
       controllerId: e.controllerId ?? e.payload?.controllerId ?? null,
       payload: e.payload ?? null,
     })),
+    handOrder: null,
+    opponentHandReorderEpoch: 0,
   };
 
-  // In omniscient mode, build opponent hand card views for face-up rendering.
-  // These are passed via opts.opponentHandCards to the renderer, bypassing
-  // the viewmodel's privacy check (which requires opponent hand = {count}).
-  let opponentHandCards = null;
+  // In omniscient mode, build face-up opponent hand cards (Astra TableCard[]).
+  // In public mode, the opponent hand stays concealed (card backs only).
+  let opponentHand = null;
   if (omniscient) {
     const oppPv = strictView(frameState, opponentPlayerId);
-    opponentHandCards = (oppPv.own?.hand ?? []).map(cardViewToViewModelCard);
+    opponentHand = (oppPv.own?.hand ?? []).map(cardViewToTableCard);
   }
 
-  return { snapshot, opponentHandCards };
+  return { snapshot, opponentHand };
 }
 
 // Convert a strictView card object ({id, identity, controllerId, zone, pointValue, tapped, ...})
-// into the viewmodel's public card view format ({entityId, identity, rank, suit, pointValue, statusMarkers, ...})
-// so renderCard() can render it face-up.
-function cardViewToViewModelCard(card) {
+// into Astra's SemanticCard / TableCard format ({id, identity, label, markers}) so the React
+// board can render it face-up in the opponent hand lane (Caster omniscient mode).
+function cardViewToTableCard(card) {
   if (!card) return null;
-  const identity = card.identity ?? '';
-  const suit = String(identity).match(/[♣♦♥♠]/u)?.[0] ?? null;
-  const rank = String(identity).replace(/[♣♦♥♠]/u, '').trim() || null;
+  const identity = card.identity ?? null;
+  const hidden = identity === null || identity === 'HIDDEN' || card.swapBarFaceDown || card.faceDown;
   const markers = [];
-  if (card.tapped) markers.push({ type: 'TAPPED', label: 'Tapped' });
-  if (card.aegis) markers.push({ type: 'AEGIS', label: 'Aegis' });
-  if (card.providesGuard) markers.push({ type: 'GUARD', label: 'Guard' });
-  if (card.exileBound) markers.push({ type: 'EXILE_BOUND', label: 'Exile-Bound' });
+  if (card.tapped) markers.push('Tapped');
+  if (card.aegis) markers.push('Aegis');
+  if (card.providesGuard) markers.push('Guard');
+  if (card.exileBound) markers.push('Exile-bound');
+  if (hidden) markers.push('Face down');
   return {
-    entityId: card.id,
-    identity: card.identity,
-    rank,
-    suit,
-    pointValue: card.pointValue ?? null,
-    isGeneratedCopy: false,
-    statusMarkers: markers,
-    zone: card.zone ?? 'HAND',
-    ownerId: card.controllerId ?? null,
+    id: hidden ? `hidden:caster:opp:${card.id}` : card.id,
+    identity: hidden ? null : identity,
+    label: hidden ? 'Hidden card' : identity,
+    markers,
   };
 }
 
@@ -186,6 +175,10 @@ const casterState = {
   commentaryLoading: false,
   waitWhatCapture: null,
   waitWhatVisible: false,
+  waitWhatInvestigation: null,
+  waitWhatInvalidated: false,
+  waitWhatAnnotationText: '',
+  waitWhatExportResult: null,
   config: {
     p1Policy: 'hybrix-baseline',
     p2Policy: 'hybrix-rusher',
@@ -202,7 +195,8 @@ const casterState = {
   savedReplays: [],
   replaysLoaded: false,
   gameplaySkin: 'dark',
-  renderToken: 0
+  renderToken: 0,
+  tacticalMount: null // Active Astra board mount controller (null when unmounted)
 };
 
 // ── Main render entry point ───────────────────────────────────────
@@ -218,21 +212,32 @@ export async function renderCaster(appEl) {
   await loadSavedReplays();
 
   if (casterState.error) {
+    disposeTacticalMount();
     renderError(appEl, casterState.error);
     return;
   }
 
   if (casterState.loading) {
+    disposeTacticalMount();
     renderLoading(appEl);
     return;
   }
 
   if (!casterState.session) {
+    disposeTacticalMount();
     renderSetup(appEl);
     return;
   }
 
   renderTheatre(appEl);
+}
+
+// Release the Astra board mount (if any) before rendering a non-theatre screen.
+function disposeTacticalMount() {
+  if (casterState.tacticalMount) {
+    try { casterState.tacticalMount.dispose(); } catch { /* ignore */ }
+    casterState.tacticalMount = null;
+  }
 }
 
 // ── Replay library section ────────────────────────────────────────
@@ -403,9 +408,10 @@ function renderError(appEl, error) {
 
 // ── Theatre (main playback view) ──────────────────────────────────
 //
-// Renders the authentic game board using renderRankedDuel() with a custom
+// Renders the authentic game board using Astra (mountGameTable) with a custom
 // right rail containing commentary (top) and replay transport controls (bottom).
-// The board is read-only — no card interactions, no action bar.
+// The board is read-only — no card interactions, no action bar. In omniscient
+// mode the opponent's hand is rendered face-up via the opponentHand option.
 
 async function renderTheatre(appEl) {
   const session = casterState.session;
@@ -434,11 +440,11 @@ async function renderTheatre(appEl) {
     return;
   }
 
-  let snapshot, opponentHandCards;
+  let snapshot, opponentHand;
   try {
     const adapted = await frameStateToSnapshot(frameState, session, beat);
     snapshot = adapted.snapshot;
-    opponentHandCards = adapted.opponentHandCards;
+    opponentHand = adapted.opponentHand;
   } catch (err) {
     if (myToken === casterState.renderToken) {
       appEl.innerHTML = `<div class="notice danger"><strong>Failed to build game view.</strong><pre>${esc(String(err?.message || err))}</pre></div>`;
@@ -450,22 +456,62 @@ async function renderTheatre(appEl) {
   if (myToken !== casterState.renderToken) return;
 
   // ── Build custom right rail HTML (commentary + transport controls) ──
-  const rightRailHtml = buildCasterRightRail(session, beat, idx, total, ps, policyIds);
+  const railHtml = buildCasterRightRail(session, beat, idx, total, ps, policyIds);
 
-  // ── Render the authentic game board ──
+  // ── Mount or update the Astra board ──
+  // The Caster owns a persistent header (exit control) above the Astra host.
+  // Astra renders the board + sidebar; the sidebar actions area is replaced
+  // by the Caster rail (commentary + transport + WAIT WHAT) via railHtml.
+  // In omniscient mode the opponent hand is shown face-up via opponentHand.
   const gameplaySkin = casterState.gameplaySkin || 'dark';
-  const boardHtml = renderRankedDuel(snapshot, {
-    rightRailHtml,
-    isReadOnly: true,
-    isCaster: true,
-    gameplaySkin,
-    opponentHandCards,
-    soundMuted: true, // Caster is a spectator — no sound interactions
-  });
+  const viewerLabel = casterState.config.viewerMode === 'omniscient' ? 'OMNISCIENT' : 'PUBLIC';
 
-  appEl.innerHTML = boardHtml;
+  if (!casterState.tacticalMount) {
+    // First theatre render: lay out the persistent header + board host, then mount Astra.
+    appEl.innerHTML = `<header class="caster-theatre-header" data-caster="1">
+      <button class="rd-header-back" data-action="exit-caster" aria-label="Back to Observatory">← Observatory</button>
+      <span class="caster-theatre-mode">${viewerLabel} · Caster</span>
+    </header>
+    <div class="caster-board-host" data-testid="caster-board-host"></div>`;
+
+    // Wire header exit button (persistent — wired once at mount).
+    const exitBtn = appEl.querySelector('[data-action="exit-caster"]');
+    if (exitBtn) {
+      exitBtn.onclick = () => {
+        stopTimer();
+        if (casterState.worker) { casterState.worker.terminate(); casterState.worker = null; }
+        casterState.session = null;
+        casterState.commentaryText = '';
+        casterState.waitWhatCapture = null;
+        casterState.waitWhatVisible = false;
+        casterState.waitWhatInvestigation = null;
+        casterState.waitWhatInvalidated = false;
+        casterState.tacticalMount?.dispose();
+        casterState.tacticalMount = null;
+        renderSetup(appEl);
+      };
+    }
+
+    const boardHost = appEl.querySelector('.caster-board-host');
+    try {
+      casterState.tacticalMount = mountGameTable(boardHost, snapshot, {
+        submit: async () => ({ accepted: false }), // Caster is read-only — never submits.
+        skin: gameplaySkin,
+        opponentHand: opponentHand ?? undefined,
+        railHtml,
+      });
+    } catch (err) {
+      appEl.innerHTML = `<div class="notice danger"><strong>Failed to render the Astra board.</strong><pre>${esc(String(err?.message || err))}</pre></div>`;
+      return;
+    }
+  } else {
+    // Subsequent beat changes: update Astra in place with the new snapshot + rail.
+    casterState.tacticalMount.update(snapshot, false, undefined, opponentHand ?? undefined, railHtml);
+  }
 
   // ── Safe text rendering for commentary (avoid innerHTML with model output) ──
+  // Astra re-renders the rail via flushSync in update(), so the commentary
+  // elements are present in the DOM by the time we reach here.
   if (casterState.commentaryText) {
     const headlineEl = appEl.querySelector('[data-testid="caster-commentary-headline"]');
     const bodyEl = appEl.querySelector('[data-testid="caster-commentary-body"]');
@@ -475,20 +521,6 @@ async function renderTheatre(appEl) {
 
   // ── Wire up controls within the right rail ──
   wireCasterRightRail(appEl, session, idx, total);
-
-  // ── Wire header exit button (data-action="exit-caster") ──
-  const exitBtn = appEl.querySelector('[data-action="exit-caster"]');
-  if (exitBtn) {
-    exitBtn.onclick = () => {
-      stopTimer();
-      if (casterState.worker) { casterState.worker.terminate(); casterState.worker = null; }
-      casterState.session = null;
-      casterState.commentaryText = '';
-      casterState.waitWhatCapture = null;
-      casterState.waitWhatVisible = false;
-      renderSetup(appEl);
-    };
-  }
 
   // ── Wire WAIT WHAT panel if visible ──
   if (casterState.waitWhatVisible && casterState.waitWhatCapture) {
@@ -502,13 +534,38 @@ async function renderTheatre(appEl) {
       };
     });
     const closeWw = appEl.querySelector('#caster-ww-close');
-    if (closeWw) closeWw.onclick = () => { casterState.waitWhatVisible = false; renderTheatre(appEl); };
+    if (closeWw) closeWw.onclick = () => {
+      casterState.waitWhatVisible = false;
+      casterState.waitWhatInvestigation = null;
+      casterState.waitWhatExportResult = null;
+      renderTheatre(appEl);
+    };
 
     // Render WAIT WHAT commentary text safely
     if (casterState.waitWhatCapture?.commentary) {
       const wwTextEl = appEl.querySelector('#caster-ww-commentary-text');
       if (wwTextEl) wwTextEl.textContent = casterState.waitWhatCapture.commentary;
     }
+
+    // Wire annotation form
+    wireWaitWhatAnnotation(appEl);
+
+    // Wire export buttons
+    wireWaitWhatExport(appEl);
+
+    // Wire branch navigation
+    appEl.querySelectorAll('.caster-ww-branch-btn').forEach(btn => {
+      btn.onclick = () => {
+        const actionId = btn.dataset.actionId;
+        // Store the investigation context in state for the branches workspace
+        state.branchContext = state.branchContext || {};
+        state.branchContext.waitWhatInvestigation = casterState.waitWhatInvestigation;
+        state.branchContext.waitWhatActionId = actionId;
+        state.branchContext.waitWhatCaptureId = casterState.waitWhatCapture?.captureId;
+        // Navigate to #/branches
+        window.location.hash = '#/branches';
+      };
+    });
   }
 }
 
@@ -541,7 +598,7 @@ function buildCasterRightRail(session, beat, idx, total, ps, policyIds) {
 
   // WAIT WHAT panel
   const ww = casterState.waitWhatVisible && casterState.waitWhatCapture
-    ? renderWaitWhatPanel(casterState.waitWhatCapture)
+    ? renderWaitWhatPanel(casterState.waitWhatCapture, casterState.waitWhatInvestigation, casterState.waitWhatInvalidated)
     : '';
 
   // ── Transport controls section (bottom, smaller) ──
@@ -634,10 +691,18 @@ function wireCasterRightRail(appEl, session, idx, total) {
   });
 
   const waitWhatBtn = $('caster-wait-what');
-  if (waitWhatBtn) waitWhatBtn.onclick = () => {
+  if (waitWhatBtn) waitWhatBtn.onclick = async () => {
     const capture = session.waitWhat();
     casterState.waitWhatCapture = capture;
     casterState.waitWhatVisible = true;
+    // Create an investigation from the capture
+    const { createInvestigation } = await getInvestigation();
+    const authHash = await getAuthorityHash();
+    casterState.waitWhatInvestigation = createInvestigation(capture, authHash);
+    casterState.waitWhatInvalidated = false;
+    casterState.waitWhatAnnotationText = '';
+    casterState.waitWhatAnnotationSeverity = '';
+    casterState.waitWhatExportResult = null;
     renderTheatre(appEl);
   };
 
@@ -649,13 +714,20 @@ function wireCasterRightRail(appEl, session, idx, total) {
     casterState.commentaryText = '';
     casterState.waitWhatCapture = null;
     casterState.waitWhatVisible = false;
+    casterState.waitWhatInvestigation = null;
+    casterState.waitWhatInvalidated = false;
+    casterState.waitWhatExportResult = null;
+    if (casterState.tacticalMount) {
+      try { casterState.tacticalMount.dispose(); } catch { /* ignore */ }
+      casterState.tacticalMount = null;
+    }
     renderSetup(appEl);
   };
 }
 
 // ── WAIT WHAT panel ───────────────────────────────────────────────
 
-function renderWaitWhatPanel(capture) {
+function renderWaitWhatPanel(capture, investigation, invalidated) {
   const beforeItems = (capture.contextBefore || []).map(b =>
     `<li><button class="caster-ww-jump" data-beat-id="${esc(b.beatId)}">${esc(beatLabel(b))}</button></li>`
   ).join('');
@@ -666,28 +738,160 @@ function renderWaitWhatPanel(capture) {
     `<li><strong>${esc(d.verdict)}</strong>: ${esc(d.observed)} <small>(${esc(d.category)})</small></li>`
   ).join('');
 
+  // Legal alternatives from the capture
+  const legalCount = capture.legalOptions?.[0]?.count;
+  const legalAlternativesHtml = legalCount != null && legalCount > 1
+    ? `<div class="caster-ww-alternatives" data-testid="caster-ww-alternatives">
+        <h4>Legal Alternatives (${legalCount} options)</h4>
+        <p class="caster-ww-alternatives-hint">${legalCount} legal actions were available at this decision point. Use the Branches workspace to explore counterfactual outcomes.</p>
+        <button class="caster-ww-branch-btn secondary-button" data-action-id="runner-up" data-testid="caster-ww-branch-btn">Branch Runner-Up Action →</button>
+      </div>`
+    : '';
+
+  // Investigation status and authority hash
+  const invStatus = investigation?.status || 'BOOKMARKED';
+  const authHash = investigation?.authorityHashAtCreation;
+  const invalidationBanner = invalidated
+    ? `<div class="caster-ww-invalidation notice danger" data-testid="caster-ww-invalidation">
+        <strong>⚠ Investigation Invalidated</strong>
+        <p>The engine authority hash has changed since this investigation was created. Branches and comparisons may be stale.</p>
+      </div>`
+    : '';
+
+  // Annotation form
+  const annotationText = casterState.waitWhatAnnotationText || '';
+  const annotationSeverity = casterState.waitWhatAnnotationSeverity || '';
+  const existingAnnotations = (investigation?.annotations || []).map(a =>
+    `<li><strong>${esc(a.beatId || 'general')}</strong>: ${esc(a.text)}</li>`
+  ).join('');
+
+  const annotationFormHtml = `<div class="caster-ww-annotation-form" data-testid="caster-ww-annotation-form">
+    <h4>Annotate</h4>
+    <textarea id="caster-ww-annotation-text" placeholder="What caught your attention?" rows="2">${esc(annotationText)}</textarea>
+    <select id="caster-ww-annotation-severity">
+      <option value="" ${annotationSeverity === '' ? 'selected' : ''}>— Severity —</option>
+      <option value="confirmed-defect" ${annotationSeverity === 'confirmed-defect' ? 'selected' : ''}>Confirmed defect</option>
+      <option value="policy-oddity" ${annotationSeverity === 'policy-oddity' ? 'selected' : ''}>Policy oddity</option>
+      <option value="legal-but-surprising" ${annotationSeverity === 'legal-but-surprising' ? 'selected' : ''}>Legal but surprising</option>
+      <option value="insufficient-evidence" ${annotationSeverity === 'insufficient-evidence' ? 'selected' : ''}>Insufficient evidence</option>
+    </select>
+    <button id="caster-ww-annotation-save" class="secondary-button" data-testid="caster-ww-annotation-save">Save Annotation</button>
+    ${existingAnnotations ? `<ul class="caster-ww-annotations-list">${existingAnnotations}</ul>` : ''}
+  </div>`;
+
+  // Export buttons
+  const exportResultHtml = casterState.waitWhatExportResult
+    ? `<div class="caster-ww-export-result notice" data-testid="caster-ww-export-result">
+        <strong>Exported as ${esc(casterState.waitWhatExportResult.format)}</strong>
+        <p>Investigation envelope downloaded.</p>
+      </div>`
+    : '';
+  const exportButtonsHtml = `<div class="caster-ww-export" data-testid="caster-ww-export">
+    <h4>Export Investigation</h4>
+    <button id="caster-ww-export-json" class="secondary-button" data-testid="caster-ww-export-json">Export JSON</button>
+    <button id="caster-ww-export-md" class="secondary-button" data-testid="caster-ww-export-md">Export Markdown</button>
+    ${exportResultHtml}
+  </div>`;
+
   return `<div class="caster-wait-what" data-testid="caster-wait-what-panel">
     <div class="caster-ww-header">
       <h3>WAIT WHAT — Investigation Envelope</h3>
       <button id="caster-ww-close" class="secondary-button">✕</button>
     </div>
     <div class="caster-ww-body">
+      ${invalidationBanner}
       <div class="caster-ww-meta">
         <p><strong>Capture:</strong> ${esc(capture.captureId)}</p>
+        <p><strong>Investigation:</strong> ${esc(investigation?.investigationId || '—')} · <strong>Status:</strong> ${esc(invStatus)}</p>
         <p><strong>Beat:</strong> ${esc(capture.casterBeatId || '—')} · <strong>Decision:</strong> ${esc(capture.decisionId || '—')}</p>
         <p><strong>Checkpoint:</strong> <code>${esc(capture.checkpointHash?.slice(0, 16) || '—')}</code></p>
         <p><strong>Viewer mode:</strong> ${esc(capture.viewerMode)} ${capture.redacted ? '· future redacted' : ''}</p>
+        ${authHash ? `<p><strong>Authority hash:</strong> <code>${esc(authHash.slice(0, 16))}</code></p>` : ''}
       </div>
       ${diags ? `<div class="caster-ww-diagnostics"><h4>Diagnostics</h4><ul>${diags}</ul></div>` : ''}
       <div class="caster-ww-context">
         <div class="caster-ww-before"><h4>Before</h4><ul>${beforeItems || '<li>—</li>'}</ul></div>
         <div class="caster-ww-after"><h4>After</h4><ul>${afterItems || '<li>—</li>'}</ul></div>
       </div>
+      ${legalAlternativesHtml}
       <div class="caster-ww-commentary">
         ${capture.commentary ? `<p><strong>Commentary:</strong> <span id="caster-ww-commentary-text"></span></p>` : '<p><em>No commentary for this beat.</em></p>'}
       </div>
+      ${annotationFormHtml}
+      ${exportButtonsHtml}
     </div>
   </div>`;
+}
+
+// ── WAIT WHAT annotation wiring ──────────────────────────────────
+
+async function wireWaitWhatAnnotation(appEl) {
+  const textArea = appEl.querySelector('#caster-ww-annotation-text');
+  const severitySelect = appEl.querySelector('#caster-ww-annotation-severity');
+  const saveBtn = appEl.querySelector('#caster-ww-annotation-save');
+  if (!textArea || !saveBtn) return;
+
+  textArea.oninput = (e) => { casterState.waitWhatAnnotationText = e.target.value; };
+  if (severitySelect) {
+    severitySelect.onchange = (e) => { casterState.waitWhatAnnotationSeverity = e.target.value; };
+  }
+
+  saveBtn.onclick = async () => {
+    const text = casterState.waitWhatAnnotationText.trim();
+    if (!text || !casterState.waitWhatInvestigation) return;
+    const { addAnnotation } = await getInvestigation();
+    const severityPrefix = casterState.waitWhatAnnotationSeverity
+      ? `[${casterState.waitWhatAnnotationSeverity}] `
+      : '';
+    casterState.waitWhatInvestigation = addAnnotation(casterState.waitWhatInvestigation, {
+      text: severityPrefix + text,
+      beatId: casterState.waitWhatCapture?.casterBeatId ?? null,
+    });
+    casterState.waitWhatAnnotationText = '';
+    casterState.waitWhatAnnotationSeverity = '';
+    renderTheatre(appEl);
+  };
+}
+
+// ── WAIT WHAT export wiring ──────────────────────────────────────
+
+async function wireWaitWhatExport(appEl) {
+  const jsonBtn = appEl.querySelector('#caster-ww-export-json');
+  const mdBtn = appEl.querySelector('#caster-ww-export-md');
+  if (!casterState.waitWhatInvestigation) return;
+
+  if (jsonBtn) jsonBtn.onclick = async () => {
+    const { exportInvestigation } = await getInvestigation();
+    const { investigation, exportData, exportFormat } = exportInvestigation(casterState.waitWhatInvestigation, 'json');
+    casterState.waitWhatInvestigation = investigation;
+    casterState.waitWhatExportResult = { format: exportFormat };
+    downloadInvestigation(exportData, 'json');
+    renderTheatre(appEl);
+  };
+
+  if (mdBtn) mdBtn.onclick = async () => {
+    const { exportInvestigation } = await getInvestigation();
+    const { investigation, exportData, exportFormat } = exportInvestigation(casterState.waitWhatInvestigation, 'markdown');
+    casterState.waitWhatInvestigation = investigation;
+    casterState.waitWhatExportResult = { format: exportFormat };
+    downloadInvestigation(exportData, 'md');
+    renderTheatre(appEl);
+  };
+}
+
+function downloadInvestigation(data, ext) {
+  try {
+    const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    const blob = new Blob([content], { type: ext === 'json' ? 'application/json' : 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `investigation-${Date.now()}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch { /* download not available */ }
 }
 
 // ── Beat change handler ───────────────────────────────────────────
@@ -740,6 +944,18 @@ async function onBeatChange(appEl) {
 
   // Re-render with final commentary state (safe text rendering)
   renderTheatre(appEl);
+
+  // Check WAIT WHAT investigation invalidation
+  if (casterState.waitWhatVisible && casterState.waitWhatInvestigation) {
+    const { checkInvalidation } = await getInvestigation();
+    const authHash = await getAuthorityHash();
+    const checked = checkInvalidation(casterState.waitWhatInvestigation, authHash);
+    if (checked.status === 'INVALIDATED' && !casterState.waitWhatInvalidated) {
+      casterState.waitWhatInvestigation = checked;
+      casterState.waitWhatInvalidated = true;
+      renderTheatre(appEl);
+    }
+  }
 
   // Render WAIT WHAT commentary text safely
   if (casterState.waitWhatVisible && casterState.waitWhatCapture?.commentary) {
@@ -1077,9 +1293,17 @@ export function cleanupCaster() {
     casterState.worker.terminate();
     casterState.worker = null;
   }
+  // Dispose the Astra board mount (if active) to release its React root.
+  if (casterState.tacticalMount) {
+    try { casterState.tacticalMount.dispose(); } catch { /* ignore */ }
+    casterState.tacticalMount = null;
+  }
   // Pause playback but preserve the session for resume.
   if (casterState.session) {
     try { casterState.session.pause(); } catch { /* ignore */ }
   }
   casterState.waitWhatVisible = false;
+  casterState.waitWhatInvestigation = null;
+  casterState.waitWhatInvalidated = false;
+  casterState.waitWhatExportResult = null;
 }

@@ -227,8 +227,8 @@ try{
   // ── Landing page proof ──
   const landingProof={};
   await cdp.evaluate(`location.hash='#/'`);await new Promise(r=>setTimeout(r,300));
-  const landingOk=await cdp.evaluate(`(()=>({shellHidden:getComputedStyle(document.querySelector('.observatory-shell')).display==='none',landingVisible:Boolean(document.querySelector('#landing-app .wip-landing')),brainVisible:Boolean(document.querySelector('#brain-container')),developerPreview:Boolean(document.querySelector('.wip-dev-preview-btn')),newsletterVisible:Boolean(document.querySelector('#wip-newsletter-form'))}))()`);
-  if(!landingOk.shellHidden||!landingOk.landingVisible||!landingOk.brainVisible||!landingOk.developerPreview||!landingOk.newsletterVisible)throw new Error(`Landing page check failed: ${JSON.stringify(landingOk)}`);
+  const landingOk=await cdp.evaluate(`(()=>({shellHidden:getComputedStyle(document.querySelector('.observatory-shell')).display==='none',landingVisible:Boolean(document.querySelector('#landing-app .wip-landing')),brainRemoved:!document.querySelector('#brain-container, .wip-brain-section'),developerPreview:Boolean(document.querySelector('.wip-dev-preview-btn')),newsletterVisible:Boolean(document.querySelector('#wip-newsletter-form'))}))()`);
+  if(!landingOk.shellHidden||!landingOk.landingVisible||!landingOk.brainRemoved||!landingOk.developerPreview||!landingOk.newsletterVisible)throw new Error(`Landing page check failed: ${JSON.stringify(landingOk)}`);
   landingProof.landing=true;
 
   await cdp.evaluate(`location.hash='#/play'`);

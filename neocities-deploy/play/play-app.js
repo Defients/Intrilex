@@ -4,52 +4,70 @@
 // Never owns authoritative state — delegates to PlaySession.
 // ═══════════════════════════════════════════════════════════════
 
-import { createSession, restoreSession, SessionState } from './play-controller.js?v=75c53031ef21';
-import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=75c53031ef21';
-import { getGameplaySkin } from './gameplay-skin.js?v=75c53031ef21';
-import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=75c53031ef21';
-import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=75c53031ef21';
-import { ensureReplayFrames } from '../replay-frames.js?v=75c53031ef21';
-import { state as observatoryState } from '../state.js?v=75c53031ef21';
-import { buildSaveIntegrityPayload } from './save-integrity.js?v=75c53031ef21';
-import { validateSnapshotPrivacy } from './play-privacy.js?v=75c53031ef21';
-import { POLICY_IDS } from '../autonomy-runtime.js?v=75c53031ef21';
-import { GuidanceMode } from './intelligence/action-explanation.js?v=75c53031ef21';
-import './orchestration/declaration-flow.js?v=75c53031ef21';
-import './state/play-lifecycle.js?v=75c53031ef21';
-import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=75c53031ef21';
-import { getAiBanter } from './ai-personality.js?v=75c53031ef21';
-import { SoundEngine } from './play-sound.js?v=75c53031ef21';
-import { ParticleSystem } from './play-particles.js?v=75c53031ef21';
-import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=75c53031ef21';
-import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=75c53031ef21';
-import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=75c53031ef21';
-import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=75c53031ef21';
-import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=75c53031ef21';
-import { renderRecap } from './academy/academy-recap.mjs?v=75c53031ef21';
-import { state, resetState } from './play-state.js?v=75c53031ef21';
-import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection } from './board-events.js?v=75c53031ef21';
+import { createSession, restoreSession, SessionState } from './play-controller.js?v=20eae2e2c270';
+import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=20eae2e2c270';
+import { getGameplaySkin } from './gameplay-skin.js?v=20eae2e2c270';
+import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=20eae2e2c270';
+import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=20eae2e2c270';
+import { ensureReplayFrames } from '../replay-frames.js?v=20eae2e2c270';
+import { state as observatoryState } from '../state.js?v=20eae2e2c270';
+import { buildSaveIntegrityPayload } from './save-integrity.js?v=20eae2e2c270';
+import { validateSnapshotPrivacy } from './play-privacy.js?v=20eae2e2c270';
+import { POLICY_IDS } from '../autonomy-runtime.js?v=20eae2e2c270';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=20eae2e2c270';
+import './orchestration/declaration-flow.js?v=20eae2e2c270';
+import './state/play-lifecycle.js?v=20eae2e2c270';
+import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=20eae2e2c270';
+import { getAiBanter } from './ai-personality.js?v=20eae2e2c270';
+import { SoundEngine } from './play-sound.js?v=20eae2e2c270';
+import { ParticleSystem } from './play-particles.js?v=20eae2e2c270';
+import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=20eae2e2c270';
+import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=20eae2e2c270';
+import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=20eae2e2c270';
+import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=20eae2e2c270';
+import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=20eae2e2c270';
+import { renderRecap } from './academy/academy-recap.mjs?v=20eae2e2c270';
+import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs?v=20eae2e2c270';
+import { state, resetState } from './play-state.js?v=20eae2e2c270';
+import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js?v=20eae2e2c270';
 import {
   openAdvancedCardRules as openAdvancedCardRulesController,
   closeAdvancedCardRules,
   isCardInspectable,
+  findAuthorizedCard,
   buildCurrentMatchContext,
   getOpenIdentity,
-} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=75c53031ef21';
-import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=75c53031ef21';
+} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=20eae2e2c270';
+import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=20eae2e2c270';
 import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
   renderNetworkQueueWaiting, renderNetworkSpectateForm, renderNetworkSpectating,
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
-  renderNetworkStatusBanner, renderNetworkUnavailable,
-} from './network/network-lobby-renderer.mjs?v=75c53031ef21';
-import { getMatchServerUrl, isMatchServerConfigured, validateMatchServerUrl } from './network/match-server-config.js?v=75c53031ef21';
-import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=75c53031ef21';
-import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=75c53031ef21';
-import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=75c53031ef21';
-import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=75c53031ef21';
+  renderNetworkUnavailable,
+} from './network/network-lobby-renderer.mjs?v=20eae2e2c270';
+import { getMatchServerUrl, validateMatchServerUrl } from './network/match-server-config.js?v=20eae2e2c270';
+import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=20eae2e2c270';
+import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=20eae2e2c270';
+import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=20eae2e2c270';
+import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=20eae2e2c270';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/**
+ * Dispose the tactical (Astra) board mount if active, releasing the React
+ * root and any subscriptions. Safe to call when no mount is active.
+ * Consolidates the six duplicate try/catch dispose blocks that were
+ * scattered across teardown, error paths, preference switches, and
+ * AI-step transitions.
+ */
+let tacticalContainer = null;
+function disposeTacticalMount() {
+  if (state.tacticalMount) {
+    try { state.tacticalMount.dispose(); } catch { /* ignore */ }
+    state.tacticalMount = null;
+  }
+  tacticalContainer = null;
+}
 
 // IRX-H10: Reconnect-grace countdown ticker for the waiting player. The
 // disconnect overlay renders a static remaining-time value; this interval
@@ -136,7 +154,7 @@ export async function handlePlayRoute(route, container) {
       const pendingSaveId = sessionStorage.getItem('intrilex-continue-save');
       if (pendingSaveId) {
         sessionStorage.removeItem('intrilex-continue-save');
-        if (isIndexedDBAvailable()) {
+        if (!state.session && isIndexedDBAvailable()) {
           await continueMatch(pendingSaveId, container);
           return;
         }
@@ -170,6 +188,8 @@ export async function handlePlayRoute(route, container) {
     await renderNetworkActiveMatch(container);
   } else if (sub === '/academy') {
     await renderAcademyHub(container);
+  } else if (sub === '/guided') {
+    await renderGuidedExhibition(container);
   } else {
     // Unknown play sub-route — redirect to new match setup
     location.hash = '#/play/new';
@@ -218,6 +238,17 @@ async function renderAcademyHub(container) {
   if (getCurrentStep() === FunnelStep.LANDING) advanceToStep(FunnelStep.TUTORIAL_STARTED);
   container.innerHTML = renderAcademy({ completedLessons: completed });
   bindAcademyEvents(container);
+}
+
+/**
+ * Render the Guided Exhibition — deterministic scripted match.
+ */
+async function renderGuidedExhibition(container) {
+  renderGuidedIntroScreen(container, {
+    onStart: async () => {
+      await startGuidedMatch(container, { guidanceLevel: 'full' });
+    },
+  });
 }
 
 /**
@@ -401,10 +432,14 @@ function wireResumePrompt(container) {
  * Start a new match.
  */
 async function startNewMatch(setup, container) {
+  const lessonController = setup.academyLessonId === state.academyLessonId ? state.academyController : null;
+  teardownSession();
   resetState();
   // Restore academy lesson ID after reset so terminal/exit handlers know
   // to route back to the Academy page instead of the homepage.
   state.academyLessonId = setup.academyLessonId ?? null;
+  state.academyController = lessonController;
+  state.academyPhase = lessonController ? AcademyPhase.MATCH : null;
   // Academy lessons always use GUIDED mode regardless of saved preference.
   if (setup.academyLessonId) {
     state.guidanceMode = GuidanceMode.GUIDED;
@@ -534,6 +569,8 @@ function teardownSession() {
   if (_graceCountdownTimerId) { clearInterval(_graceCountdownTimerId); _graceCountdownTimerId = null; }
   // v0.28: Remove beforeunload protection when the session is torn down
   removeBeforeUnloadProtection();
+  // Dispose tactical board mount if active
+  disposeTacticalMount();
   if (state.sessionId && state.tabId) {
     releaseLease(state.sessionId, state.tabId);
   }
@@ -567,6 +604,189 @@ function bindLeaseConflictEvents(container, sessionId) {
 }
 
 /**
+ * Build the chat config for the tactical (Astra) React board.
+ * Routes messages from the network session or local chat state, and
+ * sends through the network session or local echo accordingly.
+ * After any mutation (send/toggle), triggers a tactical board refresh
+ * so the React component sees the updated messages.
+ */
+function buildTacticalChatConfig(isNetworkMatch) {
+  const messages = (state.networkSession?.chatMessages ?? state.chatMessages ?? []).slice(-50);
+  const selfName = state.session?.setup?.humanDisplayName ?? 'You';
+  const opponentName = isNetworkMatch
+    ? (state.networkSession?.opponentDisplayName ?? 'Opponent')
+    : (state.session?.setup?.aiArchetype ?? 'AI');
+  const modeLabel = isNetworkMatch ? 'NETWORK · LIVE' : 'LOCAL VS AI';
+  const readOnly = state.leaseMode === 'READ_ONLY';
+  const hidden = state.networkSession?.chatHidden ?? state.chatHidden ?? false;
+  const notificationsMuted = state.chatNotificationsMuted ?? false;
+
+  function refreshTacticalChat() {
+    if (!state.tacticalMount || !state.session) return;
+    try {
+      const snap = state.session.getSnapshot();
+      state.tacticalMount.update(snap, state.leaseMode === 'READ_ONLY', buildTacticalChatConfig(isNetworkMatch));
+    } catch { /* session may be mid-transition */ }
+  }
+
+  const onSend = async (text) => {
+    if (state.networkSession && typeof state.networkSession.sendChatMessage === 'function') {
+      await state.networkSession.sendChatMessage(text);
+    } else {
+      state.chatMessages.push({ isHuman: true, text, time: new Date().toLocaleTimeString() });
+    }
+    refreshTacticalChat();
+  };
+
+  const onToggleHidden = (newHidden) => {
+    if (state.networkSession) {
+      state.networkSession.sendChatVisibility(newHidden);
+    }
+    state.chatHidden = newHidden;
+    refreshTacticalChat();
+  };
+
+  const onToggleMuted = (muted) => {
+    state.chatNotificationsMuted = muted;
+    refreshTacticalChat();
+  };
+
+  return { messages, onSend, selfName, opponentName, modeLabel, readOnly, hidden, onToggleHidden, notificationsMuted, onToggleMuted };
+}
+
+/**
+ * Render the tactical (Astra) React board.
+ *
+ * Incremental seam: receives the same authorized snapshot as the classic
+ * renderer and submits action intents through the same session path.
+ * Never owns authoritative state.
+ */
+async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
+  const session = state.session;
+  const readOnly = state.leaseMode === 'READ_ONLY';
+  const skin = getGameplaySkin();
+  // Presentation-only advice reuses the shipped Intrilex scoring module.
+  // It receives validated visible cards, never the session's raw state/vault.
+  const [{ rankPolicyActionsWithDecomposition }, { mountGameTable }] = await Promise.all([
+    import('../policy-scoring.js?v=20eae2e2c270'), import('../client/mount.tsx?v=20eae2e2c270'),
+  ]);
+  // The shell replaces play-root on hash navigation. Never publish into a
+  // detached root or finish an async mount for a session that has been replaced.
+  if (container.isConnected === false || state.session !== session) return;
+  if (state.tacticalMount && tacticalContainer !== container) disposeTacticalMount();
+  snapshot = session?.getSnapshot() ?? snapshot;
+  const teaching = {
+    panelHtml: state.academyController && state.academyPhase === AcademyPhase.MATCH ? state.academyController.getPanelHtml() : '',
+    coachmarkHtml: state.academyController && state.academyPhase === AcademyPhase.MATCH ? state.academyController.getCoachmarkHtml() : '',
+    onAction(action) {
+      const controller = state.academyController;
+      if (!controller) return;
+      if (action === 'academy-toggle-panel') controller.togglePanel();
+      else if (action === 'academy-dismiss-coachmark') controller.dismissCurrentCoachmark();
+      else if (action === 'academy-hint') {
+        const hint = controller.requestHint();
+        const hintEl = container.querySelector('[data-testid="academy-hint-display"]');
+        if (hintEl && hint) { hintEl.textContent = hint.text; hintEl.classList.add('visible'); }
+        return;
+      } else return;
+      void renderActiveMatch(container);
+    },
+  };
+
+  const submitIntent = async (intent) => {
+    const session = state.session ?? state.networkSession;
+    if (!session) return { accepted: false, error: 'No active session' };
+    try {
+      const result = await session.submitHumanAction(intent);
+      // After a successful submit, re-render so the tactical store
+      // receives the new session snapshot and resets its
+      // acceptedBoundary flag. Without this, the store's select()
+      // silently returns on all future selections because
+      // acceptedBoundary stays true. setTimeout(0) lets store.submit()
+      // finish its internal state management first.
+      if (result.accepted) {
+        setTimeout(() => { renderActiveMatch(container); }, 0);
+      }
+      return result;
+    } catch (error) {
+      return { accepted: false, error: error?.message ?? 'Submission failed' };
+    }
+  };
+
+  const onSave = async () => {
+    if (!state.session?.getSaveEnvelope) return;
+    try {
+      const envelope = state.session.getSaveEnvelope();
+      if (envelope) {
+        await putSave(envelope);
+        // Reuse the existing Continue Duel handoff on document refresh.
+        try { sessionStorage.setItem('intrilex-continue-save', envelope.saveId); } catch { /* storage may be disabled */ }
+      }
+    } catch (error) {
+      console.warn('[tactical-board] save failed:', error?.message ?? error);
+      throw error;
+    }
+  };
+
+  const onInspect = (cardId) => {
+    if (!cardId) return;
+    state.inspectorCardId = cardId;
+    const current = state.session?.getSnapshot() ?? snapshot;
+    const card = findAuthorizedCard(current, cardId);
+    if (card && isCardInspectable(current, cardId)) openAdvancedCardRules(card.identity, cardId);
+  };
+
+  const onReorderHand = async (orderedIds) => {
+    // Network match: send to server for persistence + opponent notification
+    if (isNetworkMatch && state.networkSession?.reorderHand) {
+      try {
+        await state.networkSession.reorderHand(orderedIds);
+      } catch (error) {
+        console.warn('[tactical-board] hand reorder failed:', error?.message ?? error);
+      }
+    }
+    // Local AI match: store in local state for UI persistence
+    if (!isNetworkMatch) {
+      state.handOrder = [...orderedIds];
+    }
+  };
+
+  try {
+    if (!state.tacticalMount) {
+      state.tacticalMount = mountGameTable(container, snapshot, {
+        submit: submitIntent,
+        onSave: state.session?.getSaveEnvelope ? onSave : undefined,
+        onInspect,
+        onReorderHand,
+        skin,
+        readOnly,
+        chat: buildTacticalChatConfig(isNetworkMatch),
+        teaching,
+        rankSuggestions: rankPolicyActionsWithDecomposition,
+        legacy: new URLSearchParams(location.search).get('board') === 'classic',
+        onExit: () => {
+          if (isNetworkMatch) showForfeitConfirmation(container, state);
+          else { location.hash = state.academyLessonId ? '#/play/academy' : '#/play/new'; }
+        },
+      });
+      tacticalContainer = container;
+    } else {
+      state.tacticalMount.update(snapshot, readOnly, buildTacticalChatConfig(isNetworkMatch), undefined, undefined, teaching);
+    }
+    positionAcademyCoachmarks(container);
+    bindAcademyCoachmarkDismiss(container);
+    if (getOpenIdentity() && state.advancedRulesCardId) {
+      const { refreshCurrentMatch } = await import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=20eae2e2c270');
+      refreshCurrentMatch(snapshot, state.advancedRulesCardId);
+    }
+  } catch (error) {
+    console.error('[tactical-board] mount failed:', error);
+    disposeTacticalMount();
+    container.innerHTML = `<div class="play-error" role="alert"><h2>Board error</h2><p>${esc(error?.message ?? 'Failed to render the Astra board.')}</p><a href="#/" class="secondary-button">Back to Home</a></div>`;
+  }
+}
+
+/**
  * Render the active match.
  */
 async function renderActiveMatch(container) {
@@ -576,6 +796,11 @@ async function renderActiveMatch(container) {
   }
   if (!container) return; // Guard: heartbeat may fire after navigation away from play
   state.activeContainer = container;
+  if (state.session === state.networkSession &&
+      [NetworkSessionState.IN_LOBBY, NetworkSessionState.READY].includes(state.networkSession?.status)) {
+    await renderNetworkActiveMatch(container);
+    return;
+  }
 
   // Gate 2: Conflict UI — when another tab holds the lease
   if (state.leaseMode === 'CONFLICT' || state.leaseMode === 'LEASE_LOST') {
@@ -609,7 +834,17 @@ async function renderActiveMatch(container) {
   // If AI decision is pending, step it
   if (state.session.status === SessionState.AI_DECISION && !state.isAdvancing) {
     state.isAdvancing = true;
-    container.innerHTML = '<div class="play-loading">Opponent is thinking...</div>';
+    const preSnapshot = state.session.getSnapshot();
+    const isNetworkMatch = state.networkSession instanceof NetworkPlaySession;
+    if (state.tacticalMount) {
+      // Update Astra board with current snapshot (shows "waiting"
+      // status) instead of destroying the React DOM with innerHTML.
+      state.tacticalMount.update(preSnapshot, state.leaseMode === 'READ_ONLY');
+    } else {
+      // No active Astra mount yet (e.g. AI opens the match) — mount it
+      // so the player sees the AI-thinking state instead of a blank box.
+      await renderTacticalBoard(container, preSnapshot, isNetworkMatch);
+    }
     try {
       await state.session.stepAI();
     } catch (error) {
@@ -618,6 +853,7 @@ async function renderActiveMatch(container) {
         state.session.status = SessionState.ERROR;
         state.session.error = { code: 'AI_STEP_EXCEPTION', message: error.message };
       }
+      disposeTacticalMount();
       container.innerHTML = `<div class="play-error" role="alert"><h2>AI error</h2><p>${esc(error.message)}</p><a href="#/" class="secondary-button">Back to Home</a></div>`;
       state.isAdvancing = false;
       return;
@@ -647,6 +883,21 @@ async function renderActiveMatch(container) {
   if (snapshot.status === 'TERMINAL' && state.session && !state.statsRecorded) {
     state.statsRecorded = true;
     updatePlayerStatsOnTerminal(snapshot);
+    // IRX-TRACE: Cache the certified replay for trace-based teaching insights
+    // on the terminal screen. This is async but the result is cached on
+    // state._terminalCertifiedReplay and picked up on the next render.
+    // Guard against the promise resolving after navigation away by checking
+    // that the session identity hasn't changed.
+    if (!state._terminalCertifiedReplay) {
+      const sessionId = state.session.sessionId;
+      state.session.createCertifiedReplay?.()
+        .then(replay => {
+          if (state.session?.sessionId === sessionId) {
+            state._terminalCertifiedReplay = replay;
+          }
+        })
+        .catch(err => console.warn('[play-app] failed to cache terminal certified replay:', err?.message ?? err));
+    }
     // v0.28: Remove beforeunload protection when the match reaches terminal state
     removeBeforeUnloadProtection();
     // Academy: route through AcademyController for completion + recap
@@ -710,6 +961,22 @@ async function renderActiveMatch(container) {
     } else {
       removeBeforeUnloadProtection();
     }
+
+    // ── Astra board (active play) ───────────────────────────────
+    // Astra is the only in-match board. For active (non-terminal)
+    // states, mount or update the React GameTable. It receives the
+    // same authorized snapshot and submits through the same action
+    // intent path. It never owns authoritative state.
+    if (snapshot.status !== 'TERMINAL') {
+      await renderTacticalBoard(container, snapshot, isNetworkMatch);
+      return;
+    }
+
+    // Terminal state: dispose any active Astra mount and render the
+    // rich terminal screen (rank results, achievements, rematch,
+    // academy recap, intelligence card) via the classic renderer.
+    disposeTacticalMount();
+
     boardHtml = renderBoard(snapshot, {
       selectedActionId: state.selectedActionId,
       selectedIntentKey: state.selectedIntentKey,
@@ -759,6 +1026,9 @@ async function renderActiveMatch(container) {
     // Gameplay skin (Light/Dark/CosmoTech/Corrupture) — read synchronously
     // so the first paint carries the correct data-gameplay-skin attribute.
     gameplaySkin: getGameplaySkin(),
+    // IRX-TRACE: Pass the cached certified replay for trace-based teaching
+    // insights on the terminal screen.
+    certifiedReplay: state._terminalCertifiedReplay ?? null,
   });
   } catch (renderError) {
     console.error('renderBoard threw:', renderError);
@@ -827,7 +1097,7 @@ async function renderActiveMatch(container) {
   // inspected card is no longer inspectable, the controller sanitizes
   // (closes) the view to avoid leaking stale information.
   if (getOpenIdentity() && state.advancedRulesCardId) {
-    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=75c53031ef21').then(({ refreshCurrentMatch }) => {
+    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=20eae2e2c270').then(({ refreshCurrentMatch }) => {
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     });
   }
@@ -892,6 +1162,7 @@ function positionAcademyCoachmarks(container) {
  * Bind auto-dismiss for academy coachmarks when the player clicks
  * the target element (they're following the guidance).
  */
+const academyCoachmarkBindings = new WeakMap();
 function bindAcademyCoachmarkDismiss(container) {
   const coachmarkEl = container.querySelector('[data-testid="academy-coachmark"]');
   if (!coachmarkEl) return;
@@ -901,12 +1172,18 @@ function bindAcademyCoachmarkDismiss(container) {
 
   const targetEls = container.querySelectorAll(targetSelector);
   targetEls.forEach((el) => {
-    el.addEventListener('click', () => {
+    const previous = academyCoachmarkBindings.get(el);
+    if (previous?.coachmark === coachmarkEl) return;
+    if (previous) el.removeEventListener('click', previous.handler);
+    const handler = () => {
+      academyCoachmarkBindings.delete(el);
       if (state.academyController) {
         state.academyController.dismissCurrentCoachmark();
         renderActiveMatch(container);
       }
-    }, { once: true });
+    };
+    academyCoachmarkBindings.set(el, { coachmark: coachmarkEl, handler });
+    el.addEventListener('click', handler, { once: true });
   });
 }
 
@@ -955,7 +1232,7 @@ function bindReplayLibraryEvents(container) {
       } else if (action === 'delete-replay') {
         const confirmed = await showConfirmDialog('Delete replay', `Delete replay ${replayId}? This cannot be undone.`);
         if (confirmed) {
-          const { deleteReplay } = await import('./persistence.js?v=75c53031ef21');
+          const { deleteReplay } = await import('./persistence.js?v=20eae2e2c270');
           await deleteReplay(replayId);
           await renderReplays(container);
         }
@@ -1359,7 +1636,7 @@ function bindNetworkWaitingEvents(container) {
  * Render the matchmaking queue flow — joins the queue and waits for pairing.
  */
 async function renderNetworkQueueFlow(container) {
-  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=75c53031ef21');
+  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=20eae2e2c270');
   const serverUrl = getNetworkServerUrl();
   if (!serverUrl) {
     container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
@@ -1582,7 +1859,7 @@ function fetchSpectatableList(serverUrl, listSpectatable) {
  * Match ID form remains available as a fallback and for private shares.
  */
 async function renderNetworkSpectateFlow(container) {
-  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=75c53031ef21');
+  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=20eae2e2c270');
 
   // Live-list state for the discovery section
   let liveState = { liveMatches: null, liveLoading: false, liveError: null };
@@ -1776,7 +2053,7 @@ async function renderNetworkActiveMatch(container) {
   // (e.g., opponent acted). Prevents duplicate listeners by checking
   // that the callback isn't already wired to this container.
   const currentOnStateChange = session.onStateChange;
-  if (!currentOnStateChange || !currentOnStateChange._isNetworkBoardSubscription) {
+  if (!currentOnStateChange || !currentOnStateChange._isNetworkBoardSubscription || currentOnStateChange._networkBoardContainer !== container) {
     const boardSubscription = () => {
       // Don't re-render if we've navigated away or the session was replaced
       if (state.networkSession !== session) return;
@@ -1798,9 +2075,10 @@ async function renderNetworkActiveMatch(container) {
         }
       }
       // Re-render the board with the latest authoritative view
-      renderActiveMatch(container);
+      renderNetworkActiveMatch(container);
     };
     boardSubscription._isNetworkBoardSubscription = true;
+    boardSubscription._networkBoardContainer = container;
     session.onStateChange = boardSubscription;
   }
 
@@ -1899,7 +2177,10 @@ async function reconnectToSavedMatch(container) {
 
     if (session.status === NetworkSessionState.RUNNING) {
       state.session = session;
-      location.hash = '#/play/online/match';
+      // A document refresh already has this hash, so assigning it would not
+      // dispatch navigation. Mount and subscribe directly on the current root.
+      if (location.hash === '#/play/online/match') await renderNetworkActiveMatch(container);
+      else location.hash = '#/play/online/match';
     } else if (session.status === NetworkSessionState.IN_LOBBY || session.status === NetworkSessionState.READY) {
       if (session.inviteCode) {
         await renderNetworkCreateWaitingRoom(container);
@@ -1976,6 +2257,7 @@ function startAutosave() {
         // Recompute content hash after saveId changes
         envelope.contentHash = buildSaveIntegrityPayload(envelope);
         await putSave(envelope);
+        try { sessionStorage.setItem('intrilex-continue-save', envelope.saveId); } catch { /* storage may be disabled */ }
       } catch (error) {
         console.warn('Autosave failed:', error.message);
       } finally {
@@ -2003,6 +2285,7 @@ function stopAutosave() {
  * sound/particle engines.
  */
 function cleanupPlayResources() {
+  disposeTacticalMount();
   stopAutosave();
   removeKeyboardShortcuts();
   removeVisibilityHandler();

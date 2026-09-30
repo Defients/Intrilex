@@ -158,6 +158,8 @@ function buildPlayerPlate(state, playerId, seatIndex, isHuman, localProfile) {
     rating: isHuman ? (localProfile?.rating ?? null) : opponentRating,
     rank: isHuman ? (localProfile?.rank ?? null) : opponentRank,
     aiRating: !isHuman && !opponentIsHuman ? (player.aiRating ?? null) : null,
+    // v2.5 §4J: AI difficulty label (e.g. "EASY") for the identity meta line.
+    difficulty: !isHuman && !opponentIsHuman ? (player.difficulty ?? '') : '',
     badges: isHuman ? (localProfile?.badges ?? []) : [],
     connectionState: player.connectionState ?? null,
     statusIndicators: buildStatusIndicators(player),
@@ -168,7 +170,7 @@ function emptyPlayerPlate() {
   return {
     playerId: '', seatIndex: 0, displayName: '', isHuman: true, isLocalPlayer: true,
     monogram: '?', secured: 0, goal: 21, goalLabel: '0/21',
-    rating: null, rank: null, aiRating: null, badges: [], connectionState: null, statusIndicators: [],
+    rating: null, rank: null, aiRating: null, difficulty: '', badges: [], connectionState: null, statusIndicators: [],
   };
 }
 

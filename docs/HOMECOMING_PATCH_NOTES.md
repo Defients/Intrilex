@@ -2,6 +2,20 @@
 
 September 30, 2026 — local implementation and verification; no deployment.
 
+## Intrilex Brain removal
+
+- Remove the “Explore the Intrilex Brain” homepage section and all 2D/3D Brain runtime modules, styles, mode persistence, lifecycle cleanup and navigation behavior.
+- Remove the Three.js dependency, Brain-specific tests and CI stage, certification requirement, generated limitation, roadmap references and deployment chunks.
+- Update the landing-page browser smoke check to prove the retired Brain UI is absent.
+
+## Possible Moves stylization
+
+- Give move families distinct accent colors, tinted icon tiles, matching variant-count badges and layered row backgrounds. Use gold for Super/Anchors, teal for scoring, pink for Swap Bar, coral for Scuttle/counters, cyan for Draw, blue for private choices and violet for remaining advanced/wild families.
+- Set move names in bold and effect descriptions in italics. Emphasize authorized source/target references with compact suit chips and brighter red/black suit colors on dark surfaces; retain the original move wording and atomic rank/suit wrapping.
+- Add compact timing badges, softer supporting text and right-side disclosure marks. Give hover and keyboard focus a family-colored glow; honor reduced motion and keep row positions stable.
+- Carry the same family accent into the Composer heading, active parameter, selected options and resolved preview. Retain the original action IDs and submission behavior.
+- Capture the real component palette, hover, Composer and phone layout with controlled UI fixtures. Local verification: 48 focused tests, 7 action-rail browser scenarios, 19 rebuilt-app browser scenarios and 10 drag browser scenarios passed; build and both TypeScript checks passed; lint reported 0 errors and 423 existing warnings.
+
 ## Left history and focused action rail
 
 - Remove the redundant top-right Opponent Hand panel and decorative player-summary fans. Keep one accessible hand-count indicator beside each player's name, score and goal.

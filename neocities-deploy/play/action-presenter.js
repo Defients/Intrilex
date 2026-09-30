@@ -46,6 +46,12 @@ const FAMILY_LABELS = Object.freeze({
   'ultra': 'Ultra',
   'voltage': 'Voltage',
   'solo-wild': 'Solo Wild',
+  'super': 'Super · Multi-card Plays',
+  'royal-marriage': 'Royal Marriage',
+  'queens-court': 'Queen’s Court',
+  'sudden-death': 'Sudden Death',
+  'special-scoring-riders': 'Scoring Riders',
+  'wild-sovereignty': 'Wild Sovereignty',
 });
 
 /**
@@ -137,6 +143,21 @@ const MODE_LABELS = Object.freeze({
   '2-black-2-red-rummage': '2 black 2 red rummage',
   'deep-draw': 'deep draw',
   'plus-3': '+3',
+  'declare': 'declare',
+  'queens-court': 'Queen’s Court',
+  'four-exchange-er': 'exchange Enduring Rows',
+  'four-exchange-pr': 'exchange Point Rows',
+  'jack-tempo': 'Jack tempo',
+  'three-raid': 'Three raid',
+  'spade-recovery': 'Spade recovery',
+  'rank7-hand-only': 'take into hand',
+  'rank7-effect-only': 'generated effect',
+  'diamond-mimic-topdeck-seven': 'Mimic Seven topdeck',
+  'diamond-mimic-recycle-five': 'Mimic Five recycle',
+  'diamond-mimic-paired-topdeck-seven': 'paired Mimic Seven topdeck',
+  'diamond-mimic-paired-recycle-five': 'paired Mimic Five recycle',
+  'diamond-mimic-paired-absolute-scuttle': 'paired Mimic absolute Scuttle',
+  'diamond-mimic-paired-super-j-tempo': 'paired Mimic Super Jack tempo',
 });
 
 // Rank-7 generated effect mode prefixes → labels

@@ -21,11 +21,11 @@
 // with Online Ranked IR/record.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct, state } from '../state.js?v=75c53031ef21';
-import { loadProfile, isStorageAvailable } from '../play/local-profile.mjs?v=75c53031ef21';
-import { getAchievementRuntime, getDefinition } from '../play/achievements/achievement-runtime.js?v=75c53031ef21';
+import { app, esc, pct, state } from '../state.js?v=20eae2e2c270';
+import { loadProfile, isStorageAvailable } from '../play/local-profile.mjs?v=20eae2e2c270';
+import { getAchievementRuntime, getDefinition } from '../play/achievements/achievement-runtime.js?v=20eae2e2c270';
 import { ratingToTierDivision, RankTier } from "../account-domain/rank-tier.mjs";
-import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=75c53031ef21';
+import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=20eae2e2c270';
 import {
   fetchSelfProfile,
   fetchPublicProfile,
@@ -43,22 +43,23 @@ import {
   getTitleDefinition,
   getFrameDefinition,
   getBadgeDefinition,
-} from '../play/profile/profile-data.js?v=75c53031ef21';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=75c53031ef21';
-import { getReplay, listMatchStats, listReplays } from '../play/persistence.js?v=75c53031ef21';
-import { downloadReplay } from '../play/replay-library.js?v=75c53031ef21';
+} from '../play/profile/profile-data.js?v=20eae2e2c270';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=20eae2e2c270';
+import { getReplay, listMatchStats, listReplays } from '../play/persistence.js?v=20eae2e2c270';
+import { downloadReplay } from '../play/replay-library.js?v=20eae2e2c270';
 import { buildStrategicFingerprint } from "../account-domain/strategic-fingerprint.mjs";
 import { buildEnrichedStats } from "../account-domain/match-stats-aggregator.mjs";
+import { computeUncertaintyLabel, buildSampleSizeDisclaimer } from '@intrilex/statistics/evidence-honest';
 import { renderMasterySection, computeUsageFromReplays } from "../decision-intelligence/mastery-tracks.mjs";
 import { generateReplayLesson, renderLessonStep, getLessonSummary } from "../decision-intelligence/replay-lesson.mjs";
-import { getAuthState, getProfile as getAuthProfile } from '../play/network/auth-controller.js?v=75c53031ef21';
+import { getAuthState, getProfile as getAuthProfile } from '../play/network/auth-controller.js?v=20eae2e2c270';
 import {
   fetchRelationshipStatus,
   followPlayer,
   unfollowPlayer,
   setRival,
   unsetRival,
-} from '../play/players/relationships-data.js?v=75c53031ef21';
+} from '../play/players/relationships-data.js?v=20eae2e2c270';
 
 const BADGE_ICONS = {
   shield: '🛡', trophy: '🏆', star: '⭐', crown: '👑', flame: '🔥',
@@ -986,6 +987,18 @@ function renderStrategicFingerprintCard(ranked, isSelf) {
     ? `Based on ${coverageCount} match${coverageCount === 1 ? '' : 's'}`
     : 'Estimated from ranked record';
 
+  // Evidence-honest confidence label from the statistics package.
+  // Shows the truth about how much evidence backs this fingerprint.
+  const uncertainty = computeUncertaintyLabel({ sampleSize: coverageCount || (ranked?.games ?? 0) });
+  const disclaimer = buildSampleSizeDisclaimer(
+    { sampleSize: coverageCount || (ranked?.games ?? 0) },
+    'win-rate'
+  );
+  const confidenceBadge = `<span class="profile-fingerprint-confidence" data-testid="profile-fingerprint-confidence" title="${esc(uncertainty.humanReadable)}">${esc(uncertainty.label)}</span>`;
+  const disclaimerHtml = disclaimer.shouldDisplay
+    ? `<div class="profile-fingerprint-disclaimer" data-testid="profile-fingerprint-disclaimer">${esc(disclaimer.disclaimerText)}</div>`
+    : '';
+
   const traitBadges = fingerprint.traits.slice(0, 4).map(t => {
     const pctScore = Math.round(t.score * 100);
     return `<span class="profile-fingerprint-trait" data-testid="profile-fingerprint-trait" title="${esc(t.description)}">
@@ -1006,7 +1019,8 @@ function renderStrategicFingerprintCard(ranked, isSelf) {
         </div>
       </div>
       <div class="profile-fingerprint-traits">${traitBadges}</div>
-      <div class="profile-fingerprint-coverage" data-testid="profile-fingerprint-coverage">${esc(coverageLabel)}</div>
+      <div class="profile-fingerprint-coverage" data-testid="profile-fingerprint-coverage">${esc(coverageLabel)} ${confidenceBadge}</div>
+      ${disclaimerHtml}
     </div>
   </section>`;
 }

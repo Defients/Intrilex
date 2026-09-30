@@ -118,6 +118,58 @@ export function enumerateCorePrivateChoiceActions(state, actorId) {
     if (choice.kind === "core-nine-anchor-discard")
         for (const id of choice.optionCardIds)
             candidates.push(privateChoiceAction(state, choice, "nine-anchor-discard", [id], { kind: "core-nine-anchor-discard", selectedCardIds: [id] }, { discard: true }));
+    // Natural 4: reorder top 4 DP cards, optionally draw 1 from the top.
+    if (choice.kind === "core-natural-four-reorder") {
+        const topIds = choice.optionCardIds;
+        // Enumerate a deterministic subset of orderings: original, reverse, and each card moved to front.
+        const permutations = [];
+        permutations.push([...topIds]);
+        permutations.push([...topIds].reverse());
+        for (let i = 0; i < topIds.length; i++) {
+            const reordered = [...topIds];
+            const [card] = reordered.splice(i, 1);
+            if (card)
+                reordered.unshift(card);
+            permutations.push(reordered);
+        }
+        // Deduplicate permutations by joining
+        const seen = new Set();
+        const unique = [];
+        for (const perm of permutations) {
+            const key = perm.join(",");
+            if (!seen.has(key)) {
+                seen.add(key);
+                unique.push(perm);
+            }
+        }
+        for (const perm of unique) {
+            candidates.push(privateChoiceAction(state, choice, `natural-four-reorder-${perm.join("-")}`, perm, { kind: "core-natural-four-reorder", reorderCardIds: perm, drawTop: false }, { naturalFour: true, drawTop: false }));
+            candidates.push(privateChoiceAction(state, choice, `natural-four-reorder-draw-${perm.join("-")}`, perm, { kind: "core-natural-four-reorder", reorderCardIds: perm, drawTop: true }, { naturalFour: true, drawTop: true }));
+        }
+    }
+    // BJ Exile Recycle: select 0-2 cards from Exile to place on DP.
+    if (choice.kind === "core-bj-exile-recycle") {
+        // No selection (skip)
+        candidates.push(privateChoiceAction(state, choice, "bj-exile-recycle-skip", [], { kind: "core-bj-exile-recycle", selectedCardIds: [], placements: [] }, { recycle: true, count: 0 }));
+        // Select 1 card
+        for (const id of choice.optionCardIds) {
+            candidates.push(privateChoiceAction(state, choice, `bj-exile-recycle-${id}`, [id], { kind: "core-bj-exile-recycle", selectedCardIds: [id], placements: ["top"] }, { recycle: true, count: 1 }));
+        }
+        // Select 2 cards
+        for (let i = 0; i < choice.optionCardIds.length; i++) {
+            for (let j = i + 1; j < choice.optionCardIds.length; j++) {
+                const ids = [choice.optionCardIds[i], choice.optionCardIds[j]];
+                candidates.push(privateChoiceAction(state, choice, `bj-exile-recycle-${ids.join("-")}`, ids, { kind: "core-bj-exile-recycle", selectedCardIds: ids, placements: ["top", "top"] }, { recycle: true, count: 2 }));
+            }
+        }
+    }
+    // Seven scoring trigger: take 1 card from revealed, return rest to top.
+    if (choice.kind === "core-seven-scoring-trigger") {
+        for (const takeId of choice.optionCardIds) {
+            const returnIds = choice.optionCardIds.filter((id) => id !== takeId);
+            candidates.push(privateChoiceAction(state, choice, `seven-scoring-trigger-take-${takeId}`, [takeId], { kind: "core-seven-scoring-trigger", takeCardId: takeId, returnOrderCardIds: returnIds }, { sevenTrigger: true, takeId }));
+        }
+    }
     const accepted = candidates.filter((entry) => engine.execute(state, entry.command).accepted).sort((a, b) => a.actionId.localeCompare(b.actionId));
     return { stateRevision: state.revision, actorId, actions: accepted, frameHash: hashCanonical(accepted.map((entry) => ({ actionId: entry.actionId, commandHash: entry.commandHash }))) };
 }
@@ -277,6 +329,21 @@ export function enumerateCoreLegalActions(state, actorId) {
             if ([CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId))
                 for (const candidate of enumerateWildSovereigntyCandidates(state, actorId))
                     candidates.push(candidate);
+            // Nine Goal Shift (rulebook §9): +3 or +5 to opponent's Goal; 9♠ +5 may also reduce own Goal by 2.
+            if ([CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId)) {
+                for (const sourceId of state.players[actorId].hand) {
+                    const parsed9 = parseIdentity(state.cards[sourceId].identity);
+                    if (parsed9?.rank === "9") {
+                        for (const opponentId of state.turnOrder.filter((id) => id !== actorId)) {
+                            candidates.push(action(state, actorId, "instant", "nine-goal-shift-3", "ACTION", [sourceId], [], { kind: "core-resolve-rank-action", action: { kind: "goal-shift-nine", sourceCardId: sourceId, targetPlayerId: opponentId, delta: 3 } }, { goalShift: true, delta: 3 }));
+                            candidates.push(action(state, actorId, "instant", "nine-goal-shift-5", "ACTION", [sourceId], [], { kind: "core-resolve-rank-action", action: { kind: "goal-shift-nine", sourceCardId: sourceId, targetPlayerId: opponentId, delta: 5 } }, { goalShift: true, delta: 5 }));
+                            if (parsed9.suit === "♠") {
+                                candidates.push(action(state, actorId, "instant", "nine-spade-goal-shift-5", "ACTION", [sourceId], [], { kind: "core-resolve-rank-action", action: { kind: "goal-shift-nine", sourceCardId: sourceId, targetPlayerId: opponentId, delta: 5, ownGoalDelta: -2 } }, { goalShift: true, delta: 5, spade: true, ownGoalDelta: -2 }));
+                            }
+                        }
+                    }
+                }
+            }
         }
         if ([CORE_RESPONSE_AUTHORITY_PROFILE.id, CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id, CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId)) {
             for (const sourceId of state.players[actorId].hand) {
@@ -396,7 +463,7 @@ export function createCoreMatchState(setup) {
         throw new Error("seed must be a nonzero uint32");
     const state = createEmptyState([...setup.seatOrder]);
     state.rng = { algorithm: "xorshift32", seed: setup.seed >>> 0, cursor: 0 };
-    const cmd = { id: `CORE-SETUP-${setup.seed >>> 0}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: setup.seatOrder[0], action: { kind: "core-apply-setup", playerIds: [...setup.seatOrder], profileId: setup.profileId } };
+    const cmd = { id: `CORE-SETUP-${setup.seed >>> 0}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: setup.seatOrder[0], action: { kind: "core-apply-setup", playerIds: [...setup.seatOrder], profileId: setup.profileId, ...(setup.predeterminedIdentities ? { predeterminedIdentities: [...setup.predeterminedIdentities] } : {}) } };
     const result = new IntrilexEngine().execute(state, cmd);
     if (!result.accepted)
         throw new Error(`Core setup rejected: ${result.error?.code}:${result.error?.message}`);

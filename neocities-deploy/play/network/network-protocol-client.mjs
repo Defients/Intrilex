@@ -51,6 +51,10 @@ export function leaveMatch(matchId, participantToken) {
   return envelope('LEAVE_MATCH', { matchId, participantToken });
 }
 
+export function getReplay(matchId, participantToken) {
+  return envelope('GET_REPLAY', { matchId, participantToken });
+}
+
 export function queueJoin(profileId, queueId = 'ranked') {
   return envelope('QUEUE_JOIN', { profileId, queueId });
 }
@@ -85,6 +89,10 @@ export function chatVisibility(matchId, participantToken, hidden) {
 
 export function rematch(matchId, participantToken) {
   return envelope('REMATCH', { matchId, participantToken });
+}
+
+export function handReorder(matchId, participantToken, orderedIds) {
+  return envelope('HAND_REORDER', { matchId, participantToken, orderedIds });
 }
 
 // ── Tournament (v0.28.0 — Epoch 7) ──

@@ -395,7 +395,7 @@ Academy, puzzles, rules, card reference
 
 LAB
 Watch, Caster, mechanics, ranks, evidence,
-traces, branches, diagnostics, Brain
+traces, branches, diagnostics
 ```
 
 Keep advanced tools available, but stop making every workspace compete equally for attention.
@@ -438,7 +438,6 @@ Shift critical journeys toward behavioral browser tests:
 - finish placement and inspect rating change;
 - complete Academy lesson;
 - open, play, seek, and investigate a Caster replay;
-- navigate the Brain using mouse and keyboard;
 - reload every primary route directly.
 
 ### 5. Run production-shaped certification
@@ -763,23 +762,7 @@ Useful additions:
 - Link back from the finding to replay, beat, decision, branch, and engine version.
 - Automatic invalidation when the engine authority hash changes.
 
-## 4. Decide the Brain's actual job
-
-The 3D Brain is visually interesting, but it should earn its place. Choose one primary purpose:
-
-- onboarding map;
-- mechanic-relationship explorer;
-- evidence topology;
-- live match-state graph;
-- development architecture viewer.
-
-My preference is **mechanic/evidence topology**, not a general homepage spectacle. A graph becomes valuable when it answers:
-
-> "What interacts with this mechanic, which cards provide it, what counters it, and what evidence supports those relationships?"
-
-Provide a complete 2D/list equivalent. Three-dimensional presentation should be optional enrichment, never the only navigable structure.
-
-## 5. Make player intelligence evidence-honest
+## 4. Make player intelligence evidence-honest
 
 Strategic fingerprints and meta reports should distinguish:
 

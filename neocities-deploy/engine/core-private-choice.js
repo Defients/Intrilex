@@ -1,5 +1,6 @@
 import { canonicalClone } from "./canonical-json.js";
 import { enumerateCoreEffectCandidates } from "./core-effects.js";
+import { enumerateAdvancedCoreCandidates } from "./core-advanced.js";
 import { hashCanonical } from "./hash.js";
 import { revealUntilStart } from "./lifecycle.js";
 import { cardPointValue, parseIdentity } from "./ranks.js";
@@ -160,13 +161,17 @@ function validateSubmission(state, actorId, token, submission) {
         return "Core private choice seal verification failed";
     if (choice.kind !== submission.kind)
         return `Core choice kind mismatch: expected ${choice.kind}`;
-    const selected = submission.selectedCardIds;
-    if (new Set(selected).size !== selected.length)
-        return "Core private choice selections must be unique";
-    if (selected.length < choice.minSelections || selected.length > choice.maxSelections)
-        return `Core private choice requires ${choice.minSelections}-${choice.maxSelections} selections`;
-    if (selected.some((id) => !choice.optionCardIds.includes(id)))
-        return "Core private choice selected an unavailable card";
+    // Submissions that use selectedCardIds for validation
+    const usesSelectedCardIds = "selectedCardIds" in submission;
+    const selected = (usesSelectedCardIds ? submission.selectedCardIds : []);
+    if (usesSelectedCardIds) {
+        if (new Set(selected).size !== selected.length)
+            return "Core private choice selections must be unique";
+        if (selected.length < choice.minSelections || selected.length > choice.maxSelections)
+            return `Core private choice requires ${choice.minSelections}-${choice.maxSelections} selections`;
+        if (selected.some((id) => !choice.optionCardIds.includes(id)))
+            return "Core private choice selected an unavailable card";
+    }
     return choice;
 }
 function rank(state, cardId) {
@@ -181,7 +186,7 @@ function requireSource(state, actorId, sourceCardId, expectedRank) {
     return null;
 }
 export function isCorePrivateChoiceEffect(effect) {
-    return ["three-hand-raid", "five-recycle", "six-dig", "seven-topdeck", "nine-anchor"].includes(effect.kind);
+    return ["three-hand-raid", "five-recycle", "six-dig", "seven-topdeck", "nine-anchor", "natural-four"].includes(effect.kind);
 }
 export function resolveCorePrivateChoiceRoot(input, actorId, effect) {
     if (!isCorePrivateChoiceProfile(input))
@@ -306,6 +311,37 @@ export function resolveCorePrivateChoiceRoot(input, actorId, effect) {
         }, events);
         return { ok: true, state, events };
     }
+    if (effect.kind === "natural-four") {
+        // Rulebook §4 Natural: look at top 4 DP cards, reorder them, then optionally draw 1 from the top.
+        const problem = requireSource(state, actorId, effect.sourceCardId, "4");
+        if (problem)
+            return fail("CORE_PRIVATE_CHOICE_SOURCE", problem);
+        stageSource(state, effect.sourceCardId, actorId);
+        const topCount = Math.min(4, state.zones.dp.length);
+        const topIds = [];
+        for (let index = 0; index < topCount; index += 1) {
+            const cardId = state.zones.dp[index];
+            holdPrivate(state, cardId, actorId, true);
+            topIds.push(cardId);
+        }
+        events.push({ type: "CORE_NATURAL_FOUR_REVEALED", payload: { playerId: actorId, sourceCardId: effect.sourceCardId, revealedCardIds: topIds }, visibility: "authorized" });
+        if (topIds.length === 0) {
+            completeSource(state, effect.sourceCardId);
+            return { ok: true, state, events };
+        }
+        beginChoice(state, {
+            kind: "core-natural-four-reorder",
+            chooserId: actorId,
+            controllerId: actorId,
+            sourceCardId: effect.sourceCardId,
+            optionCardIds: topIds,
+            minSelections: 0,
+            maxSelections: topIds.length,
+            stage: 1,
+            context: { topCount }
+        }, events);
+        return { ok: true, state, events };
+    }
     if (effect.kind === "nine-anchor") {
         const problem = requireSource(state, actorId, effect.sourceCardId, "9");
         if (problem)
@@ -346,9 +382,29 @@ export function generatedCoreEffectCandidates(state, actorId, cardId) {
     const probe = canonicalClone(state);
     releaseHeld(probe, cardId);
     moveCard(probe, cardId, `${actorId}_HAND`, actorId);
-    return enumerateCoreEffectCandidates(probe, actorId)
+    // Enumerate standalone effects (generated card alone)
+    const standalone = enumerateCoreEffectCandidates(probe, actorId)
         .filter((entry) => entry.sourceCardIds.length === 1 && entry.sourceCardIds[0] === cardId)
         .map((entry) => canonicalClone(entry.effect));
+    // Also enumerate Super/Combo declarations that include the generated card plus hand components.
+    // Per rulebook §7: the generated revealed card may combine with cards already in hand.
+    const multiCard = enumerateCoreEffectCandidates(probe, actorId)
+        .filter((entry) => entry.sourceCardIds.includes(cardId) && entry.sourceCardIds.length > 1)
+        .map((entry) => canonicalClone(entry.effect));
+    return [...standalone, ...multiCard];
+}
+export function generatedAdvancedCandidates(state, actorId, cardId) {
+    const card = state.cards[cardId];
+    if (!card || card.state.privateChoiceHeldBy !== actorId)
+        return [];
+    const probe = canonicalClone(state);
+    releaseHeld(probe, cardId);
+    moveCard(probe, cardId, `${actorId}_HAND`, actorId);
+    // Enumerate advanced actions (Supers, Ultras, etc.) that include the generated card.
+    // Per rulebook §7: the generated revealed card may be used as a component of its Rank's Super.
+    return enumerateAdvancedCoreCandidates(probe, actorId)
+        .filter((entry) => entry.sourceCardIds.includes(cardId))
+        .map((entry) => canonicalClone(entry.advanced));
 }
 export function resolveCorePrivateChoiceSubmission(input, actorId, token, submission) {
     const validation = validateSubmission(input, actorId, token, submission);
@@ -357,7 +413,7 @@ export function resolveCorePrivateChoiceSubmission(input, actorId, token, submis
     const choice = validation;
     const state = canonicalClone(input);
     const events = [];
-    const selected = [...submission.selectedCardIds];
+    const selected = [...("selectedCardIds" in submission ? submission.selectedCardIds : [])];
     const context = choice.context;
     if (submission.kind === "core-rank3-present") {
         const targetPlayerId = String(context.targetPlayerId);
@@ -551,24 +607,39 @@ export function resolveCorePrivateChoiceSubmission(input, actorId, token, submis
             return { ok: true, state, events };
         }
         const legalEffects = generatedCoreEffectCandidates(state, choice.controllerId, generatedCardId);
+        const legalAdvanced = generatedAdvancedCandidates(state, choice.controllerId, generatedCardId);
         const generatedEffect = submission.generatedEffect;
-        if (!generatedEffect) {
-            if (legalEffects.length > 0)
-                return fail("CORE_PRIVATE_CHOICE_GENERATED", "A legal generated effect or score must be selected");
+        const generatedAdvanced = submission.generatedAdvanced;
+        if (!generatedEffect && !generatedAdvanced) {
+            if (legalEffects.length > 0 || legalAdvanced.length > 0)
+                return fail("CORE_PRIVATE_CHOICE_GENERATED", "A legal generated effect, advanced action, or score must be selected");
+            // Rulebook §7: scrap the card only if no legal generated declaration remains.
             releaseHeld(state, generatedCardId);
             moveCard(state, generatedCardId, "GY");
             events.push({ type: "CORE_SEVEN_GENERATED_EFFECT_UNAVAILABLE", payload: { choiceId: choice.choiceId, playerId: choice.controllerId, generatedCardId } });
             completeSource(state, choice.sourceCardId);
             return { ok: true, state, events };
         }
-        const effectHash = hashCanonical(generatedEffect);
-        if (!legalEffects.some((candidate) => hashCanonical(candidate) === effectHash))
-            return fail("CORE_PRIVATE_CHOICE_GENERATED", "Generated Seven effect is not legal from the sealed frame");
+        if (generatedEffect) {
+            const effectHash = hashCanonical(generatedEffect);
+            if (!legalEffects.some((candidate) => hashCanonical(candidate) === effectHash))
+                return fail("CORE_PRIVATE_CHOICE_GENERATED", "Generated Seven effect is not legal from the sealed frame");
+            releaseHeld(state, generatedCardId);
+            moveCard(state, generatedCardId, `${choice.controllerId}_HAND`, choice.controllerId);
+            completeSource(state, choice.sourceCardId);
+            events.push({ type: "CORE_SEVEN_GENERATED_EFFECT_SELECTED", payload: { choiceId: choice.choiceId, playerId: choice.controllerId, generatedCardId, effectKind: generatedEffect.kind } });
+            return { ok: true, state, events, generatedPrimary: { kind: "core-resolve-effect", effect: canonicalClone(generatedEffect) } };
+        }
+        // generatedAdvanced is set
+        const adv = generatedAdvanced;
+        const advHash = hashCanonical(adv);
+        if (!legalAdvanced.some((candidate) => hashCanonical(candidate) === advHash))
+            return fail("CORE_PRIVATE_CHOICE_GENERATED", "Generated Seven advanced action is not legal from the sealed frame");
         releaseHeld(state, generatedCardId);
         moveCard(state, generatedCardId, `${choice.controllerId}_HAND`, choice.controllerId);
         completeSource(state, choice.sourceCardId);
-        events.push({ type: "CORE_SEVEN_GENERATED_EFFECT_SELECTED", payload: { choiceId: choice.choiceId, playerId: choice.controllerId, generatedCardId, effectKind: generatedEffect.kind } });
-        return { ok: true, state, events, generatedPrimary: { kind: "core-resolve-effect", effect: canonicalClone(generatedEffect) } };
+        events.push({ type: "CORE_SEVEN_GENERATED_ADVANCED_SELECTED", payload: { choiceId: choice.choiceId, playerId: choice.controllerId, generatedCardId, advancedKind: adv.kind } });
+        return { ok: true, state, events, generatedPrimary: { kind: "core-resolve-advanced", advanced: canonicalClone(adv) } };
     }
     if (submission.kind === "core-nine-anchor-discard") {
         const targetPlayerId = String(context.targetPlayerId);
@@ -578,6 +649,86 @@ export function resolveCorePrivateChoiceSubmission(input, actorId, token, submis
         moveCard(state, cardId, "GY");
         clearChoice(state);
         events.push({ type: "CORE_NINE_ANCHOR_DISCARD_RESOLVED", payload: { choiceId: choice.choiceId, playerId: choice.controllerId, targetPlayerId, sourceCardId: choice.sourceCardId, discardedCardId: cardId }, visibility: "authorized" });
+        return { ok: true, state, events };
+    }
+    if (submission.kind === "core-natural-four-reorder") {
+        // Rulebook §4 Natural: reorder top 4 DP cards, then optionally draw 1 from the top.
+        // The top cards were held in VOID during the private choice — use optionCardIds, not DP.
+        const topIds = choice.optionCardIds;
+        if (submission.reorderCardIds.length !== topIds.length || !submission.reorderCardIds.every((id) => topIds.includes(id)))
+            return fail("CORE_PRIVATE_CHOICE_STALE", "Natural 4 reorder must list exactly the top cards of DP");
+        // Release held cards and apply reordering: the top N cards were held in VOID.
+        // Release them and place them back on top of DP in the specified order.
+        // Cards in VOID are not in any GlobalZones array, so we just set zone and unshift.
+        for (const id of topIds)
+            releaseHeld(state, id);
+        // Use reverse iteration so unshift produces the correct final order.
+        for (let i = submission.reorderCardIds.length - 1; i >= 0; i -= 1) {
+            const id = submission.reorderCardIds[i];
+            state.cards[id].zone = "DP";
+            state.zones.dp.unshift(id);
+        }
+        let drawnCardId = null;
+        if (submission.drawTop && state.zones.dp.length > 0) {
+            drawnCardId = state.zones.dp[0];
+            moveCard(state, drawnCardId, `${choice.controllerId}_HAND`, choice.controllerId);
+        }
+        moveCard(state, choice.sourceCardId, "GY");
+        clearChoice(state);
+        events.push({ type: "NATURAL_FOUR_RESOLVED", payload: { choiceId: choice.choiceId, playerId: choice.controllerId, sourceCardId: choice.sourceCardId, reorderedCount: topIds.length, drawnCardId }, visibility: "authorized" });
+        return { ok: true, state, events };
+    }
+    if (submission.kind === "core-bj-exile-recycle") {
+        // Rulebook §BJ: when BJ is scored, controller may move up to 2 cards from Exile to DP (top or bottom).
+        const exileCards = state.zones.exile;
+        if (submission.selectedCardIds.length > 2)
+            return fail("CORE_PRIVATE_CHOICE_INVALID", "Exile Recycle allows at most 2 cards");
+        if (!submission.selectedCardIds.every((id) => exileCards.includes(id)))
+            return fail("CORE_PRIVATE_CHOICE_STALE", "Exile Recycle cards must be in Exile");
+        if (submission.selectedCardIds.length !== submission.placements.length)
+            return fail("CORE_PRIVATE_CHOICE_INVALID", "Each selected card needs a placement");
+        for (let i = 0; i < submission.selectedCardIds.length; i += 1) {
+            const cardId = submission.selectedCardIds[i];
+            const placement = submission.placements[i];
+            moveCard(state, cardId, "DP", choice.controllerId);
+            if (placement === "top") {
+                // Card was placed at bottom by moveCard; move it to top
+                const idx = state.zones.dp.indexOf(cardId);
+                if (idx !== -1) {
+                    state.zones.dp.splice(idx, 1);
+                    state.zones.dp.unshift(cardId);
+                }
+            }
+            // "bottom" → leave at bottom (already there from moveCard)
+        }
+        clearChoice(state);
+        events.push({ type: "CORE_BJ_EXILE_RECYCLE_RESOLVED", payload: { choiceId: choice.choiceId, playerId: choice.controllerId, recycledCardIds: submission.selectedCardIds, placements: submission.placements }, visibility: "authorized" });
+        return { ok: true, state, events };
+    }
+    if (submission.kind === "core-seven-scoring-trigger") {
+        // Rulebook §7 Scoring Trigger: take 1 revealed card to hand, return others to top of DP in any order.
+        const revealedIds = context.revealedIds ?? [];
+        if (!state.zones.dp.includes(submission.takeCardId) && !revealedIds.includes(submission.takeCardId))
+            return fail("CORE_PRIVATE_CHOICE_STALE", "Seven scoring trigger take card must be a revealed card");
+        // The revealed cards were set aside in context. Remove them from DP top (they were revealed from there).
+        // In practice, the revealed cards are still on top of DP. We need to remove them, take one to hand, and return the rest in chosen order.
+        const topN = revealedIds.length;
+        const currentTop = state.zones.dp.slice(0, topN);
+        if (!revealedIds.every((id) => currentTop.includes(id)))
+            return fail("CORE_PRIVATE_CHOICE_STALE", "Seven scoring trigger revealed cards must remain on top of DP");
+        // Remove the revealed cards from DP
+        state.zones.dp.splice(0, topN);
+        // Take the chosen card to hand
+        moveCard(state, submission.takeCardId, `${choice.controllerId}_HAND`, choice.controllerId);
+        revealUntilStart(state.cards[submission.takeCardId], { playerId: choice.controllerId, startSequence: (state.startPhaseSequenceByPlayer[choice.controllerId] ?? 0) + 1 });
+        // Return the rest in the specified order
+        const returnIds = submission.returnOrderCardIds.filter((id) => id !== submission.takeCardId);
+        if (returnIds.length !== revealedIds.length - 1)
+            return fail("CORE_PRIVATE_CHOICE_INVALID", "Seven scoring trigger return order must list all non-taken revealed cards");
+        for (const id of returnIds)
+            state.zones.dp.unshift(id);
+        clearChoice(state);
+        events.push({ type: "CORE_SEVEN_SCORING_TRIGGER_RESOLVED", payload: { choiceId: choice.choiceId, playerId: choice.controllerId, takeCardId: submission.takeCardId, returnOrderCardIds: returnIds }, visibility: "authorized" });
         return { ok: true, state, events };
     }
     return fail("CORE_PRIVATE_CHOICE_UNSUPPORTED", "Unsupported Core private-choice submission");

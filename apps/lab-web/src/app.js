@@ -73,14 +73,6 @@ const getMatchServerConfig = lazyLoad(() => import('./play/network/match-server-
 const getAuthController = lazyLoad(() => import('./play/network/auth-controller.js'));
 const getAccountStore = lazyLoad(() => import('./play/network/account-store.js'));
 const getMigrationController = lazyLoad(() => import('./play/network/migration-controller.js'));
-// 3D Mind Map Brain — lazy-loaded Three.js visualization on the homepage.
-// Three.js lands in a separate esbuild chunk via the dynamic import chain
-// (brain-controller → brain-scene/nodes/edges/interaction → three).
-const getBrain = lazyLoad(() => import('./brain/brain-controller.js'));
-// A-05: Lightweight 2D SVG brain (default) — no Three.js dependency.
-// This chunk is tiny since brain-data.js and brain-fallback.js are self-contained.
-const get2dBrain = lazyLoad(() => import('./brain/brain-2d.js'));
-
 // Install global error boundary at module load time
 installGlobalErrorBoundary();
 
@@ -184,14 +176,6 @@ export function render() {
   // Caster workspace cleanup: stop playback timer and terminate worker on route change.
   if (_previousRoute === '/caster' && r !== '/caster') {
     try { cleanupCaster(); } catch (e) { console.warn('[render] cleanupCaster error:', e); }
-  }
-  // 3D Brain cleanup: dispose Three.js scene/renderer/listeners when leaving
-  // the homepage (#/) so the WebGL context and rAF loop don't leak.
-  if (_previousRoute === '/') {
-    const brainMod = getBrain.cached;
-    if (brainMod && typeof brainMod.destroyBrain === 'function') {
-      try { brainMod.destroyBrain(); } catch (e) { console.warn('[render] destroyBrain error:', e); }
-    }
   }
   _previousRoute = r;
   // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
@@ -1975,11 +1959,6 @@ function renderWipLanding() {
           </div>
         </div>
         ${renderPlayCtaSection()}
-        <section class="wip-brain-section" aria-labelledby="wip-brain-title">
-          <h2 id="wip-brain-title" class="wip-brain-title">Explore the Intrilex Brain</h2>
-          <p class="wip-brain-desc">An interactive mind map of mechanics, synergies, card interactions, and workspaces. Click nodes to navigate. Switch to 3D for orbit, zoom, and advanced filters.</p>
-          <div id="brain-container" aria-label="3D interactive mind map" role="region"></div>
-        </section>
         <div class="wip-newsletter" aria-labelledby="wip-newsletter-title">
           <h2 id="wip-newsletter-title" class="wip-newsletter-title">Stay Updated on Launch</h2>
           <p class="wip-newsletter-desc">Sign up to receive early playtest invites and major development updates.</p>
@@ -2036,31 +2015,6 @@ function renderWipLanding() {
   </div>`;
   bindWipLandingEvents();
   maybeSkipLandingVideo();
-  // A-05: 2D SVG brain is the default (no Three.js loaded). 3D is opt-in
-  // via the "Switch to 3D" toggle. The mode preference is persisted in
-  // localStorage under 'intrilex:brain-mode'.
-  const brainHost = document.querySelector('#brain-container');
-  if (brainHost) {
-    let brainMode = '2d';
-    try { brainMode = localStorage.getItem('intrilex:brain-mode') === '3d' ? '3d' : '2d'; } catch { /* ignore */ }
-
-    if (brainMode === '3d') {
-      // 3D mode — loads the Three.js chunk (561KB)
-      getBrain().then(({ initBrain }) => brainHost.isConnected ? initBrain(brainHost) : null)
-        .catch((err) => console.error('[brain] failed to load:', err));
-    } else {
-      // 2D mode (default) — lightweight SVG, no Three.js
-      get2dBrain().then(({ init2dBrain }) => brainHost.isConnected ? init2dBrain(brainHost) : null)
-        .catch((err) => console.error('[brain-2d] failed to load:', err));
-    }
-
-    // Listen for mode switch from 2D → 3D (dispatched by the toggle button)
-    brainHost.addEventListener('brain:switch-mode', (e) => {
-      if (e.detail?.mode !== '3d') return;
-      getBrain().then(({ initBrain }) => brainHost.isConnected ? initBrain(brainHost) : null)
-        .catch((err) => console.error('[brain] failed to load:', err));
-    });
-  }
 }
 
 /**

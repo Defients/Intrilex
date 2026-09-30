@@ -23,7 +23,7 @@
     "sim": true
   },
   "campaign": {
-    "status": "PASS · 1 matches, 0 aborts, 2247ms · 16 mechanics, 0 synergies",
+    "status": "PASS · 1 matches, 0 aborts, 743ms · 15 mechanics, 0 synergies",
     "matchCount": 1,
     "abortCount": 0
   },
@@ -36,10 +36,10 @@
     "lang": "en",
     "skipLink": true,
     "main": true,
-    "navLinks": 14,
+    "navLinks": 16,
     "unnamedButtons": 0,
     "reducedMotion": true,
-    "axInteractiveNodes": 50,
+    "axInteractiveNodes": 64,
     "axUnnamedInteractiveNodes": 0
   },
   "responsive": [
@@ -49,7 +49,7 @@
       "height": 844,
       "scrollWidth": 390,
       "clientWidth": 390,
-      "scrollHeight": 3374,
+      "scrollHeight": 3519,
       "workspace": "Mechanics",
       "screenshot": "reports/visual-qa/mobile-390.png"
     },
@@ -68,9 +68,9 @@
       "width": 1366,
       "height": 768,
       "scrollWidth": 1356,
-      "clientWidth": 1356,
-      "scrollHeight": 1599,
-      "workspace": "Watch",
+      "clientWidth": 1366,
+      "scrollHeight": 768,
+      "workspace": "Mechanics",
       "screenshot": "reports/visual-qa/desktop-1366.png"
     },
     {
@@ -79,7 +79,7 @@
       "height": 1080,
       "scrollWidth": 1910,
       "clientWidth": 1910,
-      "scrollHeight": 1579,
+      "scrollHeight": 1695,
       "workspace": "Watch",
       "screenshot": "reports/visual-qa/theatre-1920.png"
     }

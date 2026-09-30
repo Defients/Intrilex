@@ -249,8 +249,6 @@ const STAGES = [
   ['replay-caster', 'node', ['--test', 'test/replay-caster.test.mjs']],
   // Caster Full-Screen Spectator — regression tests for game UI integration
   ['caster-fullscreen', 'node', ['--test', 'test/caster-fullscreen.test.mjs']],
-  // 3D Mind Map Brain — Three.js homepage visualization
-  ['brain-3d', 'node', ['--test', 'test/brain-3d.test.mjs']],
   // v0.28.1 Rules-Parity Hotfix — failing behavioral tests for IMPL-01/03/04/12, DEG-01
   ['v0.28.1-rules-parity-defects', 'node', ['--test', 'test/v0.28.1-rules-parity-defects.test.mjs']],
   // v0.28.2 Evidence Recalibration — evidence epoch, policy tiers, self-play exclusion
@@ -261,7 +259,7 @@ const STAGES = [
   ['v0.30.0-player-experience', 'node', ['--test', 'test/v0.30.0-player-experience.test.mjs']],
   // v0.31.0 Competitive Operations — tournament check-in, abandonment, broadcast, moderation, migrations
   ['v0.31.0-competitive-operations', 'node', ['--test', 'test/v0.31.0-competitive-operations.test.mjs']],
-  // v0.32.0 Intelligence, Better AI, and Replay Caster v1 — bounded lookahead, commentary contract, investigation workflow, brain topology, evidence-honest intelligence
+  // v0.32.0 Intelligence, Better AI, and Replay Caster v1 — bounded lookahead, commentary contract, investigation workflow, evidence-honest intelligence
   ['v0.32.0-intelligence-caster', 'node', ['--test', 'test/v0.32.0-intelligence-caster.test.mjs']],
   // v1.0.0 Behavioral Play Journey — behavioral tests for save integrity, action presenter, evidence-honest labels, WAIT WHAT investigation, tournament lifecycle notice, caster UI wiring
   ['v1.0.0-behavioral-play-journey', 'node', ['--test', 'test/v1.0.0-behavioral-play-journey.test.mjs']],
@@ -273,7 +271,7 @@ const STAGES = [
   ['competitive-journey-e2e', 'node', ['--test', 'test/competitive-journey-e2e.test.mjs']],
   // Phase 5: Supabase static schema/RLS/function analysis
   ['supabase-static-analysis', 'node', ['--test', 'test/supabase-static-analysis.test.mjs']],
-  // Phase 2: Player Experience Foundation — onboarding, card inspector, tooltips, 2D brain, teaching moments
+  // Phase 2: Player Experience Foundation — onboarding, card inspector, tooltips, teaching moments
   ['phase2-player-experience', 'node', ['--test', 'test/phase2-player-experience.test.mjs']],
   // Phase 4: Forensic replay layer — bookmarks, branches, annotations, comparisons, puzzle generation
   ['forensic-replay', 'node', ['--test', 'test/forensic-replay.test.mjs']],

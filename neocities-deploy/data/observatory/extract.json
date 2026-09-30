@@ -1,7 +1,7 @@
 {
   "extractVersion": "1.0.0",
   "analyticsSchemaVersion": "4.2.0",
-  "sourceHash": "ba5f1612c872e9e615f376019b28bf4fcff56811961268472750baf517b15603",
+  "sourceHash": "c3175a49922a04045fdfae81f9132b754b5f46fd7b19b12b4dd9d373fd1dcb35",
   "aggregateHash": "e4a6921c4b8595bafe7b745b35a99911fc236e16ccaba2cba2f301141b699f48",
   "executiveSummary": "Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. All matches completed without aborts. Highest win rate: hybrix-sniper at 91.7% (CI [0.646, 0.985], 12 games). No synergy pairs reached statistical significance after FDR correction. 106 mechanic(s) measured with evidence-backed associations. 27 anomaly/anomalies flagged (0 critical, 5 warning, 22 info). Data completeness: PASS (no unclassified facts). Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
   "dataset": {
@@ -13,7 +13,7 @@
     "policyCount": 12,
     "mechanicCount": 106,
     "synergyCount": 1,
-    "motifCount": 49,
+    "motifCount": 51,
     "anomalyCount": 27
   },
   "policyFindings": [
@@ -367,7 +367,7 @@
         0.01867497170581167
       ],
       "immediatePointImpact": {
-        "count": 11,
+        "count": 14,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -486,7 +486,7 @@
         0.321319276890759
       ],
       "immediatePointImpact": {
-        "count": 5,
+        "count": 4,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -777,16 +777,16 @@
         0.43755114808198475
       ],
       "immediatePointImpact": {
-        "count": 2,
-        "mean": 9,
-        "median": 9,
+        "count": 3,
+        "mean": 6,
+        "median": 0,
         "min": 0,
         "max": 18,
-        "p05": 0.9,
-        "p25": 4.5,
-        "p75": 13.5,
-        "p95": 17.099999999999998,
-        "standardDeviation": 12.727922061357855
+        "p05": 0,
+        "p25": 0,
+        "p75": 9,
+        "p95": 16.2,
+        "standardDeviation": 10.392304845413264
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
@@ -797,7 +797,7 @@
         "M-44d7c9fa35f12273eb68",
         "M-db10a45b83e5e68eb1fd"
       ],
-      "summary": "Used in 5.5% of participant observations (11/200). Outcome association: positive (0.144, CI [-0.149, 0.438]). Immediate point impact: mean 9.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 5.5% of participant observations (11/200). Outcome association: positive (0.144, CI [-0.149, 0.438]). Immediate point impact: mean 6.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "counter",
@@ -815,16 +815,16 @@
         0.343627251024468
       ],
       "immediatePointImpact": {
-        "count": 8,
-        "mean": 1.375,
+        "count": 7,
+        "mean": 1.5714285714285714,
         "median": 0,
         "min": 0,
         "max": 11,
         "p05": 0,
         "p25": 0,
         "p75": 0,
-        "p95": 7.149999999999994,
-        "standardDeviation": 3.8890872965260113
+        "p95": 7.699999999999992,
+        "standardDeviation": 4.1576092031015
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
@@ -835,7 +835,7 @@
         "M-cdbb93aac376239f7748",
         "M-030616815bfed08a875f"
       ],
-      "summary": "Used in 29.5% of participant observations (59/200). Outcome association: positive (0.195, CI [0.047, 0.344]). Immediate point impact: mean 1.38 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 29.5% of participant observations (59/200). Outcome association: positive (0.195, CI [0.047, 0.344]). Immediate point impact: mean 1.57 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "deep-draw-♠",
@@ -876,7 +876,18 @@
         -0.3325712189828675,
         0.5377525661331266
       ],
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 5,
@@ -886,7 +897,7 @@
         "M-0fbb81ca3aeeda551d13",
         "M-a526bfd4b58f3e7c1278"
       ],
-      "summary": "Used in 2.5% of participant observations (5/200). Outcome association: positive (0.103, CI [-0.333, 0.538]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 2.5% of participant observations (5/200). Outcome association: positive (0.103, CI [-0.333, 0.538]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "diamond-mimic-row-exchange-er",
@@ -958,7 +969,7 @@
         0.14050521813486855
       ],
       "immediatePointImpact": {
-        "count": 11,
+        "count": 12,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -996,7 +1007,7 @@
         -0.04815949932922628
       ],
       "immediatePointImpact": {
-        "count": 5,
+        "count": 1,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -1087,7 +1098,18 @@
         -0.4154283465682551,
         -0.08314476070050436
       ],
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 39,
@@ -1097,7 +1119,7 @@
         "M-cdbb93aac376239f7748",
         "M-152dc2ebb7f84e8d1124"
       ],
-      "summary": "Used in 19.5% of participant observations (39/200). Outcome association: negative (-0.249, CI [-0.415, -0.083]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 19.5% of participant observations (39/200). Outcome association: negative (-0.249, CI [-0.415, -0.083]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "effect-red-joker",
@@ -1168,18 +1190,7 @@
         -0.22117263392266895,
         0.09235025266046981
       ],
-      "immediatePointImpact": {
-        "count": 6,
-        "mean": 1.5,
-        "median": 0,
-        "min": 0,
-        "max": 9,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 6.75,
-        "standardDeviation": 3.6742346141747673
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 55,
@@ -1189,7 +1200,7 @@
         "M-cdbb93aac376239f7748",
         "M-e32149ebf24466103ea9"
       ],
-      "summary": "Used in 27.5% of participant observations (55/200). Outcome association: negative (-0.064, CI [-0.221, 0.092]). Immediate point impact: mean 1.50 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 27.5% of participant observations (55/200). Outcome association: negative (-0.064, CI [-0.221, 0.092]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "eight-scuttle",
@@ -1283,7 +1294,7 @@
         0.037270434707358524
       ],
       "immediatePointImpact": {
-        "count": 14,
+        "count": 11,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -1598,7 +1609,7 @@
         0.16532059745452604
       ],
       "immediatePointImpact": {
-        "count": 2,
+        "count": 1,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -1636,7 +1647,7 @@
         0.14050521813486855
       ],
       "immediatePointImpact": {
-        "count": 11,
+        "count": 12,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -1832,7 +1843,7 @@
         0.1077823443193473
       ],
       "immediatePointImpact": {
-        "count": 9,
+        "count": 3,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -2003,16 +2014,16 @@
         0.14018280161140867
       ],
       "immediatePointImpact": {
-        "count": 4,
-        "mean": 4.5,
+        "count": 5,
+        "mean": 3.6,
         "median": 0,
         "min": 0,
         "max": 18,
         "p05": 0,
         "p25": 0,
-        "p75": 4.5,
-        "p95": 15.299999999999994,
-        "standardDeviation": 9
+        "p75": 0,
+        "p95": 14.399999999999997,
+        "standardDeviation": 8.049844718999244
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
@@ -2023,7 +2034,7 @@
         "M-cdbb93aac376239f7748",
         "M-e32149ebf24466103ea9"
       ],
-      "summary": "Used in 30.5% of participant observations (61/200). Outcome association: negative (-0.012, CI [-0.164, 0.140]). Immediate point impact: mean 4.50 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 30.5% of participant observations (61/200). Outcome association: negative (-0.012, CI [-0.164, 0.140]). Immediate point impact: mean 3.60 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "rank10-stack-theft",
@@ -2459,16 +2470,16 @@
         0.6452665145475287
       ],
       "immediatePointImpact": {
-        "count": 85,
-        "mean": 3.6,
+        "count": 83,
+        "mean": 3.710843373493976,
         "median": 0,
         "min": 0,
         "max": 11,
         "p05": 0,
         "p25": 0,
         "p75": 8,
-        "p95": 10.799999999999997,
-        "standardDeviation": 4.329302154257328
+        "p95": 10,
+        "standardDeviation": 4.212438377581929
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
@@ -2479,7 +2490,7 @@
         "M-cdbb93aac376239f7748",
         "M-0a64cce5e87cfe339b3b"
       ],
-      "summary": "Used in 76.5% of participant observations (153/200). Outcome association: positive (0.532, CI [0.419, 0.645]). Immediate point impact: mean 3.60 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 76.5% of participant observations (153/200). Outcome association: positive (0.532, CI [0.419, 0.645]). Immediate point impact: mean 3.71 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "scuttle",
@@ -2523,7 +2534,18 @@
         -0.4375511480819848,
         0.14878109460604894
       ],
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 11,
@@ -2533,7 +2555,7 @@
         "M-cdbb93aac376239f7748",
         "M-eec6e8dbac8062940f40"
       ],
-      "summary": "Used in 5.5% of participant observations (11/200). Outcome association: negative (-0.144, CI [-0.438, 0.149]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 5.5% of participant observations (11/200). Outcome association: negative (-0.144, CI [-0.438, 0.149]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "shuffle-reset",
@@ -2710,7 +2732,7 @@
         0.047548517301641
       ],
       "immediatePointImpact": {
-        "count": 14,
+        "count": 11,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -2774,18 +2796,7 @@
         -0.4731869539578308,
         0.21266063816835706
       ],
-      "immediatePointImpact": {
-        "count": 2,
-        "mean": 1.5,
-        "median": 1.5,
-        "min": 0,
-        "max": 3,
-        "p05": 0.15000000000000002,
-        "p25": 0.75,
-        "p75": 2.25,
-        "p95": 2.8499999999999996,
-        "standardDeviation": 2.1213203435596424
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 9,
@@ -2795,7 +2806,7 @@
         "M-6e75ba582c29437816eb",
         "M-e35cccea15951261a2cc"
       ],
-      "summary": "Used in 4.5% of participant observations (9/200). Outcome association: negative (-0.130, CI [-0.473, 0.213]). Immediate point impact: mean 1.50 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 4.5% of participant observations (9/200). Outcome association: negative (-0.130, CI [-0.473, 0.213]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "three-black-clear-er",
@@ -3124,16 +3135,16 @@
         0.22148726633530366
       ],
       "immediatePointImpact": {
-        "count": 5,
-        "mean": 0.8,
+        "count": 1,
+        "mean": 0,
         "median": 0,
         "min": 0,
-        "max": 4,
+        "max": 0,
         "p05": 0,
         "p25": 0,
         "p75": 0,
-        "p95": 3.1999999999999993,
-        "standardDeviation": 1.788854381999832
+        "p95": 0,
+        "standardDeviation": 0
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
@@ -3144,7 +3155,7 @@
         "M-cdbb93aac376239f7748",
         "M-152dc2ebb7f84e8d1124"
       ],
-      "summary": "Used in 45.0% of participant observations (90/200). Outcome association: positive (0.082, CI [-0.058, 0.221]). Immediate point impact: mean 0.80 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 45.0% of participant observations (90/200). Outcome association: positive (0.082, CI [-0.058, 0.221]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "topdeck-seven-♣",
@@ -3265,16 +3276,16 @@
         0.12046840187663133
       ],
       "immediatePointImpact": {
-        "count": 18,
-        "mean": 0.3888888888888889,
+        "count": 15,
+        "mean": 0,
         "median": 0,
         "min": 0,
-        "max": 4,
+        "max": 0,
         "p05": 0,
         "p25": 0,
         "p75": 0,
-        "p95": 3.1499999999999986,
-        "standardDeviation": 1.1447521637192346
+        "p95": 0,
+        "standardDeviation": 0
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
@@ -3285,7 +3296,7 @@
         "M-cdbb93aac376239f7748",
         "M-152dc2ebb7f84e8d1124"
       ],
-      "summary": "Used in 75.5% of participant observations (151/200). Outcome association: negative (-0.041, CI [-0.202, 0.120]). Immediate point impact: mean 0.39 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 75.5% of participant observations (151/200). Outcome association: negative (-0.041, CI [-0.202, 0.120]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "voltage",
@@ -3369,219 +3380,173 @@
   "motifFindings": [
     {
       "motif": "score → score",
-      "count": 48,
+      "count": 49,
       "matchIds": [
         "M-01a5983455ae919f8a0b",
-        "M-0a64cce5e87cfe339b3b",
-        "M-2b0bf84b4df444eecc9c",
-        "M-657a4bf619e288635b74",
+        "M-14103530f39e4c8fd523",
         "M-7856e24c1f36d9441ba1",
         "M-a1e29c33aabdd60ee16f",
         "M-a9a7afa9ee474bf45536",
-        "M-ba18599acbda2de20d91",
-        "M-dca045bdd34e77aba406",
-        "M-e35cccea15951261a2cc",
-        "M-e81dcb1f989a3c62c3ae",
+        "M-b15f0ccdbc77e5d6ea16",
+        "M-c3e39fc33a594c40202f",
+        "M-eea877acab1a61f410d4",
+        "M-f23e0c2f7f0412abc92e",
+        "M-f64ab908222f007aaf8d",
         "M-f6d8aa25e78043fa3961"
       ],
       "outcomes": {
-        "NORMAL_VICTORY": 48
+        "NORMAL_VICTORY": 49
       },
-      "summary": "score → score: observed 48 time(s) across 12 match(es)."
+      "summary": "score → score: observed 49 time(s) across 11 match(es)."
     },
     {
       "motif": "unclassified → score",
-      "count": 26,
+      "count": 18,
       "matchIds": [
         "M-01a5983455ae919f8a0b",
-        "M-0a64cce5e87cfe339b3b",
-        "M-2b0bf84b4df444eecc9c",
-        "M-657a4bf619e288635b74",
+        "M-14103530f39e4c8fd523",
         "M-7856e24c1f36d9441ba1",
         "M-a1e29c33aabdd60ee16f",
         "M-a9a7afa9ee474bf45536",
-        "M-ba18599acbda2de20d91",
-        "M-dca045bdd34e77aba406",
-        "M-e35cccea15951261a2cc",
-        "M-e81dcb1f989a3c62c3ae",
+        "M-afdcc6f2781ba6f857b7",
+        "M-b15f0ccdbc77e5d6ea16",
+        "M-c3e39fc33a594c40202f",
+        "M-eea877acab1a61f410d4",
+        "M-f23e0c2f7f0412abc92e",
+        "M-f64ab908222f007aaf8d",
         "M-f6d8aa25e78043fa3961"
       ],
       "outcomes": {
-        "NORMAL_VICTORY": 26
+        "NORMAL_VICTORY": 18
       },
-      "summary": "unclassified → score: observed 26 time(s) across 12 match(es)."
+      "summary": "unclassified → score: observed 18 time(s) across 12 match(es)."
     },
     {
-      "motif": "score → unclassified",
-      "count": 16,
-      "matchIds": [
-        "M-0a64cce5e87cfe339b3b",
-        "M-2b0bf84b4df444eecc9c",
-        "M-657a4bf619e288635b74",
-        "M-7856e24c1f36d9441ba1",
-        "M-a1e29c33aabdd60ee16f",
-        "M-a9a7afa9ee474bf45536",
-        "M-ba18599acbda2de20d91",
-        "M-dca045bdd34e77aba406",
-        "M-e35cccea15951261a2cc",
-        "M-e81dcb1f989a3c62c3ae",
-        "M-f6d8aa25e78043fa3961"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 16
-      },
-      "summary": "score → unclassified: observed 16 time(s) across 11 match(es)."
-    },
-    {
-      "motif": "face-down → unclassified",
+      "motif": "unclassified → 2-black-2-red-draw",
       "count": 14,
       "matchIds": [
         "M-01a5983455ae919f8a0b",
-        "M-0a64cce5e87cfe339b3b",
-        "M-2b0bf84b4df444eecc9c",
-        "M-657a4bf619e288635b74",
-        "M-ba18599acbda2de20d91",
-        "M-dca045bdd34e77aba406",
-        "M-e35cccea15951261a2cc",
-        "M-e81dcb1f989a3c62c3ae",
-        "M-f6d8aa25e78043fa3961"
+        "M-14103530f39e4c8fd523",
+        "M-7856e24c1f36d9441ba1",
+        "M-a1e29c33aabdd60ee16f",
+        "M-a9a7afa9ee474bf45536",
+        "M-afdcc6f2781ba6f857b7",
+        "M-b15f0ccdbc77e5d6ea16",
+        "M-c3e39fc33a594c40202f",
+        "M-eea877acab1a61f410d4",
+        "M-f23e0c2f7f0412abc92e",
+        "M-f64ab908222f007aaf8d"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 14
       },
-      "summary": "face-down → unclassified: observed 14 time(s) across 9 match(es)."
+      "summary": "unclassified → 2-black-2-red-draw: observed 14 time(s) across 11 match(es)."
     },
     {
-      "motif": "unclassified → 2-black-2-red-draw",
-      "count": 11,
+      "motif": "score → unclassified",
+      "count": 12,
       "matchIds": [
-        "M-01a5983455ae919f8a0b",
-        "M-2b0bf84b4df444eecc9c",
-        "M-657a4bf619e288635b74",
+        "M-14103530f39e4c8fd523",
         "M-7856e24c1f36d9441ba1",
         "M-a1e29c33aabdd60ee16f",
         "M-a9a7afa9ee474bf45536",
-        "M-ba18599acbda2de20d91",
-        "M-dca045bdd34e77aba406",
-        "M-e35cccea15951261a2cc",
-        "M-e81dcb1f989a3c62c3ae"
+        "M-c3e39fc33a594c40202f",
+        "M-eea877acab1a61f410d4",
+        "M-f23e0c2f7f0412abc92e",
+        "M-f64ab908222f007aaf8d",
+        "M-f6d8aa25e78043fa3961"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 12
+      },
+      "summary": "score → unclassified: observed 12 time(s) across 9 match(es)."
+    },
+    {
+      "motif": "face-down → unclassified",
+      "count": 11,
+      "matchIds": [
+        "M-01a5983455ae919f8a0b",
+        "M-14103530f39e4c8fd523",
+        "M-afdcc6f2781ba6f857b7",
+        "M-c3e39fc33a594c40202f",
+        "M-eea877acab1a61f410d4",
+        "M-f64ab908222f007aaf8d",
+        "M-f6d8aa25e78043fa3961"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 11
       },
-      "summary": "unclassified → 2-black-2-red-draw: observed 11 time(s) across 10 match(es)."
+      "summary": "face-down → unclassified: observed 11 time(s) across 7 match(es)."
     },
     {
       "motif": "2-black-2-red-draw → score",
-      "count": 6,
+      "count": 9,
       "matchIds": [
-        "M-2b0bf84b4df444eecc9c",
-        "M-657a4bf619e288635b74",
+        "M-01a5983455ae919f8a0b",
+        "M-14103530f39e4c8fd523",
         "M-7856e24c1f36d9441ba1",
         "M-a1e29c33aabdd60ee16f",
         "M-a9a7afa9ee474bf45536",
-        "M-e35cccea15951261a2cc"
+        "M-eea877acab1a61f410d4",
+        "M-f23e0c2f7f0412abc92e",
+        "M-f64ab908222f007aaf8d"
       ],
       "outcomes": {
-        "NORMAL_VICTORY": 6
+        "NORMAL_VICTORY": 9
       },
-      "summary": "2-black-2-red-draw → score: observed 6 time(s) across 6 match(es)."
+      "summary": "2-black-2-red-draw → score: observed 9 time(s) across 8 match(es)."
     },
     {
-      "motif": "score → nine-tap",
-      "count": 5,
-      "matchIds": [
-        "M-0a64cce5e87cfe339b3b",
-        "M-657a4bf619e288635b74",
-        "M-a9a7afa9ee474bf45536",
-        "M-dca045bdd34e77aba406",
-        "M-e81dcb1f989a3c62c3ae"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 5
-      },
-      "summary": "score → nine-tap: observed 5 time(s) across 5 match(es)."
-    },
-    {
-      "motif": "unclassified → draw",
-      "count": 5,
-      "matchIds": [
-        "M-01a5983455ae919f8a0b",
-        "M-a1e29c33aabdd60ee16f",
-        "M-dca045bdd34e77aba406",
-        "M-e35cccea15951261a2cc",
-        "M-f6d8aa25e78043fa3961"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 5
-      },
-      "summary": "unclassified → draw: observed 5 time(s) across 5 match(es)."
-    },
-    {
-      "motif": "2-black-2-red-draw → disrupt",
+      "motif": "disrupt → disrupt",
       "count": 4,
       "matchIds": [
-        "M-657a4bf619e288635b74",
-        "M-ba18599acbda2de20d91",
-        "M-dca045bdd34e77aba406",
-        "M-e81dcb1f989a3c62c3ae"
+        "M-afdcc6f2781ba6f857b7",
+        "M-b15f0ccdbc77e5d6ea16",
+        "M-f23e0c2f7f0412abc92e"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 4
       },
-      "summary": "2-black-2-red-draw → disrupt: observed 4 time(s) across 4 match(es)."
-    },
-    {
-      "motif": "draw → unclassified",
-      "count": 3,
-      "matchIds": [
-        "M-01a5983455ae919f8a0b",
-        "M-a1e29c33aabdd60ee16f",
-        "M-e35cccea15951261a2cc"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 3
-      },
-      "summary": "draw → unclassified: observed 3 time(s) across 3 match(es)."
-    },
-    {
-      "motif": "nine-tap → nine-tap",
-      "count": 3,
-      "matchIds": [
-        "M-0a64cce5e87cfe339b3b",
-        "M-657a4bf619e288635b74",
-        "M-e81dcb1f989a3c62c3ae"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 3
-      },
-      "summary": "nine-tap → nine-tap: observed 3 time(s) across 3 match(es)."
+      "summary": "disrupt → disrupt: observed 4 time(s) across 3 match(es)."
     },
     {
       "motif": "score → disrupt",
-      "count": 3,
+      "count": 4,
       "matchIds": [
-        "M-2b0bf84b4df444eecc9c",
         "M-a1e29c33aabdd60ee16f",
-        "M-ba18599acbda2de20d91"
+        "M-afdcc6f2781ba6f857b7",
+        "M-b15f0ccdbc77e5d6ea16",
+        "M-f23e0c2f7f0412abc92e"
       ],
       "outcomes": {
-        "NORMAL_VICTORY": 3
+        "NORMAL_VICTORY": 4
       },
-      "summary": "score → disrupt: observed 3 time(s) across 3 match(es)."
+      "summary": "score → disrupt: observed 4 time(s) across 4 match(es)."
     },
     {
-      "motif": "score → face-down",
+      "motif": "score → seven-scoring-trigger-take-CORE-018",
       "count": 3,
       "matchIds": [
-        "M-0a64cce5e87cfe339b3b",
-        "M-657a4bf619e288635b74",
-        "M-e35cccea15951261a2cc"
+        "M-a1e29c33aabdd60ee16f",
+        "M-eea877acab1a61f410d4",
+        "M-f64ab908222f007aaf8d"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 3
       },
-      "summary": "score → face-down: observed 3 time(s) across 3 match(es)."
+      "summary": "score → seven-scoring-trigger-take-CORE-018: observed 3 time(s) across 3 match(es)."
+    },
+    {
+      "motif": "2-black-2-red-draw → disrupt",
+      "count": 2,
+      "matchIds": [
+        "M-c3e39fc33a594c40202f",
+        "M-f64ab908222f007aaf8d"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 2
+      },
+      "summary": "2-black-2-red-draw → disrupt: observed 2 time(s) across 2 match(es)."
     },
     {
       "motif": "ace-base → ace-base",
@@ -3607,22 +3572,11 @@
       "summary": "disrupt → ace-spade: observed 2 time(s) across 2 match(es)."
     },
     {
-      "motif": "disrupt → eight-aegis-field",
-      "count": 2,
-      "matchIds": [
-        "M-ba18599acbda2de20d91"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 2
-      },
-      "summary": "disrupt → eight-aegis-field: observed 2 time(s) across 1 match(es)."
-    },
-    {
       "motif": "disrupt → score",
       "count": 2,
       "matchIds": [
-        "M-657a4bf619e288635b74",
-        "M-e81dcb1f989a3c62c3ae"
+        "M-c3e39fc33a594c40202f",
+        "M-f64ab908222f007aaf8d"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 2
@@ -3630,102 +3584,78 @@
       "summary": "disrupt → score: observed 2 time(s) across 2 match(es)."
     },
     {
-      "motif": "disrupt → three-red-counter",
+      "motif": "disrupt → unclassified",
       "count": 2,
       "matchIds": [
-        "M-2b0bf84b4df444eecc9c",
-        "M-dca045bdd34e77aba406"
+        "M-afdcc6f2781ba6f857b7",
+        "M-b15f0ccdbc77e5d6ea16"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 2
       },
-      "summary": "disrupt → three-red-counter: observed 2 time(s) across 2 match(es)."
+      "summary": "disrupt → unclassified: observed 2 time(s) across 2 match(es)."
     },
     {
-      "motif": "draw → face-down",
+      "motif": "score → face-down",
       "count": 2,
       "matchIds": [
-        "M-dca045bdd34e77aba406",
-        "M-f6d8aa25e78043fa3961"
+        "M-01a5983455ae919f8a0b",
+        "M-eea877acab1a61f410d4"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 2
       },
-      "summary": "draw → face-down: observed 2 time(s) across 2 match(es)."
+      "summary": "score → face-down: observed 2 time(s) across 2 match(es)."
     },
     {
-      "motif": "eight-aegis-field → eight-aegis-field",
+      "motif": "score → nine-tap",
       "count": 2,
       "matchIds": [
-        "M-ba18599acbda2de20d91"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 2
-      },
-      "summary": "eight-aegis-field → eight-aegis-field: observed 2 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "heart-tempo → disrupt",
-      "count": 2,
-      "matchIds": [
-        "M-e35cccea15951261a2cc",
-        "M-f6d8aa25e78043fa3961"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 2
-      },
-      "summary": "heart-tempo → disrupt: observed 2 time(s) across 2 match(es)."
-    },
-    {
-      "motif": "nine-tap → ace-base",
-      "count": 2,
-      "matchIds": [
-        "M-0a64cce5e87cfe339b3b",
+        "M-14103530f39e4c8fd523",
         "M-a9a7afa9ee474bf45536"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 2
       },
-      "summary": "nine-tap → ace-base: observed 2 time(s) across 2 match(es)."
+      "summary": "score → nine-tap: observed 2 time(s) across 2 match(es)."
     },
     {
-      "motif": "nine-tap → unclassified",
+      "motif": "score → seven-scoring-trigger-take-CORE-019",
       "count": 2,
       "matchIds": [
-        "M-0a64cce5e87cfe339b3b",
-        "M-657a4bf619e288635b74"
+        "M-c3e39fc33a594c40202f",
+        "M-f23e0c2f7f0412abc92e"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 2
       },
-      "summary": "nine-tap → unclassified: observed 2 time(s) across 2 match(es)."
+      "summary": "score → seven-scoring-trigger-take-CORE-019: observed 2 time(s) across 2 match(es)."
     },
     {
-      "motif": "three-red-counter → face-down",
+      "motif": "unclassified → unclassified",
       "count": 2,
       "matchIds": [
-        "M-2b0bf84b4df444eecc9c",
-        "M-dca045bdd34e77aba406"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 2
-      },
-      "summary": "three-red-counter → face-down: observed 2 time(s) across 2 match(es)."
-    },
-    {
-      "motif": "unclassified → heart-tempo",
-      "count": 2,
-      "matchIds": [
-        "M-e35cccea15951261a2cc",
+        "M-afdcc6f2781ba6f857b7",
         "M-f6d8aa25e78043fa3961"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 2
       },
-      "summary": "unclassified → heart-tempo: observed 2 time(s) across 2 match(es)."
+      "summary": "unclassified → unclassified: observed 2 time(s) across 2 match(es)."
     },
     {
-      "motif": "2-black-2-red-draw → three-red-counter",
+      "motif": "2-black-2-red-draw → club-foundation-bonus",
+      "count": 1,
+      "matchIds": [
+        "M-b15f0ccdbc77e5d6ea16"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "2-black-2-red-draw → club-foundation-bonus: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "2-black-2-red-draw → diamond-mimic-paired-super-j-tempo",
       "count": 1,
       "matchIds": [
         "M-01a5983455ae919f8a0b"
@@ -3733,29 +3663,29 @@
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "2-black-2-red-draw → three-red-counter: observed 1 time(s) across 1 match(es)."
+      "summary": "2-black-2-red-draw → diamond-mimic-paired-super-j-tempo: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "ace-base → nine-tap",
+      "motif": "2-black-2-red-draw → unclassified",
       "count": 1,
       "matchIds": [
-        "M-0a64cce5e87cfe339b3b"
+        "M-afdcc6f2781ba6f857b7"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "ace-base → nine-tap: observed 1 time(s) across 1 match(es)."
+      "summary": "2-black-2-red-draw → unclassified: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "ace-base → three-black-bounce-top",
+      "motif": "ace-base → face-down",
       "count": 1,
       "matchIds": [
-        "M-e35cccea15951261a2cc"
+        "M-afdcc6f2781ba6f857b7"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "ace-base → three-black-bounce-top: observed 1 time(s) across 1 match(es)."
+      "summary": "ace-base → face-down: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "ace-base → unclassified",
@@ -3780,6 +3710,17 @@
       "summary": "ace-spade → ace-spade: observed 1 time(s) across 1 match(es)."
     },
     {
+      "motif": "ace-spade → bj-exile-recycle-CORE-015",
+      "count": 1,
+      "matchIds": [
+        "M-a1e29c33aabdd60ee16f"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "ace-spade → bj-exile-recycle-CORE-015: observed 1 time(s) across 1 match(es)."
+    },
+    {
       "motif": "ace-spade → three-red-counter",
       "count": 1,
       "matchIds": [
@@ -3791,7 +3732,7 @@
       "summary": "ace-spade → three-red-counter: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "ace-spade → unclassified",
+      "motif": "bj-exile-recycle-CORE-015 → unclassified",
       "count": 1,
       "matchIds": [
         "M-a1e29c33aabdd60ee16f"
@@ -3799,13 +3740,13 @@
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "ace-spade → unclassified: observed 1 time(s) across 1 match(es)."
+      "summary": "bj-exile-recycle-CORE-015 → unclassified: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "club-foundation-bonus → club-foundation-bonus",
       "count": 1,
       "matchIds": [
-        "M-01a5983455ae919f8a0b"
+        "M-b15f0ccdbc77e5d6ea16"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -3813,7 +3754,29 @@
       "summary": "club-foundation-bonus → club-foundation-bonus: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "club-foundation-bonus → unclassified",
+      "motif": "club-foundation-bonus → disrupt",
+      "count": 1,
+      "matchIds": [
+        "M-afdcc6f2781ba6f857b7"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "club-foundation-bonus → disrupt: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "club-foundation-bonus → score",
+      "count": 1,
+      "matchIds": [
+        "M-b15f0ccdbc77e5d6ea16"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "club-foundation-bonus → score: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "diamond-mimic-paired-super-j-tempo → score",
       "count": 1,
       "matchIds": [
         "M-01a5983455ae919f8a0b"
@@ -3821,90 +3784,57 @@
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "club-foundation-bonus → unclassified: observed 1 time(s) across 1 match(es)."
+      "summary": "diamond-mimic-paired-super-j-tempo → score: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "disrupt → ace-base",
+      "motif": "draw → face-down",
       "count": 1,
       "matchIds": [
-        "M-e35cccea15951261a2cc"
+        "M-f6d8aa25e78043fa3961"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "disrupt → ace-base: observed 1 time(s) across 1 match(es)."
+      "summary": "draw → face-down: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "disrupt → disrupt",
+      "motif": "effect-private-choice → ace-base",
       "count": 1,
       "matchIds": [
-        "M-dca045bdd34e77aba406"
+        "M-afdcc6f2781ba6f857b7"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "disrupt → disrupt: observed 1 time(s) across 1 match(es)."
+      "summary": "effect-private-choice → ace-base: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "eight-aegis-field → disrupt",
+      "motif": "heart-tempo → disrupt",
       "count": 1,
       "matchIds": [
-        "M-dca045bdd34e77aba406"
+        "M-f6d8aa25e78043fa3961"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "eight-aegis-field → disrupt: observed 1 time(s) across 1 match(es)."
+      "summary": "heart-tempo → disrupt: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "eight-aegis-field → face-down",
+      "motif": "nine-tap → ace-base",
       "count": 1,
       "matchIds": [
-        "M-ba18599acbda2de20d91"
+        "M-a9a7afa9ee474bf45536"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "eight-aegis-field → face-down: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "eight-aegis-field → score",
-      "count": 1,
-      "matchIds": [
-        "M-ba18599acbda2de20d91"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "eight-aegis-field → score: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "eight-aegis-field → unclassified",
-      "count": 1,
-      "matchIds": [
-        "M-01a5983455ae919f8a0b"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "eight-aegis-field → unclassified: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "nine-tap → eight-aegis-field",
-      "count": 1,
-      "matchIds": [
-        "M-dca045bdd34e77aba406"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "nine-tap → eight-aegis-field: observed 1 time(s) across 1 match(es)."
+      "summary": "nine-tap → ace-base: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "nine-tap → face-down",
       "count": 1,
       "matchIds": [
-        "M-e81dcb1f989a3c62c3ae"
+        "M-14103530f39e4c8fd523"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -3912,29 +3842,29 @@
       "summary": "nine-tap → face-down: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "three-black-bounce-top → score",
+      "motif": "nine-tap → nine-tap",
       "count": 1,
       "matchIds": [
-        "M-e35cccea15951261a2cc"
+        "M-14103530f39e4c8fd523"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "three-black-bounce-top → score: observed 1 time(s) across 1 match(es)."
+      "summary": "nine-tap → nine-tap: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "three-black-bounce-top → three-black-bounce-top",
+      "motif": "score → seven-scoring-trigger-take-CORE-015",
       "count": 1,
       "matchIds": [
-        "M-e35cccea15951261a2cc"
+        "M-a1e29c33aabdd60ee16f"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "three-black-bounce-top → three-black-bounce-top: observed 1 time(s) across 1 match(es)."
+      "summary": "score → seven-scoring-trigger-take-CORE-015: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "three-red-counter → eight-aegis-field",
+      "motif": "score → seven-scoring-trigger-take-CORE-017",
       "count": 1,
       "matchIds": [
         "M-01a5983455ae919f8a0b"
@@ -3942,7 +3872,84 @@
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "three-red-counter → eight-aegis-field: observed 1 time(s) across 1 match(es)."
+      "summary": "score → seven-scoring-trigger-take-CORE-017: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "score → seven-scoring-trigger-take-CORE-020",
+      "count": 1,
+      "matchIds": [
+        "M-b15f0ccdbc77e5d6ea16"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "score → seven-scoring-trigger-take-CORE-020: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "score → seven-scoring-trigger-take-CORE-022",
+      "count": 1,
+      "matchIds": [
+        "M-f64ab908222f007aaf8d"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "score → seven-scoring-trigger-take-CORE-022: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "seven-scoring-trigger-take-CORE-017 → unclassified",
+      "count": 1,
+      "matchIds": [
+        "M-01a5983455ae919f8a0b"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "seven-scoring-trigger-take-CORE-017 → unclassified: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "seven-scoring-trigger-take-CORE-018 → face-down",
+      "count": 1,
+      "matchIds": [
+        "M-f64ab908222f007aaf8d"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "seven-scoring-trigger-take-CORE-018 → face-down: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "seven-scoring-trigger-take-CORE-018 → score",
+      "count": 1,
+      "matchIds": [
+        "M-a1e29c33aabdd60ee16f"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "seven-scoring-trigger-take-CORE-018 → score: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "seven-scoring-trigger-take-CORE-019 → score",
+      "count": 1,
+      "matchIds": [
+        "M-c3e39fc33a594c40202f"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "seven-scoring-trigger-take-CORE-019 → score: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "seven-scoring-trigger-take-CORE-019 → unclassified",
+      "count": 1,
+      "matchIds": [
+        "M-f23e0c2f7f0412abc92e"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "seven-scoring-trigger-take-CORE-019 → unclassified: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "three-red-counter → score",
@@ -3956,21 +3963,10 @@
       "summary": "three-red-counter → score: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "three-red-counter → three-red-counter",
-      "count": 1,
-      "matchIds": [
-        "M-2b0bf84b4df444eecc9c"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "three-red-counter → three-red-counter: observed 1 time(s) across 1 match(es)."
-    },
-    {
       "motif": "unclassified → club-foundation-bonus",
       "count": 1,
       "matchIds": [
-        "M-01a5983455ae919f8a0b"
+        "M-afdcc6f2781ba6f857b7"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -3978,7 +3974,7 @@
       "summary": "unclassified → club-foundation-bonus: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "unclassified → unclassified",
+      "motif": "unclassified → draw",
       "count": 1,
       "matchIds": [
         "M-f6d8aa25e78043fa3961"
@@ -3986,7 +3982,29 @@
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "unclassified → unclassified: observed 1 time(s) across 1 match(es)."
+      "summary": "unclassified → draw: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "unclassified → effect-private-choice",
+      "count": 1,
+      "matchIds": [
+        "M-afdcc6f2781ba6f857b7"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "unclassified → effect-private-choice: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "unclassified → heart-tempo",
+      "count": 1,
+      "matchIds": [
+        "M-f6d8aa25e78043fa3961"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "unclassified → heart-tempo: observed 1 time(s) across 1 match(es)."
     }
   ],
   "anomalies": {
@@ -4104,5 +4122,5 @@
     "Most synergy findings are inconclusive — consider increasing match count for statistical power.",
     "82 mechanic(s) have sample size below 20 — interpret with caution."
   ],
-  "extractHash": "4fe3c46c1824a47b09af27e45d9acd8405b86130e9347685f916d6795df88ef3"
+  "extractHash": "d83198c3593ff1c051ba8d018020149c29db0fa06974c417af877741329da4b9"
 }

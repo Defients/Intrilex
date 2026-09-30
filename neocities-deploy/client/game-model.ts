@@ -16,6 +16,9 @@ export type SemanticPlayer = Readonly<{
   hand: readonly SemanticCard[];
   points: readonly SemanticCard[];
   enduring: readonly SemanticCard[];
+  /** Only fields already authorized in the owning player's projected limits. */
+  miniTurnsRemaining?: number | null;
+  swapUsed?: boolean | null;
 }>;
 
 export type SemanticAction = Readonly<{
@@ -24,8 +27,11 @@ export type SemanticAction = Readonly<{
   family: string;
   mode: string | null;
   timing: string;
+  timingClass?: string;
   sources: readonly string[];
   targets: readonly string[];
+  /** Public zero-based position, never a hidden card identity. */
+  swapSlot?: number;
   facts: readonly string[];
 }>;
 
@@ -62,9 +68,11 @@ export type SemanticGame = Readonly<{
   error: string | null;
   handOrder: readonly string[] | null;
   opponentHandReorderEpoch: number;
+  choice: Readonly<{ kind: string; cards: readonly SemanticCard[] }> | null;
+  connection: string | null;
 }>;
 
-type Options = { readOnly?: boolean; visibility?: 'player' | 'public' };
+type Options = { readOnly?: boolean; visibility?: 'player' | 'public'; coalesceIdenticalActions?: boolean };
 type Data = Record<string, unknown>;
 
 const UNAVAILABLE = 'Game snapshot unavailable.';
@@ -196,6 +204,8 @@ const unavailableGame: SemanticGame = freeze({
   error: UNAVAILABLE,
   handOrder: null,
   opponentHandReorderEpoch: 0,
+  choice: null,
+  connection: null,
 });
 
 function card(input: unknown, fallbackId: string): SemanticCard {
@@ -256,8 +266,9 @@ function handles(value: Data, primary: string, alternate: string): string[] {
   return list(preferred === undefined ? field(value, alternate) : preferred).map(entry => text(entry));
 }
 
-function actions(input: unknown, revision: number, frameHash: string): SemanticAction[] {
-  const entries = list(input).map(entry => {
+function actions(input: unknown, revision: number, frameHash: string, swapIds: readonly (string | null)[], coalesce: boolean): SemanticAction[] {
+  const descriptions = new Map<string, string>();
+  const entries = list(input).flatMap(entry => {
     const value = record(entry);
     const id = text(field(value, 'actionId'));
     const family = knownFamily(field(value, 'family'));
@@ -266,7 +277,33 @@ function actions(input: unknown, revision: number, frameHash: string): SemanticA
     if (!TIMINGS.has(timingClass)) invalid();
     const timing: string = timingLabel(timingClass);
     const safeMode = safeModeFor(family, mode);
-    return { id, family, mode: safeMode, label: labelFor(family, mode), timing, sources: handles(value, 'sourceHandles', 'sourceCardIds'), targets: handles(value, 'targetHandles', 'targetCardIds') };
+    const sources = handles(value, 'sourceHandles', 'sourceCardIds');
+    const targets = handles(value, 'targetHandles', 'targetCardIds');
+    const rawSlot = field(value, 'swapSlot');
+    let swapSlot: number | undefined;
+    if (family === 'swap-bar') {
+      if (rawSlot !== undefined) {
+        swapSlot = count(rawSlot);
+        if (swapSlot >= swapIds.length) invalid();
+      } else {
+        const index = swapIds.findIndex(id => id !== null && targets.includes(id));
+        if (index >= 0) swapSlot = index;
+      }
+    }
+    // Replace hidden swap handles with public positions at the semantic boundary.
+    // The action ID still identifies the exact command in the authority's vault.
+    const safeTargets = family === 'swap-bar' && swapSlot !== undefined ? [`hidden:swap:${swapSlot}`] : targets;
+    if (coalesce) {
+      // The canonical enumerator can repeat one action ID through multiple
+      // discovery paths. Coalesce only identical structured descriptions,
+      // including untranslated metadata. A conflicting duplicate fails closed.
+      // This never changes the supplied frame hash or the vault's original ID.
+      const description = JSON.stringify([field(value, 'family'), mode, timingClass, sources, targets, swapSlot]);
+      const previous = descriptions.get(id);
+      if (previous !== undefined) { if (previous !== description) invalid(); return []; }
+      descriptions.set(id, description);
+    }
+    return [{ id, family, mode: safeMode, label: labelFor(family, mode), timing, timingClass, sources, targets: safeTargets, ...(swapSlot !== undefined ? { swapSlot } : {}) }];
   });
   if (new Set(entries.map(entry => entry.id)).size !== entries.length) invalid();
   const alternativeSample = entries.slice(0, 9);
@@ -364,10 +401,16 @@ export function buildSemanticGame(input: unknown, options: Options = {}): Semant
     const ownHandCount = field(own, 'handCount');
     const handCount = ownHandCount === undefined ? list(ownHand).length : count(ownHandCount);
     if (!publicOnly && handCount !== hand.length) invalid();
+    const ownLimits = record(field(own, 'limits') ?? {});
+    const rawMiniTurns = publicOnly ? undefined : field(ownLimits, 'miniTurnsRemaining');
+    const rawSwapUsed = publicOnly ? undefined : field(ownLimits, 'swapBarUsedThisFT');
+    if (rawSwapUsed !== undefined && typeof rawSwapUsed !== 'boolean') invalid();
     const self: SemanticPlayer = {
       id: selfId, name: displayName(human, publicOnly ? selfId : 'You'),
       score: finite(field(own, 'securedPoints')), goal: finite(field(own, 'goal')),
       handCount, hand, points: cards(field(own, 'pr'), `${selfId}:points`), enduring: cards(field(own, 'er'), `${selfId}:enduring`),
+      miniTurnsRemaining: rawMiniTurns === undefined ? null : count(rawMiniTurns),
+      swapUsed: rawSwapUsed === undefined ? null : rawSwapUsed,
     };
     const opponent: SemanticPlayer = {
       id: opponentId, name: displayName(field(snapshot, 'opponent'), publicOnly ? opponentId : 'Opponent'),
@@ -377,6 +420,8 @@ export function buildSemanticGame(input: unknown, options: Options = {}): Semant
     };
     let frameHash: string | null = null;
     let legalActions: readonly SemanticAction[] = [];
+    const rawSwap = list(field(view, 'swapBar'));
+    const swapIds = rawSwap.map(entry => nullableText(field(record(entry), 'id')));
     const decision = field(snapshot, 'decision');
     if (decision !== null) {
       const value = record(decision);
@@ -387,7 +432,7 @@ export function buildSemanticGame(input: unknown, options: Options = {}): Semant
       const hash = field(value, 'frameHash');
       if (!publicOnly || hash != null) frameHash = text(hash);
       if (!publicOnly && !completed && (status === 'HUMAN_DECISION' || status === 'RUNNING') && isHuman && actorId === humanId) {
-        legalActions = actions(field(value, 'legalActions'), revision, frameHash!);
+        legalActions = actions(field(value, 'legalActions'), revision, frameHash!, swapIds, flag(policy, 'coalesceIdenticalActions'));
       }
     }
     const stack = list(field(view, 'stack')).flatMap(entry => {
@@ -404,6 +449,19 @@ export function buildSemanticGame(input: unknown, options: Options = {}): Semant
     const discardCount = count(field(view, 'gyCount'));
     const top = field(view, 'gyTopCard');
     if (top === undefined || (discardCount === 0 && top !== null) || (discardCount > 0 && top === null)) invalid();
+    let choice: SemanticGame['choice'] = null;
+    const pendingChoice = publicOnly ? null : field(view, 'pendingChoice');
+    if (pendingChoice != null) {
+      const value = record(pendingChoice);
+      const kind = field(value, 'kind');
+      const allowed = new Set(['core-rank3-present', 'core-rank3-take', 'core-rank3-discard', 'core-rank5-rummage', 'core-rank6-dig', 'core-rank7-assign', 'core-rank7-generated-effect', 'core-nine-anchor-discard', 'core-natural-four-reorder', 'core-bj-exile-recycle', 'core-seven-scoring-trigger', 'rank3-present', 'rank3-take', 'rank3-discard', 'rank5-rummage', 'rank6-dig', 'rank7-assign', 'rank7-generated-effect', 'nine-anchor-discard', 'rank7-scoring-trigger']);
+      // Do not read an arbitrary pending-choice context or knownCards registry.
+      if (typeof kind === 'string' && allowed.has(kind)) {
+        choice = { kind, cards: cards(field(value, 'optionCards'), 'choice') };
+      }
+    }
+    const rawConnection = field(record(field(snapshot, 'opponent') ?? {}), 'connectionState');
+    const connection = typeof rawConnection === 'string' && ['CONNECTED', 'DISCONNECTED', 'RECONNECTING'].includes(rawConnection) ? rawConnection : null;
     return freeze({
       schemaVersion: 1, sessionId, revision, frameHash: publicOnly ? null : frameHash,
       status: completed ? 'completed' : legalActions.length > 0 ? 'ready' : 'waiting',
@@ -417,6 +475,7 @@ export function buildSemanticGame(input: unknown, options: Options = {}): Semant
       opponentHandReorderEpoch: field(snapshot, 'opponentHandReorderEpoch') === undefined
         ? 0
         : count(field(snapshot, 'opponentHandReorderEpoch')),
+      choice, connection,
     });
   } catch (error) {
     console.warn('[buildSemanticGame] snapshot rejected:', (error as Error)?.message ?? error);

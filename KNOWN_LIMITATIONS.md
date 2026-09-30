@@ -1,7 +1,7 @@
 # Known Limitations — Intrilex Simulation Lab v1.0.0
 
 > **AUTO-GENERATED** by `scripts/generate-capability-truth.mjs` from `config/capability-truth.json`.
-> Generated: 2026-09-04T20:24:39.791Z
+> Generated: 2026-09-30T14:45:17.753Z
 > Do not edit manually — run `pnpm run capability:generate` to regenerate.
 
 ## By Design (Scope Freeze)
@@ -35,11 +35,6 @@
 
 - **ID:** CERT-WAITWHAT-01
 - **Detail:** The investigation workflow is a complete pure-function module but has not been integrated into the CasterSession UI. It is available as a library API.
-
-### 2D brain topology renderer is not the default
-
-- **ID:** CERT-BRAIN-2D-01
-- **Detail:** A complete 2D SVG brain topology renderer exists but has not replaced the 3D Three.js renderer as the default.
 
 ### Evidence-honest intelligence labels not displayed in all player-facing surfaces
 

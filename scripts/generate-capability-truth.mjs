@@ -268,12 +268,6 @@ function deriveLimitations(manifest, releaseIdentity) {
     detail: 'The investigation workflow is a complete pure-function module but has not been integrated into the CasterSession UI. It is available as a library API.'
   });
   limits.push({
-    id: 'CERT-BRAIN-2D-01',
-    severity: 'technical',
-    title: '2D brain topology renderer is not the default',
-    detail: 'A complete 2D SVG brain topology renderer exists but has not replaced the 3D Three.js renderer as the default.'
-  });
-  limits.push({
     id: 'CERT-EVIDENCE-DISPLAY-01',
     severity: 'technical',
     title: 'Evidence-honest intelligence labels not displayed in all player-facing surfaces',

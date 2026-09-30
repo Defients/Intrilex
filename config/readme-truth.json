@@ -13,7 +13,7 @@
     ],
     "networkStatus": "SUPPORTED",
     "multiplayerStatus": "BLOCKED",
-    "testFileCount": 189,
+    "testFileCount": 203,
     "certifiedReplayCount": 121
   },
   "lanes": {
@@ -220,11 +220,6 @@
     {
       "id": "CERT-WAITWHAT-01",
       "title": "WAIT WHAT investigation workflow is not wired into CasterSession UI",
-      "severity": "technical"
-    },
-    {
-      "id": "CERT-BRAIN-2D-01",
-      "title": "2D brain topology renderer is not the default",
       "severity": "technical"
     },
     {

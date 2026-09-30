@@ -494,6 +494,29 @@ export function resolveRankAction(input, actorId, action) {
             events.push({ type: "EIGHT_AEGIS_FIELD_RESOLVED", payload: { sourceCardId: action.sourceCardId, affected, failed, expiresAt: expiry } });
             break;
         }
+        case "natural-four": {
+            // Rulebook §4 Natural: "Look at the top 4 cards of DP, reorder them, then optionally draw 1 of them from the top."
+            if (!inHandOf(state, action.sourceCardId, actorId) || !isRank(state, action.sourceCardId, "4"))
+                return fail("RANK_SOURCE", "Natural 4 requires a Four in hand");
+            const topCount = Math.min(4, state.zones.dp.length);
+            const topIds = state.zones.dp.slice(0, topCount);
+            // Validate reorder list matches the top N cards exactly
+            if (action.reorderCardIds.length !== topIds.length || !action.reorderCardIds.every((id) => topIds.includes(id)))
+                return fail("RANK_TARGET", "Natural 4 reorder must list exactly the top cards of DP");
+            // Apply reordering: remove top N cards from DP, then push back in the specified order
+            state.zones.dp.splice(0, topIds.length);
+            for (const id of action.reorderCardIds)
+                state.zones.dp.unshift(id);
+            // Optionally draw the top card
+            let drawnCardId = null;
+            if (action.drawTop && state.zones.dp.length > 0) {
+                drawnCardId = state.zones.dp[0];
+                moveCard(state, drawnCardId, `${actorId}_HAND`, actorId);
+            }
+            moveCard(state, action.sourceCardId, "GY");
+            events.push({ type: "NATURAL_FOUR_RESOLVED", payload: { sourceCardId: action.sourceCardId, reorderedCount: topIds.length, drawnCardId, visibility: "authorized" } });
+            break;
+        }
         case "goal-shift-nine": {
             if (!inHandOf(state, action.sourceCardId, actorId) || !isRank(state, action.sourceCardId, "9"))
                 return fail("RANK_SOURCE", "Goal Shift requires a Nine in hand");

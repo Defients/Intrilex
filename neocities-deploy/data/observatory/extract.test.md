@@ -2,9 +2,9 @@
 
 **Extract version:** 1.0.0
 **Analytics schema:** 4.2.0
-**Source hash:** `ba5f1612c872e9e615f376019b28bf4fcff56811961268472750baf517b15603`
+**Source hash:** `c3175a49922a04045fdfae81f9132b754b5f46fd7b19b12b4dd9d373fd1dcb35`
 **Aggregate hash:** `e4a6921c4b8595bafe7b745b35a99911fc236e16ccaba2cba2f301141b699f48`
-**Extract hash:** `4fe3c46c1824a47b09af27e45d9acd8405b86130e9347685f916d6795df88ef3`
+**Extract hash:** `d83198c3593ff1c051ba8d018020149c29db0fa06974c417af877741329da4b9`
 
 ## Executive Summary
 
@@ -22,7 +22,7 @@ Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. Al
 | policyCount | 12 |
 | mechanicCount | 106 |
 | synergyCount | 1 |
-| motifCount | 49 |
+| motifCount | 51 |
 | anomalyCount | 27 |
 
 ## Policy Findings
@@ -310,14 +310,14 @@ Replay refs: M-dcc47c0a70b0e1ec0c2c, M-ce645ce7a5c5594556ee, M-946f016b3c900b654
 
 <details><summary><b>club-foundation-bonus</b></summary>
 
-Used in 5.5% of participant observations (11/200). Outcome association: positive (0.144, CI [-0.149, 0.438]). Immediate point impact: mean 9.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 5.5% of participant observations (11/200). Outcome association: positive (0.144, CI [-0.149, 0.438]). Immediate point impact: mean 6.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-1197243e3d684bf9b83d, M-aa8f4a129617fe179fe4, M-44d7c9fa35f12273eb68, M-db10a45b83e5e68eb1fd
 </details>
 
 <details><summary><b>counter</b></summary>
 
-Used in 29.5% of participant observations (59/200). Outcome association: positive (0.195, CI [0.047, 0.344]). Immediate point impact: mean 1.38 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 29.5% of participant observations (59/200). Outcome association: positive (0.195, CI [0.047, 0.344]). Immediate point impact: mean 1.57 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-4dbd281c5bbb2e29b64c, M-a9a7afa9ee474bf45536, M-cdbb93aac376239f7748, M-030616815bfed08a875f
 </details>
@@ -331,7 +331,7 @@ Replay refs: M-8f5ba7a1426637e83d01
 
 <details><summary><b>diamond-mimic-paired-super-j-tempo</b></summary>
 
-Used in 2.5% of participant observations (5/200). Outcome association: positive (0.103, CI [-0.333, 0.538]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 2.5% of participant observations (5/200). Outcome association: positive (0.103, CI [-0.333, 0.538]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-eb968361e3bdc82164ce, M-ce099e622a899fa5cb74, M-0fbb81ca3aeeda551d13, M-a526bfd4b58f3e7c1278
 </details>
@@ -380,7 +380,7 @@ Replay refs: M-6eb96a20b1344ba12321, M-e23351a3b5866db76481, M-cdbb93aac376239f7
 
 <details><summary><b>effect-private-choice</b></summary>
 
-Used in 19.5% of participant observations (39/200). Outcome association: negative (-0.249, CI [-0.415, -0.083]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 19.5% of participant observations (39/200). Outcome association: negative (-0.249, CI [-0.415, -0.083]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-dcc47c0a70b0e1ec0c2c, M-a6002589304eda5d8923, M-cdbb93aac376239f7748, M-152dc2ebb7f84e8d1124
 </details>
@@ -401,7 +401,7 @@ Replay refs: M-dcc47c0a70b0e1ec0c2c, M-de1b456110c82ac594d5, M-cdbb93aac376239f7
 
 <details><summary><b>eight-aegis-field</b></summary>
 
-Used in 27.5% of participant observations (55/200). Outcome association: negative (-0.064, CI [-0.221, 0.092]). Immediate point impact: mean 1.50 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 27.5% of participant observations (55/200). Outcome association: negative (-0.064, CI [-0.221, 0.092]). Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-dcc47c0a70b0e1ec0c2c, M-690e14c1ad1c3c20a4fe, M-cdbb93aac376239f7748, M-e32149ebf24466103ea9
 </details>
@@ -611,7 +611,7 @@ Replay refs: M-dcc47c0a70b0e1ec0c2c, M-e8afd8ba50aa2cf5c2ef, M-cdbb93aac376239f7
 
 <details><summary><b>rank10</b></summary>
 
-Used in 30.5% of participant observations (61/200). Outcome association: negative (-0.012, CI [-0.164, 0.140]). Immediate point impact: mean 4.50 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 30.5% of participant observations (61/200). Outcome association: negative (-0.012, CI [-0.164, 0.140]). Immediate point impact: mean 3.60 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-dcc47c0a70b0e1ec0c2c, M-56cb16e6cdcdf5dbd1a1, M-cdbb93aac376239f7748, M-e32149ebf24466103ea9
 </details>
@@ -730,7 +730,7 @@ Replay refs: M-eb968361e3bdc82164ce, M-db10a45b83e5e68eb1fd
 
 <details><summary><b>score</b></summary>
 
-Used in 76.5% of participant observations (153/200). Outcome association: positive (0.532, CI [0.419, 0.645]). Immediate point impact: mean 3.60 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 76.5% of participant observations (153/200). Outcome association: positive (0.532, CI [0.419, 0.645]). Immediate point impact: mean 3.71 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-dcc47c0a70b0e1ec0c2c, M-0496791615f3cfbfb548, M-cdbb93aac376239f7748, M-0a64cce5e87cfe339b3b
 </details>
@@ -744,7 +744,7 @@ Replay refs: M-dcc47c0a70b0e1ec0c2c, M-ce645ce7a5c5594556ee, M-cdbb93aac376239f7
 
 <details><summary><b>seven-topdeck</b></summary>
 
-Used in 5.5% of participant observations (11/200). Outcome association: negative (-0.144, CI [-0.438, 0.149]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 5.5% of participant observations (11/200). Outcome association: negative (-0.144, CI [-0.438, 0.149]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-1197243e3d684bf9b83d, M-030616815bfed08a875f, M-cdbb93aac376239f7748, M-eec6e8dbac8062940f40
 </details>
@@ -807,7 +807,7 @@ Replay refs: M-6eb96a20b1344ba12321, M-9ac410d55ff6857e19e9, M-9764f9a75800787b9
 
 <details><summary><b>three-black-bounce-top</b></summary>
 
-Used in 4.5% of participant observations (9/200). Outcome association: negative (-0.130, CI [-0.473, 0.213]). Immediate point impact: mean 1.50 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 4.5% of participant observations (9/200). Outcome association: negative (-0.130, CI [-0.473, 0.213]). Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-dcc47c0a70b0e1ec0c2c, M-6fde7fe703a4f13b5b61, M-6e75ba582c29437816eb, M-e35cccea15951261a2cc
 </details>
@@ -898,7 +898,7 @@ Replay refs: M-6eb96a20b1344ba12321, M-a6002589304eda5d8923, M-c37124f0bd32b32d2
 
 <details><summary><b>three-red-counter</b></summary>
 
-Used in 45.0% of participant observations (90/200). Outcome association: positive (0.082, CI [-0.058, 0.221]). Immediate point impact: mean 0.80 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 45.0% of participant observations (90/200). Outcome association: positive (0.082, CI [-0.058, 0.221]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-dcc47c0a70b0e1ec0c2c, M-690e14c1ad1c3c20a4fe, M-cdbb93aac376239f7748, M-152dc2ebb7f84e8d1124
 </details>
@@ -933,7 +933,7 @@ Replay refs: M-1197243e3d684bf9b83d, M-e8afd8ba50aa2cf5c2ef, M-e32149ebf24466103
 
 <details><summary><b>ultra</b></summary>
 
-Used in 75.5% of participant observations (151/200). Outcome association: negative (-0.041, CI [-0.202, 0.120]). Immediate point impact: mean 0.39 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 75.5% of participant observations (151/200). Outcome association: negative (-0.041, CI [-0.202, 0.120]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-dcc47c0a70b0e1ec0c2c, M-0496791615f3cfbfb548, M-cdbb93aac376239f7748, M-152dc2ebb7f84e8d1124
 </details>
@@ -960,26 +960,26 @@ Replay refs: M-eec6e8dbac8062940f40
 
 ## Causal Motifs
 
-- **score → score** — 48 occurrence(s), 12 matches
-- **unclassified → score** — 26 occurrence(s), 12 matches
-- **score → unclassified** — 16 occurrence(s), 11 matches
-- **face-down → unclassified** — 14 occurrence(s), 9 matches
-- **unclassified → 2-black-2-red-draw** — 11 occurrence(s), 10 matches
-- **2-black-2-red-draw → score** — 6 occurrence(s), 6 matches
-- **score → nine-tap** — 5 occurrence(s), 5 matches
-- **unclassified → draw** — 5 occurrence(s), 5 matches
-- **2-black-2-red-draw → disrupt** — 4 occurrence(s), 4 matches
-- **draw → unclassified** — 3 occurrence(s), 3 matches
-- **nine-tap → nine-tap** — 3 occurrence(s), 3 matches
-- **score → disrupt** — 3 occurrence(s), 3 matches
-- **score → face-down** — 3 occurrence(s), 3 matches
+- **score → score** — 49 occurrence(s), 11 matches
+- **unclassified → score** — 18 occurrence(s), 12 matches
+- **unclassified → 2-black-2-red-draw** — 14 occurrence(s), 11 matches
+- **score → unclassified** — 12 occurrence(s), 9 matches
+- **face-down → unclassified** — 11 occurrence(s), 7 matches
+- **2-black-2-red-draw → score** — 9 occurrence(s), 8 matches
+- **disrupt → disrupt** — 4 occurrence(s), 3 matches
+- **score → disrupt** — 4 occurrence(s), 4 matches
+- **score → seven-scoring-trigger-take-CORE-018** — 3 occurrence(s), 3 matches
+- **2-black-2-red-draw → disrupt** — 2 occurrence(s), 2 matches
 - **ace-base → ace-base** — 2 occurrence(s), 1 matches
 - **disrupt → ace-spade** — 2 occurrence(s), 2 matches
-- **disrupt → eight-aegis-field** — 2 occurrence(s), 1 matches
 - **disrupt → score** — 2 occurrence(s), 2 matches
-- **disrupt → three-red-counter** — 2 occurrence(s), 2 matches
-- **draw → face-down** — 2 occurrence(s), 2 matches
-- **eight-aegis-field → eight-aegis-field** — 2 occurrence(s), 1 matches
+- **disrupt → unclassified** — 2 occurrence(s), 2 matches
+- **score → face-down** — 2 occurrence(s), 2 matches
+- **score → nine-tap** — 2 occurrence(s), 2 matches
+- **score → seven-scoring-trigger-take-CORE-019** — 2 occurrence(s), 2 matches
+- **unclassified → unclassified** — 2 occurrence(s), 2 matches
+- **2-black-2-red-draw → club-foundation-bonus** — 1 occurrence(s), 1 matches
+- **2-black-2-red-draw → diamond-mimic-paired-super-j-tempo** — 1 occurrence(s), 1 matches
 
 ## Anomalies
 

@@ -8,6 +8,7 @@ import { loadProfile } from './local-profile.mjs';
 import { ratingToTierDivision, compareRank } from "../account-domain/rank-tier.mjs";
 import { renderRankGlyph, rankLabel } from './rank/rank-glyph.js';
 import { generateTeachingMoment, generateBeginnerTrapTip, renderTeachingMoment } from "../decision-intelligence/teaching-moments.mjs";
+import { generateTraceInsights, renderTraceInsights } from '../forensic/trace-teaching.mjs';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -37,6 +38,7 @@ export function renderTerminal(vm, opts) {
   const outcome = isDraw ? 'draw' : winner === humanId ? 'win' : 'loss';
   const outcomeLabel = outcome === 'win' ? 'VICTORY' : outcome === 'loss' ? 'DEFEAT' : 'DRAW';
   const resultIcon = outcome === 'win' ? '🏆' : outcome === 'loss' ? '💀' : '🤝';
+  const winnerLabel = outcome === 'win' ? 'You' : outcome === 'loss' ? (opts.isNetworkMatch ? (vm.opponent?.displayName || 'Opponent') : 'AI') : 'Draw';
 
   // v0.19.0: AI banter on terminal
   const archetype = vm.opponent?.archetype ?? '';
@@ -50,7 +52,7 @@ export function renderTerminal(vm, opts) {
       <p class="terminal-banter" data-testid="terminal-banter">${esc(banter)}</p>
     </div>
     <dl class="terminal-details">
-      <dt>Winner</dt><dd data-testid="terminal-winner">${esc(outcome === 'win' ? 'You' : outcome === 'loss' ? 'AI' : 'Draw')}</dd>
+      <dt>Winner</dt><dd data-testid="terminal-winner">${esc(winnerLabel)}</dd>
       <dt>Termination</dt><dd>${esc(formatTerminationReason(vm.match.terminationReason || 'UNKNOWN'))}</dd>
       <dt>Full Turns</dt><dd>${vm.match.fullTurnSequence ?? 0}</dd>
     </dl>
@@ -58,6 +60,12 @@ export function renderTerminal(vm, opts) {
     ${opts.achievementSummaryHtml || ''}
     ${renderIntelligenceCard(vm, opts)}
     ${renderTeachingMoment(generateTeachingMoment(vm) || generateBeginnerTrapTip(vm))}
+    ${renderTraceInsightsCard(opts)}
+    ${opts.isNetworkMatch && opts.rematchInvite ? `<section class="terminal-rematch-invite" role="status">
+      <p>${esc(opts.rematchInvite.fromDisplayName || 'Opponent')} requested a rematch.</p>
+      <button class="primary-button" data-action="accept-rematch" data-invite-code="${esc(opts.rematchInvite.inviteCode)}">Accept rematch</button>
+      <button class="secondary-button" data-action="decline-rematch">Decline</button>
+    </section>` : ''}
     <div class="terminal-actions">
       <button class="primary-button" data-testid="watch-replay" data-action="watch-replay">Watch replay</button>
       ${opts.isNetworkMatch ? '<button class="secondary-button" data-testid="download-replay" data-action="download-replay">Download certified replay</button>' : ''}
@@ -150,6 +158,26 @@ function renderIntelligenceCard(vm, opts) {
       </div>
     </div>
     <p class="intel-termination" data-testid="intel-termination">Ended: ${esc(termination)}</p>
+  </div>`;
+}
+
+/**
+ * Render trace-based teaching insights on the terminal screen.
+ * Uses the forensic trace-teaching module to generate frame-level insights
+ * from the certified replay, if available.
+ * @param {object} opts - Terminal render options (must include certifiedReplay)
+ * @returns {string} HTML
+ */
+function renderTraceInsightsCard(opts) {
+  const certifiedReplay = opts?.certifiedReplay;
+  if (!certifiedReplay?.frames?.length) return '';
+  const humanId = opts?.humanPlayerId ?? 'P1';
+  const insights = generateTraceInsights(certifiedReplay, { perspectivePlayerId: humanId });
+  if (insights.length === 0) return '';
+  return `<div class="trace-insights-card" data-testid="trace-insights-card">
+    <h3 class="trace-insights-card-title">Frame-Level Analysis</h3>
+    <p class="trace-insights-card-desc">Key moments from this match, with alternatives and consequences.</p>
+    ${renderTraceInsights(insights)}
   </div>`;
 }
 
