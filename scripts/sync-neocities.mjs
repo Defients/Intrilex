@@ -115,17 +115,28 @@ async function main() {
   // with empty stubs to prevent duplicate app instances.
   // EXCEPTION: app.js gets a re-export stub pointing to the real bundle,
   // because some bundled chunks do `import('./app.js')` to access render().
+  //
+  // worker.js is NOT neutralized — it is a real Worker entry point spawned at
+  // the fixed URL `new Worker('worker.js', { type: 'module' })`, which cannot
+  // point at a hashed chunk. Its entire root-level import graph must stay
+  // executable too (autonomy-runtime, browser-analytics and its rank/
+  // observatory/mechanic registry deps, decision-intelligence for the lazy
+  // counterfactual/diagnostics handlers, version, policy-scoring, anchor),
+  // or every worker-backed feature (campaigns, tournaments, counterfactuals,
+  // diagnostics, corpus verification) hangs silently — the stub parses fine
+  // so no onerror fires, but onmessage is never installed and every posted
+  // job is dropped. These files are unreachable from the stubbed app entry
+  // chain, so stale-SW duplicate-execution risk is unaffected.
+  // browser-proof.js is likewise a real page entry — browser-proof.html
+  // loads it directly via <script src>.
   const { writeFile: wf } = await import('node:fs/promises');
   const rawSourceFiles = [
     'error-boundary.js', 'state.js', 'router.js', 'rerender.js',
-    'data-loader.js', 'version.js', 'integrity.js', 'anchor.js',
+    'data-loader.js', 'integrity.js',
     'card-face-data.js', 'card-face-renderer.js', 'card-art-registry.js',
     'chart-toolkit.js', 'experiment-controls.js', 'legal-pages.js',
-    'mechanic-registry-browser.js', 'observatory-analytics-browser.js',
-    'rank-attribution-browser.js', 'rank-power-model.js', 'replay-frames.js',
+    'replay-frames.js',
     'rulebook-renderer.js', 'seo-metadata.js', 'shared-browser.js',
-    'browser-analytics.js', 'browser-proof.js', 'policy-scoring.js',
-    'autonomy-runtime.js', 'decision-intelligence.js', 'worker.js',
   ];
   for (const f of rawSourceFiles) {
     const p = path.join(deployDir, f);
@@ -138,6 +149,13 @@ async function main() {
   const appStub = `// Re-export from the real bundled app (defense-in-depth for stale SWs)\nexport { render, showExtract, stop, togglePlay } from './${refs.appJs}';\n`;
   await wf(appJsPath, appStub, 'utf8');
   console.log(`[neocities] Neutralized ${rawSourceFiles.length} raw source files + app.js re-export stub`);
+
+  // Fail closed: worker.js must remain a real Worker entry point. A stubbed
+  // worker silently drops every postMessage — campaigns sit at 0/N forever.
+  const deployedWorker = await readFile(path.join(deployDir, 'worker.js'), 'utf8');
+  if (!/self\.onmessage\s*=/.test(deployedWorker)) {
+    throw new Error('neocities-deploy/worker.js is not an executable worker entry (missing self.onmessage) — refusing to ship a dead worker');
+  }
 
   await writeDeployOwnership(distDir, deployDir);
 
