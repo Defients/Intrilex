@@ -1,7 +1,7 @@
 # Feature Matrix
 
 > **AUTO-GENERATED** by `scripts/generate-capability-truth.mjs` from `config/capability-truth.json`.
-> Generated: 2026-09-30T14:45:17.753Z
+> Generated: 2026-10-01T05:48:17.022Z
 > Version: 1.0.0 (Certified Public Baseline)
 
 ## Simulation Profiles
@@ -116,11 +116,11 @@
 - **Severity:** environment
 - **Detail:** The integration test for 121 certified replays skips gracefully when vendor/intrilex-engine-4.1.0/ is absent.
 
-### Git history contains a credential-bearing path (scripts/upload-key.cjs)
+### Historical credential revocation requires operator evidence
 
 - **ID:** SEC-01-HISTORY
 - **Severity:** security-debt
-- **Detail:** The secret containment scan detects a credential-bearing path in 2 reachable commits. This requires Git history rewriting to fully resolve. The current working tree does not contain the credential.
+- **Detail:** Earlier audits reported scripts/upload-key.cjs as credential-bearing. The October 1, 2026 scan found no occurrence in this non-shallow checkout or its locally reachable refs and no current-tree secret findings. Provider revocation and other remote refs, forks, caches, and clones remain unverified. Obtain provider rotation evidence; coordinate a history purge only where exposure is still reachable.
 
 ### Lookahead, Tournament, and Human-meta-proxy policy tiers are not yet established
 
@@ -146,11 +146,11 @@
 - **Severity:** evidence
 - **Detail:** The bounded lookahead policy has not been benchmarked to justify an "expert" strength claim. The default evaluation function is a placeholder heuristic.
 
-### WAIT WHAT investigation workflow is not wired into CasterSession UI
+### WAIT WHAT is integrated; branching uses the specialized branches workspace
 
 - **ID:** CERT-WAITWHAT-01
 - **Severity:** technical
-- **Detail:** The investigation workflow is a complete pure-function module but has not been integrated into the CasterSession UI. It is available as a library API.
+- **Detail:** Caster wires capture, investigation creation, annotation, authority-hash invalidation, and branch handoff in caster-workspace.js. Behavioral coverage is in v1.0.0-behavioral-play-journey.test.mjs. This integration does not establish human usability validation or live Ollama quality.
 
 ### Evidence-honest intelligence labels not displayed in all player-facing surfaces
 

@@ -1,7 +1,7 @@
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type CSSProperties } from 'react';
 import type { GameStore } from '../game-store.js';
 import type { SemanticCard, SemanticGame } from '../game-model.js';
-import { CardReference, Icon, Wordmark, formatLabel } from '../primitives.js';
+import { CardLane, CardReference, Icon, Wordmark, formatLabel } from '../primitives.js';
 import { TabletopCard, PileTray, SuitText } from './TabletopCard.js';
 import { ChatPanel, type ChatConfig } from '../game-table.js';
 import { ActionRail, type ComposerState } from './ActionRail.js';
@@ -27,6 +27,10 @@ export type IntrilexGameProps = {
   chat?: ChatConfig;
   rankSuggestions?: SuggestionRanker;
   teaching?: TeachingSupport;
+  /** Trusted Caster template; commentary is inserted as text by its owner. */
+  railHtml?: string;
+  /** Explicitly authorized omniscient replay hand; absent in public mode. */
+  opponentHand?: readonly SemanticCard[];
 };
 
 function Section({ title, children, className = '' }: { title: string; children: ReactNode; className?: string }) {
@@ -85,10 +89,10 @@ function GameChat() {
 type SessionProps = IntrilexGameProps & { snapshot: ReturnType<GameStore['getSnapshot']>; network: boolean };
 const StableGameSession = memo(GameSession, (a, b) => a.snapshot === b.snapshot && a.store === b.store &&
   a.onSave === b.onSave && a.onInspect === b.onInspect && a.onReorderHand === b.onReorderHand && a.onExit === b.onExit &&
-  a.skin === b.skin && a.debug === b.debug && a.network === b.network && a.rankSuggestions === b.rankSuggestions &&
+  a.skin === b.skin && a.debug === b.debug && a.network === b.network && a.rankSuggestions === b.rankSuggestions && a.railHtml === b.railHtml && a.opponentHand === b.opponentHand &&
   a.teaching?.panelHtml === b.teaching?.panelHtml && a.teaching?.coachmarkHtml === b.teaching?.coachmarkHtml && a.teaching?.onAction === b.teaching?.onAction);
 
-function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit, skin = 'dark', debug, network, rankSuggestions, teaching }: SessionProps) {
+function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit, skin = 'dark', debug, network, rankSuggestions, teaching, railHtml, opponentHand }: SessionProps) {
   const { game } = snapshot;
   const boundary = decisionBoundary(game);
   const [composer, setComposer] = useState<ComposerState | null>(null);
@@ -110,11 +114,11 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
   const highlighted = openFamily && activeComposer ? boardOptions(game, openFamily, activeComposer.selection, activeComposer.activeKey) : [];
   const suggestions = useMemo(() => showSuggestions ? suggestedMoves(game, rankSuggestions) : [], [game, rankSuggestions, showSuggestions]);
   const cards = visibleCards(game);
-  const inspected = cards.find(card => card.id === inspectId && card.identity !== null) ?? null;
+  const inspected = [...cards, ...(opponentHand ?? [])].find(card => card.id === inspectId && card.identity !== null) ?? null;
   const selected = game.actions.find(action => action.id === snapshot.selectedActionId);
   const blocked = submitting || game.status !== 'ready' || snapshot.interaction === 'submitting';
   const skinName = ['dark', 'light', 'cosmotech', 'corrupture'].includes(skin) ? skin : 'dark';
-  const status = game.status === 'completed' ? 'Match complete' : game.status === 'unavailable' ? 'Table unavailable' : game.connection === 'DISCONNECTED' ? 'Opponent disconnected · awaiting reconnect' : game.status === 'ready' ? game.choice ? 'Your choice' : game.stack.length ? 'Your response' : 'Your move' : 'Waiting for the next decision';
+  const status = railHtml !== undefined ? 'Replay playback · read only' : game.status === 'completed' ? 'Match complete' : game.status === 'unavailable' ? 'Table unavailable' : game.connection === 'DISCONNECTED' ? 'Opponent disconnected · awaiting reconnect' : game.status === 'ready' ? game.choice ? 'Your choice' : game.stack.length ? 'Your response' : 'Your move' : 'Waiting for the next decision';
   const filteredActions = game.actions.filter(action => !cardFilter || action.sources.includes(cardFilter) || action.targets.includes(cardFilter) || !action.sources.length);
   const visibleEntries = buildActionEntries(filteredActions).filter(entry => !search || (entry.kind === 'family' ? [entry.family.title, ...entry.family.variants.map(a => actionPreview(game, a))].join(' ') : actionPreview(game, entry.action)).toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   const nameOf = (id: string | null) => id === game.self.id ? game.self.name : id === game.opponent.id ? game.opponent.name : '—';
@@ -209,7 +213,7 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
   };
 
   return <DirectManipulation store={store} game={game} blocked={blocked} interrupted={Boolean(activeComposer || inspected || teaching?.coachmarkHtml)} submit={confirm} skin={skinName}><main className="astra-client hc-game" data-skin={skinName} data-testid="play-board" data-play-state={game.status} aria-label="Intrilex gameboard">
-    <header className="hc-header"><a href="#/" aria-label="Intrilex Home"><Wordmark /></a><span className="hc-table-title">Intrilex · Rules-assisted <span className="pill">{network ? 'Online match' : 'Local match'}</span></span>
+    <header className="hc-header"><a href="#/" aria-label="Intrilex Home"><Wordmark /></a><span className="hc-table-title">Intrilex · {railHtml !== undefined ? 'Replay Caster' : 'Rules-assisted'} <span className="pill">{railHtml !== undefined ? 'Read only' : network ? 'Online match' : 'Local match'}</span></span>
       <nav aria-label="Match controls"><a href="#/rules" target="_blank" rel="noreferrer">Rules</a>
         {onSave && <button type="button" disabled={saveState === 'Saving…'} onClick={() => void save()}><Icon name="save" />Save</button>}
         <button type="button" onClick={() => setShowSuggestions(value => !value)} aria-pressed={showSuggestions}>Hints</button>
@@ -222,6 +226,7 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
     <div className="hc-layout fc-layout">
       <aside className="hc-left hx-left" data-testid="score-rail" aria-label="Players and shared table">
         <Summary game={game} opponent />
+        {opponentHand && opponentHand.length > 0 && <CardLane title="Hand" owner={game.opponent.name} cards={opponentHand} selectedId={inspectId} onCard={card => setInspectId(card.id)} />}
         <Section title="Swap Bar" className="hc-swap hx-swap"><ul className="hx-swap-slots" aria-label="Swap Bar slots">{game.swap.map((card, index) => <li className="hx-swap-slot" key={card.id}><DragTarget as="span" destination={{ kind: 'zone', id: `swap:${index}` }} label={`Swap Bar slot ${index + 1}`} className="hc-card-target">
           <TabletopCard card={card} size="sm" purpose={`Choose swap slot ${index + 1}`} onDoubleClick={() => { if (card.identity) setInspectId(card.id); }} onClick={() => {
             const option = highlighted.find(item => item.entityId === card.id);
@@ -270,7 +275,8 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
           </li>)}</ul><button type="button" className="hx-hand-arrow" aria-label="Scroll hand right" onClick={() => handStrip.current?.scrollBy({ left: 180, behavior: 'smooth' })}>›</button></div>{!orderedIds.length && <p className="hc-empty">{game.self.handCount ? 'Hand identities are not visible.' : 'Your hand is empty.'}</p>}
         </section>
       </div>
-      <aside className="hc-right hx-right" aria-label="Moves and Action Composer">
+      <aside className="hc-right hx-right" aria-label={railHtml === undefined ? "Moves and Action Composer" : "Commentary and playback"}>
+        {railHtml !== undefined ? <div className="hc-caster-rail" dangerouslySetInnerHTML={{ __html: railHtml }} /> : <>
         <section className={`hc-actions fc-panel hx-panel ${sheet ? '' : 'is-collapsed'}`} aria-label="Your legal actions"><div className="fc-panel-head"><h2>Legal Actions ({game.actions.length})</h2><button type="button" className="link-btn" onClick={() => setShowSuggestions(value => !value)} aria-pressed={showSuggestions}>{showSuggestions ? 'Fewer hints' : 'More hints'}</button><button type="button" className="narrow-only" aria-expanded={sheet} onClick={() => setSheet(value => !value)}>{sheet ? 'Hide' : 'Show'}</button></div>
         {showSuggestions && suggestions.length > 0 && <section aria-label="Suggested Moves" className="hc-suggestions fc-suggestions"><h3>Suggested Moves</h3>{suggestions.map((suggestion, index) => {
           const action = game.actions.find(action => action.id === suggestion.actionId);
@@ -280,7 +286,7 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
           {cardFilter && <div className="chip-row"><button type="button" className="chip" onClick={() => setCardFilter(null)}>Filtering by <SuitText text={cards.find(card => card.id === cardFilter)?.label ?? 'card'} /> ×</button><button type="button" className="chip" onClick={() => setInspectId(cardFilter)}>Inspect</button></div>}
           {!activeComposer && <label className="hc-search">Find a legal action<input type="search" aria-label="Search legal actions" placeholder="Card, mode or target…" value={search} onChange={event => setSearch(event.target.value)} /></label>}
           <ActionRail game={game} entries={visibleEntries} family={openFamily} composer={activeComposer} blocked={blocked} open={open} change={changeComposer} choose={choose} confirm={id => void confirm(id)} />
-        </section>
+        </section></>}
       </aside>
     </div>
     <GameChat />

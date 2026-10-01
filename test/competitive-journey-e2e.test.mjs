@@ -1,8 +1,11 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { FakeMatchResultPersistor } from '../apps/match-server/src/persistence/fake-match-result-persistor.mjs';
 // ═══════════════════════════════════════════════════════════════
 // competitive-journey-e2e.test.mjs
 // Phase 3: One integrated competitive journey through real handlers.
 //
-// Proves the production path:
+// Exercises real local handlers with file-backed SQLite/outbox and a fake remote persistor:
 //   create match → join → ready → play actions → match ends →
 //   terminal result persisted (outbox) → replay generated →
 //   spectator projection is neutral → restart recovery (no duplication)
@@ -79,11 +82,23 @@ function drainViews(mc) {
 
 // ── E2E: Full competitive journey ────────────────────────────────
 
-test('Phase 3 E2E: full competitive journey — create, play, persist, replay, spectator, restart recovery', async () => {
+test('Phase 3 E2E: full competitive journey — create, play, persist, replay, spectator, restart recovery', async (t) => {
   const { startServer } = await importModule('apps/match-server/src/server.mjs');
   const port = randomPort();
-  const server = await startServer({
-    port, host: '127.0.0.1', dbPath: ':memory:', persistent: false,
+  const directory = mkdtempSync(path.join(tmpdir(), 'intrilex-journey-'));
+  const dbPath = path.join(directory, 'matches.sqlite');
+  const outboxPath = path.join(directory, 'outbox.sqlite');
+  const persistor = new FakeMatchResultPersistor();
+  let firstClosed = false, restarted = null, server = null;
+  t.after(async () => {
+    if (restarted) await restarted.close();
+    if (!firstClosed && server) await server.close();
+    assert.equal(path.dirname(directory), path.resolve(tmpdir()), 'cleanup must remain inside the temporary workspace');
+    rmSync(directory, { recursive: true, force: true });
+  });
+  server = await startServer({
+    port, host: '127.0.0.1', dbPath, outboxPath, persistent: true,
+    matchResultPersistor: persistor,
     rateLimitCapacity: 10000,
   });
   assert.ok(server, 'Server must start');
@@ -177,7 +192,8 @@ test('Phase 3 E2E: full competitive journey — create, play, persist, replay, s
     let matchEnded = mc1.buffer.find(m => m.type === 'MATCH_ENDED');
     if (!matchEnded) matchEnded = await mc1.waitFor('MATCH_ENDED', 10000);
     assert.ok(matchEnded, `Match must end within ${maxSteps} steps (took ${stepCount})`);
-    assert.ok(matchEnded.payload.winner, 'MATCH_ENDED must include winner');
+    assert.ok(Object.hasOwn(matchEnded.payload, 'winner'), 'MATCH_ENDED must explicitly include winner, including null for a draw');
+    assert.equal(matchEnded.payload.winner, server.matchStore.get(matchId).winner, 'terminal winner must match authoritative state');
     assert.ok(matchEnded.payload.reason, 'MATCH_ENDED must include termination reason');
 
     // Wait for REPLAY_AVAILABLE
@@ -219,21 +235,36 @@ test('Phase 3 E2E: full competitive journey — create, play, persist, replay, s
     specWs.close();
 
     // ── Step 7: Verify outbox state (terminal result was persisted) ──
-    // MATCH_ENDED was received — outbox enqueue succeeded (IRX-H13: broadcast after persistence)
-    assert.ok(matchEnded, 'MATCH_ENDED received — outbox enqueue succeeded (IRX-H13)');
+    await server.terminalOutbox._drainOnce();
+    const resultJobs = server.terminalOutbox.listJobs().filter(job => job.jobType === 'result' && job.matchId === matchId);
+    assert.equal(resultJobs.length, 1, 'one durable result job exists');
+    assert.equal(resultJobs[0].status, 'completed');
+    assert.equal(persistor.matchCount, 1, 'terminal result was actually delivered');
+    assert.equal(persistor.getMatch(matchId).replayHash, replayAvail.payload.replayHash);
+    // Simulate a delivery that committed remotely but crashed before its local acknowledgement.
+    server.terminalOutbox._storage.update(resultJobs[0].jobId, { status: 'in_progress' });
 
     // ── Step 8: Restart recovery ──
     mc1.stop(); mc2.stop();
     ws1.close(); ws2.close();
     await new Promise(r => setTimeout(r, 200));
-    await server.close();
+    await server.close(); firstClosed = true;
     await new Promise(r => setTimeout(r, 300));
 
     const server2 = await startServer({
-      port, host: '127.0.0.1', dbPath: ':memory:', persistent: false,
+      port, host: '127.0.0.1', dbPath, outboxPath, persistent: true,
+      matchResultPersistor: persistor,
       rateLimitCapacity: 10000,
     });
+    restarted = server2;
     assert.ok(server2, 'Server must restart cleanly');
+    const restored = server2.matchStore.get(matchId);
+    assert.ok(restored, 'the same terminal match survives file-backed restart');
+    assert.equal(restored.status, 'TERMINAL');
+    assert.equal(createHash('sha256').update(JSON.stringify(restored.getReplay())).digest('hex'), replayAvail.payload.replayHash, 'replay identity survives restart');
+    await server2.terminalOutbox._drainOnce();
+    assert.equal(persistor.matchCount, 1, 'interrupted delivery retry cannot duplicate the result');
+    assert.ok(server2.terminalOutbox.listJobs().filter(job => job.matchId === matchId).every(job => job.status === 'completed'));
 
     const ws3 = await connectWs(port);
     const mc3 = createMessageCollector(ws3);
@@ -245,11 +276,11 @@ test('Phase 3 E2E: full competitive journey — create, play, persist, replay, s
 
     mc3.stop();
     ws3.close();
-    await server2.close();
+    await server2.close(); restarted = null;
     await new Promise(r => setTimeout(r, 200));
 
   } finally {
-    try { await server.close(); } catch { /* already closed */ }
+    if (!firstClosed) { await server.close(); firstClosed = true; }
   }
 });
 

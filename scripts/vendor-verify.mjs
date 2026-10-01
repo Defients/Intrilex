@@ -17,7 +17,7 @@ if (!existsSync(vendor)) {
     checkedFileCount: 0,
     failures: [{ reason: 'VENDOR_DIRECTORY_MISSING' }],
   };
-  await writeFile(path.join(root, 'reports/vendor-integrity.json'), JSON.stringify(report, null, 2) + '\n');
+  if (process.env.INTRILEX_WRITE_REPORTS !== '0') await writeFile(path.join(root, 'reports/vendor-integrity.json'), JSON.stringify(report, null, 2) + '\n');
   console.error(JSON.stringify(report, null, 2));
   process.exit(1);
 }
@@ -83,7 +83,7 @@ const report = {
   failures,
 };
 
-await writeFile(path.join(root, 'reports/vendor-integrity.json'), JSON.stringify(report, null, 2) + '\n');
+if (process.env.INTRILEX_WRITE_REPORTS !== '0') await writeFile(path.join(root, 'reports/vendor-integrity.json'), JSON.stringify(report, null, 2) + '\n');
 if (report.status !== 'VERIFIED') {
   console.error(JSON.stringify(report, null, 2));
   process.exit(1);

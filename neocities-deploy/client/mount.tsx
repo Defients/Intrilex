@@ -89,9 +89,9 @@ export function mountGameTable(container: HTMLElement, input: unknown, options: 
   const debug = resolveDebug(options.debug);
   const renderTable = (chat: ChatConfig | undefined, opponentHand: readonly TableCard[] | undefined, railHtml: string | undefined, teaching = options.teaching) => {
     root.render(<TableBoundary>
-      {options.legacy || opponentHand !== undefined || railHtml !== undefined
+      {options.legacy
         ? <GameTable store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} skin={options.skin} debug={debug} chat={chat} opponentHand={opponentHand} railHtml={railHtml} />
-        : <IntrilexGame store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} onExit={options.onExit} skin={options.skin} debug={debug} chat={chat} rankSuggestions={options.rankSuggestions} teaching={teaching ? { ...teaching, onAction: options.teaching?.onAction ?? teaching.onAction } : undefined} />}
+        : <IntrilexGame opponentHand={opponentHand} railHtml={railHtml} store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} onExit={options.onExit} skin={options.skin} debug={debug} chat={chat} rankSuggestions={options.rankSuggestions} teaching={teaching ? { ...teaching, onAction: options.teaching?.onAction ?? teaching.onAction } : undefined} />}
     </TableBoundary>);
   };
   flushSync(() => renderTable(options.chat, options.opponentHand, options.railHtml));

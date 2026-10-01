@@ -469,7 +469,7 @@ async function renderTheatre(appEl) {
   if (!casterState.tacticalMount) {
     // First theatre render: lay out the persistent header + board host, then mount Astra.
     appEl.innerHTML = `<header class="caster-theatre-header" data-caster="1">
-      <button class="rd-header-back" data-action="exit-caster" aria-label="Back to Observatory">← Observatory</button>
+      <button class="caster-exit-button secondary-button" data-action="exit-caster" aria-label="Back to Observatory">← Observatory</button>
       <span class="caster-theatre-mode">${viewerLabel} · Caster</span>
     </header>
     <div class="caster-board-host" data-testid="caster-board-host"></div>`;

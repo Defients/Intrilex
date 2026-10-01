@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const base = process.env.HOMECOMING_BASE_URL ?? 'http://127.0.0.1:4173';
-const output = resolve(root, 'reports/homecoming');
+const output = resolve(root, 'reports/local/homecoming');
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const report = { date: new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }), browser: await browser.version(), scenarios: [], screenshots: [], exercisedFamilies: [], errors: [] };

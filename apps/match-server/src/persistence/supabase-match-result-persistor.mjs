@@ -25,10 +25,12 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
   /**
    * @param {object} opts
    * @param {string} opts.supabaseUrl - Supabase project URL
+   * @param {boolean} [opts.requireAtomic] - Disable nontransactional compatibility fallback
    * @param {string} opts.supabaseServiceKey - Service role key (server-only, never exposed to clients)
    */
-  constructor({ supabaseUrl, supabaseServiceKey }) {
+  constructor({ supabaseUrl, supabaseServiceKey, requireAtomic = process.env.NODE_ENV === 'production' }) {
     super();
+    this.requireAtomic = requireAtomic || process.env.NODE_ENV === 'production';
     if (!supabaseUrl) throw new Error('supabaseUrl is required');
     if (!supabaseServiceKey) throw new Error('supabaseServiceKey is required');
 
@@ -131,6 +133,7 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
         // If the RPC doesn't exist yet (migration 0012 not applied),
         // fall back to the legacy multi-call path.
         if (this._isMissingRpcError(error)) {
+          if (this.requireAtomic) return { success: false, error: 'Atomic persist_match_result RPC is required; apply the database migrations.', record };
           return this._persistMatchResultLegacy(record);
         }
         return { success: false, error: `persist_match_result RPC failed: ${error.message}`, record };
@@ -149,6 +152,7 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
     } catch (err) {
       // Network errors or RPC not found — fall back to legacy path
       if (this._isMissingRpcError(err)) {
+        if (this.requireAtomic) return { success: false, error: 'Atomic persist_match_result RPC is required; apply the database migrations.', record };
         return this._persistMatchResultLegacy(record);
       }
       return { success: false, error: err?.message ?? 'persist_match_result threw', record };
@@ -164,7 +168,7 @@ export class SupabaseMatchResultPersistor extends MatchResultPersistor {
    */
   _isMissingRpcError(err) {
     const msg = (err?.message ?? String(err)).toLowerCase();
-    return msg.includes('could not find the function')
+    return err?.code === 'PGRST202' || err?.code === '42883' || msg.includes('could not find the function')
         || msg.includes('function public.persist_match_result')
         || msg.includes('does not exist')
         || msg.includes('p089')

@@ -35,11 +35,11 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { readFileSync, existsSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { captureProvenance, releaseProvenanceProblems, evidenceProvenanceProblems, releaseAuditProblems } from './release-provenance.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -55,18 +55,14 @@ function gitTree() {
   catch { return null; }
 }
 function gitDirty() {
-  try { const s = spawnSync('git', ['status', '--porcelain'], { cwd: ROOT, encoding: 'utf8' }).stdout; return s.trim().length > 0; }
+  try { return captureProvenance(ROOT).dirty; }
   catch { return null; }
 }
-async function lockfileHash() {
-  try { return createHash('sha256').update(await readFile(join(ROOT, 'pnpm-lock.yaml'))).digest('hex'); }
-  catch { return null; }
-}
-
-const HEAD = gitHead();
-const TREE = gitTree();
-const DIRTY = gitDirty();
-const LOCKFILE = await lockfileHash();
+const PROVENANCE = captureProvenance(ROOT);
+const HEAD = PROVENANCE.gitCommit;
+const TREE = PROVENANCE.gitTree;
+const DIRTY = PROVENANCE.dirty;
+const LOCKFILE = PROVENANCE.lockfileSha256;
 
 // ── Evidence-state builders ──────────────────────────────────────
 
@@ -81,6 +77,7 @@ function runControl(command, args = [], scope = 'local', timeoutMs = 60000) {
     encoding: 'utf8',
     timeout: timeoutMs,
     stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, INTRILEX_WRITE_REPORTS: '0' },
   });
   const completedAt = new Date().toISOString();
 
@@ -137,6 +134,7 @@ function runControl(command, args = [], scope = 'local', timeoutMs = 60000) {
  * - Report provenance (if present) binds to current tree
  */
 function consumeReport(relPath, scope, expectedStatus = 'PASS') {
+  if (relPath === 'reports/self-audit.json') relPath = 'reports/release/self-audit.json';
   const absPath = join(ROOT, relPath);
   const state = {
     status: 'NOT_RUN',
@@ -184,21 +182,13 @@ function consumeReport(relPath, scope, expectedStatus = 'PASS') {
     return state;
   }
 
-  // Check provenance if present (Phase 2: reject stale reports)
-  if (report.provenance) {
-    const prov = report.provenance;
-    if (prov.gitCommit && HEAD && prov.gitCommit !== HEAD) {
-      state.status = 'STALE';
-      state.summary = `Report provenance gitCommit=${prov.gitCommit} does not match current HEAD=${HEAD}`;
-      state.blockers.push(`Report ${relPath} is stale: bound to ${prov.gitCommit}, current HEAD is ${HEAD}`);
-      return state;
-    }
-    if (prov.mode && prov.mode !== 'full') {
-      state.status = 'STALE';
-      state.summary = `Report provenance mode=${prov.mode}, expected 'full'`;
-      state.blockers.push(`Report ${relPath} is not canonical (mode=${prov.mode})`);
-      return state;
-    }
+  const provenanceProblems = relPath === 'reports/release/self-audit.json'
+    ? releaseAuditProblems(report, PROVENANCE) : evidenceProvenanceProblems(report, PROVENANCE);
+  if (provenanceProblems.length) {
+    state.status = 'STALE';
+    state.summary = provenanceProblems.join(' ');
+    state.blockers.push(...provenanceProblems);
+    return state;
   }
 
   // Compute artifact hash
@@ -270,7 +260,12 @@ function notRunState(scope, description, blockers = []) {
 // ── JSON/text helpers ────────────────────────────────────────────
 
 function readJson(p) {
-  try { return JSON.parse(readFileSync(join(ROOT, p), 'utf8')); }
+  if (p === 'reports/self-audit.json') p = 'reports/release/self-audit.json';
+  try {
+    const report = JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
+    if (p === 'reports/release/self-audit.json' && releaseAuditProblems(report, PROVENANCE).length) return null;
+    return report;
+  }
   catch { return null; }
 }
 
@@ -749,6 +744,8 @@ export function runAllGates() {
     }
   }
 
+  const provenanceProblems = releaseProvenanceProblems(captureProvenance(ROOT));
+  if (provenanceProblems.length) { allPassed = false; failedCriticalGates.push('release-provenance'); }
   const summary = {
     totalGates: Object.keys(CERTIFICATION_GATES).length,
     passedGates: Object.values(gates).filter(g => g.passed).length,
@@ -757,6 +754,8 @@ export function runAllGates() {
   };
 
   const release = {
+    ...PROVENANCE,
+    provenanceProblems,
     version: readJson('package.json')?.version,
     gitCommit: HEAD,
     gitTree: TREE,
@@ -774,6 +773,13 @@ if (import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}` ||
     process.argv[1]?.endsWith('certification-gates.mjs')) {
   const args = process.argv.slice(2);
   const jsonOut = args.includes('--json');
+  if (!args.includes('--development')) {
+    const blockers = releaseProvenanceProblems(captureProvenance(ROOT));
+    if (blockers.length) {
+      console.error(JSON.stringify({ passed: false, status: 'BLOCKED', mode: 'release', blockers, provenance: PROVENANCE }, null, 2));
+      process.exit(1);
+    }
+  }
   const gateArg = args.find(a => a.startsWith('--gate='));
   const gateKey = gateArg?.split('=')[1];
 

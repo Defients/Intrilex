@@ -3,6 +3,7 @@ import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { captureProvenance, releaseAuditProblems } from './release-provenance.mjs';
 import { hashCanonical } from '@intrilex/shared';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const manifestPath=path.join(root,'release/RELEASE_MANIFEST.json');
@@ -14,18 +15,12 @@ const mode=process.argv[2];
 // IRX-C05: Compute verdict from self-audit.json instead of hardcoding 'PASS'.
 // The verdict must reflect the actual test/gate status from the self-audit.
 function computeVerdict() {
-  const auditPath = path.join(root, 'reports/self-audit.json');
+  const auditPath = path.join(root, 'reports/release/self-audit.json');
   if (!existsSync(auditPath)) return 'BLOCKED';
   try {
     const audit = JSON.parse(readFileSync(auditPath, 'utf8'));
-    // If self-audit says FAIL, verdict is FAIL
-    if (audit.status === 'FAIL') return 'FAIL';
-    // If any critical gate is false, verdict is FAIL
-    if (audit.criticalGates) {
-      for (const [gate, value] of Object.entries(audit.criticalGates)) {
-        if (value !== true) return 'FAIL';
-      }
-    }
+    const problems = releaseAuditProblems(audit, captureProvenance(root));
+    if (problems.length) return audit.status === 'FAIL' ? 'FAIL' : 'BLOCKED';
     return 'PASS';
   } catch {
     return 'BLOCKED';
@@ -35,7 +30,7 @@ function computeVerdict() {
 // IRX-C05: The manifest must be generated BEFORE the ZIP so it can be embedded.
 // It hashes workspace files (excluding the ZIP, manifest, and generated artifacts).
 // The ZIP's SHA256 is bound to the manifest via the certification file.
-const skip=rel=>rel==='release/RELEASE_MANIFEST.json'||rel==='release/extracted-verification-report.json'||rel==='reports/extracted-verification-report.json'||rel==='reports/package-determinism.json'||rel==='release/package-determinism.json'||rel==='release/RELEASE_INTEGRITY.md'||(/^release\/Intrilex_Simulation_Lab_v/.test(rel)&&(rel.endsWith('.zip')||rel.endsWith('.zip.sha256')))||(/^release\/Intrilex_Engine_v/.test(rel)&&(rel.endsWith('.zip')||rel.endsWith('.zip.sha256')))||(/^release\/v[\d.]+-(release-manifest|certification)\.json$/.test(rel))||(/\/_[^/]+$/.test(rel))||rel==='.git'||rel.startsWith('.git/')||rel==='node_modules'||rel.startsWith('node_modules/')||rel.includes('/node_modules/')||/^runtime\/campaign-(segments|replays)/.test(rel)||rel.startsWith('release/extracted-verification/')||rel.startsWith('release/archives/');
+const skip=rel=>rel==='release/RELEASE_MANIFEST.json'||rel==='release/extracted-verification-report.json'||rel==='reports/extracted-verification-report.json'||rel==='reports/package-determinism.json'||rel==='release/package-determinism.json'||rel==='release/RELEASE_INTEGRITY.md'||(/^release\/Intrilex_Simulation_Lab_v/.test(rel)&&(rel.endsWith('.zip')||rel.endsWith('.zip.sha256')))||(/^release\/Intrilex_Engine_v/.test(rel)&&(rel.endsWith('.zip')||rel.endsWith('.zip.sha256')))||(/^release\/v[\d.]+-(release-manifest|certification)\.json$/.test(rel))||(/\/_[^/]+$/.test(rel))||rel.startsWith('reports/local/')||rel.startsWith('reports/release/')||rel.includes('/__pycache__/')||rel.endsWith('.pyc')||rel==='.git'||rel.startsWith('.git/')||rel==='node_modules'||rel.startsWith('node_modules/')||rel.includes('/node_modules/')||/^runtime\/campaign-(segments|replays)/.test(rel)||rel.startsWith('release/extracted-verification/')||rel.startsWith('release/archives/');
 async function walk(dir){let out=[];for(const e of await readdir(dir,{withFileTypes:true})){const p=path.join(dir,e.name),rel=path.relative(root,p).replaceAll('\\','/');if(skip(rel))continue;if(e.isDirectory())out=out.concat(await walk(p));else if(e.isFile())out.push(rel);}return out.sort((a,b)=>a<b?-1:a>b?1:0);}
 async function compute(){
   const files={};
@@ -54,7 +49,7 @@ async function compute(){
     analyticsSchemaVersion:identity.analyticsSchemaVersion,
     verdict, // IRX-C05: computed, not hardcoded
     verdictScope:'MECHANICS_OBSERVATORY_WITH_PRIORITY_PASS_CANON_HOTFIX',
-    verdictSource:'self-audit.json', // IRX-C05: documents where verdict came from
+    verdictSource:'reports/release/self-audit.json', // IRX-C05: documents where verdict came from
     certifiedBaseVersion:identity.coreSchemaVersion,
     files
   };

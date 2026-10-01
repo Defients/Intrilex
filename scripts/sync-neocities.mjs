@@ -15,11 +15,12 @@
  *
  * Exit code is non-zero on any failure. Safe to re-run.
  */
-import { cp, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises';
+import { cp, mkdir, readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { pruneDeployFiles, staleDeployFiles, writeDeployOwnership } from './deploy-ownership.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = path.join(root, 'apps/lab-web/dist');
@@ -52,20 +53,6 @@ function extractBundleRefs(html) {
     stylesCss: cssMatch ? cssMatch[1] : null,
     configJs: configMatch ? configMatch[1] : null,
   };
-}
-
-/**
- * List hashed bundle files in a directory matching `app.*.js`, `styles.*.css`,
- * or `__intrilex-config.*.js`.
- * @param {string} dir @returns {Promise<{app: string[], styles: string[], config: string[]}>}
- */
-async function listHashedBundles(dir) {
-  if (!existsSync(dir)) return { app: [], styles: [], config: [] };
-  const entries = await readdir(dir, { withFileTypes: true });
-  const app = entries.filter((e) => e.isFile() && /^app\.[a-f0-9]+\.js$/.test(e.name)).map((e) => e.name);
-  const styles = entries.filter((e) => e.isFile() && /^styles\.[a-f0-9]+\.css$/.test(e.name)).map((e) => e.name);
-  const config = entries.filter((e) => e.isFile() && /^__intrilex-config\.[a-f0-9]+\.js$/.test(e.name)).map((e) => e.name);
-  return { app, styles, config };
 }
 
 async function main() {
@@ -107,18 +94,14 @@ async function main() {
     console.log(`[neocities] Created neocities-deploy/ (first run or after cleanup)`);
   }
 
-  // 3. Delete stale hashed bundles in deploy (anything not matching the new refs)
-  const deployBundles = await listHashedBundles(deployDir);
-  const staleApp = deployBundles.app.filter((f) => f !== refs.appJs);
-  const staleStyles = deployBundles.styles.filter((f) => f !== refs.stylesCss);
-  const staleConfig = deployBundles.config.filter((f) => f !== refs.configJs);
-  for (const f of [...staleApp, ...staleStyles, ...staleConfig]) {
-    const p = path.join(deployDir, f);
-    if (existsSync(p)) {
-      await rm(p, { force: true });
-      console.log(`[neocities] Deleted stale bundle: ${f}`);
-    }
+  if (process.argv.includes('--check')) {
+    const stale = await staleDeployFiles(distDir, deployDir);
+    if (stale.length) throw new Error(`Stale build artifacts: ${stale.join(', ')}`);
+    console.log('[neocities] No stale owned build artifacts');
+    return;
   }
+  const stale = await pruneDeployFiles(distDir, deployDir);
+  console.log(`[neocities] Pruned ${stale.length} stale owned build files`);
 
   // 4. Copy dist -> deploy (recursive, overwrite). Files not in dist (404.html, fonts) are preserved.
   await cp(distDir, deployDir, { recursive: true, force: true });
@@ -156,45 +139,7 @@ async function main() {
   await wf(appJsPath, appStub, 'utf8');
   console.log(`[neocities] Neutralized ${rawSourceFiles.length} raw source files + app.js re-export stub`);
 
-  // 4b. Prune stale data files/dirs in deploy that no longer exist in dist.
-  // The cp above overwrites changed files but does NOT delete files removed from
-  // dist (e.g. when build.mjs excludes unused data artifacts). Without this, old
-  // unused files accumulate forever in neocities-deploy and get re-uploaded.
-  const deployDataDir = path.join(deployDir, 'data');
-  const distDataDir = path.join(distDir, 'data');
-  if (existsSync(deployDataDir) && existsSync(distDataDir)) {
-    const { readdir: rd, rm: rmf } = await import('node:fs/promises');
-    /** Recursively collect relative paths (forward slashes) under a dir. @param {string} dir @param {string} base @returns {Promise<Set<string>>} */
-    async function collectPaths(dir, base = '') {
-      const out = new Set();
-      const entries = await rd(dir, { withFileTypes: true });
-      for (const e of entries) {
-        const rel = base ? `${base}/${e.name}` : e.name;
-        if (e.isDirectory()) {
-          out.add(rel + '/');
-          for (const sub of await collectPaths(path.join(dir, e.name), rel)) out.add(sub);
-        } else {
-          out.add(rel);
-        }
-      }
-      return out;
-    }
-    const distPaths = await collectPaths(distDataDir);
-    const deployPaths = await collectPaths(deployDataDir);
-    let pruned = 0;
-    // Delete deploy paths that don't exist in dist (files first, then empty dirs)
-    const staleFiles = [...deployPaths].filter((p) => !p.endsWith('/') && !distPaths.has(p));
-    const staleDirs = [...deployPaths].filter((p) => p.endsWith('/') && !distPaths.has(p)).sort().reverse();
-    for (const rel of staleFiles) {
-      await rmf(path.join(deployDataDir, rel), { force: true });
-      pruned++;
-    }
-    for (const rel of staleDirs) {
-      const abs = path.join(deployDataDir, rel.slice(0, -1));
-      if (existsSync(abs)) { await rmf(abs, { recursive: true, force: true }); pruned++; }
-    }
-    if (pruned > 0) console.log(`[neocities] Pruned ${pruned} stale data file(s)/dir(s) no longer in dist`);
-  }
+  await writeDeployOwnership(distDir, deployDir);
 
   // 5. Verify
   const deployIndex = path.join(deployDir, 'index.html');

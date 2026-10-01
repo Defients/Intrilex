@@ -38,11 +38,11 @@ test('meta: CI run_step count matches printed denominator (BL-17 regression guar
   const ciPath = path.join(root, 'scripts/ci.mjs');
   if (!existsSync(ciPath)) return;
   const ci = await readFile(ciPath, 'utf8');
-  // ci.mjs uses STAGES array — verify it has entries and writes ci-stages.json
+  // The registry denominator and isolated report path remain discoverable.
   const stageCount = (ci.match(/^\s+\['[^']+',/gm) ?? []).length;
   assert.ok(stageCount >= 80, `ci.mjs must have at least 80 stages, got ${stageCount}`);
-  assert.ok(ci.includes('ci-stages.json'),
-    'ci.mjs must write reports/ci-stages.json');
+  assert.ok(ci.includes("path.join(root, 'reports/local')") && ci.includes('ci-${domain'),
+    'ci.mjs must write an isolated local report for the selected domain');
 });
 
 test('meta: no test file uses bare try/catch that swallows assertion failures (BL-13 regression guard)', async () => {

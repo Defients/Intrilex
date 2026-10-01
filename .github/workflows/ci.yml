@@ -10,44 +10,97 @@ permissions:
   contents: read
 
 jobs:
-  ci:
+  quality:
+    name: ${{ matrix.domain }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
-      fail-fast: true
-
+      fail-fast: false
+      matrix:
+        domain: [integrity, static, engine, client, network, security, browser]
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
         with:
           version: 10.11.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run CI pipeline
-        run: node scripts/ci.mjs
-
-      - name: Upload CI stage report
+          node-version: '22.14.0'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Prepare isolated runtime
+        run: pnpm run engine-patch:build
+      - name: Prepare browser build
+        if: matrix.domain != 'integrity' && matrix.domain != 'static'
+        env:
+          INTRILEX_SKIP_AUTONOMY_REPLAY_REGEN: '1'
+        run: node scripts/build.mjs
+      - name: Prepare browser environment
+        if: matrix.domain == 'browser'
+        run: |
+          pnpm exec playwright install --with-deps chrome
+          node scripts/dev-server.mjs --port 4173 > /tmp/intrilex-preview.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/intrilex-preview.log
+          exit 1
+      - name: Validate domain
+        env:
+          CHROMIUM_BIN: /usr/bin/google-chrome
+        run: node scripts/ci.mjs --domain ${{ matrix.domain }} --no-fail-fast
+      - name: Upload domain evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ci-stages-report
-          path: reports/ci-stages.json
+          name: evidence-${{ matrix.domain }}
+          path: |
+            reports/local/ci-*.json
+            reports/local/homecoming/
+            reports/local/direct-manipulation/
+            reports/browser-*.json
           retention-days: 30
 
-      - name: Upload self-audit report
+  release:
+    name: Release Certification
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run engine-patch:build
+      - name: Build release candidate
+        env:
+          INTRILEX_SKIP_AUTONOMY_REPLAY_REGEN: '1'
+        run: node scripts/build.mjs
+      - name: Prepare release browser verification
+        run: pnpm exec playwright install --with-deps chrome
+      - name: Require clean source and collect full release audit
+        env:
+          CHROMIUM_BIN: /usr/bin/google-chrome
+        run: pnpm run self-audit:release
+      - name: Validate packaging and release contracts
+        run: node scripts/ci.mjs --domain release --no-fail-fast
+      - name: Upload release evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: self-audit-report
-          path: reports/self-audit.json
+          name: evidence-release
+          path: |
+            reports/local/
+            reports/release/
+            reports/extracted-verification-report.json
           retention-days: 30

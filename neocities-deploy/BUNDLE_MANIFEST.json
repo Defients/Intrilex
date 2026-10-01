@@ -2,13 +2,13 @@
   "schemaVersion": "1.0.0",
   "assets": {
     "app": {
-      "file": "app.20eae2e2c270.js",
-      "hash": "20eae2e2c270",
+      "file": "app.51d2e07ced88.js",
+      "hash": "51d2e07ced88",
       "type": "js"
     },
     "styles": {
-      "file": "styles.ad9adeae9fba.css",
-      "hash": "ad9adeae9fba",
+      "file": "styles.bf128f082049.css",
+      "hash": "bf128f082049",
       "type": "css"
     },
     "tacticalStyles": {
@@ -82,6 +82,14 @@
         "type": "js"
       },
       {
+        "file": "chunk-chunk-BTV3RVAZ.js",
+        "type": "js"
+      },
+      {
+        "file": "chunk-chunk-F47ADAAS.js",
+        "type": "js"
+      },
+      {
         "file": "chunk-chunk-FL4DAGNU.js",
         "type": "js"
       },
@@ -110,19 +118,11 @@
         "type": "js"
       },
       {
-        "file": "chunk-chunk-LAPTCBAE.js",
-        "type": "js"
-      },
-      {
         "file": "chunk-chunk-LC5IQFFO.js",
         "type": "js"
       },
       {
         "file": "chunk-chunk-LKL5ZRDV.js",
-        "type": "js"
-      },
-      {
-        "file": "chunk-chunk-LPHVT6P4.js",
         "type": "js"
       },
       {
@@ -174,7 +174,7 @@
         "type": "js"
       },
       {
-        "file": "chunk-data-loader-3ZHZ5PMT.js",
+        "file": "chunk-data-loader-TDQLJHCD.js",
         "type": "js"
       },
       {
@@ -190,7 +190,7 @@
         "type": "js"
       },
       {
-        "file": "chunk-mount-TYMCTBXF.js",
+        "file": "chunk-mount-WVZH4S6N.js",
         "type": "js"
       },
       {
@@ -202,7 +202,7 @@
         "type": "js"
       },
       {
-        "file": "chunk-play-app-ULFKFAKK.js",
+        "file": "chunk-play-app-HZHRUVNX.js",
         "type": "js"
       },
       {

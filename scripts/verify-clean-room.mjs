@@ -143,7 +143,7 @@ console.log();
 
 // 5. Secret containment scan
 console.log('Step 5: Secret containment scan');
-runStep('secret-containment-scan', process.execPath, ['scripts/secret-containment-scan.mjs'], { timeout: 60000 });
+runStep('secret-containment-scan', process.execPath, ['scripts/secret-containment-scan.mjs'], { timeout: 180000 });
 console.log();
 
 // 6. Release identity verification

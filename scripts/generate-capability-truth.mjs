@@ -8,6 +8,7 @@ import { readFile, writeFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { captureProvenance, evidenceProvenanceProblems } from './release-provenance.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFile(path.join(root, p), 'utf8');
@@ -16,8 +17,9 @@ const readJson = async (p) => JSON.parse(await read(p));
 async function main() {
   const manifest = await readJson('reports/capability-manifest.json');
   const releaseIdentity = await readJson('config/release-identity.json');
-  const selfAudit = existsSync(path.join(root, 'reports/self-audit.json'))
-    ? await readJson('reports/self-audit.json')
+  const auditPath = existsSync(path.join(root, 'reports/release/self-audit.json')) ? 'reports/release/self-audit.json' : 'reports/self-audit.json';
+  const selfAudit = existsSync(path.join(root, auditPath))
+    ? await readJson(auditPath)
     : null;
   const pkg = await readJson('package.json');
 
@@ -28,8 +30,8 @@ async function main() {
   // Count CI stages
   let ciStages = 0;
   try {
-    const ci = read('scripts/ci.mjs');
-    ciStages = (ci.match(/STAGES\s*=\s*\[/) ? (ci.match(/\{[^}]+\}/g) || []).length : 0);
+    const ci = await read('scripts/ci.mjs');
+    ciStages = (ci.match(/^ {2}\['[^']+',/gm) || []).length;
   } catch {}
 
   const truth = {
@@ -38,7 +40,7 @@ async function main() {
     source: {
       capabilityManifest: 'reports/capability-manifest.json',
       releaseIdentity: 'config/release-identity.json',
-      selfAudit: 'reports/self-audit.json',
+      selfAudit: auditPath,
       packageJson: 'package.json'
     },
     product: {
@@ -89,7 +91,7 @@ async function main() {
       testCount: selfAudit?.testResults?.totalTests ?? null,
       testPassCount: selfAudit?.testResults?.totalPass ?? null,
       ciStageCount: ciStages || null,
-      selfAuditStatus: selfAudit?.status ?? null
+      selfAuditStatus: !selfAudit ? 'NOT_RUN' : selfAudit.status !== 'PASS' ? selfAudit.status : evidenceProvenanceProblems(selfAudit, captureProvenance(root)).length ? 'STALE' : 'PASS'
     },
     lanes: {
       play: {
@@ -226,8 +228,8 @@ function deriveLimitations(manifest, releaseIdentity) {
   limits.push({
     id: 'SEC-01-HISTORY',
     severity: 'security-debt',
-    title: 'Git history contains a credential-bearing path (scripts/upload-key.cjs)',
-    detail: 'The secret containment scan detects a credential-bearing path in 2 reachable commits. This requires Git history rewriting to fully resolve. The current working tree does not contain the credential.'
+    title: 'Historical credential revocation requires operator evidence',
+    detail: 'Earlier audits reported scripts/upload-key.cjs as credential-bearing. The October 1, 2026 scan found no occurrence in this non-shallow checkout or its locally reachable refs and no current-tree secret findings. Provider revocation and other remote refs, forks, caches, and clones remain unverified. Obtain provider rotation evidence; coordinate a history purge only where exposure is still reachable.'
   });
 
   // Policy strength tiers not yet established
@@ -264,8 +266,8 @@ function deriveLimitations(manifest, releaseIdentity) {
   limits.push({
     id: 'CERT-WAITWHAT-01',
     severity: 'technical',
-    title: 'WAIT WHAT investigation workflow is not wired into CasterSession UI',
-    detail: 'The investigation workflow is a complete pure-function module but has not been integrated into the CasterSession UI. It is available as a library API.'
+    title: 'WAIT WHAT is integrated; branching uses the specialized branches workspace',
+    detail: 'Caster wires capture, investigation creation, annotation, authority-hash invalidation, and branch handoff in caster-workspace.js. Behavioral coverage is in v1.0.0-behavioral-play-journey.test.mjs. This integration does not establish human usability validation or live Ollama quality.'
   });
   limits.push({
     id: 'CERT-EVIDENCE-DISPLAY-01',

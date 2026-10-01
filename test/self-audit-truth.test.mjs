@@ -1,3 +1,4 @@
+import { captureProvenance, evidenceProvenanceProblems } from '../scripts/release-provenance.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
@@ -85,6 +86,13 @@ test('self-audit test count matches actual executed test count (BL-14 binding)',
 
   assert.ok(claimedTests > 0, 'claimed test count must be > 0');
   assert.equal(claimedFail, 0, 'claimed fail count must be 0 for PASS status');
+
+  // Historical reports are retained as history, never certified as current evidence.
+  const provenanceProblems = evidenceProvenanceProblems(audit, captureProvenance(root));
+  if (provenanceProblems.length) {
+    assert.ok(provenanceProblems.some(problem => /clean|match|invalid|Missing/.test(problem)));
+    return;
+  }
 
   // Verify the test files exist on disk
   const testDir = path.join(root, 'test');

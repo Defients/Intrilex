@@ -28,6 +28,7 @@ import { isFoundationsComplete, loadProgress } from './academy/academy-progress.
 import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs';
 import { renderRecap } from './academy/academy-recap.mjs';
 import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs';
+import { createSessionAutosave } from './session-autosave.js';
 import { state, resetState } from './play-state.js';
 import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js';
 import {
@@ -1381,7 +1382,7 @@ function bindNetworkLobbyEvents(container) {
       } else if (action === 'network-reconnect') {
         await reconnectToSavedMatch(container);
       } else if (action === 'network-abandon') {
-        try { localStorage.removeItem('intrilex:network-match'); } catch { /* ignore */ }
+        NetworkPlaySession.clearSavedMatch();
         await renderNetworkLobbyHub(container);
       }
     });
@@ -1727,13 +1728,7 @@ async function renderNetworkQueueFlow(container) {
           // Save the match info and transition to the match
           // Use canonical `url` field (not `serverUrl`) for reconnect-record consistency
           const { matchId, participantToken } = msg.payload;
-          try {
-            localStorage.setItem('intrilex:network-match', JSON.stringify({
-              schemaVersion: 2,
-              url: serverUrl,
-              matchId, participantToken, savedAt: Date.now(),
-            }));
-          } catch { /* ignore */ }
+          NetworkPlaySession.saveReconnectRecord({ url: serverUrl, matchId, participantToken });
           ws.close();
           // Reconnect as a participant via the standard resume flow
           reconnectToSavedMatch(container);
@@ -2210,7 +2205,7 @@ async function reconnectToSavedMatch(container) {
       location.hash = '#/play/online/match';
     }
   } catch (error) {
-    try { localStorage.removeItem('intrilex:network-match'); } catch { /* ignore */ }
+    NetworkPlaySession.clearSavedMatch();
     container.innerHTML = renderNetworkError({
       title: 'Reconnect Failed',
       message: error.message ?? 'Could not reconnect to the match.',
@@ -2243,39 +2238,7 @@ function bindNetworkErrorEvents(container) {
 /**
  * Start the autosave timer.
  */
-let _autosaveInFlight = false;
-function startAutosave() {
-  stopAutosave();
-  state.autosaveTimer = setInterval(async () => {
-    if (_autosaveInFlight) return;  // Guard: skip if previous save still running
-    if (state.session && state.session.status !== SessionState.TERMINAL) {
-      _autosaveInFlight = true;
-      try {
-        const envelope = state.session.getSaveEnvelope();
-        // Override saveId for autosave and recompute content hash
-        envelope.saveId = `AUTOSAVE-${state.session.sessionId}`;
-        // Recompute content hash after saveId changes
-        envelope.contentHash = buildSaveIntegrityPayload(envelope);
-        await putSave(envelope);
-        try { sessionStorage.setItem('intrilex-continue-save', envelope.saveId); } catch { /* storage may be disabled */ }
-      } catch (error) {
-        console.warn('Autosave failed:', error.message);
-      } finally {
-        _autosaveInFlight = false;
-      }
-    }
-  }, 5000);
-}
-
-/**
- * Stop the autosave timer.
- */
-function stopAutosave() {
-  if (state.autosaveTimer) {
-    clearInterval(state.autosaveTimer);
-    state.autosaveTimer = null;
-  }
-}
+const { startAutosave, stopAutosave } = createSessionAutosave(state, { putSave, buildSaveIntegrityPayload });
 
 /**
  * Clean up play resources (timers, listeners, engines) without clearing the

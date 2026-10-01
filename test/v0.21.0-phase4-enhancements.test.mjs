@@ -130,10 +130,9 @@ test('p4: dist index.html references hashed __intrilex-config file', async () =>
 
 test('p4: sync-neocities.mjs prunes stale hashed config files', async () => {
   const sync = await readFile(path.join(root, 'scripts/sync-neocities.mjs'), 'utf8');
-  // The source contains a regex literal: __intrilex-config\.[a-f0-9]+\.js
-  // Match the literal text (backslashes are literal in the source).
+  // Cleanup is owned by deploy-ownership; its filesystem behavior has dedicated tests.
   assert.ok(sync.includes('__intrilex-config'), 'sync-neocities.mjs must reference __intrilex-config');
-  assert.ok(sync.includes('staleConfig'), 'sync-neocities.mjs must prune stale config files');
+  assert.ok(sync.includes('pruneDeployFiles'), 'sync-neocities.mjs must prune stale config files');
   assert.ok(sync.includes('configJs'), 'sync-neocities.mjs must extract configJs ref from HTML');
 });
 

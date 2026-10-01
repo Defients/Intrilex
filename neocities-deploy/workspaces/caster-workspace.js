@@ -14,17 +14,17 @@
 // esc() — never raw innerHTML with model output.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc, state } from '../state.js?v=20eae2e2c270';
-import { policyOptions } from '../router.js?v=20eae2e2c270';
-import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=20eae2e2c270';
-import { reconstructReplayFrames } from '../replay-frames.js?v=20eae2e2c270';
-import { mountGameTable } from '../client/mount.tsx?v=20eae2e2c270';
+import { esc, state } from '../state.js?v=51d2e07ced88';
+import { policyOptions } from '../router.js?v=51d2e07ced88';
+import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=51d2e07ced88';
+import { reconstructReplayFrames } from '../replay-frames.js?v=51d2e07ced88';
+import { mountGameTable } from '../client/mount.tsx?v=51d2e07ced88';
 
 // Lazy-loaded @intrilex/replay-caster (browser-bundleable subset).
 let casterModule = null;
 async function getCaster() {
   if (!casterModule) {
-    casterModule = await import('../replay-caster/browser-entry.js?v=20eae2e2c270');
+    casterModule = await import('../replay-caster/browser-entry.js?v=51d2e07ced88');
   }
   return casterModule;
 }
@@ -68,7 +68,7 @@ async function getAuthorityHash() {
 let _strictViewFn = null;
 async function getStrictView() {
   if (!_strictViewFn) {
-    const mod = await import('../autonomy-runtime.js?v=20eae2e2c270');
+    const mod = await import('../autonomy-runtime.js?v=51d2e07ced88');
     _strictViewFn = mod.strictView;
   }
   return _strictViewFn;
@@ -469,7 +469,7 @@ async function renderTheatre(appEl) {
   if (!casterState.tacticalMount) {
     // First theatre render: lay out the persistent header + board host, then mount Astra.
     appEl.innerHTML = `<header class="caster-theatre-header" data-caster="1">
-      <button class="rd-header-back" data-action="exit-caster" aria-label="Back to Observatory">← Observatory</button>
+      <button class="caster-exit-button secondary-button" data-action="exit-caster" aria-label="Back to Observatory">← Observatory</button>
       <span class="caster-theatre-mode">${viewerLabel} · Caster</span>
     </header>
     <div class="caster-board-host" data-testid="caster-board-host"></div>`;

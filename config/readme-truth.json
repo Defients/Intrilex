@@ -13,7 +13,7 @@
     ],
     "networkStatus": "SUPPORTED",
     "multiplayerStatus": "BLOCKED",
-    "testFileCount": 203,
+    "testFileCount": 206,
     "certifiedReplayCount": 121
   },
   "lanes": {
@@ -194,7 +194,7 @@
     },
     {
       "id": "SEC-01-HISTORY",
-      "title": "Git history contains a credential-bearing path (scripts/upload-key.cjs)",
+      "title": "Historical credential revocation requires operator evidence",
       "severity": "security-debt"
     },
     {
@@ -219,7 +219,7 @@
     },
     {
       "id": "CERT-WAITWHAT-01",
-      "title": "WAIT WHAT investigation workflow is not wired into CasterSession UI",
+      "title": "WAIT WHAT is integrated; branching uses the specialized branches workspace",
       "severity": "technical"
     },
     {

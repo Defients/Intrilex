@@ -12,14 +12,27 @@
  */
 import { spawnSync } from 'node:child_process';
 import { openSync, closeSync } from 'node:fs';
-import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
+import { readFile, writeFile, readdir, rm, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { captureProvenance, releaseProvenanceProblems, evidenceProvenanceProblems } from './release-provenance.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rootPkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 const quick = process.argv.includes('--quick');
+const releaseMode = process.argv.includes('--release');
+const initialProvenance = captureProvenance(root);
+if (releaseMode) {
+  const blockers = releaseProvenanceProblems(initialProvenance);
+  if (quick) blockers.push('Release audit cannot use --quick.');
+  if (blockers.length) { console.error(blockers.join('\n')); process.exit(1); }
+  const integrity = spawnSync(process.execPath, ['scripts/engine-patch-integrity.mjs', 'verify'], {
+    cwd: root, stdio: 'inherit', env: { ...process.env, INTRILEX_WRITE_REPORTS: '0' },
+  });
+  if (integrity.status !== 0) process.exit(1);
+}
+
 const configuredConcurrency = Number.parseInt(process.env.INTRILEX_TEST_CONCURRENCY ?? '4', 10);
 const testConcurrency = Number.isInteger(configuredConcurrency) && configuredConcurrency > 0
   ? configuredConcurrency
@@ -147,35 +160,27 @@ const testFileCount = allTestFiles.length;
 const hasVendorIntegrity = existsSync(path.join(root, 'reports/vendor-integrity.json'));
 const hasEnginePatch = existsSync(path.join(root, 'reports/engine-patch-integrity.json'));
 const hasBuildDeterminism = existsSync(path.join(root, 'reports/build-determinism.json'));
-const hasBrowserParity = existsSync(path.join(root, 'reports/browser-parity.json'));
 const hasCapabilityManifest = existsSync(path.join(root, 'reports/capability-manifest.json'));
 
-// Check vendor-integrity report status (not just file existence)
-let vendorIntegrityPassed = false;
-if (hasVendorIntegrity) {
-  try {
-    const vi = JSON.parse(await readFile(path.join(root, 'reports/vendor-integrity.json'), 'utf8'));
-    vendorIntegrityPassed = vi.status === 'VERIFIED' || vi.status === 'PASS';
-  } catch { vendorIntegrityPassed = false; }
+// Generated report existence and old PASS fields cannot establish current evidence.
+const evidenceControls = {};
+function executeEvidenceControl(name, script, args = []) {
+  const control = spawnSync(process.execPath, [script, ...args], {
+    cwd: root, encoding: 'utf8', timeout: auditTimeoutMs,
+    env: { ...process.env, INTRILEX_WRITE_REPORTS: '0', INTRILEX_SKIP_BUILD: '1' },
+  });
+  evidenceControls[name] = {
+    command: `${process.execPath} ${script} ${args.join(' ')}`.trim(),
+    status: control.status === 0 && !control.error && !control.signal ? 'PASS' : 'FAIL',
+    exitCode: control.status, signal: control.signal, error: control.error?.message ?? null,
+    outputTail: `${control.stdout ?? ''}\n${control.stderr ?? ''}`.slice(-2000),
+  };
+  return evidenceControls[name].status === 'PASS';
 }
-
-// Phase 1.3: Check engine-patch-integrity report status (not just file existence)
-let enginePatchIntegrityPassed = false;
-if (hasEnginePatch) {
-  try {
-    const ep = JSON.parse(await readFile(path.join(root, 'reports/engine-patch-integrity.json'), 'utf8'));
-    enginePatchIntegrityPassed = ep.status === 'PASS';
-  } catch { enginePatchIntegrityPassed = false; }
-}
-
-// Phase 1.3: Check build-determinism report status (not just file existence)
-let buildDeterminismPassed = false;
-if (hasBuildDeterminism) {
-  try {
-    const bd = JSON.parse(await readFile(path.join(root, 'reports/build-determinism.json'), 'utf8'));
-    buildDeterminismPassed = bd.status === 'PASS' || bd.deterministic === true;
-  } catch { buildDeterminismPassed = false; }
-}
+const vendorIntegrityPassed = !quick && executeEvidenceControl('vendor', 'scripts/vendor-verify.mjs');
+const enginePatchIntegrityPassed = !quick && executeEvidenceControl('engine', 'scripts/engine-patch-integrity.mjs', ['verify']);
+const buildDeterminismPassed = !quick && executeEvidenceControl('determinism', 'scripts/verify-build-determinism.mjs');
+const browserParityPassed = !quick && executeEvidenceControl('browser-parity', 'scripts/browser-parity.mjs');
 
 // Check if privacy-related test files passed (search output for privacy test results)
 const privacyTestOutput = output.match(/privacy|hidden-information|visibility-projection/gi);
@@ -186,9 +191,9 @@ const dimensions = {
   canonEngineDeterminism: enginePatchIntegrityPassed && buildDeterminismPassed ? 20 : enginePatchIntegrityPassed ? 15 : 10,
   analyticsStatistics: totalPass > 400 ? 19 : totalPass > 300 ? 16 : 12,
   evidencePrivacy: privacyGatePassed ? 20 : privacyTestsRan ? 15 : 10,
-  guiUx: hasBrowserParity ? 14 : 10,
+  guiUx: browserParityPassed ? 14 : 10,
   semanticFx: totalPass > 400 ? 8 : 6,
-  accessibilityPerformance: hasBrowserParity ? 9 : 6,
+  accessibilityPerformance: browserParityPassed ? 9 : 6,
   documentationRelease: hasCapabilityManifest ? 7 : 5
 };
 
@@ -203,15 +208,14 @@ const filesDiscovered = allTestFiles.length;
 const filesStarted = processStatus.spawnError ? 0 : testArgs.length;
 const filesCompleted = processStatus.abnormal ? 0 : testArgs.length;
 
-// Phase 1.3: Compute provenance binding fields (tree hash, dirty, lockfile hash)
-// before constructing the audit object.
-const { createHash } = await import('node:crypto');
-let lockfileSha256 = null;
-try { lockfileSha256 = createHash('sha256').update(await readFile(path.join(root, 'pnpm-lock.yaml'))).digest('hex'); } catch { /* lockfile may not exist */ }
-const gitCommit = (() => { try { return spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })();
-const gitTree = (() => { try { return spawnSync('git', ['rev-parse', 'HEAD^{tree}'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })();
-const gitBranch = (() => { try { return spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim() } catch { return null } })();
-const gitDirty = (() => { try { const s = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).stdout; return s.trim().length > 0 } catch { return null } })();
+// Capture both ends; release evidence is invalid if controls changed the tree.
+const finalProvenance = captureProvenance(root);
+const releaseProblems = releaseMode ? [
+  ...releaseProvenanceProblems(finalProvenance),
+  ...evidenceProvenanceProblems({ provenance: { ...initialProvenance, mode: 'full' } }, finalProvenance),
+] : [];
+const { gitCommit, gitTree, gitBranch, lockfileSha256 } = initialProvenance;
+const gitDirty = initialProvenance.dirty;
 
 const criticalGates = {
   canonDefect: totalFail === 0,
@@ -238,7 +242,7 @@ const criticalGates = {
 const gateEvidence = {
   canonDefect: `Test suite executed: ${totalTests} tests, ${totalPass} pass, ${totalFail} fail, ${totalSkip} skip, ${totalCancelled} cancelled, ${totalTodo} todo`,
   determinismMismatch: buildDeterminismPassed
-    ? 'build-determinism.json reports PASS/deterministic=true'
+    ? 'Current two-build determinism control exited 0'
     : hasBuildDeterminism
       ? 'build-determinism.json exists but does not report PASS'
       : 'build-determinism.json missing — run pnpm run test:build-determinism',
@@ -249,7 +253,7 @@ const gateEvidence = {
       : 'No privacy tests detected in suite output',
   falseAnalyticClaim: `Self-audit generated by scripts/generate-self-audit.mjs from real execution — not hand-written. Score ${score}/${threshold}.`,
   extractedVerificationPending: vendorIntegrityPassed
-    ? 'vendor-integrity.json exists and reports VERIFIED'
+    ? 'Current vendor integrity control exited 0'
     : hasVendorIntegrity
       ? 'vendor-integrity.json exists but does not report VERIFIED'
       : 'vendor-integrity.json missing — run pnpm run vendor:verify',
@@ -260,7 +264,7 @@ const gateEvidence = {
     ? `Process exited normally (status=${processStatus.exitStatus}, signal=${processStatus.signal})`
     : `ABNORMAL TERMINATION: ${processStatus.reason}`,
   enginePatchIntegrity: enginePatchIntegrityPassed
-    ? 'engine-patch-integrity.json reports PASS'
+    ? 'Current engine payload integrity control exited 0'
     : hasEnginePatch
       ? 'engine-patch-integrity.json exists but does not report PASS'
       : 'engine-patch-integrity.json missing — run pnpm run engine-patch:verify',
@@ -286,7 +290,7 @@ const audit = {
   // apparent contradiction where score meets threshold but status is FAIL.
   // A report can have scorePassed=true but criticalGatesPassed=false → status=FAIL.
   // Phase 1.3: processTerminatedNormally prevents partial-run false PASS.
-  status: (totalFail === 0 && totalCancelled === 0 && score >= threshold && unaccounted === 0 && !processStatus.abnormal && Object.values(criticalGates).every(v => v === true)) ? 'PASS' : 'FAIL',
+  status: (releaseProblems.length === 0 && totalFail === 0 && totalCancelled === 0 && score >= threshold && unaccounted === 0 && !processStatus.abnormal && Object.values(criticalGates).every(v => v === true)) ? 'PASS' : 'FAIL',
   quickMode: quick,
   score,
   threshold,
@@ -304,6 +308,9 @@ const audit = {
   // gate to mechanically reject stale or incompatible audits.
   // Phase 1.3: Added gitTree, dirty, lockfileSha256 for exact-tree binding.
   provenance: {
+    ...initialProvenance,
+    auditKind: releaseMode ? 'release' : 'development',
+    finalDirty: finalProvenance.dirty,
     labVersion: rootPkg.version,
     mode: quick ? 'quick' : 'full',
     testFileCount: allTestFiles.length,
@@ -322,6 +329,7 @@ const audit = {
   },
   processStatus,
   dimensions,
+  evidenceControls,
   criticalGates,
   gateEvidence,
   testResults: {
@@ -347,15 +355,15 @@ const audit = {
   }
 };
 
-// v0.25: Quick mode writes to reports/self-audit.quick.json — it can NEVER
-// overwrite the canonical reports/self-audit.json. Only full mode (the default)
-// writes the canonical audit. This prevents a quick developer run from being
-// committed as release evidence.
-const outputPath = quick
-  ? path.join(root, 'reports/self-audit.quick.json')
-  : path.join(root, 'reports/self-audit.json');
+// Release evidence lives in ignored output, avoiding self-referential commit hashes.
+if (releaseProblems.length) { audit.status = 'FAIL'; audit.releaseBlockers = releaseProblems; }
+const outputDir = path.join(root, releaseMode ? 'reports/release' : 'reports/local');
+await mkdir(outputDir, { recursive: true });
+const outputPath = path.join(outputDir, quick ? 'self-audit.quick.json' : 'self-audit.json');
 await writeFile(outputPath, JSON.stringify(audit, null, 2) + '\n');
-console.log(`generate-self-audit: wrote ${outputPath} (status=${audit.status}, score=${score}/${threshold}${quick ? ' [QUICK]' : ' [CANONICAL]'})`);
+console.log(`generate-self-audit: wrote ${outputPath} (status=${audit.status}, score=${score}/${threshold}, ${releaseMode ? 'RELEASE' : 'DEVELOPMENT'})`);
+if (releaseProblems.length) console.error(releaseProblems.join('\n'));
+if (audit.status !== 'PASS') process.exitCode = 1;
 
 // The complete TAP stream can exceed hundreds of megabytes, so it is not kept
 // as a report artifact. Preserve the useful failure identities in the JSON

@@ -19,7 +19,7 @@
 //   - defaultSimulationProfile: packages/engine-adapter/src/adapter.mjs → DEFAULT_SIMULATION_PROFILE
 //   - supportedProfileIds:  packages/engine-adapter/src/adapter.mjs → SUPPORTED_PROFILE_IDS
 //   - releaseTitle:         package.json → description (parsed for release title)
-//   - releaseDate:          current date (ISO 8601 date only)
+//   - releaseDate:          existing same-version release date or explicit INTRILEX_RELEASE_DATE
 //
 // The generator also cross-checks that:
 //   1. version.mjs values match adapter.mjs values (engine/rules)
@@ -163,6 +163,14 @@ export async function generateReleaseIdentity() {
   const afterEmDash = pkg.description?.split('—')?.[1]?.trim() ?? '';
   const releaseTitle = afterEmDash.split(':')[0]?.trim() || afterEmDash.split('.')?.[0]?.trim() || 'Unknown';
 
+  // Rebuilding a release must not change its date or dirty the tracked identity.
+  const previousPath = join(ROOT, 'config/release-identity.json');
+  const previous = existsSync(previousPath) ? readJson(previousPath) : null;
+  const releaseDate = process.env.INTRILEX_RELEASE_DATE
+    ?? (previous?.version === version ? previous.releaseDate : null)
+    ?? new Date().toISOString().split('T')[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(releaseDate)) errors.push('Invalid release date; expected YYYY-MM-DD.');
+
   // 6. Build the manifest
   const manifest = {
     schemaVersion: '1.0.0',
@@ -185,7 +193,7 @@ export async function generateReleaseIdentity() {
     supportedProfileIds,
     artifactKinds: ['source', 'deploy', 'evidence'],
     canonicalArchivePrefix: `Intrilex_Simulation_Lab_v${version}`,
-    releaseDate: new Date().toISOString().split('T')[0],
+    releaseDate,
   };
 
   // Compute integrity hash over the canonical content
@@ -231,7 +239,7 @@ if (verifyOnly || checkOnly) {
   const existing = readJson(existingPath);
   const drift = [];
   for (const key of Object.keys(manifest)) {
-    if (key === 'releaseDate' || key === 'integrityHash') continue; // Non-deterministic
+    // Every generated field is reproducible for the same release inputs.
     if (JSON.stringify(existing[key]) !== JSON.stringify(manifest[key])) {
       drift.push(`  ${key}: existing=${JSON.stringify(existing[key])} vs generated=${JSON.stringify(manifest[key])}`);
     }

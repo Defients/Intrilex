@@ -943,28 +943,28 @@ export class NetworkPlaySession {
    * Called after a successful create/join.
    */
   _saveReconnectInfo() {
+    NetworkPlaySession.saveReconnectRecord({ url: this._url, matchId: this.matchId,
+      participantToken: this.participantToken, playerId: this.playerId, inviteCode: this.inviteCode });
+  }
+
+  /** The session owns serialization for both matchmaking handoffs and active matches. */
+  static saveReconnectRecord({ url, matchId, participantToken, playerId = null, inviteCode = null }) {
+    if (![url, matchId, participantToken].every(value => typeof value === 'string' && value.length > 0)) return false;
     try {
-      const data = {
-        schemaVersion: RECONNECT_RECORD_SCHEMA_VERSION,
-        url: this._url, // Canonical field name — must match getSavedMatch()
-        matchId: this.matchId,
-        participantToken: this.participantToken,
-        playerId: this.playerId,
-        inviteCode: this.inviteCode,
-        savedAt: Date.now(),
-      };
-      localStorage.setItem(RECONNECT_KEY, JSON.stringify(data));
-    } catch { /* localStorage may be unavailable */ }
+      localStorage.setItem(RECONNECT_KEY, JSON.stringify({ schemaVersion: RECONNECT_RECORD_SCHEMA_VERSION,
+        url, matchId, participantToken, playerId, inviteCode, savedAt: Date.now() }));
+      return true;
+    } catch { return false; }
+  }
+
+  static clearSavedMatch() {
+    try { localStorage.removeItem(RECONNECT_KEY); } catch { /* unavailable storage */ }
   }
 
   /**
    * Clear saved reconnect info — called on leave/forfeit/terminal.
    */
-  _clearReconnectInfo() {
-    try {
-      localStorage.removeItem(RECONNECT_KEY);
-    } catch { /* ignore */ }
-  }
+  _clearReconnectInfo() { NetworkPlaySession.clearSavedMatch(); }
 
   /**
    * Check if there is a saved match to reconnect to.

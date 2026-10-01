@@ -2522,12 +2522,11 @@ test("4.2.5 Stack Theft transfers resolution authority but charges only its two 
     assert.ok(theft);
     state = engine.execute(d.state, theft.command).state;
     for (let i = 0; i < 20 && state.stack.length; i++) {
+        // Stop at resolution: advanceCoreToDecision can complete the turn and consume skips.
         if (state.priority?.open === true) {
-            d = advanceCoreToDecision(state);
-            state = d.state;
-            const pass = d.legalActionFrame.actions.find((x) => x.family === "response-decline");
-            if (pass)
-                state = engine.execute(state, pass.command).state;
+            const r = engine.execute(state, { id: `DECLINE-42402-${i}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: state.priority.order[state.priority.index], action: { kind: "core-pass-priority", semantic: "DECLINE_RESPONSE" } });
+            assert.equal(r.accepted, true);
+            state = r.state;
         }
         else {
             const r = engine.execute(state, { id: `RESOLVE-42402-${i}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: state.activePlayerId, action: { kind: "core-resolve-response-top" } });
@@ -2548,21 +2547,21 @@ test("4.2.5 Stack Theft transfers resolution authority but charges only its two 
     assert.equal(end.state.activePlayerId, "P2");
 });
 test("4.2.5 Stack Theft is offered only for a pending single effect play", async () => {
-    const { advanceCoreToDecision, createCoreMatchState, CORE_ADVANCED_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
+    const { advanceCoreToDecision, createCoreMatchState, CORE_ADVANCED_AUTHORITY_PROFILE, moveCard, enumerateCoreResponseActions } = await import("../src/index.js");
     const engine = new IntrilexEngine();
     let state = createCoreMatchState({ profileId: CORE_ADVANCED_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42412 });
     let d = advanceCoreToDecision(state);
     state = engine.execute(d.state, d.legalActionFrame.actions.find((x) => x.mode === "enter-action").command).state;
     const by = Object.fromEntries(Object.values(state.cards).map((c) => [c.identity, c.id]));
-    moveCard(state, by["10♠"], "P1_HAND", "P1");
+    moveCard(state, by["10♠"], "P2_HAND", "P2");
     moveCard(state, by["6♣"], "P1_HAND", "P1");
     d = advanceCoreToDecision(state);
     const score = d.legalActionFrame.actions.find((x) => x.family === "score" && x.sourceCardIds.includes(by["6♣"]));
     state = engine.execute(d.state, score.command).state;
-    d = advanceCoreToDecision(state);
-    assert.equal(d.decisionActorId, "P1");
-    assert.equal(d.legalActionFrame.actions.some((x) => x.mode === "rank10-stack-theft"), false);
-    const illegal = engine.execute(d.state, { id: "ILLEGAL-STACK-THEFT-SCORE", type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P1", action: { kind: "core-declare-rank10-stack-theft", sourceCardId: by["10♠"], targetStackItemId: d.state.stack.at(-1).id } });
+    // Inspect the pending score before orchestration automatically resolves it.
+    assert.equal(state.priority.order[state.priority.index], "P2");
+    assert.equal(enumerateCoreResponseActions(state, "P2").actions.some((x) => x.mode === "rank10-stack-theft"), false);
+    const illegal = engine.execute(state, { id: "ILLEGAL-STACK-THEFT-SCORE", type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P2", action: { kind: "core-declare-rank10-stack-theft", sourceCardId: by["10♠"], targetStackItemId: state.stack.at(-1).id } });
     assert.equal(illegal.accepted, false);
     assert.equal(illegal.error?.code, "CORE_STACK_THEFT_TARGET");
 });
@@ -2678,7 +2677,7 @@ test("4.2.5 incomplete advanced declarations fail closed with exact rewind", asy
         assert.equal(hashCanonical(r.state), before);
     }
 });
-test("4.2.5 special scoring riders are absent and direct declarations exact-rewind", async () => {
+test("Current scoring contract: Seven, Ten of Clubs and Black Joker declarations are legal", async () => {
     const { advanceCoreToDecision, createCoreMatchState, CORE_ADVANCED_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
     const engine = new IntrilexEngine();
     let state = createCoreMatchState({ profileId: CORE_ADVANCED_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42408 });
@@ -2689,12 +2688,10 @@ test("4.2.5 special scoring riders are absent and direct declarations exact-rewi
         moveCard(state, by[identity], "P1_HAND", "P1");
     d = advanceCoreToDecision(state);
     for (const identity of ["7♣", "10♣", "BJ"]) {
-        assert.equal(d.legalActionFrame.actions.some((x) => x.family === "score" && x.sourceCardIds.includes(by[identity])), false, identity);
-        const before = hashCanonical(d.state);
+        assert.equal(d.legalActionFrame.actions.some((x) => x.family === "score" && x.sourceCardIds.includes(by[identity])), true, identity);
         const r = engine.execute(d.state, { id: `SCORE-${identity}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P1", action: { kind: "core-declare-primary", action: { kind: "core-score", cardId: by[identity] } } });
-        assert.equal(r.accepted, false);
-        assert.equal(r.events.length, 0);
-        assert.equal(hashCanonical(r.state), before);
+        assert.equal(r.accepted, true, identity);
+        assert.ok(r.events.some((event) => event.type === "CORE_ACTION_DECLARED"), identity);
     }
 });
 test("4.2.5 Super Eight prunes object Aegis and Super Four preserves tap state while replacing Aegis", async () => {

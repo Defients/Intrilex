@@ -450,3 +450,42 @@ test('Store: createDerivedStore dispose stops all notifications', () => {
   parent.setState({ val: 2 });
   assert.equal(notified, false, 'Should not notify after dispose');
 });
+
+
+// Exercise timer ownership and asynchronous completion without a browser clock.
+import { createSessionAutosave } from '../apps/lab-web/src/play/session-autosave.js';
+test('Autosave lifecycle: stop and replacement sessions cannot publish stale Continue targets', async () => {
+  const callbacks = new Map();
+  let next = 1, finish, writes = 0;
+  const published = [];
+  const session = id => ({ sessionId: id, status: 'RUNNING', getSaveEnvelope: () => ({ sessionId: id }) });
+  const state = { session: session('first'), autosaveTimer: null };
+  const autosave = createSessionAutosave(state, {
+    timers: { setInterval(fn) { const id = next++; callbacks.set(id, fn); return id; }, clearInterval(id) { callbacks.delete(id); } },
+    putSave: async () => { writes++; await new Promise(resolve => { finish = resolve; }); },
+    buildSaveIntegrityPayload: () => 'hash', saveContinue: id => published.push(id),
+  });
+  autosave.startAutosave();
+  const tick = callbacks.get(state.autosaveTimer);
+  const pending = tick();
+  await tick();
+  assert.equal(writes, 1, 'overlapping saves are prevented');
+  state.session = session('second');
+  autosave.startAutosave();
+  assert.equal(callbacks.size, 1, 'replacement owns exactly one timer');
+  finish(); await pending;
+  assert.deepEqual(published, [], 'old completion cannot replace Continue');
+  const current = callbacks.get(state.autosaveTimer)();
+  finish(); await current;
+  assert.deepEqual(published, ['AUTOSAVE-second']);
+  const stopped = callbacks.get(state.autosaveTimer)();
+  autosave.stopAutosave();
+  finish(); await stopped;
+  assert.equal(callbacks.size, 0);
+  assert.deepEqual(published, ['AUTOSAVE-second'], 'stop invalidates an in-flight completion');
+  state.session.status = 'TERMINAL';
+  autosave.startAutosave();
+  await callbacks.get(state.autosaveTimer)();
+  assert.equal(writes, 3, 'terminal sessions do not save');
+  autosave.stopAutosave();
+});

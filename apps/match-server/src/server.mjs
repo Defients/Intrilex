@@ -1,3 +1,4 @@
+import { startServerMaintenance } from './server-maintenance.mjs';
 // ═══════════════════════════════════════════════════════════════
 // server.mjs — Intrilex Match Authority Server
 //
@@ -50,6 +51,7 @@ import { createMatchHandlers } from './handlers/match-handlers.mjs';
 import { createTournamentHandlers } from './handlers/tournament-handlers.mjs';
 import { createReportHandlers } from './handlers/report-handlers.mjs';
 import { InMemoryTournamentRepository, SupabaseTournamentRepository } from './persistence/tournament-repository.mjs';
+import { validateStartupConfig } from './startup-config.mjs';
 import { startHealthMonitor } from './monitoring/health-monitor.mjs';
 
 const require = createRequire(import.meta.url);
@@ -416,6 +418,8 @@ function checkRateLimit(connectionId) {
  * @returns {Promise<{ httpServer, wss, close }>}
  */
 export async function startServer(opts = {}) {
+  const startup = validateStartupConfig(opts);
+  ALLOWED_ORIGINS = startup.allowedOrigins;
   const port = opts.port ?? DEFAULT_PORT;
   const host = opts.host ?? DEFAULT_HOST;
   const persistent = opts.persistent ?? true;
@@ -434,7 +438,7 @@ export async function startServer(opts = {}) {
   }
 
   // ── Auth initialization ──
-  _authMode = opts.authMode ?? AUTH_MODE;
+  _authMode = startup.authMode;
 
   if (_authMode === AuthMode.REQUIRED) {
     // Production: must have a verifier
@@ -561,12 +565,14 @@ export async function startServer(opts = {}) {
     matchResultPersistor = new SupabaseMatchResultPersistor({
       supabaseUrl: opts.supabaseUrl,
       supabaseServiceKey: resolvedServiceKey,
+      requireAtomic: _isProductionMode && !opts.allowFakePersistor,
     });
   } else if (process.env.SUPABASE_URL && resolvedServiceKey) {
     const { SupabaseMatchResultPersistor } = require('./persistence/supabase-match-result-persistor.mjs');
     matchResultPersistor = new SupabaseMatchResultPersistor({
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseServiceKey: resolvedServiceKey,
+      requireAtomic: _isProductionMode && !opts.allowFakePersistor,
     });
   } else if (_isProductionMode && !opts.allowFakePersistor) {
     // DATA-04: FAIL LOUDLY in production — never silently use fake persistence
@@ -644,7 +650,6 @@ export async function startServer(opts = {}) {
   });
   // Recover any interrupted jobs from a previous run
   const recovered = terminalOutbox.recoverPending();
-  terminalOutbox.startDrain();
   logEvent('terminalOutboxConfigured', { durable: outboxDurable, recovered });
 
   // Initialize matchmaking queue
@@ -982,50 +987,17 @@ export async function startServer(opts = {}) {
     });
   });
 
-  // Heartbeat — ping all connections, terminate dead peers
-  const heartbeatTimer = setInterval(() => {
-    const now = Date.now();
-    for (const [cid, conn] of connections) {
-      if (now - conn.lastHeartbeat > HEARTBEAT_INTERVAL * 2) {
-        // Dead peer detected — perform disconnect bookkeeping before terminating
-        try { handleDisconnect(cid); } catch (err) { logEvent('heartbeatDisconnectError', { cid, error: err?.message }); }
-        try { conn.ws.terminate(); } catch { /* ignore — ws may already be closed */ }
-      } else {
-        try { conn.ws.ping(); } catch { /* ignore — ws may be closing */ }
-      }
-    }
-  }, HEARTBEAT_INTERVAL);
-  heartbeatTimer.unref?.();
-
-  // Cleanup timer — uses status-specific TTL policies
-  const cleanupTimer = setInterval(() => {
-    matchStore.cleanExpired({
-      lobbyTtl: LOBBY_TTL,
-      matchTtl: MATCH_TTL,
-      historyTtl: 3600000, // 1 hr for terminal history
+  let maintenance = null;
+  function startMaintenance() {
+    maintenance = startServerMaintenance({
+      connections, disconnect: handleDisconnect, logEvent,
+      heartbeatInterval: HEARTBEAT_INTERVAL, matchStore,
+      lobbyTtl: LOBBY_TTL, matchTtl: MATCH_TTL, matchmakingQueue,
+      onQueueTimeout: ws => send(ws, errorMsg(ReasonCode.QUEUE_TIMEOUT, 'Queue timeout')),
+      bannedIps, authAttempts: _authAttempts, authAttemptWindowMs: _authAttemptWindowMs,
     });
-    // Clean expired queue entries and notify them
-    if (matchmakingQueue) {
-      const expired = matchmakingQueue.cleanExpired();
-      for (const cid of expired) {
-        const conn = connections.get(cid);
-        if (conn) send(conn.ws, errorMsg(ReasonCode.QUEUE_TIMEOUT, 'Queue timeout'));
-      }
-    }
-    // Clean expired IP bans
-    const now = Date.now();
-    for (const [ip, expires] of bannedIps) {
-      if (now > expires) bannedIps.delete(ip);
-    }
-    // Clean stale auth-attempt trackers (no attempts in the window)
-    const authCutoff = now - _authAttemptWindowMs;
-    for (const [ip, attempts] of _authAttempts) {
-      // Remove entries outside the window; if none remain, drop the IP entirely
-      while (attempts.length > 0 && attempts[0] < authCutoff) attempts.shift();
-      if (attempts.length === 0) _authAttempts.delete(ip);
-    }
-  }, 60000);
-  cleanupTimer.unref?.();
+    terminalOutbox.startDrain();
+  }
 
   // Created only after the HTTP/WebSocket listener is live. A failed startup
   // must not leave observability timers behind in a test worker or operator CLI.
@@ -1042,7 +1014,28 @@ export async function startServer(opts = {}) {
     || !identityVerifier
     || typeof identityVerifier.probeModerationTable !== 'function';
 
+  // Listener/probe failure must release the resources already allocated above.
+  let startupCleanup = null;
+  function failStartup(error, reject) {
+    if (startupCleanup) return;
+    startupCleanup = (async () => {
+      maintenance?.stop();
+      healthMonitor?.stop();
+      if (terminalOutbox) { await terminalOutbox.shutdown(0); terminalOutbox = null; }
+      matchStore?.close(); matchStore = null;
+      identityVerifier?.close?.(); identityVerifier = null;
+      matchResultPersistor?.close?.(); matchResultPersistor = null;
+      matchmakingQueue = null; ratingService = null; blockChecker = null;
+      wss.close();
+      httpServer.close();
+    })().catch(cleanupError => {
+      logEvent('startupCleanupError', { error: cleanupError.message });
+    }).finally(() => reject(error));
+  }
   return new Promise((resolve, reject) => {
+    const startupError = error => failStartup(error, reject);
+    httpServer.once('error', startupError);
+    wss.once('error', startupError);
     (async () => {
       if (!skipModerationProbe) {
         let probeResult;
@@ -1059,13 +1052,13 @@ export async function startServer(opts = {}) {
             hint: errInfo.hint,
           });
           if (_isProductionMode) {
-            reject(new Error(
+            failStartup(new Error(
               'Moderation table startup probe failed: ' + (errInfo.message ?? 'unknown error') +
               (errInfo.hint ? ` (hint: ${errInfo.hint})` : '') +
               '. Ensure the account_moderation table exists (migration 0006) and the ' +
               'service-role key has access. Set opts.skipModerationProbe=true to bypass ' +
               '(NOT recommended in production).'
-            ));
+            ), reject);
             return;
           }
           process.stderr.write(
@@ -1078,6 +1071,9 @@ export async function startServer(opts = {}) {
       }
 
       httpServer.listen(port, host, () => {
+        httpServer.removeListener('error', startupError);
+        wss.removeListener('error', startupError);
+        startMaintenance();
         // ── Health monitor — periodic threshold checks + structured alerts ──
         healthMonitor = startHealthMonitor({
           getHealthMetrics,
@@ -1094,8 +1090,7 @@ export async function startServer(opts = {}) {
           get ratingService() { return ratingService; },
           get terminalOutbox() { return terminalOutbox; },
           close() {
-            clearInterval(heartbeatTimer);
-            clearInterval(cleanupTimer);
+            maintenance?.stop();
             healthMonitor?.stop();
             healthMonitor = null;
             // v0.25: Remove signal handlers on explicit close
@@ -1173,7 +1168,7 @@ export async function startServer(opts = {}) {
         seasonRefreshTimer.unref?.();
         resolve(api);
       });
-    })().catch(reject);
+    })().catch(error => failStartup(error, reject));
   });
 }
 

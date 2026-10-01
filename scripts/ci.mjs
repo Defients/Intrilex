@@ -3,12 +3,12 @@
  * CI pipeline — cross-platform Node port of scripts/ci.sh.
  * Runs on Windows, macOS, and Linux without bash.
  *
- * Stages mirror ci.sh exactly. Each stage:
+ * The Node runner is the canonical stage registry. Each stage:
  *   - Runs with a timeout (default 240s)
  *   - Captures stdout/stderr to a log
  *   - Reports PASS/FAIL/SKIP with elapsed time
  *   - Exits on first failure (fail-fast)
- *   - Writes reports/ci-stages.json at the end
+ *   - Writes ignored reports/local/ci-<domain>.json at the end
  *
  * Usage:
  *   node scripts/ci.mjs                    # full pipeline
@@ -21,16 +21,27 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {} from 'node:os';
+import { CI_DOMAINS, ciDomain } from './ci-domains.mjs';
+import { captureProvenance } from './release-provenance.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
+const domain = args.includes('--domain') ? args[args.indexOf('--domain') + 1] : null;
+if (domain && !CI_DOMAINS.includes(domain)) throw new Error(`Unknown CI domain: ${domain}`);
+const initialProvenance = captureProvenance(root);
 const noFailFast = args.includes('--no-fail-fast');
 const singleStage = args.includes('--stage') ? args[args.indexOf('--stage') + 1] : null;
 const customTimeout = args.includes('--timeout') ? parseInt(args[args.indexOf('--timeout') + 1]) * 1000 : 240000;
 
 // ── Stage definitions (mirrors ci.sh) ──
 const STAGES = [
+  ['auth-production-startup', 'node', ['--test', 'test/production-startup.test.mjs']],
+  ['deploy-ownership', 'node', ['--test', 'test/deploy-ownership.test.mjs']],
+  ['lint', 'node', ['node_modules/eslint/bin/eslint.js', 'apps/lab-web/src/**/*.js', 'apps/lab-web/src/client/**/*.ts', 'apps/lab-web/src/client/**/*.tsx', 'apps/match-server/src/**/*.mjs', 'packages/**/*.mjs', 'scripts/**/*.mjs', 'test/**/*.mjs']],
+  ['homecoming-browser', 'node', ['scripts/homecoming-browser.mjs']],
+  ['stabilization-browser', 'node', ['scripts/stabilization-browser.mjs']],
+  ['direct-manipulation-browser', 'node', ['scripts/direct-manipulation-browser.mjs']],
+  ['release-provenance', 'node', ['--test', 'test/release-provenance.test.mjs']],
   ['vendor-integrity', 'node', ['scripts/vendor-verify.mjs']],
   ['engine-patch-integrity', 'node', ['scripts/engine-patch-integrity.mjs', 'verify']],
   ['engine-patch-build', 'node', ['scripts/build-engine-patch.mjs']],
@@ -122,7 +133,7 @@ const STAGES = [
   ['typecheck', 'node', ['scripts/typecheck.mjs']],
   // IRX-C05: self-audit must run BEFORE release-package so the manifest
   // can compute its verdict from the actual self-audit results.
-  ['self-audit-generate', 'node', ['scripts/generate-self-audit.mjs']],
+  ['self-audit-generate', 'node', ['scripts/generate-self-audit.mjs', '--release']],
   ['release-package', 'node', ['scripts/package-release.mjs']],
   ['falsification-sweep', 'node', ['scripts/falsification-sweep.mjs']],
   ['browser-e2e-certification', 'node', ['scripts/browser-e2e-certification.mjs']],
@@ -286,14 +297,14 @@ const STAGES = [
 let passCount = 0, skipCount = 0, failCount = 0;
 const stageNames = [], stageStatuses = [];
 
-function runStep(name, cmd, cmdArgs, envOverride = {}) {
+async function runStep(name, cmd, cmdArgs, envOverride = {}) {
   const started = Date.now();
   const result = spawnSync(cmd, cmdArgs, {
     cwd: root,
     encoding: 'utf8',
     timeout: customTimeout,
     maxBuffer: 50 * 1024 * 1024,
-    env: { ...process.env, ...envOverride }
+    env: { ...process.env, INTRILEX_WRITE_REPORTS: '0', ...envOverride }
   });
   const elapsed = Date.now() - started;
   const output = (result.stdout ?? '') + (result.stderr ?? '');
@@ -317,7 +328,7 @@ function runStep(name, cmd, cmdArgs, envOverride = {}) {
     console.error(`[FAIL] ${name} (${elapsed}ms; exit ${code})`);
     console.error(output.slice(-2000));
     if (!noFailFast) {
-      writeReport();
+      await writeReport();
       process.exit(code ?? 1);
     }
   }
@@ -326,30 +337,35 @@ function runStep(name, cmd, cmdArgs, envOverride = {}) {
 // Filter to single stage if requested
 const stagesToRun = singleStage
   ? STAGES.filter(([name]) => name === singleStage)
-  : STAGES;
+  : domain ? STAGES.filter(([name]) => ciDomain(name) === domain) : STAGES;
 
 if (singleStage && stagesToRun.length === 0) {
   console.error(`Unknown stage: ${singleStage}. Available: ${STAGES.map(s => s[0]).join(', ')}`);
   process.exit(1);
 }
 
+if (args.includes('--list')) { console.log(JSON.stringify(stagesToRun.map(([name]) => ({ name, domain: ciDomain(name) })), null, 2)); process.exit(0); }
+
 console.log(`CI START: ${stagesToRun.length} stages${noFailFast ? ' (no-fail-fast)' : ''}`);
 
 for (const [name, cmd, cmdArgs, envOverride] of stagesToRun) {
-  runStep(name, cmd, cmdArgs, envOverride);
+  await runStep(name, cmd, cmdArgs, envOverride);
 }
 
 async function writeReport() {
   const total = passCount + skipCount + failCount;
   console.log(`CI COMPLETE: ${passCount}/${total} stages (PASS=${passCount}, SKIP=${skipCount}, FAIL=${failCount})`);
   const report = {
-    schemaVersion: '1.0.0',
+    schemaVersion: '1.1.0',
+    domain: domain ?? 'all',
+    provenance: initialProvenance,
+    completedAt: new Date().toISOString(),
     passCount, skipCount, failCount, totalStages: total,
     stages: stageNames.map((name, i) => ({ name, status: stageStatuses[i] }))
   };
-  const reportsDir = path.join(root, 'reports');
+  const reportsDir = path.join(root, 'reports/local');
   if (!existsSync(reportsDir)) await mkdir(reportsDir, { recursive: true });
-  await writeFile(path.join(reportsDir, 'ci-stages.json'), JSON.stringify(report, null, 2) + '\n');
+  await writeFile(path.join(reportsDir, `ci-${domain ?? 'stages'}.json`), JSON.stringify(report, null, 2) + '\n');
 }
 
 await writeReport();

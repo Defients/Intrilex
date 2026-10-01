@@ -500,3 +500,25 @@
   width: clamp(50px, 4vw, 72px);
   height: auto;
 }
+
+
+/* Caster composes the canonical board inside its persistent exit header. */
+.caster-theatre-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  background: #070b18;
+  border-bottom: 1px solid #262e55;
+}
+.caster-exit-button {
+  width: auto;
+  min-height: 36px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+.caster-board-host { height: calc(100dvh - 52px); min-height: 0; }
+.caster-board-host > div { height: 100%; }
+.caster-board-host .astra-client.hc-game { height: 100%; min-height: 0; }

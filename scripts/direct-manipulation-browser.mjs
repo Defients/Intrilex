@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { createAuthoritativeMatch } from '../packages/match-authority/src/authoritative-match-session.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const output = join(root, 'reports/direct-manipulation');
+const output = join(root, 'reports/local/direct-manipulation');
 await mkdir(output, { recursive: true });
 let match, participants, submitted, current, kingId, reject = false;
 function project() {

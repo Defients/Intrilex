@@ -49,3 +49,8 @@ terminal-outbox.sqlite
 reports/.self-audit-tap-output.txt
 # Neocities credentials (local only — never commit)
 neocities.config.js
+# Local diagnostics and commit-bound release evidence must not alter the tested tree.
+reports/local/
+reports/release/
+__pycache__/
+*.pyc
