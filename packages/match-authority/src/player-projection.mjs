@@ -140,7 +140,8 @@ function sanitizeAction(action) {
   /** @type {Record<string, *>} */
   const safe = {};
   const allowed = ['actionId', 'family', 'mode', 'timingClass',
-                    'sourceCardIds', 'targetCardIds', 'displayLabel'];
+                    'sourceCardIds', 'targetCardIds', 'displayLabel',
+                    'composition'];
   for (const key of allowed) {
     if (action[key] !== undefined) {
       safe[key] = action[key];

@@ -1516,6 +1516,7 @@ export class NetworkPlaySession {
           sourceHandles: a.sourceCardIds,
           targetHandles: a.targetCardIds,
           ...(Number.isSafeInteger(a.swapSlot) ? { swapSlot: a.swapSlot } : {}),
+          ...(a.composition ? { composition: a.composition } : {}),
         })),
         isHuman: view.decision.isMyDecision,
       } : null,

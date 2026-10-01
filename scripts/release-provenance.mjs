@@ -52,6 +52,7 @@ export function evidenceProvenanceProblems(report, current) {
 /** A matching report still needs complete, internally consistent execution results. */
 export function releaseAuditProblems(report, current) {
   const problems = evidenceProvenanceProblems(report, current);
+  if (report?.provenance?.auditKind !== 'release') problems.push('Release evidence requires an explicitly executed release audit.');
   if (report?.status !== 'PASS') problems.push('Release self-audit is not PASS.');
   const gates = Object.values(report?.criticalGates ?? {});
   if (!gates.length || gates.some(value => value !== true)) problems.push('Release audit requires explicit passing critical gates.');

@@ -758,6 +758,81 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
   if (diSharedRewritten > 0) console.log(`build: rewrote @intrilex/shared imports in ${diSharedRewritten} decision-intelligence module(s) → shared-browser.js`);
 }
 
+// ── Rewrite bare @intrilex/engine-adapter/action-composition imports ────
+// Same defense-in-depth pattern as @intrilex/account-domain above. Only
+// action-composition.mjs is browser-consumed (by play/play-controller.js);
+// the rest of engine-adapter is Node-only, so copy just that one module
+// into dist/engine-adapter/ and rewrite the bare specifier.
+{
+  const adapterSrc = path.join(root, 'packages/engine-adapter/src/action-composition.mjs');
+  const adapterDist = path.join(dist, 'engine-adapter');
+  await mkdir(adapterDist, { recursive: true });
+  await cp(adapterSrc, path.join(adapterDist, 'action-composition.mjs'));
+
+  const specifier = '@intrilex/engine-adapter/action-composition';
+  const importRegex = new RegExp(`from\\s+["']${specifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`, 'g');
+  let adapterRewrittenCount = 0;
+  async function rewriteAdapterBareImports(dir) {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === 'engine' || entry.name === 'data' || entry.name === 'assets' ||
+            entry.name === 'hybrix' || entry.name === 'achievements' || entry.name === 'analytics-ai' ||
+            entry.name === 'account-domain' || entry.name === 'decision-intelligence' ||
+            entry.name === 'engine-adapter' || entry.name === 'vendor' || entry.name === '.split-tmp') continue;
+        await rewriteAdapterBareImports(fullPath);
+      } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.mjs'))) {
+        const content = await readFile(fullPath, 'utf8');
+        if (importRegex.test(content)) {
+          importRegex.lastIndex = 0;
+          const relBase = path.relative(path.dirname(fullPath), adapterDist).replace(/\\/g, '/');
+          // For files at the dist root, path.relative yields "engine-adapter"
+          // — still a bare specifier. Relative module specifiers must start
+          // with ./ or ../.
+          const target = relBase.startsWith('.') ? relBase : `./${relBase}`;
+          await writeFile(fullPath, content.replace(importRegex, `from "${target}/action-composition.mjs"`));
+          adapterRewrittenCount++;
+        }
+      }
+    }
+  }
+  await rewriteAdapterBareImports(dist);
+
+  // Fail-closed verification: no browser-served module may retain the
+  // bare @intrilex/engine-adapter/action-composition specifier, nor a
+  // non-relative engine-adapter/action-composition specifier left over
+  // from a root-level rewrite missing the ./ prefix.
+  const offenders = [];
+  const bareRelativeRegex = /from\s+["']engine-adapter\/action-composition["'.]/g;
+  async function auditAdapterBareImports(dir) {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === 'engine' || entry.name === 'data' || entry.name === 'assets' ||
+            entry.name === 'hybrix' || entry.name === 'achievements' || entry.name === 'analytics-ai' ||
+            entry.name === 'account-domain' || entry.name === 'decision-intelligence' ||
+            entry.name === 'engine-adapter' || entry.name === 'vendor' || entry.name === '.split-tmp') continue;
+        await auditAdapterBareImports(fullPath);
+      } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.mjs'))) {
+        const content = await readFile(fullPath, 'utf8');
+        importRegex.lastIndex = 0;
+        bareRelativeRegex.lastIndex = 0;
+        if (importRegex.test(content) || bareRelativeRegex.test(content)) offenders.push(path.relative(dist, fullPath));
+      }
+    }
+  }
+  await auditAdapterBareImports(dist);
+  if (offenders.length > 0) {
+    console.error('BUILD FAIL: bare @intrilex/engine-adapter/action-composition import statements found after rewriting:');
+    for (const f of offenders) console.error(`  - ${f}`);
+    process.exit(1);
+  }
+  if (adapterRewrittenCount > 0) console.log(`build: rewrote bare @intrilex/engine-adapter/action-composition imports in ${adapterRewrittenCount} raw dist file(s) → ./engine-adapter/action-composition.mjs`);
+  console.log(`build: verified 0 bare @intrilex/engine-adapter/action-composition import statements in dist`);
+}
+
 // ── Rewrite bare @supabase/supabase-js imports in raw dist files ────────
 // Same defense-in-depth pattern as @intrilex/account-domain above.
 // esbuild bundles supabase into chunks for the main app, but raw dist files

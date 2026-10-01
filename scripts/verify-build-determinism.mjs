@@ -1,12 +1,21 @@
+import { captureProvenance } from './release-provenance.mjs';
 import { createHash } from 'node:crypto';
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { readFile, readdir, mkdir, writeFile as writeArtifact } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hashCanonical } from '@intrilex/shared';
 
+async function writeFile(target, bytes, ...options) {
+  const text=typeof bytes === 'string' ? bytes : null;
+  if(String(target).endsWith('.json') && text) {
+    try { const value=JSON.parse(text); if(value && typeof value==='object' && !Array.isArray(value)) bytes=JSON.stringify({...value,provenance:{...captureProvenance(root),mode:'full'}},null,2)+'\n'; } catch { /* non-report JSON is preserved */ }
+  }
+  return writeArtifact(target,bytes,...options);
+}
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const writeReports = process.env.INTRILEX_WRITE_REPORTS !== '0';
+const writeReports = true; // Only ignored diagnostics are written.
 
 async function treeSnapshot(relativeRoot) {
   const base = path.join(root, relativeRoot);
@@ -57,6 +66,7 @@ const report = {
   },
   identical,
 };
-if (writeReports) await writeFile(path.join(root, 'reports/build-determinism.json'), `${JSON.stringify(report, null, 2)}\n`);
+if (writeReports) await mkdir(path.join(root,'reports/local'),{recursive:true});
+if (writeReports) await writeFile(path.join(root, 'reports/local/build-determinism.json'), `${JSON.stringify(report, null, 2)}\n`);
 console.log(`BUILD DETERMINISM ${report.status}: dist=${second.dist.treeHash}; sample=${second.sampleData.treeHash}`);
 if (!identical) process.exit(1);

@@ -7,8 +7,15 @@ export type Selection = Readonly<Record<string, ParameterValue | undefined>>;
 export type Parameter = Readonly<{
   key: string;
   label: string;
-  kind: 'card' | 'cards' | 'target' | 'slot' | 'mode' | 'variant';
+  kind: 'card' | 'cards' | 'target' | 'slot' | 'mode' | 'variant' | 'copy' | 'cost';
   multiple: boolean;
+  /**
+   * Progressive disclosure stage. A staged parameter renders only once
+   * every earlier-stage parameter is resolved (picked or collapsed to a
+   * single compatible value). Unstaged parameters render immediately —
+   * preserving the flat layout for ordinary families.
+   */
+  stage?: number;
   value: (action: SemanticAction) => ParameterValue;
 }>;
 export type ActionFamily = Readonly<{
@@ -31,10 +38,28 @@ const tuple = (family: ActionFamily, action: SemanticAction) => JSON.stringify(f
 function parameters(variants: readonly SemanticAction[]): Parameter[] {
   const first = variants[0];
   const result: Parameter[] = [];
-  const add = (key: string, label: string, kind: Parameter['kind'], multiple: boolean, value: Parameter['value']) => {
+  const add = (key: string, label: string, kind: Parameter['kind'], multiple: boolean, value: Parameter['value'], stage?: number) => {
     // Constants belong to the action preview; only actual decisions need controls.
-    if (new Set(variants.map(a => JSON.stringify(value(a)))).size > 1) result.push({ key, label, kind, multiple, value });
+    if (new Set(variants.map(a => JSON.stringify(value(a)))).size > 1) result.push({ key, label, kind, multiple, value, ...(stage !== undefined ? { stage } : {}) });
   };
+  // Copy-effect families (Wild Sovereignty, Solo Wild) carry a public
+  // `composition` decomposition from the authority boundary. Their player
+  // decision tree is: which base effect is copied → which sub-effect/mode
+  // → which target → which cost card. Staging keeps the composer asking
+  // one question at a time instead of dumping raw variant declarations.
+  const hasCopy = variants.length > 0 && variants.every(a => a.composition !== undefined);
+  if (hasCopy) {
+    add('sources', 'Wild card', 'card', false, a => a.sources[0] ?? NONE, 0);
+    add('copy', first.family === 'wild-sovereignty' ? 'Copy a Spade effect' : 'Copy base effect', 'copy', false,
+      a => a.composition?.copy ?? NONE, 0);
+    add('mode', 'Effect', 'mode', false, a => a.mode ?? NONE, 1);
+    const multiple = variants.some(a => a.targets.length > 1);
+    add('targets', multiple ? 'Targets / cost cards' : 'Target', multiple ? 'cards' : 'target', multiple,
+      a => multiple ? a.targets : a.targets[0] ?? NONE, 2);
+    add('cost', 'Discard cost', 'cost', false,
+      a => (a.composition?.costs?.length ? [...a.composition.costs].sort().join('|') : NONE), 3);
+    return result;
+  }
   if (first.family === 'swap-bar' && variants.every(a => a.swapSlot !== undefined)) {
     add('slot', 'Take from the Swap Bar', 'slot', false, a => String(a.swapSlot));
     add('sources', 'Give from your hand', 'card', false, a => a.sources[0] ?? NONE);
@@ -112,6 +137,24 @@ export function parameterOptions(family: ActionFamily, parameter: Parameter, sel
   return [...values];
 }
 
+/**
+ * For a staged parameter, downstream selections must not shrink the
+ * options an upstream control shows — switching the copied effect while a
+ * mode is picked is legal; reconcileSelection drops the stale mode. So a
+ * staged parameter's own choices are computed against only same-or-earlier
+ * stage picks. Unstaged parameters keep the classic every-pick-applies
+ * semantics.
+ */
+export function upstreamSelection(family: ActionFamily, parameter: Parameter, selection: Selection): Selection {
+  if (parameter.stage === undefined) return selection;
+  const result: Record<string, ParameterValue> = {};
+  for (const p of family.parameters) {
+    const value = selection[p.key];
+    if (value !== undefined && (p.stage === undefined || p.stage <= parameter.stage!)) result[p.key] = value;
+  }
+  return result;
+}
+
 export function effectiveSelection(family: ActionFamily, selection: Selection): Selection {
   const result = { ...selection };
   for (const parameter of family.parameters) {
@@ -148,7 +191,7 @@ export function selectOption(family: ActionFamily, selection: Selection, key: st
   if (!parameter) return selection;
   const previous = selection[key];
   const alreadyPicked = asArray(previous).includes(value);
-  if (!alreadyPicked && !parameterOptions(family, parameter, selection).includes(value)) return selection;
+  if (!alreadyPicked && !parameterOptions(family, parameter, upstreamSelection(family, parameter, selection)).includes(value)) return selection;
   const next = { ...selection };
   if (parameter.multiple) {
     next[key] = alreadyPicked ? asArray(previous).filter(x => x !== value) : [...asArray(previous), value];
@@ -180,6 +223,16 @@ export function actionPreview(game: SemanticGame, action: SemanticAction): strin
 export function optionLabel(game: SemanticGame, family: ActionFamily, parameter: Parameter, value: string): string {
   if (parameter.kind === 'slot') return `Slot ${Number(value) + 1} · ${game.swap[Number(value)]?.identity ?? 'Face down'}`;
   if (parameter.kind === 'mode') return value === NONE ? 'Default' : modeLabel(family.variants[0].family, value) ?? 'Mode';
+  if (parameter.kind === 'copy') {
+    if (value === NONE) return 'No copied effect';
+    // The copied card shares the wild card's suit: derive the glyph from
+    // the source card's identity rather than hardcoding one per family.
+    const suit = family.variants.map(a => referenceLabel(game, a.sources[0] ?? '')).join(' ').match(/[♠♥♦♣]/)?.[0] ?? '';
+    return `${value}${suit}`;
+  }
+  if (parameter.kind === 'cost') {
+    return value === NONE ? 'No discard' : value.split('|').map(id => referenceLabel(game, id)).join(' + ');
+  }
   if (parameter.kind === 'variant') {
     const index = family.variants.findIndex(a => a.id === value);
     return `${index + 1}. ${actionPreview(game, family.variants[index])}`;
@@ -187,13 +240,36 @@ export function optionLabel(game: SemanticGame, family: ActionFamily, parameter:
   return referenceLabel(game, value);
 }
 
+/**
+ * Progressive disclosure for staged families: a staged parameter renders
+ * only when every earlier-stage parameter is already resolved (picked or
+ * collapsed to a single compatible value via effectiveSelection), and it
+ * still offers a real choice within the current compatible set.
+ */
+export function parameterVisible(family: ActionFamily, parameter: Parameter, selection: Selection): boolean {
+  if (parameter.stage === undefined) return true;
+  const effective = effectiveSelection(family, selection);
+  const earlierResolved = family.parameters.every(p =>
+    p === parameter || p.stage === undefined || p.stage >= parameter.stage! || effective[p.key] !== undefined);
+  if (!earlierResolved) return false;
+  // A staged parameter collapsed to a single option needs no control —
+  // effectiveSelection already pins it. Omit the meaningless step.
+  // Options are counted against upstream picks only, so a resolved
+  // upstream control (e.g. Copy effect) keeps its full choice list for
+  // the player to switch between.
+  return parameterOptions(family, parameter, upstreamSelection(family, parameter, selection)).length > 1;
+}
+
 /** Highlights and picks share exactly the Composer's options, never a second rule system. */
 export function boardOptions(game: SemanticGame, family: ActionFamily, selection: Selection, activeKey: string): readonly { entityId: string; value: string }[] {
   const parameter = family.parameters.find(p => p.key === activeKey);
-  if (!parameter || ['mode', 'variant'].includes(parameter.kind)) return [];
-  return parameterOptions(family, parameter, selection).filter(value => value !== NONE).map(value => ({
-    value, entityId: parameter.kind === 'slot' ? game.swap[Number(value)]?.id ?? '' : value,
-  })).filter(option => option.entityId !== '');
+  if (!parameter || ['mode', 'variant', 'copy'].includes(parameter.kind)) return [];
+  return parameterOptions(family, parameter, upstreamSelection(family, parameter, selection)).filter(value => value !== NONE).flatMap(value => {
+    if (parameter.kind === 'slot') return [{ value, entityId: game.swap[Number(value)]?.id ?? '' }];
+    // Cost options encode a declared set of own-hand card IDs.
+    if (parameter.kind === 'cost') return value.split('|').map(entityId => ({ value, entityId }));
+    return [{ value, entityId: value }];
+  }).filter(option => option.entityId !== '');
 }
 
 export function decisionBoundary(game: SemanticGame): string {

@@ -365,7 +365,8 @@
    Row 1: What's New | Rules
    Row 2: Ranking System (full width)
    Row 3: Players | Leaderboard
-   Row 4: Official Forums (full width)
+   Row 4: Tournaments | Seasons
+   Row 5: Subreddit
    ═══════════════════════════════════════════════════════════════ */
 .landing-secondary-rail{
   display:flex; flex-direction:column;
@@ -378,7 +379,7 @@
   gap:12px; max-width:none; width:100%;
   align-content:center;
 }
-/* Full-width rows: Ranking System (3rd card) and Forums (6th card) */
+/* Full-width row: Ranking System (3rd card) */
 .landing-rail-card.ranking-system{
   grid-column:1 / -1;
 }
@@ -447,10 +448,6 @@
 }
 .landing-rail-emblem.ranking-system-emblem svg,
 .landing-rail-emblem.leaderboard-emblem svg{width:18px; height:18px}
-.landing-rail-forums-icon{
-  width:34px; height:34px; border-radius:9px;
-}
-.landing-rail-forums-icon svg{width:18px; height:18px}
 
 /* ── Continue button (now in topbar — see §2 for base styles) ── */
 
@@ -509,14 +506,7 @@
 .landing-rail-card.leaderboard p{font-size:10.5px; line-height:1.3; margin:1px 0 0}
 .landing-rail-card.leaderboard .landing-rail-cta{color:var(--violet)}
 
-/* Forums: reduced prominence — muted blue, smaller text */
-.landing-rail-card.forums{opacity:.82; border-color:rgba(91,156,240,.16)}
-.landing-rail-card.forums:hover{border-color:rgba(91,156,240,.32); opacity:1}
-.landing-rail-card.forums::before{background:linear-gradient(180deg,var(--blue),transparent)}
-.landing-rail-card.forums strong{color:var(--blue); font-size:11px; letter-spacing:.02em}
-.landing-rail-card.forums p{font-size:10px; line-height:1.3; margin:1px 0 0}
-
-/* Subreddit: Reddit-tinted companion to Forums */
+/* Subreddit: Reddit-tinted community card */
 .landing-rail-card.subreddit{opacity:.88; border-color:rgba(255,69,0,.16)}
 .landing-rail-card.subreddit:hover{border-color:rgba(255,69,0,.34); opacity:1}
 .landing-rail-card.subreddit::before{background:linear-gradient(180deg,#ff4500,transparent)}
@@ -611,7 +601,6 @@
   .landing-rail-emblem.leaderboard-emblem,
   .landing-rail-emblem.reddit-emblem{width:28px; height:28px}
   .landing-rail-emblem.reddit-emblem svg{width:28px; height:28px}
-  .landing-rail-forums-icon{width:28px; height:28px}
 }
 
 @media(max-width:1100px){

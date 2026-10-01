@@ -10,6 +10,7 @@ import {
   CORE_ADVANCED_AUTHORITY_PROFILE,
   CORE_UNRESTRICTED_AUTHORITY_PROFILE,
 } from '@intrilex/engine-adapter';
+import { actionComposition } from '@intrilex/engine-adapter/action-composition';
 import { runPolicyMatch } from '@intrilex/simulation-runtime';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -226,6 +227,60 @@ test('K♠ Wild Sovereignty four-row-clear resolves with K♠ sent to Exile', ()
   assert.equal(result.accepted, true, 'Wild Sovereignty four-row-clear should be accepted');
   assert.equal(result.state.cards[ks].zone, 'EXILE', 'K♠ should be in Exile');
   assert.equal(result.state.cards[enemy].zone, 'GY', 'enemy PR card should be cleared to GY');
+});
+
+test('actionComposition decomposes Wild Sovereignty into public decision fields only', () => {
+  const engine = new IntrilexEngine();
+  let state = enterActionPhase(engine, createSimulationState(setup));
+  const ks = cardBy(state, 'K♠');
+  const target = cardBy(state, 'A♣');
+  moveCard(state, ks, 'P1_HAND', 'P1');
+  moveCard(state, cardBy(state, '3♣'), 'P1_HAND', 'P1');
+  moveCard(state, cardBy(state, '4♦'), 'P1_HAND', 'P1');
+  moveCard(state, target, 'P2_PR', 'P2');
+  const d = advanceSimulationToDecision(state);
+  const wilds = d.legalActionFrame.actions.filter(a => a.family === 'wild-sovereignty');
+  assert.ok(wilds.length >= 6, 'expected several Wild Sovereignty variants');
+  for (const wild of wilds) {
+    const composition = actionComposition(wild);
+    assert.deepEqual(Object.keys(composition).sort(), ['copy', 'costs', 'effect', 'row']);
+    assert.ok(['3', '4', '5', '6', '7'].includes(composition.copy));
+    assert.equal(typeof composition.effect, 'string');
+    // The decomposition must never smuggle the command payload across.
+    assert.doesNotMatch(JSON.stringify(composition), /"command"|"action":\s*\{/);
+  }
+});
+
+test('actionComposition discriminates hidden command payloads (cost cards, row, target)', () => {
+  const engine = new IntrilexEngine();
+  let state = enterActionPhase(engine, createSimulationState(setup));
+  const ks = cardBy(state, 'K♠');
+  const target = cardBy(state, 'A♣');
+  moveCard(state, ks, 'P1_HAND', 'P1');
+  for (const ident of ['3♣', '4♦', '5♥']) moveCard(state, cardBy(state, ident), 'P1_HAND', 'P1');
+  moveCard(state, target, 'P2_PR', 'P2');
+  const d = advanceSimulationToDecision(state);
+  const wilds = d.legalActionFrame.actions.filter(a => a.family === 'wild-sovereignty');
+  const ofMode = mode => wilds.filter(a => a.mode === mode);
+  // deep-draw variants are identical on the public surface and differ
+  // only by copiedAction.discardCardIds — each must surface a unique cost.
+  const deepDraws = ofMode('deep-draw');
+  assert.ok(deepDraws.length >= 2);
+  assert.equal(new Set(deepDraws.map(a => actionComposition(a).costs.join('|'))).size, deepDraws.length);
+  for (const a of deepDraws) assert.equal(actionComposition(a).costs[0] !== ks, true);
+  // total-clear cost cards come from rankAction.discardCostCardId.
+  const totalClears = ofMode('total-clear');
+  assert.ok(totalClears.length >= 2);
+  assert.equal(new Set(totalClears.map(a => actionComposition(a).costs.join('|'))).size, totalClears.length);
+  // row-scoped copies carry their row; bounce carries a real target.
+  assert.equal(actionComposition(ofMode('four-row-clear-pr')[0]).row, 'pr');
+  assert.equal(actionComposition(ofMode('four-row-clear-er')[0]).row, 'er');
+  const bounce = ofMode('three-bounce')[0];
+  assert.equal(actionComposition(bounce).copy, '3');
+  assert.ok(bounce.targetCardIds.includes(target));
+  // Non-copy actions return undefined — composition is absent, not empty.
+  const ordinary = d.legalActionFrame.actions.find(a => a.family !== 'wild-sovereignty');
+  if (ordinary) assert.equal(actionComposition(ordinary), undefined);
 });
 
 test('Wild Sovereignty matches complete without errors under random-legal policies (advanced)', () => {

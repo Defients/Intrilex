@@ -719,18 +719,6 @@ function renderLanding() {
               </span>
               <span class="landing-rail-emblem" aria-hidden="true">&#128197;</span>
             </a>
-            <a class="landing-rail-card forums" href="https://intrilex.discourse.group/" target="_blank" rel="noopener noreferrer">
-              <span class="landing-rail-forums-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-                </svg>
-              </span>
-              <span class="landing-rail-body">
-                <strong>Official Forums</strong>
-                <p>Discuss strategy, report issues, and connect with players.</p>
-              </span>
-              <span class="landing-rail-chevron" aria-hidden="true">&rsaquo;</span>
-            </a>
             <a class="landing-rail-card subreddit" href="https://reddit.com/r/intrilex" target="_blank" rel="noopener noreferrer">
               <span class="landing-rail-emblem reddit-emblem" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="34" height="34" role="presentation">
@@ -805,9 +793,11 @@ let _preAlphaOverlayTimer = null;
  * @returns {boolean}
  */
 function showPreAlphaOverlay() {
-  if (_preAlphaOverlayTimer) { clearTimeout(_preAlphaOverlayTimer); _preAlphaOverlayTimer = null; }
-  const existing = document.getElementById('prealpha-overlay');
-  if (existing) existing.remove();
+  // Idempotent: if the overlay is already scheduled or on-screen, do not
+  // restart it. Re-renders of /dev (duplicate hashchange listeners, auth
+  // updates, navigating back) must not tear down a visible overlay and
+  // reschedule it — that made the notice vanish and appear a second time.
+  if (_preAlphaOverlayTimer || document.getElementById('prealpha-overlay')) return true;
 
   // Only show the overlay once every 12 hours per browser.
   // The timestamp of the last acknowledgement is stored; if less than
@@ -821,9 +811,14 @@ function showPreAlphaOverlay() {
   const waitSeconds = firstTime ? 5 : 2;
 
   _preAlphaOverlayTimer = setTimeout(() => {
-    // Guard: if the user navigated away from the landing page during the
-    // delay, skip showing the overlay — it would appear on the wrong route.
-    if (!landingContainer.isConnected || landingContainer.style.display === 'none') return;
+    _preAlphaOverlayTimer = null;
+    // Guard: only show while still on the /dev route. landingContainer stays
+    // connected and visible on every landing route (/rules, /auth, …), so the
+    // container check alone lets the overlay fire on the wrong page — and it
+    // would then fire again when the user returns to /dev.
+    if (route() !== '/dev' || !landingContainer.isConnected || landingContainer.style.display === 'none') return;
+    // Never stack a second copy if one already exists.
+    if (document.getElementById('prealpha-overlay')) return;
     const overlay = document.createElement('div');
     overlay.id = 'prealpha-overlay';
     overlay.className = 'prealpha-overlay';
@@ -837,12 +832,12 @@ function showPreAlphaOverlay() {
       <button class="prealpha-acknowledge" id="prealpha-acknowledge" disabled aria-disabled="true">
         <span class="prealpha-acknowledge-text">Please wait ${waitSeconds}s&hellip;</span>
       </button>
-      <div class="prealpha-dev-stamp" aria-label="Last development date: August 15, 2026">
+      <div class="prealpha-dev-stamp" aria-label="Last development date: October 1, 2026">
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
         <span class="prealpha-dev-stamp-content">
           <span class="prealpha-dev-stamp-dot" aria-hidden="true"></span>
           <span class="prealpha-dev-stamp-label">Last development</span>
-          <time class="prealpha-dev-stamp-date" datetime="2026-08-15">Aug 15, 2026</time>
+          <time class="prealpha-dev-stamp-date" datetime="2026-10-01">Oct 1, 2026</time>
         </span>
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
       </div>
@@ -1826,12 +1821,6 @@ function renderWipLanding() {
           <a class="wip-community-btn rules" href="#/rules">
             <span class="wip-community-icon" aria-hidden="true">&sect;</span>
             <span class="wip-community-label">Official Rulebook</span>
-          </a>
-          <a class="wip-community-btn forums" href="https://intrilex.discourse.group/" target="_blank" rel="noopener noreferrer">
-            <svg class="wip-community-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-            </svg>
-            <span class="wip-community-label">Official Forums</span>
           </a>
           <a class="wip-community-btn reddit" href="https://reddit.com/r/intrilex" target="_blank" rel="noopener noreferrer">
             <svg class="wip-community-icon reddit-emblem" viewBox="0 0 24 24" aria-hidden="true">

@@ -142,6 +142,11 @@ const MODE_LABELS = Object.freeze({
   '2-black-2-red-draw': '2 black 2 red draw',
   '2-black-2-red-rummage': '2 black 2 red rummage',
   'deep-draw': 'deep draw',
+  'three-bounce': 'bounce to top',
+  'four-row-clear-pr': 'clear Point Row',
+  'four-row-clear-er': 'clear Enduring Row',
+  'recycle-five': 'recycle five',
+  'topdeck-seven': 'topdeck seven',
   'plus-3': '+3',
   'declare': 'declare',
   'queens-court': 'Queen’s Court',
@@ -411,6 +416,9 @@ export function presentAction(action, cardRegistry) {
     isPrivateChoice: action.family === 'private-choice' || action.family === 'effect-private-choice',
     sourceHandles: [...(action.sourceHandles ?? action.sourceCardIds ?? [])],
     targetHandles: [...(action.targetHandles ?? action.targetCardIds ?? [])],
+    // Public composition decomposition (copied effect, row, own-hand cost
+    // IDs) produced at the authority boundary — never a command.
+    composition: action.composition ?? null,
     featureVector: action.featureVector ?? {},
     commandHash: action.commandHash ?? action.engineCommandHash ?? null,
   };

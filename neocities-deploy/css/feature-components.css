@@ -451,15 +451,6 @@ input::placeholder{color:var(--faint);opacity:.85}
 .landing-rail-emblem.ranking-system-emblem svg{width:22px;height:22px}
 .landing-rail-card.ranking-system:hover .landing-rail-emblem.ranking-system-emblem{transform:scale(1.06);border-color:rgba(90,215,232,.55);box-shadow:0 0 18px rgba(90,215,232,.18)}
 .landing-rail-card.ranking-system:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-/* Forums card — community entry, blue accent */
-.landing-rail-card.forums{padding:18px 24px;flex-direction:row;align-items:center;gap:14px;border-color:rgba(91,156,240,.18)}
-.landing-rail-card.forums:hover{transform:translateY(-2px);border-color:rgba(91,156,240,.35)}
-.landing-rail-card.forums::before{display:none}
-.landing-rail-card.forums strong{color:var(--blue);font-size:13px;letter-spacing:.02em}
-.landing-rail-card.forums p{color:var(--muted);font-size:11.5px;line-height:1.4;margin:3px 0 0}
-.landing-rail-forums-icon{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;border:1px solid rgba(91,156,240,.3);border-radius:12px;background:linear-gradient(145deg,rgba(91,156,240,.12),rgba(20,36,50,.6));color:var(--blue);transition:transform var(--fast) var(--ease),border-color var(--fast)}
-.landing-rail-forums-icon svg{width:22px;height:22px}
-.landing-rail-card.forums:hover .landing-rail-forums-icon{transform:scale(1.06);border-color:rgba(91,156,240,.5)}
 /* Continue card: filled resume button */
 .landing-resume-btn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:9px 18px;border:1px solid rgba(90,215,232,.55);border-radius:10px;background:linear-gradient(180deg,#3fc1d8 0%,var(--cyan-2) 55%,#1e8ba3 100%);color:#041a20;font-size:12px;font-weight:700;letter-spacing:.08em;box-shadow:0 4px 16px rgba(90,215,232,.18),inset 0 1px 0 rgba(255,255,255,.25);width:fit-content}
 

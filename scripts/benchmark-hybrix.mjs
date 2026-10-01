@@ -8,12 +8,12 @@
 
 import { runPolicyMatch } from '@intrilex/simulation-runtime';
 import { POLICY_BY_ID } from '@intrilex/simulation-runtime/policy-catalog';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const REPORT_PATH = join(__dirname, '..', 'reports', 'hybrix-benchmark.json');
+const REPORT_PATH = join(__dirname, '..', 'reports', 'local', 'hybrix-benchmark.json');
 
 const MATCHUPS = [
   { label: 'HYBRIX Rusher vs SCORE_RUSH',         p1: 'hybrix-rusher',           p2: 'score-rush' },
@@ -249,6 +249,7 @@ console.log(`  OVERALL: HYBRIX ${totalHybrixWins}W / Baseline ${totalBaselineWin
 console.log(`  95% CI: [${(overallCI95.lower * 100).toFixed(1)}%, ${(overallCI95.upper * 100).toFixed(1)}%]  |  99% CI: [${(overallCI99.lower * 100).toFixed(1)}%, ${(overallCI99.upper * 100).toFixed(1)}%]`);
 console.log('═'.repeat(72));
 
+mkdirSync(join(__dirname,'..','reports','local'),{recursive:true});
 writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2));
 console.log(`\n  Report saved: ${REPORT_PATH}`);
 if (!report.totals.accountingInvariant) {

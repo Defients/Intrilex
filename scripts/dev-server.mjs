@@ -264,8 +264,10 @@ const server = http.createServer(async (request, response) => {
   createReadStream(file).pipe(response);
 });
 
-server.listen(4173, '127.0.0.1', () => {
-  const url = 'http://127.0.0.1:4173/#/';
+const devPort = Number(process.env.INTRILEX_DEV_PORT ?? 4173);
+if (!Number.isInteger(devPort) || devPort < 1 || devPort > 65535) throw new Error('INTRILEX_DEV_PORT must be an integer from 1 to 65535');
+server.listen(devPort, '127.0.0.1', () => {
+  const url = `http://127.0.0.1:${devPort}/#/`;
   console.log(`Intrilex Lab: ${url}${watchMode ? ' (watch mode — auto-rebuild on src/ changes)' : ''}`);
 });
 

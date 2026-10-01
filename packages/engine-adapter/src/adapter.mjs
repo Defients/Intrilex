@@ -28,6 +28,7 @@ const coreEffects = await import(moduleUrl(authorityRuntime, 'core-effects.js'))
 const coreResponse = await import(moduleUrl(authorityRuntime, 'core-response.js'));
 const corePrivate = await import(moduleUrl(authorityRuntime, 'core-private-choice.js'));
 const ranksModule = await import(moduleUrl(authorityRuntime, 'ranks.js'));
+const { actionComposition } = await import('./action-composition.mjs');
 
 export const { parseCertifiedReplay, verifyCertifiedReplay, publicCertifiedReplayView, serializeCertifiedReplay } = phase16;
 export const { publicStateView, privateStateView, publicEventView } = views;
@@ -186,7 +187,12 @@ export function advanceSimulationToDecision(state) {
  * @returns {*}
  */
 export function authorizedActionView(action, profileId) {
-  return isCoreProfile(profileId) ? core.toAuthorizedCoreAction(action) : firstContact.authorizedLegalActionView(action);
+  const view = isCoreProfile(profileId) ? core.toAuthorizedCoreAction(action) : firstContact.authorizedLegalActionView(action);
+  // While the private command is still visible here, decompose copy-effect
+  // actions (Wild Sovereignty, Solo Wild) into the public decision fields a
+  // composer needs. The command itself never crosses this boundary.
+  const composition = actionComposition(action);
+  return composition ? { ...view, composition } : view;
 }
 
 /**

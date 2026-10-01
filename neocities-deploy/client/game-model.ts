@@ -32,6 +32,18 @@ export type SemanticAction = Readonly<{
   targets: readonly string[];
   /** Public zero-based position, never a hidden card identity. */
   swapSlot?: number;
+  /**
+   * Presentation decomposition for copy-effect actions (Wild
+   * Sovereignty, Solo Wild): which base rank is copied, which effect
+   * within it, the row scope, and own-hand discard cost card IDs.
+   * Derived at the authority boundary; never exposes commands.
+   */
+  composition?: Readonly<{
+    copy: string | null;
+    effect: string | null;
+    row: 'pr' | 'er' | null;
+    costs: readonly string[];
+  }>;
   facts: readonly string[];
 }>;
 
@@ -266,6 +278,18 @@ function handles(value: Data, primary: string, alternate: string): string[] {
   return list(preferred === undefined ? field(value, alternate) : preferred).map(entry => text(entry));
 }
 
+function actionComposition(input: unknown): SemanticAction['composition'] {
+  if (input === undefined || input === null) return undefined;
+  const value = record(input);
+  const copy = nullableText(field(value, 'copy'));
+  const effect = nullableText(field(value, 'effect'));
+  const rawRow = field(value, 'row');
+  const row = rawRow === 'pr' || rawRow === 'er' ? rawRow : rawRow === null || rawRow === undefined ? null : invalid();
+  const rawCosts = field(value, 'costs');
+  const costs = rawCosts === undefined || rawCosts === null ? [] : list(rawCosts).map(entry => text(entry, 128));
+  return Object.freeze({ copy, effect, row, costs: Object.freeze(costs) });
+}
+
 function actions(input: unknown, revision: number, frameHash: string, swapIds: readonly (string | null)[], coalesce: boolean): SemanticAction[] {
   const descriptions = new Map<string, string>();
   const entries = list(input).flatMap(entry => {
@@ -293,17 +317,18 @@ function actions(input: unknown, revision: number, frameHash: string, swapIds: r
     // Replace hidden swap handles with public positions at the semantic boundary.
     // The action ID still identifies the exact command in the authority's vault.
     const safeTargets = family === 'swap-bar' && swapSlot !== undefined ? [`hidden:swap:${swapSlot}`] : targets;
+    const composition = actionComposition(field(value, 'composition'));
     if (coalesce) {
       // The canonical enumerator can repeat one action ID through multiple
       // discovery paths. Coalesce only identical structured descriptions,
       // including untranslated metadata. A conflicting duplicate fails closed.
       // This never changes the supplied frame hash or the vault's original ID.
-      const description = JSON.stringify([field(value, 'family'), mode, timingClass, sources, targets, swapSlot]);
+      const description = JSON.stringify([field(value, 'family'), mode, timingClass, sources, targets, swapSlot, composition ?? null]);
       const previous = descriptions.get(id);
       if (previous !== undefined) { if (previous !== description) invalid(); return []; }
       descriptions.set(id, description);
     }
-    return [{ id, family, mode: safeMode, label: labelFor(family, mode), timing, timingClass, sources, targets: safeTargets, ...(swapSlot !== undefined ? { swapSlot } : {}) }];
+    return [{ id, family, mode: safeMode, label: labelFor(family, mode), timing, timingClass, sources, targets: safeTargets, ...(swapSlot !== undefined ? { swapSlot } : {}), ...(composition ? { composition } : {}) }];
   });
   if (new Set(entries.map(entry => entry.id)).size !== entries.length) invalid();
   const alternativeSample = entries.slice(0, 9);

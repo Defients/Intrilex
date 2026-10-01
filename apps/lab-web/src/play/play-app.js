@@ -6,6 +6,18 @@
 
 import { createSession, restoreSession, SessionState } from './play-controller.js';
 import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs';
+import {
+  buildOpponentModel,
+  policyTraitsFromId,
+  resolveOpponent,
+  archetypeForDifficulty,
+} from './opponent-catalog.mjs';
+import {
+  renderArchetypeGrid,
+  renderOpponentBrief,
+  renderMatchBrief,
+  renderPlaystyleScope,
+} from './ranked-duel-hub.mjs';
 import { getGameplaySkin } from './gameplay-skin.js';
 import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js';
 import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js';
@@ -201,11 +213,10 @@ export async function handlePlayRoute(route, container) {
  * Render new match setup.
  */
 async function renderNewMatch(container) {
-  // Build policy catalog from POLICY_IDS
-  const catalog = POLICY_IDS.map(id => ({
-    policyId: id,
-    traits: { archetype: id.replace('hybrix-', '').replace(/-(hard|easy|nightmare|normal)$/, ''), difficulty: id.includes('-hard') ? 'hard' : id.includes('-easy') ? 'easy' : id.includes('-nightmare') ? 'nightmare' : 'normal' },
-  }));
+  // Build the policy catalog from the shipped engine policies. Traits are
+  // derived from the policyId via opponent-catalog so the difficulty ×
+  // archetype model always reflects the policies the engine actually ships.
+  const catalog = POLICY_IDS.map(id => ({ policyId: id, traits: policyTraitsFromId(id) }));
   // v0.30.0: Check for existing save to show resume prompt
   let saveInfo = null;
   try {
@@ -225,8 +236,7 @@ async function renderNewMatch(container) {
   const funnelBanner = renderFunnelBanner();
   container.innerHTML = funnelBanner + renderNewMatchSetup(catalog, { saveInfo });
   if (funnelBanner) wireFunnelBanner(container);
-  bindNewMatchForm(container);
-  wireProfileExplainer(container);
+  wireNewMatchSetup(container, catalog);
   wireResumePrompt(container);
 }
 
@@ -373,48 +383,113 @@ function renderAcademyRecap(recap, container) {
 }
 
 /**
- * Bind new match form events.
+ * Wire the New Match configurator.
+ *
+ * Owns the difficulty × archetype model so that changing the difficulty
+ * re-derives the compatible archetypes, clamps an impossible selection, and
+ * refreshes the Opponent Brief and Match Brief. Only the derived regions are
+ * re-rendered — never the control the player is currently focused on, so
+ * keyboard focus and tab order survive every interaction.
+ *
+ * @param {HTMLElement} container - Play root
+ * @param {Array} policyCatalog - Shipped policies with { policyId, traits }
  */
-function bindNewMatchForm(container) {
+function wireNewMatchSetup(container, policyCatalog) {
   const form = container.querySelector('#new-match-form');
   if (!form) return;
+  const model = buildOpponentModel(policyCatalog);
+  const archetypeGrid = form.querySelector('[data-testid="archetype-grid"]');
+  const scopeNote = form.querySelector('[data-testid="archetype-scope"]');
+  const opponentBrief = form.querySelector('[data-testid="opponent-brief-body"]');
+  const briefRows = form.querySelector('[data-testid="match-brief-rows"]');
+  const profileDetail = form.querySelector('[data-testid="profile-explainer"]');
+
+  /** Read the current configuration straight from the form controls. */
+  const readState = () => ({
+    profileId: form.querySelector('input[name="profile"]:checked')?.value ?? null,
+    seat: form.querySelector('input[name="seat"]:checked')?.value ?? 'P1',
+    difficulty: form.querySelector('input[name="ai-difficulty"]:checked')?.value ?? model.defaultDifficulty,
+    archetype: form.querySelector('input[name="ai-archetype"]:checked')?.value ?? model.defaultArchetype,
+    seed: form.querySelector('[name="seed"]')?.value ?? '',
+  });
+
+  const syncBrief = (state) => {
+    if (briefRows) briefRows.innerHTML = renderMatchBrief(state);
+  };
+
+  const syncOpponentBrief = (difficultyId, archetypeId) => {
+    if (opponentBrief) opponentBrief.innerHTML = renderOpponentBrief(model, difficultyId, archetypeId);
+  };
+
+  /**
+   * Re-render the playstyle grid for a difficulty. The archetype selection is
+   * always clamped to an archetype that actually ships at that difficulty, so
+   * an invalid difficulty/archetype pair can never persist in the form.
+   */
+  const syncPlaystyle = (difficultyId, preferredArchetypeId) => {
+    const archetypeId = archetypeForDifficulty(model, difficultyId, preferredArchetypeId);
+    if (archetypeGrid) archetypeGrid.innerHTML = renderArchetypeGrid(model, difficultyId, archetypeId);
+    if (scopeNote) scopeNote.textContent = renderPlaystyleScope(model, difficultyId);
+    return archetypeId;
+  };
+
+  form.addEventListener('change', (event) => {
+    const name = event.target?.name;
+    if (name === 'ai-difficulty') {
+      const state = readState();
+      const archetypeId = syncPlaystyle(state.difficulty, state.archetype);
+      syncOpponentBrief(state.difficulty, archetypeId);
+      syncBrief({ ...state, archetype: archetypeId });
+      return;
+    }
+    if (name === 'ai-archetype') {
+      const state = readState();
+      syncOpponentBrief(state.difficulty, state.archetype);
+      syncBrief(state);
+      return;
+    }
+    if (name === 'profile') {
+      const state = readState();
+      profileDetail?.querySelectorAll('.profile-explanation').forEach(el => {
+        el.hidden = el.dataset.profile !== state.profileId;
+      });
+      syncBrief(state);
+      return;
+    }
+    if (name === 'seat') {
+      syncBrief(readState());
+    }
+  });
+
+  // The seed lives under Advanced options; keep the Match Brief honest about it.
+  form.querySelector('[name="seed"]')?.addEventListener('input', () => syncBrief(readState()));
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(form);
     const profileId = formData.get('profile');
     const seat = formData.get('seat');
-    const aiPolicy = formData.get('ai-policy');
     const seedInput = formData.get('seed');
     const seed = seedInput ? Number(seedInput) >>> 0 : (Math.random() * 4294967296) >>> 0 || 1;
     const humanPlayerId = seat === 'random' ? (Math.random() < 0.5 ? 'P1' : 'P2') : seat;
+    // The engine needs one concrete policyId: resolve it from the two
+    // player-facing decisions (difficulty + archetype).
+    const opponent = resolveOpponent(model, formData.get('ai-difficulty'), formData.get('ai-archetype'));
+    const aiPolicyId = opponent.policyId ?? policyCatalog[0]?.policyId;
 
     await startNewMatch({
       profileId,
       seed,
       humanPlayerId,
-      aiPolicyId: aiPolicy,
+      aiPolicyId,
       mode: 'ADVANCED_CORE',
     }, container);
   });
-}
 
-/**
- * v0.30.0: Wire profile explainer to show/hide explanation based on selected profile.
- */
-function wireProfileExplainer(container) {
-  const radios = container.querySelectorAll('input[name="profile"]');
-  const explanations = container.querySelectorAll('.profile-explanation');
-  if (!radios.length || !explanations.length) return;
-  const update = () => {
-    const selected = container.querySelector('input[name="profile"]:checked');
-    if (!selected) return;
-    const profileId = selected.value;
-    explanations.forEach(el => {
-      el.hidden = el.dataset.profile !== profileId;
-    });
-  };
-  radios.forEach(r => r.addEventListener('change', update));
-  update();
+  // Initial paint: the markup is already server-rendered from the same model,
+  // so this only guarantees the briefs match the defaults.
+  const initial = readState();
+  syncBrief(initial);
 }
 
 /**

@@ -24,6 +24,7 @@ import {
   ENGINE_VERSION,
   RULES_VERSION,
 } from '@intrilex/engine-adapter';
+import { actionComposition } from '@intrilex/engine-adapter/action-composition';
 
 import { ReasonCode, PROTOCOL_VERSION } from '@intrilex/network-protocol';
 import { createHash, randomBytes } from 'node:crypto';
@@ -448,7 +449,11 @@ export class AuthoritativeMatchSession {
       this.commandVault.set(action.actionId, action.command);
     }
 
-    // Build safe legal action frame (no commands)
+    // Build safe legal action frame (no commands).
+    // `composition` is a presentation-only decomposition (copied effect,
+    // own-hand cost card IDs) extracted while the private command is
+    // still visible here. It lets clients compose decisions instead of
+    // reading raw variant payloads, and never exposes hidden state.
     const safeActions = frame.actions.map(action => ({
       actionId: action.actionId,
       family: action.family ?? null,
@@ -457,6 +462,7 @@ export class AuthoritativeMatchSession {
       sourceCardIds: action.sourceCardIds ?? [],
       targetCardIds: action.targetCardIds ?? [],
       displayLabel: action.displayLabel ?? null,
+      composition: actionComposition(action) ?? null,
     }));
     this.legalActionFrame = safeActions;
 

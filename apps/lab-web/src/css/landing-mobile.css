@@ -345,8 +345,6 @@
   }
   .landing-rail-emblem.ranking-system-emblem svg,
   .landing-rail-emblem.leaderboard-emblem svg{width:20px;height:20px}
-  .landing-rail-forums-icon{width:36px;height:36px}
-  .landing-rail-forums-icon svg{width:20px;height:20px}
   .landing-rail-emblem.reddit-emblem{width:36px;height:36px}
   .landing-rail-emblem.reddit-emblem svg{width:36px;height:36px}
   .landing-rail-chevron{font-size:22px}
@@ -357,7 +355,6 @@
   .landing-rail-card.ranking-system strong{font-size:13px}
   .landing-rail-card.players strong{font-size:12.5px}
   .landing-rail-card.leaderboard strong{font-size:12.5px}
-  .landing-rail-card.forums strong{font-size:12px}
   .landing-rail-card.subreddit strong{font-size:12px}
 
   /* ══ FOOTER: stack vertically, safe-area-aware ══ */
@@ -631,8 +628,6 @@
   .landing-rail-emblem.leaderboard-emblem{width:32px;height:32px}
   .landing-rail-emblem.ranking-system-emblem svg,
   .landing-rail-emblem.leaderboard-emblem svg{width:18px;height:18px}
-  .landing-rail-forums-icon{width:32px;height:32px}
-  .landing-rail-forums-icon svg{width:18px;height:18px}
   .landing-rail-emblem.reddit-emblem{width:32px;height:32px}
   .landing-rail-emblem.reddit-emblem svg{width:32px;height:32px}
 

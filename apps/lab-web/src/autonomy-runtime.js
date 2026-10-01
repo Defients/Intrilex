@@ -9,6 +9,7 @@ import {
   deriveSecuredPoints,
   hashCanonical
 } from './engine/browser-entry.js';
+import { actionComposition } from '@intrilex/engine-adapter/action-composition';
 import { rankPolicyActions } from './policy-scoring.js';
 import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js';
 import { attributeAction,   isNoAttributionAction} from './browser-analytics.js';
@@ -36,7 +37,7 @@ const pointValue=(card)=>{if(!card)return null;if(typeof card.state?.pointValue=
 
 export function createState(setup){return isCore(setup.profileId)?createCoreMatchState({profileId:setup.profileId,playerIds:setup.playerIds,seatOrder:setup.seatOrder,enabledModules:[],seed:setup.seed,...(setup.predeterminedIdentities?{predeterminedIdentities:setup.predeterminedIdentities}:{})}):createMatchState({...setup,eventApprovedModules:[]});}
 export function advance(state){return state.metadata?.coreAuthority?advanceCoreToDecision(state):advanceToDecision(state);}
-export function actionView(action,profileId){return isCore(profileId)?toAuthorizedCoreAction(action):authorizedLegalActionView(action);}
+export function actionView(action,profileId){const view=isCore(profileId)?toAuthorizedCoreAction(action):authorizedLegalActionView(action);const composition=actionComposition(action);return composition?{...view,composition}:view;}
 
 export function strictView(state,actorId){
   const actor=state.players[actorId],knownCards={};

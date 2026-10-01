@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { SemanticAction, SemanticGame } from '../game-model.js';
-import { compatibleVariants, effectiveSelection, needsCompositionConfirmation, optionLabel, parameterOptions, referenceLabel, resolvedAction, selectOption, visibleCards } from './action-family.js';
+import { compatibleVariants, effectiveSelection, needsCompositionConfirmation, optionLabel, parameterOptions, parameterVisible, referenceLabel, resolvedAction, selectOption, upstreamSelection, visibleCards } from './action-family.js';
 import type { ActionEntry, ActionFamily, Selection } from './action-family.js';
 import { SuitText, TabletopCard } from './TabletopCard.js';
 
@@ -20,10 +20,13 @@ export type ComposerProps = {
 /** Style the existing copy and authorized references without changing the move. */
 function MoveCopy({ game, action }: { game: SemanticGame; action: SemanticAction }) {
   const [title, ...description] = action.label.split(' — ');
+  const copySuit = action.sources.length ? referenceLabel(game, action.sources[0]).match(/[♠♥♦♣]/)?.[0] ?? '' : '';
   return <span className="hc-move-text">
     <strong className="hc-move-name">{title}</strong>{description.length > 0 && <> — <em className="hc-move-effect">{description.join(' — ')}</em></>}
     {action.swapSlot !== undefined && <> · <span className="hc-move-slot">Slot {action.swapSlot + 1}</span></>}
     {action.sources.length > 0 && <> · <span className="hc-move-ref"><SuitText text={action.sources.map(id => referenceLabel(game, id)).join(' + ')} /></span></>}
+    {action.composition?.copy && <> copies <span className="hc-move-ref"><SuitText text={`${action.composition.copy}${copySuit}`} /></span></>}
+    {action.composition?.costs?.length ? <> · discard <span className="hc-move-ref"><SuitText text={action.composition.costs.map(id => referenceLabel(game, id)).join(' + ')} /></span></> : null}
     {action.targets.length > 0 && action.swapSlot === undefined && <> · <span className="hc-move-target">→ <span className="hc-move-ref"><SuitText text={action.targets.map(id => referenceLabel(game, id)).join(' + ')} /></span></span></>}
   </span>;
 }
@@ -58,15 +61,25 @@ export function ActionRail({ game, entries, family, composer, blocked, open, cha
     function pickOption(key: string, selection: Selection) {
       const action = resolvedAction(family!, selection);
       if (!needsConfirmation && action) choose(action.id);
-      else change({ ...composer!, activeKey: key, selection });
+      else {
+        // Advance focus to the next unresolved staged decision so board
+        // highlights track the question the player is actually answering.
+        const effective = effectiveSelection(family!, selection);
+        const nextKey = family!.parameters.find(parameter =>
+          parameterVisible(family!, parameter, selection) && effective[parameter.key] === undefined)?.key ?? key;
+        change({ ...composer!, activeKey: nextKey, selection });
+      }
     }
+    const visibleParameters = family.parameters.filter(parameter => parameterVisible(family, parameter, composer.selection));
     return <div className="hc-composer" data-family={family.variants[0].family} ref={panel} tabIndex={-1} aria-label={`${family.title} Action Composer`} data-testid="action-composer"
       onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); change(null); } }}>
       <div className="fc-composer-top"><button type="button" className="hc-back link-btn" onClick={() => change(null)}>‹ Possible Moves</button><span className="fc-fam-count">{family.variants.length} variants</span></div>
-      <div className="fc-composer-head"><span className="fc-composer-ic" aria-hidden="true">{family.icon}</span><span className="fc-composer-title"><FamilyTitle title={family.title} /><small>{needsConfirmation ? 'Choose cards and options, then confirm the declaration.' : 'Choose an option to play it.'}</small></span></div>
-      {family.parameters.map(parameter => {
+      <div className="fc-composer-head"><span className="fc-composer-ic" aria-hidden="true">{family.icon}</span><span className="fc-composer-title"><FamilyTitle title={family.title} /><small>{family.parameters.some(p => p.kind === 'copy') ? 'Choose which base effect to copy, then complete its declaration.' : needsConfirmation ? 'Choose cards and options, then confirm the declaration.' : 'Choose an option to play it.'}</small></span></div>
+      {visibleParameters.map(parameter => {
         const picked = effective[parameter.key];
-        const options = parameterOptions(family, parameter, composer.selection);
+        // Staged controls show the full upstream option set; downstream
+        // picks stay visible but never hide the switchable parent choice.
+        const options = parameterOptions(family, parameter, upstreamSelection(family, parameter, composer.selection));
         const canPickEmpty = parameter.multiple && compatibleVariants(family, composer.selection, parameter.key).some(a => (parameter.value(a) as readonly string[]).length === 0);
         return <fieldset key={parameter.key} className="hc-parameter" data-active={composer.activeKey === parameter.key}>
           <legend><button type="button" aria-pressed={composer.activeKey === parameter.key} onClick={() => change({ ...composer, activeKey: parameter.key })}>{parameter.label}</button></legend>

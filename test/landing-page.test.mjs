@@ -358,7 +358,7 @@ test('Learn Intrilex rail card removed (no redundant CTA to tutorial)', async ()
   assert.doesNotMatch(js, /landing-rail-card learn/);
 });
 
-test('right rail order: What\'s New, Rules, Ranking System, Players, Leaderboard, Forums', async () => {
+test('right rail order: What\'s New, Rules, Ranking System, Players, Leaderboard, Subreddit', async () => {
   const js = await src('app.js');
   const railStart = js.indexOf('landing-secondary-rail');
   const railSection = js.slice(railStart);
@@ -367,12 +367,12 @@ test('right rail order: What\'s New, Rules, Ranking System, Players, Leaderboard
   const rankingIdx = railSection.indexOf('data-ranking-system-card');
   const playersIdx = railSection.indexOf('data-players-card');
   const leaderboardIdx = railSection.indexOf('data-leaderboard-card');
-  const forumsIdx = railSection.indexOf('intrilex.discourse.group');
+  const subredditIdx = railSection.indexOf('landing-rail-card subreddit');
   assert.ok(whatsNewIdx > -1 && whatsNewIdx < rulesIdx, "What's New must come before Rules");
   assert.ok(rulesIdx > -1 && rulesIdx < rankingIdx, 'Rules must come before Ranking System');
   assert.ok(rankingIdx > -1 && rankingIdx < playersIdx, 'Ranking System must come before Players');
   assert.ok(playersIdx > -1 && playersIdx < leaderboardIdx, 'Players must come before Leaderboard');
-  assert.ok(leaderboardIdx > -1 && leaderboardIdx < forumsIdx, 'Leaderboard must come before Forums');
+  assert.ok(leaderboardIdx > -1 && leaderboardIdx < subredditIdx, 'Leaderboard must come before Subreddit');
 });
 
 test('Continue Duel slot is in the topbar, not the rail', async () => {
@@ -383,14 +383,15 @@ test('Continue Duel slot is in the topbar, not the rail', async () => {
   assert.ok(topbarSection.includes('landing-continue-slot'), 'Continue slot must be in the topbar');
   // Continue slot must NOT be inside the rail's landing-cards div
   const railCardsStart = js.indexOf('class="landing-cards"');
-  const railCardsEnd = js.indexOf('</div>', js.indexOf('landing-rail-card forums', railCardsStart));
+  const railCardsEnd = js.indexOf('</div>', js.indexOf('landing-rail-card subreddit', railCardsStart));
   const railCardsSection = js.slice(railCardsStart, railCardsEnd);
   assert.ok(!railCardsSection.includes('landing-continue-slot'), 'Continue slot must not be in the rail cards');
 });
 
-test('Forums card links to intrilex.discourse.group', async () => {
+test('Forums card removed (no discourse.group links)', async () => {
   const js = await src('app.js');
-  assert.match(js, /href="https:\/\/intrilex\.discourse\.group\/"/);
+  assert.doesNotMatch(js, /discourse\.group/);
+  assert.doesNotMatch(js, /landing-rail-card forums/);
 });
 
 test('Rules card copy says complete official rulebook', async () => {

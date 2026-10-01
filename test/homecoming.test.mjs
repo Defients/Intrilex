@@ -14,7 +14,7 @@ const bundle = await build({
   bundle: true, write: false, platform: 'browser', format: 'esm', metafile: true,
 });
 const api = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`);
-const { buildActionEntries, compatibleVariants, parameterOptions, resolvedAction, reconcileSelection, selectOption, boardOptions, buildSemanticGame, createGameStore, decisionBoundary, suggestedMoves } = api;
+const { buildActionEntries, compatibleVariants, parameterOptions, parameterVisible, upstreamSelection, optionLabel, resolvedAction, reconcileSelection, selectOption, boardOptions, buildSemanticGame, createGameStore, decisionBoundary, suggestedMoves } = api;
 const action = (id, sources = [], targets = [], mode = 'ordinary', family = 'scuttle', extra = {}) => ({ id, sources, targets, mode, family, label: 'Copy may change', timing: 'Action', facts: [], ...extra });
 const familyOf = actions => {
   const entry = buildActionEntries(actions)[0]; assert.equal(entry.kind, 'family'); return entry.family;
@@ -361,4 +361,111 @@ test('Homecoming host coalesces identical canonical enumerations but rejects con
   assert.equal(game.status, 'ready'); assert.equal(game.actions.length, 2); assert.equal(game.frameHash, 'frame-3');
   input.decision.legalActions[2].mode = 'face-up';
   assert.equal(buildSemanticGame(input, { coalesceIdenticalActions: true }).status, 'unavailable');
+});
+
+// ── Wild Sovereignty progressive composer ──
+// The engine thinks in legal action variants; the player thinks in game
+// decisions. `composition` (extracted at the authority boundary) lets the
+// composer stage copy → effect → target/cost instead of dumping variants.
+const wild = (id, mode, copy, effect, row, costs = [], targets = []) =>
+  action(id, ['ks'], targets, mode, 'wild-sovereignty', { composition: { copy, effect, row, costs } });
+const wildVariants = () => [
+  wild('w-b1', 'three-bounce', '3', 'three-bounce', null, [], ['t1']),
+  wild('w-b2', 'three-bounce', '3', 'three-bounce', null, [], ['t2']),
+  wild('w-pr', 'four-row-clear-pr', '4', 'four-row-clear', 'pr'),
+  wild('w-er', 'four-row-clear-er', '4', 'four-row-clear', 'er'),
+  wild('w-tc1', 'total-clear', '4', 'total-clear', null, ['c1']),
+  wild('w-tc2', 'total-clear', '4', 'total-clear', null, ['c2']),
+  wild('w-d1', 'deep-draw', '6', 'deep-draw-six-spade', null, ['d1']),
+  wild('w-d2', 'deep-draw', '6', 'deep-draw-six-spade', null, ['d2']),
+  wild('w-r5', 'recycle-five', '5', 'recycle-five', null),
+  wild('w-td7', 'topdeck-seven', '7', 'topdeck-seven', null),
+];
+const visibleKeys = (family, selection) => family.parameters.filter(p => parameterVisible(family, p, selection)).map(p => p.key);
+
+test('Wild Sovereignty composer stages copy → effect → target/cost with no variant dump', () => {
+  const family = familyOf(wildVariants());
+  // Command-only distinctions (discard cost) are real parameters now, so
+  // the lossy 'Exact declaration' fallback is never needed here.
+  assert.deepEqual(family.parameters.map(p => p.key), ['copy', 'mode', 'targets', 'cost']);
+  assert.ok(family.parameters.every(p => p.key !== 'variant'));
+  // Nothing but the copied-effect choice renders first — no premature target.
+  assert.deepEqual(visibleKeys(family, {}), ['copy']);
+  const copy = family.parameters.find(p => p.key === 'copy');
+  assert.deepEqual([...parameterOptions(family, copy, {})].sort(), ['3', '4', '5', '6', '7']);
+  // A copied effect with no remaining decisions resolves immediately.
+  assert.equal(resolvedAction(family, selectOption(family, {}, 'copy', '5'))?.id, 'w-r5');
+  // copy 3 → only the bounce target remains.
+  let sel = selectOption(family, {}, 'copy', '3');
+  assert.deepEqual(visibleKeys(family, sel), ['copy', 'targets']);
+  assert.equal(resolvedAction(family, sel), undefined, 'target still open → not yet resolved');
+  sel = selectOption(family, sel, 'targets', 't2');
+  assert.equal(resolvedAction(family, sel)?.id, 'w-b2');
+  // copy 6 → only the discard cost remains.
+  sel = selectOption(family, {}, 'copy', '6');
+  assert.deepEqual(visibleKeys(family, sel), ['copy', 'cost']);
+  sel = selectOption(family, sel, 'cost', 'd2');
+  assert.equal(resolvedAction(family, sel)?.id, 'w-d2');
+  // copy 4 → pick the effect first; the cost step appears only for total-clear.
+  sel = selectOption(family, {}, 'copy', '4');
+  assert.deepEqual(visibleKeys(family, sel), ['copy', 'mode']);
+  sel = selectOption(family, sel, 'mode', 'total-clear');
+  assert.deepEqual(visibleKeys(family, sel), ['copy', 'mode', 'cost']);
+  sel = selectOption(family, sel, 'cost', 'c1');
+  assert.equal(resolvedAction(family, sel)?.id, 'w-tc1');
+  // A row clear needs no cost — the copy+effect pair resolves alone.
+  sel = selectOption(family, selectOption(family, {}, 'copy', '4'), 'mode', 'four-row-clear-er');
+  assert.equal(resolvedAction(family, sel)?.id, 'w-er');
+});
+
+test('Wild Sovereignty upstream copy switch clears invalid downstream picks', () => {
+  const variants = [...wildVariants(),
+    wild('w-tcx', 'total-clear', '4', 'total-clear', null, ['x']),
+    wild('w-dx', 'deep-draw', '6', 'deep-draw-six-spade', null, ['x'])];
+  const family = familyOf(variants);
+  // A still-legal downstream pick survives an upstream switch.
+  let sel = selectOption(family, selectOption(family, selectOption(family, {}, 'copy', '4'), 'mode', 'total-clear'), 'cost', 'x');
+  sel = selectOption(family, sel, 'copy', '6');
+  assert.equal(sel.copy, '6');
+  assert.equal(sel.mode, undefined, 'total-clear is not a 6♠ effect — dropped');
+  assert.equal(sel.cost, 'x', 'x remains a legal deep-draw discard — retained');
+  assert.equal(resolvedAction(family, sel)?.id, 'w-dx');
+  // An incompatible downstream pick is dropped, never silently submitted.
+  sel = selectOption(family, { copy: '6', cost: 'd1' }, 'copy', '4');
+  assert.equal(sel.cost, undefined, 'd1 is not a legal copy-4 cost — dropped');
+});
+
+test('Wild Sovereignty staged controls expose real effect labels, never Default', () => {
+  const family = familyOf(wildVariants());
+  const input = fixture();
+  input.playerView.own.hand.push(card('ks', 'K♠'));
+  const game = buildSemanticGame(input);
+  const mode = family.parameters.find(p => p.key === 'mode');
+  const sel = selectOption(family, {}, 'copy', '4');
+  const labels = parameterOptions(family, mode, upstreamSelection(family, mode, sel)).map(v => optionLabel(game, family, mode, v));
+  assert.deepEqual(labels.sort(), ['clear Enduring Row', 'clear Point Row', 'total clear']);
+  // Copy options present canonical card ranks, not opaque action IDs.
+  const copy = family.parameters.find(p => p.key === 'copy');
+  assert.deepEqual(parameterOptions(family, copy, {}).map(v => optionLabel(game, family, copy, v)).sort(), ['3♠', '4♠', '5♠', '6♠', '7♠']);
+});
+
+test('Homecoming composition parses into semantic actions and survives the network allowlist', () => {
+  const input = fixture();
+  input.decision.legalActions[0].composition = { copy: '6', effect: 'deep-draw-six-spade', row: null, costs: ['h1'] };
+  const game = buildSemanticGame(input);
+  assert.deepEqual(JSON.parse(JSON.stringify(game.actions[0].composition)), { copy: '6', effect: 'deep-draw-six-spade', row: null, costs: ['h1'] });
+  const dto = buildNetworkPlayerView({
+    matchId: 'm-comp', playerId: 'P1', playerView: input.playerView,
+    decision: {
+      isMyDecision: true, actorId: 'P1', stateRevision: 3, frameHash: 'f',
+      legalActions: [{
+        actionId: 'w1', family: 'wild-sovereignty', mode: 'deep-draw', timingClass: 'ACTION',
+        sourceCardIds: ['ks'], targetCardIds: [],
+        composition: { copy: '6', effect: 'deep-draw-six-spade', row: null, costs: ['h1'] },
+        command: { action: { secret: 'NO_LEAK' } }, featureVector: { secret: 'NO_LEAK' },
+      }],
+    },
+  });
+  assert.deepEqual(dto.decision.legalActions[0].composition, { copy: '6', effect: 'deep-draw-six-spade', row: null, costs: ['h1'] });
+  assert.doesNotMatch(JSON.stringify(dto), /NO_LEAK|command|featureVector/);
 });

@@ -1,50 +1,27 @@
 // ═══════════════════════════════════════════════════════════════
 // ai-personality.js — HYBIX archetype personality data and banter
-// Provides descriptions, play style traits, and contextual banter
-// messages for each AI archetype.
+// Archetype metadata lives in opponent-catalog.mjs — the single source of
+// truth shared with the match configurator.
 // ═══════════════════════════════════════════════════════════════
 
+import { ARCHETYPE_DEFINITIONS, getArchetypeDefinition } from './opponent-catalog.mjs?v=8b1d0071e553';
+
+const toMatchPlayStyle = (playstyle) => playstyle.replace(/ · /g, ' — ');
+
 /**
- * Personality data for each HYBIX archetype.
- * Used by the new match setup screen and the opponent band.
+ * Personality data for each HYBIX archetype, derived from the canonical
+ * opponent catalog. Used by the in-match opponent band and banter.
  */
-export const ARCHETYPE_PERSONALITIES = Object.freeze({
-  rusher: {
-    description: 'Aggressive tempo player that scores early and often, sacrificing defense for speed.',
-    playStyle: 'Aggressive tempo — scores early, sacrifices defense',
-    traits: ['aggressive', 'fast', 'risk-taking'],
-  },
-  defender: {
-    description: 'Reactive strategist that counters opponent plays and builds late-game advantage.',
-    playStyle: 'Reactive — counters opponent plays, builds late-game advantage',
-    traits: ['reactive', 'patient', 'counter-focused'],
-  },
-  trickster: {
-    description: 'Misdirection specialist that manipulates the swap bar and leverages effect-heavy plays.',
-    playStyle: 'Misdirection — swap bar manipulation, effect-heavy',
-    traits: ['cunning', 'unpredictable', 'effect-focused'],
-  },
-  sniper: {
-    description: 'Precision remover that targets key cards and maximizes resource efficiency.',
-    playStyle: 'Precision — targets key cards, resource-efficient',
-    traits: ['precise', 'efficient', 'targeting'],
-  },
-  support: {
-    description: 'Utility-focused controller that manipulates the stack and protects own cards.',
-    playStyle: 'Utility — stack manipulation, protects own cards',
-    traits: ['supportive', 'protective', 'stack-focused'],
-  },
-  tank: {
-    description: 'Endurance grinder that relies on high-defense plays and grinds out value over long games.',
-    playStyle: 'Endurance — high-defense, grinds out value over long games',
-    traits: ['defensive', 'endurance', 'grinding'],
-  },
-  baseline: {
-    description: 'Balanced generalist that adapts to the game state without a strong preference.',
-    playStyle: 'Balanced — adapts to game state',
-    traits: ['balanced', 'adaptive'],
-  },
-});
+export const ARCHETYPE_PERSONALITIES = Object.freeze(
+  Object.fromEntries(Object.entries(ARCHETYPE_DEFINITIONS).map(([id, definition]) => [
+    id,
+    Object.freeze({
+      description: definition.aiSummary,
+      playStyle: toMatchPlayStyle(definition.playstyle),
+      traits: definition.traits,
+    }),
+  ]))
+);
 
 /**
  * Get personality data for an archetype.
@@ -52,7 +29,14 @@ export const ARCHETYPE_PERSONALITIES = Object.freeze({
  * @returns {object} { description, playStyle, traits }
  */
 export function getArchetypePersonality(archetype) {
-  return ARCHETYPE_PERSONALITIES[archetype] ?? ARCHETYPE_PERSONALITIES.baseline;
+  const known = ARCHETYPE_PERSONALITIES[archetype];
+  if (known) return known;
+  const definition = getArchetypeDefinition(archetype);
+  return {
+    description: definition.aiSummary,
+    playStyle: toMatchPlayStyle(definition.playstyle),
+    traits: definition.traits,
+  };
 }
 
 /**
