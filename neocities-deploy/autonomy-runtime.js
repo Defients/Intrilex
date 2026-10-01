@@ -8,12 +8,12 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=8b1d0071e553';
+} from './engine/browser-entry.js?v=e09244683def';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
-import { rankPolicyActions } from './policy-scoring.js?v=8b1d0071e553';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=8b1d0071e553';
-import { attributeAction,   isNoAttributionAction} from './browser-analytics.js?v=8b1d0071e553';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=8b1d0071e553';
+import { rankPolicyActions } from './policy-scoring.js?v=e09244683def';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=e09244683def';
+import { attributeAction,   isNoAttributionAction} from './browser-analytics.js?v=e09244683def';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=e09244683def';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];

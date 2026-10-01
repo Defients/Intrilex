@@ -1485,7 +1485,7 @@ When a Rank-10 effect begins resolving, apply the Exile-Bound marker from Sectio
 
 ### 10♣ — Foundation
 
-When scored for Points, 10♣ enters PR with Aegis until its controller's recorded next Start Phase.
+When scored for Points, 10♣ enters PR with Aegis. Remove that Aegis at the beginning of its controller's next Start Phase.
 
 Immediately before it enters PR, record that player's Secured PR Points.
 
@@ -1497,7 +1497,7 @@ The bonus card:
 
 - is scored for Points only;
 - can release Nine-conditioned taps;
-- creates its normal scoring trigger;
+- does not create its normal scoring trigger, including any Voltage triggered by being scored;
 - cannot be used as an effect, Scuttle source, Combo, Super, Ultra, cost, or Royal Marriage component for this instruction.
 
 ### 10♦ — Mimic

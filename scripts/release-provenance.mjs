@@ -67,3 +67,16 @@ export function releaseAuditProblems(report, current) {
   if (report?.processStatus?.abnormal !== false || report?.processStatus?.exitStatus !== 0) problems.push('Release audit requires normal successful test process termination.');
   return problems;
 }
+
+/** Public truth consumes executed release evidence, never a development PASS. */
+export function releaseAuditEvidence(report, current) {
+  if (!report) return { status: 'NOT_RUN', blockers: ['No release self-audit is available.'] };
+  const blockers = releaseAuditProblems(report, current);
+  return {
+    status: report.status === 'FAIL' ? 'FAIL' : blockers.length ? 'STALE' : 'PASS',
+    blockers,
+    gitCommit: report.provenance?.gitCommit ?? null,
+    auditKind: report.provenance?.auditKind ?? null,
+    generatedAt: report.generatedAt ?? null,
+  };
+}

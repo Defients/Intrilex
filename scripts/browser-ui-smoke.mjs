@@ -38,7 +38,7 @@ async function connectCdp(debugPort){
 async function waitFor(evaluate,expression,{timeout=30000,label=expression}={}){const started=Date.now();while(Date.now()-started<timeout){const value=await evaluate(expression).catch(()=>false);if(value)return value;await new Promise(r=>setTimeout(r,100));}throw new Error(`Timed out: ${label}`);}
 
 // ── HTTP server: serve dist directory, intercept state.js to inject test data boundary ──
-const MIME={'.js':'text/javascript','.json':'application/json','.html':'text/html','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.ndjson':'application/x-ndjson','.woff':'font/woff','.woff2':'font/woff2'};
+const MIME={'.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.html':'text/html','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.ndjson':'application/x-ndjson','.woff':'font/woff','.woff2':'font/woff2'};
 async function startStaticServer(){
   const serverPort=await reservePort();
   const server=http.createServer(async(req,res)=>{
@@ -192,8 +192,8 @@ try{
   await waitFor(cdp.evaluate,`Boolean(document.querySelector('.player-board'))`,{label:'player-authorized view'});
   // Wait for authorized replay to load and render
   await new Promise(r=>setTimeout(r,3000));
-  await cdp.evaluate(`import('/app.js').then(m => m.render()).catch(()=>{})`,true);
-  await new Promise(r=>setTimeout(r,1000));
+  // The visibility change rerenders the running hashed app. Importing raw app.js
+  // here creates a second app/state instance and can overwrite the authorized board.
   // BL-10 fix: require opponent zone to exist and use correct card selector
   const hiddenOpponentHand=await cdp.evaluate(`(()=>{
     // Find P2 player board by seat label
@@ -263,11 +263,12 @@ try{
   landingProof.sim=true;
 
   // Capture landing page screenshot at desktop viewport
+  await mkdir(screenshotDir,{recursive:true});
   await cdp.call('Emulation.setDeviceMetricsOverride',{width:1366,height:768,deviceScaleFactor:1,mobile:false});
   await cdp.evaluate(`location.hash='#/'`);await new Promise(r=>setTimeout(r,300));
   const landingShot=await cdp.call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await writeFile(path.join(screenshotDir,'landing-desktop.png'),Buffer.from(landingShot.data,'base64'));
 
-  await mkdir(screenshotDir,{recursive:true});const viewportResults=[];
+  const viewportResults=[];
   for(const [name,width,height] of [['mobile-390',390,844],['tablet-768',768,1024],['desktop-1366',1366,768],['theatre-1920',1920,1080]]){
     await cdp.call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
     const targetRoute=name==='theatre-1920'?'watch':name==='desktop-1366'?'cards':'mechanics';await cdp.evaluate(`location.hash='#/${targetRoute}'`);await new Promise(r=>setTimeout(r,250));
@@ -275,7 +276,7 @@ try{
     const geometry=await cdp.evaluate(`(()=>({scrollWidth:document.documentElement.scrollWidth,clientWidth:document.documentElement.clientWidth,scrollHeight:document.documentElement.scrollHeight,workspace:document.querySelector('#page-title')?.textContent}))()`);
     if(geometry.scrollWidth>geometry.clientWidth+2)throw new Error(`Horizontal overflow at ${name}: ${JSON.stringify(geometry)}`);
     const shot=await cdp.call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await writeFile(path.join(screenshotDir,`${name}.png`),Buffer.from(shot.data,'base64'));
-    viewportResults.push({name,width,height,...geometry,screenshot:`reports/visual-qa/${name}.png`});
+    viewportResults.push({name,width,height,...geometry,screenshot:`reports/local/visual-qa/${name}.png`});
   }
   await cdp.call('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});await cdp.evaluate(`location.hash='#/watch'`);await new Promise(r=>setTimeout(r,200));
   const reduced=await cdp.evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches`);if(!reduced)throw new Error('Reduced-motion emulation failed');
@@ -283,7 +284,7 @@ try{
   if(cdp.exceptions.length)throw new Error(`Browser exceptions: ${cdp.exceptions.join('\n')}`);
 
   report={schemaVersion:'2.0.0',status:'PASS',browser:'Chromium 144 headless',workspaces:workspaceProof,landing:landingProof,campaign:{status:campaignStatus,matchCount:1,abortCount:0},replay:{checkpointStep:true,playerProjection:true,opponentHandHidden:true},accessibility,responsive:viewportResults,reducedMotion:true,exceptions:[]};
-  if(writeReports){await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`);await writeFile(reportMdPath,`# Browser UI Smoke\n\nStatus: **PASS**\n\n- Eleven smoke-tested workspaces including Caster, Ranks, Traces, Branches, and Diagnostics: PASS\n- Landing page (Play · Puzzles · Rules · Sim): PASS\n- Semantic checkpoint stepping: PASS\n- Player-authorized hidden-hand projection: PASS\n- Browser Worker campaign: 1/1 complete\n- Accessibility-tree unnamed interactive controls: 0\n- Responsive viewports: 390×844, 768×1024, 1366×768, 1920×1080\n- Reduced-motion emulation: PASS\n- Screenshots: \`reports/visual-qa/\`\n`);}
+  if(writeReports){await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`);await writeFile(reportMdPath,`# Browser UI Smoke\n\nStatus: **PASS**\n\n- Eleven smoke-tested workspaces including Caster, Ranks, Traces, Branches, and Diagnostics: PASS\n- Landing page (Play · Puzzles · Rules · Sim): PASS\n- Semantic checkpoint stepping: PASS\n- Player-authorized hidden-hand projection: PASS\n- Browser Worker campaign: 1/1 complete\n- Accessibility-tree unnamed interactive controls: 0\n- Responsive viewports: 390×844, 768×1024, 1366×768, 1920×1080\n- Reduced-motion emulation: PASS\n- Screenshots: \`reports/local/visual-qa/\`\n`);}
   console.log(`BROWSER UI SMOKE PASS: workspaces=11; landing=4; campaign=1; screenshots=${viewportResults.length+2}`);
 }catch(error){report={schemaVersion:'2.0.0',status:'FAIL',error:error.stack??String(error),exceptions:cdp?.exceptions??[]};if(writeReports)await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`).catch(()=>{});console.error(error);process.exitCode=1;}
 finally{try{cdp?.socket.close();}catch{}try{process.kill(-child.pid,'SIGKILL');}catch{}try{await rm(profileDir,{recursive:true,force:true});}catch{/* Windows may lock Chrome crash files; best-effort cleanup */}try{tempServer?.close();}catch{}}

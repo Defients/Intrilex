@@ -480,7 +480,7 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
                 return fail("CORE_SCORE_SOURCE", "Play for Points requires a controlled hand card");
             card.state.pointValue = cardPointValue(card);
             moveCard(state, action.cardId, `${actorId}_PR`, actorId);
-            // Rulebook §10♣: "When scored for Points, 10♣ enters PR with Aegis until its controller's recorded next Start Phase."
+            // Rulebook §10♣: "When scored for Points, 10♣ enters PR with Aegis. Remove that Aegis at the beginning of its controller's next Start Phase."
             if (isAdvancedProfile(state) && card.identity === "10♣") {
                 applyAegis(card, "10♣-score", futureStart(state, actorId));
             }

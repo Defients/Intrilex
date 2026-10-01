@@ -13,8 +13,25 @@
     ],
     "networkStatus": "SUPPORTED",
     "multiplayerStatus": "BLOCKED",
-    "testFileCount": 206,
-    "certifiedReplayCount": 121
+    "testFileCount": 207,
+    "certifiedReplayCount": 121,
+    "selfAuditStatus": "STALE",
+    "selfAuditEvidence": {
+      "status": "STALE",
+      "blockers": [
+        "Release certification requires a clean Git working tree (including untracked files).",
+        "Missing or invalid enginePayloadHash.",
+        "Release certification requires a clean Git working tree (including untracked files).",
+        "Evidence gitCommit does not match the current checkout.",
+        "Evidence gitTree does not match the current checkout.",
+        "Evidence lockfileSha256 does not match the current checkout.",
+        "Evidence enginePayloadHash does not match the current checkout.",
+        "Release evidence requires an explicitly executed release audit."
+      ],
+      "gitCommit": "41feafd07a2ef6fc7e76ae854af3d3bc8ddc2aa8",
+      "auditKind": null,
+      "generatedAt": "2026-09-30T12:03:35.772Z"
+    }
   },
   "lanes": {
     "play": {

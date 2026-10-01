@@ -14,17 +14,17 @@
 // esc() — never raw innerHTML with model output.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc, state } from '../state.js?v=8b1d0071e553';
-import { policyOptions } from '../router.js?v=8b1d0071e553';
-import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=8b1d0071e553';
-import { reconstructReplayFrames } from '../replay-frames.js?v=8b1d0071e553';
-import { mountGameTable } from '../client/mount.tsx?v=8b1d0071e553';
+import { esc, state } from '../state.js?v=e09244683def';
+import { policyOptions } from '../router.js?v=e09244683def';
+import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=e09244683def';
+import { reconstructReplayFrames } from '../replay-frames.js?v=e09244683def';
+import { mountGameTable } from '../client/mount.tsx?v=e09244683def';
 
 // Lazy-loaded @intrilex/replay-caster (browser-bundleable subset).
 let casterModule = null;
 async function getCaster() {
   if (!casterModule) {
-    casterModule = await import('../replay-caster/browser-entry.js?v=8b1d0071e553');
+    casterModule = await import('../replay-caster/browser-entry.js?v=e09244683def');
   }
   return casterModule;
 }
@@ -68,7 +68,7 @@ async function getAuthorityHash() {
 let _strictViewFn = null;
 async function getStrictView() {
   if (!_strictViewFn) {
-    const mod = await import('../autonomy-runtime.js?v=8b1d0071e553');
+    const mod = await import('../autonomy-runtime.js?v=e09244683def');
     _strictViewFn = mod.strictView;
   }
   return _strictViewFn;

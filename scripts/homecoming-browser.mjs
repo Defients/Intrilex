@@ -46,10 +46,17 @@ async function makeMove(activePage = page, preferredFamily) {
     report.exercisedFamilies.push(await row.getAttribute('data-family'));
     await row.click();
     const composer = activePage.getByTestId('action-composer');
+    const exact = composer.locator('fieldset').filter({ hasText: 'Exact declaration' });
+    if (await exact.count()) await exact.getByTestId('composer-option').first().click();
     for (let i = 0; i < 14 && await composer.count() && !await composer.locator('.hc-confirm:enabled').count(); i++) {
       const parameter = composer.locator('fieldset').filter({ hasNot: activePage.locator('[data-testid="composer-option"][aria-pressed="true"]'), has: activePage.locator('[data-testid="composer-option"][aria-pressed="false"]') }).first();
-      if (!await parameter.count()) break;
-      await parameter.locator('[data-testid="composer-option"][aria-pressed="false"]').first().click();
+      // An exact variant fixes the canonical tuple, but a multi-card parameter
+      // still requires its entire set. One selected card is not a complete intent.
+      const remaining = await parameter.count() ? parameter : await exact.count()
+        ? composer.locator('fieldset').filter({ hasNotText: 'Exact declaration', has: activePage.locator('[data-testid="composer-option"][aria-pressed="false"]') }).first()
+        : parameter;
+      if (!await remaining.count()) break;
+      await remaining.locator('[data-testid="composer-option"][aria-pressed="false"]').first().click();
     }
     if (await composer.count()) await composer.locator('.hc-confirm:enabled').click();
   }

@@ -1,11 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   createSimulationState,
   createSimulationDecisionFrame,
   CORE_ADVANCED_AUTHORITY_PROFILE
 } from '@intrilex/engine-adapter';
 import { runPolicyMatch } from '@intrilex/simulation-runtime';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const runtimeDir = path.join(root, 'runtime/autonomy-engine-dist/src');
+const moduleUrl = (file) => pathToFileURL(path.join(runtimeDir, file)).href;
+
+const engineModule = await import(moduleUrl('engine.js'));
+const stateModule = await import(moduleUrl('state.js'));
+const lifecycleModule = await import(moduleUrl('lifecycle.js'));
+const IntrilexEngine = engineModule.IntrilexEngine;
+const moveCard = stateModule.moveCard;
+const applyAegis = lifecycleModule.applyAegis;
+const applyTap = lifecycleModule.applyTap;
 
 // Helper: run a match and assert clean termination
 function assertCleanMatch(t, opts) {
@@ -182,4 +196,214 @@ test('Advanced continuations: multiple policy pairings all terminate cleanly', (
     );
     assert.equal(result.summary.errorCode, null);
   }
+});
+
+// ── 10♣ Foundation Aegis lifecycle ──
+// Official ruling: "When scored for Points, 10♣ enters PR with Aegis. Remove
+// that Aegis at the beginning of its controller's next Start Phase."
+
+const ADV_SETUP = {
+  profileId: 'core-advanced-authority',
+  playerIds: ['P1', 'P2'],
+  enabledModules: [],
+  seatOrder: ['P1', 'P2']
+};
+
+function stageCard(state, identity, zone, controllerId) {
+  const card = Object.values(state.cards).find((c) => c.identity === identity);
+  assert.ok(card, `${identity} must exist in state`);
+  moveCard(state, card.id, zone, controllerId);
+  delete state.cards[card.id].state.swapBarFaceDown;
+  delete state.cards[card.id].state.swapBarFaceUp;
+  return card.id;
+}
+
+function advanceToDecision(state) {
+  const d = createSimulationDecisionFrame(state);
+  assert.equal(d.status, 'PLAYER_DECISION_REQUIRED', `expected a decision, got ${d.status} (${d.reasonCode ?? 'none'})`);
+  return d;
+}
+
+function findCommand(frame, predicate) {
+  const action = frame.legalActionFrame.actions.find(predicate);
+  assert.ok(action, 'expected action not found in legal frame');
+  return action.command;
+}
+
+// Direct authority commands — the same mechanism certified replays submit —
+// resolve immediately without the declare-primary/priority envelope.
+function core(engine, state, actorId, action, id) {
+  const result = engine.execute(state, { id, type: 'RESOLVE_CORE_AUTHORITY_ACTION', actorId, action });
+  return result;
+}
+
+test('10♣ Foundation: Aegis lifecycle across the full protection window', () => {
+  const engine = new IntrilexEngine();
+  let state = createSimulationState({ ...ADV_SETUP, seed: 0xAE6115 });
+
+  // P1 Start #1 is auto-prepared; enter the Action phase.
+  let d = advanceToDecision(state);
+  assert.equal(d.decisionActorId, 'P1');
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  assert.equal(state.phase, 'Action');
+
+  // Stage: 10♣ plus a Seven (bonus must not queue its normal scoring trigger)
+  // in P1's hand; a Nine-conditioned tapped card in P1's PR (tapped cards do
+  // not count toward Secured PR Points, so the bonus remains legal — and once
+  // released it must not push P1 to the 21-Point goal: 10 + 7 + 2 = 19).
+  const tenId = stageCard(state, '10♣', 'P1_HAND', 'P1');
+  const bonusId = stageCard(state, '7♦', 'P1_HAND', 'P1');
+  const tappedId = stageCard(state, '2♥', 'P1_PR', 'P1');
+  state.cards[tappedId].state.pointValue = 2;
+  applyTap(state.cards[tappedId], { kind: 'nine-score', sourceRef: 'TEST-NINE' });
+
+  // Enumeration: both Foundation modes are offered while pre-entry Secured PR is 0.
+  d = advanceToDecision(state);
+  assert.ok(d.legalActionFrame.actions.some((a) => a.family === 'rank10' && a.mode === 'club-foundation'),
+    'plain Foundation must be enumerated');
+  assert.ok(d.legalActionFrame.actions.some((a) => a.mode === 'club-foundation-bonus'),
+    'Foundation bonus must be enumerated while pre-entry Secured PR is 0');
+
+  // P1 scores 10♣ via Foundation with the optional bonus card.
+  const resolved = core(engine, d.state, 'P1', {
+    kind: 'core-resolve-advanced',
+    advanced: { kind: 'advanced-rank10-club-foundation', sourceCardId: tenId, bonusScoreCardId: bonusId }
+  }, 'TEST-FOUNDATION');
+  assert.equal(resolved.accepted, true, `Foundation must be accepted: ${resolved.error?.code ?? ''}`);
+  state = resolved.state;
+
+  // (1) & (2) 10♣ scores during P1's turn and has Aegis immediately.
+  const ten = state.cards[tenId];
+  assert.equal(ten.zone, 'P1_PR');
+  assert.equal(ten.state.pointValue, 10);
+  assert.deepEqual(ten.state.aegis, {
+    sourceRef: '10♣-entry',
+    expiresAt: { playerId: 'P1', startSequence: 2 }
+  }, 'Aegis must record the controller\'s next Start Phase (P1 Start #2)');
+
+  // (9) Bonus behavior: scored for Points, one Mini-Turn spent in total, no
+  // scoring trigger queued for the bonus Seven, Nine-conditioned tap released.
+  assert.equal(state.cards[bonusId].zone, 'P1_PR');
+  assert.equal(state.cards[bonusId].state.pointValue, 7);
+  assert.equal(state.players.P1.limits.miniTurnsRemaining, 0, 'The bonus card must not spend an extra Mini-Turn');
+  assert.equal(state.metadata.coreAuthority.privateChoice, null, 'Bonus Seven must not create its normal scoring trigger');
+  assert.equal(state.cards[tappedId].state.tapped, undefined, 'Foundation scoring must release Nine-conditioned taps');
+  assert.ok(resolved.events.some((e) => e.type === 'NINE_TAP_RELEASED' && e.payload.cardId === tappedId));
+
+  // (3) Aegis remains during the rest of P1's current turn (End phase).
+  assert.equal(state.phase, 'End');
+  assert.ok(state.cards[tenId].state.aegis, 'Aegis must persist for the remainder of the scoring turn');
+
+  // ── P2's intervening turn ──
+  d = advanceToDecision(state); // auto: complete P1 FT, begin P2 Start #1
+  assert.equal(d.decisionActorId, 'P2');
+  state = d.state;
+
+  // (4) Aegis remains through Player B's intervening turn.
+  assert.ok(state.cards[tenId].state.aegis, 'Aegis must persist through the intervening turn');
+
+  // Grant an unrelated Aegis anchored to P2's next Start (P2 seq is now 1).
+  const p2GuardedId = stageCard(state, 'Q♦', 'P2_ER', 'P2');
+  applyAegis(state.cards[p2GuardedId], 'TEST-UNRELATED', { playerId: 'P2', startSequence: 2 });
+
+  state = engine.execute(state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  assert.equal(state.phase, 'Action');
+
+  // P2 cannot Scuttle the protected 10♣ (Aegis checked before rank comparison).
+  const p2Source = [...state.players.P2.hand].sort()[0];
+  const blocked = core(engine, state, 'P2', { kind: 'core-scuttle', sourceCardId: p2Source, targetCardId: tenId }, 'TEST-SCUTTLE-BLOCKED');
+  assert.equal(blocked.accepted, false, 'Scuttle must be blocked while Aegis holds');
+  assert.equal(blocked.error.code, 'AEGIS_BLOCK');
+
+  // P2 spends its Mini-Turn and ends the turn.
+  const p2Draw = core(engine, state, 'P2', { kind: 'core-draw' }, 'TEST-P2-DRAW');
+  assert.equal(p2Draw.accepted, true, `P2 draw rejected: ${p2Draw.error?.code ?? ''}`);
+  state = p2Draw.state;
+  assert.equal(state.phase, 'End');
+
+  // ── P1's next Start Phase ──
+  d = advanceToDecision(state); // auto: complete P2 FT, begin P1 Start #2
+  state = d.state;
+  assert.equal(d.decisionActorId, 'P1');
+
+  // (5) Aegis is removed at the beginning of P1's next Start Phase.
+  assert.equal(state.cards[tenId].state.aegis, undefined,
+    'Aegis must be removed at the beginning of the controller\'s next Start Phase');
+  const beganIdx = d.events.findIndex((e) => e.type === 'START_PHASE_BEGAN' && e.payload.playerId === 'P1');
+  const expiredIdx = d.events.findIndex((e) => e.type === 'AEGIS_EXPIRED' && e.payload.cardId === tenId);
+  assert.ok(beganIdx >= 0, 'START_PHASE_BEGAN must be emitted for P1');
+  assert.ok(expiredIdx > beganIdx, 'AEGIS_EXPIRED must follow START_PHASE_BEGAN in deterministic order');
+  // Player actions become available only after expiry.
+  assert.ok(d.legalActionFrame.actions.some((a) => a.mode === 'enter-action'),
+    'Start-phase actions must be offered only after Aegis expiry');
+
+  // (8) The unrelated Aegis anchored to P2 must NOT expire on P1's Start.
+  assert.ok(state.cards[p2GuardedId].state.aegis, 'Unrelated Aegis must be keyed to its own recorded Start Phase');
+
+  // (7) Aegis does not survive throughout P1's new turn.
+  state = engine.execute(state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  assert.equal(state.phase, 'Action');
+  assert.equal(state.cards[tenId].state.aegis, undefined, 'Aegis must not persist into the new Action phase');
+  const p1Draw = core(engine, state, 'P1', { kind: 'core-draw' }, 'TEST-P1-DRAW');
+  assert.equal(p1Draw.accepted, true);
+  state = p1Draw.state;
+  assert.equal(state.phase, 'End');
+  assert.equal(state.cards[tenId].state.aegis, undefined, 'Aegis must not return or persist through the new turn');
+
+  // ── P2's second turn: normal interactions work after expiry ──
+  d = advanceToDecision(state); // auto: complete P1 FT, begin P2 Start #2
+  state = d.state;
+  assert.equal(d.decisionActorId, 'P2');
+  // The unrelated Aegis expires now (P2's own next Start Phase).
+  const unrelatedExpiry = d.events.find((e) => e.type === 'AEGIS_EXPIRED' && e.payload.cardId === p2GuardedId);
+  assert.ok(unrelatedExpiry, 'Unrelated Aegis must expire at P2\'s own next Start Phase');
+  assert.equal(state.cards[p2GuardedId].state.aegis, undefined);
+
+  state = engine.execute(state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  const jackId = stageCard(state, 'J♦', 'P2_HAND', 'P2');
+  const scuttle = core(engine, state, 'P2', { kind: 'core-scuttle', sourceCardId: jackId, targetCardId: tenId }, 'TEST-SCUTTLE-AFTER');
+  // (6) After expiration, normal interactions can affect 10♣. (The advanced
+  // path marks 10♣ Exile-Bound via consumeRank10, so GY routes to EXILE.)
+  assert.equal(scuttle.accepted, true, `Post-expiry Scuttle should succeed: ${scuttle.error?.code ?? ''}`);
+  assert.equal(scuttle.state.cards[tenId].zone, 'EXILE');
+});
+
+test('10♣ Foundation (legacy rank-action path): identical Aegis expiry reference', () => {
+  const engine = new IntrilexEngine();
+  let state = createSimulationState({ ...ADV_SETUP, seed: 0xAE6116 });
+  let d = advanceToDecision(state);
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  const tenId = stageCard(state, '10♣', 'P1_HAND', 'P1');
+
+  const resolved = engine.execute(state, {
+    id: 'TEST-LEGACY-FOUNDATION', type: 'RESOLVE_RANK_ACTION', actorId: 'P1',
+    action: { kind: 'foundation-ten-club', sourceCardId: tenId }
+  });
+  assert.equal(resolved.accepted, true, `Legacy Foundation must be accepted: ${resolved.error?.code ?? ''}`);
+  state = resolved.state;
+  assert.deepEqual(state.cards[tenId].state.aegis, {
+    sourceRef: '10♣-entry',
+    expiresAt: { playerId: 'P1', startSequence: 2 }
+  });
+  assert.equal(state.cards[tenId].state.pointValue, 10);
+
+  // Drive to P1's next Start Phase: end P1's turn, run P2's turn, expire.
+  const p1Draw = core(engine, state, 'P1', { kind: 'core-draw' }, 'TEST-LP1-DRAW');
+  assert.equal(p1Draw.accepted, true, `P1 draw rejected: ${p1Draw.error?.code ?? ''}`);
+  state = p1Draw.state;
+  assert.equal(state.phase, 'End');
+  d = advanceToDecision(state); // P2 Start #1
+  state = d.state;
+  assert.equal(d.decisionActorId, 'P2');
+  assert.ok(state.cards[tenId].state.aegis, 'Legacy-path Aegis must persist through the intervening turn');
+  state = engine.execute(state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  const p2Draw = core(engine, state, 'P2', { kind: 'core-draw' }, 'TEST-LP2-DRAW');
+  assert.equal(p2Draw.accepted, true);
+  state = p2Draw.state;
+  d = advanceToDecision(state); // auto: complete P2 FT, begin P1 Start #2
+  state = d.state;
+  assert.equal(d.decisionActorId, 'P1');
+  assert.equal(state.cards[tenId].state.aegis, undefined,
+    'Legacy-path Aegis must expire at the same point: beginning of controller\'s next Start Phase');
+  assert.ok(d.events.some((e) => e.type === 'AEGIS_EXPIRED' && e.payload.cardId === tenId));
 });

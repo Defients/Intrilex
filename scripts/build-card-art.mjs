@@ -19,6 +19,7 @@
 //   - Safe to rerun.
 // ═══════════════════════════════════════════════════════════════════════════
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { writeGeneratedFile } from './write-generated-file.mjs';
 import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -86,7 +87,7 @@ async function main() {
     count: ENTRIES.length,
     entries: report.sort((a, b) => a.code.localeCompare(b.code)),
   };
-  await writeFile(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+  await writeGeneratedFile(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 
   console.log(`CARD ART BUILD PASS: ${report.length} cards → ${outDir}`);
   console.log(`  encoded=${encoded} skipped=${skipped} (unchanged)`);

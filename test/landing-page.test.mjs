@@ -219,7 +219,8 @@ test('index.html has a visible back-home button in the observatory header', asyn
 
 test('dev-server.mjs default URL points to landing page', async () => {
   const dev = await readFile(path.join(root, 'scripts/dev-server.mjs'), 'utf8');
-  assert.match(dev, /4173\/#\/['"]/);
+  assert.match(dev, /INTRILEX_DEV_PORT\s*\?\?\s*4173/, 'The default port is 4173 and remains configurable');
+  assert.match(dev, /http:\/\/127\.0\.0\.1:\$\{devPort\}\/#\//, 'The advertised URL follows the configured port and lands at home');
   assert.ok(!dev.includes('#/match'), 'dev server must not default to #/match');
 });
 

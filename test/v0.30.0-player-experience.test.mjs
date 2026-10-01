@@ -97,11 +97,13 @@ test('v0.30.0: renderCompatibilityWarning returns empty when no compat info', as
 test('v0.30.0: AI personality cards show description text', async () => {
   const { renderNewMatchSetup } = await import('../apps/lab-web/src/play/ranked-duel-hub.mjs');
   const catalog = [
-    { policyId: 'hybix-rusher-easy', traits: { archetype: 'rusher', difficulty: 'easy' } },
+    { policyId: 'hybrix-rusher-easy', traits: { archetype: 'rusher', difficulty: 'easy' } },
   ];
   const html = renderNewMatchSetup(catalog);
-  assert.ok(html.includes('ai-personality-desc'), 'Must include personality description');
-  assert.ok(html.includes('Aggressive tempo'), 'Must show rusher description');
+  const { ARCHETYPE_DEFINITIONS } = await import('../apps/lab-web/src/play/opponent-catalog.mjs');
+  assert.match(html, /data-testid="archetype-card-rusher"/, 'Must render an available Rusher choice');
+  assert.ok(html.includes('nm-archetype-desc'), 'Must include the current archetype description');
+  assert.ok(html.includes(ARCHETYPE_DEFINITIONS.rusher.description), 'Must show the canonical Rusher description');
 });
 
 // ── Card Inspector bridge ──────────────────────────────────────

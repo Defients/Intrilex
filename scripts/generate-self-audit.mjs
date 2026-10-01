@@ -11,7 +11,7 @@
  *   node scripts/generate-self-audit.mjs --quick   # subset only, for CI speed
  */
 import { spawnSync } from 'node:child_process';
-import { openSync, closeSync } from 'node:fs';
+import { openSync, closeSync, mkdirSync, writeFileSync } from 'node:fs';
 import { readFile, writeFile, readdir, rm, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -167,12 +167,19 @@ const evidenceControls = {};
 function executeEvidenceControl(name, script, args = []) {
   const control = spawnSync(process.execPath, [script, ...args], {
     cwd: root, encoding: 'utf8', timeout: auditTimeoutMs,
+    maxBuffer: 50 * 1024 * 1024,
     env: { ...process.env, INTRILEX_WRITE_REPORTS: '0', INTRILEX_SKIP_BUILD: '1' },
   });
+  // Preserve the first failure and its context, not just the end of a stack.
+  // Ignored logs cannot change the source tree being certified.
+  const outputPath = `reports/local/self-audit-controls/${name}.log`;
+  mkdirSync(path.join(root, 'reports/local/self-audit-controls'), { recursive: true });
+  writeFileSync(path.join(root, outputPath), `${control.stdout ?? ''}\n${control.stderr ?? ''}`);
   evidenceControls[name] = {
     command: `${process.execPath} ${script} ${args.join(' ')}`.trim(),
     status: control.status === 0 && !control.error && !control.signal ? 'PASS' : 'FAIL',
     exitCode: control.status, signal: control.signal, error: control.error?.message ?? null,
+    outputPath,
     outputTail: `${control.stdout ?? ''}\n${control.stderr ?? ''}`.slice(-2000),
   };
   return evidenceControls[name].status === 'PASS';

@@ -85,12 +85,18 @@ jobs:
       - name: Build release candidate
         env:
           INTRILEX_SKIP_AUTONOMY_REPLAY_REGEN: '1'
+          INTRILEX_MATCH_SERVER_URL: wss://match.intrilex.cards
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
         run: node scripts/build.mjs
       - name: Prepare release browser verification
         run: pnpm exec playwright install --with-deps chrome
       - name: Require clean source and collect full release audit
         env:
           CHROMIUM_BIN: /usr/bin/google-chrome
+          INTRILEX_MATCH_SERVER_URL: wss://match.intrilex.cards
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
         run: pnpm run self-audit:release
       - name: Validate packaging and release contracts
         run: node scripts/ci.mjs --domain release --no-fail-fast

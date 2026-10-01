@@ -13,7 +13,7 @@ import { startServerMaintenance } from './server-maintenance.mjs';
 
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
-import { randomBytes, randomUUID, createHash } from 'node:crypto';
+import { randomBytes, randomUUID, createHash, timingSafeEqual } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -419,6 +419,14 @@ function checkRateLimit(connectionId) {
  */
 export async function startServer(opts = {}) {
   const startup = validateStartupConfig(opts);
+  // Independent server-only credential: player authentication grants no operator access.
+  const operatorStatusToken = opts.operatorStatusToken !== undefined
+    ? opts.operatorStatusToken : process.env.INTRILEX_OPERATOR_STATUS_TOKEN;
+  if (operatorStatusToken && (typeof operatorStatusToken !== 'string' || !/^[\x21-\x7e]{32,256}$/.test(operatorStatusToken))) {
+    throw new Error('INTRILEX_OPERATOR_STATUS_TOKEN must contain 32–256 printable non-space ASCII characters');
+  }
+  const operatorStatusDigest = operatorStatusToken
+    ? createHash('sha256').update(operatorStatusToken).digest() : null;
   ALLOWED_ORIGINS = startup.allowedOrigins;
   const port = opts.port ?? DEFAULT_PORT;
   const host = opts.host ?? DEFAULT_HOST;
@@ -744,12 +752,27 @@ export async function startServer(opts = {}) {
       res.end(JSON.stringify(getPublicHealthMetrics()));
       return;
     }
-    // v0.31.0: Monitoring dashboard endpoint at /api/status — detailed metrics
-    // for operator dashboards. Returns full health metrics including event
-    // counters, persistence info, and server configuration. Intended for
-    // authenticated operators (protect via reverse proxy / firewall in prod).
-    if (req.url === '/api/status') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+    // Detailed operator metrics are disabled until a server-only token is set.
+    // Query parameters and forwarded headers never grant operator authority.
+    if (req.url?.split('?')[0] === '/api/status') {
+      const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+      if (!operatorStatusDigest) {
+        res.writeHead(404, headers);
+        res.end(JSON.stringify({ error: 'Not found' }));
+        return;
+      }
+      const bearer = /^Bearer ([\x21-\x7e]{32,256})$/.exec(req.headers.authorization ?? '');
+      if (!bearer || !timingSafeEqual(operatorStatusDigest, createHash('sha256').update(bearer[1]).digest())) {
+        res.writeHead(401, { ...headers, 'WWW-Authenticate': 'Bearer' });
+        res.end(JSON.stringify({ error: 'Operator authorization required' }));
+        return;
+      }
+      if (req.method !== 'GET') {
+        res.writeHead(405, { ...headers, Allow: 'GET' });
+        res.end(JSON.stringify({ error: 'Method not allowed' }));
+        return;
+      }
+      res.writeHead(200, headers);
       res.end(JSON.stringify({
         server: 'Intrilex Match Authority',
         version: '1.0.0',

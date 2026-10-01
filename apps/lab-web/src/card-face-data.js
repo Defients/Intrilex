@@ -65,7 +65,7 @@ const TENS = {
     ...tenShared, identity:'10♣', rank:'10', suit:'♣', art:'assets/card-art/10c.webp', badges:['Score stability','Aegis entry'],
     abilities:[mechanic('foundation','◫','Foundation','Scoring trigger',
       'When scored, enter PR with Aegis. If pre-entry Secured PR was 0, optionally score one legal hand card.',
-      'When scored for Points, 10♣ enters PR with Aegis until its controller’s recorded next Start Phase. Immediately before it enters PR, record that player’s Secured PR Points. If the recorded total was 0, queue an optional trigger to score one legal card from hand into PR without spending a Mini-Turn. The bonus card is Points-only, can release Nine-conditioned taps, and creates its normal scoring trigger; it cannot be used as an effect, Scuttle source, Combo, Super, Ultra, cost, or Royal Marriage component for this instruction.')]
+      'When scored for Points, 10♣ enters PR with Aegis. Remove that Aegis at the beginning of its controller’s next Start Phase. Immediately before it enters PR, record that player’s Secured PR Points. If the recorded total was 0, queue an optional trigger to score one legal card from hand into PR without spending a Mini-Turn. The bonus card is Points-only, can release Nine-conditioned taps, and does not create its normal scoring trigger, including any Voltage triggered by being scored; it cannot be used as an effect, Scuttle source, Combo, Super, Ultra, cost, or Royal Marriage component for this instruction.')]
   },
   '10♦': {
     ...tenShared, identity:'10♦', rank:'10', suit:'♦', art:'assets/card-art/10d.webp', badges:['Adaptive copy','Always Rank 10'],

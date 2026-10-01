@@ -45,6 +45,12 @@ describe('match-server production configuration', () => {
   });
 
   describe('health endpoint', () => {
+    it('detailed status is disabled without an operator credential', async () => {
+      const res = await fetch(`http://127.0.0.1:${TEST_PORT}/api/status`);
+      assert.equal(res.status, 404);
+      const body = await res.json();
+      for (const key of ['config', 'events', 'persistence', 'bannedIPs']) assert.equal(body[key], undefined);
+    });
     it('GET /health returns 200 with service info', async () => {
       const res = await fetch(`http://127.0.0.1:${TEST_PORT}/health`);
       assert.equal(res.status, 200);
@@ -173,6 +179,52 @@ describe('match-server production configuration', () => {
         /fetch|ECONNREFUSED|aborted/i
       );
     });
+  });
+});
+
+describe('operator status authorization', () => {
+  let server;
+  const token = 'operator-test-token-'.padEnd(48, 'x');
+  const base = `http://127.0.0.1:${TEST_PORT + 50}`;
+  before(async () => { server = await startTestServer(TEST_PORT + 50, { operatorStatusToken: token }); });
+  after(async () => { await server?.close(); });
+
+  it('rejects missing, malformed, wrong and URL-carried credentials without internal details', async () => {
+    for (const authorization of [undefined, 'Basic ' + token, 'Bearer wrong', 'Bearer ' + token + 'x']) {
+      const res = await fetch(`${base}/api/status`, { headers: authorization ? { authorization } : {} });
+      assert.equal(res.status, 401);
+      assert.equal(res.headers.get('cache-control'), 'no-store');
+      const body = await res.json();
+      for (const key of ['config', 'events', 'persistence', 'auth']) assert.equal(body[key], undefined);
+      assert.ok(!JSON.stringify(body).includes(token));
+    }
+    assert.equal((await fetch(`${base}/api/status?token=${token}`)).status, 401);
+  });
+
+  it('returns detailed metrics only for the configured bearer credential', async () => {
+    const res = await fetch(`${base}/api/status`, { headers: { authorization: `Bearer ${token}` } });
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('cache-control'), 'no-store');
+    const body = await res.json();
+    assert.equal(typeof body.config.maxConnections, 'number');
+    assert.equal(typeof body.events, 'object');
+    assert.equal(typeof body.persistence.persistorType, 'string');
+    assert.ok(!JSON.stringify(body).includes(token));
+  });
+
+  it('public health and metrics never include detailed status fields', async () => {
+    for (const endpoint of ['/health', '/metrics']) {
+      const res = await fetch(base + endpoint);
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      for (const key of ['config', 'events', 'persistence', 'bannedIPs']) assert.equal(body[key], undefined);
+    }
+  });
+
+  it('operator status accepts GET only after authorization', async () => {
+    const res = await fetch(`${base}/api/status`, { method: 'POST', headers: { authorization: `Bearer ${token}` } });
+    assert.equal(res.status, 405);
+    assert.equal(res.headers.get('allow'), 'GET');
   });
 });
 

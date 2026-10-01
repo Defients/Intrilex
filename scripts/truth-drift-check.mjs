@@ -25,6 +25,7 @@ import { readFile,  readdir} from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { captureProvenance, releaseAuditEvidence } from './release-provenance.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const skipStaleness = process.argv.includes('--no-staleness');
@@ -57,13 +58,19 @@ const testFiles = (await readdir(path.join(root, 'test')))
 const testFileCount = testFiles.length;
 
 // ── 5. Load self-audit ──
-const selfAuditPath = path.join(root, 'reports/self-audit.json');
+const selfAuditPath = path.join(root, existsSync(path.join(root, 'reports/release/self-audit.json'))
+  ? 'reports/release/self-audit.json' : 'reports/self-audit.json');
 let selfAudit = null;
 if (existsSync(selfAuditPath)) {
   selfAudit = JSON.parse(await readFile(selfAuditPath, 'utf8'));
 }
 
 // ═══════════════════════════════════════════════════════════════
+// --no-staleness skips age checks only, never exact release proof.
+if (/\*\*Self-audit:\*\*\s*PASS\b/i.test(readme)) {
+  const evidence = releaseAuditEvidence(selfAudit, captureProvenance(root));
+  if (evidence.status !== 'PASS') fail(`README claims self-audit PASS without current release evidence: ${evidence.blockers.join(' ')}`);
+}
 // CHECKS
 // ═══════════════════════════════════════════════════════════════
 

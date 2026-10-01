@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { captureProvenance, releaseProvenanceProblems, evidenceProvenanceProblems, releaseAuditProblems } from '../scripts/release-provenance.mjs';
+import { captureProvenance, releaseProvenanceProblems, evidenceProvenanceProblems, releaseAuditProblems, releaseAuditEvidence } from '../scripts/release-provenance.mjs';
 
 test('release provenance requires clean Git and exact commit/tree/lock/engine bindings', () => {
   const root = mkdtempSync(join(tmpdir(), 'intrilex-provenance-'));
@@ -26,6 +26,11 @@ test('release provenance requires clean Git and exact commit/tree/lock/engine bi
       processStatus: { abnormal: false, exitStatus: 0 },
       testResults: { totalTests: 3, totalPass: 2, totalFail: 0, totalSkip: 1, totalCancelled: 0, totalTodo: 0 } };
     assert.deepEqual(releaseAuditProblems(audit, clean), []);
+    assert.equal(releaseAuditEvidence(audit, clean).status, 'PASS');
+    assert.equal(releaseAuditEvidence(null, clean).status, 'NOT_RUN');
+    assert.equal(releaseAuditEvidence(report, clean).status, 'STALE', 'a full development PASS cannot become public release proof');
+    assert.equal(releaseAuditEvidence({ ...audit, status: 'FAIL' }, clean).status, 'FAIL');
+    assert.equal(releaseAuditEvidence({ ...audit, testResults: {} }, clean).status, 'STALE');
     for (const invalid of [
       { provenance: { ...audit.provenance, auditKind: 'development' } }, { criticalGates: {} }, { criticalGates: { executed: false } },
       { status: 'NOT_RUN' }, { testResults: {} },

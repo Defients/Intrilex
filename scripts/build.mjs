@@ -80,7 +80,7 @@ if (rankedGlyphs.status !== 0) process.exit(rankedGlyphs.status ?? 1);
 // Use synchronous fs operations for the initial dist creation to avoid
 // Windows filesystem sync races where async cp/rm promises resolve before
 // the OS has committed the changes, causing spawnSync (bundle.mjs) to fail.
-rmSync(dist, { recursive: true, force: true });
+rmSync(dist, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 mkdirSync(dist, { recursive: true });
 cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
 // ── Analytics AI core: copy isomorphic package modules into dist/analytics-ai ──
@@ -220,7 +220,7 @@ if (includeReplayBlobs) {
 // a filter to ensure the ~37MB analytics.json is fully written.
 const observatorySrcDir = path.join(root, 'sample-data', 'observatory');
 const observatoryDistDir = path.join(dist, 'data', 'observatory');
-await rm(observatoryDistDir, { recursive: true, force: true });
+await rm(observatoryDistDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 // Retry cp on Windows — antivirus/indexer can briefly lock source files
 let cpSuccess = false;
 for (let attempt = 0; attempt < 3; attempt++) {
@@ -231,7 +231,7 @@ for (let attempt = 0; attempt < 3; attempt++) {
   } catch (err) {
     if (attempt < 2) {
       await new Promise(r => setTimeout(r, 500));
-      await rm(observatoryDistDir, { recursive: true, force: true });
+      await rm(observatoryDistDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
       continue;
     }
     throw err;
@@ -290,7 +290,7 @@ await slimIndexFile('autonomy/lab-replay-index.json', 'lab-replay-index.json');
 // leaving empty dirs like data/autonomy/replays/ and data/autonomy/lab-replays/.
 for (const emptyDir of ['data/autonomy/replays', 'data/autonomy/lab-replays', 'data/replays/public']) {
   const abs = path.join(dist, emptyDir);
-  if (existsSync(abs)) await rm(abs, { recursive: true, force: true });
+  if (existsSync(abs)) await rm(abs, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 }
 
 await mkdir(path.join(dist, 'data/release'), { recursive: true });
@@ -397,7 +397,7 @@ const observatoryAnalyticsPath = path.join(dist, 'data', 'observatory', 'analyti
 if (!existsSync(observatoryAnalyticsPath)) {
   console.error(`build: WARNING — analytics.json missing before rank power assertion, re-copying observatory...`);
   // Re-copy the observatory directory as a workaround
-  await rm(path.join(dist, 'data', 'observatory'), { recursive: true, force: true });
+  await rm(path.join(dist, 'data', 'observatory'), { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
   await cp(observatorySrcDir, path.join(dist, 'data', 'observatory'), { recursive: true });
   // Wait for flush
   await new Promise(r => setTimeout(r, 1000));

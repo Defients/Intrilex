@@ -8,7 +8,7 @@ import { readFile, writeFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { captureProvenance, evidenceProvenanceProblems } from './release-provenance.mjs';
+import { captureProvenance, releaseAuditEvidence } from './release-provenance.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFile(path.join(root, p), 'utf8');
@@ -21,6 +21,7 @@ async function main() {
   const selfAudit = existsSync(path.join(root, auditPath))
     ? await readJson(auditPath)
     : null;
+  const auditEvidence = releaseAuditEvidence(selfAudit, captureProvenance(root));
   const pkg = await readJson('package.json');
 
   // Count test files
@@ -88,10 +89,12 @@ async function main() {
       semanticHotfixFixtureCount: manifest.engine.semanticHotfixConformance.fixtureCount,
       browserParity: manifest.browserEvidence,
       testFileCount: testFiles.length,
-      testCount: selfAudit?.testResults?.totalTests ?? null,
-      testPassCount: selfAudit?.testResults?.totalPass ?? null,
+      // Stale or development-only evidence must not supply current release totals.
+      testCount: auditEvidence.status === 'PASS' ? selfAudit?.testResults?.totalTests ?? null : null,
+      testPassCount: auditEvidence.status === 'PASS' ? selfAudit?.testResults?.totalPass ?? null : null,
       ciStageCount: ciStages || null,
-      selfAuditStatus: !selfAudit ? 'NOT_RUN' : selfAudit.status !== 'PASS' ? selfAudit.status : evidenceProvenanceProblems(selfAudit, captureProvenance(root)).length ? 'STALE' : 'PASS'
+      selfAuditStatus: auditEvidence.status,
+      selfAuditEvidence: auditEvidence
     },
     lanes: {
       play: {
@@ -378,7 +381,9 @@ async function generateReadmeSections(truth, root) {
       networkStatus: truth.networkAuthority.status,
       multiplayerStatus: truth.multiplayer.status,
       testFileCount: truth.evidence.testFileCount,
-      certifiedReplayCount: truth.evidence.certifiedReplayCount
+      certifiedReplayCount: truth.evidence.certifiedReplayCount,
+      selfAuditStatus: truth.evidence.selfAuditStatus,
+      selfAuditEvidence: truth.evidence.selfAuditEvidence
     },
     lanes: truth.lanes,
     limitations: truth.limitations.map(l => ({ id: l.id, title: l.title, severity: l.severity }))

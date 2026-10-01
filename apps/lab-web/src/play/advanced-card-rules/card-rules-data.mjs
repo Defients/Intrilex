@@ -409,7 +409,7 @@ const RANK_DATA = {
   10: {
     overview: 'Tens are Exile-Grade Spikes. Limit: one Rank-10 effect play per player per Full Turn. Royal Shield does not protect Rank-10 effect plays. When a Rank-10 effect begins resolving, it gains the permanent Exile-Bound marker for the remainder of the match.',
     destinations: [
-      { scenario: 'Scored for Points', destination: 'PR (10 Points; 10♣ enters with Aegis)' },
+      { scenario: 'Scored for Points', destination: 'PR (10 Points; 10♣ enters with Aegis, removed at the beginning of its controller\'s next Start Phase)' },
       { scenario: 'Rank-10 effect play', destination: 'GY, then Exile-Bound marker applies for the rest of the match' },
     ],
     persistentState: [
@@ -596,10 +596,10 @@ const ID_OVERRIDES = {
     relatedRules: [{ label: '10♠ — Stack Theft', ref: '§10♠ Stack Theft' }, { label: '10♠ — Exile Recovery', ref: '§10♠ Exile Recovery' }, { label: 'Interrupt timing hotfix', ref: '§v4.1.1' }],
   },
   '10♣': {
-    overview: '10♣ is Foundation. When scored for Points, it enters PR with Aegis. If the player\'s pre-entry Secured PR was 0, it queues an optional trigger to score one legal hand card into PR without spending a Mini-Turn.',
+    overview: '10♣ is Foundation. When scored for Points, it enters PR with Aegis; that Aegis is removed at the beginning of its controller\'s next Start Phase. If the player\'s pre-entry Secured PR was 0, it queues an optional trigger to score one legal hand card into PR without spending a Mini-Turn.',
     rulings: [
       ruling('tenclubs-foundation-bonus', 'Foundation bonus card is Points-only',
-        'The bonus card is Points-only, can release Nine-conditioned taps, and creates its normal scoring trigger; it cannot be used as an effect, Scuttle source, Combo, Super, Ultra, cost, or Royal Marriage component for this instruction. Immediately before 10♣ enters PR, record that player\'s Secured PR Points; if the recorded total was 0, queue the optional trigger.',
+        'The bonus card is Points-only, can release Nine-conditioned taps, and does not create its normal scoring trigger, including any Voltage triggered by being scored; it cannot be used as an effect, Scuttle source, Combo, Super, Ultra, cost, or Royal Marriage component for this instruction. Immediately before 10♣ enters PR, record that player\'s Secured PR Points; if the recorded total was 0, queue the optional trigger.',
         { tags: ['foundation', 'scoring-trigger', 'aegis'], relatedSystems: ['Scoring Triggers', 'Aegis'] }),
     ],
     relatedRules: [{ label: '10♣ — Foundation', ref: '§10♣' }],

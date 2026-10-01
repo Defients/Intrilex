@@ -2,11 +2,11 @@
 // workspaces/tournament.js — /tournament workspace: AI tournament mode
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, definitionList, showToast, clamp } from '../state.js?v=8b1d0071e553';
-import { rerender } from '../rerender.js?v=8b1d0071e553';
-import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=8b1d0071e553';
-import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=8b1d0071e553';
-import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=8b1d0071e553';
+import { state, app, esc, pct, definitionList, showToast, clamp } from '../state.js?v=e09244683def';
+import { rerender } from '../rerender.js?v=e09244683def';
+import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=e09244683def';
+import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=e09244683def';
+import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=e09244683def';
 
 const ALL_POLICIES = [
   'random-legal','score-rush','control','tempo','value',
@@ -499,7 +499,7 @@ function liveSemanticLabel(command) {
 // ── Frame reconstruction from replay ────────────────────────────
 
 async function reconstructFrames(replay) {
-  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=8b1d0071e553');
+  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=e09244683def');
   const engine = new IntrilexEngine();
   let s = structuredClone(replay.initialState);
   const frames = [{ state: s, events: [], command: null, commandIndex: -1 }];

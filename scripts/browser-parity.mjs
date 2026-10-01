@@ -48,7 +48,7 @@ const distServer=http.createServer(async(req,res)=>{
     const urlPath=decodeURIComponent(req.url.split('?')[0]);
     const filePath=path.join(dist,urlPath);
     const ext=path.extname(urlPath);
-    const mime={'.js':'text/javascript','.json':'application/json','.css':'text/css','.html':'text/html'}[ext]??'application/octet-stream';
+    const mime={'.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.css':'text/css','.html':'text/html'}[ext]??'application/octet-stream';
     const data=await readFile(filePath);
     res.writeHead(200,{'Content-Type':mime,'Content-Length':data.length,'Access-Control-Allow-Origin':'*'});
     res.end(data);

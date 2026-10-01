@@ -1,5 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
-import { applyAegis, applyTap, hasAegis, markExileBound, revealUntilStart } from "./lifecycle.js";
+import { applyAegis, applyTap, hasAegis, markExileBound, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js";
 import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js";
 import { cardPointValue, parseIdentity, rankDefinition, resolveRankAction } from "./ranks.js";
 import { deriveSecuredPoints, moveCard } from "./state.js";
@@ -357,6 +357,9 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
             moveCard(s, a.sourceCardId, `${actorId}_PR`, actorId);
             s.cards[a.sourceCardId].state.pointValue = 10;
             applyAegis(s.cards[a.sourceCardId], "10♣-entry", futureStart(s, actorId));
+            // Rulebook §10♣: the Aegis records the controller's next Start Phase and is
+            // removed at the beginning of that phase by processStartPhaseLifecycles.
+            const released = releaseNineTapsForScoring(s, actorId);
             let bonus = null;
             if (before === 0 && a.bonusScoreCardId !== undefined) {
                 if (!inHand(s, a.bonusScoreCardId, actorId))
@@ -364,8 +367,12 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
                 bonus = a.bonusScoreCardId;
                 moveCard(s, bonus, `${actorId}_PR`, actorId);
                 s.cards[bonus].state.pointValue = cardPointValue(s.cards[bonus]);
+                // Rulebook §10♣: the bonus card is scored for Points only — it may
+                // release Nine-conditioned taps but creates no scoring trigger.
+                released.push(...releaseNineTapsForScoring(s, actorId));
             }
             events.push({ type: "CORE_ADVANCED_TEN_CLUB_FOUNDATION_RESOLVED", payload: { sourceCardId: a.sourceCardId, preEntryPoints: before, bonusScoreCardId: bonus } });
+            events.push(...released.map((entry) => ({ type: entry.type, payload: entry.payload })));
             break;
         }
         case "advanced-rank10-heart-tempo": {

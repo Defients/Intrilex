@@ -356,6 +356,17 @@ sudo ufw status
 
 ## Health Verification
 
+`/health` and `/metrics` expose the public health projection. Detailed event counters,
+persistence type, and server limits are available only through `GET /api/status`.
+This endpoint returns 404 until `INTRILEX_OPERATOR_STATUS_TOKEN` is configured in
+the server environment. Set a separate random credential (for example, generate
+one with `openssl rand -hex 32`); use 32–256 printable non-space ASCII characters.
+Restart the service after configuration or rotation. Operator requests must supply
+`Authorization: Bearer <credential>` over HTTPS; missing or wrong credentials receive
+401. URL parameters, player credentials, and forwarded headers grant no access.
+Responses use `Cache-Control: no-store`. Keep the credential out of browser configuration,
+URLs, logs, and Git. Caddy can proxy this path because the application enforces access.
+
 ### Check if the server is running (from the VPS)
 
 ```bash
@@ -372,7 +383,7 @@ Expected response:
 ```json
 {
   "server": "Intrilex Match Authority",
-  "version": "0.27.0",
+  "version": "1.0.0",
   "protocolVersion": 2,
   "uptime": 12345,
   "activeMatches": 0,

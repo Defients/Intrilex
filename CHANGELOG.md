@@ -1,5 +1,40 @@
 # Changelog
 
+## Unreleased — October 1, 2026 stabilization
+
+- Detailed HTTP operator status is disabled until a separate server-only bearer
+  credential is configured. Public health remains reachable; unauthorized callers
+  cannot retrieve internal event counters, persistence details, or server limits.
+- Deployment verification checks every owned file's presence and bytes, validates
+  ownership, rejects stale artifacts, and remains read-only. Compatibility stubs
+  share one source-owned generator with the parity check; worker entries remain
+  executable. Release CI includes deployment parity and explicit public build config.
+- Public audit truth requires executed release evidence with matching provenance
+  and complete passing results. Development PASS reports cannot certify releases.
+  README claims no longer rely on copied test totals or a historical PASS.
+- Version and source asset manifests preserve unchanged files. This prevents
+  build-generated source writes from waking a dev watcher and starting a second
+  build against temporary chunks. Audit controls retain complete ignored logs.
+- Browser parity/smoke servers serve module dependencies with the proper `.mjs`
+  MIME type. Smoke no longer starts a second raw application to force rendering,
+  creates screenshot directories before writing, and records correct artifact paths.
+- Homecoming browser verification completes ambiguous ordered private choices
+  through the exact-declaration path and the full canonical component set.
+- Academy, configurable dev-port, and opponent-description tests exercise the
+  current interfaces rather than obsolete markup, styles, or a misspelled policy ID.
+- The 10♣ Foundation ruling is clarified: its entry Aegis is removed at the
+  beginning of its controller's next Start Phase. The engine already expired
+  it there through the recorded-next-Start lifecycle; the wording now matches.
+- The Foundation bonus card is scored for Points without creating its normal
+  scoring trigger (including any Voltage triggered by being scored), and
+  Foundation scoring now releases the scorer's Nine-conditioned taps as the
+  official ruling specifies. Rulebook, card text, and advanced-card rulings
+  are updated to match.
+
+Local validation is recorded in ignored `reports/local/` artifacts. These changes
+do not establish a clean release candidate, remote CI success, live deployment,
+provider credential rotation, or completed human acceptance sessions.
+
 ## v1.0.0 — Certified Public Baseline
 
 This is a certification release, not a feature release. It establishes that everything built in v0.28.1 → v0.32.0 is stable and trustworthy.

@@ -829,7 +829,7 @@ function describeAnchor(_action, src, _tgt, mode) {
     const ability = lookupAbility(src, 'guard-anchor') ?? lookupAbility(src, 'anchor');
     return {
       title: `Anchor ${src} as a Queen (Guard)`,
-      explanation: ability?.full ?? `A Queen in ER is an Anchor worth 0 Points and provides Guard while untapped. A Queen enters ER with Aegis until its controller's recorded next Start Phase.`,
+      explanation: ability?.full ?? `A Queen in ER is an Anchor worth 0 Points and provides Guard while untapped. A Queen enters ER with Aegis; that Aegis is removed at the beginning of its controller's next Start Phase.`,
     };
   }
   if (mode === 'king' || mode === 'anchor') {
@@ -901,7 +901,7 @@ function describeEffect(_action, src, tgt, mode) {
     const ability = lookupAbility(src, 'aegis-field');
     return {
       title: `Aegis Field with ${src}`,
-      explanation: ability?.full ?? `Grant Aegis to all your OTT cards until your recorded next Start Phase. New Aegis replaces old Aegis. Nines do not gain Aegis.`,
+      explanation: ability?.full ?? `Grant Aegis to all your OTT cards; each Aegis is removed at the beginning of your next Start Phase. New Aegis replaces old Aegis. Nines do not gain Aegis.`,
     };
   }
   // Queen Quick Aegis
@@ -909,7 +909,7 @@ function describeEffect(_action, src, tgt, mode) {
     const ability = lookupAbility(src, 'quick-aegis');
     return {
       title: `Quick Aegis on ${tgt} with ${src}`,
-      explanation: ability?.full ?? `Grant Aegis to one friendly OTT card until your controller's recorded next Start Phase. Limit: 1 resolved Q Quick per FT. Nines cannot receive Aegis.`,
+      explanation: ability?.full ?? `Grant Aegis to one friendly OTT card; that Aegis is removed at the beginning of its controller's next Start Phase. Limit: 1 resolved Q Quick per FT. Nines cannot receive Aegis.`,
     };
   }
   // Six Dig
@@ -1122,7 +1122,7 @@ function describeEffect(_action, src, tgt, mode) {
     const ability = lookupAbility(src, 'royal-marriage');
     return {
       title: `Royal Marriage: ${src}`,
-      explanation: ability?.full ?? `Declare this King plus the Queen of the same suit as one multi-card Anchor Play. Both enter ER. The Queen enters with Aegis until its controller's recorded next Start Phase.`,
+      explanation: ability?.full ?? `Declare this King plus the Queen of the same suit as one multi-card Anchor Play. Both enter ER. The Queen enters with Aegis; that Aegis is removed at the beginning of its controller's next Start Phase.`,
     };
   }
 

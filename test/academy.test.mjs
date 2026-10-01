@@ -27,7 +27,6 @@ const masterySrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/acade
 const playAppSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-app.js'), 'utf8');
 const playStateSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-state.js'), 'utf8');
 const routerSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/router.js'), 'utf8');
-const hubSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-hub.mjs'), 'utf8');
 const seoSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/seo-metadata.js'), 'utf8');
 const cssSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/play-v3.css'), 'utf8');
 const terminalSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-terminal.mjs'), 'utf8');
@@ -443,19 +442,11 @@ test('BoardEvents: academy recap action wired', () => {
 
 // ── Hub integration ──
 
-test('Hub: Academy entry link on new match page', () => {
-  assert.ok(
-    hubSrc.includes('academy-entry-link'),
-    'New match page must have Academy entry link'
-  );
-  assert.ok(
-    hubSrc.includes('#/play/academy'),
-    'Academy entry link must point to #/play/academy'
-  );
-  assert.ok(
-    hubSrc.includes('data-testid="academy-entry-link"'),
-    'Academy entry link must have data-testid'
-  );
+test('Hub: Academy entry link on new match page', async () => {
+  const { renderNewMatchSetup } = await import('../apps/lab-web/src/play/ranked-duel-hub.mjs');
+  const html = renderNewMatchSetup([]);
+  assert.match(html, /<a\b[^>]*href="#\/play\/academy"[^>]*data-testid="academy-entry-link"[^>]*>/,
+    'The rendered quick-mode card must provide the Academy route and stable test ID');
 });
 
 // ── SEO ──
@@ -481,7 +472,7 @@ test('CSS: Academy styles exist', () => {
   assert.ok(cssSrc.includes('.academy'), 'CSS must have .academy styles');
   assert.ok(cssSrc.includes('.academy-lesson-card'), 'CSS must have .academy-lesson-card styles');
   assert.ok(cssSrc.includes('.academy-progress-fill'), 'CSS must have .academy-progress-fill styles');
-  assert.ok(cssSrc.includes('.academy-entry-link'), 'CSS must have .academy-entry-link styles');
+  assert.ok(cssSrc.includes('.quick-mode-card'), 'Academy uses the shared quick-mode card style');
 });
 
 test('CSS: Academy 2.0 tier styles exist', () => {

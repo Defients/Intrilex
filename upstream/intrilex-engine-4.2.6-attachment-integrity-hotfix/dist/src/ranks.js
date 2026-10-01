@@ -1,5 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
-import { applyAegis, applyTap, hasAegis, markExileBound, revealUntilStart } from "./lifecycle.js";
+import { applyAegis, applyTap, hasAegis, markExileBound, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js";
 import { revalidateAttachments } from "./interactions.js";
 import { deriveSecuredPoints, moveCard } from "./state.js";
 export const RANK_REGISTRY = Object.freeze({
@@ -652,6 +652,9 @@ export function resolveRankAction(input, actorId, action) {
             moveCard(state, action.sourceCardId, `${actorId}_PR`, actorId);
             state.cards[action.sourceCardId].state.pointValue = 10;
             applyAegis(state.cards[action.sourceCardId], "10♣-entry", futureStart(state, actorId));
+            // Rulebook §10♣: the Aegis records the controller's next Start Phase and is
+            // removed at the beginning of that phase by processStartPhaseLifecycles.
+            const released = releaseNineTapsForScoring(state, actorId);
             let bonus = null;
             if (before === 0 && action.bonusScoreCardId !== undefined) {
                 if (!inHandOf(state, action.bonusScoreCardId, actorId))
@@ -659,8 +662,12 @@ export function resolveRankAction(input, actorId, action) {
                 bonus = action.bonusScoreCardId;
                 moveCard(state, bonus, `${actorId}_PR`, actorId);
                 state.cards[bonus].state.pointValue = cardPointValue(state.cards[bonus]);
+                // The bonus card is scored for Points only — it may release
+                // Nine-conditioned taps but creates no scoring trigger.
+                released.push(...releaseNineTapsForScoring(state, actorId));
             }
             events.push({ type: "TEN_CLUB_FOUNDATION_RESOLVED", payload: { sourceCardId: action.sourceCardId, preEntryPoints: before, bonusScoreCardId: bonus } });
+            events.push(...released.map((entry) => ({ type: entry.type, payload: entry.payload })));
             break;
         }
         case "stack-theft-ten-spade": {

@@ -7,11 +7,12 @@
  *   3. Deletes any stale hashed `app.*.js` / `styles.*.css` files in neocities-deploy/ that no longer match.
  *   4. Recursively copies dist/ over neocities-deploy/ (overwriting changed files, leaving neocities-only
  *      files like `404.html` and `assets/fonts/*` untouched since they aren't in dist).
- *   5. Verifies the result: index.html references, bundle sizes, preserved extras.
+ *   5. Generates source-owned stale-SW compatibility stubs and verifies byte parity.
  *
  * Usage:
  *   node scripts/sync-neocities.mjs            # sync only (assumes build already ran)
  *   node scripts/sync-neocities.mjs --build    # run `pnpm run build` first, then sync
+ *   node scripts/sync-neocities.mjs --check    # read-only byte parity + ownership verification
  *
  * Exit code is non-zero on any failure. Safe to re-run.
  */
@@ -20,7 +21,7 @@ import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { pruneDeployFiles, staleDeployFiles, writeDeployOwnership } from './deploy-ownership.mjs';
+import { pruneDeployFiles, writeDeployOwnership, deployParityProblems, finalizeDeployRuntime } from './deploy-ownership.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = path.join(root, 'apps/lab-web/dist');
@@ -56,6 +57,8 @@ function extractBundleRefs(html) {
 }
 
 async function main() {
+  const checkOnly = process.argv.includes('--check');
+  if (checkOnly && runBuildFirst) throw new Error('--check is read-only and cannot be combined with --build');
   if (runBuildFirst) {
     console.log('[neocities] Running build first...');
     // Force the production WSS endpoint for Neocities builds.
@@ -88,18 +91,14 @@ async function main() {
   const distAppStat = await stat(distAppPath);
   console.log(`[neocities] Source build: app=${refs.appJs} (${distAppStat.size} bytes)${refs.stylesCss ? `, styles=${refs.stylesCss}` : ''}`);
 
-  // 2. Ensure deploy dir exists (create if missing — first run or after cleanup)
-  if (!existsSync(deployDir)) {
-    await mkdir(deployDir, { recursive: true });
-    console.log(`[neocities] Created neocities-deploy/ (first run or after cleanup)`);
-  }
-
-  if (process.argv.includes('--check')) {
-    const stale = await staleDeployFiles(distDir, deployDir);
-    if (stale.length) throw new Error(`Stale build artifacts: ${stale.join(', ')}`);
-    console.log('[neocities] No stale owned build artifacts');
+  if (checkOnly) {
+    const problems = await deployParityProblems(distDir, deployDir, refs.appJs);
+    if (problems.length) throw new Error(problems.join('\n'));
+    console.log('[neocities] Source/deploy byte parity and ownership PASS');
     return;
   }
+  // Creation is allowed only for a sync; verification never mutates the mirror.
+  if (!existsSync(deployDir)) await mkdir(deployDir, { recursive: true });
   const stale = await pruneDeployFiles(distDir, deployDir);
   console.log(`[neocities] Pruned ${stale.length} stale owned build files`);
 
@@ -107,57 +106,13 @@ async function main() {
   await cp(distDir, deployDir, { recursive: true, force: true });
   console.log('[neocities] Copied dist -> neocities-deploy');
 
-  // 4a. Neutralize raw source .js files in the deploy root that could be
-  // loaded by stale service workers serving old index.html files. These raw
-  // files (app.js, error-boundary.js, state.js, router.js, etc.) are copied
-  // from src by build.mjs but must NOT execute in production — the real code
-  // lives in the bundled chunks (chunk-*.js, app.<hash>.js). Overwrite them
-  // with empty stubs to prevent duplicate app instances.
-  // EXCEPTION: app.js gets a re-export stub pointing to the real bundle,
-  // because some bundled chunks do `import('./app.js')` to access render().
-  //
-  // worker.js is NOT neutralized — it is a real Worker entry point spawned at
-  // the fixed URL `new Worker('worker.js', { type: 'module' })`, which cannot
-  // point at a hashed chunk. Its entire root-level import graph must stay
-  // executable too (autonomy-runtime, browser-analytics and its rank/
-  // observatory/mechanic registry deps, decision-intelligence for the lazy
-  // counterfactual/diagnostics handlers, version, policy-scoring, anchor),
-  // or every worker-backed feature (campaigns, tournaments, counterfactuals,
-  // diagnostics, corpus verification) hangs silently — the stub parses fine
-  // so no onerror fires, but onmessage is never installed and every posted
-  // job is dropped. These files are unreachable from the stubbed app entry
-  // chain, so stale-SW duplicate-execution risk is unaffected.
-  // browser-proof.js is likewise a real page entry — browser-proof.html
-  // loads it directly via <script src>.
-  const { writeFile: wf } = await import('node:fs/promises');
-  const rawSourceFiles = [
-    'error-boundary.js', 'state.js', 'router.js', 'rerender.js',
-    'data-loader.js', 'integrity.js',
-    'card-face-data.js', 'card-face-renderer.js', 'card-art-registry.js',
-    'chart-toolkit.js', 'experiment-controls.js', 'legal-pages.js',
-    'replay-frames.js',
-    'rulebook-renderer.js', 'seo-metadata.js', 'shared-browser.js',
-  ];
-  for (const f of rawSourceFiles) {
-    const p = path.join(deployDir, f);
-    if (existsSync(p)) {
-      await wf(p, '// Neutralized stub — real code is in the bundled chunks.\nexport {};\n', 'utf8');
-    }
-  }
-  // app.js: re-export from the real bundle so dynamic import('./app.js') works
-  const appJsPath = path.join(deployDir, 'app.js');
-  const appStub = `// Re-export from the real bundled app (defense-in-depth for stale SWs)\nexport { render, showExtract, stop, togglePlay } from './${refs.appJs}';\n`;
-  await wf(appJsPath, appStub, 'utf8');
-  console.log(`[neocities] Neutralized ${rawSourceFiles.length} raw source files + app.js re-export stub`);
-
-  // Fail closed: worker.js must remain a real Worker entry point. A stubbed
-  // worker silently drops every postMessage — campaigns sit at 0/N forever.
-  const deployedWorker = await readFile(path.join(deployDir, 'worker.js'), 'utf8');
-  if (!/self\.onmessage\s*=/.test(deployedWorker)) {
-    throw new Error('neocities-deploy/worker.js is not an executable worker entry (missing self.onmessage) — refusing to ship a dead worker');
-  }
+  // Compatibility files are generated by the same projection used by --check.
+  await finalizeDeployRuntime(deployDir, refs.appJs);
 
   await writeDeployOwnership(distDir, deployDir);
+
+  const parityProblems = await deployParityProblems(distDir, deployDir, refs.appJs);
+  if (parityProblems.length) throw new Error(parityProblems.join('\n'));
 
   // 5. Verify
   const deployIndex = path.join(deployDir, 'index.html');

@@ -23,6 +23,7 @@
 //   - Safe to rerun.
 // ═══════════════════════════════════════════════════════════════════════════
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { writeGeneratedFile } from './write-generated-file.mjs';
 import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -113,7 +114,7 @@ async function main() {
       a.tier.localeCompare(b.tier) || a.size - b.size
     ),
   };
-  await writeFile(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+  await writeGeneratedFile(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 
   console.log(`RANKED GLYPH BUILD PASS: ${TIERS.length} tiers × ${SIZES.length} sizes → ${outDir}`);
   console.log(`  encoded=${encoded} skipped=${skipped} (unchanged)`);
