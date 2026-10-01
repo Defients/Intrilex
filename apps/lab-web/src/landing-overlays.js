@@ -2,6 +2,23 @@
 export function createLandingOverlays({ state, esc, renderAuth }) {
 let _landingOverlay = null;
 let _landingOverlayTeardown = null;
+let _returnFocus = null;
+const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+function focusDialog(overlay) {
+  overlay.tabIndex = -1;
+  const controls = () => [...overlay.querySelectorAll(focusableSelector)].filter(el => !el.disabled && !el.hidden && el.getClientRects().length);
+  overlay.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const items = controls();
+    if (!items.length) { e.preventDefault(); overlay.focus(); return; }
+    const first = items[0], last = items[items.length - 1];
+    if (!overlay.contains(document.activeElement) || (e.shiftKey && document.activeElement === first) || (!e.shiftKey && document.activeElement === last)) {
+      e.preventDefault(); (e.shiftKey ? last : first).focus();
+    }
+  });
+  // The overlay starts hidden until its entrance frame; focus only once visible.
+  requestAnimationFrame(() => requestAnimationFrame(() => { if (_landingOverlay === overlay) (controls()[0] ?? overlay).focus(); }));
+}
 
 /** Close the active landing overlay, running its teardown callback and removing the DOM node. */
 function closeLandingOverlay() {
@@ -15,6 +32,8 @@ function closeLandingOverlay() {
   _landingOverlay.classList.remove('landing-overlay--visible');
   const el = _landingOverlay;
   _landingOverlay = null;
+  if (_returnFocus?.isConnected) _returnFocus.focus();
+  _returnFocus = null;
   // IRX-M07: Respect reduced motion — remove immediately instead of animating
   const delay = state.reducedMotion ? 0 : 300;
   setTimeout(() => el.remove(), delay);
@@ -27,6 +46,7 @@ function closeLandingOverlay() {
  * @param {() => void} [teardown] - Optional cleanup callback (abort requests, clear timers) called on close
  */
 function openLandingOverlay(title, renderer, teardown) {
+  if (!_landingOverlay) _returnFocus = document.activeElement;
   // Remove any existing overlay (and run its teardown)
   if (_landingOverlay) {
     document.removeEventListener('keydown', _overlayEscHandler);
@@ -59,27 +79,8 @@ function openLandingOverlay(title, renderer, teardown) {
     el.addEventListener('click', closeLandingOverlay));
   document.addEventListener('keydown', _overlayEscHandler);
 
-  // IRX-M08: Focus trap — keep Tab/Shift+Tab within the dialog
-  const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-  /** @param {KeyboardEvent} e */
-  function _overlayTabTrap(e) {
-    if (e.key !== 'Tab') return;
-    const focusable = overlay.querySelectorAll(focusableSelector);
-    if (focusable.length === 0) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
-  overlay.addEventListener('keydown', _overlayTabTrap);
-  // Focus the first focusable element to enter the dialog
-  const initialFocus = overlay.querySelector(focusableSelector);
-  if (initialFocus) initialFocus.focus();
+  // IRX-M08: Shared dynamic focus trap also covers Sign In.
+  focusDialog(overlay);
 
   // Render content
   const body = overlay.querySelector('.landing-overlay-body');
@@ -107,6 +108,7 @@ function _overlayEscHandler(e) {
 
 
 function openAuthOverlay() {
+  if (!_landingOverlay) _returnFocus = document.activeElement;
   // Sign In has its own panel (.auth-card), so we bypass the standard
   // landing-overlay-card wrapper to avoid a panel-inside-a-panel.
   // The .auth-card is rendered directly as the floating overlay card.
@@ -122,7 +124,7 @@ function openAuthOverlay() {
   overlay.className = 'landing-overlay landing-overlay--bare';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-labelledby', 'auth-overlay-title');
+  overlay.setAttribute('aria-label', 'Sign In');
   overlay.innerHTML = `<div class="landing-overlay-backdrop" data-overlay-close></div>
     <div class="landing-overlay-body landing-overlay-body--bare"></div>`;
   document.body.appendChild(overlay);
@@ -153,6 +155,8 @@ function openAuthOverlay() {
     closeBtn.addEventListener('click', closeLandingOverlay);
     authHeader.appendChild(closeBtn);
   }
+
+  focusDialog(overlay);
 
   // The Continue to Lobby button should also close this overlay; the
   // wireAuthActions handler in auth.js will navigate the hash to

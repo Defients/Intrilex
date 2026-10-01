@@ -10,7 +10,7 @@
   },
   "governingSemanticRulesVersion": "4.1.2",
   "semanticFixtureCount": 25,
-  "governingSemanticAggregate": "29f032742f25f86a242c775834384b3d2b010fad98e7fbff671cd0d20f0a543b",
+  "governingSemanticAggregate": "15c50bce844212927269300ed161d69dc6a23c27a53c70317b99fd346daf01ce",
   "addedFixtureIds": [
     "PP-001",
     "PP-002",
@@ -119,13 +119,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 7,
-        "responsePlayedCount": 5,
-        "responseDeclinedWithOptionsCount": 3,
-        "automaticPriorityAdvanceCount": 78,
-        "responseWindowClosedCount": 40,
-        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+        "responseOpportunityCount": 0,
+        "responsePlayedCount": 0,
+        "responseDeclinedWithOptionsCount": 0,
+        "automaticPriorityAdvanceCount": 12,
+        "responseWindowClosedCount": 6,
+        "matchResultHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "observerOffHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4"
       }
     },
     {
@@ -141,13 +141,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 7,
-        "responsePlayedCount": 5,
-        "responseDeclinedWithOptionsCount": 3,
-        "automaticPriorityAdvanceCount": 78,
-        "responseWindowClosedCount": 40,
-        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+        "responseOpportunityCount": 0,
+        "responsePlayedCount": 0,
+        "responseDeclinedWithOptionsCount": 0,
+        "automaticPriorityAdvanceCount": 12,
+        "responseWindowClosedCount": 6,
+        "matchResultHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "observerOffHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4"
       }
     },
     {
@@ -163,14 +163,14 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 7,
-        "responsePlayedCount": 5,
-        "responseDeclinedWithOptionsCount": 3,
-        "automaticPriorityAdvanceCount": 78,
-        "responseWindowClosedCount": 40,
-        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "declines": 3
+        "responseOpportunityCount": 0,
+        "responsePlayedCount": 0,
+        "responseDeclinedWithOptionsCount": 0,
+        "automaticPriorityAdvanceCount": 12,
+        "responseWindowClosedCount": 6,
+        "matchResultHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "observerOffHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "declines": 0
       }
     },
     {
@@ -186,14 +186,14 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 7,
-        "responsePlayedCount": 5,
-        "responseDeclinedWithOptionsCount": 3,
-        "automaticPriorityAdvanceCount": 78,
-        "responseWindowClosedCount": 40,
-        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "declines": 3
+        "responseOpportunityCount": 0,
+        "responsePlayedCount": 0,
+        "responseDeclinedWithOptionsCount": 0,
+        "automaticPriorityAdvanceCount": 12,
+        "responseWindowClosedCount": 6,
+        "matchResultHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "observerOffHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "declines": 0
       }
     },
     {
@@ -209,14 +209,14 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 7,
-        "responsePlayedCount": 5,
-        "responseDeclinedWithOptionsCount": 3,
-        "automaticPriorityAdvanceCount": 78,
-        "responseWindowClosedCount": 40,
-        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "declines": 3
+        "responseOpportunityCount": 0,
+        "responsePlayedCount": 0,
+        "responseDeclinedWithOptionsCount": 0,
+        "automaticPriorityAdvanceCount": 12,
+        "responseWindowClosedCount": 6,
+        "matchResultHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "observerOffHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "declines": 0
       }
     },
     {
@@ -232,13 +232,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 7,
-        "responsePlayedCount": 5,
-        "responseDeclinedWithOptionsCount": 3,
-        "automaticPriorityAdvanceCount": 78,
-        "responseWindowClosedCount": 40,
-        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+        "responseOpportunityCount": 0,
+        "responsePlayedCount": 0,
+        "responseDeclinedWithOptionsCount": 0,
+        "automaticPriorityAdvanceCount": 12,
+        "responseWindowClosedCount": 6,
+        "matchResultHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "observerOffHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4"
       }
     },
     {
@@ -254,13 +254,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 7,
-        "responsePlayedCount": 5,
-        "responseDeclinedWithOptionsCount": 3,
-        "automaticPriorityAdvanceCount": 78,
-        "responseWindowClosedCount": 40,
-        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+        "responseOpportunityCount": 0,
+        "responsePlayedCount": 0,
+        "responseDeclinedWithOptionsCount": 0,
+        "automaticPriorityAdvanceCount": 12,
+        "responseWindowClosedCount": 6,
+        "matchResultHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "observerOffHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4"
       }
     },
     {
@@ -276,13 +276,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 7,
-        "responsePlayedCount": 5,
-        "responseDeclinedWithOptionsCount": 3,
-        "automaticPriorityAdvanceCount": 78,
-        "responseWindowClosedCount": 40,
-        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+        "responseOpportunityCount": 0,
+        "responsePlayedCount": 0,
+        "responseDeclinedWithOptionsCount": 0,
+        "automaticPriorityAdvanceCount": 12,
+        "responseWindowClosedCount": 6,
+        "matchResultHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "observerOffHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4"
       }
     },
     {
@@ -298,13 +298,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 7,
-        "responsePlayedCount": 5,
-        "responseDeclinedWithOptionsCount": 3,
-        "automaticPriorityAdvanceCount": 78,
-        "responseWindowClosedCount": 40,
-        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+        "responseOpportunityCount": 0,
+        "responsePlayedCount": 0,
+        "responseDeclinedWithOptionsCount": 0,
+        "automaticPriorityAdvanceCount": 12,
+        "responseWindowClosedCount": 6,
+        "matchResultHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "observerOffHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4"
       }
     },
     {
@@ -320,13 +320,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 7,
-        "responsePlayedCount": 5,
-        "responseDeclinedWithOptionsCount": 3,
-        "automaticPriorityAdvanceCount": 78,
-        "responseWindowClosedCount": 40,
-        "matchResultHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041",
-        "observerOffHash": "0cd33b7cc17552061b26afb07b31c30e1b8a53d8cdae38b96ad99661212f7041"
+        "responseOpportunityCount": 0,
+        "responsePlayedCount": 0,
+        "responseDeclinedWithOptionsCount": 0,
+        "automaticPriorityAdvanceCount": 12,
+        "responseWindowClosedCount": 6,
+        "matchResultHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4",
+        "observerOffHash": "0e3479e1f9de653c963e29f2960de007ad5524997d9c58221aa6465f5d63ced4"
       }
     },
     {
@@ -342,13 +342,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 15,
-        "responsePlayedCount": 11,
-        "responseDeclinedWithOptionsCount": 6,
-        "automaticPriorityAdvanceCount": 59,
-        "responseWindowClosedCount": 30,
-        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+        "responseOpportunityCount": 10,
+        "responsePlayedCount": 6,
+        "responseDeclinedWithOptionsCount": 4,
+        "automaticPriorityAdvanceCount": 42,
+        "responseWindowClosedCount": 23,
+        "matchResultHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "observerOffHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2"
       }
     },
     {
@@ -364,13 +364,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 15,
-        "responsePlayedCount": 11,
-        "responseDeclinedWithOptionsCount": 6,
-        "automaticPriorityAdvanceCount": 59,
-        "responseWindowClosedCount": 30,
-        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+        "responseOpportunityCount": 10,
+        "responsePlayedCount": 6,
+        "responseDeclinedWithOptionsCount": 4,
+        "automaticPriorityAdvanceCount": 42,
+        "responseWindowClosedCount": 23,
+        "matchResultHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "observerOffHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2"
       }
     },
     {
@@ -386,14 +386,14 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 15,
-        "responsePlayedCount": 11,
-        "responseDeclinedWithOptionsCount": 6,
-        "automaticPriorityAdvanceCount": 59,
-        "responseWindowClosedCount": 30,
-        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "declines": 6
+        "responseOpportunityCount": 10,
+        "responsePlayedCount": 6,
+        "responseDeclinedWithOptionsCount": 4,
+        "automaticPriorityAdvanceCount": 42,
+        "responseWindowClosedCount": 23,
+        "matchResultHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "observerOffHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "declines": 4
       }
     },
     {
@@ -409,14 +409,14 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 15,
-        "responsePlayedCount": 11,
-        "responseDeclinedWithOptionsCount": 6,
-        "automaticPriorityAdvanceCount": 59,
-        "responseWindowClosedCount": 30,
-        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "declines": 6
+        "responseOpportunityCount": 10,
+        "responsePlayedCount": 6,
+        "responseDeclinedWithOptionsCount": 4,
+        "automaticPriorityAdvanceCount": 42,
+        "responseWindowClosedCount": 23,
+        "matchResultHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "observerOffHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "declines": 4
       }
     },
     {
@@ -432,14 +432,14 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 15,
-        "responsePlayedCount": 11,
-        "responseDeclinedWithOptionsCount": 6,
-        "automaticPriorityAdvanceCount": 59,
-        "responseWindowClosedCount": 30,
-        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "declines": 6
+        "responseOpportunityCount": 10,
+        "responsePlayedCount": 6,
+        "responseDeclinedWithOptionsCount": 4,
+        "automaticPriorityAdvanceCount": 42,
+        "responseWindowClosedCount": 23,
+        "matchResultHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "observerOffHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "declines": 4
       }
     },
     {
@@ -455,13 +455,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 15,
-        "responsePlayedCount": 11,
-        "responseDeclinedWithOptionsCount": 6,
-        "automaticPriorityAdvanceCount": 59,
-        "responseWindowClosedCount": 30,
-        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+        "responseOpportunityCount": 10,
+        "responsePlayedCount": 6,
+        "responseDeclinedWithOptionsCount": 4,
+        "automaticPriorityAdvanceCount": 42,
+        "responseWindowClosedCount": 23,
+        "matchResultHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "observerOffHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2"
       }
     },
     {
@@ -477,13 +477,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 15,
-        "responsePlayedCount": 11,
-        "responseDeclinedWithOptionsCount": 6,
-        "automaticPriorityAdvanceCount": 59,
-        "responseWindowClosedCount": 30,
-        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+        "responseOpportunityCount": 10,
+        "responsePlayedCount": 6,
+        "responseDeclinedWithOptionsCount": 4,
+        "automaticPriorityAdvanceCount": 42,
+        "responseWindowClosedCount": 23,
+        "matchResultHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "observerOffHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2"
       }
     },
     {
@@ -499,13 +499,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 15,
-        "responsePlayedCount": 11,
-        "responseDeclinedWithOptionsCount": 6,
-        "automaticPriorityAdvanceCount": 59,
-        "responseWindowClosedCount": 30,
-        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+        "responseOpportunityCount": 10,
+        "responsePlayedCount": 6,
+        "responseDeclinedWithOptionsCount": 4,
+        "automaticPriorityAdvanceCount": 42,
+        "responseWindowClosedCount": 23,
+        "matchResultHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "observerOffHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2"
       }
     },
     {
@@ -521,13 +521,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 15,
-        "responsePlayedCount": 11,
-        "responseDeclinedWithOptionsCount": 6,
-        "automaticPriorityAdvanceCount": 59,
-        "responseWindowClosedCount": 30,
-        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+        "responseOpportunityCount": 10,
+        "responsePlayedCount": 6,
+        "responseDeclinedWithOptionsCount": 4,
+        "automaticPriorityAdvanceCount": 42,
+        "responseWindowClosedCount": 23,
+        "matchResultHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "observerOffHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2"
       }
     },
     {
@@ -543,13 +543,13 @@
         "termination": "NORMAL_VICTORY",
         "passActionCount": 0,
         "exhaustedPassActionCount": 0,
-        "responseOpportunityCount": 15,
-        "responsePlayedCount": 11,
-        "responseDeclinedWithOptionsCount": 6,
-        "automaticPriorityAdvanceCount": 59,
-        "responseWindowClosedCount": 30,
-        "matchResultHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31",
-        "observerOffHash": "817ad1c1decd73e7fe517d7a7887e3513d2d68de41348140e123e9c96fa3ca31"
+        "responseOpportunityCount": 10,
+        "responsePlayedCount": 6,
+        "responseDeclinedWithOptionsCount": 4,
+        "automaticPriorityAdvanceCount": 42,
+        "responseWindowClosedCount": 23,
+        "matchResultHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2",
+        "observerOffHash": "3624d56c563fe280bd24ac008ca51e0eaf2670b5660a3cdbd07d3fff2c35a7b2"
       }
     },
     {

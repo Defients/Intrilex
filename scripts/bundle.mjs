@@ -170,7 +170,7 @@ async function bundle() {
     const matchServerUrl = process.env.INTRILEX_MATCH_SERVER_URL || '';
     const hasSupabase = supabaseUrl && supabaseKey;
     const hasMatchServer = !!matchServerUrl;
-    if ((hasSupabase || hasMatchServer) && !html.includes('__INTRILEX_CONFIG__')) {
+    if (!html.includes('__INTRILEX_CONFIG__')) {
       const configParts = [];
       if (hasSupabase) {
         configParts.push(`supabase:{url:${JSON.stringify(supabaseUrl)},publishableKey:${JSON.stringify(supabaseKey)}}`);

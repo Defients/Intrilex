@@ -1,4 +1,4 @@
-/* global document, KeyboardEvent -- callbacks execute in Chrome */
+/* global document, KeyboardEvent, requestAnimationFrame -- callbacks execute in Chrome */
 import assert from 'node:assert/strict';
 import { chromium, expect } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -18,14 +18,15 @@ async function scenario(name, run) {
 }
 try {
   await page.goto(base);
+  await page.waitForLoadState('networkidle');
   await scenario('Landing overlay replacement, dismissal and delayed renderer cleanup', async () => {
     const result = await page.evaluate(async () => {
       const { createLandingOverlays } = await import('/landing-overlays.js');
       const listeners = new Set();
       const add = document.addEventListener.bind(document);
       const remove = document.removeEventListener.bind(document);
-      document.addEventListener = (type, fn, ...rest) => { if (type === 'keydown') listeners.add(fn); add(type, fn, ...rest); };
-      document.removeEventListener = (type, fn, ...rest) => { if (type === 'keydown') listeners.delete(fn); remove(type, fn, ...rest); };
+      document.addEventListener = (type, fn, ...rest) => { if (type === 'keydown' && fn.name === '_overlayEscHandler') listeners.add(fn); add(type, fn, ...rest); };
+      document.removeEventListener = (type, fn, ...rest) => { if (type === 'keydown' && fn.name === '_overlayEscHandler') listeners.delete(fn); remove(type, fn, ...rest); };
       let cleanup = 0, rejectRenderer;
       const overlay = createLandingOverlays({ state: { reducedMotion: true }, esc: text => text, renderAuth: node => { node.innerHTML = '<div class="auth-card"><div class="auth-header">Sign In</div><input></div>'; } });
       try {
@@ -47,6 +48,54 @@ try {
       }
     });
     assert.deepEqual(result, { cleanup: 20, listeners: 0, dialogs: 0 });
+  });
+  await scenario('Modal keyboard containment and focus return for standard and auth dialogs', async () => {
+    const result = await page.evaluate(async () => {
+      const { createLandingOverlays } = await import('/landing-overlays.js');
+      const trigger = document.createElement('button'); trigger.textContent = 'Test dialog trigger'; document.body.appendChild(trigger); trigger.focus();
+      const owner = createLandingOverlays({state:{reducedMotion:true},esc:text=>text,
+        renderAuth:node=>{node.innerHTML='<div class="auth-card"><div class="auth-header">Sign In</div><input aria-label="Test email"><button disabled>Disabled</button></div>';}});
+      const checks=[];
+      try {
+        for(const auth of [false,true]) {
+          if(auth) owner.openAuthOverlay(); else owner.openLandingOverlay('Keyboard test',node=>{node.innerHTML='<input aria-label="Test entry"><button disabled>Disabled</button>';});
+          await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+          const dialog=document.querySelector('.landing-overlay');
+          const controls=[...dialog.querySelectorAll('button,input')].filter(el=>!el.disabled);
+          checks.push(dialog.contains(document.activeElement));
+          controls[0].focus(); controls[0].dispatchEvent(new KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true,cancelable:true}));
+          checks.push(document.activeElement===controls.at(-1));
+          controls.at(-1).dispatchEvent(new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));
+          checks.push(document.activeElement===controls[0]);
+          document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));
+          checks.push(document.activeElement===trigger);
+          await new Promise(resolve=>setTimeout(resolve,0));
+        }
+        return checks;
+      } finally {owner.closeLandingOverlay();trigger.remove();}
+    });
+    assert.equal(result.length,8); assert.ok(result.every(Boolean),JSON.stringify(result));
+  });
+  await scenario('Laboratory data is lazy, retries failed loads and reuses successful data', async () => {
+    const context=await browser.newContext();
+    const probe=await context.newPage();
+    let mandatoryRequests=0;
+    await probe.route('**/data/corpus-analytics.json', async request => {
+      mandatoryRequests++;
+      if(mandatoryRequests===1) await request.fulfill({status:503,body:'unavailable'});
+      else await request.continue();
+    });
+    try {
+      await probe.goto(base); await probe.waitForLoadState('networkidle');
+      assert.equal(mandatoryRequests,0,'landing does not prefetch laboratory data');
+      await probe.goto(`${base}/#/mechanics`);
+      await expect(probe.getByRole('alert')).toContainText('Could not load laboratory data');
+      await probe.getByRole('button',{name:'Retry',exact:true}).click();
+      await probe.waitForFunction(()=>Boolean(globalThis.__intrilexState?.observatory?.mechanics),{},{timeout:60000});
+      assert.equal(mandatoryRequests,2,'one retry after a failed request');
+      await probe.goto(`${base}/#/`); await probe.goto(`${base}/#/ranks`); await probe.waitForLoadState('networkidle');
+      assert.equal(mandatoryRequests,2,'successful laboratory data is reused');
+    } finally {await context.close();}
   });
   for (const mode of ['public', 'omniscient']) {
     await scenario(`Caster ${mode}: Homecoming board, transport, WAIT WHAT and annotations`, async () => {
@@ -80,7 +129,7 @@ try {
   }
   assert.deepEqual(report.errors, []);
 } finally {
-  report.status = report.errors.length === 0 && report.scenarios.length === 3 && report.scenarios.every(s => s.status === 'PASS') ? 'PASS' : 'FAIL';
+  report.status = report.errors.length === 0 && report.scenarios.length === 5 && report.scenarios.every(s => s.status === 'PASS') ? 'PASS' : 'FAIL';
   await mkdir(new URL('../reports/local/', import.meta.url), { recursive: true });
   await writeFile(new URL('../reports/local/stabilization-browser.json', import.meta.url), JSON.stringify(report, null, 2) + '\n');
   await browser.close();

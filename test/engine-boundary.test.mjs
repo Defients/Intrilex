@@ -20,3 +20,4 @@ const specView=projectFrame(frame,'spectator','S1');const specJson=JSON.stringif
 // Unknown mode must throw — never return raw frame.state
 assert.throws(()=>projectFrame(frame,'raw','P1'),/Unknown projection mode/,'unknown mode must throw');assert.throws(()=>projectFrame(frame,undefined,'P1'),/Unknown projection mode/,'undefined mode must throw');assert.throws(()=>projectFrame(frame,'admin','P1'),/Unknown projection mode/,'admin mode must throw');});
 
+

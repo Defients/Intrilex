@@ -22,12 +22,12 @@ test('release provenance requires clean Git and exact commit/tree/lock/engine bi
     assert.deepEqual(releaseProvenanceProblems(clean), []);
     const report = { status: 'PASS', provenance: { ...clean, mode: 'full' } };
     assert.deepEqual(evidenceProvenanceProblems(report, clean), []);
-    const audit = { ...report, criticalGates: { executed: true },
+    const audit = { ...report, provenance: { ...report.provenance, auditKind: 'release' }, criticalGates: { executed: true },
       processStatus: { abnormal: false, exitStatus: 0 },
       testResults: { totalTests: 3, totalPass: 2, totalFail: 0, totalSkip: 1, totalCancelled: 0, totalTodo: 0 } };
     assert.deepEqual(releaseAuditProblems(audit, clean), []);
     for (const invalid of [
-      { criticalGates: {} }, { criticalGates: { executed: false } },
+      { provenance: { ...audit.provenance, auditKind: 'development' } }, { criticalGates: {} }, { criticalGates: { executed: false } },
       { status: 'NOT_RUN' }, { testResults: {} },
       { testResults: { ...audit.testResults, totalTests: 0 } },
       { testResults: { ...audit.testResults, totalTests: 4 } },

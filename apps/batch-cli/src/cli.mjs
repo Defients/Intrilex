@@ -21,7 +21,7 @@ const profileId = () => { const value=option('--profile',DEFAULT_SIMULATION_PROF
 const completeReasons = new Set(['NORMAL_VICTORY','EXHAUSTED_RESOLUTION','CANONICAL_DRAW']);
 
 async function verifyCorpus() {
-  const dir = path.join(root, 'vendor/intrilex-engine-4.1.0/replays');
+  const dir = path.join(root, 'upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/replays');
   const files = (await readdir(dir)).filter(name=>name.endsWith('.certified.replay.json')&&!name.includes('.public.certified.')).sort();
   let commands=0,events=0;
   for(const name of files){const replay=await loadCertifiedReplay(path.join(dir,name));const result=verifyCertifiedReplay(replay);commands+=replay.commands.length;events+=result.events.length;}

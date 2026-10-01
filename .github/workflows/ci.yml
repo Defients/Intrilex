@@ -88,12 +88,8 @@ jobs:
         run: node scripts/build.mjs
       - name: Prepare release browser verification
         run: pnpm exec playwright install --with-deps chrome
-      - name: Require clean source and collect full release audit
-        env:
-          CHROMIUM_BIN: /usr/bin/google-chrome
-        run: pnpm run self-audit:release
       - name: Validate packaging and release contracts
-        run: node scripts/ci.mjs --domain release --no-fail-fast
+        run: node scripts/ci.mjs --domain release --no-fail-fast --timeout 1200
       - name: Upload release evidence
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,5 +1,6 @@
+import { createEvidenceWriter } from './evidence-writer.mjs';
 import http from 'node:http';
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
@@ -8,11 +9,13 @@ import { spawn, spawnSync } from 'node:child_process';
 import { hashCanonical as nodeHashCanonical, verifyAuthorityCertifiedReplay as nodeVerifyCertifiedReplay } from '@intrilex/engine-adapter';
 import { runPolicyMatch as runNodePolicyMatch } from '@intrilex/simulation-runtime';
 
+
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const writeReports=process.env.INTRILEX_WRITE_REPORTS!=='0';
+const writeFile = createEvidenceWriter(root);
+const writeReports=true; // Ignored diagnostics preserve read-only source controls.
 const dist=path.join(root,'apps/lab-web/dist'),engineDir=path.join(dist,'engine');
 const replayDir=path.join(root,'upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/replays');
-const reportPath=path.join(root,'reports/browser-parity.json'),reportMdPath=path.join(root,'reports/BROWSER_PARITY_CERTIFICATION.md');
+const reportPath=path.join(root,'reports/local/browser-parity.json'),reportMdPath=path.join(root,'reports/local/BROWSER_PARITY_CERTIFICATION.md');
 if(process.env.INTRILEX_SKIP_BUILD!=='1'){
   const build=spawnSync(process.execPath,['scripts/build.mjs'],{cwd:root,stdio:'inherit',env:{...process.env,INTRILEX_SKIP_AUTONOMY_REPLAY_REGEN:'1'}});
   if(build.status!==0)process.exit(build.status??1);

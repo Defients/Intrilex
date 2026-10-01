@@ -220,11 +220,10 @@ export function render() {
   }
   showShell();
   if (landingContainer) landingContainer.style.display = 'none';
-  // If observatory data is still loading in the background (started by boot()
-  // for landing/play routes), wait for it to complete before rendering.
+  // Start laboratory data only when a laboratory workspace is requested.
   const bootPromise = getObservatoryBootPromise();
   if (bootPromise) {
-    bootPromise.then(() => { render(); }).catch(() => { render(); });
+    bootPromise.then(() => { render(); }).catch(() => { if (route() === r) renderObservatoryFailure(); });
     return;
   }
   // Only the Watch workspace needs a loaded replay. Other workspaces render
@@ -2350,6 +2349,10 @@ setRenderer(render);
 // a minimal bridge — the forensic model itself is pure and framework-agnostic.
 window.__intrilexState = state;
 
-boot().then(() => {
-  render();
-});
+function renderObservatoryFailure() {
+  showShell();
+  if (landingContainer) landingContainer.style.display = 'none';
+  app.innerHTML = '<div class="notice danger" role="alert"><strong>Could not load laboratory data.</strong><p>Check your connection and try again.</p><button data-lab-retry>Retry</button></div>';
+  app.querySelector('[data-lab-retry]').addEventListener('click', render, { once: true });
+}
+boot().then(() => { render(); }).catch(renderObservatoryFailure);

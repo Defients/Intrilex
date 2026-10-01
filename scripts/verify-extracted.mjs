@@ -17,7 +17,7 @@ if (isWsl) {
 
 const packageJson = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 const zipName = `Intrilex_Simulation_Lab_v${packageJson.version}_Mechanics_Observatory.zip`;
-const zip = path.join(root, 'release', zipName);
+const zip = path.join(root, 'reports/release/artifacts', zipName);
 const checksumFile = `${zip}.sha256`;
 const temp = await mkdtemp(path.join(tmpdir(), 'intrilex-lab-extracted-'));
 const steps = [];
@@ -48,14 +48,23 @@ try {
     ? spawnSync('tar', ['-tf', zip], { cwd: root, encoding: 'utf8' })
     : spawnSync('unzip', ['-Z1', zip], { cwd: root, encoding: 'utf8' });
   if (list.status !== 0) throw new Error('ZIP_LIST_FAILED');
-  const unsafe = list.stdout.split(/\r?\n/).filter(Boolean).filter((entry) => entry.startsWith('/') || entry.split('/').includes('..'));
+  const unsafe = list.stdout.split(/\r?\n/).filter(Boolean).filter((entry) => entry.startsWith('/') || entry.includes('\\') || entry.includes(':') || entry.split('/').some(part => !part || part === '..' || part === '.'));
   if (unsafe.length) throw new Error(`UNSAFE_ARCHIVE_PATH:${unsafe[0]}`);
+  const entries=list.stdout.split(/\r?\n/).filter(Boolean);
+  if(new Set(entries).size !== entries.length) throw new Error('DUPLICATE_ARCHIVE_MEMBER');
   record('archive-path-safety', 'PASS', { entryCount: list.stdout.split(/\r?\n/).filter(Boolean).length });
 
   if (isWin) run('extract', 'tar', ['-xf', zip, '-C', temp], root);
   else run('extract', 'unzip', ['-q', zip, '-d', temp], root);
-  const embeddedManifest = JSON.parse(await readFile(path.join(temp, 'release/RELEASE_MANIFEST.json'), 'utf8'));
+  const manifestBytes=await readFile(path.join(temp,'release/RELEASE_MANIFEST.json'));
+  const embeddedManifest = JSON.parse(manifestBytes);
+  const certificate=JSON.parse(await readFile(path.join(root,'reports/release/artifacts',`v${packageJson.version}-certification.json`),'utf8'));
+  if(certificate.releaseZip?.sha256 !== zipSha256 || certificate.manifestHash !== createHash('sha256').update(manifestBytes).digest('hex')) throw new Error('CERTIFICATE_BINDING_MISMATCH');
+  for(const key of ['gitCommit','gitTree','lockfileSha256','enginePayloadHash']) if(certificate.provenance?.[key] !== embeddedManifest.provenance?.[key]) throw new Error('CERTIFICATE_PROVENANCE_MISMATCH');
+  record('certificate-binding','PASS');
   manifestPayloadHash = embeddedManifest.payloadHash;
+  const expectedEntries=[...Object.keys(embeddedManifest.files),'release/RELEASE_MANIFEST.json'].sort();
+  if(JSON.stringify(entries.sort()) !== JSON.stringify(expectedEntries)) throw new Error('ARCHIVE_INVENTORY_MISMATCH');
   run('pnpm-install-offline', 'pnpm', ['install', '--offline', '--frozen-lockfile', '--ignore-scripts']);
   run('manifest-verify-pre-ci', 'pnpm', ['run', 'manifest:verify']);
   run('build-determinism-read-only', 'pnpm', ['run', 'test:build-determinism'], temp, { INTRILEX_WRITE_REPORTS: '0' });
@@ -75,12 +84,12 @@ try {
 
 const report = {
   schemaVersion: '1.2', status, sourceZip: zipName, zipSha256, manifestPayloadHash,
-  verificationMode: 'CURRENT_ZIP_SHA256_SAFE_EXTRACTION_OFFLINE_INSTALL_READ_ONLY_FULL_CI_POST_CI_MANIFEST_CLI_ADVANCED_CORE',
+  verificationMode: 'CURRENT_ZIP_SHA256_SAFE_EXTRACTION_OFFLINE_INSTALL_READ_ONLY_FOCUSED_TESTS_POST_TEST_MANIFEST_CLI_ADVANCED_CORE',
   steps, error
 };
 const internal = { ...report, steps: steps.map(({ name, status: stepStatus, exitCode = null, zipSha256: stepHash = null, entryCount = null }) => ({ name, status: stepStatus, exitCode, zipSha256: stepHash, entryCount })) };
-await writeFile(path.join(root, 'release/extracted-verification-report.json'), `${JSON.stringify(report, null, 2)}\n`);
-await writeFile(path.join(root, 'reports/extracted-verification-report.json'), `${JSON.stringify(internal, null, 2)}\n`);
+await writeFile(path.join(root, 'reports/release/artifacts/extracted-verification-report.json'), `${JSON.stringify(report, null, 2)}\n`);
+await writeFile(path.join(root, 'reports/local/extracted-verification-report.json'), `${JSON.stringify(internal, null, 2)}\n`);
 await rm(temp, { recursive: true, force: true });
 console.log(`\nEXTRACTED RELEASE ${status}`);
 if (status !== 'PASS') process.exit(1);

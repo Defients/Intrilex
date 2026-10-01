@@ -35,6 +35,7 @@ const customTimeout = args.includes('--timeout') ? parseInt(args[args.indexOf('-
 
 // ── Stage definitions (mirrors ci.sh) ──
 const STAGES = [
+  ['release-inventory', 'node', ['--test', 'test/release-inventory.test.mjs']],
   ['auth-production-startup', 'node', ['--test', 'test/production-startup.test.mjs']],
   ['deploy-ownership', 'node', ['--test', 'test/deploy-ownership.test.mjs']],
   ['lint', 'node', ['node_modules/eslint/bin/eslint.js', 'apps/lab-web/src/**/*.js', 'apps/lab-web/src/client/**/*.ts', 'apps/lab-web/src/client/**/*.tsx', 'apps/match-server/src/**/*.mjs', 'packages/**/*.mjs', 'scripts/**/*.mjs', 'test/**/*.mjs']],
@@ -313,7 +314,7 @@ async function runStep(name, cmd, cmdArgs, envOverride = {}) {
   stageNames.push(name);
   if (code === 0) {
     const summary = output.match(/# pass \d+|PASS\b/)?.[0] ?? output.trim().split('\n').pop();
-    if (output.includes('SKIP')) {
+    if (/^(?:[A-Z][A-Z ]* SKIP:|SKIP:)/m.test(output)) {
       skipCount++;
       stageStatuses.push('SKIP');
       console.log(`[SKIP] ${name} (${elapsed}ms) — ${summary}`);

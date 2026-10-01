@@ -1,3 +1,4 @@
+import { createEvidenceWriter } from './evidence-writer.mjs';
 // ═══════════════════════════════════════════════════════════════
 // browser-e2e-certification.mjs
 // Gate 3 — Real Chrome/Chromium E2E certification
@@ -14,7 +15,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { createServer } from 'node:http';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, extname, normalize } from 'node:path';
 import { fileURLToPath} from 'node:url';
@@ -22,9 +23,11 @@ import { spawn } from 'node:child_process';
 import {} from 'node:crypto';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
 const root = join(__dirname, '..');
+const writeFile = createEvidenceWriter(root);
 const distDir = join(root, 'apps', 'lab-web', 'dist');
-const reportDir = join(root, 'reports');
+const reportDir = join(root, 'reports/local');
 const reportPath = join(reportDir, 'browser-e2e-certification.json');
 
 // ── Chrome discovery ──────────────────────────────────────────

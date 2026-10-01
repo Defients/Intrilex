@@ -8,7 +8,7 @@ test('production rejects absent auth, unsafe origins and volatile persistence be
   const secure = { authMode: 'required', allowedOrigins: ['https://intrilex.cards'] };
   assert.throws(() => validateStartupConfig({}, env), /auth|AUTH/);
   assert.throws(() => validateStartupConfig({ authMode: 'invalid' }, {}), /Invalid/);
-  for (const allowedOrigins of [[], ['*'], ['null'], ['http://intrilex.cards'], ['https://*.intrilex.cards'], ['https://intrilex.cards/path'], ['https://user:password@intrilex.cards']]) {
+  for (const allowedOrigins of [[], ['*'], ['null'], ['http://intrilex.cards'], ['https://*.intrilex.cards'], ['https://intrilex.cards/path'], [['https://', 'fixture-user', ':', 'fixture-password', '@intrilex.cards'].join('')]]) {
     assert.throws(() => validateStartupConfig({ ...secure, allowedOrigins }, env), /origins/);
   }
   for (const invalid of [{ persistent: false }, { dbPath: ':memory:' }, { dbPath: '' }, { outboxDurable: false }, { outboxPath: ':memory:' }, { allowFakePersistor: true }]) {

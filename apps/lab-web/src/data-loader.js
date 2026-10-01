@@ -62,37 +62,28 @@ export async function loadTraceData(matchId) {
 
 // ── Boot sequence ─────────────────────────────────────────────────
 
-// Background observatory boot promise — started by boot() for landing/play
-// routes so the data is ready when the user navigates to an observatory route.
-// render() awaits this before rendering any observatory workspace.
-// Set to null once complete so render() knows the data is ready.
+// Laboratory data has one lazy owner. Landing and play never prefetch it.
 let _observatoryBootPromise = null;
-
-export function getObservatoryBootPromise() { return _observatoryBootPromise; }
-
+let _observatoryReady = false;
+export function getObservatoryBootPromise() {
+  if (_observatoryReady) return null;
+  if (!_observatoryBootPromise) _observatoryBootPromise = loadObservatoryData();
+  return _observatoryBootPromise;
+}
 export async function boot() {
   const r = route();
   if (isPlayRoute(r)) {
     if (shell) shell.style.display = 'none';
     if (landingContainer) landingContainer.style.display = 'block';
-    // Start observatory data loading in the background (non-blocking)
-    _observatoryBootPromise = loadObservatoryData();
     return;
   }
-  if (LANDING_MODES.has(r)) {
-    // Landing/play routes don't need observatory data to render.
-    // Start loading it in the background so it's ready if the user
-    // navigates to an observatory route, but don't block the landing render.
-    _observatoryBootPromise = loadObservatoryData();
-    return;
-  }
-  // Observatory route loaded directly — must load data before rendering
-  await loadObservatoryData();
+  if (LANDING_MODES.has(r) || r === '/caster') return;
+  await getObservatoryBootPromise();
 }
-
 async function loadObservatoryData() {
   try {
     await _loadObservatoryDataInner();
+    _observatoryReady = true;
   } finally {
     _observatoryBootPromise = null;
   }

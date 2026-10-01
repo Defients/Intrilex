@@ -1,17 +1,20 @@
+import { createEvidenceWriter } from './evidence-writer.mjs';
 import path from 'node:path';
-import { mkdtemp,  mkdir,  readFile,  rm,  writeFile } from 'node:fs/promises';
+import { mkdtemp,  mkdir,  readFile,  rm } from 'node:fs/promises';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import http from 'node:http';
 
+
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const writeReports=process.env.INTRILEX_WRITE_REPORTS!=='0';
+const writeFile = createEvidenceWriter(root);
+const writeReports=true; // Ignored diagnostics preserve read-only source controls.
 const dist=path.join(root,'apps/lab-web/dist');
-const reportPath=path.join(root,'reports/browser-ui-smoke.json');
-const reportMdPath=path.join(root,'reports/BROWSER_UI_SMOKE.md');
-const screenshotDir=path.join(root,'reports/visual-qa');
+const reportPath=path.join(root,'reports/local/browser-ui-smoke.json');
+const reportMdPath=path.join(root,'reports/local/BROWSER_UI_SMOKE.md');
+const screenshotDir=path.join(root,'reports/local/visual-qa');
 const chromium=process.env.CHROMIUM_BIN??(process.platform==='win32'?'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe':existsSync('/mnt/c/Program Files/Google/Chrome/Application/chrome.exe')?'/mnt/c/Program Files/Google/Chrome/Application/chrome.exe':'/usr/lib/chromium/chromium');
 
 async function reservePort(){const probe=http.createServer();await new Promise(r=>probe.listen(0,'127.0.0.1',r));const p=probe.address().port;await new Promise(r=>probe.close(r));return p;}

@@ -1,11 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { loadCertifiedReplay, verifyCertifiedReplay } from '@intrilex/engine-adapter';
 const root=path.resolve('.');
-test('all 121 certified authorized replays verify',async()=>{const dir=path.join(root,'vendor/intrilex-engine-4.1.0/replays');if(!existsSync(dir)){test.skip('vendor/intrilex-engine-4.1.0 not present — skipping corpus verification');return;}const files=(await readdir(dir)).filter(n=>n.endsWith('.certified.replay.json')&&!n.includes('.public.certified.'));assert.equal(files.length,121);for(const n of files)verifyCertifiedReplay(await loadCertifiedReplay(path.join(dir,n)));});
+test('all 121 certified authorized replays verify',async()=>{const dir=path.join(root,'upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/replays');const files=(await readdir(dir)).filter(n=>n.endsWith('.certified.replay.json')&&!n.includes('.public.certified.'));assert.equal(files.length,121);for(const n of files)verifyCertifiedReplay(await loadCertifiedReplay(path.join(dir,n)));});
 test('generated replay index covers corpus',async()=>{const x=JSON.parse(await readFile('sample-data/replay-index.json','utf8'));assert.equal(x.replayCount,x.records.length);assert.ok(x.replayCount>=121,'replay index must cover at least 121 corpus replays');});
 test('corpus analytics never claims match balance',async()=>{const x=JSON.parse(await readFile('sample-data/corpus-analytics.json','utf8'));assert.match(x.interpretationBoundary,/not autonomous matches/i);});
 

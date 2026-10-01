@@ -1,6 +1,8 @@
+import { captureProvenance, evidenceProvenanceProblems } from './release-provenance.mjs';
 import { readFile } from 'node:fs/promises';
-const ui=JSON.parse(await readFile('reports/browser-ui-smoke.json','utf8'));
-const parity=JSON.parse(await readFile('reports/browser-parity.json','utf8'));
+const ui=JSON.parse(await readFile('reports/local/browser-ui-smoke.json','utf8'));
+const parity=JSON.parse(await readFile('reports/local/browser-parity.json','utf8'));
+for(const report of [ui,parity]) {const problems=evidenceProvenanceProblems(report,captureProvenance(process.cwd()));if(problems.length) throw new Error('STALE_BROWSER_EVIDENCE: '+problems.join(' '));}
 const info=JSON.parse(await readFile('apps/lab-web/dist/BUILD_INFO.json','utf8'));
 if(ui.status!=='PASS')throw new Error('BROWSER_UI_REPORT_NOT_PASS');
 if(parity.status!=='PASS')throw new Error('BROWSER_PARITY_REPORT_NOT_PASS');

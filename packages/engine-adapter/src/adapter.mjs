@@ -4,7 +4,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../../..');
-const vendorRuntime = path.join(root, 'runtime/vendor-dist/src');
 const authorityRuntime = path.join(root, 'runtime/autonomy-engine-dist/src');
 /**
  * Build a file:// URL for a runtime module.
@@ -14,7 +13,6 @@ const authorityRuntime = path.join(root, 'runtime/autonomy-engine-dist/src');
  */
 const moduleUrl = (dir, file) => pathToFileURL(path.join(dir, file)).href;
 
-const phase16 = await import(moduleUrl(vendorRuntime, 'phase16.js'));
 const views = await import(moduleUrl(authorityRuntime, 'views.js'));
 const hash = await import(moduleUrl(authorityRuntime, 'hash.js'));
 const engineModule = await import(moduleUrl(authorityRuntime, 'engine.js'));
@@ -29,7 +27,7 @@ const coreResponse = await import(moduleUrl(authorityRuntime, 'core-response.js'
 const corePrivate = await import(moduleUrl(authorityRuntime, 'core-private-choice.js'));
 const ranksModule = await import(moduleUrl(authorityRuntime, 'ranks.js'));
 
-export const { parseCertifiedReplay, verifyCertifiedReplay, publicCertifiedReplayView, serializeCertifiedReplay } = phase16;
+export const { parseCertifiedReplay, verifyCertifiedReplay, publicCertifiedReplayView, serializeCertifiedReplay } = authorityPhase16;
 export const { publicStateView, privateStateView, publicEventView } = views;
 export const { hashCanonical } = hash;
 export const authorityHashCanonical = hash.hashCanonical;
