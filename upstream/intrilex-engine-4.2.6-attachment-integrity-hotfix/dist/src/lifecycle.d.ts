@@ -19,3 +19,7 @@ export declare function markExileBound(card: CardInstance): void;
 export declare function changeController(card: CardInstance, controllerId: PlayerId): void;
 export declare function processStartPhaseLifecycles(state: EngineState, playerId: PlayerId): LifecycleTransition[];
 export declare function releaseNineTapsForScoring(state: EngineState, scoringPlayerId: PlayerId): LifecycleTransition[];
+export declare function armFoundationActionRestriction(state: EngineState, playerId: PlayerId): void;
+export declare function processFoundationActionRestriction(state: EngineState, playerId: PlayerId): boolean;
+export declare function foundationActionRestricted(state: Readonly<EngineState>, playerId: PlayerId): boolean;
+export declare function miniTurnHardCap(state: Readonly<EngineState>, playerId: PlayerId): number;

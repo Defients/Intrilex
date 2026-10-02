@@ -1,5 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
-import { hasAegis } from "./lifecycle.js";
+import { hasAegis, miniTurnHardCap } from "./lifecycle.js";
 import { parseIdentity } from "./ranks.js";
 import { deriveSecuredPoints, moveCard } from "./state.js";
 import { relationBetween } from "./phase11.js";
@@ -159,8 +159,9 @@ export function resolvePhase12Action(input, actorId, action) {
             if (!player)
                 return fail("BATTLEREALM_PLAYER", `Unknown player ${action.playerId}`);
             const previous = player.limits.miniTurnsRemaining;
-            player.limits.miniTurnsRemaining = Math.min(3, previous + action.amount);
-            events.push({ type: "BATTLEREALM_MINI_TURNS_GRANTED", payload: { playerId: action.playerId, requested: action.amount, previous, remaining: player.limits.miniTurnsRemaining, cap: 3 } });
+            const cap = miniTurnHardCap(state, action.playerId);
+            player.limits.miniTurnsRemaining = Math.min(cap, previous + action.amount);
+            events.push({ type: "BATTLEREALM_MINI_TURNS_GRANTED", payload: { playerId: action.playerId, requested: action.amount, previous, remaining: player.limits.miniTurnsRemaining, cap } });
             break;
         }
         case "register-limited-play": {

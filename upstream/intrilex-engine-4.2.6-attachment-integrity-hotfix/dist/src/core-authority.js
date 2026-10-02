@@ -1,5 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
-import { applyAegis, applyTap, markExileBound, processStartPhaseLifecycles, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js";
+import { applyAegis, applyTap, markExileBound, processFoundationActionRestriction, processStartPhaseLifecycles, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js";
 import { CORE_EFFECT_DECLARATION_PROFILE, resolveCoreEffect } from "./core-effects.js";
 import { evaluateProtection, revalidateAttachments } from "./interactions.js";
 import { CORE_RESPONSE_AUTHORITY_PROFILE, primaryDescriptor, targetAcceptsCounter } from "./core-response.js";
@@ -399,6 +399,8 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
             if (clearedDisruptions.length > 0)
                 events.push({ type: "CORE_JACK_DISRUPTIONS_CLEARED", payload: { playerId: actorId, disruptedActionTypes: clearedDisruptions } });
             events.push(...transitions.map((entry) => ({ type: entry.type, payload: entry.payload })));
+            if (processFoundationActionRestriction(state, actorId))
+                events.push({ type: "FOUNDATION_ACTION_RESTRICTION_BEGAN", payload: { playerId: actorId, startSequence: state.startPhaseSequenceByPlayer[actorId] ?? 0 } });
             break;
         }
         case "core-face-down-swap": {

@@ -1,4 +1,4 @@
-import { hashCanonical } from './browser-shared.js?v=e09244683def';
+import { hashCanonical } from './browser-shared.js?v=c617754e81fe';
 export class DeterministicPolicyRng {
   constructor(seed) { const value = Number(seed) >>> 0; this.seed = value || 1; this.cursor = 0; }
   nextUint32() { let x = this.seed >>> 0; x ^= x << 13; x ^= x >>> 17; x ^= x << 5; this.seed = x >>> 0; this.cursor += 1; return this.seed; }

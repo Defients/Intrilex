@@ -56,8 +56,8 @@ import {
 import {
   rankLabel,
   presentationFor,
-} from './rank-presentation.mjs?v=e09244683def';
-import { renderRankGlyph } from './rank-glyph.js?v=e09244683def';
+} from './rank-presentation.mjs?v=c617754e81fe';
+import { renderRankGlyph } from './rank-glyph.js?v=c617754e81fe';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmtIr = (n) => Math.round(n).toLocaleString('en-US');
@@ -586,7 +586,7 @@ function wireCta(container) {
  */
 async function loadPlayerRankState() {
   try {
-    const { fetchSelfProfile } = await import('../../play/profile/profile-data.js?v=e09244683def');
+    const { fetchSelfProfile } = await import('../../play/profile/profile-data.js?v=c617754e81fe');
     const result = await fetchSelfProfile();
     if (!result || !result.available || !result.profile) {
       return unavailableState();

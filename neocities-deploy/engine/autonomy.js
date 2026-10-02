@@ -1,11 +1,11 @@
-import { canonicalClone } from "./canonical-json.js";
-import { IntrilexEngine } from "./engine.js";
-import { hashCanonical } from "./hash.js";
-import { evaluateProtection } from "./interactions.js";
-import { compareScuttle, cardPointValue, hasOrdinaryScuttleImmunity, parseIdentity, rankDefinition } from "./ranks.js";
-import { nextIndex } from "./rng.js";
-import { addCard, createEmptyState, moveCard } from "./state.js";
-import { assertValidState } from "./validation.js";
+import { canonicalClone } from "./canonical-json.js?v=c617754e81fe";
+import { IntrilexEngine } from "./engine.js?v=c617754e81fe";
+import { hashCanonical } from "./hash.js?v=c617754e81fe";
+import { evaluateProtection } from "./interactions.js?v=c617754e81fe";
+import { compareScuttle, cardPointValue, hasOrdinaryScuttleImmunity, parseIdentity, rankDefinition } from "./ranks.js?v=c617754e81fe";
+import { nextIndex } from "./rng.js?v=c617754e81fe";
+import { addCard, createEmptyState, moveCard } from "./state.js?v=c617754e81fe";
+import { assertValidState } from "./validation.js?v=c617754e81fe";
 export const FIRST_CONTACT_AUTONOMY_BASELINE_PROFILE = Object.freeze({
     id: "first-contact-baseline",
     displayName: "First Contact Baseline — Score/Scuttle",

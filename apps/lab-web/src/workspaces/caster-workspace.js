@@ -14,7 +14,7 @@
 // esc() — never raw innerHTML with model output.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc, state } from '../state.js';
+import { esc } from '../state.js';
 import { policyOptions } from '../router.js';
 import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js';
 import { reconstructReplayFrames } from '../replay-frames.js';
@@ -196,12 +196,21 @@ const casterState = {
   replaysLoaded: false,
   gameplaySkin: 'dark',
   renderToken: 0,
+  lifecycleToken: 0,
+  commentaryToken: 0,
+  activeContainer: null,
+  cancelWorker: null,
   tacticalMount: null // Active Astra board mount controller (null when unmounted)
 };
 
 // ── Main render entry point ───────────────────────────────────────
 
 export async function renderCaster(appEl) {
+  // Ordinary shell/auth refreshes on the same route retain pending commentary.
+  // Route departure or a different container establishes a new ownership epoch.
+  if (casterState.activeContainer !== appEl) casterState.lifecycleToken += 1;
+  const lifecycle = casterState.lifecycleToken;
+  casterState.activeContainer = appEl;
   // Ensure the module is loaded (for the browser entry).
   await getCaster();
 
@@ -210,6 +219,7 @@ export async function renderCaster(appEl) {
 
   // Load saved replays from IndexedDB for the library section.
   await loadSavedReplays();
+  if (!isActiveCaster(appEl, lifecycle)) return;
 
   if (casterState.error) {
     disposeTacticalMount();
@@ -230,6 +240,23 @@ export async function renderCaster(appEl) {
   }
 
   renderTheatre(appEl);
+}
+
+function isActiveCaster(appEl, lifecycle = casterState.lifecycleToken) {
+  return casterState.activeContainer === appEl && appEl.isConnected && lifecycle === casterState.lifecycleToken;
+}
+
+function invalidateCommentary() {
+  casterState.commentaryToken += 1;
+  casterState.session?.cancelCommentary();
+  casterState.commentaryLoading = false;
+}
+
+function stopWorker() {
+  casterState.cancelWorker?.();
+  casterState.cancelWorker = null;
+  if (casterState.worker) casterState.worker.terminate();
+  casterState.worker = null;
 }
 
 // Release the Astra board mount (if any) before rendering a non-theatre screen.
@@ -415,6 +442,7 @@ function renderError(appEl, error) {
 
 async function renderTheatre(appEl) {
   const session = casterState.session;
+  if (!session || !isActiveCaster(appEl)) return;
   const beat = session.currentBeat;
   if (!beat) {
     appEl.innerHTML = '<div class="notice">No beat available.</div>';
@@ -453,7 +481,7 @@ async function renderTheatre(appEl) {
   }
 
   // Guard: if a newer render was triggered while we were building the snapshot, abort
-  if (myToken !== casterState.renderToken) return;
+  if (myToken !== casterState.renderToken || !isActiveCaster(appEl) || session !== casterState.session) return;
 
   // ── Build custom right rail HTML (commentary + transport controls) ──
   const railHtml = buildCasterRightRail(session, beat, idx, total, ps, policyIds);
@@ -479,7 +507,9 @@ async function renderTheatre(appEl) {
     if (exitBtn) {
       exitBtn.onclick = () => {
         stopTimer();
-        if (casterState.worker) { casterState.worker.terminate(); casterState.worker = null; }
+        invalidateCommentary();
+        casterState.renderToken += 1;
+        stopWorker();
         casterState.session = null;
         casterState.commentaryText = '';
         casterState.waitWhatCapture = null;
@@ -553,19 +583,6 @@ async function renderTheatre(appEl) {
     // Wire export buttons
     wireWaitWhatExport(appEl);
 
-    // Wire branch navigation
-    appEl.querySelectorAll('.caster-ww-branch-btn').forEach(btn => {
-      btn.onclick = () => {
-        const actionId = btn.dataset.actionId;
-        // Store the investigation context in state for the branches workspace
-        state.branchContext = state.branchContext || {};
-        state.branchContext.waitWhatInvestigation = casterState.waitWhatInvestigation;
-        state.branchContext.waitWhatActionId = actionId;
-        state.branchContext.waitWhatCaptureId = casterState.waitWhatCapture?.captureId;
-        // Navigate to #/branches
-        window.location.hash = '#/branches';
-      };
-    });
   }
 }
 
@@ -672,7 +689,12 @@ function wireCasterRightRail(appEl, session, idx, total) {
   if (prevBtn) prevBtn.onclick = () => { session.stepBackward(); onBeatChange(appEl); };
 
   const playBtn = $('caster-play');
-  if (playBtn) playBtn.onclick = () => { session.toggle(); startTimer(appEl); renderTheatre(appEl); };
+  if (playBtn) playBtn.onclick = () => {
+    const before = session.currentBeat;
+    session.toggle();
+    if (session.director.playing) startTimer(appEl); else stopTimer();
+    if (session.currentBeat !== before) onBeatChange(appEl); else renderTheatre(appEl);
+  };
 
   const nextBtn = $('caster-next');
   if (nextBtn) nextBtn.onclick = () => { session.stepForward(); onBeatChange(appEl); };
@@ -692,12 +714,17 @@ function wireCasterRightRail(appEl, session, idx, total) {
 
   const waitWhatBtn = $('caster-wait-what');
   if (waitWhatBtn) waitWhatBtn.onclick = async () => {
+    session.pause();
+    stopTimer();
     const capture = session.waitWhat();
+    if (!capture) return;
+    const lifecycle = casterState.lifecycleToken;
     casterState.waitWhatCapture = capture;
     casterState.waitWhatVisible = true;
     // Create an investigation from the capture
     const { createInvestigation } = await getInvestigation();
     const authHash = await getAuthorityHash();
+    if (!isActiveCaster(appEl, lifecycle) || casterState.session !== session || casterState.waitWhatCapture !== capture || !casterState.waitWhatVisible) return;
     casterState.waitWhatInvestigation = createInvestigation(capture, authHash);
     casterState.waitWhatInvalidated = false;
     casterState.waitWhatAnnotationText = '';
@@ -709,7 +736,9 @@ function wireCasterRightRail(appEl, session, idx, total) {
   const backSetupBtn = $('caster-back-setup');
   if (backSetupBtn) backSetupBtn.onclick = () => {
     stopTimer();
-    if (casterState.worker) { casterState.worker.terminate(); casterState.worker = null; }
+    invalidateCommentary();
+    casterState.renderToken += 1;
+    stopWorker();
     casterState.session = null;
     casterState.commentaryText = '';
     casterState.waitWhatCapture = null;
@@ -743,8 +772,7 @@ function renderWaitWhatPanel(capture, investigation, invalidated) {
   const legalAlternativesHtml = legalCount != null && legalCount > 1
     ? `<div class="caster-ww-alternatives" data-testid="caster-ww-alternatives">
         <h4>Legal Alternatives (${legalCount} options)</h4>
-        <p class="caster-ww-alternatives-hint">${legalCount} legal actions were available at this decision point. Use the Branches workspace to explore counterfactual outcomes.</p>
-        <button class="caster-ww-branch-btn secondary-button" data-action-id="runner-up" data-testid="caster-ww-branch-btn">Branch Runner-Up Action →</button>
+        <p class="caster-ww-alternatives-hint">${legalCount} legal actions were recorded at this decision. This capture does not include a verified alternative action for the Branch Lab. Export the investigation to preserve this exact replay position.</p>
       </div>`
     : '';
 
@@ -839,7 +867,10 @@ async function wireWaitWhatAnnotation(appEl) {
   saveBtn.onclick = async () => {
     const text = casterState.waitWhatAnnotationText.trim();
     if (!text || !casterState.waitWhatInvestigation) return;
+    const current = casterState.waitWhatInvestigation;
+    const lifecycle = casterState.lifecycleToken;
     const { addAnnotation } = await getInvestigation();
+    if (!isActiveCaster(appEl, lifecycle) || current !== casterState.waitWhatInvestigation) return;
     const severityPrefix = casterState.waitWhatAnnotationSeverity
       ? `[${casterState.waitWhatAnnotationSeverity}] `
       : '';
@@ -861,7 +892,10 @@ async function wireWaitWhatExport(appEl) {
   if (!casterState.waitWhatInvestigation) return;
 
   if (jsonBtn) jsonBtn.onclick = async () => {
+    const current = casterState.waitWhatInvestigation;
+    const lifecycle = casterState.lifecycleToken;
     const { exportInvestigation } = await getInvestigation();
+    if (!isActiveCaster(appEl, lifecycle) || current !== casterState.waitWhatInvestigation) return;
     const { investigation, exportData, exportFormat } = exportInvestigation(casterState.waitWhatInvestigation, 'json');
     casterState.waitWhatInvestigation = investigation;
     casterState.waitWhatExportResult = { format: exportFormat };
@@ -870,7 +904,10 @@ async function wireWaitWhatExport(appEl) {
   };
 
   if (mdBtn) mdBtn.onclick = async () => {
+    const current = casterState.waitWhatInvestigation;
+    const lifecycle = casterState.lifecycleToken;
     const { exportInvestigation } = await getInvestigation();
+    if (!isActiveCaster(appEl, lifecycle) || current !== casterState.waitWhatInvestigation) return;
     const { investigation, exportData, exportFormat } = exportInvestigation(casterState.waitWhatInvestigation, 'markdown');
     casterState.waitWhatInvestigation = investigation;
     casterState.waitWhatExportResult = { format: exportFormat };
@@ -898,17 +935,26 @@ function downloadInvestigation(data, ext) {
 
 async function onBeatChange(appEl) {
   const session = casterState.session;
-  if (!session) return;
+  if (!session || !isActiveCaster(appEl)) return;
+  const request = ++casterState.commentaryToken;
+  const lifecycle = casterState.lifecycleToken;
+  const beat = session.currentBeat;
+  const isCurrent = () => isActiveCaster(appEl, lifecycle) && session === casterState.session
+    && request === casterState.commentaryToken && session.currentBeat === beat;
 
   // Show loading state and re-render the theatre immediately
   // (updates beat display, slider, timeline, clears old commentary)
   casterState.commentaryLoading = true;
   casterState.commentaryError = null;
+  casterState.commentaryText = '';
+  casterState.commentaryHeadline = '';
+  casterState.commentaryTone = '';
   renderTheatre(appEl);
 
   try {
     const result = await session.generateCommentaryForCurrentBeat({
       onToken: (chunk) => {
+        if (!isCurrent()) return;
         // Incremental streaming update — append to commentary body text.
         // Only update the DOM textContent (safe, no re-render needed).
         const bodyEl = appEl.querySelector('[data-testid="caster-commentary-body"]');
@@ -920,6 +966,7 @@ async function onBeatChange(appEl) {
         casterState.commentaryText = (casterState.commentaryText || '') + chunk;
       }
     });
+    if (!isCurrent()) return;
     casterState.commentaryLoading = false;
     if (result.skipped) {
       casterState.commentaryText = '';
@@ -937,6 +984,7 @@ async function onBeatChange(appEl) {
       casterState.commentaryError = result.error || 'Unknown error';
     }
   } catch (err) {
+    if (!isCurrent()) return;
     casterState.commentaryLoading = false;
     casterState.commentaryText = '';
     casterState.commentaryError = err?.message || String(err);
@@ -949,6 +997,7 @@ async function onBeatChange(appEl) {
   if (casterState.waitWhatVisible && casterState.waitWhatInvestigation) {
     const { checkInvalidation } = await getInvestigation();
     const authHash = await getAuthorityHash();
+    if (!isCurrent() || !casterState.waitWhatVisible || !casterState.waitWhatInvestigation) return;
     const checked = checkInvalidation(casterState.waitWhatInvestigation, authHash);
     if (checked.status === 'INVALIDATED' && !casterState.waitWhatInvalidated) {
       casterState.waitWhatInvestigation = checked;
@@ -1005,9 +1054,11 @@ async function buildProvider() {
 }
 
 async function buildAndLoadSession(appEl, matchResult, frames) {
+  const lifecycle = casterState.lifecycleToken;
   const { CasterSession, COMMENTARY_MODE, VIEWER_MODE } = await getCaster();
   const c = casterState.config;
   const provider = await buildProvider();
+  if (!isActiveCaster(appEl, lifecycle)) return;
   const session = new CasterSession({
     provider,
     mode: c.mode === 'DEV_OBSERVATORY' ? COMMENTARY_MODE.DEV_OBSERVATORY : COMMENTARY_MODE.BROADCAST,
@@ -1023,6 +1074,7 @@ async function buildAndLoadSession(appEl, matchResult, frames) {
 }
 
 async function startMatch(appEl) {
+  const lifecycle = casterState.lifecycleToken;
   const c = casterState.config;
   casterState.loading = true;
   casterState.loadingMessage = 'Running match in worker…';
@@ -1037,12 +1089,15 @@ async function startMatch(appEl) {
       decisionLimit: c.decisionLimit,
       profileId: 'core-advanced-authority'
     });
+    if (!isActiveCaster(appEl, lifecycle)) return;
 
     // Reconstruct frames in the main thread using the browser engine.
     const frames = await reconstructReplayFrames(matchResult.replay);
+    if (!isActiveCaster(appEl, lifecycle)) return;
 
     await buildAndLoadSession(appEl, matchResult, frames);
   } catch (err) {
+    if (!isActiveCaster(appEl, lifecycle)) return;
     casterState.loading = false;
     casterState.error = err?.message || String(err);
     renderError(appEl, casterState.error);
@@ -1052,6 +1107,7 @@ async function startMatch(appEl) {
 // ── Load a saved replay from IndexedDB ────────────────────────────
 
 async function loadSavedReplayIntoCaster(appEl, replayId) {
+  const lifecycle = casterState.lifecycleToken;
   casterState.loading = true;
   casterState.loadingMessage = `Loading replay ${replayId}…`;
   casterState.error = null;
@@ -1059,12 +1115,14 @@ async function loadSavedReplayIntoCaster(appEl, replayId) {
 
   try {
     const record = await getReplay(replayId);
+    if (!isActiveCaster(appEl, lifecycle)) return;
     if (!record || !record.certifiedReplay) {
       throw new Error('Replay not found or missing certified replay data');
     }
 
     // Reconstruct frames from the certified replay.
     const frames = await reconstructReplayFrames(record.certifiedReplay);
+    if (!isActiveCaster(appEl, lifecycle)) return;
     if (frames.length === 0) {
       throw new Error('Could not reconstruct frames from certified replay');
     }
@@ -1094,6 +1152,7 @@ async function loadSavedReplayIntoCaster(appEl, replayId) {
 
     await buildAndLoadSession(appEl, matchResult, frames);
   } catch (err) {
+    if (!isActiveCaster(appEl, lifecycle)) return;
     casterState.loading = false;
     casterState.error = err?.message || String(err);
     renderError(appEl, casterState.error);
@@ -1101,21 +1160,28 @@ async function loadSavedReplayIntoCaster(appEl, replayId) {
 }
 
 function runMatchInWorker(config) {
+  stopWorker();
   return new Promise((resolve, reject) => {
     const worker = new Worker('worker.js', { type: 'module' });
     casterState.worker = worker;
+    const finish = () => {
+      worker.terminate();
+      if (casterState.worker === worker) {
+        casterState.worker = null;
+        casterState.cancelWorker = null;
+      }
+    };
+    casterState.cancelWorker = () => { finish(); reject(new Error('Match generation cancelled')); };
     worker.onmessage = (e) => {
       const x = e.data;
       if (x.type === 'autonomy-match-result') {
-        worker.terminate();
-        casterState.worker = null;
+        finish();
         if (x.ok) resolve(x.result);
         else reject(new Error(x.error || 'worker error'));
       }
     };
     worker.onerror = (e) => {
-      worker.terminate();
-      casterState.worker = null;
+      finish();
       reject(new Error(e.message || 'worker error'));
     };
     worker.postMessage({
@@ -1271,6 +1337,7 @@ async function testOllama(appEl) {
 // ── Helpers ───────────────────────────────────────────────────────
 
 function beatLabel(beat) {
+  if (beat.redacted) return 'Future beat (hidden)';
   if (!beat) return '—';
   if (beat.beatKind === 'MATCH_START') return 'Match Start';
   if (beat.beatKind === 'MATCH_END') return 'Match End';
@@ -1288,11 +1355,13 @@ function beatLabel(beat) {
 // and playback position all survive the route change.
 
 export function cleanupCaster() {
+  casterState.lifecycleToken += 1;
+  casterState.renderToken += 1;
+  casterState.activeContainer = null;
+  invalidateCommentary();
+  casterState.loading = false;
   stopTimer();
-  if (casterState.worker) {
-    casterState.worker.terminate();
-    casterState.worker = null;
-  }
+  stopWorker();
   // Dispose the Astra board mount (if active) to release its React root.
   if (casterState.tacticalMount) {
     try { casterState.tacticalMount.dispose(); } catch { /* ignore */ }

@@ -1500,6 +1500,14 @@ The bonus card:
 - does not create its normal scoring trigger, including any Voltage triggered by being scored;
 - cannot be used as an effect, Scuttle source, Combo, Super, Ultra, cost, or Royal Marriage component for this instruction.
 
+If the bonus score is used, during that player's next Action Phase:
+
+- their Mini-Turn hard cap is 1;
+- they cannot initiate a Combo;
+- they cannot initiate a Super.
+
+Effects that grant additional Mini-Turns still respect that temporary hard cap.
+
 ### 10♦ — Mimic
 
 10♦ always remains a Rank-10 play for limits, Royal Shield, identity, and Exile-Bound.

@@ -58,6 +58,10 @@ export interface PlayerLimits {
     queensCourtPlayedThisFT: boolean;
     pendingFullTurnSkips: number;
     pendingActionPhaseSkips: number;
+    /** Armed by the 10♣ Foundation bonus; keyed to the controller's recorded next Start Phase. */
+    foundationRestrictionPending?: StartEventRef;
+    /** The Full Turn carrying the controller's restricted Action Phase: Mini-Turn hard cap 1, no Combo/Super initiation. Self-expires when the Full Turn advances. */
+    foundationActionRestriction?: number;
 }
 export interface PlayerState {
     id: PlayerId;

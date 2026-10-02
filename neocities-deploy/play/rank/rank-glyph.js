@@ -17,7 +17,7 @@ import {
   rankLabel,
   presentationFor,
   hasGlyph,
-} from './rank-presentation.mjs?v=e09244683def';
+} from './rank-presentation.mjs?v=c617754e81fe';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

@@ -1,5 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
-import { hasAegis } from "./lifecycle.js";
+import { foundationActionRestricted, hasAegis } from "./lifecycle.js";
 import { moveCard } from "./state.js";
 import type { CardId, EngineState, Phase10Action, PlayerId, ZoneName } from "./types.js";
 
@@ -148,6 +148,7 @@ export function resolvePhase10Action(input: EngineState, actorId: PlayerId, acti
       break;
     }
     case "declare-combo": {
+      if (foundationActionRestricted(state, actorId)) return fail("FOUNDATION_ACTION_RESTRICTION", "10♣ Foundation bonus restricts Combo initiation during this Action Phase");
       if (!action.recipeDefined) return fail("COMBO_UNDEFINED", "Undefined Combo recipe is illegal before Trap detection", { sourceCardIds: action.sourceCardIds });
       if (!action.sourceCardIds.every((id) => state.cards[id]?.zone === `${actorId}_HAND` && state.cards[id]?.controllerId === actorId)) return fail("COMBO_SOURCE", "Every Combo source must be controlled in hand");
       events.push({ type: "DEFINED_COMBO_DECLARED", payload: { actorId, sourceCardIds: action.sourceCardIds, initiatorCardId: action.initiatorCardId } });

@@ -118,7 +118,7 @@
       },
       "previousStateHash": "496386c52d0a845577475ddfa545d50012cc37b5664ba8e9ff4544fca9587b00",
       "sequence": 1,
-      "stateHash": "ab027f28deef3e125ca8adff45c681822fd55c7a53c6d714c220ec45c452aaae",
+      "stateHash": "bdecbf317005e36743770582d383bf35939a34fba61cc5d5b7acd59a3316f31f",
       "type": "TEN_CLUB_FOUNDATION_RESOLVED",
       "visibility": "public"
     }
@@ -130,9 +130,9 @@
       "accepted": true,
       "eventStartIndex": 0,
       "eventEndIndex": 1,
-      "eventRangeHash": "8a4cff2a32fec4d2c345778342760f704327488325e0fb09b21aeafa419656dc"
+      "eventRangeHash": "0c777567cb376919be2039e7aa4b86fe357c7d99444b5f7c37db89824fb4ef1d"
     }
   ],
-  "publicEventLogHash": "8a4cff2a32fec4d2c345778342760f704327488325e0fb09b21aeafa419656dc",
-  "publicContentHash": "7a8c6e63fae52e58be8e5ef35119dbe57d43ad5b3e17d6bed9aac38b7e61b542"
+  "publicEventLogHash": "0c777567cb376919be2039e7aa4b86fe357c7d99444b5f7c37db89824fb4ef1d",
+  "publicContentHash": "c5cc7ed39baf9a8d4fc44a333e62e3979d425c3a005363c37c1e16afd4a6e334"
 }

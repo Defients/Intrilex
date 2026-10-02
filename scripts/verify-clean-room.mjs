@@ -17,7 +17,7 @@
 //
 // Usage:
 //   node scripts/verify-clean-room.mjs           # full check
-//   node scripts/verify-clean-room.mjs --quick   # skip install + build
+//   node scripts/verify-clean-room.mjs --quick   # skip install; build and verification still run
 // ═══════════════════════════════════════════════════════════════
 
 import { spawnSync } from 'node:child_process';

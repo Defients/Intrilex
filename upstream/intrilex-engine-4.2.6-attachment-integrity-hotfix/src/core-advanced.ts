@@ -1,5 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
-import { applyAegis, applyTap, hasAegis, markExileBound, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js";
+import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js";
 import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js";
 import { cardPointValue, parseIdentity, rankDefinition, resolveRankAction } from "./ranks.js";
 import { deriveSecuredPoints, moveCard } from "./state.js";
@@ -88,6 +88,7 @@ export function advancedStackClass(a:CoreAdvancedAction):"super"|"ultra"|"royal-
 export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:CoreAdvancedAction):AdvancedResolution{
   if(!profile(input))return fail("CORE_ADVANCED_PROFILE","Advanced Core Authority profile is not active");
   const s=canonicalClone(input),events:Event[]=[];
+  if(a.kind.startsWith("advanced-super")&&foundationActionRestricted(s,actorId))return fail("FOUNDATION_ACTION_RESTRICTION","10♣ Foundation bonus restricts Combo and Super initiation during this Action Phase");
   switch(a.kind){
     case "advanced-royal-marriage":{
       if(!inHand(s,a.kingCardId,actorId)||!inHand(s,a.queenCardId,actorId)||rank(s,a.kingCardId)!=="K"||rank(s,a.queenCardId)!=="Q"||suit(s,a.kingCardId)!==suit(s,a.queenCardId))return fail("ROYAL_MARRIAGE","Royal Marriage requires same-suit King and Queen in hand");
@@ -112,7 +113,7 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
       if(!allRank(s,a.sourceCardIds,"8",actorId))return fail("SUPER_EIGHT_SOURCE","⭐8 requires two Eights in hand");const t=s.cards[a.targetCardId];if(!t||t.controllerId===actorId||!t.zone.endsWith("_PR")||hasAegis(t))return fail("SUPER_EIGHT_TARGET","⭐8 requires enemy non-Aegis PR target");for(const id of a.sourceCardIds)moveCard(s,id,"GY");moveCard(s,t.id,"GY");events.push(...revalidateAttachments(s).map(e=>({type:e.type,payload:e.payload as Record<string,unknown>})));events.push({type:"CORE_ADVANCED_SUPER_EIGHT_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,targetCardId:t.id}});break;
     }
     case "advanced-super-j-tempo":{
-      if(!allRank(s,a.sourceCardIds,"J",actorId))return fail("SUPER_J_SOURCE","⭐J requires two Jacks in hand");for(const id of a.sourceCardIds)moveCard(s,id,"GY");const p=s.players[actorId]!;p.limits.miniTurnsRemaining=Math.min(3,p.limits.miniTurnsRemaining+2);events.push({type:"CORE_ADVANCED_SUPER_J_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,miniTurnsRemaining:p.limits.miniTurnsRemaining}});break;
+      if(!allRank(s,a.sourceCardIds,"J",actorId))return fail("SUPER_J_SOURCE","⭐J requires two Jacks in hand");for(const id of a.sourceCardIds)moveCard(s,id,"GY");const p=s.players[actorId]!;p.limits.miniTurnsRemaining=Math.min(miniTurnHardCap(s,actorId),p.limits.miniTurnsRemaining+2);events.push({type:"CORE_ADVANCED_SUPER_J_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,miniTurnsRemaining:p.limits.miniTurnsRemaining}});break;
     }
     case "advanced-super-three-raid":{
       if(!isUnrestricted(input))return fail("UNRESTRICTED_REQUIRED","⭐3 Raid requires the unrestricted Core authority profile");
@@ -218,13 +219,16 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
         // Rulebook §10♣: the bonus card is scored for Points only — it may
         // release Nine-conditioned taps but creates no scoring trigger.
         released.push(...releaseNineTapsForScoring(s, actorId));
+        // Rulebook §10♣: using the bonus restricts the controller's next Action
+        // Phase — Mini-Turn hard cap 1, no Combo or Super initiation.
+        armFoundationActionRestriction(s, actorId);
       }
       events.push({ type: "CORE_ADVANCED_TEN_CLUB_FOUNDATION_RESOLVED", payload: { sourceCardId: a.sourceCardId, preEntryPoints: before, bonusScoreCardId: bonus } });
       events.push(...released.map((entry) => ({ type: entry.type, payload: entry.payload as Record<string, unknown> })));
       break;
     }
     case "advanced-rank10-heart-tempo":{
-      if(suit(s,a.sourceCardId)!=="♥")return fail("RANK10_SOURCE","Tempo Spike requires 10♥");const problem=consumeRank10(s,actorId,a.sourceCardId);if(problem)return fail("RANK10_LIMIT",problem);moveCard(s,a.sourceCardId,"EXILE");const p=s.players[actorId]!;p.limits.miniTurnsRemaining=Math.min(3,p.limits.miniTurnsRemaining+2);const drawn=s.zones.dp[0];if(drawn)moveCard(s,drawn,`${actorId}_HAND`,actorId);events.push({type:"CORE_ADVANCED_TEN_HEART_RESOLVED",payload:{sourceCardId:a.sourceCardId,drawnCardId:drawn??null,miniTurnsRemaining:p.limits.miniTurnsRemaining}});break;
+      if(suit(s,a.sourceCardId)!=="♥")return fail("RANK10_SOURCE","Tempo Spike requires 10♥");const problem=consumeRank10(s,actorId,a.sourceCardId);if(problem)return fail("RANK10_LIMIT",problem);moveCard(s,a.sourceCardId,"EXILE");const p=s.players[actorId]!;p.limits.miniTurnsRemaining=Math.min(miniTurnHardCap(s,actorId),p.limits.miniTurnsRemaining+2);const drawn=s.zones.dp[0];if(drawn)moveCard(s,drawn,`${actorId}_HAND`,actorId);events.push({type:"CORE_ADVANCED_TEN_HEART_RESOLVED",payload:{sourceCardId:a.sourceCardId,drawnCardId:drawn??null,miniTurnsRemaining:p.limits.miniTurnsRemaining}});break;
     }
     case "advanced-rank10-spade-recovery":{
       if(suit(s,a.sourceCardId)!=="♠")return fail("RANK10_SOURCE","Exile Recovery requires 10♠");const problem=consumeRank10(s,actorId,a.sourceCardId);if(problem)return fail("RANK10_LIMIT",problem);if(s.cards[a.recoverCardId]?.zone!=="EXILE")return fail("RANK10_TARGET","Exile Recovery target must be in Exile");moveCard(s,a.recoverCardId,`${actorId}_HAND`,actorId);revealUntilStart(s.cards[a.recoverCardId]!,futureStart(s,actorId));moveCard(s,a.sourceCardId,"EXILE");events.push({type:"CORE_ADVANCED_TEN_SPADE_RECOVERY_RESOLVED",payload:{sourceCardId:a.sourceCardId,recoverCardId:a.recoverCardId}});break;
@@ -241,7 +245,7 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
       const problem=consumeUltra(s,actorId,a.sourceCardIds,"3-black");if(problem)return fail("ULTRA_RECIPE",problem);if(new Set([a.scoreCardId,a.castCardId,a.exileCardId]).size!==3||![a.scoreCardId,a.castCardId,a.exileCardId].every(id=>a.sourceCardIds.includes(id)))return fail("ULTRA_ROLES","3 Black roles must partition the sources");const scoreIdentity=s.cards[a.scoreCardId]!.identity;if(rank(s,a.scoreCardId)==="7"||scoreIdentity==="BJ")return fail("ULTRA_SCORE_RIDER_UNSUPPORTED","3 Black score role cannot use a card with an uncertified scoring rider");moveCard(s,a.scoreCardId,`${actorId}_PR`,actorId);s.cards[a.scoreCardId]!.state.pointValue=cardPointValue(s.cards[a.scoreCardId]!);let castResolved=false;if(a.castEffect.sourceCardId===a.castCardId){const cast=resolveCoreEffect(s,actorId,a.castEffect);if(cast.ok){Object.assign(s,cast.state);events.push(...cast.events);castResolved=true;}}if(!castResolved&&s.cards[a.castCardId]?.zone===`${actorId}_HAND`)moveCard(s,a.castCardId,"GY");moveCard(s,a.exileCardId,"EXILE");events.push({type:"CORE_ADVANCED_ULTRA_THREE_BLACK_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,scoreCardId:a.scoreCardId,castCardId:a.castCardId,exileCardId:a.exileCardId,castResolved,castFizzled:!castResolved,priorityWindowsInside:0}});break;
     }
     case "advanced-ultra-two-black-two-red":{
-      const problem=consumeUltra(s,actorId,a.sourceCardIds,"2-black-2-red");if(problem)return fail("ULTRA_RECIPE",problem);for(const id of a.sourceCardIds)moveCard(s,id,"GY");const p=s.players[actorId]!;p.limits.miniTurnsRemaining=Math.min(3,p.limits.miniTurnsRemaining+2);let moved:CardId[]=[];if(a.branch==="draw-two"){for(let i=0;i<2&&s.zones.dp.length;i++){const id=s.zones.dp[0]!;moveCard(s,id,`${actorId}_HAND`,actorId);moved.push(id);}}else if(a.rummageCardId&&s.cards[a.rummageCardId]?.zone==="EXILE"){moveCard(s,a.rummageCardId,`${actorId}_HAND`,actorId);moved=[a.rummageCardId];}events.push({type:"CORE_ADVANCED_ULTRA_2B2R_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,branch:a.branch,movedCardIds:moved,miniTurnsRemaining:p.limits.miniTurnsRemaining}});break;
+      const problem=consumeUltra(s,actorId,a.sourceCardIds,"2-black-2-red");if(problem)return fail("ULTRA_RECIPE",problem);for(const id of a.sourceCardIds)moveCard(s,id,"GY");const p=s.players[actorId]!;p.limits.miniTurnsRemaining=Math.min(miniTurnHardCap(s,actorId),p.limits.miniTurnsRemaining+2);let moved:CardId[]=[];if(a.branch==="draw-two"){for(let i=0;i<2&&s.zones.dp.length;i++){const id=s.zones.dp[0]!;moveCard(s,id,`${actorId}_HAND`,actorId);moved.push(id);}}else if(a.rummageCardId&&s.cards[a.rummageCardId]?.zone==="EXILE"){moveCard(s,a.rummageCardId,`${actorId}_HAND`,actorId);moved=[a.rummageCardId];}events.push({type:"CORE_ADVANCED_ULTRA_2B2R_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,branch:a.branch,movedCardIds:moved,miniTurnsRemaining:p.limits.miniTurnsRemaining}});break;
     }
     case "advanced-voltage-three": {
       const rt = phase8Runtime(s);
@@ -552,6 +556,8 @@ export function enumerateAdvancedCoreCandidates(state:Readonly<EngineState>,acto
       }
     }
   }
+  // 10♣ Foundation bonus rider: a restricted Action Phase cannot initiate a Super.
+  if (foundationActionRestricted(s, actorId)) return out.filter((c) => c.family !== "super");
   return out;
 }
 

@@ -4,7 +4,7 @@
 // truth shared with the match configurator.
 // ═══════════════════════════════════════════════════════════════
 
-import { ARCHETYPE_DEFINITIONS, getArchetypeDefinition } from './opponent-catalog.mjs?v=e09244683def';
+import { ARCHETYPE_DEFINITIONS, getArchetypeDefinition } from './opponent-catalog.mjs?v=c617754e81fe';
 
 const toMatchPlayStyle = (playstyle) => playstyle.replace(/ · /g, ' — ');
 

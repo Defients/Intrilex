@@ -596,11 +596,14 @@ const ID_OVERRIDES = {
     relatedRules: [{ label: '10♠ — Stack Theft', ref: '§10♠ Stack Theft' }, { label: '10♠ — Exile Recovery', ref: '§10♠ Exile Recovery' }, { label: 'Interrupt timing hotfix', ref: '§v4.1.1' }],
   },
   '10♣': {
-    overview: '10♣ is Foundation. When scored for Points, it enters PR with Aegis; that Aegis is removed at the beginning of its controller\'s next Start Phase. If the player\'s pre-entry Secured PR was 0, it queues an optional trigger to score one legal hand card into PR without spending a Mini-Turn.',
+    overview: '10♣ is Foundation. When scored for Points, it enters PR with Aegis; that Aegis is removed at the beginning of its controller\'s next Start Phase. If the player\'s pre-entry Secured PR was 0, it queues an optional trigger to score one legal hand card into PR without spending a Mini-Turn. If the bonus score is used, that player\'s next Action Phase is restricted: Mini-Turn hard cap 1, and no Combo or Super initiation.',
     rulings: [
       ruling('tenclubs-foundation-bonus', 'Foundation bonus card is Points-only',
         'The bonus card is Points-only, can release Nine-conditioned taps, and does not create its normal scoring trigger, including any Voltage triggered by being scored; it cannot be used as an effect, Scuttle source, Combo, Super, Ultra, cost, or Royal Marriage component for this instruction. Immediately before 10♣ enters PR, record that player\'s Secured PR Points; if the recorded total was 0, queue the optional trigger.',
         { tags: ['foundation', 'scoring-trigger', 'aegis'], relatedSystems: ['Scoring Triggers', 'Aegis'] }),
+      ruling('tenclubs-foundation-restriction', 'Foundation bonus restricts the next Action Phase',
+        'If the bonus score is used, during that player\'s next Action Phase their Mini-Turn hard cap is 1 and they cannot initiate a Combo or a Super. Effects that grant additional Mini-Turns still respect that temporary hard cap. The restriction concludes when that Action Phase ends and does not affect later turns.',
+        { tags: ['foundation', 'mini-turns', 'combo', 'super'], relatedSystems: ['Action Phase', 'Mini-Turns', 'Combos', 'Supers'] }),
     ],
     relatedRules: [{ label: '10♣ — Foundation', ref: '§10♣' }],
   },

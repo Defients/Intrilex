@@ -1,5 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
-import { applyAegis, applyTap, hasAegis, markExileBound, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js";
+import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js";
 import { revalidateAttachments } from "./interactions.js";
 import { deriveSecuredPoints, moveCard } from "./state.js";
 export const RANK_REGISTRY = Object.freeze({
@@ -250,6 +250,12 @@ export function resolveRankAction(input, actorId, action) {
         return fail("RANK_PLAYER", `Unknown actor ${actorId}`);
     const state = canonicalClone(input);
     const events = [];
+    // 10♣ Foundation bonus rider: the two-source paired Supers (⭐2/⭐4/⭐8) cannot
+    // be initiated during the restricted Action Phase. Response authorities such as
+    // ace-counter and Rank-10 plays (including 10♦ mimic) remain legal.
+    if ((action.kind === "commandeer" || action.kind === "row-exchange" || action.kind === "absolute-scuttle") && foundationActionRestricted(state, actorId)) {
+        return fail("FOUNDATION_ACTION_RESTRICTION", "10♣ Foundation bonus restricts Combo and Super initiation during this Action Phase");
+    }
     switch (action.kind) {
         case "ace-counter": {
             const expectedCount = action.authority === "super" ? 2 : 1;
@@ -591,7 +597,7 @@ export function resolveRankAction(input, actorId, action) {
                 }
                 case "super-j-tempo": {
                     const p = state.players[actorId];
-                    p.limits.miniTurnsRemaining = Math.min(3, p.limits.miniTurnsRemaining + 2);
+                    p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(state, actorId), p.limits.miniTurnsRemaining + 2);
                     events.push({ type: "MIMIC_SUPER_J_TEMPO_RESOLVED", payload: { sourceCardId: action.sourceCardId, miniTurnsRemaining: p.limits.miniTurnsRemaining } });
                     break;
                 }
@@ -665,6 +671,9 @@ export function resolveRankAction(input, actorId, action) {
                 // The bonus card is scored for Points only — it may release
                 // Nine-conditioned taps but creates no scoring trigger.
                 released.push(...releaseNineTapsForScoring(state, actorId));
+                // Using the bonus restricts the controller's next Action Phase —
+                // Mini-Turn hard cap 1, no Combo or Super initiation.
+                armFoundationActionRestriction(state, actorId);
             }
             events.push({ type: "TEN_CLUB_FOUNDATION_RESOLVED", payload: { sourceCardId: action.sourceCardId, preEntryPoints: before, bonusScoreCardId: bonus } });
             events.push(...released.map((entry) => ({ type: entry.type, payload: entry.payload })));

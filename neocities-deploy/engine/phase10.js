@@ -1,6 +1,6 @@
-import { canonicalClone } from "./canonical-json.js";
-import { hasAegis } from "./lifecycle.js";
-import { moveCard } from "./state.js";
+import { canonicalClone } from "./canonical-json.js?v=c617754e81fe";
+import { foundationActionRestricted, hasAegis } from "./lifecycle.js?v=c617754e81fe";
+import { moveCard } from "./state.js?v=c617754e81fe";
 const TRAP_IDENTITIES = new Set(["4♠", "4♥", "4♦", "4♣", "5♠", "5♥", "5♦", "5♣"]);
 function fail(code, message, details) {
     return details === undefined ? { ok: false, code, message } : { ok: false, code, message, details };
@@ -136,6 +136,8 @@ export function resolvePhase10Action(input, actorId, action) {
             break;
         }
         case "declare-combo": {
+            if (foundationActionRestricted(state, actorId))
+                return fail("FOUNDATION_ACTION_RESTRICTION", "10♣ Foundation bonus restricts Combo initiation during this Action Phase");
             if (!action.recipeDefined)
                 return fail("COMBO_UNDEFINED", "Undefined Combo recipe is illegal before Trap detection", { sourceCardIds: action.sourceCardIds });
             if (!action.sourceCardIds.every((id) => state.cards[id]?.zone === `${actorId}_HAND` && state.cards[id]?.controllerId === actorId))

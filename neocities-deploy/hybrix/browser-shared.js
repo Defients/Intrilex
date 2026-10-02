@@ -1,5 +1,5 @@
-export { hashCanonical, sha256Text } from '../engine/hash.js?v=e09244683def';
-export { canonicalize, canonicalClone } from '../engine/canonical-json.js?v=e09244683def';
+export { hashCanonical, sha256Text } from '../engine/hash.js?v=c617754e81fe';
+export { canonicalize, canonicalClone } from '../engine/canonical-json.js?v=c617754e81fe';
 export function sanitizeCsvCell(value) {
   const text = value == null ? '' : String(value);
   const safe = /^[=+\-@]/.test(text) ? `'${text}` : text;

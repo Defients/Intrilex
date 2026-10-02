@@ -1,6 +1,6 @@
-import { canonicalClone } from "./canonical-json.js";
-import { moveCard } from "./state.js";
-import { parseIdentity, rankDefinition } from "./ranks.js";
+import { canonicalClone } from "./canonical-json.js?v=c617754e81fe";
+import { moveCard } from "./state.js?v=c617754e81fe";
+import { parseIdentity, rankDefinition } from "./ranks.js?v=c617754e81fe";
 function fail(code, message, details) {
     return details === undefined ? { ok: false, code, message } : { ok: false, code, message, details };
 }

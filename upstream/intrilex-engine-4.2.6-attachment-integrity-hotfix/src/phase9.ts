@@ -1,5 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
-import { applyTap, hasAegis } from "./lifecycle.js";
+import { applyTap, hasAegis, processFoundationActionRestriction } from "./lifecycle.js";
 import { evaluateProtection, revalidateAttachments } from "./interactions.js";
 import { hashCanonical } from "./hash.js";
 import { exhaustedWinner } from "./phase8.js";
@@ -488,6 +488,7 @@ export function resolvePhase9Action(input: EngineState, actorId: PlayerId, actio
       state.phase = "Start";
       state.activePlayerId = action.playerId;
       state.startPhaseSequenceByPlayer[action.playerId] = (state.startPhaseSequenceByPlayer[action.playerId] ?? 0) + 1;
+      if (processFoundationActionRestriction(state, action.playerId)) events.push({ type: "FOUNDATION_ACTION_RESTRICTION_BEGAN", payload: { playerId: action.playerId, startSequence: state.startPhaseSequenceByPlayer[action.playerId] ?? 0 } });
       const untappedCardIds = autoUntap(state, action.playerId);
       events.push({ type: "FIRST_CONTACT_START_COMPLETED", payload: { playerId: action.playerId, untappedCardIds, miniTurnsRemaining: 1 } });
       break;

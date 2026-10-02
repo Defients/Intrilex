@@ -17,6 +17,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { runInNewContext } from 'node:vm';
 
 const root = process.cwd();
 const casterSrc = readFileSync(join(root, 'apps/lab-web/src/workspaces/caster-workspace.js'), 'utf8');
@@ -211,4 +212,126 @@ test('caster-workspace.js: cleanupCaster is still exported', () => {
 test('caster-workspace.js: render token guard prevents stale renders', () => {
   assert.match(casterSrc, /renderToken/, 'must have renderToken state');
   assert.match(casterSrc, /myToken.*renderToken/, 'must check render token');
+});
+
+// Execute the saved workspace functions with only their browser/import boundaries
+// replaced. Deferred completions reproduce races without wall-clock sleeps.
+function workspaceHarness({ render = () => {}, investigation = {} } = {}) {
+  const source = casterSrc.replace(/^import .*;\r?$/gm, '').replace(/^export /gm, '');
+  return runInNewContext(`${source}\n
+    renderTheatre = render;
+    getInvestigation = async () => investigation;
+    getAuthorityHash = async () => 'authority';
+    getCaster = async () => ({});
+    getStrictView = async () => (() => ({}));
+    loadSavedReplays = async () => {};
+    ({ state: casterState, renderCaster, onBeatChange, cleanupCaster, wireCasterRightRail,
+       wireWaitWhatExport, wireWaitWhatAnnotation, runMatchInWorker, renderWaitWhatPanel });`, {
+    render, investigation, setInterval, clearInterval, setTimeout, clearTimeout,
+    esc: value => String(value ?? ''),
+    Worker: class { postMessage() {} terminate() {} }
+  });
+}
+
+function deferred() {
+  let resolve, reject;
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
+test('Caster browser controller ignores old streams and completions after a newer beat', async () => {
+  const harness = workspaceHarness();
+  const body = { textContent: '' };
+  const container = { isConnected: true, querySelector: () => body };
+  const pending = [];
+  const session = {
+    currentBeat: { beatId: 'first' },
+    generateCommentaryForCurrentBeat(callbacks) {
+      const request = deferred(); pending.push({ ...request, callbacks }); return request.promise;
+    }
+  };
+  harness.state.activeContainer = container;
+  harness.state.session = session;
+  harness.state.commentaryText = 'previous';
+  const first = harness.onBeatChange(container);
+  assert.equal(harness.state.commentaryText, '');
+  session.currentBeat = { beatId: 'second' };
+  const second = harness.onBeatChange(container);
+  pending[1].callbacks.onToken('current');
+  // An ordinary host rerender must not orphan an otherwise current request.
+  await harness.renderCaster(container);
+  pending[1].resolve({ ok: true, record: { commentary: 'current', headline: 'Now', tone: 'neutral' } });
+  await second;
+  pending[0].callbacks.onToken('obsolete');
+  pending[0].resolve({ ok: true, record: { commentary: 'obsolete' } });
+  await first;
+  assert.equal(harness.state.commentaryText, 'current');
+  assert.equal(harness.state.commentaryHeadline, 'Now');
+  assert.equal(body.textContent, 'current');
+});
+
+test('leaving Caster prevents late errors and remounts even when the shared container stays connected', async () => {
+  let renders = 0, cancelled = 0, paused = 0;
+  const harness = workspaceHarness({ render: () => { renders += 1; } });
+  const container = { isConnected: true, querySelector: () => null };
+  const pending = deferred();
+  harness.state.activeContainer = container;
+  harness.state.session = {
+    currentBeat: { beatId: 'first' },
+    generateCommentaryForCurrentBeat: () => pending.promise,
+    cancelCommentary: () => { cancelled += 1; }, pause: () => { paused += 1; }
+  };
+  const work = harness.onBeatChange(container);
+  harness.cleanupCaster();
+  pending.reject(new Error('old route error'));
+  await work;
+  assert.equal(renders, 1, 'only the initial loading render should execute');
+  assert.equal(harness.state.commentaryError, null);
+  assert.equal(harness.state.commentaryLoading, false);
+  assert.equal(cancelled, 1);
+  assert.equal(paused, 1);
+  assert.ok(harness.state.session, 'the replay survives route exit');
+});
+
+test('cleanup settles a cancelled worker and clears loading for route re-entry', async () => {
+  const harness = workspaceHarness();
+  harness.state.loading = true;
+  const result = harness.runMatchInWorker({ seed: 1 });
+  harness.cleanupCaster();
+  await assert.rejects(result, /Match generation cancelled/);
+  assert.equal(harness.state.worker, null);
+  assert.equal(harness.state.cancelWorker, null);
+  assert.equal(harness.state.loading, false);
+});
+
+test('WAIT WHAT pauses at capture and cannot restore an investigation after navigation', async () => {
+  let paused = false;
+  const load = deferred();
+  const harness = workspaceHarness({ investigation: load.promise });
+  const button = {};
+  const container = { isConnected: true, querySelector: id => id === '#caster-wait-what' ? button : null, querySelectorAll: () => [] };
+  harness.state.activeContainer = container;
+  const session = {
+    pause: () => { paused = true; }, cancelCommentary() {},
+    waitWhat: () => { assert.equal(paused, true); return { captureId: 'bookmark' }; }
+  };
+  harness.state.session = session;
+  harness.wireCasterRightRail(container, session, 0, 2);
+  const work = button.onclick();
+  harness.cleanupCaster();
+  load.resolve({ createInvestigation: () => { throw new Error('must not recreate the closed investigation'); } });
+  await work;
+  assert.equal(harness.state.waitWhatInvestigation, null);
+  assert.equal(harness.state.waitWhatVisible, false);
+});
+
+test('public investigation HTML shows neutral future anchors and no fabricated runner-up', () => {
+  const harness = workspaceHarness();
+  const html = harness.renderWaitWhatPanel({
+    captureId: 'bookmark', viewerMode: 'public', redacted: true,
+    contextAfter: [{ beatId: 'future', redacted: true }], legalOptions: [{ count: 4 }]
+  }, null, false);
+  assert.match(html, /Future beat \(hidden\)/);
+  assert.match(html, /does not include a verified alternative action/);
+  assert.doesNotMatch(html, /data-action-id="runner-up"/);
 });

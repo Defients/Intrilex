@@ -280,7 +280,7 @@ export function buildSessionEnvelope(session) {
     profileId: session.profileId ?? null,
     policyIds: session.policyIds ?? [],
     beatCount: session.beats?.length ?? 0,
-    commentaryMode: session.commentaryMode ?? COMMENTARY_MODE.BROADCAST,
+    commentaryMode: session.mode ?? session.commentaryMode ?? COMMENTARY_MODE.BROADCAST,
     viewerMode: session.viewerMode ?? VIEWER_MODE.PUBLIC,
     commentaryPromptVersion: COMMENTARY_PROMPT_VERSION,
     casterSchemaVersion: CASTER_SCHEMA_VERSION

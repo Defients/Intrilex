@@ -44,9 +44,10 @@ export class CasterSession {
   constructor({ provider, mode, viewerMode, settings } = {}) {
     this._provider = provider || new DeterministicCommentaryProvider();
     this._mode = mode === COMMENTARY_MODE.DEV_OBSERVATORY ? mode : COMMENTARY_MODE.BROADCAST;
-    this._viewerMode = viewerMode ?? VIEWER_MODE.PUBLIC;
+    this._viewerMode = viewerMode === VIEWER_MODE.OMNISCIENT ? viewerMode : VIEWER_MODE.PUBLIC;
     this._settings = settings || {};
     this._cache = new Map();
+    this._commentaryRevision = 0;
     this._commentaryHistory = []; // { commentaryId, beatId, decisionId, checkpointHash, mode, text, sourceFacts, generatedBy }
     this._waitWhatCaptures = [];
     this._telemetry = { beatsViewed: 0, commentaryGenerated: 0, cacheHits: 0, cacheMisses: 0, failedGenerations: 0, waitWhatCaptures: 0 };
@@ -117,6 +118,7 @@ export class CasterSession {
    * @returns {object} session envelope
    */
   loadCompletedMatch(matchResult, frames) {
+    this.cancelCommentary();
     this.matchResult = matchResult;
     this.frames = frames;
     const built = buildBeats(matchResult, frames, { viewerMode: this._viewerMode });
@@ -164,13 +166,18 @@ export class CasterSession {
   setMode(mode) {
     this._mode = mode === COMMENTARY_MODE.DEV_OBSERVATORY ? mode : COMMENTARY_MODE.BROADCAST;
     // Mode change invalidates commentary cache (different prompt intent).
-    this._cache.clear();
+    this.clearCache();
+    this._commentaryHistory.length = 0;
   }
 
   setViewerMode(viewerMode) {
-    this._viewerMode = viewerMode ?? VIEWER_MODE.PUBLIC;
+    this._viewerMode = viewerMode === VIEWER_MODE.OMNISCIENT ? viewerMode : VIEWER_MODE.PUBLIC;
     // Viewer mode change invalidates cache (different projection).
-    this._cache.clear();
+    this.clearCache();
+    // Captures and commentary can contain omniscient context. Never carry
+    // that context into a subsequent public-view investigation or prompt.
+    this._commentaryHistory.length = 0;
+    this._waitWhatCaptures.length = 0;
   }
 
   /**
@@ -182,9 +189,12 @@ export class CasterSession {
    * @returns {Promise<{ok, record, commentaryId, cached, error}>}
    */
   async generateCommentaryForCurrentBeat({ onToken } = {}) {
+    const revision = ++this._commentaryRevision;
     if (!this.director) return { ok: false, record: null, commentaryId: null, cached: false, error: 'NO_SESSION' };
     const beat = this.director.currentBeat();
     if (!beat) return { ok: false, record: null, commentaryId: null, cached: false, error: 'NO_BEAT' };
+    const isCurrent = () => revision === this._commentaryRevision && this.currentBeat === beat;
+    const stale = () => ({ ok: false, record: null, commentaryId: null, cached: false, error: 'STALE_COMMENTARY', stale: true });
     this._telemetry.beatsViewed += 1;
 
     const input = buildCommentaryInput({
@@ -219,7 +229,17 @@ export class CasterSession {
     }
     this._telemetry.cacheMisses += 1;
 
-    const result = await this._provider.generateCommentary(input, { onToken });
+    let result;
+    try {
+      result = await this._provider.generateCommentary(input, {
+        onToken: typeof onToken === 'function' ? chunk => { if (isCurrent()) onToken(chunk); } : undefined
+      });
+    } catch (error) {
+      if (!isCurrent()) return stale();
+      this._telemetry.failedGenerations += 1;
+      return { ok: false, record: null, commentaryId: null, cached: false, error: error?.message || 'COMMENTARY_FAILED' };
+    }
+    if (!isCurrent()) return stale();
     if (!result.ok || !result.record) {
       this._telemetry.failedGenerations += 1;
       return { ok: false, record: result.record, commentaryId: null, cached: false, error: result.error };
@@ -233,6 +253,7 @@ export class CasterSession {
       decisionId: beat.decisionId,
       checkpointHash: beat.checkpointHashAfter ?? beat.checkpointHashBefore,
       mode: this._mode,
+      viewerMode: this._viewerMode,
       text: result.record.commentary,
       sourceFacts: [beat.beatId, beat.action?.family].filter(Boolean),
       generatedBy: { provider: this._provider.name, model: this._settings.model || null, promptVersion: COMMENTARY_PROMPT_VERSION }
@@ -283,7 +304,10 @@ export class CasterSession {
   }
 
   /** Clear the commentary cache (e.g. on settings change). */
-  clearCache() { this._cache.clear(); }
+  clearCache() { this.cancelCommentary(); this._cache.clear(); }
+
+  /** Invalidate pending output without discarding completed replay evidence. */
+  cancelCommentary() { this._commentaryRevision += 1; }
 
   _decisionIndexForBeat(beat) {
     if (!beat) return -1;

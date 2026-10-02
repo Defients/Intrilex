@@ -1,11 +1,11 @@
-import { canonicalClone } from "./canonical-json.js";
-import { applyTap, hasAegis } from "./lifecycle.js";
-import { evaluateProtection, revalidateAttachments } from "./interactions.js";
-import { hashCanonical } from "./hash.js";
-import { exhaustedWinner } from "./phase8.js";
-import { cardPointValue, compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, rankDefinition } from "./ranks.js";
-import { nextIndex } from "./rng.js";
-import { deriveSecuredPoints, moveCard } from "./state.js";
+import { canonicalClone } from "./canonical-json.js?v=c617754e81fe";
+import { applyTap, hasAegis, processFoundationActionRestriction } from "./lifecycle.js?v=c617754e81fe";
+import { evaluateProtection, revalidateAttachments } from "./interactions.js?v=c617754e81fe";
+import { hashCanonical } from "./hash.js?v=c617754e81fe";
+import { exhaustedWinner } from "./phase8.js?v=c617754e81fe";
+import { cardPointValue, compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, rankDefinition } from "./ranks.js?v=c617754e81fe";
+import { nextIndex } from "./rng.js?v=c617754e81fe";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=c617754e81fe";
 export const FIRST_CONTACT_PROFILE = Object.freeze({
     id: "first-contact",
     goal: 15,
@@ -454,6 +454,8 @@ export function resolvePhase9Action(input, actorId, action) {
             state.phase = "Start";
             state.activePlayerId = action.playerId;
             state.startPhaseSequenceByPlayer[action.playerId] = (state.startPhaseSequenceByPlayer[action.playerId] ?? 0) + 1;
+            if (processFoundationActionRestriction(state, action.playerId))
+                events.push({ type: "FOUNDATION_ACTION_RESTRICTION_BEGAN", payload: { playerId: action.playerId, startSequence: state.startPhaseSequenceByPlayer[action.playerId] ?? 0 } });
             const untappedCardIds = autoUntap(state, action.playerId);
             events.push({ type: "FIRST_CONTACT_START_COMPLETED", payload: { playerId: action.playerId, untappedCardIds, miniTurnsRemaining: 1 } });
             break;

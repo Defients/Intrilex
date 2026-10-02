@@ -1,7 +1,7 @@
-import { canonicalClone } from "./canonical-json.js";
-import { hasAegis, revealUntilStart } from "./lifecycle.js";
-import { relationBetween } from "./phase11.js";
-import { moveCard } from "./state.js";
+import { canonicalClone } from "./canonical-json.js?v=c617754e81fe";
+import { armFoundationActionRestriction, foundationActionRestricted, hasAegis, revealUntilStart } from "./lifecycle.js?v=c617754e81fe";
+import { relationBetween } from "./phase11.js?v=c617754e81fe";
+import { moveCard } from "./state.js?v=c617754e81fe";
 const TRACKS = Object.freeze({
     "♣": Object.freeze([0, 2, 4, 7]),
     "♦": Object.freeze([0, 2, 4, 7]),
@@ -218,6 +218,12 @@ export function resolvePhase13Action(input, actorId, action) {
                 return fail("ACTION_PHASE_SKIP", "No pending Action-Phase skip exists");
             player.limits.pendingActionPhaseSkips -= 1;
             player.limits.miniTurnsRemaining = 0;
+            // A skipped Action Phase does not consume a pending requirement — defer the
+            // 10♣ Foundation restriction to the player's next Start Phase instead.
+            if (foundationActionRestricted(state, action.playerId)) {
+                delete player.limits.foundationActionRestriction;
+                armFoundationActionRestriction(state, action.playerId);
+            }
             state.activePlayerId = action.playerId;
             state.phase = "End";
             runtime.lastResolution = { kind: action.kind, playerId: action.playerId };

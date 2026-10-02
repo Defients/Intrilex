@@ -1,7 +1,7 @@
-import { canonicalClone } from "./canonical-json.js";
-import { markExileBound } from "./lifecycle.js";
-import { cardPointValue, parseIdentity } from "./ranks.js";
-import { deriveSecuredPoints, moveCard } from "./state.js";
+import { canonicalClone } from "./canonical-json.js?v=c617754e81fe";
+import { markExileBound, miniTurnHardCap, processFoundationActionRestriction } from "./lifecycle.js?v=c617754e81fe";
+import { cardPointValue, parseIdentity } from "./ranks.js?v=c617754e81fe";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=c617754e81fe";
 function fail(code, message, details) {
     return details === undefined ? { ok: false, code, message } : { ok: false, code, message, details };
 }
@@ -132,7 +132,7 @@ export function resolvePhase8Action(input, actorId, action) {
                 for (const sourceId of action.sourceCardIds)
                     moveCard(state, sourceId, "GY");
                 const player = state.players[actorId];
-                player.limits.miniTurnsRemaining = Math.min(3, player.limits.miniTurnsRemaining + 2);
+                player.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(state, actorId), player.limits.miniTurnsRemaining + 2);
                 if (action.branch === "draw-two") {
                     const drawn = state.zones.dp.slice(0, 2);
                     for (const id of drawn)
@@ -256,6 +256,8 @@ export function resolvePhase8Action(input, actorId, action) {
             state.phase = "Start";
             state.activePlayerId = playerId;
             state.startPhaseSequenceByPlayer[playerId] = (state.startPhaseSequenceByPlayer[playerId] ?? 0) + 1;
+            if (processFoundationActionRestriction(state, playerId))
+                events.push({ type: "FOUNDATION_ACTION_RESTRICTION_BEGAN", payload: { playerId, startSequence: state.startPhaseSequenceByPlayer[playerId] ?? 0 } });
             if (state.zones.dp.length === 0 && runtime.exhausted === null) {
                 runtime.exhausted = { remaining: 3, startedFullTurnSequence: state.fullTurnSequence };
                 events.push({ type: "EXHAUSTED_BEGAN", payload: { ...runtime.exhausted } });

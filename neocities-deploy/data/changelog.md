@@ -30,6 +30,14 @@
   Foundation scoring now releases the scorer's Nine-conditioned taps as the
   official ruling specifies. Rulebook, card text, and advanced-card rulings
   are updated to match.
+- Using the optional Foundation bonus score now restricts that player's next
+  Action Phase per the official ruling: their Mini-Turn hard cap is 1, they
+  cannot initiate a Combo, and they cannot initiate a Super. Effects that
+  grant additional Mini-Turns still resolve but respect the temporary cap.
+  Ultras, Rank-10 plays (including a paired 10♦ mimic generating a ⭐-class
+  effect), and response authorities remain legal. The restriction arms as a
+  recorded next-Start-Phase record and concludes when that Action Phase ends;
+  a skipped Action Phase does not consume it.
 
 Local validation is recorded in ignored `reports/local/` artifacts. These changes
 do not establish a clean release candidate, remote CI success, live deployment,

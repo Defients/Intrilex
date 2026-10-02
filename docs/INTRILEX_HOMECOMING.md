@@ -102,7 +102,7 @@ Focused tests include real canonical frames from Advanced Core, Unrestricted Cor
 
 ## Retained transition surfaces and limits
 
-The normal active Play path defaults to Homecoming. `?board=classic` temporarily selects the prior React presentation for parity investigation. Caster's existing custom rail and visible-opponent-hand presentation still use `GameTable`; that is a specialized playback consumer of the same mount contract. Guided Exhibition retains its separate scripted teaching runtime. The rich terminal renderer is retained for results, ratings, achievements, and replay actions.
+The normal active Play path defaults to Homecoming. `?board=classic` temporarily selects the prior React presentation for parity investigation. Caster also uses Homecoming through the same mount contract, with a custom commentary/transport rail and an explicitly authorized opponent hand in Omniscient mode. Its snapshot carries no legal actions and its submit callback always rejects. Guided Exhibition retains its separate scripted teaching runtime. The rich terminal renderer is retained for results, ratings, achievements, and replay actions. See [October 2 Caster patch notes](PATCH_NOTES_2026-10-02.md) for commentary lifecycle, public investigation redaction and browser verification.
 
 Legacy deletion remains gated on full teaching, playback, theme, keyboard, and exceptional-mechanic parity. Do not delete the shared Caster presentation or terminal styles simply because active Play now uses Homecoming.
 

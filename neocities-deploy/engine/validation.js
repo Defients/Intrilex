@@ -1,6 +1,6 @@
-import { canonicalize } from "./canonical-json.js";
-import { EngineError } from "./errors.js";
-import { zoneList } from "./state.js";
+import { canonicalize } from "./canonical-json.js?v=c617754e81fe";
+import { EngineError } from "./errors.js?v=c617754e81fe";
+import { zoneList } from "./state.js?v=c617754e81fe";
 function issue(path, code, message) {
     return { path, code, message };
 }

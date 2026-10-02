@@ -1,11 +1,11 @@
-import { canonicalClone } from "./canonical-json.js";
-import { applyAegis, applyTap, hasAegis, markExileBound, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js";
-import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js";
-import { cardPointValue, parseIdentity, rankDefinition, resolveRankAction } from "./ranks.js";
-import { deriveSecuredPoints, moveCard } from "./state.js";
-import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js";
-import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js";
-import { phase8Runtime } from "./phase8.js";
+import { canonicalClone } from "./canonical-json.js?v=c617754e81fe";
+import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=c617754e81fe";
+import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js?v=c617754e81fe";
+import { cardPointValue, parseIdentity, rankDefinition, resolveRankAction } from "./ranks.js?v=c617754e81fe";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=c617754e81fe";
+import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js?v=c617754e81fe";
+import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js?v=c617754e81fe";
+import { phase8Runtime } from "./phase8.js?v=c617754e81fe";
 export const CORE_ADVANCED_AUTHORITY_PROFILE = Object.freeze({
     id: "core-advanced-authority",
     displayName: "Advanced Core Authority — Audited Public Supers, Rank 10, Ultras, Voltage & Royal Marriage",
@@ -116,6 +116,8 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
     if (!profile(input))
         return fail("CORE_ADVANCED_PROFILE", "Advanced Core Authority profile is not active");
     const s = canonicalClone(input), events = [];
+    if (a.kind.startsWith("advanced-super") && foundationActionRestricted(s, actorId))
+        return fail("FOUNDATION_ACTION_RESTRICTION", "10♣ Foundation bonus restricts Combo and Super initiation during this Action Phase");
     switch (a.kind) {
         case "advanced-royal-marriage": {
             if (!inHand(s, a.kingCardId, actorId) || !inHand(s, a.queenCardId, actorId) || rank(s, a.kingCardId) !== "K" || rank(s, a.queenCardId) !== "Q" || suit(s, a.kingCardId) !== suit(s, a.queenCardId))
@@ -208,7 +210,7 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
             for (const id of a.sourceCardIds)
                 moveCard(s, id, "GY");
             const p = s.players[actorId];
-            p.limits.miniTurnsRemaining = Math.min(3, p.limits.miniTurnsRemaining + 2);
+            p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(s, actorId), p.limits.miniTurnsRemaining + 2);
             events.push({ type: "CORE_ADVANCED_SUPER_J_RESOLVED", payload: { sourceCardIds: a.sourceCardIds, miniTurnsRemaining: p.limits.miniTurnsRemaining } });
             break;
         }
@@ -370,6 +372,9 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
                 // Rulebook §10♣: the bonus card is scored for Points only — it may
                 // release Nine-conditioned taps but creates no scoring trigger.
                 released.push(...releaseNineTapsForScoring(s, actorId));
+                // Rulebook §10♣: using the bonus restricts the controller's next Action
+                // Phase — Mini-Turn hard cap 1, no Combo or Super initiation.
+                armFoundationActionRestriction(s, actorId);
             }
             events.push({ type: "CORE_ADVANCED_TEN_CLUB_FOUNDATION_RESOLVED", payload: { sourceCardId: a.sourceCardId, preEntryPoints: before, bonusScoreCardId: bonus } });
             events.push(...released.map((entry) => ({ type: entry.type, payload: entry.payload })));
@@ -383,7 +388,7 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
                 return fail("RANK10_LIMIT", problem);
             moveCard(s, a.sourceCardId, "EXILE");
             const p = s.players[actorId];
-            p.limits.miniTurnsRemaining = Math.min(3, p.limits.miniTurnsRemaining + 2);
+            p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(s, actorId), p.limits.miniTurnsRemaining + 2);
             const drawn = s.zones.dp[0];
             if (drawn)
                 moveCard(s, drawn, `${actorId}_HAND`, actorId);
@@ -446,7 +451,7 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
             for (const id of a.sourceCardIds)
                 moveCard(s, id, "GY");
             const p = s.players[actorId];
-            p.limits.miniTurnsRemaining = Math.min(3, p.limits.miniTurnsRemaining + 2);
+            p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(s, actorId), p.limits.miniTurnsRemaining + 2);
             let moved = [];
             if (a.branch === "draw-two") {
                 for (let i = 0; i < 2 && s.zones.dp.length; i++) {
@@ -864,6 +869,9 @@ export function enumerateAdvancedCoreCandidates(state, actorId) {
             }
         }
     }
+    // 10♣ Foundation bonus rider: a restricted Action Phase cannot initiate a Super.
+    if (foundationActionRestricted(s, actorId))
+        return out.filter((c) => c.family !== "super");
     return out;
 }
 //# sourceMappingURL=core-advanced.js.map

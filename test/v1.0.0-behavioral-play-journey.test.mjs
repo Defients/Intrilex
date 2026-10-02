@@ -410,8 +410,8 @@ describe('Human tournament lifecycle notice (source-reading)', () => {
 describe('Caster WAIT WHAT UI wiring (source-reading)', () => {
   const src = readSrc('workspaces/caster-workspace.js');
 
-  test('imports state from state.js', () => {
-    assert.match(src, /import.*\bstate\b.*from.*state\.js/);
+  test('imports HTML escaping from state.js', () => {
+    assert.match(src, /import.*\besc\b.*from.*state\.js/);
   });
 
   test('getInvestigation function is defined', () => {
@@ -471,7 +471,7 @@ describe('Caster WAIT WHAT UI wiring (source-reading)', () => {
 
   test('renderWaitWhatPanel includes legal alternatives section', () => {
     assert.match(src, /caster-ww-alternatives/);
-    assert.match(src, /caster-ww-branch-btn/);
+    assert.match(src, /does not include a verified alternative action/);
   });
 
   test('wireWaitWhatAnnotation function is defined', () => {
@@ -501,9 +501,10 @@ describe('Caster WAIT WHAT UI wiring (source-reading)', () => {
     assert.match(src, /casterState\.waitWhatExportResult = null/);
   });
 
-  test('branch navigation stores context in state.branchContext', () => {
-    assert.match(src, /state\.branchContext/);
-    assert.match(src, /#\/branches/);
+  test('investigation does not promise a runner-up without an executable replay anchor', () => {
+    assert.doesNotMatch(src, /data-action-id="runner-up"/);
+    assert.doesNotMatch(src, /state\.branchContext/);
+    assert.match(src, /Export the investigation to preserve this exact replay position/);
   });
 });
 

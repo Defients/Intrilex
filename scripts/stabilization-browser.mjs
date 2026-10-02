@@ -1,7 +1,7 @@
-/* global document, KeyboardEvent, requestAnimationFrame -- callbacks execute in Chrome */
+/* global document, location, KeyboardEvent, requestAnimationFrame -- callbacks execute in Chrome */
 import assert from 'node:assert/strict';
 import { chromium, expect } from '@playwright/test';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { captureProvenance } from './release-provenance.mjs';
 import { fileURLToPath } from 'node:url';
 
@@ -96,12 +96,42 @@ try {
       const opponentHand = page.locator('.hc-game').getByRole('region', { name: /hand/i });
       // Public projection exposes one player's hand; omniscient replay explicitly adds the other.
       assert.equal(await opponentHand.count(), mode === 'omniscient' ? 2 : 1);
+      await page.locator('#caster-play').click();
+      await expect(page.locator('#caster-play')).toHaveAttribute('aria-label', 'Pause');
       await page.getByTestId('caster-wait-what').click();
       await expect(page.getByTestId('caster-wait-what-panel')).toBeVisible();
+      await expect(page.locator('#caster-play')).toHaveAttribute('aria-label', 'Play');
+      await expect(page.locator('[data-action-id="runner-up"]')).toHaveCount(0);
       await page.locator('#caster-ww-annotation-text').fill('Stabilization browser verification');
       await page.getByTestId('caster-ww-annotation-save').click();
       await expect(page.getByTestId('caster-wait-what-panel')).toContainText('Stabilization browser verification');
+      const downloadPromise = page.waitForEvent('download');
+      await page.getByTestId('caster-ww-export-json').click();
+      const download = await downloadPromise;
+      const exported = JSON.parse(await readFile(await download.path(), 'utf8'));
+      assert.equal(exported.capture.viewerMode, mode);
+      assert.ok(exported.capture.casterBeatId);
+      assert.ok(exported.capture.checkpointHash);
+      assert.equal(exported.annotations[0].text, 'Stabilization browser verification');
+      if (mode === 'public') {
+        assert.ok(exported.capture.contextAfter.length > 0);
+        for (const future of exported.capture.contextAfter) {
+          assert.equal(future.redacted, true);
+          assert.equal(future.publicSummary, undefined);
+          assert.equal(future.beatKind, undefined);
+          assert.equal(future.action, undefined);
+          assert.equal(future.decision, undefined);
+        }
+        await expect(page.getByTestId('caster-wait-what-panel')).toContainText('Future beat (hidden)');
+      }
       await page.screenshot({ path: fileURLToPath(new URL(`../reports/local/caster-${mode}.png`, import.meta.url)), fullPage: true });
+      const pausedProgress = await page.getByTestId('caster-progress').textContent();
+      await page.evaluate(() => { location.hash = '#/rules'; });
+      await expect(page.locator('#caster-play')).toHaveCount(0);
+      await page.evaluate(() => { location.hash = '#/caster'; });
+      await expect(page.locator('#caster-play')).toHaveAttribute('aria-label', 'Play');
+      await expect(page.getByTestId('caster-progress')).toHaveText(pausedProgress);
+      await expect(page.getByTestId('caster-wait-what-panel')).toHaveCount(0);
       await page.locator('[data-action="exit-caster"]').click();
       await expect(page.locator('#caster-start')).toBeVisible();
     });

@@ -1,5 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
-import { hasAegis, revealUntilStart } from "./lifecycle.js";
+import { armFoundationActionRestriction, foundationActionRestricted, hasAegis, revealUntilStart } from "./lifecycle.js";
 import { relationBetween } from "./phase11.js";
 import { moveCard } from "./state.js";
 import type { CardId, CardInstance, EngineState, Phase13Action, PlayerId } from "./types.js";
@@ -235,6 +235,12 @@ export function resolvePhase13Action(input: EngineState, actorId: PlayerId, acti
       if (player.limits.pendingActionPhaseSkips < 1) return fail("ACTION_PHASE_SKIP", "No pending Action-Phase skip exists");
       player.limits.pendingActionPhaseSkips -= 1;
       player.limits.miniTurnsRemaining = 0;
+      // A skipped Action Phase does not consume a pending requirement — defer the
+      // 10♣ Foundation restriction to the player's next Start Phase instead.
+      if (foundationActionRestricted(state, action.playerId)) {
+        delete player.limits.foundationActionRestriction;
+        armFoundationActionRestriction(state, action.playerId);
+      }
       state.activePlayerId = action.playerId;
       state.phase = "End";
       runtime.lastResolution = { kind: action.kind, playerId: action.playerId };

@@ -246,8 +246,12 @@ async function bundle() {
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
         if (entry.isDirectory()) {
+          // NOTE: engine/ is intentionally NOT skipped — the raw engine
+          // modules import each other via unversioned relative specifiers,
+          // and a stale cached sibling (e.g. lifecycle.js) loading alongside
+          // fresh importers produces mixed-revision SyntaxError failures.
           if (entry.name === 'data' || entry.name === 'assets' ||
-              entry.name === '.split-tmp' || entry.name === 'engine') continue;
+              entry.name === '.split-tmp') continue;
           await bustImports(fullPath);
         } else if (entry.isFile() && entry.name.endsWith('.js')) {
           let content = await readFile(fullPath, 'utf8');

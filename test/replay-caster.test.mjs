@@ -472,6 +472,10 @@ describe('Replay Caster v0.1 — Privacy Boundaries', () => {
     // Future context should be redacted
     for (const after of capture.contextAfter) {
       assert.ok(after.redacted, 'future beats should be redacted in PUBLIC mode');
+      assert.equal(after.publicSummary, undefined, 'future scores and outcomes must be absent');
+      assert.equal(after.beatKind, undefined, 'future beat kinds must not reveal match end');
+      assert.equal(after.action, undefined);
+      assert.equal(after.decision, undefined);
     }
   });
 
@@ -480,6 +484,113 @@ describe('Replay Caster v0.1 — Privacy Boundaries', () => {
     session.director.stepTo(2);
     const capture = session.waitWhat();
     assert.equal(capture.redacted, false);
+  });
+});
+
+describe('Replay Caster — pending commentary and viewer context', () => {
+  let fixture;
+  async function controlledSession() {
+    if (!fixture) fixture = await makeSession();
+    const pending = [];
+    const provider = {
+      name: 'controlled',
+      generateCommentary(input, callbacks) {
+        return new Promise((resolve, reject) => pending.push({ input, callbacks, resolve, reject }));
+      }
+    };
+    const session = new CasterSession({ provider });
+    session.loadCompletedMatch(fixture.matchResult, fixture.frames);
+    session.director.stepTo(session.beats.findIndex(beat => (beat.publicSummary?.scoreDelta ?? 0) !== 0));
+    return { session, pending };
+  }
+  const answer = text => ({ ok: true, record: { commentary: text, headline: text, tone: 'neutral' } });
+
+  test('out-of-order generations only publish the latest request', async () => {
+    const { session, pending } = await controlledSession();
+    const tokens = [];
+    const older = session.generateCommentaryForCurrentBeat({ onToken: token => tokens.push(token) });
+    const newer = session.generateCommentaryForCurrentBeat({ onToken: token => tokens.push(token) });
+    pending[1].callbacks.onToken('current');
+    pending[1].resolve(answer('current'));
+    assert.equal((await newer).ok, true);
+    pending[0].callbacks.onToken('obsolete');
+    pending[0].resolve(answer('obsolete'));
+    assert.equal((await older).stale, true);
+    assert.deepEqual(tokens, ['current']);
+    assert.deepEqual(session.commentaryHistory.map(entry => entry.text), ['current']);
+    assert.equal((await session.generateCommentaryForCurrentBeat()).record.commentary, 'current');
+  });
+
+  test('a replaced match cannot acquire old history, cache entries or telemetry', async () => {
+    const { session, pending } = await controlledSession();
+    const old = session.generateCommentaryForCurrentBeat();
+    session.loadCompletedMatch(session.matchResult, session.frames);
+    pending[0].resolve(answer('previous match'));
+    assert.equal((await old).stale, true);
+    assert.equal(session.commentaryHistory.length, 0);
+    assert.equal(session.telemetry.commentaryGenerated, 0);
+    assert.equal(session.telemetry.failedGenerations, 0);
+  });
+
+  test('moving away suppresses late tokens and late provider errors', async () => {
+    const { session, pending } = await controlledSession();
+    const tokens = [];
+    const old = session.generateCommentaryForCurrentBeat({ onToken: token => tokens.push(token) });
+    session.stepForward();
+    pending[0].callbacks.onToken('wrong beat');
+    pending[0].reject(new Error('old failure'));
+    assert.equal((await old).stale, true);
+    assert.deepEqual(tokens, []);
+    assert.equal(session.telemetry.failedGenerations, 0);
+  });
+
+  test('route cancellation invalidates pending output but preserves replay position', async () => {
+    const { session, pending } = await controlledSession();
+    const index = session.index;
+    const old = session.generateCommentaryForCurrentBeat();
+    session.cancelCommentary();
+    pending[0].resolve(answer('after leaving'));
+    assert.equal((await old).stale, true);
+    assert.equal(session.index, index);
+    assert.equal(session.commentaryHistory.length, 0);
+  });
+
+  test('viewer changes discard private history, captures and in-flight output', async () => {
+    const { session, pending } = await controlledSession();
+    session.setViewerMode(VIEWER_MODE.OMNISCIENT);
+    const old = session.generateCommentaryForCurrentBeat();
+    pending[0].resolve(answer('private detail'));
+    await old;
+    session.waitWhat();
+    assert.equal(session.waitWhatCaptures.length, 1);
+    session.clearCache();
+    const inFlight = session.generateCommentaryForCurrentBeat();
+    session.setViewerMode('invalid-mode');
+    pending[1].resolve(answer('more private detail'));
+    assert.equal((await inFlight).stale, true);
+    assert.equal(session.viewerMode, VIEWER_MODE.PUBLIC);
+    assert.equal(session.commentaryHistory.length, 0);
+    assert.equal(session.waitWhatCaptures.length, 0);
+    assert.equal(session.waitWhat().commentary, null);
+  });
+
+  test('provider exceptions are contained without stopping playback', async () => {
+    const { session, pending } = await controlledSession();
+    session.play();
+    const result = session.generateCommentaryForCurrentBeat();
+    pending[0].reject(new Error('provider unavailable'));
+    assert.equal((await result).error, 'provider unavailable');
+    assert.equal(session.director.playing, true);
+    assert.equal(session.telemetry.failedGenerations, 1);
+  });
+
+  test('envelope reflects selected commentary mode and public beats omit replay seeds', async () => {
+    const { session } = await controlledSession();
+    session.setMode(COMMENTARY_MODE.DEV_OBSERVATORY);
+    assert.equal(session.envelope().commentaryMode, COMMENTARY_MODE.DEV_OBSERVATORY);
+    assert.equal(session.beats[0].publicSummary.seed, undefined);
+    assert.ok(session.replayHash);
+    assert.ok(session.finalStateHash);
   });
 });
 

@@ -1,4 +1,4 @@
-import { canonicalClone } from "./canonical-json.js";
+import { canonicalClone } from "./canonical-json.js?v=c617754e81fe";
 export function isHandZone(zone) {
     return zone.endsWith("_HAND");
 }
@@ -101,5 +101,44 @@ export function releaseNineTapsForScoring(state, scoringPlayerId) {
         transitions.push({ type: "NINE_TAP_RELEASED", payload: { cardId, scoringPlayerId, sourceRef } });
     }
     return transitions;
+}
+// 10♣ Foundation bonus rider: when the optional bonus score is used, the scorer's
+// next Action Phase runs under a Mini-Turn hard cap of 1 and cannot initiate a
+// Combo or a Super. The pending record is keyed to the controller's recorded next
+// Start Phase (same anchor as the Aegis expiry); the active restriction is bound
+// to that Full Turn so a countered-and-restored declaration still resumes inside
+// the same restricted Action Phase, while a skipped Action Phase does not consume
+// the restriction (phase13 re-arms the pending record instead).
+export function armFoundationActionRestriction(state, playerId) {
+    const player = state.players[playerId];
+    if (!player)
+        return;
+    player.limits.foundationRestrictionPending = {
+        playerId,
+        startSequence: (state.startPhaseSequenceByPlayer[playerId] ?? 0) + 1
+    };
+}
+export function processFoundationActionRestriction(state, playerId) {
+    const player = state.players[playerId];
+    if (player === undefined)
+        return false;
+    const stale = player.limits.foundationActionRestriction;
+    if (stale !== undefined && stale !== state.fullTurnSequence)
+        delete player.limits.foundationActionRestriction;
+    const pending = player.limits.foundationRestrictionPending;
+    if (pending === undefined)
+        return false;
+    const eventRef = { playerId, startSequence: state.startPhaseSequenceByPlayer[playerId] ?? 0 };
+    if (!startRefEqual(pending, eventRef))
+        return false;
+    delete player.limits.foundationRestrictionPending;
+    player.limits.foundationActionRestriction = state.fullTurnSequence;
+    return true;
+}
+export function foundationActionRestricted(state, playerId) {
+    return state.players[playerId]?.limits.foundationActionRestriction === state.fullTurnSequence;
+}
+export function miniTurnHardCap(state, playerId) {
+    return foundationActionRestricted(state, playerId) ? 1 : 3;
 }
 //# sourceMappingURL=lifecycle.js.map

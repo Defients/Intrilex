@@ -4,45 +4,45 @@
 // Never owns authoritative state — delegates to PlaySession.
 // ═══════════════════════════════════════════════════════════════
 
-import { createSession, restoreSession, SessionState } from './play-controller.js?v=e09244683def';
-import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=e09244683def';
+import { createSession, restoreSession, SessionState } from './play-controller.js?v=c617754e81fe';
+import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=c617754e81fe';
 import {
   buildOpponentModel,
   policyTraitsFromId,
   resolveOpponent,
   archetypeForDifficulty,
-} from './opponent-catalog.mjs?v=e09244683def';
+} from './opponent-catalog.mjs?v=c617754e81fe';
 import {
   renderArchetypeGrid,
   renderOpponentBrief,
   renderMatchBrief,
   renderPlaystyleScope,
-} from './ranked-duel-hub.mjs?v=e09244683def';
-import { getGameplaySkin } from './gameplay-skin.js?v=e09244683def';
-import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=e09244683def';
-import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=e09244683def';
-import { ensureReplayFrames } from '../replay-frames.js?v=e09244683def';
-import { state as observatoryState } from '../state.js?v=e09244683def';
-import { buildSaveIntegrityPayload } from './save-integrity.js?v=e09244683def';
-import { validateSnapshotPrivacy } from './play-privacy.js?v=e09244683def';
-import { POLICY_IDS } from '../autonomy-runtime.js?v=e09244683def';
-import { GuidanceMode } from './intelligence/action-explanation.js?v=e09244683def';
-import './orchestration/declaration-flow.js?v=e09244683def';
-import './state/play-lifecycle.js?v=e09244683def';
-import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=e09244683def';
-import { getAiBanter } from './ai-personality.js?v=e09244683def';
-import { SoundEngine } from './play-sound.js?v=e09244683def';
-import { ParticleSystem } from './play-particles.js?v=e09244683def';
-import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=e09244683def';
-import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=e09244683def';
-import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=e09244683def';
-import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=e09244683def';
-import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=e09244683def';
-import { renderRecap } from './academy/academy-recap.mjs?v=e09244683def';
-import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs?v=e09244683def';
-import { createSessionAutosave } from './session-autosave.js?v=e09244683def';
-import { state, resetState } from './play-state.js?v=e09244683def';
-import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js?v=e09244683def';
+} from './ranked-duel-hub.mjs?v=c617754e81fe';
+import { getGameplaySkin } from './gameplay-skin.js?v=c617754e81fe';
+import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=c617754e81fe';
+import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=c617754e81fe';
+import { ensureReplayFrames } from '../replay-frames.js?v=c617754e81fe';
+import { state as observatoryState } from '../state.js?v=c617754e81fe';
+import { buildSaveIntegrityPayload } from './save-integrity.js?v=c617754e81fe';
+import { validateSnapshotPrivacy } from './play-privacy.js?v=c617754e81fe';
+import { POLICY_IDS } from '../autonomy-runtime.js?v=c617754e81fe';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=c617754e81fe';
+import './orchestration/declaration-flow.js?v=c617754e81fe';
+import './state/play-lifecycle.js?v=c617754e81fe';
+import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=c617754e81fe';
+import { getAiBanter } from './ai-personality.js?v=c617754e81fe';
+import { SoundEngine } from './play-sound.js?v=c617754e81fe';
+import { ParticleSystem } from './play-particles.js?v=c617754e81fe';
+import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=c617754e81fe';
+import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=c617754e81fe';
+import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=c617754e81fe';
+import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=c617754e81fe';
+import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=c617754e81fe';
+import { renderRecap } from './academy/academy-recap.mjs?v=c617754e81fe';
+import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs?v=c617754e81fe';
+import { createSessionAutosave } from './session-autosave.js?v=c617754e81fe';
+import { state, resetState } from './play-state.js?v=c617754e81fe';
+import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js?v=c617754e81fe';
 import {
   openAdvancedCardRules as openAdvancedCardRulesController,
   closeAdvancedCardRules,
@@ -50,19 +50,19 @@ import {
   findAuthorizedCard,
   buildCurrentMatchContext,
   getOpenIdentity,
-} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=e09244683def';
-import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=e09244683def';
+} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=c617754e81fe';
+import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=c617754e81fe';
 import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
   renderNetworkQueueWaiting, renderNetworkSpectateForm, renderNetworkSpectating,
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
   renderNetworkUnavailable,
-} from './network/network-lobby-renderer.mjs?v=e09244683def';
-import { getMatchServerUrl, validateMatchServerUrl } from './network/match-server-config.js?v=e09244683def';
-import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=e09244683def';
-import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=e09244683def';
-import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=e09244683def';
-import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=e09244683def';
+} from './network/network-lobby-renderer.mjs?v=c617754e81fe';
+import { getMatchServerUrl, validateMatchServerUrl } from './network/match-server-config.js?v=c617754e81fe';
+import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=c617754e81fe';
+import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=c617754e81fe';
+import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=c617754e81fe';
+import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=c617754e81fe';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -744,7 +744,7 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
   // Presentation-only advice reuses the shipped Intrilex scoring module.
   // It receives validated visible cards, never the session's raw state/vault.
   const [{ rankPolicyActionsWithDecomposition }, { mountGameTable }] = await Promise.all([
-    import('../policy-scoring.js?v=e09244683def'), import('../client/mount.tsx?v=e09244683def'),
+    import('../policy-scoring.js?v=c617754e81fe'), import('../client/mount.tsx?v=c617754e81fe'),
   ]);
   // The shell replaces play-root on hash navigation. Never publish into a
   // detached root or finish an async mount for a session that has been replaced.
@@ -852,7 +852,7 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
     positionAcademyCoachmarks(container);
     bindAcademyCoachmarkDismiss(container);
     if (getOpenIdentity() && state.advancedRulesCardId) {
-      const { refreshCurrentMatch } = await import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=e09244683def');
+      const { refreshCurrentMatch } = await import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=c617754e81fe');
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     }
   } catch (error) {
@@ -1173,7 +1173,7 @@ async function renderActiveMatch(container) {
   // inspected card is no longer inspectable, the controller sanitizes
   // (closes) the view to avoid leaking stale information.
   if (getOpenIdentity() && state.advancedRulesCardId) {
-    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=e09244683def').then(({ refreshCurrentMatch }) => {
+    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=c617754e81fe').then(({ refreshCurrentMatch }) => {
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     });
   }
@@ -1308,7 +1308,7 @@ function bindReplayLibraryEvents(container) {
       } else if (action === 'delete-replay') {
         const confirmed = await showConfirmDialog('Delete replay', `Delete replay ${replayId}? This cannot be undone.`);
         if (confirmed) {
-          const { deleteReplay } = await import('./persistence.js?v=e09244683def');
+          const { deleteReplay } = await import('./persistence.js?v=c617754e81fe');
           await deleteReplay(replayId);
           await renderReplays(container);
         }
@@ -1712,7 +1712,7 @@ function bindNetworkWaitingEvents(container) {
  * Render the matchmaking queue flow — joins the queue and waits for pairing.
  */
 async function renderNetworkQueueFlow(container) {
-  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=e09244683def');
+  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=c617754e81fe');
   const serverUrl = getNetworkServerUrl();
   if (!serverUrl) {
     container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
@@ -1929,7 +1929,7 @@ function fetchSpectatableList(serverUrl, listSpectatable) {
  * Match ID form remains available as a fallback and for private shares.
  */
 async function renderNetworkSpectateFlow(container) {
-  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=e09244683def');
+  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=c617754e81fe');
 
   // Live-list state for the discovery section
   let liveState = { liveMatches: null, liveLoading: false, liveError: null };

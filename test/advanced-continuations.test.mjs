@@ -407,3 +407,281 @@ test('10♣ Foundation (legacy rank-action path): identical Aegis expiry referen
     'Legacy-path Aegis must expire at the same point: beginning of controller\'s next Start Phase');
   assert.ok(d.events.some((e) => e.type === 'AEGIS_EXPIRED' && e.payload.cardId === tenId));
 });
+
+// ── 10♣ Foundation bonus: next-Action-Phase restriction ──
+// Official ruling: "If the bonus score is used, during that player's next
+// Action Phase: their Mini-Turn hard cap is 1; they cannot initiate a Combo;
+// they cannot initiate a Super. Effects that grant additional Mini-Turns still
+// respect that temporary hard cap."
+
+function rankAction(engine, state, actorId, action, id) {
+  return engine.execute(state, { id, type: 'RESOLVE_RANK_ACTION', actorId, action });
+}
+
+test('10♣ Foundation bonus: next-Action-Phase restriction lifecycle (advanced path)', () => {
+  const engine = new IntrilexEngine();
+  let state = createSimulationState({ ...ADV_SETUP, seed: 0xAE6220 });
+  let d = advanceToDecision(state);
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+
+  // P1's hand: 10♣ + bonus 7♦, Super material (two Jacks), Ultra material
+  // (two black + two red). A Nine-tapped low-point card in PR keeps Secured PR
+  // Points at 0 without approaching the 21-Point goal on release (10+7+2=19).
+  const tenId = stageCard(state, '10♣', 'P1_HAND', 'P1');
+  const bonusId = stageCard(state, '7♦', 'P1_HAND', 'P1');
+  stageCard(state, 'J♠', 'P1_HAND', 'P1');
+  stageCard(state, 'J♥', 'P1_HAND', 'P1');
+  const u1 = stageCard(state, '3♣', 'P1_HAND', 'P1');
+  const u2 = stageCard(state, '4♠', 'P1_HAND', 'P1');
+  const u3 = stageCard(state, '4♥', 'P1_HAND', 'P1');
+  const u4 = stageCard(state, '6♦', 'P1_HAND', 'P1');
+  const tappedId = stageCard(state, '2♥', 'P1_PR', 'P1');
+  state.cards[tappedId].state.pointValue = 2;
+  applyTap(state.cards[tappedId], { kind: 'nine-score', sourceRef: 'TEST-NINE' });
+
+  const resolved = core(engine, state, 'P1', {
+    kind: 'core-resolve-advanced',
+    advanced: { kind: 'advanced-rank10-club-foundation', sourceCardId: tenId, bonusScoreCardId: bonusId }
+  }, 'TEST-FRB-RESOLVE');
+  assert.equal(resolved.accepted, true, `Foundation must be accepted: ${resolved.error?.code ?? ''}`);
+  state = resolved.state;
+
+  // Bonus used → pending restriction keyed to P1's recorded next Start Phase.
+  assert.deepEqual(state.players.P1.limits.foundationRestrictionPending,
+    { playerId: 'P1', startSequence: 2 },
+    'Using the bonus must arm the recorded next-Start-Phase restriction');
+  assert.equal(state.players.P1.limits.foundationActionRestriction, undefined,
+    'Restriction must not be active during the scoring turn itself');
+  assert.equal(state.phase, 'End');
+
+  // ── P2's intervening turn: pending record survives unaffected ──
+  d = advanceToDecision(state);
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  assert.equal(state.players.P1.limits.foundationRestrictionPending?.startSequence, 2);
+  const p2Draw = core(engine, state, 'P2', { kind: 'core-draw' }, 'TEST-FRB-P2-DRAW');
+  assert.equal(p2Draw.accepted, true);
+  state = p2Draw.state;
+
+  // ── P1's next Start Phase: restriction activates ──
+  d = advanceToDecision(state);
+  state = d.state;
+  assert.equal(d.decisionActorId, 'P1');
+  assert.equal(state.players.P1.limits.foundationActionRestriction, state.fullTurnSequence,
+    'Restriction must bind to the Full Turn carrying the recorded Action Phase');
+  assert.equal(state.players.P1.limits.foundationRestrictionPending, undefined,
+    'Pending record must be consumed at activation');
+  const beganIdx = d.events.findIndex((e) => e.type === 'START_PHASE_BEGAN' && e.payload.playerId === 'P1');
+  const restrictIdx = d.events.findIndex((e) => e.type === 'FOUNDATION_ACTION_RESTRICTION_BEGAN' && e.payload.playerId === 'P1');
+  assert.ok(beganIdx >= 0 && restrictIdx > beganIdx,
+    'FOUNDATION_ACTION_RESTRICTION_BEGAN must follow START_PHASE_BEGAN deterministically');
+
+  // ── Restricted Action Phase: enumeration omits Supers; Ultras remain ──
+  state = engine.execute(state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  d = advanceToDecision(state);
+  assert.ok(!d.legalActionFrame.actions.some((a) => a.family === 'super'),
+    'No Super may be enumerated during the restricted Action Phase');
+  assert.ok(d.legalActionFrame.actions.some((a) => a.family === 'ultra'),
+    'Ultras must remain enumerated during the restricted Action Phase');
+
+  // Direct Super initiation is rejected without consuming the Mini-Turn.
+  const superDenied = core(engine, state, 'P1', {
+    kind: 'core-resolve-advanced',
+    advanced: { kind: 'advanced-super-j-tempo', sourceCardIds: [state.players.P1.hand.find((id) => state.cards[id].identity === 'J♠'), state.players.P1.hand.find((id) => state.cards[id].identity === 'J♥')] }
+  }, 'TEST-FRB-SUPER');
+  assert.equal(superDenied.accepted, false);
+  assert.equal(superDenied.error.code, 'FOUNDATION_ACTION_RESTRICTION');
+  assert.equal(state.players.P1.limits.miniTurnsRemaining, 1);
+  assert.equal(state.players.P1.limits.foundationActionRestriction, state.fullTurnSequence);
+
+  // Generic Combo initiation is rejected on the same ground.
+  const comboDenied = engine.execute(state, {
+    id: 'TEST-FRB-COMBO', type: 'RESOLVE_PHASE10_ACTION', actorId: 'P1',
+    action: { kind: 'declare-combo', sourceCardIds: [u1, u2], initiatorCardId: u1, recipeDefined: true }
+  });
+  assert.equal(comboDenied.accepted, false);
+  assert.equal(comboDenied.error.code, 'FOUNDATION_ACTION_RESTRICTION');
+
+  // Ultras remain legal; their Mini-Turn grant clamps to the hard cap of 1.
+  const ultra = core(engine, state, 'P1', {
+    kind: 'core-resolve-advanced',
+    advanced: { kind: 'advanced-ultra-two-black-two-red', sourceCardIds: [u1, u2, u3, u4], branch: 'draw-two' }
+  }, 'TEST-FRB-ULTRA');
+  assert.equal(ultra.accepted, true, `Ultra must remain legal during the restricted phase: ${ultra.error?.code ?? ''}`);
+  const ultraEvent = ultra.events.find((e) => e.type === 'CORE_ADVANCED_ULTRA_2B2R_RESOLVED');
+  assert.equal(ultraEvent?.payload.miniTurnsRemaining, 1,
+    'Mini-Turn grants must respect the temporary hard cap of 1');
+  state = ultra.state;
+  assert.equal(state.players.P1.limits.miniTurnsRemaining, 0);
+  assert.equal(state.phase, 'End');
+
+  // ── Following turns return to normal ──
+  d = advanceToDecision(state); // P2 Start #2
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  const p2Draw2 = core(engine, state, 'P2', { kind: 'core-draw' }, 'TEST-FRB-P2-DRAW2');
+  state = p2Draw2.state;
+  d = advanceToDecision(state); // P1 Start #3
+  state = d.state;
+  assert.equal(state.players.P1.limits.foundationActionRestriction, undefined,
+    'The stale restriction marker must be cleared at the controller\'s next Start Phase');
+  assert.equal(state.players.P1.limits.foundationRestrictionPending, undefined);
+  assert.ok(!d.events.some((e) => e.type === 'FOUNDATION_ACTION_RESTRICTION_BEGAN'),
+    'The restriction must not re-arm after its Action Phase concludes');
+
+  state = engine.execute(state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  d = advanceToDecision(state);
+  assert.ok(d.legalActionFrame.actions.some((a) => a.family === 'super'),
+    'Supers must be enumerated again on later Action Phases');
+
+  // ⭐J grants +2 Mini-Turns against the normal cap of 3 again.
+  const jacks = state.players.P1.hand.filter((id) => state.cards[id].identity.startsWith('J'));
+  const superJ = core(engine, state, 'P1', {
+    kind: 'core-resolve-advanced',
+    advanced: { kind: 'advanced-super-j-tempo', sourceCardIds: jacks.slice(0, 2) }
+  }, 'TEST-FRB-SUPERJ-LATER');
+  assert.equal(superJ.accepted, true, `Super must be legal after the restricted phase: ${superJ.error?.code ?? ''}`);
+  const superJEvent = superJ.events.find((e) => e.type === 'CORE_ADVANCED_SUPER_J_RESOLVED');
+  assert.equal(superJEvent?.payload.miniTurnsRemaining, 3,
+    'Mini-Turn grants return to the normal cap of 3 after the restricted phase');
+});
+
+test('10♣ Foundation without bonus: no Action-Phase restriction', () => {
+  const engine = new IntrilexEngine();
+  let state = createSimulationState({ ...ADV_SETUP, seed: 0xAE6221 });
+  let d = advanceToDecision(state);
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+
+  const tenId = stageCard(state, '10♣', 'P1_HAND', 'P1');
+  const resolved = core(engine, state, 'P1', {
+    kind: 'core-resolve-advanced',
+    advanced: { kind: 'advanced-rank10-club-foundation', sourceCardId: tenId }
+  }, 'TEST-FNB');
+  assert.equal(resolved.accepted, true, `Foundation must be accepted: ${resolved.error?.code ?? ''}`);
+  state = resolved.state;
+  assert.equal(state.players.P1.limits.foundationRestrictionPending, undefined,
+    'Declining the optional bonus must not arm the restriction');
+  assert.equal(state.players.P1.limits.foundationActionRestriction, undefined);
+
+  // Drive to P1's next Start Phase — no restriction may activate.
+  d = advanceToDecision(state);
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  state = core(engine, state, 'P2', { kind: 'core-draw' }, 'TEST-FNB-P2').state;
+  d = advanceToDecision(state);
+  state = d.state;
+  assert.equal(state.players.P1.limits.foundationActionRestriction, undefined);
+  assert.ok(!d.events.some((e) => e.type === 'FOUNDATION_ACTION_RESTRICTION_BEGAN'));
+});
+
+test('10♣ Foundation (legacy path): bonus arms the same restriction; paired Supers blocked, 10♦ mimic legal', () => {
+  const engine = new IntrilexEngine();
+  let state = createSimulationState({ ...ADV_SETUP, seed: 0xAE6222 });
+  let d = advanceToDecision(state);
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+
+  const tenId = stageCard(state, '10♣', 'P1_HAND', 'P1');
+  const bonusId = stageCard(state, '3♦', 'P1_HAND', 'P1');
+  const mimicId = stageCard(state, '10♦', 'P1_HAND', 'P1');
+  const cmdA = stageCard(state, '2♣', 'P1_HAND', 'P1');
+  const cmdB = stageCard(state, '2♦', 'P1_HAND', 'P1');
+  const pairedTwoId = stageCard(state, '2♠', 'P1_HAND', 'P1');
+  stageCard(state, '5♠', 'P2_PR', 'P2');
+
+  const resolved = rankAction(engine, state, 'P1', {
+    kind: 'foundation-ten-club', sourceCardId: tenId, bonusScoreCardId: bonusId
+  }, 'TEST-LFRB');
+  assert.equal(resolved.accepted, true, `Legacy Foundation must be accepted: ${resolved.error?.code ?? ''}`);
+  state = resolved.state;
+  assert.deepEqual(state.players.P1.limits.foundationRestrictionPending,
+    { playerId: 'P1', startSequence: 2 },
+    'Legacy bonus use must arm the same pending restriction');
+
+  // P2 turn, then P1's next Start Phase.
+  state = core(engine, state, 'P1', { kind: 'core-draw' }, 'TEST-LFRB-P1-DRAW').state;
+  d = advanceToDecision(state);
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  state = core(engine, state, 'P2', { kind: 'core-draw' }, 'TEST-LFRB-P2-DRAW').state;
+  d = advanceToDecision(state);
+  state = d.state;
+  assert.equal(state.players.P1.limits.foundationActionRestriction, state.fullTurnSequence,
+    'Restriction must activate for the legacy-path bonus too');
+  assert.ok(d.events.some((e) => e.type === 'FOUNDATION_ACTION_RESTRICTION_BEGAN' && e.payload.playerId === 'P1'));
+  state = engine.execute(state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+
+  // Legacy paired Supers (⭐2/⭐4/⭐8 via two-source rank actions) are blocked.
+  const enemyPr = state.players.P2.pr[0];
+  const superDenied = rankAction(engine, state, 'P1', {
+    kind: 'commandeer', sourceCardIds: [cmdA, cmdB], targetCardId: enemyPr, disposition: 'score'
+  }, 'TEST-LFRB-SUPER');
+  assert.equal(superDenied.accepted, false);
+  assert.equal(superDenied.error.code, 'FOUNDATION_ACTION_RESTRICTION');
+
+  // The paired 10♦ mimic remains a Rank-10 play even when it generates a
+  // ⭐-class effect — and its Mini-Turn grant still respects the hard cap.
+  const mimic = rankAction(engine, state, 'P1', {
+    kind: 'mimic-ten-diamond', sourceCardId: mimicId, pairedTwoId, mimickedRank: 'J',
+    effectKey: 'super-j-tempo', mimicAction: { kind: 'super-j-tempo' }
+  }, 'TEST-LFRB-MIMIC');
+  assert.equal(mimic.accepted, true, `10♦ mimic must remain legal: ${mimic.error?.code ?? ''}`);
+  const mimicEvent = mimic.events.find((e) => e.type === 'MIMIC_SUPER_J_TEMPO_RESOLVED');
+  assert.equal(mimicEvent?.payload.miniTurnsRemaining, 1,
+    'Rank-10 mimic Mini-Turn grants must respect the temporary hard cap of 1');
+});
+
+test('10♣ Foundation bonus: a skipped Action Phase defers the restriction instead of consuming it', () => {
+  const engine = new IntrilexEngine();
+  let state = createSimulationState({ ...ADV_SETUP, seed: 0xAE6223 });
+  let d = advanceToDecision(state);
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+
+  const tenId = stageCard(state, '10♣', 'P1_HAND', 'P1');
+  const bonusId = stageCard(state, '7♦', 'P1_HAND', 'P1');
+  stageCard(state, 'J♠', 'P1_HAND', 'P1');
+  stageCard(state, 'J♥', 'P1_HAND', 'P1');
+
+  const resolved = core(engine, state, 'P1', {
+    kind: 'core-resolve-advanced',
+    advanced: { kind: 'advanced-rank10-club-foundation', sourceCardId: tenId, bonusScoreCardId: bonusId }
+  }, 'TEST-FD-RESOLVE');
+  assert.equal(resolved.accepted, true, `Foundation must be accepted: ${resolved.error?.code ?? ''}`);
+  state = resolved.state;
+
+  // Intervening turn, then the restricted Start Phase activates.
+  d = advanceToDecision(state);
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  state = core(engine, state, 'P2', { kind: 'core-draw' }, 'TEST-FD-P2-DRAW').state;
+  d = advanceToDecision(state);
+  state = d.state;
+  assert.equal(state.players.P1.limits.foundationActionRestriction, state.fullTurnSequence);
+  state = engine.execute(state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+
+  // A pending Action-Phase skip (e.g. a Time Bomb Defuse) consumes the Action
+  // Phase entirely — the restriction must defer, not be spent.
+  state.players.P1.limits.pendingActionPhaseSkips = 1;
+  const skipped = engine.execute(state, {
+    id: 'TEST-FD-SKIP', type: 'RESOLVE_PHASE13_ACTION', actorId: 'P1',
+    action: { kind: 'consume-action-phase-skip', playerId: 'P1' }
+  });
+  assert.equal(skipped.accepted, true, `Skip must resolve: ${skipped.error?.code ?? ''}`);
+  state = skipped.state;
+  assert.equal(state.phase, 'End');
+  assert.equal(state.players.P1.limits.pendingActionPhaseSkips, 0);
+  assert.equal(state.players.P1.limits.foundationActionRestriction, undefined,
+    'A skipped Action Phase must not leave the restriction active');
+  assert.deepEqual(state.players.P1.limits.foundationRestrictionPending,
+    { playerId: 'P1', startSequence: 3 },
+    'A skipped Action Phase must defer the restriction to the next Start Phase');
+
+  // The deferred restriction activates on the following turn instead.
+  d = advanceToDecision(state); // P2 Start #2
+  state = engine.execute(d.state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  state = core(engine, state, 'P2', { kind: 'core-draw' }, 'TEST-FD-P2-DRAW2').state;
+  d = advanceToDecision(state); // P1 Start #3
+  state = d.state;
+  assert.equal(state.players.P1.limits.foundationActionRestriction, state.fullTurnSequence,
+    'The deferred restriction must activate at the next Start Phase');
+  assert.ok(d.events.some((e) => e.type === 'FOUNDATION_ACTION_RESTRICTION_BEGAN' && e.payload.playerId === 'P1'));
+
+  state = engine.execute(state, findCommand(d, (a) => a.mode === 'enter-action')).state;
+  d = advanceToDecision(state);
+  assert.ok(!d.legalActionFrame.actions.some((a) => a.family === 'super'),
+    'The deferred restricted Action Phase must still omit Supers');
+});
