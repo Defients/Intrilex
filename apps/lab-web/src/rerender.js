@@ -14,6 +14,16 @@
 // ═══════════════════════════════════════════════════════════════
 
 let _renderer = null;
+/** @type {Record<string, (...args: any[]) => any>} */
+let _actions = {};
+/** @param {Record<string, (...args: any[]) => any>} actions */
+export function setAppActions(actions) { _actions = { ...actions }; }
+/** @param {string} name @param {...any} args */
+export function invokeAppAction(name, ...args) {
+  const action = _actions[name];
+  if (typeof action !== 'function') throw new Error(`APP_ACTION_UNAVAILABLE:${name}`);
+  return action(...args);
+}
 // IRX-C06 (residual): Track missed rerender calls so app.js can detect
 // if workspace modules tried to re-render before the renderer was registered
 // (e.g., during async boot). The warning fires once to avoid console spam.
@@ -57,6 +67,7 @@ export function rerender() {
  */
 export function clearRenderer() {
   _renderer = null;
+  _actions = {};
   _missedCount = 0;
   _warned = false;
 }

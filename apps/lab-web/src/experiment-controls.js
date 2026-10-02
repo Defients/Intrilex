@@ -7,6 +7,7 @@ import { WORKSPACES, route, policyOptions } from './router.js';
 import { showIntegrity } from './integrity.js';
 import { RULES_VERSION, LAB_VERSION } from './version.js';
 import { populateDialogHeading } from './seo-metadata.js';
+import { rerender, invokeAppAction } from './rerender.js';
 
 // ── Experiment panel ──────────────────────────────────────────────
 export function renderExperimentControls() {
@@ -53,12 +54,13 @@ export function updatePreflight() {
 
 // ── Global bindings ───────────────────────────────────────────────
 export function bindGlobal() {
-  window.addEventListener('hashchange', () => { import('./app.js').then(m => m.render()); });
+  // app.js owns route changes. Importing its entry point here creates a
+  // second ESM entry graph and discards in-memory developer sessions.
   document.querySelector('#layout-preset').addEventListener('change', e => {
     state.layout = e.target.value;
     document.querySelector('.observatory-shell').dataset.preset = state.layout;
     persistSetting('layout', state.layout);
-    import('./app.js').then(m => m.render());
+    rerender();
   });
   document.querySelector('#global-visibility').addEventListener('change', async e => {
     state.visibility = e.target.value;
@@ -67,7 +69,7 @@ export function bindGlobal() {
       const { loadAuthorized } = await import('./data-loader.js');
       await loadAuthorized();
     }
-    import('./app.js').then(m => m.render());
+    rerender();
   });
   document.querySelector('#integrity-button').addEventListener('click', showIntegrity);
   const palette = document.querySelector('#command-palette');
@@ -96,7 +98,7 @@ export function bindGlobal() {
     }
     if (e.key === ' ' && route() === '/watch' && !['INPUT', 'SELECT', 'BUTTON'].includes(document.activeElement.tagName)) {
       e.preventDefault();
-      import('./app.js').then(m => m.togglePlay());
+      invokeAppAction('togglePlay');
     }
   });
   document.querySelector('#collapse-experiment').addEventListener('click', () => {
@@ -111,10 +113,10 @@ function renderCommandResults() {
     { label: 'Toggle reduced motion', detail: 'Accessibility', run: () => { state.reducedMotion = !state.reducedMotion; document.body.classList.toggle('reduced-motion', state.reducedMotion); persistSetting('reducedMotion', state.reducedMotion); } },
     { label: 'Toggle reduced sensory', detail: 'Accessibility', run: () => { state.reducedSensory = !state.reducedSensory; document.body.classList.toggle('reduced-sensory', state.reducedSensory); persistSetting('reducedSensory', state.reducedSensory); } },
     { label: 'Toggle FX', detail: 'Presentation', run: () => { state.fx = !state.fx; document.body.classList.toggle('fx-off', !state.fx); persistSetting('fx', state.fx); } },
-    { label: 'Show priority orchestration', detail: 'Developer evidence', run: () => { state.showOrchestration = !state.showOrchestration; import('./app.js').then(m => m.render()); } },
-    { label: 'Restart replay', detail: 'Identical seed / source replay', run: () => { import('./app.js').then(m => { m.stop(); state.frame = 0; m.render(); }); } },
-    { label: 'Extract analysis (JSON)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js').then(m => m.showExtract('json')); } },
-    { label: 'Extract analysis (Markdown)', detail: 'AI agent brief · copy to clipboard', run: () => { import('./app.js').then(m => m.showExtract('markdown')); } }
+    { label: 'Show priority orchestration', detail: 'Developer evidence', run: () => { state.showOrchestration = !state.showOrchestration; rerender(); } },
+    { label: 'Restart replay', detail: 'Identical seed / source replay', run: () => { invokeAppAction('stop'); state.frame = 0; rerender(); } },
+    { label: 'Extract analysis (JSON)', detail: 'AI agent brief · copy to clipboard', run: () => { invokeAppAction('showExtract', 'json'); } },
+    { label: 'Extract analysis (Markdown)', detail: 'AI agent brief · copy to clipboard', run: () => { invokeAppAction('showExtract', 'markdown'); } }
   ].filter(item => !q || `${item.label} ${item.detail}`.toLowerCase().includes(q));
   const root = document.querySelector('#command-results');
   root.innerHTML = commands.map((item, i) => `<button type="button" class="command-result" data-command="${i}" role="option"><span>${esc(item.label)}</span><small>${esc(item.detail)}</small></button>`).join('') || '<div class="empty-state"><strong>No command found</strong>Try a workspace or accessibility setting.</div>';
@@ -358,7 +360,7 @@ async function finalizeCampaignResult(x, count, workers) {
   renderCampaignSummary(x);
   // Re-render the current workspace so Mechanics/Synergies/Compare/etc.
   // reflect the freshly updated state.observatory immediately.
-  import('./app.js').then(m => m.render());
+  rerender();
 }
 
 function cancelBrowserCampaign() {
@@ -385,7 +387,7 @@ function resetCampaignResults() {
   state.variantAnalytics = state.bootState?.variantAnalytics != null ? structuredClone(state.bootState.variantAnalytics) : state.observatory?.variantAnalytics ?? state.variantAnalytics;
   document.querySelector('#campaign-summary').innerHTML = '';
   document.querySelector('#experiment-status').textContent = 'Ready.';
-  import('./app.js').then(m => m.render());
+  rerender();
 }
 
 function renderCampaignSummary(result) {

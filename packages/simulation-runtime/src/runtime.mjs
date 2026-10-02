@@ -323,7 +323,7 @@ export function runPolicyMatch(config) {
     // the originating declaration, not to the current decision.
     const preFrameState = captureFacts ? structuredClone(state) : null;
     const preFrameScores = captureFacts ? pointsByPlayer(state, seatOrder) : null;
-    const frame = createSimulationDecisionFrame(state);
+    const frame = createSimulationDecisionFrame(state, config.orchestrationCommandLimit ?? 16);
     state = frame.state;
     commands.push(...frame.executedCommands);
     captureEvents(frame.events);
@@ -607,6 +607,10 @@ export function runPolicyMatch(config) {
   const base = { summary, decisions, facts, provenance };
   if (captureTraces) base.decisionTraces = decisionTraces;
   if (!config.includeReplay) return base;
+  // Evolution Lab can retain a command transcript without constructing/hashing
+  // every certified checkpoint for every bulk game. Certification remains the
+  // default; transcript inspection executes the same authority on demand.
+  if (config.replayMode === 'commands') return { ...base, replay: { initialState, commands } };
   const replay = createAuthorityCertifiedReplay(matchId, initialState, commands, ENGINE_VERSION);
   const verified = verifyAuthorityCertifiedReplay(replay);
   if (authorityHashCanonical(verified.state) !== summary.finalStateHash) throw new Error('AUTHORITY_REPLAY_FINAL_HASH_MISMATCH');

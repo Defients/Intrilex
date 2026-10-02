@@ -172,11 +172,12 @@ export function createSimulationState(setup) {
 /**
  * Advance the simulation to the next decision point.
  * @param {Record<string, *>} state - Current simulation state
+ * @param {number} [maxCommands] - Explicit bounded orchestration budget
  * @returns {*}
  */
-export function advanceSimulationToDecision(state) {
+export function advanceSimulationToDecision(state, maxCommands = 16) {
   return isCoreProfile(state.metadata?.coreAuthority?.profileId)
-    ? core.advanceCoreToDecision(state)
+    ? core.advanceCoreToDecision(state, maxCommands)
     : firstContact.advanceToDecision(state);
 }
 
@@ -200,8 +201,8 @@ export function authorizedActionView(action, profileId) {
  * @param {Record<string, *>} state - Current simulation state
  * @returns {*}
  */
-export function createSimulationDecisionFrame(state) {
-  const advanced = advanceSimulationToDecision(state);
+export function createSimulationDecisionFrame(state, maxCommands = 16) {
+  const advanced = advanceSimulationToDecision(state, maxCommands);
   if (advanced.status !== 'PLAYER_DECISION_REQUIRED' || !advanced.legalActionFrame) {
     return { ...advanced, policyActions: [], resolve: () => null };
   }

@@ -14,6 +14,7 @@ import {} from './experiment-controls.js';
 import {} from './integrity.js';
 import { renderRanks } from './workspaces/ranks.js';
 import { renderDiagnostics } from './workspaces/diagnostics.js';
+import { renderEvolutionLab, cleanupEvolutionLab } from './workspaces/evolution.js';
 import { renderBranches} from './workspaces/branches.js';
 import { renderForensicWorkspace, initForensicViewer, getForensicState, setCurrentFrame, renderForensicSidebar, renderForensicComparisonOverlay, renderFrameCommentary, handleForensicAction } from './forensic/forensic-viewer.mjs';
 import { frameSummary as forensicFrameSummary, branchesAtFrame as forensicBranchesAtFrame, annotationsAtFrame as forensicAnnotationsAtFrame, sortedBookmarks as forensicSortedBookmarks } from './forensic/forensic-model.mjs';
@@ -178,6 +179,10 @@ export function render() {
   if (_previousRoute === '/caster' && r !== '/caster') {
     try { cleanupCaster(); } catch (e) { console.warn('[render] cleanupCaster error:', e); }
   }
+  // Evolution Lab cleanup: stop a running series and terminate its workers on route change.
+  if (_previousRoute === '/evolution' && r !== '/evolution') {
+    try { cleanupEvolutionLab(); } catch (e) { console.warn('[render] cleanupEvolutionLab error:', e); }
+  }
   _previousRoute = r;
   // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
   // This replaces the old ad-hoc metadata restore block and ensures every
@@ -264,7 +269,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/forensic': renderForensic, '/diagnostics': renderDiagnostics, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
+    '/branches': renderBranches, '/forensic': renderForensic, '/diagnostics': renderDiagnostics, '/evolution': renderEvolutionLab, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
   };
   try {
     const result = (renderers[r] ?? renderEvidence)();
@@ -2331,8 +2336,9 @@ getAuthController().then(async ({ initAuth, isMigrationPending }) => {
 // IRX-C06: Register render function with the rerender bus so workspace
 // modules can trigger re-renders without dynamically importing app.js.
 // This breaks the backedge from workspace modules to the entry point.
-import { setRenderer } from './rerender.js';
+import { setRenderer, setAppActions } from './rerender.js';
 setRenderer(render);
+setAppActions({ togglePlay, stop, showExtract });
 
 // IRX-FORENSIC: Expose state on window for the forensic viewer's open-session
 // flow, which needs to set replay state before navigating to Watch. This is

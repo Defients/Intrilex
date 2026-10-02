@@ -1,0 +1,84 @@
+/* ═══════════════════════════════════════════════════════════════
+   evolution.css — Evolution Lab (Prototype Zero) dashboard styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Run-state chip ── */
+.evo-state{display:inline-flex;align-items:center;padding:5px 12px;border-radius:999px;font-size:10.5px;font-weight:700;letter-spacing:.14em;border:1px solid var(--border-soft);color:var(--muted);background:var(--surface)}
+.evo-state-running{color:var(--green);border-color:rgba(104,211,145,.45);background:rgba(104,211,145,.08)}
+.evo-state-running::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px;animation:evoPulse 1.4s ease-in-out infinite}
+.evo-state-complete{color:var(--cyan);border-color:rgba(90,215,232,.45);background:rgba(90,215,232,.08)}
+.evo-state-stopped{color:var(--amber);border-color:rgba(241,189,93,.45);background:rgba(241,189,93,.08)}
+.evo-state-error{color:var(--red);border-color:rgba(242,119,122,.45);background:rgba(242,119,122,.08)}
+@keyframes evoPulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── Configuration ── */
+.evo-config{border:1px solid var(--border-soft);border-radius:14px;background:linear-gradient(160deg,var(--surface),rgba(16,29,42,.55));padding:16px 18px;margin:14px 0 18px;display:grid;gap:14px}
+.evo-vs-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:end}
+.evo-bot-select{display:grid;gap:6px;font-size:11.5px;color:var(--muted-bright)}
+.evo-bot-select select{min-height:38px}
+.evo-vs{display:grid;place-items:center;font-size:13px;font-weight:800;letter-spacing:.18em;color:var(--cyan);padding-bottom:9px;text-transform:uppercase}
+.evo-config-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;align-items:end}
+.evo-config-row .field{gap:6px;font-size:11.5px;color:var(--muted-bright)}
+.evo-config-row .field-label{display:block}
+.evo-presets{display:flex;gap:6px;align-items:center}
+.evo-presets .evo-preset{padding:7px 12px;font-size:12px}
+.evo-presets .evo-preset.active{border-color:var(--cyan-2);color:var(--cyan);background:rgba(90,215,232,.08)}
+.evo-presets input{width:96px;min-height:36px;padding:4px 10px}
+.evo-seed-tag{font-style:normal;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(90,215,232,.35);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+.evo-toggle{display:inline-flex;align-items:center;gap:8px;min-height:36px;color:var(--text);font-size:13px}
+.evo-toggle input{width:16px;height:16px;accent-color:var(--cyan-2)}
+
+/* ── Arena: mirrored bot panels ── */
+.evo-arena{display:grid;grid-template-columns:1fr minmax(240px,340px) 1fr;gap:14px;align-items:stretch;margin-bottom:18px}
+.evo-bot{border:1px solid var(--border-soft);border-radius:14px;padding:16px 18px;background:linear-gradient(160deg,var(--surface),rgba(16,29,42,.6));display:grid;gap:12px;align-content:start}
+.evo-bot-a{border-top:2px solid var(--cyan)}
+.evo-bot-b{border-top:2px solid var(--magenta)}
+.evo-bot-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.evo-bot-tag{font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.evo-bot-a .evo-bot-tag{color:var(--cyan)}
+.evo-bot-b .evo-bot-tag{color:var(--magenta)}
+.evo-bot-policy{font-size:14px;font-weight:700;color:var(--text)}
+.evo-bot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.evo-bot-grid>div{display:grid;gap:2px;padding:8px 10px;border:1px solid var(--border-soft);border-radius:8px;background:rgba(12,22,34,.5)}
+.evo-bot-grid small{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.evo-bot-grid b{font-size:15px;font-variant-numeric:tabular-nums;color:var(--text)}
+.evo-arena-mid{display:grid;align-content:center;gap:8px}
+.evo-arena-vs{text-align:center;font-size:17px;font-weight:800;letter-spacing:.3em;color:var(--faint);text-transform:uppercase}
+
+/* ── Progress ── */
+.evo-progress{display:grid;gap:7px}
+.evo-progress-head{display:flex;justify-content:space-between;font-size:12px;color:var(--text);font-variant-numeric:tabular-nums}
+.evo-progress-head span:last-child{color:var(--cyan);font-weight:700}
+.evo-progress-track{height:10px;border-radius:6px;background:var(--bg-2);border:1px solid var(--border-soft);overflow:hidden}
+.evo-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--cyan-2),var(--cyan));transition:width .3s ease}
+.evo-progress-sub{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.evo-progress-sub b{color:var(--text);font-variant-numeric:tabular-nums}
+
+/* ── Metrics grid ── */
+.evo-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.evo-metrics .metric-card{margin:0}
+.evo-metrics .metric-value{font-size:24px}
+
+/* ── Chart ── */
+.evo-chart-wrap{border:1px solid var(--border-soft);border-radius:14px;background:var(--surface);padding:16px 18px;margin-bottom:18px}
+.evo-chart-wrap h3{margin:0 0 10px;font-size:13px;color:var(--text)}
+.evo-chart-wrap svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.evo-chart-empty{padding:40px 16px;text-align:center;color:var(--faint);font-size:13px;border:1px dashed var(--border-soft);border-radius:10px}
+.evo-chart-note{margin:10px 0 0;font-size:11px;color:var(--muted)}
+
+/* ── System status strip ── */
+.evo-status-strip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.evo-sys{display:flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--border-soft);border-radius:8px;background:rgba(12,22,34,.5);font-size:11px;color:var(--muted)}
+.evo-sys b{font-size:9.5px;letter-spacing:.12em;font-weight:800}
+.evo-sys-on{color:var(--green)}
+.evo-sys-off{color:var(--faint)}
+
+/* ── Future modules rail ── */
+.evo-future{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:4px;border-top:1px dashed var(--border-soft)}
+.evo-future-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-right:6px}
+.evo-future-chip{display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;padding:8px 14px;border-radius:9px;font-size:12px;color:var(--faint);border-style:dashed;cursor:not-allowed}
+.evo-future-chip em{font-style:normal;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);opacity:.85}
+
+/* ── Responsive ── */
+@media(max-width:1100px){.evo-arena{grid-template-columns:1fr}.evo-arena-mid{order:-1}}
+@media(max-width:760px){.evo-metrics{grid-template-columns:repeat(2,1fr)}.evo-vs-grid{grid-template-columns:1fr}.evo-vs{padding:0}.evo-bot-grid{grid-template-columns:repeat(2,1fr)}}

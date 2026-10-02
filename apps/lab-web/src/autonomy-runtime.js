@@ -36,7 +36,7 @@ const uint32FromHash=(value)=>Number.parseInt(hashCanonical(value).slice(0,8),16
 const pointValue=(card)=>{if(!card)return null;if(typeof card.state?.pointValue==='number')return card.state.pointValue;const rank=String(card.identity??'').replace(/[♣♦♥♠]/gu,'');if(/^\d+$/.test(rank))return Number(rank);return({A:4,J:3,Q:2,K:8,RJ:5,BJ:11})[rank]??0;};
 
 export function createState(setup){return isCore(setup.profileId)?createCoreMatchState({profileId:setup.profileId,playerIds:setup.playerIds,seatOrder:setup.seatOrder,enabledModules:[],seed:setup.seed,...(setup.predeterminedIdentities?{predeterminedIdentities:setup.predeterminedIdentities}:{})}):createMatchState({...setup,eventApprovedModules:[]});}
-export function advance(state){return state.metadata?.coreAuthority?advanceCoreToDecision(state):advanceToDecision(state);}
+export function advance(state,maxCommands=16){return state.metadata?.coreAuthority?advanceCoreToDecision(state,maxCommands):advanceToDecision(state);}
 export function actionView(action,profileId){const view=isCore(profileId)?toAuthorizedCoreAction(action):authorizedLegalActionView(action);const composition=actionComposition(action);return composition?{...view,composition}:view;}
 
 export function strictView(state,actorId){
@@ -82,7 +82,7 @@ function buildRuleCompliance({decisions,events,state}){
   return{status:violationCount===0?'PASS':'FAIL',violationCount,...checks,authorizedFullTurnSkips,consumedFullTurnSkips,pendingFullTurnSkips};
 }
 
-export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,recordReplay=false}){
+export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,recordReplay=false,orchestrationCommandLimit=16}){
   if(policyIds.length!==2||policyIds.some(id=>!POLICY_IDS.includes(id)))throw new Error('INVALID_POLICY_PAIR');
   const seats=seatOrder??['P1','P2'];const setup={profileId,playerIds:seats,enabledModules:[],eventApprovedModules:[],seed:(seed>>>0)||1,seatOrder:seats};
   let state=initialState?structuredClone(initialState):createState(setup);const engine=new IntrilexEngine();
@@ -99,7 +99,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   const executionInstanceToken=`${matchId}:${Date.now()}:${Math.random().toString(36).slice(2,10)}`;
   const capture=(items)=>{events+=items.length;capturedEvents.push(...items);for(const event of items){increment(eventTypeCounts,event.type);const type=String(event.type??'');if(/AUTOMATIC_PRIORITY_ADVANCE/.test(type)){semantic.automaticPriorityAdvanceCount+=1;semantic.automaticOrchestrationCommandCount+=1;}if(/RESPONSE_WINDOW_CLOSED/.test(type))semantic.responseWindowClosedCount+=1;}};
   for(let decisionIndex=0;decisionIndex<decisionLimit;decisionIndex+=1){
-    const advanced=advance(state);state=advanced.state;commands+=advanced.executedCommands.length;capture(advanced.events);
+    const advanced=advance(state,orchestrationCommandLimit);state=advanced.state;commands+=advanced.executedCommands.length;capture(advanced.events);
     if(replayCommands)replayCommands.push(...advanced.executedCommands);
     if(advanced.status==='TERMINAL'){terminationReason=advanced.reasonCode==='CANONICAL_DRAW'?'CANONICAL_DRAW':advanced.reasonCode==='EXHAUSTED_RESOLUTION'?'EXHAUSTED_RESOLUTION':'NORMAL_VICTORY';break;}
     if(advanced.status!=='PLAYER_DECISION_REQUIRED'||!advanced.legalActionFrame){terminationReason='UNSUPPORTED_CONFIGURATION';errorCode=advanced.reasonCode??'UNKNOWN';break;}

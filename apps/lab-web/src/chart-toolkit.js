@@ -322,11 +322,14 @@ function donutArcPath(cx, cy, outer, inner, a0, a1) {
  * @param {string[]} [opts.xLabels] - labels for x-axis ticks
  * @param {number} [opts.width] - default 520
  * @param {number} [opts.height] - default 280
+ * @param {number} [opts.minValue] - explicit y-axis minimum; auto-computed if omitted
+ * @param {number} [opts.maxValue] - explicit y-axis maximum; auto-computed if omitted
+ * @param {string} [opts.yUnit] - suffix appended to y-axis tick labels (e.g. '%')
  * @param {string} [opts.title]
  * @param {string} [opts.ariaLabel]
  * @returns {string} SVG string
  */
-export function lineChart({ series, xLabels, width = 520, height = 280, title, ariaLabel } = {}) {
+export function lineChart({ series, xLabels, width = 520, height = 280, minValue, maxValue, yUnit = '', title, ariaLabel } = {}) {
   const list = Array.isArray(series) ? series.filter(s => s && s.label != null && Array.isArray(s.values)) : [];
   if (list.length === 0) return svgWrap({ width, height, viewBox: `0 0 ${width} ${height}`, className: 'ix-chart-line', title, ariaLabel, desc: 'No data for line chart.' }, `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" font-size="12" fill="rgba(255,255,255,0.5)">No data</text>`);
   const palette = ['#4fd387', '#5ad7e8', '#a78bfa', '#f1bd5d', '#f0786f', '#7dd3fc', '#fbbf24', '#34d399'];
@@ -334,8 +337,10 @@ export function lineChart({ series, xLabels, width = 520, height = 280, title, a
   const chartW = width - padL - padR;
   const chartH = height - padT - padB;
   const allVals = list.flatMap(s => s.values.map(v => Number(v ?? 0))).filter(Number.isFinite);
-  const min = allVals.length ? Math.min(...allVals) : 0;
-  const max = allVals.length ? Math.max(...allVals) : 1;
+  const dataMin = allVals.length ? Math.min(...allVals) : 0;
+  const dataMax = allVals.length ? Math.max(...allVals) : 1;
+  const min = Number.isFinite(Number(minValue)) ? Number(minValue) : dataMin;
+  const max = Number.isFinite(Number(maxValue)) ? Number(maxValue) : dataMax;
   const range = max - min || 1;
   const maxLen = Math.max(...list.map(s => s.values.length), 1);
   const stepX = maxLen > 1 ? chartW / (maxLen - 1) : 0;
@@ -343,7 +348,7 @@ export function lineChart({ series, xLabels, width = 520, height = 280, title, a
   const grid = [0, 0.25, 0.5, 0.75, 1].map(level => {
     const y = padT + chartH * (1 - level);
     const val = min + range * level;
-    return `<line x1="${padL}" y1="${y.toFixed(2)}" x2="${padL + chartW}" y2="${y.toFixed(2)}" stroke="rgba(255,255,255,0.06)"/><text x="${padL - 6}" y="${(y + 3).toFixed(2)}" text-anchor="end" font-size="9" fill="rgba(255,255,255,0.5)">${fmtNum(val)}</text>`;
+    return `<line x1="${padL}" y1="${y.toFixed(2)}" x2="${padL + chartW}" y2="${y.toFixed(2)}" stroke="rgba(255,255,255,0.06)"/><text x="${padL - 6}" y="${(y + 3).toFixed(2)}" text-anchor="end" font-size="9" fill="rgba(255,255,255,0.5)">${fmtNum(val)}${escSvg(yUnit)}</text>`;
   }).join('');
   // X labels
   const xLab = Array.isArray(xLabels) && xLabels.length ? xLabels : [];

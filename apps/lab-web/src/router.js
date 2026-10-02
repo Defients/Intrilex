@@ -27,6 +27,7 @@ export const WORKSPACES = [
   ['/branches','⎇','Branches','Counterfactual lab'],
   ['/forensic','🔬','Forensic','Replay forensics'],
   ['/diagnostics','⚙','Diagnostics','Policy behavior'],
+  ['/evolution','🧬','Evolution Lab','Self-play series runner'],
   ['/tournament','🏆','Tournament','AI bracket'],
   ['/evidence','◎','Evidence','Integrity'],
   ['/intelligence','✦','Analytics AI','Ollama interpretation'],
@@ -66,6 +67,7 @@ export const SUBTITLES = {
   '/branches':'Policy-conditioned counterfactual estimates from command checkpoints.',
   '/forensic':'Bookmark, branch, annotate, and compare replays. Generate puzzles from key positions.',
   '/diagnostics':'Decision margins, self-counter rates, response conservation, timing, and win rates.',
+  '/evolution':'Deterministic developer arena — paired self-play, frozen benchmarks, immutable checkpoints, and reproducible replay evidence. Adaptive learning is disabled.',
   '/tournament':'Single-elimination AI-vs-AI bracket with deterministic matches and champion crowning.',
   '/profile':'Player profile — identity, ranked, achievements, showcase, customization, and privacy.',
   '/achievements':'56 launch achievements with deterministic detection, career tracking, and hidden discoveries.',
@@ -98,7 +100,7 @@ export function renderNavigation() {
   // account dropdown on the landing page. Release Notes is on the landing rail.
   const SECTIONS = [
     { label: 'Learn', routes: ['/rules', '/cards'] },
-    { label: 'Lab', routes: ['/watch', '/caster', '/replays', '/history', '/mechanics', '/synergies', '/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/tournament', '/evidence', '/intelligence'] },
+    { label: 'Lab', routes: ['/watch', '/caster', '/replays', '/history', '/mechanics', '/synergies', '/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/evolution', '/tournament', '/evidence', '/intelligence'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));
   const nav = document.querySelector('#workspace-nav');

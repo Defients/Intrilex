@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { hashCanonical } from '@intrilex/shared';
+import { evolutionIdentity } from './evolution-identity.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rootPackage = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
@@ -83,6 +84,13 @@ if (rankedGlyphs.status !== 0) process.exit(rankedGlyphs.status ?? 1);
 rmSync(dist, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 mkdirSync(dist, { recursive: true });
 cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
+// Portable lab domain/session have no engine rules or Node I/O. Browser workers
+// execute the existing autonomy runtime; the dashboard owns only artifacts.
+for (const name of ['evolution-domain.mjs', 'evolution-session.mjs']) {
+  const content = await readFile(path.join(root, 'packages/simulation-runtime/src', name), 'utf8');
+  await writeFile(path.join(dist, 'evolution', name), content.replace("from '@intrilex/shared'", "from '../shared-browser.js'"));
+}
+await writeFile(path.join(dist, 'evolution/identity.mjs'), `export const LAB_IDENTITY = ${JSON.stringify(await evolutionIdentity())};\n`);
 // ── Analytics AI core: copy isomorphic package modules into dist/analytics-ai ──
 // The browser UI adapters (apps/lab-web/src/analytics-ai/*.js) import these
 // .mjs modules via relative paths. The package is self-contained (no workspace

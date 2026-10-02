@@ -63,6 +63,98 @@ self.onmessage = async (event) => {
     } catch(error){ self.postMessage({ type:'autonomy-campaign-result', ok:false, error:error?.stack??String(error) }); }
     return;
   }
+  if (type === 'run-evolution-series') {
+    // Evolution Lab (Prototype Zero): run this worker's strided slice of a
+    // self-play series, streaming one slim record per completed game so the
+    // dashboard stays live. Cancellation is via worker.terminate().
+    try {
+      const { runBrowserPolicyMatch } = await autonomyModule;
+      const core = await import('./evolution/evolution-core.mjs');
+      const cfg = event.data.config ?? {};
+      const start = Math.max(0, Number(cfg.startOrdinal) || 0);
+      const stride = Math.max(1, Number(cfg.stride) || 1);
+      const total = Math.max(0, Math.min(Number(cfg.total) || 0, 10000));
+      if (!cfg.botA || !cfg.botB) {
+        self.postMessage({ type: 'evolution-worker-done', workerIndex: event.data.workerIndex ?? 0, produced: 0, error: 'INVALID_CONFIG: botA and botB policy ids are required' });
+        return;
+      }
+      let produced = 0;
+      for (let ordinal = start; ordinal < total; ordinal += stride) {
+        const plan = core.seatPlan(ordinal, cfg.mirrorSeats !== false, cfg.botA, cfg.botB);
+        const seed = core.evolutionGameSeed(cfg.baseSeed ?? 1, ordinal);
+        let record;
+        try {
+          const summary = runBrowserPolicyMatch({
+            seed,
+            policyIds: plan.policyIds,
+            decisionLimit: cfg.decisionLimit ?? 1800,
+            profileId: cfg.profileId
+          });
+          record = core.slimGameRecord(summary, ordinal, plan.swapped);
+        } catch (gameError) {
+          record = core.faultGameRecord(ordinal, plan.swapped, gameError);
+        }
+        self.postMessage({ type: 'evolution-game', workerIndex: event.data.workerIndex ?? 0, game: record });
+        produced += 1;
+      }
+      self.postMessage({ type: 'evolution-worker-done', workerIndex: event.data.workerIndex ?? 0, produced });
+    } catch (error) {
+      self.postMessage({ type: 'evolution-worker-done', workerIndex: event.data.workerIndex ?? 0, error: error?.stack ?? String(error) });
+    }
+    return;
+  }
+  if (type === 'run-evolution-game') {
+    const { epoch, workerIndex, ordinal } = event.data;
+    try {
+      const { runBrowserPolicyMatch } = await autonomyModule;
+      const domain = await import('./evolution/evolution-domain.mjs');
+      const { LAB_IDENTITY } = await import('./evolution/identity.mjs');
+      const run = event.data.run;
+      domain.assertIdentity(run.identity, LAB_IDENTITY);
+      domain.labConfig(run.config);
+      run.checkpoints.forEach(cp => domain.validateCheckpoint(cp, LAB_IDENTITY));
+      const plan = domain.gamePlan(run.config, ordinal);
+      let evidence;
+      const started = performance.now();
+      try {
+        const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds,
+          profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true });
+        const record = domain.gameEvidence(summary, plan, run, summary.replay, performance.now()-started);
+        const keep = event.data.retainReplay || !domain.CLEAN_REASONS.includes(record.terminationReason);
+        evidence = { record, replay: keep ? summary.replay : null };
+      } catch (error) { evidence = { record: domain.gameFault(error, plan, run, performance.now()-started), replay: null }; }
+      self.postMessage({ type: 'evolution-evidence', epoch, workerIndex, evidence });
+    } catch (error) { self.postMessage({ type: 'evolution-fault', epoch, workerIndex, error: error?.message ?? String(error) }); }
+    return;
+  }
+  if (type === 'inspect-evolution-replay') {
+    try {
+      const domain = await import('./evolution/evolution-domain.mjs');
+      const { LAB_IDENTITY } = await import('./evolution/identity.mjs');
+      const runtime = await autonomyModule;
+      const { IntrilexEngine, hashCanonical } = await engineModule;
+      const run = domain.validateArtifact(event.data.artifact, LAB_IDENTITY);
+      const evidence = run.replays.find(r => r.replayId === event.data.replayId);
+      const record = run.records.find(r => r.ordinal === evidence?.ordinal);
+      const replay = domain.validateReplay(evidence, record, run);
+      const initial = runtime.createState({ profileId: run.config.profileId, playerIds: ['P1', 'P2'], seatOrder: ['P1', 'P2'], enabledModules: [], seed: record.seed });
+      if (hashCanonical(initial) !== record.initialStateHash) throw new Error('SEED_INITIAL_STATE_MISMATCH');
+      const engine = new IntrilexEngine();
+      let state = initial;
+      const steps = [{ index: 0, revision: state.revision, turn: state.fullTurnSequence, phase: state.phase, scores: { P1: 0, P2: 0 }, command: 'INITIAL', events: [] }];
+      for (const [index, command] of replay.commands.entries()) {
+        const result = engine.execute(state, command);
+        if (!result.accepted && !(record.terminationReason === 'ENGINE_REJECTION' && index === replay.commands.length-1)) throw new Error(`REPLAY_REJECTED_AT_${index}`);
+        state = result.state;
+        steps.push({ index: index+1, revision: state.revision, turn: state.fullTurnSequence, phase: state.phase,
+          scores: { P1: runtime.strictView(state, 'P1').own.securedPoints, P2: runtime.strictView(state, 'P2').own.securedPoints },
+          command: command.type, actor: command.actorId ?? null, events: result.events.map(e => e.type) });
+      }
+      if (hashCanonical(state) !== record.finalStateHash) throw new Error('REPLAY_FINAL_STATE_MISMATCH');
+      self.postMessage({ type: 'evolution-inspection', ok: true, replayId: evidence.replayId, finalStateHash: record.finalStateHash, steps });
+    } catch (error) { self.postMessage({ type: 'evolution-inspection', ok: false, error: error?.message ?? String(error) }); }
+    return;
+  }
   if (type === 'run-autonomy-segment') {
     try {
       const { runBrowserCampaign } = await autonomyModule;
