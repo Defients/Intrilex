@@ -28,10 +28,6 @@ function importModule(rel) {
 
 // ── Helpers ──────────────────────────────────────────────────────
 
-function randomPort() {
-  return 49152 + Math.floor(Math.random() * 16000);
-}
-
 function connectWs(port) {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(`ws://127.0.0.1:${port}`);
@@ -80,11 +76,21 @@ function drainViews(mc) {
   }
 }
 
+// This tests terminal persistence, not catalog ordering. Prefer scoring and
+// replenishing the hand over repeatedly choosing an optional first-listed effect.
+function journeyAction(decision) {
+  for (const family of ['score', 'draw', 'response-decline']) {
+    const action = decision.legalActions.find(candidate => candidate.family === family);
+    if (action) return action;
+  }
+  return decision.legalActions[0];
+}
+
 // ── E2E: Full competitive journey ────────────────────────────────
 
 test('Phase 3 E2E: full competitive journey — create, play, persist, replay, spectator, restart recovery', async (t) => {
   const { startServer } = await importModule('apps/match-server/src/server.mjs');
-  const port = randomPort();
+  let port = 0;
   const directory = mkdtempSync(path.join(tmpdir(), 'intrilex-journey-'));
   const dbPath = path.join(directory, 'matches.sqlite');
   const outboxPath = path.join(directory, 'outbox.sqlite');
@@ -102,6 +108,7 @@ test('Phase 3 E2E: full competitive journey — create, play, persist, replay, s
     rateLimitCapacity: 10000,
   });
   assert.ok(server, 'Server must start');
+  port = server.httpServer.address().port;
 
   try {
     // ── Step 1: Create match ──
@@ -155,7 +162,7 @@ test('Phase 3 E2E: full competitive journey — create, play, persist, replay, s
       const dec1 = view1?.decision;
 
       if (dec1?.isMyDecision && dec1.legalActions?.length) {
-        const action = dec1.legalActions[0];
+        const action = journeyAction(dec1);
         ws1.send(JSON.stringify(submitAction(matchId, p1Token, `cmd-${stepCount}`, dec1.stateRevision, dec1.frameHash, action.actionId)));
         const result = await mc1.waitFor('ACTION_RESULT', 5000);
         if (!result.payload?.accepted && dec1.legalActions.length > 1) {
@@ -173,7 +180,7 @@ test('Phase 3 E2E: full competitive journey — create, play, persist, replay, s
         if (view2?.status === 'TERMINAL') break;
         const dec2 = view2?.decision;
         if (dec2?.isMyDecision && dec2.legalActions?.length) {
-          const action = dec2.legalActions[0];
+          const action = journeyAction(dec2);
           ws2.send(JSON.stringify(submitAction(matchId, p2Token, `cmd-${stepCount}`, dec2.stateRevision, dec2.frameHash, action.actionId)));
           const result = await mc2.waitFor('ACTION_RESULT', 5000);
           if (!result.payload?.accepted && dec2.legalActions.length > 1) {
@@ -189,6 +196,8 @@ test('Phase 3 E2E: full competitive journey — create, play, persist, replay, s
     }
 
     // ── Verify: Match ended with terminal state ──
+    const authoritativeMatch = server.matchStore.get(matchId);
+    assert.equal(authoritativeMatch.status, 'TERMINAL', `Journey exhausted ${stepCount} steps: ${JSON.stringify({status:authoritativeMatch.status,reason:authoritativeMatch.terminalReason,decisions:authoritativeMatch.decisionJournal.length,actor:authoritativeMatch.currentDecisionActor})}`);
     let matchEnded = mc1.buffer.find(m => m.type === 'MATCH_ENDED');
     if (!matchEnded) matchEnded = await mc1.waitFor('MATCH_ENDED', 10000);
     assert.ok(matchEnded, `Match must end within ${maxSteps} steps (took ${stepCount})`);
@@ -288,13 +297,13 @@ test('Phase 3 E2E: full competitive journey — create, play, persist, replay, s
 
 test('Phase 3 E2E: disconnect → abandon → terminal result with abandonment reason', async () => {
   const { startServer } = await importModule('apps/match-server/src/server.mjs');
-  const port = randomPort();
   const server = await startServer({
-    port, host: '127.0.0.1', dbPath: ':memory:', persistent: false,
+    port: 0, host: '127.0.0.1', dbPath: ':memory:', persistent: false,
     rateLimitCapacity: 10000,
     reconnectGraceMs: 1000,
   });
   assert.ok(server, 'Server must start');
+  const port = server.httpServer.address().port;
 
   try {
     // Create and join match

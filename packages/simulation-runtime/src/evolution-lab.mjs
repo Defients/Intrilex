@@ -40,7 +40,7 @@ export function verifyLabReplay(run, evidence) {
   return verified;
 }
 
-export async function runLabSeries(input, { onProgress = () => {}, identity, signal, startingCheckpoints, createdAt } = {}) {
+export async function runLabSeries(input, { onProgress = () => {}, identity, signal, startingCheckpoints, createdAt, profile = false } = {}) {
   assertIdentity(identity ?? implementationIdentity,implementationIdentity);
   const run = createLabRun(input, identity ?? implementationIdentity, createdAt);
   if (startingCheckpoints) {
@@ -50,10 +50,13 @@ export async function runLabSeries(input, { onProgress = () => {}, identity, sig
   }
   run.status = 'RUNNING';
   const start = performance.now();
+  let hostEvidenceHandlingMs=0,workerOnlineLatencySumMs=0;
   const record = evidence => {
+    const handlingStarted=profile?performance.now():0;
     validateRecord(evidence.record, run);
     run.records.push(evidence.record); retainReplay(run, evidence);
     onProgress({ completed: run.records.length, total: run.config.gameCount, record: evidence.record });
+    if(profile)hostEvidenceHandlingMs+=performance.now()-handlingStarted;
   };
   if (run.config.workerCount === 1) {
     for (let ordinal = 0; ordinal < run.config.gameCount; ordinal += 1) {
@@ -81,7 +84,9 @@ export async function runLabSeries(input, { onProgress = () => {}, identity, sig
       if (signal?.aborted) { cancel(); return; }
       signal?.addEventListener('abort', cancel, { once: true });
       for (let index = 0; index < Math.min(run.config.workerCount,run.config.gameCount); index += 1) {
+        const workerStarted=profile?performance.now():0;
         const worker = new Worker(new URL('./evolution-node-worker.mjs', import.meta.url), { workerData: { run }, execArgv: [] });
+        if(profile)worker.once('online',()=>{workerOnlineLatencySumMs+=performance.now()-workerStarted;});
         workers.push(worker);
         worker.on('message', evidence => {
           if (done) return;
@@ -97,7 +102,8 @@ export async function runLabSeries(input, { onProgress = () => {}, identity, sig
   }
   run.elapsedMs = performance.now()-start;
   if (run.status === 'RUNNING') run.status = 'COMPLETE';
-  return { run, metrics: summarizeRecords(run.records), gamesPerSecond: run.records.length/(run.elapsedMs/1000) };
+  const aggregateStarted=performance.now(),metrics=summarizeRecords(run.records),metricAggregationMs=performance.now()-aggregateStarted;
+  return { run, metrics, gamesPerSecond: run.records.length/(run.elapsedMs/1000),performance:{inclusiveExecutionMs:run.elapsedMs,metricAggregationMs,hostEvidenceHandlingMs:profile?hostEvidenceHandlingMs:null,workerOnlineLatencySumMs:profile?workerOnlineLatencySumMs:null,peakWorkers:run.config.workerCount===1?0:Math.min(run.config.workerCount,run.config.gameCount),profilingEnabled:profile,note:'Inclusive execution includes worker startup, coordination, simulation, hashing and transcript creation. Online latencies sum overlapping worker intervals; host handling is a measured subset of inclusive wall time.'} };
 }
 
 /** Evaluation never calls update/train hooks; admitted checkpoints describe frozen policies. */

@@ -1,11 +1,12 @@
-/* global document, window, Worker, location, IDBDatabase, DOMException, indexedDB -- callbacks evaluated in browser */
+/* global document, window, Worker, location, IDBDatabase, IDBObjectStore, DOMException, indexedDB, queueMicrotask -- callbacks evaluated in browser */
 import assert from 'node:assert/strict';
+import { hashCanonical } from '@intrilex/shared';
 import http from 'node:http';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, expect } from '@playwright/test';
-const root=fileURLToPath(new URL('../',import.meta.url)), dist=path.join(root,'apps/lab-web/dist'), output=path.join(root,'reports/local/evolution-browser');
+const root=fileURLToPath(new URL('../',import.meta.url)), dist=path.join(root,'apps/lab-web/dist'), output=path.join(root,'reports/local/evolution-v1-completion/browser');
 await mkdir(output,{recursive:true});
 const server=http.createServer(async(req,res) => {
   try {
@@ -98,18 +99,35 @@ try {
     await page.locator('#evo-pack-pairs').fill('1');await page.locator('#evo-experiment-name').fill('Browser scientific fixture');await page.locator('#evo-create-experiment').click();
     await expect(page.locator('#evo-research-state')).toHaveText('IDLE');
     await page.locator('#evo-suite-evaluate').click();await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE',{timeout:120000});
-    await expect(page.locator('#evo-research-evaluations')).toContainText('tempo');await page.locator('#evo-compare-checkpoints').click();await expect(page.locator('#evo-checkpoint-comparison')).toContainText('Measured deltas');
+    await expect(page.locator('#evo-research-evaluations')).toContainText('tempo');await page.locator('#evo-compare-checkpoints').click();await expect(page.locator('#evo-checkpoint-comparison')).toContainText('comparison unavailable');
     const downloadPromise=page.waitForEvent('download');await page.locator('#evo-export-research').click();const download=await downloadPromise;await download.saveAs(path.join(output,'research.json'));
     await page.locator('#evo-clone-experiment').click();await expect(page.locator('#evo-research')).toContainText('Changes from parent');
     await page.reload();await expect(page.locator('[data-load-experiment]').first()).toBeVisible();await page.locator('[data-load-experiment]').first().click();await expect(page.locator('#evo-research-state')).toBeVisible();
     await page.locator('#evo-import-research').setInputFiles(path.join(output,'research.json'));await expect(page.locator('#evo-research')).toContainText('Imported research claims');
     await expect(page.locator('#evo-research-error')).toHaveText('');
   });
+  await scenario('repeated evaluations, malformed rehashed import, research quota and archive inspection',async()=>{
+    await page.setViewportSize({width:1440,height:1000});
+    const left=await page.locator('#evo-checkpoint-left').inputValue();await page.locator('#evo-checkpoint-right').selectOption(left);
+    await page.locator('#evo-suite-evaluate').click();await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE',{timeout:120000});await page.locator('#evo-compare-checkpoints').click();await expect(page.locator('#evo-checkpoint-comparison tbody tr')).toHaveCount(5);
+    await expect(page.locator('#evo-checkpoint-comparison')).toContainText('Latest complete appended');
+    const save=async name=>{const event=page.waitForEvent('download');await page.locator('#evo-export-research').click();const download=await event;const target=path.join(output,name);await download.saveAs(target);return {target,envelope:JSON.parse(await readFile(target,'utf8'))};};
+    const original=await save('repeated-research.json'),p=original.envelope.payload;assert.ok(p.experiment.runIds.length);assert.ok(p.evaluations.every(e=>e.matchups.every(m=>p.experiment.runIds.includes(m.runId))));
+    const bad=structuredClone(original.envelope),ev=bad.payload.evaluations[0],oldId=ev.evaluationId;ev.matchups[0].metrics.pairedScore=2;const {evaluationId:_id,matchups,...core}=ev;ev.evaluationId='EV-'+hashCanonical({...core,matchups:matchups.map(({runId:_run,...m})=>m)});bad.payload.experiment.evaluationIds=bad.payload.experiment.evaluationIds.map(id=>id===oldId?ev.evaluationId:id);bad.contentHash=hashCanonical(bad.payload);const badPath=path.join(output,'malformed-research.json');await writeFile(badPath,JSON.stringify(bad));await page.locator('#evo-import-research').setInputFiles(badPath);await expect(page.locator('#evo-research-error')).toContainText('INVALID_EVALUATION_UNCERTAINTY');
+    await page.locator('#evo-import-research').setInputFiles(original.target);await expect(page.locator('#evo-research-error')).toHaveText('');
+    await page.evaluate(()=>{window.__researchTransaction=IDBDatabase.prototype.transaction;IDBDatabase.prototype.transaction=function(names,mode,...rest){if(mode==='readwrite'&&(names==='research'||Array.isArray(names)&&names.includes('research')))throw new DOMException('CONTROLLED_RESEARCH_QUOTA','QuotaExceededError');return window.__researchTransaction.call(this,names,mode,...rest);};});
+    await page.locator('#evo-save-research').click();await expect(page.locator('#evo-research-error')).toContainText('CONTROLLED_RESEARCH_QUOTA');const quota=await save('research-quota.json');assert.deepEqual(quota.envelope.payload.evaluations,p.evaluations);
+    await page.evaluate(()=>{IDBDatabase.prototype.transaction=window.__researchTransaction;});
+    const legacy=structuredClone(original.envelope);legacy.payload.experiment.runIds=[];legacy.contentHash=hashCanonical(legacy.payload);const archivePath=path.join(output,'legacy-research.json');await writeFile(archivePath,JSON.stringify(legacy));await page.locator('#evo-archive-research').setInputFiles(archivePath);await expect(page.locator('#evo-research-archive')).toContainText('Execution is not admitted');await expect(page.locator('#evo-research-archive')).toContainText(legacy.payload.checkpoints[0].checkpointId);
+    const archived=page.waitForEvent('download');await page.locator('#evo-export-research-archive').click();const archiveDownload=await archived,archiveExport=path.join(output,'archive-export.json');await archiveDownload.saveAs(archiveExport);assert.deepEqual(JSON.parse(await readFile(archiveExport,'utf8')),legacy);
+    await page.locator('#evo-import-research').setInputFiles(original.target);
+  });
   await scenario('adaptive stop, resume, generation advancement, historical checkpoint and export',async()=>{
-    await page.evaluate(()=>{const Base=Worker;window.__researchWorkers=[];window.Worker=class extends Base{constructor(...args){super(...args);window.__researchWorkers.push(this);}};});
+    await page.evaluate(()=>{const Base=Worker;window.__researchWorkers=[];window.Worker=class extends Base{constructor(...args){super(...args);window.__researchWorkers.push(this);}postMessage(message){if(window.__failResearchWorker&&message.type==='run-evolution-game'){window.__failResearchWorker=false;queueMicrotask(()=>this.onerror?.({message:'CONTROLLED_RESEARCH_WORKER_FAILURE'}));return;}super.postMessage(message);}};});
     await page.locator('#evo-training-generations').fill('1');await page.locator('#evo-training-candidates').fill('1');await page.locator('#evo-training-pairs').fill('1');await page.locator('#evo-training-step').fill('1000');await page.locator('#evo-pack-pairs').fill('1');await page.locator('#evo-create-training').click();
-    await expect(page.locator('#evo-research-state')).toHaveText('IDLE');await page.locator('#evo-train').click();await expect(page.locator('#evo-research-state')).toHaveText('RUNNING');await page.locator('#evo-research-stop').click();await expect(page.locator('#evo-research-state')).toHaveText('STOPPED',{timeout:30000});
+    await expect(page.locator('#evo-research-state')).toHaveText('IDLE');await page.evaluate(()=>{window.__failResearchWorker=true;});await page.locator('#evo-train').click();await expect(page.locator('#evo-research-state')).toHaveText('ERROR',{timeout:30000});await page.locator('#evo-train').click();await expect(page.locator('#evo-research-state')).toHaveText('RUNNING');await page.locator('#evo-research-stop').click();await expect(page.locator('#evo-research-state')).toHaveText('STOPPED',{timeout:30000});
     await page.locator('#evo-train').click();await page.evaluate(()=>{window.__researchWorkers[0].onmessage({data:{type:'evolution-fault',epoch:1,error:'STALE_RESEARCH_FAULT'}});});await expect(page.locator('#evo-research-state')).toHaveText('RUNNING');await expect(page.locator('#evo-research-error')).not.toContainText('STALE_RESEARCH_FAULT');await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE',{timeout:240000});
+    await expect(page.locator('.evo-training-summary').first()).toContainText('TRAINING selection mean');await expect(page.locator('.evo-behavior-summary').first()).toContainText('candidate decisions');await expect(page.locator('#evo-behavior-divergence')).toContainText('matching held-out pack');
     await expect(page.locator('#evo-training-controls')).toContainText('2 committed lineage generations');
     await page.locator('#evo-history-refresh').click();await expect(page.locator('#evo-history')).toContainText('TRAINING');
     await page.locator('#evo-history .evo-replay-row').filter({hasText:'TRAINING'}).first().locator('[data-load-run]').click();await expect(page.locator('#evo-evaluation-results')).toContainText('TRAINING SELECTION PERFORMANCE');
@@ -121,6 +139,15 @@ try {
     await page.reload();await expect(page.locator('[data-load-experiment]').first()).toBeVisible();await page.locator('#evo-import-research').setInputFiles(file);await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE');
     await page.locator('#evo-checkpoint-left').selectOption(envelope.payload.checkpoints[0].checkpointId);await page.locator('#evo-checkpoint-right').selectOption(envelope.payload.generations[0].selectedCheckpointId);await page.locator('#evo-compare-checkpoints').click();await expect(page.locator('#evo-checkpoint-comparison')).toContainText('beforeInterval');
     await page.screenshot({path:path.join(output,'adaptive-desktop.png'),fullPage:true});await page.locator('#evo-training-controls').screenshot({path:path.join(output,'adaptive-controls.png')});await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+2),'adaptive mobile horizontal overflow: '+JSON.stringify(await page.evaluate(()=>Array.from(document.querySelectorAll('#evo-research *')).filter(e=>e.getBoundingClientRect().right>document.documentElement.clientWidth+2 && !e.closest('.evo-table-scroll')).slice(0,8).map(e=>({tag:e.tagName,id:e.id,right:e.getBoundingClientRect().right})))));await page.locator('#evo-training-controls').screenshot({path:path.join(output,'adaptive-mobile.png')});
+  });
+  await scenario('committed selection survives stop, reload, resume and repeated finalization',async()=>{
+    await page.setViewportSize({width:1440,height:1000});await page.locator('#evo-clone-experiment').click();
+    await page.evaluate(()=>{const original=IDBObjectStore.prototype.put;window.__stopAtCommit=true;IDBObjectStore.prototype.put=function(value,...args){const result=original.call(this,value,...args);if(window.__stopAtCommit&&this.name==='research'&&value.payload?.generations.length===1){window.__stopAtCommit=false;this.transaction.addEventListener('complete',()=>document.querySelector('#evo-research-stop').click(),{once:true});}return result;};});
+    await page.locator('#evo-train').click();await expect(page.locator('#evo-research-state')).toHaveText('STOPPED',{timeout:180000});
+    const event=page.waitForEvent('download');await page.locator('#evo-export-research').click();const download=await event,stoppedPath=path.join(output,'selection-stopped.json');await download.saveAs(stoppedPath);const stopped=JSON.parse(await readFile(stoppedPath,'utf8'));assert.equal(stopped.payload.generations.length,1);const id=stopped.payload.experiment.experimentId;
+    await page.reload();await page.locator(`[data-load-experiment="${id}"]`).click();await expect(page.locator('#evo-research-state')).toHaveText('STOPPED');await page.locator('#evo-train').click();await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE',{timeout:180000});
+    const completedEvent=page.waitForEvent('download');await page.locator('#evo-export-research').click();const completedDownload=await completedEvent,completedPath=path.join(output,'selection-resumed.json');await completedDownload.saveAs(completedPath);const completed=JSON.parse(await readFile(completedPath,'utf8'));assert.equal(completed.payload.generations[0].generationId,stopped.payload.generations[0].generationId);assert.equal(completed.payload.generations.length,2);
+    await page.locator('#evo-train').click();await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE',{timeout:30000});const repeatedEvent=page.waitForEvent('download');await page.locator('#evo-export-research').click();const repeated=await repeatedEvent,repeatedPath=path.join(output,'selection-repeated.json');await repeated.saveAs(repeatedPath);const again=JSON.parse(await readFile(repeatedPath,'utf8'));assert.deepEqual(again.payload.generations,completed.payload.generations);assert.deepEqual(again.payload.regressions,completed.payload.regressions);
   });
   await scenario('schema-1 IndexedDB upgrades preserve frozen run/checkpoint identities',async()=>{
     const legacy=JSON.parse(await readFile(path.join(output,'completed.json'),'utf8'));

@@ -1,6 +1,6 @@
 import { hashCanonical } from '@intrilex/shared';
 import { createTrainableCheckpoint } from './evolution-domain.mjs';
-import { createEvaluationPack, createBaselineSuite, createExperiment, validateResearchProject, reconstructLineage } from './evolution-research.mjs';
+import { createEvaluationPack, createBaselineSuite, createExperiment, validateResearchProject, reconstructLineage, completeEvaluation, recordEvaluation } from './evolution-research.mjs';
 import { evaluateSuite, matchupRegressions } from './evolution-evaluation.mjs';
 import { baselinePolicyState, validatePolicyState, WEIGHT_FEATURES, WEIGHT_BOUND, WEIGHTED_POLICY_ID } from '../../policies/src/weighted-heuristic.mjs';
 
@@ -30,14 +30,14 @@ export function mutatePolicyState(parent,seed,step) {
 /** No evaluation data is accepted here. Any failed/unresolved game disqualifies
  * a candidate; ties prefer parent, then deterministic mutation index. */
 export function selectCandidate(results) {
-  const admitted=results.filter(r=>r.result.purpose==='TRAINING' && r.result.status==='COMPLETE' && r.result.matchups.length && r.result.matchups.every(m=>m.metrics.aborted===0 && m.metrics.unresolved===0 && m.metrics.pairedScore!==null));
+  const admitted=results.filter(r=>r.result.purpose==='TRAINING' && r.result.status==='COMPLETE' && r.result.matchups.length && r.result.matchups.every(m=>m.metrics?.aborted===0 && m.metrics.unresolved===0 && Number.isFinite(m.metrics.pairedScore) && m.metrics.pairedScore>=0 && m.metrics.pairedScore<=1));
   if(!admitted.length)throw new Error('NO_TRUSTWORTHY_SELECTION_CANDIDATE');
   const ranked=admitted.map(r=>({...r,fitness:r.result.matchups.reduce((s,m)=>s+m.metrics.pairedScore,0)/r.result.matchups.length})).sort((a,b)=>b.fitness-a.fitness || a.index-b.index);
   return {selected:ranked[0],ranking:ranked.map(r=>({index:r.index,checkpointId:r.checkpointId,fitness:r.fitness})),disqualified:results.filter(r=>!admitted.includes(r)).map(r=>({checkpointId:r.checkpointId,reason:'INCOMPLETE_OR_FAILED_SELECTION_EVIDENCE'})),criterion:'Mean paired score across TRAINING opponents only; ties retain parent then lower mutation index. Zero failed/unresolved games required.'};
 }
 const add=(array,item,key)=>{if(!array.some(x=>x[key]===item[key]))array.push(item);};
 
-export async function trainProject(project,executeSeries,{signal,onProgress=()=>{},onSave=()=>{},onRun=()=>{}}={}) {
+export async function trainProject(project,executeSeries,{signal,onProgress=()=>{},onSave=()=>{},onRun=()=>{},onExecution=()=>{}}={}) {
   const identity=project.experiment.identity;validateResearchProject(project,identity);
   if(project.experiment.type!=='EVOLUTION_TRAINING')throw new Error('NOT_TRAINING_EXPERIMENT');
   const settings=trainingConfig(project.experiment.scientific.training);
@@ -48,24 +48,46 @@ export async function trainProject(project,executeSeries,{signal,onProgress=()=>
   if(roots.length!==2 || roots.some(cp=>cp?.schemaVersion!==2 || cp.generation!==0) || roots[0].lineageId===roots[1].lineageId || hashCanonical(roots[0].policyState)!==hashCanonical(roots[1].policyState))throw new Error('INVALID_TRAINING_ROOTS');
   const snapshot=hashCanonical(roots),workerCount=project.experiment.operational.workerCount;
   project.experiment.status='RUNNING';
+  let context={stage:'BASELINE_EVALUATION'};
   const evaluate=async(candidate,pack)=>{
-    const cached=project.evaluations.find(e=>e.candidateCheckpointId===candidate.checkpointId && e.packId===pack.packId && e.suiteId===project.suite.suiteId && e.status==='COMPLETE');
+    context={...context,checkpointId:candidate.checkpointId,lineageId:candidate.lineageId,generation:candidate.generation,packId:pack.packId,mode:pack.purpose};
+    const cached=project.evaluations.findLast(e=>e.candidateCheckpointId===candidate.checkpointId && e.packId===pack.packId && e.suiteId===project.suite.suiteId && e.status==='COMPLETE');
     if(cached)return cached;
-    const result=await evaluateSuite({candidate,suite:project.suite,pack,workerCount},executeSeries,{signal,onProgress,onRun:async run=>{if(!project.experiment.runIds.includes(run.runId))project.experiment.runIds.push(run.runId);await onRun(run);}});
+    const result=await evaluateSuite({candidate,suite:project.suite,pack,workerCount},executeSeries,{signal,onProgress,onExecution,onRun:async run=>{if(!project.experiment.runIds.includes(run.runId))project.experiment.runIds.push(run.runId);await onRun(run);}});
     // Store execution references separately from checkpoint state. Even stopped
     // results preserve failure evidence; later retries can complete the suite.
-    add(project.evaluations,result,'evaluationId');if(!project.experiment.evaluationIds.includes(result.evaluationId))project.experiment.evaluationIds.push(result.evaluationId);
+    recordEvaluation(project,result);
     return result;
   };
+  const required=result=>{if(result.status!=='COMPLETE'&&!signal?.aborted)throw new Error('REQUIRED_FROZEN_EVALUATION_INCOMPLETE');};
+  const finalize=async(record,root)=>{
+    context={stage:'GENERATION_FINALIZATION',lineageId:root.lineageId,generation:record.generation};
+    const selected=project.checkpoints.find(cp=>cp.checkpointId===record.selectedCheckpointId),evaluation=await evaluate(selected,evaluationPack);
+    if(evaluation.status==='COMPLETE'){
+      const strongPrior=project.generations.filter(g=>g.lineageId===root.lineageId && g.generation<record.generation).sort((a,b)=>b.selection.ranking[0].fitness-a.selection.ranking[0].fitness || a.generation-b.generation)[0];
+      const referenceIds=new Set([root.checkpointId,record.parentCheckpointId,strongPrior?.selectedCheckpointId].filter(Boolean));
+      project.regressions??=[];
+      for(const referenceId of referenceIds){
+        const reference=completeEvaluation(project.evaluations,referenceId,evaluationPack.packId,project.suite.suiteId);if(!reference)continue;
+        for(const finding of matchupRegressions(reference,evaluation,settings.regressionThreshold)){
+          const body={...finding,checkpointId:selected.checkpointId,referenceCheckpointId:referenceId,evaluationId:evaluation.evaluationId,referenceEvaluationId:reference.evaluationId,packId:evaluationPack.packId};
+          add(project.regressions,{...body,findingId:`RG-${hashCanonical(body)}`},'findingId');
+        }
+      }
+      project.regressions.sort((a,b)=>a.findingId.localeCompare(b.findingId));
+    }
+    await onSave(project);required(evaluation);
+  };
   try {
-    for(const root of roots){if(signal?.aborted)break;await evaluate(root,evaluationPack);await onSave(project);}
+    for(const root of roots){if(signal?.aborted)break;const result=await evaluate(root,evaluationPack);await onSave(project);required(result);}
     for(let generation=1;generation<=settings.generations&&!signal?.aborted;generation++)for(const root of roots){
       if(signal?.aborted)break;
       const previous=project.generations.find(g=>g.lineageId===root.lineageId && g.generation===generation);
-      if(previous){const selected=project.checkpoints.find(cp=>cp.checkpointId===previous.selectedCheckpointId);await evaluate(selected,evaluationPack);continue;}
+      if(previous){await finalize(previous,root);continue;}
       const prior=project.generations.find(g=>g.lineageId===root.lineageId && g.generation===generation-1);
       const parent=prior ? project.checkpoints.find(cp=>cp.checkpointId===prior.selectedCheckpointId) : root;
       if(parent.generation!==generation-1)throw new Error('MISSING_GENERATION_PARENT');
+      context={stage:'MUTATION_SELECTION',lineageId:root.lineageId,generation,parentCheckpointId:parent.checkpointId};
       const started=performance.now(),candidates=[parent],mutations=[];
       for(let index=0;index<settings.candidates;index++){
         const mutation=mutatePolicyState(parent.policyState,mutationSeed(project.experiment,root.lineageId,generation,index),settings.mutationStep);
@@ -84,24 +106,18 @@ export async function trainProject(project,executeSeries,{signal,onProgress=()=>
       // Commit selection before held-out evaluation. A stop/resume can finish
       // evaluation but cannot choose a different child from held-out feedback.
       project.generations.push({...record,generationId:`EG-${hashCanonical(record)}`,elapsedMs:performance.now()-started});await onSave(project);
-      const evaluation=await evaluate(selected,evaluationPack);
-      const baseline=project.evaluations.find(e=>e.candidateCheckpointId===root.checkpointId&&e.packId===evaluationPack.packId&&e.status==='COMPLETE');
-      if(evaluation.status==='COMPLETE'&&baseline){
-        project.regressions??=[];
-        const strongPrior=project.generations.filter(g=>g.lineageId===root.lineageId && g.generation<generation).sort((a,b)=>b.selection.ranking[0].fitness-a.selection.ranking[0].fitness)[0];
-        const referenceIds=new Set([root.checkpointId,parent.checkpointId,strongPrior?.selectedCheckpointId].filter(Boolean));
-        for(const referenceId of referenceIds){const reference=project.evaluations.find(e=>e.candidateCheckpointId===referenceId && e.packId===evaluationPack.packId && e.status==='COMPLETE');if(!reference)continue;for(const finding of matchupRegressions(reference,evaluation,settings.regressionThreshold))project.regressions.push({...finding,checkpointId:selected.checkpointId,referenceCheckpointId:referenceId});}
-      }
-      await onSave(project);
+      await finalize(project.generations.at(-1),root);
     }
     if(hashCanonical(roots)!==snapshot)throw new Error('TRAINING_MUTATED_BASELINE');
-    project.experiment.status=signal?.aborted?'STOPPED':project.evaluations.some(e=>e.purpose==='EVALUATION' && e.status==='ERROR')?'ERROR':'COMPLETE';
-  } catch(error){project.experiment.status='ERROR';project.faults.push({experimentId:project.experiment.experimentId,message:String(error.stack??error).slice(0,4000),lastGenerationIds:project.generations.slice(-2).map(g=>g.generationId)});}
+    const heldOut=id=>!!completeEvaluation(project.evaluations,id,evaluationPack.packId,project.suite.suiteId);
+    const complete=roots.every(root=>heldOut(root.checkpointId) && Array.from({length:settings.generations},(_,i)=>project.generations.find(g=>g.lineageId===root.lineageId&&g.generation===i+1)).every(g=>g&&heldOut(g.selectedCheckpointId)));
+    project.experiment.status=signal?.aborted?'STOPPED':complete?'COMPLETE':'ERROR';
+  } catch(error){project.experiment.status='ERROR';project.faults.push({experimentId:project.experiment.experimentId,...context,message:String(error.stack??error).slice(0,4000),lastGenerationIds:project.generations.slice(-2).map(g=>g.generationId)});}
   validateResearchProject(project,identity);await onSave(project);return project;
 }
 
 export function semanticTrainingResult(project) {
-  return {scientificId:project.experiment.scientificId,checkpointIds:project.checkpoints.map(cp=>cp.checkpointId).sort(),generationIds:project.generations.map(g=>g.generationId),evaluationIds:project.evaluations.filter(e=>e.status==='COMPLETE').map(e=>e.evaluationId).sort(),lineages:project.experiment.scientific.startingCheckpointIds.map(id=>{
+  return {scientificId:project.experiment.scientificId,checkpointIds:project.checkpoints.map(cp=>cp.checkpointId).sort(),generationIds:project.generations.map(g=>g.generationId),evaluationIds:[...new Set(project.evaluations.filter(e=>e.status==='COMPLETE').map(e=>e.evaluationId))].sort(),regressionIds:(project.regressions??[]).map(r=>r.findingId).sort(),lineages:project.experiment.scientific.startingCheckpointIds.map(id=>{
     const root=project.checkpoints.find(cp=>cp.checkpointId===id),history=project.generations.filter(g=>g.lineageId===root.lineageId);return reconstructLineage(project.checkpoints,history.at(-1)?.selectedCheckpointId??id).map(cp=>cp.checkpointId);
   })};
 }
