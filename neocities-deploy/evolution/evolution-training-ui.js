@@ -1,10 +1,10 @@
-import { researchRunEvidence } from './evolution-retention.mjs?v=a45e6b3a7e27';
-import { esc } from '../state.js?v=a45e6b3a7e27';
-import { LAB_IDENTITY } from './identity.mjs?v=a45e6b3a7e27';
-import { createTrainingProject,trainProject } from './evolution-training.mjs?v=a45e6b3a7e27';
-import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=a45e6b3a7e27';
-import { attachTrainingUi } from './evolution-research-ui.js?v=a45e6b3a7e27';
-import { projectModel } from './evolution-view-model.mjs?v=a45e6b3a7e27';
+import { researchRunEvidence } from './evolution-retention.mjs?v=7e1a57e0182d';
+import { esc } from '../state.js?v=7e1a57e0182d';
+import { LAB_IDENTITY } from './identity.mjs?v=7e1a57e0182d';
+import { createTrainingProject,trainProject } from './evolution-training.mjs?v=7e1a57e0182d';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=7e1a57e0182d';
+import { attachTrainingUi } from './evolution-research-ui.js?v=7e1a57e0182d';
+import { projectModel } from './evolution-view-model.mjs?v=7e1a57e0182d';
 
 const api=attachTrainingUi(renderTraining);
 function renderTraining(project,locked){

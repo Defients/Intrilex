@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased — October 3, 2026 Evolution Lab reliability polish
+
+- Concurrent Evolution Lab storage reads and saves share one IndexedDB open.
+  Failed opens remain retryable; close and blocked-upgrade paths reject pending
+  callers and close late connections without replacing a newer connection.
+- Research workers report message-decoding failures immediately, release owned
+  workers and timers, and retain accepted evidence. A late progress exception
+  cannot turn an already stopped run into an error.
+- Invalid saved cockpit preferences, including JSON `null`, fall back to
+  Overview while explicit route navigation retains precedence.
+- Eight focused regressions and a Chrome storage/navigation scenario cover
+  the failures. Existing APIs, database schema, engine rules, policy behavior,
+  scientific fingerprints and saved artifact formats are preserved.
+- See [the October 3 polish record](docs/POLISH_2026-10-03.md) for assessment,
+  validation evidence and deferred work.
+
 ## Unreleased — October 2, 2026 Replay Caster continuity
 
 - Commentary belongs to its current request, beat, mode and match. Superseded

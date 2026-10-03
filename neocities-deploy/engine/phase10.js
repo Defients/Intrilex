@@ -1,6 +1,6 @@
-import { canonicalClone } from "./canonical-json.js?v=a45e6b3a7e27";
-import { foundationActionRestricted, hasAegis } from "./lifecycle.js?v=a45e6b3a7e27";
-import { moveCard } from "./state.js?v=a45e6b3a7e27";
+import { canonicalClone } from "./canonical-json.js?v=7e1a57e0182d";
+import { foundationActionRestricted, hasAegis } from "./lifecycle.js?v=7e1a57e0182d";
+import { moveCard } from "./state.js?v=7e1a57e0182d";
 const TRAP_IDENTITIES = new Set(["4♠", "4♥", "4♦", "4♣", "5♠", "5♥", "5♦", "5♣"]);
 function fail(code, message, details) {
     return details === undefined ? { ok: false, code, message } : { ok: false, code, message, details };

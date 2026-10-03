@@ -1,4 +1,4 @@
-import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=a45e6b3a7e27';
+import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=7e1a57e0182d';
 import {
   IntrilexEngine,
   createMatchState,
@@ -9,12 +9,12 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=a45e6b3a7e27';
+} from './engine/browser-entry.js?v=7e1a57e0182d';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
-import { rankPolicyActions } from './policy-scoring.js?v=a45e6b3a7e27';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=a45e6b3a7e27';
-import { attributeAction,   isNoAttributionAction} from './browser-analytics.js?v=a45e6b3a7e27';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=a45e6b3a7e27';
+import { rankPolicyActions } from './policy-scoring.js?v=7e1a57e0182d';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=7e1a57e0182d';
+import { attributeAction,   isNoAttributionAction} from './browser-analytics.js?v=7e1a57e0182d';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=7e1a57e0182d';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];

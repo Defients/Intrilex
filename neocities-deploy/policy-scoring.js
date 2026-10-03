@@ -1,5 +1,5 @@
-import { sha256Text } from "./engine/hash.js?v=a45e6b3a7e27";
-import { tacticalBase, tacticalScore } from './tactics.mjs?v=a45e6b3a7e27';
+import { sha256Text } from "./engine/hash.js?v=7e1a57e0182d";
+import { tacticalBase, tacticalScore } from './tactics.mjs?v=7e1a57e0182d';
 
 // ── Default scoring weights (parameterized for tuning and sensitivity analysis) ──
 // Provenance: hand-tuned baseline from v0.10.0. Each weight can be overridden

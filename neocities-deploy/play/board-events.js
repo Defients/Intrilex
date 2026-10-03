@@ -7,16 +7,16 @@
 // inspector, chat, guidance toggle, sound, confirm/cancel,
 // and terminal actions.
 // ═══════════════════════════════════════════════════════════════
-import { state } from './play-state.js?v=a45e6b3a7e27';
-import { esc } from '../state.js?v=a45e6b3a7e27';
-import { SessionState } from './play-controller.js?v=a45e6b3a7e27';
-import { GuidanceMode } from './intelligence/action-explanation.js?v=a45e6b3a7e27';
-import { getReasonCode } from './authority/reason-code-registry.js?v=a45e6b3a7e27';
-import { setPreference } from './persistence.js?v=a45e6b3a7e27';
-import { parseCardIdentity } from './play-card-component.js?v=a45e6b3a7e27';
-import { getSuitParticleColor } from './play-particles.js?v=a45e6b3a7e27';
-import { buildActionGroups, resolveAction } from './action-presentation.mjs?v=a45e6b3a7e27';
-import { setGameplaySkin, GAMEPLAY_SKINS } from './gameplay-skin.js?v=a45e6b3a7e27';
+import { state } from './play-state.js?v=7e1a57e0182d';
+import { esc } from '../state.js?v=7e1a57e0182d';
+import { SessionState } from './play-controller.js?v=7e1a57e0182d';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=7e1a57e0182d';
+import { getReasonCode } from './authority/reason-code-registry.js?v=7e1a57e0182d';
+import { setPreference } from './persistence.js?v=7e1a57e0182d';
+import { parseCardIdentity } from './play-card-component.js?v=7e1a57e0182d';
+import { getSuitParticleColor } from './play-particles.js?v=7e1a57e0182d';
+import { buildActionGroups, resolveAction } from './action-presentation.mjs?v=7e1a57e0182d';
+import { setGameplaySkin, GAMEPLAY_SKINS } from './gameplay-skin.js?v=7e1a57e0182d';
 
 // Lazy-loaded module reference for the group button handler
 const _actionPresentationModule = { buildActionGroups, resolveAction };
@@ -778,8 +778,8 @@ export function bindBoardEvents(container, callbacks) {
           // Network match — fetch replay from server and play directly
           try {
             container.innerHTML = '<div class="play-loading">Loading replay from server…</div>';
-            const { ensureReplayFrames } = await import('../replay-frames.js?v=a45e6b3a7e27');
-            const { state: observatoryState } = await import('../state.js?v=a45e6b3a7e27');
+            const { ensureReplayFrames } = await import('../replay-frames.js?v=7e1a57e0182d');
+            const { state: observatoryState } = await import('../state.js?v=7e1a57e0182d');
             const replay = await state.networkSession.getReplay();
             if (!replay) {
               container.innerHTML = '<div class="play-error" role="alert"><h2>Replay unavailable</h2><p>The server could not provide a certified replay for this match.</p><a href="#/play/online" class="secondary-button">Back to Online</a></div>';
@@ -804,7 +804,7 @@ export function bindBoardEvents(container, callbacks) {
           }
         } else {
           // Local match — save replay and redirect
-          const { createReplayRecord, saveReplay } = await import('./replay-library.js?v=a45e6b3a7e27');
+          const { createReplayRecord, saveReplay } = await import('./replay-library.js?v=7e1a57e0182d');
           const record = await createReplayRecord(state.session);
           await saveReplay(record);
           location.hash = '#/play/replays';
@@ -814,7 +814,7 @@ export function bindBoardEvents(container, callbacks) {
         // (HTTP replay download was removed in v0.24.2 — GET_REPLAY is the canonical path)
         if (state.networkSession && state.networkSession.status === 'TERMINAL' && state.networkSession.matchId) {
           try {
-            const { createNetworkReplayRecord, saveReplay } = await import('./replay-library.js?v=a45e6b3a7e27');
+            const { createNetworkReplayRecord, saveReplay } = await import('./replay-library.js?v=7e1a57e0182d');
             const record = await createNetworkReplayRecord(state.networkSession);
             if (record) {
               // Save to local IndexedDB replay library

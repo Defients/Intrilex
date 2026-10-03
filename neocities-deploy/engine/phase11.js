@@ -1,5 +1,5 @@
-import { canonicalClone } from "./canonical-json.js?v=a45e6b3a7e27";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=a45e6b3a7e27";
+import { canonicalClone } from "./canonical-json.js?v=7e1a57e0182d";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=7e1a57e0182d";
 function fail(code, message, details) {
     return details === undefined ? { ok: false, code, message } : { ok: false, code, message, details };
 }

@@ -1,13 +1,14 @@
-import { mountChartInteractions } from './evolution-analytics-charts.mjs?v=a45e6b3a7e27';
-import { LAB_IDENTITY } from './identity.mjs?v=a45e6b3a7e27';
-import { WEIGHT_FEATURES, WEIGHT_BOUND } from './weighted-heuristic.mjs?v=a45e6b3a7e27';
-import { esc } from '../state.js?v=a45e6b3a7e27';
-import { projectModel, pairFor, draftWeights, shortId } from './evolution-view-model.mjs?v=a45e6b3a7e27';
-import { overviewHtml, lineagesHtml, evidenceHtml, inspectorHtml, heldOutTrendHtml } from './evolution-cockpit-views.js?v=a45e6b3a7e27';
+import { mountChartInteractions } from './evolution-analytics-charts.mjs?v=7e1a57e0182d';
+import { LAB_IDENTITY } from './identity.mjs?v=7e1a57e0182d';
+import { WEIGHT_FEATURES, WEIGHT_BOUND } from './weighted-heuristic.mjs?v=7e1a57e0182d';
+import { esc } from '../state.js?v=7e1a57e0182d';
+import { projectModel, pairFor, draftWeights, shortId } from './evolution-view-model.mjs?v=7e1a57e0182d';
+import { overviewHtml, lineagesHtml, evidenceHtml, inspectorHtml, heldOutTrendHtml } from './evolution-cockpit-views.js?v=7e1a57e0182d';
 
 const surfaces = [['overview','Overview','01'],['arena','Arena','02'],['evolution','Evolution','03'],['evidence','Evidence','04'],['forensics','Forensics','05'],['ledger','Ledger','06']];
 export function createCockpitState() {
   let preferences={};try{preferences=JSON.parse(localStorage.getItem('intrilex.evolution.cockpit.v1')??'{}');}catch{ /* UI preferences are optional; scientific storage is separate. */ }
+  if (!preferences || typeof preferences !== 'object' || Array.isArray(preferences)) preferences = {};
   const query=new URLSearchParams(location.hash.split('?')[1]??'');
   const surface=query.get('view')??preferences.surface??'overview';
   return {surface:surfaces.some(([key])=>key===surface)?surface:'overview',evidenceMode:'evaluations',lineage:'all',from:0,to:100,search:'',findingsOnly:false,faultsOnly:false,page:0,purpose:'all',opponent:'control',inspect:query.get('inspect'),drafts:{},draftOpen:false,left:null,right:null,drawer:false,consoleExpanded:false,consolePaused:false,consoleFollow:true,events:[],lastObservation:'',lastProject:null};

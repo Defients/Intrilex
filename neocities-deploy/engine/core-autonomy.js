@@ -1,15 +1,15 @@
-import { canonicalClone } from "./canonical-json.js?v=a45e6b3a7e27";
-import { IntrilexEngine } from "./engine.js?v=a45e6b3a7e27";
-import { hashCanonical } from "./hash.js?v=a45e6b3a7e27";
-import { cardPointValue, parseIdentity } from "./ranks.js?v=a45e6b3a7e27";
-import { nextIndex } from "./rng.js?v=a45e6b3a7e27";
-import { createEmptyState } from "./state.js?v=a45e6b3a7e27";
-import { assertValidState } from "./validation.js?v=a45e6b3a7e27";
-import { CORE_FOUNDATION_AUTHORITY_PROFILE } from "./core-authority.js?v=a45e6b3a7e27";
-import { CORE_EFFECT_DECLARATION_PROFILE, enumerateCoreEffectCandidates } from "./core-effects.js?v=a45e6b3a7e27";
-import { CORE_RESPONSE_AUTHORITY_PROFILE, currentCoreStackTarget, currentPriorityActor, primaryDescriptor } from "./core-response.js?v=a45e6b3a7e27";
-import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates } from "./core-private-choice.js?v=a45e6b3a7e27";
-import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=a45e6b3a7e27";
+import { canonicalClone } from "./canonical-json.js?v=7e1a57e0182d";
+import { IntrilexEngine } from "./engine.js?v=7e1a57e0182d";
+import { hashCanonical } from "./hash.js?v=7e1a57e0182d";
+import { cardPointValue, parseIdentity } from "./ranks.js?v=7e1a57e0182d";
+import { nextIndex } from "./rng.js?v=7e1a57e0182d";
+import { createEmptyState } from "./state.js?v=7e1a57e0182d";
+import { assertValidState } from "./validation.js?v=7e1a57e0182d";
+import { CORE_FOUNDATION_AUTHORITY_PROFILE } from "./core-authority.js?v=7e1a57e0182d";
+import { CORE_EFFECT_DECLARATION_PROFILE, enumerateCoreEffectCandidates } from "./core-effects.js?v=7e1a57e0182d";
+import { CORE_RESPONSE_AUTHORITY_PROFILE, currentCoreStackTarget, currentPriorityActor, primaryDescriptor } from "./core-response.js?v=7e1a57e0182d";
+import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates } from "./core-private-choice.js?v=7e1a57e0182d";
+import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=7e1a57e0182d";
 function readCoreRuntime(state) {
     const value = state.metadata.coreAuthority;
     return value && typeof value === "object" ? value : null;

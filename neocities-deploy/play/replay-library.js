@@ -4,8 +4,8 @@
 // Supports public (sanitized) and private (full) export.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from './hash.js?v=a45e6b3a7e27';
-import { listReplays,   putReplay} from './persistence.js?v=a45e6b3a7e27';
+import { hashCanonical } from './hash.js?v=7e1a57e0182d';
+import { listReplays,   putReplay} from './persistence.js?v=7e1a57e0182d';
 
 /**
  * Create a replay record from a completed session.
@@ -58,7 +58,7 @@ export async function saveReplay(record) {
  */
 export async function verifyReplayRecord(record) {
   try {
-    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=a45e6b3a7e27');
+    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=7e1a57e0182d');
     verifyCertifiedReplay(record.certifiedReplay);
     return { valid: true };
   } catch (error) {
