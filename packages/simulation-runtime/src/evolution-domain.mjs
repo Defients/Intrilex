@@ -1,4 +1,5 @@
 import { hashCanonical } from '@intrilex/shared';
+import { WEIGHTED_POLICY_ID, validatePolicyState, baselinePolicyState } from '../../policies/src/weighted-heuristic.mjs';
 
 /** @typedef {{schemaVersion:number, fingerprint:string, engineHash:string, policyImplementationHash:string, runtimeHash:string, engineVersion:string, rulesVersion:string}} RulesetFingerprint */
 /** @typedef {{checkpointId:string, agentId:string, lineageId:string, generation:number, parentCheckpointId:string|null, policyId:string, policyVersion:string, policyState:object, identity:RulesetFingerprint, createdAt:string}} AgentCheckpoint */
@@ -7,6 +8,7 @@ import { hashCanonical } from '@intrilex/shared';
 
 export const LAB_SCHEMA = 1;
 export const FROZEN_POLICIES = Object.freeze(['random-legal', 'score-rush', 'control', 'tempo', 'value']);
+export const LAB_POLICIES = Object.freeze([...FROZEN_POLICIES, WEIGHTED_POLICY_ID]);
 export const LAB_PROFILES = Object.freeze(['core-advanced-authority', 'core-unrestricted-authority', 'first-contact-trigger-closure']);
 export const LAB_LIMITS = Object.freeze({ games: 10000, workers: 4, decisions: 1800, replays: 12, commands: 12000, importBytes: 40 * 1024 * 1024 });
 export const CLEAN_REASONS = Object.freeze(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW']);
@@ -25,14 +27,15 @@ export function assertIdentity(identity, expected = identity) {
 export function labConfig(input) {
   if (!input || typeof input !== 'object') fail('INVALID_CONFIG');
   const { botA, botB, profileId = LAB_PROFILES[0], gameCount, seed = 1, workerCount = 1, mirrorSeats = true, kind = 'SELF_PLAY' } = input;
-  if (!FROZEN_POLICIES.includes(botA) || !FROZEN_POLICIES.includes(botB)) fail('POLICY_NOT_ADMITTED');
+  if (!LAB_POLICIES.includes(botA) || !LAB_POLICIES.includes(botB)) fail('POLICY_NOT_ADMITTED');
   if (!LAB_PROFILES.includes(profileId)) fail('PROFILE_NOT_ADMITTED');
   if (!Number.isInteger(gameCount) || gameCount < 1 || gameCount > LAB_LIMITS.games) fail('INVALID_GAME_COUNT');
   if (!uint(seed)) fail('INVALID_SEED');
   if (!Number.isInteger(workerCount) || workerCount < 1 || workerCount > LAB_LIMITS.workers) fail('INVALID_WORKER_COUNT');
   if (typeof mirrorSeats !== 'boolean' || !['SELF_PLAY', 'EVALUATION'].includes(kind)) fail('INVALID_RUN_KIND');
   if (kind === 'EVALUATION' && (!mirrorSeats || gameCount % 2)) fail('EVALUATION_REQUIRES_COMPLETE_PAIRS');
-  return { botA, botB, profileId, gameCount, seed: seed || 1, workerCount, mirrorSeats, kind, decisionLimit: LAB_LIMITS.decisions, orchestrationCommandLimit: 256 };
+  if (input.seedCatalog !== undefined && (!Array.isArray(input.seedCatalog) || input.seedCatalog.length !== gameCount/2 || !mirrorSeats || gameCount%2 || input.seedCatalog.some(s=>!uint(s)||s===0) || new Set(input.seedCatalog).size !== input.seedCatalog.length)) fail('INVALID_SEED_CATALOG');
+  return { ...(input.seedCatalog === undefined ? {} : {seedCatalog:[...input.seedCatalog]}), botA, botB, profileId, gameCount, seed: seed || 1, workerCount, mirrorSeats, kind, decisionLimit: LAB_LIMITS.decisions, orchestrationCommandLimit: 256 };
 }
 
 export function labGameSeed(baseSeed, ordinal, mirrored = true) {
@@ -44,7 +47,7 @@ export function labGameSeed(baseSeed, ordinal, mirrored = true) {
 export function gamePlan(config, ordinal) {
   if (!Number.isInteger(ordinal) || ordinal < 0 || ordinal >= config.gameCount) fail('ORDINAL_OUT_OF_RANGE');
   const swapped = config.mirrorSeats && ordinal % 2 === 1;
-  return { ordinal, swapped, seed: labGameSeed(config.seed, ordinal, config.mirrorSeats),
+  return { ordinal, swapped, seed: config.seedCatalog?.[Math.floor(ordinal/2)] ?? labGameSeed(config.seed, ordinal, config.mirrorSeats),
     policyIds: swapped ? [config.botB, config.botA] : [config.botA, config.botB] };
 }
 
@@ -63,6 +66,7 @@ export function createCheckpoint({ policyId, identity, agentId, lineageId = agen
 }
 
 export function validateCheckpoint(checkpoint, identity) {
+  if (checkpoint?.schemaVersion === 2) return validateTrainableCheckpoint(checkpoint,identity);
   if (!checkpoint || checkpoint.schemaVersion !== LAB_SCHEMA) fail('INVALID_CHECKPOINT');
   assertIdentity(checkpoint.identity, identity);
   const { checkpointId, ...body } = checkpoint;
@@ -76,9 +80,37 @@ export function createLabRun(input, identity, createdAt = new Date().toISOString
   assertIdentity(identity);
   const config = labConfig(input);
   const runId = `EL-${hashCanonical({ config, fingerprint: identity.fingerprint, createdAt }).slice(0, 24)}`;
-  const checkpoints = ['A', 'B'].map((seat, i) => createCheckpoint({ policyId: i ? config.botB : config.botA, identity, agentId: `${runId}:${seat}`, createdAt }));
+  const checkpoints = ['A', 'B'].map((seat, i) => { const policyId=i ? config.botB : config.botA; const args={identity,agentId:`${runId}:${seat}`,createdAt}; return policyId===WEIGHTED_POLICY_ID ? createTrainableCheckpoint({...args,policyState:baselinePolicyState()}) : createCheckpoint({...args,policyId}); });
   return { schemaVersion: LAB_SCHEMA, runId, kind: config.kind, config, identity: structuredClone(identity), checkpoints,
     records: [], replays: [], bookmarks: [], notes: '', status: 'IDLE', createdAt, elapsedMs: 0 };
+}
+
+function checkpointSemanticBody(checkpoint) {
+  const {checkpointId:_checkpointId,createdAt:_createdAt,tags:_tags,protected:_protectedFlag,favorite:_favorite,...semantic}=checkpoint;
+  return semantic;
+}
+export function createTrainableCheckpoint({identity,agentId,lineageId=agentId,parent=null,policyState,trainingConfiguration=null,mutation=null,experimentId=null,createdAt=new Date().toISOString()}) {
+  assertIdentity(identity); validatePolicyState(policyState);
+  if(parent) { validateCheckpoint(parent,identity); if(parent.schemaVersion!==2 || parent.lineageId!==lineageId) fail('INVALID_CHECKPOINT_PARENT'); }
+  const body={schemaVersion:2,policyId:WEIGHTED_POLICY_ID,policyVersion:'1.0.0',policyImplementationHash:identity.policyImplementationHash,
+    agentId,lineageId,parentCheckpointId:parent?.checkpointId ?? null,generation:parent ? parent.generation+1 : 0,
+    policyState:structuredClone(policyState),trainingConfiguration:structuredClone(trainingConfiguration),mutation:structuredClone(mutation),
+    experimentId,identity:structuredClone(identity),createdAt,tags:parent ? ['experimental'] : ['baseline'],protected:!parent,favorite:false};
+  const checkpoint={...body,checkpointId:`CP2-${hashCanonical(checkpointSemanticBody(body))}`};
+  return validateTrainableCheckpoint(checkpoint,identity);
+}
+function validateTrainableCheckpoint(checkpoint,identity) {
+  assertIdentity(checkpoint.identity,identity); validatePolicyState(checkpoint.policyState);
+  if(checkpoint.policyId!==WEIGHTED_POLICY_ID || checkpoint.policyVersion!=='1.0.0' || checkpoint.policyImplementationHash!==identity.policyImplementationHash || checkpoint.checkpointId!==`CP2-${hashCanonical(checkpointSemanticBody(checkpoint))}`) fail('INCOMPATIBLE_CHECKPOINT');
+  if(typeof checkpoint.agentId!=='string' || !checkpoint.agentId || typeof checkpoint.lineageId!=='string' || !checkpoint.lineageId || !Number.isInteger(checkpoint.generation) || checkpoint.generation<0 || !Number.isFinite(Date.parse(checkpoint.createdAt)) || (checkpoint.generation===0 ? checkpoint.parentCheckpointId!==null : !/^CP2-[a-f0-9]{64}$/.test(checkpoint.parentCheckpointId))) fail('INVALID_CHECKPOINT_METADATA');
+  return deepFreeze(structuredClone(checkpoint));
+}
+
+/** Read-only old artifacts retain their original identities. Execution still
+ * requires validateArtifact(envelope, currentIdentity), which fails closed. */
+export function inspectHistoricalArtifact(envelope) {
+  const run=validateArtifact(envelope,envelope?.payload?.identity);
+  return {...run,archival:true,evidenceOrigin:'IMPORTED_UNVERIFIED'};
 }
 
 export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
@@ -94,6 +126,7 @@ export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
     actionCount: summary.actionCount ?? 0, policyActionCount: summary.policyActionCount ?? 0,
     commandCount: replay.commands.length, initialStateHash, actionSequenceHash, finalStateHash: summary.finalStateHash,
     illegalActionAttempts: ['ENGINE_REJECTION', 'ACTION_ID_INVALID'].includes(summary.errorCode) || summary.terminationReason === 'ENGINE_REJECTION' ? 1 : 0,
+    seatBehavior: summary.perSeatStats?.map((p,i)=>({playerId:`P${i+1}`,decisions:p.policyDecisionCount,actionCounts:p.decisionFamilyCounts ?? {},mechanicCounts:p.mechanicCounts ?? {}})) ?? [],
     actionCounts: summary.decisionFamilyCounts ?? {}, eventCounts: summary.eventTypeCounts ?? {},
     mechanicCounts: summary.mechanicCounts ?? {}, ruleCompliance: summary.ruleCompliance?.status ?? 'UNAVAILABLE' };
   return { ...core, resultHash: hashCanonical(core), durationMs };
@@ -213,4 +246,83 @@ export function summarizeRecords(records) {
     meanGameDurationMs: n ? clean.reduce((s,r) => s+r.durationMs,0)/n : null,
     pairCount, pairedScore, pairedScoreInterval95: pairCount ? [Math.max(0, pairedScore-radius), Math.min(1, pairedScore+radius)] : null,
     uncertainty: pairCount < 100 ? 'SMALL_SAMPLE' : 'BOUNDED_ESTIMATE', actionCounts, abortReasons };
+}
+
+export function createSeriesAggregator() {
+  return {
+    completed: 0,        // all games that produced a record (incl. aborted)
+    completedClean: 0,   // canonically completed games
+    winsA: 0,
+    winsB: 0,
+    draws: 0,
+    unresolved: 0,       // completed without a winner or draw (defensive)
+    aborted: 0,
+    seat1Wins: 0,
+    seat2Wins: 0,
+    scoreSumA: 0,
+    scoreSumB: 0,
+    turnsSum: 0,
+    decisionsSum: 0,
+    abortReasons: {},
+  };
+}
+
+/** Fold one slim game record into the accumulator. Returns the accumulator. */
+export function ingestGameRecord(agg, g) {
+  agg.completed += 1;
+  if (!CLEAN_REASONS.includes(g.terminationReason)) {
+    agg.aborted += 1;
+    const reason = String(g.terminationReason ?? 'UNKNOWN');
+    agg.abortReasons[reason] = (agg.abortReasons[reason] ?? 0) + 1;
+    return agg;
+  }
+  agg.completedClean += 1;
+  const winnerSeat = g.winner === 'P1' ? 1 : g.winner === 'P2' ? 2 : null;
+  if (winnerSeat === 1) agg.seat1Wins += 1;
+  else if (winnerSeat === 2) agg.seat2Wins += 1;
+  if (winnerSeat === null) {
+    if (g.terminationReason === 'CANONICAL_DRAW' || g.winner === 'DRAW') agg.draws += 1;
+    else agg.unresolved += 1;
+  } else {
+    const botAWon = (!g.swapped && winnerSeat === 1) || (g.swapped && winnerSeat === 2);
+    if (botAWon) agg.winsA += 1; else agg.winsB += 1;
+  }
+  agg.scoreSumA += g.swapped ? g.scoreP2 : g.scoreP1;
+  agg.scoreSumB += g.swapped ? g.scoreP1 : g.scoreP2;
+  agg.turnsSum += g.turns;
+  agg.decisionsSum += g.decisions;
+  return agg;
+}
+
+/**
+ * Derived metrics. elapsedMs is wall-clock time of the series so far
+ * (live) or total (finished). All rates are null-safe for empty series.
+ */
+export function seriesMetrics(agg, elapsedMs) {
+  const clean = agg.completedClean || 0;
+  const ratio = (n, d) => (d > 0 ? n / d : null);
+  const seconds = Number(elapsedMs) / 1000;
+  return {
+    gamesCompleted: agg.completed,
+    gamesClean: clean,
+    winsA: agg.winsA,
+    winsB: agg.winsB,
+    draws: agg.draws,
+    unresolved: agg.unresolved,
+    aborted: agg.aborted,
+    abortReasons: { ...agg.abortReasons },
+    winPctA: ratio(agg.winsA, clean),
+    winPctB: ratio(agg.winsB, clean),
+    drawPct: ratio(agg.draws, clean),
+    seat1Wins: agg.seat1Wins,
+    seat2Wins: agg.seat2Wins,
+    seat1WinPct: ratio(agg.seat1Wins, clean),
+    seat2WinPct: ratio(agg.seat2Wins, clean),
+    avgScoreA: ratio(agg.scoreSumA, clean),
+    avgScoreB: ratio(agg.scoreSumB, clean),
+    avgScoreDiff: clean > 0 ? (agg.scoreSumA - agg.scoreSumB) / clean : null,
+    avgTurns: ratio(agg.turnsSum, clean),
+    avgDecisions: ratio(agg.decisionsSum, clean),
+    gamesPerSec: seconds > 0 && agg.completed > 0 ? agg.completed / seconds : null,
+  };
 }

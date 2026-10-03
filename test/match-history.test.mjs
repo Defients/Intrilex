@@ -41,7 +41,6 @@ import {
   matchHistory as clientMatchHistory,
 } from '../apps/lab-web/src/play/network/network-protocol-client.mjs';
 
-function randomPort() { return 5500 + randomInt(0, 999); }
 
 function waitForMessage(ws, timeoutMs = 5000) {
   return new Promise((resolve) => {
@@ -184,8 +183,8 @@ test('match-history: SqliteMatchStore.listMatches respects limit', () => {
 
 test('match-history: server returns match history via WebSocket', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const port = randomPort();
-  const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', publicHistory: true });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', publicHistory: true });
+  const port = server.httpServer.address().port; // OS allocation avoids occupied/reserved ports.
 
   try {
     // Create a match first
@@ -214,8 +213,8 @@ test('match-history: server returns match history via WebSocket', async () => {
 
 test('match-history: server returns empty list when no matches', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const port = randomPort();
-  const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', publicHistory: true });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', publicHistory: true });
+  const port = server.httpServer.address().port; // OS allocation avoids occupied/reserved ports.
 
   try {
     const ws = new WebSocket(`ws://127.0.0.1:${port}`);

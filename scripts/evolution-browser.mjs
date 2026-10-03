@@ -1,4 +1,4 @@
-/* global document, window, Worker, location, IDBDatabase, DOMException -- callbacks evaluated in browser */
+/* global document, window, Worker, location, IDBDatabase, DOMException, indexedDB -- callbacks evaluated in browser */
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
@@ -10,6 +10,7 @@ await mkdir(output,{recursive:true});
 const server=http.createServer(async(req,res) => {
   try {
     const url=new URL(req.url,'http://localhost');
+    if(url.pathname==='/migration-fixture'){res.writeHead(200,{'Content-Type':'text/html'});res.end('<!doctype html><title>IndexedDB migration fixture</title>');return;}
     const target=path.resolve(dist,`.${decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname)}`);
     if (!target.startsWith(`${dist}${path.sep}`)) { res.writeHead(403).end(); return; }
     const data=await readFile(target);
@@ -90,6 +91,50 @@ try {
     await page.getByTestId('start-match').click();
     await expect(page.locator('.hc-game')).toBeVisible({timeout:30000});
     await expect(page.locator('.hc-action:enabled, .hc-family:enabled').first()).toBeVisible({timeout:30000});
+  });
+  await scenario('experiments, controlled cloning, frozen suite, comparison and research persistence',async()=>{
+    await page.setViewportSize({width:1440,height:1000});
+    await page.evaluate(()=>{location.hash='/evolution';});await expect(page.locator('#evo-create-experiment')).toBeVisible();
+    await page.locator('#evo-pack-pairs').fill('1');await page.locator('#evo-experiment-name').fill('Browser scientific fixture');await page.locator('#evo-create-experiment').click();
+    await expect(page.locator('#evo-research-state')).toHaveText('IDLE');
+    await page.locator('#evo-suite-evaluate').click();await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE',{timeout:120000});
+    await expect(page.locator('#evo-research-evaluations')).toContainText('tempo');await page.locator('#evo-compare-checkpoints').click();await expect(page.locator('#evo-checkpoint-comparison')).toContainText('Measured deltas');
+    const downloadPromise=page.waitForEvent('download');await page.locator('#evo-export-research').click();const download=await downloadPromise;await download.saveAs(path.join(output,'research.json'));
+    await page.locator('#evo-clone-experiment').click();await expect(page.locator('#evo-research')).toContainText('Changes from parent');
+    await page.reload();await expect(page.locator('[data-load-experiment]').first()).toBeVisible();await page.locator('[data-load-experiment]').first().click();await expect(page.locator('#evo-research-state')).toBeVisible();
+    await page.locator('#evo-import-research').setInputFiles(path.join(output,'research.json'));await expect(page.locator('#evo-research')).toContainText('Imported research claims');
+    await expect(page.locator('#evo-research-error')).toHaveText('');
+  });
+  await scenario('adaptive stop, resume, generation advancement, historical checkpoint and export',async()=>{
+    await page.evaluate(()=>{const Base=Worker;window.__researchWorkers=[];window.Worker=class extends Base{constructor(...args){super(...args);window.__researchWorkers.push(this);}};});
+    await page.locator('#evo-training-generations').fill('1');await page.locator('#evo-training-candidates').fill('1');await page.locator('#evo-training-pairs').fill('1');await page.locator('#evo-training-step').fill('1000');await page.locator('#evo-pack-pairs').fill('1');await page.locator('#evo-create-training').click();
+    await expect(page.locator('#evo-research-state')).toHaveText('IDLE');await page.locator('#evo-train').click();await expect(page.locator('#evo-research-state')).toHaveText('RUNNING');await page.locator('#evo-research-stop').click();await expect(page.locator('#evo-research-state')).toHaveText('STOPPED',{timeout:30000});
+    await page.locator('#evo-train').click();await page.evaluate(()=>{window.__researchWorkers[0].onmessage({data:{type:'evolution-fault',epoch:1,error:'STALE_RESEARCH_FAULT'}});});await expect(page.locator('#evo-research-state')).toHaveText('RUNNING');await expect(page.locator('#evo-research-error')).not.toContainText('STALE_RESEARCH_FAULT');await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE',{timeout:240000});
+    await expect(page.locator('#evo-training-controls')).toContainText('2 committed lineage generations');
+    await page.locator('#evo-history-refresh').click();await expect(page.locator('#evo-history')).toContainText('TRAINING');
+    await page.locator('#evo-history .evo-replay-row').filter({hasText:'TRAINING'}).first().locator('[data-load-run]').click();await expect(page.locator('#evo-evaluation-results')).toContainText('TRAINING SELECTION PERFORMANCE');
+    const historical=await exported('training-history.json');assert.equal(historical.payload.researchPurpose,'TRAINING');await expect(page.locator('#evo-run')).toBeDisabled();
+    for(const cp of historical.payload.checkpoints)await expect(page.getByTestId('evo-checkpoints')).toContainText(`generation ${cp.generation}`);
+    await expect(page.getByTestId('evo-arena')).toContainText('immutable weighted checkpoint');
+    const downloadPromise=page.waitForEvent('download');await page.locator('#evo-export-research').click();const download=await downloadPromise;const file=path.join(output,'adaptive.json');await download.saveAs(file);
+    const envelope=JSON.parse(await readFile(file,'utf8'));assert.equal(envelope.payload.generations.length,2);assert.deepEqual(envelope.payload.checkpoints[0].policyState,envelope.payload.checkpoints[1].policyState);
+    await page.reload();await expect(page.locator('[data-load-experiment]').first()).toBeVisible();await page.locator('#evo-import-research').setInputFiles(file);await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE');
+    await page.locator('#evo-checkpoint-left').selectOption(envelope.payload.checkpoints[0].checkpointId);await page.locator('#evo-checkpoint-right').selectOption(envelope.payload.generations[0].selectedCheckpointId);await page.locator('#evo-compare-checkpoints').click();await expect(page.locator('#evo-checkpoint-comparison')).toContainText('beforeInterval');
+    await page.screenshot({path:path.join(output,'adaptive-desktop.png'),fullPage:true});await page.locator('#evo-training-controls').screenshot({path:path.join(output,'adaptive-controls.png')});await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+2),'adaptive mobile horizontal overflow: '+JSON.stringify(await page.evaluate(()=>Array.from(document.querySelectorAll('#evo-research *')).filter(e=>e.getBoundingClientRect().right>document.documentElement.clientWidth+2 && !e.closest('.evo-table-scroll')).slice(0,8).map(e=>({tag:e.tagName,id:e.id,right:e.getBoundingClientRect().right})))));await page.locator('#evo-training-controls').screenshot({path:path.join(output,'adaptive-mobile.png')});
+  });
+  await scenario('schema-1 IndexedDB upgrades preserve frozen run/checkpoint identities',async()=>{
+    const legacy=JSON.parse(await readFile(path.join(output,'completed.json'),'utf8'));
+    const migrationContext=await browser.newContext(),migrationPage=await migrationContext.newPage();migrationPage.on('pageerror',error=>errors.push(error.message));
+    try{
+      await migrationPage.goto(new URL('/migration-fixture',page.url()).href);
+      await migrationPage.evaluate(async envelope=>{
+        const db=await new Promise((resolve,reject)=>{const req=indexedDB.open('intrilex-evolution-lab',1);req.onupgradeneeded=()=>{req.result.createObjectStore('runs',{keyPath:'payload.runId'});req.result.createObjectStore('history',{keyPath:'runId'});req.result.createObjectStore('checkpoints',{keyPath:'checkpointId'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+        await new Promise((resolve,reject)=>{const tx=db.transaction(['runs','history','checkpoints'],'readwrite'),run=envelope.payload;tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);tx.objectStore('runs').put(envelope);tx.objectStore('history').put({runId:run.runId,createdAt:run.createdAt,status:run.status,kind:run.kind,games:run.records.length,botA:run.config.botA,botB:run.config.botB,bytes:JSON.stringify(envelope).length,fingerprint:run.identity.fingerprint});for(const cp of run.checkpoints)tx.objectStore('checkpoints').add(cp);});db.close();
+      },legacy);
+      await migrationPage.goto(new URL('/#/evolution',page.url()).href);await expect(migrationPage.locator('[data-load-run]')).toBeVisible();await migrationPage.locator('[data-load-run]').click();await expect(migrationPage.locator('#evo-state')).toHaveText('COMPLETE');
+      await expect(migrationPage.getByTestId('evo-checkpoints')).toContainText(legacy.payload.checkpoints[0].checkpointId);
+      const stores=await migrationPage.evaluate(async()=>{const db=await new Promise(resolve=>{const req=indexedDB.open('intrilex-evolution-lab');req.onsuccess=()=>resolve(req.result);});const result={version:db.version,stores:Array.from(db.objectStoreNames)};db.close();return result;});assert.equal(stores.version,2);assert.ok(stores.stores.includes('research'));
+    }finally{await migrationContext.close();}
   });
   assert.deepEqual(errors,[]); report.status='PASS';
 } catch(error) { report.status='FAIL'; report.error=error.stack; report.uiError=await page.locator('#evo-error').textContent().catch(() => null); report.url=page.url(); await page.screenshot({path:path.join(output,'failure.png'),fullPage:true}); process.exitCode=1; }

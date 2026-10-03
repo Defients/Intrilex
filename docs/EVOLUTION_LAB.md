@@ -1,65 +1,74 @@
-# Evolution Lab deterministic foundation
+# Evolution Lab developer operating guide
 
-This developer workspace runs frozen Intrilex policies through the existing engine, records reproducible game evidence, and evaluates policies against stable references. Adaptive learning is disabled. The first vertical slice stops here; experiments, trainers, population evolution, branching, learned generations, ratings, clustering and Balance Lab remain later milestones.
+Evolution Lab runs authoritative Intrilex games and records reproducible research evidence. Frozen baseline policies remain unchanged. Experimental local weighted-heuristic training is isolated in Research experiments.
 
-## Run it
+## Browser workflows
 
-From the repository root:
+Build with `pnpm run build`, serve `apps/lab-web/dist`, and open `#/evolution`.
+
+1. **Run Series** uses the existing frozen policy arena. Configure policies, profile, base seed, mirrored seats and 1–4 workers. Pause/resume preserves accepted ordinals; reload then Load restores an interrupted run as paused. Stop keeps its evidence.
+2. **Create experiment** records name, hypothesis, scientific config, starting checkpoints, a frozen paired evaluation pack and Core Baseline Suite v1. Execute experiment runs SELF_PLAY/POLICY_COMPARISON under recorded config; CHECKPOINT_EVALUATION runs the frozen suite. Run IDs identify executions.
+3. **Clone experiment** preserves scientific variables and records the parent. The optional Clone series seed field deliberately changes that variable and records its before/after diff. Training clones preserve frozen seed pools. Create a new training experiment to change its seed pools.
+4. **Run frozen suite** evaluates the selected historical candidate against random-legal, score-rush, control, tempo and value. The matchup vector keeps each opponent separate, with clean/failed games, paired score, bounds, score margin and first-seat wins.
+5. **Compare checkpoints** selects two chronological checkpoints and compares identity, matching evaluation packs/opponents and measured candidate behavior deltas. Missing evidence stays unavailable.
+6. **Create A0 / B0 experiment** creates independent lineages from identical parameter state. Configure generations (1–100), candidates (1–4), step (1–1000), evolution seed, training pairs and held-out evaluation pairs. **Train / resume generations** executes the shared headless-capable algorithm. **Stop research run** terminates owned workers and preserves history. Resume completes pending held-out evaluation before advancing further.
+7. Export research artifacts for portability. Save conclusions explicitly. Load experiment restores local history. Imported evidence is marked unverified. Research history cannot overwrite a longer committed generation sequence.
+8. **Inspect historical artifact** validates an older run against its recorded identity read-only. Current execution rejects incompatible fingerprints. Original stores/IDs remain intact; use the original source/runtime to reproduce historical outcomes.
+
+Research persistence errors remain visible; export before leaving if a save fails. Ordinary run replay inspection still re-executes retained commands and checks seeded initial/final state hashes. All research series can be found in ordinary saved-run history and inspected there. Loaded weighted-checkpoint series show their actual generation and are read-only configurations; Research evaluates selected historical checkpoints, and Reset starts a new frozen-policy arena series.
+
+## Headless workflows
 
 ```powershell
 pnpm run build
-pnpm run dev
-```
-
-Open `http://localhost:4173/#/evolution`. Choose Bot A/B, game count, seed, worker count and an admitted rules profile. **Run Series** creates independent A/B lineage IDs and immutable generation-0 checkpoints. Selecting the same policy for both bots gives them identical policy state and implementation; the lineages have separate identities.
-
-**Pause** terminates workers, saves completed records and leaves interrupted ordinals pending. **Resume** reruns only pending games from their original seeds. **Stop** preserves the partial record and ends that run. Leaving the workspace pauses it. After a browser reload, use **Load** in saved history to restore a compatible run.
-
-**Evaluate A/B** creates a separate EVALUATION run against the selected frozen reference. Evaluation requires an even game count and mirrored seats. All five admitted policies are shipped baseline implementations: random-legal, score-rush, control, tempo and value. HybriX remains available to ordinary gameplay; it is not yet admitted to this deterministic lab.
-
-Inspect a retained replay to re-execute its commands through the engine, verify seed/initial state and final hash, and step through command, actor, phase, turn, scores and emitted event types. Bookmarks protect retained samples. This is a command/event inspector; it does not yet present a full board reconstruction or policy reasoning view.
-
-## Headless API and CLI
-
-```powershell
-pnpm run benchmark:evolution -- --games 2000 --workers 4 --seed 1337
 pnpm run test:evolution
 pnpm run test:evolution:browser
+pnpm run train:evolution -- --generations=2 --candidates=2 --training-pairs=2 --evaluation-pairs=2 --seed=42 --evolution-seed=31091 --step=250 --workers=4 --out=reports/local/evolution-training.json
+pnpm run train:evolution -- --resume=reports/local/evolution-training.json --out=reports/local/evolution-training-resumed.json
+pnpm run benchmark:evolution -- --games=2000 --workers=4 --seed=1337
 ```
 
-The benchmark writes `reports/local/evolution-benchmark.json`, including configuration, actual implementation fingerprint, immutable checkpoints, every slim game record, bounded full replays, statistics and timing. It verifies retained replays before finishing and preserves diagnostics if verification fails. Exit status is nonzero for an incomplete run, unresolved/aborted game, or replay failure. `--a`, `--b`, `--profile` and `--out` are supported; policy/profile admission remains strict.
+CLI flags use `--key=value`. SIGINT preserves partial history. The training JSON is a checksummed research envelope; its `.report.json` companion contains semantic lineage hashes, matchup evidence and performance measurements. Its `.runs` companion directory contains validated run artifacts referenced by the research history, including every slim game record and selected forensic transcripts. Run the identical configuration with workers 1 and 4 to compare semantic results. Wall time, run IDs and timestamps can differ. When resuming to a new output path, the CLI validates and copies referenced files from the original `.runs` directory. Missing older companion files are explicitly listed as `missingPriorRunEvidence`; it never invents their contents. A completed resume appends no generations.
 
-Import from `@intrilex/simulation-runtime/evolution-lab` for `runLabSeries`, `runLabGame`, `verifyLabReplay` and `runFrozenEvaluation`. Pass validated starting checkpoints to reproduce a historical policy identity. `runFrozenEvaluation` accepts one candidate checkpoint and up to eight frozen benchmark checkpoints, mirrored game count, seed, profile and workers. No training/update hooks are called.
+## Weighted heuristic V1
 
-## Evidence and compatibility
+The policy ranks **only** legal actions supplied by the authority. It starts with shipped `control` scoring and adds six residuals using the existing `decomposePolicyScore` features. Baseline residual weights are zero; parameters are bounded to [-2000, 2000]. No card rule is reimplemented.
 
-- Engine authority remains `IntrilexEngine.execute`, reached through existing legal-action frames and simulation runners. No game-rule implementation was added.
-- Fingerprints bind actual compiled engine modules, shipped baseline policies/scoring/SDK, Node/browser runners, the lab domain contract and the engine adapter/action projection. Same labels with different implementation bytes are incompatible.
-- A game record contains seed, ordinal, seat assignment, agents' checkpoint IDs, winner, terminal/error reason, scores, full turns, mini-turns, decisions/commands, action/event/mechanic counts, illegal-action attempt count and initial/final/command hashes. `durationMs` is separate operational metadata excluded from `resultHash`.
-- Paired ordinals share game randomness and swap policy seats. Policy RNG remains separately seeded by the existing runtime. Zero base seed follows the existing convention and becomes one.
-- Lab games allow up to 1,800 policy decisions and 256 automatic orchestration commands per decision frame. These are safety budgets; normal callers retain their existing defaults. The browser also enforces a 30-second worker-job watchdog.
-- Run errors and noncanonical endings remain visible and are excluded from clean-game outcome rates. Failed games are quarantined; a worker infrastructure failure stops and preserves the partial run.
-- Serialized files have schema version, content checksums and fingerprint validation. Imported files never supply executable policies. Import checksums detect corruption; they do not prove authorship or outcomes. The UI marks imported outcomes as unverified until individually reproduced.
-- Browser and Node summary formats differ in existing telemetry details. Admission tests compare actual initial states, ordered commands and final state hashes across all three admitted rules profiles, rather than claiming their full summaries are interchangeable.
+| Parameter | Existing measurable feature |
+| --- | --- |
+| points | Immediate points plus half target-point value |
+| resource | Draw/swap/recovery indicators and authorized draw-count feature |
+| tempo | QUICK timing, control-base offset (zero), authorized Mini-Turn feature |
+| defense | Existing anchor/guard/effect-nine indicators and own response-stack context |
+| synergy | Authorized anchor/Mimic/row-exchange features |
+| risk | Countering own stack, source-versus-target cost and absolute-scuttle feature |
 
-## Metric definitions
+These are established scoring proxies, not psychological labels or complete strategic models. Baseline scoring retains its terminal-win preference; all weighted choices remain legal even when a mutation performs poorly.
 
-Win rates divide by canonically completed games, including draws in the denominator. A draw earns half a point in the paired performance score. Aborted games and unmatched/incomplete seed pairs do not enter the paired estimate. First-player win rate is seat P1 wins per clean game; policy scores map results back to A/B even when seats swap.
+Each mutation adjusts one feature by a recorded signed step and clamps it. Mutation seeds derive from scientific experiment identity, evolution seed, lineage, generation and candidate index. Evolution RNG never consumes game/policy RNG. Changing worker scheduling does not change mutations or selection.
 
-Mean/median score differential is A minus B. Variance is sample variance of that differential. Action families and mechanic counts derive from actual runtime telemetry. They are observations, not invented strategy labels. Full turns, mini-turns, legal decisions and automatic engine commands are different counters.
+The `(1 + λ)` strategy evaluates parent plus 1–4 mutations against a named suite on **TRAINING** seeds. Selection maximizes mean paired training score; ties prefer parent then lower mutation index. Incomplete/failed/unresolved candidate evidence disqualifies it. If none qualify, training stops diagnostically. A retained parent creates a new immutable child with unchanged state. Selection is committed before **EVALUATION** on disjoint held-out frozen seeds. Held-out results do not enter selection, stop criteria or mutation.
 
-The conservative 95% paired-score bounds use `sqrt(log(40)/(2 * pairCount))`, clipped to [0,1]. Each complete seed pair is one bounded sample; its two games are correlated. The inference assumes independent sampled seed pairs. Fixed seed catalogs produce descriptive evidence for that catalog, and excluding failures can bias estimates; failure rates remain visible. Small samples are flagged below 100 complete pairs. See the [CMU derivation of Hoeffding bounds](https://www.stat.cmu.edu/~cshalizi/sml/21/lectures/06/lecture-06.html).
+Selected baselines, parents and strongest prior selected ancestors remain available; matchup regression means an observed paired-score drop beyond the configured threshold on a matching fixed pack. Small-sample regression is descriptive, not proof of catastrophic forgetting.
 
-## Storage and compute limits
+## Identity and storage
 
-Runs are bounded to 10,000 games and four workers. Only one browser run/evaluation is active at a time. Every slim result is kept, while full replay retention is capped at 12. Bookmark priority comes first, aborted samples second, early ordinals third. Full transcript length is bounded to 12,000 commands, and imported/saved artifacts to 40 MiB.
+- Experiment scientific identity includes implementation/rules identity, type, scientific config, checkpoint identities, pack/suite references and training settings. Name/parent define a manifest instance. Worker count and clocks are operational.
+- Pack IDs cover explicit seed arrays and provenance. Packs are frozen, not regenerated when loading. Mirrored games reuse a seed with equal AB/BA exposure.
+- Schema-v1 checkpoints retain original frozen generation-0 hash semantics. Schema-v2 IDs cover actual policy state, implementation, ancestry, training/mutation and experiment origin. Creation timestamp, tags and favorite/protected display metadata are excluded from v2 semantic identity. Root checkpoints precede experiment creation; descendants identify the originating experiment. Reference/root timestamps use the fixed catalog edition date; descendants carry the experiment creation timestamp. Generation ordering is authoritative, rather than those display timestamps.
+- Generation records are append-only and contain parent/candidates, mutation evidence, training/evaluation pack references, selection ranking/disqualifications and selected child. Held-out results are separate immutable evaluation references.
+- IndexedDB `intrilex-evolution-lab` version 2 keeps original run/history/checkpoint stores and adds research artifacts. No protected checkpoint is silently removed. Imports are checksummed claims, not authenticated authorship.
+- Research run artifacts explicitly carry `researchPurpose=TRAINING` or `EVALUATION`. The internal mirrored-series admission kind stays EVALUATION; saved history and performance labels use the scientific purpose. Training saves retain one ordinary clean transcript plus retained failures and bookmarks; held-out evaluation retains its bounded samples. All slim records and checkpoint identities remain intact.
+- Limits: 10,000 games/run, four workers, 1,800 decisions/game, 256 automatic commands per decision boundary, twelve retained replays/run, 40 MiB/artifact, 100 generations per lineage, four mutations/parent. Partial research suites retry on resume; committed selections do not change.
 
-IndexedDB uses a separate `intrilex-evolution-lab` database with run, history and immutable checkpoint stores. Save success waits for transaction commit, following [IndexedDB transaction completion semantics](https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction/complete_event). Autosave occurs every 250 games and on pause/stop/completion/bookmark. A crash can lose work since the last completed save. Browser storage may be cleared or evicted; exports are the portable copy. Quota and unavailable-storage errors remain visible and leave in-memory export working. History is not silently pruned; this slice has no deletion/pruning UI.
+## Metrics and interpretation
 
-Elapsed time/games per second measure wall time in the current environment. Per-game timing includes local engine/metrics work, while series throughput includes scheduling overhead. These are measurements, not a guarantee of performance on other machines. There is no CPU utilization target or rate-cap control in this milestone.
+Paired score averages the two seat results for each complete seed pair (win 1, draw 0.5, loss 0). Conservative 95% Hoeffding bounds assume independently sampled seeds; fixed catalogs describe that catalog. Aborted games never count as wins. Candidate failures remain visible and can disqualify selection. Tiny demonstration packs cannot establish universal improvement.
 
-## Learning gate
+Behavior V1 counts candidate-selected action families and canonical mechanic tags per candidate decision. Shared mean full turns/Mini-Turns describe arena context. Old artifacts lacking per-seat telemetry report unavailable behavior. Rank/suit distributions and direct resource expenditure are not fabricated.
 
-Keep adaptive learning disabled until the final validation report is accepted and remaining foundation constraints are addressed. A suitable first learning candidate is mutation/selection over explicit heuristic weights, with independently seeded mutation, immutable parameter checkpoints, frozen paired evaluation and historical opponents. Existing baseline checkpoints deliberately reject nonempty learned state; adding learning requires a new explicit schema/adapter and admission tests.
+The CLI measures wall games/sec and actions/sec, persistence and retained replay verification, plus serialization/hash/aggregation microbenchmarks. Worker startup and coordination are included in wall throughput; isolated coordination or transcript creation costs are not claimed.
 
-See [the architecture audit](EVOLUTION_LAB_AUDIT.md) and [implementation/validation report](EVOLUTION_LAB_REPORT.md).
+The initial mutation/selection approach follows the standard simple evolution-strategy pattern; this implementation is deliberately smaller than adaptive covariance or neural approaches. Background: [Beyer and Schwefel, Evolution strategies: A comprehensive introduction (2002)](https://gwern.net/doc/reinforcement-learning/model-free/2002-beyer.pdf).
+
+See `EVOLUTION_LAB_AUDIT.md`, `EVOLUTION_ARCHITECTURE_RECONCILIATION.md`, `EVOLUTION_FOUNDATION_GATE.md` and `EVOLUTION_LAB_REPORT.md` for architecture and current validation boundaries.

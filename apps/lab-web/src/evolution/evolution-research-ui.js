@@ -1,0 +1,75 @@
+import { esc } from '../state.js';
+import { LAB_IDENTITY } from './identity.mjs';
+import { createLabRun, CLEAN_REASONS } from './evolution-domain.mjs';
+import { createEvaluationPack,createBaselineSuite,createExperiment,cloneExperiment,compareCheckpoints,researchEnvelope,parseResearchImport } from './evolution-research.mjs';
+import { evaluateSuite } from './evolution-evaluation.mjs';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs';
+import { EvolutionStore } from './evolution-store.mjs';
+
+const store=new EvolutionStore(LAB_IDENTITY);
+const view={project:null,history:[],controller:null,error:'',progress:null,comparison:null,selectedA:null,selectedB:null,readConfig:null,serial:0,started:0,attempted:0,failed:0};
+const percent=n=>Number.isFinite(n)?`${(100*n).toFixed(1)}%`:'unavailable';
+const busy=()=>!!view.controller;
+export function researchHtml(){return '<section id="evo-research" class="evo-section" data-testid="evo-research"></section>';}
+export function mountResearchPanel(readConfig){view.readConfig=readConfig;render();store.listResearch().then(history=>{view.history=history;render();}).catch(error=>{view.error=`Research storage: ${error.message}`;render();});}
+function render(){
+  const root=document.getElementById('evo-research');if(!root)return;
+  const p=view.project,disabled=busy()?'disabled':'',cps=p?.checkpoints??[],exp=p?.experiment;
+  const opts=selected=>cps.map(cp=>`<option value="${cp.checkpointId}" ${cp.checkpointId===selected?'selected':''}>${esc(cp.agentId)} · generation ${cp.generation} · ${esc(cp.policyId)} · ${cp.checkpointId.slice(0,14)}</option>`).join('');
+  root.innerHTML=`<h3>Research experiments</h3><p>Scientific identity tracks result-affecting variables. Workers and elapsed time are operational metadata.</p>
+    <p id="evo-research-error" class="danger" role="alert">${esc(view.error)}</p>
+    ${p?.evidenceOrigin==='IMPORTED_UNVERIFIED'?'<p class="notice">Imported research claims are unverified. Checksums establish integrity; reproduce the experiment to verify outcomes.</p>':''}
+    <div class="toolbar"><label>Name<input id="evo-experiment-name" maxlength="160" value="${esc(exp?.name??'Policy comparison #001')}" ${disabled}></label>
+    <label>Type<select id="evo-experiment-type" ${disabled}>${['SELF_PLAY','POLICY_COMPARISON','CHECKPOINT_EVALUATION'].map(t=>`<option ${t===exp?.type?'selected':''}>${t}</option>`).join('')}</select></label>
+    <label>Hypothesis<input id="evo-experiment-hypothesis" value="${esc(exp?.hypothesis??'')}" ${disabled}></label>
+    <label>Frozen evaluation pairs<input id="evo-pack-pairs" type="number" min="1" max="5000" value="${p?.packs.find(x=>x.purpose==='EVALUATION')?.seeds.length??2}" ${disabled}></label>
+    <label>Clone series seed (blank preserves)<input id="evo-clone-seed" type="number" min="0" max="4294967295" placeholder="Preserve parent" ${disabled}></label><button id="evo-create-experiment" class="secondary-button" ${disabled}>Create experiment</button><button id="evo-clone-experiment" class="secondary-button" ${!p||busy()?'disabled':''}>Clone experiment</button></div>
+    ${p?`<p><b>${esc(exp.name)}</b> · <span id="evo-research-state" role="status">${esc(exp.status)}</span><br><code class="evo-hash">${exp.scientificId}</code></p>
+    <details><summary>Changes from parent · ${exp.changes.length}</summary><pre>${esc(JSON.stringify({parentExperimentId:exp.parentExperimentId,changes:exp.changes},null,2))}</pre></details>
+    <p>${esc(p.suite.name)} · frozen pack <code>${p.packs.find(x=>x.purpose==='EVALUATION').packId.slice(0,20)}</code> · identical seed pairs for historical comparisons.</p>
+    <div class="toolbar"><label>Candidate / left checkpoint<select id="evo-checkpoint-left" ${disabled}>${opts(view.selectedA)}</select></label><label>Right checkpoint<select id="evo-checkpoint-right" ${disabled}>${opts(view.selectedB)}</select></label>
+    <button id="evo-execute-experiment" class="secondary-button" ${busy()||exp.type==='EVOLUTION_TRAINING'?'disabled':''}>Execute experiment</button><button id="evo-suite-evaluate" class="secondary-button" ${disabled}>Run frozen suite</button><button id="evo-compare-checkpoints" class="secondary-button" ${disabled}>Compare checkpoints</button><button id="evo-research-stop" class="secondary-button" ${busy()?'':'disabled'}>Stop research run</button></div>
+    <p id="evo-research-progress" role="status">${progressText()}</p>
+    <div id="evo-training-controls"></div>
+    <h4>Checkpoint timeline</h4><div class="evo-table-scroll"><table><thead><tr><th>Agent / lineage</th><th>Generation</th><th>Checkpoint</th><th>Parent</th><th>Policy version</th></tr></thead><tbody>${cps.map(cp=>`<tr><td>${esc(cp.agentId)}<br><small>${esc(cp.lineageId)}</small></td><td>${cp.generation}</td><td><code>${cp.checkpointId.slice(0,19)}</code></td><td><code>${cp.parentCheckpointId?.slice(0,19)??'baseline'}</code></td><td>${esc(cp.policyVersion)}</td></tr>`).join('')}</tbody></table></div>
+    <div id="evo-research-evaluations">${evaluationsHtml(p)}</div>
+    ${view.comparison?`<details open id="evo-checkpoint-comparison"><summary>Checkpoint comparison</summary><div class="evo-table-scroll"><table><thead><tr><th>Opponent</th><th>Before</th><th>After</th><th>Paired-score delta</th><th>Score-margin delta</th></tr></thead><tbody>${view.comparison.matchups.map(m=>`<tr><td>${esc(m.opponent)}</td><td>${percent(m.before)}</td><td>${percent(m.after)}</td><td>${m.delta===null?'unavailable':(100*m.delta).toFixed(1)+' pp'}</td><td>${m.scoreMarginDelta?.toFixed(2)??'unavailable'}</td></tr>`).join('')}</tbody></table></div><pre>${esc(JSON.stringify(view.comparison,null,2))}</pre></details>`:''}
+    <details><summary>Generation selection evidence</summary><pre>${esc(JSON.stringify(p.generations,null,2))}</pre></details>
+    <label>Developer conclusions<textarea id="evo-experiment-conclusions" maxlength="10000" ${disabled}>${esc(exp.conclusions)}</textarea></label><button id="evo-save-conclusions" class="ghost-button" ${disabled}>Save conclusions</button>
+    <div class="toolbar"><button id="evo-export-research" class="secondary-button">Export research artifact</button><button id="evo-save-research" class="ghost-button">Save experiment</button></div>`:''}
+    <label>Import research artifact<input id="evo-import-research" type="file" accept="application/json,.json" ${disabled}></label>
+    <div id="evo-research-history">${view.history.map(h=>`<div class="evo-replay-row"><span>${esc(h.name)} · ${esc(h.status)}</span><button class="ghost-button" data-load-experiment="${h.experimentId}" ${disabled}>Load experiment</button></div>`).join('')}</div>`;
+  bind();view.renderTraining?.(p,busy());
+}
+function progressText(){const x=view.progress,cp=view.project?.checkpoints.find(c=>c.checkpointId===x?.checkpointId),gps=view.started ? view.attempted/((performance.now()-view.started)/1000) : 0;return x?`${x.mode} · generation ${cp?.generation??'—'} · ${x.opponent??''} · ${x.completed??0}/${x.total??0} suite games · ${view.attempted} attempts / ${view.failed} failed in this execution · ${gps.toFixed(2)} games/sec · ${x.packId?.slice(0,18)??''}`:'No research execution active.';}
+function evaluationsHtml(p){return p.evaluations.filter(e=>e.purpose==='EVALUATION').slice(-8).map(e=>`<section><h4>Frozen matchup vector · ${e.candidateCheckpointId.slice(0,18)} · ${e.status}</h4><p>Small frozen samples are descriptive; change is not evidence of general improvement.</p><div class="evo-table-scroll"><table><thead><tr><th>Opponent</th><th>Paired score</th><th>95% bounds</th><th>Clean / failed</th><th>Score margin</th><th>First-seat wins</th></tr></thead><tbody>${e.matchups.map(m=>`<tr><td>${esc(m.opponentPolicyId)}</td><td><span class="evo-vector-bar" style="--score:${100*(m.metrics.pairedScore??0)}%">${percent(m.metrics.pairedScore)}</span></td><td>${m.metrics.pairedScoreInterval95?.map(percent).join(' – ')??'unavailable'}</td><td>${m.metrics.clean} / ${m.metrics.aborted}</td><td>${m.metrics.meanScoreDifference?.toFixed(2)??'—'}</td><td>${percent(m.metrics.firstPlayerWinRate)}</td></tr>`).join('')}</tbody></table></div></section>`).join('');}
+function pickProject(p){view.project=p;view.selectedA=p.checkpoints[0]?.checkpointId;view.selectedB=p.checkpoints[1]?.checkpointId;view.comparison=null;view.error='';render();}
+async function persist(){if(!view.project)return;await store.saveResearch(view.project);view.history=await store.listResearch();render();}
+function bind(){
+  const click=(id,fn)=>document.getElementById(id)?.addEventListener('click',()=>Promise.resolve().then(fn).catch(error=>{view.error=error.message;render();}));
+  click('evo-create-experiment',async()=>{
+    const config=view.readConfig(),pack=createEvaluationPack({identity:LAB_IDENTITY,baseSeed:config.seed,pairCount:Number(document.getElementById('evo-pack-pairs').value),profileId:config.profileId}),suite=createBaselineSuite(LAB_IDENTITY),checkpoints=createLabRun(config,LAB_IDENTITY).checkpoints;
+    const experiment=createExperiment({identity:LAB_IDENTITY,name:document.getElementById('evo-experiment-name').value,hypothesis:document.getElementById('evo-experiment-hypothesis').value,type:document.getElementById('evo-experiment-type').value,config,startingCheckpoints:checkpoints,seedPackId:pack.packId,evaluationSuiteId:suite.suiteId});
+    pickProject({schemaVersion:1,experiment,packs:[pack],suite,checkpoints,generations:[],evaluations:[],faults:[]});await persist();
+  });
+  click('evo-clone-experiment',async()=>{const old=view.project,seed=document.getElementById('evo-clone-seed').value;if(seed!=='' && old.experiment.type==='EVOLUTION_TRAINING')throw new Error('Training clones preserve their frozen seed packs; create a new training experiment for different seed pools.');const experiment=cloneExperiment(old.experiment,{config:seed===''?{}:{seed:Number(seed)},name:document.getElementById('evo-experiment-name').value+' — clone'});pickProject({...structuredClone(old),experiment,generations:[],evaluations:[],faults:[]});await persist();});
+  document.getElementById('evo-checkpoint-left')?.addEventListener('change',e=>{view.selectedA=e.target.value;});document.getElementById('evo-checkpoint-right')?.addEventListener('change',e=>{view.selectedB=e.target.value;});
+  click('evo-compare-checkpoints',()=>{const p=view.project;view.comparison=compareCheckpoints(p.checkpoints.find(c=>c.checkpointId===view.selectedA),p.checkpoints.find(c=>c.checkpointId===view.selectedB),p.evaluations);render();});
+  click('evo-suite-evaluate',()=>execute(async(signal,p)=>{const result=await evaluateSuite({candidate:p.checkpoints.find(c=>c.checkpointId===view.selectedA),suite:p.suite,pack:p.packs.find(x=>x.purpose==='EVALUATION'),workerCount:p.experiment.operational.workerCount},executeBrowserSeries,{signal,onProgress:progress,onRun:run=>store.save(run)});p.evaluations.push(result);p.experiment.evaluationIds.push(result.evaluationId);return result.status;}));
+  click('evo-execute-experiment',()=>{
+    if(view.project.experiment.type==='CHECKPOINT_EVALUATION'){document.getElementById('evo-suite-evaluate').click();return;}
+    return execute(async(signal,p)=>{
+      const e=p.experiment,startingCheckpoints=e.scientific.startingCheckpointIds.map(id=>p.checkpoints.find(cp=>cp.checkpointId===id));
+      const result=await executeBrowserSeries({...e.scientific.config,workerCount:e.operational.workerCount},{identity:LAB_IDENTITY,startingCheckpoints,signal,onProgress:x=>progress({...x,mode:e.type})});
+      await store.save(result.run);e.runIds.push(result.run.runId);p.lastRunSummary=result.metrics;return result.run.status;
+    });
+  });
+  click('evo-research-stop',()=>view.controller?.abort());click('evo-save-research',persist);click('evo-save-conclusions',async()=>{view.project.experiment.conclusions=document.getElementById('evo-experiment-conclusions').value;await persist();});
+  click('evo-export-research',()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(researchEnvelope(view.project))],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`${view.project.experiment.experimentId}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+  document.getElementById('evo-import-research')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>40*1024*1024)throw new Error('IMPORT_TOO_LARGE');pickProject(parseResearchImport(await file.text(),LAB_IDENTITY));await persist();}catch(error){view.error=error.message;render();}});
+  document.getElementById('evo-research-history')?.addEventListener('click',async e=>{try{const b=e.target.closest('[data-load-experiment]');if(b&&!busy())pickProject(await store.loadResearch(b.dataset.loadExperiment));}catch(error){view.error=error.message;render();}});
+}
+function progress(x){view.progress=x;if(x.record){view.attempted++;if(!CLEAN_REASONS.includes(x.record.terminationReason))view.failed++;}const value=progressText();for(const id of ['evo-research-progress','evo-training-live']){const el=document.getElementById(id);if(el)el.textContent=value;}}
+async function execute(fn){if(busy()||!view.project)return;const owner=view.project,controller=new AbortController(),serial=++view.serial;view.controller=controller;view.progress=null;view.started=performance.now();view.attempted=0;view.failed=0;owner.experiment.status='RUNNING';view.error='';render();try{owner.experiment.status=await fn(controller.signal,owner);}catch(error){owner.experiment.status='ERROR';owner.faults.push({message:String(error.stack??error).slice(0,2000),experimentId:owner.experiment.experimentId});view.error=error.message;}finally{if(view.serial===serial){view.controller=null;await persist().catch(error=>{view.error=`Save failed: ${error.message}. Export research before leaving.`;});render();}}}
+export function cleanupResearchPanel(){view.controller?.abort();}
+export function attachTrainingUi(renderTraining){view.renderTraining=renderTraining;return {view,render,persist,pickProject,execute,progress,store};}

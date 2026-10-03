@@ -5,3 +5,17 @@
 .evo-section pre{white-space:pre-wrap;max-height:300px;overflow:auto;font-size:.8rem}.evo-hash{overflow-wrap:anywhere}.evo-bot{padding:1.5rem;border:1px solid #ffffff20;border-radius:12px}
 .evo-state-paused{color:#f2c76b}.evo-section input[type=file]{width:220px}.evo-panel .panel-header{flex-wrap:wrap}.evo-panel .toolbar{flex-wrap:wrap}
 @media(max-width:700px){.evo-section{padding:.8rem}.evo-bot{padding:1rem}.evo-panel .panel-header .toolbar{width:100%}.evo-replay-row>span{min-width:100%}}
+
+.evo-table-scroll { overflow-x:auto; max-width:100%; }
+.evo-table-scroll table { width:100%; border-collapse:collapse; }
+.evo-table-scroll th,.evo-table-scroll td { padding:0.6rem; text-align:left; border-bottom:1px solid #ffffff20; }
+#evo-research pre { max-height:28rem; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; }
+#evo-research textarea { width:100%; min-height:5rem; }
+.evo-vector-bar { display:block; padding:.3rem; background:linear-gradient(90deg,#58d8c530 var(--score),transparent var(--score)); }
+
+.evo-panel,.evo-section,.evo-arena>* { min-width:0; }
+#evo-research { overflow-wrap:anywhere; }
+#evo-research .toolbar>label { min-width:0; max-width:100%; }
+#evo-research select { min-width:0; width:min(26rem,100%); }
+#evo-research .evo-table-scroll { min-width:0; width:100%; }
+@media(max-width:700px){#evo-research .toolbar{display:grid;grid-template-columns:minmax(0,1fr)}#evo-research .toolbar input,#evo-research .toolbar select{width:100%;min-width:0}#evo-research button{max-width:100%;white-space:normal}}

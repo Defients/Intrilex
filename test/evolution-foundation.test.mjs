@@ -138,12 +138,15 @@ test('browser and Node adapters use identical authoritative trajectories across 
     }
   }
 });
-test('lab explicitly budgets long authoritative orchestration without changing normal defaults', async () => {
+test('normal and lab orchestration resume the same long automatic chain', async () => {
   const run=create({botA:'score-rush',botB:'control',seed:42,gameCount:100});
   const evidence=runLabGame(run,16);
   assert.equal(evidence.record.terminationReason,'NORMAL_VICTORY');
   run.records.push(evidence.record); retainReplay(run,evidence); verifyLabReplay(run,run.replays[0]);
   const {runPolicyMatch}=await import('../packages/simulation-runtime/src/runtime.mjs');
-  const normal=runPolicyMatch({seed:gamePlan(run.config,16).seed,policyIds:['score-rush','control'],telemetryEnabled:false});
-  assert.equal(normal.summary.errorCode,'CORE_ORCHESTRATION_COMMAND_LIMIT');
+  const normal=runPolicyMatch({seed:gamePlan(run.config,16).seed,policyIds:['score-rush','control'],telemetryEnabled:false,includeReplay:true,replayMode:'commands'});
+  assert.equal(normal.summary.terminationReason,evidence.record.terminationReason);
+  assert.equal(normal.summary.finalStateHash,evidence.record.finalStateHash);
+  assert.deepEqual(normal.replay.commands,evidence.replay.commands);
+  assert.deepEqual(normal.summary.ruleCompliance.status,evidence.record.ruleCompliance);
 });

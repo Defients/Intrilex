@@ -63,46 +63,6 @@ self.onmessage = async (event) => {
     } catch(error){ self.postMessage({ type:'autonomy-campaign-result', ok:false, error:error?.stack??String(error) }); }
     return;
   }
-  if (type === 'run-evolution-series') {
-    // Evolution Lab (Prototype Zero): run this worker's strided slice of a
-    // self-play series, streaming one slim record per completed game so the
-    // dashboard stays live. Cancellation is via worker.terminate().
-    try {
-      const { runBrowserPolicyMatch } = await autonomyModule;
-      const core = await import('./evolution/evolution-core.mjs');
-      const cfg = event.data.config ?? {};
-      const start = Math.max(0, Number(cfg.startOrdinal) || 0);
-      const stride = Math.max(1, Number(cfg.stride) || 1);
-      const total = Math.max(0, Math.min(Number(cfg.total) || 0, 10000));
-      if (!cfg.botA || !cfg.botB) {
-        self.postMessage({ type: 'evolution-worker-done', workerIndex: event.data.workerIndex ?? 0, produced: 0, error: 'INVALID_CONFIG: botA and botB policy ids are required' });
-        return;
-      }
-      let produced = 0;
-      for (let ordinal = start; ordinal < total; ordinal += stride) {
-        const plan = core.seatPlan(ordinal, cfg.mirrorSeats !== false, cfg.botA, cfg.botB);
-        const seed = core.evolutionGameSeed(cfg.baseSeed ?? 1, ordinal);
-        let record;
-        try {
-          const summary = runBrowserPolicyMatch({
-            seed,
-            policyIds: plan.policyIds,
-            decisionLimit: cfg.decisionLimit ?? 1800,
-            profileId: cfg.profileId
-          });
-          record = core.slimGameRecord(summary, ordinal, plan.swapped);
-        } catch (gameError) {
-          record = core.faultGameRecord(ordinal, plan.swapped, gameError);
-        }
-        self.postMessage({ type: 'evolution-game', workerIndex: event.data.workerIndex ?? 0, game: record });
-        produced += 1;
-      }
-      self.postMessage({ type: 'evolution-worker-done', workerIndex: event.data.workerIndex ?? 0, produced });
-    } catch (error) {
-      self.postMessage({ type: 'evolution-worker-done', workerIndex: event.data.workerIndex ?? 0, error: error?.stack ?? String(error) });
-    }
-    return;
-  }
   if (type === 'run-evolution-game') {
     const { epoch, workerIndex, ordinal } = event.data;
     try {
@@ -117,7 +77,7 @@ self.onmessage = async (event) => {
       let evidence;
       const started = performance.now();
       try {
-        const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds,
+        const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds, policyStates:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? cp.policyState : null),
           profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true });
         const record = domain.gameEvidence(summary, plan, run, summary.replay, performance.now()-started);
         const keep = event.data.retainReplay || !domain.CLEAN_REASONS.includes(record.terminationReason);

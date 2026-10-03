@@ -1,3 +1,3 @@
-// Evolution Lab deterministic foundation. Checkpoints and Benchmarks are active.
-// Coming later: Evolution, Lineages, Hall of Fame, Balance Lab.
+// Evolution Lab: deterministic research, frozen suites and experimental local heuristic lineages.
+// Future: strategy clustering, Hall of Fame, Balance Lab.
 export { renderEvolutionLab, cleanupEvolutionLab } from './evolution-dashboard.js';

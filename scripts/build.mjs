@@ -86,10 +86,11 @@ mkdirSync(dist, { recursive: true });
 cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
 // Portable lab domain/session have no engine rules or Node I/O. Browser workers
 // execute the existing autonomy runtime; the dashboard owns only artifacts.
-for (const name of ['evolution-domain.mjs', 'evolution-session.mjs']) {
+for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs']) {
   const content = await readFile(path.join(root, 'packages/simulation-runtime/src', name), 'utf8');
-  await writeFile(path.join(dist, 'evolution', name), content.replace("from '@intrilex/shared'", "from '../shared-browser.js'"));
+  await writeFile(path.join(dist, 'evolution', name), content.replace("from '@intrilex/shared'", "from '../shared-browser.js'").replace("from '../../policies/src/weighted-heuristic.mjs'", "from './weighted-heuristic.mjs'"));
 }
+await writeFile(path.join(dist, 'evolution/weighted-heuristic.mjs'), (await readFile(path.join(root,'packages/policies/src/weighted-heuristic.mjs'),'utf8')).replace("from './scoring.mjs'","from '../policy-scoring.js'"));
 await writeFile(path.join(dist, 'evolution/identity.mjs'), `export const LAB_IDENTITY = ${JSON.stringify(await evolutionIdentity())};\n`);
 // ── Analytics AI core: copy isomorphic package modules into dist/analytics-ai ──
 // The browser UI adapters (apps/lab-web/src/analytics-ai/*.js) import these

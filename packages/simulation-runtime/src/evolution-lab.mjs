@@ -3,17 +3,26 @@ import { createSimulationState, createAuthorityCertifiedReplay, verifyAuthorityC
 import { evolutionIdentity } from '../../../scripts/evolution-identity.mjs';
 import { Worker } from 'node:worker_threads';
 import { setImmediate } from 'node:timers';
-import { createLabRun, gamePlan, gameEvidence, gameFault, validateRecord, validateReplay, validateCheckpoint, retainReplay, summarizeRecords, validateArtifact, artifactEnvelope } from './evolution-domain.mjs';
+import { createLabRun, gamePlan, gameEvidence, gameFault, validateRecord, validateReplay, validateCheckpoint, retainReplay, summarizeRecords, validateArtifact, artifactEnvelope, assertIdentity } from './evolution-domain.mjs';
+
+const implementationIdentity=await evolutionIdentity();
 
 export { evolutionIdentity, createLabRun, gamePlan, summarizeRecords, validateArtifact, artifactEnvelope };
 
 export function runLabGame(run, ordinal) {
+  assertIdentity(run.identity,implementationIdentity);
   const plan = gamePlan(run.config, ordinal);
   const started = performance.now();
   try {
-    const result = runPolicyMatch({ ...plan, profileId: run.config.profileId, includeReplay: true,
+    const checkpoints=plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints;
+    const result = runPolicyMatch({ ...plan, policyStates:checkpoints.map(cp=>cp.schemaVersion===2 ? cp.policyState : null), profileId: run.config.profileId, includeReplay: true,
       decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, telemetryEnabled: false, replayMode: 'commands' });
-    const record = gameEvidence(result.summary, plan, run, result.replay, performance.now()-started);
+    const perSeatStats=result.summary.participants.map(p=>{
+      const decisionFamilyCounts={};
+      for(const decision of result.decisions)if(decision.actorId===p.playerId)decisionFamilyCounts[decision.family]=(decisionFamilyCounts[decision.family]??0)+1;
+      return {policyDecisionCount:p.decisionCount,decisionFamilyCounts,mechanicCounts:p.mechanicCounts};
+    });
+    const record = gameEvidence({...result.summary,perSeatStats}, plan, run, result.replay, performance.now()-started);
     validateRecord(record, run);
     return { record, replay: result.replay };
   } catch (error) { return { record: gameFault(error, plan, run, performance.now()-started), replay: null }; }
@@ -32,7 +41,8 @@ export function verifyLabReplay(run, evidence) {
 }
 
 export async function runLabSeries(input, { onProgress = () => {}, identity, signal, startingCheckpoints, createdAt } = {}) {
-  const run = createLabRun(input, identity ?? await evolutionIdentity(), createdAt);
+  assertIdentity(identity ?? implementationIdentity,implementationIdentity);
+  const run = createLabRun(input, identity ?? implementationIdentity, createdAt);
   if (startingCheckpoints) {
     if (startingCheckpoints.length !== 2) throw new Error('CHECKPOINT_PAIR_REQUIRED');
     run.checkpoints = startingCheckpoints.map(cp => validateCheckpoint(cp, run.identity));

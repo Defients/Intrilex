@@ -1,151 +1,149 @@
-# Evolution Lab: first vertical slice technical report
+# Evolution Lab Continued Development Report
 
-Validated October 2, 2026 (America/New_York), in `H:\myProjects\Intrilex-MASTER\Intrilex_dev-current`. This report covers locally validated developer tooling. It is not a release certification or remote deployment report.
+October 2, 2026 (America/New_York). Baseline: `92d01cea128eae0b277cfa362bae15ba29b35ebb`. Local implementation and validation complete. No remote CI, publishing, deployment or release certification was performed.
 
-## Implemented
+## Architecture Consolidated
 
-- Headless Simulation API, frozen RandomLegal/current heuristic adapters and real Node/browser worker execution.
-- Paired seed scheduling with equal AB/BA seat exposure for evaluation; stable ordinal ownership and deduplication.
-- Outcome, seat, score differential, game flow, action/event/mechanic, failure and timing records. Wall timing is separated from deterministic semantic hashes.
-- Replay IDs and state/command hashes for every game; bounded full transcripts; replay verification and command/event stepping; developer bookmarks.
-- Immutable, implementation-bound generation-0 checkpoints, independent A/B lineage IDs, round-trip validation and historical checkpoint loading through the API.
-- Frozen reference evaluation, conservative uncertainty on complete seed pairs, visible sample size and separate self-play/evaluation records.
-- Developer dashboard with run configuration, start/pause/resume/stop, A/B metrics, checkpoint history, replay forensics, IndexedDB history and validated artifact import/export.
-- Explicit compute/retention/import limits, quota diagnostics, quarantine of failed games, worker watchdogs and stale-worker rejection.
-- A headless benchmark CLI, registered tests/CI stage, architecture audit and operating guide.
+The simulation-runtime domain is the sole configuration, paired seed, seat, checkpoint and evidence authority. Research, evaluation and training modules extend that authority. Node and browser adapters execute the same planning and trainer functions using the existing authoritative game engines.
 
-Adaptive learning remains disabled. There are no fake generations, fabricated thoughts, mutable historical checkpoints or unsupported learning controls.
+## Legacy Systems Removed or Retained
 
-## Architecture added
+Removed Prototype Zero `evolution-core.mjs` and `run-evolution-series`. Migrated tests to current admission/planning/protocol. Incremental aggregation moved into the domain; bounded chart sampling moved into `evolution-presentation.mjs`. Existing self-play, pause/resume, replays, ordinary play, and frozen baseline policies remain functional.
 
-| Boundary | Source |
-| --- | --- |
-| Portable schemas / checkpoints / metrics / paired plans / artifact validation | `packages/simulation-runtime/src/evolution-domain.mjs` |
-| Run state, claims, epochs and evidence ownership | `packages/simulation-runtime/src/evolution-session.mjs` |
-| Node simulation and frozen evaluation adapter | `packages/simulation-runtime/src/evolution-lab.mjs` |
-| Node worker pool endpoint | `packages/simulation-runtime/src/evolution-node-worker.mjs` |
-| Actual engine/policy/runtime implementation identity | `scripts/evolution-identity.mjs` |
-| Browser persistence and import boundary | `apps/lab-web/src/evolution/evolution-store.mjs` |
-| Developer dashboard | `apps/lab-web/src/workspaces/evolution-dashboard.js` |
-| Existing workspace entry / worker adapters | `workspaces/evolution.js`, `worker.js` |
-| Developer stylesheet | `css/evolution-foundation.css`, existing prototype CSS |
-| Benchmark and browser validation harnesses | `scripts/evolution-benchmark.mjs`, `scripts/evolution-browser.mjs` |
+## Orchestration Parity Findings
 
-The build copies the portable domain/session into the browser distribution, rewrites the canonical hash import to the existing browser crypto shim, and emits the same implementation identity used by the Node adapter. The original prototype's core helpers, stylesheet, routing, chart helper and tests were retained and extended. Existing unrelated dirty work was preserved.
+Sixteen commands bounded an execution slice rather than a gameplay rule. Seed `3484793158` legitimately needs further automatic work. The core orchestrator now continues slices with globally stable command indices, up to an independent 256-command guard. The same game under ordinary 16 and Lab 256 slices has identical command trajectory, state hash and rule-compliance result. No card, score, legal-action or victory rule changed. Compiled upstream JS/map accompany the operational TS change.
 
-## Existing architecture reused
+## Experiment System
 
-Canonical authority is the existing `upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix` source compiled into the existing runtime. State creation, legal-action generation, private command resolution, transitions, scoring, turn/priority advancement and victory remain engine-owned.
+Manifests distinguish scientific variables from worker count, timestamps and elapsed time. Scientific IDs are content-derived. Runs are execution references, hypotheses/conclusions are explicit developer statements. Three initial experiment types execute; adaptive experiments add training configuration. Clones preserve scientific fields and identify their parent; deliberately changing a series seed produces a structured field diff. Ruleset comparison remains future work; no rule overrides are invented.
 
-The Node lab wraps `runPolicyMatch`; browser workers wrap `runBrowserPolicyMatch`. Both use existing policy/scoring implementations and separately seeded policy RNG. Retained Node replay evidence verifies through the existing certified replay creator/verifier. Browser inspection executes the same recorded commands through `IntrilexEngine` and verifies initial/final hashes.
+## Evaluation Packs / Suites
 
-The existing chart toolkit, observatory route shell, render bus and worker infrastructure are reused. Player saves, authentication, networking and ranked state are separate from the lab database.
+Explicit immutable seed catalogs mirror every seed AB/BA. Core Baseline Suite v1 contains random-legal, score-rush, control, tempo and value checkpoint identities. Each evaluation retains opponent/candidate/pack identity, full matchup metrics, failures, conservative pair-level uncertainty, score margins, seat exposure, behavior and execution references. Small fixed packs describe their samples. A training mean is an explicit selection criterion, never a universal rating.
 
-## Determinism evidence
+## Checkpoint Schema
 
-- 32 independent base seeds reproduce identical initial states/deals, ordered commands, terminal hashes and semantic records in repeated real-engine runs. Duration is explicitly excluded from semantic equality.
-- Browser/Node admission tests compare actual initial states, command trajectories and final hashes for four seeds across all three admitted rules profiles.
-- A real four-worker Node pool matches a serial run when configuration and starting checkpoints are the same; semantic metrics and ordinal-indexed results agree.
-- Pause/resume invalidates interrupted claims and stale epochs; duplicate results cannot increment totals twice. Browser testing also injects a callback from a terminated prior run while a new run is active and verifies it is ignored.
-- Checkpoint/record/artifact round trips reject modified checksums, incompatible implementations, duplicate ordinals, unsupported policies and malformed budgets.
-- Replay tests reject altered commands and incompatible initial configuration. Retained benchmark replays reconstruct successfully.
-- A seed that exhausted the engine's default 16-command orchestration budget is explicitly tested. The lab's opt-in 256-command budget completes the game and replays it; normal API defaults remain unchanged. The canonical engine source was not modified.
+Schema 1 retains its original bytes/hash semantics and frozen generation-0 state. Schema 2 contains bounded weighted policy state, parent, lineage, generation, training/mutation provenance and originating experiment. Content-derived v2 IDs include semantic state, exclude display timestamp/tags/favorite/protection metadata. Evaluation references live in experiment/project history rather than changing checkpoint IDs. Loaded research-series configuration is read-only; the replay arena shows actual historical generation numbers. Historical incompatible artifacts can be inspected read-only; executing them requires their original implementation. IndexedDB upgrades in place and does not delete historical stores.
 
-Final benchmark fingerprint:
+## Adaptive Learning Status
 
-```text
-ecaa17c5f5e1441c3aae62af9490443f7b18bd56d0eafb4068c9d356abb9f6a0
-```
+`VALIDATED_V1` within the documented local experimental bounds. Foundation gate passed 29/29 tests and 9/9 Chrome scenarios before trainer implementation. Final validation covers real adaptive lineages, frozen historical evaluation, browser execution and worker-count reproducibility. This status establishes software behavior, not statistical evidence of stronger strategies.
 
-It was recomputed from current implementation bytes after the benchmark and matched the stored fingerprint.
+## Evolution Algorithm
 
-## Simulation throughput
+Local deterministic `(1 + λ)` selection, λ bounded 1–4. Both roots have identical control-base parameter state and independent A/B lineages. Six residual weights use existing authorized scoring decompositions: points, resource, tempo, defense, synergy and risk. One feature per candidate changes by an explicit bounded step; weights remain [-2000,2000]. Mutation seeds derive from scientific experiment identity, evolution seed, lineage, generation and mutation index. Game and policy RNG remain separate.
 
-Final benchmark: Advanced Core, score-rush vs control, base seed 1337, mirrored seating, four Node workers, 2,000 games / 1,000 seed pairs.
+Candidates and parent play frozen **TRAINING** seeds against named opponents. Mean paired training score selects the source; ties prefer parent then mutation index. Any incomplete, aborted or unresolved selection evidence disqualifies that candidate. Retaining parent creates an immutable unchanged child generation. Selection commits before held-out **EVALUATION**, whose results never select or mutate. Baseline, parent and strongest prior selected ancestor are compared on the same frozen matchup vector for descriptive regressions. All parents and candidates remain available.
 
-| Measurement | Result |
-| --- | ---: |
-| Attempted / clean games | 2,000 / 2,000 |
-| Aborted / unresolved games | 0 / 0 |
-| Retained replays verified / failed | 12 / 0 |
-| Series elapsed time | 310.93 seconds |
-| Measured throughput | 6.43 games/second |
-| Mean individual game runtime | 619.49 milliseconds |
-| Mean policy decisions | 34.24 per game |
-| Mean full turns / mini-turns | 12.14 / 15.35 |
-| Score-rush / control wins | 1,754 / 246 |
-| First-player win share | 46.4% |
-| Mean / median A-minus-B score margin | 16.728 / 21 |
-| Paired score / conservative 95% bounds | 87.7% / 83.4%–92.0% |
+## Determinism Evidence
 
-This was measured while other validation processes were running. It is not a maximum-throughput estimate. Series timing includes engine/metrics and worker coordination, but ends before retained-replay verification and report writing. Individual game runtime is accumulated across simultaneous workers and is not the same as series wall time. The outcome describes this frozen opponent and seed suite; no improvement or general strength claim follows from it.
+Focused tests cover exact seed/action/state reproduction, weighted-policy Node/browser trajectories, independent RNG, bounded mutation, frozen evaluation, serialization, ancestry, scientific cloning, and diagnostic rejection. The final registered suite includes 37 Evolution tests, all passing with zero skips. Weighted Node/browser command trajectories agree. A browser adaptive artifact was reproduced headlessly in Node with identical checkpoint/generation/evaluation/ancestry semantics; proof is `reports/local/evolution-cross-runtime.json`.
 
-Machine-readable evidence: local `reports/local/evolution-benchmark-final.json` (4,987,250 bytes), including the complete run artifact. A separate browser run completed 100/100 games after pause/reload/resume, with zero aborted games and preserved pre-pause records.
+## Worker-Count Reproducibility
 
-## Test results
+Real two-generation focused lineages reproduced exactly with one and four workers, including checkpoint IDs, generation IDs, evaluation identities and ancestry. Re-running a completed project appended no duplicate generations. Interrupted selection history resumed correctly. The full named five-opponent demonstration reproduces exactly with workers 1 and 4: 220 games and 4,093 policy actions per execution, identical checkpoint IDs, generation IDs, evaluation IDs and ancestry. Semantic hash: `b09ddd697221205d9f14fdfccebb499a62580017aec6439d7beb2334d931f828`. Proof: `reports/local/evolution-worker-count-proof.json`. The four-worker case includes four concurrent game workers on four-game held-out matchups; two-game training matchups use two workers.
 
-| Check | Status | Evidence |
-| --- | --- | --- |
-| Full registered test suite | PASS | 5,256 tests; 5,242 passed, 14 skipped, zero failed; 95 suites; 338.95 seconds |
-| Evolution prototype + foundation cases | PASS | All 38 cases passed in the full run; zero lab skips |
-| Routing / browser graph / architecture / test registration regressions | PASS | 75 tests; zero skipped or failed |
-| Actual Chrome browser scenarios | PASS | 8/8; Chrome 154.0.8037.93; zero page errors |
-| Build | PASS | Browser bundle and engine runtime generated successfully |
-| Typecheck | PASS | Existing package scope and React client scope |
-| Lint | PASS | Zero errors; 422 repository warnings remain |
-| Final 2,000-game benchmark / retained replay verification | PASS | 2,000 clean; 12 verified; matching current fingerprint |
-| Diff whitespace validation | PASS | `git diff --check` |
-| Remote deployment / release certification | NOT_RUN | Outside this developer milestone |
+## Browser Validation
 
-Skipped tests are not passes. The detailed full-suite log records the skip context, including an unavailable legacy 4.1.0 vendor replay corpus. This milestone does not claim those paths were exercised. Existing typecheck scopes do not cover every JavaScript module; behavioral integration tests validate the new portable lab modules.
+Extended Chrome harness exercises experiment creation/cloning, five-opponent frozen evaluation, comparison, import/export, persistence/reload, adaptive stop/resume, generation advancement and historical checkpoint selection. Existing pause/reload/resume, stale worker rejection, replay verification, mobile/quota behavior and ordinary human-vs-AI startup remain covered. Final Chrome validation: 11/11 scenarios, zero failures/page errors. It additionally verifies saved training history/summary labels and actual historical generation display, stale adaptive callbacks, mobile layout after training, and an actual IndexedDB v1-to-v2 migration preserving original schema-v1 checkpoint IDs. Evidence: `reports/local/evolution-browser/report.json`.
 
-Browser scenarios exercise configuration rejection, real workers, pause/save/reload/resume, replay verification/stepping/bookmarks, artifact round trip/tamper rejection, independent frozen evaluation, stop/stale callback/route cleanup, mobile overflow/quota failure, and ordinary human-versus-AI match startup. Browser verification tests are executed as a separate harness, not inferred from source-string assertions.
+## Benchmark Results
 
-Local evidence is retained in:
+Final implementation fingerprint: `82c311de78ed5109e47a874be39f259fdae6fa21896c7a1df29251bb97db8849`.
 
-- `reports/local/evolution-full-tests-final.log`
-- `reports/local/evolution-routing-tests.log`
-- `reports/local/evolution-build.log`
-- `reports/local/evolution-lint.log`
-- `reports/local/evolution-typecheck.log`
-- `reports/local/evolution-benchmark-final.json` and `.log`
-- `reports/local/evolution-browser/report.json`, exported test artifacts, desktop/mobile screenshots and `.log`
+| Demonstration | Games | Actions | Wall time | Games/sec | Replays verified | Verification errors |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Two generations, workers 1 | 220 | 4,093 | 340.509 s | 0.6461 | 212 | 0 |
+| Two generations, workers 4 | 220 | 4,093 | 301.223 s | 0.7304 | 212 | 0 |
+| Default-seed divergence + companion evidence, workers 4 | 80 | 1,821 | 107.686 s | 0.7429 | 75 | 0 |
 
-## Known limitations
+Measured while other local validation processes were running; wall time includes persistence and extensive replay verification. The parallel case spent 170.300 s verifying retained transcripts and 0.416 s persisting research envelopes. Its 1,000-iteration microbenchmarks took 11.722 ms for checkpoint serialization, 15.926 ms for checkpoint hashing, and 23.505 ms for aggregation of a four-record sample. These are small-sample diagnostics, not scalable speed claims.
 
-- No trainer, learned state, population, lineage tree, branching, Hall of Fame, rating system, experiment hypotheses/configuration cloning, meta clustering or ruleset parameter sweep exists yet. The UI exposes supported operations only.
-- HybriX is excluded from lab admission until its state/time-sensitive paths have separate reproducibility evidence. Normal gameplay's existing AI remains available.
-- The replay viewer is a verified command/event/score inspector, not a complete visual board playback or counterfactual policy-choice explorer.
-- Only 12 full transcripts are retained; remaining games have seeds/configuration/checkpoint identities and hashes for rerunning, rather than instant full playback.
-- Import hashes establish integrity/compatibility, not authenticity. Imported result claims are visibly unverified; inspecting a retained replay verifies that trajectory, not every historical result.
-- Browser autosave is periodic; a crash can lose unsaved games. IndexedDB is origin-local and can be evicted. No automatic history pruning or checkpoint deletion interface is implemented.
-- Confidence bounds assume independent seed-pair sampling and describe a fixed catalog cautiously. Removing failed pairs can bias comparisons; failure counts remain explicit.
-- Failure diagnostics for engine throws or worker loss cannot recover an unavailable in-flight raw state. Completed command transcripts are retained when returned by the engine; infrastructure failures preserve the partial run and its configuration.
-- There are no CPU-utilization presets, rate caps or million-game retention facilities. Four workers and 10,000 games are deliberate initial limits.
-- Performance and determinism evidence is local to the tested environment. Cross-platform/million-game guarantees and remote hosting are not established.
+Both two-generation lineages converged to equal final residual weights (`resource=-1000`, `defense=-1000`, other residuals zero). Independent mutation does not guarantee divergent selected policies.
 
-## Storage characteristics
+An additional default-seed demonstration (game seed 1337, evolution seed 31091, one generation, one candidate, step 1000, one frozen seed pair/opponent) did diverge: A1 selected `resource=-1000`; B1 retained baseline state. Against the same frozen control pair, A1 draw-family usage was 12.35% of 81 candidate decisions; B1 was 21.74% of 115 candidate decisions. Mean arena full turns were 32 versus 43. Both scored 50% against control and had the same entire paired-score vector: random 50%, score-rush 0%, control 50%, tempo 0%, value 0%. All ten held-out games per checkpoint were clean. This demonstrates measurable behavior change with equal small-sample outcomes, not improvement.
 
-Every result retains stable schema, seed, seat, checkpoint IDs, terminal/error metadata, score/flow/action/event counters and state/command/result hashes. Generation-0 checkpoint payloads are immutable and implementation-bound. Browser history stores full artifact snapshots and a separate compact history index; checkpoint insertion prevents historical replacement.
+Artifacts: `reports/local/evolution-training-final-w1.report.json`, `evolution-training-final-w4.report.json`, and `evolution-divergence-evidence.report.json`. Corresponding JSON files without `.report` are portable research envelopes. CLI reports simulation throughput, actions/sec, persistence, retained replay verification, checkpoint serialization/hash and aggregation microbenchmarks. Worker startup/coordination and transcript creation are included in wall throughput, not separately isolated. Rich transcripts are bounded per run; research projects store references and selected metrics rather than duplicating every transcript. Training saves keep one ordinary transcript plus retained failures/bookmarks. Saved artifacts carry scientific TRAINING/EVALUATION purpose separately from mirrored-series admission. The headless companion `evolution-divergence-evidence.runs` directory contains 40 validated run files, all 80 slim game records and 57 retained transcripts. Its semantic result exactly matches the prior divergence demonstration. The evidence-purpose annotation was added to these locally produced files after execution without changing record/checkpoint identities; `evolution-run-evidence-proof.json` records that check.
 
-Per-run bounds are 10,000 games, 12 full replays, 12,000 commands per transcript and 40 MiB per serialized artifact/import. The 100-game browser artifact was 582,258 bytes; the 2,000-game benchmark report was 4,987,250 bytes. These are observed examples, not universal size estimates; richer interactions and longer games change transcript size.
+## Tests
 
-Save success requires IndexedDB transaction commit. Saves occur every 250 games and on pause, stop, completion and bookmarks. Quota failures leave the run in memory with visible diagnostics and working export. Exports are the portable evidence copy. Browser history is not silently pruned.
+- Registered full suite: **5,255 tests; 5,241 passed, 0 failed, 14 skipped; 95 suites**. Runtime 354.875 s. Includes all 37 Evolution tests.
+- Real Chrome harness: **11 scenarios passed, 0 failed, 0 page errors**.
+- Final route/module-graph/test-registration regressions after presentation copy edits: **30 passed, 0 failed/skipped**.
+- Completed headless resume: PASS; unchanged semantic lineage, zero games/new generations, all 40 prior run-evidence files copied and validated at the new output path.
+- Port-allocation regressions: **41 passed, 0 failed/skipped**.
+- Build: PASS. Root and client typechecks: PASS. ESLint: **0 errors, 422 existing warnings**; targeted browser modules/harness: zero errors/warnings. Diff whitespace check: PASS.
+- Skips: one unavailable legacy vendor-4.1 corpus check; thirteen service-worker tests explicitly skipped because the existing PWA kill switch is active. Skips are not passes.
+- Two early full-suite attempts exposed random occupied/reserved Windows ports. Fixed only the two affected test files to request OS-assigned ports. A further intermediate attempt raced changing source/build files; the successful full run used a fixed source tree/build. Final copy/style edits were followed by separate route and browser checks. Subsequent artifact retention/purpose-labeling changes were followed by all 37 focused Evolution tests, the 11 real-browser scenarios, lint and both typechecks.
+- Evidence: `reports/local/evolution-v2-full-tests-final.log`, `evolution-port-allocation-tests.log`, `evolution-v2-routing-final.log`, `evolution-v2-build-final.log`, `evolution-v2-lint-final.log`, `evolution-v2-typecheck-final.log`, and `evolution-browser/report.json`.
 
-## Performance bottlenecks
+Local PASS does not establish remote CI/deployment/release approval.
 
-The existing engine's immutable transitions and canonical hashing, Node rank/telemetry extraction, command retention and result hashing dominate per-game work. Certified checkpoints for all games were unnecessary overhead, so bulk Node runs use the existing runner's optional raw command transcript mode and certify retained evidence on demand. The default certified replay behavior remains unchanged.
+## Known Limitations
 
-Workers transfer slim result metadata and only retained/failing transcripts. Dashboard charts are bounded to the prototype's sample limit. Autosave serializes the current artifact periodically and can become costly near the 10,000-game cap. Future work should measure engine, hashing, telemetry, worker transfer and persistence costs independently before optimizing. No simplified alternative game engine was created.
+- Experimental heuristic search does not establish general strength, convergence or a discovered metagame. Tiny demonstration packs are deliberately underpowered.
+- Fixed held-out catalogs can be overfit by developer iteration; selection code never consumes them, but fresh preregistered evaluation is needed for stronger claims.
+- Training resumes at suite/generation boundaries; a stopped partial suite is preserved and retried. Individual ordinary Lab runs retain game-level resume.
+- Storage is local to browser origin. Exports provide portability; checksums do not authenticate imported claims.
+- Rule/implementation fingerprints intentionally reject incompatible execution. Read-only historical inspection preserves attribution, not executable migration.
+- No automatic checkpoint deletion. The v1 project budget limits generation/checkpoint/evaluation counts and total artifact bytes; long-run retention policy remains future work.
+- Candidate family/mechanic rates and shared arena lengths are measured. Rank/suit usage and direct resource expenditure remain unavailable; no inferred archetype labels.
+- No external AI, neural policies, cloud training, giant sweeps, TrueSkill or elaborate lineage graphics.
 
-## Recommended learning algorithm V1
+## Technical Debt
 
-Once the remaining experiment/evaluation tooling is stable, use explicit weighted-heuristic mutation and selection. It fits the existing policy scoring architecture, allows understandable parameter checkpoints and keeps legal action selection behind the authority boundary. Seed mutation separately from game randomness, preserve historical contenders, and select using frozen mirrored benchmark suites rather than current self-play win rate.
+Repository-bound implementation identity/build transport; root checkJs does not cover every new JS module (behavioral tests and ESLint do). Full performance decomposition, richer per-card telemetry, immutable external evidence signing and independent seed-pack preregistration remain open.
 
-This is a recommendation, not implemented behavior. The current checkpoint schema rejects learned state. Introducing parameter state requires an explicit new schema/adapter, reproducibility tests, frozen evaluator invariants and historical benchmark admission.
+## Files Changed
 
-## Recommended next phase
+Complete inventory appears below; removed files are marked explicitly. Changes cover Evolution, existing runner/policy integration, operational core orchestration and its generated JS/map, build/test registration, documentation, and the two network test fixtures repaired after observed validation failures.
 
-Add reproducible experiment manifests (name, hypothesis, starting checkpoints, seed catalog, configuration and notes), cloning with explicit changed fields, named multi-opponent evaluation suites and checkpoint comparison. Then broaden seed/adversarial/long-run admission and storage retention before learning. Keep adaptive updates gated until those phases have their own acceptance evidence.
+## Recommended Next Milestone
 
-Operating guide: [EVOLUTION_LAB.md](EVOLUTION_LAB.md). Initial forensics and implementation findings: [EVOLUTION_LAB_AUDIT.md](EVOLUTION_LAB_AUDIT.md).
+Preregister larger fresh training/validation packs, evaluate several independent evolution seeds and preserved ancestors, report uncertainty and failure rates, then measure parameter sensitivity and behavioral divergence before adding larger populations or strategy clustering.
+
+## Complete File Inventory
+
+- `apps/lab-web/src/autonomy-runtime.js`
+- `apps/lab-web/src/css/evolution-foundation.css`
+- `apps/lab-web/src/css/evolution.css`
+- `apps/lab-web/src/evolution/evolution-browser-runner.mjs`
+- `apps/lab-web/src/evolution/evolution-core.mjs` — removed Prototype Zero module
+- `apps/lab-web/src/evolution/evolution-presentation.mjs`
+- `apps/lab-web/src/evolution/evolution-research-ui.js`
+- `apps/lab-web/src/evolution/evolution-store.mjs`
+- `apps/lab-web/src/evolution/evolution-training-ui.js`
+- `apps/lab-web/src/router.js`
+- `apps/lab-web/src/worker.js`
+- `apps/lab-web/src/workspaces/evolution-dashboard.js`
+- `apps/lab-web/src/workspaces/evolution.js`
+- `docs/EVOLUTION_ARCHITECTURE_RECONCILIATION.md`
+- `docs/EVOLUTION_FOUNDATION_GATE.md`
+- `docs/EVOLUTION_LAB.md`
+- `docs/EVOLUTION_LAB_AUDIT.md`
+- `docs/EVOLUTION_LAB_REPORT.md`
+- `package.json`
+- `packages/policies/src/weighted-heuristic.mjs`
+- `packages/simulation-runtime/src/evolution-domain.mjs`
+- `packages/simulation-runtime/src/evolution-evaluation.mjs`
+- `packages/simulation-runtime/src/evolution-lab.mjs`
+- `packages/simulation-runtime/src/evolution-research.mjs`
+- `packages/simulation-runtime/src/evolution-retention.mjs`
+- `packages/simulation-runtime/src/evolution-training.mjs`
+- `packages/simulation-runtime/src/runtime.mjs`
+- `scripts/build.mjs`
+- `scripts/ci.mjs`
+- `scripts/evolution-browser.mjs`
+- `scripts/evolution-cross-runtime-check.mjs`
+- `scripts/evolution-identity.mjs`
+- `scripts/evolution-train.mjs`
+- `test/evolution-foundation.test.mjs`
+- `test/evolution-lab.test.mjs`
+- `test/evolution-research.test.mjs`
+- `test/evolution-training.test.mjs`
+- `test/match-history.test.mjs`
+- `test/network-truth-closure.test.mjs`
+- `upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/dist/src/core-autonomy.js`
+- `upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/dist/src/core-autonomy.js.map`
+- `upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/src/core-autonomy.ts`

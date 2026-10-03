@@ -17,10 +17,6 @@ const require = createRequire(import.meta.url);
 
 // ── Helpers ──
 
-function randomPort() {
-  // Use full ephemeral port range (49152-65535) to minimize conflicts under concurrency
-  return 49152 + Math.floor(Math.random() * 16383);
-}
 
 function waitForMessage(ws, timeout = 5000) {
   return new Promise((resolve, reject) => {
@@ -100,8 +96,8 @@ test('P0.1: spectator view hides both players\' hands', async () => {
 
 test('P0.1: spectator action submission is rejected', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const port = randomPort();
-  const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const port = server.httpServer.address().port; // OS allocation avoids occupied/reserved ports.
 
   try {
     // Create a match (casual mode — private matches reject spectators per IRX-M19)
@@ -336,8 +332,8 @@ test('P1.10: unstarted lobby expires by createdAt', async () => {
 // P1.11: Protocol state machine
 test('P1.11: leave match sends LEFT_MATCH not ERROR with code OK', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const port = randomPort();
-  const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const port = server.httpServer.address().port; // OS allocation avoids occupied/reserved ports.
 
   try {
     const ws1 = await connectWs(port);
@@ -359,8 +355,8 @@ test('P1.11: leave match sends LEFT_MATCH not ERROR with code OK', async () => {
 
 test('P1.11: conflicting create/join is rejected', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const port = randomPort();
-  const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const port = server.httpServer.address().port; // OS allocation avoids occupied/reserved ports.
 
   try {
     const ws = await connectWs(port);
@@ -383,8 +379,8 @@ test('P1.11: conflicting create/join is rejected', async () => {
 // P1.12: History and spectator discovery
 test('P1.12: public match history is disabled by default', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const port = randomPort();
-  const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const port = server.httpServer.address().port; // OS allocation avoids occupied/reserved ports.
 
   try {
     const ws = await connectWs(port);
@@ -400,8 +396,8 @@ test('P1.12: public match history is disabled by default', async () => {
 
 test('P1.12: public matchmaking is disabled by default', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const port = randomPort();
-  const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const port = server.httpServer.address().port; // OS allocation avoids occupied/reserved ports.
 
   try {
     const ws = await connectWs(port);
@@ -417,8 +413,8 @@ test('P1.12: public matchmaking is disabled by default', async () => {
 // P1.8: Heartbeat pong tracking
 test('P1.8: heartbeat tracks pong for liveness', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const port = randomPort();
-  const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const port = server.httpServer.address().port; // OS allocation avoids occupied/reserved ports.
 
   try {
     const ws = await connectWs(port);
@@ -486,8 +482,8 @@ test('P0.2: strictPolicyView produces own/opponents structure for network DTO', 
 // P0.6: Structured error format
 test('P0.6: error messages include code, message, and requestId', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const port = randomPort();
-  const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const port = server.httpServer.address().port; // OS allocation avoids occupied/reserved ports.
 
   try {
     const ws = await connectWs(port);
@@ -507,8 +503,8 @@ test('P0.6: error messages include code, message, and requestId', async () => {
 // P1.11: x-forwarded-for is ignored by default
 test('P1.11: x-forwarded-for is ignored without trusted proxy config', async () => {
   const { startServer } = await import('../apps/match-server/src/server.mjs');
-  const port = randomPort();
-  const server = await startServer({ port, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const server = await startServer({ port: 0, host: '127.0.0.1', dbPath: ':memory:', persistent: false });
+  const port = server.httpServer.address().port; // OS allocation avoids occupied/reserved ports.
 
   try {
     // Connect with a spoofed x-forwarded-for header

@@ -405,7 +405,11 @@ export function createCoreMatchState(setup: CoreMatchSetup): EngineState {
 
 export function advanceCoreToDecision(input: Readonly<EngineState>, maxCommands = 16): CoreOrchestrationResult {
   const engine = new IntrilexEngine(); let state = canonicalClone(input); const events: EngineEvent[] = []; const executedCommands: EngineCommand[] = [];
-  for (let index = 0; index < maxCommands; index += 1) {
+  // Execution slices are operational, never rule termination. Keep global
+  // command indices stable across slices; a separate guard bounds runaway work.
+  const sliceSize = Math.max(1, Math.min(256, Math.floor(maxCommands) || 16));
+  for (let sliceStart = 0; sliceStart < 256; sliceStart += sliceSize) {
+  for (let index = sliceStart; index < Math.min(sliceStart + sliceSize, 256); index += 1) {
     const core = readCoreRuntime(state);
     if (!core || ![CORE_FOUNDATION_AUTHORITY_PROFILE.id, CORE_EFFECT_DECLARATION_PROFILE.id, CORE_RESPONSE_AUTHORITY_PROFILE.id, CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id, CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId as any)) return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_PROFILE_UNAVAILABLE" };
     if (state.winner !== null || core.terminalReason) return { status: "TERMINAL", state, events, executedCommands, reasonCode: core.terminalReason ?? "NORMAL_VICTORY" };
@@ -445,6 +449,7 @@ export function advanceCoreToDecision(input: Readonly<EngineState>, maxCommands 
       state = result.state; events.push(...result.events); executedCommands.push(cmd); continue;
     }
     return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_PHASE_UNSUPPORTED:${state.phase}` };
+  }
   }
   return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_ORCHESTRATION_COMMAND_LIMIT" };
 }

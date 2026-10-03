@@ -1,3 +1,4 @@
+import { chooseWeightedAction, WEIGHTED_POLICY_ID } from '../../policies/src/weighted-heuristic.mjs';
 import {
   DEFAULT_SIMULATION_PROFILE,
   ENGINE_VERSION,
@@ -373,7 +374,7 @@ export function runPolicyMatch(config) {
     const postFrameScores = captureFacts ? pointsByPlayer(state, seatOrder) : null;
     const actorId = frame.decisionActorId;
     const seatIndex = seatOrder.indexOf(actorId);
-    const policy = POLICY_BY_ID[policyIds[seatIndex]];
+    const policy = policyIds[seatIndex]===WEIGHTED_POLICY_ID && config.policyStates?.[seatIndex] ? {policyId:WEIGHTED_POLICY_ID,version:'1.0.0',policyHash:hashCanonical(config.policyStates[seatIndex]),traits:{},choose:context=>({actionId:chooseWeightedAction(config.policyStates[seatIndex],context)?.actionId,metadata:{reasonCode:'WEIGHTED_HEURISTIC_V1',candidateScores:[]}})} : POLICY_BY_ID[policyIds[seatIndex]];
     if (!policy) { terminationReason = 'POLICY_ERROR'; errorCode = `UNKNOWN_POLICY:${policyIds[seatIndex]}`; break; }
     const authorizedView = strictPolicyView(state, actorId);
     const rng = policyRngByPlayer[actorId];

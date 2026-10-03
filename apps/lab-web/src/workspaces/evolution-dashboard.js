@@ -1,7 +1,10 @@
+import '../evolution/evolution-training-ui.js';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel} from '../evolution/evolution-research-ui.js';
 import { app, esc, fmt } from '../state.js';
 import { lineChart } from '../chart-toolkit.js';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics, pushChartSample } from '../evolution/evolution-core.mjs';
-import { createLabRun, labConfig, gamePlan, FROZEN_POLICIES, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact } from '../evolution/evolution-domain.mjs';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs';
+import { createLabRun, labConfig, gamePlan, FROZEN_POLICIES, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs';
 import { EvolutionSession } from '../evolution/evolution-session.mjs';
 import { LAB_IDENTITY } from '../evolution/identity.mjs';
 import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs';
@@ -9,20 +12,21 @@ import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs
 const store = new EvolutionStore(LAB_IDENTITY);
 const view = { config: { botA:'score-rush', botB:'control', gameCount:1000, seed:1337, workerCount:2, mirrorSeats:true, profileId:'core-advanced-authority' },
   session:null, workers:[], timers:new Map(), tick:null, start:0, elapsed:0, agg:createSeriesAggregator(), samples:[],
-  history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve() };
+  archive:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve() };
 const run = () => view.session?.run;
+const researchMode = () => run()?.researchPurpose ?? run()?.kind ?? 'SELF_PLAY';
 const status = () => run()?.status ?? 'IDLE';
 const active = () => ['RUNNING','PAUSED'].includes(status());
 const elapsed = () => view.elapsed+(status() === 'RUNNING' ? performance.now()-view.start : 0);
 const pct = n => Number.isFinite(n) ? `${(n*100).toFixed(1)}%` : '—';
 const num = n => Number.isFinite(n) ? n.toFixed(2) : '—';
 const name = id => id.replaceAll('-',' ').replace(/\b\w/g,c => c.toUpperCase());
-const options = selected => FROZEN_POLICIES.map(id => `<option value="${id}" ${id === selected ? 'selected' : ''}>${name(id)} · frozen</option>`).join('');
+const options = selected => (selected === 'weighted-heuristic-v1' ? '<option value="weighted-heuristic-v1" selected disabled>Weighted heuristic · historical checkpoint</option>' : '') + FROZEN_POLICIES.map(id => `<option value="${id}" ${id === selected ? 'selected' : ''}>${name(id)} · frozen</option>`).join('');
 const text = (id,value) => { const el=document.getElementById(id); if (el) el.textContent=value; };
 
 export function renderEvolutionLab() {
   view.mounted=true;
-  const cfg=run()?.config ?? view.config, disabled=active() ? 'disabled' : '', m=seriesMetrics(view.agg,elapsed());
+  const cfg=run()?.config ?? view.config, historical=run()?.checkpoints.some(c => c.schemaVersion === 2), disabled=active() || historical ? 'disabled' : '', m=seriesMetrics(view.agg,elapsed());
   app.innerHTML=`<section class="panel evo-panel" data-testid="evolution-lab">
     <div class="panel-header"><div><h2>Evolution Lab</h2><p>Reproducible games, frozen checkpoints, and a separate evaluation arena.</p></div>
       <div class="toolbar"><span id="evo-state" class="evo-state evo-state-${status().toLowerCase()}" role="status" data-testid="evo-state">${status()}</span>
@@ -31,7 +35,8 @@ export function renderEvolutionLab() {
       <button id="evo-resume" class="secondary-button" ${status() === 'PAUSED' ? '' : 'disabled'}>Resume</button>
       <button id="evo-stop" class="secondary-button" data-testid="evo-stop" ${active() ? '' : 'disabled'}>Stop</button>
       <button id="evo-reset" class="ghost-button" data-testid="evo-reset" ${disabled}>Reset</button></div></div>
-    <div class="panel-body"><div class="notice">Adaptive learning is NOT ENABLED. The shipped random/legal and heuristic policies remain frozen. All rule execution uses the authoritative engine. HybriX admission awaits separate reproducibility checks.</div>
+    <div class="panel-body"><div class="notice">Experimental local heuristic evolution is available in Research experiments. The shipped baseline policies remain frozen. All rule execution uses the authoritative engine. HybriX admission awaits separate reproducibility checks.</div>
+    ${historical ? '<p class="notice">Historical research series. Inspect its immutable evidence below; use Research to evaluate a selected checkpoint, or Reset to start a frozen-policy series.</p>' : ''}
     <p id="evo-error" class="danger" role="alert">${esc(view.error)}</p>
     ${run()?.evidenceOrigin === 'IMPORTED_UNVERIFIED' ? '<div class="notice">Imported evidence: checksums and compatibility passed. Outcome claims have not been independently reproduced. Replay inspection verifies one retained command sequence at a time.</div>' : ''}
     <div class="evo-config" data-testid="evo-config"><div class="evo-vs-grid">
@@ -43,28 +48,30 @@ export function renderEvolutionLab() {
       <label class="field">Rules profile<select id="evo-profile" ${disabled}>${[['core-advanced-authority','Advanced Core'],['core-unrestricted-authority','Unrestricted Core'],['first-contact-trigger-closure','Complete First Contact']].map(([id,label]) => `<option value="${id}" ${cfg.profileId === id ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
       <label class="field evo-mirror">Paired seats · same seed AB/BA<input id="evo-mirror" type="checkbox" ${cfg.mirrorSeats ? 'checked' : ''} ${disabled}></label></div></div>
     <div class="evo-arena" data-testid="evo-arena">${bot('A',cfg.botA,m.winsA,m.winPctA)}<div class="evo-arena-mid">
-      <strong>${run()?.kind === 'EVALUATION' ? 'FROZEN EVALUATION' : 'SELF-PLAY RECORD'}</strong><p id="evo-progress-count">${fmt(m.gamesCompleted)} / ${fmt(cfg.gameCount)}</p>
+      <strong>${researchMode() === 'TRAINING' ? 'TRAINING SELECTION RECORD' : researchMode() === 'EVALUATION' ? 'FROZEN EVALUATION' : 'SELF-PLAY RECORD'}</strong><p id="evo-progress-count">${fmt(m.gamesCompleted)} / ${fmt(cfg.gameCount)}</p>
       <div class="evo-progress-track"><div class="evo-progress-fill" id="evo-progress-fill" style="width:${100*m.gamesCompleted/cfg.gameCount}%"></div></div>
       <p><span id="evo-elapsed">${num(elapsed()/1000)}</span>s · <span id="evo-gps">${num(m.gamesPerSec)}</span> games/sec</p></div>${bot('B',cfg.botB,m.winsB,m.winPctB)}</div>
     <div class="evo-metrics" data-testid="evo-metrics">${Object.entries(metricValues(m)).map(([key,value]) => `<div class="metric-card"><small>${key}</small><div class="metric-value" data-evo-metric="${key}">${value}</div></div>`).join('')}</div>
-    <div class="evo-chart-wrap"><h3>${run()?.kind === 'EVALUATION' ? 'Evaluation' : 'Self-play'} cumulative win record</h3><div id="evo-chart" data-testid="evo-chart">${chart()}</div><p>Arrival-order observations; final evidence is sorted by game ordinal. Aborted games are excluded.</p></div>
+    <div class="evo-chart-wrap"><h3>${researchMode() === 'TRAINING' ? 'Training' : researchMode() === 'EVALUATION' ? 'Evaluation' : 'Self-play'} cumulative win record</h3><div id="evo-chart" data-testid="evo-chart">${chart()}</div><p>Arrival-order observations; final evidence is sorted by game ordinal. Aborted games are excluded.</p></div>
     <section class="evo-section" data-testid="evo-benchmarks"><h3>Frozen benchmark arena</h3><p>Evaluate either selected bot against a shipped reference. This is measured performance for a reproducible seed suite, not a universal rating or an improvement claim.</p>
       <div class="toolbar"><label>Reference<select id="evo-baseline" ${disabled}>${options('random-legal')}</select></label><label>Evaluation games (even)<input id="evo-eval-games" type="number" min="2" max="10000" step="2" value="100" ${disabled}></label>
       <button id="evo-evaluate-a" class="secondary-button" ${disabled}>Evaluate A</button><button id="evo-evaluate-b" class="secondary-button" ${disabled}>Evaluate B</button></div>
       <div id="evo-evaluation-results">${details()}</div></section>
-    <section class="evo-section" data-testid="evo-checkpoints"><h3>Immutable checkpoint history</h3><p>Generation 0 · frozen implementation · independent A/B lineage IDs.</p>
-      ${run() ? run().checkpoints.map(c => `<div class="evo-checkpoint"><b>${esc(c.policyId)}</b> · v${esc(c.policyVersion)}<br><code>${esc(c.checkpointId)}</code><br><small>${esc(c.lineageId)} · protected baseline · ${esc(c.createdAt)}</small></div>`).join('') : '<p>Starting checkpoints are created with a run.</p>'}</section>
+    <section class="evo-section" data-testid="evo-checkpoints"><h3>Immutable checkpoint history</h3><p>Original checkpoint identities and generation state for this execution.</p>
+      ${run() ? run().checkpoints.map(c => `<div class="evo-checkpoint"><b>${esc(c.policyId)}</b> · v${esc(c.policyVersion)}<br><code>${esc(c.checkpointId)}</code><br><small>${esc(c.lineageId)} · generation ${c.generation} · ${c.generation === 0 ? 'baseline' : 'descendant'}${c.protected ? ' · protected' : ''} · ${esc(c.createdAt)}</small></div>`).join('') : '<p>Starting checkpoints are created with a run.</p>'}</section>
     <section class="evo-section" data-testid="evo-replays"><h3>Replay forensics</h3><p>Up to ${LAB_LIMITS.replays} full command sequences retained per run. Aborted games can replace unbookmarked normal samples. All slim records retain seed, checkpoint and state/action hashes; other games can be rerun by ordinal and configuration.</p>
       <div id="evo-replay-list">${replayList()}</div><div id="evo-inspection" aria-live="polite">${inspectionHtml()}</div></section>
     <section class="evo-section"><h3>Developer artifacts</h3><p>IndexedDB on this browser origin. Saves occur every 250 games, and on pause, stop, completion or bookmarks. Export for portable evidence.</p>
       <div class="toolbar"><button id="evo-export" class="secondary-button" ${run() ? '' : 'disabled'}>Export artifact</button>
-      <label class="secondary-button">Import artifact<input id="evo-import" type="file" accept="application/json,.json" ${disabled}></label><button id="evo-history-refresh" class="ghost-button">Refresh history</button></div>
+      <label class="secondary-button">Inspect historical artifact<input id="evo-archive-import" type="file" accept="application/json,.json"></label><label class="secondary-button">Import artifact<input id="evo-import" type="file" accept="application/json,.json" ${disabled}></label><button id="evo-history-refresh" class="ghost-button">Refresh history</button></div>
+      ${view.archive ? `<details open><summary>Read-only historical implementation</summary><p>Identity ${esc(view.archive.identity.fingerprint)}. Original checkpoint IDs and artifact bytes are preserved. This implementation is not admitted for current execution; imported outcomes remain unverified.</p><pre>${esc(JSON.stringify(view.archive.checkpoints,null,2))}</pre></details>` : ''}
       <p id="evo-storage" role="status">${esc(view.storageError || storageSummary())}</p><div id="evo-history">${historyHtml()}</div>
       <p>Rules ${LAB_IDENTITY.rulesVersion} · engine ${LAB_IDENTITY.engineVersion}<br><code class="evo-hash">${LAB_IDENTITY.fingerprint}</code></p></section>
-    <div class="evo-future" data-testid="evo-future"><span>Coming later:</span>${['Evolution','Lineages','Hall of Fame','Balance Lab'].map(n => `<span class="evo-future-chip">${n}</span>`).join('')}</div></div></section>`;
-  bind(); refreshHistory();
+    ${researchHtml()}
+    <div class="evo-future" data-testid="evo-future"><span>Coming later:</span>${['Strategy clustering','Hall of Fame','Balance Lab'].map(n => `<span class="evo-future-chip">${n}</span>`).join('')}</div></div></section>`;
+  bind(); refreshHistory(); mountResearchPanel(readConfig);
 }
-function bot(seat,policy,wins,rate) { return `<div class="evo-bot"><h3>BOT ${seat}</h3><b>${name(policy)}</b><p>Generation 0 · frozen policy</p><p><span id="evo-${seat}-wins">${fmt(wins)}</span> wins · <span id="evo-${seat}-rate">${pct(rate)}</span></p></div>`; }
+function bot(seat,policy,wins,rate) { const cp=run()?.checkpoints[seat === 'A' ? 0 : 1]; return `<div class="evo-bot"><h3>BOT ${seat}</h3><b>${name(policy)}</b><p>Generation ${cp?.generation ?? 0} · ${cp?.schemaVersion === 2 ? 'immutable weighted checkpoint' : 'frozen policy'}</p><p><span id="evo-${seat}-wins">${fmt(wins)}</span> wins · <span id="evo-${seat}-rate">${pct(rate)}</span></p></div>`; }
 function metricValues(m) { return {'Completed':fmt(m.gamesClean),'Draws':fmt(m.draws),'Aborted / errors':fmt(m.aborted),'Avg score diff':num(m.avgScoreDiff),'Avg turns':num(m.avgTurns),'Avg decisions':num(m.avgDecisions),'First-player win':pct(m.seat1WinPct),'Second-player win':pct(m.seat2WinPct)}; }
 function chart() {
   if (!view.samples.length) return '<p>Run a series to collect observations.</p>';
@@ -73,7 +80,7 @@ function chart() {
 function details() {
   if (!run()?.records.length) return '<p>No results yet.</p>';
   const m=summarizeRecords(run().records), ci=m.pairedScoreInterval95;
-  return `<p><strong>${run().kind === 'EVALUATION' ? 'EVALUATED PERFORMANCE' : 'SELF-PLAY PERFORMANCE'}</strong> · ${m.clean} clean / ${m.games} attempted · ${m.aborted} aborted.</p>
+  return `<p><strong>${researchMode() === 'TRAINING' ? 'TRAINING SELECTION PERFORMANCE' : researchMode() === 'EVALUATION' ? 'EVALUATED PERFORMANCE' : 'SELF-PLAY PERFORMANCE'}</strong> · ${m.clean} clean / ${m.games} attempted · ${m.aborted} aborted.</p>
     <p>${m.pairCount} complete seed pairs · paired score ${pct(m.pairedScore)}${ci ? ` · conservative 95% bounds ${pct(ci[0])}–${pct(ci[1])}` : ''} · ${m.uncertainty}.</p>
     <p>Mean score margin ${num(m.meanScoreDifference)} · median ${num(m.medianScoreDifference)} · variance ${num(m.scoreVariance)} · mean mini-turns ${num(m.meanMiniTurns)}.</p>
     <p>Draws score ½. Bounds use complete seed-pair averages and assume independent sampled seeds. A fixed seed catalog describes that catalog.</p>
@@ -110,6 +117,7 @@ function bind() {
   click('evo-reset',() => { if (!active()) { release(); view.session=null; view.agg=createSeriesAggregator(); view.samples=[]; view.elapsed=0; view.error=''; view.inspection=null; renderEvolutionLab(); } });
   click('evo-history-refresh',refreshHistory);
   click('evo-export',() => { if (!run()) return; const copy=structuredClone(run()); copy.elapsedMs=elapsed(); const url=URL.createObjectURL(new Blob([JSON.stringify(artifactEnvelope(copy))],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download=`${copy.runId}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000); });
+  document.getElementById('evo-archive-import')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>LAB_LIMITS.importBytes)throw new Error('IMPORT_TOO_LARGE');view.archive=inspectHistoricalArtifact(JSON.parse(await file.text()));renderEvolutionLab();}catch(error){view.error=error.message;renderEvolutionLab();}});
   document.getElementById('evo-import')?.addEventListener('change',async e => {
     if (active()) return; try { const file=e.target.files?.[0]; if (!file) return; if (file.size > LAB_LIMITS.importBytes) throw new Error('IMPORT_TOO_LARGE'); loadRun(parseLabImport(await file.text(),LAB_IDENTITY)); await persist(); }
     catch(error) { view.error=`Import rejected: ${error.message}`; renderEvolutionLab(); }
@@ -179,4 +187,4 @@ function inspectReplay(replayId) {
   worker.onmessage=e => { if (e.data.type === 'evolution-inspection') done(e.data.ok ? e.data : {error:e.data.error}); }; worker.onerror=e => done({error:e.message || 'REPLAY_WORKER_FAILED'}); view.inspectionTimer=setTimeout(() => done({error:'REPLAY_VERIFICATION_TIMEOUT'}),30000);
   worker.postMessage({type:'inspect-evolution-replay',replayId,artifact:artifactEnvelope(run())});
 }
-export function cleanupEvolutionLab() { view.mounted=false; if (status() === 'RUNNING') { captureElapsed(); view.session.pause(); persist(); } release(); }
+export function cleanupEvolutionLab() { cleanupResearchPanel(); view.mounted=false; if (status() === 'RUNNING') { captureElapsed(); view.session.pause(); persist(); } release(); }
