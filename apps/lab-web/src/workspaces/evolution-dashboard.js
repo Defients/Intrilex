@@ -1,5 +1,6 @@
 import '../evolution/evolution-training-ui.js';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel} from '../evolution/evolution-research-ui.js';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js';
 import { app, esc, fmt } from '../state.js';
 import { lineChart } from '../chart-toolkit.js';
 import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs';
@@ -12,7 +13,7 @@ import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs
 const store = new EvolutionStore(LAB_IDENTITY);
 const view = { config: { botA:'score-rush', botB:'control', gameCount:1000, seed:1337, workerCount:2, mirrorSeats:true, profileId:'core-advanced-authority' },
   session:null, workers:[], timers:new Map(), tick:null, start:0, elapsed:0, agg:createSeriesAggregator(), samples:[],
-  archive:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve() };
+  archive:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), ui:createCockpitState(), cockpit:null };
 const run = () => view.session?.run;
 const researchMode = () => run()?.researchPurpose ?? run()?.kind ?? 'SELF_PLAY';
 const status = () => run()?.status ?? 'IDLE';
@@ -25,8 +26,9 @@ const options = selected => (selected === 'weighted-heuristic-v1' ? '<option val
 const text = (id,value) => { const el=document.getElementById(id); if (el) el.textContent=value; };
 
 export function renderEvolutionLab() {
+  view.cockpit?.cleanup();
   view.mounted=true;
-  const cfg=run()?.config ?? view.config, historical=run()?.checkpoints.some(c => c.schemaVersion === 2), disabled=active() || historical ? 'disabled' : '', m=seriesMetrics(view.agg,elapsed());
+  const cfg=run()?.config ?? view.config, historical=run()?.checkpoints.some(c => c.schemaVersion === 2), disabled=active() || historical || view.archive ? 'disabled' : '', m=seriesMetrics(view.agg,elapsed());
   app.innerHTML=`<section class="panel evo-panel" data-testid="evolution-lab">
     <div class="panel-header"><div><h2>Evolution Lab</h2><p>Reproducible games, frozen checkpoints, and a separate evaluation arena.</p></div>
       <div class="toolbar"><span id="evo-state" class="evo-state evo-state-${status().toLowerCase()}" role="status" data-testid="evo-state">${status()}</span>
@@ -61,15 +63,16 @@ export function renderEvolutionLab() {
       ${run() ? run().checkpoints.map(c => `<div class="evo-checkpoint"><b>${esc(c.policyId)}</b> · v${esc(c.policyVersion)}<br><code>${esc(c.checkpointId)}</code><br><small>${esc(c.lineageId)} · generation ${c.generation} · ${c.generation === 0 ? 'baseline' : 'descendant'}${c.protected ? ' · protected' : ''} · ${esc(c.createdAt)}</small></div>`).join('') : '<p>Starting checkpoints are created with a run.</p>'}</section>
     <section class="evo-section" data-testid="evo-replays"><h3>Replay forensics</h3><p>Up to ${LAB_LIMITS.replays} full command sequences retained per run. Aborted games can replace unbookmarked normal samples. All slim records retain seed, checkpoint and state/action hashes; other games can be rerun by ordinal and configuration.</p>
       <div id="evo-replay-list">${replayList()}</div><div id="evo-inspection" aria-live="polite">${inspectionHtml()}</div></section>
-    <section class="evo-section"><h3>Developer artifacts</h3><p>IndexedDB on this browser origin. Saves occur every 250 games, and on pause, stop, completion or bookmarks. Export for portable evidence.</p>
+    <section class="evo-section" data-evo-ledger><h3>Runs & artifacts</h3><p>IndexedDB on this browser origin. Saves occur every 250 games, and on pause, stop, completion or bookmarks. Export for portable evidence.</p>
       <div class="toolbar"><button id="evo-export" class="secondary-button" ${run() ? '' : 'disabled'}>Export artifact</button>
       <label class="secondary-button">Inspect historical artifact<input id="evo-archive-import" type="file" accept="application/json,.json"></label><label class="secondary-button">Import artifact<input id="evo-import" type="file" accept="application/json,.json" ${disabled}></label><button id="evo-history-refresh" class="ghost-button">Refresh history</button></div>
       ${view.archive ? `<details open><summary>Read-only historical implementation</summary><p>Identity ${esc(view.archive.identity.fingerprint)}. Original checkpoint IDs and artifact bytes are preserved. This implementation is not admitted for current execution; imported outcomes remain unverified.</p><pre>${esc(JSON.stringify(view.archive.checkpoints,null,2))}</pre></details>` : ''}
       <p id="evo-storage" role="status">${esc(view.storageError || storageSummary())}</p><div id="evo-history">${historyHtml()}</div>
       <p>Rules ${LAB_IDENTITY.rulesVersion} · engine ${LAB_IDENTITY.engineVersion}<br><code class="evo-hash">${LAB_IDENTITY.fingerprint}</code></p></section>
     ${researchHtml()}
-    <div class="evo-future" data-testid="evo-future"><span>Coming later:</span>${['Strategy clustering','Hall of Fame','Balance Lab'].map(n => `<span class="evo-future-chip">${n}</span>`).join('')}</div></div></section>`;
+    </div></section>`;
   bind(); refreshHistory(); mountResearchPanel(readConfig);
+  view.cockpit=mountCockpit(document.querySelector('[data-testid="evolution-lab"]'),{state:view.ui,research:cockpitResearch,getArena:()=>({run:run(),archive:view.archive,error:view.error,storageError:view.storageError,controlsLocked:active()||!!view.archive||!!cockpitResearch.getState().archive,renderHistory(query){view.historyQuery=query;const el=document.getElementById('evo-history');if(el)el.innerHTML=historyHtml();},closeArchive(){if(view.archive){view.archive=null;renderEvolutionLab();}}}),loadRun:async id=>{const admitted=()=>{if(active()||view.archive||cockpitResearch.getState().archive)throw new Error('Stop the current arena or leave historical inspection before loading other evidence.');};admitted();const saved=await store.load(id);admitted();loadRun(saved);}});
 }
 function bot(seat,policy,wins,rate) { const cp=run()?.checkpoints[seat === 'A' ? 0 : 1]; return `<div class="evo-bot"><h3>BOT ${seat}</h3><b>${name(policy)}</b><p>Generation ${cp?.generation ?? 0} · ${cp?.schemaVersion === 2 ? 'immutable weighted checkpoint' : 'frozen policy'}</p><p><span id="evo-${seat}-wins">${fmt(wins)}</span> wins · <span id="evo-${seat}-rate">${pct(rate)}</span></p></div>`; }
 function metricValues(m) { return {'Completed':fmt(m.gamesClean),'Draws':fmt(m.draws),'Aborted / errors':fmt(m.aborted),'Avg score diff':num(m.avgScoreDiff),'Avg turns':num(m.avgTurns),'Avg decisions':num(m.avgDecisions),'First-player win':pct(m.seat1WinPct),'Second-player win':pct(m.seat2WinPct)}; }
@@ -93,10 +96,11 @@ function replayList() { return run()?.replays.length ? run().replays.map(r => {
 function inspectionHtml() {
   const x=view.inspection;
   if (!x) return ''; if (x.error) return `<p class="danger">${esc(x.error)}</p>`; if (!x.steps) return '<p>Re-executing commands through the engine…</p>';
-  return `<p><strong>VERIFIED</strong> · seed/initial state and final hash match · ${x.steps.length-1} commands</p><div class="toolbar"><button id="evo-prev" class="ghost-button" ${view.step ? '' : 'disabled'}>Previous</button><label>Command<input id="evo-step" type="range" min="0" max="${x.steps.length-1}" value="${view.step}"></label><button id="evo-next" class="ghost-button" ${view.step === x.steps.length-1 ? 'disabled' : ''}>Next</button></div><pre>${esc(JSON.stringify(x.steps[view.step],null,2))}</pre><code class="evo-hash">${esc(x.finalStateHash)}</code>`;
+  const step=x.steps[view.step],command=typeof step.command==='string'?step.command:step.command?.type??'Unavailable';
+  return `<p><strong>VERIFIED</strong> · seed/initial state and final hash match · ${x.steps.length-1} commands</p><div class="toolbar"><button id="evo-prev" class="ghost-button" ${view.step ? '' : 'disabled'}>Previous</button><label>Command<input id="evo-step" type="range" min="0" max="${x.steps.length-1}" value="${view.step}"></label><button id="evo-next" class="ghost-button" ${view.step === x.steps.length-1 ? 'disabled' : ''}>Next</button></div><section class="evo-workbench"><h4>Command ${step.index} · ${esc(command)}</h4><p>Turn ${step.turn??'Unavailable'} · revision ${step.revision??'Unavailable'} · phase ${esc(step.phase??'Unavailable')}</p><p>P1 score ${step.scores?.P1??'Unavailable'} · P2 score ${step.scores?.P2??'Unavailable'} · ${step.events?.length??0} engine events</p><p>Arrow keys step commands; Home / End jump to endpoints.</p><details><summary>Command and event diagnostics</summary><pre>${esc(JSON.stringify(step,null,2))}</pre></details></section><code class="evo-hash">${esc(x.finalStateHash)}</code>`;
 }
 function storageSummary() { return `${view.history.length} saved runs · ${(view.history.reduce((s,r) => s+(r.bytes ?? 0),0)/1048576).toFixed(2)} MiB in lab artifacts`; }
-function historyHtml() { return view.history.length ? view.history.slice(0,20).map(h => `<div class="evo-replay-row"><span>${esc(h.kind)} · ${esc(h.botA)} / ${esc(h.botB)} · ${h.games} games · ${esc(h.status)} · ${esc(h.createdAt)}</span><button class="ghost-button" data-load-run="${esc(h.runId)}" ${active() ? 'disabled' : ''}>Load</button></div>`).join('') : '<p>No saved lab runs.</p>'; }
+function historyHtml() { const query=(view.historyQuery??'').toLowerCase(),rows=view.history.filter(h=>!query||JSON.stringify(h).toLowerCase().includes(query));return rows.length ? `<p>${rows.length} matching runs; first 50 shown. Search all saved metadata to narrow.</p>`+rows.slice(0,50).map(h => `<div class="evo-replay-row"><span>${esc(h.kind)} · ${esc(h.botA)} / ${esc(h.botB)} · ${h.games} games · ${esc(h.status)} · ${esc(h.createdAt)}<br><code>${esc(h.runId)}</code><br>Fingerprint ${esc(h.fingerprint?.slice(0,24)??'Unavailable')}</span><button class="ghost-button" data-load-run="${esc(h.runId)}" ${active() ? 'disabled' : ''}>Load</button></div>`).join('') : '<p>No matching saved lab runs. Adjust search or import evidence.</p>'; }
 async function refreshHistory() {
   try { view.history=await store.list(); } catch(error) { view.storageError=`Storage unavailable: ${error.message}. Results remain in memory; export before leaving.`; }
   if (!view.mounted) return; text('evo-storage',view.storageError || storageSummary());
@@ -174,10 +178,12 @@ function updateLive() {
   text('evo-A-wins',fmt(m.winsA)); text('evo-B-wins',fmt(m.winsB)); text('evo-A-rate',pct(m.winPctA)); text('evo-B-rate',pct(m.winPctB));
   const fill=document.getElementById('evo-progress-fill'); if (fill) fill.style.width=`${100*m.gamesCompleted/run().config.gameCount}%`;
   const metrics=metricValues(m); document.querySelectorAll('[data-evo-metric]').forEach(el => { el.textContent=metrics[el.dataset.evoMetric]; }); const chartEl=document.getElementById('evo-chart'); if (chartEl) chartEl.innerHTML=chart();
+  view.cockpit?.refresh('progress');
 }
 function bindInspection() {
   const seek=n => { if (!view.inspection?.steps) return; view.step=Math.max(0,Math.min(view.inspection.steps.length-1,n)); const el=document.getElementById('evo-inspection'); if (el) { el.innerHTML=inspectionHtml(); bindInspection(); } };
   document.getElementById('evo-prev')?.addEventListener('click',() => seek(view.step-1)); document.getElementById('evo-next')?.addEventListener('click',() => seek(view.step+1)); document.getElementById('evo-step')?.addEventListener('input',e => seek(Number(e.target.value)));
+  const inspector=document.getElementById('evo-inspection');if(inspector){inspector.tabIndex=0;inspector.onkeydown=e=>{if(e.target.closest('input'))return;const next={ArrowLeft:view.step-1,ArrowRight:view.step+1,Home:0,End:view.inspection?.steps?.length-1}[e.key];if(Number.isFinite(next)){e.preventDefault();seek(next);document.getElementById('evo-inspection')?.focus();}};}
 }
 function inspectReplay(replayId) {
   view.inspectionWorker?.terminate(); clearTimeout(view.inspectionTimer); view.inspection={}; view.step=0;
@@ -187,4 +193,4 @@ function inspectReplay(replayId) {
   worker.onmessage=e => { if (e.data.type === 'evolution-inspection') done(e.data.ok ? e.data : {error:e.data.error}); }; worker.onerror=e => done({error:e.message || 'REPLAY_WORKER_FAILED'}); view.inspectionTimer=setTimeout(() => done({error:'REPLAY_VERIFICATION_TIMEOUT'}),30000);
   worker.postMessage({type:'inspect-evolution-replay',replayId,artifact:artifactEnvelope(run())});
 }
-export function cleanupEvolutionLab() { cleanupResearchPanel(); view.mounted=false; if (status() === 'RUNNING') { captureElapsed(); view.session.pause(); persist(); } release(); }
+export function cleanupEvolutionLab() { view.cockpit?.cleanup();view.cockpit=null;cleanupResearchPanel(); view.mounted=false; if (status() === 'RUNNING') { captureElapsed(); view.session.pause(); persist(); } release(); }

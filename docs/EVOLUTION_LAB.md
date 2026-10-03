@@ -6,6 +6,12 @@ Evolution Lab runs authoritative Intrilex games and records reproducible researc
 
 Build with `pnpm run build`, serve `apps/lab-web/dist`, and open `#/evolution`.
 
+The research cockpit provides six workspaces: **Overview** for lineage heads and coverage; **Arena** for frozen policy series; **Evolution** for scientific drafts, training and committed lineages; **Evidence** for evaluations, comparisons, behavior and regressions; **Forensics** for verified replay commands; **Ledger** for history, storage, imports and exports. Checkpoint, generation, evaluation, finding and run IDs open the shared inspector. See [the cockpit operating and architecture guide](EVOLUTION_COCKPIT.md) and [current delivery evidence](EVOLUTION_COCKPIT_REPORT.md).
+
+Use the global execution controls for arena runs and **Stop research** during research execution. Workspace navigation, filters and inspection preserve the owned executor. Research has stop/resume at required suite and generation boundaries; it has no invented pause operation. The console reports received progress and observed transitions. Its pause/clear controls affect its display only.
+
+Residual editing is a **non-committed UI draft**. It enforces the authoritative integer bounds, supports reset/copy, and cannot alter a historical checkpoint or create an executable policy. Parameter differences are distinct from measured behavior. Export from Ledger remains the portability and recovery mechanism when local storage fails.
+
 1. **Run Series** uses the existing frozen policy arena. Configure policies, profile, base seed, mirrored seats and 1–4 workers. Pause/resume preserves accepted ordinals; reload then Load restores an interrupted run as paused. Stop keeps its evidence.
 2. **Create experiment** records name, hypothesis, scientific config, starting checkpoints, a frozen paired evaluation pack and Core Baseline Suite v1. Execute experiment runs SELF_PLAY/POLICY_COMPARISON under recorded config; CHECKPOINT_EVALUATION runs the frozen suite. Run IDs identify executions.
 3. **Clone experiment** preserves scientific variables and records the parent. The optional Clone series seed field deliberately changes that variable and records its before/after diff. Training clones preserve frozen seed pools. Create a new training experiment to change its seed pools.
