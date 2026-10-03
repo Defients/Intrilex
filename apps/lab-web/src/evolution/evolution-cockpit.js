@@ -1,3 +1,4 @@
+import { mountChartInteractions } from './evolution-analytics-charts.mjs';
 import { LAB_IDENTITY } from './identity.mjs';
 import { WEIGHT_FEATURES, WEIGHT_BOUND } from './weighted-heuristic.mjs';
 import { esc } from '../state.js';
@@ -29,7 +30,7 @@ export function mountCockpit(root,{state,research,getArena,loadRun}) {
     if(el.matches('[data-testid="evo-replays"]')){page('forensics').append(el);continue;}
     if(el.matches('[data-evo-ledger]')){page('ledger').append(el);continue;}
     if(el.matches('.evo-future')||el.matches('.notice')&&!/Imported|Historical/.test(el.textContent))continue;
-    if(el.id==='evo-error'){header.append(el);continue;}
+    if(el.id==='evo-error'){el.hidden=true;header.append(el);continue;}
     page('arena').append(el);
   }
   const arenaAdmission=[...root.querySelectorAll('#evo-page-arena input,#evo-page-arena select,#evo-page-arena button,#evo-run,#evo-resume,#evo-import')].map(element=>({element,disabled:element.disabled}));
@@ -77,6 +78,7 @@ export function mountCockpit(root,{state,research,getArena,loadRun}) {
     page('evidence').innerHTML=evidenceHtml(p,state,r.archive?null:r.comparison,!!r.controller||!!r.archive,!!r.archive);
     root.querySelector('#evo-inspector-content').innerHTML=inspectorHtml(p,state,a);
     for(const [key]of surfaces){page(key).hidden=key!==state.surface;root.querySelector(`.evo-navigation [data-evo-surface="${key}"]`).setAttribute('aria-current',key===state.surface?'page':'false');}
+    root.querySelector('.evo-cockpit-grid').classList.toggle('evo-graph-space',['arena','evidence','evolution'].includes(state.surface)&&!state.inspect&&!state.drawer);
     const aside=root.querySelector('#evo-cockpit-inspector'),narrow=matchMedia('(max-width: 1100px)').matches;
     aside.classList.toggle('is-open',state.drawer);aside.setAttribute('role',narrow&&state.drawer?'dialog':'complementary');
     if(narrow&&state.drawer)aside.setAttribute('aria-modal','true');else aside.removeAttribute('aria-modal');
@@ -94,6 +96,7 @@ export function mountCockpit(root,{state,research,getArena,loadRun}) {
     research.select(pair[0],'left');research.select(pair[1],'right');research.compare();state.evidenceMode='comparison';selectSurface('evidence');
   }
   const click=async event=>{
+    const mark=event.target.closest('[data-evo-inspect]');if(mark){event.preventDefault();return selectEvidence(mark.dataset.evoInspect);}
     const b=event.target.closest('button');if(!b)return;
     if(b.dataset.evoSurface){root.querySelector('#evo-command-dialog').close();return selectSurface(b.dataset.evoSurface,true);}
     if(b.dataset.evoInspect)return selectEvidence(b.dataset.evoInspect);
@@ -131,6 +134,7 @@ export function mountCockpit(root,{state,research,getArena,loadRun}) {
     if(el.dataset.evoWeight){const cp=project().checkpoints.find(cp=>cp.checkpointId===el.dataset.checkpoint);state.drafts[cp.checkpointId]??={...cp.policyState.weights};state.drafts[cp.checkpointId][el.dataset.evoWeight]=el.value===''?NaN:Number(el.value);state.draftOpen=true;const draft=draftWeights(cp,state.drafts[cp.checkpointId],WEIGHT_FEATURES,WEIGHT_BOUND);for(const other of root.querySelectorAll(`[data-evo-weight="${el.dataset.evoWeight}"]`))if(other!==el)other.value=el.value;root.querySelector('#evo-draft-status').textContent=draft.valid?'Non-committed draft. Historical weights remain unchanged.':`Invalid draft: ${draft.invalid.join(', ')}`;root.querySelector('[data-evo-draft-copy]').disabled=!draft.valid;}
   };
   const keydown=event=>{
+    const mark=event.target.closest('svg [data-evo-inspect]');if(mark&&['Enter',' '].includes(event.key)){event.preventDefault();return selectEvidence(mark.dataset.evoInspect);}
     const editable=event.target.closest('input,textarea,select,[contenteditable=true]');
     if(event.key==='Escape'&&state.drawer){state.drawer=false;refresh();root.querySelector('.evo-navigation [aria-current="page"]').focus();return;}
     if(event.key==='Tab'&&state.drawer&&matchMedia('(max-width: 1100px)').matches){const focusable=[...root.querySelectorAll('#evo-cockpit-inspector button:not(:disabled),#evo-cockpit-inspector input:not(:disabled),#evo-cockpit-inspector summary')];const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&(event.target===first||event.target.id==='evo-cockpit-inspector')){event.preventDefault();last?.focus();}else if(!event.shiftKey&&event.target===last){event.preventDefault();first?.focus();}}
@@ -140,6 +144,6 @@ export function mountCockpit(root,{state,research,getArena,loadRun}) {
   };
   root.addEventListener('click',click);root.addEventListener('change',change);root.addEventListener('input',input);root.addEventListener('keydown',keydown);
   const resize=()=>{refresh();const inspector=root.querySelector('#evo-cockpit-inspector');if(state.drawer&&matchMedia('(max-width: 1100px)').matches&&!inspector.contains(document.activeElement))inspector.focus();};window.addEventListener('resize',resize);
-  const unsubscribe=research.subscribe(refresh);refresh();
-  return {refresh,cleanup(){unsubscribe();clearTimeout(searchTimer);root.removeEventListener('click',click);root.removeEventListener('change',change);root.removeEventListener('input',input);root.removeEventListener('keydown',keydown);window.removeEventListener('resize',resize);}};
+  const cleanupCharts=mountChartInteractions(root);const unsubscribe=research.subscribe(refresh);refresh();
+  return {refresh,cleanup(){cleanupCharts();unsubscribe();clearTimeout(searchTimer);root.removeEventListener('click',click);root.removeEventListener('change',change);root.removeEventListener('input',input);root.removeEventListener('keydown',keydown);window.removeEventListener('resize',resize);}};
 }

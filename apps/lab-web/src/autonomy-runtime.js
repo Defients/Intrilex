@@ -16,7 +16,7 @@ import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.j
 import { attributeAction,   isNoAttributionAction} from './browser-analytics.js';
 import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js';
 
-const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value'];
+const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];
 export const DEFAULT_PROFILE_ID = 'core-advanced-authority';
 export const ENGINE_VERSION = _ENGINE_VERSION;

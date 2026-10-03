@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'apps/lab-web/dist');
 
-test('browser autonomy-runtime exports all 19 policies (5 baseline + 14 HYBRIX)', async () => {
+test('browser autonomy-runtime exports baseline, tactical and HYBRIX policies', async () => {
   const src = await readFile(path.join(dist, 'autonomy-runtime.js'), 'utf8');
   // Check that HYBRIX import is present
   assert.ok(src.includes('HYBRIX_POLICY_IDS'), 'autonomy-runtime must import HYBRIX_POLICY_IDS');
@@ -17,7 +17,7 @@ test('browser autonomy-runtime exports all 19 policies (5 baseline + 14 HYBRIX)'
   assert.ok(src.includes('[...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS]'), 'POLICY_IDS must spread baseline + HYBRIX');
 });
 
-test('browser app.js exposes all 19 policies in the dropdown', async () => {
+test('browser app.js exposes baseline, tactical and HYBRIX policies in the dropdown', async () => {
   const src = await readFile(path.join(dist, 'router.js'), 'utf8');
   // Check that HYBRIX policies are in the dropdown (policyOptions lives in router.js after decomposition)
   const hybrixIds = ['hybrix-rusher','hybrix-defender','hybrix-trickster','hybrix-sniper','hybrix-support','hybrix-tank',

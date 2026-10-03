@@ -1,6 +1,6 @@
 import { hashCanonical } from '../shared-browser.js';
 import { validateResearchProject, researchEnvelope } from './evolution-research.mjs';
-import { artifactEnvelope, validateArtifact, LAB_LIMITS } from './evolution-domain.mjs';
+import { artifactEnvelope, validateArtifact, inspectHistoricalArtifact, LAB_LIMITS } from './evolution-domain.mjs';
 
 /** Dedicated developer database. Completion resolves only after transaction commit. */
 export class EvolutionStore {
@@ -81,6 +81,13 @@ export class EvolutionStore {
   }
   async list() { return (await this.read('history')).sort((a,b) => b.createdAt.localeCompare(a.createdAt)); }
   async load(id) { const envelope = await this.read('runs', id); if (!envelope) throw new Error('LAB_RUN_NOT_FOUND'); return validateArtifact(envelope, this.identity); }
+  async loadForInspection(id) {
+    const envelope = await this.read('runs', id);
+    if (!envelope) throw new Error('LAB_RUN_NOT_FOUND');
+    const historical = envelope.payload?.identity?.fingerprint !== this.identity.fingerprint;
+    const run = historical ? inspectHistoricalArtifact(envelope) : validateArtifact(envelope, this.identity);
+    return {run, historical, envelope};
+  }
   close() { this.db?.close(); this.db = null; }
 }
 

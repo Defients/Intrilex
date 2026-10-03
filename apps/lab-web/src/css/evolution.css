@@ -6,3 +6,35 @@
 @media(max-width:1100px){.evo-cockpit-grid{grid-template-columns:125px minmax(0,1fr)}.evo-inspector{display:none}.evo-inspector.is-open{display:block;position:fixed;inset:8vh 3vw;z-index:1200;max-height:84vh;border:1px solid var(--evo-border-strong);box-shadow:0 0 0 100vmax #050b13cc;border-radius:8px}.evo-overview-stats{grid-template-columns:repeat(2,1fr)}.evo-global-header .toolbar{max-width:320px}.evo-overview-grid{grid-template-columns:1fr}.evo-cockpit .evo-arena{grid-template-columns:1fr 1fr}.evo-cockpit .evo-arena-mid{grid-column:1/-1;grid-row:1}}
 @media(max-width:700px){.evo-global-header{position:sticky;top:0;z-index:30;grid-template-columns:1fr;padding:12px!important}.evo-global-header .toolbar{grid-column:1;grid-row:auto;max-width:none;justify-content:start}.evo-global-header .toolbar button{min-height:34px;padding:5px 8px}.evo-global-header h2{font-size:19px}.evo-global-header>div:not(.evo-global-context)>p{display:none}.evo-global-context{grid-row:auto;gap:6px;font-size:10px}.evo-global-context code{display:none}#evo-context-origin{margin-left:0}.evo-cockpit-grid{display:block}.evo-navigation{position:static;display:flex;gap:4px;overflow:auto;border-right:0;border-bottom:1px solid var(--evo-border);padding:8px}.evo-navigation>button{flex:0 0 auto;width:auto;white-space:nowrap;padding:7px 9px}.evo-navigation>button span,.evo-nav-heading,.evo-nav-foot{display:none}.evo-primary{padding:10px;min-height:400px}.evo-searchbar>span{display:none}.evo-searchbar label{display:grid;gap:4px}.evo-searchbar input{max-width:none}.evo-workspace-title{align-items:start;flex-wrap:wrap}.evo-workspace-title h3{font-size:18px}.evo-overview-stats strong{font-size:12px}.evo-overview-stats>div{padding:10px}.evo-workbench{padding:11px}.evo-training-heads{grid-template-columns:1fr}.evo-cockpit .evo-metrics{grid-template-columns:repeat(2,1fr)}.evo-cockpit .toolbar>label{flex-basis:100%}.evo-cockpit .evo-arena{grid-template-columns:1fr}.evo-cockpit .evo-arena-mid{grid-column:1}.evo-console>header{flex-wrap:wrap}.evo-console>header>span{flex-basis:100%;order:3}.evo-inspector.is-open{inset:0;max-height:100dvh;border-radius:0;padding:15px}.evo-tabs{overflow:auto}.evo-filterbar>label{max-width:100%}.evo-filterbar select{max-width:100%}.evo-table-scroll table{min-width:440px}.evo-inspector .evo-table-scroll table{min-width:300px}.evo-replay-row>span{flex-basis:100%}#evo-console-events>div{flex-wrap:wrap}.evo-cockpit .toolbar p{flex-basis:100%}.evo-draft-grid label{grid-template-columns:65px minmax(0,1fr) 72px}}
 @media(prefers-reduced-motion:reduce){.evo-cockpit *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Analytical surfaces get the space otherwise reserved for an empty inspector. */
+@media(min-width:1101px){.evo-cockpit-grid.evo-graph-space{grid-template-columns:142px minmax(0,1fr)}.evo-graph-space>.evo-inspector{display:none}}
+.evo-cockpit .evo-analytics{padding:0;border:0;background:none}
+.evo-analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.evo-analytic-card{margin:0;padding:16px;background:linear-gradient(145deg,#101e2c,#0b1420 65%);border:1px solid var(--evo-border);border-radius:9px;min-width:0;overflow:hidden}
+.evo-analytic-wide{grid-column:1/-1}
+.evo-analytic-card>figcaption{display:flex;justify-content:space-between;gap:12px;align-items:start;margin-bottom:14px}
+.evo-analytic-card h4{font-size:17px;margin:4px 0 6px;letter-spacing:-.02em}
+.evo-analytic-card figcaption p{font-size:11px;line-height:1.6;color:var(--evo-muted);margin:0;max-width:85ch}
+.evo-analytic-card figcaption button{flex-shrink:0;font-size:10px;padding:4px 9px;min-height:30px}
+.evo-analytic-card svg{display:block;width:100%;height:auto;border-radius:5px;overflow:visible}
+.evo-analytic-card svg [data-evo-tooltip]{cursor:crosshair;outline:none}
+.evo-analytic-card svg [data-evo-inspect]{cursor:pointer}
+.evo-analytic-card svg [data-evo-tooltip]:hover,.evo-analytic-card svg [data-evo-tooltip]:focus{stroke:#fff;stroke-width:2;fill-opacity:1}
+.evo-plot-readout{min-height:38px;padding:10px 0 0;font-size:10px;line-height:1.5;color:var(--evo-secondary);font-variant-numeric:tabular-nums}
+.evo-plot-legend{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:4px 0 12px;font-size:10px;color:var(--evo-muted)}
+.evo-plot-legend button{font-size:10px;min-height:30px;background:transparent;border:1px solid var(--evo-border);display:flex;gap:7px;align-items:center;padding:4px 8px}
+.evo-plot-legend button[aria-pressed=false]{opacity:.4;text-decoration:line-through}
+.evo-plot-legend i{width:14px;height:3px;display:inline-block}
+.evo-cockpit[data-evo-hidden-series~=a] [data-evo-series=a],.evo-cockpit[data-evo-hidden-series~=b] [data-evo-series=b],.evo-cockpit[data-evo-hidden-series~=rolling] [data-evo-series=rolling]{display:none}
+.evo-analysis-coverage{padding:12px 14px;background:var(--evo-inset);border-left:3px solid var(--evo-accent);font-size:11px;line-height:1.7}
+.evo-analysis-coverage.danger{border-left-color:var(--evo-danger)}
+.evo-analysis-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+.evo-analysis-kpis>div{padding:14px;border-top:2px solid var(--evo-accent);background:var(--evo-panel);display:flex;flex-direction:column;gap:8px}
+.evo-analysis-kpis small{font-size:9px;color:var(--evo-muted);letter-spacing:.06em}
+.evo-analysis-kpis strong{font-size:27px;font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.evo-analysis-kpis span{font-size:10px;color:var(--evo-secondary)}
+.evo-metric-definition{font-size:11px;line-height:1.7}
+.evo-plot-empty{padding:30px;border:1px dashed var(--evo-border);color:var(--evo-muted);font-size:12px}
+@media(max-width:1250px){.evo-analytics-grid{grid-template-columns:1fr}.evo-analysis-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.evo-analytic-card{padding:12px}.evo-analytic-card h4{font-size:15px}.evo-analysis-kpis{gap:8px}.evo-analysis-kpis>div{padding:10px}.evo-analysis-kpis strong{font-size:23px}.evo-plot-legend{gap:6px}.evo-analytic-card figcaption{gap:8px}}

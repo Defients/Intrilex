@@ -8,7 +8,9 @@ import { WEIGHTED_POLICY_ID, validatePolicyState, baselinePolicyState } from '..
 
 export const LAB_SCHEMA = 1;
 export const FROZEN_POLICIES = Object.freeze(['random-legal', 'score-rush', 'control', 'tempo', 'value']);
-export const LAB_POLICIES = Object.freeze([...FROZEN_POLICIES, WEIGHTED_POLICY_ID]);
+export const STATIC_POLICIES = Object.freeze([...FROZEN_POLICIES, 'score-rush-tactical', 'control-tactical', 'tempo-tactical', 'value-tactical']);
+const staticPolicyVersion = id => FROZEN_POLICIES.includes(id) ? '2.0.0' : STATIC_POLICIES.includes(id) ? '3.0.0' : null;
+export const LAB_POLICIES = Object.freeze([...STATIC_POLICIES, WEIGHTED_POLICY_ID]);
 export const LAB_PROFILES = Object.freeze(['core-advanced-authority', 'core-unrestricted-authority', 'first-contact-trigger-closure']);
 export const LAB_LIMITS = Object.freeze({ games: 10000, workers: 4, decisions: 1800, replays: 12, commands: 12000, importBytes: 40 * 1024 * 1024 });
 export const CLEAN_REASONS = Object.freeze(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW']);
@@ -58,8 +60,8 @@ function deepFreeze(value) {
 
 export function createCheckpoint({ policyId, identity, agentId, lineageId = agentId, parentCheckpointId = null, createdAt = new Date().toISOString() }) {
   assertIdentity(identity);
-  if (!FROZEN_POLICIES.includes(policyId) || typeof agentId !== 'string' || !agentId || typeof lineageId !== 'string' || !lineageId) fail('INVALID_CHECKPOINT_POLICY');
-  const body = { schemaVersion: LAB_SCHEMA, policyId, policyVersion: '2.0.0', policyImplementationHash: identity.policyImplementationHash,
+  if (!STATIC_POLICIES.includes(policyId) || typeof agentId !== 'string' || !agentId || typeof lineageId !== 'string' || !lineageId) fail('INVALID_CHECKPOINT_POLICY');
+  const body = { schemaVersion: LAB_SCHEMA, policyId, policyVersion: staticPolicyVersion(policyId), policyImplementationHash: identity.policyImplementationHash,
     agentId, lineageId, parentCheckpointId, generation: 0, createdAt, policyState: {}, trainingConfiguration: null,
     identity: structuredClone(identity), tags: ['frozen', 'baseline'], protected: true };
   return deepFreeze({ ...body, checkpointId: `CP-${hashCanonical(body)}` });
@@ -71,7 +73,7 @@ export function validateCheckpoint(checkpoint, identity) {
   assertIdentity(checkpoint.identity, identity);
   const { checkpointId, ...body } = checkpoint;
   if (checkpointId !== `CP-${hashCanonical(body)}`) fail('CHECKPOINT_HASH_MISMATCH');
-  if (!FROZEN_POLICIES.includes(body.policyId) || body.policyVersion !== '2.0.0' || body.policyImplementationHash !== identity.policyImplementationHash || body.generation !== 0 || body.trainingConfiguration !== null || Object.keys(body.policyState ?? {}).length) fail('INCOMPATIBLE_CHECKPOINT');
+  if (!STATIC_POLICIES.includes(body.policyId) || body.policyVersion !== staticPolicyVersion(body.policyId) || body.policyImplementationHash !== identity.policyImplementationHash || body.generation !== 0 || body.trainingConfiguration !== null || Object.keys(body.policyState ?? {}).length) fail('INCOMPATIBLE_CHECKPOINT');
   if (typeof body.agentId !== 'string' || !body.agentId || typeof body.lineageId !== 'string' || !Number.isFinite(Date.parse(body.createdAt))) fail('INVALID_CHECKPOINT_METADATA');
   return deepFreeze(structuredClone(checkpoint));
 }

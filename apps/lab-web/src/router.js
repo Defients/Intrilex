@@ -154,5 +154,5 @@ export function policyOptions(selected) {
   const hybrix = ['hybrix-rusher','hybrix-defender','hybrix-trickster','hybrix-sniper','hybrix-support','hybrix-tank','hybrix-baseline','hybrix-rusher-hard','hybrix-defender-hard','hybrix-trickster-hard','hybrix-sniper-hard','hybrix-rusher-easy','hybrix-defender-easy','hybrix-rusher-nightmare','hybrix-defender-nightmare'];
   const fmt = id => id.replaceAll('-',' ').replace(/\b\w/g,c=>c.toUpperCase());
   const opt = (id,g) => `<option value="${id}" ${id===selected?'selected':''}>${g?g+' · ':''}${fmt(id)}</option>`;
-  return [...baseline.map(id=>opt(id,'Baseline')),...hybrix.map(id=>opt(id,'HYBRIX'))].join('');
+  return [...['score-rush-tactical','control-tactical','tempo-tactical','value-tactical'].map(id=>opt(id,'Tactical v3')),...baseline.map(id=>opt(id,'Frozen v2')),...hybrix.map(id=>opt(id,'HYBRIX'))].join('');
 }

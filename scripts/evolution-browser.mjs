@@ -110,7 +110,7 @@ try {
   await scenario('repeated evaluations, malformed rehashed import, research quota and archive inspection',async()=>{
     await page.setViewportSize({width:1440,height:1000});await surface('evolution');
     const left=await page.locator('#evo-checkpoint-left').inputValue();await page.locator('#evo-checkpoint-right').selectOption(left);
-    await page.locator('#evo-suite-evaluate').click();await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE',{timeout:120000});await page.locator('#evo-compare-checkpoints').click();await expect(page.locator('#evo-checkpoint-comparison table').first().locator('tbody tr')).toHaveCount(5);
+    await page.locator('#evo-suite-evaluate').click();await expect(page.locator('#evo-research-state')).toHaveText('COMPLETE',{timeout:120000});await page.locator('#evo-compare-checkpoints').click();await expect(page.locator('#evo-checkpoint-comparison > .evo-table-scroll table').first().locator('tbody tr')).toHaveCount(5);
     await expect(page.locator('#evo-checkpoint-comparison')).toContainText('Latest complete appended');
     const save=async name=>{await surface('ledger');await surface('ledger');const event=page.waitForEvent('download');await page.locator('#evo-export-research').click();const download=await event;const target=path.join(output,name);await download.saveAs(target);return {target,envelope:JSON.parse(await readFile(target,'utf8'))};};
     const original=await save('repeated-research.json'),p=original.envelope.payload;assert.ok(p.experiment.runIds.length);assert.ok(p.evaluations.every(e=>e.matchups.every(m=>p.experiment.runIds.includes(m.runId))));

@@ -157,10 +157,10 @@ export const ARCHETYPE_DEFINITIONS = Object.freeze({
     icon: '💥',
     playstyle: 'Scoring · Tempo',
     description: 'Prioritizes immediate scoring progress over long-term setup.',
-    brief: 'Immediate-scoring specialist. Every decision is measured by how fast it advances the score, even when that means abandoning a stronger long-term structure. Slow it down and its plan runs out.',
+    brief: 'Immediate-scoring specialist. It favors score progress, takes available wins, and weighs useful denial when an opponent approaches their goal.',
     tags: ['Scoring', 'Tempo'],
     traits: ['aggressive', 'scoring'],
-    aiSummary: 'Immediate scoring pressure that races the score track above all else.',
+    aiSummary: 'Immediate scoring pressure with public-threat defense and selective counters.',
   }),
   control: Object.freeze({
     id: 'control',
@@ -168,10 +168,10 @@ export const ARCHETYPE_DEFINITIONS = Object.freeze({
     icon: '🔒',
     playstyle: 'Control · Denial',
     description: 'Restricts your options and dictates how the board develops.',
-    brief: 'Board-control specialist. It weighs disruption, counters, and scuttles far above its own scoring, steering the shape of the game. Keep more than one line of play open.',
+    brief: 'Board-control specialist. It favors useful disruption and removal, avoids empty or fully protected row clears, and takes available scoring wins.',
     tags: ['Control', 'Denial'],
     traits: ['disruptive', 'counter-focused'],
-    aiSummary: 'Disruption-first play that maximizes board and response control.',
+    aiSummary: 'Disruption-focused play that weighs public material and conserves counters.',
   }),
   tempo: Object.freeze({
     id: 'tempo',
@@ -179,7 +179,7 @@ export const ARCHETYPE_DEFINITIONS = Object.freeze({
     icon: '⏱',
     playstyle: 'Initiative · Pressure',
     description: 'Keeps the initiative and repeatedly forces you to respond.',
-    brief: 'Initiative-keeper. It values advanced plays, interrupts, and sustained pressure, and it is reluctant to let a response window pass. Make it spend its answers.',
+    brief: 'Initiative-keeper. It values advanced plays and sustained pressure, answers meaningful threats, and preserves counters when a response offers little benefit.',
     tags: ['Initiative', 'Pressure'],
     traits: ['proactive', 'pressing'],
     aiSummary: 'Maintains initiative and forces continuous responses.',
@@ -190,7 +190,7 @@ export const ARCHETYPE_DEFINITIONS = Object.freeze({
     icon: '💎',
     playstyle: 'Efficiency · Resources',
     description: 'Optimizes resource efficiency and builds a long-term advantage.',
-    brief: 'Resource optimizer. It preserves hand value, protects its own cards, and refuses low-efficiency trades to compound a quiet advantage. Deny the slow build and it has no burst to fall back on.',
+    brief: 'Resource optimizer. It weighs hand preservation and efficient trades, accounts for its own material in board clears, and takes available scoring wins.',
     tags: ['Efficiency', 'Resources'],
     traits: ['conservative', 'efficient'],
     aiSummary: 'Maximizes expected value through hand preservation and efficient trades.',
@@ -247,6 +247,8 @@ const DIFFICULTY_SUFFIX = /-(hard|easy|nightmare|normal)$/;
  */
 export function policyTraitsFromId(policyId) {
   const id = String(policyId ?? '');
+  const tactical = id.match(/^(score-rush|control|tempo|value)-tactical$/);
+  if (tactical) return {archetype:tactical[1], difficulty:'normal'};
   if (!id.startsWith('hybrix-')) return { archetype: id, difficulty: 'normal' };
   const rest = id.slice('hybrix-'.length);
   const suffix = rest.match(DIFFICULTY_SUFFIX);

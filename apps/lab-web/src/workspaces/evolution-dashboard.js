@@ -2,27 +2,28 @@ import '../evolution/evolution-training-ui.js';
 import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js';
 import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js';
 import { app, esc, fmt } from '../state.js';
-import { lineChart } from '../chart-toolkit.js';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs';
+import { arenaAnalyticsHtml } from '../evolution/evolution-analytics-charts.mjs';
 import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs';
 import { pushChartSample } from '../evolution/evolution-presentation.mjs';
-import { createLabRun, labConfig, gamePlan, FROZEN_POLICIES, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs';
+import { createLabRun, labConfig, gamePlan, STATIC_POLICIES, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs';
 import { EvolutionSession } from '../evolution/evolution-session.mjs';
 import { LAB_IDENTITY } from '../evolution/identity.mjs';
 import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs';
 
 const store = new EvolutionStore(LAB_IDENTITY);
-const view = { config: { botA:'score-rush', botB:'control', gameCount:1000, seed:1337, workerCount:2, mirrorSeats:true, profileId:'core-advanced-authority' },
+const view = { config: { botA:'tempo-tactical', botB:'value-tactical', gameCount:1000, seed:1337, workerCount:2, mirrorSeats:true, profileId:'core-advanced-authority' },
   session:null, workers:[], timers:new Map(), tick:null, start:0, elapsed:0, agg:createSeriesAggregator(), samples:[],
-  archive:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), ui:createCockpitState(), cockpit:null };
-const run = () => view.session?.run;
+  archive:null, archiveEnvelope:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), ui:createCockpitState(), cockpit:null, analytics:{window:100,from:1,to:10000}, analyticsCache:null, turnMetricsCache:null };
+const run = () => view.archive ?? view.session?.run;
 const researchMode = () => run()?.researchPurpose ?? run()?.kind ?? 'SELF_PLAY';
-const status = () => run()?.status ?? 'IDLE';
+const status = () => view.archive ? 'ARCHIVE' : run()?.status ?? 'IDLE';
 const active = () => ['RUNNING','PAUSED'].includes(status());
-const elapsed = () => view.elapsed+(status() === 'RUNNING' ? performance.now()-view.start : 0);
+const elapsed = () => view.archive ? view.archive.elapsedMs : view.elapsed+(status() === 'RUNNING' ? performance.now()-view.start : 0);
 const pct = n => Number.isFinite(n) ? `${(n*100).toFixed(1)}%` : '—';
 const num = n => Number.isFinite(n) ? n.toFixed(2) : '—';
 const name = id => id.replaceAll('-',' ').replace(/\b\w/g,c => c.toUpperCase());
-const options = selected => (selected === 'weighted-heuristic-v1' ? '<option value="weighted-heuristic-v1" selected disabled>Weighted heuristic · historical checkpoint</option>' : '') + FROZEN_POLICIES.map(id => `<option value="${id}" ${id === selected ? 'selected' : ''}>${name(id)} · frozen</option>`).join('');
+const options = selected => (selected === 'weighted-heuristic-v1' ? '<option value="weighted-heuristic-v1" selected disabled>Weighted heuristic · historical checkpoint</option>' : '') + STATIC_POLICIES.map(id => `<option value="${id}" ${id === selected ? 'selected' : ''}>${name(id)} · ${id.endsWith('-tactical') ? 'v3' : 'frozen v2'}</option>`).join('');
 const text = (id,value) => { const el=document.getElementById(id); if (el) el.textContent=value; };
 
 export function renderEvolutionLab() {
@@ -54,7 +55,7 @@ export function renderEvolutionLab() {
       <div class="evo-progress-track"><div class="evo-progress-fill" id="evo-progress-fill" style="width:${100*m.gamesCompleted/cfg.gameCount}%"></div></div>
       <p><span id="evo-elapsed">${num(elapsed()/1000)}</span>s · <span id="evo-gps">${num(m.gamesPerSec)}</span> games/sec</p></div>${bot('B',cfg.botB,m.winsB,m.winPctB)}</div>
     <div class="evo-metrics" data-testid="evo-metrics">${Object.entries(metricValues(m)).map(([key,value]) => `<div class="metric-card"><small>${key}</small><div class="metric-value" data-evo-metric="${key}">${value}</div></div>`).join('')}</div>
-    <div class="evo-chart-wrap"><h3>${researchMode() === 'TRAINING' ? 'Training' : researchMode() === 'EVALUATION' ? 'Evaluation' : 'Self-play'} cumulative win record</h3><div id="evo-chart" data-testid="evo-chart">${chart()}</div><p>Arrival-order observations; final evidence is sorted by game ordinal. Aborted games are excluded.</p></div>
+    <div class="evo-chart-wrap evo-analytics"><h3>Arena analytics</h3><div class="evo-filterbar"><label>Rolling window<select id="evo-chart-window">${[25,50,100,200].map(n=>`<option value="${n}" ${view.analytics.window===n?'selected':''}>${n} clean games</option>`).join('')}</select></label><label>From game<input id="evo-chart-from" type="number" min="1" max="10000" value="${view.analytics.from}"></label><label>Through game<input id="evo-chart-to" type="number" min="1" max="10000" value="${view.analytics.to}"></label><button id="evo-chart-apply">Apply chart range</button><span>View filters only · execution unchanged</span></div><p id="evo-chart-filter-error" role="status"></p><div id="evo-chart" data-testid="evo-chart">${chart()}</div></div>
     <section class="evo-section" data-testid="evo-benchmarks"><h3>Frozen benchmark arena</h3><p>Evaluate either selected bot against a shipped reference. This is measured performance for a reproducible seed suite, not a universal rating or an improvement claim.</p>
       <div class="toolbar"><label>Reference<select id="evo-baseline" ${disabled}>${options('random-legal')}</select></label><label>Evaluation games (even)<input id="evo-eval-games" type="number" min="2" max="10000" step="2" value="100" ${disabled}></label>
       <button id="evo-evaluate-a" class="secondary-button" ${disabled}>Evaluate A</button><button id="evo-evaluate-b" class="secondary-button" ${disabled}>Evaluate B</button></div>
@@ -65,20 +66,32 @@ export function renderEvolutionLab() {
       <div id="evo-replay-list">${replayList()}</div><div id="evo-inspection" aria-live="polite">${inspectionHtml()}</div></section>
     <section class="evo-section" data-evo-ledger><h3>Runs & artifacts</h3><p>IndexedDB on this browser origin. Saves occur every 250 games, and on pause, stop, completion or bookmarks. Export for portable evidence.</p>
       <div class="toolbar"><button id="evo-export" class="secondary-button" ${run() ? '' : 'disabled'}>Export artifact</button>
-      <label class="secondary-button">Inspect historical artifact<input id="evo-archive-import" type="file" accept="application/json,.json"></label><label class="secondary-button">Import artifact<input id="evo-import" type="file" accept="application/json,.json" ${disabled}></label><button id="evo-history-refresh" class="ghost-button">Refresh history</button></div>
-      ${view.archive ? `<details open><summary>Read-only historical implementation</summary><p>Identity ${esc(view.archive.identity.fingerprint)}. Original checkpoint IDs and artifact bytes are preserved. This implementation is not admitted for current execution; imported outcomes remain unverified.</p><pre>${esc(JSON.stringify(view.archive.checkpoints,null,2))}</pre></details>` : ''}
+      <label class="secondary-button">Inspect historical artifact<input id="evo-archive-import" type="file" accept="application/json,.json" ${active() ? 'disabled' : ''}></label><label class="secondary-button">Import artifact<input id="evo-import" type="file" accept="application/json,.json" ${disabled}></label><button id="evo-history-refresh" class="ghost-button">Refresh history</button></div>
+      ${view.archive ? `<details open><summary>Read-only historical implementation</summary><p>Identity ${esc(view.archive.identity.fingerprint)}. Original checkpoint IDs and artifact content are preserved. This implementation is not admitted for current execution; imported outcomes remain unverified.</p><pre>${esc(JSON.stringify(view.archive.checkpoints,null,2))}</pre></details>` : ''}
       <p id="evo-storage" role="status">${esc(view.storageError || storageSummary())}</p><div id="evo-history">${historyHtml()}</div>
       <p>Rules ${LAB_IDENTITY.rulesVersion} · engine ${LAB_IDENTITY.engineVersion}<br><code class="evo-hash">${LAB_IDENTITY.fingerprint}</code></p></section>
     ${researchHtml()}
     </div></section>`;
   bind(); refreshHistory(); mountResearchPanel(readConfig);
-  view.cockpit=mountCockpit(document.querySelector('[data-testid="evolution-lab"]'),{state:view.ui,research:cockpitResearch,getArena:()=>({run:run(),archive:view.archive,error:view.error,storageError:view.storageError,controlsLocked:active()||!!view.archive||!!cockpitResearch.getState().archive,renderHistory(query){view.historyQuery=query;const el=document.getElementById('evo-history');if(el)el.innerHTML=historyHtml();},closeArchive(){if(view.archive){view.archive=null;renderEvolutionLab();}}}),loadRun:async id=>{const admitted=()=>{if(active()||view.archive||cockpitResearch.getState().archive)throw new Error('Stop the current arena or leave historical inspection before loading other evidence.');};admitted();const saved=await store.load(id);admitted();loadRun(saved);}});
+  view.cockpit=mountCockpit(document.querySelector('[data-testid="evolution-lab"]'),{state:view.ui,research:cockpitResearch,getArena:()=>({run:run(),archive:view.archive,error:view.error,storageError:view.storageError,controlsLocked:active()||!!view.archive||!!cockpitResearch.getState().archive,renderHistory(query){view.historyQuery=query;const el=document.getElementById('evo-history');if(el)el.innerHTML=historyHtml();},closeArchive(){if(view.archive){view.archive=null;view.archiveEnvelope=null;aggregate(view.session?.run);view.inspection=null;renderEvolutionLab();}}}),loadRun:async id=>{const admitted=()=>{if(active()||view.archive||cockpitResearch.getState().archive)throw new Error('Stop the current arena or leave historical inspection before loading other evidence.');};admitted();const saved=await store.loadForInspection(id);admitted();if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run);}});
 }
 function bot(seat,policy,wins,rate) { const cp=run()?.checkpoints[seat === 'A' ? 0 : 1]; return `<div class="evo-bot"><h3>BOT ${seat}</h3><b>${name(policy)}</b><p>Generation ${cp?.generation ?? 0} · ${cp?.schemaVersion === 2 ? 'immutable weighted checkpoint' : 'frozen policy'}</p><p><span id="evo-${seat}-wins">${fmt(wins)}</span> wins · <span id="evo-${seat}-rate">${pct(rate)}</span></p></div>`; }
-function metricValues(m) { return {'Completed':fmt(m.gamesClean),'Draws':fmt(m.draws),'Aborted / errors':fmt(m.aborted),'Avg score diff':num(m.avgScoreDiff),'Avg turns':num(m.avgTurns),'Avg decisions':num(m.avgDecisions),'First-player win':pct(m.seat1WinPct),'Second-player win':pct(m.seat2WinPct)}; }
+function analyticsModel() {
+  const current=run(), key=`${current?.runId}:${current?.records.length}:${current?.status}:${JSON.stringify(view.analytics)}`;
+  if(view.analyticsCache?.key!==key)view.analyticsCache={key,model:arenaAnalytics(current,view.analytics),html:null};
+  return view.analyticsCache;
+}
+function metricValues(m) {
+  // Header averages describe the entire accepted clean sample, independently of chart filters.
+  const current=run(),key=`${current?.runId}:${current?.records.length}`;
+  if(view.turnMetricsCache?.key!==key){let count=0,sum=0;for(const r of current?.records??[]){const value=inclusiveFullTurns(r,current.config.profileId);if(Number.isFinite(value)){count++;sum+=value;}}view.turnMetricsCache={key,mean:count?sum/count:null};}
+  const summary={meanTurns:view.turnMetricsCache.mean};
+  return {'Clean games':fmt(m.gamesClean),'Draws':fmt(m.draws),'Recorded game faults':fmt(m.aborted),'Avg score diff':num(m.avgScoreDiff),'Avg full turns · incl. End':num(summary.meanTurns),'Avg decisions':num(m.avgDecisions),'First-player win':pct(m.seat1WinPct),'Second-player win':pct(m.seat2WinPct)};
+}
 function chart() {
-  if (!view.samples.length) return '<p>Run a series to collect observations.</p>';
-  return lineChart({series:[{label:'Bot A',color:'#58d8c5',values:view.samples.map(s => s.a)},{label:'Bot B',color:'#b495ff',values:view.samples.map(s => s.b)}],xLabels:view.samples.map(s => String(s.n)),minValue:0,maxValue:100,yUnit:'%',ariaLabel:'Cumulative frozen policy win rates'});
+  const cache=analyticsModel();
+  cache.html??=arenaAnalyticsHtml(run(),view.analytics);
+  return cache.html;
 }
 function details() {
   if (!run()?.records.length) return '<p>No results yet.</p>';
@@ -91,7 +104,7 @@ function details() {
 }
 function replayList() { return run()?.replays.length ? run().replays.map(r => {
   const g=run().records.find(g => g.ordinal === r.ordinal), marked=run().bookmarks.includes(r.replayId);
-  return `<div class="evo-replay-row"><span>Game ${r.ordinal+1} · seed ${g.seed} · ${esc(g.terminationReason)}</span><button class="ghost-button" data-inspect="${r.replayId}">Inspect / verify</button><button class="ghost-button" data-bookmark="${r.replayId}" aria-pressed="${marked}">${marked ? '★ Bookmarked' : '☆ Bookmark'}</button></div>`;
+  return `<div class="evo-replay-row"><span>Game ${r.ordinal+1} · seed ${g.seed} · ${esc(g.terminationReason)}</span><button class="ghost-button" data-inspect="${r.replayId}">Inspect / verify</button><button class="ghost-button" data-bookmark="${r.replayId}" aria-pressed="${marked}" ${view.archive ? 'disabled' : ''}>${marked ? '★ Bookmarked' : '☆ Bookmark'}</button></div>`;
 }).join('') : '<p>No retained replay samples.</p>'; }
 function inspectionHtml() {
   const x=view.inspection;
@@ -107,7 +120,7 @@ async function refreshHistory() {
   const el=document.getElementById('evo-history'); if (el) el.innerHTML=historyHtml();
 }
 function persist() {
-  if (!run()) return Promise.resolve();
+  if (!run() || view.archive) return Promise.resolve();
   const snapshot=structuredClone(run()); snapshot.elapsedMs=elapsed();
   view.saveChain=view.saveChain.then(() => store.save(snapshot)).then(() => { view.storageError=''; return refreshHistory(); }).catch(error => {
     view.storageError=`Save failed: ${error.message}. Export this run before leaving.`; if (view.mounted) text('evo-storage',view.storageError);
@@ -115,30 +128,44 @@ function persist() {
 }
 function readConfig() { return {botA:document.getElementById('evo-bot-a').value,botB:document.getElementById('evo-bot-b').value,gameCount:Number(document.getElementById('evo-games').value),seed:Number(document.getElementById('evo-seed').value),workerCount:Number(document.getElementById('evo-workers').value),mirrorSeats:document.getElementById('evo-mirror').checked,profileId:document.getElementById('evo-profile').value}; }
 function bind() {
+  document.getElementById('evo-chart-apply')?.addEventListener('click',()=>{
+    const from=Number(document.getElementById('evo-chart-from').value),to=Number(document.getElementById('evo-chart-to').value);
+    if(!Number.isInteger(from)||!Number.isInteger(to)||from<1||to>10000||from>to){text('evo-chart-filter-error','Choose an ordered game range between 1 and 10000.');return;}
+    view.analytics={from,to,window:Number(document.getElementById('evo-chart-window').value)};
+    text('evo-chart-filter-error','');document.getElementById('evo-chart').innerHTML=chart();
+  });
   const click=(id,fn) => document.getElementById(id)?.addEventListener('click',fn);
   click('evo-run',() => begin('SELF_PLAY')); click('evo-evaluate-a',() => begin('EVALUATION','A')); click('evo-evaluate-b',() => begin('EVALUATION','B'));
   click('evo-pause',pause); click('evo-resume',launch); click('evo-stop',stop);
   click('evo-reset',() => { if (!active()) { release(); view.session=null; view.agg=createSeriesAggregator(); view.samples=[]; view.elapsed=0; view.error=''; view.inspection=null; renderEvolutionLab(); } });
   click('evo-history-refresh',refreshHistory);
-  click('evo-export',() => { if (!run()) return; const copy=structuredClone(run()); copy.elapsedMs=elapsed(); const url=URL.createObjectURL(new Blob([JSON.stringify(artifactEnvelope(copy))],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download=`${copy.runId}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000); });
-  document.getElementById('evo-archive-import')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>LAB_LIMITS.importBytes)throw new Error('IMPORT_TOO_LARGE');view.archive=inspectHistoricalArtifact(JSON.parse(await file.text()));renderEvolutionLab();}catch(error){view.error=error.message;renderEvolutionLab();}});
+  click('evo-export',() => { if (!run()) return; const copy=structuredClone(run()); if(!view.archive)copy.elapsedMs=elapsed(); const url=URL.createObjectURL(new Blob([JSON.stringify(view.archiveEnvelope ?? artifactEnvelope(copy))],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download=`${copy.runId}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000); });
+  document.getElementById('evo-archive-import')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>LAB_LIMITS.importBytes)throw new Error('IMPORT_TOO_LARGE');if(active())throw new Error('Stop the current series before inspecting historical evidence.');openArchive(JSON.parse(await file.text()));}catch(error){view.error=error.message;renderEvolutionLab();}});
   document.getElementById('evo-import')?.addEventListener('change',async e => {
     if (active()) return; try { const file=e.target.files?.[0]; if (!file) return; if (file.size > LAB_LIMITS.importBytes) throw new Error('IMPORT_TOO_LARGE'); loadRun(parseLabImport(await file.text(),LAB_IDENTITY)); await persist(); }
     catch(error) { view.error=`Import rejected: ${error.message}`; renderEvolutionLab(); }
   });
   document.getElementById('evo-replay-list')?.addEventListener('click',e => {
     const inspect=e.target.closest('[data-inspect]'), bookmark=e.target.closest('[data-bookmark]'); if (inspect) inspectReplay(inspect.dataset.inspect);
-    if (bookmark && run()) { const id=bookmark.dataset.bookmark,i=run().bookmarks.indexOf(id); if (i < 0) run().bookmarks.push(id); else run().bookmarks.splice(i,1); bookmark.textContent=i < 0 ? '★ Bookmarked' : '☆ Bookmark'; bookmark.setAttribute('aria-pressed',String(i < 0)); persist(); }
+    if (bookmark && run() && !view.archive) { const id=bookmark.dataset.bookmark,i=run().bookmarks.indexOf(id); if (i < 0) run().bookmarks.push(id); else run().bookmarks.splice(i,1); bookmark.textContent=i < 0 ? '★ Bookmarked' : '☆ Bookmark'; bookmark.setAttribute('aria-pressed',String(i < 0)); persist(); }
   });
-  document.getElementById('evo-history')?.addEventListener('click',async e => { const b=e.target.closest('[data-load-run]'); if (!b || active()) return; try { loadRun(await store.load(b.dataset.loadRun)); } catch(error) { view.error=`Load rejected: ${error.message}`; renderEvolutionLab(); } });
+  document.getElementById('evo-history')?.addEventListener('click',async e => { const b=e.target.closest('[data-load-run]'); if (!b || active()) return; try { const saved=await store.loadForInspection(b.dataset.loadRun);if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run); } catch(error) { view.error=`Load rejected: ${error.message}`; renderEvolutionLab(); } });
   bindInspection();
 }
+function aggregate(saved) {
+  view.agg=createSeriesAggregator();view.samples=[];
+  for(const r of [...(saved?.records??[])].sort((a,b)=>a.ordinal-b.ordinal)){ingestGameRecord(view.agg,r);pushChartSample(view.samples,view.agg);}
+}
+function openArchive(envelope) {
+  release();view.archive=inspectHistoricalArtifact(envelope);view.archiveEnvelope=structuredClone(envelope);view.error='';view.inspection=null;aggregate(view.archive);renderEvolutionLab();
+}
 function loadRun(saved) {
+  view.archive=null;view.archiveEnvelope=null;
   release(); view.session=new EvolutionSession(saved); view.elapsed=saved.elapsedMs; view.error=''; view.inspection=null; view.agg=createSeriesAggregator(); view.samples=[];
   for (const r of [...saved.records].sort((a,b) => a.ordinal-b.ordinal)) { ingestGameRecord(view.agg,r); pushChartSample(view.samples,view.agg); } view.config={...saved.config}; renderEvolutionLab();
 }
 function begin(kind,candidate) {
-  if (active()) return;
+  if (active() || view.archive) return;
   try { const input=readConfig(); if (kind === 'EVALUATION') { input.botA=candidate === 'B' ? input.botB : input.botA; input.botB=document.getElementById('evo-baseline').value; input.gameCount=Number(document.getElementById('evo-eval-games').value); input.mirrorSeats=true; }
     const config=labConfig({...input,kind}); if (run()) persist(); release(); view.session=new EvolutionSession(createLabRun(config,LAB_IDENTITY)); view.config=config; view.elapsed=0; view.agg=createSeriesAggregator(); view.samples=[]; view.error=''; view.inspection=null; persist(); launch();
   } catch(error) { view.error=`Configuration rejected: ${error.message}`; renderEvolutionLab(); }
@@ -177,7 +204,7 @@ function updateLive() {
   if (!view.mounted) return; const m=seriesMetrics(view.agg,elapsed()); text('evo-progress-count',`${fmt(m.gamesCompleted)} / ${fmt(run().config.gameCount)}`); text('evo-elapsed',num(elapsed()/1000)); text('evo-gps',num(m.gamesPerSec));
   text('evo-A-wins',fmt(m.winsA)); text('evo-B-wins',fmt(m.winsB)); text('evo-A-rate',pct(m.winPctA)); text('evo-B-rate',pct(m.winPctB));
   const fill=document.getElementById('evo-progress-fill'); if (fill) fill.style.width=`${100*m.gamesCompleted/run().config.gameCount}%`;
-  const metrics=metricValues(m); document.querySelectorAll('[data-evo-metric]').forEach(el => { el.textContent=metrics[el.dataset.evoMetric]; }); const chartEl=document.getElementById('evo-chart'); if (chartEl) chartEl.innerHTML=chart();
+  const metrics=metricValues(m); document.querySelectorAll('[data-evo-metric]').forEach(el => { el.textContent=metrics[el.dataset.evoMetric]; }); const chartEl=document.getElementById('evo-chart'); if (chartEl && !chartEl.contains(document.activeElement) && !document.getElementById('evo-page-arena')?.hidden && chartEl.dataset.revision!==analyticsModel().key) { chartEl.innerHTML=chart();chartEl.dataset.revision=analyticsModel().key; }
   view.cockpit?.refresh('progress');
 }
 function bindInspection() {
@@ -186,6 +213,7 @@ function bindInspection() {
   const inspector=document.getElementById('evo-inspection');if(inspector){inspector.tabIndex=0;inspector.onkeydown=e=>{if(e.target.closest('input'))return;const next={ArrowLeft:view.step-1,ArrowRight:view.step+1,Home:0,End:view.inspection?.steps?.length-1}[e.key];if(Number.isFinite(next)){e.preventDefault();seek(next);document.getElementById('evo-inspection')?.focus();}};}
 }
 function inspectReplay(replayId) {
+  if(view.archive){view.inspection={error:'Historical commands are preserved in the exported artifact. Current implementation replay verification is not admitted.'};const el=document.getElementById('evo-inspection');if(el)el.innerHTML=inspectionHtml();return;}
   view.inspectionWorker?.terminate(); clearTimeout(view.inspectionTimer); view.inspection={}; view.step=0;
   const el=document.getElementById('evo-inspection'); if (el) el.innerHTML=inspectionHtml();
   const worker=new Worker('worker.js',{type:'module'}); view.inspectionWorker=worker;

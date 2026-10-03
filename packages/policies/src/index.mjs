@@ -36,6 +36,10 @@ export const CONTROL = strategicPolicy('control', '2.0.0', { disruptionPreferenc
 export const TEMPO = strategicPolicy('tempo', '2.0.0', { aggression: 0.55, handValuePreservation: 0.35, counterConservation: 0.45 }, 'MAX_TEMPO', 'heuristic');
 export const VALUE = strategicPolicy('value', '2.0.0', { handValuePreservation: 0.8, riskTolerance: 0.35, counterConservation: 0.55 }, 'MAX_EXPECTED_VALUE', 'heuristic');
 
-export const CORE_POLICY_CATALOG = Object.freeze([RANDOM_LEGAL, SCORE_RUSH, CONTROL, TEMPO, VALUE]);
+export const TEMPO_TACTICAL = strategicPolicy('tempo-tactical', '3.0.0', { aggression: 0.55, handValuePreservation: 0.35, counterConservation: 0.65 }, 'THREAT_AWARE_TEMPO');
+export const VALUE_TACTICAL = strategicPolicy('value-tactical', '3.0.0', { handValuePreservation: 0.8, riskTolerance: 0.35, counterConservation: 0.75 }, 'THREAT_AWARE_VALUE');
+export const SCORE_RUSH_TACTICAL = strategicPolicy('score-rush-tactical', '3.0.0', { immediateScorePreference: 1, aggression: 0.35, counterConservation: 0.65 }, 'THREAT_AWARE_SCORE_PRESSURE');
+export const CONTROL_TACTICAL = strategicPolicy('control-tactical', '3.0.0', { disruptionPreference: 1, aggression: 0.85, counterConservation: 0.65 }, 'THREAT_AWARE_BOARD_CONTROL');
+export const CORE_POLICY_CATALOG = Object.freeze([RANDOM_LEGAL, SCORE_RUSH, CONTROL, TEMPO, VALUE, SCORE_RUSH_TACTICAL, CONTROL_TACTICAL, TEMPO_TACTICAL, VALUE_TACTICAL]);
 export const CORE_POLICY_BY_ID = Object.freeze(Object.fromEntries(CORE_POLICY_CATALOG.map((policy) => [policy.policyId, policy])));
 export { rankPolicyActions, selectPolicyAction, decomposePolicyScore, rankPolicyActionsWithDecomposition, SCORING_WEIGHTS, createScoringWeights, scoringWeightsHash, scorePolicyAction } from './scoring.mjs';

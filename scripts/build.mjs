@@ -139,6 +139,7 @@ await writeFile(path.join(dist, 'evolution/identity.mjs'), `export const LAB_IDE
   scoringSrc = scoringSrc.replace(/import\s+\{\s*createHash\s*\}\s+from\s+["']node:crypto["'];?/g, 'import { sha256Text } from "./engine/hash.js";');
   scoringSrc = scoringSrc.replace(/createHash\(['"]sha256['"]\)\.update\((.+)\)\.digest\(['"]hex['"]\)/g, 'sha256Text($1)');
   await writeFile(path.join(dist, 'policy-scoring.js'), scoringSrc);
+  await cp(path.join(root, 'packages/policies/src/tactics.mjs'), path.join(dist, 'tactics.mjs'));
 }
 await cp(path.join(root, 'apps/lab-web/src/decision-intelligence.js'), path.join(dist, 'decision-intelligence.js'));
 
@@ -473,6 +474,7 @@ const criticalFiles = [
   'engine/canonical-json.js',
   'play/achievements/achievement-ui.js',
   'policy-scoring.js',
+  'tactics.mjs',
   'hybrix/policy-adapter.js',
   'analytics-ai/browser-controller.js',
   'analytics-ai/config.mjs',
