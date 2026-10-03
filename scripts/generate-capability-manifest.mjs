@@ -1,4 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
+import { writeFile } from './lib/write-with-retry.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hashCanonical } from '@intrilex/shared';

@@ -1,4 +1,5 @@
-import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rm } from 'node:fs/promises';
+import { writeFile } from './lib/write-with-retry.mjs';
 import { existsSync, readFileSync, cpSync, rmSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -54,15 +55,10 @@ if (extract.status !== 0) process.exit(extract.status ?? 1);
 const extractMd = spawnSync(process.execPath, ['scripts/extract-analysis.mjs', '--markdown', '--out', 'sample-data/observatory/extract.md'], { cwd: root, stdio: 'inherit' });
 if (extractMd.status !== 0) process.exit(extractMd.status ?? 1);
 
-// ── Decision trace index: verify or regenerate (prevents silent broken dist) ──
-const traceIndexPath = path.join(root, 'sample-data/autonomy/decision-trace-index.json');
-let traceIndexExists = true;
-try { await readFile(traceIndexPath, 'utf8'); } catch { traceIndexExists = false; }
-if (!traceIndexExists) {
-  console.log('decision-trace-index.json missing — regenerating via generate-decision-traces.mjs --resume');
-  const traces = spawnSync(process.execPath, ['scripts/generate-decision-traces.mjs', '--resume'], { cwd: root, stdio: 'inherit' });
-  if (traces.status !== 0) process.exit(traces.status ?? 1);
-}
+// Reconcile the trace index with the current retention set. An existing index
+// can describe an older policy campaign even when individual traces are cached.
+const traces = spawnSync(process.execPath, ['scripts/generate-decision-traces.mjs', '--resume'], { cwd: root, stdio: 'inherit' });
+if (traces.status !== 0) process.exit(traces.status ?? 1);
 // ── Card art: regenerate WebP board assets from source PNGs (deterministic, skip-unchanged) ──
 const cardArt = spawnSync(process.execPath, ['scripts/build-card-art.mjs'], { cwd: root, stdio: 'inherit' });
 if (cardArt.status !== 0) process.exit(cardArt.status ?? 1);
@@ -140,6 +136,7 @@ await writeFile(path.join(dist, 'evolution/identity.mjs'), `export const LAB_IDE
   scoringSrc = scoringSrc.replace(/createHash\(['"]sha256['"]\)\.update\((.+)\)\.digest\(['"]hex['"]\)/g, 'sha256Text($1)');
   await writeFile(path.join(dist, 'policy-scoring.js'), scoringSrc);
   await cp(path.join(root, 'packages/policies/src/tactics.mjs'), path.join(dist, 'tactics.mjs'));
+  await cp(path.join(root, 'packages/policies/src/action-evaluation.mjs'), path.join(dist, 'action-evaluation.mjs'));
 }
 await cp(path.join(root, 'apps/lab-web/src/decision-intelligence.js'), path.join(dist, 'decision-intelligence.js'));
 
@@ -475,6 +472,7 @@ const criticalFiles = [
   'play/achievements/achievement-ui.js',
   'policy-scoring.js',
   'tactics.mjs',
+  'action-evaluation.mjs',
   'hybrix/policy-adapter.js',
   'analytics-ai/browser-controller.js',
   'analytics-ai/config.mjs',
@@ -779,6 +777,7 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
   const adapterDist = path.join(dist, 'engine-adapter');
   await mkdir(adapterDist, { recursive: true });
   await cp(adapterSrc, path.join(adapterDist, 'action-composition.mjs'));
+  await cp(path.join(root,'packages/engine-adapter/src/action-semantics.mjs'),path.join(adapterDist,'action-semantics.mjs'));
 
   const specifier = '@intrilex/engine-adapter/action-composition';
   const importRegex = new RegExp(`from\\s+["']${specifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`, 'g');
@@ -809,6 +808,21 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
     }
   }
   await rewriteAdapterBareImports(dist);
+  async function rewriteSemantics(dir) {
+    for(const entry of await readdir(dir,{withFileTypes:true})) {
+      if(['engine','data','assets','.split-tmp'].includes(entry.name))continue;
+      const full=path.join(dir,entry.name);
+      if(entry.isDirectory())await rewriteSemantics(full);
+      else if(/\.(js|mjs)$/.test(entry.name)) {
+        const text=await readFile(full,'utf8');
+        if(text.includes('@intrilex/engine-adapter/action-semantics')) {
+          const relative=path.relative(path.dirname(full),path.join(adapterDist,'action-semantics.mjs')).replace(/\\/g,'/');
+          await writeFile(full,text.replaceAll('@intrilex/engine-adapter/action-semantics',relative.startsWith('.')?relative:`./${relative}`));
+        }
+      }
+    }
+  }
+  await rewriteSemantics(dist);
 
   // Fail-closed verification: no browser-served module may retain the
   // bare @intrilex/engine-adapter/action-composition specifier, nor a

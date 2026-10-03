@@ -5,6 +5,7 @@
   "exports": {
     ".": "./src/adapter.mjs",
     "./action-composition": "./src/action-composition.mjs",
+    "./action-semantics": "./src/action-semantics.mjs",
     "./public-projection": "./src/public-projection.mjs",
     "./engine-fuzz-harness": "./src/engine-fuzz-harness.mjs",
     "./action-introspection": "./src/action-introspection.mjs"

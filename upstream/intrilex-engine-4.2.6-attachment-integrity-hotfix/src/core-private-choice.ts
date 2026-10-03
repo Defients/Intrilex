@@ -437,7 +437,7 @@ export function generatedCoreEffectCandidates(state: Readonly<EngineState>, acto
   return [...standalone, ...multiCard];
 }
 
-export function generatedAdvancedCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): CoreAdvancedAction[] {
+export function generatedAdvancedLegalCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId) {
   const card = state.cards[cardId];
   if (!card || card.state.privateChoiceHeldBy !== actorId) return [];
   const probe = canonicalClone(state);
@@ -446,8 +446,10 @@ export function generatedAdvancedCandidates(state: Readonly<EngineState>, actorI
   // Enumerate advanced actions (Supers, Ultras, etc.) that include the generated card.
   // Per rulebook §7: the generated revealed card may be used as a component of its Rank's Super.
   return enumerateAdvancedCoreCandidates(probe, actorId)
-    .filter((entry) => entry.sourceCardIds.includes(cardId))
-    .map((entry) => canonicalClone(entry.advanced));
+    .filter((entry) => entry.sourceCardIds.includes(cardId));
+}
+export function generatedAdvancedCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): CoreAdvancedAction[] {
+  return generatedAdvancedLegalCandidates(state, actorId, cardId).map((entry) => canonicalClone(entry.advanced));
 }
 
 export function resolveCorePrivateChoiceSubmission(

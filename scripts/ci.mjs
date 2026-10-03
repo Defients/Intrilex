@@ -294,7 +294,7 @@ const STAGES = [
   ['trace-teaching', 'node', ['--test', 'test/trace-teaching.test.mjs']],
   // Divergence fixes: regression tests for all 10 implementation divergences
   ['engine-divergence-fixes', 'node', ['--test', 'test/engine-divergence-fixes.test.mjs']],
-  ['evolution-lab', 'node', ['--test', 'test/evolution-lab.test.mjs', 'test/evolution-foundation.test.mjs', 'test/evolution-research.test.mjs', 'test/evolution-training.test.mjs', 'test/evolution-completion.test.mjs', 'test/evolution-cockpit.test.mjs', 'test/evolution-analytics.test.mjs', 'test/tactical-policies.test.mjs']],
+  ['evolution-lab', 'node', ['--test', 'test/evolution-lab.test.mjs', 'test/evolution-foundation.test.mjs', 'test/evolution-research.test.mjs', 'test/evolution-training.test.mjs', 'test/evolution-completion.test.mjs', 'test/evolution-cockpit.test.mjs', 'test/evolution-analytics.test.mjs', 'test/tactical-policies.test.mjs', 'test/policy-action-coverage.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

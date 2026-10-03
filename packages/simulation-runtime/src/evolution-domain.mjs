@@ -9,7 +9,7 @@ import { WEIGHTED_POLICY_ID, validatePolicyState, baselinePolicyState } from '..
 export const LAB_SCHEMA = 1;
 export const FROZEN_POLICIES = Object.freeze(['random-legal', 'score-rush', 'control', 'tempo', 'value']);
 export const STATIC_POLICIES = Object.freeze([...FROZEN_POLICIES, 'score-rush-tactical', 'control-tactical', 'tempo-tactical', 'value-tactical']);
-const staticPolicyVersion = id => FROZEN_POLICIES.includes(id) ? '2.0.0' : STATIC_POLICIES.includes(id) ? '3.0.0' : null;
+const staticPolicyVersion = id => FROZEN_POLICIES.includes(id) ? '2.0.0' : STATIC_POLICIES.includes(id) ? '4.0.0' : null;
 export const LAB_POLICIES = Object.freeze([...STATIC_POLICIES, WEIGHTED_POLICY_ID]);
 export const LAB_PROFILES = Object.freeze(['core-advanced-authority', 'core-unrestricted-authority', 'first-contact-trigger-closure']);
 export const LAB_LIMITS = Object.freeze({ games: 10000, workers: 4, decisions: 1800, replays: 12, commands: 12000, importBytes: 40 * 1024 * 1024 });
@@ -128,7 +128,7 @@ export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
     actionCount: summary.actionCount ?? 0, policyActionCount: summary.policyActionCount ?? 0,
     commandCount: replay.commands.length, initialStateHash, actionSequenceHash, finalStateHash: summary.finalStateHash,
     illegalActionAttempts: ['ENGINE_REJECTION', 'ACTION_ID_INVALID'].includes(summary.errorCode) || summary.terminationReason === 'ENGINE_REJECTION' ? 1 : 0,
-    seatBehavior: summary.perSeatStats?.map((p,i)=>({playerId:`P${i+1}`,decisions:p.policyDecisionCount,actionCounts:p.decisionFamilyCounts ?? {},mechanicCounts:p.mechanicCounts ?? {}})) ?? [],
+    seatBehavior: summary.perSeatStats?.map((p,i)=>({playerId:`P${i+1}`,decisions:p.policyDecisionCount,actionCounts:p.decisionFamilyCounts ?? {},mechanicCounts:p.mechanicCounts ?? {},...(p.actionCoverage?{actionCoverage:p.actionCoverage}:{})})) ?? [],
     actionCounts: summary.decisionFamilyCounts ?? {}, eventCounts: summary.eventTypeCounts ?? {},
     mechanicCounts: summary.mechanicCounts ?? {}, ruleCompliance: summary.ruleCompliance?.status ?? 'UNAVAILABLE' };
   return { ...core, resultHash: hashCanonical(core), durationMs };

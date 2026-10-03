@@ -1,15 +1,15 @@
-import '../evolution/evolution-training-ui.js?v=7e1a57e0182d';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=7e1a57e0182d';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=7e1a57e0182d';
-import { app, esc, fmt } from '../state.js?v=7e1a57e0182d';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=7e1a57e0182d';
-import { arenaAnalyticsHtml } from '../evolution/evolution-analytics-charts.mjs?v=7e1a57e0182d';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=7e1a57e0182d';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=7e1a57e0182d';
-import { createLabRun, labConfig, gamePlan, STATIC_POLICIES, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=7e1a57e0182d';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=7e1a57e0182d';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=7e1a57e0182d';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=7e1a57e0182d';
+import '../evolution/evolution-training-ui.js?v=f6c7ea2918fb';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=f6c7ea2918fb';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=f6c7ea2918fb';
+import { app, esc, fmt } from '../state.js?v=f6c7ea2918fb';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=f6c7ea2918fb';
+import { arenaAnalyticsHtml } from '../evolution/evolution-analytics-charts.mjs?v=f6c7ea2918fb';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=f6c7ea2918fb';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=f6c7ea2918fb';
+import { createLabRun, labConfig, gamePlan, STATIC_POLICIES, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=f6c7ea2918fb';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=f6c7ea2918fb';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=f6c7ea2918fb';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=f6c7ea2918fb';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 const view = { config: { botA:'tempo-tactical', botB:'value-tactical', gameCount:1000, seed:1337, workerCount:2, mirrorSeats:true, profileId:'core-advanced-authority' },

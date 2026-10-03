@@ -1,4 +1,5 @@
-import { readdir, readFile, lstat, rm, writeFile } from 'node:fs/promises';
+import { readdir, readFile, lstat, rm } from 'node:fs/promises';
+import { writeFile, withRetry } from './lib/write-with-retry.mjs';
 import path from 'node:path';
 
 const protectedFile = file => file === '404.html' || file === '_headers' || file.startsWith('assets/fonts/');
@@ -76,7 +77,7 @@ export async function pruneDeployFiles(dist, deploy) {
     if (!safeRelative(file) || !absolute.startsWith(target + path.sep)) throw new Error('Unsafe deployment path');
     // The complete traversal above rejects symlink parents before any mutation.
     if (!(await lstat(absolute)).isFile()) throw new Error(`Not a regular build file: ${file}`);
-    await rm(absolute);
+    await withRetry(() => rm(absolute));
   }
   return stale;
 }

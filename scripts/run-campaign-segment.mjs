@@ -15,6 +15,7 @@ const started = performance.now();
 const campaign = await runCampaign({ ...config, ordinalStart, ordinalEnd, workerCount });
 await writeFile(output, JSON.stringify({
   schemaVersion: '1.1',
+  implementationFingerprint: config.implementationFingerprint ?? null,
   ordinalRange: [ordinalStart, ordinalEnd],
   workerCount,
   durationMs: Math.round(performance.now() - started),

@@ -1,15 +1,15 @@
-import { canonicalClone } from "./canonical-json.js?v=7e1a57e0182d";
-import { IntrilexEngine } from "./engine.js?v=7e1a57e0182d";
-import { hashCanonical } from "./hash.js?v=7e1a57e0182d";
-import { cardPointValue, parseIdentity } from "./ranks.js?v=7e1a57e0182d";
-import { nextIndex } from "./rng.js?v=7e1a57e0182d";
-import { createEmptyState } from "./state.js?v=7e1a57e0182d";
-import { assertValidState } from "./validation.js?v=7e1a57e0182d";
-import { CORE_FOUNDATION_AUTHORITY_PROFILE } from "./core-authority.js?v=7e1a57e0182d";
-import { CORE_EFFECT_DECLARATION_PROFILE, enumerateCoreEffectCandidates } from "./core-effects.js?v=7e1a57e0182d";
-import { CORE_RESPONSE_AUTHORITY_PROFILE, currentCoreStackTarget, currentPriorityActor, primaryDescriptor } from "./core-response.js?v=7e1a57e0182d";
-import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates } from "./core-private-choice.js?v=7e1a57e0182d";
-import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=7e1a57e0182d";
+import { canonicalClone } from "./canonical-json.js?v=f6c7ea2918fb";
+import { IntrilexEngine } from "./engine.js?v=f6c7ea2918fb";
+import { hashCanonical } from "./hash.js?v=f6c7ea2918fb";
+import { cardPointValue, parseIdentity } from "./ranks.js?v=f6c7ea2918fb";
+import { nextIndex } from "./rng.js?v=f6c7ea2918fb";
+import { createEmptyState } from "./state.js?v=f6c7ea2918fb";
+import { assertValidState } from "./validation.js?v=f6c7ea2918fb";
+import { CORE_FOUNDATION_AUTHORITY_PROFILE } from "./core-authority.js?v=f6c7ea2918fb";
+import { CORE_EFFECT_DECLARATION_PROFILE, enumerateCoreEffectCandidates } from "./core-effects.js?v=f6c7ea2918fb";
+import { CORE_RESPONSE_AUTHORITY_PROFILE, currentCoreStackTarget, currentPriorityActor, primaryDescriptor } from "./core-response.js?v=f6c7ea2918fb";
+import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates, generatedAdvancedLegalCandidates } from "./core-private-choice.js?v=f6c7ea2918fb";
+import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=f6c7ea2918fb";
 function readCoreRuntime(state) {
     const value = state.metadata.coreAuthority;
     return value && typeof value === "object" ? value : null;
@@ -109,11 +109,18 @@ export function enumerateCorePrivateChoiceActions(state, actorId) {
     if (choice.kind === "core-rank7-generated-effect") {
         const generatedCardId = choice.optionCardIds[0];
         const effects = generatedCoreEffectCandidates(state, actorId, generatedCardId);
+        const advanced = generatedAdvancedLegalCandidates(state, actorId, generatedCardId);
         candidates.push(privateChoiceAction(state, choice, "rank7-generated-score", [generatedCardId], { kind: "core-rank7-generated-effect", selectedCardIds: [generatedCardId], scoreInstead: true }, { toScore: true }));
-        if (effects.length === 0)
+        if (effects.length === 0 && advanced.length === 0)
             candidates.push(privateChoiceAction(state, choice, "rank7-generated-unavailable", [generatedCardId], { kind: "core-rank7-generated-effect", selectedCardIds: [generatedCardId] }, { fizzle: true }));
         for (const effect of effects)
             candidates.push(privateChoiceAction(state, choice, `rank7-generated-${effect.kind}`, [generatedCardId], { kind: "core-rank7-generated-effect", selectedCardIds: [generatedCardId], generatedEffect: canonicalClone(effect) }, { generated: true, effectKind: effect.kind }));
+        for (const entry of advanced) {
+            const candidate = privateChoiceAction(state, choice, `rank7-generated-${entry.advanced.kind}`, [generatedCardId], { kind: "core-rank7-generated-effect", selectedCardIds: [generatedCardId], generatedAdvanced: canonicalClone(entry.advanced) }, { ...entry.featureVector, generated: true, generatedFamily: entry.family, generatedMode: entry.mode, effectKind: entry.advanced.kind });
+            candidate.sourceCardIds = [...entry.sourceCardIds];
+            candidate.targetCardIds = [...entry.targetCardIds];
+            candidates.push(candidate);
+        }
     }
     if (choice.kind === "core-nine-anchor-discard")
         for (const id of choice.optionCardIds)

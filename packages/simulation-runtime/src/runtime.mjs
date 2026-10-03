@@ -1,3 +1,4 @@
+import { recordActionCoverage } from '@intrilex/policies/scoring';
 import { chooseWeightedAction, WEIGHTED_POLICY_ID } from '../../policies/src/weighted-heuristic.mjs';
 import {
   DEFAULT_SIMULATION_PROFILE,
@@ -410,6 +411,7 @@ export function runPolicyMatch(config) {
     applyDecisionCounters(semanticCounters, selectedAction, frame.policyActions);
     const ps = perSeat[seatIndex];
     ps.policyDecisionCount += 1;
+    recordActionCoverage(ps, frame.policyActions, selectedAction);
     if (isMeaningfulResponseFrame(frame.policyActions)) ps.responseOpportunityCount += 1;
     if (selectedAction.family === 'response-decline') { ps.responseDeclinedCount += 1; ps.meaningfulResponseDecisionCount += 1; }
     else { ps.policyActionCount += 1; if (RESPONSE_FAMILIES.has(selectedAction.family) || ['INSTANT','QUICK','INTERRUPT'].includes(selectedAction.timingClass)) { ps.responsePlayedCount += 1; ps.meaningfulResponseDecisionCount += 1; } }
@@ -604,7 +606,7 @@ export function runPolicyMatch(config) {
       return rest;
     }),
   };
-  const summary = { ...summaryCore, matchResultHash: hashCanonical(hashInput), rankDecisions };
+  const summary = { ...summaryCore, matchResultHash: hashCanonical(hashInput), perSeatStats:perSeat.map((p,i)=>({playerId:seatOrder[i],...p})), rankDecisions };
   const base = { summary, decisions, facts, provenance };
   if (captureTraces) base.decisionTraces = decisionTraces;
   if (!config.includeReplay) return base;

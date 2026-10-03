@@ -9,17 +9,17 @@
  * runtime. Also works standalone for real-time games.
  */
 
-import { createPerception } from "./perception.js?v=7e1a57e0182d";
-import { createPersonality, updateMorale, decayMorale, describePersonality } from "./personality.js?v=7e1a57e0182d";
-import { createMemory } from "./memory.js?v=7e1a57e0182d";
-import { createCognition } from "./cognition.js?v=7e1a57e0182d";
-import { createSharedBlackboard, evaluateCoordination } from "./coordination.js?v=7e1a57e0182d";
-import { createFailsafe, determineLodTier } from "./failsafe.js?v=7e1a57e0182d";
-import { createDebugSystem } from "./debug.js?v=7e1a57e0182d";
-import { getDifficultyConfig, getReactionMultiplier, getAdaptationRate, isCoordinationEnabled, auditDifficultyConfig } from "./difficulty.js?v=7e1a57e0182d";
-import { evaluateRankStrategy } from "./rank-strategy.js?v=7e1a57e0182d";
-import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=7e1a57e0182d";
-import { scorePolicyAction } from "../policy-scoring.js?v=7e1a57e0182d";
+import { createPerception } from "./perception.js?v=f6c7ea2918fb";
+import { createPersonality, updateMorale, decayMorale, describePersonality } from "./personality.js?v=f6c7ea2918fb";
+import { createMemory } from "./memory.js?v=f6c7ea2918fb";
+import { createCognition } from "./cognition.js?v=f6c7ea2918fb";
+import { createSharedBlackboard, evaluateCoordination } from "./coordination.js?v=f6c7ea2918fb";
+import { createFailsafe, determineLodTier } from "./failsafe.js?v=f6c7ea2918fb";
+import { createDebugSystem } from "./debug.js?v=f6c7ea2918fb";
+import { getDifficultyConfig, getReactionMultiplier, getAdaptationRate, isCoordinationEnabled, auditDifficultyConfig } from "./difficulty.js?v=f6c7ea2918fb";
+import { evaluateRankStrategy } from "./rank-strategy.js?v=f6c7ea2918fb";
+import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=f6c7ea2918fb";
+import { scorePolicyAction } from "../policy-scoring.js?v=f6c7ea2918fb";
 
 export const ARCHETYPE_TO_SCORING_POLICY = Object.freeze({
   rusher: 'score-rush',
@@ -268,7 +268,7 @@ export function createHybrixAgent({ botId, archetype, difficulty = 'normal', see
     const scoringPolicyId = ARCHETYPE_TO_SCORING_POLICY[archetype] ?? 'value';
     const personalityIntensity = diffConfig.personalityIntensity ?? 0.5;
     const scored = legalActions.map(action => {
-      const baseScore = scorePolicyAction(scoringPolicyId, action, context);
+      const baseScore = scorePolicyAction(`${scoringPolicyId}-tactical`, action, context);
       const cognitionScore = applyCognitionToLegalAction(baseScore, action, cognition, personalityIntensity, context);
       const goalScore = applyGoalBonusToAction(cognitionScore, action, goals, personalityIntensity);
       const personalityScore = applyPersonalityToLegalAction(goalScore, action, personality, fullConfig.personality, personalityIntensity, cognition);
@@ -281,7 +281,7 @@ export function createHybrixAgent({ botId, archetype, difficulty = 'normal', see
       return { action, score: nudgeScore, baseScore, rankReasonCodes: rankStrategy.reasonCodes };
     });
 
-    scored.sort((a, b) => b.score - a.score);
+    scored.sort((a, b) => b.score - a.score || a.action.actionId.localeCompare(b.action.actionId));
 
     // Apply difficulty selection with a dedicated rng to decouple from tick()'s rng consumption
     const decisionSeed = (originalSeed * 7919 + (context.decisionIndex ?? currentTick) + 0xD1FF) >>> 0;
@@ -685,33 +685,8 @@ function applyCognitionToLegalAction(baseScore, action, cognition, intensity, co
     adjusted += 100 * intensity;
   }
 
-  // Swap Bar — the HYBIX AI actively cycles the bar. Face-down swaps are free
-  // (Start phase, no mini-turn cost), so the AI dumps low-value non-royal hand
-  // cards to gamble on a face-down bar card. Royals (K/Q) are protected: they
-  // enable royal-marriage and anchor defense, so the AI keeps them. In urgent
-  // states (SURVIVAL/MACRO_GOAL) the hand is preserved for defense/scoring.
-  if (family === 'swap-bar') {
-    const knownCards = context?.authorizedView?.knownCards ?? {};
-    if (action.mode === 'face-down') {
-      if (cognition.btNode === 'TACTICAL' || cognition.btNode === 'COORDINATION' || cognition.btNode === 'IDLE_ROAM') {
-        const dumpsRoyal = (action.sourceHandles ?? []).some((h) => /^[KQ][♣♦♥♠]$/u.test(String(knownCards[h]?.identity ?? '')));
-        const sourcePts = Math.max(Number(action.featureVector?.sourcePointValue ?? 0), (action.sourceHandles ?? []).reduce((s, h) => s + Number(knownCards[h]?.pointValue ?? 0), 0));
-        if (!dumpsRoyal && sourcePts <= 5) {
-          // Boost above the phase-transition score (5000) so the AI swaps before
-          // entering the action phase. Scaled by source value so the lowest
-          // cards are swapped most eagerly. Margin absorbs personality modifiers.
-          adjusted += 5700 - sourcePts * 60;
-        }
-      }
-    } else if (action.mode === 'face-up') {
-      // Face-up swap draw costs a mini-turn; reward taking a known card,
-      // scaling with its value so high-value bar cards are prioritized.
-      const targetPts = Math.max(Number(action.featureVector?.targetPointValue ?? 0), (action.targetHandles ?? []).reduce((s, h) => s + Number(knownCards[h]?.pointValue ?? 0), 0));
-      adjusted += 350 + targetPts * 20;
-    }
-    // Hand pressure: a small hand amplifies swap value (refill/cycle).
-    if (cognition.ownHandCount <= 3) adjusted += 140 * intensity;
-  }
+  // Swap costs, recipes and timing are evaluated by shared Tactical scoring.
+  // Personality may scale that value; no phase-score workaround is needed.
 
   return adjusted;
 }

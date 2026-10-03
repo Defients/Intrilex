@@ -1,8 +1,8 @@
-import { canonicalClone } from "./canonical-json.js?v=7e1a57e0182d";
-import { hasAegis, miniTurnHardCap } from "./lifecycle.js?v=7e1a57e0182d";
-import { parseIdentity } from "./ranks.js?v=7e1a57e0182d";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=7e1a57e0182d";
-import { relationBetween } from "./phase11.js?v=7e1a57e0182d";
+import { canonicalClone } from "./canonical-json.js?v=f6c7ea2918fb";
+import { hasAegis, miniTurnHardCap } from "./lifecycle.js?v=f6c7ea2918fb";
+import { parseIdentity } from "./ranks.js?v=f6c7ea2918fb";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=f6c7ea2918fb";
+import { relationBetween } from "./phase11.js?v=f6c7ea2918fb";
 export const BATTLE_REALM_REGISTRY = Object.freeze({
     Bravery: Object.freeze({ id: "Bravery", signature: "Courageous Assault", ultimate: "Iron Advance", signatureUses: 1, absoluteCaps: ["mini-turn<=3", "ultra<=1/FT", "rank10<=1/FT", "goal>=5"], modifierKeys: ["ruthless-read", "dangerous-leverage", "hard-jack", "black-joker-draw"] }),
     Balance: Object.freeze({ id: "Balance", signature: "Rejuvenation", ultimate: "Harmonized Mimic", signatureUses: 1, absoluteCaps: ["mini-turn<=3", "ultra<=1/FT", "rank10<=1/FT", "goal>=5"], modifierKeys: ["five-bottom-draw", "six-draw-to-six", "clean-exchange"] }),

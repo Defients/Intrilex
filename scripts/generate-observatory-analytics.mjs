@@ -1,4 +1,5 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import { writeFile as writeFileWithRetry } from './lib/write-with-retry.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildObservatoryAnalytics } from '@intrilex/analytics';
@@ -11,24 +12,7 @@ const autonomy=path.join(root,'sample-data/autonomy');
 const out=path.join(root,'sample-data/observatory');
 await mkdir(out,{recursive:true});
 
-// Windows filesystem retry wrapper — antivirus/indexer can briefly lock files,
-// causing UNKNOWN (errno -4094) on writeFile. Retry with backoff.
-async function writeFileWithRetry(filePath, data, retries = 5) {
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      await writeFile(filePath, data);
-      return;
-    } catch (err) {
-      if (err.code === 'UNKNOWN' || err.code === 'EPERM' || err.code === 'EBUSY') {
-        if (attempt < retries - 1) {
-          await new Promise(r => setTimeout(r, 200 * (attempt + 1)));
-          continue;
-        }
-      }
-      throw err;
-    }
-  }
-}
+// writeFileWithRetry: shared Windows fs-stall retry — see scripts/lib/write-with-retry.mjs
 const summariesText=await readFile(path.join(autonomy,'match-summaries.ndjson'),'utf8');
 const summaries=summariesText.trim().split('\n').filter(Boolean).map(JSON.parse);
 const aggregate=JSON.parse(await readFile(path.join(autonomy,'aggregate.json'),'utf8'));

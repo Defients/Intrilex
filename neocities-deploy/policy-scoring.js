@@ -1,5 +1,6 @@
-import { sha256Text } from "./engine/hash.js?v=7e1a57e0182d";
-import { tacticalBase, tacticalScore } from './tactics.mjs?v=7e1a57e0182d';
+import { sha256Text } from "./engine/hash.js?v=f6c7ea2918fb";
+import { tacticalBase, tacticalScore } from './tactics.mjs?v=f6c7ea2918fb';
+export { evaluateAction, ACTION_PURPOSES, recordActionCoverage } from './action-evaluation.mjs?v=f6c7ea2918fb';
 
 // ── Default scoring weights (parameterized for tuning and sensitivity analysis) ──
 // Provenance: hand-tuned baseline from v0.10.0. Each weight can be overridden
@@ -59,7 +60,7 @@ const n = (action, key) => Number(action.featureVector?.[key] ?? 0);
 const bool = (action, key) => action.featureVector?.[key] === true;
 const str = (action, key) => String(action.featureVector?.[key] ?? '');
 
-function knownPointValue(context, handle) { return Number(context.authorizedView?.knownCards?.[handle]?.pointValue ?? 0); }
+function knownPointValue(context, handle) { const view=context.authorizedView; return Number((view?.legacyKnownCards ?? view?.knownCards)?.[handle]?.pointValue ?? 0); }
 function targetValue(action, context) { return (action.targetHandles ?? []).reduce((sum, handle) => sum + knownPointValue(context, handle), 0); }
 function sourceValue(action, context) { return (action.sourceHandles ?? []).reduce((sum, handle) => sum + knownPointValue(context, handle), 0); }
 function responseContext(context) {

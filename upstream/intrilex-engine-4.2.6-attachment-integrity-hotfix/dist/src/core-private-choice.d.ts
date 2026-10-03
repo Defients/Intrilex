@@ -32,5 +32,6 @@ export declare function beginChoice(state: EngineState, input: Omit<CorePrivateC
 export declare function isCorePrivateChoiceEffect(effect: CoreEffectAction): boolean;
 export declare function resolveCorePrivateChoiceRoot(input: EngineState, actorId: PlayerId, effect: CoreEffectAction): CorePrivateChoiceTransition | CorePrivateChoiceFailure;
 export declare function generatedCoreEffectCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): CoreEffectAction[];
+export declare function generatedAdvancedLegalCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): import("./core-advanced.js").AdvancedCoreCandidate[];
 export declare function generatedAdvancedCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): CoreAdvancedAction[];
 export declare function resolveCorePrivateChoiceSubmission(input: EngineState, actorId: PlayerId, token: string, submission: CorePrivateChoiceSubmission): CorePrivateChoiceTransition | CorePrivateChoiceFailure;

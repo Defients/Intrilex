@@ -20,7 +20,8 @@ export function runLabGame(run, ordinal) {
     const perSeatStats=result.summary.participants.map(p=>{
       const decisionFamilyCounts={};
       for(const decision of result.decisions)if(decision.actorId===p.playerId)decisionFamilyCounts[decision.family]=(decisionFamilyCounts[decision.family]??0)+1;
-      return {policyDecisionCount:p.decisionCount,decisionFamilyCounts,mechanicCounts:p.mechanicCounts};
+      return {policyDecisionCount:p.decisionCount,decisionFamilyCounts,mechanicCounts:p.mechanicCounts,
+        actionCoverage:result.summary.perSeatStats?.find(s=>s.playerId===p.playerId)?.actionCoverage};
     });
     const record = gameEvidence({...result.summary,perSeatStats}, plan, run, result.replay, performance.now()-started);
     validateRecord(record, run);

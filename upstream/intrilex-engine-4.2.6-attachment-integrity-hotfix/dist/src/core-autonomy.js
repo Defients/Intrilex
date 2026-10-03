@@ -8,7 +8,7 @@ import { assertValidState } from "./validation.js";
 import { CORE_FOUNDATION_AUTHORITY_PROFILE } from "./core-authority.js";
 import { CORE_EFFECT_DECLARATION_PROFILE, enumerateCoreEffectCandidates } from "./core-effects.js";
 import { CORE_RESPONSE_AUTHORITY_PROFILE, currentCoreStackTarget, currentPriorityActor, primaryDescriptor } from "./core-response.js";
-import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates } from "./core-private-choice.js";
+import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates, generatedAdvancedLegalCandidates } from "./core-private-choice.js";
 import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, enumerateAdvancedCoreCandidates } from "./core-advanced.js";
 function readCoreRuntime(state) {
     const value = state.metadata.coreAuthority;
@@ -109,11 +109,18 @@ export function enumerateCorePrivateChoiceActions(state, actorId) {
     if (choice.kind === "core-rank7-generated-effect") {
         const generatedCardId = choice.optionCardIds[0];
         const effects = generatedCoreEffectCandidates(state, actorId, generatedCardId);
+        const advanced = generatedAdvancedLegalCandidates(state, actorId, generatedCardId);
         candidates.push(privateChoiceAction(state, choice, "rank7-generated-score", [generatedCardId], { kind: "core-rank7-generated-effect", selectedCardIds: [generatedCardId], scoreInstead: true }, { toScore: true }));
-        if (effects.length === 0)
+        if (effects.length === 0 && advanced.length === 0)
             candidates.push(privateChoiceAction(state, choice, "rank7-generated-unavailable", [generatedCardId], { kind: "core-rank7-generated-effect", selectedCardIds: [generatedCardId] }, { fizzle: true }));
         for (const effect of effects)
             candidates.push(privateChoiceAction(state, choice, `rank7-generated-${effect.kind}`, [generatedCardId], { kind: "core-rank7-generated-effect", selectedCardIds: [generatedCardId], generatedEffect: canonicalClone(effect) }, { generated: true, effectKind: effect.kind }));
+        for (const entry of advanced) {
+            const candidate = privateChoiceAction(state, choice, `rank7-generated-${entry.advanced.kind}`, [generatedCardId], { kind: "core-rank7-generated-effect", selectedCardIds: [generatedCardId], generatedAdvanced: canonicalClone(entry.advanced) }, { ...entry.featureVector, generated: true, generatedFamily: entry.family, generatedMode: entry.mode, effectKind: entry.advanced.kind });
+            candidate.sourceCardIds = [...entry.sourceCardIds];
+            candidate.targetCardIds = [...entry.targetCardIds];
+            candidates.push(candidate);
+        }
     }
     if (choice.kind === "core-nine-anchor-discard")
         for (const id of choice.optionCardIds)

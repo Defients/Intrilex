@@ -1,4 +1,5 @@
-import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rm } from 'node:fs/promises';
+import { writeFile as writeFileWithRetry } from './lib/write-with-retry.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { aggregateReplayRecords } from '@intrilex/analytics';
@@ -18,19 +19,6 @@ const output = path.join(root, 'sample-data');
 const publicDir = path.join(output, 'replays/public');
 const authorizedDir = path.join(output, 'replays/authorized');
 
-async function writeFileWithRetry(filePath, data, retries = 5) {
-  for (let attempt = 0; attempt < retries; attempt += 1) {
-    try {
-      await writeFile(filePath, data);
-      return;
-    } catch (error) {
-      const retryable = ['UNKNOWN', 'EPERM', 'EBUSY'].includes(error?.code);
-      if (!retryable || attempt === retries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1)));
-    }
-  }
-}
-
 function sanitizePublic(value){
   if(Array.isArray(value))return value.map(sanitizePublic);
   if(!value||typeof value!=='object')return value;
@@ -39,7 +27,7 @@ function sanitizePublic(value){
 const publicEventType=(type)=>type==='PRIORITY_PASSED'?'LEGACY_PRIORITY_TRANSITION':type==='PRIORITY_CLOSED'?'RESPONSE_WINDOW_CLOSED':type;
 const publicCommandType=(command)=>command.type==='PASS_PRIORITY'?'LEGACY_PRIORITY_TRANSITION':command.type;
 
-await rm(path.join(output, 'replays'), { recursive: true, force: true });
+await rm(path.join(output, 'replays'), { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 await mkdir(publicDir, { recursive: true });
 await mkdir(authorizedDir, { recursive: true });
 

@@ -75,7 +75,7 @@ test('tactical policies never read full state or RNG and preserve lexical ties',
 });
 test('versioned checkpoints retain the original five-opponent research suite and reject version substitution',async()=>{
   const identity=await evolutionIdentity();assert.deepEqual(FROZEN_POLICIES,['random-legal','score-rush','control','tempo','value']);
-  for(const id of ids){assert.equal(CORE_POLICY_BY_ID[id].version,'3.0.0');const cp=createCheckpoint({policyId:id,agentId:'A',identity});assert.equal(cp.policyVersion,'3.0.0');const {checkpointId:_,...body}=cp;body.policyVersion='2.0.0';assert.throws(()=>validateCheckpoint({...body,checkpointId:`CP-${hashCanonical(body)}`},identity),/INCOMPATIBLE/);}
+  for(const id of ids){assert.equal(CORE_POLICY_BY_ID[id].version,'4.0.0');const cp=createCheckpoint({policyId:id,agentId:'A',identity});assert.equal(cp.policyVersion,'4.0.0');const {checkpointId:_,...body}=cp;body.policyVersion='2.0.0';assert.throws(()=>validateCheckpoint({...body,checkpointId:`CP-${hashCanonical(body)}`},identity),/INCOMPATIBLE/);}
   assert.equal(CORE_POLICY_BY_ID.tempo.version,'2.0.0');assert.equal(CORE_POLICY_BY_ID.value.version,'2.0.0');
 });
 test('real legal-action frames agree in Node and browser, and opponent hidden-card swaps cannot change choices',async()=>{

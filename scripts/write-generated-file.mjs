@@ -1,4 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
+import { writeFile } from './lib/write-with-retry.mjs';
 
 /** Preserve metadata on a no-op so source watchers do not trigger another build. */
 export async function writeGeneratedFile(file, content) {

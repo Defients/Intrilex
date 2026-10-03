@@ -30,7 +30,7 @@ try{
     await page.locator('#evo-bot-a').selectOption('score-rush-tactical');await page.locator('#evo-bot-b').selectOption('control-tactical');
     await page.locator('#evo-games').fill('4');await page.locator('#evo-run').click();await expect(page.locator('#evo-state')).toHaveText('COMPLETE',{timeout:60000});
     const exported=await exportRun('tactical-workers.json'),run=exported.payload;
-    assert.equal(run.checkpoints[0].policyVersion,'3.0.0');assert.equal(run.checkpoints[1].policyVersion,'3.0.0');
+    assert.equal(run.checkpoints[0].policyVersion,'4.0.0');assert.equal(run.checkpoints[1].policyVersion,'4.0.0');
     const node=(await runLabSeries(run.config,{identity,createdAt:run.createdAt})).run;
     for(const r of run.records){const expected=node.records.find(x=>x.ordinal===r.ordinal);for(const key of ['initialStateHash','actionSequenceHash','finalStateHash','winner','resultHash'])assert.equal(r[key],expected[key]);}
     await page.goto(`${base}/#/watch`);for(const id of ['score-rush-tactical','control-tactical','tempo-tactical','value-tactical']){await expect(page.locator(`#exp-p1 option[value="${id}"]`)).toHaveCount(1);await expect(page.locator(`#exp-p2 option[value="${id}"]`)).toHaveCount(1);}await page.goto(`${base}/#/caster`);
@@ -50,8 +50,8 @@ try{
     const exported=await exportRun('historical-original.json');assert.deepEqual(exported,envelope);await page.locator('[data-evo-action="close-archive"]').click();await expect(page.locator('#evo-run')).toBeEnabled();
   });
   await surface('ledger');await page.locator('#evo-import').setInputFiles(source);const before=await exportRun('before.json');await surface('arena');
-  await scenario('eight arena plot families, full-sample statistics and corrected Core turn average',async()=>{
-    await expect(page.locator('#evo-chart [data-evo-plot]')).toHaveCount(8);
+  await scenario('nine arena plot families, full-sample statistics and corrected Core turn average',async()=>{
+    await expect(page.locator('#evo-chart [data-evo-plot]')).toHaveCount(9);
     await expect(page.locator('[data-evo-metric="Avg full turns · incl. End"]')).toHaveText(model.summary.meanTurns.toFixed(2));
     await expect(page.locator('.evo-analysis-kpis')).toContainText('MINI-TURNS');await expect(page.locator('.evo-analysis-coverage')).toContainText('120 / 120');
     await expect(page.locator('.evo-cockpit-grid')).toHaveClass(/evo-graph-space/);await expect(page.locator('#evo-cockpit-inspector')).not.toBeVisible();

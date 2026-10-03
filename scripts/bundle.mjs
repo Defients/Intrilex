@@ -12,7 +12,8 @@
  */
 import esbuild from 'esbuild';
 import { compile } from '@tailwindcss/node';
-import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
+import { readFile, readdir, rm } from 'node:fs/promises';
+import { writeFile } from './lib/write-with-retry.mjs';
 import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
@@ -141,7 +142,7 @@ async function bundle() {
   }
 
   // Clean up the temp split directory
-  await rm(splitDir, { recursive: true, force: true });
+  await rm(splitDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 
   // Write bundle manifest
   const manifest = {

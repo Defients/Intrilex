@@ -1,7 +1,7 @@
-import { RULES_VERSION } from './version.js?v=7e1a57e0182d';
-const engineModule = import('./engine/browser-entry.js?v=7e1a57e0182d');
-const autonomyModule = import('./autonomy-runtime.js?v=7e1a57e0182d');
-const analyticsModule = import('./browser-analytics.js?v=7e1a57e0182d');
+import { RULES_VERSION } from './version.js?v=f6c7ea2918fb';
+const engineModule = import('./engine/browser-entry.js?v=f6c7ea2918fb');
+const autonomyModule = import('./autonomy-runtime.js?v=f6c7ea2918fb');
+const analyticsModule = import('./browser-analytics.js?v=f6c7ea2918fb');
 
 const fetchJson = async (url) => {
   const response = await fetch(url);
@@ -67,8 +67,8 @@ self.onmessage = async (event) => {
     const { epoch, workerIndex, ordinal } = event.data;
     try {
       const { runBrowserPolicyMatch } = await autonomyModule;
-      const domain = await import('./evolution/evolution-domain.mjs?v=7e1a57e0182d');
-      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=7e1a57e0182d');
+      const domain = await import('./evolution/evolution-domain.mjs?v=f6c7ea2918fb');
+      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=f6c7ea2918fb');
       const run = event.data.run;
       domain.assertIdentity(run.identity, LAB_IDENTITY);
       domain.labConfig(run.config);
@@ -89,8 +89,8 @@ self.onmessage = async (event) => {
   }
   if (type === 'inspect-evolution-replay') {
     try {
-      const domain = await import('./evolution/evolution-domain.mjs?v=7e1a57e0182d');
-      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=7e1a57e0182d');
+      const domain = await import('./evolution/evolution-domain.mjs?v=f6c7ea2918fb');
+      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=f6c7ea2918fb');
       const runtime = await autonomyModule;
       const { IntrilexEngine, hashCanonical } = await engineModule;
       const run = domain.validateArtifact(event.data.artifact, LAB_IDENTITY);
@@ -137,7 +137,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-counterfactual') {
     try {
-      const { runCounterfactualBranch } = await import('./decision-intelligence.js?v=7e1a57e0182d');
+      const { runCounterfactualBranch } = await import('./decision-intelligence.js?v=f6c7ea2918fb');
       const result = runCounterfactualBranch(event.data.config ?? {});
       self.postMessage({ type: 'counterfactual-result', ok: true, result });
     } catch (error) { self.postMessage({ type: 'counterfactual-result', ok: false, error: error?.stack ?? String(error) }); }
@@ -145,7 +145,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-paired-counterfactual') {
     try {
-      const { runPairedCounterfactual } = await import('./decision-intelligence.js?v=7e1a57e0182d');
+      const { runPairedCounterfactual } = await import('./decision-intelligence.js?v=f6c7ea2918fb');
       const cfg = event.data.config ?? {};
       // Load the authorized replay if not already provided in config
       if (!cfg.replay && cfg.fixtureId) {
@@ -161,7 +161,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'get-legal-actions') {
     try {
-      const { getCheckpointLegalActions } = await import('./decision-intelligence.js?v=7e1a57e0182d');
+      const { getCheckpointLegalActions } = await import('./decision-intelligence.js?v=f6c7ea2918fb');
       const { replay, checkpointIndex, profileId, fixtureId, replayKind } = event.data;
       let replayObj = replay;
       if (!replayObj && fixtureId) {
@@ -177,7 +177,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-all-actions') {
     try {
-      const { getCheckpointLegalActions, runCounterfactualBranch } = await import('./decision-intelligence.js?v=7e1a57e0182d');
+      const { getCheckpointLegalActions, runCounterfactualBranch } = await import('./decision-intelligence.js?v=f6c7ea2918fb');
       const { replay, checkpointIndex, profileId, fixtureId, replayKind, rolloutCount, continuationPolicyIds, baseSeed, seatOrder, matchId } = event.data;
       let replayObj = replay;
       if (!replayObj && fixtureId) {
@@ -238,7 +238,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-diagnostics') {
     try {
-      const { diagnosePolicy } = await import('./decision-intelligence.js?v=7e1a57e0182d');
+      const { diagnosePolicy } = await import('./decision-intelligence.js?v=f6c7ea2918fb');
       const summaries = JSON.parse(event.data.summariesJson ?? '[]');
       const decisions = JSON.parse(event.data.decisionsJson ?? '[]');
       const baseline = diagnosePolicy(summaries, decisions, event.data.baselinePolicyId);

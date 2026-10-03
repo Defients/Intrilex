@@ -44,7 +44,7 @@ export function createHybrixPolicy({ policyId, archetype, difficulty = 'normal',
 
   return createPolicyDefinition({
     policyId,
-    version: '1.0.0',
+    version: '2.0.0',
     strengthTier: resolvedTier,
     traits: {
       archetype,

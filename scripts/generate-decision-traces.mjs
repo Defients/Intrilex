@@ -1,4 +1,5 @@
-import { mkdir,  readFile,  writeFile } from 'node:fs/promises';
+import { mkdir,  readFile } from 'node:fs/promises';
+import { writeFile } from './lib/write-with-retry.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runPolicyMatch } from '@intrilex/simulation-runtime';

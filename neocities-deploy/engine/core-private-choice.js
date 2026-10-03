@@ -1,10 +1,10 @@
-import { canonicalClone } from "./canonical-json.js?v=7e1a57e0182d";
-import { enumerateCoreEffectCandidates } from "./core-effects.js?v=7e1a57e0182d";
-import { enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=7e1a57e0182d";
-import { hashCanonical } from "./hash.js?v=7e1a57e0182d";
-import { revealUntilStart } from "./lifecycle.js?v=7e1a57e0182d";
-import { cardPointValue, parseIdentity } from "./ranks.js?v=7e1a57e0182d";
-import { moveCard } from "./state.js?v=7e1a57e0182d";
+import { canonicalClone } from "./canonical-json.js?v=f6c7ea2918fb";
+import { enumerateCoreEffectCandidates } from "./core-effects.js?v=f6c7ea2918fb";
+import { enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=f6c7ea2918fb";
+import { hashCanonical } from "./hash.js?v=f6c7ea2918fb";
+import { revealUntilStart } from "./lifecycle.js?v=f6c7ea2918fb";
+import { cardPointValue, parseIdentity } from "./ranks.js?v=f6c7ea2918fb";
+import { moveCard } from "./state.js?v=f6c7ea2918fb";
 export const CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE = Object.freeze({
     id: "core-private-choice-authority",
     displayName: "Core Private Choice Authority — Sealed Hidden Decisions",
@@ -393,7 +393,7 @@ export function generatedCoreEffectCandidates(state, actorId, cardId) {
         .map((entry) => canonicalClone(entry.effect));
     return [...standalone, ...multiCard];
 }
-export function generatedAdvancedCandidates(state, actorId, cardId) {
+export function generatedAdvancedLegalCandidates(state, actorId, cardId) {
     const card = state.cards[cardId];
     if (!card || card.state.privateChoiceHeldBy !== actorId)
         return [];
@@ -403,8 +403,10 @@ export function generatedAdvancedCandidates(state, actorId, cardId) {
     // Enumerate advanced actions (Supers, Ultras, etc.) that include the generated card.
     // Per rulebook §7: the generated revealed card may be used as a component of its Rank's Super.
     return enumerateAdvancedCoreCandidates(probe, actorId)
-        .filter((entry) => entry.sourceCardIds.includes(cardId))
-        .map((entry) => canonicalClone(entry.advanced));
+        .filter((entry) => entry.sourceCardIds.includes(cardId));
+}
+export function generatedAdvancedCandidates(state, actorId, cardId) {
+    return generatedAdvancedLegalCandidates(state, actorId, cardId).map((entry) => canonicalClone(entry.advanced));
 }
 export function resolveCorePrivateChoiceSubmission(input, actorId, token, submission) {
     const validation = validateSubmission(input, actorId, token, submission);

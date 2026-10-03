@@ -29,6 +29,7 @@ const coreResponse = await import(moduleUrl(authorityRuntime, 'core-response.js'
 const corePrivate = await import(moduleUrl(authorityRuntime, 'core-private-choice.js'));
 const ranksModule = await import(moduleUrl(authorityRuntime, 'ranks.js'));
 const { actionComposition } = await import('./action-composition.mjs');
+const { actionSemantics } = await import('./action-semantics.mjs');
 
 export const { parseCertifiedReplay, verifyCertifiedReplay, publicCertifiedReplayView, serializeCertifiedReplay } = phase16;
 export const { publicStateView, privateStateView, publicEventView } = views;
@@ -193,7 +194,8 @@ export function authorizedActionView(action, profileId) {
   // actions (Wild Sovereignty, Solo Wild) into the public decision fields a
   // composer needs. The command itself never crosses this boundary.
   const composition = actionComposition(action);
-  return composition ? { ...view, composition } : view;
+  const semantics = actionSemantics(action);
+  return { ...view, ...(composition ? { composition } : {}), ...(semantics ? { semantics } : {}) };
 }
 
 /**
@@ -351,6 +353,13 @@ export function strictPolicyView(state, actorId) {
     const card = state.cards[id];
     return card?.state?.swapBarFaceUp === true ? include(id) : { id, identity: 'HIDDEN', faceDown: true };
   });
+  const gyTopCard = state.zones.gy.length ? include(state.zones.gy.at(-1)) : null;
+  // Frozen v2 evaluators keep their original input subset. Current evaluators
+  // also receive public stack sources and piles, never hidden identities.
+  const legacyKnownCards = { ...knownCards };
+  for (const item of stack) for (const id of item.sourceCardIds) include(id);
+  const graveyard = state.zones.gy.map(include).filter(Boolean);
+  const exile = state.zones.exile.map(include).filter(Boolean);
   return {
     schemaVersion: '3.0',
     engineVersion: ENGINE_VERSION,
@@ -363,8 +372,10 @@ export function strictPolicyView(state, actorId) {
     fullTurnSequence: state.fullTurnSequence,
     dpCount: state.zones.dp.length,
     gyCount: state.zones.gy.length,
-    gyTopCard: state.zones.gy.length > 0 ? include(state.zones.gy[state.zones.gy.length - 1]) : null,
+    gyTopCard,
     exileCount: state.zones.exile.length,
+    graveyard,
+    exile,
     swapBar,
     boardLock: structuredClone(state.metadata?.boardLock ?? null),
     suddenDeath: structuredClone(state.metadata?.suddenDeath ?? null),
@@ -377,6 +388,7 @@ export function strictPolicyView(state, actorId) {
       (trigger) => ({ id: trigger.id, type: trigger.type, controllerId: trigger.controllerId ?? null, status: trigger.status ?? null })),
     pendingChoice,
     knownCards,
+    legacyKnownCards,
     own,
     opponents
   };

@@ -59,8 +59,17 @@ export function arenaAnalytics(run, {window=100, from=1, to=10000}={}) {
   let telemetryGames=0;
   for(const r of clean){if(r.seatBehavior?.length!==2)continue;telemetryGames++;for(const [i,seat] of r.seatBehavior.entries()){const bot=(i===0)!==r.swapped?'A':'B';actions[bot].decisions+=seat.decisions;for(const [key,count]of Object.entries(seat.actionCounts??{}))actions[bot].counts[key]=(actions[bot].counts[key]??0)+count;}}
   const families=[...new Set([...Object.keys(actions.A.counts),...Object.keys(actions.B.counts)])].sort().map(key=>({key,A:actions.A.decisions?100*(actions.A.counts[key]??0)/actions.A.decisions:null,B:actions.B.decisions?100*(actions.B.counts[key]??0)/actions.B.decisions:null}));
+  const coverage={A:{games:0,opportunities:{},selected:{}},B:{games:0,opportunities:{},selected:{}}};
+  for(const r of clean) for(const [i,seat] of (r.seatBehavior??[]).entries()) {
+    const c=seat.actionCoverage;if(c?.schemaVersion!==1)continue;
+    const bot=(i===0)!==r.swapped?'A':'B';coverage[bot].games++;
+    for(const field of ['opportunities','selected'])for(const [key,count]of Object.entries(c[field]??{}))coverage[bot][field][key]=(coverage[bot][field][key]??0)+count;
+  }
+  const opportunityRows=[...new Set([...Object.keys(coverage.A.opportunities),...Object.keys(coverage.B.opportunities)])].sort().map(key=>{
+    const row={key};for(const bot of ['A','B']){const c=coverage[bot],n=c.opportunities[key]??0,selected=c.selected[key]??0;row[bot]=c.games&&n?100*selected/n:null;row[`${bot}Available`]=c.games?n:null;row[`${bot}Selected`]=c.games?selected:null;}return row;
+  });
   const terminations=Object.entries(records.reduce((acc,r)=>{acc[r.terminationReason]=(acc[r.terminationReason]??0)+1;return acc;},{})).map(([key,count])=>({key,count}));
-  return {records,clean,summary,curves,seats,families,telemetryGames,terminations,
+  return {records,clean,summary,curves,seats,families,telemetryGames,terminations,coverage,opportunityRows,
     pairs:{n:pairScores.length,incompleteGames:clean.length-pairScores.length*2,score:paired,interval:paired===null?null:[Math.max(0,paired-radius),Math.min(1,paired+radius)]},
     turnBins:histogram(clean,r=>inclusiveFullTurns(r,profile)),decisionBins:histogram(clean,r=>r.decisions),
     marginBins:histogram(clean,r=>r.swapped?r.scoreP2-r.scoreP1:r.scoreP1-r.scoreP2),

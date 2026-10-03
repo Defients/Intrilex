@@ -1,4 +1,5 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm } from 'node:fs/promises';
+import { writeFile } from './lib/write-with-retry.mjs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +11,7 @@ import { publicAuthorityCertifiedReplayView } from '@intrilex/engine-adapter';
 import { POLICY_CATALOG } from '@intrilex/simulation-runtime/policy-catalog';
 import { hashCanonical, sanitizeCsvCell } from '@intrilex/shared';
 import { loadReleaseIdentity } from '@intrilex/shared/release-identity';
+import { evolutionIdentity } from './evolution-identity.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const output=path.join(root,'sample-data/autonomy'),reports=path.join(root,'reports'),segmentRoot=path.join(root,'runtime/campaign-segments-v070'),replayCacheRoot=path.join(root,'runtime/campaign-replays-v070');
@@ -22,15 +24,15 @@ if(!Number.isInteger(segmentSize)||segmentSize<25||segmentSize%25!==0)throw new 
 const BASE_POLICY_IDS=POLICY_CATALOG.filter(policy=>!policy.policyId.startsWith('hybrix-')).map(policy=>policy.policyId);
 const HYBRIX_NORMAL_IDS=POLICY_CATALOG.filter(policy=>policy.policyId.startsWith('hybrix-')&&!policy.policyId.endsWith('-easy')&&!policy.policyId.endsWith('-hard')&&!policy.policyId.endsWith('-nightmare')).map(policy=>policy.policyId);
 const OBSERVATORY_POLICY_IDS=[...BASE_POLICY_IDS,...HYBRIX_NORMAL_IDS],policyPairs=OBSERVATORY_POLICY_IDS.flatMap(left=>OBSERVATORY_POLICY_IDS.map(right=>[left,right]));
-const config={profileId:'core-advanced-authority',matchCount,policyPairs,decisionLimit:3600};
+const config={profileId:'core-advanced-authority',matchCount,policyPairs,decisionLimit:3600,implementationFingerprint:(await evolutionIdentity()).fingerprint};
 
 async function segmented(workerCount,executionId){
-  const dir=path.join(segmentRoot,executionId);if(!resume)await rm(dir,{recursive:true,force:true});await mkdir(dir,{recursive:true});
+  const dir=path.join(segmentRoot,executionId);if(!resume)await rm(dir,{recursive:true,force:true,maxRetries:10,retryDelay:250});await mkdir(dir,{recursive:true});
   const configPath=path.join(dir,'config.json');await writeFile(configPath,JSON.stringify(config));const segments=[];
   for(let start=0;start<matchCount;start+=segmentSize){
     const end=Math.min(matchCount,start+segmentSize),file=path.join(dir,`${String(start).padStart(6,'0')}.json`);let segment=null;
     if(resume)segment=await readFile(file,'utf8').then(JSON.parse).catch(()=>null);
-    if(!segment||segment.workerCount!==workerCount||segment.ordinalRange?.[0]!==start||segment.ordinalRange?.[1]!==end){
+    if(!segment||segment.workerCount!==workerCount||segment.ordinalRange?.[0]!==start||segment.ordinalRange?.[1]!==end||segment.implementationFingerprint!==config.implementationFingerprint||hashCanonical(segment.semantic?.policyPairs)!==hashCanonical(policyPairs)){
       const run=spawnSync(process.execPath,['scripts/run-campaign-segment.mjs','--config',configPath,'--start',String(start),'--end',String(end),'--workers',String(workerCount),'--output',file],{cwd:root,stdio:'inherit',timeout:180000});
       if(run.status!==0)throw new Error(`SEGMENT_FAILED:${executionId}:${start}-${end}:${run.signal??run.status}`);
       segment=JSON.parse(await readFile(file,'utf8'));
@@ -59,7 +61,7 @@ config.postRulesParityRepair=true;
 config.authorityHash=authorityHash;
 config.releaseIdentityHash=releaseIdentityHash;
 
-await rm(output,{recursive:true,force:true});if(!resume)await rm(replayCacheRoot,{recursive:true,force:true});await mkdir(replayCacheRoot,{recursive:true});await mkdir(path.join(output,'replays/authorized'),{recursive:true});await mkdir(path.join(output,'replays/public'),{recursive:true});await mkdir(reports,{recursive:true});
+await rm(output,{recursive:true,force:true,maxRetries:10,retryDelay:250});if(!resume)await rm(replayCacheRoot,{recursive:true,force:true,maxRetries:10,retryDelay:250});await mkdir(replayCacheRoot,{recursive:true});await mkdir(path.join(output,'replays/authorized'),{recursive:true});await mkdir(path.join(output,'replays/public'),{recursive:true});await mkdir(reports,{recursive:true});
 const executions=[];let canonical=null;
 async function execute(workerCount,id){const startedAt=new Date().toISOString(),started=performance.now();const campaign=await segmented(workerCount,id);const durationMs=campaign.segmentDurationsMs.reduce((a,b)=>a+b,0)||Math.round(performance.now()-started);canonical??=campaign;executions.push({schemaVersion:'4.1.0',executionId:id,experimentHash:campaign.experimentHash,workerCount,matchCount:campaign.matchCount,startedAt,durationMs,matchesPerSecond:Number((campaign.matchCount/(durationMs/1000)).toFixed(2)),canonicalResultHash:campaign.canonicalResultHash,node:process.version,platform:`${process.platform}-${process.arch}`,cpuCount:os.cpus().length,segmentCount:campaign.segmentCount,segmentSize:campaign.segmentSize});}
 for(const workers of workerCounts)await execute(workers,`workers-${workers}`);if(includeRerun)await execute(rerunWorkerCount,`workers-${rerunWorkerCount}-clean-rerun`);

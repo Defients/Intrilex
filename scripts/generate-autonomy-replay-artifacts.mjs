@@ -1,4 +1,5 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm } from 'node:fs/promises';
+import { writeFile } from './lib/write-with-retry.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -15,21 +16,32 @@ import { createReplayScopedPublicProjector } from '@intrilex/engine-adapter/publ
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const base=path.join(root,'sample-data/autonomy');
 const identity=await loadReleaseIdentity();
-const retention=JSON.parse(await readFile(path.join(base,'retention-index.json'),'utf8'));
+const retentionArg=process.argv.indexOf('--retention-index');
+const retention=JSON.parse(await readFile(retentionArg>=0?path.resolve(process.argv[retentionArg+1]):path.join(base,'retention-index.json'),'utf8'));
 const out=path.join(base,'lab-replays'),publicDir=path.join(out,'public'),authorizedDir=path.join(out,'authorized');
 const resume=process.argv.includes('--resume');
 
 function sanitizePublic(value){if(Array.isArray(value))return value.map(sanitizePublic);if(!value||typeof value!=='object')return value;const out={};for(const [key,item] of Object.entries(value)){if(['instructions','replacementInstructions','command','commandHash','integrityHash','rng'].includes(key))continue;out[key]=sanitizePublic(item);}return out;}
 const publicCommandSemantic=(command)=>{const semantic=command?.action?.semantic;if(semantic==='DECLINE_RESPONSE')return{type:'DECLINE_RESPONSE',semanticClass:'response-decline'};if(semantic==='AUTOMATIC_PRIORITY_ADVANCE')return{type:'AUTOMATIC_PRIORITY_ADVANCE',semanticClass:'engine-orchestration'};return{type:command.type,semanticClass:null};};
 
-if(!resume)await rm(out,{recursive:true,force:true});await mkdir(publicDir,{recursive:true});await mkdir(authorizedDir,{recursive:true});
+if(!resume)await rm(out,{recursive:true,force:true,maxRetries:10,retryDelay:250});await mkdir(publicDir,{recursive:true});await mkdir(authorizedDir,{recursive:true});
 const records=[];
 for(const retained of retention.records){
   const publicPath=path.join(publicDir,`${retained.matchId}.json`),authorizedPath=path.join(authorizedDir,`${retained.matchId}.json`);
   if(resume){
     const existingPublic=await readFile(publicPath,'utf8').then(JSON.parse).catch(()=>null);
     const existingAuthorized=await readFile(authorizedPath,'utf8').then(JSON.parse).catch(()=>null);
-    if(existingPublic&&existingAuthorized){
+    const validArtifact=artifact=>{if(!artifact)return false;const {artifactHash,...core}=artifact;return artifactHash===hashCanonical(core);};
+    if(existingPublic&&existingAuthorized&&existingPublic.provenance?.certifiedReplayContentHash===retained.authorizedReplayHash&&existingAuthorized.provenance?.certifiedReplayContentHash===retained.authorizedReplayHash&&validArtifact(existingPublic)&&validArtifact(existingAuthorized)){
+      // Retention reasons and experiment provenance can change while the
+      // certified command transcript remains identical. Refresh just that
+      // metadata and its content hash rather than replaying unchanged frames.
+      for(const [artifact,file]of [[existingPublic,publicPath],[existingAuthorized,authorizedPath]]){
+        if(JSON.stringify(artifact.retentionReasons)!==JSON.stringify(retained.reasons)||artifact.provenance.experimentHash!==retention.experimentHash){
+          artifact.retentionReasons=retained.reasons;artifact.provenance.experimentHash=retention.experimentHash;
+          const {artifactHash:_oldHash,...core}=artifact;artifact.artifactHash=hashCanonical(core);await writeFile(file,JSON.stringify(artifact)+'\n');
+        }
+      }
       const source=retained.summary;
       records.push({fixtureId:retained.matchId,replayKind:'ADVANCED_CORE_RETAINED',retentionReasons:retained.reasons,commandCount:existingAuthorized.commands.length,eventCount:existingAuthorized.events.length,acceptedCount:existingAuthorized.accepted.filter(Boolean).length,viewerIds:existingAuthorized.viewers,publicArtifactHash:existingPublic.artifactHash,authorizedArtifactHash:existingAuthorized.artifactHash,certifiedReplayContentHash:existingAuthorized.provenance.certifiedReplayContentHash,finalStateHash:existingAuthorized.frames.at(-1)?.omniscientStateHash??null,hasDecisionTraces:retained.hasDecisionTraces??false,traceCount:retained.traceCount??0,summary:source});
       console.log(`REPLAY RESUME PASS: ${retained.matchId}`);

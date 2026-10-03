@@ -10,9 +10,9 @@
  * isolates separate campaign executions even when they share matchIds.
  */
 
-import { createPolicyDefinition } from "./browser-policy-sdk.js?v=7e1a57e0182d";
-import { createHybrixAgent} from "./agent.js?v=7e1a57e0182d";
-import { DEFAULT_CONFIG } from "./config.js?v=7e1a57e0182d";
+import { createPolicyDefinition } from "./browser-policy-sdk.js?v=f6c7ea2918fb";
+import { createHybrixAgent} from "./agent.js?v=f6c7ea2918fb";
+import { DEFAULT_CONFIG } from "./config.js?v=f6c7ea2918fb";
 
 /**
  * Create a HYBRIX-backed policy definition.
@@ -44,7 +44,7 @@ export function createHybrixPolicy({ policyId, archetype, difficulty = 'normal',
 
   return createPolicyDefinition({
     policyId,
-    version: '1.0.0',
+    version: '2.0.0',
     strengthTier: resolvedTier,
     traits: {
       archetype,

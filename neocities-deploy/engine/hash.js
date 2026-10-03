@@ -1,4 +1,4 @@
-import { canonicalize } from "./canonical-json.js?v=7e1a57e0182d";
+import { canonicalize } from "./canonical-json.js?v=f6c7ea2918fb";
 
 const K = new Uint32Array([
   0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,

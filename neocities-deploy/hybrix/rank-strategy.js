@@ -115,6 +115,32 @@ const MODE_CATEGORY = {
   'ordinary': 'score'
 };
 
+// Canonical engine spellings and older test/consumer spellings meet here.
+// Family context disambiguates modes such as "queen", "king" and suit names.
+function strategyMode(action) {
+  const mode = String(action.mode ?? '');
+  if (action.family === 'royal-marriage') return 'royal-marriage';
+  if (action.family === 'wild-sovereignty') return 'wild-sovereignty';
+  if (action.family === 'solo-wild') return 'solo-wild-copy';
+  if (action.family === 'score') return 'score';
+  const aliases = {
+    'ace-base':'base-counter', 'ace-spade':'spade-exile-counter', 'super-ace':'super-counter',
+    'ace-anchor':'anchor-counter', 'king-spade':'spade-multi-counter',
+    'rank10-stack-theft':'spade-stack-theft', 'spade-recovery':'spade-exile-recovery',
+    'club-foundation-bonus':'club-foundation', 'queen':'guard-anchor', 'king':'anchor',
+    'queen-aegis':'quick-aegis', 'eight-aegis-field':'aegis-field', 'nine-tap':'tap',
+    'board-lock':'board-lock-quick', 'black-joker':'board-lock-quick',
+    'jack-tempo':'tempo-force', 'eight-absolute-scuttle':'super-scuttle', 'absolute-scuttle':'super-scuttle',
+    'three-raid':'super-raid', 'five-recycle':'recycle', 'six-dig':'dig', 'seven-topdeck':'topdeck-cast',
+  };
+  if (action.family === 'anchor' && mode === 'ace') return 'anchor-counter';
+  if (action.family === 'disrupt' && mode === 'jack') return 'disrupt';
+  if (mode.startsWith('clear-')) return 'row-clear';
+  if (mode.includes('four-exchange') || mode.includes('row-exchange')) return 'row-exchange';
+  if (mode.startsWith('diamond-mimic')) return 'diamond-mimic';
+  return aliases[mode] ?? mode;
+}
+
 /**
  * Evaluate rank-aware strategic features for a single legal action.
  *
@@ -131,7 +157,7 @@ export function evaluateRankStrategy(action, context, cognition) {
     .map(h => knownCards[h]?.identity)
     .filter(Boolean);
   const sourceParsed = sourceIdentities.map(parseRank).filter(Boolean);
-  const mode = action.mode ?? '';
+  const mode = strategyMode(action);
   const family = action.family ?? '';
   const category = MODE_CATEGORY[mode] ?? family;
   const reasonCodes = [];
@@ -141,7 +167,7 @@ export function evaluateRankStrategy(action, context, cognition) {
   const immediate = Number(action.featureVector?.immediateScore ?? action.featureVector?.immediatePoints ?? 0);
   const ownSecured = Number(own.securedPoints ?? 0);
   const ownGoal = Number(own.goal ?? 21);
-  if (ownSecured + immediate >= ownGoal) {
+  if (immediate > 0 && ownSecured + immediate >= ownGoal) {
     adjustment += 8000;
     reasonCodes.push('TERMINAL_SCORE_AVAILABLE');
     // Terminal wins override conservation — never penalize a winning score
@@ -284,7 +310,7 @@ function rankModeValuation(sources, mode, category, action, context, reasonCodes
       // Penalize if K♠ is the only counter available for multi-card threats
       const ownHand = context?.authorizedView?.own?.hand ?? [];
       const knownCards = context?.authorizedView?.knownCards ?? {};
-      const handParsed = ownHand.map(h => knownCards[h]?.identity).filter(Boolean).map(parseRank).filter(Boolean);
+      const handParsed = ownHand.map(h => (typeof h === 'string' ? knownCards[h] : h)?.identity).filter(Boolean).map(parseRank).filter(Boolean);
       const hasOtherCounters = handParsed.some(p =>
         p.rank === 'A' || (p.rank === 'K' && p.suit !== '♠')
       );
@@ -554,7 +580,7 @@ function combinationAwareness(sources, mode, category, action, context, reasonCo
   const own = context?.authorizedView?.own ?? {};
   const hand = own.hand ?? [];
   const knownCards = context?.authorizedView?.knownCards ?? {};
-  const handIdentities = hand.map(h => knownCards[h]?.identity).filter(Boolean).map(parseRank).filter(Boolean);
+  const handIdentities = hand.map(h => (typeof h === 'string' ? knownCards[h] : h)?.identity).filter(Boolean).map(parseRank).filter(Boolean);
   const handRanks = handIdentities.map(p => p.rank);
   const handByRank = {};
   for (const p of handIdentities) {
@@ -643,7 +669,7 @@ function conservationPenalty(sources, mode, category, action, context, cognition
   const own = context?.authorizedView?.own ?? {};
   const ownSecured = Number(own.securedPoints ?? 0);
   const ownGoal = Number(own.goal ?? 21);
-  if (ownSecured + immediate >= ownGoal) return 0;
+  if (immediate > 0 && ownSecured + immediate >= ownGoal) return 0;
 
   // ── Conservation weakens under opponent threat ──
   const opponents = context?.authorizedView?.opponents ?? [];
@@ -694,7 +720,7 @@ function conservationPenalty(sources, mode, category, action, context, cognition
   }
 
   // ── Draw Pile exhaustion changes resource value ──
-  const dpRemaining = Number(own.drawPileRemaining ?? context?.authorizedView?.drawPileRemaining ?? 99);
+  const dpRemaining = Number(own.drawPileRemaining ?? context?.authorizedView?.dpCount ?? context?.authorizedView?.drawPileRemaining ?? 99);
   if (dpRemaining <= 5) {
     // Late game: conservation weakens because cards won't be replaced
     adj *= 0.5;
@@ -713,7 +739,8 @@ function estimateStackValue(context) {
   let value = 0;
   for (const item of stack) {
     value += Number(item.featureVector?.immediateScore ?? 0) * 10;
-    value += (item.targetHandles ?? []).length * 50;
+    value += (item.sourceCardIds ?? []).reduce((sum,id)=>sum+Number(context.authorizedView?.knownCards?.[id]?.pointValue ?? 0)*10,0);
+    value += (item.targetCardIds ?? item.targetHandles ?? []).length * 50;
   }
   return value;
 }
@@ -731,7 +758,7 @@ function estimateHandAdvantage(context) {
   const own = context?.authorizedView?.own ?? {};
   const opponents = context?.authorizedView?.opponents ?? [];
   const ownHand = own.hand?.length ?? 0;
-  const oppHand = opponents[0]?.hand?.length ?? 0;
+  const oppHand = opponents[0]?.handCount ?? opponents[0]?.hand?.length ?? 0;
   if (ownHand + oppHand === 0) return 0;
   return (ownHand - oppHand) / Math.max(ownHand, oppHand, 1);
 }
@@ -755,14 +782,14 @@ function estimateExileValue(context) {
 function estimateFriendlyLoss(action, context) {
   // Estimate own PR/ER value that would be cleared
   const own = context?.authorizedView?.own ?? {};
-  const prValue = (own.pointRow ?? []).reduce((s, c) => s + Number(c.pointValue ?? 0), 0);
+  const prValue = (own.pr ?? own.pointRow ?? []).reduce((s, c) => s + Number(c.pointValue ?? 0), 0);
   return prValue;
 }
 
 function estimateEnemyLoss(action, context) {
   const opponents = context?.authorizedView?.opponents ?? [];
   const prValue = opponents.reduce((s, o) =>
-    s + (o.pointRow ?? []).reduce((ss, c) => ss + Number(c.pointValue ?? 0), 0), 0);
+    s + (o.pr ?? o.pointRow ?? []).reduce((ss, c) => ss + Number(c.pointValue ?? 0), 0), 0);
   return prValue;
 }
 
@@ -770,9 +797,9 @@ function estimateThreatIsMultiCard(context) {
   const stack = context?.authorizedView?.stack ?? [];
   const top = stack.at(-1);
   if (!top) return false;
-  const sourceCount = (top.sourceHandles ?? []).length;
+  const sourceCount = (top.sourceCardIds ?? top.sourceHandles ?? []).length;
   if (sourceCount >= 2) return true;
-  const family = top.family ?? '';
+  const family = top.stackClass ?? top.family ?? '';
   return ['royal-marriage', 'queens-court', 'super', 'ultra'].includes(family);
 }
 
