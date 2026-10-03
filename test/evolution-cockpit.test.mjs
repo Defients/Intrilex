@@ -1,8 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
 import {projectModel,lineageNodes,pairFor,residualRows,behaviorPair,draftWeights,filterRecords,finite} from '../apps/lab-web/src/evolution/evolution-view-model.mjs';
 
 const features=['points','tempo'];
+
+test('navigation survives malformed, null and non-object saved preferences', async () => {
+  const source = (await readFile('apps/lab-web/src/evolution/evolution-cockpit.js', 'utf8')).replace(/^import .*;\r?$/gm, '').replace(/^export /gm, '');
+  const state = (saved, hash = '#/evolution') => runInNewContext(`${source}\ncreateCockpitState()`, {
+    localStorage: { getItem: () => saved }, location: { hash }, URLSearchParams,
+  });
+  for (const saved of ['null', 'false', '42', '"arena"', '[]', '{broken', '{}', '{"surface":"unknown"}']) {
+    assert.equal(state(saved).surface, 'overview', saved);
+    assert.equal(state(saved, '#/evolution?view=ledger').surface, 'ledger', 'route preference takes precedence');
+  }
+  assert.equal(state('{"surface":"arena"}').surface, 'arena');
+});
 function fixture(){
   const checkpoint=(checkpointId,lineageId,generation,parentCheckpointId,points)=>({checkpointId,lineageId,agentId:lineageId,generation,parentCheckpointId,policyState:{weights:{points,tempo:0}}});
   const matchup=()=>({opponentPolicyId:'control',opponentCheckpointId:'frozen-control',behavior:{availableGames:2,decisions:8}});

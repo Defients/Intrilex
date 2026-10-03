@@ -9,12 +9,14 @@ const generatedRootFile = /^(?:(?:app|styles|tactical|__intrilex-config)\.[a-zA-
 const legacyGeneratedFiles = new Set(['client/board-preference.js', 'assets/og-image.hash']);
 // One source-owned compatibility projection for stale service workers. The
 // worker/proof entries and their runtime imports must remain executable.
+// shared-browser.js is imported directly by Evolution workers, outside the
+// bundled app graph; preserve its canonical hash exports byte-for-byte.
 const neutralizedFiles = new Set([
   'error-boundary.js', 'state.js', 'router.js', 'rerender.js',
   'data-loader.js', 'integrity.js', 'card-face-data.js', 'card-face-renderer.js',
   'card-art-registry.js', 'chart-toolkit.js', 'experiment-controls.js',
   'legal-pages.js', 'replay-frames.js', 'rulebook-renderer.js',
-  'seo-metadata.js', 'shared-browser.js',
+  'seo-metadata.js',
 ]);
 const neutralizedStub = '// Neutralized stub — real code is in the bundled chunks.\nexport {};\n';
 

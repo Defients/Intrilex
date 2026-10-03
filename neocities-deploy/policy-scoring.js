@@ -1,4 +1,5 @@
-import { sha256Text } from "./engine/hash.js?v=c617754e81fe";
+import { sha256Text } from "./engine/hash.js?v=a45e6b3a7e27";
+import { tacticalBase, tacticalScore } from './tactics.mjs?v=a45e6b3a7e27';
 
 // ── Default scoring weights (parameterized for tuning and sensitivity analysis) ──
 // Provenance: hand-tuned baseline from v0.10.0. Each weight can be overridden
@@ -100,6 +101,8 @@ function advancedScore(policyId, action, context, weights) {
 }
 
 export function scorePolicyAction(policyId, action, context, weights = SCORING_WEIGHTS) {
+  const baseId = tacticalBase(policyId);
+  if (baseId) return tacticalScore(baseId, action, context, scorePolicyAction(baseId, action, context, weights));
   const own = context.authorizedView.own, response = responseContext(context);
   const family = normalizedFamily(action);
   const immediate = n(action, 'immediateScore') || n(action, 'immediatePoints');

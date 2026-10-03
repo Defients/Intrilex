@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { hashCanonical } from '@intrilex/shared';
 import { evolutionIdentity, runLabGame, verifyLabReplay, runLabSeries } from '../packages/simulation-runtime/src/evolution-lab.mjs';
-import { createLabRun, createCheckpoint, validateCheckpoint, labConfig, gamePlan, artifactEnvelope, validateArtifact, summarizeRecords, gameFault, retainReplay } from '../packages/simulation-runtime/src/evolution-domain.mjs';
+import { createLabRun, createCheckpoint, validateCheckpoint, labConfig, gamePlan, artifactEnvelope, validateArtifact, summarizeRecords, gameFault, retainReplay, LAB_LIMITS } from '../packages/simulation-runtime/src/evolution-domain.mjs';
 import { EvolutionSession } from '../packages/simulation-runtime/src/evolution-session.mjs';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
 import { setAppActions, invokeAppAction, clearRenderer } from '../apps/lab-web/src/rerender.js';
 
 const identity=await evolutionIdentity();
@@ -13,6 +14,117 @@ const input={botA:'random-legal',botB:'score-rush',gameCount:12,seed:42,workerCo
 const create=over => createLabRun({...input,...over},identity,'2026-10-02T16:00:00.000Z');
 const semanticRecord=({durationMs:_durationMs,...record}) => record;
 const semanticMetrics=({meanGameDurationMs:_meanGameDurationMs,...metrics}) => metrics;
+
+// Execute the browser adapters with their real domain dependencies; only host
+// boundaries (IndexedDB and Workers) are controlled to reproduce lifecycle races.
+async function browserAdapter(file, expression, globals = {}) {
+  const source = (await readFile(file, 'utf8')).replace(/^import .*;\r?$/gm, '').replace(/^export /gm, '');
+  return runInNewContext(`${source}\n${expression}`, {
+    createLabRun, validateCheckpoint, summarizeRecords, LAB_LIMITS,
+    EvolutionSession, performance, setTimeout, clearTimeout, TextEncoder, ...globals,
+  });
+}
+
+async function storageHarness() {
+  const requests = [];
+  const Store = await browserAdapter('apps/lab-web/src/evolution/evolution-store.mjs', 'EvolutionStore');
+  const store = new Store(identity, { open() { const request = {}; requests.push(request); return request; } });
+  const connection = () => ({ closed: 0, close() { this.closed++; } });
+  return { store, requests, connection };
+}
+
+test('storage shares a concurrent open and retries after a failed request', async () => {
+  const { store, requests, connection } = await storageHarness();
+  const first = store.open(), second = store.open();
+  assert.equal(requests.length, 1, 'one physical connection request for concurrent callers');
+  const db = connection(); requests[0].result = db; requests[0].onsuccess();
+  assert.equal(await first, db); assert.equal(await second, db);
+  db.onversionchange(); assert.equal(db.closed, 1); assert.equal(store.db, null);
+  const failed = store.open(), rejection = assert.rejects(failed, /OPEN_FAILED/);
+  requests[1].error = new Error('OPEN_FAILED'); requests[1].onerror(); await rejection;
+  const retry = store.open(); assert.equal(requests.length, 3);
+  requests[2].result = connection(); requests[2].onsuccess(); await retry; store.close();
+});
+
+test('storage closes a late blocked connection without replacing a successful retry', async () => {
+  const { store, requests, connection } = await storageHarness();
+  const blocked = store.open(), rejection = assert.rejects(blocked, /LAB_STORAGE_BLOCKED/);
+  requests[0].onblocked(); await rejection;
+  const retry = store.open(), current = connection(); requests[1].result = current; requests[1].onsuccess(); await retry;
+  const late = connection(); requests[0].result = late; requests[0].onsuccess();
+  assert.equal(late.closed, 1); assert.equal(store.db, current); store.close();
+});
+
+test('closing storage settles its pending open and rejects a late connection', async () => {
+  const { store, requests, connection } = await storageHarness();
+  const pending = store.open(), rejection = assert.rejects(pending, /LAB_STORAGE_CLOSED/);
+  store.close();
+  const late = connection(); requests[0].result = late; requests[0].onsuccess();
+  await rejection; assert.equal(late.closed, 1); assert.equal(store.db, null);
+});
+
+test('worker decoding faults settle partial results promptly and release every worker', async () => {
+  const workers = [];
+  class ControlledWorker {
+    constructor() { this.terminated = false; workers.push(this); }
+    postMessage(message) { this.message = message; }
+    terminate() { this.terminated = true; }
+  }
+  const execute = await browserAdapter('apps/lab-web/src/evolution/evolution-browser-runner.mjs', 'executeBrowserSeries', { Worker: ControlledWorker });
+  const controller = new AbortController();
+  const pending = execute({ ...input, gameCount: 4, workerCount: 2 }, { identity, signal: controller.signal });
+  assert.equal(typeof workers[1].onmessageerror, 'function', 'decode errors have an explicit handler');
+  const evidence = runLabGame({ ...workers[0].message.run }, 0);
+  workers[0].onmessage({ data: { type: 'evolution-evidence', epoch: workers[0].message.epoch, evidence } });
+  workers[1].onmessageerror();
+  const result = await pending;
+  assert.equal(result.run.status, 'ERROR'); assert.match(result.run.error, /WORKER_MESSAGE_FAILED/);
+  assert.equal(result.run.records.length, 1); assert.ok(workers.every(w => w.terminated));
+  controller.abort();
+  workers[0].onmessage({ data: { type: 'evolution-evidence', epoch: workers[0].message.epoch, evidence } });
+  assert.equal(result.run.records.length, 1); assert.equal(result.run.status, 'ERROR');
+});
+
+test('research cancellation keeps accepted evidence and ignores a late progress exception', async () => {
+  const workers = [];
+  class ControlledWorker {
+    constructor() { workers.push(this); }
+    postMessage(message) { this.message = message; }
+    terminate() { this.terminated = true; }
+  }
+  const execute = await browserAdapter('apps/lab-web/src/evolution/evolution-browser-runner.mjs', 'executeBrowserSeries', { Worker: ControlledWorker });
+  const controller = new AbortController();
+  const pending = execute({ ...input, gameCount: 4 }, { identity, signal: controller.signal,
+    onProgress() { controller.abort(); throw new Error('departed progress view'); } });
+  const message = workers[0].message, evidence = runLabGame(message.run, 0);
+  workers[0].onmessage({ data: { type: 'evolution-evidence', epoch: message.epoch, evidence } });
+  const result = await pending;
+  assert.equal(result.run.status, 'STOPPED'); assert.equal(result.run.records.length, 1);
+  assert.ok(workers[0].terminated); assert.equal(result.run.error, undefined);
+  const before = workers.length, alreadyStopped = new AbortController(); alreadyStopped.abort();
+  const cancelled = await execute(input, { identity, signal: alreadyStopped.signal });
+  assert.equal(cancelled.run.status, 'STOPPED'); assert.equal(workers.length, before);
+});
+
+test('obsolete storage upgrades abort without altering a retry connection', async () => {
+  const { store, requests, connection } = await storageHarness();
+  const pending = store.open(), rejection = assert.rejects(pending, /LAB_STORAGE_CLOSED/);
+  store.close(); await rejection;
+  const retry = store.open(), current = connection(); requests[1].result = current; requests[1].onsuccess(); await retry;
+  let aborted = 0;
+  requests[0].transaction = { abort() { aborted++; } };
+  requests[0].onupgradeneeded(); assert.equal(aborted, 1); assert.equal(store.db, current);
+  const next = store.open(); assert.equal(await next, current); store.close();
+});
+
+test('storage retries a synchronous open failure without retaining a rejected request', async () => {
+  const Store = await browserAdapter('apps/lab-web/src/evolution/evolution-store.mjs', 'EvolutionStore');
+  let attempts = 0, request;
+  const store = new Store(identity, { open() { if (++attempts === 1) throw new Error('OPEN_DENIED'); request = {}; return request; } });
+  await assert.rejects(store.open(), /OPEN_DENIED/);
+  const retry = store.open(), db = { close() {} }; request.result = db; request.onsuccess();
+  assert.equal(await retry, db); assert.equal(attempts, 2); store.close();
+});
 
 test('lab admission rejects unsupported policy/profile and incomplete evaluation pairs', () => {
   for (const over of [{botA:'hybrix-rusher'},{botA:'bogus'},{profileId:'core-bogus'},{gameCount:0},{seed:NaN},{workerCount:5},{kind:'EVALUATION',gameCount:3},{kind:'EVALUATION',mirrorSeats:false}]) assert.throws(() => labConfig({...input,...over}));

@@ -14,7 +14,7 @@
 // user. Public profile RPC applies privacy filtering server-side.
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=c617754e81fe';
+import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=a45e6b3a7e27';
 import {
   Visibility,
   ShowcaseItemType,

@@ -8,6 +8,7 @@ import { overviewHtml, lineagesHtml, evidenceHtml, inspectorHtml, heldOutTrendHt
 const surfaces = [['overview','Overview','01'],['arena','Arena','02'],['evolution','Evolution','03'],['evidence','Evidence','04'],['forensics','Forensics','05'],['ledger','Ledger','06']];
 export function createCockpitState() {
   let preferences={};try{preferences=JSON.parse(localStorage.getItem('intrilex.evolution.cockpit.v1')??'{}');}catch{ /* UI preferences are optional; scientific storage is separate. */ }
+  if (!preferences || typeof preferences !== 'object' || Array.isArray(preferences)) preferences = {};
   const query=new URLSearchParams(location.hash.split('?')[1]??'');
   const surface=query.get('view')??preferences.surface??'overview';
   return {surface:surfaces.some(([key])=>key===surface)?surface:'overview',evidenceMode:'evaluations',lineage:'all',from:0,to:100,search:'',findingsOnly:false,faultsOnly:false,page:0,purpose:'all',opponent:'control',inspect:query.get('inspect'),drafts:{},draftOpen:false,left:null,right:null,drawer:false,consoleExpanded:false,consolePaused:false,consoleFollow:true,events:[],lastObservation:'',lastProject:null};

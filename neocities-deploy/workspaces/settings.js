@@ -8,10 +8,10 @@
 //   - Data: clear local saves, reset settings
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, state, showToast, persistSetting } from '../state.js?v=c617754e81fe';
-import { getAuthState, getProfile, signOut, subscribe } from '../play/network/auth-controller.js?v=c617754e81fe';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=c617754e81fe';
-import { validateMatchServerUrl } from '../play/network/match-server-config.js?v=c617754e81fe';
+import { app, esc, state, showToast, persistSetting } from '../state.js?v=a45e6b3a7e27';
+import { getAuthState, getProfile, signOut, subscribe } from '../play/network/auth-controller.js?v=a45e6b3a7e27';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=a45e6b3a7e27';
+import { validateMatchServerUrl } from '../play/network/match-server-config.js?v=a45e6b3a7e27';
 
 let _unsub = null;
 
@@ -200,7 +200,7 @@ function wireSettingsActions(container) {
     hapticsToggle.addEventListener('change', () => {
       state.haptics = hapticsToggle.checked;
       persistSetting('haptics', state.haptics);
-      try { import('../play/touch/haptics.js?v=c617754e81fe').then(m => m.setHapticsEnabled(state.haptics)); } catch { /* ignore */ }
+      try { import('../play/touch/haptics.js?v=a45e6b3a7e27').then(m => m.setHapticsEnabled(state.haptics)); } catch { /* ignore */ }
       showToast(`Haptic feedback ${state.haptics ? 'enabled' : 'disabled'}`, { type: 'info' });
     });
   }
@@ -219,7 +219,7 @@ function wireSettingsActions(container) {
       state.seasonalThemes = seasonalToggle.checked;
       persistSetting('seasonalThemes', state.seasonalThemes);
       if (state.seasonalThemes) {
-        import('../landing/seasonal-theme.js?v=c617754e81fe').then(m => m.applySeasonalTheme()).catch(() => {});
+        import('../landing/seasonal-theme.js?v=a45e6b3a7e27').then(m => m.applySeasonalTheme()).catch(() => {});
       } else {
         document.documentElement.removeAttribute('data-season');
       }
@@ -257,7 +257,7 @@ function wireSettingsActions(container) {
     clearSavesBtn.addEventListener('click', async () => {
       if (!confirm('Clear all local match saves? This cannot be undone.')) return;
       try {
-        const { isIndexedDBAvailable, listSaves, deleteSave } = await import('../play/persistence.js?v=c617754e81fe');
+        const { isIndexedDBAvailable, listSaves, deleteSave } = await import('../play/persistence.js?v=a45e6b3a7e27');
         if (!isIndexedDBAvailable()) { showToast('No local saves found', { type: 'info' }); return; }
         const saves = await listSaves();
         if (!saves || saves.length === 0) { showToast('No local saves found', { type: 'info' }); return; }

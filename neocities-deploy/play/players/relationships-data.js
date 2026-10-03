@@ -18,8 +18,8 @@
 // the UI can show a graceful state.
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=c617754e81fe';
-import { getAuthState } from '../network/auth-controller.js?v=c617754e81fe';
+import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=a45e6b3a7e27';
+import { getAuthState } from '../network/auth-controller.js?v=a45e6b3a7e27';
 import {
   toRelationshipEntry,
   toRelationshipStatus,

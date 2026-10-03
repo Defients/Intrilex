@@ -87,9 +87,9 @@ function redactBeat(beat) {
   return {
     beatId: beat.beatId,
     sequence: beat.sequence,
-    beatKind: beat.beatKind,
-    redacted: true,
-    publicSummary: { scores: beat.publicSummary?.scores ?? {} }
+    // Keep only a navigation anchor. Future scores, kinds (including MATCH_END),
+    // actions and decisions are spoilers even when their cards are public.
+    redacted: true
   };
 }
 

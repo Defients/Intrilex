@@ -4,24 +4,46 @@ import { artifactEnvelope, validateArtifact, inspectHistoricalArtifact, LAB_LIMI
 
 /** Dedicated developer database. Completion resolves only after transaction commit. */
 export class EvolutionStore {
-  constructor(identity, factory = globalThis.indexedDB) { this.identity = identity; this.factory = factory; this.db = null; }
+  constructor(identity, factory = globalThis.indexedDB) { this.identity = identity; this.factory = factory; this.db = null; this.opening = null; }
   async open() {
     if (this.db) return this.db;
+    if (this.opening) return this.opening.promise;
     if (!this.factory) throw new Error('INDEXEDDB_UNAVAILABLE');
-    this.db = await new Promise((resolve, reject) => {
-      const req = this.factory.open('intrilex-evolution-lab', 2);
+    // Concurrent history reads and saves share one request. An abandoned open
+    // can still succeed later, so connection ownership is checked at delivery.
+    const pending = { promise: null, reject: null };
+    this.opening = pending;
+    pending.promise = new Promise((resolve, reject) => {
+      pending.reject = reject;
+      const fail = error => {
+        if (this.opening === pending) this.opening = null;
+        reject(error);
+      };
+      let req;
+      try { req = this.factory.open('intrilex-evolution-lab', 2); }
+      catch (error) { fail(error); return; }
       req.onupgradeneeded = () => {
+        if (this.opening !== pending) { req.transaction.abort(); return; }
         if(!req.result.objectStoreNames.contains('research')) req.result.createObjectStore('research', {keyPath:'payload.experiment.experimentId'});
         if(!req.result.objectStoreNames.contains('runs')) req.result.createObjectStore('runs', { keyPath: 'payload.runId' });
         if(!req.result.objectStoreNames.contains('history')) req.result.createObjectStore('history', { keyPath: 'runId' });
         if(!req.result.objectStoreNames.contains('checkpoints')) req.result.createObjectStore('checkpoints', { keyPath: 'checkpointId' });
       };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-      req.onblocked = () => reject(new Error('LAB_STORAGE_BLOCKED'));
+      req.onsuccess = () => {
+        const db = req.result;
+        if (this.opening !== pending) { db.close(); return; }
+        this.db = db;
+        this.opening = null;
+        db.onversionchange = () => {
+          db.close();
+          if (this.db === db) this.db = null;
+        };
+        resolve(db);
+      };
+      req.onerror = () => fail(req.error ?? new Error('LAB_STORAGE_OPEN_FAILED'));
+      req.onblocked = () => fail(new Error('LAB_STORAGE_BLOCKED'));
     });
-    this.db.onversionchange = () => { this.db?.close(); this.db = null; };
-    return this.db;
+    return pending.promise;
   }
   async save(run) {
     const envelope = artifactEnvelope(run);
@@ -88,7 +110,12 @@ export class EvolutionStore {
     const run = historical ? inspectHistoricalArtifact(envelope) : validateArtifact(envelope, this.identity);
     return {run, historical, envelope};
   }
-  close() { this.db?.close(); this.db = null; }
+  close() {
+    const pending = this.opening;
+    this.opening = null;
+    pending?.reject(new Error('LAB_STORAGE_CLOSED'));
+    this.db?.close(); this.db = null;
+  }
 }
 
 export function parseLabImport(text, identity) {

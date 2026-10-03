@@ -23,6 +23,14 @@ Residual editing is a **non-committed UI draft**. It enforces the authoritative 
 
 Research persistence errors remain visible; export before leaving if a save fails. Ordinary run replay inspection still re-executes retained commands and checks seeded initial/final state hashes. Repeated evaluations remain execution history. Comparison uses the latest complete appended held-out attempt per matching pack/suite and identifies the selected evaluation/run IDs. Partial-only evidence is unavailable; results are never pooled implicitly.
 
+Storage reads and saves share a pending IndexedDB connection. A blocked upgrade
+reports `LAB_STORAGE_BLOCKED`; close other tabs using this origin and retry the
+existing save or history action. Failed or cancelled opens cannot install a late
+connection. Research worker decoding failures report `WORKER_MESSAGE_FAILED`
+immediately and retain accepted game records; Stop remains `STOPPED` even if a
+departed progress callback later throws. Invalid saved navigation preferences
+fall back to Overview. See [the October 3 polish record](POLISH_2026-10-03.md).
+
 All research series can be found in ordinary saved-run history and inspected there. Loaded weighted-checkpoint series show their actual generation and are read-only configurations; Research evaluates selected historical checkpoints, and Reset starts a new frozen-policy arena series.
 
 ## Headless workflows

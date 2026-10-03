@@ -15,7 +15,7 @@ The product is organized into three lanes:
 |------|-------------|--------|
 | **Play** | Local, ranked, tournaments, replays | `/play`, `/play/new`, `/play/academy`, `/puzzles`, `/play/replays`, `/tournaments`, `/seasons` |
 | **Learn** | Academy, puzzles, rules, card reference | `/rules`, `/play/academy`, `/puzzles`, `/cards` |
-| **Lab** | Watch, Caster, mechanics, ranks, evidence, traces, branches, diagnostics | `/watch`, `/caster`, `/replays`, `/history`, `/mechanics`, `/synergies`, `/ranks`, `/compare`, `/traces`, `/branches`, `/diagnostics`, `/tournament`, `/evidence`, `/intelligence` |
+| **Lab** | Watch, Caster, Evolution, mechanics, ranks, evidence, traces, branches, diagnostics | `/watch`, `/caster`, `/evolution`, `/replays`, `/history`, `/mechanics`, `/synergies`, `/ranks`, `/compare`, `/traces`, `/branches`, `/diagnostics`, `/tournament`, `/evidence`, `/intelligence` |
 
 Active Play now uses the **Homecoming rules-assisted board**: structured Action Families, exact Action Composer confirmation, board picking, visible-information suggestions, and a viewport-native battlefield. It runs through Intrilex's existing authority, AI, networking, and save contracts. See [the migration and validation guide](docs/INTRILEX_HOMECOMING.md) for architecture, checks, and retained parity fallbacks.
 
@@ -31,6 +31,7 @@ Active Play now uses the **Homecoming rules-assisted board**: structured Action 
 - **Academy** — 5 sequential interactive lessons
 - **Puzzle ladder** — progressive puzzles with localStorage progress tracking
 - **Replay Caster** — live broadcast with Ollama commentary, theatre playback, public/omniscient viewing
+- **Evolution Lab** — local policy series, experimental heuristic training, frozen evaluation suites, replay inspection and analytical views; see [the operating guide](docs/EVOLUTION_LAB.md). Imported outcome claims remain unverified until reproduced.
 - **Decision intelligence** — per-decision traces with score decomposition and rule audit
 - **Counterfactual branch lab** — policy-conditioned estimates from command checkpoints
 - **Rank anatomy observatory** — cohort-relative power profiles, counterfactual decision value
@@ -100,6 +101,8 @@ Release CI checks the committed deployment against its fresh build. Configure th
 - [docs/FEATURE_MATRIX.md](docs/FEATURE_MATRIX.md) — auto-generated feature matrix
 - [docs/CAPABILITY_MATRIX.md](docs/CAPABILITY_MATRIX.md) — reconciled capability matrix
 - [docs/ROADMAP.md](docs/ROADMAP.md) — release ladder from v0.28.1 to v1.0.0
+- [docs/EVOLUTION_LAB.md](docs/EVOLUTION_LAB.md) — existing Arena, Research, evidence and storage workflows
+- [docs/POLISH_2026-10-03.md](docs/POLISH_2026-10-03.md) — current enhancement-only changes, verification and deferred work
 - [CHANGELOG.md](CHANGELOG.md) — version history
 
 ## Architecture

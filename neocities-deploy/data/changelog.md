@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased — October 2, 2026 Replay Caster continuity
+
+- Commentary belongs to its current request, beat, mode and match. Superseded
+  streams, late completions and late errors cannot replace the visible beat,
+  populate a new match's history/cache, or remount a departed workspace.
+- Viewer-mode changes discard prior commentary and investigation captures;
+  unknown viewer modes default to Public. Public beats omit the replay seed,
+  and public WAIT WHAT future context retains only redacted navigation anchors.
+- WAIT WHAT pauses playback at the captured moment. Route exit settles cancelled
+  generation, clears loading, and preserves the completed replay for return.
+  Restarting playback from the end refreshes first-beat commentary immediately.
+- Investigations no longer offer the nonfunctional "Branch Runner-Up" shortcut.
+  The panel explains the missing replay-to-branch capability and offers existing
+  JSON/Markdown exports. Session envelopes report the actual commentary mode.
+- Added twelve regression tests for request ordering, route lifecycle, worker
+  cancellation, viewer isolation and provenance. Chrome verification now checks
+  paused captures, exported redaction, annotations and exact route-return position.
+- Corrected the clean-room `--quick` command description: it skips installation
+  but still builds, so output-dependent verification must follow the build.
+- Complete scope, project findings and verification are recorded in
+  [October 2 patch notes](docs/PATCH_NOTES_2026-10-02.md).
+
 ## Unreleased — October 1, 2026 stabilization
 
 - Detailed HTTP operator status is disabled until a separate server-only bearer

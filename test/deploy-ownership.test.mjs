@@ -7,7 +7,7 @@ import { pruneDeployFiles, staleDeployFiles, writeDeployOwnership, deployParityP
 import { cp, symlink, stat, utimes } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 test('deploy converges chunks, maps and removed owned files while retaining intentional extras', async () => {
   const root = await mkdtemp(join(tmpdir(), 'intrilex-deploy-'));
@@ -128,4 +128,27 @@ test('deployment parity rejects missing, altered and stale files, including runt
     await rm(join(deploy, '.build-owned.json'));
     assert.ok((await deployParityProblems(dist, deploy, 'app.abcdef.js')).some(p => p.includes('ownership')));
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+
+test('deployment preserves shared hash exports required by unbundled Evolution workers', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'intrilex-evolution-worker-deploy-'));
+  const dist = join(root, 'dist'), deploy = join(root, 'deploy');
+  try {
+    await mkdir(join(dist, 'evolution'), {recursive:true});
+    await writeFile(join(dist, 'package.json'), JSON.stringify({type:'module'}));
+    await writeFile(join(dist, 'app.abcdef.js'), 'export const render = 1;');
+    await writeFile(join(dist, 'worker.js'), 'self.onmessage = () => {};');
+    await writeFile(join(dist, 'shared-browser.js'), 'export const hashCanonical = value => JSON.stringify(value);');
+    await writeFile(join(dist, 'evolution/domain.mjs'), "import {hashCanonical} from '../shared-browser.js'; export const checkpointHash = hashCanonical({policy:'tempo-tactical'});");
+    await cp(dist, deploy, {recursive:true});
+    await finalizeDeployRuntime(deploy, 'app.abcdef.js');
+    await writeDeployOwnership(dist, deploy);
+    const domain = await import(pathToFileURL(join(deploy, 'evolution/domain.mjs')));
+    assert.equal(domain.checkpointHash, JSON.stringify({policy:'tempo-tactical'}));
+    assert.equal(await readFile(join(deploy, 'shared-browser.js'), 'utf8'), await readFile(join(dist, 'shared-browser.js'), 'utf8'));
+    assert.deepEqual(await deployParityProblems(dist, deploy, 'app.abcdef.js'), []);
+    await writeFile(join(deploy, 'shared-browser.js'), 'export {};');
+    assert.ok((await deployParityProblems(dist, deploy, 'app.abcdef.js')).some(p => p === 'Modified build artifact: shared-browser.js'));
+  } finally { await rm(root, {recursive:true,force:true}); }
 });

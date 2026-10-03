@@ -1,15 +1,15 @@
-import { canonicalClone } from "./canonical-json.js?v=c617754e81fe";
-import { IntrilexEngine } from "./engine.js?v=c617754e81fe";
-import { hashCanonical } from "./hash.js?v=c617754e81fe";
-import { cardPointValue, parseIdentity } from "./ranks.js?v=c617754e81fe";
-import { nextIndex } from "./rng.js?v=c617754e81fe";
-import { createEmptyState } from "./state.js?v=c617754e81fe";
-import { assertValidState } from "./validation.js?v=c617754e81fe";
-import { CORE_FOUNDATION_AUTHORITY_PROFILE } from "./core-authority.js?v=c617754e81fe";
-import { CORE_EFFECT_DECLARATION_PROFILE, enumerateCoreEffectCandidates } from "./core-effects.js?v=c617754e81fe";
-import { CORE_RESPONSE_AUTHORITY_PROFILE, currentCoreStackTarget, currentPriorityActor, primaryDescriptor } from "./core-response.js?v=c617754e81fe";
-import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates } from "./core-private-choice.js?v=c617754e81fe";
-import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=c617754e81fe";
+import { canonicalClone } from "./canonical-json.js?v=a45e6b3a7e27";
+import { IntrilexEngine } from "./engine.js?v=a45e6b3a7e27";
+import { hashCanonical } from "./hash.js?v=a45e6b3a7e27";
+import { cardPointValue, parseIdentity } from "./ranks.js?v=a45e6b3a7e27";
+import { nextIndex } from "./rng.js?v=a45e6b3a7e27";
+import { createEmptyState } from "./state.js?v=a45e6b3a7e27";
+import { assertValidState } from "./validation.js?v=a45e6b3a7e27";
+import { CORE_FOUNDATION_AUTHORITY_PROFILE } from "./core-authority.js?v=a45e6b3a7e27";
+import { CORE_EFFECT_DECLARATION_PROFILE, enumerateCoreEffectCandidates } from "./core-effects.js?v=a45e6b3a7e27";
+import { CORE_RESPONSE_AUTHORITY_PROFILE, currentCoreStackTarget, currentPriorityActor, primaryDescriptor } from "./core-response.js?v=a45e6b3a7e27";
+import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates } from "./core-private-choice.js?v=a45e6b3a7e27";
+import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=a45e6b3a7e27";
 function readCoreRuntime(state) {
     const value = state.metadata.coreAuthority;
     return value && typeof value === "object" ? value : null;
@@ -475,72 +475,77 @@ export function advanceCoreToDecision(input, maxCommands = 16) {
     let state = canonicalClone(input);
     const events = [];
     const executedCommands = [];
-    for (let index = 0; index < maxCommands; index += 1) {
-        const core = readCoreRuntime(state);
-        if (!core || ![CORE_FOUNDATION_AUTHORITY_PROFILE.id, CORE_EFFECT_DECLARATION_PROFILE.id, CORE_RESPONSE_AUTHORITY_PROFILE.id, CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id, CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId))
-            return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_PROFILE_UNAVAILABLE" };
-        if (state.winner !== null || core.terminalReason)
-            return { status: "TERMINAL", state, events, executedCommands, reasonCode: core.terminalReason ?? "NORMAL_VICTORY" };
-        const pendingChoice = activeCorePrivateChoice(state);
-        if (pendingChoice) {
-            const frame = enumerateCorePrivateChoiceActions(state, pendingChoice.chooserId);
-            if (frame.actions.length === 0)
-                return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_NO_PRIVATE_CHOICE_ACTION" };
-            return { status: "PLAYER_DECISION_REQUIRED", state, events, executedCommands, decisionActorId: pendingChoice.chooserId, legalActionFrame: frame };
+    // Execution slices are operational, never rule termination. Keep global
+    // command indices stable across slices; a separate guard bounds runaway work.
+    const sliceSize = Math.max(1, Math.min(256, Math.floor(maxCommands) || 16));
+    for (let sliceStart = 0; sliceStart < 256; sliceStart += sliceSize) {
+        for (let index = sliceStart; index < Math.min(sliceStart + sliceSize, 256); index += 1) {
+            const core = readCoreRuntime(state);
+            if (!core || ![CORE_FOUNDATION_AUTHORITY_PROFILE.id, CORE_EFFECT_DECLARATION_PROFILE.id, CORE_RESPONSE_AUTHORITY_PROFILE.id, CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id, CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId))
+                return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_PROFILE_UNAVAILABLE" };
+            if (state.winner !== null || core.terminalReason)
+                return { status: "TERMINAL", state, events, executedCommands, reasonCode: core.terminalReason ?? "NORMAL_VICTORY" };
+            const pendingChoice = activeCorePrivateChoice(state);
+            if (pendingChoice) {
+                const frame = enumerateCorePrivateChoiceActions(state, pendingChoice.chooserId);
+                if (frame.actions.length === 0)
+                    return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_NO_PRIVATE_CHOICE_ACTION" };
+                return { status: "PLAYER_DECISION_REQUIRED", state, events, executedCommands, decisionActorId: pendingChoice.chooserId, legalActionFrame: frame };
+            }
+            if ([CORE_RESPONSE_AUTHORITY_PROFILE.id, CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id, CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId) && state.priority?.open === true) {
+                const responseActorId = currentPriorityActor(state);
+                const frame = enumerateCoreResponseActions(state, responseActorId);
+                if (frame.actions.length > 0)
+                    return { status: "PLAYER_DECISION_REQUIRED", state, events, executedCommands, decisionActorId: responseActorId, legalActionFrame: frame };
+                const cmd = command(state, responseActorId, `ORCH-${index}-AUTO-PRIORITY`, { kind: "core-pass-priority", semantic: "AUTOMATIC_PRIORITY_ADVANCE" });
+                const result = engine.execute(state, cmd);
+                if (!result.accepted)
+                    return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_ORCHESTRATION_REJECTED:${result.error?.code}` };
+                state = result.state;
+                events.push(...result.events);
+                executedCommands.push(cmd);
+                continue;
+            }
+            if ([CORE_RESPONSE_AUTHORITY_PROFILE.id, CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id, CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId) && state.stack.length > 0 && state.priority?.open !== true) {
+                const cmd = command(state, state.activePlayerId, `ORCH-${index}-RESOLVE`, { kind: "core-resolve-response-top" });
+                const result = engine.execute(state, cmd);
+                if (!result.accepted)
+                    return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_ORCHESTRATION_REJECTED:${result.error?.code}` };
+                state = result.state;
+                events.push(...result.events);
+                executedCommands.push(cmd);
+                continue;
+            }
+            if (state.stack.length > 0 || state.priority?.open === true)
+                return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_STACK_STATE_UNEXPECTED" };
+            if (state.phase === "Start" && core.startPreparedFullTurnSequence !== state.fullTurnSequence) {
+                const cmd = command(state, state.activePlayerId, `ORCH-${index}-START`, { kind: "core-begin-start", playerId: state.activePlayerId });
+                const result = engine.execute(state, cmd);
+                if (!result.accepted)
+                    return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_ORCHESTRATION_REJECTED:${result.error?.code}` };
+                state = result.state;
+                events.push(...result.events);
+                executedCommands.push(cmd);
+                continue;
+            }
+            if (state.phase === "Start" || state.phase === "Action") {
+                const frame = enumerateCoreLegalActions(state, state.activePlayerId);
+                if (frame.actions.length === 0)
+                    return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_NO_LEGAL_ACTION" };
+                return { status: "PLAYER_DECISION_REQUIRED", state, events, executedCommands, decisionActorId: state.activePlayerId, legalActionFrame: frame };
+            }
+            if (state.phase === "End") {
+                const cmd = command(state, state.activePlayerId, `ORCH-${index}-END`, { kind: "core-complete-turn" });
+                const result = engine.execute(state, cmd);
+                if (!result.accepted)
+                    return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_ORCHESTRATION_REJECTED:${result.error?.code}` };
+                state = result.state;
+                events.push(...result.events);
+                executedCommands.push(cmd);
+                continue;
+            }
+            return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_PHASE_UNSUPPORTED:${state.phase}` };
         }
-        if ([CORE_RESPONSE_AUTHORITY_PROFILE.id, CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id, CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId) && state.priority?.open === true) {
-            const responseActorId = currentPriorityActor(state);
-            const frame = enumerateCoreResponseActions(state, responseActorId);
-            if (frame.actions.length > 0)
-                return { status: "PLAYER_DECISION_REQUIRED", state, events, executedCommands, decisionActorId: responseActorId, legalActionFrame: frame };
-            const cmd = command(state, responseActorId, `ORCH-${index}-AUTO-PRIORITY`, { kind: "core-pass-priority", semantic: "AUTOMATIC_PRIORITY_ADVANCE" });
-            const result = engine.execute(state, cmd);
-            if (!result.accepted)
-                return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_ORCHESTRATION_REJECTED:${result.error?.code}` };
-            state = result.state;
-            events.push(...result.events);
-            executedCommands.push(cmd);
-            continue;
-        }
-        if ([CORE_RESPONSE_AUTHORITY_PROFILE.id, CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id, CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId) && state.stack.length > 0 && state.priority?.open !== true) {
-            const cmd = command(state, state.activePlayerId, `ORCH-${index}-RESOLVE`, { kind: "core-resolve-response-top" });
-            const result = engine.execute(state, cmd);
-            if (!result.accepted)
-                return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_ORCHESTRATION_REJECTED:${result.error?.code}` };
-            state = result.state;
-            events.push(...result.events);
-            executedCommands.push(cmd);
-            continue;
-        }
-        if (state.stack.length > 0 || state.priority?.open === true)
-            return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_STACK_STATE_UNEXPECTED" };
-        if (state.phase === "Start" && core.startPreparedFullTurnSequence !== state.fullTurnSequence) {
-            const cmd = command(state, state.activePlayerId, `ORCH-${index}-START`, { kind: "core-begin-start", playerId: state.activePlayerId });
-            const result = engine.execute(state, cmd);
-            if (!result.accepted)
-                return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_ORCHESTRATION_REJECTED:${result.error?.code}` };
-            state = result.state;
-            events.push(...result.events);
-            executedCommands.push(cmd);
-            continue;
-        }
-        if (state.phase === "Start" || state.phase === "Action") {
-            const frame = enumerateCoreLegalActions(state, state.activePlayerId);
-            if (frame.actions.length === 0)
-                return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_NO_LEGAL_ACTION" };
-            return { status: "PLAYER_DECISION_REQUIRED", state, events, executedCommands, decisionActorId: state.activePlayerId, legalActionFrame: frame };
-        }
-        if (state.phase === "End") {
-            const cmd = command(state, state.activePlayerId, `ORCH-${index}-END`, { kind: "core-complete-turn" });
-            const result = engine.execute(state, cmd);
-            if (!result.accepted)
-                return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_ORCHESTRATION_REJECTED:${result.error?.code}` };
-            state = result.state;
-            events.push(...result.events);
-            executedCommands.push(cmd);
-            continue;
-        }
-        return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: `CORE_PHASE_UNSUPPORTED:${state.phase}` };
     }
     return { status: "UNSUPPORTED_CONFIGURATION", state, events, executedCommands, reasonCode: "CORE_ORCHESTRATION_COMMAND_LIMIT" };
 }

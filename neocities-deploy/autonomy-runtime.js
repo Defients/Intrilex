@@ -1,3 +1,4 @@
+import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=a45e6b3a7e27';
 import {
   IntrilexEngine,
   createMatchState,
@@ -8,14 +9,14 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=c617754e81fe';
+} from './engine/browser-entry.js?v=a45e6b3a7e27';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
-import { rankPolicyActions } from './policy-scoring.js?v=c617754e81fe';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=c617754e81fe';
-import { attributeAction,   isNoAttributionAction} from './browser-analytics.js?v=c617754e81fe';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=c617754e81fe';
+import { rankPolicyActions } from './policy-scoring.js?v=a45e6b3a7e27';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=a45e6b3a7e27';
+import { attributeAction,   isNoAttributionAction} from './browser-analytics.js?v=a45e6b3a7e27';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=a45e6b3a7e27';
 
-const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value'];
+const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];
 export const DEFAULT_PROFILE_ID = 'core-advanced-authority';
 export const ENGINE_VERSION = _ENGINE_VERSION;
@@ -36,7 +37,7 @@ const uint32FromHash=(value)=>Number.parseInt(hashCanonical(value).slice(0,8),16
 const pointValue=(card)=>{if(!card)return null;if(typeof card.state?.pointValue==='number')return card.state.pointValue;const rank=String(card.identity??'').replace(/[♣♦♥♠]/gu,'');if(/^\d+$/.test(rank))return Number(rank);return({A:4,J:3,Q:2,K:8,RJ:5,BJ:11})[rank]??0;};
 
 export function createState(setup){return isCore(setup.profileId)?createCoreMatchState({profileId:setup.profileId,playerIds:setup.playerIds,seatOrder:setup.seatOrder,enabledModules:[],seed:setup.seed,...(setup.predeterminedIdentities?{predeterminedIdentities:setup.predeterminedIdentities}:{})}):createMatchState({...setup,eventApprovedModules:[]});}
-export function advance(state){return state.metadata?.coreAuthority?advanceCoreToDecision(state):advanceToDecision(state);}
+export function advance(state,maxCommands=16){return state.metadata?.coreAuthority?advanceCoreToDecision(state,maxCommands):advanceToDecision(state);}
 export function actionView(action,profileId){const view=isCore(profileId)?toAuthorizedCoreAction(action):authorizedLegalActionView(action);const composition=actionComposition(action);return composition?{...view,composition}:view;}
 
 export function strictView(state,actorId){
@@ -46,6 +47,7 @@ export function strictView(state,actorId){
   return{schemaVersion:'4.0.0',engineVersion:ENGINE_VERSION,profileId:runtime.profileId??null,actorId,activePlayerId:state.activePlayerId,phase:state.phase,revision:state.revision,fullTurnSequence:state.fullTurnSequence,dpCount:state.zones.dp.length,gyCount:state.zones.gy.length,gyTopCard:state.zones.gy.length>0?card(state.zones.gy[state.zones.gy.length-1]):null,exileCount:state.zones.exile.length,swapBar:state.zones.swapBar.map(id=>state.cards[id]?.state?.swapBarFaceUp?card(id):{id,identity:'HIDDEN',faceDown:true}),boardLock:structuredClone(state.metadata?.boardLock??null),suddenDeath:structuredClone(state.metadata?.suddenDeath??null),exhausted:structuredClone(runtime.exhausted??null),voltage:structuredClone(state.metadata?.phase8??null),priority:structuredClone(state.priority),stack:(state.stack??[]).map(item=>({id:item.id,controllerId:item.controllerId,originalControllerId:item.originalControllerId??null,kind:item.kind,status:item.status,sourceCardIds:[...(item.sourceCardIds??[])],targetCardIds:[...(item.targetCardIds??[])],actionType:item.coreAuthority?.actionType??item.firstContactAuthority?.actionType??null,stackClass:item.coreAuthority?.stackClass??item.firstContactAuthority?.stackClass??null,advancedKind:item.coreAuthority?.advanced?.kind??null})),triggerQueue:(state.triggerQueue??[]).map(trigger=>({id:trigger.id,type:trigger.type,controllerId:trigger.controllerId??null,status:trigger.status??null})),pendingChoice:choice?.chooserId===actorId?{choiceId:choice.choiceId,kind:choice.kind,stage:choice.stage,minSelections:choice.minSelections,maxSelections:choice.maxSelections,optionCards:(choice.optionCardIds??[]).map(card).filter(Boolean),sourceCard:choice.sourceCardId?card(choice.sourceCardId):null,context:structuredClone(choice.context??{})}:null,knownCards,own:{goal:actor.goal,securedPoints:deriveSecuredPoints(state,actorId),hand:actor.hand.map(card).filter(Boolean),pr:actor.pr.map(card).filter(Boolean),er:actor.er.map(card).filter(Boolean),limits:structuredClone(actor.limits??{})},opponents:state.turnOrder.filter(id=>id!==actorId).map(id=>({playerId:id,goal:state.players[id].goal,securedPoints:deriveSecuredPoints(state,id),handCount:state.players[id].hand.length,pr:state.players[id].pr.map(card).filter(Boolean),er:state.players[id].er.map(card).filter(Boolean)}))};
 }
 export function choosePolicy(policyId,context){
+  if(policyId===WEIGHTED_POLICY_ID)return chooseWeightedAction(context.policyState,context);
   if(!policyId||policyId==='random-legal'){const actions=lexical(context.legalActions);return actions[context.rng.nextIndex(actions.length)];}
   if(policyId.startsWith('hybrix-')){
     const envelope=chooseHybrixPolicy(policyId,context);
@@ -82,8 +84,8 @@ function buildRuleCompliance({decisions,events,state}){
   return{status:violationCount===0?'PASS':'FAIL',violationCount,...checks,authorizedFullTurnSkips,consumedFullTurnSkips,pendingFullTurnSkips};
 }
 
-export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,recordReplay=false}){
-  if(policyIds.length!==2||policyIds.some(id=>!POLICY_IDS.includes(id)))throw new Error('INVALID_POLICY_PAIR');
+export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,recordReplay=false,orchestrationCommandLimit=16,policyStates=[]}){
+  if(policyIds.length!==2||policyIds.some((id,i)=>!POLICY_IDS.includes(id) && !(id===WEIGHTED_POLICY_ID && validatePolicyState(policyStates[i]))))throw new Error('INVALID_POLICY_PAIR');
   const seats=seatOrder??['P1','P2'];const setup={profileId,playerIds:seats,enabledModules:[],eventApprovedModules:[],seed:(seed>>>0)||1,seatOrder:seats};
   let state=initialState?structuredClone(initialState):createState(setup);const engine=new IntrilexEngine();
   const replayCommands=recordReplay?[]:null;const replayInitialState=recordReplay?structuredClone(state):null;
@@ -99,7 +101,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   const executionInstanceToken=`${matchId}:${Date.now()}:${Math.random().toString(36).slice(2,10)}`;
   const capture=(items)=>{events+=items.length;capturedEvents.push(...items);for(const event of items){increment(eventTypeCounts,event.type);const type=String(event.type??'');if(/AUTOMATIC_PRIORITY_ADVANCE/.test(type)){semantic.automaticPriorityAdvanceCount+=1;semantic.automaticOrchestrationCommandCount+=1;}if(/RESPONSE_WINDOW_CLOSED/.test(type))semantic.responseWindowClosedCount+=1;}};
   for(let decisionIndex=0;decisionIndex<decisionLimit;decisionIndex+=1){
-    const advanced=advance(state);state=advanced.state;commands+=advanced.executedCommands.length;capture(advanced.events);
+    const advanced=advance(state,orchestrationCommandLimit);state=advanced.state;commands+=advanced.executedCommands.length;capture(advanced.events);
     if(replayCommands)replayCommands.push(...advanced.executedCommands);
     if(advanced.status==='TERMINAL'){terminationReason=advanced.reasonCode==='CANONICAL_DRAW'?'CANONICAL_DRAW':advanced.reasonCode==='EXHAUSTED_RESOLUTION'?'EXHAUSTED_RESOLUTION':'NORMAL_VICTORY';break;}
     if(advanced.status!=='PLAYER_DECISION_REQUIRED'||!advanced.legalActionFrame){terminationReason='UNSUPPORTED_CONFIGURATION';errorCode=advanced.reasonCode??'UNKNOWN';break;}
@@ -107,7 +109,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
     // Legal opportunity counting at the legality boundary
     {const frameTags=new Set(),framePrimaryTags=new Set();for(const la of engineActions){for(const tag of mechanicTags(la))frameTags.add(tag);const pt=primaryMechanicTag(la);if(pt)framePrimaryTags.add(pt);}for(const tag of frameTags){increment(perSeat[seat].mechanicOpportunityCounts,tag);increment(mechanicOpportunityCounts,tag);}for(const tag of framePrimaryTags){increment(perSeat[seat].primaryMechanicOpportunityCounts,tag);increment(primaryMechanicOpportunityCounts,tag);}}
     // BL-05 fix: pass complete deterministic context including matchId, runInstanceId, decisionIndex
-    const authorizedView=strictView(state,actorId),selected=choosePolicy(policyIds[seat],{actorId,authorizedView,legalActions:policyActions,rng:rngByPlayer[actorId],matchId,runInstanceId:executionInstanceToken,decisionIndex,profileId,engineVersion:ENGINE_VERSION,rulesVersion:_RULES_VERSION});
+    const authorizedView=strictView(state,actorId),selected=choosePolicy(policyIds[seat],{policyState:policyStates[seat],actorId,authorizedView,legalActions:policyActions,rng:rngByPlayer[actorId],matchId,runInstanceId:executionInstanceToken,decisionIndex,profileId,engineVersion:ENGINE_VERSION,rulesVersion:_RULES_VERSION});
     if(!selected){terminationReason='POLICY_ERROR';errorCode='NO_LEGAL_ACTION';break;}
     const command=vault.get(selected.actionId);if(!command){terminationReason='POLICY_ERROR';errorCode='ACTION_ID_INVALID';break;}
     const targetStackItem=state.stack?.at(-1)??null,targetControllerId=targetStackItem?.controllerId??null,targetStackClass=targetStackItem?.coreAuthority?.stackClass??null,targetSourceCount=targetStackItem?.sourceCardIds?.length??0,targetUntappedQueenDefenders=targetControllerId?countUntappedQueens(state,targetControllerId):0;

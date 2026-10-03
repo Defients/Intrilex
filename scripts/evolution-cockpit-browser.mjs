@@ -1,4 +1,4 @@
-/* global document, IDBDatabase, DOMException */
+/* global document, IDBDatabase, DOMException, indexedDB, localStorage */
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
@@ -18,6 +18,30 @@ async function surface(name){await page.locator(`.evo-navigation [data-evo-surfa
 async function exported(name){await surface('ledger');const pending=page.waitForEvent('download');await page.locator('#evo-export-research').click();const download=await pending,target=path.join(output,name);await download.saveAs(target);return JSON.parse(await readFile(target,'utf8'));}
 const cp=artifact.payload.generations[0].selectedCheckpointId;
 try{
+  await scenario('null navigation preferences recover and concurrent storage opens share a connection',async()=>{
+    await page.goto(base);
+    await page.evaluate(()=>localStorage.setItem('intrilex.evolution.cockpit.v1','null'));
+    await page.reload();
+    await page.goto(`${base}/#/evolution`);
+    await expect(page.locator('#evo-page-overview')).toBeVisible({timeout:30000});
+    const result=await page.evaluate(async()=>{
+      const {EvolutionStore}=await import('/evolution/evolution-store.mjs');
+      const {LAB_IDENTITY}=await import('/evolution/identity.mjs');
+      let opens=0;
+      const store=new EvolutionStore(LAB_IDENTITY,{open(...args){opens++;return indexedDB.open(...args);}});
+      const [first,second]=await Promise.all([store.open(),store.open()]);
+      const shared=first===second;
+      store.close();
+      const cancelled=store.open().then(()=>null,error=>error.message);
+      store.close();
+      const cancellation=await cancelled;
+      const retry=await store.open();
+      const version=retry.version;
+      store.close();
+      return {opens,shared,cancellation,version};
+    });
+    assert.deepEqual(result,{opens:3,shared:true,cancellation:'LAB_STORAGE_CLOSED',version:2});
+  });
   await page.goto(`${base}/#/evolution`);await expect(page.getByTestId('evolution-lab')).toBeVisible({timeout:30000});await surface('ledger');await page.locator('#evo-import-research').setInputFiles(source);await expect(page.locator('#evo-context-origin')).toContainText('Imported');
   const before=await exported('before-ui.json');
   await scenario('overview, lineage filters and structured checkpoint/generation inspection',async()=>{

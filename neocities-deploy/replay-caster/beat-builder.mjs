@@ -97,7 +97,7 @@ export function buildBeats(matchResult, frames, opts = {}) {
   beats.push(buildStructuralBeat({
     matchId, sequence, kind: BEAT_KIND.MATCH_START,
     frame: startFrame, seatOrder, goalBySeat, deriveSecured,
-    publicSummary: { seatOrder, policyIds: summary.policyIds, seed: summary.seed }
+    publicSummary: { seatOrder, policyIds: summary.policyIds }
   }));
   sequence += 1;
 
