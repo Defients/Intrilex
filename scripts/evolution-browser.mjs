@@ -32,7 +32,9 @@ async function configure(games=20,workers=2) { await surface('arena'); await pag
 try {
   await scenario('route and unsupported configuration rejection',async() => {
     await page.goto(`${base}/#/evolution`); await expect(page.getByTestId('evolution-lab')).toBeVisible({timeout:30000});
-    await expect(page.locator('.evo-navigation > button')).toHaveCount(6);await surface('arena');await page.locator('#evo-seed').fill('-1'); await page.locator('#evo-run').click(); await expect(page.locator('#evo-error')).toContainText('INVALID_SEED');
+    await expect(page.locator('.evo-navigation > button')).toHaveCount(7);
+    assert.deepEqual(await page.locator('.evo-navigation > button').evaluateAll(buttons => buttons.map(button => button.dataset.evoSurface)), ['profiles', 'overview', 'arena', 'evolution', 'evidence', 'forensics', 'ledger']);
+    await surface('arena');await page.locator('#evo-seed').fill('-1'); await page.locator('#evo-run').click(); await expect(page.locator('#evo-error')).toContainText('INVALID_SEED');
     await expect(page.locator('#evo-bot-a option[value="hybrix-rusher"]')).toHaveCount(0);
   });
   let paused;

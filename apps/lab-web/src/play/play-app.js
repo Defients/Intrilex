@@ -203,6 +203,8 @@ export async function handlePlayRoute(route, container) {
     await renderAcademyHub(container);
   } else if (sub === '/guided') {
     await renderGuidedExhibition(container);
+  } else if (sub.startsWith('/agent/')) {
+    await startAgentProfileMatch(decodeURIComponent(sub.slice('/agent/'.length)), container);
   } else {
     // Unknown play sub-route — redirect to new match setup
     location.hash = '#/play/new';
@@ -502,6 +504,54 @@ function wireResumePrompt(container) {
     const saveId = btn.dataset.saveId;
     if (saveId) await continueMatch(saveId, container);
   });
+}
+
+/**
+ * Agent Profile opponent: resolve the Profile head ONCE into an immutable
+ * snapshot and pin it into the match setup. Resolution failure stops here;
+ * there is no silent fallback to a baseline policy.
+ */
+async function profileStore() {
+  const [{ ProfileStore, IndexedDbBackend }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs'), import('../evolution/identity.mjs')]);
+  return new ProfileStore(new IndexedDbBackend(), { identity: LAB_IDENTITY });
+}
+async function startAgentProfileMatch(agentProfileId, container) {
+  let snapshot;
+  const store = await profileStore();
+  try { snapshot = await store.resolveProfileHead(agentProfileId); }
+  catch (error) {
+    container.innerHTML = `<div class="play-error" role="alert"><h2>Cannot start this Profile match</h2><p>${esc(error.code ?? 'PROFILE_RESOLUTION_FAILED')}: ${esc(error.message)}</p><p>No substitute policy was used.</p><a href="#/evolution?view=profiles" class="secondary-button">Back to Profiles</a></div>`;
+    return;
+  } finally { store.backend.close(); }
+  const seed = (Math.random() * 4294967296) >>> 0 || 1;
+  await startNewMatch({ profileId: snapshot.rulesProfileId, seed, humanPlayerId: Math.random() < 0.5 ? 'P1' : 'P2', aiPolicyId: 'weighted-heuristic-v1', mode: 'ADVANCED_CORE', agentSnapshot: snapshot }, container);
+}
+/** Observational Experience Record; a write failure never alters the completed outcome. */
+async function recordAgentExperience(session, snapshot) {
+  const agent = session.setup?.agentSnapshot;
+  if (!agent) return;
+  state.experienceNotice = 'Recording encounter as Experience…';
+  const aiSeat = session.setup.humanPlayerId === 'P1' ? 'P2' : 'P1';
+  const families = {};
+  let notice;
+  for (const entry of session.decisionJournal) if (entry.source === 'ai' && entry.family) families[entry.family] = (families[entry.family] ?? 0) + 1;
+  try {
+    const { buildExperienceRecord } = await import('../evolution/profile-science.mjs');
+    const record = buildExperienceRecord({ encounterId: session.sessionId, snapshot: agent, agentSeat: aiSeat, rulesProfileId: session.setup.profileId,
+      outcome: { winner: snapshot.match.winner ?? null, terminationReason: snapshot.match.terminationReason ?? null, fullTurns: snapshot.match.fullTurnSequence ?? null },
+      observations: { agentDecisions: session.decisionJournal.filter(e => e.source === 'ai').length, agentFamilyCounts: families } });
+    const store = await profileStore();
+    try { await store.recordExperience(record); } finally { store.backend.close(); }
+    notice = 'Encounter recorded as observational Experience (no training).';
+  } catch (error) {
+    notice = `Experience record not saved (${error.code ?? error.message}). The match result is unchanged.`;
+    console.warn('[play-app] experience record failed:', error?.message ?? error);
+  }
+  if (state.session === session) {
+    state.experienceNotice = notice;
+    const status = state.activeContainer?.querySelector('[data-testid="agent-experience-notice"]');
+    if (status) status.textContent = notice;
+  }
 }
 
 /**
@@ -955,6 +1005,12 @@ async function renderActiveMatch(container) {
   // Generate AI banter from new events
   generateBanterFromEvents(snapshot);
 
+  // Experience delivery is independent of player-stat recording, including restored terminal saves.
+  if (snapshot.status === 'TERMINAL' && state.session?.setup.agentSnapshot && state.experienceEncounterId !== state.session.sessionId) {
+    state.experienceEncounterId = state.session.sessionId;
+    recordAgentExperience(state.session, snapshot);
+  }
+
   // Update player stats on terminal
   if (snapshot.status === 'TERMINAL' && state.session && !state.statsRecorded) {
     state.statsRecorded = true;
@@ -1068,6 +1124,7 @@ async function renderActiveMatch(container) {
     rightRailTab: state.rightRailTab || 'chat',
     soundMuted: state.soundMuted,
     achievementSummaryHtml,
+    agentExperienceNotice: snapshot.opponent?.agentProfile ? state.experienceNotice : null,
     isNetworkMatch,
     chatHidden: state.networkSession?.chatHidden ?? false,
     chatSplit: state.chatSplit ?? 40,
@@ -1144,6 +1201,10 @@ async function renderActiveMatch(container) {
   }
 
   container.innerHTML = boardHtml;
+  // A completed Experience write may precede a queued terminal redraw.
+  // Always paint the latest session-scoped status after replacing the DOM.
+  const experienceStatus = container.querySelector('[data-testid="agent-experience-notice"]');
+  if (experienceStatus && state.experienceNotice) experienceStatus.textContent = state.experienceNotice;
 
   // Mount particle canvas on the YOUR ACTION frame (or stage fallback)
   if (state.particles && snapshot.status !== 'TERMINAL') {

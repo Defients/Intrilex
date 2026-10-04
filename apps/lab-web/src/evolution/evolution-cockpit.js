@@ -4,8 +4,9 @@ import { WEIGHT_FEATURES, WEIGHT_BOUND } from './weighted-heuristic.mjs';
 import { esc } from '../state.js';
 import { projectModel, pairFor, draftWeights, shortId } from './evolution-view-model.mjs';
 import { overviewHtml, lineagesHtml, evidenceHtml, inspectorHtml, heldOutTrendHtml } from './evolution-cockpit-views.js';
+import { mountProfileWorkspace } from './profile-workspace.js';
 
-const surfaces = [['overview','Overview','01'],['arena','Arena','02'],['evolution','Evolution','03'],['evidence','Evidence','04'],['forensics','Forensics','05'],['ledger','Ledger','06']];
+const surfaces = [['profiles','Profiles','00'],['overview','Overview','01'],['arena','Arena','02'],['evolution','Evolution','03'],['evidence','Evidence','04'],['forensics','Forensics','05'],['ledger','Ledger','06']];
 export function createCockpitState() {
   let preferences={};try{preferences=JSON.parse(localStorage.getItem('intrilex.evolution.cockpit.v1')??'{}');}catch{ /* UI preferences are optional; scientific storage is separate. */ }
   if (!preferences || typeof preferences !== 'object' || Array.isArray(preferences)) preferences = {};
@@ -145,6 +146,7 @@ export function mountCockpit(root,{state,research,getArena,loadRun}) {
   };
   root.addEventListener('click',click);root.addEventListener('change',change);root.addEventListener('input',input);root.addEventListener('keydown',keydown);
   const resize=()=>{refresh();const inspector=root.querySelector('#evo-cockpit-inspector');if(state.drawer&&matchMedia('(max-width: 1100px)').matches&&!inspector.contains(document.activeElement))inspector.focus();};window.addEventListener('resize',resize);
+  const profiles=mountProfileWorkspace(page('profiles'));
   const cleanupCharts=mountChartInteractions(root);const unsubscribe=research.subscribe(refresh);refresh();
-  return {refresh,cleanup(){cleanupCharts();unsubscribe();clearTimeout(searchTimer);root.removeEventListener('click',click);root.removeEventListener('change',change);root.removeEventListener('input',input);root.removeEventListener('keydown',keydown);window.removeEventListener('resize',resize);}};
+  return {refresh,profiles,cleanup(){profiles.cleanup();cleanupCharts();unsubscribe();clearTimeout(searchTimer);root.removeEventListener('click',click);root.removeEventListener('change',change);root.removeEventListener('input',input);root.removeEventListener('keydown',keydown);window.removeEventListener('resize',resize);}};
 }

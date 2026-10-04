@@ -54,6 +54,21 @@ async function autonomy() {
   return _autonomyModule;
 }
 
+// Agent Profile opponents execute an exact snapshot resolved once at match
+// start. The snapshot is bound into the save (setup is content-hashed) and is
+// never re-resolved, so a later promotion or rollback cannot change this match.
+export const AGENT_POLICY_ID = 'weighted-heuristic-v1';
+async function admitAgentSnapshot(setup) {
+  if (!setup?.agentSnapshot) return null;
+  const [{ validateSnapshot }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs'), import('../evolution/identity.mjs')]);
+  const fail = code => { throw Object.assign(new Error(code), { reasonCode: code }); };
+  const snapshot = validateSnapshot(setup.agentSnapshot);
+  if (setup.aiPolicyId !== AGENT_POLICY_ID || snapshot.policyId !== AGENT_POLICY_ID) fail('AGENT_POLICY_MISMATCH');
+  if (snapshot.implementation.fingerprint !== LAB_IDENTITY.fingerprint) fail('AGENT_SNAPSHOT_IMPLEMENTATION_MISMATCH');
+  if (snapshot.rulesProfileId && snapshot.rulesProfileId !== setup.profileId) fail('AGENT_RULES_PROFILE_MISMATCH');
+  return snapshot;
+}
+
 /**
  * Create a new player session.
  * @param {object} setup - { profileId, seed, humanPlayerId, aiPolicyId, mode }
@@ -106,6 +121,13 @@ export class PlaySession {
     this._policyContext = null;
     this._isAdvancing = false;
     this._achievementConsumer = null; // (events, snapshot) => void — set by play-app
+    this._agent = null;          // pinned Agent Profile snapshot (null for catalog policies)
+    this._policyActions = null;  // Lab-parity authorized action views for the current frame
+  }
+
+  /** Legal actions handed to a pinned agent: the same authorized views the Lab trains on, plus the vaulted command. */
+  _agentLegalActions() {
+    return this._policyActions.map(action => ({ ...action, command: this.commandVault.get(action.actionId) }));
   }
 
   /**
@@ -114,7 +136,8 @@ export class PlaySession {
   async init(setup) {
     this.status = SessionState.SETTING_UP;
     this.sessionId = `S-${hashCanonical({ setup, created: Date.now() }).slice(0, 16)}`;
-    this.setup = setup;
+    this._agent = await admitAgentSnapshot(setup);
+    this.setup = this._agent ? { ...setup, agentSnapshot: structuredClone(this._agent) } : setup;
 
     const auto = await autonomy();
     const engineMod = await engine();
@@ -310,6 +333,7 @@ export class PlaySession {
 
     // Build authorized action views (no commands)
     const policyActions = frame.actions.map(action => auto.actionView(action, profileId));
+    this._policyActions = policyActions;
 
     // Build the player-authorized view for the human
     const playerView = isHuman ? auto.strictView(this.state, this.setup.humanPlayerId) : null;
@@ -432,7 +456,7 @@ export class PlaySession {
 
     // Get the raw legal actions (with commands) for the vault
     const frame = this.currentFrame;
-    const legalActions = Array.from(this.commandVault.entries()).map(([actionId, command]) => {
+    const legalActions = this._agent ? this._agentLegalActions() : Array.from(this.commandVault.entries()).map(([actionId, command]) => {
       // Find the action in the frame
       const presented = frame.legalActions.find(a => a.actionId === actionId);
       return {
@@ -461,6 +485,7 @@ export class PlaySession {
       profileId: this.setup.profileId,
       engineVersion: auto.ENGINE_VERSION,
       rulesVersion: RULES_VERSION,
+      ...(this._agent ? { policyState: this._agent.policyState } : {}),
     };
 
     // Select action through the policy
@@ -557,10 +582,11 @@ export class PlaySession {
       opponent: {
         // v2.5 §4J: Never leak the raw policyId (e.g. "hybrix-rusher-easy")
         // as the player-facing display name. Use a friendly, titled name.
-        displayName: aiDisplayNameFromPolicyId(this.setup.aiPolicyId),
+        displayName: this._agent?.displayName ?? aiDisplayNameFromPolicyId(this.setup.aiPolicyId),
         policyId: this.setup.aiPolicyId,
         archetype: this.setup.aiArchetype ?? '',
         difficulty: this.setup.aiDifficulty ?? aiDifficultyLabelFromPolicyId(this.setup.aiPolicyId),
+        ...(this._agent ? { agentProfile: { agentProfileId: this._agent.profile.agentProfileId, headVersion: this._agent.profile.headVersion, checkpointId: this._agent.checkpointId, snapshotDigest: this._agent.snapshotDigest } } : {}),
       },
       match: {
         fullTurnSequence: this.state?.fullTurnSequence ?? 0,
@@ -614,7 +640,8 @@ export class PlaySession {
         humanPlayerId: this.setup.humanPlayerId,
         aiPolicyId: this.setup.aiPolicyId,
         aiPolicyVersion: '1.0.0',
-        aiConfigHash: hashCanonical({ policyId: this.setup.aiPolicyId }),
+        aiConfigHash: hashCanonical(this._agent ? { policyId: this.setup.aiPolicyId, snapshotDigest: this._agent.snapshotDigest } : { policyId: this.setup.aiPolicyId }),
+        ...(this._agent ? { agentSnapshot: structuredClone(this._agent) } : {}),
       },
       decisionJournal: this.decisionJournal.map(e => ({ ...e })),
       commandLog: this.commandLog.map(c => structuredClone(c.command)),
@@ -647,7 +674,7 @@ export class PlaySession {
     const oppView = auto.strictView(this.state, oppId);
     const modeLabel = this.setup.mode ? String(this.setup.mode).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : 'Local vs AI';
     const opponentRaw = this.setup.aiPolicyId ?? '';
-    const opponentLabel = opponentRaw ? opponentRaw.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'AI';
+    const opponentLabel = this._agent?.displayName ?? (opponentRaw ? opponentRaw.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'AI');
     return {
       turn: this.state.fullTurnSequence ?? 0,
       humanScore: humanView?.own?.securedPoints ?? 0,
@@ -697,6 +724,8 @@ export class PlaySession {
     const auto = await autonomy();
     const engineMod = await engine();
     const candidateEngine = new engineMod.IntrilexEngine();
+    // The save's own pinned snapshot is the only agent authority on resume.
+    const restoredAgent = await admitAgentSnapshot({ ...save.setup, profileId: save.profileId });
 
     const stateSetup = {
       profileId: save.profileId,
@@ -747,11 +776,14 @@ export class PlaySession {
     const savedSessionId = this.sessionId;
     const savedSetup = this.setup;
     const savedInitialState = this._initialState;
+    const savedAgent = this._agent;
 
     // Wire candidate into the session temporarily for replay
     this.status = SessionState.ADVANCING;
     this.sessionId = save.sessionId;
-    this.setup = { profileId: save.profileId, seed: save.setup.seed, humanPlayerId: save.setup.humanPlayerId, aiPolicyId: save.setup.aiPolicyId, aiArchetype: save.setup.aiArchetype ?? '', aiDifficulty: save.setup.aiDifficulty ?? '', mode: save.mode, tutorial: save.tutorial };
+    this.setup = { profileId: save.profileId, seed: save.setup.seed, humanPlayerId: save.setup.humanPlayerId, aiPolicyId: save.setup.aiPolicyId, aiArchetype: save.setup.aiArchetype ?? '', aiDifficulty: save.setup.aiDifficulty ?? '', mode: save.mode, tutorial: save.tutorial,
+      ...(restoredAgent ? { agentSnapshot: structuredClone(restoredAgent) } : {}) };
+    this._agent = restoredAgent;
     this.engine = candidateEngine;
     this.state = candidateState;
     this._decisionIndex = 0;
@@ -788,11 +820,12 @@ export class PlaySession {
 
         if (entry.source === 'ai') {
           const aiView = auto.strictView(this.state, entry.actorId);
-          const legalActions = Array.from(this.commandVault.entries()).map(([actionId, cmd]) => {
+          const legalActions = this._agent ? this._agentLegalActions() : Array.from(this.commandVault.entries()).map(([actionId, cmd]) => {
             const presented = this.currentFrame.legalActions.find(a => a.actionId === actionId);
             return { actionId, actorId: entry.actorId, family: presented.family, mode: presented.mode, timingClass: presented.timingClass, sourceCardIds: presented.sourceHandles, targetCardIds: presented.targetHandles, featureVector: presented.featureVector, command: cmd, commandHash: presented.commandHash };
           });
-          const context = { matchId: this.sessionId, runInstanceId: this.sessionId, decisionIndex: this._decisionIndex, actorId: entry.actorId, authorizedView: aiView, legalActions, rng: this._rngByPlayer[entry.actorId], profileId: this.setup.profileId, engineVersion: auto.ENGINE_VERSION, rulesVersion: RULES_VERSION };
+          const context = { matchId: this.sessionId, runInstanceId: this.sessionId, decisionIndex: this._decisionIndex, actorId: entry.actorId, authorizedView: aiView, legalActions, rng: this._rngByPlayer[entry.actorId], profileId: this.setup.profileId, engineVersion: auto.ENGINE_VERSION, rulesVersion: RULES_VERSION,
+            ...(this._agent ? { policyState: this._agent.policyState } : {}) };
           const aiSelected = auto.choosePolicy(this.setup.aiPolicyId, context);
           if (!aiSelected || aiSelected.actionId !== entry.selectedActionId) {
             throw Object.assign(new Error(`RESTORE_AI_DIVERGENCE at decision ${entry.decisionIndex}`), { reasonCode: 'RESTORE_FRAME_HASH_MISMATCH' });
@@ -855,6 +888,7 @@ export class PlaySession {
       this.sessionId = savedSessionId;
       this.setup = savedSetup;
       this._initialState = savedInitialState;
+      this._agent = savedAgent;
       throw error;
     }
   }

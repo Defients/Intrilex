@@ -36,6 +36,8 @@ export const state = {
   visibilityHandler: null,
   prevHandCount: 0,
   statsRecorded: false, // Guard: update player stats only once per terminal match
+  experienceEncounterId: null,
+  experienceNotice: null,
   selectedIntentKey: null, // Currently selected intent group key
   viewMode: null, // Current view mode (e.g. 'start')
   rightRailTab: 'chat', // Active right rail tab ('chat' | 'debug')
@@ -79,6 +81,8 @@ export function resetState() {
   state.visibilityHandler = null;
   state.prevHandCount = 0;
   state.statsRecorded = false;
+  state.experienceEncounterId = null;
+  state.experienceNotice = null;
   state.selectedIntentKey = null;
   state.viewMode = null;
   state.rightRailTab = 'chat';

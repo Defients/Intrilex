@@ -82,7 +82,7 @@ mkdirSync(dist, { recursive: true });
 cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
 // Portable lab domain/session have no engine rules or Node I/O. Browser workers
 // execute the existing autonomy runtime; the dashboard owns only artifacts.
-for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'matchup-lab.mjs']) {
+for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'matchup-lab.mjs', 'profile-contracts.mjs', 'profile-journal.mjs', 'profile-store.mjs', 'profile-science.mjs']) {
   const content = await readFile(path.join(root, 'packages/simulation-runtime/src', name), 'utf8');
   await writeFile(path.join(dist, 'evolution', name), content.replace("from '@intrilex/shared'", "from '../shared-browser.js'").replace("from '../../policies/src/weighted-heuristic.mjs'", "from './weighted-heuristic.mjs'"));
 }
