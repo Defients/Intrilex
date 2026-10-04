@@ -58,6 +58,7 @@ export function renderTerminal(vm, opts) {
     </dl>
     ${renderRankResultBlock(opts)}
     ${opts.achievementSummaryHtml || ''}
+    ${opts.agentExperienceNotice ? `<p role="status" data-testid="agent-experience-notice">${esc(opts.agentExperienceNotice)}</p>` : ''}
     ${renderIntelligenceCard(vm, opts)}
     ${renderTeachingMoment(generateTeachingMoment(vm) || generateBeginnerTrapTip(vm))}
     ${renderTraceInsightsCard(opts)}

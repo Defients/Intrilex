@@ -16,7 +16,7 @@
 // a structured "unavailable" result so the UI can show a graceful state.
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=7bebb07bf156';
+import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=03a3defa2a22';
 import {
   toDirectoryEntry,
   normalizeDirectorySearch,

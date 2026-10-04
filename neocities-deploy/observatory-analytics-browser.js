@@ -12,7 +12,7 @@
 // formula strings used by browser-analytics.js METRIC_REGISTRY so that
 // observatory output stays hash-consistent across the browser bundle.
 
-import { sha256Text } from './engine/browser-entry.js?v=7bebb07bf156';
+import { sha256Text } from './engine/browser-entry.js?v=03a3defa2a22';
 import {
   MECHANIC_REGISTRY,
   mechanicDisplayName,
@@ -22,7 +22,7 @@ import {
   analyticsEntityDefinition,
   synergyExcludedTags,
   areTagsInseparable,
-} from './mechanic-registry-browser.js?v=7bebb07bf156';
+} from './mechanic-registry-browser.js?v=03a3defa2a22';
 
 // ── Pure-math statistics helpers (browser ports of @intrilex/statistics) ──
 
