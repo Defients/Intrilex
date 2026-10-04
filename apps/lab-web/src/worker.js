@@ -26,15 +26,22 @@ function bootstrapMeanCIInline(values, _alpha = 0.05) {
 self.onmessage = async (event) => {
   const { type, records, fixtureIds } = event.data ?? {};
   if(type==='cancel-strategy-study'){strategyStudyAbort?.abort();return;}
-  if(type==='run-strategy-study'){
-    const token=event.data.plan.artifactId;
+  if(type==='run-strategy-study'||type==='run-information-study'){
+    const token=event.data.token??event.data.plan.artifactId;
     strategyStudyAbort=new AbortController();
     try {
       const auto=await autonomyModule,{IntrilexEngine}=await engineModule,{executeStrategyBranch}=await import('./evolution/strategy-branch.mjs'),{validateCheckpoint}=await import('./evolution/evolution-domain.mjs'),{LAB_IDENTITY}=await import('./evolution/identity.mjs'),engine=new IntrilexEngine();
       const input=event.data;
       const authority={createState:auto.createState,execute:(state,command)=>engine.execute(state,command),view:auto.strictView,validateCheckpoint,
         frame:state=>{const advanced=auto.advance(state,256),actions=advanced.legalActionFrame?.actions??[];return {...advanced,policyActions:actions.map(a=>auto.actionView(a,input.event.identity.rulesProfile)),resolve:id=>actions.find(a=>a.actionId===id)?.command};}};
-      const study=await executeStrategyBranch({event:input.event,replay:input.replay,checkpoints:input.checkpoints,plan:input.plan,identity:LAB_IDENTITY,authority,
+      let study;
+      if(type==='run-information-study'){
+        const {prepareInformationStudy,executeInformationStudy}=await import('./evolution/strategy-information.mjs');
+        const prepared=prepareInformationStudy({...input,identity:LAB_IDENTITY,authority});
+        self.postMessage({type:'information-plan',token,...prepared});
+        await new Promise((resolve,reject)=>{const receive=e=>{if(e.data.type==='information-plan-committed'&&e.data.token===token){self.removeEventListener('message',receive);resolve();}if(e.data.type==='cancel-strategy-study'){self.removeEventListener('message',receive);reject(new Error('INFORMATION_PLAN_CANCELLED'));}};self.addEventListener('message',receive);});
+        study=await executeInformationStudy({...prepared,event:input.event,checkpoints:input.checkpoints,identity:LAB_IDENTITY,authority,continueMatch:config=>auto.runBrowserPolicyMatch(config),signal:strategyStudyAbort.signal,onProgress:p=>self.postMessage({type:'strategy-progress',token,...p})});
+      }else study=await executeStrategyBranch({event:input.event,replay:input.replay,checkpoints:input.checkpoints,plan:input.plan,identity:LAB_IDENTITY,authority,
         continueMatch:config=>auto.runBrowserPolicyMatch(config),signal:strategyStudyAbort.signal,onProgress:p=>self.postMessage({type:'strategy-progress',token,...p})});
       self.postMessage({type:'strategy-study',token,study});
     }catch(error){self.postMessage({type:'strategy-fault',token,error:error.message});}

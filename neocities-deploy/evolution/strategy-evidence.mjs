@@ -1,5 +1,7 @@
 import { STRATEGY_CONTRACTS, sealStrategy, verifyStrategy, strategyDigest, validateDecisionEvent, CLEAN_ENDINGS, strategyFail } from './strategy-contracts.mjs';
 
+import { validateInformationSet, validateInformationStudy } from './strategy-information.mjs';
+
 export function classifyStrategySource(run) {
   const records=run.records ?? [];
   const full=records.filter(r=>Array.isArray(r.strategyDecisions)).length;
@@ -51,16 +53,19 @@ export function eventIndexRow(event,evidenceId,origin) {
   return {eventId:event.artifactId,evidenceId,origin,event,scopeKeys:subjects.map(s=>strategyScopeKey(fingerprint,rulesProfile,eraId,s)),
     policyKey:[fingerprint,rulesProfile,eraId,policyId],matchupKey:[fingerprint,rulesProfile,eraId,opponentPolicyId],maturityKey:[fingerprint,rulesProfile,eraId,event.maturity.bucket]};
 }
-export function strategyBundle({evidence,replays=[],studies=[],claims=[],importedResearch=[],sourceOrigins=evidence.map(e=>({artifactId:e.artifactId,origin:e.source.origin}))}) {
+export function strategyBundle({evidence,replays=[],studies=[],claims=[],importedResearch=[],informationSets=[],informationPlans=[],informationStudies=[],sourceOrigins=evidence.map(e=>({artifactId:e.artifactId,origin:e.source.origin}))}) {
   evidence.forEach(validateStrategyEvidence);
   for(const s of studies)verifyStrategy(s,STRATEGY_CONTRACTS.branch);
   for(const c of claims)verifyStrategy(c,STRATEGY_CONTRACTS.claim);
-  for(const archived of importedResearch){if(!['BRANCH','CLAIM'].includes(archived.kind))strategyFail('STRATEGY_IMPORTED_ARCHIVE_INVALID');verifyStrategy(archived.payload,archived.kind==='BRANCH'?STRATEGY_CONTRACTS.branch:STRATEGY_CONTRACTS.claim);if(archived.origin!=='IMPORTED_UNVERIFIED'||archived.archiveId!==archived.payload.artifactId)strategyFail('STRATEGY_IMPORTED_ARCHIVE_INVALID');}
+  for(const archived of importedResearch){if(!['BRANCH','CLAIM','INFORMATION_SET','INFORMATION_PLAN','INFORMATION_STUDY'].includes(archived.kind))strategyFail('STRATEGY_IMPORTED_ARCHIVE_INVALID');verifyStrategy(archived.payload,({BRANCH:STRATEGY_CONTRACTS.branch,CLAIM:STRATEGY_CONTRACTS.claim,INFORMATION_SET:'INFORMATION_SET_V1',INFORMATION_PLAN:'INFORMATION_SET_STUDY_PLAN_V1',INFORMATION_STUDY:'INFORMATION_SET_STUDY_V1'})[archived.kind]);if(archived.origin!=='IMPORTED_UNVERIFIED'||archived.archiveId!==archived.payload.artifactId)strategyFail('STRATEGY_IMPORTED_ARCHIVE_INVALID');}
   if(sourceOrigins.some(row=>!evidence.some(e=>e.artifactId===row.artifactId)||typeof row.origin!=='string')||new Set(sourceOrigins.map(row=>row.artifactId)).size!==sourceOrigins.length)strategyFail('STRATEGY_ORIGIN_MANIFEST_INVALID');
-  return sealStrategy('STRATEGY_BUNDLE_V1',{evidence,replays,studies,claims,importedResearch,sourceOrigins});
+  informationSets.forEach(validateInformationSet);informationPlans.forEach(p=>verifyStrategy(p,'INFORMATION_SET_STUDY_PLAN_V1'));informationStudies.forEach(validateInformationStudy);
+  const extended=informationSets.length||informationPlans.length||informationStudies.length||importedResearch.some(a=>a.kind.startsWith('INFORMATION_'));
+  return sealStrategy(extended?'STRATEGY_BUNDLE_V2':'STRATEGY_BUNDLE_V1',{evidence,replays,studies,claims,importedResearch,sourceOrigins,...(extended?{informationSets,informationPlans,informationStudies}:{})});
 }
 export function validateStrategyBundle(bundle) {
-  verifyStrategy(bundle,'STRATEGY_BUNDLE_V1');
+  if(!['STRATEGY_BUNDLE_V1','STRATEGY_BUNDLE_V2'].includes(bundle.contract))strategyFail('STRATEGY_BUNDLE_VERSION');verifyStrategy(bundle,bundle.contract);
+  if(bundle.contract==='STRATEGY_BUNDLE_V2'&&['informationSets','informationPlans','informationStudies'].some(k=>!Array.isArray(bundle[k])||bundle[k].length>1000))strategyFail('STRATEGY_BUNDLE_SCHEMA');
   if(['evidence','replays','studies','claims','importedResearch','sourceOrigins'].some(key=>!Array.isArray(bundle[key])))strategyFail('STRATEGY_BUNDLE_SCHEMA');
   if(bundle.evidence.length>10000 || bundle.studies.length>1000)strategyFail('STRATEGY_IMPORT_BUDGET');
   const rebuilt=strategyBundle(bundle);

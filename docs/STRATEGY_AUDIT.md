@@ -29,3 +29,6 @@ Maturity uses current public score/goal, hands/counts, board and pile developmen
 Exact-state continuations retain hidden state. Their results are conditioned on that one hidden realization, so they are explicitly research-only and cannot upgrade ordinary player advice. A future player-actionable counterfactual study requires justified hidden-state sampling from the acting player's information set. No fixed hidden state or exposed replay seed enters an ordinary recommendation feature.
 
 Old aggregate artifacts are ingested at their actual fidelity. A separately reproduced current replay may create new decision evidence with its own provenance; it cannot alter or upgrade the original historical artifact.
+
+
+The subsequent opening information-set extension is audited separately in [INFORMATION_SET_AUDIT.md](INFORMATION_SET_AUDIT.md). The original audit above remains the implementation baseline; its future-sampler statement is superseded only within that certified opening boundary.

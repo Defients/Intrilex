@@ -19,7 +19,8 @@
     "./strategy-contracts": "./src/strategy-contracts.mjs",
     "./strategy-evidence": "./src/strategy-evidence.mjs",
     "./strategy-analysis": "./src/strategy-analysis.mjs",
-    "./strategy-branch": "./src/strategy-branch.mjs"
+    "./strategy-branch": "./src/strategy-branch.mjs",
+    "./strategy-information": "./src/strategy-information.mjs"
   },
   "dependencies": {
     "@intrilex/shared": "workspace:*",

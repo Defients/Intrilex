@@ -32,7 +32,7 @@ Active Play now uses the **Homecoming rules-assisted board**: structured Action 
 - **Puzzle ladder** — progressive puzzles with localStorage progress tracking
 - **Replay Caster** — live broadcast with Ollama commentary, theatre playback, public/omniscient viewing
 - **Evolution Lab** — local policy series, experimental heuristic training, frozen evaluation suites, replay inspection and analytical views; see [the operating guide](docs/EVOLUTION_LAB.md). Imported outcome claims remain unverified until reproduced.
-- **Strategy / FIELD MANUAL** — authorized decision evidence, maturity and opportunity-normalized timing, context and Profile/checkpoint comparisons, exact-state research branches, bounded discoveries and provenance-bound guide exports. Fresh evidence stays insufficient; hidden-state branches stay research-only. See [the operating and scientific contract](docs/STRATEGY_INTELLIGENCE.md).
+- **Strategy / FIELD MANUAL** — authorized decision evidence, maturity and opportunity-normalized timing, context and Profile/checkpoint comparisons, exact-state research branches, certified opening information-set studies, bounded discoveries and provenance-bound guide exports. Fresh evidence stays insufficient; hidden-state branches stay research-only. See [the operating and scientific contract](docs/STRATEGY_INTELLIGENCE.md).
 - **Decision intelligence** — per-decision traces with score decomposition and rule audit
 - **Counterfactual branch lab** — policy-conditioned estimates from command checkpoints
 - **Rank anatomy observatory** — cohort-relative power profiles, counterfactual decision value

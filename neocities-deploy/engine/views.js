@@ -1,4 +1,4 @@
-import { canonicalClone } from "./canonical-json.js?v=54ccded41bff";
+import { canonicalClone } from "./canonical-json.js?v=02b75fb50abd";
 const DRAW_PILE_ZONES = new Set(["DP", "dp"]);
 function isDrawPileZone(zone) {
     return zone !== undefined && DRAW_PILE_ZONES.has(zone);

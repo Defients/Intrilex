@@ -1,7 +1,7 @@
 import { MATURITY_BUCKETS, STRATEGY_CONTRACTS, STRATEGY_NAMES, sealStrategy, verifyStrategy, strategyFail } from './strategy-contracts.mjs';
 
 export const STRATEGY_CONFIDENCE = Object.freeze({ INSUFFICIENT:'Missing or inadmissible evidence; no advice.', EXPERIMENTAL:'Descriptive/observational pattern, or one research-only branched state. No strategic strength conclusion.',
-  SUGGESTIVE:'Player-actionable controlled study with uncertainty excluding zero and at least two independent state/seed blocks.',
+  SUGGESTIVE:'Player-actionable controlled study with meaningful uncertainty bounds and at least two independent hidden worlds; continuation seeds are nested.',
   STRONG:'Predetermined replication, compatible era/rules, uncertainty excluding zero, consistency across at least two packs, policies and matchups.',
   ESTABLISHED:'Independent held-out replication of a strong result; no unresolved sensitivity reversal or faults.' });
 export function confidenceFor(e) {
@@ -63,6 +63,7 @@ export function synthesizeStrategyClaim(claim) {
   if(claim.evidenceType==='DESCRIPTIVE')return `Selected on ${Math.round(100*claim.estimatedMagnitude)}% of legal opportunities. That tells us what these policies did; whether you should play it is still unknown.`;
   if(claim.evidenceType==='ASSOCIATIONAL')return `Selected decisions were associated with ${claim.estimatedMagnitude>=0?'+':''}${(claim.estimatedMagnitude*100).toFixed(1)} percentage points in terminal game score. Context and policy can explain that difference; it does not prove a better play.`;
   if(claim.informationScope==='RESEARCH_ONLY')return `In this recorded hidden state, ${claim.statementData.alternative} changed paired continuation game score by ${(claim.estimatedMagnitude*100).toFixed(1)} percentage points. Research-only; this is not player advice.`;
+  if(claim.statementData?.informationSetId){const d=claim.statementData;return `${claim.confidence==='SUGGESTIVE'?(claim.recommendation==='PLAY'?`Usually play ${claim.subject.replace(/^(card|rank|family):/,'')}`:claim.recommendation==='HOLD'?`Usually preserve ${claim.subject.replace(/^(card|rank|family):/,'')}`:'Prefer alternative'):'Unknown'}: ${d.alternative}. Estimated terminal game-score difference ${(claim.estimatedMagnitude*100).toFixed(1)} percentage points across ${d.hiddenWorlds} compatible hidden worlds, ${d.continuationsPerWorld} continuations per world/action. ${d.heterogeneity}. Applies only to this exact authorized opening context and frozen continuation policies.`;}
   return 'No supported player recommendation.';
 }
 export function claimsFromAggregate(aggregate,generatedAt=new Date().toISOString()) {
@@ -81,6 +82,7 @@ export function validateStrategyClaim(claim) {
   if(!['DESCRIPTIVE','ASSOCIATIONAL','COUNTERFACTUAL','REPLICATED'].includes(claim.evidenceType) || !Object.hasOwn(STRATEGY_CONFIDENCE,claim.confidence))strategyFail('STRATEGY_CLAIM_INVALID');
   if(['DESCRIPTIVE','ASSOCIATIONAL'].includes(claim.evidenceType) && (claim.recommendation!=='UNKNOWN' || !['INSUFFICIENT','EXPERIMENTAL'].includes(claim.confidence)))strategyFail('STRATEGY_OBSERVATIONAL_OVERCLAIM');
   if(claim.informationScope==='RESEARCH_ONLY' && (claim.recommendation!=='UNKNOWN' || !['INSUFFICIENT','EXPERIMENTAL'].includes(claim.confidence)))strategyFail('STRATEGY_RESEARCH_ADVICE_REJECTED');
+  if(claim.recommendation!=='UNKNOWN'&&claim.statementData?.informationSetId){const d=claim.statementData,i=claim.uncertainty?.interval;if(claim.confidence!=='SUGGESTIVE'||claim.origin!=='LOCAL_REPRODUCTION'||claim.stale||claim.invalidated||claim.informationScope!=='ACTOR_AUTHORIZED'||claim.independentStateCount<2||d.heterogeneity!=='ROBUST'||!i||i[0]<=d.minimumMeaningfulEffect||!Number.isFinite(d.minimumMeaningfulEffect)||d.minimumMeaningfulEffect<0)strategyFail('STRATEGY_INFORMATION_ADVICE_REJECTED');}
   return claim;
 }
 export function strategyGuide(claims,{fingerprint,rulesProfile,eraId,generatedAt=new Date().toISOString()}) {

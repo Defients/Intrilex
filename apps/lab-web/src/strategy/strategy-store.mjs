@@ -1,8 +1,9 @@
 import { strategyDigest, STRATEGY_CONTRACTS, verifyStrategy, strategyFail } from '../../../../packages/simulation-runtime/src/strategy-contracts.mjs';
 import { validateStrategyEvidence, eventIndexRow, strategyScopeKey, strategyBundle, validateStrategyBundle } from '../../../../packages/simulation-runtime/src/strategy-evidence.mjs';
 import { createStrategyAggregate, strategyEventMatches, validateStrategyClaim } from '../../../../packages/simulation-runtime/src/strategy-analysis.mjs';
+import { validateInformationSet, validateInformationStudy } from '../../../../packages/simulation-runtime/src/strategy-information.mjs';
 
-export const STRATEGY_STORAGE = Object.freeze({database:'intrilex-strategy-intelligence',version:1,maxGameBytes:8*1024*1024,maxPortableBytes:40*1024*1024,decisionPage:40});
+export const STRATEGY_STORAGE = Object.freeze({database:'intrilex-strategy-intelligence',version:2,maxGameBytes:8*1024*1024,maxPortableBytes:40*1024*1024,decisionPage:40});
 const bytes=value=>new TextEncoder().encode(JSON.stringify(value)).byteLength;
 const storageError=error=>error?.name==='QuotaExceededError'?new Error('STRATEGY_STORAGE_PRESSURE: export evidence or free browser storage, then retry.'):error;
 export class StrategyStore {
@@ -18,7 +19,7 @@ export class StrategyStore {
       request.onupgradeneeded=()=>{
         if(this.opening!==pending){request.transaction.abort();return;}
         const db=request.result;
-        for(const [name,keyPath] of [['evidence','artifactId'],['sources','artifactId'],['events','eventId'],['replays','replayHash'],['studies','artifactId'],['claims','artifactId'],['archives','archiveId']])if(!db.objectStoreNames.contains(name))db.createObjectStore(name,{keyPath});
+        for(const [name,keyPath] of [['evidence','artifactId'],['sources','artifactId'],['events','eventId'],['replays','replayHash'],['studies','artifactId'],['claims','artifactId'],['archives','archiveId'],['informationSets','artifactId'],['informationPlans','artifactId'],['informationStudies','artifactId']])if(!db.objectStoreNames.contains(name))db.createObjectStore(name,{keyPath});
         const events=request.transaction.objectStore('events');
         if(!events.indexNames.contains('subject'))events.createIndex('subject','scopeKeys',{multiEntry:true});
         for(const [name,key] of [['cohort','cohortKey'],['policy','policyKey'],['matchup','matchupKey'],['maturity','maturityKey']])if(!events.indexNames.contains(name))events.createIndex(name,key);
@@ -99,22 +100,26 @@ export class StrategyStore {
     return result;
   }
   async saveStudy(study,claims){verifyStrategy(study,STRATEGY_CONTRACTS.branch);claims.forEach(validateStrategyClaim);await this.insert([{store:'studies',key:study.artifactId,value:study},...claims.map(c=>({store:'claims',key:c.artifactId,value:c}))]);}
+  async saveInformationPlan(info,plan){validateInformationSet(info);verifyStrategy(plan,'INFORMATION_SET_STUDY_PLAN_V1');if(plan.informationSetId!==info.artifactId)strategyFail('INFORMATION_PLAN_IDENTITY_MISMATCH');await this.insert([{store:'informationSets',key:info.artifactId,value:info},{store:'informationPlans',key:plan.artifactId,value:plan}]);}
+  async saveInformationStudy(study,claims){validateInformationStudy(study);claims.forEach(validateStrategyClaim);const plan=await this.get('informationPlans',study.plan.artifactId);if(!plan||strategyDigest(plan)!==strategyDigest(study.plan))strategyFail('INFORMATION_PLAN_NOT_COMMITTED');await this.insert([{store:'informationStudies',key:study.artifactId,value:study},...claims.map(c=>({store:'claims',key:c.artifactId,value:c}))]);}
+  async informationStudies(scope){const rows=[];await this.scan('informationStudies',{visit:s=>{if(s.plan.fingerprint===scope.fingerprint&&s.plan.rulesProfile===scope.rulesProfile&&s.plan.eraId===scope.eraId&&strategyEventMatches({identity:s.sourceIdentity,context:s.context,seat:s.seat,maturity:s.maturity},scope.filters))rows.push(s);},limit:1000});return rows;}
   async studies(scope){const rows=[];await this.scan('studies',{visit:row=>{if(row.plan.fingerprint===scope.fingerprint && row.plan.rulesProfile===scope.rulesProfile && row.plan.eraId===scope.eraId&&strategyEventMatches({identity:row.sourceIdentity,context:row.context,seat:row.seat,maturity:row.maturity},scope.filters))rows.push(row);},limit:1000});return rows;}
-  async importedResearch(scope){const rows=[];await this.scan('archives',{visit:row=>{const s=row.payload.scope??row.payload.plan;if(s?.fingerprint===scope.fingerprint&&s.rulesProfile===scope.rulesProfile&&s.eraId===scope.eraId)rows.push(row);},limit:1000});return rows;}
+  async importedResearch(scope){const rows=[];await this.scan('archives',{visit:row=>{const s=row.payload.scope??row.payload.plan??row.payload;if(s?.fingerprint===scope.fingerprint&&s.rulesProfile===scope.rulesProfile&&s.eraId===scope.eraId)rows.push(row);},limit:1000});return rows;}
   async exportBundle(scope){
     const evidence=[],replays=[],studies=await this.studies(scope),claims=[],seen=new Set();let size=0;
     const sources=(await this.listSources()).filter(s=>s.fingerprint===scope.fingerprint && s.rulesProfile===scope.rulesProfile && s.eraId===scope.eraId);
     for(const source of sources){const e=await this.get('evidence',source.artifactId);size+=bytes(e);if(size>STRATEGY_STORAGE.maxPortableBytes)strategyFail('STRATEGY_EXPORT_TOO_LARGE: export smaller source groups.');evidence.push(e);if(e.replayHash&&!seen.has(e.replayHash)){seen.add(e.replayHash);const r=await this.get('replays',e.replayHash);if(r){replays.push(r);size+=bytes(r);}}}
     await this.scan('claims',{visit:c=>{if(c.scope.fingerprint===scope.fingerprint&&c.scope.rulesProfile===scope.rulesProfile&&c.scope.eraId===scope.eraId)claims.push(c);}});
     const importedResearch=await this.importedResearch(scope),sourceOrigins=sources.map(s=>({artifactId:s.artifactId,origin:s.origin}));
-    const bundle=strategyBundle({evidence,replays,studies,claims,importedResearch,sourceOrigins});if(bytes(bundle)>STRATEGY_STORAGE.maxPortableBytes)strategyFail('STRATEGY_EXPORT_TOO_LARGE');return bundle;
+    const informationStudies=await this.informationStudies(scope),informationPlans=[],informationSets=[],infos=new Set();await this.scan('informationPlans',{visit:p=>{if(p.fingerprint===scope.fingerprint&&p.rulesProfile===scope.rulesProfile&&p.eraId===scope.eraId){informationPlans.push(p);infos.add(p.informationSetId);}},limit:1000});for(const id of infos)informationSets.push(await this.get('informationSets',id));
+    const bundle=strategyBundle({evidence,replays,studies,claims,importedResearch,sourceOrigins,informationStudies,informationPlans,informationSets});if(bytes(bundle)>STRATEGY_STORAGE.maxPortableBytes)strategyFail('STRATEGY_EXPORT_TOO_LARGE');return bundle;
   }
   async importBundle(text){
     if(typeof text!=='string' || new TextEncoder().encode(text).byteLength>STRATEGY_STORAGE.maxPortableBytes)strategyFail('STRATEGY_IMPORT_BUDGET');
     const bundle=validateStrategyBundle(JSON.parse(text));
     // Import is an append-only copy with explicit origin, never trust-by-checksum.
     for(const e of bundle.evidence)await this.addEvidence(e,bundle.replays.find(r=>r.replayHash===e.replayHash)?.replay??null,{originOverride:'IMPORTED_UNVERIFIED'});
-    const archives=[...bundle.importedResearch,...bundle.studies.map(payload=>({archiveId:payload.artifactId,kind:'BRANCH',origin:'IMPORTED_UNVERIFIED',payload})),...bundle.claims.map(payload=>({archiveId:payload.artifactId,kind:'CLAIM',origin:'IMPORTED_UNVERIFIED',payload}))];
+    const archives=[...(bundle.informationSets??[]).map(payload=>({archiveId:payload.artifactId,kind:'INFORMATION_SET',origin:'IMPORTED_UNVERIFIED',payload})),...(bundle.informationPlans??[]).map(payload=>({archiveId:payload.artifactId,kind:'INFORMATION_PLAN',origin:'IMPORTED_UNVERIFIED',payload})),...(bundle.informationStudies??[]).map(payload=>({archiveId:payload.artifactId,kind:'INFORMATION_STUDY',origin:'IMPORTED_UNVERIFIED',payload})),...bundle.importedResearch,...bundle.studies.map(payload=>({archiveId:payload.artifactId,kind:'BRANCH',origin:'IMPORTED_UNVERIFIED',payload})),...bundle.claims.map(payload=>({archiveId:payload.artifactId,kind:'CLAIM',origin:'IMPORTED_UNVERIFIED',payload}))];
     for(const archive of archives)await this.insert([{store:'archives',key:archive.archiveId,value:archive}]);
     // External branch/claim artifacts survive verbatim in a separate inspection archive.
     return bundle.evidence.length;

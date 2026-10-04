@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — October 4, 2026 Information-set Strategy Studies
+
+- Added sealed opening Information Sets, source-independent unseen-card/fresh-RNG
+  reconstruction, frozen matched world/action studies and conservative world-level
+  inference with familywise correction and heterogeneity diagnostics.
+- Added opening-study controls and provenance-rich controlled claims to FIELD
+  MANUAL. Suggestive advice is earned only by clean, current, robust evidence;
+  exact-state branches remain research-only and midgame sampling fails closed.
+- Strategy IndexedDB v2 preserves prior stores; portable V2 bundles preserve
+  imported studies in unverified archives. See [the sampling boundary and method](docs/INFORMATION_SET_STUDIES.md).
+
 ## Unreleased — October 4, 2026 Strategy Intelligence / FIELD MANUAL
 
 - Added Learn → Strategy with card/timing manuals, exact-context exploration,

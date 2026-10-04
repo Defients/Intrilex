@@ -151,7 +151,7 @@ samples. Mirrored games share seed blocks.
 | STRONG | Predetermined replication in at least two packs, policies and matchups, with consistent effects and no reversal |
 | ESTABLISHED | Independent held-out replication of Strong evidence |
 
-Only the first two levels are produced by the current implemented studies.
+Observational and exact-state studies produce only the first two levels. The opening Information-Set Study producer can earn Suggestive under the stricter documented world-level gates.
 Higher levels have validation requirements, not a button to upgrade evidence.
 All current recommendation fields remain UNKNOWN. Historical and imported
 claims cannot become stronger merely through a matching checksum.
@@ -293,3 +293,8 @@ pair alternatives across independent state/seed blocks, freeze continuation
 policies, retain full admissibility provenance, then replicate across held-out
 packs and matchups. That would create the evidence needed for actual timing and
 hold/play recommendations without teaching through hidden information.
+
+
+## Opening Information-Set Studies
+
+See [INFORMATION_SET_STUDIES.md](INFORMATION_SET_STUDIES.md) for the implemented, bounded player-information bridge and [INFORMATION_SET_AUDIT.md](INFORMATION_SET_AUDIT.md) for its pre-implementation audit. It reconstructs canonical opening worlds without source hidden truth, commits a frozen plan before outcomes, and infers over matched hidden-world effects. General midgame sampling remains unavailable. Exact-state branches remain permanently research-only. Strategy IndexedDB is now v2; portable bundles add V2 only when information artifacts require it.
