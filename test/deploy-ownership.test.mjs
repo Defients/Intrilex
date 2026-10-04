@@ -46,6 +46,8 @@ test('deploy CLI check is read-only and cannot accept build mode', async () => {
     for (const file of ['sync-neocities.mjs', 'deploy-ownership.mjs']) {
       await cp(fileURLToPath(new URL('../scripts/' + file, import.meta.url)), join(root, 'scripts', file));
     }
+    await mkdir(join(root,'scripts/lib'));
+    await cp(fileURLToPath(new URL('../scripts/lib/write-with-retry.mjs',import.meta.url)),join(root,'scripts/lib/write-with-retry.mjs'));
     const dist = join(root, 'apps/lab-web/dist');
     await mkdir(dist, { recursive: true });
     await writeFile(join(dist, 'index.html'), '<script src="app.abcdef.js"></script>');
@@ -68,6 +70,8 @@ test('version generation preserves unchanged watched files and writes real versi
       const source = fileURLToPath(new URL('../scripts/' + file, import.meta.url));
       if (existsSync(source)) await cp(source, join(root, 'scripts', file));
     }
+    await mkdir(join(root,'scripts/lib'));
+    await cp(fileURLToPath(new URL('../scripts/lib/write-with-retry.mjs',import.meta.url)),join(root,'scripts/lib/write-with-retry.mjs'));
     const identity = { version: '1.0.0', engineVersion: '4.2.6', rulesVersion: '4.3.1' };
     await writeFile(join(root, 'config/release-identity.json'), JSON.stringify(identity));
     const output = join(root, 'version.js');

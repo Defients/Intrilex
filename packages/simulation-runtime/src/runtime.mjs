@@ -1,4 +1,5 @@
 import { recordActionCoverage } from '@intrilex/policies/scoring';
+import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './strategic-telemetry.mjs';
 import { chooseWeightedAction, WEIGHTED_POLICY_ID } from '../../policies/src/weighted-heuristic.mjs';
 import {
   DEFAULT_SIMULATION_PROFILE,
@@ -289,6 +290,7 @@ export function runPolicyMatch(config) {
   const decisionTraces = [];
   const captureFacts = config.telemetryEnabled !== false;
   const captureTraces = config.decisionTracesEnabled === true;
+  const strategy = config.strategicTelemetryEnabled === true ? createStrategicTracker({deep:config.strategicTrace===true}) : null;
   const actionCounts = {}, decisionFamilyCounts = {}, actionModeCounts = {}, decisionModeCounts = {}, responseActionCounts = {}, timingClassCounts = {}, eventTypeCounts = {}, mechanicCounts = {}, primaryMechanicCounts = {}, mechanicOpportunityCounts = {}, primaryMechanicOpportunityCounts = {};
   const rankDecisions = [];
   const semanticCounters = emptySemanticCounters();
@@ -327,6 +329,7 @@ export function runPolicyMatch(config) {
     const preFrameScores = captureFacts ? pointsByPlayer(state, seatOrder) : null;
     const frame = createSimulationDecisionFrame(state, config.orchestrationCommandLimit ?? 16);
     state = frame.state;
+    strategy?.observe(seatOrder.map(id=>deriveSecuredPoints(state,id)),decisionIndex);
     commands.push(...frame.executedCommands);
     captureEvents(frame.events);
 
@@ -387,6 +390,7 @@ export function runPolicyMatch(config) {
       terminationReason = 'POLICY_ERROR'; errorCode = error.code ?? 'POLICY_THROW'; break;
     }
     const selectedAction = frame.policyActions.find((action) => action.actionId === selected.actionId);
+    const strategicDecision = strategy ? decisionObservation({actorId,seat:seatIndex+1,decisionIndex,authorizedView,legalActions:frame.policyActions,selected:selectedAction,...(config.strategicTrace?{policyScores:selected.metadata.candidateScores}: {})}) : null;
     const command = frame.resolve(selected.actionId);
     const targetStackItem = state.stack?.at(-1) ?? null;
     const targetControllerId = targetStackItem?.controllerId ?? null;
@@ -407,6 +411,7 @@ export function runPolicyMatch(config) {
     rankDecisions.push({ checkpointId, participantId: actorId, decisionIndex, rankAttribution, rankOpportunities: Object.values(rankOppMap), variantOpportunities: Object.values(variantOppMap), action: { family: selectedAction.family, mode: selectedAction.mode, kind: selectedAction.kind, authority: selectedAction.authority, timingClass: selectedAction.timingClass }, legalActions: frame.policyActions.map(pa => ({ actionId: pa.actionId, family: pa.family, mode: pa.mode, kind: pa.kind })) });
 
     state = result.state;
+    if(strategy)strategy.capture(strategicDecision,seatOrder.map(id=>deriveSecuredPoints(state,id)));
 
     applyDecisionCounters(semanticCounters, selectedAction, frame.policyActions);
     const ps = perSeat[seatIndex];
@@ -547,6 +552,8 @@ export function runPolicyMatch(config) {
 
   if (terminationReason === 'DECISION_LIMIT' && state.winner !== null) terminationReason = 'NORMAL_VICTORY';
   const finalScores = pointsByPlayer(state, seatOrder);
+  const strategicTelemetry = strategy?.finish(seatOrder.map(id=>finalScores[id]),decisions.length);
+  const terminal = terminalEvidence(events,seatOrder.map(id=>state.players[id].goal),publicTerminalAnchorCounts(state,seatOrder));
   const participants = seatOrder.map((playerId, seatIndex) => {
     const ps = perSeat[seatIndex];
     const isWinner = state.winner === playerId;
@@ -606,7 +613,7 @@ export function runPolicyMatch(config) {
       return rest;
     }),
   };
-  const summary = { ...summaryCore, matchResultHash: hashCanonical(hashInput), perSeatStats:perSeat.map((p,i)=>({playerId:seatOrder[i],...p})), rankDecisions };
+  const summary = { ...summaryCore, ...(strategicTelemetry?{strategicTelemetry}:{}), ...(terminal?{terminalEvidence:terminal}:{}), matchResultHash: hashCanonical(hashInput), perSeatStats:perSeat.map((p,i)=>({playerId:seatOrder[i],...p})), rankDecisions };
   const base = { summary, decisions, facts, provenance };
   if (captureTraces) base.decisionTraces = decisionTraces;
   if (!config.includeReplay) return base;

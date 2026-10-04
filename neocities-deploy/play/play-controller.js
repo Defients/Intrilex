@@ -4,9 +4,9 @@
 // Action IDs resolve through a private command vault.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from '../engine/browser-entry.js?v=f6c7ea2918fb';
-import { classifyDecisionKind, presentAction } from './action-presenter.js?v=f6c7ea2918fb';
-import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js?v=f6c7ea2918fb';
+import { hashCanonical } from '../engine/browser-entry.js?v=7bebb07bf156';
+import { classifyDecisionKind, presentAction } from './action-presenter.js?v=7bebb07bf156';
+import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js?v=7bebb07bf156';
 import {
   PRODUCT_VERSION,
   PLAYER_RUNTIME_VERSION,
@@ -18,8 +18,8 @@ import {
   validateSaveEnvelope,
   canMigrateSave,
   migrateSave,
-} from './save-integrity.js?v=f6c7ea2918fb';
-import { createPolicyRng, computePlayerStats } from './session-utils.js?v=f6c7ea2918fb';
+} from './save-integrity.js?v=7bebb07bf156';
+import { createPolicyRng, computePlayerStats } from './session-utils.js?v=7bebb07bf156';
 
 // Re-export for backward compatibility (other modules import from play-controller)
 export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope, canMigrateSave, migrateSave };
@@ -41,7 +41,7 @@ export const SessionState = Object.freeze({
 let _engineModule = null;
 async function engine() {
   if (!_engineModule) {
-    _engineModule = await import('../engine/browser-entry.js?v=f6c7ea2918fb');
+    _engineModule = await import('../engine/browser-entry.js?v=7bebb07bf156');
   }
   return _engineModule;
 }
@@ -49,7 +49,7 @@ async function engine() {
 let _autonomyModule = null;
 async function autonomy() {
   if (!_autonomyModule) {
-    _autonomyModule = await import('../autonomy-runtime.js?v=f6c7ea2918fb');
+    _autonomyModule = await import('../autonomy-runtime.js?v=7bebb07bf156');
   }
   return _autonomyModule;
 }

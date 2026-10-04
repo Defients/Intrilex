@@ -36,5 +36,6 @@
 .evo-analysis-kpis span{font-size:10px;color:var(--evo-secondary)}
 .evo-metric-definition{font-size:11px;line-height:1.7}
 .evo-plot-empty{padding:30px;border:1px dashed var(--evo-border);color:var(--evo-muted);font-size:12px}
+.evo-analytic-card pre{max-width:100%;max-height:360px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:1250px){.evo-analytics-grid{grid-template-columns:1fr}.evo-analysis-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.evo-analytic-card{padding:12px}.evo-analytic-card h4{font-size:15px}.evo-analysis-kpis{gap:8px}.evo-analysis-kpis>div{padding:10px}.evo-analysis-kpis strong{font-size:23px}.evo-plot-legend{gap:6px}.evo-analytic-card figcaption{gap:8px}}

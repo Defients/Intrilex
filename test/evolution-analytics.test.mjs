@@ -53,7 +53,7 @@ test('chart projections label partial errors and never add a timed-out game to o
   const r={...run([game(0),game(1)]),status:'ERROR',error:'WORKER_TIMEOUT <seed>',config:{...run([]).config,gameCount:10}};
   const html=arenaAnalyticsHtml(r);assert.match(html,/8 without accepted records/);assert.match(html,/2 clean games \/ 0 recorded faults/);
   assert.match(html,/WORKER_TIMEOUT &lt;seed&gt;/);assert.match(html,/Original hashed counter mean: 2.00/);assert.doesNotMatch(html,/NaN|Infinity/);
-  assert.equal((html.match(/data-evo-plot=/g)??[]).length,9);
+  assert.equal((html.match(/data-evo-plot=/g)??[]).length,11);
 });
 test('held-out cells admit only matching complete suite/pack evidence and preserve missing values',()=>{
   const project={experiment:{scientific:{startingCheckpointIds:['root']}},checkpoints:[{checkpointId:'root',agentId:'A',generation:0,lineageId:'A',policyState:{weights:{points:0}}}],generations:[],packs:[{purpose:'EVALUATION',packId:'heldout'}],suite:{suiteId:'suite',checkpoints:[{policyId:'control'},{policyId:'tempo'}]},evaluations:[

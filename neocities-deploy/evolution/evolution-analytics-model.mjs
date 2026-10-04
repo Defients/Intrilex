@@ -1,4 +1,5 @@
 // Read-only projections: never rewrite a hashed game record or execution config.
+import { winnerScoreDiagnostic } from './strategic-telemetry.mjs';
 const cleanReasons = new Set(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW']);
 export const isCleanGame = r => cleanReasons.has(r.terminationReason) && ['P1','P2','DRAW'].includes(r.winner);
 export const outcome = r => !isCleanGame(r) ? 'Fault' : r.winner === 'DRAW' ? 'Draw' : ((r.winner === 'P1') !== r.swapped ? 'A' : 'B');
@@ -32,8 +33,58 @@ export function histogram(records, getValue, maxBins=24) {
   return bins;
 }
 
-export function arenaAnalytics(run, {window=100, from=1, to=10000}={}) {
-  const records=(run?.records??[]).filter(r=>r.ordinal+1>=from&&r.ordinal+1<=to).sort((a,b)=>a.ordinal-b.ordinal);
+/** Seat × terminal reason × outcome stratification, with proportional quotas.
+ * Each nonempty stratum receives a mark when the budget permits. Within strata
+ * deterministic hashed priorities avoid aliasing with ordinal/group periods. */
+export function representativeSample(records,limit=300) {
+  if(!Number.isInteger(limit)||limit<0)throw new Error('INVALID_SAMPLE_BUDGET');
+  if(!limit)return [];
+  const ordered=[...records].sort((a,b)=>a.ordinal-b.ordinal);if(ordered.length<=limit)return ordered;
+  const strata=new Map();for(const r of ordered){const key=JSON.stringify([r.swapped,r.terminationReason,outcome(r)]);if(!strata.has(key))strata.set(key,[]);strata.get(key).push(r);}
+  const hash=r=>{let h=2166136261;for(const c of `${r.seed}:${r.ordinal}:${r.swapped}:${r.terminationReason}:${r.winner}`)h=Math.imul(h^c.charCodeAt(0),16777619)>>>0;return h;};
+  const groups=[...strata].sort(([a],[b])=>a.localeCompare(b)).map(([key,rows])=>({key,rows:rows.sort((a,b)=>hash(a)-hash(b)||a.ordinal-b.ordinal),quota:0}));
+  if(limit>=groups.length)for(const g of groups)g.quota=1;
+  else for(const seat of [false,true]){const g=groups.filter(g=>g.rows[0].swapped===seat).sort((a,b)=>b.rows.length-a.rows.length)[0];if(g&&groups.reduce((n,g)=>n+g.quota,0)<limit)g.quota=1;}
+  let remaining=limit-groups.reduce((n,g)=>n+g.quota,0);
+  while(remaining--){const g=groups.filter(g=>g.quota<g.rows.length).sort((a,b)=>(b.rows.length/ordered.length*limit-b.quota)-(a.rows.length/ordered.length*limit-a.quota)||a.key.localeCompare(b.key))[0];g.quota++;}
+  return groups.flatMap(g=>g.rows.slice(0,g.quota)).sort((a,b)=>a.ordinal-b.ordinal);
+}
+
+export function filterArenaRecords(run,{from=1,to=10000,winner='all',seat='all',termination='all',relation='all',policy='all',marginMin=null,marginMax=null,turnMin=null,turnMax=null,decisionMin=null,decisionMax=null}={}) {
+  return (run?.records??[]).filter(r=>{
+    if(r.ordinal+1<from||r.ordinal+1>to)return false;
+    const d=winnerScoreDiagnostic(r),t=inclusiveFullTurns(r,run?.config.profileId);
+    return (winner==='all'||d.outcome===winner)&&(seat==='all'||d.seat===seat)&&(termination==='all'||r.terminationReason===termination)
+      &&(relation==='all'||d.winnerScoreRelation===relation)&&(policy==='all'||(d.outcome==='A'?run.config.botA:d.outcome==='B'?run.config.botB:null)===policy)
+      &&[[d.margin,marginMin,marginMax],[t,turnMin,turnMax],[r.decisions,decisionMin,decisionMax]].every(([v,lo,hi])=>(lo===null||Number.isFinite(v)&&v>=lo)&&(hi===null||Number.isFinite(v)&&v<=hi));
+  }).sort((a,b)=>a.ordinal-b.ordinal);
+}
+
+export function strategicAnalytics(records) {
+  const bots={A:{games:0,declineGames:0,declineGameWins:0,counts:{},chains:{},chainOutcomes:{},declinedByFamily:{},followupByFamily:{},controlByPosition:{},scoreByThreat:{},scoreByPhase:{}},B:{games:0,declineGames:0,declineGameWins:0,counts:{},chains:{},chainOutcomes:{},declinedByFamily:{},followupByFamily:{},controlByPosition:{},scoreByThreat:{},scoreByPhase:{}}};
+  for(const r of records){if(r.strategicTelemetry?.schemaVersion!==1||r.strategicTelemetry.seats?.length!==2)continue;
+    for(const [i,s]of r.strategicTelemetry.seats.entries()) {const key=(i===0)!==r.swapped?'A':'B',b=bots[key];b.games++;
+      if(s.scoreDeclined){b.declineGames++;if(outcome(r)===key)b.declineGameWins++;}
+      for(const [k,v]of Object.entries(s))if(typeof v==='number'&&k!=='schemaVersion')b.counts[k]=(b.counts[k]??0)+v;
+      for(const [k,v]of Object.entries(s.chainLengths??{})){b.chains[k]=(b.chains[k]??0)+v;b.chainOutcomes[k]??={games:0,wins:0};b.chainOutcomes[k].games++;if(outcome(r)===key)b.chainOutcomes[k].wins++;}
+      for(const name of ['declinedByFamily','followupByFamily','controlByPosition'])for(const [k,v]of Object.entries(s[name]??{}))b[name][k]=(b[name][k]??0)+v;
+      for(const name of ['scoreByThreat','scoreByPhase'])for(const [k,v]of Object.entries(s[name]??{})){b[name][k]??={observed:0,taken:0};b[name][k].observed+=v.observed;b[name][k].taken+=v.taken;}
+    }
+  }
+  for(const b of Object.values(bots)){const c=b.counts;b.immediateConversion=c.scoreOpportunities?c.scoreTaken/c.scoreOpportunities:null;b.deferredConversion=c.scoreDeclined?c.deferredConversions/c.scoreDeclined:null;
+    b.meanDeclinedValue=c.declinedValueCount?c.declinedValueSum/c.declinedValueCount:null;b.meanDelay=c.deferredConversions?c.conversionDelaySum/c.deferredConversions:null;b.meanHorizonSwing=c.horizonObserved?c.horizonSwingSum/c.horizonObserved:null;
+    b.winRateInDeclineGames=b.declineGames?b.declineGameWins/b.declineGames:null;
+  }return bots;
+}
+
+export function fingerprintDistance(left,right) {
+  if(!left||!right)return null;const keys=[...new Set([...Object.keys(left),...Object.keys(right)])];
+  return keys.reduce((n,k)=>n+Math.abs((left[k]??0)-(right[k]??0)),0)/2;
+}
+
+export function arenaAnalytics(run, options={}) {
+  const {window=100}=options;
+  const records=filterArenaRecords(run,options);
   const clean=records.filter(isCleanGame), profile=run?.config.profileId;
   const turnValues=clean.map(r=>inclusiveFullTurns(r,profile)).filter(Number.isFinite);
   const summary={accepted:records.length,clean:clean.length,faults:records.length-clean.length,
@@ -58,7 +109,7 @@ export function arenaAnalytics(run, {window=100, from=1, to=10000}={}) {
   const actions={A:{decisions:0,counts:{}},B:{decisions:0,counts:{}}};
   let telemetryGames=0;
   for(const r of clean){if(r.seatBehavior?.length!==2)continue;telemetryGames++;for(const [i,seat] of r.seatBehavior.entries()){const bot=(i===0)!==r.swapped?'A':'B';actions[bot].decisions+=seat.decisions;for(const [key,count]of Object.entries(seat.actionCounts??{}))actions[bot].counts[key]=(actions[bot].counts[key]??0)+count;}}
-  const families=[...new Set([...Object.keys(actions.A.counts),...Object.keys(actions.B.counts)])].sort().map(key=>({key,A:actions.A.decisions?100*(actions.A.counts[key]??0)/actions.A.decisions:null,B:actions.B.decisions?100*(actions.B.counts[key]??0)/actions.B.decisions:null}));
+  const families=[...new Set([...Object.keys(actions.A.counts),...Object.keys(actions.B.counts)])].sort().map(key=>({key,A:actions.A.decisions?100*(actions.A.counts[key]??0)/actions.A.decisions:null,B:actions.B.decisions?100*(actions.B.counts[key]??0)/actions.B.decisions:null,ACount:actions.A.decisions?actions.A.counts[key]??0:null,BCount:actions.B.decisions?actions.B.counts[key]??0:null,ADecisions:actions.A.decisions||null,BDecisions:actions.B.decisions||null}));
   const coverage={A:{games:0,opportunities:{},selected:{}},B:{games:0,opportunities:{},selected:{}}};
   for(const r of clean) for(const [i,seat] of (r.seatBehavior??[]).entries()) {
     const c=seat.actionCoverage;if(c?.schemaVersion!==1)continue;
@@ -69,11 +120,13 @@ export function arenaAnalytics(run, {window=100, from=1, to=10000}={}) {
     const row={key};for(const bot of ['A','B']){const c=coverage[bot],n=c.opportunities[key]??0,selected=c.selected[key]??0;row[bot]=c.games&&n?100*selected/n:null;row[`${bot}Available`]=c.games?n:null;row[`${bot}Selected`]=c.games?selected:null;}return row;
   });
   const terminations=Object.entries(records.reduce((acc,r)=>{acc[r.terminationReason]=(acc[r.terminationReason]??0)+1;return acc;},{})).map(([key,count])=>({key,count}));
-  return {records,clean,summary,curves,seats,families,telemetryGames,terminations,coverage,opportunityRows,
+  const strategy=strategicAnalytics(clean), diagnostics=records.map(winnerScoreDiagnostic);
+  const fingerprints=Object.fromEntries(['A','B'].map(bot=>[bot,actions[bot].decisions?Object.fromEntries(Object.entries(actions[bot].counts).map(([k,v])=>[k,v/actions[bot].decisions])):null]));
+  return {records,clean,summary,curves,seats,families,telemetryGames,terminations,coverage,opportunityRows,strategy,diagnostics,fingerprints,similarityDistance:fingerprintDistance(fingerprints.A,fingerprints.B),
     pairs:{n:pairScores.length,incompleteGames:clean.length-pairScores.length*2,score:paired,interval:paired===null?null:[Math.max(0,paired-radius),Math.min(1,paired+radius)]},
     turnBins:histogram(clean,r=>inclusiveFullTurns(r,profile)),decisionBins:histogram(clean,r=>r.decisions),
     marginBins:histogram(clean,r=>r.swapped?r.scoreP2-r.scoreP1:r.scoreP1-r.scoreP2),
-    scatter:clean.filter((_,i)=>i%Math.max(1,Math.ceil(clean.length/300))===0).map(r=>({x:inclusiveFullTurns(r,profile),y:r.swapped?r.scoreP2-r.scoreP1:r.scoreP1-r.scoreP2,record:r})).filter(p=>Number.isFinite(p.x))};
+    scatter:representativeSample(clean.filter(r=>Number.isFinite(inclusiveFullTurns(r,profile)))).map(r=>({x:inclusiveFullTurns(r,profile),y:r.swapped?r.scoreP2-r.scoreP1:r.scoreP1-r.scoreP2,record:r}))};
 }
 
 export function researchAnalytics(project) {

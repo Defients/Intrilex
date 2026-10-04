@@ -1,11 +1,11 @@
-import { canonicalClone } from "./canonical-json.js?v=f6c7ea2918fb";
-import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=f6c7ea2918fb";
-import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js?v=f6c7ea2918fb";
-import { cardPointValue, parseIdentity, rankDefinition, resolveRankAction } from "./ranks.js?v=f6c7ea2918fb";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=f6c7ea2918fb";
-import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js?v=f6c7ea2918fb";
-import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js?v=f6c7ea2918fb";
-import { phase8Runtime } from "./phase8.js?v=f6c7ea2918fb";
+import { canonicalClone } from "./canonical-json.js?v=7bebb07bf156";
+import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=7bebb07bf156";
+import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js?v=7bebb07bf156";
+import { cardPointValue, parseIdentity, rankDefinition, resolveRankAction } from "./ranks.js?v=7bebb07bf156";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=7bebb07bf156";
+import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js?v=7bebb07bf156";
+import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js?v=7bebb07bf156";
+import { phase8Runtime } from "./phase8.js?v=7bebb07bf156";
 export const CORE_ADVANCED_AUTHORITY_PROFILE = Object.freeze({
     id: "core-advanced-authority",
     displayName: "Advanced Core Authority — Audited Public Supers, Rank 10, Ultras, Voltage & Royal Marriage",

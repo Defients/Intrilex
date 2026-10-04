@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { tacticalBase, tacticalScore } from './tactics.mjs';
+import { CONTROL_CONVERSION_ID, controlConversionScore } from './control-conversion.mjs';
 export { evaluateAction, ACTION_PURPOSES, recordActionCoverage } from './action-evaluation.mjs';
 
 // ── Default scoring weights (parameterized for tuning and sensitivity analysis) ──
@@ -102,6 +103,7 @@ function advancedScore(policyId, action, context, weights) {
 }
 
 export function scorePolicyAction(policyId, action, context, weights = SCORING_WEIGHTS) {
+  if (policyId === CONTROL_CONVERSION_ID) return controlConversionScore(action, context, scorePolicyAction('control-tactical', action, context, weights));
   const baseId = tacticalBase(policyId);
   if (baseId) return tacticalScore(baseId, action, context, scorePolicyAction(baseId, action, context, weights));
   const own = context.authorizedView.own, response = responseContext(context);

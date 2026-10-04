@@ -21,11 +21,11 @@
 // with Online Ranked IR/record.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct, state } from '../state.js?v=f6c7ea2918fb';
-import { loadProfile, isStorageAvailable } from '../play/local-profile.mjs?v=f6c7ea2918fb';
-import { getAchievementRuntime, getDefinition } from '../play/achievements/achievement-runtime.js?v=f6c7ea2918fb';
+import { app, esc, pct, state } from '../state.js?v=7bebb07bf156';
+import { loadProfile, isStorageAvailable } from '../play/local-profile.mjs?v=7bebb07bf156';
+import { getAchievementRuntime, getDefinition } from '../play/achievements/achievement-runtime.js?v=7bebb07bf156';
 import { ratingToTierDivision, RankTier } from "../account-domain/rank-tier.mjs";
-import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=f6c7ea2918fb';
+import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=7bebb07bf156';
 import {
   fetchSelfProfile,
   fetchPublicProfile,
@@ -43,23 +43,23 @@ import {
   getTitleDefinition,
   getFrameDefinition,
   getBadgeDefinition,
-} from '../play/profile/profile-data.js?v=f6c7ea2918fb';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=f6c7ea2918fb';
-import { getReplay, listMatchStats, listReplays } from '../play/persistence.js?v=f6c7ea2918fb';
-import { downloadReplay } from '../play/replay-library.js?v=f6c7ea2918fb';
+} from '../play/profile/profile-data.js?v=7bebb07bf156';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=7bebb07bf156';
+import { getReplay, listMatchStats, listReplays } from '../play/persistence.js?v=7bebb07bf156';
+import { downloadReplay } from '../play/replay-library.js?v=7bebb07bf156';
 import { buildStrategicFingerprint } from "../account-domain/strategic-fingerprint.mjs";
 import { buildEnrichedStats } from "../account-domain/match-stats-aggregator.mjs";
 import { computeUncertaintyLabel, buildSampleSizeDisclaimer } from '@intrilex/statistics/evidence-honest';
 import { renderMasterySection, computeUsageFromReplays } from "../decision-intelligence/mastery-tracks.mjs";
 import { generateReplayLesson, renderLessonStep, getLessonSummary } from "../decision-intelligence/replay-lesson.mjs";
-import { getAuthState, getProfile as getAuthProfile } from '../play/network/auth-controller.js?v=f6c7ea2918fb';
+import { getAuthState, getProfile as getAuthProfile } from '../play/network/auth-controller.js?v=7bebb07bf156';
 import {
   fetchRelationshipStatus,
   followPlayer,
   unfollowPlayer,
   setRival,
   unsetRival,
-} from '../play/players/relationships-data.js?v=f6c7ea2918fb';
+} from '../play/players/relationships-data.js?v=7bebb07bf156';
 
 const BADGE_ICONS = {
   shield: '🛡', trophy: '🏆', star: '⭐', crown: '👑', flame: '🔥',

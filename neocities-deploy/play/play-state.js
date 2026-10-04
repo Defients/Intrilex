@@ -6,7 +6,7 @@
 // (board-events.js, etc.) can read and write the same state
 // without circular imports or prop-drilling.
 // ═══════════════════════════════════════════════════════════════
-import { GuidanceMode } from './intelligence/action-explanation.js?v=f6c7ea2918fb';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=7bebb07bf156';
 
 export const state = {
   session: null,

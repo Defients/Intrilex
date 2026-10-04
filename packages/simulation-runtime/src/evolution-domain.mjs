@@ -1,5 +1,6 @@
 import { hashCanonical } from '@intrilex/shared';
 import { WEIGHTED_POLICY_ID, validatePolicyState, baselinePolicyState } from '../../policies/src/weighted-heuristic.mjs';
+import { validateStrategicTelemetry } from './strategic-telemetry.mjs';
 
 /** @typedef {{schemaVersion:number, fingerprint:string, engineHash:string, policyImplementationHash:string, runtimeHash:string, engineVersion:string, rulesVersion:string}} RulesetFingerprint */
 /** @typedef {{checkpointId:string, agentId:string, lineageId:string, generation:number, parentCheckpointId:string|null, policyId:string, policyVersion:string, policyState:object, identity:RulesetFingerprint, createdAt:string}} AgentCheckpoint */
@@ -8,8 +9,8 @@ import { WEIGHTED_POLICY_ID, validatePolicyState, baselinePolicyState } from '..
 
 export const LAB_SCHEMA = 1;
 export const FROZEN_POLICIES = Object.freeze(['random-legal', 'score-rush', 'control', 'tempo', 'value']);
-export const STATIC_POLICIES = Object.freeze([...FROZEN_POLICIES, 'score-rush-tactical', 'control-tactical', 'tempo-tactical', 'value-tactical']);
-const staticPolicyVersion = id => FROZEN_POLICIES.includes(id) ? '2.0.0' : STATIC_POLICIES.includes(id) ? '4.0.0' : null;
+export const STATIC_POLICIES = Object.freeze([...FROZEN_POLICIES, 'score-rush-tactical', 'control-tactical', 'tempo-tactical', 'value-tactical', 'control-conversion-tactical']);
+export const staticPolicyVersion = id => id === 'control-conversion-tactical' ? '5.0.0' : FROZEN_POLICIES.includes(id) ? '2.0.0' : STATIC_POLICIES.includes(id) ? '4.0.0' : null;
 export const LAB_POLICIES = Object.freeze([...STATIC_POLICIES, WEIGHTED_POLICY_ID]);
 export const LAB_PROFILES = Object.freeze(['core-advanced-authority', 'core-unrestricted-authority', 'first-contact-trigger-closure']);
 export const LAB_LIMITS = Object.freeze({ games: 10000, workers: 4, decisions: 1800, replays: 12, commands: 12000, importBytes: 40 * 1024 * 1024 });
@@ -37,7 +38,8 @@ export function labConfig(input) {
   if (typeof mirrorSeats !== 'boolean' || !['SELF_PLAY', 'EVALUATION'].includes(kind)) fail('INVALID_RUN_KIND');
   if (kind === 'EVALUATION' && (!mirrorSeats || gameCount % 2)) fail('EVALUATION_REQUIRES_COMPLETE_PAIRS');
   if (input.seedCatalog !== undefined && (!Array.isArray(input.seedCatalog) || input.seedCatalog.length !== gameCount/2 || !mirrorSeats || gameCount%2 || input.seedCatalog.some(s=>!uint(s)||s===0) || new Set(input.seedCatalog).size !== input.seedCatalog.length)) fail('INVALID_SEED_CATALOG');
-  return { ...(input.seedCatalog === undefined ? {} : {seedCatalog:[...input.seedCatalog]}), botA, botB, profileId, gameCount, seed: seed || 1, workerCount, mirrorSeats, kind, decisionLimit: LAB_LIMITS.decisions, orchestrationCommandLimit: 256 };
+  if (input.strategicTrace !== undefined && typeof input.strategicTrace !== 'boolean') fail('INVALID_TRACE_OPTION');
+  return { ...(input.strategicTrace === undefined ? {} : {strategicTrace:input.strategicTrace}), ...(input.seedCatalog === undefined ? {} : {seedCatalog:[...input.seedCatalog]}), botA, botB, profileId, gameCount, seed: seed || 1, workerCount, mirrorSeats, kind, decisionLimit: LAB_LIMITS.decisions, orchestrationCommandLimit: 256 };
 }
 
 export function labGameSeed(baseSeed, ordinal, mirrored = true) {
@@ -129,6 +131,8 @@ export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
     commandCount: replay.commands.length, initialStateHash, actionSequenceHash, finalStateHash: summary.finalStateHash,
     illegalActionAttempts: ['ENGINE_REJECTION', 'ACTION_ID_INVALID'].includes(summary.errorCode) || summary.terminationReason === 'ENGINE_REJECTION' ? 1 : 0,
     seatBehavior: summary.perSeatStats?.map((p,i)=>({playerId:`P${i+1}`,decisions:p.policyDecisionCount,actionCounts:p.decisionFamilyCounts ?? {},mechanicCounts:p.mechanicCounts ?? {},...(p.actionCoverage?{actionCoverage:p.actionCoverage}:{})})) ?? [],
+    ...(summary.strategicTelemetry ? {strategicTelemetry:summary.strategicTelemetry} : {}),
+    ...(summary.terminalEvidence ? {terminalEvidence:summary.terminalEvidence} : {}),
     actionCounts: summary.decisionFamilyCounts ?? {}, eventCounts: summary.eventTypeCounts ?? {},
     mechanicCounts: summary.mechanicCounts ?? {}, ruleCompliance: summary.ruleCompliance?.status ?? 'UNAVAILABLE' };
   return { ...core, resultHash: hashCanonical(core), durationMs };
@@ -155,6 +159,7 @@ export function validateRecord(record, run) {
   for (const k of ['scoreP1', 'scoreP2', 'turns', 'decisions', 'miniTurns', 'actionCount', 'policyActionCount', 'commandCount']) if (!Number.isFinite(record[k]) || record[k] < 0) fail('INVALID_RESULT_METRIC');
   if (record.decisions > LAB_LIMITS.decisions || record.commandCount > LAB_LIMITS.commands) fail('RESULT_BUDGET_EXCEEDED');
   if (record.terminationReason !== 'WORKER_FAULT' && !['initialStateHash', 'actionSequenceHash', 'finalStateHash'].every(k => digest(record[k]))) fail('INVALID_RESULT_EVIDENCE');
+  if(record.strategicTelemetry!==undefined)validateStrategicTelemetry(record.strategicTelemetry,record.decisions);
   return record;
 }
 

@@ -82,12 +82,16 @@ mkdirSync(dist, { recursive: true });
 cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
 // Portable lab domain/session have no engine rules or Node I/O. Browser workers
 // execute the existing autonomy runtime; the dashboard owns only artifacts.
-for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs']) {
+for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'matchup-lab.mjs']) {
   const content = await readFile(path.join(root, 'packages/simulation-runtime/src', name), 'utf8');
   await writeFile(path.join(dist, 'evolution', name), content.replace("from '@intrilex/shared'", "from '../shared-browser.js'").replace("from '../../policies/src/weighted-heuristic.mjs'", "from './weighted-heuristic.mjs'"));
 }
 await writeFile(path.join(dist, 'evolution/weighted-heuristic.mjs'), (await readFile(path.join(root,'packages/policies/src/weighted-heuristic.mjs'),'utf8')).replace("from './scoring.mjs'","from '../policy-scoring.js'"));
 await writeFile(path.join(dist, 'evolution/identity.mjs'), `export const LAB_IDENTITY = ${JSON.stringify(await evolutionIdentity())};\n`);
+for(const name of ['evolution-analytics-model.mjs','evolution-analytics-charts.mjs']) {
+  const file=path.join(dist,'evolution',name);
+  await writeFile(file,(await readFile(file,'utf8')).replaceAll('../../../../packages/simulation-runtime/src/strategic-telemetry.mjs','./strategic-telemetry.mjs'));
+}
 // ── Analytics AI core: copy isomorphic package modules into dist/analytics-ai ──
 // The browser UI adapters (apps/lab-web/src/analytics-ai/*.js) import these
 // .mjs modules via relative paths. The package is self-contained (no workspace
@@ -136,6 +140,7 @@ await writeFile(path.join(dist, 'evolution/identity.mjs'), `export const LAB_IDE
   scoringSrc = scoringSrc.replace(/createHash\(['"]sha256['"]\)\.update\((.+)\)\.digest\(['"]hex['"]\)/g, 'sha256Text($1)');
   await writeFile(path.join(dist, 'policy-scoring.js'), scoringSrc);
   await cp(path.join(root, 'packages/policies/src/tactics.mjs'), path.join(dist, 'tactics.mjs'));
+  await cp(path.join(root, 'packages/policies/src/control-conversion.mjs'), path.join(dist, 'control-conversion.mjs'));
   await cp(path.join(root, 'packages/policies/src/action-evaluation.mjs'), path.join(dist, 'action-evaluation.mjs'));
 }
 await cp(path.join(root, 'apps/lab-web/src/decision-intelligence.js'), path.join(dist, 'decision-intelligence.js'));
@@ -472,6 +477,9 @@ const criticalFiles = [
   'play/achievements/achievement-ui.js',
   'policy-scoring.js',
   'tactics.mjs',
+  'control-conversion.mjs',
+  'evolution/strategic-telemetry.mjs',
+  'evolution/matchup-lab.mjs',
   'action-evaluation.mjs',
   'hybrix/policy-adapter.js',
   'analytics-ai/browser-controller.js',

@@ -13,11 +13,12 @@ import {
 import { actionComposition } from '@intrilex/engine-adapter/action-composition';
 import { actionSemantics } from '@intrilex/engine-adapter/action-semantics';
 import { rankPolicyActions, recordActionCoverage } from './policy-scoring.js';
+import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs';
 import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js';
 import { attributeAction,   isNoAttributionAction} from './browser-analytics.js';
 import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js';
 
-const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical'];
+const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical','control-conversion-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];
 export const DEFAULT_PROFILE_ID = 'core-advanced-authority';
 export const ENGINE_VERSION = _ENGINE_VERSION;
@@ -89,7 +90,7 @@ function buildRuleCompliance({decisions,events,state}){
   return{status:violationCount===0?'PASS':'FAIL',violationCount,...checks,authorizedFullTurnSkips,consumedFullTurnSkips,pendingFullTurnSkips};
 }
 
-export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,recordReplay=false,orchestrationCommandLimit=16,policyStates=[]}){
+export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,recordReplay=false,orchestrationCommandLimit=16,policyStates=[],strategicTelemetryEnabled=false,strategicTrace=false}){
   if(policyIds.length!==2||policyIds.some((id,i)=>!POLICY_IDS.includes(id) && !(id===WEIGHTED_POLICY_ID && validatePolicyState(policyStates[i]))))throw new Error('INVALID_POLICY_PAIR');
   const seats=seatOrder??['P1','P2'];const setup={profileId,playerIds:seats,enabledModules:[],eventApprovedModules:[],seed:(seed>>>0)||1,seatOrder:seats};
   let state=initialState?structuredClone(initialState):createState(setup);const engine=new IntrilexEngine();
@@ -98,6 +99,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   const actionCounts={},actionModeCounts={},decisionFamilyCounts={},decisionModeCounts={},responseActionCounts={},timingClassCounts={},eventTypeCounts={},mechanicCounts={},primaryMechanicCounts={},mechanicOpportunityCounts={},primaryMechanicOpportunityCounts={};const semantic={miniTurnActionCount:0,exhaustedPassActionCount:0,responseOpportunityCount:0,responsePlayedCount:0,responseDeclinedWithOptionsCount:0,automaticPriorityAdvanceCount:0,responseWindowClosedCount:0,counterDeclarationCount:0,quickDeclarationCount:0,instantDeclarationCount:0,interruptDeclarationCount:0,policyDecisionCount:0,policyActionCount:0,actionCount:0,passActionCount:0,miniTurnCount:0,meaningfulResponseDecisionCount:0,automaticOrchestrationCommandCount:0};
   const perSeat=[{miniTurnActionCount:0,exhaustedPassActionCount:0,responsePlayedCount:0,responseDeclinedWithOptionsCount:0,counterDeclarationCount:0,quickDeclarationCount:0,instantDeclarationCount:0,interruptDeclarationCount:0,policyDecisionCount:0,policyActionCount:0,actionCount:0,passActionCount:0,miniTurnCount:0,meaningfulResponseDecisionCount:0,responseOpportunityCount:0,advancedDecisionCount:0,voltageDecisionCount:0,ultraDecisionCount:0,privateChoiceDecisionCount:0,mechanicCounts:{},primaryMechanicCounts:{},mechanicOpportunityCounts:{},primaryMechanicOpportunityCounts:{},decisionFamilyCounts:{}},{miniTurnActionCount:0,exhaustedPassActionCount:0,responsePlayedCount:0,responseDeclinedWithOptionsCount:0,counterDeclarationCount:0,quickDeclarationCount:0,instantDeclarationCount:0,interruptDeclarationCount:0,policyDecisionCount:0,policyActionCount:0,actionCount:0,passActionCount:0,miniTurnCount:0,meaningfulResponseDecisionCount:0,responseOpportunityCount:0,advancedDecisionCount:0,voltageDecisionCount:0,ultraDecisionCount:0,privateChoiceDecisionCount:0,mechanicCounts:{},primaryMechanicCounts:{},mechanicOpportunityCounts:{},primaryMechanicOpportunityCounts:{},decisionFamilyCounts:{}}];
   const auditDecisions=[],capturedEvents=[],rankDecisions=[];
+  const strategy=strategicTelemetryEnabled?createStrategicTracker({deep:strategicTrace}):null;
   let decisions=0,responseDecisions=0,commands=0,events=0,terminationReason='DECISION_LIMIT',errorCode=null;
   // BL-05 fix: compute matchId before the loop so it's available in policy context
   const matchId=`M-${hashCanonical({profileId,seed:setup.seed,seatOrder:seats,policyIds}).slice(0,20)}`;
@@ -107,6 +109,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   const capture=(items)=>{events+=items.length;capturedEvents.push(...items);for(const event of items){increment(eventTypeCounts,event.type);const type=String(event.type??'');if(/AUTOMATIC_PRIORITY_ADVANCE/.test(type)){semantic.automaticPriorityAdvanceCount+=1;semantic.automaticOrchestrationCommandCount+=1;}if(/RESPONSE_WINDOW_CLOSED/.test(type))semantic.responseWindowClosedCount+=1;}};
   for(let decisionIndex=0;decisionIndex<decisionLimit;decisionIndex+=1){
     const advanced=advance(state,orchestrationCommandLimit);state=advanced.state;commands+=advanced.executedCommands.length;capture(advanced.events);
+    strategy?.observe(seats.map(id=>deriveSecuredPoints(state,id)),decisionIndex);
     if(replayCommands)replayCommands.push(...advanced.executedCommands);
     if(advanced.status==='TERMINAL'){terminationReason=advanced.reasonCode==='CANONICAL_DRAW'?'CANONICAL_DRAW':advanced.reasonCode==='EXHAUSTED_RESOLUTION'?'EXHAUSTED_RESOLUTION':'NORMAL_VICTORY';break;}
     if(advanced.status!=='PLAYER_DECISION_REQUIRED'||!advanced.legalActionFrame){terminationReason='UNSUPPORTED_CONFIGURATION';errorCode=advanced.reasonCode??'UNKNOWN';break;}
@@ -116,9 +119,11 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
     // BL-05 fix: pass complete deterministic context including matchId, runInstanceId, decisionIndex
     const authorizedView=strictView(state,actorId),selected=choosePolicy(policyIds[seat],{policyState:policyStates[seat],actorId,authorizedView,legalActions:policyActions,rng:rngByPlayer[actorId],matchId,runInstanceId:executionInstanceToken,decisionIndex,profileId,engineVersion:ENGINE_VERSION,rulesVersion:_RULES_VERSION});
     if(!selected){terminationReason='POLICY_ERROR';errorCode='NO_LEGAL_ACTION';break;}
+    const observation=strategy?decisionObservation({actorId,seat:seat+1,decisionIndex,authorizedView,legalActions:policyActions,selected,...(strategicTrace?{policyScores:policyIds[seat]==='random-legal'||policyIds[seat].startsWith('hybrix-')||policyIds[seat]===WEIGHTED_POLICY_ID?undefined:rankPolicyActions(policyIds[seat],policyActions,{actorId,authorizedView,legalActions:policyActions}).slice(0,8).map(r=>({actionId:r.action.actionId,score:r.score}))}: {})}):null;
     const command=vault.get(selected.actionId);if(!command){terminationReason='POLICY_ERROR';errorCode='ACTION_ID_INVALID';break;}
     const targetStackItem=state.stack?.at(-1)??null,targetControllerId=targetStackItem?.controllerId??null,targetStackClass=targetStackItem?.coreAuthority?.stackClass??null,targetSourceCount=targetStackItem?.sourceCardIds?.length??0,targetUntappedQueenDefenders=targetControllerId?countUntappedQueens(state,targetControllerId):0;
     const result=engine.execute(state,command);if(replayCommands)replayCommands.push(command);commands+=1;capture(result.events);if(!result.accepted){terminationReason='ENGINE_REJECTION';errorCode=result.error?.code??'UNKNOWN';break;}
+    if(strategy)strategy.capture(observation,seats.map(id=>deriveSecuredPoints(result.state,id)));
     // Capture rank attribution for this decision (use pre-execution state for card access)
     const rankAttribution=attributeAction(state,selected,'private');
     const rankOppMap={};
@@ -139,7 +144,9 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   const core={schemaVersion:'4.0.0',analyticsSchemaVersion:'4.0.0',matchId,matchOrdinal:ordinal,seed:setup.seed,engineVersion:ENGINE_VERSION,profileId,seatOrder:seats,policyIds,pairedRunId,seatSwapped,winner:state.winner??(terminationReason==='CANONICAL_DRAW'?'DRAW':'ABORTED'),winningSeat:state.winner?seats.indexOf(state.winner)+1:null,terminationReason,completedFullTurns:Math.max(0,state.fullTurnSequence-1),...semantic,responseDecisionCount:semantic.meaningfulResponseDecisionCount,privateChoiceDecisionCount:decisionFamilyCounts['private-choice']??0,advancedDecisionCount:countFamilies(decisionFamilyCounts,ADVANCED_FAMILIES),voltageDecisionCount:decisionFamilyCounts.voltage??0,ultraDecisionCount:decisionFamilyCounts.ultra??0,triggerCount:Object.entries(eventTypeCounts).filter(([type])=>type.includes('TRIGGER')||type.includes('VOLTAGE')).reduce((sum,[,count])=>sum+count,0),commandCount:commands,eventCount:events,finalScores,scoreMargin:Math.abs(finalScores.P1-finalScores.P2),finalStateHash:hashCanonical(state),participants,perSeatStats:perSeat.map((ps,i)=>({seat:i+1,...ps,mechanicCounts:Object.fromEntries(Object.entries(ps.mechanicCounts).sort()),primaryMechanicCounts:Object.fromEntries(Object.entries(ps.primaryMechanicCounts).sort()),mechanicOpportunityCounts:Object.fromEntries(Object.entries(ps.mechanicOpportunityCounts??{}).sort()),primaryMechanicOpportunityCounts:Object.fromEntries(Object.entries(ps.primaryMechanicOpportunityCounts??{}).sort()),decisionFamilyCounts:Object.fromEntries(Object.entries(ps.decisionFamilyCounts).sort())})),actionCounts:Object.fromEntries(Object.entries(actionCounts).sort()),decisionFamilyCounts:Object.fromEntries(Object.entries(decisionFamilyCounts).sort()),actionModeCounts:Object.fromEntries(Object.entries(actionModeCounts).sort()),decisionModeCounts:Object.fromEntries(Object.entries(decisionModeCounts).sort()),responseActionCounts:Object.fromEntries(Object.entries(responseActionCounts).sort()),timingClassCounts:Object.fromEntries(Object.entries(timingClassCounts).sort()),eventTypeCounts:Object.fromEntries(Object.entries(eventTypeCounts).sort()),mechanicCounts:Object.fromEntries(Object.entries(mechanicCounts).sort()),primaryMechanicCounts:Object.fromEntries(Object.entries(primaryMechanicCounts).sort()),mechanicOpportunityCounts:Object.fromEntries(Object.entries(mechanicOpportunityCounts??{}).sort()),primaryMechanicOpportunityCounts:Object.fromEntries(Object.entries(primaryMechanicOpportunityCounts??{}).sort()),ruleCompliance,errorCode};
   const{mechanicOpportunityCounts:_bMechOpp,primaryMechanicOpportunityCounts:_bPrimaryMechOpp,...hashCore}=core;
   const browserHashInput={...hashCore,participants:hashCore.participants.map(p=>{const{mechanicOpportunityCounts:_m,primaryMechanicOpportunityCounts:_pm,...rest}=p;return rest;})};
-  const _matchResult={...core,matchResultHash:hashCanonical(browserHashInput),rankDecisions};
+  const strategyData=strategy?.finish(seats.map(id=>finalScores[id]),decisions);
+  const terminal=terminalEvidence(capturedEvents,seats.map(id=>state.players[id].goal),publicTerminalAnchorCounts(state,seats));
+  const _matchResult={...core,...(strategyData?{strategicTelemetry:strategyData}:{}),...(terminal?{terminalEvidence:terminal}:{}),matchResultHash:hashCanonical(browserHashInput),rankDecisions};
   if(recordReplay)_matchResult.replay={initialState:replayInitialState,commands:replayCommands};
   return _matchResult;
 }

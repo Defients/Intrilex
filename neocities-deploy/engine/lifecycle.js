@@ -1,4 +1,4 @@
-import { canonicalClone } from "./canonical-json.js?v=f6c7ea2918fb";
+import { canonicalClone } from "./canonical-json.js?v=7bebb07bf156";
 export function isHandZone(zone) {
     return zone.endsWith("_HAND");
 }

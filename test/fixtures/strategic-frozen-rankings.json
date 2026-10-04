@@ -1,0 +1,1728 @@
+{
+  "sourceHead": "a3e8557296ccfa8f59c73ff2ae9aa6897fc5d801",
+  "moves": [
+    {
+      "actionId": "a0",
+      "family": "score",
+      "mode": "points",
+      "timingClass": "ACTION",
+      "sourceHandles": [],
+      "targetHandles": [],
+      "featureVector": {
+        "immediatePoints": 9
+      }
+    },
+    {
+      "actionId": "a1",
+      "family": "scuttle",
+      "mode": "ordinary",
+      "timingClass": "ACTION",
+      "sourceHandles": [],
+      "targetHandles": [],
+      "featureVector": {}
+    },
+    {
+      "actionId": "a2",
+      "family": "anchor",
+      "mode": "queen",
+      "timingClass": "ACTION",
+      "sourceHandles": [],
+      "targetHandles": [],
+      "featureVector": {}
+    },
+    {
+      "actionId": "a3",
+      "family": "effect-four",
+      "mode": "clear-pr",
+      "timingClass": "ACTION",
+      "sourceHandles": [],
+      "targetHandles": [],
+      "featureVector": {}
+    },
+    {
+      "actionId": "a4",
+      "family": "effect-private-choice",
+      "mode": "six-dig",
+      "timingClass": "ACTION",
+      "sourceHandles": [],
+      "targetHandles": [],
+      "featureVector": {}
+    },
+    {
+      "actionId": "a5",
+      "family": "draw",
+      "mode": "top",
+      "timingClass": "ACTION",
+      "sourceHandles": [],
+      "targetHandles": [],
+      "featureVector": {}
+    },
+    {
+      "actionId": "a6",
+      "family": "phase",
+      "mode": "enter-action",
+      "timingClass": "ACTION",
+      "sourceHandles": [],
+      "targetHandles": [],
+      "featureVector": {}
+    },
+    {
+      "actionId": "a7",
+      "family": "response-decline",
+      "mode": "decline",
+      "timingClass": "ACTION",
+      "sourceHandles": [],
+      "targetHandles": [],
+      "featureVector": {}
+    },
+    {
+      "actionId": "a8",
+      "family": "voltage",
+      "mode": "three-hand",
+      "timingClass": "ACTION",
+      "sourceHandles": [],
+      "targetHandles": [],
+      "featureVector": {}
+    }
+  ],
+  "cases": [
+    {
+      "context": {
+        "actorId": "P1",
+        "authorizedView": {
+          "own": {
+            "goal": 21,
+            "securedPoints": 0,
+            "hand": [],
+            "pr": [],
+            "er": [],
+            "limits": {}
+          },
+          "opponents": [
+            {
+              "playerId": "P2",
+              "goal": 21,
+              "securedPoints": 0,
+              "handCount": 3,
+              "pr": [],
+              "er": []
+            }
+          ],
+          "knownCards": {},
+          "stack": [],
+          "dpCount": 20
+        }
+      },
+      "rankings": {
+        "control-tactical": [
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 1080
+          },
+          {
+            "id": "a2",
+            "score": 1050
+          },
+          {
+            "id": "a4",
+            "score": 1050
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a0",
+            "score": 758
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -450
+          }
+        ],
+        "score-rush-tactical": [
+          {
+            "id": "a0",
+            "score": 1606
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a2",
+            "score": 760
+          },
+          {
+            "id": "a4",
+            "score": 760
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -440
+          }
+        ],
+        "tempo-tactical": [
+          {
+            "id": "a0",
+            "score": 1346
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a2",
+            "score": 900
+          },
+          {
+            "id": "a4",
+            "score": 900
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -300
+          }
+        ],
+        "value-tactical": [
+          {
+            "id": "a0",
+            "score": 1506
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 930
+          },
+          {
+            "id": "a2",
+            "score": 930
+          },
+          {
+            "id": "a4",
+            "score": 930
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -270
+          }
+        ]
+      }
+    },
+    {
+      "context": {
+        "actorId": "P1",
+        "authorizedView": {
+          "own": {
+            "goal": 21,
+            "securedPoints": 0,
+            "hand": [],
+            "pr": [],
+            "er": [],
+            "limits": {}
+          },
+          "opponents": [
+            {
+              "playerId": "P2",
+              "goal": 21,
+              "securedPoints": 12,
+              "handCount": 3,
+              "pr": [],
+              "er": []
+            }
+          ],
+          "knownCards": {},
+          "stack": [],
+          "dpCount": 20
+        }
+      },
+      "rankings": {
+        "control-tactical": [
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 1080
+          },
+          {
+            "id": "a2",
+            "score": 1050
+          },
+          {
+            "id": "a4",
+            "score": 1050
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a0",
+            "score": 758
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -450
+          }
+        ],
+        "score-rush-tactical": [
+          {
+            "id": "a0",
+            "score": 1606
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a2",
+            "score": 760
+          },
+          {
+            "id": "a4",
+            "score": 760
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -440
+          }
+        ],
+        "tempo-tactical": [
+          {
+            "id": "a0",
+            "score": 1346
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a2",
+            "score": 900
+          },
+          {
+            "id": "a4",
+            "score": 900
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -300
+          }
+        ],
+        "value-tactical": [
+          {
+            "id": "a0",
+            "score": 1506
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 930
+          },
+          {
+            "id": "a2",
+            "score": 930
+          },
+          {
+            "id": "a4",
+            "score": 930
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -270
+          }
+        ]
+      }
+    },
+    {
+      "context": {
+        "actorId": "P1",
+        "authorizedView": {
+          "own": {
+            "goal": 21,
+            "securedPoints": 0,
+            "hand": [],
+            "pr": [],
+            "er": [],
+            "limits": {}
+          },
+          "opponents": [
+            {
+              "playerId": "P2",
+              "goal": 21,
+              "securedPoints": 20,
+              "handCount": 3,
+              "pr": [],
+              "er": []
+            }
+          ],
+          "knownCards": {},
+          "stack": [],
+          "dpCount": 20
+        }
+      },
+      "rankings": {
+        "control-tactical": [
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 1080
+          },
+          {
+            "id": "a2",
+            "score": 1050
+          },
+          {
+            "id": "a4",
+            "score": 1050
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a0",
+            "score": 758
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -450
+          }
+        ],
+        "score-rush-tactical": [
+          {
+            "id": "a0",
+            "score": 1606
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a2",
+            "score": 760
+          },
+          {
+            "id": "a4",
+            "score": 760
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -440
+          }
+        ],
+        "tempo-tactical": [
+          {
+            "id": "a0",
+            "score": 1346
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a2",
+            "score": 900
+          },
+          {
+            "id": "a4",
+            "score": 900
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -300
+          }
+        ],
+        "value-tactical": [
+          {
+            "id": "a0",
+            "score": 1506
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 930
+          },
+          {
+            "id": "a2",
+            "score": 930
+          },
+          {
+            "id": "a4",
+            "score": 930
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -270
+          }
+        ]
+      }
+    },
+    {
+      "context": {
+        "actorId": "P1",
+        "authorizedView": {
+          "own": {
+            "goal": 21,
+            "securedPoints": 10,
+            "hand": [],
+            "pr": [],
+            "er": [],
+            "limits": {}
+          },
+          "opponents": [
+            {
+              "playerId": "P2",
+              "goal": 21,
+              "securedPoints": 0,
+              "handCount": 3,
+              "pr": [],
+              "er": []
+            }
+          ],
+          "knownCards": {},
+          "stack": [],
+          "dpCount": 20
+        }
+      },
+      "rankings": {
+        "control-tactical": [
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 1080
+          },
+          {
+            "id": "a2",
+            "score": 1050
+          },
+          {
+            "id": "a4",
+            "score": 1050
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a0",
+            "score": 758
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -450
+          }
+        ],
+        "score-rush-tactical": [
+          {
+            "id": "a0",
+            "score": 1606
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a2",
+            "score": 760
+          },
+          {
+            "id": "a4",
+            "score": 760
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -440
+          }
+        ],
+        "tempo-tactical": [
+          {
+            "id": "a0",
+            "score": 1346
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a2",
+            "score": 900
+          },
+          {
+            "id": "a4",
+            "score": 900
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -300
+          }
+        ],
+        "value-tactical": [
+          {
+            "id": "a0",
+            "score": 1506
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 930
+          },
+          {
+            "id": "a2",
+            "score": 930
+          },
+          {
+            "id": "a4",
+            "score": 930
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -270
+          }
+        ]
+      }
+    },
+    {
+      "context": {
+        "actorId": "P1",
+        "authorizedView": {
+          "own": {
+            "goal": 21,
+            "securedPoints": 10,
+            "hand": [],
+            "pr": [],
+            "er": [],
+            "limits": {}
+          },
+          "opponents": [
+            {
+              "playerId": "P2",
+              "goal": 21,
+              "securedPoints": 12,
+              "handCount": 3,
+              "pr": [],
+              "er": []
+            }
+          ],
+          "knownCards": {},
+          "stack": [],
+          "dpCount": 20
+        }
+      },
+      "rankings": {
+        "control-tactical": [
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 1080
+          },
+          {
+            "id": "a2",
+            "score": 1050
+          },
+          {
+            "id": "a4",
+            "score": 1050
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a0",
+            "score": 758
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -450
+          }
+        ],
+        "score-rush-tactical": [
+          {
+            "id": "a0",
+            "score": 1606
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a2",
+            "score": 760
+          },
+          {
+            "id": "a4",
+            "score": 760
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -440
+          }
+        ],
+        "tempo-tactical": [
+          {
+            "id": "a0",
+            "score": 1346
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a2",
+            "score": 900
+          },
+          {
+            "id": "a4",
+            "score": 900
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -300
+          }
+        ],
+        "value-tactical": [
+          {
+            "id": "a0",
+            "score": 1506
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 930
+          },
+          {
+            "id": "a2",
+            "score": 930
+          },
+          {
+            "id": "a4",
+            "score": 930
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -270
+          }
+        ]
+      }
+    },
+    {
+      "context": {
+        "actorId": "P1",
+        "authorizedView": {
+          "own": {
+            "goal": 21,
+            "securedPoints": 10,
+            "hand": [],
+            "pr": [],
+            "er": [],
+            "limits": {}
+          },
+          "opponents": [
+            {
+              "playerId": "P2",
+              "goal": 21,
+              "securedPoints": 20,
+              "handCount": 3,
+              "pr": [],
+              "er": []
+            }
+          ],
+          "knownCards": {},
+          "stack": [],
+          "dpCount": 20
+        }
+      },
+      "rankings": {
+        "control-tactical": [
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 1080
+          },
+          {
+            "id": "a2",
+            "score": 1050
+          },
+          {
+            "id": "a4",
+            "score": 1050
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a0",
+            "score": 758
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -450
+          }
+        ],
+        "score-rush-tactical": [
+          {
+            "id": "a0",
+            "score": 1606
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a2",
+            "score": 760
+          },
+          {
+            "id": "a4",
+            "score": 760
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -440
+          }
+        ],
+        "tempo-tactical": [
+          {
+            "id": "a0",
+            "score": 1346
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a2",
+            "score": 900
+          },
+          {
+            "id": "a4",
+            "score": 900
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -300
+          }
+        ],
+        "value-tactical": [
+          {
+            "id": "a0",
+            "score": 1506
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 930
+          },
+          {
+            "id": "a2",
+            "score": 930
+          },
+          {
+            "id": "a4",
+            "score": 930
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -270
+          }
+        ]
+      }
+    },
+    {
+      "context": {
+        "actorId": "P1",
+        "authorizedView": {
+          "own": {
+            "goal": 21,
+            "securedPoints": 18,
+            "hand": [],
+            "pr": [],
+            "er": [],
+            "limits": {}
+          },
+          "opponents": [
+            {
+              "playerId": "P2",
+              "goal": 21,
+              "securedPoints": 0,
+              "handCount": 3,
+              "pr": [],
+              "er": []
+            }
+          ],
+          "knownCards": {},
+          "stack": [],
+          "dpCount": 20
+        }
+      },
+      "rankings": {
+        "control-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 1080
+          },
+          {
+            "id": "a2",
+            "score": 1050
+          },
+          {
+            "id": "a4",
+            "score": 1050
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -450
+          }
+        ],
+        "score-rush-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a2",
+            "score": 760
+          },
+          {
+            "id": "a4",
+            "score": 760
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -440
+          }
+        ],
+        "tempo-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a2",
+            "score": 900
+          },
+          {
+            "id": "a4",
+            "score": 900
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -300
+          }
+        ],
+        "value-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 930
+          },
+          {
+            "id": "a2",
+            "score": 930
+          },
+          {
+            "id": "a4",
+            "score": 930
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -270
+          }
+        ]
+      }
+    },
+    {
+      "context": {
+        "actorId": "P1",
+        "authorizedView": {
+          "own": {
+            "goal": 21,
+            "securedPoints": 18,
+            "hand": [],
+            "pr": [],
+            "er": [],
+            "limits": {}
+          },
+          "opponents": [
+            {
+              "playerId": "P2",
+              "goal": 21,
+              "securedPoints": 12,
+              "handCount": 3,
+              "pr": [],
+              "er": []
+            }
+          ],
+          "knownCards": {},
+          "stack": [],
+          "dpCount": 20
+        }
+      },
+      "rankings": {
+        "control-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 1080
+          },
+          {
+            "id": "a2",
+            "score": 1050
+          },
+          {
+            "id": "a4",
+            "score": 1050
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -450
+          }
+        ],
+        "score-rush-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a2",
+            "score": 760
+          },
+          {
+            "id": "a4",
+            "score": 760
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -440
+          }
+        ],
+        "tempo-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a2",
+            "score": 900
+          },
+          {
+            "id": "a4",
+            "score": 900
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -300
+          }
+        ],
+        "value-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 930
+          },
+          {
+            "id": "a2",
+            "score": 930
+          },
+          {
+            "id": "a4",
+            "score": 930
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -270
+          }
+        ]
+      }
+    },
+    {
+      "context": {
+        "actorId": "P1",
+        "authorizedView": {
+          "own": {
+            "goal": 21,
+            "securedPoints": 18,
+            "hand": [],
+            "pr": [],
+            "er": [],
+            "limits": {}
+          },
+          "opponents": [
+            {
+              "playerId": "P2",
+              "goal": 21,
+              "securedPoints": 20,
+              "handCount": 3,
+              "pr": [],
+              "er": []
+            }
+          ],
+          "knownCards": {},
+          "stack": [],
+          "dpCount": 20
+        }
+      },
+      "rankings": {
+        "control-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 1080
+          },
+          {
+            "id": "a2",
+            "score": 1050
+          },
+          {
+            "id": "a4",
+            "score": 1050
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -450
+          }
+        ],
+        "score-rush-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a2",
+            "score": 760
+          },
+          {
+            "id": "a4",
+            "score": 760
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -440
+          }
+        ],
+        "tempo-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a2",
+            "score": 900
+          },
+          {
+            "id": "a4",
+            "score": 900
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a1",
+            "score": 820
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -300
+          }
+        ],
+        "value-tactical": [
+          {
+            "id": "a0",
+            "score": 10306
+          },
+          {
+            "id": "a5",
+            "score": 1280
+          },
+          {
+            "id": "a1",
+            "score": 930
+          },
+          {
+            "id": "a2",
+            "score": 930
+          },
+          {
+            "id": "a4",
+            "score": 930
+          },
+          {
+            "id": "a7",
+            "score": 900
+          },
+          {
+            "id": "a8",
+            "score": 600
+          },
+          {
+            "id": "a6",
+            "score": 0
+          },
+          {
+            "id": "a3",
+            "score": -270
+          }
+        ]
+      }
+    }
+  ]
+}

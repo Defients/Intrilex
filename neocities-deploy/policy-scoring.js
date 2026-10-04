@@ -1,6 +1,7 @@
-import { sha256Text } from "./engine/hash.js?v=f6c7ea2918fb";
-import { tacticalBase, tacticalScore } from './tactics.mjs?v=f6c7ea2918fb';
-export { evaluateAction, ACTION_PURPOSES, recordActionCoverage } from './action-evaluation.mjs?v=f6c7ea2918fb';
+import { sha256Text } from "./engine/hash.js?v=7bebb07bf156";
+import { tacticalBase, tacticalScore } from './tactics.mjs?v=7bebb07bf156';
+import { CONTROL_CONVERSION_ID, controlConversionScore } from './control-conversion.mjs?v=7bebb07bf156';
+export { evaluateAction, ACTION_PURPOSES, recordActionCoverage } from './action-evaluation.mjs?v=7bebb07bf156';
 
 // ── Default scoring weights (parameterized for tuning and sensitivity analysis) ──
 // Provenance: hand-tuned baseline from v0.10.0. Each weight can be overridden
@@ -102,6 +103,7 @@ function advancedScore(policyId, action, context, weights) {
 }
 
 export function scorePolicyAction(policyId, action, context, weights = SCORING_WEIGHTS) {
+  if (policyId === CONTROL_CONVERSION_ID) return controlConversionScore(action, context, scorePolicyAction('control-tactical', action, context, weights));
   const baseId = tacticalBase(policyId);
   if (baseId) return tacticalScore(baseId, action, context, scorePolicyAction(baseId, action, context, weights));
   const own = context.authorizedView.own, response = responseContext(context);

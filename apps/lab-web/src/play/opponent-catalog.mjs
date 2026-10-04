@@ -294,6 +294,7 @@ export function buildOpponentModel(policyCatalog = []) {
 
   for (const entry of Array.isArray(policyCatalog) ? policyCatalog : []) {
     const policyId = entry?.policyId;
+    if(entry?.traits?.researchOnly)continue;
     if (!policyId) continue;
     const derived = policyTraitsFromId(policyId);
     const archetype = entry.traits?.archetype ?? derived.archetype;

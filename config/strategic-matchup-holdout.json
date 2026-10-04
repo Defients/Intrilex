@@ -1,0 +1,18 @@
+{
+  "policyIds": [
+    "control-tactical",
+    "control-conversion-tactical",
+    "tempo-tactical",
+    "value-tactical",
+    "score-rush-tactical"
+  ],
+  "masterSeeds": [
+    170003,
+    190003,
+    230003
+  ],
+  "gamesPerPairing": 100,
+  "profileId": "core-advanced-authority",
+  "workerCount": 4,
+  "strategicTrace": false
+}

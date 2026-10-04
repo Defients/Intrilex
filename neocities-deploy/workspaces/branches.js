@@ -2,9 +2,9 @@
 // workspaces/branches.js — /branches workspace: counterfactual lab
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   app,   esc,   pct,   definitionList } from '../state.js?v=f6c7ea2918fb';
-import { rerender } from '../rerender.js?v=f6c7ea2918fb';
-import { POLICY_IDS } from '../autonomy-runtime.js?v=f6c7ea2918fb';
+import { state,   app,   esc,   pct,   definitionList } from '../state.js?v=7bebb07bf156';
+import { rerender } from '../rerender.js?v=7bebb07bf156';
+import { POLICY_IDS } from '../autonomy-runtime.js?v=7bebb07bf156';
 
 // Build a human-readable label for a policy ID
 function policyLabel(id) {

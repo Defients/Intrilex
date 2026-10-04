@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { runLabSeries, evolutionIdentity } from '../packages/simulation-runtime/src/evolution-lab.mjs';
+import { runMatchupLab, matchupMatrix, matchupArtifact } from '../packages/simulation-runtime/src/matchup-lab.mjs';
+import { arenaAnalytics } from '../apps/lab-web/src/evolution/evolution-analytics-model.mjs';
+const args=process.argv.slice(2),option=(key,fallback)=>args.includes(key)?args[args.indexOf(key)+1]:fallback;
+const config=JSON.parse(await readFile(option('--config','config/strategic-matchup-lab.json'),'utf8'));
+if(args.includes('--games'))config.gamesPerPairing=Number(option('--games'));
+if(args.includes('--workers'))config.workerCount=Number(option('--workers'));
+const out=path.resolve(option('--out','reports/local/strategic-matchup-lab'));
+if(existsSync(path.join(out,'artifact.json'))||existsSync(path.join(out,'summary.json')))throw new Error('MATRIX_OUTPUT_EXISTS: choose a new --out directory to preserve prior evidence');
+await mkdir(out,{recursive:true});
+let series=0;const started=performance.now();
+const lab=await runMatchupLab(config,runLabSeries,{identity:await evolutionIdentity(),onRun:async run=>{series++;await writeFile(path.join(out,`${run.runId}.json`),JSON.stringify((await import('../packages/simulation-runtime/src/evolution-domain.mjs')).artifactEnvelope(run)));console.log(`${series}: ${run.config.botA} vs ${run.config.botB}; master ${run.config.seed}; ${run.records.length}/${run.config.gameCount} ${run.status}`);}});
+const matrix=matchupMatrix(lab),behavior=lab.runs.map(run=>{const a=arenaAnalytics(run);return {runId:run.runId,botA:run.config.botA,botB:run.config.botB,masterSeed:run.config.seed,strategy:a.strategy,fingerprints:a.fingerprints,totalVariationDistance:a.similarityDistance,terminalDiagnostics:a.diagnostics.filter(d=>d.winnerScoreRelation==='LOWER_SCORE'||d.status==='UNEXPECTED')};});
+await writeFile(path.join(out,'artifact.json'),JSON.stringify(matchupArtifact(lab)));
+await writeFile(path.join(out,'summary.json'),JSON.stringify({matrix,behavior,elapsedMs:performance.now()-started,gamesPerSecond:matrix.acceptedGames/((performance.now()-started)/1000)},null,2));
+console.log(JSON.stringify(matrix.cells.map(c=>({A:c.botA,B:c.botB,games:c.metrics.clean,score:c.metrics.pairedScore,bounds:c.metrics.pairedScoreInterval95,faults:c.metrics.aborted})),null,2));
+if(lab.status!=='COMPLETE')process.exitCode=1;

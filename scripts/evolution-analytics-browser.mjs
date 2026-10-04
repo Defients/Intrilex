@@ -50,8 +50,8 @@ try{
     const exported=await exportRun('historical-original.json');assert.deepEqual(exported,envelope);await page.locator('[data-evo-action="close-archive"]').click();await expect(page.locator('#evo-run')).toBeEnabled();
   });
   await surface('ledger');await page.locator('#evo-import').setInputFiles(source);const before=await exportRun('before.json');await surface('arena');
-  await scenario('nine arena plot families, full-sample statistics and corrected Core turn average',async()=>{
-    await expect(page.locator('#evo-chart [data-evo-plot]')).toHaveCount(9);
+  await scenario('eleven arena plot families, full-sample statistics and corrected Core turn average',async()=>{
+    await expect(page.locator('#evo-chart [data-evo-plot]')).toHaveCount(11);
     await expect(page.locator('[data-evo-metric="Avg full turns · incl. End"]')).toHaveText(model.summary.meanTurns.toFixed(2));
     await expect(page.locator('.evo-analysis-kpis')).toContainText('MINI-TURNS');await expect(page.locator('.evo-analysis-coverage')).toContainText('120 / 120');
     await expect(page.locator('.evo-cockpit-grid')).toHaveClass(/evo-graph-space/);await expect(page.locator('#evo-cockpit-inspector')).not.toBeVisible();

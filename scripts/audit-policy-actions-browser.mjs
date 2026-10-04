@@ -22,7 +22,7 @@ try{
   await page.locator('#evo-bot-a').selectOption('score-rush-tactical');await page.locator('#evo-bot-b').selectOption('tempo-tactical');
   await page.locator('#evo-games').fill('4');await page.locator('#evo-run').click();
   await expect(page.locator('#evo-state')).toHaveText('COMPLETE',{timeout:120000});
-  await expect(page.locator('#evo-chart [data-evo-plot]')).toHaveCount(9);
+  await expect(page.locator('#evo-chart [data-evo-plot]')).toHaveCount(11);
   const chart=page.locator('[data-evo-plot="action-opportunities"]');await expect(chart).toContainText('Selection when legal');
   await expect(chart).toContainText('Selected declarations are not resolved effects');await chart.locator('summary').click();
   await expect(chart.locator('table')).toContainText('mode:swap-bar:face-down');await expect(chart.locator('table')).toContainText('A available');

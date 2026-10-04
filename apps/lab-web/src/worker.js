@@ -78,7 +78,7 @@ self.onmessage = async (event) => {
       const started = performance.now();
       try {
         const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds, policyStates:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? cp.policyState : null),
-          profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true });
+          profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true, strategicTelemetryEnabled:true,strategicTrace:run.config.strategicTrace===true });
         const record = domain.gameEvidence(summary, plan, run, summary.replay, performance.now()-started);
         const keep = event.data.retainReplay || !domain.CLEAN_REASONS.includes(record.terminationReason);
         evidence = { record, replay: keep ? summary.replay : null };
