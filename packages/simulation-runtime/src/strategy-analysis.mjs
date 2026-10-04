@@ -63,7 +63,17 @@ export function synthesizeStrategyClaim(claim) {
   if(claim.evidenceType==='DESCRIPTIVE')return `Selected on ${Math.round(100*claim.estimatedMagnitude)}% of legal opportunities. That tells us what these policies did; whether you should play it is still unknown.`;
   if(claim.evidenceType==='ASSOCIATIONAL')return `Selected decisions were associated with ${claim.estimatedMagnitude>=0?'+':''}${(claim.estimatedMagnitude*100).toFixed(1)} percentage points in terminal game score. Context and policy can explain that difference; it does not prove a better play.`;
   if(claim.informationScope==='RESEARCH_ONLY')return `In this recorded hidden state, ${claim.statementData.alternative} changed paired continuation game score by ${(claim.estimatedMagnitude*100).toFixed(1)} percentage points. Research-only; this is not player advice.`;
-  if(claim.statementData?.informationSetId){const d=claim.statementData;return `${claim.confidence==='SUGGESTIVE'?(claim.recommendation==='PLAY'?`Usually play ${claim.subject.replace(/^(card|rank|family):/,'')}`:claim.recommendation==='HOLD'?`Usually preserve ${claim.subject.replace(/^(card|rank|family):/,'')}`:'Prefer alternative'):'Unknown'}: ${d.alternative}. Estimated terminal game-score difference ${(claim.estimatedMagnitude*100).toFixed(1)} percentage points across ${d.hiddenWorlds} compatible hidden worlds, ${d.continuationsPerWorld} continuations per world/action. ${d.heterogeneity}. Applies only to this exact authorized opening context and frozen continuation policies.`;}
+  if(claim.statementData?.informationSetId){const d=claim.statementData,name=claim.subject.replace(/^(card|rank|family|mode|mechanic|timing|suit|combination):/,'');
+    const robust=d.heterogeneity==='ROBUST'?'Robust across compatible hidden worlds':d.heterogeneity==='VOLATILE'?'Volatile across compatible hidden worlds':'Unresolved heterogeneity across compatible hidden worlds';
+    const scope=`Applies only to this exact authorized opening context and frozen continuation policies`;
+    if(d.direction==='REFERENCE'){
+      const head=claim.confidence!=='SUGGESTIVE'?'Unknown':claim.recommendation==='PLAY'?`Usually play ${name} here`:['PRESERVE','HOLD'].includes(claim.recommendation)?`Usually preserve ${name} here`:`Prefer the recorded play (${d.referenceLabel}) over the tested alternatives`;
+      return `${head}: the recorded play beat each of the ${d.testedAlternatives?.length??0} planned alternatives by at least ${(claim.estimatedMagnitude*100).toFixed(1)} percentage points across ${d.hiddenWorlds} compatible hidden worlds, ${d.continuationsPerWorld} continuations per world/action. ${robust}. ${scope}; untested legal actions were not compared.`;
+    }
+    const alt=d.alternative?.split(' · ')[0]??'alternative',altName=alt.charAt(0).toUpperCase()+alt.slice(1);
+    const refUses=(d.referenceDispositions??[]).includes('USES_SUBJECT'),altUses=(d.dispositions??[]).includes('USES_SUBJECT');
+    const head=claim.confidence!=='SUGGESTIVE'?'Unknown':claim.recommendation==='PLAY'?`Usually play ${name} here`:['PRESERVE','HOLD'].includes(claim.recommendation)?`Usually preserve ${name} here`:d.direction==='ALTERNATIVE'?`Prefer ${altName} over ${refUses&&!altUses?`using ${name}`:'the recorded play'} in this opening`:'Prefer alternative';
+    return `${head}: ${d.alternative}. Estimated terminal game-score difference ${(claim.estimatedMagnitude*100).toFixed(1)} percentage points across ${d.hiddenWorlds} compatible hidden worlds, ${d.continuationsPerWorld} continuations per world/action. ${robust}. ${scope}.`;}
   return 'No supported player recommendation.';
 }
 export function claimsFromAggregate(aggregate,generatedAt=new Date().toISOString()) {

@@ -1,7 +1,14 @@
-# Information-set Strategy Studies V1
+# Information-set Strategy Studies V1.1
 
 October 4, 2026, America/New_York. The sampling boundary and reasons for its
 limits are recorded in [INFORMATION_SET_AUDIT.md](INFORMATION_SET_AUDIT.md).
+V1.1 is a surgical hardening pass over V1: study-subject binding,
+subject-aware action classification, symmetric reference/alternative
+inference, controlled-evidence Quick Read priority and a calibrated
+variance-sensitive inference method. All V1 safeguards are unchanged.
+Plans sealed as V1 schema (no `schemaVersion` field) keep
+`WORLD_PAIRED_HOEFFDING_BONFERRONI_95_V1` semantics forever; new studies
+use `schemaVersion: 2` and `WORLD_PAIRED_EMPIRICAL_BERNSTEIN_BONFERRONI_95_V1`.
 
 ## Supported context
 
@@ -49,6 +56,13 @@ invalidates study inference.
 engine seed, requested/accepted/rejected counts and reasons. States are regenerated
 deterministically; no collection of full hidden worlds is persisted.
 
+The supported study budget is 1–512 hidden worlds. The world budget
+(`INFORMATION_WORLD_BUDGET_INVALID` above 512) and the sampler catalog ordinal
+domain (0–511, `INFORMATION_SAMPLER_CATALOG_INVALID` beyond) are separate bounds;
+V1.1 raised both from the original 256/255 so a requested 512-world plan is
+accepted rather than silently becoming non-clean. Ordinals 0–255 produce
+byte-identical worlds under either bound, so plans at ≤256 worlds are unchanged.
+
 ## Frozen experiment
 
 `INFORMATION_SET_STUDY_PLAN_V1` freezes the information set, source event,
@@ -56,6 +70,20 @@ question, recorded reference and deterministic legal competitors, sampler and
 catalog, world manifest, policy checkpoints/digest, continuation seeds, budgets,
 metric, meaningful-effect threshold, multiplicity, heterogeneity thresholds,
 stopping/fault policy, rules, fingerprint, era and provenance.
+
+V1.1 additionally freezes three separately validated fields:
+
+- `requestedSubject` — the canonical Strategy question subject the researcher
+  or player actually selected (for example `rank:3`). The study setup receives
+  it explicitly and rejects it unless it is present in the information set's
+  legal opportunity set. A `rank:3` study launched from a recorded Draw
+  decision cannot silently become a `family:draw` study. Validation recomputes
+  the question from `requestedSubject` and requires
+  `question.subject === requestedSubject`; mutating either after seal fails.
+- `referenceActionId` — the recorded action, kept as the fixed reference for
+  every precommitted contrast. Validation requires it to equal
+  `actualActionId`.
+- `schemaVersion: 2` — selects the V1.1 classifier and inference method.
 
 Prepared plans and nested manifests are deeply frozen. Execution snapshots and
 freezes transported inputs again, since structured messages and IndexedDB reads
@@ -69,10 +97,31 @@ the prior evidence intact. Plan insertion failure prevents execution.
 
 All accepted worlds × all planned actions × the same continuation seed catalog
 execute through existing engine authority and frozen policy runtime. The
-reference is the recorded action; no fictional hold command exists. After the
-real command, tracked source cards are classified as played/committed, preserved
-in hand, consumed another way or unavailable another way. An action with no
-tracked source card cannot become a preserve recommendation.
+reference is the recorded action; no fictional hold command exists.
+
+V1.1 classifies every executed action against the **requested subject**, not
+the recorded action's own source cards. For `card:`/`rank:`/`suit:` subjects
+the classifier binds every matching copy in the visible hand to engine handles
+and uses the real command's declared `sourceHandles` plus the authoritative
+after-state:
+
+- `USES_SUBJECT` — the command declared at least one tracked copy as a source.
+- `PRESERVES_SUBJECT` — no copy was a declared source and every tracked copy
+  remains in the actor's hand afterward.
+- `CONSUMES_SUBJECT_OTHER_WAY` — a non-source copy ended in graveyard/exile.
+- `SUBJECT_UNAVAILABLE_AFTER_ACTION` — a copy otherwise left the hand (swap,
+  board, deck, opponent zones).
+- `DOES_NOT_INVOLVE_SUBJECT` — for non-card subjects (`family:`, `mode:`,
+  `mechanic:`, `combination:`, `timing:`) when the action's family/mode/timing
+  does not match the subject; those subjects have no physical handles.
+
+Multiple copies are explicit: one used copy classifies the action as
+`USES_SUBJECT` even when another copy stays behind; `PRESERVES_SUBJECT`
+requires every tracked copy to remain. Preserve/hold semantics are never
+inferred from "the action did not mention the card" — they are read from the
+before/after state. V1 rows keep their four original labels
+(`PLAYED_OR_COMMITTED`, `PRESERVED_IN_HAND`, `CONSUMED_OTHER_WAY`,
+`UNAVAILABLE_OTHER_WAY`) forever.
 
 Any engine rejection, continuation exception, censored terminal budget, rejected
 world or cancellation prevents comparisons and claims. Fault rows retain their
@@ -109,6 +158,87 @@ the observed world distribution, not a confidence level. Negative effects remain
 reported; this first producer conservatively issues advice only for alternatives
 with a positive lower bound above the precommitted meaningful threshold.
 
+### V1.1 method decision: empirical Bernstein, symmetric interpretation
+
+V1's `WORLD_PAIRED_HOEFFDING_BONFERRONI_95_V1` is valid for any bounded
+distribution but pessimistic at every variance. At N = 256, m = 2 its
+half-width is ~18.5 pp, so an observed effect must exceed ~23.5 pp before the
+lower bound clears the 5 pp meaningful threshold. Moderate 5–15 pp effects are
+uncertifiable at that cap.
+
+Methods compared for V1.1 (all over independent world-level effects bounded in
+[-1,1], two-sided, familywise Bonferroni delta = 0.05/m):
+
+| Candidate | Validity | Behavior at V = 0 | Small-N behavior | Decision |
+| --- | --- | --- | --- | --- |
+| Hoeffding + Bonferroni (V1) | Any bounded distribution | Keeps a nonzero floor automatically | Very wide | Kept for V1 plans |
+| Paired Student-t | Asymptotic; invalid for degenerate/heavy-tailed small-N effects | Interval collapses to zero width — fake certainty | Anti-conservative at small n | Rejected |
+| **Empirical Bernstein (AMS) + Bonferroni** | **Any bounded distribution, finite n** | **Residual floor 3·ln(3m/0.05)/N; never collapses** | **Tightens with observed variance; no wider than Hoeffding at matched intent** | **Adopted for V2 plans** |
+
+The adopted `WORLD_PAIRED_EMPIRICAL_BERNSTEIN_BONFERRONI_95_V1` uses the
+Audibert–Munos–Szepesvári bound:
+
+    half = sqrt(2 * V * ln(3m/0.05) / N) + 3 * ln(3m/0.05) / N
+
+where V is the biased empirical variance of world effects the inequality
+requires. The additive term is a documented floor: 128 identical +10 pp effects
+still produce interval [-1.2, +21.2] pp — deterministic continuation artifacts
+cannot masquerade as infinite certainty. The ln(3/δ) constant and the additive
+penalty make the bound strictly conservative versus a naive plug-in Bernstein;
+at maximal variance it is slightly *wider* than V1 Hoeffding, and it tightens
+only when observed world dispersion is genuinely low. Independent N remains
+hidden worlds; continuation seeds stay nested repetitions.
+
+Symmetric interpretation: every comparison still computes the precommitted
+`alternative − reference` contrast — the sign convention is never flipped after
+seeing outcomes. The sealed study now records `assessment`, derived
+deterministically from the comparisons:
+
+- `ALTERNATIVE_DOMINATES` — at least one alternative qualifies and none
+  reference-dominates → per-alternative advice allowed.
+- `REFERENCE_DOMINATES_ALL` — **every** tested alternative has its upper bound
+  below −(meaningful effect) with reference-favored heterogeneity → one
+  reference claim is issued, bounded by the worst tested-alternative interval.
+- `MIXED_DIRECTIONS` / `PARTIAL_REFERENCE_ADVANTAGE` — no recommendation; the
+  reference is never called "best" unless it dominates every precommitted
+  comparison.
+- `UNRESOLVED` / `NOT_EVALUATED` — no advice.
+
+A dominating reference earns `PLAY` only when its disposition uniformly uses a
+card/rank/suit requested subject, `PRESERVE` when it uniformly preserves one,
+otherwise `REFERENCE_PREFERRED`. Recommendation semantics name the tested set:
+"the recorded play outperformed the tested alternatives", never global
+optimality. All claims carry `requestedSubject`, `referenceActionId`,
+`alternativeActionId`, `direction`, `referenceDispositions`, `dispositions`
+and `testedAlternatives` inside `statementData` under the existing
+`STRATEGY_CLAIM_V1` contract (opaque statement data; no claim reseal needed).
+
+### Pre-study resolution diagnostics
+
+`informationResolution({worlds, alternatives, minimumMeaningfulEffect,
+variance})` reports the labeled approximation `minimumResolvableEffect =
+mme + half` under a declared dispersion assumption — not a power guarantee.
+`approximateWorldsForEffect({effect, ...})` inverts the same expression by
+binary search and returns `null` when the target is unreachable inside
+`maxWorlds`. These are planning aids only; they cannot adapt a running study.
+
+Approximate minimum resolvable effect (pp above the 5 pp meaningful floor),
+m = 2 alternatives, by world count and assumed world-effect variance:
+
+| Hidden worlds | V = 0 | V = 0.0625 | V = 0.25 | V = 1 | V1 Hoeffding (any V) |
+| --- | --- | --- | --- | --- | --- |
+| 32  | 49.9 | 63.6 | 77.2 | 104.6 | 57.3 |
+| 64  | 27.4 | 37.1 | 46.8 | 66.1 | 42.0 |
+| 128 | 16.2 | 23.1 | 29.9 | 43.6 | 31.2 |
+| 256 | 10.6 | 15.4 | 20.3 | 30.0 | 23.5 |
+| 512 | 7.8  | 11.2 | 14.6 | 21.5 | 18.1 |
+
+Reading: a near-deterministic +11 pp world effect can certify at 256 worlds
+under V1.1 but never under V1 Hoeffding; a +10 pp effect at moderate dispersion
+(V ≈ 0.25) still needs roughly 2,000 worlds — beyond any UI budget. Raising m
+widens intervals through the Bonferroni log; raising dispersion can make V1.1
+wider than V1 Hoeffding, by design.
+
 ## Claims, UI and trust
 
 Results are separate `INFORMATION_SET_STUDY_V1` artifacts with
@@ -120,11 +250,35 @@ stricter than merely observing a positive mean. All other current clean results
 remain Experimental / Unknown. Imported or incompatible results are Insufficient.
 No Strong/Established producer was added.
 
-The Counterfactual Lab adds opening study controls. Card/action pages render
-controlled claims separately from observational habits, showing exact authorized
-hand/Swap Bar context, effect, familywise interval, confidence, heterogeneity,
-worlds, repetitions, faults and caveat. Show Nerd Data exposes the sealed study,
-manifest and claims. Exact-state `STRATEGY_BRANCH_V1` remains research-only.
+The Counterfactual Lab adds opening study controls. The study question binds
+to the currently selected page subject: only certified opening decisions whose
+legal opportunity set contains that subject are offered, and the request is
+frozen into the plan. A live preview shows `worlds × actions × continuations`
+planned executions, the inference method, the 5 pp meaningful floor and the
+approximate resolution under a declared dispersion assumption, warning when a
+configuration is mainly useful for very large effects.
+
+V1.1 makes the evidence hierarchy explicit in Quick Read. Priority order:
+
+1. A valid current actionable Information-set claim (clean, complete,
+   Suggestive, non-UNKNOWN) → RECOMMENDATION with confidence, effect,
+   robustness, exact context and caveats.
+2. Other admissible current controlled evidence (Experimental or unresolved)
+   → "no supported recommendation yet" with the controlled statement.
+3. Observational/descriptive evidence → usage habits only.
+4. Unknown / no evidence.
+
+Observational prose can never overwrite controlled evidence. Experimental,
+imported/unverified, incompatible or historical claims, exact-state
+`RESEARCH_ONLY` branch results, volatile controlled evidence and
+non-clean/faulted studies can never drive the player-facing answer. Show Nerd
+Data displays the exact claims used by the rendered recommendation.
+Card/action pages render controlled claims separately from observational
+habits ("What bots tended to do · observational only"), showing exact
+authorized hand/Swap Bar context, effect, familywise interval, confidence,
+heterogeneity, worlds, repetitions, faults and caveat. Show Nerd Data exposes
+the sealed study, manifest and claims. Exact-state `STRATEGY_BRANCH_V1`
+remains research-only.
 
 Strategy IndexedDB v2 adds informationSets, informationPlans and
 informationStudies, preserving all v1 stores. Immutable transactions reject

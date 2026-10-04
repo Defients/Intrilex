@@ -44,3 +44,33 @@ Exact `STRATEGY_BRANCH_V1` retains its permanent `RESEARCH_ONLY` ceiling.
 World-level bounded paired inference, with continuation repetitions nested in
 worlds and precommitted familywise correction, will use sampled worlds as N.
 No general midgame sampler, knowledge ledger or replication campaign is included.
+
+## V1.1 hardening audit — four defects found in the shipped V1 path
+
+Audited October 4, 2026 against the live `main` implementation before the V1.1
+pass. The sampling boundary above remains correct; these defects were semantic
+and presentational, not sampler soundness:
+
+1. **Study subject binding.** The Field Manual launched studies with only the
+   decision event; `prepareInformationStudy` derived `question.subject` from
+   `selectedActionId`'s first candidate subject. A page subject that was legal
+   but not the recorded action's subject silently redirected the study
+   question — a `rank:3` study launched from a recorded Draw could become a
+   `family:draw` study. The machinery could answer the wrong question
+   correctly. Fixed by freezing `requestedSubject` into the sealed plan and
+   rejecting any subject absent from the legal opportunity set.
+2. **Asymmetric inference.** Only `alternative − reference` effects with a
+   positive lower bound could qualify, so a dominating recorded action could
+   never earn advice. Fixed by a deterministic sealed `assessment` computed
+   from the precommitted contrasts, allowing a reference-direction claim only
+   when every tested alternative is dominated.
+3. **Quick Read priority.** The card page rendered observational "no supported
+   recommendation" prose above valid controlled claims. Fixed by a
+   deterministic evidence priority: actionable controlled claim → other
+   admissible controlled evidence → observational → unknown.
+4. **Inference practicality.** Fixed Hoeffding needs ~23.5 pp observed effect
+   at N=256/m=2 to certify a 5 pp meaningful effect — moderate effects were
+   unreachable. Replaced for new V2 plans with variance-sensitive empirical
+   Bernstein plus a documented zero-variance floor, and added labeled
+   pre-study resolution diagnostics. V1 plans keep Hoeffding semantics
+   forever.

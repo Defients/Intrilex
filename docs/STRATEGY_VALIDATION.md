@@ -9,6 +9,135 @@ production certification. Engine/rules and policy implementations were not
 edited. New observation/analysis sources intentionally change the scientific
 runtime fingerprint. Original historical artifacts are not rewritten.
 
+## Information-set V1.1 hardening pass — final local validation
+
+October 4, 2026, America/New_York. This section supersedes the V1
+information-set record below for subject binding, symmetric inference,
+Quick Read priority and inference calibration. Scientific fingerprint:
+`b9a4cf9dcef22a556a96821192305d91553903d9bcb249e33821e619cacb5e6f`.
+
+### Defects fixed (audit detail: docs/INFORMATION_SET_AUDIT.md)
+
+1. **Subject binding.** `requestedSubject` is validated against the legal
+   opportunity set and frozen into the sealed V2 plan; the recorded action is
+   only the reference. A `rank:3` study launched over a recorded Draw stays a
+   `rank:3` study or fails closed. Subject-aware dispositions
+   (`USES_SUBJECT`, `PRESERVES_SUBJECT`, `CONSUMES_SUBJECT_OTHER_WAY`,
+   `SUBJECT_UNAVAILABLE_AFTER_ACTION`, `DOES_NOT_INVOLVE_SUBJECT`) are computed
+   from actual source handles plus authoritative after-state, bound to all
+   matching visible copies for card/rank/suit subjects.
+2. **Symmetric inference.** Precommitted `alternative − reference` contrasts
+   are interpreted symmetrically by a sealed study `assessment`:
+   `ALTERNATIVE_DOMINATES`, `REFERENCE_DOMINATES_ALL` (only when every tested
+   alternative is dominated — never global optimality), `MIXED_DIRECTIONS`,
+   `PARTIAL_REFERENCE_ADVANTAGE`, `UNRESOLVED`, `NOT_EVALUATED`. Claims carry
+   `requestedSubject`, `referenceActionId`, `alternativeActionId`, `direction`,
+   `dispositions`, `referenceDispositions` and `testedAlternatives` in
+   `statementData` under the unchanged `STRATEGY_CLAIM_V1` contract.
+3. **Quick Read priority.** Deterministic evidence hierarchy: actionable
+   current controlled claim → other admissible controlled evidence →
+   observational usage → unknown. Observational prose cannot overwrite
+   controlled evidence; imported/historical/research-only/volatile/non-clean
+   artifacts never drive the top answer.
+4. **Inference practicality.** New V2 plans adopt
+   `WORLD_PAIRED_EMPIRICAL_BERNSTEIN_BONFERRONI_95_V1` (variance-sensitive,
+   valid for any bounded distribution, documented zero-variance floor,
+   familywise Bonferroni across planned alternatives, worlds — not
+   continuation repetitions — as independent N). V1 plans keep Hoeffding
+   semantics forever; sealed artifacts are never re-interpreted.
+
+### Method decision
+
+Hoeffding + Bonferroni (V1) is valid at every variance but needs ~23.5 pp
+observed effect at N=256/m=2 to certify the 5 pp floor. Paired Student-t was
+rejected: asymptotic, invalid for degenerate/heavy-tailed small-N world
+effects, and its interval collapses to zero width at zero variance — fake
+certainty. Empirical Bernstein (AMS bound) is valid for any bounded
+distribution at finite n, tightens with observed variance, and its additive
+`3·ln(3m/0.05)/N` term keeps a floor at zero variance. At worst-case variance
+it is slightly wider than V1 — conservative by construction, not chosen for
+more Suggestive results. Full comparison: docs/INFORMATION_SET_STUDIES.md.
+
+### World-count resolution and real benchmark
+
+Approximate minimum resolvable effect (pp above the 5 pp floor, m=2):
+V=0: 49.9/27.4/16.2/10.6/7.8; V=0.25: 77.2/46.8/29.9/20.3/14.6; worst case
+V=1: 104.6/66.1/43.6/30.0/21.5 at N=32/64/128/256/512 — vs V1 Hoeffding
+57.3/42.0/31.2/23.5/18.1 at any variance. The sampler ordinal domain was
+raised 256→511 to match the accepted budget; ordinals 0–255 produce identical
+worlds, so plans ≤256 worlds are unchanged.
+
+`scripts/benchmark-information.mjs` real matched-world studies (3 actions × 2
+continuations, Value/Tempo frozen checkpoints, same opening information set,
+single-threaded Node on i7-13700F; all COMPLETE, 0 rejections, 0 faults):
+
+| Worlds | Branch executions | Elapsed | exec/s | Artifact size |
+| --- | --- | --- | --- | --- |
+| 64  | 384   | 119,119 ms  | 3.22 | 185,983 B   |
+| 128 | 768   | 231,637 ms  | 3.32 | 354,572 B   |
+| 256 | 1,536 | 453,668 ms  | 3.39 | 692,377 B   |
+| 512 | 3,072 | 954,447 ms  | 3.22 | 1,367,970 B |
+
+~3.2-3.4 real game continuations per second, ~0.54-0.56 accepted worlds per
+second. A 512-world opt-in study takes ~16 min in a cancellable background
+worker — long but feasible, and it is the only configuration that can certify
+moderate-dispersion effects under ~15 pp. Browser cancellation and route-exit
+termination are verified by acceptance scenarios.
+
+### Real end-to-end result (V2)
+
+`reports/local/strategy/browser/information-real-study.json`: the real UI
+study, requested subject `family:phase`, reproduced byte-for-byte through the
+Node authority — 4 worlds, 24 executions, COMPLETE, UNRESOLVED, intervals
+[-1,1] → Experimental / UNKNOWN. `real-study.json`/`real-claims.json` and the
+512-world benchmark tell the same honest story on the static Value/Tempo
+fixture: observed +3.7 pp [-6.2, +13.6] and +4.1 pp [-4.4, +12.6] at N=512,
+heterogeneity UNRESOLVED → Experimental / UNKNOWN. No real Suggestive
+recommendation was manufactured; a null result is the truthful result.
+`synthetic-ui-fixture.json` remains clearly labeled engineered evidence for
+UI/confidence acceptance only.
+
+### VERIFIED LOCALLY (final build, fingerprint b9a4cf9d)
+
+- Focused Strategy tests: PASS — 170/170 (65 information + 105 intelligence).
+- Full repository suite: PASS — 5,549 tests, 5,535 pass, 0 fail, 14 skipped
+  (~413 s). An earlier run under concurrent benchmark+Chrome load showed two
+  worker-count-invariance failures in `agent-profile-science.test.mjs`; both
+  pass standalone and in the final clean suite — environmental load flakes,
+  not defects of this pass.
+- Chrome acceptance: Strategy 34/34, Evolution 34 (13 arena + 11 cockpit +
+  10 analytics), Profiles 17/17, Profile Arena 7/7 — all on Chrome
+  154.0.8037.93 against the final dist. Two intermediate runs failed on
+  stale dist/artifact fingerprints (`resultHash` mismatch,
+  `INCOMPATIBLE_IMPLEMENTATION`); root cause was a rebuild ordering issue,
+  not test defects — all pass cleanly on the final build.
+- Build: PASS. Typecheck (`tsc --noEmit`): PASS, 0 errors.
+- Lint: PASS, 0 errors, 422 pre-existing warnings; focused lint on every
+  touched file: 0 errors, 0 warnings.
+- V1 sealed-plan compatibility: historical plans validate under original
+  Hoeffding semantics (test: "historical V1 plans keep Hoeffding semantics").
+
+### NOT VERIFIED
+
+Remote CI, deployment, production certification, human visual acceptance,
+and any machine other than this Windows checkout: NOT_RUN. Browser
+responsiveness at 512 worlds inside the UI worker is benchmarked at Node
+level only (executions are identical; the browser path is exercised at 4
+worlds plus cancellation/route-exit scenarios).
+
+### Limits and remaining blocker
+
+Opening-only scope: certified first prepared P1 Start decision, unmodified
+Core setup, uniform unseen assignment + fresh engine RNG (a conditional
+model, not the posterior of the original deal), frozen continuation policies,
+world-level paired effects. Moderate-dispersion effects below ~15 pp still
+cannot certify inside the 512-world cap; a ~10 pp effect at V≈0.25 needs
+roughly 2,000 worlds — beyond any offered budget by design. The exact
+blocker to broader strategy advice is unchanged: there is no remembered-
+information ledger or midgame information-set reconstruction, and only
+opening decision evidence exists. Knowledge Farm, campaign orchestration and
+multi-state replication remain out of scope.
+
 ## Information-set bridge: final local validation
 
 October 4, 2026, America/New_York. This section supersedes the historical
