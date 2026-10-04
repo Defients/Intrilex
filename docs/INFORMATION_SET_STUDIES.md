@@ -213,6 +213,58 @@ optimality. All claims carry `requestedSubject`, `referenceActionId`,
 and `testedAlternatives` inside `statementData` under the existing
 `STRATEGY_CLAIM_V1` contract (opaque statement data; no claim reseal needed).
 
+### V1.2 erratum: the support-range factor was missing (corrected in V3)
+
+The V1.1 formula quoted above applied the AMS bound as if effects were bounded
+in [0,1]. Our paired world effects are bounded in [-1,+1] — an interval of
+width R = 2 — so the additive term was under-scaled by exactly R. Sealed V2
+plans keep the historical V2 semantics forever (digest-bound recomputation);
+new schemaVersion 3 plans use `WORLD_PAIRED_EMPIRICAL_BERNSTEIN_BONFERRONI_95_V2`:
+
+    half = sqrt(2 * V * ln(3m/0.05) / N) + 3 * R * ln(3m/0.05) / N   (R = 2)
+
+Only the additive floor doubles; the variance term does not take the range
+factor (rescaling X in [a,a+R] to [0,1] divides V by R² and rescales the whole
+bound by R, which cancels). Consequence: V2 intervals were anti-conservative —
+every interval produced under V2 was narrower than the inequality allows. No
+V2-produced claim is silently upgraded; the corrected bound only ever widens
+intervals, so previously issued Suggestive results would be re-derived, not
+trusted, on revalidation under V3 plans.
+
+`informationResolution`, `approximateWorldsForEffect` and the planning table
+use the corrected bound and report `method: INFORMATION_INFERENCE_V3` /
+`APPROXIMATE_RESOLUTION` explicitly.
+
+Corrected approximate minimum resolvable effect (pp above the 5 pp meaningful
+floor), m = 2 alternatives, by world count and assumed world-effect variance:
+
+| Hidden worlds | V = 0 | V = 0.0625 | V = 0.25 | V = 1 | V1 Hoeffding (any V) |
+| --- | --- | --- | --- | --- | --- |
+| 32  | 94.8 | 108.4 | 122.1 | 149.5 | 57.3 |
+| 64  | 49.9 | 59.6 | 69.2 | 88.6 | 42.0 |
+| 128 | 27.4 | 34.3 | 41.1 | 54.8 | 31.2 |
+| 256 | 16.2 | 21.1 | 25.9 | 35.6 | 23.5 |
+| 512 | 10.6 | 14.0 | 17.4 | 24.3 | 18.1 |
+
+Reading: under the corrected bound the zero-dispersion floor at 512 worlds is
+~10.6 pp resolvable, not ~7.8. The variance term still tightens with observed
+dispersion, and V3 still never invents certainty: identical effects keep a
+nonzero floor, and volatile world effects still resolve to UNRESOLVED.
+
+### V1.2: subject-aware action selection
+
+V1.1 plans chose alternatives by `branch.actionIds.slice(0,3)` — a generic
+family-diversified prefix that could omit every action involving the requested
+subject. V3 plans freeze an auditable `actionSelection` block: every legal
+action is classified against the requested subject on a validated sampled
+world (USES / PRESERVES / CONSUMES_OTHER_WAY / UNAVAILABLE_AFTER /
+DOES_NOT_INVOLVE / REJECTED), the recorded action stays the labeled reference,
+and alternatives are chosen to guarantee a real use-vs-preserve contrast plus
+family-diverse comparators. A subject with no usable contrast fails closed
+with `NO_SUBJECT_ACTION_CONTRAST_AVAILABLE` instead of running irrelevant
+executions under a misleading label. The selection metadata is digest-bound
+and re-derived on revalidation; forged dispositions or rationale are rejected.
+
 ### Pre-study resolution diagnostics
 
 `informationResolution({worlds, alternatives, minimumMeaningfulEffect,
@@ -221,23 +273,6 @@ mme + half` under a declared dispersion assumption — not a power guarantee.
 `approximateWorldsForEffect({effect, ...})` inverts the same expression by
 binary search and returns `null` when the target is unreachable inside
 `maxWorlds`. These are planning aids only; they cannot adapt a running study.
-
-Approximate minimum resolvable effect (pp above the 5 pp meaningful floor),
-m = 2 alternatives, by world count and assumed world-effect variance:
-
-| Hidden worlds | V = 0 | V = 0.0625 | V = 0.25 | V = 1 | V1 Hoeffding (any V) |
-| --- | --- | --- | --- | --- | --- |
-| 32  | 49.9 | 63.6 | 77.2 | 104.6 | 57.3 |
-| 64  | 27.4 | 37.1 | 46.8 | 66.1 | 42.0 |
-| 128 | 16.2 | 23.1 | 29.9 | 43.6 | 31.2 |
-| 256 | 10.6 | 15.4 | 20.3 | 30.0 | 23.5 |
-| 512 | 7.8  | 11.2 | 14.6 | 21.5 | 18.1 |
-
-Reading: a near-deterministic +11 pp world effect can certify at 256 worlds
-under V1.1 but never under V1 Hoeffding; a +10 pp effect at moderate dispersion
-(V ≈ 0.25) still needs roughly 2,000 worlds — beyond any UI budget. Raising m
-widens intervals through the Bonferroni log; raising dispersion can make V1.1
-wider than V1 Hoeffding, by design.
 
 ## Claims, UI and trust
 

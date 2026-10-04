@@ -4,8 +4,8 @@
 // under the System nav section.
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc } from '../state.js?v=02b75fb50abd';
-import { renderAnalyticsAiPanel } from '../analytics-ai/intelligence-panel.js?v=02b75fb50abd';
+import { state, app, esc } from '../state.js?v=aa5ccc2813d1';
+import { renderAnalyticsAiPanel } from '../analytics-ai/intelligence-panel.js?v=aa5ccc2813d1';
 
 export function renderIntelligence() {
   // Clean up any previous Analytics AI subscription before wiping innerHTML.

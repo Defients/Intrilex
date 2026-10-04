@@ -56,3 +56,13 @@
 @media(max-width:768px) { .observatory-shell:has(.si-workspace) .side-rail { max-height:190px; height:auto; overflow:auto; position:relative; } }
 @media(max-width:1000px) { .si-workspace { padding:12px; }.si-timing { grid-template-columns:repeat(3,1fr); }.si-two { grid-template-columns:1fr; }.si-card { padding:18px; } }
 @media(max-width:600px) { .si-hero { padding:20px; align-items:flex-start; flex-direction:column; }.si-kpis { grid-template-columns:repeat(2,1fr); }.si-timing { grid-template-columns:1fr; }.si-timing article { display:grid; grid-template-columns:1fr 1fr; }.si-workspace table { font-size:.68rem; }.si-card-heading { align-items:flex-start; }.si-workspace .si-nav button { flex-basis:44%; }.si-nerd pre { max-height:360px; } }
+/* Rank semantic decomposition + optional local AI interpretation */
+.si-semantics { border:1px solid var(--si-line); border-radius:10px; padding:14px 18px; margin:18px 0; background:#152019; }
+.si-semantics h3 { margin-top:0; }
+.si-semantics .si-timing { grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); margin:12px 0 6px; }
+.si-semantics [aria-pressed="true"] { border-color:var(--si-accent); color:var(--si-accent); }
+.si-ai { border:1px dashed #6b5b95; border-radius:10px; padding:14px 18px; margin:18px 0; background:#1a1724; }
+.si-ai h3 { margin-top:0; color:#c9b8f0; font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; }
+.si-ai-result { border-left:3px solid #6b5b95; padding:8px 18px; background:#211c30; border-radius:0 8px 8px 0; }
+.si-ai-result h4 { margin:10px 0 4px; color:#e8e0ff; }
+.si-ai-result p { font-size:.84rem; }

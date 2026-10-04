@@ -5,9 +5,9 @@
 // Rank attribution extracted to rank-attribution-browser.js (P4.3).
 // Rank power model extracted to rank-power-model.js (P4.3).
 
-import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=02b75fb50abd';
-import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=02b75fb50abd';
-import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=02b75fb50abd';
+import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=aa5ccc2813d1';
+import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=aa5ccc2813d1';
+import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=aa5ccc2813d1';
 import {
   CANONICAL_RANKS,
   classifyPlayForm,
@@ -15,7 +15,7 @@ import {
   buildSourceCards,
   attributeRankAction,
   attributeAction,
-} from './rank-attribution-browser.js?v=02b75fb50abd';
+} from './rank-attribution-browser.js?v=aa5ccc2813d1';
 import {
   RANK_POWER_SCHEMA_VERSION,
   RPI_AXIS_WEIGHTS,
@@ -26,7 +26,7 @@ import {
   computeDecisionPower,
   buildBalanceWatchlist,
   buildRankPowerModel,
-} from './rank-power-model.js?v=02b75fb50abd';
+} from './rank-power-model.js?v=aa5ccc2813d1';
 import {
   buildMechanicsAtlas,
   analyzeSynergies,
@@ -35,11 +35,11 @@ import {
   detectAnomalies,
   mcnemarPairedTest,
   pairedBootstrapABBA,
-} from './observatory-analytics-browser.js?v=02b75fb50abd';
+} from './observatory-analytics-browser.js?v=aa5ccc2813d1';
 import {
   mechanicRegistryHash,
   quarantineUnknownTags,
-} from './mechanic-registry-browser.js?v=02b75fb50abd';
+} from './mechanic-registry-browser.js?v=aa5ccc2813d1';
 
 // Re-export for backward compatibility (other modules import from browser-analytics)
 export {

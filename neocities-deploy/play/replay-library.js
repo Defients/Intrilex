@@ -4,9 +4,9 @@
 // Supports public (sanitized) and private (full) export.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from './hash.js?v=02b75fb50abd';
-import { listReplays,   putReplay} from './persistence.js?v=02b75fb50abd';
-import { finishLocalStrategy } from '../strategy/strategy-player.js?v=02b75fb50abd';
+import { hashCanonical } from './hash.js?v=aa5ccc2813d1';
+import { listReplays,   putReplay} from './persistence.js?v=aa5ccc2813d1';
+import { finishLocalStrategy } from '../strategy/strategy-player.js?v=aa5ccc2813d1';
 
 /**
  * Create a replay record from a completed session.
@@ -16,7 +16,7 @@ import { finishLocalStrategy } from '../strategy/strategy-player.js?v=02b75fb50a
 export async function createReplayRecord(session) {
   const certifiedReplay = await session.createCertifiedReplay();
   const publicView = await session.createPublicReplay(certifiedReplay);
-  const {strictView}=await import('../autonomy-runtime.js?v=02b75fb50abd');
+  const {strictView}=await import('../autonomy-runtime.js?v=aa5ccc2813d1');
   session._strategyTerminalScores=Object.fromEntries(['P1','P2'].map(id=>[id,strictView(session.state,id).own.securedPoints]));
 
   const replayId = `R-${session.sessionId}`;
@@ -62,7 +62,7 @@ export async function saveReplay(record) {
  */
 export async function verifyReplayRecord(record) {
   try {
-    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=02b75fb50abd');
+    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=aa5ccc2813d1');
     verifyCertifiedReplay(record.certifiedReplay);
     return { valid: true };
   } catch (error) {

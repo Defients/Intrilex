@@ -1,10 +1,10 @@
-import { canonicalClone } from "./canonical-json.js?v=02b75fb50abd";
-import { enumerateCoreEffectCandidates } from "./core-effects.js?v=02b75fb50abd";
-import { enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=02b75fb50abd";
-import { hashCanonical } from "./hash.js?v=02b75fb50abd";
-import { revealUntilStart } from "./lifecycle.js?v=02b75fb50abd";
-import { cardPointValue, parseIdentity } from "./ranks.js?v=02b75fb50abd";
-import { moveCard } from "./state.js?v=02b75fb50abd";
+import { canonicalClone } from "./canonical-json.js?v=aa5ccc2813d1";
+import { enumerateCoreEffectCandidates } from "./core-effects.js?v=aa5ccc2813d1";
+import { enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=aa5ccc2813d1";
+import { hashCanonical } from "./hash.js?v=aa5ccc2813d1";
+import { revealUntilStart } from "./lifecycle.js?v=aa5ccc2813d1";
+import { cardPointValue, parseIdentity } from "./ranks.js?v=aa5ccc2813d1";
+import { moveCard } from "./state.js?v=aa5ccc2813d1";
 export const CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE = Object.freeze({
     id: "core-private-choice-authority",
     displayName: "Core Private Choice Authority — Sealed Hidden Decisions",

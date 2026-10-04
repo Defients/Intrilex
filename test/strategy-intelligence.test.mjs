@@ -6,8 +6,8 @@ import { gamePlan, validateRecord, validateCheckpoint } from '../packages/simula
 import { runPolicyMatch } from '../packages/simulation-runtime/src/runtime.mjs';
 import { createSimulationDecisionFrame, createSimulationState, executeSimulationAction, strictPolicyView, authorityHashCanonical } from '@intrilex/engine-adapter';
 import { STRATEGY_CONTRACTS, strategyDigest, strategyCanonical, sealStrategy, verifyStrategy, validateDecisionEvent, decisionIdentity, decisionContext, gameMaturity, normalizeStrategyAction } from '../packages/simulation-runtime/src/strategy-contracts.mjs';
-import { strategyGameEvidence, classifyStrategySource, validateStrategyEvidence, strategyBundle, validateStrategyBundle, eventIndexRow } from '../packages/simulation-runtime/src/strategy-evidence.mjs';
-import { createStrategyAggregate, strategyEventMatches, confidenceFor, claimsFromAggregate, validateStrategyClaim, synthesizeStrategyClaim, strategyGuide, mineStrategyMotifs, mineStrategyMistakes } from '../packages/simulation-runtime/src/strategy-analysis.mjs';
+import { strategyGameEvidence, classifyStrategySource, validateStrategyEvidence, chunkStrategyEvidence, strategyBundle, validateStrategyBundle, eventIndexRow } from '../packages/simulation-runtime/src/strategy-evidence.mjs';
+import { createStrategyAggregate, strategyEventMatches, confidenceFor, claimsFromAggregate, validateStrategyClaim, synthesizeStrategyClaim, strategyGuide, mineStrategyMotifs, mineStrategyMistakes, rankSemanticCategory, RANK_SEMANTIC_CATEGORIES, orderControlledClaims, researchLeadsFor, RESEARCH_LEAD } from '../packages/simulation-runtime/src/strategy-analysis.mjs';
 import { planStrategyBranch, reconstructStrategyDecision, executeStrategyBranch, claimFromStrategyBranch } from '../packages/simulation-runtime/src/strategy-branch.mjs';
 
 const identity=await evolutionIdentity();
@@ -204,10 +204,64 @@ test('bounded two/three action motifs never combine games or imply causation',()
   const motifs=mineStrategyMotifs(events,{maxMotifs:3});assert.ok(motifs.length<=3);for(const m of motifs){assert.ok([2,3].includes(m.sequence.length));assert.equal(m.evidenceType,'ASSOCIATIONAL');assert.match(m.caveat,/not causal/);}
   const mixed=[events[0],reseal(events[1],b=>{b.identity.runId='OTHER';})];assert.deepEqual(mineStrategyMotifs(mixed),[]);
 });
-test('expert guide exports provenance-bound claims with no filler or cross-era synthesis',()=>{
-  const claims=claimsFromAggregate(aggregate(fullRows),'2026-10-04T16:00:00.000Z'),guide=strategyGuide(claims,{...scope,generatedAt:'2026-10-04T16:00:00.000Z'});
-  verifyStrategy(guide.manifest,STRATEGY_CONTRACTS.guide);assert.equal(guide.manifest.entries.length,claims.length);for(const c of claims)assert.ok(guide.markdown.includes(c.artifactId));assert.match(guide.markdown,/No strong conclusion/);
+test('rank semantic categories decompose every rank-subject opportunity without inventing mechanics',()=>{
+  const rows=fullRows.filter(r=>r.event.outcomes.clean&&r.event.candidates.some(c=>c.subjects.includes('rank:3')));
+  const all=aggregate(rows,{subject:'rank:3'}),decomp=all.semantics;
+  assert.ok(decomp,'rank subjects carry a semantic decomposition');
+  for(const category of Object.keys(decomp))assert.ok(RANK_SEMANTIC_CATEGORIES.includes(category),'only canonical categories exist');
+  const combined=Object.values(decomp).reduce((n,c)=>n+c.opportunities,0);
+  assert.ok(combined>=all.total.opportunities,'one event may offer the rank under several mechanics; categories account for every offer');
+  const selectedTotal=Object.values(decomp).reduce((n,c)=>n+c.selected,0);
+  assert.equal(selectedTotal,all.total.selected,'selected category accounting equals the combined accounting');
+  const scoreOnly=aggregate(rows,{subject:'rank:3',filters:{semanticUse:'SCORE_USE'}});
+  assert.ok(scoreOnly.total.opportunities<=all.total.opportunities);
+  assert.equal(scoreOnly.semanticUse,'SCORE_USE');
+  assert.throws(()=>aggregate(rows,{subject:'rank:3',filters:{semanticUse:'TELEPORT'}}),/SEMANTIC_INVALID/);
+});
+test('canonical families map to the documented semantic categories',()=>{
+  assert.equal(rankSemanticCategory({family:'score'}),'SCORE_USE');
+  assert.equal(rankSemanticCategory({family:'swap-bar'}),'SWAP_USE');
+  assert.equal(rankSemanticCategory({family:'private-choice'}),'PRIVATE_CHOICE_USE');
+  assert.equal(rankSemanticCategory({family:'super'}),'COMBINATION_USE');
+  assert.equal(rankSemanticCategory({family:'counter',timing:'INSTANT'}),'RESPONSE_USE');
+  assert.equal(rankSemanticCategory({family:'scuttle'}),'PRIMARY_EFFECT');
+  assert.equal(rankSemanticCategory({family:'unknown-family'}),'OTHER_USE');
+});
+test('non-rank subjects carry no semantic decomposition and reject narrowing',()=>{
+  const a=aggregate(fullRows,{subject:'family:draw'});assert.equal(a.semantics,null);assert.equal(a.semanticUse,null);
+  assert.throws(()=>aggregate(fullRows,{subject:'family:draw',filters:{semanticUse:'SCORE_USE'}}),/SEMANTIC_INVALID/);
+});
+test('quick read ordering never rewards effect magnitude',()=>{
+  const claims=claimsFromAggregate(aggregate(fullRows));
+  const big=reseal(claims[0],c=>{c.evidenceType='COUNTERFACTUAL';c.confidence='SUGGESTIVE';c.recommendation='PLAY';c.origin='LOCAL_REPRODUCTION';c.estimatedMagnitude=.99;c.statementData={informationSetId:'SI-big',direction:'ALTERNATIVE',heterogeneity:'ROBUST',hiddenWorlds:64,continuationsPerWorld:2,minimumMeaningfulEffect:.05,publicContext:{own:{hand:[]},swapBar:[]}};});
+  const small=reseal(claims[0],c=>{c.evidenceType='COUNTERFACTUAL';c.confidence='STRONG';c.recommendation='PLAY';c.origin='LOCAL_REPRODUCTION';c.estimatedMagnitude=.06;c.statementData={informationSetId:'SI-small',direction:'ALTERNATIVE',heterogeneity:'ROBUST',hiddenWorlds:512,continuationsPerWorld:2,minimumMeaningfulEffect:.05,publicContext:{own:{hand:[]},swapBar:[]}};});
+  const ordered=orderControlledClaims([big,small],{fingerprint:identity.fingerprint,eraId:identity.fingerprint});
+  assert.equal(ordered[0].artifactId,small.artifactId,'stronger confidence outranks a bigger point estimate');
+  const imported=orderControlledClaims([big,reseal(small,s=>{s.origin='IMPORTED_UNVERIFIED';s.stale=true;})],{fingerprint:identity.fingerprint,eraId:identity.fingerprint});
+  assert.equal(imported[0].origin,'LOCAL_REPRODUCTION','stale/imported claims cannot become the top quick read');
+});
+test('research leads are deterministic testing leads, never advice',()=>{
+  const a=aggregate(fullRows,{subject:'rank:3'}),leads=researchLeadsFor('rank:3',a);
+  assert.ok(leads.length);for(const l of leads)assert.ok(Object.values(RESEARCH_LEAD).includes(l.kind));
+  const empty=researchLeadsFor('rank:K',aggregate([]));assert.deepEqual(empty.map(l=>l.kind),[RESEARCH_LEAD.INSUFFICIENT]);
+});
+test('expert guide is human-first per subject with provenance in the manifest',()=>{
+  const claims=claimsFromAggregate(aggregate(fullRows),'2026-10-04T16:00:00.000Z'),agg=aggregate(fullRows,{subject:'family:draw'});
+  const guide=strategyGuide(claims,{...scope,generatedAt:'2026-10-04T16:00:00.000Z',subjects:[{subject:'family:draw',aggregate:agg}],humanName:s=>s});
+  verifyStrategy(guide.manifest,STRATEGY_CONTRACTS.guide);assert.equal(guide.manifest.entries.length,claims.length);
+  for(const c of claims)assert.equal(guide.markdown.includes(c.artifactId),false,'claim IDs stay out of human prose');
+  assert.match(guide.markdown,/# FIELD MANUAL/);assert.match(guide.markdown,/Current Evidence Status/);assert.match(guide.markdown,/No controlled player-actionable recommendation has earned Suggestive confidence/);assert.match(guide.markdown,/What We Still Don/);
+  assert.equal(guide.manifest.entries.some(e=>e.provenance.length>0),true,'manifest keeps the audit trail');
   assert.throws(()=>strategyGuide(claims,{...scope,eraId:'other'}),/CROSS_ERA/);
+});
+test('oversized game envelopes split into independently sealed chunks that re-ingest identically',()=>{
+  const source=strategyGameEvidence(run,record),size=new TextEncoder().encode(JSON.stringify(source)).byteLength,budget=Math.max(4096,Math.ceil(size/3));
+  const chunks=chunkStrategyEvidence(source,budget);
+  assert.ok(chunks.length>=2);assert.equal(chunks.reduce((n,c)=>n+c.events.length,0),source.events.length);
+  for(const c of chunks){validateStrategyEvidence(c);assert.equal(c.source.runId,source.source.runId);assert.equal(c.replayHash,source.replayHash);assert.ok(new TextEncoder().encode(JSON.stringify(c)).byteLength<=budget+8);}
+  assert.deepEqual(chunkStrategyEvidence(source).map(c=>c.artifactId),[source.artifactId],'within-budget envelopes stay one chunk');
+  const again=chunkStrategyEvidence(source,budget);
+  assert.deepEqual(again.map(c=>c.artifactId),chunks.map(c=>c.artifactId),'chunking is deterministic and deduplicates by artifactId');
 });
 test('Strategy route, portable build modules and CI registration are integrated',async()=>{
   const [router,build,pkg,ci]=await Promise.all(['apps/lab-web/src/router.js','scripts/build.mjs','package.json','scripts/ci.mjs'].map(p=>readFile(p,'utf8')));

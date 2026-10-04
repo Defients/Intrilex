@@ -295,7 +295,7 @@ const STAGES = [
   // Divergence fixes: regression tests for all 10 implementation divergences
   ['engine-divergence-fixes', 'node', ['--test', 'test/engine-divergence-fixes.test.mjs']],
   ['evolution-lab', 'node', ['--test', 'test/evolution-lab.test.mjs', 'test/evolution-foundation.test.mjs', 'test/evolution-research.test.mjs', 'test/evolution-training.test.mjs', 'test/evolution-completion.test.mjs', 'test/evolution-cockpit.test.mjs', 'test/evolution-analytics.test.mjs', 'test/tactical-policies.test.mjs', 'test/policy-action-coverage.test.mjs', 'test/strategic-research.test.mjs']],
-  ['strategy-intelligence', 'node', ['--test', 'test/strategy-intelligence.test.mjs', 'test/strategy-information.test.mjs']],
+  ['strategy-intelligence', 'node', ['--test', 'test/strategy-intelligence.test.mjs', 'test/strategy-information.test.mjs', 'test/strategy-ai-interpreter.test.mjs']],
   ['agent-profiles', 'node', ['--test', 'test/agent-profile-contracts.test.mjs', 'test/agent-profile-store.test.mjs', 'test/agent-profile-science.test.mjs', 'test/agent-profile-consumer.test.mjs', 'test/agent-profile-arena.test.mjs']],
 ];
 

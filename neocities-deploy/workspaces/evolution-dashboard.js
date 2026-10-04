@@ -1,19 +1,19 @@
-import '../evolution/evolution-training-ui.js?v=02b75fb50abd';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=02b75fb50abd';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=02b75fb50abd';
-import { app, esc, fmt } from '../state.js?v=02b75fb50abd';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=02b75fb50abd';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=02b75fb50abd';
-import { runMatchupLab, matchupMatrix, matchupArtifact, validateMatchupArtifact, DEFAULT_MATCHUP_POLICIES } from '../evolution/matchup-lab.mjs?v=02b75fb50abd';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=02b75fb50abd';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=02b75fb50abd';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=02b75fb50abd';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=02b75fb50abd';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=02b75fb50abd';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=02b75fb50abd';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=02b75fb50abd';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=02b75fb50abd';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=02b75fb50abd';
+import '../evolution/evolution-training-ui.js?v=aa5ccc2813d1';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=aa5ccc2813d1';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=aa5ccc2813d1';
+import { app, esc, fmt } from '../state.js?v=aa5ccc2813d1';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=aa5ccc2813d1';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=aa5ccc2813d1';
+import { runMatchupLab, matchupMatrix, matchupArtifact, validateMatchupArtifact, DEFAULT_MATCHUP_POLICIES } from '../evolution/matchup-lab.mjs?v=aa5ccc2813d1';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=aa5ccc2813d1';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=aa5ccc2813d1';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=aa5ccc2813d1';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=aa5ccc2813d1';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=aa5ccc2813d1';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=aa5ccc2813d1';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=aa5ccc2813d1';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=aa5ccc2813d1';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=aa5ccc2813d1';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 const profiles = new ProfileStore(new IndexedDbBackend(), { identity: LAB_IDENTITY });
@@ -149,15 +149,26 @@ function inspectionHtml() {
 function storageSummary() { return `${view.history.length} saved runs · ${(view.history.reduce((s,r) => s+(r.bytes ?? 0),0)/1048576).toFixed(2)} MiB in lab artifacts`; }
 function historyHtml() { const query=(view.historyQuery??'').toLowerCase(),rows=view.history.filter(h=>!query||JSON.stringify(h).toLowerCase().includes(query));return rows.length ? `<p>${rows.length} matching runs; first 50 shown. Search all saved metadata to narrow.</p>`+rows.slice(0,50).map(h => `<div class="evo-replay-row"><span>${esc(h.kind)} · ${esc(h.botA)} / ${esc(h.botB)} · ${h.games} games · ${esc(h.status)} · ${esc(h.createdAt)}<br><code>${esc(h.runId)}</code><br>Fingerprint ${esc(h.fingerprint?.slice(0,24)??'Unavailable')}</span><button class="ghost-button" data-load-run="${esc(h.runId)}" ${active() ? 'disabled' : ''}>Load</button></div>`).join('') : '<p>No matching saved lab runs. Adjust search or import evidence.</p>'; }
 async function refreshHistory() {
-  try { view.history=await store.list(); } catch(error) { view.storageError=`Storage unavailable: ${error.message}. Results remain in memory; export before leaving.`; }
-  if (!view.mounted) return; text('evo-storage',view.storageError || storageSummary());
+  try { view.history=await store.list(); } catch(error) { view.storageError=`Storage unavailable: ${error.message}. Results remain in memory.`; }
+  if (!view.mounted) return; storageStatus();
   const el=document.getElementById('evo-history'); if (el) el.innerHTML=historyHtml();
+}
+// Storage failures surface the real cause (policy size vs true browser
+// quota), whether the artifact remains in memory, and an inline export action
+// — the user never has to hunt through "Runs & artifacts" to rescue work.
+function storageStatus() {
+  const el=document.getElementById('evo-storage'); if (!el) return;
+  el.innerHTML=view.storageError
+    ? `${esc(view.storageError)} <button id="evo-storage-export" class="secondary-button">Export current run</button>`
+    : esc(storageSummary());
+  document.getElementById('evo-storage-export')?.addEventListener('click',()=>document.getElementById('evo-export')?.click());
 }
 function persist() {
   if (!run() || view.archive) return Promise.resolve();
   const snapshot=structuredClone(run()); snapshot.elapsedMs=elapsed();
   view.saveChain=view.saveChain.then(() => store.save(snapshot)).then(() => { view.storageError=''; return refreshHistory(); }).catch(error => {
-    view.storageError=`Save failed: ${error.message}. Export this run before leaving.`; if (view.mounted) text('evo-storage',view.storageError);
+    const detail=error?.artifactSize?` Artifact is ${(error.artifactSize/1048576).toFixed(1)} MiB vs the ${((error.persistLimit??0)/1048576).toFixed(0)} MiB browser archive limit.`:'';
+    view.storageError=`Save failed: ${error.message}.${detail} The run remains in memory; Strategy evidence, if any, was retained separately.`; if (view.mounted) storageStatus();
   }); return view.saveChain;
 }
 function readConfig() { return {botA:document.getElementById('evo-bot-a').value,botB:document.getElementById('evo-bot-b').value,gameCount:Number(document.getElementById('evo-games').value),seed:Number(document.getElementById('evo-seed').value),workerCount:Number(document.getElementById('evo-workers').value),mirrorSeats:document.getElementById('evo-mirror').checked,profileId:document.getElementById('evo-profile').value,strategicTrace:document.getElementById('evo-deep-trace').checked}; }

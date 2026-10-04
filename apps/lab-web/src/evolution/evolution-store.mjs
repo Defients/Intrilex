@@ -45,16 +45,16 @@ export class EvolutionStore {
     });
     return pending.promise;
   }
-  async save(run) {
+  async save(run,{budget=LAB_LIMITS.persistRunBytes}={}) {
     const envelope = artifactEnvelope(run);
     validateArtifact(envelope, this.identity);
     const size = new TextEncoder().encode(JSON.stringify(envelope)).byteLength;
-    if (size > LAB_LIMITS.importBytes) throw new Error('LAB_STORAGE_BUDGET_EXCEEDED');
+    if (size > budget) throw Object.assign(new Error('RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE'),{code:'RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE',artifactSize:size,persistLimit:budget});
     const db = await this.open();
     await new Promise((resolve, reject) => {
       const tx = db.transaction(['runs', 'history', 'checkpoints'], 'readwrite');
       tx.oncomplete = () => resolve();
-      tx.onabort = () => reject(tx.error ?? new Error('LAB_STORAGE_ABORTED'));
+      tx.onabort = () => reject(tx.error?.name === 'QuotaExceededError' ? Object.assign(new Error('BROWSER_STORAGE_QUOTA_EXCEEDED'),{code:'BROWSER_STORAGE_QUOTA_EXCEEDED',cause:tx.error}) : tx.error ?? new Error('LAB_STORAGE_ABORTED'));
       tx.onerror = () => {}; // transaction abort carries the error
       tx.objectStore('runs').put(envelope);
       tx.objectStore('history').put({ runId: run.runId, createdAt: run.createdAt, status: run.status, kind: run.researchPurpose ?? run.kind,
@@ -73,7 +73,8 @@ export class EvolutionStore {
   async saveResearch(project) {
     const envelope=researchEnvelope(project);
     validateResearchProject(project,this.identity);
-    if(new TextEncoder().encode(JSON.stringify(envelope)).byteLength>LAB_LIMITS.importBytes)throw new Error('LAB_STORAGE_BUDGET_EXCEEDED');
+    const size=new TextEncoder().encode(JSON.stringify(envelope)).byteLength;
+    if(size>LAB_LIMITS.persistRunBytes)throw Object.assign(new Error('RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE'),{code:'RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE',artifactSize:size,persistLimit:LAB_LIMITS.persistRunBytes});
     const db=await this.open();
     await new Promise((resolve,reject)=>{
       const tx=db.transaction('research','readwrite');let diagnostic;

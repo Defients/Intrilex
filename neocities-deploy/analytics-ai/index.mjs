@@ -15,3 +15,4 @@ export { repairResponse, extractAndRepair } from './response-repair.mjs';
 export { buildMessages, buildSystemPrompt, buildUserPrompt } from './prompt-builder.mjs';
 export { AnalysisCache, computeCacheKey, deriveDatasetId } from './analysis-cache.mjs';
 export { AnalysisController, ANALYSIS_STATUS } from './analysis-controller.mjs';
+export * from './strategy-interpreter.mjs';

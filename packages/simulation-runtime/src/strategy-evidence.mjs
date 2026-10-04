@@ -46,6 +46,30 @@ export function validateStrategyEvidence(evidence) {
   if(evidence.fidelity==='FULL_DECISION_EVIDENCE'&&!evidence.events.length||evidence.fidelity==='SUMMARY_ONLY'&&evidence.events.length)strategyFail('STRATEGY_FIDELITY_INVALID');
   return evidence;
 }
+const evidenceBytes=value=>new TextEncoder().encode(JSON.stringify(value)).byteLength;
+/** Split an oversized game envelope into sealed chunk envelopes of the same
+ * STRATEGY_EVIDENCE_V1 contract. Every chunk is independently valid, carries
+ * only fields the parent carried, deduplicates by artifactId on re-ingest,
+ * and shares the parent's replay/checkpoint provenance. Chunks are a storage
+ * concern — no scientific fields are added or removed. */
+export function chunkStrategyEvidence(evidence,maxBytes=8*1024*1024) {
+  validateStrategyEvidence(evidence);
+  if(!Number.isSafeInteger(maxBytes)||maxBytes<1024)strategyFail('STRATEGY_CHUNK_BUDGET_INVALID');
+  if(evidenceBytes(evidence)<=maxBytes)return [evidence];
+  if(!evidence.events.length)strategyFail('STRATEGY_EVIDENCE_CHUNK_BUDGET');
+  const {artifactId:_id,...body}=evidence,overhead=evidenceBytes({...body,events:[]});
+  const groups=[];let batch=[],size=overhead;
+  for(const event of evidence.events) {
+    // +1 accounts for the array separator so the emitted chunk never exceeds
+    // the declared chunk budget.
+    const n=evidenceBytes(event)+1;
+    if(overhead+n>maxBytes)strategyFail('STRATEGY_EVENT_STORAGE_BUDGET');
+    if(size+n>maxBytes&&batch.length){groups.push(batch);batch=[];size=overhead;}
+    batch.push(event);size+=n;
+  }
+  if(batch.length)groups.push(batch);
+  return groups.map(events=>sealStrategy(STRATEGY_CONTRACTS.evidence,{...body,events}));
+}
 export const strategyScopeKey=(fingerprint,rulesProfile,eraId,subject)=>JSON.stringify([fingerprint,rulesProfile,eraId,subject]);
 export function eventIndexRow(event,evidenceId,origin) {
   const subjects=[...new Set(event.candidates.flatMap(c=>c.subjects))];

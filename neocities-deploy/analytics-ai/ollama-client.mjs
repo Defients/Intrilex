@@ -136,14 +136,16 @@ export class OllamaClient {
    * @param {Array} params.messages - [{role, content}]
    * @param {object} params.options - { temperature, num_predict, ... }
    * @param {boolean} params.stream
+   * @param {object} [params.format] - Ollama structured-output JSON schema
+   *   (forwarded verbatim as the request `format` field; 'json' also accepted)
    * @param {function} [params.onToken] - (textChunk) => void
    * @param {function} [params.onProgress] - ({ tokens, done }) => void
    * @param {AbortSignal} [params.signal]
    * @returns {Promise<{ text: string, done: boolean, rawChunks: Array }>}
    */
-  async chat({ model, messages, options = {}, stream = false, onToken, onProgress, signal } = {}) {
+  async chat({ model, messages, options = {}, stream = false, format = null, onToken, onProgress, signal } = {}) {
     if (!model) throw new OllamaError(OLLAMA_ERROR.MODEL_NOT_FOUND, 'No model selected', { endpoint: this.endpoint });
-    const body = { model, messages, stream, options: { temperature: options.temperature ?? 0.2, num_predict: options.num_predict ?? 2048, ...options } };
+    const body = { model, messages, stream, ...(format ? { format } : {}), options: { temperature: options.temperature ?? 0.2, num_predict: options.num_predict ?? 2048, ...options } };
     const res = await this._request('/api/chat', { method: 'POST', body, signal });
     if (res.status === 404) {
       throw new OllamaError(OLLAMA_ERROR.MODEL_NOT_FOUND, `Model "${model}" not found on Ollama server`, { status: 404, endpoint: this.endpoint });

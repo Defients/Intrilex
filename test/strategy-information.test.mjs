@@ -9,7 +9,7 @@ import { strategyDigest, sealStrategy } from '../packages/simulation-runtime/src
 import { strategyBundle, validateStrategyBundle } from '../packages/simulation-runtime/src/strategy-evidence.mjs';
 import { validateStrategyClaim, synthesizeStrategyClaim } from '../packages/simulation-runtime/src/strategy-analysis.mjs';
 import { claimFromStrategyBranch } from '../packages/simulation-runtime/src/strategy-branch.mjs';
-import { createInformationSet, validateInformationSet, informationEquivalent, sampleInformationWorlds, validateInformationWorld, reconstructInformationWorld, prepareInformationStudy, executeInformationStudy, inferWorldEffects, inferWorldEffectsV2, informationStudyAssessment, informationResolution, approximateWorldsForEffect, claimsFromInformationStudy, validateInformationStudy, INFORMATION_INFERENCE, INFORMATION_INFERENCE_V2 } from '../packages/simulation-runtime/src/strategy-information.mjs';
+import { createInformationSet, validateInformationSet, informationEquivalent, sampleInformationWorlds, validateInformationWorld, reconstructInformationWorld, prepareInformationStudy, executeInformationStudy, inferWorldEffects, inferWorldEffectsV2, inferWorldEffectsV3, informationStudyAssessment, informationResolution, informationResolutionTable, approximateWorldsForEffect, claimsFromInformationStudy, validateInformationStudy, INFORMATION_INFERENCE, INFORMATION_INFERENCE_V3 } from '../packages/simulation-runtime/src/strategy-information.mjs';
 
 const authority={createState:createSimulationState,frame:s=>createSimulationDecisionFrame(s,256),execute:executeSimulationAction,view:strictPolicyView,validateCheckpoint};
 const identity=await evolutionIdentity();
@@ -38,7 +38,7 @@ test('unsupported actor and modules fail closed',()=>{assert.throws(()=>createIn
 test('world validation rejects changed known cards and illegal vault',()=>{const w=reconstructInformationWorld(info,{authority,seed:5,ordinal:0}),universe=Object.values(source.cards).map(c=>c.identity).sort();const bad=structuredClone(w.frame.state);[bad.cards['CORE-001'].identity,bad.cards['CORE-006'].identity]=[bad.cards['CORE-006'].identity,bad.cards['CORE-001'].identity];assert.throws(()=>validateInformationWorld(info,authority.frame(bad),authority,universe),/PROJECTION_MISMATCH/);assert.throws(()=>validateInformationWorld(info,{...w.frame,policyActions:w.frame.policyActions.slice(1)},authority,universe),/LEGAL_MISMATCH/);});
 test('rejection manifests preserve every failed ordinal without replacement',()=>{const bad=reseal(info,b=>{b.knowledge.structuralCertificate='bad';}),sample=sampleInformationWorlds(bad,{authority,count:3});assert.equal(sample.manifest.accepted,0);assert.equal(sample.manifest.rejected,3);assert.deepEqual(sample.manifest.rejections.map(r=>r.ordinal),[0,1,2]);});
 test('invalid sampler counts and seeds rejected',()=>{for(const count of [0,513,1.5])assert.throws(()=>sampleInformationWorlds(info,{authority,count}),/BUDGET/);assert.throws(()=>reconstructInformationWorld(info,{authority,seed:0,ordinal:0}),/CATALOG/);});
-test('frozen plan precedes outcomes and binds entire accepted manifest',()=>{assert.equal(prepared.plan.contract,'INFORMATION_SET_STUDY_PLAN_V1');assert.equal(prepared.plan.schemaVersion,2);assert.equal(Object.hasOwn(prepared.plan,'rows'),false);assert.equal(prepared.plan.worldManifest.accepted,4);assert.equal(prepared.plan.informationSetId,prepared.informationSet.artifactId);assert.equal(prepared.plan.fixedBudget,true);});
+test('frozen plan precedes outcomes and binds entire accepted manifest',()=>{assert.equal(prepared.plan.contract,'INFORMATION_SET_STUDY_PLAN_V1');assert.equal(prepared.plan.schemaVersion,3);assert.equal(prepared.plan.inferenceMethod,INFORMATION_INFERENCE_V3);assert.equal(Object.hasOwn(prepared.plan,'rows'),false);assert.equal(prepared.plan.worldManifest.accepted,4);assert.equal(prepared.plan.informationSetId,prepared.informationSet.artifactId);assert.equal(prepared.plan.fixedBudget,true);});
 test('requested subject binds the study question, not the recorded action',()=>{
   // The recorded action is a phase action; rank:2 is a legal opportunity
   // belonging to different candidates. A study launched from the rank:2 page
@@ -92,8 +92,8 @@ test('V2 bundles seal information artifacts and retain V1 compatibility',()=>{co
 const syntheticWorlds=sampleInformationWorlds(prepared.informationSet,{authority,count:128,seed:1337});
 const syntheticPlan=reseal(prepared.plan,p=>{p.worldManifest=syntheticWorlds.manifest;p.provenance=[event.artifactId,prepared.informationSet.artifactId,syntheticWorlds.manifest.artifactId];});
 const syntheticRows=syntheticWorlds.worlds.flatMap(w=>syntheticPlan.seeds.flatMap(seed=>syntheticPlan.actionIds.map(actionId=>({worldOrdinal:w.ordinal,worldHash:w.stateHash,seed,actionId,clean:true,score:actionId===syntheticPlan.actualActionId?0:1,disposition:'DOES_NOT_INVOLVE_SUBJECT',winner:actionId===syntheticPlan.actualActionId?'P2':'P1',terminationReason:'NORMAL_VICTORY',finalStateHash:'SYNTHETIC_TEST_FIXTURE',error:null}))));
-const synthetic=reseal(study,s=>{s.plan=syntheticPlan;s.schemaVersion=2;s.rows=syntheticRows;s.counts={hiddenWorlds:128,continuationsPerWorld:2,actionBranches:syntheticPlan.actionIds.length,plannedExecutions:syntheticRows.length,executions:syntheticRows.length,cleanExecutions:syntheticRows.length,faults:0};s.comparisons=syntheticPlan.actionIds.filter(id=>id!==syntheticPlan.actualActionId).map(actionId=>({actionId,alternativeLabel:'SYNTHETIC ACCEPTANCE FIXTURE',worldEffects:syntheticWorlds.worlds.map(w=>({ordinal:w.ordinal,effect:1})),...inferWorldEffectsV2(Array(128).fill(1),{alternatives:syntheticPlan.actionIds.length-1})}));s.assessment=informationStudyAssessment(s.comparisons);s.caveats=['SYNTHETIC ACCEPTANCE FIXTURE: engineered scores, not real strategy evidence.'];});
-test('synthetic positive controlled fixture earns Suggestive without Strong or fake hold',()=>{const result=claimsFromInformationStudy(synthetic,{identity});assert.equal(result.length,2);for(const c of result){assert.equal(c.confidence,'SUGGESTIVE');assert.equal(c.recommendation,'PREFER_ALTERNATIVE');validateStrategyClaim(c);assert.match(synthesizeStrategyClaim(c),/^Prefer .+ over/);}});
+const synthetic=reseal(study,s=>{s.plan=syntheticPlan;s.schemaVersion=3;s.rows=syntheticRows;s.counts={hiddenWorlds:128,continuationsPerWorld:2,actionBranches:syntheticPlan.actionIds.length,plannedExecutions:syntheticRows.length,executions:syntheticRows.length,cleanExecutions:syntheticRows.length,faults:0};s.comparisons=syntheticPlan.actionIds.filter(id=>id!==syntheticPlan.actualActionId).map(actionId=>({actionId,alternativeLabel:'SYNTHETIC ACCEPTANCE FIXTURE',worldEffects:syntheticWorlds.worlds.map(w=>({ordinal:w.ordinal,effect:1})),...inferWorldEffectsV3(Array(128).fill(1),{alternatives:syntheticPlan.actionIds.length-1})}));s.assessment=informationStudyAssessment(s.comparisons);s.caveats=['SYNTHETIC ACCEPTANCE FIXTURE: engineered scores, not real strategy evidence.'];});
+test('synthetic positive controlled fixture earns Suggestive without Strong or fake hold',()=>{const result=claimsFromInformationStudy(synthetic,{identity});assert.equal(result.length,synthetic.comparisons.length);for(const c of result){assert.equal(c.confidence,'SUGGESTIVE');assert.equal(c.recommendation,'PREFER_ALTERNATIVE');validateStrategyClaim(c);assert.match(synthesizeStrategyClaim(c),/^Prefer .+ over/);}});
 test('imported positive fixture cannot issue advice',()=>{for(const c of claimsFromInformationStudy(synthetic,{identity,origin:'IMPORTED_UNVERIFIED'})){assert.equal(c.confidence,'INSUFFICIENT');assert.equal(c.recommendation,'UNKNOWN');}});
 test('frozen reference and question cannot change after plan seal',async()=>{for(const change of [p=>{p.actualActionId=p.actionIds[1];},p=>{p.question.subject='rank:3';},p=>{p.optionalStopping=true;}])await assert.rejects(executeInformationStudy({...input,...prepared,plan:reseal(prepared.plan,change),continueMatch:runPolicyMatch}),/FROZEN_FIELDS/);});
 test('changed controlled claim origin cannot retain recommendation',()=>{const c=claimsFromInformationStudy(synthetic,{identity})[0];assert.throws(()=>validateStrategyClaim(reseal(c,b=>{b.origin='IMPORTED_UNVERIFIED';})),/INFORMATION_ADVICE_REJECTED/);});
@@ -109,12 +109,15 @@ test('preserve prose names the tracked card rather than calling the alternative 
 // V1.1 symmetric-inference fixtures. Engineered scores remain synthetic: they
 // exercise the symmetric gate and claim direction, never real strategy evidence.
 const localMean=v=>v.reduce((a,b)=>a+b,0)/v.length;
-function syntheticV2(scoresByAction,{worlds=64,refDisposition='DOES_NOT_INVOLVE_SUBJECT',altDispositions={},requestedSubject}={}){
+// Zero-variance .5 effects qualify under the V3 range-corrected bound only once
+// n·.45 exceeds 6·ln(3m/.05) — i.e. n>139 at 3 alternatives. 160 worlds keeps
+// the symmetric acceptance gates meaningful without inflating runtime.
+function syntheticV2(scoresByAction,{worlds=160,refDisposition='DOES_NOT_INVOLVE_SUBJECT',altDispositions={},requestedSubject}={}){
   const base=requestedSubject?prepareInformationStudy({...input,requestedSubject}):prepared,sample=sampleInformationWorlds(base.informationSet,{authority,count:worlds,seed:1337});
   const plan=reseal(base.plan,p=>{p.worldManifest=sample.manifest;p.provenance=[event.artifactId,base.informationSet.artifactId,sample.manifest.artifactId];});
   const rows=sample.worlds.flatMap(w=>plan.seeds.flatMap(seed=>plan.actionIds.map(actionId=>{const score=scoresByAction(actionId,{seed,worldOrdinal:w.ordinal,referenceId:plan.actualActionId});return {worldOrdinal:w.ordinal,worldHash:w.stateHash,seed,actionId,clean:true,score,disposition:actionId===plan.actualActionId?refDisposition:(altDispositions[actionId]??'DOES_NOT_INVOLVE_SUBJECT'),winner:score===1?'P1':score===0?'P2':'DRAW',terminationReason:'NORMAL_VICTORY',finalStateHash:'SYNTHETIC_TEST_FIXTURE',error:null};})));
-  const comparisons=plan.actionIds.filter(id=>id!==plan.actualActionId).map(actionId=>{const worldEffects=sample.worlds.map(w=>({ordinal:w.ordinal,effect:localMean(plan.seeds.map(seed=>scoresByAction(actionId,{seed,worldOrdinal:w.ordinal,referenceId:plan.actualActionId})-scoresByAction(plan.actualActionId,{seed,worldOrdinal:w.ordinal,referenceId:plan.actualActionId})))}));return {actionId,alternativeLabel:'SYNTHETIC ACCEPTANCE FIXTURE',worldEffects,...inferWorldEffectsV2(worldEffects.map(e=>e.effect),{alternatives:plan.actionIds.length-1,minimumMeaningfulEffect:plan.minimumMeaningfulEffect})};});
-  return reseal(study,s=>{s.plan=plan;s.schemaVersion=2;s.rows=rows;s.comparisons=comparisons;s.assessment=informationStudyAssessment(comparisons);s.counts={hiddenWorlds:worlds,continuationsPerWorld:plan.seeds.length,actionBranches:plan.actionIds.length,plannedExecutions:rows.length,executions:rows.length,cleanExecutions:rows.length,faults:0};s.caveats=['SYNTHETIC ACCEPTANCE FIXTURE: engineered scores, not real strategy evidence.'];});
+  const comparisons=plan.actionIds.filter(id=>id!==plan.actualActionId).map(actionId=>{const worldEffects=sample.worlds.map(w=>({ordinal:w.ordinal,effect:localMean(plan.seeds.map(seed=>scoresByAction(actionId,{seed,worldOrdinal:w.ordinal,referenceId:plan.actualActionId})-scoresByAction(plan.actualActionId,{seed,worldOrdinal:w.ordinal,referenceId:plan.actualActionId})))}));return {actionId,alternativeLabel:'SYNTHETIC ACCEPTANCE FIXTURE',worldEffects,...inferWorldEffectsV3(worldEffects.map(e=>e.effect),{alternatives:plan.actionIds.length-1,minimumMeaningfulEffect:plan.minimumMeaningfulEffect})};});
+  return reseal(study,s=>{s.plan=plan;s.schemaVersion=3;s.rows=rows;s.comparisons=comparisons;s.assessment=informationStudyAssessment(comparisons);s.counts={hiddenWorlds:worlds,continuationsPerWorld:plan.seeds.length,actionBranches:plan.actionIds.length,plannedExecutions:rows.length,executions:rows.length,cleanExecutions:rows.length,faults:0};s.caveats=['SYNTHETIC ACCEPTANCE FIXTURE: engineered scores, not real strategy evidence.'];});
 }
 test('symmetric: every alternative winning earns alternative advice, not reference praise',()=>{
   const s=syntheticV2(id=>id===prepared.plan.actualActionId?0:1);validateInformationStudy(s);assert.equal(s.assessment,'ALTERNATIVE_DOMINATES');
@@ -163,7 +166,7 @@ test('imported symmetric reference claim cannot retain advice',()=>{
   assert.equal(ref.confidence,'INSUFFICIENT');assert.equal(ref.recommendation,'UNKNOWN');validateStrategyClaim(ref);
 });
 test('historical V1 plans keep Hoeffding semantics and V1 dispositions',async()=>{
-  const v1=reseal(prepared.plan,p=>{delete p.schemaVersion;delete p.requestedSubject;delete p.referenceActionId;p.inferenceMethod=INFORMATION_INFERENCE;});
+  const v1=reseal(prepared.plan,p=>{delete p.schemaVersion;delete p.requestedSubject;delete p.referenceActionId;delete p.actionSelection;p.inferenceMethod=INFORMATION_INFERENCE;});
   const s=await executeInformationStudy({...input,plan:v1,informationSet:prepared.informationSet,continueMatch:runPolicyMatch});
   assert.equal(s.plan.inferenceMethod,INFORMATION_INFERENCE);assert.ok(!Object.hasOwn(s.plan,'requestedSubject'));
   assert.ok(s.rows.every(r=>['PLAYED_OR_COMMITTED','PRESERVED_IN_HAND','CONSUMED_OTHER_WAY','UNAVAILABLE_OTHER_WAY'].includes(r.disposition)));
@@ -191,13 +194,66 @@ test('V2 multiplicity broadens uncertainty and enforces the meaningful floor',()
   assert.throws(()=>inferWorldEffectsV2([NaN]),/EFFECTS_INVALID/);assert.throws(()=>inferWorldEffectsV2([1],{alternatives:0}),/EFFECTS_INVALID/);
 });
 test('one world has no inferential interval under V2',()=>{assert.equal(inferWorldEffectsV2([1]).interval,null);assert.equal(inferWorldEffectsV2([1]).qualifies,false);assert.equal(inferWorldEffectsV2([1]).referenceDominates,false);assert.equal(inferWorldEffectsV2([]).n,0);});
+test('V3 empirical Bernstein carries the [-1,+1] range factor on the additive term',()=>{
+  const log=Math.log(3*2/.05);
+  for(const n of [32,64,128,256,512]){const r=inferWorldEffectsV3(Array(n).fill(.1),{alternatives:2});assert.ok(r.interval[1]-r.interval[0]>=12*log/n-1e-9,`n=${n}`);assert.equal(r.method,INFORMATION_INFERENCE_V3);assert.ok(r.interval[0]<r.interval[1]);}
+  const corrected=inferWorldEffectsV3(Array(128).fill(0),{alternatives:2}),old=inferWorldEffectsV2(Array(128).fill(0),{alternatives:2});
+  assert.ok(corrected.interval[1]-corrected.interval[0]>old.interval[1]-old.interval[0],'range-corrected bound is strictly wider at identical effects');
+  assert.ok(Math.abs((corrected.interval[1]-corrected.interval[0])-2*(old.interval[1]-old.interval[0]))<1e-9,'additive term doubles at zero variance');
+});
+test('V3 zero-variance positive effects characterize, not certify, at large N',()=>{
+  assert.equal(inferWorldEffectsV3(Array(512).fill(.1),{alternatives:2}).qualifies,false);
+  assert.equal(inferWorldEffectsV3(Array(512).fill(.5),{alternatives:1}).qualifies,true);
+  assert.equal(inferWorldEffectsV3(Array(512).fill(0),{alternatives:2}).qualifies,false);
+});
+test('V3 interval scales the additive floor but not the variance term',()=>{
+  const effects=[...Array(96).fill(.2),...Array(32).fill(-.1)],log=Math.log(3*2/.05);
+  const v3=inferWorldEffectsV3(effects,{alternatives:2}),v2=inferWorldEffectsV2(effects,{alternatives:2});
+  const extra=6*log/effects.length;assert.ok(Math.abs((v3.interval[1]-v3.interval[0])-(v2.interval[1]-v2.interval[0])-extra)<1e-9,'V3 widens by exactly one range-scaled additive term');
+  const hi=inferWorldEffectsV3([...Array(64).fill(1),...Array(64).fill(-1)],{alternatives:2});
+  assert.equal(hi.heterogeneity,'VOLATILE');assert.equal(hi.qualifies,false);assert.equal(hi.referenceDominates,false);
+  assert.throws(()=>inferWorldEffectsV3([NaN]),/EFFECTS_INVALID/);assert.throws(()=>inferWorldEffectsV3([2]),/EFFECTS_INVALID/);
+});
+test('subject-aware selection freezes a use-vs-preserve contrast with auditable rationale',()=>{
+  const p=prepareInformationStudy({...input,requestedSubject:'rank:2'}),sel=p.plan.actionSelection;
+  assert.equal(sel.method,'SUBJECT_DISPOSITION_CONTRAST_V1');assert.equal(sel.requestedSubject,'rank:2');
+  assert.equal(sel.rationale[p.plan.actualActionId],'REFERENCE_RECORDED_ACTION');
+  const dispositions=sel.dispositions,legal=prepared.informationSet.legalActions.map(a=>a.actionId);
+  assert.deepEqual(Object.keys(dispositions).sort(),legal.sort());
+  assert.ok(Object.values(dispositions).includes('USES_SUBJECT')&&Object.values(dispositions).some(d=>d!=='USES_SUBJECT'),'plan must contain a real use-vs-preserve contrast');
+  assert.ok(p.plan.actionIds.includes(p.plan.actualActionId));assert.ok(p.plan.actionIds.length>=2&&p.plan.actionIds.length<=4);
+  const again=prepareInformationStudy({...input,requestedSubject:'rank:2'});assert.deepEqual(again.plan.actionIds,p.plan.actionIds,'candidate selection is deterministic');
+});
+test('explicit actionIds keep their precommitted rationale labels',()=>{
+  const ref=event.selectedActionId,alt=event.candidates.find(c=>c.actionId!==ref).actionId;
+  const p=prepareInformationStudy({...input,requestedSubject:'rank:2',actionIds:[ref,alt]});
+  assert.deepEqual(p.plan.actionIds,[ref,alt]);assert.equal(p.plan.actionSelection.rationale[alt],'EXPLICIT_PRECOMMITTED_ALTERNATIVE');
+});
+test('a subject with no use-vs-preserve contrast fails closed rather than running irrelevant work',()=>{
+  // timing:ACTION covers every legal action in the canonical P1 opening frame,
+  // so no non-using comparator can exist.
+  const subject=event.candidates.every(c=>c.subjects.includes('timing:ACTION'))?'timing:ACTION':null;
+  if(subject)assert.throws(()=>prepareInformationStudy({...input,requestedSubject:subject}),/NO_SUBJECT_ACTION_CONTRAST_AVAILABLE/);
+});
+test('frozen action selection cannot be forged after seal',async()=>{
+  await assert.rejects(executeInformationStudy({...input,...prepared,plan:reseal(prepared.plan,p=>{p.actionSelection.dispositions[p.actionIds[0]]='FORGED';}),continueMatch:runPolicyMatch}),/ACTION_SELECTION|DIGEST/);
+  await assert.rejects(executeInformationStudy({...input,...prepared,plan:reseal(prepared.plan,p=>{p.actionSelection.rationale[p.actionIds[1]]='FORGED';}),continueMatch:runPolicyMatch}),/ACTION_SELECTION|DIGEST/);
+  await assert.rejects(executeInformationStudy({...input,...prepared,plan:reseal(prepared.plan,p=>{delete p.actionSelection;}),continueMatch:runPolicyMatch}),/FROZEN_FIELDS/);
+});
 test('resolution helper reports approximate minimum resolvable effect under declared dispersion',()=>{
-  const r=informationResolution({worlds:256,alternatives:2});assert.equal(r.method,INFORMATION_INFERENCE_V2);assert.equal(r.label,'APPROXIMATE_RESOLUTION');
-  assert.ok(r.minimumResolvableEffect>.05);assert.ok(r.halfWidth>0);
+  const r=informationResolution({worlds:256,alternatives:2});assert.equal(r.method,INFORMATION_INFERENCE_V3);assert.equal(r.label,'APPROXIMATE_RESOLUTION');
+  assert.ok(r.minimumResolvableEffect>.05);assert.ok(r.expectedIntervalRadius>0);
   for(const n of [64,128,256,512])assert.ok(informationResolution({worlds:n,alternatives:2}).minimumResolvableEffect<informationResolution({worlds:n/2,alternatives:2}).minimumResolvableEffect);
   assert.equal(approximateWorldsForEffect({effect:.15,alternatives:2})>0,true);
   assert.equal(approximateWorldsForEffect({effect:.06,alternatives:2,maxWorlds:512}),null);
   assert.throws(()=>informationResolution({worlds:1}),/RESOLUTION_INVALID/);assert.throws(()=>approximateWorldsForEffect({effect:0}),/RESOLUTION_INVALID/);
+});
+test('recalibrated planning table covers the representative grid honestly',()=>{
+  const t=informationResolutionTable();assert.equal(t.method,INFORMATION_INFERENCE_V3);assert.equal(t.label,'APPROXIMATE_RESOLUTION');
+  assert.equal(t.resolution.length,5*3*3);assert.equal(t.worldsNeeded.length,5*3*3);
+  for(const row of t.resolution){assert.ok(row.expectedIntervalRadius>0);assert.ok(row.approximateDetectableEffect>.05);}
+  const worst=t.resolution.find(r=>r.worlds===512&&r.alternatives===1&&r.dispersion==='ZERO');
+  assert.ok(worst.expectedIntervalRadius<.15,'even the corrected additive floor resolves under 15pp at 512 worlds');
 });
 test('prepared plan and nested manifest are physically immutable',()=>{assert.ok(Object.isFrozen(prepared.plan));assert.ok(Object.isFrozen(prepared.plan.actionIds));assert.ok(Object.isFrozen(prepared.plan.worldManifest.worlds[0]));assert.throws(()=>prepared.plan.actionIds.push('hold'),TypeError);});
 test('mutating a transported caller plan cannot change the active frozen experiment',async()=>{const transported=structuredClone(prepared);let changed=false;const result=await executeInformationStudy({...input,...transported,continueMatch:runPolicyMatch,onProgress:()=>{if(!changed){changed=true;transported.plan.actionIds.length=1;transported.plan.seeds.length=1;}}});assert.equal(transported.plan.actionIds.length,1);assert.deepEqual(result,study);});

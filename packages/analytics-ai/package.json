@@ -16,7 +16,8 @@
     "./response-repair": "./src/response-repair.mjs",
     "./prompt-builder": "./src/prompt-builder.mjs",
     "./analysis-cache": "./src/analysis-cache.mjs",
-    "./analysis-controller": "./src/analysis-controller.mjs"
+    "./analysis-controller": "./src/analysis-controller.mjs",
+    "./strategy-interpreter": "./src/strategy-interpreter.mjs"
   },
   "dependencies": {}
 }

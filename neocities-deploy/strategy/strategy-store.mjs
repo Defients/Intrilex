@@ -1,9 +1,13 @@
 import { strategyDigest, STRATEGY_CONTRACTS, verifyStrategy, strategyFail } from '../evolution/strategy-contracts.mjs';
-import { validateStrategyEvidence, eventIndexRow, strategyScopeKey, strategyBundle, validateStrategyBundle } from '../evolution/strategy-evidence.mjs';
+import { chunkStrategyEvidence, eventIndexRow, strategyScopeKey, strategyBundle, validateStrategyBundle } from '../evolution/strategy-evidence.mjs';
 import { createStrategyAggregate, strategyEventMatches, validateStrategyClaim } from '../evolution/strategy-analysis.mjs';
 import { validateInformationSet, validateInformationStudy } from '../evolution/strategy-information.mjs';
 
-export const STRATEGY_STORAGE = Object.freeze({database:'intrilex-strategy-intelligence',version:2,maxGameBytes:8*1024*1024,maxPortableBytes:40*1024*1024,decisionPage:40});
+// Purpose-named budgets: strategyChunkBytes bounds one sealed evidence chunk
+// written to IndexedDB (a large game is split into chunk envelopes), while
+// maxPortableBytes bounds the portable import/export bundle. Neither limits
+// how much evidence a run may retain — only the size of each unit.
+export const STRATEGY_STORAGE = Object.freeze({database:'intrilex-strategy-intelligence',version:2,strategyChunkBytes:8*1024*1024,maxPortableBytes:40*1024*1024,decisionPage:40});
 const bytes=value=>new TextEncoder().encode(JSON.stringify(value)).byteLength;
 const storageError=error=>error?.name==='QuotaExceededError'?new Error('STRATEGY_STORAGE_PRESSURE: export evidence or free browser storage, then retry.'):error;
 export class StrategyStore {
@@ -59,25 +63,39 @@ export class StrategyStore {
     });
   }
   async addEvidence(evidence,replay=null,{retainEvents=true,originOverride=null}={}){
-    validateStrategyEvidence(evidence);
-    if(bytes(evidence)>STRATEGY_STORAGE.maxGameBytes)strategyFail('STRATEGY_GAME_STORAGE_BUDGET');
+    // Chunked persistence: an oversized game envelope is split into sealed
+    // chunk envelopes (same contract), so evidence is never lost to a single-
+    // blob size policy. Chunks deduplicate by artifactId on re-ingest.
+    const chunks=chunkStrategyEvidence(evidence,STRATEGY_STORAGE.strategyChunkBytes);
     if(replay && (strategyDigest({initialState:replay.initialState,commands:replay.commands})!==evidence.replayHash || bytes(replay)>STRATEGY_STORAGE.maxPortableBytes))strategyFail('STRATEGY_REPLAY_DIGEST');
-    const s=evidence.source;
-    const meta={artifactId:evidence.artifactId,...s,origin:originOverride??s.origin,fidelity:evidence.fidelity,clean:evidence.clean,eventCount:evidence.events.length,retainedEvents:retainEvents,replayHash:evidence.replayHash,bytes:bytes(evidence),subjects:[...new Set(evidence.events.flatMap(e=>e.candidates.flatMap(c=>c.subjects)))].sort(),policyIds:[...new Set(evidence.events.map(e=>e.identity.policyId))],checkpointIds:evidence.checkpoints.map(c=>c.checkpointId),agentProfileIds:[...new Set(evidence.events.map(e=>e.identity.agentProfileId).filter(Boolean))],profileHeads:[...new Set(evidence.events.map(e=>e.identity.profileHead).filter(h=>h!==null))]};
-    const rows=[{store:'evidence',key:evidence.artifactId,value:evidence},{store:'sources',key:evidence.artifactId,value:meta}];
-    // Event rows are the indexed query path; envelope preserves portable evidence.
-    const nextByActor=new Map();
-    if(retainEvents)for(const event of [...evidence.events].reverse()){
-      const row=eventIndexRow(event,evidence.artifactId,originOverride??s.origin);row.cohortKey=[s.fingerprint,s.rulesProfile,s.eraId];
-      row.cleanCohortKey=[...row.cohortKey,event.outcomes.clean?'CLEAN':'FAULT'];row.cleanMaturityKey=[...row.cleanCohortKey,event.maturity.bucket];
-      const next=nextByActor.get(event.actorId)??new Map();
-      row.subsequent=Object.fromEntries([...next].map(([subject,ordinal])=>[subject,ordinal-event.decisionOrdinal]));
-      for(const subject of event.candidates.find(c=>c.actionId===event.selectedActionId).subjects)next.set(subject,event.decisionOrdinal);
-      nextByActor.set(event.actorId,next);
-      rows.push({store:'events',key:row.eventId,value:row});
+    // Subsequent-use tracking spans the whole game, so it is computed over the
+    // parent event list before chunk assignment — a later use never loses its
+    // antecedent just because the game was split for storage.
+    const subsequentByEvent=new Map();
+    if(retainEvents){
+      const nextByActor=new Map();
+      for(const event of [...evidence.events].reverse()){
+        const next=nextByActor.get(event.actorId)??new Map();
+        subsequentByEvent.set(event.artifactId,Object.fromEntries([...next].map(([subject,ordinal])=>[subject,ordinal-event.decisionOrdinal])));
+        for(const subject of event.candidates.find(c=>c.actionId===event.selectedActionId).subjects)next.set(subject,event.decisionOrdinal);
+        nextByActor.set(event.actorId,next);
+      }
+    }
+    const rows=[];
+    for(const [index,chunk] of chunks.entries()) {
+      const s=chunk.source;
+      const meta={artifactId:chunk.artifactId,...s,origin:originOverride??s.origin,fidelity:chunk.fidelity,clean:chunk.clean,eventCount:chunk.events.length,retainedEvents:retainEvents,replayHash:chunk.replayHash,bytes:bytes(chunk),chunkOf:evidence.artifactId,chunkIndex:index,chunkCount:chunks.length,subjects:[...new Set(chunk.events.flatMap(e=>e.candidates.flatMap(c=>c.subjects)))].sort(),policyIds:[...new Set(chunk.events.map(e=>e.identity.policyId))],checkpointIds:chunk.checkpoints.map(c=>c.checkpointId),agentProfileIds:[...new Set(chunk.events.map(e=>e.identity.agentProfileId).filter(Boolean))],profileHeads:[...new Set(chunk.events.map(e=>e.identity.profileHead).filter(h=>h!==null))]};
+      rows.push({store:'evidence',key:chunk.artifactId,value:chunk},{store:'sources',key:chunk.artifactId,value:meta});
+      // Event rows are the indexed query path; envelope preserves portable evidence.
+      if(retainEvents)for(const event of chunk.events){
+        const row=eventIndexRow(event,chunk.artifactId,originOverride??s.origin);row.cohortKey=[s.fingerprint,s.rulesProfile,s.eraId];
+        row.cleanCohortKey=[...row.cohortKey,event.outcomes.clean?'CLEAN':'FAULT'];row.cleanMaturityKey=[...row.cleanCohortKey,event.maturity.bucket];
+        row.subsequent=subsequentByEvent.get(event.artifactId)??{};
+        rows.push({store:'events',key:row.eventId,value:row});
+      }
     }
     if(replay)rows.push({store:'replays',key:evidence.replayHash,value:{replayHash:evidence.replayHash,replay}});
-    await this.insert(rows);return meta;
+    await this.insert(rows);return chunks.map(c=>({artifactId:c.artifactId,chunkOf:evidence.artifactId,eventCount:c.events.length}));
   }
   async listSources(){const rows=[];await this.scan('sources',{visit:row=>rows.push(row),limit:10000});return rows.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));}
   async aggregate(scope){

@@ -4,9 +4,9 @@
 // Action IDs resolve through a private command vault.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from '../engine/browser-entry.js?v=02b75fb50abd';
-import { classifyDecisionKind, presentAction } from './action-presenter.js?v=02b75fb50abd';
-import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js?v=02b75fb50abd';
+import { hashCanonical } from '../engine/browser-entry.js?v=aa5ccc2813d1';
+import { classifyDecisionKind, presentAction } from './action-presenter.js?v=aa5ccc2813d1';
+import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js?v=aa5ccc2813d1';
 import {
   PRODUCT_VERSION,
   PLAYER_RUNTIME_VERSION,
@@ -18,9 +18,9 @@ import {
   validateSaveEnvelope,
   canMigrateSave,
   migrateSave,
-} from './save-integrity.js?v=02b75fb50abd';
-import { createPolicyRng, computePlayerStats } from './session-utils.js?v=02b75fb50abd';
-import { captureLocalDecision, captureLocalOutcome } from '../strategy/strategy-player.js?v=02b75fb50abd';
+} from './save-integrity.js?v=aa5ccc2813d1';
+import { createPolicyRng, computePlayerStats } from './session-utils.js?v=aa5ccc2813d1';
+import { captureLocalDecision, captureLocalOutcome } from '../strategy/strategy-player.js?v=aa5ccc2813d1';
 
 // Re-export for backward compatibility (other modules import from play-controller)
 export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope, canMigrateSave, migrateSave };
@@ -42,7 +42,7 @@ export const SessionState = Object.freeze({
 let _engineModule = null;
 async function engine() {
   if (!_engineModule) {
-    _engineModule = await import('../engine/browser-entry.js?v=02b75fb50abd');
+    _engineModule = await import('../engine/browser-entry.js?v=aa5ccc2813d1');
   }
   return _engineModule;
 }
@@ -50,7 +50,7 @@ async function engine() {
 let _autonomyModule = null;
 async function autonomy() {
   if (!_autonomyModule) {
-    _autonomyModule = await import('../autonomy-runtime.js?v=02b75fb50abd');
+    _autonomyModule = await import('../autonomy-runtime.js?v=aa5ccc2813d1');
   }
   return _autonomyModule;
 }
@@ -61,7 +61,7 @@ async function autonomy() {
 export const AGENT_POLICY_ID = 'weighted-heuristic-v1';
 async function admitAgentSnapshot(setup) {
   if (!setup?.agentSnapshot) return null;
-  const [{ validateSnapshot }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=02b75fb50abd'), import('../evolution/identity.mjs?v=02b75fb50abd')]);
+  const [{ validateSnapshot }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=aa5ccc2813d1'), import('../evolution/identity.mjs?v=aa5ccc2813d1')]);
   const fail = code => { throw Object.assign(new Error(code), { reasonCode: code }); };
   const snapshot = validateSnapshot(setup.agentSnapshot);
   if (setup.aiPolicyId !== AGENT_POLICY_ID || snapshot.policyId !== AGENT_POLICY_ID) fail('AGENT_POLICY_MISMATCH');
