@@ -267,7 +267,7 @@ function launch() {
 }
 function dispatch(worker,index,epoch) {
   const ordinal=view.session.claim(index); if (ordinal === null) return; const r=run();
-  worker.postMessage({type:'run-evolution-game',workerIndex:index,epoch,ordinal,retainReplay:ordinal < LAB_LIMITS.replays,run:{runId:r.runId,config:r.config,identity:r.identity,checkpoints:r.checkpoints}});
+  worker.postMessage({type:'run-evolution-game',workerIndex:index,epoch,ordinal,retainReplay:ordinal < LAB_LIMITS.replays,run:{runId:r.runId,config:r.config,identity:r.identity,checkpoints:r.checkpoints,...(r.arenaProfiles?{arenaProfiles:r.arenaProfiles}:{})}});
   view.timers.set(index,setTimeout(() => failRun(new Error(`WORKER_TIMEOUT: ordinal ${ordinal}, seed ${gamePlan(r.config,ordinal).seed}, run ${r.runId}`)),30000));
 }
 function releaseWorkers() { if (view.tick) clearInterval(view.tick); view.tick=null; for (const t of view.timers.values()) clearTimeout(t); view.timers.clear(); for (const w of view.workers) w.terminate(); view.workers=[]; }

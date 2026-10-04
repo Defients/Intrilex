@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:intrilex:STRATEGY_CLAIM_V1",
+  "type": "object",
+  "required": [
+    "contract",
+    "artifactId",
+    "schemaVersion",
+    "subject",
+    "scope",
+    "recommendation",
+    "informationScope",
+    "evidenceType",
+    "opportunityCount",
+    "selectedCount",
+    "independentStateCount",
+    "uncertainty",
+    "confidence",
+    "provenance",
+    "generatedAt",
+    "caveats",
+    "stale",
+    "invalidated"
+  ],
+  "properties": {
+    "contract": {
+      "const": "STRATEGY_CLAIM_V1"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "artifactId": {
+      "type": "string",
+      "pattern": "^SI-[a-f0-9]{64}$"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rulesProfile": {
+          "type": "string"
+        },
+        "eraId": {
+          "type": "string"
+        },
+        "filters": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "fingerprint",
+        "rulesProfile",
+        "eraId",
+        "filters"
+      ]
+    },
+    "evidenceType": {
+      "enum": [
+        "DESCRIPTIVE",
+        "ASSOCIATIONAL",
+        "COUNTERFACTUAL",
+        "REPLICATED"
+      ]
+    },
+    "confidence": {
+      "enum": [
+        "INSUFFICIENT",
+        "EXPERIMENTAL",
+        "SUGGESTIVE",
+        "STRONG",
+        "ESTABLISHED"
+      ]
+    },
+    "recommendation": {
+      "const": "UNKNOWN"
+    },
+    "informationScope": {
+      "enum": [
+        "ACTOR_AUTHORIZED",
+        "RESEARCH_ONLY"
+      ]
+    },
+    "provenance": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "generatedAt": {
+      "type": "string"
+    },
+    "caveats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "stale": {
+      "type": "boolean"
+    },
+    "invalidated": {
+      "type": "boolean"
+    },
+    "independentStateCount": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "evidenceType": {
+            "enum": [
+              "DESCRIPTIVE",
+              "ASSOCIATIONAL"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "confidence": {
+            "enum": [
+              "INSUFFICIENT",
+              "EXPERIMENTAL"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "informationScope": {
+            "const": "RESEARCH_ONLY"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "confidence": {
+            "enum": [
+              "INSUFFICIENT",
+              "EXPERIMENTAL"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,7 +1,8 @@
-import { RULES_VERSION } from './version.js?v=03a3defa2a22';
-const engineModule = import('./engine/browser-entry.js?v=03a3defa2a22');
-const autonomyModule = import('./autonomy-runtime.js?v=03a3defa2a22');
-const analyticsModule = import('./browser-analytics.js?v=03a3defa2a22');
+import { RULES_VERSION } from './version.js?v=54ccded41bff';
+const engineModule = import('./engine/browser-entry.js?v=54ccded41bff');
+const autonomyModule = import('./autonomy-runtime.js?v=54ccded41bff');
+const analyticsModule = import('./browser-analytics.js?v=54ccded41bff');
+let strategyStudyAbort=null;
 
 const fetchJson = async (url) => {
   const response = await fetch(url);
@@ -24,6 +25,22 @@ function bootstrapMeanCIInline(values, _alpha = 0.05) {
 
 self.onmessage = async (event) => {
   const { type, records, fixtureIds } = event.data ?? {};
+  if(type==='cancel-strategy-study'){strategyStudyAbort?.abort();return;}
+  if(type==='run-strategy-study'){
+    const token=event.data.plan.artifactId;
+    strategyStudyAbort=new AbortController();
+    try {
+      const auto=await autonomyModule,{IntrilexEngine}=await engineModule,{executeStrategyBranch}=await import('./evolution/strategy-branch.mjs?v=54ccded41bff'),{validateCheckpoint}=await import('./evolution/evolution-domain.mjs?v=54ccded41bff'),{LAB_IDENTITY}=await import('./evolution/identity.mjs?v=54ccded41bff'),engine=new IntrilexEngine();
+      const input=event.data;
+      const authority={createState:auto.createState,execute:(state,command)=>engine.execute(state,command),view:auto.strictView,validateCheckpoint,
+        frame:state=>{const advanced=auto.advance(state,256),actions=advanced.legalActionFrame?.actions??[];return {...advanced,policyActions:actions.map(a=>auto.actionView(a,input.event.identity.rulesProfile)),resolve:id=>actions.find(a=>a.actionId===id)?.command};}};
+      const study=await executeStrategyBranch({event:input.event,replay:input.replay,checkpoints:input.checkpoints,plan:input.plan,identity:LAB_IDENTITY,authority,
+        continueMatch:config=>auto.runBrowserPolicyMatch(config),signal:strategyStudyAbort.signal,onProgress:p=>self.postMessage({type:'strategy-progress',token,...p})});
+      self.postMessage({type:'strategy-study',token,study});
+    }catch(error){self.postMessage({type:'strategy-fault',token,error:error.message});}
+    finally{strategyStudyAbort=null;}
+    return;
+  }
   if (type === 'aggregate') {
     const result = records.reduce((acc, item) => {
       acc.replays += 1; acc.commands += item.commandCount; acc.events += item.eventCount; acc.rejected += item.rejectedCount;
@@ -67,8 +84,8 @@ self.onmessage = async (event) => {
     const { epoch, workerIndex, ordinal } = event.data;
     try {
       const { runBrowserPolicyMatch } = await autonomyModule;
-      const domain = await import('./evolution/evolution-domain.mjs?v=03a3defa2a22');
-      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=03a3defa2a22');
+      const domain = await import('./evolution/evolution-domain.mjs?v=54ccded41bff');
+      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=54ccded41bff');
       const run = event.data.run;
       domain.assertIdentity(run.identity, LAB_IDENTITY);
       domain.labConfig(run.config);
@@ -78,7 +95,7 @@ self.onmessage = async (event) => {
       const started = performance.now();
       try {
         const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds, policyStates:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? cp.policyState : null),
-          profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true, strategicTelemetryEnabled:true,strategicTrace:run.config.strategicTrace===true });
+          profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true, strategicTelemetryEnabled:true,strategicTrace:run.config.strategicTrace===true, ...(run.config.strategicTrace ? {strategyIdentities:await import('./evolution/strategy-contracts.mjs?v=54ccded41bff').then(m=>[1,2].map(seat=>m.decisionIdentity(run,plan,seat)))}:{}) });
         const record = domain.gameEvidence(summary, plan, run, summary.replay, performance.now()-started);
         const keep = event.data.retainReplay || !domain.CLEAN_REASONS.includes(record.terminationReason);
         evidence = { record, replay: keep ? summary.replay : null };
@@ -89,8 +106,8 @@ self.onmessage = async (event) => {
   }
   if (type === 'inspect-evolution-replay') {
     try {
-      const domain = await import('./evolution/evolution-domain.mjs?v=03a3defa2a22');
-      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=03a3defa2a22');
+      const domain = await import('./evolution/evolution-domain.mjs?v=54ccded41bff');
+      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=54ccded41bff');
       const runtime = await autonomyModule;
       const { IntrilexEngine, hashCanonical } = await engineModule;
       const run = domain.validateArtifact(event.data.artifact, LAB_IDENTITY);
@@ -137,7 +154,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-counterfactual') {
     try {
-      const { runCounterfactualBranch } = await import('./decision-intelligence.js?v=03a3defa2a22');
+      const { runCounterfactualBranch } = await import('./decision-intelligence.js?v=54ccded41bff');
       const result = runCounterfactualBranch(event.data.config ?? {});
       self.postMessage({ type: 'counterfactual-result', ok: true, result });
     } catch (error) { self.postMessage({ type: 'counterfactual-result', ok: false, error: error?.stack ?? String(error) }); }
@@ -145,7 +162,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-paired-counterfactual') {
     try {
-      const { runPairedCounterfactual } = await import('./decision-intelligence.js?v=03a3defa2a22');
+      const { runPairedCounterfactual } = await import('./decision-intelligence.js?v=54ccded41bff');
       const cfg = event.data.config ?? {};
       // Load the authorized replay if not already provided in config
       if (!cfg.replay && cfg.fixtureId) {
@@ -161,7 +178,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'get-legal-actions') {
     try {
-      const { getCheckpointLegalActions } = await import('./decision-intelligence.js?v=03a3defa2a22');
+      const { getCheckpointLegalActions } = await import('./decision-intelligence.js?v=54ccded41bff');
       const { replay, checkpointIndex, profileId, fixtureId, replayKind } = event.data;
       let replayObj = replay;
       if (!replayObj && fixtureId) {
@@ -177,7 +194,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-all-actions') {
     try {
-      const { getCheckpointLegalActions, runCounterfactualBranch } = await import('./decision-intelligence.js?v=03a3defa2a22');
+      const { getCheckpointLegalActions, runCounterfactualBranch } = await import('./decision-intelligence.js?v=54ccded41bff');
       const { replay, checkpointIndex, profileId, fixtureId, replayKind, rolloutCount, continuationPolicyIds, baseSeed, seatOrder, matchId } = event.data;
       let replayObj = replay;
       if (!replayObj && fixtureId) {
@@ -238,7 +255,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-diagnostics') {
     try {
-      const { diagnosePolicy } = await import('./decision-intelligence.js?v=03a3defa2a22');
+      const { diagnosePolicy } = await import('./decision-intelligence.js?v=54ccded41bff');
       const summaries = JSON.parse(event.data.summariesJson ?? '[]');
       const decisions = JSON.parse(event.data.decisionsJson ?? '[]');
       const baseline = diagnosePolicy(summaries, decisions, event.data.baselinePolicyId);

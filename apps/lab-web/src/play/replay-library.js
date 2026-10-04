@@ -6,6 +6,7 @@
 
 import { hashCanonical } from './hash.js';
 import { listReplays,   putReplay} from './persistence.js';
+import { finishLocalStrategy } from '../strategy/strategy-player.js';
 
 /**
  * Create a replay record from a completed session.
@@ -15,6 +16,8 @@ import { listReplays,   putReplay} from './persistence.js';
 export async function createReplayRecord(session) {
   const certifiedReplay = await session.createCertifiedReplay();
   const publicView = await session.createPublicReplay(certifiedReplay);
+  const {strictView}=await import('../autonomy-runtime.js');
+  session._strategyTerminalScores=Object.fromEntries(['P1','P2'].map(id=>[id,strictView(session.state,id).own.securedPoints]));
 
   const replayId = `R-${session.sessionId}`;
   const record = {
@@ -31,6 +34,7 @@ export async function createReplayRecord(session) {
     fullTurnSequence: session.state?.fullTurnSequence ?? 0,
     decisionCount: session.decisionJournal.length,
     certifiedReplay,
+    ...finishLocalStrategy(session,certifiedReplay),
     publicView,
     certifiedReplayHash: certifiedReplay.integrityHash,
     publicViewHash: publicView.publicContentHash,

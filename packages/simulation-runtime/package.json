@@ -15,7 +15,11 @@
     "./rank-counterfactual": "./src/rank-counterfactual.mjs",
     "./rank-power": "./src/rank-power.mjs",
     "./variant-registry": "./src/variant-registry.mjs",
-    "./rank-anatomy-registry": "./src/rank-anatomy-registry.mjs"
+    "./rank-anatomy-registry": "./src/rank-anatomy-registry.mjs",
+    "./strategy-contracts": "./src/strategy-contracts.mjs",
+    "./strategy-evidence": "./src/strategy-evidence.mjs",
+    "./strategy-analysis": "./src/strategy-analysis.mjs",
+    "./strategy-branch": "./src/strategy-branch.mjs"
   },
   "dependencies": {
     "@intrilex/shared": "workspace:*",

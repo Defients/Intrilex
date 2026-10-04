@@ -15,6 +15,7 @@ import {} from './integrity.js';
 import { renderRanks } from './workspaces/ranks.js';
 import { renderDiagnostics } from './workspaces/diagnostics.js';
 import { renderEvolutionLab, cleanupEvolutionLab } from './workspaces/evolution.js';
+import { renderStrategy, cleanupStrategy } from './strategy/strategy-workspace.js';
 import { renderBranches} from './workspaces/branches.js';
 import { renderForensicWorkspace, initForensicViewer, getForensicState, setCurrentFrame, renderForensicSidebar, renderForensicComparisonOverlay, renderFrameCommentary, handleForensicAction } from './forensic/forensic-viewer.mjs';
 import { frameSummary as forensicFrameSummary, branchesAtFrame as forensicBranchesAtFrame, annotationsAtFrame as forensicAnnotationsAtFrame, sortedBookmarks as forensicSortedBookmarks } from './forensic/forensic-model.mjs';
@@ -183,6 +184,7 @@ export function render() {
   if (_previousRoute === '/evolution' && r !== '/evolution') {
     try { cleanupEvolutionLab(); } catch (e) { console.warn('[render] cleanupEvolutionLab error:', e); }
   }
+  if (_previousRoute === '/strategy' && r !== '/strategy') cleanupStrategy();
   _previousRoute = r;
   // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
   // This replaces the old ad-hoc metadata restore block and ensures every
@@ -266,6 +268,7 @@ export function render() {
   renderFilters();
   stopTransientFx();
   const renderers = {
+    '/strategy': renderStrategy,
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
@@ -1745,6 +1748,7 @@ function renderWipLanding() {
         <small class="landing-brand-sub">TACTICAL PLAYING CARD GAME</small>
       </a>
       <nav class="wip-topbar-nav" aria-label="Preview navigation">
+        <a href="#/strategy" class="wip-topbar-rules-link" aria-label="Strategy Field Manual">Field Manual</a>
         <a href="#/rules" class="wip-topbar-rules-link" aria-label="Rulebook">
           <span aria-hidden="true">&sect;</span>
           <span>Rulebook</span>

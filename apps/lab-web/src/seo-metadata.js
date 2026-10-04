@@ -32,6 +32,7 @@ const ORIGIN = 'https://intrilex.cards';
 
 /** @type {Record<string, RouteMeta>} */
 const ROUTE_META = {
+  '/strategy': { title: 'Field Manual — Intrilex Strategy', description: 'Evidence-backed card timing, contextual strategy and controlled decision research.', canonicalPath: '/#/strategy', ogType: 'website' },
   // Homepage — the competitive playing card game
   '/': {
     title: 'Intrilex — Competitive Playing Card Game',

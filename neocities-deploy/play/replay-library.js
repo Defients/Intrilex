@@ -4,8 +4,9 @@
 // Supports public (sanitized) and private (full) export.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from './hash.js?v=03a3defa2a22';
-import { listReplays,   putReplay} from './persistence.js?v=03a3defa2a22';
+import { hashCanonical } from './hash.js?v=54ccded41bff';
+import { listReplays,   putReplay} from './persistence.js?v=54ccded41bff';
+import { finishLocalStrategy } from '../strategy/strategy-player.js?v=54ccded41bff';
 
 /**
  * Create a replay record from a completed session.
@@ -15,6 +16,8 @@ import { listReplays,   putReplay} from './persistence.js?v=03a3defa2a22';
 export async function createReplayRecord(session) {
   const certifiedReplay = await session.createCertifiedReplay();
   const publicView = await session.createPublicReplay(certifiedReplay);
+  const {strictView}=await import('../autonomy-runtime.js?v=54ccded41bff');
+  session._strategyTerminalScores=Object.fromEntries(['P1','P2'].map(id=>[id,strictView(session.state,id).own.securedPoints]));
 
   const replayId = `R-${session.sessionId}`;
   const record = {
@@ -31,6 +34,7 @@ export async function createReplayRecord(session) {
     fullTurnSequence: session.state?.fullTurnSequence ?? 0,
     decisionCount: session.decisionJournal.length,
     certifiedReplay,
+    ...finishLocalStrategy(session,certifiedReplay),
     publicView,
     certifiedReplayHash: certifiedReplay.integrityHash,
     publicViewHash: publicView.publicContentHash,
@@ -58,7 +62,7 @@ export async function saveReplay(record) {
  */
 export async function verifyReplayRecord(record) {
   try {
-    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=03a3defa2a22');
+    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=54ccded41bff');
     verifyCertifiedReplay(record.certifiedReplay);
     return { valid: true };
   } catch (error) {

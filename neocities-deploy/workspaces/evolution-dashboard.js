@@ -1,19 +1,19 @@
-import '../evolution/evolution-training-ui.js?v=03a3defa2a22';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=03a3defa2a22';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=03a3defa2a22';
-import { app, esc, fmt } from '../state.js?v=03a3defa2a22';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=03a3defa2a22';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=03a3defa2a22';
-import { runMatchupLab, matchupMatrix, matchupArtifact, validateMatchupArtifact, DEFAULT_MATCHUP_POLICIES } from '../evolution/matchup-lab.mjs?v=03a3defa2a22';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=03a3defa2a22';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=03a3defa2a22';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=03a3defa2a22';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=03a3defa2a22';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=03a3defa2a22';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=03a3defa2a22';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=03a3defa2a22';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=03a3defa2a22';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=03a3defa2a22';
+import '../evolution/evolution-training-ui.js?v=54ccded41bff';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=54ccded41bff';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=54ccded41bff';
+import { app, esc, fmt } from '../state.js?v=54ccded41bff';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=54ccded41bff';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=54ccded41bff';
+import { runMatchupLab, matchupMatrix, matchupArtifact, validateMatchupArtifact, DEFAULT_MATCHUP_POLICIES } from '../evolution/matchup-lab.mjs?v=54ccded41bff';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=54ccded41bff';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=54ccded41bff';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=54ccded41bff';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=54ccded41bff';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=54ccded41bff';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=54ccded41bff';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=54ccded41bff';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=54ccded41bff';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=54ccded41bff';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 const profiles = new ProfileStore(new IndexedDbBackend(), { identity: LAB_IDENTITY });
@@ -267,7 +267,7 @@ function launch() {
 }
 function dispatch(worker,index,epoch) {
   const ordinal=view.session.claim(index); if (ordinal === null) return; const r=run();
-  worker.postMessage({type:'run-evolution-game',workerIndex:index,epoch,ordinal,retainReplay:ordinal < LAB_LIMITS.replays,run:{runId:r.runId,config:r.config,identity:r.identity,checkpoints:r.checkpoints}});
+  worker.postMessage({type:'run-evolution-game',workerIndex:index,epoch,ordinal,retainReplay:ordinal < LAB_LIMITS.replays,run:{runId:r.runId,config:r.config,identity:r.identity,checkpoints:r.checkpoints,...(r.arenaProfiles?{arenaProfiles:r.arenaProfiles}:{})}});
   view.timers.set(index,setTimeout(() => failRun(new Error(`WORKER_TIMEOUT: ordinal ${ordinal}, seed ${gamePlan(r.config,ordinal).seed}, run ${r.runId}`)),30000));
 }
 function releaseWorkers() { if (view.tick) clearInterval(view.tick); view.tick=null; for (const t of view.timers.values()) clearTimeout(t); view.timers.clear(); for (const w of view.workers) w.terminate(); view.workers=[]; }

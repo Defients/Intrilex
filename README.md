@@ -14,7 +14,7 @@ The product is organized into three lanes:
 | Lane | Description | Routes |
 |------|-------------|--------|
 | **Play** | Local, ranked, tournaments, replays | `/play`, `/play/new`, `/play/academy`, `/puzzles`, `/play/replays`, `/tournaments`, `/seasons` |
-| **Learn** | Academy, puzzles, rules, card reference | `/rules`, `/play/academy`, `/puzzles`, `/cards` |
+| **Learn** | Academy, puzzles, rules, card reference, Field Manual | `/rules`, `/play/academy`, `/puzzles`, `/cards`, `/strategy` |
 | **Lab** | Watch, Caster, Evolution, mechanics, ranks, evidence, traces, branches, diagnostics | `/watch`, `/caster`, `/evolution`, `/replays`, `/history`, `/mechanics`, `/synergies`, `/ranks`, `/compare`, `/traces`, `/branches`, `/diagnostics`, `/tournament`, `/evidence`, `/intelligence` |
 
 Active Play now uses the **Homecoming rules-assisted board**: structured Action Families, exact Action Composer confirmation, board picking, visible-information suggestions, and a viewport-native battlefield. It runs through Intrilex's existing authority, AI, networking, and save contracts. See [the migration and validation guide](docs/INTRILEX_HOMECOMING.md) for architecture, checks, and retained parity fallbacks.
@@ -32,6 +32,7 @@ Active Play now uses the **Homecoming rules-assisted board**: structured Action 
 - **Puzzle ladder** — progressive puzzles with localStorage progress tracking
 - **Replay Caster** — live broadcast with Ollama commentary, theatre playback, public/omniscient viewing
 - **Evolution Lab** — local policy series, experimental heuristic training, frozen evaluation suites, replay inspection and analytical views; see [the operating guide](docs/EVOLUTION_LAB.md). Imported outcome claims remain unverified until reproduced.
+- **Strategy / FIELD MANUAL** — authorized decision evidence, maturity and opportunity-normalized timing, context and Profile/checkpoint comparisons, exact-state research branches, bounded discoveries and provenance-bound guide exports. Fresh evidence stays insufficient; hidden-state branches stay research-only. See [the operating and scientific contract](docs/STRATEGY_INTELLIGENCE.md).
 - **Decision intelligence** — per-decision traces with score decomposition and rule audit
 - **Counterfactual branch lab** — policy-conditioned estimates from command checkpoints
 - **Rank anatomy observatory** — cohort-relative power profiles, counterfactual decision value

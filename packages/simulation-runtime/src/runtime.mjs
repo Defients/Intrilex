@@ -1,5 +1,6 @@
-import { recordActionCoverage } from '@intrilex/policies/scoring';
+import { recordActionCoverage, decomposePolicyScore } from '@intrilex/policies/scoring';
 import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './strategic-telemetry.mjs';
+import { createStrategyCapture } from './strategy-contracts.mjs';
 import { chooseWeightedAction, WEIGHTED_POLICY_ID } from '../../policies/src/weighted-heuristic.mjs';
 import {
   DEFAULT_SIMULATION_PROFILE,
@@ -291,6 +292,7 @@ export function runPolicyMatch(config) {
   const captureFacts = config.telemetryEnabled !== false;
   const captureTraces = config.decisionTracesEnabled === true;
   const strategy = config.strategicTelemetryEnabled === true ? createStrategicTracker({deep:config.strategicTrace===true}) : null;
+  const fieldManual = config.strategyIdentities ? createStrategyCapture(config.strategyIdentities) : null;
   const actionCounts = {}, decisionFamilyCounts = {}, actionModeCounts = {}, decisionModeCounts = {}, responseActionCounts = {}, timingClassCounts = {}, eventTypeCounts = {}, mechanicCounts = {}, primaryMechanicCounts = {}, mechanicOpportunityCounts = {}, primaryMechanicOpportunityCounts = {};
   const rankDecisions = [];
   const semanticCounters = emptySemanticCounters();
@@ -392,6 +394,7 @@ export function runPolicyMatch(config) {
     const selectedAction = frame.policyActions.find((action) => action.actionId === selected.actionId);
     const strategicDecision = strategy ? decisionObservation({actorId,seat:seatIndex+1,decisionIndex,authorizedView,legalActions:frame.policyActions,selected:selectedAction,...(config.strategicTrace?{policyScores:selected.metadata.candidateScores}: {})}) : null;
     const command = frame.resolve(selected.actionId);
+    const strategyDraft = fieldManual?.before({actorId,seat:seatIndex+1,decisionOrdinal:decisionIndex,authorizedView,legalActions:frame.policyActions,selectedActionId:selected.actionId,policyScores:(selected.metadata.candidateScores ?? []).map(s=>({...s,decomposition:decomposePolicyScore(policy.policyId,frame.policyActions.find(a=>a.actionId===s.actionId),{actorId,authorizedView})})),replayAnchor:{commandIndex:commands.length,stateHash:authorityHashCanonical(state)}});
     const targetStackItem = state.stack?.at(-1) ?? null;
     const targetControllerId = targetStackItem?.controllerId ?? null;
     const targetStackClass = targetStackItem?.coreAuthority?.stackClass ?? null;
@@ -411,6 +414,7 @@ export function runPolicyMatch(config) {
     rankDecisions.push({ checkpointId, participantId: actorId, decisionIndex, rankAttribution, rankOpportunities: Object.values(rankOppMap), variantOpportunities: Object.values(variantOppMap), action: { family: selectedAction.family, mode: selectedAction.mode, kind: selectedAction.kind, authority: selectedAction.authority, timingClass: selectedAction.timingClass }, legalActions: frame.policyActions.map(pa => ({ actionId: pa.actionId, family: pa.family, mode: pa.mode, kind: pa.kind })) });
 
     state = result.state;
+    if(fieldManual) fieldManual.after(strategyDraft,strictPolicyView(state,actorId));
     if(strategy)strategy.capture(strategicDecision,seatOrder.map(id=>deriveSecuredPoints(state,id)));
 
     applyDecisionCounters(semanticCounters, selectedAction, frame.policyActions);
@@ -615,6 +619,7 @@ export function runPolicyMatch(config) {
   };
   const summary = { ...summaryCore, ...(strategicTelemetry?{strategicTelemetry}:{}), ...(terminal?{terminalEvidence:terminal}:{}), matchResultHash: hashCanonical(hashInput), perSeatStats:perSeat.map((p,i)=>({playerId:seatOrder[i],...p})), rankDecisions };
   const base = { summary, decisions, facts, provenance };
+  if(fieldManual) summary.strategyDecisions = fieldManual.finish({initialState,commands,finalStateHash:summary.finalStateHash,winner:summary.winner,terminationReason,finalScores,gameLength:summary.completedFullTurns});
   if (captureTraces) base.decisionTraces = decisionTraces;
   if (!config.includeReplay) return base;
   // Evolution Lab can retain a command transcript without constructing/hashing

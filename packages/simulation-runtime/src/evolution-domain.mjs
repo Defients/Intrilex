@@ -1,6 +1,7 @@
 import { hashCanonical } from '@intrilex/shared';
 import { WEIGHTED_POLICY_ID, validatePolicyState, baselinePolicyState } from '../../policies/src/weighted-heuristic.mjs';
 import { validateStrategicTelemetry } from './strategic-telemetry.mjs';
+import { validateDecisionEvent } from './strategy-contracts.mjs';
 
 /** @typedef {{schemaVersion:number, fingerprint:string, engineHash:string, policyImplementationHash:string, runtimeHash:string, engineVersion:string, rulesVersion:string}} RulesetFingerprint */
 /** @typedef {{checkpointId:string, agentId:string, lineageId:string, generation:number, parentCheckpointId:string|null, policyId:string, policyVersion:string, policyState:object, identity:RulesetFingerprint, createdAt:string}} AgentCheckpoint */
@@ -132,6 +133,7 @@ export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
     illegalActionAttempts: ['ENGINE_REJECTION', 'ACTION_ID_INVALID'].includes(summary.errorCode) || summary.terminationReason === 'ENGINE_REJECTION' ? 1 : 0,
     seatBehavior: summary.perSeatStats?.map((p,i)=>({playerId:`P${i+1}`,decisions:p.policyDecisionCount,actionCounts:p.decisionFamilyCounts ?? {},mechanicCounts:p.mechanicCounts ?? {},...(p.actionCoverage?{actionCoverage:p.actionCoverage}:{})})) ?? [],
     ...(summary.strategicTelemetry ? {strategicTelemetry:summary.strategicTelemetry} : {}),
+    ...(summary.strategyDecisions ? {strategyDecisions:summary.strategyDecisions} : {}),
     ...(summary.terminalEvidence ? {terminalEvidence:summary.terminalEvidence} : {}),
     actionCounts: summary.decisionFamilyCounts ?? {}, eventCounts: summary.eventTypeCounts ?? {},
     mechanicCounts: summary.mechanicCounts ?? {}, ruleCompliance: summary.ruleCompliance?.status ?? 'UNAVAILABLE' };
@@ -160,6 +162,14 @@ export function validateRecord(record, run) {
   if (record.decisions > LAB_LIMITS.decisions || record.commandCount > LAB_LIMITS.commands) fail('RESULT_BUDGET_EXCEEDED');
   if (record.terminationReason !== 'WORKER_FAULT' && !['initialStateHash', 'actionSequenceHash', 'finalStateHash'].every(k => digest(record[k]))) fail('INVALID_RESULT_EVIDENCE');
   if(record.strategicTelemetry!==undefined)validateStrategicTelemetry(record.strategicTelemetry,record.decisions);
+  if(record.strategyDecisions!==undefined) {
+    if(!Array.isArray(record.strategyDecisions) || record.strategyDecisions.length!==record.decisions) fail('STRATEGY_DECISION_COUNT_MISMATCH');
+    for(const [i,event] of record.strategyDecisions.entries()) {
+      validateDecisionEvent(event);
+      const s=event.seat-1;
+      if(event.decisionOrdinal!==i || event.identity.runId!==run.runId || event.identity.gameOrdinal!==record.ordinal || event.identity.derivedSeed!==record.seed || event.identity.fingerprint!==run.identity.fingerprint || event.identity.rulesProfile!==run.config.profileId || event.identity.policyId!==record.policyIds[s] || event.identity.checkpointId!==record.checkpointIds[s] || event.replayAnchor.initialStateHash!==record.initialStateHash || event.replayAnchor.actionSequenceHash!==record.actionSequenceHash || event.replayAnchor.finalStateHash!==record.finalStateHash || event.outcomes.terminalWinner!==record.winner || event.outcomes.terminationReason!==record.terminationReason) fail('STRATEGY_RECORD_MISMATCH');
+    }
+  }
   return record;
 }
 

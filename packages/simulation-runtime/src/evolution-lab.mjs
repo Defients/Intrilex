@@ -1,4 +1,5 @@
 import { runPolicyMatch } from './runtime.mjs';
+import { decisionIdentity } from './strategy-contracts.mjs';
 import { createSimulationState, createAuthorityCertifiedReplay, verifyAuthorityCertifiedReplay, authorityHashCanonical } from '@intrilex/engine-adapter';
 import { evolutionIdentity } from '../../../scripts/evolution-identity.mjs';
 import { Worker } from 'node:worker_threads';
@@ -16,7 +17,7 @@ export function runLabGame(run, ordinal) {
   try {
     const checkpoints=plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints;
     const result = runPolicyMatch({ ...plan, policyStates:checkpoints.map(cp=>cp.schemaVersion===2 ? cp.policyState : null), profileId: run.config.profileId, includeReplay: true,
-      decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, telemetryEnabled: false, strategicTelemetryEnabled:true, strategicTrace:run.config.strategicTrace===true, replayMode: 'commands' });
+      decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, telemetryEnabled: false, strategicTelemetryEnabled:true, strategicTrace:run.config.strategicTrace===true, ...(run.config.strategicTrace ? {strategyIdentities:[1,2].map(seat=>decisionIdentity(run,plan,seat))}:{}), replayMode: 'commands' });
     const perSeatStats=result.summary.participants.map(p=>{
       const decisionFamilyCounts={};
       for(const decision of result.decisions)if(decision.actorId===p.playerId)decisionFamilyCounts[decision.family]=(decisionFamilyCounts[decision.family]??0)+1;

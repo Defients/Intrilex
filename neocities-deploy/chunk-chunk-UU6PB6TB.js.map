@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../engine/canonical-json.js"],
+  "sourcesContent": ["function normalize(value) {\n    if (value === null || typeof value !== \"object\") {\n        if (typeof value === \"number\" && !Number.isFinite(value)) {\n            throw new TypeError(\"Canonical JSON cannot encode non-finite numbers\");\n        }\n        return value;\n    }\n    if (Array.isArray(value))\n        return value.map(normalize);\n    const input = value;\n    const output = {};\n    for (const key of Object.keys(input).sort()) {\n        const current = input[key];\n        if (current !== undefined)\n            output[key] = normalize(current);\n    }\n    return output;\n}\nexport function canonicalize(value) {\n    return JSON.stringify(normalize(value));\n}\nexport function canonicalClone(value) {\n    return JSON.parse(canonicalize(value));\n}\n//# sourceMappingURL=canonical-json.js.map"],
+  "mappings": "AAAA,SAASA,EAAUC,EAAO,CACtB,GAAIA,IAAU,MAAQ,OAAOA,GAAU,SAAU,CAC7C,GAAI,OAAOA,GAAU,UAAY,CAAC,OAAO,SAASA,CAAK,EACnD,MAAM,IAAI,UAAU,iDAAiD,EAEzE,OAAOA,CACX,CACA,GAAI,MAAM,QAAQA,CAAK,EACnB,OAAOA,EAAM,IAAID,CAAS,EAC9B,IAAME,EAAQD,EACRE,EAAS,CAAC,EAChB,QAAWC,KAAO,OAAO,KAAKF,CAAK,EAAE,KAAK,EAAG,CACzC,IAAMG,EAAUH,EAAME,CAAG,EACrBC,IAAY,SACZF,EAAOC,CAAG,EAAIJ,EAAUK,CAAO,EACvC,CACA,OAAOF,CACX,CACO,SAASG,EAAaL,EAAO,CAChC,OAAO,KAAK,UAAUD,EAAUC,CAAK,CAAC,CAC1C,CACO,SAASM,EAAeN,EAAO,CAClC,OAAO,KAAK,MAAMK,EAAaL,CAAK,CAAC,CACzC",
+  "names": ["normalize", "value", "input", "output", "key", "current", "canonicalize", "canonicalClone"]
+}

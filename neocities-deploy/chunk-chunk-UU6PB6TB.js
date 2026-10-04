@@ -1,0 +1,2 @@
+function r(n){if(n===null||typeof n!="object"){if(typeof n=="number"&&!Number.isFinite(n))throw new TypeError("Canonical JSON cannot encode non-finite numbers");return n}if(Array.isArray(n))return n.map(r);let t=n,o={};for(let e of Object.keys(t).sort()){let i=t[e];i!==void 0&&(o[e]=r(i))}return o}function c(n){return JSON.stringify(r(n))}function f(n){return JSON.parse(c(n))}export{c as a,f as b};
+//# sourceMappingURL=chunk-chunk-UU6PB6TB.js.map

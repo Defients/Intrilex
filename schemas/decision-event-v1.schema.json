@@ -1,0 +1,686 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:intrilex:DECISION_EVENT_V1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "DECISION_EVENT_V1"
+    },
+    "artifactId": {
+      "type": "string",
+      "pattern": "^SI-[a-f0-9]{64}$"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "informationScope": {
+      "const": "ACTOR_AUTHORIZED"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runId": {
+          "type": "string"
+        },
+        "gameOrdinal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "masterSeed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "derivedSeed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rulesProfile": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "eraId": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "policyId": {
+          "type": "string"
+        },
+        "policyVersion": {
+          "type": "string"
+        },
+        "checkpointId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "opponentPolicyId": {
+          "type": "string"
+        },
+        "opponentCheckpointId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "agentProfileId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profileHead": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "runId",
+        "gameOrdinal",
+        "masterSeed",
+        "derivedSeed",
+        "rulesProfile",
+        "fingerprint",
+        "eraId",
+        "purpose",
+        "policyId",
+        "policyVersion",
+        "checkpointId",
+        "opponentPolicyId",
+        "opponentCheckpointId",
+        "agentProfileId",
+        "profileHead"
+      ]
+    },
+    "actorId": {
+      "enum": [
+        "P1",
+        "P2"
+      ]
+    },
+    "seat": {
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "decisionOrdinal": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "type": "string"
+        },
+        "turn": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "miniTurnRoom": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ownScore": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "opponentScore": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "scoreDifferential": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ownGoalDistance": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "opponentGoalDistance": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ownGoal": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "opponentGoal": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ownHandSize": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "opponentHandCount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "deckSize": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "graveyardSize": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "exileSize": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ownBoardCards": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "opponentBoardCards": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "boardOccupancy": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "stackDepth": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "responseOpen": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "boardLocked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "exhausted": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "phase",
+        "turn",
+        "miniTurnRoom",
+        "ownScore",
+        "opponentScore",
+        "scoreDifferential",
+        "ownGoalDistance",
+        "opponentGoalDistance",
+        "ownGoal",
+        "opponentGoal",
+        "ownHandSize",
+        "opponentHandCount",
+        "deckSize",
+        "graveyardSize",
+        "exileSize",
+        "ownBoardCards",
+        "opponentBoardCards",
+        "boardOccupancy",
+        "stackDepth",
+        "responseOpen",
+        "boardLocked",
+        "exhausted"
+      ]
+    },
+    "maturity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "const": "GAME_MATURITY_V1"
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "bucket": {
+          "enum": [
+            "OPENING",
+            "EARLY",
+            "MIDGAME",
+            "LATE",
+            "ENDGAME"
+          ]
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "score": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "board": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "hand": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "depletion": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "turn": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "score",
+            "board",
+            "hand",
+            "depletion",
+            "turn"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "score",
+        "bucket",
+        "components"
+      ]
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "actionId": {
+            "type": "string"
+          },
+          "family": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "timing": {
+            "type": "string"
+          },
+          "sourceCards": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "rank": {
+                  "type": "string"
+                },
+                "suit": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "identity": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rank",
+                "suit",
+                "identity"
+              ]
+            }
+          },
+          "sourceRole": {
+            "enum": [
+              "OWN_HAND",
+              "OWN_BOARD",
+              "AUTHORIZED_MIXED_OR_REVEALED",
+              "NONE"
+            ]
+          },
+          "targetRole": {
+            "enum": [
+              "OWN_VISIBLE",
+              "PUBLIC_OTHER",
+              "OPAQUE_LEGAL_TARGET",
+              "NONE"
+            ]
+          },
+          "subjects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "features": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "immediateScore": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "immediatePoints": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "drawCount": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "draw": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "miniTurns": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "goalDelta": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "targetPointValue": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "sourcePointValue": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "pointValue": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "costCount": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "recycleCount": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "recoveryCount": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "anchorValue": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "risk": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "synergy": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "immediateScore",
+              "immediatePoints",
+              "drawCount",
+              "draw",
+              "miniTurns",
+              "goalDelta",
+              "targetPointValue",
+              "sourcePointValue",
+              "pointValue",
+              "costCount",
+              "recycleCount",
+              "recoveryCount",
+              "anchorValue",
+              "risk",
+              "synergy"
+            ]
+          },
+          "policyScore": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "decomposition": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "actionId",
+          "family",
+          "mode",
+          "timing",
+          "sourceCards",
+          "sourceRole",
+          "targetRole",
+          "subjects",
+          "features",
+          "policyScore",
+          "decomposition"
+        ]
+      }
+    },
+    "selectedActionId": {
+      "type": "string"
+    },
+    "legalSetDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "replayAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "commandIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stateHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "initialStateHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "actionSequenceHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "finalStateHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "commandIndex",
+        "stateHash",
+        "initialStateHash",
+        "actionSequenceHash",
+        "finalStateHash"
+      ]
+    },
+    "tiebreak": {
+      "type": "string"
+    },
+    "outcomes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "immediateScoreDelta": {
+          "type": "number"
+        },
+        "immediateHandDelta": {
+          "type": "number"
+        },
+        "immediateBoardDelta": {
+          "type": "number"
+        },
+        "horizonScoreDifferentialDelta": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "horizonCensored": {
+          "type": "boolean"
+        },
+        "terminalWinner": {
+          "enum": [
+            "P1",
+            "P2",
+            "DRAW",
+            "ABORTED"
+          ]
+        },
+        "terminalOwnScore": {
+          "type": "number"
+        },
+        "terminalOpponentScore": {
+          "type": "number"
+        },
+        "gameLength": {
+          "type": "number"
+        },
+        "terminationReason": {
+          "type": "string"
+        },
+        "clean": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "immediateScoreDelta",
+        "immediateHandDelta",
+        "immediateBoardDelta",
+        "horizonScoreDifferentialDelta",
+        "horizonCensored",
+        "terminalWinner",
+        "terminalOwnScore",
+        "terminalOpponentScore",
+        "gameLength",
+        "terminationReason",
+        "clean"
+      ]
+    }
+  },
+  "required": [
+    "contract",
+    "artifactId",
+    "schemaVersion",
+    "informationScope",
+    "identity",
+    "actorId",
+    "seat",
+    "decisionOrdinal",
+    "context",
+    "maturity",
+    "candidates",
+    "selectedActionId",
+    "legalSetDigest",
+    "replayAnchor",
+    "tiebreak",
+    "outcomes"
+  ]
+}

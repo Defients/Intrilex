@@ -1,11 +1,11 @@
-import { canonicalClone } from "./canonical-json.js?v=03a3defa2a22";
-import { IntrilexEngine } from "./engine.js?v=03a3defa2a22";
-import { hashCanonical } from "./hash.js?v=03a3defa2a22";
-import { evaluateProtection } from "./interactions.js?v=03a3defa2a22";
-import { compareScuttle, cardPointValue, hasOrdinaryScuttleImmunity, parseIdentity, rankDefinition } from "./ranks.js?v=03a3defa2a22";
-import { nextIndex } from "./rng.js?v=03a3defa2a22";
-import { addCard, createEmptyState, moveCard } from "./state.js?v=03a3defa2a22";
-import { assertValidState } from "./validation.js?v=03a3defa2a22";
+import { canonicalClone } from "./canonical-json.js?v=54ccded41bff";
+import { IntrilexEngine } from "./engine.js?v=54ccded41bff";
+import { hashCanonical } from "./hash.js?v=54ccded41bff";
+import { evaluateProtection } from "./interactions.js?v=54ccded41bff";
+import { compareScuttle, cardPointValue, hasOrdinaryScuttleImmunity, parseIdentity, rankDefinition } from "./ranks.js?v=54ccded41bff";
+import { nextIndex } from "./rng.js?v=54ccded41bff";
+import { addCard, createEmptyState, moveCard } from "./state.js?v=54ccded41bff";
+import { assertValidState } from "./validation.js?v=54ccded41bff";
 export const FIRST_CONTACT_AUTONOMY_BASELINE_PROFILE = Object.freeze({
     id: "first-contact-baseline",
     displayName: "First Contact Baseline — Score/Scuttle",

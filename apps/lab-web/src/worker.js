@@ -2,6 +2,7 @@ import { RULES_VERSION } from './version.js';
 const engineModule = import('./engine/browser-entry.js');
 const autonomyModule = import('./autonomy-runtime.js');
 const analyticsModule = import('./browser-analytics.js');
+let strategyStudyAbort=null;
 
 const fetchJson = async (url) => {
   const response = await fetch(url);
@@ -24,6 +25,22 @@ function bootstrapMeanCIInline(values, _alpha = 0.05) {
 
 self.onmessage = async (event) => {
   const { type, records, fixtureIds } = event.data ?? {};
+  if(type==='cancel-strategy-study'){strategyStudyAbort?.abort();return;}
+  if(type==='run-strategy-study'){
+    const token=event.data.plan.artifactId;
+    strategyStudyAbort=new AbortController();
+    try {
+      const auto=await autonomyModule,{IntrilexEngine}=await engineModule,{executeStrategyBranch}=await import('./evolution/strategy-branch.mjs'),{validateCheckpoint}=await import('./evolution/evolution-domain.mjs'),{LAB_IDENTITY}=await import('./evolution/identity.mjs'),engine=new IntrilexEngine();
+      const input=event.data;
+      const authority={createState:auto.createState,execute:(state,command)=>engine.execute(state,command),view:auto.strictView,validateCheckpoint,
+        frame:state=>{const advanced=auto.advance(state,256),actions=advanced.legalActionFrame?.actions??[];return {...advanced,policyActions:actions.map(a=>auto.actionView(a,input.event.identity.rulesProfile)),resolve:id=>actions.find(a=>a.actionId===id)?.command};}};
+      const study=await executeStrategyBranch({event:input.event,replay:input.replay,checkpoints:input.checkpoints,plan:input.plan,identity:LAB_IDENTITY,authority,
+        continueMatch:config=>auto.runBrowserPolicyMatch(config),signal:strategyStudyAbort.signal,onProgress:p=>self.postMessage({type:'strategy-progress',token,...p})});
+      self.postMessage({type:'strategy-study',token,study});
+    }catch(error){self.postMessage({type:'strategy-fault',token,error:error.message});}
+    finally{strategyStudyAbort=null;}
+    return;
+  }
   if (type === 'aggregate') {
     const result = records.reduce((acc, item) => {
       acc.replays += 1; acc.commands += item.commandCount; acc.events += item.eventCount; acc.rejected += item.rejectedCount;
@@ -78,7 +95,7 @@ self.onmessage = async (event) => {
       const started = performance.now();
       try {
         const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds, policyStates:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? cp.policyState : null),
-          profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true, strategicTelemetryEnabled:true,strategicTrace:run.config.strategicTrace===true });
+          profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true, strategicTelemetryEnabled:true,strategicTrace:run.config.strategicTrace===true, ...(run.config.strategicTrace ? {strategyIdentities:await import('./evolution/strategy-contracts.mjs').then(m=>[1,2].map(seat=>m.decisionIdentity(run,plan,seat)))}:{}) });
         const record = domain.gameEvidence(summary, plan, run, summary.replay, performance.now()-started);
         const keep = event.data.retainReplay || !domain.CLEAN_REASONS.includes(record.terminationReason);
         evidence = { record, replay: keep ? summary.replay : null };

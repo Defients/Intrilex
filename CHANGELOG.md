@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased — October 4, 2026 Strategy Intelligence / FIELD MANUAL
+
+- Added Learn → Strategy with card/timing manuals, exact-context exploration,
+  policy/checkpoint/Profile-head comparison, controlled research continuations,
+  bounded motif/regret discovery, provenance-bound guides and an evidence desk.
+- Added authorized decision capture to opt-in Node/browser Lab deep traces and
+  completed local play. Existing engine authority, deterministic action/final
+  hashes, journals, public replay exports and frozen policy behavior are retained.
+- Added canonical versioned decision, maturity, evidence, branch, claim and guide
+  artifacts, a separate indexed Strategy database and immutable portable bundles.
+  Historical eras remain separate; imported claims remain unverified archives.
+- Exact hidden-state branches are research-only. Observational usage remains
+  observational; neither produces unsupported play/hold recommendations or
+  Strong/Established strategy claims.
+- Scientific fingerprint coverage includes the new observation/analysis code.
+  Older evidence retains its original identity. See the [implementation guide](docs/STRATEGY_INTELLIGENCE.md)
+  and [validation record](docs/STRATEGY_VALIDATION.md).
+
 ## Unreleased — October 3, 2026 Evolution Lab reliability polish
 
 - Concurrent Evolution Lab storage reads and saves share one IndexedDB open.

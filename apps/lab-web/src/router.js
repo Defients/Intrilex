@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { esc } from './state.js';
+import { STRATEGY_NAMES } from '../../../packages/simulation-runtime/src/strategy-contracts.mjs';
 
 export const WORKSPACES = [
   // Play lane
@@ -14,6 +15,7 @@ export const WORKSPACES = [
   // Learn lane
   ['/rules','📖','Rules','Complete rulebook'],
   ['/cards','🃏','Cards','Card reference'],
+  [STRATEGY_NAMES.route,'◈',STRATEGY_NAMES.workspace,'Field Manual · evidence-backed strategy'],
   // Lab lane
   ['/watch','◈','Watch','Match theatre'],
   ['/caster','🎙','Caster','Live replay broadcast'],
@@ -42,6 +44,7 @@ export const WORKSPACES = [
 export const TITLES = Object.fromEntries(WORKSPACES.map(([route,,label]) => [route,label]));
 
 export const SUBTITLES = {
+  '/strategy':'Field Manual — practical strategy, timing, context and controlled evidence.',
   // Play lane
   '/play':'Game hub — local play vs AI, online Direct Duel, resume saves, and new match setup.',
   '/play/academy':'5 sequential interactive lessons covering core mechanics, responses, counters, and royal cards.',
@@ -99,7 +102,7 @@ export function renderNavigation() {
   // Account features (Profile, Achievements, Settings, Auth) are in the
   // account dropdown on the landing page. Release Notes is on the landing rail.
   const SECTIONS = [
-    { label: 'Learn', routes: ['/rules', '/cards'] },
+    { label: 'Learn', routes: ['/rules', '/cards', STRATEGY_NAMES.route] },
     { label: 'Lab', routes: ['/watch', '/caster', '/replays', '/history', '/mechanics', '/synergies', '/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/evolution', '/tournament', '/evidence', '/intelligence'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));

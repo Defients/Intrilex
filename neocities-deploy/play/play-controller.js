@@ -4,9 +4,9 @@
 // Action IDs resolve through a private command vault.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from '../engine/browser-entry.js?v=03a3defa2a22';
-import { classifyDecisionKind, presentAction } from './action-presenter.js?v=03a3defa2a22';
-import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js?v=03a3defa2a22';
+import { hashCanonical } from '../engine/browser-entry.js?v=54ccded41bff';
+import { classifyDecisionKind, presentAction } from './action-presenter.js?v=54ccded41bff';
+import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js?v=54ccded41bff';
 import {
   PRODUCT_VERSION,
   PLAYER_RUNTIME_VERSION,
@@ -18,8 +18,9 @@ import {
   validateSaveEnvelope,
   canMigrateSave,
   migrateSave,
-} from './save-integrity.js?v=03a3defa2a22';
-import { createPolicyRng, computePlayerStats } from './session-utils.js?v=03a3defa2a22';
+} from './save-integrity.js?v=54ccded41bff';
+import { createPolicyRng, computePlayerStats } from './session-utils.js?v=54ccded41bff';
+import { captureLocalDecision, captureLocalOutcome } from '../strategy/strategy-player.js?v=54ccded41bff';
 
 // Re-export for backward compatibility (other modules import from play-controller)
 export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope, canMigrateSave, migrateSave };
@@ -41,7 +42,7 @@ export const SessionState = Object.freeze({
 let _engineModule = null;
 async function engine() {
   if (!_engineModule) {
-    _engineModule = await import('../engine/browser-entry.js?v=03a3defa2a22');
+    _engineModule = await import('../engine/browser-entry.js?v=54ccded41bff');
   }
   return _engineModule;
 }
@@ -49,7 +50,7 @@ async function engine() {
 let _autonomyModule = null;
 async function autonomy() {
   if (!_autonomyModule) {
-    _autonomyModule = await import('../autonomy-runtime.js?v=03a3defa2a22');
+    _autonomyModule = await import('../autonomy-runtime.js?v=54ccded41bff');
   }
   return _autonomyModule;
 }
@@ -60,7 +61,7 @@ async function autonomy() {
 export const AGENT_POLICY_ID = 'weighted-heuristic-v1';
 async function admitAgentSnapshot(setup) {
   if (!setup?.agentSnapshot) return null;
-  const [{ validateSnapshot }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=03a3defa2a22'), import('../evolution/identity.mjs?v=03a3defa2a22')]);
+  const [{ validateSnapshot }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=54ccded41bff'), import('../evolution/identity.mjs?v=54ccded41bff')]);
   const fail = code => { throw Object.assign(new Error(code), { reasonCode: code }); };
   const snapshot = validateSnapshot(setup.agentSnapshot);
   if (setup.aiPolicyId !== AGENT_POLICY_ID || snapshot.policyId !== AGENT_POLICY_ID) fail('AGENT_POLICY_MISMATCH');
@@ -406,6 +407,7 @@ export class PlaySession {
     this.decisionJournal.push(journalEntry);
 
     // Execute through the engine
+    const strategyDraft=await captureLocalDecision(this,this.currentFrame.actorId,this.currentFrame.legalActions,submission.actionId,journalEntry.decisionIndex);
     const result = this.engine.execute(this.state, command);
     if (!result.accepted) {
       this.status = SessionState.ERROR;
@@ -423,6 +425,7 @@ export class PlaySession {
     this.recentEvents = [...this.recentEvents, ...result.events].slice(-20);
     this.state = result.state;
     this._stateRevision = this.state.revision ?? this._stateRevision + 1;
+    await captureLocalOutcome(this,strategyDraft);
 
     // Notify achievement consumer of human action events
     this._notifyAchievementConsumer(result.events);
@@ -523,6 +526,7 @@ export class PlaySession {
     this.decisionJournal.push(journalEntry);
 
     // Execute through the engine
+    const strategyDraft=await captureLocalDecision(this,actorId,legalActions,selected.actionId,journalEntry.decisionIndex);
     const result = this.engine.execute(this.state, selected.command);
     if (!result.accepted) {
       this.status = SessionState.ERROR;
@@ -540,6 +544,7 @@ export class PlaySession {
     this.recentEvents = [...this.recentEvents, ...result.events].slice(-20);
     this.state = result.state;
     this._stateRevision = this.state.revision ?? this._stateRevision + 1;
+    await captureLocalOutcome(this,strategyDraft);
 
     // Notify achievement consumer of AI action events
     this._notifyAchievementConsumer(result.events);

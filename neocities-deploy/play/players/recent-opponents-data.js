@@ -15,8 +15,8 @@
 // result so the UI can show a graceful state.
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=03a3defa2a22';
-import { getAuthState } from '../network/auth-controller.js?v=03a3defa2a22';
+import { getSupabaseClient, isSupabaseConfigured } from '../network/supabase-client.js?v=54ccded41bff';
+import { getAuthState } from '../network/auth-controller.js?v=54ccded41bff';
 import {
   toOpponentEntry,
   DEFAULT_RECENT_OPPONENTS_LIMIT,

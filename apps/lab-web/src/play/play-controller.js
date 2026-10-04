@@ -20,6 +20,7 @@ import {
   migrateSave,
 } from './save-integrity.js';
 import { createPolicyRng, computePlayerStats } from './session-utils.js';
+import { captureLocalDecision, captureLocalOutcome } from '../strategy/strategy-player.js';
 
 // Re-export for backward compatibility (other modules import from play-controller)
 export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope, canMigrateSave, migrateSave };
@@ -406,6 +407,7 @@ export class PlaySession {
     this.decisionJournal.push(journalEntry);
 
     // Execute through the engine
+    const strategyDraft=await captureLocalDecision(this,this.currentFrame.actorId,this.currentFrame.legalActions,submission.actionId,journalEntry.decisionIndex);
     const result = this.engine.execute(this.state, command);
     if (!result.accepted) {
       this.status = SessionState.ERROR;
@@ -423,6 +425,7 @@ export class PlaySession {
     this.recentEvents = [...this.recentEvents, ...result.events].slice(-20);
     this.state = result.state;
     this._stateRevision = this.state.revision ?? this._stateRevision + 1;
+    await captureLocalOutcome(this,strategyDraft);
 
     // Notify achievement consumer of human action events
     this._notifyAchievementConsumer(result.events);
@@ -523,6 +526,7 @@ export class PlaySession {
     this.decisionJournal.push(journalEntry);
 
     // Execute through the engine
+    const strategyDraft=await captureLocalDecision(this,actorId,legalActions,selected.actionId,journalEntry.decisionIndex);
     const result = this.engine.execute(this.state, selected.command);
     if (!result.accepted) {
       this.status = SessionState.ERROR;
@@ -540,6 +544,7 @@ export class PlaySession {
     this.recentEvents = [...this.recentEvents, ...result.events].slice(-20);
     this.state = result.state;
     this._stateRevision = this.state.revision ?? this._stateRevision + 1;
+    await captureLocalOutcome(this,strategyDraft);
 
     // Notify achievement consumer of AI action events
     this._notifyAchievementConsumer(result.events);
