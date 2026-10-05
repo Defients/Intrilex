@@ -191,6 +191,9 @@ export function bindBatchMatrix(root, ctx) {
     // identity dedup keeps repeated imports from creating duplicates.
     if (state.lab?.runs?.length) void Promise.allSettled(state.lab.runs.map(run => ctx.ingestRun?.(run)));
     try { state.saved = await ctx.persist.listMatrices(); } catch { state.saved = []; }
+    // Repaint here, not in callers — routed imports (main artifact input)
+    // would otherwise update state invisibly.
+    render();
   };
   const derived = () => {
     const rows = rosterRows(state, ctx.roster(), ctx.statics);

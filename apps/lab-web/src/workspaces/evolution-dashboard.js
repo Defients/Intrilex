@@ -253,14 +253,14 @@ function bind() {
   document.getElementById('evo-archive-import')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>LAB_LIMITS.importBytes)throw new Error('IMPORT_TOO_LARGE');if(active())throw new Error('Stop the current series before inspecting historical evidence.');const envelope=JSON.parse(await file.text());
     // A matrix envelope is current-contract, not historical — hand it to the
     // matrix importer instead of failing as an unreadable archive.
-    if (envelope?.format === 'intrilex-matchup-lab') { if (!view.batchApi) throw new Error('Batch Matrix panel unavailable.'); await view.batchApi.importMatrix(validateMatrixEnvelope(envelope)); return; }
+    if (envelope?.format === 'intrilex-matchup-lab') { if (!view.batchApi) throw new Error('Batch Matrix panel unavailable.'); await view.batchApi.importMatrix(validateMatrixEnvelope(envelope)); await refreshHistory(); document.getElementById('evo-batch-matrix')?.scrollIntoView({ block: 'start' }); return; }
     openArchive(envelope);}catch(error){view.error=error.message;renderEvolutionLab();}});
   document.getElementById('evo-import')?.addEventListener('change',async e => {
     if (active()) return; try { const file=e.target.files?.[0]; if (!file) return; if (file.size > LAB_LIMITS.importBytes) throw new Error('IMPORT_TOO_LARGE');
       const text=await file.text();let envelope=null;try{envelope=JSON.parse(text);}catch{/* parseLabImport reports malformed JSON */}
       // Matrix envelopes route to the Batch Matrix importer — the per-run
       // ledger validator would misreport them as corrupt artifacts.
-      if (envelope?.format === 'intrilex-matchup-lab') { if (!view.batchApi) throw new Error('Batch Matrix panel unavailable.'); await view.batchApi.importMatrix(validateMatrixEnvelope(envelope)); return; }
+      if (envelope?.format === 'intrilex-matchup-lab') { if (!view.batchApi) throw new Error('Batch Matrix panel unavailable.'); await view.batchApi.importMatrix(validateMatrixEnvelope(envelope)); await refreshHistory(); document.getElementById('evo-batch-matrix')?.scrollIntoView({ block: 'start' }); return; }
       loadRun(parseLabImport(text,LAB_IDENTITY)); await persist(); }
     catch(error) { view.error=`Import rejected: ${error.message}`; renderEvolutionLab(); }
   });
