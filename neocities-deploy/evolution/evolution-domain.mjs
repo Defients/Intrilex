@@ -121,6 +121,9 @@ export function inspectHistoricalArtifact(envelope) {
   return {...run,archival:true,evidenceOrigin:'IMPORTED_UNVERIFIED'};
 }
 
+// Retained telemetry must round-trip byte-identically through JSON artifacts —
+// drop undefined-valued properties so in-memory records equal restored ones.
+const jsonClean = (value) => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
   if (!replay || !Array.isArray(replay.commands)) fail('REPLAY_REQUIRED');
   const initialStateHash = hashCanonical(replay.initialState);
@@ -135,6 +138,23 @@ export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
     commandCount: replay.commands.length, initialStateHash, actionSequenceHash, finalStateHash: summary.finalStateHash,
     illegalActionAttempts: ['ENGINE_REJECTION', 'ACTION_ID_INVALID'].includes(summary.errorCode) || summary.terminationReason === 'ENGINE_REJECTION' ? 1 : 0,
     seatBehavior: summary.perSeatStats?.map((p,i)=>({playerId:`P${i+1}`,decisions:p.policyDecisionCount,actionCounts:p.decisionFamilyCounts ?? {},mechanicCounts:p.mechanicCounts ?? {},...(p.actionCoverage?{actionCoverage:p.actionCoverage}:{})})) ?? [],
+    // Full observatory-grade telemetry is retained when the engine summary
+    // provides it, so saved/imported records can feed Mechanics, Synergies and
+    // Ranks through the observatory bridge without re-execution.
+    ...(summary.participants ? {participants:jsonClean(summary.participants)} : {}),
+    ...(summary.rankDecisions ? {rankDecisions:jsonClean(summary.rankDecisions)} : {}),
+    ...(summary.mechanicOpportunityCounts ? {mechanicOpportunityCounts:jsonClean(summary.mechanicOpportunityCounts)} : {}),
+    ...(summary.primaryMechanicCounts ? {primaryMechanicCounts:jsonClean(summary.primaryMechanicCounts)} : {}),
+    ...(summary.primaryMechanicOpportunityCounts ? {primaryMechanicOpportunityCounts:jsonClean(summary.primaryMechanicOpportunityCounts)} : {}),
+    ...(summary.decisionFamilyCounts ? {decisionFamilyCounts:jsonClean(summary.decisionFamilyCounts)} : {}),
+    ...(summary.eventTypeCounts ? {eventTypeCounts:jsonClean(summary.eventTypeCounts)} : {}),
+    ...(summary.responseOpportunityCount!=null?{responseOpportunityCount:summary.responseOpportunityCount}:{}) ,
+    ...(summary.responsePlayedCount!=null?{responsePlayedCount:summary.responsePlayedCount}:{}) ,
+    ...(summary.responseDeclinedWithOptionsCount!=null?{responseDeclinedWithOptionsCount:summary.responseDeclinedWithOptionsCount}:{}) ,
+    ...(summary.meaningfulResponseDecisionCount!=null?{meaningfulResponseDecisionCount:summary.meaningfulResponseDecisionCount}:{}) ,
+    ...(summary.miniTurnActionCount!=null?{miniTurnActionCount:summary.miniTurnActionCount}:{}) ,
+    ...(summary.exhaustedPassActionCount!=null?{exhaustedPassActionCount:summary.exhaustedPassActionCount}:{}) ,
+    ...(summary.triggerCount!=null?{triggerCount:summary.triggerCount}:{}) ,
     ...(summary.strategicTelemetry ? {strategicTelemetry:summary.strategicTelemetry} : {}),
     ...(summary.strategyDecisions ? {strategyDecisions:summary.strategyDecisions} : {}),
     ...(summary.terminalEvidence ? {terminalEvidence:summary.terminalEvidence} : {}),

@@ -4,6 +4,7 @@
 
 import { state,   app,   esc,   short,   definitionList } from '../state.js';
 import { rerender } from '../rerender.js';
+import { labDatasetBanner } from './observatory.js';
 import { radarChart } from '../chart-toolkit.js';
 
 function displayRankGlyph(rank) {
@@ -50,7 +51,7 @@ export function renderRanks() {
       })
     : '';
 
-  app.innerHTML = `<div class="grid two"><section class="panel"><div class="panel-header"><div><h2>Rank power ladder</h2><p>Cohort-relative Observed RPI across ${ladder.length} rank ladder entries</p></div><span>${ladder.length} entries</span></div><div class="panel-body"><div class="rank-ladder">${ladder.map(entry => {
+  app.innerHTML = `<div class="grid two"><section class="panel"><div class="panel-header"><div><h2>Rank power ladder</h2><p>Cohort-relative Observed RPI across ${ladder.length} rank ladder entries</p></div><span>${ladder.length} entries</span></div><div class="panel-body">${labDatasetBanner()}<div class="rank-ladder">${ladder.map(entry => {
     const glyph = displayRankGlyph(entry.rank);
     const rpct = (entry.rpi * 100).toFixed(1);
     const isSelected = entry.rank === selectedRank;

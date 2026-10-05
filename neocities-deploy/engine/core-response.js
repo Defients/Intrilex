@@ -1,4 +1,4 @@
-import { advancedStackClass } from "./core-advanced.js?v=8e7dcad7e473";
+import { advancedStackClass } from "./core-advanced.js?v=7fd8c38b9b66";
 export const CORE_RESPONSE_AUTHORITY_PROFILE = Object.freeze({
     id: "core-response-authority",
     displayName: "Core Response Authority — Quick, Instant & Counter Stack",

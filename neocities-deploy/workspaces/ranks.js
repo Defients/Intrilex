@@ -2,9 +2,10 @@
 // workspaces/ranks.js — /ranks workspace: rank power observatory
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   app,   esc,   short,   definitionList } from '../state.js?v=8e7dcad7e473';
-import { rerender } from '../rerender.js?v=8e7dcad7e473';
-import { radarChart } from '../chart-toolkit.js?v=8e7dcad7e473';
+import { state,   app,   esc,   short,   definitionList } from '../state.js?v=7fd8c38b9b66';
+import { rerender } from '../rerender.js?v=7fd8c38b9b66';
+import { labDatasetBanner } from './observatory.js?v=7fd8c38b9b66';
+import { radarChart } from '../chart-toolkit.js?v=7fd8c38b9b66';
 
 function displayRankGlyph(rank) {
   if (rank.startsWith('10:')) {
@@ -50,7 +51,7 @@ export function renderRanks() {
       })
     : '';
 
-  app.innerHTML = `<div class="grid two"><section class="panel"><div class="panel-header"><div><h2>Rank power ladder</h2><p>Cohort-relative Observed RPI across ${ladder.length} rank ladder entries</p></div><span>${ladder.length} entries</span></div><div class="panel-body"><div class="rank-ladder">${ladder.map(entry => {
+  app.innerHTML = `<div class="grid two"><section class="panel"><div class="panel-header"><div><h2>Rank power ladder</h2><p>Cohort-relative Observed RPI across ${ladder.length} rank ladder entries</p></div><span>${ladder.length} entries</span></div><div class="panel-body">${labDatasetBanner()}<div class="rank-ladder">${ladder.map(entry => {
     const glyph = displayRankGlyph(entry.rank);
     const rpct = (entry.rpi * 100).toFixed(1);
     const isSelected = entry.rank === selectedRank;

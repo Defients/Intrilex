@@ -5,6 +5,7 @@ import { runLabSeries, evolutionIdentity } from '../packages/simulation-runtime/
 import { strategyEvidenceForGame, createStrategyEvidenceWriter, ingestRunEvidence, runProvenance } from '../packages/simulation-runtime/src/strategy-live.mjs';
 import { classifyStrategySource } from '../packages/simulation-runtime/src/strategy-evidence.mjs';
 import { StrategyStore } from '../apps/lab-web/src/strategy/strategy-store.mjs';
+import { observatorySummariesForRun, observatoryCoverage } from '../packages/simulation-runtime/src/observatory-bridge.mjs';
 
 // In-memory IndexedDB stand-in — same coverage pattern as
 // strategy-v121-correction.test.mjs, extended with the 'provenance' store.
@@ -308,4 +309,100 @@ test('imported matrix cell runs enter Lab history; foreign fingerprints fail clo
   foreign.identity = { ...foreign.identity, fingerprint: '0'.repeat(64) };
   await assert.rejects(() => lab.save(foreign));
   assert.ok(!(await lab.list()).some(h => h.runId === foreign.runId), 'foreign-fingerprint run is not admitted to the ledger');
+});
+
+// ── Observatory bridge ───────────────────────────────────────────────
+// Lab records convert into the campaign-style summary contract consumed by
+// buildObservatoryAnalytics/campaignAggregate — Mechanics, Synergies, Ranks.
+test('lab records convert to observatory summary rows with honest field mapping', () => {
+  const summaries = observatorySummariesForRun(traced);
+  assert.equal(summaries.length, traced.records.length);
+  for (const [i, s] of summaries.entries()) {
+    const record = traced.records[i];
+    assert.equal(s.matchId, record.matchId);
+    assert.equal(s.matchResultHash, record.resultHash);
+    assert.equal(s.profileId, traced.config.profileId);
+    assert.deepEqual(s.policyIds, record.policyIds);
+    assert.deepEqual(s.seatOrder, ['P1', 'P2']);
+    assert.equal(s.seatSwapped, record.swapped);
+    assert.equal(s.winner, record.winner);
+    assert.equal(s.winningSeat, record.winningSeat);
+    assert.equal(s.terminationReason, record.terminationReason);
+    assert.equal(s.completedFullTurns, record.turns);
+    assert.equal(s.policyDecisionCount, record.decisions);
+    assert.equal(s.scoreMargin, record.scoreP1 - record.scoreP2);
+    assert.equal(s.telemetryOrigin, 'EVOLUTION_LAB');
+    assert.equal(s.labRunId, traced.runId);
+    assert.equal(s.evidenceOrigin, 'LOCAL');
+    assert.equal(s.ruleCompliance.status, record.ruleCompliance);
+    assert.ok(Array.isArray(s.participants) && s.participants.length === 2);
+    for (const p of s.participants) {
+      assert.ok(p.policyId && p.profileId && s.policyIds.includes(p.policyId));
+      assert.ok(['win', 'loss', 'draw', 'abort'].includes(p.result));
+      assert.equal(p.matchId, s.matchId);
+    }
+  }
+});
+
+test('mirror-seats ordinals pair into honest AB/BA blocks', () => {
+  const summaries = observatorySummariesForRun(traced);
+  const pairs = new Map();
+  for (const s of summaries) {
+    assert.ok(s.pairedRunId, 'pairedRunId derived for mirror-seats run');
+    assert.equal(s.pairedRunId, `${traced.runId}:pair:${Math.floor(s.matchOrdinal / 2)}`);
+    pairs.set(s.pairedRunId, (pairs.get(s.pairedRunId) ?? []).concat(s));
+  }
+  for (const block of pairs.values()) {
+    assert.equal(block.length, 2, 'each block is one AB/BA pair');
+    assert.notEqual(block[0].seatSwapped, block[1].seatSwapped);
+  }
+});
+
+test('retained full telemetry reaches the summary contract for new runs', () => {
+  const summaries = observatorySummariesForRun(traced);
+  const cov = observatoryCoverage(summaries);
+  assert.equal(cov.matches, traced.records.length);
+  assert.equal(cov.withParticipants, cov.matches, 'engine participants retained in records');
+  assert.equal(cov.withRankDecisions, cov.matches, 'rankDecisions retained → Ranks panel can populate');
+  assert.ok(cov.withOpportunityCounts > 0, 'mechanic opportunity telemetry present');
+  assert.equal(cov.imported, 0);
+});
+
+test('legacy records without retained telemetry degrade honestly, never fabricate', () => {
+  const legacy = structuredClone(untraced);
+  for (const r of legacy.records) {
+    delete r.participants; delete r.rankDecisions;
+    delete r.mechanicOpportunityCounts; delete r.primaryMechanicCounts;
+    delete r.primaryMechanicOpportunityCounts; delete r.decisionFamilyCounts;
+    delete r.eventTypeCounts; delete r.responseOpportunityCount;
+    delete r.responsePlayedCount; delete r.responseDeclinedWithOptionsCount;
+    delete r.meaningfulResponseDecisionCount; delete r.miniTurnActionCount;
+    delete r.exhaustedPassActionCount; delete r.triggerCount;
+    r.evidenceOrigin = 'IMPORTED_UNVERIFIED';
+  }
+  const summaries = observatorySummariesForRun(legacy);
+  const cov = observatoryCoverage(summaries);
+  assert.equal(cov.withRankDecisions, 0, 'no rank telemetry fabricated');
+  assert.equal(cov.withOpportunityCounts, 0, 'no opportunity counts fabricated');
+  assert.equal(cov.withResponseCounters, 0);
+  assert.equal(cov.imported, cov.matches, 'provenance survives conversion');
+  // seatBehavior-derived participants still give Mechanics/Synergies real data.
+  for (const s of summaries) {
+    assert.ok(s.participants.every(p => p.mechanicCounts && typeof p.mechanicCounts === 'object'));
+    assert.ok(s.participants.every(p => Number.isFinite(p.decisionCount)));
+    const w = s.winner;
+    if (w === 'DRAW') assert.ok(s.participants.every(p => p.result === 'draw'));
+    else if (w === 'ABORTED') assert.ok(s.participants.every(p => p.result === 'abort'));
+    else assert.deepEqual(s.participants.map(p => p.result), s.participants.map(p => p.playerId === w ? 'win' : 'loss'));
+  }
+});
+
+test('coverage report distinguishes full and partial telemetry datasets', () => {
+  const full = observatoryCoverage(observatorySummariesForRun(traced));
+  assert.ok(full.withRankDecisions > 0 && full.withOpportunityCounts > 0);
+  const partial = structuredClone(traced);
+  partial.records = partial.records.map(r => { const { participants: _p, rankDecisions: _rd, mechanicOpportunityCounts: _m, primaryMechanicCounts: _pm, primaryMechanicOpportunityCounts: _pmo, ...rest } = r; return rest; });
+  const low = observatoryCoverage(observatorySummariesForRun(partial));
+  assert.equal(low.withRankDecisions, 0);
+  assert.equal(low.withOpportunityCounts, 0);
 });

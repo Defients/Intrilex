@@ -1,7 +1,7 @@
 import '../evolution/evolution-training-ui.js';
 import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js';
 import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js';
-import { app, esc, fmt } from '../state.js';
+import { app, esc, fmt, state } from '../state.js';
 import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs';
 import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs';
 import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs';
@@ -18,6 +18,7 @@ import { LAB_IDENTITY } from '../evolution/identity.mjs';
 import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs';
 import { StrategyStore } from '../strategy/strategy-store.mjs';
 import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs';
+import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 // Strategy evidence is a separate persistence concern from the monolithic
@@ -110,7 +111,8 @@ export function renderEvolutionLab() {
       <div id="evo-replay-list">${replayList()}</div><div id="evo-inspection" aria-live="polite">${inspectionHtml()}</div></section>
     <section class="evo-section" data-evo-ledger><h3>Runs & artifacts</h3><p>IndexedDB on this browser origin. Saves occur every 250 games, and on pause, stop, completion or bookmarks. Export for portable evidence.</p>
       <div class="toolbar"><button id="evo-export" class="secondary-button" ${run() ? '' : 'disabled'}>Export artifact</button>
-      <label class="secondary-button">Inspect historical artifact<input id="evo-archive-import" type="file" accept="application/json,.json" ${active() ? 'disabled' : ''}></label><label class="secondary-button">Import artifact<input id="evo-import" type="file" accept="application/json,.json" ${disabled}></label><button id="evo-history-refresh" class="ghost-button">Refresh history</button></div>
+      <label class="secondary-button">Inspect historical artifact<input id="evo-archive-import" type="file" accept="application/json,.json" ${active() ? 'disabled' : ''}></label><label class="secondary-button">Import artifact<input id="evo-import" type="file" accept="application/json,.json" ${disabled}></label><button id="evo-history-refresh" class="ghost-button">Refresh history</button><button id="evo-propagate" class="secondary-button" ${disabled}>Propagate → Observatory</button>${state.observatory?.datasetOrigin === 'EVOLUTION_LAB' ? '<button id="evo-observatory-restore" class="ghost-button">Restore certified analytics</button>' : ''}</div>
+      <p id="evo-propagate-status" role="status">${esc(view.propagateStatus ?? '')}</p>
       ${view.archive ? `<details open><summary>Read-only historical implementation</summary><p>Identity ${esc(view.archive.identity.fingerprint)}. Original checkpoint IDs and artifact content are preserved. This implementation is not admitted for current execution; imported outcomes remain unverified.</p><pre>${esc(JSON.stringify(view.archive.checkpoints,null,2))}</pre></details>` : ''}
       <p id="evo-storage" role="status">${esc(view.storageError || storageSummary())}</p><p id="evo-strategy-evidence" role="status">${esc(run()?strategyEvidenceNote():'')}</p><div id="evo-history">${historyHtml()}</div>
       <p>Rules ${LAB_IDENTITY.rulesVersion} · engine ${LAB_IDENTITY.engineVersion}<br><code class="evo-hash">${LAB_IDENTITY.fingerprint}</code></p></section>
@@ -162,6 +164,49 @@ async function refreshHistory() {
   try { view.history=await store.list(); } catch(error) { view.storageError=`Storage unavailable: ${error.message}. Results remain in memory.`; }
   if (!view.mounted) return; storageStatus();
   const el=document.getElementById('evo-history'); if (el) el.innerHTML=historyHtml();
+}
+// ── Observatory propagation ───────────────────────────────────────
+// Converts every saved ledger run (arena series, batch matrix cell runs,
+// imported artifacts) into the campaign-style summary contract and rebuilds
+// the Observatory dataset over it. Replaces the certified corpus for the
+// session — cohorts are never mixed — and is reversible via bootState.
+async function propagateToObservatory() {
+  const rows = await store.list();
+  const runs = [];
+  let skipped = 0, historical = 0;
+  for (const row of rows) {
+    // loadForInspection admits foreign-fingerprint artifacts under their own
+    // identity — propagated summaries carry evidenceOrigin/fingerprint either way.
+    try { const entry = await store.loadForInspection(row.runId); runs.push(entry.run); if (entry.historical) historical += 1; }
+    catch { skipped += 1; }
+  }
+  const summaries = [...new Map(runs.flatMap(observatorySummariesForRun).map(s => [s.matchId, s])).values()];
+  if (!summaries.length) { view.propagateStatus = 'No saved lab runs to propagate — run, save or import evidence first.'; renderEvolutionLab(); return; }
+  try {
+    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js');
+    const aggregate = campaignAggregate(summaries, { profileId: null });
+    const obs = buildObservatoryAnalytics({ summaries, aggregate });
+    state.observatory = { ...obs, summaries, datasetOrigin: 'EVOLUTION_LAB' };
+    state.aggregate = aggregate;
+    state.rankPower = obs.rankPower ?? null;
+    state.swapMatrix = obs.swapMatrix ?? null;
+    state.variantAnalytics = obs.variantAnalytics ?? null;
+    const cov = observatoryCoverage(summaries);
+    view.propagateStatus = `Propagated ${summaries.length} games from ${runs.length} run(s)${cov.imported ? ` (${cov.imported} imported)` : ''}${historical ? ` · ${historical} historical-fingerprint run(s)` : ''}${skipped ? ` · ${skipped} run(s) skipped — unreadable` : ''}. Telemetry coverage: ${cov.withRankDecisions}/${cov.matches} rank decisions · ${cov.withOpportunityCounts}/${cov.matches} opportunity counts. Session-scoped — reload or restore returns the certified dataset.`;
+  } catch (error) { view.propagateStatus = `Propagation failed: ${error.message}`; }
+  renderEvolutionLab();
+}
+function restoreCertifiedObservatory() {
+  const boot = state.bootState;
+  if (boot?.observatory) {
+    state.observatory = structuredClone(boot.observatory);
+    state.aggregate = structuredClone(boot.aggregate);
+    state.rankPower = structuredClone(boot.rankPower);
+    state.swapMatrix = structuredClone(boot.swapMatrix);
+    state.variantAnalytics = structuredClone(boot.variantAnalytics);
+  }
+  view.propagateStatus = 'Certified observatory dataset restored.';
+  renderEvolutionLab();
 }
 // Analysis indexing is reported only from the writer's real counters —
 // never implied. "Registered" means committed to the analysis evidence store.
@@ -249,6 +294,7 @@ function bind() {
   click('evo-pause',pause); click('evo-resume',launch); click('evo-stop',stop);
   click('evo-reset',() => { if (!active()) { release(); view.session=null; view.agg=createSeriesAggregator(); view.samples=[]; view.elapsed=0; view.error=''; view.inspection=null; view.strategyWriter=null; view.strategyStats=null; renderEvolutionLab(); } });
   click('evo-history-refresh',refreshHistory);
+  click('evo-propagate',propagateToObservatory); click('evo-observatory-restore',restoreCertifiedObservatory);
   click('evo-export',() => { if (!run()) return; const copy=structuredClone(run()); if(!view.archive)copy.elapsedMs=elapsed(); const url=URL.createObjectURL(new Blob([JSON.stringify(view.archiveEnvelope ?? artifactEnvelope(copy))],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download=`${copy.runId}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000); });
   document.getElementById('evo-archive-import')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>LAB_LIMITS.importBytes)throw new Error('IMPORT_TOO_LARGE');if(active())throw new Error('Stop the current series before inspecting historical evidence.');const envelope=JSON.parse(await file.text());
     // A matrix envelope is current-contract, not historical — hand it to the
