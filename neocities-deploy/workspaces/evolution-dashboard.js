@@ -1,23 +1,23 @@
-import '../evolution/evolution-training-ui.js?v=0b47cb7fa0fe';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=0b47cb7fa0fe';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=0b47cb7fa0fe';
-import { app, esc, fmt } from '../state.js?v=0b47cb7fa0fe';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=0b47cb7fa0fe';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=0b47cb7fa0fe';
-import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=0b47cb7fa0fe';
-import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=0b47cb7fa0fe';
-import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=0b47cb7fa0fe';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=0b47cb7fa0fe';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=0b47cb7fa0fe';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=0b47cb7fa0fe';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=0b47cb7fa0fe';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=0b47cb7fa0fe';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=0b47cb7fa0fe';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=0b47cb7fa0fe';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=0b47cb7fa0fe';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=0b47cb7fa0fe';
-import { StrategyStore } from '../strategy/strategy-store.mjs?v=0b47cb7fa0fe';
-import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=0b47cb7fa0fe';
+import '../evolution/evolution-training-ui.js?v=ab635c0cbff0';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=ab635c0cbff0';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=ab635c0cbff0';
+import { app, esc, fmt } from '../state.js?v=ab635c0cbff0';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=ab635c0cbff0';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=ab635c0cbff0';
+import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=ab635c0cbff0';
+import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=ab635c0cbff0';
+import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=ab635c0cbff0';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=ab635c0cbff0';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=ab635c0cbff0';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=ab635c0cbff0';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=ab635c0cbff0';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=ab635c0cbff0';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=ab635c0cbff0';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=ab635c0cbff0';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=ab635c0cbff0';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=ab635c0cbff0';
+import { StrategyStore } from '../strategy/strategy-store.mjs?v=ab635c0cbff0';
+import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=ab635c0cbff0';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 // Strategy evidence is a separate persistence concern from the monolithic
@@ -61,7 +61,7 @@ async function refreshProfiles() {
       const select = document.getElementById(id);
       if (select) select.innerHTML = arenaOptions(select.value, rules);
     }
-    view.batchRender?.render();
+    view.batchApi?.render();
     text('evo-profile-status', `${roster.length} Custom Profile${roster.length === 1 ? '' : 's'} available on this browser origin. Arena measures only; it never trains or promotes Profiles.`);
   } catch (error) {
     if (view.mounted && request === rosterRequest) text('evo-profile-status', `Profile storage unavailable: ${error.message}. Static policies remain available.`);
@@ -235,7 +235,7 @@ function bind() {
   document.getElementById('evo-profiles-refresh')?.addEventListener('click',refreshProfiles);
   document.getElementById('evo-profile')?.addEventListener('change',refreshProfiles);
   document.querySelector('[data-testid="evolution-lab"]')?.addEventListener('click',event=>{if(event.target.closest('[data-evo-surface="arena"]'))refreshProfiles();});
-  view.batchRender = bindBatchMatrix(document.getElementById('evo-batch-matrix'), batchContext());
+  view.batchApi = bindBatchMatrix(document.getElementById('evo-batch-matrix'), batchContext());
   document.getElementById('evo-chart-apply')?.addEventListener('click',()=>{
     const from=Number(document.getElementById('evo-chart-from').value),to=Number(document.getElementById('evo-chart-to').value);
     if(!Number.isInteger(from)||!Number.isInteger(to)||from<1||to>10000||from>to){text('evo-chart-filter-error','Choose an ordered game range between 1 and 10000.');return;}
@@ -250,9 +250,18 @@ function bind() {
   click('evo-reset',() => { if (!active()) { release(); view.session=null; view.agg=createSeriesAggregator(); view.samples=[]; view.elapsed=0; view.error=''; view.inspection=null; view.strategyWriter=null; view.strategyStats=null; renderEvolutionLab(); } });
   click('evo-history-refresh',refreshHistory);
   click('evo-export',() => { if (!run()) return; const copy=structuredClone(run()); if(!view.archive)copy.elapsedMs=elapsed(); const url=URL.createObjectURL(new Blob([JSON.stringify(view.archiveEnvelope ?? artifactEnvelope(copy))],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download=`${copy.runId}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000); });
-  document.getElementById('evo-archive-import')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>LAB_LIMITS.importBytes)throw new Error('IMPORT_TOO_LARGE');if(active())throw new Error('Stop the current series before inspecting historical evidence.');openArchive(JSON.parse(await file.text()));}catch(error){view.error=error.message;renderEvolutionLab();}});
+  document.getElementById('evo-archive-import')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>LAB_LIMITS.importBytes)throw new Error('IMPORT_TOO_LARGE');if(active())throw new Error('Stop the current series before inspecting historical evidence.');const envelope=JSON.parse(await file.text());
+    // A matrix envelope is current-contract, not historical — hand it to the
+    // matrix importer instead of failing as an unreadable archive.
+    if (envelope?.format === 'intrilex-matchup-lab') { if (!view.batchApi) throw new Error('Batch Matrix panel unavailable.'); await view.batchApi.importMatrix(validateMatrixEnvelope(envelope)); return; }
+    openArchive(envelope);}catch(error){view.error=error.message;renderEvolutionLab();}});
   document.getElementById('evo-import')?.addEventListener('change',async e => {
-    if (active()) return; try { const file=e.target.files?.[0]; if (!file) return; if (file.size > LAB_LIMITS.importBytes) throw new Error('IMPORT_TOO_LARGE'); loadRun(parseLabImport(await file.text(),LAB_IDENTITY)); await persist(); }
+    if (active()) return; try { const file=e.target.files?.[0]; if (!file) return; if (file.size > LAB_LIMITS.importBytes) throw new Error('IMPORT_TOO_LARGE');
+      const text=await file.text();let envelope=null;try{envelope=JSON.parse(text);}catch{/* parseLabImport reports malformed JSON */}
+      // Matrix envelopes route to the Batch Matrix importer — the per-run
+      // ledger validator would misreport them as corrupt artifacts.
+      if (envelope?.format === 'intrilex-matchup-lab') { if (!view.batchApi) throw new Error('Batch Matrix panel unavailable.'); await view.batchApi.importMatrix(validateMatrixEnvelope(envelope)); return; }
+      loadRun(parseLabImport(text,LAB_IDENTITY)); await persist(); }
     catch(error) { view.error=`Import rejected: ${error.message}`; renderEvolutionLab(); }
   });
   document.getElementById('evo-replay-list')?.addEventListener('click',e => {

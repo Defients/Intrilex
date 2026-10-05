@@ -1,11 +1,11 @@
-import { canonicalClone } from "./canonical-json.js?v=0b47cb7fa0fe";
-import { applyTap, hasAegis, processFoundationActionRestriction } from "./lifecycle.js?v=0b47cb7fa0fe";
-import { evaluateProtection, revalidateAttachments } from "./interactions.js?v=0b47cb7fa0fe";
-import { hashCanonical } from "./hash.js?v=0b47cb7fa0fe";
-import { exhaustedWinner } from "./phase8.js?v=0b47cb7fa0fe";
-import { cardPointValue, compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, rankDefinition } from "./ranks.js?v=0b47cb7fa0fe";
-import { nextIndex } from "./rng.js?v=0b47cb7fa0fe";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=0b47cb7fa0fe";
+import { canonicalClone } from "./canonical-json.js?v=ab635c0cbff0";
+import { applyTap, hasAegis, processFoundationActionRestriction } from "./lifecycle.js?v=ab635c0cbff0";
+import { evaluateProtection, revalidateAttachments } from "./interactions.js?v=ab635c0cbff0";
+import { hashCanonical } from "./hash.js?v=ab635c0cbff0";
+import { exhaustedWinner } from "./phase8.js?v=ab635c0cbff0";
+import { cardPointValue, compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, rankDefinition } from "./ranks.js?v=ab635c0cbff0";
+import { nextIndex } from "./rng.js?v=ab635c0cbff0";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=ab635c0cbff0";
 export const FIRST_CONTACT_PROFILE = Object.freeze({
     id: "first-contact",
     goal: 15,

@@ -158,6 +158,40 @@ export function bindBatchMatrix(root, ctx) {
     return state.queue;
   };
   const loader = id => ctx.persist.loadRun(id).catch(error => /NOT_FOUND/.test(error.message) ? null : Promise.reject(error));
+  /** Admits one validated matrix envelope (artifact or manifest): inspects
+   * it, persists what the local ledger accepts and registers constituent
+   * games with the analysis index. Sealed identity dedup keeps repeated
+   * imports exactly-once. Throws on rejection — callers surface the error. */
+  const importMatrix = async parsed => {
+    if (parsed.schemaVersion === 1) { state.v1 = parsed; state.lab = null; return; }
+    if (parsed.runRefs) {
+      state.lab = await fns.rehydrateBatchMatrix(parsed, loader); state.v1 = null;
+      // Persist the manifest only when every referenced run resolved
+      // locally — a regenerated manifest must not drop unknown cells.
+      if (state.lab.runs.length === parsed.runRefs.length) await ctx.persist.saveMatrix(state.lab);
+      state.progressText = `Imported matrix manifest · ${fmt(state.lab.runs.length)} / ${fmt(parsed.runRefs.length)} cell run(s) resolved from local storage${state.lab.runs.length === parsed.runRefs.length ? ' · matrix saved to Lab history' : ' · unresolved cells remain pending'}`;
+    } else {
+      state.lab = parsed; state.v1 = null;
+      // Mirror the single-artifact import: admissible constituent runs
+      // enter the run ledger and Lab history. Runs carrying a different
+      // implementation fingerprint fail validateArtifact closed, so they
+      // reach the analysis index only (marked IMPORTED_UNVERIFIED).
+      let ledgered = 0, skipped = 0;
+      for (const run of state.lab.runs) {
+        run.evidenceOrigin ??= 'IMPORTED_UNVERIFIED';
+        if (run.identity?.fingerprint !== ctx.identity.fingerprint) { skipped++; continue; }
+        try { await ctx.persist.saveRun(run); ledgered++; } catch { skipped++; }
+      }
+      // The manifest is persisted only when every cell landed — a partial
+      // manifest would let Resume fabricate replacement cells.
+      if (!skipped) await ctx.persist.saveMatrix(state.lab);
+      state.progressText = `Imported matrix · ${fmt(ledgered)} cell run(s) added to Lab history${skipped ? ` · ${fmt(skipped)} run(s) hold a different implementation fingerprint — analysis index only` : ''}`;
+    }
+    // Register imported constituent games with the analysis index; sealed
+    // identity dedup keeps repeated imports from creating duplicates.
+    if (state.lab?.runs?.length) void Promise.allSettled(state.lab.runs.map(run => ctx.ingestRun?.(run)));
+    try { state.saved = await ctx.persist.listMatrices(); } catch { state.saved = []; }
+  };
   const derived = () => {
     const rows = rosterRows(state, ctx.roster(), ctx.statics);
     const selected = rows.filter(r => r.selected);
@@ -219,14 +253,8 @@ export function bindBatchMatrix(root, ctx) {
     (async () => {
       try {
         if (file.size > ctx.importLimit) throw new Error('MATRIX_IMPORT_TOO_LARGE');
-        const parsed = fns.validateMatrixEnvelope(JSON.parse(await file.text()));
-        if (parsed.schemaVersion === 1) { state.v1 = parsed; state.lab = null; }
-        else if (parsed.runRefs) { state.lab = await fns.rehydrateBatchMatrix(parsed, loader); state.v1 = null; }
-        else { state.lab = parsed; state.v1 = null; for (const run of state.lab.runs) run.evidenceOrigin ??= 'IMPORTED_UNVERIFIED'; }
+        await importMatrix(fns.validateMatrixEnvelope(JSON.parse(await file.text())));
         state.error = '';
-        // Register imported constituent games with the analysis index; sealed
-        // identity dedup keeps repeated imports from creating duplicates.
-        if (state.lab?.runs?.length) void Promise.allSettled(state.lab.runs.map(run => ctx.ingestRun?.(run)));
       } catch (error) { state.error = `Matrix import rejected: ${error.message}`; }
       render();
     })();
@@ -264,5 +292,5 @@ export function bindBatchMatrix(root, ctx) {
     void ctx.persist.listMatrices?.().then(list => { if (state.saved == null) { state.saved = list ?? []; render(); } }).catch(() => { state.saved = []; });
   }
   render();
-  return { render };
+  return { render, importMatrix };
 }

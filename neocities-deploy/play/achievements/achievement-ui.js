@@ -4,8 +4,8 @@
 // Consumes the canonical catalog — no duplicate definitions.
 // ═══════════════════════════════════════════════════════════════
 
-import { getAchievementRuntime } from './achievement-runtime.js?v=0b47cb7fa0fe';
-import { getCatalog, RARITY, CATEGORY, RARITY_SYMBOL } from '../../achievements/index.mjs?v=0b47cb7fa0fe';
+import { getAchievementRuntime } from './achievement-runtime.js?v=ab635c0cbff0';
+import { getCatalog, RARITY, CATEGORY, RARITY_SYMBOL } from '../../achievements/index.mjs?v=ab635c0cbff0';
 
 const CATEGORY_LABELS = {
   FIRST_STEPS: 'First Steps',

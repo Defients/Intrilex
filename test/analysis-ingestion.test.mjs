@@ -43,7 +43,9 @@ function memoryIdbFactory() {
         count(range) { const r = fakeRequest(); queueMicrotask(() => { r.result = [...s.data.values()].filter(row => matchesIndex(row, spec, range?.__only)).length; r.onsuccess?.(); }); return r; },
         openCursor(range) { const rows = [...s.data.values()].filter(row => matchesIndex(row, spec, range?.__only)); return cursorReq(fakeRequest(), rows); } }; },
       get(key) { const r = fakeRequest(); queueMicrotask(() => { r.result = s.data.get(key); r.onsuccess?.(); }); return r; },
+      getAll() { const r = fakeRequest(); queueMicrotask(() => { r.result = [...s.data.values()]; r.onsuccess?.(); }); return r; },
       add(value) { const r = fakeRequest(); queueMicrotask(() => { s.data.set(value[s.keyPath], value); r.onsuccess?.(); }); return r; },
+      put(value) { const r = fakeRequest(); queueMicrotask(() => { s.data.set(value[s.keyPath], value); r.onsuccess?.(); }); return r; },
       delete(key) { const r = fakeRequest(); queueMicrotask(() => { s.data.delete(key); r.onsuccess?.(); }); return r; },
       openCursor(range) { const rows = [...s.data.values()].filter(row => range === undefined || keyEq(row[s.keyPath], range.__only)); return cursorReq(fakeRequest(), rows); }
     };
@@ -285,4 +287,25 @@ test('indexing failure is reported without invalidating the run', async () => {
   const retry = await ingestRunEvidence(store, traced);
   assert.equal(retry.failed, 0);
   assert.equal((await store.listSources()).length, traced.records.length);
+});
+
+// ── Lab ledger on import ───────────────────────────────────────────────
+// Mirrors the matrix import handler: admissible constituent runs persist to
+// the run ledger (Lab history); foreign-fingerprint runs fail closed and stay
+// analysis-index only.
+test('imported matrix cell runs enter Lab history; foreign fingerprints fail closed', async () => {
+  const { EvolutionStore } = await import('../apps/lab-web/dist/evolution/evolution-store.mjs');
+  const lab = new EvolutionStore(identity, memoryIdbFactory());
+  const cellRun = structuredClone(untraced);
+  cellRun.matrixCell = { matrixId: 'MX-deadbeef01', seatA: 'P-alpha', seatB: 'P-beta' };
+  cellRun.evidenceOrigin = 'IMPORTED_UNVERIFIED';
+  await lab.save(cellRun);
+  assert.ok((await lab.list()).some(h => h.runId === cellRun.runId), 'imported cell run appears in Lab history');
+  await lab.save(cellRun);
+  assert.equal((await lab.list()).filter(h => h.runId === cellRun.runId).length, 1, 're-import stays one row');
+  const foreign = structuredClone(untraced);
+  foreign.runId = `EL-${'f'.repeat(24)}`;
+  foreign.identity = { ...foreign.identity, fingerprint: '0'.repeat(64) };
+  await assert.rejects(() => lab.save(foreign));
+  assert.ok(!(await lab.list()).some(h => h.runId === foreign.runId), 'foreign-fingerprint run is not admitted to the ledger');
 });

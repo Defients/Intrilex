@@ -1,7 +1,7 @@
-import { canonicalClone } from "./canonical-json.js?v=0b47cb7fa0fe";
-import { hasAegis } from "./lifecycle.js?v=0b47cb7fa0fe";
-import { compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, rankDefinition } from "./ranks.js?v=0b47cb7fa0fe";
-import { moveCard } from "./state.js?v=0b47cb7fa0fe";
+import { canonicalClone } from "./canonical-json.js?v=ab635c0cbff0";
+import { hasAegis } from "./lifecycle.js?v=ab635c0cbff0";
+import { compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, rankDefinition } from "./ranks.js?v=ab635c0cbff0";
+import { moveCard } from "./state.js?v=ab635c0cbff0";
 function fail(code, message, details) {
     return details === undefined ? { ok: false, code, message } : { ok: false, code, message, details };
 }
