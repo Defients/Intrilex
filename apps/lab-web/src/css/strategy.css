@@ -45,6 +45,7 @@
 .si-nerd pre,.si-guide { white-space:pre-wrap; overflow-wrap:anywhere; max-height:520px; overflow:auto; padding:16px; background:#0d1712; border-radius:8px; color:#b6cbbc; font:12px/1.7 monospace; }
 .si-status { margin:16px 0; color:var(--si-soft); }
 .si-warning { border-left:3px solid #edc778; background:#322b1b; padding:14px 18px; color:#f1d89f; }
+.si-note { border-left:3px solid var(--si-accent); background:#182019; padding:10px 14px; color:var(--si-soft); }
 .si-error { padding:16px; border:1px solid #ba6c6c; background:#3a2323; overflow-wrap:anywhere; }
 .si-source code,.si-study code { overflow-wrap:anywhere; }
 .si-study,.si-source { border-top:1px solid var(--si-line); padding:14px 0; }

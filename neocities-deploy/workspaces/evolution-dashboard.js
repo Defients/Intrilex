@@ -1,28 +1,34 @@
-import '../evolution/evolution-training-ui.js?v=aa5ccc2813d1';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=aa5ccc2813d1';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=aa5ccc2813d1';
-import { app, esc, fmt } from '../state.js?v=aa5ccc2813d1';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=aa5ccc2813d1';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=aa5ccc2813d1';
-import { runMatchupLab, matchupMatrix, matchupArtifact, validateMatchupArtifact, DEFAULT_MATCHUP_POLICIES } from '../evolution/matchup-lab.mjs?v=aa5ccc2813d1';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=aa5ccc2813d1';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=aa5ccc2813d1';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=aa5ccc2813d1';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=aa5ccc2813d1';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=aa5ccc2813d1';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=aa5ccc2813d1';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=aa5ccc2813d1';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=aa5ccc2813d1';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=aa5ccc2813d1';
+import '../evolution/evolution-training-ui.js?v=e1685673b001';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=e1685673b001';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=e1685673b001';
+import { app, esc, fmt } from '../state.js?v=e1685673b001';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=e1685673b001';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=e1685673b001';
+import { runMatchupLab, matchupMatrix, matchupArtifact, validateMatchupArtifact, DEFAULT_MATCHUP_POLICIES } from '../evolution/matchup-lab.mjs?v=e1685673b001';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=e1685673b001';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=e1685673b001';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=e1685673b001';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=e1685673b001';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=e1685673b001';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=e1685673b001';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=e1685673b001';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=e1685673b001';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=e1685673b001';
+import { StrategyStore } from '../strategy/strategy-store.mjs?v=e1685673b001';
+import { createStrategyEvidenceWriter } from '../evolution/strategy-live.mjs?v=e1685673b001';
 
 const store = new EvolutionStore(LAB_IDENTITY);
+// Strategy evidence is a separate persistence concern from the monolithic
+// Arena artifact: every finalized accepted game is streamed to its own sealed
+// store while the series is still running.
+const strategies = new StrategyStore();
 const profiles = new ProfileStore(new IndexedDbBackend(), { identity: LAB_IDENTITY });
 let roster = [], rosterRequest = 0, startRequest = 0;
 let starting = false;
 const seatChoice = (cfg, i) => run()?.arenaProfiles?.snapshots?.[i]?.profile ? profileChoice(run().arenaProfiles.snapshots[i].profile.agentProfileId) : (i ? cfg.botB : cfg.botA);
 const view = { config: { botA:'tempo-tactical', botB:'value-tactical', gameCount:1000, seed:1337, workerCount:2, mirrorSeats:true, profileId:'core-advanced-authority' },
   session:null, workers:[], timers:new Map(), tick:null, start:0, elapsed:0, agg:createSeriesAggregator(), samples:[],
-  archive:null, archiveEnvelope:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), ui:createCockpitState(), cockpit:null, analytics:{window:100,from:1,to:10000}, analyticsCache:null, turnMetricsCache:null };
+  archive:null, archiveEnvelope:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), ui:createCockpitState(), cockpit:null, analytics:{window:100,from:1,to:10000}, analyticsCache:null, turnMetricsCache:null, strategyWriter:null, strategyStats:null };
 const run = () => view.archive ?? view.session?.run;
 view.matrix=null;view.matrixAbort=null;view.matrixError='';
 const researchMode = () => run()?.researchPurpose ?? run()?.kind ?? 'SELF_PLAY';
@@ -102,7 +108,7 @@ export function renderEvolutionLab() {
       <div class="toolbar"><button id="evo-export" class="secondary-button" ${run() ? '' : 'disabled'}>Export artifact</button>
       <label class="secondary-button">Inspect historical artifact<input id="evo-archive-import" type="file" accept="application/json,.json" ${active() ? 'disabled' : ''}></label><label class="secondary-button">Import artifact<input id="evo-import" type="file" accept="application/json,.json" ${disabled}></label><button id="evo-history-refresh" class="ghost-button">Refresh history</button></div>
       ${view.archive ? `<details open><summary>Read-only historical implementation</summary><p>Identity ${esc(view.archive.identity.fingerprint)}. Original checkpoint IDs and artifact content are preserved. This implementation is not admitted for current execution; imported outcomes remain unverified.</p><pre>${esc(JSON.stringify(view.archive.checkpoints,null,2))}</pre></details>` : ''}
-      <p id="evo-storage" role="status">${esc(view.storageError || storageSummary())}</p><div id="evo-history">${historyHtml()}</div>
+      <p id="evo-storage" role="status">${esc(view.storageError || storageSummary())}</p><p id="evo-strategy-evidence" role="status">${esc(run()?strategyEvidenceNote():'')}</p><div id="evo-history">${historyHtml()}</div>
       <p>Rules ${LAB_IDENTITY.rulesVersion} · engine ${LAB_IDENTITY.engineVersion}<br><code class="evo-hash">${LAB_IDENTITY.fingerprint}</code></p></section>
     ${researchHtml()}
     </div></section>`;
@@ -153,6 +159,25 @@ async function refreshHistory() {
   if (!view.mounted) return; storageStatus();
   const el=document.getElementById('evo-history'); if (el) el.innerHTML=historyHtml();
 }
+// Strategy evidence retention is reported only from the streaming writer's
+// real counters — never implied. "Retained" means committed to StrategyStore.
+function strategyEvidenceNote() {
+  const cfg=run()?.config;
+  if (!cfg) return '';
+  if (cfg.strategicTrace!==true) return 'Strategy evidence: none — deep decision tracing was off for this run.';
+  const s=view.strategyWriter?.stats ?? view.strategyStats;
+  if (!s) return 'Strategy evidence: deep tracing on. Games finalized in this session commit as they complete; earlier evidence syncs via the Evidence desk.';
+  if (!s.offered) return 'Strategy evidence: streamed retention enabled; no finalized games committed yet.';
+  const counts=`Strategy evidence: ${s.committed}/${s.offered} finalized games retained${s.pending?` · ${s.pending} writes pending`:''}`;
+  return s.error ? `${counts} · persistence error: ${s.error}` : `${counts}.`;
+}
+async function flushStrategyEvidence() {
+  if (!view.strategyWriter) return null;
+  const stats=await view.strategyWriter.flush();
+  view.strategyStats=stats;
+  if (view.mounted) { const el=document.getElementById('evo-strategy-evidence'); if (el) el.textContent=strategyEvidenceNote(); }
+  return stats;
+}
 // Storage failures surface the real cause (policy size vs true browser
 // quota), whether the artifact remains in memory, and an inline export action
 // — the user never has to hunt through "Runs & artifacts" to rescue work.
@@ -162,13 +187,14 @@ function storageStatus() {
     ? `${esc(view.storageError)} <button id="evo-storage-export" class="secondary-button">Export current run</button>`
     : esc(storageSummary());
   document.getElementById('evo-storage-export')?.addEventListener('click',()=>document.getElementById('evo-export')?.click());
+  const note=document.getElementById('evo-strategy-evidence'); if (note) note.textContent=strategyEvidenceNote();
 }
 function persist() {
   if (!run() || view.archive) return Promise.resolve();
   const snapshot=structuredClone(run()); snapshot.elapsedMs=elapsed();
   view.saveChain=view.saveChain.then(() => store.save(snapshot)).then(() => { view.storageError=''; return refreshHistory(); }).catch(error => {
     const detail=error?.artifactSize?` Artifact is ${(error.artifactSize/1048576).toFixed(1)} MiB vs the ${((error.persistLimit??0)/1048576).toFixed(0)} MiB browser archive limit.`:'';
-    view.storageError=`Save failed: ${error.message}.${detail} The run remains in memory; Strategy evidence, if any, was retained separately.`; if (view.mounted) storageStatus();
+    view.storageError=`Save failed: ${error.message}.${detail} The run remains in memory. ${strategyEvidenceNote()}`; if (view.mounted) storageStatus();
   }); return view.saveChain;
 }
 function readConfig() { return {botA:document.getElementById('evo-bot-a').value,botB:document.getElementById('evo-bot-b').value,gameCount:Number(document.getElementById('evo-games').value),seed:Number(document.getElementById('evo-seed').value),workerCount:Number(document.getElementById('evo-workers').value),mirrorSeats:document.getElementById('evo-mirror').checked,profileId:document.getElementById('evo-profile').value,strategicTrace:document.getElementById('evo-deep-trace').checked}; }
@@ -211,7 +237,7 @@ function bind() {
   const click=(id,fn) => document.getElementById(id)?.addEventListener('click',fn);
   click('evo-run',() => begin('SELF_PLAY')); click('evo-evaluate-a',() => begin('EVALUATION','A')); click('evo-evaluate-b',() => begin('EVALUATION','B'));
   click('evo-pause',pause); click('evo-resume',launch); click('evo-stop',stop);
-  click('evo-reset',() => { if (!active()) { release(); view.session=null; view.agg=createSeriesAggregator(); view.samples=[]; view.elapsed=0; view.error=''; view.inspection=null; renderEvolutionLab(); } });
+  click('evo-reset',() => { if (!active()) { release(); view.session=null; view.agg=createSeriesAggregator(); view.samples=[]; view.elapsed=0; view.error=''; view.inspection=null; view.strategyWriter=null; view.strategyStats=null; renderEvolutionLab(); } });
   click('evo-history-refresh',refreshHistory);
   click('evo-export',() => { if (!run()) return; const copy=structuredClone(run()); if(!view.archive)copy.elapsedMs=elapsed(); const url=URL.createObjectURL(new Blob([JSON.stringify(view.archiveEnvelope ?? artifactEnvelope(copy))],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download=`${copy.runId}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000); });
   document.getElementById('evo-archive-import')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>LAB_LIMITS.importBytes)throw new Error('IMPORT_TOO_LARGE');if(active())throw new Error('Stop the current series before inspecting historical evidence.');openArchive(JSON.parse(await file.text()));}catch(error){view.error=error.message;renderEvolutionLab();}});
@@ -231,12 +257,12 @@ function aggregate(saved) {
   for(const r of [...(saved?.records??[])].sort((a,b)=>a.ordinal-b.ordinal)){ingestGameRecord(view.agg,r);pushChartSample(view.samples,view.agg);}
 }
 function openArchive(envelope) {
-  release();view.archive=inspectHistoricalArtifact(envelope);view.archiveEnvelope=structuredClone(envelope);view.error='';view.inspection=null;aggregate(view.archive);renderEvolutionLab();
+  release();view.archive=inspectHistoricalArtifact(envelope);view.archiveEnvelope=structuredClone(envelope);view.error='';view.inspection=null;view.strategyWriter=null;view.strategyStats=null;aggregate(view.archive);renderEvolutionLab();
 }
 function loadRun(saved) {
   validateProfileArenaRun(saved,LAB_IDENTITY);
   view.archive=null;view.archiveEnvelope=null;
-  release(); view.session=new EvolutionSession(saved); view.elapsed=saved.elapsedMs; view.error=''; view.inspection=null; view.agg=createSeriesAggregator(); view.samples=[];
+  release(); view.session=new EvolutionSession(saved); view.elapsed=saved.elapsedMs; view.error=''; view.inspection=null; view.agg=createSeriesAggregator(); view.samples=[]; view.strategyWriter=null; view.strategyStats=null;
   for (const r of [...saved.records].sort((a,b) => a.ordinal-b.ordinal)) { ingestGameRecord(view.agg,r); pushChartSample(view.samples,view.agg); } view.config={...saved.config,botA:saved.arenaProfiles?.snapshots?.[0]?.profile ? profileChoice(saved.arenaProfiles.snapshots[0].profile.agentProfileId) : saved.config.botA,botB:saved.arenaProfiles?.snapshots?.[1]?.profile ? profileChoice(saved.arenaProfiles.snapshots[1].profile.agentProfileId) : saved.config.botB}; renderEvolutionLab();
 }
 async function begin(kind,candidate) {
@@ -251,7 +277,7 @@ async function begin(kind,candidate) {
     const saved=await createProfileArenaRun({...input,kind},LAB_IDENTITY,profiles);
     if (!view.mounted || request !== startRequest) return;
     if (run()) persist();
-    release(); view.session=new EvolutionSession(saved); view.config={...saved.config,botA:input.botA,botB:input.botB}; view.elapsed=0; view.agg=createSeriesAggregator(); view.samples=[]; view.error=''; view.inspection=null;
+    release(); view.session=new EvolutionSession(saved); view.config={...saved.config,botA:input.botA,botB:input.botB}; view.elapsed=0; view.agg=createSeriesAggregator(); view.samples=[]; view.error=''; view.inspection=null; view.strategyWriter=null; view.strategyStats=null;
     starting=false; persist(); launch();
   } catch(error) {
     if (view.mounted && request === startRequest) { starting=false; view.error=`Configuration rejected: ${error.message}`; renderEvolutionLab(); }
@@ -263,13 +289,19 @@ function launch() {
   try { validateArtifact(artifactEnvelope(run()),LAB_IDENTITY); validateProfileArenaRun(run(),LAB_IDENTITY); }
   catch(error) { view.error=`Resume rejected: ${error.message}`; renderEvolutionLab(); return; }
   const owner=view.session, epoch=owner.start(); view.start=performance.now();
+  // Deep-traced runs stream each finalized game's Strategy evidence to its
+  // own sealed store — independent of the monolithic Arena artifact.
+  if (run().config.strategicTrace===true && !view.strategyWriter) view.strategyWriter=createStrategyEvidenceWriter(strategies);
   try { for (let i=0;i<run().config.workerCount;i+=1) {
     const worker=new Worker('worker.js',{type:'module'}); view.workers.push(worker);
-    worker.onmessage=e => {
+    worker.onmessage=async e => {
       const x=e.data; if (view.session !== owner || x.epoch !== epoch || status() !== 'RUNNING') return;
       try { if (x.type === 'evolution-fault') throw new Error(x.error); if (x.type !== 'evolution-evidence') return;
         if (!view.session.accept(i,epoch,x.evidence)) return;
         clearTimeout(view.timers.get(i)); view.timers.delete(i); ingestGameRecord(view.agg,x.evidence.record); pushChartSample(view.samples,view.agg);
+        // Bounded write queue: awaiting offer() applies backpressure before
+        // the next ordinal is dispatched. Offer never rejects.
+        if (view.strategyWriter) await view.strategyWriter.offer(run(), x.evidence);
         if (run().records.length % 250 === 0) persist(); if (status() === 'COMPLETE') { finish(); return; } dispatch(worker,i,epoch);
       } catch(error) { failRun(error); }
     };
@@ -284,12 +316,13 @@ function dispatch(worker,index,epoch) {
 function releaseWorkers() { if (view.tick) clearInterval(view.tick); view.tick=null; for (const t of view.timers.values()) clearTimeout(t); view.timers.clear(); for (const w of view.workers) w.terminate(); view.workers=[]; }
 function release() { releaseWorkers(); view.inspectionWorker?.terminate(); view.inspectionWorker=null; clearTimeout(view.inspectionTimer); }
 function captureElapsed() { view.elapsed+=performance.now()-view.start; if (run()) run().elapsedMs=view.elapsed; }
-function finish() { captureElapsed(); releaseWorkers(); persist(); renderEvolutionLab(); }
-function pause() { if (status() !== 'RUNNING') return; captureElapsed(); view.session.pause(); releaseWorkers(); persist(); renderEvolutionLab(); }
-function stop() { if (!active()) return; if (status() === 'RUNNING') captureElapsed(); view.session.stop(); releaseWorkers(); persist(); renderEvolutionLab(); }
-function failRun(error) { if (status() !== 'RUNNING') return; captureElapsed(); view.session.error(error.message); view.error=error.message; releaseWorkers(); persist(); if (view.mounted) renderEvolutionLab(); }
+function finish() { captureElapsed(); releaseWorkers(); persist(); void flushStrategyEvidence(); renderEvolutionLab(); }
+function pause() { if (status() !== 'RUNNING') return; captureElapsed(); view.session.pause(); releaseWorkers(); persist(); void flushStrategyEvidence(); renderEvolutionLab(); }
+function stop() { if (!active()) return; if (status() === 'RUNNING') captureElapsed(); view.session.stop(); releaseWorkers(); persist(); void flushStrategyEvidence(); renderEvolutionLab(); }
+function failRun(error) { if (status() !== 'RUNNING') return; captureElapsed(); view.session.error(error.message); view.error=error.message; releaseWorkers(); persist(); void flushStrategyEvidence(); if (view.mounted) renderEvolutionLab(); }
 function updateLive() {
   if (!view.mounted) return; const m=seriesMetrics(view.agg,elapsed()); text('evo-progress-count',`${fmt(m.gamesCompleted)} / ${fmt(run().config.gameCount)}`); text('evo-elapsed',num(elapsed()/1000)); text('evo-gps',num(m.gamesPerSec));
+  text('evo-strategy-evidence',strategyEvidenceNote());
   text('evo-A-wins',fmt(m.winsA)); text('evo-B-wins',fmt(m.winsB)); text('evo-A-rate',pct(m.winPctA)); text('evo-B-rate',pct(m.winPctB));
   const fill=document.getElementById('evo-progress-fill'); if (fill) fill.style.width=`${100*m.gamesCompleted/run().config.gameCount}%`;
   const metrics=metricValues(m); document.querySelectorAll('[data-evo-metric]').forEach(el => { el.textContent=metrics[el.dataset.evoMetric]; }); const chartEl=document.getElementById('evo-chart'); if (chartEl && !chartEl.contains(document.activeElement) && !document.getElementById('evo-page-arena')?.hidden && chartEl.dataset.revision!==analyticsModel().key) { chartEl.innerHTML=chart();chartEl.dataset.revision=analyticsModel().key; }

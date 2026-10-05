@@ -17,7 +17,7 @@ export async function evolutionIdentity() {
   runners.push('packages/simulation-runtime/src/strategic-telemetry.mjs','packages/simulation-runtime/src/matchup-lab.mjs');
   runners.push('packages/simulation-runtime/src/strategy-contracts.mjs','packages/simulation-runtime/src/strategy-branch.mjs');
   runners.push('apps/lab-web/src/strategy/strategy-player.js');
-  runners.push('packages/simulation-runtime/src/strategy-evidence.mjs','packages/simulation-runtime/src/strategy-analysis.mjs','packages/simulation-runtime/src/strategy-information.mjs');
+  runners.push('packages/simulation-runtime/src/strategy-evidence.mjs','packages/simulation-runtime/src/strategy-analysis.mjs','packages/simulation-runtime/src/strategy-information.mjs','packages/simulation-runtime/src/strategy-live.mjs');
   const runtimeHash = hashCanonical(await Promise.all(runners.map(async name => [name, hashCanonical(await readFile(path.join(root, name), 'utf8'))])));
   const engineHash = hashCanonical(engine);
   return { schemaVersion: 1, engineVersion: ENGINE_VERSION, rulesVersion: RULES_VERSION,

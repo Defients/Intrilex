@@ -9,6 +9,96 @@ production certification. Engine/rules and policy implementations were not
 edited. New observation/analysis sources intentionally change the scientific
 runtime fingerprint. Original historical artifacts are not rewritten.
 
+## Strategy Field Manual V1.2.1 — correction & integration pass
+
+October 4, 2026, America/New_York. This section is the final local record for
+the V1.2.1 pass; it supersedes the V1.2 figures below only for the items it
+measures directly. Scientific fingerprint:
+`fa0b72633f1d274ec77a009b093167029d8f9c691cbefb4157dc4a69eb7912f2`.
+
+The pass integrates streamed per-game Strategy evidence into regular Arena,
+repairs the interpreter packet and grounding, splits Ollama status/error UX,
+adds interpretation surfaces, documents overlapping rank semantics, and makes
+guide "next useful study" lines subject-aware. It adds no new science: no new
+claim types, no new evidence semantics, no confidence upgrades.
+
+### VERIFIED LOCALLY (final build, fingerprint fa0b7263)
+
+| Check | Result |
+| --- | --- |
+| Focused Strategy tests | PASS: 157/157 (4 files incl. `test/strategy-v121-correction.test.mjs`, 23 tests) |
+| Strategy native Chrome acceptance | PASS: 34/34 scenarios, zero page errors, Chrome 154.0.8037.93 against the final dist |
+| Full repository suite | PASS: 5,601 tests, 5,587 pass, 14 skipped, 0 failed/cancelled (~337 s) |
+| Typecheck (`npx tsc --noEmit`) | PASS, 0 errors |
+| Repository lint | PASS, 0 errors, 422 pre-existing warnings |
+| Build | PASS: `app.e1685673b001.js`, 29 browser modules, 121 certified replays verified |
+| Small real-workload benchmark | PASS: `reports/local/strategy/benchmark.json` (fingerprint fa0b7263) |
+
+The 14 skips are the pre-existing absent legacy engine-corpus check and the
+service-worker checks disabled by the PWA kill switch; they are not passes.
+
+New-suite coverage: finalized games stream into a real `StrategyStore` during
+execution (byte-identical to saved-run ingestion), bounded writer queue reports
+peak pending, persistence failures surface in stats without touching execution,
+duplicate re-ingestion is idempotent, controlled intervals reach the V2 packet,
+unit-aware grounding rejects cross-unit numbers, fact citations validate,
+all interpretation surfaces build, Ollama discovery distinguishes unreachable
+from uninstalled, next-study suggestions are subject-aware, and the UI never
+claims separately-retained evidence without real counts.
+
+### Measured small-workload performance (current fingerprint)
+
+`pnpm run benchmark:strategy`: three alternating baseline/deep pairs after
+warm-up, eight mirrored Value/Tempo games per run, master seed 1337, one worker,
+i7-13700F, no concurrent suite during measurement.
+
+| Metric | Observed |
+| --- | --- |
+| Decisions in one eight-game workload | 192 |
+| Baseline median | 2,518.46 ms |
+| Deep-capture median | 3,192.35 ms |
+| Incremental deep-capture time | 26.76% |
+| Total game-envelope bytes | 1,798,441 bytes |
+| Envelope bytes per decision | 9,366.88 bytes, about 9.1 KiB (unchanged from V1.2) |
+| Largest game envelope | 388,413 bytes, about 379 KiB |
+| Retained replay list | 161,748 bytes |
+| Pure streaming aggregate median | 0.3455 ms |
+
+The 26.76% delta vs V1.2's 19.78% reflects machine/load variance on a small
+three-pair sample plus the per-game evidence construction now executed inside
+the runner; absolute timings are not comparable claims. Envelope bytes per
+decision are unchanged, so capture content did not grow.
+
+### Test-drift defects found and repaired during validation
+
+- The guide browser assertion still required V1.1-era sealed claim IDs and the
+  missing-conclusion string inside human prose. Guide V2 deliberately keeps both
+  in the sealed manifest (the Node test asserts claim IDs stay out of prose);
+  the browser check now asserts manifest provenance and manifest
+  `missingConclusion`, not prose leakage.
+- The volatile-fixture scenario recomputed comparisons with
+  `inferWorldEffectsV2` while schema-3 plans require `inferWorldEffectsV3`;
+  it now uses the plan's frozen inference method.
+- `synthetic-ui-fixture.json` was regenerated under the current fingerprint by
+  `test/strategy-information.test.mjs`, as designed.
+
+### NOT VERIFIED / limits
+
+Remote CI, deployment parity, live multiplayer infrastructure, production
+certification, a fresh-profile offline run and human visual acceptance:
+NOT_RUN. Streaming durability was verified at store level and through the
+browser acceptance path; IndexedDB persistence across a hard browser-process
+kill was not power-tested. Ollama integration was exercised against a mock
+daemon and discovery parsing; no real Ollama model produced text in this
+validation. No Strong/Established producer, campaign orchestration, Knowledge
+Farm, midgame information reconstruction or cloud persistence was added.
+
+### Highest-value next step
+
+Exercise the live Ollama path once against a real local daemon and record the
+observed latency/rejection behavior per surface — the schema, grounding and
+status plumbing are verified, but no real model output has been observed.
+
 ## Information-set V1.1 hardening pass — final local validation
 
 October 4, 2026, America/New_York. This section supersedes the V1

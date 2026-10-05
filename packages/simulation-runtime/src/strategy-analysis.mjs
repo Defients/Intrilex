@@ -176,6 +176,30 @@ export function researchLeadsFor(subject,aggregate,{hasControlledAdvice=false}={
   if(!leads.length)leads.push({kind:RESEARCH_LEAD.INSUFFICIENT,subject,detail:'No deterministic research-lead threshold met.'});
   return leads;
 }
+// ── Subject-aware next-study templates ─────────────────────────────────
+// A "next test" is a mechanically appropriate experiment template — never
+// a research-lead ranking and never universal boilerplate. Each subject
+// type gets the contrast that is legally meaningful for it; subjects with
+// no meaningful controlled template say so explicitly.
+export function nextStudySuggestionFor(subject,aggregate) {
+  const [kind,name='']=String(subject??'').split(/:(.*)/s);
+  const c=aggregate?.total;
+  if(!c||!c.opportunities)return 'collect traced evidence first — no controlled template applies to a subject with no legal opportunities.';
+  if(kind==='rank'||kind==='card'||kind==='suit')
+    return `compare using vs preserving ${kind==='suit'?`a ${name} card`:'this card'} in matched opening contexts.`;
+  if(kind==='family'){
+    if(name==='draw')return 'compare taking the draw against meaningful non-draw legal alternatives in matched contexts.';
+    if(name==='score')return 'compare scoring now against the strongest available non-scoring legal alternatives in matched contexts.';
+    return 'compare using this action now against preserving or declining it where legally meaningful.';
+  }
+  if(kind==='combination')
+    return 'compare committing the combination against simpler legal lines in matched positions.';
+  if(kind==='mode'||kind==='mechanic')
+    return 'compare choosing this mode against the family\u2019s other legal modes in matched contexts.';
+  if(kind==='timing')
+    return 'compare acting in this phase against the same action at other phases where it remains legal.';
+  return 'no controlled next-study template is available for this subject yet.';
+}
 // ── Expert Guide V2 ────────────────────────────────────────────────────
 // Human-first synthesis: one coherent section per subject, grouped sections,
 // no provenance dumps in prose. The sealed manifest retains the full audit
@@ -192,7 +216,7 @@ function guideSubjectSection(d){
   else lines.push('Controlled evidence: none.');
   lines.push(assoc!==null&&Math.abs(assoc)>=.1?'Interpretation: interesting, but observational only — usage patterns cannot prove this play is better.':'Interpretation: nothing stands out strongly enough to prioritize yet.');
   const priority=d.leads.some(l=>[RESEARCH_LEAD.PROMISING_POSITIVE_SIGNAL,RESEARCH_LEAD.PROMISING_NEGATIVE_SIGNAL,RESEARCH_LEAD.LOW_USAGE_HIGH_ASSOCIATION].includes(l.kind))?'High':d.leads.some(l=>l.kind!==RESEARCH_LEAD.INSUFFICIENT)?'Medium':'Low';
-  lines.push(`Research priority: ${priority}.`,`Next useful study: play-vs-preserve comparison in an exact opening information set.`);
+  lines.push(`Research priority: ${priority}.`,`Next useful study: ${nextStudySuggestionFor(d.subject,d.aggregate)}`);
   return lines;
 }
 export function strategyGuide(claims,{fingerprint,rulesProfile,eraId,generatedAt=new Date().toISOString(),subjects=[],motifs=[],humanName=s=>s}={}) {

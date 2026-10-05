@@ -2,8 +2,13 @@ import { createLabRun, validateCheckpoint, summarizeRecords, LAB_LIMITS } from '
 import { EvolutionSession } from './evolution-session.mjs';
 
 /** Browser adapter uses the same claim/epoch/evidence authority as the existing
- * arena. No planning, scoring or trainer logic is defined in this adapter. */
-export async function executeBrowserSeries(input,{identity,startingCheckpoints,arenaProfiles,signal,onProgress=()=>{}}={}) {
+ * arena. No planning, scoring or trainer logic is defined in this adapter.
+ * onAcceptedGame(evidence, run) fires after EvolutionSession accepts a
+ * finalized record — its awaited return applies persistence backpressure
+ * before the next ordinal is dispatched. Callback failures are collected as
+ * persistErrors; they never alter game execution. */
+export async function executeBrowserSeries(input,{identity,startingCheckpoints,arenaProfiles,signal,onProgress=()=>{},onAcceptedGame}={}) {
+  const persistErrors=[];
   const run=createLabRun(input,identity);
   if(startingCheckpoints){run.checkpoints=startingCheckpoints.map(cp=>validateCheckpoint(cp,identity));if(run.checkpoints.length!==2 || run.checkpoints[0].policyId!==run.config.botA || run.checkpoints[1].policyId!==run.config.botB)throw new Error('CHECKPOINT_CONFIG_MISMATCH');}
   if(arenaProfiles)run.arenaProfiles=structuredClone(arenaProfiles);
@@ -18,10 +23,10 @@ export async function executeBrowserSeries(input,{identity,startingCheckpoints,a
     if(signal?.aborted){cancel();return;}signal?.addEventListener('abort',cancel,{once:true});
     try{for(let index=0;index<Math.min(run.config.workerCount,run.config.gameCount);index++){
       const worker=new Worker('worker.js',{type:'module'});workers.push(worker);
-      worker.onmessage=e=>{if(done || e.data.epoch!==epoch || owner.run.status!=='RUNNING')return;try{if(e.data.type==='evolution-fault')throw new Error(e.data.error);if(e.data.type!=='evolution-evidence' || !owner.accept(index,epoch,e.data.evidence))return;clearTimeout(timers.get(worker));onProgress({completed:run.records.length,total:run.config.gameCount,record:e.data.evidence.record});if(run.status==='COMPLETE')finish();else dispatch(worker,index);}catch(error){fault(error);}};
+      worker.onmessage=async e=>{if(done || e.data.epoch!==epoch || owner.run.status!=='RUNNING')return;try{if(e.data.type==='evolution-fault')throw new Error(e.data.error);if(e.data.type!=='evolution-evidence' || !owner.accept(index,epoch,e.data.evidence))return;clearTimeout(timers.get(worker));if(onAcceptedGame)try{await onAcceptedGame(e.data.evidence,run);}catch(error){persistErrors.push(String(error?.message??error));}onProgress({completed:run.records.length,total:run.config.gameCount,record:e.data.evidence.record});if(run.status==='COMPLETE')finish();else dispatch(worker,index);}catch(error){fault(error);}};
       worker.onerror=e=>{if(!done)fault(new Error(e.message??'WORKER_FAILED'));};
       worker.onmessageerror=()=>{if(!done)fault(new Error('WORKER_MESSAGE_FAILED'));};dispatch(worker,index);
     }}catch(error){fault(error);}
   });
-  return {run,metrics:summarizeRecords(run.records)};
+  return {run,metrics:summarizeRecords(run.records),persistErrors};
 }

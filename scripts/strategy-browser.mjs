@@ -86,7 +86,7 @@ try {
   await scenario('generated expert guide and manifest retain every statement provenance and unknowns',async()=>{
     await page.locator('[data-si-action="guide"]').click();await expect(page.locator('#si-status')).toContainText('Generate expert guide complete.',{timeout:60000});
     const markdown=await exported('[data-si-action="guide-md"]','guide.md'),manifest=JSON.parse(await exported('[data-si-action="guide-manifest"]','guide-manifest.json'));
-    assert.ok(manifest.entries.length>0);for(const e of manifest.entries){assert.ok(markdown.includes(e.claimId));assert.ok(e.provenance.length>0);}assert.ok(markdown.includes('No strong conclusion yet'));assert.ok(manifest.entries.some(e=>e.informationScope==='RESEARCH_ONLY'));
+    assert.ok(manifest.entries.length>0);for(const e of manifest.entries){assert.ok(e.claimId);assert.ok(e.provenance.length>0);assert.ok(!markdown.includes(e.claimId),'sealed claim IDs stay out of human prose');}assert.ok(String(manifest.missingConclusion).includes('No strong conclusion yet'));assert.ok(manifest.entries.some(e=>e.informationScope==='RESEARCH_ONLY'));
   });
   await tab('discoveries');
   await scenario('sequence miner and mistake empty/research states remain observational',async()=>{await expect(page.locator('#si-content')).toContainText('A weak policy choosing a line does not make it a mistake');await expect(page.locator('#si-content')).toContainText('Candidate regret findings');});
@@ -189,12 +189,12 @@ try {
     // never a robust recommendation — even though rows and worlds stay real.
     const fixture=JSON.parse(await readFile(path.join(root,'reports/local/strategy/information/synthetic-ui-fixture.json'),'utf8'));
     const volatileStudy=await page.evaluate(async fixture=>{
-      const {sealStrategy}=await import('./evolution/strategy-contracts.mjs'),{inferWorldEffectsV2,informationStudyAssessment,claimsFromInformationStudy}=await import('./evolution/strategy-information.mjs'),{LAB_IDENTITY}=await import('./evolution/identity.mjs');
+      const {sealStrategy}=await import('./evolution/strategy-contracts.mjs'),{inferWorldEffectsV3,informationStudyAssessment,claimsFromInformationStudy}=await import('./evolution/strategy-information.mjs'),{LAB_IDENTITY}=await import('./evolution/identity.mjs');
       const reseal=(a,change)=>{const {contract,artifactId:_id,...body}=structuredClone(a);change(body);return sealStrategy(contract,body);};
       const plan=reseal(fixture.plan,p=>{p.requestedSubject='rank:K';p.question={...p.question,subject:'rank:K'};});
       const rows=fixture.rows.map(r=>r.worldOrdinal%2===0?r:(r.actionId===fixture.plan.actualActionId?{...r,score:1,winner:'P1'}:{...r,score:0,winner:'P2'}));
       const mean=v=>v.reduce((a,b)=>a+b,0)/v.length;
-      const comparisons=plan.actionIds.filter(id=>id!==plan.actualActionId).map(actionId=>{const worldEffects=plan.worldManifest.worlds.map(w=>({ordinal:w.ordinal,effect:mean(plan.seeds.map(seed=>rows.find(r=>r.worldOrdinal===w.ordinal&&r.actionId===actionId&&r.seed===seed).score-rows.find(r=>r.worldOrdinal===w.ordinal&&r.actionId===plan.actualActionId&&r.seed===seed).score))}));return {actionId,alternativeLabel:'SYNTHETIC VOLATILE FIXTURE',worldEffects,...inferWorldEffectsV2(worldEffects.map(e=>e.effect),{alternatives:plan.actionIds.length-1,minimumMeaningfulEffect:plan.minimumMeaningfulEffect})};});
+      const comparisons=plan.actionIds.filter(id=>id!==plan.actualActionId).map(actionId=>{const worldEffects=plan.worldManifest.worlds.map(w=>({ordinal:w.ordinal,effect:mean(plan.seeds.map(seed=>rows.find(r=>r.worldOrdinal===w.ordinal&&r.actionId===actionId&&r.seed===seed).score-rows.find(r=>r.worldOrdinal===w.ordinal&&r.actionId===plan.actualActionId&&r.seed===seed).score))}));return {actionId,alternativeLabel:'SYNTHETIC VOLATILE FIXTURE',worldEffects,...inferWorldEffectsV3(worldEffects.map(e=>e.effect),{alternatives:plan.actionIds.length-1,minimumMeaningfulEffect:plan.minimumMeaningfulEffect})};});
       const study=reseal(fixture,s=>{s.plan=plan;s.rows=rows;s.comparisons=comparisons;s.assessment=informationStudyAssessment(comparisons);s.caveats=[...s.caveats,'SYNTHETIC VOLATILE FIXTURE: engineered sign-reversing scores, not real strategy evidence.'];});
       return {study,claims:claimsFromInformationStudy(study,{identity:LAB_IDENTITY})};
     },fixture);

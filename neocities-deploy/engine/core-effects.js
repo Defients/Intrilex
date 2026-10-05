@@ -1,9 +1,9 @@
-import { canonicalClone } from "./canonical-json.js?v=aa5ccc2813d1";
-import { applyAegis, hasAegis } from "./lifecycle.js?v=aa5ccc2813d1";
-import { evaluateProtection, revalidateAttachments } from "./interactions.js?v=aa5ccc2813d1";
-import { nextIndex } from "./rng.js?v=aa5ccc2813d1";
-import { moveCard } from "./state.js?v=aa5ccc2813d1";
-import { parseIdentity } from "./ranks.js?v=aa5ccc2813d1";
+import { canonicalClone } from "./canonical-json.js?v=e1685673b001";
+import { applyAegis, hasAegis } from "./lifecycle.js?v=e1685673b001";
+import { evaluateProtection, revalidateAttachments } from "./interactions.js?v=e1685673b001";
+import { nextIndex } from "./rng.js?v=e1685673b001";
+import { moveCard } from "./state.js?v=e1685673b001";
+import { parseIdentity } from "./ranks.js?v=e1685673b001";
 export const CORE_EFFECT_DECLARATION_PROFILE = Object.freeze({
     id: "core-effect-declaration-authority",
     displayName: "Core Effect Declaration Authority — Public Single-Card Effects",

@@ -225,13 +225,53 @@ claims in the selected context plus local controlled studies. Every substantive
 entry includes its claim ID and evidence IDs. Markdown and a sealed JSON
 manifest export the same claims. Categories lacking player-actionable evidence
 remain explicitly unknown. Imported research archives are inspectable but do
-not enter local guides until reproduced.
+not enter local guides until reproduced. "Next useful study" lines are
+subject-aware: rank/card/suit subjects get use-vs-preserve contrasts, draw
+family gets draw-vs-alternative, score family gets score-vs-strongest
+alternative, combinations get commit-vs-simpler-lines, and mode/mechanic
+subjects get sibling-mode contrasts. Unsupported subject types say so.
+
+## Optional local AI interpretation
+
+A local Ollama daemon can re-explain deterministic evidence in plain language
+("Deffy English"). It is off by default and strictly opt-in. The interpreter
+sends a sanitized `STRATEGY_EXPLANATION_PACKET_V2` — public evidence, typed
+grounding facts and surface metadata only — to `http://localhost:11434` and
+validates the structured reply: the evidence label and confidence language
+must echo the packet, every number+unit phrase must match a grounding fact of
+the same unit (a game count cannot ground a percentage), and any declared
+`usedFactIds` must exist. Failures are rejected and labeled; AI output is
+never evidence, never a claim, never a confidence change.
+
+Surfaces: card field manual, context & matchups, policy/profile comparison,
+controlled information-set study, evidence desk, and an optional Expert Guide
+polish that reads the sealed deterministic guide as input.
+
+Setup: install Ollama, start the daemon (`ollama serve`), pull a model
+(`ollama pull llama3.1`). If the app is served from a non-localhost origin
+(for example the deployed Neocities host), set `OLLAMA_ORIGINS` to allow that
+origin — browser CORS will otherwise block the loopback request. The settings
+panel's "Check connection & models" discovers installed models via
+`/api/tags`; a previously selected model that is no longer installed is
+flagged, never silently substituted. All endpoints are validated local-only;
+there is no cloud fallback.
 
 ## Storage, portability and privacy
 
-Separate IndexedDB `intrilex-strategy-intelligence`, version 1, stores evidence,
-sources, indexed events, one replay per transcript hash, studies, claims and
-import archives. Existing Evolution/Profile databases are not migrated.
+Separate IndexedDB `intrilex-strategy-intelligence`, version 2, stores
+evidence (sealed chunk envelopes), sources, indexed events, one replay per
+transcript hash, studies, claims, imported archives and information-set
+artifacts. Existing Evolution/Profile databases are not migrated.
+
+Deep-traced Lab runs persist Strategy evidence incrementally: each game is
+sealed and committed to `StrategyStore` as soon as `EvolutionSession` accepts
+its finalized record, through one bounded serialized writer. Interruption,
+stop, worker failure or monolithic-archive failure cannot lose already
+committed games, and the run UI reports committed/offered counts rather than
+assuming retention. The same conversion path serves the Evidence desk
+producer and saved-run ingestion; identical games produce identical sealed
+artifacts, so re-ingestion is an exact deduplication, never a double count.
+
 Transactions resolve after commit; insert-or-verify rejects immutable conflicts.
 Concurrent opens share ownership; close/blocked/failure paths release callers
 and reject late operations without replacing a newer connection.
@@ -243,7 +283,9 @@ Follow-up indexing uses a reverse per-actor pass. Source listing caps at 10,000;
 study/archive listing caps at 1,000. These limits require partitioning larger
 campaigns rather than claiming an untested million-game UI.
 
-Budgets are 8 MiB per game envelope and 40 MiB per portable bundle. UI producers
+Budgets are 8 MiB per sealed evidence chunk (an oversized game envelope splits
+into multiple sealed chunks — no per-game size cap), 40 MiB per portable
+bundle, and a separate 128 MiB monolithic Lab archive limit. UI producers
 cap at 128 paired games and default to eight. Deep evidence is optional at the
 Lab producer; Strategy-generated runs enable it explicitly. The store's
 `retainEvents:false` omits event indexes but retains the portable envelope:
@@ -302,3 +344,5 @@ See [INFORMATION_SET_STUDIES.md](INFORMATION_SET_STUDIES.md) for the implemented
 V1.1 (October 4, 2026) hardens that bridge: the study question binds to an explicit frozen `requestedSubject` proven legal in the information set rather than the recorded action's subject; actions are classified against the requested subject from real before/after state; inference is symmetric — the recorded reference can earn advice over every tested alternative, or an alternative over the reference; new V2 plans use variance-sensitive empirical Bernstein with a documented zero-variance floor (V1 plans keep Hoeffding forever); the world cap is 512 after real benchmarks; and Quick Read deterministically prioritizes admissible controlled evidence over observational usage.
 
 V1.2 (October 4, 2026) is a usability/scale/semantics patch that repairs one real statistical defect: the V2 empirical-Bernstein additive term missed the support-range factor for effects bounded in [-1,+1], so V3 plans apply `3·R·ln(3m/0.05)/N` with R = 2 — strictly wider, never stronger. V3 plans also freeze auditable subject-aware action selection (a guaranteed use-vs-preserve contrast; no contrast fails closed) instead of a generic `slice(0,3)` prefix. Storage gained purpose-named budgets — external imports stay at 40 MiB, locally generated run artifacts get a separate 128 MiB archive limit, and oversized game envelopes split into independently sealed evidence chunks so an archive-size failure cannot lose completed Strategy evidence. Long-running studies lost the fixed 600-second total cutoff in favor of a progress-aware stall watchdog. `rank:`/`card:`/`suit:` subjects decompose into canonical semantic use categories (score, swap, response, combinations, …) computed from real action family/timing descriptors — additive accounting, never invented mechanics. Quick Read orders controlled claims by context-match, currency, confidence and deterministic ID — never by |effect|. The Expert Guide is now human-first markdown plus a separate sealed claim/provenance manifest. An optional local Ollama interpreter (`@intrilex/analytics-ai/strategy-interpreter`) can explain the evidence packet in plain language under strict schema + grounding validation; it is off by default, local-only, and its output is labeled non-scientific interpretation — never evidence.
+
+V1.2.1 (correction & integration pass) fixes the defects the V1.2 rollout left open. Regular Arena now streams each finalized accepted game's sealed Strategy evidence into StrategyStore while the series runs — per-game evidence retention no longer depends on the monolithic run archive, and a crash, stop or archive failure keeps every committed game. The same canonical `FINALIZED GAME → strategyGameEvidence → addEvidence` path is shared by Arena streaming, the evidence producer and saved-run ingestion, so later sync deduplicates on immutable artifact/event identity and never double-counts. A bounded write queue applies backpressure without blocking execution; every persistence result is reported with real counts — the UI never claims evidence was "retained separately" unless it was. The explanation packet moves to `STRATEGY_EXPLANATION_PACKET_V2`: controlled uncertainty now reads the actual `claim.uncertainty.interval` (V1 checked a nonexistent `intervalPoints` field on raw claims, so valid bounds never reached the packet); numbers are published as typed `groundingFacts` (counts, percentages, percentage points, hidden worlds, …) and validation matches number+unit phrases against facts of the same unit — "29 games" can no longer ground "29%" — plus optional `usedFactIds` citation checking. The Ollama panel separates reachable status from errors, discovers installed models via `/api/tags` with a selector, persists the selection and flags a selected model that is no longer installed. Interpretation is available per surface: card, context/matchups, policy comparison, controlled study, evidence desk and an optional guide polish that treats the deterministic Expert Guide as input — the deterministic guide remains the authoritative artifact. Rank-semantic panels now state explicitly that opportunity categories overlap and must not be summed. Guide "next useful study" lines are subject-aware (`nextStudySuggestionFor`): draw vs non-draw alternatives, score vs strongest non-scoring line, combination vs simpler lines, mode vs sibling modes — no universal play-vs-preserve boilerplate, and no template is claimed where none is meaningful.
