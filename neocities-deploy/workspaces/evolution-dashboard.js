@@ -1,21 +1,23 @@
-import '../evolution/evolution-training-ui.js?v=e1685673b001';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=e1685673b001';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=e1685673b001';
-import { app, esc, fmt } from '../state.js?v=e1685673b001';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=e1685673b001';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=e1685673b001';
-import { runMatchupLab, matchupMatrix, matchupArtifact, validateMatchupArtifact, DEFAULT_MATCHUP_POLICIES } from '../evolution/matchup-lab.mjs?v=e1685673b001';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=e1685673b001';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=e1685673b001';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=e1685673b001';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=e1685673b001';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=e1685673b001';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=e1685673b001';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=e1685673b001';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=e1685673b001';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=e1685673b001';
-import { StrategyStore } from '../strategy/strategy-store.mjs?v=e1685673b001';
-import { createStrategyEvidenceWriter } from '../evolution/strategy-live.mjs?v=e1685673b001';
+import '../evolution/evolution-training-ui.js?v=37aaf900a6e7';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=37aaf900a6e7';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=37aaf900a6e7';
+import { app, esc, fmt } from '../state.js?v=37aaf900a6e7';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=37aaf900a6e7';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=37aaf900a6e7';
+import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=37aaf900a6e7';
+import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=37aaf900a6e7';
+import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=37aaf900a6e7';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=37aaf900a6e7';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=37aaf900a6e7';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=37aaf900a6e7';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=37aaf900a6e7';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=37aaf900a6e7';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=37aaf900a6e7';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=37aaf900a6e7';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=37aaf900a6e7';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=37aaf900a6e7';
+import { StrategyStore } from '../strategy/strategy-store.mjs?v=37aaf900a6e7';
+import { createStrategyEvidenceWriter } from '../evolution/strategy-live.mjs?v=37aaf900a6e7';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 // Strategy evidence is a separate persistence concern from the monolithic
@@ -30,7 +32,8 @@ const view = { config: { botA:'tempo-tactical', botB:'value-tactical', gameCount
   session:null, workers:[], timers:new Map(), tick:null, start:0, elapsed:0, agg:createSeriesAggregator(), samples:[],
   archive:null, archiveEnvelope:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), ui:createCockpitState(), cockpit:null, analytics:{window:100,from:1,to:10000}, analyticsCache:null, turnMetricsCache:null, strategyWriter:null, strategyStats:null };
 const run = () => view.archive ?? view.session?.run;
-view.matrix=null;view.matrixAbort=null;view.matrixError='';
+view.matrixAbort=null;
+view.batch={selected:new Set(),lab:null,v1:null,error:'',progressText:'',cell:null,focus:null,storage:'',saved:null,queue:null,abort:null,games:64,seed:1337,workers:2,profileId:'core-advanced-authority',trace:false};
 const researchMode = () => run()?.researchPurpose ?? run()?.kind ?? 'SELF_PLAY';
 const status = () => view.archive ? 'ARCHIVE' : run()?.status ?? 'IDLE';
 const active = () => starting || ['RUNNING','PAUSED'].includes(status());
@@ -58,6 +61,7 @@ async function refreshProfiles() {
       const select = document.getElementById(id);
       if (select) select.innerHTML = arenaOptions(select.value, rules);
     }
+    view.batchRender?.render();
     text('evo-profile-status', `${roster.length} Custom Profile${roster.length === 1 ? '' : 's'} available on this browser origin. Arena measures only; it never trains or promotes Profiles.`);
   } catch (error) {
     if (view.mounted && request === rosterRequest) text('evo-profile-status', `Profile storage unavailable: ${error.message}. Static policies remain available.`);
@@ -95,7 +99,7 @@ export function renderEvolutionLab() {
       <p><span id="evo-elapsed">${num(elapsed()/1000)}</span>s · <span id="evo-gps">${num(m.gamesPerSec)}</span> games/sec</p></div>${bot('B',cfg.botB,m.winsB,m.winPctB)}</div>
     <div class="evo-metrics" data-testid="evo-metrics">${Object.entries(metricValues(m)).map(([key,value]) => `<div class="metric-card"><small>${key}</small><div class="metric-value" data-evo-metric="${key}">${value}</div></div>`).join('')}</div>
     <div class="evo-chart-wrap evo-analytics"><h3>Arena analytics</h3><div class="evo-filterbar"><label>Rolling window<select id="evo-chart-window">${[25,50,100,200].map(n=>`<option value="${n}" ${view.analytics.window===n?'selected':''}>${n} clean games</option>`).join('')}</select></label><label>From game<input id="evo-chart-from" type="number" min="1" max="10000" value="${view.analytics.from}"></label><label>Through game<input id="evo-chart-to" type="number" min="1" max="10000" value="${view.analytics.to}"></label>${diagnosticFiltersHtml()}<button id="evo-chart-apply">Apply observational filters</button><span>View filters only · execution unchanged</span></div><p id="evo-chart-filter-error" role="status"></p><div id="evo-chart" data-testid="evo-chart">${chart()}</div></div>
-    ${matchupSetupHtml(disabled)}
+    <section id="evo-batch-matrix" class="evo-section"></section>
     <section class="evo-section" data-testid="evo-benchmarks"><h3>Frozen benchmark arena</h3><p>Evaluate either selected bot against a shipped reference. This is measured performance for a reproducible seed suite, not a universal rating or an improvement claim.</p>
       <div class="toolbar"><label>Reference<select id="evo-baseline" ${disabled}>${options('random-legal')}</select></label><label>Evaluation games (even)<input id="evo-eval-games" type="number" min="2" max="10000" step="2" value="100" ${disabled}></label>
       <button id="evo-evaluate-a" class="secondary-button" ${disabled}>Evaluate A</button><button id="evo-evaluate-b" class="secondary-button" ${disabled}>Evaluate B</button></div>
@@ -207,25 +211,24 @@ function diagnosticFiltersHtml(){
   const selects={winner:['all','A','B','Draw','Fault'],seat:['all','AB','BA'],termination:['all','NORMAL_VICTORY','EXHAUSTED_RESOLUTION','CANONICAL_DRAW','WORKER_FAULT','DECISION_LIMIT','POLICY_ERROR','ENGINE_REJECTION','UNSUPPORTED_CONFIGURATION'],relation:['all','HIGHER_SCORE','LOWER_SCORE','EQUAL_SCORE','NOT_APPLICABLE']};
   return Object.entries(selects).map(([key,values])=>`<label>${key}<select id="evo-filter-${key}">${values.map(v=>`<option value="${v}" ${(view.analytics[key]??'all')===v?'selected':''}>${v}</option>`).join('')}</select></label>`).join('')+['marginMin','marginMax','turnMin','turnMax','decisionMin','decisionMax'].map(key=>`<label>${key.replace(/(Min|Max)/,' $1')}<input id="evo-filter-${key}" type="number" value="${view.analytics[key]??''}"></label>`).join('');
 }
-function matchupSetupHtml(disabled) {
-  return `<section class="evo-section" data-testid="evo-matchup-lab"><h3>Strategic matchup laboratory</h3><p>Frozen round robin: current Control, Control Conversion v5, Tempo, Value and Score Rush. The same independent master seed packs and paired AB/BA seats are used for every matchup. Profile and workers follow Arena setup. Export preserves every accepted record.</p><div class="evo-filterbar"><label>Games per matchup per master (even)<input id="evo-matrix-games" type="number" min="2" max="10000" step="2" value="100" ${disabled}></label><label>Independent master seeds<input id="evo-matrix-seeds" value="20261003,104729,8675309" ${disabled}></label><label>Deep decision tracing<input id="evo-matrix-trace" type="checkbox" ${disabled}></label><button id="evo-matrix-run" ${disabled}>Run round robin</button><button id="evo-matrix-stop" ${view.matrixAbort?'':'disabled'}>Stop matrix</button><button id="evo-matrix-export" ${view.matrix?'':'disabled'}>Export matrix artifact</button><label>Inspect matrix artifact<input id="evo-matrix-import" type="file" accept=".json,application/json" ${disabled}></label></div><p id="evo-matrix-status" role="status">${esc(view.matrixError||view.matrix?.status||'Not run. Missing cells remain unavailable.')}</p><p>${view.matrix&&view.matrix.identity.fingerprint!==LAB_IDENTITY.fingerprint?'Historical matrix: original implementation identity retained. Inspection only; new execution creates current checkpoints.':''}</p><div id="evo-matrix-chart">${view.matrix?matchupMatrixHtml(matchupMatrix(view.matrix),{checkpoints:view.matrix.checkpoints,identity:view.matrix.identity}):''}</div></section>`;
-}
-async function beginMatrix() {
-  if(active()||view.archive||view.matrixAbort)return;
-  const arena=readConfig(),input={policyIds:DEFAULT_MATCHUP_POLICIES,gamesPerPairing:Number(document.getElementById('evo-matrix-games').value),masterSeeds:document.getElementById('evo-matrix-seeds').value.split(',').map(s=>Number(s.trim())),profileId:arena.profileId,workerCount:arena.workerCount,strategicTrace:document.getElementById('evo-matrix-trace').checked};
-  view.matrixAbort=new AbortController();view.matrixError='';const controller=view.matrixAbort;renderEvolutionLab();
-  try{view.matrix=await runMatchupLab(input,executeBrowserSeries,{identity:LAB_IDENTITY,signal:controller.signal,onProgress:p=>{if(view.mounted)text('evo-matrix-status',`${p.seriesCompleted}/${p.seriesTotal} series · ${p.botA} vs ${p.botB} · master ${p.masterSeed} · ${p.completed}/${p.total} games`);},onRun:saved=>store.save(saved)});}
-  catch(error){view.matrixError=`Matrix failed: ${error.message}`;}
-  finally{if(view.matrixAbort===controller)view.matrixAbort=null;if(view.mounted)renderEvolutionLab();}
+function batchContext() {
+  return { state: view.batch, identity: LAB_IDENTITY, profiles, executeSeries: executeBrowserSeries,
+    roster: () => roster, statics: STATIC_POLICIES.map(id => ({ id, label: name(id) })),
+    rulesOptions: [['core-advanced-authority','Advanced Core'],['core-unrestricted-authority','Unrestricted Core'],['first-contact-trigger-closure','Complete First Contact']],
+    busy: () => active() || !!view.archive || !!cockpitResearch.getState().archive,
+    lock: { get: () => view.matrixAbort, set: controller => { view.matrixAbort = controller; } },
+    fns: { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix },
+    persist: { saveRun: r => store.save(r), saveMatrix: lab => store.saveMatrix(lab), listMatrices: () => store.listMatrices(), loadMatrix: id => store.loadMatrix(id), loadRun: id => store.load(id) },
+    runEnvelope: artifactEnvelope, importLimit: LAB_LIMITS.importBytes,
+    openRun: saved => { if (active() || view.archive || view.matrixAbort || cockpitResearch.getState().archive) throw new Error('Stop the current Evolution operation before loading series evidence.'); loadRun(saved); },
+    exportJson: (payload, filename) => { const url = URL.createObjectURL(new Blob([JSON.stringify(payload)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); },
+    legacy: { render: lab => matchupMatrixHtml(matchupMatrix(lab), { checkpoints: lab.checkpoints, identity: lab.identity }), artifact: matchupArtifact } };
 }
 function bind() {
   document.getElementById('evo-profiles-refresh')?.addEventListener('click',refreshProfiles);
   document.getElementById('evo-profile')?.addEventListener('change',refreshProfiles);
   document.querySelector('[data-testid="evolution-lab"]')?.addEventListener('click',event=>{if(event.target.closest('[data-evo-surface="arena"]'))refreshProfiles();});
-  document.getElementById('evo-matrix-run')?.addEventListener('click',beginMatrix);
-  document.getElementById('evo-matrix-import')?.addEventListener('change',async event=>{if(active()||view.matrixAbort)return;try{const file=event.target.files?.[0];if(!file)return;if(file.size>LAB_LIMITS.importBytes)throw new Error('MATRIX_IMPORT_TOO_LARGE');view.matrix=validateMatchupArtifact(JSON.parse(await file.text()));view.matrixError='';}catch(error){view.matrixError=`Matrix import rejected: ${error.message}`;}if(view.mounted)renderEvolutionLab();});
-  document.getElementById('evo-matrix-stop')?.addEventListener('click',()=>view.matrixAbort?.abort());
-  document.getElementById('evo-matrix-export')?.addEventListener('click',()=>{if(!view.matrix)return;const url=URL.createObjectURL(new Blob([JSON.stringify(matchupArtifact(view.matrix))],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`${view.matrix.matrixId}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+  view.batchRender = bindBatchMatrix(document.getElementById('evo-batch-matrix'), batchContext());
   document.getElementById('evo-chart-apply')?.addEventListener('click',()=>{
     const from=Number(document.getElementById('evo-chart-from').value),to=Number(document.getElementById('evo-chart-to').value);
     if(!Number.isInteger(from)||!Number.isInteger(to)||from<1||to>10000||from>to){text('evo-chart-filter-error','Choose an ordered game range between 1 and 10000.');return;}

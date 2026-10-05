@@ -212,7 +212,10 @@ minutes, with no incomplete study admitted as complete.
 The motif miner examines two/three successive substantive same-actor actions
 within three current turns. It preserves game/era boundaries, checks the
 selected filters on each window, caps distinct motifs at 100 per game and
-discloses correlated overlapping windows. Workspace discovery loads at most
+discloses correlated overlapping windows. Windows never overlap inside one
+actor-game, and a motif contributes at most two windows per actor-game — one
+game replaying the same sequence cannot masquerade as independent strategic
+evidence. Workspace discovery loads at most
 twelve complete game envelopes selected from its forty-decision page. It is
 a bounded exploration sample, not an exhaustive campaign census.
 
@@ -220,11 +223,49 @@ Candidate regret leads require a complete controlled study with an alternative's
 lower bound above zero. They remain research-only and do not call a recurring
 habit a mistake from one state or one weak policy.
 
-The Expert Strategy Guide is generated from available rank/family/combination
-claims in the selected context plus local controlled studies. Every substantive
-entry includes its claim ID and evidence IDs. Markdown and a sealed JSON
-manifest export the same claims. Categories lacking player-actionable evidence
-remain explicitly unknown. Imported research archives are inspectable but do
+## Strategy synthesis and Guide V3
+
+A deterministic `STRATEGY_SYNTHESIS_V1` layer sits between per-subject
+aggregates/claims and human-facing guide prose. A Strategy Claim says "this
+measured relationship exists"; a `STRATEGIC_FINDING_V1` says "several measured
+signals together form an interesting strategic pattern." Findings combine
+timing behavior, usage rate, outcome association, semantic-use decomposition,
+policy and within-policy opponent splits, and sample adequacy. They carry one
+of three trust classes: `OBSERVED_PATTERN` (deterministic summary of
+descriptive or associational evidence), `WORKING_HYPOTHESIS` (a plausible
+question raised by two or more signals together), or `CONTROLLED_ADVICE`
+(restated only from an existing admissible controlled claim — the layer can
+never manufacture one). Findings never invent data, never upgrade confidence,
+and never turn observation into advice.
+
+The synthesis gates are documented constants (`SYNTHESIS_THRESHOLDS`):
+timing buckets below 5 opportunities are ineligible and buckets below 10 are
+flagged thin; a timing shape needs a 0.25 spread across eligible buckets and
+a 0.20 first→last direction; flat or noisy phases produce no finding;
+policy/matchup splits need 10+ opportunities per compared group and a 0.20
+rate difference; associations need at least 6 selected AND skipped
+observations; subjects under 15 opportunities are flagged thin rather than
+headlined; combinations need 12+ opportunities; motifs need 3+ occurrences
+across 2+ distinct games. Matchup sensitivity additionally requires
+within-policy opponent variation — in mirror self-play where each policy
+sees one opponent, aggregate opponent splits are confounded with policy
+identity and no matchup finding is emitted. Alias subjects carrying an
+identical opportunity set collapse to one canonical representative, and
+`mechanic:`/`mode:` sub-descriptors never generate primary findings because
+their family or rank lens covers the same signal.
+
+The Expert Strategy Guide (guideVersion 3) renders the synthesis: evidence
+status, top findings, strategic phase-of-game patterns, salience-ranked
+"cards worth talking about", compressed low-information subjects, real
+policy and matchup differences (or an honest "none adequately sampled"),
+controlled advice, best next research questions, and grouped unknowns that
+use subject-appropriate wording — use-versus-preserve for cards, action-
+family contrasts for families, commit-versus-simpler-lines for combinations.
+Every substantive entry remains backed by sealed claims whose IDs and
+provenance live in the exported manifest, not in human prose. Markdown and a
+sealed JSON manifest export the same claims, findings, and synthesis object.
+Categories lacking player-actionable evidence remain explicitly unknown.
+Imported research archives are inspectable but do
 not enter local guides until reproduced. "Next useful study" lines are
 subject-aware: rank/card/suit subjects get use-vs-preserve contrasts, draw
 family gets draw-vs-alternative, score family gets score-vs-strongest
@@ -245,7 +286,20 @@ never evidence, never a claim, never a confidence change.
 
 Surfaces: card field manual, context & matchups, policy/profile comparison,
 controlled information-set study, evidence desk, and an optional Expert Guide
-polish that reads the sealed deterministic guide as input.
+polish. The GUIDE packet carries the synthesized strategic findings, top
+findings, grouped unknowns, research questions and controlled advice from
+`manifest.synthesis` — not a raw markdown dump — plus a bounded, explicitly
+labeled excerpt for context. Guide output validates against a dedicated
+`STRATEGY_GUIDE_SCHEMA` narrative shape (bounded key-lesson array, phase of
+game, things not to overread, best next experiments) with the same fail-closed
+rules: echoed labels and confidence, unit-checked numbers, real fact IDs only.
+A card's printed point value is a public rules fact carried as a typed
+`CARD_POINT_VALUE` grounding unit: unsigned "N points" may refer to it, a
+signed "+N points" cannot, and "7 points" can never stand in for "+7 pp".
+AI guide output is visually distinct in the workspace and exports separately —
+`intrilex-field-manual.md` and the sealed manifest are the scientific
+artifacts; `intrilex-field-manual-ai-interpretation.md` is clearly marked
+interpretation, not scientific output.
 
 Setup: install Ollama, start the daemon (`ollama serve`), pull a model
 (`ollama pull llama3.1`). If the app is served from a non-localhost origin

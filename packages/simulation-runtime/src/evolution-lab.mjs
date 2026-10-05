@@ -42,16 +42,19 @@ export function verifyLabReplay(run, evidence) {
   return verified;
 }
 
-export async function runLabSeries(input, { onProgress = () => {}, identity, signal, startingCheckpoints, createdAt, profile = false } = {}) {
+export async function runLabSeries(input, { onProgress = () => {}, identity, signal, startingCheckpoints, createdAt, profile = false, run: prepared = null } = {}) {
   assertIdentity(identity ?? implementationIdentity,implementationIdentity);
-  const run = createLabRun(input, identity ?? implementationIdentity, createdAt);
-  if (startingCheckpoints) {
+  // A prepared run continues from its own accepted records: dispatched ordinals
+  // never collide with `seen`, so resume cannot duplicate committed evidence.
+  const run = prepared ? validateArtifact(artifactEnvelope(prepared), identity ?? implementationIdentity) : createLabRun(input, identity ?? implementationIdentity, createdAt);
+  if (!prepared && startingCheckpoints) {
     if (startingCheckpoints.length !== 2) throw new Error('CHECKPOINT_PAIR_REQUIRED');
     run.checkpoints = startingCheckpoints.map(cp => validateCheckpoint(cp, run.identity));
     if (run.checkpoints[0].policyId !== run.config.botA || run.checkpoints[1].policyId !== run.config.botB) throw new Error('CHECKPOINT_CONFIG_MISMATCH');
   }
   run.status = 'RUNNING';
   const start = performance.now();
+  const seen = new Set(run.records.map(r => r.ordinal));
   let hostEvidenceHandlingMs=0,workerOnlineLatencySumMs=0;
   const record = evidence => {
     const handlingStarted=profile?performance.now():0;
@@ -62,11 +65,12 @@ export async function runLabSeries(input, { onProgress = () => {}, identity, sig
   };
   if (run.config.workerCount === 1) {
     for (let ordinal = 0; ordinal < run.config.gameCount; ordinal += 1) {
+      if (seen.has(ordinal)) continue;
       if (signal?.aborted) { run.status = 'STOPPED'; break; }
       record(runLabGame(run, ordinal));
       if (ordinal % 10 === 9) await new Promise(resolve => setImmediate(resolve));
     }
-  } else {
+  } else if (seen.size < run.config.gameCount) {
     await new Promise((resolve, reject) => {
       let next = 0, done = false;
       const workers = [], timers = new Map();
@@ -78,8 +82,9 @@ export async function runLabSeries(input, { onProgress = () => {}, identity, sig
       };
       const cancel = () => { run.status = 'STOPPED'; finish(); };
       const dispatch = worker => {
+        while (next < run.config.gameCount && seen.has(next)) next += 1;
         if (next < run.config.gameCount) {
-          const ordinal = next++; worker.postMessage(ordinal);
+          const ordinal = next++; seen.add(ordinal); worker.postMessage(ordinal);
           timers.set(worker, setTimeout(() => finish(new Error(`WORKER_TIMEOUT:${ordinal}`)), 30000));
         }
       };
@@ -102,7 +107,7 @@ export async function runLabSeries(input, { onProgress = () => {}, identity, sig
       }
     }).catch(error => { run.status = 'ERROR'; run.error = String(error.stack ?? error).slice(0, 2000); });
   }
-  run.elapsedMs = performance.now()-start;
+  run.elapsedMs = (run.elapsedMs ?? 0) + (performance.now()-start);
   if (run.status === 'RUNNING') run.status = 'COMPLETE';
   const aggregateStarted=performance.now(),metrics=summarizeRecords(run.records),metricAggregationMs=performance.now()-aggregateStarted;
   return { run, metrics, gamesPerSecond: run.records.length/(run.elapsedMs/1000),performance:{inclusiveExecutionMs:run.elapsedMs,metricAggregationMs,hostEvidenceHandlingMs:profile?hostEvidenceHandlingMs:null,workerOnlineLatencySumMs:profile?workerOnlineLatencySumMs:null,peakWorkers:run.config.workerCount===1?0:Math.min(run.config.workerCount,run.config.gameCount),profilingEnabled:profile,note:'Inclusive execution includes worker startup, coordination, simulation, hashing and transcript creation. Online latencies sum overlapping worker intervals; host handling is a measured subset of inclusive wall time.'} };

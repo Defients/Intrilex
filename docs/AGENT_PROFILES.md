@@ -18,13 +18,16 @@ Completed continuation checks and evidence boundaries are recorded in
   `evolution-research.mjs` (packs, suites, experiments, evaluation validation), `evolution-evaluation.mjs`,
   `evolution-training.mjs` (`ONE_PLUS_LAMBDA_V1`: `mutatePolicyState`, `selectCandidate`),
   `weighted-heuristic.mjs` (six bounded residuals over `control`), Node `runLabSeries` / browser
-  `executeBrowserSeries`, IndexedDB `intrilex-evolution-lab` v2.
+  `executeBrowserSeries`, IndexedDB `intrilex-evolution-lab` v3 (adds the `matrices` store for compact
+  Batch Matrix manifests).
 - **Fingerprint boundary.** `scripts/evolution-identity.mjs` hashes engine, policy and runtime files.
   Editing any of them makes every existing local artifact historical. Profile code therefore lives in
   new modules outside that list; no fingerprint-covered file is modified. Profile-layer semantics are
   pinned by explicit contract versions plus a source-lock test (`test/agent-profile-contracts.test.mjs`)
   that fails when a versioned implementation changes without a version bump.
-- **Policy consumer inventory.** Lab arena/research (Node and browser workers), tournament workspace
+- **Policy consumer inventory.** Lab arena/research (Node and browser workers), the Batch Profile
+  Matrix (`batch-matrix.mjs` — frozen multi-participant round robin; see
+  [BATCH_PROFILE_MATRIX.md](BATCH_PROFILE_MATRIX.md)), tournament workspace
   (`run-autonomy-match`, static policies only), Caster (replays only), normal local AI play
   (`play-controller.js` → `autonomy-runtime.choosePolicy`). **Selected consumer: normal local AI play.**
 - **Verified pre-existing consumer defect.** `PlaySession.stepAI` hands policies presentation actions with

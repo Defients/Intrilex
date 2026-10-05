@@ -1,4 +1,5 @@
 import { MATURITY_BUCKETS, STRATEGY_CONTRACTS, STRATEGY_NAMES, sealStrategy, verifyStrategy, strategyFail, decisionContext, gameMaturity } from './strategy-contracts.mjs';
+import { synthesizeStrategyFindings, timingTrend, timingTrendSentence, FINDING_TRUST, FINDING_TYPES } from './strategy-synthesis.mjs';
 
 // Rank semantic decomposition. rank:/card:/suit: subjects aggregate every
 // authorized source-card use; these categories decompose that total by the
@@ -51,7 +52,7 @@ export function createStrategyAggregate({fingerprint,rulesProfile,eraId,subject,
   const semanticUse=filters.semanticUse??null,semanticSubject=/^(rank|card|suit):/.test(subject);
   if(semanticUse!==null&&!RANK_SEMANTIC_CATEGORIES.includes(semanticUse))strategyFail('STRATEGY_SEMANTIC_INVALID');
   if(semanticUse!==null&&semanticUse!=='ANY_USE'&&!semanticSubject)strategyFail('STRATEGY_SEMANTIC_INVALID');
-  const cells=Object.fromEntries(MATURITY_BUCKETS.map(b=>[b,emptyCell()])),total=emptyCell(),semanticCells=new Map();
+  const cells=Object.fromEntries(MATURITY_BUCKETS.map(b=>[b,emptyCell()])),total=emptyCell(),semanticCells=new Map(),policyCells=new Map(),matchupCells=new Map(),policyMatchupCells=new Map();
   const provenance=new Set(),states=new Set(),seeds=new Set(),policies=new Set(),checkpoints=new Set(),matchups=new Set(),origins=new Set(),games=new Set();
   let nonClean=0,excluded=0;
   return {
@@ -85,15 +86,27 @@ export function createStrategyAggregate({fingerprint,rulesProfile,eraId,subject,
           if(!e.outcomes.horizonCensored && e.outcomes.horizonScoreDifferentialDelta!==null){c.horizonSum+=e.outcomes.horizonScoreDifferentialDelta;c.horizonCount++;}}
         else {c.skipped++;c.skipWinSum+=win;c.skipWinCount++;if(row.subsequent?.[subject]){c.subsequentSelected++;c.subsequentDelaySum+=row.subsequent[subject];}}
       }
-      if(available){provenance.add(row.evidenceId??e.artifactId);states.add(`${e.identity.derivedSeed}:${e.seat}:${e.replayAnchor.stateHash}`);seeds.add(e.identity.derivedSeed);policies.add(e.identity.policyId);checkpoints.add(e.identity.checkpointId);matchups.add(e.identity.opponentPolicyId);games.add(`${e.identity.runId}:${e.identity.gameOrdinal}`);origins.add(row.origin??'LOCAL');}
+      if(available){provenance.add(row.evidenceId??e.artifactId);states.add(`${e.identity.derivedSeed}:${e.seat}:${e.replayAnchor.stateHash}`);seeds.add(e.identity.derivedSeed);policies.add(e.identity.policyId);checkpoints.add(e.identity.checkpointId);matchups.add(e.identity.opponentPolicyId);games.add(`${e.identity.runId}:${e.identity.gameOrdinal}`);origins.add(row.origin??'LOCAL');
+        for(const [map,key] of [[policyCells,e.identity.policyId],[matchupCells,e.identity.opponentPolicyId]]) {
+          if(key===null||key===undefined)continue;
+          const cell=map.get(key)??map.set(key,{opportunities:0,selected:0,games:new Set()}).get(key);
+          cell.opportunities++;if(selected)cell.selected++;cell.games.add(`${e.identity.runId}:${e.identity.gameOrdinal}`);
+        }
+        if(e.identity.policyId!==null&&e.identity.policyId!==undefined&&e.identity.opponentPolicyId!==null&&e.identity.opponentPolicyId!==undefined) {
+          const per=e.identity.policyId,inner=policyMatchupCells.get(per)??policyMatchupCells.set(per,new Map()).get(per);
+          const cell=inner.get(e.identity.opponentPolicyId)??inner.set(e.identity.opponentPolicyId,{opportunities:0,selected:0,games:new Set()}).get(e.identity.opponentPolicyId);
+          cell.opportunities++;if(selected)cell.selected++;cell.games.add(`${e.identity.runId}:${e.identity.gameOrdinal}`);
+        }}
     },
     finish() {
       const decorate=c=>({...c,opportunityRate:c.decisions?c.opportunities/c.decisions:null,selectionRate:c.opportunities?c.selected/c.opportunities:null,holdRate:c.opportunities?c.skipped/c.opportunities:null,
         selectedOutcomeAssociation:c.winCount?c.winSum/c.winCount:null,skippedOutcomeAssociation:c.skipWinCount?c.skipWinSum/c.skipWinCount:null,
         immediateScoreDelta:c.selected?c.immediateScoreSum/c.selected:null,horizonScoreDelta:c.horizonCount?c.horizonSum/c.horizonCount:null});
+      const split=map=>Object.fromEntries([...map.entries()].sort(([a],[b])=>String(a).localeCompare(String(b))).map(([id,c])=>[id,{opportunities:c.opportunities,selected:c.selected,selectionRate:c.opportunities?c.selected/c.opportunities:null,games:c.games.size}]));
       return {contract:'STRATEGY_AGGREGATE_V1',fingerprint,rulesProfile,eraId,subject,filters,historical,total:decorate(total),timing:MATURITY_BUCKETS.map(bucket=>({bucket,...decorate(cells[bucket])})),
         semanticUse:semanticSubject?semanticUse:null,
         semantics:semanticSubject?Object.fromEntries([...semanticCells.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,c])=>[k,decorate(c)])):null,
+        byPolicy:split(policyCells),byMatchup:split(matchupCells),byPolicyMatchup:Object.fromEntries([...policyMatchupCells.entries()].sort(([a],[b])=>String(a).localeCompare(String(b))).map(([id,inner])=>[id,split(inner)])),
         distinctStates:states.size,independentStates:null,seedBlocks:seeds.size,games:games.size,policies:[...policies].sort(),checkpoints:[...checkpoints].sort(),matchups:[...matchups].sort(),provenance:[...provenance].sort(),origins:[...origins].sort(),nonClean,excluded,
         caveats:['Selected means declaration, not successful resolution.','Rank subjects decompose into semantic use categories derived from canonical action family/timing; ANY_USE combines every authorized source-card use.','Skipped opportunity does not establish intentional holding.','Outcome associations weight decisions, not independent games; repeated decisions and mirrored seats are correlated.','Policy decomposition is the existing diagnostic feature decomposition, not an additive reconstruction of the final policy score.','No uncertainty or causal strength is inferred from raw usage.','Immediate deltas exclude later stack resolution.']};
     }
@@ -200,23 +213,38 @@ export function nextStudySuggestionFor(subject,aggregate) {
     return 'compare acting in this phase against the same action at other phases where it remains legal.';
   return 'no controlled next-study template is available for this subject yet.';
 }
-// ── Expert Guide V2 ────────────────────────────────────────────────────
-// Human-first synthesis: one coherent section per subject, grouped sections,
-// no provenance dumps in prose. The sealed manifest retains the full audit
-// trail — claim IDs, provenance IDs, scope and uncertainty — untouched.
+// ── Expert Guide V3 ────────────────────────────────────────────────────
+// Synthesis-first: STRATEGIC_FINDING_V1 sits between raw aggregates and
+// prose. The guide leads with what the data is actually telling us, keeps
+// duplicate-signal subjects collapsed to one canonical name, and never
+// prints "observed against N policies" as if it were a difference. The
+// sealed manifest retains claim IDs, provenance and uncertainty.
 const pp=n=>`${n>=0?'+':''}${(n*100).toFixed(1)} pp`;
 const pct0=n=>`${(n*100).toFixed(1)}%`;
-function guideSubjectSection(d){
-  const c=d.aggregate.total,assoc=d.assoc,lines=[`### ${d.name}`,'',
-    `Usage: selected on ${c.opportunities?pct0(c.selectionRate??0):'0.0%'} of ${c.opportunities} legal opportunities (${c.decisions} decisions observed).`];
-  lines.push(assoc===null?'Observed signal: not enough comparable selections/skips to form an outcome association.':`Observed signal: ${pp(assoc)} association between selected and skipped opportunities in this dataset.`);
+function guideFindingBlock(f){
+  const lines=[`### ${f.headline}`,'',f.trustClass===FINDING_TRUST.CONTROLLED_ADVICE?'**Controlled advice** — earned in an exact tested context.':f.trustClass===FINDING_TRUST.WORKING_HYPOTHESIS?'**Working hypothesis** — a question the signals raise together.':f.type===FINDING_TYPES.SAMPLE_TOO_THIN?'**Observed pattern · THIN SAMPLE**':'**Observed pattern**','',
+    `What we saw: ${f.observations.join(' ')||f.headline}`,
+    `Why it matters: ${f.interpretation}`,
+    `What this does not prove: ${f.limitations[0]??'Nothing beyond the observation itself.'}`,
+    `Next test: ${f.nextTest}`,''];
+  return lines;
+}
+function guideCardSection(d,findings){
+  const c=d.aggregate.total,assoc=d.assoc,lines=[`### ${d.name}`,''];
+  const mine=findings.filter(f=>f.subjects.length===1&&f.subjects[0]===d.subject&&f.type!==FINDING_TYPES.SAMPLE_TOO_THIN);
+  const thin=findings.find(f=>f.type===FINDING_TYPES.SAMPLE_TOO_THIN&&f.subjects[0]===d.subject);
+  const behavior=mine.filter(f=>[FINDING_TYPES.TIMING_SHIFT,FINDING_TYPES.LATE_COMMITMENT_PATTERN,FINDING_TYPES.EARLY_COMMITMENT_PATTERN,FINDING_TYPES.SEMANTIC_MODE_CONCENTRATION,FINDING_TYPES.SEMANTIC_MODE_SPLIT].includes(f.type));
+  lines.push('Observed behavior:',`selected on ${pct0(c.selectionRate??0)} of ${c.opportunities} legal opportunities${c.opportunities<15?' — thin sample':''}.`,
+    ...behavior.slice(0,2).map(f=>`- ${f.observations[0]??f.headline}`));
+  lines.push(`Outcome signal: ${assoc===null?'not enough comparable selections/skips for an association':`${pp(assoc)} observational association`}.`);
+  const disagreement=mine.find(f=>f.type===FINDING_TYPES.POLICY_DISAGREEMENT),sensitive=mine.find(f=>f.type===FINDING_TYPES.MATCHUP_SENSITIVITY);
+  if(disagreement)lines.push(`- ${disagreement.observations[0]} Policies disagree here.`);
+  if(sensitive)lines.push(`- ${sensitive.observations[0]} Possibly matchup-sensitive.`);
+  if(thin)lines.push(`- ${thin.observations[0]}`);
   const actionable=d.controlled.filter(x=>x.confidence!=='INSUFFICIENT'&&x.confidence!=='EXPERIMENTAL'&&x.recommendation!=='UNKNOWN');
-  if(actionable.length)lines.push('Controlled evidence:',...actionable.slice(0,3).map(x=>`- ${synthesizeStrategyClaim(x)}`));
-  else if(d.controlled.length)lines.push('Controlled evidence: controlled opening-study evidence exists, but no result has earned player-actionable confidence yet.');
-  else lines.push('Controlled evidence: none.');
-  lines.push(assoc!==null&&Math.abs(assoc)>=.1?'Interpretation: interesting, but observational only — usage patterns cannot prove this play is better.':'Interpretation: nothing stands out strongly enough to prioritize yet.');
-  const priority=d.leads.some(l=>[RESEARCH_LEAD.PROMISING_POSITIVE_SIGNAL,RESEARCH_LEAD.PROMISING_NEGATIVE_SIGNAL,RESEARCH_LEAD.LOW_USAGE_HIGH_ASSOCIATION].includes(l.kind))?'High':d.leads.some(l=>l.kind!==RESEARCH_LEAD.INSUFFICIENT)?'Medium':'Low';
-  lines.push(`Research priority: ${priority}.`,`Next useful study: ${nextStudySuggestionFor(d.subject,d.aggregate)}`);
+  lines.push(`Confidence: ${actionable.length?`${actionable[0].confidence} controlled evidence in its exact tested context`:'observational only'}.`);
+  lines.push(`What that suggests: ${behavior.length?'this looks more like a timing question than a raw "is it good?" question.':assoc!==null&&Math.abs(assoc)>=.1?'interesting, but observational only — usage patterns cannot prove this play is better.':'nothing stands out strongly enough to prioritize yet.'}`);
+  lines.push(`What to test: ${nextStudySuggestionFor(d.subject,d.aggregate)}`,'');
   return lines;
 }
 export function strategyGuide(claims,{fingerprint,rulesProfile,eraId,generatedAt=new Date().toISOString(),subjects=[],motifs=[],humanName=s=>s}={}) {
@@ -230,57 +258,106 @@ export function strategyGuide(claims,{fingerprint,rulesProfile,eraId,generatedAt
     const c=aggregate.total,assoc=c.selectedOutcomeAssociation!==null&&c.skippedOutcomeAssociation!==null?c.selectedOutcomeAssociation-c.skippedOutcomeAssociation:null;
     return {subject,name:humanName(subject),aggregate,claims:subClaims,controlled,assoc,leads:researchLeadsFor(subject,aggregate,{hasControlledAdvice:actionable.some(c=>c.subject===subject)})};
   }).filter(d=>d.aggregate.total.opportunities>0||d.claims.length>0);
-  const leads=subjectData.flatMap(d=>d.leads.filter(l=>l.kind!==RESEARCH_LEAD.INSUFFICIENT).map(l=>({subject:d.subject,subjectName:d.name,kind:l.kind,detail:l.detail})));
+  const synthesis=synthesizeStrategyFindings(subjectData,{claims,motifs,fingerprint,rulesProfile,eraId,humanName});
+  const canonicalBySubject=new Map();for(const d of subjectData)if(!canonicalBySubject.has(d.subject))canonicalBySubject.set(d.subject,d);
+  const canonical=synthesis.canonicalSubjects.map(c=>{const d=canonicalBySubject.get(c.subject);return d?{...d,aliases:c.aliases}:null;}).filter(Boolean);
+  const leads=canonical.flatMap(d=>d.leads.filter(l=>l.kind!==RESEARCH_LEAD.INSUFFICIENT).map(l=>({subject:d.subject,subjectName:d.name,kind:l.kind,detail:l.detail})));
   const controlledTotal=claims.filter(c=>c.evidenceType==='COUNTERFACTUAL').length;
+  const totalDecisions=Math.max(0,...subjectData.map(d=>d.aggregate.total?.decisions??0));
+  const totalGames=Math.max(0,...subjectData.map(d=>d.aggregate?.games??0));
   const md=[`# ${STRATEGY_NAMES.title} — Intrilex Strategy Guide`,'',`Generated ${generatedAt} · rules ${rulesProfile}`,'',
     '## Current Evidence Status','',
-    `${subjectData.length} subjects observed · ${controlledTotal} controlled claims · ${actionable.length} earned player-actionable recommendations.`,
-    ...(actionable.length?['Some controlled opening-context advice exists below — each applies only to its exact tested context.']:['No controlled player-actionable recommendation has earned Suggestive confidence yet.']),'' ];
-  const signals=subjectData.filter(d=>d.assoc!==null).sort((a,b)=>Math.abs(b.assoc)-Math.abs(a.assoc)).slice(0,3);
-  const mostUsed=subjectData.filter(d=>d.aggregate.total.selectionRate!==null).sort((a,b)=>(b.aggregate.total.selectionRate??0)-(a.aggregate.total.selectionRate??0))[0];
-  if(signals.length||mostUsed)md.push('## Executive Summary','',
-    ...(mostUsed?[`- Most used subject: ${mostUsed.name} (${pct0(mostUsed.aggregate.total.selectionRate)} of opportunities — behavior, not strength).`]:[]),
-    ...signals.map(d=>`- ${d.name}: ${pp(d.assoc)} observational association — a testing lead, not proof.`),'');
-  if(subjectData.length)md.push('## Core Strategic Signals','',...subjectData.filter(d=>d.assoc!==null&&Math.abs(d.assoc)>=.05).map(d=>`- ${d.name}: used ${pct0(d.aggregate.total.selectionRate??0)} of opportunities; ${pp(d.assoc)} observational outcome association.`),'');
-  const cards=subjectData.filter(d=>/^rank:/.test(d.subject));
-  if(cards.length)md.push('## Card-by-Card Guide','',...cards.flatMap(guideSubjectSection));
-  const timingRows=subjectData.filter(d=>{const b=(d.aggregate.timing??[]).filter(t=>t.opportunities>=5&&t.selectionRate!==null);return b.length>=2&&Math.max(...b.map(t=>t.selectionRate))-Math.min(...b.map(t=>t.selectionRate))>=.15;});
-  if(timingRows.length)md.push('## Timing','',...timingRows.flatMap(d=>[`### ${d.name}`,'',...d.aggregate.timing.filter(t=>t.opportunities>0).map(t=>`- ${t.bucket}: ${t.selected}/${t.opportunities} opportunities selected (${pct0(t.selectionRate??0)})`),'','Usage by maturity is descriptive — it shows when these policies reached for it, not when it is correct.','']));
-  const resource=subjectData.filter(d=>/^family:(score|draw)$/.test(d.subject));
-  if(resource.length)md.push('## Scoring vs Resource','',...resource.map(d=>`- ${d.name}: ${pct0(d.aggregate.total.selectionRate??0)} selection rate; ${d.assoc===null?'no outcome association yet':`${pp(d.assoc)} observational association`}.`),'');
-  const disruption=subjectData.filter(d=>/^family:(scuttle|counter|disrupt|interrupt|instant|quick)$/.test(d.subject)||/RESPONSE_USE/.test(Object.keys(d.aggregate.semantics??{}).join(',')));
-  if(disruption.length)md.push('## Disruption & Control','',...disruption.map(d=>`- ${d.name}: ${pct0(d.aggregate.total.selectionRate??0)} selection rate${d.assoc===null?'':`; ${pp(d.assoc)} observational association`}.`),'');
-  const combos=subjectData.filter(d=>/^combination:/.test(d.subject));
-  if(combos.length||motifs.length)md.push('## Combinations / Sequences','',...combos.map(d=>`- ${d.name}: ${d.aggregate.total.opportunities} opportunities, ${pct0(d.aggregate.total.selectionRate??0)} selected.`),...motifs.slice(0,5).map(m=>`- ${m.sequence.join(' → ')}: ${m.occurrences} observed windows in ${m.gameCount} games (associational).`),'');
-  const matchup=subjectData.filter(d=>(d.aggregate.matchups??[]).length>=2);
-  if(matchup.length)md.push('## Matchup Differences','',...matchup.map(d=>`- ${d.name}: observed against ${d.aggregate.matchups.length} distinct opponent policies; usage may reflect matchup, not card strength.`),'');
-  if(leads.length)md.push('## Research Leads','','Leads are not advice — they rank what deserves controlled testing next.','',...leads.map(l=>`- ${l.subjectName} · ${l.kind.replaceAll('_',' ')}: ${l.detail}`),'');
-  md.push('## Supported Advice','');
+    `${totalDecisions} recorded decisions across ${totalGames} games · ${canonical.length} distinct signals · ${controlledTotal} controlled claims · ${actionable.length} earned player-actionable recommendations.`,
+    actionable.length?'Some controlled opening-context advice exists below — each applies only to its exact tested context.':'No controlled player-actionable recommendation has earned Suggestive confidence yet.',
+    actionable.length?'':'The guide below describes observed patterns and research hypotheses, not proven optimal play.',''];
+  if(synthesis.topFindings.length){
+    md.push('## What This Dataset Is Actually Telling Us','');
+    for(const f of synthesis.topFindings)md.push(...guideFindingBlock(f));
+  }
+  // Strategic phase of game — cross-subject timing patterns.
+  const phaseFindings=synthesis.findings.filter(f=>[FINDING_TYPES.RESOURCE_TO_SCORE_TRANSITION,FINDING_TYPES.TIMING_SHIFT,FINDING_TYPES.LATE_COMMITMENT_PATTERN,FINDING_TYPES.EARLY_COMMITMENT_PATTERN].includes(f.type));
+  if(phaseFindings.length){
+    md.push('## Strategic Phase of Game','');
+    for(const f of phaseFindings.slice(0,8))md.push(`- ${(f.observations.length?f.observations:[f.headline]).join(' ')}`);
+    md.push('','Usage by maturity is descriptive — it shows when these policies reached for things, not when reaching is correct.','');
+  }
+  // Cards: salience-ranked, low-information ranks compressed.
+  const cardFindings=new Map();for(const f of synthesis.findings)for(const s of f.subjects){const list=cardFindings.get(s)??[];list.push(f);cardFindings.set(s,list);}
+  const cards=canonical.filter(d=>/^rank:/.test(d.subject));
+  const cardSalience=d=>Math.max(0,...(cardFindings.get(d.subject)??[]).filter(f=>f.type!==FINDING_TYPES.NO_CLEAR_PATTERN).map(f=>f.salience));
+  const notable=cards.filter(d=>cardSalience(d)>0||Math.abs(d.assoc??0)>=.1).sort((a,b)=>cardSalience(b)-cardSalience(a));
+  const quiet=cards.filter(d=>!notable.includes(d));
+  if(notable.length)md.push('## Cards Worth Talking About','',...notable.flatMap(d=>guideCardSection(d,synthesis.findings)));
+  if(quiet.length)md.push('## Other Cards','',...quiet.sort((a,b)=>(b.aggregate.total.opportunities??0)-(a.aggregate.total.opportunities??0)).map(d=>`- ${d.name}: no strong pattern yet — ${d.aggregate.total.selectionRate===null?'no selections recorded':`${pct0(d.aggregate.total.selectionRate)} of ${d.aggregate.total.opportunities} opportunities selected`}${d.aggregate.total.opportunities<15?', thin sample':''}; more evidence needed.`),'');
+  const resource=canonical.filter(d=>/^family:(score|draw)$/.test(d.subject));
+  if(resource.length){
+    md.push('## Scoring, Resources & Tempo','');
+    for(const d of resource){const trend=timingTrend(d.aggregate),sentence=timingTrendSentence(d.name,trend);
+      md.push(`- ${d.name}: ${pct0(d.aggregate.total.selectionRate??0)} selection rate; ${d.assoc===null?'no outcome association yet':`${pp(d.assoc)} observational association`}.${sentence?` ${sentence}`:''}`);}
+    md.push('');
+  }
+  const disruption=canonical.filter(d=>/^family:(scuttle|counter|disrupt|interrupt|instant|quick)$/.test(d.subject));
+  if(disruption.length){
+    md.push('## Disruption & Control','');
+    for(const d of disruption){const trend=timingTrend(d.aggregate),sentence=timingTrendSentence(d.name,trend);
+      md.push(`- ${d.name}: ${pct0(d.aggregate.total.selectionRate??0)} selection rate${d.assoc===null?'':`; ${pp(d.assoc)} observational association`}.${sentence?` ${sentence}`:''}`);}
+    md.push('');
+  }
+  const combos=canonical.filter(d=>/^combination:/.test(d.subject));
+  const guideMotifs=(motifs??[]).filter(m=>(m.gameCount??0)>=2&&(m.occurrences??0)>=3);
+  if(combos.length||guideMotifs.length){
+    md.push('## Combinations & Sequences','');
+    for(const d of combos){const f=(cardFindings.get(d.subject)??[]).find(x=>[FINDING_TYPES.COMBINATION_FREQUENT,FINDING_TYPES.COMBINATION_UNDERUSED].includes(x.type));
+      md.push(`- ${d.name}: ${d.aggregate.total.opportunities} opportunities, ${pct0(d.aggregate.total.selectionRate??0)} committed.${f?` ${f.interpretation}`:''}`);}
+    for(const m of guideMotifs.slice(0,5))md.push(`- ${m.sequence.join(' → ')}: ${m.occurrences} windows across ${m.gameCount} distinct games (associational).`);
+    md.push('');
+  }
+  md.push('## Policy Differences','');
+  if(synthesis.policyDifferences.length)md.push(...synthesis.policyDifferences.slice(0,8).map(f=>`- ${f.observations[0]} ${f.interpretation}`));
+  else md.push('- No adequately sampled policy behavior difference in this evidence yet.');
+  md.push('');
+  md.push('## Matchup Differences','');
+  if(synthesis.matchupDifferences.length)md.push(...synthesis.matchupDifferences.slice(0,8).map(f=>`- ${f.observations[0]} ${f.interpretation}`));
+  else md.push('- No adequately sampled matchup difference in this evidence yet.');
+  md.push('');
+  md.push('## Controlled Advice','');
   if(actionable.length)md.push(...orderControlledClaims(actionable,{fingerprint,eraId}).slice(0,8).map(c=>`- ${humanName(c.subject)} · ${c.confidence}: ${synthesizeStrategyClaim(c)}`),'');
   else md.push('No controlled player-actionable recommendation has earned Suggestive confidence yet.','');
+  if(synthesis.researchQuestions.length)md.push('## Best Questions to Test Next','','Leads are not advice — they rank what deserves controlled testing next.','',...synthesis.researchQuestions.slice(0,8).map(q=>`- ${humanName(q.subject)} · ${q.kind.replaceAll('_',' ')}: ${q.detail}`),'');
   md.push('## What We Still Don\'t Know','',
-    ...subjectData.filter(d=>!d.controlled.length).map(d=>`- ${d.name}: no controlled use-vs-preserve evidence.`),
+    ...synthesis.unknowns.map(u=>`- ${u.summary}`),
     '- Midgame and private-information decisions cannot be studied yet — controlled evidence covers the first P1 opening decision only.',
     '- Observational associations remain non-causal; nothing here proves a card wins more games by itself.','');
-  const guide=sealStrategy(STRATEGY_CONTRACTS.guide,{fingerprint,rulesProfile,eraId,generatedAt,guideVersion:2,entries,leads,claims,missingConclusion:'No strong conclusion yet. Timing, scoring, defense, traps and expert recommendations require supported player-actionable evidence.'});
+  const guide=sealStrategy(STRATEGY_CONTRACTS.guide,{fingerprint,rulesProfile,eraId,generatedAt,guideVersion:3,entries,leads,claims,synthesis,missingConclusion:'No strong conclusion yet. Timing, scoring, defense, traps and expert recommendations require supported player-actionable evidence.'});
   return {manifest:guide,markdown:md.join('\n')};
 }
-/** Bounded 2–3 action motifs; same actor, public descriptors, no causal label. */
+/** Bounded 2–3 action motifs; same actor, public descriptors, no causal label. Windows never overlap inside one actor-game, so a repeated score→score→score chain in a single game counts once instead of masquerading as many independent patterns. */
 export function mineStrategyMotifs(events,{maxMotifs=100,filters={}}={}) {
   const motifs=new Map();
   for(const seat of [1,2]) {
     const actions=events.filter(e=>e.seat===seat && e.outcomes.clean && !['phase','private-choice','response-decline'].includes(e.candidates.find(a=>a.actionId===e.selectedActionId)?.family));
-    for(let i=0;i<actions.length-1;i++)for(const length of [2,3]) {
-      const slice=actions.slice(i,i+length);if(slice.length!==length || slice.at(-1).context.turn-slice[0].context.turn>3)continue;
-      if(slice.some(e=>!strategyEventMatches(e,filters)))continue;
-      if(slice.some(e=>e.identity.runId!==slice[0].identity.runId || e.identity.gameOrdinal!==slice[0].identity.gameOrdinal || e.identity.eraId!==slice[0].identity.eraId))continue;
-      const sequence=slice.map(e=>{const a=e.candidates.find(c=>c.actionId===e.selectedActionId);return `${a.family}:${a.mode}`;}),key=sequence.join(' → ');
-      if(!motifs.has(key) && motifs.size>=maxMotifs)continue;
-      const m=motifs.get(key)??{sequence,occurrences:0,games:new Set(),eventIds:[],outcomeScoreSum:0};
-      m.occurrences++;m.games.add(`${slice[0].identity.runId}:${slice[0].identity.gameOrdinal}`);if(m.eventIds.length<12)m.eventIds.push(slice[0].artifactId);m.outcomeScoreSum+=slice.at(-1).outcomes.terminalWinner==='DRAW'?0.5:slice.at(-1).outcomes.terminalWinner===slice[0].actorId?1:0;motifs.set(key,m);
+    for(let i=0;i<actions.length-1;i++) {
+      // Longest non-overlapping window wins the start position; advancing i
+      // by the emitted length keeps one action inside at most one window.
+      for(const length of [3,2]) {
+        const slice=actions.slice(i,i+length);if(slice.length!==length || slice.at(-1).context.turn-slice[0].context.turn>3)continue;
+        if(slice.some(e=>!strategyEventMatches(e,filters)))continue;
+        if(slice.some(e=>e.identity.runId!==slice[0].identity.runId || e.identity.gameOrdinal!==slice[0].identity.gameOrdinal || e.identity.eraId!==slice[0].identity.eraId))continue;
+        const sequence=slice.map(e=>{const a=e.candidates.find(c=>c.actionId===e.selectedActionId);return `${a.family}:${a.mode}`;}),key=sequence.join(' → ');
+        if(!motifs.has(key) && motifs.size>=maxMotifs)continue;
+        const m=motifs.get(key)??{sequence,occurrences:0,games:new Set(),perGame:new Map(),eventIds:[],outcomeScoreSum:0};
+        const gameKey=`${slice[0].identity.runId}:${slice[0].identity.gameOrdinal}:${seat}`;
+        // Occurrence cap per actor-game: one game replaying the same
+        // sequence contributes at most 2 windows — correlated repeats
+        // cannot masquerade as independent strategic evidence.
+        if((m.perGame.get(gameKey)??0)>=2)break;
+        m.perGame.set(gameKey,(m.perGame.get(gameKey)??0)+1);
+        m.occurrences++;m.games.add(`${slice[0].identity.runId}:${slice[0].identity.gameOrdinal}`);if(m.eventIds.length<12)m.eventIds.push(slice[0].artifactId);m.outcomeScoreSum+=slice.at(-1).outcomes.terminalWinner==='DRAW'?0.5:slice.at(-1).outcomes.terminalWinner===slice[0].actorId?1:0;motifs.set(key,m);
+        i+=length-1;break;
+      }
     }
   }
-  return [...motifs.values()].map(({games,...m})=>({...m,gameCount:games.size,evidenceType:'ASSOCIATIONAL',caveat:'Sequence occurrence is not causal proof; overlapping windows are correlated.'})).sort((a,b)=>b.occurrences-a.occurrences);
+  return [...motifs.values()].map(({games,...m})=>{delete m.perGame;return {...m,gameCount:games.size,evidenceType:'ASSOCIATIONAL',caveat:'Sequence occurrence is not causal proof; overlapping windows are correlated.'};}).sort((a,b)=>b.occurrences-a.occurrences);
 }
 export function mineStrategyMistakes(studies) {
   return studies.flatMap(study=>{

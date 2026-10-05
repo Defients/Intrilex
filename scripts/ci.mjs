@@ -198,6 +198,7 @@ const STAGES = [
   ['observatory-charts', 'node', ['--test', 'test/observatory-charts.test.mjs']],
   ['cross-workspace-linking', 'node', ['--test', 'test/cross-workspace-linking.test.mjs']],
   ['matchup-matrix', 'node', ['--test', 'test/matchup-matrix.test.mjs']],
+  ['batch-matrix', 'node', ['--test', 'test/batch-matrix.test.mjs']],
   ['tempo-opening-analysis', 'node', ['--test', 'test/tempo-opening-analysis.test.mjs']],
   ['endgame-section-nav', 'node', ['--test', 'test/endgame-section-nav.test.mjs']],
   ['backup-match-db', 'node', ['--test', 'test/backup-match-db.test.mjs']],
@@ -294,8 +295,8 @@ const STAGES = [
   ['trace-teaching', 'node', ['--test', 'test/trace-teaching.test.mjs']],
   // Divergence fixes: regression tests for all 10 implementation divergences
   ['engine-divergence-fixes', 'node', ['--test', 'test/engine-divergence-fixes.test.mjs']],
-  ['evolution-lab', 'node', ['--test', 'test/evolution-lab.test.mjs', 'test/evolution-foundation.test.mjs', 'test/evolution-research.test.mjs', 'test/evolution-training.test.mjs', 'test/evolution-completion.test.mjs', 'test/evolution-cockpit.test.mjs', 'test/evolution-analytics.test.mjs', 'test/tactical-policies.test.mjs', 'test/policy-action-coverage.test.mjs', 'test/strategic-research.test.mjs']],
-  ['strategy-intelligence', 'node', ['--test', 'test/strategy-intelligence.test.mjs', 'test/strategy-information.test.mjs', 'test/strategy-ai-interpreter.test.mjs', 'test/strategy-v121-correction.test.mjs']],
+  ['evolution-lab', 'node', ['--test', 'test/evolution-lab.test.mjs', 'test/evolution-foundation.test.mjs', 'test/evolution-research.test.mjs', 'test/evolution-training.test.mjs', 'test/evolution-completion.test.mjs', 'test/evolution-cockpit.test.mjs', 'test/evolution-analytics.test.mjs', 'test/tactical-policies.test.mjs', 'test/policy-action-coverage.test.mjs', 'test/strategic-research.test.mjs', 'test/batch-matrix.test.mjs']],
+  ['strategy-intelligence', 'node', ['--test', 'test/strategy-intelligence.test.mjs', 'test/strategy-information.test.mjs', 'test/strategy-ai-interpreter.test.mjs', 'test/strategy-v121-correction.test.mjs', 'test/strategy-v3-synthesis.test.mjs']],
   ['agent-profiles', 'node', ['--test', 'test/agent-profile-contracts.test.mjs', 'test/agent-profile-store.test.mjs', 'test/agent-profile-science.test.mjs', 'test/agent-profile-consumer.test.mjs', 'test/agent-profile-arena.test.mjs']],
 ];
 

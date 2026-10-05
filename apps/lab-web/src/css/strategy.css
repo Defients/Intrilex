@@ -67,3 +67,9 @@
 .si-ai-result { border-left:3px solid #6b5b95; padding:8px 18px; background:#211c30; border-radius:0 8px 8px 0; }
 .si-ai-result h4 { margin:10px 0 4px; color:#e8e0ff; }
 .si-ai-result p { font-size:.84rem; }
+/* Guide-level AI interpretation: visually distinct from deterministic
+   guide prose — dashed frame + lesson cards, never a .si-guide lookalike. */
+.si-ai-guide { border-left-style:dashed; }
+.si-ai-guide::before { content:'AI INTERPRETATION — NOT SCIENTIFIC OUTPUT'; display:block; font-size:.62rem; letter-spacing:.18em; color:#9d8fd0; margin-bottom:6px; }
+.si-ai-lesson { background:#181425; border:1px solid #3a3157; border-radius:8px; padding:8px 14px; margin:8px 0; }
+.si-ai-lesson h5 { margin:4px 0; color:#ded5f8; font-size:.86rem; }

@@ -1,10 +1,10 @@
-import { researchRunEvidence } from './evolution-retention.mjs?v=e1685673b001';
-import { esc } from '../state.js?v=e1685673b001';
-import { LAB_IDENTITY } from './identity.mjs?v=e1685673b001';
-import { createTrainingProject,trainProject } from './evolution-training.mjs?v=e1685673b001';
-import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=e1685673b001';
-import { attachTrainingUi } from './evolution-research-ui.js?v=e1685673b001';
-import { projectModel } from './evolution-view-model.mjs?v=e1685673b001';
+import { researchRunEvidence } from './evolution-retention.mjs?v=37aaf900a6e7';
+import { esc } from '../state.js?v=37aaf900a6e7';
+import { LAB_IDENTITY } from './identity.mjs?v=37aaf900a6e7';
+import { createTrainingProject,trainProject } from './evolution-training.mjs?v=37aaf900a6e7';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=37aaf900a6e7';
+import { attachTrainingUi } from './evolution-research-ui.js?v=37aaf900a6e7';
+import { projectModel } from './evolution-view-model.mjs?v=37aaf900a6e7';
 
 const api=attachTrainingUi(renderTraining);
 function renderTraining(project,locked){

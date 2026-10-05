@@ -242,7 +242,7 @@ test('GUIDE packet embeds the deterministic artifact as interpretation input', (
   const manifest = { entries: [{ claimId: 'SI-1', subject: 'rank:7' }], claims: [suggestive], leads: [], generatedAt: 't' };
   const packet = createGuidePacket({ manifest, markdown: '# Guide\nSeven looks promising.' });
   assert.equal(packet.surface, 'GUIDE');
-  assert.match(packet.surfaceData.guide.text, /Seven looks promising/);
+  assert.match(packet.surfaceData.guide.excerpt.text, /Seven looks promising/);
   assert.equal(packet.groundingFacts.some(f => f.id === 'guide_subjects'), true);
 });
 

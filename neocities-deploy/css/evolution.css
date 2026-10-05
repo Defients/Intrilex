@@ -42,3 +42,39 @@
 /* Agent Profiles surface */
 .ap-layout{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:12px;align-items:start}.ap-main{min-width:0}.ap-header{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.ap-roster-list{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:6px}.ap-roster-list li{display:grid;gap:2px}.ap-roster-list button{text-align:left;width:100%}.ap-roster-list button[aria-current=true]{border-color:var(--evo-accent);color:var(--evo-accent)}.ap-roster-list small{color:var(--evo-muted);font-size:9px}.ap-form{display:grid;gap:8px}.ap-form fieldset{border:1px solid var(--evo-border);border-radius:5px;padding:8px;display:grid;gap:8px;min-width:0}.ap-form legend{font-size:10px;color:var(--evo-secondary)}.ap-form small{color:var(--evo-muted);font-size:9px}.ap-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin:0 0 12px}.ap-facts>div{border:1px solid var(--evo-border);background:var(--evo-panel);border-radius:5px;padding:8px;min-width:0}.ap-facts dt{color:var(--evo-muted);font-size:9px;letter-spacing:.08em;text-transform:uppercase}.ap-facts dd{margin:4px 0 0;overflow-wrap:anywhere;font-size:11px}.ap-facts pre{max-height:240px}.ap-layout button:focus-visible,.ap-layout input:focus-visible,.ap-layout select:focus-visible,.ap-layout textarea:focus-visible,.ap-layout summary:focus-visible{outline:2px solid var(--evo-accent);outline-offset:2px}.ap-layout table caption{text-align:left;font-size:10px;color:var(--evo-secondary);padding:6px 8px}
 @media(max-width:900px){.ap-layout{grid-template-columns:1fr}}
+
+/* Batch profile matrix */
+.bm-roster{list-style:none;margin:10px 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px}
+.bm-row{display:flex;align-items:flex-start;gap:8px;border:1px solid var(--evo-border);border-radius:5px;padding:8px 10px;background:var(--evo-panel);cursor:pointer;font-size:11px}
+.bm-row input{min-height:0;margin-top:3px;flex:0 0 auto}
+.bm-row.bm-selected{border-color:var(--evo-accent)}
+.bm-row.bm-unavailable{opacity:.62;cursor:not-allowed}
+.bm-name{font-weight:650;display:block}
+.bm-meta{color:var(--evo-muted);font-size:9px;display:block;margin-top:2px}
+.bm-reason{color:var(--evo-danger)}
+.bm-preflight{border:1px solid var(--evo-border);border-radius:5px;background:var(--evo-inset);padding:10px 12px;margin:10px 0}
+.bm-preflight>strong{font-size:9px;letter-spacing:.14em;color:var(--evo-muted)}
+.bm-preflight-list{display:flex;flex-wrap:wrap;gap:6px 18px;list-style:none;padding:0;margin:8px 0;font-size:11px;color:var(--evo-secondary)}
+.bm-preflight-list .bm-reason{flex-basis:100%}
+.bm-note{color:var(--evo-muted);font-size:10px}
+.bm-empty{color:var(--evo-muted);border:1px dashed var(--evo-border);padding:12px;border-radius:5px}
+.bm-matrix-scroll{position:relative;max-height:60vh}
+.bm-matrix th[scope=row]{position:sticky;left:0;background:var(--evo-inset);z-index:2;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+.bm-matrix thead th{position:sticky;top:0;z-index:3;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.bm-matrix thead th:first-child{z-index:4}
+.bm-cell{display:block;width:100%;min-height:44px;text-align:center;font-size:11px;padding:4px;border-radius:4px}
+.bm-cell small{font-size:8px;color:var(--evo-muted)}
+.bm-cell.bm-win{background:#14352f;border-color:#2d6a5d;color:var(--evo-lineage-a)}
+.bm-cell.bm-loss{background:#2b2138;border-color:#57447e;color:var(--evo-lineage-b)}
+.bm-cell.bm-partial{background:var(--evo-raised)}
+.bm-cell.bm-pending{opacity:.5}
+.bm-cell.bm-focus-cell,.bm-focus-cell{outline:2px solid var(--evo-accent);outline-offset:-2px}
+.bm-diag{color:var(--evo-muted);text-align:center}
+.bm-board td,.bm-board th{white-space:nowrap}
+.bm-breakdown{margin:12px 0}
+.bm-breakdown-row{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--evo-border);padding:5px 0;font-size:11px}
+.bm-breakdown-row>span{flex:1}
+.bm-detail{border-top:1px solid var(--evo-border);margin-top:12px;padding-top:8px}
+.bm-badge{font-size:9px;border:1px solid var(--evo-border);border-radius:3px;padding:2px 6px;color:var(--evo-secondary)}
+.bm-saved{margin-top:12px}
+@media(max-width:700px){.bm-roster{grid-template-columns:1fr}.bm-cell small{display:none}}

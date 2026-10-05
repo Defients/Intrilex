@@ -1,5 +1,5 @@
-import { verifyCertifiedReplay } from './engine/browser-entry.js?v=e1685673b001';
-import { hashCanonical, sha256Text } from './engine/hash.js?v=e1685673b001';
+import { verifyCertifiedReplay } from './engine/browser-entry.js?v=37aaf900a6e7';
+import { hashCanonical, sha256Text } from './engine/hash.js?v=37aaf900a6e7';
 
 const output = document.querySelector('#result');
 const setResult = (status, value) => {

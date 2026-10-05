@@ -1,5 +1,11 @@
 # Custom Profiles in Arena
 
+> Multi-Profile batch evaluation now exists: see
+> [BATCH_PROFILE_MATRIX.md](BATCH_PROFILE_MATRIX.md). The Batch Matrix freezes
+> the same head snapshots this document describes, across every unique pairing
+> of 2–8 participants, instead of one Arena matchup at a time.
+
+
 Local integration verified on **2026-10-04, America/New_York**, starting from
 `ec4baa6`. This closes the Arena dropdown and checkpoint-consumer gap. It is not
 a claim that every v1.31 roadmap requirement is complete or that the published

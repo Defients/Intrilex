@@ -5,8 +5,8 @@
 // card faces with family filtering and ability summaries.
 // ═══════════════════════════════════════════════════════════════
 
-import { listAuthoritativeCards, getCardDefinition, getSuit, rankName, pointValue, CARD_FACE_REGISTRY_META } from '../card-face-data.js?v=e1685673b001';
-import { renderCardFace } from '../card-face-renderer.js?v=e1685673b001';
+import { listAuthoritativeCards, getCardDefinition, getSuit, rankName, pointValue, CARD_FACE_REGISTRY_META } from '../card-face-data.js?v=37aaf900a6e7';
+import { renderCardFace } from '../card-face-renderer.js?v=37aaf900a6e7';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

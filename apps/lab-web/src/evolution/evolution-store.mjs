@@ -1,6 +1,7 @@
 import { hashCanonical } from '../shared-browser.js';
 import { validateResearchProject, researchEnvelope } from './evolution-research.mjs';
 import { artifactEnvelope, validateArtifact, inspectHistoricalArtifact, LAB_LIMITS } from './evolution-domain.mjs';
+import { batchMatrixManifest, validateBatchMatrixManifest } from './batch-matrix.mjs';
 
 /** Dedicated developer database. Completion resolves only after transaction commit. */
 export class EvolutionStore {
@@ -20,7 +21,7 @@ export class EvolutionStore {
         reject(error);
       };
       let req;
-      try { req = this.factory.open('intrilex-evolution-lab', 2); }
+      try { req = this.factory.open('intrilex-evolution-lab', 3); }
       catch (error) { fail(error); return; }
       req.onupgradeneeded = () => {
         if (this.opening !== pending) { req.transaction.abort(); return; }
@@ -28,6 +29,7 @@ export class EvolutionStore {
         if(!req.result.objectStoreNames.contains('runs')) req.result.createObjectStore('runs', { keyPath: 'payload.runId' });
         if(!req.result.objectStoreNames.contains('history')) req.result.createObjectStore('history', { keyPath: 'runId' });
         if(!req.result.objectStoreNames.contains('checkpoints')) req.result.createObjectStore('checkpoints', { keyPath: 'checkpointId' });
+        if(!req.result.objectStoreNames.contains('matrices')) req.result.createObjectStore('matrices', { keyPath: 'payload.matrixId' });
       };
       req.onsuccess = () => {
         const db = req.result;
@@ -88,6 +90,40 @@ export class EvolutionStore {
         records.put(envelope);
       };
     });
+  }
+  /** Batch Matrix manifests are compact frozen plans (participants,
+   * checkpoints, config, run references). Cell evidence stays in the runs
+   * store — the manifest never duplicates records into a second copy. */
+  async saveMatrix(lab) {
+    const envelope = batchMatrixManifest(lab);
+    validateBatchMatrixManifest(envelope);
+    const size = new TextEncoder().encode(JSON.stringify(envelope)).byteLength;
+    if (size > LAB_LIMITS.persistRunBytes) throw Object.assign(new Error('RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE'),{code:'RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE',artifactSize:size,persistLimit:LAB_LIMITS.persistRunBytes});
+    const db = await this.open();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(['matrices'], 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(tx.error?.name === 'QuotaExceededError' ? Object.assign(new Error('BROWSER_STORAGE_QUOTA_EXCEEDED'),{code:'BROWSER_STORAGE_QUOTA_EXCEEDED',cause:tx.error}) : tx.error ?? new Error('LAB_STORAGE_ABORTED'));
+      tx.onerror = () => {};
+      tx.objectStore('matrices').put(envelope);
+    });
+    return size;
+  }
+  async listMatrices() {
+    const rows = await this.read('matrices');
+    return rows.map(e => {
+      try { validateBatchMatrixManifest(e); } catch { return { matrixId: e?.payload?.matrixId ?? 'unreadable', status: 'CORRUPT', corrupt: true }; }
+      const refs = e.payload.runRefs ?? [];
+      return { matrixId: e.payload.matrixId, status: e.payload.status, createdAt: e.payload.createdAt,
+        participants: e.payload.participants.map(p => p.displayName),
+        cellsComplete: refs.filter(r => r.status === 'COMPLETE').length, cellsTotal: e.payload.participants.length * (e.payload.participants.length - 1) / 2,
+        records: refs.reduce((n, r) => n + r.records, 0) };
+    }).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+  }
+  async loadMatrix(id) {
+    const envelope = await this.read('matrices', id);
+    if (!envelope) throw new Error('LAB_MATRIX_NOT_FOUND');
+    return validateBatchMatrixManifest(envelope);
   }
   async listResearch() {return (await this.read('research')).map(e=>({experimentId:e.payload.experiment.experimentId,name:e.payload.experiment.name,status:e.payload.experiment.status,scientificId:e.payload.experiment.scientificId}));}
   async loadResearch(id) {const envelope=await this.read('research',id);if(!envelope || envelope.contentHash!==hashCanonical(envelope.payload))throw new Error('RESEARCH_HASH_MISMATCH');const project=validateResearchProject(envelope.payload,this.identity);if(project.experiment.status==='RUNNING')project.experiment.status='PAUSED';return project;}

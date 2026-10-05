@@ -36,7 +36,10 @@ export const STRATEGY_FACT_UNITS = Object.freeze({
   COUNT_CONTINUATIONS: 'COUNT_CONTINUATIONS', COUNT_COMPARISONS: 'COUNT_COMPARISONS',
   COUNT_EXECUTIONS: 'COUNT_EXECUTIONS', COUNT_FAULTS: 'COUNT_FAULTS', COUNT_POLICIES: 'COUNT_POLICIES',
   COUNT_MATCHUPS: 'COUNT_MATCHUPS', COUNT_STATES: 'COUNT_STATES', COUNT_SEED_BLOCKS: 'COUNT_SEED_BLOCKS',
-  COUNT_SOURCES: 'COUNT_SOURCES', COUNT_SUBJECTS: 'COUNT_SUBJECTS', COUNT_EVENTS: 'COUNT_EVENTS'
+  COUNT_SOURCES: 'COUNT_SOURCES', COUNT_SUBJECTS: 'COUNT_SUBJECTS', COUNT_EVENTS: 'COUNT_EVENTS',
+  // A card's printed point value — a public rules fact, NOT a statistical
+  // delta. "7 points" must never be read as "+7 percentage points".
+  CARD_POINT_VALUE: 'CARD_POINT_VALUE'
 });
 
 const UNIT_COUNT_WORDS = Object.freeze({
@@ -57,6 +60,7 @@ export function renderFactDisplay(value, unit) {
   if (unit === STRATEGY_FACT_UNITS.PERCENT) return `${(value * 100).toFixed(1)}%`;
   if (unit === STRATEGY_FACT_UNITS.PERCENTAGE_POINTS) return `${value >= 0 ? '+' : ''}${(value * 100).toFixed(1)} pp`;
   if (unit === STRATEGY_FACT_UNITS.GAME_SCORE_POINTS) return `${value >= 0 ? '+' : ''}${(value * 100).toFixed(1)} pp game score`;
+  if (unit === STRATEGY_FACT_UNITS.CARD_POINT_VALUE) return `${value} card point${value === 1 ? '' : 's'}`;
   const words = UNIT_COUNT_WORDS[unit] ?? ['unit', 'units'];
   return `${value} ${value === 1 ? words[0] : words[1]}`;
 }
@@ -145,6 +149,7 @@ export function createStrategyExplanationPacket({
   controlledClaims = [],
   researchLeads = [],
   publicMechanicDescription = null,
+  cardPointValue = null,
   surfaceData = null
 } = {}) {
   if (!Object.values(STRATEGY_INTERPRETER_SURFACES).includes(surface)) throw new Error('STRATEGY_PACKET_SURFACE_INVALID');
@@ -270,6 +275,7 @@ export function createStrategyExplanationPacket({
   }
   fact('controlled_comparisons', packet.controlledSummary.testedComparisons, STRATEGY_FACT_UNITS.COUNT_COMPARISONS, 'controlled comparisons tested');
   fact('controlled_experimental', packet.controlledSummary.experimental, STRATEGY_FACT_UNITS.COUNT_COMPARISONS, 'experimental controlled results');
+  fact('card_point_value', cardPointValue, STRATEGY_FACT_UNITS.CARD_POINT_VALUE, 'printed card point value from public rules — not a statistic');
   packet.groundingFacts = facts;
   if (surfaceData !== null) {
     assertPacketSafe(surfaceData, 'surfaceData');
@@ -277,6 +283,50 @@ export function createStrategyExplanationPacket({
   }
   return packet;
 }
+
+/** GUIDE-specific structured output — a whole-guide narrative, not the
+ * single-subject card schema. Bounded so the model synthesizes instead of
+ * mirroring every subject. */
+export const STRATEGY_GUIDE_SCHEMA = Object.freeze({
+  type: 'object',
+  required: ['title', 'executiveTake', 'keyLessons', 'phaseOfGame', 'thingsNotToOverread', 'bestNextExperiments', 'bottomLine', 'evidenceLabel', 'confidenceLanguage'],
+  properties: {
+    title: { type: 'string' },
+    executiveTake: { type: 'string' },
+    keyLessons: {
+      type: 'array', maxItems: 8,
+      items: {
+        type: 'object',
+        required: ['headline', 'explanation', 'confidence', 'caveat', 'nextQuestion'],
+        properties: {
+          headline: { type: 'string' }, explanation: { type: 'string' },
+          confidence: { type: 'string', enum: ['OBSERVED_PATTERN', 'WORKING_HYPOTHESIS', 'CONTROLLED_ADVICE'] },
+          caveat: { type: 'string' }, nextQuestion: { type: 'string' }
+        },
+        additionalProperties: false
+      }
+    },
+    cardInsights: {
+      type: 'array', maxItems: 8,
+      items: {
+        type: 'object', required: ['subject', 'insight'],
+        properties: { subject: { type: 'string' }, insight: { type: 'string' } },
+        additionalProperties: false
+      }
+    },
+    phaseOfGame: { type: 'string' },
+    policyInsights: { type: 'array', maxItems: 4, items: { type: 'string' } },
+    matchupInsights: { type: 'array', maxItems: 4, items: { type: 'string' } },
+    thingsNotToOverread: { type: 'array', maxItems: 6, items: { type: 'string' } },
+    bestNextExperiments: { type: 'array', maxItems: 5, items: { type: 'string' } },
+    bottomLine: { type: 'string' },
+    confidenceLanguage: { type: 'string', enum: ['INSUFFICIENT', 'EXPERIMENTAL', 'SUGGESTIVE', 'STRONG', 'ESTABLISHED', 'UNKNOWN'] },
+    evidenceLabel: { type: 'string', enum: [...STRATEGY_EVIDENCE_LABELS] },
+    usedFactIds: { type: 'array', items: { type: 'string' } }
+  },
+  additionalProperties: false
+});
+export const STRATEGY_GUIDE_LIMITS = Object.freeze({ keyLessons: 8, cardInsights: 8, policyInsights: 4, matchupInsights: 4, thingsNotToOverread: 6, bestNextExperiments: 5 });
 
 /** Append a typed grounding fact to a packet built above. */
 export function addGroundingFact(packet, id, value, unit, meaning) {
@@ -350,9 +400,10 @@ export function createPolicyComparePacket({ kind = 'policyId', left, right, cont
  * markdown is interpretation input; AI output is never a replacement
  * scientific artifact and cannot alter claims, confidence or provenance.
  */
-export function createGuidePacket({ manifest, markdown, context = {}, humanName: _humanName = s => s } = {}) {
+export function createGuidePacket({ manifest, markdown, context = {}, synthesis = null, humanName: _humanName = s => s } = {}) {
   if (!manifest || typeof markdown !== 'string' || !markdown) throw new Error('STRATEGY_PACKET_GUIDE_REQUIRED');
   const claims = manifest.claims ?? [];
+  const syn = synthesis ?? manifest.synthesis ?? null;
   const packet = createStrategyExplanationPacket({
     surface: STRATEGY_INTERPRETER_SURFACES.GUIDE,
     subject: 'guide:expert', humanSubjectName: 'Expert Strategy Guide',
@@ -364,12 +415,24 @@ export function createGuidePacket({ manifest, markdown, context = {}, humanName:
       guide: {
         entries: manifest.entries?.length ?? null, claimCount: claims.length,
         leadCount: (manifest.leads ?? []).length, generatedAt: manifest.generatedAt ?? null,
-        text: markdown.slice(0, 16000)
+        // The model reads synthesized findings, not a truncated markdown
+        // dump — the excerpt below is context only and honestly labeled.
+        excerpt: { text: markdown.slice(0, 4000), truncated: markdown.length > 4000, totalChars: markdown.length },
+        strategicFindings: (syn?.findings ?? []).slice(0, 24).map(f => ({
+          type: f.type, trustClass: f.trustClass, headline: f.headline,
+          subjects: f.subjects, observations: f.observations, interpretation: f.interpretation,
+          limitations: f.limitations, nextTest: f.nextTest, salience: f.salience
+        })),
+        topFindings: (syn?.topFindings ?? []).map(f => ({ type: f.type, trustClass: f.trustClass, headline: f.headline, subjects: f.subjects })),
+        controlledAdvice: (syn?.controlledAdvice ?? []).map(f => ({ headline: f.headline, subjects: f.subjects })),
+        majorUnknowns: (syn?.unknowns ?? []).map(u => ({ kind: u.kind, summary: u.summary })),
+        researchQuestions: (syn?.researchQuestions ?? []).slice(0, 8).map(q => ({ subject: q.subject, kind: q.kind, detail: q.detail }))
       }
     }
   });
   addGroundingFact(packet, 'guide_claims', claims.length, STRATEGY_FACT_UNITS.COUNT_COMPARISONS, 'claims cited by the deterministic guide');
   addGroundingFact(packet, 'guide_subjects', manifest.entries?.length, STRATEGY_FACT_UNITS.COUNT_SUBJECTS, 'subjects covered by the guide');
+  addGroundingFact(packet, 'guide_findings', (syn?.findings ?? []).length, STRATEGY_FACT_UNITS.COUNT_SUBJECTS, 'strategic findings synthesized');
   return packet;
 }
 
@@ -402,11 +465,12 @@ export function createEvidenceDeskPacket({ summary, context = {} } = {}) {
 // Number+unit phrases the validator recognizes. A bare numeral ("Rank 7",
 // "Seven", "128") with no unit word is subject identity or ordinary prose —
 // never a statistical claim — and is not checked here.
-const NUMERIC_UNIT_PATTERN = /(?<![\d.,])([+-]?\d+(?:\.\d+)?)\s*(%|percentage points?|\bpp\b|percent\b|points?\b|games?\b|decisions?\b|hidden worlds?\b|worlds?\b|opportunit(?:y|ies)\b|selections?\b|continuations?\b|comparisons?\b|executions?\b|faults?\b|policies\b|matchups?\b|states?\b|seed blocks?\b|subjects?\b|sources?\b|events?\b)/gi;
+const NUMERIC_UNIT_PATTERN = /(?<![\d.,])([+-]?\d+(?:\.\d+)?)\s*(%|percentage points?|\bpp\b|percent\b|card points?\b|points?\b|games?\b|decisions?\b|hidden worlds?\b|worlds?\b|opportunit(?:y|ies)\b|selections?\b|continuations?\b|comparisons?\b|executions?\b|faults?\b|policies\b|matchups?\b|states?\b|seed blocks?\b|subjects?\b|sources?\b|events?\b)/gi;
 const UNIT_ALIASES = Object.freeze({
   '%': STRATEGY_FACT_UNITS.PERCENT, 'percent': STRATEGY_FACT_UNITS.PERCENT,
   'percentage point': STRATEGY_FACT_UNITS.PERCENTAGE_POINTS, 'percentage points': STRATEGY_FACT_UNITS.PERCENTAGE_POINTS,
   'pp': STRATEGY_FACT_UNITS.PERCENTAGE_POINTS, 'point': STRATEGY_FACT_UNITS.PERCENTAGE_POINTS, 'points': STRATEGY_FACT_UNITS.PERCENTAGE_POINTS,
+  'card point': STRATEGY_FACT_UNITS.CARD_POINT_VALUE, 'card points': STRATEGY_FACT_UNITS.CARD_POINT_VALUE,
   'game': STRATEGY_FACT_UNITS.COUNT_GAMES, 'games': STRATEGY_FACT_UNITS.COUNT_GAMES,
   'decision': STRATEGY_FACT_UNITS.COUNT_DECISIONS, 'decisions': STRATEGY_FACT_UNITS.COUNT_DECISIONS,
   'hidden world': STRATEGY_FACT_UNITS.COUNT_WORLDS, 'hidden worlds': STRATEGY_FACT_UNITS.COUNT_WORLDS,
@@ -426,6 +490,49 @@ const UNIT_ALIASES = Object.freeze({
   'event': STRATEGY_FACT_UNITS.COUNT_EVENTS, 'events': STRATEGY_FACT_UNITS.COUNT_EVENTS
 });
 
+function collectStrings(value, into = []) {
+  if (typeof value === 'string') into.push(value);
+  else if (Array.isArray(value)) for (const item of value) collectStrings(item, into);
+  else if (value && typeof value === 'object') for (const entry of Object.values(value)) collectStrings(entry, into);
+  return into;
+}
+// Unit-aware grounding shared by both schemas: every "number + unit"
+// phrase must match a fact of the SAME unit at the same value.
+function assertGroundedNumbers(texts, packet) {
+  const fail = code => { throw new Error(code); };
+  const allowedByUnit = new Map();
+  for (const f of packet.groundingFacts ?? []) {
+    const n = factNumber(f);
+    if (n === null) continue;
+    if (!allowedByUnit.has(f.unit)) allowedByUnit.set(f.unit, new Set());
+    allowedByUnit.get(f.unit).add(n);
+  }
+  for (const match of texts.join(' ').matchAll(NUMERIC_UNIT_PATTERN)) {
+    const word = match[2].toLowerCase();
+    const num = Number(match[1]);
+    // "points" is ambiguous: a signed value is always a statistical delta,
+    // while an unsigned "N points" may be a card's printed point value.
+    // Only "percentage points"/"pp" strictly mean the statistical unit.
+    const units = word === 'card point' || word === 'card points'
+      ? [STRATEGY_FACT_UNITS.CARD_POINT_VALUE]
+      : word === 'point' || word === 'points'
+        ? (/^[+-]/.test(match[1]) ? [STRATEGY_FACT_UNITS.PERCENTAGE_POINTS] : [STRATEGY_FACT_UNITS.PERCENTAGE_POINTS, STRATEGY_FACT_UNITS.CARD_POINT_VALUE])
+        : [UNIT_ALIASES[word]];
+    if (!units.some(unit => unit && allowedByUnit.get(unit)?.has(num))) fail('STRATEGY_EXPLANATION_UNGROUNDED_NUMBER');
+  }
+}
+function assertEchoedClassification(value, packet) {
+  const fail = code => { throw new Error(code); };
+  // The model must echo the deterministic classification, not invent one.
+  if (packet && value.evidenceLabel !== packet.evidenceLabel) fail('STRATEGY_EXPLANATION_LABEL_MISMATCH');
+  if (packet && packet.highestConfidence !== 'UNKNOWN' && value.confidenceLanguage !== packet.highestConfidence) fail('STRATEGY_EXPLANATION_CONFIDENCE_MISMATCH');
+  if (packet && packet.highestConfidence === 'UNKNOWN' && !['UNKNOWN', 'INSUFFICIENT'].includes(value.confidenceLanguage)) fail('STRATEGY_EXPLANATION_CONFIDENCE_MISMATCH');
+}
+function assertFactIds(value, packet) {
+  const factIds = new Set((packet?.groundingFacts ?? []).map(f => f.id));
+  for (const id of value.usedFactIds ?? []) if (!factIds.has(id)) throw new Error('STRATEGY_EXPLANATION_UNKNOWN_FACT');
+}
+
 /**
  * Strict validation of structured model output. Fails closed: a malformed
  * or ungrounded response is rejected, never treated as evidence. Numeric
@@ -443,30 +550,56 @@ export function validateStrategyExplanation(value, packet) {
   if (!Array.isArray(value.warnings) || value.warnings.some(w => typeof w !== 'string')) fail('STRATEGY_EXPLANATION_SCHEMA');
   if ('usedFactIds' in value && (!Array.isArray(value.usedFactIds) || value.usedFactIds.some(id => typeof id !== 'string'))) fail('STRATEGY_EXPLANATION_SCHEMA');
   if (!STRATEGY_EVIDENCE_LABELS.includes(value.evidenceLabel)) fail('STRATEGY_EXPLANATION_SCHEMA');
-  // The model must echo the deterministic classification, not invent one.
-  if (packet && value.evidenceLabel !== packet.evidenceLabel) fail('STRATEGY_EXPLANATION_LABEL_MISMATCH');
-  if (packet && packet.highestConfidence !== 'UNKNOWN' && value.confidenceLanguage !== packet.highestConfidence) fail('STRATEGY_EXPLANATION_CONFIDENCE_MISMATCH');
-  if (packet && packet.highestConfidence === 'UNKNOWN' && !['UNKNOWN', 'INSUFFICIENT'].includes(value.confidenceLanguage)) fail('STRATEGY_EXPLANATION_CONFIDENCE_MISMATCH');
+  assertEchoedClassification(value, packet);
   if (packet) {
-    const facts = packet.groundingFacts ?? [];
-    const factIds = new Set(facts.map(f => f.id));
-    // Declared citations must reference real grounding facts.
-    for (const id of value.usedFactIds ?? []) if (!factIds.has(id)) fail('STRATEGY_EXPLANATION_UNKNOWN_FACT');
-    // Unit-aware grounding: every "number + unit" phrase must match a fact
-    // of the SAME unit at the same value. Same-number/wrong-unit prose fails.
-    const allowedByUnit = new Map();
-    for (const f of facts) {
-      const n = factNumber(f);
-      if (n === null) continue;
-      if (!allowedByUnit.has(f.unit)) allowedByUnit.set(f.unit, new Set());
-      allowedByUnit.get(f.unit).add(n);
-    }
+    assertFactIds(value, packet);
     const text = required.filter(k => k !== 'warnings').map(k => value[k]).join(' ') + ' ' + value.warnings.join(' ');
-    for (const match of text.matchAll(NUMERIC_UNIT_PATTERN)) {
-      const unit = UNIT_ALIASES[match[2].toLowerCase()];
-      const num = Number(match[1]);
-      if (!unit || !allowedByUnit.get(unit)?.has(num)) fail('STRATEGY_EXPLANATION_UNGROUNDED_NUMBER');
+    assertGroundedNumbers([text], packet);
+  }
+  return value;
+}
+
+/**
+ * Strict validation of the GUIDE narrative schema — same fail-closed
+ * rules, plus bounded arrays so a guide stays a synthesis, not a dump.
+ */
+export function validateStrategyGuideExplanation(value, packet) {
+  const fail = code => { throw new Error(code); };
+  if (!value || typeof value !== 'object' || Array.isArray(value)) fail('STRATEGY_GUIDE_SCHEMA');
+  const required = STRATEGY_GUIDE_SCHEMA.required;
+  const allowed = Object.keys(STRATEGY_GUIDE_SCHEMA.properties);
+  for (const key of required) if (!(key in value)) fail('STRATEGY_GUIDE_SCHEMA');
+  for (const key of Object.keys(value)) if (!allowed.includes(key)) fail('STRATEGY_GUIDE_SCHEMA');
+  for (const key of ['title', 'executiveTake', 'phaseOfGame', 'bottomLine', 'confidenceLanguage', 'evidenceLabel'])
+    if (typeof value[key] !== 'string') fail('STRATEGY_GUIDE_SCHEMA');
+  if (!STRATEGY_EVIDENCE_LABELS.includes(value.evidenceLabel)) fail('STRATEGY_GUIDE_SCHEMA');
+  const stringArray = (key, max) => {
+    if (!(key in value)) return;
+    if (!Array.isArray(value[key]) || value[key].length > max || value[key].some(item => typeof item !== 'string')) fail('STRATEGY_GUIDE_SCHEMA');
+  };
+  for (const [key, max] of Object.entries(STRATEGY_GUIDE_LIMITS)) {
+    if (key === 'keyLessons' || key === 'cardInsights') continue;
+    stringArray(key, max);
+  }
+  if (!Array.isArray(value.keyLessons) || value.keyLessons.length > STRATEGY_GUIDE_LIMITS.keyLessons) fail('STRATEGY_GUIDE_SCHEMA');
+  for (const lesson of value.keyLessons) {
+    if (!lesson || typeof lesson !== 'object') fail('STRATEGY_GUIDE_SCHEMA');
+    for (const key of ['headline', 'explanation', 'caveat', 'nextQuestion']) if (typeof lesson[key] !== 'string') fail('STRATEGY_GUIDE_SCHEMA');
+    if (!['OBSERVED_PATTERN', 'WORKING_HYPOTHESIS', 'CONTROLLED_ADVICE'].includes(lesson.confidence)) fail('STRATEGY_GUIDE_SCHEMA');
+    if (Object.keys(lesson).some(key => !['headline', 'explanation', 'confidence', 'caveat', 'nextQuestion'].includes(key))) fail('STRATEGY_GUIDE_SCHEMA');
+  }
+  if ('cardInsights' in value) {
+    if (!Array.isArray(value.cardInsights) || value.cardInsights.length > STRATEGY_GUIDE_LIMITS.cardInsights) fail('STRATEGY_GUIDE_SCHEMA');
+    for (const item of value.cardInsights) {
+      if (!item || typeof item !== 'object' || typeof item.subject !== 'string' || typeof item.insight !== 'string') fail('STRATEGY_GUIDE_SCHEMA');
+      if (Object.keys(item).some(key => !['subject', 'insight'].includes(key))) fail('STRATEGY_GUIDE_SCHEMA');
     }
+  }
+  if ('usedFactIds' in value && (!Array.isArray(value.usedFactIds) || value.usedFactIds.some(id => typeof id !== 'string'))) fail('STRATEGY_GUIDE_SCHEMA');
+  assertEchoedClassification(value, packet);
+  if (packet) {
+    assertFactIds(value, packet);
+    assertGroundedNumbers(collectStrings(value), packet);
   }
   return value;
 }
@@ -493,16 +626,19 @@ export function strategyAiClient(config, { fetchImpl } = {}) {
  */
 export async function explainStrategyEvidence({ client, packet, model, signal, stream = false, onToken, options = {} } = {}) {
   if (!client || typeof client.chat !== 'function') throw new Error('STRATEGY_AI_CLIENT_REQUIRED');
+  const isGuide = packet?.surface === STRATEGY_INTERPRETER_SURFACES.GUIDE;
   const messages = [
     { role: 'system', content: STRATEGY_INTERPRETER_SYSTEM_PROMPT },
-    { role: 'user', content: `Explain this Intrilex Strategy evidence packet to a player. Reply ONLY with JSON matching the required schema.\n\nPACKET:\n${JSON.stringify(packet)}` }
+    { role: 'user', content: isGuide
+      ? `You are explaining a deterministic Intrilex Field Manual to a player. The packet contains the manual's synthesized strategic findings — explain the FINDINGS, not every subject. What are the most useful things a player can learn? Which numbers are likely misleading because of sample size? What appears to change by game phase? Where do policies disagree? What might be matchup-sensitive? What should the player NOT conclude? What is most valuable to test next? Reply ONLY with JSON matching the guide schema.\n\nPACKET:\n${JSON.stringify(packet)}`
+      : `Explain this Intrilex Strategy evidence packet to a player. Reply ONLY with JSON matching the required schema.\n\nPACKET:\n${JSON.stringify(packet)}` }
   ];
-  const { text } = await client.chat({ model, messages, format: STRATEGY_EXPLANATION_SCHEMA, stream, onToken, signal, options: { temperature: 0.2, num_predict: 1200, ...options } });
+  const { text } = await client.chat({ model, messages, format: isGuide ? STRATEGY_GUIDE_SCHEMA : STRATEGY_EXPLANATION_SCHEMA, stream, onToken, signal, options: { temperature: 0.2, num_predict: isGuide ? 2400 : 1200, ...options } });
   let parsed;
   try { parsed = JSON.parse(text); }
   catch { throw new OllamaError(OLLAMA_ERROR.MALFORMED_RESPONSE, 'Model response was not valid JSON'); }
   return {
-    explanation: validateStrategyExplanation(parsed, packet),
+    explanation: isGuide ? validateStrategyGuideExplanation(parsed, packet) : validateStrategyExplanation(parsed, packet),
     surface: packet?.surface ?? STRATEGY_INTERPRETER_SURFACES.CARD,
     model,
     generatedAt: new Date().toISOString(),
