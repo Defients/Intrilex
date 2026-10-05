@@ -739,16 +739,38 @@ export function buildVariantAnalytics({ summaries, aggregate = null, profileId =
       if (attribution.primaryRank === '10' && (!variantEntity?.variantKey || !['10:club', '10:diamond', '10:heart', '10:spade'].includes(variantEntity.variantKey))) {
         variantEntity = classifyVariantEntity(attribution, decision.action ?? {});
       }
+      // Build variant opportunities from variant-level data (preferred) or
+      // fall back to rank-level data for legacy decisions — parity with
+      // packages/analytics/src/rank-integration.mjs.
       const variantOpps = {};
-      for (const opp of (decision.rankOpportunities ?? [])) {
-        if (!opp.rank) continue;
-        if (opp.rank === '10') {
-          const perSuit = Math.ceil((opp.opportunityFrames ?? 1) / 3);
-          variantOpps['10'] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
-          for (const key of ['10:club', '10:diamond', '10:heart']) variantOpps[key] = { opportunityFrames: perSuit, legalOptions: opp.legalOptions ?? 1 };
-        } else {
-          variantOpps[opp.rank] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
-          variantOpps[`${opp.rank}:normal`] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
+      const decisionVariantOpps = decision.variantOpportunities;
+      if (decisionVariantOpps) {
+        for (const opp of decisionVariantOpps) {
+          if (opp.variantKey) variantOpps[opp.variantKey] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
+        }
+        // Legacy/stale decisions may only carry 10 or 10:normal — distribute
+        // across the non-spade suit keys so the per-suit ladder has data.
+        if (attribution.primaryRank === '10') {
+          const nonSpade = variantOpps['10:normal'] ?? variantOpps['10'];
+          if (nonSpade) {
+            const perSuit = Math.ceil((nonSpade.opportunityFrames ?? 1) / 3);
+            for (const key of ['10:club', '10:diamond', '10:heart']) variantOpps[key] = { opportunityFrames: perSuit, legalOptions: nonSpade.legalOptions ?? 1 };
+          }
+        }
+      } else {
+        // Legacy fallback: rank-overall and normal keys only. Spade/super
+        // variants record zero opportunities in legacy data (documented
+        // limitation — integrity banner flags it rather than fabricating).
+        for (const opp of (decision.rankOpportunities ?? [])) {
+          if (!opp.rank) continue;
+          if (opp.rank === '10') {
+            const perSuit = Math.ceil((opp.opportunityFrames ?? 1) / 3);
+            variantOpps['10'] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
+            for (const key of ['10:club', '10:diamond', '10:heart']) variantOpps[key] = { opportunityFrames: perSuit, legalOptions: opp.legalOptions ?? 1 };
+          } else {
+            variantOpps[opp.rank] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
+            variantOpps[`${opp.rank}:normal`] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
+          }
         }
       }
       applyDecisionToVariantCounters(variantCounters, pid, attribution, variantEntity, decision.action ?? {}, variantOpps);

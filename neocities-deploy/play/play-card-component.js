@@ -11,8 +11,8 @@
 //     exileBound, jackHostId, faceDown }
 // ═══════════════════════════════════════════════════════════════
 
-import { getCardDefinition, getSuit, parseCardIdentity, rankName } from '../card-face-data.js?v=7fd8c38b9b66';
-import { getCardArtBoardPath } from '../card-art-registry.js?v=7fd8c38b9b66';
+import { getCardDefinition, getSuit, parseCardIdentity, rankName } from '../card-face-data.js?v=ac7ae9e38182';
+import { getCardArtBoardPath } from '../card-art-registry.js?v=ac7ae9e38182';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

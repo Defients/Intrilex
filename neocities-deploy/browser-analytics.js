@@ -5,9 +5,9 @@
 // Rank attribution extracted to rank-attribution-browser.js (P4.3).
 // Rank power model extracted to rank-power-model.js (P4.3).
 
-import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=7fd8c38b9b66';
-import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=7fd8c38b9b66';
-import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=7fd8c38b9b66';
+import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=ac7ae9e38182';
+import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=ac7ae9e38182';
+import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=ac7ae9e38182';
 import {
   CANONICAL_RANKS,
   classifyPlayForm,
@@ -15,7 +15,7 @@ import {
   buildSourceCards,
   attributeRankAction,
   attributeAction,
-} from './rank-attribution-browser.js?v=7fd8c38b9b66';
+} from './rank-attribution-browser.js?v=ac7ae9e38182';
 import {
   RANK_POWER_SCHEMA_VERSION,
   RPI_AXIS_WEIGHTS,
@@ -26,7 +26,7 @@ import {
   computeDecisionPower,
   buildBalanceWatchlist,
   buildRankPowerModel,
-} from './rank-power-model.js?v=7fd8c38b9b66';
+} from './rank-power-model.js?v=ac7ae9e38182';
 import {
   buildMechanicsAtlas,
   analyzeSynergies,
@@ -35,11 +35,11 @@ import {
   detectAnomalies,
   mcnemarPairedTest,
   pairedBootstrapABBA,
-} from './observatory-analytics-browser.js?v=7fd8c38b9b66';
+} from './observatory-analytics-browser.js?v=ac7ae9e38182';
 import {
   mechanicRegistryHash,
   quarantineUnknownTags,
-} from './mechanic-registry-browser.js?v=7fd8c38b9b66';
+} from './mechanic-registry-browser.js?v=ac7ae9e38182';
 
 // Re-export for backward compatibility (other modules import from browser-analytics)
 export {
@@ -739,16 +739,38 @@ export function buildVariantAnalytics({ summaries, aggregate = null, profileId =
       if (attribution.primaryRank === '10' && (!variantEntity?.variantKey || !['10:club', '10:diamond', '10:heart', '10:spade'].includes(variantEntity.variantKey))) {
         variantEntity = classifyVariantEntity(attribution, decision.action ?? {});
       }
+      // Build variant opportunities from variant-level data (preferred) or
+      // fall back to rank-level data for legacy decisions — parity with
+      // packages/analytics/src/rank-integration.mjs.
       const variantOpps = {};
-      for (const opp of (decision.rankOpportunities ?? [])) {
-        if (!opp.rank) continue;
-        if (opp.rank === '10') {
-          const perSuit = Math.ceil((opp.opportunityFrames ?? 1) / 3);
-          variantOpps['10'] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
-          for (const key of ['10:club', '10:diamond', '10:heart']) variantOpps[key] = { opportunityFrames: perSuit, legalOptions: opp.legalOptions ?? 1 };
-        } else {
-          variantOpps[opp.rank] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
-          variantOpps[`${opp.rank}:normal`] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
+      const decisionVariantOpps = decision.variantOpportunities;
+      if (decisionVariantOpps) {
+        for (const opp of decisionVariantOpps) {
+          if (opp.variantKey) variantOpps[opp.variantKey] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
+        }
+        // Legacy/stale decisions may only carry 10 or 10:normal — distribute
+        // across the non-spade suit keys so the per-suit ladder has data.
+        if (attribution.primaryRank === '10') {
+          const nonSpade = variantOpps['10:normal'] ?? variantOpps['10'];
+          if (nonSpade) {
+            const perSuit = Math.ceil((nonSpade.opportunityFrames ?? 1) / 3);
+            for (const key of ['10:club', '10:diamond', '10:heart']) variantOpps[key] = { opportunityFrames: perSuit, legalOptions: nonSpade.legalOptions ?? 1 };
+          }
+        }
+      } else {
+        // Legacy fallback: rank-overall and normal keys only. Spade/super
+        // variants record zero opportunities in legacy data (documented
+        // limitation — integrity banner flags it rather than fabricating).
+        for (const opp of (decision.rankOpportunities ?? [])) {
+          if (!opp.rank) continue;
+          if (opp.rank === '10') {
+            const perSuit = Math.ceil((opp.opportunityFrames ?? 1) / 3);
+            variantOpps['10'] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
+            for (const key of ['10:club', '10:diamond', '10:heart']) variantOpps[key] = { opportunityFrames: perSuit, legalOptions: opp.legalOptions ?? 1 };
+          } else {
+            variantOpps[opp.rank] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
+            variantOpps[`${opp.rank}:normal`] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
+          }
         }
       }
       applyDecisionToVariantCounters(variantCounters, pid, attribution, variantEntity, decision.action ?? {}, variantOpps);

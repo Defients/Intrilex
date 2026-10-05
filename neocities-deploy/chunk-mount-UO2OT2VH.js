@@ -1,2 +1,2 @@
-import{a,b}from"./chunk-chunk-NAQJH7QH.js?v=7fd8c38b9b66";import"./chunk-chunk-VO577NFA.js?v=7fd8c38b9b66";import"./chunk-chunk-HADQ5WYF.js?v=7fd8c38b9b66";export{a as loadTableStyles,b as mountGameTable};
+import{a,b}from"./chunk-chunk-NAQJH7QH.js?v=ac7ae9e38182";import"./chunk-chunk-VO577NFA.js?v=ac7ae9e38182";import"./chunk-chunk-HADQ5WYF.js?v=ac7ae9e38182";export{a as loadTableStyles,b as mountGameTable};
 //# sourceMappingURL=chunk-mount-UO2OT2VH.js.map

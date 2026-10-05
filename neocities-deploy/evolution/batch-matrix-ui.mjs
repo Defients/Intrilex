@@ -129,7 +129,7 @@ export function batchSectionHtml(state, deps) {
       <button id="evo-batch-resume" class="secondary-button" type="button" ${!busy && state.lab && !['COMPLETE', 'RUNNING'].includes(state.lab.status) ? '' : 'disabled'}>Resume matrix</button>
       <button id="evo-batch-export" class="secondary-button" type="button" ${state.lab ? '' : 'disabled'}>Export matrix artifact</button>
       <label class="secondary-button">Inspect matrix artifact<input id="evo-batch-import" type="file" accept=".json,application/json" ${busy ? 'disabled' : ''}></label></div>
-    <p id="evo-batch-status" role="status">${esc(progressText || state.error || (state.lab ? `${state.lab.status} · ${fmt(state.lab.runs.reduce((n, r) => n + r.records.length, 0))} accepted records` : 'Not run. Missing matchups remain pending.'))}</p>
+    <p id="evo-batch-status" role="status">${esc(state.error || progressText || (state.lab ? `${state.lab.status} · ${fmt(state.lab.runs.reduce((n, r) => n + r.records.length, 0))} accepted records` : 'Not run. Missing matchups remain pending.'))}</p>
     ${state.storage ? `<p class="danger" role="alert">${esc(state.storage)}</p>` : ''}
     <div id="evo-batch-results">${view ? `${batchMatrixTableHtml(view, { focusCell: state.cell })}${batchLeaderboardHtml(view, { focus: state.focus })}${batchBreakdownHtml(view, state.focus)}<div id="evo-batch-detail">${batchCellDetailHtml(view, state.cell)}</div>` : ''}${v1Html}</div>
     ${batchSavedHtml(saved)}</div>`;
@@ -147,7 +147,7 @@ export function bindBatchMatrix(root, ctx) {
   const { state, fns } = ctx;
   const status = () => {
     const el = root.querySelector('#evo-batch-status');
-    if (el) el.textContent = state.progressText || state.error || (state.lab ? `${state.lab.status} · ${fmt(state.lab.runs.reduce((n, r) => n + r.records.length, 0))} accepted records` : 'Not run. Missing matchups remain pending.');
+    if (el) el.textContent = state.error || state.progressText || (state.lab ? `${state.lab.status} · ${fmt(state.lab.runs.reduce((n, r) => n + r.records.length, 0))} accepted records` : 'Not run. Missing matchups remain pending.');
   };
   const busy = () => ctx.busy() || !!ctx.lock.get();
   const enqueue = job => {
@@ -163,7 +163,7 @@ export function bindBatchMatrix(root, ctx) {
    * games with the analysis index. Sealed identity dedup keeps repeated
    * imports exactly-once. Throws on rejection — callers surface the error. */
   const importMatrix = async parsed => {
-    if (parsed.schemaVersion === 1) { state.v1 = parsed; state.lab = null; return; }
+    if (parsed.schemaVersion === 1) { state.v1 = parsed; state.lab = null; state.progressText = 'Imported legacy (v1) matrix artifact — read-only inspection'; return; }
     if (parsed.runRefs) {
       state.lab = await fns.rehydrateBatchMatrix(parsed, loader); state.v1 = null;
       // Persist the manifest only when every referenced run resolved
@@ -278,7 +278,7 @@ export function bindBatchMatrix(root, ctx) {
         try {
           const manifest = await ctx.persist.loadMatrix(id);
           state.lab = await fns.rehydrateBatchMatrix(manifest, loader);
-          state.v1 = null; state.error = '';
+          state.v1 = null; state.error = ''; state.progressText = '';
           if (resume) await execute(state.lab); else render();
         } catch (error) { state.error = `Matrix load rejected: ${error.message}`; render(); }
       })();

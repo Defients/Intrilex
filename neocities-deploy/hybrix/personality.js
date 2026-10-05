@@ -12,7 +12,7 @@
  *   loyalty    — commitment to allies / team coordination
  */
 
-import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=7fd8c38b9b66";
+import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=ac7ae9e38182";
 
 export const ARCHETYPES = Object.freeze({
   rusher: {

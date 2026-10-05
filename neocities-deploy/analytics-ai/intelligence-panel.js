@@ -5,9 +5,9 @@
 // LLM interpretations. Grounded in the active Observatory dataset.
 // ═══════════════════════════════════════════════════════════════
 
-import { state, esc } from '../state.js?v=7fd8c38b9b66';
-import { getAnalyticsAi, ANALYSIS_MODE, ANALYSIS_STATUS } from './browser-controller.js?v=7fd8c38b9b66';
-import { renderAnalyticsAiSettings } from './settings.js?v=7fd8c38b9b66';
+import { state, esc } from '../state.js?v=ac7ae9e38182';
+import { getAnalyticsAi, ANALYSIS_MODE, ANALYSIS_STATUS } from './browser-controller.js?v=ac7ae9e38182';
+import { renderAnalyticsAiSettings } from './settings.js?v=ac7ae9e38182';
 
 const MODE_TABS = [
   { id: ANALYSIS_MODE.EXECUTIVE_SUMMARY, label: 'Summary', hint: 'Plain-language overview' },
