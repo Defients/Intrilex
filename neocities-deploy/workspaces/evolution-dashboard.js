@@ -1,23 +1,23 @@
-import '../evolution/evolution-training-ui.js?v=37aaf900a6e7';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=37aaf900a6e7';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=37aaf900a6e7';
-import { app, esc, fmt } from '../state.js?v=37aaf900a6e7';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=37aaf900a6e7';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=37aaf900a6e7';
-import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=37aaf900a6e7';
-import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=37aaf900a6e7';
-import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=37aaf900a6e7';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=37aaf900a6e7';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=37aaf900a6e7';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=37aaf900a6e7';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=37aaf900a6e7';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=37aaf900a6e7';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=37aaf900a6e7';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=37aaf900a6e7';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=37aaf900a6e7';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=37aaf900a6e7';
-import { StrategyStore } from '../strategy/strategy-store.mjs?v=37aaf900a6e7';
-import { createStrategyEvidenceWriter } from '../evolution/strategy-live.mjs?v=37aaf900a6e7';
+import '../evolution/evolution-training-ui.js?v=0b47cb7fa0fe';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=0b47cb7fa0fe';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=0b47cb7fa0fe';
+import { app, esc, fmt } from '../state.js?v=0b47cb7fa0fe';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=0b47cb7fa0fe';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=0b47cb7fa0fe';
+import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=0b47cb7fa0fe';
+import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=0b47cb7fa0fe';
+import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=0b47cb7fa0fe';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=0b47cb7fa0fe';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=0b47cb7fa0fe';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=0b47cb7fa0fe';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=0b47cb7fa0fe';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=0b47cb7fa0fe';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=0b47cb7fa0fe';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=0b47cb7fa0fe';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=0b47cb7fa0fe';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=0b47cb7fa0fe';
+import { StrategyStore } from '../strategy/strategy-store.mjs?v=0b47cb7fa0fe';
+import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=0b47cb7fa0fe';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 // Strategy evidence is a separate persistence concern from the monolithic
@@ -30,7 +30,7 @@ let starting = false;
 const seatChoice = (cfg, i) => run()?.arenaProfiles?.snapshots?.[i]?.profile ? profileChoice(run().arenaProfiles.snapshots[i].profile.agentProfileId) : (i ? cfg.botB : cfg.botA);
 const view = { config: { botA:'tempo-tactical', botB:'value-tactical', gameCount:1000, seed:1337, workerCount:2, mirrorSeats:true, profileId:'core-advanced-authority' },
   session:null, workers:[], timers:new Map(), tick:null, start:0, elapsed:0, agg:createSeriesAggregator(), samples:[],
-  archive:null, archiveEnvelope:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), ui:createCockpitState(), cockpit:null, analytics:{window:100,from:1,to:10000}, analyticsCache:null, turnMetricsCache:null, strategyWriter:null, strategyStats:null };
+  archive:null, archiveEnvelope:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), ui:createCockpitState(), cockpit:null, analytics:{window:100,from:1,to:10000}, analyticsCache:null, turnMetricsCache:null, strategyWriter:null, strategyStats:null, batchWriter:null };
 const run = () => view.archive ?? view.session?.run;
 view.matrixAbort=null;
 view.batch={selected:new Set(),lab:null,v1:null,error:'',progressText:'',cell:null,focus:null,storage:'',saved:null,queue:null,abort:null,games:64,seed:1337,workers:2,profileId:'core-advanced-authority',trace:false};
@@ -116,7 +116,7 @@ export function renderEvolutionLab() {
       <p>Rules ${LAB_IDENTITY.rulesVersion} · engine ${LAB_IDENTITY.engineVersion}<br><code class="evo-hash">${LAB_IDENTITY.fingerprint}</code></p></section>
     ${researchHtml()}
     </div></section>`;
-  bind(); refreshHistory(); refreshProfiles(); window.addEventListener('focus',refreshProfiles); mountResearchPanel(readResearchConfig);
+  bind(); refreshHistory(); refreshProfiles(); window.addEventListener('focus',refreshProfiles); mountResearchPanel(readResearchConfig,{ingestRun:r=>ingestRunEvidence(strategies,r)});
   view.cockpit=mountCockpit(document.querySelector('[data-testid="evolution-lab"]'),{state:view.ui,research:cockpitResearch,getArena:()=>({run:run(),archive:view.archive,error:view.error,storageError:view.storageError,controlsLocked:active()||!!view.archive||!!cockpitResearch.getState().archive,renderHistory(query){view.historyQuery=query;const el=document.getElementById('evo-history');if(el)el.innerHTML=historyHtml();},closeArchive(){if(view.archive){view.archive=null;view.archiveEnvelope=null;aggregate(view.session?.run);view.inspection=null;renderEvolutionLab();}}}),loadRun:async id=>{const admitted=()=>{if(active()||view.archive||cockpitResearch.getState().archive)throw new Error('Stop the current arena or leave historical inspection before loading other evidence.');};admitted();const saved=await store.loadForInspection(id);admitted();if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run);}});
 }
 function bot(seat,policy,wins,rate) { const cp=run()?.checkpoints[seat === 'A' ? 0 : 1], snapshot=run()?.arenaProfiles?.snapshots?.[seat === 'A' ? 0 : 1]; return `<div class="evo-bot"><h3>BOT ${seat}</h3><b>${esc(snapshot?.displayName ?? name(policy))}</b>${snapshot ? `<p>Custom Profile &middot; head ${snapshot.profile.headVersion}<br><code>${esc(snapshot.profile.activeRevisionId)}</code></p>` : ''}<p>Generation ${cp?.generation ?? 0} · ${cp?.schemaVersion === 2 ? 'immutable weighted checkpoint' : 'frozen policy'}</p><p><span id="evo-${seat}-wins">${fmt(wins)}</span> wins · <span id="evo-${seat}-rate">${pct(rate)}</span></p></div>`; }
@@ -163,17 +163,17 @@ async function refreshHistory() {
   if (!view.mounted) return; storageStatus();
   const el=document.getElementById('evo-history'); if (el) el.innerHTML=historyHtml();
 }
-// Strategy evidence retention is reported only from the streaming writer's
-// real counters — never implied. "Retained" means committed to StrategyStore.
+// Analysis indexing is reported only from the writer's real counters —
+// never implied. "Registered" means committed to the analysis evidence store.
 function strategyEvidenceNote() {
   const cfg=run()?.config;
   if (!cfg) return '';
-  if (cfg.strategicTrace!==true) return 'Strategy evidence: none — deep decision tracing was off for this run.';
   const s=view.strategyWriter?.stats ?? view.strategyStats;
-  if (!s) return 'Strategy evidence: deep tracing on. Games finalized in this session commit as they complete; earlier evidence syncs via the Evidence desk.';
-  if (!s.offered) return 'Strategy evidence: streamed retention enabled; no finalized games committed yet.';
-  const counts=`Strategy evidence: ${s.committed}/${s.offered} finalized games retained${s.pending?` · ${s.pending} writes pending`:''}`;
-  return s.error ? `${counts} · persistence error: ${s.error}` : `${counts}.`;
+  const fidelity=cfg.strategicTrace===true?'decision':'summary';
+  if (!s) return `Analysis indexing: enabled at ${fidelity} fidelity — finalized games register with Strategy / Match History as they are accepted.`;
+  if (!s.offered) return `Analysis indexing: enabled at ${fidelity} fidelity; no finalized games committed yet.`;
+  const counts=`Analysis index: ${s.committed}/${s.offered} finalized games registered${s.pending?` · ${s.pending} writes pending`:''}`;
+  return s.error ? `${counts} · indexing incomplete: ${s.error} — reopen or re-import the run to retry.` : `${counts}.`;
 }
 async function flushStrategyEvidence() {
   if (!view.strategyWriter) return null;
@@ -211,6 +211,11 @@ function diagnosticFiltersHtml(){
   const selects={winner:['all','A','B','Draw','Fault'],seat:['all','AB','BA'],termination:['all','NORMAL_VICTORY','EXHAUSTED_RESOLUTION','CANONICAL_DRAW','WORKER_FAULT','DECISION_LIMIT','POLICY_ERROR','ENGINE_REJECTION','UNSUPPORTED_CONFIGURATION'],relation:['all','HIGHER_SCORE','LOWER_SCORE','EQUAL_SCORE','NOT_APPLICABLE']};
   return Object.entries(selects).map(([key,values])=>`<label>${key}<select id="evo-filter-${key}">${values.map(v=>`<option value="${v}" ${(view.analytics[key]??'all')===v?'selected':''}>${v}</option>`).join('')}</select></label>`).join('')+['marginMin','marginMax','turnMin','turnMax','decisionMin','decisionMax'].map(key=>`<label>${key.replace(/(Min|Max)/,' $1')}<input id="evo-filter-${key}" type="number" value="${view.analytics[key]??''}"></label>`).join('');
 }
+// Matrix cells and matrix imports flow through the same normalized ingestion
+// path as Arena: finalized record → provenance row + sealed evidence. One
+// writer per matrix keeps registration and writes serial; dedup is by sealed
+// artifact identity, so resume and re-ingest never double-count.
+function batchWriter() { view.batchWriter ??= createStrategyEvidenceWriter(strategies); return view.batchWriter; }
 function batchContext() {
   return { state: view.batch, identity: LAB_IDENTITY, profiles, executeSeries: executeBrowserSeries,
     roster: () => roster, statics: STATIC_POLICIES.map(id => ({ id, label: name(id) })),
@@ -219,6 +224,8 @@ function batchContext() {
     lock: { get: () => view.matrixAbort, set: controller => { view.matrixAbort = controller; } },
     fns: { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix },
     persist: { saveRun: r => store.save(r), saveMatrix: lab => store.saveMatrix(lab), listMatrices: () => store.listMatrices(), loadMatrix: id => store.loadMatrix(id), loadRun: id => store.load(id) },
+    onAcceptedGame: (evidence, cellRun) => batchWriter().offer(cellRun, evidence),
+    ingestRun: saved => ingestRunEvidence(strategies, saved),
     runEnvelope: artifactEnvelope, importLimit: LAB_LIMITS.importBytes,
     openRun: saved => { if (active() || view.archive || view.matrixAbort || cockpitResearch.getState().archive) throw new Error('Stop the current Evolution operation before loading series evidence.'); loadRun(saved); },
     exportJson: (payload, filename) => { const url = URL.createObjectURL(new Blob([JSON.stringify(payload)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); },
@@ -260,12 +267,24 @@ function aggregate(saved) {
   for(const r of [...(saved?.records??[])].sort((a,b)=>a.ordinal-b.ordinal)){ingestGameRecord(view.agg,r);pushChartSample(view.samples,view.agg);}
 }
 function openArchive(envelope) {
-  release();view.archive=inspectHistoricalArtifact(envelope);view.archiveEnvelope=structuredClone(envelope);view.error='';view.inspection=null;view.strategyWriter=null;view.strategyStats=null;aggregate(view.archive);renderEvolutionLab();
+  release();view.archive=inspectHistoricalArtifact(envelope);view.archiveEnvelope=structuredClone(envelope);view.error='';view.inspection=null;view.strategyWriter=null;view.strategyStats=null;aggregate(view.archive);
+  // Archive records are descriptive-only imports: they keep their foreign
+  // fingerprint and IMPORTED_UNVERIFIED origin, landing in a historical
+  // read-only cohort — inspectable, never promoted to verified evidence.
+  void (async()=>{view.strategyStats=await ingestRunEvidence(strategies,view.archive);if(view.mounted)storageStatus();})();
+  renderEvolutionLab();
 }
 function loadRun(saved) {
   validateProfileArenaRun(saved,LAB_IDENTITY);
   view.archive=null;view.archiveEnvelope=null;
-  release(); view.session=new EvolutionSession(saved); view.elapsed=saved.elapsedMs; view.error=''; view.inspection=null; view.agg=createSeriesAggregator(); view.samples=[]; view.strategyWriter=null; view.strategyStats=null;
+  release(); view.session=new EvolutionSession(saved); view.elapsed=saved.elapsedMs; view.error=''; view.inspection=null; view.agg=createSeriesAggregator(); view.samples=[];
+  // Reconcile the analysis index against the saved record set. Offers are
+  // serialized through one writer and deduplicate on sealed artifact identity,
+  // so reopen, re-save, resume and re-import can never double-count games.
+  // This also backfills runs saved before automatic indexing existed.
+  view.strategyWriter=createStrategyEvidenceWriter(strategies); view.strategyStats=null;
+  const writer=view.strategyWriter;
+  void (async()=>{for(const record of saved.records)await writer.offer(saved,record);view.strategyStats=await writer.flush();if(view.mounted)storageStatus();})();
   for (const r of [...saved.records].sort((a,b) => a.ordinal-b.ordinal)) { ingestGameRecord(view.agg,r); pushChartSample(view.samples,view.agg); } view.config={...saved.config,botA:saved.arenaProfiles?.snapshots?.[0]?.profile ? profileChoice(saved.arenaProfiles.snapshots[0].profile.agentProfileId) : saved.config.botA,botB:saved.arenaProfiles?.snapshots?.[1]?.profile ? profileChoice(saved.arenaProfiles.snapshots[1].profile.agentProfileId) : saved.config.botB}; renderEvolutionLab();
 }
 async function begin(kind,candidate) {
@@ -292,9 +311,10 @@ function launch() {
   try { validateArtifact(artifactEnvelope(run()),LAB_IDENTITY); validateProfileArenaRun(run(),LAB_IDENTITY); }
   catch(error) { view.error=`Resume rejected: ${error.message}`; renderEvolutionLab(); return; }
   const owner=view.session, epoch=owner.start(); view.start=performance.now();
-  // Deep-traced runs stream each finalized game's Strategy evidence to its
-  // own sealed store — independent of the monolithic Arena artifact.
-  if (run().config.strategicTrace===true && !view.strategyWriter) view.strategyWriter=createStrategyEvidenceWriter(strategies);
+  // Every finalized accepted game registers in the analysis evidence index —
+  // independent of the monolithic Arena artifact. Deep tracing decides the
+  // fidelity (full decision context vs summary), not whether indexing runs.
+  if (!view.strategyWriter) view.strategyWriter=createStrategyEvidenceWriter(strategies);
   try { for (let i=0;i<run().config.workerCount;i+=1) {
     const worker=new Worker('worker.js',{type:'module'}); view.workers.push(worker);
     worker.onmessage=async e => {
@@ -304,7 +324,7 @@ function launch() {
         clearTimeout(view.timers.get(i)); view.timers.delete(i); ingestGameRecord(view.agg,x.evidence.record); pushChartSample(view.samples,view.agg);
         // Bounded write queue: awaiting offer() applies backpressure before
         // the next ordinal is dispatched. Offer never rejects.
-        if (view.strategyWriter) await view.strategyWriter.offer(run(), x.evidence);
+        await view.strategyWriter.offer(run(), x.evidence);
         if (run().records.length % 250 === 0) persist(); if (status() === 'COMPLETE') { finish(); return; } dispatch(worker,i,epoch);
       } catch(error) { failRun(error); }
     };

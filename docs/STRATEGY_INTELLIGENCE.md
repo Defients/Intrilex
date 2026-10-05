@@ -312,19 +312,26 @@ there is no cloud fallback.
 
 ## Storage, portability and privacy
 
-Separate IndexedDB `intrilex-strategy-intelligence`, version 2, stores
+Separate IndexedDB `intrilex-strategy-intelligence`, version 3, stores
 evidence (sealed chunk envelopes), sources, indexed events, one replay per
-transcript hash, studies, claims, imported archives and information-set
-artifacts. Existing Evolution/Profile databases are not migrated.
+transcript hash, studies, claims, imported archives, information-set
+artifacts and per-run provenance rows (producer channel, matrix lineage,
+origin). Existing Evolution/Profile databases are not migrated.
 
-Deep-traced Lab runs persist Strategy evidence incrementally: each game is
-sealed and committed to `StrategyStore` as soon as `EvolutionSession` accepts
-its finalized record, through one bounded serialized writer. Interruption,
-stop, worker failure or monolithic-archive failure cannot lose already
-committed games, and the run UI reports committed/offered counts rather than
-assuming retention. The same conversion path serves the Evidence desk
-producer and saved-run ingestion; identical games produce identical sealed
-artifacts, so re-ingestion is an exact deduplication, never a double count.
+All Lab runs persist analysis evidence incrementally: each game is sealed
+and committed to `StrategyStore` as soon as `EvolutionSession` accepts its
+finalized record, through one bounded serialized writer — deep tracing
+decides fidelity (full decision context vs behavioral aggregates), not
+whether a finalized game registers. Arena runs, Batch Matrix cells and
+validated imported artifacts share this single normalization path; imported
+copies keep `IMPORTED_UNVERIFIED` provenance and never masquerade as locally
+produced evidence. Interruption, stop, worker failure or monolithic-archive
+failure cannot lose already committed games, and the run UI reports
+registered/offered counts rather than assuming retention. The same
+conversion path serves the Evidence desk producer and saved-run ingestion;
+identical games produce identical sealed artifacts, so re-ingestion is an
+exact deduplication, never a double count. Reopening or re-saving a run, and
+the "Ingest saved evidence" action, reconcile the index idempotently.
 
 Transactions resolve after commit; insert-or-verify rejects immutable conflicts.
 Concurrent opens share ownership; close/blocked/failure paths release callers

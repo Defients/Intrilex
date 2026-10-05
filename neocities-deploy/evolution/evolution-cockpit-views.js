@@ -1,9 +1,9 @@
-import { esc } from '../state.js?v=37aaf900a6e7';
-import { matchupHeatmapHtml, residualHeatmapHtml, comparisonPlotHtml, behaviorPlotsHtml, learningTrendHtml, lineageGraphHtml } from './evolution-analytics-charts.mjs?v=37aaf900a6e7';
-import { lineChart } from '../chart-toolkit.js?v=37aaf900a6e7';
-import { behaviorDeltas } from './evolution-research.mjs?v=37aaf900a6e7';
-import { WEIGHT_FEATURES, WEIGHT_BOUND } from './weighted-heuristic.mjs?v=37aaf900a6e7';
-import { projectModel, lineageNodes, residualRows, behaviorPair, filterRecords, draftWeights, shortId, finite } from './evolution-view-model.mjs?v=37aaf900a6e7';
+import { esc } from '../state.js?v=0b47cb7fa0fe';
+import { matchupHeatmapHtml, residualHeatmapHtml, comparisonPlotHtml, behaviorPlotsHtml, learningTrendHtml, lineageGraphHtml } from './evolution-analytics-charts.mjs?v=0b47cb7fa0fe';
+import { lineChart } from '../chart-toolkit.js?v=0b47cb7fa0fe';
+import { behaviorDeltas } from './evolution-research.mjs?v=0b47cb7fa0fe';
+import { WEIGHT_FEATURES, WEIGHT_BOUND } from './weighted-heuristic.mjs?v=0b47cb7fa0fe';
+import { projectModel, lineageNodes, residualRows, behaviorPair, filterRecords, draftWeights, shortId, finite } from './evolution-view-model.mjs?v=0b47cb7fa0fe';
 
 export const percent = n => finite(n) ? `${(n * 100).toFixed(1)}%` : 'Unavailable';
 const number = n => finite(n) ? n.toFixed(2) : 'Unavailable';
@@ -36,7 +36,7 @@ export function lineagesHtml(project, state) {
 }
 
 export function evidenceHtml(project, state, comparison, busy, historical = false) {
-  if (!project) return empty('No research evidence','Load an experiment or collect a held-out frozen suite. Arena evidence remains in Arena.','evolution');
+  if (!project) return empty('No research evidence','Load an experiment or collect a held-out frozen suite. Arena runs stay canonical here and are also indexed for Strategy analysis.','evolution');
   const options = selected => project.checkpoints.map(cp => `<option value="${cp.checkpointId}" ${cp.checkpointId===selected?'selected':''}>${esc(cp.agentId)}${cp.generation} · ${esc(shortId(cp.checkpointId))}</option>`).join('');
   const modes = [['evaluations','Evaluations'],['comparison','Compare'],['behavior','Behavior'],['regressions','Regressions']];
   let content;

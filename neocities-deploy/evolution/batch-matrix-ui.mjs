@@ -139,7 +139,9 @@ export function batchSectionHtml(state, deps) {
  * delegated listeners survive. ctx supplies state, roster(), statics,
  * rulesOptions, busy(), fns (runtime functions), identity, profiles,
  * persist {saveRun,saveMatrix,listMatrices,loadMatrix,loadRun}, executeSeries,
- * lock {get,set}, openRun, exportJson, runEnvelope, importLimit, legacy. */
+ * lock {get,set}, openRun, exportJson, runEnvelope, importLimit, legacy.
+ * Optional analysis hooks: onAcceptedGame(evidence, cellRun) streams each
+ * finalized game; ingestRun(run) reconciles a whole run into the index. */
 export function bindBatchMatrix(root, ctx) {
   if (!root) return null;
   const { state, fns } = ctx;
@@ -182,9 +184,11 @@ export function bindBatchMatrix(root, ctx) {
     try {
       const lab = await fns.runBatchMatrix(source, ctx.executeSeries, {
         identity: ctx.identity, store: ctx.profiles, signal: controller.signal,
-        onAcceptedGame: async (_evidence, runRef) => { if (runRef.records.length % 50 === 0) await enqueue(() => ctx.persist.saveRun(runRef)); },
+        onAcceptedGame: async (evidence, runRef) => { await ctx.onAcceptedGame?.(evidence, runRef); if (runRef.records.length % 50 === 0) await enqueue(() => ctx.persist.saveRun(runRef)); },
         onProgress: p => { state.progressText = `${p.displayA} vs ${p.displayB} · ${fmt(p.gamesCompleted)} / ${fmt(p.gamesTotal)} games · ${p.cellsCompleted} / ${p.cellsTotal} matchups complete`; status(); },
-        onRun: saved => enqueue(() => ctx.persist.saveRun(saved)),
+        // Reconcile each finished cell against the analysis index — streamed
+        // writes deduplicate, so resume and earlier sessions stay exactly-once.
+        onRun: async saved => { await enqueue(() => ctx.persist.saveRun(saved)); await ctx.ingestRun?.(saved); },
         onMatrix: lab => enqueue(() => ctx.persist.saveMatrix(lab)),
       });
       state.lab = lab;
@@ -218,8 +222,11 @@ export function bindBatchMatrix(root, ctx) {
         const parsed = fns.validateMatrixEnvelope(JSON.parse(await file.text()));
         if (parsed.schemaVersion === 1) { state.v1 = parsed; state.lab = null; }
         else if (parsed.runRefs) { state.lab = await fns.rehydrateBatchMatrix(parsed, loader); state.v1 = null; }
-        else { state.lab = parsed; state.v1 = null; }
+        else { state.lab = parsed; state.v1 = null; for (const run of state.lab.runs) run.evidenceOrigin ??= 'IMPORTED_UNVERIFIED'; }
         state.error = '';
+        // Register imported constituent games with the analysis index; sealed
+        // identity dedup keeps repeated imports from creating duplicates.
+        if (state.lab?.runs?.length) void Promise.allSettled(state.lab.runs.map(run => ctx.ingestRun?.(run)));
       } catch (error) { state.error = `Matrix import rejected: ${error.message}`; }
       render();
     })();

@@ -1,7 +1,7 @@
-import { canonicalClone } from "./canonical-json.js?v=37aaf900a6e7";
-import { armFoundationActionRestriction, foundationActionRestricted, hasAegis, revealUntilStart } from "./lifecycle.js?v=37aaf900a6e7";
-import { relationBetween } from "./phase11.js?v=37aaf900a6e7";
-import { moveCard } from "./state.js?v=37aaf900a6e7";
+import { canonicalClone } from "./canonical-json.js?v=0b47cb7fa0fe";
+import { armFoundationActionRestriction, foundationActionRestricted, hasAegis, revealUntilStart } from "./lifecycle.js?v=0b47cb7fa0fe";
+import { relationBetween } from "./phase11.js?v=0b47cb7fa0fe";
+import { moveCard } from "./state.js?v=0b47cb7fa0fe";
 const TRACKS = Object.freeze({
     "♣": Object.freeze([0, 2, 4, 7]),
     "♦": Object.freeze([0, 2, 4, 7]),

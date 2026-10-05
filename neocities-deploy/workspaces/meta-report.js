@@ -11,9 +11,9 @@
 // The server-side RPC already ranked the rows; we only aggregate.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct } from '../state.js?v=37aaf900a6e7';
-import { fetchLeaderboard } from '../play/ranked/leaderboard-data.js?v=37aaf900a6e7';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=37aaf900a6e7';
+import { app, esc, pct } from '../state.js?v=0b47cb7fa0fe';
+import { fetchLeaderboard } from '../play/ranked/leaderboard-data.js?v=0b47cb7fa0fe';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=0b47cb7fa0fe';
 import { buildMetaReport, formatTierPercentage } from "../account-domain/meta-report.mjs";
 import { RankTier } from "../account-domain/rank-tier.mjs";
 import { computeUncertaintyLabel } from '@intrilex/statistics/evidence-honest';

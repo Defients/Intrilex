@@ -10,7 +10,7 @@ const store=new EvolutionStore(LAB_IDENTITY);
 const view={project:null,history:[],controller:null,error:'',progress:null,comparison:null,selectedA:null,selectedB:null,readConfig:null,serial:0,started:0,attempted:0,failed:0,archive:null};
 const busy=()=>!!view.controller;
 export function researchHtml(){return '<section id="evo-research" class="evo-section" data-testid="evo-research"></section>';}
-export function mountResearchPanel(readConfig){view.readConfig=readConfig;render();store.listResearch().then(history=>{view.history=history;render();}).catch(error=>{view.error=`Research storage: ${error.message}`;render();});}
+export function mountResearchPanel(readConfig,hooks={}){view.readConfig=readConfig;view.ingestRun=hooks.ingestRun??view.ingestRun??null;render();store.listResearch().then(history=>{view.history=history;render();}).catch(error=>{view.error=`Research storage: ${error.message}`;render();});}
 const listeners=new Set();
 const notify=(kind='render')=>{for(const listener of listeners)listener(kind);};
 export const cockpitResearch={getState:()=>view,renderHistory(query){view.historyQuery=query;const el=document.getElementById('evo-research-history');if(el)el.innerHTML=researchHistoryHtml();},subscribe(listener){listeners.add(listener);return()=>listeners.delete(listener);},select(id,side){if(!view.project?.checkpoints.some(cp=>cp.checkpointId===id))return;view[side==='right'?'selectedB':'selectedA']=id;const field=document.getElementById(side==='right'?'evo-checkpoint-right':'evo-checkpoint-left');if(field)field.value=id;},compare(){const p=view.project;if(!p)return;view.comparison=compareCheckpoints(p.checkpoints.find(c=>c.checkpointId===view.selectedA),p.checkpoints.find(c=>c.checkpointId===view.selectedB),p.evaluations,{packs:p.packs,suite:p.suite});notify('comparison');},closeArchive(){view.archive=null;render();}};
@@ -59,13 +59,13 @@ function bind(){
   click('evo-clone-experiment',async()=>{const old=view.project,seed=document.getElementById('evo-clone-seed').value;if(seed!=='' && old.experiment.type==='EVOLUTION_TRAINING')throw new Error('Training clones preserve their frozen seed packs; create a new training experiment for different seed pools.');const experiment=cloneExperiment(old.experiment,{config:seed===''?{}:{seed:Number(seed)},name:document.getElementById('evo-experiment-name').value+' — clone'});pickProject({...structuredClone(old),experiment,generations:[],evaluations:[],regressions:[],faults:[]});await persist();});
   document.getElementById('evo-checkpoint-left')?.addEventListener('change',e=>{view.selectedA=e.target.value;});document.getElementById('evo-checkpoint-right')?.addEventListener('change',e=>{view.selectedB=e.target.value;});
   click('evo-compare-checkpoints',()=>cockpitResearch.compare());
-  click('evo-suite-evaluate',()=>execute(async(signal,p)=>{const result=await evaluateSuite({candidate:p.checkpoints.find(c=>c.checkpointId===view.selectedA),suite:p.suite,pack:p.packs.find(x=>x.purpose==='EVALUATION'),workerCount:p.experiment.operational.workerCount},executeBrowserSeries,{signal,onProgress:progress,onRun:async run=>{if(!p.experiment.runIds.includes(run.runId))p.experiment.runIds.push(run.runId);await store.save(run);}});recordEvaluation(p,result);return result.status;}));
+  click('evo-suite-evaluate',()=>execute(async(signal,p)=>{const result=await evaluateSuite({candidate:p.checkpoints.find(c=>c.checkpointId===view.selectedA),suite:p.suite,pack:p.packs.find(x=>x.purpose==='EVALUATION'),workerCount:p.experiment.operational.workerCount},executeBrowserSeries,{signal,onProgress:progress,onRun:async run=>{if(!p.experiment.runIds.includes(run.runId))p.experiment.runIds.push(run.runId);await store.save(run);await view.ingestRun?.(run);}});recordEvaluation(p,result);return result.status;}));
   click('evo-execute-experiment',()=>{
     if(view.project.experiment.type==='CHECKPOINT_EVALUATION'){document.getElementById('evo-suite-evaluate').click();return;}
     return execute(async(signal,p)=>{
       const e=p.experiment,startingCheckpoints=e.scientific.startingCheckpointIds.map(id=>p.checkpoints.find(cp=>cp.checkpointId===id));
       const result=await executeBrowserSeries({...e.scientific.config,workerCount:e.operational.workerCount},{identity:LAB_IDENTITY,startingCheckpoints,signal,onProgress:x=>progress({...x,mode:e.type})});
-      await store.save(result.run);e.runIds.push(result.run.runId);p.lastRunSummary=result.metrics;return result.run.status;
+      await store.save(result.run);await view.ingestRun?.(result.run);e.runIds.push(result.run.runId);p.lastRunSummary=result.metrics;return result.run.status;
     });
   });
   click('evo-research-stop',()=>view.controller?.abort());click('evo-save-research',persist);click('evo-save-conclusions',async()=>{view.project.experiment.conclusions=document.getElementById('evo-experiment-conclusions').value;await persist();});

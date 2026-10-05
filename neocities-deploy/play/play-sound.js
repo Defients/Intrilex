@@ -4,7 +4,7 @@
 // Respects prefers-reduced-motion (no positional panning).
 // ═══════════════════════════════════════════════════════════════
 
-import { getPreference, setPreference } from './persistence.js?v=37aaf900a6e7';
+import { getPreference, setPreference } from './persistence.js?v=0b47cb7fa0fe';
 
 // Suit → frequency mapping for card-play tones
 const SUIT_FREQ = {

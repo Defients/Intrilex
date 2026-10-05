@@ -17,7 +17,9 @@ function renderTraining(project,locked){
     api.pickProject(createTrainingProject({identity:LAB_IDENTITY,name:document.getElementById('evo-experiment-name').value,seed:config.seed,workerCount:config.workerCount,profileId:config.profileId,training}));await api.persist();
   }catch(error){api.view.error=error.message;api.render();}};
   document.getElementById('evo-train').onclick=()=>api.execute(async(signal,p)=>{
-    await trainProject(p,executeBrowserSeries,{signal,onProgress:api.progress,onRun:async run=>api.store.save(researchRunEvidence(run,api.view.progress?.mode??'EVALUATION')),onSave:async()=>{await api.persist();}});
+    // Ingest the retention-marked copy (same object that is saved): evidence
+    // produced here is byte-identical to a later sync of the saved run.
+    await trainProject(p,executeBrowserSeries,{signal,onProgress:api.progress,onRun:async run=>{const marked=researchRunEvidence(run,api.view.progress?.mode??'EVALUATION');await api.store.save(marked);await api.view.ingestRun?.(marked);},onSave:async()=>{await api.persist();}});
     const selected=p.generations.at(-1)?.selectedCheckpointId;if(selected)api.view.selectedA=selected;
     return p.experiment.status;
   });

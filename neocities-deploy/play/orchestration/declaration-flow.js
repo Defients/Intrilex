@@ -8,8 +8,8 @@
 // Does NOT mutate authoritative state before engine acceptance.
 // ═══════════════════════════════════════════════════════════════
 
-import {  actionsForCard } from '../authority/legal-action-adapter.js?v=37aaf900a6e7';
-import { buildWhyExplanation } from '../intelligence/action-explanation.js?v=37aaf900a6e7';
+import {  actionsForCard } from '../authority/legal-action-adapter.js?v=0b47cb7fa0fe';
+import { buildWhyExplanation } from '../intelligence/action-explanation.js?v=0b47cb7fa0fe';
 
 /**
  * Declaration flow state.

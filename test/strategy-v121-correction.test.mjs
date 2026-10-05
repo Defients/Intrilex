@@ -297,7 +297,7 @@ test('next-study suggestions are subject-aware, never universal boilerplate', ()
 test('dashboard never claims separately-retained evidence without real counts', async () => {
   const src = await readFile(new URL('../apps/lab-web/src/workspaces/evolution-dashboard.js', import.meta.url), 'utf8');
   assert.equal(src.includes('retained separately'), false, 'unconditional "retained separately" claim removed');
-  assert.match(src, /Strategy evidence: .*finalized games retained/, 'truthful retained-count note exists');
+  assert.match(src, /Analysis index: .*finalized games registered/, 'truthful registered-count note exists');
 });
 
 test('workspace separates AI status from AI error', async () => {

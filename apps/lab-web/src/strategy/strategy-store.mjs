@@ -1,5 +1,6 @@
 import { strategyDigest, STRATEGY_CONTRACTS, verifyStrategy, strategyFail } from '../../../../packages/simulation-runtime/src/strategy-contracts.mjs';
 import { chunkStrategyEvidence, eventIndexRow, strategyScopeKey, strategyBundle, validateStrategyBundle } from '../../../../packages/simulation-runtime/src/strategy-evidence.mjs';
+import { runProvenance } from '../../../../packages/simulation-runtime/src/strategy-live.mjs';
 import { createStrategyAggregate, strategyEventMatches, validateStrategyClaim } from '../../../../packages/simulation-runtime/src/strategy-analysis.mjs';
 import { validateInformationSet, validateInformationStudy } from '../../../../packages/simulation-runtime/src/strategy-information.mjs';
 
@@ -7,11 +8,11 @@ import { validateInformationSet, validateInformationStudy } from '../../../../pa
 // written to IndexedDB (a large game is split into chunk envelopes), while
 // maxPortableBytes bounds the portable import/export bundle. Neither limits
 // how much evidence a run may retain — only the size of each unit.
-export const STRATEGY_STORAGE = Object.freeze({database:'intrilex-strategy-intelligence',version:2,strategyChunkBytes:8*1024*1024,maxPortableBytes:40*1024*1024,decisionPage:40});
+export const STRATEGY_STORAGE = Object.freeze({database:'intrilex-strategy-intelligence',version:3,strategyChunkBytes:8*1024*1024,maxPortableBytes:40*1024*1024,decisionPage:40});
 const bytes=value=>new TextEncoder().encode(JSON.stringify(value)).byteLength;
 const storageError=error=>error?.name==='QuotaExceededError'?new Error('STRATEGY_STORAGE_PRESSURE: export evidence or free browser storage, then retry.'):error;
 export class StrategyStore {
-  constructor(factory=globalThis.indexedDB){this.factory=factory;this.db=null;this.opening=null;}
+  constructor(factory=globalThis.indexedDB){this.factory=factory;this.db=null;this.opening=null;this.writeChain=Promise.resolve();}
   async open(){
     if(this.db)return this.db;if(this.opening)return this.opening.promise;
     if(!this.factory)strategyFail('STRATEGY_INDEXEDDB_UNAVAILABLE');
@@ -23,7 +24,7 @@ export class StrategyStore {
       request.onupgradeneeded=()=>{
         if(this.opening!==pending){request.transaction.abort();return;}
         const db=request.result;
-        for(const [name,keyPath] of [['evidence','artifactId'],['sources','artifactId'],['events','eventId'],['replays','replayHash'],['studies','artifactId'],['claims','artifactId'],['archives','archiveId'],['informationSets','artifactId'],['informationPlans','artifactId'],['informationStudies','artifactId']])if(!db.objectStoreNames.contains(name))db.createObjectStore(name,{keyPath});
+        for(const [name,keyPath] of [['evidence','artifactId'],['sources','artifactId'],['events','eventId'],['replays','replayHash'],['studies','artifactId'],['claims','artifactId'],['archives','archiveId'],['informationSets','artifactId'],['informationPlans','artifactId'],['informationStudies','artifactId'],['provenance','id']])if(!db.objectStoreNames.contains(name))db.createObjectStore(name,{keyPath});
         const events=request.transaction.objectStore('events');
         if(!events.indexNames.contains('subject'))events.createIndex('subject','scopeKeys',{multiEntry:true});
         for(const [name,key] of [['cohort','cohortKey'],['policy','policyKey'],['matchup','matchupKey'],['maturity','maturityKey']])if(!events.indexNames.contains(name))events.createIndex(name,key);
@@ -46,22 +47,43 @@ export class StrategyStore {
       tx.oncomplete=()=>resolve(count);tx.onabort=()=>reject(diagnostic??storageError(tx.error??new Error('STRATEGY_STORAGE_READ_FAILED')));
     });
   }
+  // Writes are serialized per connection so two overlapping ingestion paths
+  // (live stream + reconcile/backfill) cannot race the get-then-add dedup
+  // check. A ConstraintError from a second connection is retried once: the
+  // retry's get() then sees the committed row and dedups or reports a real
+  // immutable conflict.
   async insert(rows){
+    const result=this.writeChain.then(()=>this.insertNow(rows),()=>this.insertNow(rows));
+    this.writeChain=result.then(()=>{},()=>{});
+    return result;
+  }
+  async insertNow(rows){
     const unique=new Map();
     for(const row of rows){const key=strategyDigest({store:row.store,key:row.key}),prior=unique.get(key);if(prior&&strategyDigest(prior.value)!==strategyDigest(row.value))strategyFail('STRATEGY_IMMUTABLE_CONFLICT');unique.set(key,row);}
     rows=[...unique.values()];
     if(!rows.length)return;
     const db=await this.open(),names=[...new Set(rows.map(r=>r.store))];
-    await new Promise((resolve,reject)=>{
-      const tx=db.transaction(names,'readwrite');let diagnostic;
-      tx.oncomplete=()=>resolve();tx.onabort=()=>reject(diagnostic??storageError(tx.error??new Error('STRATEGY_STORAGE_ABORTED')));tx.onerror=()=>{};
-      for(const row of rows){const store=tx.objectStore(row.store),get=store.get(row.key);get.onsuccess=()=>{if(get.result){
-        // Event identity de-duplicates imported copies and mirrored source imports.
-        const old=row.store==='events'?get.result.event:row.store==='sources'?{...get.result,origin:null}:get.result,newValue=row.store==='events'?row.value.event:row.store==='sources'?{...row.value,origin:null}:row.value;
-        if(strategyDigest(old)!==strategyDigest(newValue)){diagnostic=new Error('STRATEGY_IMMUTABLE_CONFLICT');tx.abort();}
-      }else store.add(row.value);};}
-    });
+    for(let attempt=0;attempt<2;attempt++){
+      const failure=await new Promise(resolve=>{
+        const tx=db.transaction(names,'readwrite');let diagnostic;
+        tx.oncomplete=()=>resolve(null);tx.onabort=()=>resolve(diagnostic??storageError(tx.error??new Error('STRATEGY_STORAGE_ABORTED')));tx.onerror=()=>{};
+        for(const row of rows){const store=tx.objectStore(row.store),get=store.get(row.key);get.onsuccess=()=>{if(get.result){
+          // Event identity de-duplicates imported copies and mirrored source imports.
+          const old=row.store==='events'?get.result.event:row.store==='sources'?{...get.result,origin:null}:get.result,newValue=row.store==='events'?row.value.event:row.store==='sources'?{...row.value,origin:null}:row.value;
+          if(strategyDigest(old)!==strategyDigest(newValue)){diagnostic=new Error('STRATEGY_IMMUTABLE_CONFLICT');tx.abort();}
+        }else store.add(row.value);};}
+      });
+      if(!failure)return;
+      if(attempt===0&&failure?.name==='ConstraintError')continue;
+      throw failure;
+    }
   }
+  /** Provenance index: one immutable row per (runId, producer, origin)
+   * recording which channel produced the run (ARENA / BATCH_MATRIX /
+   * EXPERIMENT) and its matrix/profile lineage. Identical registrations
+   * dedup; a contradictory row under the same key fails closed. */
+  async registerRun(run){const row=runProvenance(run);await this.insert([{store:'provenance',key:row.id,value:row}]);return row;}
+  async listProvenance(){const rows=[];await this.scan('provenance',{visit:row=>rows.push(row),limit:10000});return rows;}
   async addEvidence(evidence,replay=null,{retainEvents=true,originOverride=null}={}){
     // Chunked persistence: an oversized game envelope is split into sealed
     // chunk envelopes (same contract), so evidence is never lost to a single-

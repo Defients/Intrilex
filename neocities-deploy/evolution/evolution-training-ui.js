@@ -1,10 +1,10 @@
-import { researchRunEvidence } from './evolution-retention.mjs?v=37aaf900a6e7';
-import { esc } from '../state.js?v=37aaf900a6e7';
-import { LAB_IDENTITY } from './identity.mjs?v=37aaf900a6e7';
-import { createTrainingProject,trainProject } from './evolution-training.mjs?v=37aaf900a6e7';
-import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=37aaf900a6e7';
-import { attachTrainingUi } from './evolution-research-ui.js?v=37aaf900a6e7';
-import { projectModel } from './evolution-view-model.mjs?v=37aaf900a6e7';
+import { researchRunEvidence } from './evolution-retention.mjs?v=0b47cb7fa0fe';
+import { esc } from '../state.js?v=0b47cb7fa0fe';
+import { LAB_IDENTITY } from './identity.mjs?v=0b47cb7fa0fe';
+import { createTrainingProject,trainProject } from './evolution-training.mjs?v=0b47cb7fa0fe';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=0b47cb7fa0fe';
+import { attachTrainingUi } from './evolution-research-ui.js?v=0b47cb7fa0fe';
+import { projectModel } from './evolution-view-model.mjs?v=0b47cb7fa0fe';
 
 const api=attachTrainingUi(renderTraining);
 function renderTraining(project,locked){
@@ -17,7 +17,9 @@ function renderTraining(project,locked){
     api.pickProject(createTrainingProject({identity:LAB_IDENTITY,name:document.getElementById('evo-experiment-name').value,seed:config.seed,workerCount:config.workerCount,profileId:config.profileId,training}));await api.persist();
   }catch(error){api.view.error=error.message;api.render();}};
   document.getElementById('evo-train').onclick=()=>api.execute(async(signal,p)=>{
-    await trainProject(p,executeBrowserSeries,{signal,onProgress:api.progress,onRun:async run=>api.store.save(researchRunEvidence(run,api.view.progress?.mode??'EVALUATION')),onSave:async()=>{await api.persist();}});
+    // Ingest the retention-marked copy (same object that is saved): evidence
+    // produced here is byte-identical to a later sync of the saved run.
+    await trainProject(p,executeBrowserSeries,{signal,onProgress:api.progress,onRun:async run=>{const marked=researchRunEvidence(run,api.view.progress?.mode??'EVALUATION');await api.store.save(marked);await api.view.ingestRun?.(marked);},onSave:async()=>{await api.persist();}});
     const selected=p.generations.at(-1)?.selectedCheckpointId;if(selected)api.view.selectedA=selected;
     return p.experiment.status;
   });

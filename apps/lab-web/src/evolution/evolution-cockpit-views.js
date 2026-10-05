@@ -36,7 +36,7 @@ export function lineagesHtml(project, state) {
 }
 
 export function evidenceHtml(project, state, comparison, busy, historical = false) {
-  if (!project) return empty('No research evidence','Load an experiment or collect a held-out frozen suite. Arena evidence remains in Arena.','evolution');
+  if (!project) return empty('No research evidence','Load an experiment or collect a held-out frozen suite. Arena runs stay canonical here and are also indexed for Strategy analysis.','evolution');
   const options = selected => project.checkpoints.map(cp => `<option value="${cp.checkpointId}" ${cp.checkpointId===selected?'selected':''}>${esc(cp.agentId)}${cp.generation} · ${esc(shortId(cp.checkpointId))}</option>`).join('');
   const modes = [['evaluations','Evaluations'],['comparison','Compare'],['behavior','Behavior'],['regressions','Regressions']];
   let content;
