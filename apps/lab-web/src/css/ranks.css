@@ -1,0 +1,201 @@
+/* ═══════════════════════════════════════════════════════════════
+   ranks.css — /ranks workspace redesign layer
+   Rank Power Observatory: summary strip, ladder, dossier,
+   watchlist groups, authority tiles, swap-matrix heatmap.
+   Loaded last in styles.css so these rules win over the base
+   and polish layers at equal specificity.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Page scaffold ── */
+.ranks-observatory{display:grid;gap:18px}
+.ranks-layout{display:grid;grid-template-columns:minmax(330px,400px) minmax(0,1fr);gap:18px;align-items:start}
+.panel-icon{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:9px;border:1px solid rgba(90,215,232,.3);border-radius:7px;background:rgba(90,215,232,.08);color:var(--cyan);font-size:11px;font-weight:700;vertical-align:-1px}
+.panel-chip{display:inline-flex;align-items:center;padding:4px 11px;border:1px solid var(--border-soft);border-radius:999px;background:rgba(5,11,17,.5);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-bright);white-space:nowrap}
+
+/* ── Summary strip ── */
+.rank-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px}
+.rank-stat{position:relative;display:grid;gap:3px;align-content:start;padding:15px 18px 14px;border:1px solid var(--border-soft);border-radius:14px;background:linear-gradient(160deg,var(--surface),rgba(16,29,42,.65));box-shadow:var(--shadow-sm),var(--shadow-inset);overflow:hidden}
+.rank-stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--cyan),transparent 85%);opacity:.45}
+.rank-stat>small{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-bright);font-weight:600}
+.rank-stat>b{font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--text-bright);font-variant-numeric:tabular-nums}
+.rank-stat>b>i{font-style:normal;font-size:14px;font-weight:600;color:var(--muted)}
+.rank-stat-sub{font-size:10.5px;color:var(--muted)}
+.rank-stat-lead{border-color:rgba(90,215,232,.28);background:radial-gradient(circle at 85% 10%,rgba(90,215,232,.09),transparent 55%),linear-gradient(160deg,var(--surface),rgba(16,29,42,.65))}
+.rank-stat-lead::before{opacity:.8}
+.rank-stat-leadline{display:flex;align-items:center;gap:11px}
+.rank-stat-leadline>b{font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--text-bright);font-variant-numeric:tabular-nums}
+.rank-stat-alert{border-color:rgba(242,119,122,.35)}
+.rank-stat-alert::before{background:linear-gradient(180deg,var(--red),transparent 85%);opacity:.85}
+.rank-stat-alert>b{color:var(--red)}
+
+/* ── Glyph tiles (rank family accents) ── */
+.rank-tile{display:inline-grid;place-items:center;width:36px;height:36px;flex:none;border:1px solid var(--border);border-radius:10px;background:linear-gradient(150deg,var(--surface-2),var(--bg-2));font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:14px;color:var(--cyan);box-shadow:var(--shadow-inset);line-height:1}
+.rank-tile-sm{width:26px;height:26px;border-radius:8px;font-size:11px}
+.rank-tile-lg{width:60px;height:60px;border-radius:16px;font-size:23px}
+.rank-tile.family-ace{color:var(--cyan);border-color:rgba(90,215,232,.45);background:radial-gradient(circle at 50% 15%,rgba(90,215,232,.18),var(--bg-2) 78%)}
+.rank-tile.family-royal{color:var(--amber);border-color:rgba(241,189,93,.45);background:radial-gradient(circle at 50% 15%,rgba(241,189,93,.16),var(--bg-2) 78%)}
+.rank-tile.family-joker{color:var(--magenta);border-color:rgba(238,108,183,.45);background:radial-gradient(circle at 50% 15%,rgba(238,108,183,.16),var(--bg-2) 78%)}
+.rank-tile.family-number{color:var(--blue);border-color:rgba(91,156,240,.35);background:radial-gradient(circle at 50% 15%,rgba(91,156,240,.12),var(--bg-2) 78%)}
+.rank-tile.suit-club{color:var(--green);border-color:rgba(104,211,145,.45);background:radial-gradient(circle at 50% 15%,rgba(104,211,145,.16),var(--bg-2) 78%)}
+.rank-tile.suit-diamond{color:#ee8f6b;border-color:rgba(238,143,107,.45);background:radial-gradient(circle at 50% 15%,rgba(238,143,107,.15),var(--bg-2) 78%)}
+.rank-tile.suit-heart{color:#f07a93;border-color:rgba(240,122,147,.45);background:radial-gradient(circle at 50% 15%,rgba(240,122,147,.15),var(--bg-2) 78%)}
+.rank-tile.suit-spade{color:var(--violet);border-color:rgba(167,139,250,.45);background:radial-gradient(circle at 50% 15%,rgba(167,139,250,.16),var(--bg-2) 78%)}
+
+/* ── Ladder panel (sticky, internally scrolling) ── */
+.ranks-ladder-panel{position:sticky;top:16px}
+ol.rank-ladder{list-style:none;margin:0;padding:2px 6px 2px 0;display:grid;gap:6px;max-height:calc(100vh - 340px);min-height:120px;overflow-y:auto;scrollbar-gutter:stable}
+.rank-row{display:grid;grid-template-columns:24px 38px minmax(0,1fr) auto 9px;align-items:center;gap:10px;width:100%;padding:8px 10px;border:1px solid var(--border-soft);border-radius:11px;background:var(--surface);color:var(--text);cursor:pointer;text-align:left;transition:var(--transition-smooth)}
+.rank-row:hover{background:var(--surface-2);border-color:var(--border);transform:translateX(3px)}
+.rank-row.selected{border-color:rgba(90,215,232,.5);background:linear-gradient(135deg,rgba(90,215,232,.1),rgba(16,29,42,.75));box-shadow:var(--glow-cyan)}
+.rank-pos{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;font-size:10px;font-weight:700;color:var(--faint);font-variant-numeric:tabular-nums}
+.rank-pos.podium-1{color:#141003;background:linear-gradient(135deg,#f5cf7f,#e0a53e);box-shadow:0 0 12px rgba(241,189,93,.35)}
+.rank-pos.podium-2{color:#0b0e11;background:linear-gradient(135deg,#dde4ea,#9fb0ba);box-shadow:0 0 10px rgba(199,208,216,.2)}
+.rank-pos.podium-3{color:#170c05;background:linear-gradient(135deg,#d6935e,#a86334);box-shadow:0 0 10px rgba(205,143,94,.25)}
+.rank-row-track{display:block;min-width:0}
+.rank-row .rank-bar-container{display:block;height:10px;border-radius:999px;background:rgba(5,11,17,.7);box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+.rank-row .rank-bar-fill{display:block;border-radius:999px;background:linear-gradient(90deg,var(--cyan-2),var(--cyan) 55%,var(--magenta));box-shadow:0 0 10px rgba(90,215,232,.3)}
+.rank-rpi{font-size:13px;font-weight:700;color:var(--text-bright);min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.rank-conf-dot{display:block;width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor;justify-self:center}
+.rank-row.confidence-insufficient .rank-rpi{color:var(--muted)}
+.rank-row.confidence-insufficient .rank-bar-fill{background:linear-gradient(90deg,var(--border),var(--muted));box-shadow:none}
+
+/* ── Confidence pill ── */
+.confidence-pill{display:inline-flex;align-items:center;padding:4px 12px;border:1px solid currentColor;border-radius:999px;background:color-mix(in srgb,currentColor 10%,transparent);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+
+/* ── Rank dossier ── */
+.rank-identity{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:2px 0 18px;margin-bottom:18px;border-bottom:1px solid var(--border-soft)}
+.rank-identity-copy{flex:1;min-width:180px}
+.rank-identity-copy h3{margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--text-bright)}
+.rank-identity-copy p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+.rank-detail-grid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:center;margin-bottom:20px}
+.ranks-detail-panel .ix-chart-container{margin:0;padding:16px;border-radius:14px;background:radial-gradient(circle at 50% 28%,rgba(90,215,232,.06),transparent 70%),rgba(8,12,18,.55)}
+.ranks-detail-panel .ix-chart-header{justify-content:center}
+.ranks-detail-panel .ix-chart-radar{display:block;margin:0 auto}
+
+/* ── Axis bars ── */
+.rank-profile{display:grid;gap:11px;align-content:center}
+.rank-axis-bar{display:grid;grid-template-columns:128px minmax(0,1fr) auto;align-items:center;gap:12px}
+.axis-label{font-size:11.5px;font-weight:550;color:var(--muted-bright)}
+.rank-axis-bar .axis-track{display:block;height:8px;border-radius:999px;background:rgba(5,11,17,.7);box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+.rank-axis-bar .axis-fill{display:block;border-radius:999px;background:linear-gradient(90deg,var(--cyan-2),var(--cyan));box-shadow:0 0 8px rgba(90,215,232,.28)}
+.axis-value{min-width:44px;font-size:12px;font-weight:650;color:var(--text-bright);text-align:right;font-variant-numeric:tabular-nums}
+.axis-value small{display:inline;margin-left:6px;font-size:9.5px;font-weight:500;color:var(--muted)}
+.rank-axis-bar.axis-unavailable .axis-track{height:8px;border:1px dashed var(--border);background:transparent;box-shadow:none}
+.rank-axis-bar.axis-unavailable .axis-label,.rank-axis-bar.axis-unavailable .axis-value{color:var(--faint);font-weight:500}
+
+/* ── Cohort metrics tiles ── */
+.rank-subhead{margin:0 0 10px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-bright)}
+.rank-metrics-grid{margin-bottom:18px}
+.rank-metrics-grid .definition-list:has(>div){grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
+.rank-metrics-grid .definition-list>div{display:grid;gap:3px;align-content:start;padding:10px 13px;border:1px solid var(--border-soft);border-radius:11px;background:linear-gradient(160deg,var(--surface),rgba(12,22,34,.65));box-shadow:var(--shadow-inset)}
+.rank-metrics-grid .definition-list>div>dt{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.rank-metrics-grid .definition-list>div>dd{font-size:15px;font-weight:700;color:var(--text-bright);font-variant-numeric:tabular-nums}
+/* Flat definition lists (anatomy module) render as a clean kv table */
+.rank-metrics-grid .definition-list:not(:has(>div)){grid-template-columns:minmax(150px,230px) 1fr;gap:0 16px;padding:8px 16px;border:1px solid var(--border-soft);border-radius:11px;background:rgba(8,16,26,.5)}
+.rank-metrics-grid .definition-list:not(:has(>div))>dt{padding:7px 0;border-bottom:1px solid rgba(40,64,80,.18);font-size:10.5px}
+.rank-metrics-grid .definition-list:not(:has(>div))>dd{padding:7px 0;border-bottom:1px solid rgba(40,64,80,.18);font-size:12.5px;font-weight:650;color:var(--text)}
+.rank-metrics-grid .definition-list:not(:has(>div))>dt:last-of-type,.rank-metrics-grid .definition-list:not(:has(>div))>dd:last-of-type{border-bottom:0}
+
+/* ── Observed Rank Value card ── */
+.rank-cdv{padding:16px 18px;border:1px solid rgba(90,215,232,.22);border-radius:14px;background:radial-gradient(circle at 92% -10%,rgba(90,215,232,.1),transparent 55%),linear-gradient(160deg,var(--surface),var(--bg-2));box-shadow:var(--shadow-inset)}
+.rank-cdv-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.rank-cdv-head h3{margin:0;flex:1;font-size:13.5px;font-weight:650;color:var(--text-bright)}
+.rank-cdv .definition-list{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+
+/* ── Balance watchlist groups ── */
+.watch-groups{display:grid;gap:10px}
+.watch-group{border:1px solid var(--border-soft);border-left-width:3px;border-radius:12px;background:rgba(8,16,26,.55);overflow:hidden}
+.watch-group.watch-danger{border-left-color:var(--red)}
+.watch-group.watch-warning{border-left-color:var(--amber)}
+.watch-group.watch-info{border-left-color:var(--blue)}
+.watch-group-head{display:flex;align-items:center;gap:9px;padding:10px 14px;border-bottom:1px solid var(--border-soft)}
+.watch-group-head strong{flex:1;font-size:12.5px;color:var(--text-bright)}
+.watch-icon{width:18px;text-align:center;font-size:11px}
+.watch-danger .watch-icon{color:var(--red)}
+.watch-warning .watch-icon{color:var(--amber)}
+.watch-info .watch-icon{color:var(--blue)}
+.watch-count{padding:2px 9px;border:1px solid var(--border-soft);border-radius:999px;background:var(--surface-2);font-size:10px;font-weight:700;color:var(--muted-bright);font-variant-numeric:tabular-nums}
+.watch-flags{list-style:none;margin:0;padding:9px 12px;display:grid;gap:7px}
+.watch-flags li{display:flex;align-items:center;gap:10px;font-size:11.5px;line-height:1.45;color:var(--muted)}
+.watch-reason{flex:1;min-width:0}
+.rank-flag-button{display:inline-flex;padding:0;border:0;border-radius:8px;background:transparent;cursor:pointer;transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease)}
+.rank-flag-button:hover{transform:translateY(-1px);box-shadow:0 0 0 2px rgba(90,215,232,.3)}
+
+/* ── Rank authority tiles ── */
+.rank-authority-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:10px}
+.rank-authority-card{display:grid;justify-items:center;gap:6px;padding:13px 8px 11px;border:1px solid var(--border-soft);border-radius:12px;background:linear-gradient(160deg,var(--surface),rgba(12,22,34,.65));color:var(--text);box-shadow:var(--shadow-inset);text-align:center;cursor:pointer;transition:var(--transition-smooth)}
+.rank-authority-card:hover{border-color:var(--border-strong);background:var(--surface-2);transform:translateY(-2px);box-shadow:var(--shadow-soft)}
+.rank-authority-card .rank-tile{display:grid;width:40px;height:40px;font-size:15px;margin-bottom:2px}
+.rank-authority-card b{font-size:12px;font-weight:700;color:var(--text-bright);font-variant-numeric:tabular-nums}
+.rank-authority-card small{display:block;font-size:9.5px;line-height:1.35;color:var(--muted)}
+
+/* ── Swap matrix heatmap ── */
+.swap-matrix-wrapper{max-height:600px;overflow:auto;padding:14px;border:1px solid var(--border-soft);border-radius:12px;background:rgba(5,11,17,.55);scrollbar-gutter:stable}
+.swap-matrix{border-collapse:separate;border-spacing:3px;width:auto;max-width:none;margin:0 auto}
+.swap-matrix th,.swap-matrix td{border:0;height:36px;min-width:36px;padding:0 2px}
+.swap-header,.swap-row-header{position:sticky;z-index:2;border-radius:7px;background:var(--surface-2);font-size:10.5px;letter-spacing:.03em}
+.swap-header{top:0}
+.swap-row-header{left:0}
+.swap-corner{position:sticky;top:0;left:0;z-index:3;border-radius:7px;background:var(--surface-2)}
+.swap-header-label{display:inline-grid;place-items:center;min-width:22px;padding:2px 4px;border-radius:5px;font-family:Georgia,"Times New Roman",serif}
+.swap-header-label.family-ace{color:var(--cyan)}
+.swap-header-label.family-royal{color:var(--amber)}
+.swap-header-label.family-joker{color:var(--magenta)}
+.swap-header-label.family-number{color:var(--blue)}
+.swap-header-label.suit-club{color:var(--green)}
+.swap-header-label.suit-diamond{color:#ee8f6b}
+.swap-header-label.suit-heart{color:#f07a93}
+.swap-header-label.suit-spade{color:var(--violet)}
+.swap-cell{border-radius:7px;font-size:9.5px;cursor:help}
+.swap-cell.swap-hl{outline:2px solid var(--cyan);outline-offset:1px}
+.swap-header.swap-hl,.swap-row-header.swap-hl{box-shadow:inset 0 0 0 2px var(--cyan);background:var(--surface-3)}
+.swap-diagonal{background:repeating-linear-gradient(135deg,var(--bg-2) 0 4px,rgba(16,29,42,.9) 4px 8px)}
+.swap-empty{background:rgba(5,11,17,.6)}
+.swap-legend{align-items:center}
+.swap-legend-scale{display:inline-flex;align-items:center;gap:9px}
+.swap-gradient-bar{width:150px;height:10px;border:1px solid var(--border-soft);border-radius:999px;background:linear-gradient(90deg,rgba(240,93,120,.85),rgba(240,93,120,.14),rgba(79,211,135,.14),rgba(79,211,135,.85))}
+.swap-scale-label{font-size:10px;color:var(--muted)}
+
+/* ── Rank anatomy observatory polish ── */
+.rank-anatomy-observatory{padding:0;border:1px solid var(--border-soft);border-radius:var(--radius-lg);background:linear-gradient(160deg,rgba(16,29,42,.75),rgba(10,19,28,.8));box-shadow:var(--shadow-md),var(--shadow-inset);overflow:hidden}
+.rank-anatomy-header{padding:18px 20px 14px;border-bottom:1px solid var(--border-soft)}
+.rank-anatomy-header h2{font-size:15.5px;font-weight:650;letter-spacing:-.015em;color:var(--text-bright)}
+.rank-anatomy-observatory>.anatomy-integrity-banner{margin:12px 20px 0}
+.anatomy-rail{gap:6px;padding:0 12px;border-bottom:0;background:rgba(5,11,17,.4)}
+.anatomy-tab{position:relative;padding:12px 14px 10px;border-radius:10px 10px 0 0;border-bottom-width:3px}
+.anatomy-tab.active{background:linear-gradient(180deg,rgba(90,215,232,.09),rgba(90,215,232,.02))}
+.anatomy-tab-label{color:var(--muted-bright)}
+.anatomy-tab.active .anatomy-tab-label{color:var(--cyan)}
+.rank-anatomy-content{padding:18px 20px}
+.anatomy-section h3{font-size:13.5px;font-weight:650;color:var(--text-bright);letter-spacing:-.01em}
+.anatomy-subsection{border-top-color:rgba(40,64,80,.3)}
+.frequency-potency-table,.comparison-table{border:1px solid var(--border-soft);border-radius:10px;border-collapse:separate;border-spacing:0;overflow:hidden;background:rgba(8,16,26,.4)}
+.frequency-potency-table th,.comparison-table th{padding:9px 10px;background:rgba(20,36,50,.85);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-bright)}
+.frequency-potency-table td,.comparison-table td{padding:8px 10px}
+.frequency-potency-table tbody tr:hover,.comparison-table tbody tr:hover{background:rgba(90,215,232,.04)}
+.funnel-stage{border-radius:10px;background:linear-gradient(160deg,var(--surface),rgba(12,22,34,.7));box-shadow:var(--shadow-inset)}
+.super-effect-dossier{border-radius:12px;background:linear-gradient(160deg,var(--surface),rgba(12,22,34,.65));box-shadow:var(--shadow-inset)}
+.contribution-track{height:12px;border-radius:999px;box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+.contribution-fill{border-radius:999px}
+
+/* ── Responsive ── */
+@media(max-width:1100px){
+  .ranks-layout{grid-template-columns:1fr}
+  .ranks-ladder-panel{position:static}
+  ol.rank-ladder{max-height:400px}
+  .rank-detail-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .rank-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rank-stat{padding:12px 14px}
+  .rank-stat>b{font-size:21px}
+  .rank-identity-copy h3{font-size:19px}
+  .rank-axis-bar{grid-template-columns:92px minmax(0,1fr) auto;gap:8px}
+  .axis-value small{display:none}
+  .rank-metrics-grid .definition-list:has(>div){grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rank-authority-grid{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}
+}
+@media print{
+  ol.rank-ladder,.swap-matrix-wrapper{max-height:none;overflow:visible}
+  .ranks-ladder-panel{position:static}
+}

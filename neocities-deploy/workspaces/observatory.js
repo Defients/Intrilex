@@ -3,10 +3,10 @@
 //   Compare, Mechanics, Synergies, History, Replays, Traces
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=2d119ab0ddda';
-import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow } from '../chart-toolkit.js?v=2d119ab0ddda';
-// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=2d119ab0ddda') to break backedge
-import { rerender } from '../rerender.js?v=2d119ab0ddda';
+import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=3e5b5b85f4e1';
+import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow } from '../chart-toolkit.js?v=3e5b5b85f4e1';
+// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=3e5b5b85f4e1') to break backedge
+import { rerender } from '../rerender.js?v=3e5b5b85f4e1';
 
 // Shown when the Observatory dataset was swapped to propagated Evolution Lab
 // runs (Evolution Lab → Runs & artifacts → "Propagate → Observatory").
@@ -29,6 +29,10 @@ export function renderCompare() {
   document.querySelector('#compare-left').onchange = e => { state.selectedPolicy = e.target.value; rerender(); };
   document.querySelector('#compare-right').onchange = e => { state.comparePolicyRight = e.target.value; rerender(); };
   bindChartToggle('#matchup-matrix-chart');
+  document.querySelector('#matchup-source')?.addEventListener('change', e => {
+    state.matchupSource = e.target.value === 'all' ? null : e.target.value;
+    rerender();
+  });
   // Depth II Phase 6: matchup cell → filtered history
   document.querySelectorAll('[data-policy-a][data-policy-b]').forEach(cell => {
     const handler = () => {
@@ -100,11 +104,42 @@ function resolveWinningPolicy(s, pids) {
   return null;
 }
 
+// Propagated lab datasets pool several cohorts: one per Batch Matrix manifest
+// (cell runs share matrixId) plus one per standalone run, alongside certified
+// rows. A single axis across cohorts leaves honest 'no-data' cells wherever a
+// policy pair never played — the scope filter isolates one round robin.
+function matchupCohorts(summaries) {
+  const groups = new Map();
+  for (const s of summaries) {
+    const key = s.matrixId
+      ? `matrix:${s.matrixId}`
+      : s.telemetryOrigin === 'EVOLUTION_LAB'
+        ? `lab:${s.labRunId ?? 'unknown'}`
+        : 'certified';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
+  }
+  return groups;
+}
+
+function matchupCohortLabel(key) {
+  if (key === 'certified') return 'Certified corpus';
+  const id = key.slice(key.indexOf(':') + 1);
+  const shortId = id.length > 22 ? id.slice(0, 21) + '…' : id;
+  return key.startsWith('matrix:') ? `Batch matrix ${shortId}` : `Lab run ${shortId}`;
+}
+
 export function renderMatchupMatrix() {
-  const summaries = state.observatory?.summaries ?? [];
+  const allSummaries = state.observatory?.summaries ?? [];
+  const cohorts = matchupCohorts(allSummaries);
+  const scope = state.matchupSource && cohorts.has(state.matchupSource) ? state.matchupSource : 'all';
+  const summaries = scope === 'all' ? allSummaries : cohorts.get(scope);
+  const scopeHtml = cohorts.size > 1
+    ? `<label class="ix-matchup-scope">Dataset <select id="matchup-source" data-testid="matchup-source">${['all', ...[...cohorts.keys()].sort((a, b) => matchupCohortLabel(a).localeCompare(matchupCohortLabel(b)))].map(k => `<option value="${esc(k)}" ${k === scope ? 'selected' : ''}>${esc(k === 'all' ? `All datasets (${allSummaries.length} matches)` : `${matchupCohortLabel(k)} (${cohorts.get(k).length} matches)`)}</option>`).join('')}</select></label>`
+    : '';
   const { wins, policies } = computeMatchupMatrix(summaries);
   if (policies.length < 2) {
-    return `<div class="ix-chart-empty" data-testid="matchup-matrix-empty">No decisive 2-player matches available to compute a matchup matrix. Run a campaign with multiple policies.</div>`;
+    return `${scopeHtml}<div class="ix-chart-empty" data-testid="matchup-matrix-empty">No decisive 2-player matches available to compute a matchup matrix. Run a campaign with multiple policies.</div>`;
   }
   const n = policies.length;
   const cells = [];
@@ -162,7 +197,7 @@ export function renderMatchupMatrix() {
     rows: tableRows,
     caption: 'Policy matchup win rates',
   });
-  return `<details class="ix-chart-container" data-testid="matchup-matrix" id="matchup-matrix-chart" open><summary class="ix-chart-header"><h4>Matchup matrix (policy vs policy win rate)</h4><span class="footer-note">${policies.length} policies · green = row wins more, red = column wins more</span></summary>${svg}<button class="ix-chart-toggle" data-chart-toggle="matchup-matrix" aria-expanded="false">View as table</button><div class="ix-chart-table-alt" data-chart-table="matchup-matrix" hidden>${tableAlt}</div></details>`;
+  return `<details class="ix-chart-container" data-testid="matchup-matrix" id="matchup-matrix-chart" open><summary class="ix-chart-header"><h4>Matchup matrix (policy vs policy win rate)</h4><span class="footer-note">${policies.length} policies · green = row wins more, red = column wins more, dark = pair never met</span></summary>${scopeHtml}${svg}<button class="ix-chart-toggle" data-chart-toggle="matchup-matrix" aria-expanded="false">View as table</button><div class="ix-chart-table-alt" data-chart-table="matchup-matrix" hidden>${tableAlt}</div></details>`;
 }
 
 // ── Policy archetype clustering (Phase 4B) ────────────────────────
@@ -391,7 +426,7 @@ export async function renderOpeningPatterns() {
   let idx = state.traceIndex;
   if (!idx) {
     try {
-      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=2d119ab0ddda');
+      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=3e5b5b85f4e1');
       idx = await loadTraceIndex();
       if (!idx || !idx.records) {
         return `<div class="ix-chart-empty" data-testid="opening-patterns-empty">No decision traces available. Run a campaign with decision traces enabled to analyze opening patterns.</div>`;
@@ -404,7 +439,7 @@ export async function renderOpeningPatterns() {
     }
   }
   // If traceIndex exists but trace data isn't preloaded, load it
-  const { loadTraceData } = await import('../data-loader.js?v=2d119ab0ddda');
+  const { loadTraceData } = await import('../data-loader.js?v=3e5b5b85f4e1');
   const traceFiles = await Promise.all(idx.records.map(r => loadTraceData(r.matchId)));
   return _renderOpeningPatternsFromTraces(idx.records, traceFiles);
 }
@@ -834,6 +869,7 @@ function renderMechanicsPickRateChart(mechanics) {
     barHeight: 22,
     title: 'Top mechanics by pick rate (when legal)',
     ariaLabel: 'Bar chart of the top 15 mechanics by legal pick rate, colored by evidence grade',
+    barAttrs: item => ` class="ix-bar-clickable" data-mechanic="${esc(item.mechanic)}"`,
   });
   const tableAlt = chartTableAlternative({
     headers: ['Mechanic', 'Pick rate (legal)', 'Evidence'],

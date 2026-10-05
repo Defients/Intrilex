@@ -62,6 +62,15 @@ test('barChart handles empty input gracefully', async () => {
   assert.ok(svg.includes('No data'), 'should show No data message');
 });
 
+test('barChart emits barAttrs on a wrapping <g> per item for click targets', async () => {
+  const { barChart } = await loadToolkit();
+  const svg = barChart({
+    items: [{ label: 'A', value: 10, id: 'm-a' }, { label: 'B', value: 20, id: 'm-b' }],
+    barAttrs: item => ` class="ix-bar-clickable" data-mechanic="${item.id}"`,
+  });
+  assert.equal(svg.match(/<g class="ix-bar-clickable" data-mechanic="m-[ab]">/g).length, 2, 'each bar row is wrapped in an attributed group');
+});
+
 test('heatmap produces correct cell count (rows × cols)', async () => {
   const { heatmap } = await loadToolkit();
   const rows = ['r1', 'r2', 'r3'];

@@ -1278,6 +1278,7 @@ input::placeholder{color:var(--faint);opacity:.85}
    ═══════════════════════════════════════════════════════════════════ */
 .ix-chart-radar,.ix-chart-bar,.ix-chart-heatmap,.ix-chart-sparkline,.ix-chart-donut,.ix-chart-line,.ix-chart-stacked-bar,.ix-chart-sankey{display:block;max-width:100%;height:auto;font-family:Inter,ui-sans-serif,system-ui,sans-serif}
 .ix-chart-radar{margin:0 auto}
+.ix-chart-bar .ix-bar-clickable{cursor:pointer}
 .ix-chart-bar .ix-bar-fill,.ix-chart-stacked-bar .ix-stacked-segment{transition:filter .15s ease}
 .ix-chart-bar .ix-bar-fill:hover,.ix-chart-stacked-bar .ix-stacked-segment:hover{filter:brightness(1.18)}
 .ix-chart-heatmap .ix-heatmap-cell{transition:stroke .15s ease,stroke-width .15s ease}
@@ -1303,6 +1304,9 @@ input::placeholder{color:var(--faint);opacity:.85}
 .ix-chart-container .ix-chart-toggle:hover{color:var(--text-bright);border-color:rgba(255,255,255,.25)}
 .ix-chart-container .ix-chart-table-alt{margin-top:10px}
 .ix-chart-empty{padding:16px;text-align:center;color:var(--muted);font-size:12px;border:1px dashed var(--border-soft);border-radius:8px}
+/* Matchup matrix cohort scope — isolates one round robin from a pooled dataset */
+.ix-matchup-scope{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:0 0 10px}
+.ix-matchup-scope select{font-size:12px}
 /* Section tab navigation for multi-section workspaces */
 .ix-section-tabs{display:flex;gap:4px;flex-wrap:wrap;padding:4px;border:1px solid var(--border-soft);border-radius:10px;background:rgba(8,12,18,.5);margin-bottom:12px}
 .ix-section-tab{padding:7px 14px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;transition:background .15s,color .15s,border-color .15s}

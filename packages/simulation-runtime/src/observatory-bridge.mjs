@@ -86,6 +86,9 @@ export function observatorySummaryForRecord(record, run, { pairId = null } = {})
     // Provenance: Observatory rows keep lab lineage for filtering/reporting.
     telemetryOrigin: 'EVOLUTION_LAB',
     labRunId: run.runId,
+    // Matrix lineage lets cohort-scoped views isolate one frozen round robin —
+    // every cell run of a matrix shares its matrixId.
+    ...(run.matrixCell?.matrixId ? { matrixId: run.matrixCell.matrixId } : {}),
     evidenceOrigin: record.evidenceOrigin ?? 'LOCAL',
     fingerprint: record.fingerprint ?? run.identity?.fingerprint ?? null,
   };

@@ -344,6 +344,15 @@ test('lab records convert to observatory summary rows with honest field mapping'
   }
 });
 
+test('matrix cell runs carry matrixId so cohort-scoped views can isolate the round robin', () => {
+  const cell = structuredClone(traced);
+  cell.matrixCell = { matrixId: 'MX-deadbeef01', seatA: 'P-alpha', seatB: 'P-beta' };
+  const withCell = observatorySummariesForRun(cell);
+  assert.ok(withCell.every(s => s.matrixId === 'MX-deadbeef01'), 'matrixId propagated to every summary');
+  const plain = observatorySummariesForRun(traced);
+  assert.ok(plain.every(s => s.matrixId === undefined), 'standalone runs carry no matrixId');
+});
+
 test('mirror-seats ordinals pair into honest AB/BA blocks', () => {
   const summaries = observatorySummariesForRun(traced);
   const pairs = new Map();

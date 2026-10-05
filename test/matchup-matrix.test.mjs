@@ -98,6 +98,28 @@ test('compare workspace renders the matchup matrix section', async () => {
   assert.ok(/renderMatchupMatrix\(\)/.test(js), 'compare must call renderMatchupMatrix');
 });
 
+test('matchup matrix supports cohort scoping for pooled lab datasets', async () => {
+  const js = await src('workspaces/observatory.js');
+  // Pooled lab datasets mix cohorts (one per matrix + standalone runs);
+  // the axis unions all policies but cross-cohort cells have no evidence.
+  assert.ok(/function matchupCohorts/.test(js), 'must define matchupCohorts');
+  assert.ok(/s\.matrixId/.test(js), 'must group matrix cell summaries by matrixId');
+  assert.ok(/telemetryOrigin === 'EVOLUTION_LAB'/.test(js), 'must isolate lab cohorts');
+  assert.ok(/matchup-source/.test(js), 'must emit a dataset scope select');
+  assert.ok(/state\.matchupSource/.test(js), 'must persist scope selection in state');
+  assert.ok(/cohorts\.size > 1/.test(js), 'scope select only appears with multiple cohorts');
+});
+
+test('matchup matrix footer explains unplayed-pair cells', async () => {
+  const js = await src('workspaces/observatory.js');
+  assert.ok(/never met/.test(js), 'footer must explain dark cells as unplayed pairs');
+});
+
+test('observatory bridge propagates matrixId for cohort scoping', async () => {
+  const js = await readFile(path.join(root, 'packages/simulation-runtime/src/observatory-bridge.mjs'), 'utf8');
+  assert.ok(/run\.matrixCell\?\.matrixId/.test(js), 'bridge must carry matrixId from matrixCell');
+});
+
 test('no new dependencies are introduced for clustering (inline k-means)', async () => {
   const js = await src('workspaces/observatory.js');
   assert.ok(!/from ['"]ml-kmeans|from ['"]clusterfck|from ['"]skmeans/i.test(js), 'must not import a clustering library');

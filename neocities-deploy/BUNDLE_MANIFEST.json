@@ -2,13 +2,13 @@
   "schemaVersion": "1.0.0",
   "assets": {
     "app": {
-      "file": "app.2d119ab0ddda.js",
-      "hash": "2d119ab0ddda",
+      "file": "app.3e5b5b85f4e1.js",
+      "hash": "3e5b5b85f4e1",
       "type": "js"
     },
     "styles": {
-      "file": "styles.d7d36e14e368.css",
-      "hash": "d7d36e14e368",
+      "file": "styles.86fb0902905b.css",
+      "hash": "86fb0902905b",
       "type": "css"
     },
     "tacticalStyles": {

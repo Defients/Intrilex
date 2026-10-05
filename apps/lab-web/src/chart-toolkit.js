@@ -121,7 +121,7 @@ export function radarChart({ axes, max = 1, size = 240, color = '#4fd387', title
  * @param {string} [opts.ariaLabel]
  * @returns {string} SVG string
  */
-export function barChart({ items, maxValue, width = 400, barHeight = 24, title, ariaLabel } = {}) {
+export function barChart({ items, maxValue, width = 400, barHeight = 24, title, ariaLabel, barAttrs } = {}) {
   const list = Array.isArray(items) ? items.filter(i => i && i.label != null) : [];
   if (list.length === 0) return svgWrap({ width, height: 40, viewBox: `0 0 ${width} 40`, className: 'ix-chart-bar', title, ariaLabel, desc: 'No data available for bar chart.' }, `<text x="${width / 2}" y="22" text-anchor="middle" font-size="12" fill="rgba(255,255,255,0.5)">No data</text>`);
   const labelW = Math.min(160, Math.max(60, Math.max(...list.map(i => String(i.label).length)) * 7));
@@ -138,7 +138,8 @@ export function barChart({ items, maxValue, width = 400, barHeight = 24, title, 
     const color = item.color ?? defaultColor;
     const label = escSvg(item.label);
     const valueText = fmtNum(v);
-    return `<text class="ix-bar-label" x="${labelW - 8}" y="${y + barHeight / 2 + 3}" text-anchor="end" font-size="11" fill="rgba(255,255,255,0.82)">${label}</text><rect class="ix-bar-track" x="${labelW}" y="${y}" width="${chartW}" height="${barHeight}" rx="3" fill="rgba(255,255,255,0.05)"/><rect class="ix-bar-fill" x="${labelW}" y="${y}" width="${w.toFixed(2)}" height="${barHeight}" rx="3" fill="${escSvg(color)}"><title>${label}: ${valueText}</title></rect><text class="ix-bar-value" x="${labelW + w + 5}" y="${y + barHeight / 2 + 3}" font-size="11" fill="rgba(255,255,255,0.7)">${valueText}</text>`;
+    const extraAttrs = typeof barAttrs === 'function' ? (barAttrs(item, i) || '') : '';
+    return `<g${extraAttrs}><text class="ix-bar-label" x="${labelW - 8}" y="${y + barHeight / 2 + 3}" text-anchor="end" font-size="11" fill="rgba(255,255,255,0.82)">${label}</text><rect class="ix-bar-track" x="${labelW}" y="${y}" width="${chartW}" height="${barHeight}" rx="3" fill="rgba(255,255,255,0.05)"/><rect class="ix-bar-fill" x="${labelW}" y="${y}" width="${w.toFixed(2)}" height="${barHeight}" rx="3" fill="${escSvg(color)}"><title>${label}: ${valueText}</title></rect><text class="ix-bar-value" x="${labelW + w + 5}" y="${y + barHeight / 2 + 3}" font-size="11" fill="rgba(255,255,255,0.7)">${valueText}</text></g>`;
   }).join('');
   const desc = `Bar chart with ${list.length} items.`;
   return svgWrap({ width, height, viewBox: `0 0 ${width} ${height}`, className: 'ix-chart-bar', title, desc, ariaLabel }, bars);
