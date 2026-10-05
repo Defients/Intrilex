@@ -10,13 +10,13 @@
 // (semantic table, aria-sort, keyboard, reduced motion, textual tier names).
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct } from '../state.js?v=ac7ae9e38182';
-import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=ac7ae9e38182';
+import { app, esc, pct } from '../state.js?v=2d119ab0ddda';
+import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=2d119ab0ddda';
 import { RankTier } from "../account-domain/rank-tier.mjs";
 import { apexLabel, LeaderboardType } from "../account-domain/leaderboard.mjs";
 import {
   fetchLeaderboard, fetchPlayerStanding, fetchSeasons,
-} from '../play/ranked/leaderboard-data.js?v=ac7ae9e38182';
+} from '../play/ranked/leaderboard-data.js?v=2d119ab0ddda';
 
 const TIER_FILTERS = [
   { value: 'ALL', label: 'All Tiers' },

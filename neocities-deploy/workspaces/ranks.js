@@ -2,10 +2,10 @@
 // workspaces/ranks.js — /ranks workspace: rank power observatory
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   app,   esc,   short,   definitionList } from '../state.js?v=ac7ae9e38182';
-import { rerender } from '../rerender.js?v=ac7ae9e38182';
-import { labDatasetBanner } from './observatory.js?v=ac7ae9e38182';
-import { radarChart } from '../chart-toolkit.js?v=ac7ae9e38182';
+import { state,   app,   esc,   short,   definitionList } from '../state.js?v=2d119ab0ddda';
+import { rerender } from '../rerender.js?v=2d119ab0ddda';
+import { labDatasetBanner } from './observatory.js?v=2d119ab0ddda';
+import { radarChart } from '../chart-toolkit.js?v=2d119ab0ddda';
 
 function displayRankGlyph(rank) {
   if (rank.startsWith('10:')) {

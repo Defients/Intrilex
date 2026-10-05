@@ -14,10 +14,14 @@ export const STATIC_POLICIES = Object.freeze([...FROZEN_POLICIES, 'score-rush-ta
 export const staticPolicyVersion = id => id === 'control-conversion-tactical' ? '5.0.0' : FROZEN_POLICIES.includes(id) ? '2.0.0' : STATIC_POLICIES.includes(id) ? '4.0.0' : null;
 export const LAB_POLICIES = Object.freeze([...STATIC_POLICIES, WEIGHTED_POLICY_ID]);
 export const LAB_PROFILES = Object.freeze(['core-advanced-authority', 'core-unrestricted-authority', 'first-contact-trigger-closure']);
-// importBytes bounds *external* JSON an operator chooses to ingest. Locally
-// generated runs are valid evidence and get their own, larger single-artifact
-// persistence budget; browser quota errors remain a separate failure class.
-export const LAB_LIMITS = Object.freeze({ games: 10000, workers: 4, decisions: 1800, replays: 12, commands: 12000, importBytes: 40 * 1024 * 1024, persistRunBytes: 128 * 1024 * 1024 });
+// importBytes bounds *external* JSON an operator chooses to ingest — a
+// fail-fast guard so a pathological file cannot stall the tab on JSON.parse,
+// sized to admit telemetry-heavy artifacts (deep decision records run ~80 KiB
+// per game). Artifacts beyond this bound are meant to travel as compact
+// manifests or per-run artifacts instead. Locally generated runs are valid
+// evidence and get their own persistence budget; browser quota errors remain
+// a separate failure class.
+export const LAB_LIMITS = Object.freeze({ games: 10000, workers: 4, decisions: 1800, replays: 12, commands: 12000, importBytes: 256 * 1024 * 1024, persistRunBytes: 128 * 1024 * 1024 });
 export const CLEAN_REASONS = Object.freeze(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW']);
 const fail = code => { throw Object.assign(new Error(code), { code }); };
 const digest = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);

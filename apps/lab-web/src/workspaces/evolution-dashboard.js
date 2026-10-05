@@ -5,7 +5,7 @@ import { app, esc, fmt, state } from '../state.js';
 import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs';
 import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs';
 import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs';
-import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs';
+import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs';
 import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs';
 import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs';
 import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs';
@@ -267,7 +267,7 @@ function batchContext() {
     rulesOptions: [['core-advanced-authority','Advanced Core'],['core-unrestricted-authority','Unrestricted Core'],['first-contact-trigger-closure','Complete First Contact']],
     busy: () => active() || !!view.archive || !!cockpitResearch.getState().archive,
     lock: { get: () => view.matrixAbort, set: controller => { view.matrixAbort = controller; } },
-    fns: { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix },
+    fns: { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix },
     persist: { saveRun: r => store.save(r), saveMatrix: lab => store.saveMatrix(lab), listMatrices: () => store.listMatrices(), loadMatrix: id => store.loadMatrix(id), loadRun: id => store.load(id) },
     onAcceptedGame: (evidence, cellRun) => batchWriter().offer(cellRun, evidence),
     ingestRun: saved => ingestRunEvidence(strategies, saved),

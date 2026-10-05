@@ -127,7 +127,8 @@ export function batchSectionHtml(state, deps) {
     <div class="toolbar"><button id="evo-batch-start" class="primary-button" type="button" ${busy || blockers.length || !plan ? 'disabled' : ''}>Start batch matrix</button>
       <button id="evo-batch-stop" class="secondary-button" type="button" ${running ? '' : 'disabled'}>Stop matrix</button>
       <button id="evo-batch-resume" class="secondary-button" type="button" ${!busy && state.lab && !['COMPLETE', 'RUNNING'].includes(state.lab.status) ? '' : 'disabled'}>Resume matrix</button>
-      <button id="evo-batch-export" class="secondary-button" type="button" ${state.lab ? '' : 'disabled'}>Export matrix artifact</button>
+      <button id="evo-batch-export" class="secondary-button" type="button" ${state.lab ? '' : 'disabled'} title="Full artifact: embeds every game record — large file, portable across origins">Export matrix artifact</button>
+      <button id="evo-batch-export-manifest" class="secondary-button" type="button" ${state.lab ? '' : 'disabled'} title="Compact manifest: run references only — rehydrates from this browser's run ledger">Export manifest</button>
       <label class="secondary-button">Inspect matrix artifact<input id="evo-batch-import" type="file" accept=".json,application/json" ${busy ? 'disabled' : ''}></label></div>
     <p id="evo-batch-status" role="status">${esc(state.error || progressText || (state.lab ? `${state.lab.status} · ${fmt(state.lab.runs.reduce((n, r) => n + r.records.length, 0))} accepted records` : 'Not run. Missing matchups remain pending.'))}</p>
     ${state.storage ? `<p class="danger" role="alert">${esc(state.storage)}</p>` : ''}
@@ -290,6 +291,7 @@ export function bindBatchMatrix(root, ctx) {
     if (event.target.id === 'evo-batch-stop') ctx.lock.get()?.abort();
     if (event.target.id === 'evo-batch-resume') { if (state.lab) void execute(state.lab); }
     if (event.target.id === 'evo-batch-export') { if (state.lab) ctx.exportJson(fns.batchMatrixArtifact(state.lab), `${state.lab.matrixId}.json`); }
+    if (event.target.id === 'evo-batch-export-manifest') { if (state.lab) ctx.exportJson(fns.batchMatrixManifest(state.lab), `${state.lab.matrixId}-manifest.json`); }
   });
   if (state.saved === undefined || state.saved === null) {
     void ctx.persist.listMatrices?.().then(list => { if (state.saved == null) { state.saved = list ?? []; render(); } }).catch(() => { state.saved = []; });

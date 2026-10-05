@@ -1,24 +1,24 @@
-import '../evolution/evolution-training-ui.js?v=ac7ae9e38182';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=ac7ae9e38182';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=ac7ae9e38182';
-import { app, esc, fmt, state } from '../state.js?v=ac7ae9e38182';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=ac7ae9e38182';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=ac7ae9e38182';
-import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=ac7ae9e38182';
-import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=ac7ae9e38182';
-import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=ac7ae9e38182';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=ac7ae9e38182';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=ac7ae9e38182';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=ac7ae9e38182';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=ac7ae9e38182';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=ac7ae9e38182';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=ac7ae9e38182';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=ac7ae9e38182';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=ac7ae9e38182';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=ac7ae9e38182';
-import { StrategyStore } from '../strategy/strategy-store.mjs?v=ac7ae9e38182';
-import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=ac7ae9e38182';
-import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs?v=ac7ae9e38182';
+import '../evolution/evolution-training-ui.js?v=2d119ab0ddda';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=2d119ab0ddda';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=2d119ab0ddda';
+import { app, esc, fmt, state } from '../state.js?v=2d119ab0ddda';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=2d119ab0ddda';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=2d119ab0ddda';
+import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=2d119ab0ddda';
+import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=2d119ab0ddda';
+import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=2d119ab0ddda';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=2d119ab0ddda';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=2d119ab0ddda';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=2d119ab0ddda';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=2d119ab0ddda';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=2d119ab0ddda';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=2d119ab0ddda';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=2d119ab0ddda';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=2d119ab0ddda';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=2d119ab0ddda';
+import { StrategyStore } from '../strategy/strategy-store.mjs?v=2d119ab0ddda';
+import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=2d119ab0ddda';
+import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs?v=2d119ab0ddda';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 // Strategy evidence is a separate persistence concern from the monolithic
@@ -183,7 +183,7 @@ async function propagateToObservatory() {
   const summaries = [...new Map(runs.flatMap(observatorySummariesForRun).map(s => [s.matchId, s])).values()];
   if (!summaries.length) { view.propagateStatus = 'No saved lab runs to propagate — run, save or import evidence first.'; renderEvolutionLab(); return; }
   try {
-    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js?v=ac7ae9e38182');
+    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js?v=2d119ab0ddda');
     const aggregate = campaignAggregate(summaries, { profileId: null });
     const obs = buildObservatoryAnalytics({ summaries, aggregate });
     state.observatory = { ...obs, summaries, datasetOrigin: 'EVOLUTION_LAB' };
@@ -267,7 +267,7 @@ function batchContext() {
     rulesOptions: [['core-advanced-authority','Advanced Core'],['core-unrestricted-authority','Unrestricted Core'],['first-contact-trigger-closure','Complete First Contact']],
     busy: () => active() || !!view.archive || !!cockpitResearch.getState().archive,
     lock: { get: () => view.matrixAbort, set: controller => { view.matrixAbort = controller; } },
-    fns: { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, validateMatrixEnvelope, rehydrateBatchMatrix },
+    fns: { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix },
     persist: { saveRun: r => store.save(r), saveMatrix: lab => store.saveMatrix(lab), listMatrices: () => store.listMatrices(), loadMatrix: id => store.loadMatrix(id), loadRun: id => store.load(id) },
     onAcceptedGame: (evidence, cellRun) => batchWriter().offer(cellRun, evidence),
     ingestRun: saved => ingestRunEvidence(strategies, saved),

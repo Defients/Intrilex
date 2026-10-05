@@ -55,8 +55,9 @@ export function batchMatrixConfig(input = {}) {
 export function batchMatrixPlan(input) {
   const config = batchMatrixConfig(input);
   const count = config.participants.length, matchups = count * (count - 1) / 2;
+  const recordBytes = config.strategicTrace ? 160 * 1024 : 80 * 1024; // decision-telemetry records measure ~80 KiB/game, roughly double under deep tracing
   return { participants: count, matchups, gamesPerMatchup: config.gamesPerMatchup, totalGames: matchups * config.gamesPerMatchup, seed: config.seed, profileId: config.profileId,
-    estimatedBytes: matchups * (config.gamesPerMatchup * 1500 + LAB_LIMITS.replays * 80000) };
+    estimatedBytes: matchups * (config.gamesPerMatchup * recordBytes + LAB_LIMITS.replays * 80000) };
 }
 
 function scientificManifest(config, participants, identity) {

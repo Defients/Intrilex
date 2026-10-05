@@ -36,9 +36,9 @@ import {
   HIDDEN_ACHIEVEMENT_IDS,
   RARITY_SYMBOL,
   AP_BY_RARITY,
-} from '../../achievements/index.mjs?v=ac7ae9e38182';
+} from '../../achievements/index.mjs?v=2d119ab0ddda';
 
-import { getAchievementState, saveAchievementState, resetAchievementState } from '../persistence.js?v=ac7ae9e38182';
+import { getAchievementState, saveAchievementState, resetAchievementState } from '../persistence.js?v=2d119ab0ddda';
 
 // Validate catalog at module load
 validateCatalog();

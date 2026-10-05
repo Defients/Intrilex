@@ -3,10 +3,10 @@
 //   Compare, Mechanics, Synergies, History, Replays, Traces
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=ac7ae9e38182';
-import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow } from '../chart-toolkit.js?v=ac7ae9e38182';
-// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=ac7ae9e38182') to break backedge
-import { rerender } from '../rerender.js?v=ac7ae9e38182';
+import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=2d119ab0ddda';
+import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow } from '../chart-toolkit.js?v=2d119ab0ddda';
+// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=2d119ab0ddda') to break backedge
+import { rerender } from '../rerender.js?v=2d119ab0ddda';
 
 // Shown when the Observatory dataset was swapped to propagated Evolution Lab
 // runs (Evolution Lab → Runs & artifacts → "Propagate → Observatory").
@@ -391,7 +391,7 @@ export async function renderOpeningPatterns() {
   let idx = state.traceIndex;
   if (!idx) {
     try {
-      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=ac7ae9e38182');
+      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=2d119ab0ddda');
       idx = await loadTraceIndex();
       if (!idx || !idx.records) {
         return `<div class="ix-chart-empty" data-testid="opening-patterns-empty">No decision traces available. Run a campaign with decision traces enabled to analyze opening patterns.</div>`;
@@ -404,7 +404,7 @@ export async function renderOpeningPatterns() {
     }
   }
   // If traceIndex exists but trace data isn't preloaded, load it
-  const { loadTraceData } = await import('../data-loader.js?v=ac7ae9e38182');
+  const { loadTraceData } = await import('../data-loader.js?v=2d119ab0ddda');
   const traceFiles = await Promise.all(idx.records.map(r => loadTraceData(r.matchId)));
   return _renderOpeningPatternsFromTraces(idx.records, traceFiles);
 }

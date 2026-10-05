@@ -23,8 +23,8 @@
 // (no presence infrastructure). No fake social actions.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct } from '../state.js?v=ac7ae9e38182';
-import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=ac7ae9e38182';
+import { app, esc, pct } from '../state.js?v=2d119ab0ddda';
+import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=2d119ab0ddda';
 import { RankTier } from "../account-domain/rank-tier.mjs";
 import { apexLabel } from "../account-domain/leaderboard.mjs";
 import {
@@ -47,13 +47,13 @@ import {
   detectNemesis,
   detectKryptonite,
 } from "../account-domain/relationships.mjs";
-import { fetchDirectory } from '../play/players/players-data.js?v=ac7ae9e38182';
-import { fetchRecentOpponents } from '../play/players/recent-opponents-data.js?v=ac7ae9e38182';
+import { fetchDirectory } from '../play/players/players-data.js?v=2d119ab0ddda';
+import { fetchRecentOpponents } from '../play/players/recent-opponents-data.js?v=2d119ab0ddda';
 import {
   fetchRelationships,
   fetchSuggestedRivals,
   DEFAULT_SUGGESTED_RIVALS_LIMIT,
-} from '../play/players/relationships-data.js?v=ac7ae9e38182';
+} from '../play/players/relationships-data.js?v=2d119ab0ddda';
 
 /** @typedef {'directory'|'opponents'|'rivals'} PlayerTab */
 /** @typedef {'rivals'|'following'|'suggested'} RivalsSegment */
@@ -1269,7 +1269,7 @@ function updateRivalsSegmentButtons(target) {
  */
 async function handleQuickRival(target, pid, btn) {
   // Lazy import to avoid loading the data layer until first interaction.
-  const { setRival } = await import('../play/players/relationships-data.js?v=ac7ae9e38182');
+  const { setRival } = await import('../play/players/relationships-data.js?v=2d119ab0ddda');
   btn.disabled = true;
   const original = btn.textContent;
   btn.textContent = 'Adding…';
