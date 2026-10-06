@@ -1452,10 +1452,11 @@ export function renderSynergies() {
   const nearThresholdHtml = (synergies.length === 0 && nearThreshold.length > 0)
     ? renderNearThresholdPairs(nearThreshold)
     : '';
+  const rejectedCellsHtml = renderRejectedSynergyCells(synergyDiagnostics);
   const heatmapHtml = renderSynergyHeatmap(filteredSynergies);
   const synergyFilterHtml = synergies.length > 0 ? `<div class="ix-filter-toolbar" data-testid="synergies-filter-toolbar"><label for="synergies-mechanic-filter">Mechanic:</label><select id="synergies-mechanic-filter"><option value="all" ${mechanicFilter === 'all' ? 'selected' : ''}>All mechanics</option>${allMechanics.map(m => `<option value="${esc(m)}" ${m === mechanicFilter ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select><label for="synergies-direction-filter">Direction:</label><select id="synergies-direction-filter"><option value="all" ${directionFilter === 'all' ? 'selected' : ''}>All</option><option value="synergy" ${directionFilter === 'synergy' ? 'selected' : ''}>Synergy only</option><option value="anti-synergy" ${directionFilter === 'anti-synergy' ? 'selected' : ''}>Anti-synergy only</option></select><label for="synergies-min-cohort">Min cohort (Both): <output id="synergies-min-cohort-out">${minCohort}</output></label><input type="range" id="synergies-min-cohort" min="0" max="${Math.max(...synergies.map(s => s.bothN ?? s.effectiveN ?? s.sampleSize ?? 0), 50)}" step="5" value="${minCohort}"></div>` : '';
   const motifFlowHtml = renderMotifFlow(motifs);
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Synergy Observatory</h2><p>Four-cohort logistic A×B interaction (odds-ratio scale) — ${filteredSynergies.length} of ${synergies.length} pairs</p></div></div><div class="panel-body">${labDatasetBanner()}${healthHtml}${emptyMsg}${synergyFilterHtml}${filterMsg}${heatmapHtml}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(s => `<tr class="clickable-row" data-synergy="${esc(s.id)}"><td><b>${esc(s.displayName ?? s.id)}</b></td><td>${s.effect != null ? `${s.effect.toFixed(3)}` : '—'}</td><td>${s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(1)} pp` : '—'}</td><td>${(s.confidenceInterval ?? s.interval)?.[0] != null ? `${(s.confidenceInterval ?? s.interval)[0].toFixed(3)} to ${(s.confidenceInterval ?? s.interval)[1].toFixed(3)}` : '—'}</td><td>${s.neitherN ?? '—'}/${s.aOnlyN ?? '—'}/${s.bOnlyN ?? '—'}/${s.bothN ?? '—'}</td><td>${s.pValue?.toFixed(4) ?? '—'}</td><td>${s.qValue?.toFixed(4) ?? '—'}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${nearThresholdHtml}${motifFlowHtml}</div></section>`;
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Synergy Observatory</h2><p>Four-cohort logistic A×B interaction (odds-ratio scale) — ${filteredSynergies.length} of ${synergies.length} pairs</p></div></div><div class="panel-body">${labDatasetBanner()}${healthHtml}${emptyMsg}${synergyFilterHtml}${filterMsg}${heatmapHtml}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(s => `<tr class="clickable-row" data-synergy="${esc(s.id)}"><td><b>${esc(s.displayName ?? s.id)}</b></td><td>${s.effect != null ? `${s.effect.toFixed(3)}` : '—'}</td><td>${s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(1)} pp` : '—'}</td><td>${(s.confidenceInterval ?? s.interval)?.[0] != null ? `${(s.confidenceInterval ?? s.interval)[0].toFixed(3)} to ${(s.confidenceInterval ?? s.interval)[1].toFixed(3)}` : '—'}</td><td>${s.neitherN ?? '—'}/${s.aOnlyN ?? '—'}/${s.bOnlyN ?? '—'}/${s.bothN ?? '—'}</td><td>${s.pValue?.toFixed(4) ?? '—'}</td><td>${s.qValue?.toFixed(4) ?? '—'}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${nearThresholdHtml}${rejectedCellsHtml}${motifFlowHtml}</div></section>`;
   document.querySelectorAll('[data-sort-column]').forEach(th => {
     const handler = () => {
       const col = th.dataset.sortColumn;
@@ -1529,6 +1530,41 @@ export function renderSynergies() {
 // co-occurred in ≥ 10 participant-matches. These are NOT proven synergies;
 // they are pairs that would likely become eligible with a larger campaign.
 // The section is clearly labelled as exploratory/diagnostic.
+// ── Rejected / non-modeled synergy cells ───────────────────────
+// Every candidate pair that was NOT modeled gets an explicit cell status
+// (INSUFFICIENT_DATA / FAILED / NOT_IDENTIFIABLE) with a machine-readable
+// reason code and cohort/strata accounting. Unknown ≠ neutral: these cells
+// carry no effect estimate at all, and the UI must say why.
+const SYNERGY_CELL_STATUS_LABEL = {
+  INSUFFICIENT_DATA: 'Insufficient data',
+  FAILED: 'Model failed',
+  NOT_IDENTIFIABLE: 'Not identifiable',
+};
+const SYNERGY_REASON_LABEL = {
+  INSUFFICIENT_BOTH: 'Both-cohort below threshold',
+  INSUFFICIENT_SINGLE: 'Single-mechanic cohorts below threshold',
+  INSUFFICIENT_TOTAL: 'Total sample below threshold',
+  NO_WITHIN_STRATUM_VARIATION: 'No within-stratum variation',
+  SEPARATION: 'Outcome separation in contributing strata',
+  SAME_EVENT_DEPENDENCY: 'Same-event family/mode dependency (not independent)',
+  ALIAS_DUPLICATE: 'Identical-usage alias (deduplicated)',
+};
+function renderRejectedSynergyCells(diagnostics) {
+  const rows = (diagnostics ?? []).filter(d => d.cellStatus && d.cellStatus !== 'MODELED');
+  if (!rows.length) return '';
+  const byStatus = {};
+  for (const d of rows) byStatus[d.cellStatus] = (byStatus[d.cellStatus] ?? 0) + 1;
+  const summary = Object.entries(byStatus).map(([k, v]) => `${SYNERGY_CELL_STATUS_LABEL[k] ?? k}: ${v}`).join(' · ');
+  const body = rows.slice(0, 100).map(d => {
+    const c = d.cohortN ?? {};
+    const strataNote = (d.excludedStrata ?? []).length
+      ? `${d.excludedStrata.length} strata excluded (${[...new Set(d.excludedStrata.map(s => s.reason))].join(', ')})`
+      : '';
+    return `<tr><td class="mono">${esc(d.id ?? `${d.source}::${d.target}`)}</td><td><span class="status-badge warning">${esc(SYNERGY_CELL_STATUS_LABEL[d.cellStatus] ?? d.cellStatus)}</span></td><td>${esc(SYNERGY_REASON_LABEL[d.reasonCode] ?? d.reasonCode ?? '—')}</td><td>${c.neither ?? '—'}/${c.aOnly ?? '—'}/${c.bOnly ?? '—'}/${c.both ?? '—'}</td><td style="font-size:11px">${esc(strataNote)}</td></tr>`;
+  }).join('');
+  return `<details class="ix-chart-container" data-testid="synergy-rejected-cells" style="margin-top:16px"><summary class="ix-chart-header"><h4>Non-modeled cells (${rows.length})</h4><span class="footer-note">${esc(summary)}</span></summary><div class="notice warning" style="margin-bottom:12px"><strong>These pairs produced no estimate.</strong> An absent cell is not evidence of "no interaction" — the reason column states why modeling was impossible or the pair was ineligible. Neither/ A-only / B-only / Both are the four-cohort observation counts.</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Pair</th><th>Cell status</th><th>Reason</th><th>N/A/B/Both</th><th>Strata detail</th></tr></thead><tbody>${body}</tbody></table></div>${rows.length > 100 ? `<div class="notice info" style="margin-top:8px">Showing 100 of ${rows.length} non-modeled cells.</div>` : ''}</details>`;
+}
+
 function renderNearThresholdPairs(nearThreshold) {
   const SYNERGY_THRESHOLD_BOTH = 20;
   const rows = nearThreshold.map(d => {
