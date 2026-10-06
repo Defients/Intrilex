@@ -12,6 +12,8 @@
 // never as balance evidence.
 // ═══════════════════════════════════════════════════════════════
 
+import { CHOICE_SUPPORT_MIN_DECLINES, choiceSupportStatus } from './observatory-integrity.mjs';
+
 // Action→mechanic-tag derivation, identical to runtime.mjs mechanicTags /
 // primaryMechanicTag so choice analysis and telemetry agree by construction.
 const NON_MECHANIC_FAMILIES = new Set(['phase', 'response-decline', 'private-choice']);
@@ -163,18 +165,45 @@ export function buildChoiceAnalysis(decisions = [], { minFrames = 5, maxContexts
     // Entity-level conditional accounting: an entity is "on offer" when its
     // tag appears among the offered options; it is "selected" when the chosen
     // action carries the tag.
-    const offered = new Set(d.legalActions.flatMap((a) => actionMechanicTags(a)));
+    //
+    // Per-frame tag structure: tagCounts[t] = actions carrying t;
+    // pairCounts['a|b'] = actions carrying BOTH a and b (a single action's
+    // family+mode pair, e.g. voltage:five-gy-bottom). A rival tag is an
+    // independently selectable option in a frame only when some action
+    // carries it WITHOUT the entity tag — otherwise the "rival" is a
+    // same-action variant and can never be picked instead of the entity.
+    const tagCounts = new Map();
+    const pairCounts = new Map();
+    for (const a of d.legalActions) {
+      const tags = actionMechanicTags(a);
+      for (const t of tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+      for (let i = 0; i < tags.length; i += 1)
+        for (let j = i + 1; j < tags.length; j += 1) {
+          const k = `${tags[i]}|${tags[j]}`;
+          pairCounts.set(k, (pairCounts.get(k) ?? 0) + 1);
+        }
+    }
+    const offered = new Set(tagCounts.keys());
     const selectedTags = new Set(d.selectedTags ?? []);
     for (const e of offered) {
-      const rec = entity.get(e) ?? { offered: 0, selected: 0, pair: new Map() };
+      const rec = entity.get(e) ?? { offered: 0, selected: 0, actionShareSum: 0, declines: new Map(), pair: new Map() };
       entity.set(e, rec);
       rec.offered += 1;
+      rec.actionShareSum += (tagCounts.get(e) ?? 0) / d.legalActions.length;
       if (selectedTags.has(e)) rec.selected += 1;
+      else {
+        const declineKey = d.selectedOption ?? 'unknown';
+        rec.declines.set(declineKey, (rec.declines.get(declineKey) ?? 0) + 1);
+      }
+      const both = (/** @type {string} */ other) => pairCounts.get(e < other ? `${e}|${other}` : `${other}|${e}`) ?? 0;
       for (const other of offered) {
         if (other === e) continue;
-        const pair = rec.pair.get(other) ?? { jointFrames: 0, eSelected: 0, otherSelected: 0, neither: 0 };
+        const pair = rec.pair.get(other) ?? { jointFrames: 0, eSelected: 0, otherSelected: 0, neither: 0, rivalOptionFrames: 0, entityOptionFrames: 0 };
         rec.pair.set(other, pair);
         pair.jointFrames += 1;
+        const coPresent = both(other);
+        if ((tagCounts.get(other) ?? 0) - coPresent > 0) pair.rivalOptionFrames += 1;
+        if ((tagCounts.get(e) ?? 0) - coPresent > 0) pair.entityOptionFrames += 1;
         if (selectedTags.has(e)) pair.eSelected += 1;
         else if (selectedTags.has(other)) pair.otherSelected += 1;
         else pair.neither += 1;
@@ -196,13 +225,41 @@ export function buildChoiceAnalysis(decisions = [], { minFrames = 5, maxContexts
         entitySelected: p.eSelected,
         otherSelected: p.otherSelected,
         neitherSelected: p.neither,
+        rivalOptionFrames: p.rivalOptionFrames,
+        entityOptionFrames: p.entityOptionFrames,
+        // The rival was an independently selectable alternative in at least
+        // one joint frame only when some action carried its tag without the
+        // entity's. With zero such frames the pair is structurally coupled:
+        // 'inseparable' when neither tag ever stood alone, 'same-action-only'
+        // when only the rival lacked independent options (e.g. family vs
+        // mode). Conditional share is then a structural fact, not a
+        // preference measurement.
+        relation: p.rivalOptionFrames === 0
+          ? (p.entityOptionFrames === 0 ? 'inseparable' : 'same-action-only')
+          : 'independent-rival',
         conditionalShare: p.eSelected + p.otherSelected > 0 ? p.eSelected / (p.eSelected + p.otherSelected) : null,
       }))
       .sort((a, b) => b.jointFrames - a.jointFrames || a.versus.localeCompare(b.versus));
+    const declinedCount = rec.offered - rec.selected;
+    const declineOutcomes = {};
+    let declineRemainder = 0;
+    [...rec.declines.entries()].sort((a, b) => b[1] - a[1]).forEach(([optionId, n], i) => {
+      if (i < 6) declineOutcomes[optionId] = n;
+      else declineRemainder += n;
+    });
+    if (declineRemainder > 0) declineOutcomes['#other'] = declineRemainder;
     entities[e] = {
       offeredCount: rec.offered,
       selectedCount: rec.selected,
+      declinedCount,
       conditionalRate: rec.offered ? rec.selected / rec.offered : null,
+      actionShareWhenOffered: rec.offered > 0 ? rec.actionShareSum / rec.offered : null,
+      declineOutcomes,
+      choiceSupport: {
+        status: choiceSupportStatus(declinedCount),
+        declinedCount,
+        minimum: CHOICE_SUPPORT_MIN_DECLINES,
+      },
       pairwise,
     };
   }
@@ -218,15 +275,17 @@ export function buildChoiceAnalysis(decisions = [], { minFrames = 5, maxContexts
   for (const list of Object.values(perPolicy)) list.sort((a, b) => b.frameCount - a.frameCount || a.contextId.localeCompare(b.contextId));
 
   return {
-    schemaVersion: '1.0.0',
+    schemaVersion: '1.1.0',
     coverage,
     contexts: contextRows.filter((r) => r.frameCount >= minFrames).slice(0, maxContexts),
     contextCount: contextRows.length,
     entities,
     perPolicy,
     contractNote:
-      'Conditional choice analysis: opportunities are frames where the option was simultaneously legal. ' +
+      'Conditional choice analysis: opportunities are frames where the option was simultaneously legal — joint legality does not by itself mean substitutable alternatives. ' +
       'Entropy measures selection diversity within an identical offered set only — different choice sets are never pooled. ' +
-      'Deterministic selection is decision behavior, not balance evidence.',
+      'Deterministic selection is decision behavior, not balance evidence. ' +
+      'choiceSupport reports legal-but-unselected frames: without them a pick rate describes what happened, not what was preferred. ' +
+      'Pair relation marks rivals that were never independently selectable (relation !== independent-rival) — conditional share on such pairs is structural, not preference.',
   };
 }

@@ -16,18 +16,8 @@ import { createServer } from 'node:net';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { WebSocket } from 'ws';
 
-import {
-  createMatch, joinMatch, ready, submitAction, requestSync,
-  spectateMatch,
-  ReasonCode,
-} from '../packages/network-protocol/src/protocol.mjs';
-import {
-  Visibility,
-  DEFAULT_PRIVACY,
-  TITLE_CATALOG,
-  PROFILE_FRAME_CATALOG,
-  CARD_BACK_CATALOG,
-} from '../packages/account-domain/src/profile-domain.mjs';
+import { ReasonCode } from '../packages/network-protocol/src/protocol.mjs';
+import { Visibility, DEFAULT_PRIVACY, TITLE_CATALOG } from '../packages/account-domain/src/profile-domain.mjs';
 import { FakeIdentityVerifier } from '../apps/match-server/src/auth/fake-identity-verifier.mjs';
 
 // ── Helpers ──────────────────────────────────────────────────

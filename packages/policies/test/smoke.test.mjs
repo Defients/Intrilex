@@ -21,7 +21,7 @@ test('RANDOM_LEGAL policy selects from legal actions', () => {
     { actionId: 'a1', family: 'score', featureVector: {} },
     { actionId: 'a2', family: 'draw', featureVector: {} },
   ];
-  const context = { legalActions, authorizedView: {}, rng: { nextUint32: () => 0, nextIndex: (n) => 0 } };
+  const context = { legalActions, authorizedView: {}, rng: { nextUint32: () => 0, nextIndex: (_n) => 0 } };
   const result = RANDOM_LEGAL.choose(context);
   assert.ok(result.actionId === 'a1' || result.actionId === 'a2');
 });

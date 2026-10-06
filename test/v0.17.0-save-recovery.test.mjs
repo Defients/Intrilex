@@ -191,16 +191,7 @@ test('CONSERVATION: restore replays from initial state, not from snapshot', () =
 // NOT a duplicated test copy. This ensures tests exercise the actual
 // restore path that ships in the browser. The dist version resolves
 // the engine/browser-entry.js import correctly.
-import {
-  buildSaveIntegrityPayload,
-  validateSaveEnvelope,
-  PRODUCT_VERSION,
-  PLAYER_RUNTIME_VERSION,
-  ENGINE_VERSION,
-  RULES_VERSION,
-  SAVE_FORMAT_VERSION,
-  SUPPORTED_PROFILES,
-} from '../apps/lab-web/dist/play/save-integrity.js';
+import { buildSaveIntegrityPayload, validateSaveEnvelope, PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION } from '../apps/lab-web/dist/play/save-integrity.js';
 
 // hashCanonical is needed for constructing test save fixtures (setup hashes etc.)
 import { hashCanonical } from '../apps/lab-web/dist/engine/browser-entry.js';

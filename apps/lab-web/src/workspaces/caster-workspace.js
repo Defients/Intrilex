@@ -592,7 +592,7 @@ async function renderTheatre(appEl) {
 //   Top section (larger): Commentary display + WAIT WHAT
 //   Bottom section (smaller): Replay transport controls + timeline
 
-function buildCasterRightRail(session, beat, idx, total, ps, policyIds) {
+function buildCasterRightRail(session, beat, idx, total, ps, _policyIds) {
   const isFinished = beat.beatKind === 'MATCH_END';
   const winner = ps.winner;
 
@@ -682,7 +682,7 @@ function buildCasterRightRail(session, beat, idx, total, ps, policyIds) {
 
 // ── Wire up right rail transport controls ──────────────────────────
 
-function wireCasterRightRail(appEl, session, idx, total) {
+function wireCasterRightRail(appEl, session, _idx, _total) {
   const $ = (id) => appEl.querySelector(`#${id}`);
 
   const prevBtn = $('caster-prev');

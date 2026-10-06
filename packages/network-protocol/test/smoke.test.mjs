@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateEnvelope, validateCreateMatch, validateJoinMatch, validateSubmitAction, validateReady, validateResumeMatch } from '../src/validation.mjs';
+import { validateEnvelope, validateCreateMatch, validateJoinMatch, validateSubmitAction } from '../src/validation.mjs';
 import { ReasonCode } from '../src/reason-codes.mjs';
-import { createMatch, joinMatch, ready, submitAction, resumeMatch, matchCreated, matchJoined, error, envelope, achievementsEarned } from '../src/protocol.mjs';
+import { createMatch, joinMatch, ready, submitAction, error, achievementsEarned } from '../src/protocol.mjs';
 
 test('all exports are defined', () => {
   assert.ok(validateEnvelope);

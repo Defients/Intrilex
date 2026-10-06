@@ -17,12 +17,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import {
-  CORE_UNRESTRICTED_AUTHORITY_PROFILE,
-  createSimulationState,
-  advanceSimulationToDecision,
-  hashCanonical
-} from '@intrilex/engine-adapter';
+import { createSimulationState, advanceSimulationToDecision, hashCanonical } from '@intrilex/engine-adapter';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const runtimeDir = path.join(root, 'runtime/autonomy-engine-dist/src');
@@ -31,7 +26,7 @@ const moduleUrl = (file) => pathToFileURL(path.join(runtimeDir, file)).href;
 const engineModule = await import(moduleUrl('engine.js'));
 const stateModule = await import(moduleUrl('state.js'));
 const coreAutonomyModule = await import(moduleUrl('core-autonomy.js'));
-const corePrivateModule = await import(moduleUrl('core-private-choice.js'));
+const _corePrivateModule = await import(moduleUrl('core-private-choice.js'));
 const IntrilexEngine = engineModule.IntrilexEngine;
 const moveCard = stateModule.moveCard;
 
@@ -104,7 +99,7 @@ test('R7S-001: RankAction topdeck-seven type includes optional scoreCardId', () 
   // Verify the compiled JS engine accepts scoreCardId in a topdeck-seven action.
   // We execute the seven-topdeck action from the decision frame, then check that
   // the resulting private choice includes scoring options (which require scoreCardId support).
-  let { engine, state, by } = createActionState(['7♣'], undefined, 1);
+  let { engine, state, by: _by } = createActionState(['7♣'], undefined, 1);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -119,7 +114,7 @@ test('R7S-001: RankAction topdeck-seven type includes optional scoreCardId', () 
 
 test('R7S-002: CorePrivateChoiceSubmission supports score-only mode', () => {
   // Verify the engine accepts a core-rank7-assign submission with mode: "score-only"
-  let { engine, state, by } = createActionState(['7♣'], undefined, 1);
+  let { engine, state, by: _by1 } = createActionState(['7♣'], undefined, 1);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -132,7 +127,7 @@ test('R7S-002: CorePrivateChoiceSubmission supports score-only mode', () => {
 });
 
 test('R7S-003: CorePrivateChoiceSubmission supports hand-and-score mode', () => {
-  let { engine, state, by } = createActionState(['7♣']);
+  let { engine, state, by: _by2 } = createActionState(['7♣']);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -149,7 +144,7 @@ test('R7S-003: CorePrivateChoiceSubmission supports hand-and-score mode', () => 
 });
 
 test('R7S-004: CorePrivateChoiceSubmission supports scoreInstead for generated-effect', () => {
-  let { engine, state, by } = createActionState(['7♣'], undefined, 1);
+  let { engine, state, by: _by3 } = createActionState(['7♣'], undefined, 1);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -173,7 +168,7 @@ test('R7S-004: CorePrivateChoiceSubmission supports scoreInstead for generated-e
 // ═══════════════════════════════════════════════════════════════
 
 test('R7S-010: score-only mode moves revealed card to PR with correct pointValue', () => {
-  let { engine, state, by } = createActionState(['7♣'], undefined, 1);
+  let { engine, state, by: _by4 } = createActionState(['7♣'], undefined, 1);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -191,7 +186,7 @@ test('R7S-010: score-only mode moves revealed card to PR with correct pointValue
 });
 
 test('R7S-011: hand-and-score mode moves one card to hand and one to PR', () => {
-  let { engine, state, by } = createActionState(['7♣']);
+  let { engine, state, by: _by5 } = createActionState(['7♣']);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -211,7 +206,7 @@ test('R7S-011: hand-and-score mode moves one card to hand and one to PR', () => 
 });
 
 test('R7S-012: generated-effect scoreInstead moves card to PR', () => {
-  let { engine, state, by } = createActionState(['7♣'], undefined, 1);
+  let { engine, state, by: _by6 } = createActionState(['7♣'], undefined, 1);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -236,7 +231,7 @@ test('R7S-012: generated-effect scoreInstead moves card to PR', () => {
 });
 
 test('R7S-013: score-only mode emits CORE_SEVEN_ASSIGNMENT_RESOLVED with scoreCardId', () => {
-  let { engine, state, by } = createActionState(['7♣'], undefined, 1);
+  let { engine, state, by: _by7 } = createActionState(['7♣'], undefined, 1);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -253,7 +248,7 @@ test('R7S-013: score-only mode emits CORE_SEVEN_ASSIGNMENT_RESOLVED with scoreCa
 });
 
 test('R7S-014: generated-effect scoreInstead emits CORE_SEVEN_GENERATED_SCORE_RESOLVED', () => {
-  let { engine, state, by } = createActionState(['7♣'], undefined, 1);
+  let { engine, state, by: _by8 } = createActionState(['7♣'], undefined, 1);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -278,7 +273,7 @@ test('R7S-014: generated-effect scoreInstead emits CORE_SEVEN_GENERATED_SCORE_RE
 // ═══════════════════════════════════════════════════════════════
 
 test('R7S-020: Super 7 Topdeck action includes scoreCardIds field', () => {
-  let { engine, state, by } = createActionState(['7♣', '7♦']);
+  let { engine: _engine, state, by: _by9 } = createActionState(['7♣', '7♦']);
   const d = advanceSimulationToDecision(state);
   // With paired 7s, both effect-private-choice and super seven-topdeck actions are enumerated.
   // The Super 7 Topdeck is in the "super" family.
@@ -292,7 +287,7 @@ test('R7S-020: Super 7 Topdeck action includes scoreCardIds field', () => {
 });
 
 test('R7S-021: Super 7 Topdeck with scoreCardIds moves card to PR', () => {
-  let { engine, state, by } = createActionState(['7♣', '7♦']);
+  let { engine, state, by: _by10 } = createActionState(['7♣', '7♦']);
   let d = advanceSimulationToDecision(state);
   const topdeck = d.legalActionFrame.actions.find(a => a.mode === 'seven-topdeck' && a.family === 'super');
   assert.ok(topdeck, 'Super 7 Topdeck should be enumerated with paired 7s');
@@ -392,7 +387,7 @@ test('R7S-040: SEVEN_TOPDECK_RESOLVED event omits scoreCardId when not used', ()
 });
 
 test('R7S-041: existing hand-only and effect-only modes still work', () => {
-  let { engine, state, by } = createActionState(['7♣'], undefined, 1);
+  let { engine, state, by: _by11 } = createActionState(['7♣'], undefined, 1);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -407,7 +402,7 @@ test('R7S-041: existing hand-only and effect-only modes still work', () => {
 });
 
 test('R7S-042: existing hand-and-effect mode still works', () => {
-  let { engine, state, by } = createActionState(['7♣']);
+  let { engine, state, by: _by12 } = createActionState(['7♣']);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -446,7 +441,7 @@ test('R7S-052: canRecurseTopdeck returns false for a non-Seven card', () => {
 // ═══════════════════════════════════════════════════════════════
 
 test('R7S-060: scored revealed card has pointValue matching its rank', () => {
-  let { engine, state, by } = createActionState(['7♣'], undefined, 1);
+  let { engine, state, by: _by13 } = createActionState(['7♣'], undefined, 1);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');
@@ -465,7 +460,7 @@ test('R7S-060: scored revealed card has pointValue matching its rank', () => {
 });
 
 test('R7S-061: scored generated-effect card has pointValue matching its rank', () => {
-  let { engine, state, by } = createActionState(['7♣'], undefined, 1);
+  let { engine, state, by: _by14 } = createActionState(['7♣'], undefined, 1);
   const d = advanceSimulationToDecision(state);
   const topdeckAction = findAction(d, 'seven-topdeck');
   assert.ok(topdeckAction, 'seven-topdeck must be available with 7♣ in hand');

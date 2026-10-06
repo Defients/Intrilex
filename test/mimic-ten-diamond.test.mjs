@@ -1,18 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  createSimulationState,
-  createSimulationDecisionFrame,
-  executeSimulationAction,
-  strictPolicyView,
-  CORE_ADVANCED_AUTHORITY_PROFILE
-} from '@intrilex/engine-adapter';
+import { createSimulationState, createSimulationDecisionFrame, executeSimulationAction, CORE_ADVANCED_AUTHORITY_PROFILE } from '@intrilex/engine-adapter';
 import { runPolicyMatch } from '@intrilex/simulation-runtime';
 import { decomposePolicyScore } from '@intrilex/policies/scoring';
 
 const setup = { profileId: 'core-advanced-authority', playerIds: ['P1', 'P2'], enabledModules: [], seed: 0x51a7c0de, seatOrder: ['P1', 'P2'] };
 
-function advanceToAction(state) {
+function _advanceToAction(state) {
   const frame = createSimulationDecisionFrame(state);
   if (frame.status === 'PLAYER_DECISION_REQUIRED') return frame;
   if (frame.status === 'GAME_OVER') return frame;
@@ -21,13 +15,13 @@ function advanceToAction(state) {
     if (action.family === 'phase' || action.family === 'swap-bar') {
       const cmd = frame.resolve(action.actionId);
       state = executeSimulationAction(state, cmd).state;
-      return advanceToAction(state);
+      return _advanceToAction(state);
     }
   }
   return frame;
 }
 
-function findCardByIdentity(state, playerId, identity) {
+function _findCardByIdentity(state, playerId, identity) {
   const player = state.players[playerId];
   if (!player) return null;
   for (const id of player.hand) {
@@ -69,7 +63,7 @@ test('10♦ Mimic candidates appear in advanced core enumeration', () => {
   const state = createSimulationState(setup);
   const { frame } = advanceToActionPhase(state);
   if (frame.status !== 'PLAYER_DECISION_REQUIRED') return;
-  const mimicActions = frame.policyActions.filter(a =>
+  const _mimicActions = frame.policyActions.filter(a =>
     a.family === 'rank10' && a.mode && a.mode.includes('diamond-mimic')
   );
   // 10♦ may or may not be in the opening hand depending on deal; just verify the enumeration doesn't crash

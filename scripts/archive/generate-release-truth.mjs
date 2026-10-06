@@ -100,7 +100,7 @@ gates.gate8_documentation = {
 // ── Compute overall status ──────────────────────────────────────
 const gateStatuses = Object.values(gates).map(g => g.status);
 const overallStatus = gateStatuses.every(s => s === 'PASS') ? 'PASS'
-  : gateStatuses.some(s => 'FAIL') ? 'FAIL'
+  : gateStatuses.some(_s => 'FAIL') ? 'FAIL'
   : 'PARTIAL';
 
 // ── Build release truth ─────────────────────────────────────────

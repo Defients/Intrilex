@@ -12,11 +12,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import {
-  generateTeachingMoment,
-  generateBeginnerTrapTip,
-  renderTeachingMoment,
-} from '../packages/decision-intelligence/src/teaching-moments.mjs';
+import { renderTeachingMoment } from '../packages/decision-intelligence/src/teaching-moments.mjs';
 
 const appSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/app.js'), 'utf8');
 const cardRefSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/workspaces/card-reference.js'), 'utf8');

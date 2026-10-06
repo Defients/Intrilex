@@ -10,8 +10,8 @@
 // It never exposes AI chain-of-thought.
 // ═══════════════════════════════════════════════════════════════
 
-import { reasonShortText,  reasonDetailedText,  reasonRuleRef } from '../authority/reason-code-registry.js?v=ad40772959f0';
-import { classifyActionForm,  isSuperDeclaration,  isSpadesVariant } from '../authority/legal-action-adapter.js?v=ad40772959f0';
+import { reasonShortText,  reasonDetailedText,  reasonRuleRef } from '../authority/reason-code-registry.js?v=c4e7aaac019e';
+import { classifyActionForm,  isSuperDeclaration,  isSpadesVariant } from '../authority/legal-action-adapter.js?v=c4e7aaac019e';
 
 /**
  * Guidance modes.
@@ -114,7 +114,7 @@ export function buildWhyExplanation(contract, cardRegistry, guidanceMode = Guida
  * @param {object} rankAnatomyData - Rank Anatomy registry data (optional)
  * @returns {object} { rankAnatomyLinks, mechanicsLinks, evidenceLinks }
  */
-export function buildDeeperExplanation(contract, cardRegistry, rankAnatomyData = null) {
+export function buildDeeperExplanation(contract, cardRegistry, _rankAnatomyData = null) {
   const form = contract.form ?? classifyActionForm(contract);
   const ranks = contract.rankIds ?? [];
   const isSpade = contract.isSpadesVariant ?? false;

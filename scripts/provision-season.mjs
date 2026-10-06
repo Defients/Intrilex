@@ -256,7 +256,7 @@ async function finalize(client, opts) {
   console.log(`Archived (finalized): ${seasonId}`);
   if (opts['activate-next']) {
     const next = opts['activate-next'];
-    const { data, error: nextErr } = await client.from(TABLE).select('*').eq('season_id', next).single();
+    const { data: _data, error: nextErr } = await client.from(TABLE).select('*').eq('season_id', next).single();
     if (nextErr) throw nextErr;
     const { error: actErr } = await client.from(TABLE)
       .update({ status: SeasonStatus.ACTIVE, updated_at: new Date().toISOString() })

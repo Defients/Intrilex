@@ -37,7 +37,7 @@ for (const record of retention.records) {
     const existingReplay = JSON.parse(await readFile(replayPath, 'utf8'));
     verifyAuthorityCertifiedReplay(existingReplay);
     replayValid = true;
-  } catch (e) {
+  } catch {
     // Replay is stale or missing — regenerate
   }
 

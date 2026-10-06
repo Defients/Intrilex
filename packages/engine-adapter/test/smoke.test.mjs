@@ -1,22 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  ENGINE_VERSION,
-  RULES_VERSION,
-  OFFICIAL_RULES_VERSION,
-  DEFAULT_SIMULATION_PROFILE,
-  CANONICAL_RANKS,
-  RANK_REGISTRY,
-  allRankDefinitions,
-  rankDefinition,
-  parseIdentity,
-  hasOrdinaryScuttleImmunity,
-  compareScuttle,
-  isCoreProfile,
-  canonicalRankAuthority,
-  hashCanonical,
-  simulationCapabilities,
-} from '@intrilex/engine-adapter';
+import { ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION, DEFAULT_SIMULATION_PROFILE, CANONICAL_RANKS, allRankDefinitions, rankDefinition, parseIdentity, compareScuttle, isCoreProfile, canonicalRankAuthority, hashCanonical, simulationCapabilities } from '@intrilex/engine-adapter';
 
 // ─── Version constants ──────────────────────────────────────────────────────
 

@@ -6,7 +6,7 @@
 // Imports parseIdentity and RANK_REGISTRY directly from the browser engine.
 // ═══════════════════════════════════════════════════════════════
 
-import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=ad40772959f0';
+import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=c4e7aaac019e';
 
 export const CANONICAL_RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K","RJ","BJ"];
 
@@ -70,7 +70,7 @@ export function buildSourceCards(state, action, viewerMode = 'private') {
   return cards;
 }
 
-export function attributeRankAction({ sourceCards, playForm, originRank = null, generatedRank = null, viewerMode = 'private' }) {
+export function attributeRankAction({ sourceCards, playForm, originRank = null, generatedRank = null, viewerMode: _viewerMode = 'private' }) {
   if (!sourceCards || sourceCards.length === 0) {
     return { sourceCards: [], sourceRanks: [], primaryRank: null, rankWeights: {}, playForm: playForm ?? 'other', originRank: null, generatedRank: null, attributionStatus: 'not-observable', attributionReason: 'no source cards' };
   }

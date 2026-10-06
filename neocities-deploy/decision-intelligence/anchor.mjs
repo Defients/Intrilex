@@ -229,7 +229,7 @@ export function verifyAnchorAuthority({ anchor, retainedRecord, restoredAuthorit
 // inputs MUST produce identical hashes across consumers (parity gate).
 let _hashCanonical = null;
 export function installAnchorHash(hashCanonical) { _hashCanonical = hashCanonical; }
-export function verifiedAnchorHash(anchor, retainedRecord, restoredAuthority) {
+export function verifiedAnchorHash(anchor, retainedRecord, _restoredAuthority) {
   const h = _hashCanonical;
   if (typeof h !== 'function') throw new Error('Anchor hash not installed; call installAnchorHash(hashCanonical) first.');
   return h({

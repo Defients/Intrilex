@@ -61,7 +61,7 @@ export class BrowserAnalyticsAi {
     };
   }
 
-  _setStatus(status, detail) { this.status = status; this._emit(); }
+  _setStatus(status, _detail) { this.status = status; this._emit(); }
 
   loadSettings() { this.settings = normalizeSettings(loadSettings()); this.connection.endpoint = this.settings.endpoint; this._emit(); return this.settings; }
   saveSettings(partial) {

@@ -25,7 +25,7 @@ export async function loadReplay(fixtureId) {
     await ensureReplayFrames(state.replay);
     state.authorized = null;
     if (state.visibility !== 'public') await loadAuthorized();
-  } catch (err) {
+  } catch {
     // Replay blobs are excluded from the build by default (saves ~670MB).
     // The HTML response is the dev server's SPA fallback (index.html).
     // Silently set replay to null without console spam.

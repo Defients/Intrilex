@@ -11,41 +11,9 @@ import { CANONICAL_RANKS} from '@intrilex/engine-adapter';
 import { hashCanonical } from '@intrilex/shared';
 import { buildRankPowerModel } from '@intrilex/simulation-runtime/rank-power';
 import { aggregateRankDecisionValues, buildRankSwapMatrix } from '@intrilex/simulation-runtime/rank-counterfactual';
-import {
-  allVariantKeys,
-  entitiesForRank,
-  allVariantEntities,
-  canonicalVariantRegistry,
-  superEffectsForRank,
-  isSuperEffectAvailable,
-  perSuitTenKeys,
-  isPerSuitTenRank,
-  VARIANT_ELIGIBLE_RANKS,
-  ADVANCED_CORE_PROFILE_ID,
-  UNRESTRICTED_CORE_PROFILE_ID,
-  ALL_CORE_PROFILES,
-  ENTITY_TIER
-} from '@intrilex/simulation-runtime/variant-registry';
+import { allVariantKeys, entitiesForRank, allVariantEntities, canonicalVariantRegistry, perSuitTenKeys, isPerSuitTenRank, VARIANT_ELIGIBLE_RANKS, ADVANCED_CORE_PROFILE_ID } from '@intrilex/simulation-runtime/variant-registry';
 import { classifyVariantEntity } from '@intrilex/simulation-runtime/rank-attribution';
-import {
-  emptyRankCounters,
-  applyDecisionToRankCounters,
-  applyMatchResultToRankCounters,
-  applyStateDeltaToRankCounters,
-  computeAggregateRankMetrics,
-  RANK_METRIC_REGISTRY,
-  emptyVariantCounters,
-  emptyParticipantVariantCounters,
-  applyDecisionToVariantCounters,
-  applyMatchResultToVariantCounters,
-  applyStateDeltaToVariantCounters,
-  applyVariantResolution,
-  applyVariantDraw,
-  computeVariantMetrics,
-  computeAggregateVariantMetrics,
-  VARIANT_METRIC_REGISTRY,
-  VARIANT_TELEMETRY_SCHEMA_VERSION
-} from '@intrilex/telemetry/rank-telemetry';
+import { emptyRankCounters, applyDecisionToRankCounters, applyMatchResultToRankCounters, applyStateDeltaToRankCounters, computeAggregateRankMetrics, RANK_METRIC_REGISTRY, emptyVariantCounters, emptyParticipantVariantCounters, applyDecisionToVariantCounters, applyMatchResultToVariantCounters, applyStateDeltaToVariantCounters, applyVariantResolution, computeVariantMetrics, computeAggregateVariantMetrics, VARIANT_METRIC_REGISTRY, VARIANT_TELEMETRY_SCHEMA_VERSION } from '@intrilex/telemetry/rank-telemetry';
 
 export const RANK_ANALYTICS_SCHEMA_VERSION = '1.0.0';
 
@@ -144,7 +112,7 @@ function computeObservedRankValue(rankMetrics) {
 export function buildRankAnalytics({ summaries, aggregate = null }) {
   const ranks = CANONICAL_RANKS;
   const participantIds = extractParticipantIds(summaries);
-  const rankCounters = emptyRankCounters(ranks);
+  const _rankCounters = emptyRankCounters(ranks);
   const perParticipantCounters = {};
   for (const pid of participantIds) {
     perParticipantCounters[pid] = emptyRankCounters(ranks);
@@ -854,7 +822,7 @@ function buildVariantCompareFacetRaw(rank, variantMetrics, powerProfiles, confid
  * @param {Array<string>} variantKeys
  * @returns {object} profileId → aggregate variant metrics
  */
-function buildPerProfileVariantSummaries(summaries, variantKeys) {
+function buildPerProfileVariantSummaries(summaries, _variantKeys) {
   const byProfile = {};
   for (const s of summaries) {
     const pid = resolveProfileId(s);

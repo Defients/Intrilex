@@ -16,7 +16,7 @@
 // with an error category. Playback continues regardless.
 // ═══════════════════════════════════════════════════════════════
 
-import { SPOILER_CHECK } from './schemas.mjs';
+import './schemas.mjs';
 import { buildCommentaryPrompt } from './commentary-planner.mjs';
 import { validateAndAccept } from './commentary-validator.mjs';
 
@@ -93,7 +93,7 @@ export class OllamaCommentaryProvider {
     }
     let client;
     try { client = await this._ensureClient(); }
-    catch (err) {
+    catch {
       return { ok: false, record: null, error: OLLAMA_ERROR.UNREACHABLE, cached: false };
     }
     const { messages } = buildCommentaryPrompt(input);

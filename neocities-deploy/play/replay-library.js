@@ -4,9 +4,9 @@
 // Supports public (sanitized) and private (full) export.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from './hash.js?v=ad40772959f0';
-import { listReplays,   putReplay} from './persistence.js?v=ad40772959f0';
-import { finishLocalStrategy } from '../strategy/strategy-player.js?v=ad40772959f0';
+import { hashCanonical } from './hash.js?v=c4e7aaac019e';
+import { listReplays,   putReplay} from './persistence.js?v=c4e7aaac019e';
+import { finishLocalStrategy } from '../strategy/strategy-player.js?v=c4e7aaac019e';
 
 /**
  * Create a replay record from a completed session.
@@ -16,7 +16,7 @@ import { finishLocalStrategy } from '../strategy/strategy-player.js?v=ad40772959
 export async function createReplayRecord(session) {
   const certifiedReplay = await session.createCertifiedReplay();
   const publicView = await session.createPublicReplay(certifiedReplay);
-  const {strictView}=await import('../autonomy-runtime.js?v=ad40772959f0');
+  const {strictView}=await import('../autonomy-runtime.js?v=c4e7aaac019e');
   session._strategyTerminalScores=Object.fromEntries(['P1','P2'].map(id=>[id,strictView(session.state,id).own.securedPoints]));
 
   const replayId = `R-${session.sessionId}`;
@@ -62,7 +62,7 @@ export async function saveReplay(record) {
  */
 export async function verifyReplayRecord(record) {
   try {
-    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=ad40772959f0');
+    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=c4e7aaac019e');
     verifyCertifiedReplay(record.certifiedReplay);
     return { valid: true };
   } catch (error) {
@@ -182,7 +182,7 @@ export async function listReplaySummaries() {
 /**
  * Render the replay library UI.
  */
-export function renderReplayLibrary(summaries, options = {}) {
+export function renderReplayLibrary(summaries, _options = {}) {
   if (!summaries || summaries.length === 0) {
     return `<div class="replay-library" data-testid="replay-library">
       <a class="play-hub-back" href="#/" aria-label="Back to home">← Back</a>

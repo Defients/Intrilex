@@ -43,8 +43,8 @@ export function renderChatPanel(vm, opts, isReadOnly, chatMessages) {
   const chatHidden = opts.chatHidden === true;
 
   // Determine authorship from participantId, NOT from isHuman boolean.
-  const localParticipantId = vm.human?.playerId;
-  const opponentParticipantId = vm.opponent?.playerId;
+  const _localParticipantId = vm.human?.playerId;
+  const _opponentParticipantId = vm.opponent?.playerId;
 
   const messages = (chatMessages || []).map(m => {
     let cls, author;

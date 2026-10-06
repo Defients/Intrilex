@@ -39,7 +39,7 @@ export function createSharedBlackboard(config) {
     return result;
   }
 
-  function postCallout(botId, callout) {
+  function postCallout(botId, _callout) {
     const now = Date.now();
     const lastCallout = calloutTimestamps.get(botId) ?? 0;
     if (now - lastCallout < (coordConfig.calloutCooldownMs ?? 2000)) return false;
@@ -136,7 +136,7 @@ export function evaluateCoordination(blackboard, botId, perceived, personality, 
   return directive;
 }
 
-function canFlank(enemyPos, allyPositions, perceived) {
+function canFlank(enemyPos, allyPositions, _perceived) {
   if (!enemyPos || allyPositions.length === 0) return false;
   // Can flank if allies are on opposite side of enemy
   const allySide = allyPositions.every(p => (p.x ?? 0) < (enemyPos.x ?? 0));
@@ -144,7 +144,7 @@ function canFlank(enemyPos, allyPositions, perceived) {
   return allySide !== botSide;
 }
 
-function computeFlankRoute(enemyPos, allyPositions, perceived) {
+function computeFlankRoute(enemyPos, allyPositions, _perceived1) {
   // Simple flanking: approach from the opposite direction of allies
   const avgAllyX = allyPositions.reduce((sum, p) => sum + (p.x ?? 0), 0) / allyPositions.length;
   const flankX = (enemyPos.x ?? 0) + ((enemyPos.x ?? 0) - avgAllyX) * 0.5;

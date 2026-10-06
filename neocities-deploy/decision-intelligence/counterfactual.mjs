@@ -73,8 +73,8 @@ export function buildCounterfactualResult(config, results, anchorVerification) {
   });
 
   const failedCount = results.filter((r) => r.error !== undefined).length;
-  const unsupportedCount = results.filter((r) => r.winner === undefined && r.error === undefined && r.winner !== 'ABORTED').length;
-  const missingCount = results.filter((r) => r.winner === undefined && r.error === undefined && r.winner === undefined).length;
+  const _unsupportedCount = results.filter((r) => r.winner === undefined && r.error === undefined && r.winner !== 'ABORTED').length;
+  const _missingCount = results.filter((r) => r.winner === undefined && r.error === undefined && r.winner === undefined).length;
   const hasFailures = failedCount > 0 || aborted > 0 || completed.length === 0;
   const status = hasFailures ? 'FAILED' : 'COMPLETED';
 

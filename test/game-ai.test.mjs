@@ -232,7 +232,7 @@ describe('Memory', () => {
     mem.record({ tick: 0, type: 'ATTACK', actor: 'e1' });
     mem.decay();
     mem.decay();
-    const patterns = mem.recognizePatterns();
+    const _patterns = mem.recognizePatterns();
     // After decay, events should still be in buffer but with lower weight
     const snap = mem.getSnapshot();
     assert.ok(snap.bufferSize > 0);
@@ -1017,7 +1017,7 @@ describe('Card-Game GOAP Goals', () => {
     });
     // First decision — close to winning
     const ctx1 = makeContext({ own: { securedPoints: 18, goal: 21, hand: ['A♣'], pr: [], er: [], deckCount: 5 } });
-    const result1 = agent.choose({ ...ctx1, decisionIndex: 0 });
+    const _result1 = agent.choose({ ...ctx1, decisionIndex: 0 });
 
 
     // Second decision — same state, goals should persist

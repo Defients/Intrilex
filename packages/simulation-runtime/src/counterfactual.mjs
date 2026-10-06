@@ -5,15 +5,7 @@ import {
   authorityHashCanonical,
   verifyAuthorityCertifiedReplay
 } from '@intrilex/engine-adapter';
-import {
-  COUNTERFACTUAL_SCHEMA_VERSION,
-  ANALYSIS_VERSION,
-  deriveContinuationSeed,
-  isCounterfactualSupported,
-  notSupportedResult,
-  buildCounterfactualResult,
-  compareCounterfactual
-} from '@intrilex/decision-intelligence/counterfactual';
+import { ANALYSIS_VERSION, deriveContinuationSeed, isCounterfactualSupported, notSupportedResult, buildCounterfactualResult, compareCounterfactual } from '@intrilex/decision-intelligence/counterfactual';
 import { verifyAnchorAuthority } from '@intrilex/decision-intelligence/anchor';
 import { runPolicyMatch } from './runtime.mjs';
 
@@ -147,7 +139,7 @@ function verifyAnchor(config, replay, frames, checkpointIndex, decisionFrame, se
 
 function runSingleBranch(config, sharedSeeds) {
   const {
-    matchId, checkpointHash, baseSeed, seatOrder, policyIds, profileId,
+    matchId, checkpointHash: _checkpointHash, baseSeed, seatOrder, policyIds, profileId,
     alternativeActionId, continuationPolicyIds, rolloutCount = 32,
     analysisVersion = ANALYSIS_VERSION,
     replay, checkpointIndex = 0, decisionIndex = 0,
@@ -159,9 +151,9 @@ function runSingleBranch(config, sharedSeeds) {
     return notSupportedResult(supportCheck.reason, supportCheck.missingAuthority, config);
   }
 
-  let replayVerification;
+  let _replayVerification;
   try {
-    replayVerification = verifyAuthorityCertifiedReplay(replay);
+    _replayVerification = verifyAuthorityCertifiedReplay(replay);
   } catch (err) {
     console.warn('[counterfactual] REPLAY_VERIFICATION_FAILED:', err?.message ?? err);
     return notSupportedResult('REPLAY_VERIFICATION_FAILED', 'authority-certified-replay', config);

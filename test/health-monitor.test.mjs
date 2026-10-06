@@ -132,7 +132,7 @@ test('health-monitor: emits health snapshot on every check', () => {
 test('health-monitor: detects auth failure spike via counter delta', () => {
   const events = [];
   let callCount = 0;
-  let metrics = makeMetrics();
+  let _metrics = makeMetrics();
 
   const monitor = startHealthMonitor({
     getHealthMetrics: () => {

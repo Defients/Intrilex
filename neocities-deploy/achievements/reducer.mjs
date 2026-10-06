@@ -5,12 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { FACT_KIND, ZONE } from './constants.mjs';
-import {
-  createMatchTracker,
-  createCareerTracker,
-  serializeCareerTracker,
-  deserializeCareerTracker,
-} from './progress.mjs';
+import { createMatchTracker, createCareerTracker } from './progress.mjs';
 
 /**
  * Apply a single fact to the match tracker and career tracker.

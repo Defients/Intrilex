@@ -11,7 +11,7 @@
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { RANK_REGISTRY, allRankDefinitions, parseIdentity } from '@intrilex/engine-adapter';
+import { allRankDefinitions } from '@intrilex/engine-adapter';
 import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION } from '@intrilex/shared/version';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

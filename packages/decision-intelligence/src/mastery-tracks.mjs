@@ -12,7 +12,7 @@
 //   - Deterministic (same match history → same mastery)
 // ═══════════════════════════════════════════════════════════════
 
-import { MECHANIC_REGISTRY, analyticsEligibleMechanics } from './mechanic-registry.mjs';
+import { analyticsEligibleMechanics } from './mechanic-registry.mjs';
 
 /**
  * @typedef {Object} MasteryTier

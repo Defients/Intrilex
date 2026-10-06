@@ -66,7 +66,7 @@ export function classifyPlayForm(action) {
  * @param {string} params.viewerMode - 'private' or 'public' (affects not-observable)
  * @returns {object} attribution result
  */
-export function attributeRankAction({ sourceCards, playForm, originRank = null, generatedRank = null, viewerMode = 'private' }) {
+export function attributeRankAction({ sourceCards, playForm, originRank = null, generatedRank = null, viewerMode: _viewerMode = 'private' }) {
   // No source cards → no attribution
   if (!sourceCards || sourceCards.length === 0) {
     return {

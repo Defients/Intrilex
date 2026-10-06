@@ -2,14 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import {
-  CORE_UNRESTRICTED_AUTHORITY_PROFILE,
-  CORE_ADVANCED_AUTHORITY_PROFILE,
-  createSimulationState,
-  advanceSimulationToDecision,
-  simulationCapabilities,
-  hashCanonical
-} from '@intrilex/engine-adapter';
+import { CORE_UNRESTRICTED_AUTHORITY_PROFILE, createSimulationState, advanceSimulationToDecision, simulationCapabilities, hashCanonical } from '@intrilex/engine-adapter';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const runtimeDir = path.join(root, 'runtime/autonomy-engine-dist/src');

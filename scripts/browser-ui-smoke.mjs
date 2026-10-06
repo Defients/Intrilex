@@ -126,7 +126,7 @@ async function startStaticServer(){
       const data=await readFile(filePath);
       res.writeHead(200,{'Content-Type':mime,'Content-Length':data.length});
       res.end(data);
-    }catch(e){
+    }catch{
       res.writeHead(404).end('Not found: '+req.url);
     }
   });
@@ -160,7 +160,7 @@ try{
   // IRX-H21: Wait for replay to load (frame slider becomes enabled with max > 0)
   try {
     await waitFor(cdp.evaluate,`(()=>{const s=document.querySelector('#frame-slider');return s&&!s.disabled&&Number(s.max)>0})()`,{label:'replay loaded',timeout:30000});
-  } catch(e) {
+  } catch {
     // Replay didn't load — log diagnostics and skip replay-dependent checks
     const sliderState=await cdp.evaluate(`JSON.stringify({disabled:document.querySelector('#frame-slider')?.disabled,max:document.querySelector('#frame-slider')?.max,value:document.querySelector('#frame-slider')?.value})`);
     console.log(`Replay not loaded (slider: ${sliderState}). Exceptions: ${JSON.stringify(cdp.exceptions.slice(-5))}. Console: ${JSON.stringify(cdp.consoleLogs.slice(-10))}`);
@@ -215,7 +215,7 @@ try{
   await cdp.evaluate(`(()=>{document.querySelector('#exp-count').value='1';document.querySelector('#run-experiment').click();return true;})()`);
   try {
   await waitFor(cdp.evaluate,`document.querySelector('#experiment-status')?.textContent.includes('PASS · 1 matches')`,{timeout:180000,label:'1-match Web Worker campaign'});
-  } catch(e) {
+  } catch {
     const status=await cdp.evaluate(`document.querySelector('#experiment-status')?.textContent ?? 'NO STATUS'`);
     const excs=cdp.exceptions.slice(-5);
     throw new Error(`Campaign failed. Status: ${status}. Exceptions: ${JSON.stringify(excs)}`);

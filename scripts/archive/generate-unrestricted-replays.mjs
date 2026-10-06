@@ -22,8 +22,8 @@ if (!Number.isInteger(matchCount) || matchCount < 1 || matchCount > 10000) {
 }
 
 // Import engine modules
-const engineModule = await import(moduleUrl('engine.js'));
-const stateModule = await import(moduleUrl('state.js'));
+const _engineModule = await import(moduleUrl('engine.js'));
+const _stateModule = await import(moduleUrl('state.js'));
 const coreAutonomyModule = await import(moduleUrl('core-autonomy.js'));
 const phase16Module = await import(moduleUrl('phase16.js'));
 const indexModule = await import(moduleUrl('index.js'));

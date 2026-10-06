@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validateAnalysisResponse } from '@intrilex/analytics-ai/response-validator';
-import { repairResponse, extractAndRepair, stripCodeFences, extractLargestObject, removeTrailingCommas, closeBraces } from '@intrilex/analytics-ai/response-repair';
+import { repairResponse, stripCodeFences, extractLargestObject, removeTrailingCommas, closeBraces } from '@intrilex/analytics-ai/response-repair';
 import { emptyResponse } from '@intrilex/analytics-ai/response-schema';
-import { AnalysisController, ANALYSIS_STATUS } from '@intrilex/analytics-ai/analysis-controller';
+import { AnalysisController } from '@intrilex/analytics-ai/analysis-controller';
 import { ANALYSIS_MODE } from '@intrilex/analytics-ai/analytics-context-builder';
 
 const validResponse = {
@@ -125,7 +125,7 @@ test('repair: closeBraces closes mid-string', () => {
 });
 
 test('repair: removeTrailingCommas handles nested', () => {
-  const out = removeTrailingCommas('{"a":1,,"b":[1,2,],}');
+  const _out = removeTrailingCommas('{"a":1,,"b":[1,2,],}');
   // Note: double comma isn't fixed by this function, only comma-before-close
   const fixed = removeTrailingCommas('{"a":1,"b":[1,2,],}');
   assert.equal(fixed, '{"a":1,"b":[1,2]}');

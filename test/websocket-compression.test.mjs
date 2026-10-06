@@ -14,9 +14,7 @@ import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
 import { readFileSync } from 'node:fs';
 
-import {
-  createMatch, matchCreated,
-} from '../packages/network-protocol/src/protocol.mjs';
+import { createMatch } from '../packages/network-protocol/src/protocol.mjs';
 
 const TEST_PORT = 3299;
 

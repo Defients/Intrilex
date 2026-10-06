@@ -16,9 +16,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const __ = (p) => path.join(root, p);
 
 // ── Server-side imports ──
-import { computePowerAxes, computeObservedRPI, computeDecisionPower, buildBalanceWatchlist, RPI_AXIS_WEIGHTS } from '../packages/simulation-runtime/src/rank-power.mjs';
+import { computePowerAxes, computeDecisionPower, RPI_AXIS_WEIGHTS } from '../packages/simulation-runtime/src/rank-power.mjs';
 import { aggregateRankDecisionValues } from '../packages/simulation-runtime/src/rank-counterfactual.mjs';
-import { buildRankAnalytics, buildRankEvidenceFacet } from '../packages/analytics/src/rank-integration.mjs';
+import { buildRankAnalytics } from '../packages/analytics/src/rank-integration.mjs';
 
 // ═══════════════════════════════════════════════════════════════
 // Root Cause A: Server/browser schema drift produced NaN

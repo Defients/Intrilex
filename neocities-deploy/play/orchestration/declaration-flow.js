@@ -8,8 +8,8 @@
 // Does NOT mutate authoritative state before engine acceptance.
 // ═══════════════════════════════════════════════════════════════
 
-import {  actionsForCard } from '../authority/legal-action-adapter.js?v=ad40772959f0';
-import { buildWhyExplanation } from '../intelligence/action-explanation.js?v=ad40772959f0';
+import {  actionsForCard } from '../authority/legal-action-adapter.js?v=c4e7aaac019e';
+import { buildWhyExplanation } from '../intelligence/action-explanation.js?v=c4e7aaac019e';
 
 /**
  * Declaration flow state.
@@ -217,7 +217,7 @@ export function handleRejection(flow, result) {
  * @param {object} flow - The current declaration flow state
  * @returns {object} The reset flow state
  */
-export function handleAccepted(flow) {
+export function handleAccepted(_flow) {
   return {
     ...createDeclarationFlow(),
     phase: DeclarationPhase.SUBMITTED,
@@ -227,7 +227,7 @@ export function handleAccepted(flow) {
 /**
  * Reset the declaration flow to idle.
  */
-function resetFlow(flow) {
+function resetFlow(_flow1) {
   return {
     ...createDeclarationFlow(),
     phase: DeclarationPhase.IDLE,

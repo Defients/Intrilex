@@ -8,25 +8,12 @@ import {
   summarizeNumbers,
   wilsonInterval
 } from '@intrilex/statistics';
-import {
-  MECHANIC_REGISTRY,
-  mechanicRegistryHash,
-  resolveMechanicId,
-  mechanicDisplayName,
-  mechanicCategory,
-  isExcludedFromDiscovery,
-  validateMechanicTags,
-  quarantineUnknownTags,
-  classifyTagDimension,
-  analyticsEntityDefinition,
-  synergyExcludedTags,
-  areTagsInseparable
-} from '@intrilex/decision-intelligence/mechanic-registry';
+import { MECHANIC_REGISTRY, mechanicRegistryHash, mechanicDisplayName, mechanicCategory, isExcludedFromDiscovery, validateMechanicTags, quarantineUnknownTags, classifyTagDimension, analyticsEntityDefinition, synergyExcludedTags, areTagsInseparable } from '@intrilex/decision-intelligence/mechanic-registry';
 import { buildRankAnalytics, buildVariantAnalytics, expandTenSuitsInRankPower } from './rank-integration.mjs';
 import { buildChoiceAnalysis, decisionChoices } from './choice-analysis.mjs';
 import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS, metricRegistryWithHashesUsing } from './metric-registry.mjs';
 import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './observatory-core.mjs';
-import { applyRankBalanceQualification, deriveTagRelations } from './observatory-integrity.mjs';
+import { applyRankBalanceQualification, deriveTagRelations, choiceSupportStatus, CHOICE_SUPPORT_MIN_DECLINES } from './observatory-integrity.mjs';
 
 export { ANALYTICS_SCHEMA_VERSION };
 
@@ -130,8 +117,8 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
     }
   }
   const allTags = mechanicNames;
-  const tagValidation = validateMechanicTags(allTags);
-  const quarantined = quarantineUnknownTags(allTags);
+  const _tagValidation = validateMechanicTags(allTags);
+  const _quarantined = quarantineUnknownTags(allTags);
   const rows = mechanicNames.map((mechanic) => {
     const used = units.filter((row) => Number(row.mechanicCounts?.[mechanic] ?? 0) > 0);
     const notUsed = units.filter((row) => Number(row.mechanicCounts?.[mechanic] ?? 0) === 0);
@@ -152,6 +139,10 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
     const hasOpportunityData = legalOpportunityCount > 0;
     // Pick rate when legal: selections / legal opportunities (N/A if no opportunities)
     const pickRateWhenLegal = hasOpportunityData ? selectionCount / legalOpportunityCount : null;
+    // Choice support: legal-but-unselected frames are the only evidence that
+    // a declining selection was possible-and-observed. Without them a pick
+    // rate is descriptive regularity, not identified preference.
+    const legalDeclinedCount = hasOpportunityData ? Math.max(0, legalOpportunityCount - selectionCount) : null;
     // Match prevalence: unique matches in which entity was selected at least once
     const usedMatchIds = new Set(used.map((row) => row.matchId));
     const matchPrevalence = summaries.length > 0 ? usedMatchIds.size / summaries.length : 0;
@@ -181,6 +172,10 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
           ? { status: 'available', value: pickRateWhenLegal, numerator: selectionCount, denominator: legalOpportunityCount }
           : { status: 'zero-opportunities', reasonCode: 'NO_LEGAL_OPPORTUNITIES', detail: 'Entity had zero legal opportunities in this campaign.' })
         : { status: 'missing-telemetry', reasonCode: 'MISSING_OPPORTUNITY_TELEMETRY', detail: 'Opportunity telemetry not recorded for this campaign.' },
+      legalDeclinedCount, // legal-but-unselected decision frames (counterfactual choice support)
+      choiceSupport: hasOpportunityData
+        ? { status: choiceSupportStatus(legalDeclinedCount), declinedCount: legalDeclinedCount, minimum: CHOICE_SUPPORT_MIN_DECLINES }
+        : { status: 'unmeasured', reasonCode: 'MISSING_OPPORTUNITY_TELEMETRY', declinedCount: null, minimum: CHOICE_SUPPORT_MIN_DECLINES },
       matchOpportunityCount:summaries.length,
       analysisUnitOpportunityCount:units.length, usageUnit,
       // Renamed metrics (participant prevalence, not "usage rate")
@@ -207,7 +202,7 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       outcomeAssociation: association.estimate, outcomeAssociation95: association.interval, pValue: association.pValue,
       adjustedWinAssociation: adjustedAssociation.estimate, adjustedWinAssociation95: adjustedAssociation.interval,
       adjustedWinAssociationStatus: adjustedAssociation.estimate != null
-        ? { status: 'available', sampleSize: usedDecisive.length + unusedDecisive.length }
+        ? { status: 'available', sampleSize: usedDecisive.length + unusedDecisive.length, contributingStrata: adjustedAssociation.contributingStrata ?? null, skippedStrata: adjustedAssociation.skippedStrata ?? null }
         : { status: 'model-failed', reasonCode: 'STRATIFIED_ESTIMATOR_FAILED', detail: 'Stratified estimator could not produce a finite estimate.' },
       sampleSize,
       status: sampleSize ? 'measured' : 'not-observable',
@@ -220,6 +215,9 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       limitations:[
         `Participant prevalence uses ${usageUnit}-level observations and is policy-, seat-, and profile-conditioned.`,
         hasOpportunityData ? 'Pick rate when legal uses opportunity telemetry from the legality boundary.' : 'Opportunity-level pick rate is N/A — legal opportunity telemetry not available for this campaign.',
+        hasOpportunityData && legalDeclinedCount != null && legalDeclinedCount < CHOICE_SUPPORT_MIN_DECLINES
+          ? `Pick rate is not preference evidence — only ${legalDeclinedCount} legal-but-unselected frame${legalDeclinedCount === 1 ? '' : 's'} observed.`
+          : 'Pick rate reflects observed selection, not proven preference.',
         'Win association is an observational association, not causal proof.',
       ]
     };
@@ -245,25 +243,29 @@ function stratifiedWinAssociation(units, mechanic) {
     else group.unused.push(row);
   }
   let pooledDiff = 0, pooledWeight = 0;
+  // Stratum support accounting: strata with an empty cohort carry no
+  // within-stratum comparison and are excluded — the estimator never
+  // extrapolates across them.
+  let contributingStrata = 0, skippedStrata = 0;
   for (const group of strata.values()) {
-    if (!group.used.length || !group.unused.length) continue;
+    if (!group.used.length || !group.unused.length) { skippedStrata += 1; continue; }
     const usedWins = group.used.reduce((s, r) => s + unitWon(r), 0);
     const unusedWins = group.unused.reduce((s, r) => s + unitWon(r), 0);
     const p1 = usedWins / group.used.length, p0 = unusedWins / group.unused.length;
     const diff = p1 - p0;
     // Inverse variance weight
     const v = (p1 * (1 - p1)) / group.used.length + (p0 * (1 - p0)) / group.unused.length;
-    if (v > 0) {
-      const w = 1 / v;
-      pooledDiff += diff * w;
-      pooledWeight += w;
-    }
+    if (v <= 0) { skippedStrata += 1; continue; }
+    const w = 1 / v;
+    pooledDiff += diff * w;
+    pooledWeight += w;
+    contributingStrata += 1;
   }
-  if (pooledWeight === 0) return { estimate: null, interval: [null, null] };
+  if (pooledWeight === 0) return { estimate: null, interval: [null, null], contributingStrata: 0, skippedStrata };
   const estimate = pooledDiff / pooledWeight;
   const se = Math.sqrt(1 / pooledWeight);
   const z95 = 1.959963984540054;
-  return { estimate, interval: [estimate - z95 * se, estimate + z95 * se] };
+  return { estimate, interval: [estimate - z95 * se, estimate + z95 * se], contributingStrata, skippedStrata };
 }
 
 export function analyzeSynergies(summaries, options = {}) {
@@ -290,7 +292,7 @@ export function mineCausalMotifs(detailedMatches,{limit=60}={}){
 
 // Legacy SYNERGY_EXCLUDED_MECHANICS retained for backward compatibility.
 // New code uses synergyExcludedTags() from the mechanic registry.
-const SYNERGY_EXCLUDED_MECHANICS=new Set([
+const _SYNERGY_EXCLUDED_MECHANICS=new Set([
   'draw','discard','recycle','rummage','exhausted','goal','trigger',
   'ACTION','SETUP','INSTANT','QUICK','INTERRUPT',
   'phase','enter-action','points','ordinary','top','decline','response-decline','private-choice','forced-mini-turn',

@@ -156,7 +156,7 @@ const unaccounted = totalTests - accounted;
 console.log(`generate-self-audit: ${totalTests} tests, ${totalPass} pass, ${totalFail} fail, ${totalSkip} skip, ${totalCancelled} cancelled, ${totalTodo} todo, ${unaccounted} unaccounted, ${durationMs}ms`);
 
 // ── Compute score and gates from real evidence ──
-const testFileCount = allTestFiles.length;
+const _testFileCount = allTestFiles.length;
 const hasVendorIntegrity = existsSync(path.join(root, 'reports/vendor-integrity.json'));
 const hasEnginePatch = existsSync(path.join(root, 'reports/engine-patch-integrity.json'));
 const hasBuildDeterminism = existsSync(path.join(root, 'reports/build-determinism.json'));

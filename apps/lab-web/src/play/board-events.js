@@ -711,7 +711,7 @@ export function bindBoardEvents(container, callbacks) {
   // v0.25: Mechanic icon tooltips — promote to fixed-position overlay to escape
   // overflow:hidden clipping from card/row/hand containers.
   let activeTooltip = null;
-  let activeTooltipIcon = null;
+  let _activeTooltipIcon = null;
 
   function showMechanicTooltip(iconEl) {
     const tooltipEl = iconEl.querySelector('.tcg-mechanic-tooltip');
@@ -745,14 +745,14 @@ export function bindBoardEvents(container, callbacks) {
     clone.style.pointerEvents = 'none';
     document.body.appendChild(clone);
     activeTooltip = clone;
-    activeTooltipIcon = iconEl;
+    _activeTooltipIcon = iconEl;
   }
 
   function hideMechanicTooltip() {
     if (activeTooltip) {
       activeTooltip.remove();
       activeTooltip = null;
-      activeTooltipIcon = null;
+      _activeTooltipIcon = null;
     }
   }
 

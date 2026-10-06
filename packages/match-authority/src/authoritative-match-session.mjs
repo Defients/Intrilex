@@ -10,20 +10,7 @@
 // This is the single source of canonical truth for a match.
 // ═══════════════════════════════════════════════════════════════
 
-import {
-  createSimulationState,
-  advanceSimulationToDecision,
-  executeSimulationAction,
-  privateStateView,
-  publicStateView,
-  strictPolicyView,
-  hashCanonical,
-  createAuthorityCertifiedReplay,
-  verifyAuthorityCertifiedReplay,
-  CORE_UNRESTRICTED_AUTHORITY_PROFILE,
-  ENGINE_VERSION,
-  RULES_VERSION,
-} from '@intrilex/engine-adapter';
+import { createSimulationState, advanceSimulationToDecision, executeSimulationAction, strictPolicyView, hashCanonical, createAuthorityCertifiedReplay, verifyAuthorityCertifiedReplay, CORE_UNRESTRICTED_AUTHORITY_PROFILE, ENGINE_VERSION, RULES_VERSION } from '@intrilex/engine-adapter';
 import { actionComposition } from '@intrilex/engine-adapter/action-composition';
 
 import { ReasonCode, PROTOCOL_VERSION } from '@intrilex/network-protocol';
@@ -525,7 +512,7 @@ export class AuthoritativeMatchSession {
     }
 
     // Check idempotency
-    const idemKey = `${participantId}:${clientCommandId}`;
+    const _idemKey = `${participantId}:${clientCommandId}`;
     if (!this._idempotency.has(participantId)) {
       this._idempotency.set(participantId, new Map());
     }

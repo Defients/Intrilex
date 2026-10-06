@@ -544,7 +544,7 @@ function _renderOpeningPatternsFromTraces(records, traceFiles) {
     const tf = traceFiles[i];
     if (!tf || !tf.traces) continue;
     const rec = records[i];
-    const matchId = rec.matchId;
+    const _matchId = rec.matchId;
     // Group traces by policyId, sort by turn, take first 3
     const byPolicy = {};
     for (const t of tf.traces) {
@@ -655,7 +655,7 @@ function isDefensiveAction(actionType, action) {
 // reasons, a bar chart of comeback rate per policy, and a summary table.
 export function renderEndgameAnalysis() {
   const summaries = state.observatory?.summaries ?? [];
-  const policies = state.observatory?.policies ?? [];
+  const _policies = state.observatory?.policies ?? [];
   if (summaries.length === 0) {
     return `<div class="ix-chart-empty" data-testid="endgame-empty">No match summaries available for endgame analysis. Run a campaign to populate this analysis.</div>`;
   }
@@ -898,10 +898,17 @@ function rankFilterOptions(mechanics, selected) {
   return [...fromMechanics].sort().map(r => `<option value="${esc(r)}" ${r === selected ? 'selected' : ''}>${esc(r)}</option>`).join('');
 }
 
+const CHOICE_SUPPORT_LABEL = { identified: 'Identified', limited: 'Limited', unsupported: 'Unsupported', unmeasured: 'Unmeasured' };
+const CHOICE_SUPPORT_CLASS = { identified: 'supported', limited: 'warning', unsupported: 'warning', unmeasured: '' };
+
 function renderPickRateCell(m) {
   const st = m.pickRateStatus;
+  const cs = m.choiceSupport;
+  const supportNote = cs && cs.status !== 'identified' && cs.status !== 'unmeasured'
+    ? ` · only ${cs.declinedCount} legal-but-unselected — not preference evidence`
+    : '';
   if (!st) return m.pickRateWhenLegal != null ? pct(m.pickRateWhenLegal) : 'N/A';
-  if (st.status === 'available') return `<span title="${st.numerator}/${st.denominator}">${pct(st.value)}</span>`;
+  if (st.status === 'available') return `<span${cs && cs.status !== 'identified' && cs.status !== 'unmeasured' ? ' class="metric-degenerate" style="border-bottom:1px dashed var(--warn,#d9a03f)"' : ''} title="${st.numerator}/${st.denominator}${esc(supportNote)}">${pct(st.value)}</span>`;
   if (st.status === 'zero-opportunities') return `<span class="metric-na" title="${esc(st.detail ?? '')}">0 opps</span>`;
   if (st.status === 'missing-telemetry') return `<span class="metric-na" title="${esc(st.detail ?? '')}">no telemetry</span>`;
   return 'N/A';
@@ -1077,17 +1084,19 @@ function renderChoiceDiagnostics(o) {
   const entities = Object.entries(ca.entities ?? {})
     .sort((a, b) => (b[1].offeredCount ?? 0) - (a[1].offeredCount ?? 0))
     .slice(0, 25);
-  const covHtml = `<div class="notice info" style="margin-bottom:12px"><strong>Coverage:</strong> ${fmt(cov.decisionsWithLegalActions ?? 0)} of ${fmt(cov.decisionsSeen ?? 0)} recorded decisions carry a legal-action set; ${fmt(cov.multiOptionDecisions ?? 0)} frames offered multiple options. Selections below are <em>conditional on the simultaneously-legal set</em> — a high conditional rate with no jointly-legal competitors is a forced pick, not a preference.</div>`;
+  const covHtml = `<div class="notice info" style="margin-bottom:12px"><strong>Coverage:</strong> ${fmt(cov.decisionsWithLegalActions ?? 0)} of ${fmt(cov.decisionsSeen ?? 0)} recorded decisions carry a legal-action set; ${fmt(cov.multiOptionDecisions ?? 0)} frames offered multiple options. Selections below are <em>conditional on the simultaneously-legal set</em> — a high conditional rate with no legal-but-unselected support is a regularity, not an identified preference.</div>`;
   const entityRows = entities.map(([e, rec]) => {
     const contested = (rec.pairwise ?? []).filter(p => (p.entitySelected + p.otherSelected) > 0);
     const rivals = contested.length;
     const shareTxt = contested.length
       ? contested.slice(0, 3).map(p => `${esc(p.versus)} ${p.conditionalShare != null ? pct(p.conditionalShare) : '—'} (${p.entitySelected}/${p.entitySelected + p.otherSelected})`).join('; ')
       : '—';
-    return `<tr><td class="mono">${esc(e)}</td><td>${fmt(rec.offeredCount)}</td><td>${fmt(rec.selectedCount)}</td><td>${rec.conditionalRate != null ? pct(rec.conditionalRate) : '—'}</td><td>${rivals}</td><td style="font-size:11px">${shareTxt}</td></tr>`;
+    const declined = rec.declinedCount ?? (rec.offeredCount != null && rec.selectedCount != null ? rec.offeredCount - rec.selectedCount : null);
+    const cs = rec.choiceSupport?.status ?? (declined != null ? (declined <= 0 ? 'unsupported' : declined < 20 ? 'limited' : 'identified') : 'unmeasured');
+    return `<tr><td class="mono">${esc(e)}</td><td>${fmt(rec.offeredCount)}</td><td>${fmt(rec.selectedCount)}</td><td>${declined != null ? fmt(declined) : '—'}</td><td>${rec.conditionalRate != null ? pct(rec.conditionalRate) : '—'}</td><td>${rivals}</td><td style="font-size:11px">${shareTxt}</td><td><span class="status-badge ${CHOICE_SUPPORT_CLASS[cs] ?? ''}" title="Legal-but-unselected frames = the only observed support for declining this option. ${cs === 'unsupported' ? 'Zero — no preference evidence exists.' : cs === 'limited' ? 'Below the identification threshold — weak preference evidence.' : cs === 'identified' ? 'Sufficient declines to discuss choice behavior.' : 'Opportunity telemetry unavailable.'}">${esc(CHOICE_SUPPORT_LABEL[cs] ?? cs)}</span></td></tr>`;
   }).join('');
   const entityHtml = entities.length
-    ? `<h4 style="margin:12px 0 4px;font-size:12px;color:var(--text-bright)">Conditional selection (entity vs jointly-legal alternatives)</h4><div class="table-wrap"><table class="data-table"><thead><tr><th>Entity</th><th>Offered</th><th>Selected</th><th>Conditional rate</th><th>Contested rivals</th><th>Head-to-head (top 3)</th></tr></thead><tbody>${entityRows}</tbody></table></div>`
+    ? `<h4 style="margin:12px 0 4px;font-size:12px;color:var(--text-bright)">Conditional selection (entity vs jointly-legal alternatives)</h4><div class="table-wrap"><table class="data-table"><thead><tr><th>Entity</th><th>Offered</th><th>Selected</th><th>Declined</th><th>Conditional rate</th><th>Contested rivals</th><th>Head-to-head (top 3)</th><th>Choice support</th></tr></thead><tbody>${entityRows}</tbody></table></div>`
     : `<div class="notice info">No entity-level choice data.</div>`;
   const ctxRows = contexts.map(c => `<tr><td class="mono" style="font-size:11px">${esc(c.contextId)}</td><td>${fmt(c.frameCount)}</td><td>${c.offeredCount}</td><td>${c.dominantOption != null ? `${esc(c.dominantOption)} (${c.dominantShare != null ? pct(c.dominantShare) : '—'})` : '—'}</td><td>${c.normalizedEntropy != null ? c.normalizedEntropy.toFixed(3) : '—'}</td><td><span class="status-badge ${c.evidence === 'OBSERVED' ? 'info' : 'warning'}">${esc(c.evidence ?? 'INSUFFICIENT_DATA')}</span></td></tr>`).join('');
   const ctxHtml = contexts.length
@@ -1102,8 +1111,30 @@ function renderMechanicChoiceBlock(m, o) {
   const rec = o.choiceAnalysis?.entities?.[m.mechanic];
   if (!rec) return '';
   const pairs = (rec.pairwise ?? []).filter(p => p.jointFrames > 0).slice(0, 12);
-  const pairRows = pairs.map(p => `<tr><td class="mono">${esc(p.versus)}</td><td>${fmt(p.jointFrames)}</td><td>${fmt(p.entitySelected)}</td><td>${fmt(p.otherSelected)}</td><td>${fmt(p.neitherSelected)}</td><td>${p.conditionalShare != null ? pct(p.conditionalShare) : '—'}</td></tr>`).join('');
-  return `<h3 style="margin-top:16px">Conditional choice set</h3><div class="notice info" style="margin-bottom:8px">Offered ${fmt(rec.offeredCount)} times, selected ${fmt(rec.selectedCount)} (conditional rate ${rec.conditionalRate != null ? pct(rec.conditionalRate) : '—'}). Rows show what was <em>simultaneously legal</em> — forced picks (no rival selected) are not preferences.</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Jointly legal with</th><th>Joint frames</th><th>This selected</th><th>Rival selected</th><th>Neither</th><th>Conditional share</th></tr></thead><tbody>${pairRows}</tbody></table></div>`;
+  const structuralPairs = pairs.filter(p => p.relation === 'same-action-only' || p.relation === 'inseparable');
+  const pairRows = pairs.map(p => {
+    // relation is absent on pre-1.1.0 artifacts — treat as independent (historical rendering).
+    const structural = p.relation === 'same-action-only' || p.relation === 'inseparable';
+    const shareCell = p.conditionalShare != null
+      ? `${pct(p.conditionalShare)}${structural ? '<span class="metric-na" title="The rival tag was never an independently selectable option in these frames — this share is structural co-occurrence, not a contested choice.">*</span>' : ''}`
+      : '—';
+    const rivalCell = p.relation == null
+      ? fmt(p.rivalOptionFrames ?? '—')
+      : (structural ? '<span class="metric-na">never</span>' : fmt(p.rivalOptionFrames));
+    return `<tr><td class="mono">${esc(p.versus)}</td><td>${fmt(p.jointFrames)}</td><td>${rivalCell}</td><td>${fmt(p.entitySelected)}</td><td>${fmt(p.otherSelected)}</td><td>${fmt(p.neitherSelected)}</td><td>${shareCell}</td></tr>`;
+  }).join('');
+  const declined = rec.declinedCount ?? null;
+  const declines = Object.entries(rec.declineOutcomes ?? {}).filter(([k]) => k !== '#other').sort((a, b) => b[1] - a[1]);
+  const declineTxt = declines.length
+    ? ` Declines (${declined ?? '0'}): ${declines.slice(0, 5).map(([k, n]) => `${esc(k)} ×${fmt(n)}`).join(', ')}${rec.declineOutcomes?.['#other'] ? `, other ×${fmt(rec.declineOutcomes['#other'])}` : ''}.`
+    : '';
+  const supportWarn = declined != null && declined < 20
+    ? `<div class="notice warning" style="margin-bottom:8px" data-testid="choice-support-warning"><strong>Choice identification: ${esc(CHOICE_SUPPORT_LABEL[rec.choiceSupport?.status ?? (declined <= 0 ? 'unsupported' : 'limited')])}.</strong> Selected in ${fmt(rec.selectedCount)} of ${fmt(rec.offeredCount)} offered frames — only ${fmt(declined)} legal-but-unselected. This is an observed regularity, not identified preference.</div>`
+    : '';
+  const structuralNote = structuralPairs.length
+    ? `<div class="notice info" style="margin-top:8px">* ${structuralPairs.length} row${structuralPairs.length === 1 ? '' : 's'} list tag${structuralPairs.length === 1 ? '' : 's'} that never existed as an independent option in these frames (e.g. a family tag co-appearing with its own variant on the same action). Their conditional shares are structural co-occurrence, not contested choices.</div>`
+    : '';
+  return `<h3 style="margin-top:16px">Conditional choice set</h3><div class="notice info" style="margin-bottom:8px">Offered ${fmt(rec.offeredCount)} times, selected ${fmt(rec.selectedCount)} (conditional rate ${rec.conditionalRate != null ? pct(rec.conditionalRate) : '—'}).${esc(declineTxt)} Rows show what was <em>simultaneously legal</em> — "independently selectable" counts frames where the rival could be chosen as a different action; rivals never independently offered cannot be "declined in favor of" this entity.</div>${supportWarn}<div class="table-wrap"><table class="data-table"><thead><tr><th>Jointly legal with</th><th>Joint frames</th><th>Rival independently selectable</th><th>This selected</th><th>Rival selected</th><th>Neither</th><th>Conditional share</th></tr></thead><tbody>${pairRows}</tbody></table></div>${structuralNote}`;
 }
 
 export function renderMechanics() {
@@ -1191,7 +1222,14 @@ export function renderMechanics() {
 function renderMechanicDetail(m) {
   const evidenceClass = (EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 3 ? 'supported' : 'warning';
   const choiceBlockHtml = renderMechanicChoiceBlock(m, state.observatory);
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="mechanics-back">← Back to atlas</button><h2>${esc(m.displayName ?? m.mechanic)}</h2><p>${esc(m.category ?? '')} · ${esc(m.dimension ?? 'canonical-mechanic')}</p></div><span class="status-badge ${evidenceClass}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Selections', m.selectionCount], ['Legal opportunities', m.legalOpportunityCount ?? 'N/A'], ['Pick rate when legal', m.pickRateWhenLegal != null ? pct(m.pickRateWhenLegal) : 'N/A'], ['Participant prevalence', pct(m.participantPrevalence ?? m.matchUsageRate)], ['Participant prevalence 95% CI', (m.participantPrevalenceWilson95 ?? m.matchUsageWilson95) ? `${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[0])} to ${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[1])}` : '—'], ['Match prevalence', pct(m.matchPrevalence)], ['Raw win association', m.rawWinAssociation != null ? `${(m.rawWinAssociation * 100).toFixed(1)} pp` : '—'], ['Raw assoc. 95% CI', (m.rawWinAssociation95 ?? m.outcomeAssociation95)?.[0] != null ? `${((m.rawWinAssociation95 ?? m.outcomeAssociation95)[0] * 100).toFixed(1)} to ${((m.rawWinAssociation95 ?? m.outcomeAssociation95)[1] * 100).toFixed(1)} pp` : '—'], ['Adjusted win association', m.adjustedWinAssociation != null ? `${(m.adjustedWinAssociation * 100).toFixed(1)} pp` : '—'], ['Adjusted assoc. 95% CI', m.adjustedWinAssociation95?.[0] != null ? `${(m.adjustedWinAssociation95[0] * 100).toFixed(1)} to ${(m.adjustedWinAssociation95[1] * 100).toFixed(1)} pp` : '—'], ['Actor point impact mean', (m.actorPointImpact ?? m.immediatePointImpact)?.mean?.toFixed(2) ?? '—'], ['Actor point impact median', (m.actorPointImpact ?? m.immediatePointImpact)?.median?.toFixed(2) ?? '—'], ['Sample size', m.sampleSize], ['P-value (raw assoc.)', m.pValue?.toFixed(4)], ['Q-value (BH)', m.associationQValue != null ? Number(m.associationQValue).toFixed(4) : '—'], ['Registry verified', m.registryVerified ? 'Yes' : 'No']])}${Array.isArray(m.evidenceReasons) && m.evidenceReasons.length ? `<div class="notice info" style="margin-top:12px"><strong>Why this evidence grade:</strong><ul>${m.evidenceReasons.map(r => `<li><code>${esc(r.code)}</code> — ${esc(r.detail)}</li>`).join('')}</ul></div>` : ''}<div class="notice info" style="margin-top:12px"><strong>Interpretation:</strong> raw and adjusted associations are observational, not causal. A sign reversal between them indicates confounding (policy/seat composition), not an error.</div><button id="mechanic-view-synergies" class="ix-cross-link" data-testid="mechanic-view-synergies" aria-label="View synergies involving this mechanic in the Synergy Observatory">⟷ View synergies involving this mechanic</button>${m.limitations ? `<div class="notice info" style="margin-top:12px"><strong>Limitations:</strong><ul>${m.limitations.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}${choiceBlockHtml}</div></section>`;
+  const cs = m.choiceSupport;
+  const pickRateCell = m.pickRateWhenLegal != null
+    ? `${pct(m.pickRateWhenLegal)} (${fmt(m.selectionCount ?? 0)} / ${fmt(m.legalOpportunityCount ?? 0)})`
+    : 'N/A';
+  const supportWarnHtml = cs && (cs.status === 'limited' || cs.status === 'unsupported')
+    ? `<div class="notice warning" style="margin-top:12px" data-testid="choice-support-warning"><strong>Choice identification: ${esc(CHOICE_SUPPORT_LABEL[cs.status] ?? cs.status)}.</strong> Selected in ${fmt(m.selectionCount ?? 0)} of ${fmt(m.legalOpportunityCount ?? 0)} observed legal opportunities — only ${fmt(m.legalDeclinedCount ?? cs.declinedCount ?? 0)} legal-but-unselected frame${(m.legalDeclinedCount ?? cs.declinedCount) === 1 ? '' : 's'}. Pick rate here is an observed regularity, not evidence that agents prefer this mechanic; and the win associations below are observational — they do not establish that selecting it causes wins.</div>`
+    : '';
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="mechanics-back">← Back to atlas</button><h2>${esc(m.displayName ?? m.mechanic)}</h2><p>${esc(m.category ?? '')} · ${esc(m.dimension ?? 'canonical-mechanic')}</p></div><span class="status-badge ${evidenceClass}" title="Association evidence grade — precision and significance of the observational win association; not a causal or preference identification.">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Selections', m.selectionCount], ['Legal opportunities', m.legalOpportunityCount ?? 'N/A'], ['Pick rate when legal', pickRateCell], ['Legal-but-unselected', m.legalDeclinedCount != null ? fmt(m.legalDeclinedCount) : 'N/A'], ['Choice support', cs ? `${CHOICE_SUPPORT_LABEL[cs.status] ?? cs.status} (≥${cs.minimum ?? 20} declines for Identified)` : 'N/A'], ['Participant prevalence', pct(m.participantPrevalence ?? m.matchUsageRate)], ['Participant prevalence 95% CI', (m.participantPrevalenceWilson95 ?? m.matchUsageWilson95) ? `${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[0])} to ${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[1])}` : '—'], ['Match prevalence', pct(m.matchPrevalence)], ['Raw win association', m.rawWinAssociation != null ? `${(m.rawWinAssociation * 100).toFixed(1)} pp` : '—'], ['Raw assoc. 95% CI', (m.rawWinAssociation95 ?? m.outcomeAssociation95)?.[0] != null ? `${((m.rawWinAssociation95 ?? m.outcomeAssociation95)[0] * 100).toFixed(1)} to ${((m.rawWinAssociation95 ?? m.outcomeAssociation95)[1] * 100).toFixed(1)} pp` : '—'], ['Adjusted win association', m.adjustedWinAssociation != null ? `${(m.adjustedWinAssociation * 100).toFixed(1)} pp` : '—'], ['Adjusted assoc. 95% CI', m.adjustedWinAssociation95?.[0] != null ? `${(m.adjustedWinAssociation95[0] * 100).toFixed(1)} to ${(m.adjustedWinAssociation95[1] * 100).toFixed(1)} pp` : '—'], ['Adjusted strata', m.adjustedWinAssociationStatus?.contributingStrata != null ? `${fmt(m.adjustedWinAssociationStatus.contributingStrata)} contributing${m.adjustedWinAssociationStatus.skippedStrata ? ` · ${fmt(m.adjustedWinAssociationStatus.skippedStrata)} skipped (no within-stratum comparison)` : ''}` : '—'], ['Actor point impact mean', (m.actorPointImpact ?? m.immediatePointImpact)?.mean?.toFixed(2) ?? '—'], ['Actor point impact median', (m.actorPointImpact ?? m.immediatePointImpact)?.median?.toFixed(2) ?? '—'], ['Sample size', m.sampleSize], ['P-value (raw assoc.)', m.pValue?.toFixed(4)], ['Q-value (BH)', m.associationQValue != null ? Number(m.associationQValue).toFixed(4) : '—'], ['Registry verified', m.registryVerified ? 'Yes' : 'No']])}${Array.isArray(m.evidenceReasons) && m.evidenceReasons.length ? `<div class="notice info" style="margin-top:12px"><strong>Why this evidence grade:</strong><ul>${m.evidenceReasons.map(r => `<li><code>${esc(r.code)}</code> — ${esc(r.detail)}</li>`).join('')}</ul></div>` : ''}<div class="notice info" style="margin-top:12px"><strong>Interpretation:</strong> raw and adjusted associations are observational, not causal. A sign reversal between them indicates confounding (policy/seat composition), not an error.</div>${supportWarnHtml}<button id="mechanic-view-synergies" class="ix-cross-link" data-testid="mechanic-view-synergies" aria-label="View synergies involving this mechanic in the Synergy Observatory">⟷ View synergies involving this mechanic</button>${m.limitations ? `<div class="notice info" style="margin-top:12px"><strong>Limitations:</strong><ul>${m.limitations.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}${choiceBlockHtml}</div></section>`;
   document.querySelector('#mechanics-back').onclick = () => { state.selectedMechanic = null; rerender(); };
   // Phase 3A: Mechanic → Synergy cross-workspace navigation
   const viewSynergiesBtn = document.querySelector('#mechanic-view-synergies');

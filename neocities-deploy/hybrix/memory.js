@@ -11,7 +11,7 @@
  * - All learning resettable / debuggable
  */
 
-export function createMemory(botId, config, seed) {
+export function createMemory(botId, config, _seed) {
   const capacity = (config.windowSeconds ?? 15) * (config.tickRate ?? 60);
   const buffer = [];
   const patterns = [];

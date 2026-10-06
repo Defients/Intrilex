@@ -52,7 +52,7 @@ const distServer=http.createServer(async(req,res)=>{
     const data=await readFile(filePath);
     res.writeHead(200,{'Content-Type':mime,'Content-Length':data.length,'Access-Control-Allow-Origin':'*'});
     res.end(data);
-  }catch(e){res.writeHead(404,{'Access-Control-Allow-Origin':'*'});res.end('Not found');}
+  }catch{res.writeHead(404,{'Access-Control-Allow-Origin':'*'});res.end('Not found');}
 });
 await new Promise(r=>distServer.listen(enginePort,'127.0.0.1',r));
 const distBaseUrl=`http://127.0.0.1:${enginePort}`;
@@ -86,7 +86,7 @@ try{
   const hybrixFiles=(await readdir(hybrixDir)).filter(f=>f.endsWith('.js'));
   const hybrixUrls=new Map();
   for(const name of hybrixFiles){hybrixUrls.set(name,`${distBaseUrl}/hybrix/${name}`);}
-  const hybrixPolicyAdapterUrl=hybrixUrls.get('policy-adapter.js');
+  const _hybrixPolicyAdapterUrl=hybrixUrls.get('policy-adapter.js');
   const policyUrl=`${distBaseUrl}/autonomy-runtime.js`;
   await cdp.evaluate(`import(${JSON.stringify(policyUrl)}).then(m=>{globalThis.__intrilexPolicies=m;return Object.keys(m)})`,true);
   const names=(await readdir(replayDir)).filter(n=>n.endsWith('.certified.replay.json')&&!n.includes('.public.certified.')).sort();const replays=[];for(const name of names)replays.push(JSON.parse(await readFile(path.join(replayDir,name),'utf8')));

@@ -182,7 +182,7 @@ export async function listReplaySummaries() {
 /**
  * Render the replay library UI.
  */
-export function renderReplayLibrary(summaries, options = {}) {
+export function renderReplayLibrary(summaries, _options = {}) {
   if (!summaries || summaries.length === 0) {
     return `<div class="replay-library" data-testid="replay-library">
       <a class="play-hub-back" href="#/" aria-label="Back to home">← Back</a>

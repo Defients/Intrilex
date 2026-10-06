@@ -15,16 +15,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import {
-  createSimulationState,
-  createSimulationDecisionFrame,
-  executeSimulationAction,
-  advanceSimulationToDecision,
-  strictPolicyView,
-  ENGINE_VERSION,
-  RULES_VERSION,
-  OFFICIAL_RULES_VERSION,
-} from '@intrilex/engine-adapter';
+import { createSimulationState, createSimulationDecisionFrame, executeSimulationAction, strictPolicyView } from '@intrilex/engine-adapter';
 import { validateDecision } from '@intrilex/policy-sdk';
 import { createHybrixAgent, DEFAULT_CONFIG } from '@intrilex/game-ai';
 
@@ -99,7 +90,7 @@ function searchForScenario(conditionFn, maxSeeds = 200, maxSteps = 30) {
  * Search for a seed where a specific action family/mode is available.
  */
 function searchForAction(predicate, maxSeeds = 200, maxSteps = 30) {
-  return searchForScenario((frame, state) => {
+  return searchForScenario((frame, _state) => {
     const action = frame.policyActions.find(predicate);
     if (action) return { action };
     return null;

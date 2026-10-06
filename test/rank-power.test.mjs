@@ -1,18 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  RANK_POWER_SCHEMA_VERSION,
-  RPI_AXIS_WEIGHTS,
-  CONFIDENCE_THRESHOLDS,
-  BALANCE_THRESHOLDS,
-  normalizeMinimax,
-  computePowerAxes,
-  computeObservedRPI,
-  computeDecisionPower,
-  confidenceStatus,
-  buildBalanceWatchlist,
-  buildRankPowerModel
-} from '@intrilex/simulation-runtime/rank-power';
+import { RANK_POWER_SCHEMA_VERSION, RPI_AXIS_WEIGHTS, normalizeMinimax, computePowerAxes, computeObservedRPI, computeDecisionPower, confidenceStatus, buildBalanceWatchlist, buildRankPowerModel } from '@intrilex/simulation-runtime/rank-power';
 
 const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K","RJ","BJ"];
 

@@ -22,7 +22,7 @@ async function main() {
     ? await readJson(auditPath)
     : null;
   const auditEvidence = releaseAuditEvidence(selfAudit, captureProvenance(root));
-  const pkg = await readJson('package.json');
+  const _pkg = await readJson('package.json');
 
   // Count test files
   const testDir = path.join(root, 'test');
@@ -161,7 +161,7 @@ async function main() {
   await generateKnownLimitations(truth, root);
 }
 
-function deriveLimitations(manifest, releaseIdentity) {
+function deriveLimitations(manifest, _releaseIdentity) {
   const limits = [];
 
   // Multiplayer
@@ -336,7 +336,7 @@ async function generateFeatureMatrix(truth, root) {
   // Lanes
   lines.push('## Product Lanes');
   lines.push('');
-  for (const [laneId, lane] of Object.entries(truth.lanes)) {
+  for (const [_laneId, lane] of Object.entries(truth.lanes)) {
     lines.push(`### ${lane.label} — ${lane.description}`);
     lines.push('');
     for (const r of lane.routes) {

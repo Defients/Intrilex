@@ -1,14 +1,6 @@
-import { runBrowserPolicyMatch } from './autonomy-runtime.js?v=ad40772959f0';
-import { IntrilexEngine, verifyCertifiedReplay, hashCanonical, advanceToDecision, advanceCoreToDecision } from './engine/browser-entry.js?v=ad40772959f0';
-import {
-  ANCHOR_SCHEMA_VERSION,
-  REQUIRED_ANCHOR_FIELDS,
-  isFullHash,
-  reconcileLegacyCheckpointHash,
-  verifyAnchorAuthority,
-  installAnchorHash,
-  verifiedAnchorHash
-} from './anchor.js?v=ad40772959f0';
+import { runBrowserPolicyMatch } from './autonomy-runtime.js?v=c4e7aaac019e';
+import { IntrilexEngine, verifyCertifiedReplay, hashCanonical, advanceToDecision, advanceCoreToDecision } from './engine/browser-entry.js?v=c4e7aaac019e';
+import { verifyAnchorAuthority, installAnchorHash } from './anchor.js?v=c4e7aaac019e';
 
 // Install the browser hash function into the anchor resolver for parity.
 installAnchorHash(hashCanonical);
@@ -21,7 +13,7 @@ export {
   reconcileLegacyCheckpointHash,
   verifyAnchorAuthority,
   verifiedAnchorHash
-} from './anchor.js?v=ad40772959f0';
+} from './anchor.js?v=c4e7aaac019e';
 
 export const COUNTERFACTUAL_SCHEMA_VERSION = '2.0.0';
 export const ANALYSIS_VERSION = '2.0.0';
@@ -216,14 +208,14 @@ export function getCheckpointLegalActions(replay, checkpointIndex, profileId) {
     return { status: 'NOT_SUPPORTED', reason: supportCheck.reason, missingAuthority: supportCheck.missingAuthority };
   }
 
-  try { verifyCertifiedReplay(replay); } catch (error) {
+  try { verifyCertifiedReplay(replay); } catch {
     return { status: 'NOT_SUPPORTED', reason: 'REPLAY_VERIFICATION_FAILED', missingAuthority: 'authority-certified-replay' };
   }
 
   let frames;
   try {
     frames = reconstructCheckpoints(replay);
-  } catch (error) {
+  } catch {
     return { status: 'NOT_SUPPORTED', reason: 'CHECKPOINT_RECONSTRUCTION_FAILED', missingAuthority: 'checkpoint-reconstruction' };
   }
 
@@ -231,7 +223,7 @@ export function getCheckpointLegalActions(replay, checkpointIndex, profileId) {
   let advanced;
   try {
     advanced = isCore(profileId) ? advanceCoreToDecision(checkpointState) : advanceToDecision(checkpointState);
-  } catch (error) {
+  } catch {
     return { status: 'NOT_SUPPORTED', reason: 'NO_DECISION_AT_CHECKPOINT', missingAuthority: 'decision-frame' };
   }
 
@@ -638,7 +630,7 @@ function variance(values) {
  * @param {number} [alpha=0.05] - Significance level (default: 95% CI)
  * @returns {[number, number] | null} [lower, upper] or null if insufficient data
  */
-function bootstrapMeanCI(values, alpha = 0.05) {
+function bootstrapMeanCI(values, _alpha = 0.05) {
   const clean = values.filter(Number.isFinite);
   if (clean.length < 2) return null;
   const mean = clean.reduce((a, b) => a + b, 0) / clean.length;

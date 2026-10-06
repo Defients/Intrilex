@@ -47,6 +47,9 @@ function describeMechanic(mech) {
     parts.push(`Immediate point impact: mean ${impact.mean?.toFixed(2)} over ${impact.n} measured declarations.`);
   }
   parts.push(`Evidence grade: ${mech.evidenceGrade} (${gradeLabel(mech.evidenceGrade)}).`);
+  if (mech.choiceSupport && (mech.choiceSupport.status === 'limited' || mech.choiceSupport.status === 'unsupported')) {
+    parts.push(`Choice identification: ${mech.choiceSupport.status} — only ${mech.choiceSupport.declinedCount} legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.`);
+  }
   if (mech.status === 'not-observable') parts.push('Status: not observable in current dataset.');
   return parts.join(' ');
 }
@@ -139,6 +142,8 @@ export function extractAnalysis({ analytics, aggregate = null }) {
     matchUsageWilson95: m.matchUsageWilson95,
     outcomeAssociation: m.outcomeAssociation,
     outcomeAssociationCI: m.outcomeAssociation95,
+    legalDeclinedCount: m.legalDeclinedCount ?? null,
+    choiceSupport: m.choiceSupport ?? null,
     immediatePointImpact: m.immediatePointImpact,
     evidenceGrade: m.evidenceGrade,
     status: m.status,

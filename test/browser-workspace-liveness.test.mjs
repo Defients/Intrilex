@@ -165,7 +165,7 @@ test('BL-18: every LANDING_MODES route has a renderLandingMode dispatch case', a
   // Extract renderLandingMode function body from app.js
   const fnMatch = appCode.match(/function renderLandingMode\(r\)\s*\{([\s\S]*?)\n\}/);
   assert.ok(fnMatch, 'must find renderLandingMode function in app.js');
-  const fnBody = fnMatch[1];
+  const _fnBody = fnMatch[1];
 
   // Every LANDING_MODES route must have a dispatch case
   // Routes handled via isPlayRoute() (e.g. /play, /play/academy) are excluded

@@ -26,7 +26,7 @@ import {
   ReasonCode,
 } from '../packages/network-protocol/src/protocol.mjs';
 
-function makeConnId() { return `conn-${randomBytes(4).toString('hex')}`; }
+function _makeConnId() { return `conn-${randomBytes(4).toString('hex')}`; }
 
 // ── Section 1: Queue basics ──
 

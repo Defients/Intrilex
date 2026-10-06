@@ -720,7 +720,7 @@ test('v0.31.0: migration runner works with in-memory mock DB', async () => {
         tables.set('_migrations', []);
       }
     },
-    prepare: (sql) => ({
+    prepare: (_sql) => ({
       all: () => tables.get('_migrations') ?? [],
       get: () => (tables.get('_migrations') ?? [])[0] ?? null,
       run: (...params) => {
@@ -734,8 +734,8 @@ test('v0.31.0: migration runner works with in-memory mock DB', async () => {
   };
   const runner = createMigrationRunner(mockDb);
   runner.registerMigration(createMigration('001_test', 1, 'Test migration',
-    (db) => { tables.set('test_table', []); },
-    (db) => { tables.delete('test_table'); }
+    (_db) => { tables.set('test_table', []); },
+    (_db1) => { tables.delete('test_table'); }
   ));
   const result = runner.runPending();
   assert.equal(result.applied, 1);

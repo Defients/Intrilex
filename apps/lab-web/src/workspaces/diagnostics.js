@@ -5,7 +5,7 @@
 import { state, app, esc, pct, short, definitionList } from '../state.js';
 import { rerender } from '../rerender.js';
 import { loadTraceIndex, loadTraceData } from '../data-loader.js';
-import { renderPolicyArchetypes, renderMatchupMatrix, renderTempoCurve, renderEndgameAnalysis, renderActionDistribution } from './observatory.js';
+import { renderPolicyArchetypes, renderTempoCurve, renderEndgameAnalysis, renderActionDistribution } from './observatory.js';
 
 export function renderDiagnostics() {
   const summaries = state.observatory?.summaries ?? [];

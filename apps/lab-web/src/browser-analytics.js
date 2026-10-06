@@ -5,7 +5,7 @@
 // Rank attribution extracted to rank-attribution-browser.js (P4.3).
 // Rank power model extracted to rank-power-model.js (P4.3).
 
-import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js';
+import './engine/ranks.js';
 import { hashCanonical, sha256Text } from './engine/browser-entry.js';
 import { RULES_VERSION, ENGINE_VERSION } from './version.js';
 import {
@@ -107,7 +107,7 @@ export function emptyParticipantRankCounters(participantIds, ranks = CANONICAL_R
   return result;
 }
 
-export function applyDecisionToRankCounters(counters, participantId, attribution, action, legalActions = [], rankOpportunities = {}) {
+export function applyDecisionToRankCounters(counters, participantId, attribution, action, _legalActions = [], rankOpportunities = {}) {
   const participantCounters = counters[participantId];
   if (!participantCounters) return counters;
 
@@ -995,6 +995,9 @@ function _describeMechanic(m) {
   if (m.outcomeAssociation !== null && Number.isFinite(m.outcomeAssociation)) { const dir = m.outcomeAssociation > 0 ? 'positive' : 'negative'; parts.push(`Outcome association: ${dir} (${m.outcomeAssociation.toFixed(3)}, CI ${_fmtCI(m.outcomeAssociation95)}).`); }
   if (m.immediatePointImpact) { const i = m.immediatePointImpact; parts.push(`Immediate point impact: mean ${i.mean?.toFixed(2)} over ${i.n} measured declarations.`); }
   parts.push(`Evidence grade: ${m.evidenceGrade} (${_gradeLabel(m.evidenceGrade)}).`);
+  if (m.choiceSupport && (m.choiceSupport.status === 'limited' || m.choiceSupport.status === 'unsupported')) {
+    parts.push(`Choice identification: ${m.choiceSupport.status} — only ${m.choiceSupport.declinedCount} legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.`);
+  }
   if (m.status === 'not-observable') parts.push('Status: not observable in current dataset.');
   return parts.join(' ');
 }
@@ -1006,7 +1009,7 @@ function _describeSynergy(s) {
 export function extractAnalysis({ analytics, aggregate = null }) {
   const policies = analytics.policies ?? [], mechanics = analytics.mechanics ?? [], synergies = analytics.synergies ?? [], motifs = analytics.motifs ?? [], anomalies = analytics.anomalies ?? [];
   const policyFindings = policies.map(p => ({ policyId: p.policyId, games: p.games, wins: p.wins, winRate: p.winRate, winRateCI: p.winWilson95, fingerprint: p.fingerprint, keyTraits: _describePolicy(p), summary: `${p.policyId}: ${p.wins}/${p.games} wins (${_pct(p.winRate)}, Wilson CI ${_fmtCI(p.winWilson95)}). Traits: ${_describePolicy(p).join(', ') || 'none notable'}.` }));
-  const mechanicFindings = mechanics.map(m => ({ mechanic: m.mechanic, selectionCount: m.selectionCount, usageUnit: m.usageUnit ?? 'match', analysisUnitOpportunityCount: m.analysisUnitOpportunityCount ?? m.matchOpportunityCount, matchUsageRate: m.matchUsageRate, matchUsageWilson95: m.matchUsageWilson95, outcomeAssociation: m.outcomeAssociation, outcomeAssociationCI: m.outcomeAssociation95, immediatePointImpact: m.immediatePointImpact, evidenceGrade: m.evidenceGrade, status: m.status, sampleSize: m.sampleSize, replayRefs: m.replayRefs, summary: _describeMechanic(m) }));
+  const mechanicFindings = mechanics.map(m => ({ mechanic: m.mechanic, selectionCount: m.selectionCount, usageUnit: m.usageUnit ?? 'match', analysisUnitOpportunityCount: m.analysisUnitOpportunityCount ?? m.matchOpportunityCount, matchUsageRate: m.matchUsageRate, matchUsageWilson95: m.matchUsageWilson95, outcomeAssociation: m.outcomeAssociation, outcomeAssociationCI: m.outcomeAssociation95, legalDeclinedCount: m.legalDeclinedCount ?? null, choiceSupport: m.choiceSupport ?? null, immediatePointImpact: m.immediatePointImpact, evidenceGrade: m.evidenceGrade, status: m.status, sampleSize: m.sampleSize, replayRefs: m.replayRefs, summary: _describeMechanic(m) }));
   const synergyFindings = synergies.map(s => ({ pair: s.id, source: s.source, target: s.target, relationshipClass: s.relationshipClass, effect: s.effect, shrunkEffect: s.shrunkEffect, confidenceInterval: s.confidenceInterval, pValue: s.pValue, qValue: s.qValue, status: s.status, evidenceGrade: s.evidenceGrade, jointOpportunityCount: s.jointOpportunityCount, baselineCount: s.baselineCount, replayRefs: s.replayRefs, summary: _describeSynergy(s) }));
   const motifFindings = motifs.map(m => ({ motif: m.motif, count: m.count, matchIds: m.matchIds, outcomes: m.outcomes, summary: `${m.motif}: observed ${m.count} time(s) across ${m.matchIds?.length ?? 0} match(es).` }));
   const anomalySummary = anomalies.length ? { count: anomalies.length, byType: anomalies.reduce((acc, a) => { acc[a.type] = (acc[a.type] ?? 0) + 1; return acc; }, {}), summary: `${anomalies.length} anomaly/anomalies: ${Object.entries(anomalies.reduce((acc, a) => { acc[a.type] = (acc[a.type] ?? 0) + 1; return acc; }, {})).map(([t, c]) => `${t} (${c})`).join(', ')}.`, critical: anomalies.filter(a => a.severity === 'critical').length, warnings: anomalies.filter(a => a.severity === 'warning').length, info: anomalies.filter(a => a.severity === 'info').length } : { count: 0, byType: {}, summary: 'No anomalies detected.', critical: 0, warnings: 0, info: 0 };

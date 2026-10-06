@@ -3,7 +3,7 @@
 // Pure data structures and helpers. No side effects.
 // ═══════════════════════════════════════════════════════════════
 
-import { FACT_KIND, ZONE, LAUNCH_ZONE_SET, CLEAN_SWEEP_ZONES, LAUNCH_SPADES_EFFECTS } from './constants.mjs';
+import './constants.mjs';
 
 // ── Match-Scoped Tracker ────────────────────────────────────────
 

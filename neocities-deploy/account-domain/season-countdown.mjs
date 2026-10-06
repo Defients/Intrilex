@@ -79,7 +79,7 @@ export function computeSeasonCountdown(endDate, now = new Date()) {
  * @param {number} daysRemaining
  * @returns {object|null}
  */
-function getSeasonRewardPreview(daysRemaining) {
+function getSeasonRewardPreview(_daysRemaining) {
   // Reward tiers based on season participation
   const rewards = {
     titles: [

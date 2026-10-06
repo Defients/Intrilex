@@ -128,10 +128,10 @@ async function createServer(port) {
 // Compute dist hash
 function computeDistHash() {
   const files = [];
-  function walk(dir) {
+  function _walk(dir) {
     for (const entry of readFileSync(dir)) {
       const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
+      if (entry.isDirectory()) _walk(full);
       else files.push(full);
     }
   }
@@ -194,7 +194,7 @@ try {
     await waitFor(cdp.evaluate, `document.querySelector('#page-title')?.textContent === 'Watch' && Boolean(document.querySelector('#replay-slider'))`, { timeout: 30000, label: 'Watch workspace boot' });
     recordTest('Watch workspace boot', true);
     console.log('Watch workspace booted successfully');
-  } catch (e) {
+  } catch {
     const pageTitle = await cdp.evaluate(`document.querySelector('#page-title')?.textContent ?? 'NONE'`);
     const bodyText = await cdp.evaluate(`document.body?.textContent?.substring(0, 500) ?? 'EMPTY'`);
     recordTest('Watch workspace boot', false, `Page title: ${pageTitle}, Body: ${bodyText.substring(0, 200)}, Exceptions: ${cdp.exceptions.join('; ')}`);

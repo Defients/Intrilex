@@ -15,11 +15,7 @@ import { WebSocket } from 'ws';
 import { readFileSync } from 'node:fs';
 import { randomInt } from 'node:crypto';
 
-import {
-  createMatch, ready, joinMatch,
-  spectateMatch,
-  ReasonCode,
-} from '../packages/network-protocol/src/protocol.mjs';
+import { createMatch, ready, joinMatch, spectateMatch } from '../packages/network-protocol/src/protocol.mjs';
 
 function randomPort() { return 4500 + randomInt(0, 999); }
 

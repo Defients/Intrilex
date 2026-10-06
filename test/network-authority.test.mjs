@@ -15,12 +15,12 @@ import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { WebSocket } from 'ws';
 
-import { createAuthoritativeMatch, AuthoritativeMatchSession, MatchStatus } from '../packages/match-authority/src/authoritative-match-session.mjs';
+import { createAuthoritativeMatch, MatchStatus } from '../packages/match-authority/src/authoritative-match-session.mjs';
 import { buildNetworkPlayerView, validateNetworkViewPrivacy } from '../packages/match-authority/src/player-projection.mjs';
 import { InMemoryMatchStore } from '../packages/match-authority/src/match-store.mjs';
 import { validateEnvelope, validateCreateMatch, validateJoinMatch, validateSubmitAction, checkMessageSize } from '../packages/network-protocol/src/validation.mjs';
 import { ReasonCode } from '../packages/network-protocol/src/reason-codes.mjs';
-import { createMatch, joinMatch, ready, submitAction, requestSync, resumeMatch, matchCreated, matchJoined, error as errorMsg } from '../packages/network-protocol/src/protocol.mjs';
+import { createMatch, joinMatch, ready, submitAction, requestSync } from '../packages/network-protocol/src/protocol.mjs';
 
 // ── Helpers ──
 
@@ -338,7 +338,7 @@ test('authority: same clientCommandId with different payload rejected', async ()
   const aid = match.legalActionFrame[0].actionId;
 
   // First submission
-  const r1 = await match.submitAction(actorPid, {
+  const _r1 = await match.submitAction(actorPid, {
     clientCommandId: 'cmd-collide',
     expectedRevision: rev,
     decisionFrameHash: fh,
@@ -483,8 +483,8 @@ test('duel: two automated players can reach terminal state', async () => {
   const match = createAuthoritativeMatch({ matchId: makeId('M'), seed: 123456 });
   const p1Id = makeId('P');
   const p2Id = makeId('P');
-  const p1 = match.addParticipant(p1Id, makeToken());
-  const p2 = match.addParticipant(p2Id, makeToken());
+  const _p1 = match.addParticipant(p1Id, makeToken());
+  const _p2 = match.addParticipant(p2Id, makeToken());
   match.setReady(p1Id);
   match.setReady(p2Id);
   match.start();
@@ -668,13 +668,13 @@ test('isolation: two matches cannot interfere', async () => {
   const matchB = createAuthoritativeMatch({ matchId: 'M-ISO-B', seed: 2 });
 
   const pA1 = matchA.addParticipant('PA-1', makeToken());
-  const pA2 = matchA.addParticipant('PA-2', makeToken());
+  const _pA2 = matchA.addParticipant('PA-2', makeToken());
   matchA.setReady('PA-1');
   matchA.setReady('PA-2');
   matchA.start();
 
   const pB1 = matchB.addParticipant('PB-1', makeToken());
-  const pB2 = matchB.addParticipant('PB-2', makeToken());
+  const _pB2 = matchB.addParticipant('PB-2', makeToken());
   matchB.setReady('PB-1');
   matchB.setReady('PB-2');
   matchB.start();

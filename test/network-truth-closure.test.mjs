@@ -10,10 +10,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { randomUUID } from 'node:crypto';
+import 'node:crypto';
 import { WebSocket } from 'ws';
 
-const require = createRequire(import.meta.url);
+const _require = createRequire(import.meta.url);
 
 // ── Helpers ──
 
@@ -45,7 +45,7 @@ function sendMsg(ws, msg) {
 
 // P0.1: Neutral spectator projection
 test('P0.1: spectator view hides both players\' hands', async () => {
-  const { startServer } = await import('../apps/match-server/src/server.mjs');
+  const { startServer: _startServer } = await import('../apps/match-server/src/server.mjs');
   const { buildSpectatorView } = await import('../packages/match-authority/src/player-projection.mjs');
 
   // Build a mock authorized view with both players' hands
@@ -116,7 +116,7 @@ test('P0.1: spectator action submission is rejected', async () => {
     await waitForMessage(ws1);
     sendMsg(ws2, { protocolVersion: 2, type: 'READY', requestId: 'r4', payload: { matchId, participantToken: joined.payload.participantToken } });
     // Wait for match started
-    const started1 = await waitForMessage(ws1, 10000);
+    const _started1 = await waitForMessage(ws1, 10000);
 
     // Spectate from third client
     const ws3 = await connectWs(port);
@@ -174,7 +174,7 @@ test('P0.5: ready state never regresses from TERMINAL to READY', async () => {
 
 // P0.6: Request and connection semantics
 test('P0.6: connect() settles exactly once on close-before-open', async () => {
-  const { NetworkPlaySession, NetworkSessionState } = await import('../apps/lab-web/src/play/network/network-session.mjs');
+  const { NetworkPlaySession, NetworkSessionState: _NetworkSessionState } = await import('../apps/lab-web/src/play/network/network-session.mjs');
 
   // Try to connect to a non-existent server
   const session = new NetworkPlaySession('ws://127.0.0.1:1'); // port 1 should fail
@@ -280,7 +280,7 @@ test('P1.9: fromSnapshot fails on corrupted integrity hash', async () => {
 // P1.10: Match lifetime TTL
 test('P1.10: active match is not deleted by creation-age TTL', async () => {
   const { InMemoryMatchStore } = await import('../packages/match-authority/src/match-store.mjs');
-  const { AuthoritativeMatchSession, MatchStatus } = await import('../packages/match-authority/src/authoritative-match-session.mjs');
+  const { AuthoritativeMatchSession, MatchStatus: _MatchStatus } = await import('../packages/match-authority/src/authoritative-match-session.mjs');
 
   const store = new InMemoryMatchStore();
   const match = new AuthoritativeMatchSession({
@@ -362,7 +362,7 @@ test('P1.11: conflicting create/join is rejected', async () => {
     const ws = await connectWs(port);
     // Create first match
     sendMsg(ws, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r1', payload: { profileId: 'core-unrestricted-authority' } });
-    const created = await waitForMessage(ws);
+    const _created = await waitForMessage(ws);
 
     // Try to create a second match on the same connection — should be rejected
     sendMsg(ws, { protocolVersion: 2, type: 'CREATE_MATCH', requestId: 'r2', payload: { profileId: 'core-unrestricted-authority' } });

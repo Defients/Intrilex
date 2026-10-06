@@ -23,46 +23,10 @@
 //   - Malformed output safety (red-team #6)
 // ═══════════════════════════════════════════════════════════════
 
-import { test, describe, beforeEach, afterEach } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import {
-  CasterSession,
-  DeterministicCommentaryProvider,
-  OllamaCommentaryProvider,
-  OLLAMA_ERROR,
-  COMMENTARY_MODE,
-  VIEWER_MODE,
-  CASTER_SCHEMA_VERSION,
-  COMMENTARY_PROMPT_VERSION,
-  BEAT_KIND,
-  SPOILER_CHECK,
-  DIAGNOSTIC_VERDICT,
-  buildBeats,
-  computeImportance,
-  shouldSpeak,
-  pacingBand,
-  PACING_BAND,
-  PlaybackDirector,
-  SUPPORTED_SPEEDS,
-  buildThreadRegistry,
-  viewerThreadState,
-  privateThreadState,
-  runDiagnostics,
-  buildCommentaryInput,
-  buildCommentaryPrompt,
-  spoilerLint,
-  validateAndAccept,
-  parseJsonLoose,
-  captureWaitWhat,
-  validateBeat,
-  validateCommentaryRecord,
-  validateDiagnosticRecord,
-  validateWaitWhatCapture,
-  buildSessionEnvelope,
-  makeBeatId,
-  makeCommentaryCacheKey
-} from '@intrilex/replay-caster';
+import { CasterSession, DeterministicCommentaryProvider, OllamaCommentaryProvider, OLLAMA_ERROR, COMMENTARY_MODE, VIEWER_MODE, CASTER_SCHEMA_VERSION, COMMENTARY_PROMPT_VERSION, BEAT_KIND, DIAGNOSTIC_VERDICT, computeImportance, shouldSpeak, pacingBand, PACING_BAND, PlaybackDirector, viewerThreadState, privateThreadState, runDiagnostics, buildCommentaryInput, buildCommentaryPrompt, spoilerLint, validateAndAccept, parseJsonLoose, validateBeat, validateCommentaryRecord, validateDiagnosticRecord, validateWaitWhatCapture, makeBeatId, makeCommentaryCacheKey } from '@intrilex/replay-caster';
 
 // ── Test fixtures ─────────────────────────────────────────────────
 
@@ -115,7 +79,7 @@ describe('Replay Caster v0.1 — Schema Validation', () => {
   });
 
   test('validateCommentaryRecord rejects empty commentary', () => {
-    const { valid, errors } = validateCommentaryRecord({ commentary: '' });
+    const { valid, errors: _errors } = validateCommentaryRecord({ commentary: '' });
     assert.equal(valid, false);
   });
 
@@ -680,7 +644,7 @@ describe('Replay Caster v0.1 — Diagnostics', () => {
     const session = await makeSession();
     // Create a fake diagnostic at a future beat index
     const futureDiag = { ...session.diagnostics[0], _beatIndex: 999 };
-    const all = [...session.diagnostics, futureDiag];
+    const _all = [...session.diagnostics, futureDiag];
     const filtered = runDiagnostics(session.matchResult, session.beats, session.frames);
     // diagnosticsThroughBeat should exclude future beats
     const throughNow = filtered.filter(d => d._beatIndex <= 0);
@@ -705,7 +669,7 @@ describe('Replay Caster v0.1 — Narrative Threads', () => {
     const session = await makeSession();
     if (session.threads.length > 0) {
       const privateState = privateThreadState(session.threads, session.beats.length - 1, session.beats);
-      const withPayoff = privateState.filter(t => t.payoffBeatId);
+      const _withPayoff = privateState.filter(t => t.payoffBeatId);
       // At least some threads should have payoff info (private)
       assert.ok(privateState.every(t => t.visibleToViewer === false));
     }

@@ -61,7 +61,7 @@ for (const target of TARGETS) {
         }
         killed++;
         console.log(`[kill-orphaned-smoke] Terminated PID ${pid} (${target})`);
-      } catch (err) {
+      } catch {
         // Process may have already exited
       }
     }

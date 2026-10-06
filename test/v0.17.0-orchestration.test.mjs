@@ -3,28 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { LifecycleState, mapToLifecycleState, lifecycleStateLabel, validTransitions, isValidTransition } from '../apps/lab-web/src/play/state/play-lifecycle.js';
-import {
-  DeclarationPhase,
-  createDeclarationFlow,
-  selectSourceCard,
-  selectAction,
-  selectTarget,
-  moveToConfirmation,
-  cancelDeclaration,
-  buildSubmission,
-  handleRejection,
-  handleAccepted,
-  isSubmittable,
-  needsTargetSelection,
-  describeFlowState,
-} from '../apps/lab-web/src/play/orchestration/declaration-flow.js';
-import {
-  buildEventLog,
-  buildEventLogEntry,
-  buildStackDisplay,
-  buildEffectExplanation,
-  buildPartialResolution,
-} from '../apps/lab-web/src/play/orchestration/resolution-flow.js';
+import { DeclarationPhase, createDeclarationFlow, selectSourceCard, selectAction, selectTarget, moveToConfirmation, cancelDeclaration, buildSubmission, handleRejection, handleAccepted, isSubmittable, describeFlowState } from '../apps/lab-web/src/play/orchestration/declaration-flow.js';
+import { buildEventLog, buildStackDisplay, buildEffectExplanation, buildPartialResolution } from '../apps/lab-web/src/play/orchestration/resolution-flow.js';
 
 // ─── Lifecycle State Machine Tests ──────────────────────────────
 

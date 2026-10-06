@@ -20,18 +20,12 @@ import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { WebSocket } from 'ws';
 
-import {
-  createMatch, joinMatch, ready, submitAction, requestSync,
-  matchCreated, matchJoined,
-  spectateMatch, spectateLeave, spectateJoined, spectateLeft,
-  validateEnvelope, validateSpectateMatch, validateSpectateLeave,
-  ReasonCode,
-} from '../packages/network-protocol/src/protocol.mjs';
-import { createAuthoritativeMatch, MatchStatus } from '../packages/match-authority/src/authoritative-match-session.mjs';
+import { createMatch, joinMatch, ready, submitAction, spectateMatch, spectateLeave, spectateJoined, spectateLeft, validateEnvelope, validateSpectateMatch, validateSpectateLeave, ReasonCode } from '../packages/network-protocol/src/protocol.mjs';
+import '../packages/match-authority/src/authoritative-match-session.mjs';
 
 const TEST_PORT = 3399;
 
-function makeToken() { return randomBytes(32).toString('base64url'); }
+function _makeToken() { return randomBytes(32).toString('base64url'); }
 
 // ── Section 1: Protocol validation ──
 

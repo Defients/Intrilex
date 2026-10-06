@@ -196,7 +196,7 @@ function isLeaseExpired(lease) {
   return Date.now() - lease.lastHeartbeat > LEASE_TTL_MS;
 }
 
-function startHeartbeat(key, tabId, sessionId) {
+function startHeartbeat(key, tabId, _sessionId) {
   stopHeartbeat();
   _heartbeatTimer = setInterval(() => {
     const lease = readLease(key);

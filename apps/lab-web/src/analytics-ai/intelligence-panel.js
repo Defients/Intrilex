@@ -181,7 +181,7 @@ function errorHint(r) {
   return hints[r?.code] || 'Check the connection and model, then try again. Details are available in the browser console.';
 }
 
-function renderAnalysisResult(result, ai) {
+function renderAnalysisResult(result, _ai) {
   const a = result.analysis;
   const sections = [];
   sections.push(renderSummary(a));
@@ -267,7 +267,7 @@ function renderFollowUps(a) {
   return `<div class="aai-block"><h5>Suggested follow-up questions</h5><ul class="aai-followups">${a.followUpQuestions.map(q => `<li><button class="aai-followup-btn" type="button" data-q="${esc(q)}">${esc(q)}</button></li>`).join('')}</ul></div>`;
 }
 
-function renderDebugPanel(result, ai, rerender) {
+function renderDebugPanel(result, _ai1, _rerender) {
   const d = result.debug || {};
   const body = `<div class="aai-debug-grid">
     <div><b>Model:</b> ${esc(d.model)}</div>

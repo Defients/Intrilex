@@ -39,7 +39,7 @@ const rankedDuelRenderer = await import(srcUrl('play/ranked-duel-renderer.mjs'))
 
 function buildTestSnapshot(overrides = {}) {
   const humanPlayerId = overrides.humanPlayerId ?? 'P1';
-  const opponentPlayerId = humanPlayerId === 'P1' ? 'P2' : 'P1';
+  const _opponentPlayerId = humanPlayerId === 'P1' ? 'P2' : 'P1';
   return {
     humanPlayerId,
     status: 'AI_DECISION',

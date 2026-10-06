@@ -135,7 +135,7 @@ function makeFact(beat, factType, source, level, value) {
  */
 export function authorizeFacts(beat, viewerMode, mode) {
   if (beat == null || typeof beat !== 'object') return [];
-  const vMode = (viewerMode === VIEWER_MODE.OMNISCIENT || viewerMode === VIEWER_MODE.PLAYER)
+  const _vMode = (viewerMode === VIEWER_MODE.OMNISCIENT || viewerMode === VIEWER_MODE.PLAYER)
     ? viewerMode
     : VIEWER_MODE.PUBLIC;
   const devMode = mode === COMMENTARY_MODE.DEV_OBSERVATORY;

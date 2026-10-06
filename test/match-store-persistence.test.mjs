@@ -21,13 +21,13 @@ import { mkdtempSync, rmSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { createAuthoritativeMatch, AuthoritativeMatchSession, MatchStatus, ConnectionState } from '../packages/match-authority/src/authoritative-match-session.mjs';
+import { createAuthoritativeMatch, AuthoritativeMatchSession, MatchStatus } from '../packages/match-authority/src/authoritative-match-session.mjs';
 import { InMemoryMatchStore, SqliteMatchStore } from '../packages/match-authority/src/match-store.mjs';
 
 // ── Helpers ──
 
 function makeToken() { return randomBytes(32).toString('base64url'); }
-function makeId(prefix) { return `${prefix}-${randomBytes(8).toString('base64url')}`; }
+function _makeId(prefix) { return `${prefix}-${randomBytes(8).toString('base64url')}`; }
 function makeMatchId() { return `match-${randomBytes(12).toString('hex')}`; }
 function makeInviteCode() { return randomBytes(3).toString('base64url').toUpperCase().slice(0, 6); }
 
@@ -222,7 +222,7 @@ test('match-store: fromSnapshot reconstructs lobby match', () => {
 });
 
 test('match-store: fromSnapshot reconstructs started match with engine state', () => {
-  const { match, token1, token2 } = createStartedMatch();
+  const { match, token1: _token1, token2: _token2 } = createStartedMatch();
   const snapshot = match.toSnapshot();
   const restored = AuthoritativeMatchSession.fromSnapshot(snapshot);
   assert.equal(restored.matchId, match.matchId);

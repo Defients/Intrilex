@@ -743,7 +743,7 @@ if (bundleResult.status !== 0) process.exit(bundleResult.status ?? 1);
   // (hashCanonical). In the browser bundle this is aliased to shared-browser.js
   // by bundle.mjs. For the raw dist copies, rewrite @intrilex/shared to the
   // shared-browser.js shim at the dist root.
-  const sharedBrowserPath = path.join(dist, 'shared-browser.js');
+  const _sharedBrowserPath = path.join(dist, 'shared-browser.js');
 
   let diRewrittenCount = 0;
   async function rewriteDiBareImports(dir) {

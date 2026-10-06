@@ -15,17 +15,17 @@ const SWAP_BAR_ZONES = new Set(['SWAP_BAR', 'swapBar']);
 
 function isDrawPile(card) { return card && DRAW_PILE_ZONES.has(card.zone); }
 function isHand(card) { return card && HAND_ZONE_RE.test(card.zone ?? ''); }
-function isSwapBar(card) { return card && SWAP_BAR_ZONES.has(card.zone); }
+function _isSwapBar(card) { return card && SWAP_BAR_ZONES.has(card.zone); }
 function isHiddenIdentity(identity) { return !identity || identity === 'HIDDEN'; }
 
 /** Collect all card identities from an object by walking its structure. */
-function collectIdentities(obj, found = []) {
+function _collectIdentities(obj, found = []) {
   if (!obj || typeof obj !== 'object') return found;
   if (typeof obj.identity === 'string' && obj.identity !== 'HIDDEN' && obj.zone) {
     found.push({ identity: obj.identity, zone: obj.zone, id: obj.id });
   }
   for (const value of Object.values(obj)) {
-    if (typeof value === 'object') collectIdentities(value, found);
+    if (typeof value === 'object') _collectIdentities(value, found);
   }
   return found;
 }

@@ -4,19 +4,7 @@
 // Produces player-safe achievement facts and unlocks per participant.
 // ═══════════════════════════════════════════════════════════════
 
-import {
-  deriveAchievementFacts,
-  createCheckpointFact,
-  createMatchTracker,
-  createCareerTracker,
-  reduceFacts,
-  evaluateAchievements,
-  applyUnlocks,
-  isQualifyingMatch,
-  networkMatchContext,
-  PROVENANCE,
-  serializeCareerTracker,
-} from '@intrilex/achievements';
+import { deriveAchievementFacts, createCheckpointFact, createMatchTracker, createCareerTracker, reduceFacts, evaluateAchievements, isQualifyingMatch, networkMatchContext, PROVENANCE, serializeCareerTracker } from '@intrilex/achievements';
 
 /**
  * @typedef {Object} MatchAchievementContext

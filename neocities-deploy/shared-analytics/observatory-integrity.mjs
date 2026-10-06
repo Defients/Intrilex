@@ -90,6 +90,31 @@ export function mechanicInferentialEligibility(row, aliasOf) {
   return { eligible: true, reasonCode: null, detail: null };
 }
 
+// ── Choice support (preference-identification accounting) ──────
+// Pick rate and conditional share measure *what was selected*, never whether
+// an alternative was declined. Selection in every legal frame is an observed
+// regularity, not evidence of preference — there is no legal-but-unselected
+// counterfactual support behind it. `declinedCount` is that support: decision
+// frames where the entity was legal but the selected action did not carry its
+// tag. The classification below is deliberately coarse — it reports whether a
+// preference reading has any support at all, not how strong the preference is.
+
+export const CHOICE_SUPPORT_MIN_DECLINES = 20;
+
+export const CHOICE_SUPPORT_STATUSES = Object.freeze(['identified', 'limited', 'unsupported', 'unmeasured']);
+
+/**
+ * @param {number | null | undefined} declinedCount legal-but-unselected frames
+ * @param {boolean} [hasOpportunityData] false when opportunity telemetry is absent
+ * @returns {'identified' | 'limited' | 'unsupported' | 'unmeasured'}
+ */
+export function choiceSupportStatus(declinedCount, hasOpportunityData = true) {
+  if (!hasOpportunityData || !Number.isFinite(declinedCount)) return 'unmeasured';
+  if (declinedCount <= 0) return 'unsupported';
+  if (declinedCount < CHOICE_SUPPORT_MIN_DECLINES) return 'limited';
+  return 'identified';
+}
+
 // ── Synergy cell semantics ─────────────────────────────────────
 // A blank matrix cell is never NEUTRAL. Every candidate pair maps to exactly
 // one of these states.

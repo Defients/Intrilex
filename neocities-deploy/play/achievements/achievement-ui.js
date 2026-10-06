@@ -4,8 +4,8 @@
 // Consumes the canonical catalog — no duplicate definitions.
 // ═══════════════════════════════════════════════════════════════
 
-import { getAchievementRuntime } from './achievement-runtime.js?v=ad40772959f0';
-import { getCatalog, RARITY, CATEGORY, RARITY_SYMBOL } from '../../achievements/index.mjs?v=ad40772959f0';
+import { getAchievementRuntime } from './achievement-runtime.js?v=c4e7aaac019e';
+import { getCatalog, CATEGORY } from '../../achievements/index.mjs?v=c4e7aaac019e';
 
 const CATEGORY_LABELS = {
   FIRST_STEPS: 'First Steps',
@@ -34,7 +34,7 @@ export async function renderAchievementsWorkspace(container) {
   await runtime.init();
 
   const summary = runtime.getSummary();
-  const catalog = getCatalog();
+  const _catalog = getCatalog();
 
   // State for filtering
   let currentFilter = 'all';

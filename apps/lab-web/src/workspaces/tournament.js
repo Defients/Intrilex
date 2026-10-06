@@ -2,7 +2,7 @@
 // workspaces/tournament.js — /tournament workspace: AI tournament mode
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, definitionList, showToast, clamp } from '../state.js';
+import { state, app, esc, pct, showToast, clamp } from '../state.js';
 import { rerender } from '../rerender.js';
 import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js';
 import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js';
@@ -235,7 +235,7 @@ function renderTournamentAnalytics(tournament) {
     : '';
   // Sparkline per policy showing cumulative wins across rounds.
   // Reconstruct cumulative wins from the bracket round structure.
-  const sparkPerPolicy = policyEntries.map(([id, s]) => {
+  const sparkPerPolicy = policyEntries.map(([id, _s]) => {
     // Build a cumulative win count by walking rounds in order.
     const cumulative = [];
     let running = 0;
@@ -304,7 +304,7 @@ async function playNextMatch(tournament) {
   }
 }
 
-async function autoPlayTournament(tournament) {
+async function autoPlayTournament(_tournament) {
   if (state.tournamentRunning) return;
   state.tournamentAutoPlaying = true;
   state.tournamentRunning = true;

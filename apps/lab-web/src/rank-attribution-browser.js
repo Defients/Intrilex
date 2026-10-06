@@ -70,7 +70,7 @@ export function buildSourceCards(state, action, viewerMode = 'private') {
   return cards;
 }
 
-export function attributeRankAction({ sourceCards, playForm, originRank = null, generatedRank = null, viewerMode = 'private' }) {
+export function attributeRankAction({ sourceCards, playForm, originRank = null, generatedRank = null, viewerMode: _viewerMode = 'private' }) {
   if (!sourceCards || sourceCards.length === 0) {
     return { sourceCards: [], sourceRanks: [], primaryRank: null, rankWeights: {}, playForm: playForm ?? 'other', originRank: null, generatedRank: null, attributionStatus: 'not-observable', attributionReason: 'no source cards' };
   }

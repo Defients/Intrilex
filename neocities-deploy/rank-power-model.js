@@ -17,7 +17,7 @@ export const RPI_AXIS_WEIGHTS = Object.freeze({
 export const CONFIDENCE_THRESHOLDS = Object.freeze({ HIGH: 200, MEDIUM: 50, LOW: 10 });
 export const BALANCE_THRESHOLDS = Object.freeze({ OVERPOWERED_RPI: 0.75, UNDERPOWERED_RPI: 0.25, DOMINANT_SELECTION: 0.80, NEGLIGIBLE_SELECTION: 0.05 });
 
-function normalizeMinimax(valuesByRank) {
+function _normalizeMinimax(valuesByRank) {
   const values = Object.values(valuesByRank);
   if (values.length === 0) return {};
   const min = Math.min(...values), max = Math.max(...values), range = max - min;

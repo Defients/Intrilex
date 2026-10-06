@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const schedulerPath = path.join(root, 'apps/lab-web/src/workspaces/tournament-scheduler.js');
-const { createTournament, recordMatchResult, getNextMatch, getReadyMatches, getTournamentSummary, getTournamentAnalytics, TOURNAMENT_SCHEMA_VERSION } = await import('file://' + schedulerPath.replace(/\\/g, '/'));
+const { createTournament, recordMatchResult, getNextMatch, getReadyMatches: _getReadyMatches, getTournamentSummary, getTournamentAnalytics, TOURNAMENT_SCHEMA_VERSION } = await import('file://' + schedulerPath.replace(/\\/g, '/'));
 
 // ── Schema version ──────────────────────────────────────────────
 

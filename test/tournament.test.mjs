@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const schedulerPath = path.join(root, 'apps/lab-web/src/workspaces/tournament-scheduler.js');
 
 // The tournament scheduler uses ES module exports — import it directly
-const { createTournament, advanceTournament, recordMatchResult, getNextMatch, getReadyMatches, getTournamentSummary, TOURNAMENT_SCHEMA_VERSION } = await import('file://' + schedulerPath.replace(/\\/g, '/'));
+const { createTournament, advanceTournament: _advanceTournament, recordMatchResult, getNextMatch, getReadyMatches, getTournamentSummary, TOURNAMENT_SCHEMA_VERSION: _TOURNAMENT_SCHEMA_VERSION } = await import('file://' + schedulerPath.replace(/\\/g, '/'));
 
 // ── Bracket generation tests ────────────────────────────────────
 

@@ -89,7 +89,7 @@ export function applyDecisionToRankCounters(counters, participantId, attribution
 
   // Update opportunity counts for all ranks that had options in this frame
   if (rankOpportunities) {
-    for (const [rank, info] of Object.entries(rankOpportunities)) {
+    for (const [rank, _info] of Object.entries(rankOpportunities)) {
       if (participantCounters[rank]) {
         participantCounters[rank].opportunityCount += 1;
       }

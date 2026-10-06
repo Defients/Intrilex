@@ -14,7 +14,7 @@ const commentaryPath = path.join(root, 'apps/lab-web/src/play/ai-commentary.js')
 const personalityPath = path.join(root, 'apps/lab-web/src/play/ai-personality.js');
 
 const { generateCommentary, generatePostMatchAnalysis, commentaryInterval } = await import('file://' + commentaryPath.replace(/\\/g, '/'));
-const { getAiBanter, getTerminalBanter, getArchetypePersonality } = await import('file://' + personalityPath.replace(/\\/g, '/'));
+const { getAiBanter, getTerminalBanter, getArchetypePersonality: _getArchetypePersonality } = await import('file://' + personalityPath.replace(/\\/g, '/'));
 
 // ── Commentary module exists ─────────────────────────────────────
 

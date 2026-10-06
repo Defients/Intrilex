@@ -9,17 +9,17 @@
  * runtime. Also works standalone for real-time games.
  */
 
-import { createPerception } from "./perception.js?v=ad40772959f0";
-import { createPersonality, updateMorale, decayMorale, describePersonality } from "./personality.js?v=ad40772959f0";
-import { createMemory } from "./memory.js?v=ad40772959f0";
-import { createCognition } from "./cognition.js?v=ad40772959f0";
-import { createSharedBlackboard, evaluateCoordination } from "./coordination.js?v=ad40772959f0";
-import { createFailsafe, determineLodTier } from "./failsafe.js?v=ad40772959f0";
-import { createDebugSystem } from "./debug.js?v=ad40772959f0";
-import { getDifficultyConfig, getReactionMultiplier, getAdaptationRate, isCoordinationEnabled, auditDifficultyConfig } from "./difficulty.js?v=ad40772959f0";
-import { evaluateRankStrategy } from "./rank-strategy.js?v=ad40772959f0";
-import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=ad40772959f0";
-import { scorePolicyAction } from "../policy-scoring.js?v=ad40772959f0";
+import { createPerception } from "./perception.js?v=c4e7aaac019e";
+import { createPersonality, updateMorale, decayMorale, describePersonality } from "./personality.js?v=c4e7aaac019e";
+import { createMemory } from "./memory.js?v=c4e7aaac019e";
+import { createCognition } from "./cognition.js?v=c4e7aaac019e";
+import { createSharedBlackboard, evaluateCoordination } from "./coordination.js?v=c4e7aaac019e";
+import { createFailsafe, determineLodTier } from "./failsafe.js?v=c4e7aaac019e";
+import { createDebugSystem } from "./debug.js?v=c4e7aaac019e";
+import { getDifficultyConfig, getReactionMultiplier, getAdaptationRate, isCoordinationEnabled, auditDifficultyConfig } from "./difficulty.js?v=c4e7aaac019e";
+import { evaluateRankStrategy } from "./rank-strategy.js?v=c4e7aaac019e";
+import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=c4e7aaac019e";
+import { scorePolicyAction } from "../policy-scoring.js?v=c4e7aaac019e";
 
 export const ARCHETYPE_TO_SCORING_POLICY = Object.freeze({
   rusher: 'score-rush',
@@ -80,11 +80,11 @@ export function createHybrixAgent({ botId, archetype, difficulty = 'normal', see
   const cognition = { get decide() { ensureSpatialModules(); return _cognition.decide; }, reset() { _cognition?.reset(); } };
   const failsafe = { get validate() { ensureSpatialModules(); return _failsafe.validate; }, reset() { _failsafe?.reset(); } };
 
-  const rng = new DeterministicPolicyRng(seed);
+  const _rng = new DeterministicPolicyRng(seed);
   const originalSeed = seed;
   let currentTick = 0;
-  let lastWorldState = null;
-  let lastBotState = null;
+  let _lastWorldState = null;
+  let _lastBotState = null;
   let lastDecision = null;
   const cardGameGoals = []; // persistent GOAP goals for the card-game path
 
@@ -103,8 +103,8 @@ export function createHybrixAgent({ botId, archetype, difficulty = 'normal', see
     ensureSpatialModules();
     const tickStart = typeof performance !== 'undefined' ? performance.now() : Date.now();
     currentTick = worldState.tick ?? currentTick + 1;
-    lastWorldState = worldState;
-    lastBotState = botState;
+    _lastWorldState = worldState;
+    _lastBotState = botState;
 
     // 1. Perception (with difficulty-scaled reaction time)
     const reactionMultiplier = getReactionMultiplier(diffConfig);
@@ -232,8 +232,8 @@ export function createHybrixAgent({ botId, archetype, difficulty = 'normal', see
     debug.reset();
     personality.morale = fullConfig.personality.moraleBaseline ?? 0.5;
     currentTick = 0;
-    lastWorldState = null;
-    lastBotState = null;
+    _lastWorldState = null;
+    _lastBotState = null;
     lastDecision = null;
     cardGameGoals.length = 0; // clear GOAP goals on reset
   }
@@ -625,7 +625,7 @@ function assessIntrilexBoardState(own, opponents, stack, context) {
  * Apply cognition context to adjust action scores based on board state.
  * This replaces the spatial cognition's role in action selection.
  */
-function applyCognitionToLegalAction(baseScore, action, cognition, intensity, context) {
+function applyCognitionToLegalAction(baseScore, action, cognition, intensity, _context) {
   let adjusted = baseScore;
   const family = action.family ?? 'unknown';
 
@@ -693,7 +693,7 @@ function applyCognitionToLegalAction(baseScore, action, cognition, intensity, co
 
 // ── Legal Action Scoring Helpers ──────────────────────────────
 
-function scoreLegalAction(action, view, context) {
+function _scoreLegalAction(action, view, _context1) {
   const family = action.family ?? 'unknown';
   let score = 100;
 

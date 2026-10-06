@@ -21,7 +21,7 @@ export function createFailsafe(config) {
    * @param {number} tick - Current tick
    * @returns {object} { action, fallbackUsed, failsafeTriggered, reason }
    */
-  function validate(decisionResult, elapsedMs, lodTier, tick) {
+  function validate(decisionResult, elapsedMs, lodTier, _tick) {
     const action = decisionResult.action;
     let finalAction = action;
     let fallbackUsed = false;

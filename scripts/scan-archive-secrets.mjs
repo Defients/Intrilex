@@ -15,7 +15,7 @@
 // scans the decompressed content for secret patterns.
 // ═══════════════════════════════════════════════════════════════
 
-import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { execSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -48,7 +48,7 @@ const FORBIDDEN_FILES = [
 ];
 
 // Forbidden filename patterns (checked against the basename of each entry).
-const FORBIDDEN_PATTERNS = [
+const _FORBIDDEN_PATTERNS = [
   /\.sqlite$/,
   /\.sqlite-wal$/,
   /\.sqlite-shm$/,

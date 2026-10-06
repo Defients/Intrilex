@@ -275,7 +275,7 @@ export class ParticleSystem {
     this._raf = requestAnimationFrame((t) => this._tick(t));
   }
 
-  _tick(timestamp) {
+  _tick(_timestamp) {
     if (!this._mounted || !this._ctx || !this._canvas) return;
 
     if (document.hidden) {

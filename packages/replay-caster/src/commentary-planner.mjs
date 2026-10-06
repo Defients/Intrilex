@@ -18,10 +18,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { hashCanonical } from '@intrilex/shared';
-import {
-  COMMENTARY_PROMPT_VERSION, COMMENTARY_MODE, VIEWER_MODE,
-  SPOILER_CHECK, makeCommentaryCacheKey
-} from './schemas.mjs';
+import { COMMENTARY_PROMPT_VERSION, COMMENTARY_MODE, VIEWER_MODE, makeCommentaryCacheKey } from './schemas.mjs';
 import { PACING_BAND, pacingBand, shouldSpeak } from './importance.mjs';
 import {
   viewerThreadState, privateThreadState

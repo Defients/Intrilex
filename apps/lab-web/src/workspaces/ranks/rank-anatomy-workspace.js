@@ -206,7 +206,7 @@ function renderOverallTab(cmp, rankEntry, va) {
 /**
  * Ordinary tab — normal suit baseline (♣/♦/♥ combined, excluding Spades/Super).
  */
-function renderOrdinaryTab(cmp, va) {
+function renderOrdinaryTab(cmp, _va) {
   if (!cmp) return '<div class="empty-state"><strong>No variant data</strong></div>';
   const normalKey = Object.keys(cmp.levels ?? {}).find(k => k.endsWith(':normal'));
   if (!normalKey) return '<div class="empty-state"><strong>No ordinary baseline data</strong><p>This rank may not have suit variants.</p></div>';
@@ -237,7 +237,7 @@ function renderOrdinaryTab(cmp, va) {
 /**
  * Spades tab — exact Spades variant comparison.
  */
-function renderSpadesTab(cmp, rankEntry, va) {
+function renderSpadesTab(cmp, rankEntry, _va1) {
   if (!rankEntry.spadesEligible) {
     return `<div class="anatomy-section">
       <h3>Spades Variant — Not Eligible</h3>
@@ -518,7 +518,7 @@ function renderContributionDecomposition(cmp, va) {
 /**
  * Render frequency-potency table.
  */
-function renderFrequencyPotencyTable(cmp, va) {
+function renderFrequencyPotencyTable(cmp, _va2) {
   if (!cmp) return '';
   const order = cmp.entityOrder ?? [];
   const levels = cmp.levels ?? {};
@@ -530,7 +530,7 @@ function renderFrequencyPotencyTable(cmp, va) {
     const freq = m.variantPlayRate ?? 0;
     const potency = m.variantAverageValueWhenActivated ?? 0;
     const tier = lv.tier ?? '';
-    const tierLabel = tierLabelFor(tier);
+    const _tierLabel = tierLabelFor(tier);
     const conf = lv.confidence ?? 'INSUFFICIENT';
     const confClass = `confidence-${conf.toLowerCase()}`;
     const marker = tierMarker(tier);
@@ -648,7 +648,7 @@ function renderSuperFunnel(cmp, rankEntry) {
  * Shows registry info (authority refs, action modes, alt kinds) alongside campaign metrics.
  * When no campaign data exists, the dossier still displays the full registry definition.
  */
-function renderSuperEffectDossier(superRec, cmp, va) {
+function renderSuperEffectDossier(superRec, cmp, _va3) {
   const effectKey = `${superRec.rank}:super:${superRec.effectId}`;
   const lv = cmp.levels?.[effectKey];
   const conf = lv?.confidence ?? 'INSUFFICIENT';

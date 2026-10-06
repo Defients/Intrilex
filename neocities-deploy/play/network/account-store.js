@@ -8,7 +8,7 @@
 // The auth-controller drives state changes; this store just broadcasts.
 // ═══════════════════════════════════════════════════════════════
 
-import { subscribe as subscribeToAuth, getAuthState, getProfile } from './auth-controller.js?v=ad40772959f0';
+import { subscribe as subscribeToAuth, getAuthState, getProfile } from './auth-controller.js?v=c4e7aaac019e';
 
 /**
  * @typedef {Object} AccountState

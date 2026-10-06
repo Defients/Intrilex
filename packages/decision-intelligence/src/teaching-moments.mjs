@@ -107,7 +107,7 @@ function checkIRMargin(vm) {
 function checkDrawEfficiency(vm) {
   const human = vm.human ?? {};
   const cardsDrawn = human.cardsDrawn ?? 0;
-  const cardsPlayed = human.cardsPlayed ?? 0;
+  const _cardsPlayed = human.cardsPlayed ?? 0;
   const zones = vm.zones ?? {};
   const drawRemaining = zones.drawPile?.count ?? zones.drawPile?.length ?? 0;
 
@@ -149,7 +149,7 @@ function checkPassFrequency(vm) {
  */
 function checkGoalProgress(vm) {
   const human = vm.human ?? {};
-  const opponent = vm.opponent ?? {};
+  const _opponent = vm.opponent ?? {};
   const humanIR = human.secured ?? 0;
   const humanGoal = human.goal ?? 21;
   const humanPct = humanGoal > 0 ? humanIR / humanGoal : 0;

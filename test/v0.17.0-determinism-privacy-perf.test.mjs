@@ -67,7 +67,7 @@ test('DETERMINISM: renderer does not use Math.random for game state', () => {
 test('DETERMINISM: app uses Math.random only for seed generation', () => {
   // The app can use Math.random for new seed generation, but not for game decisions
   const combinedSrc = appSrc + '\n' + boardEventsSrc;
-  const matches = combinedSrc.match(/Math\.random/g) ?? [];
+  const _matches = combinedSrc.match(/Math\.random/g) ?? [];
   // Should only appear in the new-seed action
   assert.ok(combinedSrc.includes('newSeed'), 'App must use Math.random only for seed generation');
 });

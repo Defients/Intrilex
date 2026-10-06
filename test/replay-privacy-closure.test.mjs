@@ -18,7 +18,7 @@ import { createServer } from 'node:net';
 import { createMatch } from '../packages/network-protocol/src/protocol.mjs';
 import { ReasonCode } from '../packages/network-protocol/src/reason-codes.mjs';
 
-function randomPort() {
+function _randomPort() {
   return 3000 + Math.floor(Math.random() * 1000);
 }
 

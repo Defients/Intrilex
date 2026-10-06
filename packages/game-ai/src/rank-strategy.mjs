@@ -29,8 +29,8 @@ function parseRank(identity) {
 }
 
 // ── Premium counter identities (preserve for high-tier threats) ──
-const PREMIUM_COUNTER_RANKS = new Set(['A']);       // Ace-family counters
-const SPADE_PREMIUM = new Set(['A♠', 'K♠', 'Q♠']);  // spade-enhanced premium cards
+const _PREMIUM_COUNTER_RANKS = new Set(['A']);       // Ace-family counters
+const _SPADE_PREMIUM = new Set(['A♠', 'K♠', 'Q♠']);  // spade-enhanced premium cards
 
 // ── Mode → strategic classification ──
 // Maps engine mode strings to strategic categories for valuation.
@@ -509,9 +509,9 @@ function rankModeValuation(sources, mode, category, action, context, reasonCodes
 function counterConservation(sources, mode, category, action, context, cognition, reasonCodes) {
   let adj = 0;
   const primaryRank = sources[0]?.rank;
-  const primarySuit = sources[0]?.suit;
-  const isPremiumCounter = category === 'counter-premium';
-  const isBasicCounter = category === 'counter-effect' || category === 'counter-anchor' || category === 'counter-scuttle';
+  const _primarySuit = sources[0]?.suit;
+  const _isPremiumCounter = category === 'counter-premium';
+  const _isBasicCounter = category === 'counter-effect' || category === 'counter-anchor' || category === 'counter-scuttle';
 
   // If both Base Ace and ⭐A are legal, prefer Base Ace and preserve ⭐A
   if (mode === 'super-counter') {
@@ -590,7 +590,7 @@ function combinationAwareness(sources, mode, category, action, context, reasonCo
 
   const consumedRank = sources[0]?.rank;
   const consumedSuit = sources[0]?.suit;
-  const consumedKey = consumedSuit ? `${consumedRank}${consumedSuit}` : consumedRank;
+  const _consumedKey = consumedSuit ? `${consumedRank}${consumedSuit}` : consumedRank;
 
   // ── Queen's Court: 2 Queens in hand ──
   if (consumedRank === 'Q' && mode !== 'queens-court' && mode !== 'pr-score') {

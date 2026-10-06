@@ -20,14 +20,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  createSimulationState,
-  advanceSimulationToDecision,
-  executeSimulationAction,
-  createSimulationDecisionFrame,
-  strictPolicyView,
-  RANK_REGISTRY,
-} from '../packages/engine-adapter/src/adapter.mjs';
+import { createSimulationState, advanceSimulationToDecision, executeSimulationAction, createSimulationDecisionFrame, RANK_REGISTRY } from '../packages/engine-adapter/src/adapter.mjs';
 
 // ── Test helpers ──────────────────────────────────────────────────
 
@@ -104,7 +97,7 @@ function findAction(frame, predicate) {
 }
 
 /** Execute the first legal action matching a predicate. Returns the result. */
-function executeFirst(state, frame, predicate) {
+function _executeFirst(state, frame, predicate) {
   const action = findAction(frame, predicate);
   if (!action) return null;
   const command = frame.resolve(action.actionId);

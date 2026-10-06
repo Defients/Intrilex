@@ -106,7 +106,7 @@ function topN(rankingArr, n, label, scoreField) {
 // ============================================================================
 // Helper: mechanically generate Bottom-N from a ranking array
 // ============================================================================
-function bottomN(rankingArr, n) {
+function _bottomN(rankingArr, n) {
   const lines = [];
   const start = rankingArr.length - n;
   for (let i = start; i < rankingArr.length; i++) {
@@ -272,9 +272,9 @@ The table below reflects all ${er.asWrittenEffectCount} AS-WRITTEN declaration r
 for (const row of tableRows) {
   // row indices: 0=#, 1=EffectID, 2=Source, 3=Mode, 4=Timing, 5=RawPrimRank, 6=PracWritten, 7=PracExecuted, 8=EffRank, 9=Tier, 10=PtsForgone, 11=ExtraCost, 12=Setup, 13=Counterplay, 14=Reachability, 15=ThreatValue, 16=Status, 17=ProfileAvail, 18=Confidence
   const effId = row[1];
-  const threatRank = threatRankMap.get(effId) || '—';
-  const comebackRank = comebackRankMap.get(effId) || '—';
-  const snowballRank = snowballRankMap.get(effId) || '—';
+  const _threatRank = threatRankMap.get(effId) || '—';
+  const _comebackRank = comebackRankMap.get(effId) || '—';
+  const _snowballRank = snowballRankMap.get(effId) || '—';
   md += `| ${row[0]} | \`${row[1]}\` | ${row[2]} | ${row[3]} | ${row[4]} | ${row[5]} | ${row[6]} | ${row[7]} | ${row[8]} | **${row[9]}** | ${row[10]} | ${row[11]} | ${row[12]} | ${row[13]} | ${row[14]} | ${row[15]} | \`${row[16]}\` | ${row[17]} | \`${row[18]}\` |\n`;
 }
 
@@ -342,7 +342,7 @@ function rankStr(effectId, dimension, label) {
   return `#${rank}`;
 }
 
-function comparisonLine(effectId, label) {
+function comparisonLine(effectId, _label) {
   const wRank = rankStr(effectId, 'written', 'Practical Written');
   const eRank = executedRankMap.has(effectId) ? rankStr(effectId, 'executed', 'Practical Executed') : 'N/A (not executed)';
   const rawPrimId = effectToPrimitive.get(effectId);

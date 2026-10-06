@@ -46,7 +46,7 @@ import { isEligible } from './eligibility.mjs';
  * @returns {EvaluationResult}
  */
 export function evaluateAchievements(tracker, career, profileState, ctx) {
-  const catalogById = getCatalogById();
+  const _catalogById = getCatalogById();
   /** @type {UnlockResult[]} */
   const newUnlocks = [];
   /** @type {Record<string, any>} */

@@ -121,7 +121,7 @@ test('SQLite and InMemory listMatches return the same semantic MatchSummary', ()
     const memStore = new InMemoryMatchStore();
 
     for (const status of [MatchStatus.READY_CHECK, MatchStatus.RUNNING, MatchStatus.TERMINAL]) {
-      const { match, pids } = createMatchInStatus(status);
+      const { match, pids: _pids } = createMatchInStatus(status);
       sqliteStore.save(match);
       memStore.save(match);
     }

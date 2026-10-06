@@ -4,38 +4,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 // Reason code registry
-import {
-  REASON_CODES,
-  getReasonCode,
-  reasonShortText,
-  reasonDetailedText,
-  reasonRuleRef,
-  isVisibilitySafe,
-  mapEngineRejection,
-  auditReasonCodes,
-} from '../apps/lab-web/src/play/authority/reason-code-registry.js';
+import { REASON_CODES, getReasonCode, reasonShortText, reasonDetailedText, mapEngineRejection, auditReasonCodes } from '../apps/lab-web/src/play/authority/reason-code-registry.js';
 
 // Priority projection
-import {
-  derivePriorityContext,
-  priorityBannerText,
-  windowTypeLabel,
-  priorityTimeline,
-  WindowType,
-} from '../apps/lab-web/src/play/authority/priority-projection.js';
+import { derivePriorityContext, priorityBannerText, priorityTimeline, WindowType } from '../apps/lab-web/src/play/authority/priority-projection.js';
 
 // Legal action adapter
-import {
-  classifyActionForm,
-  classifyActionRanks,
-  isSpadesVariant,
-  isSuperDeclaration,
-  getSuperEffectId,
-  buildLegalActionContract,
-  groupActionsByTiming,
-  filterBySourceCard,
-  actionsForCard,
-} from '../apps/lab-web/src/play/authority/legal-action-adapter.js';
+import { classifyActionForm, isSpadesVariant, isSuperDeclaration, getSuperEffectId, buildLegalActionContract, groupActionsByTiming, filterBySourceCard, actionsForCard } from '../apps/lab-web/src/play/authority/legal-action-adapter.js';
 
 // Action explanation
 import {

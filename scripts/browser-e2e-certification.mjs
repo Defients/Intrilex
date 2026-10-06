@@ -997,7 +997,7 @@ async function main() {
     console.log('BROWSER E2E CERTIFICATION SKIP: Chrome/Chromium not found (set CHROMIUM_BIN env var or install Chrome)');
     process.exit(0);
   }
-  const chromeVersion = (await import('node:fs/promises')).readFile
+  const _chromeVersion = (await import('node:fs/promises')).readFile
     ? null // We'll get version from CDP
     : null;
 

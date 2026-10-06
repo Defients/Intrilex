@@ -12,20 +12,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import {
-  TournamentFormat,
-  TournamentStatus,
-  TournamentMatchStatus,
-  createTournament,
-  startTournament,
-  recordTournamentResult,
-  advanceSingleElimRound,
-  advanceSwissRound,
-  getChampion,
-  getSwissStandings,
-  singleElimRoundCount,
-  swissRoundCount,
-} from '../packages/account-domain/src/tournament-domain.mjs';
+import { TournamentFormat, TournamentStatus, TournamentMatchStatus, createTournament, startTournament, recordTournamentResult, getChampion, getSwissStandings, singleElimRoundCount } from '../packages/account-domain/src/tournament-domain.mjs';
 
 function makePlayer(id, seed) {
   return { publicPlayerId: id, displayName: `Player ${seed}`, handle: `p${seed}`, seed };

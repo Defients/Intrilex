@@ -216,6 +216,11 @@ function summarizeMechanics(mechanics, limit) {
     legalOpportunityCount: m.legalOpportunityCount,
     pickRateWhenLegal: m.pickRateWhenLegal ?? null,
     hasOpportunityData: m.hasOpportunityData ?? null,
+    // Choice identification: legal-but-unselected frames are the only
+    // observed support for declining an option — a high pick rate without
+    // them is descriptive regularity, not identified preference.
+    legalDeclinedCount: m.legalDeclinedCount ?? null,
+    choiceSupport: m.choiceSupport?.status ?? null,
     winAssociation: m.winAssociation ?? m.winRateAssociation ?? null,
     quarantined: m.quarantined ?? null
   }));

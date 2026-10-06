@@ -83,7 +83,7 @@ export function validateSnapshotPrivacy(snapshot) {
  * @param {string} opaqueSecret - Secret for generating opaque handles
  * @returns {object} Sanitized public replay
  */
-export function sanitizeReplayForPublic(replay, opaqueSecret) {
+export function sanitizeReplayForPublic(replay, _opaqueSecret) {
   if (!replay) return null;
   // Use the engine's publicCertifiedReplayView if available
   // This is the primary sanitization path

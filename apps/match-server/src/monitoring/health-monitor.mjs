@@ -81,7 +81,7 @@ export function startHealthMonitor(opts) {
       return;
     }
 
-    const now = Date.now();
+    const _now = Date.now();
     const alerts = [];
 
     // ── Connection density ──

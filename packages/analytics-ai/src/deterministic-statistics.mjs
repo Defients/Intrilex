@@ -11,6 +11,7 @@ export const DET_CHECK = Object.freeze({
   IMPOSSIBLE_PERCENT: 'IMPOSSIBLE_PERCENT',
   ZERO_DENOMINATOR: 'ZERO_DENOMINATOR',
   USAGE_VS_OPPORTUNITY: 'USAGE_VS_OPPORTUNITY',
+  CHOICE_SUPPORT: 'CHOICE_SUPPORT',
   SEAT_ASYMMETRY: 'SEAT_ASYMMETRY',
   WIN_RATE_UNCERTAINTY: 'WIN_RATE_UNCERTAINTY',
   SAMPLE_SIZE: 'SAMPLE_SIZE',
@@ -60,6 +61,9 @@ export function runDeterministicChecks(bundle = {}) {
 
   // ── Usage vs opportunity ──
   checkUsageVsOpportunity(warnings, { observatory, sourceId });
+
+  // ── Choice identification support ──
+  checkChoiceSupport(warnings, { observatory, sourceId });
 
   // ── Missing telemetry / fields ──
   checkMissingFields(warnings, { observatory, aggregate, sourceId });
@@ -202,6 +206,36 @@ function checkUsageVsOpportunity(warnings, { observatory, sourceId }) {
     if (opp != null && sel != null && opp > 0 && sel > opp) {
       add(warnings, { check: DET_CHECK.USAGE_VS_OPPORTUNITY, severity: DET_SEVERITY.HIGH, title: `Usage exceeds opportunity: ${m.mechanic || m.metricId}`, detail: `selectionCount=${sel} > legalOpportunityCount=${opp}. This suggests either double-counting or an opportunity-denominator bug.`, metric: `${m.metricId}.selectionCount`, value: sel, expected: opp, sourceId });
     }
+  }
+}
+
+// A high pick rate is only preference evidence when legal-but-unselected
+// frames exist. Below the identification threshold the rate is a descriptive
+// regularity — this check makes that limitation explicit before the LLM sees
+// the numbers. Where the artifact carries a canonical `choiceSupport`
+// classification we trust it; the local threshold is only a fallback for
+// legacy artifacts so this package stays dependency-free.
+const CHOICE_SUPPORT_MIN_DECLINES_FALLBACK = 20;
+function checkChoiceSupport(warnings, { observatory, sourceId }) {
+  const mechanics = observatory.mechanics || [];
+  for (const m of mechanics) {
+    const pickRate = m.pickRateWhenLegal ?? m.pickRate ?? null;
+    if (pickRate == null || pickRate < 0.9) continue;
+    const declined = m.legalDeclinedCount ?? m.choiceSupport?.declinedCount
+      ?? (m.legalOpportunityCount != null && m.selectionCount != null ? Math.max(0, m.legalOpportunityCount - m.selectionCount) : null);
+    const degenerate = m.choiceSupport?.status != null
+      ? (m.choiceSupport.status === 'limited' || m.choiceSupport.status === 'unsupported')
+      : (declined != null && declined < (m.choiceSupport?.minimum ?? CHOICE_SUPPORT_MIN_DECLINES_FALLBACK));
+    if (!degenerate || declined == null) continue;
+    add(warnings, {
+      check: DET_CHECK.CHOICE_SUPPORT,
+      severity: DET_SEVERITY.MEDIUM,
+      title: `Degenerate choice support: ${m.mechanic || m.metricId}`,
+      detail: `pickRate=${(pickRate * 100).toFixed(1)}% but only ${declined} legal-but-unselected frame(s) observed (< ${m.choiceSupport?.minimum ?? CHOICE_SUPPORT_MIN_DECLINES_FALLBACK}). This describes selection regularity, not identified preference — do not present it as agents preferring the mechanic or as causal win evidence.`,
+      metric: `${m.metricId}.pickRateWhenLegal`,
+      value: declined,
+      sourceId,
+    });
   }
 }
 

@@ -20,7 +20,7 @@ export function generateCommentary(viewModel, opts = {}) {
   const observations = [];
 
   // ── Board assessment: Effect Row control ──
-  const opponentER = viewModel.battlefield?.topER?.length > 0
+  const _opponentER = viewModel.battlefield?.topER?.length > 0
     ? viewModel.battlefield.topER
     : viewModel.battlefield?.bottomER ?? [];
   // Determine which ER is the opponent's

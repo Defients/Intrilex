@@ -15,7 +15,7 @@ import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
 import { createServer } from 'node:net';
 
-import { createMatch, ready } from '../packages/network-protocol/src/protocol.mjs';
+import { createMatch } from '../packages/network-protocol/src/protocol.mjs';
 import { ReasonCode } from '../packages/network-protocol/src/reason-codes.mjs';
 
 async function findFreePort() {
@@ -151,7 +151,7 @@ test('connection-binding: LEAVE_MATCH with mismatched matchId returns CONNECTION
     await new Promise(r => ws.on('open', r));
     ws.send(JSON.stringify(createMatch('core-unrestricted-authority')));
     const created = await waitForMessage(ws, 'MATCH_CREATED');
-    const matchId = created.payload.matchId;
+    const _matchId = created.payload.matchId;
     const p1Token = created.payload.participantToken;
 
     // Send LEAVE_MATCH for a different matchId — must not disconnect from the real match

@@ -1324,7 +1324,7 @@ function wireMatchReplayButtons() {
           btn.style.opacity = '';
           btn.style.color = '';
         }, 2000);
-      } catch (err) {
+      } catch {
         btn.textContent = 'Error';
         btn.style.color = 'var(--danger,#e55)';
         setTimeout(() => {

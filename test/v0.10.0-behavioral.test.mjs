@@ -223,7 +223,7 @@ describe('Decision Evidence Reconciliation', () => {
       for (const opt of opts) {
         if (opt.scoreSource === 'policy' && opt.score != null) {
           const comp = opt.scoreComponents ?? {};
-          const compSum = Object.values(comp).reduce((a, b) => a + (Number(b) || 0), 0);
+          const _compSum = Object.values(comp).reduce((a, b) => a + (Number(b) || 0), 0);
           if (opt.actualContributions) {
             const actSum = Object.values(opt.actualContributions).reduce((a, b) => a + (Number(b) || 0), 0);
             assert.equal(actSum, opt.actualTotal ?? opt.score,
@@ -281,12 +281,12 @@ describe('Rule Audits', () => {
   if (!fixture) { it('should have traces', () => assert.fail('No traces')); return; }
 
   it('27. Exhausted Pass fails if Exhausted is inactive', () => {
-    let foundExhaustedPassCheck = false;
+    let _foundExhaustedPassCheck = false;
     for (const trace of fixture.traces) {
       const checks = trace.ruleAudit?.checks ?? [];
       for (const check of checks) {
         if (check.checkId === 'exhausted-pass-forced') {
-          foundExhaustedPassCheck = true;
+          _foundExhaustedPassCheck = true;
           if (check.status === 'PASS') {
             assert.ok(check.observed?.exhaustedActive === true,
               'Exhausted Pass PASS must prove exhaustedActive');

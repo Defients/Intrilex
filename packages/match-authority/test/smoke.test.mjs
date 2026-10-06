@@ -7,7 +7,7 @@ import { InMemoryMatchStore } from '../src/match-store.mjs';
 import { evaluateMatchAchievements } from '../src/achievement-projection.mjs';
 
 function makeToken() { return randomBytes(32).toString('base64url'); }
-function makeId(p) { return `${p}-${randomBytes(8).toString('base64url')}`; }
+function _makeId(p) { return `${p}-${randomBytes(8).toString('base64url')}`; }
 
 test('exports are defined', () => {
   assert.ok(createAuthoritativeMatch);

@@ -11,19 +11,8 @@ import {
   buildObservatoryAnalytics,
   ANALYTICS_SCHEMA_VERSION,
 } from '@intrilex/analytics';
-import {
-  classifyTagDimension,
-  analyticsEntityDefinition,
-  synergyExcludedTags,
-  areTagsInseparable,
-  TAXONOMY_DIMENSIONS,
-} from '@intrilex/decision-intelligence/mechanic-registry';
-import {
-  evidenceGrade,
-  benjaminiHochberg,
-  logisticInteractionEstimate,
-  stratifiedInteractionEstimate,
-} from '@intrilex/statistics';
+import { classifyTagDimension, analyticsEntityDefinition, areTagsInseparable, TAXONOMY_DIMENSIONS } from '@intrilex/decision-intelligence/mechanic-registry';
+import { evidenceGrade, benjaminiHochberg, logisticInteractionEstimate } from '@intrilex/statistics';
 
 // ── Test data helpers ──
 const makeUnit = (i, a, b, win, opts = {}) => ({

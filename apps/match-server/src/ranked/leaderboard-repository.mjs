@@ -13,15 +13,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { createClient } from '@supabase/supabase-js';
-import {
-  processLeaderboardRows,
-  toLeaderboardEntry,
-  normalizeSearchQuery,
-  validateTierFilter,
-  DEFAULT_LEADERBOARD_LIMIT,
-  LEADERBOARD_PAGE_SIZE,
-  MAX_LEADERBOARD_LIMIT,
-} from '@intrilex/account-domain';
+import { toLeaderboardEntry, normalizeSearchQuery, validateTierFilter, DEFAULT_LEADERBOARD_LIMIT, LEADERBOARD_PAGE_SIZE, MAX_LEADERBOARD_LIMIT } from '@intrilex/account-domain';
 
 /**
  * @typedef {import('@intrilex/account-domain').LeaderboardEntry} LeaderboardEntry

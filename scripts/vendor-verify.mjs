@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFile, stat, writeFile, readdir } from 'node:fs/promises';
+import { readFile, writeFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

@@ -2,11 +2,11 @@
 // workspaces/tournament.js — /tournament workspace: AI tournament mode
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, definitionList, showToast, clamp } from '../state.js?v=ad40772959f0';
-import { rerender } from '../rerender.js?v=ad40772959f0';
-import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=ad40772959f0';
-import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=ad40772959f0';
-import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=ad40772959f0';
+import { state, app, esc, pct, showToast, clamp } from '../state.js?v=c4e7aaac019e';
+import { rerender } from '../rerender.js?v=c4e7aaac019e';
+import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=c4e7aaac019e';
+import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=c4e7aaac019e';
+import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=c4e7aaac019e';
 
 const ALL_POLICIES = [
   'random-legal','score-rush','control','tempo','value',
@@ -235,7 +235,7 @@ function renderTournamentAnalytics(tournament) {
     : '';
   // Sparkline per policy showing cumulative wins across rounds.
   // Reconstruct cumulative wins from the bracket round structure.
-  const sparkPerPolicy = policyEntries.map(([id, s]) => {
+  const sparkPerPolicy = policyEntries.map(([id, _s]) => {
     // Build a cumulative win count by walking rounds in order.
     const cumulative = [];
     let running = 0;
@@ -304,7 +304,7 @@ async function playNextMatch(tournament) {
   }
 }
 
-async function autoPlayTournament(tournament) {
+async function autoPlayTournament(_tournament) {
   if (state.tournamentRunning) return;
   state.tournamentAutoPlaying = true;
   state.tournamentRunning = true;
@@ -499,7 +499,7 @@ function liveSemanticLabel(command) {
 // ── Frame reconstruction from replay ────────────────────────────
 
 async function reconstructFrames(replay) {
-  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=ad40772959f0');
+  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=c4e7aaac019e');
   const engine = new IntrilexEngine();
   let s = structuredClone(replay.initialState);
   const frames = [{ state: s, events: [], command: null, commandIndex: -1 }];

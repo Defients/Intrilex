@@ -29,7 +29,7 @@ import {
 import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS } from './shared-analytics/metric-registry.mjs';
 import { wilsonInterval, normalCdf, differenceInProportions } from './shared-analytics/estimators.mjs';
 import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './shared-analytics/observatory-core.mjs';
-import { deriveTagRelations } from './shared-analytics/observatory-integrity.mjs';
+import { deriveTagRelations, choiceSupportStatus, CHOICE_SUPPORT_MIN_DECLINES } from './shared-analytics/observatory-integrity.mjs';
 
 export { ANALYTICS_SCHEMA_VERSION, wilsonInterval };
 const _formulaHashCache = {};
@@ -234,6 +234,7 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
     const legalOpportunityCount = units.reduce((sum, row) => sum + Number(row.mechanicOpportunityCounts?.[mechanic] ?? 0), 0);
     const hasOpportunityData = legalOpportunityCount > 0;
     const pickRateWhenLegal = hasOpportunityData ? selectionCount / legalOpportunityCount : null;
+    const legalDeclinedCount = hasOpportunityData ? Math.max(0, legalOpportunityCount - selectionCount) : null;
     const usedMatchIds = new Set(used.map((row) => row.matchId));
     const matchPrevalence = summaries.length > 0 ? usedMatchIds.size / summaries.length : 0;
     const matchPrevalenceWilson95 = wilsonInterval(usedMatchIds.size, summaries.length);
@@ -253,6 +254,10 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
           ? { status: 'available', value: pickRateWhenLegal, numerator: selectionCount, denominator: legalOpportunityCount }
           : { status: 'zero-opportunities', reasonCode: 'NO_LEGAL_OPPORTUNITIES', detail: 'Entity had zero legal opportunities in this campaign.' })
         : { status: 'missing-telemetry', reasonCode: 'MISSING_OPPORTUNITY_TELEMETRY', detail: 'Opportunity telemetry not recorded for this campaign.' },
+      legalDeclinedCount,
+      choiceSupport: hasOpportunityData
+        ? { status: choiceSupportStatus(legalDeclinedCount), declinedCount: legalDeclinedCount, minimum: CHOICE_SUPPORT_MIN_DECLINES }
+        : { status: 'unmeasured', reasonCode: 'MISSING_OPPORTUNITY_TELEMETRY', declinedCount: null, minimum: CHOICE_SUPPORT_MIN_DECLINES },
       matchOpportunityCount:summaries.length,
       analysisUnitOpportunityCount:units.length, usageUnit,
       participantPrevalence, participantPrevalenceWilson95,
@@ -272,7 +277,7 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       outcomeAssociation: association.estimate, outcomeAssociation95: association.interval, pValue: association.pValue,
       adjustedWinAssociation: adjustedAssociation.estimate, adjustedWinAssociation95: adjustedAssociation.interval,
       adjustedWinAssociationStatus: adjustedAssociation.estimate != null
-        ? { status: 'available', sampleSize: usedDecisive.length + unusedDecisive.length }
+        ? { status: 'available', sampleSize: usedDecisive.length + unusedDecisive.length, contributingStrata: adjustedAssociation.contributingStrata ?? null, skippedStrata: adjustedAssociation.skippedStrata ?? null }
         : { status: 'model-failed', reasonCode: 'STRATIFIED_ESTIMATOR_FAILED', detail: 'Stratified estimator could not produce a finite estimate.' },
       sampleSize,
       status:sampleSize?'measured':'not-observable', replayRefs:representativeMatches(units,row=>Number(row.mechanicCounts?.[mechanic]??0)>0),
@@ -284,6 +289,9 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       limitations:[
         `Participant prevalence uses ${usageUnit}-level observations and is policy-, seat-, and profile-conditioned.`,
         hasOpportunityData ? 'Pick rate when legal uses opportunity telemetry from the legality boundary.' : 'Opportunity-level pick rate is N/A — legal opportunity telemetry not available for this campaign.',
+        hasOpportunityData && legalDeclinedCount != null && legalDeclinedCount < CHOICE_SUPPORT_MIN_DECLINES
+          ? `Pick rate is not preference evidence — only ${legalDeclinedCount} legal-but-unselected frame${legalDeclinedCount === 1 ? '' : 's'} observed.`
+          : 'Pick rate reflects observed selection, not proven preference.',
         'Win association is an observational association, not causal proof.',
       ]
     };
@@ -303,20 +311,23 @@ function stratifiedWinAssociation(units, mechanic) {
     else group.unused.push(row);
   }
   let pooledDiff = 0, pooledWeight = 0;
+  let contributingStrata = 0, skippedStrata = 0;
   for (const group of strata.values()) {
-    if (!group.used.length || !group.unused.length) continue;
+    if (!group.used.length || !group.unused.length) { skippedStrata += 1; continue; }
     const usedWins = group.used.reduce((s, r) => s + unitWon(r), 0);
     const unusedWins = group.unused.reduce((s, r) => s + unitWon(r), 0);
     const p1 = usedWins / group.used.length, p0 = unusedWins / group.unused.length;
     const diff = p1 - p0;
     const v = (p1 * (1 - p1)) / group.used.length + (p0 * (1 - p0)) / group.unused.length;
-    if (v > 0) { const w = 1 / v; pooledDiff += diff * w; pooledWeight += w; }
+    if (v <= 0) { skippedStrata += 1; continue; }
+    const w = 1 / v;
+    pooledDiff += diff * w; pooledWeight += w; contributingStrata += 1;
   }
-  if (pooledWeight === 0) return { estimate: null, interval: [null, null] };
+  if (pooledWeight === 0) return { estimate: null, interval: [null, null], contributingStrata: 0, skippedStrata };
   const estimate = pooledDiff / pooledWeight;
   const se = Math.sqrt(1 / pooledWeight);
   const z95 = 1.959963984540054;
-  return { estimate, interval: [estimate - z95 * se, estimate + z95 * se] };
+  return { estimate, interval: [estimate - z95 * se, estimate + z95 * se], contributingStrata, skippedStrata };
 }
 
 // ── Synergies ──

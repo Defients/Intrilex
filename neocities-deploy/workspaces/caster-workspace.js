@@ -14,17 +14,17 @@
 // esc() — never raw innerHTML with model output.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js?v=ad40772959f0';
-import { policyOptions } from '../router.js?v=ad40772959f0';
-import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=ad40772959f0';
-import { reconstructReplayFrames } from '../replay-frames.js?v=ad40772959f0';
-import { mountGameTable } from '../client/mount.tsx?v=ad40772959f0';
+import { esc } from '../state.js?v=c4e7aaac019e';
+import { policyOptions } from '../router.js?v=c4e7aaac019e';
+import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=c4e7aaac019e';
+import { reconstructReplayFrames } from '../replay-frames.js?v=c4e7aaac019e';
+import { mountGameTable } from '../client/mount.tsx?v=c4e7aaac019e';
 
 // Lazy-loaded @intrilex/replay-caster (browser-bundleable subset).
 let casterModule = null;
 async function getCaster() {
   if (!casterModule) {
-    casterModule = await import('../replay-caster/browser-entry.js?v=ad40772959f0');
+    casterModule = await import('../replay-caster/browser-entry.js?v=c4e7aaac019e');
   }
   return casterModule;
 }
@@ -68,7 +68,7 @@ async function getAuthorityHash() {
 let _strictViewFn = null;
 async function getStrictView() {
   if (!_strictViewFn) {
-    const mod = await import('../autonomy-runtime.js?v=ad40772959f0');
+    const mod = await import('../autonomy-runtime.js?v=c4e7aaac019e');
     _strictViewFn = mod.strictView;
   }
   return _strictViewFn;
@@ -592,7 +592,7 @@ async function renderTheatre(appEl) {
 //   Top section (larger): Commentary display + WAIT WHAT
 //   Bottom section (smaller): Replay transport controls + timeline
 
-function buildCasterRightRail(session, beat, idx, total, ps, policyIds) {
+function buildCasterRightRail(session, beat, idx, total, ps, _policyIds) {
   const isFinished = beat.beatKind === 'MATCH_END';
   const winner = ps.winner;
 
@@ -682,7 +682,7 @@ function buildCasterRightRail(session, beat, idx, total, ps, policyIds) {
 
 // ── Wire up right rail transport controls ──────────────────────────
 
-function wireCasterRightRail(appEl, session, idx, total) {
+function wireCasterRightRail(appEl, session, _idx, _total) {
   const $ = (id) => appEl.querySelector(`#${id}`);
 
   const prevBtn = $('caster-prev');

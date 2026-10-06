@@ -5,7 +5,7 @@
 - **Package manager:** pnpm@10.11.0 (workspace monorepo)
 - **Build:** `pnpm run build` (engine-patch build + browser dist bundle)
 - **Test:** `pnpm test` (2400+ tests across 112+ suites, ~4 min; 0 fail expected)
-- **Lint:** `pnpm run lint` (0 errors expected; ~242 no-unused-vars warnings are pre-existing)
+- **Lint:** `pnpm run lint` (0 errors, 0 warnings expected — the `lint-ratchet` test pins `config/lint-baseline.json` at 0; keep it there. Unused params/vars use the `_` prefix convention; unused catch params use `catch {}`)
 - **Typecheck:** `npx tsc --noEmit` (0 errors; checkJs enabled via tsconfig.json)
 
 ## Key Commands

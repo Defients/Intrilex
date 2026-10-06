@@ -9,9 +9,9 @@
  * GOAP provides lightweight macro planning (≤3 goals, depth ≤2).
  */
 
-import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=ad40772959f0";
-import { applyPersonalityToScore } from "./personality.js?v=ad40772959f0";
-import { applyDifficultySelection } from "./difficulty.js?v=ad40772959f0";
+import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=c4e7aaac019e";
+import { applyPersonalityToScore } from "./personality.js?v=c4e7aaac019e";
+import { applyDifficultySelection } from "./difficulty.js?v=c4e7aaac019e";
 
 /**
  * Create the cognition engine for a bot.
@@ -201,7 +201,7 @@ export function createCognition(config, seed) {
     }
   }
 
-  function generateCandidates(btNodeId, perceived, memory, coordination, goals, tick) {
+  function generateCandidates(btNodeId, perceived, memory, coordination, goals, _tick) {
     const candidates = [];
 
     switch (btNodeId) {
@@ -335,7 +335,7 @@ export function createCognition(config, seed) {
     const key = action.id ?? action.type;
     const until = actionCooldowns.get(key);
     if (until == null) return false;
-    const cooldownTicks = Math.ceil((cogConfig.cooldownMs ?? 500) / (1000 / 60));
+    const _cooldownTicks = Math.ceil((cogConfig.cooldownMs ?? 500) / (1000 / 60));
     return tick < until;
   }
 
@@ -398,11 +398,11 @@ function evaluateRegroupNeed(perceived, coordination) {
   return 0.2;
 }
 
-function evaluateResourceValue(perceived) {
+function evaluateResourceValue(_perceived) {
   return 0.3;
 }
 
-function evaluateDefenseNeed(perceived, coordination) {
+function evaluateDefenseNeed(perceived, _coordination) {
   if (perceived.threats.length > 2) return 0.7;
   return 0.2;
 }

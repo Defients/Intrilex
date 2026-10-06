@@ -151,7 +151,7 @@ export function createSpectatorHandlers(ctx) {
     const view = match.getAuthorizedView([...match.participants.keys()][0]);
     const safeView = buildSpectatorView(view);
 
-    for (const [cid, conn] of connections) {
+    for (const [_cid, conn] of connections) {
       if (conn.isSpectator && conn.spectatingMatchId === match.matchId) {
         send(conn.ws, matchView(match.matchId, safeView));
       }

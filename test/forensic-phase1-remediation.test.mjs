@@ -189,7 +189,7 @@ test('IRX-H09: private match does not compute rating updates', async () => {
 // ── IRX-H10: Forfeit mechanism ──
 
 test('IRX-H10: forfeit() terminalizes match with remaining player as winner', async () => {
-  const { AuthoritativeMatchSession, MatchStatus, ConnectionState } = await import('../packages/match-authority/src/authoritative-match-session.mjs');
+  const { AuthoritativeMatchSession, MatchStatus, ConnectionState: _ConnectionState } = await import('../packages/match-authority/src/authoritative-match-session.mjs');
 
   const match = new AuthoritativeMatchSession({
     matchId: 'M-forfeit-test',

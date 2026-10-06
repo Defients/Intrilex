@@ -10,7 +10,7 @@
 // Open: reports/rank-glyph-qa.html
 // ═══════════════════════════════════════════════════════════════
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 

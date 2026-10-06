@@ -62,7 +62,7 @@ async function startAuthServer(opts = {}) {
 
 async function stopTestServer() {
   if (server) {
-    try { await server.close(); } catch (e) { /* ignore close errors */ }
+    try { await server.close(); } catch { /* ignore close errors */ }
     server = null;
   }
   if (verifier) { verifier.close(); verifier = null; }

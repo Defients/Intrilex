@@ -19,12 +19,7 @@ import { readFileSync } from 'node:fs';
 import { randomInt } from 'node:crypto';
 import { WebSocket } from 'ws';
 
-import {
-  matchHistory, matchHistoryResult,
-  validateEnvelope, validateMatchHistory,
-  createMatch,
-  ReasonCode,
-} from '../packages/network-protocol/src/protocol.mjs';
+import { matchHistory, matchHistoryResult, validateEnvelope, validateMatchHistory, createMatch } from '../packages/network-protocol/src/protocol.mjs';
 
 import { InMemoryMatchStore, SqliteMatchStore } from '../packages/match-authority/src/match-store.mjs';
 import { AuthoritativeMatchSession } from '../packages/match-authority/src/authoritative-match-session.mjs';

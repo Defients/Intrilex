@@ -2,9 +2,9 @@
 
 **Extract version:** 1.0.0
 **Analytics schema:** 4.2.0
-**Source hash:** `0b5695684f16b02bb0271069d1c7a38cd82fc762e2ce30265dd1272822696170`
+**Source hash:** `497b7a6564ef281b274e74dfeeb57c5691a1639a270f3dd544955ccd00408a84`
 **Aggregate hash:** `59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2`
-**Extract hash:** `3ec8e980c1a1e751a6426664e34e09965e6168cf8c86989baf1e8c11f1e12f96`
+**Extract hash:** `77d4964faf42f6a065f8e87362adb55bfb70f473b8b8c2153e123aa36099b2f7`
 
 ## Executive Summary
 
@@ -313,21 +313,21 @@ Replay refs: M-da33bf6f5bb04f175916, M-ec8f8ba09f1121a2d16f, M-9c890ada2c2ec493c
 
 <details><summary><b>ace-anchor</b></summary>
 
-Used in 3.5% of participant observations (7/200). Outcome association: negative (-0.222, CI [-0.564, 0.120]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 3.5% of participant observations (7/200). Outcome association: negative (-0.222, CI [-0.564, 0.120]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 6 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-f3fba5744ac97b09f3e9, M-581e8e1bf1c1db31783f, M-9c890ada2c2ec493c6f9, M-4e938b55c5c081cf4195
 </details>
 
 <details><summary><b>ace-base</b></summary>
 
-Used in 16.5% of participant observations (33/200). Outcome association: positive (0.163, CI [-0.017, 0.344]). Immediate point impact: mean 3.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 16.5% of participant observations (33/200). Outcome association: positive (0.163, CI [-0.017, 0.344]). Immediate point impact: mean 3.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 18 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-9e5f57461794b4359633, M-3e56af56c419de97ddc8, M-1b9ce7c6ecb94b540b09, M-71fc87e2f89eabd4d70c
 </details>
 
 <details><summary><b>ace-spade</b></summary>
 
-Used in 9.0% of participant observations (18/200). Outcome association: positive (0.122, CI [-0.115, 0.359]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 9.0% of participant observations (18/200). Outcome association: positive (0.122, CI [-0.115, 0.359]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 13 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-97e74d496af22ec1ef0c, M-581e8e1bf1c1db31783f, M-e50eb7181b42fcaf3c35, M-a6073e68be3dfa99914b
 </details>
@@ -355,28 +355,28 @@ Replay refs: M-0eb5279a20c8b5c7fadc, M-1e315378d0c99486e181, M-5f2660010ee9acaad
 
 <details><summary><b>bj-exile-recycle-CORE-003-CORE-016</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-97e74d496af22ec1ef0c
 </details>
 
 <details><summary><b>bj-exile-recycle-CORE-007</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 1 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-04f952648982b1b60b68
 </details>
 
 <details><summary><b>bj-exile-recycle-CORE-011</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-f1291cd390d331a3ffbb
 </details>
 
 <details><summary><b>bj-exile-recycle-skip</b></summary>
 
-Used in 2.5% of participant observations (5/200). Outcome association: positive (0.513, CI [0.443, 0.583]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 2.5% of participant observations (5/200). Outcome association: positive (0.513, CI [0.443, 0.583]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 3 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-67e0e95c9279752ebbb3, M-46ef419cc3ad42da20d8, M-d42c5a76b1a43e8227de, M-97ab3f793f2aeef24f57
 </details>
@@ -446,7 +446,7 @@ Replay refs: M-522454b71d0726b45836
 
 <details><summary><b>diamond-mimic-paired-super-j-tempo</b></summary>
 
-Used in 1.0% of participant observations (2/200). Outcome association: negative (-0.505, CI [-0.575, -0.435]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.0% of participant observations (2/200). Outcome association: negative (-0.505, CI [-0.575, -0.435]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 2 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-031ed40318b12b46cc1e, M-97ab3f793f2aeef24f57
 </details>
@@ -516,7 +516,7 @@ Replay refs: M-da33bf6f5bb04f175916, M-dfab048a83e3b8acc06c, M-1b9ce7c6ecb94b540
 
 <details><summary><b>eight-absolute-scuttle</b></summary>
 
-Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 10 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-fd7699a659985da0fd8b, M-82d0158eacf1f693fe2a, M-0cb7ff81422b13b69064, M-1e315378d0c99486e181
 </details>
@@ -530,21 +530,21 @@ Replay refs: M-da33bf6f5bb04f175916, M-1eda409b45784512a347, M-1b9ce7c6ecb94b540
 
 <details><summary><b>eight-scuttle</b></summary>
 
-Used in 5.5% of participant observations (11/200). Outcome association: positive (0.241, CI [-0.032, 0.513]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 5.5% of participant observations (11/200). Outcome association: positive (0.241, CI [-0.032, 0.513]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 1 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-9db1549bec3c58b78cff, M-4637c7fa222fd4f0e395, M-7d2e54be2e472d2f7c7d, M-754f798f908f9e4f73d8
 </details>
 
 <details><summary><b>eight-spade-free-scuttle</b></summary>
 
-Used in 5.5% of participant observations (11/200). Outcome association: positive (0.241, CI [-0.032, 0.513]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 5.5% of participant observations (11/200). Outcome association: positive (0.241, CI [-0.032, 0.513]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 2 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-7b7e7ab66d88f3491867, M-f1291cd390d331a3ffbb, M-b615ae18bd3e0f132ef8, M-a6073e68be3dfa99914b
 </details>
 
 <details><summary><b>exhausted-pass</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-7d2e54be2e472d2f7c7d
 </details>
@@ -789,7 +789,7 @@ Replay refs: M-0eb5279a20c8b5c7fadc, M-1e315378d0c99486e181, M-5f2660010ee9acaad
 
 <details><summary><b>jack-tempo</b></summary>
 
-Used in 1.5% of participant observations (3/200). Outcome association: negative (-0.169, CI [-0.707, 0.369]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.5% of participant observations (3/200). Outcome association: negative (-0.169, CI [-0.707, 0.369]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 9 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-9e5f57461794b4359633, M-97e74d496af22ec1ef0c, M-71fc87e2f89eabd4d70c
 </details>
@@ -803,14 +803,14 @@ Replay refs: M-da33bf6f5bb04f175916, M-0ff40b5b215e28c298ff, M-1b9ce7c6ecb94b540
 
 <details><summary><b>king-anchor</b></summary>
 
-Used in 5.0% of participant observations (10/200). Outcome association: negative (-0.421, CI [-0.620, -0.222]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 5.0% of participant observations (10/200). Outcome association: negative (-0.421, CI [-0.620, -0.222]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 9 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-ec8f8ba09f1121a2d16f, M-84269db284883330999c, M-1b9ce7c6ecb94b540b09, M-4756067b923a59fad42d
 </details>
 
 <details><summary><b>king-spade</b></summary>
 
-Used in 1.0% of participant observations (2/200). Outcome association: negative (-0.505, CI [-0.575, -0.435]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.0% of participant observations (2/200). Outcome association: negative (-0.505, CI [-0.575, -0.435]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-9e5f57461794b4359633, M-1b9ce7c6ecb94b540b09
 </details>
@@ -824,35 +824,35 @@ Replay refs: M-da33bf6f5bb04f175916, M-9ac093c9da6330a6fdec, M-1d9b0db8df3efa98a
 
 <details><summary><b>natural-four-reorder-CORE-026-CORE-022-CORE-024-CORE-028</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-9ac093c9da6330a6fdec
 </details>
 
 <details><summary><b>natural-four-reorder-draw-CORE-019-CORE-001-CORE-017-CORE-021</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-da33bf6f5bb04f175916
 </details>
 
 <details><summary><b>natural-four-reorder-draw-CORE-019-CORE-017-CORE-021-CORE-023</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-97ab3f793f2aeef24f57
 </details>
 
 <details><summary><b>natural-four-reorder-draw-CORE-038-CORE-040-CORE-042-CORE-044</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-1d9b0db8df3efa98ae2c
 </details>
 
 <details><summary><b>natural-four-reorder-draw-CORE-040-CORE-042-CORE-044-CORE-046</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-581e8e1bf1c1db31783f
 </details>
@@ -866,7 +866,7 @@ Replay refs: M-a0945b1315ef7a1c6d20, M-4756067b923a59fad42d, M-1b9ce7c6ecb94b540
 
 <details><summary><b>nine-anchor-discard</b></summary>
 
-Used in 4.0% of participant observations (8/200). Outcome association: positive (0.260, CI [-0.048, 0.569]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 4.0% of participant observations (8/200). Outcome association: positive (0.260, CI [-0.048, 0.569]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-a0945b1315ef7a1c6d20, M-7d2e54be2e472d2f7c7d, M-1b9ce7c6ecb94b540b09, M-97ab3f793f2aeef24f57
 </details>
@@ -894,7 +894,7 @@ Replay refs: M-581e8e1bf1c1db31783f, M-7d2e54be2e472d2f7c7d, M-1d9b0db8df3efa98a
 
 <details><summary><b>nine-tap</b></summary>
 
-Used in 28.0% of participant observations (56/200). Outcome association: negative (-0.248, CI [-0.395, -0.101]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 28.0% of participant observations (56/200). Outcome association: negative (-0.248, CI [-0.395, -0.101]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 17 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-da33bf6f5bb04f175916, M-f1291cd390d331a3ffbb, M-cc250cc50515a292f3e3, M-4756067b923a59fad42d
 </details>
@@ -943,35 +943,35 @@ Replay refs: M-da33bf6f5bb04f175916, M-6d0b4f6682536c727bbc, M-d42c5a76b1a43e822
 
 <details><summary><b>rank10-stack-theft</b></summary>
 
-Used in 3.5% of participant observations (7/200). Outcome association: negative (-0.222, CI [-0.564, 0.120]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 3.5% of participant observations (7/200). Outcome association: negative (-0.222, CI [-0.564, 0.120]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 6 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-67e0e95c9279752ebbb3, M-a70f77adb2c9476531b2, M-c7e06b8e9ceba7badd1b, M-950f525deedd2a7736c7
 </details>
 
 <details><summary><b>rank3-discard</b></summary>
 
-Used in 3.5% of participant observations (7/200). Outcome association: positive (0.370, CI [0.101, 0.639]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 3.5% of participant observations (7/200). Outcome association: positive (0.370, CI [0.101, 0.639]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-43ee676468dfdd29d4e0, M-4e938b55c5c081cf4195, M-1d9b0db8df3efa98ae2c, M-3dc3510153eebdf54abb
 </details>
 
 <details><summary><b>rank3-present</b></summary>
 
-Used in 1.0% of participant observations (2/200). Outcome association: negative (-0.505, CI [-0.575, -0.435]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.0% of participant observations (2/200). Outcome association: negative (-0.505, CI [-0.575, -0.435]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-7d2e54be2e472d2f7c7d, M-0cb7ff81422b13b69064
 </details>
 
 <details><summary><b>rank3-take</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-0cb7ff81422b13b69064
 </details>
 
 <details><summary><b>rank5-rummage</b></summary>
 
-Used in 5.5% of participant observations (11/200). Outcome association: positive (0.048, CI [-0.255, 0.351]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 5.5% of participant observations (11/200). Outcome association: positive (0.048, CI [-0.255, 0.351]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-da33bf6f5bb04f175916, M-2e7aa9b5e00505294fc0, M-1b9ce7c6ecb94b540b09, M-581e8e1bf1c1db31783f
 </details>
@@ -992,35 +992,35 @@ Replay refs: M-9e5f57461794b4359633, M-9ac093c9da6330a6fdec, M-1d9b0db8df3efa98a
 
 <details><summary><b>rank6-keep-return-top</b></summary>
 
-Used in 5.0% of participant observations (10/200). Outcome association: negative (-0.211, CI [-0.503, 0.082]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 5.0% of participant observations (10/200). Outcome association: negative (-0.211, CI [-0.503, 0.082]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 17 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-82d0158eacf1f693fe2a, M-031ed40318b12b46cc1e, M-1b9ce7c6ecb94b540b09, M-0cb7ff81422b13b69064
 </details>
 
 <details><summary><b>rank7-generated-advanced-ultra-three-black</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-1d9b0db8df3efa98ae2c
 </details>
 
 <details><summary><b>rank7-generated-four-row-clear</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-7d2e54be2e472d2f7c7d
 </details>
 
 <details><summary><b>rank7-hand-and-effect</b></summary>
 
-Used in 1.0% of participant observations (2/200). Outcome association: negative (0.000, CI [-0.696, 0.696]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.0% of participant observations (2/200). Outcome association: negative (0.000, CI [-0.696, 0.696]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 16 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-7d2e54be2e472d2f7c7d, M-1d9b0db8df3efa98ae2c
 </details>
 
 <details><summary><b>rank7-hand-and-score</b></summary>
 
-Used in 7.0% of participant observations (14/200). Outcome association: positive (0.154, CI [-0.107, 0.415]). Immediate point impact: mean 8.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 7.0% of participant observations (14/200). Outcome association: positive (0.154, CI [-0.107, 0.415]). Immediate point impact: mean 8.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 2 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-f3fba5744ac97b09f3e9, M-950f525deedd2a7736c7, M-1d9b0db8df3efa98ae2c, M-84269db284883330999c
 </details>
@@ -1062,7 +1062,7 @@ Replay refs: M-e50eb7181b42fcaf3c35
 
 <details><summary><b>royal-marriage</b></summary>
 
-Used in 4.5% of participant observations (9/200). Outcome association: negative (-0.058, CI [-0.390, 0.274]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 4.5% of participant observations (9/200). Outcome association: negative (-0.058, CI [-0.390, 0.274]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 8 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-f3fba5744ac97b09f3e9, M-cc2da4250ea78f0c5da4, M-b615ae18bd3e0f132ef8, M-fa05d1e275802242db55
 </details>
@@ -1083,133 +1083,133 @@ Replay refs: M-67e0e95c9279752ebbb3, M-a478ccdcc1e81c64bdb5, M-cc250cc50515a292f
 
 <details><summary><b>seven-scoring-trigger-take-CORE-001</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-a478ccdcc1e81c64bdb5
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-003</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-97e74d496af22ec1ef0c
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-006</b></summary>
 
-Used in 1.0% of participant observations (2/200). Outcome association: negative (0.000, CI [-0.696, 0.696]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.0% of participant observations (2/200). Outcome association: negative (0.000, CI [-0.696, 0.696]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 1 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-f3fba5744ac97b09f3e9, M-44dff5891c6198671640
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-015</b></summary>
 
-Used in 4.5% of participant observations (9/200). Outcome association: positive (0.175, CI [-0.142, 0.491]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 4.5% of participant observations (9/200). Outcome association: positive (0.175, CI [-0.142, 0.491]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 8 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-34f95691dcfd17f93e47, M-171e3ddc109606355fe8, M-71fc87e2f89eabd4d70c, M-4637c7fa222fd4f0e395
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-016</b></summary>
 
-Used in 4.5% of participant observations (9/200). Outcome association: positive (0.058, CI [-0.274, 0.390]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 4.5% of participant observations (9/200). Outcome association: positive (0.058, CI [-0.274, 0.390]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 11 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-34f95691dcfd17f93e47, M-c0ba3f945ece330667df, M-be23c86bf5150b63b8ce, M-3dc3510153eebdf54abb
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-017</b></summary>
 
-Used in 2.5% of participant observations (5/200). Outcome association: positive (0.308, CI [-0.050, 0.665]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 2.5% of participant observations (5/200). Outcome association: positive (0.308, CI [-0.050, 0.665]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 6 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-281a5cd2113c6a01ede0, M-015b0b148b1e1f8a9876, M-5f2660010ee9acaad412, M-9c21702da5d01e560631
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-018</b></summary>
 
-Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 6 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-f1291cd390d331a3ffbb, M-7d6730d8dab297d9def5, M-ee7b17238b5a8fc4f4f8, M-1b16b9dae9b5e9933821
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-019</b></summary>
 
-Used in 3.5% of participant observations (7/200). Outcome association: positive (0.370, CI [0.101, 0.639]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 3.5% of participant observations (7/200). Outcome association: positive (0.370, CI [0.101, 0.639]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 4 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-a70f77adb2c9476531b2, M-031ed40318b12b46cc1e, M-cc250cc50515a292f3e3, M-5f2660010ee9acaad412
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-020</b></summary>
 
-Used in 2.0% of participant observations (4/200). Outcome association: negative (0.000, CI [-0.495, 0.495]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 2.0% of participant observations (4/200). Outcome association: negative (0.000, CI [-0.495, 0.495]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 7 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-fd7699a659985da0fd8b, M-a478ccdcc1e81c64bdb5, M-f468fb9b0431f3ac6637, M-031ed40318b12b46cc1e
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-021</b></summary>
 
-Used in 1.5% of participant observations (3/200). Outcome association: negative (-0.169, CI [-0.707, 0.369]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.5% of participant observations (3/200). Outcome association: negative (-0.169, CI [-0.707, 0.369]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 3 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-0eb5279a20c8b5c7fadc, M-c7fa95689d660a49366b, M-f468fb9b0431f3ac6637
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-022</b></summary>
 
-Used in 3.0% of participant observations (6/200). Outcome association: positive (0.344, CI [0.037, 0.650]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 3.0% of participant observations (6/200). Outcome association: positive (0.344, CI [0.037, 0.650]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 2 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-a0945b1315ef7a1c6d20, M-d5b17d7b99557deb8cf5, M-cc250cc50515a292f3e3, M-97ab3f793f2aeef24f57
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-023</b></summary>
 
-Used in 1.0% of participant observations (2/200). Outcome association: positive (0.505, CI [0.435, 0.575]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.0% of participant observations (2/200). Outcome association: positive (0.505, CI [0.435, 0.575]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 2 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-45801dddc6b525246c7c, M-6f27bc08a55e9f60beda
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-024</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 5 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-4756067b923a59fad42d
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-025</b></summary>
 
-Used in 2.0% of participant observations (4/200). Outcome association: positive (0.510, CI [0.440, 0.580]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 2.0% of participant observations (4/200). Outcome association: positive (0.510, CI [0.440, 0.580]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 1 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-67e0e95c9279752ebbb3, M-dfab048a83e3b8acc06c, M-46ef419cc3ad42da20d8, M-754f798f908f9e4f73d8
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-027</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 1 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-c16d20b1a2a555dc6b2a
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-028</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-9e5f57461794b4359633
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-038</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-a6073e68be3dfa99914b
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-041</b></summary>
 
-Used in 1.0% of participant observations (2/200). Outcome association: positive (0.505, CI [0.435, 0.575]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.0% of participant observations (2/200). Outcome association: positive (0.505, CI [0.435, 0.575]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-950f525deedd2a7736c7, M-7d2e54be2e472d2f7c7d
 </details>
 
 <details><summary><b>seven-scoring-trigger-take-CORE-053</b></summary>
 
-Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-0cb7ff81422b13b69064
 </details>
@@ -1244,7 +1244,7 @@ Replay refs: M-f3fba5744ac97b09f3e9, M-950f525deedd2a7736c7, M-e50eb7181b42fcaf3
 
 <details><summary><b>spade-recovery</b></summary>
 
-Used in 1.5% of participant observations (3/200). Outcome association: negative (-0.169, CI [-0.707, 0.369]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.5% of participant observations (3/200). Outcome association: negative (-0.169, CI [-0.707, 0.369]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 6 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-3e56af56c419de97ddc8, M-04f952648982b1b60b68, M-0cb7ff81422b13b69064
 </details>
@@ -1293,7 +1293,7 @@ Replay refs: M-9c9a76ea4e99e1871ffa, M-581e8e1bf1c1db31783f, M-38bc37c903f30b850
 
 <details><summary><b>three-black-jack-pr</b></summary>
 
-Used in 1.5% of participant observations (3/200). Outcome association: positive (0.508, CI [0.438, 0.577]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.5% of participant observations (3/200). Outcome association: positive (0.508, CI [0.438, 0.577]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 3 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-cd7618de7602f750b9aa, M-5f0108d242d5ab67d089, M-ec8f8ba09f1121a2d16f
 </details>
@@ -1391,14 +1391,14 @@ Replay refs: M-9ac093c9da6330a6fdec, M-3e56af56c419de97ddc8, M-0cb7ff81422b13b69
 
 <details><summary><b>two-hold</b></summary>
 
-Used in 1.0% of participant observations (2/200). Outcome association: negative (-0.505, CI [-0.575, -0.435]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 1.0% of participant observations (2/200). Outcome association: negative (-0.505, CI [-0.575, -0.435]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 8 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-5ef9d016ebb1846cf10b, M-4e938b55c5c081cf4195
 </details>
 
 <details><summary><b>two-score</b></summary>
 
-Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 6 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.
 
 Replay refs: M-f3fba5744ac97b09f3e9, M-34f95691dcfd17f93e47, M-29d8421ee41250f8c875
 </details>

@@ -4,7 +4,7 @@
 // under the System nav section.
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc } from '../state.js';
+import { app, esc } from '../state.js';
 import { renderAnalyticsAiPanel } from '../analytics-ai/intelligence-panel.js';
 
 export function renderIntelligence() {

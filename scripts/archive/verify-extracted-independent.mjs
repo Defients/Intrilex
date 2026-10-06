@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const manifestPath = join(root, 'release/release-manifest.json');
-const archivesDir = join(root, 'release/archives');
+const _archivesDir = join(root, 'release/archives');
 
 function sha256File(filePath) {
   return new Promise((resolve, reject) => {

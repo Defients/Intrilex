@@ -13,7 +13,7 @@
 //   6. Prints the keys you need to paste into .env
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, readFileSync, writeFileSync, copyFileSync } from 'node:fs';
+import { existsSync, readFileSync, copyFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

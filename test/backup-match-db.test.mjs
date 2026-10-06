@@ -9,7 +9,7 @@
 // ═══════════════════════════════════════════════════════════════
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { mkdtempSync, rmSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';

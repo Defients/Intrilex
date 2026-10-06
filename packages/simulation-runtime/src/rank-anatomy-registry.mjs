@@ -145,7 +145,7 @@ function ordinaryBaselineRecord(rank) {
   return {
     effectIds: ordinaryModes,
     eligibleCardIds: CANONICAL_RANKS.includes(rank)
-      ? ['♣', '♦', '♥'].map(s => `${rank}${s}`).filter(id => rank !== 'RJ' && rank !== 'BJ')
+      ? ['♣', '♦', '♥'].map(s => `${rank}${s}`).filter(_id => rank !== 'RJ' && rank !== 'BJ')
       : [],
   };
 }

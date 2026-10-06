@@ -12,7 +12,7 @@
 //   - Non-judgmental (observes, doesn't grade)
 // ═══════════════════════════════════════════════════════════════
 
-import { mechanicDisplayName, mechanicCategory } from './mechanic-registry.mjs';
+import { mechanicDisplayName } from './mechanic-registry.mjs';
 
 /**
  * @typedef {Object} ReplayCommand
@@ -68,7 +68,7 @@ export function generateReplayLesson(replay) {
  */
 function generateCommentary(cmd, index, allCommands) {
   const player = cmd.playerId === 'P1' ? 'Player 1' : 'Player 2';
-  const action = cmd.action ?? cmd.type ?? 'unknown';
+  const _action = cmd.action ?? cmd.type ?? 'unknown';
 
   // Opening move commentary
   if (index === 0) {

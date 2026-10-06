@@ -17,7 +17,7 @@ import {
 } from '../packages/decision-intelligence/src/teaching-moments.mjs';
 
 const terminalSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel-terminal.mjs'), 'utf8');
-const teachingSrc = readFileSync(join(process.cwd(), 'packages/decision-intelligence/src/teaching-moments.mjs'), 'utf8');
+const _teachingSrc = readFileSync(join(process.cwd(), 'packages/decision-intelligence/src/teaching-moments.mjs'), 'utf8');
 const pkgSrc = readFileSync(join(process.cwd(), 'packages/decision-intelligence/package.json'), 'utf8');
 
 // ═══════════════════════════════════════════════════════════════

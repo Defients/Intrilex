@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const profilePath = path.join(root, 'apps/lab-web/src/play/local-profile.mjs');
-const { loadProfile, saveProfile, recordVerifiedResult, isStorageAvailable } = await import('file://' + profilePath.replace(/\\/g, '/'));
+const { loadProfile: _loadProfile, saveProfile: _saveProfile, recordVerifiedResult, isStorageAvailable: _isStorageAvailable } = await import('file://' + profilePath.replace(/\\/g, '/'));
 
 // ── Schema version ──────────────────────────────────────────────
 

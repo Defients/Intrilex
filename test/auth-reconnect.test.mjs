@@ -46,7 +46,7 @@ async function startAuthServer(identities = {}) {
 }
 
 async function stopTestServer() {
-  if (server) { try { await server.close(); } catch (e) { /* ignore close errors */ } server = null; }
+  if (server) { try { await server.close(); } catch { /* ignore close errors */ } server = null; }
   if (verifier) { verifier.close(); verifier = null; }
   await new Promise(r => setTimeout(r, 200));
 }

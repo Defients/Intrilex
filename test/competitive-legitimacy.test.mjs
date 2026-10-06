@@ -27,17 +27,7 @@ const funnelSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/first-
 import { validateReportPlayer } from '../packages/network-protocol/src/validation.mjs';
 
 // ── First-run funnel imports ──
-import {
-  FunnelStep,
-  loadFunnelState,
-  getCurrentStep,
-  isStepCompleted,
-  isFunnelComplete,
-  completeStep,
-  advanceToStep,
-  skipStep,
-  getNextAction,
-} from '../apps/lab-web/src/play/first-run-funnel.js';
+import '../apps/lab-web/src/play/first-run-funnel.js';
 
 // ═══════════════════════════════════════════════════════════════
 // B12: REPORT FLOW V1

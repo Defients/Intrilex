@@ -89,7 +89,7 @@ for (const matchup of MATCHUPS) {
   process.stderr.write(`\r  [${matchupIdx}/${MATCHUPS.length}] ${matchup.label}...          `);
 
   // Seat-balanced: run half with p1 in seat 1, half with p1 in seat 2
-  const halfCount = Math.floor(MATCHES_PER_MATCHUP / 2);
+  const _halfCount = Math.floor(MATCHES_PER_MATCHUP / 2);
 
 
   let p1Wins = 0, p2Wins = 0, draws = 0, errors = 0, unsupported = 0;
@@ -140,7 +140,7 @@ for (const matchup of MATCHUPS) {
       decisionCountSum += s.participants[0].decisionCount + s.participants[1].decisionCount;
       turnCountSum += s.completedFullTurns ?? 0;
       scoreMargins.push(s.scoreMargin ?? 0);
-    } catch (err) {
+    } catch {
       errors++;
       terminationReasons['ERROR'] = (terminationReasons['ERROR'] ?? 0) + 1;
     }

@@ -4,51 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 
-import {
-  getCatalog,
-  getCatalogById,
-  getAllIds,
-  getDefinition,
-  validateCatalog,
-  assertCatalogValid,
-  LAUNCH_CONSTRAINTS,
-  HIDDEN_ACHIEVEMENT_IDS,
-  AP_BY_RARITY,
-  RARITY,
-  CATEGORY,
-  PROGRESS_TYPE,
-  ELIGIBILITY_SCOPE,
-  createAchievementProfileState,
-  createMatchTracker,
-  createCareerTracker,
-  createTrackers,
-  serializeMatchTracker,
-  deserializeMatchTracker,
-  serializeCareerTracker,
-  deserializeCareerTracker,
-  deriveAchievementFacts,
-  createCheckpointFact,
-  reduceFacts,
-  reduceFact,
-  evaluateAchievements,
-  applyUnlocks,
-  computeTotalAP,
-  countEarned,
-  isEarned,
-  isQualifyingMatch,
-  isEligible,
-  localVsAIContext,
-  networkMatchContext,
-  migrateLegacyData,
-  isMigrated,
-  FACT_KIND,
-  ZONE,
-  LAUNCH_ZONE_SET,
-  CLEAN_SWEEP_ZONES,
-  LAUNCH_SPADES_EFFECTS,
-  CARD_MASTERY_ACHIEVEMENT_IDS,
-  getProgress,
-} from '../packages/achievements/src/index.mjs';
+import { getCatalog, getCatalogById, getAllIds, getDefinition, validateCatalog, assertCatalogValid, LAUNCH_CONSTRAINTS, HIDDEN_ACHIEVEMENT_IDS, AP_BY_RARITY, CATEGORY, PROGRESS_TYPE, createAchievementProfileState, createMatchTracker, createCareerTracker, createTrackers, serializeMatchTracker, deserializeMatchTracker, serializeCareerTracker, deserializeCareerTracker, deriveAchievementFacts, createCheckpointFact, reduceFacts, reduceFact, evaluateAchievements, applyUnlocks, computeTotalAP, countEarned, isEarned, isQualifyingMatch, isEligible, localVsAIContext, networkMatchContext, migrateLegacyData, isMigrated, FACT_KIND, LAUNCH_ZONE_SET, CLEAN_SWEEP_ZONES, LAUNCH_SPADES_EFFECTS, CARD_MASTERY_ACHIEVEMENT_IDS } from '../packages/achievements/src/index.mjs';
 
 import { evaluateMatchAchievements } from '../packages/match-authority/src/achievement-projection.mjs';
 

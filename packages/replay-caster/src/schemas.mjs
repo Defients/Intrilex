@@ -71,7 +71,7 @@ export const SPOILER_CHECK = Object.freeze({
 });
 
 const VALID_BEAT_KINDS = new Set(Object.values(BEAT_KIND));
-const VALID_MODES = new Set(Object.values(COMMENTARY_MODE));
+const _VALID_MODES = new Set(Object.values(COMMENTARY_MODE));
 const VALID_VIEWER = new Set(Object.values(VIEWER_MODE));
 const VALID_VERDICTS = new Set(Object.values(DIAGNOSTIC_VERDICT));
 
@@ -151,7 +151,7 @@ export function validateCommentaryRecord(obj) {
   }
   if (!isNonEmptyString(obj.commentary)) errors.push('commentary must be a non-empty string');
   if (obj.importance !== undefined && !isFiniteNumber(obj.importance)) errors.push('importance must be a number when present');
-  const spoiler = VALID_VERDICTS.has(obj.spoilerCheck) ? obj.spoilerCheck : SPOILER_CHECK.UNVERIFIED;
+  const _spoiler = VALID_VERDICTS.has(obj.spoilerCheck) ? obj.spoilerCheck : SPOILER_CHECK.UNVERIFIED;
   // spoilerCheck is constrained to the spoiler enum, not the diagnostic verdict enum
   const validSpoiler = [SPOILER_CHECK.PASS, SPOILER_CHECK.FAIL, SPOILER_CHECK.UNVERIFIED].includes(obj.spoilerCheck);
   const normalized = {

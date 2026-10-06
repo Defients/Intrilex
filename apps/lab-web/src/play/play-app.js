@@ -2231,7 +2231,7 @@ function bindNetworkReconnectEvents(container) {
           await session.connect();
           await session.reconnect();
           location.hash = '#/play/online/match';
-        } catch (error) {
+        } catch {
           container.innerHTML = renderNetworkReconnectDialog({
             matchId: session.matchId,
             canReconnect: true,
@@ -2564,7 +2564,7 @@ function handleInspectorShortcut(container) {
  * inspected card. Falls back to the selected source card. Honors the
  * hidden-info firewall (openAdvancedCardRules verifies inspectability).
  */
-function handleAdvancedRulesShortcut(container) {
+function handleAdvancedRulesShortcut(_container) {
   const cardId = state.inspectorCardId ?? state.selectedSourceCardId;
   if (!cardId) return;
   const snapshot = state.session?.getSnapshot();

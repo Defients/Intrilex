@@ -6,7 +6,7 @@
 // ── Global error handlers ────────────────────────────────────────
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
-  const el = document.querySelector('#app') ?? document.body;
+  const _el = document.querySelector('#app') ?? document.body;
   const banner = document.createElement('div');
   banner.className = 'notice danger';
   banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;padding:12px;';

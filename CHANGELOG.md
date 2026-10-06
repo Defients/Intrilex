@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased — October 6, 2026 Lint baseline cleanup
+
+- The lint suite is now clean: all 420 pre-existing `no-unused-vars` warnings
+  were resolved — dead import specifiers removed (fully-dead imports become
+  bare side-effect imports), intentionally-unused params/vars were `_`-prefixed,
+  and unused catch params became `catch {}`. The `lint-ratchet` baseline
+  (`config/lint-baseline.json`) is pinned at 0, so new warnings now fail tests.
+- `eslint.config.mjs` gains `caughtErrorsIgnorePattern: '^_'`, consistent with
+  the existing `argsIgnorePattern`/`varsIgnorePattern` convention.
+- Removed accidentally committed scratch files: `poop.md` (a pasted task prompt)
+  and stale `ranked-duel-hub.mjs.bak` copies (src, dist, and the tracked
+  `neocities-deploy/` mirror).
+
 ## Unreleased — October 4, 2026 Information-set Strategy Studies
 
 - Added sealed opening Information Sets, source-independent unseen-card/fresh-RNG

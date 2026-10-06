@@ -201,7 +201,7 @@ export function createCognition(config, seed) {
     }
   }
 
-  function generateCandidates(btNodeId, perceived, memory, coordination, goals, tick) {
+  function generateCandidates(btNodeId, perceived, memory, coordination, goals, _tick) {
     const candidates = [];
 
     switch (btNodeId) {
@@ -335,7 +335,7 @@ export function createCognition(config, seed) {
     const key = action.id ?? action.type;
     const until = actionCooldowns.get(key);
     if (until == null) return false;
-    const cooldownTicks = Math.ceil((cogConfig.cooldownMs ?? 500) / (1000 / 60));
+    const _cooldownTicks = Math.ceil((cogConfig.cooldownMs ?? 500) / (1000 / 60));
     return tick < until;
   }
 
@@ -398,11 +398,11 @@ function evaluateRegroupNeed(perceived, coordination) {
   return 0.2;
 }
 
-function evaluateResourceValue(perceived) {
+function evaluateResourceValue(_perceived) {
   return 0.3;
 }
 
-function evaluateDefenseNeed(perceived, coordination) {
+function evaluateDefenseNeed(perceived, _coordination) {
   if (perceived.threats.length > 2) return 0.7;
   return 0.2;
 }

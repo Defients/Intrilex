@@ -71,7 +71,7 @@ async function bundle() {
   // "Could not resolve node:crypto". The shim re-exports the browser crypto
   // shim's hash primitives and defines the pure helpers.
   const sharedBrowserShim = path.join(dist, 'shared-browser.js');
-  const jsResult = await esbuild.build({
+  const _jsResult = await esbuild.build({
     entryPoints: [entryJs],
     bundle: true,
     splitting: true,

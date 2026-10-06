@@ -13,7 +13,7 @@
 // visibility-safe explanations.
 // ═══════════════════════════════════════════════════════════════
 
-import { REASON_CODE_VOCABULARY } from '@intrilex/decision-intelligence/reason-codes';
+import '@intrilex/decision-intelligence/reason-codes';
 
 /**
  * @typedef {Object} ActionIntrospection
@@ -95,7 +95,7 @@ export function introspectAllLegalActions(state, adapter) {
  * @param {object} adapter - Engine adapter
  * @returns {{ code: string, shortText: string, detailedText: string, ruleRef: string|null, visibilitySafe: boolean }}
  */
-function determineIllegalReason(state, action, adapter) {
+function determineIllegalReason(state, action, _adapter) {
   const actionType = action.type ?? action.id ?? 'unknown';
   const phase = state.phase ?? 'UNKNOWN';
 

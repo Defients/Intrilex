@@ -24,20 +24,14 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import {
-  RankTier, Division, RANK_LADDER, PLACEMENTS_REQUIRED,
-  TIER_THRESHOLDS, tierBounds, tierOrdinal, isApexTier, tierHasDivisions,
-  ratingToTierDivision, progressInTier,
-} from '../packages/account-domain/src/rank-tier.mjs';
+import { RankTier, Division, RANK_LADDER, PLACEMENTS_REQUIRED, TIER_THRESHOLDS, tierBounds, ratingToTierDivision, progressInTier } from '../packages/account-domain/src/rank-tier.mjs';
 import {
   DEFAULT_RATING, PROVISIONAL_THRESHOLD, computeRatingUpdate, initialRatingState,
 } from '../packages/account-domain/src/rating.mjs';
 import {
   GLICKO2_TAU, DEFAULT_RATING_DEVIATION, DEFAULT_VOLATILITY,
 } from '../packages/account-domain/src/glicko2.mjs';
-import {
-  RANK_TIER_PRESENTATION, RANKED_GLYPH_BASE, resolveGlyphPath, rankLabel,
-} from '../apps/lab-web/src/play/rank/rank-presentation.mjs';
+import { resolveGlyphPath } from '../apps/lab-web/src/play/rank/rank-presentation.mjs';
 import {
   computeRatingDemos, renderRankLadder, renderRungDetail,
   renderPlayerRankCard, renderHowRatingWorks, renderAdvancedDetails,

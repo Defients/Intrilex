@@ -24,7 +24,7 @@
  * @param {object} [opts.adapter] - Engine adapter instance (must have createInitialState, legalActions, execute, isTerminal, stateHash)
  * @returns {{ passed: boolean, actionsExecuted: number, error?: string, hash?: string }}
  */
-export function fuzzOnce({ seed, maxActions = 200, profileId = 'core-unrestricted-authority', adapter = null }) {
+export function fuzzOnce({ seed, maxActions = 200, profileId: _profileId = 'core-unrestricted-authority', adapter = null }) {
   // Simple seeded PRNG (mulberry32)
   let s = seed >>> 0;
   const rng = () => {
@@ -115,7 +115,7 @@ export function fuzzCampaign({ iterations, maxActions, profileId, adapter = null
  * @param {object} adapter - Engine adapter
  * @returns {{ passed: boolean, error?: string }}
  */
-function checkInvariants(state, adapter) {
+function checkInvariants(state, _adapter) {
   // 1. State must be a non-null object
   if (!state || typeof state !== 'object') {
     return { passed: false, error: 'state is not an object' };

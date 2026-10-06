@@ -11,26 +11,19 @@ import {
   verifyAuthorityCertifiedReplay
 } from '@intrilex/engine-adapter';
 import { hashCanonical } from '@intrilex/shared';
-import {
-  verifyAnchorAuthority,
-  isFullHash,
-  reconcileLegacyCheckpointHash,
-  installAnchorHash,
-  verifiedAnchorHash,
-  REQUIRED_ANCHOR_FIELDS
-} from '@intrilex/decision-intelligence/anchor';
+import { verifyAnchorAuthority, isFullHash, reconcileLegacyCheckpointHash, installAnchorHash, REQUIRED_ANCHOR_FIELDS } from '@intrilex/decision-intelligence/anchor';
 import { runPairedCounterfactual } from '@intrilex/simulation-runtime/counterfactual';
 
 installAnchorHash(hashCanonical);
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const read = (rel) => readFileSync(path.join(root, rel), 'utf8');
+const _read = (rel) => readFileSync(path.join(root, rel), 'utf8');
 
 // Dynamically find a match that has both decision traces and an authorized replay
 const traceDir = path.join(root, 'sample-data/autonomy/decision-traces');
 const replayDir = path.join(root, 'sample-data/autonomy/replays/authorized');
 const traceFiles = readdirSync(traceDir).filter(f => f.endsWith('.json'));
-let MATCH_ID = null, AUTHENTIC_DECISION_ID = null, traceFile = null, retainedTrace = null, replay = null;
+let MATCH_ID = null, AUTHENTIC_DECISION_ID = null, _traceFile = null, retainedTrace = null, replay = null;
 for (const f of traceFiles) {
   const id = f.replace('.json', '');
   const replayPath = path.join(replayDir, `${id}.authorized.replay.json`);
@@ -42,7 +35,7 @@ for (const f of traceFiles) {
     verifyAuthorityCertifiedReplay(r);
     MATCH_ID = id;
     AUTHENTIC_DECISION_ID = tf.traces[0].decisionId;
-    traceFile = tf;
+    _traceFile = tf;
     retainedTrace = tf.traces[0];
     replay = r;
     break;

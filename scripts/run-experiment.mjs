@@ -17,9 +17,9 @@ import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
 
 import { runCampaign, campaignAggregate } from '@intrilex/simulation-runtime/campaign';
-import { runPolicyMatch } from '@intrilex/simulation-runtime';
-import { POLICY_CATALOG, POLICY_BY_ID } from '@intrilex/simulation-runtime/policy-catalog';
-import { hashCanonical } from '@intrilex/shared';
+import '@intrilex/simulation-runtime';
+import { POLICY_CATALOG } from '@intrilex/simulation-runtime/policy-catalog';
+import '@intrilex/shared';
 import { loadReleaseIdentity } from '@intrilex/shared/release-identity';
 import { wilsonInterval } from '@intrilex/statistics';
 

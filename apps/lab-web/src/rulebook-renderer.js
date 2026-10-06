@@ -827,7 +827,7 @@ function renderShowcaseParts(mdText) {
   let current = [];
   let partTitle = null;
   let partKey = null;
-  let isFirstBlock = true;
+  let _isFirstBlock = true;
 
   const flush = () => {
     if (!current.length) return;
@@ -843,7 +843,7 @@ function renderShowcaseParts(mdText) {
       blocks.push(`<div class="showcase-frontmatter">${hero}<div class="showcase-frontmatter-body">${body}</div></div>`);
     }
     current = [];
-    isFirstBlock = false;
+    _isFirstBlock = false;
   };
 
   for (const line of lines) {

@@ -42,7 +42,7 @@ export function migrateLegacyData(legacyProfile, legacyStats, existingAchievemen
 
   const timestamp = new Date().toISOString();
   /** @param {string} id */
-  const unlockRecord = (id) => ({
+  const _unlockRecord = (id) => ({
     achievementId: id,
     unlockedAt: timestamp,
     matchId: null,

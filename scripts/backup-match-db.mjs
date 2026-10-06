@@ -40,7 +40,7 @@
 
 import { createRequire } from 'node:module';
 import { mkdirSync, existsSync, readdirSync, unlinkSync, statSync } from 'node:fs';
-import { join, dirname, basename, extname } from 'node:path';
+import { join, basename, extname } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createGzip } from 'node:zlib';
 import { createReadStream, createWriteStream } from 'node:fs';

@@ -411,10 +411,10 @@ export function validateQueueJoin(payload) {
 
 /**
  * Validate a QUEUE_LEAVE payload.
- * @param {Record<string, *>} payload - Message payload
+ * @param {Record<string, *>} _payload - Message payload
  * @returns {ValidationResult}
  */
-export function validateQueueLeave(payload) {
+export function validateQueueLeave(_payload) {
   // QUEUE_LEAVE has no required fields
   return ok();
 }
@@ -433,10 +433,10 @@ export function validateSpectateMatch(payload) {
 
 /**
  * Validate a SPECTATE_LEAVE payload.
- * @param {Record<string, *>} payload - Message payload
+ * @param {Record<string, *>} _payload - Message payload
  * @returns {ValidationResult}
  */
-export function validateSpectateLeave(payload) {
+export function validateSpectateLeave(_payload) {
   // SPECTATE_LEAVE has no required fields
   return ok();
 }

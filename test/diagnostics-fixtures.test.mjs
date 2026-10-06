@@ -24,7 +24,7 @@ test('decision traces exist as positive fixtures for diagnostics', async () => {
 test('diagnostics pipeline produces valid output from retained traces', async () => {
   // Load the browser-side diagnostics function
   const browserDiagPath = path.join(root, 'apps/lab-web/src/decision-intelligence.js');
-  const browserDiagUrl = `file://${browserDiagPath.replace(/\\/g, '/')}`;
+  const _browserDiagUrl = `file://${browserDiagPath.replace(/\\/g, '/')}`;
   // The browser decision-intelligence imports from autonomy-runtime and engine
   // which have browser-specific imports. We'll test the diagnostics logic directly.
   // Instead, verify the Node-side diagnostics produces valid output.

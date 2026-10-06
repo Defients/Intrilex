@@ -2,14 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import {
-  createSimulationState,
-  advanceSimulationToDecision,
-  createSimulationDecisionFrame,
-  executeSimulationAction,
-  CORE_ADVANCED_AUTHORITY_PROFILE,
-  CORE_UNRESTRICTED_AUTHORITY_PROFILE,
-} from '@intrilex/engine-adapter';
+import { createSimulationState, advanceSimulationToDecision, CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE } from '@intrilex/engine-adapter';
 import { actionComposition } from '@intrilex/engine-adapter/action-composition';
 import { runPolicyMatch } from '@intrilex/simulation-runtime';
 

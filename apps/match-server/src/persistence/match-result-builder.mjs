@@ -7,16 +7,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { createHash } from 'node:crypto';
-import {
-  computeRatingUpdate,
-  deriveOutcome,
-  initialRatingState,
-  DEFAULT_RATING,
-  DEFAULT_RATING_DEVIATION,
-  DEFAULT_VOLATILITY,
-  RANKED_QUEUE_ID,
-} from '@intrilex/account-domain';
-import { ENGINE_VERSION, RULES_VERSION } from '@intrilex/engine-adapter';
+import { computeRatingUpdate, deriveOutcome, initialRatingState, RANKED_QUEUE_ID } from '@intrilex/account-domain';
+import { RULES_VERSION } from '@intrilex/engine-adapter';
 import { MatchStatus } from '@intrilex/match-authority';
 
 /**

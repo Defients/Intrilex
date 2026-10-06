@@ -4,7 +4,7 @@
 // Respects reduced-motion, aria-live, and mute settings.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDefinition, RARITY_SYMBOL, AP_BY_RARITY } from '../../achievements/index.mjs';
+import { getDefinition, RARITY_SYMBOL } from '../../achievements/index.mjs';
 
 /**
  * AchievementPresenter manages the unlock toast notification queue.
@@ -100,7 +100,7 @@ export class AchievementPresenter {
    * @param {object} unlock - Unlock result
    * @returns {HTMLElement}
    */
-  _createToast(def, unlock) {
+  _createToast(def, _unlock) {
     const toast = document.createElement('div');
     toast.className = `achievement-toast achievement-rarity-${def.rarity.toLowerCase()}`;
     toast.style.cssText = [

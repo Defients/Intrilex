@@ -790,7 +790,7 @@ class ModerationService {
    * @param {string|null} notes
    * @private
    */
-  _applyMute(accountId, moderatorAccountId, durationMs, reason, reportId, notes) {
+  _applyMute(accountId, moderatorAccountId, durationMs, reason, reportId, _notes) {
     const mutedUntil = durationMs > 0 ? Date.now() + durationMs : null; // null = permanent
     this._mutes.set(accountId, { mutedUntil, reason, reportId });
   }

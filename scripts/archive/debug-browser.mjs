@@ -32,7 +32,7 @@ const server = createServer(async (req, res) => {
     const mime = MIME[extname(filePath)] || 'application/octet-stream';
     res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'no-cache' });
     res.end(data);
-  } catch (e) {
+  } catch {
     console.log(`404: ${req.url}`);
     res.writeHead(404); res.end('Not found');
   }
@@ -107,7 +107,7 @@ server.listen(8787, '127.0.0.1', async () => {
       console.log('Page state:', JSON.stringify(result.result.value, null, 2));
       
       // Also check console errors
-      const consoleResult = await send('Runtime.evaluate', {
+      const _consoleResult = await send('Runtime.evaluate', {
         expression: `(() => {
           const errors = [];
           const origError = console.error;

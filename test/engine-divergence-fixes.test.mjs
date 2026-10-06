@@ -23,7 +23,7 @@ async function readNeocities(file) {
   return await readFile(path.join(neocitiesDir, file), 'utf8');
 }
 
-async function readSource(file) {
+async function _readSource(file) {
   return await readFile(path.join(upstreamSrc, file), 'utf8');
 }
 

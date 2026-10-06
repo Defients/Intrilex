@@ -90,7 +90,7 @@ export function renderCardReference(container) {
 function renderGalleryHTML(cards, family) {
   const filtered = family === 'all' ? cards : cards.filter(c => c.family === family);
   return filtered.map(card => {
-    const suit = getSuit(card.suit);
+    const _suit = getSuit(card.suit);
     return `<button class="card-ref-item" data-card-identity="${esc(card.identity)}" aria-label="Inspect ${esc(card.identity)}">
       ${renderCardFace(card.identity, { view: 'board' })}
       <span class="card-ref-item-label">${esc(card.identity)}</span>
@@ -218,7 +218,7 @@ function buildWhenToPlayGuidance(card) {
  * @param {number} pv - Point value
  * @returns {string} HTML string
  */
-function buildScoringSummary(card, pv) {
+function buildScoringSummary(card, _pv) {
   const parts = [];
   if (card.prValue != null) {
     parts.push(`<span class="card-ref-scoring-pr">PR: ${card.prValue} IR</span>`);

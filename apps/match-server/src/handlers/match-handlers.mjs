@@ -329,7 +329,7 @@ export function createMatchHandlers(ctx) {
       logEvent('matchStart', { matchId: match.matchId, profileId: match.profileId });
 
       // Broadcast MATCH_STARTED to both participants
-      for (const [pid, p] of match.participants) {
+      for (const [pid, _p] of match.participants) {
         const view = match.getAuthorizedView(pid);
         const safeView = buildNetworkPlayerView(view);
         const targetConn = findConnectionByParticipant(pid, match.matchId);

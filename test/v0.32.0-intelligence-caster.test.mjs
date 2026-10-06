@@ -51,8 +51,8 @@ test('v0.32.0: bounded lookahead search is deterministic', async () => {
     maxNodes: 50,
     maxDepth: 1,
     evaluationFn: defaultEvaluation,
-    simulateFn: (state, command) => ({ state: { ...state, scores: { ...state.scores, P1: (state.scores.P1 || 0) + 1 } }, accepted: true, error: null }),
-    enumerateActionsFn: (state) => ({
+    simulateFn: (state, _command) => ({ state: { ...state, scores: { ...state.scores, P1: (state.scores.P1 || 0) + 1 } }, accepted: true, error: null }),
+    enumerateActionsFn: (_state) => ({
       legalActions: [{ actionId: 'a1', playerId: 'P2' }, { actionId: 'a2', playerId: 'P2' }],
       resolveAction: (id) => ({ actionId: id }),
       status: 'OK',
@@ -75,8 +75,8 @@ test('v0.32.0: bounded lookahead respects node budget', async () => {
     maxNodes: 5,
     maxDepth: 1,
     evaluationFn: defaultEvaluation,
-    simulateFn: (state, command) => ({ state: { ...state }, accepted: true, error: null }),
-    enumerateActionsFn: (state) => ({
+    simulateFn: (state, _command1) => ({ state: { ...state }, accepted: true, error: null }),
+    enumerateActionsFn: (_state1) => ({
       legalActions: [
         { actionId: `a1`, playerId: 'P2' },
         { actionId: `a2`, playerId: 'P2' },
@@ -180,7 +180,7 @@ test('v0.32.0: authorizeFacts returns authorized facts for public viewer', async
 });
 
 test('v0.32.0: authorizeFacts includes diagnostic facts in dev observatory mode', async () => {
-  const { authorizeFacts, FACT_TYPE } = await import('../packages/replay-caster/src/commentary-contract.mjs');
+  const { authorizeFacts, FACT_TYPE: _FACT_TYPE } = await import('../packages/replay-caster/src/commentary-contract.mjs');
   const beat = {
     beatId: 'CB-test',
     beatKind: 'DECISION',

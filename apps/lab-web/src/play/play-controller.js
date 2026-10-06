@@ -161,7 +161,7 @@ export class PlaySession {
     const PolicyRng = auto.PolicyRng ?? createPolicyRng;
     const uint32FromHash = (v) => Number.parseInt(hashCanonical(v).slice(0, 8), 16) >>> 0 || 1;
     this._rngByPlayer = Object.fromEntries(
-      ['P1', 'P2'].map((playerId, index) => [
+      ['P1', 'P2'].map((playerId, _index) => [
         playerId,
         new PolicyRng(uint32FromHash({ seed: stateSetup.seed, playerId, policyId: setup.aiPolicyId, stream: 'POLICY_V4' })),
       ])

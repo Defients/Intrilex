@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { writeFile } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
+import 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
 // ── Finding definitions ──

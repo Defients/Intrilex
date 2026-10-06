@@ -18,7 +18,7 @@ import { renderEvolutionLab, cleanupEvolutionLab } from './workspaces/evolution.
 import { renderStrategy, cleanupStrategy } from './strategy/strategy-workspace.js';
 import { renderBranches} from './workspaces/branches.js';
 import { renderForensicWorkspace, initForensicViewer, getForensicState, setCurrentFrame, renderForensicSidebar, renderForensicComparisonOverlay, renderFrameCommentary, handleForensicAction } from './forensic/forensic-viewer.mjs';
-import { frameSummary as forensicFrameSummary, branchesAtFrame as forensicBranchesAtFrame, annotationsAtFrame as forensicAnnotationsAtFrame, sortedBookmarks as forensicSortedBookmarks } from './forensic/forensic-model.mjs';
+import { frameSummary as forensicFrameSummary, branchesAtFrame as forensicBranchesAtFrame } from './forensic/forensic-model.mjs';
 import { renderEvidence } from './workspaces/evidence.js';
 import { renderReleaseNotes } from './workspaces/release-notes.js';
 import { renderIntelligence } from './workspaces/intelligence.js';
@@ -36,7 +36,7 @@ import { renderSettings } from './workspaces/settings.js';
 import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js';
 import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js';
 import { renderPrivacyPage, renderTermsPage } from './legal-pages.js';
-import { applyRouteMetadata, populateObservatoryShellText, populateDialogHeading } from './seo-metadata.js';
+import { applyRouteMetadata, populateObservatoryShellText } from './seo-metadata.js';
 
 // IRX-M32: Play-related modules are dynamically imported to enable code splitting.
 // The esbuild bundler (splitting: true) creates separate lazy chunks for these
@@ -1597,7 +1597,7 @@ async function loadContinueCard() {
     if (!save) return;
     // Build rich metadata from the save summary (v2 envelope) or fall back to basics
     const sum = save.summary;
-    const mode = sum?.mode ?? (save.mode ? String(save.mode).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : 'Local vs AI');
+    const _mode = sum?.mode ?? (save.mode ? String(save.mode).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : 'Local vs AI');
     const turn = sum?.turn ? `Turn ${sum.turn}` : (save.stableBoundary?.turn ? `Turn ${save.stableBoundary.turn}` : '');
     const score = (sum && typeof sum.humanScore === 'number') ? `${sum.humanScore}\u2013${sum.opponentScore}` : '';
     const parts = [turn, score].filter(Boolean);

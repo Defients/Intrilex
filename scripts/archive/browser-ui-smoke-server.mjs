@@ -58,7 +58,7 @@ async function connectCdp(port) {
   return { socket, evaluate, call };
 }
 
-async function waitFor(evaluate, predicate, { label = 'condition', timeout = 15000 } = {}) {
+async function _waitFor(evaluate, predicate, { label = 'condition', timeout = 15000 } = {}) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
     const result = await evaluate(`(${predicate})()`);

@@ -3,7 +3,7 @@
 // Strictly read-only relative to canonical gameplay; outputs report and CSV/JSON artifacts.
 
 import fs from 'fs';
-import path from 'path';
+import 'path';
 
 // 1. Definition of the 102 Declaration Routes and their respective Primitives
 // Each route captures:

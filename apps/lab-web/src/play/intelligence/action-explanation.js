@@ -114,7 +114,7 @@ export function buildWhyExplanation(contract, cardRegistry, guidanceMode = Guida
  * @param {object} rankAnatomyData - Rank Anatomy registry data (optional)
  * @returns {object} { rankAnatomyLinks, mechanicsLinks, evidenceLinks }
  */
-export function buildDeeperExplanation(contract, cardRegistry, rankAnatomyData = null) {
+export function buildDeeperExplanation(contract, cardRegistry, _rankAnatomyData = null) {
   const form = contract.form ?? classifyActionForm(contract);
   const ranks = contract.rankIds ?? [];
   const isSpade = contract.isSpadesVariant ?? false;

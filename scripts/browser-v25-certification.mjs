@@ -179,7 +179,7 @@ async function waitFor(cdp, sessionId, predicate, timeoutMs = 15000) {
   throw new Error(`waitFor timeout after ${timeoutMs}ms`);
 }
 
-async function click(cdp, sessionId, selector) {
+async function _click(cdp, sessionId, selector) {
   return evaluate(cdp, sessionId, `
     const el = document.querySelector('${selector}');
     if (el) { el.click(); true; } else { false; }
@@ -603,7 +603,7 @@ async function localVsAIJourney(cdp, baseUrl) {
     // 33-37. Save/Resume
     // Wait for autosave
     await new Promise(r => setTimeout(r, 3500));
-    const saveCheck = await evaluate(cdp, sessionId, `(() => {
+    const _saveCheck = await evaluate(cdp, sessionId, `(() => {
       // Check IndexedDB for saves via the play app's state
       const playRoot = document.querySelector('#play-root, .play-shell');
       return { hasPlayRoot: playRoot !== null };
@@ -656,7 +656,7 @@ async function localVsAIJourney(cdp, baseUrl) {
           const loading = document.querySelector('.play-loading');
           return board !== null || terminal !== null || loading !== null;
         }, 15000);
-      } catch (e) { /* timeout is ok */ }
+      } catch { /* timeout is ok */ }
       await new Promise(r => setTimeout(r, 1000));
       const resumed = await evaluate(cdp, sessionId, `(() => {
         const board = document.querySelector('[data-testid="play-board"], .play-board, .rd-board');
@@ -986,7 +986,7 @@ async function onlineTwoClientJourney(cdp, baseUrl, matchServerPort) {
       await new Promise(r => setTimeout(r, 500));
 
       // Try to confirm
-      const confirmA = await evaluate(cdp, tabA.sessionId, `(() => {
+      const _confirmA = await evaluate(cdp, tabA.sessionId, `(() => {
         const confirmBtn = document.querySelector('[data-testid="confirm-action"]');
         if (confirmBtn && !confirmBtn.disabled) { confirmBtn.click(); return true; }
         return false;
@@ -1019,7 +1019,7 @@ async function onlineTwoClientJourney(cdp, baseUrl, matchServerPort) {
         return { clicked: false, count: 0 };
       })()`);
       await new Promise(r => setTimeout(r, 500));
-      const confirmB = await evaluate(cdp, tabB.sessionId, `(() => {
+      const _confirmB = await evaluate(cdp, tabB.sessionId, `(() => {
         const confirmBtn = document.querySelector('[data-testid="confirm-action"]');
         if (confirmBtn && !confirmBtn.disabled) { confirmBtn.click(); return true; }
         return false;
@@ -1040,7 +1040,7 @@ async function onlineTwoClientJourney(cdp, baseUrl, matchServerPort) {
       results['14_publicStateAgrees'] = { status: 'PASS', details: { note: 'Public state (point/enduring/swap/stage/stack) is server-authoritative' } };
 
       // 15. Advanced Card Rules opens for both
-      const advA = await evaluate(cdp, tabA.sessionId, `(() => {
+      const _advA = await evaluate(cdp, tabA.sessionId, `(() => {
         const card = document.querySelector('.hand-card, .rd-card');
         if (card) { card.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })); return true; }
         return false;
@@ -1050,7 +1050,7 @@ async function onlineTwoClientJourney(cdp, baseUrl, matchServerPort) {
       // Close it
       await evaluate(cdp, tabA.sessionId, `(() => { const c = document.querySelector('[data-testid="inspector-close"]'); if (c) c.click(); return true; })()`);
 
-      const advB = await evaluate(cdp, tabB.sessionId, `(() => {
+      const _advB = await evaluate(cdp, tabB.sessionId, `(() => {
         const card = document.querySelector('.hand-card, .rd-card');
         if (card) { card.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })); return true; }
         return false;

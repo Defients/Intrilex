@@ -1,6 +1,6 @@
 import http from 'node:http';
 import { createReadStream, existsSync, statSync, readFileSync } from 'node:fs';
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync, spawn } from 'node:child_process';
@@ -38,9 +38,9 @@ if (!existsSync(path.join(dist, 'index.html'))) {
 }
 
 // Load bundle manifest for hashed asset names
-let bundleManifest = null;
+let _bundleManifest = null;
 try {
-  bundleManifest = JSON.parse(await readFile(path.join(dist, 'BUNDLE_MANIFEST.json'), 'utf8'));
+  _bundleManifest = JSON.parse(await readFile(path.join(dist, 'BUNDLE_MANIFEST.json'), 'utf8'));
 } catch {
   // No manifest — use unhashed filenames (dev mode before bundling)
 }
@@ -108,7 +108,7 @@ function triggerRebuild(changedFile) {
       console.log(`[watch] Build succeeded in ${elapsed}s — notifying ${sseClients.size} client(s)`);
       // Reload bundle manifest
       readFile(path.join(dist, 'BUNDLE_MANIFEST.json'), 'utf8')
-        .then(data => { bundleManifest = JSON.parse(data); })
+        .then(data => { _bundleManifest = JSON.parse(data); })
         .catch(() => {});
       // Notify all SSE clients to reload
       for (const res of sseClients) {
@@ -134,7 +134,7 @@ if (watchMode) {
     try {
       watch(dir, { recursive }, (eventType, filename) => {
         if (!filename) return;
-        const fullPath = path.join(dir, filename);
+        const _fullPath = path.join(dir, filename);
         // Only trigger on source file changes
         if (/\.(js|mjs|ts|tsx|css|html|json|svg)$/.test(filename)) {
           scheduleRebuild(filename);

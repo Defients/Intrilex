@@ -19,8 +19,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildSpectatorView, buildNetworkPlayerView, validateNetworkViewPrivacy } from '../packages/match-authority/src/player-projection.mjs';
-import { createAuthoritativeMatch, MatchStatus } from '../packages/match-authority/src/authoritative-match-session.mjs';
+import { buildSpectatorView, validateNetworkViewPrivacy } from '../packages/match-authority/src/player-projection.mjs';
+import { createAuthoritativeMatch } from '../packages/match-authority/src/authoritative-match-session.mjs';
 import { randomBytes } from 'node:crypto';
 
 function makeToken() { return randomBytes(32).toString('base64url'); }

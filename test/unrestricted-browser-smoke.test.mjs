@@ -114,7 +114,7 @@ test('browser unrestricted match exercises unique mechanic counts', () => {
   const mechanicKeys = Object.keys(result.mechanicCounts || {});
   assert.ok(mechanicKeys.length > 0, 'unrestricted match should have mechanic counts');
   // Check for sudden-death or hidden super mechanics
-  const hasUnrestrictedMechanics = mechanicKeys.some(k =>
+  const _hasUnrestrictedMechanics = mechanicKeys.some(k =>
     k.includes('sudden') || k.includes('dig') || k.includes('recycle') ||
     k.includes('raid') || k.includes('topdeck') || k.includes('mimic')
   );

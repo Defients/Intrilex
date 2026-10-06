@@ -19,7 +19,7 @@ import { WebSocket } from 'ws';
 import { createAuthoritativeMatch, MatchStatus } from '../packages/match-authority/src/authoritative-match-session.mjs';
 import { FakeMatchResultPersistor } from '../apps/match-server/src/persistence/fake-match-result-persistor.mjs';
 import { buildMatchResultRecord } from '../apps/match-server/src/persistence/match-result-builder.mjs';
-import { computeRatingUpdate, deriveOutcome, DEFAULT_RATING } from '../packages/account-domain/src/index.mjs';
+import '../packages/account-domain/src/index.mjs';
 import { createMatch, ready } from '../packages/network-protocol/src/protocol.mjs';
 
 // ── Helpers ──

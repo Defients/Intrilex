@@ -48,7 +48,7 @@ self.addEventListener('install', (event) => {
           CACHE_VERSION = `intrilex-v${ver}`;
           CACHE_NAME = `${CACHE_VERSION}-${self.registration ? self.registration.scope : 'root'}`;
         }
-      } catch (_e) {
+      } catch {
         // Fallback to default version — cache will still work
       }
       const cache = await caches.open(CACHE_NAME);
@@ -58,7 +58,7 @@ self.addEventListener('install', (event) => {
           try {
             const resp = await fetch(url, { cache: 'no-store' });
             if (resp.ok) await cache.put(url, resp.clone());
-          } catch (_e) {
+          } catch {
             // Network failure during install is non-fatal
           }
         })
@@ -176,7 +176,7 @@ async function networkFirst(request) {
       evictIfNeeded(cache);
     }
     return response;
-  } catch (_e) {
+  } catch {
     const cached = await cache.match(request);
     if (cached) return cached;
     // Offline fallback for navigation requests

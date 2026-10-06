@@ -33,7 +33,7 @@ export function renderExperimentControls() {
 export function updatePreflight() {
   const n = Number(document.querySelector('#exp-count').value);
   const w = Number(document.querySelector('#exp-workers').value);
-  const p = document.querySelector('#exp-profile').value;
+  const _p = document.querySelector('#exp-profile').value;
   const seed = document.querySelector('#exp-seed').value;
   const p1 = document.querySelector('#exp-p1').value;
   const p2 = document.querySelector('#exp-p2').value;
@@ -218,7 +218,7 @@ async function runBrowserCampaign() {
     if (finalized || completedSegments < segments.length) return;
     finalized = true;
     // All segments done — terminate workers and assemble the campaign result.
-    for (const w of spawned) { try { w.terminate(); } catch (_) { /* already terminated */ } }
+    for (const w of spawned) { try { w.terminate(); } catch { /* already terminated */ } }
     state.campaignWorker = null;
     state.campaignWorkers = [];
     if (failedSegment) {
@@ -259,7 +259,7 @@ async function runBrowserCampaign() {
       } else if (x.type === 'autonomy-segment-result') {
         if (x.ok) {
           try { segmentSummaries[i] = JSON.parse(x.summariesJson ?? '[]'); }
-          catch (_) { segmentSummaries[i] = []; }
+          catch { segmentSummaries[i] = []; }
         } else if (!failedSegment) {
           failedSegment = x.error ?? `Worker ${i} failed`;
         }
@@ -303,7 +303,7 @@ function splitOrdinals(count, workers) {
 
 // Shared finalization for both single- and multi-worker paths: updates state,
 // renders the campaign summary, and re-renders the current workspace.
-async function finalizeCampaignResult(x, count, workers) {
+async function finalizeCampaignResult(x, count, _workers) {
   state.lastCampaignResult = x;
   document.querySelector('#run-experiment').disabled = false;
   document.querySelector('#cancel-experiment').disabled = true;
@@ -365,10 +365,10 @@ async function finalizeCampaignResult(x, count, workers) {
 
 function cancelBrowserCampaign() {
   if (state.campaignWorker) {
-    try { state.campaignWorker.terminate(); } catch (_) { /* already terminated */ }
+    try { state.campaignWorker.terminate(); } catch { /* already terminated */ }
     state.campaignWorker = null;
   }
-  for (const w of state.campaignWorkers ?? []) { try { w.terminate(); } catch (_) { /* already terminated */ } }
+  for (const w of state.campaignWorkers ?? []) { try { w.terminate(); } catch { /* already terminated */ } }
   state.campaignWorkers = [];
   document.querySelector('#experiment-status').textContent = 'Cancelled.';
   document.querySelector('#run-experiment').disabled = false;

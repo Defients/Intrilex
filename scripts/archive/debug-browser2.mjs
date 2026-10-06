@@ -24,7 +24,7 @@ const server = createServer(async (req, res) => {
     const data = await readFile(filePath);
     res.writeHead(200, { 'Content-Type': MIME[extname(filePath)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
     res.end(data);
-  } catch (e) { res.writeHead(404); res.end('Not found'); }
+  } catch { res.writeHead(404); res.end('Not found'); }
 });
 
 server.listen(8787, '127.0.0.1', async () => {

@@ -319,8 +319,8 @@ test('Depth II: Sankey included in reduced-motion and print styles', async () =>
 });
 test('Depth II: no new npm dependencies added', async () => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
-  const depCount = Object.keys(pkg.dependencies ?? {}).length;
-  const devDepCount = Object.keys(pkg.devDependencies ?? {}).length;
+  const _depCount = Object.keys(pkg.dependencies ?? {}).length;
+  const _devDepCount = Object.keys(pkg.devDependencies ?? {}).length;
   // The exact count doesn't matter — what matters is we didn't add any.
   // We verify by checking that no chart library was added.
   const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };

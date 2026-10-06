@@ -11,7 +11,7 @@ function stableHash(value) {
   return hashCanonical(value).slice(0, 16);
 }
 
-function classifyDecisionKind(action, legalActions) {
+function classifyDecisionKind(action, _legalActions) {
   if (action.family === 'private-choice') return 'PRIVATE_CHOICE';
   if (action.family === 'response-decline' || RESPONSE_FAMILIES.has(action.family) || ['INSTANT', 'QUICK', 'INTERRUPT'].includes(action.timingClass)) return 'RESPONSE';
   return 'MINI_TURN';
@@ -71,7 +71,7 @@ function deriveReasonCodes(policyId, action, context, scoreComponents) {
   return [...new Set(codes)].sort();
 }
 
-function computeScoreComponents(policyId, action, context, rawScore) {
+function computeScoreComponents(policyId, action, context, _rawScore) {
   const fv = action.featureVector ?? {};
   const response = context.response ?? {};
   const terminal = (action.family === 'play-for-points' || action.family === 'score') && (Number(fv.immediateScore ?? fv.immediatePoints ?? 0) + (context.own?.securedPoints ?? 0) >= (context.own?.goal ?? Infinity)) ? 1 : 0;

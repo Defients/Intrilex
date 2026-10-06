@@ -5,7 +5,7 @@ import { OllamaClient, OLLAMA_ERROR, OllamaError } from '@intrilex/analytics-ai/
 import { discoverOllama, verifyModel } from '@intrilex/analytics-ai/model-discovery';
 
 // ── Helpers: spin up a mock Ollama server ──────────────────────────
-function startMockServer({ handler, status = 200 } = {}) {
+function startMockServer({ handler, status: _status = 200 } = {}) {
   return new Promise((resolve) => {
     const server = http.createServer(async (req, res) => {
       res.setHeader('content-type', 'application/json');
@@ -113,7 +113,7 @@ test('ollama-client: timeout produces TIMEOUT error', async () => {
       client.chat({ model: 'llama3', messages: [], stream: false }),
       (err) => err instanceof OllamaError && err.category === OLLAMA_ERROR.TIMEOUT
     );
-  }, { handler: (req, res) => { /* never respond */ } });
+  }, { handler: (_req, _res) => { /* never respond */ } });
 });
 
 test('ollama-client: cancellation via AbortSignal produces CANCELLED', async () => {
@@ -123,7 +123,7 @@ test('ollama-client: cancellation via AbortSignal produces CANCELLED', async () 
     const p = client.chat({ model: 'llama3', messages: [], stream: false, signal: ac.signal });
     ac.abort();
     await assert.rejects(p, (err) => err instanceof OllamaError && err.category === OLLAMA_ERROR.CANCELLED);
-  }, { handler: (req, res) => { /* never respond */ } });
+  }, { handler: (_req1, _res1) => { /* never respond */ } });
 });
 
 test('ollama-client: pre-aborted signal rejects immediately as CANCELLED', async () => {

@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getAchievementRuntime } from './achievement-runtime.js';
-import { getCatalog, RARITY, CATEGORY, RARITY_SYMBOL } from '../../achievements/index.mjs';
+import { getCatalog, CATEGORY } from '../../achievements/index.mjs';
 
 const CATEGORY_LABELS = {
   FIRST_STEPS: 'First Steps',
@@ -34,7 +34,7 @@ export async function renderAchievementsWorkspace(container) {
   await runtime.init();
 
   const summary = runtime.getSummary();
-  const catalog = getCatalog();
+  const _catalog = getCatalog();
 
   // State for filtering
   let currentFilter = 'all';

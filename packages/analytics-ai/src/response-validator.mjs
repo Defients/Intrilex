@@ -77,7 +77,7 @@ export function validateAnalysisResponse(obj) {
   return { valid: errors.length === 0, errors, warnings, normalized };
 }
 
-function validateFinding(f, i, errors, warnings) {
+function validateFinding(f, i, errors, _warnings) {
   const path = `keyFindings[${i}]`;
   if (f == null || typeof f !== 'object') {
     errors.push(`${path} must be an object`);
@@ -110,7 +110,7 @@ function validateEvidence(e, path, errors) {
   };
 }
 
-function validatePowerEntry(p, i, field, errors, warnings) {
+function validatePowerEntry(p, i, field, errors, _warnings1) {
   const path = `${field}[${i}]`;
   if (p == null || typeof p !== 'object') {
     errors.push(`${path} must be an object`);
@@ -125,7 +125,7 @@ function validatePowerEntry(p, i, field, errors, warnings) {
   };
 }
 
-function validateAnomaly(a, i, errors, warnings) {
+function validateAnomaly(a, i, errors, _warnings2) {
   const path = `anomalies[${i}]`;
   if (a == null || typeof a !== 'object') {
     errors.push(`${path} must be an object`);
@@ -142,7 +142,7 @@ function validateAnomaly(a, i, errors, warnings) {
   };
 }
 
-function validateExperiment(e, i, errors, warnings) {
+function validateExperiment(e, i, errors, _warnings3) {
   const path = `recommendedExperiments[${i}]`;
   if (e == null || typeof e !== 'object') {
     errors.push(`${path} must be an object`);

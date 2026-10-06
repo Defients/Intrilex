@@ -81,7 +81,7 @@ test('self-audit test count matches actual executed test count (BL-14 binding)',
   const claimedMatch = claimed.match(/(\d+)\s+tests,\s+(\d+)\s+pass,\s+(\d+)\s+fail/);
   assert.ok(claimedMatch, `defaultTestSuite must be in format 'N tests, N pass, N fail', got: ${claimed}`);
   const claimedTests = parseInt(claimedMatch[1]);
-  const claimedPass = parseInt(claimedMatch[2]);
+  const _claimedPass = parseInt(claimedMatch[2]);
   const claimedFail = parseInt(claimedMatch[3]);
 
   assert.ok(claimedTests > 0, 'claimed test count must be > 0');
