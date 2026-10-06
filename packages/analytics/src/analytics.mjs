@@ -1,17 +1,10 @@
 import { hashCanonical } from '@intrilex/shared';
 import {
-  benjaminiHochberg,
-  evidenceGradeDetailed,
-  cohortBalanceRatio,
   deterministicClusterBootstrap,
   differenceInProportions,
-  empiricalBayesShrinkage,
-  evidenceGradeLegacy,
   formulaHash,
-  logisticInteractionEstimate,
   mcnemarPairedTest,
   pairedBootstrapABBA,
-  stratifiedInteractionEstimate,
   summarizeNumbers,
   wilsonInterval
 } from '@intrilex/statistics';
@@ -30,8 +23,11 @@ import {
   areTagsInseparable
 } from '@intrilex/decision-intelligence/mechanic-registry';
 import { buildRankAnalytics, buildVariantAnalytics, expandTenSuitsInRankPower } from './rank-integration.mjs';
+import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS, metricRegistryWithHashesUsing } from './metric-registry.mjs';
+import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './observatory-core.mjs';
+import { applyRankBalanceQualification, deriveTagRelations } from './observatory-integrity.mjs';
 
-export const ANALYTICS_SCHEMA_VERSION = '4.2.0';
+export { ANALYTICS_SCHEMA_VERSION };
 
 function increment(record, key, amount = 1) { record[key] = (record[key] ?? 0) + amount; }
 const decisive = (row) => row.terminationReason !== 'CANONICAL_DRAW' && row.winner !== 'DRAW' && row.winner !== 'ABORTED';
@@ -76,27 +72,12 @@ function analysisUnits(summaries, { primary = false } = {}) {
   }
   return units;
 }
-const unitDecisive = (row) => row._decisive === true;
-const unitWon = (row) => unitDecisive(row) ? Number(row._won ?? 0) : 0;
 
-export const METRIC_REGISTRY = Object.freeze({
-  'win-rate': { version:'4.2.0', formula:'wins / decisive completed matches', uncertainty:'Wilson 95% interval' },
-  'participant-prevalence': { version:'4.2.0', formula:'unique participant-match pairs that selected entity ≥1 / all eligible participant-match records', uncertainty:'Wilson 95% interval' },
-  'match-prevalence': { version:'4.2.0', formula:'unique matches in which entity selected ≥1 / all eligible matches', uncertainty:'Wilson 95% interval' },
-  'pick-rate-when-legal': { version:'4.2.0', formula:'selections / distinct legal decision windows', uncertainty:'Wilson 95% interval; N/A when zero legal opportunities' },
-  'selection-frequency': { version:'4.2.0', formula:'total selections / eligible participant-match records', uncertainty:'descriptive rate' },
-  'resolution-rate': { version:'4.2.0', formula:'resolved declarations / accepted declarations', uncertainty:'Wilson 95% interval' },
-  'response-play-rate': { version:'4.2.0', formula:'response plays / lawful response opportunities', uncertainty:'Wilson 95% interval' },
-  'counter-efficiency': { version:'4.2.0', formula:'opponent value prevented / own card and tempo cost', uncertainty:'match-clustered deterministic bootstrap' },
-  'synergy-interaction': { version:'4.2.0', formula:'stratified logistic A×B interaction (odds-ratio scale) from four-cohort model', uncertainty:'Wald CI from inverse-variance pooled SE + BH FDR' },
-  'immediate-point-impact': { version:'4.2.0', formula:'sum actor-perspective secured point delta / resolved selections with point data', uncertainty:'match-clustered deterministic bootstrap' },
-  'raw-win-association': { version:'4.2.0', formula:'P(win|selected) - P(win|not selected)', uncertainty:'two-proportion z-test CI' },
-  'adjusted-win-association': { version:'4.2.0', formula:'stratified win-rate differential controlling for policy, seat, profile', uncertainty:'Mantel-Haenszel-style stratified estimator CI' },
-  'policy-fingerprint': { version:'4.2.0', formula:'policy event/action count / policy games', uncertainty:'descriptive; no optimality claim' }
-});
+// Metric identity is defined once in ./metric-registry.mjs (shared verbatim with the browser).
+export const METRIC_REGISTRY = METRIC_DEFINITIONS;
 
 export function metricRegistryWithHashes() {
-  return Object.fromEntries(Object.entries(METRIC_REGISTRY).map(([id, metric]) => [id, { metricId:id, ...metric, formulaHash:formulaHash(metric.formula) }]));
+  return metricRegistryWithHashesUsing(formulaHash);
 }
 
 export function aggregateReplayRecords(records) {
@@ -123,16 +104,6 @@ export function aggregateReplayRecords(records) {
   return { ...aggregate, aggregateHash:hashCanonical(aggregate) };
 }
 
-function representativeMatches(rows, predicate, limit = 4) {
-  const selected = [...new Map(
-    rows.filter(predicate)
-      .sort((a,b) => String(a.matchResultHash ?? a.matchId).localeCompare(String(b.matchResultHash ?? b.matchId)))
-      .map((row) => [row.matchId, row])
-  ).values()];
-  if (!selected.length) return [];
-  const indexes = [...new Set([0, Math.floor((selected.length-1)/2), selected.length-1, Math.floor((selected.length-1)*0.75)])].slice(0,limit);
-  return indexes.map((index)=>selected[index].matchId);
-}
 
 export function buildMechanicsAtlas(summaries, detailedMatches = []) {
   const units = analysisUnits(summaries);
@@ -238,12 +209,13 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
         ? { status: 'available', sampleSize: usedDecisive.length + unusedDecisive.length }
         : { status: 'model-failed', reasonCode: 'STRATIFIED_ESTIMATOR_FAILED', detail: 'Stratified estimator could not produce a finite estimate.' },
       sampleSize,
-      evidenceGradeLegacy: evidenceGradeLegacy({sampleSize, interval: association.interval, qValue: null, minimum: 20}),
       status: sampleSize ? 'measured' : 'not-observable',
       replayRefs:representativeMatches(units,row=>Number(row.mechanicCounts?.[mechanic]??0)>0),
       counterexampleRefs:representativeMatches(units,row=>Number(row.mechanicCounts?.[mechanic]??0)>0 && unitDecisive(row) && unitWon(row)===0,2),
       formulaHash:metricRegistryWithHashes()['immediate-point-impact'].formulaHash,
-      outcomeFormulaHash:metricRegistryWithHashes()['synergy-interaction'].formulaHash,
+      outcomeFormulaHash:metricRegistryWithHashes()['raw-win-association'].formulaHash,
+      adjustedFormulaHash:metricRegistryWithHashes()['adjusted-win-association'].formulaHash,
+      pickRateFormulaHash:metricRegistryWithHashes()['pick-rate-when-legal'].formulaHash,
       limitations:[
         `Participant prevalence uses ${usageUnit}-level observations and is policy-, seat-, and profile-conditioned.`,
         hasOpportunityData ? 'Pick rate when legal uses opportunity telemetry from the legality boundary.' : 'Opportunity-level pick rate is N/A — legal opportunity telemetry not available for this campaign.',
@@ -251,27 +223,10 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       ]
     };
   });
-  // Multiplicity correction across all mechanics' raw-association tests.
-  // Previously qValue was never supplied to the evidence rubric, so every
-  // mechanic was structurally capped at INSUFFICIENT regardless of sample size.
-  const qByMechanic = new Map(
-    benjaminiHochberg(rows.filter((row) => Number.isFinite(row.pValue)), { idKey: 'mechanic' })
-      .map((row) => [row.mechanic, row.qValue])
-  );
-  for (const row of rows) {
-    const q = qByMechanic.get(row.mechanic) ?? null;
-    // Grade against the decisive-cohort N that the test actually used, not
-    // the raw usage count — draws and aborts carry no outcome signal.
-    const decisiveN = row.rawWinAssociationStatus?.status === 'available'
-      ? row.rawWinAssociationStatus.sampleSize : null;
-    const graded = evidenceGradeDetailed({
-      sampleSize: decisiveN ?? 0, interval: row.rawWinAssociation95, qValue: q,
-      minimum: 20, effectSize: row.rawWinAssociation, effectiveN: decisiveN ?? 0,
-    });
-    row.associationQValue = q;
-    row.evidenceGrade = graded.grade;
-    row.evidenceReasons = graded.reasons;
-  }
+  // Multiplicity correction over the valid inferential family only
+  // (canonical/rank-effect rows with available decisive cohorts, aliases
+  // collapsed); descriptive rows carry an explicit non-inferential reason.
+  gradeMechanicRows(rows, deriveTagRelations(summaries, units, mechanicNames, { isRegistered: (t) => Boolean(MECHANIC_REGISTRY[t]) }));
   return rows;
 }
 
@@ -310,161 +265,14 @@ function stratifiedWinAssociation(units, mechanic) {
   return { estimate, interval: [estimate - z95 * se, estimate + z95 * se] };
 }
 
-function stratumKey(row) { return row._stratum ?? `${row.profileId}|${(row.policyIds ?? []).join('>')}|${(row.seatOrder ?? []).join('>')}`; }
-/**
- * Four-cohort interaction estimator for a single stratum.
- * Classifies participant-match records into Neither, A-only, B-only, Both cohorts
- * and computes the logistic A×B interaction on the odds-ratio scale.
- */
-function fourCohortInteraction(group, a, b) {
-  const neither = { wins: 0, losses: 0 };
-  const aOnly = { wins: 0, losses: 0 };
-  const bOnly = { wins: 0, losses: 0 };
-  const both = { wins: 0, losses: 0 };
-  for (const row of group) {
-    if (!unitDecisive(row)) continue;
-    const hasA = Number(row.mechanicCounts?.[a] ?? 0) > 0;
-    const hasB = Number(row.mechanicCounts?.[b] ?? 0) > 0;
-    const won = unitWon(row) === 1;
-    if (hasA && hasB) { if (won) both.wins += 1; else both.losses += 1; }
-    else if (hasA) { if (won) aOnly.wins += 1; else aOnly.losses += 1; }
-    else if (hasB) { if (won) bOnly.wins += 1; else bOnly.losses += 1; }
-    else { if (won) neither.wins += 1; else neither.losses += 1; }
-  }
-  return { neither, aOnly, bOnly, both };
-}
-
-export function analyzeSynergies(summaries, {
-  minimumBoth = 20,
-  minimumCohort = 10,
-  minimumEffectiveN = 50,
-  maxMechanics = 24,
-  includeDiagnostics = false,
-} = {}) {
+export function analyzeSynergies(summaries, options = {}) {
   const units = analysisUnits(summaries, { primary: true });
-  const excludedTags = synergyExcludedTags();
-  const mechanics = [...new Set(units.flatMap((row) => Object.keys(row.mechanicCounts ?? {})))]
-    .sort((a, b) => {
-      const ca = units.reduce((s, r) => s + Number(r.mechanicCounts?.[a] ?? 0), 0);
-      const cb = units.reduce((s, r) => s + Number(r.mechanicCounts?.[b] ?? 0), 0);
-      return cb - ca || a.localeCompare(b);
-    })
-    .filter((m) => !excludedTags.has(m))
-    .slice(0, maxMechanics);
-  // Build strata for stratified interaction estimation
-  const strataMap = new Map();
-  for (const row of units.filter(unitDecisive)) {
-    const key = stratumKey(row);
-    if (!strataMap.has(key)) strataMap.set(key, []);
-    strataMap.get(key).push(row);
-  }
-  const strata = [...strataMap.values()];
-  const raw = [];
-  const diagnostics = [];
-  for (let i = 0; i < mechanics.length; i++) {
-    for (let j = i + 1; j < mechanics.length; j++) {
-      const a = mechanics[i], b = mechanics[j];
-      // Skip inseparable pairs (parent/child, aliases)
-      if (areTagsInseparable(a, b)) {
-        if (includeDiagnostics) diagnostics.push({ id: `${a}::${b}`, source: a, target: b, status: 'rejected', reason: 'inseparable-tags', reasonCode: 'PARENT_CHILD_OR_ALIAS', cohortN: null });
-        continue;
-      }
-      // Compute four-cohort interaction per stratum
-      const stratumCohorts = strata.map((group) => fourCohortInteraction(group, a, b));
-      // Aggregate cohort sizes across all strata
-      const totalCohortN = { neither: 0, aOnly: 0, bOnly: 0, both: 0 };
-      for (const sc of stratumCohorts) {
-        totalCohortN.neither += sc.neither.wins + sc.neither.losses;
-        totalCohortN.aOnly += sc.aOnly.wins + sc.aOnly.losses;
-        totalCohortN.bOnly += sc.bOnly.wins + sc.bOnly.losses;
-        totalCohortN.both += sc.both.wins + sc.both.losses;
-      }
-      const totalN = totalCohortN.neither + totalCohortN.aOnly + totalCohortN.bOnly + totalCohortN.both;
-      // Rare-pair suppression: check minimum cohort sizes
-      if (totalCohortN.both < minimumBoth) {
-        if (includeDiagnostics) diagnostics.push({ id: `${a}::${b}`, source: a, target: b, status: 'rejected', reason: 'insufficient-both-cohort', reasonCode: 'INSUFFICIENT_BOTH', cohortN: totalCohortN, threshold: minimumBoth });
-        continue;
-      }
-      if (totalCohortN.aOnly < minimumCohort || totalCohortN.bOnly < minimumCohort) {
-        if (includeDiagnostics) diagnostics.push({ id: `${a}::${b}`, source: a, target: b, status: 'rejected', reason: 'insufficient-single-cohort', reasonCode: 'INSUFFICIENT_SINGLE', cohortN: totalCohortN, threshold: minimumCohort });
-        continue;
-      }
-      if (totalN < minimumEffectiveN) {
-        if (includeDiagnostics) diagnostics.push({ id: `${a}::${b}`, source: a, target: b, status: 'rejected', reason: 'insufficient-effective-n', reasonCode: 'INSUFFICIENT_N', cohortN: totalCohortN, threshold: minimumEffectiveN });
-        continue;
-      }
-      // Stratified interaction estimate using inverse-variance pooling
-      const result = stratifiedInteractionEstimate(stratumCohorts);
-      if (!Number.isFinite(result.logEstimate)) {
-        if (includeDiagnostics) diagnostics.push({ id: `${a}::${b}`, source: a, target: b, status: 'rejected', reason: 'model-failure', reasonCode: 'SINGULAR_MODEL', cohortN: totalCohortN });
-        continue;
-      }
-      const balance = cohortBalanceRatio(totalCohortN);
-      const p00 = totalCohortN.neither > 0 ? (stratumCohorts.reduce((s, sc) => s + sc.neither.wins, 0)) / totalCohortN.neither : 0;
-      const p10 = totalCohortN.aOnly > 0 ? (stratumCohorts.reduce((s, sc) => s + sc.aOnly.wins, 0)) / totalCohortN.aOnly : 0;
-      const p01 = totalCohortN.bOnly > 0 ? (stratumCohorts.reduce((s, sc) => s + sc.bOnly.wins, 0)) / totalCohortN.bOnly : 0;
-      const p11 = totalCohortN.both > 0 ? (stratumCohorts.reduce((s, sc) => s + sc.both.wins, 0)) / totalCohortN.both : 0;
-      const marginalInteraction = p11 - p10 - p01 + p00;
-      raw.push({
-        id: `${a}::${b}`, source: a, target: b,
-        displayName: `${a} × ${b}`,
-        relationshipClass: marginalInteraction >= 0 ? 'synergy' : 'anti-synergy',
-        direction: 'bidirectional',
-        effect: result.estimate,
-        logEstimate: result.logEstimate,
-        rawEffect: marginalInteraction,
-        marginalInteraction,
-        shrunkEffect: empiricalBayesShrinkage(result.estimate, result.effectiveN),
-        confidenceInterval: result.interval,
-        standardError: result.standardError,
-        pValue: result.pValue,
-        cohortN: totalCohortN,
-        neitherN: totalCohortN.neither, aOnlyN: totalCohortN.aOnly,
-        bOnlyN: totalCohortN.bOnly, bothN: totalCohortN.both,
-        cohortBalance: balance,
-        effectiveN: result.effectiveN,
-        separation: result.separation,
-        strataCount: result.strataCount,
-        jointOpportunityCount: totalCohortN.both,
-        baselineCount: totalCohortN.aOnly + totalCohortN.bOnly,
-        sampleSize: totalN,
-      });
-    }
-  }
-  const results = benjaminiHochberg(raw).map((item) => {
-    const graded = evidenceGradeDetailed({
-      sampleSize: item.effectiveN,
-      interval: item.confidenceInterval,
-      qValue: item.qValue,
-      minimum: Math.min(minimumBoth, minimumEffectiveN),
-      effectSize: item.marginalInteraction,
-      cohortBalance: item.cohortBalance,
-      effectiveN: item.effectiveN,
-      nullValue: 1,
-    });
-    return {
-      ...item,
-      modelStatus: 'modeled',
-      status: item.qValue <= 0.1 && (item.confidenceInterval[0] > 1 || item.confidenceInterval[1] < 1)
-        ? (item.marginalInteraction > 0 ? 'positive' : 'negative')
-        : 'inconclusive',
-      evidenceGrade: graded.grade,
-      evidenceReasons: graded.reasons,
-      evidenceGradeLegacy: evidenceGradeLegacy({ sampleSize: item.effectiveN, interval: item.confidenceInterval, qValue: item.qValue, minimum: Math.min(minimumBoth, minimumEffectiveN) }),
-      replayRefs: representativeMatches(units, (row) => (row.mechanicCounts?.[item.source] ?? 0) > 0 && (row.mechanicCounts?.[item.target] ?? 0) > 0),
-      counterexampleRefs: representativeMatches(units, (row) => (row.mechanicCounts?.[item.source] ?? 0) > 0 && (row.mechanicCounts?.[item.target] ?? 0) > 0 && unitDecisive(row) && unitWon(row) === 0, 2),
-      formulaHash: metricRegistryWithHashes()['synergy-interaction'].formulaHash,
-      limitations: [
-        'Interaction effect is the A×B odds-ratio from a stratified logistic model — association, not causation.',
-        `Four cohorts: Neither=${item.neitherN}, A-only=${item.aOnlyN}, B-only=${item.bOnlyN}, Both=${item.bothN}.`,
-        item.separation ? 'Perfect separation detected in some strata; continuity correction applied.' : null,
-        'Low-frequency pairs are suppressed by minimum cohort thresholds.',
-      ].filter(Boolean),
-    };
-  }).sort((a, b) => Math.abs(b.shrunkEffect) - Math.abs(a.shrunkEffect) || a.id.localeCompare(b.id));
-  // Attach diagnostics array to results for callers that request it
-  if (includeDiagnostics) results.diagnostics = diagnostics;
-  return results;
+  const tags = [...new Set(units.flatMap((row) => Object.keys(row.mechanicCounts ?? {})))].sort();
+  const relations = deriveTagRelations(summaries, units, tags, { isRegistered: (t) => Boolean(MECHANIC_REGISTRY[t]) });
+  return analyzeSynergiesCore(units, {
+    excludedTags: synergyExcludedTags(), areTagsInseparable, relations,
+    formulaHash: metricRegistryWithHashes()['synergy-interaction'].formulaHash,
+  }, options);
 }
 
 export function mineCausalMotifs(detailedMatches,{limit=60}={}){
@@ -536,21 +344,19 @@ export function buildPolicyFingerprints(summaries){
     }
   }
   return Object.values(byPolicy).map(x=>{
-    const crossDecisive=x.crossPolicyWins+x.crossPolicyLosses;
     return {
     ...x,
     opponents:[...x.opponentSet].sort(),opponentSet:undefined,
     matchCount:x.games,
     // Cross-policy superiority record (self-play excluded, matching campaignAggregate)
-    record:{games:x.games,selfPlayGames:x.selfPlayGames,crossPolicyGames:x.games-x.selfPlayGames,
-      wins:x.crossPolicyWins,losses:x.crossPolicyLosses,draws:x.crossPolicyDraws,aborts:x.crossPolicyAborts,decisive:crossDecisive,
-      winRate:x.games-x.selfPlayGames?x.crossPolicyWins/(x.games-x.selfPlayGames):0,
-      wilson95:wilsonInterval(x.crossPolicyWins,Math.max(1,crossDecisive))},
+    record:policyRecord(x),
     seatSplit:{seat1:x.seat1Games,seat2:x.seat2Games},
     avgScoreMargin:x.games?x.scoreMarginTotal/x.games:null,
     exhaustedPassRate:x.miniTurnActions?x.exhaustedPassActions/x.miniTurnActions:null,
     responsePlayRate:(x.responsePlays+x.responseDeclines)?x.responsePlays/(x.responsePlays+x.responseDeclines):null,
-    winRate:x.games?x.wins/x.games:0,winWilson95:wilsonInterval(x.wins,Math.max(1,x.games)),
+    // Fingerprint rate over ALL participations (self-play and non-decisive
+    // included); the superiority estimand is record.winRate.
+    winRate:x.games?x.wins/x.games:0,winWilson95:x.games?wilsonInterval(x.wins,x.games):null,winRateBasis:'all-participations-including-self-play',
     fingerprint:{scoreAggression:x.games?x.miniTurnActions/x.games:0,responseUse:x.games?x.responsePlays/x.games:0,responseConservation:x.responsePlays+x.responseDeclines?x.responseDeclines/(x.responsePlays+x.responseDeclines):0,privateChoiceDensity:x.games?x.privateChoices/x.games:0,advancedFrequency:x.games?x.advanced/x.games:0,ultraFrequency:x.games?x.ultras/x.games:0,voltageFrequency:x.games?x.voltage/x.games:0,matchLength:x.games?x.turns/x.games:0}
     };
   }).sort((a,b)=>a.policyId.localeCompare(b.policyId));
@@ -721,6 +527,9 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
   // (10♣/10♦/10♥/10♠) using variant-level metrics.
   try { rankAnalytics = expandTenSuitsInRankPower(rankAnalytics, variantAnalytics); }
   catch(error){ console.error('buildObservatoryAnalytics: ten-suit expansion failed:',error); }
+  // Integrity gate: descriptive RPI stays visible, but ranks whose own or
+  // child-variant opportunity accounting is invalid cannot balance-qualify.
+  rankAnalytics = { ...rankAnalytics, rankPower: applyRankBalanceQualification(rankAnalytics.rankPower, variantAnalytics) };
   // Build paired AB/BA seat-swap analysis
   const pairedABBA=buildPairedABBAAnalysis(summaries);
   // Campaign health summary — counts of entities with each metric available
@@ -759,6 +568,8 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
     // whose evidence grade rose above INSUFFICIENT.
     successfullyModeledSynergyPairs: synergies.filter(s => s.modelStatus === 'modeled').length,
     rejectedSynergyPairs: synergyDiagnostics.length,
+    synergyCandidatePairs: synergies.candidateSet?.pairCount ?? null,
+    synergyCellStatusCounts: [...synergies, ...synergyDiagnostics].reduce((acc, row) => { acc[row.cellStatus] = (acc[row.cellStatus] ?? 0) + 1; return acc; }, {}),
     evidenceQualifiedSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length,
     unmappedDiagnostics,
     incompleteABBA,
@@ -782,7 +593,7 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
     engineVersion:aggregate?.engineVersion??null,rulesVersion:aggregate?.rulesVersion??null,
     profileId:aggregate?.profileId??null,authorityHash:aggregate?.authorityHash??null,
     releaseIdentityHash:aggregate?.releaseIdentityHash??null,
-    aggregateHash:aggregate?.aggregateHash??null,mechanics,synergies,synergyDiagnostics,motifs,policies,anomalies,
+    aggregateHash:aggregate?.aggregateHash??null,mechanics,synergies,synergyDiagnostics,synergyCandidateSet:synergies.candidateSet??null,motifs,policies,anomalies,
     rankPower:rankAnalytics.rankPower,
     swapMatrix:rankAnalytics.swapMatrix,
     rankCounters:rankAnalytics.rankCounters,

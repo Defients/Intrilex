@@ -45,12 +45,12 @@
     "ranks": {
       "2": {
         "rank": "2",
-        "rpi": 0.16042227756899705,
+        "rpi": 0.12257410495180626,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.12833782205519764,
+        "decisionPower": 0.09805928396144502,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.26341755264400396,
+          "selectionPower": 0.07417668955805007,
           "victoryPower": 0.2897832817337461,
           "scorePower": 0.054015167555290344,
           "boardPower": 0.19969823809987344,
@@ -94,16 +94,25 @@
           "averageScoreMarginDelta": -1.9374089525900136,
           "averageDecisionValue": -0.092634781326401,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "3": {
         "rank": "3",
-        "rpi": 0.3502569675941608,
+        "rpi": 0.3299397985049902,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.3531412552774468,
+        "decisionPower": 0.33688752000611033,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.6045972871025861,
+          "selectionPower": 0.5030114416567333,
           "victoryPower": 0.6700280112044821,
           "scorePower": 0.0059688564664215635,
           "boardPower": 0.0593497517765015,
@@ -147,16 +156,25 @@
           "averageScoreMarginDelta": -2.3272030994154105,
           "averageDecisionValue": 0.003467277205345088,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "4": {
         "rank": "4",
-        "rpi": 0.31177925124732514,
+        "rpi": 0.29119218534213615,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.28626747540123537,
+        "decisionPower": 0.2697978226770842,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.5993446885349567,
+          "selectionPower": 0.49640935900901173,
           "victoryPower": 0.45614035087719307,
           "scorePower": 0.1131404463940637,
           "boardPower": 0.21543936854799234,
@@ -200,16 +218,25 @@
           "averageScoreMarginDelta": -1.4577324259541793,
           "averageDecisionValue": -0.04408801606004264,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "5": {
         "rank": "5",
-        "rpi": 0.3348782115041111,
+        "rpi": 0.2984727020338263,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.32939249544713745,
+        "decisionPower": 0.3002680878709096,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.2914939504718784,
+          "selectionPower": 0.10946640312045441,
           "victoryPower": 0.5439686171951619,
           "scorePower": 0.22871249013531458,
           "boardPower": 0.41495181543852816,
@@ -253,16 +280,25 @@
           "averageScoreMarginDelta": -0.5201098454471565,
           "averageDecisionValue": -0.011613964168015904,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "6": {
         "rank": "6",
-        "rpi": 0.40686971268120525,
+        "rpi": 0.3750064331690223,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.41313863853895083,
+        "decisionPower": 0.3876480149292045,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.37989258712026297,
+          "selectionPower": 0.22057618955934827,
           "victoryPower": 0.6604150826504465,
           "scorePower": 0.2759922429888553,
           "boardPower": 0.3694666845128005,
@@ -306,16 +342,25 @@
           "averageScoreMarginDelta": -0.1365346966376329,
           "averageDecisionValue": 0.0228458713454824,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "7": {
         "rank": "7",
-        "rpi": 0.40783011648052275,
+        "rpi": 0.367220115967681,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.41913063968504327,
+        "decisionPower": 0.38664263927476983,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.20966822183402378,
+          "selectionPower": 0.006618219269815251,
           "victoryPower": 0.6503759398496244,
           "scorePower": 0.39337394417529553,
           "boardPower": 0.4641800583208833,
@@ -359,16 +404,25 @@
           "averageScoreMarginDelta": 0.8157694247391787,
           "averageDecisionValue": 0.02972873321612176,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "8": {
         "rank": "8",
-        "rpi": 0.4937746708078313,
+        "rpi": 0.4744505805709626,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.4792357239262354,
+        "decisionPower": 0.4637764517367405,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.6239240973780644,
+          "selectionPower": 0.5273036461937209,
           "victoryPower": 0.671873859405796,
           "scorePower": 0.18319072416044677,
           "boardPower": 0.16846251188702277,
@@ -412,16 +466,25 @@
           "averageScoreMarginDelta": -0.8894226506974618,
           "averageDecisionValue": 0.018330518585728393,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "9": {
         "rank": "9",
-        "rpi": 0.4545388398010198,
+        "rpi": 0.4447984274538416,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.40001842921303954,
+        "decisionPower": 0.392226099335297,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.8104369043782514,
+          "selectionPower": 0.7617348426423611,
           "victoryPower": 0.40434419381787806,
           "scorePower": 0.2736260642360256,
           "boardPower": 0.24497984679272805,
@@ -465,16 +528,25 @@
           "averageScoreMarginDelta": -0.15573123030053293,
           "averageDecisionValue": -0.04468979897530105,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "A": {
         "rank": "A",
-        "rpi": 0.3383912616564956,
+        "rpi": 0.30836854410986264,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.3100200665989831,
+        "decisionPower": 0.2860018925616768,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.41571269528790034,
+          "selectionPower": 0.26559910755473565,
           "victoryPower": 0.4774040364068066,
           "scorePower": 0.08421347866615704,
           "boardPower": 0.1495737786986692,
@@ -518,6 +590,15 @@
           "averageScoreMarginDelta": -1.6924135585990838,
           "averageDecisionValue": -0.04084272212333377,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "J": {
@@ -571,16 +652,25 @@
           "averageScoreMarginDelta": -2.3756277393331056,
           "averageDecisionValue": -0.02889770313878606,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "Q": {
         "rank": "Q",
-        "rpi": 0.3265756561042764,
+        "rpi": 0.303163648152777,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.2945354598218191,
+        "decisionPower": 0.2758058534606196,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.5443670612884295,
+          "selectionPower": 0.4273070215309327,
           "victoryPower": 0.45614035087719307,
           "scorePower": 0.05517343621956178,
           "boardPower": 0.2937839533915593,
@@ -624,16 +714,25 @@
           "averageScoreMarginDelta": -1.9280120533161198,
           "averageDecisionValue": -0.048790812333662045,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "K": {
         "rank": "K",
-        "rpi": 0.41074491955966896,
+        "rpi": 0.40298188958490744,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.3566379826448868,
+        "decisionPower": 0.3504275586650775,
         "confidence": "HIGH",
         "axes": {
-          "selectionPower": 0.8489197437471361,
+          "selectionPower": 0.8101045938733284,
           "victoryPower": 0.3667576019695257,
           "scorePower": 0.25992972556460764,
           "boardPower": 0.5992344479578474,
@@ -677,16 +776,25 @@
           "averageScoreMarginDelta": -0.26684803669139634,
           "averageDecisionValue": -0.055685809335556384,
           "confidence": "MEDIUM"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": true,
+        "balanceQualification": {
+          "qualified": true,
+          "reasons": []
         }
       },
       "RJ": {
         "rank": "RJ",
-        "rpi": 0.1369921411321042,
+        "rpi": 0.088897368187446,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.1369921411321042,
+        "decisionPower": 0.088897368187446,
         "confidence": "MEDIUM",
         "axes": {
-          "selectionPower": 0.20440278501479736,
+          "selectionPower": 0,
           "victoryPower": 0,
           "scorePower": 0.19867212486720315,
           "boardPower": 0.3582833798588847,
@@ -721,16 +829,30 @@
           "stateDeltaObservationCount": 31,
           "causalCoverage": 1
         },
-        "orv": null
+        "orv": null,
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": false,
+        "balanceQualification": {
+          "qualified": false,
+          "reasons": [
+            {
+              "code": "FREQUENCY_CONFIDENCE_BELOW_HIGH",
+              "detail": "opportunity-frequency confidence is MEDIUM"
+            }
+          ]
+        }
       },
       "BJ": {
         "rank": "BJ",
-        "rpi": 0.7158585101509835,
+        "rpi": 0.6859265321736174,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.735512654617243,
+        "decisionPower": 0.7085738744376135,
         "confidence": "MEDIUM",
         "axes": {
-          "selectionPower": 0.4174786239809107,
+          "selectionPower": 0.2678187340940809,
           "victoryPower": 0.9877324891175306,
           "scorePower": 0.7552210651935403,
           "boardPower": 0.6136474252895942,
@@ -774,16 +896,30 @@
           "averageScoreMarginDelta": 3.7513931307433195,
           "averageDecisionValue": 0.1478058710858797,
           "confidence": "LOW"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": false,
+        "balanceQualification": {
+          "qualified": false,
+          "reasons": [
+            {
+              "code": "FREQUENCY_CONFIDENCE_BELOW_HIGH",
+              "detail": "opportunity-frequency confidence is MEDIUM"
+            }
+          ]
         }
       },
       "10:club": {
         "rank": "10:club",
-        "rpi": 0.7552413936388677,
+        "rpi": 0.8690983404684265,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.7797172542749808,
-        "confidence": "HIGH",
+        "decisionPower": 0.8821885064215839,
+        "confidence": "MEDIUM",
         "axes": {
-          "selectionPower": 0.2762069681943383,
+          "selectionPower": 0.8454917023421319,
           "victoryPower": 1,
           "scorePower": 1,
           "boardPower": 1,
@@ -799,7 +935,7 @@
           "observedRankValue": "observed"
         },
         "raw": {
-          "selectionRate": 0.25112107623318386,
+          "selectionRate": 0.45901639344262296,
           "victoryRate": 0.6346153846153846,
           "scorePerSelection": 7.892857142857143,
           "boardPerSelection": 0.8392857142857143,
@@ -809,8 +945,8 @@
         },
         "metrics": {
           "selectionCount": 56,
-          "opportunityCount": 223,
-          "selectionRate": 0.25112107623318386,
+          "opportunityCount": 122,
+          "selectionRate": 0.45901639344262296,
           "victoryContributionCount": 33,
           "defeatExposureCount": 19,
           "securedPointContribution": 442,
@@ -827,16 +963,30 @@
           "averageScoreMarginDelta": 5.737256225981415,
           "averageDecisionValue": 0.17089071661315944,
           "confidence": "LOW"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": false,
+        "balanceQualification": {
+          "qualified": false,
+          "reasons": [
+            {
+              "code": "FREQUENCY_CONFIDENCE_BELOW_HIGH",
+              "detail": "opportunity-frequency confidence is MEDIUM"
+            }
+          ]
         }
       },
       "10:diamond": {
         "rank": "10:diamond",
-        "rpi": 0.39574551618502474,
+        "rpi": 0.4994998162038589,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.3986344527119309,
-        "confidence": "HIGH",
+        "decisionPower": 0.49201332272888165,
+        "confidence": "MEDIUM",
         "axes": {
-          "selectionPower": 0.0851650734112193,
+          "selectionPower": 0.6039365735053902,
           "victoryPower": 0.5624587785252605,
           "scorePower": 0.5494196677766443,
           "boardPower": 0.6451864109802394,
@@ -852,7 +1002,7 @@
           "observedRankValue": "observed"
         },
         "raw": {
-          "selectionRate": 0.18502202643171806,
+          "selectionRate": 0.3925233644859813,
           "victoryRate": 0.5263157894736842,
           "scorePerSelection": 4.4523809523809526,
           "boardPerSelection": 0.5714285714285714,
@@ -862,8 +1012,8 @@
         },
         "metrics": {
           "selectionCount": 42,
-          "opportunityCount": 227,
-          "selectionRate": 0.18502202643171806,
+          "opportunityCount": 107,
+          "selectionRate": 0.3925233644859813,
           "victoryContributionCount": 20,
           "defeatExposureCount": 18,
           "securedPointContribution": 187,
@@ -880,16 +1030,30 @@
           "averageScoreMarginDelta": 2.081750273600463,
           "averageDecisionValue": 0.01926733725129323,
           "confidence": "LOW"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": false,
+        "balanceQualification": {
+          "qualified": false,
+          "reasons": [
+            {
+              "code": "FREQUENCY_CONFIDENCE_BELOW_HIGH",
+              "detail": "opportunity-frequency confidence is MEDIUM"
+            }
+          ]
         }
       },
       "10:heart": {
         "rank": "10:heart",
-        "rpi": 0.2324170593031591,
+        "rpi": 0.3274983920579177,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.2372498774966189,
-        "confidence": "HIGH",
+        "decisionPower": 0.3228230769759016,
+        "confidence": "MEDIUM",
         "axes": {
-          "selectionPower": 0,
+          "selectionPower": 0.4754066637737929,
           "victoryPower": 0.5173539910382016,
           "scorePower": 0.22824475968663982,
           "boardPower": 0.15317823420617155,
@@ -905,7 +1069,7 @@
           "observedRankValue": "observed"
         },
         "raw": {
-          "selectionRate": 0.15555555555555556,
+          "selectionRate": 0.35714285714285715,
           "victoryRate": 0.5151515151515151,
           "scorePerSelection": 2,
           "boardPerSelection": 0.2,
@@ -915,8 +1079,8 @@
         },
         "metrics": {
           "selectionCount": 35,
-          "opportunityCount": 225,
-          "selectionRate": 0.15555555555555556,
+          "opportunityCount": 98,
+          "selectionRate": 0.35714285714285715,
           "victoryContributionCount": 17,
           "defeatExposureCount": 16,
           "securedPointContribution": 70,
@@ -933,16 +1097,30 @@
           "averageScoreMarginDelta": -0.5239044883042994,
           "averageDecisionValue": -0.018651251835059005,
           "confidence": "LOW"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": false,
+        "balanceQualification": {
+          "qualified": false,
+          "reasons": [
+            {
+              "code": "FREQUENCY_CONFIDENCE_BELOW_HIGH",
+              "detail": "opportunity-frequency confidence is MEDIUM"
+            }
+          ]
         }
       },
       "10:spade": {
         "rank": "10:spade",
-        "rpi": 0.40818343438772614,
+        "rpi": 0.3792095882062761,
         "rpiStatus": "OBSERVED",
-        "decisionPower": 0.3924834631129748,
+        "decisionPower": 0.3664070015496697,
         "confidence": "MEDIUM",
         "axes": {
-          "selectionPower": 0.4361253119006536,
+          "selectionPower": 0.2912560809934033,
           "victoryPower": 0.39842463301109926,
           "scorePower": 0.517745290024283,
           "boardPower": 0.4459928171445844,
@@ -986,145 +1164,193 @@
           "averageScoreMarginDelta": 1.8247797222220166,
           "averageDecisionValue": -0.026441466006852116,
           "confidence": "LOW"
+        },
+        "integrity": {
+          "status": "PASS",
+          "violations": []
+        },
+        "balanceQualified": false,
+        "balanceQualification": {
+          "qualified": false,
+          "reasons": [
+            {
+              "code": "FREQUENCY_CONFIDENCE_BELOW_HIGH",
+              "detail": "opportunity-frequency confidence is MEDIUM"
+            }
+          ]
         }
       }
     },
     "ladder": [
       {
         "rank": "10:club",
-        "rpi": 0.7552413936388677,
+        "rpi": 0.8690983404684265,
         "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "MEDIUM",
+        "balanceQualified": false,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "BJ",
-        "rpi": 0.7158585101509835,
+        "rpi": 0.6859265321736174,
         "rpiStatus": "OBSERVED",
-        "confidence": "MEDIUM"
+        "confidence": "MEDIUM",
+        "balanceQualified": false,
+        "integrityStatus": "PASS"
+      },
+      {
+        "rank": "10:diamond",
+        "rpi": 0.4994998162038589,
+        "rpiStatus": "OBSERVED",
+        "confidence": "MEDIUM",
+        "balanceQualified": false,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "8",
-        "rpi": 0.4937746708078313,
+        "rpi": 0.4744505805709626,
         "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "J",
         "rpi": 0.47348025624435175,
         "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "9",
-        "rpi": 0.4545388398010198,
+        "rpi": 0.4447984274538416,
         "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "K",
-        "rpi": 0.41074491955966896,
+        "rpi": 0.40298188958490744,
         "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "10:spade",
-        "rpi": 0.40818343438772614,
+        "rpi": 0.3792095882062761,
         "rpiStatus": "OBSERVED",
-        "confidence": "MEDIUM"
-      },
-      {
-        "rank": "7",
-        "rpi": 0.40783011648052275,
-        "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "MEDIUM",
+        "balanceQualified": false,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "6",
-        "rpi": 0.40686971268120525,
+        "rpi": 0.3750064331690223,
         "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
       },
       {
-        "rank": "10:diamond",
-        "rpi": 0.39574551618502474,
+        "rank": "7",
+        "rpi": 0.367220115967681,
         "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "3",
-        "rpi": 0.3502569675941608,
+        "rpi": 0.3299397985049902,
         "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
-      },
-      {
-        "rank": "A",
-        "rpi": 0.3383912616564956,
-        "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
-      },
-      {
-        "rank": "5",
-        "rpi": 0.3348782115041111,
-        "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
-      },
-      {
-        "rank": "Q",
-        "rpi": 0.3265756561042764,
-        "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
-      },
-      {
-        "rank": "4",
-        "rpi": 0.31177925124732514,
-        "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "10:heart",
-        "rpi": 0.2324170593031591,
+        "rpi": 0.3274983920579177,
         "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "MEDIUM",
+        "balanceQualified": false,
+        "integrityStatus": "PASS"
+      },
+      {
+        "rank": "A",
+        "rpi": 0.30836854410986264,
+        "rpiStatus": "OBSERVED",
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
+      },
+      {
+        "rank": "Q",
+        "rpi": 0.303163648152777,
+        "rpiStatus": "OBSERVED",
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
+      },
+      {
+        "rank": "5",
+        "rpi": 0.2984727020338263,
+        "rpiStatus": "OBSERVED",
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
+      },
+      {
+        "rank": "4",
+        "rpi": 0.29119218534213615,
+        "rpiStatus": "OBSERVED",
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "2",
-        "rpi": 0.16042227756899705,
+        "rpi": 0.12257410495180626,
         "rpiStatus": "OBSERVED",
-        "confidence": "HIGH"
+        "confidence": "HIGH",
+        "balanceQualified": true,
+        "integrityStatus": "PASS"
       },
       {
         "rank": "RJ",
-        "rpi": 0.1369921411321042,
+        "rpi": 0.088897368187446,
         "rpiStatus": "OBSERVED",
-        "confidence": "MEDIUM"
+        "confidence": "MEDIUM",
+        "balanceQualified": false,
+        "integrityStatus": "PASS"
       }
     ],
     "watchlist": {
-      "overpowered": [
-        {
-          "rank": "10:club",
-          "rpi": 0.7552413936388677,
-          "reason": "RPI exceeds 0.75 with HIGH confidence and all mandatory axes observed"
-        }
-      ],
+      "overpowered": [],
       "underpowered": [
         {
           "rank": "2",
-          "rpi": 0.16042227756899705,
-          "reason": "RPI below 0.25 with HIGH confidence and all mandatory axes observed"
-        },
-        {
-          "rank": "10:heart",
-          "rpi": 0.2324170593031591,
+          "rpi": 0.12257410495180626,
           "reason": "RPI below 0.25 with HIGH confidence and all mandatory axes observed"
         }
       ],
       "dominant": [],
       "negligible": [],
       "suppressed": false,
-      "suppressionReason": null
+      "suppressionReason": null,
+      "integritySuppressed": []
     },
-    "aggregateHash": "59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2"
+    "aggregateHash": "59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2",
+    "balanceQualification": {
+      "qualifiedCount": 12,
+      "entryCount": 18,
+      "integrityFailures": [],
+      "descriptiveLeader": "10:club",
+      "qualifiedLeader": "8",
+      "contract": "Descriptive RPI ordering is always shown; balance conclusions require integrity PASS (no selections without opportunities, child variants included), HIGH opportunity-frequency confidence, an observed RPI and all mandatory axes observed."
+    }
   },
   "swapMatrix": {
     "2": {

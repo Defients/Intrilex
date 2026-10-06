@@ -26071,10 +26071,10 @@
     "10:club": {
       "variantDrawCount": 0,
       "variantAppearanceCount": 0,
-      "variantOpportunityCount": 223,
+      "variantOpportunityCount": 122,
       "variantSelectionCount": 56,
       "variantActivationCount": 0,
-      "variantPlayRate": 0.25112107623318386,
+      "variantPlayRate": 0.45901639344262296,
       "variantConversionRate": 0,
       "variantSuccessCount": 0,
       "variantFailureCount": 0,
@@ -26099,10 +26099,10 @@
     "10:diamond": {
       "variantDrawCount": 0,
       "variantAppearanceCount": 0,
-      "variantOpportunityCount": 227,
+      "variantOpportunityCount": 107,
       "variantSelectionCount": 42,
       "variantActivationCount": 0,
-      "variantPlayRate": 0.18502202643171806,
+      "variantPlayRate": 0.3925233644859813,
       "variantConversionRate": 0,
       "variantSuccessCount": 0,
       "variantFailureCount": 0,
@@ -26127,10 +26127,10 @@
     "10:heart": {
       "variantDrawCount": 0,
       "variantAppearanceCount": 0,
-      "variantOpportunityCount": 225,
+      "variantOpportunityCount": 98,
       "variantSelectionCount": 35,
       "variantActivationCount": 0,
-      "variantPlayRate": 0.15555555555555556,
+      "variantPlayRate": 0.35714285714285715,
       "variantConversionRate": 0,
       "variantSuccessCount": 0,
       "variantFailureCount": 0,
@@ -27782,10 +27782,10 @@
       "10:club": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 98,
+        "variantOpportunityCount": 54,
         "variantSelectionCount": 22,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.22448979591836735,
+        "variantPlayRate": 0.4074074074074074,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -27810,10 +27810,10 @@
       "10:diamond": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 97,
+        "variantOpportunityCount": 51,
         "variantSelectionCount": 20,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.20618556701030927,
+        "variantPlayRate": 0.39215686274509803,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -27838,10 +27838,10 @@
       "10:heart": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 94,
+        "variantOpportunityCount": 42,
         "variantSelectionCount": 18,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.19148936170212766,
+        "variantPlayRate": 0.42857142857142855,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -29492,10 +29492,10 @@
       "10:club": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 125,
+        "variantOpportunityCount": 68,
         "variantSelectionCount": 34,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.272,
+        "variantPlayRate": 0.5,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -29520,10 +29520,10 @@
       "10:diamond": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 130,
+        "variantOpportunityCount": 56,
         "variantSelectionCount": 22,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.16923076923076924,
+        "variantPlayRate": 0.39285714285714285,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -29548,10 +29548,10 @@
       "10:heart": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 131,
+        "variantOpportunityCount": 56,
         "variantSelectionCount": 17,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.1297709923664122,
+        "variantPlayRate": 0.30357142857142855,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -32472,7 +32472,7 @@
     },
     "10:club": {
       "axes": {
-        "selectionPower": 0.41853512705530643,
+        "selectionPower": 0.7650273224043717,
         "victoryPower": 0.8461538461538461,
         "scorePower": 1,
         "boardPower": 1,
@@ -32480,7 +32480,7 @@
         "valuePower": 0.5
       },
       "raw": {
-        "selectionRate": 0.25112107623318386,
+        "selectionRate": 0.45901639344262296,
         "victoryRate": 0.6346153846153846,
         "scorePerSelection": 7.892857142857143,
         "boardPerSelection": 0.8392857142857143,
@@ -32490,7 +32490,7 @@
     },
     "10:diamond": {
       "axes": {
-        "selectionPower": 0.30837004405286345,
+        "selectionPower": 0.6542056074766355,
         "victoryPower": 0.7017543859649122,
         "scorePower": 0.5641025641025641,
         "boardPower": 0.6808510638297872,
@@ -32498,7 +32498,7 @@
         "valuePower": 0.5
       },
       "raw": {
-        "selectionRate": 0.18502202643171806,
+        "selectionRate": 0.3925233644859813,
         "victoryRate": 0.5263157894736842,
         "scorePerSelection": 4.4523809523809526,
         "boardPerSelection": 0.5714285714285714,
@@ -32508,7 +32508,7 @@
     },
     "10:heart": {
       "axes": {
-        "selectionPower": 0.2592592592592593,
+        "selectionPower": 0.5952380952380952,
         "victoryPower": 0.6868686868686869,
         "scorePower": 0.25339366515837103,
         "boardPower": 0.23829787234042554,
@@ -32516,7 +32516,7 @@
         "valuePower": 0.5
       },
       "raw": {
-        "selectionRate": 0.15555555555555556,
+        "selectionRate": 0.35714285714285715,
         "victoryRate": 0.5151515151515151,
         "scorePerSelection": 2,
         "boardPerSelection": 0.2,
@@ -32824,7 +32824,7 @@
     "9:spade": "HIGH",
     "10:club": "HIGH",
     "10:diamond": "HIGH",
-    "10:heart": "HIGH",
+    "10:heart": "MEDIUM",
     "10:spade": "HIGH",
     "J": "HIGH",
     "J:normal": "HIGH",
@@ -33063,19 +33063,19 @@
       "firstPlayerSensitivity": 0.03431372549019607
     },
     "10:club": {
-      "policySensitivity": 0.04751020408163267,
-      "seatSensitivity": 0.04751020408163267,
-      "firstPlayerSensitivity": 0.04751020408163267
+      "policySensitivity": 0.09259259259259262,
+      "seatSensitivity": 0.09259259259259262,
+      "firstPlayerSensitivity": 0.09259259259259262
     },
     "10:diamond": {
-      "policySensitivity": 0.03695479777954003,
-      "seatSensitivity": 0.03695479777954003,
-      "firstPlayerSensitivity": 0.03695479777954003
+      "policySensitivity": 0.0007002801120448154,
+      "seatSensitivity": 0.0007002801120448154,
+      "firstPlayerSensitivity": 0.0007002801120448154
     },
     "10:heart": {
-      "policySensitivity": 0.06171836933571545,
-      "seatSensitivity": 0.06171836933571545,
-      "firstPlayerSensitivity": 0.06171836933571545
+      "policySensitivity": 0.125,
+      "seatSensitivity": 0.125,
+      "firstPlayerSensitivity": 0.125
     },
     "10:spade": {
       "policySensitivity": 0.13978208875896891,
@@ -35495,10 +35495,10 @@
           "metrics": {
             "variantDrawCount": 0,
             "variantAppearanceCount": 0,
-            "variantOpportunityCount": 223,
+            "variantOpportunityCount": 122,
             "variantSelectionCount": 56,
             "variantActivationCount": 0,
-            "variantPlayRate": 0.25112107623318386,
+            "variantPlayRate": 0.45901639344262296,
             "variantConversionRate": 0,
             "variantSuccessCount": 0,
             "variantFailureCount": 0,
@@ -35522,7 +35522,7 @@
           },
           "power": {
             "axes": {
-              "selectionPower": 0.41853512705530643,
+              "selectionPower": 0.7650273224043717,
               "victoryPower": 0.8461538461538461,
               "scorePower": 1,
               "boardPower": 1,
@@ -35530,7 +35530,7 @@
               "valuePower": 0.5
             },
             "raw": {
-              "selectionRate": 0.25112107623318386,
+              "selectionRate": 0.45901639344262296,
               "victoryRate": 0.6346153846153846,
               "scorePerSelection": 7.892857142857143,
               "boardPerSelection": 0.8392857142857143,
@@ -35541,7 +35541,7 @@
           "confidence": "HIGH",
           "synergies": [],
           "counters": [],
-          "sampleSize": 223
+          "sampleSize": 122
         },
         "10:diamond": {
           "variantKey": "10:diamond",
@@ -35552,10 +35552,10 @@
           "metrics": {
             "variantDrawCount": 0,
             "variantAppearanceCount": 0,
-            "variantOpportunityCount": 227,
+            "variantOpportunityCount": 107,
             "variantSelectionCount": 42,
             "variantActivationCount": 0,
-            "variantPlayRate": 0.18502202643171806,
+            "variantPlayRate": 0.3925233644859813,
             "variantConversionRate": 0,
             "variantSuccessCount": 0,
             "variantFailureCount": 0,
@@ -35579,7 +35579,7 @@
           },
           "power": {
             "axes": {
-              "selectionPower": 0.30837004405286345,
+              "selectionPower": 0.6542056074766355,
               "victoryPower": 0.7017543859649122,
               "scorePower": 0.5641025641025641,
               "boardPower": 0.6808510638297872,
@@ -35587,7 +35587,7 @@
               "valuePower": 0.5
             },
             "raw": {
-              "selectionRate": 0.18502202643171806,
+              "selectionRate": 0.3925233644859813,
               "victoryRate": 0.5263157894736842,
               "scorePerSelection": 4.4523809523809526,
               "boardPerSelection": 0.5714285714285714,
@@ -35598,7 +35598,7 @@
           "confidence": "HIGH",
           "synergies": [],
           "counters": [],
-          "sampleSize": 227
+          "sampleSize": 107
         },
         "10:heart": {
           "variantKey": "10:heart",
@@ -35609,10 +35609,10 @@
           "metrics": {
             "variantDrawCount": 0,
             "variantAppearanceCount": 0,
-            "variantOpportunityCount": 225,
+            "variantOpportunityCount": 98,
             "variantSelectionCount": 35,
             "variantActivationCount": 0,
-            "variantPlayRate": 0.15555555555555556,
+            "variantPlayRate": 0.35714285714285715,
             "variantConversionRate": 0,
             "variantSuccessCount": 0,
             "variantFailureCount": 0,
@@ -35636,7 +35636,7 @@
           },
           "power": {
             "axes": {
-              "selectionPower": 0.2592592592592593,
+              "selectionPower": 0.5952380952380952,
               "victoryPower": 0.6868686868686869,
               "scorePower": 0.25339366515837103,
               "boardPower": 0.23829787234042554,
@@ -35644,7 +35644,7 @@
               "valuePower": 0.5
             },
             "raw": {
-              "selectionRate": 0.15555555555555556,
+              "selectionRate": 0.35714285714285715,
               "victoryRate": 0.5151515151515151,
               "scorePerSelection": 2,
               "boardPerSelection": 0.2,
@@ -35652,10 +35652,10 @@
               "avgValue": 0
             }
           },
-          "confidence": "HIGH",
+          "confidence": "MEDIUM",
           "synergies": [],
           "counters": [],
-          "sampleSize": 225
+          "sampleSize": 98
         },
         "10:spade": {
           "variantKey": "10:spade",
@@ -37923,10 +37923,10 @@
       "10:club": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 223,
+        "variantOpportunityCount": 122,
         "variantSelectionCount": 56,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.25112107623318386,
+        "variantPlayRate": 0.45901639344262296,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -37951,10 +37951,10 @@
       "10:diamond": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 227,
+        "variantOpportunityCount": 107,
         "variantSelectionCount": 42,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.18502202643171806,
+        "variantPlayRate": 0.3925233644859813,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -37979,10 +37979,10 @@
       "10:heart": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 225,
+        "variantOpportunityCount": 98,
         "variantSelectionCount": 35,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.15555555555555556,
+        "variantPlayRate": 0.35714285714285715,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -39635,10 +39635,10 @@
       "10:club": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 98,
+        "variantOpportunityCount": 54,
         "variantSelectionCount": 22,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.22448979591836735,
+        "variantPlayRate": 0.4074074074074074,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -39663,10 +39663,10 @@
       "10:diamond": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 97,
+        "variantOpportunityCount": 51,
         "variantSelectionCount": 20,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.20618556701030927,
+        "variantPlayRate": 0.39215686274509803,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -39691,10 +39691,10 @@
       "10:heart": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 94,
+        "variantOpportunityCount": 42,
         "variantSelectionCount": 18,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.19148936170212766,
+        "variantPlayRate": 0.42857142857142855,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -41345,10 +41345,10 @@
       "10:club": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 125,
+        "variantOpportunityCount": 68,
         "variantSelectionCount": 34,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.272,
+        "variantPlayRate": 0.5,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -41373,10 +41373,10 @@
       "10:diamond": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 130,
+        "variantOpportunityCount": 56,
         "variantSelectionCount": 22,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.16923076923076924,
+        "variantPlayRate": 0.39285714285714285,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -41401,10 +41401,10 @@
       "10:heart": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 131,
+        "variantOpportunityCount": 56,
         "variantSelectionCount": 17,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.1297709923664122,
+        "variantPlayRate": 0.30357142857142855,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -43057,10 +43057,10 @@
       "10:club": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 98,
+        "variantOpportunityCount": 54,
         "variantSelectionCount": 22,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.22448979591836735,
+        "variantPlayRate": 0.4074074074074074,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -43085,10 +43085,10 @@
       "10:diamond": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 97,
+        "variantOpportunityCount": 51,
         "variantSelectionCount": 20,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.20618556701030927,
+        "variantPlayRate": 0.39215686274509803,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -43113,10 +43113,10 @@
       "10:heart": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 94,
+        "variantOpportunityCount": 42,
         "variantSelectionCount": 18,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.19148936170212766,
+        "variantPlayRate": 0.42857142857142855,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -44767,10 +44767,10 @@
       "10:club": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 125,
+        "variantOpportunityCount": 68,
         "variantSelectionCount": 34,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.272,
+        "variantPlayRate": 0.5,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -44795,10 +44795,10 @@
       "10:diamond": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 130,
+        "variantOpportunityCount": 56,
         "variantSelectionCount": 22,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.16923076923076924,
+        "variantPlayRate": 0.39285714285714285,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -44823,10 +44823,10 @@
       "10:heart": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 131,
+        "variantOpportunityCount": 56,
         "variantSelectionCount": 17,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.1297709923664122,
+        "variantPlayRate": 0.30357142857142855,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -46479,10 +46479,10 @@
       "10:club": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 98,
+        "variantOpportunityCount": 54,
         "variantSelectionCount": 22,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.22448979591836735,
+        "variantPlayRate": 0.4074074074074074,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -46507,10 +46507,10 @@
       "10:diamond": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 97,
+        "variantOpportunityCount": 51,
         "variantSelectionCount": 20,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.20618556701030927,
+        "variantPlayRate": 0.39215686274509803,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -46535,10 +46535,10 @@
       "10:heart": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 94,
+        "variantOpportunityCount": 42,
         "variantSelectionCount": 18,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.19148936170212766,
+        "variantPlayRate": 0.42857142857142855,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -48189,10 +48189,10 @@
       "10:club": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 125,
+        "variantOpportunityCount": 68,
         "variantSelectionCount": 34,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.272,
+        "variantPlayRate": 0.5,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -48217,10 +48217,10 @@
       "10:diamond": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 130,
+        "variantOpportunityCount": 56,
         "variantSelectionCount": 22,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.16923076923076924,
+        "variantPlayRate": 0.39285714285714285,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,
@@ -48245,10 +48245,10 @@
       "10:heart": {
         "variantDrawCount": 0,
         "variantAppearanceCount": 0,
-        "variantOpportunityCount": 131,
+        "variantOpportunityCount": 56,
         "variantSelectionCount": 17,
         "variantActivationCount": 0,
-        "variantPlayRate": 0.1297709923664122,
+        "variantPlayRate": 0.30357142857142855,
         "variantConversionRate": 0,
         "variantSuccessCount": 0,
         "variantFailureCount": 0,

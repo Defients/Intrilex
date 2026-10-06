@@ -327,31 +327,6 @@ export function expandTenSuitsInRankPower(rankAnalytics, variantAnalytics) {
   };
 }
 
-/**
- * Distribute legacy Rank 10 variant opportunities (10 or 10:normal) to the
- * per-suit Ten keys (10:club, 10:diamond, 10:heart).  Spade opportunities are
- * left as 10:spade.  This allows stale/legacy summaries to produce data for the
- * new per-suit 10 ladder without requiring a full campaign regeneration.
- * @param {object} variantOpps
- * @returns {object} additional per-suit opportunities to merge in
- */
-function normalizeTenVariantOpportunities(variantOpps) {
-  const additional = {};
-  // If only the rank-overall or the legacy 10:normal key is present, spread
-  // the non-spade suit opportunity equally across the three non-spade tens.
-  // 10:spade is left as-is if already present.  Use ceil to avoid floating-
-  // point precision issues where selections could exceed opportunities by
-  // a tiny epsilon (e.g. 2 > 1.9999999999999998).
-  const nonSpadeSource = variantOpps['10:normal'] ?? variantOpps['10'];
-  if (nonSpadeSource) {
-    const total = nonSpadeSource.opportunityFrames ?? 1;
-    const perSuit = Math.ceil(total / 3);
-    for (const key of ['10:club', '10:diamond', '10:heart']) {
-      additional[key] = { opportunityFrames: perSuit, legalOptions: nonSpadeSource.legalOptions ?? 1 };
-    }
-  }
-  return additional;
-}
 
 /**
  * Extract participant IDs from summaries.
@@ -722,13 +697,11 @@ export function buildVariantAnalytics({ summaries, aggregate = null, profileId =
             variantOpps[opp.variantKey] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
           }
         }
-        // Legacy or stale summaries may contain 10 or 10:normal opportunities
-        // before the per-suit Ten expansion.  Distribute those opportunities to
-        // the per-suit keys so the new ladder has data.
-        if (isPerSuitTenRank(attribution.primaryRank)) {
-          const normalizedTen = normalizeTenVariantOpportunities(variantOpps);
-          for (const [key, info] of Object.entries(normalizedTen)) variantOpps[key] = info;
-        }
+        // Runtime-recorded per-suit Ten keys (10:club … 10:spade) are the
+        // only valid per-suit denominators. They are never synthesized from
+        // the rank-overall '10' count: the former ceil(n/3) spread overwrote
+        // real opportunities whenever a 10 was selected and never credited
+        // 10:spade.
       } else {
         // Legacy fallback: credit rank-overall and normal from rank-level
         // opportunities. Spade/super variants will have zero opportunities
@@ -738,11 +711,10 @@ export function buildVariantAnalytics({ summaries, aggregate = null, profileId =
           const r = opp.rank;
           if (!r) continue;
           if (isPerSuitTenRank(r)) {
+            // Legacy data cannot say which Ten suit was legal: credit only the
+            // rank-overall key. Per-suit selections then surface as an
+            // explicit integrity failure instead of an invented denominator.
             variantOpps[r] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
-            const perSuit = Math.ceil((opp.opportunityFrames ?? 1) / 3);
-            for (const key of ['10:club', '10:diamond', '10:heart']) {
-              variantOpps[key] = { opportunityFrames: perSuit, legalOptions: opp.legalOptions ?? 1 };
-            }
           } else {
             variantOpps[r] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
             variantOpps[`${r}:normal`] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };

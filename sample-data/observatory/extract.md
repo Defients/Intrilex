@@ -2,9 +2,9 @@
 
 **Extract version:** 1.0.0
 **Analytics schema:** 4.2.0
-**Source hash:** `a08badc41c452f798de5b2edba58a012cdfb3390060caa7c62154c0ec87e106f`
+**Source hash:** `6e6a88dd49329d53c9a4e796ed2e37b0f04a686767788d9e7354cceec268e816`
 **Aggregate hash:** `59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2`
-**Extract hash:** `4698d55e9c1e5daffc0aa2dd0ec35578ee8a361d6c9a12569b7a77408a58c845`
+**Extract hash:** `50516a53525a37e3c12020dfeb0123c3e1c3f8828c6984129b993340df36dd21`
 
 ## Executive Summary
 
@@ -164,7 +164,7 @@ Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. Al
 | eight-scuttle | 5.5% | 11 | 0.241 | INSUFFICIENT | measured |
 | eight-spade-free-scuttle | 5.5% | 11 | 0.241 | INSUFFICIENT | measured |
 | exhausted-pass | 0.5% | 1 | 0.503 | INSUFFICIENT | measured |
-| face-down | 53.5% | 107 | 0.211 | EXPLORATORY | measured |
+| face-down | 53.5% | 107 | 0.211 | INSUFFICIENT | measured |
 | face-up-draw | 17.5% | 35 | -0.017 | INSUFFICIENT | measured |
 | five-gy-bottom | 11.0% | 22 | 0.460 | EXPLORATORY | measured |
 | five-recycle | 6.0% | 12 | 0.089 | INSUFFICIENT | measured |
@@ -200,7 +200,7 @@ Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. Al
 | jack-pr | 3.0% | 6 | 0.344 | INSUFFICIENT | measured |
 | jack-tempo | 1.5% | 3 | -0.169 | INSUFFICIENT | measured |
 | king | 16.5% | 33 | 0.018 | INSUFFICIENT | measured |
-| king-anchor | 5.0% | 10 | -0.421 | EXPLORATORY | measured |
+| king-anchor | 5.0% | 10 | -0.421 | INSUFFICIENT | measured |
 | king-spade | 1.0% | 2 | -0.505 | INSUFFICIENT | measured |
 | natural-four | 3.5% | 7 | -0.074 | INSUFFICIENT | measured |
 | natural-four-reorder-CORE-026-CORE-022-CORE-024-CORE-028 | 0.5% | 1 | 0.503 | INSUFFICIENT | measured |
@@ -213,7 +213,7 @@ Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. Al
 | nine-goal-shift-3 | 1.0% | 2 | -0.505 | INSUFFICIENT | measured |
 | nine-goal-shift-5 | 2.0% | 4 | 0.255 | INSUFFICIENT | measured |
 | nine-spade-goal-shift-5 | 1.5% | 3 | 0.169 | INSUFFICIENT | measured |
-| nine-tap | 28.0% | 56 | -0.248 | EXPLORATORY | measured |
+| nine-tap | 28.0% | 56 | -0.248 | INSUFFICIENT | measured |
 | purge-aegis | 2.0% | 4 | -0.255 | INSUFFICIENT | measured |
 | purge-anchor-bounce | 5.0% | 10 | -0.211 | INSUFFICIENT | measured |
 | queen | 3.5% | 7 | -0.074 | INSUFFICIENT | measured |
@@ -238,7 +238,7 @@ Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. Al
 | recycle-five-♥ | 0.5% | 1 | -0.503 | INSUFFICIENT | measured |
 | recycle-five-♦ | 0.5% | 1 | -0.503 | INSUFFICIENT | measured |
 | royal-marriage | 4.5% | 9 | -0.058 | INSUFFICIENT | measured |
-| score | 80.5% | 161 | 0.462 | EXPLORATORY | measured |
+| score | 80.5% | 161 | 0.462 | INSUFFICIENT | measured |
 | scuttle | 24.0% | 48 | -0.137 | INSUFFICIENT | measured |
 | seven-scoring-trigger-take-CORE-001 | 0.5% | 1 | 0.503 | INSUFFICIENT | measured |
 | seven-scoring-trigger-take-CORE-003 | 0.5% | 1 | -0.503 | INSUFFICIENT | measured |
@@ -551,7 +551,7 @@ Replay refs: M-7d2e54be2e472d2f7c7d
 
 <details><summary><b>face-down</b></summary>
 
-Used in 53.5% of participant observations (107/200). Outcome association: positive (0.211, CI [0.075, 0.347]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient).
+Used in 53.5% of participant observations (107/200). Outcome association: positive (0.211, CI [0.075, 0.347]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-da33bf6f5bb04f175916, M-dfab048a83e3b8acc06c, M-d42c5a76b1a43e8227de, M-a6073e68be3dfa99914b
 </details>
@@ -803,7 +803,7 @@ Replay refs: M-da33bf6f5bb04f175916, M-0ff40b5b215e28c298ff, M-1b9ce7c6ecb94b540
 
 <details><summary><b>king-anchor</b></summary>
 
-Used in 5.0% of participant observations (10/200). Outcome association: negative (-0.421, CI [-0.620, -0.222]). Evidence grade: EXPLORATORY (insufficient).
+Used in 5.0% of participant observations (10/200). Outcome association: negative (-0.421, CI [-0.620, -0.222]). Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-ec8f8ba09f1121a2d16f, M-84269db284883330999c, M-1b9ce7c6ecb94b540b09, M-4756067b923a59fad42d
 </details>
@@ -894,7 +894,7 @@ Replay refs: M-581e8e1bf1c1db31783f, M-7d2e54be2e472d2f7c7d, M-1d9b0db8df3efa98a
 
 <details><summary><b>nine-tap</b></summary>
 
-Used in 28.0% of participant observations (56/200). Outcome association: negative (-0.248, CI [-0.395, -0.101]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient).
+Used in 28.0% of participant observations (56/200). Outcome association: negative (-0.248, CI [-0.395, -0.101]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-da33bf6f5bb04f175916, M-f1291cd390d331a3ffbb, M-cc250cc50515a292f3e3, M-4756067b923a59fad42d
 </details>
@@ -1069,7 +1069,7 @@ Replay refs: M-f3fba5744ac97b09f3e9, M-cc2da4250ea78f0c5da4, M-b615ae18bd3e0f132
 
 <details><summary><b>score</b></summary>
 
-Used in 80.5% of participant observations (161/200). Outcome association: positive (0.462, CI [0.332, 0.591]). Immediate point impact: mean 3.43 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient).
+Used in 80.5% of participant observations (161/200). Outcome association: positive (0.462, CI [0.332, 0.591]). Immediate point impact: mean 3.43 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
 
 Replay refs: M-da33bf6f5bb04f175916, M-c7fa95689d660a49366b, M-d42c5a76b1a43e8227de, M-4e938b55c5c081cf4195
 </details>
@@ -1428,8 +1428,8 @@ Replay refs: M-9ac093c9da6330a6fdec, M-950f525deedd2a7736c7, M-e50eb7181b42fcaf3
 
 | Pair | Class | Effect | Shrunk | q-value | Status |
 |------|-------|--------|--------|---------|--------|
-| draw::jack | anti-synergy | 1.214 | 1.090 | 0.9010 | inconclusive |
-| draw::2-black-2-red-draw | anti-synergy | 0.667 | 0.596 | 0.9010 | inconclusive |
+| draw::2-black-2-red-draw | anti-synergy | 0.667 | 0.854 | 0.9010 | inconclusive |
+| draw::jack | synergy | 1.214 | 1.115 | 0.9010 | inconclusive |
 
 ## Causal Motifs
 

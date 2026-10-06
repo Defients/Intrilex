@@ -85,6 +85,7 @@ const STAGES = [
   ['analytics-ai-integrity', 'node', ['--test', 'test/analytics-ai-integrity.test.mjs']],
   ['analytics-ai-ui', 'node', ['--test', 'test/analytics-ai-ui.test.mjs']],
   ['browser-analytics-coverage', 'node', ['--test', 'test/browser-analytics-coverage.test.mjs']],
+  ['analytics-measurement-integrity', 'node', ['--test', 'test/measurement-integrity.test.mjs']],
   ['observatory', 'node', ['--test', 'test/observatory.test.mjs', 'test/observatory-hardening.test.mjs', 'test/observatory-completion.test.mjs', 'test/observatory-integrity.test.mjs']],
   ['visual', 'node', ['--test', 'test/visual.test.mjs']],
   ['card-face-renderer', 'node', ['--test', 'test/card-face-renderer.test.mjs']],

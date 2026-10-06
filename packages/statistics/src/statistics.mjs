@@ -1,23 +1,14 @@
 import { createHash } from 'node:crypto';
+import { normalCdf } from './estimators.mjs';
 
-/**
- * Wilson score interval for a binomial proportion.
- * More accurate than the normal approximation, especially for small samples
- * or proportions near 0 or 1.
- * @param {number} successes - Number of successes
- * @param {number} total - Total trials
- * @param {number} [z=1.96] - Z-score for confidence level (default: 95%)
- * @returns {[number, number]} [lower, upper] bounds in [0, 1]
- * @throws {TypeError} If counts are invalid
- */
-export function wilsonInterval(successes, total, z = 1.959963984540054) {
-  if (!Number.isInteger(successes) || !Number.isInteger(total) || successes < 0 || total < 0 || successes > total) throw new TypeError('Invalid binomial counts');
-  if (total === 0) return [0, 0];
-  const p = successes / total, z2 = z * z, denominator = 1 + z2 / total;
-  const center = (p + z2 / (2 * total)) / denominator;
-  const margin = (z * Math.sqrt((p * (1 - p) + z2 / (4 * total)) / total)) / denominator;
-  return [Math.max(0, center - margin), Math.min(1, center + margin)];
-}
+// Estimand-defining functions live in ./estimators.mjs (browser-safe, shared
+// verbatim with the browser Observatory) and are re-exported here.
+export {
+  Z95, normalCdf, wilsonInterval, differenceInProportions, benjaminiHochberg, cohortBalanceRatio,
+  logisticInteractionEstimate, stratifiedInteractionEstimate, empiricalBayesShrinkage, shrinkLogOddsRatio,
+  EVIDENCE_SCALES, evidenceGrade, evidenceGradeDetailed, evidenceGradeLegacy, LEGACY_GRADE_MAP, winRateRecord,
+} from './estimators.mjs';
+
 
 /**
  * Compute the q-th quantile of a numeric array using linear interpolation.
@@ -94,172 +85,12 @@ export function deterministicClusterBootstrap(rows, estimator, { iterations = 10
   return { estimate: estimator(rows), interval: [quantile(samples, alpha / 2), quantile(samples, 1 - alpha / 2)], iterations: samples.length, seed: String(seed) };
 }
 
-/**
- * Benjamini-Hochberg FDR correction.
- * Adjusts p-values to control the false discovery rate at level alpha.
- * @template {Record<string, unknown>} T
- * @param {T[]} items - Items with p-values
- * @param {{ pKey?: string, idKey?: string }} [options] - Keys for p-value and identifier
- * @returns {(T & { qValue: number | null })[]} Items with added `qValue` field
- */
-export function benjaminiHochberg(items, { pKey = 'pValue', idKey = 'id' } = {}) {
-  const valid = items.filter((item) => Number.isFinite(/** @type {Record<string, unknown>} */ (item)[pKey])).map((item) => ({ ...item })).sort((a, b) => /** @type {number} */ (a[pKey]) - /** @type {number} */ (b[pKey]) || String(a[idKey]).localeCompare(String(b[idKey])));
-  const m = valid.length;
-  let running = 1;
-  for (let i = m - 1; i >= 0; i -= 1) {
-    const raw = (/** @type {number} */ (valid[i][pKey]) * m) / (i + 1);
-    running = Math.min(running, raw);
-    /** @type {Record<string, unknown>} */ (valid[i]).qValue = Math.min(1, running);
-  }
-  const byId = new Map(valid.map((item) => [item[idKey], /** @type {number} */ (item.qValue)]));
-  return items.map((item) => ({ ...item, qValue: byId.get(item[idKey]) ?? null }));
-}
 
-/**
- * Cumulative distribution function of the standard normal distribution.
- * Uses the Abramowitz & Stegun approximation for erf.
- * @param {number} x - Value to evaluate
- * @returns {number} CDF value in [0, 1]
- */
-export function normalCdf(x) {
-  const sign = x < 0 ? -1 : 1;
-  const z = Math.abs(x) / Math.sqrt(2);
-  const t = 1 / (1 + 0.3275911 * z);
-  const erf = sign * (1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z));
-  return 0.5 * (1 + erf);
-}
 
-/**
- * Two-proportion z-test for the difference in proportions.
- * @param {number} aSuccess - Successes in group A
- * @param {number} aTotal - Total in group A
- * @param {number} bSuccess - Successes in group B
- * @param {number} bTotal - Total in group B
- * @returns {{ estimate: number | null, standardError: number | null, pValue: number | null, interval: [number | null, number | null] }}
- */
-export function differenceInProportions(aSuccess, aTotal, bSuccess, bTotal) {
-  if (!aTotal || !bTotal) return { estimate: null, standardError: null, pValue: null, interval: [null, null] };
-  const pa = aSuccess / aTotal, pb = bSuccess / bTotal, estimate = pa - pb;
-  const se = Math.sqrt((pa * (1 - pa)) / aTotal + (pb * (1 - pb)) / bTotal);
-  const z = se ? estimate / se : 0;
-  return { estimate, standardError: se, pValue: 2 * (1 - normalCdf(Math.abs(z))), interval: [estimate - 1.959963984540054 * se, estimate + 1.959963984540054 * se] };
-}
 
-/**
- * Empirical Bayes shrinkage estimator.
- * Shrinks an estimate toward a prior mean, weighted by sample size.
- * @param {number} estimate - Observed estimate
- * @param {number} sampleSize - Number of observations
- * @param {{ priorMean?: number, priorStrength?: number }} [options]
- * @returns {number | null} Shrunk estimate, or null if invalid
- */
-export function empiricalBayesShrinkage(estimate, sampleSize, { priorMean = 0, priorStrength = 25 } = {}) {
-  if (!Number.isFinite(estimate) || sampleSize <= 0) return null;
-  return (estimate * sampleSize + priorMean * priorStrength) / (sampleSize + priorStrength);
-}
 
-/**
- * Classify evidence strength using a multi-criteria rubric.
- *
- * Replaces the old p-value-dominated grading with a transparent classification
- * that accounts for sample size, effect size, confidence interval width,
- * cohort balance, multiplicity correction, and minimum cell sizes.
- *
- * Grades: INSUFFICIENT < EXPLORATORY < SUPPORTED < ROBUST
- *
- * @param {{ sampleSize?: number, interval?: [number, number], qValue?: number, minimum?: number, effectSize?: number | null, cohortBalance?: number | null, effectiveN?: number | null, pairedCoverage?: number | null, nullValue?: number }} [params]
- * @returns {'INSUFFICIENT' | 'EXPLORATORY' | 'SUPPORTED' | 'ROBUST'}
- */
-export function evidenceGrade({ sampleSize = 0, interval = [0, 0], qValue, minimum = 20, effectSize = null, cohortBalance = null, effectiveN = null, pairedCoverage = null, nullValue = 0 } = {}) {
-  const n = effectiveN != null && Number.isFinite(effectiveN) ? effectiveN : sampleSize;
-  if (!Number.isFinite(n) || n < minimum) return 'INSUFFICIENT';
-  if (!Array.isArray(interval) || !interval.every(Number.isFinite)) return 'INSUFFICIENT';
-  const excludesNull = interval[0] > nullValue || interval[1] < nullValue;
-  const width = Math.abs(interval[1] - interval[0]);
-  const q = qValue == null ? 1 : qValue;
-  // Effect size threshold: at least 2pp for binary outcomes
-  const hasEffect = effectSize != null && Number.isFinite(effectSize) ? Math.abs(effectSize) >= 0.02 : excludesNull;
-  // Cohort balance: ratio of smallest to largest cohort (1 = perfectly balanced)
-  const balanced = cohortBalance != null && Number.isFinite(cohortBalance) ? cohortBalance >= 0.2 : true;
-  // Paired-run coverage: fraction of data from complete AB/BA pairs
-  const paired = pairedCoverage != null && Number.isFinite(pairedCoverage) ? pairedCoverage >= 0.5 : true;
-  if (!excludesNull || !hasEffect) return 'INSUFFICIENT';
-  if (n >= 500 && q <= 0.05 && width <= 0.15 && balanced && paired) return 'ROBUST';
-  if (n >= 100 && q <= 0.10 && width <= 0.25 && balanced) return 'SUPPORTED';
-  if (n >= minimum && q <= 0.20) return 'EXPLORATORY';
-  return 'INSUFFICIENT';
-}
 
-/**
- * Structured companion to evidenceGrade: returns the same grade plus the
- * machine-readable reasons that produced it, so the UI can explain *why*
- * evidence is insufficient instead of showing a bare badge.
- *
- * Reason codes (stable contract):
- *  INSUFFICIENT_SAMPLE      — n (or effectiveN) below the minimum
- *  MISSING_INTERVAL         — no finite confidence interval from the estimator
- *  CI_CROSSES_NULL          — interval contains the null value (0 for
- *                             difference scale, 1 for odds-ratio scale)
- *  EFFECT_BELOW_MINIMUM     — |effectSize| below the 0.02 minimum
- *  MISSING_QVALUE           — no multiplicity-adjusted q-value was supplied;
- *                             the grade is structurally capped at INSUFFICIENT
- *  QVALUE_ABOVE_TIER        — q-value exceeds the next tier's threshold
- *  SAMPLE_BELOW_TIER        — n below the next tier's requirement
- *  INTERVAL_TOO_WIDE        — CI width exceeds the next tier's requirement
- *  IMBALANCED_COHORTS       — cohort balance ratio below 0.2
- *  LOW_PAIRED_COVERAGE      — paired (AB/BA) coverage below 0.5
- *
- * @param {{ sampleSize?: number, interval?: [number, number], qValue?: number, minimum?: number, effectSize?: number | null, cohortBalance?: number | null, effectiveN?: number | null, pairedCoverage?: number | null, nullValue?: number }} [params]
- * @returns {{ grade: 'INSUFFICIENT' | 'EXPLORATORY' | 'SUPPORTED' | 'ROBUST', reasons: Array<{ code: string, detail: string }> }}
- */
-export function evidenceGradeDetailed({ sampleSize = 0, interval = [0, 0], qValue, minimum = 20, effectSize = null, cohortBalance = null, effectiveN = null, pairedCoverage = null, nullValue = 0 } = {}) {
-  /** @type {Array<{ code: string, detail: string }>} */
-  const reasons = [];
-  const n = effectiveN != null && Number.isFinite(effectiveN) ? effectiveN : sampleSize;
-  if (!Number.isFinite(n) || n < minimum) {
-    reasons.push({ code: 'INSUFFICIENT_SAMPLE', detail: `${Number.isFinite(n) ? n : 'no'} usable observations < ${minimum} required` });
-    return { grade: 'INSUFFICIENT', reasons };
-  }
-  if (!Array.isArray(interval) || !interval.every(Number.isFinite)) {
-    reasons.push({ code: 'MISSING_INTERVAL', detail: 'estimator produced no finite confidence interval' });
-    return { grade: 'INSUFFICIENT', reasons };
-  }
-  const excludesNull = interval[0] > nullValue || interval[1] < nullValue;
-  const width = Math.abs(interval[1] - interval[0]);
-  const q = qValue == null ? 1 : qValue;
-  const hasEffect = effectSize != null && Number.isFinite(effectSize) ? Math.abs(effectSize) >= 0.02 : excludesNull;
-  const balanced = cohortBalance != null && Number.isFinite(cohortBalance) ? cohortBalance >= 0.2 : true;
-  const paired = pairedCoverage != null && Number.isFinite(pairedCoverage) ? pairedCoverage >= 0.5 : true;
-  if (!excludesNull) {
-    reasons.push({ code: 'CI_CROSSES_NULL', detail: `confidence interval contains the null value (${nullValue})` });
-    return { grade: 'INSUFFICIENT', reasons };
-  }
-  if (!hasEffect) {
-    reasons.push({ code: 'EFFECT_BELOW_MINIMUM', detail: `|effect| ${Math.abs(effectSize ?? NaN).toFixed(4)} < 0.02 minimum` });
-    return { grade: 'INSUFFICIENT', reasons };
-  }
-  if (n >= 500 && q <= 0.05 && width <= 0.15 && balanced && paired) return { grade: 'ROBUST', reasons };
-  if (n >= 100 && q <= 0.10 && width <= 0.25 && balanced) return { grade: 'SUPPORTED', reasons };
-  if (n >= minimum && q <= 0.20) return { grade: 'EXPLORATORY', reasons };
-  if (qValue == null) reasons.push({ code: 'MISSING_QVALUE', detail: 'no multiplicity-adjusted q-value; significance tiers unreachable' });
-  else if (q > 0.20) reasons.push({ code: 'QVALUE_ABOVE_TIER', detail: `q=${q.toFixed(4)} > 0.20 (EXPLORATORY threshold)` });
-  if (n < 100) reasons.push({ code: 'SAMPLE_BELOW_TIER', detail: `n=${n} < 100 (SUPPORTED tier)` });
-  if (width > 0.25) reasons.push({ code: 'INTERVAL_TOO_WIDE', detail: `CI width ${width.toFixed(3)} > 0.25 (SUPPORTED tier)` });
-  if (!balanced) reasons.push({ code: 'IMBALANCED_COHORTS', detail: `cohort balance ${Number(cohortBalance).toFixed(3)} < 0.2` });
-  if (!paired) reasons.push({ code: 'LOW_PAIRED_COVERAGE', detail: `paired coverage ${Number(pairedCoverage).toFixed(3)} < 0.5` });
-  if (reasons.length === 0) reasons.push({ code: 'UNSPECIFIED', detail: 'criteria combination did not reach EXPLORATORY' });
-  return { grade: 'INSUFFICIENT', reasons };
-}
 
-/**
- * Backward-compatible alias for evidenceGrade returning lowercase values.
- * Maps INSUFFICIENT→insufficient, EXPLORATORY→weak, SUPPORTED→moderate, ROBUST→strong.
- * @deprecated Use evidenceGrade directly.
- */
-export function evidenceGradeLegacy({ sampleSize = 0, interval = [0, 0], qValue, minimum = 20 } = /** @type {{ sampleSize?: number, interval?: [number, number], qValue?: number, minimum?: number }} */ ({})) {
-  const grade = evidenceGrade({ sampleSize, interval, qValue, minimum });
-  return { INSUFFICIENT: 'insufficient', EXPLORATORY: 'weak', SUPPORTED: 'moderate', ROBUST: 'strong' }[grade] ?? 'insufficient';
-}
 
 /**
  * Detect perfect separation in a 2×2×2 binary outcome table.
@@ -272,135 +103,8 @@ export function detectSeparation(/** @type {Array<{ wins: number, losses: number
   return false;
 }
 
-/**
- * Logistic interaction estimator for binary outcome Y ~ A + B + A×B.
- *
- * Computes the interaction effect on the odds-ratio scale from four
- * mutually exclusive cohorts (Neither, A-only, B-only, Both).
- *
- * The interaction on the log-odds scale is:
- *   β₃ = log(OR_A|B=1) - log(OR_A|B=0)
- *      = log(p11/(1-p11)) - log(p10/(1-p10)) - log(p01/(1-p01)) + log(p00/(1-p00))
- *
- * where p_ij = P(Y=1 | A=i, B=j).
- *
- * The returned estimate is the odds-ratio interaction (exp(β₃)),
- * with a Wald confidence interval and p-value from the same model.
- *
- * @param {{ neither: {wins:number,losses:number}, aOnly: {wins:number,losses:number}, bOnly: {wins:number,losses:number}, both: {wins:number,losses:number} }} cohorts
- * @returns {{ estimate: number|null, logEstimate: number|null, standardError: number|null, pValue: number|null, interval: [number|null,number|null], separation: boolean, cohortN: {neither:number,aOnly:number,bOnly:number,both:number} }}
- */
-export function logisticInteractionEstimate(cohorts) {
-  const { neither, aOnly, bOnly, both } = cohorts;
-  const n00 = neither.wins + neither.losses;
-  const n10 = aOnly.wins + aOnly.losses;
-  const n01 = bOnly.wins + bOnly.losses;
-  const n11 = both.wins + both.losses;
-  const cohortN = { neither: n00, aOnly: n10, bOnly: n01, both: n11 };
-  // Check for separation or empty cells
-  if (n00 === 0 || n10 === 0 || n01 === 0 || n11 === 0) {
-    return { estimate: null, logEstimate: null, standardError: null, pValue: null, interval: [null, null], separation: true, cohortN };
-  }
-  const p00 = neither.wins / n00, p10 = aOnly.wins / n10, p01 = bOnly.wins / n01, p11 = both.wins / n11;
-  // Check for perfect separation (p=0 or p=1 in any cell)
-  if ([p00, p10, p01, p11].some((p) => p === 0 || p === 1)) {
-    // Apply 0.5 continuity correction for Haldane-Anscombe
-    const corrected = {
-      neither: { wins: neither.wins + 0.5, losses: neither.losses + 0.5 },
-      aOnly: { wins: aOnly.wins + 0.5, losses: aOnly.losses + 0.5 },
-      bOnly: { wins: bOnly.wins + 0.5, losses: bOnly.losses + 0.5 },
-      both: { wins: both.wins + 0.5, losses: both.losses + 0.5 },
-    };
-    const r = logisticInteractionEstimate(corrected);
-    return { ...r, separation: true };
-  }
-  // Log-odds for each cell
-  const lo00 = Math.log(p00 / (1 - p00)), lo10 = Math.log(p10 / (1 - p10));
-  const lo01 = Math.log(p01 / (1 - p01)), lo11 = Math.log(p11 / (1 - p11));
-  // Interaction on log-odds scale: β₃ = lo11 - lo10 - lo01 + lo00
-  const logEstimate = lo11 - lo10 - lo01 + lo00;
-  // Variance via delta method: Var(β₃) = Σ 1/(n_ij * p_ij * (1-p_ij))
-  const variance = 1 / (n00 * p00 * (1 - p00)) + 1 / (n10 * p10 * (1 - p10))
-    + 1 / (n01 * p01 * (1 - p01)) + 1 / (n11 * p11 * (1 - p11));
-  const standardError = Math.sqrt(variance);
-  const z = standardError > 0 ? logEstimate / standardError : 0;
-  const pValue = 2 * (1 - normalCdf(Math.abs(z)));
-  // Confidence interval on log-odds scale, then exponentiate to odds-ratio scale
-  const z95 = 1.959963984540054;
-  const logLo = logEstimate - z95 * standardError, logHi = logEstimate + z95 * standardError;
-  return {
-    estimate: Math.exp(logEstimate),
-    logEstimate,
-    standardError,
-    pValue,
-    interval: [Math.exp(logLo), Math.exp(logHi)],
-    separation: false,
-    cohortN,
-  };
-}
 
-/**
- * Stratified Mantel-Haenszel-style interaction estimator.
- *
- * Pools the log-odds interaction across strata using inverse-variance weighting.
- * Each stratum contributes a log-odds interaction estimate weighted by its
- * inverse variance. The pooled estimate, SE, CI, and p-value all come from
- * the same model.
- *
- * @param {Array<{ neither: {wins:number,losses:number}, aOnly: {wins:number,losses:number}, bOnly: {wins:number,losses:number}, both: {wins:number,losses:number} }>} strata
- * @returns {{ estimate: number|null, logEstimate: number|null, standardError: number|null, pValue: number|null, interval: [number|null,number|null], separation: boolean, strataCount: number, totalCohortN: object, effectiveN: number }}
- */
-export function stratifiedInteractionEstimate(strata) {
-  let pooledLog = 0, pooledVarianceInv = 0, separation = false;
-  const totalCohortN = { neither: 0, aOnly: 0, bOnly: 0, both: 0 };
-  let validStrata = 0;
-  for (const stratum of strata) {
-    const r = logisticInteractionEstimate(stratum);
-    totalCohortN.neither += r.cohortN.neither;
-    totalCohortN.aOnly += r.cohortN.aOnly;
-    totalCohortN.bOnly += r.cohortN.bOnly;
-    totalCohortN.both += r.cohortN.both;
-    if (r.separation || r.logEstimate == null || r.standardError == null || !Number.isFinite(r.logEstimate) || !Number.isFinite(r.standardError) || r.standardError === 0) {
-      separation = separation || r.separation;
-      continue;
-    }
-    const w = 1 / (r.standardError * r.standardError);
-    pooledLog += r.logEstimate * w;
-    pooledVarianceInv += w;
-    validStrata += 1;
-  }
-  if (pooledVarianceInv === 0 || validStrata === 0) {
-    return { estimate: null, logEstimate: null, standardError: null, pValue: null, interval: [null, null], separation: true, strataCount: strata.length, totalCohortN, effectiveN: 0 };
-  }
-  const logEstimate = pooledLog / pooledVarianceInv;
-  const standardError = Math.sqrt(1 / pooledVarianceInv);
-  const z = standardError > 0 ? logEstimate / standardError : 0;
-  const pValue = 2 * (1 - normalCdf(Math.abs(z)));
-  const z95 = 1.959963984540054;
-  const logLo = logEstimate - z95 * standardError, logHi = logEstimate + z95 * standardError;
-  const effectiveN = totalCohortN.neither + totalCohortN.aOnly + totalCohortN.bOnly + totalCohortN.both;
-  return {
-    estimate: Math.exp(logEstimate),
-    logEstimate,
-    standardError,
-    pValue,
-    interval: [Math.exp(logLo), Math.exp(logHi)],
-    separation: false,
-    strataCount: validStrata,
-    totalCohortN,
-    effectiveN,
-  };
-}
 
-/**
- * Compute cohort balance ratio (smallest/largest) from four cohort sizes.
- * Returns a value in [0, 1] where 1 means perfectly balanced.
- */
-export function cohortBalanceRatio(/** @type {Record<string, number>} */ cohortN) {
-  const sizes = Object.values(cohortN).filter((n) => n > 0);
-  if (sizes.length < 2) return 0;
-  return Math.min(...sizes) / Math.max(...sizes);
-}
 
 export function formulaHash(/** @type {string} */ formula) {
   return createHash('sha256').update(String(formula)).digest('hex');

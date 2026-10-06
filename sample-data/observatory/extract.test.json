@@ -1,7 +1,7 @@
 {
   "extractVersion": "1.0.0",
   "analyticsSchemaVersion": "4.2.0",
-  "sourceHash": "a08badc41c452f798de5b2edba58a012cdfb3390060caa7c62154c0ec87e106f",
+  "sourceHash": "6e6a88dd49329d53c9a4e796ed2e37b0f04a686767788d9e7354cceec268e816",
   "aggregateHash": "59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2",
   "executiveSummary": "Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. All matches completed without aborts. Highest win rate: hybrix-rusher at 83.3% (CI [0.436, 0.970], 6 games). No synergy pairs reached statistical significance after FDR correction. 162 mechanic(s) measured with evidence-backed associations. 30 anomaly/anomalies flagged (0 critical, 5 warning, 25 info). Data completeness: PASS (no unclassified facts). Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
   "dataset": {
@@ -1610,7 +1610,7 @@
         "p95": 0,
         "standardDeviation": 0
       },
-      "evidenceGrade": "EXPLORATORY",
+      "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 107,
       "replayRefs": [
@@ -1619,7 +1619,7 @@
         "M-d42c5a76b1a43e8227de",
         "M-a6073e68be3dfa99914b"
       ],
-      "summary": "Used in 53.5% of participant observations (107/200). Outcome association: positive (0.211, CI [0.075, 0.347]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient)."
+      "summary": "Used in 53.5% of participant observations (107/200). Outcome association: positive (0.211, CI [0.075, 0.347]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "face-up-draw",
@@ -2553,7 +2553,7 @@
         -0.2220081152286491
       ],
       "immediatePointImpact": null,
-      "evidenceGrade": "EXPLORATORY",
+      "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 10,
       "replayRefs": [
@@ -2562,7 +2562,7 @@
         "M-1b9ce7c6ecb94b540b09",
         "M-4756067b923a59fad42d"
       ],
-      "summary": "Used in 5.0% of participant observations (10/200). Outcome association: negative (-0.421, CI [-0.620, -0.222]). Evidence grade: EXPLORATORY (insufficient)."
+      "summary": "Used in 5.0% of participant observations (10/200). Outcome association: negative (-0.421, CI [-0.620, -0.222]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "king-spade",
@@ -2894,7 +2894,7 @@
         "p95": 0,
         "standardDeviation": 0
       },
-      "evidenceGrade": "EXPLORATORY",
+      "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 56,
       "replayRefs": [
@@ -2903,7 +2903,7 @@
         "M-cc250cc50515a292f3e3",
         "M-4756067b923a59fad42d"
       ],
-      "summary": "Used in 28.0% of participant observations (56/200). Outcome association: negative (-0.248, CI [-0.395, -0.101]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient)."
+      "summary": "Used in 28.0% of participant observations (56/200). Outcome association: negative (-0.248, CI [-0.395, -0.101]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "purge-aegis",
@@ -3615,7 +3615,7 @@
         "p95": 10,
         "standardDeviation": 4.2761798705987895
       },
-      "evidenceGrade": "EXPLORATORY",
+      "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 161,
       "replayRefs": [
@@ -3624,7 +3624,7 @@
         "M-d42c5a76b1a43e8227de",
         "M-4e938b55c5c081cf4195"
       ],
-      "summary": "Used in 80.5% of participant observations (161/200). Outcome association: positive (0.462, CI [0.332, 0.591]). Immediate point impact: mean 3.43 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient)."
+      "summary": "Used in 80.5% of participant observations (161/200). Outcome association: positive (0.462, CI [0.332, 0.591]). Immediate point impact: mean 3.43 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "scuttle",
@@ -5055,37 +5055,12 @@
   ],
   "synergyFindings": [
     {
-      "pair": "draw::jack",
-      "source": "draw",
-      "target": "jack",
-      "relationshipClass": "anti-synergy",
-      "effect": 1.2141797788555981,
-      "shrunkEffect": 1.0902838830540065,
-      "confidenceInterval": [
-        0.0570898728762284,
-        25.823013103882438
-      ],
-      "pValue": 0.9009849105080965,
-      "qValue": 0.9009849105080965,
-      "status": "inconclusive",
-      "evidenceGrade": "INSUFFICIENT",
-      "jointOpportunityCount": 43,
-      "baselineCount": 86,
-      "replayRefs": [
-        "M-67e0e95c9279752ebbb3",
-        "M-754f798f908f9e4f73d8",
-        "M-cc250cc50515a292f3e3",
-        "M-4e938b55c5c081cf4195"
-      ],
-      "summary": "draw + jack: anti-synergy (effect 1.214, shrunk 1.090, CI [0.057, 25.823], q=0.9010). inconclusive after FDR correction. Joint sample: 43."
-    },
-    {
       "pair": "draw::2-black-2-red-draw",
       "source": "draw",
       "target": "2-black-2-red-draw",
       "relationshipClass": "anti-synergy",
       "effect": 0.6666666666666667,
-      "shrunkEffect": 0.5963431786216596,
+      "shrunkEffect": 0.8536531748787067,
       "confidenceInterval": [
         0.00803098041444785,
         55.34124372223375
@@ -5102,7 +5077,32 @@
         "M-cc250cc50515a292f3e3",
         "M-4e938b55c5c081cf4195"
       ],
-      "summary": "draw + 2-black-2-red-draw: anti-synergy (effect 0.667, shrunk 0.596, CI [0.008, 55.341], q=0.9010). inconclusive after FDR correction. Joint sample: 30."
+      "summary": "draw + 2-black-2-red-draw: anti-synergy (effect 0.667, shrunk 0.854, CI [0.008, 55.341], q=0.9010). inconclusive after FDR correction. Joint sample: 30."
+    },
+    {
+      "pair": "draw::jack",
+      "source": "draw",
+      "target": "jack",
+      "relationshipClass": "synergy",
+      "effect": 1.2141797788555981,
+      "shrunkEffect": 1.115107584110157,
+      "confidenceInterval": [
+        0.0570898728762284,
+        25.823013103882438
+      ],
+      "pValue": 0.9009849105080965,
+      "qValue": 0.9009849105080965,
+      "status": "inconclusive",
+      "evidenceGrade": "INSUFFICIENT",
+      "jointOpportunityCount": 43,
+      "baselineCount": 86,
+      "replayRefs": [
+        "M-67e0e95c9279752ebbb3",
+        "M-754f798f908f9e4f73d8",
+        "M-cc250cc50515a292f3e3",
+        "M-4e938b55c5c081cf4195"
+      ],
+      "summary": "draw + jack: positive synergy (effect 1.214, shrunk 1.115, CI [0.057, 25.823], q=0.9010). inconclusive after FDR correction. Joint sample: 43."
     }
   ],
   "motifFindings": [
@@ -5853,13 +5853,26 @@
       "version": "4.2.0",
       "formula": "wins / decisive completed matches",
       "uncertainty": "Wilson 95% interval",
+      "scale": "proportion",
+      "denominator": "decisive cross-policy games (draws, aborts and self-play excluded from point estimate and interval alike)",
       "formulaHash": "ec429969658fee3c08d9cfdec77f90801c757b37bb15a4b401e5fe13c083bef6"
+    },
+    "win-rate-all-games": {
+      "metricId": "win-rate-all-games",
+      "version": "4.3.0",
+      "formula": "wins / all eligible cross-policy games including draws and aborts",
+      "uncertainty": "Wilson 95% interval",
+      "scale": "proportion",
+      "denominator": "all eligible cross-policy games",
+      "formulaHash": "9fe11e70c9265ff6d2af37f94c59a16fa6695be1e2a57c1a3551663eb29db568"
     },
     "participant-prevalence": {
       "metricId": "participant-prevalence",
       "version": "4.2.0",
       "formula": "unique participant-match pairs that selected entity ≥1 / all eligible participant-match records",
       "uncertainty": "Wilson 95% interval",
+      "scale": "proportion",
+      "denominator": "participant-match records",
       "formulaHash": "380d488d64ae6a91d259fedb79e4f1e1a822dc23946e19564ca2296aa128a08c"
     },
     "match-prevalence": {
@@ -5867,6 +5880,8 @@
       "version": "4.2.0",
       "formula": "unique matches in which entity selected ≥1 / all eligible matches",
       "uncertainty": "Wilson 95% interval",
+      "scale": "proportion",
+      "denominator": "matches",
       "formulaHash": "afd80665b3e86b9a829493c8dfe00e07fc917858a57aab57b553ad856d0e156b"
     },
     "pick-rate-when-legal": {
@@ -5874,6 +5889,8 @@
       "version": "4.2.0",
       "formula": "selections / distinct legal decision windows",
       "uncertainty": "Wilson 95% interval; N/A when zero legal opportunities",
+      "scale": "proportion",
+      "denominator": "decision frames in which the entity was legal",
       "formulaHash": "c9b6cb70e5d4248d6234f570c26eb28d7cd6c5de260d6ef3b30949fd3c9e1742"
     },
     "selection-frequency": {
@@ -5881,6 +5898,8 @@
       "version": "4.2.0",
       "formula": "total selections / eligible participant-match records",
       "uncertainty": "descriptive rate",
+      "scale": "descriptive",
+      "denominator": "participant-match records",
       "formulaHash": "d6140b5266e681b5d7d3de5a09e94f8db68f83548c32154b7913221cabb80901"
     },
     "resolution-rate": {
@@ -5888,6 +5907,8 @@
       "version": "4.2.0",
       "formula": "resolved declarations / accepted declarations",
       "uncertainty": "Wilson 95% interval",
+      "scale": "proportion",
+      "denominator": "accepted declarations",
       "formulaHash": "d50cc705225a7c42270b0f2ffe6769ac9872f9546b54ce0aa585c48d0bffc833"
     },
     "response-play-rate": {
@@ -5895,6 +5916,8 @@
       "version": "4.2.0",
       "formula": "response plays / lawful response opportunities",
       "uncertainty": "Wilson 95% interval",
+      "scale": "proportion",
+      "denominator": "lawful response opportunities",
       "formulaHash": "ad799f7a62e3c512e65005a52c6b336acf858d24f7c00395b8b77b340e6653c9"
     },
     "counter-efficiency": {
@@ -5902,20 +5925,26 @@
       "version": "4.2.0",
       "formula": "opponent value prevented / own card and tempo cost",
       "uncertainty": "match-clustered deterministic bootstrap",
+      "scale": "descriptive",
+      "denominator": "own card and tempo cost",
       "formulaHash": "804b7710884afcc05130f6ef907cfad293514de6408f4879df56f6524577bc53"
     },
     "synergy-interaction": {
       "metricId": "synergy-interaction",
-      "version": "4.2.0",
-      "formula": "stratified logistic A×B interaction (odds-ratio scale) from four-cohort model",
-      "uncertainty": "Wald CI from inverse-variance pooled SE + BH FDR",
-      "formulaHash": "581889d3af451efa9bfb296049a1e1c0781c80e7e51d8696433ed8fc92c21f8d"
+      "version": "4.3.0",
+      "formula": "exp(inverse-variance pooled log-odds A×B interaction over contributing policy|seat|profile strata); strata with an empty cohort, outcome separation or degenerate variance are excluded and disclosed; shrinkage log(OR)·n/(n+25) toward OR=1 with n = contributing observations; direction from sign(log OR)",
+      "uncertainty": "Wald CI on log(OR) from pooled SE, exponentiated; BH FDR over modeled pairs; evidence graded on log(OR)",
+      "scale": "odds-ratio",
+      "denominator": "decisive participant-match records in contributing strata",
+      "formulaHash": "04014bc291125d4f787daa58b750a36aa66d6a4af368a50a86acf9ff090971e1"
     },
     "immediate-point-impact": {
       "metricId": "immediate-point-impact",
       "version": "4.2.0",
       "formula": "sum actor-perspective secured point delta / resolved selections with point data",
       "uncertainty": "match-clustered deterministic bootstrap",
+      "scale": "descriptive",
+      "denominator": "resolved selections with point data",
       "formulaHash": "6737c3e7f6336d0adce20989d17bb6f271655f2f7ee337c42125d60077cb6f5a"
     },
     "raw-win-association": {
@@ -5923,6 +5952,8 @@
       "version": "4.2.0",
       "formula": "P(win|selected) - P(win|not selected)",
       "uncertainty": "two-proportion z-test CI",
+      "scale": "difference",
+      "denominator": "decisive participant-match records",
       "formulaHash": "85105687d6f9ab588142a614296e10a6290cd0a78f51e50eab7618698b48be33"
     },
     "adjusted-win-association": {
@@ -5930,6 +5961,8 @@
       "version": "4.2.0",
       "formula": "stratified win-rate differential controlling for policy, seat, profile",
       "uncertainty": "Mantel-Haenszel-style stratified estimator CI",
+      "scale": "difference",
+      "denominator": "decisive participant-match records in strata containing both cohorts",
       "formulaHash": "b96bd6bef6c4d26d86738e3b6c202595081c8cf64e74b57d497d3c5a4d20ed19"
     },
     "policy-fingerprint": {
@@ -5937,6 +5970,8 @@
       "version": "4.2.0",
       "formula": "policy event/action count / policy games",
       "uncertainty": "descriptive; no optimality claim",
+      "scale": "descriptive",
+      "denominator": "policy participations",
       "formulaHash": "24b168c29d3e7069f9218717ca5ad35a008abb3249c97f4bd0cf6ba3e584f286"
     }
   },
@@ -5945,5 +5980,5 @@
     "Most synergy findings are inconclusive — consider increasing match count for statistical power.",
     "133 mechanic(s) have sample size below 20 — interpret with caution."
   ],
-  "extractHash": "4698d55e9c1e5daffc0aa2dd0ec35578ee8a361d6c9a12569b7a77408a58c845"
+  "extractHash": "50516a53525a37e3c12020dfeb0123c3e1c3f8828c6984129b993340df36dd21"
 }

@@ -208,8 +208,17 @@ export function campaignAggregate(campaign) {
     // superiority. Both counters use the participation convention, so the
     // identity crossPolicyGames + selfPlayGames === games holds exactly.
     item.crossPolicyGames = item.games - (item.selfPlayGames ?? 0);
-    item.winRate = item.crossPolicyGames ? item.wins / item.crossPolicyGames : 0;
-    item.wilson95 = wilsonInterval(item.wins, Math.max(1, item.crossPolicyGames - item.draws - item.aborts));
+    // One estimand per field: winRate and wilson95 both use decisive
+    // cross-policy games (registry 'win-rate'); the all-games rate is a
+    // separately labeled metric. Zero decisive games → null, never an
+    // invented [0, 0.79] interval.
+    const decisiveGames = item.crossPolicyGames - item.draws - item.aborts;
+    item.decisiveGames = decisiveGames;
+    item.winRate = decisiveGames > 0 ? item.wins / decisiveGames : null;
+    item.wilson95 = decisiveGames > 0 ? wilsonInterval(item.wins, decisiveGames) : null;
+    item.winRateDenominator = 'decisive';
+    item.allGamesWinRate = item.crossPolicyGames ? item.wins / item.crossPolicyGames : null;
+    item.allGamesWilson95 = item.crossPolicyGames ? wilsonInterval(item.wins, item.crossPolicyGames) : null;
   }
   for (const item of Object.values(matchups)) {
     item.meanFullTurns = item.games ? item.totalFullTurns / item.games : 0;

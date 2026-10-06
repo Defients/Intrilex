@@ -24,13 +24,18 @@ function pair(rows){return analyzeSynergies(rows,{minimumJoint:4,maxMechanics:3}
 const nullResult=pair(build('null'));
 const positive=pair(build('positive'));
 const negative=pair(build('negative'));
-if(!nullResult||Math.abs(nullResult.effect)>0.15)throw new Error(`NULL_SYNERGY_FALSE_POSITIVE:${nullResult?.effect}`);
-if(!positive||positive.effect<=0.15)throw new Error(`POSITIVE_SYNERGY_NOT_DETECTED:${positive?.effect}`);
-if(!negative||negative.effect>=-0.15)throw new Error(`NEGATIVE_SYNERGY_NOT_DETECTED:${negative?.effect}`);
+// `effect` is an odds ratio (null = 1), never a zero-centered quantity:
+// the null pair must have a CI that contains OR = 1 and must not be called
+// significant; real interactions must point the right way on log(OR).
+const containsOne=(r)=>r.confidenceInterval[0]<=1&&r.confidenceInterval[1]>=1;
+if(!nullResult||!containsOne(nullResult)||nullResult.status!=='inconclusive')throw new Error(`NULL_SYNERGY_FALSE_POSITIVE:${nullResult?.modelOR} CI ${nullResult?.confidenceInterval}`);
+if(!positive||!(positive.logOR>0)||positive.modelDirection!=='positive'||positive.relationshipClass!=='synergy')throw new Error(`POSITIVE_SYNERGY_NOT_DETECTED:${positive?.modelOR}`);
+if(!negative||!(negative.logOR<0)||negative.modelDirection!=='negative'||negative.relationshipClass!=='anti-synergy')throw new Error(`NEGATIVE_SYNERGY_NOT_DETECTED:${negative?.modelOR}`);
+if(!(Math.abs(positive.logOR)>Math.abs(nullResult.logOR)&&Math.abs(negative.logOR)>Math.abs(nullResult.logOR)))throw new Error('SYNTHETIC_EFFECT_ORDERING_INVALID');
 const low=pair([row('L1',{a:true,b:true,win:1}),row('L2',{a:true,b:false,win:0}),row('L3',{a:false,b:true,win:0}),row('L4',{a:true,b:true,win:1})]);
 if(low!==undefined)throw new Error('LOW_SAMPLE_PAIR_WAS_NOT_SUPPRESSED');
 const adjusted=benjaminiHochberg([{id:'a',pValue:.001},{id:'b',pValue:.02},{id:'c',pValue:.7}]);
 if(!(adjusted[0].qValue<=adjusted[1].qValue&&adjusted[1].qValue<=adjusted[2].qValue))throw new Error('BH_ORDER_INVALID');
 const first=hashCanonical({nullResult,positive,negative,adjusted}),second=hashCanonical({nullResult:pair(build('null')),positive:pair(build('positive')),negative:pair(build('negative')),adjusted:benjaminiHochberg([{id:'a',pValue:.001},{id:'b',pValue:.02},{id:'c',pValue:.7}])});
 if(first!==second)throw new Error('SYNTHETIC_ANALYTICS_NONDETERMINISTIC');
-console.log(JSON.stringify({status:'PASS',nullEffect:nullResult.effect,positiveEffect:positive.effect,negativeEffect:negative.effect,bh:adjusted.map(x=>x.qValue),hash:first},null,2));
+console.log(JSON.stringify({status:'PASS',nullOR:nullResult.modelOR,positiveOR:positive.modelOR,negativeOR:negative.modelOR,bh:adjusted.map(x=>x.qValue),hash:first},null,2));

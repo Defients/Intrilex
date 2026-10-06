@@ -8,9 +8,8 @@
 // mechanic registry (./mechanic-registry-browser.js) and the browser engine
 // hash shim (./engine/browser-entry.js), avoiding circular imports.
 //
-// Formula hashes are computed with sha256Text against the same canonical
-// formula strings used by browser-analytics.js METRIC_REGISTRY so that
-// observatory output stays hash-consistent across the browser bundle.
+// Formula hashes are sha256Text over the shared metric-registry formula text,
+// so they equal the canonical hashes by construction.
 
 import { sha256Text } from './engine/browser-entry.js';
 import {
@@ -24,20 +23,22 @@ import {
   areTagsInseparable,
 } from './mechanic-registry-browser.js';
 
-// Shared analytics schema version — single source for observatory artifacts
-// produced in the browser bundle (parity with @intrilex/analytics).
-export const ANALYTICS_SCHEMA_VERSION = '4.2.0';
+// Metric identity, estimators and the synergy/mechanics inference core are
+// shared verbatim with canonical analytics (scripts/build.mjs copies them into
+// dist/shared-analytics/), so formula hashes and estimands cannot diverge.
+import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS } from './shared-analytics/metric-registry.mjs';
+import { wilsonInterval, normalCdf, differenceInProportions } from './shared-analytics/estimators.mjs';
+import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './shared-analytics/observatory-core.mjs';
+import { deriveTagRelations } from './shared-analytics/observatory-integrity.mjs';
+
+export { ANALYTICS_SCHEMA_VERSION, wilsonInterval };
+const _formulaHashCache = {};
+function metricFormulaHash(metricId) {
+  return (_formulaHashCache[metricId] ??= sha256Text(String(METRIC_DEFINITIONS[metricId]?.formula ?? '')));
+}
 
 // ── Pure-math statistics helpers (browser ports of @intrilex/statistics) ──
 
-export function wilsonInterval(successes, total, z = 1.959963984540054) {
-  if (!Number.isInteger(successes) || !Number.isInteger(total) || successes < 0 || total < 0 || successes > total) throw new TypeError('Invalid binomial counts');
-  if (total === 0) return [0, 0];
-  const p = successes / total, z2 = z * z, denominator = 1 + z2 / total;
-  const center = (p + z2 / (2 * total)) / denominator;
-  const margin = (z * Math.sqrt((p * (1 - p) + z2 / (4 * total)) / total)) / denominator;
-  return [Math.max(0, center - margin), Math.min(1, center + margin)];
-}
 
 function quantile(values, q) {
   const clean = values.filter(Number.isFinite).sort((a, b) => a - b);
@@ -60,13 +61,6 @@ function summarizeNumbers(values) {
   };
 }
 
-function normalCdf(x) {
-  const sign = x < 0 ? -1 : 1;
-  const z = Math.abs(x) / Math.sqrt(2);
-  const t = 1 / (1 + 0.3275911 * z);
-  const erf = sign * (1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z));
-  return 0.5 * (1 + erf);
-}
 
 function binomialCoefficient(n, k) {
   if (k < 0 || k > n) return 0;
@@ -154,157 +148,8 @@ export function pairedBootstrapABBA(pairs, { iterations = 2000, seed = 'intrilex
   return { estimate: estimate(pairs), interval: [quantile(samples, alpha / 2), quantile(samples, 1 - alpha / 2)], iterations: samples.length, seed: String(seed), sampleSize: pairs.length };
 }
 
-function differenceInProportions(aSuccess, aTotal, bSuccess, bTotal) {
-  if (!aTotal || !bTotal) return { estimate: null, standardError: null, pValue: null, interval: [null, null] };
-  const pa = aSuccess / aTotal, pb = bSuccess / bTotal, estimate = pa - pb;
-  const se = Math.sqrt((pa * (1 - pa)) / aTotal + (pb * (1 - pb)) / bTotal);
-  const z = se ? estimate / se : 0;
-  return { estimate, standardError: se, pValue: 2 * (1 - normalCdf(Math.abs(z))), interval: [estimate - 1.959963984540054 * se, estimate + 1.959963984540054 * se] };
-}
 
-function empiricalBayesShrinkage(estimate, sampleSize, { priorMean = 0, priorStrength = 25 } = {}) {
-  if (!Number.isFinite(estimate) || sampleSize <= 0) return null;
-  return (estimate * sampleSize + priorMean * priorStrength) / (sampleSize + priorStrength);
-}
 
-function evidenceGrade({ sampleSize, interval, qValue, minimum = 20, effectSize = null, cohortBalance = null, effectiveN = null, pairedCoverage = null, nullValue = 0 } = {}) {
-  const n = Number.isFinite(effectiveN) ? effectiveN : sampleSize;
-  if (!Number.isFinite(n) || n < minimum) return 'INSUFFICIENT';
-  if (!Array.isArray(interval) || !interval.every(Number.isFinite)) return 'INSUFFICIENT';
-  const excludesNull = interval[0] > nullValue || interval[1] < nullValue;
-  const width = Math.abs(interval[1] - interval[0]);
-  const q = qValue == null ? 1 : qValue;
-  const hasEffect = Number.isFinite(effectSize) ? Math.abs(effectSize) >= 0.02 : excludesNull;
-  const balanced = Number.isFinite(cohortBalance) ? cohortBalance >= 0.2 : true;
-  const paired = Number.isFinite(pairedCoverage) ? pairedCoverage >= 0.5 : true;
-  if (!excludesNull || !hasEffect) return 'INSUFFICIENT';
-  if (n >= 500 && q <= 0.05 && width <= 0.15 && balanced && paired) return 'ROBUST';
-  if (n >= 100 && q <= 0.10 && width <= 0.25 && balanced) return 'SUPPORTED';
-  if (n >= minimum && q <= 0.20) return 'EXPLORATORY';
-  return 'INSUFFICIENT';
-}
-
-// Structured companion to evidenceGrade (parity with
-// packages/statistics/src/statistics.mjs evidenceGradeDetailed): returns the
-// grade plus machine-readable reasons explaining it, so the UI can say *why*
-// evidence is insufficient instead of showing a bare badge.
-function evidenceGradeDetailed({ sampleSize, interval, qValue, minimum = 20, effectSize = null, cohortBalance = null, effectiveN = null, pairedCoverage = null, nullValue = 0 } = {}) {
-  const reasons = [];
-  const n = Number.isFinite(effectiveN) ? effectiveN : sampleSize;
-  if (!Number.isFinite(n) || n < minimum) {
-    reasons.push({ code: 'INSUFFICIENT_SAMPLE', detail: `${Number.isFinite(n) ? n : 'no'} usable observations < ${minimum} required` });
-    return { grade: 'INSUFFICIENT', reasons };
-  }
-  if (!Array.isArray(interval) || !interval.every(Number.isFinite)) {
-    reasons.push({ code: 'MISSING_INTERVAL', detail: 'estimator produced no finite confidence interval' });
-    return { grade: 'INSUFFICIENT', reasons };
-  }
-  const excludesNull = interval[0] > nullValue || interval[1] < nullValue;
-  const width = Math.abs(interval[1] - interval[0]);
-  const q = qValue == null ? 1 : qValue;
-  const hasEffect = Number.isFinite(effectSize) ? Math.abs(effectSize) >= 0.02 : excludesNull;
-  const balanced = Number.isFinite(cohortBalance) ? cohortBalance >= 0.2 : true;
-  const paired = Number.isFinite(pairedCoverage) ? pairedCoverage >= 0.5 : true;
-  if (!excludesNull) {
-    reasons.push({ code: 'CI_CROSSES_NULL', detail: `confidence interval contains the null value (${nullValue})` });
-    return { grade: 'INSUFFICIENT', reasons };
-  }
-  if (!hasEffect) {
-    reasons.push({ code: 'EFFECT_BELOW_MINIMUM', detail: `|effect| ${Math.abs(effectSize ?? NaN).toFixed(4)} < 0.02 minimum` });
-    return { grade: 'INSUFFICIENT', reasons };
-  }
-  if (n >= 500 && q <= 0.05 && width <= 0.15 && balanced && paired) return { grade: 'ROBUST', reasons };
-  if (n >= 100 && q <= 0.10 && width <= 0.25 && balanced) return { grade: 'SUPPORTED', reasons };
-  if (n >= minimum && q <= 0.20) return { grade: 'EXPLORATORY', reasons };
-  if (qValue == null) reasons.push({ code: 'MISSING_QVALUE', detail: 'no multiplicity-adjusted q-value; significance tiers unreachable' });
-  else if (q > 0.20) reasons.push({ code: 'QVALUE_ABOVE_TIER', detail: `q=${q.toFixed(4)} > 0.20 (EXPLORATORY threshold)` });
-  if (n < 100) reasons.push({ code: 'SAMPLE_BELOW_TIER', detail: `n=${n} < 100 (SUPPORTED tier)` });
-  if (width > 0.25) reasons.push({ code: 'INTERVAL_TOO_WIDE', detail: `CI width ${width.toFixed(3)} > 0.25 (SUPPORTED tier)` });
-  if (!balanced) reasons.push({ code: 'IMBALANCED_COHORTS', detail: `cohort balance ${Number(cohortBalance).toFixed(3)} < 0.2` });
-  if (!paired) reasons.push({ code: 'LOW_PAIRED_COVERAGE', detail: `paired coverage ${Number(pairedCoverage).toFixed(3)} < 0.5` });
-  if (reasons.length === 0) reasons.push({ code: 'UNSPECIFIED', detail: 'criteria combination did not reach EXPLORATORY' });
-  return { grade: 'INSUFFICIENT', reasons };
-}
-
-function evidenceGradeLegacy({ sampleSize, interval, qValue, minimum = 20 } = {}) {
-  const grade = evidenceGrade({ sampleSize, interval, qValue, minimum });
-  return { INSUFFICIENT: 'insufficient', EXPLORATORY: 'weak', SUPPORTED: 'moderate', ROBUST: 'strong' }[grade] ?? 'insufficient';
-}
-
-function logisticInteractionEstimate(cohorts) {
-  const { neither, aOnly, bOnly, both } = cohorts;
-  const n00 = neither.wins + neither.losses, n10 = aOnly.wins + aOnly.losses;
-  const n01 = bOnly.wins + bOnly.losses, n11 = both.wins + both.losses;
-  const cohortN = { neither: n00, aOnly: n10, bOnly: n01, both: n11 };
-  if (n00 === 0 || n10 === 0 || n01 === 0 || n11 === 0) return { estimate: null, logEstimate: null, standardError: null, pValue: null, interval: [null, null], separation: true, cohortN };
-  const p00 = neither.wins / n00, p10 = aOnly.wins / n10, p01 = bOnly.wins / n01, p11 = both.wins / n11;
-  if ([p00, p10, p01, p11].some((p) => p === 0 || p === 1)) {
-    const corrected = { neither: { wins: neither.wins + 0.5, losses: neither.losses + 0.5 }, aOnly: { wins: aOnly.wins + 0.5, losses: aOnly.losses + 0.5 }, bOnly: { wins: bOnly.wins + 0.5, losses: bOnly.losses + 0.5 }, both: { wins: both.wins + 0.5, losses: both.losses + 0.5 } };
-    const r = logisticInteractionEstimate(corrected); return { ...r, separation: true };
-  }
-  const lo00 = Math.log(p00 / (1 - p00)), lo10 = Math.log(p10 / (1 - p10));
-  const lo01 = Math.log(p01 / (1 - p01)), lo11 = Math.log(p11 / (1 - p11));
-  const logEstimate = lo11 - lo10 - lo01 + lo00;
-  const variance = 1 / (n00 * p00 * (1 - p00)) + 1 / (n10 * p10 * (1 - p10)) + 1 / (n01 * p01 * (1 - p01)) + 1 / (n11 * p11 * (1 - p11));
-  const standardError = Math.sqrt(variance);
-  const z = standardError > 0 ? logEstimate / standardError : 0;
-  const pValue = 2 * (1 - normalCdf(Math.abs(z)));
-  const z95 = 1.959963984540054;
-  return { estimate: Math.exp(logEstimate), logEstimate, standardError, pValue, interval: [Math.exp(logEstimate - z95 * standardError), Math.exp(logEstimate + z95 * standardError)], separation: false, cohortN };
-}
-
-function stratifiedInteractionEstimate(strata) {
-  let pooledLog = 0, pooledVarianceInv = 0, separation = false;
-  const totalCohortN = { neither: 0, aOnly: 0, bOnly: 0, both: 0 };
-  let validStrata = 0;
-  for (const stratum of strata) {
-    const r = logisticInteractionEstimate(stratum);
-    totalCohortN.neither += r.cohortN.neither; totalCohortN.aOnly += r.cohortN.aOnly;
-    totalCohortN.bOnly += r.cohortN.bOnly; totalCohortN.both += r.cohortN.both;
-    if (r.separation || !Number.isFinite(r.logEstimate) || !Number.isFinite(r.standardError) || r.standardError === 0) { separation = separation || r.separation; continue; }
-    const w = 1 / (r.standardError * r.standardError);
-    pooledLog += r.logEstimate * w; pooledVarianceInv += w; validStrata += 1;
-  }
-  if (pooledVarianceInv === 0 || validStrata === 0) return { estimate: null, logEstimate: null, standardError: null, pValue: null, interval: [null, null], separation: true, strataCount: strata.length, totalCohortN, effectiveN: 0 };
-  const logEstimate = pooledLog / pooledVarianceInv;
-  const standardError = Math.sqrt(1 / pooledVarianceInv);
-  const z = standardError > 0 ? logEstimate / standardError : 0;
-  const pValue = 2 * (1 - normalCdf(Math.abs(z)));
-  const z95 = 1.959963984540054;
-  const effectiveN = totalCohortN.neither + totalCohortN.aOnly + totalCohortN.bOnly + totalCohortN.both;
-  return { estimate: Math.exp(logEstimate), logEstimate, standardError, pValue, interval: [Math.exp(logEstimate - z95 * standardError), Math.exp(logEstimate + z95 * standardError)], separation: false, strataCount: validStrata, totalCohortN, effectiveN };
-}
-
-function cohortBalanceRatio(cohortN) {
-  const sizes = Object.values(cohortN).filter((n) => n > 0);
-  if (sizes.length < 2) return 0;
-  return Math.min(...sizes) / Math.max(...sizes);
-}
-
-function benjaminiHochberg(items, { pKey = 'pValue', idKey = 'id' } = {}) {
-  const valid = items.filter((item) => Number.isFinite(item[pKey])).map((item) => ({ ...item })).sort((a, b) => a[pKey] - b[pKey] || String(a[idKey]).localeCompare(String(b[idKey])));
-  const m = valid.length;
-  let running = 1;
-  for (let i = m - 1; i >= 0; i -= 1) {
-    const raw = (valid[i][pKey] * m) / (i + 1);
-    running = Math.min(running, raw);
-    valid[i].qValue = Math.min(1, running);
-  }
-  const byId = new Map(valid.map((item) => [item[idKey], item.qValue]));
-  return items.map((item) => ({ ...item, qValue: byId.get(item[idKey]) ?? null }));
-}
-
-// ── Formula-hash helpers (hash-consistent with browser-analytics.js METRIC_REGISTRY) ──
-
-const METRIC_FORMULAS = {
-  'immediate-point-impact': 'sum secured point delta in declaration state transition / declarations',
-  'synergy-interaction': 'stratified joint outcome rate - mean stratified component-only outcome rate',
-};
-const _formulaHashCache = {};
-function metricFormulaHash(metricId) {
-  if (!_formulaHashCache[metricId]) _formulaHashCache[metricId] = sha256Text(String(METRIC_FORMULAS[metricId] ?? ''));
-  return _formulaHashCache[metricId];
-}
 
 // ── Internal helpers ──
 
@@ -352,19 +197,7 @@ function analysisUnits(summaries, { primary = false } = {}) {
   }
   return units;
 }
-const unitDecisive = (row) => row._decisive === true;
-const unitWon = (row) => unitDecisive(row) ? Number(row._won ?? 0) : 0;
 
-function representativeMatches(rows, predicate, limit = 4) {
-  const selected = [...new Map(
-    rows.filter(predicate)
-      .sort((a,b) => String(a.matchResultHash ?? a.matchId).localeCompare(String(b.matchResultHash ?? b.matchId)))
-      .map((row) => [row.matchId, row])
-  ).values()];
-  if (!selected.length) return [];
-  const indexes = [...new Set([0, Math.floor((selected.length-1)/2), selected.length-1, Math.floor((selected.length-1)*0.75)])].slice(0,limit);
-  return indexes.map((index)=>selected[index].matchId);
-}
 
 // ── Mechanics Atlas ──
 
@@ -442,11 +275,12 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
         ? { status: 'available', sampleSize: usedDecisive.length + unusedDecisive.length }
         : { status: 'model-failed', reasonCode: 'STRATIFIED_ESTIMATOR_FAILED', detail: 'Stratified estimator could not produce a finite estimate.' },
       sampleSize,
-      evidenceGradeLegacy: evidenceGradeLegacy({sampleSize, interval: association.interval, qValue: null, minimum: 20}),
       status:sampleSize?'measured':'not-observable', replayRefs:representativeMatches(units,row=>Number(row.mechanicCounts?.[mechanic]??0)>0),
       counterexampleRefs:representativeMatches(units,row=>Number(row.mechanicCounts?.[mechanic]??0)>0 && unitDecisive(row) && unitWon(row)===0,2),
       formulaHash:metricFormulaHash('immediate-point-impact'),
-      outcomeFormulaHash:metricFormulaHash('synergy-interaction'),
+      outcomeFormulaHash:metricFormulaHash('raw-win-association'),
+      adjustedFormulaHash:metricFormulaHash('adjusted-win-association'),
+      pickRateFormulaHash:metricFormulaHash('pick-rate-when-legal'),
       limitations:[
         `Participant prevalence uses ${usageUnit}-level observations and is policy-, seat-, and profile-conditioned.`,
         hasOpportunityData ? 'Pick rate when legal uses opportunity telemetry from the legality boundary.' : 'Opportunity-level pick rate is N/A — legal opportunity telemetry not available for this campaign.',
@@ -454,28 +288,8 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       ]
     };
   });
-  // Multiplicity correction across all mechanics' raw-association tests
-  // (parity with packages/analytics/src/analytics.mjs). Previously qValue was
-  // never supplied to the evidence rubric, so every mechanic was structurally
-  // capped at INSUFFICIENT regardless of sample size.
-  const qByMechanic = new Map(
-    benjaminiHochberg(rows.filter((row) => Number.isFinite(row.pValue)), { idKey: 'mechanic' })
-      .map((row) => [row.mechanic, row.qValue])
-  );
-  for (const row of rows) {
-    const q = qByMechanic.get(row.mechanic) ?? null;
-    // Grade against the decisive-cohort N that the test actually used, not
-    // the raw usage count — draws and aborts carry no outcome signal.
-    const decisiveN = row.rawWinAssociationStatus?.status === 'available'
-      ? row.rawWinAssociationStatus.sampleSize : null;
-    const graded = evidenceGradeDetailed({
-      sampleSize: decisiveN ?? 0, interval: row.rawWinAssociation95, qValue: q,
-      minimum: 20, effectSize: row.rawWinAssociation, effectiveN: decisiveN ?? 0,
-    });
-    row.associationQValue = q;
-    row.evidenceGrade = graded.grade;
-    row.evidenceReasons = graded.reasons;
-  }
+  // BH over the valid inferential family only (parity with canonical).
+  gradeMechanicRows(rows, deriveTagRelations(summaries, units, mechanicNames, { isRegistered: (t) => Boolean(MECHANIC_REGISTRY[t]) }));
   return rows;
 }
 
@@ -506,138 +320,14 @@ function stratifiedWinAssociation(units, mechanic) {
 }
 
 // ── Synergies ──
+// Estimation, candidate sanitation, grading and ranking are the shared core
+// (packages/analytics/src/observatory-core.mjs), identical to canonical.
 
-function stratumKey(row) { return row._stratum ?? `${row.profileId}|${(row.policyIds ?? []).join('>')}|${(row.seatOrder ?? []).join('>')}`; }
-
-function fourCohortInteraction(group, a, b) {
-  const neither = { wins: 0, losses: 0 }, aOnly = { wins: 0, losses: 0 };
-  const bOnly = { wins: 0, losses: 0 }, both = { wins: 0, losses: 0 };
-  for (const row of group) {
-    if (!unitDecisive(row)) continue;
-    const hasA = Number(row.mechanicCounts?.[a] ?? 0) > 0;
-    const hasB = Number(row.mechanicCounts?.[b] ?? 0) > 0;
-    const won = unitWon(row) === 1;
-    if (hasA && hasB) { if (won) both.wins += 1; else both.losses += 1; }
-    else if (hasA) { if (won) aOnly.wins += 1; else aOnly.losses += 1; }
-    else if (hasB) { if (won) bOnly.wins += 1; else bOnly.losses += 1; }
-    else { if (won) neither.wins += 1; else neither.losses += 1; }
-  }
-  return { neither, aOnly, bOnly, both };
-}
-
-const SYNERGY_EXCLUDED_MECHANICS = new Set([
-  'draw','discard','recycle','rummage','exhausted','goal','trigger',
-  'ACTION','SETUP','INSTANT','QUICK','INTERRUPT',
-  'phase','enter-action','points','ordinary','top','decline','response-decline','private-choice','forced-mini-turn',
-  'instant','quick','interrupt','score','exhausted-pass','♣','♦','♥','♠'
-]);
-
-export function analyzeSynergies(summaries, {
-  minimumBoth = 20, minimumCohort = 10, minimumEffectiveN = 50, maxMechanics = 24, includeDiagnostics = false,
-} = {}) {
+export function analyzeSynergies(summaries, options = {}) {
   const units = analysisUnits(summaries, { primary: true });
-  const excludedTags = synergyExcludedTags();
-  const mechanics = [...new Set(units.flatMap((row) => Object.keys(row.mechanicCounts ?? {})))]
-    .sort((a, b) => {
-      const ca = units.reduce((s, r) => s + Number(r.mechanicCounts?.[a] ?? 0), 0);
-      const cb = units.reduce((s, r) => s + Number(r.mechanicCounts?.[b] ?? 0), 0);
-      return cb - ca || a.localeCompare(b);
-    })
-    .filter((m) => !excludedTags.has(m))
-    .slice(0, maxMechanics);
-  const strataMap = new Map();
-  for (const row of units.filter(unitDecisive)) {
-    const key = stratumKey(row);
-    if (!strataMap.has(key)) strataMap.set(key, []);
-    strataMap.get(key).push(row);
-  }
-  const strata = [...strataMap.values()];
-  const raw = [];
-  const diagnostics = [];
-  for (let i = 0; i < mechanics.length; i++) {
-    for (let j = i + 1; j < mechanics.length; j++) {
-      const a = mechanics[i], b = mechanics[j];
-      if (areTagsInseparable(a, b)) {
-        if (includeDiagnostics) diagnostics.push({ id: `${a}::${b}`, source: a, target: b, status: 'rejected', reason: 'inseparable-tags', reasonCode: 'PARENT_CHILD_OR_ALIAS', cohortN: null });
-        continue;
-      }
-      const stratumCohorts = strata.map((group) => fourCohortInteraction(group, a, b));
-      const totalCohortN = { neither: 0, aOnly: 0, bOnly: 0, both: 0 };
-      for (const sc of stratumCohorts) {
-        totalCohortN.neither += sc.neither.wins + sc.neither.losses;
-        totalCohortN.aOnly += sc.aOnly.wins + sc.aOnly.losses;
-        totalCohortN.bOnly += sc.bOnly.wins + sc.bOnly.losses;
-        totalCohortN.both += sc.both.wins + sc.both.losses;
-      }
-      const totalN = totalCohortN.neither + totalCohortN.aOnly + totalCohortN.bOnly + totalCohortN.both;
-      if (totalCohortN.both < minimumBoth) {
-        if (includeDiagnostics) diagnostics.push({ id: `${a}::${b}`, source: a, target: b, status: 'rejected', reason: 'insufficient-both-cohort', reasonCode: 'INSUFFICIENT_BOTH', cohortN: totalCohortN, threshold: minimumBoth });
-        continue;
-      }
-      if (totalCohortN.aOnly < minimumCohort || totalCohortN.bOnly < minimumCohort) {
-        if (includeDiagnostics) diagnostics.push({ id: `${a}::${b}`, source: a, target: b, status: 'rejected', reason: 'insufficient-single-cohort', reasonCode: 'INSUFFICIENT_SINGLE', cohortN: totalCohortN, threshold: minimumCohort });
-        continue;
-      }
-      if (totalN < minimumEffectiveN) {
-        if (includeDiagnostics) diagnostics.push({ id: `${a}::${b}`, source: a, target: b, status: 'rejected', reason: 'insufficient-effective-n', reasonCode: 'INSUFFICIENT_N', cohortN: totalCohortN, threshold: minimumEffectiveN });
-        continue;
-      }
-      const result = stratifiedInteractionEstimate(stratumCohorts);
-      if (!Number.isFinite(result.logEstimate)) {
-        if (includeDiagnostics) diagnostics.push({ id: `${a}::${b}`, source: a, target: b, status: 'rejected', reason: 'model-failure', reasonCode: 'SINGULAR_MODEL', cohortN: totalCohortN });
-        continue;
-      }
-      const balance = cohortBalanceRatio(totalCohortN);
-      const p00 = totalCohortN.neither > 0 ? (stratumCohorts.reduce((s, sc) => s + sc.neither.wins, 0)) / totalCohortN.neither : 0;
-      const p10 = totalCohortN.aOnly > 0 ? (stratumCohorts.reduce((s, sc) => s + sc.aOnly.wins, 0)) / totalCohortN.aOnly : 0;
-      const p01 = totalCohortN.bOnly > 0 ? (stratumCohorts.reduce((s, sc) => s + sc.bOnly.wins, 0)) / totalCohortN.bOnly : 0;
-      const p11 = totalCohortN.both > 0 ? (stratumCohorts.reduce((s, sc) => s + sc.both.wins, 0)) / totalCohortN.both : 0;
-      const marginalInteraction = p11 - p10 - p01 + p00;
-      raw.push({
-        id: `${a}::${b}`, source: a, target: b, displayName: `${a} × ${b}`,
-        relationshipClass: marginalInteraction >= 0 ? 'synergy' : 'anti-synergy',
-        direction: 'bidirectional',
-        effect: result.estimate, logEstimate: result.logEstimate,
-        rawEffect: marginalInteraction, marginalInteraction,
-        shrunkEffect: empiricalBayesShrinkage(result.estimate, result.effectiveN),
-        confidenceInterval: result.interval, standardError: result.standardError,
-        pValue: result.pValue, cohortN: totalCohortN,
-        neitherN: totalCohortN.neither, aOnlyN: totalCohortN.aOnly,
-        bOnlyN: totalCohortN.bOnly, bothN: totalCohortN.both,
-        cohortBalance: balance, effectiveN: result.effectiveN,
-        separation: result.separation, strataCount: result.strataCount,
-        jointOpportunityCount: totalCohortN.both,
-        baselineCount: totalCohortN.aOnly + totalCohortN.bOnly, sampleSize: totalN,
-      });
-    }
-  }
-  const results = benjaminiHochberg(raw).map((item) => {
-    const graded = evidenceGradeDetailed({
-      sampleSize: item.effectiveN, interval: item.confidenceInterval, qValue: item.qValue,
-      minimum: Math.min(minimumBoth, minimumEffectiveN), effectSize: item.marginalInteraction,
-      cohortBalance: item.cohortBalance, effectiveN: item.effectiveN, nullValue: 1,
-    });
-    return {
-      ...item,
-      modelStatus: 'modeled',
-      status: item.qValue <= 0.1 && (item.confidenceInterval[0] > 1 || item.confidenceInterval[1] < 1)
-        ? (item.marginalInteraction > 0 ? 'positive' : 'negative') : 'inconclusive',
-      evidenceGrade: graded.grade,
-      evidenceReasons: graded.reasons,
-      evidenceGradeLegacy: evidenceGradeLegacy({ sampleSize: item.effectiveN, interval: item.confidenceInterval, qValue: item.qValue, minimum: Math.min(minimumBoth, minimumEffectiveN) }),
-      replayRefs: representativeMatches(units, (row) => (row.mechanicCounts?.[item.source] ?? 0) > 0 && (row.mechanicCounts?.[item.target] ?? 0) > 0),
-      counterexampleRefs: representativeMatches(units, (row) => (row.mechanicCounts?.[item.source] ?? 0) > 0 && (row.mechanicCounts?.[item.target] ?? 0) > 0 && unitDecisive(row) && unitWon(row) === 0, 2),
-      formulaHash: metricFormulaHash('synergy-interaction'),
-      limitations: [
-        'Interaction effect is the A×B odds-ratio from a stratified logistic model — association, not causation.',
-        `Four cohorts: Neither=${item.neitherN}, A-only=${item.aOnlyN}, B-only=${item.bOnlyN}, Both=${item.bothN}.`,
-        item.separation ? 'Perfect separation detected in some strata; continuity correction applied.' : null,
-        'Low-frequency pairs are suppressed by minimum cohort thresholds.',
-      ].filter(Boolean),
-    };
-  }).sort((a, b) => Math.abs(b.shrunkEffect) - Math.abs(a.shrunkEffect) || a.id.localeCompare(b.id));
-  if (includeDiagnostics) results.diagnostics = diagnostics;
-  return results;
+  const tags = [...new Set(units.flatMap((row) => Object.keys(row.mechanicCounts ?? {})))].sort();
+  const relations = deriveTagRelations(summaries, units, tags, { isRegistered: (t) => Boolean(MECHANIC_REGISTRY[t]) });
+  return analyzeSynergiesCore(units, { excludedTags: synergyExcludedTags(), areTagsInseparable, relations, formulaHash: metricFormulaHash('synergy-interaction') }, options);
 }
 
 // ── Causal Motifs ──
@@ -705,20 +395,16 @@ export function buildPolicyFingerprints(summaries){
     }
   }
   return Object.values(byPolicy).map(x=>{
-    const crossDecisive=x.crossPolicyWins+x.crossPolicyLosses;
     return {
     ...x,
     opponents:[...x.opponentSet].sort(),opponentSet:undefined,
     matchCount:x.games,
-    record:{games:x.games,selfPlayGames:x.selfPlayGames,crossPolicyGames:x.games-x.selfPlayGames,
-      wins:x.crossPolicyWins,losses:x.crossPolicyLosses,draws:x.crossPolicyDraws,aborts:x.crossPolicyAborts,decisive:crossDecisive,
-      winRate:x.games-x.selfPlayGames?x.crossPolicyWins/(x.games-x.selfPlayGames):0,
-      wilson95:wilsonInterval(x.crossPolicyWins,Math.max(1,crossDecisive))},
+    record:policyRecord(x),
     seatSplit:{seat1:x.seat1Games,seat2:x.seat2Games},
     avgScoreMargin:x.games?x.scoreMarginTotal/x.games:null,
     exhaustedPassRate:x.miniTurnActions?x.exhaustedPassActions/x.miniTurnActions:null,
     responsePlayRate:(x.responsePlays+x.responseDeclines)?x.responsePlays/(x.responsePlays+x.responseDeclines):null,
-    winRate:x.games?x.wins/x.games:0,winWilson95:wilsonInterval(x.wins,Math.max(1,x.games)),
+    winRate:x.games?x.wins/x.games:0,winWilson95:x.games?wilsonInterval(x.wins,x.games):null,winRateBasis:'all-participations-including-self-play',
     fingerprint:{scoreAggression:x.games?x.miniTurnActions/x.games:0,responseUse:x.games?x.responsePlays/x.games:0,responseConservation:x.responsePlays+x.responseDeclines?x.responseDeclines/(x.responsePlays+x.responseDeclines):0,privateChoiceDensity:x.games?x.privateChoices/x.games:0,advancedFrequency:x.games?x.advanced/x.games:0,ultraFrequency:x.games?x.ultras/x.games:0,voltageFrequency:x.games?x.voltage/x.games:0,matchLength:x.games?x.turns/x.games:0}
     };
   }).sort((a,b)=>a.policyId.localeCompare(b.policyId));

@@ -313,8 +313,11 @@ test('Test S: METRIC_REGISTRY includes participant-prevalence and pick-rate-when
   assert.ok(registry['match-prevalence'], 'match-prevalence metric should exist');
   assert.ok(registry['raw-win-association'], 'raw-win-association metric should exist');
   assert.ok(registry['adjusted-win-association'], 'adjusted-win-association metric should exist');
-  assert.equal(registry['synergy-interaction'].version, '4.2.0');
-  assert.match(registry['synergy-interaction'].formula, /logistic/);
+  // 4.3.0: log-OR shrinkage toward OR=1, contributing-strata effective N,
+  // disclosed separation and log-scale evidence grading changed the estimator.
+  assert.equal(registry['synergy-interaction'].version, '4.3.0');
+  assert.equal(registry['synergy-interaction'].scale, 'odds-ratio');
+  assert.match(registry['synergy-interaction'].formula, /log-odds/);
 });
 
 // ── Test T: Synergy interaction effect is on odds-ratio scale ──

@@ -1,6 +1,6 @@
 import { cp, mkdir, readFile, readdir, rm } from 'node:fs/promises';
 import { writeFile } from './lib/write-with-retry.mjs';
-import { existsSync, readFileSync, cpSync, rmSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, cpSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -113,6 +113,26 @@ for(const name of ['evolution-analytics-model.mjs','evolution-analytics-charts.m
     await cp(path.join(aaiSrc, mod), path.join(aaiDist, mod));
   }
 }
+// ── Shared analytics: one source of truth for estimators + metric identity ──
+// These pure modules are imported by canonical analytics in Node and copied
+// verbatim (one import rewritten) for the browser Observatory, so formula
+// hashes and estimands are identical by construction.
+async function copySharedAnalytics() {
+  const out = path.join(dist, 'shared-analytics');
+  await mkdir(out, { recursive: true });
+  const sources = [
+    ['packages/statistics/src/estimators.mjs', 'estimators.mjs'],
+    ['packages/analytics/src/metric-registry.mjs', 'metric-registry.mjs'],
+    ['packages/analytics/src/observatory-integrity.mjs', 'observatory-integrity.mjs'],
+    ['packages/analytics/src/observatory-core.mjs', 'observatory-core.mjs'],
+  ];
+  for (const [src, name] of sources) {
+    const text = (await readFile(path.join(root, src), 'utf8')).replaceAll("from '@intrilex/statistics/estimators'", "from './estimators.mjs'");
+    if (/from '@intrilex\//.test(text)) throw new Error(`shared-analytics/${name} has an unrewritten workspace import`);
+    writeFileSync(path.join(out, name), text);
+  }
+}
+await copySharedAnalytics();
 // ── Replay Caster: copy browser-bundleable package modules into dist/replay-caster ──
 // The browser UI (apps/lab-web/src/workspaces/caster-workspace.js) imports these
 // .mjs modules via the browser-entry.js adapter. The package imports
@@ -498,6 +518,10 @@ const criticalFiles = [
   'analytics-ai/analysis-controller.mjs',
   'analytics-ai/analysis-cache.mjs',
   'achievements/index.mjs',
+  'shared-analytics/estimators.mjs',
+  'shared-analytics/metric-registry.mjs',
+  'shared-analytics/observatory-integrity.mjs',
+  'shared-analytics/observatory-core.mjs',
 ];
 let missingFiles = criticalFiles.filter(f => !existsSync(path.join(dist, f)));
 // Also check for truncated (0-byte) index.html — a known Windows race condition
@@ -527,6 +551,7 @@ if (missingFiles.length > 0) {
   if (existsSync(achSrcDir)) {
     cpSync(achSrcDir, achDistDir, { recursive: true, force: true });
   }
+  await copySharedAnalytics();
   // Re-copy engine files synchronously
   cpSync(path.join(root, 'packages/browser-crypto-shim/src/hash.js'), path.join(dist, 'engine/hash.js'), { force: true });
   // Re-write shared-browser.js and browser-entry.js synchronously

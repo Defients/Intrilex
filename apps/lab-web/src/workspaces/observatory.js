@@ -31,23 +31,27 @@ export function renderCompare() {
   // record (new artifacts), then the campaign aggregate, which applies the
   // same self-play exclusion. Win rates are cross-policy decisive games only.
   const aggPolicies = state.aggregate?.policies ?? {};
+  // Denominator contract: the displayed rate and its CI are ALWAYS derived
+  // here from raw counts over decisive cross-policy games, so legacy artifacts
+  // whose stored winRate used a different denominator than their stored CI
+  // cannot surface a mismatched pair. The all-games rate is shown separately.
   const recordOf = (p) => {
     if (!p) return null;
-    if (p.record && Number.isFinite(p.record.wins)) return p.record;
-    const a = aggPolicies[p.policyId];
-    if (!a) return null;
-    // This fallback only sees pre-participation-fix aggregates, where
-    // selfPlayGames counted matches. Normalize to participations so
-    // rec.selfPlayGames has one convention everywhere.
-    const legacySelfPlay = a.selfPlayGames ?? 0;
-    const cross = a.crossPolicyGames ?? (a.games - 2 * legacySelfPlay);
-    const nonDecisive = (a.draws ?? 0) + (a.aborts ?? 0);
-    return {
-      games: a.games, selfPlayGames: 2 * legacySelfPlay, crossPolicyGames: cross,
-      wins: a.wins ?? 0, losses: Math.max(0, cross - (a.wins ?? 0) - nonDecisive),
-      draws: a.draws ?? 0, aborts: a.aborts ?? 0, decisive: Math.max(0, cross - nonDecisive),
-      winRate: a.winRate, wilson95: a.wilson95,
-    };
+    let c = null;
+    if (p.record && Number.isFinite(p.record.wins)) c = p.record;
+    else if (aggPolicies[p.policyId]) {
+      const a = aggPolicies[p.policyId];
+      // Aggregates that carry crossPolicyGames already use the participation
+      // convention for selfPlayGames; older ones counted self-play matches.
+      const selfPlay = a.crossPolicyGames != null ? (a.selfPlayGames ?? 0) : 2 * (a.selfPlayGames ?? 0);
+      const cross = a.crossPolicyGames ?? (a.games - selfPlay);
+      c = { games: a.games, selfPlayGames: selfPlay, crossPolicyGames: cross, wins: a.wins ?? 0, draws: a.draws ?? 0, aborts: a.aborts ?? 0, losses: Math.max(0, cross - (a.wins ?? 0) - (a.draws ?? 0) - (a.aborts ?? 0)) };
+    }
+    if (!c) return null;
+    const decisive = (c.wins ?? 0) + (c.losses ?? 0), all = decisive + (c.draws ?? 0) + (c.aborts ?? 0);
+    return { ...c, decisive,
+      winRate: decisive ? c.wins / decisive : null, wilson95: decisive ? wilsonInterval(c.wins, decisive) : null,
+      allGamesWinRate: all ? c.wins / all : null, allGamesWilson95: all ? wilsonInterval(c.wins, all) : null };
   };
   const opponentsOf = (p) => {
     if (Array.isArray(p?.opponents)) return p.opponents;
@@ -77,14 +81,15 @@ export function renderCompare() {
     const recordText = rec
       ? `${rec.wins}–${rec.losses}${rec.draws ? `–${rec.draws}D` : ''}${rec.aborts ? ` (+${rec.aborts} aborted)` : ''}`
       : null;
-    const rate = rec?.wilson95 ? `${pct(rec.winRate)}` : pct(p.winRate);
-    const ci = rec?.wilson95 ?? p.winWilson95;
+    const rate = rec ? (rec.winRate != null ? pct(rec.winRate) : '—') : null;
+    const ci = rec?.wilson95 ?? null;
     return `<div>${definitionList([
       ['Policy', p.policyId],
       ['Record (cross-policy)', recordText],
       ['Games', rec ? `${rec.games} total${rec.selfPlayGames ? ` · ${rec.selfPlayGames / 2} self-play match${rec.selfPlayGames > 2 ? 'es' : ''} excluded` : ''}` : (p.matchCount ?? p.games)],
-      ['Win rate (cross-policy)', rate],
-      ['Win rate 95% CI', ci ? `${pct(ci[0])} to ${pct(ci[1])}` : '—'],
+      ['Win rate (decisive cross-policy games)', rate == null ? null : `${rate}${rec ? ` · n=${rec.decisive}` : ''}`],
+      ['Win rate 95% CI (same denominator)', ci ? `${pct(ci[0])} to ${pct(ci[1])}` : '—'],
+      ['Win rate incl. draws/aborts', rec?.allGamesWinRate != null && (rec.draws || rec.aborts) ? `${pct(rec.allGamesWinRate)} (${pct(rec.allGamesWilson95[0])}–${pct(rec.allGamesWilson95[1])}) · n=${rec.decisive + rec.draws + rec.aborts}` : null],
       ['Seat split', seat ? `S1 ${seat.seat1} · S2 ${seat.seat2}` : null],
       ['Opponents faced', opps ? `${opps.length}${opps.length <= 6 ? ` (${opps.join(', ')})` : ''}` : null],
       ['Avg score margin', (p.avgScoreMargin ?? p.fingerprint?.avgScoreMargin) != null ? Number(p.avgScoreMargin ?? p.fingerprint?.avgScoreMargin).toFixed(1) : null],
