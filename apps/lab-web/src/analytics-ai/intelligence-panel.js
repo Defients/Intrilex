@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { state, esc } from '../state.js';
-import { getAnalyticsAi, ANALYSIS_MODE, ANALYSIS_STATUS } from './browser-controller.js';
+import { getAnalyticsAi, ANALYSIS_MODE, ANALYSIS_STATUS, OLLAMA_ERROR } from './browser-controller.js';
 import { renderAnalyticsAiSettings } from './settings.js';
 
 const MODE_TABS = [
@@ -154,13 +154,31 @@ function renderDeterministicWarnings(warnings) {
 
 function renderError(ai) {
   if (ai.status !== ANALYSIS_STATUS.ERROR) return '';
-  const r = ai.lastResult;
+  const r = ai.lastError;
   if (r?.ok) return '';
-  // The last analyze() result is stored only on success; for errors we
-  // rely on the controller return value captured in runAnalysis. To keep
-  // the panel reactive, we surface a generic error line plus streaming text.
-  const msg = ai.streamingText ? '' : 'The last analysis request failed. Check the connection and model, then try again. Details are available in the browser console.';
-  return `<div class="aai-error" role="alert"><strong>Analysis error.</strong> ${esc(msg)}</div>`;
+  const code = r?.code ? `<div class="aai-error-code"><span class="aai-badge danger">${esc(String(r.code))}</span></div>` : '';
+  const detail = r?.error ? `<p class="aai-error-detail">${esc(r.error)}</p>` : '';
+  const streamed = ai.streamingText
+    ? `<details class="aai-streaming"><summary>Partial streamed response</summary><pre class="aai-stream-pre">${esc(ai.streamingText)}</pre></details>`
+    : '';
+  const raw = !ai.streamingText && r?.rawResponse
+    ? `<details class="aai-streaming"><summary>Raw model response</summary><pre class="aai-stream-pre">${esc(r.rawResponse)}</pre></details>`
+    : '';
+  return `<div class="aai-error" role="alert"><strong>Analysis error.</strong> The last analysis request failed.${code}${detail}<p class="aai-error-hint">${esc(errorHint(r))}</p>${streamed}${raw}</div>`;
+}
+
+function errorHint(r) {
+  const hints = {
+    [OLLAMA_ERROR.UNREACHABLE]: 'The browser could not reach Ollama. Check that Ollama is running and the endpoint is correct. On the deployed (HTTPS) site, Ollama must allow this origin (set OLLAMA_ORIGINS) and the browser may block HTTPS→localhost requests (Private Network Access) — the local dev server is the supported environment.',
+    [OLLAMA_ERROR.TIMEOUT]: 'The request timed out. Increase the request timeout in settings, or try a smaller/faster model.',
+    [OLLAMA_ERROR.MODEL_NOT_FOUND]: 'The selected model is not installed on the Ollama server. Pull it with "ollama pull <model>" or choose another model after refreshing the model list.',
+    [OLLAMA_ERROR.HTTP_ERROR]: 'Ollama returned an HTTP error. Check the Ollama server logs for details.',
+    [OLLAMA_ERROR.NETWORK]: 'A network error interrupted the request. Check the connection and try again.',
+    'malformed-output': 'The model did not return valid structured JSON and repair failed. Try a larger model, lower the temperature, or enable developer mode and inspect the raw response below.',
+    'no-model': 'Select a model in the settings above.',
+    'busy': 'Wait for the current analysis to finish or cancel it.'
+  };
+  return hints[r?.code] || 'Check the connection and model, then try again. Details are available in the browser console.';
 }
 
 function renderAnalysisResult(result, ai) {

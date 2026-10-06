@@ -167,27 +167,88 @@ export function empiricalBayesShrinkage(estimate, sampleSize, { priorMean = 0, p
  *
  * Grades: INSUFFICIENT < EXPLORATORY < SUPPORTED < ROBUST
  *
- * @param {{ sampleSize?: number, interval?: [number, number], qValue?: number, minimum?: number, effectSize?: number | null, cohortBalance?: number | null, effectiveN?: number | null, pairedCoverage?: number | null }} [params]
+ * @param {{ sampleSize?: number, interval?: [number, number], qValue?: number, minimum?: number, effectSize?: number | null, cohortBalance?: number | null, effectiveN?: number | null, pairedCoverage?: number | null, nullValue?: number }} [params]
  * @returns {'INSUFFICIENT' | 'EXPLORATORY' | 'SUPPORTED' | 'ROBUST'}
  */
-export function evidenceGrade({ sampleSize = 0, interval = [0, 0], qValue, minimum = 20, effectSize = null, cohortBalance = null, effectiveN = null, pairedCoverage = null } = {}) {
+export function evidenceGrade({ sampleSize = 0, interval = [0, 0], qValue, minimum = 20, effectSize = null, cohortBalance = null, effectiveN = null, pairedCoverage = null, nullValue = 0 } = {}) {
   const n = effectiveN != null && Number.isFinite(effectiveN) ? effectiveN : sampleSize;
   if (!Number.isFinite(n) || n < minimum) return 'INSUFFICIENT';
   if (!Array.isArray(interval) || !interval.every(Number.isFinite)) return 'INSUFFICIENT';
-  const excludesZero = interval[0] > 0 || interval[1] < 0;
+  const excludesNull = interval[0] > nullValue || interval[1] < nullValue;
   const width = Math.abs(interval[1] - interval[0]);
   const q = qValue == null ? 1 : qValue;
   // Effect size threshold: at least 2pp for binary outcomes
-  const hasEffect = effectSize != null && Number.isFinite(effectSize) ? Math.abs(effectSize) >= 0.02 : excludesZero;
+  const hasEffect = effectSize != null && Number.isFinite(effectSize) ? Math.abs(effectSize) >= 0.02 : excludesNull;
   // Cohort balance: ratio of smallest to largest cohort (1 = perfectly balanced)
   const balanced = cohortBalance != null && Number.isFinite(cohortBalance) ? cohortBalance >= 0.2 : true;
   // Paired-run coverage: fraction of data from complete AB/BA pairs
   const paired = pairedCoverage != null && Number.isFinite(pairedCoverage) ? pairedCoverage >= 0.5 : true;
-  if (!excludesZero || !hasEffect) return 'INSUFFICIENT';
+  if (!excludesNull || !hasEffect) return 'INSUFFICIENT';
   if (n >= 500 && q <= 0.05 && width <= 0.15 && balanced && paired) return 'ROBUST';
   if (n >= 100 && q <= 0.10 && width <= 0.25 && balanced) return 'SUPPORTED';
   if (n >= minimum && q <= 0.20) return 'EXPLORATORY';
   return 'INSUFFICIENT';
+}
+
+/**
+ * Structured companion to evidenceGrade: returns the same grade plus the
+ * machine-readable reasons that produced it, so the UI can explain *why*
+ * evidence is insufficient instead of showing a bare badge.
+ *
+ * Reason codes (stable contract):
+ *  INSUFFICIENT_SAMPLE      — n (or effectiveN) below the minimum
+ *  MISSING_INTERVAL         — no finite confidence interval from the estimator
+ *  CI_CROSSES_NULL          — interval contains the null value (0 for
+ *                             difference scale, 1 for odds-ratio scale)
+ *  EFFECT_BELOW_MINIMUM     — |effectSize| below the 0.02 minimum
+ *  MISSING_QVALUE           — no multiplicity-adjusted q-value was supplied;
+ *                             the grade is structurally capped at INSUFFICIENT
+ *  QVALUE_ABOVE_TIER        — q-value exceeds the next tier's threshold
+ *  SAMPLE_BELOW_TIER        — n below the next tier's requirement
+ *  INTERVAL_TOO_WIDE        — CI width exceeds the next tier's requirement
+ *  IMBALANCED_COHORTS       — cohort balance ratio below 0.2
+ *  LOW_PAIRED_COVERAGE      — paired (AB/BA) coverage below 0.5
+ *
+ * @param {{ sampleSize?: number, interval?: [number, number], qValue?: number, minimum?: number, effectSize?: number | null, cohortBalance?: number | null, effectiveN?: number | null, pairedCoverage?: number | null, nullValue?: number }} [params]
+ * @returns {{ grade: 'INSUFFICIENT' | 'EXPLORATORY' | 'SUPPORTED' | 'ROBUST', reasons: Array<{ code: string, detail: string }> }}
+ */
+export function evidenceGradeDetailed({ sampleSize = 0, interval = [0, 0], qValue, minimum = 20, effectSize = null, cohortBalance = null, effectiveN = null, pairedCoverage = null, nullValue = 0 } = {}) {
+  /** @type {Array<{ code: string, detail: string }>} */
+  const reasons = [];
+  const n = effectiveN != null && Number.isFinite(effectiveN) ? effectiveN : sampleSize;
+  if (!Number.isFinite(n) || n < minimum) {
+    reasons.push({ code: 'INSUFFICIENT_SAMPLE', detail: `${Number.isFinite(n) ? n : 'no'} usable observations < ${minimum} required` });
+    return { grade: 'INSUFFICIENT', reasons };
+  }
+  if (!Array.isArray(interval) || !interval.every(Number.isFinite)) {
+    reasons.push({ code: 'MISSING_INTERVAL', detail: 'estimator produced no finite confidence interval' });
+    return { grade: 'INSUFFICIENT', reasons };
+  }
+  const excludesNull = interval[0] > nullValue || interval[1] < nullValue;
+  const width = Math.abs(interval[1] - interval[0]);
+  const q = qValue == null ? 1 : qValue;
+  const hasEffect = effectSize != null && Number.isFinite(effectSize) ? Math.abs(effectSize) >= 0.02 : excludesNull;
+  const balanced = cohortBalance != null && Number.isFinite(cohortBalance) ? cohortBalance >= 0.2 : true;
+  const paired = pairedCoverage != null && Number.isFinite(pairedCoverage) ? pairedCoverage >= 0.5 : true;
+  if (!excludesNull) {
+    reasons.push({ code: 'CI_CROSSES_NULL', detail: `confidence interval contains the null value (${nullValue})` });
+    return { grade: 'INSUFFICIENT', reasons };
+  }
+  if (!hasEffect) {
+    reasons.push({ code: 'EFFECT_BELOW_MINIMUM', detail: `|effect| ${Math.abs(effectSize ?? NaN).toFixed(4)} < 0.02 minimum` });
+    return { grade: 'INSUFFICIENT', reasons };
+  }
+  if (n >= 500 && q <= 0.05 && width <= 0.15 && balanced && paired) return { grade: 'ROBUST', reasons };
+  if (n >= 100 && q <= 0.10 && width <= 0.25 && balanced) return { grade: 'SUPPORTED', reasons };
+  if (n >= minimum && q <= 0.20) return { grade: 'EXPLORATORY', reasons };
+  if (qValue == null) reasons.push({ code: 'MISSING_QVALUE', detail: 'no multiplicity-adjusted q-value; significance tiers unreachable' });
+  else if (q > 0.20) reasons.push({ code: 'QVALUE_ABOVE_TIER', detail: `q=${q.toFixed(4)} > 0.20 (EXPLORATORY threshold)` });
+  if (n < 100) reasons.push({ code: 'SAMPLE_BELOW_TIER', detail: `n=${n} < 100 (SUPPORTED tier)` });
+  if (width > 0.25) reasons.push({ code: 'INTERVAL_TOO_WIDE', detail: `CI width ${width.toFixed(3)} > 0.25 (SUPPORTED tier)` });
+  if (!balanced) reasons.push({ code: 'IMBALANCED_COHORTS', detail: `cohort balance ${Number(cohortBalance).toFixed(3)} < 0.2` });
+  if (!paired) reasons.push({ code: 'LOW_PAIRED_COVERAGE', detail: `paired coverage ${Number(pairedCoverage).toFixed(3)} < 0.5` });
+  if (reasons.length === 0) reasons.push({ code: 'UNSPECIFIED', detail: 'criteria combination did not reach EXPLORATORY' });
+  return { grade: 'INSUFFICIENT', reasons };
 }
 
 /**

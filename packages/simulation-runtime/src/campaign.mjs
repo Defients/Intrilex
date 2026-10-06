@@ -166,7 +166,11 @@ export function campaignAggregate(campaign) {
     for (const id of match.policyIds) policy[id] ??= { games: 0, wins: 0, draws: 0, aborts: 0, miniTurnActions:0, responsesPlayed:0, responsesDeclined:0, selfPlayGames: 0 };
     policy[match.policyIds[0]].games += 1; policy[match.policyIds[1]].games += 1;
     const isSelfPlay = match.policyIds[0] === match.policyIds[1];
-    if (isSelfPlay) { policy[match.policyIds[0]].selfPlayGames += 1; }
+    // `games` counts participations (one per seat). selfPlayGames uses the
+    // same participation convention so crossPolicyGames + selfPlayGames ===
+    // games holds exactly — a self-play match occupies both seats and must
+    // remove both participations from cross-policy denominators.
+    if (isSelfPlay) { policy[match.policyIds[0]].selfPlayGames += 1; policy[match.policyIds[1]].selfPlayGames += 1; }
     const hasParticipants = Array.isArray(match.participants) && match.participants.length === 2;
     if (hasParticipants) {
       for (const p of match.participants) {
@@ -200,7 +204,9 @@ export function campaignAggregate(campaign) {
     }
   }
   for (const item of Object.values(policy)) {
-    // selfPlayGames are excluded from win-rate denominator for cross-policy superiority
+    // selfPlayGames are excluded from win-rate denominator for cross-policy
+    // superiority. Both counters use the participation convention, so the
+    // identity crossPolicyGames + selfPlayGames === games holds exactly.
     item.crossPolicyGames = item.games - (item.selfPlayGames ?? 0);
     item.winRate = item.crossPolicyGames ? item.wins / item.crossPolicyGames : 0;
     item.wilson95 = wilsonInterval(item.wins, Math.max(1, item.crossPolicyGames - item.draws - item.aborts));

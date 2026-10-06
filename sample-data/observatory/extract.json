@@ -1,7 +1,7 @@
 {
   "extractVersion": "1.0.0",
   "analyticsSchemaVersion": "4.2.0",
-  "sourceHash": "3092fc6460f314ad3c6a2d16608cd45451c7db683e7759de3439b300e0eeebfb",
+  "sourceHash": "a08badc41c452f798de5b2edba58a012cdfb3390060caa7c62154c0ec87e106f",
   "aggregateHash": "59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2",
   "executiveSummary": "Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. All matches completed without aborts. Highest win rate: hybrix-rusher at 83.3% (CI [0.436, 0.970], 6 games). No synergy pairs reached statistical significance after FDR correction. 162 mechanic(s) measured with evidence-backed associations. 30 anomaly/anomalies flagged (0 critical, 5 warning, 25 info). Data completeness: PASS (no unclassified facts). Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
   "dataset": {
@@ -1272,7 +1272,7 @@
         "p95": 0,
         "standardDeviation": 0
       },
-      "evidenceGrade": "INSUFFICIENT",
+      "evidenceGrade": "EXPLORATORY",
       "status": "measured",
       "sampleSize": 101,
       "replayRefs": [
@@ -1281,7 +1281,7 @@
         "M-d42c5a76b1a43e8227de",
         "M-3dc3510153eebdf54abb"
       ],
-      "summary": "Used in 50.5% of participant observations (101/200). Outcome association: negative (-0.210, CI [-0.346, -0.075]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 50.5% of participant observations (101/200). Outcome association: negative (-0.210, CI [-0.346, -0.075]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient)."
     },
     {
       "mechanic": "effect-ace",
@@ -1610,7 +1610,7 @@
         "p95": 0,
         "standardDeviation": 0
       },
-      "evidenceGrade": "INSUFFICIENT",
+      "evidenceGrade": "EXPLORATORY",
       "status": "measured",
       "sampleSize": 107,
       "replayRefs": [
@@ -1619,7 +1619,7 @@
         "M-d42c5a76b1a43e8227de",
         "M-a6073e68be3dfa99914b"
       ],
-      "summary": "Used in 53.5% of participant observations (107/200). Outcome association: positive (0.211, CI [0.075, 0.347]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 53.5% of participant observations (107/200). Outcome association: positive (0.211, CI [0.075, 0.347]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient)."
     },
     {
       "mechanic": "face-up-draw",
@@ -1664,7 +1664,7 @@
         0.6002615947715711
       ],
       "immediatePointImpact": null,
-      "evidenceGrade": "INSUFFICIENT",
+      "evidenceGrade": "EXPLORATORY",
       "status": "measured",
       "sampleSize": 22,
       "replayRefs": [
@@ -1673,7 +1673,7 @@
         "M-b615ae18bd3e0f132ef8",
         "M-84269db284883330999c"
       ],
-      "summary": "Used in 11.0% of participant observations (22/200). Outcome association: positive (0.460, CI [0.319, 0.600]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 11.0% of participant observations (22/200). Outcome association: positive (0.460, CI [0.319, 0.600]). Evidence grade: EXPLORATORY (insufficient)."
     },
     {
       "mechanic": "five-recycle",
@@ -2553,7 +2553,7 @@
         -0.2220081152286491
       ],
       "immediatePointImpact": null,
-      "evidenceGrade": "INSUFFICIENT",
+      "evidenceGrade": "EXPLORATORY",
       "status": "measured",
       "sampleSize": 10,
       "replayRefs": [
@@ -2562,7 +2562,7 @@
         "M-1b9ce7c6ecb94b540b09",
         "M-4756067b923a59fad42d"
       ],
-      "summary": "Used in 5.0% of participant observations (10/200). Outcome association: negative (-0.421, CI [-0.620, -0.222]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 5.0% of participant observations (10/200). Outcome association: negative (-0.421, CI [-0.620, -0.222]). Evidence grade: EXPLORATORY (insufficient)."
     },
     {
       "mechanic": "king-spade",
@@ -2894,7 +2894,7 @@
         "p95": 0,
         "standardDeviation": 0
       },
-      "evidenceGrade": "INSUFFICIENT",
+      "evidenceGrade": "EXPLORATORY",
       "status": "measured",
       "sampleSize": 56,
       "replayRefs": [
@@ -2903,7 +2903,7 @@
         "M-cc250cc50515a292f3e3",
         "M-4756067b923a59fad42d"
       ],
-      "summary": "Used in 28.0% of participant observations (56/200). Outcome association: negative (-0.248, CI [-0.395, -0.101]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 28.0% of participant observations (56/200). Outcome association: negative (-0.248, CI [-0.395, -0.101]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient)."
     },
     {
       "mechanic": "purge-aegis",
@@ -3615,7 +3615,7 @@
         "p95": 10,
         "standardDeviation": 4.2761798705987895
       },
-      "evidenceGrade": "INSUFFICIENT",
+      "evidenceGrade": "EXPLORATORY",
       "status": "measured",
       "sampleSize": 161,
       "replayRefs": [
@@ -3624,7 +3624,7 @@
         "M-d42c5a76b1a43e8227de",
         "M-4e938b55c5c081cf4195"
       ],
-      "summary": "Used in 80.5% of participant observations (161/200). Outcome association: positive (0.462, CI [0.332, 0.591]). Immediate point impact: mean 3.43 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 80.5% of participant observations (161/200). Outcome association: positive (0.462, CI [0.332, 0.591]). Immediate point impact: mean 3.43 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient)."
     },
     {
       "mechanic": "scuttle",
@@ -4400,7 +4400,7 @@
         "p95": 0,
         "standardDeviation": 0
       },
-      "evidenceGrade": "INSUFFICIENT",
+      "evidenceGrade": "EXPLORATORY",
       "status": "measured",
       "sampleSize": 111,
       "replayRefs": [
@@ -4409,7 +4409,7 @@
         "M-d42c5a76b1a43e8227de",
         "M-5ef9d016ebb1846cf10b"
       ],
-      "summary": "Used in 55.5% of participant observations (111/200). Outcome association: positive (0.233, CI [0.097, 0.368]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 55.5% of participant observations (111/200). Outcome association: positive (0.233, CI [0.097, 0.368]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient)."
     },
     {
       "mechanic": "three-black-ace",
@@ -5014,7 +5014,7 @@
         0.46546765324217765
       ],
       "immediatePointImpact": null,
-      "evidenceGrade": "INSUFFICIENT",
+      "evidenceGrade": "EXPLORATORY",
       "status": "measured",
       "sampleSize": 32,
       "replayRefs": [
@@ -5023,7 +5023,7 @@
         "M-b615ae18bd3e0f132ef8",
         "M-015b0b148b1e1f8a9876"
       ],
-      "summary": "Used in 16.0% of participant observations (32/200). Outcome association: positive (0.298, CI [0.130, 0.465]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 16.0% of participant observations (32/200). Outcome association: positive (0.298, CI [0.130, 0.465]). Evidence grade: EXPLORATORY (insufficient)."
     },
     {
       "mechanic": "wild-sovereignty",
@@ -5945,5 +5945,5 @@
     "Most synergy findings are inconclusive — consider increasing match count for statistical power.",
     "133 mechanic(s) have sample size below 20 — interpret with caution."
   ],
-  "extractHash": "fcbf81d3a45c5fbbfea514fee955bf154abf77e8450b445d20cfc0953234e6c5"
+  "extractHash": "4698d55e9c1e5daffc0aa2dd0ec35578ee8a361d6c9a12569b7a77408a58c845"
 }

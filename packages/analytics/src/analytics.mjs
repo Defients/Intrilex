@@ -1,11 +1,11 @@
 import { hashCanonical } from '@intrilex/shared';
 import {
   benjaminiHochberg,
+  evidenceGradeDetailed,
   cohortBalanceRatio,
   deterministicClusterBootstrap,
   differenceInProportions,
   empiricalBayesShrinkage,
-  evidenceGrade,
   evidenceGradeLegacy,
   formulaHash,
   logisticInteractionEstimate,
@@ -160,7 +160,7 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
   const allTags = mechanicNames;
   const tagValidation = validateMechanicTags(allTags);
   const quarantined = quarantineUnknownTags(allTags);
-  return mechanicNames.map((mechanic) => {
+  const rows = mechanicNames.map((mechanic) => {
     const used = units.filter((row) => Number(row.mechanicCounts?.[mechanic] ?? 0) > 0);
     const notUsed = units.filter((row) => Number(row.mechanicCounts?.[mechanic] ?? 0) === 0);
     const usedDecisive = used.filter(unitDecisive), unusedDecisive = notUsed.filter(unitDecisive);
@@ -197,11 +197,6 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
     const registryEntry = MECHANIC_REGISTRY[mechanic];
     const dimension = classifyTagDimension(mechanic);
     const entityDef = analyticsEntityDefinition(mechanic);
-    // Evidence grade using new multi-criteria rubric
-    const evidenceV2 = evidenceGrade({
-      sampleSize, interval: association.interval, qValue: null, minimum: 20,
-      effectSize: association.estimate, effectiveN: sampleSize,
-    });
     return {
       metricId:`mechanic:${mechanic}`, mechanic, displayName:mechanicDisplayName(mechanic), category:mechanicCategory(mechanic),
       dimension, entityDescription: entityDef.description,
@@ -242,7 +237,7 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       adjustedWinAssociationStatus: adjustedAssociation.estimate != null
         ? { status: 'available', sampleSize: usedDecisive.length + unusedDecisive.length }
         : { status: 'model-failed', reasonCode: 'STRATIFIED_ESTIMATOR_FAILED', detail: 'Stratified estimator could not produce a finite estimate.' },
-      sampleSize, evidenceGrade: evidenceV2,
+      sampleSize,
       evidenceGradeLegacy: evidenceGradeLegacy({sampleSize, interval: association.interval, qValue: null, minimum: 20}),
       status: sampleSize ? 'measured' : 'not-observable',
       replayRefs:representativeMatches(units,row=>Number(row.mechanicCounts?.[mechanic]??0)>0),
@@ -256,6 +251,28 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       ]
     };
   });
+  // Multiplicity correction across all mechanics' raw-association tests.
+  // Previously qValue was never supplied to the evidence rubric, so every
+  // mechanic was structurally capped at INSUFFICIENT regardless of sample size.
+  const qByMechanic = new Map(
+    benjaminiHochberg(rows.filter((row) => Number.isFinite(row.pValue)), { idKey: 'mechanic' })
+      .map((row) => [row.mechanic, row.qValue])
+  );
+  for (const row of rows) {
+    const q = qByMechanic.get(row.mechanic) ?? null;
+    // Grade against the decisive-cohort N that the test actually used, not
+    // the raw usage count — draws and aborts carry no outcome signal.
+    const decisiveN = row.rawWinAssociationStatus?.status === 'available'
+      ? row.rawWinAssociationStatus.sampleSize : null;
+    const graded = evidenceGradeDetailed({
+      sampleSize: decisiveN ?? 0, interval: row.rawWinAssociation95, qValue: q,
+      minimum: 20, effectSize: row.rawWinAssociation, effectiveN: decisiveN ?? 0,
+    });
+    row.associationQValue = q;
+    row.evidenceGrade = graded.grade;
+    row.evidenceReasons = graded.reasons;
+  }
+  return rows;
 }
 
 /**
@@ -415,7 +432,7 @@ export function analyzeSynergies(summaries, {
     }
   }
   const results = benjaminiHochberg(raw).map((item) => {
-    const evidenceV2 = evidenceGrade({
+    const graded = evidenceGradeDetailed({
       sampleSize: item.effectiveN,
       interval: item.confidenceInterval,
       qValue: item.qValue,
@@ -423,13 +440,16 @@ export function analyzeSynergies(summaries, {
       effectSize: item.marginalInteraction,
       cohortBalance: item.cohortBalance,
       effectiveN: item.effectiveN,
+      nullValue: 1,
     });
     return {
       ...item,
+      modelStatus: 'modeled',
       status: item.qValue <= 0.1 && (item.confidenceInterval[0] > 1 || item.confidenceInterval[1] < 1)
         ? (item.marginalInteraction > 0 ? 'positive' : 'negative')
         : 'inconclusive',
-      evidenceGrade: evidenceV2,
+      evidenceGrade: graded.grade,
+      evidenceReasons: graded.reasons,
       evidenceGradeLegacy: evidenceGradeLegacy({ sampleSize: item.effectiveN, interval: item.confidenceInterval, qValue: item.qValue, minimum: Math.min(minimumBoth, minimumEffectiveN) }),
       replayRefs: representativeMatches(units, (row) => (row.mechanicCounts?.[item.source] ?? 0) > 0 && (row.mechanicCounts?.[item.target] ?? 0) > 0),
       counterexampleRefs: representativeMatches(units, (row) => (row.mechanicCounts?.[item.source] ?? 0) > 0 && (row.mechanicCounts?.[item.target] ?? 0) > 0 && unitDecisive(row) && unitWon(row) === 0, 2),
@@ -469,28 +489,71 @@ const SYNERGY_EXCLUDED_MECHANICS=new Set([
 ]);
 export function buildPolicyFingerprints(summaries){
   const byPolicy={};
+  const blank=(id)=>({policyId:id,games:0,wins:0,miniTurnActions:0,responsePlays:0,responseDeclines:0,privateChoices:0,advanced:0,ultras:0,voltage:0,turns:0,
+    // Record fields mirror campaignAggregate() conventions: wins/draws/aborts
+    // count cross-policy games only; self-play is tracked but excluded from the
+    // superiority record. Seated split enables seat-balance inspection.
+    selfPlayGames:0,crossPolicyWins:0,crossPolicyLosses:0,crossPolicyDraws:0,crossPolicyAborts:0,seat1Games:0,seat2Games:0,opponentSet:new Set(),scoreMarginTotal:0,exhaustedPassActions:0});
   for(const row of summaries){
+    const policyIds=row.policyIds??[];
+    const isSelfPlay=policyIds.length===2&&policyIds[0]===policyIds[1];
+    const isDraw=row.terminationReason==='CANONICAL_DRAW'||row.winner==='DRAW';
+    const isDecisive=decisive(row);
+    const winnerPolicy=isDecisive?policyIds[(row.seatOrder??[]).indexOf(row.winner)]:null;
     const hasParticipants=Array.isArray(row.participants)&&row.participants.length===2;
+    // games and selfPlayGames both count participations (one per seat), so
+    // crossPolicyGames = games - selfPlayGames holds exactly — a self-play
+    // match occupies both seats and removes both participations.
     if(hasParticipants){
       for(const p of row.participants){
-        byPolicy[p.policyId]??={policyId:p.policyId,games:0,wins:0,miniTurnActions:0,responsePlays:0,responseDeclines:0,privateChoices:0,advanced:0,ultras:0,voltage:0,turns:0};
+        byPolicy[p.policyId]??=blank(p.policyId);
         const x=byPolicy[p.policyId];x.games+=1;x.turns+=row.completedFullTurns;
-        if(p.result==='win')x.wins+=1;
-        x.miniTurnActions+=p.miniTurnActionCount??0;x.responsePlays+=p.responsePlayCount??0;x.responseDeclines+=p.responseDeclineCount??0;x.privateChoices+=p.privateChoiceDecisionCount??0;x.advanced+=p.advancedDecisionCount??0;x.ultras+=p.ultraDecisionCount??0;x.voltage+=p.voltageDecisionCount??0;
+        if(p.seat===1)x.seat1Games+=1;else if(p.seat===2)x.seat2Games+=1;
+        for(const other of policyIds)if(other!==p.policyId)x.opponentSet.add(other);
+        x.scoreMarginTotal+=Number(row.scoreMargin??0);
+        if(isSelfPlay)x.selfPlayGames+=1;
+        if(p.result==='win'){x.wins+=1;if(!isSelfPlay)x.crossPolicyWins+=1;}
+        else if(p.result==='loss'){if(!isSelfPlay)x.crossPolicyLosses+=1;}
+        else if(isDraw){if(!isSelfPlay)x.crossPolicyDraws+=1;}
+        else if(!isSelfPlay)x.crossPolicyAborts+=1;
+        x.miniTurnActions+=p.miniTurnActionCount??0;x.responsePlays+=p.responsePlayCount??0;x.responseDeclines+=p.responseDeclineCount??0;x.privateChoices+=p.privateChoiceDecisionCount??0;x.advanced+=p.advancedDecisionCount??0;x.ultras+=p.ultraDecisionCount??0;x.voltage+=p.voltageDecisionCount??0;x.exhaustedPassActions+=p.exhaustedPassActionCount??0;
       }
     }else{
-      for(const policyId of row.policyIds){
-        byPolicy[policyId]??={policyId,games:0,wins:0,miniTurnActions:0,responsePlays:0,responseDeclines:0,privateChoices:0,advanced:0,ultras:0,voltage:0,turns:0};
+      for(const policyId of policyIds){
+        byPolicy[policyId]??=blank(policyId);
         const x=byPolicy[policyId];x.games+=1;x.turns+=row.completedFullTurns;
-        if(row.winner!=='DRAW'&&row.winner!=='ABORTED'&&row.policyIds[row.seatOrder.indexOf(row.winner)]===policyId)x.wins+=1;
-        x.miniTurnActions+=row.miniTurnActionCount??0;x.responsePlays+=row.responsePlayedCount??0;x.responseDeclines+=row.responseDeclinedWithOptionsCount??0;x.privateChoices+=row.privateChoiceDecisionCount??0;x.advanced+=row.advancedDecisionCount??0;x.ultras+=row.ultraDecisionCount??0;x.voltage+=row.voltageDecisionCount??0;
+        const seat=(row.seatOrder??[]).indexOf(policyId)+1;
+        if(seat===1)x.seat1Games+=1;else if(seat===2)x.seat2Games+=1;
+        for(const other of policyIds)if(other!==policyId)x.opponentSet.add(other);
+        x.scoreMarginTotal+=Number(row.scoreMargin??0);
+        if(isSelfPlay)x.selfPlayGames+=1;
+        if(winnerPolicy===policyId){x.wins+=1;if(!isSelfPlay)x.crossPolicyWins+=1;}
+        else if(isDecisive){if(!isSelfPlay)x.crossPolicyLosses+=1;}
+        else if(isDraw){if(!isSelfPlay)x.crossPolicyDraws+=1;}
+        else if(!isSelfPlay)x.crossPolicyAborts+=1;
+        x.miniTurnActions+=row.miniTurnActionCount??0;x.responsePlays+=row.responsePlayedCount??0;x.responseDeclines+=row.responseDeclinedWithOptionsCount??0;x.privateChoices+=row.privateChoiceDecisionCount??0;x.advanced+=row.advancedDecisionCount??0;x.ultras+=row.ultraDecisionCount??0;x.voltage+=row.voltageDecisionCount??0;x.exhaustedPassActions+=row.exhaustedPassActionCount??0;
       }
     }
   }
-  return Object.values(byPolicy).map(x=>({
-    ...x,winRate:x.games?x.wins/x.games:0,winWilson95:wilsonInterval(x.wins,Math.max(1,x.games)),
+  return Object.values(byPolicy).map(x=>{
+    const crossDecisive=x.crossPolicyWins+x.crossPolicyLosses;
+    return {
+    ...x,
+    opponents:[...x.opponentSet].sort(),opponentSet:undefined,
+    matchCount:x.games,
+    // Cross-policy superiority record (self-play excluded, matching campaignAggregate)
+    record:{games:x.games,selfPlayGames:x.selfPlayGames,crossPolicyGames:x.games-x.selfPlayGames,
+      wins:x.crossPolicyWins,losses:x.crossPolicyLosses,draws:x.crossPolicyDraws,aborts:x.crossPolicyAborts,decisive:crossDecisive,
+      winRate:x.games-x.selfPlayGames?x.crossPolicyWins/(x.games-x.selfPlayGames):0,
+      wilson95:wilsonInterval(x.crossPolicyWins,Math.max(1,crossDecisive))},
+    seatSplit:{seat1:x.seat1Games,seat2:x.seat2Games},
+    avgScoreMargin:x.games?x.scoreMarginTotal/x.games:null,
+    exhaustedPassRate:x.miniTurnActions?x.exhaustedPassActions/x.miniTurnActions:null,
+    responsePlayRate:(x.responsePlays+x.responseDeclines)?x.responsePlays/(x.responsePlays+x.responseDeclines):null,
+    winRate:x.games?x.wins/x.games:0,winWilson95:wilsonInterval(x.wins,Math.max(1,x.games)),
     fingerprint:{scoreAggression:x.games?x.miniTurnActions/x.games:0,responseUse:x.games?x.responsePlays/x.games:0,responseConservation:x.responsePlays+x.responseDeclines?x.responseDeclines/(x.responsePlays+x.responseDeclines):0,privateChoiceDensity:x.games?x.privateChoices/x.games:0,advancedFrequency:x.games?x.advanced/x.games:0,ultraFrequency:x.games?x.ultras/x.games:0,voltageFrequency:x.games?x.voltage/x.games:0,matchLength:x.games?x.turns/x.games:0}
-  })).sort((a,b)=>a.policyId.localeCompare(b.policyId));
+    };
+  }).sort((a,b)=>a.policyId.localeCompare(b.policyId));
 }
 
 export function detectAnomalies(summaries,detailedMatches=[]){
@@ -498,14 +561,14 @@ export function detectAnomalies(summaries,detailedMatches=[]){
   const threshold=turns.p95??Infinity;
   const anomalies=[];
   for(const row of summaries){
-    if(row.completedFullTurns>=threshold)anomalies.push({type:'LONG_MATCH',severity:'warning',matchId:row.matchId,value:row.completedFullTurns,threshold});
-    if(row.terminationReason==='UNSUPPORTED_CONFIGURATION'||row.terminationReason==='ENGINE_REJECTION')anomalies.push({type:row.terminationReason,severity:'critical',matchId:row.matchId,value:row.errorCode});
-    if((row.automaticPriorityAdvanceCount??0)>Math.max(30,(row.responseOpportunityCount??0)*8))anomalies.push({type:'ORCHESTRATION_DENSITY',severity:'info',matchId:row.matchId,value:row.automaticPriorityAdvanceCount});
-    if((row.responsePlayedCount??0)>20)anomalies.push({type:'RESPONSE_CHAIN_INTENSITY',severity:'info',matchId:row.matchId,value:row.responsePlayedCount});
+    if(row.completedFullTurns>=threshold)anomalies.push({type:'LONG_MATCH',severity:'warning',matchId:row.matchId,value:row.completedFullTurns,threshold,baseline:threshold,unit:'full turns',detail:`${row.completedFullTurns} completed turns ≥ p95 baseline (${threshold} turns); tail detector flags ~5% of matches by construction`});
+    if(row.terminationReason==='UNSUPPORTED_CONFIGURATION'||row.terminationReason==='ENGINE_REJECTION')anomalies.push({type:row.terminationReason,severity:'critical',matchId:row.matchId,value:row.errorCode,baseline:'accepted run',unit:'termination',detail:`match terminated with ${row.terminationReason}${row.errorCode?` (${row.errorCode})`:''}`});
+    if((row.automaticPriorityAdvanceCount??0)>Math.max(30,(row.responseOpportunityCount??0)*8))anomalies.push({type:'ORCHESTRATION_DENSITY',severity:'info',matchId:row.matchId,value:row.automaticPriorityAdvanceCount,threshold:Math.max(30,(row.responseOpportunityCount??0)*8),unit:'automatic priority advances per match',detail:`${row.automaticPriorityAdvanceCount} automatic priority advances > max(30, 8×${row.responseOpportunityCount??0} response opportunities)`});
+    if((row.responsePlayedCount??0)>20)anomalies.push({type:'RESPONSE_CHAIN_INTENSITY',severity:'info',matchId:row.matchId,value:row.responsePlayedCount,threshold:20,unit:'response plays per match',detail:`${row.responsePlayedCount} response plays > 20 per match`});
   }
   for(const match of detailedMatches){
     const unclassified=(match.facts?.resolutionFacts??[]).filter(f=>f.mechanicTags?.includes('unclassified')).length;
-    if(unclassified)anomalies.push({type:'UNCLASSIFIED_FACT',severity:'warning',matchId:match.summary.matchId,value:unclassified});
+    if(unclassified)anomalies.push({type:'UNCLASSIFIED_FACT',severity:'warning',matchId:match.summary.matchId,value:unclassified,unit:'unclassified resolution facts',detail:`${unclassified} resolution fact${unclassified===1?'':'s'} carry the 'unclassified' mechanic tag`});
   }
   return anomalies.sort((a,b)=>String(a.matchId).localeCompare(String(b.matchId))||a.type.localeCompare(b.type));
 }
@@ -606,6 +669,12 @@ export function buildPairedABBAAnalysis(summaries) {
   }
 
   const totalPairs = pairResults.reduce((s, r) => s + r.pairedBlocks, 0);
+  // Distinguish "no pairs exist" causes: a schedule that never repeated a
+  // pairedRunId produces hasPairedRunIds=true with zero complete pairs —
+  // that is a data limitation of the campaign, not a pairing failure.
+  const scheduleNote = totalPairs === 0 && hasPairedRunIds
+    ? 'pairedRunIds are present but none grouped ≥2 matches — the campaign schedule did not repeat pair blocks, so AB/BA pairing is not possible on this dataset'
+    : null;
   return {
     schemaVersion: ANALYTICS_SCHEMA_VERSION,
     design: 'matched AB/BA seat-swap',
@@ -613,6 +682,7 @@ export function buildPairedABBAAnalysis(summaries) {
     totalPairedBlocks: totalPairs,
     incompletePairs,
     hasPairedRunIds,
+    scheduleNote,
     pairResults: pairResults.sort((a, b) => a.policyPair.localeCompare(b.policyPair)),
     interpretationBoundary: hasPairedRunIds
       ? 'AB/BA pairs are linked by pairedRunId. Discordant-pair McNemar and paired bootstrap control for seat assignment. AB and BA ordinals use distinct derived seeds; pairing is by policy-pair block, not by identical deal seed.'
@@ -681,12 +751,37 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
     entitiesWithPointImpact: withPointImpact,
     eligibleSynergyPairs,
     nearThresholdPairs,
-    successfullyModeledSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length,
+    // Rows returned by analyzeSynergies all have modelStatus='modeled' —
+    // pairs that fail cohort gates or whose estimator fails are rejected into
+    // synergyDiagnostics before modeling. "Successfully modeled" therefore
+    // means the interaction model produced finite output, NOT that the result
+    // is statistically significant; evidenceQualifiedSynergyPairs counts pairs
+    // whose evidence grade rose above INSUFFICIENT.
+    successfullyModeledSynergyPairs: synergies.filter(s => s.modelStatus === 'modeled').length,
+    rejectedSynergyPairs: synergyDiagnostics.length,
+    evidenceQualifiedSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length,
     unmappedDiagnostics,
     incompleteABBA,
   };
+  // Taxonomy reconciliation: every tracked entity lands in exactly one
+  // dimension bucket, so the identity tracked = Σ dimensionCounts always holds.
+  // UI surfaces display canonical + aggregate rows; diagnostic/rank-effect/
+  // action-* entities are tracked and measured but not presented as mechanics.
+  const reconciliation = {
+    trackedEntities: mechanics.length,
+    byDimension: dimensionCounts,
+    registered: mechanics.filter(m => m.registryVerified).length,
+    unregisteredTags: quarantineLedger.length,
+    invariantHolds: mechanics.length === Object.values(dimensionCounts).reduce((a, b) => a + b, 0),
+  };
   const core={
     schemaVersion:ANALYTICS_SCHEMA_VERSION,metricRegistry:metricRegistryWithHashes(),summaryCount:summaries.length,
+    // Provenance echo: make the artifact self-describing so any surface can
+    // answer "where did this number come from?" without joining aggregate.json
+    evidenceEpoch:aggregate?.evidenceEpoch??null,postRulesParityRepair:aggregate?.postRulesParityRepair??null,
+    engineVersion:aggregate?.engineVersion??null,rulesVersion:aggregate?.rulesVersion??null,
+    profileId:aggregate?.profileId??null,authorityHash:aggregate?.authorityHash??null,
+    releaseIdentityHash:aggregate?.releaseIdentityHash??null,
     aggregateHash:aggregate?.aggregateHash??null,mechanics,synergies,synergyDiagnostics,motifs,policies,anomalies,
     rankPower:rankAnalytics.rankPower,
     swapMatrix:rankAnalytics.swapMatrix,
@@ -701,6 +796,7 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
     hasOpportunityTelemetry,
     legacySchema: !hasOpportunityTelemetry,
     campaignHealth,
+    reconciliation,
     completeness:{unclassifiedCount,tolerance:0,status:unclassifiedCount===0?'PASS':'FAIL'},
     interpretationBoundary:'Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.'
   };

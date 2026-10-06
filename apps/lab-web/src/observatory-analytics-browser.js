@@ -24,9 +24,13 @@ import {
   areTagsInseparable,
 } from './mechanic-registry-browser.js';
 
+// Shared analytics schema version — single source for observatory artifacts
+// produced in the browser bundle (parity with @intrilex/analytics).
+export const ANALYTICS_SCHEMA_VERSION = '4.2.0';
+
 // ── Pure-math statistics helpers (browser ports of @intrilex/statistics) ──
 
-function wilsonInterval(successes, total, z = 1.959963984540054) {
+export function wilsonInterval(successes, total, z = 1.959963984540054) {
   if (!Number.isInteger(successes) || !Number.isInteger(total) || successes < 0 || total < 0 || successes > total) throw new TypeError('Invalid binomial counts');
   if (total === 0) return [0, 0];
   const p = successes / total, z2 = z * z, denominator = 1 + z2 / total;
@@ -163,21 +167,63 @@ function empiricalBayesShrinkage(estimate, sampleSize, { priorMean = 0, priorStr
   return (estimate * sampleSize + priorMean * priorStrength) / (sampleSize + priorStrength);
 }
 
-function evidenceGrade({ sampleSize, interval, qValue, minimum = 20, effectSize = null, cohortBalance = null, effectiveN = null, pairedCoverage = null } = {}) {
+function evidenceGrade({ sampleSize, interval, qValue, minimum = 20, effectSize = null, cohortBalance = null, effectiveN = null, pairedCoverage = null, nullValue = 0 } = {}) {
   const n = Number.isFinite(effectiveN) ? effectiveN : sampleSize;
   if (!Number.isFinite(n) || n < minimum) return 'INSUFFICIENT';
   if (!Array.isArray(interval) || !interval.every(Number.isFinite)) return 'INSUFFICIENT';
-  const excludesZero = interval[0] > 0 || interval[1] < 0;
+  const excludesNull = interval[0] > nullValue || interval[1] < nullValue;
   const width = Math.abs(interval[1] - interval[0]);
   const q = qValue == null ? 1 : qValue;
-  const hasEffect = Number.isFinite(effectSize) ? Math.abs(effectSize) >= 0.02 : excludesZero;
+  const hasEffect = Number.isFinite(effectSize) ? Math.abs(effectSize) >= 0.02 : excludesNull;
   const balanced = Number.isFinite(cohortBalance) ? cohortBalance >= 0.2 : true;
   const paired = Number.isFinite(pairedCoverage) ? pairedCoverage >= 0.5 : true;
-  if (!excludesZero || !hasEffect) return 'INSUFFICIENT';
+  if (!excludesNull || !hasEffect) return 'INSUFFICIENT';
   if (n >= 500 && q <= 0.05 && width <= 0.15 && balanced && paired) return 'ROBUST';
   if (n >= 100 && q <= 0.10 && width <= 0.25 && balanced) return 'SUPPORTED';
   if (n >= minimum && q <= 0.20) return 'EXPLORATORY';
   return 'INSUFFICIENT';
+}
+
+// Structured companion to evidenceGrade (parity with
+// packages/statistics/src/statistics.mjs evidenceGradeDetailed): returns the
+// grade plus machine-readable reasons explaining it, so the UI can say *why*
+// evidence is insufficient instead of showing a bare badge.
+function evidenceGradeDetailed({ sampleSize, interval, qValue, minimum = 20, effectSize = null, cohortBalance = null, effectiveN = null, pairedCoverage = null, nullValue = 0 } = {}) {
+  const reasons = [];
+  const n = Number.isFinite(effectiveN) ? effectiveN : sampleSize;
+  if (!Number.isFinite(n) || n < minimum) {
+    reasons.push({ code: 'INSUFFICIENT_SAMPLE', detail: `${Number.isFinite(n) ? n : 'no'} usable observations < ${minimum} required` });
+    return { grade: 'INSUFFICIENT', reasons };
+  }
+  if (!Array.isArray(interval) || !interval.every(Number.isFinite)) {
+    reasons.push({ code: 'MISSING_INTERVAL', detail: 'estimator produced no finite confidence interval' });
+    return { grade: 'INSUFFICIENT', reasons };
+  }
+  const excludesNull = interval[0] > nullValue || interval[1] < nullValue;
+  const width = Math.abs(interval[1] - interval[0]);
+  const q = qValue == null ? 1 : qValue;
+  const hasEffect = Number.isFinite(effectSize) ? Math.abs(effectSize) >= 0.02 : excludesNull;
+  const balanced = Number.isFinite(cohortBalance) ? cohortBalance >= 0.2 : true;
+  const paired = Number.isFinite(pairedCoverage) ? pairedCoverage >= 0.5 : true;
+  if (!excludesNull) {
+    reasons.push({ code: 'CI_CROSSES_NULL', detail: `confidence interval contains the null value (${nullValue})` });
+    return { grade: 'INSUFFICIENT', reasons };
+  }
+  if (!hasEffect) {
+    reasons.push({ code: 'EFFECT_BELOW_MINIMUM', detail: `|effect| ${Math.abs(effectSize ?? NaN).toFixed(4)} < 0.02 minimum` });
+    return { grade: 'INSUFFICIENT', reasons };
+  }
+  if (n >= 500 && q <= 0.05 && width <= 0.15 && balanced && paired) return { grade: 'ROBUST', reasons };
+  if (n >= 100 && q <= 0.10 && width <= 0.25 && balanced) return { grade: 'SUPPORTED', reasons };
+  if (n >= minimum && q <= 0.20) return { grade: 'EXPLORATORY', reasons };
+  if (qValue == null) reasons.push({ code: 'MISSING_QVALUE', detail: 'no multiplicity-adjusted q-value; significance tiers unreachable' });
+  else if (q > 0.20) reasons.push({ code: 'QVALUE_ABOVE_TIER', detail: `q=${q.toFixed(4)} > 0.20 (EXPLORATORY threshold)` });
+  if (n < 100) reasons.push({ code: 'SAMPLE_BELOW_TIER', detail: `n=${n} < 100 (SUPPORTED tier)` });
+  if (width > 0.25) reasons.push({ code: 'INTERVAL_TOO_WIDE', detail: `CI width ${width.toFixed(3)} > 0.25 (SUPPORTED tier)` });
+  if (!balanced) reasons.push({ code: 'IMBALANCED_COHORTS', detail: `cohort balance ${Number(cohortBalance).toFixed(3)} < 0.2` });
+  if (!paired) reasons.push({ code: 'LOW_PAIRED_COVERAGE', detail: `paired coverage ${Number(pairedCoverage).toFixed(3)} < 0.5` });
+  if (reasons.length === 0) reasons.push({ code: 'UNSPECIFIED', detail: 'criteria combination did not reach EXPLORATORY' });
+  return { grade: 'INSUFFICIENT', reasons };
 }
 
 function evidenceGradeLegacy({ sampleSize, interval, qValue, minimum = 20 } = {}) {
@@ -340,7 +386,7 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       }
     }
   }
-  return mechanicNames.map((mechanic) => {
+  const rows = mechanicNames.map((mechanic) => {
     const used = units.filter((row) => Number(row.mechanicCounts?.[mechanic] ?? 0) > 0);
     const notUsed = units.filter((row) => Number(row.mechanicCounts?.[mechanic] ?? 0) === 0);
     const usedDecisive = used.filter(unitDecisive), unusedDecisive = notUsed.filter(unitDecisive);
@@ -364,7 +410,6 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
     const registryEntry = MECHANIC_REGISTRY[mechanic];
     const dimension = classifyTagDimension(mechanic);
     const entityDef = analyticsEntityDefinition(mechanic);
-    const evidenceV2 = evidenceGrade({ sampleSize, interval: association.interval, qValue: null, minimum: 20, effectSize: association.estimate, effectiveN: sampleSize });
     return {
       metricId:`mechanic:${mechanic}`, mechanic, displayName:mechanicDisplayName(mechanic), category:mechanicCategory(mechanic),
       dimension, entityDescription: entityDef.description,
@@ -396,7 +441,7 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       adjustedWinAssociationStatus: adjustedAssociation.estimate != null
         ? { status: 'available', sampleSize: usedDecisive.length + unusedDecisive.length }
         : { status: 'model-failed', reasonCode: 'STRATIFIED_ESTIMATOR_FAILED', detail: 'Stratified estimator could not produce a finite estimate.' },
-      sampleSize, evidenceGrade: evidenceV2,
+      sampleSize,
       evidenceGradeLegacy: evidenceGradeLegacy({sampleSize, interval: association.interval, qValue: null, minimum: 20}),
       status:sampleSize?'measured':'not-observable', replayRefs:representativeMatches(units,row=>Number(row.mechanicCounts?.[mechanic]??0)>0),
       counterexampleRefs:representativeMatches(units,row=>Number(row.mechanicCounts?.[mechanic]??0)>0 && unitDecisive(row) && unitWon(row)===0,2),
@@ -409,6 +454,29 @@ export function buildMechanicsAtlas(summaries, detailedMatches = []) {
       ]
     };
   });
+  // Multiplicity correction across all mechanics' raw-association tests
+  // (parity with packages/analytics/src/analytics.mjs). Previously qValue was
+  // never supplied to the evidence rubric, so every mechanic was structurally
+  // capped at INSUFFICIENT regardless of sample size.
+  const qByMechanic = new Map(
+    benjaminiHochberg(rows.filter((row) => Number.isFinite(row.pValue)), { idKey: 'mechanic' })
+      .map((row) => [row.mechanic, row.qValue])
+  );
+  for (const row of rows) {
+    const q = qByMechanic.get(row.mechanic) ?? null;
+    // Grade against the decisive-cohort N that the test actually used, not
+    // the raw usage count — draws and aborts carry no outcome signal.
+    const decisiveN = row.rawWinAssociationStatus?.status === 'available'
+      ? row.rawWinAssociationStatus.sampleSize : null;
+    const graded = evidenceGradeDetailed({
+      sampleSize: decisiveN ?? 0, interval: row.rawWinAssociation95, qValue: q,
+      minimum: 20, effectSize: row.rawWinAssociation, effectiveN: decisiveN ?? 0,
+    });
+    row.associationQValue = q;
+    row.evidenceGrade = graded.grade;
+    row.evidenceReasons = graded.reasons;
+  }
+  return rows;
 }
 
 function stratifiedWinAssociation(units, mechanic) {
@@ -544,16 +612,18 @@ export function analyzeSynergies(summaries, {
     }
   }
   const results = benjaminiHochberg(raw).map((item) => {
-    const evidenceV2 = evidenceGrade({
+    const graded = evidenceGradeDetailed({
       sampleSize: item.effectiveN, interval: item.confidenceInterval, qValue: item.qValue,
       minimum: Math.min(minimumBoth, minimumEffectiveN), effectSize: item.marginalInteraction,
-      cohortBalance: item.cohortBalance, effectiveN: item.effectiveN,
+      cohortBalance: item.cohortBalance, effectiveN: item.effectiveN, nullValue: 1,
     });
     return {
       ...item,
+      modelStatus: 'modeled',
       status: item.qValue <= 0.1 && (item.confidenceInterval[0] > 1 || item.confidenceInterval[1] < 1)
         ? (item.marginalInteraction > 0 ? 'positive' : 'negative') : 'inconclusive',
-      evidenceGrade: evidenceV2,
+      evidenceGrade: graded.grade,
+      evidenceReasons: graded.reasons,
       evidenceGradeLegacy: evidenceGradeLegacy({ sampleSize: item.effectiveN, interval: item.confidenceInterval, qValue: item.qValue, minimum: Math.min(minimumBoth, minimumEffectiveN) }),
       replayRefs: representativeMatches(units, (row) => (row.mechanicCounts?.[item.source] ?? 0) > 0 && (row.mechanicCounts?.[item.target] ?? 0) > 0),
       counterexampleRefs: representativeMatches(units, (row) => (row.mechanicCounts?.[item.source] ?? 0) > 0 && (row.mechanicCounts?.[item.target] ?? 0) > 0 && unitDecisive(row) && unitWon(row) === 0, 2),
@@ -588,28 +658,70 @@ export function mineCausalMotifs(detailedMatches,{limit=60}={}){
 
 export function buildPolicyFingerprints(summaries){
   const byPolicy={};
+  // Record fields mirror campaignAggregate() conventions: wins/draws/aborts
+  // count cross-policy games only; self-play is tracked but excluded from the
+  // superiority record. Seated split enables seat-balance inspection.
+  const blank=(id)=>({policyId:id,games:0,wins:0,miniTurnActions:0,responsePlays:0,responseDeclines:0,privateChoices:0,advanced:0,ultras:0,voltage:0,turns:0,
+    selfPlayGames:0,crossPolicyWins:0,crossPolicyLosses:0,crossPolicyDraws:0,crossPolicyAborts:0,seat1Games:0,seat2Games:0,opponentSet:new Set(),scoreMarginTotal:0,exhaustedPassActions:0});
   for(const row of summaries){
+    const policyIds=row.policyIds??[];
+    const isSelfPlay=policyIds.length===2&&policyIds[0]===policyIds[1];
+    const isDraw=row.terminationReason==='CANONICAL_DRAW'||row.winner==='DRAW';
+    const isDecisive=decisive(row);
+    const winnerPolicy=isDecisive?policyIds[(row.seatOrder??[]).indexOf(row.winner)]:null;
     const hasParticipants=Array.isArray(row.participants)&&row.participants.length===2;
+    // games and selfPlayGames both count participations (one per seat), so
+    // crossPolicyGames = games - selfPlayGames holds exactly — a self-play
+    // match occupies both seats and removes both participations.
     if(hasParticipants){
       for(const p of row.participants){
-        byPolicy[p.policyId]??={policyId:p.policyId,games:0,wins:0,miniTurnActions:0,responsePlays:0,responseDeclines:0,privateChoices:0,advanced:0,ultras:0,voltage:0,turns:0};
+        byPolicy[p.policyId]??=blank(p.policyId);
         const x=byPolicy[p.policyId];x.games+=1;x.turns+=row.completedFullTurns;
-        if(p.result==='win')x.wins+=1;
-        x.miniTurnActions+=p.miniTurnActionCount??0;x.responsePlays+=p.responsePlayCount??0;x.responseDeclines+=p.responseDeclineCount??0;x.privateChoices+=p.privateChoiceDecisionCount??0;x.advanced+=p.advancedDecisionCount??0;x.ultras+=p.ultraDecisionCount??0;x.voltage+=p.voltageDecisionCount??0;
+        if(p.seat===1)x.seat1Games+=1;else if(p.seat===2)x.seat2Games+=1;
+        for(const other of policyIds)if(other!==p.policyId)x.opponentSet.add(other);
+        x.scoreMarginTotal+=Number(row.scoreMargin??0);
+        if(isSelfPlay)x.selfPlayGames+=1;
+        if(p.result==='win'){x.wins+=1;if(!isSelfPlay)x.crossPolicyWins+=1;}
+        else if(p.result==='loss'){if(!isSelfPlay)x.crossPolicyLosses+=1;}
+        else if(isDraw){if(!isSelfPlay)x.crossPolicyDraws+=1;}
+        else if(!isSelfPlay)x.crossPolicyAborts+=1;
+        x.miniTurnActions+=p.miniTurnActionCount??0;x.responsePlays+=p.responsePlayCount??0;x.responseDeclines+=p.responseDeclineCount??0;x.privateChoices+=p.privateChoiceDecisionCount??0;x.advanced+=p.advancedDecisionCount??0;x.ultras+=p.ultraDecisionCount??0;x.voltage+=p.voltageDecisionCount??0;x.exhaustedPassActions+=p.exhaustedPassActionCount??0;
       }
     }else{
-      for(const policyId of row.policyIds){
-        byPolicy[policyId]??={policyId,games:0,wins:0,miniTurnActions:0,responsePlays:0,responseDeclines:0,privateChoices:0,advanced:0,ultras:0,voltage:0,turns:0};
+      for(const policyId of policyIds){
+        byPolicy[policyId]??=blank(policyId);
         const x=byPolicy[policyId];x.games+=1;x.turns+=row.completedFullTurns;
-        if(row.winner!=='DRAW'&&row.winner!=='ABORTED'&&row.policyIds[row.seatOrder.indexOf(row.winner)]===policyId)x.wins+=1;
-        x.miniTurnActions+=row.miniTurnActionCount??0;x.responsePlays+=row.responsePlayedCount??0;x.responseDeclines+=row.responseDeclinedWithOptionsCount??0;x.privateChoices+=row.privateChoiceDecisionCount??0;x.advanced+=row.advancedDecisionCount??0;x.ultras+=row.ultraDecisionCount??0;x.voltage+=row.voltageDecisionCount??0;
+        const seat=(row.seatOrder??[]).indexOf(policyId)+1;
+        if(seat===1)x.seat1Games+=1;else if(seat===2)x.seat2Games+=1;
+        for(const other of policyIds)if(other!==policyId)x.opponentSet.add(other);
+        x.scoreMarginTotal+=Number(row.scoreMargin??0);
+        if(isSelfPlay)x.selfPlayGames+=1;
+        if(winnerPolicy===policyId){x.wins+=1;if(!isSelfPlay)x.crossPolicyWins+=1;}
+        else if(isDecisive){if(!isSelfPlay)x.crossPolicyLosses+=1;}
+        else if(isDraw){if(!isSelfPlay)x.crossPolicyDraws+=1;}
+        else if(!isSelfPlay)x.crossPolicyAborts+=1;
+        x.miniTurnActions+=row.miniTurnActionCount??0;x.responsePlays+=row.responsePlayedCount??0;x.responseDeclines+=row.responseDeclinedWithOptionsCount??0;x.privateChoices+=row.privateChoiceDecisionCount??0;x.advanced+=row.advancedDecisionCount??0;x.ultras+=row.ultraDecisionCount??0;x.voltage+=row.voltageDecisionCount??0;x.exhaustedPassActions+=row.exhaustedPassActionCount??0;
       }
     }
   }
-  return Object.values(byPolicy).map(x=>({
-    ...x,winRate:x.games?x.wins/x.games:0,winWilson95:wilsonInterval(x.wins,Math.max(1,x.games)),
+  return Object.values(byPolicy).map(x=>{
+    const crossDecisive=x.crossPolicyWins+x.crossPolicyLosses;
+    return {
+    ...x,
+    opponents:[...x.opponentSet].sort(),opponentSet:undefined,
+    matchCount:x.games,
+    record:{games:x.games,selfPlayGames:x.selfPlayGames,crossPolicyGames:x.games-x.selfPlayGames,
+      wins:x.crossPolicyWins,losses:x.crossPolicyLosses,draws:x.crossPolicyDraws,aborts:x.crossPolicyAborts,decisive:crossDecisive,
+      winRate:x.games-x.selfPlayGames?x.crossPolicyWins/(x.games-x.selfPlayGames):0,
+      wilson95:wilsonInterval(x.crossPolicyWins,Math.max(1,crossDecisive))},
+    seatSplit:{seat1:x.seat1Games,seat2:x.seat2Games},
+    avgScoreMargin:x.games?x.scoreMarginTotal/x.games:null,
+    exhaustedPassRate:x.miniTurnActions?x.exhaustedPassActions/x.miniTurnActions:null,
+    responsePlayRate:(x.responsePlays+x.responseDeclines)?x.responsePlays/(x.responsePlays+x.responseDeclines):null,
+    winRate:x.games?x.wins/x.games:0,winWilson95:wilsonInterval(x.wins,Math.max(1,x.games)),
     fingerprint:{scoreAggression:x.games?x.miniTurnActions/x.games:0,responseUse:x.games?x.responsePlays/x.games:0,responseConservation:x.responsePlays+x.responseDeclines?x.responseDeclines/(x.responsePlays+x.responseDeclines):0,privateChoiceDensity:x.games?x.privateChoices/x.games:0,advancedFrequency:x.games?x.advanced/x.games:0,ultraFrequency:x.games?x.ultras/x.games:0,voltageFrequency:x.games?x.voltage/x.games:0,matchLength:x.games?x.turns/x.games:0}
-  })).sort((a,b)=>a.policyId.localeCompare(b.policyId));
+    };
+  }).sort((a,b)=>a.policyId.localeCompare(b.policyId));
 }
 
 // ── Anomaly Detection ──
@@ -619,14 +731,56 @@ export function detectAnomalies(summaries,detailedMatches=[]){
   const threshold=turns.p95??Infinity;
   const anomalies=[];
   for(const row of summaries){
-    if(row.completedFullTurns>=threshold)anomalies.push({type:'LONG_MATCH',severity:'warning',matchId:row.matchId,value:row.completedFullTurns,threshold});
-    if(row.terminationReason==='UNSUPPORTED_CONFIGURATION'||row.terminationReason==='ENGINE_REJECTION')anomalies.push({type:row.terminationReason,severity:'critical',matchId:row.matchId,value:row.errorCode});
-    if((row.automaticPriorityAdvanceCount??0)>Math.max(30,(row.responseOpportunityCount??0)*8))anomalies.push({type:'ORCHESTRATION_DENSITY',severity:'info',matchId:row.matchId,value:row.automaticPriorityAdvanceCount});
-    if((row.responsePlayedCount??0)>20)anomalies.push({type:'RESPONSE_CHAIN_INTENSITY',severity:'info',matchId:row.matchId,value:row.responsePlayedCount});
+    if(row.completedFullTurns>=threshold)anomalies.push({type:'LONG_MATCH',severity:'warning',matchId:row.matchId,value:row.completedFullTurns,threshold,baseline:threshold,unit:'full turns',detail:`${row.completedFullTurns} completed turns ≥ p95 baseline (${threshold} turns); tail detector flags ~5% of matches by construction`});
+    if(row.terminationReason==='UNSUPPORTED_CONFIGURATION'||row.terminationReason==='ENGINE_REJECTION')anomalies.push({type:row.terminationReason,severity:'critical',matchId:row.matchId,value:row.errorCode,baseline:'accepted run',unit:'termination',detail:`match terminated with ${row.terminationReason}${row.errorCode?` (${row.errorCode})`:''}`});
+    if((row.automaticPriorityAdvanceCount??0)>Math.max(30,(row.responseOpportunityCount??0)*8))anomalies.push({type:'ORCHESTRATION_DENSITY',severity:'info',matchId:row.matchId,value:row.automaticPriorityAdvanceCount,threshold:Math.max(30,(row.responseOpportunityCount??0)*8),unit:'automatic priority advances per match',detail:`${row.automaticPriorityAdvanceCount} automatic priority advances > max(30, 8×${row.responseOpportunityCount??0} response opportunities)`});
+    if((row.responsePlayedCount??0)>20)anomalies.push({type:'RESPONSE_CHAIN_INTENSITY',severity:'info',matchId:row.matchId,value:row.responsePlayedCount,threshold:20,unit:'response plays per match',detail:`${row.responsePlayedCount} response plays > 20 per match`});
   }
   for(const match of detailedMatches){
     const unclassified=(match.facts?.resolutionFacts??[]).filter(f=>f.mechanicTags?.includes('unclassified')).length;
-    if(unclassified)anomalies.push({type:'UNCLASSIFIED_FACT',severity:'warning',matchId:match.summary.matchId,value:unclassified});
+    if(unclassified)anomalies.push({type:'UNCLASSIFIED_FACT',severity:'warning',matchId:match.summary.matchId,value:unclassified,unit:'unclassified resolution facts',detail:`${unclassified} resolution fact${unclassified===1?'':'s'} carry the 'unclassified' mechanic tag`});
   }
   return anomalies.sort((a,b)=>String(a.matchId).localeCompare(String(b.matchId))||a.type.localeCompare(b.type));
+}
+
+// ── AB/BA matched-pair analysis (browser port, parity with @intrilex/analytics) ──
+// Moved here from browser-analytics.js so the orchestrator module stays under
+// its size budget; behavior unchanged.
+export function buildPairedABBAAnalysis(summaries) {
+  const hasPairedRunIds = summaries.some((r) => r.pairedRunId);
+  const pairBlocks = new Map();
+  let incompletePairs = 0;
+  for (const row of summaries) {
+    const blockKey = (hasPairedRunIds && row.pairedRunId) ? row.pairedRunId : [...(row.policyIds ?? [])].sort().join('__');
+    if (!pairBlocks.has(blockKey)) pairBlocks.set(blockKey, []);
+    pairBlocks.get(blockKey).push(row);
+  }
+  const pairResults = [];
+  for (const [blockKey, rows] of pairBlocks) {
+    rows.sort((a, b) => (a.matchOrdinal ?? 0) - (b.matchOrdinal ?? 0));
+    const policyA = rows[0]?.policyIds?.[0] ?? 'A', policyB = rows[0]?.policyIds?.[1] ?? 'B';
+    const pairs = [];
+    for (let i = 0; i + 1 < rows.length; i += 2) {
+      const seat1Row = rows[i], seat2Row = rows[i + 1];
+      if (!seat1Row || !seat2Row) { incompletePairs += 1; continue; }
+      const seatSwapped = seat2Row.seatSwapped === true || (JSON.stringify(seat2Row.seatOrder) !== JSON.stringify(seat1Row.seatOrder));
+      const s1wp = seat1Row.winner !== 'DRAW' && seat1Row.winner !== 'ABORTED' ? seat1Row.policyIds[seat1Row.seatOrder.indexOf(seat1Row.winner)] : null;
+      const s2wp = seat2Row.winner !== 'DRAW' && seat2Row.winner !== 'ABORTED' ? seat2Row.policyIds[seat2Row.seatOrder.indexOf(seat2Row.winner)] : null;
+      pairs.push({ aSeat1Win: s1wp === policyA, bSeat1Win: s1wp === policyB, aSeat2Win: s2wp === policyA, bSeat2Win: s2wp === policyB, seatSwapped, pairedRunId: seat1Row.pairedRunId ?? null });
+    }
+    if (rows.length % 2 === 1) incompletePairs += 1;
+    if (pairs.length === 0) continue;
+    const allSwapped = pairs.every((p) => p.seatSwapped);
+    const mcnemar = mcnemarPairedTest(pairs);
+    const bootstrap = pairedBootstrapABBA(pairs, { iterations: 2000, seed: `abba:${blockKey}` });
+    pairResults.push({ policyPair: blockKey, policyA, policyB, pairedBlocks: pairs.length, seatSwapVerified: allSwapped, mcnemar, bootstrap, design: allSwapped ? 'matched AB/BA seat-swap (verified)' : 'AB/BA seat-swap (unverified — legacy or incomplete)', interpretation: mcnemar.pValue < 0.05 ? 'statistically significant seat-policy differential (p < 0.05)' : 'no statistically significant seat-policy differential detected' });
+  }
+  const totalPairs = pairResults.reduce((s, r) => s + r.pairedBlocks, 0);
+  // Distinguish "no pairs" causes: a schedule that never repeated a
+  // pairedRunId yields hasPairedRunIds=true with zero complete pairs — a data
+  // limitation of the campaign, not a pairing failure.
+  const scheduleNote = totalPairs === 0 && hasPairedRunIds
+    ? 'pairedRunIds are present but none grouped ≥2 matches — the campaign schedule did not repeat pair blocks, so AB/BA pairing is not possible on this dataset'
+    : null;
+  return { schemaVersion: ANALYTICS_SCHEMA_VERSION, design: 'matched AB/BA seat-swap', pairCount: pairResults.length, totalPairedBlocks: totalPairs, incompletePairs, hasPairedRunIds, scheduleNote, pairResults: pairResults.sort((a, b) => a.policyPair.localeCompare(b.policyPair)), interpretationBoundary: hasPairedRunIds ? 'AB/BA pairs are linked by pairedRunId.' : 'AB/BA pairs are matched by policy-pair block (legacy).' };
 }

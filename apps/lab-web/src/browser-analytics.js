@@ -28,13 +28,13 @@ import {
   buildRankPowerModel,
 } from './rank-power-model.js';
 import {
+  ANALYTICS_SCHEMA_VERSION,
   buildMechanicsAtlas,
   analyzeSynergies,
   mineCausalMotifs,
   buildPolicyFingerprints,
   detectAnomalies,
-  mcnemarPairedTest,
-  pairedBootstrapABBA,
+  buildPairedABBAAnalysis,
 } from './observatory-analytics-browser.js';
 import {
   mechanicRegistryHash,
@@ -973,7 +973,7 @@ export function campaignAggregate(summaries, semantic = {}) {
 // ── Extract analysis (browser-safe port of packages/analytics/src/extract.mjs) ──
 function formulaHash(formula) { return sha256Text(String(formula)); }
 
-const ANALYTICS_SCHEMA_VERSION = '4.2.0';
+// ANALYTICS_SCHEMA_VERSION is imported from observatory-analytics-browser.js.
 const _V = ANALYTICS_SCHEMA_VERSION;
 const METRIC_REGISTRY = Object.freeze({
   'win-rate': { version: _V, formula: 'wins / decisive completed matches', uncertainty: 'Wilson 95% interval' },
@@ -1080,41 +1080,19 @@ export function buildObservatoryAnalytics({ summaries, detailedMatches = [], agg
   const pairedABBA = buildPairedABBAAnalysis(summaries);
   const _f = (p) => mechanics.filter(p).length;
   const nearThresholdPairs = synergyDiagnostics.filter(d => d.reasonCode === 'INSUFFICIENT_BOTH' && (d.cohortN?.both ?? 0) >= 10).length;
-  const campaignHealth = { trackedEntities: mechanics.length, canonicalMechanics: _f(m => m.dimension === 'canonical-mechanic'), entitiesWithOpportunityData: _f(m => m.hasOpportunityData), entitiesWithValidPickRate: _f(m => m.pickRateStatus?.status === 'available'), entitiesWithRawAssociation: _f(m => m.rawWinAssociationStatus?.status === 'available'), entitiesWithAdjustedAssociation: _f(m => m.adjustedWinAssociationStatus?.status === 'available'), entitiesWithPointImpact: _f(m => m.pointImpactStatus?.status === 'available' && m.actorPointImpact != null), eligibleSynergyPairs: synergies.length, nearThresholdPairs, successfullyModeledSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length, unmappedDiagnostics: _f(m => m.dimension === 'diagnostic' && !m.registryVerified), incompleteABBA: pairedABBA?.incompletePairs ?? 0 };
-  const core = { schemaVersion: ANALYTICS_SCHEMA_VERSION, metricRegistry: metricRegistryWithHashes(), summaryCount: summaries.length, aggregateHash: aggregate?.aggregateHash ?? null, mechanics, synergies, synergyDiagnostics, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
+  // successfullyModeledSynergyPairs counts model success (finite estimator
+  // output), NOT evidence strength — pairs rejected before modeling live in
+  // synergyDiagnostics. evidenceQualifiedSynergyPairs counts pairs whose
+  // grade rose above INSUFFICIENT. (Parity with packages/analytics.)
+  const campaignHealth = { trackedEntities: mechanics.length, canonicalMechanics: _f(m => m.dimension === 'canonical-mechanic'), entitiesWithOpportunityData: _f(m => m.hasOpportunityData), entitiesWithValidPickRate: _f(m => m.pickRateStatus?.status === 'available'), entitiesWithRawAssociation: _f(m => m.rawWinAssociationStatus?.status === 'available'), entitiesWithAdjustedAssociation: _f(m => m.adjustedWinAssociationStatus?.status === 'available'), entitiesWithPointImpact: _f(m => m.pointImpactStatus?.status === 'available' && m.actorPointImpact != null), eligibleSynergyPairs: synergies.length, nearThresholdPairs, successfullyModeledSynergyPairs: synergies.filter(s => s.modelStatus === 'modeled').length, rejectedSynergyPairs: synergyDiagnostics.length, evidenceQualifiedSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length, unmappedDiagnostics: _f(m => m.dimension === 'diagnostic' && !m.registryVerified), incompleteABBA: pairedABBA?.incompletePairs ?? 0 };
+  // Taxonomy reconciliation: tracked entities = Σ dimension buckets; the
+  // invariant is checked here so count drift surfaces in the artifact itself.
+  const reconciliation = { trackedEntities: mechanics.length, byDimension: dimensionCounts, registered: mechanics.filter(m => m.registryVerified).length, unregisteredTags: quarantineLedger.length, invariantHolds: mechanics.length === Object.values(dimensionCounts).reduce((a, b) => a + b, 0) };
+  const core = { schemaVersion: ANALYTICS_SCHEMA_VERSION, metricRegistry: metricRegistryWithHashes(), summaryCount: summaries.length, aggregateHash: aggregate?.aggregateHash ?? null,
+    // Provenance echo: self-describing artifact (parity with canonical analytics)
+    evidenceEpoch: aggregate?.evidenceEpoch ?? null, postRulesParityRepair: aggregate?.postRulesParityRepair ?? null, engineVersion: aggregate?.engineVersion ?? null, rulesVersion: aggregate?.rulesVersion ?? null, profileId: aggregate?.profileId ?? null, authorityHash: aggregate?.authorityHash ?? null, releaseIdentityHash: aggregate?.releaseIdentityHash ?? null,
+    mechanics, synergies, synergyDiagnostics, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, reconciliation, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
   return { ...core, observatoryHash: hashCanonical(core) };
 }
-
-// ── Paired AB/BA seat-swap analysis (browser port) ──
-function buildPairedABBAAnalysis(summaries) {
-  const hasPairedRunIds = summaries.some((r) => r.pairedRunId);
-  const pairBlocks = new Map();
-  let incompletePairs = 0;
-  for (const row of summaries) {
-    const blockKey = (hasPairedRunIds && row.pairedRunId) ? row.pairedRunId : [...(row.policyIds ?? [])].sort().join('__');
-    if (!pairBlocks.has(blockKey)) pairBlocks.set(blockKey, []);
-    pairBlocks.get(blockKey).push(row);
-  }
-  const pairResults = [];
-  for (const [blockKey, rows] of pairBlocks) {
-    rows.sort((a, b) => (a.matchOrdinal ?? 0) - (b.matchOrdinal ?? 0));
-    const policyA = rows[0]?.policyIds?.[0] ?? 'A', policyB = rows[0]?.policyIds?.[1] ?? 'B';
-    const pairs = [];
-    for (let i = 0; i + 1 < rows.length; i += 2) {
-      const seat1Row = rows[i], seat2Row = rows[i + 1];
-      if (!seat1Row || !seat2Row) { incompletePairs += 1; continue; }
-      const seatSwapped = seat2Row.seatSwapped === true || (JSON.stringify(seat2Row.seatOrder) !== JSON.stringify(seat1Row.seatOrder));
-      const s1wp = seat1Row.winner !== 'DRAW' && seat1Row.winner !== 'ABORTED' ? seat1Row.policyIds[seat1Row.seatOrder.indexOf(seat1Row.winner)] : null;
-      const s2wp = seat2Row.winner !== 'DRAW' && seat2Row.winner !== 'ABORTED' ? seat2Row.policyIds[seat2Row.seatOrder.indexOf(seat2Row.winner)] : null;
-      pairs.push({ aSeat1Win: s1wp === policyA, bSeat1Win: s1wp === policyB, aSeat2Win: s2wp === policyA, bSeat2Win: s2wp === policyB, seatSwapped, pairedRunId: seat1Row.pairedRunId ?? null });
-    }
-    if (rows.length % 2 === 1) incompletePairs += 1;
-    if (pairs.length === 0) continue;
-    const allSwapped = pairs.every((p) => p.seatSwapped);
-    const mcnemar = mcnemarPairedTest(pairs);
-    const bootstrap = pairedBootstrapABBA(pairs, { iterations: 2000, seed: `abba:${blockKey}` });
-    pairResults.push({ policyPair: blockKey, policyA, policyB, pairedBlocks: pairs.length, seatSwapVerified: allSwapped, mcnemar, bootstrap, design: allSwapped ? 'matched AB/BA seat-swap (verified)' : 'AB/BA seat-swap (unverified — legacy or incomplete)', interpretation: mcnemar.pValue < 0.05 ? 'statistically significant seat-policy differential (p < 0.05)' : 'no statistically significant seat-policy differential detected' });
-  }
-  const totalPairs = pairResults.reduce((s, r) => s + r.pairedBlocks, 0);
-  return { schemaVersion: ANALYTICS_SCHEMA_VERSION, design: 'matched AB/BA seat-swap', pairCount: pairResults.length, totalPairedBlocks: totalPairs, incompletePairs, hasPairedRunIds, pairResults: pairResults.sort((a, b) => a.policyPair.localeCompare(b.policyPair)), interpretationBoundary: hasPairedRunIds ? 'AB/BA pairs are linked by pairedRunId.' : 'AB/BA pairs are matched by policy-pair block (legacy).' };
-}
+// buildPairedABBAAnalysis lives in observatory-analytics-browser.js
+// (imported above) to keep this orchestrator under its size budget.

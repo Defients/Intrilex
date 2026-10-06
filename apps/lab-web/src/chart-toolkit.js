@@ -156,9 +156,11 @@ export function barChart({ items, maxValue, width = 400, barHeight = 24, title, 
  * @param {number} [opts.cellSize] - pixel size of each cell (default 36)
  * @param {string} [opts.title]
  * @param {string} [opts.ariaLabel]
+ * @param {(r:number,c:number,meta:*)=>string} [opts.cellAttrs] - extra attributes per cell rect
+ * @param {(r:number,c:number,value:number,meta:*)=>string} [opts.cellTitle] - custom tooltip text per cell
  * @returns {string} SVG string
  */
-export function heatmap({ rows, cols, cells, colorScale, cellSize = 36, title, ariaLabel, cellAttrs } = {}) {
+export function heatmap({ rows, cols, cells, colorScale, cellSize = 36, title, ariaLabel, cellAttrs, cellTitle } = {}) {
   const rowLabels = Array.isArray(rows) ? rows : [];
   const colLabels = Array.isArray(cols) ? cols : [];
   const matrix = Array.isArray(cells) ? cells : [];
@@ -192,7 +194,9 @@ export function heatmap({ rows, cols, cells, colorScale, cellSize = 36, title, a
       const [value, meta] = Array.isArray(cell) ? cell : [cell, null];
       const fill = scale(value, meta);
       const valText = fmtNum(value);
-      const tip = `${escSvg(rowLabels[r])} vs ${escSvg(colLabels[c])}: ${valText}`;
+      const tip = typeof cellTitle === 'function'
+        ? escSvg(cellTitle(r, c, value, meta) ?? `${rowLabels[r]} vs ${colLabels[c]}: ${valText}`)
+        : `${escSvg(rowLabels[r])} vs ${escSvg(colLabels[c])}: ${valText}`;
       const extraAttrs = typeof cellAttrs === 'function' ? (cellAttrs(r, c, meta) || '') : '';
       cellRects.push(`<rect class="ix-heatmap-cell" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${cellSize}" height="${cellSize}" fill="${escSvg(fill)}" stroke="rgba(255,255,255,0.08)"${extraAttrs}><title>${tip}</title></rect>`);
     }

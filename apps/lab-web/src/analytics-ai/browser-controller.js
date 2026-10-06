@@ -39,6 +39,7 @@ export class BrowserAnalyticsAi {
     this._abortController = null;
     this.connection = { tested: false, ok: false, reachable: false, models: [], error: null, version: null, endpoint: this.settings.endpoint };
     this.lastResult = null;
+    this.lastError = null;
     this.status = ANALYSIS_STATUS.IDLE;
     this.streamingText = '';
     this._listeners = new Set();
@@ -54,6 +55,7 @@ export class BrowserAnalyticsAi {
       status: this.status,
       streamingText: this.streamingText,
       lastResult: this.lastResult,
+      lastError: this.lastError,
       systemPromptVersion: SYSTEM_PROMPT_VERSION,
       isLocal: isLocalEndpoint(this.settings.endpoint)
     };
@@ -137,6 +139,7 @@ export class BrowserAnalyticsAi {
     }
     this._abortController = new AbortController();
     this.streamingText = '';
+    this.lastError = null;
     this._setStatus(ANALYSIS_STATUS.BUILDING_CONTEXT, 'Starting analysis');
     const bundle = this.buildBundle(state);
     const result = await this._controller.analyze({
@@ -150,7 +153,20 @@ export class BrowserAnalyticsAi {
       onToken: (chunk) => { this.streamingText += chunk; this._setStatus(ANALYSIS_STATUS.STREAMING, 'streaming'); }
     });
     this._abortController = null;
-    if (result.ok) this.lastResult = result;
+    if (result.ok) {
+      this.lastResult = result;
+      this.lastError = null;
+    } else if (!result.cancelled) {
+      this.lastError = result;
+      // The panel copy tells users details are in the console — make that true.
+      console.error('[analytics-ai] analysis failed:', result.error, {
+        code: result.code,
+        endpoint: result.endpoint,
+        validationErrors: result.validationErrors,
+        repairAttempts: result.repairAttempts,
+        rawResponse: result.rawResponse
+      });
+    }
     this._setStatus(result.ok ? ANALYSIS_STATUS.DONE : (result.cancelled ? ANALYSIS_STATUS.CANCELLED : ANALYSIS_STATUS.ERROR), result.ok ? 'done' : (result.error || 'error'));
     return result;
   }
