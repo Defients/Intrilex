@@ -3686,6 +3686,16 @@
   border: none;
   box-shadow: none;
   animation: astra-chat-fab-pop 0.2s ease-out;
+  /* The collapsed shell is only a FAB — shrink-wrap it and let clicks pass
+     through the empty area so the invisible container cannot intercept
+     pointer events over game controls (e.g. the action composer). */
+  width: auto;
+  max-height: none;
+  pointer-events: none;
+}
+
+.astra-client .astra-chat--collapsed .astra-chat-fab {
+  pointer-events: auto;
 }
 
 @keyframes astra-chat-fab-pop {

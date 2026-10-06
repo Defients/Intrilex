@@ -125,6 +125,7 @@ async function copySharedAnalytics() {
     ['packages/analytics/src/metric-registry.mjs', 'metric-registry.mjs'],
     ['packages/analytics/src/observatory-integrity.mjs', 'observatory-integrity.mjs'],
     ['packages/analytics/src/observatory-core.mjs', 'observatory-core.mjs'],
+    ['packages/analytics/src/choice-analysis.mjs', 'choice-analysis.mjs'],
   ];
   for (const [src, name] of sources) {
     const text = (await readFile(path.join(root, src), 'utf8')).replaceAll("from '@intrilex/statistics/estimators'", "from './estimators.mjs'");
@@ -522,6 +523,7 @@ const criticalFiles = [
   'shared-analytics/metric-registry.mjs',
   'shared-analytics/observatory-integrity.mjs',
   'shared-analytics/observatory-core.mjs',
+  'shared-analytics/choice-analysis.mjs',
 ];
 let missingFiles = criticalFiles.filter(f => !existsSync(path.join(dist, f)));
 // Also check for truncated (0-byte) index.html — a known Windows race condition

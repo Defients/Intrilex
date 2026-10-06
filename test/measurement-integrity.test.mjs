@@ -375,3 +375,80 @@ test('evidence provenance: generated outputs do not dirty source, source dirt fa
   assert.ok(problems.some((p) => p.includes('gitCommit')), 'foreign-commit evidence rejected');
   assert.ok(GENERATED_OUTPUT_ROOTS.includes('release/'));
 });
+
+// ── 22. Choice-set conditional analysis ────────────────────────
+// A 90% marginal pick rate is uninterpretable without knowing what else was
+// legal. Conditional analysis must distinguish "only option" from
+// "preferred over jointly-legal alternatives" using the same decision frames.
+test('choice-set conditional metrics use simultaneously legal alternatives', async () => {
+  const { buildChoiceAnalysis } = await import('@intrilex/analytics/choice-analysis');
+  const mk = (sel, legal, i) => ({
+    matchId: `M${i}`, decisionIndex: 0, participantId: 'P1', seat: 1,
+    profileId: 'core-advanced-authority', policyId: 'anchor-bias',
+    selectedOption: sel, selectedTags: [sel], legalActions: legal,
+  });
+  // Case A: entity legal alone (with a non-mechanic fallback option only) —
+  // every offer is a forced pick; conditionalRate 1.0 carries no preference.
+  const soloLegal = [{ family: 'anchor', mode: 'ace-anchor' }, { family: 'phase', mode: 'enter-action' }];
+  const alone = [...Array(9)].map((_, i) => mk('ace-anchor', soloLegal, i));
+  // Case B: entity legal alongside two other mechanic options — 9/10 picks is
+  // a real conditional preference over jointly-legal alternatives.
+  const contested = [{ family: 'anchor', mode: 'ace-anchor' }, { family: 'anchor', mode: 'ace-points' }, { family: 'scuttle', mode: 'sea' }];
+  const shared = [...Array(9)].map((_, i) => mk('ace-anchor', contested, 100 + i)).concat([mk('ace-points', contested, 200)]);
+  const out = buildChoiceAnalysis([...alone, ...shared], { minFrames: 1 });
+  const a = out.entities['ace-anchor'];
+  assert.equal(a.offeredCount, 19);
+  assert.equal(a.selectedCount, 18);
+  const vsPoints = a.pairwise.find((p) => p.versus === 'ace-points');
+  assert.equal(vsPoints.jointFrames, 10, 'joint legality recorded only when both were offered');
+  assert.equal(vsPoints.entitySelected, 9);
+  assert.equal(vsPoints.otherSelected, 1);
+  assert.equal(vsPoints.conditionalShare, 0.9);
+  // The two contexts are distinct and never pooled
+  assert.equal(out.contexts.length, 2);
+  assert.ok(out.contexts.every((c) => c.offeredOptions.includes('ace-anchor') !== undefined));
+  const soloCtx = out.contexts.find((c) => c.offeredOptions.length === 2);
+  const contestCtx = out.contexts.find((c) => c.offeredOptions.length === 3);
+  assert.equal(soloCtx.dominantShare, 1);
+  assert.equal(contestCtx.dominantShare, 0.9);
+  assert.equal(contestCtx.normalizedEntropy > 0, true, 'real competition has nonzero entropy');
+});
+
+// ── 23. Profile decision diversity / choice entropy ────────────
+test('choice entropy matches known fixtures: deterministic 0, uniform 1, no cross-context pooling', async () => {
+  const { buildChoiceAnalysis } = await import('@intrilex/analytics/choice-analysis');
+  const L3 = [{ family: 'f', mode: 'a' }, { family: 'g', mode: 'b' }, { family: 'h', mode: 'c' }];
+  const L4 = [...L3, { family: 'i', mode: 'd' }];
+  const mk = (sel, legal, i, pol = 'p1') => ({
+    matchId: `E${i}`, decisionIndex: i, participantId: 'P1', seat: 1,
+    profileId: 'p', policyId: pol, selectedOption: sel, selectedTags: [sel], legalActions: legal,
+  });
+  // deterministic: always 'a' -> entropy 0, normalized 0, dominantShare 1
+  const det = buildChoiceAnalysis([...Array(8)].map((_, i) => mk('a', L4, i)), { minFrames: 1 });
+  const detCtx = det.contexts[0];
+  assert.equal(detCtx.choiceEntropyBits, 0);
+  assert.equal(detCtx.normalizedEntropy, 0);
+  assert.equal(detCtx.dominantShare, 1);
+  assert.equal(detCtx.distinctOptionsSelected, 1);
+  // uniform over 4 options -> H = 2 bits, normalized 1
+  const uni = buildChoiceAnalysis([...Array(8)].map((_, i) => mk(['a', 'b', 'c', 'd'][i % 4], L4, i)), { minFrames: 1 });
+  const uniCtx = uni.contexts[0];
+  assert.ok(Math.abs(uniCtx.choiceEntropyBits - 2) < 1e-9);
+  assert.ok(Math.abs(uniCtx.normalizedEntropy - 1) < 1e-9);
+  assert.equal(uniCtx.dominantShare, 0.25);
+  // intermediate: 6×a,1×b,1×c over 3 options -> H≈1.252, normalized≈0.79
+  const mid = buildChoiceAnalysis([...Array(6)].map((_, i) => mk('a', L3, i))
+    .concat([mk('b', L3, 100), mk('c', L3, 101)]), { minFrames: 1 });
+  const midCtx = mid.contexts[0];
+  const expectedH = -(0.75 * Math.log2(0.75) + 0.125 * Math.log2(0.125) + 0.125 * Math.log2(0.125));
+  assert.ok(Math.abs(midCtx.choiceEntropyBits - expectedH) < 1e-9);
+  assert.ok(Math.abs(midCtx.normalizedEntropy - expectedH / Math.log2(3)) < 1e-9);
+  assert.equal(midCtx.dominantShare, 0.75);
+  // different legal sets must never be pooled into one context
+  const mixed = buildChoiceAnalysis([mk('a', L3, 1), mk('a', L4, 2), mk('a', L3, 3)], { minFrames: 1 });
+  assert.equal(mixed.contexts.length, 2, 'different offered sets stay separate');
+  assert.equal(mixed.contexts.every((c) => c.frameCount >= 1), true);
+  // single-option contexts report normalizedEntropy 0, not NaN/null-spam
+  const single = buildChoiceAnalysis([mk('a', [{ family: 'f', mode: 'a' }], 1)], { minFrames: 1 });
+  assert.equal(single.contexts[0].normalizedEntropy, 0);
+});

@@ -8,7 +8,8 @@
     "./rank-integration": "./src/rank-integration.mjs",
     "./metric-registry": "./src/metric-registry.mjs",
     "./observatory-core": "./src/observatory-core.mjs",
-    "./observatory-integrity": "./src/observatory-integrity.mjs"
+    "./observatory-integrity": "./src/observatory-integrity.mjs",
+    "./choice-analysis": "./src/choice-analysis.mjs"
   },
   "dependencies": {
     "@intrilex/shared": "workspace:*",

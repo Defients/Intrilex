@@ -1,2 +1,7 @@
 upstream/** text eol=lf
+# Bytecode caches are binary — the pyc format itself embeds CRLF bytes, so
+# treating them as text makes a clean checkout show them as perpetually
+# modified (phantom EOL dirt) and corrupts hash verification.
+*.pyc -text
+**/__pycache__/** -text
 runtime/vendor-dist/** -text

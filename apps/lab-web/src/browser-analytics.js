@@ -43,6 +43,7 @@ import {
 import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs';
 import { winRateRecord } from './shared-analytics/estimators.mjs';
 import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs';
+import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs';
 
 // Re-export for backward compatibility (other modules import from browser-analytics)
 export {
@@ -1056,6 +1057,13 @@ export function buildObservatoryAnalytics({ summaries, detailedMatches = [], agg
   catch (error) { console.error('buildObservatoryAnalytics: ten-suit expansion failed:', error); }
   rankAnalytics = { ...rankAnalytics, rankPower: applyRankBalanceQualification(rankAnalytics.rankPower, variantAnalytics) };
   const pairedABBA = buildPairedABBAAnalysis(summaries);
+  // Conditional choice-set analysis: simultaneous legality + decision
+  // diversity. Diagnostic only — deterministic Profile choices are decision
+  // behavior, not balance evidence. (Parity with packages/analytics.)
+  let choiceAnalysis = null;
+  let choiceAnalysisError = null;
+  try { choiceAnalysis = buildChoiceAnalysis(decisionChoices(summaries)); }
+  catch (error) { choiceAnalysisError = error.message; console.error('buildObservatoryAnalytics: choice analysis failed:', error); }
   const _f = (p) => mechanics.filter(p).length;
   const nearThresholdPairs = synergyDiagnostics.filter(d => d.reasonCode === 'INSUFFICIENT_BOTH' && (d.cohortN?.both ?? 0) >= 10).length;
   // successfullyModeledSynergyPairs counts model success (finite estimator
@@ -1069,7 +1077,7 @@ export function buildObservatoryAnalytics({ summaries, detailedMatches = [], agg
   const core = { schemaVersion: ANALYTICS_SCHEMA_VERSION, metricRegistry: metricRegistryWithHashes(), summaryCount: summaries.length, aggregateHash: aggregate?.aggregateHash ?? null,
     // Provenance echo: self-describing artifact (parity with canonical analytics)
     evidenceEpoch: aggregate?.evidenceEpoch ?? null, postRulesParityRepair: aggregate?.postRulesParityRepair ?? null, engineVersion: aggregate?.engineVersion ?? null, rulesVersion: aggregate?.rulesVersion ?? null, profileId: aggregate?.profileId ?? null, authorityHash: aggregate?.authorityHash ?? null, releaseIdentityHash: aggregate?.releaseIdentityHash ?? null,
-    mechanics, synergies, synergyDiagnostics, synergyCandidateSet: synergies.candidateSet ?? null, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, reconciliation, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
+    mechanics, synergies, synergyDiagnostics, synergyCandidateSet: synergies.candidateSet ?? null, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, choiceAnalysis, choiceAnalysisError, mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, reconciliation, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
   return { ...core, observatoryHash: hashCanonical(core) };
 }
 // buildPairedABBAAnalysis lives in observatory-analytics-browser.js

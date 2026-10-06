@@ -23,6 +23,7 @@ import {
   areTagsInseparable
 } from '@intrilex/decision-intelligence/mechanic-registry';
 import { buildRankAnalytics, buildVariantAnalytics, expandTenSuitsInRankPower } from './rank-integration.mjs';
+import { buildChoiceAnalysis, decisionChoices } from './choice-analysis.mjs';
 import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS, metricRegistryWithHashesUsing } from './metric-registry.mjs';
 import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './observatory-core.mjs';
 import { applyRankBalanceQualification, deriveTagRelations } from './observatory-integrity.mjs';
@@ -532,6 +533,14 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
   rankAnalytics = { ...rankAnalytics, rankPower: applyRankBalanceQualification(rankAnalytics.rankPower, variantAnalytics) };
   // Build paired AB/BA seat-swap analysis
   const pairedABBA=buildPairedABBAAnalysis(summaries);
+  // Conditional choice-set analysis: what was simultaneously legal when each
+  // option was selected, and how deterministic each policy is inside a
+  // recurring offered set. Diagnostic only — deterministic Profile choices
+  // are decision behavior, not balance evidence.
+  let choiceAnalysis=null;
+  let choiceAnalysisError=null;
+  try { choiceAnalysis=buildChoiceAnalysis(decisionChoices(summaries)); }
+  catch(error){ choiceAnalysisError=error.message; console.error('buildObservatoryAnalytics: choice analysis failed:',error); }
   // Campaign health summary — counts of entities with each metric available
   const canonicalCount = mechanics.filter(m => m.dimension === 'canonical-mechanic').length;
   const withOpportunityData = mechanics.filter(m => m.hasOpportunityData).length;
@@ -601,6 +610,8 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
     variantAnalytics,
     variantAnalyticsError,
     pairedABBA,
+    choiceAnalysis,
+    choiceAnalysisError,
     mechanicRegistryHash:mechanicRegistryHash(),
     quarantineLedger,
     taxonomyDimensions: dimensionCounts,

@@ -4,4 +4,4 @@ Telemetry schema: 4.1.0
 Analytics schema: 4.2.0
 Matches: 100
 Detailed semantic fact matches: 12
-Observatory hash: 6e6a88dd49329d53c9a4e796ed2e37b0f04a686767788d9e7354cceec268e816
+Observatory hash: 0b5695684f16b02bb0271069d1c7a38cd82fc762e2ce30265dd1272822696170

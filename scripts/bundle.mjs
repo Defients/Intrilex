@@ -171,7 +171,10 @@ async function bundle() {
     const matchServerUrl = process.env.INTRILEX_MATCH_SERVER_URL || '';
     const hasSupabase = supabaseUrl && supabaseKey;
     const hasMatchServer = !!matchServerUrl;
-    if ((hasSupabase || hasMatchServer) && !html.includes('__INTRILEX_CONFIG__')) {
+    // The hashed config file is emitted unconditionally: builds without env
+    // credentials produce an empty config object, but the content-hashed
+    // filename contract (SW immutable caching) must hold for every build.
+    if (!html.includes('__INTRILEX_CONFIG__')) {
       const configParts = [];
       if (hasSupabase) {
         configParts.push(`supabase:{url:${JSON.stringify(supabaseUrl)},publishableKey:${JSON.stringify(supabaseKey)}}`);
@@ -188,6 +191,10 @@ async function bundle() {
       const configHash = createHash('sha256').update(configBody).digest('hex').slice(0, 12);
       const configFileName = `__intrilex-config.${configHash}.js`;
       await writeFile(path.join(dist, configFileName), configBody);
+      // Idempotent: strip any previously injected config tag(s) before
+      // appending, so re-running bundle.mjs over an existing dist never
+      // leaves duplicate or stale config scripts.
+      html = html.replace(/<script src="\/__intrilex-config\.[a-f0-9]+\.js"><\/script>\n?/g, '');
       html = html.replace('</head>', `<script src="/${configFileName}"></script>\n</head>`);
       // Also write the unhashed name for dev-server compatibility and
       // as a fallback for SW versions that still special-case it.
