@@ -31,10 +31,11 @@ test('Lint ratchet: current warning count does not exceed baseline', () => {
   // Run lint and parse warning count
   let lintOutput;
   try {
-    lintOutput = execSync('npx eslint apps/lab-web/src/**/*.js apps/match-server/src/**/*.mjs packages/**/*.mjs scripts/**/*.mjs test/**/*.mjs --format json 2>nul', {
+    lintOutput = execSync('npx eslint apps/lab-web/src/**/*.js apps/match-server/src/**/*.mjs packages/**/*.mjs scripts/**/*.mjs test/**/*.mjs --format json', {
       encoding: 'utf8',
       timeout: 120000,
       maxBuffer: 50 * 1024 * 1024,
+      stdio: ['pipe', 'pipe', 'ignore'],
     });
   } catch (err) {
     // eslint exits non-zero when warnings exist; output is still in stdout
