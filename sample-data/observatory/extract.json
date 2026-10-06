@@ -1,7 +1,7 @@
 {
   "extractVersion": "1.0.0",
   "analyticsSchemaVersion": "4.2.0",
-  "sourceHash": "6e6a88dd49329d53c9a4e796ed2e37b0f04a686767788d9e7354cceec268e816",
+  "sourceHash": "0b5695684f16b02bb0271069d1c7a38cd82fc762e2ce30265dd1272822696170",
   "aggregateHash": "59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2",
   "executiveSummary": "Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. All matches completed without aborts. Highest win rate: hybrix-rusher at 83.3% (CI [0.436, 0.970], 6 games). No synergy pairs reached statistical significance after FDR correction. 162 mechanic(s) measured with evidence-backed associations. 30 anomaly/anomalies flagged (0 critical, 5 warning, 25 info). Data completeness: PASS (no unclassified facts). Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
   "dataset": {
@@ -5980,5 +5980,5 @@
     "Most synergy findings are inconclusive — consider increasing match count for statistical power.",
     "133 mechanic(s) have sample size below 20 — interpret with caution."
   ],
-  "extractHash": "50516a53525a37e3c12020dfeb0123c3e1c3f8828c6984129b993340df36dd21"
+  "extractHash": "3ec8e980c1a1e751a6426664e34e09965e6168cf8c86989baf1e8c11f1e12f96"
 }
