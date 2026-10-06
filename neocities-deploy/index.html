@@ -62,7 +62,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=Dancing+Script:wght@500;600;700&family=Great+Vibes&display=swap">
-  <link rel="stylesheet" href="styles.86fb0902905b.css">
+  <link rel="stylesheet" href="styles.8b1800cf45fe.css">
 
   <!-- Structured data (JSON-LD is not executed as script, so CSP script-src does not apply) -->
   <script type="application/ld+json">
@@ -140,31 +140,28 @@
     </noscript>
   </div>
   <div class="observatory-shell" data-preset="observatory" hidden inert aria-hidden="true">
-    <aside class="side-rail" aria-label="Observatory navigation and experiment controls">
+    <aside id="side-rail" class="side-rail" aria-label="Observatory navigation and dataset context">
       <a class="brand-block" href="#/" aria-label="Back to Intrilex home">
         <span class="brand-glyph" aria-hidden="true">IX</span>
         <span><strong>INTRILEX</strong><small></small></span>
       </a>
       <nav id="workspace-nav" class="workspace-nav" aria-label="Analytical workspaces"></nav>
-      <section class="experiment-rail" aria-labelledby="experiment-title">
-        <div class="section-kicker"><span>Experiment</span><button id="collapse-experiment" class="icon-button" aria-label="Collapse experiment controls">−</button></div>
-        <h2 id="experiment-title">Run configuration</h2>
-        <div id="experiment-controls"></div>
-      </section>
-      <div class="authority-stamp">
-        <span class="live-dot" aria-hidden="true"></span>
-        <span><strong></strong><small></small><small class="stamp-verified" id="stamp-verified">Verified</small></span>
-      </div>
+      <div id="rail-context" class="rail-context" aria-label="Active dataset"></div>
+      <details class="authority-stamp">
+        <summary><span class="live-dot" aria-hidden="true"></span><span class="stamp-line"><strong></strong><small class="stamp-verified" id="stamp-verified">Verified</small></span><span class="stamp-chevron" aria-hidden="true">▾</span></summary>
+        <div class="stamp-details"><small></small><a class="stamp-link" href="#/evidence">Integrity evidence →</a></div>
+      </details>
+      <button id="rail-toggle" class="rail-toggle" type="button" aria-expanded="true" aria-controls="side-rail" aria-label="Collapse sidebar" title="Collapse sidebar"><span class="rail-toggle-icon" aria-hidden="true"></span></button>
     </aside>
     <main id="main" tabindex="-1">
       <header class="global-header">
         <div class="title-stack"><nav class="breadcrumb" aria-label="Breadcrumb" id="breadcrumb"><a href="#/">Intrilex</a><span class="breadcrumb-sep" aria-hidden="true">/</span><span id="breadcrumb-current">Observatory</span></nav><p class="eyebrow"></p><h1 id="page-title"></h1><p id="page-subtitle"></p></div>
         <div class="global-actions">
           <a class="secondary-button sim-back-home" href="#/" aria-label="Back to Intrilex home">← Home</a>
+          <button id="experiment-button" class="secondary-button" aria-haspopup="dialog"><span aria-hidden="true">⚗</span> Experiment <span id="experiment-badge" class="exp-badge" hidden></span></button>
           <label class="compact-control">Layout <select id="layout-preset"><option value="observatory">Observatory</option><option value="theatre">Theatre</option><option value="analyst">Analyst</option><option value="compact">Compact</option></select></label>
           <label class="compact-control">View <select id="global-visibility" aria-label="Visibility mode"><option value="public">Public</option><option value="player">Player-authorized</option><option value="judge">Omniscient</option></select></label>
           <button id="command-palette-button" class="secondary-button" aria-haspopup="dialog"><span aria-hidden="true">⌘</span> Navigate <span class="kbd-hint" aria-hidden="true">Ctrl K</span></button>
-          <button id="integrity-button" class="integrity-chip" aria-haspopup="dialog"><span aria-hidden="true">✓</span> Integrity verified</button>
         </div>
       </header>
       <div id="global-filter-bar" class="global-filter-bar" aria-label="Global cohort filters"></div>
@@ -184,6 +181,10 @@
       <div id="integrity-content"></div>
     </form>
   </dialog>
+  <dialog id="experiment-dialog" class="command-dialog experiment-dialog" aria-labelledby="experiment-title">
+    <div class="dialog-head"><div><p class="eyebrow"></p><h2 id="experiment-title"></h2></div><button class="icon-button" id="experiment-close" aria-label="Close experiment panel">×</button></div>
+    <div id="experiment-controls"></div>
+  </dialog>
   <dialog id="advanced-card-rules-dialog" class="advanced-card-rules-dialog" aria-labelledby="advanced-card-rules-title" aria-hidden="true">
     <div class="acr-dialog-head">
       <div><p class="eyebrow"></p><h2 id="advanced-card-rules-title"></h2></div>
@@ -191,7 +192,7 @@
     </div>
     <div id="advanced-card-rules-content"></div>
   </dialog>
-  <script type="module" src="app.c4e7aaac019e.js"></script>
+  <script type="module" src="app.408ebfe25d7a.js"></script>
   <script src="sw-kill.js"></script>
 </body>
 </html>

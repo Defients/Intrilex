@@ -62,6 +62,7 @@ export function renderTerminal(vm, opts) {
     ${renderIntelligenceCard(vm, opts)}
     ${renderTeachingMoment(generateTeachingMoment(vm) || generateBeginnerTrapTip(vm))}
     ${renderTraceInsightsCard(opts)}
+    ${opts.fcRecapHtml || ''}
     ${opts.isNetworkMatch && opts.rematchInvite ? `<section class="terminal-rematch-invite" role="status">
       <p>${esc(opts.rematchInvite.fromDisplayName || 'Opponent')} requested a rematch.</p>
       <button class="primary-button" data-action="accept-rematch" data-invite-code="${esc(opts.rematchInvite.inviteCode)}">Accept rematch</button>

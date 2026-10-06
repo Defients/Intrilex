@@ -4,7 +4,7 @@
 // function, not duplicated test logic.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from '../engine/browser-entry.js?v=c4e7aaac019e';
+import { hashCanonical } from '../engine/browser-entry.js?v=408ebfe25d7a';
 
 // ── Release identity (single source — Gate 4 canonical location) ──
 export const PRODUCT_VERSION = '1.0.0';

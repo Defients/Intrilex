@@ -340,10 +340,11 @@ test('Extract: CLI script generates JSON and Markdown artifacts', async () => {
 test('Extract: browser app.js has extract UI and command palette entries', async () => {
   const appJs = await readFile('apps/lab-web/src/app.js', 'utf8');
   const expJs = await readFile('apps/lab-web/src/experiment-controls.js', 'utf8');
-  // showExtract, _extractModule, and extractAnalysis remain in app.js
+  // showExtract remains in app.js; extraction now runs through the
+  // analysis-dossier-export module (canonical dossier superset).
   assert.match(appJs, /showExtract/, 'should have showExtract function');
-  assert.match(appJs, /_extractModule/, 'should load extract module dynamically');
-  assert.match(appJs, /extractAnalysis/, 'should reference extractAnalysis');
+  assert.match(appJs, /analysis-dossier-export/, 'should load the dossier export module dynamically');
+  assert.match(appJs, /extractAnalysisToClipboard/, 'should delegate to extractAnalysisToClipboard');
   // Command palette entries were moved to experiment-controls.js during decomposition
   assert.match(expJs, /Extract analysis \(JSON\)/, 'should have command palette entry for JSON extract');
   assert.match(expJs, /Extract analysis \(Markdown\)/, 'should have command palette entry for Markdown extract');

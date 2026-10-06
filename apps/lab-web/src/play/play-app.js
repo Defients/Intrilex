@@ -40,6 +40,9 @@ import { isFoundationsComplete, loadProgress } from './academy/academy-progress.
 import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs';
 import { renderRecap } from './academy/academy-recap.mjs';
 import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs';
+import { FirstContactController } from './first-contact/fc-controller.mjs';
+import { FIRST_CONTACT_SCENARIO, validateFirstContactScenario } from './first-contact/fc-scenario.mjs';
+import { renderFcRecapBlock } from './first-contact/fc-panel.mjs';
 import { createSessionAutosave } from './session-autosave.js';
 import { state, resetState } from './play-state.js';
 import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js';
@@ -201,6 +204,8 @@ export async function handlePlayRoute(route, container) {
     await renderNetworkActiveMatch(container);
   } else if (sub === '/academy') {
     await renderAcademyHub(container);
+  } else if (sub === '/first-contact') {
+    await startFirstContact(container);
   } else if (sub === '/guided') {
     await renderGuidedExhibition(container);
   } else if (sub.startsWith('/agent/')) {
@@ -262,6 +267,44 @@ async function renderGuidedExhibition(container) {
       await startGuidedMatch(container, { guidanceLevel: 'full' });
     },
   });
+}
+
+/**
+ * First Contact — the primary beginner onboarding. One click enters a
+ * real, controlled Intrilex match on the actual engine: the deal order
+ * is fixed by the scenario, the rival follows a legal-only teaching
+ * script, and the coach panel teaches through the player's own actions.
+ * Academy remains available for structured depth; this is the "learn by
+ * playing" front door.
+ */
+async function startFirstContact(container) {
+  const { valid, errors } = validateFirstContactScenario();
+  if (!valid) {
+    container.innerHTML = `<div class="play-error" role="alert"><h2>First Contact unavailable</h2><p>${esc(errors.join('; '))}</p><a href="#/play/new" class="secondary-button">Back</a></div>`;
+    return;
+  }
+  const scenario = FIRST_CONTACT_SCENARIO;
+  // Create the controller before startNewMatch() resets play state;
+  // startNewMatch re-attaches it to `state` from the setup flag.
+  const controller = new FirstContactController({
+    scenario,
+    record: undefined, // default fc-telemetry sink
+  });
+  state._pendingFcController = controller;
+  state.guidanceMode = GuidanceMode.GUIDED;
+  state.guidancePrefLoaded = true; // prevent handlePlayRoute from overriding
+  // First-run funnel: this IS the tutorial step for new players.
+  if (getCurrentStep() === FunnelStep.LANDING) advanceToStep(FunnelStep.TUTORIAL_STARTED);
+  await startNewMatch({
+    profileId: scenario.profileId,
+    seed: scenario.seed,
+    humanPlayerId: scenario.humanPlayerId,
+    aiPolicyId: scenario.aiPolicyId,
+    mode: 'ADVANCED_CORE',
+    tutorial: 'first-contact',
+    predeterminedIdentities: [...scenario.predeterminedIdentities],
+    opponentScript: scenario.opponentScript.map((entry) => ({ ...entry, intent: { ...entry.intent } })),
+  }, container);
 }
 
 /**
@@ -571,6 +614,13 @@ async function startNewMatch(setup, container) {
     state.guidanceMode = GuidanceMode.GUIDED;
     state.guidancePrefLoaded = true; // prevent handlePlayRoute from overriding
   }
+  // First Contact: attach the controller created by startFirstContact.
+  if (setup.tutorial === 'first-contact') {
+    state.fcController = state._pendingFcController ?? new FirstContactController({ scenario: FIRST_CONTACT_SCENARIO });
+    delete state._pendingFcController;
+    state.guidanceMode = GuidanceMode.GUIDED;
+    state.guidancePrefLoaded = true;
+  }
   container.innerHTML = '<div class="play-loading">Creating match...</div>';
   try {
     state.session = await createSession(setup);
@@ -581,7 +631,7 @@ async function startNewMatch(setup, container) {
     try {
       const achRuntime = getAchievementRuntime();
       await achRuntime.init();
-      achRuntime.startMatch(state.sessionId, setup.humanPlayerId, { isTutorial: false });
+      achRuntime.startMatch(state.sessionId, setup.humanPlayerId, { isTutorial: setup.tutorial === 'first-contact' });
       const presenter = getAchievementPresenter();
       achRuntime.onUnlock((unlocks) => presenter.queueUnlocks(unlocks));
       state.session.setAchievementConsumer((events, snapshot) => {
@@ -589,6 +639,10 @@ async function startNewMatch(setup, container) {
         // Academy Phase 2: forward events to the academy controller for live objective detection
         if (state.academyController && state.academyPhase === AcademyPhase.MATCH) {
           try { state.academyController.onSessionEvents(events, snapshot); } catch { /* ignore */ }
+        }
+        // First Contact: the coach observes the same authoritative events
+        if (state.fcController) {
+          try { state.fcController.onSessionEvents(events, snapshot); } catch { /* ignore */ }
         }
       });
     } catch (err) { console.warn('[play-app] achievement tracking init failed:', err?.message ?? err); }
@@ -626,11 +680,25 @@ async function continueMatch(saveId, container) {
     state.tabId = state.tabId || generateTabId();
     state.chatMessages = [];
     state.lastEventCount = 0;
+    // First Contact resume: rebuild the lesson cursor from the replayed
+    // command log. Command events carry every declaration the lessons
+    // predicate on; the coach picks up where the match is, not where
+    // the player left off reading — which is what the "learn by playing"
+    // model wants anyway.
+    if (save.tutorial === 'first-contact') {
+      state.fcController = new FirstContactController({ scenario: FIRST_CONTACT_SCENARIO });
+      state.fcController.acked.welcome = true;
+      state.guidanceMode = GuidanceMode.GUIDED;
+      const priorEvents = (state.session.commandLog ?? []).flatMap((entry) => entry.events ?? []);
+      if (priorEvents.length) {
+        try { state.fcController.onSessionEvents(priorEvents, null); } catch { /* cursor rebuild is best-effort */ }
+      }
+    }
     // Resume achievement tracking for restored match
     try {
       const achRuntime = getAchievementRuntime();
       await achRuntime.init();
-      achRuntime.startMatch(state.sessionId, save.setup?.humanPlayerId ?? 'P1', { isTutorial: false });
+      achRuntime.startMatch(state.sessionId, save.setup?.humanPlayerId ?? 'P1', { isTutorial: save.tutorial === 'first-contact' });
       const presenter = getAchievementPresenter();
       achRuntime.onUnlock((unlocks) => presenter.queueUnlocks(unlocks));
       state.session.setAchievementConsumer((events, snapshot) => {
@@ -638,6 +706,9 @@ async function continueMatch(saveId, container) {
         // Academy Phase 2: forward events to the academy controller for live objective detection
         if (state.academyController && state.academyPhase === AcademyPhase.MATCH) {
           try { state.academyController.onSessionEvents(events, snapshot); } catch { /* ignore */ }
+        }
+        if (state.fcController) {
+          try { state.fcController.onSessionEvents(events, snapshot); } catch { /* ignore */ }
         }
       });
     } catch (err) { console.warn('[play-app] achievement tracking init failed:', err?.message ?? err); }
@@ -801,10 +872,28 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
   if (container.isConnected === false || state.session !== session) return;
   if (state.tacticalMount && tacticalContainer !== container) disposeTacticalMount();
   snapshot = session?.getSnapshot() ?? snapshot;
+  // First Contact: let the coach see the current decision frame before
+  // its HTML is built — activation (e.g. a response window opening) and
+  // SHOW ME both read real legal actions from this snapshot.
+  try { state.fcController?.syncFrame(snapshot); } catch { /* coach sync is non-fatal */ }
+  if (state.fcController && !state.fcController._rankSuggestions) {
+    // Adapt the policy ranker to the controller's (actions) => action[]
+    // contract — recommendation only, the engine still owns legality.
+    state.fcController._rankSuggestions = (actions) =>
+      (rankPolicyActionsWithDecomposition('score-rush', actions, {}) ?? []).map((r) => r.action);
+  }
+  const fc = state.fcController;
   const teaching = {
-    panelHtml: state.academyController && state.academyPhase === AcademyPhase.MATCH ? state.academyController.getPanelHtml() : '',
-    coachmarkHtml: state.academyController && state.academyPhase === AcademyPhase.MATCH ? state.academyController.getCoachmarkHtml() : '',
+    panelHtml: fc ? fc.getPanelHtml()
+      : state.academyController && state.academyPhase === AcademyPhase.MATCH ? state.academyController.getPanelHtml() : '',
+    coachmarkHtml: fc ? fc.getCoachmarkHtml()
+      : state.academyController && state.academyPhase === AcademyPhase.MATCH ? state.academyController.getCoachmarkHtml() : '',
     onAction(action) {
+      if (state.fcController) {
+        try { state.fcController.onCoachAction(action); } catch { /* non-fatal */ }
+        void renderActiveMatch(container);
+        return;
+      }
       const controller = state.academyController;
       if (!controller) return;
       if (action === 'academy-toggle-panel') controller.togglePanel();
@@ -824,6 +913,11 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
     if (!session) return { accepted: false, error: 'No active session' };
     try {
       const result = await session.submitHumanAction(intent);
+      // First Contact: rejections are teaching moments — hand the
+      // structured result to the coach so WHY? can explain them.
+      if (!result.accepted && state.fcController) {
+        try { state.fcController.onHumanRejection(result); } catch { /* non-fatal */ }
+      }
       // After a successful submit, re-render so the tactical store
       // receives the new session snapshot and resets its
       // acceptedBoundary flag. Without this, the store's select()
@@ -892,6 +986,10 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
         legacy: new URLSearchParams(location.search).get('board') === 'classic',
         onExit: () => {
           if (isNetworkMatch) showForfeitConfirmation(container, state);
+          else if (state.fcController) {
+            try { state.fcController.abandon(); } catch { /* non-fatal */ }
+            location.hash = '#/play/new';
+          }
           else { location.hash = state.academyLessonId ? '#/play/academy' : '#/play/new'; }
         },
       });
@@ -1043,6 +1141,17 @@ async function renderActiveMatch(container) {
       }
       // Stash the recap for the terminal renderer to render via a button
       state._academyRecap = recap;
+    } else if (state.fcController) {
+      // First Contact: produce the recap once; the terminal renderer
+      // shows it inline above the action row.
+      state._fcRecap = state.fcController.onMatchEnd(snapshot);
+      // First-run funnel: First Contact IS the tutorial step.
+      completeStep(FunnelStep.TUTORIAL_STARTED);
+      advanceToStep(FunnelStep.TUTORIAL_COMPLETE);
+      if (state._fcRecap?.won) {
+        completeStep(FunnelStep.FIRST_AI_WIN);
+        advanceToStep(FunnelStep.ACCOUNT_PROMPT);
+      }
     } else if (state.academyLessonId) {
       // Legacy fallback: no controller (shouldn't happen, but keep behavior)
       const humanId = snapshot.humanPlayerId ?? 'P1';
@@ -1156,6 +1265,8 @@ async function renderActiveMatch(container) {
       : '',
     // Academy: recap data so the terminal screen can show a "View Recap" button
     academyRecap: state._academyRecap ?? null,
+    // First Contact: inline recap block on the terminal screen
+    fcRecapHtml: state._fcRecap ? renderFcRecapBlock(state._fcRecap) : '',
     // Gameplay skin (Light/Dark/CosmoTech/Corrupture) — read synchronously
     // so the first paint carries the correct data-gameplay-skin attribute.
     gameplaySkin: getGameplaySkin(),

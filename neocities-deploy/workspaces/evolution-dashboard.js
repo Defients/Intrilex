@@ -1,24 +1,24 @@
-import '../evolution/evolution-training-ui.js?v=c4e7aaac019e';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=c4e7aaac019e';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=c4e7aaac019e';
-import { app, esc, fmt, state } from '../state.js?v=c4e7aaac019e';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=c4e7aaac019e';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=c4e7aaac019e';
-import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=c4e7aaac019e';
-import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=c4e7aaac019e';
-import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=c4e7aaac019e';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=c4e7aaac019e';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=c4e7aaac019e';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=c4e7aaac019e';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=c4e7aaac019e';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=c4e7aaac019e';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=c4e7aaac019e';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=c4e7aaac019e';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=c4e7aaac019e';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=c4e7aaac019e';
-import { StrategyStore } from '../strategy/strategy-store.mjs?v=c4e7aaac019e';
-import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=c4e7aaac019e';
-import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs?v=c4e7aaac019e';
+import '../evolution/evolution-training-ui.js?v=408ebfe25d7a';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=408ebfe25d7a';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=408ebfe25d7a';
+import { app, esc, fmt, state } from '../state.js?v=408ebfe25d7a';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=408ebfe25d7a';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=408ebfe25d7a';
+import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=408ebfe25d7a';
+import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=408ebfe25d7a';
+import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=408ebfe25d7a';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=408ebfe25d7a';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=408ebfe25d7a';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=408ebfe25d7a';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=408ebfe25d7a';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=408ebfe25d7a';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=408ebfe25d7a';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=408ebfe25d7a';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=408ebfe25d7a';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=408ebfe25d7a';
+import { StrategyStore } from '../strategy/strategy-store.mjs?v=408ebfe25d7a';
+import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=408ebfe25d7a';
+import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs?v=408ebfe25d7a';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 // Strategy evidence is a separate persistence concern from the monolithic
@@ -183,7 +183,7 @@ async function propagateToObservatory() {
   const summaries = [...new Map(runs.flatMap(observatorySummariesForRun).map(s => [s.matchId, s])).values()];
   if (!summaries.length) { view.propagateStatus = 'No saved lab runs to propagate — run, save or import evidence first.'; renderEvolutionLab(); return; }
   try {
-    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js?v=c4e7aaac019e');
+    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js?v=408ebfe25d7a');
     const aggregate = campaignAggregate(summaries, { profileId: null });
     const obs = buildObservatoryAnalytics({ summaries, aggregate });
     state.observatory = { ...obs, summaries, datasetOrigin: 'EVOLUTION_LAB' };
@@ -421,3 +421,22 @@ function inspectReplay(replayId) {
   worker.postMessage({type:'inspect-evolution-replay',replayId,artifact:artifactEnvelope(run())});
 }
 export function cleanupEvolutionLab() { ++startRequest; ++rosterRequest; starting=false; window.removeEventListener('focus',refreshProfiles); view.cockpit?.cleanup();view.cockpit=null;cleanupResearchPanel(); view.mounted=false;view.matrixAbort?.abort(); if (status() === 'RUNNING') { captureElapsed(); view.session.pause(); persist(); } release(); }
+
+/** Read-only snapshot of the live lab surface for the Analysis Dossier export.
+ * Returns raw references — the dossier builder projects and bounds them; it
+ * never mutates run state. Persisted IndexedDB contents are collected
+ * separately through the EvolutionStore/StrategyStore read APIs. */
+export function liveLabSnapshot() {
+  const research = cockpitResearch.getState();
+  return {
+    identity: LAB_IDENTITY,
+    liveRun: run() ?? null,
+    liveStatus: status(),
+    liveAggregator: { ...view.agg },
+    liveArchiveRef: view.archive ? { runId: view.archive.runId, historical: true } : null,
+    analyticsFilters: { ...view.analytics },
+    liveMatrix: view.batch.lab ?? null,
+    researchProject: research.project ?? null,
+    researchArchive: research.archive ?? null,
+  };
+}

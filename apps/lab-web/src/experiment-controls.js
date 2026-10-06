@@ -3,8 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting } from './state.js';
-import { WORKSPACES, route, policyOptions } from './router.js';
-import { showIntegrity } from './integrity.js';
+import { WORKSPACES, route, policyOptions, updateRailContext } from './router.js';
 import { RULES_VERSION, LAB_VERSION } from './version.js';
 import { populateDialogHeading } from './seo-metadata.js';
 import { rerender, invokeAppAction } from './rerender.js';
@@ -18,7 +17,7 @@ export function renderExperimentControls() {
     <div class="inline-fields"><label>Matches<input id="exp-count" type="number" min="1" max="10000" value="100"></label><label>Workers<select id="exp-workers"><option>1</option><option selected>2</option><option>4</option></select></label></div>
     <label>Seed strategy<select id="exp-seed"><option value="ordinal-hash">Experiment hash + ordinal</option><option value="fixed">Fixed seed</option></select></label>
     <div class="preflight" id="preflight"><b>Preflight:</b> 25 ordered pairings · matched AB/BA seat-swap · paired McNemar + bootstrap · deterministic telemetry v4.1 · unsupported systems fail closed.</div>
-    <div class="rail-actions"><button id="run-experiment" class="primary-button">Run</button><button id="cancel-experiment" class="secondary-button" disabled>Cancel</button><button id="reset-experiment" class="ghost-button">Reset</button></div>
+    <div class="rail-actions"><button id="run-experiment" type="button" class="primary-button">Run</button><button id="cancel-experiment" type="button" class="secondary-button" disabled>Cancel</button><button id="reset-experiment" type="button" class="ghost-button">Reset</button></div>
     <output id="experiment-status" class="footer-note" aria-live="polite">Ready.</output>
     <div id="campaign-progress" class="campaign-progress-bar" hidden><div class="campaign-progress-bar-fill" style="width:0%"></div></div>
     <div id="campaign-summary" class="campaign-summary"></div>
@@ -53,15 +52,39 @@ export function updatePreflight() {
 }
 
 // ── Global bindings ───────────────────────────────────────────────
+export function syncRailToggle() {
+  const btn = document.querySelector('#rail-toggle');
+  if (!btn) return;
+  const collapsed = state.layout === 'theatre';
+  btn.setAttribute('aria-expanded', String(!collapsed));
+  const label = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+  btn.setAttribute('aria-label', label);
+  btn.title = label;
+}
+
 export function bindGlobal() {
   // app.js owns route changes. Importing its entry point here creates a
   // second ESM entry graph and discards in-memory developer sessions.
-  document.querySelector('#layout-preset').addEventListener('change', e => {
-    state.layout = e.target.value;
+  document.querySelector('#rail-toggle').addEventListener('click', () => {
+    state.layout = state.layout === 'theatre' ? 'observatory' : 'theatre';
     document.querySelector('.observatory-shell').dataset.preset = state.layout;
     persistSetting('layout', state.layout);
+    const layoutEl = document.querySelector('#layout-preset');
+    if (layoutEl) layoutEl.value = state.layout;
+    syncRailToggle();
     rerender();
   });
+  const layoutEl = document.querySelector('#layout-preset');
+  if (layoutEl) {
+    layoutEl.value = state.layout;
+    layoutEl.addEventListener('change', () => {
+      state.layout = layoutEl.value;
+      document.querySelector('.observatory-shell').dataset.preset = state.layout;
+      persistSetting('layout', state.layout);
+      syncRailToggle();
+      rerender();
+    });
+  }
   document.querySelector('#global-visibility').addEventListener('change', async e => {
     state.visibility = e.target.value;
     persistSetting('visibility', state.visibility);
@@ -69,9 +92,9 @@ export function bindGlobal() {
       const { loadAuthorized } = await import('./data-loader.js');
       await loadAuthorized();
     }
+    updateRailContext();
     rerender();
   });
-  document.querySelector('#integrity-button').addEventListener('click', showIntegrity);
   const palette = document.querySelector('#command-palette');
   const openCommandPalette = () => {
     populateDialogHeading('command-palette', 'QUICK NAVIGATION', 'Command palette');
@@ -101,9 +124,27 @@ export function bindGlobal() {
       invokeAppAction('togglePlay');
     }
   });
-  document.querySelector('#collapse-experiment').addEventListener('click', () => {
-    document.querySelector('.experiment-rail').classList.toggle('collapsed');
-  });
+  // Experiment panel lives in a dialog — the header button opens it and
+  // mirrors live campaign status so progress stays visible when closed.
+  const expDialog = document.querySelector('#experiment-dialog');
+  const expBtn = document.querySelector('#experiment-button');
+  if (expDialog && expBtn) {
+    expBtn.addEventListener('click', () => {
+      populateDialogHeading('experiment-dialog', 'EXPERIMENT', 'Run configuration');
+      if (typeof expDialog.showModal === 'function') expDialog.showModal();
+      else expDialog.setAttribute('open', '');
+    });
+    document.querySelector('#experiment-close')?.addEventListener('click', () => expDialog.close());
+    const badge = document.querySelector('#experiment-badge');
+    const syncBadge = () => {
+      const t = document.querySelector('#experiment-status')?.textContent ?? '';
+      const busy = /running|progress:/i.test(t);
+      if (badge) { badge.hidden = !busy; badge.textContent = busy ? t.replace(/^Progress:\s*/i, '').slice(0, 40) : ''; }
+      expBtn.classList.toggle('running', busy);
+    };
+    const host = document.querySelector('#experiment-controls');
+    if (host) new MutationObserver(syncBadge).observe(host, { subtree: true, characterData: true, childList: true });
+  }
 }
 
 function renderCommandResults() {
@@ -115,8 +156,11 @@ function renderCommandResults() {
     { label: 'Toggle FX', detail: 'Presentation', run: () => { state.fx = !state.fx; document.body.classList.toggle('fx-off', !state.fx); persistSetting('fx', state.fx); } },
     { label: 'Show priority orchestration', detail: 'Developer evidence', run: () => { state.showOrchestration = !state.showOrchestration; rerender(); } },
     { label: 'Restart replay', detail: 'Identical seed / source replay', run: () => { invokeAppAction('stop'); state.frame = 0; rerender(); } },
-    { label: 'Extract analysis (JSON)', detail: 'AI agent brief · copy to clipboard', run: () => { invokeAppAction('showExtract', 'json'); } },
-    { label: 'Extract analysis (Markdown)', detail: 'AI agent brief · copy to clipboard', run: () => { invokeAppAction('showExtract', 'markdown'); } }
+    { label: 'Export Analysis Dossier (JSON)', detail: 'AI research-state export · downloads file', run: () => { invokeAppAction('exportAnalysisDossier', 'json'); } },
+    { label: 'Export Analysis Dossier (Markdown)', detail: 'AI research-state export · downloads file', run: () => { invokeAppAction('exportAnalysisDossier', 'markdown'); } },
+    { label: 'Export Analysis Dossier (JSON + Markdown)', detail: 'AI research-state export · downloads both files', run: () => { invokeAppAction('exportAnalysisDossier', 'both'); } },
+    { label: 'Extract analysis (JSON)', detail: 'Analysis dossier · copy to clipboard (legacy)', run: () => { invokeAppAction('showExtract', 'json'); } },
+    { label: 'Extract analysis (Markdown)', detail: 'Analysis dossier · copy to clipboard (legacy)', run: () => { invokeAppAction('showExtract', 'markdown'); } }
   ].filter(item => !q || `${item.label} ${item.detail}`.toLowerCase().includes(q));
   const root = document.querySelector('#command-results');
   root.innerHTML = commands.map((item, i) => `<button type="button" class="command-result" data-command="${i}" role="option"><span>${esc(item.label)}</span><small>${esc(item.detail)}</small></button>`).join('') || '<div class="empty-state"><strong>No command found</strong>Try a workspace or accessibility setting.</div>';
@@ -358,6 +402,7 @@ async function finalizeCampaignResult(x, count, _workers) {
     showToast(x.error ?? 'Campaign failed', { type: 'error', title: 'Campaign failed' });
   }
   renderCampaignSummary(x);
+  updateRailContext();
   // Re-render the current workspace so Mechanics/Synergies/Compare/etc.
   // reflect the freshly updated state.observatory immediately.
   rerender();
@@ -387,6 +432,7 @@ function resetCampaignResults() {
   state.variantAnalytics = state.bootState?.variantAnalytics != null ? structuredClone(state.bootState.variantAnalytics) : state.observatory?.variantAnalytics ?? state.variantAnalytics;
   document.querySelector('#campaign-summary').innerHTML = '';
   document.querySelector('#experiment-status').textContent = 'Ready.';
+  updateRailContext();
   rerender();
 }
 

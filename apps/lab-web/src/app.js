@@ -8,9 +8,9 @@ import { getCardDefinition } from './card-face-data.js';
 import { renderRulesPage } from './rulebook-renderer.js';
 import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js';
 import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js';
-import { TITLES,   SUBTITLES,   LANDING_MODES,   isPlayRoute,   route} from './router.js';
+import { TITLES,   SUBTITLES,   INSTRUMENTS,   LANDING_MODES,   isPlayRoute,   route} from './router.js';
 import { boot,   loadReplay,   getObservatoryBootPromise} from './data-loader.js';
-import {} from './experiment-controls.js';
+import { syncRailToggle } from './experiment-controls.js';
 import {} from './integrity.js';
 import { renderRanks } from './workspaces/ranks.js';
 import { renderDiagnostics } from './workspaces/diagnostics.js';
@@ -94,19 +94,19 @@ getMatchServerConfig().then(({ diagnoseConfig }) => diagnoseConfig()).catch(() =
 // if app.js loads before the shell DOM is parsed.
 let _breadcrumbEl = null;
 let _visibilityEl = null;
-let _layoutPresetEl = null;
 let _workspaceLinks = null;
 let _filterBarEl = null;
 let _clearFiltersEl = null;
+let _eyebrowEl = null;
 
 function cachedBreadcrumb() {
   return _breadcrumbEl ??= document.querySelector('#breadcrumb-current');
 }
+function cachedEyebrow() {
+  return _eyebrowEl ??= document.querySelector('.observatory-shell .global-header .eyebrow');
+}
 function cachedVisibility() {
   return _visibilityEl ??= document.querySelector('#global-visibility');
-}
-function cachedLayoutPreset() {
-  return _layoutPresetEl ??= document.querySelector('#layout-preset');
 }
 function cachedWorkspaceLinks() {
   return _workspaceLinks ??= document.querySelectorAll('.workspace-link');
@@ -131,6 +131,7 @@ function hideShell() {
   shell.setAttribute('inert', '');
   shell.setAttribute('aria-hidden', 'true');
   shell.style.display = 'none';
+  shell.removeAttribute('data-workspace');
   // Redirect skip-link to the landing container (the visible content region)
   const skip = document.querySelector('.skip-link');
   if (skip) skip.setAttribute('href', '#landing-app');
@@ -262,9 +263,14 @@ export function render() {
   cachedWorkspaceLinks().forEach(link => link.classList.toggle('active', link.dataset.route === r));
   const visEl = cachedVisibility();
   if (visEl) visEl.value = state.visibility;
-  const layoutEl = cachedLayoutPreset();
-  if (layoutEl) layoutEl.value = state.layout;
   shell.dataset.preset = state.layout;
+  syncRailToggle();
+  // CosmoTech: tag the shell with the active instrument so the accent
+  // system can tint chrome (nav, tabs, wells) per workspace without
+  // touching workspace markup.
+  shell.dataset.workspace = r.replace(/^\//, '');
+  const eyebrowEl = cachedEyebrow();
+  if (eyebrowEl && INSTRUMENTS[r]) eyebrowEl.textContent = INSTRUMENTS[r];
   renderFilters();
   stopTransientFx();
   const renderers = {
@@ -2218,22 +2224,35 @@ function wireForensicOverlay() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// EXTRACT — analysis export
+// ANALYSIS DOSSIER — research-state export (see docs/ANALYSIS_DOSSIER.md)
 // ═══════════════════════════════════════════════════════════════
 /**
- * Export the current observatory analysis to the clipboard as JSON or Markdown.
+ * Download the canonical Analysis Dossier as JSON, Markdown, or both.
+ * @param {'json'|'markdown'|'both'} format - Output format
+ */
+export async function exportAnalysisDossier(format = 'json') {
+  try {
+    const exporter = await import('./analysis-dossier-export.js');
+    const { files } = await exporter.exportAnalysisDossier(['json', 'markdown', 'both'].includes(format) ? format : 'json');
+    showToast(`Downloaded ${files.join(' and ')}`, { type: 'success', title: 'Analysis Dossier exported' });
+  } catch (err) {
+    showToast(err.message ?? 'Dossier export failed', { type: 'error', title: 'Export failed' });
+  }
+}
+
+/**
+ * Legacy extract contract, repaired: the clipboard now receives the canonical
+ * Analysis Dossier serialization (JSON or deterministic Markdown), which is a
+ * superset of the old analysis extract.
  * @param {'json'|'markdown'} format - Output format
  */
 export async function showExtract(format) {
-  if (!state._extractModule) {
-    app.innerHTML = '<div class="notice warning"><strong>Extract module not loaded.</strong></div>';
-    return;
-  }
   try {
-    const result = await state._extractModule.extractAnalysis(state.observatory, format);
+    const { extractAnalysisToClipboard } = await import('./analysis-dossier-export.js');
+    const result = await extractAnalysisToClipboard(format === 'markdown' ? 'markdown' : 'json');
     await navigator.clipboard.writeText(result);
-    app.innerHTML = `<div class="notice supported"><strong>Analysis copied to clipboard.</strong><p>${format === 'json' ? 'JSON' : 'Markdown'} extract is now in your clipboard.</p></div>`;
-    showToast(`${format === 'json' ? 'JSON' : 'Markdown'} extract copied to clipboard`, { type: 'success', title: 'Analysis copied' });
+    app.innerHTML = `<div class="notice supported"><strong>Analysis copied to clipboard.</strong><p>${format === 'json' ? 'JSON' : 'Markdown'} dossier is now in your clipboard.</p></div>`;
+    showToast(`${format === 'json' ? 'JSON' : 'Markdown'} dossier copied to clipboard`, { type: 'success', title: 'Analysis copied' });
     setTimeout(() => render(), 3000);
   } catch (err) {
     app.innerHTML = `<div class="notice danger"><strong>Extract failed:</strong> ${esc(err.message)}</div>`;
@@ -2342,7 +2361,7 @@ getAuthController().then(async ({ initAuth, isMigrationPending }) => {
 // This breaks the backedge from workspace modules to the entry point.
 import { setRenderer, setAppActions } from './rerender.js';
 setRenderer(render);
-setAppActions({ togglePlay, stop, showExtract });
+setAppActions({ togglePlay, stop, showExtract, exportAnalysisDossier });
 
 // IRX-FORENSIC: Expose state on window for the forensic viewer's open-session
 // flow, which needs to set replay state before navigating to Watch. This is

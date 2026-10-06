@@ -85,12 +85,14 @@ test('v0.30.0: generate-capability-truth.mjs script exists', async () => {
   assert.ok(await exists('scripts/generate-capability-truth.mjs'));
 });
 
-// ── Lab navigation (Learn + Lab only; Play/Account accessed elsewhere) ──
+// ── Lab navigation (Learn + instrument sections; Play/Account accessed elsewhere) ──
 
-test('v0.30.0: router.js has Learn and Lab nav sections', async () => {
+test('v0.30.0: router.js has Learn and instrument nav sections', async () => {
   const router = await read('apps/lab-web/src/router.js');
   assert.match(router, /label:\s*'Learn'/);
-  assert.match(router, /label:\s*'Lab'/);
+  for (const label of ['Observe', 'Analyze', 'Experiment', 'Evidence']) {
+    assert.match(router, new RegExp(`label:\\s*'${label}'`), `nav must include ${label} section`);
+  }
 });
 
 test('v0.30.0: router.js Lab nav excludes Play and Account sections', async () => {

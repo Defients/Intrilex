@@ -1,0 +1,471 @@
+/* ═══════════════════════════════════════════════════════════════
+   cosmotech.css — CosmoTech instrument layer.
+
+   Final cascade layer. Re-scopes the shared primitives (panels,
+   metric wells, tabs, badges, notices, tables) into a coherent
+   scientific-instrument grammar inside the Observatory shell:
+
+     90% clean engineering / 10% alien geometry
+     spectral color = information, not decoration
+
+   Every rule is scoped to `.observatory-shell` (or the Lab dialogs,
+   which live at <body> level) so landing and play surfaces keep
+   their own product language. Markup contracts are untouched —
+   this layer only reads existing classes, IDs, and data-workspace.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Instrument accent map ─────────────────────────────────────
+   One emitted accent per workspace instrument. Everything else in
+   the chrome stays neutral graphite so spectral color always means
+   something. Derived -line/-soft/-faint shades are computed with
+   color-mix so every accent family stays internally consistent. */
+.observatory-shell {
+  --ws-accent: var(--sig-measure);
+  --ws-accent-line: color-mix(in srgb, var(--ws-accent) 45%, transparent);
+  --ws-accent-soft: color-mix(in srgb, var(--ws-accent) 12%, transparent);
+  --ws-accent-faint: color-mix(in srgb, var(--ws-accent) 7%, transparent);
+}
+/* violet — system identity, lineage, selected structure */
+.observatory-shell[data-workspace="ranks"],
+.observatory-shell[data-workspace="intelligence"],
+.observatory-shell[data-workspace="synergies"],
+.observatory-shell[data-workspace="profile"],
+.observatory-shell[data-workspace="player"] { --ws-accent: var(--sig-system); }
+/* amber — active computation, experiments, reactors */
+.observatory-shell[data-workspace="evolution"],
+.observatory-shell[data-workspace="tournament"] { --ws-accent: var(--sig-active); }
+/* magenta — divergence, counterfactuals, forensic anomalies */
+.observatory-shell[data-workspace="branches"],
+.observatory-shell[data-workspace="forensic"] { --ws-accent: var(--sig-anomaly); }
+/* green — verified evidence, archive integrity */
+.observatory-shell[data-workspace="evidence"] { --ws-accent: var(--sig-ok); }
+/* cyan (default) — measurement instruments: watch, caster, replays,
+   history, mechanics, compare, traces, diagnostics, release-notes,
+   achievements, settings, auth, strategy. */
+.evo-cockpit { --ws-accent: var(--evo-accent); }
+
+/* ── Canvas — faint instrument grid under the workspace ──────── */
+.observatory-shell main {
+  background-image:
+    linear-gradient(rgba(148,170,230,.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148,170,230,.024) 1px, transparent 1px);
+  background-size: 52px 52px;
+  background-attachment: local;
+}
+
+/* ── Global header — instrument designation readout ──────────── */
+.observatory-shell .global-header .eyebrow {
+  font-family: var(--font-mono);
+  color: var(--ws-accent);
+  letter-spacing: .22em;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.observatory-shell .global-header .eyebrow::after {
+  content: "";
+  display: inline-block;
+  width: 6px; height: 6px;
+  border: 1px solid var(--ws-accent);
+  transform: rotate(45deg);
+  opacity: .7;
+}
+.observatory-shell .breadcrumb { font-family: var(--font-mono); font-size: 11px; }
+.observatory-shell .compact-control select { border-radius: 5px; background: var(--bg-1); }
+
+/* ── Rail — instrument column with measurement edge ──────────── */
+.observatory-shell .side-rail {
+  background: linear-gradient(180deg, rgba(8,13,24,.98), rgba(5,8,15,.96));
+  border-right-color: var(--hairline);
+}
+.observatory-shell .nav-section-label {
+  font-family: var(--font-mono);
+  letter-spacing: .18em;
+}
+.observatory-shell .nav-section-label::before {
+  content: "";
+  width: 8px; height: 1px;
+  background: var(--faint);
+  flex: none;
+}
+.observatory-shell .workspace-link { border-radius: 6px; }
+.observatory-shell .workspace-link.active {
+  background: linear-gradient(90deg, var(--ws-accent-soft), transparent 78%);
+  border-color: var(--ws-accent-line);
+  box-shadow: inset 2px 0 0 var(--ws-accent);
+}
+.observatory-shell .workspace-link.active .workspace-icon {
+  filter: drop-shadow(0 0 5px var(--ws-accent));
+  opacity: 1;
+}
+.observatory-shell .rail-context { font-variant-numeric: tabular-nums; }
+.observatory-shell .rail-context-row b { font-family: var(--font-mono); font-weight: 600; }
+
+/* ── Filter rail — cohort definition strip ───────────────────── */
+.observatory-shell .global-filter-bar {
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(14,21,36,.78), rgba(9,14,26,.72));
+}
+.observatory-shell .global-filter-bar .eyebrow { color: var(--ws-accent); }
+.observatory-shell .filter-chip { border-radius: 5px; }
+.observatory-shell .filter-chip b { color: var(--ws-accent); }
+
+/* ── Panels — fabricated enclosures, one chamfered corner ────── */
+.observatory-shell .panel {
+  border-radius: 4px;
+  border-color: var(--border-soft);
+  clip-path: polygon(0 0, calc(100% - var(--ct-cut)) 0, 100% var(--ct-cut), 100% 100%, 0 100%);
+  background: linear-gradient(180deg, var(--surface), var(--bg-2) 140%);
+  box-shadow: 0 2px 10px rgba(0,0,0,.18);
+}
+.observatory-shell .panel:hover { box-shadow: 0 2px 10px rgba(0,0,0,.18); }
+/* The cockpit renders a position:fixed inspector overlay — clip-path on an
+   ancestor would clip it, so the reactor shell stays un-chamfered. */
+.observatory-shell .panel:has(> .panel-body .evo-cockpit),
+.observatory-shell .panel.evo-panel { clip-path: none; }
+.observatory-shell .panel-header {
+  position: relative;
+  padding: 13px 16px 12px;
+  border-bottom-color: var(--border-soft);
+}
+.observatory-shell .panel-header::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 12px; bottom: 12px;
+  width: 3px;
+  background: linear-gradient(180deg, var(--ws-accent), transparent 90%);
+  opacity: .55;
+  border-radius: 0 2px 2px 0;
+}
+.observatory-shell .panel-header h2,
+.observatory-shell .panel-header h3 { letter-spacing: .01em; }
+.observatory-shell .panel-header p { font-variant-numeric: tabular-nums; }
+.observatory-shell .panel-body { background: rgba(3,6,12,.18); }
+
+/* ── Data wells — recessed readouts, not floating cards ──────── */
+.observatory-shell .metric-card,
+.observatory-shell .obs-stat {
+  position: relative;
+  border-radius: 6px;
+  border-color: var(--border-soft);
+  background: linear-gradient(180deg, var(--bg-1), color-mix(in srgb, var(--bg-1) 62%, var(--bg-2)));
+  box-shadow: var(--ct-well-inset);
+}
+.observatory-shell .metric-card::before,
+.observatory-shell .obs-stat::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 14px;
+  width: 24px; height: 2px;
+  background: var(--ws-accent);
+  opacity: .55;
+  border-radius: 0 0 2px 2px;
+}
+.observatory-shell .metric-card:hover { transform: none; border-color: var(--border); }
+.observatory-shell .metric-card small,
+.observatory-shell .obs-stat small {
+  font-family: var(--font-mono);
+  letter-spacing: .12em;
+}
+.observatory-shell .metric-value { font-variant-numeric: tabular-nums; }
+.metric-value.positive { color: var(--sig-ok); }
+.metric-value.negative { color: var(--sig-error); }
+.observatory-shell .obs-stat-lead { border-color: var(--ws-accent-line); }
+.observatory-shell .obs-stat-lead > b { color: var(--ws-accent); }
+
+/* ── Controls — engineered, slightly asymmetric ──────────────── */
+.observatory-shell .primary-button,
+.observatory-shell .secondary-button,
+.observatory-shell .danger-button {
+  border-radius: 3px 9px 3px 9px;
+}
+.observatory-shell .primary-button {
+  letter-spacing: .04em;
+  font-weight: 700;
+}
+.observatory-shell .secondary-button { background: var(--surface-2); }
+.observatory-shell button:hover:not(:disabled) { border-color: var(--border-strong); }
+.observatory-shell .icon-button { border-radius: 5px; }
+.observatory-shell .toolbar { gap: 10px; }
+.observatory-shell select,
+.observatory-shell input[type="number"],
+.observatory-shell input[type="text"],
+.observatory-shell input[type="search"],
+.observatory-shell input:not([type]) {
+  border-radius: 5px;
+  background: var(--bg-1);
+}
+.observatory-shell select:focus,
+.observatory-shell input:focus { border-color: var(--ws-accent); }
+
+/* ── Tabs & segmented controls — instrument selectors ────────── */
+.observatory-shell .ix-section-tabs { border-radius: 8px; background: rgba(4,8,16,.55); }
+.observatory-shell .ix-section-tab { border-radius: 5px; }
+.observatory-shell .ix-section-tab.active,
+.observatory-shell .ix-section-tab[aria-selected="true"] {
+  color: var(--ws-accent);
+  background: var(--ws-accent-soft);
+  border-color: var(--ws-accent-line);
+  box-shadow: inset 0 -2px 0 var(--ws-accent);
+}
+.observatory-shell .obs-seg { border-radius: 6px; background: rgba(4,8,16,.6); }
+.observatory-shell .obs-seg-btn.active {
+  color: var(--ws-accent);
+  background: var(--ws-accent-soft);
+  border-color: var(--ws-accent-line);
+}
+.observatory-shell .ix-chart-toggle { border-radius: 4px; }
+.observatory-shell .ix-cross-link {
+  border-radius: 4px;
+  border-color: var(--ws-accent-line);
+  color: var(--ws-accent);
+  background: var(--ws-accent-faint);
+}
+.observatory-shell .ix-cross-link:hover { background: var(--ws-accent-soft); }
+
+/* ── Badges & chips — spectral tags ──────────────────────────── */
+.observatory-shell .badge,
+.observatory-shell .status-badge { border-radius: 4px; font-family: var(--font-mono); }
+.badge-tag {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; margin-left: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  vertical-align: 1px;
+}
+.badge-tag.is-sig { color: #0b0e14; background: var(--sig-active); border-color: transparent; }
+/* Semantic badge tones emitted by observatory-ui (evidenceBadge /
+   statusChip) — previously rendered as unstyled bordered pills. */
+.badge.badge-supported { color: var(--sig-ok); border-color: color-mix(in srgb, var(--sig-ok) 40%, transparent); background: color-mix(in srgb, var(--sig-ok) 9%, transparent); }
+.badge.badge-info { color: var(--sig-measure); border-color: color-mix(in srgb, var(--sig-measure) 40%, transparent); background: color-mix(in srgb, var(--sig-measure) 9%, transparent); }
+.badge.badge-warning { color: var(--sig-active); border-color: color-mix(in srgb, var(--sig-active) 40%, transparent); background: color-mix(in srgb, var(--sig-active) 9%, transparent); }
+.badge.badge-alert { color: var(--sig-error); border-color: color-mix(in srgb, var(--sig-error) 40%, transparent); background: color-mix(in srgb, var(--sig-error) 9%, transparent); }
+.status-badge.warning { color: var(--sig-active); border-color: color-mix(in srgb, var(--sig-active) 40%, transparent); background: color-mix(in srgb, var(--sig-active) 7%, transparent); }
+.status-badge.info { color: var(--sig-measure); border-color: color-mix(in srgb, var(--sig-measure) 40%, transparent); background: color-mix(in srgb, var(--sig-measure) 7%, transparent); }
+.status-badge.alert { color: var(--sig-error); border-color: color-mix(in srgb, var(--sig-error) 40%, transparent); background: color-mix(in srgb, var(--sig-error) 7%, transparent); }
+.badge-tag.is-flat { color: var(--faint); }
+.badge-tag.is-hist {
+  color: var(--sig-system);
+  border-color: color-mix(in srgb, var(--sig-system) 45%, transparent);
+  background: color-mix(in srgb, var(--sig-system) 12%, transparent);
+}
+.observatory-shell .panel-chip { border-radius: 4px; font-family: var(--font-mono); }
+
+/* ── Notices — flagged readout strips ────────────────────────── */
+.observatory-shell .notice {
+  border-radius: 5px;
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--sig-measure);
+  background: linear-gradient(90deg, rgba(90,215,232,.05), transparent 60%);
+}
+.observatory-shell .notice.warning {
+  border-left-color: var(--sig-active);
+  background: linear-gradient(90deg, rgba(241,189,93,.07), transparent 60%);
+}
+.observatory-shell .notice.danger {
+  border-left-color: var(--sig-error);
+  background: linear-gradient(90deg, rgba(242,119,122,.07), transparent 60%);
+}
+.notice.info {
+  border-left-color: var(--sig-measure);
+  background: linear-gradient(90deg, rgba(90,215,232,.05), transparent 60%);
+}
+
+/* ── Dossier frames — recessed analyst surfaces ──────────────── */
+.observatory-shell .obs-dossier,
+.observatory-shell .matchup-side,
+.observatory-shell .dossier-section {
+  box-shadow: var(--ct-well-inset);
+}
+.observatory-shell .dossier-section-head h4,
+.observatory-shell .rank-subhead { font-family: var(--font-mono); }
+.observatory-shell .kv dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  align-self: center;
+}
+.observatory-shell .kv dd { font-variant-numeric: tabular-nums; }
+
+/* ── Tables — ledger rows with measurement rules ─────────────── */
+.observatory-shell .table-wrap { border-radius: 6px; background: rgba(4,8,16,.35); }
+.observatory-shell .data-table thead th {
+  font-family: var(--font-mono);
+  letter-spacing: .1em;
+  background: var(--bg-2);
+}
+.observatory-shell .data-table tbody tr.selected-row {
+  background: var(--ws-accent-faint);
+  border-left-color: var(--ws-accent);
+  box-shadow: inset 3px 0 0 var(--ws-accent);
+}
+.data-table td.positive, .data-table .positive { color: var(--sig-ok); font-variant-numeric: tabular-nums; }
+.data-table td.negative, .data-table .negative { color: var(--sig-error); font-variant-numeric: tabular-nums; }
+.observatory-shell .data-table button { color: var(--ws-accent); }
+
+/* ── Chart frames — inset instruments ────────────────────────── */
+.observatory-shell .ix-chart-container {
+  border-radius: 6px;
+  background: var(--bg-1);
+  box-shadow: var(--ct-well-inset);
+}
+.observatory-shell .ix-chart-container .ix-chart-header h4 {
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  color: var(--muted-bright);
+}
+
+/* ── Empty / loading — quiet "no signal" frames ──────────────── */
+.observatory-shell .empty-state {
+  position: relative;
+  border: 1px dashed var(--border-soft);
+  border-radius: 8px;
+  background: rgba(6,10,18,.35);
+}
+.observatory-shell .empty-state::before,
+.observatory-shell .empty-state::after {
+  content: "";
+  position: absolute;
+  width: 12px; height: 12px;
+  border: 1px solid var(--ws-accent);
+  opacity: .6;
+}
+.observatory-shell .empty-state::before { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+.observatory-shell .empty-state::after { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+.observatory-shell .loading-spinner { border-top-color: var(--ws-accent); }
+
+/* ── Stack utilities & shared shell gaps ─────────────────────── */
+.ws-stack { display: grid; gap: 16px; }
+#branch-output .ws-stack { margin-top: 16px; }
+.branch-analysis-note { color: var(--muted); font-size: 11.5px; margin: 0 0 12px; line-height: 1.5; }
+.ct-well {
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  background: var(--bg-1);
+  box-shadow: var(--ct-well-inset);
+  padding: 14px 16px;
+}
+.ct-well > h3 {
+  margin: 14px 0 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted-bright);
+}
+.ct-well > h3:first-child { margin-top: 0; }
+.diag-comparison { margin-top: 16px; }
+.branch-divergence-chart { margin: 4px 0 14px; }
+
+/* ── Dialogs — instrument housings ───────────────────────────── */
+.command-dialog {
+  border-radius: 6px;
+  border-color: var(--border);
+  background: linear-gradient(180deg, var(--surface), var(--bg-2));
+}
+.command-dialog::backdrop { background: rgba(2,4,10,.8); backdrop-filter: blur(4px); }
+.command-dialog .eyebrow { font-family: var(--font-mono); letter-spacing: .2em; color: var(--sig-measure); }
+.command-dialog input { border-radius: 5px; background: var(--bg-1); }
+.command-result { border-radius: 5px; }
+.command-result.active, .command-result:hover { background: var(--surface-2); }
+
+/* Experiment dialog = test chamber */
+.experiment-dialog .experiment-grid label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.experiment-dialog .experiment-grid select,
+.experiment-dialog .experiment-grid input {
+  border-radius: 5px;
+  background: var(--bg-1);
+}
+.experiment-dialog .preflight {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.6;
+  border-radius: 5px;
+  border-left: 3px solid var(--sig-active);
+  background: linear-gradient(90deg, rgba(241,189,93,.05), transparent 65%);
+}
+#campaign-progress.campaign-progress-bar {
+  height: 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 3px;
+  background: var(--bg-1);
+  overflow: hidden;
+}
+#campaign-progress .campaign-progress-bar-fill {
+  background: var(--sig-active);
+  mask: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8px);
+  -webkit-mask: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8px);
+}
+.experiment-dialog .summary-card { border-radius: 4px; background: var(--bg-1); }
+.experiment-dialog .summary-card b { color: var(--sig-active); font-family: var(--font-mono); }
+
+/* ── Theatre cells — board readouts as recessed instrument panes ─ */
+.observatory-shell .status-cell,
+.observatory-shell .zone,
+.observatory-shell .diff-value {
+  box-shadow: var(--ct-well-inset);
+  border-radius: 6px;
+}
+.observatory-shell .player-board { border-radius: 6px; }
+.observatory-shell .timeline-item.selected {
+  border-color: var(--ws-accent-line);
+  box-shadow: inset 2px 0 0 var(--ws-accent);
+}
+
+/* ── Scrollbars — thin instrument tracks ─────────────────────── */
+.observatory-shell .table-wrap::-webkit-scrollbar,
+.observatory-shell .side-rail::-webkit-scrollbar,
+.observatory-shell .command-dialog::-webkit-scrollbar,
+.observatory-shell .semantic-timeline::-webkit-scrollbar {
+  width: 8px; height: 8px;
+}
+.observatory-shell ::-webkit-scrollbar-thumb {
+  background: var(--border-soft);
+  border-radius: 4px;
+}
+.observatory-shell ::-webkit-scrollbar-thumb:hover { background: var(--border); }
+.observatory-shell ::-webkit-scrollbar-track { background: transparent; }
+.observatory-shell ::-webkit-scrollbar-corner { background: transparent; }
+
+/* ── Motion — panels resolve like an instrument acquiring lock ─ */
+@keyframes ct-resolve {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+/* Excluded on playback-driven workspaces (watch/caster/forensic) —
+   stepTo() re-renders #app every frame, so a mount animation there
+   would strobe during replay transport. */
+.observatory-shell:not([data-workspace="watch"]):not([data-workspace="caster"]):not([data-workspace="forensic"]) #app > * { animation: ct-resolve 180ms var(--ease) both; }
+.observatory-shell:not([data-workspace="watch"]):not([data-workspace="caster"]):not([data-workspace="forensic"]) #app > *:nth-child(2) { animation-delay: 40ms; }
+.observatory-shell:not([data-workspace="watch"]):not([data-workspace="caster"]):not([data-workspace="forensic"]) #app > *:nth-child(3) { animation-delay: 70ms; }
+.observatory-shell:not([data-workspace="watch"]):not([data-workspace="caster"]):not([data-workspace="forensic"]) #app > *:nth-child(4) { animation-delay: 95ms; }
+.observatory-shell:not([data-workspace="watch"]):not([data-workspace="caster"]):not([data-workspace="forensic"]) #app > *:nth-child(n+5) { animation-delay: 110ms; }
+@media (prefers-reduced-motion: reduce) {
+  .observatory-shell #app > * { animation: none; }
+}
+
+/* ── Narrow layouts — geometry simplifies, signal stays ──────── */
+@media (max-width: 760px) {
+  .observatory-shell main { background-size: 44px 44px; }
+  .observatory-shell .panel { clip-path: none; border-radius: 8px; }
+  .observatory-shell .panel-header::before { opacity: .4; }
+  .observatory-shell:not([data-workspace="watch"]):not([data-workspace="caster"]):not([data-workspace="forensic"]) #app > * { animation-duration: 120ms; }
+}
+@media (forced-colors: active) {
+  .observatory-shell .metric-card::before,
+  .observatory-shell .obs-stat::before,
+  .observatory-shell .panel-header::before { background: CanvasText; }
+}

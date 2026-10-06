@@ -39,7 +39,31 @@ export class PolicyRng {
 const uint32FromHash=(value)=>Number.parseInt(hashCanonical(value).slice(0,8),16)>>>0||1;
 const pointValue=(card)=>{if(!card)return null;if(typeof card.state?.pointValue==='number')return card.state.pointValue;const rank=String(card.identity??'').replace(/[♣♦♥♠]/gu,'');if(/^\d+$/.test(rank))return Number(rank);return({A:4,J:3,Q:2,K:8,RJ:5,BJ:11})[rank]??0;};
 
-export function createState(setup){return isCore(setup.profileId)?createCoreMatchState({profileId:setup.profileId,playerIds:setup.playerIds,seatOrder:setup.seatOrder,enabledModules:[],seed:setup.seed,...(setup.predeterminedIdentities?{predeterminedIdentities:setup.predeterminedIdentities}:{})}):createMatchState({...setup,eventApprovedModules:[]});}
+// predeterminedIdentities: scenario support shared by both engine paths.
+// The core profile consumes the list natively; the First Contact path deals
+// a fixed positional layout (C-001..C-005 P1 hand, C-006..C-011 P2 hand,
+// C-012..C-054 DP top→bottom), so the runtime relabels each position's
+// identity. Both paths keep all 54 physical card instances — only the
+// dealt identity per position changes, which is what scenario fixtures mean
+// by "arrangement".
+const FC_CARD_ID=(position)=>`C-${String(position+1).padStart(3,'0')}`;
+export const FC_DECK_SIZE=54;
+export function applyPredeterminedIdentities(state,identities){
+  if(!Array.isArray(identities)||identities.length!==FC_DECK_SIZE)throw new Error('PREDETERMINED_IDENTITIES_LENGTH');
+  if(new Set(identities).size!==FC_DECK_SIZE)throw new Error('PREDETERMINED_IDENTITIES_DUPLICATE');
+  for(let i=0;i<FC_DECK_SIZE;i+=1){
+    const card=state.cards[FC_CARD_ID(i)];
+    if(!card)throw new Error('PREDETERMINED_IDENTITIES_LAYOUT');
+    card.identity=identities[i];
+  }
+  return state;
+}
+export function createState(setup){
+  if(isCore(setup.profileId))return createCoreMatchState({profileId:setup.profileId,playerIds:setup.playerIds,seatOrder:setup.seatOrder,enabledModules:[],seed:setup.seed,...(setup.predeterminedIdentities?{predeterminedIdentities:setup.predeterminedIdentities}:{})});
+  const state=createMatchState({...setup,eventApprovedModules:[]});
+  if(setup.predeterminedIdentities)applyPredeterminedIdentities(state,setup.predeterminedIdentities);
+  return state;
+}
 export function advance(state,maxCommands=16){return state.metadata?.coreAuthority?advanceCoreToDecision(state,maxCommands):advanceToDecision(state);}
 export function actionView(action,profileId){const view=isCore(profileId)?toAuthorizedCoreAction(action):authorizedLegalActionView(action);const composition=actionComposition(action);const semantics=actionSemantics(action);return{...view,...(composition?{composition}:{}),...(semantics?{semantics}:{})};}
 

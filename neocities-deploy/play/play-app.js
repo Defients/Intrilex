@@ -4,45 +4,48 @@
 // Never owns authoritative state — delegates to PlaySession.
 // ═══════════════════════════════════════════════════════════════
 
-import { createSession, restoreSession, SessionState } from './play-controller.js?v=c4e7aaac019e';
-import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=c4e7aaac019e';
+import { createSession, restoreSession, SessionState } from './play-controller.js?v=408ebfe25d7a';
+import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=408ebfe25d7a';
 import {
   buildOpponentModel,
   policyTraitsFromId,
   resolveOpponent,
   archetypeForDifficulty,
-} from './opponent-catalog.mjs?v=c4e7aaac019e';
+} from './opponent-catalog.mjs?v=408ebfe25d7a';
 import {
   renderArchetypeGrid,
   renderOpponentBrief,
   renderMatchBrief,
   renderPlaystyleScope,
-} from './ranked-duel-hub.mjs?v=c4e7aaac019e';
-import { getGameplaySkin } from './gameplay-skin.js?v=c4e7aaac019e';
-import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=c4e7aaac019e';
-import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=c4e7aaac019e';
-import { ensureReplayFrames } from '../replay-frames.js?v=c4e7aaac019e';
-import { state as observatoryState } from '../state.js?v=c4e7aaac019e';
-import { buildSaveIntegrityPayload } from './save-integrity.js?v=c4e7aaac019e';
-import { validateSnapshotPrivacy } from './play-privacy.js?v=c4e7aaac019e';
-import { POLICY_IDS } from '../autonomy-runtime.js?v=c4e7aaac019e';
-import { GuidanceMode } from './intelligence/action-explanation.js?v=c4e7aaac019e';
-import './orchestration/declaration-flow.js?v=c4e7aaac019e';
-import './state/play-lifecycle.js?v=c4e7aaac019e';
-import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=c4e7aaac019e';
-import { getAiBanter } from './ai-personality.js?v=c4e7aaac019e';
-import { SoundEngine } from './play-sound.js?v=c4e7aaac019e';
-import { ParticleSystem } from './play-particles.js?v=c4e7aaac019e';
-import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=c4e7aaac019e';
-import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=c4e7aaac019e';
-import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=c4e7aaac019e';
-import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=c4e7aaac019e';
-import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=c4e7aaac019e';
-import { renderRecap } from './academy/academy-recap.mjs?v=c4e7aaac019e';
-import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs?v=c4e7aaac019e';
-import { createSessionAutosave } from './session-autosave.js?v=c4e7aaac019e';
-import { state, resetState } from './play-state.js?v=c4e7aaac019e';
-import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js?v=c4e7aaac019e';
+} from './ranked-duel-hub.mjs?v=408ebfe25d7a';
+import { getGameplaySkin } from './gameplay-skin.js?v=408ebfe25d7a';
+import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=408ebfe25d7a';
+import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=408ebfe25d7a';
+import { ensureReplayFrames } from '../replay-frames.js?v=408ebfe25d7a';
+import { state as observatoryState } from '../state.js?v=408ebfe25d7a';
+import { buildSaveIntegrityPayload } from './save-integrity.js?v=408ebfe25d7a';
+import { validateSnapshotPrivacy } from './play-privacy.js?v=408ebfe25d7a';
+import { POLICY_IDS } from '../autonomy-runtime.js?v=408ebfe25d7a';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=408ebfe25d7a';
+import './orchestration/declaration-flow.js?v=408ebfe25d7a';
+import './state/play-lifecycle.js?v=408ebfe25d7a';
+import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=408ebfe25d7a';
+import { getAiBanter } from './ai-personality.js?v=408ebfe25d7a';
+import { SoundEngine } from './play-sound.js?v=408ebfe25d7a';
+import { ParticleSystem } from './play-particles.js?v=408ebfe25d7a';
+import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=408ebfe25d7a';
+import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=408ebfe25d7a';
+import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=408ebfe25d7a';
+import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=408ebfe25d7a';
+import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=408ebfe25d7a';
+import { renderRecap } from './academy/academy-recap.mjs?v=408ebfe25d7a';
+import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs?v=408ebfe25d7a';
+import { FirstContactController } from './first-contact/fc-controller.mjs?v=408ebfe25d7a';
+import { FIRST_CONTACT_SCENARIO, validateFirstContactScenario } from './first-contact/fc-scenario.mjs?v=408ebfe25d7a';
+import { renderFcRecapBlock } from './first-contact/fc-panel.mjs?v=408ebfe25d7a';
+import { createSessionAutosave } from './session-autosave.js?v=408ebfe25d7a';
+import { state, resetState } from './play-state.js?v=408ebfe25d7a';
+import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js?v=408ebfe25d7a';
 import {
   openAdvancedCardRules as openAdvancedCardRulesController,
   closeAdvancedCardRules,
@@ -50,19 +53,19 @@ import {
   findAuthorizedCard,
   buildCurrentMatchContext,
   getOpenIdentity,
-} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=c4e7aaac019e';
-import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=c4e7aaac019e';
+} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=408ebfe25d7a';
+import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=408ebfe25d7a';
 import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
   renderNetworkQueueWaiting, renderNetworkSpectateForm, renderNetworkSpectating,
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
   renderNetworkUnavailable,
-} from './network/network-lobby-renderer.mjs?v=c4e7aaac019e';
-import { getMatchServerUrl, validateMatchServerUrl } from './network/match-server-config.js?v=c4e7aaac019e';
-import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=c4e7aaac019e';
-import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=c4e7aaac019e';
-import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=c4e7aaac019e';
-import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=c4e7aaac019e';
+} from './network/network-lobby-renderer.mjs?v=408ebfe25d7a';
+import { getMatchServerUrl, validateMatchServerUrl } from './network/match-server-config.js?v=408ebfe25d7a';
+import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=408ebfe25d7a';
+import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=408ebfe25d7a';
+import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=408ebfe25d7a';
+import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=408ebfe25d7a';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -201,6 +204,8 @@ export async function handlePlayRoute(route, container) {
     await renderNetworkActiveMatch(container);
   } else if (sub === '/academy') {
     await renderAcademyHub(container);
+  } else if (sub === '/first-contact') {
+    await startFirstContact(container);
   } else if (sub === '/guided') {
     await renderGuidedExhibition(container);
   } else if (sub.startsWith('/agent/')) {
@@ -262,6 +267,44 @@ async function renderGuidedExhibition(container) {
       await startGuidedMatch(container, { guidanceLevel: 'full' });
     },
   });
+}
+
+/**
+ * First Contact — the primary beginner onboarding. One click enters a
+ * real, controlled Intrilex match on the actual engine: the deal order
+ * is fixed by the scenario, the rival follows a legal-only teaching
+ * script, and the coach panel teaches through the player's own actions.
+ * Academy remains available for structured depth; this is the "learn by
+ * playing" front door.
+ */
+async function startFirstContact(container) {
+  const { valid, errors } = validateFirstContactScenario();
+  if (!valid) {
+    container.innerHTML = `<div class="play-error" role="alert"><h2>First Contact unavailable</h2><p>${esc(errors.join('; '))}</p><a href="#/play/new" class="secondary-button">Back</a></div>`;
+    return;
+  }
+  const scenario = FIRST_CONTACT_SCENARIO;
+  // Create the controller before startNewMatch() resets play state;
+  // startNewMatch re-attaches it to `state` from the setup flag.
+  const controller = new FirstContactController({
+    scenario,
+    record: undefined, // default fc-telemetry sink
+  });
+  state._pendingFcController = controller;
+  state.guidanceMode = GuidanceMode.GUIDED;
+  state.guidancePrefLoaded = true; // prevent handlePlayRoute from overriding
+  // First-run funnel: this IS the tutorial step for new players.
+  if (getCurrentStep() === FunnelStep.LANDING) advanceToStep(FunnelStep.TUTORIAL_STARTED);
+  await startNewMatch({
+    profileId: scenario.profileId,
+    seed: scenario.seed,
+    humanPlayerId: scenario.humanPlayerId,
+    aiPolicyId: scenario.aiPolicyId,
+    mode: 'ADVANCED_CORE',
+    tutorial: 'first-contact',
+    predeterminedIdentities: [...scenario.predeterminedIdentities],
+    opponentScript: scenario.opponentScript.map((entry) => ({ ...entry, intent: { ...entry.intent } })),
+  }, container);
 }
 
 /**
@@ -512,7 +555,7 @@ function wireResumePrompt(container) {
  * there is no silent fallback to a baseline policy.
  */
 async function profileStore() {
-  const [{ ProfileStore, IndexedDbBackend }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=c4e7aaac019e'), import('../evolution/identity.mjs?v=c4e7aaac019e')]);
+  const [{ ProfileStore, IndexedDbBackend }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=408ebfe25d7a'), import('../evolution/identity.mjs?v=408ebfe25d7a')]);
   return new ProfileStore(new IndexedDbBackend(), { identity: LAB_IDENTITY });
 }
 async function startAgentProfileMatch(agentProfileId, container) {
@@ -536,7 +579,7 @@ async function recordAgentExperience(session, snapshot) {
   let notice;
   for (const entry of session.decisionJournal) if (entry.source === 'ai' && entry.family) families[entry.family] = (families[entry.family] ?? 0) + 1;
   try {
-    const { buildExperienceRecord } = await import('../evolution/profile-science.mjs?v=c4e7aaac019e');
+    const { buildExperienceRecord } = await import('../evolution/profile-science.mjs?v=408ebfe25d7a');
     const record = buildExperienceRecord({ encounterId: session.sessionId, snapshot: agent, agentSeat: aiSeat, rulesProfileId: session.setup.profileId,
       outcome: { winner: snapshot.match.winner ?? null, terminationReason: snapshot.match.terminationReason ?? null, fullTurns: snapshot.match.fullTurnSequence ?? null },
       observations: { agentDecisions: session.decisionJournal.filter(e => e.source === 'ai').length, agentFamilyCounts: families } });
@@ -571,6 +614,13 @@ async function startNewMatch(setup, container) {
     state.guidanceMode = GuidanceMode.GUIDED;
     state.guidancePrefLoaded = true; // prevent handlePlayRoute from overriding
   }
+  // First Contact: attach the controller created by startFirstContact.
+  if (setup.tutorial === 'first-contact') {
+    state.fcController = state._pendingFcController ?? new FirstContactController({ scenario: FIRST_CONTACT_SCENARIO });
+    delete state._pendingFcController;
+    state.guidanceMode = GuidanceMode.GUIDED;
+    state.guidancePrefLoaded = true;
+  }
   container.innerHTML = '<div class="play-loading">Creating match...</div>';
   try {
     state.session = await createSession(setup);
@@ -581,7 +631,7 @@ async function startNewMatch(setup, container) {
     try {
       const achRuntime = getAchievementRuntime();
       await achRuntime.init();
-      achRuntime.startMatch(state.sessionId, setup.humanPlayerId, { isTutorial: false });
+      achRuntime.startMatch(state.sessionId, setup.humanPlayerId, { isTutorial: setup.tutorial === 'first-contact' });
       const presenter = getAchievementPresenter();
       achRuntime.onUnlock((unlocks) => presenter.queueUnlocks(unlocks));
       state.session.setAchievementConsumer((events, snapshot) => {
@@ -589,6 +639,10 @@ async function startNewMatch(setup, container) {
         // Academy Phase 2: forward events to the academy controller for live objective detection
         if (state.academyController && state.academyPhase === AcademyPhase.MATCH) {
           try { state.academyController.onSessionEvents(events, snapshot); } catch { /* ignore */ }
+        }
+        // First Contact: the coach observes the same authoritative events
+        if (state.fcController) {
+          try { state.fcController.onSessionEvents(events, snapshot); } catch { /* ignore */ }
         }
       });
     } catch (err) { console.warn('[play-app] achievement tracking init failed:', err?.message ?? err); }
@@ -626,11 +680,25 @@ async function continueMatch(saveId, container) {
     state.tabId = state.tabId || generateTabId();
     state.chatMessages = [];
     state.lastEventCount = 0;
+    // First Contact resume: rebuild the lesson cursor from the replayed
+    // command log. Command events carry every declaration the lessons
+    // predicate on; the coach picks up where the match is, not where
+    // the player left off reading — which is what the "learn by playing"
+    // model wants anyway.
+    if (save.tutorial === 'first-contact') {
+      state.fcController = new FirstContactController({ scenario: FIRST_CONTACT_SCENARIO });
+      state.fcController.acked.welcome = true;
+      state.guidanceMode = GuidanceMode.GUIDED;
+      const priorEvents = (state.session.commandLog ?? []).flatMap((entry) => entry.events ?? []);
+      if (priorEvents.length) {
+        try { state.fcController.onSessionEvents(priorEvents, null); } catch { /* cursor rebuild is best-effort */ }
+      }
+    }
     // Resume achievement tracking for restored match
     try {
       const achRuntime = getAchievementRuntime();
       await achRuntime.init();
-      achRuntime.startMatch(state.sessionId, save.setup?.humanPlayerId ?? 'P1', { isTutorial: false });
+      achRuntime.startMatch(state.sessionId, save.setup?.humanPlayerId ?? 'P1', { isTutorial: save.tutorial === 'first-contact' });
       const presenter = getAchievementPresenter();
       achRuntime.onUnlock((unlocks) => presenter.queueUnlocks(unlocks));
       state.session.setAchievementConsumer((events, snapshot) => {
@@ -638,6 +706,9 @@ async function continueMatch(saveId, container) {
         // Academy Phase 2: forward events to the academy controller for live objective detection
         if (state.academyController && state.academyPhase === AcademyPhase.MATCH) {
           try { state.academyController.onSessionEvents(events, snapshot); } catch { /* ignore */ }
+        }
+        if (state.fcController) {
+          try { state.fcController.onSessionEvents(events, snapshot); } catch { /* ignore */ }
         }
       });
     } catch (err) { console.warn('[play-app] achievement tracking init failed:', err?.message ?? err); }
@@ -794,17 +865,35 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
   // Presentation-only advice reuses the shipped Intrilex scoring module.
   // It receives validated visible cards, never the session's raw state/vault.
   const [{ rankPolicyActionsWithDecomposition }, { mountGameTable }] = await Promise.all([
-    import('../policy-scoring.js?v=c4e7aaac019e'), import('../client/mount.tsx?v=c4e7aaac019e'),
+    import('../policy-scoring.js?v=408ebfe25d7a'), import('../client/mount.tsx?v=408ebfe25d7a'),
   ]);
   // The shell replaces play-root on hash navigation. Never publish into a
   // detached root or finish an async mount for a session that has been replaced.
   if (container.isConnected === false || state.session !== session) return;
   if (state.tacticalMount && tacticalContainer !== container) disposeTacticalMount();
   snapshot = session?.getSnapshot() ?? snapshot;
+  // First Contact: let the coach see the current decision frame before
+  // its HTML is built — activation (e.g. a response window opening) and
+  // SHOW ME both read real legal actions from this snapshot.
+  try { state.fcController?.syncFrame(snapshot); } catch { /* coach sync is non-fatal */ }
+  if (state.fcController && !state.fcController._rankSuggestions) {
+    // Adapt the policy ranker to the controller's (actions) => action[]
+    // contract — recommendation only, the engine still owns legality.
+    state.fcController._rankSuggestions = (actions) =>
+      (rankPolicyActionsWithDecomposition('score-rush', actions, {}) ?? []).map((r) => r.action);
+  }
+  const fc = state.fcController;
   const teaching = {
-    panelHtml: state.academyController && state.academyPhase === AcademyPhase.MATCH ? state.academyController.getPanelHtml() : '',
-    coachmarkHtml: state.academyController && state.academyPhase === AcademyPhase.MATCH ? state.academyController.getCoachmarkHtml() : '',
+    panelHtml: fc ? fc.getPanelHtml()
+      : state.academyController && state.academyPhase === AcademyPhase.MATCH ? state.academyController.getPanelHtml() : '',
+    coachmarkHtml: fc ? fc.getCoachmarkHtml()
+      : state.academyController && state.academyPhase === AcademyPhase.MATCH ? state.academyController.getCoachmarkHtml() : '',
     onAction(action) {
+      if (state.fcController) {
+        try { state.fcController.onCoachAction(action); } catch { /* non-fatal */ }
+        void renderActiveMatch(container);
+        return;
+      }
       const controller = state.academyController;
       if (!controller) return;
       if (action === 'academy-toggle-panel') controller.togglePanel();
@@ -824,6 +913,11 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
     if (!session) return { accepted: false, error: 'No active session' };
     try {
       const result = await session.submitHumanAction(intent);
+      // First Contact: rejections are teaching moments — hand the
+      // structured result to the coach so WHY? can explain them.
+      if (!result.accepted && state.fcController) {
+        try { state.fcController.onHumanRejection(result); } catch { /* non-fatal */ }
+      }
       // After a successful submit, re-render so the tactical store
       // receives the new session snapshot and resets its
       // acceptedBoundary flag. Without this, the store's select()
@@ -892,6 +986,10 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
         legacy: new URLSearchParams(location.search).get('board') === 'classic',
         onExit: () => {
           if (isNetworkMatch) showForfeitConfirmation(container, state);
+          else if (state.fcController) {
+            try { state.fcController.abandon(); } catch { /* non-fatal */ }
+            location.hash = '#/play/new';
+          }
           else { location.hash = state.academyLessonId ? '#/play/academy' : '#/play/new'; }
         },
       });
@@ -902,7 +1000,7 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
     positionAcademyCoachmarks(container);
     bindAcademyCoachmarkDismiss(container);
     if (getOpenIdentity() && state.advancedRulesCardId) {
-      const { refreshCurrentMatch } = await import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=c4e7aaac019e');
+      const { refreshCurrentMatch } = await import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=408ebfe25d7a');
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     }
   } catch (error) {
@@ -1043,6 +1141,17 @@ async function renderActiveMatch(container) {
       }
       // Stash the recap for the terminal renderer to render via a button
       state._academyRecap = recap;
+    } else if (state.fcController) {
+      // First Contact: produce the recap once; the terminal renderer
+      // shows it inline above the action row.
+      state._fcRecap = state.fcController.onMatchEnd(snapshot);
+      // First-run funnel: First Contact IS the tutorial step.
+      completeStep(FunnelStep.TUTORIAL_STARTED);
+      advanceToStep(FunnelStep.TUTORIAL_COMPLETE);
+      if (state._fcRecap?.won) {
+        completeStep(FunnelStep.FIRST_AI_WIN);
+        advanceToStep(FunnelStep.ACCOUNT_PROMPT);
+      }
     } else if (state.academyLessonId) {
       // Legacy fallback: no controller (shouldn't happen, but keep behavior)
       const humanId = snapshot.humanPlayerId ?? 'P1';
@@ -1156,6 +1265,8 @@ async function renderActiveMatch(container) {
       : '',
     // Academy: recap data so the terminal screen can show a "View Recap" button
     academyRecap: state._academyRecap ?? null,
+    // First Contact: inline recap block on the terminal screen
+    fcRecapHtml: state._fcRecap ? renderFcRecapBlock(state._fcRecap) : '',
     // Gameplay skin (Light/Dark/CosmoTech/Corrupture) — read synchronously
     // so the first paint carries the correct data-gameplay-skin attribute.
     gameplaySkin: getGameplaySkin(),
@@ -1234,7 +1345,7 @@ async function renderActiveMatch(container) {
   // inspected card is no longer inspectable, the controller sanitizes
   // (closes) the view to avoid leaking stale information.
   if (getOpenIdentity() && state.advancedRulesCardId) {
-    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=c4e7aaac019e').then(({ refreshCurrentMatch }) => {
+    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=408ebfe25d7a').then(({ refreshCurrentMatch }) => {
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     });
   }
@@ -1369,7 +1480,7 @@ function bindReplayLibraryEvents(container) {
       } else if (action === 'delete-replay') {
         const confirmed = await showConfirmDialog('Delete replay', `Delete replay ${replayId}? This cannot be undone.`);
         if (confirmed) {
-          const { deleteReplay } = await import('./persistence.js?v=c4e7aaac019e');
+          const { deleteReplay } = await import('./persistence.js?v=408ebfe25d7a');
           await deleteReplay(replayId);
           await renderReplays(container);
         }
@@ -1773,7 +1884,7 @@ function bindNetworkWaitingEvents(container) {
  * Render the matchmaking queue flow — joins the queue and waits for pairing.
  */
 async function renderNetworkQueueFlow(container) {
-  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=c4e7aaac019e');
+  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=408ebfe25d7a');
   const serverUrl = getNetworkServerUrl();
   if (!serverUrl) {
     container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
@@ -1990,7 +2101,7 @@ function fetchSpectatableList(serverUrl, listSpectatable) {
  * Match ID form remains available as a fallback and for private shares.
  */
 async function renderNetworkSpectateFlow(container) {
-  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=c4e7aaac019e');
+  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=408ebfe25d7a');
 
   // Live-list state for the discovery section
   let liveState = { liveMatches: null, liveLoading: false, liveError: null };

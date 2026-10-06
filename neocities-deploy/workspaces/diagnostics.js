@@ -2,10 +2,10 @@
 // workspaces/diagnostics.js — /diagnostics workspace
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, short, definitionList } from '../state.js?v=c4e7aaac019e';
-import { rerender } from '../rerender.js?v=c4e7aaac019e';
-import { loadTraceIndex, loadTraceData } from '../data-loader.js?v=c4e7aaac019e';
-import { renderPolicyArchetypes, renderTempoCurve, renderEndgameAnalysis, renderActionDistribution } from './observatory.js?v=c4e7aaac019e';
+import { state, app, esc, pct, short, definitionList } from '../state.js?v=408ebfe25d7a';
+import { rerender } from '../rerender.js?v=408ebfe25d7a';
+import { loadTraceIndex, loadTraceData } from '../data-loader.js?v=408ebfe25d7a';
+import { renderPolicyArchetypes, renderTempoCurve, renderEndgameAnalysis, renderActionDistribution } from './observatory.js?v=408ebfe25d7a';
 
 export function renderDiagnostics() {
   const summaries = state.observatory?.summaries ?? [];
@@ -30,7 +30,7 @@ export function renderDiagnostics() {
     { id: 'actions', label: 'Actions' },
   ];
   const tabHtml = `<nav class="ix-section-tabs" data-testid="diag-section-tabs" role="tablist">${tabs.map(t => `<button role="tab" data-section-tab="${t.id}" aria-selected="${t.id === activeSection}" aria-controls="diag-section-${t.id}" id="diag-tab-${t.id}" class="ix-section-tab ${t.id === activeSection ? 'active' : ''}">${esc(t.label)}</button>`).join('')}</nav>`;
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Policy Diagnostics</h2><p>Decision margins, self-counter rates, response conservation, timing, and win rates</p></div><div class="toolbar"><select id="diag-baseline">${policies.map(p => `<option value="${esc(p)}" ${p === baselineId ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select><span>vs</span><select id="diag-candidate">${policies.map(p => `<option value="${esc(p)}" ${p === candidateId ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select><button id="diag-run" class="primary-button">Run diagnostics</button></div></div>${tabHtml}<div class="panel-body" id="diag-output" role="tabpanel" aria-labelledby="diag-tab-diagnostics" id="diag-section-diagnostics" ${activeSection !== 'diagnostics' ? 'hidden' : ''}><div class="notice">Select two policies and click <strong>Run diagnostics</strong>. Diagnostics uses retained decision traces as evidence.</div></div></section><div role="tabpanel" aria-labelledby="diag-tab-archetypes" id="diag-section-archetypes" ${activeSection !== 'archetypes' ? 'hidden' : ''}>${archetypeHtml}</div><div role="tabpanel" aria-labelledby="diag-tab-tempo" id="diag-section-tempo" ${activeSection !== 'tempo' ? 'hidden' : ''}>${tempoHtml}</div><div role="tabpanel" aria-labelledby="diag-tab-endgame" id="diag-section-endgame" ${activeSection !== 'endgame' ? 'hidden' : ''}>${endgameHtml}</div><div role="tabpanel" aria-labelledby="diag-tab-actions" id="diag-section-actions" ${activeSection !== 'actions' ? 'hidden' : ''}>${actionsHtml}</div>`;
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Policy Diagnostics</h2><p>Decision margins, self-counter rates, response conservation, timing, and win rates</p></div><div class="toolbar"><select id="diag-baseline">${policies.map(p => `<option value="${esc(p)}" ${p === baselineId ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select><span>vs</span><select id="diag-candidate">${policies.map(p => `<option value="${esc(p)}" ${p === candidateId ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select><button id="diag-run" class="primary-button">Run diagnostics</button></div></div>${tabHtml}<div class="panel-body" role="tabpanel" aria-labelledby="diag-tab-diagnostics" id="diag-section-diagnostics" ${activeSection !== 'diagnostics' ? 'hidden' : ''}><div id="diag-output"><div class="notice">Select two policies and click <strong>Run diagnostics</strong>. Diagnostics uses retained decision traces as evidence.</div></div></div></section><div role="tabpanel" aria-labelledby="diag-tab-archetypes" id="diag-section-archetypes" ${activeSection !== 'archetypes' ? 'hidden' : ''}>${archetypeHtml}</div><div role="tabpanel" aria-labelledby="diag-tab-tempo" id="diag-section-tempo" ${activeSection !== 'tempo' ? 'hidden' : ''}>${tempoHtml}</div><div role="tabpanel" aria-labelledby="diag-tab-endgame" id="diag-section-endgame" ${activeSection !== 'endgame' ? 'hidden' : ''}>${endgameHtml}</div><div role="tabpanel" aria-labelledby="diag-tab-actions" id="diag-section-actions" ${activeSection !== 'actions' ? 'hidden' : ''}>${actionsHtml}</div>`;
   document.querySelector('#diag-baseline').onchange = e => { state.diagBaseline = e.target.value; };
   document.querySelector('#diag-candidate').onchange = e => { state.diagCandidate = e.target.value; };
   document.querySelector('#diag-run').onclick = () => {
@@ -111,7 +111,7 @@ export async function runDiagnostics(baselineId, candidateId) {
 function renderDiagOutput({ baseline, candidate }) {
   const out = document.querySelector('#diag-output');
   if (!out) return;
-  out.innerHTML = `<div class="grid two"><div>${renderDiagResult(baseline)}</div><div>${renderDiagResult(candidate)}</div></div>${renderDiagComparison(baseline, candidate)}`;
+  out.innerHTML = `<div class="grid two"><div class="ct-well diag-result">${renderDiagResult(baseline)}</div><div class="ct-well diag-result">${renderDiagResult(candidate)}</div></div>${renderDiagComparison(baseline, candidate)}`;
 }
 
 function renderDiagResult(d) {
@@ -136,7 +136,7 @@ function renderDiagComparison(base, cand) {
   const wrDelta = (cand.metrics?.winRate ?? 0) - (base.metrics?.winRate ?? 0);
   const scDelta = (cand.metrics?.selfCounterRate ?? 0) - (base.metrics?.selfCounterRate ?? 0);
   const dmDelta = (cand.metrics?.decisionMarginMean ?? 0) - (base.metrics?.decisionMarginMean ?? 0);
-  return `<section class="panel" style="margin-top:16px"><div class="panel-header"><div><h2>Policy comparison</h2><p>${esc(base.policyId)} vs ${esc(cand.policyId)}</p></div></div><div class="grid four">${[['Win rate Δ', wrDelta, 'percent'], ['Self-counter Δ', scDelta, 'percent'], ['Margin Δ', dmDelta, 'number']].map(([label, v, type]) => `<div class="metric-card"><small>${esc(label)}</small><div class="metric-value ${v >= 0 ? 'positive' : 'negative'}">${type === 'percent' ? `${(v * 100).toFixed(1)} pp` : v.toFixed(2)}</div></div>`).join('')}</div><div class="notice warning"><strong>Interpretation:</strong> Policy comparison is descriptive. Win-rate differences require uncertainty quantification and multiple opponents before promotion.</div></section>`;
+  return `<section class="panel diag-comparison"><div class="panel-header"><div><h2>Policy comparison</h2><p>${esc(base.policyId)} vs ${esc(cand.policyId)}</p></div></div><div class="panel-body"><div class="grid four">${[['Win rate Δ', wrDelta, 'percent'], ['Self-counter Δ', scDelta, 'percent'], ['Margin Δ', dmDelta, 'number']].map(([label, v, type]) => `<div class="metric-card"><small>${esc(label)}</small><div class="metric-value ${v >= 0 ? 'positive' : 'negative'}">${type === 'percent' ? `${(v * 100).toFixed(1)} pp` : v.toFixed(2)}</div></div>`).join('')}</div><div class="notice warning"><strong>Interpretation:</strong> Policy comparison is descriptive. Win-rate differences require uncertainty quantification and multiple opponents before promotion.</div></div></section>`;
 }
 
 // ── Chart "View as table" toggle helper (Phase 6C) ────────────────

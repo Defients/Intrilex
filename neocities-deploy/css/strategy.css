@@ -50,7 +50,7 @@
 .si-source code,.si-study code { overflow-wrap:anywhere; }
 .si-study,.si-source { border-top:1px solid var(--si-line); padding:14px 0; }
 .si-import input { font-size:.74rem; max-width:240px; }
-.observatory-shell:has(.si-workspace) .experiment-rail,
+.observatory-shell:has(.si-workspace) #experiment-button,
 .observatory-shell:has(.si-workspace) .authority-stamp,
 .observatory-shell:has(.si-workspace) .global-filter-bar,
 .observatory-shell:has(.si-workspace) .global-actions .compact-control { display:none; }

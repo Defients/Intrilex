@@ -4,6 +4,8 @@
    ═══════════════════════════════════════════════════════════════════ */
 @font-face{font-family:'Pepsi';src:url('/assets/Pepsi.ttf') format('truetype');font-weight:normal;font-style:normal;font-display:swap}
 @font-face{font-family:'Prototype';src:url('/assets/Prototype.ttf') format('truetype');font-weight:normal;font-style:normal;font-display:swap}
+@font-face{font-family:'Creature';src:url('/assets/Creature.ttf') format('truetype');font-weight:normal;font-style:normal;font-display:swap}
+@font-face{font-family:'ProtoSym';src:url('/assets/protosym_enhanced.ttf') format('truetype');font-weight:normal;font-style:normal;font-display:swap}
 .card-renderer-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:22px 24px;margin-bottom:16px;border:1px solid rgba(241,189,93,.25);border-radius:18px;background:radial-gradient(circle at 88% 18%,rgba(167,139,250,.14),transparent 35%),linear-gradient(135deg,rgba(30,25,22,.92),rgba(12,20,29,.95));box-shadow:var(--shadow-md),inset 0 1px 0 rgba(255,255,255,.04)}
 .card-renderer-hero h2{margin:2px 0 5px;font-family:Georgia,"Times New Roman",serif;font-size:clamp(24px,4vw,38px);font-weight:700;letter-spacing:.02em;color:#f7e4ba}
 .card-renderer-hero p{margin:0;color:var(--muted-bright);max-width:760px}
@@ -375,7 +377,7 @@ input::placeholder{color:var(--faint);opacity:.85}
 
 /* ── Play panel typography ── */
 .landing-play-panel .landing-eyebrow{font-size:12px;letter-spacing:.3em;color:var(--cyan);margin:0 0 16px;font-weight:700;text-transform:uppercase}
-.landing-play-panel .landing-title{font-family:'Pepsi',sans-serif;font-size:clamp(44px,5.6vw,76px);font-weight:800;letter-spacing:.01em;margin:0 0 16px;line-height:1;background:linear-gradient(180deg,var(--text-bright) 0%,#c8dae6 60%,var(--muted) 130%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 60px rgba(90,215,232,.1)}
+.landing-play-panel .landing-title{font-family:'ProtoSym','Pepsi',sans-serif;font-size:clamp(44px,5.6vw,76px);font-weight:800;letter-spacing:.01em;margin:0 0 16px;line-height:1;background:linear-gradient(180deg,var(--text-bright) 0%,#c8dae6 60%,var(--muted) 130%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 60px rgba(90,215,232,.1)}
 .landing-play-panel .landing-tagline{font-size:clamp(15px,1.6vw,18px);line-height:1.6;color:var(--muted-bright);margin:0 0 32px;max-width:560px}
 
 /* ── Mode selection ── */

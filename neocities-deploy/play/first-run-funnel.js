@@ -161,16 +161,16 @@ export function getNextAction() {
     [FunnelStep.LANDING]: {
       step: FunnelStep.LANDING,
       title: 'Learn the Game',
-      description: 'Start with the Academy tutorial to learn the basics of Intrilex.',
-      cta: 'Start Tutorial',
-      route: '#/play/academy',
+      description: 'Jump into First Contact — a real match that teaches Intrilex as you play.',
+      cta: 'Learn by Playing',
+      route: '#/play/first-contact',
     },
     [FunnelStep.TUTORIAL_STARTED]: {
       step: FunnelStep.TUTORIAL_STARTED,
-      title: 'Finish the Tutorial',
-      description: 'Complete all Academy lessons to master the fundamentals.',
-      cta: 'Continue Tutorial',
-      route: '#/play/academy',
+      title: 'Finish First Contact',
+      description: 'Finish your guided match — the Academy is there for deeper lessons after.',
+      cta: 'Continue',
+      route: '#/play/first-contact',
     },
     [FunnelStep.TUTORIAL_COMPLETE]: {
       step: FunnelStep.TUTORIAL_COMPLETE,

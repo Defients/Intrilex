@@ -86,7 +86,7 @@ const STAGES = [
   ['analytics-ai-ui', 'node', ['--test', 'test/analytics-ai-ui.test.mjs']],
   ['browser-analytics-coverage', 'node', ['--test', 'test/browser-analytics-coverage.test.mjs']],
   ['analytics-measurement-integrity', 'node', ['--test', 'test/measurement-integrity.test.mjs']],
-  ['observatory', 'node', ['--test', 'test/observatory.test.mjs', 'test/observatory-hardening.test.mjs', 'test/observatory-completion.test.mjs', 'test/observatory-integrity.test.mjs', 'test/observatory-choice-support.test.mjs']],
+  ['observatory', 'node', ['--test', 'test/observatory.test.mjs', 'test/observatory-hardening.test.mjs', 'test/observatory-completion.test.mjs', 'test/observatory-integrity.test.mjs', 'test/observatory-choice-support.test.mjs', 'test/observatory-ux.test.mjs']],
   ['visual', 'node', ['--test', 'test/visual.test.mjs']],
   ['card-face-renderer', 'node', ['--test', 'test/card-face-renderer.test.mjs']],
   ['advanced-card-rules', 'node', ['--test', 'test/advanced-card-rules.test.mjs']],
@@ -213,6 +213,7 @@ const STAGES = [
   ['v0.28-pvp-experience', 'node', ['--test', 'test/v0.28-pvp-experience.test.mjs']],
   ['academy', 'node', ['--test', 'test/academy.test.mjs']],
   ['guided-exhibition', 'node', ['--test', 'test/guided-exhibition.test.mjs']],
+  ['first-contact', 'node', ['--test', 'test/first-contact.test.mjs']],
   ['puzzle-ladder', 'node', ['--test', 'test/puzzle-ladder.test.mjs']],
   ['gameplay-skin', 'node', ['--test', 'test/gameplay-skin.test.mjs']],
   ['social-activation', 'node', ['--test', 'test/social-activation.test.mjs']],
@@ -302,7 +303,7 @@ const STAGES = [
   // Divergence fixes: regression tests for all 10 implementation divergences
   ['engine-divergence-fixes', 'node', ['--test', 'test/engine-divergence-fixes.test.mjs']],
   ['evolution-lab', 'node', ['--test', 'test/evolution-lab.test.mjs', 'test/evolution-foundation.test.mjs', 'test/evolution-research.test.mjs', 'test/evolution-training.test.mjs', 'test/evolution-completion.test.mjs', 'test/evolution-cockpit.test.mjs', 'test/evolution-analytics.test.mjs', 'test/tactical-policies.test.mjs', 'test/policy-action-coverage.test.mjs', 'test/strategic-research.test.mjs', 'test/batch-matrix.test.mjs']],
-  ['strategy-intelligence', 'node', ['--test', 'test/strategy-intelligence.test.mjs', 'test/strategy-information.test.mjs', 'test/strategy-ai-interpreter.test.mjs', 'test/strategy-v121-correction.test.mjs', 'test/strategy-v3-synthesis.test.mjs', 'test/analysis-ingestion.test.mjs']],
+  ['strategy-intelligence', 'node', ['--test', 'test/strategy-intelligence.test.mjs', 'test/strategy-information.test.mjs', 'test/strategy-ai-interpreter.test.mjs', 'test/strategy-v121-correction.test.mjs', 'test/strategy-v3-synthesis.test.mjs', 'test/analysis-ingestion.test.mjs', 'test/analysis-dossier.test.mjs']],
   ['agent-profiles', 'node', ['--test', 'test/agent-profile-contracts.test.mjs', 'test/agent-profile-store.test.mjs', 'test/agent-profile-science.test.mjs', 'test/agent-profile-consumer.test.mjs', 'test/agent-profile-arena.test.mjs']],
 ];
 

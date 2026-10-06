@@ -421,3 +421,22 @@ function inspectReplay(replayId) {
   worker.postMessage({type:'inspect-evolution-replay',replayId,artifact:artifactEnvelope(run())});
 }
 export function cleanupEvolutionLab() { ++startRequest; ++rosterRequest; starting=false; window.removeEventListener('focus',refreshProfiles); view.cockpit?.cleanup();view.cockpit=null;cleanupResearchPanel(); view.mounted=false;view.matrixAbort?.abort(); if (status() === 'RUNNING') { captureElapsed(); view.session.pause(); persist(); } release(); }
+
+/** Read-only snapshot of the live lab surface for the Analysis Dossier export.
+ * Returns raw references — the dossier builder projects and bounds them; it
+ * never mutates run state. Persisted IndexedDB contents are collected
+ * separately through the EvolutionStore/StrategyStore read APIs. */
+export function liveLabSnapshot() {
+  const research = cockpitResearch.getState();
+  return {
+    identity: LAB_IDENTITY,
+    liveRun: run() ?? null,
+    liveStatus: status(),
+    liveAggregator: { ...view.agg },
+    liveArchiveRef: view.archive ? { runId: view.archive.runId, historical: true } : null,
+    analyticsFilters: { ...view.analytics },
+    liveMatrix: view.batch.lab ?? null,
+    researchProject: research.project ?? null,
+    researchArchive: research.archive ?? null,
+  };
+}

@@ -69,6 +69,106 @@ Rules:
 - If evidence is insufficient, prefer "INSUFFICIENT_EVIDENCE" / "unknown" over a confident diagnosis.
 - Include alternativeExplanations for every major finding.`;
 
+// Shared building blocks for ANALYSIS_RESPONSE_SCHEMA. The `value`
+// evidence field accepts string|number, so it is left unconstrained.
+const EVIDENCE_SCHEMA = {
+  type: 'object',
+  required: ['metric', 'sourceId'],
+  properties: {
+    metric: { type: 'string' },
+    value: {},
+    comparison: { type: 'string' },
+    sourceId: { type: 'string' }
+  }
+};
+const POWER_ENTRY_SCHEMA = {
+  type: 'object',
+  required: ['entity', 'confidence', 'verdict'],
+  properties: {
+    entity: { type: 'string' },
+    confidence: { type: 'number', minimum: 0, maximum: 1 },
+    evidenceFor: { type: 'array', items: { type: 'string' } },
+    evidenceAgainst: { type: 'array', items: { type: 'string' } },
+    verdict: { type: 'string' }
+  }
+};
+const STRING_ARRAY = { type: 'array', items: { type: 'string' } };
+
+/**
+ * JSON Schema matching the contract above, sent as the Ollama `format`
+ * field so generation is constrained to parseable, correctly shaped
+ * output instead of relying on prompt discipline alone. Mirrors what
+ * validateAnalysisResponse treats as errors (not just warnings).
+ */
+export const ANALYSIS_RESPONSE_SCHEMA = Object.freeze({
+  type: 'object',
+  required: ['summary', 'overallConfidence', 'healthAssessment'],
+  properties: {
+    summary: { type: 'string' },
+    overallConfidence: { type: 'number', minimum: 0, maximum: 1 },
+    healthAssessment: {
+      type: 'object',
+      required: ['status'],
+      properties: {
+        status: { type: 'string', enum: ENUMS.healthStatus },
+        explanation: { type: 'string' }
+      }
+    },
+    keyFindings: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['title', 'classification', 'severity', 'confidence', 'observation', 'interpretation', 'recommendedAction'],
+        properties: {
+          title: { type: 'string' },
+          classification: { type: 'string', enum: ENUMS.classification },
+          severity: { type: 'string', enum: ENUMS.severity },
+          confidence: { type: 'number', minimum: 0, maximum: 1 },
+          observation: { type: 'string' },
+          evidence: { type: 'array', items: EVIDENCE_SCHEMA },
+          interpretation: { type: 'string' },
+          alternativeExplanations: STRING_ARRAY,
+          recommendedAction: { type: 'string' }
+        }
+      }
+    },
+    potentiallyOverpowered: { type: 'array', items: POWER_ENTRY_SCHEMA },
+    potentiallyUnderpowered: { type: 'array', items: POWER_ENTRY_SCHEMA },
+    anomalies: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['metric', 'observed', 'classification', 'confidence'],
+        properties: {
+          metric: { type: 'string' },
+          observed: { type: 'string' },
+          expectedOrReference: { type: 'string' },
+          classification: { type: 'string', enum: ENUMS.anomalyClassification },
+          confidence: { type: 'number', minimum: 0, maximum: 1 },
+          possibleCauses: STRING_ARRAY,
+          verificationSteps: STRING_ARRAY
+        }
+      }
+    },
+    dataLimitations: STRING_ARRAY,
+    recommendedExperiments: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['hypothesis', 'configuration', 'supportingOutcome', 'rejectingOutcome'],
+        properties: {
+          hypothesis: { type: 'string' },
+          configuration: { type: 'string' },
+          metrics: STRING_ARRAY,
+          supportingOutcome: { type: 'string' },
+          rejectingOutcome: { type: 'string' }
+        }
+      }
+    },
+    followUpQuestions: STRING_ARRAY
+  }
+});
+
 /**
  * The minimal empty response, used as a fallback when repair fails.
  */

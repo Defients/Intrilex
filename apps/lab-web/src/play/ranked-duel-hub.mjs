@@ -73,6 +73,7 @@ const SEAT_OPTIONS = Object.freeze([
 
 // ── Secondary modes — discoverable, deliberately subordinate ──
 const QUICK_MODES = Object.freeze([
+  { id: 'first-contact', href: '#/play/first-contact', icon: '🛰', title: 'First Contact', blurb: 'New? Start here — learn by playing', testId: 'first-contact-entry-link' },
   { id: 'academy', href: '#/play/academy', icon: '🎓', title: 'Academy', blurb: 'Guided learning', testId: 'academy-entry-link' },
   { id: 'puzzles', href: '#/puzzles', icon: '🧩', title: 'Puzzles', blurb: 'Tactical challenges', testId: 'puzzles-entry-link' },
   { id: 'guided', href: '#/play/guided', icon: '🎭', title: 'Guided Exhibition', blurb: 'Scripted match with commentary', testId: 'guided-entry-link' },

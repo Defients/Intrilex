@@ -4,9 +4,10 @@
 // Action IDs resolve through a private command vault.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from '../engine/browser-entry.js?v=c4e7aaac019e';
-import { classifyDecisionKind, presentAction } from './action-presenter.js?v=c4e7aaac019e';
-import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js?v=c4e7aaac019e';
+import { hashCanonical, deriveSecuredPoints } from '../engine/browser-entry.js?v=408ebfe25d7a';
+import { classifyDecisionKind, presentAction } from './action-presenter.js?v=408ebfe25d7a';
+import { matchIntent } from './guided-exhibition/guided-runtime.mjs?v=408ebfe25d7a';
+import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js?v=408ebfe25d7a';
 import {
   PRODUCT_VERSION,
   PLAYER_RUNTIME_VERSION,
@@ -18,9 +19,9 @@ import {
   validateSaveEnvelope,
   canMigrateSave,
   migrateSave,
-} from './save-integrity.js?v=c4e7aaac019e';
-import { createPolicyRng, computePlayerStats } from './session-utils.js?v=c4e7aaac019e';
-import { captureLocalDecision, captureLocalOutcome } from '../strategy/strategy-player.js?v=c4e7aaac019e';
+} from './save-integrity.js?v=408ebfe25d7a';
+import { createPolicyRng, computePlayerStats } from './session-utils.js?v=408ebfe25d7a';
+import { captureLocalDecision, captureLocalOutcome } from '../strategy/strategy-player.js?v=408ebfe25d7a';
 
 // Re-export for backward compatibility (other modules import from play-controller)
 export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope, canMigrateSave, migrateSave };
@@ -42,7 +43,7 @@ export const SessionState = Object.freeze({
 let _engineModule = null;
 async function engine() {
   if (!_engineModule) {
-    _engineModule = await import('../engine/browser-entry.js?v=c4e7aaac019e');
+    _engineModule = await import('../engine/browser-entry.js?v=408ebfe25d7a');
   }
   return _engineModule;
 }
@@ -50,7 +51,7 @@ async function engine() {
 let _autonomyModule = null;
 async function autonomy() {
   if (!_autonomyModule) {
-    _autonomyModule = await import('../autonomy-runtime.js?v=c4e7aaac019e');
+    _autonomyModule = await import('../autonomy-runtime.js?v=408ebfe25d7a');
   }
   return _autonomyModule;
 }
@@ -61,7 +62,7 @@ async function autonomy() {
 export const AGENT_POLICY_ID = 'weighted-heuristic-v1';
 async function admitAgentSnapshot(setup) {
   if (!setup?.agentSnapshot) return null;
-  const [{ validateSnapshot }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=c4e7aaac019e'), import('../evolution/identity.mjs?v=c4e7aaac019e')]);
+  const [{ validateSnapshot }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=408ebfe25d7a'), import('../evolution/identity.mjs?v=408ebfe25d7a')]);
   const fail = code => { throw Object.assign(new Error(code), { reasonCode: code }); };
   const snapshot = validateSnapshot(setup.agentSnapshot);
   if (setup.aiPolicyId !== AGENT_POLICY_ID || snapshot.policyId !== AGENT_POLICY_ID) fail('AGENT_POLICY_MISMATCH');
@@ -132,6 +133,40 @@ export class PlaySession {
   }
 
   /**
+   * Select an AI action for the current decision. When the match setup
+   * declares `opponentScript` (teaching scenarios such as First Contact),
+   * each AI decision first tries the script entries in order: the first
+   * entry within its `uses` budget and `minFullTurn` gate whose intent
+   * matches an engine-legal action wins. The script can only ever choose
+   * real legal actions — anything unmatched falls through to the
+   * configured policy, so a scripted opponent can never make an illegal
+   * or fabricated move.
+   *
+   * This overlay runs identically during save-restore replay, which is
+   * what keeps restored scripted matches deterministic.
+   */
+  _selectAIAction(auto, policyId, context) {
+    const script = this.setup?.opponentScript;
+    if (Array.isArray(script) && script.length) {
+      if (!this._scriptUsage) this._scriptUsage = new Map();
+      const fullTurn = this.state?.fullTurnSequence ?? 0;
+      for (let index = 0; index < script.length; index += 1) {
+        const entry = script[index];
+        if (!entry?.intent) continue;
+        if (fullTurn < (entry.minFullTurn ?? 0)) continue;
+        const used = this._scriptUsage.get(index) ?? 0;
+        if (used >= (entry.uses ?? 1)) continue;
+        const match = matchIntent(entry.intent, context.legalActions, this.state);
+        if (match) {
+          this._scriptUsage.set(index, used + 1);
+          return match;
+        }
+      }
+    }
+    return auto.choosePolicy(policyId, context);
+  }
+
+  /**
    * Initialize a new session from setup.
    */
   async init(setup) {
@@ -145,7 +180,11 @@ export class PlaySession {
 
     this.engine = new engineMod.IntrilexEngine();
 
-    // Create initial state
+    // Create initial state. `predeterminedIdentities` is the scenario
+    // contract shared with the autonomy facade: a 54-entry deal order
+    // (P1 hand, P2 hand, DP top→bottom) used by teaching fixtures. The
+    // engine still owns every rule decision — this only fixes which
+    // physical card instance sits in each dealt position.
     const stateSetup = {
       profileId: setup.profileId,
       playerIds: ['P1', 'P2'],
@@ -153,9 +192,11 @@ export class PlaySession {
       eventApprovedModules: [],
       seed: setup.seed >>> 0 || 1,
       seatOrder: ['P1', 'P2'],
+      ...(setup.predeterminedIdentities ? { predeterminedIdentities: setup.predeterminedIdentities } : {}),
     };
     this.state = auto.createState(stateSetup);
     this._initialState = structuredClone(this.state);
+    this._scriptUsage = new Map();
 
     // Initialize per-player policy RNG (same as autonomy-runtime)
     const PolicyRng = auto.PolicyRng ?? createPolicyRng;
@@ -194,8 +235,8 @@ export class PlaySession {
     const humanPlayer = state.players?.[humanId];
     const opponentPlayer = state.players?.[opponentId];
     return {
-      humanScore: humanPlayer?.securedPoints ?? 0,
-      opponentScore: opponentPlayer?.securedPoints ?? 0,
+      humanScore: humanPlayer ? deriveSecuredPoints(state, humanId) : 0,
+      opponentScore: opponentPlayer ? deriveSecuredPoints(state, opponentId) : 0,
       humanHandCount: humanPlayer?.hand?.length ?? 0,
       opponentHandCount: opponentPlayer?.hand?.length ?? 0,
       stackDepth: state.stack?.length ?? 0,
@@ -491,10 +532,11 @@ export class PlaySession {
       ...(this._agent ? { policyState: this._agent.policyState } : {}),
     };
 
-    // Select action through the policy
+    // Select action through the policy (or the scripted-opponent overlay
+    // when the match setup declares one, e.g. First Contact scenarios)
     let selected;
     try {
-      selected = auto.choosePolicy(policyId, context);
+      selected = this._selectAIAction(auto, policyId, context);
     } catch (error) {
       this.status = SessionState.ERROR;
       this.error = { code: 'AI_POLICY_EXCEPTION', message: `AI policy threw: ${error.message}` };
@@ -646,6 +688,10 @@ export class PlaySession {
         aiPolicyId: this.setup.aiPolicyId,
         aiPolicyVersion: '1.0.0',
         aiConfigHash: hashCanonical(this._agent ? { policyId: this.setup.aiPolicyId, snapshotDigest: this._agent.snapshotDigest } : { policyId: this.setup.aiPolicyId }),
+        // Scenario fields must persist or a restored save replays
+        // different setup inputs and fails its own integrity hashes.
+        ...(this.setup.predeterminedIdentities ? { predeterminedIdentities: structuredClone(this.setup.predeterminedIdentities) } : {}),
+        ...(this.setup.opponentScript ? { opponentScript: structuredClone(this.setup.opponentScript) } : {}),
         ...(this._agent ? { agentSnapshot: structuredClone(this._agent) } : {}),
       },
       decisionJournal: this.decisionJournal.map(e => ({ ...e })),
@@ -739,6 +785,7 @@ export class PlaySession {
       eventApprovedModules: [],
       seed: save.setup.seed >>> 0 || 1,
       seatOrder: save.setup.seatOrder,
+      ...(save.setup.predeterminedIdentities ? { predeterminedIdentities: save.setup.predeterminedIdentities } : {}),
     };
     let candidateState = auto.createState(stateSetup);
     const candidateInitialState = structuredClone(candidateState);
@@ -787,7 +834,10 @@ export class PlaySession {
     this.status = SessionState.ADVANCING;
     this.sessionId = save.sessionId;
     this.setup = { profileId: save.profileId, seed: save.setup.seed, humanPlayerId: save.setup.humanPlayerId, aiPolicyId: save.setup.aiPolicyId, aiArchetype: save.setup.aiArchetype ?? '', aiDifficulty: save.setup.aiDifficulty ?? '', mode: save.mode, tutorial: save.tutorial,
+      ...(save.setup.opponentScript ? { opponentScript: structuredClone(save.setup.opponentScript) } : {}),
+      ...(save.setup.predeterminedIdentities ? { predeterminedIdentities: structuredClone(save.setup.predeterminedIdentities) } : {}),
       ...(restoredAgent ? { agentSnapshot: structuredClone(restoredAgent) } : {}) };
+    this._scriptUsage = new Map(); // rebuilt deterministically as the replay re-fires scripted selections
     this._agent = restoredAgent;
     this.engine = candidateEngine;
     this.state = candidateState;
@@ -831,7 +881,7 @@ export class PlaySession {
           });
           const context = { matchId: this.sessionId, runInstanceId: this.sessionId, decisionIndex: this._decisionIndex, actorId: entry.actorId, authorizedView: aiView, legalActions, rng: this._rngByPlayer[entry.actorId], profileId: this.setup.profileId, engineVersion: auto.ENGINE_VERSION, rulesVersion: RULES_VERSION,
             ...(this._agent ? { policyState: this._agent.policyState } : {}) };
-          const aiSelected = auto.choosePolicy(this.setup.aiPolicyId, context);
+          const aiSelected = this._selectAIAction(auto, this.setup.aiPolicyId, context);
           if (!aiSelected || aiSelected.actionId !== entry.selectedActionId) {
             throw Object.assign(new Error(`RESTORE_AI_DIVERGENCE at decision ${entry.decisionIndex}`), { reasonCode: 'RESTORE_FRAME_HASH_MISMATCH' });
           }

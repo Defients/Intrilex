@@ -17,6 +17,7 @@ export const OLLAMA_ERROR = Object.freeze({
   MODEL_NOT_FOUND: 'MODEL_NOT_FOUND',
   HTTP_ERROR: 'HTTP_ERROR',
   MALFORMED_RESPONSE: 'MALFORMED_RESPONSE',
+  EMPTY_RESPONSE: 'EMPTY_RESPONSE',
   NETWORK: 'NETWORK',
   UNKNOWN: 'UNKNOWN'
 });
@@ -138,14 +139,17 @@ export class OllamaClient {
    * @param {boolean} params.stream
    * @param {object} [params.format] - Ollama structured-output JSON schema
    *   (forwarded verbatim as the request `format` field; 'json' also accepted)
+   * @param {boolean} [params.think] - forwarded as the request `think` field;
+   *   pass false to disable reasoning-model thinking so the token budget is
+   *   spent on content. Ignored by models/servers without thinking support.
    * @param {function} [params.onToken] - (textChunk) => void
    * @param {function} [params.onProgress] - ({ tokens, done }) => void
    * @param {AbortSignal} [params.signal]
-   * @returns {Promise<{ text: string, done: boolean, rawChunks: Array }>}
+   * @returns {Promise<{ text: string, done: boolean, rawChunks: Array, thinking?: string, doneReason?: string|null }>}
    */
-  async chat({ model, messages, options = {}, stream = false, format = null, onToken, onProgress, signal } = {}) {
+  async chat({ model, messages, options = {}, stream = false, format = null, think = null, onToken, onProgress, signal } = {}) {
     if (!model) throw new OllamaError(OLLAMA_ERROR.MODEL_NOT_FOUND, 'No model selected', { endpoint: this.endpoint });
-    const body = { model, messages, stream, ...(format ? { format } : {}), options: { temperature: options.temperature ?? 0.2, num_predict: options.num_predict ?? 2048, ...options } };
+    const body = { model, messages, stream, ...(format ? { format } : {}), ...(think != null ? { think: Boolean(think) } : {}), options: { temperature: options.temperature ?? 0.2, num_predict: options.num_predict ?? 2048, ...options } };
     const res = await this._request('/api/chat', { method: 'POST', body, signal });
     if (res.status === 404) {
       throw new OllamaError(OLLAMA_ERROR.MODEL_NOT_FOUND, `Model "${model}" not found on Ollama server`, { status: 404, endpoint: this.endpoint });
@@ -163,28 +167,63 @@ export class OllamaClient {
         // pipeline can attempt recovery rather than crashing.
         const text = await safeText(res);
         if (onProgress) onProgress({ tokens: 1, done: true });
+        if (!text) this._throwEmpty({ doneReason: null });
         return { text, done: true, rawChunks: [], malformed: true };
       }
+      this._throwIfErrorField(data, res.status);
       const text = data?.message?.content ?? data?.response ?? '';
+      const thinking = data?.message?.thinking ?? '';
+      const doneReason = data?.done_reason ?? null;
       if (onProgress) onProgress({ tokens: 1, done: true });
-      return { text, done: true, rawChunks: [data] };
+      if (!text) this._throwEmpty({ thinking, doneReason });
+      return { text, thinking, doneReason, done: true, rawChunks: [data] };
     }
 
     // Streaming: Ollama emits newline-delimited JSON objects, one per token.
     const rawChunks = [];
     let text = '';
+    let thinking = '';
+    let doneReason = null;
     const reader = res.body?.getReader?.();
     if (!reader) {
       // No readable body — fall back to buffering the whole response.
       const data = await res.json();
+      this._throwIfErrorField(data, res.status);
       const t = data?.message?.content ?? data?.response ?? '';
-      if (onToken) onToken(t);
+      const th = data?.message?.thinking ?? '';
+      if (onToken && t) onToken(t);
       if (onProgress) onProgress({ tokens: 1, done: true });
-      return { text: t, done: true, rawChunks: [data] };
+      if (!t) this._throwEmpty({ thinking: th, doneReason: data?.done_reason ?? null });
+      return { text: t, thinking: th, doneReason: data?.done_reason ?? null, done: true, rawChunks: [data] };
     }
     const decoder = new TextDecoder();
     let buffer = '';
     let tokenCount = 0;
+    // Parse one NDJSON line. Returns true when the terminal `done` chunk
+    // arrives; throws on server-reported error payloads.
+    const consumeLine = (line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return false;
+      let chunk;
+      try { chunk = JSON.parse(trimmed); }
+      catch { return false; } // skip malformed line, do not crash
+      rawChunks.push(chunk);
+      this._throwIfErrorField(chunk, res.status);
+      const piece = chunk?.message?.content ?? chunk?.response ?? '';
+      const thinkPiece = chunk?.message?.thinking ?? '';
+      if (thinkPiece) thinking += thinkPiece;
+      if (piece) {
+        text += piece;
+        tokenCount += 1;
+        if (onToken) onToken(piece);
+        if (onProgress) onProgress({ tokens: tokenCount, done: false });
+      }
+      if (chunk?.done) {
+        doneReason = chunk.done_reason ?? doneReason;
+        return true;
+      }
+      return false;
+    };
     try {
       while (true) {
         const { value, done } = await reader.read();
@@ -192,32 +231,45 @@ export class OllamaClient {
         buffer += decoder.decode(value, { stream: true });
         let nl;
         while ((nl = buffer.indexOf('\n')) >= 0) {
-          const line = buffer.slice(0, nl).trim();
+          const line = buffer.slice(0, nl);
           buffer = buffer.slice(nl + 1);
-          if (!line) continue;
-          let chunk;
-          try { chunk = JSON.parse(line); }
-          catch { continue; } // skip malformed line, do not crash
-          rawChunks.push(chunk);
-          const piece = chunk?.message?.content ?? chunk?.response ?? '';
-          if (piece) {
-            text += piece;
-            tokenCount += 1;
-            if (onToken) onToken(piece);
-            if (onProgress) onProgress({ tokens: tokenCount, done: false });
-          }
-          if (chunk?.done) {
+          if (consumeLine(line)) {
             if (onProgress) onProgress({ tokens: tokenCount, done: true });
-            return { text, done: true, rawChunks };
+            if (!text) this._throwEmpty({ thinking, doneReason });
+            return { text, thinking, doneReason, done: true, rawChunks };
           }
         }
       }
+      // Flush the decoder and process any final line that lacked a
+      // trailing newline — some proxies terminate the stream without one.
+      buffer += decoder.decode();
+      if (buffer.trim()) consumeLine(buffer);
       // Stream ended without an explicit done flag.
       if (onProgress) onProgress({ tokens: tokenCount, done: true });
-      return { text, done: true, rawChunks };
+      if (!text) this._throwEmpty({ thinking, doneReason });
+      return { text, thinking, doneReason, done: true, rawChunks };
     } finally {
       try { reader.releaseLock?.(); } catch { /* ignore */ }
     }
+  }
+
+  /** Surface a server-reported `error` payload instead of ignoring it. */
+  _throwIfErrorField(data, status) {
+    if (data && typeof data === 'object' && typeof data.error === 'string' && data.error) {
+      throw new OllamaError(OLLAMA_ERROR.HTTP_ERROR, `Ollama error: ${data.error}`, { status, endpoint: this.endpoint });
+    }
+  }
+
+  /** Fail loudly when the model produced no content at all. */
+  _throwEmpty({ thinking = '', doneReason = null } = {}) {
+    const notes = [];
+    if (thinking) notes.push('the model produced only reasoning (thinking) output — a reasoning model may have spent the whole num_predict budget before answering; raise max tokens or pick a non-reasoning model');
+    if (doneReason) notes.push(`done_reason=${doneReason}`);
+    throw new OllamaError(
+      OLLAMA_ERROR.EMPTY_RESPONSE,
+      `Ollama returned an empty response${notes.length ? ` (${notes.join('; ')})` : ''}`,
+      { endpoint: this.endpoint }
+    );
   }
 }
 

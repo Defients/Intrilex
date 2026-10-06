@@ -428,6 +428,140 @@ export function stackedBarChart({ items, width = 480, barHeight = 28, legendLabe
   return svgWrap({ width, height: totalH, viewBox: `0 0 ${width} ${totalH}`, className: 'ix-chart-stacked-bar', title, desc, ariaLabel }, `${bars}${legend}`);
 }
 
+// ── scatterPlot ──────────────────────────────────────────────────
+/**
+ * Render a bubble scatter plot. Points can carry an arbitrary attribute
+ * string (data-*) so host code can bind click/keyboard selection.
+ * Reference lines are plain annotations — callers are responsible for
+ * only drawing references that carry real meaning (e.g. association = 0).
+ *
+ * @param {object} opts
+ * @param {Array<{x:number,y:number,r?:number,color?:string,label:string,title?:string,attrs?:string}>} opts.points
+ * @param {number} [opts.width] - default 640
+ * @param {number} [opts.height] - default 360
+ * @param {string} [opts.xLabel]
+ * @param {string} [opts.yLabel]
+ * @param {[number,number]} [opts.xDomain] - explicit x range; auto-padded if omitted
+ * @param {[number,number]} [opts.yDomain] - explicit y range; auto-padded if omitted
+ * @param {number} [opts.xRef] - vertical reference line value
+ * @param {string} [opts.xRefLabel]
+ * @param {number} [opts.yRef] - horizontal reference line value
+ * @param {string} [opts.yRefLabel]
+ * @param {(v:number)=>string} [opts.xFmt] - x-axis tick formatter
+ * @param {(v:number)=>string} [opts.yFmt] - y-axis tick formatter
+ * @param {{tl?:string,tr?:string,bl?:string,br?:string}} [opts.quadrantLabels] - corner annotations
+ * @param {string} [opts.title]
+ * @param {string} [opts.ariaLabel]
+ * @returns {string} SVG string
+ */
+export function scatterPlot({ points, width = 640, height = 360, xLabel = '', yLabel = '', xDomain, yDomain, xRef, xRefLabel, yRef, yRefLabel, xFmt, yFmt, quadrantLabels, title, ariaLabel } = {}) {
+  const list = (Array.isArray(points) ? points : []).filter(p => p && Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y)));
+  const cls = 'ix-chart-scatter';
+  if (list.length === 0) {
+    return svgWrap({ width, height, viewBox: `0 0 ${width} ${height}`, className: cls, title, ariaLabel, desc: 'No data for scatter plot.' }, `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" font-size="12" fill="rgba(255,255,255,0.5)">No plottable data</text>`);
+  }
+  const xf = xFmt ?? fmtNum;
+  const yf = yFmt ?? fmtNum;
+  const padL = 52, padR = 18, padT = 18, padB = 42;
+  const chartW = width - padL - padR;
+  const chartH = height - padT - padB;
+  const xs = list.map(p => Number(p.x));
+  const ys = list.map(p => Number(p.y));
+  const pad = (lo, hi) => {
+    const span = hi - lo;
+    if (span <= 0) return [lo - 1, hi + 1];
+    return [lo - span * 0.08, hi + span * 0.08];
+  };
+  const [xMin, xMax] = xDomain ?? pad(Math.min(...xs, Number.isFinite(xRef) ? xRef : Infinity), Math.max(...xs, Number.isFinite(xRef) ? xRef : -Infinity));
+  const [yMin, yMax] = yDomain ?? pad(Math.min(...ys, Number.isFinite(yRef) ? yRef : Infinity), Math.max(...ys, Number.isFinite(yRef) ? yRef : -Infinity));
+  const xSpan = xMax - xMin || 1;
+  const ySpan = yMax - yMin || 1;
+  const px = v => padL + ((v - xMin) / xSpan) * chartW;
+  const py = v => padT + chartH * (1 - (v - yMin) / ySpan);
+  const ticks = (min, max, fmt) => [0, 0.25, 0.5, 0.75, 1].map(t => min + (max - min) * t).map(fmt);
+  const xTickVals = ticks(xMin, xMax, xf);
+  const yTickVals = ticks(yMin, yMax, yf);
+  const grid = yTickVals.map((v, i) => {
+    const y = (padT + chartH * (1 - i * 0.25)).toFixed(2);
+    return `<line x1="${padL}" y1="${y}" x2="${padL + chartW}" y2="${y}" stroke="rgba(255,255,255,0.06)"/><text x="${padL - 6}" y="${(+y + 3).toFixed(2)}" text-anchor="end" font-size="9" fill="rgba(255,255,255,0.5)">${escSvg(v)}</text>`;
+  }).join('');
+  const xTicks = xTickVals.map((v, i) => {
+    const x = (padL + chartW * i * 0.25).toFixed(2);
+    return `<text x="${x}" y="${padT + chartH + 14}" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.5)">${escSvg(v)}</text>`;
+  }).join('');
+  const refs = [
+    Number.isFinite(xRef) ? `<line class="ix-scatter-ref" x1="${px(xRef).toFixed(2)}" y1="${padT}" x2="${px(xRef).toFixed(2)}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.35)" stroke-dasharray="4 3"/>${xRefLabel ? `<text x="${px(xRef).toFixed(2)}" y="${padT - 6}" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.6)">${escSvg(xRefLabel)}</text>` : ''}` : '',
+    Number.isFinite(yRef) ? `<line class="ix-scatter-ref" x1="${padL}" y1="${py(yRef).toFixed(2)}" x2="${padL + chartW}" y2="${py(yRef).toFixed(2)}" stroke="rgba(255,255,255,0.35)" stroke-dasharray="4 3"/>${yRefLabel ? `<text x="${padL + 4}" y="${(py(yRef) - 4).toFixed(2)}" font-size="9" fill="rgba(255,255,255,0.6)">${escSvg(yRefLabel)}</text>` : ''}` : '',
+  ].join('');
+  const q = quadrantLabels ?? {};
+  const quad = [
+    q.tl ? `<text class="ix-scatter-quadrant" x="${padL + 8}" y="${padT + 14}" font-size="10" fill="rgba(255,255,255,0.32)">${escSvg(q.tl)}</text>` : '',
+    q.tr ? `<text class="ix-scatter-quadrant" x="${padL + chartW - 8}" y="${padT + 14}" text-anchor="end" font-size="10" fill="rgba(255,255,255,0.32)">${escSvg(q.tr)}</text>` : '',
+    q.bl ? `<text class="ix-scatter-quadrant" x="${padL + 8}" y="${padT + chartH - 8}" font-size="10" fill="rgba(255,255,255,0.32)">${escSvg(q.bl)}</text>` : '',
+    q.br ? `<text class="ix-scatter-quadrant" x="${padL + chartW - 8}" y="${padT + chartH - 8}" text-anchor="end" font-size="10" fill="rgba(255,255,255,0.32)">${escSvg(q.br)}</text>` : '',
+  ].join('');
+  const maxR = Math.max(...list.map(p => Number(p.r ?? 0)), 0);
+  const dots = list.map(p => {
+    const rr = Number.isFinite(Number(p.r)) && maxR > 0 ? 4 + 10 * Math.sqrt(Number(p.r) / maxR) : 5;
+    const color = p.color ?? '#5ad7e8';
+    const tip = p.title ?? p.label;
+    const attrs = typeof p.attrs === 'string' ? ` ${p.attrs}` : '';
+    return `<circle class="ix-scatter-point" cx="${px(Number(p.x)).toFixed(2)}" cy="${py(Number(p.y)).toFixed(2)}" r="${rr.toFixed(1)}" fill="${escSvg(color)}" fill-opacity="0.72" stroke="rgba(7,11,17,0.7)" stroke-width="1"${attrs}><title>${escSvg(tip)}</title></circle>`;
+  }).join('');
+  const axisLabels = `<text class="ix-scatter-axis-label" x="${padL + chartW / 2}" y="${height - 8}" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.7)">${escSvg(xLabel)}</text><text class="ix-scatter-axis-label" x="${12}" y="${padT + chartH / 2}" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.7)" transform="rotate(-90 12 ${padT + chartH / 2})">${escSvg(yLabel)}</text>`;
+  const desc = `Scatter plot with ${list.length} points.`;
+  return svgWrap({ width, height, viewBox: `0 0 ${width} ${height}`, className: cls, title, desc, ariaLabel }, `${grid}${xTicks}${refs}${quad}${dots}${axisLabels}`);
+}
+
+// ── intervalPlot ─────────────────────────────────────────────────
+/**
+ * Render a forest-plot style interval chart: one row per estimate with a
+ * CI whisker and a point marker against an explicit reference line.
+ *
+ * @param {object} opts
+ * @param {Array<{label:string,estimate:number,low:number,high:number,color?:string,note?:string,attrs?:string}>} opts.rows
+ * @param {number} [opts.width] - default 560
+ * @param {number} [opts.rowHeight] - default 34
+ * @param {[number,number]} [opts.domain] - explicit [lo,hi]; auto from intervals+ref if omitted
+ * @param {number} [opts.refLine] - null reference value drawn dashed
+ * @param {(v:number)=>string} [opts.fmt] - axis tick + tooltip formatter
+ * @param {string} [opts.title]
+ * @param {string} [opts.ariaLabel]
+ * @returns {string} SVG string
+ */
+export function intervalPlot({ rows, width = 560, rowHeight = 34, domain, refLine = 0, fmt, title, ariaLabel } = {}) {
+  const list = (Array.isArray(rows) ? rows : []).filter(r => r && r.label != null && Number.isFinite(Number(r.estimate)) && Number.isFinite(Number(r.low)) && Number.isFinite(Number(r.high)));
+  const cls = 'ix-chart-interval';
+  if (list.length === 0) {
+    return svgWrap({ width, height: 60, viewBox: `0 0 ${width} 60`, className: cls, title, ariaLabel, desc: 'No data for interval plot.' }, `<text x="${width / 2}" y="30" text-anchor="middle" font-size="12" fill="rgba(255,255,255,0.5)">No data</text>`);
+  }
+  const f = fmt ?? fmtNum;
+  const labelW = Math.min(180, Math.max(70, Math.max(...list.map(r => String(r.label).length)) * 7));
+  const padR = 18, padT = 10, padB = 26;
+  const chartW = width - labelW - padR;
+  const height = padT + list.length * rowHeight + padB;
+  const lows = list.map(r => Number(r.low));
+  const highs = list.map(r => Number(r.high));
+  let lo = Math.min(...lows, Number.isFinite(refLine) ? refLine : Infinity);
+  let hi = Math.max(...highs, Number.isFinite(refLine) ? refLine : -Infinity);
+  if (hi - lo <= 0) { lo -= 1; hi += 1; }
+  const span = hi - lo;
+  const dom = domain ?? [lo - span * 0.06, hi + span * 0.06];
+  const dSpan = dom[1] - dom[0] || 1;
+  const px = v => labelW + ((v - dom[0]) / dSpan) * chartW;
+  const rowsSvg = list.map((r, i) => {
+    const y = padT + i * rowHeight + rowHeight / 2;
+    const color = r.color ?? '#5ad7e8';
+    const attrs = typeof r.attrs === 'string' ? ` ${r.attrs}` : '';
+    const tip = `${r.label}: ${f(Number(r.estimate))} [${f(Number(r.low))}, ${f(Number(r.high))}]${r.note ? ` — ${r.note}` : ''}`;
+    return `<text class="ix-interval-label" x="${labelW - 10}" y="${(y + 3.5).toFixed(2)}" text-anchor="end" font-size="11" fill="rgba(255,255,255,0.82)">${escSvg(r.label)}</text><line x1="${labelW}" y1="${y.toFixed(2)}" x2="${labelW + chartW}" y2="${y.toFixed(2)}" stroke="rgba(255,255,255,0.05)"/><line class="ix-interval-ci" x1="${px(Number(r.low)).toFixed(2)}" y1="${y.toFixed(2)}" x2="${px(Number(r.high)).toFixed(2)}" y2="${y.toFixed(2)}" stroke="${escSvg(color)}" stroke-width="4" stroke-linecap="round" opacity="0.55"/><line x1="${px(Number(r.low)).toFixed(2)}" y1="${(y - 6).toFixed(2)}" x2="${px(Number(r.low)).toFixed(2)}" y2="${(y + 6).toFixed(2)}" stroke="${escSvg(color)}" stroke-width="2"/><line x1="${px(Number(r.high)).toFixed(2)}" y1="${(y - 6).toFixed(2)}" x2="${px(Number(r.high)).toFixed(2)}" y2="${(y + 6).toFixed(2)}" stroke="${escSvg(color)}" stroke-width="2"/><circle class="ix-interval-point" cx="${px(Number(r.estimate)).toFixed(2)}" cy="${y.toFixed(2)}" r="4.5" fill="${escSvg(color)}" stroke="rgba(7,11,17,0.8)" stroke-width="1"${attrs}><title>${escSvg(tip)}</title></circle>`;
+  }).join('');
+  const ref = Number.isFinite(refLine) ? `<line class="ix-interval-ref" x1="${px(refLine).toFixed(2)}" y1="${padT - 4}" x2="${px(refLine).toFixed(2)}" y2="${padT + list.length * rowHeight}" stroke="rgba(255,255,255,0.4)" stroke-dasharray="4 3"/><text x="${px(refLine).toFixed(2)}" y="${padT + list.length * rowHeight + 12}" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.55)">${escSvg(f(refLine))}</text>` : '';
+  const edges = `<text x="${labelW}" y="${padT + list.length * rowHeight + 12}" font-size="9" fill="rgba(255,255,255,0.55)">${escSvg(f(dom[0]))}</text><text x="${labelW + chartW}" y="${padT + list.length * rowHeight + 12}" text-anchor="end" font-size="9" fill="rgba(255,255,255,0.55)">${escSvg(f(dom[1]))}</text>`;
+  const desc = `Interval plot with ${list.length} estimates.`;
+  return svgWrap({ width, height, viewBox: `0 0 ${width} ${height}`, className: cls, title, desc, ariaLabel }, `${rowsSvg}${ref}${edges}`);
+}
+
 // ── chartTableAlternative ─────────────────────────────────────────
 /**
  * Render a tabular data alternative for a chart (accessibility / "View as table").
@@ -507,22 +641,41 @@ export function sankeyFlow({ nodes, links, width = 600, height = 400, nodeWidth 
     rightLayout[id] = { y: rightY, h: nodeH, totalFlow: flow };
     rightY += nodeH + nodeGap;
   }
-  const leftX = 60;
-  const rightX = width - 60 - nodeWidth;
-  // Build a label map
+  // Nodes clamped to the 4px minimum can push a column past the canvas
+  // bottom — grow the viewBox instead of clipping the overflow.
+  const usedBottom = Math.max(leftY, rightY) - nodeGap;
+  if (usedBottom + padB > height) height = Math.ceil(usedBottom + padB);
+  // Build a label map. Overlong ids are truncated for display — the full
+  // label remains available via <title> and data-node-id.
   const labelMap = {};
-  for (const n of nodeList) labelMap[n.id] = n.label ?? n.id;
+  const displayLabel = {};
+  for (const n of nodeList) {
+    const raw = String(n.label ?? n.id);
+    labelMap[n.id] = raw;
+    displayLabel[n.id] = raw.length > 24 ? `${raw.slice(0, 23)}…` : raw;
+  }
+  // Size the side gutters from the longest label on each side so the
+  // text anchored outside the node columns is not clipped by the viewBox.
+  // ~5.6px per glyph at font-size 10, plus the 6px text offset + margin.
+  const estTextW = (s) => String(s).length * 5.6 + 12;
+  const maxPad = Math.max(66, (width - nodeWidth - 60) / 2);
+  const padL = Math.min(150, maxPad, Math.max(66, ...leftNodes.map(id => estTextW(displayLabel[id] ?? id))));
+  const padR = Math.min(150, maxPad, Math.max(66, ...rightNodes.map(id => estTextW(displayLabel[id] ?? id))));
+  const leftX = padL;
+  const rightX = width - padR - nodeWidth;
   // Render left nodes
   const leftRects = leftNodes.map(id => {
     const ly = leftLayout[id];
     const label = escSvg(labelMap[id] ?? id);
-    return `<rect class="ix-sankey-node ix-sankey-node-left" x="${leftX}" y="${ly.y.toFixed(2)}" width="${nodeWidth}" height="${ly.h.toFixed(2)}" rx="2" fill="rgba(79,211,135,0.7)" data-node-id="${escSvg(id)}"><title>${label}: ${fmtNum(ly.totalFlow)} outgoing</title></rect><text class="ix-sankey-label" x="${leftX - 6}" y="${(ly.y + ly.h / 2 + 3).toFixed(2)}" text-anchor="end" font-size="10" fill="rgba(255,255,255,0.82)">${label}</text>`;
+    const dLabel = escSvg(displayLabel[id] ?? id);
+    return `<rect class="ix-sankey-node ix-sankey-node-left" x="${leftX}" y="${ly.y.toFixed(2)}" width="${nodeWidth}" height="${ly.h.toFixed(2)}" rx="2" fill="rgba(79,211,135,0.7)" data-node-id="${escSvg(id)}"><title>${label}: ${fmtNum(ly.totalFlow)} outgoing</title></rect><text class="ix-sankey-label" x="${leftX - 6}" y="${(ly.y + ly.h / 2 + 3).toFixed(2)}" text-anchor="end" font-size="10" fill="rgba(255,255,255,0.82)">${dLabel}</text>`;
   }).join('');
   // Render right nodes
   const rightRects = rightNodes.map(id => {
     const ry = rightLayout[id];
     const label = escSvg(labelMap[id] ?? id);
-    return `<rect class="ix-sankey-node ix-sankey-node-right" x="${rightX}" y="${ry.y.toFixed(2)}" width="${nodeWidth}" height="${ry.h.toFixed(2)}" rx="2" fill="rgba(90,215,232,0.7)" data-node-id="${escSvg(id)}"><title>${label}: ${fmtNum(ry.totalFlow)} incoming</title></rect><text class="ix-sankey-label" x="${rightX + nodeWidth + 6}" y="${(ry.y + ry.h / 2 + 3).toFixed(2)}" text-anchor="start" font-size="10" fill="rgba(255,255,255,0.82)">${label}</text>`;
+    const dLabel = escSvg(displayLabel[id] ?? id);
+    return `<rect class="ix-sankey-node ix-sankey-node-right" x="${rightX}" y="${ry.y.toFixed(2)}" width="${nodeWidth}" height="${ry.h.toFixed(2)}" rx="2" fill="rgba(90,215,232,0.7)" data-node-id="${escSvg(id)}"><title>${label}: ${fmtNum(ry.totalFlow)} incoming</title></rect><text class="ix-sankey-label" x="${rightX + nodeWidth + 6}" y="${(ry.y + ry.h / 2 + 3).toFixed(2)}" text-anchor="start" font-size="10" fill="rgba(255,255,255,0.82)">${dLabel}</text>`;
   }).join('');
   // Render links as cubic Bézier curves
   // Track vertical offset within each source/target node for stacking

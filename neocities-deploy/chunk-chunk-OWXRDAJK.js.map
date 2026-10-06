@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../evolution/identity.mjs"],
-  "sourcesContent": ["export const LAB_IDENTITY = {\"schemaVersion\":1,\"engineVersion\":\"4.2.6\",\"rulesVersion\":\"4.3.1\",\"engineHash\":\"e52ab8a270dd4f629e9641a9a64f38403362c84b0ffe9c1d9f7514097b508fc3\",\"policyImplementationHash\":\"c1de23505695ad5f4c55149eb0e32782eeb9f7ec949c28034e049331fde0d562\",\"runtimeHash\":\"4beffd8b1f17c2d408003c25b7b93693bb75d9f8b32eefc5877996fdda73a2c3\",\"fingerprint\":\"50f0a14e1374a23c789680c4aa1e359777bc1ca43fc5e589722ea946ac18d690\"};\n"],
-  "mappings": "AAAO,IAAMA,EAAe,CAAC,cAAgB,EAAE,cAAgB,QAAQ,aAAe,QAAQ,WAAa,mEAAmE,yBAA2B,mEAAmE,YAAc,mEAAmE,YAAc,kEAAkE",
-  "names": ["LAB_IDENTITY"]
-}

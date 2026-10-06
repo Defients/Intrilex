@@ -72,6 +72,12 @@ const ROUTE_META = {
     canonicalPath: '/#/play/academy',
     ogType: 'website',
   },
+  '/play/first-contact': {
+    title: 'Intrilex — First Contact',
+    description: 'Learn Intrilex by playing it. A real, controlled match on the actual rules engine — the board explains itself as you play.',
+    canonicalPath: '/#/play/first-contact',
+    ogType: 'website',
+  },
   '/puzzles': {
     title: 'Intrilex — Puzzle Ladder',
     description: 'Solve tactical Intrilex puzzles. Each puzzle is a constrained game state with a specific objective — find the winning move, survive under pressure, or prove a position.',

@@ -20,8 +20,8 @@
 .rank-stat>b{font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--text-bright);font-variant-numeric:tabular-nums}
 .rank-stat>b>i{font-style:normal;font-size:14px;font-weight:600;color:var(--muted)}
 .rank-stat-sub{font-size:10.5px;color:var(--muted)}
-.rank-stat-lead{border-color:rgba(90,215,232,.28);background:radial-gradient(circle at 85% 10%,rgba(90,215,232,.09),transparent 55%),linear-gradient(160deg,var(--surface),rgba(16,29,42,.65))}
-.rank-stat-lead::before{opacity:.8}
+.rank-stat-lead{border-color:var(--ws-accent-line);background:radial-gradient(circle at 85% 10%,var(--ws-accent-soft),transparent 55%),linear-gradient(160deg,var(--surface),rgba(16,29,42,.65))}
+.rank-stat-lead::before{background:linear-gradient(180deg,var(--ws-accent),transparent 85%);opacity:.8}
 .rank-stat-leadline{display:flex;align-items:center;gap:11px}
 .rank-stat-leadline>b{font-size:26px;font-weight:700;letter-spacing:-.03em;color:var(--text-bright);font-variant-numeric:tabular-nums}
 .rank-stat-alert{border-color:rgba(242,119,122,.35)}
@@ -46,7 +46,7 @@
 ol.rank-ladder{list-style:none;margin:0;padding:2px 6px 2px 0;display:grid;gap:6px;max-height:calc(100vh - 340px);min-height:120px;overflow-y:auto;scrollbar-gutter:stable}
 .rank-row{display:grid;grid-template-columns:24px 38px minmax(0,1fr) auto 9px;align-items:center;gap:10px;width:100%;padding:8px 10px;border:1px solid var(--border-soft);border-radius:11px;background:var(--surface);color:var(--text);cursor:pointer;text-align:left;transition:var(--transition-smooth)}
 .rank-row:hover{background:var(--surface-2);border-color:var(--border);transform:translateX(3px)}
-.rank-row.selected{border-color:rgba(90,215,232,.5);background:linear-gradient(135deg,rgba(90,215,232,.1),rgba(16,29,42,.75));box-shadow:var(--glow-cyan)}
+.rank-row.selected{border-color:var(--ws-accent-line);background:linear-gradient(135deg,var(--ws-accent-soft),rgba(16,29,42,.75));box-shadow:0 0 0 1px var(--ws-accent-faint)}
 .rank-pos{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;font-size:10px;font-weight:700;color:var(--faint);font-variant-numeric:tabular-nums}
 .rank-pos.podium-1{color:#141003;background:linear-gradient(135deg,#f5cf7f,#e0a53e);box-shadow:0 0 12px rgba(241,189,93,.35)}
 .rank-pos.podium-2{color:#0b0e11;background:linear-gradient(135deg,#dde4ea,#9fb0ba);box-shadow:0 0 10px rgba(199,208,216,.2)}
@@ -67,8 +67,8 @@ ol.rank-ladder{list-style:none;margin:0;padding:2px 6px 2px 0;display:grid;gap:6
 .rank-identity-copy{flex:1;min-width:180px}
 .rank-identity-copy h3{margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--text-bright)}
 .rank-identity-copy p{margin:3px 0 0;font-size:12px;color:var(--muted)}
-.rank-detail-grid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:center;margin-bottom:20px}
-.ranks-detail-panel .ix-chart-container{margin:0;padding:16px;border-radius:14px;background:radial-gradient(circle at 50% 28%,rgba(90,215,232,.06),transparent 70%),rgba(8,12,18,.55)}
+.rank-detail-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:22px;align-items:center;margin-bottom:20px}
+.ranks-detail-panel .ix-chart-container{margin:0;padding:16px;border-radius:14px;background:radial-gradient(circle at 50% 28%,var(--ws-accent-soft),transparent 70%),rgba(8,12,18,.55)}
 .ranks-detail-panel .ix-chart-header{justify-content:center}
 .ranks-detail-panel .ix-chart-radar{display:block;margin:0 auto}
 
@@ -79,7 +79,7 @@ ol.rank-ladder{list-style:none;margin:0;padding:2px 6px 2px 0;display:grid;gap:6
 .rank-axis-bar .axis-track{display:block;height:8px;border-radius:999px;background:rgba(5,11,17,.7);box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
 .rank-axis-bar .axis-fill{display:block;border-radius:999px;background:linear-gradient(90deg,var(--cyan-2),var(--cyan));box-shadow:0 0 8px rgba(90,215,232,.28)}
 .axis-value{min-width:44px;font-size:12px;font-weight:650;color:var(--text-bright);text-align:right;font-variant-numeric:tabular-nums}
-.axis-value small{display:inline;margin-left:6px;font-size:9.5px;font-weight:500;color:var(--muted)}
+.axis-value small{display:block;margin-top:1px;font-size:9.5px;font-weight:500;color:var(--muted);white-space:nowrap}
 .rank-axis-bar.axis-unavailable .axis-track{height:8px;border:1px dashed var(--border);background:transparent;box-shadow:none}
 .rank-axis-bar.axis-unavailable .axis-label,.rank-axis-bar.axis-unavailable .axis-value{color:var(--faint);font-weight:500}
 
@@ -163,9 +163,9 @@ ol.rank-ladder{list-style:none;margin:0;padding:2px 6px 2px 0;display:grid;gap:6
 .rank-anatomy-observatory>.anatomy-integrity-banner{margin:12px 20px 0}
 .anatomy-rail{gap:6px;padding:0 12px;border-bottom:0;background:rgba(5,11,17,.4)}
 .anatomy-tab{position:relative;padding:12px 14px 10px;border-radius:10px 10px 0 0;border-bottom-width:3px}
-.anatomy-tab.active{background:linear-gradient(180deg,rgba(90,215,232,.09),rgba(90,215,232,.02))}
+.anatomy-tab.active{background:linear-gradient(180deg,var(--ws-accent-soft),var(--ws-accent-faint))}
 .anatomy-tab-label{color:var(--muted-bright)}
-.anatomy-tab.active .anatomy-tab-label{color:var(--cyan)}
+.anatomy-tab.active .anatomy-tab-label{color:var(--ws-accent)}
 .rank-anatomy-content{padding:18px 20px}
 .anatomy-section h3{font-size:13.5px;font-weight:650;color:var(--text-bright);letter-spacing:-.01em}
 .anatomy-subsection{border-top-color:rgba(40,64,80,.3)}

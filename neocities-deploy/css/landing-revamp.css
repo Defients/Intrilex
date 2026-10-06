@@ -232,7 +232,7 @@
   opacity:.8; flex-shrink:0;
 }
 .landing-play-panel .landing-title{
-  font-family:'Pepsi',sans-serif;
+  font-family:'ProtoSym','Pepsi',sans-serif;
   font-size:clamp(42px,5.2vw,72px);
   font-weight:800; letter-spacing:.008em;
   margin:0 0 14px; line-height:1;

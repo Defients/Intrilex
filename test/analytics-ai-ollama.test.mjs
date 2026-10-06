@@ -106,6 +106,87 @@ test('ollama-client: streaming chat invokes onToken and concatenates', async () 
   } });
 });
 
+test('ollama-client: empty content produces EMPTY_RESPONSE', async () => {
+  await withServer(async (url) => {
+    const client = new OllamaClient({ endpoint: url, timeoutMs: 3000 });
+    await assert.rejects(
+      client.chat({ model: 'llama3', messages: [], stream: false }),
+      (err) => err instanceof OllamaError && err.category === OLLAMA_ERROR.EMPTY_RESPONSE
+    );
+  }, { handler: (req, res) => res.end(JSON.stringify({ message: { content: '' }, done: true, done_reason: 'stop' })) });
+});
+
+test('ollama-client: 200 response with error field throws HTTP_ERROR', async () => {
+  await withServer(async (url) => {
+    const client = new OllamaClient({ endpoint: url, timeoutMs: 3000 });
+    await assert.rejects(
+      client.chat({ model: 'llama3', messages: [], stream: false }),
+      (err) => err instanceof OllamaError && err.category === OLLAMA_ERROR.HTTP_ERROR && /too large/.test(err.message)
+    );
+  }, { handler: (req, res) => res.end(JSON.stringify({ error: 'model requires too large a context' })) });
+});
+
+test('ollama-client: streaming thinking-only output produces EMPTY_RESPONSE', async () => {
+  await withServer(async (url) => {
+    const client = new OllamaClient({ endpoint: url, timeoutMs: 3000 });
+    await assert.rejects(
+      client.chat({ model: 'deepseek-r1', messages: [], stream: true }),
+      (err) => err instanceof OllamaError && err.category === OLLAMA_ERROR.EMPTY_RESPONSE && /thinking/.test(err.message)
+    );
+  }, { handler: async (req, res) => {
+    await readBody(req);
+    res.write(JSON.stringify({ message: { thinking: 'let me reason…' }, done: false }) + '\n');
+    res.write(JSON.stringify({ message: { content: '' }, done: true, done_reason: 'length' }) + '\n');
+    res.end();
+  } });
+});
+
+test('ollama-client: streaming error chunk throws HTTP_ERROR', async () => {
+  await withServer(async (url) => {
+    const client = new OllamaClient({ endpoint: url, timeoutMs: 3000 });
+    await assert.rejects(
+      client.chat({ model: 'llama3', messages: [], stream: true }),
+      (err) => err instanceof OllamaError && err.category === OLLAMA_ERROR.HTTP_ERROR && /boom/.test(err.message)
+    );
+  }, { handler: async (req, res) => {
+    await readBody(req);
+    res.write(JSON.stringify({ message: { content: '{"a":' }, done: false }) + '\n');
+    res.write(JSON.stringify({ error: 'boom' }) + '\n');
+    res.end();
+  } });
+});
+
+test('ollama-client: final stream line without trailing newline is processed', async () => {
+  await withServer(async (url) => {
+    const client = new OllamaClient({ endpoint: url, timeoutMs: 3000 });
+    const tokens = [];
+    const result = await client.chat({ model: 'llama3', messages: [], stream: true, onToken: (t) => tokens.push(t) });
+    assert.equal(result.text, '{"a":1}');
+    assert.equal(tokens.length, 1);
+    assert.equal(result.doneReason, 'stop');
+  }, { handler: async (req, res) => {
+    await readBody(req);
+    // Single chunk, no trailing newline — previously dropped from the buffer.
+    res.end(JSON.stringify({ message: { content: '{"a":1}' }, done: true, done_reason: 'stop' }));
+  } });
+});
+
+test('ollama-client: forwards format and think fields in request body', async () => {
+  await withServer(async (url) => {
+    const client = new OllamaClient({ endpoint: url, timeoutMs: 3000 });
+    const result = await client.chat({
+      model: 'llama3', messages: [], stream: false,
+      format: { type: 'object' }, think: false
+    });
+    assert.equal(result.text, '{"ok":true}');
+  }, { handler: async (req, res) => {
+    const body = JSON.parse(await readBody(req));
+    assert.deepEqual(body.format, { type: 'object' });
+    assert.equal(body.think, false);
+    res.end(JSON.stringify({ message: { content: '{"ok":true}' }, done: true }));
+  } });
+});
+
 test('ollama-client: timeout produces TIMEOUT error', async () => {
   await withServer(async (url) => {
     const client = new OllamaClient({ endpoint: url, timeoutMs: 200 });

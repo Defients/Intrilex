@@ -4,9 +4,9 @@
 // Reuses the lightweight markdown renderer from rulebook-renderer.js.
 // ═══════════════════════════════════════════════════════════════
 
-import { app as _app, esc } from '../state.js?v=c4e7aaac019e';
-import { renderMarkdown, slugify } from '../rulebook-renderer.js?v=c4e7aaac019e';
-import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION } from '../version.js?v=c4e7aaac019e';
+import { app as _app, esc } from '../state.js?v=408ebfe25d7a';
+import { renderMarkdown, slugify } from '../rulebook-renderer.js?v=408ebfe25d7a';
+import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION } from '../version.js?v=408ebfe25d7a';
 
 let _container = _app;
 

@@ -6,7 +6,7 @@
 // (board-events.js, etc.) can read and write the same state
 // without circular imports or prop-drilling.
 // ═══════════════════════════════════════════════════════════════
-import { GuidanceMode } from './intelligence/action-explanation.js?v=c4e7aaac019e';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=408ebfe25d7a';
 
 export const state = {
   session: null,
@@ -43,6 +43,7 @@ export const state = {
   rightRailTab: 'chat', // Active right rail tab ('chat' | 'debug')
   academyLessonId: null, // Current Academy lesson ID (null for non-academy matches)
   academyController: null, // Active AcademyController instance (null when not in an academy lesson)
+  fcController: null, // Active FirstContactController (null outside First Contact matches)
   academyPhase: null, // Current academy controller phase ('briefing' | 'match' | 'recap' | null)
   guidedController: null, // Active GuidedController instance (null when not in guided exhibition)
   guidedPhase: null, // Current guided exhibition phase ('intro' | 'match' | 'debrief' | null)
@@ -92,6 +93,9 @@ export function resetState() {
   state.academyController = null;
   state.academyPhase = null;
   state._academyRecap = null;
+  state.fcController = null;
+  state._pendingFcController = null;
+  state._fcRecap = null;
   state.guidedController = null;
   state.guidedPhase = null;
   if (state.tacticalMount) {

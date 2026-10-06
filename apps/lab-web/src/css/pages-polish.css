@@ -6,7 +6,6 @@
 
 /* ── Shared: Button active press state ── */
 .primary-button:active,.secondary-button:active,.ghost-button:active,.icon-button:active{transform:scale(.97);transition:transform 60ms ease}
-.integrity-chip:active{transform:scale(.97)}
 
 /* ── Shared: Dialog backdrop & entrance refinement ── */
 .command-dialog::backdrop,.card-face-dialog::backdrop{backdrop-filter:blur(8px) saturate(1.15)}
@@ -207,7 +206,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,[t
 @media(prefers-reduced-motion:reduce){
   .landing-card:hover .landing-card-icon{transform:none}
   .landing-card:hover .landing-card-cta{transform:none}
-  .primary-button:active,.secondary-button:active,.ghost-button:active,.icon-button:active,.integrity-chip:active{transform:none}
+  .primary-button:active,.secondary-button:active,.ghost-button:active,.icon-button:active{transform:none}
 }
 
 /* ═══════════════════════════════════════════════════════════════════

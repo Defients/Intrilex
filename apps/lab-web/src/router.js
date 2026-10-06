@@ -2,20 +2,21 @@
 // router.js — Workspace definitions, routing, navigation rendering
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from './state.js';
+import { esc, state, fmt } from './state.js';
 import { STRATEGY_NAMES } from '../../../packages/simulation-runtime/src/strategy-contracts.mjs';
 
 export const WORKSPACES = [
   // Play lane
   ['/play','🎮','Play','Local, ranked, and online'],
   ['/play/academy','🎓','Academy','Interactive lessons'],
+  ['/play/first-contact','🛰','First Contact','Learn by playing a real match'],
   ['/puzzles','🧩','Puzzles','Progressive ladder'],
   ['/tournaments','🏆','Tournaments','AI bracket play'],
   ['/seasons','📅','Seasons','Ranked play and leaderboards'],
   // Learn lane
   ['/rules','📖','Rules','Complete rulebook'],
   ['/cards','🃏','Cards','Card reference'],
-  [STRATEGY_NAMES.route,'◈',STRATEGY_NAMES.workspace,'Field Manual · evidence-backed strategy'],
+  [STRATEGY_NAMES.route,'◈',STRATEGY_NAMES.workspace,'Field Manual'],
   // Lab lane
   ['/watch','◈','Watch','Match theatre'],
   ['/caster','🎙','Caster','Live replay broadcast'],
@@ -48,6 +49,7 @@ export const SUBTITLES = {
   // Play lane
   '/play':'Game hub — local play vs AI, online Direct Duel, resume saves, and new match setup.',
   '/play/academy':'5 sequential interactive lessons covering core mechanics, responses, counters, and royal cards.',
+  '/play/first-contact':'A real, controlled Intrilex match that teaches you by letting you play.',
   '/puzzles':'Progressive puzzle ladder with localStorage progress tracking and increasing difficulty.',
   '/tournaments':'AI-vs-AI bracket tournaments with AB/BA seat-swap fairness and post-tournament analytics.',
   '/seasons':'Ranked play with Glicko-2 ratings, seasons, placements, and public leaderboards.',
@@ -78,9 +80,38 @@ export const SUBTITLES = {
   '/auth':'Sign in with Discord or Google, or continue as a guest to play online.'
 };
 
+// CosmoTech instrument designations — each Lab workspace is a distinct
+// instrument inside one research facility. Shown in the global header
+// eyebrow; the accent system reads the same identity via data-workspace.
+export const INSTRUMENTS = {
+  '/watch': 'OBS-01 · MATCH THEATRE',
+  '/caster': 'OBS-02 · BROADCAST DECK',
+  '/replays': 'OBS-03 · VERIFICATION VAULT',
+  '/history': 'OBS-04 · MATCH LEDGER',
+  '/mechanics': 'OBS-05 · MECHANIC ATLAS',
+  '/synergies': 'OBS-06 · RELATIONSHIP MATRIX',
+  '/ranks': 'OBS-07 · POWER OBSERVATORY',
+  '/compare': 'OBS-08 · COHORT COMPARATOR',
+  '/traces': 'OBS-09 · DECISION TRACER',
+  '/branches': 'OBS-10 · DIVERGENCE CHAMBER',
+  '/diagnostics': 'OBS-11 · SYSTEMS TELEMETRY',
+  '/evolution': 'OBS-12 · LINEAGE REACTOR',
+  '/tournament': 'OBS-13 · BRACKET ENGINE',
+  '/evidence': 'OBS-14 · EVIDENCE ARCHIVE',
+  '/intelligence': 'OBS-15 · ANALYTICS LENS',
+  '/forensic': 'OBS-16 · REPLAY FORENSICS',
+  '/strategy': 'FIELD-00 · FIELD MANUAL',
+  '/release-notes': 'LOG-00 · RELEASE LOG',
+  '/profile': 'ID-00 · PLAYER DOSSIER',
+  '/player': 'ID-00 · PLAYER DOSSIER',
+  '/achievements': 'ID-01 · ACHIEVEMENT LEDGER',
+  '/settings': 'SYS-00 · SYSTEM CONFIG',
+  '/auth': 'AUTH-00 · ACCESS GATE'
+};
+
 export const LEGAL_MODES = new Set(['/privacy', '/terms']);
 
-export const LANDING_MODES = new Set(['/', '/dev', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/cards', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles', '/caster', '/forensic']);
+export const LANDING_MODES = new Set(['/', '/dev', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/play/first-contact', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/cards', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles', '/caster', '/forensic']);
 
 export const isPlayRoute = (r) => r === '/play' || r.startsWith('/play/');
 
@@ -103,7 +134,10 @@ export function renderNavigation() {
   // account dropdown on the landing page. Release Notes is on the landing rail.
   const SECTIONS = [
     { label: 'Learn', routes: ['/rules', '/cards', STRATEGY_NAMES.route] },
-    { label: 'Lab', routes: ['/watch', '/caster', '/replays', '/history', '/mechanics', '/synergies', '/ranks', '/compare', '/traces', '/branches', '/diagnostics', '/evolution', '/tournament', '/evidence', '/intelligence'] },
+    { label: 'Observe', routes: ['/watch', '/caster', '/replays', '/history'] },
+    { label: 'Analyze', routes: ['/mechanics', '/synergies', '/ranks', '/compare', '/traces', '/branches', '/diagnostics'] },
+    { label: 'Experiment', routes: ['/evolution', '/tournament'] },
+    { label: 'Evidence', routes: ['/evidence', '/intelligence'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));
   const nav = document.querySelector('#workspace-nav');
@@ -127,6 +161,22 @@ export function renderNavigation() {
   if (searchInput) {
     searchInput.addEventListener('input', () => filterWorkspaces(searchInput.value));
   }
+  updateRailContext();
+}
+
+/**
+ * Refresh the rail's persistent dataset-orientation strip (match count,
+ * corpus origin, visibility mode). Called after nav render and whenever
+ * the active dataset is replaced (campaign run, reset, authorized load).
+ */
+export function updateRailContext() {
+  const el = document.querySelector('#rail-context');
+  if (!el) return;
+  const o = state.observatory ?? {};
+  const n = state.aggregate?.matchCount ?? (Array.isArray(o.summaries) ? o.summaries.length : null);
+  const origin = o.datasetOrigin === 'EVOLUTION_LAB' ? 'Lab dataset' : 'Certified corpus';
+  const vis = ({ public: 'Public', player: 'Player', judge: 'Omniscient' })[state.visibility] ?? 'Public';
+  el.innerHTML = `<span class="rail-context-row"><b>${n != null ? fmt(n) : '—'}</b><small>matches</small></span><span class="rail-context-meta">${esc(origin)} · ${esc(vis)} view</span>`;
 }
 
 /**

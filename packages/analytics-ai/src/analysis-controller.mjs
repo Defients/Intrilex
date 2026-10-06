@@ -11,6 +11,7 @@ import { runDeterministicChecks, summarizeDeterministicChecks } from './determin
 import { buildContext, ANALYSIS_MODE } from './analytics-context-builder.mjs';
 import { buildMessages } from './prompt-builder.mjs';
 import { validateAnalysisResponse } from './response-validator.mjs';
+import { ANALYSIS_RESPONSE_SCHEMA } from './response-schema.mjs';
 import { repairResponse } from './response-repair.mjs';
 import { computeCacheKey, deriveDatasetId } from './analysis-cache.mjs';
 
@@ -99,16 +100,35 @@ export class AnalysisController {
     const client = new OllamaClient({ endpoint: normSettings.endpoint, timeoutMs: normSettings.requestTimeoutMs, fetchImpl: this._fetchImpl });
     const requestStarted = Date.now();
     let rawText = '';
+    let structuredOutput = 'schema';
     try {
-      const result = await client.chat({
+      const chatOnce = (format, think) => client.chat({
         model: normSettings.model,
         messages,
+        format,
+        think,
         options: { temperature: normSettings.temperature, num_predict: normSettings.maxGeneratedTokens },
         stream: normSettings.streaming,
         onToken: (chunk) => { progress(ANALYSIS_STATUS.STREAMING, 'Streaming response'); try { onToken?.(chunk); } catch { /* ignore */ } },
         onProgress: (p) => progress(ANALYSIS_STATUS.STREAMING, `${p.tokens} tokens`),
         signal
       });
+      let result;
+      try {
+        // think:false keeps reasoning models (deepseek-r1, qwen3, gpt-oss…)
+        // from spending the whole num_predict budget on hidden thinking and
+        // returning empty content. Older servers ignore unknown fields.
+        result = await chatOnce(ANALYSIS_RESPONSE_SCHEMA, false);
+      } catch (err) {
+        // Older Ollama builds reject schema-typed `format` fields with a
+        // 400 — retry once unconstrained rather than failing outright.
+        if (err?.category === OLLAMA_ERROR.HTTP_ERROR && err?.status === 400 && !signal?.aborted) {
+          structuredOutput = 'unsupported-fallback';
+          result = await chatOnce(null, null);
+        } else {
+          throw err;
+        }
+      }
       rawText = result.text;
     } catch (err) {
       const requestDurationMs = Date.now() - requestStarted;
@@ -140,6 +160,8 @@ export class AnalysisController {
       return this._error('Model returned malformed output that could not be repaired.', {
         code: 'malformed-output',
         requestDurationMs,
+        endpoint: normSettings.endpoint,
+        model: normSettings.model,
         rawResponse: rawText,
         validationErrors: validation?.errors || ['no parseable JSON'],
         repairAttempts: repairInfo?.attempts || [],
@@ -165,6 +187,7 @@ export class AnalysisController {
         contextTruncated: context.truncated,
         sanitizationFlags: context.sanitizationFlags,
         systemPromptVersion,
+        structuredOutput,
         repairUsed: repairInfo?.repaired || false,
         repairMethod: repairInfo?.method || null,
         rawResponse: rawText,

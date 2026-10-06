@@ -174,6 +174,7 @@ function errorHint(r) {
     [OLLAMA_ERROR.MODEL_NOT_FOUND]: 'The selected model is not installed on the Ollama server. Pull it with "ollama pull <model>" or choose another model after refreshing the model list.',
     [OLLAMA_ERROR.HTTP_ERROR]: 'Ollama returned an HTTP error. Check the Ollama server logs for details.',
     [OLLAMA_ERROR.NETWORK]: 'A network error interrupted the request. Check the connection and try again.',
+    [OLLAMA_ERROR.EMPTY_RESPONSE]: 'The model returned an empty response. Reasoning models (deepseek-r1, qwen3, gpt-oss…) can spend the whole token budget on hidden reasoning — raise "Max generated tokens" in settings or pick a non-reasoning model. If the endpoint is not a real Ollama server, its response format may be incompatible.',
     'malformed-output': 'The model did not return valid structured JSON and repair failed. Try a larger model, lower the temperature, or enable developer mode and inspect the raw response below.',
     'no-model': 'Select a model in the settings above.',
     'busy': 'Wait for the current analysis to finish or cancel it.'

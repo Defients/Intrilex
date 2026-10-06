@@ -152,6 +152,51 @@ test('controller: malformed model output surfaces raw response and validation er
   assert.ok(r.deterministicWarnings, 'deterministic warnings should still be computed');
 });
 
+test('controller: structured-output request retries without format on HTTP 400', async () => {
+  const bodies = [];
+  const fakeFetch = async (_url, opts) => {
+    bodies.push(JSON.parse(opts.body));
+    if (bodies.length === 1) {
+      return { ok: false, status: 400, json: async () => ({}), text: async () => 'invalid format field', body: null };
+    }
+    return {
+      ok: true, status: 200,
+      json: async () => ({ message: { content: JSON.stringify(validResponse) }, done: true }),
+      text: async () => JSON.stringify(validResponse),
+      body: null
+    };
+  };
+  const ctrl = new AnalysisController({ fetchImpl: fakeFetch });
+  const r = await ctrl.analyze({
+    settings: { enabled: true, model: 'llama3', streaming: false, endpoint: 'http://127.0.0.1:1' },
+    bundle: { observatory: { mechanics: [], hasOpportunityTelemetry: true }, aggregate: { matchCount: 100 } },
+    mode: ANALYSIS_MODE.EXECUTIVE_SUMMARY, useCache: false
+  });
+  assert.equal(r.ok, true);
+  assert.equal(bodies.length, 2);
+  assert.ok(bodies[0].format, 'first request should carry the structured-output schema');
+  assert.equal(bodies[0].think, false);
+  assert.equal(bodies[1].format, undefined);
+  assert.equal(r.debug.structuredOutput, 'unsupported-fallback');
+});
+
+test('controller: empty model output fails with EMPTY_RESPONSE', async () => {
+  const fakeFetch = async () => ({
+    ok: true, status: 200,
+    json: async () => ({ message: { content: '' }, done: true, done_reason: 'stop' }),
+    text: async () => '',
+    body: null
+  });
+  const ctrl = new AnalysisController({ fetchImpl: fakeFetch });
+  const r = await ctrl.analyze({
+    settings: { enabled: true, model: 'llama3', streaming: false, endpoint: 'http://127.0.0.1:1' },
+    bundle: { observatory: { mechanics: [], hasOpportunityTelemetry: true }, aggregate: { matchCount: 100 } },
+    mode: ANALYSIS_MODE.EXECUTIVE_SUMMARY, useCache: false
+  });
+  assert.equal(r.ok, false);
+  assert.equal(r.code, 'EMPTY_RESPONSE');
+});
+
 test('controller: valid model output is validated and cached', async () => {
   const fakeFetch = async () => ({
     ok: true, status: 200,

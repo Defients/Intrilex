@@ -2,9 +2,10 @@
 // workspaces/branches.js — /branches workspace: counterfactual lab
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   app,   esc,   pct,   definitionList } from '../state.js?v=c4e7aaac019e';
-import { rerender } from '../rerender.js?v=c4e7aaac019e';
-import { POLICY_IDS } from '../autonomy-runtime.js?v=c4e7aaac019e';
+import { state,   app,   esc,   pct,   definitionList } from '../state.js?v=408ebfe25d7a';
+import { rerender } from '../rerender.js?v=408ebfe25d7a';
+import { POLICY_IDS } from '../autonomy-runtime.js?v=408ebfe25d7a';
+import { intervalPlot } from '../chart-toolkit.js?v=408ebfe25d7a';
 
 // Build a human-readable label for a policy ID
 function policyLabel(id) {
@@ -100,14 +101,14 @@ export function renderBranches() {
 }
 
 function renderBranchResult() {
-  if (state.branchAllActionsResult) return renderAllActionsResult(state.branchAllActionsResult);
+  if (state.branchAllActionsResult) return `<div class="ws-stack">${renderAllActionsResult(state.branchAllActionsResult)}</div>`;
   if (!state.branchResult) return '<div class="notice">Configure parameters above and click <strong>Load legal actions</strong> to see available actions at the checkpoint, then click <strong>Run paired counterfactual</strong> to estimate the causal effect of an alternative action, or <strong>Analyze all actions</strong> to rank every legal action by utility.</div>';
   const s = state.branchResult, a = state.branchResultB, c = state.branchComparison;
   if (s.status === 'NOT_SUPPORTED') return `<div class="notice warning"><strong>Not supported:</strong> ${esc(s.reason ?? 'unknown')}. Missing: ${esc(s.missingAuthority ?? 'unknown')}</div>`;
-  return `<div class="grid two" style="margin-top:16px">
+  return `<div class="ws-stack"><div class="grid two">
     <div class="panel"><div class="panel-header"><h3>Selected branch</h3></div><div class="panel-body">${renderBranchSummary(s)}</div></div>
     <div class="panel"><div class="panel-header"><h3>Alternative branch</h3></div><div class="panel-body">${renderBranchSummary(a)}</div></div>
-  </div>${c ? renderBranchComparison(c) : ''}`;
+  </div>${c ? renderBranchComparison(c) : ''}</div>`;
 }
 
 function renderAllActionsResult(result) {
@@ -117,12 +118,21 @@ function renderAllActionsResult(result) {
     const winRate = r.focalWinRate != null ? pct(r.focalWinRate) : '—';
     const ci = r.utilityCI ? `[${r.utilityCI[0].toFixed(4)}, ${r.utilityCI[1].toFixed(4)}]` : '—';
     const delta = r.utilityDelta != null ? (r.utilityDelta >= 0 ? `+${r.utilityDelta.toFixed(4)}` : r.utilityDelta.toFixed(4)) : '—';
-    const deltaCls = r.utilityDelta > 0 ? 'style="color:var(--accent)"' : r.utilityDelta < 0 ? 'style="color:#f87171"' : '';
-    const histBadge = r.isHistorical ? '<span class="badge-tag" style="background:var(--accent);color:var(--bg)">Historical</span>' : '';
-    return `<tr><td>${i + 1}</td><td><code>${esc(r.actionId)}</code> ${histBadge}</td><td>${util}</td><td>${ci}</td><td>${winRate}</td><td ${deltaCls}>${delta}</td><td>${r.completedCount}/${r.totalRollouts}</td></tr>`;
+    const deltaCls = r.utilityDelta > 0 ? 'positive' : r.utilityDelta < 0 ? 'negative' : '';
+    const histBadge = r.isHistorical ? '<span class="badge-tag is-hist">Historical</span>' : '';
+    return `<tr><td>${i + 1}</td><td><code>${esc(r.actionId)}</code> ${histBadge}</td><td>${util}</td><td>${ci}</td><td>${winRate}</td><td class="${deltaCls}">${delta}</td><td>${r.completedCount}/${r.totalRollouts}</td></tr>`;
   }).join('');
-  return `<div class="panel" style="margin-top:16px"><div class="panel-header"><h3>All Actions Analysis — Ranked by Focal Utility</h3></div><div class="panel-body">
-    <p style="color:var(--text-dim);margin-bottom:12px">Each legal action at checkpoint ${result.checkpointIndex} was executed and continued with ${esc(result.continuationPolicyIds?.join(' vs ') ?? 'N/A')} for ${result.rolloutCount} rollouts. Delta is relative to the historical action.</p>
+  // Utility-CI interval plot: which actions dominate the historical choice,
+  // and which are statistically indistinguishable from it.
+  const plotRows = result.rankings
+    .filter(r => Number.isFinite(r.meanFocalUtility) && Array.isArray(r.utilityCI))
+    .map(r => ({ label: r.actionId, estimate: r.meanFocalUtility, low: r.utilityCI[0], high: r.utilityCI[1], color: r.isHistorical ? '#ee6cb7' : '#5ad7e8', note: r.isHistorical ? 'historical action' : '' }));
+  const intervalHtml = plotRows.length
+    ? `<div class="branch-divergence-chart">${intervalPlot({ rows: plotRows, refLine: NaN, title: 'Utility by action', ariaLabel: `Interval plot of focal utility 95% confidence intervals for ${plotRows.length} actions at checkpoint ${result.checkpointIndex}` })}</div>`
+    : '';
+  return `<div class="panel"><div class="panel-header"><h3>All Actions Analysis — Ranked by Focal Utility</h3></div><div class="panel-body">
+    <p class="branch-analysis-note">Each legal action at checkpoint ${result.checkpointIndex} was executed and continued with ${esc(result.continuationPolicyIds?.join(' vs ') ?? 'N/A')} for ${result.rolloutCount} rollouts. Delta is relative to the historical action.</p>
+    ${intervalHtml}
     <div class="table-wrap"><table class="data-table"><thead><tr><th>Rank</th><th>Action</th><th>Mean Utility</th><th>95% CI</th><th>Win Rate</th><th>Δ vs Historical</th><th>Completed</th></tr></thead><tbody>${rows}</tbody></table></div>
   </div></div>`;
 }
@@ -143,9 +153,23 @@ function renderBranchComparison(c) {
   const fmtCI = (ci) => ci ? `[${ci[0].toFixed(4)}, ${ci[1].toFixed(4)}]` : '—';
   const fmtWinCI = (ci) => ci ? `[${pct(ci[0])}, ${pct(ci[1])}]` : '—';
   const sigBadge = c.significant
-    ? '<span class="badge-tag" style="background:var(--accent);color:var(--bg)">Significant (95%)</span>'
-    : '<span class="badge-tag" style="background:var(--text-dim);color:var(--bg)">Not significant</span>';
-  return `<div class="panel" style="margin-top:16px"><div class="panel-header"><h3>Comparison ${sigBadge}</h3></div><div class="panel-body">
+    ? '<span class="badge-tag is-sig">Significant (95%)</span>'
+    : '<span class="badge-tag is-flat">Not significant</span>';
+  // Divergence interval plot: the two branch utility estimates side by side.
+  const divPlot = (Number.isFinite(c.selectedFocalUtility) && Array.isArray(c.selectedUtilityCI)
+    && Number.isFinite(c.alternativeFocalUtility) && Array.isArray(c.alternativeUtilityCI))
+    ? `<div class="branch-divergence-chart">${intervalPlot({
+        rows: [
+          { label: 'Selected', estimate: c.selectedFocalUtility, low: c.selectedUtilityCI[0], high: c.selectedUtilityCI[1], color: '#5ad7e8' },
+          { label: 'Alternative', estimate: c.alternativeFocalUtility, low: c.alternativeUtilityCI[0], high: c.alternativeUtilityCI[1], color: '#ee6cb7' }
+        ],
+        refLine: NaN,
+        title: 'Branch utility comparison',
+        ariaLabel: 'Interval plot comparing selected and alternative branch focal utility with 95% confidence intervals'
+      })}</div>`
+    : '';
+  return `<div class="panel"><div class="panel-header"><h3>Comparison ${sigBadge}</h3></div><div class="panel-body">
+    ${divPlot}
     ${definitionList([
       ['Selected utility', c.selectedFocalUtility?.toFixed(4)],
       ['Selected utility 95% CI', fmtCI(c.selectedUtilityCI)],

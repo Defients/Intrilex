@@ -1,8 +1,8 @@
 // shared-browser.js — Browser-safe replacement for @intrilex/shared canonical.mjs.
 // Re-exports hash primitives from the browser crypto shim and defines pure
 // helpers so the browser bundle never pulls in node:crypto.
-export { canonicalize, canonicalClone } from './engine/canonical-json.js?v=c4e7aaac019e';
-export { sha256Text, hashCanonical } from './engine/hash.js?v=c4e7aaac019e';
+export { canonicalize, canonicalClone } from './engine/canonical-json.js?v=408ebfe25d7a';
+export { sha256Text, hashCanonical } from './engine/hash.js?v=408ebfe25d7a';
 export function sanitizeCsvCell(value) {
   const text = value == null ? '' : String(value);
   const safe = /^[=+\-@]/.test(text) ? `'${text}` : text;

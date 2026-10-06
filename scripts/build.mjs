@@ -96,6 +96,14 @@ for(const name of (await readdir(path.join(dist,'strategy'))).filter(n=>/\.(js|m
   const file=path.join(dist,'router.js');
   await writeFile(file,(await readFile(file,'utf8')).replaceAll('../../../packages/simulation-runtime/src/','./evolution/'));
 }
+// analysis-dossier.js is isomorphic: tests import the src file (packages paths
+// resolve in Node); the browser copy uses the dist shared/evolution mirrors.
+{
+  const file=path.join(dist,'analysis-dossier.js');
+  await writeFile(file,(await readFile(file,'utf8'))
+    .replaceAll('../../../packages/shared/src/canonical.mjs','./shared-browser.js')
+    .replaceAll('../../../packages/simulation-runtime/src/','./evolution/'));
+}
 for(const name of ['evolution-analytics-model.mjs','evolution-analytics-charts.mjs']) {
   const file=path.join(dist,'evolution',name);
   await writeFile(file,(await readFile(file,'utf8')).replaceAll('../../../../packages/simulation-runtime/src/strategic-telemetry.mjs','./strategic-telemetry.mjs'));

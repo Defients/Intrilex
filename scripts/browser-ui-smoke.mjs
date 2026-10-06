@@ -272,7 +272,7 @@ try{
   for(const [name,width,height] of [['mobile-390',390,844],['tablet-768',768,1024],['desktop-1366',1366,768],['theatre-1920',1920,1080]]){
     await cdp.call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});
     const targetRoute=name==='theatre-1920'?'watch':name==='desktop-1366'?'cards':'mechanics';await cdp.evaluate(`location.hash='#/${targetRoute}'`);await new Promise(r=>setTimeout(r,250));
-    if(name==='theatre-1920')await cdp.evaluate(`(()=>{const el=document.querySelector('#layout-preset');el.value='theatre';el.dispatchEvent(new Event('change',{bubbles:true}));return true;})()`);
+    if(name==='theatre-1920')await cdp.evaluate(`(()=>{if(document.querySelector('.observatory-shell').dataset.preset!=='theatre')document.querySelector('#rail-toggle').click();return true;})()`);
     const geometry=await cdp.evaluate(`(()=>({scrollWidth:document.documentElement.scrollWidth,clientWidth:document.documentElement.clientWidth,scrollHeight:document.documentElement.scrollHeight,workspace:document.querySelector('#page-title')?.textContent}))()`);
     if(geometry.scrollWidth>geometry.clientWidth+2)throw new Error(`Horizontal overflow at ${name}: ${JSON.stringify(geometry)}`);
     const shot=await cdp.call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await writeFile(path.join(screenshotDir,`${name}.png`),Buffer.from(shot.data,'base64'));

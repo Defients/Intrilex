@@ -2466,3 +2466,40 @@
 
 .guided-error { max-width: 480px; margin: 0 auto; padding: var(--tcg-space-6); text-align: center; }
 .guided-error h2 { color: rgba(255, 100, 100, 0.9); margin-bottom: var(--tcg-space-3); }
+
+/* ── First Contact: in-match coach panel ── */
+.fc-coach { background: rgba(15, 20, 35, 0.6); border: 1px solid rgba(90, 215, 232, 0.18); border-radius: var(--tcg-radius-md); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.fc-coach-head { display: flex; align-items: center; gap: 10px; }
+.fc-coach-eyebrow { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tcg-cyan, #5ad7e8); }
+.fc-coach-status { font-size: 0.72rem; color: var(--tcg-text-dim); font-variant-numeric: tabular-nums; margin-left: auto; }
+.fc-dots { display: inline-flex; gap: 4px; align-items: center; }
+.fc-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.15); }
+.fc-dot-done { background: rgba(90, 215, 232, 0.7); }
+.fc-dot-now { background: var(--tcg-cyan, #5ad7e8); box-shadow: 0 0 6px rgba(90, 215, 232, 0.6); }
+.fc-text { margin: 0; font-size: 0.85rem; line-height: 1.5; color: var(--tcg-text); }
+.fc-text-railsoff { color: var(--tcg-text-dim); }
+.fc-say { margin: 0; font-size: 0.8rem; line-height: 1.5; color: var(--tcg-cyan, #5ad7e8); border-left: 2px solid rgba(90, 215, 232, 0.4); padding-left: 8px; }
+.fc-coach-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.fc-btn { background: rgba(90, 215, 232, 0.08); border: 1px solid rgba(90, 215, 232, 0.22); color: var(--tcg-cyan, #5ad7e8); font-size: 0.74rem; padding: 4px 10px; border-radius: var(--tcg-radius-sm); cursor: pointer; }
+.fc-btn:hover { background: rgba(90, 215, 232, 0.16); }
+.fc-btn:focus-visible { outline: 2px solid rgba(90, 215, 232, 0.6); outline-offset: 1px; }
+.fc-coach-railsoff { border-color: rgba(90, 215, 232, 0.08); opacity: 0.85; }
+.fc-coach-railsoff .fc-dots { display: none; }
+
+/* ── First Contact: welcome gate (the only blocking beat) ── */
+.fc-coachmark { position: fixed; inset: 0; z-index: 9200; display: flex; align-items: center; justify-content: center; background: rgba(5, 8, 16, 0.72); backdrop-filter: blur(2px); animation: fc-coachmark-fadein 0.25s ease-out; }
+@keyframes fc-coachmark-fadein { from { opacity: 0; } to { opacity: 1; } }
+.fc-coachmark-card { max-width: 380px; margin: 0 16px; background: linear-gradient(135deg, rgba(15, 25, 45, 0.97), rgba(20, 15, 35, 0.97)); border: 1px solid rgba(90, 215, 232, 0.35); border-radius: var(--tcg-radius-md); padding: 20px 22px; box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(90, 215, 232, 0.12); text-align: center; }
+.fc-coachmark-eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--tcg-cyan, #5ad7e8); margin: 0 0 8px; }
+.fc-coachmark-text { font-size: 0.92rem; line-height: 1.6; color: var(--tcg-text); margin: 0 0 16px; }
+.fc-coachmark-button { background: rgba(90, 215, 232, 0.15); border: 1px solid rgba(90, 215, 232, 0.5); color: var(--tcg-cyan, #5ad7e8); font-size: 0.9rem; font-weight: 600; padding: 9px 26px; border-radius: var(--tcg-radius-sm); cursor: pointer; }
+.fc-coachmark-button:hover { background: rgba(90, 215, 232, 0.25); }
+.fc-coachmark-button:focus-visible { outline: 2px solid rgba(90, 215, 232, 0.7); outline-offset: 2px; }
+
+/* ── First Contact: terminal recap ── */
+.fc-recap { margin: 12px auto; max-width: 480px; background: rgba(15, 20, 35, 0.6); border: 1px solid rgba(90, 215, 232, 0.25); border-radius: var(--tcg-radius-md); padding: 16px 20px; text-align: center; }
+.fc-recap-eyebrow { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tcg-cyan, #5ad7e8); margin: 0 0 4px; }
+.fc-recap-title { margin: 0 0 6px; font-size: 1.05rem; color: var(--tcg-text); }
+.fc-recap-progress { font-size: 0.74rem; color: var(--tcg-text-dim); margin: 0 0 10px; font-variant-numeric: tabular-nums; }
+.fc-recap-line { font-size: 0.84rem; line-height: 1.5; color: var(--tcg-text-dim); margin: 2px 0; }
+.fc-recap-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
