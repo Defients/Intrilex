@@ -1,5 +1,5 @@
-import { runBrowserPolicyMatch } from './autonomy-runtime.js?v=3e5b5b85f4e1';
-import { IntrilexEngine, verifyCertifiedReplay, hashCanonical, advanceToDecision, advanceCoreToDecision } from './engine/browser-entry.js?v=3e5b5b85f4e1';
+import { runBrowserPolicyMatch } from './autonomy-runtime.js?v=ad40772959f0';
+import { IntrilexEngine, verifyCertifiedReplay, hashCanonical, advanceToDecision, advanceCoreToDecision } from './engine/browser-entry.js?v=ad40772959f0';
 import {
   ANCHOR_SCHEMA_VERSION,
   REQUIRED_ANCHOR_FIELDS,
@@ -8,7 +8,7 @@ import {
   verifyAnchorAuthority,
   installAnchorHash,
   verifiedAnchorHash
-} from './anchor.js?v=3e5b5b85f4e1';
+} from './anchor.js?v=ad40772959f0';
 
 // Install the browser hash function into the anchor resolver for parity.
 installAnchorHash(hashCanonical);
@@ -21,7 +21,7 @@ export {
   reconcileLegacyCheckpointHash,
   verifyAnchorAuthority,
   verifiedAnchorHash
-} from './anchor.js?v=3e5b5b85f4e1';
+} from './anchor.js?v=ad40772959f0';
 
 export const COUNTERFACTUAL_SCHEMA_VERSION = '2.0.0';
 export const ANALYSIS_VERSION = '2.0.0';

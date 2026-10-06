@@ -2,10 +2,10 @@
 // workspaces/ranks.js — /ranks workspace: rank power observatory
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   app,   esc,   short,   definitionList } from '../state.js?v=3e5b5b85f4e1';
-import { rerender } from '../rerender.js?v=3e5b5b85f4e1';
-import { labDatasetBanner } from './observatory.js?v=3e5b5b85f4e1';
-import { radarChart } from '../chart-toolkit.js?v=3e5b5b85f4e1';
+import { state,   app,   esc,   short,   definitionList } from '../state.js?v=ad40772959f0';
+import { rerender } from '../rerender.js?v=ad40772959f0';
+import { labDatasetBanner } from './observatory.js?v=ad40772959f0';
+import { radarChart } from '../chart-toolkit.js?v=ad40772959f0';
 
 const SUIT_GLYPHS = { '10:club': '♣', '10:diamond': '♦', '10:heart': '♥', '10:spade': '♠' };
 
@@ -44,7 +44,7 @@ export function renderRanks() {
   const ranks = rankPower.ranks ?? {};
   const watch = rankPower.watchlist ?? { overpowered: [], underpowered: [], dominant: [], negligible: [] };
   const ladder = Object.entries(ranks)
-    .map(([rank, profile]) => ({ rank, rpi: profile.rpi ?? 0, confidence: profile.confidence ?? 'INSUFFICIENT', opportunities: profile.metrics?.opportunityCount ?? 0 }))
+    .map(([rank, profile]) => ({ rank, rpi: profile.rpi ?? 0, confidence: profile.confidence ?? 'INSUFFICIENT', opportunities: profile.metrics?.opportunityCount ?? 0, balanceQualified: profile.balanceQualified, integrityStatus: profile.integrity?.status ?? null, qualificationReasons: profile.balanceQualification?.reasons ?? [] }))
     .sort((a, b) => b.rpi - a.rpi);
   const selectedRank = state.selectedRank ?? ladder[0]?.rank ?? 'A';
   const profile = ranks[selectedRank] ?? {};
@@ -103,12 +103,21 @@ function rankSummaryStrip(ladder, watch) {
   const highConf = ladder.filter(e => e.confidence === 'HIGH').length;
   const flagCount = ['overpowered', 'underpowered', 'dominant', 'negligible']
     .reduce((sum, k) => sum + (watch[k]?.length ?? 0), 0);
+  // Descriptive RPI order is not a balance conclusion. When qualification
+  // metadata is present, the lead tile names the strongest balance-qualified
+  // entry and states plainly when the descriptive leader is disqualified.
+  const hasQualification = ladder.some(e => e.balanceQualified !== undefined);
+  const qualifiedTop = hasQualification ? ladder.find(e => e.balanceQualified) : top;
+  const integrityFailures = ladder.filter(e => e.integrityStatus === 'FAIL');
+  const lead = qualifiedTop
+    ? `<small>${hasQualification ? 'Strongest balance-qualified' : 'Strongest rank (descriptive)'}</small><div class="rank-stat-leadline"><span class="rank-glyph rank-tile ${rankFamily(qualifiedTop.rank)}">${esc(displayRankGlyph(qualifiedTop.rank))}</span><b>${(qualifiedTop.rpi * 100).toFixed(1)}</b></div><span class="rank-stat-sub">RPI${hasQualification && qualifiedTop !== top ? ` · descriptive leader ${esc(displayRankGlyph(top.rank))} not balance-qualified` : ''}</span>`
+    : `<small>Strongest balance-qualified</small><b>none</b><span class="rank-stat-sub">descriptive leader ${esc(displayRankGlyph(top.rank))} (${(top.rpi * 100).toFixed(1)}) is not balance-qualified</span>`;
   return `<div class="rank-summary">
-    <div class="rank-stat rank-stat-lead"><small>Strongest rank</small><div class="rank-stat-leadline"><span class="rank-glyph rank-tile ${rankFamily(top.rank)}">${esc(displayRankGlyph(top.rank))}</span><b>${(top.rpi * 100).toFixed(1)}</b></div><span class="rank-stat-sub">RPI · ${esc((top.confidence ?? '').toLowerCase())} confidence</span></div>
-    <div class="rank-stat"><small>Median RPI</small><b>${(mid.rpi * 100).toFixed(1)}</b><span class="rank-stat-sub">cohort midpoint</span></div>
+    <div class="rank-stat rank-stat-lead" data-testid="rank-summary-lead" title="Balance-qualified = integrity PASS (no selections without opportunities, child variants included) + HIGH opportunity-frequency confidence + all mandatory axes observed. Descriptive RPI ordering never implies balance.">${lead}</div>
+    <div class="rank-stat"><small>Median RPI</small><b>${(mid.rpi * 100).toFixed(1)}</b><span class="rank-stat-sub">cohort midpoint (descriptive)</span></div>
     <div class="rank-stat"><small>Power spread</small><b>${(spread * 100).toFixed(1)}</b><span class="rank-stat-sub">top − bottom RPI</span></div>
-    <div class="rank-stat"><small>High confidence</small><b>${highConf}<i>/${ladder.length}</i></b><span class="rank-stat-sub">ladder entries</span></div>
-    <div class="rank-stat ${flagCount ? 'rank-stat-alert' : ''}"><small>Balance flags</small><b>${flagCount}</b><span class="rank-stat-sub">${flagCount ? 'active watchlist entries' : 'watchlist clear'}</span></div>
+    <div class="rank-stat" title="Frequency confidence counts recorded opportunities only. HIGH frequency confidence does not imply balance-inference confidence."><small>High frequency confidence</small><b>${highConf}<i>/${ladder.length}</i></b><span class="rank-stat-sub">opportunity count ≥ 200</span></div>
+    <div class="rank-stat ${flagCount || integrityFailures.length ? 'rank-stat-alert' : ''}"><small>Balance flags</small><b>${flagCount}</b><span class="rank-stat-sub">${integrityFailures.length ? `${integrityFailures.length} entr${integrityFailures.length === 1 ? 'y' : 'ies'} disqualified by integrity failure` : flagCount ? 'active watchlist entries' : 'watchlist clear'}</span></div>
   </div>`;
 }
 
@@ -120,12 +129,13 @@ function rankLadderRow(entry, index, selectedRank) {
   const confClass = `confidence-${conf.toLowerCase()}`;
   const isSelected = entry.rank === selectedRank;
   const podium = index < 3 ? ` podium-${index + 1}` : '';
-  return `<li><button class="rank-row ${isSelected ? 'selected' : ''} ${confClass}" data-rank="${esc(entry.rank)}" ${isSelected ? 'aria-current="true"' : ''} title="${esc(glyph)} — RPI ${rpct} · ${conf} confidence">
+  const qualText = entry.integrityStatus === 'FAIL' ? ' · INTEGRITY FAILURE — not balance-qualified' : entry.balanceQualified === false ? ' · descriptive only (not balance-qualified)' : '';
+  return `<li><button class="rank-row ${isSelected ? 'selected' : ''} ${confClass}${entry.integrityStatus === 'FAIL' ? ' rank-row-integrity-fail' : ''}" data-rank="${esc(entry.rank)}" ${isSelected ? 'aria-current="true"' : ''} title="${esc(glyph)} — RPI ${rpct} · ${conf} frequency confidence${qualText}">
     <span class="rank-pos${podium}">${index + 1}</span>
     <span class="rank-glyph rank-tile ${rankFamily(entry.rank)}">${esc(glyph)}</span>
     <span class="rank-row-track"><span class="rank-bar-container"><span class="rank-bar-fill" style="width:${rpct}%"></span></span></span>
     <span class="rank-rpi">${rpct}</span>
-    <span class="rank-conf-dot" title="${conf} confidence" aria-hidden="true"></span>
+    <span class="rank-conf-dot" title="${conf} frequency confidence" aria-hidden="true"></span>${entry.integrityStatus === 'FAIL' ? '<span class="rank-integrity-flag" title="Selections without recorded opportunities — excluded from balance conclusions">!</span>' : ''}
   </button></li>`;
 }
 

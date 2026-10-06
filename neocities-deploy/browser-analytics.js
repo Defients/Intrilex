@@ -5,9 +5,9 @@
 // Rank attribution extracted to rank-attribution-browser.js (P4.3).
 // Rank power model extracted to rank-power-model.js (P4.3).
 
-import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=3e5b5b85f4e1';
-import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=3e5b5b85f4e1';
-import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=3e5b5b85f4e1';
+import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=ad40772959f0';
+import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=ad40772959f0';
+import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=ad40772959f0';
 import {
   CANONICAL_RANKS,
   classifyPlayForm,
@@ -15,7 +15,7 @@ import {
   buildSourceCards,
   attributeRankAction,
   attributeAction,
-} from './rank-attribution-browser.js?v=3e5b5b85f4e1';
+} from './rank-attribution-browser.js?v=ad40772959f0';
 import {
   RANK_POWER_SCHEMA_VERSION,
   RPI_AXIS_WEIGHTS,
@@ -26,20 +26,24 @@ import {
   computeDecisionPower,
   buildBalanceWatchlist,
   buildRankPowerModel,
-} from './rank-power-model.js?v=3e5b5b85f4e1';
+} from './rank-power-model.js?v=ad40772959f0';
 import {
+  ANALYTICS_SCHEMA_VERSION,
   buildMechanicsAtlas,
   analyzeSynergies,
   mineCausalMotifs,
   buildPolicyFingerprints,
   detectAnomalies,
-  mcnemarPairedTest,
-  pairedBootstrapABBA,
-} from './observatory-analytics-browser.js?v=3e5b5b85f4e1';
+  buildPairedABBAAnalysis,
+} from './observatory-analytics-browser.js?v=ad40772959f0';
 import {
   mechanicRegistryHash,
   quarantineUnknownTags,
-} from './mechanic-registry-browser.js?v=3e5b5b85f4e1';
+} from './mechanic-registry-browser.js?v=ad40772959f0';
+import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=ad40772959f0';
+import { winRateRecord } from './shared-analytics/estimators.mjs?v=ad40772959f0';
+import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=ad40772959f0';
+import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=ad40772959f0';
 
 // Re-export for backward compatibility (other modules import from browser-analytics)
 export {
@@ -748,15 +752,8 @@ export function buildVariantAnalytics({ summaries, aggregate = null, profileId =
         for (const opp of decisionVariantOpps) {
           if (opp.variantKey) variantOpps[opp.variantKey] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
         }
-        // Legacy/stale decisions may only carry 10 or 10:normal — distribute
-        // across the non-spade suit keys so the per-suit ladder has data.
-        if (attribution.primaryRank === '10') {
-          const nonSpade = variantOpps['10:normal'] ?? variantOpps['10'];
-          if (nonSpade) {
-            const perSuit = Math.ceil((nonSpade.opportunityFrames ?? 1) / 3);
-            for (const key of ['10:club', '10:diamond', '10:heart']) variantOpps[key] = { opportunityFrames: perSuit, legalOptions: nonSpade.legalOptions ?? 1 };
-          }
-        }
+        // Per-suit Ten denominators come only from runtime-recorded keys —
+        // never synthesized from the rank-overall count (parity with canonical).
       } else {
         // Legacy fallback: rank-overall and normal keys only. Spade/super
         // variants record zero opportunities in legacy data (documented
@@ -764,9 +761,8 @@ export function buildVariantAnalytics({ summaries, aggregate = null, profileId =
         for (const opp of (decision.rankOpportunities ?? [])) {
           if (!opp.rank) continue;
           if (opp.rank === '10') {
-            const perSuit = Math.ceil((opp.opportunityFrames ?? 1) / 3);
+            // Legacy data cannot say which Ten suit was legal → rank-overall only.
             variantOpps['10'] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
-            for (const key of ['10:club', '10:diamond', '10:heart']) variantOpps[key] = { opportunityFrames: perSuit, legalOptions: opp.legalOptions ?? 1 };
           } else {
             variantOpps[opp.rank] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
             variantOpps[`${opp.rank}:normal`] = { opportunityFrames: opp.opportunityFrames ?? 1, legalOptions: opp.legalOptions ?? 1 };
@@ -918,8 +914,9 @@ export function campaignAggregate(summaries, semantic = {}) {
     for (const [k, v] of Object.entries(m.primaryMechanicCounts ?? {})) _increment(primaryMechanicCounts, k, v);
     if (m.ruleCompliance?.status === 'PASS') ruleCompliance.passedMatchCount += 1;
     else { ruleCompliance.failedMatchCount += 1; ruleCompliance.violationCount += Number(m.ruleCompliance?.violationCount ?? 1); }
-    for (const id of match.policyIds) policy[id] ??= { games: 0, wins: 0, draws: 0, aborts: 0, miniTurnActions:0, responsesPlayed:0, responsesDeclined:0 };
+    for (const id of match.policyIds) policy[id] ??= { games: 0, wins: 0, draws: 0, aborts: 0, miniTurnActions:0, responsesPlayed:0, responsesDeclined:0, selfPlayGames: 0 };
     policy[match.policyIds[0]].games += 1; policy[match.policyIds[1]].games += 1;
+    const sp = match.policyIds[0] === match.policyIds[1]; if (sp) policy[match.policyIds[0]].selfPlayGames += 2; // participation convention (parity with canonical)
     const hasParticipants = Array.isArray(match.participants) && match.participants.length === 2;
     if (hasParticipants) { for (const p of match.participants) { policy[p.policyId].miniTurnActions += p.miniTurnActionCount ?? 0; policy[p.policyId].responsesPlayed += p.responsePlayCount ?? 0; policy[p.policyId].responsesDeclined += p.responseDeclineCount ?? 0; } }
     else { const mt = match.miniTurnActionCount ?? 0, rp = match.responsePlayedCount ?? 0, rd = match.responseDeclinedWithOptionsCount ?? 0; for (const pid of match.policyIds) { policy[pid].miniTurnActions += mt; policy[pid].responsesPlayed += rp; policy[pid].responsesDeclined += rd; } }
@@ -927,17 +924,18 @@ export function campaignAggregate(summaries, semantic = {}) {
     matchups[matchupKey] ??= { games: 0, seat1Wins: 0, seat2Wins: 0, draws: 0, aborts: 0, totalFullTurns:0, totalResponses:0, totalChoices:0 };
     const matchup = matchups[matchupKey]; matchup.games += 1; matchup.totalFullTurns += match.completedFullTurns; matchup.totalResponses += match.meaningfulResponseDecisionCount ?? 0; matchup.totalChoices += match.privateChoiceDecisionCount ?? 0;
     if (!COMPLETE_REASONS.has(match.terminationReason)) {
-      matchup.aborts += 1; policy[match.policyIds[0]].aborts += 1; policy[match.policyIds[1]].aborts += 1;
+      matchup.aborts += 1; if (!sp) { policy[match.policyIds[0]].aborts += 1; policy[match.policyIds[1]].aborts += 1; }
     } else if (match.terminationReason === 'CANONICAL_DRAW') {
-      matchup.draws += 1; policy[match.policyIds[0]].draws += 1; policy[match.policyIds[1]].draws += 1;
+      matchup.draws += 1; if (!sp) { policy[match.policyIds[0]].draws += 1; policy[match.policyIds[1]].draws += 1; }
     } else {
       _increment(seatWins, String(match.winningSeat)); matchup[match.winningSeat === 1 ? 'seat1Wins' : 'seat2Wins'] += 1;
-      const winnerIndex = match.seatOrder.indexOf(match.winner); policy[match.policyIds[winnerIndex]].wins += 1;
+      const winnerIndex = match.seatOrder.indexOf(match.winner); if (!sp) policy[match.policyIds[winnerIndex]].wins += 1;
     }
   }
   for (const item of Object.values(policy)) {
-    item.winRate = item.games ? item.wins / item.games : 0;
-    item.wilson95 = _wilsonInterval(item.wins, Math.max(1, item.games - item.draws - item.aborts));
+    item.crossPolicyGames = item.games - item.selfPlayGames;
+    const r = winRateRecord({ wins: item.wins, losses: item.crossPolicyGames - item.wins - item.draws - item.aborts, draws: item.draws, aborts: item.aborts });
+    Object.assign(item, { decisiveGames: r.decisive, winRate: r.winRate, wilson95: r.wilson95, winRateDenominator: r.winRateDenominator, allGamesWinRate: r.allGamesWinRate, allGamesWilson95: r.allGamesWilson95 });
   }
   for (const item of Object.values(matchups)) {
     item.meanFullTurns = item.games ? item.totalFullTurns / item.games : 0;
@@ -973,27 +971,7 @@ export function campaignAggregate(summaries, semantic = {}) {
 // ── Extract analysis (browser-safe port of packages/analytics/src/extract.mjs) ──
 function formulaHash(formula) { return sha256Text(String(formula)); }
 
-const ANALYTICS_SCHEMA_VERSION = '4.2.0';
-const _V = ANALYTICS_SCHEMA_VERSION;
-const METRIC_REGISTRY = Object.freeze({
-  'win-rate': { version: _V, formula: 'wins / decisive completed matches', uncertainty: 'Wilson 95% interval' },
-  'participant-prevalence': { version: _V, formula: 'unique participant-match pairs that selected entity ≥1 / all eligible participant-match records', uncertainty: 'Wilson 95% interval' },
-  'match-prevalence': { version: _V, formula: 'unique matches in which entity selected ≥1 / all eligible matches', uncertainty: 'Wilson 95% interval' },
-  'pick-rate-when-legal': { version: _V, formula: 'selections / distinct legal decision windows', uncertainty: 'Wilson 95% interval; N/A when zero legal opportunities' },
-  'selection-frequency': { version: _V, formula: 'total selections / eligible participant-match records', uncertainty: 'descriptive rate' },
-  'resolution-rate': { version: _V, formula: 'resolved declarations / accepted declarations', uncertainty: 'Wilson 95% interval' },
-  'response-play-rate': { version: _V, formula: 'response plays / lawful response opportunities', uncertainty: 'Wilson 95% interval' },
-  'counter-efficiency': { version: _V, formula: 'opponent value prevented / own card and tempo cost', uncertainty: 'match-clustered deterministic bootstrap' },
-  'synergy-interaction': { version: _V, formula: 'stratified logistic A×B interaction (odds-ratio scale) from four-cohort model', uncertainty: 'Wald CI from inverse-variance pooled SE + BH FDR' },
-  'immediate-point-impact': { version: _V, formula: 'sum actor-perspective secured point delta / resolved selections with point data', uncertainty: 'match-clustered deterministic bootstrap' },
-  'raw-win-association': { version: _V, formula: 'P(win|selected) - P(win|not selected)', uncertainty: 'two-proportion z-test CI' },
-  'adjusted-win-association': { version: _V, formula: 'stratified win-rate differential controlling for policy, seat, profile', uncertainty: 'Mantel-Haenszel-style stratified estimator CI' },
-  'policy-fingerprint': { version: _V, formula: 'policy event/action count / policy games', uncertainty: 'descriptive; no optimality claim' }
-});
-
-function metricRegistryWithHashes() {
-  return Object.fromEntries(Object.entries(METRIC_REGISTRY).map(([id, metric]) => [id, { metricId: id, ...metric, formulaHash: formulaHash(metric.formula) }]));
-}
+function metricRegistryWithHashes() { return metricRegistryWithHashesUsing(formulaHash); }
 
 const EXTRACT_VERSION = '1.0.0';
 function _pct(v) { return Number.isFinite(Number(v)) ? `${(Number(v) * 100).toFixed(1)}%` : null; }
@@ -1077,44 +1055,30 @@ export function buildObservatoryAnalytics({ summaries, detailedMatches = [], agg
   catch (error) { console.error('buildObservatoryAnalytics: variant analytics failed:', error); }
   try { rankAnalytics = expandTenSuitsInRankPower(rankAnalytics, variantAnalytics); }
   catch (error) { console.error('buildObservatoryAnalytics: ten-suit expansion failed:', error); }
+  rankAnalytics = { ...rankAnalytics, rankPower: applyRankBalanceQualification(rankAnalytics.rankPower, variantAnalytics) };
   const pairedABBA = buildPairedABBAAnalysis(summaries);
+  // Conditional choice-set analysis: simultaneous legality + decision
+  // diversity. Diagnostic only — deterministic Profile choices are decision
+  // behavior, not balance evidence. (Parity with packages/analytics.)
+  let choiceAnalysis = null;
+  let choiceAnalysisError = null;
+  try { choiceAnalysis = buildChoiceAnalysis(decisionChoices(summaries)); }
+  catch (error) { choiceAnalysisError = error.message; console.error('buildObservatoryAnalytics: choice analysis failed:', error); }
   const _f = (p) => mechanics.filter(p).length;
   const nearThresholdPairs = synergyDiagnostics.filter(d => d.reasonCode === 'INSUFFICIENT_BOTH' && (d.cohortN?.both ?? 0) >= 10).length;
-  const campaignHealth = { trackedEntities: mechanics.length, canonicalMechanics: _f(m => m.dimension === 'canonical-mechanic'), entitiesWithOpportunityData: _f(m => m.hasOpportunityData), entitiesWithValidPickRate: _f(m => m.pickRateStatus?.status === 'available'), entitiesWithRawAssociation: _f(m => m.rawWinAssociationStatus?.status === 'available'), entitiesWithAdjustedAssociation: _f(m => m.adjustedWinAssociationStatus?.status === 'available'), entitiesWithPointImpact: _f(m => m.pointImpactStatus?.status === 'available' && m.actorPointImpact != null), eligibleSynergyPairs: synergies.length, nearThresholdPairs, successfullyModeledSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length, unmappedDiagnostics: _f(m => m.dimension === 'diagnostic' && !m.registryVerified), incompleteABBA: pairedABBA?.incompletePairs ?? 0 };
-  const core = { schemaVersion: ANALYTICS_SCHEMA_VERSION, metricRegistry: metricRegistryWithHashes(), summaryCount: summaries.length, aggregateHash: aggregate?.aggregateHash ?? null, mechanics, synergies, synergyDiagnostics, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
+  // successfullyModeledSynergyPairs counts model success (finite estimator
+  // output), NOT evidence strength — pairs rejected before modeling live in
+  // synergyDiagnostics. evidenceQualifiedSynergyPairs counts pairs whose
+  // grade rose above INSUFFICIENT. (Parity with packages/analytics.)
+  const campaignHealth = { trackedEntities: mechanics.length, canonicalMechanics: _f(m => m.dimension === 'canonical-mechanic'), entitiesWithOpportunityData: _f(m => m.hasOpportunityData), entitiesWithValidPickRate: _f(m => m.pickRateStatus?.status === 'available'), entitiesWithRawAssociation: _f(m => m.rawWinAssociationStatus?.status === 'available'), entitiesWithAdjustedAssociation: _f(m => m.adjustedWinAssociationStatus?.status === 'available'), entitiesWithPointImpact: _f(m => m.pointImpactStatus?.status === 'available' && m.actorPointImpact != null), eligibleSynergyPairs: synergies.length, nearThresholdPairs, successfullyModeledSynergyPairs: synergies.filter(s => s.modelStatus === 'modeled').length, rejectedSynergyPairs: synergyDiagnostics.length, synergyCandidatePairs: synergies.candidateSet?.pairCount ?? null, synergyCellStatusCounts: [...synergies, ...synergyDiagnostics].reduce((acc, row) => { acc[row.cellStatus] = (acc[row.cellStatus] ?? 0) + 1; return acc; }, {}), evidenceQualifiedSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length, unmappedDiagnostics: _f(m => m.dimension === 'diagnostic' && !m.registryVerified), incompleteABBA: pairedABBA?.incompletePairs ?? 0 };
+  // Taxonomy reconciliation: tracked entities = Σ dimension buckets; the
+  // invariant is checked here so count drift surfaces in the artifact itself.
+  const reconciliation = { trackedEntities: mechanics.length, byDimension: dimensionCounts, registered: mechanics.filter(m => m.registryVerified).length, unregisteredTags: quarantineLedger.length, invariantHolds: mechanics.length === Object.values(dimensionCounts).reduce((a, b) => a + b, 0) };
+  const core = { schemaVersion: ANALYTICS_SCHEMA_VERSION, metricRegistry: metricRegistryWithHashes(), summaryCount: summaries.length, aggregateHash: aggregate?.aggregateHash ?? null,
+    // Provenance echo: self-describing artifact (parity with canonical analytics)
+    evidenceEpoch: aggregate?.evidenceEpoch ?? null, postRulesParityRepair: aggregate?.postRulesParityRepair ?? null, engineVersion: aggregate?.engineVersion ?? null, rulesVersion: aggregate?.rulesVersion ?? null, profileId: aggregate?.profileId ?? null, authorityHash: aggregate?.authorityHash ?? null, releaseIdentityHash: aggregate?.releaseIdentityHash ?? null,
+    mechanics, synergies, synergyDiagnostics, synergyCandidateSet: synergies.candidateSet ?? null, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, choiceAnalysis, choiceAnalysisError, mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, reconciliation, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
   return { ...core, observatoryHash: hashCanonical(core) };
 }
-
-// ── Paired AB/BA seat-swap analysis (browser port) ──
-function buildPairedABBAAnalysis(summaries) {
-  const hasPairedRunIds = summaries.some((r) => r.pairedRunId);
-  const pairBlocks = new Map();
-  let incompletePairs = 0;
-  for (const row of summaries) {
-    const blockKey = (hasPairedRunIds && row.pairedRunId) ? row.pairedRunId : [...(row.policyIds ?? [])].sort().join('__');
-    if (!pairBlocks.has(blockKey)) pairBlocks.set(blockKey, []);
-    pairBlocks.get(blockKey).push(row);
-  }
-  const pairResults = [];
-  for (const [blockKey, rows] of pairBlocks) {
-    rows.sort((a, b) => (a.matchOrdinal ?? 0) - (b.matchOrdinal ?? 0));
-    const policyA = rows[0]?.policyIds?.[0] ?? 'A', policyB = rows[0]?.policyIds?.[1] ?? 'B';
-    const pairs = [];
-    for (let i = 0; i + 1 < rows.length; i += 2) {
-      const seat1Row = rows[i], seat2Row = rows[i + 1];
-      if (!seat1Row || !seat2Row) { incompletePairs += 1; continue; }
-      const seatSwapped = seat2Row.seatSwapped === true || (JSON.stringify(seat2Row.seatOrder) !== JSON.stringify(seat1Row.seatOrder));
-      const s1wp = seat1Row.winner !== 'DRAW' && seat1Row.winner !== 'ABORTED' ? seat1Row.policyIds[seat1Row.seatOrder.indexOf(seat1Row.winner)] : null;
-      const s2wp = seat2Row.winner !== 'DRAW' && seat2Row.winner !== 'ABORTED' ? seat2Row.policyIds[seat2Row.seatOrder.indexOf(seat2Row.winner)] : null;
-      pairs.push({ aSeat1Win: s1wp === policyA, bSeat1Win: s1wp === policyB, aSeat2Win: s2wp === policyA, bSeat2Win: s2wp === policyB, seatSwapped, pairedRunId: seat1Row.pairedRunId ?? null });
-    }
-    if (rows.length % 2 === 1) incompletePairs += 1;
-    if (pairs.length === 0) continue;
-    const allSwapped = pairs.every((p) => p.seatSwapped);
-    const mcnemar = mcnemarPairedTest(pairs);
-    const bootstrap = pairedBootstrapABBA(pairs, { iterations: 2000, seed: `abba:${blockKey}` });
-    pairResults.push({ policyPair: blockKey, policyA, policyB, pairedBlocks: pairs.length, seatSwapVerified: allSwapped, mcnemar, bootstrap, design: allSwapped ? 'matched AB/BA seat-swap (verified)' : 'AB/BA seat-swap (unverified — legacy or incomplete)', interpretation: mcnemar.pValue < 0.05 ? 'statistically significant seat-policy differential (p < 0.05)' : 'no statistically significant seat-policy differential detected' });
-  }
-  const totalPairs = pairResults.reduce((s, r) => s + r.pairedBlocks, 0);
-  return { schemaVersion: ANALYTICS_SCHEMA_VERSION, design: 'matched AB/BA seat-swap', pairCount: pairResults.length, totalPairedBlocks: totalPairs, incompletePairs, hasPairedRunIds, pairResults: pairResults.sort((a, b) => a.policyPair.localeCompare(b.policyPair)), interpretationBoundary: hasPairedRunIds ? 'AB/BA pairs are linked by pairedRunId.' : 'AB/BA pairs are matched by policy-pair block (legacy).' };
-}
+// buildPairedABBAAnalysis lives in observatory-analytics-browser.js
+// (imported above) to keep this orchestrator under its size budget.

@@ -2,9 +2,9 @@
 
 **Extract version:** 1.0.0
 **Analytics schema:** 4.2.0
-**Source hash:** `3092fc6460f314ad3c6a2d16608cd45451c7db683e7759de3439b300e0eeebfb`
+**Source hash:** `0b5695684f16b02bb0271069d1c7a38cd82fc762e2ce30265dd1272822696170`
 **Aggregate hash:** `59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2`
-**Extract hash:** `fcbf81d3a45c5fbbfea514fee955bf154abf77e8450b445d20cfc0953234e6c5`
+**Extract hash:** `3ec8e980c1a1e751a6426664e34e09965e6168cf8c86989baf1e8c11f1e12f96`
 
 ## Executive Summary
 
@@ -153,7 +153,7 @@ Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. Al
 | diamond-mimic-row-exchange-er | 3.5% | 7 | -0.074 | INSUFFICIENT | measured |
 | diamond-mimic-row-exchange-pr | 5.5% | 11 | 0.241 | INSUFFICIENT | measured |
 | disrupt | 35.5% | 71 | 0.011 | INSUFFICIENT | measured |
-| draw | 50.5% | 101 | -0.210 | INSUFFICIENT | measured |
+| draw | 50.5% | 101 | -0.210 | EXPLORATORY | measured |
 | effect-ace | 6.0% | 12 | -0.177 | INSUFFICIENT | measured |
 | effect-four | 10.5% | 21 | -0.133 | INSUFFICIENT | measured |
 | effect-private-choice | 23.0% | 46 | -0.113 | INSUFFICIENT | measured |
@@ -166,7 +166,7 @@ Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. Al
 | exhausted-pass | 0.5% | 1 | 0.503 | INSUFFICIENT | measured |
 | face-down | 53.5% | 107 | 0.211 | INSUFFICIENT | measured |
 | face-up-draw | 17.5% | 35 | -0.017 | INSUFFICIENT | measured |
-| five-gy-bottom | 11.0% | 22 | 0.460 | INSUFFICIENT | measured |
+| five-gy-bottom | 11.0% | 22 | 0.460 | EXPLORATORY | measured |
 | five-recycle | 6.0% | 12 | 0.089 | INSUFFICIENT | measured |
 | five-refine | 4.5% | 9 | 0.058 | INSUFFICIENT | measured |
 | four-exchange-er | 0.5% | 1 | 0.503 | INSUFFICIENT | measured |
@@ -265,7 +265,7 @@ Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. Al
 | solo-wild | 10.5% | 21 | -0.133 | INSUFFICIENT | measured |
 | spade-recovery | 1.5% | 3 | -0.169 | INSUFFICIENT | measured |
 | super | 8.5% | 17 | 0.096 | INSUFFICIENT | measured |
-| swap-bar | 55.5% | 111 | 0.233 | INSUFFICIENT | measured |
+| swap-bar | 55.5% | 111 | 0.233 | EXPLORATORY | measured |
 | three-black-ace | 1.0% | 2 | -0.505 | INSUFFICIENT | measured |
 | three-black-bounce-top | 2.0% | 4 | 0.000 | INSUFFICIENT | measured |
 | three-black-clear-er | 2.0% | 4 | 0.000 | INSUFFICIENT | measured |
@@ -287,7 +287,7 @@ Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. Al
 | two-hold | 1.0% | 2 | -0.505 | INSUFFICIENT | measured |
 | two-score | 2.0% | 4 | 0.255 | INSUFFICIENT | measured |
 | ultra | 46.0% | 92 | -0.081 | INSUFFICIENT | measured |
-| voltage | 16.0% | 32 | 0.298 | INSUFFICIENT | measured |
+| voltage | 16.0% | 32 | 0.298 | EXPLORATORY | measured |
 | wild-sovereignty | 2.0% | 4 | -0.255 | INSUFFICIENT | measured |
 
 <details><summary><b>2-black-2-red-draw</b></summary>
@@ -474,7 +474,7 @@ Replay refs: M-67e0e95c9279752ebbb3, M-3e56af56c419de97ddc8, M-cc250cc50515a292f
 
 <details><summary><b>draw</b></summary>
 
-Used in 50.5% of participant observations (101/200). Outcome association: negative (-0.210, CI [-0.346, -0.075]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 50.5% of participant observations (101/200). Outcome association: negative (-0.210, CI [-0.346, -0.075]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient).
 
 Replay refs: M-da33bf6f5bb04f175916, M-754f798f908f9e4f73d8, M-d42c5a76b1a43e8227de, M-3dc3510153eebdf54abb
 </details>
@@ -565,7 +565,7 @@ Replay refs: M-f3fba5744ac97b09f3e9, M-7d6730d8dab297d9def5, M-d42c5a76b1a43e822
 
 <details><summary><b>five-gy-bottom</b></summary>
 
-Used in 11.0% of participant observations (22/200). Outcome association: positive (0.460, CI [0.319, 0.600]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 11.0% of participant observations (22/200). Outcome association: positive (0.460, CI [0.319, 0.600]). Evidence grade: EXPLORATORY (insufficient).
 
 Replay refs: M-f3fba5744ac97b09f3e9, M-8fcc52b645373191c478, M-b615ae18bd3e0f132ef8, M-84269db284883330999c
 </details>
@@ -1258,7 +1258,7 @@ Replay refs: M-f3fba5744ac97b09f3e9, M-f1291cd390d331a3ffbb, M-1b9ce7c6ecb94b540
 
 <details><summary><b>swap-bar</b></summary>
 
-Used in 55.5% of participant observations (111/200). Outcome association: positive (0.233, CI [0.097, 0.368]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient).
+Used in 55.5% of participant observations (111/200). Outcome association: positive (0.233, CI [0.097, 0.368]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient).
 
 Replay refs: M-da33bf6f5bb04f175916, M-dfab048a83e3b8acc06c, M-d42c5a76b1a43e8227de, M-5ef9d016ebb1846cf10b
 </details>
@@ -1412,7 +1412,7 @@ Replay refs: M-da33bf6f5bb04f175916, M-c7fa95689d660a49366b, M-d42c5a76b1a43e822
 
 <details><summary><b>voltage</b></summary>
 
-Used in 16.0% of participant observations (32/200). Outcome association: positive (0.298, CI [0.130, 0.465]). Evidence grade: INSUFFICIENT (insufficient).
+Used in 16.0% of participant observations (32/200). Outcome association: positive (0.298, CI [0.130, 0.465]). Evidence grade: EXPLORATORY (insufficient).
 
 Replay refs: M-f3fba5744ac97b09f3e9, M-889076167d236a1a97c2, M-b615ae18bd3e0f132ef8, M-015b0b148b1e1f8a9876
 </details>
@@ -1428,8 +1428,8 @@ Replay refs: M-9ac093c9da6330a6fdec, M-950f525deedd2a7736c7, M-e50eb7181b42fcaf3
 
 | Pair | Class | Effect | Shrunk | q-value | Status |
 |------|-------|--------|--------|---------|--------|
-| draw::jack | anti-synergy | 1.214 | 1.090 | 0.9010 | inconclusive |
-| draw::2-black-2-red-draw | anti-synergy | 0.667 | 0.596 | 0.9010 | inconclusive |
+| draw::2-black-2-red-draw | anti-synergy | 0.667 | 0.854 | 0.9010 | inconclusive |
+| draw::jack | synergy | 1.214 | 1.115 | 0.9010 | inconclusive |
 
 ## Causal Motifs
 

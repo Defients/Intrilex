@@ -1,4 +1,4 @@
-import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=3e5b5b85f4e1';
+import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=ad40772959f0';
 import {
   IntrilexEngine,
   createMatchState,
@@ -9,15 +9,15 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=3e5b5b85f4e1';
+} from './engine/browser-entry.js?v=ad40772959f0';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
 import { actionSemantics } from './engine-adapter/action-semantics.mjs';
-import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=3e5b5b85f4e1';
-import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=3e5b5b85f4e1';
-import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=3e5b5b85f4e1';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=3e5b5b85f4e1';
-import { attributeAction,   isNoAttributionAction} from './browser-analytics.js?v=3e5b5b85f4e1';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=3e5b5b85f4e1';
+import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=ad40772959f0';
+import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=ad40772959f0';
+import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=ad40772959f0';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=ad40772959f0';
+import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=ad40772959f0';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=ad40772959f0';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical','control-conversion-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];
@@ -130,10 +130,17 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
     if(fieldManual)fieldManual.after(strategyDraft,strictView(result.state,actorId));
     // Capture rank attribution for this decision (use pre-execution state for card access)
     const rankAttribution=attributeAction(state,selected,'private');
-    const rankOppMap={};
-    for(const pa of policyActions){if(isNoAttributionAction(pa))continue;const paAttrib=attributeAction(state,pa,'private');if(paAttrib.primaryRank){if(!rankOppMap[paAttrib.primaryRank])rankOppMap[paAttrib.primaryRank]={rank:paAttrib.primaryRank,opportunityFrames:1,legalOptions:1};else rankOppMap[paAttrib.primaryRank].legalOptions+=1;}}
-    const rankOpportunities=Object.values(rankOppMap);
-    rankDecisions.push({participantId:actorId,decisionIndex,rankAttribution,rankOpportunities,action:{family:selected.family,mode:selected.mode,kind:selected.kind,authority:selected.authority,timingClass:selected.timingClass},legalActions:policyActions.map(pa=>({actionId:pa.actionId,family:pa.family,mode:pa.mode,kind:pa.kind}))});
+    // Opportunity telemetry mirrors packages/simulation-runtime buildRankOpportunityMaps:
+    // rank opportunities credit every source rank, and variant opportunities
+    // (per-suit Tens, spade variants, supers) are recorded per legal action.
+    // Without variantOpportunities, browser/Lab data recorded 10♠ (and every
+    // spade/super variant) selections with zero opportunities. Telemetry only:
+    // rankDecisions is excluded from matchResultHash.
+    const rankOppMap={},variantOppMap={};
+    const bumpOpp=(map,key,field)=>{if(!map[key])map[key]={[field]:key,opportunityFrames:1,legalOptions:1};else map[key].legalOptions+=1;};
+    for(const pa of policyActions){if(isNoAttributionAction(pa))continue;const paAttrib=attributeAction(state,pa,'private');if(paAttrib.primaryRank){for(const rank of new Set(paAttrib.sourceRanks?.length?paAttrib.sourceRanks:[paAttrib.primaryRank]))bumpOpp(rankOppMap,rank,'rank');}const v=classifyVariantEntity(paAttrib,pa);if(v.variantKey){bumpOpp(variantOppMap,v.variantKey,'variantKey');for(const ck of v.creditKeys)if(ck!==v.variantKey)bumpOpp(variantOppMap,ck,'variantKey');}else if(paAttrib.primaryRank){bumpOpp(variantOppMap,paAttrib.primaryRank,'variantKey');bumpOpp(variantOppMap,`${paAttrib.primaryRank}:normal`,'variantKey');}}
+    const rankOpportunities=Object.values(rankOppMap),variantOpportunities=Object.values(variantOppMap);
+    rankDecisions.push({participantId:actorId,decisionIndex,rankAttribution,rankOpportunities,variantOpportunities,action:{family:selected.family,mode:selected.mode,kind:selected.kind,authority:selected.authority,timingClass:selected.timingClass},legalActions:policyActions.map(pa=>({actionId:pa.actionId,family:pa.family,mode:pa.mode,kind:pa.kind}))});
     state=result.state;decisions+=1;semantic.policyDecisionCount+=1;perSeat[seat].policyDecisionCount+=1;recordActionCoverage(perSeat[seat],policyActions,selected);if(isMeaningfulResponseFrame(policyActions)){semantic.responseOpportunityCount+=1;perSeat[seat].responseOpportunityCount+=1;}const semanticClass=semanticClassForAction(selected);if(semanticClass==='response-decline'){semantic.responseDeclinedWithOptionsCount+=1;semantic.meaningfulResponseDecisionCount+=1;perSeat[seat].responseDeclinedWithOptionsCount+=1;perSeat[seat].meaningfulResponseDecisionCount+=1;}else{semantic.policyActionCount+=1;perSeat[seat].policyActionCount+=1;if(semanticClass==='free-response-play'){semantic.responsePlayedCount+=1;semantic.meaningfulResponseDecisionCount+=1;perSeat[seat].responsePlayedCount+=1;perSeat[seat].meaningfulResponseDecisionCount+=1;}if(isMiniTurnAction(selected)){semantic.miniTurnActionCount+=1;semantic.actionCount+=1;semantic.miniTurnCount+=1;perSeat[seat].miniTurnActionCount+=1;perSeat[seat].actionCount+=1;perSeat[seat].miniTurnCount+=1;if(selected.family==='exhausted-pass'){semantic.exhaustedPassActionCount+=1;semantic.passActionCount+=1;perSeat[seat].exhaustedPassActionCount+=1;perSeat[seat].passActionCount+=1;}}}if(selected.family==='counter'){semantic.counterDeclarationCount+=1;perSeat[seat].counterDeclarationCount+=1;}if(selected.timingClass==='QUICK'){semantic.quickDeclarationCount+=1;perSeat[seat].quickDeclarationCount+=1;}if(selected.timingClass==='INSTANT'){semantic.instantDeclarationCount+=1;perSeat[seat].instantDeclarationCount+=1;}if(selected.timingClass==='INTERRUPT'){semantic.interruptDeclarationCount+=1;perSeat[seat].interruptDeclarationCount+=1;}if(selected.family==='response-decline'||(!['private-choice','phase'].includes(selected.family)&&(RESPONSE_FAMILIES.has(selected.family)||['INSTANT','QUICK','INTERRUPT'].includes(selected.timingClass))))responseDecisions+=1;increment(decisionFamilyCounts,selected.family);increment(perSeat[seat].decisionFamilyCounts,selected.family);increment(decisionModeCounts,`${selected.family}:${selected.mode}`);if(isMiniTurnAction(selected)){increment(actionCounts,selected.family);increment(actionModeCounts,`${selected.family}:${selected.mode}`);}if(RESPONSE_DECLINE_FAMILIES.has(selected.family))increment(responseActionCounts,`${selected.family}:${selected.mode}`);increment(timingClassCounts,selected.timingClass);const tags=mechanicTags(selected),primaryTag=primaryMechanicTag(selected);for(const tag of tags){increment(mechanicCounts,tag);increment(perSeat[seat].mechanicCounts,tag);}if(primaryTag){increment(primaryMechanicCounts,primaryTag);increment(perSeat[seat].primaryMechanicCounts,primaryTag);}auditDecisions.push({actorId,activePlayerId:authorizedView.activePlayerId,family:selected.family,mode:selected.mode,timingClass:selected.timingClass,consumedMiniTurn:isMiniTurnAction(selected),hadLawfulResponse:isMeaningfulResponseFrame(policyActions),targetStackClass,targetSourceCount,targetUntappedQueenDefenders});
   }
   const finalScores=Object.fromEntries(seats.map(id=>[id,deriveSecuredPoints(state,id)]));

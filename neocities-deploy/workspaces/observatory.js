@@ -3,10 +3,11 @@
 //   Compare, Mechanics, Synergies, History, Replays, Traces
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=3e5b5b85f4e1';
-import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow } from '../chart-toolkit.js?v=3e5b5b85f4e1';
-// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=3e5b5b85f4e1') to break backedge
-import { rerender } from '../rerender.js?v=3e5b5b85f4e1';
+import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=ad40772959f0';
+import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow } from '../chart-toolkit.js?v=ad40772959f0';
+import { wilsonInterval } from '../observatory-analytics-browser.js?v=ad40772959f0';
+// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=ad40772959f0') to break backedge
+import { rerender } from '../rerender.js?v=ad40772959f0';
 
 // Shown when the Observatory dataset was swapped to propagated Evolution Lab
 // runs (Evolution Lab → Runs & artifacts → "Propagate → Observatory").
@@ -25,7 +26,82 @@ export function renderCompare() {
   const policyMap = Object.fromEntries(policies.map(p => [p.policyId, p]));
   const left = policyMap[selectedPolicy], right = policyMap[rightPolicy];
   const matchupHtml = renderMatchupMatrix();
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Policy Comparison</h2><p>Side-by-side policy metrics with uncertainty quantification</p></div><div class="toolbar"><select id="compare-left">${policies.map(p => `<option value="${esc(p.policyId)}" ${p.policyId === selectedPolicy ? 'selected' : ''}>${esc(p.policyId)}</option>`).join('')}</select><span>vs</span><select id="compare-right">${policies.map(p => `<option value="${esc(p.policyId)}" ${p.policyId === rightPolicy ? 'selected' : ''}>${esc(p.policyId)}</option>`).join('')}</select></div></div><div class="panel-body">${labDatasetBanner()}<div class="grid two">${[left, right].map(p => p ? `<div>${definitionList([['Policy', p.policyId], ['Matches', p.matchCount], ['Win rate', pct(p.winRate)], ['Win rate 95% CI', p.winWilson95 ? `${pct(p.winWilson95[0])} to ${pct(p.winWilson95[1])}` : '—'], ['Avg score margin', p.avgScoreMargin?.toFixed(1)], ['Exhausted pass rate', pct(p.exhaustedPassRate)], ['Response play rate', pct(p.responsePlayRate)]])}</div>` : '<div class="notice warning">No data</div>').join('')}</div>${matchupHtml}</div></section>`;
+  const summaries = o.summaries ?? [];
+  // Resolve the cross-policy superiority record: prefer the analytics-side
+  // record (new artifacts), then the campaign aggregate, which applies the
+  // same self-play exclusion. Win rates are cross-policy decisive games only.
+  const aggPolicies = state.aggregate?.policies ?? {};
+  // Denominator contract: the displayed rate and its CI are ALWAYS derived
+  // here from raw counts over decisive cross-policy games, so legacy artifacts
+  // whose stored winRate used a different denominator than their stored CI
+  // cannot surface a mismatched pair. The all-games rate is shown separately.
+  const recordOf = (p) => {
+    if (!p) return null;
+    let c = null;
+    if (p.record && Number.isFinite(p.record.wins)) c = p.record;
+    else if (aggPolicies[p.policyId]) {
+      const a = aggPolicies[p.policyId];
+      // Aggregates that carry crossPolicyGames already use the participation
+      // convention for selfPlayGames; older ones counted self-play matches.
+      const selfPlay = a.crossPolicyGames != null ? (a.selfPlayGames ?? 0) : 2 * (a.selfPlayGames ?? 0);
+      const cross = a.crossPolicyGames ?? (a.games - selfPlay);
+      c = { games: a.games, selfPlayGames: selfPlay, crossPolicyGames: cross, wins: a.wins ?? 0, draws: a.draws ?? 0, aborts: a.aborts ?? 0, losses: Math.max(0, cross - (a.wins ?? 0) - (a.draws ?? 0) - (a.aborts ?? 0)) };
+    }
+    if (!c) return null;
+    const decisive = (c.wins ?? 0) + (c.losses ?? 0), all = decisive + (c.draws ?? 0) + (c.aborts ?? 0);
+    return { ...c, decisive,
+      winRate: decisive ? c.wins / decisive : null, wilson95: decisive ? wilsonInterval(c.wins, decisive) : null,
+      allGamesWinRate: all ? c.wins / all : null, allGamesWilson95: all ? wilsonInterval(c.wins, all) : null };
+  };
+  const opponentsOf = (p) => {
+    if (Array.isArray(p?.opponents)) return p.opponents;
+    if (!p) return null;
+    const seen = new Set();
+    for (const s of summaries) {
+      const pids = s.policyIds ?? [];
+      if (pids.includes(p.policyId)) for (const other of pids) if (other !== p.policyId) seen.add(other);
+    }
+    return [...seen].sort();
+  };
+  const seatSplitOf = (p) => {
+    if (p?.seatSplit) return p.seatSplit;
+    if (!p) return null;
+    let seat1 = 0, seat2 = 0;
+    for (const s of summaries) {
+      const idx = (s.seatOrder ?? []).indexOf(p.policyId);
+      if (idx === 0) seat1 += 1; else if (idx === 1) seat2 += 1;
+    }
+    return seat1 + seat2 > 0 ? { seat1, seat2 } : null;
+  };
+  const policyCard = (p) => {
+    if (!p) return '<div class="notice warning">No data</div>';
+    const rec = recordOf(p);
+    const seat = seatSplitOf(p);
+    const opps = opponentsOf(p);
+    const recordText = rec
+      ? `${rec.wins}–${rec.losses}${rec.draws ? `–${rec.draws}D` : ''}${rec.aborts ? ` (+${rec.aborts} aborted)` : ''}`
+      : null;
+    const rate = rec ? (rec.winRate != null ? pct(rec.winRate) : '—') : null;
+    const ci = rec?.wilson95 ?? null;
+    return `<div>${definitionList([
+      ['Policy', p.policyId],
+      ['Record (cross-policy)', recordText],
+      ['Games', rec ? `${rec.games} total${rec.selfPlayGames ? ` · ${rec.selfPlayGames / 2} self-play match${rec.selfPlayGames > 2 ? 'es' : ''} excluded` : ''}` : (p.matchCount ?? p.games)],
+      ['Win rate (decisive cross-policy games)', rate == null ? null : `${rate}${rec ? ` · n=${rec.decisive}` : ''}`],
+      ['Win rate 95% CI (same denominator)', ci ? `${pct(ci[0])} to ${pct(ci[1])}` : '—'],
+      ['Win rate incl. draws/aborts', rec?.allGamesWinRate != null && (rec.draws || rec.aborts) ? `${pct(rec.allGamesWinRate)} (${pct(rec.allGamesWilson95[0])}–${pct(rec.allGamesWilson95[1])}) · n=${rec.decisive + rec.draws + rec.aborts}` : null],
+      ['Seat split', seat ? `S1 ${seat.seat1} · S2 ${seat.seat2}` : null],
+      ['Opponents faced', opps ? `${opps.length}${opps.length <= 6 ? ` (${opps.join(', ')})` : ''}` : null],
+      ['Avg score margin', (p.avgScoreMargin ?? p.fingerprint?.avgScoreMargin) != null ? Number(p.avgScoreMargin ?? p.fingerprint?.avgScoreMargin).toFixed(1) : null],
+      ['Exhausted pass rate', p.exhaustedPassRate != null ? pct(p.exhaustedPassRate) : null],
+      ['Response play rate', p.responsePlayRate != null ? pct(p.responsePlayRate) : null],
+    ])}</div>`;
+  };
+  const abba = o.pairedABBA;
+  const designNote = abba?.scheduleNote
+    ? `<div class="notice info" style="margin-top:12px"><strong>Matched design:</strong> ${esc(abba.scheduleNote)}.</div>`
+    : (abba ? `<div class="notice info" style="margin-top:12px"><strong>Matched design:</strong> ${abba.totalPairedBlocks ?? 0} complete AB/BA seat-swap pair${abba.totalPairedBlocks === 1 ? '' : 's'}${abba.incompletePairs ? ` · ${abba.incompletePairs} incomplete` : ''}. Win rates are cross-policy decisive games; self-play is excluded. These are observational associations, not causal rankings.</div>` : '');
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Policy Comparison</h2><p>Side-by-side policy metrics with uncertainty quantification</p></div><div class="toolbar"><select id="compare-left">${policies.map(p => `<option value="${esc(p.policyId)}" ${p.policyId === selectedPolicy ? 'selected' : ''}>${esc(p.policyId)}</option>`).join('')}</select><span>vs</span><select id="compare-right">${policies.map(p => `<option value="${esc(p.policyId)}" ${p.policyId === rightPolicy ? 'selected' : ''}>${esc(p.policyId)}</option>`).join('')}</select></div></div><div class="panel-body">${labDatasetBanner()}<div class="grid two">${[left, right].map(policyCard).join('')}</div>${designNote}${matchupHtml}</div></section>`;
   document.querySelector('#compare-left').onchange = e => { state.selectedPolicy = e.target.value; rerender(); };
   document.querySelector('#compare-right').onchange = e => { state.comparePolicyRight = e.target.value; rerender(); };
   bindChartToggle('#matchup-matrix-chart');
@@ -154,15 +230,21 @@ export function renderMatchupMatrix() {
       if (total === 0) { row.push([null, 'no-data']); continue; }
       // Win rate of A (row) vs B (col). Symmetric: A-vs-B + B-vs-A = 1.
       const winRate = aWins / total;
-      row.push([winRate, { aWins, bWins, total }]);
+      row.push([winRate, { aWins, bWins, total, ci: wilsonInterval(aWins, total) }]);
     }
     cells.push(row);
   }
-  const colorScale = (v) => {
+  // Cell intensity encodes BOTH outcome direction and evidence strength:
+  // alpha scales with sqrt of decisive games so a 1–0 cell cannot visually
+  // resemble a 50–10 cell. Tiny samples additionally get a dashed border.
+  const FULL_EVIDENCE_N = 24;
+  const TINY_SAMPLE_N = 6;
+  const colorScale = (v, meta) => {
     if (v == null || !Number.isFinite(v)) return 'rgba(255,255,255,0.03)';
     // 0.5 = neutral (dark), >0.5 = green (A wins), <0.5 = red (B wins)
     const intensity = Math.abs(v - 0.5) * 2;
-    const alpha = 0.15 + intensity * 0.7;
+    const evidence = meta?.total ? Math.min(1, Math.sqrt(meta.total / FULL_EVIDENCE_N)) : 0;
+    const alpha = 0.08 + intensity * 0.75 * (0.35 + 0.65 * evidence);
     return v >= 0.5 ? `rgba(79,211,135,${alpha.toFixed(3)})` : `rgba(240,93,120,${alpha.toFixed(3)})`;
   };
   const shortLabel = (p) => p.length > 14 ? p.slice(0, 13) + '…' : p;
@@ -173,13 +255,21 @@ export function renderMatchupMatrix() {
     colorScale,
     cellSize: 38,
     title: 'Policy matchup matrix',
-    ariaLabel: 'Heatmap of policy-vs-policy win rates; green indicates the row policy wins more often, red indicates the column policy wins more often',
+    ariaLabel: 'Heatmap of policy-vs-policy win rates; green indicates the row policy wins more often, red indicates the column policy wins more often; cell brightness scales with decisive game count',
+    cellTitle: (r, c, value, meta) => {
+      if (r === c) return `${policies[r]} (self-play — not a matchup)`;
+      if (!meta || meta.total === 0) return `${policies[r]} vs ${policies[c]}: no decisive games played`;
+      const a = policies[r], b = policies[c];
+      const ci = meta.ci ?? null;
+      return `${a} vs ${b}: ${meta.aWins}–${meta.bWins} in ${meta.total} decisive games · win rate ${pct(value)}${ci ? ` · 95% CI ${pct(ci[0])}–${pct(ci[1])}` : ''}${meta.total < TINY_SAMPLE_N ? ' · tiny sample — weak evidence' : ''}`;
+    },
     cellAttrs: (r, c, meta) => {
       if (r === c || !meta || meta.total === 0) return '';
-      return ` data-policy-a="${esc(policies[r])}" data-policy-b="${esc(policies[c])}" data-testid="matchup-cell-${r}-${c}" role="button" tabindex="0"`;
+      const tiny = meta.total < TINY_SAMPLE_N ? ' stroke-dasharray="3 2" stroke="rgba(255,255,255,0.45)"' : '';
+      return ` data-policy-a="${esc(policies[r])}" data-policy-b="${esc(policies[c])}" data-testid="matchup-cell-${r}-${c}" role="button" tabindex="0"${tiny}`;
     },
   });
-  // Table alternative: show A, B, A-wins, B-wins, A win rate
+  // Table alternative: show A, B, A-wins, B-wins, A win rate, CI, sample flag
   const tableRows = [];
   for (let r = 0; r < n; r += 1) {
     for (let c = 0; c < n; c += 1) {
@@ -189,15 +279,16 @@ export function renderMatchupMatrix() {
       const bWins = wins[b]?.[a] ?? 0;
       const total = aWins + bWins;
       if (total === 0) continue;
-      tableRows.push([a, b, aWins, bWins, ((aWins / total) * 100).toFixed(1) + '%']);
+      const ci = wilsonInterval(aWins, total);
+      tableRows.push([a, b, aWins, bWins, ((aWins / total) * 100).toFixed(1) + '%', `${pct(ci[0])}–${pct(ci[1])}`, total < TINY_SAMPLE_N ? `tiny sample (n=${total})` : `n=${total}`]);
     }
   }
   const tableAlt = chartTableAlternative({
-    headers: ['Policy A', 'Policy B', 'A wins', 'B wins', 'A win rate'],
+    headers: ['Policy A', 'Policy B', 'A wins', 'B wins', 'A win rate', '95% CI', 'Sample'],
     rows: tableRows,
-    caption: 'Policy matchup win rates',
+    caption: 'Policy matchup win rates with decisive-game count and Wilson 95% interval',
   });
-  return `<details class="ix-chart-container" data-testid="matchup-matrix" id="matchup-matrix-chart" open><summary class="ix-chart-header"><h4>Matchup matrix (policy vs policy win rate)</h4><span class="footer-note">${policies.length} policies · green = row wins more, red = column wins more, dark = pair never met</span></summary>${scopeHtml}${svg}<button class="ix-chart-toggle" data-chart-toggle="matchup-matrix" aria-expanded="false">View as table</button><div class="ix-chart-table-alt" data-chart-table="matchup-matrix" hidden>${tableAlt}</div></details>`;
+  return `<details class="ix-chart-container" data-testid="matchup-matrix" id="matchup-matrix-chart" open><summary class="ix-chart-header"><h4>Matchup matrix (policy vs policy win rate)</h4><span class="footer-note">${policies.length} policies · green = row wins more, red = column wins more, dark = pair never met · brightness scales with decisive games, dashed border = tiny sample (n&lt;${TINY_SAMPLE_N})</span></summary>${scopeHtml}${svg}<button class="ix-chart-toggle" data-chart-toggle="matchup-matrix" aria-expanded="false">View as table</button><div class="ix-chart-table-alt" data-chart-table="matchup-matrix" hidden>${tableAlt}</div></details>`;
 }
 
 // ── Policy archetype clustering (Phase 4B) ────────────────────────
@@ -426,7 +517,7 @@ export async function renderOpeningPatterns() {
   let idx = state.traceIndex;
   if (!idx) {
     try {
-      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=3e5b5b85f4e1');
+      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=ad40772959f0');
       idx = await loadTraceIndex();
       if (!idx || !idx.records) {
         return `<div class="ix-chart-empty" data-testid="opening-patterns-empty">No decision traces available. Run a campaign with decision traces enabled to analyze opening patterns.</div>`;
@@ -439,7 +530,7 @@ export async function renderOpeningPatterns() {
     }
   }
   // If traceIndex exists but trace data isn't preloaded, load it
-  const { loadTraceData } = await import('../data-loader.js?v=3e5b5b85f4e1');
+  const { loadTraceData } = await import('../data-loader.js?v=ad40772959f0');
   const traceFiles = await Promise.all(idx.records.map(r => loadTraceData(r.matchId)));
   return _renderOpeningPatternsFromTraces(idx.records, traceFiles);
 }
@@ -790,6 +881,7 @@ const DIMENSION_FILTERS = [
   { value: 'action-mode', label: 'Action Modes' },
   { value: 'rank-effect', label: 'Rank Effects' },
   { value: 'diagnostic', label: 'Diagnostics' },
+  { value: 'aggregate', label: 'Aggregates' },
 ];
 
 // Phase 3B: build <option> elements for the rank filter from the mechanic set.
@@ -817,7 +909,15 @@ function renderPickRateCell(m) {
 
 function renderWinAssocCell(m, field, statusField) {
   const st = m[statusField];
-  if (m[field] != null) return `${(m[field] * 100).toFixed(1)} pp`;
+  const ciField = `${field}95`;
+  if (m[field] != null) {
+    const ci = m[ciField];
+    const ciText = Array.isArray(ci) && ci.every(Number.isFinite) ? `95% CI ${(ci[0] * 100).toFixed(1)} to ${(ci[1] * 100).toFixed(1)} pp` : 'no CI';
+    const basis = field === 'adjustedWinAssociation'
+      ? 'stratified by policy, seat, and profile — association, not causation'
+      : 'unadjusted difference in win proportions — association, not causation';
+    return `<span title="${esc(ciText)} · n=${st?.sampleSize ?? '—'} · ${esc(basis)}">${(m[field] * 100).toFixed(1)} pp</span>`;
+  }
   if (st?.status === 'insufficient-sample') return `<span class="metric-na" title="${esc(st.detail ?? '')}">insuff.</span>`;
   if (st?.status === 'model-failed') return `<span class="metric-na" title="${esc(st.detail ?? '')}">model fail</span>`;
   return '—';
@@ -839,10 +939,27 @@ function renderCampaignHealthBanner(o) {
   if (legacy) warnings.push(`<div class="notice warning"><strong>Legacy campaign:</strong> pick-rate and adjusted-outcome metrics require a rerun with opportunity telemetry enabled.</div>`);
   const oppGap = h.trackedEntities - h.entitiesWithOpportunityData;
   if (!legacy && oppGap > 0) warnings.push(`<div class="notice info"><strong>Opportunity telemetry incomplete:</strong> ${oppGap} of ${h.trackedEntities} entities lack legal-window records.</div>`);
-  if (h.eligibleSynergyPairs > 0) warnings.push(`<div class="notice info">${h.successfullyModeledSynergyPairs} of ${h.eligibleSynergyPairs} eligible synergy pairs were successfully modeled.</div>`);
-  if (h.unmappedDiagnostics > 0) warnings.push(`<div class="notice info">${h.unmappedDiagnostics} unmapped diagnostic tags — not displayed in canonical view.</div>`);
+  if (h.eligibleSynergyPairs > 0) {
+    // Newer artifacts distinguish model success from evidence qualification.
+    // Older artifacts only carried successfullyModeledSynergyPairs, which
+    // actually counted evidence-qualified pairs.
+    const qualified = h.evidenceQualifiedSynergyPairs ?? h.successfullyModeledSynergyPairs ?? 0;
+    const modeled = h.evidenceQualifiedSynergyPairs != null ? (h.successfullyModeledSynergyPairs ?? h.eligibleSynergyPairs) : null;
+    warnings.push(`<div class="notice info">${modeled != null ? `${modeled} of ${h.eligibleSynergyPairs} eligible synergy pairs produced a modeled estimate; ` : ''}${qualified} reached EXPLORATORY+ evidence${h.rejectedSynergyPairs != null ? ` · ${h.rejectedSynergyPairs} pairs rejected before modeling (see diagnostics)` : ''}.</div>`);
+  }
+  if (h.unmappedDiagnostics > 0) warnings.push(`<div class="notice info">${h.unmappedDiagnostics} diagnostic tags lack registry entries — tracked and measured, but not canonical mechanics.</div>`);
   const stats = `Tracked: ${h.trackedEntities} · Canonical: ${h.canonicalMechanics} · With pick rate: ${h.entitiesWithValidPickRate} · With adj. assoc.: ${h.entitiesWithAdjustedAssociation} · With point impact: ${h.entitiesWithPointImpact} · Synergy pairs: ${h.eligibleSynergyPairs}`;
-  return `<div class="campaign-health">${warnings.join('')}<div class="health-stats">${esc(stats)}</div></div>`;
+  // Provenance + taxonomy reconciliation line: makes every denominator
+  // traceable without leaving the page.
+  const dims = o.taxonomyDimensions ?? {};
+  const rec = o.reconciliation;
+  const dimLine = Object.keys(dims).length
+    ? ` · Breakdown: ${Object.entries(dims).map(([d, n]) => `${n} ${d}`).join(' + ')}${rec?.invariantHolds === false ? ' (RECONCILIATION FAILED)' : ''}`
+    : '';
+  const epoch = o.evidenceEpoch ?? state.aggregate?.evidenceEpoch ?? null;
+  const engine = o.engineVersion ?? state.aggregate?.engineVersion ?? null;
+  const provLine = epoch || engine ? ` · epoch ${epoch ?? '—'} · engine ${engine ?? '—'} · rules ${o.rulesVersion ?? state.aggregate?.rulesVersion ?? '—'}` : '';
+  return `<div class="campaign-health">${warnings.join('')}<div class="health-stats">${esc(stats)}${esc(dimLine)}${esc(provLine)}</div></div>`;
 }
 
 // ── Mechanics pick-rate bar chart (Phase 2A) ──────────────────────
@@ -899,6 +1016,9 @@ function aggregateFourGuess(mechanics) {
   const aggregated = {
     mechanic: 'four-guess',
     displayName: 'four-guess (all variants)',
+    // Not a canonical mechanic — an aggregate view over card-specific variants.
+    // Marking the dimension keeps it out of the canonical-mechanic count/filter.
+    dimension: 'aggregate',
     category: variants[0]?.category ?? 'unknown',
     selectionCount: totalSelections,
     sampleSize: totalSample,
@@ -935,7 +1055,55 @@ function renderQuarantineLedger(o) {
   const reasonGroups = Object.entries(byReason).map(([reason, entries]) => {
     return `<div style="margin-bottom:12px"><h4 style="margin:0 0 4px;font-size:12px;color:var(--text-bright)">${esc(reason)} (${entries.length})</h4><div class="table-wrap"><table class="data-table"><thead><tr><th>Tag</th><th>Status</th></tr></thead><tbody>${entries.map(e => `<tr><td class="mono">${esc(e.tag ?? '—')}</td><td><span class="status-badge warning">${esc(e.status ?? 'QUARANTINED')}</span></td></tr>`).join('')}</tbody></table></div></div>`;
   }).join('');
-  return `<details class="ix-chart-container" data-testid="quarantine-ledger" style="margin-top:16px"><summary class="ix-chart-header"><h4>Quarantine ledger (${ledger.length} excluded mechanics)</h4><span class="footer-note">Mechanics excluded from the analysis pipeline</span></summary><div class="notice warning" style="margin-bottom:12px"><strong>These mechanics were excluded from the analysis pipeline.</strong> They are not measured because they lack registry entries or were flagged during validation.</div>${reasonGroups}</details>`;
+  return `<details class="ix-chart-container" data-testid="quarantine-ledger" style="margin-top:16px"><summary class="ix-chart-header"><h4>Quarantine ledger (${ledger.length} unregistered tags)</h4><span class="footer-note">Tags excluded from the analysis pipeline's canonical-mechanic and synergy surfaces</span></summary><div class="notice warning" style="margin-bottom:12px"><strong>These tags lack registry entries.</strong> They are still tracked and measured in this dataset, but are excluded from the analysis pipeline's canonical mechanic interpretation and synergy modeling.</div>${reasonGroups}</details>`;
+}
+
+// ── Choice-set diagnostics ─────────────────────────────────────
+// Conditional selection analysis: for each entity, the "selected" count is
+// relative to frames where the entity was *simultaneously legal* with the
+// observed alternatives — not a raw marginal pick rate. Choice entropy is
+// computed only within identical offered sets; different choice sets are
+// never pooled. Deterministic selection is decision behavior, not balance
+// evidence.
+function renderChoiceDiagnostics(o) {
+  const ca = o.choiceAnalysis;
+  if (!ca) {
+    return o.choiceAnalysisError
+      ? `<details class="ix-chart-container" data-testid="choice-diagnostics" style="margin-top:16px"><summary class="ix-chart-header"><h4>Choice-set diagnostics</h4><span class="footer-note">Unavailable</span></summary><div class="notice warning">Choice-set analysis failed: ${esc(o.choiceAnalysisError)}</div></details>`
+      : '';
+  }
+  const cov = ca.coverage ?? {};
+  const contexts = (ca.contexts ?? []).slice(0, 25);
+  const entities = Object.entries(ca.entities ?? {})
+    .sort((a, b) => (b[1].offeredCount ?? 0) - (a[1].offeredCount ?? 0))
+    .slice(0, 25);
+  const covHtml = `<div class="notice info" style="margin-bottom:12px"><strong>Coverage:</strong> ${fmt(cov.decisionsWithLegalActions ?? 0)} of ${fmt(cov.decisionsSeen ?? 0)} recorded decisions carry a legal-action set; ${fmt(cov.multiOptionDecisions ?? 0)} frames offered multiple options. Selections below are <em>conditional on the simultaneously-legal set</em> — a high conditional rate with no jointly-legal competitors is a forced pick, not a preference.</div>`;
+  const entityRows = entities.map(([e, rec]) => {
+    const contested = (rec.pairwise ?? []).filter(p => (p.entitySelected + p.otherSelected) > 0);
+    const rivals = contested.length;
+    const shareTxt = contested.length
+      ? contested.slice(0, 3).map(p => `${esc(p.versus)} ${p.conditionalShare != null ? pct(p.conditionalShare) : '—'} (${p.entitySelected}/${p.entitySelected + p.otherSelected})`).join('; ')
+      : '—';
+    return `<tr><td class="mono">${esc(e)}</td><td>${fmt(rec.offeredCount)}</td><td>${fmt(rec.selectedCount)}</td><td>${rec.conditionalRate != null ? pct(rec.conditionalRate) : '—'}</td><td>${rivals}</td><td style="font-size:11px">${shareTxt}</td></tr>`;
+  }).join('');
+  const entityHtml = entities.length
+    ? `<h4 style="margin:12px 0 4px;font-size:12px;color:var(--text-bright)">Conditional selection (entity vs jointly-legal alternatives)</h4><div class="table-wrap"><table class="data-table"><thead><tr><th>Entity</th><th>Offered</th><th>Selected</th><th>Conditional rate</th><th>Contested rivals</th><th>Head-to-head (top 3)</th></tr></thead><tbody>${entityRows}</tbody></table></div>`
+    : `<div class="notice info">No entity-level choice data.</div>`;
+  const ctxRows = contexts.map(c => `<tr><td class="mono" style="font-size:11px">${esc(c.contextId)}</td><td>${fmt(c.frameCount)}</td><td>${c.offeredCount}</td><td>${c.dominantOption != null ? `${esc(c.dominantOption)} (${c.dominantShare != null ? pct(c.dominantShare) : '—'})` : '—'}</td><td>${c.normalizedEntropy != null ? c.normalizedEntropy.toFixed(3) : '—'}</td><td><span class="status-badge ${c.evidence === 'OBSERVED' ? 'info' : 'warning'}">${esc(c.evidence ?? 'INSUFFICIENT_DATA')}</span></td></tr>`).join('');
+  const ctxHtml = contexts.length
+    ? `<h4 style="margin:12px 0 4px;font-size:12px;color:var(--text-bright)">Decision diversity by recurring choice context (top ${contexts.length} of ${ca.contextCount ?? 0})</h4><div class="notice info" style="margin-bottom:8px">Normalized entropy is Shannon entropy of the selected-option distribution divided by log2(offered options): 0 = always the same pick, 1 = uniform. Only identical offered sets are pooled — deterministic Profiles are <em>decision behavior</em>, not balance evidence.</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Offered set</th><th>Frames</th><th>Options</th><th>Dominant pick (share)</th><th>Normalized entropy</th><th>Evidence</th></tr></thead><tbody>${ctxRows}</tbody></table></div>`
+    : `<div class="notice info">No recurring choice contexts met the minimum-frame threshold (${fmt(cov.decisionsUsable ?? 0)} usable decisions).</div>`;
+  return `<details class="ix-chart-container" data-testid="choice-diagnostics" style="margin-top:16px"><summary class="ix-chart-header"><h4>Choice-set diagnostics</h4><span class="footer-note">Conditional selection + decision diversity. Diagnostic only — not balance evidence.</span></summary>${covHtml}${entityHtml}${ctxHtml}</details>`;
+}
+
+// Per-mechanic conditional block for the detail view: when this mechanic was
+// selected, which alternatives were simultaneously legal?
+function renderMechanicChoiceBlock(m, o) {
+  const rec = o.choiceAnalysis?.entities?.[m.mechanic];
+  if (!rec) return '';
+  const pairs = (rec.pairwise ?? []).filter(p => p.jointFrames > 0).slice(0, 12);
+  const pairRows = pairs.map(p => `<tr><td class="mono">${esc(p.versus)}</td><td>${fmt(p.jointFrames)}</td><td>${fmt(p.entitySelected)}</td><td>${fmt(p.otherSelected)}</td><td>${fmt(p.neitherSelected)}</td><td>${p.conditionalShare != null ? pct(p.conditionalShare) : '—'}</td></tr>`).join('');
+  return `<h3 style="margin-top:16px">Conditional choice set</h3><div class="notice info" style="margin-bottom:8px">Offered ${fmt(rec.offeredCount)} times, selected ${fmt(rec.selectedCount)} (conditional rate ${rec.conditionalRate != null ? pct(rec.conditionalRate) : '—'}). Rows show what was <em>simultaneously legal</em> — forced picks (no rival selected) are not preferences.</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Jointly legal with</th><th>Joint frames</th><th>This selected</th><th>Rival selected</th><th>Neither</th><th>Conditional share</th></tr></thead><tbody>${pairRows}</tbody></table></div>`;
 }
 
 export function renderMechanics() {
@@ -991,7 +1159,8 @@ export function renderMechanics() {
   const healthHtml = renderCampaignHealthBanner(o);
   const chartHtml = renderMechanicsPickRateChart(filtered);
   const quarantineHtml = renderQuarantineLedger(o);
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Mechanics Atlas</h2><p>Prevalence, pick rate, win association, and evidence by mechanic — ${filtered.length} of ${mechanics.length} entities</p></div>${filterHtml}</div><div class="panel-body">${labDatasetBanner()}${healthHtml}${chartHtml}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(m => `<tr class="clickable-row" data-mechanic="${esc(m.mechanic)}"><td><b>${esc(m.displayName ?? m.mechanic)}</b></td><td>${esc(m.dimension ?? 'canonical-mechanic')}</td><td>${fmt(m.selectionCount ?? 0)}</td><td>${fmt(m.legalOpportunityCount ?? 0)}</td><td>${renderPickRateCell(m)}</td><td>${pct(m.participantPrevalence ?? m.matchUsageRate)}</td><td>${pct(m.matchPrevalence ?? 0)}</td><td>${renderWinAssocCell(m, 'rawWinAssociation', 'rawWinAssociationStatus')}</td><td>${renderWinAssocCell(m, 'adjustedWinAssociation', 'adjustedWinAssociationStatus')}</td><td>${renderPointImpactCell(m)}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${quarantineHtml}</div></section>`;
+  const choiceHtml = renderChoiceDiagnostics(o);
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Mechanics Atlas</h2><p>Prevalence, pick rate, win association, and evidence by mechanic — ${filtered.length} of ${mechanics.length} entities</p></div>${filterHtml}</div><div class="panel-body">${labDatasetBanner()}${healthHtml}${chartHtml}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(m => `<tr class="clickable-row" data-mechanic="${esc(m.mechanic)}"><td><b>${esc(m.displayName ?? m.mechanic)}</b></td><td>${esc(m.dimension ?? 'canonical-mechanic')}</td><td>${fmt(m.selectionCount ?? 0)}</td><td>${fmt(m.legalOpportunityCount ?? 0)}</td><td>${renderPickRateCell(m)}</td><td>${pct(m.participantPrevalence ?? m.matchUsageRate)}</td><td>${pct(m.matchPrevalence ?? 0)}</td><td>${renderWinAssocCell(m, 'rawWinAssociation', 'rawWinAssociationStatus')}</td><td>${renderWinAssocCell(m, 'adjustedWinAssociation', 'adjustedWinAssociationStatus')}</td><td>${renderPointImpactCell(m)}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}" title="${esc(Array.isArray(m.evidenceReasons) && m.evidenceReasons.length ? m.evidenceReasons.map(r => `${r.code}: ${r.detail}`).join(' · ') : 'no structured reasons available')}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${quarantineHtml}${choiceHtml}</div></section>`;
   document.querySelector('#dimension-filter').onchange = e => { state.mechanicsDimensionFilter = e.target.value; rerender(); };
   // Phase 3B: enhanced filter handlers
   const rankFilterEl = document.querySelector('#mechanics-rank-filter');
@@ -1021,7 +1190,8 @@ export function renderMechanics() {
 
 function renderMechanicDetail(m) {
   const evidenceClass = (EVIDENCE_GRADE_RANK[m.evidenceGrade] ?? 0) >= 3 ? 'supported' : 'warning';
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="mechanics-back">← Back to atlas</button><h2>${esc(m.displayName ?? m.mechanic)}</h2><p>${esc(m.category ?? '')} · ${esc(m.dimension ?? 'canonical-mechanic')}</p></div><span class="status-badge ${evidenceClass}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Selections', m.selectionCount], ['Legal opportunities', m.legalOpportunityCount ?? 'N/A'], ['Pick rate when legal', m.pickRateWhenLegal != null ? pct(m.pickRateWhenLegal) : 'N/A'], ['Participant prevalence', pct(m.participantPrevalence ?? m.matchUsageRate)], ['Participant prevalence 95% CI', (m.participantPrevalenceWilson95 ?? m.matchUsageWilson95) ? `${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[0])} to ${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[1])}` : '—'], ['Match prevalence', pct(m.matchPrevalence)], ['Raw win association', m.rawWinAssociation != null ? `${(m.rawWinAssociation * 100).toFixed(1)} pp` : '—'], ['Adjusted win association', m.adjustedWinAssociation != null ? `${(m.adjustedWinAssociation * 100).toFixed(1)} pp` : '—'], ['Actor point impact mean', (m.actorPointImpact ?? m.immediatePointImpact)?.mean?.toFixed(2) ?? '—'], ['Actor point impact median', (m.actorPointImpact ?? m.immediatePointImpact)?.median?.toFixed(2) ?? '—'], ['Sample size', m.sampleSize], ['P-value', m.pValue?.toFixed(4)], ['Registry verified', m.registryVerified ? 'Yes' : 'No']])}<button id="mechanic-view-synergies" class="ix-cross-link" data-testid="mechanic-view-synergies" aria-label="View synergies involving this mechanic in the Synergy Observatory">⟷ View synergies involving this mechanic</button>${m.limitations ? `<div class="notice info" style="margin-top:12px"><strong>Limitations:</strong><ul>${m.limitations.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}</div></section>`;
+  const choiceBlockHtml = renderMechanicChoiceBlock(m, state.observatory);
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="mechanics-back">← Back to atlas</button><h2>${esc(m.displayName ?? m.mechanic)}</h2><p>${esc(m.category ?? '')} · ${esc(m.dimension ?? 'canonical-mechanic')}</p></div><span class="status-badge ${evidenceClass}">${esc(m.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Selections', m.selectionCount], ['Legal opportunities', m.legalOpportunityCount ?? 'N/A'], ['Pick rate when legal', m.pickRateWhenLegal != null ? pct(m.pickRateWhenLegal) : 'N/A'], ['Participant prevalence', pct(m.participantPrevalence ?? m.matchUsageRate)], ['Participant prevalence 95% CI', (m.participantPrevalenceWilson95 ?? m.matchUsageWilson95) ? `${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[0])} to ${pct((m.participantPrevalenceWilson95 ?? m.matchUsageWilson95)[1])}` : '—'], ['Match prevalence', pct(m.matchPrevalence)], ['Raw win association', m.rawWinAssociation != null ? `${(m.rawWinAssociation * 100).toFixed(1)} pp` : '—'], ['Raw assoc. 95% CI', (m.rawWinAssociation95 ?? m.outcomeAssociation95)?.[0] != null ? `${((m.rawWinAssociation95 ?? m.outcomeAssociation95)[0] * 100).toFixed(1)} to ${((m.rawWinAssociation95 ?? m.outcomeAssociation95)[1] * 100).toFixed(1)} pp` : '—'], ['Adjusted win association', m.adjustedWinAssociation != null ? `${(m.adjustedWinAssociation * 100).toFixed(1)} pp` : '—'], ['Adjusted assoc. 95% CI', m.adjustedWinAssociation95?.[0] != null ? `${(m.adjustedWinAssociation95[0] * 100).toFixed(1)} to ${(m.adjustedWinAssociation95[1] * 100).toFixed(1)} pp` : '—'], ['Actor point impact mean', (m.actorPointImpact ?? m.immediatePointImpact)?.mean?.toFixed(2) ?? '—'], ['Actor point impact median', (m.actorPointImpact ?? m.immediatePointImpact)?.median?.toFixed(2) ?? '—'], ['Sample size', m.sampleSize], ['P-value (raw assoc.)', m.pValue?.toFixed(4)], ['Q-value (BH)', m.associationQValue != null ? Number(m.associationQValue).toFixed(4) : '—'], ['Registry verified', m.registryVerified ? 'Yes' : 'No']])}${Array.isArray(m.evidenceReasons) && m.evidenceReasons.length ? `<div class="notice info" style="margin-top:12px"><strong>Why this evidence grade:</strong><ul>${m.evidenceReasons.map(r => `<li><code>${esc(r.code)}</code> — ${esc(r.detail)}</li>`).join('')}</ul></div>` : ''}<div class="notice info" style="margin-top:12px"><strong>Interpretation:</strong> raw and adjusted associations are observational, not causal. A sign reversal between them indicates confounding (policy/seat composition), not an error.</div><button id="mechanic-view-synergies" class="ix-cross-link" data-testid="mechanic-view-synergies" aria-label="View synergies involving this mechanic in the Synergy Observatory">⟷ View synergies involving this mechanic</button>${m.limitations ? `<div class="notice info" style="margin-top:12px"><strong>Limitations:</strong><ul>${m.limitations.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}${choiceBlockHtml}</div></section>`;
   document.querySelector('#mechanics-back').onclick = () => { state.selectedMechanic = null; rerender(); };
   // Phase 3A: Mechanic → Synergy cross-workspace navigation
   const viewSynergiesBtn = document.querySelector('#mechanic-view-synergies');
@@ -1045,7 +1215,7 @@ const SYNERGY_COLUMNS = [
   { key: 'pair', label: 'Pair', sort: s => s.displayName ?? s.id, type: 'string' },
   { key: 'effect', label: 'OR interaction', sort: s => s.effect ?? 0, type: 'number' },
   { key: 'marginal', label: 'Marginal effect', sort: s => s.marginalInteraction ?? s.rawEffect ?? 0, type: 'number' },
-  { key: 'ci', label: '95% CI (OR)', sort: s => s.interval?.[0] ?? 0, type: 'number' },
+  { key: 'ci', label: '95% CI (OR)', sort: s => (s.confidenceInterval ?? s.interval)?.[0] ?? 0, type: 'number' },
   { key: 'cohorts', label: 'Cohorts (N/B/A/AB)', sort: s => s.effectiveN ?? s.sampleSize ?? 0, type: 'number' },
   { key: 'pvalue', label: 'P-value', sort: s => s.pValue ?? 1, type: 'number' },
   { key: 'qvalue', label: 'Q-value (BH)', sort: s => s.qValue ?? 1, type: 'number' },
@@ -1242,7 +1412,10 @@ export function renderSynergies() {
   }
   // Collect unique mechanics for the mechanic filter dropdown
   const allMechanics = [...new Set(synergies.flatMap(synergyPairParts))].sort();
-  const original = [...filteredSynergies].sort((a, b) => Math.abs(b.estimate ?? 0) - Math.abs(a.estimate ?? 0));
+  // Default order: strongest shrunk log-effect first (the pipeline emits
+  // `effect`/`logEstimate`/`shrunkEffect`; `estimate` does not exist and would
+  // silently sort everything by id).
+  const original = [...filteredSynergies].sort((a, b) => Math.abs(b.shrunkEffect ?? b.logEstimate ?? 0) - Math.abs(a.shrunkEffect ?? a.logEstimate ?? 0));
   const sortCol = state.synergiesSortColumn;
   const sortPhase = state.synergiesSortPhase ?? 0;
   let sorted = original;
@@ -1279,10 +1452,11 @@ export function renderSynergies() {
   const nearThresholdHtml = (synergies.length === 0 && nearThreshold.length > 0)
     ? renderNearThresholdPairs(nearThreshold)
     : '';
+  const rejectedCellsHtml = renderRejectedSynergyCells(synergyDiagnostics);
   const heatmapHtml = renderSynergyHeatmap(filteredSynergies);
   const synergyFilterHtml = synergies.length > 0 ? `<div class="ix-filter-toolbar" data-testid="synergies-filter-toolbar"><label for="synergies-mechanic-filter">Mechanic:</label><select id="synergies-mechanic-filter"><option value="all" ${mechanicFilter === 'all' ? 'selected' : ''}>All mechanics</option>${allMechanics.map(m => `<option value="${esc(m)}" ${m === mechanicFilter ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select><label for="synergies-direction-filter">Direction:</label><select id="synergies-direction-filter"><option value="all" ${directionFilter === 'all' ? 'selected' : ''}>All</option><option value="synergy" ${directionFilter === 'synergy' ? 'selected' : ''}>Synergy only</option><option value="anti-synergy" ${directionFilter === 'anti-synergy' ? 'selected' : ''}>Anti-synergy only</option></select><label for="synergies-min-cohort">Min cohort (Both): <output id="synergies-min-cohort-out">${minCohort}</output></label><input type="range" id="synergies-min-cohort" min="0" max="${Math.max(...synergies.map(s => s.bothN ?? s.effectiveN ?? s.sampleSize ?? 0), 50)}" step="5" value="${minCohort}"></div>` : '';
   const motifFlowHtml = renderMotifFlow(motifs);
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Synergy Observatory</h2><p>Four-cohort logistic A×B interaction (odds-ratio scale) — ${filteredSynergies.length} of ${synergies.length} pairs</p></div></div><div class="panel-body">${labDatasetBanner()}${healthHtml}${emptyMsg}${synergyFilterHtml}${filterMsg}${heatmapHtml}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(s => `<tr class="clickable-row" data-synergy="${esc(s.id)}"><td><b>${esc(s.displayName ?? s.id)}</b></td><td>${s.effect != null ? `${s.effect.toFixed(3)}` : '—'}</td><td>${s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(1)} pp` : '—'}</td><td>${s.interval?.[0] != null ? `${s.interval[0].toFixed(3)} to ${s.interval[1].toFixed(3)}` : '—'}</td><td>${s.neitherN ?? '—'}/${s.aOnlyN ?? '—'}/${s.bOnlyN ?? '—'}/${s.bothN ?? '—'}</td><td>${s.pValue?.toFixed(4) ?? '—'}</td><td>${s.qValue?.toFixed(4) ?? '—'}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${nearThresholdHtml}${motifFlowHtml}</div></section>`;
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Synergy Observatory</h2><p>Four-cohort logistic A×B interaction (odds-ratio scale) — ${filteredSynergies.length} of ${synergies.length} pairs</p></div></div><div class="panel-body">${labDatasetBanner()}${healthHtml}${emptyMsg}${synergyFilterHtml}${filterMsg}${heatmapHtml}<div class="table-wrap"><table class="data-table"><thead><tr>${headerHtml}</tr></thead><tbody>${sorted.map(s => `<tr class="clickable-row" data-synergy="${esc(s.id)}"><td><b>${esc(s.displayName ?? s.id)}</b></td><td>${s.effect != null ? `${s.effect.toFixed(3)}` : '—'}</td><td>${s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(1)} pp` : '—'}</td><td>${(s.confidenceInterval ?? s.interval)?.[0] != null ? `${(s.confidenceInterval ?? s.interval)[0].toFixed(3)} to ${(s.confidenceInterval ?? s.interval)[1].toFixed(3)}` : '—'}</td><td>${s.neitherN ?? '—'}/${s.aOnlyN ?? '—'}/${s.bOnlyN ?? '—'}/${s.bothN ?? '—'}</td><td>${s.pValue?.toFixed(4) ?? '—'}</td><td>${s.qValue?.toFixed(4) ?? '—'}</td><td><span class="status-badge ${(EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 2 ? 'info' : 'warning'}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></td></tr>`).join('')}</tbody></table></div>${nearThresholdHtml}${rejectedCellsHtml}${motifFlowHtml}</div></section>`;
   document.querySelectorAll('[data-sort-column]').forEach(th => {
     const handler = () => {
       const col = th.dataset.sortColumn;
@@ -1356,6 +1530,41 @@ export function renderSynergies() {
 // co-occurred in ≥ 10 participant-matches. These are NOT proven synergies;
 // they are pairs that would likely become eligible with a larger campaign.
 // The section is clearly labelled as exploratory/diagnostic.
+// ── Rejected / non-modeled synergy cells ───────────────────────
+// Every candidate pair that was NOT modeled gets an explicit cell status
+// (INSUFFICIENT_DATA / FAILED / NOT_IDENTIFIABLE) with a machine-readable
+// reason code and cohort/strata accounting. Unknown ≠ neutral: these cells
+// carry no effect estimate at all, and the UI must say why.
+const SYNERGY_CELL_STATUS_LABEL = {
+  INSUFFICIENT_DATA: 'Insufficient data',
+  FAILED: 'Model failed',
+  NOT_IDENTIFIABLE: 'Not identifiable',
+};
+const SYNERGY_REASON_LABEL = {
+  INSUFFICIENT_BOTH: 'Both-cohort below threshold',
+  INSUFFICIENT_SINGLE: 'Single-mechanic cohorts below threshold',
+  INSUFFICIENT_TOTAL: 'Total sample below threshold',
+  NO_WITHIN_STRATUM_VARIATION: 'No within-stratum variation',
+  SEPARATION: 'Outcome separation in contributing strata',
+  SAME_EVENT_DEPENDENCY: 'Same-event family/mode dependency (not independent)',
+  ALIAS_DUPLICATE: 'Identical-usage alias (deduplicated)',
+};
+function renderRejectedSynergyCells(diagnostics) {
+  const rows = (diagnostics ?? []).filter(d => d.cellStatus && d.cellStatus !== 'MODELED');
+  if (!rows.length) return '';
+  const byStatus = {};
+  for (const d of rows) byStatus[d.cellStatus] = (byStatus[d.cellStatus] ?? 0) + 1;
+  const summary = Object.entries(byStatus).map(([k, v]) => `${SYNERGY_CELL_STATUS_LABEL[k] ?? k}: ${v}`).join(' · ');
+  const body = rows.slice(0, 100).map(d => {
+    const c = d.cohortN ?? {};
+    const strataNote = (d.excludedStrata ?? []).length
+      ? `${d.excludedStrata.length} strata excluded (${[...new Set(d.excludedStrata.map(s => s.reason))].join(', ')})`
+      : '';
+    return `<tr><td class="mono">${esc(d.id ?? `${d.source}::${d.target}`)}</td><td><span class="status-badge warning">${esc(SYNERGY_CELL_STATUS_LABEL[d.cellStatus] ?? d.cellStatus)}</span></td><td>${esc(SYNERGY_REASON_LABEL[d.reasonCode] ?? d.reasonCode ?? '—')}</td><td>${c.neither ?? '—'}/${c.aOnly ?? '—'}/${c.bOnly ?? '—'}/${c.both ?? '—'}</td><td style="font-size:11px">${esc(strataNote)}</td></tr>`;
+  }).join('');
+  return `<details class="ix-chart-container" data-testid="synergy-rejected-cells" style="margin-top:16px"><summary class="ix-chart-header"><h4>Non-modeled cells (${rows.length})</h4><span class="footer-note">${esc(summary)}</span></summary><div class="notice warning" style="margin-bottom:12px"><strong>These pairs produced no estimate.</strong> An absent cell is not evidence of "no interaction" — the reason column states why modeling was impossible or the pair was ineligible. Neither/ A-only / B-only / Both are the four-cohort observation counts.</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Pair</th><th>Cell status</th><th>Reason</th><th>N/A/B/Both</th><th>Strata detail</th></tr></thead><tbody>${body}</tbody></table></div>${rows.length > 100 ? `<div class="notice info" style="margin-top:8px">Showing 100 of ${rows.length} non-modeled cells.</div>` : ''}</details>`;
+}
+
 function renderNearThresholdPairs(nearThreshold) {
   const SYNERGY_THRESHOLD_BOTH = 20;
   const rows = nearThreshold.map(d => {
@@ -1373,7 +1582,7 @@ function renderNearThresholdPairs(nearThreshold) {
 
 function renderSynergyDetail(s) {
   const evidenceClass = (EVIDENCE_GRADE_RANK[s.evidenceGrade] ?? 0) >= 3 ? 'supported' : 'warning';
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="synergy-back">← Back to observatory</button><h2>${esc(s.displayName ?? s.id)}</h2><p>${esc(s.relationshipClass ?? '')} · ${esc(s.direction ?? 'bidirectional')}</p></div><span class="status-badge ${evidenceClass}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Interaction (odds-ratio)', s.effect != null ? s.effect.toFixed(4) : '—'], ['Log-estimate', s.logEstimate != null ? s.logEstimate.toFixed(4) : '—'], ['Marginal interaction', s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(2)} pp` : '—'], ['95% CI (OR)', s.interval?.[0] != null ? `${s.interval[0].toFixed(4)} to ${s.interval[1].toFixed(4)}` : '—'], ['Standard error', s.standardError != null ? s.standardError.toFixed(4) : '—'], ['P-value', s.pValue?.toFixed(6) ?? '—'], ['Q-value', s.qValue?.toFixed(6) ?? '—'], ['Neither cohort', s.neitherN ?? '—'], ['A-only cohort', s.aOnlyN ?? '—'], ['B-only cohort', s.bOnlyN ?? '—'], ['Both cohort', s.bothN ?? '—'], ['Effective N', s.effectiveN ?? '—'], ['Cohort balance', s.cohortBalance != null ? s.cohortBalance.toFixed(3) : '—'], ['Separation detected', s.separation ? 'Yes (corrected)' : 'No'], ['Strata pooled', s.strataCount ?? '—'], ['Status', s.status ?? '—']])}${s.limitations ? `<div class="notice info" style="margin-top:12px"><strong>Limitations:</strong><ul>${s.limitations.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}</div></section>`;
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><button class="back-button" id="synergy-back">← Back to observatory</button><h2>${esc(s.displayName ?? s.id)}</h2><p>${esc(s.relationshipClass ?? '')} · ${esc(s.direction ?? 'bidirectional')}</p></div><span class="status-badge ${evidenceClass}">${esc(s.evidenceGrade ?? 'INSUFFICIENT')}</span></div><div class="panel-body">${definitionList([['Interaction (odds-ratio)', s.effect != null ? s.effect.toFixed(4) : '—'], ['Log-estimate', s.logEstimate != null ? s.logEstimate.toFixed(4) : '—'], ['Marginal interaction', s.marginalInteraction != null ? `${(s.marginalInteraction * 100).toFixed(2)} pp` : '—'], ['95% CI (OR)', (s.confidenceInterval ?? s.interval)?.[0] != null ? `${(s.confidenceInterval ?? s.interval)[0].toFixed(4)} to ${(s.confidenceInterval ?? s.interval)[1].toFixed(4)}` : '—'], ['Standard error', s.standardError != null ? s.standardError.toFixed(4) : '—'], ['P-value', s.pValue?.toFixed(6) ?? '—'], ['Q-value', s.qValue?.toFixed(6) ?? '—'], ['Neither cohort', s.neitherN ?? '—'], ['A-only cohort', s.aOnlyN ?? '—'], ['B-only cohort', s.bOnlyN ?? '—'], ['Both cohort', s.bothN ?? '—'], ['Effective N', s.effectiveN ?? '—'], ['Cohort balance', s.cohortBalance != null ? s.cohortBalance.toFixed(3) : '—'], ['Separation detected', s.separation ? 'Yes (corrected)' : 'No'], ['Strata pooled', s.strataCount ?? '—'], ['Model status', s.modelStatus ?? 'modeled'], ['Status', s.status ?? '—']])}${Array.isArray(s.evidenceReasons) && s.evidenceReasons.length ? `<div class="notice info" style="margin-top:12px"><strong>Why this evidence grade:</strong><ul>${s.evidenceReasons.map(r => `<li><code>${esc(r.code)}</code> — ${esc(r.detail)}</li>`).join('')}</ul></div>` : ''}${s.limitations ? `<div class="notice info" style="margin-top:12px"><strong>Limitations:</strong><ul>${s.limitations.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}</div></section>`;
   document.querySelector('#synergy-back').onclick = () => { state.selectedSynergy = null; rerender(); };
 }
 
