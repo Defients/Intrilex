@@ -722,3 +722,10 @@ dialog::backdrop{background:rgba(5,8,14,.7);backdrop-filter:blur(4px)}
 .error-boundary-btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .error-boundary-retry{border-color:rgba(104,211,145,.35);color:var(--green);background:linear-gradient(135deg,rgba(104,211,145,.08),rgba(12,24,34,.6))}
 .error-boundary-retry:hover{background:linear-gradient(135deg,rgba(104,211,145,.14),rgba(16,29,42,.8));border-color:rgba(104,211,145,.5)}
+
+/* ── Global utility region: Home / Experiment / Ctrl+K read as one
+     coherent instrument control cluster instead of detached buttons ── */
+.global-actions{gap:4px;padding:4px;border:1px solid var(--border-soft);border-radius:12px;background:var(--bg-1);box-shadow:var(--ct-well-inset, inset 0 1px 0 rgba(255,255,255,.03))}
+.global-actions .secondary-button{border-color:transparent;background:transparent}
+.global-actions .secondary-button:hover{background:var(--surface-2);border-color:var(--border-soft)}
+@media(max-width:760px){.global-actions{padding:0;border-color:transparent;background:transparent;box-shadow:none;gap:8px}}

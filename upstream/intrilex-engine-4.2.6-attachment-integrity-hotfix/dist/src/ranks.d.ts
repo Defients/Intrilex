@@ -33,6 +33,12 @@ export declare function parseIdentity(identity: string): ParsedIdentity | null;
 export declare function rankDefinition(cardOrIdentity: CardInstance | string): RankDefinition;
 export declare function allRankDefinitions(): RankDefinition[];
 export declare function cardPointValue(card: CardInstance): number;
+/**
+ * Point value honored by match resolution. Under experimental rule overrides
+ * ("rank.<R>.prPoints") the mutated value applies; otherwise this is identical
+ * to cardPointValue. Explicitly-set card.state.pointValue always wins.
+ */
+export declare function resolvePointValue(state: Readonly<EngineState>, card: CardInstance): number;
 export declare function hasOrdinaryScuttleImmunity(card: CardInstance): boolean;
 export declare function compareScuttle(source: CardInstance, target: CardInstance): number;
 export declare function resolveRankAction(input: EngineState, actorId: PlayerId, action: RankAction): RankResolution;

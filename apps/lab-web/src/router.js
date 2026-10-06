@@ -31,6 +31,7 @@ export const WORKSPACES = [
   ['/forensic','🔬','Forensic','Replay forensics'],
   ['/diagnostics','⚙','Diagnostics','Policy behavior'],
   ['/evolution','🧬','Evolution Lab','Experiments and heuristic evolution'],
+  ['/mutation','⚖','Mutation Chamber','A/B rule experiments'],
   ['/tournament','🏆','Tournament','AI bracket'],
   ['/evidence','◎','Evidence','Integrity'],
   ['/intelligence','✦','Analytics AI','Ollama interpretation'],
@@ -43,6 +44,34 @@ export const WORKSPACES = [
 ];
 
 export const TITLES = Object.fromEntries(WORKSPACES.map(([route,,label]) => [route,label]));
+
+/**
+ * Natural-concept search keywords per route — the questions an analyst
+ * actually types ("counterfactual", "why did it choose this", "best
+ * cards") rather than only technical workspace names. Shared by the
+ * command palette and the rail workspace filter.
+ */
+export const WORKSPACE_KEYWORDS = {
+  '/watch': 'replay match theatre observe canonical state stepping',
+  '/caster': 'live broadcast commentary replay',
+  '/replays': 'replay vault library verify search',
+  '/history': 'ledger results outcomes matches',
+  '/mechanics': 'rules systems atlas keywords opportunity usage impact',
+  '/synergies': 'relationships pairs combos interactions counterexamples',
+  '/ranks': 'best cards power rankings tier strongest',
+  '/compare': 'cohorts a/b versus matched differences',
+  '/traces': 'why did it choose this decision reasoning trace',
+  '/branches': 'counterfactual what if alternate branch divergence',
+  '/forensic': 'annotate bookmark puzzle forensics',
+  '/diagnostics': 'health telemetry policy behavior margins',
+  '/evidence': 'evidence provenance verify integrity audit',
+  '/evolution': 'experiment generations lineage evolution',
+  '/mutation': 'rule mutation a/b experiment baseline mutant impact regression balance hypothesis',
+  '/tournament': 'bracket tournament champion elimination',
+  '/intelligence': 'ai llm analytics interpretation synthesis',
+  '/rules': 'rulebook how to play learn',
+  '/cards': 'card reference database faces'
+};
 
 export const SUBTITLES = {
   '/strategy':'Field Manual — practical strategy, timing, context and controlled evidence.',
@@ -73,6 +102,7 @@ export const SUBTITLES = {
   '/forensic':'Bookmark, branch, annotate, and compare replays. Generate puzzles from key positions.',
   '/diagnostics':'Decision margins, self-counter rates, response conservation, timing, and win rates.',
   '/evolution':'Deterministic research arena — paired games, frozen evaluation suites, immutable checkpoints, and experimental local heuristic evolution.',
+  '/mutation':'Surgical A/B rules experimentation — one scoped rule parameter changes; matched-seed control vs mutant arms measure the systemic consequences.',
   '/tournament':'Single-elimination AI-vs-AI bracket with deterministic matches and champion crowning.',
   '/profile':'Player profile — identity, ranked, achievements, showcase, customization, and privacy.',
   '/achievements':'56 launch achievements with deterministic detection, career tracking, and hidden discoveries.',
@@ -96,6 +126,7 @@ export const INSTRUMENTS = {
   '/branches': 'OBS-10 · DIVERGENCE CHAMBER',
   '/diagnostics': 'OBS-11 · SYSTEMS TELEMETRY',
   '/evolution': 'OBS-12 · LINEAGE REACTOR',
+  '/mutation': 'OBS-17 · MUTATION CHAMBER',
   '/tournament': 'OBS-13 · BRACKET ENGINE',
   '/evidence': 'OBS-14 · EVIDENCE ARCHIVE',
   '/intelligence': 'OBS-15 · ANALYTICS LENS',
@@ -136,7 +167,7 @@ export function renderNavigation() {
     { label: 'Learn', routes: ['/rules', '/cards', STRATEGY_NAMES.route] },
     { label: 'Observe', routes: ['/watch', '/caster', '/replays', '/history'] },
     { label: 'Analyze', routes: ['/mechanics', '/synergies', '/ranks', '/compare', '/traces', '/branches', '/diagnostics'] },
-    { label: 'Experiment', routes: ['/evolution', '/tournament'] },
+    { label: 'Experiment', routes: ['/evolution', '/mutation', '/tournament'] },
     { label: 'Evidence', routes: ['/evidence', '/intelligence'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));
@@ -150,7 +181,7 @@ export function renderNavigation() {
     SECTIONS.map(section => {
       const links = section.routes.filter(r => wsMap[r]).map(r => {
         const [icon, label, sub] = wsMap[r];
-        return `<a class="workspace-link" href="#${r}" data-route="${r}" data-search="${esc((label + ' ' + sub + ' ' + section.label).toLowerCase())}"><span class="workspace-icon" aria-hidden="true">${icon}</span><span>${label}</span><small>${sub}</small></a>`;
+        return `<a class="workspace-link" href="#${r}" data-route="${r}" data-search="${esc((label + ' ' + sub + ' ' + section.label + ' ' + (WORKSPACE_KEYWORDS[r] ?? '')).toLowerCase())}"><span class="workspace-icon" aria-hidden="true">${icon}</span><span>${label}</span><small>${sub}</small></a>`;
       }).join('');
       return `<div class="nav-section" data-section-label="${section.label}"><div class="nav-section-label">${section.label}</div>${links}</div>`;
     }).join(''),

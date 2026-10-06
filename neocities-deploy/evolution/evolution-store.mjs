@@ -2,6 +2,7 @@ import { hashCanonical } from '../shared-browser.js';
 import { validateResearchProject, researchEnvelope } from './evolution-research.mjs';
 import { artifactEnvelope, validateArtifact, inspectHistoricalArtifact, LAB_LIMITS } from './evolution-domain.mjs';
 import { batchMatrixManifest, validateBatchMatrixManifest } from './batch-matrix.mjs';
+import { validateExperimentRecord, serializeExperiment } from './mutation-domain.mjs';
 
 /** Dedicated developer database. Completion resolves only after transaction commit. */
 export class EvolutionStore {
@@ -21,7 +22,7 @@ export class EvolutionStore {
         reject(error);
       };
       let req;
-      try { req = this.factory.open('intrilex-evolution-lab', 3); }
+      try { req = this.factory.open('intrilex-evolution-lab', 4); }
       catch (error) { fail(error); return; }
       req.onupgradeneeded = () => {
         if (this.opening !== pending) { req.transaction.abort(); return; }
@@ -30,6 +31,8 @@ export class EvolutionStore {
         if(!req.result.objectStoreNames.contains('history')) req.result.createObjectStore('history', { keyPath: 'runId' });
         if(!req.result.objectStoreNames.contains('checkpoints')) req.result.createObjectStore('checkpoints', { keyPath: 'checkpointId' });
         if(!req.result.objectStoreNames.contains('matrices')) req.result.createObjectStore('matrices', { keyPath: 'payload.matrixId' });
+        // Rule Mutation Chamber experiments (schemaVersion-gated, arm-separated).
+        if(!req.result.objectStoreNames.contains('mutations')) req.result.createObjectStore('mutations', { keyPath: 'payload.experimentId' });
       };
       req.onsuccess = () => {
         const db = req.result;
@@ -125,6 +128,41 @@ export class EvolutionStore {
     if (!envelope) throw new Error('LAB_MATRIX_NOT_FOUND');
     return validateBatchMatrixManifest(envelope);
   }
+  /** Rule Mutation Chamber: persist an experiment record under the same
+   * storage budget and integrity-hash conventions as other Lab artifacts. */
+  async saveMutation(record) {
+    validateExperimentRecord(record);
+    const envelope = { experimentType: 'rule-mutation-envelope', payload: record, contentHash: record.contentHash };
+    const size = new TextEncoder().encode(JSON.stringify(envelope)).byteLength;
+    if (size > LAB_LIMITS.persistRunBytes) throw Object.assign(new Error('RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE'), { code: 'RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE', artifactSize: size, persistLimit: LAB_LIMITS.persistRunBytes });
+    const db = await this.open();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(['mutations'], 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(tx.error?.name === 'QuotaExceededError' ? Object.assign(new Error('BROWSER_STORAGE_QUOTA_EXCEEDED'), { code: 'BROWSER_STORAGE_QUOTA_EXCEEDED', cause: tx.error }) : tx.error ?? new Error('LAB_STORAGE_ABORTED'));
+      tx.onerror = () => {};
+      tx.objectStore('mutations').put(envelope);
+    });
+    return size;
+  }
+  async listMutations() {
+    const rows = await this.read('mutations');
+    return rows.map((e) => ({
+      experimentId: e.payload?.experimentId ?? 'unreadable',
+      createdAt: e.payload?.createdAt ?? '',
+      status: e.payload?.status ?? 'unknown',
+      mutationLabel: e.payload?.mutation?.label ?? null,
+      targetId: e.payload?.mutation?.targetId ?? null,
+      verdict: e.payload?.outcome?.verdict ?? null,
+      gamesPerArm: e.payload?.config?.gamesPerArm ?? null,
+    })).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  }
+  async loadMutation(id) {
+    const envelope = await this.read('mutations', id);
+    if (!envelope) throw new Error('LAB_MUTATION_NOT_FOUND');
+    if (envelope.contentHash !== envelope.payload?.contentHash) throw new Error('MUTATION_HASH_MISMATCH');
+    return validateExperimentRecord(envelope.payload);
+  }
   async listResearch() {return (await this.read('research')).map(e=>({experimentId:e.payload.experiment.experimentId,name:e.payload.experiment.name,status:e.payload.experiment.status,scientificId:e.payload.experiment.scientificId}));}
   async loadResearch(id) {const envelope=await this.read('research',id);if(!envelope || envelope.contentHash!==hashCanonical(envelope.payload))throw new Error('RESEARCH_HASH_MISMATCH');const project=validateResearchProject(envelope.payload,this.identity);if(project.experiment.status==='RUNNING')project.experiment.status='PAUSED';return project;}
   async read(store, key) {
@@ -162,4 +200,16 @@ export function parseLabImport(text, identity) {
   // remain an external claim until reproduced by the engine.
   run.evidenceOrigin = 'IMPORTED_UNVERIFIED';
   return run;
+}
+
+/** Mutation experiment import: schema-validated, flagged unverified. */
+export function parseMutationImport(text) {
+  if (typeof text !== 'string' || new TextEncoder().encode(text).byteLength > LAB_LIMITS.importBytes) throw new Error('IMPORT_TOO_LARGE');
+  const record = validateExperimentRecord(JSON.parse(text));
+  record.evidenceOrigin = 'IMPORTED_UNVERIFIED';
+  return record;
+}
+
+export function exportMutationText(record) {
+  return serializeExperiment(record);
 }

@@ -161,7 +161,7 @@ function resolutionOutcome(result) {
 }
 
 export function createMatchId(config) {
-  return `M-${hashCanonical({ profileId: config.profileId, seed: config.seed, seatOrder: config.seatOrder, policyIds: config.policyIds }).slice(0, 20)}`;
+  return `M-${hashCanonical({ profileId: config.profileId, seed: config.seed, seatOrder: config.seatOrder, policyIds: config.policyIds, ...(config.ruleOverrides ? { ruleOverrides: config.ruleOverrides } : {}) }).slice(0, 20)}`;
 }
 
 /**
@@ -283,7 +283,7 @@ export function runPolicyMatch(config) {
   const policyIds = config.policyIds ?? ['random-legal', 'random-legal'];
   const decisionLimit = config.decisionLimit ?? 1800;
   const runInstanceId = config.runInstanceId ?? `RI-${hashCanonical({ profileId, seed: config.seed >>> 0 || 1, seatOrder, policyIds, decisionLimit }).slice(0, 20)}`;
-  const setup = { profileId, playerIds: seatOrder, enabledModules: [], eventApprovedModules: [], seed: config.seed >>> 0 || 1, seatOrder };
+  const setup = { profileId, playerIds: seatOrder, enabledModules: [], eventApprovedModules: [], seed: config.seed >>> 0 || 1, seatOrder, ...(config.ruleOverrides ? { ruleOverrides: config.ruleOverrides } : {}) };
   const initialState = config.initialState ?? createSimulationState(setup);
   let state = initialState;
   const commands = [], events = [], decisions = [];
@@ -575,6 +575,7 @@ export function runPolicyMatch(config) {
     schemaVersion: TELEMETRY_SCHEMA_VERSION, analyticsSchemaVersion: ANALYTICS_SCHEMA_VERSION,
     matchId, matchOrdinal: config.ordinal ?? 0, seed: setup.seed, profileId, seatOrder, policyIds,
     pairedRunId: config.pairedRunId ?? null, seatSwapped: config.seatSwapped ?? false,
+    ruleOverrides: config.ruleOverrides ?? null,
     engineVersion: ENGINE_VERSION, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, replayDataVersion: REPLAY_DATA_VERSION, provenanceHash: provenance.provenanceHash,
     evidenceEpoch: config.evidenceEpoch ?? 'post-rules-parity-repair-v0.28.1',
     postRulesParityRepair: config.postRulesParityRepair ?? true,
@@ -601,7 +602,7 @@ export function runPolicyMatch(config) {
     primaryMechanicOpportunityCounts: Object.fromEntries(Object.entries(primaryMechanicOpportunityCounts).sort()),
     ruleCompliance, errorCode
   };
-  const { provenanceHash: _executionProvenanceHash, labVersion: _labVersion, mechanicOpportunityCounts: _mechOppCounts, primaryMechanicOpportunityCounts: _primaryMechOppCounts, evidenceEpoch: _evidenceEpoch, postRulesParityRepair: _postRepair, authorityHash: _authorityHash, isSelfPlay: _isSelfPlay, ...semanticResultCore } = summaryCore;
+  const { provenanceHash: _executionProvenanceHash, labVersion: _labVersion, mechanicOpportunityCounts: _mechOppCounts, primaryMechanicOpportunityCounts: _primaryMechOppCounts, evidenceEpoch: _evidenceEpoch, postRulesParityRepair: _postRepair, authorityHash: _authorityHash, isSelfPlay: _isSelfPlay, ruleOverrides: _ruleOverrides, ...semanticResultCore } = summaryCore;
   // Also strip labVersion, epoch metadata, and per-participant opportunity counts from the hash.
   // labVersion is a packaging label that bumps on every release (including UI/doc-only
   // changes) regardless of whether the engine changed; engineVersion and rulesVersion

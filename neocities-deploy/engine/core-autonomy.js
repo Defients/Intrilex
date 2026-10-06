@@ -1,15 +1,16 @@
-import { canonicalClone } from "./canonical-json.js?v=408ebfe25d7a";
-import { IntrilexEngine } from "./engine.js?v=408ebfe25d7a";
-import { hashCanonical } from "./hash.js?v=408ebfe25d7a";
-import { cardPointValue, parseIdentity } from "./ranks.js?v=408ebfe25d7a";
-import { nextIndex } from "./rng.js?v=408ebfe25d7a";
-import { createEmptyState } from "./state.js?v=408ebfe25d7a";
-import { assertValidState } from "./validation.js?v=408ebfe25d7a";
-import { CORE_FOUNDATION_AUTHORITY_PROFILE } from "./core-authority.js?v=408ebfe25d7a";
-import { CORE_EFFECT_DECLARATION_PROFILE, enumerateCoreEffectCandidates } from "./core-effects.js?v=408ebfe25d7a";
-import { CORE_RESPONSE_AUTHORITY_PROFILE, currentCoreStackTarget, currentPriorityActor, primaryDescriptor } from "./core-response.js?v=408ebfe25d7a";
-import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates, generatedAdvancedLegalCandidates } from "./core-private-choice.js?v=408ebfe25d7a";
-import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=408ebfe25d7a";
+import { canonicalClone } from "./canonical-json.js?v=e5382c028fd1";
+import { IntrilexEngine } from "./engine.js?v=e5382c028fd1";
+import { hashCanonical } from "./hash.js?v=e5382c028fd1";
+import { parseIdentity, resolvePointValue } from "./ranks.js?v=e5382c028fd1";
+import { EXPERIMENTAL_RULES_METADATA_KEY, resolveRuleFlag, resolveRuleNumber, validateRuleOverrides } from "./rule-parameters.js?v=e5382c028fd1";
+import { nextIndex } from "./rng.js?v=e5382c028fd1";
+import { createEmptyState } from "./state.js?v=e5382c028fd1";
+import { assertValidState } from "./validation.js?v=e5382c028fd1";
+import { CORE_FOUNDATION_AUTHORITY_PROFILE } from "./core-authority.js?v=e5382c028fd1";
+import { CORE_EFFECT_DECLARATION_PROFILE, enumerateCoreEffectCandidates } from "./core-effects.js?v=e5382c028fd1";
+import { CORE_RESPONSE_AUTHORITY_PROFILE, currentCoreStackTarget, currentPriorityActor, primaryDescriptor } from "./core-response.js?v=e5382c028fd1";
+import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates, generatedAdvancedLegalCandidates } from "./core-private-choice.js?v=e5382c028fd1";
+import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, enumerateAdvancedCoreCandidates } from "./core-advanced.js?v=e5382c028fd1";
 function readCoreRuntime(state) {
     const value = state.metadata.coreAuthority;
     return value && typeof value === "object" ? value : null;
@@ -310,13 +311,13 @@ export function enumerateCoreLegalActions(state, actorId) {
     }
     else if (state.phase === "Action" && state.players[actorId].limits.miniTurnsRemaining > 0) {
         if (state.zones.dp.length > 0)
-            candidates.push(action(state, actorId, "draw", "top", "ACTION", [], [], { kind: "core-draw" }, { cardsDrawn: state.players[actorId].hand.length === 0 ? Math.min(2, state.zones.dp.length) : 1 }));
+            candidates.push(action(state, actorId, "draw", "top", "ACTION", [], [], { kind: "core-draw" }, { cardsDrawn: state.players[actorId].hand.length === 0 ? Math.min(resolveRuleNumber(state, "draw.emptyHand"), state.zones.dp.length) : 1 }));
         if (!state.players[actorId].limits.swapBarUsedThisFT)
             for (const id of state.zones.swapBar.filter((cardId) => state.cards[cardId]?.state.swapBarFaceUp === true))
                 candidates.push(action(state, actorId, "swap-bar", "face-up-draw", "ACTION", [], [id], { kind: "core-face-up-swap-draw", swapCardId: id }));
         for (const id of state.players[actorId].hand) {
             const c = state.cards[id];
-            candidates.push(action(state, actorId, "score", "points", "ACTION", [id], [], { kind: "core-score", cardId: id }, { immediatePoints: cardPointValue(c) }));
+            candidates.push(action(state, actorId, "score", "points", "ACTION", [id], [], { kind: "core-score", cardId: id }, { immediatePoints: resolvePointValue(state, c) }));
         }
         const boardLockActive = (state.metadata.boardLock?.turnsRemaining ?? 0) > 0;
         if (!boardLockActive) {
@@ -437,14 +438,16 @@ export function enumerateCoreResponseActions(state, actorId) {
         if ([CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(runtime?.profileId)) {
             const hand = [...state.players[actorId].hand].sort();
             const aces = hand.filter((id) => parseIdentity(state.cards[id].identity)?.rank === "A");
-            for (let i = 0; i < aces.length; i++)
-                for (let j = i + 1; j < aces.length; j++)
-                    candidates.push(action(state, actorId, "counter", "super-ace", "INSTANT", [aces[i], aces[j]], [], { kind: "core-declare-super-ace-counter", sourceCardIds: [aces[i], aces[j]], targetStackItemId: target.id }, { counter: true, super: true }));
+            if (resolveRuleFlag(state, "combo.supers.enabled"))
+                for (let i = 0; i < aces.length; i++)
+                    for (let j = i + 1; j < aces.length; j++)
+                        candidates.push(action(state, actorId, "counter", "super-ace", "INSTANT", [aces[i], aces[j]], [], { kind: "core-declare-super-ace-counter", sourceCardIds: [aces[i], aces[j]], targetStackItemId: target.id }, { counter: true, super: true }));
             const reds = hand.filter((id) => ["♦", "♥"].includes(parseIdentity(state.cards[id].identity)?.suit ?? ""));
-            for (let i = 0; i < reds.length; i++)
-                for (let j = i + 1; j < reds.length; j++)
-                    for (let k = j + 1; k < reds.length; k++)
-                        candidates.push(action(state, actorId, "ultra", "three-red-counter", "INSTANT", [reds[i], reds[j], reds[k]], [], { kind: "core-declare-ultra-three-red", sourceCardIds: [reds[i], reds[j], reds[k]], targetStackItemId: target.id }, { counter: true, ultra: true }));
+            if (resolveRuleFlag(state, "combo.ultras.enabled"))
+                for (let i = 0; i < reds.length; i++)
+                    for (let j = i + 1; j < reds.length; j++)
+                        for (let k = j + 1; k < reds.length; k++)
+                            candidates.push(action(state, actorId, "ultra", "three-red-counter", "INSTANT", [reds[i], reds[j], reds[k]], [], { kind: "core-declare-ultra-three-red", sourceCardIds: [reds[i], reds[j], reds[k]], targetStackItemId: target.id }, { counter: true, ultra: true }));
         }
         for (const sourceId of [...state.players[actorId].er].sort())
             if (parseIdentity(state.cards[sourceId].identity)?.rank === "A")
@@ -470,6 +473,12 @@ export function createCoreMatchState(setup) {
         throw new Error("seed must be a nonzero uint32");
     const state = createEmptyState([...setup.seatOrder]);
     state.rng = { algorithm: "xorshift32", seed: setup.seed >>> 0, cursor: 0 };
+    if (setup.ruleOverrides && Object.keys(setup.ruleOverrides).length > 0) {
+        // Rule Mutation Chamber seam: strictly validated overrides are stamped into
+        // the match's initial state so they are hashed into provenance, cloned with
+        // every resolution, and cannot leak into other matches or the global rules.
+        state.metadata[EXPERIMENTAL_RULES_METADATA_KEY] = validateRuleOverrides(setup.ruleOverrides);
+    }
     const cmd = { id: `CORE-SETUP-${setup.seed >>> 0}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: setup.seatOrder[0], action: { kind: "core-apply-setup", playerIds: [...setup.seatOrder], profileId: setup.profileId, ...(setup.predeterminedIdentities ? { predeterminedIdentities: [...setup.predeterminedIdentities] } : {}) } };
     const result = new IntrilexEngine().execute(state, cmd);
     if (!result.accepted)

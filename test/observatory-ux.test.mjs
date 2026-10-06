@@ -236,7 +236,7 @@ test('UX-09b: match dossier handlers preserve selection state across workspaces'
   const code = await src('workspaces/observatory.js');
   const handlers = code.match(/const watchBtn[\s\S]*?return;/);
   assert.ok(handlers, 'detail handler block exists');
-  assert.ok(handlers[0].includes("location.hash = '#/watch'"), 'watch link navigates');
+  assert.ok(handlers[0].includes("location.hash = '#/watch'") || handlers[0].includes('openReplay'), 'watch link navigates');
   assert.ok(handlers[0].includes("location.hash = '#/traces'"), 'trace link navigates');
   assert.ok(handlers[0].includes("location.hash = '#/mechanics'"), 'mechanic link navigates');
   assert.ok(handlers[0].includes("location.hash = '#/compare'"), 'compare link navigates');

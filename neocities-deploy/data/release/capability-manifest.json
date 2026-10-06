@@ -33,8 +33,8 @@
     "patch": {
       "version": "4.2.6",
       "rulesVersion": "4.3.1",
-      "payloadHash": "267c85087d8c01d1fc68eae5a1369a402be7539ad9866ac712cac8428e6d5080",
-      "fileCount": 1089,
+      "payloadHash": "5640e9a355b54776dd7fbf59dc58ec71840c662fd606655fb383be16c6c31c6d",
+      "fileCount": 1093,
       "manifest": "upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/PRIORITY_PASS_HOTFIX_MANIFEST.json"
     },
     "patchNature": "ENGINE_OWNED_ATTACHMENT_INTEGRITY_HOTFIX_ON_BOUNDED_ADVANCED_CORE_WITH_QUEENS_COURT"
@@ -316,5 +316,5 @@
     "reasonCode": "SCOPE_FREEZE_AND_MULTIPLAYER_AUTHORITY_UNAVAILABLE",
     "note": "Online 1v1 Direct Duel is supported via networkAuthority. This entry blocks the canonical 3-4 player Multiplayer rules module only."
   },
-  "capabilityHash": "74a3d31cfeddc86f4b7b4d0a70811266c28cf975d81342ffaf0353e9ee860698"
+  "capabilityHash": "c694e02b8ad1cf15351e4814b9c3b90c835e1a7a3d5357ded65f3cb4ae9d4f0b"
 }

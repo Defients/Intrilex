@@ -4,8 +4,8 @@
   "source": "upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix",
   "version": "4.2.6",
   "rulesVersion": "4.1.2",
-  "fileCount": 1089,
-  "payloadHash": "267c85087d8c01d1fc68eae5a1369a402be7539ad9866ac712cac8428e6d5080",
+  "fileCount": 1093,
+  "payloadHash": "5640e9a355b54776dd7fbf59dc58ec71840c662fd606655fb383be16c6c31c6d",
   "base": {
     "version": "4.1.0"
   },

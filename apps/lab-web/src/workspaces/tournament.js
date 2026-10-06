@@ -570,7 +570,7 @@ function renderLiveViewer() {
         const label = i === 0 ? p1Label : p2Label;
         return livePlayerBoard(s, s.players?.[id], id, `${id} · ${label}`);
       }).join('')}</div>
-      ${isFinished && lv.gameWinner ? `<div class="notice" style="margin-top:12px"><strong>Game ${lv.gameNum} winner: ${esc(POLICY_LABEL(lv.gameWinner))}</strong><button id="live-continue" class="primary-button" style="margin-left:12px">${lv.hasMoreGames ? 'Next Game →' : 'Record Result →'}</button></div>` : ''}
+      ${isFinished && lv.gameWinner ? `<div class="notice" style="margin-top:12px"><strong>Game ${lv.gameNum} winner: ${esc(POLICY_LABEL(lv.gameWinner))}</strong><button id="live-continue" class="primary-button" style="margin-left:12px">${lv.hasMoreGames ? 'Next Game →' : 'Record Result →'}</button>${lv.replay ? `<button id="live-open-watch" class="secondary-button" style="margin-left:8px" title="Open this game's replay in the Watch workspace (ends the live series)">Open in Watch</button>` : ''}</div>` : ''}
     </div>
   </div></section>`;
 
@@ -584,6 +584,26 @@ function renderLiveViewer() {
   document.querySelector('#live-play-speed').onchange = e => { lv.speed = Number(e.target.value); };
   const continueBtn = document.querySelector('#live-continue');
   if (continueBtn) continueBtn.onclick = () => continueAfterGame();
+  const watchBtn = document.querySelector('#live-open-watch');
+  if (watchBtn) watchBtn.onclick = () => openLiveReplayInWatch();
+}
+
+// Route the just-finished live game's replay through the shared resolver —
+// the worker returns a certified envelope ({initialState, commands}) when
+// recordReplay is enabled, so Watch can normalize it like any other source.
+// Opening Watch ends the live viewing flow for the current series.
+async function openLiveReplayInWatch() {
+  const lv = state.tournamentLiveView;
+  if (!lv?.replay) return;
+  const replay = lv.replay;
+  const label = `Tournament live · game ${lv.gameNum}`;
+  const id = `live-${lv.matchId}-g${lv.gameNum}`;
+  cancelLiveMatch();
+  state.tournamentRunning = false;
+  state.tournamentAutoPlaying = false;
+  state.tournamentLiveView = null;
+  const { openReplay } = await import('../data-loader.js');
+  await openReplay({ kind: 'object', replay, id, label });
 }
 
 function liveStepTo(index) {
@@ -635,6 +655,7 @@ async function watchLiveMatch(tournament) {
     active: true,
     loading: true,
     frames: null,
+    replay: null,
     currentFrame: 0,
     playing: false,
     speed: 2,
@@ -697,6 +718,7 @@ async function runLiveMatchGames(tournament, match, worker) {
     lv.p2Policy = p2Policy;
     lv.gameWinner = null;
     lv.gameSummary = null;
+    lv.replay = null;
     lv.awaitingContinue = false;
     rerender();
 
@@ -736,6 +758,7 @@ async function runLiveMatchGames(tournament, match, worker) {
     // Set up viewer for this game
     lv.loading = false;
     lv.frames = frames;
+    lv.replay = replay;
     lv.currentFrame = 0;
     lv.gameWinner = winningPolicy;
     lv.gameSummary = summary;

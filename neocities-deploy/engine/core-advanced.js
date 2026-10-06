@@ -1,11 +1,12 @@
-import { canonicalClone } from "./canonical-json.js?v=408ebfe25d7a";
-import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=408ebfe25d7a";
-import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js?v=408ebfe25d7a";
-import { cardPointValue, parseIdentity, rankDefinition, resolveRankAction } from "./ranks.js?v=408ebfe25d7a";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=408ebfe25d7a";
-import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js?v=408ebfe25d7a";
-import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js?v=408ebfe25d7a";
-import { phase8Runtime } from "./phase8.js?v=408ebfe25d7a";
+import { canonicalClone } from "./canonical-json.js?v=e5382c028fd1";
+import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=e5382c028fd1";
+import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js?v=e5382c028fd1";
+import { cardPointValue, parseIdentity, rankDefinition, resolvePointValue, resolveRankAction } from "./ranks.js?v=e5382c028fd1";
+import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=e5382c028fd1";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=e5382c028fd1";
+import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js?v=e5382c028fd1";
+import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js?v=e5382c028fd1";
+import { phase8Runtime } from "./phase8.js?v=e5382c028fd1";
 export const CORE_ADVANCED_AUTHORITY_PROFILE = Object.freeze({
     id: "core-advanced-authority",
     displayName: "Advanced Core Authority — Audited Public Supers, Rank 10, Ultras, Voltage & Royal Marriage",
@@ -118,6 +119,22 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
     const s = canonicalClone(input), events = [];
     if (a.kind.startsWith("advanced-super") && foundationActionRestricted(s, actorId))
         return fail("FOUNDATION_ACTION_RESTRICTION", "10♣ Foundation bonus restricts Combo and Super initiation during this Action Phase");
+    // Scoped experimental rule flags (Rule Mutation Chamber): disabled systems
+    // fail closed at resolution, mirroring the enumeration-side filtering.
+    if (a.kind.startsWith("advanced-super") && !resolveRuleFlag(s, "combo.supers.enabled"))
+        return fail("RULE_DISABLED", "Super Combos are disabled by experimental rule override");
+    if (a.kind.startsWith("advanced-ultra") && !resolveRuleFlag(s, "combo.ultras.enabled"))
+        return fail("RULE_DISABLED", "Ultra Combos are disabled by experimental rule override");
+    if (a.kind.startsWith("advanced-voltage") && !resolveRuleFlag(s, "voltage.enabled"))
+        return fail("RULE_DISABLED", "Voltage is disabled by experimental rule override");
+    if (a.kind === "advanced-royal-marriage" && !resolveRuleFlag(s, "royalMarriage.enabled"))
+        return fail("RULE_DISABLED", "Royal Marriage is disabled by experimental rule override");
+    if (a.kind === "advanced-queens-court" && !resolveRuleFlag(s, "queensCourt.enabled"))
+        return fail("RULE_DISABLED", "Queen's Court is disabled by experimental rule override");
+    if (a.kind === "advanced-sudden-death-declare" && !resolveRuleFlag(s, "suddenDeath.enabled"))
+        return fail("RULE_DISABLED", "Sudden Death is disabled by experimental rule override");
+    if (a.kind === "advanced-rank10-diamond-mimic" && a.mimicAction.kind === "super-j-tempo" && !resolveRuleFlag(s, "combo.supers.enabled"))
+        return fail("RULE_DISABLED", "Super Combos are disabled by experimental rule override");
     switch (a.kind) {
         case "advanced-royal-marriage": {
             if (!inHand(s, a.kingCardId, actorId) || !inHand(s, a.queenCardId, actorId) || rank(s, a.kingCardId) !== "K" || rank(s, a.queenCardId) !== "Q" || suit(s, a.kingCardId) !== suit(s, a.queenCardId))
@@ -210,7 +227,7 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
             for (const id of a.sourceCardIds)
                 moveCard(s, id, "GY");
             const p = s.players[actorId];
-            p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(s, actorId), p.limits.miniTurnsRemaining + 2);
+            p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(s, actorId), p.limits.miniTurnsRemaining + resolveRuleNumber(s, "super.jackTempo.miniTurns"));
             events.push({ type: "CORE_ADVANCED_SUPER_J_RESOLVED", payload: { sourceCardIds: a.sourceCardIds, miniTurnsRemaining: p.limits.miniTurnsRemaining } });
             break;
         }
@@ -313,7 +330,7 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
                 }
                 else if (a.scoreCardIds.includes(id)) {
                     moveCard(s, id, `${actorId}_PR`, actorId);
-                    s.cards[id].state.pointValue = cardPointValue(s.cards[id]);
+                    s.cards[id].state.pointValue = resolvePointValue(s, s.cards[id]);
                 }
                 else if (a.effectCardIds.includes(id)) {
                     // Hold the effect card for generated play resolution — it will be moved to hand
@@ -363,12 +380,12 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
             // removed at the beginning of that phase by processStartPhaseLifecycles.
             const released = releaseNineTapsForScoring(s, actorId);
             let bonus = null;
-            if (before === 0 && a.bonusScoreCardId !== undefined) {
+            if (before === 0 && a.bonusScoreCardId !== undefined && resolveRuleFlag(s, "foundation.bonus.enabled")) {
                 if (!inHand(s, a.bonusScoreCardId, actorId))
                     return fail("RANK10_CHOICE", "Foundation bonus card must be in hand");
                 bonus = a.bonusScoreCardId;
                 moveCard(s, bonus, `${actorId}_PR`, actorId);
-                s.cards[bonus].state.pointValue = cardPointValue(s.cards[bonus]);
+                s.cards[bonus].state.pointValue = resolvePointValue(s, s.cards[bonus]);
                 // Rulebook §10♣: the bonus card is scored for Points only — it may
                 // release Nine-conditioned taps but creates no scoring trigger.
                 released.push(...releaseNineTapsForScoring(s, actorId));
@@ -388,11 +405,12 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
                 return fail("RANK10_LIMIT", problem);
             moveCard(s, a.sourceCardId, "EXILE");
             const p = s.players[actorId];
-            p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(s, actorId), p.limits.miniTurnsRemaining + 2);
-            const drawn = s.zones.dp[0];
-            if (drawn)
-                moveCard(s, drawn, `${actorId}_HAND`, actorId);
-            events.push({ type: "CORE_ADVANCED_TEN_HEART_RESOLVED", payload: { sourceCardId: a.sourceCardId, drawnCardId: drawn ?? null, miniTurnsRemaining: p.limits.miniTurnsRemaining } });
+            p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(s, actorId), p.limits.miniTurnsRemaining + resolveRuleNumber(s, "rank10.heartTempo.miniTurns"));
+            const drawnCount = resolveRuleNumber(s, "rank10.heartTempo.draw");
+            const drawnIds = s.zones.dp.slice(0, drawnCount);
+            for (const did of drawnIds)
+                moveCard(s, did, `${actorId}_HAND`, actorId);
+            events.push({ type: "CORE_ADVANCED_TEN_HEART_RESOLVED", payload: { sourceCardId: a.sourceCardId, drawnCardId: drawnIds[0] ?? null, drawnCardIds: drawnIds, miniTurnsRemaining: p.limits.miniTurnsRemaining } });
             break;
         }
         case "advanced-rank10-spade-recovery": {
@@ -428,7 +446,7 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
             if (rank(s, a.scoreCardId) === "7" || scoreIdentity === "BJ")
                 return fail("ULTRA_SCORE_RIDER_UNSUPPORTED", "3 Black score role cannot use a card with an uncertified scoring rider");
             moveCard(s, a.scoreCardId, `${actorId}_PR`, actorId);
-            s.cards[a.scoreCardId].state.pointValue = cardPointValue(s.cards[a.scoreCardId]);
+            s.cards[a.scoreCardId].state.pointValue = resolvePointValue(s, s.cards[a.scoreCardId]);
             let castResolved = false;
             if (a.castEffect.sourceCardId === a.castCardId) {
                 const cast = resolveCoreEffect(s, actorId, a.castEffect);
@@ -451,10 +469,10 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
             for (const id of a.sourceCardIds)
                 moveCard(s, id, "GY");
             const p = s.players[actorId];
-            p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(s, actorId), p.limits.miniTurnsRemaining + 2);
+            p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(s, actorId), p.limits.miniTurnsRemaining + resolveRuleNumber(s, "ultra.twoBlackTwoRed.miniTurns"));
             let moved = [];
             if (a.branch === "draw-two") {
-                for (let i = 0; i < 2 && s.zones.dp.length; i++) {
+                for (let i = 0; i < resolveRuleNumber(s, "ultra.twoBlackTwoRed.draw") && s.zones.dp.length; i++) {
                     const id = s.zones.dp[0];
                     moveCard(s, id, `${actorId}_HAND`, actorId);
                     moved.push(id);
@@ -637,6 +655,7 @@ export function enumerateAdvancedCoreCandidates(state, actorId) {
     if (!p)
         return [];
     const out = [];
+    const superJackMt = resolveRuleNumber(s, "super.jackTempo.miniTurns"), heartMt = resolveRuleNumber(s, "rank10.heartTempo.miniTurns"), heartDraw = resolveRuleNumber(s, "rank10.heartTempo.draw"), ultra2B2RMt = resolveRuleNumber(s, "ultra.twoBlackTwoRed.miniTurns"), ultra2B2RDraw = resolveRuleNumber(s, "ultra.twoBlackTwoRed.draw");
     const byRank = (r) => p.hand.filter(id => rank(s, id) === r).sort();
     const opponents = s.turnOrder.filter(id => id !== actorId);
     for (const k of byRank("K"))
@@ -715,12 +734,12 @@ export function enumerateAdvancedCoreCandidates(state, actorId) {
         }
     }
     for (const pair of combos(byRank("J"), 2))
-        out.push({ family: "super", mode: "jack-tempo", timingClass: "ACTION", sourceCardIds: [...pair], targetCardIds: [], advanced: { kind: "advanced-super-j-tempo", sourceCardIds: pair }, featureVector: { miniTurns: 2 } });
+        out.push({ family: "super", mode: "jack-tempo", timingClass: "ACTION", sourceCardIds: [...pair], targetCardIds: [], advanced: { kind: "advanced-super-j-tempo", sourceCardIds: pair }, featureVector: { miniTurns: superJackMt } });
     for (const id of byRank("10")) {
         const su = suit(s, id);
         if (su === "♣" && !p.limits.rank10PlayedThisFT) {
             const before = deriveSecuredPoints(s, actorId);
-            if (before === 0) {
+            if (before === 0 && resolveRuleFlag(s, "foundation.bonus.enabled")) {
                 for (const bonusId of p.hand)
                     if (bonusId !== id)
                         out.push({ family: "rank10", mode: "club-foundation-bonus", timingClass: "ACTION", sourceCardIds: [id], targetCardIds: [bonusId], advanced: { kind: "advanced-rank10-club-foundation", sourceCardId: id, bonusScoreCardId: bonusId }, featureVector: { foundation: true, bonus: true } });
@@ -728,7 +747,7 @@ export function enumerateAdvancedCoreCandidates(state, actorId) {
             out.push({ family: "rank10", mode: "club-foundation", timingClass: "ACTION", sourceCardIds: [id], targetCardIds: [], advanced: { kind: "advanced-rank10-club-foundation", sourceCardId: id }, featureVector: { foundation: true } });
         }
         if (su === "♥")
-            out.push({ family: "rank10", mode: "heart-tempo", timingClass: "ACTION", sourceCardIds: [id], targetCardIds: [], advanced: { kind: "advanced-rank10-heart-tempo", sourceCardId: id }, featureVector: { miniTurns: 2, draw: 1 } });
+            out.push({ family: "rank10", mode: "heart-tempo", timingClass: "ACTION", sourceCardIds: [id], targetCardIds: [], advanced: { kind: "advanced-rank10-heart-tempo", sourceCardId: id }, featureVector: { miniTurns: heartMt, draw: heartDraw } });
         if (su === "♠")
             for (const x of s.zones.exile.slice(0, 12))
                 out.push({ family: "rank10", mode: "spade-recovery", timingClass: "ACTION", sourceCardIds: [id], targetCardIds: [x], advanced: { kind: "advanced-rank10-spade-recovery", sourceCardId: id, recoverCardId: x }, featureVector: { recovery: true } });
@@ -745,7 +764,7 @@ export function enumerateAdvancedCoreCandidates(state, actorId) {
                     for (const targetId of s.players[oid].pr)
                         if (!hasAegis(s.cards[targetId]))
                             out.push({ family: "rank10", mode: "diamond-mimic-paired-absolute-scuttle", timingClass: "ACTION", sourceCardIds: [id, twoId], targetCardIds: [targetId], advanced: { kind: "advanced-rank10-diamond-mimic", sourceCardId: id, pairedTwoId: twoId, mimickedRank: "8", effectKey: "absolute-scuttle", mimicAction: { kind: "absolute-scuttle", targetCardId: targetId } }, featureVector: { mimic: true, paired: true, absoluteScuttle: true } });
-                out.push({ family: "rank10", mode: "diamond-mimic-paired-super-j-tempo", timingClass: "ACTION", sourceCardIds: [id, twoId], targetCardIds: [], advanced: { kind: "advanced-rank10-diamond-mimic", sourceCardId: id, pairedTwoId: twoId, mimickedRank: "J", effectKey: "super-j-tempo", mimicAction: { kind: "super-j-tempo" } }, featureVector: { mimic: true, paired: true, miniTurns: 2 } });
+                out.push({ family: "rank10", mode: "diamond-mimic-paired-super-j-tempo", timingClass: "ACTION", sourceCardIds: [id, twoId], targetCardIds: [], advanced: { kind: "advanced-rank10-diamond-mimic", sourceCardId: id, pairedTwoId: twoId, mimickedRank: "J", effectKey: "super-j-tempo", mimicAction: { kind: "super-j-tempo" } }, featureVector: { mimic: true, paired: true, miniTurns: superJackMt } });
             }
         }
     }
@@ -764,9 +783,9 @@ export function enumerateAdvancedCoreCandidates(state, actorId) {
     }
     for (const set of combos(hand.filter(id => color(s, id) !== null), 4).slice(0, 20)) {
         if (set.filter(id => color(s, id) === "black").length === 2 && set.filter(id => color(s, id) === "red").length === 2) {
-            out.push({ family: "ultra", mode: "2-black-2-red-draw", timingClass: "ACTION", sourceCardIds: [...set], targetCardIds: [], advanced: { kind: "advanced-ultra-two-black-two-red", sourceCardIds: set, branch: "draw-two" }, featureVector: { miniTurns: 2, draw: 2 } });
+            out.push({ family: "ultra", mode: "2-black-2-red-draw", timingClass: "ACTION", sourceCardIds: [...set], targetCardIds: [], advanced: { kind: "advanced-ultra-two-black-two-red", sourceCardIds: set, branch: "draw-two" }, featureVector: { miniTurns: ultra2B2RMt, draw: ultra2B2RDraw } });
             for (const x of s.zones.exile.slice(0, 4))
-                out.push({ family: "ultra", mode: "2-black-2-red-rummage", timingClass: "ACTION", sourceCardIds: [...set], targetCardIds: [x], advanced: { kind: "advanced-ultra-two-black-two-red", sourceCardIds: set, branch: "rummage-exile", rummageCardId: x }, featureVector: { miniTurns: 2, recovery: true } });
+                out.push({ family: "ultra", mode: "2-black-2-red-rummage", timingClass: "ACTION", sourceCardIds: [...set], targetCardIds: [x], advanced: { kind: "advanced-ultra-two-black-two-red", sourceCardIds: set, branch: "rummage-exile", rummageCardId: x }, featureVector: { miniTurns: ultra2B2RMt, recovery: true } });
         }
     }
     const phase8 = phase8Runtime(s), snap = phase8.voltageSnapshots[actorId], used = phase8.voltageUsedThisFT[actorId] ?? { "3": false, "4": false, "5": false };
@@ -869,9 +888,25 @@ export function enumerateAdvancedCoreCandidates(state, actorId) {
             }
         }
     }
+    // Scoped experimental rule flags (Rule Mutation Chamber): disabled systems
+    // are not offered as legal actions at all, so the mutant arm sees a coherent
+    // ruleset rather than fail-closed rejections mid-decision.
+    let filtered = out;
+    if (!resolveRuleFlag(s, "royalMarriage.enabled"))
+        filtered = filtered.filter((c) => c.family !== "royal-marriage");
+    if (!resolveRuleFlag(s, "queensCourt.enabled"))
+        filtered = filtered.filter((c) => c.family !== "queens-court");
+    if (!resolveRuleFlag(s, "voltage.enabled"))
+        filtered = filtered.filter((c) => c.family !== "voltage");
+    if (!resolveRuleFlag(s, "suddenDeath.enabled"))
+        filtered = filtered.filter((c) => c.family !== "sudden-death");
+    if (!resolveRuleFlag(s, "combo.ultras.enabled"))
+        filtered = filtered.filter((c) => c.family !== "ultra");
+    if (!resolveRuleFlag(s, "combo.supers.enabled"))
+        filtered = filtered.filter((c) => c.family !== "super" && !String(c.mode).includes("super-j-tempo"));
     // 10♣ Foundation bonus rider: a restricted Action Phase cannot initiate a Super.
     if (foundationActionRestricted(s, actorId))
-        return out.filter((c) => c.family !== "super");
-    return out;
+        filtered = filtered.filter((c) => c.family !== "super");
+    return filtered;
 }
 //# sourceMappingURL=core-advanced.js.map

@@ -1,4 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
+import { resolveRuleNumber } from "./rule-parameters.js";
 export function isHandZone(zone) {
     return zone.endsWith("_HAND");
 }
@@ -139,6 +140,8 @@ export function foundationActionRestricted(state, playerId) {
     return state.players[playerId]?.limits.foundationActionRestriction === state.fullTurnSequence;
 }
 export function miniTurnHardCap(state, playerId) {
-    return foundationActionRestricted(state, playerId) ? 1 : 3;
+    // Foundation restriction hard-caps Mini-Turns at 1 regardless of overrides —
+    // the restriction penalty is part of the 10♣ rule, not the cap parameter.
+    return foundationActionRestricted(state, playerId) ? 1 : resolveRuleNumber(state, "miniTurns.hardCap");
 }
 //# sourceMappingURL=lifecycle.js.map

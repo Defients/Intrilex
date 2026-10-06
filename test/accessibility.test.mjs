@@ -11,12 +11,11 @@ test('document has language, skip link and main landmark',async()=>{
 });
 
 test('controls expose labels',async()=>{
-  const [html,js]=await Promise.all([
-    readFile('apps/lab-web/src/index.html','utf8'),
-    readFile('apps/lab-web/src/app.js','utf8')
-  ]);
+  const js=await readFile('apps/lab-web/src/app.js','utf8');
   assert.match(js,/title="Previous frame"/);
-  assert.match(html,/aria-label="Visibility mode"/);
+  // Visibility select is rendered by renderFilters into #global-filter-bar
+  // (moved out of the static header markup); the label contract is on js.
+  assert.match(js,/aria-label="Visibility mode"/);
   assert.match(js,/aria-label="Back to landing"/);
 });
 

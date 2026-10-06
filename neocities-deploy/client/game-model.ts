@@ -82,9 +82,30 @@ export type SemanticGame = Readonly<{
   opponentHandReorderEpoch: number;
   choice: Readonly<{ kind: string; cards: readonly SemanticCard[] }> | null;
   connection: string | null;
+  /**
+   * Presentation role: 'player' (one participant's POV, default),
+   * 'spectator'/'caster' (neutral third-party view of both seats).
+   */
+  viewRole: 'player' | 'spectator' | 'caster';
+  /**
+   * Effective information policy: 'player' (authorized participant view),
+   * 'public' (neutral public view), 'omniscient' (explicitly authorized
+   * replay inspection — both hands visible).
+   */
+  viewerMode: 'player' | 'public' | 'omniscient';
 }>;
 
-type Options = { readOnly?: boolean; visibility?: 'player' | 'public'; coalesceIdenticalActions?: boolean };
+type Options = {
+  readOnly?: boolean;
+  visibility?: 'player' | 'public' | 'omniscient';
+  coalesceIdenticalActions?: boolean;
+  /**
+   * Presentation role. 'spectator'/'caster' render a neutral two-seat
+   * view: no seat is "You", hands are concealed in public mode and may
+   * be face-up under an explicitly authorized 'omniscient' visibility.
+   */
+  viewRole?: 'player' | 'spectator' | 'caster';
+};
 type Data = Record<string, unknown>;
 
 const UNAVAILABLE = 'Game snapshot unavailable.';
@@ -218,6 +239,8 @@ const unavailableGame: SemanticGame = freeze({
   opponentHandReorderEpoch: 0,
   choice: null,
   connection: null,
+  viewRole: 'player',
+  viewerMode: 'player',
 });
 
 function card(input: unknown, fallbackId: string): SemanticCard {
@@ -392,8 +415,15 @@ export function buildSemanticGame(input: unknown, options: Options = {}): Semant
   try {
     const policy = record(options);
     const visibility = field(policy, 'visibility');
-    if (visibility !== undefined && visibility !== 'player' && visibility !== 'public') invalid();
-    const publicOnly = flag(policy, 'readOnly') || visibility === 'public';
+    if (visibility !== undefined && visibility !== 'player' && visibility !== 'public' && visibility !== 'omniscient') invalid();
+    const viewRole = field(policy, 'viewRole');
+    if (viewRole !== undefined && viewRole !== 'player' && viewRole !== 'spectator' && viewRole !== 'caster') invalid();
+    const spectator = viewRole === 'spectator' || viewRole === 'caster';
+    // 'omniscient' visibility is only meaningful — and only permitted —
+    // for a neutral spectator/caster presentation of a completed replay.
+    if (visibility === 'omniscient' && !spectator) invalid();
+    const omniscient = spectator && visibility === 'omniscient';
+    const publicOnly = flag(policy, 'readOnly') || visibility === 'public' || (spectator && !omniscient);
     const snapshot = record(input);
     const sessionId = text(field(snapshot, 'sessionId'));
     const status = text(field(snapshot, 'status'), 32);
@@ -402,7 +432,9 @@ export function buildSemanticGame(input: unknown, options: Options = {}): Semant
     const human = record(field(snapshot, 'human'));
     const selfId = text(field(view, 'actorId'));
     const humanId = nullableText(field(human, 'playerId'));
-    if ((!publicOnly || humanId !== null) && humanId !== selfId) invalid();
+    // Spectators have no participant identity — snapshot.human.playerId
+    // is null and no seat is expected to match it.
+    if (!spectator && (!publicOnly || humanId !== null) && humanId !== selfId) invalid();
     const own = record(field(view, 'own'));
     const opponents = list(field(view, 'opponents'));
     if (opponents.length !== 1) invalid();
@@ -431,17 +463,29 @@ export function buildSemanticGame(input: unknown, options: Options = {}): Semant
     const rawSwapUsed = publicOnly ? undefined : field(ownLimits, 'swapBarUsedThisFT');
     if (rawSwapUsed !== undefined && typeof rawSwapUsed !== 'boolean') invalid();
     const self: SemanticPlayer = {
-      id: selfId, name: displayName(human, publicOnly ? selfId : 'You'),
+      id: selfId, name: displayName(human, spectator ? 'Seat 1' : publicOnly ? selfId : 'You'),
       score: finite(field(own, 'securedPoints')), goal: finite(field(own, 'goal')),
       handCount, hand, points: cards(field(own, 'pr'), `${selfId}:points`), enduring: cards(field(own, 'er'), `${selfId}:enduring`),
       miniTurnsRemaining: rawMiniTurns === undefined ? null : count(rawMiniTurns),
       swapUsed: rawSwapUsed === undefined ? null : rawSwapUsed,
     };
+    // Omniscient spectator view carries the second seat's hand inside
+    // playerView.opponents[0].hand — permitted only because the adapter
+    // explicitly authorized it via visibility:'omniscient' + viewRole.
+    const oppHand = omniscient ? cards(field(other, 'hand'), `${opponentId}:hand`) : [];
+    const oppHandCount = count(field(other, 'handCount'));
+    if (omniscient && oppHandCount !== oppHand.length) invalid();
+    const otherLimits = record(field(other, 'limits') ?? {});
+    const rawOppMiniTurns = omniscient ? field(otherLimits, 'miniTurnsRemaining') : undefined;
+    const rawOppSwapUsed = omniscient ? field(otherLimits, 'swapBarUsedThisFT') : undefined;
+    if (rawOppSwapUsed !== undefined && typeof rawOppSwapUsed !== 'boolean') invalid();
     const opponent: SemanticPlayer = {
-      id: opponentId, name: displayName(field(snapshot, 'opponent'), publicOnly ? opponentId : 'Opponent'),
+      id: opponentId, name: displayName(field(snapshot, 'opponent'), spectator ? 'Seat 2' : publicOnly ? opponentId : 'Opponent'),
       score: finite(field(other, 'securedPoints')), goal: finite(field(other, 'goal')),
-      handCount: count(field(other, 'handCount')), hand: [],
+      handCount: oppHandCount, hand: oppHand,
       points: cards(field(other, 'pr'), `${opponentId}:points`), enduring: cards(field(other, 'er'), `${opponentId}:enduring`),
+      ...(rawOppMiniTurns === undefined ? {} : { miniTurnsRemaining: count(rawOppMiniTurns) }),
+      ...(rawOppSwapUsed === undefined ? {} : { swapUsed: rawOppSwapUsed }),
     };
     let frameHash: string | null = null;
     let legalActions: readonly SemanticAction[] = [];
@@ -501,6 +545,8 @@ export function buildSemanticGame(input: unknown, options: Options = {}): Semant
         ? 0
         : count(field(snapshot, 'opponentHandReorderEpoch')),
       choice, connection,
+      viewRole: spectator ? (viewRole as 'spectator' | 'caster') : 'player',
+      viewerMode: omniscient ? 'omniscient' : publicOnly ? 'public' : 'player',
     });
   } catch (error) {
     console.warn('[buildSemanticGame] snapshot rejected:', (error as Error)?.message ?? error);

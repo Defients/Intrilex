@@ -8,7 +8,7 @@
     "acceptedCommands": 259,
     "rejectedCommands": 26,
     "eventCount": 372,
-    "catalogHash": "ab622772e9d6e92cfbd5f4ed1376fdf13b0349bc86e439d3918ce30646f6db4a",
+    "catalogHash": "674dd3ff2a667a02c961ccfd49ced8d895f364994da60d5582537f26dd5d33b3",
     "scenarios": [
       {
         "id": "CT-006",
@@ -459,7 +459,7 @@
         "events": 1,
         "winner": null,
         "pointDelta": 17,
-        "resultHash": "b62a64755ece4fa03b54f067f231f045d655f5ae552c89aeb1e01053e434c8f1"
+        "resultHash": "159e4d7833a25f6aff113c7122f9e81d70d274e54f0a52e7986b7ef087558769"
       },
       {
         "id": "CT-075",
@@ -1406,5 +1406,5 @@
     "campaignHashB": "1883275f3a68356c991217e29b610076313d95595cf2c26515ea44ea93e60fb3",
     "matched": true
   },
-  "catalogHash": "7a70fa29e856d899b21dac188e612f6cd52502c103e13efd6379c3a08251bf8c"
+  "catalogHash": "f22faa5281681cb1f630227d61cfc302c5dbb8a983e50db627c2672bc131457c"
 }

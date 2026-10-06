@@ -21,16 +21,16 @@ export {
   VIEWER_MODE,
   CASTER_SCHEMA_VERSION,
   SUPPORTED_SPEEDS
-} from './caster-session.mjs?v=408ebfe25d7a';
+} from './caster-session.mjs?v=e5382c028fd1';
 
 export {
   DeterministicCommentaryProvider,
   composeDeterministic
-} from './commentary-provider.mjs?v=408ebfe25d7a';
+} from './commentary-provider.mjs?v=e5382c028fd1';
 
 export {
   OllamaCommentaryProvider,
   OLLAMA_ERROR
-} from './ollama-provider.mjs?v=408ebfe25d7a';
+} from './ollama-provider.mjs?v=e5382c028fd1';
 
-export * from './index.mjs?v=408ebfe25d7a';
+export * from './index.mjs?v=e5382c028fd1';

@@ -131,6 +131,7 @@ export function validateBeat(beat) {
     action: beat.action ?? null,
     decision: beat.decision ?? null,
     resolution: beat.resolution ?? null,
+    board: beat.board ?? null,
     visibleEvents: Array.isArray(beat.visibleEvents) ? beat.visibleEvents : [],
     importance: isFiniteNumber(beat.importance) ? clamp01(beat.importance) : 0,
     commentaryEligible: beat.commentaryEligible !== false

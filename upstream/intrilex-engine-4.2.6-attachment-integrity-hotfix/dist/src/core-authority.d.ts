@@ -22,6 +22,11 @@ export interface CoreMatchSetup {
      *  enables authored scenario fixtures (Guided Exhibition, scripted puzzles).
      *  Backward-compatible: when absent, the normal seed-based shuffle runs. */
     predeterminedIdentities?: string[];
+    /** Optional scoped experimental rule overrides (Rule Mutation Chamber).
+     *  Sanitized via validateRuleOverrides and stored on state.metadata so the
+     *  mutation is part of the match's hashed provenance. Absent ⇒ canonical
+     *  rules; production rules are never mutated globally. */
+    ruleOverrides?: Record<string, number | boolean>;
 }
 export interface CoreLegalAction {
     actionId: string;

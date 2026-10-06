@@ -2,11 +2,11 @@
 // workspaces/ranks.js — /ranks workspace: rank power observatory
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   app,   esc,   short,   definitionList } from '../state.js?v=408ebfe25d7a';
-import { rerender } from '../rerender.js?v=408ebfe25d7a';
-import { labDatasetBanner } from './observatory.js?v=408ebfe25d7a';
-import { obsContextStrip } from './observatory-ui.js?v=408ebfe25d7a';
-import { radarChart } from '../chart-toolkit.js?v=408ebfe25d7a';
+import { state,   app,   esc,   short,   definitionList } from '../state.js?v=e5382c028fd1';
+import { rerender } from '../rerender.js?v=e5382c028fd1';
+import { labDatasetBanner } from './observatory.js?v=e5382c028fd1';
+import { obsContextStrip } from './observatory-ui.js?v=e5382c028fd1';
+import { radarChart } from '../chart-toolkit.js?v=e5382c028fd1';
 
 const SUIT_GLYPHS = { '10:club': '♣', '10:diamond': '♦', '10:heart': '♥', '10:spade': '♠' };
 

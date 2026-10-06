@@ -1,7 +1,8 @@
-import { canonicalClone } from "./canonical-json.js?v=408ebfe25d7a";
-import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=408ebfe25d7a";
-import { revalidateAttachments } from "./interactions.js?v=408ebfe25d7a";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=408ebfe25d7a";
+import { canonicalClone } from "./canonical-json.js?v=e5382c028fd1";
+import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=e5382c028fd1";
+import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=e5382c028fd1";
+import { revalidateAttachments } from "./interactions.js?v=e5382c028fd1";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=e5382c028fd1";
 export const RANK_REGISTRY = Object.freeze({
     A: { rank: "A", prPoints: 4, scuttleOrder: 1, modes: ["base-counter", "purge", "anchor-counter", "spade-exile-counter", "super-counter"], prScuttleImmune: true, notes: ["A♠ and ⭐A use expanded counter authority."] },
     "2": { rank: "2", prPoints: 2, scuttleOrder: 2, modes: ["quick-score-discard", "wild-catalyst", "solo-wild-copy", "commandeer"], notes: ["⭐2 bypasses Guard and rank control protection, never Aegis.", "Solo Wild copies a same-suit rank 3-7 Base effect; wild for effect only, not points."] },
@@ -42,6 +43,19 @@ export function cardPointValue(card) {
     if (typeof card.state.pointValue === "number")
         return card.state.pointValue;
     return rankDefinition(card).prPoints;
+}
+/**
+ * Point value honored by match resolution. Under experimental rule overrides
+ * ("rank.<R>.prPoints") the mutated value applies; otherwise this is identical
+ * to cardPointValue. Explicitly-set card.state.pointValue always wins.
+ */
+export function resolvePointValue(state, card) {
+    if (typeof card.state.pointValue === "number")
+        return card.state.pointValue;
+    const parsed = parseIdentity(card.identity);
+    if (!parsed)
+        return rankDefinition(card).prPoints;
+    return resolveRuleNumber(state, `rank.${parsed.rank}.prPoints`, RANK_REGISTRY[parsed.rank].prPoints);
 }
 export function hasOrdinaryScuttleImmunity(card) {
     return card.zone.endsWith("_PR") && rankDefinition(card).prScuttleImmune === true;
@@ -226,7 +240,7 @@ function doTopdeckSeven(state, actorId, sourceCardId, handCardId, effectCardId, 
         }
         else if (id === scoreCardId) {
             moveCard(state, id, `${actorId}_PR`, actorId);
-            state.cards[id].state.pointValue = cardPointValue(state.cards[id]);
+            state.cards[id].state.pointValue = resolvePointValue(state, state.cards[id]);
         }
         else
             moveCard(state, id, "DP");
@@ -475,7 +489,7 @@ export function resolveRankAction(input, actorId, action) {
                 }
                 else if (id === action.scoreCardId) {
                     moveCard(state, id, `${actorId}_PR`, actorId);
-                    state.cards[id].state.pointValue = cardPointValue(state.cards[id]);
+                    state.cards[id].state.pointValue = resolvePointValue(state, state.cards[id]);
                 }
                 else
                     moveCard(state, id, "DP");
@@ -597,7 +611,7 @@ export function resolveRankAction(input, actorId, action) {
                 }
                 case "super-j-tempo": {
                     const p = state.players[actorId];
-                    p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(state, actorId), p.limits.miniTurnsRemaining + 2);
+                    p.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(state, actorId), p.limits.miniTurnsRemaining + resolveRuleNumber(state, "super.jackTempo.miniTurns"));
                     events.push({ type: "MIMIC_SUPER_J_TEMPO_RESOLVED", payload: { sourceCardId: action.sourceCardId, miniTurnsRemaining: p.limits.miniTurnsRemaining } });
                     break;
                 }
@@ -619,7 +633,7 @@ export function resolveRankAction(input, actorId, action) {
                         }
                         else if (id === mimic.scoreCardId) {
                             moveCard(state, id, `${actorId}_PR`, actorId);
-                            state.cards[id].state.pointValue = cardPointValue(state.cards[id]);
+                            state.cards[id].state.pointValue = resolvePointValue(state, state.cards[id]);
                         }
                         else
                             moveCard(state, id, "DP");
@@ -662,12 +676,12 @@ export function resolveRankAction(input, actorId, action) {
             // removed at the beginning of that phase by processStartPhaseLifecycles.
             const released = releaseNineTapsForScoring(state, actorId);
             let bonus = null;
-            if (before === 0 && action.bonusScoreCardId !== undefined) {
+            if (before === 0 && action.bonusScoreCardId !== undefined && resolveRuleFlag(state, "foundation.bonus.enabled")) {
                 if (!inHandOf(state, action.bonusScoreCardId, actorId))
                     return fail("RANK_CHOICE", "Foundation bonus card must be in hand");
                 bonus = action.bonusScoreCardId;
                 moveCard(state, bonus, `${actorId}_PR`, actorId);
-                state.cards[bonus].state.pointValue = cardPointValue(state.cards[bonus]);
+                state.cards[bonus].state.pointValue = resolvePointValue(state, state.cards[bonus]);
                 // The bonus card is scored for Points only — it may release
                 // Nine-conditioned taps but creates no scoring trigger.
                 released.push(...releaseNineTapsForScoring(state, actorId));

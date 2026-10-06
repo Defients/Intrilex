@@ -148,6 +148,34 @@ self.onmessage = async (event) => {
     } catch(error){ self.postMessage({ type:'autonomy-segment-result', ok:false, workerIndex:event.data.workerIndex, error:error?.stack??String(error) }); }
     return;
   }
+  if (type === 'run-mutation-segment') {
+    // Rule Mutation Chamber: executes a pre-built list of matched A/B match
+    // specs (built by mutation-domain.mjs in the workspace). Each spec already
+    // carries its arm identity, seed, seat order, policies and scoped rule
+    // overrides — the worker never derives seeds or mutates rules itself.
+    try {
+      const { runBrowserPolicyMatch } = await autonomyModule;
+      const specs = event.data.specs ?? [];
+      const results = [];
+      for (const spec of specs) {
+        try {
+          const summary = runBrowserPolicyMatch({
+            seed: spec.seed, ordinal: spec.ordinal, profileId: spec.profileId,
+            seatOrder: spec.seatOrder, seatSwapped: spec.seatSwapped, pairedRunId: spec.pairedRunId,
+            policyIds: spec.policyIds, decisionLimit: spec.decisionLimit,
+            ...(spec.ruleOverrides ? { ruleOverrides: spec.ruleOverrides } : {}),
+          });
+          results.push({ arm: spec.arm, pairIndex: spec.pairIndex, pairedRunId: spec.pairedRunId, specOrdinal: spec.ordinal, ok: true, summary });
+        } catch (error) {
+          // A failed game stays visible — never silently dropped.
+          results.push({ arm: spec.arm, pairIndex: spec.pairIndex, pairedRunId: spec.pairedRunId, specOrdinal: spec.ordinal, seed: spec.seed, policyId: spec.policyId, ruleOverrides: spec.ruleOverrides ?? null, ok: false, error: error?.message ?? String(error) });
+        }
+        self.postMessage({ type: 'mutation-segment-progress', workerIndex: event.data.workerIndex, completed: results.length, total: specs.length });
+      }
+      self.postMessage({ type: 'mutation-segment-result', ok: true, workerIndex: event.data.workerIndex, resultsJson: JSON.stringify(results) });
+    } catch (error) { self.postMessage({ type: 'mutation-segment-result', ok: false, workerIndex: event.data.workerIndex, error: error?.stack ?? String(error) }); }
+    return;
+  }
   if (type === 'run-autonomy-aggregate') {
     try {
       const { campaignAggregate, buildObservatoryAnalytics } = await analyticsModule;

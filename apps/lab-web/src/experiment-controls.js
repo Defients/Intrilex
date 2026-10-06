@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting } from './state.js';
-import { WORKSPACES, route, policyOptions, updateRailContext } from './router.js';
+import { WORKSPACES, WORKSPACE_KEYWORDS, route, policyOptions, updateRailContext } from './router.js';
 import { RULES_VERSION, LAB_VERSION } from './version.js';
 import { populateDialogHeading } from './seo-metadata.js';
 import { rerender, invokeAppAction } from './rerender.js';
@@ -69,30 +69,7 @@ export function bindGlobal() {
     state.layout = state.layout === 'theatre' ? 'observatory' : 'theatre';
     document.querySelector('.observatory-shell').dataset.preset = state.layout;
     persistSetting('layout', state.layout);
-    const layoutEl = document.querySelector('#layout-preset');
-    if (layoutEl) layoutEl.value = state.layout;
     syncRailToggle();
-    rerender();
-  });
-  const layoutEl = document.querySelector('#layout-preset');
-  if (layoutEl) {
-    layoutEl.value = state.layout;
-    layoutEl.addEventListener('change', () => {
-      state.layout = layoutEl.value;
-      document.querySelector('.observatory-shell').dataset.preset = state.layout;
-      persistSetting('layout', state.layout);
-      syncRailToggle();
-      rerender();
-    });
-  }
-  document.querySelector('#global-visibility').addEventListener('change', async e => {
-    state.visibility = e.target.value;
-    persistSetting('visibility', state.visibility);
-    if (state.visibility !== 'public') {
-      const { loadAuthorized } = await import('./data-loader.js');
-      await loadAuthorized();
-    }
-    updateRailContext();
     rerender();
   });
   const palette = document.querySelector('#command-palette');
@@ -123,6 +100,19 @@ export function bindGlobal() {
       e.preventDefault();
       invokeAppAction('togglePlay');
     }
+    // Forensic transport keys on Watch: ←/→ semantic frame step,
+    // Home/End jump to record bounds. Deliberately excludes INPUT/SELECT
+    // so slider and speed-control keep their native key behavior.
+    if (route() === '/watch' && state.replay?.frames?.length
+        && !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        invokeAppAction('stepBy', e.key === 'ArrowRight' ? 1 : -1);
+      } else if (e.key === 'Home' || e.key === 'End') {
+        e.preventDefault();
+        invokeAppAction('stepTo', e.key === 'End' ? state.replay.frames.length - 1 : 0);
+      }
+    }
   });
   // Experiment panel lives in a dialog — the header button opens it and
   // mirrors live campaign status so progress stays visible when closed.
@@ -150,7 +140,10 @@ export function bindGlobal() {
 function renderCommandResults() {
   const q = document.querySelector('#command-search').value.toLowerCase();
   const commands = [
-    ...WORKSPACES.map(([r, , label, sub]) => ({ label: `Open ${label}`, detail: sub, run: () => { location.hash = `#${r}`; } })),
+    // WORKSPACE_KEYWORDS lets analysts find instruments by the question
+    // they ask ("counterfactual", "why did it choose this", "best cards")
+    // rather than only by technical workspace name.
+    ...WORKSPACES.map(([r, , label, sub]) => ({ label: `Open ${label}`, detail: sub, keywords: WORKSPACE_KEYWORDS[r] ?? '', run: () => { location.hash = `#${r}`; } })),
     { label: 'Toggle reduced motion', detail: 'Accessibility', run: () => { state.reducedMotion = !state.reducedMotion; document.body.classList.toggle('reduced-motion', state.reducedMotion); persistSetting('reducedMotion', state.reducedMotion); } },
     { label: 'Toggle reduced sensory', detail: 'Accessibility', run: () => { state.reducedSensory = !state.reducedSensory; document.body.classList.toggle('reduced-sensory', state.reducedSensory); persistSetting('reducedSensory', state.reducedSensory); } },
     { label: 'Toggle FX', detail: 'Presentation', run: () => { state.fx = !state.fx; document.body.classList.toggle('fx-off', !state.fx); persistSetting('fx', state.fx); } },
@@ -161,7 +154,7 @@ function renderCommandResults() {
     { label: 'Export Analysis Dossier (JSON + Markdown)', detail: 'AI research-state export · downloads both files', run: () => { invokeAppAction('exportAnalysisDossier', 'both'); } },
     { label: 'Extract analysis (JSON)', detail: 'Analysis dossier · copy to clipboard (legacy)', run: () => { invokeAppAction('showExtract', 'json'); } },
     { label: 'Extract analysis (Markdown)', detail: 'Analysis dossier · copy to clipboard (legacy)', run: () => { invokeAppAction('showExtract', 'markdown'); } }
-  ].filter(item => !q || `${item.label} ${item.detail}`.toLowerCase().includes(q));
+  ].filter(item => !q || `${item.label} ${item.detail} ${item.keywords ?? ''}`.toLowerCase().includes(q));
   const root = document.querySelector('#command-results');
   root.innerHTML = commands.map((item, i) => `<button type="button" class="command-result" data-command="${i}" role="option"><span>${esc(item.label)}</span><small>${esc(item.detail)}</small></button>`).join('') || '<div class="empty-state"><strong>No command found</strong>Try a workspace or accessibility setting.</div>';
   const cmdButtons = root.querySelectorAll('[data-command]');

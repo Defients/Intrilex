@@ -2,11 +2,12 @@
 // workspaces/evidence.js — /evidence workspace: integrity and provenance
 // ═══════════════════════════════════════════════════════════════
 
-import { state,   app,   esc,   short,   definitionList } from '../state.js?v=408ebfe25d7a';
-import { rerender, invokeAppAction } from '../rerender.js?v=408ebfe25d7a';
-import { ENGINE_VERSION, RULES_VERSION } from '../version.js?v=408ebfe25d7a';
-import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=408ebfe25d7a';
-import { statusChip, pipelineFlow, dossierSection } from './observatory-ui.js?v=408ebfe25d7a';
+import { state,   app,   esc,   short,   definitionList } from '../state.js?v=e5382c028fd1';
+import { rerender, invokeAppAction } from '../rerender.js?v=e5382c028fd1';
+import { openReplay } from '../data-loader.js?v=e5382c028fd1';
+import { ENGINE_VERSION, RULES_VERSION } from '../version.js?v=e5382c028fd1';
+import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=e5382c028fd1';
+import { statusChip, pipelineFlow, dossierSection } from './observatory-ui.js?v=e5382c028fd1';
 
 // ── Anomaly Explorer (Depth II Phase 3) ──────────────────────────
 // Elevate the 30 anomalies from a flat table to an interactive explorer
@@ -139,10 +140,11 @@ export function renderEvidence() {
     const matchId = row.dataset.anomalyMatch;
     if (!matchId) return;
     state.fixtureId = matchId;
-    state.replayKind = 'autonomy';
-    state.replay = null;
-    state.frame = 0;
-    location.hash = '#/watch';
+    // Anomaly evidence is produced by the autonomy campaign — resolve via
+    // the shared replay resolver, which navigates to #/watch and reports
+    // honestly when the replay body is excluded from this build.
+    const kind = state.index?.records?.some(r => r.fixtureId === matchId) ? 'corpus' : 'autonomy';
+    void openReplay({ kind, fixtureId: matchId });
   });
   // Anomaly raw-records table toggle (same pattern as bindChartToggle)
   const anomalyToggle = document.querySelector('#anomaly-explorer [data-chart-toggle]');

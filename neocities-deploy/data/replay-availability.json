@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "sources": {
+    "corpus": {
+      "status": "bundled",
+      "urlTemplate": "data/certified-replays/<fixtureId>.certified.replay.json"
+    },
+    "autonomy": {
+      "status": "excluded",
+      "urlTemplate": "data/autonomy/replays/public/<fixtureId>.public.replay.json"
+    }
+  }
+}

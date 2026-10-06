@@ -1,14 +1,15 @@
-import { canonicalClone } from "./canonical-json.js?v=408ebfe25d7a";
-import { applyAegis, applyTap, markExileBound, processFoundationActionRestriction, processStartPhaseLifecycles, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=408ebfe25d7a";
-import { CORE_EFFECT_DECLARATION_PROFILE, resolveCoreEffect } from "./core-effects.js?v=408ebfe25d7a";
-import { evaluateProtection, revalidateAttachments } from "./interactions.js?v=408ebfe25d7a";
-import { CORE_RESPONSE_AUTHORITY_PROFILE, primaryDescriptor, targetAcceptsCounter } from "./core-response.js?v=408ebfe25d7a";
-import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, beginChoice, isCorePrivateChoiceEffect, resolveCorePrivateChoiceRoot, resolveCorePrivateChoiceSubmission } from "./core-private-choice.js?v=408ebfe25d7a";
-import { compareScuttle, cardPointValue, hasOrdinaryScuttleImmunity, parseIdentity, resolveRankAction } from "./ranks.js?v=408ebfe25d7a";
-import { nextIndex } from "./rng.js?v=408ebfe25d7a";
-import { addCard, deriveSecuredPoints, moveCard } from "./state.js?v=408ebfe25d7a";
-import { exhaustedWinner } from "./phase8.js?v=408ebfe25d7a";
-import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, advancedSourceIds, advancedTargetIds, resolveAdvancedCoreAction } from "./core-advanced.js?v=408ebfe25d7a";
+import { canonicalClone } from "./canonical-json.js?v=e5382c028fd1";
+import { applyAegis, applyTap, markExileBound, processFoundationActionRestriction, processStartPhaseLifecycles, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=e5382c028fd1";
+import { CORE_EFFECT_DECLARATION_PROFILE, resolveCoreEffect } from "./core-effects.js?v=e5382c028fd1";
+import { evaluateProtection, revalidateAttachments } from "./interactions.js?v=e5382c028fd1";
+import { CORE_RESPONSE_AUTHORITY_PROFILE, primaryDescriptor, targetAcceptsCounter } from "./core-response.js?v=e5382c028fd1";
+import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, beginChoice, isCorePrivateChoiceEffect, resolveCorePrivateChoiceRoot, resolveCorePrivateChoiceSubmission } from "./core-private-choice.js?v=e5382c028fd1";
+import { compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, resolvePointValue, resolveRankAction } from "./ranks.js?v=e5382c028fd1";
+import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=e5382c028fd1";
+import { nextIndex } from "./rng.js?v=e5382c028fd1";
+import { addCard, deriveSecuredPoints, moveCard } from "./state.js?v=e5382c028fd1";
+import { exhaustedWinner } from "./phase8.js?v=e5382c028fd1";
+import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, advancedSourceIds, advancedTargetIds, resolveAdvancedCoreAction } from "./core-advanced.js?v=e5382c028fd1";
 export const CORE_FOUNDATION_AUTHORITY_PROFILE = Object.freeze({
     id: "core-foundation-authority",
     displayName: "Core Foundation Authority — Setup, Swap Bar & Action Economy",
@@ -79,9 +80,11 @@ function setupCoreState(state, playerIds, seed, profileId, predeterminedIdentiti
     for (const [index, identity] of identities.entries()) {
         addCard(state, { id: `CORE-${String(index + 1).padStart(3, "0")}`, identity, originalOwnerId: playerIds[index % 2], zone: "DP" });
     }
-    for (let count = 0; count < 5; count += 1)
+    const handFirst = Math.min(resolveRuleNumber(state, "setup.hand.first"), state.zones.dp.length - 3);
+    const handSecond = Math.min(resolveRuleNumber(state, "setup.hand.second"), state.zones.dp.length - 3 - handFirst);
+    for (let count = 0; count < handFirst; count += 1)
         moveCard(state, state.zones.dp[0], `${playerIds[0]}_HAND`, playerIds[0]);
-    for (let count = 0; count < 6; count += 1)
+    for (let count = 0; count < handSecond; count += 1)
         moveCard(state, state.zones.dp[0], `${playerIds[1]}_HAND`, playerIds[1]);
     for (let count = 0; count < 3; count += 1) {
         const cardId = state.zones.dp[0];
@@ -94,9 +97,9 @@ function setupCoreState(state, playerIds, seed, profileId, predeterminedIdentiti
     state.phase = "Start";
     state.fullTurnSequence = 1;
     for (const id of playerIds) {
-        state.players[id].goal = 21;
+        state.players[id].goal = resolveRuleNumber(state, "match.goal");
         state.players[id].limits.miniTurnsUsed = 0;
-        state.players[id].limits.miniTurnsRemaining = 1;
+        state.players[id].limits.miniTurnsRemaining = resolveRuleNumber(state, "miniTurns.perTurn");
         state.players[id].limits.swapBarUsedThisFT = false;
         state.players[id].limits.rank10PlayedThisFT = false;
         state.players[id].limits.ultraPlayedThisFT = false;
@@ -118,7 +121,7 @@ function captureCoreVoltageSnapshot(state, playerId) {
         const card = state.cards[id], r = card ? parseIdentity(card.identity)?.rank : null;
         if (!card || card.controllerId !== playerId || card.state.tapped === true)
             continue;
-        const v = typeof card.state.pointValue === "number" ? card.state.pointValue : cardPointValue(card);
+        const v = resolvePointValue(state, card);
         if (r === "3")
             values.rank3 += v;
         if (r === "4")
@@ -250,7 +253,7 @@ function declareCoreStackItem(state, actorId, tag, sourceCardIds, targetCardIds,
     // that opponent cannot use Base Ace or Anchor Ace against the play.
     // We snapshot the flag at declaration time; later Queen-count changes do not alter it.
     let royalShieldProtected = false;
-    if (payload.kind === "primary") {
+    if (payload.kind === "primary" && resolveRuleFlag(state, "royalShield.enabled")) {
         const declarerQueens = state.players[actorId]?.er.filter((id) => {
             const c = state.cards[id];
             return c !== undefined && c.controllerId === actorId && parseIdentity(c.identity)?.rank === "Q" && c.state.tapped !== true;
@@ -364,7 +367,7 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
             catch (error) {
                 return fail("CORE_SETUP", error instanceof Error ? error.message : String(error));
             }
-            events.push({ type: "CORE_FOUNDATION_SETUP_APPLIED", payload: { profileId, playerIds: action.playerIds, goals: 21, handSizes: [5, 6], swapBar: { faceDown: 2, faceUp: 1 }, dpCount: state.zones.dp.length } });
+            events.push({ type: "CORE_FOUNDATION_SETUP_APPLIED", payload: { profileId, playerIds: action.playerIds, goals: state.players[action.playerIds[0]].goal, handSizes: [state.players[action.playerIds[0]].hand.length, state.players[action.playerIds[1]].hand.length], swapBar: { faceDown: 2, faceUp: 1 }, dpCount: state.zones.dp.length } });
             break;
         }
         case "core-begin-start": {
@@ -377,7 +380,7 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
                 return fail("CORE_START", "Start phase is already prepared for this Full Turn");
             const player = state.players[actorId];
             player.limits.miniTurnsUsed = 0;
-            player.limits.miniTurnsRemaining = 1;
+            player.limits.miniTurnsRemaining = resolveRuleNumber(state, "miniTurns.perTurn");
             player.limits.swapBarUsedThisFT = false;
             player.limits.rank10PlayedThisFT = false;
             player.limits.ultraPlayedThisFT = false;
@@ -444,7 +447,7 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
                 return fail("CORE_ACTION", problem);
             if (state.zones.dp.length === 0)
                 return fail("CORE_DRAW_EMPTY", "Cannot draw from an empty DP");
-            const count = state.players[actorId].hand.length === 0 ? Math.min(2, state.zones.dp.length) : 1;
+            const count = state.players[actorId].hand.length === 0 ? Math.min(resolveRuleNumber(state, "draw.emptyHand"), state.zones.dp.length) : 1;
             const drawnCardIds = [];
             for (let index = 0; index < count; index += 1) {
                 const id = state.zones.dp[0];
@@ -480,7 +483,7 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
             const card = state.cards[action.cardId];
             if (!card || card.zone !== `${actorId}_HAND` || card.controllerId !== actorId)
                 return fail("CORE_SCORE_SOURCE", "Play for Points requires a controlled hand card");
-            card.state.pointValue = cardPointValue(card);
+            card.state.pointValue = resolvePointValue(state, card);
             moveCard(state, action.cardId, `${actorId}_PR`, actorId);
             // Rulebook §10♣: "When scored for Points, 10♣ enters PR with Aegis. Remove that Aegis at the beginning of its controller's next Start Phase."
             if (isAdvancedProfile(state) && card.identity === "10♣") {

@@ -31,18 +31,27 @@ export type IntrilexGameProps = {
   railHtml?: string;
   /** Explicitly authorized omniscient replay hand; absent in public mode. */
   opponentHand?: readonly SemanticCard[];
+  /**
+   * Presentation role. 'spectator'/'caster' render a neutral two-seat
+   * view (neither participant is "You"), suppress player-only controls
+   * (save, hints, gestures, hand reorder, action composer), and show
+   * both hands — concealed under public visibility, face-up when the
+   * semantic model reports viewerMode 'omniscient'.
+   */
+  viewRole?: 'player' | 'spectator' | 'caster';
 };
 
 function Section({ title, children, className = '' }: { title: string; children: ReactNode; className?: string }) {
   return <section className={`hc-panel hx-panel ${className}`} aria-label={title}><div className="hx-sec-head"><strong>{title}</strong></div>{children}</section>;
 }
 
-function Summary({ game, opponent = false }: { game: SemanticGame; opponent?: boolean }) {
+function Summary({ game, opponent = false, spectator = false }: { game: SemanticGame; opponent?: boolean; spectator?: boolean }) {
   const player = opponent ? game.opponent : game.self;
+  const seatLabel = spectator ? (opponent ? 'Seat 2' : 'Seat 1') : opponent ? 'Opponent' : 'You';
   return <DragTarget as="section" destination={{ kind: 'player', id: player.id }} label={player.name} className={`hc-summary hx-panel hx-seat ${opponent ? 'hx-seat-opp' : 'hx-seat-me'}`} data-opponent={opponent} aria-label={`${player.name} summary`}>
-    <header className="hx-seat-head"><span className="hx-pbadge" aria-hidden="true">{player.id}</span><span className="hx-seat-name"><strong>{player.name}</strong><small>{opponent ? 'Opponent' : 'You'}</small></span><span className="hx-seat-hand" aria-label={`${player.handCount} cards in hand`} title={`${player.handCount} cards in hand`}><i className="hx-mini-back" aria-hidden="true" />{player.handCount}</span></header>
+    <header className="hx-seat-head"><span className="hx-pbadge" aria-hidden="true">{player.id}</span><span className="hx-seat-name"><strong>{player.name}</strong><small>{seatLabel}</small></span><span className="hx-seat-hand" aria-label={`${player.handCount} cards in hand`} title={`${player.handCount} cards in hand`}><i className="hx-mini-back" aria-hidden="true" />{player.handCount}</span></header>
     <div className="hx-seat-stats" data-testid={opponent ? 'opponent-score' : 'self-score'}><span className="hx-seat-stat"><b>{player.score}</b><i>Secured</i></span><span className="hx-seat-stat"><b>{player.goal}</b><i>Goal</i></span></div>
-    <div className="hx-seat-pills">{game.activePlayerId === player.id && game.status !== 'completed' && <span className="pill pill-active">Active turn</span>}{player.swapUsed != null && <span className="pill">Swap {player.swapUsed ? 'used' : 'available'}</span>}</div>
+    <div className="hx-seat-pills">{game.activePlayerId === player.id && game.status !== 'completed' && <span className="pill pill-active">Active turn</span>}{player.swapUsed != null && <span className="pill">Swap {player.swapUsed ? 'used' : 'available'}</span>}{spectator && player.miniTurnsRemaining != null && <span className="pill">Mini {player.miniTurnsRemaining}</span>}</div>
   </DragTarget>;
 }
 
@@ -89,11 +98,13 @@ function GameChat() {
 type SessionProps = IntrilexGameProps & { snapshot: ReturnType<GameStore['getSnapshot']>; network: boolean };
 const StableGameSession = memo(GameSession, (a, b) => a.snapshot === b.snapshot && a.store === b.store &&
   a.onSave === b.onSave && a.onInspect === b.onInspect && a.onReorderHand === b.onReorderHand && a.onExit === b.onExit &&
-  a.skin === b.skin && a.debug === b.debug && a.network === b.network && a.rankSuggestions === b.rankSuggestions && a.railHtml === b.railHtml && a.opponentHand === b.opponentHand &&
+  a.skin === b.skin && a.debug === b.debug && a.network === b.network && a.rankSuggestions === b.rankSuggestions && a.railHtml === b.railHtml && a.opponentHand === b.opponentHand && a.viewRole === b.viewRole &&
   a.teaching?.panelHtml === b.teaching?.panelHtml && a.teaching?.coachmarkHtml === b.teaching?.coachmarkHtml && a.teaching?.onAction === b.teaching?.onAction);
 
-function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit, skin = 'dark', debug, network, rankSuggestions, teaching, railHtml, opponentHand }: SessionProps) {
+function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit, skin = 'dark', debug, network, rankSuggestions, teaching, railHtml, opponentHand, viewRole }: SessionProps) {
   const { game } = snapshot;
+  const spectator = viewRole === 'spectator' || viewRole === 'caster';
+  const omniscient = spectator && game.viewerMode === 'omniscient';
   const boundary = decisionBoundary(game);
   const [composer, setComposer] = useState<ComposerState | null>(null);
   const [inspectId, setInspectId] = useState<string | null>(null);
@@ -114,9 +125,10 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
   const highlighted = openFamily && activeComposer ? boardOptions(game, openFamily, activeComposer.selection, activeComposer.activeKey) : [];
   const suggestions = useMemo(() => showSuggestions ? suggestedMoves(game, rankSuggestions) : [], [game, rankSuggestions, showSuggestions]);
   const cards = visibleCards(game);
-  const inspected = [...cards, ...(opponentHand ?? [])].find(card => card.id === inspectId && card.identity !== null) ?? null;
+  const inspectable = spectator ? [...cards, ...game.self.hand, ...game.opponent.hand] : [...cards, ...(opponentHand ?? [])];
+  const inspected = inspectable.find(card => card.id === inspectId && card.identity !== null) ?? null;
   const selected = game.actions.find(action => action.id === snapshot.selectedActionId);
-  const blocked = submitting || game.status !== 'ready' || snapshot.interaction === 'submitting';
+  const blocked = spectator || submitting || game.status !== 'ready' || snapshot.interaction === 'submitting';
   const skinName = ['dark', 'light', 'cosmotech', 'corrupture'].includes(skin) ? skin : 'dark';
   const status = railHtml !== undefined ? 'Replay playback · read only' : game.status === 'completed' ? 'Match complete' : game.status === 'unavailable' ? 'Table unavailable' : game.connection === 'DISCONNECTED' ? 'Opponent disconnected · awaiting reconnect' : game.status === 'ready' ? game.choice ? 'Your choice' : game.stack.length ? 'Your response' : 'Your move' : 'Waiting for the next decision';
   const filteredActions = game.actions.filter(action => !cardFilter || action.sources.includes(cardFilter) || action.targets.includes(cardFilter) || !action.sources.length);
@@ -169,7 +181,12 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
       changeComposer({ ...activeComposer, selection: selectOption(openFamily, activeComposer.selection, activeComposer.activeKey, option.value) });
       return;
     }
-    if (card.identity) { setCardFilter(value => value === card.id ? null : card.id); setSheet(true); }
+    if (card.identity) {
+      // Spectators inspect cards directly; there is no action composer
+      // to filter.
+      if (spectator) { setInspectId(card.id); return; }
+      setCardFilter(value => value === card.id ? null : card.id); setSheet(true);
+    }
   }
   function cardNode(card: SemanticCard, points = false, hand = false) {
     const isOption = highlighted.some(option => option.entityId === card.id);
@@ -193,6 +210,28 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
       })}</ul>
     </DragTarget>;
   }
+  // Spectator hand lane: a neutral read-only strip for either seat.
+  // Public mode renders card backs sized by the public hand count;
+  // omniscient mode renders the face-up cards the model authorized.
+  function spectatorHand(player: typeof game.self, faceUp: boolean, testId: string) {
+    const shown: SemanticCard[] = faceUp
+      ? [...player.hand]
+      : Array.from({ length: player.handCount }, (_, index) => ({
+          id: `concealed:${player.id}:hand:${index}`, identity: null,
+          label: 'Hidden card', markers: ['Face down'],
+        }));
+    return <section className="hc-hand fc-hand hx-hand hx-hand-spectator" data-testid={testId} aria-label={`${player.name} hand`}>
+      <div className="hand-head"><strong>{player.name} Hand ({player.handCount})</strong><span>{faceUp ? 'Omniscient view — identities visible' : 'Concealed — public count only'}</span></div>
+      <ul className="hx-hand-strip fc-cards hx-hand-cards" tabIndex={0} aria-label={`${player.name} hand cards`}>
+        {shown.map(card => <li className="hx-hand-slot" key={card.id}>
+          <TabletopCard card={card} size="sm" purpose="Inspect card"
+            onClick={() => { if (card.identity) setInspectId(card.id); }}
+            onDoubleClick={() => { if (card.identity) setInspectId(card.id); }} />
+        </li>)}
+      </ul>
+      {!shown.length && <p className="hc-empty">Empty hand.</p>}
+    </section>;
+  }
   const handMap = new Map(game.self.hand.map(card => [card.id, card]));
   const orderedIds = [...new Set([...handOrder, ...handMap.keys()])].filter(id => handMap.has(id));
   async function reorder(id: string, direction: number) {
@@ -215,18 +254,20 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
   return <DirectManipulation store={store} game={game} blocked={blocked} interrupted={Boolean(activeComposer || inspected || teaching?.coachmarkHtml)} submit={confirm} skin={skinName}><main className="astra-client hc-game" data-skin={skinName} data-testid="play-board" data-play-state={game.status} aria-label="Intrilex gameboard">
     <header className="hc-header"><a href="#/" aria-label="Intrilex Home"><Wordmark /></a><span className="hc-table-title">Intrilex · {railHtml !== undefined ? 'Replay Caster' : 'Rules-assisted'} <span className="pill">{railHtml !== undefined ? 'Read only' : network ? 'Online match' : 'Local match'}</span></span>
       <nav aria-label="Match controls"><a href="#/rules" target="_blank" rel="noreferrer">Rules</a>
-        {onSave && <button type="button" disabled={saveState === 'Saving…'} onClick={() => void save()}><Icon name="save" />Save</button>}
-        <button type="button" onClick={() => setShowSuggestions(value => !value)} aria-pressed={showSuggestions}>Hints</button>
-        <GestureSettings />
-        {onExit && <button type="button" onClick={onExit}>{network ? 'Forfeit' : 'Exit'}</button>}
+        {!spectator && onSave && <button type="button" disabled={saveState === 'Saving…'} onClick={() => void save()}><Icon name="save" />Save</button>}
+        {!spectator && <button type="button" onClick={() => setShowSuggestions(value => !value)} aria-pressed={showSuggestions}>Hints</button>}
+        {!spectator && <GestureSettings />}
+        {!spectator && onExit && <button type="button" onClick={onExit}>{network ? 'Forfeit' : 'Exit'}</button>}
       </nav>
     </header>
-    <div className="hc-status fc-status" role="status"><span className="hx-logo"><b>Intrilex</b><em>HybriX</em></span><span className="eyebrow">Rules-assisted</span><strong>{status}</strong><span className="hx-stats"><span className="hx-stat"><i>Turn</i>{game.turn}</span><span className="hx-stat"><i>Phase</i>{formatLabel(game.phase)}</span><span className="hx-stat"><i>Window</i>{game.choice ? 'Choice' : game.stack.length ? 'Reactive' : 'Normal'}</span><span className="hx-stat"><i>Actor</i>{nameOf(game.activePlayerId)}</span><span className="hx-stat"><i>Priority</i>{nameOf(game.priorityOwnerId)}</span>{game.self.miniTurnsRemaining != null && <span className="hx-stat hx-stat-dots"><i>Your Mini-Turns</i>{game.self.miniTurnsRemaining}<span className="hx-dots" aria-hidden="true">{Array.from({ length: 3 }, (_, i) => <i key={i} className={i < game.self.miniTurnsRemaining! ? 'on' : ''} />)}</span></span>}</span>{saveState && <span className="hc-save-state">{saveState}</span>}</div>
+    <div className="hc-status fc-status" role="status"><span className="hx-logo"><b>Intrilex</b><em>HybriX</em></span><span className="eyebrow">Rules-assisted</span><strong>{status}</strong><span className="hx-stats"><span className="hx-stat"><i>Turn</i>{game.turn}</span><span className="hx-stat"><i>Phase</i>{formatLabel(game.phase)}</span><span className="hx-stat"><i>Window</i>{game.choice ? 'Choice' : game.stack.length ? 'Reactive' : 'Normal'}</span><span className="hx-stat"><i>Actor</i>{nameOf(game.activePlayerId)}</span><span className="hx-stat"><i>Priority</i>{nameOf(game.priorityOwnerId)}</span>{game.self.miniTurnsRemaining != null && <span className="hx-stat hx-stat-dots"><i>{spectator ? `${game.self.name} Mini-Turns` : 'Your Mini-Turns'}</i>{game.self.miniTurnsRemaining}<span className="hx-dots" aria-hidden="true">{Array.from({ length: 3 }, (_, i) => <i key={i} className={i < game.self.miniTurnsRemaining! ? 'on' : ''} />)}</span></span>}{spectator && game.opponent.miniTurnsRemaining != null && <span className="hx-stat hx-stat-dots"><i>{game.opponent.name} Mini-Turns</i>{game.opponent.miniTurnsRemaining}<span className="hx-dots" aria-hidden="true">{Array.from({ length: 3 }, (_, i) => <i key={i} className={i < game.opponent.miniTurnsRemaining! ? 'on' : ''} />)}</span></span>}</span>{saveState && <span className="hc-save-state">{saveState}</span>}</div>
     {snapshot.error && <p className="hc-error" role="alert">{snapshot.error}</p>}
     <div className="hc-layout fc-layout">
       <aside className="hc-left hx-left" data-testid="score-rail" aria-label="Players and shared table">
-        <Summary game={game} opponent />
-        {opponentHand && opponentHand.length > 0 && <CardLane title="Hand" owner={game.opponent.name} cards={opponentHand} selectedId={inspectId} onCard={card => setInspectId(card.id)} />}
+        <Summary game={game} opponent spectator={spectator} />
+        {spectator
+          ? spectatorHand(game.opponent, omniscient, 'seat2-hand')
+          : opponentHand && opponentHand.length > 0 && <CardLane title="Hand" owner={game.opponent.name} cards={opponentHand} selectedId={inspectId} onCard={card => setInspectId(card.id)} />}
         <Section title="Swap Bar" className="hc-swap hx-swap"><ul className="hx-swap-slots" aria-label="Swap Bar slots">{game.swap.map((card, index) => <li className="hx-swap-slot" key={card.id}><DragTarget as="span" destination={{ kind: 'zone', id: `swap:${index}` }} label={`Swap Bar slot ${index + 1}`} className="hc-card-target">
           <TabletopCard card={card} size="sm" purpose={`Choose swap slot ${index + 1}`} onDoubleClick={() => { if (card.identity) setInspectId(card.id); }} onClick={() => {
             const option = highlighted.find(item => item.entityId === card.id);
@@ -235,14 +276,14 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
             if (entry?.kind === 'family') open(entry.family, index); else if (entry) choose(entry.action.id); else if (card.identity) pick(card);
           }} /><DragPreview destination={{ kind: 'zone', id: `swap:${index}` }} /></DragTarget><small>Slot {index + 1} · {card.identity ? 'face-up' : 'hidden'}</small>
         </li>)}</ul></Section>
-        <Summary game={game} />
+        <Summary game={game} spectator={spectator} />
         <Section title="Pending Plays" className="hc-pending hx-stack"><ol aria-label="Pending plays in supplied order">{game.stack.map((item, index) => {
           const option = highlighted.find(option => option.entityId === item.id);
           return <li key={item.id}><DragTarget destination={{ kind: 'pending-play', id: item.id }} label={item.label}><button type="button" className={option ? 'is-highlighted' : ''} disabled={!option || blocked}
             onClick={() => { if (option && openFamily && activeComposer) changeComposer({ ...activeComposer, selection: selectOption(openFamily, activeComposer.selection, activeComposer.activeKey, option.value) }); }}>
             <span>{index + 1} · {item.controllerId === game.self.id ? game.self.name : item.controllerId === game.opponent.id ? game.opponent.name : 'System'}</span><strong>{item.label}</strong></button><DragPreview destination={{ kind: 'pending-play', id: item.id }} /></DragTarget></li>;
         })}</ol>{!game.stack.length && <p className="hx-stack-clear">Stack clear</p>}
-          {game.choice && <div className="fc-choice"><b>Your choice · {formatLabel(game.choice.kind)}</b><div className="fc-cards">{game.choice.cards.map(card => <span key={card.id}>{cardNode(card)}</span>)}</div></div>}
+          {game.choice && <div className="fc-choice"><b>{spectator ? 'Private choice' : 'Your choice'} · {formatLabel(game.choice.kind)}</b><div className="fc-cards">{game.choice.cards.map(card => <span key={card.id}>{cardNode(card)}</span>)}</div></div>}
         </Section>
         {teaching?.panelHtml && <div className="hc-teaching" onClick={event => {
           const action = (event.target as HTMLElement).closest<HTMLElement>('[data-action]')?.dataset.action;
@@ -252,9 +293,9 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
         <GameLog game={game} />
       </aside>
       <div className="hc-center fc-surface" data-grid="stage" aria-label="Battlefield">
-        <div className="fc-field is-theirs">{lane('Opponent Enduring Row', game.opponent.enduring, 'enemyE')}{lane('Opponent Point Row', game.opponent.points, 'enemyP', true)}</div>
+        <div className="fc-field is-theirs">{lane(spectator ? `${game.opponent.name} Enduring Row` : 'Opponent Enduring Row', game.opponent.enduring, 'enemyE')}{lane(spectator ? `${game.opponent.name} Point Row` : 'Opponent Point Row', game.opponent.points, 'enemyP', true)}</div>
         <div className="hc-scrimmage hx-scrimmage"><span className="hx-scrim-gem" /><span className="hx-scrim-rule" /><b>Line of Scrimmage</b><span className="hx-scrim-rule" /><span className="hx-scrim-gem" /></div>
-        <div className="fc-field is-mine">{lane('Your Point Row', game.self.points, 'playerP', true)}{lane('Your Enduring Row', game.self.enduring, 'playerE')}</div>
+        <div className="fc-field is-mine">{lane(spectator ? `${game.self.name} Point Row` : 'Your Point Row', game.self.points, 'playerP', true)}{lane(spectator ? `${game.self.name} Enduring Row` : 'Your Enduring Row', game.self.enduring, 'playerE')}</div>
         <section className="hc-piles fc-center hx-piles" data-grid="piles" aria-label="Draw Graveyard and Exile">
           <button type="button" className="fc-pile hx-pile" aria-label={`Draw Pile, ${game.drawCount} cards`} disabled={blocked || !game.actions.some(action => action.family === 'draw')} onClick={() => {
             const draws = game.actions.filter(action => action.family === 'draw');
@@ -268,12 +309,12 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
           <button type="button" className="fc-pile hx-pile" disabled={!game.discardTop} onClick={() => game.discardTop && setInspectId(game.discardTop.id)}><PileTray top={game.discardTop} /><b>Graveyard</b><span className="hx-pile-count">{game.discardCount}</span><span className="hx-pile-off">{game.discardTop ? 'Inspect top card' : 'Empty'}</span></button>
           <div className="fc-pile hx-pile"><PileTray /><b>Exile</b><span className="hx-pile-count">{game.exileCount}</span><span className="hx-pile-off">{game.exileCount ? 'Public count' : 'Empty'}</span></div>
         </section>
-        <section className="hc-hand fc-hand hx-hand" data-grid="playerH" aria-label="Your hand"><div className="hand-head"><strong>Your Hand ({game.self.handCount})</strong><span>Private — only you see these faces</span></div>
+        {spectator ? spectatorHand(game.self, omniscient, 'seat1-hand') : <section className="hc-hand fc-hand hx-hand" data-grid="playerH" aria-label="Your hand"><div className="hand-head"><strong>Your Hand ({game.self.handCount})</strong><span>Private — only you see these faces</span></div>
           <div className="hx-hand-wrap"><button type="button" className="hx-hand-arrow" aria-label="Scroll hand left" onClick={() => handStrip.current?.scrollBy({ left: -180, behavior: 'smooth' })}>‹</button>
           <ul className="hx-hand-strip fc-cards hx-hand-cards" ref={handStrip} tabIndex={0} aria-label="Your visible hand cards">{orderedIds.map((id, index) => <li className="hx-hand-slot" key={id}>{cardNode(handMap.get(id)!, false, true)}
             {onReorderHand && <div className="hc-reorder"><button type="button" aria-label={`Move ${handMap.get(id)!.label} left`} disabled={index === 0} onClick={() => void reorder(id, -1)}>‹</button><button type="button" aria-label={`Move ${handMap.get(id)!.label} right`} disabled={index === orderedIds.length - 1} onClick={() => void reorder(id, 1)}>›</button></div>}
           </li>)}</ul><button type="button" className="hx-hand-arrow" aria-label="Scroll hand right" onClick={() => handStrip.current?.scrollBy({ left: 180, behavior: 'smooth' })}>›</button></div>{!orderedIds.length && <p className="hc-empty">{game.self.handCount ? 'Hand identities are not visible.' : 'Your hand is empty.'}</p>}
-        </section>
+        </section>}
       </div>
       <aside className="hc-right hx-right" aria-label={railHtml === undefined ? "Moves and Action Composer" : "Commentary and playback"}>
         {railHtml !== undefined ? <div className="hc-caster-rail" dangerouslySetInnerHTML={{ __html: railHtml }} /> : <>

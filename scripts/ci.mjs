@@ -86,7 +86,7 @@ const STAGES = [
   ['analytics-ai-ui', 'node', ['--test', 'test/analytics-ai-ui.test.mjs']],
   ['browser-analytics-coverage', 'node', ['--test', 'test/browser-analytics-coverage.test.mjs']],
   ['analytics-measurement-integrity', 'node', ['--test', 'test/measurement-integrity.test.mjs']],
-  ['observatory', 'node', ['--test', 'test/observatory.test.mjs', 'test/observatory-hardening.test.mjs', 'test/observatory-completion.test.mjs', 'test/observatory-integrity.test.mjs', 'test/observatory-choice-support.test.mjs', 'test/observatory-ux.test.mjs']],
+  ['observatory', 'node', ['--test', 'test/observatory.test.mjs', 'test/observatory-hardening.test.mjs', 'test/observatory-completion.test.mjs', 'test/observatory-integrity.test.mjs', 'test/observatory-choice-support.test.mjs', 'test/observatory-ux.test.mjs', 'test/watch-theatre.test.mjs', 'test/replay-resolver.test.mjs']],
   ['visual', 'node', ['--test', 'test/visual.test.mjs']],
   ['card-face-renderer', 'node', ['--test', 'test/card-face-renderer.test.mjs']],
   ['advanced-card-rules', 'node', ['--test', 'test/advanced-card-rules.test.mjs']],
@@ -270,6 +270,8 @@ const STAGES = [
   ['replay-caster', 'node', ['--test', 'test/replay-caster.test.mjs']],
   // Caster Full-Screen Spectator — regression tests for game UI integration
   ['caster-fullscreen', 'node', ['--test', 'test/caster-fullscreen.test.mjs']],
+  // Caster decision integrity — transcript anchoring, orchestration exclusion, spectator view
+  ['caster-decision-integrity', 'node', ['--test', 'test/caster-decision-integrity.test.mjs']],
   // v0.28.1 Rules-Parity Hotfix — failing behavioral tests for IMPL-01/03/04/12, DEG-01
   ['v0.28.1-rules-parity-defects', 'node', ['--test', 'test/v0.28.1-rules-parity-defects.test.mjs']],
   // v0.28.2 Evidence Recalibration — evidence epoch, policy tiers, self-play exclusion
@@ -305,6 +307,7 @@ const STAGES = [
   ['evolution-lab', 'node', ['--test', 'test/evolution-lab.test.mjs', 'test/evolution-foundation.test.mjs', 'test/evolution-research.test.mjs', 'test/evolution-training.test.mjs', 'test/evolution-completion.test.mjs', 'test/evolution-cockpit.test.mjs', 'test/evolution-analytics.test.mjs', 'test/tactical-policies.test.mjs', 'test/policy-action-coverage.test.mjs', 'test/strategic-research.test.mjs', 'test/batch-matrix.test.mjs']],
   ['strategy-intelligence', 'node', ['--test', 'test/strategy-intelligence.test.mjs', 'test/strategy-information.test.mjs', 'test/strategy-ai-interpreter.test.mjs', 'test/strategy-v121-correction.test.mjs', 'test/strategy-v3-synthesis.test.mjs', 'test/analysis-ingestion.test.mjs', 'test/analysis-dossier.test.mjs']],
   ['agent-profiles', 'node', ['--test', 'test/agent-profile-contracts.test.mjs', 'test/agent-profile-store.test.mjs', 'test/agent-profile-science.test.mjs', 'test/agent-profile-consumer.test.mjs', 'test/agent-profile-arena.test.mjs']],
+  ['rule-mutation', 'node', ['--test', 'test/rule-mutation.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

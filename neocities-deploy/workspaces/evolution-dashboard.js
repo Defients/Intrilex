@@ -1,24 +1,24 @@
-import '../evolution/evolution-training-ui.js?v=408ebfe25d7a';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=408ebfe25d7a';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=408ebfe25d7a';
-import { app, esc, fmt, state } from '../state.js?v=408ebfe25d7a';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=408ebfe25d7a';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=408ebfe25d7a';
-import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=408ebfe25d7a';
-import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=408ebfe25d7a';
-import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=408ebfe25d7a';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=408ebfe25d7a';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=408ebfe25d7a';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=408ebfe25d7a';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=408ebfe25d7a';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=408ebfe25d7a';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=408ebfe25d7a';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=408ebfe25d7a';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=408ebfe25d7a';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=408ebfe25d7a';
-import { StrategyStore } from '../strategy/strategy-store.mjs?v=408ebfe25d7a';
-import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=408ebfe25d7a';
-import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs?v=408ebfe25d7a';
+import '../evolution/evolution-training-ui.js?v=e5382c028fd1';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=e5382c028fd1';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=e5382c028fd1';
+import { app, esc, fmt, state } from '../state.js?v=e5382c028fd1';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=e5382c028fd1';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=e5382c028fd1';
+import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=e5382c028fd1';
+import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=e5382c028fd1';
+import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=e5382c028fd1';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=e5382c028fd1';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=e5382c028fd1';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=e5382c028fd1';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=e5382c028fd1';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=e5382c028fd1';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=e5382c028fd1';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=e5382c028fd1';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=e5382c028fd1';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=e5382c028fd1';
+import { StrategyStore } from '../strategy/strategy-store.mjs?v=e5382c028fd1';
+import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=e5382c028fd1';
+import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs?v=e5382c028fd1';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 // Strategy evidence is a separate persistence concern from the monolithic
@@ -150,7 +150,7 @@ function details() {
 }
 function replayList() { return run()?.replays.length ? run().replays.map(r => {
   const g=run().records.find(g => g.ordinal === r.ordinal), marked=run().bookmarks.includes(r.replayId);
-  return `<div class="evo-replay-row"><span>Game ${r.ordinal+1} · seed ${g.seed} · ${esc(g.terminationReason)}</span><button class="ghost-button" data-inspect="${r.replayId}">Inspect / verify</button><button class="ghost-button" data-bookmark="${r.replayId}" aria-pressed="${marked}" ${view.archive ? 'disabled' : ''}>${marked ? '★ Bookmarked' : '☆ Bookmark'}</button></div>`;
+  return `<div class="evo-replay-row"><span>Game ${r.ordinal+1} · seed ${g.seed} · ${esc(g.terminationReason)}</span><button class="ghost-button" data-inspect="${r.replayId}">Inspect / verify</button><button class="ghost-button" data-watch-replay="${r.replayId}">Watch</button><button class="ghost-button" data-bookmark="${r.replayId}" aria-pressed="${marked}" ${view.archive ? 'disabled' : ''}>${marked ? '★ Bookmarked' : '☆ Bookmark'}</button></div>`;
 }).join('') : '<p>No retained replay samples.</p>'; }
 function inspectionHtml() {
   const x=view.inspection;
@@ -183,7 +183,7 @@ async function propagateToObservatory() {
   const summaries = [...new Map(runs.flatMap(observatorySummariesForRun).map(s => [s.matchId, s])).values()];
   if (!summaries.length) { view.propagateStatus = 'No saved lab runs to propagate — run, save or import evidence first.'; renderEvolutionLab(); return; }
   try {
-    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js?v=408ebfe25d7a');
+    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js?v=e5382c028fd1');
     const aggregate = campaignAggregate(summaries, { profileId: null });
     const obs = buildObservatoryAnalytics({ summaries, aggregate });
     state.observatory = { ...obs, summaries, datasetOrigin: 'EVOLUTION_LAB' };
@@ -310,8 +310,12 @@ function bind() {
       loadRun(parseLabImport(text,LAB_IDENTITY)); await persist(); }
     catch(error) { view.error=`Import rejected: ${error.message}`; renderEvolutionLab(); }
   });
-  document.getElementById('evo-replay-list')?.addEventListener('click',e => {
-    const inspect=e.target.closest('[data-inspect]'), bookmark=e.target.closest('[data-bookmark]'); if (inspect) inspectReplay(inspect.dataset.inspect);
+  document.getElementById('evo-replay-list')?.addEventListener('click',async e => {
+    const inspect=e.target.closest('[data-inspect]'), bookmark=e.target.closest('[data-bookmark]'), watch=e.target.closest('[data-watch-replay]'); if (inspect) inspectReplay(inspect.dataset.inspect);
+    // Retained replays are certified envelopes ({initialState, commands}) —
+    // the shared resolver normalizes them for frame-by-frame Watch playback
+    // without requiring static-index membership.
+    if (watch) { const item=run()?.replays.find(r=>r.replayId===watch.dataset.watchReplay); if (item?.replay) { const { openReplay }=await import('../data-loader.js?v=e5382c028fd1'); await openReplay({ kind:'object', replay:item.replay, id:item.replayId, label:`Arena game ${item.ordinal+1}` }); } }
     if (bookmark && run() && !view.archive) { const id=bookmark.dataset.bookmark,i=run().bookmarks.indexOf(id); if (i < 0) run().bookmarks.push(id); else run().bookmarks.splice(i,1); bookmark.textContent=i < 0 ? '★ Bookmarked' : '☆ Bookmark'; bookmark.setAttribute('aria-pressed',String(i < 0)); persist(); }
   });
   document.getElementById('evo-history')?.addEventListener('click',async e => { const b=e.target.closest('[data-load-run]'); if (!b || active()) return; try { const saved=await store.loadForInspection(b.dataset.loadRun);if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run); } catch(error) { view.error=`Load rejected: ${error.message}`; renderEvolutionLab(); } });

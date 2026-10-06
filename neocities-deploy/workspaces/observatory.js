@@ -3,12 +3,13 @@
 //   Compare, Mechanics, Synergies, History, Replays, Traces
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=408ebfe25d7a';
-import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow, scatterPlot, intervalPlot } from '../chart-toolkit.js?v=408ebfe25d7a';
-import { wilsonInterval } from '../observatory-analytics-browser.js?v=408ebfe25d7a';
-import { obsContextStrip, metricStrip, evidenceBadge, dossierSection, miniBar, segmentControl } from './observatory-ui.js?v=408ebfe25d7a';
-// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=408ebfe25d7a') to break backedge
-import { rerender } from '../rerender.js?v=408ebfe25d7a';
+import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=e5382c028fd1';
+import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow, scatterPlot, intervalPlot } from '../chart-toolkit.js?v=e5382c028fd1';
+import { wilsonInterval } from '../observatory-analytics-browser.js?v=e5382c028fd1';
+import { obsContextStrip, metricStrip, evidenceBadge, dossierSection, miniBar, segmentControl } from './observatory-ui.js?v=e5382c028fd1';
+// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=e5382c028fd1') to break backedge
+import { rerender } from '../rerender.js?v=e5382c028fd1';
+import { openReplay } from '../data-loader.js?v=e5382c028fd1';
 
 // Generic segmented-control binder shared by the workspace display modes.
 // Each button carries data-seg-id (state key) + data-seg-value.
@@ -579,7 +580,7 @@ export async function renderOpeningPatterns() {
   let idx = state.traceIndex;
   if (!idx) {
     try {
-      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=408ebfe25d7a');
+      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=e5382c028fd1');
       idx = await loadTraceIndex();
       if (!idx || !idx.records) {
         return `<div class="ix-chart-empty" data-testid="opening-patterns-empty">No decision traces available. Run a campaign with decision traces enabled to analyze opening patterns.</div>`;
@@ -592,7 +593,7 @@ export async function renderOpeningPatterns() {
     }
   }
   // If traceIndex exists but trace data isn't preloaded, load it
-  const { loadTraceData } = await import('../data-loader.js?v=408ebfe25d7a');
+  const { loadTraceData } = await import('../data-loader.js?v=e5382c028fd1');
   const traceFiles = await Promise.all(idx.records.map(r => loadTraceData(r.matchId)));
   return _renderOpeningPatternsFromTraces(idx.records, traceFiles);
 }
@@ -2212,7 +2213,21 @@ export function renderHistory() {
       app.innerHTML = renderMatchDetail(summary);
       document.querySelector('#history-detail-back').onclick = () => { state.historySelectedMatch = null; rerender(); };
       const watchBtn = document.querySelector('#match-detail-watch');
-      if (watchBtn) watchBtn.onclick = () => { state.fixtureId = summary.matchId; state.replayKind = 'autonomy'; state.replay = null; state.frame = 0; location.hash = '#/watch'; };
+      if (watchBtn) {
+        // A match summary is not itself a replay — Watch is offered only
+        // when an index record says a replay artifact was retained. Which
+        // index holds it determines the resolution kind; the resolver then
+        // reports honestly if the body is excluded from this build.
+        const autonomyRecord = state.autonomyIndex?.records?.find(r => r.fixtureId === summary.matchId);
+        const corpusRecord = state.index?.records?.find(r => r.fixtureId === summary.matchId);
+        const kind = autonomyRecord ? 'autonomy' : corpusRecord ? 'corpus' : null;
+        if (kind) {
+          watchBtn.onclick = () => { void openReplay({ kind, fixtureId: summary.matchId }); };
+        } else {
+          watchBtn.disabled = true;
+          watchBtn.title = 'No replay artifact was retained for this match — the summary is statistical evidence only.';
+        }
+      }
       const tracesBtn = document.querySelector('#match-detail-traces');
       if (tracesBtn) tracesBtn.onclick = () => { state.traceSelectedId = summary.matchId; location.hash = '#/traces'; };
       document.querySelectorAll('[data-mech-link]').forEach(btn => {
@@ -2282,20 +2297,41 @@ export function renderHistory() {
 }
 
 // ── /replays ──────────────────────────────────────────────────────
+// The Replay Library lists every indexed replay from every bundled source
+// and says honestly whether the replay BODY is playable in this build:
+// index metadata existing is not the same as the replay artifact being
+// available (autonomy blobs are excluded from normal builds). Rows still
+// route into Watch, which presents the truthful standby state.
 export function renderReplays() {
-  const isAutonomy = !!state.autonomyIndex;
-  const index = isAutonomy ? state.autonomyIndex : state.index;
-  const records = index?.records ?? [];
-  if (!records.length) { app.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">▶</span><strong>No replay records.</strong><p>Run a campaign to generate certified replays.</p></div>'; return; }
+  const availabilityOf = (kind) => state.replayAvailability?.sources?.[kind]?.status ?? 'unknown';
+  const statusFor = (kind) => {
+    const availability = availabilityOf(kind);
+    if (availability === 'bundled') return { label: 'Available', cls: 'available', title: 'Replay body is bundled in this build' };
+    if (availability === 'excluded') return { label: 'Metadata only', cls: 'metadata-only', title: 'Replay metadata exists, but the full replay was not included in this build' };
+    return { label: 'Availability unknown', cls: 'unknown', title: 'Build manifest unavailable — Watch will attempt to load the replay' };
+  };
+  const sections = [
+    { kind: 'corpus', label: 'Certified corpus', records: state.index?.records ?? [] },
+    { kind: 'autonomy', label: 'Autonomy campaign', records: state.autonomyIndex?.records ?? [] },
+  ].filter(s => s.records.length);
+  if (!sections.length) { app.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">▶</span><strong>No replay records.</strong><p>Run a campaign to generate certified replays.</p></div>'; return; }
+  const allRecords = sections.flatMap(s => s.records);
   const outcomeCounts = {};
-  for (const r of records) outcomeCounts[r.outcome ?? r.terminationReason ?? 'unknown'] = (outcomeCounts[r.outcome ?? r.terminationReason ?? 'unknown'] ?? 0) + 1;
+  for (const r of allRecords) outcomeCounts[r.outcome ?? r.terminationReason ?? 'unknown'] = (outcomeCounts[r.outcome ?? r.terminationReason ?? 'unknown'] ?? 0) + 1;
+  const availableCount = sections.filter(s => availabilityOf(s.kind) !== 'excluded').reduce((a, s) => a + s.records.length, 0);
   const replaySummaryHtml = metricStrip([
-    { label: 'Certified replays', value: fmt(records.length), sub: isAutonomy ? 'autonomy campaign index' : 'conformance corpus' },
-    { label: 'Total commands', value: fmt(records.reduce((a, r) => a + (r.commandCount ?? 0), 0)), sub: `median ${fmt(records.map(r => r.commandCount ?? 0).sort((x, y) => x - y)[Math.floor(records.length / 2)] ?? 0)} / replay` },
-    { label: 'Outcomes', value: fmt(Object.keys(outcomeCounts).length), sub: Object.entries(outcomeCounts).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k, v]) => `${k} ×${v}`).join(' · ') },
+    { label: 'Indexed replays', value: fmt(allRecords.length), sub: `${fmt(availableCount)} body${availableCount === 1 ? '' : 'ies'} bundled in this build` },
+    { label: 'Total commands', value: fmt(allRecords.reduce((a, r) => a + (r.commandCount ?? 0), 0)), sub: `median ${fmt(allRecords.map(r => r.commandCount ?? 0).sort((x, y) => x - y)[Math.floor(allRecords.length / 2)] ?? 0)} / replay` },
+    { label: 'Sources', value: fmt(sections.length), sub: sections.map(s => `${s.label} ×${s.records.length}`).join(' · ') },
   ]);
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Replay Library</h2><p>${records.length} certified replays — click to load in Watch</p></div></div><div class="panel-body">${obsContextStrip(state.observatory)}${replaySummaryHtml}<div class="table-wrap"><table class="data-table"><thead><tr><th>Fixture</th><th>Commands</th><th>Events</th><th>Outcome</th></tr></thead><tbody>${records.map(r => `<tr class="clickable-row" data-fixture="${esc(r.fixtureId)}"><td class="mono">${esc(r.fixtureId)}</td><td>${r.commandCount ?? '—'}</td><td>${r.eventCount ?? '—'}</td><td>${esc(r.outcome ?? r.terminationReason ?? '—')}</td></tr>`).join('')}</tbody></table></div></div></section>`;
-  document.querySelectorAll('[data-fixture]').forEach(row => row.onclick = () => { state.fixtureId = row.dataset.fixture; state.replayKind = isAutonomy ? 'autonomy' : 'corpus'; state.replay = null; state.frame = 0; location.hash = '#/watch'; });
+  const tableFor = (section) => {
+    const status = statusFor(section.kind);
+    return `<h3 class="replay-source-heading">${esc(section.label)} <span class="replay-count-note">${section.records.length} record${section.records.length === 1 ? '' : 's'}</span></h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fixture</th><th>Commands</th><th>Events</th><th>Outcome</th><th>Status</th></tr></thead><tbody>${section.records.map(r => `<tr class="clickable-row replay-row-${status.cls}" data-fixture="${esc(r.fixtureId)}" data-replay-kind="${section.kind}"><td class="mono">${esc(r.fixtureId)}</td><td>${r.commandCount ?? '—'}</td><td>${r.eventCount ?? '—'}</td><td>${esc(r.outcome ?? r.terminationReason ?? '—')}</td><td><span class="replay-status replay-status-${status.cls}" title="${esc(status.title)}">${esc(status.label)}</span></td></tr>`).join('')}</tbody></table></div>`;
+  };
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Replay Library</h2><p>${allRecords.length} indexed replays across ${sections.length} source${sections.length === 1 ? '' : 's'} — click to open in Watch</p></div></div><div class="panel-body">${obsContextStrip(state.observatory)}${replaySummaryHtml}${sections.map(tableFor).join('')}</div></section>`;
+  document.querySelectorAll('[data-fixture]').forEach(row => row.onclick = () => {
+    void openReplay({ kind: row.dataset.replayKind, fixtureId: row.dataset.fixture });
+  });
 }
 
 // ── /traces ───────────────────────────────────────────────────────

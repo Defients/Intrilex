@@ -183,9 +183,10 @@ g.sy-cell.sy-cell-dim{opacity:.22}
 /* ── Rail frame: narrower, tighter, single instrument column ──── */
 .observatory-shell{grid-template-columns:236px minmax(0,1fr)}
 .side-rail{padding:12px 10px;gap:10px;background:linear-gradient(180deg,rgba(7,14,21,.97),rgba(4,9,15,.94))}
-.brand-block{padding:6px 8px;border-radius:10px;transition:background var(--fast)}
+.brand-block{padding:4px;border-radius:10px;transition:background var(--fast)}
 .brand-block:hover{background:var(--surface)}
-.brand-glyph{width:36px;height:36px;border-radius:9px;font-size:13px}
+.brand-banner{display:block;width:100%;height:auto;border-radius:8px}
+.brand-block .brand-glyph{display:none}
 .brand-block strong{font-size:13px;letter-spacing:.16em}
 .brand-block small{font-size:9px}
 
@@ -193,11 +194,11 @@ g.sy-cell.sy-cell-dim{opacity:.22}
 .workspace-nav{gap:1px}
 .nav-search-wrap{padding:0 2px 8px}
 .nav-search{height:32px;padding:6px 10px;font-size:12px}
-.nav-section-label{display:flex;align-items:center;gap:8px;padding:9px 9px 3px;font-size:9px;letter-spacing:.16em;color:var(--faint)}
+.nav-section-label{display:flex;align-items:center;gap:8px;padding:10px 9px 4px;font-size:9.5px;letter-spacing:.17em;color:var(--faint)}
 .nav-section-label::after{content:"";flex:1;height:1px;background:var(--border-soft);opacity:.6}
 .nav-section:first-child .nav-section-label{border-top:0;margin-top:0;padding-top:2px}
 .workspace-link{grid-template-columns:22px 1fr auto;gap:8px;padding:6px 9px;min-height:32px;border-radius:8px;font-size:12.5px}
-.workspace-link small{font-size:9px;letter-spacing:.02em}
+.workspace-link small{font-size:9.8px;letter-spacing:.02em;color:var(--muted)}
 .workspace-icon{text-align:center;font-size:12px;opacity:.85}
 .workspace-link:hover{transform:none;background:rgba(20,36,50,.6)}
 .workspace-link.active{padding-left:9px;background:linear-gradient(90deg,rgba(90,215,232,.12),rgba(20,36,50,.5));border-color:rgba(90,215,232,.28)}
@@ -255,6 +256,8 @@ details.authority-stamp{display:block;margin-top:8px;padding:0;border:0;backgrou
 [data-preset="theatre"] .authority-stamp .stamp-details,
 [data-preset="theatre"] .stamp-chevron{display:none}
 [data-preset="theatre"] .authority-stamp>summary{justify-content:center;border:0;background:transparent;padding:4px}
+[data-preset="theatre"] .brand-banner{display:none}
+[data-preset="theatre"] .brand-block .brand-glyph{display:grid;width:44px;height:44px;margin:0 auto}
 [data-preset="theatre"] .rail-toggle{align-self:center;width:42px}
 [data-preset="theatre"] .rail-toggle-icon::before{content:'»'}
 @media(max-width:1050px){.observatory-shell{grid-template-columns:196px minmax(0,1fr)}}
@@ -265,3 +268,16 @@ details.authority-stamp{display:block;margin-top:8px;padding:0;border:0;backgrou
 @media(prefers-reduced-motion:reduce){
   #experiment-button.running .exp-badge{animation:none}
 }
+
+/* ── Replay Library: honest availability badges ───────────────── */
+/* IRX-H21: index metadata existing is not the same as the replay body
+   being bundled — rows carry a truth badge, and metadata-only rows are
+   visually muted but still open the Watch standby explanation. */
+.replay-source-heading{margin:14px 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim)}
+.replay-source-heading .replay-count-note{font-size:10px;color:var(--faint);margin-left:6px;letter-spacing:.04em;text-transform:none}
+.replay-status{display:inline-block;padding:1px 8px;border-radius:999px;font-size:10px;letter-spacing:.06em;font-weight:700;border:1px solid var(--border-soft);white-space:nowrap}
+.replay-status-available{color:var(--accent,#5ad7e8);border-color:rgba(90,215,232,.4);background:rgba(90,215,232,.08)}
+.replay-status-metadata-only{color:var(--amber);border-color:rgba(241,189,93,.4);background:rgba(241,189,93,.08)}
+.replay-status-unknown{color:var(--muted);background:rgba(255,255,255,.05)}
+.replay-row-metadata-only td{color:var(--muted)}
+.replay-row-metadata-only:hover td{color:var(--text)}

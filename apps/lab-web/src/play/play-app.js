@@ -21,8 +21,6 @@ import {
 import { getGameplaySkin } from './gameplay-skin.js';
 import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js';
 import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js';
-import { ensureReplayFrames } from '../replay-frames.js';
-import { state as observatoryState } from '../state.js';
 import { buildSaveIntegrityPayload } from './save-integrity.js';
 import { validateSnapshotPrivacy } from './play-privacy.js';
 import { POLICY_IDS } from '../autonomy-runtime.js';
@@ -1507,29 +1505,18 @@ async function watchLocalReplay(replayId, container) {
     container.innerHTML = `<div class="play-error" role="alert"><h2>Replay not found</h2><p>Could not load replay ${esc(replayId)}. It may have been deleted.</p><a href="#/play/replays" class="secondary-button">Back to Replays</a></div>`;
     return;
   }
-  // Show a loading indicator while frames are reconstructed
+  // Show a loading indicator while the resolver reconstructs frames
   container.innerHTML = '<div class="play-loading">Loading replay…</div>';
   try {
-    // Build a replay object the Watch workspace can consume.
-    // The certified replay envelope has initialState + commands but no
-    // frames array — ensureReplayFrames reconstructs it via the engine.
-    const replay = { ...record.certifiedReplay, frames: undefined };
-    await ensureReplayFrames(replay);
-    if (!replay.frames || replay.frames.length === 0) {
-      throw new Error('Frame reconstruction produced no frames');
-    }
-    // Hand the replay to the Observatory state and navigate to Watch.
-    // Setting _replayLoadedFor prevents render() from re-fetching via
-    // loadReplay() (which would overwrite our local replay).
-    observatoryState.replay = replay;
-    observatoryState.authorized = null;
-    observatoryState.fixtureId = record.sessionId ?? replayId;
-    observatoryState._replayLoadedFor = observatoryState.fixtureId;
-    observatoryState.frame = 0;
-    observatoryState.playing = false;
-    observatoryState.replayKind = 'corpus';
-    observatoryState.visibility = 'public';
-    location.hash = '#/watch';
+    // Route the local IndexedDB record through the shared replay resolver —
+    // normalization, state mutation and navigation are identical for every
+    // replay source, so Watch stays source-agnostic.
+    const { openReplay } = await import('../data-loader.js');
+    await openReplay({
+      kind: 'local',
+      replayId,
+      label: `Saved replay · ${record.sessionId ?? replayId}`,
+    });
   } catch (error) {
     container.innerHTML = `<div class="play-error" role="alert"><h2>Failed to load replay</h2><p>${esc(error.message)}</p><a href="#/play/replays" class="secondary-button">Back to Replays</a></div>`;
   }

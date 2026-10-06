@@ -9,7 +9,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 export * from './schemas.mjs';
-export { buildBeats } from './beat-builder.mjs';
+export { buildBeats, isOrchestrationCommand } from './beat-builder.mjs';
 export { computeImportance, shouldSpeak, pacingBand, PACING_BAND } from './importance.mjs';
 export { PlaybackDirector, SUPPORTED_SPEEDS } from './playback-director.mjs';
 export { buildThreadRegistry, viewerThreadState, privateThreadState } from './narrative-thread.mjs';

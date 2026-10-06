@@ -60,6 +60,13 @@ export const state = {
   index:null, autonomyIndex:null, corpusAnalytics:null, aggregate:null, observatory:null, capabilities:null,
   replay:null, authorized:null, replayKind:'corpus', fixtureId:'CT-001', frame:0, visibility:_persisted.visibility, viewer:'P1',
   _replayLoadedFor:null,
+  // Replay acquisition state (replay-resolver.js). replayStatus is honest
+  // about why Watch has no frames: 'idle' | 'loading' | 'ready' |
+  // 'unavailable' (metadata only — body excluded from build) | 'error'.
+  // replayRequest is the active replay descriptor; replaySource carries the
+  // human-readable origin; replayAvailability is the build manifest that
+  // distinguishes "metadata exists" from "replay body is bundled".
+  replayStatus:'idle', replayError:null, replaySource:null, replayRequest:null, replayAvailability:null,
   playing:false, timer:null, speed:1, layout:_persisted.layout, showOrchestration:false, reducedMotion:_persisted.reducedMotion, reducedSensory:_persisted.reducedSensory, fx:_persisted.fx, rulesIllustrated:_persisted.rulesIllustrated, rulesViewMode:_persisted.rulesViewMode || (_persisted.rulesIllustrated === false ? 'text' : 'illustrated'), haptics:_persisted.haptics, highContrast:_persisted.highContrast, seasonalThemes:_persisted.seasonalThemes,
   selectedTimelineIndex:null, selectedMechanic:null, selectedSynergy:null, selectedPolicy:null, comparePolicyRight:null,
   filters:{profile:'all',evidence:'all'}, campaignWorker:null, campaignWorkers:[],

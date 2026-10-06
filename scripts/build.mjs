@@ -82,9 +82,9 @@ mkdirSync(dist, { recursive: true });
 cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
 // Portable lab domain/session have no engine rules or Node I/O. Browser workers
 // execute the existing autonomy runtime; the dashboard owns only artifacts.
-for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'batch-matrix.mjs', 'strategy-contracts.mjs', 'strategy-evidence.mjs', 'strategy-analysis.mjs', 'strategy-synthesis.mjs', 'strategy-branch.mjs', 'strategy-information.mjs', 'strategy-live.mjs', 'observatory-bridge.mjs', 'matchup-lab.mjs', 'profile-contracts.mjs', 'profile-journal.mjs', 'profile-store.mjs', 'profile-science.mjs', 'profile-arena.mjs']) {
+for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'batch-matrix.mjs', 'strategy-contracts.mjs', 'strategy-evidence.mjs', 'strategy-analysis.mjs', 'strategy-synthesis.mjs', 'strategy-branch.mjs', 'strategy-information.mjs', 'strategy-live.mjs', 'observatory-bridge.mjs', 'matchup-lab.mjs', 'profile-contracts.mjs', 'profile-journal.mjs', 'profile-store.mjs', 'profile-science.mjs', 'profile-arena.mjs', 'mutation-domain.mjs']) {
   const content = await readFile(path.join(root, 'packages/simulation-runtime/src', name), 'utf8');
-  await writeFile(path.join(dist, 'evolution', name), content.replace("from '@intrilex/shared'", "from '../shared-browser.js'").replace("from '../../policies/src/weighted-heuristic.mjs'", "from './weighted-heuristic.mjs'"));
+  await writeFile(path.join(dist, 'evolution', name), content.replace("from '@intrilex/shared'", "from '../shared-browser.js'").replace("from '@intrilex/statistics/estimators'", "from '../shared-analytics/estimators.mjs'").replace("from '../../policies/src/weighted-heuristic.mjs'", "from './weighted-heuristic.mjs'"));
 }
 await writeFile(path.join(dist, 'evolution/weighted-heuristic.mjs'), (await readFile(path.join(root,'packages/policies/src/weighted-heuristic.mjs'),'utf8')).replace("from './scoring.mjs'","from '../policy-scoring.js'"));
 await writeFile(path.join(dist, 'evolution/identity.mjs'), `export const LAB_IDENTITY = ${JSON.stringify(await evolutionIdentity())};\n`);
@@ -334,6 +334,20 @@ async function slimIndexFile(filePath, label) {
 await slimIndexFile('replay-index.json', 'replay-index.json');
 await slimIndexFile('autonomy/lab-replay-index.json', 'lab-replay-index.json');
 
+// ── Replay availability manifest ────────────────────────────────────
+// The Replay Library and the replay resolver distinguish "index metadata
+// exists" from "the replay body is bundled in this build". Corpus certified
+// replays are always shipped; autonomy replay blobs ship only when
+// INTRILEX_INCLUDE_REPLAY_BLOBS=1. The browser reads this manifest at boot
+// so metadata-only records are never presented as watchable.
+await writeFile(path.join(dist, 'data/replay-availability.json'), JSON.stringify({
+  schemaVersion: '1.0.0',
+  sources: {
+    corpus: { status: 'bundled', urlTemplate: 'data/certified-replays/<fixtureId>.certified.replay.json' },
+    autonomy: { status: includeReplayBlobs ? 'bundled' : 'excluded', urlTemplate: 'data/autonomy/replays/public/<fixtureId>.public.replay.json' },
+  },
+}, null, 2) + '\n');
+
 // ── Clean up empty directories left by blob-dir exclusion filter ──────────
 // The cp filter creates parent directories before excluding their children,
 // leaving empty dirs like data/autonomy/replays/ and data/autonomy/lab-replays/.
@@ -375,6 +389,7 @@ await writeFile(path.join(browserEngine, 'browser-entry.js'), [
   "export { CORE_RESPONSE_AUTHORITY_PROFILE } from './core-response.js';",
   "export { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE } from './core-private-choice.js';",
   "export { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE } from './core-advanced.js';",
+  "export { EXPERIMENTAL_RULE_PARAMETERS, EXPERIMENTAL_RULES_METADATA_KEY, readRuleOverrides, resolveRuleFlag, resolveRuleNumber, validateRuleOverrides } from './rule-parameters.js';",
   ''
 ].join('\n'));
 

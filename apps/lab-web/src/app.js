@@ -7,14 +7,16 @@ import { createLandingOverlays } from './landing-overlays.js';
 import { getCardDefinition } from './card-face-data.js';
 import { renderRulesPage } from './rulebook-renderer.js';
 import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js';
-import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        clamp,        showToast} from './state.js';
-import { TITLES,   SUBTITLES,   INSTRUMENTS,   LANDING_MODES,   isPlayRoute,   route} from './router.js';
-import { boot,   loadReplay,   getObservatoryBootPromise} from './data-loader.js';
+import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        fmt,        clamp,        showToast,        persistSetting} from './state.js';
+import { TITLES,   SUBTITLES,   INSTRUMENTS,   LANDING_MODES,   isPlayRoute,   route,   updateRailContext} from './router.js';
+import { boot,   loadReplay,   loadAuthorized,   getObservatoryBootPromise,   openReplay} from './data-loader.js';
+import { replayDescriptorKey,   describeWatchStandby,   REPLAY_STATUS} from './replay-resolver.js';
 import { syncRailToggle } from './experiment-controls.js';
 import {} from './integrity.js';
 import { renderRanks } from './workspaces/ranks.js';
 import { renderDiagnostics } from './workspaces/diagnostics.js';
 import { renderEvolutionLab, cleanupEvolutionLab } from './workspaces/evolution.js';
+import { renderMutationChamber, cleanupMutationChamber } from './workspaces/mutation.js';
 import { renderStrategy, cleanupStrategy } from './strategy/strategy-workspace.js';
 import { renderBranches} from './workspaces/branches.js';
 import { renderForensicWorkspace, initForensicViewer, getForensicState, setCurrentFrame, renderForensicSidebar, renderForensicComparisonOverlay, renderFrameCommentary, handleForensicAction } from './forensic/forensic-viewer.mjs';
@@ -93,7 +95,6 @@ getMatchServerConfig().then(({ diagnoseConfig }) => diagnoseConfig()).catch(() =
 // by innerHTML, so they're safe to cache. Lazy-init avoids timing issues
 // if app.js loads before the shell DOM is parsed.
 let _breadcrumbEl = null;
-let _visibilityEl = null;
 let _workspaceLinks = null;
 let _filterBarEl = null;
 let _clearFiltersEl = null;
@@ -104,9 +105,6 @@ function cachedBreadcrumb() {
 }
 function cachedEyebrow() {
   return _eyebrowEl ??= document.querySelector('.observatory-shell .global-header .eyebrow');
-}
-function cachedVisibility() {
-  return _visibilityEl ??= document.querySelector('#global-visibility');
 }
 function cachedWorkspaceLinks() {
   return _workspaceLinks ??= document.querySelectorAll('.workspace-link');
@@ -185,6 +183,10 @@ export function render() {
   if (_previousRoute === '/evolution' && r !== '/evolution') {
     try { cleanupEvolutionLab(); } catch (e) { console.warn('[render] cleanupEvolutionLab error:', e); }
   }
+  // Mutation Chamber cleanup: terminate any in-flight A/B workers on route change.
+  if (_previousRoute === '/mutation' && r !== '/mutation') {
+    try { cleanupMutationChamber(); } catch (e) { console.warn('[render] cleanupMutationChamber error:', e); }
+  }
   if (_previousRoute === '/strategy' && r !== '/strategy') cleanupStrategy();
   _previousRoute = r;
   // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
@@ -239,30 +241,32 @@ export function render() {
   // from observatory data (summaries, analytics, indices) and must not be
   // blocked by replay loading — especially since replay blobs are excluded
   // from the build by default (~670MB savings), which means loadReplay()
-  // silently fails and would otherwise cause an infinite render loop.
-  if (r === '/watch' && !state.replay && state._replayLoadedFor !== state.fixtureId) {
-    state._replayLoadedFor = state.fixtureId;
+  // can legitimately end in an unavailable state.
+  // The pending request key distinguishes descriptors: a failed load marks
+  // only its own key as attempted, so selecting any replay later (including
+  // retrying the same one through an explicit openReplay call) still works.
+  const watchPendingKey = state.replayRequest
+    ? replayDescriptorKey(state.replayRequest)
+    : replayDescriptorKey({ kind: state.replayKind === 'autonomy' ? 'autonomy' : 'corpus', fixtureId: state.fixtureId });
+  if (r === '/watch' && !state.replay && state.replayStatus !== REPLAY_STATUS.LOADING
+    && watchPendingKey && state._replayLoadedFor !== watchPendingKey) {
     // IRX-H21: Don't block the Watch workspace if replay loading fails.
-    // Attempt to load the replay in the background. If it succeeds, re-render.
-    // If it fails (e.g. replay blobs excluded from build), the Watch workspace
-    // still renders with its title and frame-slider placeholder (renderWatch
-    // handles the null replay case).
+    // Attempt to load the replay in the background; renderWatch presents the
+    // honest standby/unavailable/error state from state.replayStatus.
     loadReplay(state.fixtureId).then(() => {
-      if (state.replay) render();
+      render();
     }).catch(() => {
-      // Replay load failed — render() will show the empty-state Watch workspace
+      render();
     });
     // Don't return — fall through to render the Watch workspace immediately
-    // with the empty state (frame-slider placeholder). When loadReplay resolves,
-    // render() will be called again with the loaded replay.
+    // with the honest standby/loading state. When loadReplay resolves,
+    // render() will be called again with the outcome.
   }
   pageTitle.textContent = TITLES[r];
   pageSubtitle.textContent = SUBTITLES[r];
   const breadcrumbCurrent = cachedBreadcrumb();
   if (breadcrumbCurrent) breadcrumbCurrent.textContent = TITLES[r] ?? 'Observatory';
   cachedWorkspaceLinks().forEach(link => link.classList.toggle('active', link.dataset.route === r));
-  const visEl = cachedVisibility();
-  if (visEl) visEl.value = state.visibility;
   shell.dataset.preset = state.layout;
   syncRailToggle();
   // CosmoTech: tag the shell with the active instrument so the accent
@@ -278,7 +282,7 @@ export function render() {
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/forensic': renderForensic, '/diagnostics': renderDiagnostics, '/evolution': renderEvolutionLab, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
+    '/branches': renderBranches, '/forensic': renderForensic, '/diagnostics': renderDiagnostics, '/evolution': renderEvolutionLab, '/mutation': renderMutationChamber, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
   };
   try {
     const result = (renderers[r] ?? renderEvidence)();
@@ -1935,9 +1939,22 @@ function renderFilters() {
   if (state.filters.evidence !== 'all') chips.push(['Evidence', state.filters.evidence, () => state.filters.evidence = 'all']);
   const filterBar = cachedFilterBar();
   if (!filterBar) return;
-  filterBar.innerHTML = `<span class="eyebrow">COHORT</span>${chips.length ? `<span class="filter-count-badge" aria-label="${chips.length} active filters">${chips.length}</span>` : ''}${chips.length ? chips.map(([k, v], i) => `<span class="filter-chip"><b>${esc(k)}</b>${esc(v)}<button data-remove-filter="${i}" aria-label="Remove ${esc(k)} filter: ${esc(v)}">×</button></span>`).join('') : '<span class="footer-note">All compatible v' + RULES_VERSION + ' / Engine ' + ENGINE_VERSION + ' observations</span>'}<button id="clear-filters" class="ghost-button" ${chips.length ? '' : 'disabled'}>Clear</button>`;
+  const visOpt = (v, l) => `<option value="${v}"${state.visibility === v ? ' selected' : ''}>${l}</option>`;
+  // Provenance readout: dataset size + engine/rules authority, so the bar
+  // communicates analytical confidence instead of reading as a bare filter.
+  const matchCount = state.aggregate?.matchCount ?? (Array.isArray(state.observatory?.summaries) ? state.observatory.summaries.length : null);
+  const provenanceNote = `${matchCount != null ? fmt(matchCount) + ' matches · ' : ''}Engine ${ENGINE_VERSION} · Rules v${RULES_VERSION} · all compatible observations`;
+  filterBar.innerHTML = `<span class="eyebrow">COHORT</span>${chips.length ? `<span class="filter-count-badge" aria-label="${chips.length} active filters">${chips.length}</span>` : ''}${chips.length ? chips.map(([k, v], i) => `<span class="filter-chip"><b>${esc(k)}</b>${esc(v)}<button data-remove-filter="${i}" aria-label="Remove ${esc(k)} filter: ${esc(v)}">×</button></span>`).join('') : `<span class="footer-note cohort-provenance">${esc(provenanceNote)}</span>`}<button id="clear-filters" class="ghost-button" ${chips.length ? '' : 'disabled'}>Clear</button><label class="compact-control filter-view">View <select id="global-visibility" aria-label="Visibility mode">${visOpt('public', 'Public')}${visOpt('player', 'Player-authorized')}${visOpt('judge', 'Omniscient')}</select></label>`;
   // Re-query after innerHTML replaces child nodes — these can't be cached
   filterBar.querySelectorAll('[data-remove-filter]').forEach(button => button.addEventListener('click', () => { chips[Number(button.dataset.removeFilter)][2](); render(); }));
+  const visSelect = filterBar.querySelector('#global-visibility');
+  if (visSelect) visSelect.addEventListener('change', async e => {
+    state.visibility = e.target.value;
+    persistSetting('visibility', state.visibility);
+    if (state.visibility !== 'public') await loadAuthorized();
+    updateRailContext();
+    render();
+  });
   const clearBtn = filterBar.querySelector('#clear-filters');
   if (clearBtn) clearBtn.addEventListener('click', () => { state.selectedMechanic = null; state.selectedPolicy = null; state.filters = { profile: 'all', policy: 'all', outcome: 'all', evidence: 'all', search: '' }; render(); });
 }
@@ -1952,6 +1969,7 @@ export function stop() { state.playing = false; if (state.timer) clearInterval(s
 /** Toggle replay playback (play/pause). Re-renders after state change. */
 export function togglePlay() { if (state.playing) { stop(); render(); return; } state.playing = true; state.timer = setInterval(() => { if (state.frame >= state.replay.frames.length - 1) { stop(); render(); return; } stepTo(state.frame + 1); }, Math.max(65, 700 / state.speed)); render(); }
 function stepTo(index) { state.frame = clamp(index, 0, state.replay.frames.length - 1); state.selectedTimelineIndex = null; triggerFxForFrame(); setCurrentFrame(state.frame); render(); }
+function stepBy(delta) { stepTo(state.frame + delta); }
 function commandAt(index) { return state.replay.commands?.[Math.max(0, index - 1)] ?? null; }
 function commandAction(command) { return command?.action ?? command?.payload?.action ?? null; }
 function frameEventTypes(frame) { return (frame?.events ?? (frame?.eventTypes ?? []).map(type => ({ type }))).map(event => event.type); }
@@ -2007,12 +2025,161 @@ async function renderForensic() {
   await renderForensicWorkspace(app);
 }
 
+// ── Match Theatre helpers ─────────────────────────────────────
+/** Replay index record for the active fixture (autonomy or corpus kind). */
+function watchIndexRecord() {
+  const index = state.replayKind === 'autonomy' ? state.autonomyIndex : state.index;
+  return index?.records?.find(r => r.fixtureId === state.fixtureId) ?? null;
+}
+/** Match summary for the active fixture — exists for retained autonomy matches only. */
+function watchMatchSummary() {
+  return state.observatory?.summaries?.find(s => s.matchId === state.fixtureId) ?? null;
+}
+/**
+ * Semantic scrubber ticks — one positional tick per frame, classed by the
+ * same semantic categories as the timeline dots, with taller markers for
+ * scoring/terminal evidence and amber marks for forensic bookmarks.
+ * Every marker derives from existing replay data (frame event types,
+ * command semantics, forensic session); nothing is synthesized.
+ */
+function watchScrubberMarkers(total, forensicSession) {
+  if (!state.replay?.frames?.length || total < 1) return '';
+  const bookmarked = new Set((forensicSession?.bookmarks ?? []).map(b => b.frameIndex));
+  const ticks = [];
+  for (let i = 0; i <= total; i += 1) {
+    const frame = state.replay.frames[i];
+    const types = frameEventTypes(frame);
+    const classes = [];
+    if (i > 0) classes.push(semanticForCommand(state.replay.commands[i - 1], frame));
+    if (types.some(t => /VICTORY|TERMINATION/.test(t))) classes.push('terminal');
+    else if (types.some(t => /SCORED|SCORING|GOAL|ROW_CLEAR/.test(t))) classes.push('score');
+    if (bookmarked.has(i)) classes.push('bookmark');
+    ticks.push(`<i class="${classes.join(' ')}" style="left:${((i / total) * 100).toFixed(2)}%" aria-hidden="true"></i>`);
+  }
+  const pos = (clamp(state.frame, 0, total) / total) * 100;
+  return `${ticks.join('')}<span class="scrubber-position" style="left:${pos.toFixed(2)}%"></span>`;
+}
+/** Transport console — forensic replay transport shared by live and standby states. */
+function watchTransportHtml({ loaded, total, forensicSession, currentLabel = '', currentClass = '' }) {
+  const s = loaded ? currentState() : {};
+  const dis = loaded ? '' : 'disabled ';
+  const posMeta = loaded
+    ? `TURN ${esc(String(s.fullTurnSequence ?? '—'))} · ${esc(String(s.phase ?? '—').toUpperCase())}`
+    : 'STANDBY';
+  const posValue = loaded
+    ? `F ${state.frame}<em>/${total}</em>`
+    : 'F —<em>/0</em>';
+  return `<div class="watch-controls">
+    <div class="transport" role="group" aria-label="Playback transport"><button id="step-start" ${dis}title="Skip to start" aria-label="Skip to start">⏮</button><button id="step-prev" ${dis}title="Previous frame" aria-label="Previous frame">◀</button><button id="play-toggle" ${dis}aria-label="${loaded && state.playing ? 'Pause' : 'Play'}">${loaded && state.playing ? '⏸' : '▶'}</button><button id="step-next" ${dis}title="Next frame" aria-label="Next frame">▶</button><button id="step-end" ${dis}title="Skip to end" aria-label="Skip to end">⏭</button></div>
+    <div class="watch-scrubber"><div class="scrubber-markers" aria-hidden="true">${loaded ? watchScrubberMarkers(total, forensicSession) : ''}</div><input type="range" id="frame-slider" aria-label="Replay frame slider" min="0" max="${total}" value="${loaded ? state.frame : 0}" ${dis}></div>
+    <div class="watch-position"><b>${posValue}</b><small>${posMeta}</small></div>
+    <div class="speed-control"><label>Speed<select id="play-speed" ${dis}>${[1, 2, 4, 8].map(v => `<option value="${v}" ${state.speed === v ? 'selected' : ''}>${v}×</option>`).join('')}</select></label></div>
+    <div class="current-action ${currentClass}"><span class="action-label">${esc(currentLabel || 'No replay loaded')}</span></div>
+    ${loaded ? '<span class="transport-keys" aria-hidden="true">←/→ step · space play · home/end jump</span>' : ''}
+  </div>`;
+}
+
+/**
+ * Two coherent analytical readout regions below the theatre:
+ * MATCH STATE (seat rows + real engine fields) and EVENT / DECISION
+ * (current semantic action, event-type chips, adjacent commands, and
+ * cross-workspace provenance links). Every value comes from the replay,
+ * the reconstructed frame, or the Observatory index — nothing invented.
+ */
+function watchReadoutsHtml({ s, frame, players, currentCmd, currentLabel, currentClass, indexRec, summary, total }) {
+  const activeId = s.activePlayerId;
+  const seatRows = players.map(id => {
+    const p = s.players?.[id] ?? {};
+    const detail = [`goal ${p.goal ?? '—'}`, `hand ${(p.hand ?? []).length}`, `pr ${(p.pr ?? []).length}`, `er ${(p.er ?? []).length}`].join(' · ');
+    return `<div class="watch-seat-row ${id === activeId ? 'active' : ''}"><span class="seat-id">${esc(id)}</span><span class="seat-detail">${esc(detail)}</span><span class="seat-score">${secured(s, p)}<small> pts</small></span></div>`;
+  }).join('');
+  const stackDepth = Array.isArray(s.stack) ? s.stack.length : 0;
+  const triggerDepth = Array.isArray(s.triggerQueue) ? s.triggerQueue.length : 0;
+  const winner = s.winner ? (typeof s.winner === 'string' ? s.winner : (s.winner.playerId ?? '—')) : null;
+  const stateKvs = [
+    ['Turn', s.fullTurnSequence],
+    ['Phase', s.phase],
+    ['Active player', activeId],
+    ['Mini-turns left', s.players?.[activeId]?.limits?.miniTurnsRemaining],
+    stackDepth ? ['Stack depth', stackDepth] : null,
+    triggerDepth ? ['Trigger queue', triggerDepth] : null,
+    winner ? ['Winner', winner] : null,
+    summary?.completedFullTurns != null ? ['Match turns', summary.completedFullTurns] : null,
+  ].filter(r => r && r[1] != null && r[1] !== '');
+  const types = frameEventTypes(frame);
+  const chipClass = t => /VICTORY|TERMINATION/.test(t) ? 'terminal'
+    : /SCORED|SCORING|GOAL|ROW_CLEAR/.test(t) ? 'score'
+    : /TRIGGER|VOLTAGE/.test(t) ? 'trigger'
+    : /RESPONSE|PRIORITY/.test(t) ? 'response' : '';
+  const chipHtml = types.slice(0, 8).map(t => `<span class="watch-event-chip ${chipClass(t)}" title="${esc(t)}">${esc(t.replace(/^CORE_/, '').replaceAll('_', ' '))}</span>`).join('') + (types.length > 8 ? `<span class="watch-event-chip more">+${types.length - 8}</span>` : '');
+  const kind = commandAction(currentCmd)?.kind ?? currentCmd?.type ?? null;
+  const decisionKvs = [
+    ['Command kind', kind],
+    ['Actor', currentCmd?.actorId],
+    ['Command', currentCmd?.id],
+    frame?.commandIndex >= 0 ? ['Index', `#${frame.commandIndex}`] : null,
+    frame?.accepted === false ? ['Status', 'REJECTED'] : null,
+    indexRec?.hasDecisionTraces ? ['Traces', indexRec.traceCount != null ? `${indexRec.traceCount} recorded` : 'available'] : null,
+    indexRec?.contentHash ? ['Replay hash', `${String(indexRec.contentHash).slice(0, 12)}…`] : null,
+  ].filter(r => r && r[1] != null && r[1] !== '');
+  const prevLabel = state.frame > 0 ? semanticLabel(commandAt(state.frame - 1), state.replay.frames[state.frame - 1]) : null;
+  const nextLabel = state.frame < total ? semanticLabel(commandAt(state.frame + 1), state.replay.frames[state.frame + 1]) : null;
+  const links = [];
+  if (indexRec?.hasDecisionTraces) links.push(`<button type="button" class="ix-cross-link" id="watch-open-traces">◇ Decision traces${indexRec.traceCount ? ` (${indexRec.traceCount})` : ''}</button>`);
+  if (summary) links.push('<button type="button" class="ix-cross-link" id="watch-open-history">☰ Match detail</button>');
+  links.push('<a class="ix-cross-link" href="#/replays">▶ Replay vault</a>');
+  return `<div class="watch-readouts">
+    <section class="watch-readout" aria-label="Match state"><h4>Match state</h4>
+      <div class="watch-seat-rows">${seatRows}</div>
+      ${stateKvs.map(([k, v]) => `<div class="obs-kv"><span>${esc(k)}</span><span>${esc(String(v))}</span></div>`).join('')}
+    </section>
+    <section class="watch-readout" aria-label="Event and decision evidence"><h4>Event / decision</h4>
+      <div class="readout-headline"><span class="semantic-tag">${esc(currentClass || 'initial')}</span><span>${esc(currentLabel)}</span></div>
+      ${decisionKvs.map(([k, v]) => `<div class="obs-kv"><span>${esc(k)}</span><span>${esc(String(v))}</span></div>`).join('')}
+      ${chipHtml ? `<div class="watch-event-chips">${chipHtml}</div>` : ''}
+      ${(prevLabel || nextLabel) ? `<div class="readout-adjacent">${prevLabel ? `<span>PREV ▸ ${esc(prevLabel)}</span>` : ''}${nextLabel ? `<span>NEXT ▸ ${esc(nextLabel)}</span>` : ''}</div>` : ''}
+      <div class="readout-links">${links.join('')}</div>
+    </section>
+  </div>`;
+}
+
 function renderWatch() {
   if (!state.replay || !state.replay.frames) {
-    // IRX-H21: Render a minimal Watch workspace shell with a frame-slider
-    // placeholder so the workspace is still functional even when replay
-    // blobs are excluded from the build (~670MB savings).
-    app.innerHTML = '<div class="watch-layout"><div class="watch-controls"><div class="transport" role="group" aria-label="Playback transport"><button id="step-prev" disabled title="Previous frame" aria-label="Previous frame">◀</button><button id="play-toggle" aria-label="Play">▶</button><button id="step-next" disabled title="Next frame" aria-label="Next frame">▶</button><button id="step-end" disabled title="Skip to end" aria-label="Skip to end">⏭</button></div><div class="progress"><input type="range" id="frame-slider" aria-label="Replay frame slider" min="0" max="0" value="0" disabled><span>0/0</span></div><div class="speed-control"><label>Speed<select id="play-speed" disabled><option value="1">1×</option></select></label></div><div class="current-action"><span class="action-label">No replay loaded</span></div></div><div class="watch-board"><div class="empty-state" style="grid-column:1/-1"><span class="empty-state-icon" aria-hidden="true">◈</span><strong>No replay loaded.</strong><p>Select a replay from the Replays workspace or run a campaign.</p><a class="primary-button empty-action" href="#/replays">Browse replays</a></div></div></div>';
+    // IRX-H21: The Watch workspace renders even when replay blobs are
+    // excluded from the build (~670MB savings). The theatre presents a
+    // designed STANDBY state — ghost board topology, dormant transport —
+    // and the copy is honest about WHY there is no signal: nothing
+    // selected, loading, metadata-only (body excluded from this build),
+    // or a load/normalization failure (replay-resolver.js statuses).
+    const standby = describeWatchStandby(state);
+    const eyebrowByVariant = { loading: 'LOADING', unavailable: 'METADATA ONLY', error: 'NO SIGNAL', idle: 'STANDBY' };
+    const eyebrow = eyebrowByVariant[standby.variant] ?? 'STANDBY';
+    const sourceLabel = state.replaySource?.id ? `<span class="theatre-source-label">${esc(state.replaySource.label ?? `${state.replaySource.kind ?? 'replay'} · ${state.replaySource.id}`)}</span>` : '';
+    const retryButton = standby.variant === 'error' && state.replayRequest
+      ? '<button id="watch-standby-retry" type="button" class="secondary-button">Retry</button>' : '';
+    app.innerHTML = `<div class="watch-layout watch-layout-idle">
+      <section class="watch-theatre theatre-standby" aria-label="Match theatre — standby" data-standby-variant="${esc(standby.variant)}">
+        <div class="theatre-chrome"><span class="theatre-eyebrow"><span class="live-dot standby" aria-hidden="true"></span>MATCH THEATRE // ${esc(eyebrow)}</span><span class="theatre-chrome-meta">OBS-01 · ${esc(eyebrow)}</span></div>
+        <div class="theatre-ghost" aria-hidden="true">
+          <div class="ghost-board"><div class="ghost-seat"><span class="ghost-line w40"></span><span class="ghost-line w24"></span></div><div class="ghost-zones"><i></i><i></i><i></i></div></div>
+          <div class="ghost-board"><div class="ghost-seat"><span class="ghost-line w40"></span><span class="ghost-line w24"></span></div><div class="ghost-zones"><i></i><i></i><i></i></div></div>
+          <span class="ghost-standby-glyph" aria-hidden="true">◈</span>
+        </div>
+        <div class="theatre-standby-core">
+          <strong>${esc(standby.headline)}</strong>${sourceLabel}
+          <p>${esc(standby.detail)}</p>
+          <div class="theatre-standby-actions"><a class="primary-button" href="#/replays">Browse replays</a>${retryButton}<button id="watch-standby-experiment" type="button" class="secondary-button">Run experiment</button></div>
+        </div>
+        <div class="theatre-ghost-timeline" aria-hidden="true">${'<i></i>'.repeat(28)}</div>
+      </section>
+      ${watchTransportHtml({ loaded: false, total: 0, forensicSession: null })}
+    </div>`;
+    document.querySelector('#watch-standby-experiment')?.addEventListener('click', () => {
+      document.querySelector('#experiment-button')?.click();
+    });
+    document.querySelector('#watch-standby-retry')?.addEventListener('click', () => {
+      if (state.replayRequest) void openReplay(state.replayRequest, { navigate: false });
+    });
     return;
   }
   // IRX-FORENSIC: Initialize forensic viewer for this replay if not already loaded.
@@ -2032,16 +2199,28 @@ function renderWatch() {
   const currentLabel = state.frame === 0 ? 'Initial state' : semanticLabel(currentCmd, frame);
   const currentClass = state.frame === 0 ? '' : semanticForCommand(currentCmd, frame);
   const forensicSidebarHtml = renderForensicSidebar();
+  const indexRec = watchIndexRecord();
+  const summary = watchMatchSummary();
+  const chromeMeta = [
+    state.replay.engineVersion ? `ENGINE ${state.replay.engineVersion}` : null,
+    state.replay.rulesVersion ? `RULES ${state.replay.rulesVersion}` : null,
+    summary?.policyIds?.length ? summary.policyIds.join(' vs ').toUpperCase() : null,
+    summary?.terminationReason ?? indexRec?.terminationReason ?? indexRec?.outcome ?? null,
+  ].filter(Boolean).join(' · ');
+  const winnerLabel = s.winner ? (typeof s.winner === 'string' ? s.winner : (s.winner.playerId ?? '—')) : null;
+  const railFlag = winnerLabel
+    ? `<span class="theatre-rail-flag terminal">TERMINAL · ${esc(winnerLabel)} WINS</span>`
+    : (state.frame >= total ? '<span class="theatre-rail-flag">END OF RECORD</span>' : '');
   app.innerHTML = `<div class="watch-layout watch-layout-forensic">
     <div class="watch-main">
-      <div class="watch-controls">
-        <div class="transport" role="group" aria-label="Playback transport"><button id="step-prev" ${state.frame === 0 ? 'disabled' : ''} title="Previous frame" aria-label="Previous frame">◀</button><button id="play-toggle" aria-label="${state.playing ? 'Pause' : 'Play'}">${state.playing ? '⏸' : '▶'}</button><button id="step-next" ${state.frame >= total ? 'disabled' : ''} title="Next frame" aria-label="Next frame">▶</button><button id="step-end" ${state.frame >= total ? 'disabled' : ''} title="Skip to end" aria-label="Skip to end">⏭</button></div>
-        <div class="progress"><input type="range" id="frame-slider" aria-label="Replay frame slider" min="0" max="${total}" value="${state.frame}"><span>${state.frame}/${total}</span></div>
-        <div class="speed-control"><label>Speed<select id="play-speed"><option value="1" ${state.speed === 1 ? 'selected' : ''}>1×</option><option value="2" ${state.speed === 2 ? 'selected' : ''}>2×</option><option value="4" ${state.speed === 4 ? 'selected' : ''}>4×</option><option value="8" ${state.speed === 8 ? 'selected' : ''}>8×</option></select></label></div>
-        <div class="current-action ${currentClass}"><span class="action-label">${esc(currentLabel)}</span></div>
-      </div>
+      <section class="watch-theatre" aria-label="Match theatre">
+        <div class="theatre-chrome"><span class="theatre-eyebrow"><span class="live-dot" aria-hidden="true"></span>MATCH THEATRE · ${esc(replayId)}</span><span class="theatre-chrome-meta">${esc(chromeMeta) || 'CERTIFIED REPLAY'}</span></div>
+        <div class="watch-board">${players.map(id => playerBoard(s, s.players?.[id], id)).join('')}</div>
+        <div class="theatre-statusrail"><span>TURN <b>${esc(String(s.fullTurnSequence ?? '—'))}</b></span><span>PHASE <b>${esc(String(s.phase ?? '—').toUpperCase())}</b></span><span>ACTIVE <b>${esc(String(s.activePlayerId ?? '—'))}</b></span><span>${players.map(id => `${esc(id)} <b>${secured(s, s.players?.[id])}</b> PTS`).join(' · ')}</span>${railFlag}</div>
+      </section>
       ${renderFrameCommentary(state.frame)}
-      <div class="watch-board">${players.map(id => playerBoard(s, s.players?.[id], id)).join('')}</div>
+      ${watchTransportHtml({ loaded: true, total, forensicSession: forensicState?.session, currentLabel, currentClass })}
+      ${watchReadoutsHtml({ s, frame, players, currentCmd, currentLabel, currentClass, indexRec, summary, total })}
       ${(() => {
         // IRX-FORENSIC: Render branch previews below the board when branches exist at this frame.
         if (!forensicState?.session) return '';
@@ -2068,15 +2247,26 @@ function renderWatch() {
           if (summary.annotationCount > 0) forensicClasses += ' has-annotation';
           if (summary.branchCount > 0) forensicClasses += ' has-branch';
         }
-        return `<button class="timeline-item ${item.class} ${isCurrent ? 'current' : ''}${forensicClasses}" data-frame="${item.index}" title="${esc(label)}" aria-current="${isCurrent ? 'true' : 'false'}"><span class="timeline-dot" aria-hidden="true"></span><span class="timeline-label">${esc(label)}</span></button>`;
+        return `<button class="timeline-item ${item.class} ${isCurrent ? 'current' : ''}${forensicClasses}" data-class="${item.class}" data-frame="${item.index}" title="${esc(label)}" aria-current="${isCurrent ? 'true' : 'false'}"><span class="timeline-dot" aria-hidden="true"></span><span class="timeline-label">${esc(label)}</span></button>`;
       }).join('')}</div></div>
     </div>
     ${forensicSidebarHtml}
   </div>${renderForensicComparisonOverlay()}`;
   document.querySelector('#play-toggle').onclick = togglePlay;
+  document.querySelector('#step-start').onclick = () => stepTo(0);
   document.querySelector('#step-prev').onclick = () => stepTo(state.frame - 1);
   document.querySelector('#step-next').onclick = () => stepTo(state.frame + 1);
   document.querySelector('#step-end').onclick = () => stepTo(total);
+  // Provenance links — reuse the same cross-workspace navigation the
+  // History/Traces rows use (real actions, no fabricated behavior).
+  document.querySelector('#watch-open-traces')?.addEventListener('click', () => {
+    state.traceSelectedId = state.fixtureId;
+    location.hash = '#/traces';
+  });
+  document.querySelector('#watch-open-history')?.addEventListener('click', () => {
+    state.historySelectedMatch = state.fixtureId;
+    location.hash = '#/history';
+  });
   document.querySelector('#frame-slider').oninput = e => stepTo(Number(e.target.value));
   document.querySelector('#play-speed').onchange = e => { state.speed = Number(e.target.value); };
   document.querySelectorAll('.timeline-item').forEach(btn => btn.onclick = () => stepTo(Number(btn.dataset.frame)));
@@ -2361,7 +2551,7 @@ getAuthController().then(async ({ initAuth, isMigrationPending }) => {
 // This breaks the backedge from workspace modules to the entry point.
 import { setRenderer, setAppActions } from './rerender.js';
 setRenderer(render);
-setAppActions({ togglePlay, stop, showExtract, exportAnalysisDossier });
+setAppActions({ togglePlay, stop, stepBy, stepTo, showExtract, exportAnalysisDossier });
 
 // IRX-FORENSIC: Expose state on window for the forensic viewer's open-session
 // flow, which needs to set replay state before navigating to Watch. This is

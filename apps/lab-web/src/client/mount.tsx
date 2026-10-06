@@ -42,6 +42,15 @@ export type TableOptions = {
   onReorderHand?: (orderedIds: readonly string[]) => void | Promise<void>;
   skin?: string;
   readOnly?: boolean;
+  /**
+   * Presentation role for the semantic model. 'spectator'/'caster'
+   * render a neutral two-seat view (no "You"/"Opponent"); combined with
+   * visibility 'public' (default) or 'omniscient' (authorized replay
+   * inspection with both hands face-up).
+   */
+  viewRole?: 'player' | 'spectator' | 'caster';
+  /** Information policy; 'omniscient' requires a spectator viewRole. */
+  visibility?: 'player' | 'public' | 'omniscient';
   debug?: boolean;
   chat?: ChatConfig;
   /** Face-up opponent hand cards (Caster/omniscient spectating mode). */
@@ -82,7 +91,8 @@ class TableBoundary extends Component<{ children: ReactNode }, { failed: boolean
 
 export function mountGameTable(container: HTMLElement, input: unknown, options: TableOptions) {
   const store = createGameStore(options.submit);
-  store.update(input, { readOnly: options.readOnly, coalesceIdenticalActions: true });
+  const modelOptions = { viewRole: options.viewRole, visibility: options.visibility };
+  store.update(input, { readOnly: options.readOnly, coalesceIdenticalActions: true, ...modelOptions });
   const host = document.createElement('div');
   container.replaceChildren(host);
   const root = createRoot(host);
@@ -91,7 +101,7 @@ export function mountGameTable(container: HTMLElement, input: unknown, options: 
     root.render(<TableBoundary>
       {options.legacy
         ? <GameTable store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} skin={options.skin} debug={debug} chat={chat} opponentHand={opponentHand} railHtml={railHtml} />
-        : <IntrilexGame opponentHand={opponentHand} railHtml={railHtml} store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} onExit={options.onExit} skin={options.skin} debug={debug} chat={chat} rankSuggestions={options.rankSuggestions} teaching={teaching ? { ...teaching, onAction: options.teaching?.onAction ?? teaching.onAction } : undefined} />}
+        : <IntrilexGame opponentHand={opponentHand} railHtml={railHtml} viewRole={options.viewRole} store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} onExit={options.onExit} skin={options.skin} debug={debug} chat={chat} rankSuggestions={options.rankSuggestions} teaching={teaching ? { ...teaching, onAction: options.teaching?.onAction ?? teaching.onAction } : undefined} />}
     </TableBoundary>);
   };
   flushSync(() => renderTable(options.chat, options.opponentHand, options.railHtml));
@@ -108,7 +118,7 @@ export function mountGameTable(container: HTMLElement, input: unknown, options: 
   return {
     update(snapshot: unknown, readOnly = false, chat?: ChatConfig, opponentHand?: readonly TableCard[], railHtml?: string, teaching?: TeachingSupport) {
       if (disposed) return;
-      store.update(snapshot, { readOnly, coalesceIdenticalActions: true });
+      store.update(snapshot, { readOnly, coalesceIdenticalActions: true, ...modelOptions });
       // Re-render the root when presentational props change. The Caster
       // passes opponentHand/railHtml on every beat; flushSync ensures the
       // DOM is committed before the caller wires up rail controls via

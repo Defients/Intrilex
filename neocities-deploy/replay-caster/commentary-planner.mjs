@@ -83,6 +83,9 @@ const MAX_PAST_COMMENTARY = 4;
  * @param {Array} [ctx.commentaryHistory] - prior CommentaryRecords with beatId
  * @param {object} [ctx.matchMeta] - { matchId, policyIds, engineVersion, rulesVersion, profileId, winner, terminationReason }
  * @param {object} [ctx.settings] - { model, density }
+ * @param {object} [ctx.currentFrameState] - authoritative state at the
+ *   current beat's frame. Only consulted under OMNISCIENT viewer mode
+ *   (to surface authorized hand identities); ignored otherwise.
  * @returns {object} commentary input (provider-facing)
  */
 export function buildCommentaryInput(ctx) {
@@ -99,8 +102,8 @@ export function buildCommentaryInput(ctx) {
   const visibleDiagnostics = diagnosticsThroughBeat(ctx.diagnostics, beatIndex)
     .map(stripPrivateDiagnosticFields);
 
-  const present = buildPresentContext(beat, viewerMode);
-  const future = buildFutureContext(beats, beatIndex, ctx.matchMeta, privateThreads);
+  const present = buildPresentContext(beat, viewerMode, ctx.currentFrameState);
+  const future = buildFutureContext(beats, beatIndex, ctx.matchMeta, privateThreads, viewerMode);
 
   const beatProjectionHash = hashCanonical({
     beatId: beat.beatId, kind: beat.beatKind, publicSummary: beat.publicSummary,
@@ -218,9 +221,9 @@ function buildUserPrompt(input) {
 
 // ── Context builders ──────────────────────────────────────────────
 
-function buildPresentContext(beat, viewerMode) {
+function buildPresentContext(beat, viewerMode, frameState) {
   const ps = beat.publicSummary ?? {};
-  return {
+  const present = {
     beatId: beat.beatId,
     beatKind: beat.beatKind,
     sequence: beat.sequence,
@@ -234,11 +237,81 @@ function buildPresentContext(beat, viewerMode) {
     stackDepth: ps.stackDepth ?? 0,
     action: beat.action ?? null,
     decision: beat.decision ?? null,
+    // Public board facts (hand counts, public rows, zone counts). Beat
+    // data never carries hidden hand identities — those are appended
+    // below only under an explicitly authorized omniscient view.
+    board: beat.board ?? null,
+    recentEvents: projectEvents(beat.visibleEvents),
     viewerMode
   };
+  if (viewerMode === VIEWER_MODE.OMNISCIENT && frameState) {
+    const hands = omniscientHands(frameState);
+    if (hands) present.hands = hands;
+  }
+  return present;
 }
 
-function buildFutureContext(beats, beatIndex, matchMeta, privateThreads) {
+/**
+ * Project viewer-visible beat events to a compact commentary form.
+ * Only the event type, actor, and public card references are kept —
+ * payloads are never dumped wholesale into the prompt.
+ */
+function projectEvents(events) {
+  if (!Array.isArray(events)) return [];
+  return events.slice(-8).map(e => {
+    if (!e) return null;
+    const p = e.payload && typeof e.payload === 'object' && !Array.isArray(e.payload) ? e.payload : {};
+    const cardRefs = ['cardId', 'targetId', 'sourceCardId', 'jackCardId', 'hostCardId']
+      .map(k => p[k]).filter(v => typeof v === 'string');
+    return {
+      id: e.id ?? null,
+      type: e.type ?? null,
+      actorId: e.controllerId ?? p.controllerId ?? p.actorId ?? null,
+      cardRefs
+    };
+  }).filter(Boolean);
+}
+
+function asciiIdentity(identity) {
+  if (identity == null) return null;
+  return String(identity)
+    .replaceAll('♣', 'C').replaceAll('♦', 'D')
+    .replaceAll('♥', 'H').replaceAll('♠', 'S');
+}
+
+/**
+ * Omniscient-only: both players' hand identities (ASCII-normalized),
+ * read from the authoritative frame state supplied by the session.
+ * Never called under PUBLIC viewer mode.
+ */
+function omniscientHands(state) {
+  const players = state?.players;
+  if (!players || typeof players !== 'object') return null;
+  const cards = state.cards ?? {};
+  const out = {};
+  for (const playerId of Object.keys(players)) {
+    const hand = players[playerId]?.hand;
+    out[playerId] = Array.isArray(hand)
+      ? hand.map(id => asciiIdentity(cards[id]?.identity)).filter(Boolean)
+      : [];
+  }
+  return out;
+}
+
+function buildFutureContext(beats, beatIndex, matchMeta, privateThreads, viewerMode) {
+  // PUBLIC commentary must not see future beats or the match outcome —
+  // future knowledge is reserved for explicitly authorized omniscient
+  // broadcast/dev analysis.
+  if (viewerMode !== VIEWER_MODE.OMNISCIENT) {
+    return {
+      visibleToViewer: false,
+      redacted: true,
+      nextMajorBeat: null,
+      upcomingBeats: [],
+      narrativeThreads: [],
+      matchOutcome: null
+    };
+  }
   const upcoming = [];
   for (let i = beatIndex + 1; i < beats.length && upcoming.length < FUTURE_WINDOW; i += 1) {
     const b = beats[i];
@@ -305,6 +378,8 @@ function viewerSafeBeat(beat) {
     publicSummary: beat.publicSummary,
     action: beat.action,
     decision: beat.decision,
+    board: beat.board ?? null,
+    visibleEvents: Array.isArray(beat.visibleEvents) ? beat.visibleEvents : [],
     importance: beat.importance
   };
 }

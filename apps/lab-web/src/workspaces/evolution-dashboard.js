@@ -150,7 +150,7 @@ function details() {
 }
 function replayList() { return run()?.replays.length ? run().replays.map(r => {
   const g=run().records.find(g => g.ordinal === r.ordinal), marked=run().bookmarks.includes(r.replayId);
-  return `<div class="evo-replay-row"><span>Game ${r.ordinal+1} · seed ${g.seed} · ${esc(g.terminationReason)}</span><button class="ghost-button" data-inspect="${r.replayId}">Inspect / verify</button><button class="ghost-button" data-bookmark="${r.replayId}" aria-pressed="${marked}" ${view.archive ? 'disabled' : ''}>${marked ? '★ Bookmarked' : '☆ Bookmark'}</button></div>`;
+  return `<div class="evo-replay-row"><span>Game ${r.ordinal+1} · seed ${g.seed} · ${esc(g.terminationReason)}</span><button class="ghost-button" data-inspect="${r.replayId}">Inspect / verify</button><button class="ghost-button" data-watch-replay="${r.replayId}">Watch</button><button class="ghost-button" data-bookmark="${r.replayId}" aria-pressed="${marked}" ${view.archive ? 'disabled' : ''}>${marked ? '★ Bookmarked' : '☆ Bookmark'}</button></div>`;
 }).join('') : '<p>No retained replay samples.</p>'; }
 function inspectionHtml() {
   const x=view.inspection;
@@ -310,8 +310,12 @@ function bind() {
       loadRun(parseLabImport(text,LAB_IDENTITY)); await persist(); }
     catch(error) { view.error=`Import rejected: ${error.message}`; renderEvolutionLab(); }
   });
-  document.getElementById('evo-replay-list')?.addEventListener('click',e => {
-    const inspect=e.target.closest('[data-inspect]'), bookmark=e.target.closest('[data-bookmark]'); if (inspect) inspectReplay(inspect.dataset.inspect);
+  document.getElementById('evo-replay-list')?.addEventListener('click',async e => {
+    const inspect=e.target.closest('[data-inspect]'), bookmark=e.target.closest('[data-bookmark]'), watch=e.target.closest('[data-watch-replay]'); if (inspect) inspectReplay(inspect.dataset.inspect);
+    // Retained replays are certified envelopes ({initialState, commands}) —
+    // the shared resolver normalizes them for frame-by-frame Watch playback
+    // without requiring static-index membership.
+    if (watch) { const item=run()?.replays.find(r=>r.replayId===watch.dataset.watchReplay); if (item?.replay) { const { openReplay }=await import('../data-loader.js'); await openReplay({ kind:'object', replay:item.replay, id:item.replayId, label:`Arena game ${item.ordinal+1}` }); } }
     if (bookmark && run() && !view.archive) { const id=bookmark.dataset.bookmark,i=run().bookmarks.indexOf(id); if (i < 0) run().bookmarks.push(id); else run().bookmarks.splice(i,1); bookmark.textContent=i < 0 ? '★ Bookmarked' : '☆ Bookmark'; bookmark.setAttribute('aria-pressed',String(i < 0)); persist(); }
   });
   document.getElementById('evo-history')?.addEventListener('click',async e => { const b=e.target.closest('[data-load-run]'); if (!b || active()) return; try { const saved=await store.loadForInspection(b.dataset.loadRun);if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run); } catch(error) { view.error=`Load rejected: ${error.message}`; renderEvolutionLab(); } });

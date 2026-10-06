@@ -30,6 +30,7 @@
     "phase9.js",
     "ranks.js",
     "rng.js",
+    "rule-parameters.js",
     "state.js",
     "validation.js",
     "views.js"

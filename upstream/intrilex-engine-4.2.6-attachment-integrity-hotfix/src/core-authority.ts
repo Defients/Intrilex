@@ -4,7 +4,8 @@ import { CORE_EFFECT_DECLARATION_PROFILE, resolveCoreEffect } from "./core-effec
 import { evaluateProtection, revalidateAttachments } from "./interactions.js";
 import { CORE_RESPONSE_AUTHORITY_PROFILE, primaryDescriptor, targetAcceptsCounter } from "./core-response.js";
 import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, beginChoice, isCorePrivateChoiceEffect, resolveCorePrivateChoiceRoot, resolveCorePrivateChoiceSubmission } from "./core-private-choice.js";
-import { compareScuttle, cardPointValue, hasOrdinaryScuttleImmunity, parseIdentity, resolveRankAction } from "./ranks.js";
+import { compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, resolvePointValue, resolveRankAction } from "./ranks.js";
+import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js";
 import { nextIndex } from "./rng.js";
 import { addCard, createEmptyState, deriveSecuredPoints, moveCard } from "./state.js";
 import { exhaustedWinner, resolvePhase8Action } from "./phase8.js";
@@ -48,6 +49,11 @@ export interface CoreMatchSetup {
    *  enables authored scenario fixtures (Guided Exhibition, scripted puzzles).
    *  Backward-compatible: when absent, the normal seed-based shuffle runs. */
   predeterminedIdentities?: string[];
+  /** Optional scoped experimental rule overrides (Rule Mutation Chamber).
+   *  Sanitized via validateRuleOverrides and stored on state.metadata so the
+   *  mutation is part of the match's hashed provenance. Absent ⇒ canonical
+   *  rules; production rules are never mutated globally. */
+  ruleOverrides?: Record<string, number | boolean>;
 }
 
 export interface CoreLegalAction {
@@ -160,8 +166,10 @@ function setupCoreState(state: EngineState, playerIds: [PlayerId, PlayerId], see
   for (const [index, identity] of identities.entries()) {
     addCard(state, { id: `CORE-${String(index + 1).padStart(3, "0")}`, identity, originalOwnerId: playerIds[index % 2]!, zone: "DP" });
   }
-  for (let count = 0; count < 5; count += 1) moveCard(state, state.zones.dp[0]!, `${playerIds[0]}_HAND`, playerIds[0]);
-  for (let count = 0; count < 6; count += 1) moveCard(state, state.zones.dp[0]!, `${playerIds[1]}_HAND`, playerIds[1]);
+  const handFirst = Math.min(resolveRuleNumber(state, "setup.hand.first"), state.zones.dp.length - 3);
+  const handSecond = Math.min(resolveRuleNumber(state, "setup.hand.second"), state.zones.dp.length - 3 - handFirst);
+  for (let count = 0; count < handFirst; count += 1) moveCard(state, state.zones.dp[0]!, `${playerIds[0]}_HAND`, playerIds[0]);
+  for (let count = 0; count < handSecond; count += 1) moveCard(state, state.zones.dp[0]!, `${playerIds[1]}_HAND`, playerIds[1]);
   for (let count = 0; count < 3; count += 1) {
     const cardId = state.zones.dp[0]!;
     moveCard(state, cardId, "SWAP_BAR");
@@ -173,9 +181,9 @@ function setupCoreState(state: EngineState, playerIds: [PlayerId, PlayerId], see
   state.phase = "Start";
   state.fullTurnSequence = 1;
   for (const id of playerIds) {
-    state.players[id]!.goal = 21;
+    state.players[id]!.goal = resolveRuleNumber(state, "match.goal");
     state.players[id]!.limits.miniTurnsUsed = 0;
-    state.players[id]!.limits.miniTurnsRemaining = 1;
+    state.players[id]!.limits.miniTurnsRemaining = resolveRuleNumber(state, "miniTurns.perTurn");
     state.players[id]!.limits.swapBarUsedThisFT = false;
     state.players[id]!.limits.rank10PlayedThisFT = false;
     state.players[id]!.limits.ultraPlayedThisFT = false;
@@ -194,7 +202,7 @@ function setupCoreState(state: EngineState, playerIds: [PlayerId, PlayerId], see
 
 function captureCoreVoltageSnapshot(state: EngineState, playerId: PlayerId): { rank3:number; rank4:number; rank5:number; capturedFullTurnSequence:number } {
   const values={rank3:0,rank4:0,rank5:0};
-  for(const id of state.players[playerId]!.pr){const card=state.cards[id],r=card?parseIdentity(card.identity)?.rank:null;if(!card||card.controllerId!==playerId||card.state.tapped===true)continue;const v=typeof card.state.pointValue==="number"?card.state.pointValue:cardPointValue(card);if(r==="3")values.rank3+=v;if(r==="4")values.rank4+=v;if(r==="5")values.rank5+=v;}
+  for(const id of state.players[playerId]!.pr){const card=state.cards[id],r=card?parseIdentity(card.identity)?.rank:null;if(!card||card.controllerId!==playerId||card.state.tapped===true)continue;const v=resolvePointValue(state,card);if(r==="3")values.rank3+=v;if(r==="4")values.rank4+=v;if(r==="5")values.rank5+=v;}
   const snapshot={...values,capturedFullTurnSequence:state.fullTurnSequence};
   const phase8=(state.metadata.phase8&&typeof state.metadata.phase8==="object"?state.metadata.phase8:{}) as any;phase8.voltageSnapshots??={};phase8.voltageUsedThisFT??={};phase8.voltageSnapshots[playerId]=snapshot;phase8.voltageUsedThisFT[playerId]={"3":false,"4":false,"5":false};state.metadata.phase8=phase8;return snapshot;
 }
@@ -308,7 +316,7 @@ function declareCoreStackItem(state: EngineState, actorId: PlayerId, tag: string
   // that opponent cannot use Base Ace or Anchor Ace against the play.
   // We snapshot the flag at declaration time; later Queen-count changes do not alter it.
   let royalShieldProtected = false;
-  if (payload.kind === "primary") {
+  if (payload.kind === "primary" && resolveRuleFlag(state, "royalShield.enabled")) {
     const declarerQueens = state.players[actorId]?.er.filter((id) => {
       const c = state.cards[id];
       return c !== undefined && c.controllerId === actorId && parseIdentity(c.identity)?.rank === "Q" && c.state.tapped !== true;
@@ -395,7 +403,7 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
       if (!isSupportedCoreProfile(profileId)) return fail("CORE_PROFILE", `Unsupported Core profile ${profileId}`);
       try { setupCoreState(state, action.playerIds, state.rng.seed, profileId, action.predeterminedIdentities); }
       catch (error) { return fail("CORE_SETUP", error instanceof Error ? error.message : String(error)); }
-      events.push({ type: "CORE_FOUNDATION_SETUP_APPLIED", payload: { profileId, playerIds: action.playerIds, goals: 21, handSizes: [5, 6], swapBar: { faceDown: 2, faceUp: 1 }, dpCount: state.zones.dp.length } });
+      events.push({ type: "CORE_FOUNDATION_SETUP_APPLIED", payload: { profileId, playerIds: action.playerIds, goals: state.players[action.playerIds[0]!]!.goal, handSizes: [state.players[action.playerIds[0]!]!.hand.length, state.players[action.playerIds[1]!]!.hand.length], swapBar: { faceDown: 2, faceUp: 1 }, dpCount: state.zones.dp.length } });
       break;
     }
     case "core-begin-start": {
@@ -404,7 +412,7 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
       if (core.startPreparedFullTurnSequence === state.fullTurnSequence) return fail("CORE_START", "Start phase is already prepared for this Full Turn");
       const player = state.players[actorId]!;
       player.limits.miniTurnsUsed = 0;
-      player.limits.miniTurnsRemaining = 1;
+      player.limits.miniTurnsRemaining = resolveRuleNumber(state, "miniTurns.perTurn");
       player.limits.swapBarUsedThisFT = false;
       player.limits.rank10PlayedThisFT = false;
       player.limits.ultraPlayedThisFT = false;
@@ -452,7 +460,7 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
     case "core-draw": {
       const problem = validateActionWindow(state, actorId); if (problem) return fail("CORE_ACTION", problem);
       if (state.zones.dp.length === 0) return fail("CORE_DRAW_EMPTY", "Cannot draw from an empty DP");
-      const count = state.players[actorId]!.hand.length === 0 ? Math.min(2, state.zones.dp.length) : 1;
+      const count = state.players[actorId]!.hand.length === 0 ? Math.min(resolveRuleNumber(state, "draw.emptyHand"), state.zones.dp.length) : 1;
       const drawnCardIds: CardId[] = [];
       for (let index = 0; index < count; index += 1) { const id = state.zones.dp[0]!; moveCard(state, id, `${actorId}_HAND`, actorId); drawnCardIds.push(id); }
       consumeMiniTurn(state, actorId);
@@ -476,7 +484,7 @@ export function resolveCoreAuthorityAction(input: EngineState, actorId: PlayerId
       const problem = validateActionWindow(state, actorId); if (problem) return fail("CORE_ACTION", problem);
       const card = state.cards[action.cardId];
       if (!card || card.zone !== `${actorId}_HAND` || card.controllerId !== actorId) return fail("CORE_SCORE_SOURCE", "Play for Points requires a controlled hand card");
-      card.state.pointValue = cardPointValue(card);
+      card.state.pointValue = resolvePointValue(state, card);
       moveCard(state, action.cardId, `${actorId}_PR`, actorId);
       // Rulebook §10♣: "When scored for Points, 10♣ enters PR with Aegis. Remove that Aegis at the beginning of its controller's next Start Phase."
       if (isAdvancedProfile(state) && card.identity === "10♣") {

@@ -761,10 +761,12 @@ test('Viewer: renderForensicSidebar escapes user content', () => {
 });
 
 test('Viewer: open-session loads replay from IndexedDB', () => {
-  assert.ok(forensicViewerSrc.includes("import('../play/persistence.js')"));
-  assert.ok(forensicViewerSrc.includes("import('../replay-frames.js')"));
-  assert.ok(forensicViewerSrc.includes('getReplay'));
-  assert.ok(forensicViewerSrc.includes('ensureReplayFrames'));
+  // open-session routes the local IndexedDB record through the shared
+  // replay resolver (kind 'local') — persistence lookup and frame
+  // reconstruction happen inside the resolver, same as every other source.
+  assert.ok(forensicViewerSrc.includes("import('../data-loader.js')"));
+  assert.ok(forensicViewerSrc.includes('openReplay'));
+  assert.ok(forensicViewerSrc.includes("kind: 'local'"));
 });
 
 test('Viewer: open-session falls back to replay library on error', () => {

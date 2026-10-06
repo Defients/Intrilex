@@ -778,27 +778,18 @@ export function bindBoardEvents(container, callbacks) {
           // Network match — fetch replay from server and play directly
           try {
             container.innerHTML = '<div class="play-loading">Loading replay from server…</div>';
-            const { ensureReplayFrames } = await import('../replay-frames.js');
-            const { state: observatoryState } = await import('../state.js');
+            const { openReplay } = await import('../data-loader.js');
             const replay = await state.networkSession.getReplay();
             if (!replay) {
               container.innerHTML = '<div class="play-error" role="alert"><h2>Replay unavailable</h2><p>The server could not provide a certified replay for this match.</p><a href="#/play/online" class="secondary-button">Back to Online</a></div>';
               return;
             }
-            const replayObj = { ...replay, frames: undefined };
-            await ensureReplayFrames(replayObj);
-            if (!replayObj.frames || replayObj.frames.length === 0) {
-              throw new Error('Frame reconstruction produced no frames');
-            }
-            observatoryState.replay = replayObj;
-            observatoryState.authorized = null;
-            observatoryState.fixtureId = state.networkSession.matchId;
-            observatoryState._replayLoadedFor = state.networkSession.matchId;
-            observatoryState.frame = 0;
-            observatoryState.playing = false;
-            observatoryState.replayKind = 'corpus';
-            observatoryState.visibility = 'public';
-            location.hash = '#/watch';
+            await openReplay({
+              kind: 'object',
+              replay,
+              id: state.networkSession.matchId,
+              label: `Network match · ${state.networkSession.matchId}`,
+            });
           } catch (err) {
             container.innerHTML = `<div class="play-error" role="alert"><h2>Failed to load replay</h2><p>${esc(err.message)}</p><a href="#/play/online" class="secondary-button">Back to Online</a></div>`;
           }

@@ -1,7 +1,8 @@
 import { canonicalClone } from "./canonical-json.js";
 import { IntrilexEngine } from "./engine.js";
 import { hashCanonical } from "./hash.js";
-import { cardPointValue, parseIdentity } from "./ranks.js";
+import { cardPointValue, parseIdentity, resolvePointValue } from "./ranks.js";
+import { EXPERIMENTAL_RULES_METADATA_KEY, resolveRuleFlag, resolveRuleNumber, validateRuleOverrides } from "./rule-parameters.js";
 import { nextIndex } from "./rng.js";
 import { createEmptyState } from "./state.js";
 import { assertValidState } from "./validation.js";
@@ -285,9 +286,9 @@ export function enumerateCoreLegalActions(state: Readonly<EngineState>, actorId:
     candidates.push(action(state as EngineState, actorId, "phase", "enter-action", "SETUP", [], [], { kind: "core-enter-action" }));
     if ([CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId as any)) for (const advanced of enumerateAdvancedCoreCandidates(state, actorId).filter((entry) => entry.family === "voltage")) candidates.push(action(state as EngineState, actorId, advanced.family, advanced.mode, advanced.timingClass, [...advanced.sourceCardIds], [...advanced.targetCardIds], { kind: "core-resolve-advanced", advanced: advanced.advanced }, advanced.featureVector));
   } else if (state.phase === "Action" && state.players[actorId]!.limits.miniTurnsRemaining > 0) {
-    if (state.zones.dp.length > 0) candidates.push(action(state as EngineState, actorId, "draw", "top", "ACTION", [], [], { kind: "core-draw" }, { cardsDrawn: state.players[actorId]!.hand.length === 0 ? Math.min(2, state.zones.dp.length) : 1 }));
+    if (state.zones.dp.length > 0) candidates.push(action(state as EngineState, actorId, "draw", "top", "ACTION", [], [], { kind: "core-draw" }, { cardsDrawn: state.players[actorId]!.hand.length === 0 ? Math.min(resolveRuleNumber(state, "draw.emptyHand"), state.zones.dp.length) : 1 }));
     if (!state.players[actorId]!.limits.swapBarUsedThisFT) for (const id of state.zones.swapBar.filter((cardId) => state.cards[cardId]?.state.swapBarFaceUp === true)) candidates.push(action(state as EngineState, actorId, "swap-bar", "face-up-draw", "ACTION", [], [id], { kind: "core-face-up-swap-draw", swapCardId: id }));
-    for (const id of state.players[actorId]!.hand) { const c=state.cards[id]!; candidates.push(action(state as EngineState, actorId, "score", "points", "ACTION", [id], [], { kind: "core-score", cardId: id }, { immediatePoints: cardPointValue(c) })); }
+    for (const id of state.players[actorId]!.hand) { const c=state.cards[id]!; candidates.push(action(state as EngineState, actorId, "score", "points", "ACTION", [id], [], { kind: "core-score", cardId: id }, { immediatePoints: resolvePointValue(state, c) })); }
     const boardLockActive = ((state.metadata.boardLock as any)?.turnsRemaining ?? 0) > 0;
     if (!boardLockActive) {
       for (const sourceId of state.players[actorId]!.hand) for (const opponentId of state.turnOrder.filter((id) => id !== actorId)) for (const targetId of state.players[opponentId]!.pr) candidates.push(action(state as EngineState, actorId, "scuttle", "ordinary", "ACTION", [sourceId], [targetId], { kind: "core-scuttle", sourceCardId: sourceId, targetCardId: targetId }));
@@ -382,9 +383,9 @@ export function enumerateCoreResponseActions(state: Readonly<EngineState>, actor
     if ([CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(runtime?.profileId as any)) {
       const hand = [...state.players[actorId]!.hand].sort();
       const aces = hand.filter((id) => parseIdentity(state.cards[id]!.identity)?.rank === "A");
-      for (let i=0;i<aces.length;i++) for (let j=i+1;j<aces.length;j++) candidates.push(action(state as EngineState, actorId, "counter", "super-ace", "INSTANT", [aces[i]!,aces[j]!], [], { kind: "core-declare-super-ace-counter", sourceCardIds: [aces[i]!,aces[j]!], targetStackItemId: target.id }, { counter: true, super: true }));
+      if (resolveRuleFlag(state, "combo.supers.enabled")) for (let i=0;i<aces.length;i++) for (let j=i+1;j<aces.length;j++) candidates.push(action(state as EngineState, actorId, "counter", "super-ace", "INSTANT", [aces[i]!,aces[j]!], [], { kind: "core-declare-super-ace-counter", sourceCardIds: [aces[i]!,aces[j]!], targetStackItemId: target.id }, { counter: true, super: true }));
       const reds = hand.filter((id) => ["♦","♥"].includes(parseIdentity(state.cards[id]!.identity)?.suit ?? ""));
-      for (let i=0;i<reds.length;i++) for (let j=i+1;j<reds.length;j++) for (let k=j+1;k<reds.length;k++) candidates.push(action(state as EngineState, actorId, "ultra", "three-red-counter", "INSTANT", [reds[i]!,reds[j]!,reds[k]!], [], { kind: "core-declare-ultra-three-red", sourceCardIds: [reds[i]!,reds[j]!,reds[k]!], targetStackItemId: target.id }, { counter: true, ultra: true }));
+      if (resolveRuleFlag(state, "combo.ultras.enabled")) for (let i=0;i<reds.length;i++) for (let j=i+1;j<reds.length;j++) for (let k=j+1;k<reds.length;k++) candidates.push(action(state as EngineState, actorId, "ultra", "three-red-counter", "INSTANT", [reds[i]!,reds[j]!,reds[k]!], [], { kind: "core-declare-ultra-three-red", sourceCardIds: [reds[i]!,reds[j]!,reds[k]!], targetStackItemId: target.id }, { counter: true, ultra: true }));
     }
     for (const sourceId of [...state.players[actorId]!.er].sort()) if (parseIdentity(state.cards[sourceId]!.identity)?.rank === "A") candidates.push(action(state as EngineState, actorId, "counter", "ace-anchor", "INSTANT", [sourceId], [], { kind: "core-declare-base-ace-counter", sourceCardId: sourceId, targetStackItemId: target.id, sourceMode: "anchor" }, { counter: true, anchor: true }));
   }
@@ -404,6 +405,12 @@ export function createCoreMatchState(setup: CoreMatchSetup): EngineState {
   if (new Set(setup.playerIds).size !== 2 || new Set(setup.seatOrder).size !== 2 || setup.seatOrder.some((id) => !setup.playerIds.includes(id))) throw new Error("Core Foundation requires two distinct players and a complete seat order");
   if (!Number.isInteger(setup.seed) || (setup.seed >>> 0) === 0) throw new Error("seed must be a nonzero uint32");
   const state = createEmptyState([...setup.seatOrder]); state.rng = { algorithm: "xorshift32", seed: setup.seed >>> 0, cursor: 0 };
+  if (setup.ruleOverrides && Object.keys(setup.ruleOverrides).length > 0) {
+    // Rule Mutation Chamber seam: strictly validated overrides are stamped into
+    // the match's initial state so they are hashed into provenance, cloned with
+    // every resolution, and cannot leak into other matches or the global rules.
+    state.metadata[EXPERIMENTAL_RULES_METADATA_KEY] = validateRuleOverrides(setup.ruleOverrides);
+  }
   const cmd: Extract<EngineCommand, { type: "RESOLVE_CORE_AUTHORITY_ACTION" }> = { id: `CORE-SETUP-${setup.seed >>> 0}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: setup.seatOrder[0], action: { kind: "core-apply-setup", playerIds: [...setup.seatOrder], profileId: setup.profileId as CoreAuthorityProfileId, ...(setup.predeterminedIdentities ? { predeterminedIdentities: [...setup.predeterminedIdentities] } : {}) } };
   const result = new IntrilexEngine().execute(state, cmd);
   if (!result.accepted) throw new Error(`Core setup rejected: ${result.error?.code}:${result.error?.message}`);

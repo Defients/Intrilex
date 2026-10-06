@@ -197,6 +197,12 @@ export class CasterSession {
     const stale = () => ({ ok: false, record: null, commentaryId: null, cached: false, error: 'STALE_COMMENTARY', stale: true });
     this._telemetry.beatsViewed += 1;
 
+    // The planner only consults frame state under OMNISCIENT viewer
+    // mode (authorized hand identities); in PUBLIC mode it is ignored.
+    const currentFrame = this.frames?.[beat.frameIndex];
+    const currentFrameState = this._viewerMode === VIEWER_MODE.OMNISCIENT
+      ? (currentFrame?.state ?? currentFrame?.omniscientState ?? null)
+      : null;
     const input = buildCommentaryInput({
       beats: this.beats,
       beatIndex: this.director.index,
@@ -208,13 +214,15 @@ export class CasterSession {
       matchMeta: {
         matchId: this.matchId,
         policyIds: this.policyIds,
+        seatOrder: this.matchResult?.summary?.seatOrder ?? null,
         engineVersion: this.engineVersion,
         rulesVersion: this.rulesVersion,
         profileId: this.profileId,
         winner: this.matchResult?.summary?.winner,
         terminationReason: this.matchResult?.summary?.terminationReason
       },
-      settings: this._settings
+      settings: this._settings,
+      currentFrameState
     });
 
     if (!input.eligible) {
@@ -271,7 +279,12 @@ export class CasterSession {
     if (!this.director) return null;
     this._telemetry.waitWhatCaptures += 1;
     const beat = this.director.currentBeat();
-    const trace = this.matchResult?.decisionTraces?.[this._decisionIndexForBeat(beat)] ?? null;
+    const decisionIndex = this._decisionIndexForBeat(beat);
+    // Browser matches lack decisionTraces but carry the canonical
+    // decision transcript — it supplies the same actor/action evidence.
+    const trace = this.matchResult?.decisionTraces?.[decisionIndex]
+      ?? this.matchResult?.decisions?.[decisionIndex]
+      ?? null;
     const capture = captureWaitWhat({
       beats: this.beats,
       beatIndex: this.director.index,

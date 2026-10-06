@@ -28,6 +28,7 @@ const coreEffects = await import(moduleUrl(authorityRuntime, 'core-effects.js'))
 const coreResponse = await import(moduleUrl(authorityRuntime, 'core-response.js'));
 const corePrivate = await import(moduleUrl(authorityRuntime, 'core-private-choice.js'));
 const ranksModule = await import(moduleUrl(authorityRuntime, 'ranks.js'));
+const ruleParameters = await import(moduleUrl(authorityRuntime, 'rule-parameters.js'));
 const { actionComposition } = await import('./action-composition.mjs');
 const { actionSemantics } = await import('./action-semantics.mjs');
 
@@ -51,6 +52,17 @@ export const { CORE_EFFECT_DECLARATION_PROFILE } = coreEffects;
 export const { CORE_RESPONSE_AUTHORITY_PROFILE } = coreResponse;
 export const { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE } = corePrivate;
 export const { coreAuthorityCapabilities } = core;
+
+// Rule Mutation Chamber: the closed registry of engine-owned experimental rule
+// parameters plus the scoped per-match override seam. Overrides travel inside
+// the match state's metadata (never as global mutation), so baseline and
+// mutant simulations can coexist in one process.
+export const EXPERIMENTAL_RULE_PARAMETERS = ruleParameters.EXPERIMENTAL_RULE_PARAMETERS;
+export const EXPERIMENTAL_RULES_METADATA_KEY = ruleParameters.EXPERIMENTAL_RULES_METADATA_KEY;
+export const validateRuleOverrides = ruleParameters.validateRuleOverrides;
+export const readRuleOverrides = ruleParameters.readRuleOverrides;
+export const resolveRuleNumber = ruleParameters.resolveRuleNumber;
+export const resolveRuleFlag = ruleParameters.resolveRuleFlag;
 
 /**
  * Exact set of supported engine rules profile IDs, derived from the
@@ -164,7 +176,8 @@ export function createSimulationState(setup) {
       seatOrder: setup.seatOrder,
       enabledModules: setup.enabledModules ?? [],
       seed: setup.seed,
-      ...(setup.predeterminedIdentities ? { predeterminedIdentities: setup.predeterminedIdentities } : {})
+      ...(setup.predeterminedIdentities ? { predeterminedIdentities: setup.predeterminedIdentities } : {}),
+      ...(setup.ruleOverrides ? { ruleOverrides: setup.ruleOverrides } : {})
     });
   }
   return firstContact.createMatchState({ ...setup, eventApprovedModules: setup.eventApprovedModules ?? [] });

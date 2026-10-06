@@ -1,7 +1,8 @@
-import { canonicalClone } from "./canonical-json.js?v=408ebfe25d7a";
-import { markExileBound, miniTurnHardCap, processFoundationActionRestriction } from "./lifecycle.js?v=408ebfe25d7a";
-import { cardPointValue, parseIdentity } from "./ranks.js?v=408ebfe25d7a";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=408ebfe25d7a";
+import { canonicalClone } from "./canonical-json.js?v=e5382c028fd1";
+import { markExileBound, miniTurnHardCap, processFoundationActionRestriction } from "./lifecycle.js?v=e5382c028fd1";
+import { cardPointValue, parseIdentity } from "./ranks.js?v=e5382c028fd1";
+import { resolveRuleNumber } from "./rule-parameters.js?v=e5382c028fd1";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=e5382c028fd1";
 function fail(code, message, details) {
     return details === undefined ? { ok: false, code, message } : { ok: false, code, message, details };
 }
@@ -132,9 +133,9 @@ export function resolvePhase8Action(input, actorId, action) {
                 for (const sourceId of action.sourceCardIds)
                     moveCard(state, sourceId, "GY");
                 const player = state.players[actorId];
-                player.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(state, actorId), player.limits.miniTurnsRemaining + 2);
+                player.limits.miniTurnsRemaining = Math.min(miniTurnHardCap(state, actorId), player.limits.miniTurnsRemaining + resolveRuleNumber(state, "ultra.twoBlackTwoRed.miniTurns"));
                 if (action.branch === "draw-two") {
-                    const drawn = state.zones.dp.slice(0, 2);
+                    const drawn = state.zones.dp.slice(0, resolveRuleNumber(state, "ultra.twoBlackTwoRed.draw"));
                     for (const id of drawn)
                         moveCard(state, id, `${actorId}_HAND`, actorId);
                     events.push({ type: "ULTRA_2B2R_RESOLVED", payload: { branch: action.branch, drawnCardIds: drawn, miniTurnsRemaining: player.limits.miniTurnsRemaining } });

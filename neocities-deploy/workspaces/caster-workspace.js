@@ -14,17 +14,17 @@
 // esc() — never raw innerHTML with model output.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js?v=408ebfe25d7a';
-import { policyOptions } from '../router.js?v=408ebfe25d7a';
-import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=408ebfe25d7a';
-import { reconstructReplayFrames } from '../replay-frames.js?v=408ebfe25d7a';
-import { mountGameTable } from '../client/mount.tsx?v=408ebfe25d7a';
+import { esc } from '../state.js?v=e5382c028fd1';
+import { policyOptions } from '../router.js?v=e5382c028fd1';
+import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=e5382c028fd1';
+import { reconstructReplayFrames } from '../replay-frames.js?v=e5382c028fd1';
+import { mountGameTable } from '../client/mount.tsx?v=e5382c028fd1';
 
 // Lazy-loaded @intrilex/replay-caster (browser-bundleable subset).
 let casterModule = null;
 async function getCaster() {
   if (!casterModule) {
-    casterModule = await import('../replay-caster/browser-entry.js?v=408ebfe25d7a');
+    casterModule = await import('../replay-caster/browser-entry.js?v=e5382c028fd1');
   }
   return casterModule;
 }
@@ -68,7 +68,7 @@ async function getAuthorityHash() {
 let _strictViewFn = null;
 async function getStrictView() {
   if (!_strictViewFn) {
-    const mod = await import('../autonomy-runtime.js?v=408ebfe25d7a');
+    const mod = await import('../autonomy-runtime.js?v=e5382c028fd1');
     _strictViewFn = mod.strictView;
   }
   return _strictViewFn;
@@ -77,47 +77,93 @@ async function getStrictView() {
 // ── Frame state → Snapshot adapter ────────────────────────────────
 //
 // Converts a raw engine frame state (from CasterSession.frames[beat.frameIndex])
-// into the snapshot shape expected by Astra's buildSemanticGame() (the React
-// board). The adapter uses strictView() from autonomy-runtime to build the
-// authorized player view (same function used by the play controller), so the
-// snapshot's playerView matches exactly what Astra consumes in live play.
+// into a NEUTRAL SPECTATOR snapshot for Astra's buildSemanticGame().
 //
-// The opponent's face-up hand (omniscient mode) is returned separately as
-// `opponentHand` (Astra TableCard[]) so it can be passed via mountGameTable's
-// opponentHand option, bypassing buildSemanticGame's privacy invariant
-// (opponent hand is always empty in the semantic game).
+// The Caster is a third-party observer — neither seat is "You". The
+// adapter composes strictView() projections for BOTH seats and emits a
+// single playerView whose `own`/`opponents` entries describe the two
+// seats symmetrically, with `snapshot.human.playerId === null` (no
+// participant identity). Combined with mountGameTable's
+// viewRole:'spectator' option, the semantic layer renders neutral
+// "Seat 1"/"Seat 2" labels and both hands:
+//   - PUBLIC mode: hand identities are stripped; only public counts
+//     and card-backs are shown.
+//   - OMNISCIENT mode: both hands are face-up (explicitly authorized
+//     replay inspection), and pending private choices are visible.
 //
 // @param {object} frameState - Raw engine state from a replay frame
 // @param {object} session - CasterSession instance
 // @param {object} beat - Current playback beat
-// @returns {{ snapshot: object, opponentHand: object[]|null }}
+// @returns {{ snapshot: object }}
 
 export async function frameStateToSnapshot(frameState, session, beat) {
   if (!frameState) return null;
 
   const omniscient = casterState.config.viewerMode === 'omniscient';
   const seatOrder = session.matchResult?.summary?.seatOrder || ['P1', 'P2'];
-  const humanPlayerId = seatOrder[0] || 'P1';
-  const opponentPlayerId = seatOrder[1] || 'P2';
+  const seat1 = seatOrder[0] || 'P1';
+  const seat2 = seatOrder[1] || 'P2';
 
-  // Use strictView to build the authorized player view for the human player.
-  // strictView's output shape ({actorId, own, opponents, revision, phase, ...})
-  // is exactly Astra's playerView shape.
   const strictView = await getStrictView();
-  const pv = strictView(frameState, humanPlayerId);
+  const pv1 = strictView(frameState, seat1);
+  const pv2 = strictView(frameState, seat2);
 
-  const humanDisplayName = session.policyIds?.[0]?.replace(/-/g, ' ') || 'Seat 1';
-  const opponentDisplayName = session.policyIds?.[1]?.replace(/-/g, ' ') || 'Seat 2';
+  const seat1Name = session.policyIds?.[0]?.replace(/-/g, ' ') || 'Seat 1';
+  const seat2Name = session.policyIds?.[1]?.replace(/-/g, ' ') || 'Seat 2';
 
-  // Astra-format snapshot. status stays non-TERMINAL so the board renders
-  // (even for MATCH_END beats — the Caster always shows the board).
-  // decision is null → no legal actions → Astra shows a read-only table.
+  // In public mode, hand card ids are excluded from the knownCards
+  // registry as defense-in-depth (the semantic layer also strips them,
+  // but the raw snapshot should not carry hidden identities either).
+  const hiddenIds = omniscient ? null : new Set([
+    ...(frameState.players?.[seat1]?.hand ?? []),
+    ...(frameState.players?.[seat2]?.hand ?? [])
+  ]);
+  const knownCards = omniscient
+    ? { ...(pv1.knownCards ?? {}), ...(pv2.knownCards ?? {}) }
+    : Object.fromEntries(Object.entries(pv1.knownCards ?? {}).filter(([id]) => !hiddenIds.has(id)));
+
+  // Neutral spectator view: `actorId` remains as a schema anchor (seat 1)
+  // but carries no viewer-identity semantics — the semantic model treats
+  // own/opponents as "Seat 1"/"Seat 2" under viewRole 'spectator'.
+  const seat1Entry = pv1.own ?? {};
+  const seat2Public = pv1.opponents?.[0] ?? {};
+  // strictView passes the raw priority object ({open, order, index});
+  // the semantic model reads priority.ownerId — derive the current
+  // holder so the spectator board shows whose priority it is.
+  const rawPriority = frameState.priority;
+  const priorityOwnerId = Array.isArray(rawPriority?.order) && Number.isInteger(rawPriority?.index)
+    ? (rawPriority.order[rawPriority.index] ?? null)
+    : null;
+  const view = {
+    ...pv1,
+    actorId: seat1,
+    priority: rawPriority ? { ...pv1.priority, ownerId: priorityOwnerId } : pv1.priority,
+    own: {
+      ...seat1Entry,
+      hand: omniscient ? (seat1Entry.hand ?? []) : [],
+      handCount: Array.isArray(seat1Entry.hand) ? seat1Entry.hand.length : 0,
+      limits: omniscient ? (seat1Entry.limits ?? {}) : {}
+    },
+    opponents: [{
+      ...seat2Public,
+      playerId: seat2,
+      hand: omniscient ? (pv2.own?.hand ?? []) : [],
+      handCount: Array.isArray(pv2.own?.hand) ? pv2.own.hand.length : (seat2Public.handCount ?? 0),
+      limits: omniscient ? (pv2.own?.limits ?? {}) : {}
+    }],
+    // Private choice details are actor-scoped in strictView; under
+    // omniscient the chooser's own projection supplies them.
+    pendingChoice: omniscient ? (pv1.pendingChoice ?? pv2.pendingChoice ?? null) : null,
+    knownCards,
+    legacyKnownCards: knownCards
+  };
+
   const snapshot = {
-    sessionId: session.matchId || `caster-${humanPlayerId}-${opponentPlayerId}`,
-    status: 'AI_DECISION',
-    playerView: pv,
-    human: { playerId: humanPlayerId, displayName: humanDisplayName },
-    opponent: { displayName: opponentDisplayName },
+    sessionId: session.matchId || `caster-${seat1}-${seat2}`,
+    status: 'SPECTATING',
+    playerView: view,
+    human: { playerId: null, displayName: seat1Name },
+    opponent: { displayName: seat2Name },
     match: { winner: null, terminationReason: null },
     decision: null,
     recentEvents: (beat?.visibleEvents ?? []).slice(-20).map(e => ({
@@ -129,36 +175,7 @@ export async function frameStateToSnapshot(frameState, session, beat) {
     opponentHandReorderEpoch: 0,
   };
 
-  // In omniscient mode, build face-up opponent hand cards (Astra TableCard[]).
-  // In public mode, the opponent hand stays concealed (card backs only).
-  let opponentHand = null;
-  if (omniscient) {
-    const oppPv = strictView(frameState, opponentPlayerId);
-    opponentHand = (oppPv.own?.hand ?? []).map(cardViewToTableCard);
-  }
-
-  return { snapshot, opponentHand };
-}
-
-// Convert a strictView card object ({id, identity, controllerId, zone, pointValue, tapped, ...})
-// into Astra's SemanticCard / TableCard format ({id, identity, label, markers}) so the React
-// board can render it face-up in the opponent hand lane (Caster omniscient mode).
-function cardViewToTableCard(card) {
-  if (!card) return null;
-  const identity = card.identity ?? null;
-  const hidden = identity === null || identity === 'HIDDEN' || card.swapBarFaceDown || card.faceDown;
-  const markers = [];
-  if (card.tapped) markers.push('Tapped');
-  if (card.aegis) markers.push('Aegis');
-  if (card.providesGuard) markers.push('Guard');
-  if (card.exileBound) markers.push('Exile-bound');
-  if (hidden) markers.push('Face down');
-  return {
-    id: hidden ? `hidden:caster:opp:${card.id}` : card.id,
-    identity: hidden ? null : identity,
-    label: hidden ? 'Hidden card' : identity,
-    markers,
-  };
+  return { snapshot };
 }
 
 // ── Caster workspace state ────────────────────────────────────────
@@ -335,9 +352,9 @@ function renderSetup(appEl) {
             <option value="BROADCAST" ${c.mode === 'BROADCAST' ? 'selected' : ''}>Broadcast (play-by-play + colour)</option>
             <option value="DEV_OBSERVATORY" ${c.mode === 'DEV_OBSERVATORY' ? 'selected' : ''}>Dev Observatory (anomaly-focused)</option>
           </select></label>
-          <label>Viewer Mode<select id="caster-viewer-mode">
-            <option value="public" ${c.viewerMode === 'public' ? 'selected' : ''}>Public (no hidden cards)</option>
-            <option value="omniscient" ${c.viewerMode === 'omniscient' ? 'selected' : ''}>Omniscient (dev trace access)</option>
+          <label>Viewer Visibility<select id="caster-viewer-mode">
+            <option value="public" ${c.viewerMode === 'public' ? 'selected' : ''}>Public — both hands shown face-down; only public information</option>
+            <option value="omniscient" ${c.viewerMode === 'omniscient' ? 'selected' : ''}>Omniscient — both hands face-up (authorized replay inspection)</option>
           </select></label>
         </div>
         <div class="caster-setup-row">
@@ -357,6 +374,7 @@ function renderSetup(appEl) {
           <button id="caster-ollama-test" class="secondary-button">Test Connection</button>
           <span id="caster-ollama-status" class="caster-ollama-status">${casterState.ollamaStatus ? esc(casterState.ollamaStatus) : ''}</span>
         </div>
+        <p class="caster-commentary-source" data-testid="caster-commentary-source">Commentary source: <strong>${esc(commentarySourceLabel())}</strong></p>
       </div>
       <div class="caster-setup-game-actions">
         <button id="caster-start" class="primary-button caster-setup-game-start">Generate &amp; Cast Match</button>
@@ -468,11 +486,10 @@ async function renderTheatre(appEl) {
     return;
   }
 
-  let snapshot, opponentHand;
+  let snapshot;
   try {
     const adapted = await frameStateToSnapshot(frameState, session, beat);
     snapshot = adapted.snapshot;
-    opponentHand = adapted.opponentHand;
   } catch (err) {
     if (myToken === casterState.renderToken) {
       appEl.innerHTML = `<div class="notice danger"><strong>Failed to build game view.</strong><pre>${esc(String(err?.message || err))}</pre></div>`;
@@ -492,7 +509,8 @@ async function renderTheatre(appEl) {
   // by the Caster rail (commentary + transport + WAIT WHAT) via railHtml.
   // In omniscient mode the opponent hand is shown face-up via opponentHand.
   const gameplaySkin = casterState.gameplaySkin || 'dark';
-  const viewerLabel = casterState.config.viewerMode === 'omniscient' ? 'OMNISCIENT' : 'PUBLIC';
+  const omniscient = casterState.config.viewerMode === 'omniscient';
+  const viewerLabel = omniscient ? 'OMNISCIENT' : 'PUBLIC';
 
   if (!casterState.tacticalMount) {
     // First theatre render: lay out the persistent header + board host, then mount Astra.
@@ -527,7 +545,11 @@ async function renderTheatre(appEl) {
       casterState.tacticalMount = mountGameTable(boardHost, snapshot, {
         submit: async () => ({ accepted: false }), // Caster is read-only — never submits.
         skin: gameplaySkin,
-        opponentHand: opponentHand ?? undefined,
+        // Neutral spectator presentation: no seat is "You". Visibility
+        // policy is separate — 'public' conceals hand identities,
+        // 'omniscient' authorizes face-up hands for replay analysis.
+        viewRole: 'spectator',
+        visibility: omniscient ? 'omniscient' : 'public',
         railHtml,
       });
     } catch (err) {
@@ -536,7 +558,7 @@ async function renderTheatre(appEl) {
     }
   } else {
     // Subsequent beat changes: update Astra in place with the new snapshot + rail.
-    casterState.tacticalMount.update(snapshot, false, undefined, opponentHand ?? undefined, railHtml);
+    casterState.tacticalMount.update(snapshot, false, undefined, undefined, railHtml);
   }
 
   // ── Safe text rendering for commentary (avoid innerHTML with model output) ──
@@ -592,6 +614,15 @@ async function renderTheatre(appEl) {
 //   Top section (larger): Commentary display + WAIT WHAT
 //   Bottom section (smaller): Replay transport controls + timeline
 
+// Commentary source label — honestly reflects what powers the rail:
+// "Deterministic (rules-based)" when no local model is configured, or
+// "Ollama · <model>" when Ollama is enabled. Never implies a model is
+// in use when it is not.
+function commentarySourceLabel() {
+  if (casterState.ollamaEnabled) return `Ollama · ${casterState.ollamaModel || 'model not set'}`;
+  return 'Deterministic (rules-based)';
+}
+
 function buildCasterRightRail(session, beat, idx, total, ps, _policyIds) {
   const isFinished = beat.beatKind === 'MATCH_END';
   const winner = ps.winner;
@@ -633,7 +664,7 @@ function buildCasterRightRail(session, beat, idx, total, ps, _policyIds) {
 
   return `<div class="rd-right-rail-bottom-inner caster-right-rail" data-caster-rail="1">
     <div class="caster-rail-commentary-section">
-      <div class="caster-rail-section-header">COMMENTARY ${isFinished && winner ? '· MATCH COMPLETE' : ''}</div>
+      <div class="caster-rail-section-header">COMMENTARY · ${esc(commentarySourceLabel())} ${isFinished && winner ? '· MATCH COMPLETE' : ''}</div>
       ${commentaryBlock}
       ${commentaryLoading}
       ${commentaryErr}

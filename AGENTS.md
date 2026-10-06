@@ -51,6 +51,7 @@
 - **Browser UI smoke** (`scripts/browser-ui-smoke.mjs`) requires a Chromium binary. Without it, the script writes a FAIL report to `reports/browser-ui-smoke.json`. Do not leave orphaned `browser-ui-smoke.mjs` processes running — they will continuously overwrite the committed PASS report with FAIL, causing test 96 in `v0.10.0-behavioral.test.mjs` to fail intermittently.
 - **Real-browser E2E certification** (`scripts/browser-e2e-certification.mjs`) also requires Chrome/Chromium.
 - **Vendor engine directory** (`vendor/intrilex-engine-4.1.0/`) is not present in all workspaces. The integration test for 121 certified replays skips gracefully when this directory is absent.
+- **Windows cmd.exe line limit:** the `pnpm test` script enumerates every test file and exceeds cmd.exe's 8191-character limit. The repo `.npmrc` sets `shell-emulator=true` so pnpm scripts run under pnpm's built-in shell emulator instead of cmd. Side effect: glob args in scripts must be quoted so the emulator does not expand them itself (see `lint`/`lint:fix`).
 
 ## Test Registration
 When adding a new `test/*.test.mjs` file, it MUST be added to:

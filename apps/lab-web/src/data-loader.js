@@ -6,32 +6,48 @@ import { state,   shell,   landingContainer,   data,   text,   parseNdjsonSafe, 
 import { route, isPlayRoute, LANDING_MODES, renderNavigation } from './router.js';
 import { renderExperimentControls, bindGlobal } from './experiment-controls.js';
 import { ensureReplayFrames } from './replay-frames.js';
+import { rerender } from './rerender.js';
+import { openReplay as openReplayDescriptor } from './replay-resolver.js';
 
 // ── Replay loading ────────────────────────────────────────────────
-const _warnedReplays = new Set();
+// Replay acquisition flows through the resolver layer (replay-resolver.js):
+// a descriptor says WHERE a replay comes from (bundled corpus/autonomy file,
+// IndexedDB record, caller-supplied object); resolveReplay() normalizes it
+// into a frame-bearing replay for Watch. loadReplay() keeps its existing
+// signature for the boot/render path; all new integrations call openReplay().
+
+async function getLocalReplayRecord(replayId) {
+  const { getReplay } = await import('./play/persistence.js');
+  return getReplay(replayId);
+}
+
+/**
+ * Open a replay from any supported source and route it into Watch.
+ * @param {object} descriptor - { kind:'corpus'|'autonomy', fixtureId } |
+ *   { kind:'local', replayId } | { kind:'object', replay, id?, label? }
+ * @param {object} [opts] - { navigate?: boolean } (default true → #/watch)
+ * @returns {Promise<object>} resolveReplay result ({status, replay?, ...})
+ */
+export async function openReplay(descriptor, opts = {}) {
+  const navigate = opts.navigate ?? true;
+  return openReplayDescriptor(descriptor, {
+    state,
+    fetchJson: (url) => data(url),
+    getLocalReplay: getLocalReplayRecord,
+    ensureFrames: ensureReplayFrames,
+    availability: state.replayAvailability,
+    loadAuthorized: () => loadAuthorized(),
+    navigate: navigate ? () => { location.hash = '#/watch'; } : null,
+    rerender,
+  });
+}
+
 export async function loadReplay(fixtureId) {
-  try {
-    const kind = state.replayKind;
-    const index = kind === 'autonomy' ? state.autonomyIndex : state.index;
-    const record = index?.records?.find(r => r.fixtureId === fixtureId);
-    if (!record) { state.replay = null; state.authorized = null; return; }
-    const url = kind === 'autonomy'
-      ? `data/autonomy/replays/public/${record.fixtureId}.public.replay.json`
-      : `data/certified-replays/${record.fixtureId}.certified.replay.json`;
-    state.replay = await data(url);
-    // Certified replay envelopes store initialState + commands but not a
-    // pre-computed frames array. Reconstruct frames so the Watch workspace
-    // (which consumes state.replay.frames) can render the replay.
-    await ensureReplayFrames(state.replay);
-    state.authorized = null;
-    if (state.visibility !== 'public') await loadAuthorized();
-  } catch {
-    // Replay blobs are excluded from the build by default (saves ~670MB).
-    // The HTML response is the dev server's SPA fallback (index.html).
-    // Silently set replay to null without console spam.
-    state.replay = null;
-    state.authorized = null;
-  }
+  // Honor an explicit pending request descriptor (e.g. a local or injected
+  // replay); otherwise resolve the fixture from the static index.
+  const descriptor = state.replayRequest
+    ?? { kind: state.replayKind === 'autonomy' ? 'autonomy' : 'corpus', fixtureId };
+  await openReplay(descriptor, { navigate: false });
 }
 
 export async function loadAuthorized() {
@@ -101,9 +117,13 @@ async function loadObservatoryData() {
 async function _loadObservatoryDataInner() {
   const summariesText = await text('data/autonomy/match-summaries.ndjson');
   const summaries = parseNdjsonSafe(summariesText);
-  [state.index, state.autonomyIndex, state.corpusAnalytics, state.aggregate, state.observatory, state.capabilities, state.rankAuthority] = await Promise.all([
+  [state.index, state.autonomyIndex, state.replayAvailability, state.corpusAnalytics, state.aggregate, state.observatory, state.capabilities, state.rankAuthority] = await Promise.all([
     data('data/replay-index.json'),
     data('data/autonomy/lab-replay-index.json'),
+    // Written by scripts/build.mjs — says which replay bodies are bundled.
+    // Null (pre-manifest deployments) means "unknown": resolution attempts
+    // the fetch and reports an honest error on failure.
+    data('data/replay-availability.json', null),
     data('data/corpus-analytics.json'),
     data('data/autonomy/aggregate.json'),
     data('data/observatory/analytics.json', { schemaVersion: '4.0.0', mechanics: [], synergies: [], motifs: [], policies: [], anomalies: [], metricRegistry: {}, summaries }),
@@ -125,7 +145,11 @@ async function _loadObservatoryDataInner() {
   state.rankAnatomyRegistry = await data('data/observatory/rank-anatomy-registry.json', null);
   state._rankAnatomyModule = await import('./workspaces/ranks/rank-anatomy-workspace.js');
   state.bootState = { aggregate: structuredClone(state.aggregate), observatory: structuredClone(state.observatory), rankPower: structuredClone(state.rankPower), swapMatrix: structuredClone(state.swapMatrix), variantAnalytics: structuredClone(state.variantAnalytics) };
-  if (state.autonomyIndex?.records?.length) {
+  // Default replay selection: prefer autonomy replays only when their bodies
+  // are actually bundled in this build; the certified corpus is always
+  // shipped, so it is the reliable default.
+  const autonomyBundled = state.replayAvailability?.sources?.autonomy?.status === 'bundled';
+  if (autonomyBundled && state.autonomyIndex?.records?.length) {
     state.replayKind = 'autonomy';
     state.fixtureId = state.autonomyIndex.records[0].fixtureId;
   } else {

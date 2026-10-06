@@ -214,8 +214,8 @@ test('U7 Funnel: funnel banner has skip functionality', () => {
   assert.ok(funnelSrc.includes('skipStep'), 'Must call skipStep on skip');
 });
 
-test('U7 Funnel: CTA routes to academy for first step', () => {
-  assert.ok(funnelSrc.includes('#/play/academy'), 'Must route to academy for tutorial');
+test('U7 Funnel: CTA routes to first-contact for first step', () => {
+  assert.ok(funnelSrc.includes('#/play/first-contact'), 'Must route to first-contact for tutorial');
   assert.ok(funnelSrc.includes('#/auth'), 'Must route to auth for account creation');
   assert.ok(funnelSrc.includes('#/play'), 'Must route to play for matches');
 });

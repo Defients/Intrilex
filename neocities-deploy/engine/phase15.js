@@ -1,8 +1,8 @@
-import { canonicalClone } from "./canonical-json.js?v=408ebfe25d7a";
-import { hasAegis } from "./lifecycle.js?v=408ebfe25d7a";
-import { nextIndex } from "./rng.js?v=408ebfe25d7a";
-import { parseIdentity, rankDefinition, hasOrdinaryScuttleImmunity } from "./ranks.js?v=408ebfe25d7a";
-import { moveCard } from "./state.js?v=408ebfe25d7a";
+import { canonicalClone } from "./canonical-json.js?v=e5382c028fd1";
+import { hasAegis } from "./lifecycle.js?v=e5382c028fd1";
+import { nextIndex } from "./rng.js?v=e5382c028fd1";
+import { parseIdentity, rankDefinition, hasOrdinaryScuttleImmunity } from "./ranks.js?v=e5382c028fd1";
+import { moveCard } from "./state.js?v=e5382c028fd1";
 export const TOURNAMENT_SEED_BAN_IDENTITIES = Object.freeze([
     "BJ", "10♥", "8♠", "9♠", "10♣", "Q♠", "J♠", "4♠"
 ]);

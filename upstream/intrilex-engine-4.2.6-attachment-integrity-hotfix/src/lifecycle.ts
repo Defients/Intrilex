@@ -1,4 +1,5 @@
 import { canonicalClone } from "./canonical-json.js";
+import { resolveRuleNumber } from "./rule-parameters.js";
 import type {
   AegisState,
   CardId,
@@ -166,5 +167,7 @@ export function foundationActionRestricted(state: Readonly<EngineState>, playerI
 }
 
 export function miniTurnHardCap(state: Readonly<EngineState>, playerId: PlayerId): number {
-  return foundationActionRestricted(state, playerId) ? 1 : 3;
+  // Foundation restriction hard-caps Mini-Turns at 1 regardless of overrides —
+  // the restriction penalty is part of the 10♣ rule, not the cap parameter.
+  return foundationActionRestricted(state, playerId) ? 1 : resolveRuleNumber(state, "miniTurns.hardCap");
 }

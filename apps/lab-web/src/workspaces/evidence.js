@@ -4,6 +4,7 @@
 
 import { state,   app,   esc,   short,   definitionList } from '../state.js';
 import { rerender, invokeAppAction } from '../rerender.js';
+import { openReplay } from '../data-loader.js';
 import { ENGINE_VERSION, RULES_VERSION } from '../version.js';
 import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js';
 import { statusChip, pipelineFlow, dossierSection } from './observatory-ui.js';
@@ -139,10 +140,11 @@ export function renderEvidence() {
     const matchId = row.dataset.anomalyMatch;
     if (!matchId) return;
     state.fixtureId = matchId;
-    state.replayKind = 'autonomy';
-    state.replay = null;
-    state.frame = 0;
-    location.hash = '#/watch';
+    // Anomaly evidence is produced by the autonomy campaign — resolve via
+    // the shared replay resolver, which navigates to #/watch and reports
+    // honestly when the replay body is excluded from this build.
+    const kind = state.index?.records?.some(r => r.fixtureId === matchId) ? 'corpus' : 'autonomy';
+    void openReplay({ kind, fixtureId: matchId });
   });
   // Anomaly raw-records table toggle (same pattern as bindChartToggle)
   const anomalyToggle = document.querySelector('#anomaly-explorer [data-chart-toggle]');

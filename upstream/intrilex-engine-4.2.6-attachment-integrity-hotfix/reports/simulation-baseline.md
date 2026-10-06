@@ -6,7 +6,7 @@
 
 - Scenarios: **121**
 - Commands: **285**
-- Scenario catalog: `ab622772e9d6e92cfbd5f4ed1376fdf13b0349bc86e439d3918ce30646f6db4a`
+- Scenario catalog: `674dd3ff2a667a02c961ccfd49ced8d895f364994da60d5582537f26dd5d33b3`
 
 ## Full-match campaign
 
@@ -20,4 +20,4 @@
 
 > These are complete deterministic matches for a legal First Contact action subset under three explicit policies. They provide reproducible balance telemetry, not a claim that perfect play or the complete advanced-module metagame is solved.
 
-- Report catalog hash: `7a70fa29e856d899b21dac188e612f6cd52502c103e13efd6379c3a08251bf8c`
+- Report catalog hash: `f22faa5281681cb1f630227d61cfc302c5dbb8a983e50db627c2672bc131457c`

@@ -1,10 +1,10 @@
-import { mountChartInteractions } from './evolution-analytics-charts.mjs?v=408ebfe25d7a';
-import { LAB_IDENTITY } from './identity.mjs?v=408ebfe25d7a';
-import { WEIGHT_FEATURES, WEIGHT_BOUND } from './weighted-heuristic.mjs?v=408ebfe25d7a';
-import { esc } from '../state.js?v=408ebfe25d7a';
-import { projectModel, pairFor, draftWeights, shortId } from './evolution-view-model.mjs?v=408ebfe25d7a';
-import { overviewHtml, lineagesHtml, evidenceHtml, inspectorHtml, heldOutTrendHtml } from './evolution-cockpit-views.js?v=408ebfe25d7a';
-import { mountProfileWorkspace } from './profile-workspace.js?v=408ebfe25d7a';
+import { mountChartInteractions } from './evolution-analytics-charts.mjs?v=e5382c028fd1';
+import { LAB_IDENTITY } from './identity.mjs?v=e5382c028fd1';
+import { WEIGHT_FEATURES, WEIGHT_BOUND } from './weighted-heuristic.mjs?v=e5382c028fd1';
+import { esc } from '../state.js?v=e5382c028fd1';
+import { projectModel, pairFor, draftWeights, shortId } from './evolution-view-model.mjs?v=e5382c028fd1';
+import { overviewHtml, lineagesHtml, evidenceHtml, inspectorHtml, heldOutTrendHtml } from './evolution-cockpit-views.js?v=e5382c028fd1';
+import { mountProfileWorkspace } from './profile-workspace.js?v=e5382c028fd1';
 
 const surfaces = [['profiles','Profiles','00'],['overview','Overview','01'],['arena','Arena','02'],['evolution','Evolution','03'],['evidence','Evidence','04'],['forensics','Forensics','05'],['ledger','Ledger','06']];
 export function createCockpitState() {

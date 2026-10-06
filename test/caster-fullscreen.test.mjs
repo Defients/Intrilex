@@ -72,45 +72,45 @@ test('caster-workspace.js: frameStateToSnapshot is exported', () => {
   assert.match(casterSrc, /export async function frameStateToSnapshot/, 'frameStateToSnapshot must be exported');
 });
 
-test('caster-workspace.js: frameStateToSnapshot builds an Astra-format snapshot', () => {
+test('caster-workspace.js: frameStateToSnapshot builds an Astra-format spectator snapshot', () => {
   // Astra's buildSemanticGame consumes { sessionId, status, playerView, human, opponent, match, ... }.
-  assert.match(casterSrc, /playerView:\s*pv/, 'adapter must pass strictView output as playerView');
-  assert.match(casterSrc, /human:\s*\{\s*playerId/, 'adapter must build human with playerId');
+  assert.match(casterSrc, /playerView:\s*view/, 'adapter must pass the composed neutral spectator view as playerView');
+  assert.match(casterSrc, /human:\s*\{\s*playerId:\s*null/, 'adapter must build human with playerId null (no participant is the viewer)');
   assert.match(casterSrc, /opponent:\s*\{\s*displayName/, 'adapter must build opponent with displayName');
   assert.match(casterSrc, /match:\s*\{\s*winner:\s*null/, 'adapter must build match with null winner');
   assert.match(casterSrc, /sessionId:/, 'adapter must set sessionId');
   assert.match(casterSrc, /decision:\s*null/, 'adapter must set decision: null (no legal actions for spectator)');
 });
 
-test('caster-workspace.js: frameStateToSnapshot sets humanPlayerId to seatOrder[0]', () => {
-  assert.match(casterSrc, /humanPlayerId.*seatOrder\[0\]/, 'adapter must set humanPlayerId to seatOrder[0]');
+test('caster-workspace.js: frameStateToSnapshot is a neutral spectator projection (no human seat)', () => {
+  // The Caster observes both seats — neither is "You". The adapter must not
+  // designate seatOrder[0] as the human participant.
+  const fnStart = casterSrc.indexOf('export async function frameStateToSnapshot');
+  const fnEnd = casterSrc.indexOf('// ──', fnStart + 10);
+  const adapter = casterSrc.slice(fnStart, fnEnd > fnStart ? fnEnd : undefined);
+  assert.doesNotMatch(adapter, /humanPlayerId/, 'adapter must not carry a humanPlayerId concept');
+  assert.match(adapter, /strictView\(frameState,\s*seat1\)/, 'adapter must project seat 1 via strictView');
+  assert.match(adapter, /strictView\(frameState,\s*seat2\)/, 'adapter must project seat 2 via strictView');
 });
 
 test('caster-workspace.js: frameStateToSnapshot keeps status non-TERMINAL (board visible)', () => {
   // The adapter must not set TERMINAL/COMPLETED status or a terminationReason,
   // otherwise Astra would render the terminal screen instead of the board.
-  assert.match(casterSrc, /status:\s*'AI_DECISION'/, 'adapter must use a non-terminal status');
+  assert.match(casterSrc, /status:\s*'SPECTATING'/, 'adapter must use the spectator status');
   assert.match(casterSrc, /terminationReason:\s*null/, 'adapter must set terminationReason to null');
 });
 
 test('caster-workspace.js: frameStateToSnapshot handles public vs omniscient viewer modes', () => {
   assert.match(casterSrc, /omniscient/, 'adapter must check omniscient mode');
-  assert.match(casterSrc, /opponentHand/, 'adapter must build opponentHand for omniscient');
-  // In public mode, opponentHand stays null (opponent hand concealed — card backs only).
-  assert.match(casterSrc, /opponentHand\s*=\s*null/, 'adapter must default opponentHand to null in public mode');
+  // Both hands are carried inside the playerView only under omniscient;
+  // in public mode hand identities are stripped (concealed card backs).
+  assert.match(casterSrc, /hand:\s*omniscient\s*\?/, 'seat hands must be gated on omniscient authorization');
+  assert.match(casterSrc, /hiddenIds/, 'public mode must strip hidden hand identities from knownCards');
 });
 
 test('caster-workspace.js: frameStateToSnapshot passes recentEvents for game log', () => {
   assert.match(casterSrc, /recentEvents/, 'adapter must pass recentEvents for game log');
   assert.match(casterSrc, /visibleEvents/, 'adapter must use beat visibleEvents');
-});
-
-test('caster-workspace.js: cardViewToTableCard converts card views to Astra TableCards', () => {
-  assert.match(casterSrc, /function cardViewToTableCard/, 'cardViewToTableCard must exist');
-  assert.match(casterSrc, /identity:\s*hidden\s*\?\s*null/, 'must conceal identity for hidden cards');
-  assert.match(casterSrc, /markers/, 'must build markers array');
-  assert.match(casterSrc, /'Tapped'/, 'must map tapped to Tapped marker');
-  assert.match(casterSrc, /'Aegis'/, 'must map aegis to Aegis marker');
 });
 
 // ── caster-workspace.js mounts Astra ──
@@ -120,10 +120,13 @@ test('caster-workspace.js: imports mountGameTable from client/mount', () => {
   assert.doesNotMatch(casterSrc, /import.*renderRankedDuel.*from.*ranked-duel-renderer/, 'must not import renderRankedDuel');
 });
 
-test('caster-workspace.js: renderTheatre mounts Astra with caster rail + opponent hand', () => {
+test('caster-workspace.js: renderTheatre mounts Astra as a spectator view with caster rail', () => {
   assert.match(casterSrc, /mountGameTable\(boardHost,\s*snapshot/, 'renderTheatre must mount Astra with the snapshot');
   assert.match(casterSrc, /railHtml/, 'must pass railHtml option');
-  assert.match(casterSrc, /opponentHand/, 'must pass opponentHand option');
+  // viewRole is the presentation role (neutral spectator); visibility is the
+  // information policy (public/omniscient). They are independent options.
+  assert.match(casterSrc, /viewRole:\s*'spectator'/, 'must mount with viewRole spectator');
+  assert.match(casterSrc, /visibility:\s*omniscient\s*\?\s*'omniscient'\s*:\s*'public'/, 'must pass the viewer visibility policy');
   assert.match(casterSrc, /submit:\s*async\s*\(\)\s*=>\s*\(\{\s*accepted:\s*false\s*\}\)/, 'must pass a read-only submit (never accepts)');
 });
 

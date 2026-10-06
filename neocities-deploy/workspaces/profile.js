@@ -21,11 +21,11 @@
 // with Online Ranked IR/record.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, pct, state } from '../state.js?v=408ebfe25d7a';
-import { loadProfile, isStorageAvailable } from '../play/local-profile.mjs?v=408ebfe25d7a';
-import { getAchievementRuntime, getDefinition } from '../play/achievements/achievement-runtime.js?v=408ebfe25d7a';
+import { app, esc, pct, state } from '../state.js?v=e5382c028fd1';
+import { loadProfile, isStorageAvailable } from '../play/local-profile.mjs?v=e5382c028fd1';
+import { getAchievementRuntime, getDefinition } from '../play/achievements/achievement-runtime.js?v=e5382c028fd1';
 import { ratingToTierDivision, RankTier } from "../account-domain/rank-tier.mjs";
-import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=408ebfe25d7a';
+import { renderRankGlyph, rankLabel } from '../play/rank/rank-glyph.js?v=e5382c028fd1';
 import {
   fetchSelfProfile,
   fetchPublicProfile,
@@ -43,23 +43,23 @@ import {
   getTitleDefinition,
   getFrameDefinition,
   getBadgeDefinition,
-} from '../play/profile/profile-data.js?v=408ebfe25d7a';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=408ebfe25d7a';
-import { getReplay, listMatchStats, listReplays } from '../play/persistence.js?v=408ebfe25d7a';
-import { downloadReplay } from '../play/replay-library.js?v=408ebfe25d7a';
+} from '../play/profile/profile-data.js?v=e5382c028fd1';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=e5382c028fd1';
+import { getReplay, listMatchStats, listReplays } from '../play/persistence.js?v=e5382c028fd1';
+import { downloadReplay } from '../play/replay-library.js?v=e5382c028fd1';
 import { buildStrategicFingerprint } from "../account-domain/strategic-fingerprint.mjs";
 import { buildEnrichedStats } from "../account-domain/match-stats-aggregator.mjs";
 import { computeUncertaintyLabel, buildSampleSizeDisclaimer } from '@intrilex/statistics/evidence-honest';
 import { renderMasterySection, computeUsageFromReplays } from "../decision-intelligence/mastery-tracks.mjs";
 import { generateReplayLesson, renderLessonStep, getLessonSummary } from "../decision-intelligence/replay-lesson.mjs";
-import { getAuthState, getProfile as getAuthProfile } from '../play/network/auth-controller.js?v=408ebfe25d7a';
+import { getAuthState, getProfile as getAuthProfile } from '../play/network/auth-controller.js?v=e5382c028fd1';
 import {
   fetchRelationshipStatus,
   followPlayer,
   unfollowPlayer,
   setRival,
   unsetRival,
-} from '../play/players/relationships-data.js?v=408ebfe25d7a';
+} from '../play/players/relationships-data.js?v=e5382c028fd1';
 
 const BADGE_ICONS = {
   shield: '🛡', trophy: '🏆', star: '⭐', crown: '👑', flame: '🔥',
@@ -868,6 +868,12 @@ function renderMatchItem(m, isSelf) {
   const lessonBtn = isSelf && m.matchId
     ? `<button class="btn btn-sm profile-match-lesson-btn" data-action="view-replay-lesson" data-match-id="${esc(m.matchId)}" title="View guided replay lesson" aria-label="View lesson for match ${esc(m.matchId)}" style="font-size:11px;padding:2px 8px;margin-left:4px;color:var(--text-dim);border-color:rgba(255,255,255,0.1)">📖 Lesson</button>`
     : '';
+  // Watch button — open the locally saved certified replay in the Watch
+  // workspace via the shared replay resolver. If the replay wasn't saved,
+  // Watch shows the honest unavailable state.
+  const watchBtn = isSelf && m.matchId
+    ? `<button class="btn btn-sm profile-match-watch-btn" data-action="watch-match-replay" data-match-id="${esc(m.matchId)}" title="Open replay in Watch" aria-label="Watch replay for match ${esc(m.matchId)}" style="font-size:11px;padding:2px 8px;margin-left:4px;color:var(--text-dim);border-color:rgba(255,255,255,0.1)">▶ Watch</button>`
+    : '';
   return `<div class="match-item" data-testid="profile-match-item" style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:6px">
     <div>
       <span style="${resultClass};font-weight:500">${esc(m.result)}</span>
@@ -881,6 +887,7 @@ function renderMatchItem(m, isSelf) {
       ${replayBtn}
       ${branchBtn}
       ${lessonBtn}
+      ${watchBtn}
     </div>
   </div>`;
 }
@@ -1282,6 +1289,24 @@ function wireHeroActions(profile) {
   wireMatchReplayButtons();
   wireMatchBranchButtons();
   wireMatchLessonButtons();
+  wireMatchWatchButtons();
+}
+
+/**
+ * Bind Watch buttons on match items. Resolves the locally saved certified
+ * replay (R-{matchId}) through the shared replay resolver and opens Watch.
+ * If no replay was saved locally, Watch reports the honest unavailable state.
+ */
+function wireMatchWatchButtons() {
+  const btns = _container.querySelectorAll('[data-action="watch-match-replay"]');
+  btns.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const matchId = btn.getAttribute('data-match-id');
+      if (!matchId) return;
+      const { openReplay } = await import('../data-loader.js?v=e5382c028fd1');
+      await openReplay({ kind: 'local', replayId: `R-${matchId}`, label: `Match ${matchId}` });
+    });
+  });
 }
 
 /**

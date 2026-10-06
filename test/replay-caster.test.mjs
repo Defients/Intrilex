@@ -364,10 +364,27 @@ describe('Replay Caster v0.1 — Spoiler Firewall', () => {
     // The viewer-visible past/present context should not contain the winner
     const pastJson = JSON.stringify(input.pastContext);
     const presentJson = JSON.stringify(input.presentContext);
-    // Winner is only in futureContext.matchOutcome (private)
     assert.ok(!pastJson.includes('"winner":"P1"') || pastJson.includes('null'));
     assert.ok(!presentJson.includes('"winner":"P1"'));
-    assert.ok(input.futureContext.matchOutcome?.winnerSeat);
+    // PUBLIC: the private future channel is fully redacted — the commentator
+    // cannot leak what it never received.
+    assert.equal(input.futureContext.visibleToViewer, false);
+    assert.equal(input.futureContext.redacted, true);
+    assert.equal(input.futureContext.matchOutcome, null);
+    assert.deepEqual(input.futureContext.upcomingBeats, []);
+    // OMNISCIENT: future outcome is supplied for private planning only.
+    const omniInput = buildCommentaryInput({
+      beats: session.beats,
+      beatIndex: 1,
+      mode: COMMENTARY_MODE.BROADCAST,
+      viewerMode: VIEWER_MODE.OMNISCIENT,
+      threads: session.threads,
+      diagnostics: session.diagnostics,
+      matchMeta: { matchId: session.matchId, winner: 'P1', terminationReason: 'NORMAL_VICTORY' },
+      settings: { density: 'normal' }
+    });
+    assert.equal(omniInput.futureContext.visibleToViewer, false);
+    assert.ok(omniInput.futureContext.matchOutcome?.winnerSeat);
   });
 
   test('spoilerLint catches future winner mention', () => {

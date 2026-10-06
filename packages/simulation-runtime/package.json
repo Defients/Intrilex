@@ -8,6 +8,7 @@
     "./worker": "./src/worker.mjs",
     "./evolution-lab": "./src/evolution-lab.mjs",
     "./evolution-domain": "./src/evolution-domain.mjs",
+    "./mutation-domain": "./src/mutation-domain.mjs",
     "./evolution-session": "./src/evolution-session.mjs",
     "./counterfactual": "./src/counterfactual.mjs",
     "./policy-catalog": "./src/policy-catalog.mjs",

@@ -609,36 +609,11 @@ export async function renderForensicWorkspace(container) {
   container.querySelectorAll('[data-forensic-action="open-session"]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const replayId = btn.dataset.replayId;
-      // Try to load the replay from local IndexedDB and navigate to Watch.
-      // The replay library stores records with replayId = "R-{sessionId}".
-      // The Watch workspace uses state.fixtureId to identify replays.
+      // Route the local IndexedDB record through the shared replay resolver —
+      // the same normalized path every replay source uses to reach Watch.
       try {
-        const { getReplay } = await import('../play/persistence.js');
-        const { ensureReplayFrames } = await import('../replay-frames.js');
-        const record = await getReplay(replayId);
-        if (record && record.certifiedReplay) {
-          // Set the replay in the global observatory state and navigate to Watch.
-          // This mirrors the watchLocalReplay() flow in play-app.js.
-          const replay = { ...record.certifiedReplay, frames: undefined };
-          await ensureReplayFrames(replay);
-          // Access the global app state — this is set by app.js on boot.
-          const appState = window.__intrilexState;
-          if (appState) {
-            appState.replay = replay;
-            appState.authorized = null;
-            appState.fixtureId = record.sessionId ?? replayId;
-            appState._replayLoadedFor = appState.fixtureId;
-            appState.frame = 0;
-            appState.playing = false;
-            appState.replayKind = 'corpus';
-            appState.visibility = 'public';
-          }
-          location.hash = '#/watch';
-        } else {
-          // Replay not found in local storage — just navigate to Watch
-          // and let the user select from the replay library.
-          location.hash = '#/play/replays';
-        }
+        const { openReplay } = await import('../data-loader.js');
+        await openReplay({ kind: 'local', replayId, label: `Forensic session · ${replayId}` });
       } catch (err) {
         console.error('[forensic] failed to load replay for Watch:', err);
         location.hash = '#/play/replays';

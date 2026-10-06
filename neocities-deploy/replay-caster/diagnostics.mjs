@@ -62,6 +62,23 @@ export function runDiagnostics(matchResult, beats, frames) {
     }
   }
 
+  // ── Decision-transcript provenance ──
+  // When the match result carries no canonical decisions array, beats
+  // were derived from replay frames — actor/policy metadata and legal
+  // action context are unavailable. Surface this once rather than
+  // silently treating fallback beats as fully-evidenced decisions.
+  if (decisions.length === 0 && beats.some(b => b.beatKind === 'DECISION' || b.beatKind === 'RESPONSE')) {
+    out.push(makeDiagnostic({
+      beats, beatIndex: 0,
+      category: DIAGNOSTIC_CATEGORY.REPLAY_INTEGRITY_ANOMALY,
+      severity: DIAGNOSTIC_SEVERITY.INVESTIGATE,
+      observed: 'Match result carries no canonical decision transcript; decision beats were derived from replay frames',
+      evidence: ['matchResult.decisions absent or empty'],
+      expectedBasis: 'runPolicyMatch/runBrowserPolicyMatch decisions transcript',
+      verdict: DIAGNOSTIC_VERDICT.INVESTIGATE
+    }));
+  }
+
   // ── Per-decision diagnostics ──
   for (let i = 0; i < decisions.length; i += 1) {
     const decision = decisions[i];
