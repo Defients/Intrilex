@@ -10,7 +10,7 @@
   "legacyProtocolFixtureCount": 121,
   "semanticHotfixFixtureCount": 25,
   "fileCount": 1089,
-  "payloadHash": "d43bc0fe437e3652a6edb9b0cffcac564ca5c49107b2799113974790c1d63980",
+  "payloadHash": "267c85087d8c01d1fc68eae5a1369a402be7539ad9866ac712cac8428e6d5080",
   "files": [
     {
       "path": "ADVANCED_CORE_AUTHORITY_MANIFEST.json",
@@ -4629,8 +4629,8 @@
     },
     {
       "path": "src/core-autonomy.ts",
-      "size": 53160,
-      "sha256": "2860baee23d9f9496a6c768667e3326ed22114884e84100e9e641431f7642be0"
+      "size": 52680,
+      "sha256": "e945824e0670754334e69cabbd9f193610b917a51ac075d2883890733be6340f"
     },
     {
       "path": "src/core-effects.ts",

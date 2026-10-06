@@ -1,1 +1,2 @@
 upstream/** text eol=lf
+runtime/vendor-dist/** -text

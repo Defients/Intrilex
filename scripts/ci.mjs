@@ -45,6 +45,7 @@ const STAGES = [
   ['direct-manipulation-browser', 'node', ['scripts/direct-manipulation-browser.mjs']],
   ['release-provenance', 'node', ['--test', 'test/release-provenance.test.mjs']],
   ['vendor-integrity', 'node', ['scripts/vendor-verify.mjs']],
+  ['vendor-dist-integrity', 'node', ['scripts/vendor-dist-integrity.mjs', 'verify']],
   ['engine-patch-integrity', 'node', ['scripts/engine-patch-integrity.mjs', 'verify']],
   ['engine-patch-build', 'node', ['scripts/build-engine-patch.mjs']],
   ['engine-patch-tests', 'node', ['scripts/engine-patch-test.mjs']],
