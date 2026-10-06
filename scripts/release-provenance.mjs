@@ -3,6 +3,30 @@ import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
+/**
+ * Paths whose untracked contents are generated build/test/report outputs, not
+ * source. Ignored paths never appear in `git status` anyway; this list covers
+ * generated output roots that are only partially ignored (e.g. `release/`).
+ * Any other untracked path — including new files inside `src/`, `packages/`,
+ * `test/`, or committed report trees — still counts as source dirt.
+ */
+export const GENERATED_OUTPUT_ROOTS = [
+  'release/', 'reports/local/', 'reports/release/',
+  'apps/lab-web/dist/', 'runtime/autonomy-engine-dist/', 'runtime/match-server/',
+  'test-results/', 'playwright-report/', 'blob-report/', 'coverage/',
+];
+
+function splitDirtyPaths(status) {
+  const paths = (status ?? '').split('\n').map((line) => line.trimEnd()).filter(Boolean);
+  const source = [], generated = [];
+  for (const line of paths) {
+    const code = line.slice(0, 2), rel = line.slice(3);
+    const isGenerated = code === '??' && GENERATED_OUTPUT_ROOTS.some((prefix) => rel.startsWith(prefix));
+    (isGenerated ? generated : source).push(rel);
+  }
+  return { source, generated };
+}
+
 /** Fail closed when Git or a required input cannot be read. */
 export function captureProvenance(root) {
   const git = (...args) => {
@@ -13,12 +37,19 @@ export function captureProvenance(root) {
   let lockfileSha256 = null;
   try { lockfileSha256 = createHash('sha256').update(readFileSync(join(root, 'pnpm-lock.yaml'))).digest('hex'); } catch { /* unavailable is not clean */ }
   const status = git('status', '--porcelain', '--untracked-files=all');
+  const dirty = splitDirtyPaths(status);
   const engine = json('upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/PRIORITY_PASS_HOTFIX_MANIFEST.json');
   const identity = json('config/release-identity.json');
   return {
     gitCommit: git('rev-parse', 'HEAD'), gitTree: git('rev-parse', 'HEAD^{tree}'),
     gitBranch: git('rev-parse', '--abbrev-ref', 'HEAD'),
-    dirty: status === null ? null : status.length > 0, lockfileSha256,
+    // `dirty` is the source-dirty bit: tracked modifications and untracked
+    // files outside generated-output roots. Generated outputs under
+    // GENERATED_OUTPUT_ROOTS are reported separately and do not dirty source.
+    dirty: status === null ? null : dirty.source.length > 0,
+    dirtySourcePaths: status === null ? null : dirty.source.slice(0, 50),
+    dirtyGeneratedPaths: dirty.generated.slice(0, 50),
+    lockfileSha256,
     enginePayloadHash: engine?.payloadHash ?? null, engineVersion: engine?.version ?? null,
     rulesVersion: identity?.rulesVersion ?? null, officialRulesVersion: identity?.officialRulesVersion ?? null,
     productVersion: json('package.json')?.version ?? null,
@@ -30,7 +61,10 @@ export function captureProvenance(root) {
 export function releaseProvenanceProblems(provenance) {
   const p = provenance ?? {};
   const problems = [];
-  if (p.dirty !== false) problems.push('Release certification requires a clean Git working tree (including untracked files).');
+  if (p.dirty !== false) {
+    const paths = Array.isArray(p.dirtySourcePaths) && p.dirtySourcePaths.length ? ` Offending paths: ${p.dirtySourcePaths.slice(0, 10).join(', ')}.` : '';
+    problems.push(`Release certification requires a clean source tree (no modified tracked files or untracked files outside generated-output roots).${paths}`);
+  }
   for (const key of ['gitCommit', 'gitTree']) {
     if (!/^[0-9a-f]{40,64}$/.test(p[key] ?? '')) problems.push(`Missing or invalid ${key}.`);
   }

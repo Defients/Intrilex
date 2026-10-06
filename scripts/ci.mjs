@@ -140,6 +140,10 @@ const STAGES = [
   ['self-audit-generate', 'node', ['scripts/generate-self-audit.mjs', '--release']],
   ['release-package', 'node', ['scripts/package-release.mjs']],
   ['falsification-sweep', 'node', ['scripts/falsification-sweep.mjs']],
+  // Release-artifact claims are verified in the release domain, where
+  // `release-package` has already produced release/ outputs. In quality
+  // domains they are reported as SKIP, not FAIL.
+  ['release-verify-falsification', 'node', ['scripts/falsification-sweep.mjs', '--require-release-artifacts']],
   ['browser-e2e-certification', 'node', ['scripts/browser-e2e-certification.mjs']],
   ['release-verify-extracted', 'node', ['scripts/verify-extracted.mjs']],
   ['manifest-verify', 'node', ['scripts/manifest.mjs', 'verify']],
@@ -334,7 +338,7 @@ async function runStep(name, cmd, cmdArgs, envOverride = {}) {
     failCount++;
     stageStatuses.push('FAIL');
     console.error(`[FAIL] ${name} (${elapsed}ms; exit ${code})`);
-    console.error(output.slice(-2000));
+    console.error(output.slice(-24000));
     if (!noFailFast) {
       await writeReport();
       process.exit(code ?? 1);

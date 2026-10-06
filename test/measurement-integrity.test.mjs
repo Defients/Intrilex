@@ -312,3 +312,66 @@ test('mechanic and synergy rows carry the hash of the metric they report', () =>
   assert.equal(s.formulaHash, reg['synergy-interaction'].formulaHash);
   assert.equal(JSON.parse(JSON.stringify(s)).formulaHash, s.formulaHash);
 });
+
+
+// ── 21. Browser evidence provenance lifecycle ──────────────────
+// Generated evidence from a verified run must not invalidate its own source
+// provenance: generated output roots are not source dirt, while modified
+// tracked files and stray untracked source files remain fail-closed.
+test('evidence provenance: generated outputs do not dirty source, source dirt fails closed', async () => {
+  const { captureProvenance, evidenceProvenanceProblems, GENERATED_OUTPUT_ROOTS } = await import('../scripts/release-provenance.mjs');
+  const { mkdtempSync, writeFileSync, mkdirSync } = await import('node:fs');
+  const { execSync } = await import('node:child_process');
+  const { tmpdir } = await import('node:os');
+
+  const repo = mkdtempSync(path.join(tmpdir(), 'provenance-'));
+  execSync('git init -q', { cwd: repo });
+  execSync('git config user.email t@t && git config user.name t', { cwd: repo });
+  writeFileSync(path.join(repo, 'pnpm-lock.yaml'), '{}');
+  writeFileSync(path.join(repo, 'src.js'), 'export {};\n');
+  // captureProvenance requires these inputs to classify a provenance as valid.
+  mkdirSync(path.join(repo, 'upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix'), { recursive: true });
+  writeFileSync(path.join(repo, 'upstream/intrilex-engine-4.2.6-attachment-integrity-hotfix/PRIORITY_PASS_HOTFIX_MANIFEST.json'),
+    JSON.stringify({ payloadHash: 'a'.repeat(64), version: '4.2.6' }));
+  mkdirSync(path.join(repo, 'config'), { recursive: true });
+  writeFileSync(path.join(repo, 'config/release-identity.json'), JSON.stringify({ rulesVersion: '4.3.1' }));
+  writeFileSync(path.join(repo, 'package.json'), JSON.stringify({ version: '1.0.0' }));
+  execSync('git add -A && git commit -qm init', { cwd: repo });
+
+  // clean source: no problems
+  let current = captureProvenance(repo);
+  assert.equal(current.dirty, false);
+  const report = { provenance: { ...current, mode: 'full' }, quickMode: false };
+  assert.deepEqual(evidenceProvenanceProblems(report, current), []);
+
+  // generated output under a whitelisted root does not dirty source
+  mkdirSync(path.join(repo, 'release'), { recursive: true });
+  writeFileSync(path.join(repo, 'release', 'artifact.json'), '{}');
+  current = captureProvenance(repo);
+  assert.equal(current.dirty, false, 'generated output under release/ is not source dirt');
+  assert.deepEqual(current.dirtyGeneratedPaths, ['release/artifact.json']);
+  assert.deepEqual(evidenceProvenanceProblems(report, current), []);
+
+  // dirty source before/at capture -> certification fails
+  writeFileSync(path.join(repo, 'untracked-source.mjs'), 'export {};\n');
+  const dirty = captureProvenance(repo);
+  assert.equal(dirty.dirty, true);
+  assert.ok(dirty.dirtySourcePaths.includes('untracked-source.mjs'));
+  const dirtyReport = { provenance: { ...dirty, mode: 'full' }, quickMode: false };
+  assert.ok(evidenceProvenanceProblems(dirtyReport, dirty).length > 0, 'dirty source evidence rejected');
+
+  // modified tracked file -> source dirt -> FAIL
+  writeFileSync(path.join(repo, 'src.js'), 'export {};//drift' + String.fromCharCode(10));
+  const drifted = captureProvenance(repo);
+  assert.equal(drifted.dirty, true);
+  assert.ok(evidenceProvenanceProblems(dirtyReport, drifted).length > 0);
+
+  // report captured on a different commit/source state -> FAIL
+  execSync('git checkout -q -- src.js', { cwd: repo });
+  (await import('node:fs')).rmSync(path.join(repo, 'untracked-source.mjs'));
+  const other = captureProvenance(repo);
+  const foreign = { provenance: { ...other, mode: 'full', gitCommit: '0'.repeat(40) }, quickMode: false };
+  const problems = evidenceProvenanceProblems(foreign, current);
+  assert.ok(problems.some((p) => p.includes('gitCommit')), 'foreign-commit evidence rejected');
+  assert.ok(GENERATED_OUTPUT_ROOTS.includes('release/'));
+});

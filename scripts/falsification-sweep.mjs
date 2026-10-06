@@ -9,7 +9,23 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const rootPkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 const releaseVersion = rootPkg.version;
 const results = [];
-let passed = 0, failed = 0;
+let passed = 0, failed = 0, skipped = 0;
+// Release-artifact claims (certification JSON / ZIP / manifest) can only be
+// verified after `release-package` has produced release/ outputs — which
+// happens in the release domain. In quality domains they are SKIPped, not
+// silently dropped: `--require-release-artifacts` turns absence into FAIL.
+const requireReleaseArtifacts = process.argv.includes('--require-release-artifacts');
+const releaseArtifactsPresent = () =>
+  existsSync(join(root, `release/v${releaseVersion}-certification.json`))
+  && existsSync(join(root, `release/v${releaseVersion}-release-manifest.json`));
+function releaseClaim(name, fn) {
+  if (!requireReleaseArtifacts && !releaseArtifactsPresent()) {
+    results.push({ name, status: 'SKIP', detail: 'release package not produced in this domain' });
+    skipped++;
+    return;
+  }
+  claim(name, fn);
+}
 
 function claim(name, fn) {
   try {
@@ -54,7 +70,7 @@ claim('anchor.mjs and anchor.js are byte-identical', () => {
 });
 
 // 2. Certification JSON exists and is valid
-claim('certification JSON exists and parses', () => {
+releaseClaim('certification JSON exists and parses', () => {
   const cert = JSON.parse(readFileSync(join(root, `release/v${releaseVersion}-certification.json`), 'utf8'));
   if (cert.releaseVersion !== releaseVersion) return `version=${cert.releaseVersion}`;
   if (cert.testResults?.passed !== cert.testResults?.totalTests) return 'tests not all passing';
@@ -62,7 +78,7 @@ claim('certification JSON exists and parses', () => {
 });
 
 // 3. Release ZIP exists and hash matches
-claim('release ZIP exists and SHA-256 matches certification', () => {
+releaseClaim('release ZIP exists and SHA-256 matches certification', () => {
   const cert = JSON.parse(readFileSync(join(root, `release/v${releaseVersion}-certification.json`), 'utf8'));
   if (!cert.releaseZip) return 'no releaseZip in certification';
   const zipPath = join(root, 'release', cert.releaseZip.name);
@@ -74,7 +90,7 @@ claim('release ZIP exists and SHA-256 matches certification', () => {
 });
 
 // 4. Release manifest exists and has file hashes
-claim('release manifest exists with file hashes', () => {
+releaseClaim('release manifest exists with file hashes', () => {
   const manifest = JSON.parse(readFileSync(join(root, `release/v${releaseVersion}-release-manifest.json`), 'utf8'));
   if (!manifest.files || Object.keys(manifest.files).length < 100) return 'too few files in manifest';
   return true;
@@ -132,8 +148,13 @@ claim('policy-adapter.mjs has runInstanceId', () => {
 });
 
 // 11. Browser diagnostics uses retained traces (not static warning)
-claim('browser app.js diagnostics uses retained traces', () => {
-  const content = readFileSync(join(root, 'apps/lab-web/src/app.js'), 'utf8');
+claim('browser diagnostics workspace loads retained decision traces', () => {
+  // Phase-4 modularization moved the /diagnostics route into
+  // workspaces/diagnostics.js. The contract is behavioral: the route must be
+  // wired in app.js and the diagnostics workspace must load retained traces.
+  const appContent = readFileSync(join(root, 'apps/lab-web/src/app.js'), 'utf8');
+  if (!/['"]\/diagnostics['"]\s*:\s*renderDiagnostics/.test(appContent)) return '/diagnostics route not wired to renderDiagnostics';
+  const content = readFileSync(join(root, 'apps/lab-web/src/workspaces/diagnostics.js'), 'utf8');
   if (/Decision evidence unavailable/.test(content)) return 'static warning still present';
   if (!/loadTraceData|loadTraceIndex/.test(content)) return 'trace loading not found in diagnostics';
   return true;
@@ -141,7 +162,12 @@ claim('browser app.js diagnostics uses retained traces', () => {
 
 // 12. Browser Branch Lab is functional (not "under reconstruction")
 claim('browser Branch Lab is functional', () => {
-  const content = readFileSync(join(root, 'apps/lab-web/src/app.js'), 'utf8');
+  // Phase-4 modularization moved the Branch Lab into workspaces/branches.js;
+  // app.js only owns the route table. The contract: /branches is routed and
+  // the workspace wires the paired-counterfactual runner.
+  const appContent = readFileSync(join(root, 'apps/lab-web/src/app.js'), 'utf8');
+  if (!/['"]\/branches['"]\s*:\s*renderBranches/.test(appContent)) return '/branches route not wired to renderBranches';
+  const content = readFileSync(join(root, 'apps/lab-web/src/workspaces/branches.js'), 'utf8');
   if (/Branch Lab unavailable/.test(content)) return 'unavailable warning still present';
   if (!/runPairedCounterfactual/.test(content)) return 'runPairedCounterfactual not wired';
   return true;
@@ -250,9 +276,13 @@ claim('browser HYBRIX dist has all required modules', () => {
 // 26. Self-audit has truthful gates (all true)
 claim('self-audit.json has all critical gates true', () => {
   const audit = JSON.parse(readFileSync(join(root, 'reports/self-audit.json'), 'utf8'));
-  if (audit.schemaVersion !== '2.0.0') return `schemaVersion=${audit.schemaVersion}`;
-  for (const [gate, value] of Object.entries(audit.criticalGates)) {
-    if (value !== true) return `gate ${gate}=false`;
+  // Schema is versioned independently of gate truth; require a recognized
+  // schema and, more importantly, every declared critical gate being true.
+  if (!/^[23]\./.test(String(audit.schemaVersion))) return `schemaVersion=${audit.schemaVersion}`;
+  const gates = Object.entries(audit.criticalGates ?? {});
+  if (!gates.length) return 'no criticalGates declared';
+  for (const [gate, value] of gates) {
+    if (value !== true) return `gate ${gate}=${value}`;
   }
   return true;
 });
@@ -311,7 +341,9 @@ claim('rank-power.mjs has six-axis power profile', () => {
   if (!/scorePower/.test(content)) return 'scorePower not found';
   if (!/boardPower/.test(content)) return 'boardPower not found';
   if (!/responsePower/.test(content)) return 'responsePower not found';
-  if (!/decisionValue/.test(content)) return 'decisionValue not found';
+  // Sixth axis is Observed Rank Value (ORV) — the observational axis that
+  // replaced the earlier `decisionValue` name.
+  if (!/observedRankValue/.test(content)) return 'observedRankValue axis not found';
   return true;
 });
 
@@ -512,7 +544,7 @@ for (const r of results) {
   const icon = r.status === 'PASS' ? '✓' : '✗';
   console.log(`${icon} ${r.name}${r.detail ? ` — ${r.detail}` : ''}`);
 }
-console.log(`\n${passed} passed, ${failed} failed out of ${results.length} claims`);
+console.log(`\n${passed} passed, ${failed} failed, ${skipped} skipped out of ${results.length} claims`);
 if (failed > 0) {
   console.log('\n❌ FALSIFICATION SUCCEEDED — some claims are false!');
   process.exit(1);

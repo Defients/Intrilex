@@ -337,7 +337,12 @@ try {
     await seats[0].getByTestId('forfeit-confirm').click();
     await seats[0].locator('.hc-game').waitFor({ state: 'detached', timeout: 20000 });
     await seats[1].locator('.hc-game').waitFor({ state: 'detached', timeout: 20000 });
-    assert.ok((await seats[0].locator('body').innerText()).includes('Forfeit') || (await seats[0].locator('body').innerText()).includes('Defeat'));
+    // The play terminal hydrates asynchronously after the game view detaches;
+    // wait for it before reading the outcome text (the forfeiting seat sees
+    // "You lost." and Termination: Forfeit — the banner word is not "Defeat").
+    for (const seat of seats) await seat.getByTestId('play-terminal').waitFor({ timeout: 20000 });
+    const loserTerminal = await seats[0].getByTestId('play-terminal').innerText();
+    assert.ok(loserTerminal.includes('Forfeit') || loserTerminal.includes('lost'), `forfeit terminal missing outcome text: ${loserTerminal.slice(0, 200)}`);
     for (const seat of seats) {
       await seat.getByTestId('play-terminal').waitFor();
       const download = seat.waitForEvent('download', { timeout: 20000 });
