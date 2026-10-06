@@ -1,4 +1,4 @@
-import { cleanupForZoneTransition, resolveDestination } from "./lifecycle.js?v=e5382c028fd1";
+import { cleanupForZoneTransition, resolveDestination } from "./lifecycle.js?v=dac162e115e4";
 export function createPlayer(id, goal = 21) {
     return {
         id,

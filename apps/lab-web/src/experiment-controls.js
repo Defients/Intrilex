@@ -16,6 +16,7 @@ export function renderExperimentControls() {
     <div class="inline-fields"><label>Seat 1<select id="exp-p1">${policyOptions('score-rush')}</select></label><label>Seat 2<select id="exp-p2">${policyOptions('control')}</select></label></div>
     <div class="inline-fields"><label>Matches<input id="exp-count" type="number" min="1" max="10000" value="100"></label><label>Workers<select id="exp-workers"><option>1</option><option selected>2</option><option>4</option></select></label></div>
     <label>Seed strategy<select id="exp-seed"><option value="ordinal-hash">Experiment hash + ordinal</option><option value="fixed">Fixed seed</option></select></label>
+    <label>Deep decision tracing <button type="button" class="info-dot tooltip-wide" data-tooltip="Re-ranks all legal actions at every decision and keeps a trace per decision — heavy compute and memory. Use for small evidence runs needing decision-level detail, not large campaigns. Telemetry is hash-excluded: results stay deterministic." aria-label="About deep decision tracing">ⓘ</button><input id="exp-deep-trace" type="checkbox"></label>
     <div class="preflight" id="preflight"><b>Preflight:</b> 25 ordered pairings · matched AB/BA seat-swap · paired McNemar + bootstrap · deterministic telemetry v4.1 · unsupported systems fail closed.</div>
     <div class="rail-actions"><button id="run-experiment" type="button" class="primary-button">Run</button><button id="cancel-experiment" type="button" class="secondary-button" disabled>Cancel</button><button id="reset-experiment" type="button" class="ghost-button">Reset</button></div>
     <output id="experiment-status" class="footer-note" aria-live="polite">Ready.</output>
@@ -25,7 +26,7 @@ export function renderExperimentControls() {
   document.querySelector('#run-experiment').addEventListener('click', runBrowserCampaign);
   document.querySelector('#cancel-experiment').addEventListener('click', cancelBrowserCampaign);
   document.querySelector('#reset-experiment').addEventListener('click', resetCampaignResults);
-  for (const id of ['exp-preset', 'exp-profile', 'exp-p1', 'exp-p2', 'exp-count', 'exp-workers', 'exp-seed'])
+  for (const id of ['exp-preset', 'exp-profile', 'exp-p1', 'exp-p2', 'exp-count', 'exp-workers', 'exp-seed', 'exp-deep-trace'])
     document.querySelector(`#${id}`).addEventListener('change', updatePreflight);
 }
 
@@ -37,6 +38,7 @@ export function updatePreflight() {
   const p1 = document.querySelector('#exp-p1').value;
   const p2 = document.querySelector('#exp-p2').value;
   const preset = document.querySelector('#exp-preset')?.value ?? '';
+  const deepTrace = document.querySelector('#exp-deep-trace')?.checked === true;
   const scope = p1 === p2 ? 'self-play focused pair' : 'focused pair';
   const valid = Number.isInteger(n) && n >= 1 && n <= 10000;
   const runBtn = document.querySelector('#run-experiment');
@@ -48,7 +50,7 @@ export function updatePreflight() {
   runBtn.disabled = false;
   const seatDesign = p1 === p2 ? 'self-play' : 'matched AB/BA seat-swap';
   const presetLabel = preset ? `preset ${esc(preset)} · ` : '';
-  document.querySelector('#preflight').innerHTML = `<b>Preflight:</b> ${presetLabel}${esc(scope)} · ${esc(p1)} vs ${esc(p2)} · ${fmt(n)} matches · ${w} browser worker${w === 1 ? '' : 's'} · ${esc(seed === 'ordinal-hash' ? 'ordinal-hash seed' : 'fixed seed')} · ${esc(seatDesign)} · paired McNemar + bootstrap · semantic telemetry v4.1 · evidence epoch: post-rules-parity-repair · unsupported systems fail closed.`;
+  document.querySelector('#preflight').innerHTML = `<b>Preflight:</b> ${presetLabel}${esc(scope)} · ${esc(p1)} vs ${esc(p2)} · ${fmt(n)} matches · ${w} browser worker${w === 1 ? '' : 's'} · ${esc(seed === 'ordinal-hash' ? 'ordinal-hash seed' : 'fixed seed')} · ${esc(seatDesign)} · paired McNemar + bootstrap · semantic telemetry v4.1${deepTrace ? ' · deep decision tracing (per-decision traces + candidate scores)' : ''} · evidence epoch: post-rules-parity-repair · unsupported systems fail closed.`;
 }
 
 // ── Global bindings ───────────────────────────────────────────────
@@ -98,7 +100,9 @@ export function bindGlobal() {
     }
     if (e.key === ' ' && route() === '/watch' && !['INPUT', 'SELECT', 'BUTTON'].includes(document.activeElement.tagName)) {
       e.preventDefault();
-      invokeAppAction('togglePlay');
+      // No replay loaded → do not even invoke the action. togglePlay() also
+      // guards internally; this is the controller-layer defense.
+      if (state.replay?.frames?.length) invokeAppAction('togglePlay');
     }
     // Forensic transport keys on Watch: ←/→ semantic frame step,
     // Home/End jump to record bounds. Deliberately excludes INPUT/SELECT
@@ -187,6 +191,7 @@ async function runBrowserCampaign() {
   const workers = Math.max(1, Number(document.querySelector('#exp-workers').value));
   const seedSel = document.querySelector('#exp-seed');
   const seedStrategy = seedSel ? seedSel.value : 'ordinal-hash';
+  const strategicTrace = document.querySelector('#exp-deep-trace')?.checked === true;
   status.textContent = `Running ${count} matches with ${workers} worker(s)…`;
   document.querySelector('#run-experiment').disabled = true;
   document.querySelector('#cancel-experiment').disabled = false;
@@ -222,7 +227,7 @@ async function runBrowserCampaign() {
       document.querySelector('#cancel-experiment').disabled = true;
       showToast(e.message ?? 'Worker error', { type: 'error', title: 'Worker error' });
     };
-    worker.postMessage({ type: 'run-autonomy-campaign', config: { matchCount: count, policyIds: [p1, p2], profileId: profile, seedStrategy, workerCount: workers } });
+    worker.postMessage({ type: 'run-autonomy-campaign', config: { matchCount: count, policyIds: [p1, p2], profileId: profile, seedStrategy, workerCount: workers, strategicTrace } });
     return;
   }
 
@@ -315,7 +320,7 @@ async function runBrowserCampaign() {
     worker.postMessage({
       type: 'run-autonomy-segment',
       workerIndex: i,
-      config: { matchCount: count, policyIds: [p1, p2], profileId: profile, seedStrategy, ordinalStart: seg.start, ordinalEnd: seg.end },
+      config: { matchCount: count, policyIds: [p1, p2], profileId: profile, seedStrategy, ordinalStart: seg.start, ordinalEnd: seg.end, strategicTrace },
     });
   });
   reportAggregateProgress();

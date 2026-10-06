@@ -25,7 +25,7 @@ export async function collectLabEvidence() {
     liveRun: live.liveRun ?? null, liveStatus: live.liveStatus ?? null,
     liveAggregator: live.liveAggregator ?? null, liveArchiveRef: live.liveArchiveRef ?? null,
     analyticsFilters: live.analyticsFilters ?? null, liveMatrix: live.liveMatrix ?? null,
-    persistedRuns: [], matrices: [], researchProjects: [], strategy: null,
+    persistedRuns: [], matrices: [], researchProjects: [], mutations: [], strategy: null,
     collectionNotes: [],
   };
   if (live.researchProject) lab.researchProjects.push({ project: live.researchProject, contentHash: null });
@@ -63,6 +63,18 @@ export async function collectLabEvidence() {
       for (const r of await store.listResearch()) {
         try { lab.researchProjects.push({ project: await store.loadResearch(r.experimentId), contentHash: null }); }
         catch (error) { lab.collectionNotes.push(`Research project ${r.experimentId} unreadable: ${error?.message ?? 'unknown error'}`); }
+      }
+      // Rule Mutation experiments are first-class dossier evidence. Corrupt or
+      // unverifiable envelopes are disclosed as UNREADABLE entries — they must
+      // never silently disappear from the record of what was run.
+      for (const m of await store.listMutations()) {
+        try {
+          const record = await store.loadMutation(m.experimentId);
+          lab.mutations.push({ record, contentHash: record.contentHash ?? null });
+        } catch (error) {
+          lab.collectionNotes.push(`Persisted mutation experiment ${m.experimentId} unreadable/corrupt: ${error?.message ?? 'unknown error'}`);
+          lab.mutations.push({ record: { experimentType: 'rule-mutation', experimentId: m.experimentId, status: 'UNREADABLE' }, contentHash: null, unreadable: true });
+        }
       }
     } finally { store.close(); }
   } catch (error) {

@@ -17,6 +17,7 @@ import { renderRanks } from './workspaces/ranks.js';
 import { renderDiagnostics } from './workspaces/diagnostics.js';
 import { renderEvolutionLab, cleanupEvolutionLab } from './workspaces/evolution.js';
 import { renderMutationChamber, cleanupMutationChamber } from './workspaces/mutation.js';
+import { renderDiscover, cleanupDiscover } from './workspaces/discover.js';
 import { renderStrategy, cleanupStrategy } from './strategy/strategy-workspace.js';
 import { renderBranches} from './workspaces/branches.js';
 import { renderForensicWorkspace, initForensicViewer, getForensicState, setCurrentFrame, renderForensicSidebar, renderForensicComparisonOverlay, renderFrameCommentary, handleForensicAction } from './forensic/forensic-viewer.mjs';
@@ -32,11 +33,13 @@ import { renderLeaderboard, destroyLeaderboard } from './workspaces/leaderboard.
 import { renderSeasonArchive } from './workspaces/season-archive.js';
 import { renderMetaReport } from './workspaces/meta-report.js';
 import { renderHumanTournaments } from './workspaces/human-tournaments.js';
-import { renderCardReference } from './workspaces/card-reference.js';
+import { renderCards } from './workspaces/cards/card-workspace.js';
 import { renderAuth } from './workspaces/auth.js';
 import { renderSettings } from './workspaces/settings.js';
 import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js';
+import { renderMetaAtlas } from './workspaces/meta-atlas.js';
 import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js';
+import { createReplayTransport } from './replay-transport.mjs';
 import { renderPrivacyPage, renderTermsPage } from './legal-pages.js';
 import { applyRouteMetadata, populateObservatoryShellText } from './seo-metadata.js';
 
@@ -187,6 +190,10 @@ export function render() {
   if (_previousRoute === '/mutation' && r !== '/mutation') {
     try { cleanupMutationChamber(); } catch (e) { console.warn('[render] cleanupMutationChamber error:', e); }
   }
+  // Discover cleanup: abort the investigation loop and its stage workers.
+  if (_previousRoute === '/discover' && r !== '/discover') {
+    try { cleanupDiscover(); } catch (e) { console.warn('[render] cleanupDiscover error:', e); }
+  }
   if (_previousRoute === '/strategy' && r !== '/strategy') cleanupStrategy();
   _previousRoute = r;
   // Apply route-scoped metadata (title, description, canonical, OG, Twitter).
@@ -281,8 +288,8 @@ export function render() {
     '/strategy': renderStrategy,
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
     '/mechanics': renderMechanics, '/synergies': renderSynergies,
-    '/ranks': renderRanks, '/compare': renderCompare, '/traces': renderTraces,
-    '/branches': renderBranches, '/forensic': renderForensic, '/diagnostics': renderDiagnostics, '/evolution': renderEvolutionLab, '/mutation': renderMutationChamber, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
+    '/ranks': renderRanks, '/atlas': renderMetaAtlas, '/cards': renderCards, '/compare': renderCompare, '/traces': renderTraces,
+    '/branches': renderBranches, '/forensic': renderForensic, '/diagnostics': renderDiagnostics, '/evolution': renderEvolutionLab, '/mutation': renderMutationChamber, '/discover': renderDiscover, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
   };
   try {
     const result = (renderers[r] ?? renderEvidence)();
@@ -367,13 +374,6 @@ function renderLandingMode(r) {
         console.error('[human-tournaments] failed to render:', err);
         landingContainer.innerHTML = `<div class="notice danger"><strong>Tournament error.</strong><pre>${esc(err.stack ?? err.message)}</pre></div>`;
       });
-    }
-  }
-  else if (r === '/cards') {
-    // Card Reference — browsable gallery of all 54 canonical card faces.
-    if (landingContainer) {
-      landingContainer.innerHTML = '';
-      renderCardReference(landingContainer);
     }
   }
   else if (r === '/forensic') {
@@ -1964,12 +1964,21 @@ function renderFilters() {
 // ═══════════════════════════════════════════════════════════════
 function currentFrame() { return state.visibility === 'public' ? state.replay.frames[state.frame] : state.authorized?.frames[state.frame]; }
 function currentState() { const frame = currentFrame(); if (!frame) return {}; if (state.visibility === 'public') return frame.state; if (state.visibility === 'player') return frame.playerViews?.[state.viewer] ?? {}; return frame.omniscientState ?? {}; }
+// Playback lifecycle lives in replay-transport.mjs (Node-testable). The
+// transport guarantees: no replay → toggle/step are pure no-ops; a tick that
+// finds the replay cleared stops the timer; stop() is idempotent.
+const replayTransport = createReplayTransport({
+  getState: () => state,
+  setCurrentFrame,
+  triggerFx: triggerFxForFrame,
+  render,
+});
 /** Stop replay playback and clear the playback timer. */
-export function stop() { state.playing = false; if (state.timer) clearInterval(state.timer); state.timer = null; }
-/** Toggle replay playback (play/pause). Re-renders after state change. */
-export function togglePlay() { if (state.playing) { stop(); render(); return; } state.playing = true; state.timer = setInterval(() => { if (state.frame >= state.replay.frames.length - 1) { stop(); render(); return; } stepTo(state.frame + 1); }, Math.max(65, 700 / state.speed)); render(); }
-function stepTo(index) { state.frame = clamp(index, 0, state.replay.frames.length - 1); state.selectedTimelineIndex = null; triggerFxForFrame(); setCurrentFrame(state.frame); render(); }
-function stepBy(delta) { stepTo(state.frame + delta); }
+export function stop() { replayTransport.stop(); }
+/** Toggle replay playback (play/pause). No-op when no replay is loaded. */
+export function togglePlay() { replayTransport.togglePlay(); }
+function stepTo(index) { replayTransport.stepTo(index); }
+function stepBy(delta) { replayTransport.stepBy(delta); }
 function commandAt(index) { return state.replay.commands?.[Math.max(0, index - 1)] ?? null; }
 function commandAction(command) { return command?.action ?? command?.payload?.action ?? null; }
 function frameEventTypes(frame) { return (frame?.events ?? (frame?.eventTypes ?? []).map(type => ({ type }))).map(event => event.type); }

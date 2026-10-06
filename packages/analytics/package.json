@@ -9,6 +9,7 @@
     "./metric-registry": "./src/metric-registry.mjs",
     "./observatory-core": "./src/observatory-core.mjs",
     "./observatory-integrity": "./src/observatory-integrity.mjs",
+    "./meta-atlas": "./src/meta-atlas.mjs",
     "./choice-analysis": "./src/choice-analysis.mjs"
   },
   "dependencies": {

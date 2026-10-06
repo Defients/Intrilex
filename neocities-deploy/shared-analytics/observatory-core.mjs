@@ -87,10 +87,23 @@ export function analyzeSynergiesCore(units, deps, { minimumBoth = 20, minimumCoh
       const deficient = /** @type {const} */ (['aOnly', 'bOnly']).filter((k) => totalCohortN[k] < minimumCohort);
       if (deficient.length) { reject({ id, source: a, target: b, reason: 'insufficient-single-cohort', reasonCode: 'INSUFFICIENT_SINGLE', deficientCohorts: deficient, cohortN: totalCohortN, threshold: minimumCohort }); continue; }
       if (totalCohortN.neither < minimumCohort) { reject({ id, source: a, target: b, reason: 'insufficient-neither-cohort', reasonCode: 'INSUFFICIENT_NEITHER', cohortN: totalCohortN, threshold: minimumCohort }); continue; }
-      if (totalN < minimumEffectiveN) { reject({ id, source: a, target: b, reason: 'insufficient-effective-n', reasonCode: 'INSUFFICIENT_N', cohortN: totalCohortN, threshold: minimumEffectiveN }); continue; }
+      if (totalN < minimumEffectiveN) { reject({ id, source: a, target: b, reason: 'insufficient-effective-n', reasonCode: 'INSUFFICIENT_N', cohortN: totalCohortN, threshold: minimumEffectiveN, rawN: totalN }); continue; }
       const result = stratifiedInteractionEstimate(stratumCohorts, { stratumKeys });
       if (!result.estimatorSucceeded) {
         reject({ id, source: a, target: b, reason: 'model-failure', reasonCode: result.failureReason, cohortN: totalCohortN, excludedStrata: result.excludedStrata, strataAttempted: result.strataAttempted });
+        continue;
+      }
+      // minimumEffectiveN applies to the CONTRIBUTING sample — the observations
+      // that actually entered the pooled estimate after stratum exclusions —
+      // not the raw pre-exclusion cohort total. A pair whose estimator usable
+      // N is below threshold is rejected here, with both Ns disclosed.
+      if (result.effectiveN < minimumEffectiveN) {
+        reject({
+          id, source: a, target: b, reason: 'insufficient-contributing-n', reasonCode: 'INSUFFICIENT_EFFECTIVE_N',
+          cohortN: totalCohortN, threshold: minimumEffectiveN,
+          rawN: totalN, eligibleN: result.eligibleN, effectiveN: result.effectiveN, excludedN: result.excludedN,
+          excludedStrata: result.excludedStrata, strataAttempted: result.strataAttempted,
+        });
         continue;
       }
       const rate = (/** @type {'neither' | 'aOnly' | 'bOnly' | 'both'} */ k) => (totalCohortN[k] > 0 ? wins[k] / totalCohortN[k] : 0);

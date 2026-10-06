@@ -184,15 +184,22 @@ test('BL-18: every LANDING_MODES route has a renderLandingMode dispatch case', a
     `LANDING_MODES routes without a renderLandingMode dispatch case: ${missing.join(', ')}`);
 });
 
-// BL-18: /cards route must render the card reference workspace
-test('BL-18: /cards route dispatches to renderCardReference', async () => {
+// BL-18: /cards must render inside the Lab shell via the standard
+// workspace renderer map — not as a detached landing-mode page.
+test('BL-18: /cards route dispatches to the Card Observatory workspace', async () => {
+  const routerCode = await src('router.js');
   const appCode = await src('app.js');
-  assert.ok(appCode.includes("import { renderCardReference } from './workspaces/card-reference.js'"),
-    'app.js must import renderCardReference');
-  assert.ok(appCode.includes("r === '/cards'"),
-    'renderLandingMode must have a /cards dispatch case');
-  assert.ok(appCode.includes('renderCardReference(landingContainer)'),
-    '/cards dispatch must call renderCardReference');
+  const landingModesMatch = routerCode.match(/LANDING_MODES\s*=\s*new Set\(\[([^\]]+)\]\)/);
+  assert.ok(landingModesMatch, 'must find LANDING_MODES definition in router.js');
+  assert.ok(!landingModesMatch[1].includes("'/cards'"),
+    '/cards must NOT be in LANDING_MODES — it is a Lab workspace');
+  assert.ok(appCode.includes("import { renderCards } from './workspaces/cards/card-workspace.js'"),
+    'app.js must import renderCards from the cards workspace');
+  assert.ok(appCode.includes("'/cards': renderCards"),
+    'the renderers map must dispatch /cards to renderCards');
+  const wsCode = await src('workspaces/cards/card-workspace.js');
+  assert.ok(wsCode.includes('app.innerHTML'), 'renderCards must render into the shell #app container');
+  assert.ok(!wsCode.includes('landingContainer'), 'renderCards must not render into the landing container');
 });
 
 // BL-17: threshold-bar CSS must be present

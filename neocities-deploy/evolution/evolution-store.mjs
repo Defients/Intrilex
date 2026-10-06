@@ -3,6 +3,7 @@ import { validateResearchProject, researchEnvelope } from './evolution-research.
 import { artifactEnvelope, validateArtifact, inspectHistoricalArtifact, LAB_LIMITS } from './evolution-domain.mjs';
 import { batchMatrixManifest, validateBatchMatrixManifest } from './batch-matrix.mjs';
 import { validateExperimentRecord, serializeExperiment } from './mutation-domain.mjs';
+import { discoveryRunEnvelope, validateDiscoveryRunEnvelope, discoveryEnvelope, validateDiscoveryEnvelope, discoveryRunSummary } from './discovery-domain.mjs';
 
 /** Dedicated developer database. Completion resolves only after transaction commit. */
 export class EvolutionStore {
@@ -22,7 +23,7 @@ export class EvolutionStore {
         reject(error);
       };
       let req;
-      try { req = this.factory.open('intrilex-evolution-lab', 4); }
+      try { req = this.factory.open('intrilex-evolution-lab', 5); }
       catch (error) { fail(error); return; }
       req.onupgradeneeded = () => {
         if (this.opening !== pending) { req.transaction.abort(); return; }
@@ -33,6 +34,9 @@ export class EvolutionStore {
         if(!req.result.objectStoreNames.contains('matrices')) req.result.createObjectStore('matrices', { keyPath: 'payload.matrixId' });
         // Rule Mutation Chamber experiments (schemaVersion-gated, arm-separated).
         if(!req.result.objectStoreNames.contains('mutations')) req.result.createObjectStore('mutations', { keyPath: 'payload.experimentId' });
+        // DISCOVER: autonomous research runs and promoted discovery artifacts.
+        if(!req.result.objectStoreNames.contains('discoveryRuns')) req.result.createObjectStore('discoveryRuns', { keyPath: 'payload.runId' });
+        if(!req.result.objectStoreNames.contains('discoveries')) req.result.createObjectStore('discoveries', { keyPath: 'payload.discoveryId' });
       };
       req.onsuccess = () => {
         const db = req.result;
@@ -162,6 +166,69 @@ export class EvolutionStore {
     if (!envelope) throw new Error('LAB_MUTATION_NOT_FOUND');
     if (envelope.contentHash !== envelope.payload?.contentHash) throw new Error('MUTATION_HASH_MISMATCH');
     return validateExperimentRecord(envelope.payload);
+  }
+  /** DISCOVER: run envelopes and promoted discovery artifacts share the
+   * same content-hash + size-budget conventions as the other stores.
+   * Experiment runs executed inside a discovery run are ordinary lab
+   * series and live in the existing `runs` store — the discovery artifact
+   * only references them by id. */
+  async saveDiscoveryRun(run) {
+    const envelope = discoveryRunEnvelope(run);
+    validateDiscoveryRunEnvelope(envelope, this.identity);
+    const size = new TextEncoder().encode(JSON.stringify(envelope)).byteLength;
+    if (size > LAB_LIMITS.persistRunBytes) throw Object.assign(new Error('RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE'), { code: 'RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE', artifactSize: size, persistLimit: LAB_LIMITS.persistRunBytes });
+    const db = await this.open();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(['discoveryRuns'], 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(tx.error?.name === 'QuotaExceededError' ? Object.assign(new Error('BROWSER_STORAGE_QUOTA_EXCEEDED'), { code: 'BROWSER_STORAGE_QUOTA_EXCEEDED', cause: tx.error }) : tx.error ?? new Error('LAB_STORAGE_ABORTED'));
+      tx.onerror = () => {};
+      tx.objectStore('discoveryRuns').put(envelope);
+    });
+    return size;
+  }
+  async listDiscoveryRuns() {
+    const rows = await this.read('discoveryRuns');
+    return rows.map((e) => {
+      try { return discoveryRunSummary(validateDiscoveryRunEnvelope(e, this.identity)); }
+      catch { return { runId: e?.payload?.runId ?? 'unreadable', status: 'CORRUPT', corrupt: true }; }
+    }).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  }
+  async loadDiscoveryRun(id) {
+    const envelope = await this.read('discoveryRuns', id);
+    if (!envelope) throw new Error('DISCOVERY_RUN_NOT_FOUND');
+    return validateDiscoveryRunEnvelope(envelope, this.identity);
+  }
+  async saveDiscovery(discovery) {
+    const envelope = discoveryEnvelope(discovery);
+    validateDiscoveryEnvelope(envelope);
+    const size = new TextEncoder().encode(JSON.stringify(envelope)).byteLength;
+    if (size > LAB_LIMITS.persistRunBytes) throw Object.assign(new Error('RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE'), { code: 'RUN_ARTIFACT_TOO_LARGE_FOR_BROWSER_ARCHIVE', artifactSize: size, persistLimit: LAB_LIMITS.persistRunBytes });
+    const db = await this.open();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(['discoveries'], 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(tx.error?.name === 'QuotaExceededError' ? Object.assign(new Error('BROWSER_STORAGE_QUOTA_EXCEEDED'), { code: 'BROWSER_STORAGE_QUOTA_EXCEEDED', cause: tx.error }) : tx.error ?? new Error('LAB_STORAGE_ABORTED'));
+      tx.onerror = () => {};
+      tx.objectStore('discoveries').put(envelope);
+    });
+    return size;
+  }
+  async listDiscoveries() {
+    const rows = await this.read('discoveries');
+    return rows.map((e) => {
+      try {
+        const d = validateDiscoveryEnvelope(e);
+        return { discoveryId: d.discoveryId, status: d.status, confidence: d.confidence, category: d.category,
+          claim: d.claim, estimate: d.effect?.estimate, interval95: d.effect?.interval95, grade: d.evidenceGrade,
+          createdAt: d.createdAt, runId: d.provenance?.runId ?? null };
+      } catch { return { discoveryId: e?.payload?.discoveryId ?? 'unreadable', status: 'CORRUPT', corrupt: true }; }
+    }).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  }
+  async loadDiscovery(id) {
+    const envelope = await this.read('discoveries', id);
+    if (!envelope) throw new Error('DISCOVERY_NOT_FOUND');
+    return validateDiscoveryEnvelope(envelope);
   }
   async listResearch() {return (await this.read('research')).map(e=>({experimentId:e.payload.experiment.experimentId,name:e.payload.experiment.name,status:e.payload.experiment.status,scientificId:e.payload.experiment.scientificId}));}
   async loadResearch(id) {const envelope=await this.read('research',id);if(!envelope || envelope.contentHash!==hashCanonical(envelope.payload))throw new Error('RESEARCH_HASH_MISMATCH');const project=validateResearchProject(envelope.payload,this.identity);if(project.experiment.status==='RUNNING')project.experiment.status='PAUSED';return project;}

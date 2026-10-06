@@ -82,7 +82,7 @@ mkdirSync(dist, { recursive: true });
 cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
 // Portable lab domain/session have no engine rules or Node I/O. Browser workers
 // execute the existing autonomy runtime; the dashboard owns only artifacts.
-for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'batch-matrix.mjs', 'strategy-contracts.mjs', 'strategy-evidence.mjs', 'strategy-analysis.mjs', 'strategy-synthesis.mjs', 'strategy-branch.mjs', 'strategy-information.mjs', 'strategy-live.mjs', 'observatory-bridge.mjs', 'matchup-lab.mjs', 'profile-contracts.mjs', 'profile-journal.mjs', 'profile-store.mjs', 'profile-science.mjs', 'profile-arena.mjs', 'mutation-domain.mjs']) {
+for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'batch-matrix.mjs', 'strategy-contracts.mjs', 'strategy-evidence.mjs', 'strategy-analysis.mjs', 'strategy-synthesis.mjs', 'strategy-branch.mjs', 'strategy-information.mjs', 'strategy-live.mjs', 'observatory-bridge.mjs', 'matchup-lab.mjs', 'profile-contracts.mjs', 'profile-journal.mjs', 'profile-store.mjs', 'profile-science.mjs', 'profile-arena.mjs', 'mutation-domain.mjs', 'discovery-domain.mjs', 'discovery-scan.mjs', 'discovery-engine.mjs']) {
   const content = await readFile(path.join(root, 'packages/simulation-runtime/src', name), 'utf8');
   await writeFile(path.join(dist, 'evolution', name), content.replace("from '@intrilex/shared'", "from '../shared-browser.js'").replace("from '@intrilex/statistics/estimators'", "from '../shared-analytics/estimators.mjs'").replace("from '../../policies/src/weighted-heuristic.mjs'", "from './weighted-heuristic.mjs'"));
 }
@@ -103,6 +103,20 @@ for(const name of (await readdir(path.join(dist,'strategy'))).filter(n=>/\.(js|m
   await writeFile(file,(await readFile(file,'utf8'))
     .replaceAll('../../../packages/shared/src/canonical.mjs','./shared-browser.js')
     .replaceAll('../../../packages/simulation-runtime/src/','./evolution/'));
+}
+// Meta Atlas: raw dist copies keep the package specifier so Node tests and
+// esbuild resolve it; in the browser bundle the specifier maps to the
+// shared-analytics mirror written by copySharedAnalytics().
+{
+  const metaAtlasDist = {
+    'atlas/atlas-render.mjs': '../shared-analytics/meta-atlas.mjs',
+    'workspaces/meta-atlas.js': '../shared-analytics/meta-atlas.mjs',
+  };
+  for (const [rel, target] of Object.entries(metaAtlasDist)) {
+    const file = path.join(dist, rel);
+    await writeFile(file, (await readFile(file, 'utf8'))
+      .replaceAll("from '@intrilex/analytics/meta-atlas'", `from '${target}'`));
+  }
 }
 for(const name of ['evolution-analytics-model.mjs','evolution-analytics-charts.mjs']) {
   const file=path.join(dist,'evolution',name);
@@ -134,6 +148,7 @@ async function copySharedAnalytics() {
     ['packages/analytics/src/observatory-integrity.mjs', 'observatory-integrity.mjs'],
     ['packages/analytics/src/observatory-core.mjs', 'observatory-core.mjs'],
     ['packages/analytics/src/choice-analysis.mjs', 'choice-analysis.mjs'],
+    ['packages/analytics/src/meta-atlas.mjs', 'meta-atlas.mjs'],
   ];
   for (const [src, name] of sources) {
     const text = (await readFile(path.join(root, src), 'utf8')).replaceAll("from '@intrilex/statistics/estimators'", "from './estimators.mjs'");

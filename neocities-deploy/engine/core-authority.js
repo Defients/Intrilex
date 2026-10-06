@@ -1,15 +1,15 @@
-import { canonicalClone } from "./canonical-json.js?v=e5382c028fd1";
-import { applyAegis, applyTap, markExileBound, processFoundationActionRestriction, processStartPhaseLifecycles, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=e5382c028fd1";
-import { CORE_EFFECT_DECLARATION_PROFILE, resolveCoreEffect } from "./core-effects.js?v=e5382c028fd1";
-import { evaluateProtection, revalidateAttachments } from "./interactions.js?v=e5382c028fd1";
-import { CORE_RESPONSE_AUTHORITY_PROFILE, primaryDescriptor, targetAcceptsCounter } from "./core-response.js?v=e5382c028fd1";
-import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, beginChoice, isCorePrivateChoiceEffect, resolveCorePrivateChoiceRoot, resolveCorePrivateChoiceSubmission } from "./core-private-choice.js?v=e5382c028fd1";
-import { compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, resolvePointValue, resolveRankAction } from "./ranks.js?v=e5382c028fd1";
-import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=e5382c028fd1";
-import { nextIndex } from "./rng.js?v=e5382c028fd1";
-import { addCard, deriveSecuredPoints, moveCard } from "./state.js?v=e5382c028fd1";
-import { exhaustedWinner } from "./phase8.js?v=e5382c028fd1";
-import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, advancedSourceIds, advancedTargetIds, resolveAdvancedCoreAction } from "./core-advanced.js?v=e5382c028fd1";
+import { canonicalClone } from "./canonical-json.js?v=dac162e115e4";
+import { applyAegis, applyTap, markExileBound, processFoundationActionRestriction, processStartPhaseLifecycles, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=dac162e115e4";
+import { CORE_EFFECT_DECLARATION_PROFILE, resolveCoreEffect } from "./core-effects.js?v=dac162e115e4";
+import { evaluateProtection, revalidateAttachments } from "./interactions.js?v=dac162e115e4";
+import { CORE_RESPONSE_AUTHORITY_PROFILE, primaryDescriptor, targetAcceptsCounter } from "./core-response.js?v=dac162e115e4";
+import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, beginChoice, isCorePrivateChoiceEffect, resolveCorePrivateChoiceRoot, resolveCorePrivateChoiceSubmission } from "./core-private-choice.js?v=dac162e115e4";
+import { compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, resolvePointValue, resolveRankAction } from "./ranks.js?v=dac162e115e4";
+import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=dac162e115e4";
+import { nextIndex } from "./rng.js?v=dac162e115e4";
+import { addCard, deriveSecuredPoints, moveCard } from "./state.js?v=dac162e115e4";
+import { exhaustedWinner } from "./phase8.js?v=dac162e115e4";
+import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, advancedSourceIds, advancedTargetIds, resolveAdvancedCoreAction } from "./core-advanced.js?v=dac162e115e4";
 export const CORE_FOUNDATION_AUTHORITY_PROFILE = Object.freeze({
     id: "core-foundation-authority",
     displayName: "Core Foundation Authority — Setup, Swap Bar & Action Economy",

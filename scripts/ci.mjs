@@ -89,6 +89,7 @@ const STAGES = [
   ['observatory', 'node', ['--test', 'test/observatory.test.mjs', 'test/observatory-hardening.test.mjs', 'test/observatory-completion.test.mjs', 'test/observatory-integrity.test.mjs', 'test/observatory-choice-support.test.mjs', 'test/observatory-ux.test.mjs', 'test/watch-theatre.test.mjs', 'test/replay-resolver.test.mjs']],
   ['visual', 'node', ['--test', 'test/visual.test.mjs']],
   ['card-face-renderer', 'node', ['--test', 'test/card-face-renderer.test.mjs']],
+  ['cards-observatory', 'node', ['--test', 'test/cards-observatory.test.mjs']],
   ['advanced-card-rules', 'node', ['--test', 'test/advanced-card-rules.test.mjs']],
   ['card-art', 'node', ['--test', 'test/card-art.test.mjs']],
   ['privacy', 'node', ['--test', 'test/privacy.test.mjs']],
@@ -204,6 +205,7 @@ const STAGES = [
   ['observatory-charts', 'node', ['--test', 'test/observatory-charts.test.mjs']],
   ['cross-workspace-linking', 'node', ['--test', 'test/cross-workspace-linking.test.mjs']],
   ['matchup-matrix', 'node', ['--test', 'test/matchup-matrix.test.mjs']],
+  ['meta-atlas', 'node', ['--test', 'test/meta-atlas.test.mjs']],
   ['batch-matrix', 'node', ['--test', 'test/batch-matrix.test.mjs']],
   ['tempo-opening-analysis', 'node', ['--test', 'test/tempo-opening-analysis.test.mjs']],
   ['endgame-section-nav', 'node', ['--test', 'test/endgame-section-nav.test.mjs']],
@@ -308,6 +310,7 @@ const STAGES = [
   ['strategy-intelligence', 'node', ['--test', 'test/strategy-intelligence.test.mjs', 'test/strategy-information.test.mjs', 'test/strategy-ai-interpreter.test.mjs', 'test/strategy-v121-correction.test.mjs', 'test/strategy-v3-synthesis.test.mjs', 'test/analysis-ingestion.test.mjs', 'test/analysis-dossier.test.mjs']],
   ['agent-profiles', 'node', ['--test', 'test/agent-profile-contracts.test.mjs', 'test/agent-profile-store.test.mjs', 'test/agent-profile-science.test.mjs', 'test/agent-profile-consumer.test.mjs', 'test/agent-profile-arena.test.mjs']],
   ['rule-mutation', 'node', ['--test', 'test/rule-mutation.test.mjs']],
+  ['discovery-engine', 'node', ['--test', 'test/discovery.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

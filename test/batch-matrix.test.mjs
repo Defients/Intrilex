@@ -242,3 +242,56 @@ test('evaluation-only boundary: matrix artifacts and runs carry no training or p
   const view = batchMatrixView(lab);
   assert.match(view.uncertainty, /descriptive matrix performance/);
 });
+
+// ── Batch Matrix → Strategy reconciliation transparency ──────────
+test('matrix import exposes Strategy reconciliation pending/failed state and supports idempotent retry', async () => {
+  const { bindBatchMatrix } = await import('../apps/lab-web/src/evolution/batch-matrix-ui.mjs');
+  const { batchMatrixView } = await import('../packages/simulation-runtime/src/batch-matrix.mjs');
+  const lab = await runBatchMatrix(twoStatics, runLabSeries, { identity, createdAt: FIXED_CLOCK() });
+
+  const root = { innerHTML: '', addEventListener: () => {}, querySelector: () => null };
+  const calls = { ingested: [] };
+  const failing = new Set(['__none__']);
+  const state = {
+    selected: new Set(), games: 4, seed: 42, profileId: 'core-advanced-authority',
+    workers: 1, trace: false, lab: null, v1: null, error: '', storage: '', progressText: '', saved: [],
+  };
+  const ctx = {
+    state, fns: { batchMatrixView, batchMatrixArtifact, batchMatrixManifest },
+    roster: () => [], statics: [], busy: () => false,
+    lock: { get: () => null, set: () => {} },
+    persist: { saveRun: async () => {}, saveMatrix: async () => {}, listMatrices: async () => [], loadRun: async () => null, loadMatrix: async () => null },
+    ingestRun: async (run) => {
+      calls.ingested.push(run.runId);
+      if (failing.has(run.runId)) throw Object.assign(new Error('INDEX_UNAVAILABLE'), { code: 'INDEX_UNAVAILABLE' });
+      return { committed: run.records.length, failed: 0, pending: 0, error: null };
+    },
+    identity, profiles: null, importLimit: 8_000_000, rulesOptions: [],
+    legacy: { render: () => '' }, openRun: () => {}, exportJson: () => {}, runEnvelope: (r) => r,
+    executeSeries: null, onAcceptedGame: null,
+  };
+  const bound = bindBatchMatrix(root, ctx);
+  await bound.importMatrix(lab);
+  // Reconciliation was started — give it a macrotask to settle.
+  for (let i = 0; i < 20 && state.reconcile?.pending !== 0; i++) await new Promise(r => setTimeout(r, 0));
+  assert.ok(state.reconcile, 'reconciliation state must be recorded');
+  assert.equal(state.reconcile.pending, 0);
+  assert.equal(state.reconcile.offered, lab.runs.length);
+  assert.equal(state.reconcile.failed, 0);
+  assert.equal(state.reconcile.committed, lab.runs.length);
+  assert.ok(root.innerHTML.includes('Strategy index'), 'sync status is surfaced in the status line');
+  assert.ok(!root.innerHTML.includes('evo-batch-reconcile-retry'), 'no retry control when all synced');
+
+  // Now make one run fail and retry — idempotent: every run re-offered.
+  failing.add(lab.runs[0].runId);
+  calls.ingested.length = 0;
+  await bound.reconcileIndex();
+  assert.equal(state.reconcile.failed, 1);
+  assert.equal(state.reconcile.errors[0].runId, lab.runs[0].runId);
+  assert.equal(state.reconcile.errors[0].error, 'INDEX_UNAVAILABLE');
+  assert.ok(root.innerHTML.includes('evo-batch-reconcile-retry'), 'failure exposes the retry control');
+  failing.clear();
+  await bound.reconcileIndex();
+  assert.equal(state.reconcile.failed, 0, 'retry clears the failure after successful re-sync');
+  assert.equal(state.reconcile.committed, lab.runs.length);
+});

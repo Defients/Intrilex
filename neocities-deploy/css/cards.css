@@ -1,0 +1,164 @@
+/* ═══════════════════════════════════════════════════════════════
+   cards.css — Card Observatory workspace (/cards)
+   Deck-matrix atlas + tabbed Card Dossier inside the Lab shell.
+   ═══════════════════════════════════════════════════════════════ */
+
+.cards-workspace{display:grid;gap:14px}
+.cards-head-panel .panel-body{display:grid;gap:10px}
+
+/* ── Layout: atlas + dossier ───────────────────────────────────── */
+.cards-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(380px,1fr);gap:14px;align-items:start}
+.cards-dossier-slot{position:sticky;top:104px;max-height:calc(100vh - 120px);overflow:auto;overscroll-behavior:contain}
+.cards-dossier-slot .panel{height:100%}
+
+/* ── Toolbar ───────────────────────────────────────────────────── */
+.card-toolbar{margin-bottom:12px}
+.card-search-field{flex:1 1 200px;min-width:170px}
+.card-search-field input{width:100%;font-size:12px}
+.card-result-count{margin-left:auto;font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+
+/* ── Atlas matrix ──────────────────────────────────────────────── */
+.card-atlas{display:grid;gap:6px;overflow-x:auto;padding-bottom:4px}
+.card-atlas-row{display:grid;grid-template-columns:52px repeat(4,minmax(96px,1fr));gap:6px;align-items:stretch}
+.card-atlas-head .card-atlas-suit{text-align:center;font-size:15px;padding:4px 0;color:var(--muted);border-bottom:1px solid var(--hairline)}
+.card-atlas-rank{display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.card-atlas-head .card-atlas-rank{color:var(--faint);font-size:10px;text-transform:uppercase}
+.card-atlas-jokers .card-atlas-rank{writing-mode:horizontal-tb}
+
+.card-cell-wrap{min-width:0}
+.card-cell-wrap.is-empty{opacity:.28}
+.card-cell-empty{display:flex;align-items:center;justify-content:center;min-height:74px;border:1px dashed var(--hairline);border-radius:10px;color:var(--faint);font-family:var(--font-mono);font-size:10px}
+
+.card-cell{position:relative;display:grid;grid-template-rows:56px auto auto auto;width:100%;min-width:0;padding:0;border:1px solid var(--hairline);border-radius:10px;overflow:hidden;background:linear-gradient(160deg,rgba(12,18,30,.92),rgba(6,9,15,.96));color:var(--text);cursor:pointer;text-align:left;transition:border-color var(--fast) var(--ease),transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease)}
+.card-cell:hover{border-color:color-mix(in srgb,var(--card-accent) 55%,transparent);transform:translateY(-1px)}
+.card-cell:focus-visible{outline:2px solid var(--focus);outline-offset:2px;z-index:1}
+.card-cell.is-selected{border-color:var(--card-accent);box-shadow:0 0 0 1px var(--card-accent),0 6px 18px rgba(0,0,0,.3)}
+.card-cell-wrap[aria-selected="true"] .card-cell{border-color:var(--card-accent)}
+.card-cell-art{background-size:cover;background-repeat:no-repeat;border-bottom:1px solid var(--hairline)}
+.card-cell-id{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:4px 7px 1px;font-size:12px}
+.card-cell-id b{color:var(--card-accent);font-family:var(--font-mono);letter-spacing:.02em}
+.card-cell-name{padding:0 7px;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-cell-foot{display:flex;align-items:center;justify-content:space-between;gap:4px;padding:2px 7px 5px;font-size:9px}
+.cell-pr{color:var(--faint);font-family:var(--font-mono)}
+.cell-timing{font-style:normal;color:var(--faint);font-size:10px}
+.cell-scope{display:inline-flex;align-items:center;justify-content:center;min-width:18px;padding:1px 4px;border-radius:4px;font-family:var(--font-mono);font-size:8px;font-weight:700;letter-spacing:.05em;border:1px solid var(--hairline)}
+.cell-scope.scope-exact{color:var(--cyan);border-color:color-mix(in srgb,var(--cyan) 40%,transparent);background:color-mix(in srgb,var(--cyan) 8%,transparent)}
+.cell-scope.scope-shared{color:var(--violet);border-color:color-mix(in srgb,var(--violet) 40%,transparent);background:color-mix(in srgb,var(--violet) 8%,transparent)}
+.cell-scope.scope-rank{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 40%,transparent);background:color-mix(in srgb,var(--amber) 8%,transparent)}
+.cell-scope.scope-none{color:var(--faint)}
+
+/* Evidence status accents on cells (not color-only — paired with chip) */
+.card-cell.is-integrity-failure{border-style:dotted}
+.card-cell.is-unavailable .card-cell-art{filter:saturate(.35) brightness(.75)}
+
+/* ── List view ─────────────────────────────────────────────────── */
+.card-list td small{color:var(--muted)}
+.card-list-row.is-selected{background:color-mix(in srgb,var(--cyan) 7%,transparent)}
+.card-list-wrap{max-height:70vh;overflow:auto}
+
+/* ── Dossier shell ─────────────────────────────────────────────── */
+.card-dossier{border:1px solid var(--border-soft);border-radius:var(--radius);background:linear-gradient(170deg,var(--bg-1),var(--bg-0));overflow:hidden}
+.card-dossier-head{display:grid;grid-template-columns:74px minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px;border-bottom:1px solid var(--hairline);background:linear-gradient(120deg,color-mix(in srgb,var(--card-accent) 9%,transparent),transparent 55%)}
+.card-dossier-art{display:block;width:74px;height:100px;border-radius:8px;background-size:cover;border:1px solid color-mix(in srgb,var(--card-accent) 45%,transparent);box-shadow:var(--shadow-sm)}
+.card-dossier-title h3{margin:2px 0 4px;font-size:19px;color:var(--text-bright)}
+.card-dossier-title .eyebrow{color:var(--card-accent)}
+.card-dossier-sub{margin:0;font-size:12px;color:var(--muted)}
+.card-dossier-motto{margin:4px 0 0;font-size:11px;color:var(--faint);font-style:italic}
+.card-dossier-actions{display:flex;flex-direction:column;gap:6px;align-items:end}
+.card-dossier-empty{height:100%}
+
+.card-dossier-tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--hairline);background:rgba(6,10,16,.5)}
+.card-dossier-tab{padding:9px 12px;border:0;border-bottom:2px solid transparent;background:none;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;cursor:pointer}
+.card-dossier-tab:hover{color:var(--text-bright)}
+.card-dossier-tab:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.card-dossier-tab.active{color:var(--card-accent);border-bottom-color:var(--card-accent)}
+.card-dossier-body{padding:14px;min-height:300px}
+.card-dossier-body:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+
+/* ── Identity tab ──────────────────────────────────────────────── */
+.card-identity-tab{display:grid;grid-template-columns:minmax(200px,240px) minmax(0,1fr);gap:16px;align-items:start}
+.card-face-stage .ix-card-face{width:100%;pointer-events:none}
+.card-facts{display:grid;gap:8px;margin:10px 0}
+.card-facts div{display:grid;grid-template-columns:110px 1fr;gap:8px;padding:5px 0;border-bottom:1px solid var(--hairline)}
+.card-facts dt{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em}
+.card-facts dd{margin:0;font-size:12px;color:var(--text)}
+.card-badges{display:flex;flex-wrap:wrap;gap:5px}
+.card-legality-note{margin:12px 0 0;padding:9px 11px;border-left:3px solid var(--cyan);background:rgba(90,215,232,.06);font-size:11px;color:var(--muted);border-radius:0 8px 8px 0}
+
+/* ── Authority tab ─────────────────────────────────────────────── */
+.card-authority-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding:9px 12px;border:1px solid var(--hairline);border-radius:10px;background:rgba(8,12,20,.5)}
+.card-authority-head p{margin:0;font-size:11px;color:var(--muted);max-width:340px}
+.card-authority-tab .acr-view{border:0}
+.card-authority-tab .acr-header{margin-bottom:8px}
+
+/* ── Evidence tab ──────────────────────────────────────────────── */
+.card-entity-switcher{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.card-entity-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--hairline);border-radius:8px;background:rgba(10,16,26,.6);color:var(--muted);font-size:11px;cursor:pointer}
+.card-entity-btn:hover{color:var(--text-bright);border-color:var(--border-strong)}
+.card-entity-btn.active{color:var(--cyan);border-color:color-mix(in srgb,var(--cyan) 45%,transparent);background:color-mix(in srgb,var(--cyan) 8%,transparent)}
+.card-entity-btn i{font-style:normal;color:var(--amber);font-size:9px}
+.entity-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.entity-dot.is-available{background:var(--green)}
+.entity-dot.is-insufficient{background:var(--amber)}
+.entity-dot.is-integrity-failure{background:var(--red)}
+.entity-dot.is-unavailable{background:var(--faint);opacity:.5}
+
+.card-scope-banner{display:grid;gap:3px;padding:10px 12px;margin-bottom:12px;border-left:3px solid var(--cyan);border-radius:0 10px 10px 0;background:rgba(90,215,232,.06);font-size:11px}
+.card-scope-banner b{font-size:12px;color:var(--text-bright)}
+.card-scope-banner span{color:var(--muted)}
+.card-scope-banner.scope-normal{border-left-color:var(--violet);background:color-mix(in srgb,var(--violet) 7%,transparent)}
+.card-scope-banner.scope-rank{border-left-color:var(--amber);background:color-mix(in srgb,var(--amber) 7%,transparent)}
+.card-scope-banner.scope-super,.card-scope-banner.scope-super-aggregate{border-left-color:var(--magenta);background:color-mix(in srgb,var(--magenta) 7%,transparent)}
+
+.card-evidence-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+.card-evidence-note{font-size:11px;color:var(--muted)}
+.card-power-section{margin-top:12px}
+.card-power-section .ix-chart-radar{max-width:240px}
+
+/* ── Connections tab ───────────────────────────────────────────── */
+.card-connections-tab{display:grid;gap:14px}
+.card-sibling-row{display:flex;flex-wrap:wrap;gap:8px}
+.card-sibling-chip{display:grid;gap:1px;min-width:76px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--card-accent) 35%,transparent);border-radius:10px;background:linear-gradient(160deg,color-mix(in srgb,var(--card-accent) 10%,transparent),rgba(6,9,15,.7));color:var(--text);cursor:pointer;text-align:left}
+.card-sibling-chip:hover{border-color:var(--card-accent)}
+.card-sibling-chip b{color:var(--card-accent);font-family:var(--font-mono);font-size:12px}
+.card-sibling-chip small{color:var(--muted);font-size:9px}
+.card-sibling-chip:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.card-xref-row{display:flex;flex-wrap:wrap;gap:8px}
+.card-ref-list{margin:0;padding-left:18px;font-size:11px;color:var(--muted)}
+.card-ref-list li{margin:3px 0}
+tr.is-mapped td{background:color-mix(in srgb,var(--cyan) 5%,transparent)}
+
+/* ── Comparison ────────────────────────────────────────────────── */
+.card-compare-tray{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:8px 10px;border:1px dashed var(--hairline-strong);border-radius:10px;background:rgba(8,12,20,.4)}
+.card-compare-chip button{margin-left:4px}
+.card-compare-table th small{font-weight:400;color:var(--muted)}
+.card-compare-table td{font-variant-numeric:tabular-nums}
+
+/* ── Empty / degraded ──────────────────────────────────────────── */
+.cards-workspace .obs-empty-evidence{margin:6px 0}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media(max-width:1180px){
+  .cards-layout{grid-template-columns:1fr}
+  .cards-dossier-slot{position:static;max-height:none}
+  .card-identity-tab{grid-template-columns:minmax(180px,220px) minmax(0,1fr)}
+}
+@media(max-width:760px){
+  .card-atlas-row{grid-template-columns:36px repeat(4,minmax(78px,1fr))}
+  .card-cell{grid-template-rows:44px auto auto auto}
+  .card-cell-id{font-size:11px}
+  .card-identity-tab{grid-template-columns:1fr}
+  .card-face-stage .ix-card-face{max-width:280px;margin:0 auto}
+  .card-dossier-head{grid-template-columns:60px minmax(0,1fr)}
+  .card-dossier-actions{grid-column:1/-1;flex-direction:row;justify-content:space-between}
+  .card-dossier-art{width:60px;height:82px}
+  .card-evidence-grid{grid-template-columns:repeat(2,1fr)}
+  .card-toolbar{align-items:stretch}
+  .card-search-field{flex-basis:100%}
+}
+@media(prefers-reduced-motion:reduce){.card-cell{transition:none}}
+@media(forced-colors:active){
+  .card-cell,.card-sibling-chip,.card-scope-banner,.card-dossier{border-color:CanvasText}
+  .card-cell-art{background-image:none!important}
+  .cell-scope{color:CanvasText}
+}

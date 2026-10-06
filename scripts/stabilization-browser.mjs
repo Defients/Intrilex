@@ -93,9 +93,23 @@ try {
       const progress = await page.getByTestId('caster-progress').textContent();
       await page.locator('#caster-next').click();
       await expect(page.getByTestId('caster-progress')).not.toHaveText(progress);
-      const opponentHand = page.locator('.hc-game').getByRole('region', { name: /hand/i });
-      // Public projection exposes one player's hand; omniscient replay explicitly adds the other.
-      assert.equal(await opponentHand.count(), mode === 'omniscient' ? 2 : 1);
+      // Neutral spectator projection renders BOTH seats' hand regions in every
+      // mode. The distinction is identity visibility, not region count:
+      // public conceals all faces behind card backs (counts remain public),
+      // while omniscient authorizes face-up hands for replay inspection.
+      const handRegions = page.locator('.hc-game').getByRole('region', { name: /hand/i });
+      assert.equal(await handRegions.count(), 2);
+      const concealed = page.locator('.hx-hand-spectator .tabletop-card.is-concealed');
+      const faceUp = page.locator('.hx-hand-spectator .tabletop-card:not(.is-concealed)');
+      if (mode === 'public') {
+        assert.equal(await faceUp.count(), 0, 'public spectator must never expose hand identities');
+        assert.ok(await concealed.count() > 0, 'public spectator renders face-down placeholders');
+        await expect(page.locator('.hx-hand-spectator').first()).toContainText('Concealed — public count only');
+      } else {
+        assert.equal(await concealed.count(), 0, 'omniscient replay inspection shows every hand face-up');
+        assert.ok(await faceUp.count() > 0, 'omniscient replay exposes hand identities');
+        await expect(page.locator('.hx-hand-spectator').first()).toContainText('Omniscient view — identities visible');
+      }
       await page.locator('#caster-play').click();
       await expect(page.locator('#caster-play')).toHaveAttribute('aria-label', 'Pause');
       await page.getByTestId('caster-wait-what').click();

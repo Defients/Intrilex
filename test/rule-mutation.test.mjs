@@ -15,6 +15,7 @@ import {
   createSimulationState,
 } from '@intrilex/engine-adapter';
 import { runPolicyMatch } from '@intrilex/simulation-runtime';
+import { runMutationSegments } from '../apps/lab-web/src/workspaces/mutation-runner.mjs';
 import {
   MUTATION_TARGETS,
   createRuleMutation,
@@ -164,15 +165,15 @@ test('unmatched-seed mode uses independent deterministic streams and says so', (
 
 // ── Aggregation / pairing / impact vector ─────────────────────────────────────
 
-function stub({ pairedRunId, seed = 7, seatOrder = ['P1', 'P2'], policyId = 'tempo-tactical', winner = 'P1', winningSeat = 1, turns = 10 }) {
+function stub({ pairedRunId, seed = 7, seatOrder = ['P1', 'P2'], policyId = 'tempo-tactical', winner = 'P1', winningSeat = 1, turns = 10, ruleOverrides = null, terminationReason = 'NORMAL_VICTORY', errorCode = null }) {
   return {
-    winner, winningSeat, terminationReason: 'NORMAL_VICTORY', errorCode: null,
+    winner, winningSeat, terminationReason, errorCode,
     completedFullTurns: turns, scoreMargin: 3, commandCount: 40, eventCount: 60,
     actionCounts: { play: 5 }, decisionFamilyCounts: { super: 1, score: 4 },
     participants: [{ miniTurnActionCount: 6 }, { miniTurnActionCount: 5 }],
     advancedDecisionCount: 1, voltageDecisionCount: 0, ultraDecisionCount: 0,
     triggerCount: 0, responseDecisionCount: 2, privateChoiceDecisionCount: 0,
-    policyIds: [policyId, policyId], pairedRunId, seed, seatOrder, ruleCompliance: { status: 'PASS' },
+    policyIds: [policyId, policyId], pairedRunId, seed, seatOrder, ruleCompliance: { status: 'PASS' }, ruleOverrides,
   };
 }
 
@@ -266,20 +267,40 @@ test('outcome classification is deterministic and marks thin samples provisional
 
 // ── Artifact: serialization / persistence envelope ────────────────────────────
 
-test('experiment artifact round-trips through serialization and validation', () => {
-  const mutation = createRuleMutation({ targetId: 'miniTurns.hardCap', mutatedValue: 2 });
-  const config = createExperimentConfig({ profileId: PROFILE, population: ['tempo-tactical'], gamesPerArm: 4, seedBase: 7 });
+// Build a summary whose identity fields (pairedRunId, seed, seatOrder,
+// policyIds) match a plan spec exactly — required for the execution ledger.
+function stubForSpec(spec, overrides = {}) {
+  return stub({
+    pairedRunId: spec.pairedRunId, seed: spec.seed,
+    seatOrder: spec.seatOrder, policyId: spec.policyId,
+    ruleOverrides: spec.ruleOverrides ?? null, ...overrides,
+  });
+}
+
+function planAndSummaries({ experimentId = 'EXP-TEST', mutation, config, mutantTurns = 12 } = {}) {
+  const plan = buildMutationExperimentPlan({ experimentId, mutation, config });
+  const controlSummaries = plan.specs.filter((s) => s.arm === 'control').map((s) => stubForSpec(s));
+  const mutantSummaries = plan.specs.filter((s) => s.arm === 'mutant').map((s) => stubForSpec(s, { turns: mutantTurns }));
   const record = createExperimentRecord({
-    experimentId: 'EXP-TEST', createdAt: '2026-01-01T00:00:00.000Z',
+    experimentId, createdAt: '2026-01-01T00:00:00.000Z',
     baseline: { engineVersion: '4.2.6', rulesVersion: '4.3.1', labVersion: '0.0.0', authorityHash: 'abc' },
     mutation, hypothesis: 'Test hypothesis', config,
   });
-  const control = Array.from({ length: 4 }, (_, i) => stub({ pairedRunId: `PAIR-EXP-TEST-tempo-tactical-${i}` }));
-  const mutant = Array.from({ length: 4 }, (_, i) => stub({ pairedRunId: `PAIR-EXP-TEST-tempo-tactical-${i}`, turns: 12 }));
-  const final = finalizeExperimentRecord(record, { controlSummaries: control, mutantSummaries: mutant, completedSpecCount: 8, plannedSpecCount: 8 });
+  return { plan, record, controlSummaries, mutantSummaries };
+}
+
+test('experiment artifact round-trips through serialization and validation', () => {
+  const mutation = createRuleMutation({ targetId: 'miniTurns.hardCap', mutatedValue: 2 });
+  const config = createExperimentConfig({ profileId: PROFILE, population: ['tempo-tactical'], gamesPerArm: 4, seedBase: 7 });
+  const { plan, record, controlSummaries, mutantSummaries } = planAndSummaries({ mutation, config });
+  const final = finalizeExperimentRecord(record, {
+    controlSummaries, mutantSummaries, plan,
+    completedSpecCount: plan.specs.length, plannedSpecCount: plan.specs.length,
+  });
   assert.equal(final.status, 'complete');
   assert.equal(final.experimentType, 'rule-mutation');
   assert.equal(final.execution.matchedSeeds, true);
+  assert.equal(final.execution.ledger.exact, true);
   const text = serializeExperiment(final);
   const parsed = validateExperimentRecord(JSON.parse(text));
   assert.equal(parsed.experimentId, 'EXP-TEST');
@@ -299,6 +320,271 @@ test('artifact validation rejects non-experiment, wrong schema and tampered muta
   assert.throws(() => validateExperimentRecord(tampered), /does not match its content hash/);
 });
 
+// ── Execution ledger: COMPLETE = exact planned execution ──────────────────────
+
+test('COMPLETE requires the exact planned spec set — count alone is insufficient', () => {
+  const mutation = createRuleMutation({ targetId: 'miniTurns.hardCap', mutatedValue: 2 });
+  const config = createExperimentConfig({ profileId: PROFILE, population: ['tempo-tactical'], gamesPerArm: 4, seedBase: 7 });
+  const { plan, record, controlSummaries, mutantSummaries } = planAndSummaries({ mutation, config });
+
+  // Missing one planned mutant spec — same arm cannot substitute.
+  const missing = finalizeExperimentRecord(record, {
+    controlSummaries, mutantSummaries: mutantSummaries.slice(1), plan,
+    completedSpecCount: 7, plannedSpecCount: 8,
+  });
+  assert.equal(missing.status, 'incomplete');
+  assert.equal(missing.execution.ledger.exact, false);
+  assert.equal(missing.execution.ledger.missing.length, 1);
+
+  // Duplicate spec standing in for a missing one — row count still 8.
+  const dupMutant = [...mutantSummaries.slice(1), mutantSummaries[1]];
+  const dup = finalizeExperimentRecord(record, {
+    controlSummaries, mutantSummaries: dupMutant, plan,
+    completedSpecCount: 8, plannedSpecCount: 8,
+  });
+  assert.notEqual(dup.status, 'complete', 'a duplicate must not stand in for a missing spec');
+  assert.equal(dup.execution.ledger.duplicates.length, 1);
+  assert.equal(dup.execution.ledger.missing.length, 1);
+
+  // Unexpected extra spec — count 9 ≥ 8, still not complete.
+  const extra = finalizeExperimentRecord(record, {
+    controlSummaries, mutantSummaries: [...mutantSummaries, stub({ pairedRunId: 'PAIR-UNKNOWN-9', seed: 1 })], plan,
+    completedSpecCount: 9, plannedSpecCount: 8,
+  });
+  assert.notEqual(extra.status, 'complete');
+  assert.equal(extra.execution.ledger.unexpected.length, 1);
+
+  // Wrong arm — a mutant summary reported under control identity mismatches
+  // on ruleOverrides (matched seeds make seed/seat/policies identical, so the
+  // override map is the arm discriminator). The mutant spec goes missing too.
+  const wrongArm = finalizeExperimentRecord(record, {
+    controlSummaries: [...controlSummaries, stubForSpec(plan.specs.find((s) => s.arm === 'mutant'))],
+    mutantSummaries: mutantSummaries.slice(1), plan,
+    completedSpecCount: 8, plannedSpecCount: 8,
+  });
+  assert.notEqual(wrongArm.status, 'complete');
+  assert.ok(wrongArm.execution.ledger.mismatched.some((m) => m.endsWith(':ruleOverrides')), 'wrong-arm result caught by the override discriminator');
+  assert.equal(wrongArm.execution.ledger.missing.length, 1);
+
+  // Worker fault — disclosed as a non-execution, never a silent success.
+  const fault = stubForSpec(plan.specs.find((s) => s.arm === 'mutant'), { winner: 'ABORTED', winningSeat: null, terminationReason: 'WORKER_FAULT', errorCode: 'MUTATION_WORKER_FAULT' });
+  const faulted = finalizeExperimentRecord(record, {
+    controlSummaries, mutantSummaries: [fault, ...mutantSummaries.slice(1)], plan,
+    completedSpecCount: 8, plannedSpecCount: 8,
+  });
+  assert.notEqual(faulted.status, 'complete');
+  assert.equal(faulted.execution.ledger.faults, 1);
+
+  // No plan at all — completeness is unprovable, fail closed.
+  const noPlan = finalizeExperimentRecord(record, {
+    controlSummaries, mutantSummaries, plan: null,
+    completedSpecCount: 8, plannedSpecCount: 8,
+  });
+  assert.notEqual(noPlan.status, 'complete', 'without a plan the ledger cannot verify execution');
+});
+
+test('COMPLETE artifact requires a verifiable ledger on load — count-based legacy claims are rejected', () => {
+  const mutation = createRuleMutation({ targetId: 'miniTurns.hardCap', mutatedValue: 2 });
+  const config = createExperimentConfig({ profileId: PROFILE, population: ['tempo-tactical'], gamesPerArm: 4, seedBase: 7 });
+  const { plan, record, controlSummaries, mutantSummaries } = planAndSummaries({ mutation, config });
+  const final = finalizeExperimentRecord(record, {
+    controlSummaries, mutantSummaries, plan,
+    completedSpecCount: plan.specs.length, plannedSpecCount: plan.specs.length,
+  });
+  assert.equal(final.status, 'complete');
+  // A legacy artifact claiming COMPLETE without an exact ledger is unverifiable.
+  const legacy = JSON.parse(serializeExperiment(final));
+  delete legacy.execution.ledger;
+  assert.throws(() => validateExperimentRecord(legacy), (e) => e.code === 'EXPERIMENT_COMPLETENESS_UNPROVEN');
+  // A forged ledger whose plan hash does not match the rebuilt plan is rejected.
+  const forged = JSON.parse(serializeExperiment(final));
+  forged.execution.ledger = { ...forged.execution.ledger, planHash: 'deadbeef' };
+  assert.throws(() => validateExperimentRecord(forged), (e) => e.code === 'EXPERIMENT_PLAN_MISMATCH');
+});
+
+// ── Symmetric exact pairing ───────────────────────────────────────────────────
+
+test('extra unmatched rows on EITHER arm break exact pairing', () => {
+  const pairs = ['P-0', 'P-1'];
+  const control = pairs.map((id) => stub({ pairedRunId: id }));
+  const mutant = pairs.map((id) => stub({ pairedRunId: id }));
+
+  const extraMutant = pairArmResults(control, [...mutant, stub({ pairedRunId: 'P-9', seed: 999 })]);
+  assert.equal(extraMutant.coverage, 1, 'descriptive control coverage can still be 1');
+  assert.equal(extraMutant.exact, false, 'extra unmatched mutant breaks exactness');
+  assert.equal(extraMutant.unpairedMutant.length, 1);
+
+  const extraControl = pairArmResults([...control, stub({ pairedRunId: 'P-8', seed: 998 })], mutant);
+  assert.equal(extraControl.exact, false, 'extra unmatched control breaks exactness');
+  assert.equal(extraControl.unpairedControl.length, 1);
+  assert.equal(extraControl.mutantCoverage, 1);
+
+  const comparison = compareArms(summarizeMutationArm(control), summarizeMutationArm([...mutant, stub({ pairedRunId: 'P-9', seed: 999 })]), extraMutant);
+  assert.equal(comparison.matched, false, 'matched is the symmetric exact claim');
+  assert.equal(comparison.pairedCoverage, 1, 'coverage remains descriptive');
+  assert.ok(comparison.pairedMutantCoverage < 1, 'mutant-side coverage discloses the extra row');
+});
+
+// ── Per-policy sufficient statistics ─────────────────────────────────────────
+
+test('per-policy seat1Wins survive aggregation and drive a nonzero differential', () => {
+  // Control: seat 1 wins 3/4; mutant: seat 1 wins 1/4 — the delta must be
+  // computed from raw counts, not reconstructed from rounded rates.
+  const control = [
+    stub({ pairedRunId: 'A-0' }), stub({ pairedRunId: 'A-1' }), stub({ pairedRunId: 'A-2' }),
+    stub({ pairedRunId: 'A-3', winner: 'P2', winningSeat: 2 }),
+  ];
+  const mutant = [
+    stub({ pairedRunId: 'A-0' }),
+    stub({ pairedRunId: 'A-1', winner: 'P2', winningSeat: 2 }),
+    stub({ pairedRunId: 'A-2', winner: 'P2', winningSeat: 2 }),
+    stub({ pairedRunId: 'A-3', winner: 'P2', winningSeat: 2 }),
+  ];
+  const c = summarizeMutationArm(control), m = summarizeMutationArm(mutant);
+  assert.equal(c.policyBreakdown['tempo-tactical'].seat1Wins, 3, 'control sufficient statistic preserved');
+  assert.equal(m.policyBreakdown['tempo-tactical'].seat1Wins, 1, 'mutant sufficient statistic preserved');
+  const deltas = compareArms(c, m, pairArmResults(control, mutant)).policyDeltas;
+  const tempo = deltas.find((d) => d.policyId === 'tempo-tactical');
+  assert.equal(tempo.n.decisiveControl, 4);
+  assert.equal(tempo.n.decisiveMutant, 4);
+  assert.equal(tempo.control.seat1WinRate, 0.75);
+  assert.equal(tempo.mutant.seat1WinRate, 0.25);
+  assert.ok(tempo.seat1Delta !== null && tempo.seat1Delta < 0, 'delta is nonzero — old omission collapsed it to 0');
+});
+
+// ── Direction-aware verdicts ──────────────────────────────────────────────────
+
+function directionalComparison({ mutantTurns = 16, n = 40 } = {}) {
+  // Mutant games run LONGER than control: supported increase on meanTurns.
+  const control = Array.from({ length: n }, (_, i) => stub({ pairedRunId: `P-${i}`, turns: 10 }));
+  const mutant = Array.from({ length: n }, (_, i) => stub({ pairedRunId: `P-${i}`, turns: mutantTurns + (i % 5) }));
+  const c = summarizeMutationArm(control), m = summarizeMutationArm(mutant);
+  const pairing = pairArmResults(control, mutant);
+  return { comparison: compareArms(c, m, pairing), c, m };
+}
+
+test('supported movement AGAINST the declared direction is ADVERSE, never PROMISING', () => {
+  const { comparison, c, m } = directionalComparison();
+  const regressions = detectRegressions({ control: c, mutant: m, comparison });
+  const turnsRow = comparison.rows.find((r) => r.key === 'meanTurns');
+  assert.ok(turnsRow.delta > 0 && turnsRow.grade !== 'INSUFFICIENT', `fixture must show supported movement, got grade ${turnsRow.grade}`);
+  const mutation = createRuleMutation({ targetId: 'match.goal', mutatedValue: 30 });
+  const outcome = classifyOutcome({ comparison, regressions, mutation, objective: { metric: 'meanTurns', direction: 'decrease', minimumMeaningfulEffect: 0 } });
+  assert.equal(outcome.verdict, 'ADVERSE');
+});
+
+test('supported movement IN the declared direction on the target metric is PROMISING', () => {
+  const { comparison, c, m } = directionalComparison();
+  const regressions = detectRegressions({ control: c, mutant: m, comparison });
+  const mutation = createRuleMutation({ targetId: 'match.goal', mutatedValue: 30 });
+  const outcome = classifyOutcome({ comparison, regressions, mutation, objective: { metric: 'meanTurns', direction: 'increase', minimumMeaningfulEffect: 0 } });
+  assert.equal(outcome.verdict, 'PROMISING');
+});
+
+test('exploratory objective never reports movement as beneficial', () => {
+  const { comparison, c, m } = directionalComparison();
+  const regressions = detectRegressions({ control: c, mutant: m, comparison });
+  const mutation = createRuleMutation({ targetId: 'match.goal', mutatedValue: 30 });
+  const outcome = classifyOutcome({ comparison, regressions, mutation, objective: { metric: null, direction: 'exploratory' } });
+  assert.notEqual(outcome.verdict, 'PROMISING');
+  assert.equal(outcome.verdict, 'EXPLORATORY');
+});
+
+test('supported movement off the declared target metric is UNEXPECTED', () => {
+  const { comparison, c, m } = directionalComparison();
+  const regressions = detectRegressions({ control: c, mutant: m, comparison });
+  const mutation = createRuleMutation({ targetId: 'match.goal', mutatedValue: 30 });
+  const outcome = classifyOutcome({ comparison, regressions, mutation, objective: { metric: 'meanMargin', direction: 'increase', minimumMeaningfulEffect: 0 } });
+  assert.equal(outcome.verdict, 'UNEXPECTED');
+});
+
+test('experiment objective is validated, frozen into config and serialized', () => {
+  const objective = { metric: 'meanTurns', direction: 'decrease', minimumMeaningfulEffect: 1 };
+  const config = createExperimentConfig({ profileId: PROFILE, population: ['tempo-tactical'], gamesPerArm: 4, seedBase: 7, objective });
+  assert.deepEqual(config.objective, objective);
+  assert.throws(() => createExperimentConfig({ profileId: PROFILE, population: ['x'], gamesPerArm: 4, objective: { metric: 'bogus', direction: 'increase' } }), (e) => e.code === 'OBJECTIVE_METRIC_INVALID');
+  assert.throws(() => createExperimentConfig({ profileId: PROFILE, population: ['x'], gamesPerArm: 4, objective: { metric: 'meanTurns', direction: 'sideways' } }), (e) => e.code === 'OBJECTIVE_DIRECTION_INVALID');
+});
+
+// ── Worker-segment lifecycle: cancellation can never hang ─────────────────────
+
+function fakeWorkerFactory({ autoResult = false, capture = [] } = {}) {
+  return (index) => {
+    const worker = {
+      index, terminated: false, posted: null,
+      postMessage(msg) { worker.posted = msg; },
+      terminate() { worker.terminated = true; },
+      emit(data) { worker.onmessage?.({ data }); },
+      fail() { worker.onerror?.(new Error('boom')); },
+    };
+    capture.push(worker);
+    if (autoResult) {
+      setTimeout(() => worker.emit({
+        type: 'mutation-segment-result', ok: true,
+        resultsJson: JSON.stringify(worker.posted.specs.map((s) => ({ arm: s.arm, pairedRunId: s.pairedRunId, ok: true, summary: stubForSpec(s) }))),
+      }));
+    }
+    return worker;
+  };
+}
+
+function fakeSegments(count = 6) {
+  // Minimal spec-shaped rows — the runner only needs identity fields.
+  return Array.from({ length: count }, (_, i) => [{
+    arm: i % 2 === 0 ? 'control' : 'mutant', pairIndex: i,
+    pairedRunId: `P-${i}`, ordinal: i, seed: i + 1,
+    policyId: 'tempo-tactical', policyIds: ['tempo-tactical', 'tempo-tactical'],
+    seatOrder: ['P1', 'P2'], ruleOverrides: null,
+  }]);
+}
+
+test('cancel settles every segment promise — runExperiment-style await can never hang', async () => {
+  const workers = [];
+  const segments = fakeSegments(6);
+  const runner = runMutationSegments(segments, { createWorker: fakeWorkerFactory({ capture: workers }) });
+  assert.equal(workers.length, segments.length);
+  runner.cancel();
+  runner.cancel(); // idempotent — repeated cancel is harmless
+  const results = await runner.promise; // must resolve — not hang
+  assert.equal(runner.pending, 0);
+  assert.ok(workers.every((w) => w.terminated), 'every worker terminated');
+  assert.equal(results.flat().filter((r) => r.error === 'CANCELLED').length, segments.length);
+});
+
+test('late worker messages cannot mutate a settled (cancelled) segment', async () => {
+  const workers = [];
+  const runner = runMutationSegments(fakeSegments(2), { createWorker: fakeWorkerFactory({ capture: workers }) });
+  runner.cancel();
+  // A dying worker emitting after cancel must be ignored.
+  workers[0].emit({ type: 'mutation-segment-result', ok: true, resultsJson: JSON.stringify([{ arm: 'control', ok: true }]) });
+  const results = await runner.promise;
+  assert.equal(results[0][0].error, 'CANCELLED', 'late success cannot overwrite the cancelled row');
+});
+
+test('worker error and spawn failure settle as disclosed fault rows', async () => {
+  const workers = [];
+  const runner = runMutationSegments(fakeSegments(2), { createWorker: fakeWorkerFactory({ capture: workers }) });
+  workers[0].fail();
+  workers[1].emit({ type: 'mutation-segment-result', ok: false, error: 'INNER_FAULT' });
+  const results = await runner.promise;
+  assert.equal(results.flat().every((r) => r.ok === false), true);
+  assert.ok(workers.every((w) => w.terminated));
+
+  const spawnRunner = runMutationSegments(fakeSegments(1), { createWorker: () => { throw new Error('no workers'); } });
+  const spawned = await spawnRunner.promise;
+  assert.match(spawned[0][0].error, /WORKER_SPAWN_FAILED/);
+});
+
+test('a new run can start immediately after cancel', async () => {
+  const first = runMutationSegments(fakeSegments(1), { createWorker: fakeWorkerFactory() });
+  first.cancel();
+  await first.promise;
+  const workers = [];
+  const second = runMutationSegments(fakeSegments(1), { createWorker: fakeWorkerFactory({ capture: workers, autoResult: true }) });
+  const results = await second.promise;
+  assert.equal(results[0][0].ok, true, 'fresh run completes normally after a cancelled run');
+});
+
 // ── UI smoke (static) ─────────────────────────────────────────────────────────
 
 test('mutation chamber workspace renders scientific control surface and is routed', async () => {
@@ -308,7 +594,10 @@ test('mutation chamber workspace renders scientific control surface and is route
   assert.match(src, /data-testid="mut-impact"/);
   assert.match(src, /data-testid="mut-profiles"/);
   assert.match(src, /data-testid="mut-regressions"/);
-  assert.match(src, /run-mutation-segment/);
+  assert.match(src, /runMutationSegments/);
+  const runner = await readFile('apps/lab-web/src/workspaces/mutation-runner.mjs', 'utf8');
+  assert.match(runner, /run-mutation-segment/);
+  assert.match(runner, /cancel\(error = 'CANCELLED'\)/);
   const router = await readFile('apps/lab-web/src/router.js', 'utf8');
   assert.match(router, /'\/mutation','⚖','Mutation Chamber'/);
   const app = await readFile('apps/lab-web/src/app.js', 'utf8');

@@ -200,6 +200,107 @@ function researchProjection(project, { contentHash = null } = {}) {
   };
 }
 
+/**
+ * Rule Mutation experiment → compact dossier projection. Arm aggregates,
+ * comparison rows, verdict and execution-ledger evidence are copied verbatim
+ * from the artifact — the dossier synthesizes, it never recomputes them.
+ * Unreadable/corrupt envelopes project to an explicit disclosed stub.
+ */
+function mutationExperimentProjection(entry) {
+  const record = entry?.record ?? entry ?? null;
+  if (!record || typeof record !== 'object') return null;
+  if (entry?.unreadable === true || record.status === 'UNREADABLE') {
+    return {
+      experimentId: record.experimentId ?? 'unreadable', status: 'UNREADABLE',
+      unavailable: true,
+      reason: 'Persisted envelope failed hash or schema validation — recorded as corrupt, not dropped.',
+      evidenceOrigin: record.evidenceOrigin ?? null, artifactContentHash: entry?.contentHash ?? null,
+    };
+  }
+  const cfg = record.config ?? {};
+  const mutation = record.mutation ?? {};
+  const control = record.arms?.control?.summary ?? null;
+  const mutant = record.arms?.mutant?.summary ?? null;
+  const armSummary = (s) => s ? {
+    games: s.games ?? null, decisive: s.decisive ?? null, draws: s.draws ?? null, aborted: s.aborted ?? null,
+    seat1Wins: s.seat1Wins ?? null, seat1WinRate: s.seat1WinRate ?? null, seat1Wilson: s.seat1Wilson ?? null,
+    meanTurns: s.turns?.mean ?? null, meanMargin: s.meanMargin ?? null,
+    abortRate: s.abortRate ?? null, longGameRate: s.longGameRate ?? null,
+    terminationReasons: s.terminationReasons ?? null, errorCodes: s.errorCodes ?? null,
+    complianceFailures: s.complianceFailures ?? null, complianceUnavailable: s.complianceUnavailable ?? null,
+  } : null;
+  const impactRows = (record.comparison?.rows ?? []).map((row) => ({
+    key: row.key ?? null, label: row.label ?? null, unit: row.unit ?? null,
+    control: row.control ?? null, mutant: row.mutant ?? null, delta: row.delta ?? null,
+    interval: row.interval ?? null, pValue: row.pValue ?? null,
+    paired: row.paired ?? null, pairedN: row.pairedN ?? null,
+    grade: row.grade ?? null, gradeReasons: row.gradeReasons ?? null,
+    n: row.n ?? null,
+  }));
+  return {
+    experimentId: record.experimentId ?? null,
+    experimentType: record.experimentType ?? 'rule-mutation',
+    schemaVersion: record.schemaVersion ?? null,
+    createdAt: record.createdAt ?? null, status: record.status ?? null,
+    baseline: record.baseline ? {
+      engineVersion: record.baseline.engineVersion ?? null, rulesVersion: record.baseline.rulesVersion ?? null,
+      labVersion: record.baseline.labVersion ?? null, authorityHash: record.baseline.authorityHash ?? null,
+      profileId: record.baseline.profileId ?? null,
+    } : null,
+    mutation: {
+      id: mutation.id ?? null, targetId: mutation.targetId ?? null, label: mutation.label ?? null,
+      baselineValue: mutation.baselineValue ?? null, mutatedValue: mutation.mutatedValue ?? null,
+      type: mutation.type ?? null,
+    },
+    hypothesis: record.hypothesis ?? null,
+    config: {
+      profileId: cfg.profileId ?? null, population: Array.isArray(cfg.population) ? [...cfg.population] : [],
+      gamesPerArm: cfg.gamesPerArm ?? null, matchedSeeds: cfg.matchedSeeds ?? null,
+      swapSides: cfg.swapSides ?? null, seedBase: cfg.seedBase ?? null, decisionLimit: cfg.decisionLimit ?? null,
+      objective: cfg.objective ?? null,
+    },
+    execution: record.execution ? {
+      plannedSpecCount: record.execution.plannedSpecCount ?? null,
+      completedSpecCount: record.execution.completedSpecCount ?? null,
+      matchedSeeds: record.execution.matchedSeeds ?? null,
+      pairedCoverage: record.execution.pairedCoverage ?? null,
+      pairedMutantCoverage: record.execution.pairedMutantCoverage ?? null,
+      pairedExact: record.execution.pairedExact ?? null,
+      unpairedControl: record.execution.unpairedControl ?? null,
+      unpairedMutant: record.execution.unpairedMutant ?? null,
+      ledgerExact: record.execution.ledger?.exact ?? null,
+      ledgerMissing: record.execution.ledger?.missing?.length ?? null,
+      ledgerDuplicates: record.execution.ledger?.duplicates?.length ?? null,
+      ledgerUnexpected: record.execution.ledger?.unexpected?.length ?? null,
+      ledgerMismatched: record.execution.ledger?.mismatched?.length ?? null,
+      ledgerFaults: record.execution.ledger?.faults ?? null,
+      planHash: record.execution.ledger?.planHash ?? null,
+      cancelled: record.execution.cancelled === true || null,
+    } : null,
+    arms: {
+      control: armSummary(control), mutant: armSummary(mutant),
+      controlRetained: record.arms?.control?.summariesRetained ?? (Array.isArray(record.arms?.control?.summaries) ? record.arms.control.summaries.length : null),
+      mutantRetained: record.arms?.mutant?.summariesRetained ?? (Array.isArray(record.arms?.mutant?.summaries) ? record.arms.mutant.summaries.length : null),
+      controlDropped: record.arms?.control?.summariesDropped ?? null,
+      mutantDropped: record.arms?.mutant?.summariesDropped ?? null,
+    },
+    impactRows,
+    policyDeltas: record.comparison?.policyDeltas ?? null,
+    pairedN: record.comparison?.pairedN ?? null,
+    regressions: record.regressions ? {
+      status: record.regressions.status ?? null,
+      findings: record.regressions.findings ?? [],
+      checked: record.regressions.checked ?? [], unmeasured: record.regressions.unmeasured ?? [],
+    } : null,
+    outcome: record.outcome ? {
+      verdict: record.outcome.verdict ?? null, provisional: record.outcome.provisional ?? null,
+      reasons: record.outcome.reasons ?? [], supportedMetrics: record.outcome.supportedMetrics ?? [],
+    } : null,
+    evidenceOrigin: record.evidenceOrigin ?? 'LOCAL',
+    artifactContentHash: entry?.contentHash ?? record.contentHash ?? null,
+  };
+}
+
 // ── Finding normalization ────────────────────────────────────────────────
 // Findings project existing analytical verdicts into a uniform machine-readable
 // contract. Fields are copied verbatim from the source analysis — a null means
@@ -327,6 +428,12 @@ function deriveOpenQuestions({ observatory, labSection, integrity }) {
   for (const project of labSection?.researchProjects ?? []) {
     if (project.status === 'RUNNING' || project.status === 'PAUSED') questions.push(`Research project "${project.name ?? project.experimentId}" is ${project.status} — conclusions are provisional.`);
   }
+  for (const m of labSection?.ruleMutations ?? []) {
+    if (m.unavailable === true) { questions.push(`Rule-mutation experiment ${m.experimentId} is unreadable/corrupt — disclosed but unverifiable.`); continue; }
+    if (m.status === 'incomplete' || m.execution?.ledgerExact === false) questions.push(`Rule-mutation experiment ${m.experimentId} did not execute the full declared plan (${m.execution?.completedSpecCount ?? '?'}/${m.execution?.plannedSpecCount ?? '?'} specs) — verdict ${m.outcome?.verdict ?? 'none'} is bounded by partial evidence.`);
+    if (m.evidenceOrigin === 'IMPORTED_UNVERIFIED') questions.push(`Rule-mutation experiment ${m.experimentId} is IMPORTED_UNVERIFIED — its verdict was not reproduced under the current authority.`);
+    if (m.outcome?.provisional === true) questions.push(`Rule-mutation experiment ${m.experimentId} is provisional — small per-arm samples limit inferential confidence.`);
+  }
   const choice = observatory?.choiceAnalysis?.coverage;
   if (choice && choice.decisionsSeen > 0 && choice.decisionsUsable < choice.decisionsSeen) {
     questions.push(`Choice analysis used ${choice.decisionsUsable}/${choice.decisionsSeen} decision frames — ${choice.decisionsSeen - choice.decisionsUsable} frame(s) lacked usable legal-action structure.`);
@@ -343,6 +450,7 @@ function deriveEvidenceGaps({ observatory, labSection }) {
   if (!labSection?.arena?.available) gaps.push({ domain: 'arena', gap: 'No Arena run analytics in this export', severity: 'medium', suggestedEvidence: 'Run an Arena series in the Evolution Lab' });
   if ((labSection?.batchMatrices ?? []).length === 0) gaps.push({ domain: 'batch-experiments', gap: 'No Batch Matrix results persisted or live', severity: 'low', suggestedEvidence: 'Create and execute a Batch Matrix round robin' });
   if ((labSection?.researchProjects ?? []).length === 0) gaps.push({ domain: 'evolution', gap: 'No research projects persisted', severity: 'low', suggestedEvidence: 'Commit an experiment in the Evolution Lab Research panel' });
+  if ((labSection?.ruleMutations ?? []).length === 0) gaps.push({ domain: 'rule-mutation', gap: 'No Rule Mutation Chamber experiments persisted', severity: 'low', suggestedEvidence: 'Run a mutation experiment in the Mutation Chamber' });
   if ((observatory?.anomalies ?? []).length > 0) gaps.push({ domain: 'integrity', gap: `${observatory.anomalies.length} anomal${observatory.anomalies.length === 1 ? 'y' : 'ies'} flagged for review`, severity: 'medium', suggestedEvidence: 'Manual inspection of flagged matchIds / retained replays' });
   return gaps;
 }
@@ -425,7 +533,7 @@ function observatorySections(observatory, aggregate) {
 function labSections(lab) {
   const empty = {
     arena: unavailable('No lab snapshot provided — Arena state not accessible to this export.'),
-    runs: [], batchMatrices: [], researchProjects: [],
+    runs: [], batchMatrices: [], researchProjects: [], ruleMutations: [],
     strategy: unavailable('No lab snapshot provided — strategy evidence corpus not accessible.'),
     labIdentity: null, liveState: null, historicalArtifacts: [],
   };
@@ -448,6 +556,7 @@ function labSections(lab) {
   const matrices = (lab.matrices ?? []).map(matrixManifestRow).filter(Boolean);
   if (lab.liveMatrix) matrices.push(matrixLabProjection(lab.liveMatrix));
   const research = (lab.researchProjects ?? []).map(p => researchProjection(p.project ?? p, { contentHash: p.contentHash ?? null })).filter(Boolean);
+  const mutations = (lab.mutations ?? []).map(mutationExperimentProjection).filter(Boolean);
   const sources = lab.strategy?.sources ?? [];
   const origins = {}, fidelities = {};
   for (const s of sources) { origins[s.origin ?? 'UNKNOWN'] = (origins[s.origin ?? 'UNKNOWN'] ?? 0) + 1; fidelities[s.fidelity ?? 'UNKNOWN'] = (fidelities[s.fidelity ?? 'UNKNOWN'] ?? 0) + 1; }
@@ -471,6 +580,7 @@ function labSections(lab) {
     : unavailable('Strategy evidence store not included in the lab snapshot.');
   return {
     arena, runs: sortedRuns, batchMatrices: matrices.filter(Boolean), researchProjects: research,
+    ruleMutations: mutations,
     strategy, labIdentity: lab.identity ?? null,
     liveState: {
       liveRunId: liveRun?.runId ?? null, status: lab.liveStatus ?? null,
@@ -541,6 +651,8 @@ export function buildAnalysisDossier(input = {}, options = {}) {
       persistedRecords: labSection.runs.reduce((n, r) => n + r.records.length, 0),
       matrixCount: labSection.batchMatrices.length,
       researchProjectCount: labSection.researchProjects.length,
+      mutationExperimentCount: labSection.ruleMutations.length,
+      mutationExperimentUnreadable: labSection.ruleMutations.filter(m => m.unavailable === true).length,
       strategySourceCount: labSection.strategy.available ? labSection.strategy.sourceCount : null,
     },
   };
@@ -586,6 +698,7 @@ export function buildAnalysisDossier(input = {}, options = {}) {
       labScope: {
         runIds: labSection.runs.map(r => r.runId), matrixIds: labSection.batchMatrices.map(m => m.matrixId),
         experimentIds: labSection.researchProjects.map(p => p.experimentId),
+        mutationExperimentIds: labSection.ruleMutations.map(m => m.experimentId),
         checkpointIds: [...new Set(labSection.runs.flatMap(r => (r.checkpoints ?? []).map(c => c?.checkpointId).filter(Boolean)))].sort(),
       },
     },
@@ -603,6 +716,7 @@ export function buildAnalysisDossier(input = {}, options = {}) {
         runs: labSection.runs.map(r => ({ runId: r.runId, contentHash: r.artifactContentHash, fingerprint: r.fingerprint, evidenceOrigin: r.evidenceOrigin, historical: r.historical })),
         matrices: labSection.batchMatrices.map(m => ({ matrixId: m.matrixId, contentHash: m.contentHash ?? null, status: m.status })),
         research: labSection.researchProjects.map(p => ({ experimentId: p.experimentId, contentHash: p.contentHash, status: p.status })),
+        mutations: labSection.ruleMutations.map(m => ({ experimentId: m.experimentId, contentHash: m.artifactContentHash, status: m.status, evidenceOrigin: m.evidenceOrigin ?? null })),
       },
       collectionNotes: Array.isArray(lab?.collectionNotes) ? lab.collectionNotes : [],
       generator: 'lab-web analysis-dossier', dossierSchemaVersion: DOSSIER_VERSION,
@@ -618,7 +732,7 @@ export function buildAnalysisDossier(input = {}, options = {}) {
     strategy: labSection.strategy,
     arena: labSection.arena,
     batchExperiments: { matrices: labSection.batchMatrices, liveState: labSection.liveState },
-    evolution: { researchProjects: labSection.researchProjects, labIdentity: labSection.labIdentity, runs: labSection.runs, historicalArtifacts: labSection.historicalArtifacts },
+    evolution: { researchProjects: labSection.researchProjects, ruleMutations: labSection.ruleMutations, labIdentity: labSection.labIdentity, runs: labSection.runs, historicalArtifacts: labSection.historicalArtifacts },
     findings,
     uncertainties: collectUncertainties(observatory, labSection),
     recommendations: collectRecommendations(analysisExtract, observatory, labSection),
@@ -652,7 +766,7 @@ function buildExecutiveSummary({ observatory, aggregate, dataset, sections: _sec
   } else {
     lines.push('No Observatory analytics were loaded — this dossier covers lab evidence only.');
   }
-  if (labSection.runs.length) lines.push(`Evolution Lab: ${labSection.runs.length} run artifact(s), ${dataset.lab.persistedRecords} accepted game records, ${labSection.batchMatrices.length} matrix artifact(s), ${labSection.researchProjects.length} research project(s).`);
+  if (labSection.runs.length || labSection.ruleMutations.length) lines.push(`Evolution Lab: ${labSection.runs.length} run artifact(s), ${dataset.lab.persistedRecords} accepted game records, ${labSection.batchMatrices.length} matrix artifact(s), ${labSection.researchProjects.length} research project(s), ${labSection.ruleMutations.length} rule-mutation experiment(s).`);
   if (labSection.strategy.available) lines.push(`Strategy corpus: ${labSection.strategy.sourceCount} evidence source(s), ${labSection.strategy.decisionEventTotal} decision events (${labSection.strategy.origins.IMPORTED_UNVERIFIED ?? 0} imported-unverified).`);
   return { lines, analysisExtractSummary: null };
 }
@@ -738,6 +852,7 @@ export function renderAnalysisDossierMarkdown(dossier) {
     ['Lab replay index', ds.autonomyIndex?.replayCount, ds.autonomyIndex?.indexHash?.slice(0, 16)],
     ['Lab runs', ds.lab?.persistedRunCount, `${ds.lab?.persistedRecords ?? 0} records`],
     ['Matrices', ds.lab?.matrixCount, ''], ['Research projects', ds.lab?.researchProjectCount, ''],
+    ['Mutation experiments', ds.lab?.mutationExperimentCount, ds.lab?.mutationExperimentUnreadable ? `${ds.lab.mutationExperimentUnreadable} unreadable` : ''],
     ['Strategy sources', ds.lab?.strategySourceCount, ''],
   ]));
 
@@ -910,6 +1025,40 @@ export function renderAnalysisDossierMarkdown(dossier) {
     ])));
   }
 
+  out.push(`## Rule Mutation Experiments\n`);
+  const muts = dossier.evolution?.ruleMutations ?? [];
+  if (!muts.length) out.push('_No rule-mutation experiments persisted._\n');
+  else {
+    for (const m of muts) {
+      if (m.unavailable === true) {
+        out.push(`### ${m.experimentId ?? 'unreadable'} — UNREADABLE\n`);
+        out.push(`> ${m.reason ?? 'Persisted envelope failed validation.'}\n`);
+        continue;
+      }
+      const mut = m.mutation ?? {};
+      out.push(`### ${m.experimentId} — ${m.status ?? 'unknown'}${m.outcome?.verdict ? ` · verdict ${m.outcome.verdict}${m.outcome.provisional ? ' (provisional)' : ''}` : ''}\n`);
+      out.push(`Mutation: ${mut.label ?? mut.targetId ?? '?'} (${mut.targetId ?? '?'}: ${mut.baselineValue ?? '?'} → ${mut.mutatedValue ?? '?'}) · created ${m.createdAt ?? 'unknown'} · origin ${m.evidenceOrigin ?? 'LOCAL'}\n`);
+      if (m.baseline) out.push(`Authority: engine ${m.baseline.engineVersion ?? '?'} · rules ${m.baseline.rulesVersion ?? '?'} · lab ${m.baseline.labVersion ?? '?'} · profile ${m.baseline.profileId ?? '?'}\n`);
+      if (m.hypothesis) out.push(`> Hypothesis: ${m.hypothesis}\n`);
+      const obj = m.config?.objective;
+      out.push(`Objective: ${obj ? `${obj.direction} ${obj.metric ?? ''}${obj.minimumMeaningfulEffect ? ` (min Δ ${obj.minimumMeaningfulEffect})` : ''}` : 'exploratory (no predeclared direction — supported movement is never reported as beneficial)'}\n`);
+      const ex = m.execution;
+      if (ex) out.push(`Execution: ${ex.completedSpecCount ?? '?'}/${ex.plannedSpecCount ?? '?'} specs · exact ledger ${ex.ledgerExact === true ? 'YES' : 'NO'} · exact pairing ${ex.pairedExact === true ? 'YES' : 'NO'} · coverage ${pctText(ex.pairedCoverage)}/${pctText(ex.pairedMutantCoverage)}${ex.ledgerFaults ? ` · ${ex.ledgerFaults} worker fault(s)` : ''}${ex.cancelled ? ' · CANCELLED' : ''}\n`);
+      const ac = m.arms?.control, am = m.arms?.mutant;
+      if (ac || am) out.push(mdTable(['Arm', 'Games', 'Decisive', 'Draws', 'Aborts', 'Seat-1 win rate (self-play)', 'Mean turns'], [
+        ['control', ac?.games, ac?.decisive, ac?.draws, ac?.aborted, pctText(ac?.seat1WinRate), numText(ac?.meanTurns)],
+        ['mutant', am?.games, am?.decisive, am?.draws, am?.aborted, pctText(am?.seat1WinRate), numText(am?.meanTurns)],
+      ]));
+      if (m.impactRows?.length) out.push(mdTable(['Metric', 'Control', 'Mutant', 'Δ', '95% CI', 'p', 'n(c/m)', 'Grade'], m.impactRows.map(r => [
+        r.label ?? r.key, numText(r.control), numText(r.mutant), numText(r.delta), formatInterval(r.interval), numText(r.pValue), `${r.n?.control ?? '?'}/${r.n?.mutant ?? '?'}`, r.grade ?? '—',
+      ])));
+      if (m.regressions?.findings?.length) out.push(`Regressions: ${m.regressions.findings.map(f => `${f.code ?? '?'} (${f.severity ?? '?'})`).join(', ')}\n`);
+      else if (m.regressions) out.push(`Regressions: ${m.regressions.status ?? 'CLEAR'} (${m.regressions.checked?.length ?? 0} checks run)\n`);
+      if (m.outcome?.reasons?.length) for (const r of m.outcome.reasons) out.push(`- ${r}`);
+      out.push('');
+    }
+  }
+
   out.push(`## Anomalies\n`);
   const an = dossier.anomalies;
   if (!an?.items?.length) out.push('_No anomalies flagged._\n');
@@ -960,6 +1109,7 @@ export function renderAnalysisDossierMarkdown(dossier) {
   if (artifacts.runs?.length) out.push(`Run artifacts: ${artifacts.runs.map(r => `${r.runId}${r.historical ? ' (historical)' : ''}${r.contentHash ? ` hash=${r.contentHash.slice(0, 12)}` : ''}`).join(', ')}\n`);
   if (artifacts.matrices?.length) out.push(`Matrix artifacts: ${artifacts.matrices.map(m => `${m.matrixId} (${m.status})`).join(', ')}\n`);
   if (artifacts.research?.length) out.push(`Research artifacts: ${artifacts.research.map(p => p.experimentId).join(', ')}\n`);
+  if (artifacts.mutations?.length) out.push(`Mutation artifacts: ${artifacts.mutations.map(m => `${m.experimentId} (${m.status}${m.evidenceOrigin === 'IMPORTED_UNVERIFIED' ? ', imported-unverified' : ''})`).join(', ')}\n`);
 
   if (dossier.unavailable?.length) {
     out.push(`## Unavailable Domains\n`);

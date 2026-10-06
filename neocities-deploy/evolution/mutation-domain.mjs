@@ -21,7 +21,61 @@ export const MUTATION_EXPERIMENT_TYPE = 'rule-mutation';
 export const MUTATION_EXPERIMENT_SCHEMA_VERSION = 1;
 export const MUTATION_ARM = Object.freeze({ CONTROL: 'control', MUTANT: 'mutant' });
 export const MUTATION_STATUS = Object.freeze({ CONFIGURED: 'configured', RUNNING: 'running', COMPLETE: 'complete', INCOMPLETE: 'incomplete', FAILED: 'failed' });
-export const MUTATION_OUTCOME = Object.freeze({ PROMISING: 'PROMISING', TRADEOFF: 'TRADEOFF', REGRESSION: 'REGRESSION', INCONCLUSIVE: 'INCONCLUSIVE', UNEXPECTED: 'UNEXPECTED' });
+export const MUTATION_OUTCOME = Object.freeze({ PROMISING: 'PROMISING', TRADEOFF: 'TRADEOFF', REGRESSION: 'REGRESSION', INCONCLUSIVE: 'INCONCLUSIVE', UNEXPECTED: 'UNEXPECTED', ADVERSE: 'ADVERSE', EXPLORATORY: 'EXPLORATORY' });
+
+/**
+ * Metrics a declared experiment objective may target — the exact row keys the
+ * impact vector produces in compareArms(). Closed list so objectives stay
+ * machine-checkable and deterministic (never parsed from freeform text).
+ */
+export const MUTATION_OBJECTIVE_METRICS = Object.freeze({
+  seat1WinRate: 'First-player win rate',
+  drawRate: 'Draw rate',
+  abortRate: 'Abort / invalid rate',
+  longGameRate: 'Long-game rate',
+  meanTurns: 'Mean game length (Full Turns)',
+  meanMargin: 'Mean score margin',
+  meanCommands: 'Mean commands',
+  meanActions: 'Mean actions',
+  meanMiniTurnActions: 'Mean Mini-Turn actions',
+  meanAdvancedDecisions: 'Mean advanced decisions',
+  meanVoltageDecisions: 'Mean Voltage decisions',
+  meanUltraDecisions: 'Mean Ultra decisions',
+  meanTriggerCount: 'Mean trigger events',
+  meanResponseDecisions: 'Mean response decisions',
+});
+
+export const MUTATION_OBJECTIVE_DIRECTIONS = Object.freeze(['increase', 'decrease', 'absolute-change', 'exploratory']);
+
+/**
+ * Normalize + validate a predeclared experiment objective. The objective is
+ * chosen before execution, serialized into the artifact, displayed in the UI
+ * and consulted by classification — a verdict may never infer desirability
+ * from the freeform hypothesis. `null`/`undefined` → null (the artifact then
+ * classifies with exploratory semantics and can never report PROMISING).
+ * @param {{ metric?: string, direction: string, minimumMeaningfulEffect?: number } | null | undefined} input
+ */
+export function createExperimentObjective(input) {
+  if (input == null) return null;
+  if (typeof input !== 'object') fail('OBJECTIVE_INVALID', 'Experiment objective must be an object');
+  const direction = input.direction;
+  if (!MUTATION_OBJECTIVE_DIRECTIONS.includes(direction)) fail('OBJECTIVE_DIRECTION_INVALID', `Objective direction must be one of ${MUTATION_OBJECTIVE_DIRECTIONS.join(', ')}`);
+  const metric = input.metric ?? null;
+  if (direction !== 'exploratory') {
+    if (typeof metric !== 'string' || !MUTATION_OBJECTIVE_METRICS[metric]) fail('OBJECTIVE_METRIC_INVALID', `Objective metric must be one of ${Object.keys(MUTATION_OBJECTIVE_METRICS).join(', ')}`);
+  } else if (metric != null && !MUTATION_OBJECTIVE_METRICS[metric]) {
+    fail('OBJECTIVE_METRIC_INVALID', `Objective metric must be one of ${Object.keys(MUTATION_OBJECTIVE_METRICS).join(', ')}`);
+  }
+  const minimumMeaningfulEffect = input.minimumMeaningfulEffect == null ? 0 : Number(input.minimumMeaningfulEffect);
+  if (!Number.isFinite(minimumMeaningfulEffect) || minimumMeaningfulEffect < 0) fail('OBJECTIVE_EFFECT_INVALID', 'minimumMeaningfulEffect must be a finite number ≥ 0');
+  return Object.freeze({ metric: metric ?? null, direction, minimumMeaningfulEffect });
+}
+
+/** Re-validate a persisted objective (load/import path). null stays null. */
+export function validateExperimentObjective(value) {
+  if (value == null) return null;
+  return createExperimentObjective(value);
+}
 
 export const MUTATION_LIMITS = Object.freeze({
   gamesPerArm: 10000,
@@ -185,6 +239,11 @@ export function createExperimentConfig(input) {
     swapSides: input.swapSides !== false,
     seedBase,
     decisionLimit,
+    // Predeclared experimental objective — chosen before execution and frozen
+    // into the config so the verdict can never reinterpret intent post hoc.
+    // null means "exploratory": supported movement is reported, never called
+    // beneficial.
+    objective: createExperimentObjective(input.objective ?? null),
   });
 }
 
@@ -336,6 +395,9 @@ export function summarizeMutationArm(summaries) {
     terminationReasons, errorCodes,
     policyBreakdown: Object.fromEntries(Object.entries(policyBreakdown).map(([k, b]) => [k, {
       games: b.games, wins: b.wins, losses: b.losses, draws: b.draws, aborted: b.aborted, decisive: b.decisive,
+      // Sufficient statistics survive aggregation — downstream inference must
+      // derive from raw counts, never from the rounded display rates.
+      seat1Wins: b.seat1Wins,
       winRate: b.decisive > 0 ? b.wins / b.decisive : null,
       seat1WinRate: b.decisive > 0 ? b.seat1Wins / b.decisive : null,
       meanTurns: b.turns.length ? b.turns.reduce((a, c) => a + c, 0) / b.turns.length : null,
@@ -347,7 +409,13 @@ export function summarizeMutationArm(summaries) {
  * Align the two arms into genuine matched pairs. A pair requires the same
  * pairedRunId, the same seed, the same seat order, and the same policies —
  * anything missing on one side stays unpaired and is reported honestly.
- * @returns {{ pairs: Array<{control: *, mutant: *}>, unpairedControl: Array, unpairedMutant: Array, coverage: number }}
+ *
+ * Coverage contract — two different questions, two different fields:
+ *   coverage / mutantCoverage — descriptive per-arm pairing rates;
+ *   exact — the Boolean claim "every row in BOTH arms is paired", which is
+ *   symmetric: extra unmatched mutant rows make it false just as extra
+ *   unmatched control rows do. Never derive exactness from coverage alone.
+ * @returns {{ pairs: Array<{control: *, mutant: *}>, unpairedControl: Array, unpairedMutant: Array, coverage: number, mutantCoverage: number, exact: boolean }}
  */
 export function pairArmResults(controlSummaries, mutantSummaries) {
   const key = (s) => `${s.pairedRunId ?? ''}|${s.seed}|${(s.seatOrder ?? []).join(',')}|${(s.policyIds ?? []).join(',')}`;
@@ -365,14 +433,24 @@ export function pairArmResults(controlSummaries, mutantSummaries) {
   }
   const unpairedMutant = [...mutantByKey.values()].flat();
   const coverage = controlSummaries.length ? pairs.length / controlSummaries.length : 0;
-  return { pairs, unpairedControl, unpairedMutant, coverage };
+  const mutantCoverage = mutantSummaries.length ? pairs.length / mutantSummaries.length : 0;
+  const exact = pairs.length > 0 && unpairedControl.length === 0 && unpairedMutant.length === 0;
+  return { pairs, unpairedControl, unpairedMutant, coverage, mutantCoverage, exact };
 }
 
 // ── Impact vector ───────────────────────────────────────────────────────────
 
+// Fixed family size for Bonferroni multiplicity adjustment: 4 rate rows +
+// 11 mean rows. Without a q-value the shared grader can never reach any
+// evidence tier (q defaults to 1), which would make every supported-movement
+// verdict unreachable. Bonferroni is conservative and honest — it can only
+// make evidence HARDER to claim, never easier.
+const MUTATION_METRIC_FAMILY_SIZE = 15;
+const adjustedQ = (pValue) => (pValue == null || !Number.isFinite(pValue) ? null : Math.min(1, pValue * MUTATION_METRIC_FAMILY_SIZE));
+
 function rateRow(key, label, controlCount, mutantCount, controlTotal, mutantTotal) {
   const diff = differenceInProportions(mutantCount, mutantTotal, controlCount, controlTotal);
-  const grade = evidenceGradeDetailed({ sampleSize: Math.min(mutantTotal, controlTotal), interval: diff.interval, effectSize: diff.estimate, cohortBalance: Math.min(mutantTotal, controlTotal) / Math.max(mutantTotal, controlTotal, 1) });
+  const grade = evidenceGradeDetailed({ sampleSize: Math.min(mutantTotal, controlTotal), interval: diff.interval, effectSize: diff.estimate, cohortBalance: Math.min(mutantTotal, controlTotal) / Math.max(mutantTotal, controlTotal, 1), qValue: adjustedQ(diff.pValue) });
   return {
     key, label, unit: 'proportion', deltaKind: 'pp',
     control: controlTotal > 0 ? controlCount / controlTotal : null,
@@ -402,7 +480,7 @@ function meanRow(key, label, controlStats, mutantStats, pairs, selector, pairedC
   }
   const grade = evidenceGradeDetailed({
     sampleSize: diffs.length, interval, effectSize: delta,
-    pairedCoverage, scale: 'difference',
+    pairedCoverage, scale: 'difference', qValue: adjustedQ(pValue),
   });
   return {
     key, label, unit: 'mean', deltaKind: 'mean',
@@ -448,8 +526,11 @@ export function compareArms(control, mutant, pairing) {
       (s) => (s && s.games === 1 ? s[key] : selector(s)), pairing.coverage));
   }
   return {
-    matched: pairing.coverage >= 0.99,
+    // `matched` is the exact-pairing claim: symmetric over both arms. The
+    // asymmetric coverage ratio stays available as a descriptive metric only.
+    matched: pairing.exact ?? (pairing.coverage >= 0.99 && (pairing.unpairedMutant?.length ?? 0) === 0),
     pairedCoverage: pairing.coverage,
+    pairedMutantCoverage: pairing.mutantCoverage ?? null,
     pairedN: pairing.pairs.length,
     unpairedControl: pairing.unpairedControl.length,
     unpairedMutant: pairing.unpairedMutant.length,
@@ -566,44 +647,83 @@ export function detectRegressions({ control, mutant, comparison }) {
 // ── Outcome classification ──────────────────────────────────────────────────
 
 /**
- * Deterministic experiment verdict. PROMISING requires a supported positive
- * effect with no regression; TRADEOFF requires supported movement in at least
- * two directions; REGRESSION on any critical/warning regression finding;
- * INCONCLUSIVE when nothing reaches the exploratory grade; UNEXPECTED when a
- * supported effect exists but the mutation target family was not among the
- * metrics that moved. Marked provisional when sample sizes are thin.
+ * Deterministic experiment verdict, evaluated against the experiment's
+ * PREDECLARED objective (config.objective). A supported effect can only be
+ * called beneficial when the recorded objective declared that metric and that
+ * direction before execution — desirability is never reverse-engineered from
+ * whichever metric happened to move.
+ *
+ *   PROMISING    — the objective metric moved in the declared direction by at
+ *                  least minimumMeaningfulEffect, with no regression finding
+ *                  and no other supported movement.
+ *   TRADEOFF     — the objective was met, but other metric(s) also moved with
+ *                  supported evidence.
+ *   ADVERSE      — the objective metric moved with supported evidence in the
+ *                  direction OPPOSITE the declared intent.
+ *   UNEXPECTED   — supported movement exists, but not on the declared
+ *                  objective metric.
+ *   EXPLORATORY  — supported movement exists and the objective is exploratory
+ *                  (or absent, e.g. a legacy artifact): reported as observed
+ *                  movement, never as a benefit.
+ *   REGRESSION   — any critical/warning regression finding.
+ *   INCONCLUSIVE — nothing reached the exploratory evidence grade, or the
+ *                  target moved less than minimumMeaningfulEffect.
+ *
+ * Marked provisional when sample sizes are thin.
  */
-export function classifyOutcome({ comparison, regressions, mutation }) {
+export function classifyOutcome({ comparison, regressions, mutation, objective = null }) {
   const supported = comparison.rows.filter((row) => ['EXPLORATORY', 'SUPPORTED', 'ROBUST'].includes(row.grade));
   const regressing = regressions.findings.filter((f) => f.severity === 'critical' || f.severity === 'warning');
   const smallSample = Math.min(comparison.rows[0]?.n?.control ?? 0, comparison.rows[0]?.n?.mutant ?? 0) < 100;
+  const targetGroup = mutationTarget(mutation?.targetId)?.group ?? '';
+  const reasons = [
+    `${supported.length} metric(s) reached exploratory-or-better evidence`,
+    `${regressing.length} regression finding(s)`,
+    ...(smallSample ? [`small sample (<100 per arm) — verdict is provisional`] : []),
+  ];
   let verdict;
-  if (regressing.some((f) => f.severity === 'critical')) verdict = MUTATION_OUTCOME.REGRESSION;
-  else if (regressing.length > 0) verdict = MUTATION_OUTCOME.REGRESSION;
+  if (regressing.length > 0) verdict = MUTATION_OUTCOME.REGRESSION;
   else if (supported.length === 0) verdict = MUTATION_OUTCOME.INCONCLUSIVE;
-  else if (supported.length >= 2) verdict = MUTATION_OUTCOME.TRADEOFF;
   else {
-    // Single supported effect — does it implicate the mutated system?
-    const targetGroup = mutationTarget(mutation?.targetId)?.group ?? '';
-    const row = supported[0];
-    const related = (
-      (targetGroup === 'Tempo' && ['meanMiniTurnActions', 'meanTurns', 'seat1WinRate'].includes(row.key)) ||
-      (targetGroup === 'Points' && ['meanMargin', 'meanTurns'].includes(row.key)) ||
-      (targetGroup === 'Combos' && ['meanAdvancedDecisions', 'meanUltraDecisions', 'meanMiniTurnActions'].includes(row.key)) ||
-      (targetGroup === 'Draw' && ['meanActions', 'meanTurns'].includes(row.key)) ||
-      (targetGroup === 'Match' && ['meanTurns', 'seat1WinRate'].includes(row.key)) ||
-      row.key === 'seat1WinRate'
-    );
-    verdict = related ? MUTATION_OUTCOME.PROMISING : MUTATION_OUTCOME.UNEXPECTED;
+    const objectiveValid = objective && typeof objective === 'object' && MUTATION_OBJECTIVE_DIRECTIONS.includes(objective.direction);
+    const direction = objectiveValid ? objective.direction : 'exploratory';
+    if (direction === 'exploratory') {
+      verdict = MUTATION_OUTCOME.EXPLORATORY;
+      reasons.push(`no directional objective was predeclared — supported movement on ${supported.map((r) => r.key).join(', ')} is reported as observed exploratory movement, not a benefit`);
+    } else {
+      const targetRow = comparison.rows.find((row) => row.key === objective.metric);
+      if (!targetRow || !supported.includes(targetRow)) {
+        verdict = MUTATION_OUTCOME.UNEXPECTED;
+        reasons.push(`supported movement on ${supported.map((r) => r.key).join(', ')}, but the declared objective metric ${objective.metric} did not reach exploratory evidence`);
+      } else {
+        const delta = targetRow.delta;
+        const minimum = Number.isFinite(objective.minimumMeaningfulEffect) ? objective.minimumMeaningfulEffect : 0;
+        const meaningful = Number.isFinite(delta) && Math.abs(delta) >= minimum;
+        const desired = direction === 'increase' ? delta > 0 : direction === 'decrease' ? delta < 0 : delta !== 0;
+        const fmtDelta = Number.isFinite(delta) ? (targetRow.unit === 'proportion' ? `${(delta * 100).toFixed(1)}pp` : `${delta}`) : 'unavailable';
+        if (!meaningful) {
+          verdict = MUTATION_OUTCOME.INCONCLUSIVE;
+          reasons.push(`${objective.metric} moved ${fmtDelta} — inside the declared minimum meaningful effect ${minimum}; treated as no meaningful effect`);
+        } else if (!desired) {
+          verdict = MUTATION_OUTCOME.ADVERSE;
+          reasons.push(`${objective.metric} moved ${fmtDelta} — supported evidence in the direction OPPOSITE the declared ${direction} objective${targetGroup ? ` (target family: ${targetGroup})` : ''}`);
+        } else {
+          const offTarget = supported.filter((row) => row !== targetRow);
+          if (offTarget.length > 0) {
+            verdict = MUTATION_OUTCOME.TRADEOFF;
+            reasons.push(`objective met: ${objective.metric} moved ${fmtDelta} in the declared ${direction} direction, but ${offTarget.length} other metric(s) also moved with support (${offTarget.map((r) => r.key).join(', ')})`);
+          } else {
+            verdict = MUTATION_OUTCOME.PROMISING;
+            reasons.push(`declared objective met: ${objective.metric} moved ${fmtDelta} in the ${direction} direction with ${targetRow.grade} evidence${targetGroup ? ` (target family: ${targetGroup})` : ''}`);
+          }
+        }
+      }
+    }
   }
   return {
     verdict,
     provisional: smallSample,
-    reasons: [
-      `${supported.length} metric(s) reached exploratory-or-better evidence`,
-      `${regressing.length} regression finding(s)`,
-      ...(smallSample ? [`small sample (<100 per arm) — verdict is provisional`] : []),
-    ],
+    reasons,
     supportedMetrics: supported.map((row) => row.key),
   };
 }
@@ -650,11 +770,80 @@ export function experimentContentHash(record) {
 }
 
 /**
- * Finalize a record after execution: attach arm summaries, aggregate, compare,
- * detect regressions, classify. `status` is COMPLETE only when every planned
- * spec produced a summary in both arms.
+ * Execution-ledger audit: proves that the completed result set IS the planned
+ * spec set — not merely the same row count. Every planned spec has a stable
+ * identity `arm|pairedRunId`; the executed set must contain each identity
+ * exactly once, carry matching seed / seat order / policy identity, contain
+ * no unexpected extras, and contain no worker faults (a fault is a disclosed
+ * non-execution, never a silent success).
+ *
+ * `exact` is the only field a COMPLETE verdict may rest on. `missing`,
+ * `duplicates`, `unexpected`, `mismatched` and `faults` disclose precisely
+ * which invariant failed — nothing is silently repaired.
+ *
+ * @param {{ specs?: Array } | null} plan - buildMutationExperimentPlan output
+ * @param {{ controlSummaries?: Array, mutantSummaries?: Array }} arms
  */
-export function finalizeExperimentRecord(record, { controlSummaries, mutantSummaries, completedSpecCount, plannedSpecCount }) {
+export function auditExecutionLedger(plan, { controlSummaries = [], mutantSummaries = [] } = {}) {
+  /** @type {Map<string, *>} */
+  const expected = new Map();
+  for (const spec of plan?.specs ?? []) expected.set(`${spec.arm}|${spec.pairedRunId}`, spec);
+  const plannedPairs = new Set((plan?.specs ?? []).map((s) => s.pairedRunId)).size;
+  const seen = new Map();
+  const unexpected = [], mismatched = [];
+  const isFault = (s) => s?.terminationReason === 'WORKER_FAULT' || s?.errorCode === 'MUTATION_WORKER_FAULT';
+  const observe = (arm, s) => {
+    const key = `${arm}|${s?.pairedRunId ?? ''}`;
+    const spec = expected.get(key);
+    if (!spec) { unexpected.push(key); return; }
+    const entry = seen.get(key) ?? { count: 0, faults: 0 };
+    entry.count += 1;
+    if (isFault(s)) entry.faults += 1;
+    else {
+      if (Number(s?.seed) !== spec.seed) mismatched.push(`${key}:seed`);
+      if ((s?.seatOrder ?? []).join(',') !== spec.seatOrder.join(',')) mismatched.push(`${key}:seatOrder`);
+      if ((s?.policyIds ?? []).join(',') !== spec.policyIds.join(',')) mismatched.push(`${key}:policyIds`);
+      // Arm identity discriminator: a mutant result carries the override map;
+      // a control result never does. Under matched seeds the other identity
+      // fields are identical across arms, so this is the check that catches a
+      // result reported in the wrong arm.
+      if (hashCanonical(s?.ruleOverrides ?? null) !== hashCanonical(spec.ruleOverrides ?? null)) mismatched.push(`${key}:ruleOverrides`);
+    }
+    seen.set(key, entry);
+  };
+  for (const s of controlSummaries) observe(MUTATION_ARM.CONTROL, s);
+  for (const s of mutantSummaries) observe(MUTATION_ARM.MUTANT, s);
+  const missing = [...expected.keys()].filter((k) => !seen.has(k));
+  const duplicates = [...seen.entries()].filter(([, e]) => e.count > 1).map(([k]) => k);
+  const faults = [...seen.values()].reduce((n, e) => n + e.faults, 0);
+  const executedCount = [...seen.values()].reduce((n, e) => n + e.count, 0);
+  const expectedCount = expected.size;
+  const exact = expectedCount > 0 && missing.length === 0 && duplicates.length === 0
+    && unexpected.length === 0 && mismatched.length === 0 && faults === 0
+    && executedCount === expectedCount;
+  return {
+    verified: expectedCount > 0,
+    expectedCount, executedCount, plannedPairs,
+    missing, duplicates, unexpected, mismatched, faults,
+    exact,
+    // Plan identity hash: lets an importer prove completeness independently —
+    // the plan is deterministically rebuildable from experimentId+mutation+config.
+    planHash: hashCanonical([...expected.keys()].sort()),
+  };
+}
+
+/**
+ * Finalize a record after execution: attach arm summaries, aggregate, compare,
+ * detect regressions, classify against the predeclared objective.
+ *
+ * `status` is COMPLETE only when the execution ledger proves the result set is
+ * exactly the planned spec set (every planned spec identity present exactly
+ * once, identity fields consistent, no extras, no worker faults). A row-count
+ * match alone is NEVER sufficient — a duplicate result cannot stand in for a
+ * missing planned spec. Without a plan the ledger cannot be verified, so the
+ * record fails closed to INCOMPLETE.
+ */
+export function finalizeExperimentRecord(record, { controlSummaries, mutantSummaries, plan = null, completedSpecCount, plannedSpecCount }) {
   const next = structuredClone(record);
   next.arms = {
     control: { summaries: controlSummaries, summary: summarizeMutationArm(controlSummaries) },
@@ -665,14 +854,23 @@ export function finalizeExperimentRecord(record, { controlSummaries, mutantSumma
   next.arms.mutant.pairing = { paired: pairing.pairs.length, unpaired: pairing.unpairedMutant.length };
   next.comparison = compareArms(next.arms.control.summary, next.arms.mutant.summary, pairing);
   next.regressions = detectRegressions({ control: next.arms.control.summary, mutant: next.arms.mutant.summary, comparison: next.comparison });
-  next.outcome = classifyOutcome({ comparison: next.comparison, regressions: next.regressions, mutation: next.mutation });
+  next.outcome = classifyOutcome({ comparison: next.comparison, regressions: next.regressions, mutation: next.mutation, objective: next.config?.objective ?? null });
+  const ledger = auditExecutionLedger(plan, { controlSummaries, mutantSummaries });
+  const pairedExact = pairing.exact && pairing.pairs.length === ledger.plannedPairs;
   next.execution = {
     plannedSpecCount, completedSpecCount,
-    matchedSeeds: next.config.matchedSeeds && pairing.coverage >= 0.99,
+    // `matchedSeeds` is a Boolean claim of exact matched-pair execution —
+    // symmetric over both arms and bound to the plan, not a coverage ratio.
+    matchedSeeds: next.config.matchedSeeds === true && ledger.exact && pairedExact,
     pairedCoverage: pairing.coverage,
+    pairedMutantCoverage: pairing.mutantCoverage,
+    pairedExact,
+    unpairedControl: pairing.unpairedControl.length,
+    unpairedMutant: pairing.unpairedMutant.length,
+    ledger,
     completedAt: new Date().toISOString(),
   };
-  next.status = completedSpecCount >= plannedSpecCount ? MUTATION_STATUS.COMPLETE : MUTATION_STATUS.INCOMPLETE;
+  next.status = ledger.exact && completedSpecCount >= plannedSpecCount ? MUTATION_STATUS.COMPLETE : MUTATION_STATUS.INCOMPLETE;
   next.contentHash = experimentContentHash(next);
   return next;
 }
@@ -704,7 +902,22 @@ export function validateExperimentRecord(value) {
   if (!value.baseline || typeof value.baseline.engineVersion !== 'string') fail('EXPERIMENT_BASELINE_MISSING', 'Baseline identity is missing');
   validateRuleMutation(value.mutation);
   if (!value.config || !Array.isArray(value.config.population)) fail('EXPERIMENT_CONFIG_MISSING', 'Experiment configuration is missing');
+  if (value.config.objective != null) validateExperimentObjective(value.config.objective);
   if (!value.arms || !value.arms.control || !value.arms.mutant) fail('EXPERIMENT_ARMS_MISSING', 'Arm-separated results are missing');
+  // COMPLETE is a proven claim, not a label: the artifact must carry an exact
+  // execution ledger whose plan hash matches the deterministically rebuilt
+  // plan. Legacy artifacts that predate the ledger cannot prove completeness
+  // and are rejected as unverifiable rather than silently reinterpreted.
+  if (value.status === MUTATION_STATUS.COMPLETE) {
+    const ledger = value.execution?.ledger;
+    if (!ledger || ledger.exact !== true || typeof ledger.planHash !== 'string') {
+      fail('EXPERIMENT_COMPLETENESS_UNPROVEN', 'COMPLETE status requires an exact execution ledger — this artifact cannot prove it executed the full plan');
+    }
+    const rebuilt = buildMutationExperimentPlan({ experimentId: value.experimentId, mutation: value.mutation, config: value.config });
+    if (ledger.planHash !== hashCanonical(rebuilt.specs.map((s) => `${s.arm}|${s.pairedRunId}`).sort())) {
+      fail('EXPERIMENT_PLAN_MISMATCH', 'Execution ledger plan hash does not match the plan rebuilt from the artifact config');
+    }
+  }
   return value;
 }
 

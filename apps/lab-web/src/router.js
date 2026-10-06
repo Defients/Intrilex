@@ -15,7 +15,7 @@ export const WORKSPACES = [
   ['/seasons','📅','Seasons','Ranked play and leaderboards'],
   // Learn lane
   ['/rules','📖','Rules','Complete rulebook'],
-  ['/cards','🃏','Cards','Card reference'],
+  ['/cards','🃏','Cards','Card observatory'],
   [STRATEGY_NAMES.route,'◈',STRATEGY_NAMES.workspace,'Field Manual'],
   // Lab lane
   ['/watch','◈','Watch','Match theatre'],
@@ -25,6 +25,7 @@ export const WORKSPACES = [
   ['/mechanics','⌁','Mechanics','Atlas'],
   ['/synergies','⟷','Synergies','Relationships'],
   ['/ranks','★','Ranks','Power observatory'],
+  ['/atlas','⌖','Meta Atlas','Strategic population map'],
   ['/compare','⇄','Compare','Matched cohorts'],
   ['/traces','◇','Traces','Decision intelligence'],
   ['/branches','⎇','Branches','Counterfactual lab'],
@@ -32,6 +33,7 @@ export const WORKSPACES = [
   ['/diagnostics','⚙','Diagnostics','Policy behavior'],
   ['/evolution','🧬','Evolution Lab','Experiments and heuristic evolution'],
   ['/mutation','⚖','Mutation Chamber','A/B rule experiments'],
+  ['/discover','✦','Discover','Autonomous research engine'],
   ['/tournament','🏆','Tournament','AI bracket'],
   ['/evidence','◎','Evidence','Integrity'],
   ['/intelligence','✦','Analytics AI','Ollama interpretation'],
@@ -59,6 +61,7 @@ export const WORKSPACE_KEYWORDS = {
   '/mechanics': 'rules systems atlas keywords opportunity usage impact',
   '/synergies': 'relationships pairs combos interactions counterexamples',
   '/ranks': 'best cards power rankings tier strongest',
+  '/atlas': 'population map scatter behavior metrics matchup counters strong weak similar different',
   '/compare': 'cohorts a/b versus matched differences',
   '/traces': 'why did it choose this decision reasoning trace',
   '/branches': 'counterfactual what if alternate branch divergence',
@@ -67,10 +70,11 @@ export const WORKSPACE_KEYWORDS = {
   '/evidence': 'evidence provenance verify integrity audit',
   '/evolution': 'experiment generations lineage evolution',
   '/mutation': 'rule mutation a/b experiment baseline mutant impact regression balance hypothesis',
+  '/discover': 'autonomous research discovery anomaly hypothesis falsification replication promotion surprise',
   '/tournament': 'bracket tournament champion elimination',
   '/intelligence': 'ai llm analytics interpretation synthesis',
   '/rules': 'rulebook how to play learn',
-  '/cards': 'card reference database faces'
+  '/cards': 'card atlas observatory deck suit variant evidence rules dossier'
 };
 
 export const SUBTITLES = {
@@ -84,7 +88,7 @@ export const SUBTITLES = {
   '/seasons':'Ranked play with Glicko-2 ratings, seasons, placements, and public leaderboards.',
   // Learn lane
   '/rules':'The complete player rulebook with stylized typography, sticky table of contents, and collapsible parts.',
-  '/cards':'Inspect all 54 canonical card faces in Board, Lite, and Full Zoom modes.',
+  '/cards':'Card atlas — canonical identity, rules authority, simulation evidence, and connections for all 54 cards.',
   // Lab lane
   '/watch':'Canonical match truth with semantic stepping and causal evidence.',
   '/caster':'Watch a completed AI-vs-AI match unfold live with synchronized Ollama commentary. An observability instrument disguised as a broadcast experience.',
@@ -92,6 +96,7 @@ export const SUBTITLES = {
   '/mechanics':'Opportunity, usage, impact, uncertainty, and replay evidence by mechanic.',
   '/synergies':'Stratified synergy, anti-synergy, motifs, and counterexamples.',
   '/ranks':'Cohort-relative rank power profiles, counterfactual decision value, and balance watchlist.',
+  '/atlas':'Policy population mapped onto two chosen observed metrics — position, matchup edges, evidence tiers, and quantitative comparison. No inferred archetypes.',
   '/compare':'Policy, seat, campaign, and matched-cohort differences without canon mixing.',
   '/history':'Per-match ledger with full telemetry, sortable columns, and detail inspector.',
   '/evidence':'Evidence epoch, policy-strength tiers, admissibility disclosure, formula registry, provenance, and release integrity.',
@@ -103,6 +108,7 @@ export const SUBTITLES = {
   '/diagnostics':'Decision margins, self-counter rates, response conservation, timing, and win rates.',
   '/evolution':'Deterministic research arena — paired games, frozen evaluation suites, immutable checkpoints, and experimental local heuristic evolution.',
   '/mutation':'Surgical A/B rules experimentation — one scoped rule parameter changes; matched-seed control vs mutant arms measure the systemic consequences.',
+  '/discover':'Autonomous evidence-driven research — anomaly detection, falsifiable hypotheses, mirrored experiments, replication, and gated promotion.',
   '/tournament':'Single-elimination AI-vs-AI bracket with deterministic matches and champion crowning.',
   '/profile':'Player profile — identity, ranked, achievements, showcase, customization, and privacy.',
   '/achievements':'56 launch achievements with deterministic detection, career tracking, and hidden discoveries.',
@@ -127,11 +133,14 @@ export const INSTRUMENTS = {
   '/diagnostics': 'OBS-11 · SYSTEMS TELEMETRY',
   '/evolution': 'OBS-12 · LINEAGE REACTOR',
   '/mutation': 'OBS-17 · MUTATION CHAMBER',
+  '/discover': 'RES-01 · DISCOVERY ENGINE',
   '/tournament': 'OBS-13 · BRACKET ENGINE',
+  '/atlas': 'OBS-19 · POPULATION ATLAS',
   '/evidence': 'OBS-14 · EVIDENCE ARCHIVE',
   '/intelligence': 'OBS-15 · ANALYTICS LENS',
   '/forensic': 'OBS-16 · REPLAY FORENSICS',
   '/strategy': 'FIELD-00 · FIELD MANUAL',
+  '/cards': 'OBS-18 · CARD OBSERVATORY',
   '/release-notes': 'LOG-00 · RELEASE LOG',
   '/profile': 'ID-00 · PLAYER DOSSIER',
   '/player': 'ID-00 · PLAYER DOSSIER',
@@ -142,7 +151,7 @@ export const INSTRUMENTS = {
 
 export const LEGAL_MODES = new Set(['/privacy', '/terms']);
 
-export const LANDING_MODES = new Set(['/', '/dev', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/play/first-contact', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/cards', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles', '/caster', '/forensic']);
+export const LANDING_MODES = new Set(['/', '/dev', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/play/first-contact', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles', '/caster', '/forensic']);
 
 export const isPlayRoute = (r) => r === '/play' || r.startsWith('/play/');
 
@@ -166,8 +175,8 @@ export function renderNavigation() {
   const SECTIONS = [
     { label: 'Learn', routes: ['/rules', '/cards', STRATEGY_NAMES.route] },
     { label: 'Observe', routes: ['/watch', '/caster', '/replays', '/history'] },
-    { label: 'Analyze', routes: ['/mechanics', '/synergies', '/ranks', '/compare', '/traces', '/branches', '/diagnostics'] },
-    { label: 'Experiment', routes: ['/evolution', '/mutation', '/tournament'] },
+    { label: 'Analyze', routes: ['/mechanics', '/synergies', '/ranks', '/atlas', '/compare', '/traces', '/branches', '/diagnostics'] },
+    { label: 'Experiment', routes: ['/evolution', '/mutation', '/discover', '/tournament'] },
     { label: 'Evidence', routes: ['/evidence', '/intelligence'] },
   ];
   const wsMap = Object.fromEntries(WORKSPACES.map(([r, ...rest]) => [r, rest]));

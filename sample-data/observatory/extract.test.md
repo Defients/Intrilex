@@ -2,9 +2,9 @@
 
 **Extract version:** 1.0.0
 **Analytics schema:** 4.2.0
-**Source hash:** `497b7a6564ef281b274e74dfeeb57c5691a1639a270f3dd544955ccd00408a84`
+**Source hash:** `e575f12f7f70448743e77b00393638d78cb419467aee6e5d90b0462986d0b03d`
 **Aggregate hash:** `59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2`
-**Extract hash:** `77d4964faf42f6a065f8e87362adb55bfb70f473b8b8c2153e123aa36099b2f7`
+**Extract hash:** `6ea0307c2a4db4a7fb6852b76deb924ac49b72df72cda109a1c4cb3f7474d8d4`
 
 ## Executive Summary
 
@@ -21,7 +21,7 @@ Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. Al
 | detailedMatchCount | 12 |
 | policyCount | 16 |
 | mechanicCount | 162 |
-| synergyCount | 2 |
+| synergyCount | 0 |
 | motifCount | 60 |
 | anomalyCount | 30 |
 
@@ -1428,8 +1428,6 @@ Replay refs: M-9ac093c9da6330a6fdec, M-950f525deedd2a7736c7, M-e50eb7181b42fcaf3
 
 | Pair | Class | Effect | Shrunk | q-value | Status |
 |------|-------|--------|--------|---------|--------|
-| draw::2-black-2-red-draw | anti-synergy | 0.667 | 0.854 | 0.9010 | inconclusive |
-| draw::jack | synergy | 1.214 | 1.115 | 0.9010 | inconclusive |
 
 ## Causal Motifs
 
@@ -1464,7 +1462,6 @@ Replay refs: M-9ac093c9da6330a6fdec, M-950f525deedd2a7736c7, M-e50eb7181b42fcaf3
 
 ## Recommendations
 
-- Most synergy findings are inconclusive — consider increasing match count for statistical power.
 - 133 mechanic(s) have sample size below 20 — interpret with caution.
 
 ## Interpretation Boundary

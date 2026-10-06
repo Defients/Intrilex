@@ -282,6 +282,10 @@ button:active:not(:disabled){transform:translateY(1px)}
 [data-tooltip]:hover::after,[data-tooltip]:focus-visible::after{opacity:1;transform:translateX(-50%) translateY(0)}
 [data-tooltip]::before{content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--border-soft);opacity:0;transition:opacity var(--fast)}
 [data-tooltip]:hover::before,[data-tooltip]:focus-visible::before{opacity:1}
+/* Multi-line variant for longer explanatory warnings */
+[data-tooltip].tooltip-wide::after{white-space:normal;width:max-content;max-width:280px;text-align:left;text-transform:none;letter-spacing:normal}
+/* Inline info glyph for field-level explanatory tooltips */
+.info-dot{background:none;border:none;padding:0 3px;color:var(--cyan);cursor:help;font-size:11px;line-height:1;text-transform:none;letter-spacing:normal}
 
 /* ── Phase 3: Sidebar section grouping ── */
 .workspace-nav{display:flex;flex-direction:column;gap:2px}

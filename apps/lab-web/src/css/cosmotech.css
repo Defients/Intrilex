@@ -27,6 +27,7 @@
 }
 /* violet — system identity, lineage, selected structure */
 .observatory-shell[data-workspace="ranks"],
+.observatory-shell[data-workspace="atlas"],
 .observatory-shell[data-workspace="intelligence"],
 .observatory-shell[data-workspace="synergies"],
 .observatory-shell[data-workspace="profile"],

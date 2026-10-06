@@ -44,11 +44,13 @@ test('Lint ratchet: current warning count does not exceed baseline', () => {
 
   let currentWarnings = 0;
   let currentErrors = 0;
+  const offenders = [];
   try {
     const results = JSON.parse(lintOutput);
     for (const file of results) {
       currentWarnings += file.warningCount || 0;
       currentErrors += file.errorCount || 0;
+      for (const m of file.messages ?? []) offenders.push(`${file.filePath}:${m.line} ${m.ruleId}`);
     }
   } catch {
     // If JSON parsing fails, skip this check rather than failing spuriously
@@ -57,10 +59,11 @@ test('Lint ratchet: current warning count does not exceed baseline', () => {
   }
 
   // Errors must always be zero
-  assert.equal(currentErrors, 0, `Lint errors must be 0 (found ${currentErrors})`);
+  assert.equal(currentErrors, 0, `Lint errors must be 0 (found ${currentErrors}): ${offenders.join(' | ')}`);
 
   // Warnings must not exceed baseline
   assert.ok(currentWarnings <= baselineWarnings,
     `Lint warnings (${currentWarnings}) must not exceed baseline (${baselineWarnings}). ` +
+    `Offenders: ${offenders.join(' | ')}. ` +
     `If you've fixed warnings, update config/lint-baseline.json with the new count.`);
 });

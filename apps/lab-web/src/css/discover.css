@@ -1,0 +1,64 @@
+/* ✦ DISCOVER — research instrument styling.
+   Scoped under the workspace testid; reuses the evo-* token set. State is
+   encoded with text + left-border glyphs, never color alone. */
+[data-testid="discover-workspace"] .dsc-run-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}
+[data-testid="discover-workspace"] .dsc-run-grid>span{display:grid;gap:3px;border:1px solid var(--evo-border,#444);border-radius:5px;padding:9px 10px;background:var(--evo-inset,transparent);min-width:0}
+[data-testid="discover-workspace"] .dsc-run-grid small{font-size:9px;letter-spacing:.1em;color:var(--evo-muted,#888)}
+[data-testid="discover-workspace"] .dsc-run-grid b{font-size:13px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+[data-testid="discover-workspace"] .dsc-card{border:1px solid var(--evo-border,#444);border-left:3px solid var(--evo-border,#444);border-radius:6px;padding:12px;margin:10px 0;background:var(--evo-panel,transparent)}
+[data-testid="discover-workspace"] .dsc-card header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+[data-testid="discover-workspace"] .dsc-card header code{font-size:10px;color:var(--evo-muted,#888)}
+[data-testid="discover-workspace"] .dsc-claim{font-size:13px;line-height:1.5;margin:8px 0}
+[data-testid="discover-workspace"] .dsc-cat{font-size:9px;letter-spacing:.12em;color:var(--evo-secondary,#aaa);border:1px solid var(--evo-border,#444);border-radius:3px;padding:1px 5px}
+[data-testid="discover-workspace"] .dsc-lifecycle{font-size:9px;letter-spacing:.1em;font-weight:700;border-radius:3px;padding:2px 6px;border:1px solid var(--evo-border,#444);color:var(--evo-secondary,#aaa)}
+[data-testid="discover-workspace"] .dsc-lc-queued,[data-testid="discover-workspace"] .dsc-lc-hypothesis{border-color:var(--evo-muted,#888)}
+[data-testid="discover-workspace"] .dsc-lc-testing,[data-testid="discover-workspace"] .dsc-lc-challenging,[data-testid="discover-workspace"] .dsc-lc-replicating,[data-testid="discover-workspace"] .dsc-lc-running{color:var(--evo-accent,#7dd3a8);border-color:var(--evo-accent,#7dd3a8)}
+[data-testid="discover-workspace"] .dsc-lc-discovery,[data-testid="discover-workspace"] .dsc-lc-complete{color:#ffd479;border-color:#ffd479}
+[data-testid="discover-workspace"] .dsc-lc-conditional_discovery{color:#d3a85e;border-color:#d3a85e}
+[data-testid="discover-workspace"] .dsc-lc-rejected{color:var(--evo-danger,#e07070);border-color:var(--evo-danger,#e07070)}
+[data-testid="discover-workspace"] .dsc-lc-unresolved,[data-testid="discover-workspace"] .dsc-lc-paused{color:var(--evo-muted,#888)}
+[data-testid="discover-workspace"] .dsc-card-discovery,[data-testid="discover-workspace"] .dsc-card-conditional_discovery{border-left-color:#ffd479}
+[data-testid="discover-workspace"] .dsc-card-rejected{border-left-color:var(--evo-danger,#e07070);opacity:.82}
+[data-testid="discover-workspace"] .dsc-card-unresolved{border-left-color:var(--evo-muted,#888);opacity:.82}
+[data-testid="discover-workspace"] .dsc-card-testing,[data-testid="discover-workspace"] .dsc-card-challenging,[data-testid="discover-workspace"] .dsc-card-replicating{border-left-color:var(--evo-accent,#7dd3a8)}
+[data-testid="discover-workspace"] .dsc-scores{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+[data-testid="discover-workspace"] .dsc-score{position:relative;display:inline-flex;align-items:center;gap:5px;border:1px solid var(--evo-border,#444);border-radius:3px;padding:3px 6px;font-size:9px;overflow:hidden;min-width:74px}
+[data-testid="discover-workspace"] .dsc-score i{position:absolute;inset:0;background:var(--evo-raised,#222);width:0}
+[data-testid="discover-workspace"] .dsc-score em{position:relative;font-style:normal;color:var(--evo-muted,#888);letter-spacing:.08em}
+[data-testid="discover-workspace"] .dsc-score b{position:relative;font-variant-numeric:tabular-nums}
+[data-testid="discover-workspace"] .dsc-priority{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--evo-accent,#7dd3a8)}
+[data-testid="discover-workspace"] .dsc-meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:10px;color:var(--evo-secondary,#aaa);font-variant-numeric:tabular-nums}
+[data-testid="discover-workspace"] .dsc-stages{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+[data-testid="discover-workspace"] .dsc-stage{font-size:9px;border:1px solid var(--evo-border,#444);border-radius:3px;padding:2px 6px;color:var(--evo-muted,#888)}
+[data-testid="discover-workspace"] .dsc-stage-running{color:var(--evo-accent,#7dd3a8);border-color:var(--evo-accent,#7dd3a8)}
+[data-testid="discover-workspace"] .dsc-stage-complete{color:var(--evo-secondary,#aaa)}
+[data-testid="discover-workspace"] .dsc-stage-skipped{text-decoration:line-through}
+[data-testid="discover-workspace"] .dsc-checks{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+[data-testid="discover-workspace"] .dsc-check{font-size:9px;border:1px solid var(--evo-border,#444);border-radius:3px;padding:2px 6px}
+[data-testid="discover-workspace"] .dsc-check-passed{color:var(--evo-accent,#7dd3a8);border-color:var(--evo-accent,#7dd3a8)}
+[data-testid="discover-workspace"] .dsc-check-failed{color:var(--evo-danger,#e07070);border-color:var(--evo-danger,#e07070)}
+[data-testid="discover-workspace"] .dsc-check-inconclusive{color:#d3a85e;border-color:#d3a85e}
+[data-testid="discover-workspace"] .dsc-scope-note{font-size:11px;color:#d3a85e;border-left:2px solid #d3a85e;padding-left:8px;margin-top:8px}
+[data-testid="discover-workspace"] .dsc-interpretation{font-size:11px;color:var(--evo-secondary,#aaa);border-left:2px solid var(--evo-muted,#888);padding-left:8px;margin-top:8px;font-style:italic}
+[data-testid="discover-workspace"] .dsc-journal{max-height:260px;overflow:auto;font-family:monospace;font-size:10px;border:1px solid var(--evo-border,#444);border-radius:5px;background:var(--evo-inset,transparent)}
+[data-testid="discover-workspace"] .dsc-journal-row{display:flex;gap:10px;padding:4px 8px;border-bottom:1px solid var(--evo-border,#333)}
+[data-testid="discover-workspace"] .dsc-journal-row time{color:var(--evo-muted,#888);white-space:nowrap}
+[data-testid="discover-workspace"] .dsc-j-discovery{color:#ffd479}
+[data-testid="discover-workspace"] .dsc-j-rejected{color:var(--evo-danger,#e07070)}
+[data-testid="discover-workspace"] .dsc-j-spawned,[data-testid="discover-workspace"] .dsc-j-hypothesis{color:var(--evo-accent,#7dd3a8)}
+[data-testid="discover-workspace"] .dsc-zero{padding:10px 12px;border:1px solid var(--evo-border,#444);border-left:3px solid var(--evo-accent,#7dd3a8);border-radius:4px;background:var(--evo-inset,transparent)}
+[data-testid="discover-workspace"] .dsc-lib-row{display:grid;grid-template-columns:110px auto minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;border:1px solid var(--evo-border,#444);border-radius:5px;padding:8px 10px;margin:6px 0;background:var(--evo-panel,transparent);cursor:pointer}
+[data-testid="discover-workspace"] .dsc-lib-row:hover{border-color:var(--evo-accent,#7dd3a8)}
+[data-testid="discover-workspace"] .dsc-lib-row code{font-size:10px}
+[data-testid="discover-workspace"] .dsc-lib-claim{font-size:11px;overflow-wrap:anywhere}
+[data-testid="discover-workspace"] .dsc-lib-row small{color:var(--evo-muted,#888);font-size:9px;white-space:nowrap}
+[data-testid="discover-workspace"] .dsc-cand{display:flex;gap:8px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--evo-border,#333);font-size:11px;flex-wrap:wrap}
+[data-testid="discover-workspace"] .dsc-cand code{font-size:9px;color:var(--evo-muted,#888)}
+[data-testid="discover-workspace"] .dsc-gates{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+[data-testid="discover-workspace"] .dsc-gates td{border-bottom:1px solid var(--evo-border,#333);padding:5px 8px}
+[data-testid="discover-workspace"] .dsc-prov{font-size:10px;line-height:1.8}
+[data-testid="discover-workspace"] .dsc-state-running{color:var(--evo-accent,#7dd3a8);border-color:var(--evo-accent,#7dd3a8)}
+[data-testid="discover-workspace"] .dsc-state-complete{color:#ffd479;border-color:#ffd479}
+[data-testid="discover-workspace"] .dsc-state-error,[data-testid="discover-workspace"] .dsc-state-stopped{color:var(--evo-danger,#e07070);border-color:var(--evo-danger,#e07070)}
+@media (max-width:900px){[data-testid="discover-workspace"] .dsc-run-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+[data-testid="discover-workspace"] .dsc-lib-row{grid-template-columns:1fr;gap:4px}}

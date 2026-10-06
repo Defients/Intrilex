@@ -236,7 +236,7 @@ export function buildCampaignCore(summaries,{profileId=DEFAULT_PROFILE_ID,policy
   return{...core,status:core.abortCount===0?'PASS':'FAIL',aggregateHash:hashCanonical(core),summaries};
 }
 
-export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','random-legal'],seedCatalogId='browser-v5',profileId=DEFAULT_PROFILE_ID,seedStrategy='ordinal-hash',fixedSeed=12345,ordinalStart=0,ordinalEnd=null},onProgress=()=>{}){
+export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','random-legal'],seedCatalogId='browser-v5',profileId=DEFAULT_PROFILE_ID,seedStrategy='ordinal-hash',fixedSeed=12345,ordinalStart=0,ordinalEnd=null,strategicTrace=false},onProgress=()=>{}){
   const requestedMatchCount=validateMatchCount(matchCount);
   const count=requestedMatchCount;
   const start=Math.max(0,Math.min(count,Number(ordinalStart)||0));
@@ -258,7 +258,7 @@ export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','ra
     const seatOrder=seatSwapped?['P2','P1']:['P1','P2'];
     const seed=seedStrategy==='fixed'?(Number(fixedSeed)>>>0)||1:uint32FromHash({seedCatalogId,ordinal,policyIds,profileId,engineVersion:ENGINE_VERSION});
     const pairedRunId=`PR-browser-${policyIds[0]}-${policyIds[1]}-block-${Math.floor(ordinal/2)}`;
-    summaries.push(runBrowserPolicyMatch({seed,policyIds,ordinal,profileId,seatOrder,seatSwapped,pairedRunId}));
+    summaries.push(runBrowserPolicyMatch({seed,policyIds,ordinal,profileId,seatOrder,seatSwapped,pairedRunId,strategicTelemetryEnabled:strategicTrace===true,strategicTrace:strategicTrace===true}));
     const done=ordinal-start+1;
     if(done%reportInterval===0||ordinal===end-1||maybeReport(false))onProgress({completed:done,total:segmentSize});
   }

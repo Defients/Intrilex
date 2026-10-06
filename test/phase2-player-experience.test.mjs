@@ -15,12 +15,11 @@ import { join } from 'node:path';
 import { renderTeachingMoment } from '../packages/decision-intelligence/src/teaching-moments.mjs';
 
 const appSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/app.js'), 'utf8');
-const cardRefSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/workspaces/card-reference.js'), 'utf8');
+const cardWsSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/workspaces/cards/card-workspace.js'), 'utf8');
+const cardModelSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/workspaces/cards/card-model.js'), 'utf8');
 const teachingSrc = readFileSync(join(process.cwd(), 'packages/decision-intelligence/src/teaching-moments.mjs'), 'utf8');
 const landingRevampSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/css/landing-revamp.css'), 'utf8');
 const rankedDuelCssSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel.css'), 'utf8');
-const featureComponentsSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/css/feature-components.css'), 'utf8');
-
 // ═══════════════════════════════════════════════════════════════
 // A-01: ACADEMY AS DEFAULT ONBOARDING
 // ═══════════════════════════════════════════════════════════════
@@ -74,57 +73,47 @@ test('A-01: CSS has reduced-motion support for play CTA', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// A-02: CARD INSPECTOR AS EDUCATIONAL BRIDGE
+// A-02: CARD DOSSIER AS CANONICAL BRIDGE (Card Observatory rebuild)
+//
+// The old Card Reference derived "when to play" advice from timing
+// keywords — pseudo-strategy that duplicated the Field Manual. The
+// Card Observatory dossier keeps the educational bridge but grounds
+// it in canonical sources: card-face-data + Advanced Card Rules, with
+// an explicit legality note. No timing-derived advice may return.
 // ═══════════════════════════════════════════════════════════════
 
-test('A-02: buildWhenToPlayGuidance function exists', () => {
-  assert.ok(cardRefSrc.includes('function buildWhenToPlayGuidance'), 'buildWhenToPlayGuidance must exist');
+test('A-02: dossier embeds the canonical Advanced Card Rules view', () => {
+  assert.ok(cardWsSrc.includes('renderAdvancedCardRulesView'), 'Dossier must render the canonical ACR view');
+  assert.ok(cardModelSrc.includes('getCardRulesDefinition'), 'Card model must read canonical rules definitions');
 });
 
-test('A-02: buildScoringSummary function exists', () => {
-  assert.ok(cardRefSrc.includes('function buildScoringSummary'), 'buildScoringSummary must exist');
+test('A-02: no timing-derived when-to-play guidance remains', () => {
+  assert.ok(!cardWsSrc.includes('buildWhenToPlayGuidance'), 'Old when-to-play logic must be gone');
+  assert.ok(!cardWsSrc.includes('when to play'), 'No when-to-play copy may be presented as strategy');
+  assert.ok(!cardWsSrc.includes('card-ref-detail-guidance'), 'Old guidance section must be gone');
 });
 
-test('A-02: card detail includes when-to-play guidance section', () => {
-  assert.ok(cardRefSrc.includes('card-ref-detail-guidance'), 'Card detail must have guidance section');
-  assert.ok(cardRefSrc.includes('data-testid="card-ref-guidance"'), 'Guidance must have testid');
+test('A-02: card dossier includes legality note', () => {
+  assert.ok(cardWsSrc.includes('card-legality-note'), 'Card dossier must have a legality note');
+  assert.ok(cardWsSrc.includes('data-testid="card-legality-note"'), 'Legality note must have testid');
 });
 
-test('A-02: card detail includes scoring summary', () => {
-  assert.ok(cardRefSrc.includes('card-ref-scoring-summary'), 'Card detail must have scoring summary');
-  assert.ok(cardRefSrc.includes('data-testid="card-ref-scoring"'), 'Scoring summary must have testid');
+test('A-02: dossier exposes canonical facts (PR, timing, authority)', () => {
+  assert.ok(cardWsSrc.includes('identityTab'), 'Identity tab must exist');
+  assert.ok(cardModelSrc.includes('timingClasses'), 'Card model must derive timing classes canonically');
+  assert.ok(cardWsSrc.includes('CARD_FACE_REGISTRY_META'), 'Registry provenance must be shown');
 });
 
-test('A-02: card detail includes legality note', () => {
-  assert.ok(cardRefSrc.includes('card-ref-detail-legality-note'), 'Card detail must have legality note');
-  assert.ok(cardRefSrc.includes('data-testid="card-ref-legality-note"'), 'Legality note must have testid');
+test('A-02: dossier provides investigation links instead of pseudo-strategy', () => {
+  assert.ok(cardWsSrc.includes('data-card-xref'), 'Cross-workspace links must exist');
+  assert.ok(cardWsSrc.includes("#/strategy?subject="), 'Field Manual deep link must exist');
+  assert.ok(cardModelSrc.includes('relationshipsFor'), 'Relationship model must exist');
 });
 
-test('A-02: card detail includes Academy and Free Play CTAs', () => {
-  assert.ok(cardRefSrc.includes('data-testid="card-ref-cta-academy"'), 'Must have Academy CTA');
-  assert.ok(cardRefSrc.includes('data-testid="card-ref-cta-play"'), 'Must have Free Play CTA');
-});
-
-test('A-02: timing keyword matching covers all timing types', () => {
-  // All timing types from card-face-data.js: Instant, Anchor mode, Anchor · Attachment,
-  // Effect, Interrupt, Multi-card Rank-10 play, Action · multi-card, Passive, Quick,
-  // Quick Effect, Scoring trigger, Scoring rider, Super
-  assert.ok(cardRefSrc.includes("timing.includes('Instant')"), 'Must handle Instant');
-  assert.ok(cardRefSrc.includes("timing.includes('Interrupt')"), 'Must handle Interrupt');
-  assert.ok(cardRefSrc.includes("timing.includes('Anchor')"), 'Must handle Anchor');
-  assert.ok(cardRefSrc.includes("timing.includes('Scoring')"), 'Must handle Scoring');
-  assert.ok(cardRefSrc.includes("timing.includes('Super')"), 'Must handle Super');
-  assert.ok(cardRefSrc.includes("timing.includes('Quick')"), 'Must handle Quick');
-  assert.ok(cardRefSrc.includes("timing.includes('Passive')"), 'Must handle Passive');
-  assert.ok(cardRefSrc.includes("timing.includes('Effect')"), 'Must handle Effect');
-  // Case-insensitive multi-card matching
-  assert.ok(cardRefSrc.includes("timingLower.includes('multi-card')"), 'Must handle multi-card case-insensitively');
-});
-
-test('A-02: CSS has guidance and legality styles', () => {
-  assert.ok(featureComponentsSrc.includes('.card-ref-detail-guidance'), 'CSS must have guidance styles');
-  assert.ok(featureComponentsSrc.includes('.card-ref-detail-legality-note'), 'CSS must have legality note styles');
-  assert.ok(featureComponentsSrc.includes('.card-ref-cta-btn'), 'CSS must have CTA button styles');
+test('A-02: cards workspace CSS exists', () => {
+  const cardsCss = readFileSync(join(process.cwd(), 'apps/lab-web/src/css/cards.css'), 'utf8');
+  assert.ok(cardsCss.includes('.card-dossier'), 'CSS must have dossier styles');
+  assert.ok(cardsCss.includes('.card-atlas'), 'CSS must have atlas styles');
 });
 
 // ═══════════════════════════════════════════════════════════════

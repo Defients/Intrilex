@@ -115,10 +115,10 @@ const ROUTE_META = {
     canonicalPath: '/#/rules',
     ogType: 'article',
   },
-  // Card Reference
+  // Card Observatory
   '/cards': {
-    title: 'Intrilex — Card Reference',
-    description: 'Inspect all 54 canonical Intrilex card faces. Browse by family, view abilities, point values, and rules for every card in the deck.',
+    title: 'Intrilex — Card Observatory',
+    description: 'The Intrilex Card Observatory: a deck atlas of all 54 canonical cards with canonical rules authority, simulation evidence, variant relationships, and cross-workspace investigation links.',
     canonicalPath: '/#/cards',
     ogType: 'website',
   },
@@ -140,6 +140,13 @@ const ROUTE_META = {
     title: 'Intrilex — Sign In',
     description: 'Sign in to Intrilex with Discord or Google, or continue as a guest to play online.',
     canonicalPath: '/#/auth',
+    ogType: 'website',
+  },
+  // Discovery Engine
+  '/discover': {
+    title: 'Intrilex — Discovery Engine',
+    description: 'Autonomous evidence-driven research over the Intrilex Simulation Lab: anomaly detection, falsifiable hypotheses, controlled mirrored experiments, replication, and gated promotion to Discovery artifacts.',
+    canonicalPath: '/#/discover',
     ogType: 'website',
   },
   // Player Directory

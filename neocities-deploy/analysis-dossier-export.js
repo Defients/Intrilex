@@ -3,13 +3,13 @@
 // read-only liveLabSnapshot boundary), builds the canonical dossier and
 // downloads it. All analytics live in analysis-dossier.js — this module only
 // does I/O. Browser-only; tests exercise the builder directly.
-import { state } from './state.js?v=e5382c028fd1';
-import { buildAnalysisDossier, serializeAnalysisDossier, renderAnalysisDossierMarkdown, analysisDossierFileNames } from './analysis-dossier.js?v=e5382c028fd1';
-import { EvolutionStore } from './evolution/evolution-store.mjs?v=e5382c028fd1';
-import { StrategyStore } from './strategy/strategy-store.mjs?v=e5382c028fd1';
-import { LAB_IDENTITY } from './evolution/identity.mjs?v=e5382c028fd1';
-import { liveLabSnapshot } from './workspaces/evolution-dashboard.js?v=e5382c028fd1';
-import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION, SCHEMA_VERSION } from './version.js?v=e5382c028fd1';
+import { state } from './state.js?v=dac162e115e4';
+import { buildAnalysisDossier, serializeAnalysisDossier, renderAnalysisDossierMarkdown, analysisDossierFileNames } from './analysis-dossier.js?v=dac162e115e4';
+import { EvolutionStore } from './evolution/evolution-store.mjs?v=dac162e115e4';
+import { StrategyStore } from './strategy/strategy-store.mjs?v=dac162e115e4';
+import { LAB_IDENTITY } from './evolution/identity.mjs?v=dac162e115e4';
+import { liveLabSnapshot } from './workspaces/evolution-dashboard.js?v=dac162e115e4';
+import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION, SCHEMA_VERSION } from './version.js?v=dac162e115e4';
 
 const STRATEGY_STORES = ['evidence', 'sources', 'events', 'replays', 'studies', 'claims', 'archives', 'informationSets', 'informationPlans', 'informationStudies', 'provenance'];
 
@@ -25,7 +25,7 @@ export async function collectLabEvidence() {
     liveRun: live.liveRun ?? null, liveStatus: live.liveStatus ?? null,
     liveAggregator: live.liveAggregator ?? null, liveArchiveRef: live.liveArchiveRef ?? null,
     analyticsFilters: live.analyticsFilters ?? null, liveMatrix: live.liveMatrix ?? null,
-    persistedRuns: [], matrices: [], researchProjects: [], strategy: null,
+    persistedRuns: [], matrices: [], researchProjects: [], mutations: [], strategy: null,
     collectionNotes: [],
   };
   if (live.researchProject) lab.researchProjects.push({ project: live.researchProject, contentHash: null });
@@ -63,6 +63,18 @@ export async function collectLabEvidence() {
       for (const r of await store.listResearch()) {
         try { lab.researchProjects.push({ project: await store.loadResearch(r.experimentId), contentHash: null }); }
         catch (error) { lab.collectionNotes.push(`Research project ${r.experimentId} unreadable: ${error?.message ?? 'unknown error'}`); }
+      }
+      // Rule Mutation experiments are first-class dossier evidence. Corrupt or
+      // unverifiable envelopes are disclosed as UNREADABLE entries — they must
+      // never silently disappear from the record of what was run.
+      for (const m of await store.listMutations()) {
+        try {
+          const record = await store.loadMutation(m.experimentId);
+          lab.mutations.push({ record, contentHash: record.contentHash ?? null });
+        } catch (error) {
+          lab.collectionNotes.push(`Persisted mutation experiment ${m.experimentId} unreadable/corrupt: ${error?.message ?? 'unknown error'}`);
+          lab.mutations.push({ record: { experimentType: 'rule-mutation', experimentId: m.experimentId, status: 'UNREADABLE' }, contentHash: null, unreadable: true });
+        }
       }
     } finally { store.close(); }
   } catch (error) {

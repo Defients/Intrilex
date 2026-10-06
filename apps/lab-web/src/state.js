@@ -31,7 +31,7 @@ export const pageSubtitle = document.querySelector('#page-subtitle');
 // `intrilex:settings` localStorage key as a single JSON blob so we
 // don't litter localStorage with one key per setting.
 const SETTINGS_KEY = 'intrilex:settings';
-const PERSISTABLE_SETTINGS = ['reducedMotion', 'reducedSensory', 'fx', 'layout', 'visibility', 'rulesIllustrated', 'rulesViewMode', 'haptics', 'highContrast', 'seasonalThemes'];
+const PERSISTABLE_SETTINGS = ['reducedMotion', 'reducedSensory', 'fx', 'layout', 'visibility', 'rulesIllustrated', 'rulesViewMode', 'haptics', 'highContrast', 'seasonalThemes', 'atlasPrefs'];
 const SETTINGS_DEFAULTS = { reducedMotion: false, reducedSensory: false, fx: true, layout: 'observatory', visibility: 'public', rulesIllustrated: true, rulesViewMode: 'illustrated', haptics: true, highContrast: false, seasonalThemes: true };
 
 function loadPersistedSettings() {
@@ -96,7 +96,14 @@ export const state = {
   historySelectedMatch:null,
   // Observatory Depth II — Phase 6: enhanced cross-workspace linking
   historyFilterMatchIds:null,
-  tournament:null, tournamentSelectedPolicies:null, tournamentBestOf:1, tournamentRunning:false
+  tournament:null, tournamentSelectedPolicies:null, tournamentBestOf:1, tournamentRunning:false,
+  // Card Observatory (/cards) — selection, atlas filters, dossier, compare
+  selectedCard:null, cardView:'atlas', cardSearch:'',
+  cardSuitFilter:'all', cardRankFilter:'all', cardTimingFilter:'all',
+  cardEvidenceFilter:'all', cardConfidenceFilter:'all', cardSort:'deck',
+  cardEntityKey:null, cardDossierTab:'identity', cardCompare:[], cardCompareOpen:false,
+  // Meta Atlas (/atlas) — persisted view prefs + ephemeral selection/viewport
+  atlasPrefs:_persisted.atlasPrefs ?? null, atlasSelected:null, atlasCompare:null, atlasView:null
 };
 
 // Re-exported so workspace modules can persist settings without importing

@@ -283,3 +283,111 @@ test('dossier without extract marks it unavailable explicitly', () => {
   assert.equal(d.analysisExtract, null);
   assert.ok(d.unavailable.some(u => u.domain === 'analysisExtract'));
 });
+
+// ── Rule Mutation experiments in the dossier ─────────────────────────────
+test('persisted Rule Mutation experiments are first-class dossier evidence', async () => {
+  const {
+    createRuleMutation, createExperimentConfig, buildMutationExperimentPlan,
+    createExperimentRecord, finalizeExperimentRecord,
+  } = await import('@intrilex/simulation-runtime/mutation-domain');
+  const stub = (spec) => ({
+    winner: 'P1', winningSeat: 1, terminationReason: 'NORMAL_VICTORY', errorCode: null,
+    completedFullTurns: 10, scoreMargin: 3, commandCount: 40, eventCount: 60,
+    actionCounts: { play: 5 }, decisionFamilyCounts: { score: 4 },
+    participants: [{ miniTurnActionCount: 6 }, { miniTurnActionCount: 5 }],
+    policyIds: [spec.policyId, spec.policyId], pairedRunId: spec.pairedRunId,
+    seed: spec.seed, seatOrder: spec.seatOrder, ruleCompliance: { status: 'PASS' },
+    ruleOverrides: spec.ruleOverrides ?? null,
+  });
+  const mutation = createRuleMutation({ targetId: 'miniTurns.hardCap', mutatedValue: 2 });
+  const config = createExperimentConfig({
+    profileId: 'core-advanced-authority', population: ['tempo-tactical'], gamesPerArm: 2, seedBase: 7,
+    objective: { metric: 'meanTurns', direction: 'decrease', minimumMeaningfulEffect: 0 },
+  });
+  const plan = buildMutationExperimentPlan({ experimentId: 'EXP-DOSSIER', mutation, config });
+  const record = createExperimentRecord({
+    experimentId: 'EXP-DOSSIER', createdAt: '2026-01-02T00:00:00.000Z',
+    baseline: { engineVersion: '4.2.6', rulesVersion: '4.3.1', labVersion: '1.0.0', authorityHash: 'abc' },
+    mutation, hypothesis: 'Faster tempo shortens games', config,
+  });
+  const final = finalizeExperimentRecord(record, {
+    controlSummaries: plan.specs.filter(s => s.arm === 'control').map(stub),
+    mutantSummaries: plan.specs.filter(s => s.arm === 'mutant').map(stub),
+    plan, completedSpecCount: plan.specs.length, plannedSpecCount: plan.specs.length,
+  });
+  assert.equal(final.status, 'complete');
+
+  const lab = labInput();
+  lab.mutations = [{ record: final, contentHash: final.contentHash }];
+  lab.liveRun = null;
+  const d = buildAnalysisDossier(dossierInput({ lab }), { generatedAt: GENERATED });
+  const mut = d.evolution.ruleMutations.find(m => m.experimentId === 'EXP-DOSSIER');
+  assert.ok(mut, 'mutation experiment must appear in the dossier evolution section');
+  assert.equal(mut.status, 'complete');
+  assert.equal(mut.mutation.targetId, 'miniTurns.hardCap');
+  assert.equal(mut.mutation.baselineValue, 3);
+  assert.equal(mut.mutation.mutatedValue, 2);
+  assert.deepEqual(mut.config.objective, { metric: 'meanTurns', direction: 'decrease', minimumMeaningfulEffect: 0 });
+  assert.equal(mut.execution.ledgerExact, true);
+  assert.equal(mut.execution.pairedExact, true);
+  assert.equal(mut.arms.control.games, 2);
+  assert.equal(mut.arms.control.seat1Wins, 2, 'sufficient statistics surface, not just rates');
+  assert.ok(mut.impactRows.length > 0, 'impact rows copied from the artifact');
+  assert.equal(mut.artifactContentHash, final.contentHash);
+  assert.ok(d.dataset.lab.mutationExperimentCount >= 1);
+  assert.ok(d.scope.labScope.mutationExperimentIds.includes('EXP-DOSSIER'));
+  assert.ok(d.provenance.artifacts.mutations.some(m => m.experimentId === 'EXP-DOSSIER'));
+  const md = renderAnalysisDossierMarkdown(d);
+  assert.ok(md.includes('Rule Mutation Experiments'));
+  assert.ok(md.includes('EXP-DOSSIER'));
+});
+
+test('corrupt/unreadable mutation envelopes are disclosed, never dropped silently', () => {
+  const lab = labInput();
+  lab.mutations = [{ record: { experimentType: 'rule-mutation', experimentId: 'EXP-BROKEN', status: 'UNREADABLE' }, contentHash: null, unreadable: true }];
+  lab.collectionNotes.push('Persisted mutation experiment EXP-BROKEN unreadable/corrupt: MUTATION_HASH_MISMATCH');
+  lab.liveRun = null;
+  const d = buildAnalysisDossier(dossierInput({ lab }), { generatedAt: GENERATED });
+  const mut = d.evolution.ruleMutations.find(m => m.experimentId === 'EXP-BROKEN');
+  assert.ok(mut, 'corrupt envelope is disclosed as an entry, not dropped');
+  assert.equal(mut.unavailable, true);
+  assert.equal(d.dataset.lab.mutationExperimentUnreadable, 1);
+  assert.ok(d.openQuestions.some(q => q.includes('EXP-BROKEN') && /unreadable|corrupt/.test(q)));
+  const md = renderAnalysisDossierMarkdown(d);
+  assert.ok(md.includes('EXP-BROKEN') && md.includes('UNREADABLE'));
+});
+
+test('incomplete and imported-unverified mutation experiments are flagged in open questions', async () => {
+  const {
+    createRuleMutation, createExperimentConfig, buildMutationExperimentPlan,
+    createExperimentRecord, finalizeExperimentRecord,
+  } = await import('@intrilex/simulation-runtime/mutation-domain');
+  const mutation = createRuleMutation({ targetId: 'miniTurns.hardCap', mutatedValue: 2 });
+  const config = createExperimentConfig({ profileId: 'core-advanced-authority', population: ['tempo-tactical'], gamesPerArm: 2, seedBase: 7 });
+  const plan = buildMutationExperimentPlan({ experimentId: 'EXP-PART', mutation, config });
+  const stub = (spec) => ({
+    winner: 'P1', winningSeat: 1, terminationReason: 'NORMAL_VICTORY', errorCode: null,
+    completedFullTurns: 10, scoreMargin: 3, commandCount: 40, eventCount: 60, actionCounts: {},
+    decisionFamilyCounts: {}, participants: [], policyIds: [spec.policyId, spec.policyId],
+    pairedRunId: spec.pairedRunId, seed: spec.seed, seatOrder: spec.seatOrder,
+    ruleCompliance: { status: 'PASS' }, ruleOverrides: spec.ruleOverrides ?? null,
+  });
+  const record = createExperimentRecord({
+    experimentId: 'EXP-PART', createdAt: '2026-01-02T00:00:00.000Z',
+    baseline: { engineVersion: '4.2.6', rulesVersion: '4.3.1', labVersion: '1.0.0' },
+    mutation, hypothesis: '', config,
+  });
+  const partial = finalizeExperimentRecord(record, {
+    controlSummaries: plan.specs.filter(s => s.arm === 'control').map(stub),
+    mutantSummaries: plan.specs.filter(s => s.arm === 'mutant').slice(1).map(stub),
+    plan, completedSpecCount: 3, plannedSpecCount: 4,
+  });
+  assert.equal(partial.status, 'incomplete');
+  const imported = { ...structuredClone(partial), experimentId: 'EXP-IMPORTED', evidenceOrigin: 'IMPORTED_UNVERIFIED' };
+  const lab = labInput();
+  lab.mutations = [{ record: partial, contentHash: null }, { record: imported, contentHash: null }];
+  lab.liveRun = null;
+  const d = buildAnalysisDossier(dossierInput({ lab }), { generatedAt: GENERATED });
+  assert.ok(d.openQuestions.some(q => q.includes('EXP-PART') && /full declared plan/.test(q)));
+  assert.ok(d.openQuestions.some(q => q.includes('EXP-IMPORTED') && /IMPORTED_UNVERIFIED/.test(q)));
+});

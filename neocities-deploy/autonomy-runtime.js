@@ -1,4 +1,4 @@
-import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=e5382c028fd1';
+import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=dac162e115e4';
 import {
   IntrilexEngine,
   createMatchState,
@@ -9,15 +9,15 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=e5382c028fd1';
+} from './engine/browser-entry.js?v=dac162e115e4';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
 import { actionSemantics } from './engine-adapter/action-semantics.mjs';
-import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=e5382c028fd1';
-import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=e5382c028fd1';
-import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=e5382c028fd1';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=e5382c028fd1';
-import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=e5382c028fd1';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=e5382c028fd1';
+import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=dac162e115e4';
+import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=dac162e115e4';
+import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=dac162e115e4';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=dac162e115e4';
+import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=dac162e115e4';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=dac162e115e4';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical','control-conversion-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];
@@ -236,7 +236,7 @@ export function buildCampaignCore(summaries,{profileId=DEFAULT_PROFILE_ID,policy
   return{...core,status:core.abortCount===0?'PASS':'FAIL',aggregateHash:hashCanonical(core),summaries};
 }
 
-export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','random-legal'],seedCatalogId='browser-v5',profileId=DEFAULT_PROFILE_ID,seedStrategy='ordinal-hash',fixedSeed=12345,ordinalStart=0,ordinalEnd=null},onProgress=()=>{}){
+export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','random-legal'],seedCatalogId='browser-v5',profileId=DEFAULT_PROFILE_ID,seedStrategy='ordinal-hash',fixedSeed=12345,ordinalStart=0,ordinalEnd=null,strategicTrace=false},onProgress=()=>{}){
   const requestedMatchCount=validateMatchCount(matchCount);
   const count=requestedMatchCount;
   const start=Math.max(0,Math.min(count,Number(ordinalStart)||0));
@@ -258,7 +258,7 @@ export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','ra
     const seatOrder=seatSwapped?['P2','P1']:['P1','P2'];
     const seed=seedStrategy==='fixed'?(Number(fixedSeed)>>>0)||1:uint32FromHash({seedCatalogId,ordinal,policyIds,profileId,engineVersion:ENGINE_VERSION});
     const pairedRunId=`PR-browser-${policyIds[0]}-${policyIds[1]}-block-${Math.floor(ordinal/2)}`;
-    summaries.push(runBrowserPolicyMatch({seed,policyIds,ordinal,profileId,seatOrder,seatSwapped,pairedRunId}));
+    summaries.push(runBrowserPolicyMatch({seed,policyIds,ordinal,profileId,seatOrder,seatSwapped,pairedRunId,strategicTelemetryEnabled:strategicTrace===true,strategicTrace:strategicTrace===true}));
     const done=ordinal-start+1;
     if(done%reportInterval===0||ordinal===end-1||maybeReport(false))onProgress({completed:done,total:segmentSize});
   }

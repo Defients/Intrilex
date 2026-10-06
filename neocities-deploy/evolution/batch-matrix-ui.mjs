@@ -130,10 +130,39 @@ export function batchSectionHtml(state, deps) {
       <button id="evo-batch-export" class="secondary-button" type="button" ${state.lab ? '' : 'disabled'} title="Full artifact: embeds every game record — large file, portable across origins">Export matrix artifact</button>
       <button id="evo-batch-export-manifest" class="secondary-button" type="button" ${state.lab ? '' : 'disabled'} title="Compact manifest: run references only — rehydrates from this browser's run ledger">Export manifest</button>
       <label class="secondary-button">Inspect matrix artifact<input id="evo-batch-import" type="file" accept=".json,application/json" ${busy ? 'disabled' : ''}></label></div>
-    <p id="evo-batch-status" role="status">${esc(state.error || progressText || (state.lab ? `${state.lab.status} · ${fmt(state.lab.runs.reduce((n, r) => n + r.records.length, 0))} accepted records` : 'Not run. Missing matchups remain pending.'))}</p>
+    <p id="evo-batch-status" role="status">${esc(state.error || progressText || (state.lab ? `${state.lab.status} · ${fmt(state.lab.runs.reduce((n, r) => n + r.records.length, 0))} accepted records` : 'Not run. Missing matchups remain pending.'))}${reconcileText(state)}</p>
+    ${state.reconcile && state.reconcile.pending === 0 && (state.reconcile.failed > 0 || state.reconcile.failedRecords > 0) ? `<button id="evo-batch-reconcile-retry" class="secondary-button" type="button" data-testid="evo-batch-reconcile-retry">Retry Strategy index sync</button>` : ''}
     ${state.storage ? `<p class="danger" role="alert">${esc(state.storage)}</p>` : ''}
     <div id="evo-batch-results">${view ? `${batchMatrixTableHtml(view, { focusCell: state.cell })}${batchLeaderboardHtml(view, { focus: state.focus })}${batchBreakdownHtml(view, state.focus)}<div id="evo-batch-detail">${batchCellDetailHtml(view, state.cell)}</div>` : ''}${v1Html}</div>
     ${batchSavedHtml(saved)}</div>`;
+}
+
+/** Strategy-index reconciliation status suffix for the matrix status line.
+ * Pending, committed and failed counts are disclosed — sync is never claimed
+ * complete before results are known. */
+function reconcileText(state) {
+  const r = state.reconcile;
+  if (!r) return '';
+  if (r.pending > 0) return ` · Strategy index: reconciling ${r.offered - r.pending}/${r.offered} run(s)…`;
+  if (r.failed > 0 || r.failedRecords > 0) return ` · Strategy index: ${r.committed}/${r.offered} run(s) synced, ${r.failed} run(s) failed, ${r.failedRecords} record(s) failed — evidence retained, retry available`;
+  return ` · Strategy index: ${r.committed}/${r.offered} run(s) synced`;
+}
+
+/** Fold one ingestRun result into the running reconciliation tally. */
+function tallyIngest(state, run, stats, error) {
+  const r = state.reconcile ?? (state.reconcile = { offered: 0, committed: 0, failed: 0, pending: 0, committedRecords: 0, failedRecords: 0, errors: [] });
+  r.offered += 1;
+  const committed = stats?.committed ?? 0, failedRecords = stats?.failed ?? 0;
+  r.committedRecords += committed;
+  r.failedRecords += failedRecords;
+  if (error || !stats) {
+    r.failed += 1;
+    r.errors.push({ runId: run?.runId ?? null, error: String(error?.message ?? error ?? 'unknown') });
+  } else if (failedRecords > 0 || stats.error) {
+    r.committed += 1; // run-level write completed; record failures disclosed
+    r.errors.push({ runId: run?.runId ?? null, error: stats.error ?? `${failedRecords} record(s) failed` });
+  } else r.committed += 1;
+  return r;
 }
 
 /** Bind interactive controls on a stable root; re-renders replace innerHTML so
@@ -148,7 +177,7 @@ export function bindBatchMatrix(root, ctx) {
   const { state, fns } = ctx;
   const status = () => {
     const el = root.querySelector('#evo-batch-status');
-    if (el) el.textContent = state.error || state.progressText || (state.lab ? `${state.lab.status} · ${fmt(state.lab.runs.reduce((n, r) => n + r.records.length, 0))} accepted records` : 'Not run. Missing matchups remain pending.');
+    if (el) el.textContent = (state.error || state.progressText || (state.lab ? `${state.lab.status} · ${fmt(state.lab.runs.reduce((n, r) => n + r.records.length, 0))} accepted records` : 'Not run. Missing matchups remain pending.')) + reconcileText(state);
   };
   const busy = () => ctx.busy() || !!ctx.lock.get();
   const enqueue = job => {
@@ -159,6 +188,24 @@ export function bindBatchMatrix(root, ctx) {
     return state.queue;
   };
   const loader = id => ctx.persist.loadRun(id).catch(error => /NOT_FOUND/.test(error.message) ? null : Promise.reject(error));
+  /** Reconcile every lab run into the Strategy evidence index. Tracked and
+   * idempotent: ingest dedups on sealed identity, so re-running only fills
+   * gaps. A reconciliation failure never discards the game artifacts — it is
+   * disclosed with a retry affordance instead. */
+  const reconcileIndex = async () => {
+    const runs = state.lab?.runs ?? [];
+    if (!runs.length || !ctx.ingestRun) { state.reconcile = null; return; }
+    state.reconcile = { offered: runs.length, committed: 0, failed: 0, pending: runs.length, committedRecords: 0, failedRecords: 0, errors: [] };
+    status();
+    const results = await Promise.allSettled(runs.map(run => ctx.ingestRun(run)));
+    state.reconcile = { offered: 0, committed: 0, failed: 0, pending: 0, committedRecords: 0, failedRecords: 0, errors: [] };
+    results.forEach((result, i) => {
+      if (result.status === 'fulfilled') tallyIngest(state, runs[i], result.value, null);
+      else tallyIngest(state, runs[i], null, result.reason);
+    });
+    status();
+    render();
+  };
   /** Admits one validated matrix envelope (artifact or manifest): inspects
    * it, persists what the local ledger accepts and registers constituent
    * games with the analysis index. Sealed identity dedup keeps repeated
@@ -189,8 +236,9 @@ export function bindBatchMatrix(root, ctx) {
       state.progressText = `Imported matrix · ${fmt(ledgered)} cell run(s) added to Lab history${skipped ? ` · ${fmt(skipped)} run(s) hold a different implementation fingerprint — analysis index only` : ''}`;
     }
     // Register imported constituent games with the analysis index; sealed
-    // identity dedup keeps repeated imports from creating duplicates.
-    if (state.lab?.runs?.length) void Promise.allSettled(state.lab.runs.map(run => ctx.ingestRun?.(run)));
+    // identity dedup keeps repeated imports exactly-once. Reconciliation is
+    // tracked — pending/committed/failed are surfaced, never claimed early.
+    if (state.lab?.runs?.length) void reconcileIndex();
     try { state.saved = await ctx.persist.listMatrices(); } catch { state.saved = []; }
     // Repaint here, not in callers — routed imports (main artifact input)
     // would otherwise update state invisibly.
@@ -226,11 +274,21 @@ export function bindBatchMatrix(root, ctx) {
         onProgress: p => { state.progressText = `${p.displayA} vs ${p.displayB} · ${fmt(p.gamesCompleted)} / ${fmt(p.gamesTotal)} games · ${p.cellsCompleted} / ${p.cellsTotal} matchups complete`; status(); },
         // Reconcile each finished cell against the analysis index — streamed
         // writes deduplicate, so resume and earlier sessions stay exactly-once.
-        onRun: async saved => { await enqueue(() => ctx.persist.saveRun(saved)); await ctx.ingestRun?.(saved); },
+        // Index failures are counted and disclosed, never fatal to the games.
+        onRun: async saved => {
+          await enqueue(() => ctx.persist.saveRun(saved));
+          if (!ctx.ingestRun) return;
+          try { tallyIngest(state, saved, await ctx.ingestRun(saved), null); }
+          catch (error) { tallyIngest(state, saved, null, error); }
+          status();
+        },
         onMatrix: lab => enqueue(() => ctx.persist.saveMatrix(lab)),
       });
       state.lab = lab;
       state.progressText = `${lab.status} · ${fmt(lab.runs.reduce((n, r) => n + r.records.length, 0))} accepted records across ${lab.runs.filter(r => r.status === 'COMPLETE').length} / ${lab.participants.length * (lab.participants.length - 1) / 2} matchups`;
+      // Final reconciliation sweep — dedup makes re-offering already-synced
+      // runs a no-op, so this only fills gaps (resume, prior partial syncs).
+      if (state.lab?.runs?.length) void reconcileIndex();
       try { state.saved = await ctx.persist.listMatrices(); } catch { state.saved = []; }
     } catch (error) { state.error = `Matrix failed: ${error.message}`; state.progressText = ''; }
     finally { if (ctx.lock.get() === controller) ctx.lock.set(null); state.abort = null; render(); }
@@ -290,6 +348,7 @@ export function bindBatchMatrix(root, ctx) {
     if (event.target.id === 'evo-batch-start') void begin();
     if (event.target.id === 'evo-batch-stop') ctx.lock.get()?.abort();
     if (event.target.id === 'evo-batch-resume') { if (state.lab) void execute(state.lab); }
+    if (event.target.id === 'evo-batch-reconcile-retry') void reconcileIndex();
     if (event.target.id === 'evo-batch-export') { if (state.lab) ctx.exportJson(fns.batchMatrixArtifact(state.lab), `${state.lab.matrixId}.json`); }
     if (event.target.id === 'evo-batch-export-manifest') { if (state.lab) ctx.exportJson(fns.batchMatrixManifest(state.lab), `${state.lab.matrixId}-manifest.json`); }
   });
@@ -297,5 +356,5 @@ export function bindBatchMatrix(root, ctx) {
     void ctx.persist.listMatrices?.().then(list => { if (state.saved == null) { state.saved = list ?? []; render(); } }).catch(() => { state.saved = []; });
   }
   render();
-  return { render, importMatrix };
+  return { render, importMatrix, reconcileIndex };
 }

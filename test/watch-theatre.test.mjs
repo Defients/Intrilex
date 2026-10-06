@@ -216,3 +216,71 @@ test("spectral marker classes map to existing token semantics", () => {
   for (const cls of [".scrubber-markers i.score", ".scrubber-markers i.terminal", ".scrubber-markers i.bookmark"])
     assert.ok(watchCss.includes(cls), `marker class ${cls} must exist`);
 });
+
+// ── Playback transport: lifecycle safety ─────────────────────────
+import { createReplayTransport } from "../apps/lab-web/src/replay-transport.mjs";
+
+function fakeWatchState(frames = null) {
+  return {
+    playing: false, timer: null, frame: 0, speed: 1,
+    selectedTimelineIndex: null,
+    replay: frames ? { frames } : null,
+  };
+}
+
+function fakeTransport(frames = null) {
+  const state = fakeWatchState(frames);
+  const calls = { render: 0, setFrame: [], timers: [], cleared: [] };
+  let nextTimer = 1;
+  const ticks = new Map();
+  const transport = createReplayTransport({
+    getState: () => state,
+    setCurrentFrame: (i) => calls.setFrame.push(i),
+    render: () => { calls.render += 1; },
+    setTimer: (fn) => { const id = nextTimer++; ticks.set(id, fn); calls.timers.push(id); return id; },
+    clearTimer: (id) => { ticks.delete(id); calls.cleared.push(id); },
+  });
+  return { state, transport, calls, fireTick: (id) => ticks.get(id)?.(), liveTimers: () => ticks.size };
+}
+
+test("Space-equivalent togglePlay with no replay does nothing and throws nothing", () => {
+  const { state, transport, calls, liveTimers } = fakeTransport(null);
+  transport.togglePlay();
+  transport.stepBy(1);
+  transport.stepTo(0);
+  transport.stop();
+  assert.equal(state.playing, false);
+  assert.equal(state.timer, null);
+  assert.equal(liveTimers(), 0, "no timer may start without a replay");
+  assert.equal(state.frame, 0);
+  assert.equal(calls.render, 0, "no needless re-render churn");
+});
+
+test("playback runs and self-terminates at the last frame; replay cleared mid-flight stops the timer", () => {
+  const { state, transport, calls: _calls, fireTick, liveTimers } = fakeTransport([{ f: 0 }, { f: 1 }, { f: 2 }]);
+  transport.togglePlay();
+  assert.equal(state.playing, true);
+  assert.equal(liveTimers(), 1);
+  fireTick(state.timer);
+  assert.equal(state.frame, 1);
+  fireTick(state.timer);
+  assert.equal(state.frame, 2, "reached last frame");
+  fireTick(state.timer);
+  assert.equal(state.playing, false, "auto-stops at the end");
+  assert.equal(liveTimers(), 0);
+
+  // Replay disappearing while playing must stop the timer, not crash.
+  state.frame = 0;
+  transport.togglePlay();
+  state.replay = null;
+  fireTick(state.timer);
+  assert.equal(state.playing, false);
+  assert.equal(state.timer, null);
+  assert.equal(liveTimers(), 0);
+});
+
+test("controller layer: Space with no replay does not invoke togglePlay", () => {
+  // Static contract: the Space handler gates on replay frames before
+  // invoking the app action (defense in depth — the action itself is also safe).
+  assert.match(ctrl, /e\.key === ' ' && route\(\) === '\/watch'[\s\S]*?state\.replay\?\.frames\?\.length[\s\S]*?invokeAppAction\('togglePlay'\)/);
+});

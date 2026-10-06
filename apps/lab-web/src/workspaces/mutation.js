@@ -8,11 +8,13 @@ import { LAB_IDENTITY } from '../evolution/identity.mjs';
 import { LAB_VERSION } from '../version.js';
 import {
   MUTATION_TARGETS, MUTATION_TARGET_BY_ID, MUTATION_LIMITS,
+  MUTATION_OBJECTIVE_METRICS, MUTATION_OBJECTIVE_DIRECTIONS,
   createRuleMutation, createExperimentConfig, buildMutationExperimentPlan,
   createExperimentRecord, finalizeExperimentRecord, compactExperimentRecord,
   serializeExperiment, mutationDisplay,
 } from '../evolution/mutation-domain.mjs';
 import { EvolutionStore, parseMutationImport } from '../evolution/evolution-store.mjs';
+import { runMutationSegments } from './mutation-runner.mjs';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 const POPULATION_IDS = ['random-legal', 'score-rush', 'control', 'tempo', 'value', 'score-rush-tactical', 'control-tactical', 'tempo-tactical', 'value-tactical'];
@@ -39,6 +41,7 @@ const view = {
   swapSides: true,
   seedBase: 1337,
   decisionLimit: 1800,
+  objective: { metric: 'meanTurns', direction: 'decrease', minimumMeaningfulEffect: 0 },
   mutation: null,
   record: null,
   running: false,
@@ -52,6 +55,19 @@ const view = {
 };
 
 let abortRequested = false;
+// Live segment orchestrator for the current run — null when idle. Cancel
+// settles every segment exactly once, so runExperiment() can never hang.
+let activeRunner = null;
+
+/** Cancel the running experiment. Idempotent — repeated calls are harmless. */
+function cancelExperiment() {
+  abortRequested = true;
+  const runner = activeRunner;
+  activeRunner = null;
+  try { runner?.cancel(); } catch { /* settlement is already best-effort */ }
+  view.workersLive = [];
+  view.running = false;
+}
 
 function buildMutation() {
   const target = MUTATION_TARGET_BY_ID[view.targetId];
@@ -66,10 +82,7 @@ function buildMutation() {
 }
 
 export function cleanupMutationChamber() {
-  abortRequested = true;
-  for (const worker of view.workersLive) { try { worker.terminate(); } catch { /* terminated */ } }
-  view.workersLive = [];
-  view.running = false;
+  cancelExperiment();
   view.mounted = false;
 }
 
@@ -149,7 +162,15 @@ function configHtml(mutation) {
       <label class="field evo-mirror">Swap sides<input id="mut-swap" type="checkbox" ${view.swapSides ? 'checked' : ''} ${view.running ? 'disabled' : ''}></label>
     </div>
     <fieldset class="mut-population"><legend>Population — agent profiles in self-play (${view.population.size} selected)</legend>${popCheckboxes}</fieldset>
-    <p id="mut-preflight" class="preflight"><b>Preflight:</b> ${mutation ? `${fmt(view.gamesPerArm)} games per arm · ${view.population.size} profile${view.population.size === 1 ? '' : 's'} · ${view.matchedSeeds ? 'matched seeds' : 'independent deterministic seeds'} · ${view.swapSides ? 'AB/BA seat-swap' : 'fixed seats'} · ${view.workers} worker${view.workers === 1 ? '' : 's'} · ${esc(view.profileId)}` : 'resolve the mutation error before initiating.'}</p>
+    <fieldset class="mut-population" data-testid="mut-objective"><legend>Declared objective — fixed before execution; the verdict is judged against it</legend>
+      <div class="evo-config-row">
+        <label class="field">Target metric<select id="mut-obj-metric" ${view.running ? 'disabled' : ''}>${Object.entries(MUTATION_OBJECTIVE_METRICS).map(([key, label]) => `<option value="${key}" ${view.objective?.metric === key ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select></label>
+        <label class="field">Intended direction<select id="mut-obj-direction" ${view.running ? 'disabled' : ''}>${MUTATION_OBJECTIVE_DIRECTIONS.map((d) => `<option value="${d}" ${view.objective?.direction === d ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select></label>
+        <label class="field">Min. meaningful Δ<input id="mut-obj-effect" type="number" min="0" step="0.1" value="${esc(String(view.objective?.minimumMeaningfulEffect ?? 0))}" ${view.running ? 'disabled' : ''}></label>
+      </div>
+      <p class="footer-note">PROMISING requires the target metric to move in the declared direction. Supported movement against the intent reads ADVERSE; movement off-target reads UNEXPECTED; an exploratory objective reports movement without calling it beneficial.</p>
+    </fieldset>
+    <p id="mut-preflight" class="preflight"><b>Preflight:</b> ${mutation ? `${fmt(view.gamesPerArm)} games per arm · ${view.population.size} profile${view.population.size === 1 ? '' : 's'} · ${view.matchedSeeds ? 'matched seeds' : 'independent deterministic seeds'} · ${view.swapSides ? 'AB/BA seat-swap' : 'fixed seats'} · ${view.workers} worker${view.workers === 1 ? '' : 's'} · ${esc(view.profileId)} · objective ${esc(view.objective?.direction ?? 'exploratory')}${view.objective?.direction !== 'exploratory' ? ` ${esc(view.objective?.metric ?? '')}` : ''}` : 'resolve the mutation error before initiating.'}</p>
   </section>`;
 }
 
@@ -158,22 +179,27 @@ function runStatusHtml() {
   const pctDone = view.progress.total > 0 ? Math.round((view.progress.done / view.progress.total) * 100) : 0;
   return `<section class="evo-section" data-testid="mut-status"><h3>Run status</h3>
     ${view.running ? `<div class="evo-progress-track"><div class="evo-progress-fill" style="width:${pctDone}%"></div></div>
-    <p role="status">${fmt(view.progress.done)} / ${fmt(view.progress.total)} matches (${view.workers} worker${view.workers === 1 ? '' : 's'}) — control + mutant interleaved</p>` : `<p>Run ${view.record ? esc(view.record.status) : 'idle'}${view.record?.execution ? ` · ${fmt(view.record.execution.completedSpecCount)}/${fmt(view.record.execution.plannedSpecCount)} matches · matched seeds: ${view.record.execution.matchedSeeds ? 'YES' : 'NO'} · paired coverage: ${pct(view.record.execution.pairedCoverage)}` : ''}</p>`}
+    <p role="status">${fmt(view.progress.done)} / ${fmt(view.progress.total)} matches (${view.workers} worker${view.workers === 1 ? '' : 's'}) — control + mutant interleaved</p>` : `<p>Run ${view.record ? esc(view.record.status) : 'idle'}${view.record?.execution ? ` · ${fmt(view.record.execution.completedSpecCount)}/${fmt(view.record.execution.plannedSpecCount)} matches · exact pairing: ${view.record.execution.pairedExact === true ? 'YES' : 'NO'} · paired coverage: ${pct(view.record.execution.pairedCoverage)}${view.record.execution.ledger ? ` · ledger: ${view.record.execution.ledger.exact ? 'EXACT' : `INEXACT (missing ${view.record.execution.ledger.missing.length} · dup ${view.record.execution.ledger.duplicates.length} · extra ${view.record.execution.ledger.unexpected.length} · faults ${view.record.execution.ledger.faults})`}` : ''}` : ''}</p>`}
   </section>`;
 }
 
 function resultsHtml(record) {
-  const c = record.arms.control.summary, m = record.arms.mutant.summary;
+  const c = record.arms?.control?.summary, m = record.arms?.mutant?.summary;
+  if (!c || !m) {
+    return `<section class="evo-section" data-testid="mut-arms"><h3>Control vs Mutant</h3>
+      <p>No finalized results — the run ended with status <b>${esc(record.status ?? 'unknown')}</b> before both arms were aggregated. Partial results are never presented as a comparison.</p></section>
+    ${metadataHtml(record)}`;
+  }
   const armCard = (title, sub, s) => `<div class="mut-arm"><h4>${esc(title)}</h4><small>${esc(sub)}</small>
     <div class="mut-arm-stats"><span><b>${fmt(s.games)}</b> games</span><span><b>${fmt(s.decisive)}</b> decisive</span><span><b>${fmt(s.draws)}</b> draws</span><span><b>${fmt(s.aborted)}</b> aborted</span></div>
-    <div class="mut-arm-stats"><span>seat-1 win <b>${pct(s.seat1WinRate)}</b></span><span>mean turns <b>${num(s.turns.mean, 1)}</b></span><span>mean margin <b>${num(s.meanMargin, 1)}</b></span></div></div>`;
+    <div class="mut-arm-stats"><span>seat-1 win <b>${pct(s.seat1WinRate)}</b></span><span>mean turns <b>${num(s.turns?.mean, 1)}</b></span><span>mean margin <b>${num(s.meanMargin, 1)}</b></span></div></div>`;
   return `
   <section class="evo-section" data-testid="mut-arms"><h3>Control vs Mutant</h3>
     <div class="mut-arms">
       ${armCard('CONTROL', 'Current rules', c)}
       ${armCard('MUTANT', record.mutation ? mutationDisplay(record.mutation) : '', m)}
     </div>
-    ${record.evidenceOrigin === 'IMPORTED_UNVERIFIED' ? '' : `<p class="footer-note">Matched seeds: ${record.config.matchedSeeds ? 'YES' : 'NO'} · side swapping: ${record.config.swapSides ? 'YES' : 'NO'} · games per arm: ${fmt(record.config.gamesPerArm)} · paired ordinals: ${fmt(record.comparison.pairedN)}${record.comparison.pairedCoverage < 0.99 ? ` · <b class="danger">unpaired games retained and disclosed</b>` : ''}</p>`}
+    ${record.evidenceOrigin === 'IMPORTED_UNVERIFIED' ? '' : `<p class="footer-note">Matched seeds: ${record.config.matchedSeeds ? 'YES' : 'NO'} · side swapping: ${record.config.swapSides ? 'YES' : 'NO'} · games per arm: ${fmt(record.config.gamesPerArm)} · paired ordinals: ${fmt(record.comparison?.pairedN)} · exact pairing: ${record.comparison?.matched === true ? 'YES' : 'NO'}${(record.comparison?.pairedCoverage ?? 1) < 0.99 || (record.comparison?.pairedMutantCoverage ?? 1) < 0.99 ? ` · <b class="danger">unpaired games retained and disclosed (control coverage ${pct(record.comparison?.pairedCoverage)}, mutant coverage ${pct(record.comparison?.pairedMutantCoverage)})</b>` : ''}</p>`}
   </section>
   ${impactHtml(record)}
   ${profilesHtml(record)}
@@ -209,7 +235,7 @@ function profilesHtml(record) {
   return `<section class="evo-section" data-testid="mut-profiles"><h3>Profile Effects</h3>
     <table class="mut-table"><thead><tr><th>Agent profile</th><th>Baseline seat-1</th><th>Mutant seat-1</th><th>Δ seat-1</th><th>Δ turns</th><th>n (ctrl/mut)</th><th>Note</th></tr></thead>
     <tbody>${deltas.map((d) => `<tr><td>${esc(policyName(d.policyId))}</td><td>${pct(d.control.seat1WinRate)}</td><td>${pct(d.mutant.seat1WinRate)}</td><td class="${deltaClass(d.seat1Delta)}">${pp(d.seat1Delta)}</td><td class="${deltaClass(d.turnsDelta)}">${signed(d.turnsDelta, 1)}</td><td>${fmt(d.n.control)}/${fmt(d.n.mutant)}</td><td>${d.warning ? 'SMALL SAMPLE — treat as exploratory' : ''}</td></tr>`).join('')}</tbody></table>
-    <p class="footer-note">Each row compares the same agent profile in self-play under both rulesets. A small global effect may conceal a large profile-specific effect — deltas are shown per profile with sample sizes retained.</p></section>`;
+    <p class="footer-note">Each row compares the same agent profile in self-play under both rulesets — these are first-seat win rates while the profile self-plays, not head-to-head policy win rates. A small global effect may conceal a large profile-specific effect — deltas are shown per profile with sample sizes retained.</p></section>`;
 }
 
 function regressionsHtml(record) {
@@ -238,6 +264,7 @@ function metadataHtml(record) {
       <dt>Baseline</dt><dd>engine ${esc(record.baseline.engineVersion)} · rules ${esc(record.baseline.rulesVersion)} · lab ${esc(record.baseline.labVersion)} · profile ${esc(record.baseline.profileId)}</dd>
       <dt>Mutation</dt><dd>${esc(mutationDisplay(record.mutation))} · <code>${esc(record.mutation.id)}</code></dd>
       <dt>Config</dt><dd>${fmt(record.config.gamesPerArm)}/arm · population [${record.config.population.map(esc).join(', ')}] · seed base ${fmt(record.config.seedBase)} · decision limit ${fmt(record.config.decisionLimit)}</dd>
+      <dt>Objective</dt><dd>${record.config?.objective ? `${esc(record.config.objective.direction)} ${esc(record.config.objective.metric ?? '')}${record.config.objective.minimumMeaningfulEffect ? ` · min Δ ${fmt(record.config.objective.minimumMeaningfulEffect)}` : ''}` : 'exploratory — no predeclared direction; supported movement is never reported as beneficial'}</dd>
       <dt>Content hash</dt><dd><code class="evo-hash">${esc(record.contentHash ?? '—')}</code></dd>
       <dt>Created</dt><dd>${esc(record.createdAt)}${record.execution?.completedAt ? ` · completed ${esc(record.execution.completedAt)}` : ''}</dd>
     </dl></section>`;
@@ -281,12 +308,15 @@ function bind() {
   on('mut-decisions', (e) => { view.decisionLimit = Number(e.target.value); });
   on('mut-matched', (e) => { view.matchedSeeds = e.target.checked; renderMutationChamber(); });
   on('mut-swap', (e) => { view.swapSides = e.target.checked; renderMutationChamber(); });
+  on('mut-obj-metric', (e) => { view.objective = { ...(view.objective ?? {}), metric: e.target.value }; renderMutationChamber(); });
+  on('mut-obj-direction', (e) => { view.objective = { ...(view.objective ?? {}), direction: e.target.value }; renderMutationChamber(); });
+  on('mut-obj-effect', (e) => { view.objective = { ...(view.objective ?? {}), minimumMeaningfulEffect: Number(e.target.value) }; renderMutationChamber(); });
   document.querySelectorAll('.mut-pop-check').forEach((box) => box.addEventListener('change', () => {
     if (box.checked) view.population.add(box.value); else view.population.delete(box.value);
     renderMutationChamber();
   }));
   document.getElementById('mut-run')?.addEventListener('click', runExperiment);
-  document.getElementById('mut-cancel')?.addEventListener('click', () => { abortRequested = true; for (const w of view.workersLive) { try { w.terminate(); } catch { } } view.workersLive = []; view.running = false; renderMutationChamber(); });
+  document.getElementById('mut-cancel')?.addEventListener('click', () => { cancelExperiment(); renderMutationChamber(); });
   document.getElementById('mut-export')?.addEventListener('click', exportExperiment);
   document.getElementById('mut-saved-refresh')?.addEventListener('click', refreshSavedList);
   document.getElementById('mut-import')?.addEventListener('change', importExperiment);
@@ -302,6 +332,7 @@ async function runExperiment() {
       profileId: view.profileId, population: [...view.population],
       gamesPerArm: view.gamesPerArm, matchedSeeds: view.matchedSeeds,
       swapSides: view.swapSides, seedBase: view.seedBase, decisionLimit: view.decisionLimit,
+      objective: view.objective,
     });
   } catch (error) { view.error = error.message; renderMutationChamber(); return; }
   const experimentId = `EXP-${Date.now().toString(36).toUpperCase()}`;
@@ -323,39 +354,41 @@ async function runExperiment() {
   const segments = [];
   const perWorker = Math.ceil(plan.specs.length / workers);
   for (let i = 0; i < plan.specs.length; i += perWorker) segments.push(plan.specs.slice(i, i + perWorker));
-  const results = [];
-  await Promise.all(segments.map((specs, index) => new Promise((resolve) => {
-    const worker = new Worker('worker.js', { type: 'module' });
-    view.workersLive.push(worker);
-    worker.onmessage = (e) => {
-      const x = e.data;
-      if (x.type === 'mutation-segment-progress' && view.mounted) {
-        view.progress.done = Math.min(view.progress.total, view.progress.done + (x.completed - (segments[index]._done ?? 0)));
-        segments[index]._done = x.completed;
-        const el = document.querySelector('[data-testid="mut-status"] p[role="status"]');
-        if (el) el.textContent = `${fmt(view.progress.done)} / ${fmt(view.progress.total)} matches (${workers} workers) — control + mutant interleaved`;
-        const fill = document.querySelector('.evo-progress-fill');
-        if (fill) fill.style.width = `${Math.round((view.progress.done / view.progress.total) * 100)}%`;
-      } else if (x.type === 'mutation-segment-result') {
-        try { worker.terminate(); } catch { }
-        if (x.ok) results.push(...JSON.parse(x.resultsJson));
-        else results.push(...specs.map((s) => ({ arm: s.arm, pairIndex: s.pairIndex, pairedRunId: s.pairedRunId, specOrdinal: s.ordinal, seed: s.seed, policyId: s.policyId, ruleOverrides: s.ruleOverrides ?? null, ok: false, error: x.error ?? 'WORKER_FAULT' })));
-        resolve();
-      }
-    };
-    worker.onerror = () => {
-      try { worker.terminate(); } catch { }
-      results.push(...specs.map((s) => ({ arm: s.arm, pairIndex: s.pairIndex, pairedRunId: s.pairedRunId, specOrdinal: s.ordinal, seed: s.seed, policyId: s.policyId, ruleOverrides: s.ruleOverrides ?? null, ok: false, error: 'WORKER_FAULT' })));
-      resolve();
-    };
-    worker.postMessage({ type: 'run-mutation-segment', workerIndex: index, specs });
-  })));
+  // Every segment promise settles exactly once — on result, on error, or on
+  // cancel(). Worker.terminate() cannot strand this await.
+  const runner = runMutationSegments(segments, {
+    createWorker: () => new Worker('worker.js', { type: 'module' }),
+    onProgress: (_index, delta) => {
+      if (!view.mounted) return;
+      view.progress.done = Math.min(view.progress.total, view.progress.done + delta);
+      const el = document.querySelector('[data-testid="mut-status"] p[role="status"]');
+      if (el) el.textContent = `${fmt(view.progress.done)} / ${fmt(view.progress.total)} matches (${workers} workers) — control + mutant interleaved`;
+      const fill = document.querySelector('.evo-progress-fill');
+      if (fill) fill.style.width = `${Math.round((view.progress.done / view.progress.total) * 100)}%`;
+    },
+  });
+  activeRunner = runner;
+  view.workersLive = runner.workers();
+  const settled = await runner.promise;
+  const results = settled.flat();
+  activeRunner = null;
   view.workersLive = [];
   view.running = false;
-  if (abortRequested) { view.record.status = 'incomplete'; renderMutationChamber(); return; }
+  if (abortRequested) {
+    view.record.status = 'incomplete';
+    view.record.execution = {
+      plannedSpecCount: plan.specs.length,
+      completedSpecCount: results.filter((r) => r.ok).length,
+      cancelled: true,
+      completedAt: new Date().toISOString(),
+    };
+    renderMutationChamber();
+    return;
+  }
 
   // Fold results into arm-separated summaries; worker faults become honest
-  // abort stubs so invalid games are counted, never silently discarded.
+  // abort stubs so invalid games are counted, never silently discarded. Fault
+  // stubs still count as non-executions in the ledger — they force INCOMPLETE.
   const stub = (r) => ({ winner: 'ABORTED', winningSeat: null, terminationReason: 'WORKER_FAULT', errorCode: 'MUTATION_WORKER_FAULT', completedFullTurns: null, scoreMargin: null, commandCount: null, eventCount: null, actionCounts: {}, decisionFamilyCounts: {}, participants: [], policyIds: [r.policyId ?? 'unknown', r.policyId ?? 'unknown'], pairedRunId: r.pairedRunId, seed: r.seed ?? 0, seatOrder: [], ruleCompliance: null, ruleOverrides: r.ruleOverrides ?? null });
   const controlSummaries = [], mutantSummaries = [];
   for (const r of results) {
@@ -364,7 +397,7 @@ async function runExperiment() {
   }
   try {
     view.record = finalizeExperimentRecord(view.record, {
-      controlSummaries, mutantSummaries,
+      controlSummaries, mutantSummaries, plan,
       completedSpecCount: results.length, plannedSpecCount: plan.specs.length,
     });
     const compact = compactExperimentRecord(view.record);

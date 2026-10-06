@@ -5,9 +5,9 @@
 // .mjs paths (copied to dist/achievements/ by build script).
 // ═══════════════════════════════════════════════════════════════
 
-import { getCatalog, getCatalogById, getDefinition, validateCatalog, deriveAchievementFacts, createCheckpointFact, createMatchTracker, createCareerTracker, serializeCareerTracker, deserializeCareerTracker, createAchievementProfileState, reduceFacts, evaluateAchievements, applyUnlocks, computeTotalAP, countEarned, isEarned, getProgress, isQualifyingMatch, localVsAIContext, networkMatchContext, migrateLegacyData, FACT_KIND, PROVENANCE, HIDDEN_ACHIEVEMENT_IDS, RARITY_SYMBOL, AP_BY_RARITY } from '../../achievements/index.mjs?v=e5382c028fd1';
+import { getCatalog, getCatalogById, getDefinition, validateCatalog, deriveAchievementFacts, createCheckpointFact, createMatchTracker, createCareerTracker, serializeCareerTracker, deserializeCareerTracker, createAchievementProfileState, reduceFacts, evaluateAchievements, applyUnlocks, computeTotalAP, countEarned, isEarned, getProgress, isQualifyingMatch, localVsAIContext, networkMatchContext, migrateLegacyData, FACT_KIND, PROVENANCE, HIDDEN_ACHIEVEMENT_IDS, RARITY_SYMBOL, AP_BY_RARITY } from '../../achievements/index.mjs?v=dac162e115e4';
 
-import { getAchievementState, saveAchievementState, resetAchievementState } from '../persistence.js?v=e5382c028fd1';
+import { getAchievementState, saveAchievementState, resetAchievementState } from '../persistence.js?v=dac162e115e4';
 
 // Validate catalog at module load
 validateCatalog();

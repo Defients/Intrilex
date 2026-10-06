@@ -1,24 +1,24 @@
-import '../evolution/evolution-training-ui.js?v=e5382c028fd1';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=e5382c028fd1';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=e5382c028fd1';
-import { app, esc, fmt, state } from '../state.js?v=e5382c028fd1';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=e5382c028fd1';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=e5382c028fd1';
-import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=e5382c028fd1';
-import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=e5382c028fd1';
-import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=e5382c028fd1';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=e5382c028fd1';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=e5382c028fd1';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=e5382c028fd1';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=e5382c028fd1';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=e5382c028fd1';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=e5382c028fd1';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=e5382c028fd1';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=e5382c028fd1';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=e5382c028fd1';
-import { StrategyStore } from '../strategy/strategy-store.mjs?v=e5382c028fd1';
-import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=e5382c028fd1';
-import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs?v=e5382c028fd1';
+import '../evolution/evolution-training-ui.js?v=dac162e115e4';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=dac162e115e4';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=dac162e115e4';
+import { app, esc, fmt, state } from '../state.js?v=dac162e115e4';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=dac162e115e4';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=dac162e115e4';
+import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=dac162e115e4';
+import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=dac162e115e4';
+import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=dac162e115e4';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=dac162e115e4';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=dac162e115e4';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=dac162e115e4';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=dac162e115e4';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=dac162e115e4';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=dac162e115e4';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=dac162e115e4';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=dac162e115e4';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=dac162e115e4';
+import { StrategyStore } from '../strategy/strategy-store.mjs?v=dac162e115e4';
+import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=dac162e115e4';
+import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs?v=dac162e115e4';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 // Strategy evidence is a separate persistence concern from the monolithic
@@ -183,7 +183,7 @@ async function propagateToObservatory() {
   const summaries = [...new Map(runs.flatMap(observatorySummariesForRun).map(s => [s.matchId, s])).values()];
   if (!summaries.length) { view.propagateStatus = 'No saved lab runs to propagate — run, save or import evidence first.'; renderEvolutionLab(); return; }
   try {
-    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js?v=e5382c028fd1');
+    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js?v=dac162e115e4');
     const aggregate = campaignAggregate(summaries, { profileId: null });
     const obs = buildObservatoryAnalytics({ summaries, aggregate });
     state.observatory = { ...obs, summaries, datasetOrigin: 'EVOLUTION_LAB' };
@@ -315,7 +315,7 @@ function bind() {
     // Retained replays are certified envelopes ({initialState, commands}) —
     // the shared resolver normalizes them for frame-by-frame Watch playback
     // without requiring static-index membership.
-    if (watch) { const item=run()?.replays.find(r=>r.replayId===watch.dataset.watchReplay); if (item?.replay) { const { openReplay }=await import('../data-loader.js?v=e5382c028fd1'); await openReplay({ kind:'object', replay:item.replay, id:item.replayId, label:`Arena game ${item.ordinal+1}` }); } }
+    if (watch) { const item=run()?.replays.find(r=>r.replayId===watch.dataset.watchReplay); if (item?.replay) { const { openReplay }=await import('../data-loader.js?v=dac162e115e4'); await openReplay({ kind:'object', replay:item.replay, id:item.replayId, label:`Arena game ${item.ordinal+1}` }); } }
     if (bookmark && run() && !view.archive) { const id=bookmark.dataset.bookmark,i=run().bookmarks.indexOf(id); if (i < 0) run().bookmarks.push(id); else run().bookmarks.splice(i,1); bookmark.textContent=i < 0 ? '★ Bookmarked' : '☆ Bookmark'; bookmark.setAttribute('aria-pressed',String(i < 0)); persist(); }
   });
   document.getElementById('evo-history')?.addEventListener('click',async e => { const b=e.target.closest('[data-load-run]'); if (!b || active()) return; try { const saved=await store.loadForInspection(b.dataset.loadRun);if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run); } catch(error) { view.error=`Load rejected: ${error.message}`; renderEvolutionLab(); } });

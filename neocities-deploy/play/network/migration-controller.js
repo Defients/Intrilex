@@ -19,16 +19,16 @@
 // NetworkPlaySession — it opens its own connection.
 // ═══════════════════════════════════════════════════════════════
 
-import { getAchievementState, markAchievementsMigrated } from '../persistence.js?v=e5382c028fd1';
-import { migrateGuest, authenticate, bindGuestIdentity } from './network-protocol-client.mjs?v=e5382c028fd1';
+import { getAchievementState, markAchievementsMigrated } from '../persistence.js?v=dac162e115e4';
+import { migrateGuest, authenticate, bindGuestIdentity } from './network-protocol-client.mjs?v=dac162e115e4';
 import {
   isMigrationPending,
   getGuestIdentity,
   getAccountId,
   getAccessToken,
   clearMigrationPending,
-} from './auth-controller.js?v=e5382c028fd1';
-import { getMatchServerUrl } from './match-server-config.js?v=e5382c028fd1';
+} from './auth-controller.js?v=dac162e115e4';
+import { getMatchServerUrl } from './match-server-config.js?v=dac162e115e4';
 
 /** @typedef {'IDLE'|'CONNECTING'|'AUTHENTICATING'|'MIGRATING'|'DONE'|'ERROR'} MigrationStatus */
 

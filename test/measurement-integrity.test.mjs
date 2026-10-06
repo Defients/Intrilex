@@ -452,3 +452,34 @@ test('choice entropy matches known fixtures: deterministic 0, uniform 1, no cros
   const single = buildChoiceAnalysis([mk('a', [{ family: 'f', mode: 'a' }], 1)], { minFrames: 1 });
   assert.equal(single.contexts[0].normalizedEntropy, 0);
 });
+
+// ── 24. Post-exclusion effective-N gate ────────────────────────
+test('raw N above threshold but post-exclusion effective N below threshold → rejected, both Ns disclosed', () => {
+  // Two strata: a large stratum whose A-only cohort is completely separated
+  // (all wins → OUTCOME_SEPARATION → the whole stratum is excluded), and a
+  // small clean stratum. The raw pre-exclusion cohort total (450) clears the
+  // 200 minimumEffectiveN, but the estimator's contributing N (120) does not.
+  const rows = [];
+  let i = 0;
+  // BIG stratum (seatOrder P1,P2): aOnly 200-0 separated; the rest mixed.
+  for (let k = 0; k < 200; k++) rows.push(row(i++, true, false, true));
+  for (let k = 0; k < 60; k++) rows.push(row(i++, true, true, k % 2 === 0));
+  for (let k = 0; k < 60; k++) rows.push(row(i++, false, true, k % 2 === 0));
+  for (let k = 0; k < 60; k++) rows.push(row(i++, false, false, k % 2 === 0));
+  // SMALL stratum (seatOrder P2,P1): clean, 120 decisive rows.
+  for (let k = 0; k < 120; k++) {
+    const a = k % 4 === 0 || k % 4 === 3, b = k % 4 === 2 || k % 4 === 3;
+    const unit = row(i++, a, b, k % 3 !== 0);
+    unit.seatOrder = ['P2', 'P1'];
+    rows.push(unit);
+  }
+  const out = analyzeSynergies(rows, { includeDiagnostics: true, minimumBoth: 10, minimumCohort: 10, minimumEffectiveN: 200 });
+  assert.equal(out.find((s) => s.id === 'A::B'), undefined, 'the pair must not be admitted as evidence');
+  const rejected = (out.diagnostics ?? []).find((d) => d.id === 'A::B' && d.status === 'rejected');
+  assert.ok(rejected, 'rejection must be preserved in diagnostics');
+  assert.equal(rejected.reasonCode, 'INSUFFICIENT_EFFECTIVE_N');
+  assert.ok(rejected.rawN >= 200, `raw cohort N ${rejected.rawN} passed the pre-check`);
+  assert.ok(rejected.effectiveN < 200, `post-exclusion effective N ${rejected.effectiveN} below threshold`);
+  assert.ok(rejected.excludedN > 0, 'excluded mass is disclosed');
+  assert.ok(Array.isArray(rejected.excludedStrata) && rejected.excludedStrata.length === 1);
+});
