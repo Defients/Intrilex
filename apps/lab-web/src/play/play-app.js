@@ -1006,7 +1006,7 @@ async function renderActiveMatch(container) {
   generateBanterFromEvents(snapshot);
 
   // Experience delivery is independent of player-stat recording, including restored terminal saves.
-  if (snapshot.status === 'TERMINAL' && state.session?.setup.agentSnapshot && state.experienceEncounterId !== state.session.sessionId) {
+  if (snapshot.status === 'TERMINAL' && state.session?.setup?.agentSnapshot && state.experienceEncounterId !== state.session.sessionId) {
     state.experienceEncounterId = state.session.sessionId;
     recordAgentExperience(state.session, snapshot);
   }
