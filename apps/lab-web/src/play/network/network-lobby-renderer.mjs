@@ -18,6 +18,21 @@ import { computeSeasonCountdown, renderSeasonCountdown } from '@intrilex/account
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /**
+ * Build a shareable invite link for a Direct Duel.
+ * The link deep-links into the join flow so the recipient lands on the
+ * join form with the invite code already filled in.
+ * @param {string} baseUrl - Page base URL (origin + path, e.g. 'https://x.example/')
+ * @param {string} inviteCode - 6-character invite code
+ * @returns {string|null} Absolute invite URL, or null when no code is available
+ */
+export function buildInviteLink(baseUrl, inviteCode) {
+  const code = String(inviteCode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!code) return null;
+  const base = String(baseUrl ?? '');
+  return `${base}#/play/online/join/${code}`;
+}
+
+/**
  * Render a versus card for the local player showing their rank glyph + name +
  * tier. Opponent rank is added when their rating is known (server-supplied).
  * @param {object} [overrides] - { displayName, opponentDisplayName, opponentRating, opponentRatedMatches }
@@ -244,7 +259,8 @@ export function renderNetworkCreateWaiting(session, options = {}) {
       <h2>Invite Code</h2>
       <div class="network-invite-code" data-testid="network-invite-code" role="textbox" aria-readonly="true" aria-label="Invite code">${esc(inviteCode)}</div>
       <button class="secondary-button" data-testid="network-copy-invite" data-action="network-copy-invite"><span aria-hidden="true">📋</span> Copy code</button>
-      <p class="network-invite-hint">Share this code with your opponent. They can join via “Join with Code.”</p>
+      <button class="text-button" data-testid="network-copy-invite-link" data-action="network-copy-invite-link">Copy invite link</button>
+      <p class="network-invite-hint">Share the code or link with your opponent. They can join via “Join with Code” — the link fills it in automatically.</p>
     </div>
     <div class="network-waiting-status" data-testid="network-waiting-status">
       ${opponentStatus}
@@ -260,12 +276,15 @@ export function renderNetworkCreateWaiting(session, options = {}) {
 
 /**
  * Render the "join with code" form.
- * @param {object} options — { error, connecting }
+ * @param {object} options — { error, connecting, prefillCode }
+ *   prefillCode: invite code to pre-fill (from a shared invite link)
  * @returns {string} HTML
  */
 export function renderNetworkJoinForm(options = {}) {
   const error = options.error ?? null;
   const connecting = options.connecting ?? false;
+  // Sanitize: invite codes are uppercase alphanumeric, 6–8 chars.
+  const prefill = String(options.prefillCode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
 
   return `<div class="network-join" data-testid="network-join-form">
     <a class="play-hub-back" href="#/play/online" aria-label="Back to lobby">← Back</a>
@@ -284,6 +303,7 @@ export function renderNetworkJoinForm(options = {}) {
         spellcheck="false"
         aria-label="Invite code"
         required
+        value="${esc(prefill)}"
         ${connecting ? 'disabled' : ''}
       >
       <button type="submit" class="primary-button" data-testid="network-join-submit" ${connecting ? 'disabled' : ''}>

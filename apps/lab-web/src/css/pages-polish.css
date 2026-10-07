@@ -678,8 +678,13 @@ main{padding-left:calc(24px + var(--safe-area-left));padding-right:calc(24px + v
 
 /* ── Phase 8: Campaign progress live region ── */
 #experiment-status[aria-live="polite"]{min-height:1.5em}
-.campaign-progress-bar{height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;margin-top:6px}
-.campaign-progress-bar-fill{height:100%;background:var(--cyan);border-radius:2px;transition:width var(--normal) var(--ease)}
+.campaign-progress{display:flex;align-items:center;gap:10px;margin-top:8px}
+.campaign-progress-bar{position:relative;flex:1;height:8px;border-radius:999px;background:var(--surface-3);box-shadow:inset 0 1px 3px rgba(0,0,0,.4);overflow:hidden}
+.campaign-progress-bar-fill{position:relative;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--cyan-2),var(--cyan));box-shadow:0 0 10px rgba(90,215,232,.4);transition:width var(--normal) var(--ease);overflow:hidden}
+.campaign-progress-bar-fill::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-55deg,rgba(255,255,255,.18) 0 6px,transparent 6px 12px);animation:campaign-stripes 1s linear infinite}
+.campaign-progress-bar-fill::after{content:"";position:absolute;top:0;right:0;bottom:0;width:10px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5))}
+@keyframes campaign-stripes{to{background-position:17px 0}}
+.campaign-progress-pct{flex:none;min-width:3.6ch;text-align:right;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;color:var(--cyan);font-variant-numeric:tabular-nums}
 
 /* ── Phase 2/7: Dialog improvements ── */
 dialog[open]{animation:dialog-in var(--normal) var(--ease)}
@@ -706,6 +711,7 @@ dialog::backdrop{background:rgba(5,8,14,.7);backdrop-filter:blur(4px)}
   .tcg-chat-bubble{animation:none}
   dialog[open]{animation:none}
   .campaign-progress-bar-fill{transition:none}
+  .campaign-progress-bar-fill::before{animation:none}
 }
 
 

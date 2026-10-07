@@ -390,6 +390,30 @@
   border-radius: 5px;
   background: var(--bg-1);
 }
+/* Close button — bezeled instrument key, not a bare glyph */
+.experiment-dialog .dialog-head .icon-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 4px 10px 4px 10px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
+  color: var(--muted-bright);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.09), inset 0 -1px 0 rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.3);
+}
+.experiment-dialog .dialog-head .icon-button:hover {
+  border-color: var(--border-strong);
+  color: var(--text-bright);
+  background: linear-gradient(180deg, var(--surface-elevated), var(--surface-3));
+}
+.experiment-dialog .dialog-head .icon-button:active {
+  box-shadow: inset 0 1px 4px rgba(0,0,0,.45);
+  transform: translateY(1px);
+}
 .experiment-dialog .preflight {
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -398,17 +422,87 @@
   border-left: 3px solid var(--sig-active);
   background: linear-gradient(90deg, rgba(241,189,93,.05), transparent 65%);
 }
-#campaign-progress.campaign-progress-bar {
-  height: 10px;
+/* Toggle row — labelled switch instead of a bare stacked checkbox */
+.experiment-dialog .experiment-grid label.exp-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
   border: 1px solid var(--border-soft);
-  border-radius: 3px;
+  border-radius: 6px;
   background: var(--bg-1);
-  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--fast), background var(--fast);
 }
-#campaign-progress .campaign-progress-bar-fill {
-  background: var(--sig-active);
-  mask: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8px);
-  -webkit-mask: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8px);
+.experiment-dialog .experiment-grid label.exp-toggle:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+.experiment-dialog .exp-toggle-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.experiment-dialog .experiment-grid .exp-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 38px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-3);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--fast), border-color var(--fast);
+}
+.experiment-dialog .experiment-grid .exp-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform var(--fast) var(--ease), background var(--fast), box-shadow var(--fast);
+}
+.experiment-dialog .experiment-grid .exp-switch:checked {
+  border-color: rgba(90,215,232,.6);
+  background: rgba(90,215,232,.16);
+}
+.experiment-dialog .experiment-grid .exp-switch:checked::after {
+  transform: translateX(18px);
+  background: var(--cyan);
+  box-shadow: 0 0 8px rgba(90,215,232,.6);
+}
+.experiment-dialog .experiment-grid .exp-switch:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+/* Action row — all three buttons share one row, primary action widest */
+.experiment-dialog .rail-actions {
+  grid-template-columns: 1.6fr 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 560px) {
+  .experiment-dialog .rail-actions { grid-template-columns: 1fr; }
+}
+/* Campaign progress — recessed instrument track, live percentage readout */
+.experiment-dialog .campaign-progress { margin-top: 4px; }
+.experiment-dialog .campaign-progress-bar {
+  height: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  background: var(--bg-1);
+}
+.experiment-dialog .campaign-progress-bar-fill {
+  border-radius: 4px;
+  box-shadow: 0 0 12px rgba(90,215,232,.45), inset 0 1px 0 rgba(255,255,255,.22);
 }
 .experiment-dialog .summary-card { border-radius: 4px; background: var(--bg-1); }
 .experiment-dialog .summary-card b { color: var(--sig-active); font-family: var(--font-mono); }

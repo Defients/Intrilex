@@ -19,6 +19,9 @@ import {
   renderNetworkSpectateForm,
   renderNetworkSpectating,
   renderLiveMatchesSection,
+  renderNetworkCreateWaiting,
+  renderNetworkJoinForm,
+  buildInviteLink,
 } from '../apps/lab-web/src/play/network/network-lobby-renderer.mjs';
 
 import {
@@ -290,4 +293,38 @@ test('spectate-form: no live state hides the live section but keeps the form', (
   const html = renderNetworkSpectateForm({});
   assert.ok(!html.includes('data-testid="network-live-matches"'), 'Live section must be hidden without state');
   assert.ok(html.includes('data-testid="network-spectate-form-element"'), 'Manual form must still render');
+});
+
+// ── Section 8: Invite link (deep-link join) ──
+
+test('invite-link: buildInviteLink produces a join deep-link URL', () => {
+  const link = buildInviteLink('https://intrilex.cards/', 'ABC123');
+  assert.equal(link, 'https://intrilex.cards/#/play/online/join/ABC123');
+});
+
+test('invite-link: buildInviteLink returns null without a code', () => {
+  assert.equal(buildInviteLink('https://intrilex.cards/', ''), null);
+  assert.equal(buildInviteLink('https://intrilex.cards/', null), null);
+});
+
+test('invite-link: buildInviteLink uppercases and strips unsafe characters', () => {
+  const link = buildInviteLink('https://intrilex.cards/', 'ab-c1 23');
+  assert.equal(link, 'https://intrilex.cards/#/play/online/join/ABC123');
+});
+
+test('invite-link: join form prefills the invite code', () => {
+  const html = renderNetworkJoinForm({ prefillCode: 'ABC123' });
+  assert.ok(html.includes('value="ABC123"'), 'Join form input must be prefilled with the code');
+});
+
+test('invite-link: join form sanitizes an unsafe prefill code', () => {
+  const html = renderNetworkJoinForm({ prefillCode: '"><script>' });
+  assert.ok(!html.includes('<script>'), 'Prefill must not inject markup');
+  assert.ok(html.includes('value="SCRIPT"'), 'Only the alphanumeric residue may survive sanitization');
+});
+
+test('invite-link: create waiting screen has a copy-invite-link button', () => {
+  const html = renderNetworkCreateWaiting({ inviteCode: 'ABC123', matchId: 'M-x' });
+  assert.ok(html.includes('data-action="network-copy-invite-link"'), 'Waiting room must expose Copy invite link');
+  assert.ok(html.includes('data-testid="network-copy-invite-link"'), 'Copy invite link must have testid');
 });

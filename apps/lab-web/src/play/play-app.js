@@ -57,7 +57,7 @@ import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
   renderNetworkQueueWaiting, renderNetworkSpectateForm, renderNetworkSpectating,
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
-  renderNetworkUnavailable,
+  renderNetworkUnavailable, buildInviteLink,
 } from './network/network-lobby-renderer.mjs';
 import { getMatchServerUrl, validateMatchServerUrl } from './network/match-server-config.js';
 import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js';
@@ -192,8 +192,8 @@ export async function handlePlayRoute(route, container) {
     await renderNetworkLobbyHub(container);
   } else if (sub === '/online/create') {
     await renderNetworkCreateFlow(container);
-  } else if (sub === '/online/join') {
-    await renderNetworkJoinFlow(container);
+  } else if (sub === '/online/join' || sub.startsWith('/online/join/')) {
+    await renderNetworkJoinFlow(container, extractJoinCodeFromSub(sub));
   } else if (sub === '/online/queue') {
     await renderNetworkQueueFlow(container);
   } else if (sub === '/online/spectate') {
@@ -1703,10 +1703,23 @@ async function renderNetworkCreateWaitingRoom(container) {
 }
 
 /**
- * Render the join flow — shows the invite code input form.
+ * Extract an invite code from a join sub-route (deep link).
+ * Supports '#/play/online/join/<CODE>' invite links shared by the creator.
+ * @param {string} sub - Play sub-route (e.g. '/online/join/ABC123')
+ * @returns {string} Sanitized uppercase code, or '' when absent/invalid
  */
-async function renderNetworkJoinFlow(container) {
-  container.innerHTML = renderNetworkJoinForm({});
+function extractJoinCodeFromSub(sub) {
+  const m = /^\/online\/join\/([A-Za-z0-9]{6,8})\/?$/.exec(sub ?? '');
+  return m ? m[1].toUpperCase() : '';
+}
+
+/**
+ * Render the join flow — shows the invite code input form.
+ * @param {object} container - Route container
+ * @param {string} [prefillCode] - Invite code from a shared join link
+ */
+async function renderNetworkJoinFlow(container, prefillCode = '') {
+  container.innerHTML = renderNetworkJoinForm({ prefillCode });
   bindNetworkJoinFormEvents(container);
 }
 
@@ -1721,12 +1734,12 @@ function bindNetworkJoinFormEvents(container) {
     const formData = new FormData(form);
     const inviteCode = (formData.get('inviteCode') ?? '').toString().trim().toUpperCase();
     if (!inviteCode || inviteCode.length < 6 || inviteCode.length > 8) {
-      container.innerHTML = renderNetworkJoinForm({ error: 'Invite code must be 6–8 characters.' });
+      container.innerHTML = renderNetworkJoinForm({ error: 'Invite code must be 6–8 characters.', prefillCode: inviteCode });
       bindNetworkJoinFormEvents(container);
       return;
     }
 
-    container.innerHTML = renderNetworkJoinForm({ connecting: true });
+    container.innerHTML = renderNetworkJoinForm({ connecting: true, prefillCode: inviteCode });
     bindNetworkJoinFormEvents(container);
 
     try {
@@ -1769,7 +1782,7 @@ function bindNetworkJoinFormEvents(container) {
       await session.connect();
       const result = await session.joinDuel(inviteCode);
       if (result?.error) {
-        container.innerHTML = renderNetworkJoinForm({ error: result.error });
+        container.innerHTML = renderNetworkJoinForm({ error: result.error, prefillCode: inviteCode });
         bindNetworkJoinFormEvents(container);
         return;
       }
@@ -1777,7 +1790,7 @@ function bindNetworkJoinFormEvents(container) {
       state.activeContainer = container;
       await renderNetworkJoinWaitingRoom(container);
     } catch (error) {
-      container.innerHTML = renderNetworkJoinForm({ error: error.message ?? 'Failed to join match.' });
+      container.innerHTML = renderNetworkJoinForm({ error: error.message ?? 'Failed to join match.', prefillCode: inviteCode });
       bindNetworkJoinFormEvents(container);
     }
   });
@@ -1860,6 +1873,18 @@ function bindNetworkWaitingEvents(container) {
             setTimeout(() => { el.textContent = 'Copy code'; }, resetDelay);
           } else {
             el.textContent = 'Copy code';
+          }
+        } catch { /* clipboard may be blocked */ }
+      } else if (action === 'network-copy-invite-link') {
+        const link = buildInviteLink(`${location.origin}${location.pathname}`, session.inviteCode);
+        try {
+          if (link) await navigator.clipboard.writeText(link);
+          el.textContent = '✓ Link copied';
+          const resetDelay = state.reducedMotion ? 0 : 2000;
+          if (resetDelay > 0) {
+            setTimeout(() => { el.textContent = 'Copy invite link'; }, resetDelay);
+          } else {
+            el.textContent = 'Copy invite link';
           }
         } catch { /* clipboard may be blocked */ }
       }
@@ -2460,7 +2485,8 @@ function bindNetworkErrorEvents(container) {
         if (hash.includes('/create')) {
           await renderNetworkCreateFlow(container);
         } else if (hash.includes('/join')) {
-          await renderNetworkJoinFlow(container);
+          const sub = hash.replace(/^#\/?play/, '') || '';
+          await renderNetworkJoinFlow(container, extractJoinCodeFromSub(sub));
         } else {
           await renderNetworkLobbyHub(container);
         }
