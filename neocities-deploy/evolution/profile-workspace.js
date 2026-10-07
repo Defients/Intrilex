@@ -1,13 +1,13 @@
-import { esc } from '../state.js?v=d6a5c3182938';
-import { LAB_IDENTITY } from './identity.mjs?v=d6a5c3182938';
-import { LAB_PROFILES } from './evolution-domain.mjs?v=d6a5c3182938';
-import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=d6a5c3182938';
-import { EvolutionStore } from './evolution-store.mjs?v=d6a5c3182938';
-import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoint, canCompareMeasurements, resolveEra, sameHead, CONTRACTS } from './profile-contracts.mjs?v=d6a5c3182938';
-import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs?v=d6a5c3182938';
-import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs?v=d6a5c3182938';
-import { buildDossier } from './profile-journal.mjs?v=d6a5c3182938';
-import { MODIFIER_STATES, STRATEGIC_STATE_LABELS, DEFAULT_ADAPTIVE_THRESHOLDS, ADAPTIVE_MODIFIER_BOUND, ADAPTIVE_MODIFIER_SCALE, createAdaptiveConfig } from './adaptive-strategy.mjs?v=d6a5c3182938';
+import { esc } from '../state.js?v=5c298831b65d';
+import { LAB_IDENTITY } from './identity.mjs?v=5c298831b65d';
+import { LAB_PROFILES } from './evolution-domain.mjs?v=5c298831b65d';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=5c298831b65d';
+import { EvolutionStore } from './evolution-store.mjs?v=5c298831b65d';
+import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoint, canCompareMeasurements, resolveEra, sameHead, CONTRACTS } from './profile-contracts.mjs?v=5c298831b65d';
+import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs?v=5c298831b65d';
+import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs?v=5c298831b65d';
+import { buildDossier } from './profile-journal.mjs?v=5c298831b65d';
+import { MODIFIER_STATES, STRATEGIC_STATE_LABELS, DEFAULT_ADAPTIVE_THRESHOLDS, ADAPTIVE_MODIFIER_BOUND, ADAPTIVE_MODIFIER_SCALE, createAdaptiveConfig } from './adaptive-strategy.mjs?v=5c298831b65d';
 
 // Profile-centered Lab workflows. Presentation only: every scientific or
 // head-changing action goes through ProfileStore / profile-science.

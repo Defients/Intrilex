@@ -10,6 +10,13 @@
    front door, not a dashboard.
    ═══════════════════════════════════════════════════════════════ */
 
+/* ── HERO DISPLAY FACE ─────────────────────────────────────────
+   Oxanium ExtraBold (800) — the hero transmission face. Self-hosted
+   woff2 subsets (SIL OFL 1.1); latin carries every curated line,
+   latin-ext rides along for future transmissions. */
+@font-face{font-family:'Oxanium';src:url('/assets/oxanium-extrabold-latin.woff2') format('woff2');font-weight:800;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Oxanium';src:url('/assets/oxanium-extrabold-latin-ext.woff2') format('woff2');font-weight:800;font-style:normal;font-display:swap;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
 /* ── PAGE SHELL ──────────────────────────────────────────────── */
 /* Scrollable by geometry, not by lock: min-height fills the
    viewport, flex distributes it across header / main / footer. */
@@ -239,7 +246,10 @@
   gap:12px;
   padding:10px 0 6px;
 }
-.home-hero-copy{max-width:660px; min-width:0}
+/* inline-size containment lets .hero-tx fit its longest line to the
+   column with 100cqw — transmission text can never push the hero
+   wider than the layout already allows. */
+.home-hero-copy{max-width:660px; min-width:0; container-type:inline-size}
 
 .home-eyebrow{
   margin:0 0 14px;
@@ -248,18 +258,52 @@
 }
 .home-title{
   margin:0 0 18px;
-  font-size:clamp(46px, 5.6vw, 84px);
-  font-weight:800; line-height:.98; letter-spacing:-.02em;
   color:var(--text-bright);
   text-shadow:0 2px 30px rgba(66,213,232,.1);
 }
-.home-title-accent{
+.home-title-accent,.hero-tx-accent{
   /* cyan → arcane violet, with a restrained warm endpoint so the
-     final letters of LUCK catch a hint of the card-fan's gold light */
+     final letters catch a hint of the card-fan's gold light */
   background:linear-gradient(93deg,var(--color-system) 6%,var(--color-arcane) 78%,var(--color-prestige-hot) 148%);
   -webkit-background-clip:text; background-clip:text;
   color:transparent;
 }
+
+/* ── HERO TRANSMISSION — a stable tactical display that
+   periodically reconfigures. The stage always reserves three
+   line-heights of --tx-max so rotating messages never resize the
+   hero, push the CTAs, or create scrollbars. Each transmission
+   carries --tx-w (estimated em width of its longest line) so
+   font-size fits the column instead of wrapping or shrinking to
+   unreadability: size = min(display cap, column / width). ── */
+.hero-tx{
+  --tx-max:clamp(44px,5.5vw,82px);
+  --tx-lh:1.06;
+  display:block;
+  min-height:calc(3 * var(--tx-max) * var(--tx-lh));
+  font-family:'Oxanium','ProtoSym',Georgia,'Times New Roman',serif;
+  font-weight:800;
+  font-size:var(--tx-max); /* fallback when cqw is unsupported */
+  font-size:min(var(--tx-max), calc(100cqw / var(--tx-w, 10)));
+  line-height:var(--tx-lh);
+  letter-spacing:.012em;
+  color:var(--text-bright);
+}
+.hero-tx-line{
+  display:block; white-space:nowrap;
+  transition:opacity 340ms var(--ease), transform 340ms var(--ease);
+  transition-delay:calc(var(--i, 0) * 45ms);
+}
+/* Reconfigure beat: outgoing lines dim and drift −7px, incoming
+   lines resolve sequentially from +7px, then hold perfectly static.
+   ~210ms out + ~430ms in; nothing animates at rest. */
+.hero-tx.is-out .hero-tx-line{
+  opacity:0; transform:translateX(-7px);
+  transition-duration:170ms;
+  transition-delay:calc(var(--i, 0) * 22ms);
+  transition-timing-function:ease-in;
+}
+.hero-tx.is-in .hero-tx-line{opacity:0; transform:translateX(7px)}
 .home-tagline{
   margin:0 0 28px;
   font-size:clamp(15px, 1.4vw, 18px);
@@ -613,32 +657,27 @@
 }
 .home-news-item.skeleton{opacity:.55}
 
-/* EXPLORE — 2 × 2 link grid, hairline rows */
-.home-explore-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 16px; flex:1; align-content:start}
+/* EXPLORE — 2 × 2 artwork buttons; the PNG itself is the whole
+   interactive surface (label, icon and arrow are baked in), so no
+   hairlines, boxes or extra chrome — only a restrained lift/brighten. */
+.home-explore-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; flex:1; align-content:start}
 .home-explore-item{
-  display:flex; align-items:center; gap:10px;
-  padding:9px 0;
+  display:block; min-width:0;
   color:inherit; text-decoration:none;
-  transition:transform var(--fast) var(--ease);
+  border-radius:6px;
+  transition:transform var(--normal) var(--ease), filter var(--normal) var(--ease);
 }
-.home-explore-item:nth-child(n+3){border-top:1px solid var(--home-hairline)}
-.home-explore-item:hover{transform:translateX(3px)}
-.home-explore-item:hover .home-explore-text strong{color:var(--color-system)}
-.home-explore-item:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
-.home-explore-icon{
-  flex:none; display:grid; place-items:center;
-  width:28px; height:28px;
-  font-size:14px;
-  color:var(--color-system);
-  border-radius:8px;
-  background:var(--color-system-faint);
+.home-explore-item:hover{
+  transform:translateY(-2px) scale(1.01);
+  filter:brightness(1.08) saturate(1.05);
 }
-.home-explore-icon .reddit-emblem{width:16px; height:16px}
-.home-explore-text{display:grid; gap:1px; min-width:0}
-.home-explore-text strong{font-size:11px; font-weight:750; letter-spacing:.08em; color:var(--text-bright); transition:color var(--fast)}
-.home-explore-text small{font-size:10px; color:var(--home-text-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.home-explore-arrow{margin-left:auto; color:var(--faint); font-size:13px; transition:transform var(--fast) var(--ease), color var(--fast)}
-.home-explore-item:hover .home-explore-arrow{transform:translateX(3px); color:var(--color-system)}
+.home-explore-item:active{
+  transform:translateY(0) scale(.995);
+  filter:brightness(1.12);
+  transition-duration:var(--fast);
+}
+.home-explore-item:focus-visible{outline:2px solid var(--focus); outline-offset:3px}
+.home-explore-art{display:block; width:100%; height:auto}
 
 /* ── LEADERS (module retired from the homepage; styles kept for
    the renderLeaders* helpers which remain in home-view.js) ────── */
@@ -730,7 +769,6 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
   .home-grid{grid-template-columns:1fr 1fr}
   .home-explore{grid-column:1 / -1; border-left:0; border-top:1px solid var(--home-hairline); padding-left:0; padding-right:0}
   .home-explore-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .home-explore-item:nth-child(n+3){border-top:0}
 }
 
 @media (max-width:900px){
@@ -775,7 +813,7 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
   .home-utility{gap:8px}
   .home-main{width:min(94vw,1440px); padding-bottom:30px}
   .home-hero{padding-top:20px; gap:14px}
-  .home-title{font-size:clamp(38px,11vw,52px)}
+  .hero-tx{--tx-max:clamp(38px,11vw,52px)}
   .home-tagline{font-size:14.5px}
   .home-modes{flex-direction:column}
   .home-mode-btn{flex:none; max-width:none; min-height:var(--touch-target)}
@@ -791,7 +829,6 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
   .home-panel:first-child{padding-top:14px}
   .home-explore{grid-column:auto}
   .home-explore-grid{grid-template-columns:1fr 1fr}
-  .home-explore-item:nth-child(n+3){border-top:1px solid var(--home-hairline)}
   .home-app .landing-footer{flex-wrap:wrap; gap:10px; padding:10px 16px}
   #landing-continue-slot .landing-continue-meta{display:none}
   /* Keep the primary PLAY action + account + Lab reachable without crowding */
@@ -806,12 +843,10 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
 
 /* Very small phones */
 @media (max-width:430px){
-  .home-title{font-size:clamp(34px,12vw,44px)}
+  .hero-tx{--tx-max:clamp(30px,11vw,40px)}
   .home-hero-visual{min-height:190px}
   .home-card-fan{width:min(84%,280px)}
   .home-explore-grid{grid-template-columns:1fr}
-  .home-explore-item{border-top:1px solid var(--home-hairline)}
-  .home-explore-item:first-child{border-top:0}
   .home-leader-row{padding:8px 10px}
 }
 
@@ -820,11 +855,12 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
   .home-hero{padding-top:14px}
   .home-hero-visual{min-height:180px}
   .home-card-fan{width:min(50%,300px)}
-  .home-title{font-size:clamp(30px,6vw,44px)}
+  .hero-tx{--tx-max:clamp(30px,6vw,44px)}
 }
 
 /* ── MOTION SAFETY ──────────────────────────────────────────── */
 @media (prefers-reduced-motion:reduce){
+  .hero-tx-line{transition:none}
   .home-fan-card{transition:none}
   .home-pulse-dot{animation:none}
   .home-metric-shimmer{animation:none}

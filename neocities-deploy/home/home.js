@@ -13,17 +13,18 @@
 // module never reaches into app-level singletons.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js?v=d6a5c3182938';
-import { LAB_VERSION, RULES_VERSION } from '../version.js?v=d6a5c3182938';
-import { getMatchServerUrl } from '../play/network/match-server-config.js?v=d6a5c3182938';
-import { fetchLeaderboard, fetchSeasons } from '../play/ranked/leaderboard-data.js?v=d6a5c3182938';
-import { fetchDirectory } from '../play/players/players-data.js?v=d6a5c3182938';
+import { esc } from '../state.js?v=5c298831b65d';
+import { LAB_VERSION, RULES_VERSION } from '../version.js?v=5c298831b65d';
+import { getMatchServerUrl } from '../play/network/match-server-config.js?v=5c298831b65d';
+import { fetchLeaderboard, fetchSeasons } from '../play/ranked/leaderboard-data.js?v=5c298831b65d';
+import { fetchDirectory } from '../play/players/players-data.js?v=5c298831b65d';
 import {
   renderHomePage,
   renderPulseMetricsHtml,
   renderPulseStatusText,
   renderNewsHtml,
-} from './home-view.js?v=d6a5c3182938';
+} from './home-view.js?v=5c298831b65d';
+import { mountHeroTransmission } from './hero-transmission.js?v=5c298831b65d';
 import {
   HOME_PULSE_INTERVAL_MS,
   matchServerHttpBase,
@@ -33,7 +34,7 @@ import {
   parseChangelogEntries,
   buildPulseMetrics,
   formatUpdatedAgo,
-} from './home-data.js?v=d6a5c3182938';
+} from './home-data.js?v=5c298831b65d';
 
 // AbortController for the current homepage's listeners/timers.
 // Aborted on each re-render to prevent accumulation (IRX-M41).
@@ -63,6 +64,7 @@ export function renderHome(root, ctx = {}) {
     ctx.openRankingSystemOverlay?.();
   });
   loadContinueCard(root);
+  mountHeroTransmission(root, { signal });
   hydratePulse(root, signal);
   hydrateNews(root, signal);
   hydratePreseason(root, signal);
@@ -154,7 +156,7 @@ async function loadContinueCard(root) {
   const slot = root.querySelector('#landing-continue-slot');
   if (!slot) return;
   try {
-    const { isIndexedDBAvailable, listSaves } = await import('../play/persistence.js?v=d6a5c3182938');
+    const { isIndexedDBAvailable, listSaves } = await import('../play/persistence.js?v=5c298831b65d');
     if (!isIndexedDBAvailable()) return;
     const saves = await listSaves();
     // Guard: user may have navigated away during the async work.

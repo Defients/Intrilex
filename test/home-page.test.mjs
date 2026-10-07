@@ -35,6 +35,13 @@ import {
 } from '../apps/lab-web/src/home/home-view.js';
 import { MatchmakingQueue } from '../packages/match-authority/src/matchmaking-queue.mjs';
 import { TerminalOutbox } from '../apps/match-server/src/persistence/terminal-outbox.mjs';
+import {
+  HERO_TRANSMISSIONS,
+  HERO_TX_DYNAMIC_EVERY,
+  renderHeroTransmissionLines,
+  transmissionEmWidth,
+  planNextTransmission,
+} from '../apps/lab-web/src/home/hero-transmission.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const src = (rel) => readFile(path.join(root, 'apps/lab-web/src', rel), 'utf8');
@@ -472,4 +479,108 @@ test('match server exposes the aggregated public stats endpoint', async () => {
 test('CSP connect-src permits the production match server HTTPS endpoint', async () => {
   const html = await src('index.html');
   assert.match(html, /connect-src[^;]*https:\/\/match\.intrilex\.cards/);
+});
+
+// ── HeroTransmission ──────────────────────────────────────────
+
+test('transmission #1 is the canonical brand statement and renders on initial load', () => {
+  const html = renderHomePage({ labVersion: '0', rulesVersion: '0' });
+  assert.match(html, /data-hero-tx/);
+  assert.match(html, /data-tx-id="brand"/);
+  assert.match(html, />STRATEGY</);
+  assert.match(html, />BEYOND LUCK</);
+  // The h1 keeps the canonical phrase for SEO/AT while the visual
+  // stage rotates beneath it; the stage is aria-hidden so automated
+  // swaps are never announced to screen readers.
+  assert.match(html, /<h1 class="home-title" id="home-hero-title"><span class="sr-only">STRATEGY LIVES BEYOND LUCK<\/span>/);
+  assert.match(html, /data-hero-tx[^>]*aria-hidden="true"/);
+  assert.equal(HERO_TRANSMISSIONS[0].id, 'brand');
+  assert.deepEqual(HERO_TRANSMISSIONS[0].lines, ['STRATEGY', 'LIVES', 'BEYOND LUCK']);
+});
+
+test('every transmission has 2–3 lines and in-range accent metadata', () => {
+  for (const tx of HERO_TRANSMISSIONS) {
+    assert.ok(tx.lines.length >= 2 && tx.lines.length <= 3, `${tx.id} must be 2–3 lines`);
+    const accents = Array.isArray(tx.accent) ? tx.accent : [tx.accent];
+    assert.ok(accents.length >= 1, `${tx.id} must declare at least one accent line`);
+    for (const a of accents) {
+      assert.ok(Number.isInteger(a) && a >= 0 && a < tx.lines.length, `${tx.id} accent ${a} out of range`);
+    }
+  }
+});
+
+test('accent metadata drives hero-tx-accent on exactly the accented lines', () => {
+  const html = renderHeroTransmissionLines(HERO_TRANSMISSIONS[0]);
+  const lines = html.split('</span>').filter(s => s.includes('hero-tx-line'));
+  assert.equal(lines.length, 3);
+  assert.ok(!lines[0].includes('hero-tx-accent') && !lines[1].includes('hero-tx-accent'));
+  assert.ok(lines[2].includes('hero-tx-accent'), 'BEYOND LUCK is the brand accent line');
+  // Multi-line accent: LUCK DEALS / STRATEGY / DECIDES accents lines 1+2.
+  const luck = HERO_TRANSMISSIONS.find(t => t.id === 'luck-deals');
+  const accentCount = (renderHeroTransmissionLines(luck).match(/hero-tx-accent/g) ?? []).length;
+  assert.equal(accentCount, 2);
+});
+
+test('transmission sequence is deterministic and loops back to the canonical message', () => {
+  let idx = 0;
+  const seen = [];
+  for (let step = 0; step < HERO_TRANSMISSIONS.length; step++) {
+    const plan = planNextTransmission({ step, editorialIndex: idx, transmissions: HERO_TRANSMISSIONS });
+    idx = plan.editorialIndex;
+    seen.push(plan.tx.id);
+    assert.equal(plan.dynamic, false);
+  }
+  assert.equal(seen[0], 'consequences', 'first rotation leaves the brand message');
+  assert.equal(seen[seen.length - 1], 'brand', 'after the full pool the canonical message returns');
+  assert.equal(idx, 0);
+});
+
+test('dynamic transmissions claim their fixed slot without disturbing editorial cadence', () => {
+  const dynamic = { id: 'dyn', type: 'dynamic', lines: ['184', 'ONLINE'], accent: 0 };
+  let idx = 0;
+  for (let step = 0; step < HERO_TX_DYNAMIC_EVERY - 1; step++) {
+    const plan = planNextTransmission({ step, editorialIndex: idx, transmissions: HERO_TRANSMISSIONS, dynamic });
+    idx = plan.editorialIndex;
+    assert.equal(plan.dynamic, false);
+  }
+  const slot = planNextTransmission({ step: HERO_TX_DYNAMIC_EVERY - 1, editorialIndex: idx, transmissions: HERO_TRANSMISSIONS, dynamic });
+  assert.equal(slot.dynamic, true);
+  assert.equal(slot.tx.id, 'dyn');
+  assert.equal(slot.editorialIndex, idx, 'a dynamic slot must not consume the editorial index');
+  const resume = planNextTransmission({ step: HERO_TX_DYNAMIC_EVERY, editorialIndex: slot.editorialIndex, transmissions: HERO_TRANSMISSIONS, dynamic });
+  assert.equal(resume.dynamic, false);
+  assert.equal(resume.editorialIndex, (idx + 1) % HERO_TRANSMISSIONS.length, 'editorial cadence resumes where it paused');
+  // No real data → the slot stays editorial; nothing is fabricated.
+  const quiet = planNextTransmission({ step: HERO_TX_DYNAMIC_EVERY - 1, editorialIndex: 0, transmissions: HERO_TRANSMISSIONS, dynamic: null });
+  assert.equal(quiet.dynamic, false);
+});
+
+test('transmissionEmWidth sizes the longest line so fit math stays honest', () => {
+  const brand = transmissionEmWidth(HERO_TRANSMISSIONS[0]);
+  const longest = transmissionEmWidth(HERO_TRANSMISSIONS.find(t => t.id === 'consequences'));
+  assert.ok(longest > brand, 'HAS CONSEQUENCES must estimate wider than BEYOND LUCK');
+  assert.ok(brand > 4 && longest < 20, 'estimates stay in a sane display range');
+});
+
+test('transmission renderer escapes hostile line content', () => {
+  const html = renderHeroTransmissionLines({ lines: ['<img src=x onerror=alert(1)>'], accent: 0 });
+  assert.doesNotMatch(html, /<img/);
+  assert.match(html, /&lt;img/);
+});
+
+test('hero transmission controller honors visibility, reduced-motion, and abort hygiene', async () => {
+  const js = await src('home/hero-transmission.js');
+  assert.match(js, /visibilitychange/);
+  assert.match(js, /\.hidden/);
+  assert.match(js, /prefers-reduced-motion/);
+  assert.match(js, /reduced-motion/);
+  assert.match(js, /clearTimeout/);
+  // Deterministic dwell uses a setTimeout chain — never an interval,
+  // so hidden tabs can't queue rapid-fire missed rotations.
+  assert.doesNotMatch(js, /setInterval\s*\(/);
+});
+
+test('home.js mounts the hero transmission under the page abort lifetime', async () => {
+  const js = await src('home/home.js');
+  assert.match(js, /mountHeroTransmission\(root, \{ signal \}\)/);
 });

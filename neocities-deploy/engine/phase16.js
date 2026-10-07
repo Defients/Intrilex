@@ -1,8 +1,8 @@
-import { canonicalClone, canonicalize } from "./canonical-json.js?v=d6a5c3182938";
-import { IntrilexEngine } from "./engine.js?v=d6a5c3182938";
-import { EngineError } from "./errors.js?v=d6a5c3182938";
-import { hashCanonical, sha256Text } from "./hash.js?v=d6a5c3182938";
-import { publicEventView, publicStateView } from "./views.js?v=d6a5c3182938";
+import { canonicalClone, canonicalize } from "./canonical-json.js?v=5c298831b65d";
+import { IntrilexEngine } from "./engine.js?v=5c298831b65d";
+import { EngineError } from "./errors.js?v=5c298831b65d";
+import { hashCanonical, sha256Text } from "./hash.js?v=5c298831b65d";
+import { publicEventView, publicStateView } from "./views.js?v=5c298831b65d";
 export const PHASE16_ENGINE_VERSION = "4.1.0";
 function cloneRng(rng) {
     return { algorithm: "xorshift32", seed: rng.seed >>> 0, cursor: rng.cursor };

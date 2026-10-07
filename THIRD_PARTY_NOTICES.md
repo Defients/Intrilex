@@ -35,6 +35,14 @@ The Lab does not alter the manifest-bound upstream source. It rebuilds that sour
 | sharp | 0.35.4 | Apache 2.0 |
 | typescript | 5.8.3 (vendored) | Apache 2.0 |
 
+## Fonts
+
+### Oxanium
+- Author: Severin Meyer
+- License: SIL Open Font License 1.1
+- Usage: homepage hero display face (ExtraBold / weight 800)
+- Files: `apps/lab-web/src/assets/oxanium-extrabold-latin.woff2`, `apps/lab-web/src/assets/oxanium-extrabold-latin-ext.woff2`
+
 ## Vendored Software
 
 ### TypeScript 5.8.3

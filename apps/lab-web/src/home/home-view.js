@@ -20,6 +20,8 @@
 // data-home-* hooks after render.
 // ═══════════════════════════════════════════════════════════════
 
+import { HERO_TRANSMISSIONS, renderHeroTransmissionHtml } from './hero-transmission.js';
+
 // Same escape semantics as state.js esc() — duplicated deliberately
 // so this module stays DOM-free and Node-testable.
 const esc = (value = '') => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -141,7 +143,7 @@ export function renderHomePage({ labVersion = '', rulesVersion = '' } = {}) {
       <section class="home-hero" aria-labelledby="home-hero-title">
         <div class="home-hero-copy">
           <p class="home-eyebrow">TACTICAL PLAYING CARD GAME</p>
-          <h1 class="home-title" id="home-hero-title">STRATEGY LIVES<br /><span class="home-title-accent">BEYOND LUCK</span></h1>
+          <h1 class="home-title" id="home-hero-title"><span class="sr-only">STRATEGY LIVES BEYOND LUCK</span>${renderHeroTransmissionHtml(HERO_TRANSMISSIONS[0])}</h1>
           <p class="home-tagline">A tactical card game of public score, disruption, and perfectly timed commitment.</p>
           <div class="home-modes">
             <a class="home-mode-btn solo" href="#/play/new" data-testid="home-solo-btn">

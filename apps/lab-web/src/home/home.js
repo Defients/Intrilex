@@ -24,6 +24,7 @@ import {
   renderPulseStatusText,
   renderNewsHtml,
 } from './home-view.js';
+import { mountHeroTransmission } from './hero-transmission.js';
 import {
   HOME_PULSE_INTERVAL_MS,
   matchServerHttpBase,
@@ -63,6 +64,7 @@ export function renderHome(root, ctx = {}) {
     ctx.openRankingSystemOverlay?.();
   });
   loadContinueCard(root);
+  mountHeroTransmission(root, { signal });
   hydratePulse(root, signal);
   hydrateNews(root, signal);
   hydratePreseason(root, signal);
