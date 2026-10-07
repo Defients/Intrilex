@@ -643,6 +643,21 @@ function experimentSection(experiments, datasetOrigin) {
     else if ((experiments.totalRuns ?? 0) > 0) exclusionReason = `${experiments.totalRuns} experiment run(s) recorded but none contribute (excluded, invalidated, archived, quarantined, or failed) — the exported dataset is ${datasetOrigin ?? 'CERTIFIED_CORPUS'}.`;
     else exclusionReason = 'No experiment runs recorded — the exported dataset is the certified baseline.';
   }
+  // Artifact truth: verifyRunArtifacts() probes the store for the payload
+  // row and every committed chunk — a run can record 'persisted' yet still
+  // resolve 'missing-chunks'. Exportability follows the artifact, not the
+  // record.
+  const artifactById = new Map((experiments.artifactStatus ?? []).map(a => [a.runId, a]));
+  const artifactRows = experiments.artifactStatus ?? null;
+  const artifactSummary = artifactRows
+    ? {
+      durable: artifactRows.filter(a => a.artifact === 'durable').length,
+      sessionOnly: artifactRows.filter(a => a.artifact === 'session').length,
+      unresolvable: artifactRows.filter(a => !['durable', 'session', 'none'].includes(a.artifact)).length,
+      unresolvableRunIds: artifactRows.filter(a => !['durable', 'session', 'none'].includes(a.artifact)).map(a => a.runId),
+      portablePackageCompleteness: artifactRows.every(a => ['durable', 'session', 'none'].includes(a.artifact)) && artifactRows.some(a => a.artifact === 'durable' || a.artifact === 'session') ? 'resolvable' : artifactRows.length ? 'incomplete' : 'none',
+    }
+    : null;
   return available({
     experimentId: experiments.experimentId ?? null,
     analysisSetId: experiments.analysisSetId ?? null,
@@ -667,11 +682,17 @@ function experimentSection(experiments, datasetOrigin) {
     sessionPayloadRunCount: experiments.sessionPayloadRunCount ?? 0,
     bundledBaselineContributing: experiments.bundledBaselineContributing === true,
     fallback: experiments.fallback ?? null,
+    runArtifacts: artifactSummary,
+    artifactVerification: artifactRows ? 'resolved' : 'not-run',
     runs: (experiments.runs ?? []).map(r => ({
       runId: r.runId ?? null, ordinal: r.ordinal ?? null, status: r.status ?? null,
       lifecycle: r.lifecycle ?? 'active', pinned: r.pinned === true,
       included: r.included === true, origin: r.origin ?? 'session',
       persistence: r.persistence ?? 'persisted',
+      artifact: artifactById.get(r.runId)?.artifact ?? null,
+      exportable: artifactById.get(r.runId)?.exportable ?? null,
+      decisionFidelity: artifactById.get(r.runId)?.fidelity ?? (r.strategicTrace ? 'FULL_DECISION_EVIDENCE' : 'SUMMARY_ONLY'),
+      strategicTrace: r.strategicTrace === true,
       createdAt: r.createdAt ?? null, matchCount: r.matchCount ?? 0,
       compatibility: r.compatibility ?? null,
       exclusionReason: r.exclusionReason ?? null, exclusionNote: r.exclusionNote ?? null,
@@ -683,7 +704,7 @@ function experimentSection(experiments, datasetOrigin) {
       integrityNote: r.integrityNote ?? null,
     })),
     warnings: experiments.warnings ?? [],
-    storeNote: 'Run records live in the experiment evidence store (IndexedDB intrilex-experiment-lab); excluded runs are retained, never deleted.',
+    storeNote: 'Run records live in the experiment evidence store (IndexedDB intrilex-experiment-lab); excluded runs are retained, never deleted. Run artifacts export as self-verifying intrilex-experiment-run envelopes; the research package (intrilex-research-package) bundles manifest + dossier + all resolvable artifacts.',
   });
 }
 

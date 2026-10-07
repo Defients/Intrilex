@@ -4,8 +4,8 @@
 // browser controller.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js?v=037146099ebb';
-import { isLocalEndpoint } from './browser-controller.js?v=037146099ebb';
+import { esc } from '../state.js?v=adf8892fce29';
+import { isLocalEndpoint } from './browser-controller.js?v=adf8892fce29';
 
 /**
  * Render the settings + connection block into a container element.

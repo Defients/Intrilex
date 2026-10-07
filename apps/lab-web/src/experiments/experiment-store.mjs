@@ -299,6 +299,26 @@ export class ExperimentStore {
     return run.runId;
   }
 
+  /**
+   * Atomic artifact admission (import path): the run record, its payload
+   * descriptor, every committed batch, and a sealed manifest land in ONE
+   * transaction. The manifest is written already-sealed — an imported
+   * artifact is complete evidence, never an in-progress execution — so
+   * crash-recovery cannot mistake it for an interrupted run.
+   */
+  async saveRunArtifact({ run, payload = null, manifest = null, batches = [] }) {
+    validateRunRecord(run);
+    if (byteSize(run) > EXPERIMENT_LIMITS.metaBytes) {
+      throw Object.assign(new Error('RUN_META_TOO_LARGE'), { code: 'RUN_META_TOO_LARGE' });
+    }
+    const entries = [[STORES.RUNS, run]];
+    if (payload) entries.push([STORES.PAYLOADS, { runId: run.runId, storedAt: new Date().toISOString(), ...payload }]);
+    if (manifest) entries.push([STORES.MANIFESTS, manifest]);
+    for (const batch of batches ?? []) entries.push([STORES.RUN_BATCHES, batch]);
+    await this._putAll(entries);
+    return run.runId;
+  }
+
   /** Delete an unfinalized manifest plus every batch it committed. */
   async deleteManifestCascade(manifestId) {
     const batches = await this.listRunBatches(manifestId);

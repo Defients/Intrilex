@@ -3,14 +3,14 @@
 // read-only liveLabSnapshot boundary), builds the canonical dossier and
 // downloads it. All analytics live in analysis-dossier.js — this module only
 // does I/O. Browser-only; tests exercise the builder directly.
-import { state } from './state.js?v=037146099ebb';
-import { buildAnalysisDossier, serializeAnalysisDossier, renderAnalysisDossierMarkdown, analysisDossierFileNames, deriveEvidenceStatus } from './analysis-dossier.js?v=037146099ebb';
-import { EvolutionStore } from './evolution/evolution-store.mjs?v=037146099ebb';
-import { StrategyStore } from './strategy/strategy-store.mjs?v=037146099ebb';
-import { LAB_IDENTITY } from './evolution/identity.mjs?v=037146099ebb';
-import { liveLabSnapshot } from './workspaces/evolution-dashboard.js?v=037146099ebb';
-import { collectExperimentEvidence } from './experiments/experiment-controller.mjs?v=037146099ebb';
-import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION, SCHEMA_VERSION } from './version.js?v=037146099ebb';
+import { state } from './state.js?v=adf8892fce29';
+import { buildAnalysisDossier, serializeAnalysisDossier, renderAnalysisDossierMarkdown, analysisDossierFileNames, deriveEvidenceStatus } from './analysis-dossier.js?v=adf8892fce29';
+import { EvolutionStore } from './evolution/evolution-store.mjs?v=adf8892fce29';
+import { StrategyStore } from './strategy/strategy-store.mjs?v=adf8892fce29';
+import { LAB_IDENTITY } from './evolution/identity.mjs?v=adf8892fce29';
+import { liveLabSnapshot } from './workspaces/evolution-dashboard.js?v=adf8892fce29';
+import { collectExperimentEvidence, verifyRunArtifacts } from './experiments/experiment-controller.mjs?v=adf8892fce29';
+import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION, SCHEMA_VERSION } from './version.js?v=adf8892fce29';
 
 const STRATEGY_STORES = ['evidence', 'sources', 'events', 'replays', 'studies', 'claims', 'archives', 'informationSets', 'informationPlans', 'informationStudies', 'provenance'];
 
@@ -34,6 +34,13 @@ export async function collectLabEvidence() {
     lab.experiments = collectExperimentEvidence();
   } catch (error) {
     lab.experiments = { available: false, reason: `Experiment evidence projection failed: ${error?.message ?? 'unknown error'}` };
+  }
+  // Durable-artifact resolution is the async truth layer — it probes the
+  // store (payload row + committed chunks) rather than trusting the run
+  // record's persistence label.
+  if (lab.experiments?.available === true) {
+    try { lab.experiments.artifactStatus = await verifyRunArtifacts(); }
+    catch (error) { lab.collectionNotes.push(`Experiment artifact verification failed: ${error?.message ?? 'unknown error'}`); }
   }
   if (live.researchProject) lab.researchProjects.push({ project: live.researchProject, contentHash: null });
   if (live.researchArchive) lab.collectionNotes.push('A historical research archive is open for inspection; it is not merged into current evidence.');

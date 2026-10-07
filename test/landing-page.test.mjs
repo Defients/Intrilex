@@ -59,7 +59,6 @@ test('homepage markup contains hero, mode CTAs, pulse, and ecosystem panels', as
   assert.match(view, /home-mode-btn direct/);
   assert.match(view, /home-pulse/);
   assert.match(view, /home-preseason/);
-  assert.match(view, /home-leaders/);
   assert.match(view, /home-news/);
   assert.match(view, /home-explore/);
 });
@@ -506,12 +505,17 @@ test('homepage primary nav has all approved destinations', async () => {
   }
 });
 
-test('homepage Explore panel wires real ecosystem routes', async () => {
+test('homepage Explore panel wires the four approved destinations', async () => {
   const view = await src('home/home-view.js');
-  for (const href of ['#/rules', '#/cards', '#/tournaments', '#/leaderboard', '#/players']) {
-    assert.ok(view.includes(`href: '${href}'`), `explore must link to ${href}`);
+  const exploreIdx = view.indexOf('EXPLORE_DESTINATIONS = [');
+  const exploreEnd = view.indexOf('];', exploreIdx);
+  const explore = view.slice(exploreIdx, exploreEnd);
+  for (const href of ['#/rules', '#/cards', '#/leaderboard']) {
+    assert.ok(explore.includes(`href: '${href}'`), `explore must link to ${href}`);
   }
-  assert.match(view, /reddit\.com\/r\/intrilex/);
+  assert.match(explore, /reddit\.com\/r\/intrilex/);
+  assert.doesNotMatch(explore, /#\/tournaments|#\/players/,
+    'TOURNAMENTS and PLAYERS are retired from the homepage Explore block');
 });
 
 test('home.css is imported and styles the homepage', async () => {

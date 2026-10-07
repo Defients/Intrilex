@@ -24,7 +24,7 @@ import { hashCanonical } from '../../../../packages/shared/src/canonical.mjs';
 import {
   DEFAULT_EXPERIMENT_ID, BUNDLED_RUN_ID,
   RUN_STATUS, RUN_LIFECYCLE, COMPATIBILITY, EXCLUSION_REASONS, RUN_INTEGRITY,
-  MANIFEST_STATUS,
+  MANIFEST_STATUS, MANIFEST_SCHEMA_VERSION, EXPERIMENT_LIMITS,
   createExperiment, createAnalysisSet, createRunRecord,
   createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
   commitManifestBatch, manifestTransition, manifestIsActive, manifestIsResumable,
@@ -36,6 +36,12 @@ import {
   planMigration, payloadEvidenceHash, verifyRunPayload, markRunIntegrity,
   runIntegrityState, runAnalyticallyEligible,
 } from '../../../../packages/simulation-runtime/src/experiment-domain.mjs';
+import {
+  experimentRunArtifact, artifactEvidenceForRun,
+  validateExperimentRunArtifact, parseExperimentRunArtifact,
+  validateResearchPackage, parseResearchPackage,
+  runDecisionFidelity, runEvidenceBearing,
+} from '../../../../packages/simulation-runtime/src/experiment-portability.mjs';
 import { ExperimentStore } from './experiment-store.mjs';
 
 let _store = null;
@@ -1159,6 +1165,7 @@ export function collectExperimentEvidence() {
       runId: run.runId, ordinal: run.ordinal, status: run.status,
       lifecycle: run.lifecycle?.state ?? 'active', pinned: run.lifecycle?.pinned === true,
       included, origin: run.origin ?? 'session', persistence,
+      strategicTrace: run.config?.strategicTrace === true,
       createdAt: run.createdAt ?? null,
       matchCount: run.metrics?.matchCount ?? 0,
       seat1WinRate: run.metrics?.seat1WinRate ?? null,
@@ -1178,4 +1185,209 @@ export function collectExperimentEvidence() {
     })),
     warnings: basis.warnings,
   };
+}
+
+// ── Portability: run artifacts, verification, import ────────────
+//
+// An experiment attachment resolves to durable evidence through this layer.
+// `exportRunArtifactEnvelope` reads the canonical store (batches or legacy
+// payload), verifies every hash chain before serializing, and produces the
+// self-describing `intrilex-experiment-run` envelope. `importRunArtifact`
+// admits an envelope transactionally and dedupes on sealed run identity —
+// importing the same evidence twice can never double-count matches.
+
+/** Per-run artifact resolution status for Manage Runs / ledger surfaces.
+ *  artifact: 'durable' | 'session' | 'missing' | 'missing-chunks' |
+ *            'unreachable' | 'none' | integrity state (corrupt/quarantined/…)
+ */
+export async function verifyRunArtifacts() {
+  const rows = [];
+  for (const run of _runs) {
+    if (run.runId === BUNDLED_RUN_ID) continue;
+    const integrity = runIntegrityState(run);
+    let artifact = 'none';
+    if (integrity !== 'ok') artifact = integrity;
+    else if (run.payloadKind === 'none') artifact = 'none';
+    else if (run.payloadKind === 'session') {
+      artifact = _sessionPayloads.has(run.runId) ? 'session' : 'missing';
+    } else {
+      try {
+        const payload = await _store.getRunPayload(run.runId);
+        if (!payload) artifact = 'missing';
+        else if (run.payloadKind === 'indexeddb-batches') {
+          const have = new Set((await _store.listRunBatches(run.runId)).map(b => b.batchIndex));
+          const missing = (payload.batches ?? []).filter(d => !have.has(d.batchIndex));
+          artifact = missing.length ? 'missing-chunks' : 'durable';
+        } else artifact = 'durable';
+      } catch { artifact = 'unreachable'; }
+    }
+    rows.push({
+      runId: run.runId, ordinal: run.ordinal, matchCount: run.metrics?.matchCount ?? 0,
+      status: run.status, persistence: _persistenceOf(run), artifact,
+      fidelity: runEvidenceBearing(run) ? runDecisionFidelity(run) : 'NONE',
+      exportable: artifact === 'durable' || artifact === 'session',
+    });
+  }
+  return rows;
+}
+
+/**
+ * Serialize one run's durable evidence into the intrilex-experiment-run
+ * envelope. Throws stable codes when evidence cannot resolve — export never
+ * silently produces a hollow artifact.
+ */
+export async function exportRunArtifactEnvelope(runId) {
+  if (!_ready) throw Object.assign(new Error('EXPERIMENTS_NOT_READY'), { code: 'EXPERIMENTS_NOT_READY' });
+  const run = _findRun(runId);
+  if (!run) throw Object.assign(new Error('RUN_NOT_FOUND'), { code: 'RUN_NOT_FOUND' });
+  if (run.payloadKind === 'bundled') {
+    throw Object.assign(new Error('RUN_ARTIFACT_BUNDLED — the certified corpus ships with the application; there is no run artifact to export.'), { code: 'RUN_ARTIFACT_BUNDLED' });
+  }
+  let payload = null, batches = null;
+  if (run.payloadKind === 'indexeddb-batches') {
+    payload = await _store.getRunPayload(runId);
+    if (!payload) throw Object.assign(new Error('RUN_PAYLOAD_MISSING'), { code: 'RUN_PAYLOAD_MISSING' });
+    batches = await _store.listRunBatches(runId);
+  } else if (run.payloadKind === 'indexeddb') {
+    payload = await _store.getRunPayload(runId);
+    if (!payload) throw Object.assign(new Error('RUN_PAYLOAD_MISSING'), { code: 'RUN_PAYLOAD_MISSING' });
+  } else if (run.payloadKind === 'session') {
+    payload = _sessionPayloads.get(runId) ?? null;
+    if (!payload) throw Object.assign(new Error('RUN_PAYLOAD_UNAVAILABLE'), { code: 'RUN_PAYLOAD_UNAVAILABLE' });
+  }
+  const evidence = artifactEvidenceForRun(run, payload, batches);
+  return experimentRunArtifact({
+    run, evidence,
+    versions: { engineVersion: ENGINE_VERSION, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION },
+  });
+}
+
+export async function exportRunArtifactText(runId) {
+  return JSON.stringify(await exportRunArtifactEnvelope(runId));
+}
+
+/** Export every resolvable attached run — one artifact per run; failures
+ *  are reported per run, never silently skipped. */
+export async function exportAllRunArtifacts() {
+  const out = [];
+  for (const run of _runs) {
+    if (run.runId === BUNDLED_RUN_ID || run.payloadKind === 'none') continue;
+    try { out.push({ runId: run.runId, ok: true, text: await exportRunArtifactText(run.runId) }); }
+    catch (error) { out.push({ runId: run.runId, ok: false, code: error?.code ?? 'EXPORT_FAILED', message: String(error?.message ?? error) }); }
+  }
+  return out;
+}
+
+/**
+ * Admit a validated artifact triple (or validate text/envelope first).
+ * Dedupes on sealed identity: same runHash → 'duplicate'; different evidence
+ * under the same runId → RUN_ARTIFACT_CONFLICT (never a silent overwrite).
+ * Runs sealed under a foreign experimentId persist under that id — durable
+ * and ledger-visible, but not rehomed into the active experiment.
+ */
+async function _admitRunArtifact({ run, payload, batches }) {
+  const existing = _findRun(run.runId) ?? await _store.getRun(run.runId).catch(() => null);
+  if (existing) {
+    if (existing.runHash === run.runHash) return { runId: run.runId, outcome: 'duplicate', alreadyPresent: true };
+    throw Object.assign(new Error('RUN_ARTIFACT_CONFLICT — a different run already holds this runId.'), { code: 'RUN_ARTIFACT_CONFLICT' });
+  }
+  if (run.experimentId !== _experiment.experimentId) {
+    const exp = await _store.getExperiment(run.experimentId).catch(() => null);
+    if (!exp) await _store.putExperiment(createExperiment({ experimentId: run.experimentId }));
+  }
+  const descriptors = (payload?.batches ?? []).map(d => ({
+    batchIndex: d.batchIndex, segmentIndex: d.segmentIndex ?? 0,
+    ordinalStart: d.ordinalStart, ordinalEnd: d.ordinalEnd,
+    matchCount: d.matchCount, summariesHash: d.summariesHash,
+    matchResultHashes: [], committedAt: d.committedAt ?? run.createdAt,
+  }));
+  const sealedManifest = {
+    manifestId: run.runId, runId: run.runId, experimentId: run.experimentId,
+    schemaVersion: MANIFEST_SCHEMA_VERSION, ordinal: run.ordinal,
+    status: MANIFEST_STATUS.COMPLETED,
+    createdAt: run.createdAt, startedAt: run.createdAt,
+    updatedAt: new Date().toISOString(), completedAt: run.createdAt,
+    config: run.config ?? {}, requestedMatches: run.config?.requestedMatchCount ?? run.config?.matchCount ?? run.metrics?.matchCount ?? 0,
+    committedMatches: run.metrics?.matchCount ?? 0, batchSize: 0,
+    segments: [], committedBatches: descriptors, headline: null,
+    resumable: false, sealedRunId: run.runId, failure: null,
+  };
+  await _store.saveRunArtifact({ run, payload, manifest: sealedManifest, batches: batches ?? [] });
+  const sameExperiment = run.experimentId === _experiment.experimentId;
+  if (sameExperiment && run.status === RUN_STATUS.COMPLETED) {
+    // Same admission rule as live runs: compatible evidence joins the active
+    // set, incompatible evidence is recorded but auto-excluded with a reason.
+    const { included } = await _registerStoredRun(run, _semanticFromBaseline());
+    if (included) await applySelection();
+    return { runId: run.runId, outcome: 'imported', sameExperiment, included };
+  }
+  await _refreshRuns();
+  _syncEvidenceBasis();
+  return { runId: run.runId, outcome: 'imported', sameExperiment, included: false };
+}
+
+export async function importRunArtifact(input) {
+  if (!_ready) throw Object.assign(new Error('EXPERIMENTS_NOT_READY'), { code: 'EXPERIMENTS_NOT_READY' });
+  const validated = typeof input === 'string'
+    ? parseExperimentRunArtifact(input, { importBytes: EXPERIMENT_LIMITS.importBytes })
+    : validateExperimentRunArtifact(input);
+  return _admitRunArtifact(validated);
+}
+
+/**
+ * Import a research package: verify the manifest and every embedded artifact
+ * hash (validation is all-or-nothing on integrity, per-artifact on
+ * admission), admit runs with dedupe, then reconstruct the analysis-set
+ * membership the manifest declares — for the CURRENT experiment only.
+ * Artifacts belonging to a foreign experimentId persist under their own id
+ * and are reported, never silently merged.
+ */
+export async function importResearchPackage(input) {
+  if (!_ready) throw Object.assign(new Error('EXPERIMENTS_NOT_READY'), { code: 'EXPERIMENTS_NOT_READY' });
+  const { manifest, runArtifacts } = typeof input === 'string'
+    ? parseResearchPackage(input, { importBytes: EXPERIMENT_LIMITS.importBytes })
+    : validateResearchPackage(input);
+  const report = {
+    experimentId: manifest.experimentId ?? null,
+    completeness: manifest.completeness ?? null,
+    artifactsInPackage: runArtifacts.length,
+    imported: [], duplicates: [], foreign: [], failed: [],
+    warnings: [...(manifest.warnings ?? [])],
+    membershipApplied: false,
+  };
+  for (const art of runArtifacts) {
+    try {
+      const res = await _admitRunArtifact({ run: art.run, payload: art.payload, batches: art.batches });
+      if (res.outcome === 'duplicate') report.duplicates.push(art.run.runId);
+      else report.imported.push(art.run.runId);
+      if (res.sameExperiment === false) report.foreign.push(art.run.runId);
+    } catch (error) {
+      report.failed.push({ runId: art.run?.runId ?? null, code: error?.code ?? 'IMPORT_FAILED', message: String(error?.message ?? error) });
+    }
+  }
+  // Membership reconstruction: the manifest's declared inclusion applies only
+  // where the run actually resolved under this experiment.
+  if (manifest.experimentId === _experiment.experimentId) {
+    const declared = (manifest.runArtifacts?.perRun ?? []).filter(r => r.includedInAnalysis === true).map(r => r.runId);
+    const present = new Set(_runs.map(r => r.runId));
+    const wanted = declared.filter(id => present.has(id) && id !== BUNDLED_RUN_ID);
+    const current = new Set(_set.includedRunIds ?? []);
+    let changed = false;
+    for (const id of wanted) {
+      if (!current.has(id)) { _set = includeRunInSet(_set, id); changed = true; }
+    }
+    for (const id of [...current]) {
+      // Runs that exist locally but the package excludes stay excluded —
+      // record the reason rather than silently dropping membership.
+      const isPackageRun = (manifest.runArtifacts?.perRun ?? []).some(r => r.runId === id);
+      if (isPackageRun && !wanted.includes(id) && id !== BUNDLED_RUN_ID) {
+        _set = excludeRunFromSet(_set, id, { reason: 'other', note: 'Excluded by imported research package manifest' });
+        changed = true;
+      }
+    }
+    if (changed) { await _persistSet(); _syncEvidenceBasis(); await applySelection(); }
+    report.membershipApplied = changed || wanted.length > 0;
+    report.includedRunIds = [...(_set.includedRunIds ?? [])].filter(id => id !== BUNDLED_RUN_ID);
+  }
+  return report;
 }

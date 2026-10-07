@@ -1,10 +1,11 @@
-import { esc } from '../state.js?v=037146099ebb';
-import { LAB_IDENTITY } from './identity.mjs?v=037146099ebb';
-import { createLabRun, CLEAN_REASONS } from './evolution-domain.mjs?v=037146099ebb';
-import { createEvaluationPack,createBaselineSuite,createExperiment,cloneExperiment,compareCheckpoints,researchEnvelope,parseResearchImport, recordEvaluation, inspectResearchArtifact } from './evolution-research.mjs?v=037146099ebb';
-import { evaluateSuite } from './evolution-evaluation.mjs?v=037146099ebb';
-import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=037146099ebb';
-import { EvolutionStore } from './evolution-store.mjs?v=037146099ebb';
+import { esc } from '../state.js?v=adf8892fce29';
+import { LAB_IDENTITY } from './identity.mjs?v=adf8892fce29';
+import { createLabRun, CLEAN_REASONS } from './evolution-domain.mjs?v=adf8892fce29';
+import { createEvaluationPack,createBaselineSuite,createExperiment,cloneExperiment,compareCheckpoints,researchEnvelope,parseResearchImport, recordEvaluation, inspectResearchArtifact } from './evolution-research.mjs?v=adf8892fce29';
+import { evaluateSuite } from './evolution-evaluation.mjs?v=adf8892fce29';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=adf8892fce29';
+import { EvolutionStore } from './evolution-store.mjs?v=adf8892fce29';
+import { collectExperimentEvidence } from '../experiments/experiment-controller.mjs?v=adf8892fce29';
 
 const store=new EvolutionStore(LAB_IDENTITY);
 const view={project:null,history:[],controller:null,error:'',progress:null,comparison:null,selectedA:null,selectedB:null,readConfig:null,serial:0,started:0,attempted:0,failed:0,archive:null};
@@ -43,7 +44,18 @@ function render(){
     <div id="evo-research-history">${researchHistoryHtml()}</div></section>`;
   bind();view.renderTraining?.(p,locked);notify();
 }
-function researchHistoryHtml(){const query=(view.historyQuery??'').toLowerCase(),rows=view.history.filter(h=>!query||JSON.stringify(h).toLowerCase().includes(query));return rows.length?`<p>${rows.length} matching experiments; first 50 shown. Search all saved metadata to narrow.</p>`+rows.slice(0,50).map(h=>`<div class="evo-replay-row"><span>${esc(h.name)} · ${esc(h.status)}<br><code>${esc(h.scientificId)}</code><br><code>${esc(h.experimentId)}</code></span><button data-load-experiment="${h.experimentId}" ${busy()?'disabled':''}>Load experiment</button><button data-inspect-experiment="${h.experimentId}" ${busy()?'disabled':''}>Inspect archive</button></div>`).join(''):'<p>No matching saved experiments. Create an experiment, import evidence or adjust search.</p>';}
+function researchHistoryHtml(){const query=(view.historyQuery??'').toLowerCase(),rows=view.history.filter(h=>!query||JSON.stringify(h).toLowerCase().includes(query));return (rows.length?`<p>${rows.length} matching experiments; first 50 shown. Search all saved metadata to narrow.</p>`+rows.slice(0,50).map(h=>`<div class="evo-replay-row"><span>${esc(h.name)} · ${esc(h.status)}<br><code>${esc(h.scientificId)}</code><br><code>${esc(h.experimentId)}</code></span><button data-load-experiment="${h.experimentId}" ${busy()?'disabled':''}>Load experiment</button><button data-inspect-experiment="${h.experimentId}" ${busy()?'disabled':''}>Inspect archive</button></div>`).join(''):'<p>No matching saved research operations. Create an experiment, import evidence or adjust search.</p>')+campaignExperimentsHtml();}
+// Campaign experiments persist in the experiment evidence store — the
+// research ledger lists them so an experiment with durable runs is never
+// reported as "no matching saved experiments".
+function campaignExperimentsHtml(){
+  let ev=null;try{ev=collectExperimentEvidence();}catch{return '';}
+  // Only render when campaign evidence actually exists — the bundled
+  // certified corpus alone does not make a saved experiment.
+  if(!ev?.available||(!ev.runs.some(r=>r.origin!=='bundled')&&!ev.incompleteRunCount))return '';
+  const durable=ev.runs.filter(r=>r.persistence==='persisted'&&r.origin!=='bundled').length;
+  return `<div id="evo-research-campaigns" data-testid="evo-research-campaigns"><h4>Campaign experiments — experiment evidence store</h4><div class="evo-replay-row"><span><b>${esc(ev.experimentId??'Experiment')}</b> · ${ev.totalRuns} run${ev.totalRuns===1?'':'s'} · ${ev.includedRunCount} included · ${esc(String(ev.includedGames??0))} games in analysis · ${durable} durable artifact${durable===1?'':'s'}${ev.incompleteRunCount?` · ${ev.incompleteRunCount} incomplete/resumable`:''}${ev.corruptCount+ev.quarantinedCount+ev.payloadUnavailableCount?` · <span class="danger">${ev.corruptCount+ev.quarantinedCount+ev.payloadUnavailableCount} integrity-blocked</span>`:''}</span></div></div>`;
+}
 function progressText(){const x=view.progress,cp=view.project?.checkpoints.find(c=>c.checkpointId===x?.checkpointId),gps=view.started ? view.attempted/((performance.now()-view.started)/1000) : 0;return x?`${x.mode} · generation ${cp?.generation??'—'} · ${x.opponent??''} · ${x.completed??0}/${x.total??0} suite games · ${view.attempted} attempts / ${view.failed} failed in this execution · ${gps.toFixed(2)} games/sec · ${x.packId?.slice(0,18)??''}`:'No research execution active.';}
 function pickProject(p){view.project=p;view.archive=null;view.progress=null;view.started=0;view.attempted=0;view.failed=0;view.selectedA=p.checkpoints[0]?.checkpointId;view.selectedB=p.checkpoints[1]?.checkpointId;view.comparison=null;view.error='';render();}
 async function persist(){if(!view.project)return;await store.saveResearch(view.project);view.history=await store.listResearch();render();}

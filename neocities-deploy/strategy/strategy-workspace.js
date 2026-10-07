@@ -1,20 +1,20 @@
-import { app, esc } from '../state.js?v=037146099ebb';
-import { STRATEGY_NAMES, MATURITY_BUCKETS, STRATEGY_CONTRACTS, sealStrategy, strategyDigest } from '../evolution/strategy-contracts.mjs?v=037146099ebb';
-import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=037146099ebb';
-import { claimsFromAggregate, synthesizeStrategyClaim, strategyGuide, mineStrategyMotifs, mineStrategyMistakes, STRATEGY_CONFIDENCE, orderControlledClaims, researchLeadsFor, RANK_SEMANTIC_LABELS } from '../evolution/strategy-analysis.mjs?v=037146099ebb';
-import { planStrategyBranch, claimFromStrategyBranch } from '../evolution/strategy-branch.mjs?v=037146099ebb';
-import { claimsFromInformationStudy, informationResolution, INFORMATION_INFERENCE_V3 } from '../evolution/strategy-information.mjs?v=037146099ebb';
-import { createStrategyExplanationPacket, createControlledStudyPacket, createPolicyComparePacket, createGuidePacket, createEvidenceDeskPacket, explainStrategyEvidence, normalizeStrategyAiConfig, strategyAiClient, STRATEGY_INTERPRETER_MODES, STRATEGY_INTERPRETER_SURFACES } from '../../../../packages/analytics-ai/src/strategy-interpreter.mjs?v=037146099ebb';
-import { discoverOllama } from '../../../../packages/analytics-ai/src/model-discovery.mjs?v=037146099ebb';
-import { StrategyStore } from './strategy-store.mjs?v=037146099ebb';
-import { EvolutionStore } from '../evolution/evolution-store.mjs?v=037146099ebb';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=037146099ebb';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=037146099ebb';
-import { STATIC_POLICIES, LAB_PROFILES } from '../evolution/evolution-domain.mjs?v=037146099ebb';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=037146099ebb';
-import { createProfileArenaRun, profileArenaRoster } from '../evolution/profile-arena.mjs?v=037146099ebb';
-import { rankName } from '../card-face-data.js?v=037146099ebb';
-import { ACTION_PURPOSES } from '../action-evaluation.mjs?v=037146099ebb';
+import { app, esc } from '../state.js?v=adf8892fce29';
+import { STRATEGY_NAMES, MATURITY_BUCKETS, STRATEGY_CONTRACTS, sealStrategy, strategyDigest } from '../evolution/strategy-contracts.mjs?v=adf8892fce29';
+import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=adf8892fce29';
+import { claimsFromAggregate, synthesizeStrategyClaim, strategyGuide, mineStrategyMotifs, mineStrategyMistakes, STRATEGY_CONFIDENCE, orderControlledClaims, researchLeadsFor, RANK_SEMANTIC_LABELS } from '../evolution/strategy-analysis.mjs?v=adf8892fce29';
+import { planStrategyBranch, claimFromStrategyBranch } from '../evolution/strategy-branch.mjs?v=adf8892fce29';
+import { claimsFromInformationStudy, informationResolution, INFORMATION_INFERENCE_V3 } from '../evolution/strategy-information.mjs?v=adf8892fce29';
+import { createStrategyExplanationPacket, createControlledStudyPacket, createPolicyComparePacket, createGuidePacket, createEvidenceDeskPacket, explainStrategyEvidence, normalizeStrategyAiConfig, strategyAiClient, STRATEGY_INTERPRETER_MODES, STRATEGY_INTERPRETER_SURFACES } from '../../../../packages/analytics-ai/src/strategy-interpreter.mjs?v=adf8892fce29';
+import { discoverOllama } from '../../../../packages/analytics-ai/src/model-discovery.mjs?v=adf8892fce29';
+import { StrategyStore } from './strategy-store.mjs?v=adf8892fce29';
+import { EvolutionStore } from '../evolution/evolution-store.mjs?v=adf8892fce29';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=adf8892fce29';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=adf8892fce29';
+import { STATIC_POLICIES, LAB_PROFILES } from '../evolution/evolution-domain.mjs?v=adf8892fce29';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=adf8892fce29';
+import { createProfileArenaRun, profileArenaRoster } from '../evolution/profile-arena.mjs?v=adf8892fce29';
+import { rankName } from '../card-face-data.js?v=adf8892fce29';
+import { ACTION_PURPOSES } from '../action-evaluation.mjs?v=adf8892fce29';
 
 let owner=null;
 const pretty=value=>{const subject=String(value);return subject.startsWith('rank:')?`${subject.slice(5)} · ${rankName(subject.slice(5))}`:subject.replace(/^(card|family|mode|mechanic|timing|combination|suit):/,'').replaceAll('-',' ');};
@@ -283,7 +283,7 @@ function bind(v){
         const evidence=sealStrategy(STRATEGY_CONTRACTS.evidence,{source:{runId:m.id,ordinal:0,resultHash:m.id,fingerprint:checkpoint.identity.fingerprint,rulesProfile:manifest.body.rulesProfileId,eraId:m.body.eraId,purpose:m.body.purpose,origin:'LOCAL_PROFILE_SUMMARY',createdAt:p.createdAt},fidelity:'SUMMARY_ONLY',clean:false,events:[],aggregates:[],replayHash:null,checkpoints:[checkpoint],identity:checkpoint.identity,summary:{measurementId:m.id,admissibility:'Summary only; no decision opportunities are reconstructed.'}});await v.store.addEvidence(evidence);
       }
     });return;}
-    if(action==='players'){work(v,'Ingest completed local games',async()=>{const {ingestLocalPlayerEvidence}=await import('./strategy-player.js?v=037146099ebb');await ingestLocalPlayerEvidence(v.store);});return;}
+    if(action==='players'){work(v,'Ingest completed local games',async()=>{const {ingestLocalPlayerEvidence}=await import('./strategy-player.js?v=adf8892fce29');await ingestLocalPlayerEvidence(v.store);});return;}
     if(action==='export'){work(v,'Export evidence',async()=>download('intrilex-strategy-evidence.json',JSON.stringify(await v.store.exportBundle(scope(v)),null,2)));return;}
     if(action==='export-run'){if(v.errorRun)download(`${v.errorRun.runId}.json`,JSON.stringify(v.errorRun));return;}
     if(action==='ai-enable'){const endpoint=v.root.querySelector('#si-ai-endpoint')?.value,model=v.root.querySelector('#si-ai-model')?.value;let ai;try{ai=saveStrategyAiSettings({mode:STRATEGY_INTERPRETER_MODES.OLLAMA_LOCAL,endpoint,model});v.aiError='';v.aiStatus=null;}catch(e){v.aiError=e.message;paint(v);return;}paint(v);discoverModels(v,ai);return;}
@@ -328,6 +328,6 @@ export async function renderStrategy(){
   cleanupStrategy();
   const v={root:app,store:new StrategyStore(),evolution:new EvolutionStore(LAB_IDENTITY),profiles:new ProfileStore(new IndexedDbBackend(),{identity:LAB_IDENTITY}),sources:[],cohorts:[],subjects:[],ranks:[],roster:[],filters:{},subject:new URLSearchParams(location.hash.split('?')[1]??'').get('subject')??'rank:3',cohort:{fingerprint:LAB_IDENTITY.fingerprint,rulesProfile:'core-advanced-authority',eraId:LAB_IDENTITY.fingerprint},tab:'manual',expert:false,onboarding:true,loading:true,busy:false,queryEpoch:0,decisions:[],studies:[],motifs:[],aiResults:{},aiStatus:null,aiError:'',aiModels:null,sourceFilter:'',provenance:new Map()};owner=v;
   app.innerHTML='<section aria-label="Field Manual" class="si-workspace" data-testid="strategy-workspace"><h1>FIELD MANUAL</h1><p role="status">Opening the evidence desk…</p></section>';
-  try{try{v.onboarding=localStorage.getItem('intrilex.strategy.onboarded')!=='1';}catch{/* optional */}const {RANK_REGISTRY}=await import('../engine/ranks.js?v=037146099ebb');v.ranks=Object.keys(RANK_REGISTRY);v.rankRegistry=RANK_REGISTRY;v.roster=await profileArenaRoster(v.profiles);await reloadSources(v);if(alive(v))await refresh(v);}catch(error){if(alive(v))app.innerHTML=`<section aria-label="Field Manual" class="si-workspace"><h1>FIELD MANUAL</h1><p role="alert">${esc(error.message)}</p><button id="si-open-retry">Retry evidence storage</button></section>`;app.querySelector('#si-open-retry')?.addEventListener('click',()=>{cleanupStrategy();renderStrategy();});}
+  try{try{v.onboarding=localStorage.getItem('intrilex.strategy.onboarded')!=='1';}catch{/* optional */}const {RANK_REGISTRY}=await import('../engine/ranks.js?v=adf8892fce29');v.ranks=Object.keys(RANK_REGISTRY);v.rankRegistry=RANK_REGISTRY;v.roster=await profileArenaRoster(v.profiles);await reloadSources(v);if(alive(v))await refresh(v);}catch(error){if(alive(v))app.innerHTML=`<section aria-label="Field Manual" class="si-workspace"><h1>FIELD MANUAL</h1><p role="alert">${esc(error.message)}</p><button id="si-open-retry">Retry evidence storage</button></section>`;app.querySelector('#si-open-retry')?.addEventListener('click',()=>{cleanupStrategy();renderStrategy();});}
 }
 export function cleanupStrategy(){if(!owner)return;owner.controller?.abort();owner.studyReject?.(new Error('STRATEGY_ROUTE_CLOSED'));owner.queryEpoch++;owner.store.close();owner.evolution.close();owner.profiles.backend.close?.();owner=null;}

@@ -321,6 +321,7 @@ const STAGES = [
   // Incremental durability: manifest lifecycle, atomic batch commits, crash
   // recovery, resume, partial seals, stacked runs, integrity quarantine.
   ['experiment-run-durability', 'node', ['--test', 'test/experiment-run-durability.test.mjs']],
+  ['experiment-portability', 'node', ['--test', 'test/experiment-portability.test.mjs']],
   ['combo-analytics', 'node', ['--test', 'test/combo-analytics.test.mjs']],
 ];
 

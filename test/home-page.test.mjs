@@ -52,16 +52,17 @@ test('renderHomePage emits canonical structure: header → hero → pulse → gr
   }
 });
 
-test('homepage grid has the four approved panels in order', () => {
+test('homepage grid has the three approved panels in order (leaders retired)', () => {
   const html = renderHomePage({ labVersion: '0', rulesVersion: '0' });
   const gridIdx = html.indexOf('home-grid');
   const section = html.slice(gridIdx);
   const preseason = section.indexOf('home-preseason"');
-  const leaders = section.indexOf('home-leaders"');
   const news = section.indexOf('home-news"');
   const explore = section.indexOf('home-explore"');
-  assert.ok(preseason > -1 && leaders > preseason && news > leaders && explore > news,
-    'panels must be PRESEASON → LEADERS → NEWS → EXPLORE');
+  assert.ok(preseason > -1 && news > preseason && explore > news,
+    'panels must be PRESEASON → NEWS → EXPLORE');
+  assert.equal(section.indexOf('home-leaders"'), -1,
+    'PRESEASON LEADERS is retired from the homepage grid');
 });
 
 test('homepage uses PRESEASON framing, never Season 01 as the current era', () => {
@@ -357,7 +358,7 @@ test('buildPulseMetrics supports partial failure (server ok, leaders failed)', (
   assert.equal(byKey.avgQueue.ok, false); // no queue samples yet → '—'
 });
 
-test('renderPulseMetricsHtml renders — for failed metrics and links for players', () => {
+test('renderPulseMetricsHtml hides failed metrics entirely and links players', () => {
   const html = renderPulseMetricsHtml(buildPulseMetrics({
     stats: { onlinePlayers: 5, activeMatches: 0, queueSize: 0, duelsToday: 0, avgQueueSeconds: 4, updatedAt: 'x' },
     leaders: [{ name: 'Ada', rating: 1800, publicPlayerId: 'PLY_1' }],
@@ -365,8 +366,12 @@ test('renderPulseMetricsHtml renders — for failed metrics and links for player
   assert.match(html, />5</);
   assert.match(html, /href="#\/player\/PLY_1"/);
 
+  // Unavailable values are hidden, never rendered as '—' placeholders.
+  const partial = renderPulseMetricsHtml(buildPulseMetrics({ stats: null, leaders: [{ name: 'Ada', rating: 1800 }] }));
+  assert.doesNotMatch(partial, />—</, 'no metric may render an em-dash placeholder');
+  assert.equal((partial.match(/data-metric="/g) ?? []).length, 1, 'only the topRating metric survives');
   const failed = renderPulseMetricsHtml(buildPulseMetrics({ stats: null, leaders: null }));
-  assert.ok((failed.match(/>—</g) ?? []).length >= 5, 'every failed metric must show —');
+  assert.equal(failed, '', 'a fully dead feed renders nothing');
 });
 
 // ── formatUpdatedAgo ──────────────────────────────────────────
@@ -449,9 +454,10 @@ test('home.js polls the pulse on a sane interval, not aggressively', async () =>
     'pulse interval should be 15–60s');
 });
 
-test('home.js degrades honestly: unavailable leaders/news show empty states', async () => {
+test('home.js degrades honestly: pulse hides when dead, news shows empty state', async () => {
   const js = await src('home/home.js');
-  assert.match(js, /renderLeadersEmpty\('Rankings unavailable/);
+  // The pulse strip collapses entirely when no real metric exists.
+  assert.match(js, /pulseEl\.hidden = !anyReal/);
   assert.match(js, /renderNewsHtml\(null\)/);
 });
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-10-01T15:55:21.326Z",
+  "generatedAt": "2026-10-07T06:25:50.453Z",
   "source": {
     "capabilityManifest": "reports/capability-manifest.json",
     "releaseIdentity": "config/release-identity.json",
@@ -228,26 +228,24 @@
       "certifiedReplayCount": 121,
       "autonomousProfile": "core-advanced-authority"
     },
-    "testFileCount": 207,
+    "testFileCount": 250,
     "testCount": null,
     "testPassCount": null,
-    "ciStageCount": 232,
+    "ciStageCount": 251,
     "selfAuditStatus": "STALE",
     "selfAuditEvidence": {
       "status": "STALE",
       "blockers": [
-        "Release certification requires a clean Git working tree (including untracked files).",
-        "Missing or invalid enginePayloadHash.",
-        "Release certification requires a clean Git working tree (including untracked files).",
+        "Release certification requires a clean source tree (no modified tracked files or untracked files outside generated-output roots).",
+        "Release certification requires a clean source tree (no modified tracked files or untracked files outside generated-output roots). Offending paths: NOWN_LIMITATIONS.md, apps/lab-web/src/analysis-dossier-export.js, apps/lab-web/src/analysis-dossier.js, apps/lab-web/src/analysis-export-hub.mjs, apps/lab-web/src/app.js, apps/lab-web/src/css/home.css, apps/lab-web/src/css/observatory.css, apps/lab-web/src/css/tokens-base.css, apps/lab-web/src/evolution/evolution-research-ui.js, apps/lab-web/src/experiment-controls.js.",
         "Evidence gitCommit does not match the current checkout.",
         "Evidence gitTree does not match the current checkout.",
-        "Evidence lockfileSha256 does not match the current checkout.",
         "Evidence enginePayloadHash does not match the current checkout.",
         "Release evidence requires an explicitly executed release audit."
       ],
-      "gitCommit": "41feafd07a2ef6fc7e76ae854af3d3bc8ddc2aa8",
-      "auditKind": null,
-      "generatedAt": "2026-09-30T12:03:35.772Z"
+      "gitCommit": "74922a7607fa7d3731032d7c0aecc2edc5216acf",
+      "auditKind": "development",
+      "generatedAt": "2026-10-05T02:23:38.999Z"
     }
   },
   "lanes": {
@@ -494,6 +492,12 @@
       "severity": "manual",
       "title": "Human validation sessions documented but not yet conducted",
       "detail": "The human validation protocol is documented in ROADMAP.md with measurement criteria, but actual sessions have not yet been conducted and recorded by the developer."
+    },
+    {
+      "id": "EXP-PORTABILITY-01",
+      "severity": "technical",
+      "title": "Experiment run artifacts carry match summaries, not full replays",
+      "detail": "Experiment campaign runs persist per-match summaries plus aggregate analytics in committed batches (IndexedDB runBatches). Full command transcripts are not retained for campaign games — matches are re-executable by seed + ordinal but are not stored replays. The research package manifest (intrilex-research-package) declares this: replayCoverage.gamesWithFullTranscript stays 0 and gamesReproducible counts seed-executable ordinals. Deep decision evidence exists only for runs sealed with strategicTrace enabled; per-run fidelity is reported as FULL_DECISION_EVIDENCE, SUMMARY_ONLY, or NONE."
     }
   ]
 }

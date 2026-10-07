@@ -1,7 +1,7 @@
 # Feature Matrix
 
 > **AUTO-GENERATED** by `scripts/generate-capability-truth.mjs` from `config/capability-truth.json`.
-> Generated: 2026-10-01T15:55:21.326Z
+> Generated: 2026-10-07T06:25:50.453Z
 > Version: 1.0.0 (Certified Public Baseline)
 
 ## Simulation Profiles
@@ -169,3 +169,9 @@
 - **ID:** CERT-HUMAN-VALIDATION-01
 - **Severity:** manual
 - **Detail:** The human validation protocol is documented in ROADMAP.md with measurement criteria, but actual sessions have not yet been conducted and recorded by the developer.
+
+### Experiment run artifacts carry match summaries, not full replays
+
+- **ID:** EXP-PORTABILITY-01
+- **Severity:** technical
+- **Detail:** Experiment campaign runs persist per-match summaries plus aggregate analytics in committed batches (IndexedDB runBatches). Full command transcripts are not retained for campaign games — matches are re-executable by seed + ordinal but are not stored replays. The research package manifest (intrilex-research-package) declares this: replayCoverage.gamesWithFullTranscript stays 0 and gamesReproducible counts seed-executable ordinals. Deep decision evidence exists only for runs sealed with strategicTrace enabled; per-run fidelity is reported as FULL_DECISION_EVIDENCE, SUMMARY_ONLY, or NONE.

@@ -1,24 +1,27 @@
-import '../evolution/evolution-training-ui.js?v=037146099ebb';
-import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=037146099ebb';
-import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=037146099ebb';
-import { app, esc, fmt, state } from '../state.js?v=037146099ebb';
-import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=037146099ebb';
-import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=037146099ebb';
-import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=037146099ebb';
-import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=037146099ebb';
-import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=037146099ebb';
-import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=037146099ebb';
-import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=037146099ebb';
-import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=037146099ebb';
-import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=037146099ebb';
-import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=037146099ebb';
-import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=037146099ebb';
-import { EvolutionSession } from '../evolution/evolution-session.mjs?v=037146099ebb';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=037146099ebb';
-import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=037146099ebb';
-import { StrategyStore } from '../strategy/strategy-store.mjs?v=037146099ebb';
-import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=037146099ebb';
-import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs?v=037146099ebb';
+import '../evolution/evolution-training-ui.js?v=adf8892fce29';
+import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js?v=adf8892fce29';
+import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js?v=adf8892fce29';
+import { app, esc, fmt, state } from '../state.js?v=adf8892fce29';
+import { arenaAnalytics, inclusiveFullTurns } from '../evolution/evolution-analytics-model.mjs?v=adf8892fce29';
+import { arenaAnalyticsHtml, matchupMatrixHtml } from '../evolution/evolution-analytics-charts.mjs?v=adf8892fce29';
+import { matchupMatrix, matchupArtifact } from '../evolution/matchup-lab.mjs?v=adf8892fce29';
+import { createBatchMatrix, runBatchMatrix, batchMatrixView, batchMatrixPlan, batchMatrixArtifact, batchMatrixManifest, validateMatrixEnvelope, rehydrateBatchMatrix } from '../evolution/batch-matrix.mjs?v=adf8892fce29';
+import { bindBatchMatrix } from '../evolution/batch-matrix-ui.mjs?v=adf8892fce29';
+import { executeBrowserSeries } from '../evolution/evolution-browser-runner.mjs?v=adf8892fce29';
+import { createSeriesAggregator, ingestGameRecord, seriesMetrics } from '../evolution/evolution-domain.mjs?v=adf8892fce29';
+import { pushChartSample } from '../evolution/evolution-presentation.mjs?v=adf8892fce29';
+import { gamePlan, STATIC_POLICIES, staticPolicyVersion, LAB_LIMITS, artifactEnvelope, summarizeRecords, validateArtifact, inspectHistoricalArtifact } from '../evolution/evolution-domain.mjs?v=adf8892fce29';
+import { ProfileStore, IndexedDbBackend } from '../evolution/profile-store.mjs?v=adf8892fce29';
+import { createProfileArenaRun, validateProfileArenaRun, profileArenaRoster, profileChoice } from '../evolution/profile-arena.mjs?v=adf8892fce29';
+import { EvolutionSession } from '../evolution/evolution-session.mjs?v=adf8892fce29';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=adf8892fce29';
+import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs?v=adf8892fce29';
+import { StrategyStore } from '../strategy/strategy-store.mjs?v=adf8892fce29';
+import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs?v=adf8892fce29';
+import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs?v=adf8892fce29';
+import { collectExperimentEvidence, exportRunArtifactText, exportAllRunArtifacts, importRunArtifact } from '../experiments/experiment-controller.mjs?v=adf8892fce29';
+import { importResearchPackageText, downloadResearchPackage } from '../experiments/research-package.mjs?v=adf8892fce29';
+import { openManageRuns } from '../experiment-controls.js?v=adf8892fce29';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 // Strategy evidence is a separate persistence concern from the monolithic
@@ -115,6 +118,7 @@ export function renderEvolutionLab() {
       <p id="evo-propagate-status" role="status">${esc(view.propagateStatus ?? '')}</p>
       ${view.archive ? `<details open><summary>Read-only historical implementation</summary><p>Identity ${esc(view.archive.identity.fingerprint)}. Original checkpoint IDs and artifact content are preserved. This implementation is not admitted for current execution; imported outcomes remain unverified.</p><pre>${esc(JSON.stringify(view.archive.checkpoints,null,2))}</pre></details>` : ''}
       <p id="evo-storage" role="status">${esc(view.storageError || storageSummary())}</p><p id="evo-strategy-evidence" role="status">${esc(run()?strategyEvidenceNote():'')}</p><div id="evo-history">${historyHtml()}</div>
+      ${experimentLedgerHtml()}
       <p>Rules ${LAB_IDENTITY.rulesVersion} · engine ${LAB_IDENTITY.engineVersion}<br><code class="evo-hash">${LAB_IDENTITY.fingerprint}</code></p></section>
     ${researchHtml()}
     </div></section>`;
@@ -158,8 +162,35 @@ function inspectionHtml() {
   const step=x.steps[view.step],command=typeof step.command==='string'?step.command:step.command?.type??'Unavailable';
   return `<p><strong>VERIFIED</strong> · seed/initial state and final hash match · ${x.steps.length-1} commands</p><div class="toolbar"><button id="evo-prev" class="ghost-button" ${view.step ? '' : 'disabled'}>Previous</button><label>Command<input id="evo-step" type="range" min="0" max="${x.steps.length-1}" value="${view.step}"></label><button id="evo-next" class="ghost-button" ${view.step === x.steps.length-1 ? 'disabled' : ''}>Next</button></div><section class="evo-workbench"><h4>Command ${step.index} · ${esc(command)}</h4><p>Turn ${step.turn??'Unavailable'} · revision ${step.revision??'Unavailable'} · phase ${esc(step.phase??'Unavailable')}</p><p>P1 score ${step.scores?.P1??'Unavailable'} · P2 score ${step.scores?.P2??'Unavailable'} · ${step.events?.length??0} engine events</p><p>Arrow keys step commands; Home / End jump to endpoints.</p><details><summary>Command and event diagnostics</summary><pre>${esc(JSON.stringify(step,null,2))}</pre></details></section><code class="evo-hash">${esc(x.finalStateHash)}</code>`;
 }
-function storageSummary() { return `${view.history.length} saved runs · ${(view.history.reduce((s,r) => s+(r.bytes ?? 0),0)/1048576).toFixed(2)} MiB in lab artifacts`; }
-function historyHtml() { const query=(view.historyQuery??'').toLowerCase(),rows=view.history.filter(h=>!query||JSON.stringify(h).toLowerCase().includes(query));return rows.length ? `<p>${rows.length} matching runs; first 50 shown. Search all saved metadata to narrow.</p>`+rows.slice(0,50).map(h => `<div class="evo-replay-row"><span>${esc(h.kind)} · ${esc(h.botA)} / ${esc(h.botB)} · ${h.games} games · ${esc(h.status)} · ${esc(h.createdAt)}<br><code>${esc(h.runId)}</code><br>Fingerprint ${esc(h.fingerprint?.slice(0,24)??'Unavailable')}</span><button class="ghost-button" data-load-run="${esc(h.runId)}" ${active() ? 'disabled' : ''}>Load</button></div>`).join('') : '<p>No matching saved lab runs. Adjust search or import evidence.</p>'; }
+function storageSummary() { const expRuns=experimentRunsSnapshot().length; return `${view.history.length} saved lab artifacts · ${(view.history.reduce((s,r) => s+(r.bytes ?? 0),0)/1048576).toFixed(2)} MiB${expRuns ? ` · ${expRuns} experiment run${expRuns===1?'':'s'} in the experiment store` : ''}`; }
+function historyHtml() {
+  const query=(view.historyQuery??'').toLowerCase(),rows=view.history.filter(h=>!query||JSON.stringify(h).toLowerCase().includes(query));
+  if (rows.length) return `<p>${rows.length} matching runs; first 50 shown. Search all saved metadata to narrow.</p>`+rows.slice(0,50).map(h => `<div class="evo-replay-row"><span>${esc(h.kind)} · ${esc(h.botA)} / ${esc(h.botB)} · ${h.games} games · ${esc(h.status)} · ${esc(h.createdAt)}<br><code>${esc(h.runId)}</code><br>Fingerprint ${esc(h.fingerprint?.slice(0,24)??'Unavailable')}</span><button class="ghost-button" data-load-run="${esc(h.runId)}" ${active() ? 'disabled' : ''}>Load</button></div>`).join('');
+  // Truthful empty state: distinguish "filter hides everything" from
+  // "nothing stored" — and never let experiment evidence look invisible
+  // just because it lives in the experiment store rather than this ledger.
+  if (view.history.length) return `<p>0 matching / ${view.history.length} saved lab runs. Adjust search to widen.</p>`;
+  const expRuns=experimentRunsSnapshot();
+  if (expRuns.length) return `<p>No saved lab artifacts — but ${expRuns.length} experiment run${expRuns.length===1?'':'s'} exist in the experiment evidence store (listed below). Export or manage them there.</p>`;
+  return '<p>No saved lab runs. Run a series, run an experiment, or import evidence.</p>';
+}
+// Experiment runs live in the experiment evidence store — a different
+// artifact class (sealed run record + committed summary batches) than the
+// arena envelopes above. This panel lists them so a run is never invisible
+// merely because the workspace only read one store.
+function experimentRunsSnapshot() {
+  try { const ev=collectExperimentEvidence(); return ev?.available ? (ev.runs??[]).filter(r=>r.origin!=='bundled') : []; }
+  catch { return []; }
+}
+function experimentLedgerHtml() {
+  const rows=experimentRunsSnapshot();
+  if (!rows.length) return '';
+  const durable=rows.filter(r=>r.persistence==='persisted').length;
+  return `<div id="evo-exp-ledger" data-testid="evo-exp-ledger"><h4>Experiment evidence runs</h4>
+    <p>${rows.length} experiment run${rows.length===1?'':'s'} · ${durable} durable · stored in the experiment evidence store. Export produces a self-verifying run artifact; manage inclusion in the Experiment panel.</p>
+    ${rows.map(r=>`<div class="evo-replay-row"><span><b>#${String(r.ordinal).padStart(3,'0')}</b> ${esc(r.policyIds?.join(' / ') ?? r.profileId ?? '')} · ${fmt(r.matchCount)} games · ${esc(r.status)}${r.included?' · included':' · excluded'} · ${esc(r.persistence==='persisted'?'durable':r.persistence==='session-payload'?'session only':'not saved')}${r.strategicTrace?' · deep trace':''}<br><code>${esc(r.runId)}</code>${r.integrity && r.integrity!=='ok'?`<br><span class="danger">Integrity: ${esc(r.integrity)}</span>`:''}</span><button class="ghost-button" data-exp-export-run="${esc(r.runId)}" ${r.status==='COMPLETED'?'':'disabled'}>Export artifact</button><button class="ghost-button" data-exp-open-runs>Manage</button></div>`).join('')}
+    <div class="toolbar"><button class="secondary-button" data-exp-export-all>Export all run artifacts</button><button class="secondary-button" data-exp-export-package>Export research package</button></div></div>`;
+}
 async function refreshHistory() {
   try { view.history=await store.list(); } catch(error) { view.storageError=`Storage unavailable: ${error.message}. Results remain in memory.`; }
   if (!view.mounted) return; storageStatus();
@@ -183,7 +214,7 @@ async function propagateToObservatory() {
   const summaries = [...new Map(runs.flatMap(observatorySummariesForRun).map(s => [s.matchId, s])).values()];
   if (!summaries.length) { view.propagateStatus = 'No saved lab runs to propagate — run, save or import evidence first.'; renderEvolutionLab(); return; }
   try {
-    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js?v=037146099ebb');
+    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js?v=adf8892fce29');
     const aggregate = campaignAggregate(summaries, { profileId: null });
     const obs = buildObservatoryAnalytics({ summaries, aggregate });
     state.observatory = { ...obs, summaries, datasetOrigin: 'EVOLUTION_LAB' };
@@ -307,15 +338,46 @@ function bind() {
       // Matrix envelopes route to the Batch Matrix importer — the per-run
       // ledger validator would misreport them as corrupt artifacts.
       if (envelope?.format === 'intrilex-matchup-lab') { if (!view.batchApi) throw new Error('Batch Matrix panel unavailable.'); await view.batchApi.importMatrix(validateMatrixEnvelope(envelope)); await refreshHistory(); document.getElementById('evo-batch-matrix')?.scrollIntoView({ block: 'start' }); return; }
+      // Experiment evidence envelopes route to the experiment store —
+      // verified and deduplicated on sealed run identity there.
+      if (envelope?.format === 'intrilex-experiment-run') {
+        const res=await importRunArtifact(text);
+        view.propagateStatus=res.outcome==='duplicate'?`Experiment run ${res.runId} already present — deduplicated.`:`Experiment run ${res.runId} imported${res.sameExperiment===false?' — belongs to a different experiment; retained under its own id':''}.`;
+        renderEvolutionLab(); return;
+      }
+      if (envelope?.format === 'intrilex-research-package') {
+        const report=await importResearchPackageText(text);
+        view.propagateStatus=`Research package imported — ${report.imported.length} run(s) admitted, ${report.duplicates.length} already present, ${report.failed.length} failed.`;
+        renderEvolutionLab(); return;
+      }
       loadRun(parseLabImport(text,LAB_IDENTITY)); await persist(); }
     catch(error) { view.error=`Import rejected: ${error.message}`; renderEvolutionLab(); }
+  });
+  // Experiment evidence ledger — per-run artifact export, bulk export,
+  // research package, and a jump into the Experiment panel's Manage Runs.
+  document.getElementById('evo-exp-ledger')?.addEventListener('click',async e => {
+    const one=e.target.closest('[data-exp-export-run]');
+    if (one) { try { const text=await exportRunArtifactText(one.dataset.expExportRun); const url=URL.createObjectURL(new Blob([text],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download=`${one.dataset.expExportRun}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000); } catch(error) { view.error=`Export failed: ${error.message}`; renderEvolutionLab(); } return; }
+    if (e.target.closest('[data-exp-open-runs]')) { openManageRuns(); return; }
+    if (e.target.closest('[data-exp-export-all]')) {
+      try { const results=await exportAllRunArtifacts(); let ok=0;
+        for (const r of results) { if (!r.ok) continue; ok++; const url=URL.createObjectURL(new Blob([r.text],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download=`${r.runId}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000); }
+        view.propagateStatus=`Exported ${ok}/${results.length} run artifact(s).${results.some(r=>!r.ok)?` Failed: ${results.filter(r=>!r.ok).map(r=>`${r.runId} (${r.code})`).join(', ')}`:''}`;
+      } catch(error) { view.error=`Export failed: ${error.message}`; }
+      renderEvolutionLab(); return;
+    }
+    if (e.target.closest('[data-exp-export-package]')) {
+      try { const { name, report }=await downloadResearchPackage(); view.propagateStatus=`Research package ${name} exported — ${report.completeness}${report.missingRunIds.length?` · missing: ${report.missingRunIds.join(', ')}`:''}`; }
+      catch(error) { view.error=`Package export failed: ${error.message}`; }
+      renderEvolutionLab(); return;
+    }
   });
   document.getElementById('evo-replay-list')?.addEventListener('click',async e => {
     const inspect=e.target.closest('[data-inspect]'), bookmark=e.target.closest('[data-bookmark]'), watch=e.target.closest('[data-watch-replay]'); if (inspect) inspectReplay(inspect.dataset.inspect);
     // Retained replays are certified envelopes ({initialState, commands}) —
     // the shared resolver normalizes them for frame-by-frame Watch playback
     // without requiring static-index membership.
-    if (watch) { const item=run()?.replays.find(r=>r.replayId===watch.dataset.watchReplay); if (item?.replay) { const { openReplay }=await import('../data-loader.js?v=037146099ebb'); await openReplay({ kind:'object', replay:item.replay, id:item.replayId, label:`Arena game ${item.ordinal+1}` }); } }
+    if (watch) { const item=run()?.replays.find(r=>r.replayId===watch.dataset.watchReplay); if (item?.replay) { const { openReplay }=await import('../data-loader.js?v=adf8892fce29'); await openReplay({ kind:'object', replay:item.replay, id:item.replayId, label:`Arena game ${item.ordinal+1}` }); } }
     if (bookmark && run() && !view.archive) { const id=bookmark.dataset.bookmark,i=run().bookmarks.indexOf(id); if (i < 0) run().bookmarks.push(id); else run().bookmarks.splice(i,1); bookmark.textContent=i < 0 ? '★ Bookmarked' : '☆ Bookmark'; bookmark.setAttribute('aria-pressed',String(i < 0)); persist(); }
   });
   document.getElementById('evo-history')?.addEventListener('click',async e => { const b=e.target.closest('[data-load-run]'); if (!b || active()) return; try { const saved=await store.loadForInspection(b.dataset.loadRun);if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run); } catch(error) { view.error=`Load rejected: ${error.message}`; renderEvolutionLab(); } });

@@ -305,6 +305,9 @@ details.authority-stamp{display:block;margin-top:8px;padding:0;border:0;backgrou
 .run-actions .secondary-button,.run-actions .ghost-button{padding:4px 10px;font-size:11px}
 .ghost-button.danger{color:#e58a8a;border-color:rgba(224,96,96,.35)}
 .runs-foot{margin:0;font-size:10px;color:var(--muted);line-height:1.5}
+.runs-portability{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0 4px;border-top:1px solid rgba(255,255,255,.06)}
+.runs-portability .ghost-button,.runs-portability label.ghost-button{padding:4px 10px;font-size:11px}
+.runs-portability #exp-portability-status{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
 
 /* ── Header: slightly tighter, quieter chrome ─────────────────── */
 .global-header{padding:14px 0 12px;gap:16px}

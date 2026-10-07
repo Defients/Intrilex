@@ -18,7 +18,9 @@ import {
   markRunRestored, markRunPinned, deleteRun, isolateRun, includeAllCompatible,
   previewRunSelection, allRunIds,
   getIncompleteRuns, resumeExperimentRun, finalizeExperimentRun, discardManifest,
+  verifyRunArtifacts, exportRunArtifactText, exportAllRunArtifacts, importRunArtifact,
 } from './experiment-controller.mjs';
+import { downloadResearchPackage, importResearchPackageText } from './research-package.mjs';
 import {
   EXCLUSION_REASONS, COMPATIBILITY, RUN_STATUS, RUN_LIFECYCLE, BUNDLED_RUN_ID,
 } from '../../../../packages/simulation-runtime/src/experiment-domain.mjs';
@@ -34,7 +36,7 @@ const REASON_LABELS = {
 };
 
 // Panel-local UI state (survives re-renders, not reloads — intentional)
-const panel = { open: false, filter: 'all', expanded: null, excluding: null, invalidating: null, confirmDelete: null, previewAll: false };
+const panel = { open: false, filter: 'all', expanded: null, excluding: null, invalidating: null, confirmDelete: null, previewAll: false, portabilityStatus: '' };
 
 const runLabel = run => run.runId === BUNDLED_RUN_ID ? 'CORPUS' : `#${String(run.ordinal).padStart(3, '0')}`;
 const matchupLabel = run => {
@@ -101,6 +103,7 @@ const statusBadges = (run, row) => {
   if (row?.persistence === 'session-record') out.push('<span class="run-badge run-session" title="Run record could not be saved to browser storage — retained for this session only, it will be lost on reload">Not saved</span>');
   else if (run.payloadKind === 'session') out.push('<span class="run-badge run-session" title="Evidence retained for this session only — storage limit">Session only</span>');
   if (run.corrupt) out.push(`<span class="run-badge run-failed" title="Record failed integrity validation (${esc(run.corruptCode ?? 'RUN_HASH_MISMATCH')}) — quarantined, cannot contribute">Integrity failed</span>`);
+  if (run.config?.strategicTrace === true) out.push('<span class="run-badge run-compatible" title="Deep decision tracing was enabled for this run — per-decision evidence is present in the payload">Deep trace</span>');
   if (run.lifecycle?.integrity?.state === 'quarantined') out.push(`<span class="run-badge run-failed" title="${esc(run.lifecycle.integrity.note || 'Evidence payload failed integrity verification')} — cannot contribute">Quarantined</span>`);
   if (run.lifecycle?.integrity?.state === 'payload-unavailable') out.push(`<span class="run-badge run-failed" title="${esc(run.lifecycle.integrity.note || 'Evidence payload no longer available')} — cannot contribute">No payload</span>`);
   return out.join('');
@@ -154,6 +157,7 @@ function detailBlock(row) {
     run.lifecycle?.state === RUN_LIFECYCLE.INVALIDATED ? `<button class="secondary-button" data-run-action="restore" data-run="${esc(run.runId)}">Restore (clear invalidation)</button>` : '',
     run.lifecycle?.state === RUN_LIFECYCLE.ARCHIVED ? `<button class="secondary-button" data-run-action="unarchive" data-run="${esc(run.runId)}">Unarchive</button>` : `<button class="ghost-button" data-run-action="archive" data-run="${esc(run.runId)}">Archive</button>`,
     `<button class="ghost-button" data-run-action="pin" data-run="${esc(run.runId)}">${run.lifecycle?.pinned ? 'Unpin' : 'Pin'}</button>`,
+    run.runId !== BUNDLED_RUN_ID && run.status === RUN_STATUS.COMPLETED ? `<button class="ghost-button" data-run-action="export" data-run="${esc(run.runId)}" title="Download this run's durable evidence as a self-verifying artifact">Export artifact</button>` : '',
     run.runId !== BUNDLED_RUN_ID ? `<button class="ghost-button danger" data-run-action="delete" data-run="${esc(run.runId)}">${panel.confirmDelete === run.runId ? 'Confirm delete — evidence is removed permanently' : 'Delete run'}</button>` : '',
   ].filter(Boolean).join(' ');
   const exForm = panel.excluding === run.runId ? exclusionForm(run, 'exclude') : '';
@@ -229,6 +233,13 @@ export function toggleRunsPanel() {
   renderRunsPanel();
 }
 
+/** Open the Manage Runs surface from an outside caller (e.g. the Evolution
+ * "Runs & artifacts" ledger). Caller is responsible for opening the dialog. */
+export function openRunsPanel() {
+  if (!panel.open) { panel.open = true; renderEvidenceStrip(); }
+  renderRunsPanel();
+}
+
 function _visibleRows(rows) {
   const f = panel.filter;
   return rows.filter(row => {
@@ -269,6 +280,13 @@ export function renderRunsPanel() {
     ${preview ? `<div class="runs-preview"><b>Preview — all ${preview.runCount} completed runs:</b> ${fmt(preview.games)} games · seat 1 ${pct(preview.seat1WinRate)}${basis.excludedRunCount ? ` (${fmt(preview.games - basis.includedGames)} more games than current selection)` : ''}</div>` : ''}
     ${incomplete.length ? `<div class="runs-incomplete"><b>In progress &amp; interrupted</b><small>committed counts are durable writes — resume continues from the checkpoint, seal keeps partial evidence honestly labeled</small>${incomplete.map(incompleteRowHtml).join('')}</div>` : ''}
     <div class="runs-list" role="list">${visible.length ? visible.map(rowHtml).join('') : '<div class="empty-state"><strong>No runs match this filter</strong>Run a batch or change the filter.</div>'}</div>
+    <div class="runs-portability" id="exp-portability">
+      <button class="ghost-button" id="exp-verify-artifacts" type="button" title="Resolve every run's durable artifact — reports missing payloads and lost chunks, never guesses">Verify artifacts</button>
+      <button class="ghost-button" id="exp-export-artifacts" type="button" ${basis.totalRuns ? '' : 'disabled'}>Export all run artifacts</button>
+      <button class="ghost-button" id="exp-export-package" type="button" ${basis.totalRuns ? '' : 'disabled'}>Export research package</button>
+      <label class="ghost-button" id="exp-import-label">Import artifact / package<input id="exp-import-artifact" type="file" accept="application/json,.json" hidden></label>
+      <span id="exp-portability-status" role="status">${esc(panel.portabilityStatus ?? '')}</span>
+    </div>
     <p class="runs-foot">Runs are immutable evidence. Exclusion removes a run from analysis — it never deletes it. ${(() => {
       if (!basis.persisted) return '<b>Storage unavailable: runs persist for this session only.</b>';
       const sessionRuns = (basis.memoryOnlyRunCount ?? 0) + (basis.sessionPayloadRunCount ?? 0);
@@ -284,6 +302,65 @@ export function renderRunsPanel() {
   host.querySelectorAll('[data-manifest-action]').forEach(el => el.addEventListener('click', _onManifestAction));
   host.querySelectorAll('.run-include-toggle').forEach(el => el.addEventListener('change', _onIncludeToggle));
   host.querySelectorAll('form[data-run-form]').forEach(f => f.addEventListener('submit', _onRunFormSubmit));
+  host.querySelector('#exp-verify-artifacts')?.addEventListener('click', _onVerifyArtifacts);
+  host.querySelector('#exp-export-artifacts')?.addEventListener('click', _onExportAllArtifacts);
+  host.querySelector('#exp-export-package')?.addEventListener('click', _onExportPackage);
+  host.querySelector('#exp-import-artifact')?.addEventListener('change', _onImportArtifactFile);
+}
+
+function _portabilityStatus(text) { panel.portabilityStatus = text; const el = document.querySelector('#exp-portability-status'); if (el) el.textContent = text; }
+const _downloadJson = (name, text) => { const url = URL.createObjectURL(new Blob([text], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); };
+
+async function _onVerifyArtifacts() {
+  _portabilityStatus('Resolving artifacts…');
+  try {
+    const rows = await verifyRunArtifacts();
+    const count = key => rows.filter(r => r.artifact === key).length;
+    const durable = count('durable'), session = count('session');
+    const missing = rows.filter(r => !['durable', 'session', 'none'].includes(r.artifact));
+    _portabilityStatus(`${durable} durable · ${session} session-only${missing.length ? ` · ${missing.length} unresolvable: ${missing.map(r => `#${String(r.ordinal).padStart(3, '0')} ${r.artifact}`).join(', ')}` : ''} · ${rows.length} total`);
+  } catch (error) { _portabilityStatus(`Verification failed: ${error?.message ?? error}`); }
+}
+
+async function _onExportAllArtifacts() {
+  _portabilityStatus('Exporting run artifacts…');
+  try {
+    const results = await exportAllRunArtifacts();
+    let ok = 0;
+    for (const r of results) { if (!r.ok) continue; ok++; _downloadJson(`${r.runId}.json`, r.text); }
+    _portabilityStatus(`Exported ${ok}/${results.length} run artifact(s)${results.some(r => !r.ok) ? ` — failed: ${results.filter(r => !r.ok).map(r => `${r.runId} (${r.code})`).join(', ')}` : ''}`);
+  } catch (error) { _portabilityStatus(`Export failed: ${error?.message ?? error}`); }
+}
+
+async function _onExportPackage() {
+  _portabilityStatus('Assembling research package…');
+  try {
+    const { name, report } = await downloadResearchPackage({ onProgress: p => _portabilityStatus(`Assembling research package… run ${p.done}`) });
+    _portabilityStatus(`${name} — ${report.completeness} · ${report.artifactsIncluded}/${report.artifactsExpected} run artifacts${report.missingRunIds.length ? ` · missing: ${report.missingRunIds.join(', ')}` : ''}`);
+  } catch (error) { _portabilityStatus(`Package export failed: ${error?.message ?? error}`); }
+}
+
+async function _onImportArtifactFile(e) {
+  const file = e.target.files?.[0];
+  e.target.value = '';
+  if (!file) return;
+  _portabilityStatus(`Importing ${file.name}…`);
+  try {
+    const text = await file.text();
+    let format = null;
+    try { format = JSON.parse(text)?.format; } catch { /* parser reports malformed JSON */ }
+    if (format === 'intrilex-research-package') {
+      const report = await importResearchPackageText(text);
+      _portabilityStatus(`Package: ${report.imported.length} admitted · ${report.duplicates.length} duplicates · ${report.failed.length} failed`);
+    } else if (format === 'intrilex-experiment-run') {
+      const res = await importRunArtifact(text);
+      _portabilityStatus(res.outcome === 'duplicate' ? `${res.runId} already present — deduplicated` : `${res.runId} imported${res.included ? ' and included in analysis' : ''}`);
+    } else {
+      _portabilityStatus('Not an experiment artifact — use Evolution or Strategy import for other formats.');
+      return;
+    }
+    renderRunsPanel(); renderEvidenceStrip();
+  } catch (error) { _portabilityStatus(`Import rejected: ${error?.message ?? error}`); }
 }
 
 async function _onIncludeToggle(e) {
@@ -344,6 +421,14 @@ async function _onRunAction(e) {
       if (first?.requiresForce) return setRunIncluded(runId, { force: true });
       return first;
     })(), null);
+    return;
+  }
+  if (action === 'export') {
+    try {
+      _portabilityStatus(`Exporting ${runId}…`);
+      _downloadJson(`${runId}.json`, await exportRunArtifactText(runId));
+      _portabilityStatus(`${runId} exported as a self-verifying run artifact.`);
+    } catch (error) { _portabilityStatus(`Export failed — ${error?.message ?? error}`); }
     return;
   }
   if (action === 'isolate') { await _guarded(isolateRun(runId), 'Analyzing this run only'); return; }

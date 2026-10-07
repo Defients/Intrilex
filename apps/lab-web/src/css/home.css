@@ -1,37 +1,101 @@
 /* ═══════════════════════════════════════════════════════════════
    home.css — Intrilex homepage (front door)
    Structure: HEADER → CINEMATIC HERO → LIVE PULSE
-              → PRESEASON | LEADERS | NEWS | EXPLORE → FOOTER
-   Reuses landing-* chrome (bg layers, topbar, account menu,
-   continue slot, footer). All layout here is new.
+              → PRESEASON | NEWS | EXPLORE → FOOTER
+
+   V2 pass: the page is a flex column sized to the dynamic viewport.
+   Desktop composes to fit one viewport at common widescreen sizes;
+   smaller screens scroll naturally. Boxes are replaced with
+   spacing, hairlines and atmosphere so the page reads as a game
+   front door, not a dashboard.
    ═══════════════════════════════════════════════════════════════ */
 
-/* The homepage scrolls — unlock the fixed viewport the old
-   launcher used. Background layers stay fixed to the viewport. */
+/* ── PAGE SHELL ──────────────────────────────────────────────── */
+/* Scrollable by geometry, not by lock: min-height fills the
+   viewport, flex distributes it across header / main / footer. */
 .home-app{
   position:relative; inset:auto;
   height:auto; min-height:100vh; min-height:100dvh;
   overflow:visible;
+  display:flex; flex-direction:column;
+  /* ── Cosmic Tactical: page-scoped semantic retune. Descendants
+     (including shared landing chrome) inherit; other .landing-app
+     pages are untouched. ── */
+  --cyan:var(--color-system);
+  --cyan-2:#2fa8bd;
+  --violet:var(--color-arcane);
+  --amber:var(--color-prestige);
+  --text-bright:var(--color-text-primary);
+  --muted:var(--color-text-muted);
+  --focus:var(--color-system);
+  background:
+    radial-gradient(ellipse 64% 42% at 70% 4%,rgba(66,213,232,.055),transparent 55%),
+    radial-gradient(ellipse 52% 38% at 18% 98%,rgba(134,104,245,.05),transparent 60%),
+    linear-gradient(168deg,var(--color-void) 0%,#080d17 55%,#060a11 100%);
+}
+
+/* ── Cosmic Tactical background — darker, more neutral void so cyan,
+   violet and gold can coexist without the whole canvas reading blue.
+   Shared landing layers are re-scoped here; rules/legal pages keep
+   the legacy treatment. ── */
+.home-app .landing-video-bg{opacity:.14; filter:saturate(.9) contrast(1.05)}
+.home-app .landing-video-overlay{
+  background:linear-gradient(180deg,
+    rgba(7,11,19,.7) 0%,
+    rgba(7,11,19,.42) 35%,
+    rgba(7,11,19,.58) 70%,
+    rgba(7,11,19,.78) 100%);
+}
+.home-app .landing-aurora{
+  opacity:.55;
+  background:conic-gradient(from 200deg at 50% 50%,
+    rgba(66,213,232,.065),
+    rgba(134,104,245,.055),
+    rgba(66,213,232,.05),
+    rgba(66,213,232,.065));
+}
+.home-app .landing-grid-bg{
+  background-image:linear-gradient(rgba(66,213,232,.032) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(66,213,232,.032) 1px,transparent 1px);
+}
+.home-app .landing-orbital{
+  background:radial-gradient(ellipse at 72% 42%,rgba(66,213,232,.05),transparent 48%),
+             radial-gradient(ellipse at 26% 76%,rgba(134,104,245,.045),transparent 42%),
+             radial-gradient(ellipse at 66% 34%,rgba(216,169,78,.032),transparent 42%);
 }
 
 .home-app .landing-topbar,
-.home-app .home-nav-drawer,
 .home-app .home-main,
 .home-app .landing-footer{
   position:relative; z-index:2;
 }
+/* Header overlays main so nav drawer / account menu paint above the hero. */
+.home-app .landing-topbar{z-index:30}
 
-/* ── HEADER ──────────────────────────────────────────────────── */
+/* Chrome edges align with the main content column. */
+:root{--home-chrome-pad:max(28px, calc((100vw - min(92vw, 1440px)) / 2))}
+
+/* ── HEADER (~68px) ──────────────────────────────────────────── */
 .home-topbar{
   display:flex; align-items:center; gap:18px;
-  padding:10px 28px;
-  border-bottom:1px solid var(--border-soft);
-  background:rgba(6,10,18,.62);
+  padding:6px var(--home-chrome-pad);
+  border-bottom:1px solid var(--color-hairline);
+  background:rgba(7,11,19,.64);
   -webkit-backdrop-filter:blur(14px);
   backdrop-filter:blur(14px);
   animation:none;
 }
-.home-topbar .landing-brand{flex:none}
+/* Brand reads horizontally: wordmark + hairline + tagline. */
+.home-topbar .landing-brand{
+  flex:none; flex-direction:row; align-items:center; gap:12px;
+}
+.home-topbar .landing-brand-logo{width:clamp(138px,10.5vw,166px)}
+.home-topbar .landing-brand-sub{
+  padding-left:12px;
+  border-left:1px solid var(--color-hairline);
+  font-size:8.5px; letter-spacing:.22em; line-height:1.5;
+  max-width:150px; text-align:left;
+}
 
 .home-nav{flex:1; display:flex; justify-content:center; min-width:0}
 .home-nav-list{
@@ -48,26 +112,65 @@
 }
 .home-nav-link:hover{
   color:var(--text-bright);
-  background:rgba(90,215,232,.07);
-  box-shadow:inset 0 -1px 0 rgba(90,215,232,.45);
+  background:var(--color-system-faint);
+  box-shadow:inset 0 -1px 0 var(--color-system-line);
 }
 .home-nav-link:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
 
 .home-utility{flex:none; display:flex; align-items:center; gap:10px; margin-left:auto}
 
+/* Shared landing chrome on the homepage — retuned to Tech Cyan
+   (system/interaction). Scoped so other .landing-app pages keep the
+   legacy hue. */
+.home-app .landing-brand-logo{
+  filter:drop-shadow(0 0 24px rgba(66,213,232,.22)) drop-shadow(0 2px 8px rgba(0,0,0,.3));
+}
+.home-app .landing-brand:hover .landing-brand-logo{
+  filter:drop-shadow(0 0 32px rgba(66,213,232,.32)) drop-shadow(0 2px 8px rgba(0,0,0,.3));
+}
+.home-app .landing-continue-btn{
+  border-color:var(--color-system-line);
+  background:linear-gradient(135deg,rgba(18,40,51,.9),rgba(11,22,32,.85));
+  color:var(--color-system);
+  box-shadow:0 1px 3px rgba(0,0,0,.25),inset 0 1px 0 rgba(66,213,232,.1);
+}
+.home-app .landing-continue-btn:hover{
+  border-color:rgba(66,213,232,.65);
+  background:linear-gradient(135deg,rgba(21,48,61,.95),rgba(14,30,42,.9));
+  box-shadow:0 2px 14px rgba(66,213,232,.2),inset 0 1px 0 rgba(66,213,232,.18);
+}
+.home-app .landing-continue-icon{color:var(--color-system)}
+.home-app .lab-button{
+  border-color:rgba(66,213,232,.18);
+  box-shadow:0 1px 3px rgba(0,0,0,.25),inset 0 1px 0 rgba(66,213,232,.06);
+}
+.home-app .lab-button:hover{
+  border-color:rgba(66,213,232,.42);
+  box-shadow:0 2px 14px rgba(66,213,232,.18),inset 0 1px 0 rgba(66,213,232,.14);
+}
+.home-app .account-avatar{
+  border-color:rgba(66,213,232,.22);
+  background:linear-gradient(135deg,rgba(66,213,232,.16),rgba(134,104,245,.12));
+}
+.home-app .account-menu.open .account-trigger{
+  border-color:rgba(66,213,232,.4);
+  box-shadow:0 2px 12px rgba(66,213,232,.12);
+}
+
 .home-nav-toggle{
   display:none;
   width:var(--touch-target); height:var(--touch-target);
   align-items:center; justify-content:center;
-  background:var(--surface); border:1px solid var(--border);
+  background:var(--color-surface-soft); border:1px solid var(--color-hairline);
   border-radius:10px; color:var(--text);
 }
 .home-nav-toggle svg{width:20px; height:20px}
 
+/* Drawer lives inside the header so top:100% anchors beneath it. */
 .home-nav-drawer{
-  position:absolute; top:calc(100% + 0px); left:0; right:0; z-index:40;
-  background:rgba(8,13,24,.97);
-  border-bottom:1px solid var(--border-soft);
+  position:absolute; top:calc(100% + 1px); left:0; right:0; z-index:40;
+  background:rgba(9,14,23,.97);
+  border-bottom:1px solid var(--color-hairline);
   -webkit-backdrop-filter:blur(18px);
   backdrop-filter:blur(18px);
   box-shadow:var(--shadow-md);
@@ -78,25 +181,27 @@
   padding:10px 14px; font-size:13px;
   border:1px solid transparent;
 }
-.home-nav-drawer .home-nav-link:hover{border-color:var(--border-soft)}
+.home-nav-drawer .home-nav-link:hover{border-color:var(--color-hairline)}
 
 /* ── MAIN ────────────────────────────────────────────────────── */
 .home-main{
-  width:min(1480px, 100%);
+  flex:1 0 auto; min-height:0;
+  display:flex; flex-direction:column;
+  width:min(92vw, 1440px);
   margin:0 auto;
-  padding:0 28px 48px;
+  padding:0 0 26px;
 }
 
-/* ── HERO ────────────────────────────────────────────────────── */
+/* ── HERO — the dominant band ────────────────────────────────── */
 .home-hero{
+  flex:1 1 auto; min-height:0;
   display:grid;
-  grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+  grid-template-columns:minmax(0,1fr) minmax(0,1.04fr);
   align-items:center;
-  gap:24px;
-  min-height:clamp(520px, 78vh, 760px);
-  padding:24px 0 20px;
+  gap:12px;
+  padding:10px 0 6px;
 }
-.home-hero-copy{max-width:640px; min-width:0}
+.home-hero-copy{max-width:660px; min-width:0}
 
 .home-eyebrow{
   margin:0 0 14px;
@@ -108,15 +213,17 @@
   font-size:clamp(46px, 5.6vw, 84px);
   font-weight:800; line-height:.98; letter-spacing:-.02em;
   color:var(--text-bright);
-  text-shadow:0 2px 30px rgba(90,215,232,.12);
+  text-shadow:0 2px 30px rgba(66,213,232,.1);
 }
 .home-title-accent{
-  background:linear-gradient(92deg,var(--cyan) 8%,var(--violet) 92%);
+  /* cyan → arcane violet, with a restrained warm endpoint so the
+     final letters of LUCK catch a hint of the card-fan's gold light */
+  background:linear-gradient(93deg,var(--color-system) 6%,var(--color-arcane) 78%,var(--color-prestige-hot) 148%);
   -webkit-background-clip:text; background-clip:text;
   color:transparent;
 }
 .home-tagline{
-  margin:0 0 30px;
+  margin:0 0 28px;
   font-size:clamp(15px, 1.4vw, 18px);
   line-height:1.55; color:var(--muted);
   max-width:46ch;
@@ -126,11 +233,11 @@
 .home-mode-btn{
   flex:1 1 240px; max-width:340px;
   display:flex; align-items:center; gap:12px;
-  padding:16px 18px;
+  padding:15px 18px;
   text-decoration:none;
   border-radius:14px;
-  border:1px solid var(--border);
-  background:linear-gradient(160deg,rgba(18,28,44,.85),rgba(10,16,28,.7));
+  border:1px solid var(--color-hairline);
+  background:linear-gradient(160deg,rgba(17,27,41,.84),rgba(10,15,25,.72));
   -webkit-backdrop-filter:blur(10px);
   backdrop-filter:blur(10px);
   box-shadow:var(--shadow-sm), var(--shadow-inset);
@@ -139,87 +246,130 @@
 .home-mode-btn:hover{transform:translateY(-2px)}
 .home-mode-btn:active{transform:translateY(0)}
 .home-mode-btn:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
-.home-mode-btn.solo{border-color:rgba(90,215,232,.5); box-shadow:0 6px 24px rgba(90,215,232,.14), var(--shadow-inset)}
-.home-mode-btn.solo:hover{border-color:var(--cyan); box-shadow:0 10px 34px rgba(90,215,232,.22), var(--shadow-inset)}
-.home-mode-btn.direct{border-color:rgba(167,139,250,.42)}
-.home-mode-btn.direct:hover{border-color:var(--violet); box-shadow:0 10px 34px rgba(167,139,250,.18), var(--shadow-inset)}
+/* Primary play action → system cyan. */
+.home-mode-btn.solo{border-color:var(--color-system-line); box-shadow:0 6px 24px rgba(66,213,232,.14), var(--shadow-inset)}
+.home-mode-btn.solo:hover{border-color:var(--color-system); box-shadow:0 10px 34px rgba(66,213,232,.22), var(--shadow-inset)}
+/* Secondary play action → arcane violet. */
+.home-mode-btn.direct{border-color:var(--color-arcane-line); box-shadow:0 6px 20px rgba(134,104,245,.1), var(--shadow-inset)}
+.home-mode-btn.direct:hover{border-color:var(--color-arcane); box-shadow:0 10px 34px rgba(134,104,245,.18), var(--shadow-inset)}
 .home-mode-kicker{font-size:9px; flex:none}
-.home-mode-btn.solo .home-mode-kicker{color:var(--cyan); text-shadow:0 0 8px rgba(90,215,232,.8)}
-.home-mode-btn.direct .home-mode-kicker{color:var(--violet); text-shadow:0 0 8px rgba(167,139,250,.8)}
+.home-mode-btn.solo .home-mode-kicker{color:var(--color-system); text-shadow:0 0 8px rgba(66,213,232,.8)}
+.home-mode-btn.direct .home-mode-kicker{color:var(--color-arcane); text-shadow:0 0 8px rgba(134,104,245,.8)}
 .home-mode-text{display:grid; gap:2px; min-width:0}
 .home-mode-text strong{font-size:14px; letter-spacing:.08em; color:var(--text-bright)}
 .home-mode-text small{font-size:11.5px; color:var(--muted)}
 .home-mode-arrow{margin-left:auto; color:var(--faint); font-size:16px; transition:transform var(--normal) var(--ease)}
 .home-mode-btn:hover .home-mode-arrow{transform:translateX(4px); color:var(--text)}
 
-.home-hero-footnote{margin:22px 0 0; font-size:12px; color:var(--faint)}
+.home-hero-footnote{margin:20px 0 0; font-size:12px; color:var(--faint)}
 .home-hero-footnote a{color:var(--cyan); text-decoration:none}
 .home-hero-footnote a:hover{text-decoration:underline}
 
-/* Hero visual — card fan over a luminous halo + orbital ring */
+/* ── HERO VISUAL — the card fan is the page anchor ─────────────
+   Fan geometry: cards rotate around a pivot ~45% below their own
+   bottom edge (transform-origin 50% 145%) and translate up only
+   55%, so the whole arc stays inside its container even as the fan
+   scales up. The fan therefore fills the hero without colliding
+   with the header. The fan is the warm nucleus of the page: a
+   valuable object generating antique-gold light inside a cold
+   technological environment. Interface stays cool; the cards glow. */
 .home-hero-visual{
   position:relative;
-  min-height:420px;
+  align-self:stretch; min-height:0;
   display:grid; place-items:center;
+  overflow-x:clip;
 }
 .home-hero-halo{
-  position:absolute; inset:6%;
-  background:radial-gradient(ellipse at 50% 52%,rgba(90,215,232,.16),rgba(90,215,232,.05) 42%,transparent 68%);
-  filter:blur(6px);
+  position:absolute; inset:3%;
+  background:
+    radial-gradient(ellipse 42% 30% at 50% 76%,rgba(240,200,106,.17),transparent 62%),
+    radial-gradient(ellipse at 50% 54%,rgba(216,169,78,.13),rgba(216,169,78,.045) 46%,transparent 72%),
+    radial-gradient(ellipse at 62% 30%,rgba(134,104,245,.08),transparent 55%);
+  filter:blur(8px);
 }
+/* Faint system geometry framing the warm field — cyan ring inside,
+   a whisper of arcane violet outside. */
 .home-hero-ring{
   position:absolute; inset:8%;
-  border:1px solid rgba(90,215,232,.16);
+  border:1px solid rgba(66,213,232,.15);
   border-radius:50%;
-  box-shadow:inset 0 0 60px rgba(90,215,232,.05), 0 0 42px rgba(90,215,232,.07);
+  box-shadow:inset 0 0 60px rgba(66,213,232,.045), 0 0 42px rgba(66,213,232,.055);
 }
+.home-hero-ring::after{
+  content:""; position:absolute; inset:-8%;
+  border:1px solid rgba(134,104,245,.09);
+  border-radius:50%;
+}
+/* Faint suit symbolism — arcane identity, not ornament spam. */
+.home-hero-suits{position:absolute; inset:0; pointer-events:none}
+.home-hero-suits .suit{
+  position:absolute;
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:clamp(64px,5.5vw,104px);
+  line-height:1;
+}
+.home-hero-suits .s-spade{top:4%; left:9%; color:var(--color-system); opacity:.05}
+.home-hero-suits .s-heart{top:9%; right:12%; color:var(--magenta); opacity:.045; font-size:clamp(54px,4.5vw,86px)}
+.home-hero-suits .s-diamond{bottom:10%; right:16%; color:var(--color-prestige); opacity:.06}
+.home-hero-suits .s-club{bottom:6%; left:14%; color:var(--color-arcane); opacity:.05; font-size:clamp(58px,5vw,92px)}
 .home-hero-crest{
   position:absolute; width:min(46%,320px);
-  opacity:.16; filter:saturate(1.1);
+  opacity:.15;
+  filter:saturate(1.05) drop-shadow(0 0 42px rgba(216,169,78,.16));
   transform:translateY(-4%);
 }
-.home-card-fan{position:relative; width:min(90%,460px); aspect-ratio:1.5/1; z-index:1}
+.home-card-fan{position:relative; width:min(104%,760px); aspect-ratio:1.5/1; z-index:1}
+/* Warm light pooling beneath the fan. */
+.home-card-fan::before{
+  content:""; position:absolute; left:-6%; right:-6%; bottom:-8%; height:44%;
+  background:radial-gradient(ellipse at 50% 58%,rgba(240,200,106,.13),transparent 66%);
+  filter:blur(7px);
+  z-index:-1;
+}
 .home-fan-card{
   position:absolute; left:50%; top:50%;
   width:31%;
   border-radius:6% / 4.4%;
-  box-shadow:0 14px 38px rgba(0,0,0,.5);
-  transform-origin:50% 118%;
+  box-shadow:0 14px 38px rgba(0,0,0,.55),
+             0 0 0 1px rgba(240,200,106,.1),
+             0 0 26px rgba(216,169,78,.12);
+  transform-origin:50% 145%;
   transition:transform var(--slow) var(--ease);
 }
-.home-fan-card.c1{transform:translate(-50%,-118%) rotate(-24deg)}
-.home-fan-card.c2{transform:translate(-50%,-118%) rotate(-12deg)}
-.home-fan-card.c3{transform:translate(-50%,-118%) rotate(0deg); z-index:2; width:34%}
-.home-fan-card.c4{transform:translate(-50%,-118%) rotate(12deg)}
-.home-fan-card.c5{transform:translate(-50%,-118%) rotate(24deg)}
-.home-hero-visual:hover .home-fan-card.c1{transform:translate(-50%,-118%) rotate(-27deg)}
-.home-hero-visual:hover .home-fan-card.c2{transform:translate(-50%,-118%) rotate(-14deg)}
-.home-hero-visual:hover .home-fan-card.c3{transform:translate(-50%,-121%) rotate(0deg)}
-.home-hero-visual:hover .home-fan-card.c4{transform:translate(-50%,-118%) rotate(14deg)}
-.home-hero-visual:hover .home-fan-card.c5{transform:translate(-50%,-118%) rotate(27deg)}
+.home-fan-card.c3{
+  box-shadow:0 14px 40px rgba(0,0,0,.55),
+             0 0 0 1px rgba(240,200,106,.16),
+             0 0 36px rgba(240,200,106,.18);
+}
+.home-fan-card.c1{transform:translate(-50%,-55%) rotate(-26deg)}
+.home-fan-card.c2{transform:translate(-50%,-55%) rotate(-13deg)}
+.home-fan-card.c3{transform:translate(-50%,-55%) rotate(0deg); z-index:2; width:34%}
+.home-fan-card.c4{transform:translate(-50%,-55%) rotate(13deg)}
+.home-fan-card.c5{transform:translate(-50%,-55%) rotate(26deg)}
+.home-hero-visual:hover .home-fan-card.c1{transform:translate(-50%,-55%) rotate(-30deg)}
+.home-hero-visual:hover .home-fan-card.c2{transform:translate(-50%,-55%) rotate(-15deg)}
+.home-hero-visual:hover .home-fan-card.c3{transform:translate(-50%,-58%) rotate(0deg)}
+.home-hero-visual:hover .home-fan-card.c4{transform:translate(-50%,-55%) rotate(15deg)}
+.home-hero-visual:hover .home-fan-card.c5{transform:translate(-50%,-55%) rotate(30deg)}
 
-/* ── LIVE PULSE ──────────────────────────────────────────────── */
+/* ── LIVE PULSE — hairline strip, not a statistics panel ─────── */
+/* Renders only when real metrics exist (home.js toggles [hidden]). */
 .home-pulse{
-  display:flex; align-items:stretch; gap:0;
-  margin:0 0 22px;
-  border:1px solid var(--border-soft);
-  border-radius:14px;
-  background:linear-gradient(180deg,rgba(13,21,36,.82),rgba(9,15,26,.82));
-  -webkit-backdrop-filter:blur(12px);
-  backdrop-filter:blur(12px);
-  box-shadow:var(--shadow-sm), var(--shadow-inset);
-  overflow:hidden;
+  display:flex; align-items:center; gap:0;
+  margin:0;
+  padding:11px 0;
+  border-top:1px solid var(--color-hairline);
+  border-bottom:1px solid var(--color-hairline);
 }
 .home-pulse-head{
-  flex:none; display:flex; align-items:center; gap:9px;
-  padding:14px 18px;
-  border-right:1px solid var(--border-soft);
+  flex:none; display:flex; align-items:center; gap:8px;
+  padding-right:16px;
 }
-.home-pulse-title{font-size:11px; font-weight:700; letter-spacing:.22em; color:var(--text-bright)}
+.home-pulse-title{font-size:10.5px; font-weight:700; letter-spacing:.26em; color:var(--text-bright)}
 .home-pulse-dot{
   width:8px; height:8px; border-radius:50%; flex:none;
-  background:var(--green);
-  box-shadow:0 0 0 3px rgba(104,211,145,.14), 0 0 10px rgba(104,211,145,.6);
+  background:var(--color-system);
+  box-shadow:0 0 0 3px rgba(66,213,232,.14), 0 0 10px rgba(66,213,232,.55);
   animation:home-pulse-dot 2.4s ease-in-out infinite;
 }
 .home-pulse-dot.off{
@@ -228,66 +378,64 @@
   animation:none;
 }
 @keyframes home-pulse-dot{0%,100%{opacity:1}50%{opacity:.45}}
-.home-pulse-updated{font-size:10.5px; color:var(--faint); letter-spacing:.04em; white-space:nowrap}
+.home-pulse-updated{font-size:10px; color:var(--faint); letter-spacing:.04em; white-space:nowrap}
 
 .home-pulse-metrics{
-  flex:1; display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
+  flex:1; display:flex; flex-wrap:wrap; align-items:center;
   min-width:0;
 }
 .home-metric{
-  display:grid; gap:2px; align-content:center;
-  padding:12px 18px;
+  display:flex; align-items:baseline; gap:8px;
+  padding:2px 18px;
   min-width:0;
-  border-right:1px solid var(--border-soft);
+  border-left:1px solid var(--color-hairline);
   text-decoration:none; color:inherit;
+  white-space:nowrap;
 }
-.home-metric:last-child{border-right:0}
 .home-metric.linked{transition:background var(--fast)}
-.home-metric.linked:hover{background:rgba(90,215,232,.06)}
+.home-metric.linked:hover{background:var(--color-system-faint)}
 .home-metric-label{
-  font-size:9.5px; font-weight:700; letter-spacing:.16em;
-  color:var(--faint); white-space:nowrap;
+  font-size:9.5px; font-weight:700; letter-spacing:.14em;
+  color:var(--faint);
 }
 .home-metric-value{
-  font-size:clamp(19px,1.6vw,24px); font-weight:750; letter-spacing:-.02em;
+  font-size:17px; font-weight:750; letter-spacing:-.01em;
   color:var(--text-bright); line-height:1.1;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-.home-metric-value.dim{color:var(--faint)}
 .home-metric-sub{
-  font-size:11px; color:var(--muted);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  font-size:10.5px; color:var(--muted);
+  max-width:140px; overflow:hidden; text-overflow:ellipsis;
 }
-.home-metric[data-metric="topRating"] .home-metric-value{color:var(--amber)}
-.home-metric.skeleton .home-metric-value{color:var(--faint)}
+/* TOP RATING is the strip's prestige moment — strategic gold. */
+.home-metric[data-metric="topRating"] .home-metric-value{color:var(--color-prestige-hot)}
+.home-metric[data-metric="topRating"].linked:hover{background:var(--color-prestige-faint)}
+.home-metric-shimmer{
+  display:inline-block; width:36px; height:13px;
+  border-radius:4px;
+  background:linear-gradient(90deg,var(--skeleton-base),var(--skeleton-shine),var(--skeleton-base));
+  animation:home-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes home-shimmer{0%,100%{opacity:.5}50%{opacity:1}}
 
-.home-pulse.degraded .home-pulse-metrics{opacity:.75}
-
-/* ── LOWER GRID — four ecosystem panels ─────────────────────── */
+/* ── LOWER GRID — three unboxed modules, hairline-separated ──── */
 .home-grid{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:16px;
-  align-items:stretch;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0;
+  border-top:1px solid var(--color-hairline);
 }
 .home-panel{
   position:relative;
   display:flex; flex-direction:column;
-  min-width:0; padding:20px;
-  border:1px solid var(--border-soft);
-  border-radius:var(--radius-lg);
-  background:linear-gradient(170deg,rgba(15,24,40,.78),rgba(9,15,26,.72));
-  -webkit-backdrop-filter:blur(10px);
-  backdrop-filter:blur(10px);
-  box-shadow:var(--shadow-sm), var(--shadow-inset);
-  transition:border-color var(--fast), box-shadow var(--normal);
+  min-width:0; padding:18px 24px 4px;
 }
-.home-panel:hover{border-color:var(--border-strong); box-shadow:var(--shadow-md), var(--shadow-inset)}
+.home-panel + .home-panel{border-left:1px solid var(--color-hairline)}
+.home-panel:first-child{padding-left:0}
+.home-panel:last-child{padding-right:0}
 
 .home-panel-head{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
-  margin-bottom:14px;
+  margin-bottom:10px;
 }
 .home-panel-eyebrow{
   font-size:10.5px; font-weight:700; letter-spacing:.2em;
@@ -300,11 +448,28 @@
 }
 .home-panel-link:hover{color:var(--cyan)}
 
-/* PRESEASON */
+/* Unboxed text-link button (ranking system, etc.) */
+.home-text-link{
+  padding:0; border:0; background:none;
+  font:inherit; font-size:11px; font-weight:600; letter-spacing:.06em;
+  color:var(--muted); cursor:pointer;
+  transition:color var(--fast);
+}
+.home-text-link:hover{color:var(--cyan)}
+.home-text-link:focus-visible{outline:3px solid var(--focus); outline-offset:2px; border-radius:4px}
+
+/* PRESEASON — mostly cool/neutral; a restrained warm aura behind the
+   sigil marks season prestige without turning the panel gold. */
 .home-preseason{overflow:hidden}
+.home-preseason::before{
+  content:""; position:absolute; top:-60px; right:-50px;
+  width:230px; height:230px;
+  background:radial-gradient(circle,rgba(216,169,78,.09),transparent 64%);
+  pointer-events:none;
+}
 .home-preseason-sigil{
-  position:absolute; right:-34px; top:-30px;
-  width:150px; opacity:.1;
+  position:absolute; right:-30px; top:-26px;
+  width:132px; opacity:.12;
   transform:rotate(10deg);
   pointer-events:none;
 }
@@ -312,46 +477,103 @@
   display:inline-flex; align-items:center; gap:6px;
   padding:3px 9px;
   font-size:9px; font-weight:700; letter-spacing:.18em;
-  color:var(--green);
-  border:1px solid rgba(104,211,145,.4); border-radius:999px;
-  background:rgba(104,211,145,.08);
+  color:var(--color-system);
+  border:1px solid rgba(66,213,232,.4); border-radius:999px;
+  background:rgba(66,213,232,.08);
 }
-.home-live-badge-dot{width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 8px rgba(104,211,145,.8)}
+.home-live-badge-dot{width:6px; height:6px; border-radius:50%; background:var(--color-system); box-shadow:0 0 8px rgba(66,213,232,.8)}
 .home-preseason-title{
-  margin:0 0 10px;
-  font-size:clamp(24px,2vw,30px); font-weight:800; line-height:1.04; letter-spacing:-.01em;
+  margin:0 0 8px;
+  font-size:clamp(22px,1.8vw,28px); font-weight:800; line-height:1.04; letter-spacing:-.01em;
   color:var(--text-bright);
 }
-.home-preseason-copy{margin:0 0 16px; font-size:12.5px; line-height:1.55; color:var(--muted)}
-.home-preseason-stats{
-  display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
-  margin:auto 0 12px; padding-top:14px;
-  border-top:1px solid var(--border-soft);
+.home-preseason-copy{margin:0 0 14px; font-size:12.5px; line-height:1.55; color:var(--muted); max-width:34ch}
+.home-preseason-links{
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  margin-top:auto; padding-top:12px;
+  border-top:1px solid var(--color-hairline);
 }
-.home-preseason-stat{display:grid; gap:3px; min-width:0}
-.home-preseason-stat dt{font-size:8.5px; font-weight:700; letter-spacing:.12em; color:var(--faint)}
-.home-preseason-stat dd{margin:0; font-size:15px; font-weight:700; color:var(--text-bright); white-space:nowrap}
+.home-preseason-rules{font-size:10px; font-weight:600; letter-spacing:.1em; color:var(--faint)}
 
-/* PRESEASON LEADERS */
+/* LATEST NEWS — hairline rows, no boxes */
+.home-news-list{display:grid; flex:1; align-content:start}
+.home-news-item{
+  display:grid; gap:3px;
+  padding:9px 0;
+  border-top:1px solid var(--color-hairline);
+  color:inherit; text-decoration:none;
+  transition:transform var(--fast) var(--ease);
+}
+.home-news-item:first-child{border-top:0; padding-top:0}
+.home-news-item:hover{transform:translateX(3px)}
+.home-news-item:hover .home-news-title{color:var(--color-system)}
+.home-news-item:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
+.home-news-meta{display:flex; align-items:center; gap:8px}
+.home-news-cat{
+  font-size:8.5px; font-weight:800; letter-spacing:.14em;
+  color:var(--cyan);
+}
+.home-news-date{font-size:10px; color:var(--faint)}
+.home-news-title{font-size:12.5px; font-weight:650; color:var(--text-bright); line-height:1.3; transition:color var(--fast)}
+.home-news-excerpt{
+  font-size:11px; color:var(--muted); line-height:1.45;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.home-news-empty{
+  display:grid; place-items:center; min-height:80px;
+  font-size:12px; color:var(--muted); text-align:center; padding:0 12px;
+}
+.home-news-item.skeleton{opacity:.55}
+
+/* EXPLORE — 2 × 2 link grid, hairline rows */
+.home-explore-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 16px; flex:1; align-content:start}
+.home-explore-item{
+  display:flex; align-items:center; gap:10px;
+  padding:9px 0;
+  color:inherit; text-decoration:none;
+  transition:transform var(--fast) var(--ease);
+}
+.home-explore-item:nth-child(n+3){border-top:1px solid var(--color-hairline)}
+.home-explore-item:hover{transform:translateX(3px)}
+.home-explore-item:hover .home-explore-text strong{color:var(--color-system)}
+.home-explore-item:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
+.home-explore-icon{
+  flex:none; display:grid; place-items:center;
+  width:28px; height:28px;
+  font-size:14px;
+  color:var(--color-system);
+  border-radius:8px;
+  background:var(--color-system-faint);
+}
+.home-explore-icon .reddit-emblem{width:16px; height:16px}
+.home-explore-text{display:grid; gap:1px; min-width:0}
+.home-explore-text strong{font-size:11px; font-weight:750; letter-spacing:.08em; color:var(--text-bright); transition:color var(--fast)}
+.home-explore-text small{font-size:10px; color:var(--faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.home-explore-arrow{margin-left:auto; color:var(--faint); font-size:13px; transition:transform var(--fast) var(--ease), color var(--fast)}
+.home-explore-item:hover .home-explore-arrow{transform:translateX(3px); color:var(--color-system)}
+
+/* ── LEADERS (module retired from the homepage; styles kept for
+   the renderLeaders* helpers which remain in home-view.js) ────── */
 .home-leader-list{margin:0; padding:0; list-style:none; display:grid; gap:6px; flex:1}
 .home-leader-row{
   display:grid; grid-template-columns:30px minmax(0,1fr) auto; align-items:center; gap:10px;
   padding:9px 11px;
-  border:1px solid var(--border-soft); border-radius:11px;
-  background:rgba(13,21,36,.5);
+  border:1px solid var(--color-hairline); border-radius:11px;
+  background:rgba(13,20,32,.5);
   color:inherit; text-decoration:none;
   transition:border-color var(--fast), background var(--fast), transform var(--fast) var(--ease);
 }
-a.home-leader-row:hover{border-color:rgba(90,215,232,.4); background:rgba(90,215,232,.05); transform:translateY(-1px)}
+a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--color-system-faint); transform:translateY(-1px)}
 .home-leader-row:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
 .home-leader-rank{
   display:grid; place-items:center;
   width:26px; height:26px;
   font-size:11.5px; font-weight:800;
   border-radius:8px;
-  color:var(--muted); background:var(--surface-2);
+  color:var(--muted); background:var(--color-surface-soft);
 }
-.home-leader-rank.gold{color:#1a1206; background:linear-gradient(150deg,#f8d67c,var(--amber)); box-shadow:0 0 12px rgba(241,189,93,.35)}
+.home-leader-rank.gold{color:#1a1206; background:linear-gradient(150deg,var(--color-prestige-hot),var(--color-prestige)); box-shadow:0 0 12px rgba(216,169,78,.35)}
 .home-leader-rank.silver{color:#0d1420; background:linear-gradient(150deg,#e2ecf4,#a9bccf)}
 .home-leader-rank.bronze{color:#170c04; background:linear-gradient(150deg,#e8a76b,#c07b45)}
 .home-leader-id{display:grid; gap:1px; min-width:0}
@@ -360,73 +582,40 @@ a.home-leader-row:hover{border-color:rgba(90,215,232,.4); background:rgba(90,215
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .home-leader-tier{font-size:9px; font-weight:700; letter-spacing:.12em; color:var(--faint)}
-.home-leader-rating{font-size:15px; font-weight:750; color:var(--amber); font-variant-numeric:tabular-nums}
+.home-leader-rating{font-size:15px; font-weight:750; color:var(--color-prestige); font-variant-numeric:tabular-nums}
 .home-leader-empty{
   display:grid; place-items:center; min-height:120px;
   font-size:12px; color:var(--muted); text-align:center; padding:0 12px;
 }
-.home-leader-row.skeleton{border-color:var(--border-soft); opacity:.6}
-
-/* LATEST NEWS */
-.home-news-list{display:grid; gap:8px; flex:1}
-.home-news-item{
-  display:grid; gap:4px;
-  padding:10px 12px;
-  border:1px solid var(--border-soft); border-radius:11px;
-  background:rgba(13,21,36,.5);
-  color:inherit; text-decoration:none;
-  transition:border-color var(--fast), background var(--fast), transform var(--fast) var(--ease);
+.home-leader-row.skeleton{border-color:var(--color-hairline); opacity:.6}
+.home-leader-how {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-sm, 8px);
+  background: color-mix(in srgb, var(--color-surface-soft) 60%, transparent);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
 }
-.home-news-item:hover{border-color:rgba(90,215,232,.35); background:rgba(90,215,232,.05); transform:translateY(-1px)}
-.home-news-item:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
-.home-news-meta{display:flex; align-items:center; gap:8px}
-.home-news-cat{
-  font-size:8.5px; font-weight:800; letter-spacing:.14em;
-  color:var(--cyan);
+.home-leader-how:hover,
+.home-leader-how:focus-visible {
+  border-color: color-mix(in srgb, var(--color-system) 45%, var(--color-hairline));
+  color: var(--text);
 }
-.home-news-date{font-size:10px; color:var(--faint)}
-.home-news-title{font-size:12.5px; font-weight:650; color:var(--text-bright); line-height:1.3}
-.home-news-excerpt{
-  font-size:11px; color:var(--muted); line-height:1.45;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-  overflow:hidden;
-}
-.home-news-empty{
-  display:grid; place-items:center; min-height:120px;
-  font-size:12px; color:var(--muted); text-align:center; padding:0 12px;
-}
-.home-news-item.skeleton{opacity:.55}
-
-/* EXPLORE */
-.home-explore-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; flex:1}
-.home-explore-item{
-  display:flex; align-items:center; gap:10px;
-  padding:10px 12px;
-  border:1px solid var(--border-soft); border-radius:11px;
-  background:rgba(13,21,36,.5);
-  color:inherit; text-decoration:none;
-  transition:border-color var(--fast), background var(--fast), transform var(--fast) var(--ease);
-}
-.home-explore-item:hover{border-color:rgba(90,215,232,.4); background:rgba(90,215,232,.06); transform:translateY(-1px)}
-.home-explore-item:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
-.home-explore-icon{
-  flex:none; display:grid; place-items:center;
-  width:30px; height:30px;
-  font-size:15px;
-  color:var(--cyan);
-  border:1px solid var(--border-soft); border-radius:9px;
-  background:rgba(90,215,232,.06);
-}
-.home-explore-text{display:grid; gap:1px; min-width:0}
-.home-explore-text strong{font-size:11px; font-weight:750; letter-spacing:.08em; color:var(--text-bright)}
-.home-explore-text small{font-size:10px; color:var(--faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.home-explore-arrow{margin-left:auto; color:var(--faint); font-size:13px; transition:transform var(--fast) var(--ease), color var(--fast)}
-.home-explore-item:hover .home-explore-arrow{transform:translateX(3px); color:var(--cyan)}
 
 /* ── FOOTER ─────────────────────────────────────────────────── */
 .home-app .landing-footer{
-  border-top:1px solid var(--border-soft);
-  background:rgba(6,10,18,.6);
+  flex-shrink:0;
+  padding:8px var(--home-chrome-pad);
+  border-top:1px solid var(--color-hairline);
+  background:rgba(7,11,19,.6);
   -webkit-backdrop-filter:blur(12px);
   backdrop-filter:blur(12px);
   animation:none;
@@ -438,52 +627,83 @@ a.home-leader-row:hover{border-color:rgba(90,215,232,.4); background:rgba(90,215
 
 /* Wide laptop: tighten hero + nav */
 @media (max-width:1280px){
-  .home-topbar{padding:10px 20px; gap:12px}
+  .home-topbar{gap:12px}
+  .home-topbar .landing-brand-sub{display:none}
   .home-nav-link{padding:8px 9px; letter-spacing:.1em}
-  .home-main{padding:0 20px 40px}
-  .home-hero{min-height:clamp(480px,72vh,680px)}
+  .home-main{width:min(94vw,1440px); padding-bottom:18px}
+  .home-eyebrow{margin-bottom:10px}
+  .home-title{margin-bottom:14px}
+  .home-tagline{margin-bottom:22px}
+  .home-panel{padding-top:14px}
 }
 
-/* Tablet: nav collapses into drawer, grid goes 2×2 */
+/* Tablet: nav collapses into drawer, grid goes 2 + 1 */
 @media (max-width:1100px){
   .home-nav{display:none}
   .home-nav-toggle{display:inline-flex}
   .home-grid{grid-template-columns:1fr 1fr}
+  .home-explore{grid-column:1 / -1; border-left:0; border-top:1px solid var(--color-hairline); padding-left:0; padding-right:0}
+  .home-explore-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .home-explore-item:nth-child(n+3){border-top:0}
 }
 
 @media (max-width:900px){
-  .home-hero{grid-template-columns:1fr; gap:8px; min-height:0; padding-top:34px}
+  .home-hero{grid-template-columns:1fr; gap:8px; padding-top:30px; flex:none}
   .home-hero-copy{max-width:560px}
-  .home-hero-visual{min-height:300px; order:-1; margin-bottom:6px}
-  .home-card-fan{width:min(72%,340px)}
-  .home-pulse{flex-direction:column; gap:0}
-  .home-pulse-head{border-right:0; border-bottom:1px solid var(--border-soft)}
-  .home-pulse-metrics{grid-template-columns:repeat(2,1fr)}
-  .home-metric{border-bottom:1px solid var(--border-soft)}
-  .home-metric:nth-child(2n){border-right:0}
-  .home-metric:last-child{border-bottom:0}
+  .home-hero-visual{order:-1; min-height:260px; margin-bottom:6px}
+  .home-card-fan{width:min(72%,400px)}
+  .home-hero-suits .suit{font-size:clamp(48px,8vw,72px)}
+  .home-pulse{flex-wrap:wrap; row-gap:8px}
+  .home-pulse-head{flex-basis:100%}
+  /* flex:1 leaves the metrics' hypothetical size at 0 — it would stay on
+     the head's full-width line and collapse to zero width. Force it
+     onto its own line, and keep metrics whole as they wrap. */
+  .home-pulse-metrics{flex-basis:100%}
+  .home-metric{flex:none; border-left:0; padding:2px 16px 2px 0}
+  .home-metric + .home-metric{border-left:1px solid var(--color-hairline); padding-left:16px}
 }
 
-/* Phone: vertical hero, stacked modes, metric grid, one column */
+/* Phones: keep the darker void treatment readable over the video bg
+   (matches the ≤768px contract the shared landing-mobile layer used). */
+@media (max-width:768px){
+  .home-app .landing-video-bg{opacity:.1}
+  .home-app .landing-video-overlay{
+    background:linear-gradient(180deg,
+      rgba(7,11,19,.74) 0%,
+      rgba(7,11,19,.5) 40%,
+      rgba(7,11,19,.66) 80%,
+      rgba(7,11,19,.82) 100%);
+  }
+  .home-app .landing-aurora{opacity:.4; filter:blur(80px)}
+}
+
+/* Phone: vertical hero, stacked modes, wrapped metrics, one column */
 @media (max-width:640px){
   .home-topbar{padding:8px 14px; gap:10px}
-  .home-utility{gap:8px}
+  .home-topbar .landing-brand{gap:8px}
+  .home-topbar .landing-brand-logo{width:clamp(120px,34vw,150px)}
   .home-topbar .landing-brand-sub{display:none}
-  .home-main{padding:0 14px 34px}
-  .home-hero{padding-top:22px; gap:14px}
+  .home-utility{gap:8px}
+  .home-main{width:min(94vw,1440px); padding-bottom:30px}
+  .home-hero{padding-top:20px; gap:14px}
   .home-title{font-size:clamp(38px,11vw,52px)}
   .home-tagline{font-size:14.5px}
   .home-modes{flex-direction:column}
-  .home-mode-btn{max-width:none; min-height:var(--touch-target)}
-  .home-hero-visual{min-height:230px}
-  .home-card-fan{width:min(78%,280px)}
-  .home-pulse-head{padding:12px 14px}
-  .home-metric{padding:11px 14px}
-  .home-metric-value{font-size:19px}
+  .home-mode-btn{flex:none; max-width:none; min-height:var(--touch-target)}
+  .home-hero-visual{min-height:220px}
+  .home-card-fan{width:min(80%,320px)}
+  .home-pulse{padding:10px 0}
+  .home-metric{padding:4px 12px 4px 0}
+  .home-metric + .home-metric{padding-left:12px}
+  .home-metric-sub{display:none}
   .home-grid{grid-template-columns:1fr}
-  .home-panel{padding:16px}
+  .home-panel{padding:16px 0 4px}
+  .home-panel + .home-panel{border-left:0; border-top:1px solid var(--color-hairline)}
+  .home-panel:first-child{padding-top:14px}
+  .home-explore{grid-column:auto}
   .home-explore-grid{grid-template-columns:1fr 1fr}
-  .home-app .landing-footer{flex-wrap:wrap; gap:10px}
+  .home-explore-item:nth-child(n+3){border-top:1px solid var(--color-hairline)}
+  .home-app .landing-footer{flex-wrap:wrap; gap:10px; padding:10px 16px}
   #landing-continue-slot .landing-continue-meta{display:none}
   /* Keep the primary PLAY action + account + Lab reachable without crowding */
   .home-utility .account-name{display:none}
@@ -498,16 +718,19 @@ a.home-leader-row:hover{border-color:rgba(90,215,232,.4); background:rgba(90,215
 /* Very small phones */
 @media (max-width:430px){
   .home-title{font-size:clamp(34px,12vw,44px)}
-  .home-hero-visual{min-height:200px}
-  .home-pulse-metrics{grid-template-columns:1fr 1fr}
+  .home-hero-visual{min-height:190px}
+  .home-card-fan{width:min(84%,280px)}
   .home-explore-grid{grid-template-columns:1fr}
+  .home-explore-item{border-top:1px solid var(--color-hairline)}
+  .home-explore-item:first-child{border-top:0}
   .home-leader-row{padding:8px 10px}
 }
 
 /* Landscape phones: keep hero compact so modes stay visible */
 @media (max-width:900px) and (orientation:landscape){
-  .home-hero{min-height:0; padding-top:14px}
-  .home-hero-visual{min-height:190px}
+  .home-hero{padding-top:14px}
+  .home-hero-visual{min-height:180px}
+  .home-card-fan{width:min(50%,300px)}
   .home-title{font-size:clamp(30px,6vw,44px)}
 }
 
@@ -515,33 +738,12 @@ a.home-leader-row:hover{border-color:rgba(90,215,232,.4); background:rgba(90,215
 @media (prefers-reduced-motion:reduce){
   .home-fan-card{transition:none}
   .home-pulse-dot{animation:none}
-  .home-hero-visual:hover .home-fan-card{transform:translate(-50%,-118%)}
+  .home-metric-shimmer{animation:none}
+  .home-hero-visual:hover .home-fan-card{transform:translate(-50%,-55%)}
   .home-mode-btn,.home-news-item,.home-leader-row,.home-explore-item{transition:none}
+  .home-news-item:hover,.home-explore-item:hover{transform:none}
 }
 
 @media (prefers-reduced-data:reduce){
   .home-fan-card{box-shadow:0 8px 24px rgba(0,0,0,.4)}
-}
-
-/* ── Leaders footer — Ranking System explainer ─────────────── */
-.home-leader-how {
-  display: block;
-  width: 100%;
-  margin-top: 10px;
-  padding: 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm, 8px);
-  background: color-mix(in srgb, var(--surface) 60%, transparent);
-  color: var(--muted);
-  font: inherit;
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 150ms ease, color 150ms ease;
-}
-.home-leader-how:hover,
-.home-leader-how:focus-visible {
-  border-color: color-mix(in srgb, var(--cyan) 45%, var(--border));
-  color: var(--text);
 }

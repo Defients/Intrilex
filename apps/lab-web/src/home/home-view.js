@@ -6,7 +6,7 @@
 //
 // Composition (canonical):
 //   HEADER → CINEMATIC HERO → LIVE PULSE
-//   → PRESEASON | PRESEASON LEADERS | LATEST NEWS | EXPLORE
+//   → PRESEASON | LATEST NEWS | EXPLORE
 //   → FOOTER
 //
 // Shared chrome (video bg, aurora, orbital, topbar brand, account
@@ -48,13 +48,11 @@ const PRIMARY_NAV = [
   { href: 'https://reddit.com/r/intrilex', label: 'COMMUNITY', external: true },
 ];
 
-/** EXPLORE INTRILEX lower panel — six real ecosystem routes. */
+/** EXPLORE lower panel — four real ecosystem routes (2 × 2). */
 const EXPLORE_DESTINATIONS = [
   { href: '#/rules', label: 'RULES', sub: 'Official rulebook', icon: '§' },
   { href: '#/cards', label: 'CARDS', sub: 'Card library', icon: '🃏' },
-  { href: '#/tournaments', label: 'TOURNAMENTS', sub: 'Compete & climb', icon: '🏆' },
   { href: '#/leaderboard', label: 'RANKINGS', sub: 'Global ladder', icon: '★' },
-  { href: '#/players', label: 'PLAYERS', sub: 'Find players', icon: '👥' },
   { href: 'https://reddit.com/r/intrilex', label: 'COMMUNITY', sub: 'Reddit & more', icon: REDDIT_SVG, external: true },
 ];
 
@@ -135,10 +133,10 @@ export function renderHomePage({ labVersion = '', rulesVersion = '' } = {}) {
           </div>
         </div>
       </nav>
+      <div class="home-nav-drawer" id="home-nav-drawer" data-home-nav-drawer hidden>
+        <ul class="home-nav-drawer-list">${PRIMARY_NAV.map(n => `<li><a class="home-nav-link" href="${esc(n.href)}"${n.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(n.label)}</a></li>`).join('')}</ul>
+      </div>
     </header>
-    <div class="home-nav-drawer" id="home-nav-drawer" data-home-nav-drawer hidden>
-      <ul class="home-nav-drawer-list">${PRIMARY_NAV.map(n => `<li><a class="home-nav-link" href="${esc(n.href)}"${n.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(n.label)}</a></li>`).join('')}</ul>
-    </div>
     <main id="landing-main" class="home-main" tabindex="-1">
       <section class="home-hero" aria-labelledby="home-hero-title">
         <div class="home-hero-copy">
@@ -162,6 +160,7 @@ export function renderHomePage({ labVersion = '', rulesVersion = '' } = {}) {
         <div class="home-hero-visual" aria-hidden="true">
           <div class="home-hero-halo"></div>
           <div class="home-hero-ring"></div>
+          <div class="home-hero-suits"><span class="suit s-spade">&#9824;</span><span class="suit s-heart">&#9829;</span><span class="suit s-diamond">&#9830;</span><span class="suit s-club">&#9827;</span></div>
           <div class="home-card-fan">
             <img class="home-fan-card c1" src="assets/card-art/as.webp" alt="" />
             <img class="home-fan-card c2" src="assets/card-art/kh.webp" alt="" />
@@ -172,13 +171,13 @@ export function renderHomePage({ labVersion = '', rulesVersion = '' } = {}) {
           <img class="home-hero-crest" src="assets/intrilex-crest.png" alt="" />
         </div>
       </section>
-      <section class="home-pulse" aria-label="Live game activity" data-home-pulse>
+      <section class="home-pulse" aria-label="Live game activity" data-home-pulse hidden>
         <div class="home-pulse-head">
           <span class="home-pulse-dot" data-home-pulse-dot aria-hidden="true"></span>
-          <strong class="home-pulse-title">LIVE PULSE</strong>
-          <span class="home-pulse-updated" data-home-pulse-updated role="status">Connecting…</span>
+          <strong class="home-pulse-title">LIVE</strong>
+          <span class="home-pulse-updated" data-home-pulse-updated role="status"></span>
         </div>
-        <div class="home-pulse-metrics" data-home-pulse-metrics>${renderPulseSkeleton()}</div>
+        <div class="home-pulse-metrics" data-home-pulse-metrics></div>
       </section>
       <section class="home-grid" aria-label="Intrilex ecosystem">
         <article class="home-panel home-preseason" aria-labelledby="home-preseason-title">
@@ -189,31 +188,22 @@ export function renderHomePage({ labVersion = '', rulesVersion = '' } = {}) {
           </header>
           <h2 class="home-preseason-title">THE JOURNEY<br />BEGINS</h2>
           <p class="home-preseason-copy">Help shape the future of Intrilex. Play, compete, and be part of the growing community as we prepare for Season 01.</p>
-          <dl class="home-preseason-stats">
-            <div class="home-preseason-stat"><dt>PLAYERS LISTED</dt><dd data-home-stat="players">—</dd></div>
-            <div class="home-preseason-stat"><dt>RANKED SEASONS</dt><dd data-home-stat="seasons">—</dd></div>
-            <div class="home-preseason-stat"><dt>RULES</dt><dd>v${esc(rulesVersion)}</dd></div>
-          </dl>
-          <a class="home-panel-link" href="#/seasons">Season archive &rarr;</a>
-        </article>
-        <article class="home-panel home-leaders" aria-labelledby="home-leaders-title">
-          <header class="home-panel-head">
-            <span class="home-panel-eyebrow" id="home-leaders-title">PRESEASON LEADERS</span>
-            <a class="home-panel-link" href="#/leaderboard" data-testid="home-leaders-viewall">View All &rarr;</a>
-          </header>
-          <ol class="home-leader-list" data-home-leaders>${renderLeadersSkeleton()}</ol>
-          <button type="button" class="home-leader-how" data-ranking-system-card data-testid="ranking-system-button">Ranking System &mdash; how ranking works</button>
+          <div class="home-preseason-links">
+            <span class="home-preseason-rules">Rules v${esc(rulesVersion)}</span>
+            <a class="home-panel-link" href="#/seasons">Season archive &rarr;</a>
+            <button type="button" class="home-text-link" data-ranking-system-card data-testid="ranking-system-button">Ranking System &mdash; how ranking works</button>
+          </div>
         </article>
         <article class="home-panel home-news" aria-labelledby="home-news-title">
           <header class="home-panel-head">
             <span class="home-panel-eyebrow" id="home-news-title">LATEST NEWS</span>
-            <a class="home-panel-link" href="#/release-notes">All updates &rarr;</a>
+            <a class="home-panel-link" href="#/release-notes">View all news &rarr;</a>
           </header>
           <div class="home-news-list" data-home-news>${renderNewsSkeleton()}</div>
         </article>
         <article class="home-panel home-explore" aria-labelledby="home-explore-title">
           <header class="home-panel-head">
-            <span class="home-panel-eyebrow" id="home-explore-title">EXPLORE INTRILEX</span>
+            <span class="home-panel-eyebrow" id="home-explore-title">EXPLORE</span>
           </header>
           <div class="home-explore-grid">
             ${EXPLORE_DESTINATIONS.map(d => `<a class="home-explore-item" href="${esc(d.href)}"${d.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>
@@ -245,21 +235,22 @@ export function renderHomePage({ labVersion = '', rulesVersion = '' } = {}) {
 /** Skeleton placeholders shown while the first stats fetch is in flight. */
 export function renderPulseSkeleton() {
   const keys = ['online', 'liveDuels', 'duelsToday', 'topRating', 'avgQueue'];
-  return keys.map(k => `<div class="home-metric skeleton" data-metric="${k}"><span class="home-metric-label">${esc(metricLabel(k))}</span><span class="home-metric-value" aria-hidden="true">—</span><span class="home-metric-sub">loading</span></div>`).join('');
+  return keys.map(k => `<div class="home-metric skeleton" data-metric="${k}"><span class="home-metric-shimmer" aria-hidden="true"></span><span class="home-metric-label">${esc(metricLabel(k))}</span></div>`).join('');
 }
 
 /**
  * Render hydrated pulse metrics. Entries come from
- * home-data.js buildPulseMetrics(); ok:false renders '—'.
+ * home-data.js buildPulseMetrics(). Metrics whose source failed
+ * (ok:false) are omitted entirely — the strip never shows '—' or
+ * fabricated values.
  * @param {Array} metrics
  * @returns {string} HTML
  */
 export function renderPulseMetricsHtml(metrics) {
-  return (metrics ?? []).map(m => {
-    const value = m.ok && m.value != null ? esc(m.value) : '—';
+  return (metrics ?? []).filter(m => m.ok && m.value != null).map(m => {
     const sub = m.sub ? esc(m.sub) : '';
-    const inner = `<span class="home-metric-label">${esc(m.label)}</span>
-      <span class="home-metric-value${m.ok ? '' : ' dim'}">${value}</span>
+    const inner = `<span class="home-metric-value">${esc(m.value)}</span>
+      <span class="home-metric-label">${esc(m.label)}</span>
       ${sub ? `<span class="home-metric-sub">${sub}</span>` : ''}`;
     return m.href
       ? `<a class="home-metric linked" data-metric="${esc(m.key)}" href="${esc(m.href)}">${inner}</a>`
@@ -269,8 +260,8 @@ export function renderPulseMetricsHtml(metrics) {
 
 /** Pulse status text/dot state. */
 export function renderPulseStatusText({ live, updatedLabel, partial }) {
-  if (!live) return 'Data temporarily unavailable';
-  if (partial) return `${updatedLabel} · partial`;
+  if (!live) return '';
+  if (partial) return updatedLabel;
   return updatedLabel;
 }
 
@@ -308,7 +299,7 @@ export function renderLeadersEmpty(message = 'No rated players yet — placement
 // ── News ──
 
 export function renderNewsSkeleton() {
-  return Array.from({ length: 3 }, () => `<div class="home-news-item skeleton"><span class="home-news-cat">·</span><span class="home-news-title">…</span></div>`).join('');
+  return Array.from({ length: 2 }, () => `<div class="home-news-item skeleton"><span class="home-news-cat">·</span><span class="home-news-title">…</span></div>`).join('');
 }
 
 /**

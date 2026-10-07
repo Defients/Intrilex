@@ -64,11 +64,24 @@ export function initAnalysisExportHub() {
       const s = await dossierEvidenceStatus();
       if (token !== statusToken || !isOpen()) return; // closed or superseded
       const row = (k, v) => `<div class="export-status-row"><small>${esc(k)}</small><b>${esc(v)}</b></div>`;
+      // Experiment-store truth: attached runs are listed with their durable
+      // artifact status so the hub can never imply portability it lacks.
+      let artifactRow = 'no experiment evidence';
+      try {
+        const { collectExperimentEvidence } = await import('./experiments/experiment-controller.mjs');
+        const ev = collectExperimentEvidence();
+        if (ev?.available) {
+          const real = (ev.runs ?? []).filter(r => r.origin !== 'bundled');
+          const durable = real.filter(r => r.persistence === 'persisted').length;
+          artifactRow = real.length ? `${durable}/${real.length} durable` : 'no experiment evidence';
+        }
+      } catch { /* evidence store offline — the row stays honest */ }
       if (rows) rows.innerHTML = [
         row('Source', s.sourceLabel ?? 'unknown'),
         row('Matches', s.matches == null ? 'unavailable' : fmt(s.matches)),
         row('Deep Tracking', deepTrackingLabel(s.deepTracking)),
         row('Lab runs', s.labRuns?.label ?? '0 attached'),
+        row('Run artifacts', artifactRow),
       ].join('');
       if (warnBox) {
         warnBox.hidden = !(s.warnings?.length);
@@ -127,4 +140,32 @@ export function initAnalysisExportHub() {
       }
     });
   }
+
+  // Research package — the portable bundle. Completeness is derived, never
+  // assumed: partial packages say PARTIAL/ANALYSIS_ONLY on import and in
+  // their manifest.
+  const pkgBtn = hub.querySelector('#export-research-package');
+  pkgBtn?.addEventListener('click', async () => {
+    if (pkgBtn.disabled) return;
+    pkgBtn.disabled = true;
+    pkgBtn.classList.add('busy');
+    try {
+      const { downloadResearchPackage } = await import('./experiments/research-package.mjs');
+      const { name, report } = await downloadResearchPackage();
+      if (rows) {
+        const el = document.createElement('div');
+        el.className = 'export-status-row';
+        el.innerHTML = `<small>Package</small><b>${esc(report.completeness)}</b>`;
+        rows.prepend(el);
+      }
+      const { showToast } = await import('./state.js');
+      showToast(`${name} — ${report.completeness} · ${report.artifactsIncluded}/${report.artifactsExpected} run artifacts`, { type: 'success', title: 'Research package' });
+    } catch (error) {
+      const { showToast } = await import('./state.js');
+      showToast(error?.message ?? 'Package export failed', { type: 'error', title: 'Research package' });
+    } finally {
+      pkgBtn.disabled = false;
+      pkgBtn.classList.remove('busy');
+    }
+  });
 }

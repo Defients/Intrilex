@@ -7,7 +7,7 @@ import { WORKSPACES, WORKSPACE_KEYWORDS, route, policyOptions, updateRailContext
 import { populateDialogHeading } from './seo-metadata.js';
 import { rerender, invokeAppAction } from './rerender.js';
 import { experimentsReady, nextRunOrdinalStart, beginExperimentRun, commitExperimentBatch, finalizeExperimentRun, failExperimentRun, cancelExperimentRun, registerRunExecutor, restoreBaseline } from './experiments/experiment-controller.mjs';
-import { renderEvidenceStrip, renderRunsPanel } from './experiments/runs-panel.js';
+import { renderEvidenceStrip, renderRunsPanel, openRunsPanel } from './experiments/runs-panel.js';
 import { initAnalysisExportHub } from './analysis-export-hub.mjs';
 
 // ── Experiment panel ──────────────────────────────────────────────
@@ -57,6 +57,18 @@ export function updatePreflight() {
   const seatDesign = p1 === p2 ? 'self-play' : 'matched AB/BA seat-swap';
   const presetLabel = preset ? `preset ${esc(preset)} · ` : '';
   document.querySelector('#preflight').innerHTML = `<b>Preflight:</b> ${presetLabel}${esc(scope)} · ${esc(p1)} vs ${esc(p2)} · ${fmt(n)} matches · ${w} browser worker${w === 1 ? '' : 's'} · ${esc(seed === 'ordinal-hash' ? 'ordinal-hash seed' : 'fixed seed')} · ${esc(seatDesign)} · paired McNemar + bootstrap · semantic telemetry v4.1${deepTrace ? ' · deep decision tracing (per-decision traces + candidate scores)' : ''} · evidence epoch: post-rules-parity-repair · unsupported systems fail closed.`;
+}
+
+/** Open the Experiment dialog directly on the Manage Runs surface —
+ * used by the Evolution ledger bridge and command palette. */
+export function openManageRuns() {
+  const expDialog = document.querySelector('#experiment-dialog');
+  if (expDialog && !expDialog.open) {
+    populateDialogHeading('experiment-dialog', 'EXPERIMENT', 'Run configuration');
+    if (typeof expDialog.showModal === 'function') expDialog.showModal();
+    else expDialog.setAttribute('open', '');
+  }
+  openRunsPanel();
 }
 
 // ── Global bindings ───────────────────────────────────────────────
@@ -163,6 +175,8 @@ function renderCommandResults() {
     { label: 'Export Analysis Dossier (JSON)', detail: 'AI research-state export · downloads file', run: () => { invokeAppAction('exportAnalysisDossier', 'json'); } },
     { label: 'Export Analysis Dossier (Markdown)', detail: 'AI research-state export · downloads file', run: () => { invokeAppAction('exportAnalysisDossier', 'markdown'); } },
     { label: 'Export Analysis Dossier (JSON + Markdown)', detail: 'AI research-state export · downloads both files', run: () => { invokeAppAction('exportAnalysisDossier', 'both'); } },
+    { label: 'Export Research Package', detail: 'Manifest + dossier + all durable run artifacts · downloads file', run: () => { invokeAppAction('exportResearchPackage'); } },
+    { label: 'Manage Experiment Runs', detail: 'Manage runs · include/exclude · verify · export artifacts', run: () => { openManageRuns(); } },
     { label: 'Extract analysis (JSON)', detail: 'Analysis dossier · copy to clipboard (legacy)', run: () => { invokeAppAction('showExtract', 'json'); } },
     { label: 'Extract analysis (Markdown)', detail: 'Analysis dossier · copy to clipboard (legacy)', run: () => { invokeAppAction('showExtract', 'markdown'); } }
   ].filter(item => !q || `${item.label} ${item.detail} ${item.keywords ?? ''}`.toLowerCase().includes(q));

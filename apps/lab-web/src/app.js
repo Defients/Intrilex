@@ -1861,6 +1861,21 @@ export async function exportAnalysisDossier(format = 'json') {
 }
 
 /**
+ * Export the Research Evidence Package — manifest + dossier + every
+ * resolvable durable run artifact. Completeness is declared in the
+ * manifest, never implied.
+ */
+export async function exportResearchPackage() {
+  try {
+    const { downloadResearchPackage } = await import('./experiments/research-package.mjs');
+    const { name, report } = await downloadResearchPackage();
+    showToast(`${name} — ${report.completeness} · ${report.artifactsIncluded}/${report.artifactsExpected} run artifacts`, { type: report.completeness === 'COMPLETE' ? 'success' : 'warning', title: 'Research package exported' });
+  } catch (err) {
+    showToast(err.message ?? 'Package export failed', { type: 'error', title: 'Export failed' });
+  }
+}
+
+/**
  * Legacy extract contract, repaired: the clipboard now receives the canonical
  * Analysis Dossier serialization (JSON or deterministic Markdown), which is a
  * superset of the old analysis extract.
@@ -1981,7 +1996,7 @@ getAuthController().then(async ({ initAuth, isMigrationPending }) => {
 // This breaks the backedge from workspace modules to the entry point.
 import { setRenderer, setAppActions } from './rerender.js';
 setRenderer(render);
-setAppActions({ togglePlay, stop, stepBy, stepTo, showExtract, exportAnalysisDossier });
+setAppActions({ togglePlay, stop, stepBy, stepTo, showExtract, exportAnalysisDossier, exportResearchPackage });
 
 // IRX-FORENSIC: Expose state on window for the forensic viewer's open-session
 // flow, which needs to set replay state before navigating to Watch. This is

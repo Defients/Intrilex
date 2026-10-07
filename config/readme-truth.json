@@ -13,24 +13,22 @@
     ],
     "networkStatus": "SUPPORTED",
     "multiplayerStatus": "BLOCKED",
-    "testFileCount": 207,
+    "testFileCount": 250,
     "certifiedReplayCount": 121,
     "selfAuditStatus": "STALE",
     "selfAuditEvidence": {
       "status": "STALE",
       "blockers": [
-        "Release certification requires a clean Git working tree (including untracked files).",
-        "Missing or invalid enginePayloadHash.",
-        "Release certification requires a clean Git working tree (including untracked files).",
+        "Release certification requires a clean source tree (no modified tracked files or untracked files outside generated-output roots).",
+        "Release certification requires a clean source tree (no modified tracked files or untracked files outside generated-output roots). Offending paths: NOWN_LIMITATIONS.md, apps/lab-web/src/analysis-dossier-export.js, apps/lab-web/src/analysis-dossier.js, apps/lab-web/src/analysis-export-hub.mjs, apps/lab-web/src/app.js, apps/lab-web/src/css/home.css, apps/lab-web/src/css/observatory.css, apps/lab-web/src/css/tokens-base.css, apps/lab-web/src/evolution/evolution-research-ui.js, apps/lab-web/src/experiment-controls.js.",
         "Evidence gitCommit does not match the current checkout.",
         "Evidence gitTree does not match the current checkout.",
-        "Evidence lockfileSha256 does not match the current checkout.",
         "Evidence enginePayloadHash does not match the current checkout.",
         "Release evidence requires an explicitly executed release audit."
       ],
-      "gitCommit": "41feafd07a2ef6fc7e76ae854af3d3bc8ddc2aa8",
-      "auditKind": null,
-      "generatedAt": "2026-09-30T12:03:35.772Z"
+      "gitCommit": "74922a7607fa7d3731032d7c0aecc2edc5216acf",
+      "auditKind": "development",
+      "generatedAt": "2026-10-05T02:23:38.999Z"
     }
   },
   "lanes": {
@@ -253,6 +251,11 @@
       "id": "CERT-HUMAN-VALIDATION-01",
       "title": "Human validation sessions documented but not yet conducted",
       "severity": "manual"
+    },
+    {
+      "id": "EXP-PORTABILITY-01",
+      "title": "Experiment run artifacts carry match summaries, not full replays",
+      "severity": "technical"
     }
   ]
 }

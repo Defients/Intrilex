@@ -62,7 +62,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=Dancing+Script:wght@500;600;700&family=Great+Vibes&display=swap">
-  <link rel="stylesheet" href="styles.bd0280c425f6.css">
+  <link rel="stylesheet" href="styles.eb762603e290.css">
 
   <!-- Structured data (JSON-LD is not executed as script, so CSP script-src does not apply) -->
   <script type="application/ld+json">
@@ -159,9 +159,12 @@
         <button class="icon-button" id="analysis-export-close" type="button" aria-label="Close analysis export">×</button>
       </div>
       <div class="export-hub-actions">
+        <p class="eyebrow">Analysis dossier — projection</p>
         <button class="export-choice" type="button" data-export-format="json"><b>{ } JSON</b><small>Authoritative structured analysis data</small></button>
         <button class="export-choice" type="button" data-export-format="markdown"><b>≡ Markdown</b><small>Human-readable projection</small></button>
-        <button class="export-choice primary" type="button" data-export-format="both"><b>⇩ JSON + Markdown</b><small>Recommended for AI review</small></button>
+        <button class="export-choice" type="button" data-export-format="both"><b>⇩ JSON + Markdown</b><small>Recommended for AI review</small></button>
+        <p class="eyebrow">Evidence package — portable durable evidence</p>
+        <button class="export-choice primary" type="button" id="export-research-package"><b>⬇ Research package</b><small>Manifest + dossier + run artifacts · completeness always declared</small></button>
       </div>
       <div class="export-status" data-testid="export-evidence-status">
         <p class="eyebrow">Evidence status</p>
@@ -206,7 +209,7 @@
     </div>
     <div id="advanced-card-rules-content"></div>
   </dialog>
-  <script type="module" src="app.037146099ebb.js"></script>
+  <script type="module" src="app.adf8892fce29.js"></script>
   <script src="sw-kill.js"></script>
 </body>
 </html>

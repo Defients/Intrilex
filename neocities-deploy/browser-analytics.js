@@ -5,9 +5,9 @@
 // Rank attribution extracted to rank-attribution-browser.js (P4.3).
 // Rank power model extracted to rank-power-model.js (P4.3).
 
-import './engine/ranks.js?v=037146099ebb';
-import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=037146099ebb';
-import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=037146099ebb';
+import './engine/ranks.js?v=adf8892fce29';
+import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=adf8892fce29';
+import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=adf8892fce29';
 import {
   CANONICAL_RANKS,
   classifyPlayForm,
@@ -15,7 +15,7 @@ import {
   buildSourceCards,
   attributeRankAction,
   attributeAction,
-} from './rank-attribution-browser.js?v=037146099ebb';
+} from './rank-attribution-browser.js?v=adf8892fce29';
 import {
   RANK_POWER_SCHEMA_VERSION,
   RPI_AXIS_WEIGHTS,
@@ -26,7 +26,7 @@ import {
   computeDecisionPower,
   buildBalanceWatchlist,
   buildRankPowerModel,
-} from './rank-power-model.js?v=037146099ebb';
+} from './rank-power-model.js?v=adf8892fce29';
 import {
   ANALYTICS_SCHEMA_VERSION,
   buildMechanicsAtlas,
@@ -35,16 +35,16 @@ import {
   buildPolicyFingerprints,
   detectAnomalies,
   buildPairedABBAAnalysis,
-} from './observatory-analytics-browser.js?v=037146099ebb';
+} from './observatory-analytics-browser.js?v=adf8892fce29';
 import {
   mechanicRegistryHash,
   quarantineUnknownTags,
-} from './mechanic-registry-browser.js?v=037146099ebb';
-import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=037146099ebb';
-import { winRateRecord } from './shared-analytics/estimators.mjs?v=037146099ebb';
-import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=037146099ebb';
-import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=037146099ebb';
-import { buildComboAtlas } from './shared-analytics/combo-analytics.mjs?v=037146099ebb';
+} from './mechanic-registry-browser.js?v=adf8892fce29';
+import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=adf8892fce29';
+import { winRateRecord } from './shared-analytics/estimators.mjs?v=adf8892fce29';
+import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=adf8892fce29';
+import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=adf8892fce29';
+import { buildComboAtlas } from './shared-analytics/combo-analytics.mjs?v=adf8892fce29';
 
 // Re-export for backward compatibility (other modules import from browser-analytics)
 export {

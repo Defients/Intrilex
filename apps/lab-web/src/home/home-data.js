@@ -24,7 +24,7 @@ export const HOME_PULSE_INTERVAL_MS = 25000;
 export const HOME_STATS_TIMEOUT_MS = 8000;
 /** How many leaderboard rows / news items the homepage shows. */
 export const HOME_LEADERS_LIMIT = 5;
-export const HOME_NEWS_LIMIT = 3;
+export const HOME_NEWS_LIMIT = 2;
 
 /**
  * Convert a match-server WebSocket URL (ws:// / wss://) into its HTTP(S)

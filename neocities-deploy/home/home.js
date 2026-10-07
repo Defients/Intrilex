@@ -4,26 +4,26 @@
 // Owns the canonical Intrilex homepage (#/ and #/dev):
 //   renderHome(root, ctx) → paints home-view.js markup, binds the
 //   account menu / nav drawer / continue-card, then hydrates the
-//   Live Pulse, Preseason Leaders, Latest News, and Preseason
-//   micro-stats from real data sources via home-data.js.
+//   Live Pulse, Latest News, and Preseason badge from real data
+//   sources via home-data.js. The pulse strip and every metric only
+//   render when real values exist — unavailable data hides, it never
+//   renders placeholders.
 //
 // ctx supplies overlay openers + auth accessors from app.js so this
 // module never reaches into app-level singletons.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js?v=037146099ebb';
-import { LAB_VERSION, RULES_VERSION } from '../version.js?v=037146099ebb';
-import { getMatchServerUrl } from '../play/network/match-server-config.js?v=037146099ebb';
-import { fetchLeaderboard, fetchSeasons } from '../play/ranked/leaderboard-data.js?v=037146099ebb';
-import { fetchDirectory } from '../play/players/players-data.js?v=037146099ebb';
+import { esc } from '../state.js?v=adf8892fce29';
+import { LAB_VERSION, RULES_VERSION } from '../version.js?v=adf8892fce29';
+import { getMatchServerUrl } from '../play/network/match-server-config.js?v=adf8892fce29';
+import { fetchLeaderboard, fetchSeasons } from '../play/ranked/leaderboard-data.js?v=adf8892fce29';
+import { fetchDirectory } from '../play/players/players-data.js?v=adf8892fce29';
 import {
   renderHomePage,
   renderPulseMetricsHtml,
   renderPulseStatusText,
-  renderLeadersHtml,
-  renderLeadersEmpty,
   renderNewsHtml,
-} from './home-view.js?v=037146099ebb';
+} from './home-view.js?v=adf8892fce29';
 import {
   HOME_PULSE_INTERVAL_MS,
   matchServerHttpBase,
@@ -33,7 +33,7 @@ import {
   parseChangelogEntries,
   buildPulseMetrics,
   formatUpdatedAgo,
-} from './home-data.js?v=037146099ebb';
+} from './home-data.js?v=adf8892fce29';
 
 // AbortController for the current homepage's listeners/timers.
 // Aborted on each re-render to prevent accumulation (IRX-M41).
@@ -64,7 +64,6 @@ export function renderHome(root, ctx = {}) {
   });
   loadContinueCard(root);
   hydratePulse(root, signal);
-  hydrateLeaders(root, signal);
   hydrateNews(root, signal);
   hydratePreseason(root, signal);
 }
@@ -155,7 +154,7 @@ async function loadContinueCard(root) {
   const slot = root.querySelector('#landing-continue-slot');
   if (!slot) return;
   try {
-    const { isIndexedDBAvailable, listSaves } = await import('../play/persistence.js?v=037146099ebb');
+    const { isIndexedDBAvailable, listSaves } = await import('../play/persistence.js?v=adf8892fce29');
     if (!isIndexedDBAvailable()) return;
     const saves = await listSaves();
     // Guard: user may have navigated away during the async work.
@@ -223,8 +222,13 @@ async function hydratePulse(root, signal) {
     const allReal = metrics.every(m => m.ok);
     if (statsRes.ok || anyReal) lastOkAt = Date.now();
     const live = statsRes.ok;
+    // The strip only exists when at least one real metric does — a
+    // dead feed collapses to nothing rather than a wall of '—'.
+    if (pulseEl) {
+      pulseEl.hidden = !anyReal;
+      pulseEl.classList.toggle('degraded', !live);
+    }
     if (dotEl) dotEl.classList.toggle('off', !live);
-    if (pulseEl) pulseEl.classList.toggle('degraded', !live);
     if (updatedEl) {
       updatedEl.textContent = renderPulseStatusText({
         live,
@@ -247,30 +251,6 @@ async function hydratePulse(root, signal) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PRESEASON LEADERS — canonical ladder, directory fallback
-// ═══════════════════════════════════════════════════════════════
-
-async function hydrateLeaders(root, signal) {
-  const list = root.querySelector('[data-home-leaders]');
-  if (!list) return;
-  try {
-    const res = await fetchTopRated({ fetchLeaderboardFn: fetchLeaderboard, fetchDirectoryFn: fetchDirectory, signal });
-    if (signal.aborted || !list.isConnected) return;
-    if (!res.available) {
-      list.innerHTML = renderLeadersEmpty('Rankings unavailable — check back soon.');
-      return;
-    }
-    if (!res.entries.length) {
-      list.innerHTML = renderLeadersEmpty();
-      return;
-    }
-    list.innerHTML = renderLeadersHtml(res.entries);
-  } catch {
-    if (list.isConnected) list.innerHTML = renderLeadersEmpty('Rankings unavailable — check back soon.');
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
 // LATEST NEWS — real changelog entries (same source as Release Notes)
 // ═══════════════════════════════════════════════════════════════
 
@@ -289,18 +269,15 @@ async function hydrateNews(root, signal) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PRESEASON — season status + directory player count (real data)
+// PRESEASON — LIVE NOW badge when a season is active (real data)
 // ═══════════════════════════════════════════════════════════════
 
 async function hydratePreseason(root, signal) {
-  const playersEl = root.querySelector('[data-home-stat="players"]');
-  const seasonsEl = root.querySelector('[data-home-stat="seasons"]');
   const badge = root.querySelector('[data-home-preseason-badge]');
+  if (!badge) return;
   try {
-    const ctx = await fetchPreseasonContext({ fetchSeasonsFn: fetchSeasons, fetchDirectoryFn: fetchDirectory, signal });
-    if (signal.aborted) return;
-    if (playersEl?.isConnected && ctx.playersListed != null) playersEl.textContent = ctx.playersListed.toLocaleString('en-US');
-    if (seasonsEl?.isConnected && ctx.seasonsCount != null) seasonsEl.textContent = String(ctx.seasonsCount);
-    if (badge?.isConnected && ctx.seasonStatus === 'active') badge.hidden = false;
-  } catch { /* stats remain '—' */ }
+    const ctx = await fetchPreseasonContext({ fetchSeasonsFn: fetchSeasons, signal });
+    if (signal.aborted || !badge.isConnected) return;
+    if (ctx.seasonStatus === 'active') badge.hidden = false;
+  } catch { /* badge stays hidden */ }
 }

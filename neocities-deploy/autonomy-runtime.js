@@ -1,4 +1,4 @@
-import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=037146099ebb';
+import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=adf8892fce29';
 import {
   IntrilexEngine,
   createMatchState,
@@ -9,16 +9,16 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=037146099ebb';
+} from './engine/browser-entry.js?v=adf8892fce29';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
 import { actionSemantics } from './engine-adapter/action-semantics.mjs';
-import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=037146099ebb';
-import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=037146099ebb';
-import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=037146099ebb';
-import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=037146099ebb';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=037146099ebb';
-import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=037146099ebb';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=037146099ebb';
+import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=adf8892fce29';
+import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=adf8892fce29';
+import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=adf8892fce29';
+import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=adf8892fce29';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=adf8892fce29';
+import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=adf8892fce29';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=adf8892fce29';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical','control-conversion-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];

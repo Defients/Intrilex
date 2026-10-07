@@ -9,7 +9,7 @@ import { EvolutionStore } from './evolution/evolution-store.mjs';
 import { StrategyStore } from './strategy/strategy-store.mjs';
 import { LAB_IDENTITY } from './evolution/identity.mjs';
 import { liveLabSnapshot } from './workspaces/evolution-dashboard.js';
-import { collectExperimentEvidence } from './experiments/experiment-controller.mjs';
+import { collectExperimentEvidence, verifyRunArtifacts } from './experiments/experiment-controller.mjs';
 import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION, SCHEMA_VERSION } from './version.js';
 
 const STRATEGY_STORES = ['evidence', 'sources', 'events', 'replays', 'studies', 'claims', 'archives', 'informationSets', 'informationPlans', 'informationStudies', 'provenance'];
@@ -34,6 +34,13 @@ export async function collectLabEvidence() {
     lab.experiments = collectExperimentEvidence();
   } catch (error) {
     lab.experiments = { available: false, reason: `Experiment evidence projection failed: ${error?.message ?? 'unknown error'}` };
+  }
+  // Durable-artifact resolution is the async truth layer — it probes the
+  // store (payload row + committed chunks) rather than trusting the run
+  // record's persistence label.
+  if (lab.experiments?.available === true) {
+    try { lab.experiments.artifactStatus = await verifyRunArtifacts(); }
+    catch (error) { lab.collectionNotes.push(`Experiment artifact verification failed: ${error?.message ?? 'unknown error'}`); }
   }
   if (live.researchProject) lab.researchProjects.push({ project: live.researchProject, contentHash: null });
   if (live.researchArchive) lab.collectionNotes.push('A historical research archive is open for inspection; it is not merged into current evidence.');

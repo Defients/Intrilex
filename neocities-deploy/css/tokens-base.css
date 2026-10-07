@@ -50,6 +50,18 @@
   --sig-system:var(--violet);--sig-measure:var(--cyan);--sig-anomaly:var(--magenta);--sig-active:var(--amber);--sig-error:var(--red);--sig-ok:var(--green);
   --ws-accent:var(--sig-measure);--ws-accent-line:rgba(90,215,232,.45);--ws-accent-soft:rgba(90,215,232,.12);--ws-accent-faint:rgba(90,215,232,.07);
   --ct-cut:14px;--ct-well-inset:inset 0 1px 5px rgba(0,0,0,.38);
+  /* ── Cosmic Tactical semantic layer ────────────────────────────
+     VOID holds the world · CYAN runs the system · VIOLET suggests the
+     arcane · GOLD marks what matters · RED means trouble.
+     Established on the homepage; reusable across future surfaces. */
+  --color-void:#070b13;--color-surface-raised:#0d1420;--color-surface-soft:#111b29;
+  --color-text-primary:#edf5fa;--color-text-muted:#8396a8;
+  --color-system:#42d5e8;--color-arcane:#8668f5;
+  --color-prestige:#d8a94e;--color-prestige-hot:#f0c86a;--color-danger:#d95762;
+  --color-system-line:rgba(66,213,232,.45);--color-system-soft:rgba(66,213,232,.12);--color-system-faint:rgba(66,213,232,.07);
+  --color-arcane-line:rgba(134,104,245,.4);--color-arcane-soft:rgba(134,104,245,.13);--color-arcane-faint:rgba(134,104,245,.07);
+  --color-prestige-line:rgba(216,169,78,.4);--color-prestige-soft:rgba(216,169,78,.14);--color-prestige-faint:rgba(216,169,78,.08);
+  --color-hairline:rgba(148,172,196,.14);
   /* Legacy aliases — referenced by older workspace markup. */
   --accent:var(--sig-measure);--bg:var(--bg-0);--text-dim:var(--muted);
 }
