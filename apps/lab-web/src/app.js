@@ -332,8 +332,7 @@ function renderLandingMode(r) {
     openPlayersOverlay, openRankingSystemOverlay,
   };
   const renderHomePageRoute = () => { renderHome(landingContainer, homeCtx); maybeSkipLandingVideo(); };
-  if (r === '/') renderHomePageRoute();
-  else if (r === '/dev') {
+  if (r === '/' || r === '/dev') {
     renderHomePageRoute();
     const preAlphaScheduled = showPreAlphaOverlay();
     // If the pre-alpha notice was already acknowledged (skipped), show the
@@ -619,11 +618,12 @@ function showPreAlphaOverlay() {
 
   _preAlphaOverlayTimer = setTimeout(() => {
     _preAlphaOverlayTimer = null;
-    // Guard: only show while still on the /dev route. landingContainer stays
-    // connected and visible on every landing route (/rules, /auth, …), so the
-    // container check alone lets the overlay fire on the wrong page — and it
-    // would then fire again when the user returns to /dev.
-    if (route() !== '/dev' || !landingContainer.isConnected || landingContainer.style.display === 'none') return;
+    // Guard: only show while still on the homepage (/ or /dev).
+    // landingContainer stays connected and visible on every landing route
+    // (/rules, /auth, …), so the container check alone lets the overlay fire
+    // on the wrong page — and it would then fire again when the user returns.
+    const homeRoute = route();
+    if ((homeRoute !== '/' && homeRoute !== '/dev') || !landingContainer.isConnected || landingContainer.style.display === 'none') return;
     // Never stack a second copy if one already exists.
     if (document.getElementById('prealpha-overlay')) return;
     const overlay = document.createElement('div');
@@ -639,12 +639,12 @@ function showPreAlphaOverlay() {
       <button class="prealpha-acknowledge" id="prealpha-acknowledge" disabled aria-disabled="true">
         <span class="prealpha-acknowledge-text">Please wait ${waitSeconds}s&hellip;</span>
       </button>
-      <div class="prealpha-dev-stamp" aria-label="Last development date: October 1, 2026">
+      <div class="prealpha-dev-stamp" aria-label="Last development date: October 7, 2026">
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
         <span class="prealpha-dev-stamp-content">
           <span class="prealpha-dev-stamp-dot" aria-hidden="true"></span>
           <span class="prealpha-dev-stamp-label">Last development</span>
-          <time class="prealpha-dev-stamp-date" datetime="2026-10-01">Oct 1, 2026</time>
+          <time class="prealpha-dev-stamp-date" datetime="2026-10-07">Oct 7, 2026</time>
         </span>
         <span class="prealpha-dev-stamp-line" aria-hidden="true"></span>
       </div>

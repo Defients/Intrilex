@@ -28,20 +28,56 @@
   --text-bright:var(--color-text-primary);
   --muted:var(--color-text-muted);
   --focus:var(--color-system);
+  /* Quieter linework for the lower editorial region + readable body
+     tone between --muted and --text-bright. */
+  --home-hairline:rgba(150,180,206,.105);
+  --home-text-soft:#a6bacd;
   background:
     radial-gradient(ellipse 64% 42% at 70% 4%,rgba(66,213,232,.055),transparent 55%),
     radial-gradient(ellipse 52% 38% at 18% 98%,rgba(134,104,245,.05),transparent 60%),
     linear-gradient(168deg,var(--color-void) 0%,#080d17 55%,#060a11 100%);
 }
 
+/* Lower-third readability veil: the wallpaper stays perceptible, but a
+   soft vertical fade calms the environment behind the editorial row so
+   PRESEASON / NEWS / EXPLORE scan more easily. Fixed to the viewport,
+   beneath the content column (main is z-index:2). */
+.home-app::before{
+  content:""; position:fixed; left:0; right:0; bottom:0; height:42%;
+  z-index:1; pointer-events:none;
+  background:linear-gradient(180deg,
+    rgba(6,10,16,0) 0%,
+    rgba(6,10,16,.13) 34%,
+    rgba(6,10,16,.3) 72%,
+    rgba(6,10,16,.4) 100%);
+}
+
 /* ── Cosmic Tactical background — darker, more neutral void so cyan,
    violet and gold can coexist without the whole canvas reading blue.
    Shared landing layers are re-scoped here; rules/legal pages keep
    the legacy treatment. ── */
-.home-app .landing-image-bg{
+/* The wallpaper is a real positioned image layer (not a CSS background)
+   so object-position keeps the warm pocket anchored near the card fan at
+   any aspect ratio, and future motion (drift/parallax) can transform the
+   layer without touching background geometry. Desktop viewports are at
+   or wider than the image's ~16:9.4 ratio, so cover crops almost nothing;
+   the left-biased anchor keeps the gold pocket under the right-column fan
+   when narrower (16:10) viewports do crop. */
+.home-app .landing-image-bg{background:none}
+.home-app .home-wp{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:16% 50%;
+}
+/* Veil over the wallpaper: keeps the overall darkening from the retired
+   background stack, plus a soft radial that reins in the broad warm bloom
+   — the pocket stays visibly gold but concentrates, with more depth at
+   its edges instead of a diffuse beige wash. */
+.home-app .landing-image-bg::after{
+  --wp-bloom-x:63%;
+  content:""; position:absolute; inset:0;
   background:
-    linear-gradient(180deg,rgba(5,8,14,.38) 0%,rgba(5,8,14,.18) 45%,rgba(5,8,14,.55) 100%),
-    url("/assets/intrilex-bg.png") center/cover no-repeat;
+    radial-gradient(ellipse 48% 42% at var(--wp-bloom-x) 44%,rgba(6,10,16,.05) 0%,rgba(6,10,16,.16) 62%,rgba(6,10,16,.22) 100%),
+    linear-gradient(180deg,rgba(5,8,14,.38) 0%,rgba(5,8,14,.18) 45%,rgba(5,8,14,.55) 100%);
 }
 .home-app .landing-video-bg{opacity:.14; filter:saturate(.9) contrast(1.05)}
 .home-app .landing-video-overlay{
@@ -90,17 +126,14 @@
   backdrop-filter:blur(14px);
   animation:none;
 }
-/* Brand reads horizontally: wordmark + hairline + tagline. */
+/* Brand is the wordmark alone — the "TACTICAL PLAYING CARD GAME"
+   descriptor lives in the hero eyebrow, so repeating it in the header
+   was redundant. Logo carries a restrained size bump to hold presence
+   against the enlarged hero. */
 .home-topbar .landing-brand{
   flex:none; flex-direction:row; align-items:center; gap:12px;
 }
-.home-topbar .landing-brand-logo{width:clamp(138px,10.5vw,166px)}
-.home-topbar .landing-brand-sub{
-  padding-left:12px;
-  border-left:1px solid var(--color-hairline);
-  font-size:8.5px; letter-spacing:.22em; line-height:1.5;
-  max-width:150px; text-align:left;
-}
+.home-topbar .landing-brand-logo{width:clamp(148px,11vw,178px)}
 
 .home-nav{flex:1; display:flex; justify-content:center; min-width:0}
 .home-nav-list{
@@ -236,6 +269,7 @@
 
 .home-modes{display:flex; gap:14px; flex-wrap:wrap}
 .home-mode-btn{
+  position:relative; overflow:hidden; isolation:isolate;
   flex:1 1 240px; max-width:340px;
   display:flex; align-items:center; gap:12px;
   padding:15px 18px;
@@ -248,23 +282,61 @@
   box-shadow:var(--shadow-sm), var(--shadow-inset);
   transition:transform var(--normal) var(--ease), border-color var(--fast), box-shadow var(--normal);
 }
+/* Localized accent light that blooms in from the kicker edge on hover —
+   entry-point affordance rather than a generic form-control highlight. */
+.home-mode-btn::before{
+  content:""; position:absolute; inset:0; border-radius:inherit;
+  opacity:0; transition:opacity var(--normal) var(--ease);
+  pointer-events:none;
+}
+.home-mode-btn>*{position:relative; z-index:1}
 .home-mode-btn:hover{transform:translateY(-2px)}
+.home-mode-btn:hover::before{opacity:1}
 .home-mode-btn:active{transform:translateY(0)}
 .home-mode-btn:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
-/* Primary play action → system cyan. */
-.home-mode-btn.solo{border-color:var(--color-system-line); box-shadow:0 6px 24px rgba(66,213,232,.14), var(--shadow-inset)}
-.home-mode-btn.solo:hover{border-color:var(--color-system); box-shadow:0 10px 34px rgba(66,213,232,.22), var(--shadow-inset)}
-/* Secondary play action → arcane violet. */
-.home-mode-btn.direct{border-color:var(--color-arcane-line); box-shadow:0 6px 20px rgba(134,104,245,.1), var(--shadow-inset)}
-.home-mode-btn.direct:hover{border-color:var(--color-arcane); box-shadow:0 10px 34px rgba(134,104,245,.18), var(--shadow-inset)}
+/* Primary play action → system cyan. Resting state already carries a
+   soft inner system-light so Solo reads first. */
+.home-mode-btn.solo{
+  border-color:var(--color-system-line);
+  background:linear-gradient(165deg,rgba(21,38,52,.88),rgba(11,19,29,.76));
+  box-shadow:0 8px 26px rgba(66,213,232,.17), inset 0 1px 0 rgba(66,213,232,.1);
+}
+.home-mode-btn.solo::before{
+  background:radial-gradient(140% 160% at 0% 50%,rgba(66,213,232,.16),transparent 62%);
+  opacity:.4;
+}
+.home-mode-btn.solo:hover{
+  border-color:rgba(66,213,232,.72);
+  box-shadow:0 12px 38px rgba(66,213,232,.26), inset 0 1px 0 rgba(66,213,232,.18);
+}
+.home-mode-btn.solo:hover::before{opacity:1}
+.home-mode-btn.solo:active{box-shadow:0 4px 16px rgba(66,213,232,.2), inset 0 1px 0 rgba(66,213,232,.12)}
+/* Secondary play action → arcane violet, deliberately quieter at rest. */
+.home-mode-btn.direct{
+  border-color:rgba(134,104,245,.3);
+  background:linear-gradient(165deg,rgba(19,24,38,.8),rgba(10,14,23,.68));
+  box-shadow:0 6px 18px rgba(134,104,245,.08), var(--shadow-inset);
+}
+.home-mode-btn.direct::before{
+  background:radial-gradient(140% 160% at 0% 50%,rgba(134,104,245,.13),transparent 62%);
+  opacity:.22;
+}
+.home-mode-btn.direct:hover{
+  border-color:rgba(134,104,245,.56);
+  box-shadow:0 10px 30px rgba(134,104,245,.17), inset 0 1px 0 rgba(134,104,245,.12);
+}
+.home-mode-btn.direct:hover::before{opacity:.9}
+.home-mode-btn.direct:active{box-shadow:0 4px 14px rgba(134,104,245,.12), var(--shadow-inset)}
 .home-mode-kicker{font-size:9px; flex:none}
 .home-mode-btn.solo .home-mode-kicker{color:var(--color-system); text-shadow:0 0 8px rgba(66,213,232,.8)}
 .home-mode-btn.direct .home-mode-kicker{color:var(--color-arcane); text-shadow:0 0 8px rgba(134,104,245,.8)}
 .home-mode-text{display:grid; gap:2px; min-width:0}
 .home-mode-text strong{font-size:14px; letter-spacing:.08em; color:var(--text-bright)}
 .home-mode-text small{font-size:11.5px; color:var(--muted)}
-.home-mode-arrow{margin-left:auto; color:var(--faint); font-size:16px; transition:transform var(--normal) var(--ease)}
-.home-mode-btn:hover .home-mode-arrow{transform:translateX(4px); color:var(--text)}
+.home-mode-arrow{margin-left:auto; color:var(--faint); font-size:16px; transition:transform var(--normal) var(--ease), color var(--fast)}
+.home-mode-btn:hover .home-mode-arrow{transform:translateX(4px)}
+.home-mode-btn.solo:hover .home-mode-arrow{color:var(--color-system)}
+.home-mode-btn.direct:hover .home-mode-arrow{color:var(--color-arcane)}
 
 .home-hero-footnote{margin:20px 0 0; font-size:12px; color:var(--faint)}
 .home-hero-footnote a{color:var(--cyan); text-decoration:none}
@@ -288,7 +360,7 @@
   position:absolute; inset:3%;
   background:
     radial-gradient(ellipse 42% 30% at 50% 76%,rgba(240,200,106,.17),transparent 62%),
-    radial-gradient(ellipse at 50% 54%,rgba(216,169,78,.13),rgba(216,169,78,.045) 46%,transparent 72%),
+    radial-gradient(ellipse at 50% 54%,rgba(216,169,78,.105),rgba(216,169,78,.038) 46%,transparent 72%),
     radial-gradient(ellipse at 62% 30%,rgba(134,104,245,.08),transparent 55%);
   filter:blur(8px);
 }
@@ -324,6 +396,14 @@
   transform:translateY(-4%);
 }
 .home-card-fan{position:relative; width:min(104%,760px); aspect-ratio:1.5/1; z-index:1}
+/* Gentle ambient occlusion behind the fan — a soft dark pocket that
+   grounds the cards in the environment instead of floating on top. */
+.home-card-fan::after{
+  content:""; position:absolute; inset:-4% -10% -14%;
+  background:radial-gradient(ellipse 62% 54% at 50% 56%,rgba(4,7,13,.4),rgba(4,7,13,.14) 58%,transparent 78%);
+  filter:blur(10px);
+  z-index:-2;
+}
 /* Warm light pooling beneath the fan. */
 .home-card-fan::before{
   content:""; position:absolute; left:-6%; right:-6%; bottom:-8%; height:44%;
@@ -335,16 +415,18 @@
   position:absolute; left:50%; top:50%;
   width:31%;
   border-radius:6% / 4.4%;
-  box-shadow:0 14px 38px rgba(0,0,0,.55),
-             0 0 0 1px rgba(240,200,106,.1),
-             0 0 26px rgba(216,169,78,.12);
+  box-shadow:0 20px 48px rgba(0,0,0,.62),
+             0 3px 12px rgba(0,0,0,.34),
+             0 0 0 1px rgba(240,200,106,.14),
+             0 0 30px rgba(216,169,78,.15);
   transform-origin:50% 145%;
   transition:transform var(--slow) var(--ease);
 }
 .home-fan-card.c3{
-  box-shadow:0 14px 40px rgba(0,0,0,.55),
-             0 0 0 1px rgba(240,200,106,.16),
-             0 0 36px rgba(240,200,106,.18);
+  box-shadow:0 20px 52px rgba(0,0,0,.64),
+             0 3px 12px rgba(0,0,0,.36),
+             0 0 0 1px rgba(240,200,106,.2),
+             0 0 40px rgba(240,200,106,.2);
 }
 .home-fan-card.c1{transform:translate(-50%,-55%) rotate(-26deg)}
 .home-fan-card.c2{transform:translate(-50%,-55%) rotate(-13deg)}
@@ -363,8 +445,8 @@
   display:flex; align-items:center; gap:0;
   margin:0;
   padding:11px 0;
-  border-top:1px solid var(--color-hairline);
-  border-bottom:1px solid var(--color-hairline);
+  border-top:1px solid var(--home-hairline);
+  border-bottom:1px solid var(--home-hairline);
 }
 .home-pulse-head{
   flex:none; display:flex; align-items:center; gap:8px;
@@ -393,7 +475,7 @@
   display:flex; align-items:baseline; gap:8px;
   padding:2px 18px;
   min-width:0;
-  border-left:1px solid var(--color-hairline);
+  border-left:1px solid var(--home-hairline);
   text-decoration:none; color:inherit;
   white-space:nowrap;
 }
@@ -427,14 +509,14 @@
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:0;
-  border-top:1px solid var(--color-hairline);
+  border-top:1px solid var(--home-hairline);
 }
 .home-panel{
   position:relative;
   display:flex; flex-direction:column;
   min-width:0; padding:18px 24px 4px;
 }
-.home-panel + .home-panel{border-left:1px solid var(--color-hairline)}
+.home-panel + .home-panel{border-left:1px solid var(--home-hairline)}
 .home-panel:first-child{padding-left:0}
 .home-panel:last-child{padding-right:0}
 
@@ -492,11 +574,11 @@
   font-size:clamp(22px,1.8vw,28px); font-weight:800; line-height:1.04; letter-spacing:-.01em;
   color:var(--text-bright);
 }
-.home-preseason-copy{margin:0 0 14px; font-size:12.5px; line-height:1.55; color:var(--muted); max-width:34ch}
+.home-preseason-copy{margin:0 0 14px; font-size:12.5px; line-height:1.55; color:var(--home-text-soft); max-width:34ch}
 .home-preseason-links{
   display:flex; align-items:center; gap:16px; flex-wrap:wrap;
   margin-top:auto; padding-top:12px;
-  border-top:1px solid var(--color-hairline);
+  border-top:1px solid var(--home-hairline);
 }
 .home-preseason-rules{font-size:10px; font-weight:600; letter-spacing:.1em; color:var(--faint)}
 
@@ -505,7 +587,7 @@
 .home-news-item{
   display:grid; gap:3px;
   padding:9px 0;
-  border-top:1px solid var(--color-hairline);
+  border-top:1px solid var(--home-hairline);
   color:inherit; text-decoration:none;
   transition:transform var(--fast) var(--ease);
 }
@@ -521,7 +603,7 @@
 .home-news-date{font-size:10px; color:var(--faint)}
 .home-news-title{font-size:12.5px; font-weight:650; color:var(--text-bright); line-height:1.3; transition:color var(--fast)}
 .home-news-excerpt{
-  font-size:11px; color:var(--muted); line-height:1.45;
+  font-size:11px; color:var(--home-text-soft); line-height:1.45;
   display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical;
   overflow:hidden;
 }
@@ -539,7 +621,7 @@
   color:inherit; text-decoration:none;
   transition:transform var(--fast) var(--ease);
 }
-.home-explore-item:nth-child(n+3){border-top:1px solid var(--color-hairline)}
+.home-explore-item:nth-child(n+3){border-top:1px solid var(--home-hairline)}
 .home-explore-item:hover{transform:translateX(3px)}
 .home-explore-item:hover .home-explore-text strong{color:var(--color-system)}
 .home-explore-item:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
@@ -554,7 +636,7 @@
 .home-explore-icon .reddit-emblem{width:16px; height:16px}
 .home-explore-text{display:grid; gap:1px; min-width:0}
 .home-explore-text strong{font-size:11px; font-weight:750; letter-spacing:.08em; color:var(--text-bright); transition:color var(--fast)}
-.home-explore-text small{font-size:10px; color:var(--faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.home-explore-text small{font-size:10px; color:var(--home-text-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .home-explore-arrow{margin-left:auto; color:var(--faint); font-size:13px; transition:transform var(--fast) var(--ease), color var(--fast)}
 .home-explore-item:hover .home-explore-arrow{transform:translateX(3px); color:var(--color-system)}
 
@@ -633,7 +715,6 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
 /* Wide laptop: tighten hero + nav */
 @media (max-width:1280px){
   .home-topbar{gap:12px}
-  .home-topbar .landing-brand-sub{display:none}
   .home-nav-link{padding:8px 9px; letter-spacing:.1em}
   .home-main{width:min(94vw,1440px); padding-bottom:18px}
   .home-eyebrow{margin-bottom:10px}
@@ -647,12 +728,16 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
   .home-nav{display:none}
   .home-nav-toggle{display:inline-flex}
   .home-grid{grid-template-columns:1fr 1fr}
-  .home-explore{grid-column:1 / -1; border-left:0; border-top:1px solid var(--color-hairline); padding-left:0; padding-right:0}
+  .home-explore{grid-column:1 / -1; border-left:0; border-top:1px solid var(--home-hairline); padding-left:0; padding-right:0}
   .home-explore-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
   .home-explore-item:nth-child(n+3){border-top:0}
 }
 
 @media (max-width:900px){
+  /* Stacked hero: keep the wallpaper's warm pocket behind the centered
+     fan instead of the right column. */
+  .home-app .home-wp{object-position:68% 46%}
+  .home-app .landing-image-bg::after{--wp-bloom-x:52%}
   .home-hero{grid-template-columns:1fr; gap:8px; padding-top:30px; flex:none}
   .home-hero-copy{max-width:560px}
   .home-hero-visual{order:-1; min-height:260px; margin-bottom:6px}
@@ -665,7 +750,7 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
      onto its own line, and keep metrics whole as they wrap. */
   .home-pulse-metrics{flex-basis:100%}
   .home-metric{flex:none; border-left:0; padding:2px 16px 2px 0}
-  .home-metric + .home-metric{border-left:1px solid var(--color-hairline); padding-left:16px}
+  .home-metric + .home-metric{border-left:1px solid var(--home-hairline); padding-left:16px}
 }
 
 /* Phones: keep the darker void treatment readable over the video bg
@@ -687,7 +772,6 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
   .home-topbar{padding:8px 14px; gap:10px}
   .home-topbar .landing-brand{gap:8px}
   .home-topbar .landing-brand-logo{width:clamp(120px,34vw,150px)}
-  .home-topbar .landing-brand-sub{display:none}
   .home-utility{gap:8px}
   .home-main{width:min(94vw,1440px); padding-bottom:30px}
   .home-hero{padding-top:20px; gap:14px}
@@ -703,11 +787,11 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
   .home-metric-sub{display:none}
   .home-grid{grid-template-columns:1fr}
   .home-panel{padding:16px 0 4px}
-  .home-panel + .home-panel{border-left:0; border-top:1px solid var(--color-hairline)}
+  .home-panel + .home-panel{border-left:0; border-top:1px solid var(--home-hairline)}
   .home-panel:first-child{padding-top:14px}
   .home-explore{grid-column:auto}
   .home-explore-grid{grid-template-columns:1fr 1fr}
-  .home-explore-item:nth-child(n+3){border-top:1px solid var(--color-hairline)}
+  .home-explore-item:nth-child(n+3){border-top:1px solid var(--home-hairline)}
   .home-app .landing-footer{flex-wrap:wrap; gap:10px; padding:10px 16px}
   #landing-continue-slot .landing-continue-meta{display:none}
   /* Keep the primary PLAY action + account + Lab reachable without crowding */
@@ -726,7 +810,7 @@ a.home-leader-row:hover{border-color:var(--color-system-line); background:var(--
   .home-hero-visual{min-height:190px}
   .home-card-fan{width:min(84%,280px)}
   .home-explore-grid{grid-template-columns:1fr}
-  .home-explore-item{border-top:1px solid var(--color-hairline)}
+  .home-explore-item{border-top:1px solid var(--home-hairline)}
   .home-explore-item:first-child{border-top:0}
   .home-leader-row{padding:8px 10px}
 }

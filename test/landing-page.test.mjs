@@ -79,8 +79,7 @@ test('renderLandingMode() dispatches / and /dev to the homepage and /rules to th
   const js = await src('app.js');
   assert.ok(js.includes('function renderLandingMode(r)'), 'must have renderLandingMode function');
   assert.ok(js.includes('renderHome(landingContainer, homeCtx)'), 'must render the homepage');
-  assert.ok(js.includes("if (r === '/') renderHomePageRoute()"), 'must dispatch / to the homepage');
-  assert.ok(js.includes("else if (r === '/dev')"), 'must dispatch /dev');
+  assert.ok(js.includes("if (r === '/' || r === '/dev')"), 'must dispatch / and /dev to the homepage');
   assert.ok(js.includes("if (r === '/rules') renderRules()"), 'must dispatch /rules to renderRules');
   assert.ok(js.includes("r === '/leaderboard'"), 'must dispatch /leaderboard overlay route');
 });

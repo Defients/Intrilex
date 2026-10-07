@@ -36,7 +36,7 @@ import {
 import { createDecisionTrace} from '@intrilex/decision-intelligence/decision-trace';
 import { attributeAction, classifyVariantEntity, isNoAttributionAction } from './rank-attribution.mjs';
 import { createComboTracker, comboClassOf } from './combo-telemetry.mjs';
-import { createAdaptiveController, normalizeAdaptiveConfig, effectiveAdaptiveMode, adaptiveSeatSummary, compactAdaptiveFrame, ADAPTIVE_TELEMETRY_VERSION } from './adaptive-strategy.mjs';
+import { resolveAdaptiveControllers, buildAdaptiveTelemetry, compactAdaptiveFrame } from './adaptive-strategy.mjs';
 
 export { LAB_VERSION, REPLAY_DATA_VERSION, ANALYTICS_SCHEMA_VERSION };
 const COMPLETE_REASONS = new Set(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW']);
@@ -344,12 +344,14 @@ export function runPolicyMatch(config) {
   const policyRngByPlayer = Object.fromEntries(seatOrder.map((playerId, index) => [playerId, new DeterministicPolicyRng(uint32FromHash({ seed: setup.seed, playerId, policyId: String(policyIds[index]).split('|')[0], stream: 'POLICY_V4' }))]));
   // Adaptive Strategy layer: per-seat deterministic controllers over the
   // baseline genome. Absent/OFF config builds no controller (zero overhead);
-  // LEARNED is reported as unavailable and executes as OFF.
-  const adaptiveConfigs = (config.adaptiveConfigs ?? []).map(entry => normalizeAdaptiveConfig(entry));
-  const adaptiveControllers = seatOrder.map((_, index) => {
-    const cfg = adaptiveConfigs[index];
-    if (!cfg || effectiveAdaptiveMode(cfg) !== 'RULED' || policyIds[index] !== WEIGHTED_POLICY_ID || !config.policyStates?.[index]) return null;
-    return createAdaptiveController(cfg, config.policyStates[index]);
+  // LEARNED is reported as unavailable and executes as OFF. Gating is
+  // domain-owned (resolveAdaptiveControllers) — shared with the browser and
+  // interactive runtimes.
+  const { configs: adaptiveConfigs, controllers: adaptiveControllers } = resolveAdaptiveControllers({
+    adaptiveConfigs: config.adaptiveConfigs,
+    policyIds,
+    policyStates: config.policyStates,
+    seatCount: seatOrder.length,
   });
   let terminationReason = 'DECISION_LIMIT', errorCode = null;
   const captureEvents = (items) => {
@@ -740,11 +742,7 @@ export function runPolicyMatch(config) {
   // like strategicTelemetry/comboTelemetry. Seats with no adaptive config and
   // OFF-mode configs contribute no per-decision overhead; an entry is emitted
   // only for seats that carried an adaptive configuration.
-  const adaptiveSeats = seatOrder.map((_, index) => {
-    const s = adaptiveSeatSummary(adaptiveConfigs[index], adaptiveControllers[index]);
-    return s ? { seat: index + 1, ...s } : null;
-  }).filter(Boolean);
-  const adaptiveTelemetry = adaptiveSeats.length ? { schemaVersion: ADAPTIVE_TELEMETRY_VERSION, seats: adaptiveSeats } : null;
+  const adaptiveTelemetry = buildAdaptiveTelemetry(adaptiveConfigs, adaptiveControllers);
   const summary = { ...summaryCore, ...(strategicTelemetry?{strategicTelemetry}:{}), ...(terminal?{terminalEvidence:terminal}:{}), ...(adaptiveTelemetry?{adaptiveTelemetry}:{}), comboTelemetry, matchResultHash: hashCanonical(hashInput), perSeatStats:perSeat.map((p,i)=>({playerId:seatOrder[i],...p})), rankDecisions };
   const base = { summary, decisions, facts, provenance };
   if(fieldManual) summary.strategyDecisions = fieldManual.finish({initialState,commands,finalStateHash:summary.finalStateHash,winner:summary.winner,terminationReason,finalScores,gameLength:summary.completedFullTurns});

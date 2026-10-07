@@ -7,7 +7,7 @@ import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoin
 import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs';
 import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs';
 import { buildDossier } from './profile-journal.mjs';
-import { MODIFIER_STATES, STRATEGIC_STATE_LABELS, ADAPTIVE_CONTRACT, DEFAULT_ADAPTIVE_THRESHOLDS } from './adaptive-strategy.mjs';
+import { MODIFIER_STATES, STRATEGIC_STATE_LABELS, DEFAULT_ADAPTIVE_THRESHOLDS, ADAPTIVE_MODIFIER_BOUND, ADAPTIVE_MODIFIER_SCALE, createAdaptiveConfig } from './adaptive-strategy.mjs';
 
 // Profile-centered Lab workflows. Presentation only: every scientific or
 // head-changing action goes through ProfileStore / profile-science.
@@ -168,13 +168,21 @@ export function mountProfileWorkspace(root) {
 
   function adaptiveHtml(rev) {
     const ad = rev.body.adaptiveStrategy ?? null, mode = ad?.mode ?? 'OFF', th = { ...DEFAULT_ADAPTIVE_THRESHOLDS, ...(ad?.thresholds ?? {}) };
+    const modShift = ADAPTIVE_MODIFIER_BOUND * ADAPTIVE_MODIFIER_SCALE;
     const stateEditors = MODIFIER_STATES.map(state => {
       const mods = ad?.modifiers?.[state] ?? {};
-      const inputs = GENOME_DEFINITION.parameters.map(p => `<label>${esc(p.name)} <small>−100…+100 weight shift</small><input type="number" data-ap-amod="${state}:${p.name}" min="-100" max="100" step="1" value="${mods[p.name] ?? 0}"></label>`).join('');
+      const inputs = GENOME_DEFINITION.parameters.map(p => `<label>${esc(p.name)} <small>modifier −${ADAPTIVE_MODIFIER_BOUND}…+${ADAPTIVE_MODIFIER_BOUND} (×${ADAPTIVE_MODIFIER_SCALE} → weight Δ ±${modShift}, clamped)</small><input type="number" data-ap-amod="${state}:${p.name}" min="-${ADAPTIVE_MODIFIER_BOUND}" max="${ADAPTIVE_MODIFIER_BOUND}" step="1" value="${mods[p.name] ?? 0}"></label>`).join('');
       return `<details><summary>${esc(STRATEGIC_STATE_LABELS[state] ?? state)}</summary><fieldset><legend>Weight modifiers when ${esc(STRATEGIC_STATE_LABELS[state] ?? state)} is active</legend>${inputs}</fieldset></details>`;
     }).join('');
-    const thresholds = [['aheadEnter', 'Ahead enters at advantage ≥', '0…1'], ['dominantEnter', 'Dominant enters at advantage ≥', '0…1'], ['hysteresis', 'Hysteresis band (exit needs re-cross)', '0…0.5'], ['mustDefendAt', 'Opponent secured points fraction that raises DEFENSIVE_EMERGENCY', '0.5…1']]
-      .map(([key, label, hint]) => `<label>${esc(label)} <small>${hint}</small><input type="number" data-ap-at="${key}" step="0.01" value="${th[key]}"></label>`).join('');
+    // HTML bounds mirror the runtime rules in validateAdaptiveConfig; they are
+    // authoring aids only — domain validation remains authoritative.
+    const hysteresisMax = Math.max(0, Math.min(th.aheadEnter, th.dominantEnter - th.aheadEnter));
+    const thresholds = [
+      ['aheadEnter', 'Ahead enters at advantage ≥', '0 < x < 1', { min: '0.01', max: '0.99' }],
+      ['dominantEnter', 'Dominant enters at advantage ≥', 'aheadEnter < x ≤ 1', { min: '0.01', max: '1' }],
+      ['hysteresis', 'Hysteresis band (exit needs re-cross)', `0…${hysteresisMax.toFixed(2)} for current thresholds`, { min: '0', max: String(Number(hysteresisMax.toFixed(2))) }],
+      ['mustDefendAt', 'Opponent secured points fraction that raises DEFENSIVE_EMERGENCY', '0 < x ≤ 1', { min: '0.01', max: '1' }],
+    ].map(([key, label, hint, b]) => `<label>${esc(label)} <small>${esc(hint)}</small><input type="number" data-ap-at="${key}" min="${b.min}" max="${b.max}" step="0.01" value="${th[key]}"></label>`).join('');
     return `<fieldset><legend>Adaptive Strategy <small>temporary posture shifts during a match — the base genome stays the identity</small></legend>
       <label>Mode <select id="ap-d-admode">${[['OFF', 'Off — baseline genome only'], ['RULED', 'Ruled — deterministic states + modifiers'], ['LEARNED', 'Learned (experimental — runs as Off this version)']].map(([m, l]) => `<option value="${m}" ${m === mode ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
       <details ${mode !== 'OFF' ? 'open' : ''}><summary>Strategic posture configuration</summary>
@@ -272,11 +280,11 @@ export function mountProfileWorkspace(root) {
       const metric = root.querySelector('#ap-d-metric').value, optional = sel => root.querySelector(sel).value === '' ? null : number(sel);
       const identityConstraints = [...revision().body.identityConstraints, ...(metric ? [{ metricId: metric, metricVersion: 1, key: root.querySelector('#ap-d-key').value, min: optional('#ap-d-cmin'), max: optional('#ap-d-cmax'), minDenominator: number('#ap-d-cden') }] : [])];
       const adMode = root.querySelector('#ap-d-admode').value;
-      const adaptiveStrategy = adMode === 'OFF' ? null : {
-        contract: ADAPTIVE_CONTRACT.id, mode: adMode,
+      const adaptiveStrategy = createAdaptiveConfig({
+        mode: adMode,
         thresholds: Object.fromEntries([...root.querySelectorAll('[data-ap-at]')].map(i => [i.dataset.apAt, Number(i.value)])),
-        modifiers: Object.fromEntries(MODIFIER_STATES.map(s => [s, Object.fromEntries([...root.querySelectorAll(`[data-ap-amod^="${s}:"]`)].map(i => [i.dataset.apAmod.split(':')[1], Number(i.value)]).filter(([, v]) => v !== 0))]).filter(([, t]) => Object.keys(t).length)),
-      };
+        modifiers: Object.fromEntries(MODIFIER_STATES.map(s => [s, Object.fromEntries([...root.querySelectorAll(`[data-ap-amod^="${s}:"]`)].map(i => [i.dataset.apAmod.split(':')[1], Number(i.value)]))])),
+      });
       ui.preview = await store.saveDraftRevision({ agentProfileId: id(), baseRevisionId: head().activeRevisionId, traits, statement: root.querySelector('#ap-d-statement').value, mutationConstraints, identityConstraints, rulesProfileId: root.querySelector('#ap-d-rules').value, adaptiveStrategy, sourceCheckpointId: head().championCheckpointId });
     }, 'Draft saved. The active head has not moved; review the delta and activate explicitly.');
   };

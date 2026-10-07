@@ -68,7 +68,7 @@ const EXPLORE_DESTINATIONS = [
  */
 export function renderHomePage({ labVersion = '', rulesVersion = '' } = {}) {
   return `<div class="landing-app home-app">
-    <div class="landing-image-bg" aria-hidden="true"></div>
+    <div class="landing-image-bg" aria-hidden="true"><img class="home-wp" src="assets/intrilex-bg.png" alt="" fetchpriority="high" decoding="async" /></div>
     <video class="landing-video-bg" autoplay muted loop playsinline preload="metadata" aria-hidden="true" data-mobile-skip>
       <source src="assets/landing1.mp4" type="video/mp4" />
     </video>
@@ -80,7 +80,6 @@ export function renderHomePage({ labVersion = '', rulesVersion = '' } = {}) {
     <header class="landing-topbar home-topbar">
       <a class="landing-brand" href="#/" aria-label="Intrilex home">
         <img src="assets/intrilex-name.png" alt="INTRILEX" class="landing-brand-logo" />
-        <small class="landing-brand-sub">TACTICAL PLAYING CARD GAME</small>
       </a>
       <nav class="home-nav" aria-label="Primary">
         <ul class="home-nav-list">${PRIMARY_NAV.map(n => `<li><a class="home-nav-link" href="${esc(n.href)}"${n.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(n.label)}</a></li>`).join('')}</ul>

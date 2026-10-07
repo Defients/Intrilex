@@ -1,9 +1,9 @@
 {
   "extractVersion": "1.0.0",
   "analyticsSchemaVersion": "4.2.0",
-  "sourceHash": "31e6a23bf4d4cfb07a6054017a38e48766fb3c2fb96a3dab65f5ed1b5cc283e7",
-  "aggregateHash": "2878d28393151ad8cf4d542286bccda2d1ea1088c73dbdd95780471fa6d73f55",
-  "executiveSummary": "Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. All matches completed without aborts. Highest win rate: control-conversion-tactical at 100.0% (CI [0.610, 1.000], 6 games). No synergy pairs reached statistical significance after FDR correction. 173 mechanic(s) measured with evidence-backed associations. 22 anomaly/anomalies flagged (0 critical, 5 warning, 17 info). Data completeness: PASS (no unclassified facts). Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
+  "sourceHash": "8f10ceeb04f46e114bc129093684bcc8709716d38481b7bb6b98db794a8482b6",
+  "aggregateHash": "3e3dd7a23ff2c2fab78c32fbe9e01e8f4a19814f07fac23d91d56158b396acb3",
+  "executiveSummary": "Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. All matches completed without aborts. Highest win rate: control-conversion-tactical at 100.0% (CI [0.610, 1.000], 6 games). No synergy pairs reached statistical significance after FDR correction. 171 mechanic(s) measured with evidence-backed associations. 23 anomaly/anomalies flagged (0 critical, 5 warning, 18 info). Data completeness: PASS (no unclassified facts). Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
   "dataset": {
     "matchCount": 100,
     "completedMatchCount": 100,
@@ -11,10 +11,10 @@
     "drawCount": 0,
     "detailedMatchCount": 12,
     "policyCount": 17,
-    "mechanicCount": 173,
+    "mechanicCount": 171,
     "synergyCount": 0,
     "motifCount": 60,
-    "anomalyCount": 22
+    "anomalyCount": 23
   },
   "policyFindings": [
     {
@@ -368,14 +368,14 @@
         0.8280524739491653
       ],
       "fingerprint": {
-        "scoreAggression": 7.809523809523809,
-        "responseUse": 2.619047619047619,
-        "responseConservation": 0.2028985507246377,
+        "scoreAggression": 7.761904761904762,
+        "responseUse": 2.4285714285714284,
+        "responseConservation": 0.2153846153846154,
         "privateChoiceDensity": 0.6666666666666666,
-        "advancedFrequency": 1.5238095238095237,
+        "advancedFrequency": 1.380952380952381,
         "ultraFrequency": 0.23809523809523808,
-        "voltageFrequency": 0.8571428571428571,
-        "matchLength": 11.476190476190476
+        "voltageFrequency": 0.7142857142857143,
+        "matchLength": 11.380952380952381
       },
       "keyTraits": [
         "high action frequency",
@@ -396,14 +396,14 @@
         0.7784237720752205
       ],
       "fingerprint": {
-        "scoreAggression": 6.304347826086956,
-        "responseUse": 2.652173913043478,
+        "scoreAggression": 6.260869565217392,
+        "responseUse": 2.608695652173913,
         "responseConservation": 0,
-        "privateChoiceDensity": 0.4782608695652174,
-        "advancedFrequency": 1.3043478260869565,
+        "privateChoiceDensity": 0.391304347826087,
+        "advancedFrequency": 1.2608695652173914,
         "ultraFrequency": 0.8260869565217391,
         "voltageFrequency": 0,
-        "matchLength": 9.173913043478262
+        "matchLength": 9.08695652173913
       },
       "keyTraits": [
         "high action frequency",
@@ -521,7 +521,7 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 7,
+        "count": 9,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -537,9 +537,9 @@
       "sampleSize": 46,
       "replayRefs": [
         "M-3a3ab827dcd1075b2312",
-        "M-28d14df4ee30228a466c",
+        "M-dcf452adff15fcef7302",
         "M-823b91aeb6863c9213fe",
-        "M-28ff342982dcc17a35db"
+        "M-7685104a0dff44c3cb7e"
       ],
       "summary": "Used in 23.0% of participant observations (46/200). Outcome association: negative (-0.113, CI [-0.276, 0.050]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
@@ -564,18 +564,7 @@
         "declinedCount": 26,
         "minimum": 20
       },
-      "immediatePointImpact": {
-        "count": 2,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
-        "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 2,
@@ -583,7 +572,7 @@
         "M-b15ac4537093dcb78d9e",
         "M-10e906b68f564a404af3"
       ],
-      "summary": "Used in 1.0% of participant observations (2/200). Outcome association: positive (0.505, CI [0.435, 0.575]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 1.0% of participant observations (2/200). Outcome association: positive (0.505, CI [0.435, 0.575]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "ace",
@@ -606,17 +595,28 @@
         "declinedCount": 190,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 2,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 15,
       "replayRefs": [
         "M-1e0a8ae4b4442d9640cf",
-        "M-c6f2df43037417ae933d",
+        "M-fb151a512f79ad9d26cf",
         "M-ecb9b494d74db6f2d2da",
         "M-0ed06d7836b1e9f31a1b"
       ],
-      "summary": "Used in 7.5% of participant observations (15/200). Outcome association: negative (-0.180, CI [-0.429, 0.069]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 7.5% of participant observations (15/200). Outcome association: negative (-0.180, CI [-0.429, 0.069]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "ace-anchor",
@@ -673,16 +673,16 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 2,
-        "mean": 3,
-        "median": 3,
+        "count": 3,
+        "mean": 0,
+        "median": 0,
         "min": 0,
-        "max": 6,
-        "p05": 0.30000000000000004,
-        "p25": 1.5,
-        "p75": 4.5,
-        "p95": 5.699999999999999,
-        "standardDeviation": 4.242640687119285
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
@@ -693,7 +693,7 @@
         "M-0ead2e03f49701751682",
         "M-d6119be6f69c3e5c4f03"
       ],
-      "summary": "Used in 20.5% of participant observations (41/200). Outcome association: positive (0.107, CI [-0.062, 0.277]). Immediate point impact: mean 3.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 20.5% of participant observations (41/200). Outcome association: positive (0.107, CI [-0.062, 0.277]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "ace-spade",
@@ -716,18 +716,7 @@
         "declinedCount": 9,
         "minimum": 20
       },
-      "immediatePointImpact": {
-        "count": 1,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
-        "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "EXPLORATORY",
       "status": "measured",
       "sampleSize": 16,
@@ -737,7 +726,7 @@
         "M-68e85cbe73e41181ad4b",
         "M-1b8ddabb2fbe2d2e9766"
       ],
-      "summary": "Used in 8.0% of participant observations (16/200). Outcome association: positive (0.408, CI [0.230, 0.585]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak). Choice identification: limited — only 9 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 8.0% of participant observations (16/200). Outcome association: positive (0.408, CI [0.230, 0.585]). Evidence grade: EXPLORATORY (weak). Choice identification: limited — only 9 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "anchor",
@@ -754,14 +743,14 @@
         -0.28161049498589863,
         0.04851026188566557
       ],
-      "legalDeclinedCount": 506,
+      "legalDeclinedCount": 507,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 506,
+        "declinedCount": 507,
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 2,
+        "count": 4,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -798,23 +787,34 @@
         -0.555521788018629,
         0.21187917633478015
       ],
-      "legalDeclinedCount": 176,
+      "legalDeclinedCount": 177,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 176,
+        "declinedCount": 177,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 2,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 6,
       "replayRefs": [
-        "M-75163a5f7bea7b5b1f54",
+        "M-c6f2df43037417ae933d",
         "M-bd9fa9f2b1a86c24f812",
         "M-43926dd2a83622811654",
         "M-1cabf7e1358a430a03fc"
       ],
-      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: negative (-0.172, CI [-0.556, 0.212]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: negative (-0.172, CI [-0.556, 0.212]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "attachment",
@@ -880,36 +880,6 @@
       "summary": "Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
-      "mechanic": "bj-exile-recycle-CORE-019",
-      "selectionCount": 1,
-      "usageUnit": "participant",
-      "analysisUnitOpportunityCount": 200,
-      "matchUsageRate": 0.005,
-      "matchUsageWilson95": [
-        0.0008831687156009814,
-        0.02777370439789293
-      ],
-      "outcomeAssociation": -0.5025125628140703,
-      "outcomeAssociationCI": [
-        -0.5719807672524988,
-        -0.43304435837564176
-      ],
-      "legalDeclinedCount": 0,
-      "choiceSupport": {
-        "status": "unsupported",
-        "declinedCount": 0,
-        "minimum": 20
-      },
-      "immediatePointImpact": null,
-      "evidenceGrade": "INSUFFICIENT",
-      "status": "measured",
-      "sampleSize": 1,
-      "replayRefs": [
-        "M-7a682d224e41c60f69a5"
-      ],
-      "summary": "Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
-    },
-    {
       "mechanic": "bj-exile-recycle-CORE-020",
       "selectionCount": 1,
       "usageUnit": "participant",
@@ -954,10 +924,10 @@
         0.10145115500232621,
         0.6387412950346834
       ],
-      "legalDeclinedCount": 3,
+      "legalDeclinedCount": 2,
       "choiceSupport": {
         "status": "limited",
-        "declinedCount": 3,
+        "declinedCount": 2,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -970,7 +940,7 @@
         "M-68e85cbe73e41181ad4b",
         "M-bfb4911cab03e0e69503"
       ],
-      "summary": "Used in 3.5% of participant observations (7/200). Outcome association: positive (0.370, CI [0.101, 0.639]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 3 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 3.5% of participant observations (7/200). Outcome association: positive (0.370, CI [0.101, 0.639]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 2 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "board-lock",
@@ -987,10 +957,10 @@
         -0.5736903299476463,
         -0.057888617420774724
       ],
-      "legalDeclinedCount": 67,
+      "legalDeclinedCount": 66,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 67,
+        "declinedCount": 66,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -1020,10 +990,10 @@
         -0.3354302672497872,
         0.0897903753313396
       ],
-      "legalDeclinedCount": 128,
+      "legalDeclinedCount": 127,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 128,
+        "declinedCount": 127,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -1031,7 +1001,7 @@
       "status": "measured",
       "sampleSize": 23,
       "replayRefs": [
-        "M-7f0fb54a0a4c7a02d5be",
+        "M-c6f2df43037417ae933d",
         "M-59bfa112712b2f3d6244",
         "M-823b91aeb6863c9213fe",
         "M-44f3c3b26dd3188cfb1c"
@@ -1053,10 +1023,10 @@
         -0.555521788018629,
         0.21187917633478015
       ],
-      "legalDeclinedCount": 248,
+      "legalDeclinedCount": 247,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 248,
+        "declinedCount": 247,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -1086,10 +1056,10 @@
         -0.3458033997437383,
         0.1921935687145524
       ],
-      "legalDeclinedCount": 238,
+      "legalDeclinedCount": 237,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 238,
+        "declinedCount": 237,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -1125,7 +1095,18 @@
         "declinedCount": 45,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 6,
@@ -1135,7 +1116,7 @@
         "M-ab005c31fb9e696b935a",
         "M-bfb4911cab03e0e69503"
       ],
-      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: positive (0.344, CI [0.037, 0.650]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: positive (0.344, CI [0.037, 0.650]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "club-foundation-bonus",
@@ -1159,27 +1140,27 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 9,
-        "mean": 8,
-        "median": 0,
+        "count": 6,
+        "mean": 9.166666666666666,
+        "median": 8.5,
         "min": 0,
-        "max": 18,
+        "max": 20,
         "p05": 0,
         "p25": 0,
-        "p75": 18,
-        "p95": 18,
-        "standardDeviation": 9.486832980505138
+        "p75": 17.75,
+        "p95": 19.5,
+        "standardDeviation": 10.087946603083637
       },
       "evidenceGrade": "EXPLORATORY",
       "status": "measured",
       "sampleSize": 18,
       "replayRefs": [
         "M-7f0fb54a0a4c7a02d5be",
-        "M-1cabf7e1358a430a03fc",
+        "M-def67daf60c80e4f1835",
         "M-823b91aeb6863c9213fe",
-        "M-7685104a0dff44c3cb7e"
+        "M-0ed06d7836b1e9f31a1b"
       ],
-      "summary": "Used in 9.0% of participant observations (18/200). Outcome association: positive (0.244, CI [0.025, 0.463]). Immediate point impact: mean 8.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak). Choice identification: limited — only 12 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 9.0% of participant observations (18/200). Outcome association: positive (0.244, CI [0.025, 0.463]). Immediate point impact: mean 9.17 over undefined measured declarations. Evidence grade: EXPLORATORY (weak). Choice identification: limited — only 12 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "combo",
@@ -1203,27 +1184,27 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 14,
-        "mean": 1.4285714285714286,
+        "count": 18,
+        "mean": 2.2777777777777777,
         "median": 0,
-        "min": 0,
-        "max": 20,
-        "p05": 0,
+        "min": -2,
+        "max": 17,
+        "p05": -0.2999999999999998,
         "p25": 0,
         "p75": 0,
-        "p95": 6.999999999999993,
-        "standardDeviation": 5.345224838248488
+        "p95": 16.15,
+        "standardDeviation": 5.716905328580114
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 112,
       "replayRefs": [
         "M-3a3ab827dcd1075b2312",
-        "M-dcf452adff15fcef7302",
+        "M-0abbb36eea637c1b8c25",
         "M-823b91aeb6863c9213fe",
-        "M-1b8ddabb2fbe2d2e9766"
+        "M-a4c8c5b0f6b579f5059e"
       ],
-      "summary": "Used in 56.0% of participant observations (112/200). Outcome association: negative (-0.020, CI [-0.160, 0.119]). Immediate point impact: mean 1.43 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 56.0% of participant observations (112/200). Outcome association: negative (-0.020, CI [-0.160, 0.119]). Immediate point impact: mean 2.28 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "counter",
@@ -1248,15 +1229,15 @@
       },
       "immediatePointImpact": {
         "count": 3,
-        "mean": 2,
+        "mean": 0,
         "median": 0,
         "min": 0,
-        "max": 6,
+        "max": 0,
         "p05": 0,
         "p25": 0,
-        "p75": 3,
-        "p95": 5.3999999999999995,
-        "standardDeviation": 3.4641016151377544
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
       },
       "evidenceGrade": "EXPLORATORY",
       "status": "measured",
@@ -1267,7 +1248,7 @@
         "M-0ead2e03f49701751682",
         "M-bf8173423a3f80544774"
       ],
-      "summary": "Used in 35.0% of participant observations (70/200). Outcome association: positive (0.176, CI [0.033, 0.318]). Immediate point impact: mean 2.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak)."
+      "summary": "Used in 35.0% of participant observations (70/200). Outcome association: positive (0.176, CI [0.033, 0.318]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak)."
     },
     {
       "mechanic": "deep-draw-♠",
@@ -1320,7 +1301,18 @@
         "declinedCount": 9,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 2,
@@ -1328,7 +1320,7 @@
         "M-bf8173423a3f80544774",
         "M-dc85fd40da0ee11844ae"
       ],
-      "summary": "Used in 1.0% of participant observations (2/200). Outcome association: negative (-0.505, CI [-0.575, -0.435]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 9 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 1.0% of participant observations (2/200). Outcome association: negative (-0.505, CI [-0.575, -0.435]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 9 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "diamond-mimic-row-exchange-er",
@@ -1384,7 +1376,18 @@
         "declinedCount": 40,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 12,
@@ -1394,7 +1397,7 @@
         "M-105cc67103dbca1477fb",
         "M-1b8ddabb2fbe2d2e9766"
       ],
-      "summary": "Used in 6.0% of participant observations (12/200). Outcome association: positive (0.266, CI [0.011, 0.521]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 6.0% of participant observations (12/200). Outcome association: positive (0.266, CI [0.011, 0.521]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "disrupt",
@@ -1434,15 +1437,15 @@
       "sampleSize": 77,
       "replayRefs": [
         "M-1e0a8ae4b4442d9640cf",
-        "M-77268ba404d7385345ad",
+        "M-1cabf7e1358a430a03fc",
         "M-823b91aeb6863c9213fe",
-        "M-28ff342982dcc17a35db"
+        "M-7685104a0dff44c3cb7e"
       ],
       "summary": "Used in 38.5% of participant observations (77/200). Outcome association: negative (-0.053, CI [-0.195, 0.089]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "draw",
-      "selectionCount": 321,
+      "selectionCount": 323,
       "usageUnit": "participant",
       "analysisUnitOpportunityCount": 200,
       "matchUsageRate": 0.55,
@@ -1455,14 +1458,14 @@
         -0.3383497424894166,
         -0.06569066155098743
       ],
-      "legalDeclinedCount": 1232,
+      "legalDeclinedCount": 1229,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 1232,
+        "declinedCount": 1229,
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 1,
+        "count": 3,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -1478,9 +1481,9 @@
       "sampleSize": 110,
       "replayRefs": [
         "M-1e0a8ae4b4442d9640cf",
-        "M-21f76fbae3a2850d8b89",
+        "M-dcf452adff15fcef7302",
         "M-823b91aeb6863c9213fe",
-        "M-d5cf43da2cca5b2f434f"
+        "M-7685104a0dff44c3cb7e"
       ],
       "summary": "Used in 55.0% of participant observations (110/200). Outcome association: negative (-0.202, CI [-0.338, -0.066]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak)."
     },
@@ -1532,10 +1535,10 @@
         -0.27172337665962887,
         0.16957833069435815
       ],
-      "legalDeclinedCount": 226,
+      "legalDeclinedCount": 225,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 226,
+        "declinedCount": 225,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -1565,24 +1568,13 @@
         -0.29231971102268794,
         0.034255194893655694
       ],
-      "legalDeclinedCount": 895,
+      "legalDeclinedCount": 893,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 895,
+        "declinedCount": 893,
         "minimum": 20
       },
-      "immediatePointImpact": {
-        "count": 1,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
-        "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 45,
@@ -1592,7 +1584,7 @@
         "M-823b91aeb6863c9213fe",
         "M-43926dd2a83622811654"
       ],
-      "summary": "Used in 22.5% of participant observations (45/200). Outcome association: negative (-0.129, CI [-0.292, 0.034]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 22.5% of participant observations (45/200). Outcome association: negative (-0.129, CI [-0.292, 0.034]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "effect-red-joker",
@@ -1609,10 +1601,10 @@
         -0.2118791763347802,
         0.555521788018629
       ],
-      "legalDeclinedCount": 52,
+      "legalDeclinedCount": 53,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 52,
+        "declinedCount": 53,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -1620,7 +1612,7 @@
       "status": "measured",
       "sampleSize": 6,
       "replayRefs": [
-        "M-c6f2df43037417ae933d",
+        "M-7a682d224e41c60f69a5",
         "M-1011c764e8b424cf09eb",
         "M-d5cf43da2cca5b2f434f",
         "M-bbc346d896606590e3e6"
@@ -1642,10 +1634,10 @@
         -0.3354302672497872,
         0.0897903753313396
       ],
-      "legalDeclinedCount": 128,
+      "legalDeclinedCount": 127,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 128,
+        "declinedCount": 127,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -1653,7 +1645,7 @@
       "status": "measured",
       "sampleSize": 23,
       "replayRefs": [
-        "M-7f0fb54a0a4c7a02d5be",
+        "M-c6f2df43037417ae933d",
         "M-59bfa112712b2f3d6244",
         "M-823b91aeb6863c9213fe",
         "M-44f3c3b26dd3188cfb1c"
@@ -1707,23 +1699,23 @@
         -0.21047648931361093,
         0.1723012650341683
       ],
-      "legalDeclinedCount": 187,
+      "legalDeclinedCount": 188,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 187,
+        "declinedCount": 188,
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 1,
-        "mean": 0,
+        "count": 3,
+        "mean": 3.3333333333333335,
         "median": 0,
         "min": 0,
-        "max": 0,
+        "max": 10,
         "p05": 0,
         "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
+        "p75": 5,
+        "p95": 9,
+        "standardDeviation": 5.773502691896257
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
@@ -1734,7 +1726,7 @@
         "M-dc85fd40da0ee11844ae",
         "M-0ed06d7836b1e9f31a1b"
       ],
-      "summary": "Used in 15.5% of participant observations (31/200). Outcome association: negative (-0.019, CI [-0.210, 0.172]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 15.5% of participant observations (31/200). Outcome association: negative (-0.019, CI [-0.210, 0.172]). Immediate point impact: mean 3.33 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "eight-scuttle",
@@ -1790,18 +1782,7 @@
         "declinedCount": 6,
         "minimum": 20
       },
-      "immediatePointImpact": {
-        "count": 2,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
-        "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 12,
@@ -1811,7 +1792,7 @@
         "M-3de8965082511d7fe42f",
         "M-6be86d4c8f8c2c312526"
       ],
-      "summary": "Used in 6.0% of participant observations (12/200). Outcome association: negative (-0.089, CI [-0.377, 0.199]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 6 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 6.0% of participant observations (12/200). Outcome association: negative (-0.089, CI [-0.377, 0.199]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 6 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "exhausted-pass",
@@ -1865,7 +1846,7 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 9,
+        "count": 12,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -1881,9 +1862,9 @@
       "sampleSize": 107,
       "replayRefs": [
         "M-1e0a8ae4b4442d9640cf",
-        "M-bb59aa2f7a9a15e0502b",
+        "M-0abbb36eea637c1b8c25",
         "M-823b91aeb6863c9213fe",
-        "M-44f3c3b26dd3188cfb1c"
+        "M-d5cf43da2cca5b2f434f"
       ],
       "summary": "Used in 53.5% of participant observations (107/200). Outcome association: positive (0.171, CI [0.034, 0.308]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
@@ -1902,10 +1883,10 @@
         -0.4825616220709838,
         -0.14488935832117317
       ],
-      "legalDeclinedCount": 1151,
+      "legalDeclinedCount": 1150,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 1151,
+        "declinedCount": 1150,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -1922,18 +1903,18 @@
     },
     {
       "mechanic": "five-gy-bottom",
-      "selectionCount": 57,
+      "selectionCount": 55,
       "usageUnit": "participant",
       "analysisUnitOpportunityCount": 200,
-      "matchUsageRate": 0.09,
+      "matchUsageRate": 0.085,
       "matchUsageWilson95": [
-        0.05768744886219316,
-        0.13776571876716542
+        0.05374575017747561,
+        0.13189587071565567
       ],
-      "outcomeAssociation": 0.36630036630036633,
+      "outcomeAssociation": 0.353584056573449,
       "outcomeAssociationCI": [
-        0.17949920040123005,
-        0.5531015321995026
+        0.15847230011668498,
+        0.548695813030213
       ],
       "legalDeclinedCount": 91,
       "choiceSupport": {
@@ -1944,14 +1925,14 @@
       "immediatePointImpact": null,
       "evidenceGrade": "EXPLORATORY",
       "status": "measured",
-      "sampleSize": 18,
+      "sampleSize": 17,
       "replayRefs": [
         "M-a1e68d9b732dda228781",
         "M-0abbb36eea637c1b8c25",
-        "M-7a682d224e41c60f69a5",
+        "M-ecb9b494d74db6f2d2da",
         "M-d5cf43da2cca5b2f434f"
       ],
-      "summary": "Used in 9.0% of participant observations (18/200). Outcome association: positive (0.366, CI [0.179, 0.553]). Evidence grade: EXPLORATORY (weak)."
+      "summary": "Used in 8.5% of participant observations (17/200). Outcome association: positive (0.354, CI [0.158, 0.549]). Evidence grade: EXPLORATORY (weak)."
     },
     {
       "mechanic": "five-recycle",
@@ -1968,10 +1949,10 @@
         -0.3974030806266928,
         0.15059106910879888
       ],
-      "legalDeclinedCount": 325,
+      "legalDeclinedCount": 324,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 325,
+        "declinedCount": 324,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -2039,7 +2020,18 @@
         "declinedCount": 27,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 2,
+        "mean": -1,
+        "median": -1,
+        "min": -2,
+        "max": 0,
+        "p05": -1.9,
+        "p25": -1.5,
+        "p75": -0.5,
+        "p95": -0.10000000000000009,
+        "standardDeviation": 1.4142135623730951
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 4,
@@ -2049,7 +2041,7 @@
         "M-63bf07ca92d9230c709e",
         "M-43926dd2a83622811654"
       ],
-      "summary": "Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Immediate point impact: mean -1.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "four-guess-10-♣",
@@ -2223,14 +2215,25 @@
         "declinedCount": 49,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 1,
       "replayRefs": [
         "M-8aa82c3381a9a4b56820"
       ],
-      "summary": "Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 0.5% of participant observations (1/200). Outcome association: negative (-0.503, CI [-0.572, -0.433]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "four-guess-6-♥",
@@ -2721,18 +2724,18 @@
     },
     {
       "mechanic": "hand-swap",
-      "selectionCount": 3,
+      "selectionCount": 4,
       "usageUnit": "participant",
       "analysisUnitOpportunityCount": 200,
-      "matchUsageRate": 0.015,
+      "matchUsageRate": 0.02,
       "matchUsageWilson95": [
-        0.00511423779325831,
-        0.04316572879269026
+        0.0078044264163494685,
+        0.050287086905826436
       ],
-      "outcomeAssociation": 0.16920473773265648,
+      "outcomeAssociation": 0.25510204081632654,
       "outcomeAssociationCI": [
-        -0.3687797670300306,
-        0.7071892424953437
+        -0.17497666356120978,
+        0.6851807451938629
       ],
       "legalDeclinedCount": 55,
       "choiceSupport": {
@@ -2743,13 +2746,14 @@
       "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
-      "sampleSize": 3,
+      "sampleSize": 4,
       "replayRefs": [
+        "M-7a682d224e41c60f69a5",
         "M-bbc346d896606590e3e6",
-        "M-1b8ddabb2fbe2d2e9766",
-        "M-d5cf43da2cca5b2f434f"
+        "M-d5cf43da2cca5b2f434f",
+        "M-1b8ddabb2fbe2d2e9766"
       ],
-      "summary": "Used in 1.5% of participant observations (3/200). Outcome association: positive (0.169, CI [-0.369, 0.707]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "heart-tempo",
@@ -2772,18 +2776,7 @@
         "declinedCount": 28,
         "minimum": 20
       },
-      "immediatePointImpact": {
-        "count": 4,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
-        "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 18,
@@ -2793,7 +2786,7 @@
         "M-dc85fd40da0ee11844ae",
         "M-6be86d4c8f8c2c312526"
       ],
-      "summary": "Used in 9.0% of participant observations (18/200). Outcome association: negative (0.000, CI [-0.242, 0.242]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 9.0% of participant observations (18/200). Outcome association: negative (0.000, CI [-0.242, 0.242]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "jack",
@@ -2833,9 +2826,9 @@
       "sampleSize": 77,
       "replayRefs": [
         "M-1e0a8ae4b4442d9640cf",
-        "M-77268ba404d7385345ad",
+        "M-1cabf7e1358a430a03fc",
         "M-823b91aeb6863c9213fe",
-        "M-28ff342982dcc17a35db"
+        "M-7685104a0dff44c3cb7e"
       ],
       "summary": "Used in 38.5% of participant observations (77/200). Outcome association: negative (-0.053, CI [-0.195, 0.089]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
@@ -2917,10 +2910,10 @@
         -0.23291210554397151,
         0.15448073299495196
       ],
-      "legalDeclinedCount": 200,
+      "legalDeclinedCount": 201,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 200,
+        "declinedCount": 201,
         "minimum": 20
       },
       "immediatePointImpact": {
@@ -3024,10 +3017,10 @@
         -0.555521788018629,
         0.21187917633478015
       ],
-      "legalDeclinedCount": 248,
+      "legalDeclinedCount": 247,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 248,
+        "declinedCount": 247,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -3035,7 +3028,7 @@
       "status": "measured",
       "sampleSize": 6,
       "replayRefs": [
-        "M-75163a5f7bea7b5b1f54",
+        "M-c6f2df43037417ae933d",
         "M-1fce2e8feaceff1507d0",
         "M-1b8ddabb2fbe2d2e9766",
         "M-bd9fa9f2b1a86c24f812"
@@ -3147,23 +3140,34 @@
         -0.555521788018629,
         0.21187917633478015
       ],
-      "legalDeclinedCount": 176,
+      "legalDeclinedCount": 177,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 176,
+        "declinedCount": 177,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 2,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 6,
       "replayRefs": [
-        "M-75163a5f7bea7b5b1f54",
+        "M-c6f2df43037417ae933d",
         "M-bd9fa9f2b1a86c24f812",
         "M-43926dd2a83622811654",
         "M-1cabf7e1358a430a03fc"
       ],
-      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: negative (-0.172, CI [-0.556, 0.212]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: negative (-0.172, CI [-0.556, 0.212]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "nine-anchor-discard",
@@ -3186,17 +3190,28 @@
         "declinedCount": 0,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 6,
       "replayRefs": [
-        "M-75163a5f7bea7b5b1f54",
+        "M-c6f2df43037417ae933d",
         "M-bd9fa9f2b1a86c24f812",
         "M-43926dd2a83622811654",
         "M-1cabf7e1358a430a03fc"
       ],
-      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: positive (0.172, CI [-0.212, 0.556]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: positive (0.172, CI [-0.212, 0.556]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "nine-goal-shift-3",
@@ -3213,10 +3228,10 @@
         -0.7071892424953437,
         0.3687797670300306
       ],
-      "legalDeclinedCount": 179,
+      "legalDeclinedCount": 180,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 179,
+        "declinedCount": 180,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -3265,7 +3280,7 @@
     },
     {
       "mechanic": "nine-tap",
-      "selectionCount": 70,
+      "selectionCount": 69,
       "usageUnit": "participant",
       "analysisUnitOpportunityCount": 200,
       "matchUsageRate": 0.25,
@@ -3285,7 +3300,7 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 15,
+        "count": 6,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -3301,9 +3316,9 @@
       "sampleSize": 50,
       "replayRefs": [
         "M-3a3ab827dcd1075b2312",
-        "M-21f76fbae3a2850d8b89",
+        "M-dcf452adff15fcef7302",
         "M-823b91aeb6863c9213fe",
-        "M-28ff342982dcc17a35db"
+        "M-44f3c3b26dd3188cfb1c"
       ],
       "summary": "Used in 25.0% of participant observations (50/200). Outcome association: negative (-0.107, CI [-0.265, 0.052]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
@@ -3322,10 +3337,10 @@
         0.43304435837564176,
         0.5719807672524988
       ],
-      "legalDeclinedCount": 57,
+      "legalDeclinedCount": 58,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 57,
+        "declinedCount": 58,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -3413,103 +3428,15 @@
         0.09866982633455634,
         0.1948988086570756
       ],
-      "outcomeAssociation": 0.12458471760797335,
+      "outcomeAssociation": 0.0830564784053156,
       "outcomeAssociationCI": [
-        -0.071120465370543,
-        0.3202899005864897
+        -0.1148810399544492,
+        0.2809939967650804
       ],
-      "legalDeclinedCount": 69,
+      "legalDeclinedCount": 67,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 69,
-        "minimum": 20
-      },
-      "immediatePointImpact": {
-        "count": 2,
-        "mean": 2.5,
-        "median": 2.5,
-        "min": 0,
-        "max": 5,
-        "p05": 0.25,
-        "p25": 1.25,
-        "p75": 3.75,
-        "p95": 4.75,
-        "standardDeviation": 3.5355339059327378
-      },
-      "evidenceGrade": "INSUFFICIENT",
-      "status": "measured",
-      "sampleSize": 28,
-      "replayRefs": [
-        "M-1bf76059b3e86070f410",
-        "M-6b70490e3e758f2cff70",
-        "M-dfec43fa96fba5186121",
-        "M-43926dd2a83622811654"
-      ],
-      "summary": "Used in 14.0% of participant observations (28/200). Outcome association: positive (0.125, CI [-0.071, 0.320]). Immediate point impact: mean 2.50 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
-    },
-    {
-      "mechanic": "rank10",
-      "selectionCount": 69,
-      "usageUnit": "participant",
-      "analysisUnitOpportunityCount": 200,
-      "matchUsageRate": 0.28,
-      "matchUsageWilson95": [
-        0.22236889773949026,
-        0.3459230458665071
-      ],
-      "outcomeAssociation": 0.1736111111111111,
-      "outcomeAssociationCI": [
-        0.023000038723551025,
-        0.32422218349867116
-      ],
-      "legalDeclinedCount": 87,
-      "choiceSupport": {
-        "status": "identified",
-        "declinedCount": 87,
-        "minimum": 20
-      },
-      "immediatePointImpact": {
-        "count": 14,
-        "mean": 5.142857142857143,
-        "median": 0,
-        "min": 0,
-        "max": 18,
-        "p05": 0,
-        "p25": 0,
-        "p75": 13.5,
-        "p95": 18,
-        "standardDeviation": 8.438530156892918
-      },
-      "evidenceGrade": "EXPLORATORY",
-      "status": "measured",
-      "sampleSize": 56,
-      "replayRefs": [
-        "M-3a3ab827dcd1075b2312",
-        "M-def67daf60c80e4f1835",
-        "M-823b91aeb6863c9213fe",
-        "M-28ff342982dcc17a35db"
-      ],
-      "summary": "Used in 28.0% of participant observations (56/200). Outcome association: positive (0.174, CI [0.023, 0.324]). Immediate point impact: mean 5.14 over undefined measured declarations. Evidence grade: EXPLORATORY (weak)."
-    },
-    {
-      "mechanic": "rank10-stack-theft",
-      "selectionCount": 4,
-      "usageUnit": "participant",
-      "analysisUnitOpportunityCount": 200,
-      "matchUsageRate": 0.02,
-      "matchUsageWilson95": [
-        0.0078044264163494685,
-        0.050287086905826436
-      ],
-      "outcomeAssociation": -0.2551020408163265,
-      "outcomeAssociationCI": [
-        -0.6851807451938627,
-        0.17497666356120983
-      ],
-      "legalDeclinedCount": 4,
-      "choiceSupport": {
-        "status": "limited",
-        "declinedCount": 4,
+        "declinedCount": 67,
         "minimum": 20
       },
       "immediatePointImpact": {
@@ -3526,14 +3453,91 @@
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
-      "sampleSize": 4,
+      "sampleSize": 28,
+      "replayRefs": [
+        "M-1bf76059b3e86070f410",
+        "M-21f76fbae3a2850d8b89",
+        "M-dfec43fa96fba5186121",
+        "M-44f3c3b26dd3188cfb1c"
+      ],
+      "summary": "Used in 14.0% of participant observations (28/200). Outcome association: positive (0.083, CI [-0.115, 0.281]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+    },
+    {
+      "mechanic": "rank10",
+      "selectionCount": 68,
+      "usageUnit": "participant",
+      "analysisUnitOpportunityCount": 200,
+      "matchUsageRate": 0.275,
+      "matchUsageWilson95": [
+        0.21779700329307355,
+        0.34068339357669647
+      ],
+      "outcomeAssociation": 0.18808777429467083,
+      "outcomeAssociationCI": [
+        0.03737368205426078,
+        0.3388018665350809
+      ],
+      "legalDeclinedCount": 87,
+      "choiceSupport": {
+        "status": "identified",
+        "declinedCount": 87,
+        "minimum": 20
+      },
+      "immediatePointImpact": {
+        "count": 9,
+        "mean": 6.111111111111111,
+        "median": 0,
+        "min": 0,
+        "max": 20,
+        "p05": 0,
+        "p25": 0,
+        "p75": 17,
+        "p95": 19.2,
+        "standardDeviation": 9.198429817697752
+      },
+      "evidenceGrade": "EXPLORATORY",
+      "status": "measured",
+      "sampleSize": 55,
+      "replayRefs": [
+        "M-3a3ab827dcd1075b2312",
+        "M-ed123e23841332200c85",
+        "M-823b91aeb6863c9213fe",
+        "M-bf8173423a3f80544774"
+      ],
+      "summary": "Used in 27.5% of participant observations (55/200). Outcome association: positive (0.188, CI [0.037, 0.339]). Immediate point impact: mean 6.11 over undefined measured declarations. Evidence grade: EXPLORATORY (weak)."
+    },
+    {
+      "mechanic": "rank10-stack-theft",
+      "selectionCount": 5,
+      "usageUnit": "participant",
+      "analysisUnitOpportunityCount": 200,
+      "matchUsageRate": 0.025,
+      "matchUsageWilson95": [
+        0.01072471965176126,
+        0.05717834040664198
+      ],
+      "outcomeAssociation": -0.30769230769230765,
+      "outcomeAssociationCI": [
+        -0.6652541398280271,
+        0.04986952444341175
+      ],
+      "legalDeclinedCount": 4,
+      "choiceSupport": {
+        "status": "limited",
+        "declinedCount": 4,
+        "minimum": 20
+      },
+      "immediatePointImpact": null,
+      "evidenceGrade": "INSUFFICIENT",
+      "status": "measured",
+      "sampleSize": 5,
       "replayRefs": [
         "M-a1e68d9b732dda228781",
-        "M-8a5ccb67f29c5fb760ee",
+        "M-7a682d224e41c60f69a5",
         "M-dc85fd40da0ee11844ae",
         "M-9a3926a666ef22118da0"
       ],
-      "summary": "Used in 2.0% of participant observations (4/200). Outcome association: negative (-0.255, CI [-0.685, 0.175]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 4 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 2.5% of participant observations (5/200). Outcome association: negative (-0.308, CI [-0.665, 0.050]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 4 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "rank3-discard",
@@ -3689,7 +3693,7 @@
       "status": "measured",
       "sampleSize": 9,
       "replayRefs": [
-        "M-c2d7ac654cf6fa83830b",
+        "M-c6f2df43037417ae933d",
         "M-bd9fa9f2b1a86c24f812",
         "M-ecb9b494d74db6f2d2da",
         "M-bbc346d896606590e3e6"
@@ -3750,18 +3754,7 @@
         "declinedCount": 30,
         "minimum": 20
       },
-      "immediatePointImpact": {
-        "count": 1,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
-        "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 11,
@@ -3771,7 +3764,7 @@
         "M-823b91aeb6863c9213fe",
         "M-dc85fd40da0ee11844ae"
       ],
-      "summary": "Used in 5.5% of participant observations (11/200). Outcome association: negative (-0.241, CI [-0.513, 0.032]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 5.5% of participant observations (11/200). Outcome association: negative (-0.241, CI [-0.513, 0.032]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "rank7-generated-advanced-ultra-three-black",
@@ -3890,7 +3883,7 @@
       "status": "measured",
       "sampleSize": 8,
       "replayRefs": [
-        "M-c2d7ac654cf6fa83830b",
+        "M-c6f2df43037417ae933d",
         "M-0ed06d7836b1e9f31a1b",
         "M-ac49629ef9b831f05b7c",
         "M-7685104a0dff44c3cb7e"
@@ -4022,7 +4015,7 @@
     },
     {
       "mechanic": "score",
-      "selectionCount": 533,
+      "selectionCount": 530,
       "usageUnit": "participant",
       "analysisUnitOpportunityCount": 200,
       "matchUsageRate": 0.81,
@@ -4035,34 +4028,34 @@
         0.4055916639945851,
         0.6340444633608404
       ],
-      "legalDeclinedCount": 853,
+      "legalDeclinedCount": 854,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 853,
+        "declinedCount": 854,
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 58,
-        "mean": 3.6379310344827585,
-        "median": 0,
+        "count": 70,
+        "mean": 4.1571428571428575,
+        "median": 1,
         "min": 0,
-        "max": 11,
+        "max": 19,
         "p05": 0,
         "p25": 0,
         "p75": 8,
         "p95": 10,
-        "standardDeviation": 4.34760783533855
+        "standardDeviation": 4.658281434319425
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 162,
       "replayRefs": [
         "M-3a3ab827dcd1075b2312",
-        "M-21f76fbae3a2850d8b89",
+        "M-dcf452adff15fcef7302",
         "M-823b91aeb6863c9213fe",
-        "M-44f3c3b26dd3188cfb1c"
+        "M-d5cf43da2cca5b2f434f"
       ],
-      "summary": "Used in 81.0% of participant observations (162/200). Outcome association: positive (0.520, CI [0.406, 0.634]). Immediate point impact: mean 3.64 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 81.0% of participant observations (162/200). Outcome association: positive (0.520, CI [0.406, 0.634]). Immediate point impact: mean 4.16 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "scuttle",
@@ -4079,10 +4072,10 @@
         -0.28085740890349675,
         0.02717907303337999
       ],
-      "legalDeclinedCount": 393,
+      "legalDeclinedCount": 390,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 393,
+        "declinedCount": 390,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -4112,10 +4105,10 @@
         -0.5719807672524988,
         -0.43304435837564176
       ],
-      "legalDeclinedCount": 57,
+      "legalDeclinedCount": 58,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 57,
+        "declinedCount": 58,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -4298,18 +4291,7 @@
         "declinedCount": 13,
         "minimum": 20
       },
-      "immediatePointImpact": {
-        "count": 1,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
-        "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 3,
@@ -4318,7 +4300,7 @@
         "M-5f67f9ec4d9473a55a83",
         "M-44f3c3b26dd3188cfb1c"
       ],
-      "summary": "Used in 1.5% of participant observations (3/200). Outcome association: positive (0.169, CI [-0.369, 0.707]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 13 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 1.5% of participant observations (3/200). Outcome association: positive (0.169, CI [-0.369, 0.707]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 13 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "seven-scoring-trigger-take-CORE-016",
@@ -4375,7 +4357,7 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 2,
+        "count": 1,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -4462,7 +4444,18 @@
         "declinedCount": 5,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 4,
@@ -4472,7 +4465,7 @@
         "M-21f76fbae3a2850d8b89",
         "M-3209e9849473fd96dfe9"
       ],
-      "summary": "Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 5 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 5 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "seven-scoring-trigger-take-CORE-020",
@@ -4539,18 +4532,18 @@
     },
     {
       "mechanic": "seven-scoring-trigger-take-CORE-022",
-      "selectionCount": 4,
+      "selectionCount": 3,
       "usageUnit": "participant",
       "analysisUnitOpportunityCount": 200,
-      "matchUsageRate": 0.02,
+      "matchUsageRate": 0.015,
       "matchUsageWilson95": [
-        0.0078044264163494685,
-        0.050287086905826436
+        0.00511423779325831,
+        0.04316572879269026
       ],
-      "outcomeAssociation": 0.25510204081632654,
+      "outcomeAssociation": 0.5076142131979695,
       "outcomeAssociationCI": [
-        -0.17497666356120978,
-        0.6851807451938629
+        0.4378014835751755,
+        0.5774269428207636
       ],
       "legalDeclinedCount": 1,
       "choiceSupport": {
@@ -4561,14 +4554,13 @@
       "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
-      "sampleSize": 4,
+      "sampleSize": 3,
       "replayRefs": [
         "M-c1293284c7373e63e49a",
         "M-dcf452adff15fcef7302",
-        "M-7a682d224e41c60f69a5",
         "M-ecb9b494d74db6f2d2da"
       ],
-      "summary": "Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 1 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 1.5% of participant observations (3/200). Outcome association: positive (0.508, CI [0.438, 0.577]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 1 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "seven-scoring-trigger-take-CORE-023",
@@ -4585,10 +4577,10 @@
         0.43304435837564176,
         0.5719807672524988
       ],
-      "legalDeclinedCount": 6,
+      "legalDeclinedCount": 5,
       "choiceSupport": {
         "status": "limited",
-        "declinedCount": 6,
+        "declinedCount": 5,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -4598,7 +4590,7 @@
       "replayRefs": [
         "M-2bc8ef1b255aa686db5e"
       ],
-      "summary": "Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 6 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 5 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "seven-scoring-trigger-take-CORE-024",
@@ -5009,10 +5001,10 @@
         -0.3179481429371995,
         0.3179481429371995
       ],
-      "legalDeclinedCount": 313,
+      "legalDeclinedCount": 312,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 313,
+        "declinedCount": 312,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -5020,42 +5012,12 @@
       "status": "measured",
       "sampleSize": 10,
       "replayRefs": [
-        "M-61b47f042b1cf10539c7",
+        "M-c6f2df43037417ae933d",
         "M-bd9fa9f2b1a86c24f812",
         "M-ac49629ef9b831f05b7c",
         "M-1b8ddabb2fbe2d2e9766"
       ],
       "summary": "Used in 5.0% of participant observations (10/200). Outcome association: negative (0.000, CI [-0.318, 0.318]). Evidence grade: INSUFFICIENT (insufficient)."
-    },
-    {
-      "mechanic": "shuffle-reset",
-      "selectionCount": 1,
-      "usageUnit": "participant",
-      "analysisUnitOpportunityCount": 200,
-      "matchUsageRate": 0.005,
-      "matchUsageWilson95": [
-        0.0008831687156009814,
-        0.02777370439789293
-      ],
-      "outcomeAssociation": 0.5025125628140703,
-      "outcomeAssociationCI": [
-        0.43304435837564176,
-        0.5719807672524988
-      ],
-      "legalDeclinedCount": 57,
-      "choiceSupport": {
-        "status": "identified",
-        "declinedCount": 57,
-        "minimum": 20
-      },
-      "immediatePointImpact": null,
-      "evidenceGrade": "INSUFFICIENT",
-      "status": "measured",
-      "sampleSize": 1,
-      "replayRefs": [
-        "M-c6f2df43037417ae933d"
-      ],
-      "summary": "Used in 0.5% of participant observations (1/200). Outcome association: positive (0.503, CI [0.433, 0.572]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "six-dig",
@@ -5078,18 +5040,7 @@
         "declinedCount": 200,
         "minimum": 20
       },
-      "immediatePointImpact": {
-        "count": 1,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
-        "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 32,
@@ -5099,7 +5050,7 @@
         "M-823b91aeb6863c9213fe",
         "M-105cc67103dbca1477fb"
       ],
-      "summary": "Used in 16.0% of participant observations (32/200). Outcome association: negative (-0.074, CI [-0.262, 0.113]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 16.0% of participant observations (32/200). Outcome association: negative (-0.074, CI [-0.262, 0.113]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "six-dig-♦",
@@ -5153,39 +5104,6 @@
         "declinedCount": 196,
         "minimum": 20
       },
-      "immediatePointImpact": null,
-      "evidenceGrade": "INSUFFICIENT",
-      "status": "measured",
-      "sampleSize": 22,
-      "replayRefs": [
-        "M-a1e68d9b732dda228781",
-        "M-c6f2df43037417ae933d",
-        "M-823b91aeb6863c9213fe",
-        "M-1b8ddabb2fbe2d2e9766"
-      ],
-      "summary": "Used in 11.0% of participant observations (22/200). Outcome association: negative (-0.255, CI [-0.455, -0.055]). Evidence grade: INSUFFICIENT (insufficient)."
-    },
-    {
-      "mechanic": "spade-recovery",
-      "selectionCount": 7,
-      "usageUnit": "participant",
-      "analysisUnitOpportunityCount": 200,
-      "matchUsageRate": 0.035,
-      "matchUsageWilson95": [
-        0.017055542008567192,
-        0.07047061152229073
-      ],
-      "outcomeAssociation": -0.074019245003701,
-      "outcomeAssociationCI": [
-        -0.4473433804726544,
-        0.2993048904652524
-      ],
-      "legalDeclinedCount": 8,
-      "choiceSupport": {
-        "status": "limited",
-        "declinedCount": 8,
-        "minimum": 20
-      },
       "immediatePointImpact": {
         "count": 1,
         "mean": 0,
@@ -5200,14 +5118,47 @@
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
-      "sampleSize": 7,
+      "sampleSize": 22,
       "replayRefs": [
         "M-a1e68d9b732dda228781",
-        "M-80c9d5031d1eb9d7ea35",
-        "M-7a682d224e41c60f69a5",
-        "M-bbc346d896606590e3e6"
+        "M-8529501c4d6da9b719cc",
+        "M-823b91aeb6863c9213fe",
+        "M-1b8ddabb2fbe2d2e9766"
       ],
-      "summary": "Used in 3.5% of participant observations (7/200). Outcome association: negative (-0.074, CI [-0.447, 0.299]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 8 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 11.0% of participant observations (22/200). Outcome association: negative (-0.255, CI [-0.455, -0.055]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+    },
+    {
+      "mechanic": "spade-recovery",
+      "selectionCount": 6,
+      "usageUnit": "participant",
+      "analysisUnitOpportunityCount": 200,
+      "matchUsageRate": 0.03,
+      "matchUsageWilson95": [
+        0.013820314340111346,
+        0.06389429245451925
+      ],
+      "outcomeAssociation": 0,
+      "outcomeAssociationCI": [
+        -0.40621560497771486,
+        0.40621560497771486
+      ],
+      "legalDeclinedCount": 8,
+      "choiceSupport": {
+        "status": "limited",
+        "declinedCount": 8,
+        "minimum": 20
+      },
+      "immediatePointImpact": null,
+      "evidenceGrade": "INSUFFICIENT",
+      "status": "measured",
+      "sampleSize": 6,
+      "replayRefs": [
+        "M-a1e68d9b732dda228781",
+        "M-1fce2e8feaceff1507d0",
+        "M-1b8ddabb2fbe2d2e9766",
+        "M-80c9d5031d1eb9d7ea35"
+      ],
+      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: negative (0.000, CI [-0.406, 0.406]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 8 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "super",
@@ -5231,27 +5182,27 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 1,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
+        "count": 2,
+        "mean": -1,
+        "median": -1,
+        "min": -2,
         "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
+        "p05": -1.9,
+        "p25": -1.5,
+        "p75": -0.5,
+        "p95": -0.10000000000000009,
+        "standardDeviation": 1.4142135623730951
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 20,
       "replayRefs": [
-        "M-4c77090a591dcaa0733e",
         "M-c6f2df43037417ae933d",
+        "M-fb62340c04aa2456b48c",
         "M-3de8965082511d7fe42f",
         "M-43926dd2a83622811654"
       ],
-      "summary": "Used in 10.0% of participant observations (20/200). Outcome association: positive (0.167, CI [-0.055, 0.388]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 10.0% of participant observations (20/200). Outcome association: positive (0.167, CI [-0.055, 0.388]). Immediate point impact: mean -1.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "super-ace",
@@ -5299,14 +5250,14 @@
         0.003567556307393832,
         0.27926072652088896
       ],
-      "legalDeclinedCount": 1406,
+      "legalDeclinedCount": 1405,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 1406,
+        "declinedCount": 1405,
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 9,
+        "count": 12,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -5322,9 +5273,9 @@
       "sampleSize": 110,
       "replayRefs": [
         "M-1e0a8ae4b4442d9640cf",
-        "M-bb59aa2f7a9a15e0502b",
+        "M-0abbb36eea637c1b8c25",
         "M-823b91aeb6863c9213fe",
-        "M-44f3c3b26dd3188cfb1c"
+        "M-d5cf43da2cca5b2f434f"
       ],
       "summary": "Used in 55.0% of participant observations (110/200). Outcome association: positive (0.141, CI [0.004, 0.279]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak)."
     },
@@ -5387,7 +5338,7 @@
       "status": "measured",
       "sampleSize": 5,
       "replayRefs": [
-        "M-2288bda13a819c674a8f",
+        "M-c6f2df43037417ae933d",
         "M-26d898be79a2d56affc0",
         "M-0ead2e03f49701751682",
         "M-0abbb36eea637c1b8c25"
@@ -5447,28 +5398,17 @@
         "declinedCount": 33,
         "minimum": 20
       },
-      "immediatePointImpact": {
-        "count": 1,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
-        "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 5,
       "replayRefs": [
-        "M-1fd45926dbd9f10b8374",
-        "M-43926dd2a83622811654",
         "M-7a682d224e41c60f69a5",
-        "M-105cc67103dbca1477fb"
+        "M-ed123e23841332200c85",
+        "M-105cc67103dbca1477fb",
+        "M-43926dd2a83622811654"
       ],
-      "summary": "Used in 2.5% of participant observations (5/200). Outcome association: positive (0.308, CI [-0.050, 0.665]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 2.5% of participant observations (5/200). Outcome association: positive (0.308, CI [-0.050, 0.665]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "three-black-jack-pr",
@@ -5491,7 +5431,18 @@
         "declinedCount": 0,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 4,
+        "mean": 6.5,
+        "median": 5,
+        "min": 0,
+        "max": 16,
+        "p05": 0,
+        "p25": 0,
+        "p75": 11.5,
+        "p95": 15.099999999999998,
+        "standardDeviation": 7.895146188218008
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 4,
@@ -5501,7 +5452,7 @@
         "M-ab005c31fb9e696b935a",
         "M-77268ba404d7385345ad"
       ],
-      "summary": "Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 2.0% of participant observations (4/200). Outcome association: positive (0.255, CI [-0.175, 0.685]). Immediate point impact: mean 6.50 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: unsupported — only 0 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "three-black-king",
@@ -5708,17 +5659,28 @@
         "declinedCount": 40,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 6,
       "replayRefs": [
-        "M-8aa82c3381a9a4b56820",
         "M-c6f2df43037417ae933d",
+        "M-c2d7ac654cf6fa83830b",
         "M-ac49629ef9b831f05b7c",
         "M-75e6cb05d36bb0e24e64"
       ],
-      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: negative (-0.344, CI [-0.650, -0.037]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 3.0% of participant observations (6/200). Outcome association: negative (-0.344, CI [-0.650, -0.037]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "three-force-discard",
@@ -5735,10 +5697,10 @@
         0.4354097704693831,
         0.5746912396316268
       ],
-      "legalDeclinedCount": 212,
+      "legalDeclinedCount": 211,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 212,
+        "declinedCount": 211,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -5753,18 +5715,18 @@
     },
     {
       "mechanic": "three-hand",
-      "selectionCount": 7,
+      "selectionCount": 6,
       "usageUnit": "participant",
       "analysisUnitOpportunityCount": 200,
-      "matchUsageRate": 0.02,
+      "matchUsageRate": 0.015,
       "matchUsageWilson95": [
-        0.0078044264163494685,
-        0.050287086905826436
+        0.00511423779325831,
+        0.04316572879269026
       ],
-      "outcomeAssociation": 0.5102040816326531,
+      "outcomeAssociation": 0.5076142131979695,
       "outcomeAssociationCI": [
-        0.44021994640881473,
-        0.5801882168564914
+        0.4378014835751755,
+        0.5774269428207636
       ],
       "legalDeclinedCount": 40,
       "choiceSupport": {
@@ -5775,14 +5737,13 @@
       "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
-      "sampleSize": 4,
+      "sampleSize": 3,
       "replayRefs": [
         "M-0abbb36eea637c1b8c25",
         "M-c3aa986ff508a6eeee5c",
-        "M-7a682d224e41c60f69a5",
         "M-1b8ddabb2fbe2d2e9766"
       ],
-      "summary": "Used in 2.0% of participant observations (4/200). Outcome association: positive (0.510, CI [0.440, 0.580]). Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 1.5% of participant observations (3/200). Outcome association: positive (0.508, CI [0.438, 0.577]). Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "three-points",
@@ -5799,10 +5760,10 @@
         0.43304435837564176,
         0.5719807672524988
       ],
-      "legalDeclinedCount": 46,
+      "legalDeclinedCount": 45,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 46,
+        "declinedCount": 45,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -5829,10 +5790,10 @@
         -0.6500261734300847,
         -0.03725904993761281
       ],
-      "legalDeclinedCount": 208,
+      "legalDeclinedCount": 207,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 208,
+        "declinedCount": 207,
         "minimum": 20
       },
       "immediatePointImpact": null,
@@ -5870,26 +5831,26 @@
       },
       "immediatePointImpact": {
         "count": 3,
-        "mean": 6.666666666666667,
+        "mean": 5.666666666666667,
         "median": 0,
         "min": 0,
-        "max": 20,
+        "max": 17,
         "p05": 0,
         "p25": 0,
-        "p75": 10,
-        "p95": 18,
-        "standardDeviation": 11.547005383792515
+        "p75": 8.5,
+        "p95": 15.299999999999999,
+        "standardDeviation": 9.814954576223638
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 28,
       "replayRefs": [
         "M-3a3ab827dcd1075b2312",
-        "M-bd9fa9f2b1a86c24f812",
+        "M-fe46f3098ae1178f5428",
         "M-bf5564dd869c1d3dad59",
-        "M-1b8ddabb2fbe2d2e9766"
+        "M-a4c8c5b0f6b579f5059e"
       ],
-      "summary": "Used in 14.0% of participant observations (28/200). Outcome association: positive (0.083, CI [-0.115, 0.281]). Immediate point impact: mean 6.67 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 14.0% of participant observations (28/200). Outcome association: positive (0.083, CI [-0.115, 0.281]). Immediate point impact: mean 5.67 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "topdeck-seven",
@@ -6127,18 +6088,7 @@
         "declinedCount": 11,
         "minimum": 20
       },
-      "immediatePointImpact": {
-        "count": 1,
-        "mean": 0,
-        "median": 0,
-        "min": 0,
-        "max": 0,
-        "p05": 0,
-        "p25": 0,
-        "p75": 0,
-        "p95": 0,
-        "standardDeviation": 0
-      },
+      "immediatePointImpact": null,
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 5,
@@ -6148,7 +6098,7 @@
         "M-3de8965082511d7fe42f",
         "M-bd9fa9f2b1a86c24f812"
       ],
-      "summary": "Used in 2.5% of participant observations (5/200). Outcome association: positive (0.308, CI [-0.050, 0.665]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 11 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
+      "summary": "Used in 2.5% of participant observations (5/200). Outcome association: positive (0.308, CI [-0.050, 0.665]). Evidence grade: INSUFFICIENT (insufficient). Choice identification: limited — only 11 legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence."
     },
     {
       "mechanic": "two-quick-discard",
@@ -6172,7 +6122,7 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 2,
+        "count": 4,
         "mean": 0,
         "median": 0,
         "min": 0,
@@ -6249,7 +6199,7 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 4,
+        "count": 8,
         "mean": 1,
         "median": 1,
         "min": 0,
@@ -6258,7 +6208,7 @@
         "p25": 0,
         "p75": 2,
         "p95": 2,
-        "standardDeviation": 1.1547005383792515
+        "standardDeviation": 1.0690449676496976
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
@@ -6293,60 +6243,71 @@
         "minimum": 20
       },
       "immediatePointImpact": {
-        "count": 13,
-        "mean": 1.5384615384615385,
+        "count": 16,
+        "mean": 2.6875,
         "median": 0,
         "min": 0,
-        "max": 20,
+        "max": 17,
         "p05": 0,
         "p25": 0,
         "p75": 0,
-        "p95": 7.999999999999972,
-        "standardDeviation": 5.547001962252291
+        "p95": 16.25,
+        "standardDeviation": 5.941029652621954
       },
       "evidenceGrade": "INSUFFICIENT",
       "status": "measured",
       "sampleSize": 97,
       "replayRefs": [
         "M-3a3ab827dcd1075b2312",
-        "M-ed123e23841332200c85",
+        "M-dcf452adff15fcef7302",
         "M-823b91aeb6863c9213fe",
-        "M-28ff342982dcc17a35db"
+        "M-7685104a0dff44c3cb7e"
       ],
-      "summary": "Used in 48.5% of participant observations (97/200). Outcome association: negative (-0.010, CI [-0.149, 0.129]). Immediate point impact: mean 1.54 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
+      "summary": "Used in 48.5% of participant observations (97/200). Outcome association: negative (-0.010, CI [-0.149, 0.129]). Immediate point impact: mean 2.69 over undefined measured declarations. Evidence grade: INSUFFICIENT (insufficient)."
     },
     {
       "mechanic": "voltage",
-      "selectionCount": 87,
+      "selectionCount": 84,
       "usageUnit": "participant",
       "analysisUnitOpportunityCount": 200,
-      "matchUsageRate": 0.135,
+      "matchUsageRate": 0.13,
       "matchUsageWilson95": [
-        0.09446570454787906,
-        0.18929138370752552
+        0.0902820227966932,
+        0.18366351872248407
       ],
-      "outcomeAssociation": 0.32113037893384716,
+      "outcomeAssociation": 0.30946065428824054,
       "outcomeAssociationCI": [
-        0.1476355224200929,
-        0.4946252354476014
+        0.13138444605327596,
+        0.48753686252320516
       ],
-      "legalDeclinedCount": 134,
+      "legalDeclinedCount": 135,
       "choiceSupport": {
         "status": "identified",
-        "declinedCount": 134,
+        "declinedCount": 135,
         "minimum": 20
       },
-      "immediatePointImpact": null,
+      "immediatePointImpact": {
+        "count": 1,
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "p05": 0,
+        "p25": 0,
+        "p75": 0,
+        "p95": 0,
+        "standardDeviation": 0
+      },
       "evidenceGrade": "EXPLORATORY",
       "status": "measured",
-      "sampleSize": 27,
+      "sampleSize": 26,
       "replayRefs": [
         "M-a1e68d9b732dda228781",
-        "M-c3aa986ff508a6eeee5c",
+        "M-28d14df4ee30228a466c",
         "M-0ead2e03f49701751682",
-        "M-44f3c3b26dd3188cfb1c"
+        "M-d5cf43da2cca5b2f434f"
       ],
-      "summary": "Used in 13.5% of participant observations (27/200). Outcome association: positive (0.321, CI [0.148, 0.495]). Evidence grade: EXPLORATORY (weak)."
+      "summary": "Used in 13.0% of participant observations (26/200). Outcome association: positive (0.309, CI [0.131, 0.488]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak)."
     },
     {
       "mechanic": "wild-sovereignty",
@@ -6386,171 +6347,173 @@
   "motifFindings": [
     {
       "motif": "score → score",
-      "count": 30,
+      "count": 39,
       "matchIds": [
-        "M-04f952648982b1b60b68",
-        "M-1b16b9dae9b5e9933821",
-        "M-5ef9d016ebb1846cf10b",
-        "M-6d0b4f6682536c727bbc",
-        "M-9c21702da5d01e560631",
-        "M-9c9a76ea4e99e1871ffa",
-        "M-a15fedb894e0081a701f",
-        "M-ac36b3d8d85d2a58545e",
-        "M-b0a0a5aeacc0742aa682",
-        "M-f468fb9b0431f3ac6637"
+        "M-0e77a3229088035a6e06",
+        "M-1cabf7e1358a430a03fc",
+        "M-28ff342982dcc17a35db",
+        "M-2e8921e7c06eb9d8b355",
+        "M-414634e298eb7d6784ff",
+        "M-52fcc60c7ed50ba7b744",
+        "M-77268ba404d7385345ad",
+        "M-8aa82c3381a9a4b56820",
+        "M-8d5986425d68643eca93",
+        "M-a7032ff5f7e18ca6706f",
+        "M-bf8173423a3f80544774",
+        "M-e906899d3be6eed4a9ca"
       ],
       "outcomes": {
-        "NORMAL_VICTORY": 30
+        "NORMAL_VICTORY": 39
       },
-      "summary": "score → score: observed 30 time(s) across 10 match(es)."
+      "summary": "score → score: observed 39 time(s) across 12 match(es)."
     },
     {
       "motif": "unclassified → score",
-      "count": 16,
+      "count": 22,
       "matchIds": [
-        "M-1b16b9dae9b5e9933821",
-        "M-51c5b0a7f314d910b2df",
-        "M-5ef9d016ebb1846cf10b",
-        "M-6d0b4f6682536c727bbc",
-        "M-9c9a76ea4e99e1871ffa",
-        "M-a15fedb894e0081a701f",
-        "M-ac36b3d8d85d2a58545e",
-        "M-b0a0a5aeacc0742aa682",
-        "M-b13d6d117b0cf5e2ed26"
+        "M-0e77a3229088035a6e06",
+        "M-1cabf7e1358a430a03fc",
+        "M-28ff342982dcc17a35db",
+        "M-2e8921e7c06eb9d8b355",
+        "M-52fcc60c7ed50ba7b744",
+        "M-77268ba404d7385345ad",
+        "M-8aa82c3381a9a4b56820",
+        "M-8d5986425d68643eca93",
+        "M-a7032ff5f7e18ca6706f",
+        "M-bf8173423a3f80544774",
+        "M-e906899d3be6eed4a9ca"
       ],
       "outcomes": {
-        "NORMAL_VICTORY": 16
+        "NORMAL_VICTORY": 22
       },
-      "summary": "unclassified → score: observed 16 time(s) across 9 match(es)."
+      "summary": "unclassified → score: observed 22 time(s) across 11 match(es)."
     },
     {
       "motif": "face-down → unclassified",
+      "count": 12,
+      "matchIds": [
+        "M-0e77a3229088035a6e06",
+        "M-1cabf7e1358a430a03fc",
+        "M-28ff342982dcc17a35db",
+        "M-52fcc60c7ed50ba7b744",
+        "M-77268ba404d7385345ad",
+        "M-8aa82c3381a9a4b56820",
+        "M-bf8173423a3f80544774",
+        "M-e906899d3be6eed4a9ca"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 12
+      },
+      "summary": "face-down → unclassified: observed 12 time(s) across 8 match(es)."
+    },
+    {
+      "motif": "unclassified → 2-black-2-red-draw",
       "count": 9,
       "matchIds": [
-        "M-04f952648982b1b60b68",
-        "M-51c5b0a7f314d910b2df",
-        "M-5ef9d016ebb1846cf10b",
-        "M-6d0b4f6682536c727bbc",
-        "M-9c9a76ea4e99e1871ffa",
-        "M-ac36b3d8d85d2a58545e",
-        "M-b13d6d117b0cf5e2ed26"
+        "M-1cabf7e1358a430a03fc",
+        "M-28ff342982dcc17a35db",
+        "M-2e8921e7c06eb9d8b355",
+        "M-414634e298eb7d6784ff",
+        "M-8d5986425d68643eca93",
+        "M-a7032ff5f7e18ca6706f",
+        "M-e906899d3be6eed4a9ca"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 9
       },
-      "summary": "face-down → unclassified: observed 9 time(s) across 7 match(es)."
+      "summary": "unclassified → 2-black-2-red-draw: observed 9 time(s) across 7 match(es)."
     },
     {
       "motif": "score → unclassified",
       "count": 8,
       "matchIds": [
-        "M-1b16b9dae9b5e9933821",
-        "M-51c5b0a7f314d910b2df",
-        "M-5ef9d016ebb1846cf10b",
-        "M-a15fedb894e0081a701f",
-        "M-b0a0a5aeacc0742aa682"
+        "M-2e8921e7c06eb9d8b355",
+        "M-52fcc60c7ed50ba7b744",
+        "M-77268ba404d7385345ad",
+        "M-8aa82c3381a9a4b56820",
+        "M-8d5986425d68643eca93",
+        "M-a7032ff5f7e18ca6706f"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 8
       },
-      "summary": "score → unclassified: observed 8 time(s) across 5 match(es)."
+      "summary": "score → unclassified: observed 8 time(s) across 6 match(es)."
     },
     {
-      "motif": "nine-tap → nine-tap",
-      "count": 7,
-      "matchIds": [
-        "M-04f952648982b1b60b68",
-        "M-a15fedb894e0081a701f",
-        "M-ac36b3d8d85d2a58545e",
-        "M-b13d6d117b0cf5e2ed26",
-        "M-f468fb9b0431f3ac6637"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 7
-      },
-      "summary": "nine-tap → nine-tap: observed 7 time(s) across 5 match(es)."
-    },
-    {
-      "motif": "unclassified → 2-black-2-red-draw",
-      "count": 7,
-      "matchIds": [
-        "M-1b16b9dae9b5e9933821",
-        "M-9c21702da5d01e560631",
-        "M-a15fedb894e0081a701f",
-        "M-ac36b3d8d85d2a58545e",
-        "M-b0a0a5aeacc0742aa682",
-        "M-f468fb9b0431f3ac6637"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 7
-      },
-      "summary": "unclassified → 2-black-2-red-draw: observed 7 time(s) across 6 match(es)."
-    },
-    {
-      "motif": "score → nine-tap",
-      "count": 6,
-      "matchIds": [
-        "M-04f952648982b1b60b68",
-        "M-6d0b4f6682536c727bbc",
-        "M-a15fedb894e0081a701f",
-        "M-ac36b3d8d85d2a58545e",
-        "M-b13d6d117b0cf5e2ed26",
-        "M-f468fb9b0431f3ac6637"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 6
-      },
-      "summary": "score → nine-tap: observed 6 time(s) across 6 match(es)."
-    },
-    {
-      "motif": "unclassified → club-foundation-bonus",
+      "motif": "2-black-2-red-draw → score",
       "count": 5,
       "matchIds": [
-        "M-5ef9d016ebb1846cf10b",
-        "M-6d0b4f6682536c727bbc",
-        "M-9c21702da5d01e560631",
-        "M-ac36b3d8d85d2a58545e",
-        "M-b13d6d117b0cf5e2ed26"
+        "M-28ff342982dcc17a35db",
+        "M-2e8921e7c06eb9d8b355",
+        "M-a7032ff5f7e18ca6706f",
+        "M-e906899d3be6eed4a9ca"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 5
       },
-      "summary": "unclassified → club-foundation-bonus: observed 5 time(s) across 5 match(es)."
+      "summary": "2-black-2-red-draw → score: observed 5 time(s) across 4 match(es)."
     },
     {
-      "motif": "disrupt → score",
+      "motif": "score → face-down",
+      "count": 5,
+      "matchIds": [
+        "M-52fcc60c7ed50ba7b744",
+        "M-77268ba404d7385345ad",
+        "M-8aa82c3381a9a4b56820",
+        "M-e906899d3be6eed4a9ca"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 5
+      },
+      "summary": "score → face-down: observed 5 time(s) across 4 match(es)."
+    },
+    {
+      "motif": "combo → unclassified",
       "count": 4,
       "matchIds": [
-        "M-6d0b4f6682536c727bbc",
-        "M-a15fedb894e0081a701f",
-        "M-ac36b3d8d85d2a58545e",
-        "M-f468fb9b0431f3ac6637"
+        "M-28ff342982dcc17a35db",
+        "M-52fcc60c7ed50ba7b744",
+        "M-77268ba404d7385345ad",
+        "M-8aa82c3381a9a4b56820"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 4
       },
-      "summary": "disrupt → score: observed 4 time(s) across 4 match(es)."
+      "summary": "combo → unclassified: observed 4 time(s) across 4 match(es)."
     },
     {
-      "motif": "unclassified → heart-tempo",
+      "motif": "two-score-discard → two-quick-discard",
       "count": 4,
       "matchIds": [
-        "M-04f952648982b1b60b68",
-        "M-6d0b4f6682536c727bbc",
-        "M-9c9a76ea4e99e1871ffa"
+        "M-0e77a3229088035a6e06",
+        "M-28ff342982dcc17a35db",
+        "M-8aa82c3381a9a4b56820"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 4
       },
-      "summary": "unclassified → heart-tempo: observed 4 time(s) across 3 match(es)."
+      "summary": "two-score-discard → two-quick-discard: observed 4 time(s) across 3 match(es)."
+    },
+    {
+      "motif": "two-score-discard → two-score-discard",
+      "count": 4,
+      "matchIds": [
+        "M-0e77a3229088035a6e06",
+        "M-28ff342982dcc17a35db",
+        "M-8aa82c3381a9a4b56820"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 4
+      },
+      "summary": "two-score-discard → two-score-discard: observed 4 time(s) across 3 match(es)."
     },
     {
       "motif": "2-black-2-red-draw → disrupt",
       "count": 3,
       "matchIds": [
-        "M-a15fedb894e0081a701f",
-        "M-ac36b3d8d85d2a58545e",
-        "M-f468fb9b0431f3ac6637"
+        "M-1cabf7e1358a430a03fc",
+        "M-8d5986425d68643eca93",
+        "M-a7032ff5f7e18ca6706f"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 3
@@ -6558,25 +6521,12 @@
       "summary": "2-black-2-red-draw → disrupt: observed 3 time(s) across 3 match(es)."
     },
     {
-      "motif": "club-foundation-bonus → club-foundation-bonus",
-      "count": 3,
-      "matchIds": [
-        "M-5ef9d016ebb1846cf10b",
-        "M-6d0b4f6682536c727bbc",
-        "M-ac36b3d8d85d2a58545e"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 3
-      },
-      "summary": "club-foundation-bonus → club-foundation-bonus: observed 3 time(s) across 3 match(es)."
-    },
-    {
       "motif": "club-foundation-bonus → unclassified",
       "count": 3,
       "matchIds": [
-        "M-5ef9d016ebb1846cf10b",
-        "M-9c21702da5d01e560631",
-        "M-ac36b3d8d85d2a58545e"
+        "M-1cabf7e1358a430a03fc",
+        "M-414634e298eb7d6784ff",
+        "M-bf8173423a3f80544774"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 3
@@ -6584,104 +6534,168 @@
       "summary": "club-foundation-bonus → unclassified: observed 3 time(s) across 3 match(es)."
     },
     {
-      "motif": "2-black-2-red-draw → score",
-      "count": 2,
+      "motif": "combo → combo",
+      "count": 3,
       "matchIds": [
-        "M-1b16b9dae9b5e9933821",
-        "M-b0a0a5aeacc0742aa682"
+        "M-0e77a3229088035a6e06",
+        "M-28ff342982dcc17a35db",
+        "M-52fcc60c7ed50ba7b744"
       ],
       "outcomes": {
-        "NORMAL_VICTORY": 2
+        "NORMAL_VICTORY": 3
       },
-      "summary": "2-black-2-red-draw → score: observed 2 time(s) across 2 match(es)."
+      "summary": "combo → combo: observed 3 time(s) across 3 match(es)."
     },
     {
-      "motif": "2-black-2-red-rummage → score",
-      "count": 2,
+      "motif": "disrupt → score",
+      "count": 3,
       "matchIds": [
-        "M-04f952648982b1b60b68"
+        "M-1cabf7e1358a430a03fc",
+        "M-8d5986425d68643eca93",
+        "M-a7032ff5f7e18ca6706f"
       ],
       "outcomes": {
-        "NORMAL_VICTORY": 2
+        "NORMAL_VICTORY": 3
       },
-      "summary": "2-black-2-red-rummage → score: observed 2 time(s) across 1 match(es)."
+      "summary": "disrupt → score: observed 3 time(s) across 3 match(es)."
     },
     {
-      "motif": "combo → disrupt",
-      "count": 2,
+      "motif": "unclassified → club-foundation-bonus",
+      "count": 3,
       "matchIds": [
-        "M-6d0b4f6682536c727bbc",
-        "M-9c9a76ea4e99e1871ffa"
+        "M-1cabf7e1358a430a03fc",
+        "M-414634e298eb7d6784ff",
+        "M-bf8173423a3f80544774"
       ],
       "outcomes": {
-        "NORMAL_VICTORY": 2
+        "NORMAL_VICTORY": 3
       },
-      "summary": "combo → disrupt: observed 2 time(s) across 2 match(es)."
-    },
-    {
-      "motif": "score → face-down",
-      "count": 2,
-      "matchIds": [
-        "M-5ef9d016ebb1846cf10b",
-        "M-9c9a76ea4e99e1871ffa"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 2
-      },
-      "summary": "score → face-down: observed 2 time(s) across 2 match(es)."
-    },
-    {
-      "motif": "score → seven-scoring-trigger-take-CORE-017",
-      "count": 2,
-      "matchIds": [
-        "M-6d0b4f6682536c727bbc",
-        "M-9c21702da5d01e560631"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 2
-      },
-      "summary": "score → seven-scoring-trigger-take-CORE-017: observed 2 time(s) across 2 match(es)."
-    },
-    {
-      "motif": "two-score-discard → two-quick-discard",
-      "count": 2,
-      "matchIds": [
-        "M-9c9a76ea4e99e1871ffa",
-        "M-f468fb9b0431f3ac6637"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 2
-      },
-      "summary": "two-score-discard → two-quick-discard: observed 2 time(s) across 2 match(es)."
+      "summary": "unclassified → club-foundation-bonus: observed 3 time(s) across 3 match(es)."
     },
     {
       "motif": "unclassified → combo",
+      "count": 3,
+      "matchIds": [
+        "M-52fcc60c7ed50ba7b744",
+        "M-77268ba404d7385345ad"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 3
+      },
+      "summary": "unclassified → combo: observed 3 time(s) across 2 match(es)."
+    },
+    {
+      "motif": "unclassified → two-score-discard",
+      "count": 3,
+      "matchIds": [
+        "M-0e77a3229088035a6e06",
+        "M-28ff342982dcc17a35db"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 3
+      },
+      "summary": "unclassified → two-score-discard: observed 3 time(s) across 2 match(es)."
+    },
+    {
+      "motif": "ace-base → disrupt",
       "count": 2,
       "matchIds": [
-        "M-5ef9d016ebb1846cf10b",
-        "M-9c9a76ea4e99e1871ffa"
+        "M-0e77a3229088035a6e06",
+        "M-8d5986425d68643eca93"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 2
       },
-      "summary": "unclassified → combo: observed 2 time(s) across 2 match(es)."
+      "summary": "ace-base → disrupt: observed 2 time(s) across 2 match(es)."
     },
     {
-      "motif": "2-black-2-red-draw → anchor",
-      "count": 1,
+      "motif": "club-foundation-bonus → club-foundation-bonus",
+      "count": 2,
       "matchIds": [
-        "M-a15fedb894e0081a701f"
+        "M-1cabf7e1358a430a03fc",
+        "M-bf8173423a3f80544774"
       ],
       "outcomes": {
-        "NORMAL_VICTORY": 1
+        "NORMAL_VICTORY": 2
       },
-      "summary": "2-black-2-red-draw → anchor: observed 1 time(s) across 1 match(es)."
+      "summary": "club-foundation-bonus → club-foundation-bonus: observed 2 time(s) across 2 match(es)."
+    },
+    {
+      "motif": "disrupt → eight-aegis-field",
+      "count": 2,
+      "matchIds": [
+        "M-0e77a3229088035a6e06",
+        "M-8d5986425d68643eca93"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 2
+      },
+      "summary": "disrupt → eight-aegis-field: observed 2 time(s) across 2 match(es)."
+    },
+    {
+      "motif": "nine-tap → nine-tap",
+      "count": 2,
+      "matchIds": [
+        "M-28ff342982dcc17a35db",
+        "M-77268ba404d7385345ad"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 2
+      },
+      "summary": "nine-tap → nine-tap: observed 2 time(s) across 2 match(es)."
+    },
+    {
+      "motif": "nine-tap → unclassified",
+      "count": 2,
+      "matchIds": [
+        "M-28ff342982dcc17a35db",
+        "M-77268ba404d7385345ad"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 2
+      },
+      "summary": "nine-tap → unclassified: observed 2 time(s) across 2 match(es)."
+    },
+    {
+      "motif": "two-quick-discard → draw",
+      "count": 2,
+      "matchIds": [
+        "M-0e77a3229088035a6e06",
+        "M-28ff342982dcc17a35db"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 2
+      },
+      "summary": "two-quick-discard → draw: observed 2 time(s) across 2 match(es)."
+    },
+    {
+      "motif": "unclassified → anchor-private-choice",
+      "count": 2,
+      "matchIds": [
+        "M-1cabf7e1358a430a03fc"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 2
+      },
+      "summary": "unclassified → anchor-private-choice: observed 2 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "unclassified → unclassified",
+      "count": 2,
+      "matchIds": [
+        "M-77268ba404d7385345ad",
+        "M-8aa82c3381a9a4b56820"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 2
+      },
+      "summary": "unclassified → unclassified: observed 2 time(s) across 2 match(es)."
     },
     {
       "motif": "2-black-2-red-draw → club-foundation-bonus",
       "count": 1,
       "matchIds": [
-        "M-9c21702da5d01e560631"
+        "M-414634e298eb7d6784ff"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -6689,43 +6703,43 @@
       "summary": "2-black-2-red-draw → club-foundation-bonus: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "ace-base → ace-base",
+      "motif": "ace → ace",
       "count": 1,
       "matchIds": [
-        "M-6d0b4f6682536c727bbc"
+        "M-e906899d3be6eed4a9ca"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "ace-base → ace-base: observed 1 time(s) across 1 match(es)."
+      "summary": "ace → ace: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "ace-base → unclassified",
+      "motif": "ace → unclassified",
       "count": 1,
       "matchIds": [
-        "M-6d0b4f6682536c727bbc"
+        "M-e906899d3be6eed4a9ca"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "ace-base → unclassified: observed 1 time(s) across 1 match(es)."
+      "summary": "ace → unclassified: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "ace-spade → eight-aegis-field",
+      "motif": "ace-base → face-down",
       "count": 1,
       "matchIds": [
-        "M-5ef9d016ebb1846cf10b"
+        "M-bf8173423a3f80544774"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "ace-spade → eight-aegis-field: observed 1 time(s) across 1 match(es)."
+      "summary": "ace-base → face-down: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "anchor → anchor",
       "count": 1,
       "matchIds": [
-        "M-a15fedb894e0081a701f"
+        "M-bf8173423a3f80544774"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -6733,54 +6747,54 @@
       "summary": "anchor → anchor: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "anchor → effect-private-choice",
+      "motif": "anchor → face-down",
       "count": 1,
       "matchIds": [
-        "M-a15fedb894e0081a701f"
+        "M-bf8173423a3f80544774"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "anchor → effect-private-choice: observed 1 time(s) across 1 match(es)."
+      "summary": "anchor → face-down: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "bj-exile-recycle-CORE-007 → score",
+      "motif": "anchor-private-choice → nine-anchor-discard",
       "count": 1,
       "matchIds": [
-        "M-04f952648982b1b60b68"
+        "M-1cabf7e1358a430a03fc"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "bj-exile-recycle-CORE-007 → score: observed 1 time(s) across 1 match(es)."
+      "summary": "anchor-private-choice → nine-anchor-discard: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "club-foundation-bonus → face-down",
+      "motif": "anchor-private-choice → unclassified",
       "count": 1,
       "matchIds": [
-        "M-6d0b4f6682536c727bbc"
+        "M-1cabf7e1358a430a03fc"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "club-foundation-bonus → face-down: observed 1 time(s) across 1 match(es)."
+      "summary": "anchor-private-choice → unclassified: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "club-foundation-bonus → rank10-stack-theft",
+      "motif": "club-foundation → nine-tap",
       "count": 1,
       "matchIds": [
-        "M-b13d6d117b0cf5e2ed26"
+        "M-0e77a3229088035a6e06"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "club-foundation-bonus → rank10-stack-theft: observed 1 time(s) across 1 match(es)."
+      "summary": "club-foundation → nine-tap: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "club-foundation-bonus → score",
       "count": 1,
       "matchIds": [
-        "M-9c21702da5d01e560631"
+        "M-414634e298eb7d6784ff"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -6788,43 +6802,54 @@
       "summary": "club-foundation-bonus → score: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "combo → ace-spade",
+      "motif": "combo → disrupt",
       "count": 1,
       "matchIds": [
-        "M-5ef9d016ebb1846cf10b"
+        "M-77268ba404d7385345ad"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "combo → ace-spade: observed 1 time(s) across 1 match(es)."
+      "summary": "combo → disrupt: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "combo → combo",
+      "motif": "combo → face-down",
       "count": 1,
       "matchIds": [
-        "M-b13d6d117b0cf5e2ed26"
+        "M-0e77a3229088035a6e06"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "combo → combo: observed 1 time(s) across 1 match(es)."
+      "summary": "combo → face-down: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "combo → unclassified",
+      "motif": "diamond-mimic-paired-super-j-tempo → ace-base",
       "count": 1,
       "matchIds": [
-        "M-b13d6d117b0cf5e2ed26"
+        "M-bf8173423a3f80544774"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "combo → unclassified: observed 1 time(s) across 1 match(es)."
+      "summary": "diamond-mimic-paired-super-j-tempo → ace-base: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "diamond-mimic-row-exchange-pr → disrupt",
+      "count": 1,
+      "matchIds": [
+        "M-28ff342982dcc17a35db"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "diamond-mimic-row-exchange-pr → disrupt: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "disrupt → combo",
       "count": 1,
       "matchIds": [
-        "M-6d0b4f6682536c727bbc"
+        "M-28ff342982dcc17a35db"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -6835,7 +6860,7 @@
       "motif": "disrupt → disrupt",
       "count": 1,
       "matchIds": [
-        "M-51c5b0a7f314d910b2df"
+        "M-a7032ff5f7e18ca6706f"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -6843,32 +6868,21 @@
       "summary": "disrupt → disrupt: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "disrupt → face-down",
+      "motif": "disrupt → nine-tap",
       "count": 1,
       "matchIds": [
-        "M-51c5b0a7f314d910b2df"
+        "M-77268ba404d7385345ad"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "disrupt → face-down: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "disrupt → two-score-discard",
-      "count": 1,
-      "matchIds": [
-        "M-9c9a76ea4e99e1871ffa"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "disrupt → two-score-discard: observed 1 time(s) across 1 match(es)."
+      "summary": "disrupt → nine-tap: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "draw → face-down",
       "count": 1,
       "matchIds": [
-        "M-04f952648982b1b60b68"
+        "M-1cabf7e1358a430a03fc"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -6876,21 +6890,54 @@
       "summary": "draw → face-down: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "effect-private-choice → rank6-keep-return-top",
+      "motif": "draw → nine-tap",
       "count": 1,
       "matchIds": [
-        "M-a15fedb894e0081a701f"
+        "M-28ff342982dcc17a35db"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "effect-private-choice → rank6-keep-return-top: observed 1 time(s) across 1 match(es)."
+      "summary": "draw → nine-tap: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "draw → unclassified",
+      "count": 1,
+      "matchIds": [
+        "M-0e77a3229088035a6e06"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "draw → unclassified: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "eight-aegis-field → ace-base",
+      "count": 1,
+      "matchIds": [
+        "M-8d5986425d68643eca93"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "eight-aegis-field → ace-base: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "eight-aegis-field → eight-aegis-field",
+      "count": 1,
+      "matchIds": [
+        "M-0e77a3229088035a6e06"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "eight-aegis-field → eight-aegis-field: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "eight-aegis-field → unclassified",
       "count": 1,
       "matchIds": [
-        "M-5ef9d016ebb1846cf10b"
+        "M-0e77a3229088035a6e06"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -6898,76 +6945,32 @@
       "summary": "eight-aegis-field → unclassified: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "eight-spade-free-scuttle → eight-spade-free-scuttle",
+      "motif": "four-guess-5-♥ → unclassified",
       "count": 1,
       "matchIds": [
-        "M-04f952648982b1b60b68"
+        "M-8aa82c3381a9a4b56820"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "eight-spade-free-scuttle → eight-spade-free-scuttle: observed 1 time(s) across 1 match(es)."
+      "summary": "four-guess-5-♥ → unclassified: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "eight-spade-free-scuttle → face-down",
+      "motif": "nine-anchor-discard → face-down",
       "count": 1,
       "matchIds": [
-        "M-04f952648982b1b60b68"
+        "M-1cabf7e1358a430a03fc"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "eight-spade-free-scuttle → face-down: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "heart-tempo → 2-black-2-red-rummage",
-      "count": 1,
-      "matchIds": [
-        "M-04f952648982b1b60b68"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "heart-tempo → 2-black-2-red-rummage: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "heart-tempo → disrupt",
-      "count": 1,
-      "matchIds": [
-        "M-6d0b4f6682536c727bbc"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "heart-tempo → disrupt: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "heart-tempo → score",
-      "count": 1,
-      "matchIds": [
-        "M-9c9a76ea4e99e1871ffa"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "heart-tempo → score: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "heart-tempo → unclassified",
-      "count": 1,
-      "matchIds": [
-        "M-04f952648982b1b60b68"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "heart-tempo → unclassified: observed 1 time(s) across 1 match(es)."
+      "summary": "nine-anchor-discard → face-down: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "nine-tap → ace-base",
       "count": 1,
       "matchIds": [
-        "M-6d0b4f6682536c727bbc"
+        "M-0e77a3229088035a6e06"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
@@ -6975,149 +6978,116 @@
       "summary": "nine-tap → ace-base: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "nine-tap → face-down",
+      "motif": "nine-tap → queen-aegis",
       "count": 1,
       "matchIds": [
-        "M-ac36b3d8d85d2a58545e"
+        "M-8aa82c3381a9a4b56820"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "nine-tap → face-down: observed 1 time(s) across 1 match(es)."
+      "summary": "nine-tap → queen-aegis: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "nine-tap → seven-scoring-trigger-take-CORE-015",
+      "motif": "queen-aegis → two-score-discard",
       "count": 1,
       "matchIds": [
-        "M-b13d6d117b0cf5e2ed26"
+        "M-8aa82c3381a9a4b56820"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "nine-tap → seven-scoring-trigger-take-CORE-015: observed 1 time(s) across 1 match(es)."
+      "summary": "queen-aegis → two-score-discard: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "nine-tap → two-score-discard",
+      "motif": "score → draw",
       "count": 1,
       "matchIds": [
-        "M-f468fb9b0431f3ac6637"
+        "M-1cabf7e1358a430a03fc"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "nine-tap → two-score-discard: observed 1 time(s) across 1 match(es)."
+      "summary": "score → draw: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "nine-tap → unclassified",
+      "motif": "score → four-guess-5-♥",
       "count": 1,
       "matchIds": [
-        "M-f468fb9b0431f3ac6637"
+        "M-8aa82c3381a9a4b56820"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "nine-tap → unclassified: observed 1 time(s) across 1 match(es)."
+      "summary": "score → four-guess-5-♥: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "queen-aegis → queen-aegis",
+      "motif": "score → nine-tap",
       "count": 1,
       "matchIds": [
-        "M-9c9a76ea4e99e1871ffa"
+        "M-8aa82c3381a9a4b56820"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "queen-aegis → queen-aegis: observed 1 time(s) across 1 match(es)."
+      "summary": "score → nine-tap: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "queen-aegis → unclassified",
+      "motif": "score → seven-scoring-trigger-take-CORE-017",
       "count": 1,
       "matchIds": [
-        "M-9c9a76ea4e99e1871ffa"
+        "M-28ff342982dcc17a35db"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "queen-aegis → unclassified: observed 1 time(s) across 1 match(es)."
+      "summary": "score → seven-scoring-trigger-take-CORE-017: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "queens-court → queens-court",
+      "motif": "score → seven-scoring-trigger-take-CORE-018",
       "count": 1,
       "matchIds": [
-        "M-51c5b0a7f314d910b2df"
+        "M-2e8921e7c06eb9d8b355"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "queens-court → queens-court: observed 1 time(s) across 1 match(es)."
+      "summary": "score → seven-scoring-trigger-take-CORE-018: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "queens-court → unclassified",
+      "motif": "score → seven-scoring-trigger-take-CORE-019",
       "count": 1,
       "matchIds": [
-        "M-51c5b0a7f314d910b2df"
+        "M-8d5986425d68643eca93"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "queens-court → unclassified: observed 1 time(s) across 1 match(es)."
+      "summary": "score → seven-scoring-trigger-take-CORE-019: observed 1 time(s) across 1 match(es)."
     },
     {
-      "motif": "rank10 → unclassified",
+      "motif": "seven-scoring-trigger-take-CORE-017 → face-down",
       "count": 1,
       "matchIds": [
-        "M-04f952648982b1b60b68"
+        "M-28ff342982dcc17a35db"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 1
       },
-      "summary": "rank10 → unclassified: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "rank10-stack-theft → combo",
-      "count": 1,
-      "matchIds": [
-        "M-b13d6d117b0cf5e2ed26"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "rank10-stack-theft → combo: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "rank6-keep-return-top → unclassified",
-      "count": 1,
-      "matchIds": [
-        "M-a15fedb894e0081a701f"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "rank6-keep-return-top → unclassified: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "score → bj-exile-recycle-CORE-007",
-      "count": 1,
-      "matchIds": [
-        "M-04f952648982b1b60b68"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "score → bj-exile-recycle-CORE-007: observed 1 time(s) across 1 match(es)."
+      "summary": "seven-scoring-trigger-take-CORE-017 → face-down: observed 1 time(s) across 1 match(es)."
     }
   ],
   "anomalies": {
-    "count": 22,
+    "count": 23,
     "byType": {
-      "ORCHESTRATION_DENSITY": 16,
+      "ORCHESTRATION_DENSITY": 17,
       "LONG_MATCH": 5,
       "RESPONSE_CHAIN_INTENSITY": 1
     },
-    "summary": "22 anomaly/anomalies: ORCHESTRATION_DENSITY (16), LONG_MATCH (5), RESPONSE_CHAIN_INTENSITY (1).",
+    "summary": "23 anomaly/anomalies: ORCHESTRATION_DENSITY (17), LONG_MATCH (5), RESPONSE_CHAIN_INTENSITY (1).",
     "critical": 0,
     "warnings": 5,
-    "info": 17
+    "info": 18
   },
   "completeness": {
     "unclassifiedCount": 0,
@@ -7254,7 +7224,7 @@
   },
   "interpretationBoundary": "Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
   "recommendations": [
-    "143 mechanic(s) have sample size below 20 — interpret with caution."
+    "141 mechanic(s) have sample size below 20 — interpret with caution."
   ],
-  "extractHash": "51ed5f2f8303b1b893cd22274d0ff7c96a0f86d6c87e42dea56bee8fcb75bbbb"
+  "extractHash": "8939436bb89207cf1c2f9c39c715fb7d59d4e1d4e6bbfbb2009f547c7089fe5c"
 }

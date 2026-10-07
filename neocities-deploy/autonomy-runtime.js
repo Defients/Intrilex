@@ -1,4 +1,4 @@
-import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=46b6024f32eb';
+import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=d6a5c3182938';
 import {
   IntrilexEngine,
   createMatchState,
@@ -9,19 +9,19 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=46b6024f32eb';
+} from './engine/browser-entry.js?v=d6a5c3182938';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
 import { actionSemantics } from './engine-adapter/action-semantics.mjs';
-import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=46b6024f32eb';
-import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=46b6024f32eb';
-import { createAdaptiveController, normalizeAdaptiveConfig, effectiveAdaptiveMode, adaptiveSeatSummary, compactAdaptiveFrame, ADAPTIVE_TELEMETRY_VERSION } from './evolution/adaptive-strategy.mjs?v=46b6024f32eb';
-import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=46b6024f32eb';
-import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=46b6024f32eb';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=46b6024f32eb';
-import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=46b6024f32eb';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=46b6024f32eb';
+import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=d6a5c3182938';
+import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=d6a5c3182938';
+import { resolveAdaptiveControllers, buildAdaptiveTelemetry, compactAdaptiveFrame } from './evolution/adaptive-strategy.mjs?v=d6a5c3182938';
+import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=d6a5c3182938';
+import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=d6a5c3182938';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=d6a5c3182938';
+import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=d6a5c3182938';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=d6a5c3182938';
 
-export { createAdaptiveController, STRATEGIC_STATE_LABELS, ADAPTIVE_MODE_LABELS } from './evolution/adaptive-strategy.mjs?v=46b6024f32eb';
+export { createAdaptiveController, resolveAdaptiveControllers, STRATEGIC_STATE_LABELS, ADAPTIVE_MODE_LABELS } from './evolution/adaptive-strategy.mjs?v=d6a5c3182938';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical','control-conversion-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];
@@ -128,8 +128,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   // Adaptive Strategy layer: per-seat deterministic controllers over the
   // baseline genome. Absent/OFF config builds no controller; LEARNED executes
   // as OFF and is reported unavailable.
-  const adaptiveCfgs=seats.map((_,i)=>normalizeAdaptiveConfig(adaptiveConfigs[i]));
-  const adaptiveControllers=seats.map((_,i)=>{const cfg=adaptiveCfgs[i];return cfg&&effectiveAdaptiveMode(cfg)==='RULED'&&policyIds[i]===WEIGHTED_POLICY_ID&&policyStates[i]?createAdaptiveController(cfg,policyStates[i]):null;});
+  const {configs:adaptiveCfgs,controllers:adaptiveControllers}=resolveAdaptiveControllers({adaptiveConfigs,policyIds,policyStates,seatCount:seats.length});
   const actionCounts={},actionModeCounts={},decisionFamilyCounts={},decisionModeCounts={},responseActionCounts={},timingClassCounts={},eventTypeCounts={},mechanicCounts={},primaryMechanicCounts={},mechanicOpportunityCounts={},primaryMechanicOpportunityCounts={};const semantic={miniTurnActionCount:0,exhaustedPassActionCount:0,responseOpportunityCount:0,responsePlayedCount:0,responseDeclinedWithOptionsCount:0,automaticPriorityAdvanceCount:0,responseWindowClosedCount:0,counterDeclarationCount:0,quickDeclarationCount:0,instantDeclarationCount:0,interruptDeclarationCount:0,policyDecisionCount:0,policyActionCount:0,actionCount:0,passActionCount:0,miniTurnCount:0,meaningfulResponseDecisionCount:0,automaticOrchestrationCommandCount:0};
   const perSeat=[{miniTurnActionCount:0,exhaustedPassActionCount:0,responsePlayedCount:0,responseDeclinedWithOptionsCount:0,counterDeclarationCount:0,quickDeclarationCount:0,instantDeclarationCount:0,interruptDeclarationCount:0,policyDecisionCount:0,policyActionCount:0,actionCount:0,passActionCount:0,miniTurnCount:0,meaningfulResponseDecisionCount:0,responseOpportunityCount:0,advancedDecisionCount:0,voltageDecisionCount:0,ultraDecisionCount:0,privateChoiceDecisionCount:0,mechanicCounts:{},primaryMechanicCounts:{},mechanicOpportunityCounts:{},primaryMechanicOpportunityCounts:{},decisionFamilyCounts:{}},{miniTurnActionCount:0,exhaustedPassActionCount:0,responsePlayedCount:0,responseDeclinedWithOptionsCount:0,counterDeclarationCount:0,quickDeclarationCount:0,instantDeclarationCount:0,interruptDeclarationCount:0,policyDecisionCount:0,policyActionCount:0,actionCount:0,passActionCount:0,miniTurnCount:0,meaningfulResponseDecisionCount:0,responseOpportunityCount:0,advancedDecisionCount:0,voltageDecisionCount:0,ultraDecisionCount:0,privateChoiceDecisionCount:0,mechanicCounts:{},primaryMechanicCounts:{},mechanicOpportunityCounts:{},primaryMechanicOpportunityCounts:{},decisionFamilyCounts:{}}];
   const auditDecisions=[],capturedEvents=[],rankDecisions=[],matchDecisions=[];
@@ -228,8 +227,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   const browserHashInput={...hashCore,mechanicCounts:_stripComboTag(hashCore.mechanicCounts),primaryMechanicCounts:_stripComboTag(hashCore.primaryMechanicCounts),participants:hashCore.participants.map(p=>{const{mechanicOpportunityCounts:_m,primaryMechanicOpportunityCounts:_pm,comboOpportunityCount:_co,comboDeclarationCount:_cd,...rest}=p;return{...rest,mechanicCounts:_stripComboTag(rest.mechanicCounts),primaryMechanicCounts:_stripComboTag(rest.primaryMechanicCounts)};})};
   const strategyData=strategy?.finish(seats.map(id=>finalScores[id]),decisions);
   const terminal=terminalEvidence(capturedEvents,seats.map(id=>state.players[id].goal),publicTerminalAnchorCounts(state,seats));
-  const adaptiveSeatEntries=seats.map((_,i)=>{const s=adaptiveSeatSummary(adaptiveCfgs[i],adaptiveControllers[i]);return s?{seat:i+1,...s}:null;}).filter(Boolean);
-  const adaptiveTelemetry=adaptiveSeatEntries.length?{schemaVersion:ADAPTIVE_TELEMETRY_VERSION,seats:adaptiveSeatEntries}:null;
+  const adaptiveTelemetry=buildAdaptiveTelemetry(adaptiveCfgs,adaptiveControllers);
   const _matchResult={...core,...(strategyData?{strategicTelemetry:strategyData}:{}),...(terminal?{terminalEvidence:terminal}:{}),...(adaptiveTelemetry?{adaptiveTelemetry}:{}),comboTelemetry,matchResultHash:hashCanonical(browserHashInput),rankDecisions,decisions:matchDecisions};
   if(recordReplay)_matchResult.replay={initialState:replayInitialState,commands:replayCommands};
   if(fieldManual) {

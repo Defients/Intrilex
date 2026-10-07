@@ -199,8 +199,15 @@ export class PlaySession {
     this._initialState = structuredClone(this.state);
     this._scriptUsage = new Map();
     // Adaptive Strategy: the pinned snapshot's adaptive config owns the per-
-    // match controller. OFF/absent keeps the exact baseline genome path.
-    this._adaptiveController = this._agent?.adaptive ? auto.createAdaptiveController(this._agent.adaptive, this._agent.policyState) : null;
+    // match controller, resolved through the shared domain gate. OFF/absent
+    // keeps the exact baseline genome path; LEARNED builds no controller, so
+    // it cannot fabricate RULED frames in interactive play.
+    this._adaptiveController = auto.resolveAdaptiveControllers({
+      adaptiveConfigs: [this._agent?.adaptive],
+      policyIds: [this._agent?.policyId],
+      policyStates: [this._agent?.policyState],
+      seatCount: 1,
+    }).controllers[0];
 
     // Initialize per-player policy RNG (same as autonomy-runtime)
     const PolicyRng = auto.PolicyRng ?? createPolicyRng;
@@ -846,10 +853,16 @@ export class PlaySession {
       ...(restoredAgent ? { agentSnapshot: structuredClone(restoredAgent) } : {}) };
     this._scriptUsage = new Map(); // rebuilt deterministically as the replay re-fires scripted selections
     this._agent = restoredAgent;
-    // Adaptive Strategy: rebuilt fresh, then re-derived decision-by-decision as
-    // the journal replay re-fires _selectAIAction — deterministic, so the
-    // post-restore posture matches uninterrupted play exactly.
-    this._adaptiveController = restoredAgent?.adaptive ? auto.createAdaptiveController(restoredAgent.adaptive, restoredAgent.policyState) : null;
+    // Adaptive Strategy: rebuilt fresh through the shared domain gate, then
+    // re-derived decision-by-decision as the journal replay re-fires
+    // _selectAIAction — deterministic, so the post-restore posture matches
+    // uninterrupted play exactly.
+    this._adaptiveController = auto.resolveAdaptiveControllers({
+      adaptiveConfigs: [restoredAgent?.adaptive],
+      policyIds: [restoredAgent?.policyId],
+      policyStates: [restoredAgent?.policyState],
+      seatCount: 1,
+    }).controllers[0];
     this.engine = candidateEngine;
     this.state = candidateState;
     this._decisionIndex = 0;

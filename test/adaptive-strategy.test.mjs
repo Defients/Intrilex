@@ -5,9 +5,9 @@ import { WEIGHTED_POLICY_ID, WEIGHT_BOUND } from '../packages/policies/src/weigh
 import {
   ADAPTIVE_CONTRACT, ADAPTIVE_SCHEMA_VERSION, ADAPTIVE_TELEMETRY_VERSION, STRATEGIC_STATES, MODIFIER_STATES,
   DEFAULT_ADAPTIVE_THRESHOLDS, ADAPTIVE_MODIFIER_SCALE, ADAPTIVE_MODIFIER_BOUND,
-  strategicSignals, validateAdaptiveConfig, normalizeAdaptiveConfig, effectiveAdaptiveMode,
+  strategicSignals, validateAdaptiveConfig, normalizeAdaptiveConfig, effectiveAdaptiveMode, createAdaptiveConfig,
   LEARNED_UNAVAILABLE_REASON, createAdaptiveController, compactAdaptiveFrame, adaptiveSeatSummary,
-  validateAdaptiveTelemetry,
+  validateAdaptiveTelemetry, resolveAdaptiveControllers, buildAdaptiveTelemetry,
 } from '../packages/simulation-runtime/src/adaptive-strategy.mjs';
 import { createTrainableCheckpoint, validateCheckpoint } from '../packages/simulation-runtime/src/evolution-domain.mjs';
 import { compileTraits, ZERO_GENOME } from '../packages/simulation-runtime/src/profile-contracts.mjs';
@@ -274,4 +274,154 @@ test('no tactical scripting: strategic states answer posture only, actions still
   for (const s of STRATEGIC_STATES) assert.ok(['NEUTRAL', 'AHEAD', 'DOMINANT', 'BEHIND', 'DESPERATE', 'WIN_OPPORTUNITY', 'DEFENSIVE_EMERGENCY'].includes(s));
   assert.equal(MODIFIER_STATES.includes('NEUTRAL'), false, 'NEUTRAL is the identity state and carries no modifiers');
   assert.equal(ADAPTIVE_SCHEMA_VERSION, 1);
+});
+
+// ── Profile Tune UI authoring path ─────────────────────────────────────────
+// These exercise the same serializer the Tune form submits (createAdaptiveConfig
+// on DOM-shaped editor values) all the way through draft → activation →
+// snapshot → execution. Regression: the workspace once serialized
+// `contract: ADAPTIVE_CONTRACT.id` (undefined on a string constant), so every
+// RULED/LEARNED draft failed downstream with UNSUPPORTED_ADAPTIVE_CONTRACT.
+
+test('authoring serializer: RULED drafts emit the authoritative contract and strip editor noise', () => {
+  const cfg = createAdaptiveConfig({
+    mode: 'RULED',
+    thresholds: { aheadEnter: 0.15, dominantEnter: 0.45, hysteresis: 0.06, mustDefendAt: 0.8 },
+    modifiers: { DESPERATE: { tempo: 5, risk: 0 }, BEHIND: { risk: 40 }, AHEAD: {} },
+  });
+  assert.equal(cfg.contract, ADAPTIVE_CONTRACT);
+  assert.equal(cfg.mode, 'RULED');
+  assert.deepEqual(cfg.modifiers, { DESPERATE: { tempo: 5 }, BEHIND: { risk: 40 } }, 'zero entries and empty states are dropped');
+  assert.doesNotThrow(() => validateAdaptiveConfig(cfg));
+  assert.equal(createAdaptiveConfig({ mode: 'OFF', thresholds: { aheadEnter: 0.5 }, modifiers: { AHEAD: { risk: 10 } } }), null, 'OFF serializes to absent config');
+  assert.equal(createAdaptiveConfig({}), null, 'absent mode is OFF');
+  assert.equal(code(() => createAdaptiveConfig({ mode: 'RULED', thresholds: { aheadEnter: 2 } })), 'INVALID_ADAPTIVE_THRESHOLDS', 'editor input still fails closed');
+  assert.equal(code(() => createAdaptiveConfig({ mode: 'LEARNED', modifiers: { NEUTRAL: { risk: 1 } } })), 'UNSUPPORTED_STRATEGIC_STATE');
+});
+
+test('profile tune workflow: RULED draft saves, activates, snapshots and executes', async () => {
+  const store = memoryStore();
+  const profile = await store.createProfile({ commandId: 'tune-ruled', displayName: 'TUNED MIND', traits: { guard: 30, scoringDrive: 25 } });
+  const v0 = await store.profileView(profile.agentProfileId);
+  const rev0 = v0.artifacts.find(a => a.id === v0.head.activeRevisionId);
+  const champ0 = v0.checkpoints.find(c => c.checkpointId === v0.head.championCheckpointId);
+  assert.equal(champ0.adaptive, undefined, 'baseline starts without an adaptive layer');
+
+  const drafted = createAdaptiveConfig({
+    mode: 'RULED',
+    thresholds: { aheadEnter: 0.15, dominantEnter: 0.45, hysteresis: 0.06, mustDefendAt: 0.8 },
+    modifiers: { DESPERATE: { tempo: 5, risk: 0 }, BEHIND: { risk: 40 }, WIN_OPPORTUNITY: { points: 25 } },
+  });
+  const { revision, checkpoint } = await store.saveDraftRevision({ agentProfileId: profile.agentProfileId, baseRevisionId: rev0.id, adaptiveStrategy: drafted, sourceCheckpointId: champ0.checkpointId });
+  assert.equal(revision.body.adaptiveStrategy.contract, ADAPTIVE_CONTRACT, 'persisted intent carries the authoritative contract');
+  assert.equal(revision.body.adaptiveStrategy.mode, 'RULED');
+  assert.equal(checkpoint.adaptive.mode, 'RULED', 'the compiled checkpoint carries the posture rules');
+  const v1 = await store.profileView(profile.agentProfileId);
+  assert.equal(v1.head.championCheckpointId, champ0.checkpointId, 'drafting never moves the head');
+
+  await store.activateAuthoredRevision({ commandId: 'tune-activate', agentProfileId: profile.agentProfileId, expectedHead: v1.head, revisionId: revision.id });
+  const v2 = await store.profileView(profile.agentProfileId);
+  const champ2 = v2.checkpoints.find(c => c.checkpointId === v2.head.championCheckpointId);
+  assert.equal(champ2.checkpointId, checkpoint.checkpointId, 'activation promotes the authored checkpoint');
+  assert.equal(champ2.adaptive.mode, 'RULED', 'activation retains the adaptive configuration');
+  assert.deepEqual(champ2.policyState.weights, champ0.policyState.weights, 'the adaptive edit preserves the baseline genome');
+
+  const snapshot = buildSnapshot({ checkpoint: champ2, identity, rulesProfileId: 'core-advanced-authority' });
+  assert.equal(snapshot.adaptive.mode, 'RULED', 'the execution snapshot carries the layer');
+  const run = runPolicyMatch({ seed: 4242, ordinal: 0, profileId: 'core-advanced-authority', policyIds: [WEIGHTED_POLICY_ID, 'control'], seatOrder: ['P1', 'P2'], policyStates: [snapshot.policyState, null], adaptiveConfigs: [snapshot.adaptive, null], decisionLimit: 600, telemetryEnabled: false });
+  const seat = run.summary.adaptiveTelemetry.seats.find(s => s.seat === 1);
+  assert.equal(seat.mode, 'RULED');
+  assert.equal(seat.contract, ADAPTIVE_CONTRACT);
+  assert.ok(seat.decisions > 0, 'execution consumes the activated config');
+});
+
+test('profile tune workflow: OFF clears the layer and LEARNED reports unavailability honestly', async () => {
+  const store = memoryStore();
+  const ruled = createAdaptiveConfig({ mode: 'RULED', modifiers: { DESPERATE: { risk: 40 } } });
+  const profile = await store.createProfile({ commandId: 'tune-modes', displayName: 'MODE MIND', traits: { guard: 30 }, adaptiveStrategy: ruled });
+  const v0 = await store.profileView(profile.agentProfileId);
+  const rev0 = v0.artifacts.find(a => a.id === v0.head.activeRevisionId);
+  const champ0 = v0.checkpoints.find(c => c.checkpointId === v0.head.championCheckpointId);
+  assert.equal(champ0.adaptive.mode, 'RULED');
+
+  const cleared = await store.saveDraftRevision({ agentProfileId: profile.agentProfileId, baseRevisionId: rev0.id, adaptiveStrategy: createAdaptiveConfig({ mode: 'OFF' }), sourceCheckpointId: champ0.checkpointId });
+  assert.equal(cleared.revision.body.adaptiveStrategy, undefined, 'OFF clears intent rather than storing an empty block');
+  assert.equal(cleared.checkpoint.adaptive, undefined);
+
+  const learned = createAdaptiveConfig({ mode: 'LEARNED', thresholds: { aheadEnter: 0.2 } });
+  assert.equal(learned.contract, ADAPTIVE_CONTRACT);
+  assert.equal(effectiveAdaptiveMode(learned), 'OFF', 'LEARNED has no optimizer — it must not be reinterpreted as RULED');
+  const ldraft = await store.saveDraftRevision({ agentProfileId: profile.agentProfileId, baseRevisionId: rev0.id, adaptiveStrategy: learned, sourceCheckpointId: champ0.checkpointId });
+  assert.equal(ldraft.checkpoint.adaptive.mode, 'LEARNED', 'the authored mode is stored verbatim');
+  const run = runPolicyMatch({ seed: 7, ordinal: 0, profileId: 'core-advanced-authority', policyIds: [WEIGHTED_POLICY_ID, 'control'], seatOrder: ['P1', 'P2'], policyStates: [ldraft.checkpoint.policyState, null], adaptiveConfigs: [ldraft.checkpoint.adaptive, null], decisionLimit: 600, telemetryEnabled: false });
+  const seat = run.summary.adaptiveTelemetry.seats.find(s => s.seat === 1);
+  assert.equal(seat.requestedMode, 'LEARNED');
+  assert.equal(seat.mode, 'OFF', 'executed mode is OFF, not silently RULED');
+  assert.equal(seat.unavailable, LEARNED_UNAVAILABLE_REASON);
+});
+
+// ── Shared controller resolution (runtime/browser/interactive gate) ─────────
+// resolveAdaptiveControllers is the single domain-owned gate deciding whether
+// an adaptive config becomes an executing controller. Before it existed,
+// play-controller built a controller for any present config — a LEARNED
+// profile snapshot would emit mode:'RULED' frames and apply modifiers during
+// interactive play while batch runtimes correctly reported it unavailable.
+
+test('controller resolution: controllers only for RULED + weighted policy + policy state', () => {
+  const state = baseGenome();
+  const ruled = RULED({ modifiers: { BEHIND: { risk: 40 } } });
+  const learned = createAdaptiveConfig({ mode: 'LEARNED', thresholds: { aheadEnter: 0.2 } });
+  const { configs, controllers } = resolveAdaptiveControllers({
+    adaptiveConfigs: [ruled, null, learned, ruled, ruled],
+    policyIds: [WEIGHTED_POLICY_ID, WEIGHTED_POLICY_ID, WEIGHTED_POLICY_ID, 'control', WEIGHTED_POLICY_ID],
+    policyStates: [state, state, state, state, null],
+    seatCount: 5,
+  });
+  assert.ok(controllers[0], 'RULED + weighted policy + policy state resolves');
+  assert.equal(controllers[1], null, 'absent config builds none');
+  assert.equal(controllers[2], null, 'LEARNED builds none — no fabricated RULED execution');
+  assert.equal(controllers[3], null, 'RULED on a non-weighted policy builds none');
+  assert.equal(controllers[4], null, 'RULED without a policy state builds none');
+  assert.equal(configs[2].mode, 'LEARNED', 'normalized configs still ride along for telemetry');
+});
+
+test('controller resolution: single-seat LEARNED snapshot gets no controller (interactive-play regression)', () => {
+  const learned = createAdaptiveConfig({ mode: 'LEARNED' });
+  const { controllers } = resolveAdaptiveControllers({
+    adaptiveConfigs: [learned],
+    policyIds: [WEIGHTED_POLICY_ID],
+    policyStates: [baseGenome()],
+    seatCount: 1,
+  });
+  assert.equal(controllers[0], null, 'LEARNED must not emit RULED frames in interactive play');
+  const { controllers: ruled } = resolveAdaptiveControllers({
+    adaptiveConfigs: [RULED()],
+    policyIds: [WEIGHTED_POLICY_ID],
+    policyStates: [baseGenome()],
+    seatCount: 1,
+  });
+  assert.ok(ruled[0], 'RULED still resolves for the pinned agent');
+});
+
+test('adaptive telemetry builder: RULED execution and LEARNED unavailability, absent seats omitted', () => {
+  const state = baseGenome();
+  const learned = createAdaptiveConfig({ mode: 'LEARNED' });
+  const { configs, controllers } = resolveAdaptiveControllers({
+    adaptiveConfigs: [RULED(), null, learned],
+    policyIds: [WEIGHTED_POLICY_ID, WEIGHTED_POLICY_ID, WEIGHTED_POLICY_ID],
+    policyStates: [state, state, state],
+    seatCount: 3,
+  });
+  controllers[0].decide({ authorizedView: view({}), legalActions: [] });
+  const telemetry = buildAdaptiveTelemetry(configs, controllers);
+  validateAdaptiveTelemetry(telemetry);
+  assert.equal(telemetry.seats.length, 2, 'unconfigured seats emit no entry');
+  assert.equal(telemetry.seats[0].seat, 1);
+  assert.equal(telemetry.seats[0].mode, 'RULED');
+  assert.equal(telemetry.seats[0].decisions, 1);
+  assert.equal(telemetry.seats[1].seat, 3);
+  assert.equal(telemetry.seats[1].requestedMode, 'LEARNED');
+  assert.equal(telemetry.seats[1].mode, 'OFF');
+  assert.equal(telemetry.seats[1].unavailable, LEARNED_UNAVAILABLE_REASON);
+  assert.equal(buildAdaptiveTelemetry([null, null], [null, null]), null, 'no configured seats → no telemetry block');
 });

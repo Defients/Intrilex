@@ -1,4 +1,4 @@
-import { WEIGHT_FEATURES, WEIGHT_BOUND } from './weighted-heuristic.mjs';
+import { WEIGHT_FEATURES, WEIGHT_BOUND, WEIGHTED_POLICY_ID } from './weighted-heuristic.mjs';
 
 // ── Adaptive Strategy Profiles ─────────────────────────────────────────────
 // A deterministic posture layer over the persistent baseline genome:
@@ -201,9 +201,57 @@ export function normalizeAdaptiveConfig(config) {
   return Object.freeze(out);
 }
 
+/**
+ * Authoring boundary (Profile Tune UI → stored config): build a validated
+ * adaptive config from editor values. `OFF` (or absent mode) serializes to
+ * null — no adaptive layer — matching the historical "absent config" default.
+ * Every other mode serializes with the authoritative contract id; malformed
+ * editor input fails closed with the domain codes above rather than being
+ * silently reinterpreted. Zero-valued and empty modifier entries are editor
+ * noise and are dropped before validation. The returned object is the sparse
+ * authored config — defaults still apply at execution time.
+ */
+export function createAdaptiveConfig({ mode, thresholds = null, modifiers = null } = {}) {
+  if (mode == null || mode === 'OFF') return null;
+  const config = { contract: ADAPTIVE_CONTRACT, mode };
+  if (thresholds != null) config.thresholds = { ...thresholds };
+  if (modifiers != null) {
+    const tables = Object.fromEntries(Object.entries(modifiers)
+      .map(([state, table]) => [state, Object.fromEntries(Object.entries(table ?? {}).filter(([, value]) => value !== 0))])
+      .filter(([, table]) => Object.keys(table).length));
+    if (Object.keys(tables).length) config.modifiers = tables;
+  }
+  return validateAdaptiveConfig(config);
+}
+
 /** LEARNED is architected but has no optimizer in V1 — it executes as OFF. */
 export const effectiveAdaptiveMode = config => !config || config.mode === 'LEARNED' ? 'OFF' : config.mode;
 export const LEARNED_UNAVAILABLE_REASON = 'LEARNED_MODE_EXPERIMENTAL';
+
+/**
+ * Shared per-seat controller resolution — the single place that decides
+ * whether an adaptive config becomes an executing controller. A controller is
+ * built only when the seat carries a config whose effective mode is RULED AND
+ * the seat runs the weighted heuristic with a policy state; absent/OFF and
+ * LEARNED configs, and RULED configs pinned to non-weighted or stateless
+ * policies, get none and can never emit adaptive frames. The batch runtime,
+ * the browser runtime and interactive play all resolve through here so the
+ * gate cannot drift between evidence and play paths.
+ * Returns the normalized per-seat configs (telemetry input) alongside the
+ * controller array; both are `seatCount`-length.
+ */
+export function resolveAdaptiveControllers({ adaptiveConfigs = [], policyIds = [], policyStates = [], seatCount } = {}) {
+  const count = seatCount ?? Math.max(adaptiveConfigs.length ?? 0, policyIds.length ?? 0, policyStates.length ?? 0);
+  const configs = new Array(count).fill(null), controllers = new Array(count).fill(null);
+  for (let i = 0; i < count; i++) {
+    const cfg = normalizeAdaptiveConfig(adaptiveConfigs[i]);
+    configs[i] = cfg;
+    if (cfg && effectiveAdaptiveMode(cfg) === 'RULED' && policyIds[i] === WEIGHTED_POLICY_ID && policyStates[i]) {
+      controllers[i] = createAdaptiveController(cfg, policyStates[i]);
+    }
+  }
+  return { configs, controllers };
+}
 
 const round4 = v => Math.round(v * 10000) / 10000;
 
@@ -306,6 +354,22 @@ export function adaptiveSeatSummary(config, controller) {
   return { requestedMode: normalized.mode, mode: effectiveAdaptiveMode(normalized), contract: normalized.contract,
     decisions: 0, stateDecisions: {}, transitions: [], transitionCount: 0, finalState: 'NEUTRAL', hysteresisSuppressions: 0,
     ...(normalized.mode === 'LEARNED' ? { unavailable: LEARNED_UNAVAILABLE_REASON } : {}) };
+}
+
+/**
+ * Match-level adaptive telemetry assembled from resolved configs/controllers.
+ * Observational only — never part of the match-result hash input. An entry is
+ * emitted per seat that carried an adaptive configuration (OFF/LEARNED seats
+ * report zero decisions and, for LEARNED, the unavailability reason); null
+ * when no seat carried one.
+ */
+export function buildAdaptiveTelemetry(configs = [], controllers = []) {
+  const seats = [];
+  for (let i = 0; i < Math.max(configs.length, controllers.length); i++) {
+    const s = adaptiveSeatSummary(configs[i], controllers[i]);
+    if (s) seats.push({ seat: i + 1, ...s });
+  }
+  return seats.length ? { schemaVersion: ADAPTIVE_TELEMETRY_VERSION, seats } : null;
 }
 
 export function validateAdaptiveTelemetry(telemetry) {

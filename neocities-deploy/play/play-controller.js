@@ -4,10 +4,10 @@
 // Action IDs resolve through a private command vault.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical, deriveSecuredPoints } from '../engine/browser-entry.js?v=46b6024f32eb';
-import { classifyDecisionKind, presentAction } from './action-presenter.js?v=46b6024f32eb';
-import { matchIntent } from './guided-exhibition/guided-runtime.mjs?v=46b6024f32eb';
-import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js?v=46b6024f32eb';
+import { hashCanonical, deriveSecuredPoints } from '../engine/browser-entry.js?v=d6a5c3182938';
+import { classifyDecisionKind, presentAction } from './action-presenter.js?v=d6a5c3182938';
+import { matchIntent } from './guided-exhibition/guided-runtime.mjs?v=d6a5c3182938';
+import { aiDisplayNameFromPolicyId, aiDifficultyLabelFromPolicyId } from './ai-personality.js?v=d6a5c3182938';
 import {
   PRODUCT_VERSION,
   PLAYER_RUNTIME_VERSION,
@@ -19,9 +19,9 @@ import {
   validateSaveEnvelope,
   canMigrateSave,
   migrateSave,
-} from './save-integrity.js?v=46b6024f32eb';
-import { createPolicyRng, computePlayerStats } from './session-utils.js?v=46b6024f32eb';
-import { captureLocalDecision, captureLocalOutcome } from '../strategy/strategy-player.js?v=46b6024f32eb';
+} from './save-integrity.js?v=d6a5c3182938';
+import { createPolicyRng, computePlayerStats } from './session-utils.js?v=d6a5c3182938';
+import { captureLocalDecision, captureLocalOutcome } from '../strategy/strategy-player.js?v=d6a5c3182938';
 
 // Re-export for backward compatibility (other modules import from play-controller)
 export { PRODUCT_VERSION, PLAYER_RUNTIME_VERSION, ENGINE_VERSION, RULES_VERSION, SAVE_FORMAT_VERSION, SUPPORTED_PROFILES, buildSaveIntegrityPayload, validateSaveEnvelope, canMigrateSave, migrateSave };
@@ -43,7 +43,7 @@ export const SessionState = Object.freeze({
 let _engineModule = null;
 async function engine() {
   if (!_engineModule) {
-    _engineModule = await import('../engine/browser-entry.js?v=46b6024f32eb');
+    _engineModule = await import('../engine/browser-entry.js?v=d6a5c3182938');
   }
   return _engineModule;
 }
@@ -51,7 +51,7 @@ async function engine() {
 let _autonomyModule = null;
 async function autonomy() {
   if (!_autonomyModule) {
-    _autonomyModule = await import('../autonomy-runtime.js?v=46b6024f32eb');
+    _autonomyModule = await import('../autonomy-runtime.js?v=d6a5c3182938');
   }
   return _autonomyModule;
 }
@@ -62,7 +62,7 @@ async function autonomy() {
 export const AGENT_POLICY_ID = 'weighted-heuristic-v1';
 async function admitAgentSnapshot(setup) {
   if (!setup?.agentSnapshot) return null;
-  const [{ validateSnapshot }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=46b6024f32eb'), import('../evolution/identity.mjs?v=46b6024f32eb')]);
+  const [{ validateSnapshot }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=d6a5c3182938'), import('../evolution/identity.mjs?v=d6a5c3182938')]);
   const fail = code => { throw Object.assign(new Error(code), { reasonCode: code }); };
   const snapshot = validateSnapshot(setup.agentSnapshot);
   if (setup.aiPolicyId !== AGENT_POLICY_ID || snapshot.policyId !== AGENT_POLICY_ID) fail('AGENT_POLICY_MISMATCH');
@@ -199,8 +199,15 @@ export class PlaySession {
     this._initialState = structuredClone(this.state);
     this._scriptUsage = new Map();
     // Adaptive Strategy: the pinned snapshot's adaptive config owns the per-
-    // match controller. OFF/absent keeps the exact baseline genome path.
-    this._adaptiveController = this._agent?.adaptive ? auto.createAdaptiveController(this._agent.adaptive, this._agent.policyState) : null;
+    // match controller, resolved through the shared domain gate. OFF/absent
+    // keeps the exact baseline genome path; LEARNED builds no controller, so
+    // it cannot fabricate RULED frames in interactive play.
+    this._adaptiveController = auto.resolveAdaptiveControllers({
+      adaptiveConfigs: [this._agent?.adaptive],
+      policyIds: [this._agent?.policyId],
+      policyStates: [this._agent?.policyState],
+      seatCount: 1,
+    }).controllers[0];
 
     // Initialize per-player policy RNG (same as autonomy-runtime)
     const PolicyRng = auto.PolicyRng ?? createPolicyRng;
@@ -846,10 +853,16 @@ export class PlaySession {
       ...(restoredAgent ? { agentSnapshot: structuredClone(restoredAgent) } : {}) };
     this._scriptUsage = new Map(); // rebuilt deterministically as the replay re-fires scripted selections
     this._agent = restoredAgent;
-    // Adaptive Strategy: rebuilt fresh, then re-derived decision-by-decision as
-    // the journal replay re-fires _selectAIAction — deterministic, so the
-    // post-restore posture matches uninterrupted play exactly.
-    this._adaptiveController = restoredAgent?.adaptive ? auto.createAdaptiveController(restoredAgent.adaptive, restoredAgent.policyState) : null;
+    // Adaptive Strategy: rebuilt fresh through the shared domain gate, then
+    // re-derived decision-by-decision as the journal replay re-fires
+    // _selectAIAction — deterministic, so the post-restore posture matches
+    // uninterrupted play exactly.
+    this._adaptiveController = auto.resolveAdaptiveControllers({
+      adaptiveConfigs: [restoredAgent?.adaptive],
+      policyIds: [restoredAgent?.policyId],
+      policyStates: [restoredAgent?.policyState],
+      seatCount: 1,
+    }).controllers[0];
     this.engine = candidateEngine;
     this.state = candidateState;
     this._decisionIndex = 0;
