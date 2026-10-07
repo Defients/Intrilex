@@ -20,7 +20,7 @@
 // be exercised directly in Node tests with injected dependencies.
 // ═══════════════════════════════════════════════════════════════
 
-import { ensureReplayFrames } from './replay-frames.js?v=dac162e115e4';
+import { ensureReplayFrames } from './replay-frames.js?v=ef8ac632ff7c';
 
 export const REPLAY_STATUS = Object.freeze({
   IDLE: 'idle',

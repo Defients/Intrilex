@@ -29,9 +29,9 @@
 // and every non-10 ♣/♦/♥ card shares the :normal entity.
 // ═══════════════════════════════════════════════════════════════
 
-import { getCardDefinition, listAuthoritativeCards, getSuit, rankName, CARD_FACE_REGISTRY_META } from '../../card-face-data.js?v=dac162e115e4';
-import { getCardArtBoardPath, getCardArtBoardPosition, getCardArtAlt } from '../../card-art-registry.js?v=dac162e115e4';
-import { getCardRulesDefinition } from '../../play/advanced-card-rules/card-rules-data.mjs?v=dac162e115e4';
+import { getCardDefinition, listAuthoritativeCards, getSuit, rankName, CARD_FACE_REGISTRY_META } from '../../card-face-data.js?v=ef8ac632ff7c';
+import { getCardArtBoardPath, getCardArtBoardPosition, getCardArtAlt } from '../../card-art-registry.js?v=ef8ac632ff7c';
+import { getCardRulesDefinition } from '../../play/advanced-card-rules/card-rules-data.mjs?v=ef8ac632ff7c';
 
 // ── Deck order ───────────────────────────────────────────────────
 export const SUIT_ORDER = ['♣', '♦', '♥', '♠'];
@@ -75,7 +75,7 @@ export const EVIDENCE_FILTERS = [
   { value: 'all', label: 'All evidence' },
   { value: 'exact', label: 'Exact (card or suit variant)' },
   { value: 'shared', label: 'Shared normal (♣/♦/♥)' },
-  { value: 'rank', label: 'Rank-level' },
+  { value: 'rank-fallback', label: 'Rank fallback available' },
   { value: 'insufficient', label: 'Insufficient / missing' },
 ];
 
@@ -392,7 +392,10 @@ export function filterModels(models, f = {}) {
       const status = m.evidence?.status;
       if (f.evidence === 'exact' && !EXACT_SCOPES.has(scope)) return false;
       if (f.evidence === 'shared' && scope !== EVIDENCE_SCOPE.SHARED_NORMAL) return false;
-      if (f.evidence === 'rank' && scope !== EVIDENCE_SCOPE.RANK_LEVEL) return false;
+      // Physical cards never carry a rank-level entity scope — the honest
+      // rank-level signal is the fallback disclosure on a card whose own
+      // entity evidence is missing.
+      if (f.evidence === 'rank-fallback' && !m.evidence?.rankFallback) return false;
       if (f.evidence === 'insufficient' && !(INSUFFICIENT_STATUSES.has(status) || !m.evidence?.metrics)) return false;
     }
     if (f.confidence && f.confidence !== 'all') {

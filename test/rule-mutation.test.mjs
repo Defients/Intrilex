@@ -608,3 +608,169 @@ test('mutation chamber workspace renders scientific control surface and is route
   const store = await readFile('apps/lab-web/src/evolution/evolution-store.mjs', 'utf8');
   assert.match(store, /createObjectStore\('mutations'/);
 });
+
+// ── Workspace lifecycle: cancellation is owned by a per-run execution
+// token — rendering can never change whether an experiment was cancelled,
+// and a settled-after-unmount run never resurrects the workspace. ────────
+
+async function mutationWorkspace() {
+  const { runInNewContext } = await import('node:vm');
+  const md = await import('@intrilex/simulation-runtime/mutation-domain');
+  const src = (await readFile('apps/lab-web/src/workspaces/mutation.js', 'utf8'))
+    .replace(/import\s[\s\S]*?from\s*'[^']*';/g, '')
+    .replace(/\bexport /g, '');
+  const workers = [];
+  class FakeWorker {
+    constructor() { this.posted = null; this.terminated = false; workers.push(this); }
+    postMessage(m) { this.posted = m; }
+    terminate() { this.terminated = true; }
+    emit(data) { this.onmessage?.({ data }); }
+    fail(e) { this.onerror?.(e); }
+  }
+  const savedMutations = [];
+  const appEl = { innerHTML: '' };
+  const sandbox = {
+    app: appEl,
+    esc: (s) => String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'),
+    fmt: (n) => String(n),
+    LAB_IDENTITY: { fingerprint: 'f'.repeat(64), engineVersion: 't-engine', rulesVersion: 't-rules', engineHash: 'e'.repeat(64), runtimeHash: 'r'.repeat(64) },
+    LAB_VERSION: '0.0.0-test',
+    MUTATION_TARGETS: md.MUTATION_TARGETS,
+    MUTATION_TARGET_BY_ID: md.MUTATION_TARGET_BY_ID,
+    MUTATION_LIMITS: md.MUTATION_LIMITS,
+    MUTATION_OBJECTIVE_METRICS: md.MUTATION_OBJECTIVE_METRICS,
+    MUTATION_OBJECTIVE_DIRECTIONS: md.MUTATION_OBJECTIVE_DIRECTIONS,
+    createRuleMutation: md.createRuleMutation,
+    createExperimentConfig: md.createExperimentConfig,
+    buildMutationExperimentPlan: md.buildMutationExperimentPlan,
+    createExperimentRecord: md.createExperimentRecord,
+    finalizeExperimentRecord: md.finalizeExperimentRecord,
+    compactExperimentRecord: md.compactExperimentRecord,
+    serializeExperiment: md.serializeExperiment,
+    mutationDisplay: md.mutationDisplay,
+    EvolutionStore: class {
+      async listMutations() { return []; }
+      async saveMutation(r) { savedMutations.push(r); }
+      async loadMutation() { throw new Error('not-found'); }
+    },
+    parseMutationImport: () => { throw new Error('n/a'); },
+    runMutationSegments,
+    Worker: FakeWorker,
+    document: {
+      getElementById: () => null,
+      querySelector: () => null,
+      querySelectorAll: () => [],
+      createElement: () => ({ click() {}, setAttribute() {} }),
+    },
+    Blob: class {},
+    URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} },
+    location: { hash: '#/mutation' },
+    history: { replaceState() {} },
+    console,
+  };
+  const ctx = runInNewContext(`${src}\n({ renderMutationChamber, cleanupMutationChamber, runExperiment, cancelExperiment, view })`, sandbox);
+  return { ctx, workers, savedMutations, appEl };
+}
+
+/** Result message a real worker sends for a fully-executed segment. */
+function segmentResult(worker, summaryForSpec) {
+  return {
+    type: 'mutation-segment-result', ok: true,
+    resultsJson: JSON.stringify(worker.posted.specs.map((s) => ({ arm: s.arm, pairedRunId: s.pairedRunId, ok: true, summary: summaryForSpec(s) }))),
+  };
+}
+
+function okSummary(spec) {
+  return {
+    winner: 'P1', winningSeat: 1, terminationReason: 'NORMAL_VICTORY', errorCode: null,
+    completedFullTurns: 10, scoreMargin: 3, commandCount: 40, eventCount: 60,
+    actionCounts: {}, decisionFamilyCounts: {}, participants: [{}, {}],
+    policyIds: spec.policyIds, pairedRunId: spec.pairedRunId, seed: spec.seed,
+    seatOrder: spec.seatOrder, ruleCompliance: { status: 'PASS' }, ruleOverrides: spec.ruleOverrides ?? null,
+  };
+}
+
+const settle = () => new Promise((r) => setTimeout(r, 0));
+
+test('workspace: start → cancel → render → settlement stays cancelled, never a normal worker-fault run', async () => {
+  const { ctx, workers, savedMutations } = await mutationWorkspace();
+  ctx.renderMutationChamber();
+  const p = ctx.runExperiment();
+  await settle();
+  assert.ok(workers.length > 0, 'workers must be live before cancel');
+  ctx.cancelExperiment();
+  // THE regression: rendering must not erase the cancellation.
+  ctx.renderMutationChamber();
+  await p;
+  assert.equal(ctx.view.record.status, 'incomplete', 'cancelled run closes incomplete — never a finished verdict');
+  assert.equal(ctx.view.record.execution.cancelled, true);
+  assert.equal(ctx.view.record.execution.completedSpecCount, 0);
+  assert.ok(!ctx.view.record.execution.ledger, 'cancelled run never reaches ledger finalization');
+  assert.equal(savedMutations.length, 0, 'a cancelled experiment is not autosaved as if it completed');
+  assert.equal(ctx.view.running, false);
+});
+
+test('workspace: cancel twice is harmless; cancel with no run is a no-op', async () => {
+  const { ctx } = await mutationWorkspace();
+  ctx.renderMutationChamber();
+  ctx.cancelExperiment();          // no run — must not throw
+  const p = ctx.runExperiment();
+  await settle();
+  ctx.cancelExperiment();
+  ctx.cancelExperiment();          // second cancel — idempotent
+  await p;
+  assert.equal(ctx.view.record.status, 'incomplete');
+  assert.equal(ctx.view.record.execution.cancelled, true);
+});
+
+test('workspace: navigating away while running cancels and never resurrects the chamber', async () => {
+  const { ctx, appEl, savedMutations } = await mutationWorkspace();
+  ctx.renderMutationChamber();
+  const p = ctx.runExperiment();
+  await settle();
+  ctx.cleanupMutationChamber();    // route change — cancel + unmount
+  const htmlAtCleanup = appEl.innerHTML;
+  await p;                          // async settlement lands after unmount
+  assert.equal(ctx.view.mounted, false);
+  assert.equal(appEl.innerHTML, htmlAtCleanup, 'no post-unmount render may resurrect the workspace');
+  assert.equal(ctx.view.record.status, 'incomplete');
+  assert.equal(ctx.view.record.execution.cancelled, true);
+  assert.equal(savedMutations.length, 0);
+});
+
+test('workspace: late worker messages after cancel are ignored', async () => {
+  const { ctx, workers } = await mutationWorkspace();
+  ctx.renderMutationChamber();
+  const p = ctx.runExperiment();
+  await settle();
+  const victim = workers[0];
+  ctx.cancelExperiment();
+  // A dying worker emitting a success after cancel cannot un-cancel the run.
+  victim.emit({ type: 'mutation-segment-result', ok: true, resultsJson: JSON.stringify(victim.posted.specs.map((s) => ({ arm: s.arm, ok: true }))) });
+  await p;
+  assert.equal(ctx.view.record.status, 'incomplete');
+  assert.equal(ctx.view.record.execution.cancelled, true);
+  assert.equal(ctx.view.record.execution.completedSpecCount, 0, 'late results never count as completed specs');
+});
+
+test('workspace: a fresh run after cancel starts clean and completes normally', async () => {
+  const { ctx, workers, savedMutations } = await mutationWorkspace();
+  ctx.renderMutationChamber();
+  const first = ctx.runExperiment();
+  await settle();
+  ctx.cancelExperiment();
+  await first;
+  assert.equal(ctx.view.record.status, 'incomplete');
+  // Fresh run — workers that actually deliver results.
+  const p2 = ctx.runExperiment();
+  await settle();
+  for (const w of workers.slice(-Math.ceil(workers.length / 2))) {
+    // only the newest run's workers emit — but all captured workers belong
+    // to run 2 except run 1's already-terminated set.
+    if (!w.terminated && w.posted?.specs) w.emit(segmentResult(w, okSummary));
+  }
+  await p2;
+  assert.equal(ctx.view.record.status, 'complete', 'the fresh run finalizes against its own token');
+  assert.equal(ctx.view.record.execution.cancelled ?? null, null, 'a completed run never inherits the cancelled flag');
+  assert.equal(savedMutations.length, 1, 'exactly the completed experiment is autosaved');
+});

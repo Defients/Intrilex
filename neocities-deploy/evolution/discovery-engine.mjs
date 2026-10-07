@@ -5,6 +5,7 @@ import {
   DISCOVERY_LIMITS, PROMOTION_GATES, TERMINAL_HYPOTHESIS_STATES,
   createHypothesis, planStage, scoreCandidate, stageSeed,
   transitionTo, appendJournal, warn, evaluatePromotion, createDiscoveryArtifact,
+  rawEstimatePValue,
 } from './discovery-domain.mjs';
 import { scanEvidence, projectGameRow } from './discovery-scan.mjs';
 
@@ -366,12 +367,36 @@ export async function runDiscovery(run, deps = {}) {
     run.status = 'RUNNING';
     // ── Evidence scan → candidates ──
     const eligible = evidenceRuns.filter((r) => run.evidence.runIds.includes(r.runId));
-    const { index, candidates } = scanEvidence(eligible, run.evidence, { detectedAt: now(), estGames: config.confirmGames });
+    const { index, candidates, rowCount } = scanEvidence(eligible, run.evidence, { detectedAt: now(), estGames: config.confirmGames });
     evidenceIndex = index;
+    const exclusionText = () => Object.entries(run.evidence.exclusionReasons ?? {}).map(([k, v]) => `${v}× ${k.toLowerCase().replaceAll('_', ' ')}`).join(', ');
+    note('evidence-resolution', `Evidence resolution: ${run.evidence.selectedGameCount ?? run.evidence.gameCount} selected game(s) in ${run.evidence.selectedRunCount ?? run.evidence.runCount} stored run(s) → ${run.evidence.gameCount} admissible games in ${run.evidence.runCount} source run(s)${run.evidence.excludedCount ? ` · ${run.evidence.excludedCount} excluded (${exclusionText() || 'inadmissible'})` : ''}`, run.evidence.snapshotId);
+    if (eligible.length < run.evidence.runIds.length) warn(run, 'EVIDENCE_RUNS_MISSING', `${run.evidence.runIds.length - eligible.length} snapshot-referenced run(s) could not be loaded — the frozen scope and the store disagree`);
     run.candidates = candidates.map((c) => ({ ...c, scores: scoreCandidate(c, run.mode) }));
     run.candidates.sort((a, b) => b.scores.priority - a.scores.priority || a.candidateId.localeCompare(b.candidateId));
     note('scan', `Evidence scan complete: ${run.evidence.gameCount} games across ${run.evidence.runCount} runs → ${candidates.length} candidates`, run.evidence.snapshotId);
-    if (run.evidence.excludedCount > 0) warn(run, 'EVIDENCE_EXCLUDED', `${run.evidence.excludedCount} runs skipped (foreign fingerprint or unverified import)`);
+    if (run.evidence.excludedCount > 0) warn(run, 'EVIDENCE_EXCLUDED', `${run.evidence.excludedCount} runs skipped (${exclusionText() || 'foreign fingerprint or unverified import'})`);
+
+    // A run whose frozen scope resolves to zero admissible game rows is
+    // an input-resolution failure — evidence never reached the scanner —
+    // never a scientific result. It blocks before research execution so
+    // it cannot masquerade as a completed zero-discovery run. Auditor
+    // mode is exempt when prior discoveries supply falsification targets
+    // of their own; the scan is not its evidence input.
+    if (rowCount === 0 && !(run.mode === 'auditor' && priorDiscoveries.length)) {
+      const detail = run.evidence.runCount > 0
+        ? (eligible.length === 0
+          ? `the snapshot references ${run.evidence.runCount} source run(s) but none could be loaded — stored ids and the artifact store disagree`
+          : 'eligible source run(s) contain no game records')
+        : (run.evidence.excludedCount > 0
+          ? `all ${run.evidence.excludedCount} stored run(s) were excluded (${exclusionText() || 'inadmissible'})`
+          : 'no stored Lab series evidence exists on this origin');
+      warn(run, 'EVIDENCE_RESOLUTION_FAILED', detail);
+      note('evidence-blocked', `Evidence resolution failed — ${detail}. 0 games reached the scanner; blocked before research execution.`, run.evidence.snapshotId);
+      run.status = 'BLOCKED';
+      run.completedAt = now();
+      return run;
+    }
 
     // Auditor mode: prior discoveries become falsification targets.
     if (run.mode === 'auditor' && priorDiscoveries.length) {
@@ -417,6 +442,12 @@ export async function runDiscovery(run, deps = {}) {
   }
 
   const remaining = () => run.budget.allocated - run.budget.consumed;
+  // Promotion judgment is deferred until every hypothesis has been
+  // measured: Benjamini–Hochberg adjustment needs the complete family
+  // of raw p-values, so no hypothesis is promoted until the family is
+  // fixed. Aborted runs keep pending judgments for a deterministic
+  // resume rather than judging a partial family.
+  const pendingJudgment = [];
 
   // ── Investigation loop ──
   for (const h of run.hypotheses) {
@@ -452,17 +483,27 @@ export async function runDiscovery(run, deps = {}) {
         identity: run.identity, signal, run: prepared,
         onProgress: (p) => onProgress({ hypothesisId: h.hypothesisId, stageKey: stage.key, ...p, budgetConsumed: run.budget.consumed + p.completed }),
       });
-      if (persistStageRun) await persistStageRun(h, stage, result.run);
+      const persisted = persistStageRun ? await persistStageRun(h, stage, result.run) : null;
       if (result.run.status === 'STOPPED' || signal?.aborted) {
         // Stage interrupted mid-flight — keep it pending so a later resume
         // continues the prepared series rather than re-running it.
         stage.status = 'pending';
         break;
       }
-      stage.experimentRunId = result.run.runId;
+      if (persisted === false) {
+        // The stage executed but its run artifact is not durably stored.
+        // The run id must not enter provenance, and the persistence gap
+        // must block promotion — a discovery may only cite evidence that
+        // actually exists.
+        stage.persisted = false;
+        warn(run, 'STAGE_EVIDENCE_NOT_PERSISTED', `${h.hypothesisId} ${stage.key}: stage run ${result.run.runId} could not be durably stored`);
+        note('persistence-failure', `${h.hypothesisId} ${stage.key}: executed but not durably persisted — this stage cannot back a promoted discovery`, h.hypothesisId);
+      } else {
+        stage.experimentRunId = result.run.runId;
+      }
       stage.status = 'complete';
       run.budget.consumed += result.run.records.length;
-      run.experiments.push({ hypothesisId: h.hypothesisId, stageKey: stage.key, runId: result.run.runId, games: result.run.records.length, seed: stage.series.seed });
+      run.experiments.push({ hypothesisId: h.hypothesisId, stageKey: stage.key, runId: persisted === false ? null : result.run.runId, games: result.run.records.length, seed: stage.series.seed, ...(persisted === false ? { persisted: false } : {}) });
       const cell = measureStage(h, result.run);
       // Only confirm/replicate batches contribute to the primary estimand —
       // a population challenge deliberately measures a different pairing and
@@ -544,7 +585,25 @@ export async function runDiscovery(run, deps = {}) {
         const pooledSeat = seatConsistencyCheck(h, pooled);
         if (pooledSeat.verdict !== 'inconclusive') h.checks[seatIdx] = pooledSeat;
       }
-      const judgment = evaluatePromotion(h);
+      h.evidence.pValue = rawEstimatePValue(est.estimate, est.interval);
+      pendingJudgment.push(h);
+    }
+
+    if (terminal) {
+      transitionTo(h, terminal.state, terminal.reason, now());
+      note(terminal.state, `${h.hypothesisId} ${terminal.state} — ${terminal.reason}`, h.hypothesisId);
+    }
+  }
+
+  if (!signal?.aborted) {
+    // The measured family is now fixed — judge every hypothesis against
+    // a real Benjamini–Hochberg q-value computed over all of them.
+    const family = pendingJudgment
+      .filter((h) => h.evidence.pValue != null)
+      .map((h) => ({ id: h.hypothesisId, pValue: h.evidence.pValue }));
+    for (const h of pendingJudgment) {
+      const judgment = evaluatePromotion(h, { familyPValues: family });
+      h.evidence.qValue = judgment.qValue ?? null;
       if (judgment.verdict === 'promote' || judgment.verdict === 'conditional') {
         transitionTo(h, 'replicated_finding', `replication ${h.replication.passed}/${h.replication.attempted}, grade ${judgment.grade}`, now());
         const discovery = createDiscoveryArtifact(h, run, judgment, now());
@@ -552,13 +611,11 @@ export async function runDiscovery(run, deps = {}) {
         transitionTo(h, judgment.verdict === 'conditional' ? 'conditional_discovery' : 'discovery', `promoted to ${discovery.discoveryId} (${discovery.confidence} confidence)`, now());
         note('discovery', `✦ ${discovery.discoveryId} promoted — ${h.claim}`, discovery.discoveryId);
       } else {
-        terminal = { state: judgment.verdict === 'reject' ? 'rejected' : 'unresolved', reason: `promotion gates: ${judgment.reasons.filter((r) => !r.passed).map((r) => r.code).join(', ') || 'passed'}` };
+        const state = judgment.verdict === 'reject' ? 'rejected' : 'unresolved';
+        const reason = `promotion gates: ${judgment.reasons.filter((r) => !r.passed).map((r) => r.code).join(', ') || 'passed'}`;
+        transitionTo(h, state, reason, now());
+        note(state, `${h.hypothesisId} ${state} — ${reason}`, h.hypothesisId);
       }
-    }
-
-    if (terminal) {
-      transitionTo(h, terminal.state, terminal.reason, now());
-      note(terminal.state, `${h.hypothesisId} ${terminal.state} — ${terminal.reason}`, h.hypothesisId);
     }
   }
 

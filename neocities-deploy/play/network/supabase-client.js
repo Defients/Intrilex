@@ -9,7 +9,7 @@
 // for local development.
 // ═══════════════════════════════════════════════════════════════
 
-import { createClient } from '../../vendor/supabase-js.js?v=dac162e115e4';
+import { createClient } from '../../vendor/supabase-js.js?v=ef8ac632ff7c';
 
 let _client = null;
 

@@ -1,6 +1,6 @@
 # Intrilex Analysis Dossier
 
-Schema `1.0.0` · generated 2026-10-06T14:14:43.388Z · dossier hash `9f800b8b09185a76cf70adef4a1a1b97e7bccfe23d67514b646247816d88b0c6`
+Schema `1.1.0` · generated 2026-10-06T23:21:06.662Z · dossier hash `d66f2a350b921afed6ffa56724228cc3eca498bc98e9f3ac3be611616a6726bb`
 
 > The JSON export is authoritative — this document is a deterministic projection of it. Associations are conditioned on policies, seats, profiles and telemetry; they are not causal proof.
 
@@ -8,7 +8,7 @@ Schema `1.0.0` · generated 2026-10-06T14:14:43.388Z · dossier hash `9f800b8b09
 
 - Observatory dataset: 100 match summaries under authority profile "core-advanced-authority" (rules 4.3.1, engine 4.2.6, epoch post-rules-parity-repair-v0.28.1, post-parity-repair).
 - Campaign aggregate: 100 matches, 100 completed, 0 aborts, 0 draws; seat-1 win rate 44.0% (Wilson95 [0.347, 0.538]).
-- 162 mechanic entities tracked (18 registry-registered), 2 modelled synergies, 16 policies, 30 anomalies, completeness PASS.
+- 162 mechanic entities tracked (18 registry-registered), 0 modelled synergies, 16 policies, 30 anomalies, completeness PASS.
 - Rank power: 12/18 ladder entries are balance-qualified; descriptive leader 10:club; qualified leader 8.
 
 ## Build / Rules / Research Identity
@@ -24,16 +24,28 @@ Schema `1.0.0` · generated 2026-10-06T14:14:43.388Z · dossier hash `9f800b8b09
 | Authority profile | core-advanced-authority |
 | Authority hash | 1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0 |
 | Release identity hash | acbb9d386c748daded29119e3b0db889 |
-| Capability hash | 74a3d31cfeddc86f4b7b4d0a70811266c28cf975d81342ffaf0353e9ee860698 |
+| Capability hash | c694e02b8ad1cf15351e4814b9c3b90c835e1a7a3d5357ded65f3cb4ae9d4f0b |
 | Lab fingerprint | — |
 
-**Scope.** Dataset origin `CERTIFIED_CORPUS` · experiment `8c41081f41328880af83c8769bcdaa42771dbba17de851d5714b8814e5fe406d` · canonical result `c114149cc7900f4abdb812f108400cc84cdceb040dca0c81aa02c4d4661b3039` · lab runs [none] · matrices [none] · research [none]
+## Evidence Scope
+
+| Field | Value |
+| --- | --- |
+| Dataset origin | CERTIFIED_CORPUS |
+| Authority profile | core-advanced-authority |
+| Experiment hash | 8c41081f41328880af83c8769bcdaa42771dbba17de851d5714b8814e5fe406d |
+| Canonical result | c114149cc7900f4abdb812f108400cc84cdceb040dca0c81aa02c4d4661b3039 |
+| Lab runs | none |
+| Matrices | none |
+| Research | none |
+| Rule mutations | none |
+| Experiment | unavailable — Experiment evidence store not supplied to this export. |
 
 ## Evidence Coverage
 
 | Source | Count | Hash / provenance |
 | --- | --- | --- |
-| Observatory summaries | 100 | 497b7a6564ef281b |
+| Observatory summaries | 100 | e575f12f7f704487 |
 | Detailed matches | 12 |  |
 | Retained replays | 100 |  |
 | Campaign aggregate | 100 | 59791c83908dd300 |
@@ -43,15 +55,30 @@ Schema `1.0.0` · generated 2026-10-06T14:14:43.388Z · dossier hash `9f800b8b09
 | Lab runs | 0 | 0 records |
 | Matrices | 0 |  |
 | Research projects | 0 |  |
+| Mutation experiments | 0 |  |
 | Strategy sources | — |  |
+
+## Companion Evidence
+
+_Richer evidence that exists outside this dossier — the dossier is a synthesis layer; the listed artifacts remain authoritative._
+
+| Domain | Companion evidence | Authoritative artifact |
+| --- | --- | --- |
+| Strategy decision evidence | unavailable — Evolution Lab storage not reachable from this context. |  |
+| Lab run envelopes | unavailable — Evolution Lab store not supplied or unreachable. |  |
+| Experiment run records | unavailable — Experiment evidence store not supplied to this export. |  |
+| Retained replays | 100 ref(s) | Replay bodies live in the certified replay index, the lab replay index, and Evolution run envelopes. |
+| Batch matrices | none |  |
+| Research projects | none |  |
+| Rule mutations | none |  |
 
 ## Integrity & Completeness
 
 - Completeness: **PASS** (0 unclassified, tolerance 0)
-- Reconciliation: invariant HOLDS · 144 unregistered telemetry tag(s)
-- Quarantine ledger: 144 tag(s) quarantined
+- Reconciliation: invariant HOLDS · 144 unregistered telemetry tag(s) on tracked entities
+- Quarantine: 144 unregistered tag(s) → 143 quarantined entit(ies) + 1 unregistered tag(s) on discovery-exempt entit(ies) (ledger-only, not quarantined)
 - Opportunity telemetry: present · legacy schema: no
-- Campaign health: 162 entities, 162 with opportunity data, 162 with adjusted association, 2 eligible synergy pairs (274 rejected), 100 incomplete AB/BA blocks
+- Campaign health: 162 entities, 162 with opportunity data, 162 with adjusted association, 0 eligible synergy pairs (276 rejected), 100 incomplete AB/BA blocks
 
 ## Policy / Profile Performance
 
@@ -176,12 +203,9 @@ _122 additional mechanics in the JSON export._
 
 ## Synergies & Anti-Synergies
 
-| Pair | Class | Model OR | Shrunk OR | Agreement |
-| --- | --- | --- | --- | --- |
-| draw × 2-black-2-red-draw | anti-synergy | 0.6667 | 0.8537 | true |
-| draw × jack | synergy | 1.2142 | 1.1151 | false |
+_No modelled synergy pairs._
 
-274 candidate pair(s) rejected/unmodelled — see integrity section for status counts.
+276 candidate pair(s) rejected/unmodelled — see integrity section for status counts.
 
 ## Motifs / Repeated Patterns
 
@@ -247,6 +271,10 @@ _No batch matrices._
 ## Evolution / Learning Results
 
 _No research projects._
+
+## Rule Mutation Experiments
+
+_No rule-mutation experiments persisted._
 
 ## Anomalies
 
@@ -508,24 +536,16 @@ _No research projects._
 | policy | value | value: 11W/9L/0D in 22 cross-policy games — win rate 0.55 | 0.55 | [0.342, 0.742] | — | — | 20 | — |
 | policy | value-tactical | value-tactical: 3W/3L/0D in 6 cross-policy games — win rate 0.5 | 0.5 | [0.188, 0.812] | — | — | 6 | — |
 
-### MODELED_INCONCLUSIVE (2)
-
-| Domain | Subject | Claim | Effect | CI | p | q | n | Grade |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| synergy | draw × 2-black-2-red-draw | draw × 2-black-2-red-draw: anti-synergy (model OR 0.6667) | 0.8537 | [0.008, 55.341] | 0.8573 | 0.901 | 30 | — |
-| synergy | draw × jack | draw × jack: synergy (model OR 1.2142) | 1.1151 | [0.057, 25.823] | 0.901 | 0.901 | 43 | — |
-
 ## Recommendations
 
-- Most synergy findings are inconclusive — consider increasing match count for statistical power.
 - 133 mechanic(s) have sample size below 20 — interpret with caution.
 - 144 telemetry tag(s) are quarantined pending canonical mechanic registry entries — extend the registry before treating them as canonical mechanics.
 
 ## Open Questions
 
-- 143 telemetry tag(s) are quarantined pending canonical mechanic registry classification — their measurements are descriptive, not canonical.
+- 143 tracked entit(ies) are quarantined pending canonical mechanic registry classification — their measurements are descriptive, not canonical.
 - 162 mechanic entit(ies) lack identified choice-support or carry weak evidence grades — additional matched-opportunity data is required before preference claims.
-- 274 candidate synergy pair(s) were rejected or remain unmodelled ({"FAILED":10,"INSUFFICIENT_DATA":263,"MODELED_INCONCLUSIVE":2,"NOT_IDENTIFIABLE":1}) — interactions in those cells are unmeasured, not absent.
+- 276 candidate synergy pair(s) were rejected or remain unmodelled ({"FAILED":12,"INSUFFICIENT_DATA":263,"NOT_IDENTIFIABLE":1}) — interactions in those cells are unmeasured, not absent.
 - 100 incomplete AB/BA pair block(s) reduce paired seat-swap power; seat effects on those blocks are unresolved.
 - pairedRunIds are present but none grouped ≥2 matches — the campaign schedule did not repeat pair blocks, so AB/BA pairing is not possible on this dataset
 
@@ -534,9 +554,11 @@ _No research projects._
 | Domain | Gap | Severity | Suggested evidence |
 | --- | --- | --- | --- |
 | paired-analysis | No complete matched AB/BA pair blocks in the Observatory dataset | high | Mirror-seats campaign or Arena runs with pairedRunId linkage |
+| synergies | No synergy pairs cleared the modelling threshold | medium | More joint-opportunity observations for candidate pairs |
 | arena | No Arena run analytics in this export | medium | Run an Arena series in the Evolution Lab |
 | batch-experiments | No Batch Matrix results persisted or live | low | Create and execute a Batch Matrix round robin |
 | evolution | No research projects persisted | low | Commit an experiment in the Evolution Lab Research panel |
+| rule-mutation | No Rule Mutation Chamber experiments persisted | low | Run a mutation experiment in the Mutation Chamber |
 | integrity | 30 anomalies flagged for review | medium | Manual inspection of flagged matchIds / retained replays |
 
 ## Interpretation Boundaries
@@ -554,12 +576,12 @@ _No research projects._
 
 | Field | Value |
 | --- | --- |
-| Observatory hash | 497b7a6564ef281b274e74dfeeb57c5691a1639a270f3dd544955ccd00408a84 |
+| Observatory hash | e575f12f7f70448743e77b00393638d78cb419467aee6e5d90b0462986d0b03d |
 | Aggregate hash | 59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2 |
 | Evidence epoch | post-rules-parity-repair-v0.28.1 |
 | Post-rules parity repair | true |
 | Source hashes | {"aggregate":"59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2","retention":"6b73a73464b93ed332cd91043149965e8d972ad46d6a2df6d4b2c81c59982950","summaries":"c114149cc7900f4abdb812f108400cc84cdceb040dca0c81aa02c4d4661b3039"} |
-| Extract hash | 77d4964faf42f6a065f8e87362adb55bfb70f473b8b8c2153e123aa36099b2f7 |
+| Extract hash | c913bce446eae14c6284c4310fbaba634b8a20d37f9314eb142da9e396735352 |
 | Replay index hash | f09274c60229b31dd5554f51fd4badd7950a565bfc4c72f5a071ef49ba1240b8 |
 | Lab replay index hash | 52d853fe9367b1acca679c55ed6e136c40786e2cc1f9d07458dce19fc6a05a44 |
 
@@ -569,6 +591,7 @@ _No research projects._
 | --- | --- |
 | arena | Evolution Lab storage not reachable from this context. |
 | strategy | Evolution Lab storage not reachable from this context. |
+| experiment | Experiment evidence store not supplied to this export. |
 
 ## Structured Appendix
 
@@ -576,4 +599,4 @@ The authoritative machine-readable content (full mechanic rows, synergy diagnost
 
 - Metric registry entries: 14
 - Rank anatomy registry: absent
-- Analysis extract embedded: yes (extractHash 77d4964faf42f6a065f8e87362adb55bfb70f473b8b8c2153e123aa36099b2f7)
+- Analysis extract embedded: yes (extractHash c913bce446eae14c6284c4310fbaba634b8a20d37f9314eb142da9e396735352)

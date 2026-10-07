@@ -1,7 +1,7 @@
 {
   "extractVersion": "1.0.0",
   "analyticsSchemaVersion": "4.2.0",
-  "sourceHash": "e575f12f7f70448743e77b00393638d78cb419467aee6e5d90b0462986d0b03d",
+  "sourceHash": "3ffe3c3323c88cc6fc283c1bcd1387f1779b84311ec9b1cf0ca56d6888b123e6",
   "aggregateHash": "59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2",
   "executiveSummary": "Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. All matches completed without aborts. Highest win rate: hybrix-rusher at 83.3% (CI [0.436, 0.970], 6 games). No synergy pairs reached statistical significance after FDR correction. 162 mechanic(s) measured with evidence-backed associations. 30 anomaly/anomalies flagged (0 critical, 5 warning, 25 info). Data completeness: PASS (no unclassified facts). Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
   "dataset": {
@@ -1443,7 +1443,7 @@
         "M-d42c5a76b1a43e8227de",
         "M-3dc3510153eebdf54abb"
       ],
-      "summary": "Used in 50.5% of participant observations (101/200). Outcome association: negative (-0.210, CI [-0.346, -0.075]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient)."
+      "summary": "Used in 50.5% of participant observations (101/200). Outcome association: negative (-0.210, CI [-0.346, -0.075]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak)."
     },
     {
       "mechanic": "effect-ace",
@@ -1913,7 +1913,7 @@
         "M-b615ae18bd3e0f132ef8",
         "M-84269db284883330999c"
       ],
-      "summary": "Used in 11.0% of participant observations (22/200). Outcome association: positive (0.460, CI [0.319, 0.600]). Evidence grade: EXPLORATORY (insufficient)."
+      "summary": "Used in 11.0% of participant observations (22/200). Outcome association: positive (0.460, CI [0.319, 0.600]). Evidence grade: EXPLORATORY (weak)."
     },
     {
       "mechanic": "five-recycle",
@@ -5243,7 +5243,7 @@
         "M-d42c5a76b1a43e8227de",
         "M-5ef9d016ebb1846cf10b"
       ],
-      "summary": "Used in 55.5% of participant observations (111/200). Outcome association: positive (0.233, CI [0.097, 0.368]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient)."
+      "summary": "Used in 55.5% of participant observations (111/200). Outcome association: positive (0.233, CI [0.097, 0.368]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak)."
     },
     {
       "mechanic": "three-black-ace",
@@ -5989,7 +5989,7 @@
         "M-b615ae18bd3e0f132ef8",
         "M-015b0b148b1e1f8a9876"
       ],
-      "summary": "Used in 16.0% of participant observations (32/200). Outcome association: positive (0.298, CI [0.130, 0.465]). Evidence grade: EXPLORATORY (insufficient)."
+      "summary": "Used in 16.0% of participant observations (32/200). Outcome association: positive (0.298, CI [0.130, 0.465]). Evidence grade: EXPLORATORY (weak)."
     },
     {
       "mechanic": "wild-sovereignty",
@@ -6260,6 +6260,30 @@
       "summary": "2-black-2-red-rummage → score: observed 2 time(s) across 1 match(es)."
     },
     {
+      "motif": "combo → combo",
+      "count": 2,
+      "matchIds": [
+        "M-b13d6d117b0cf5e2ed26",
+        "M-c7e06b8e9ceba7badd1b"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 2
+      },
+      "summary": "combo → combo: observed 2 time(s) across 2 match(es)."
+    },
+    {
+      "motif": "combo → disrupt",
+      "count": 2,
+      "matchIds": [
+        "M-6d0b4f6682536c727bbc",
+        "M-9c9a76ea4e99e1871ffa"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 2
+      },
+      "summary": "combo → disrupt: observed 2 time(s) across 2 match(es)."
+    },
+    {
       "motif": "disrupt → disrupt",
       "count": 2,
       "matchIds": [
@@ -6284,7 +6308,7 @@
       "summary": "disrupt → unclassified: observed 2 time(s) across 2 match(es)."
     },
     {
-      "motif": "rank10-stack-theft → three-red-counter",
+      "motif": "rank10-stack-theft → combo",
       "count": 2,
       "matchIds": [
         "M-b13d6d117b0cf5e2ed26",
@@ -6293,7 +6317,7 @@
       "outcomes": {
         "NORMAL_VICTORY": 2
       },
-      "summary": "rank10-stack-theft → three-red-counter: observed 2 time(s) across 2 match(es)."
+      "summary": "rank10-stack-theft → combo: observed 2 time(s) across 2 match(es)."
     },
     {
       "motif": "score → disrupt",
@@ -6320,16 +6344,16 @@
       "summary": "score → seven-scoring-trigger-take-CORE-017: observed 2 time(s) across 2 match(es)."
     },
     {
-      "motif": "three-red-counter → three-red-counter",
+      "motif": "unclassified → combo",
       "count": 2,
       "matchIds": [
-        "M-b13d6d117b0cf5e2ed26",
-        "M-c7e06b8e9ceba7badd1b"
+        "M-5ef9d016ebb1846cf10b",
+        "M-9c9a76ea4e99e1871ffa"
       ],
       "outcomes": {
         "NORMAL_VICTORY": 2
       },
-      "summary": "three-red-counter → three-red-counter: observed 2 time(s) across 2 match(es)."
+      "summary": "unclassified → combo: observed 2 time(s) across 2 match(es)."
     },
     {
       "motif": "unclassified → draw",
@@ -6454,6 +6478,50 @@
       "summary": "club-foundation-bonus → rank10-stack-theft: observed 1 time(s) across 1 match(es)."
     },
     {
+      "motif": "combo → ace-spade",
+      "count": 1,
+      "matchIds": [
+        "M-5ef9d016ebb1846cf10b"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "combo → ace-spade: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "combo → rank7-hand-and-score",
+      "count": 1,
+      "matchIds": [
+        "M-c7e06b8e9ceba7badd1b"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "combo → rank7-hand-and-score: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "combo → unclassified",
+      "count": 1,
+      "matchIds": [
+        "M-b13d6d117b0cf5e2ed26"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "combo → unclassified: observed 1 time(s) across 1 match(es)."
+    },
+    {
+      "motif": "disrupt → combo",
+      "count": 1,
+      "matchIds": [
+        "M-6d0b4f6682536c727bbc"
+      ],
+      "outcomes": {
+        "NORMAL_VICTORY": 1
+      },
+      "summary": "disrupt → combo: observed 1 time(s) across 1 match(es)."
+    },
+    {
       "motif": "disrupt → face-down",
       "count": 1,
       "matchIds": [
@@ -6474,17 +6542,6 @@
         "NORMAL_VICTORY": 1
       },
       "summary": "disrupt → queen-aegis: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "disrupt → three-red-counter",
-      "count": 1,
-      "matchIds": [
-        "M-6d0b4f6682536c727bbc"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "disrupt → three-red-counter: observed 1 time(s) across 1 match(es)."
     },
     {
       "motif": "draw → disrupt",
@@ -6694,61 +6751,6 @@
         "NORMAL_VICTORY": 1
       },
       "summary": "rank6-keep-return-top → unclassified: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "rank7-hand-and-score → unclassified",
-      "count": 1,
-      "matchIds": [
-        "M-c7e06b8e9ceba7badd1b"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "rank7-hand-and-score → unclassified: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "score → bj-exile-recycle-CORE-007",
-      "count": 1,
-      "matchIds": [
-        "M-04f952648982b1b60b68"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "score → bj-exile-recycle-CORE-007: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "score → eight-spade-free-scuttle",
-      "count": 1,
-      "matchIds": [
-        "M-04f952648982b1b60b68"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "score → eight-spade-free-scuttle: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "score → face-down",
-      "count": 1,
-      "matchIds": [
-        "M-9c9a76ea4e99e1871ffa"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "score → face-down: observed 1 time(s) across 1 match(es)."
-    },
-    {
-      "motif": "score → seven-scoring-trigger-take-CORE-018",
-      "count": 1,
-      "matchIds": [
-        "M-1b16b9dae9b5e9933821"
-      ],
-      "outcomes": {
-        "NORMAL_VICTORY": 1
-      },
-      "summary": "score → seven-scoring-trigger-take-CORE-018: observed 1 time(s) across 1 match(es)."
     }
   ],
   "anomalies": {
@@ -6900,5 +6902,5 @@
   "recommendations": [
     "133 mechanic(s) have sample size below 20 — interpret with caution."
   ],
-  "extractHash": "6ea0307c2a4db4a7fb6852b76deb924ac49b72df72cda109a1c4cb3f7474d8d4"
+  "extractHash": "d1414f564a3fe8707df333009146620188af223c28127717c9df7246f1e5a67f"
 }

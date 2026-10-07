@@ -307,10 +307,14 @@ const STAGES = [
   // Divergence fixes: regression tests for all 10 implementation divergences
   ['engine-divergence-fixes', 'node', ['--test', 'test/engine-divergence-fixes.test.mjs']],
   ['evolution-lab', 'node', ['--test', 'test/evolution-lab.test.mjs', 'test/evolution-foundation.test.mjs', 'test/evolution-research.test.mjs', 'test/evolution-training.test.mjs', 'test/evolution-completion.test.mjs', 'test/evolution-cockpit.test.mjs', 'test/evolution-analytics.test.mjs', 'test/tactical-policies.test.mjs', 'test/policy-action-coverage.test.mjs', 'test/strategic-research.test.mjs', 'test/batch-matrix.test.mjs']],
-  ['strategy-intelligence', 'node', ['--test', 'test/strategy-intelligence.test.mjs', 'test/strategy-information.test.mjs', 'test/strategy-ai-interpreter.test.mjs', 'test/strategy-v121-correction.test.mjs', 'test/strategy-v3-synthesis.test.mjs', 'test/analysis-ingestion.test.mjs', 'test/analysis-dossier.test.mjs']],
+  ['strategy-intelligence', 'node', ['--test', 'test/strategy-intelligence.test.mjs', 'test/strategy-information.test.mjs', 'test/strategy-ai-interpreter.test.mjs', 'test/strategy-v121-correction.test.mjs', 'test/strategy-v3-synthesis.test.mjs', 'test/analysis-ingestion.test.mjs', 'test/analysis-dossier.test.mjs', 'test/analysis-export-hub.test.mjs']],
   ['agent-profiles', 'node', ['--test', 'test/agent-profile-contracts.test.mjs', 'test/agent-profile-store.test.mjs', 'test/agent-profile-science.test.mjs', 'test/agent-profile-consumer.test.mjs', 'test/agent-profile-arena.test.mjs']],
   ['rule-mutation', 'node', ['--test', 'test/rule-mutation.test.mjs']],
   ['discovery-engine', 'node', ['--test', 'test/discovery.test.mjs']],
+  // Persistent experiment runs & analysis sets: domain model, IDB store
+  // roundtrip, curation transitions, migration, dossier scope disclosure.
+  ['experiment-runs', 'node', ['--test', 'test/experiment-runs.test.mjs']],
+  ['combo-analytics', 'node', ['--test', 'test/combo-analytics.test.mjs']],
 ];
 
 let passCount = 0, skipCount = 0, failCount = 0;

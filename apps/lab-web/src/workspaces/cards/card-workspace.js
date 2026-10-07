@@ -201,7 +201,7 @@ function listViewHTML(models, selectedId) {
       <td>${esc(m.entity?.scopeLabel ?? '—')}</td>
       <td>${met ? fmt(met.variantOpportunityCount) : '—'}</td>
       <td>${met ? fmt(met.variantSelectionCount) : '—'}</td>
-      <td>${met ? pct(met.variantPlayRate) : '—'}</td>
+      <td>${Number.isFinite(met?.variantPlayRate) ? pct(met.variantPlayRate) : '—'}</td>
       <td>${e?.status === 'available' ? `<span class="badge badge-${e.confidence === 'HIGH' ? 'supported' : e.confidence === 'MEDIUM' ? 'info' : 'warning'}">${esc(e.confidence)}</span>` : `<span class="badge badge-muted">${esc(e?.status === 'integrity-failure' ? 'LEGACY' : e?.status === 'no-dataset' ? 'NO DATA' : '—')}</span>`}</td>
     </tr>`;
   }).join('');
@@ -324,7 +324,47 @@ function evidenceTab(m, va) {
     ${switcher}
     ${scopeLine}
     ${evidenceStatusBlock(m, ev, activeEntity)}
+    ${comboEvidenceBlock(m)}
   </div>`;
+}
+
+// ── Combo participation (⚡ Combo Atlas cross-link) ───────────────
+// Canonical Combo component intelligence: a card may look ordinary in
+// ordinary usage while being a disproportionately strong committed
+// Combo component. Reads state.observatory.combo — the shared Combo
+// Atlas analytics block — and reports only observed participation;
+// missing telemetry renders as unavailable, never as zero.
+
+function comboEvidenceBlock(m) {
+  const combo = state.observatory?.combo;
+  if (!combo) return '';
+  const coverage = combo.coverage?.lifecycleStatus;
+  const cards = combo.components?.cards ?? [];
+  const ranks = combo.components?.ranks ?? [];
+  const cardRow = cards.find((c) => c.identity === m.identity) ?? null;
+  const rankRow = ranks.find((r) => r.rank === m.rank) ?? null;
+  if (!cardRow && !rankRow) {
+    // In a telemetry-covered dataset, absence means the card was never
+    // committed to an observed Combo — that is a finding, not a gap.
+    if (coverage === 'covered' && (combo.totals?.declarations ?? 0) > 0) {
+      return dossierSection('⚡ Combo participation', `<p class="card-evidence-note">${esc(m.identity)} was not committed to any observed Combo in this dataset.</p>`, { cls: 'card-combo-section' });
+    }
+    return '';
+  }
+  const stat = (label, value, sub) => `<div class="obs-stat"><small>${esc(label)}</small><b>${value}</b>${sub ? `<span class="obs-stat-sub">${sub}</span>` : ''}</div>`;
+  const totalParticipations = cards.reduce((s, c) => s + (c.declarations ?? 0), 0);
+  const stats = [];
+  if (cardRow) {
+    stats.push(stat('Combo participation', fmt(cardRow.declarations), totalParticipations ? `${pct(cardRow.declarations / totalParticipations)} of card-level participations` : null));
+    stats.push(stat('Resolve rate when involved', cardRow.declarations > 0 ? pct(cardRow.resolved / cardRow.declarations) : '—', `${fmt(cardRow.resolved)} resolved`));
+  } else {
+    stats.push(stat('Combo participation', 'rank-level', 'no exact-card telemetry — see rank aggregate'));
+  }
+  if (rankRow) stats.push(stat(`Rank ${esc(m.rank)} participation`, fmt(rankRow.declarations), `${fmt(rankRow.resolved)} resolved · ${fmt(rankRow.countered)} countered`));
+  return dossierSection('⚡ Combo participation',
+    `<div class="obs-stat-grid card-evidence-grid">${stats.join('')}</div>
+     <p class="card-evidence-note">Canonical Combo (§8) component evidence from the Combo Atlas pipeline. ${cardRow ? 'Exact-card participation measured from committed-card telemetry.' : 'Rank-level aggregate — this exact card identity was not measured separately.'} Broken-by-4♥ is unavailable in this engine build.</p>`,
+    { cls: 'card-combo-section' });
 }
 
 function shortEntityLabel(e) {
@@ -351,7 +391,7 @@ function evidenceStatusBlock(m, ev, activeEntity) {
   const stat = (label, value, sub) => `<div class="obs-stat"><small>${esc(label)}</small><b>${value}</b>${sub ? `<span class="obs-stat-sub">${sub}</span>` : ''}</div>`;
   const stats = [
     stat('Legal opportunities', fmt(met.variantOpportunityCount), `${esc(ev.confidence)} confidence`),
-    stat('Selections', fmt(met.variantSelectionCount), `pick rate ${pct(met.variantPlayRate)}`),
+    stat('Selections', fmt(met.variantSelectionCount), `pick rate ${Number.isFinite(met.variantPlayRate) ? pct(met.variantPlayRate) : '—'}`),
     Number.isFinite(met.variantWinRate) ? stat('Observed win rate', pct(met.variantWinRate), `${fmt(met.variantVictoryContributionCount ?? 0)} win / ${fmt(met.variantDefeatExposureCount ?? 0)} loss records`) : null,
     Number.isFinite(met.variantAverageValueWhenActivated) ? stat('Avg value when activated', met.variantAverageValueWhenActivated.toFixed(3)) : null,
     Number.isFinite(met.variantSecuredPointContribution) ? stat('Secured points', met.variantSecuredPointContribution.toFixed(1), 'cumulative, all selections') : null,

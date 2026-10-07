@@ -2,11 +2,11 @@
 // workspaces/tournament.js — /tournament workspace: AI tournament mode
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, showToast, clamp } from '../state.js?v=dac162e115e4';
-import { rerender } from '../rerender.js?v=dac162e115e4';
-import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=dac162e115e4';
-import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=dac162e115e4';
-import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=dac162e115e4';
+import { state, app, esc, pct, showToast, clamp } from '../state.js?v=ef8ac632ff7c';
+import { rerender } from '../rerender.js?v=ef8ac632ff7c';
+import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=ef8ac632ff7c';
+import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=ef8ac632ff7c';
+import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=ef8ac632ff7c';
 
 const ALL_POLICIES = [
   'random-legal','score-rush','control','tempo','value',
@@ -499,7 +499,7 @@ function liveSemanticLabel(command) {
 // ── Frame reconstruction from replay ────────────────────────────
 
 async function reconstructFrames(replay) {
-  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=dac162e115e4');
+  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=ef8ac632ff7c');
   const engine = new IntrilexEngine();
   let s = structuredClone(replay.initialState);
   const frames = [{ state: s, events: [], command: null, commandIndex: -1 }];
@@ -602,7 +602,7 @@ async function openLiveReplayInWatch() {
   state.tournamentRunning = false;
   state.tournamentAutoPlaying = false;
   state.tournamentLiveView = null;
-  const { openReplay } = await import('../data-loader.js?v=dac162e115e4');
+  const { openReplay } = await import('../data-loader.js?v=ef8ac632ff7c');
   await openReplay({ kind: 'object', replay, id, label });
 }
 

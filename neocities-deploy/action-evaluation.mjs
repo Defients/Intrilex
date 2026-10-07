@@ -41,6 +41,9 @@ export function actionCoverageKeys(action) {
   const keys = [`family:${action.family}`, `mode:${action.family}:${action.mode}`, `timing:${action.timingClass}`];
   if (action.family === 'super' || action.featureVector?.generatedFamily === 'super' || action.featureVector?.super || action.mode === 'super-ace') keys.push('play:super');
   if (action.family === 'ultra' || action.featureVector?.generatedFamily === 'ultra' || action.featureVector?.ultra) keys.push('play:ultra');
+  // Canonical Combo (rulebook §8): super/ultra classes + the ⭐A counter.
+  if (action.family === 'super' || action.family === 'ultra' || action.mode === 'super-ace'
+    || action.semantics?.effectKind === 'declare-combo') keys.push('play:combo');
   return keys;
 }
 

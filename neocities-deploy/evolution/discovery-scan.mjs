@@ -27,6 +27,15 @@ export function projectGameRow(run, record) {
   const aWon = !clean || winner === 'DRAW' ? null : (winner === 'P1' ? !swapped : swapped);
   const seatBehavior = Array.isArray(record.seatBehavior) ? record.seatBehavior : [];
   const seatMechanics = (seatIndex) => seatBehavior[seatIndex]?.mechanicCounts ?? null;
+  // Canonical Combo propensity telemetry (§8): legal opportunities and
+  // accepted declarations per seat. Absent telemetry is unknown — never 0.
+  const comboSeats = Array.isArray(record.comboTelemetry?.seats) ? record.comboTelemetry.seats : null;
+  const comboFor = (seatIndex) => {
+    const s = comboSeats?.[seatIndex];
+    return s && Number.isFinite(Number(s.opportunityFrames))
+      ? { opportunities: Number(s.opportunityFrames) || 0, declarations: Number(s.declarations) || 0 }
+      : null;
+  };
   return {
     runId: run.runId, ordinal: record.ordinal, seed: record.seed, swapped,
     policyA: botA, policyB: botB, seat1Policy, seat2Policy: swapped ? botA : botB,
@@ -38,6 +47,8 @@ export function projectGameRow(run, record) {
     aWon, seat1Won: clean && winner !== 'DRAW' ? winner === 'P1' : null,
     mechanicsA: seatMechanics(swapped ? 1 : 0),
     mechanicsB: seatMechanics(swapped ? 0 : 1),
+    comboA: comboFor(swapped ? 1 : 0),
+    comboB: comboFor(swapped ? 0 : 1),
     profileId: run.config.profileId ?? null,
   };
 }
@@ -58,6 +69,9 @@ export function buildEvidenceIndex(rows) {
         seat1Wins: 0, turnsSum: 0, miniTurnsSum: 0, runIds: new Set(),
         // usage[policy][tag] = {used:{decisive,wins}, unused:{decisive,wins}}
         usage: new Map(),
+        // comboUsage[policy] = {opportunities, declarations} — canonical
+        // Combo propensity under legal choice (declarations/opportunities).
+        comboUsage: new Map(),
       });
     }
     return pairings.get(k);
@@ -71,19 +85,12 @@ export function buildEvidenceIndex(rows) {
     if (!cell.usage.has(policyId)) cell.usage.set(policyId, new Map());
     return cell.usage.get(policyId);
   };
-  const foldMechanics = (cell, policyId, mechanics, won) => {
-    if (!mechanics) return;
-    const seen = new Set();
-    for (const tag of Object.keys(mechanics)) if ((mechanics[tag] ?? 0) > 0) seen.add(tag);
-    const u = usageFor(cell, policyId);
-    const tags = new Set([...u.keys(), ...seen]);
-    for (const tag of tags) {
-      if (!u.has(tag)) u.set(tag, { used: { decisive: 0, wins: 0 }, unused: { decisive: 0, wins: 0 } });
-      const cohort = seen.has(tag) ? u.get(tag).used : u.get(tag).unused;
-      cohort.decisive += 1;
-      if (won) cohort.wins += 1;
-    }
-  };
+  // Mechanic used/unused cohorts are built in two passes. A tag first
+  // observed late in the dataset still owns every earlier decisive row
+  // in its "unused" cohort — but only rows whose mechanic telemetry was
+  // actually present. Telemetry-missing rows are excluded outright:
+  // absent telemetry is unknown, never "mechanic not used".
+  const mechRows = [];
   for (const row of rows) {
     const cell = pair(pairKey(row.policyA, row.policyB));
     cell.games += 1; totalGames += 1;
@@ -102,13 +109,54 @@ export function buildEvidenceIndex(rows) {
       seats.decisive += 1;
       if (row.seat1Won) { seats.seat1Wins += 1; cell.seat1Wins += 1; } else seats.seat2Wins += 1;
     }
-    if (row.aWon !== null || row.draw) {
-      // Mechanic cohorts fold on decisive + draw rows? Wins-only association
-      // needs decisive rows; draws are excluded to keep the estimand clean.
-      if (!row.draw) {
-        const focalA = row.policyA === cell.policyA ? 'A' : 'B';
-        foldMechanics(cell, cell.policyA, focalA === 'A' ? row.mechanicsA : row.mechanicsB, aWonThis === true);
-        foldMechanics(cell, cell.policyB, focalA === 'A' ? row.mechanicsB : row.mechanicsA, aWonThis === false);
+    // Combo propensity: accumulate legal opportunities/declarations for
+    // every telemetry-covered clean row (draws included — propensity is
+    // behavioral, not outcome-conditioned). Missing telemetry is skipped.
+    for (const [pid, combo] of [[row.policyA, row.comboA], [row.policyB, row.comboB]]) {
+      if (!combo) continue;
+      if (!cell.comboUsage.has(pid)) cell.comboUsage.set(pid, { opportunities: 0, declarations: 0 });
+      const cu = cell.comboUsage.get(pid);
+      cu.opportunities += combo.opportunities;
+      cu.declarations += combo.declarations;
+    }
+    if (!row.draw && row.aWon !== null) {
+      // Wins-only association needs decisive rows; draws are excluded to
+      // keep the estimand clean. Collect the row (mechanics already
+      // oriented to the normalized pairing) for the second pass.
+      const aSide = row.policyA === cell.policyA;
+      mechRows.push({ cell, mechA: aSide ? row.mechanicsA : row.mechanicsB, mechB: aSide ? row.mechanicsB : row.mechanicsA, aWon: aWonThis === true });
+    }
+  }
+  // Pass 1 — the union of observed mechanic tags per (pairing, policy).
+  const tagUniverse = new Map();
+  for (const r of mechRows) {
+    for (const [pid, mech] of [[r.cell.policyA, r.mechA], [r.cell.policyB, r.mechB]]) {
+      if (!mech) continue;
+      let pu = tagUniverse.get(r.cell);
+      if (!pu) { pu = new Map(); tagUniverse.set(r.cell, pu); }
+      for (const tag of Object.keys(mech)) {
+        if ((mech[tag] ?? 0) > 0) {
+          if (!pu.has(pid)) pu.set(pid, new Set());
+          pu.get(pid).add(tag);
+        }
+      }
+    }
+  }
+  // Pass 2 — classify every telemetry-covered decisive row against the
+  // complete tag universe as used or unused.
+  for (const r of mechRows) {
+    const pu = tagUniverse.get(r.cell);
+    if (!pu) continue;
+    for (const [pid, mech, won] of [[r.cell.policyA, r.mechA, r.aWon === true], [r.cell.policyB, r.mechB, r.aWon === false]]) {
+      if (!mech) continue;
+      const tags = pu.get(pid);
+      if (!tags?.size) continue;
+      const u = usageFor(r.cell, pid);
+      for (const tag of tags) {
+        if (!u.has(tag)) u.set(tag, { used: { decisive: 0, wins: 0 }, unused: { decisive: 0, wins: 0 } });
+        const cohort = (mech[tag] ?? 0) > 0 ? u.get(tag).used : u.get(tag).unused;
+        cohort.decisive += 1;
+        if (won) cohort.wins += 1;
       }
     }
   }
@@ -183,13 +231,22 @@ export function detectCandidates(index, { detectedAt = new Date().toISOString(),
     if (cell.decisive < L.minScanDecisive) continue;
     const a = index.policies.get(cell.policyA), b = index.policies.get(cell.policyB);
     if (!a || !b || a.clean < 60 || b.clean < 60) continue; // no defensible baseline
-    const expected = a.strength / (a.strength + b.strength);
+    // Leave-one-out baseline: the focal pairing is excluded from each
+    // side's aggregate strength so the observation cannot partially
+    // define its own expectation. With too little external evidence the
+    // baseline is not defensible and the pairing is skipped.
+    const cellClean = cell.games - cell.faulted;
+    const extA = a.clean - cellClean, extB = b.clean - cellClean;
+    if (extA < L.minScanDecisive || extB < L.minScanDecisive) continue;
+    const sA = (a.wins - cell.winsA + (a.draws - cell.draws) / 2 + 12.5) / (extA + 25);
+    const sB = (b.wins - (cell.decisive - cell.winsA) + (b.draws - cell.draws) / 2 + 12.5) / (extB + 25);
+    const expected = sA / (sA + sB);
     const observed = cell.winsA / cell.decisive;
     const z = pairingZ(observed, expected, cell.decisive);
     const dev = observed - expected;
     if (z == null || Math.abs(z) < 2 || Math.abs(dev) < 0.06) continue;
     const { surprise, scores } = scoreParts({ z, absDev: dev, n: cell.decisive, category: 'matchup', estGames });
-    push('matchup', `matchup:${cell.key}`, `${cell.policyA} scored ${(observed * 100).toFixed(1)}% vs ${cell.policyB} — expected ${(expected * 100).toFixed(1)}% from aggregate strength.`,
+    push('matchup', `matchup:${cell.key}`, `${cell.policyA} scored ${(observed * 100).toFixed(1)}% vs ${cell.policyB} — expected ${(expected * 100).toFixed(1)}% from leave-one-out aggregate strength.`,
       { observed, expected, deviation: dev, unit: 'probability', sampleSize: cell.decisive, method: 'strength-model-deviation', surprise }, scores);
   }
 
@@ -250,6 +307,28 @@ export function detectCandidates(index, { detectedAt = new Date().toISOString(),
     }
   }
 
+  // ── Combo propensity anomalies ────────────────────────────────
+  // Canonical Comboing (rulebook §8) is a behavioral rate: declarations
+  // ÷ legal Combo opportunities — not a raw declaration count. Compare
+  // the two policies' propensity inside the same pairing (same opponent,
+  // same ruleset; only the chooser differs).
+  for (const cell of cells) {
+    const a = cell.comboUsage.get(cell.policyA), b = cell.comboUsage.get(cell.policyB);
+    if (!a || !b) continue;
+    if (a.opportunities < L.minComboOpportunities || b.opportunities < L.minComboOpportunities) continue;
+    const diff = differenceInProportions(a.declarations, a.opportunities, b.declarations, b.opportunities);
+    if (diff.estimate == null || diff.standardError == null || diff.standardError === 0) continue;
+    const z = diff.estimate / diff.standardError;
+    if (Math.abs(z) < 2 || Math.abs(diff.estimate) < 0.10) continue;
+    const [hi, lo] = diff.estimate >= 0 ? [cell.policyA, cell.policyB] : [cell.policyB, cell.policyA];
+    const hiC = diff.estimate >= 0 ? a : b, loC = diff.estimate >= 0 ? b : a;
+    const hiRate = hiC.declarations / hiC.opportunities, loRate = loC.declarations / loC.opportunities;
+    const ratio = loRate > 0 ? `${(hiRate / loRate).toFixed(1)}×` : 'a nonzero rate vs zero';
+    const { surprise, scores } = scoreParts({ z, absDev: Math.abs(diff.estimate), n: a.opportunities + b.opportunities, category: 'card', estGames });
+    push('card', `combo-propensity:${cell.key}`, `${hi} accepted ${(hiRate * 100).toFixed(1)}% of legal Combo opportunities vs ${(loRate * 100).toFixed(1)}% for ${lo} (${ratio}) in the ${cell.key} pairing.`,
+      { observed: hiRate, expected: loRate, deviation: diff.estimate, unit: 'probability', sampleSize: a.opportunities + b.opportunities, method: 'combo-propensity-divergence', surprise }, scores);
+  }
+
   // ── Turn / phase anomalies ────────────────────────────────────
   const turnCells = cells.filter((c) => c.meanTurns != null && c.games - c.faulted >= L.minScanDecisive);
   if (turnCells.length >= 4 && index.globalMeanTurns != null) {
@@ -271,13 +350,21 @@ export function detectCandidates(index, { detectedAt = new Date().toISOString(),
   // ── Integrity anomalies (Bug Hunter feedstock) ────────────────
   for (const cell of cells) {
     if (cell.games < 50 || index.globalFaultRate <= 0) continue;
-    const diff = differenceInProportions(cell.faulted, cell.games, Math.round(index.globalFaultRate * index.gameCount), index.gameCount);
+    // Leave-one-cell-out baseline: the focal cell's own faults must not
+    // contribute to the global rate it is measured against. A zero
+    // external fault rate is a legitimate baseline — "every other
+    // pairing is clean" — not a missing one.
+    const restFaulted = index.faultedCount - cell.faulted;
+    const restGames = index.gameCount - cell.games;
+    const restRate = restGames > 0 ? restFaulted / restGames : 0;
+    if (restGames < 50) continue;
+    const diff = differenceInProportions(cell.faulted, cell.games, restFaulted, restGames);
     if (diff.estimate == null || diff.estimate < 0.05) continue;
     const z = diff.standardError ? diff.estimate / diff.standardError : null;
     if (z == null || z < 2) continue;
     const { surprise, scores } = scoreParts({ z, absDev: diff.estimate, n: cell.games, category: 'integrity', estGames });
-    push('integrity', `integrity:${cell.key}`, `${cell.policyA} vs ${cell.policyB} faulted in ${(cell.faultRate * 100).toFixed(1)}% of games vs a ${(index.globalFaultRate * 100).toFixed(1)}% baseline.`,
-      { observed: cell.faultRate, expected: index.globalFaultRate, deviation: diff.estimate, unit: 'probability', sampleSize: cell.games, method: 'fault-rate-excess', surprise }, scores);
+    push('integrity', `integrity:${cell.key}`, `${cell.policyA} vs ${cell.policyB} faulted in ${(cell.faultRate * 100).toFixed(1)}% of games vs a ${(restRate * 100).toFixed(1)}% leave-one-out baseline.`,
+      { observed: cell.faultRate, expected: restRate, deviation: diff.estimate, unit: 'probability', sampleSize: cell.games, method: 'fault-rate-excess', surprise }, scores);
   }
 
   // Dedupe by content-derived candidateId; keep the strongest signal.

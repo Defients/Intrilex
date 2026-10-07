@@ -12,9 +12,14 @@ function fmtCI(ci) {
   return `[${Number(ci[0]).toFixed(3)}, ${Number(ci[1]).toFixed(3)}]`;
 }
 
-function gradeLabel(grade) {
-  const map = { A: 'strong', B: 'moderate', C: 'weak', D: 'very weak' };
-  return map[grade] ?? 'insufficient';
+// Grades exist in two vocabularies: the canonical evidence vocabulary
+// (INSUFFICIENT/EXPLORATORY/SUPPORTED/ROBUST) and legacy letters (A–D).
+// Prefer the row's own evidenceGradeLegacy when present; never emit a
+// parenthetical that contradicts the grade itself.
+function gradeLabel(mech) {
+  const canonical = { INSUFFICIENT: 'insufficient', EXPLORATORY: 'weak', SUPPORTED: 'moderate', ROBUST: 'strong' };
+  const legacy = { A: 'strong', B: 'moderate', C: 'weak', D: 'very weak' };
+  return mech?.evidenceGradeLegacy ?? canonical[mech?.evidenceGrade] ?? legacy[mech?.evidenceGrade] ?? null;
 }
 
 function describePolicy(policy) {
@@ -46,7 +51,8 @@ function describeMechanic(mech) {
     const impact = mech.immediatePointImpact;
     parts.push(`Immediate point impact: mean ${impact.mean?.toFixed(2)} over ${impact.n} measured declarations.`);
   }
-  parts.push(`Evidence grade: ${mech.evidenceGrade} (${gradeLabel(mech.evidenceGrade)}).`);
+  const gradeText = gradeLabel(mech);
+  parts.push(`Evidence grade: ${mech.evidenceGrade ?? 'ungraded'}${gradeText ? ` (${gradeText})` : ''}.`);
   if (mech.choiceSupport && (mech.choiceSupport.status === 'limited' || mech.choiceSupport.status === 'unsupported')) {
     parts.push(`Choice identification: ${mech.choiceSupport.status} — only ${mech.choiceSupport.declinedCount} legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.`);
   }
@@ -204,7 +210,8 @@ export function extractAnalysis({ analytics, aggregate = null }) {
       completedMatchCount: aggregate?.completedMatchCount ?? 0,
       abortCount: aggregate?.abortCount ?? 0,
       drawCount: aggregate?.drawCount ?? 0,
-      detailedMatchCount: analytics.detailedMatchCount ?? 0,
+      // 0 would claim "measured, zero rows". null = never collected.
+      detailedMatchCount: analytics.detailedMatchCount ?? null,
       policyCount: policies.length,
       mechanicCount: mechanics.length,
       synergyCount: synergies.length,

@@ -1,0 +1,30 @@
+/* ═══════════════════════════════════════════════════════════════
+   combo-atlas.css — ⚡ Combo Atlas workspace
+   Canonical Combo (§8) analytics: funnel, recipe matrix,
+   component map, lifecycle flow, policy propensity.
+   ═══════════════════════════════════════════════════════════════ */
+
+.combo-section{animation:fadeIn .18s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.combo-section{animation:none}}
+
+.metric-na{color:var(--muted);font-style:italic;font-size:.92em}
+
+/* Opportunity → declaration → resolution funnel */
+.combo-funnel{display:flex;flex-direction:column;gap:4px;max-width:520px}
+.combo-funnel-stage{display:flex;align-items:center;gap:12px}
+.combo-funnel-label{flex:0 0 150px;font-size:12px;color:var(--muted);text-align:right;text-transform:uppercase;letter-spacing:.04em}
+.combo-funnel-bar{min-width:48px;padding:5px 10px;border-radius:6px;font-weight:700;font-size:13px;text-align:right;color:#0a0e14;background:linear-gradient(135deg,#4fd387,#7ddba8);white-space:nowrap}
+.combo-funnel-arrow{margin-left:75px;color:var(--muted);font-size:12px;line-height:1}
+.combo-funnel-exits{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border-soft)}
+.combo-funnel-branch{border-left:3px solid var(--muted);padding:4px 10px;font-size:12.5px;color:var(--text)}
+.combo-funnel-branch b{margin-right:6px}
+.combo-funnel-branch small{color:var(--muted)}
+
+/* Component map heat cells */
+.combo-component-matrix td{text-align:center;font-variant-numeric:tabular-nums}
+.combo-component-matrix td.combo-cell-hot{background:rgba(79,211,135,.16);color:#7ddba8;font-weight:600}
+.combo-component-matrix th:first-child,.combo-component-matrix td:first-child{text-align:left}
+
+.combo-section .ct-well{margin-bottom:14px}
+.combo-section .ct-well h3{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}

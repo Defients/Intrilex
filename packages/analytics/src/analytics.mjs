@@ -14,6 +14,7 @@ import { buildChoiceAnalysis, decisionChoices } from './choice-analysis.mjs';
 import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS, metricRegistryWithHashesUsing } from './metric-registry.mjs';
 import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './observatory-core.mjs';
 import { applyRankBalanceQualification, deriveTagRelations, choiceSupportStatus, CHOICE_SUPPORT_MIN_DECLINES } from './observatory-integrity.mjs';
+import { buildComboAtlas } from './combo-analytics.mjs';
 
 export { ANALYTICS_SCHEMA_VERSION };
 
@@ -614,6 +615,7 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
     pairedABBA,
     choiceAnalysis,
     choiceAnalysisError,
+    combo:buildComboAtlas(summaries),
     mechanicRegistryHash:mechanicRegistryHash(),
     quarantineLedger,
     taxonomyDimensions: dimensionCounts,

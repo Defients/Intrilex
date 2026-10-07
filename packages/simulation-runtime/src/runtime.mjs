@@ -35,6 +35,7 @@ import {
 } from '@intrilex/telemetry';
 import { createDecisionTrace} from '@intrilex/decision-intelligence/decision-trace';
 import { attributeAction, classifyVariantEntity, isNoAttributionAction } from './rank-attribution.mjs';
+import { createComboTracker, comboClassOf } from './combo-telemetry.mjs';
 
 export { LAB_VERSION, REPLAY_DATA_VERSION, ANALYTICS_SCHEMA_VERSION };
 const COMPLETE_REASONS = new Set(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW']);
@@ -74,6 +75,9 @@ function mechanicTags(action) {
   const tags = new Set();
   if (!NON_MECHANIC_FAMILIES.has(action.family) && !TIMING_FAMILIES.has(action.family)) tags.add(action.family);
   if (action.mode && !NON_MECHANIC_MODES.has(action.mode) && action.mode !== action.family) tags.add(action.mode);
+  // Combo is the canonical parent mechanic (rulebook §8) of the super/ultra
+  // classes — tagged alongside the class tags so it is a first-class entity.
+  if (comboClassOf(action)) tags.add('combo');
   const result = [...tags].sort();
   MECHANIC_TAG_CACHE.set(action, result);
   return result;
@@ -322,6 +326,10 @@ export function runPolicyMatch(config) {
   // decision frame.
   let pendingCausality = null;
 
+  // Canonical Combo telemetry (rulebook §8): legal opportunities per recipe,
+  // declarations, and authoritative lifecycle from engine events.
+  const comboTracker = createComboTracker({ matchId, seatOrder, policyIds, scoreOf: deriveSecuredPoints });
+
   for (let decisionIndex = 0; decisionIndex < decisionLimit; decisionIndex += 1) {
     // Capture pre-frame state for deferred-resolution attribution. The frame may
     // resolve the stack (moving cards to PR/ER), which is a consequence of the
@@ -334,6 +342,7 @@ export function runPolicyMatch(config) {
     strategy?.observe(seatOrder.map(id=>deriveSecuredPoints(state,id)),decisionIndex);
     commands.push(...frame.executedCommands);
     captureEvents(frame.events);
+    comboTracker.observe(frame.events, state);
 
     // ── Causal boundary: attribute frame/orchestration transitions (stack
     // resolution, automatic priority advancement) to the PREVIOUS declaration. ──
@@ -373,6 +382,7 @@ export function runPolicyMatch(config) {
         for (const tag of frameTags) { increment(ps.mechanicOpportunityCounts, tag); increment(mechanicOpportunityCounts, tag); }
         for (const tag of framePrimaryTags) { increment(ps.primaryMechanicOpportunityCounts, tag); increment(primaryMechanicOpportunityCounts, tag); }
       }
+      comboTracker.frame({ legalActions: frame.policyActions, actorId: frame.decisionActorId, state });
     }
 
     // Capture post-frame state — the baseline for the CURRENT action's delta.
@@ -402,6 +412,10 @@ export function runPolicyMatch(config) {
     const targetUntappedQueenDefenders = targetControllerId ? countUntappedQueens(state, targetControllerId) : 0;
     const beforePhase = state.phase;
     const beforeStateHash = authorityHashCanonical(state);
+    // Pre-declaration score baseline for Combo records (only computed when the
+    // selected action is a canonical Combo declaration).
+    const comboPreScores = comboClassOf(selectedAction) ? pointsByPlayer(state, seatOrder) : null;
+    const comboPreTurn = state.fullTurnSequence;
     const result = executeSimulationAction(state, command);
     commands.push(command); captureEvents(result.events);
     if (!result.accepted) { terminationReason = 'ENGINE_REJECTION'; errorCode = result.error?.code ?? 'UNKNOWN'; break; }
@@ -414,6 +428,13 @@ export function runPolicyMatch(config) {
     rankDecisions.push({ checkpointId, participantId: actorId, decisionIndex, rankAttribution, rankOpportunities: Object.values(rankOppMap), variantOpportunities: Object.values(variantOppMap), action: { family: selectedAction.family, mode: selectedAction.mode, kind: selectedAction.kind, authority: selectedAction.authority, timingClass: selectedAction.timingClass }, legalActions: frame.policyActions.map(pa => ({ actionId: pa.actionId, family: pa.family, mode: pa.mode, kind: pa.kind })) });
 
     state = result.state;
+    comboTracker.observe(result.events, state);
+    comboTracker.declared({
+      action: selectedAction, actorId, seat: seatIndex, decisionIndex,
+      fullTurn: comboPreTurn, phase: beforePhase, commandIndex: commands.length - 1,
+      checkpointId, events: result.events, state, scoreBefore: comboPreScores?.[actorId] ?? null,
+      scoreDiffBefore: comboPreScores ? (comboPreScores[actorId] - comboPreScores[seatOrder[1 - seatIndex]]) : null,
+    });
     if(fieldManual) fieldManual.after(strategyDraft,strictPolicyView(state,actorId));
     if(strategy)strategy.capture(strategicDecision,seatOrder.map(id=>deriveSecuredPoints(state,id)));
 
@@ -557,13 +578,14 @@ export function runPolicyMatch(config) {
   if (terminationReason === 'DECISION_LIMIT' && state.winner !== null) terminationReason = 'NORMAL_VICTORY';
   const finalScores = pointsByPlayer(state, seatOrder);
   const strategicTelemetry = strategy?.finish(seatOrder.map(id=>finalScores[id]),decisions.length);
+  const comboTelemetry = comboTracker.finish({ winner: state.winner ?? null, terminationReason });
   const terminal = terminalEvidence(events,seatOrder.map(id=>state.players[id].goal),publicTerminalAnchorCounts(state,seatOrder));
   const participants = seatOrder.map((playerId, seatIndex) => {
     const ps = perSeat[seatIndex];
     const isWinner = state.winner === playerId;
     const isDraw = terminationReason === 'CANONICAL_DRAW';
     const isAborted = !COMPLETE_REASONS.has(terminationReason);
-    return { participantId:`${matchId}:seat-${seatIndex+1}`, matchId, seat:seatIndex+1, playerId, policyId:policyIds[seatIndex], profileId, result:isAborted?'abort':isDraw?'draw':isWinner?'win':'loss', scoreFor:finalScores[playerId], scoreAgainst:finalScores[seatOrder[1-seatIndex]], decisionCount:ps.policyDecisionCount, responseOpportunityCount:ps.responseOpportunityCount, responsePlayCount:ps.responsePlayedCount, responseDeclineCount:ps.responseDeclinedCount, miniTurnActionCount:ps.miniTurnActionCount, exhaustedPassActionCount:ps.exhaustedPassActionCount, counterDeclarationCount:ps.counterDeclarationCount, quickDeclarationCount:ps.quickDeclarationCount, instantDeclarationCount:ps.instantDeclarationCount, interruptDeclarationCount:ps.interruptDeclarationCount, meaningfulResponseDecisionCount:ps.meaningfulResponseDecisionCount, advancedDecisionCount:countFamilies(ps.decisionFamilyCounts,ADVANCED_FAMILIES), voltageDecisionCount:ps.decisionFamilyCounts.voltage??0, ultraDecisionCount:ps.decisionFamilyCounts.ultra??0, privateChoiceDecisionCount:ps.decisionFamilyCounts['private-choice']??0, mechanicCounts:Object.fromEntries(Object.entries(ps.mechanicCounts).sort()), primaryMechanicCounts:Object.fromEntries(Object.entries(ps.primaryMechanicCounts).sort()), mechanicOpportunityCounts:Object.fromEntries(Object.entries(ps.mechanicOpportunityCounts).sort()), primaryMechanicOpportunityCounts:Object.fromEntries(Object.entries(ps.primaryMechanicOpportunityCounts).sort()) };
+    return { participantId:`${matchId}:seat-${seatIndex+1}`, matchId, seat:seatIndex+1, playerId, policyId:policyIds[seatIndex], profileId, result:isAborted?'abort':isDraw?'draw':isWinner?'win':'loss', scoreFor:finalScores[playerId], scoreAgainst:finalScores[seatOrder[1-seatIndex]], decisionCount:ps.policyDecisionCount, responseOpportunityCount:ps.responseOpportunityCount, responsePlayCount:ps.responsePlayedCount, responseDeclineCount:ps.responseDeclinedCount, miniTurnActionCount:ps.miniTurnActionCount, exhaustedPassActionCount:ps.exhaustedPassActionCount, counterDeclarationCount:ps.counterDeclarationCount, quickDeclarationCount:ps.quickDeclarationCount, instantDeclarationCount:ps.instantDeclarationCount, interruptDeclarationCount:ps.interruptDeclarationCount, meaningfulResponseDecisionCount:ps.meaningfulResponseDecisionCount, advancedDecisionCount:countFamilies(ps.decisionFamilyCounts,ADVANCED_FAMILIES), voltageDecisionCount:ps.decisionFamilyCounts.voltage??0, ultraDecisionCount:ps.decisionFamilyCounts.ultra??0, privateChoiceDecisionCount:ps.decisionFamilyCounts['private-choice']??0, mechanicCounts:Object.fromEntries(Object.entries(ps.mechanicCounts).sort()), primaryMechanicCounts:Object.fromEntries(Object.entries(ps.primaryMechanicCounts).sort()), mechanicOpportunityCounts:Object.fromEntries(Object.entries(ps.mechanicOpportunityCounts).sort()), primaryMechanicOpportunityCounts:Object.fromEntries(Object.entries(ps.primaryMechanicOpportunityCounts).sort()), comboOpportunityCount:comboTelemetry.seats[seatIndex]?.opportunityFrames ?? 0, comboDeclarationCount:comboTelemetry.seats[seatIndex]?.declarations ?? 0 };
   });
   const privateChoiceDecisionCount = decisionFamilyCounts['private-choice'] ?? 0;
   const advancedDecisionCount = countFamilies(decisionFamilyCounts, ADVANCED_FAMILIES);
@@ -611,14 +633,26 @@ export function runPolicyMatch(config) {
   // telemetry that can vary with legal-action enumeration order, not core match results.
   // evidenceEpoch/postRulesParityRepair/authorityHash/isSelfPlay are provenance metadata
   // that describe the evidence context, not the match outcome itself.
+  // The canonical 'combo' parent tag is diagnostic taxonomy layered onto the
+  // existing super/ultra selection counts — it summarizes the same underlying
+  // declarations already counted under those tags, so including it would
+  // double-describe the same match events. Strip it from the hash input (like
+  // the opportunity counts) so corpus matchResultHashes remain stable.
+  const stripComboTag = (counts) => {
+    if (!counts || counts.combo == null) return counts;
+    const { combo: _c, ...rest } = counts;
+    return rest;
+  };
   const hashInput = {
     ...semanticResultCore,
+    mechanicCounts: stripComboTag(semanticResultCore.mechanicCounts),
+    primaryMechanicCounts: stripComboTag(semanticResultCore.primaryMechanicCounts),
     participants: semanticResultCore.participants.map(p => {
-      const { mechanicOpportunityCounts: _m, primaryMechanicOpportunityCounts: _pm, ...rest } = p;
-      return rest;
+      const { mechanicOpportunityCounts: _m, primaryMechanicOpportunityCounts: _pm, comboOpportunityCount: _co, comboDeclarationCount: _cd, ...rest } = p;
+      return { ...rest, mechanicCounts: stripComboTag(rest.mechanicCounts), primaryMechanicCounts: stripComboTag(rest.primaryMechanicCounts) };
     }),
   };
-  const summary = { ...summaryCore, ...(strategicTelemetry?{strategicTelemetry}:{}), ...(terminal?{terminalEvidence:terminal}:{}), matchResultHash: hashCanonical(hashInput), perSeatStats:perSeat.map((p,i)=>({playerId:seatOrder[i],...p})), rankDecisions };
+  const summary = { ...summaryCore, ...(strategicTelemetry?{strategicTelemetry}:{}), ...(terminal?{terminalEvidence:terminal}:{}), comboTelemetry, matchResultHash: hashCanonical(hashInput), perSeatStats:perSeat.map((p,i)=>({playerId:seatOrder[i],...p})), rankDecisions };
   const base = { summary, decisions, facts, provenance };
   if(fieldManual) summary.strategyDecisions = fieldManual.finish({initialState,commands,finalStateHash:summary.finalStateHash,winner:summary.winner,terminationReason,finalScores,gameLength:summary.completedFullTurns});
   if (captureTraces) base.decisionTraces = decisionTraces;

@@ -3,13 +3,13 @@
 //   Compare, Mechanics, Synergies, History, Replays, Traces
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=dac162e115e4';
-import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow, scatterPlot, intervalPlot } from '../chart-toolkit.js?v=dac162e115e4';
-import { wilsonInterval } from '../observatory-analytics-browser.js?v=dac162e115e4';
-import { obsContextStrip, metricStrip, evidenceBadge, dossierSection, miniBar, segmentControl } from './observatory-ui.js?v=dac162e115e4';
-// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=dac162e115e4') to break backedge
-import { rerender } from '../rerender.js?v=dac162e115e4';
-import { openReplay } from '../data-loader.js?v=dac162e115e4';
+import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=ef8ac632ff7c';
+import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow, scatterPlot, intervalPlot } from '../chart-toolkit.js?v=ef8ac632ff7c';
+import { wilsonInterval } from '../observatory-analytics-browser.js?v=ef8ac632ff7c';
+import { obsContextStrip, metricStrip, evidenceBadge, dossierSection, miniBar, segmentControl } from './observatory-ui.js?v=ef8ac632ff7c';
+// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=ef8ac632ff7c') to break backedge
+import { rerender } from '../rerender.js?v=ef8ac632ff7c';
+import { openReplay } from '../data-loader.js?v=ef8ac632ff7c';
 
 // Generic segmented-control binder shared by the workspace display modes.
 // Each button carries data-seg-id (state key) + data-seg-value.
@@ -24,11 +24,17 @@ function bindSegmentControls(stateKeys) {
   });
 }
 
-// Shown when the Observatory dataset was swapped to propagated Evolution Lab
-// runs (Evolution Lab → Runs & artifacts → "Propagate → Observatory").
+// Shown when the Observatory dataset was swapped away from the certified
+// corpus — either the experiment analysis set (Experiment panel runs) or
+// propagated Evolution Lab run artifacts.
 export function labDatasetBanner() {
-  if (state.observatory?.datasetOrigin !== 'EVOLUTION_LAB') return '';
+  const origin = state.observatory?.datasetOrigin;
   const n = state.observatory?.summaries?.length ?? 0;
+  if (origin === 'EXPERIMENT_RUNS') {
+    const basis = state.evidenceBasis;
+    return `<div class="notice info" style="margin-bottom:12px"><strong>Experiment analysis set.</strong> Analytics reflect ${n} game(s) from ${basis?.includedRunCount ?? '?'} included run(s) under ${esc(basis?.experimentId ?? 'the experiment')} — ${basis?.excludedRunCount ?? 0} recorded run(s) excluded. Manage runs in the Experiment panel, or press Baseline to restore the certified corpus.</div>`;
+  }
+  if (origin !== 'EVOLUTION_LAB') return '';
   return `<div class="notice info" style="margin-bottom:12px"><strong>Evolution Lab dataset.</strong> Analytics reflect ${n} propagated lab game(s), not the certified corpus. Imported rows are unverified; telemetry coverage may be partial. Restore via Evolution Lab → Runs &amp; artifacts → "Restore certified analytics".</div>`;
 }
 
@@ -580,7 +586,7 @@ export async function renderOpeningPatterns() {
   let idx = state.traceIndex;
   if (!idx) {
     try {
-      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=dac162e115e4');
+      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=ef8ac632ff7c');
       idx = await loadTraceIndex();
       if (!idx || !idx.records) {
         return `<div class="ix-chart-empty" data-testid="opening-patterns-empty">No decision traces available. Run a campaign with decision traces enabled to analyze opening patterns.</div>`;
@@ -593,7 +599,7 @@ export async function renderOpeningPatterns() {
     }
   }
   // If traceIndex exists but trace data isn't preloaded, load it
-  const { loadTraceData } = await import('../data-loader.js?v=dac162e115e4');
+  const { loadTraceData } = await import('../data-loader.js?v=ef8ac632ff7c');
   const traceFiles = await Promise.all(idx.records.map(r => loadTraceData(r.matchId)));
   return _renderOpeningPatternsFromTraces(idx.records, traceFiles);
 }

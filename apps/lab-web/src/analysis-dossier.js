@@ -24,7 +24,7 @@ import { observatorySummariesForRun, observatoryCoverage } from '../../../packag
 import { batchMatrixView } from '../../../packages/simulation-runtime/src/batch-matrix.mjs';
 
 export const DOSSIER_FORMAT = 'intrilex-analysis-dossier';
-export const DOSSIER_VERSION = '1.0.0';
+export const DOSSIER_VERSION = '1.1.0';
 
 const unavailable = (reason, extra = {}) => ({ available: false, reason, ...extra });
 const available = (extra = {}) => ({ available: true, ...extra });
@@ -405,10 +405,10 @@ function collectFindings({ observatory, extract }) {
 }
 
 // ── Open questions / evidence gaps ───────────────────────────────────────
-function deriveOpenQuestions({ observatory, labSection, integrity }) {
+function deriveOpenQuestions({ observatory, labSection, integrity, experiment }) {
   const questions = [];
   const quarantined = (observatory?.mechanics ?? []).filter(m => m.quarantined).length;
-  if (quarantined > 0) questions.push(`${quarantined} telemetry tag(s) are quarantined pending canonical mechanic registry classification — their measurements are descriptive, not canonical.`);
+  if (quarantined > 0) questions.push(`${quarantined} tracked entit(ies) are quarantined pending canonical mechanic registry classification — their measurements are descriptive, not canonical.`);
   const insufficient = (observatory?.mechanics ?? []).filter(m => m.choiceSupport?.status === 'insufficient' || (m.evidenceGrade && m.evidenceGrade !== 'A' && m.evidenceGrade !== 'B')).length;
   if (insufficient > 0) questions.push(`${insufficient} mechanic entit(ies) lack identified choice-support or carry weak evidence grades — additional matched-opportunity data is required before preference claims.`);
   const rejectedPairs = observatory?.campaignHealth?.rejectedSynergyPairs ?? 0;
@@ -419,7 +419,7 @@ function deriveOpenQuestions({ observatory, labSection, integrity }) {
   for (const anomaly of (observatory?.anomalies ?? []).filter(a => a.severity === 'error' || a.severity === 'critical')) {
     questions.push(`Unresolved ${anomaly.severity} anomaly ${anomaly.type} on ${anomaly.matchId ?? 'dataset'}: ${anomaly.detail ?? 'no detail recorded'}`);
   }
-  const imported = labSection?.strategy?.evidenceCorpus?.origins?.IMPORTED_UNVERIFIED ?? 0;
+  const imported = labSection?.strategy?.origins?.IMPORTED_UNVERIFIED ?? 0;
   if (imported > 0) questions.push(`${imported} imported evidence source(s) remain IMPORTED_UNVERIFIED — external claims not yet reproduced under the current authority.`);
   const historical = (labSection?.runs ?? []).filter(r => r.historical === true).length;
   if (historical > 0) questions.push(`${historical} persisted run(s) carry a historical identity fingerprint — they are retained for inspection and are excluded from current-authority aggregation.`);
@@ -439,6 +439,12 @@ function deriveOpenQuestions({ observatory, labSection, integrity }) {
     questions.push(`Choice analysis used ${choice.decisionsUsable}/${choice.decisionsSeen} decision frames — ${choice.decisionsSeen - choice.decisionsUsable} frame(s) lacked usable legal-action structure.`);
   }
   if (integrity?.completeness?.status && integrity.completeness.status !== 'PASS') questions.push(`Taxonomy completeness is ${integrity.completeness.status} — ${integrity.completeness.unclassifiedCount} entit(ies) are unclassified beyond tolerance.`);
+  if (experiment?.available === true && experiment.selectedExperimentIncluded === false && (experiment.totalRuns ?? 0) > 0) {
+    questions.push(`Experiment ${experiment.experimentId ?? '(unknown)'} has ${experiment.totalRuns} recorded run(s) but none contribute to this dossier's dataset — ${experiment.exclusionReason ?? 'reason not recorded'}`);
+  }
+  if (experiment?.available === true && experiment.datasetLinked === true && experiment.selectedExperimentIncluded !== true) {
+    questions.push(`Dataset origin claims EXPERIMENT_RUNS but the experiment evidence store reports no contributing run — scope cannot be verified.`);
+  }
   return questions;
 }
 
@@ -464,17 +470,37 @@ function observatorySections(observatory, aggregate) {
       synergies: unavailable('Observatory analytics unavailable'), motifs: unavailable('Observatory analytics unavailable'),
       ranks: unavailable('Observatory analytics unavailable'), variants: unavailable('Observatory analytics unavailable'),
       anomalies: unavailable('Observatory analytics unavailable'), pairedAnalysis: unavailable('Observatory analytics unavailable'),
+      combo: unavailable('Observatory analytics unavailable'),
       choiceAnalysis: unavailable('Observatory analytics unavailable'),
       integrity: unavailable('Observatory analytics unavailable'),
       executiveSummary: null, findings: [], interpretationBoundaries: [],
     };
   }
   const rankPower = observatory.rankPower ?? null;
+  // Quarantine reconciliation — two related but distinct counts that were
+  // previously conflated in prose:
+  //   unregisteredTags        — unregistered telemetry tags appearing on any
+  //                             tracked entity (the quarantine ledger size).
+  //                             Includes discovery-exempt pseudo-entities
+  //                             (e.g. 'unclassified').
+  //   quarantinedEntities     — tracked entities actually quarantined:
+  //                             unregistered AND not discovery-exempt.
+  //   discoveryExemptUnregistered — unregistered tags on exempt entities:
+  //                             in the ledger but intentionally not
+  //                             quarantined. unregisteredTags =
+  //                             quarantinedEntities + exempt.
+  const unregisteredTags = (observatory.quarantineLedger ?? []).length;
+  const quarantinedEntities = (observatory.mechanics ?? []).filter(m => m.quarantined).length;
   const integrity = {
     completeness: observatory.completeness ?? null,
     reconciliation: observatory.reconciliation ?? null,
     campaignHealth: observatory.campaignHealth ?? null,
     quarantineLedger: observatory.quarantineLedger ?? [],
+    quarantine: {
+      unregisteredTags,
+      quarantinedEntities,
+      discoveryExemptUnregistered: Math.max(0, unregisteredTags - quarantinedEntities),
+    },
     taxonomyDimensions: observatory.taxonomyDimensions ?? null,
     hasOpportunityTelemetry: observatory.hasOpportunityTelemetry ?? null,
     legacySchema: observatory.legacySchema ?? null,
@@ -520,6 +546,9 @@ function observatorySections(observatory, aggregate) {
     pairedAnalysis: observatory.pairedABBA
       ? available({ ...observatory.pairedABBA })
       : unavailable('No paired AB/BA analysis in the Observatory payload'),
+    combo: observatory.combo
+      ? available({ ...observatory.combo })
+      : unavailable('No Combo analytics in the Observatory payload'),
     choiceAnalysis: observatory.choiceAnalysis
       ? available({ ...observatory.choiceAnalysis })
       : unavailable(observatory.choiceAnalysisError ? `Choice analysis failed: ${observatory.choiceAnalysisError}` : 'No choice analysis in the Observatory payload'),
@@ -591,6 +620,192 @@ function labSections(lab) {
   };
 }
 
+// ── Experiment scope projection ────────────────────────────────────────
+// `experiments` is the collectExperimentEvidence() projection: the active
+// Experiment + Analysis Set — which runs contribute, which are excluded and
+// why. The dossier records this verbatim, including the honest case where
+// recorded runs exist but do NOT contribute to the exported dataset.
+function experimentSection(experiments, datasetOrigin) {
+  if (!experiments || experiments.available !== true) {
+    return unavailable(experiments?.reason ?? 'Experiment evidence store not supplied to this export.', {
+      experimentId: experiments?.experimentId ?? null,
+      selectedExperimentIncluded: null,
+      exclusionReason: 'Experiment evidence unavailable — run inclusion cannot be verified.',
+    });
+  }
+  const linked = datasetOrigin === 'EXPERIMENT_RUNS';
+  const includedRunCount = experiments.includedRunCount ?? experiments.includedRunIds?.length ?? 0;
+  const included = linked && includedRunCount > 0;
+  let exclusionReason = null;
+  if (!included) {
+    if (linked) exclusionReason = 'Dataset origin claims experiment runs but no recorded run contributes — inconsistent scope state.';
+    else if (includedRunCount > 0) exclusionReason = `${includedRunCount} run(s) are included in the active analysis set but the exported dataset is ${datasetOrigin ?? 'CERTIFIED_CORPUS'} — the experiment selection is not reflected in this dossier's dataset.`;
+    else if ((experiments.totalRuns ?? 0) > 0) exclusionReason = `${experiments.totalRuns} experiment run(s) recorded but none contribute (excluded, invalidated, archived, or failed) — the exported dataset is ${datasetOrigin ?? 'CERTIFIED_CORPUS'}.`;
+    else exclusionReason = 'No experiment runs recorded — the exported dataset is the certified baseline.';
+  }
+  return available({
+    experimentId: experiments.experimentId ?? null,
+    analysisSetId: experiments.analysisSetId ?? null,
+    persisted: experiments.persisted === true,
+    datasetLinked: linked,
+    selectedExperimentIncluded: included,
+    exclusionReason,
+    includedRunIds: experiments.includedRunIds ?? [],
+    includedRunCount,
+    includedGames: experiments.includedGames ?? 0,
+    excludedRunCount: experiments.excludedRunCount ?? 0,
+    excludedGames: experiments.excludedGames ?? 0,
+    totalRuns: experiments.totalRuns ?? 0,
+    invalidatedCount: experiments.invalidatedCount ?? 0,
+    archivedCount: experiments.archivedCount ?? 0,
+    failedCount: experiments.failedCount ?? 0,
+    bundledBaselineContributing: experiments.bundledBaselineContributing === true,
+    fallback: experiments.fallback ?? null,
+    runs: (experiments.runs ?? []).map(r => ({
+      runId: r.runId ?? null, ordinal: r.ordinal ?? null, status: r.status ?? null,
+      lifecycle: r.lifecycle ?? 'active', pinned: r.pinned === true,
+      included: r.included === true, origin: r.origin ?? 'session',
+      createdAt: r.createdAt ?? null, matchCount: r.matchCount ?? 0,
+      compatibility: r.compatibility ?? null,
+      exclusionReason: r.exclusionReason ?? null, exclusionNote: r.exclusionNote ?? null,
+      rulesVersion: r.rulesVersion ?? null, engineVersion: r.engineVersion ?? null,
+      profileId: r.profileId ?? null, policyIds: r.policyIds ?? null,
+      canonicalResultHash: r.canonicalResultHash ?? null, runHash: r.runHash ?? null,
+    })),
+    warnings: experiments.warnings ?? [],
+    storeNote: 'Run records live in the experiment evidence store (IndexedDB intrilex-experiment-lab); excluded runs are retained, never deleted.',
+  });
+}
+
+// ── Companion-artifact manifest ────────────────────────────────────────
+// The dossier is a synthesis layer: it says WHAT richer evidence exists and
+// where it lives — it does not contain run envelopes, replay bodies or
+// per-decision strategy traces. available:true means companion artifacts of
+// that type exist and are enumerable; available:false + reason distinguishes
+// "none recorded" from "store unreachable".
+function companionArtifacts({ lab, labSection, experiment, dataset }) {
+  const labReachable = lab != null && lab.available !== false;
+  const strategySources = labSection.strategy?.available ? (labSection.strategy.sources ?? []) : [];
+  const replayIds = [
+    ...new Set([
+      ...(labSection.runs ?? []).flatMap(r => r.replayRetention?.replayIds ?? []),
+      ...(dataset.retainedReplayRefs ?? []).map(r => r.matchId).filter(Boolean),
+    ].filter(Boolean)),
+  ].sort();
+  return {
+    strategy: !labSection.strategy?.available
+      ? unavailable(labSection.strategy?.reason ?? 'Strategy evidence store not accessible.')
+      : strategySources.length === 0
+        ? unavailable('Strategy evidence store reachable — no evidence sources recorded.', { decisionEventCount: 0 })
+        : available({
+          authoritativeArtifact: 'Strategy export bundle (Strategy workspace) — authoritative for decision-level evidence',
+          sourceCount: labSection.strategy.sourceCount,
+          decisionEventCount: labSection.strategy.decisionEventTotal ?? 0,
+          retainedDecisionEventCount: labSection.strategy.retainedEventTotal ?? 0,
+          artifactIds: strategySources.map(s => s.artifactId).filter(Boolean).sort(),
+          cohorts: [...new Set(strategySources.map(s => `${s.fingerprint ?? '?'}/${s.rulesProfile ?? '?'}/${s.eraId ?? '?'}`))].sort(),
+          origins: labSection.strategy.origins ?? {}, fidelities: labSection.strategy.fidelities ?? {},
+          storeCounts: labSection.strategy.storeCounts ?? null,
+        }),
+    runs: (labSection.runs ?? []).length
+      ? available({
+        authoritativeArtifact: 'Evolution run envelopes (Evolution Lab → Runs & artifacts)',
+        runCount: labSection.runs.length,
+        runIds: labSection.runs.map(r => r.runId).filter(Boolean).sort(),
+        historicalRunIds: labSection.runs.filter(r => r.historical === true).map(r => r.runId).filter(Boolean).sort(),
+      })
+      : unavailable(labReachable ? 'No persisted lab runs recorded.' : 'Evolution Lab store not supplied or unreachable.'),
+    experimentRuns: !experiment?.available
+      ? unavailable(experiment?.reason ?? 'Experiment evidence store not accessible.')
+      : (experiment.totalRuns ?? 0) === 0
+        ? unavailable('Experiment store reachable — no session runs recorded.')
+        : available({
+          authoritativeArtifact: 'Experiment evidence store (IndexedDB intrilex-experiment-lab) — run records, analysis-set membership, per-run payloads',
+          experimentId: experiment.experimentId ?? null,
+          analysisSetId: experiment.analysisSetId ?? null,
+          persisted: experiment.persisted === true,
+          runCount: experiment.totalRuns ?? 0,
+          runIds: (experiment.runs ?? []).map(r => r.runId).filter(Boolean).sort(),
+          includedRunIds: experiment.includedRunIds ?? [],
+          excludedRunCount: experiment.excludedRunCount ?? 0,
+        }),
+    batchMatrices: (labSection.batchMatrices ?? []).length
+      ? available({ matrixIds: labSection.batchMatrices.map(m => m.matrixId).filter(Boolean).sort(), matrixCount: labSection.batchMatrices.length })
+      : unavailable('No batch matrix artifacts recorded.'),
+    researchProjects: (labSection.researchProjects ?? []).length
+      ? available({ experimentIds: labSection.researchProjects.map(p => p.experimentId).filter(Boolean).sort(), projectCount: labSection.researchProjects.length })
+      : unavailable('No research project envelopes recorded.'),
+    ruleMutations: (labSection.ruleMutations ?? []).length
+      ? available({ experimentIds: labSection.ruleMutations.map(m => m.experimentId).filter(Boolean).sort(), experimentCount: labSection.ruleMutations.length })
+      : unavailable('No rule-mutation experiment envelopes recorded.'),
+    replays: replayIds.length
+      ? available({
+        retainedReplayCount: replayIds.length,
+        refs: replayIds,
+        observatoryRetainedCount: (dataset.retainedReplayRefs ?? []).length,
+        authoritativeArtifact: 'Replay bodies live in the certified replay index, the lab replay index, and Evolution run envelopes.',
+      })
+      : unavailable('No retained replay references in this dossier.'),
+  };
+}
+
+// ── Export-overlay Evidence Status ─────────────────────────────────────
+// Derives the compact status the sidebar export hub displays. Takes the same
+// collected inputs as the dossier (observatory + experiments + strategy
+// sources + persisted lab run count) so the panel can never disagree with
+// the exported document. Pure — tested in Node.
+export function deriveEvidenceStatus({ observatory = null, experiments = null, strategySources = null, strategyReachable = false, labRunCount = 0, liveRunStrategicTrace = false, labFingerprint = null } = {}) {
+  const origin = observatory?.datasetOrigin ?? 'CERTIFIED_CORPUS';
+  const experimentLinked = origin === 'EXPERIMENT_RUNS';
+  const expAvailable = experiments?.available === true;
+  const sourceLabel = experimentLinked
+    ? `Experiment · ${experiments?.experimentId ?? 'unknown'}`
+    : origin === 'EVOLUTION_LAB' ? 'Evolution Lab dataset' : 'Certified Corpus';
+  const matches = observatory?.summaryCount ?? observatory?.summaries?.length ?? null;
+
+  const warnings = [];
+  if (experimentLinked && (!expAvailable || (experiments.includedRunCount ?? 0) === 0)) {
+    warnings.push(`⚠ Selected Experiment ${experiments?.experimentId ?? ''} is not included — run inclusion cannot be verified.`.trim());
+  } else if (origin === 'CERTIFIED_CORPUS' && expAvailable && (experiments.totalRuns ?? 0) > 0) {
+    warnings.push(`⚠ ${experiments.totalRuns} experiment run(s) recorded but none contribute — this dossier covers the certified corpus.`);
+  }
+
+  let deepTracking;
+  if (!strategyReachable) deepTracking = { state: 'unavailable', decisionEvents: null, retainedEvents: null, sourceCount: null };
+  else if (!strategySources?.length) {
+    deepTracking = liveRunStrategicTrace === true
+      ? { state: 'enabled-no-evidence', decisionEvents: 0, retainedEvents: 0, sourceCount: 0 }
+      : { state: 'none', decisionEvents: 0, retainedEvents: 0, sourceCount: 0 };
+  } else {
+    const decisionEvents = strategySources.reduce((n, s) => n + (s.eventCount ?? 0), 0);
+    const retainedEvents = strategySources.reduce((n, s) => n + (s.retainedEvents ?? 0), 0);
+    const origins = [...new Set(strategySources.map(s => s.origin ?? 'UNKNOWN'))].sort();
+    const fingerprints = [...new Set(strategySources.map(s => s.fingerprint ?? null))];
+    let state_ = 'persisted';
+    if (origins.every(o => o === 'IMPORTED_UNVERIFIED')) state_ = 'imported-unverified';
+    else if (labFingerprint && fingerprints.every(f => f !== null && f !== labFingerprint)) state_ = 'historical-only';
+    if (state_ === 'historical-only') warnings.push('⚠ Strategy evidence exists, but only for a different research fingerprint.');
+    deepTracking = { state: state_, decisionEvents, retainedEvents, sourceCount: strategySources.length, origins };
+  }
+
+  const labRuns = experimentLinked
+    ? { count: experiments?.includedRunCount ?? 0, label: `${experiments?.includedRunCount ?? 0} attached` }
+    : { count: labRunCount, label: `${labRunCount} recorded` };
+
+  return {
+    origin, sourceLabel, matches,
+    detailedMatches: observatory?.detailedMatchCount ?? null,
+    deepTracking, labRuns, warnings,
+    experiment: expAvailable ? {
+      experimentId: experiments.experimentId ?? null,
+      included: experimentLinked && (experiments.includedRunCount ?? 0) > 0,
+      includedRunCount: experiments.includedRunCount ?? 0,
+      totalRuns: experiments.totalRuns ?? 0,
+      persisted: experiments.persisted === true,
+    } : null,
+  };
+}
+
 /**
  * Build the canonical Analysis Dossier.
  * @param {object} input — see docs/ANALYSIS_DOSSIER.md for the full contract.
@@ -601,7 +816,7 @@ export function buildAnalysisDossier(input = {}, options = {}) {
     observatory = null, aggregate = null, corpusAnalytics = null,
     capabilities = null, rankAuthority = null, rankAnatomyRegistry = null,
     replayIndex = null, autonomyIndex = null,
-    versions = {}, analysisExtract = null, lab = null,
+    versions = {}, analysisExtract = null, lab = null, experiments = null,
   } = input;
   const generatedAt = options.generatedAt ?? new Date().toISOString();
 
@@ -609,13 +824,16 @@ export function buildAnalysisDossier(input = {}, options = {}) {
   if (sections.ranks?.available) sections.ranks.rankAuthority = rankAuthority ? { ranks: rankAuthority.ranks ?? rankAuthority, authorityHash: rankAuthority.authorityHash ?? null } : null;
   if (rankAnatomyRegistry) sections.ranks = { ...(sections.ranks.available ? sections.ranks : available({})), available: true, rankAnatomyRegistry };
   const labSection = labSections(lab);
+  const datasetOrigin = observatory?.datasetOrigin ?? 'CERTIFIED_CORPUS';
+  const experiment = experimentSection(experiments, datasetOrigin);
 
   const unavailableDomains = [];
   for (const [domain, section] of Object.entries({
     observatory: sections.observatory, policies: sections.policies, mechanics: sections.mechanics,
     synergies: sections.synergies.available === false ? sections.synergies : null,
     ranks: sections.ranks, variants: sections.variants, pairedAnalysis: sections.pairedAnalysis,
-    choiceAnalysis: sections.choiceAnalysis, arena: labSection.arena, strategy: labSection.strategy,
+    choiceAnalysis: sections.choiceAnalysis, combo: sections.combo, arena: labSection.arena, strategy: labSection.strategy,
+    experiment,
     aggregate: aggregate ? null : unavailable('No campaign aggregate loaded'),
     corpusAnalytics: corpusAnalytics ? null : unavailable('Corpus analytics not loaded'),
     capabilities: capabilities ? null : unavailable('Capability manifest not loaded'),
@@ -655,6 +873,15 @@ export function buildAnalysisDossier(input = {}, options = {}) {
       mutationExperimentUnreadable: labSection.ruleMutations.filter(m => m.unavailable === true).length,
       strategySourceCount: labSection.strategy.available ? labSection.strategy.sourceCount : null,
     },
+    experiment: experiment.available ? {
+      experimentId: experiment.experimentId,
+      analysisSetId: experiment.analysisSetId,
+      runCount: experiment.totalRuns,
+      includedRunCount: experiment.includedRunCount,
+      includedGames: experiment.includedGames,
+      excludedRunCount: experiment.excludedRunCount,
+      persisted: experiment.persisted,
+    } : null,
   };
 
   const findings = collectFindings({ observatory, extract: analysisExtract });
@@ -690,11 +917,23 @@ export function buildAnalysisDossier(input = {}, options = {}) {
       engineHash: labSection.labIdentity?.engineHash ?? null,
     },
     scope: {
-      datasetOrigin: observatory?.datasetOrigin ?? 'CERTIFIED_CORPUS',
+      datasetOrigin,
       authorityProfileId: observatory?.profileId ?? aggregate?.profileId ?? null,
       experimentHash: aggregate?.experimentHash ?? null,
       canonicalResultHash: aggregate?.canonicalResultHash ?? null,
       arenaFilters: labSection.liveState?.analyticsFilters ?? null,
+      experiment: {
+        available: experiment.available === true,
+        experimentId: experiment.experimentId ?? null,
+        analysisSetId: experiment.analysisSetId ?? null,
+        selectedExperimentIncluded: experiment.selectedExperimentIncluded ?? null,
+        exclusionReason: experiment.exclusionReason ?? null,
+        includedRunIds: experiment.includedRunIds ?? [],
+        includedRunCount: experiment.includedRunCount ?? 0,
+        includedGames: experiment.includedGames ?? 0,
+        excludedRunCount: experiment.excludedRunCount ?? 0,
+        totalRuns: experiment.totalRuns ?? 0,
+      },
       labScope: {
         runIds: labSection.runs.map(r => r.runId), matrixIds: labSection.batchMatrices.map(m => m.matrixId),
         experimentIds: labSection.researchProjects.map(p => p.experimentId),
@@ -717,17 +956,25 @@ export function buildAnalysisDossier(input = {}, options = {}) {
         matrices: labSection.batchMatrices.map(m => ({ matrixId: m.matrixId, contentHash: m.contentHash ?? null, status: m.status })),
         research: labSection.researchProjects.map(p => ({ experimentId: p.experimentId, contentHash: p.contentHash, status: p.status })),
         mutations: labSection.ruleMutations.map(m => ({ experimentId: m.experimentId, contentHash: m.artifactContentHash, status: m.status, evidenceOrigin: m.evidenceOrigin ?? null })),
+        experiment: experiment.available ? {
+          experimentId: experiment.experimentId, analysisSetId: experiment.analysisSetId,
+          runIds: (experiment.runs ?? []).map(r => r.runId), includedRunIds: experiment.includedRunIds,
+          runHashes: (experiment.runs ?? []).map(r => r.runHash).filter(Boolean),
+        } : null,
       },
       collectionNotes: Array.isArray(lab?.collectionNotes) ? lab.collectionNotes : [],
       generator: 'lab-web analysis-dossier', dossierSchemaVersion: DOSSIER_VERSION,
     },
-    executiveSummary: buildExecutiveSummary({ observatory, aggregate, dataset, sections, labSection }),
+    executiveSummary: buildExecutiveSummary({ observatory, aggregate, dataset, sections, labSection, experiment }),
     dataset,
+    experiment,
+    companionArtifacts: companionArtifacts({ lab, labSection, experiment, dataset }),
     observatory: sections.observatory,
     integrity: sections.integrity,
     policies: sections.policies, mechanics: sections.mechanics, synergies: sections.synergies,
     motifs: sections.motifs, ranks: sections.ranks, variants: sections.variants,
     pairedAnalysis: sections.pairedAnalysis, choiceAnalysis: sections.choiceAnalysis,
+    combo: sections.combo,
     anomalies: sections.anomalies,
     strategy: labSection.strategy,
     arena: labSection.arena,
@@ -736,7 +983,7 @@ export function buildAnalysisDossier(input = {}, options = {}) {
     findings,
     uncertainties: collectUncertainties(observatory, labSection),
     recommendations: collectRecommendations(analysisExtract, observatory, labSection),
-    openQuestions: deriveOpenQuestions({ observatory, labSection, integrity: sections.integrity }),
+    openQuestions: deriveOpenQuestions({ observatory, labSection, integrity: sections.integrity, experiment }),
     evidenceGaps: deriveEvidenceGaps({ observatory, labSection }),
     interpretationBoundaries: [...new Set(interpretationBoundaries)],
     unavailable: unavailableDomains,
@@ -754,11 +1001,18 @@ function dossierBody(dossier) {
   return body;
 }
 
-function buildExecutiveSummary({ observatory, aggregate, dataset, sections: _sections, labSection }) {
+function buildExecutiveSummary({ observatory, aggregate, dataset, sections: _sections, labSection, experiment }) {
   const lines = [];
   if (observatory) {
     lines.push(`Observatory dataset: ${dataset.observatorySummaries ?? 'unknown'} match summaries under authority profile "${observatory.profileId ?? aggregate?.profileId ?? 'unknown'}" (rules ${observatory.rulesVersion ?? aggregate?.rulesVersion ?? '?'}, engine ${observatory.engineVersion ?? aggregate?.engineVersion ?? '?'}, epoch ${observatory.evidenceEpoch ?? '?'}${observatory.postRulesParityRepair ? ', post-parity-repair' : ''}).`);
-    if (observatory.datasetOrigin === 'EVOLUTION_LAB') lines.push('Dataset origin: EVOLUTION_LAB propagated lab games — not the certified corpus; telemetry coverage may be partial.');
+    if (observatory.datasetOrigin === 'EXPERIMENT_RUNS') {
+      lines.push(`Dataset origin: EXPERIMENT_RUNS — analytics describe experiment ${experiment?.experimentId ?? '(unknown)'} analysis set ${experiment?.analysisSetId ?? '(unknown)'}: ${experiment?.includedRunCount ?? 0} contributing run(s), ${experiment?.includedGames ?? 0} games, ${experiment?.excludedRunCount ?? 0} recorded run(s) excluded; telemetry coverage may differ from the certified corpus.`);
+    } else if (observatory.datasetOrigin === 'EVOLUTION_LAB') {
+      lines.push('Dataset origin: EVOLUTION_LAB propagated lab games — not the certified corpus; telemetry coverage may be partial.');
+    }
+    if (experiment?.available === true && experiment.selectedExperimentIncluded === false && (experiment.totalRuns ?? 0) > 0) {
+      lines.push(`Experiment scope: ${experiment.totalRuns} run(s) recorded under ${experiment.experimentId ?? 'the experiment'} but none contribute to this dataset — ${experiment.exclusionReason ?? 'reason not recorded'}`);
+    }
     if (aggregate) lines.push(`Campaign aggregate: ${aggregate.matchCount ?? '?'} matches, ${aggregate.completedMatchCount ?? '?'} completed, ${aggregate.abortCount ?? 0} aborts, ${aggregate.drawCount ?? 0} draws; seat-1 win rate ${pctText(aggregate.seat1WinRate)} (Wilson95 ${formatInterval(aggregate.seat1Wilson95)}).`);
     lines.push(`${observatory.mechanics?.length ?? 0} mechanic entities tracked (${observatory.reconciliation?.registered ?? '?'} registry-registered), ${observatory.synergies?.length ?? 0} modelled synergies, ${observatory.policies?.length ?? 0} policies, ${observatory.anomalies?.length ?? 0} anomalies, completeness ${observatory.completeness?.status ?? 'UNKNOWN'}.`);
     const qualified = observatory.rankPower?.balanceQualification;
@@ -839,12 +1093,37 @@ export function renderAnalysisDossierMarkdown(dossier) {
     ['Authority profile', id.authorityProfile], ['Authority hash', id.authorityHash], ['Release identity hash', id.releaseIdentityHash],
     ['Capability hash', id.capabilityHash], ['Lab fingerprint', id.labFingerprint],
   ]));
-  out.push(`**Scope.** Dataset origin \`${scope.datasetOrigin ?? 'unknown'}\` · experiment \`${scope.experimentHash ?? 'none'}\` · canonical result \`${scope.canonicalResultHash ?? 'none'}\` · lab runs [${(scope.labScope?.runIds ?? []).join(', ') || 'none'}] · matrices [${(scope.labScope?.matrixIds ?? []).join(', ') || 'none'}] · research [${(scope.labScope?.experimentIds ?? []).join(', ') || 'none'}]\n`);
+  out.push(`## Evidence Scope\n`);
+  const expScope = scope.experiment ?? {};
+  const scopeRows = [
+    ['Dataset origin', scope.datasetOrigin ?? 'unknown'],
+    ['Authority profile', scope.authorityProfileId ?? 'unknown'],
+    ['Experiment hash', scope.experimentHash ?? 'none'],
+    ['Canonical result', scope.canonicalResultHash ?? 'none'],
+    ['Lab runs', (scope.labScope?.runIds ?? []).join(', ') || 'none'],
+    ['Matrices', (scope.labScope?.matrixIds ?? []).join(', ') || 'none'],
+    ['Research', (scope.labScope?.experimentIds ?? []).join(', ') || 'none'],
+    ['Rule mutations', (scope.labScope?.mutationExperimentIds ?? []).join(', ') || 'none'],
+  ];
+  if (expScope.available === true) {
+    scopeRows.push(
+      ['Experiment', `${expScope.experimentId ?? 'unknown'} · analysis set ${expScope.analysisSetId ?? 'unknown'}`],
+      ['Experiment included', expScope.selectedExperimentIncluded === true ? 'yes' : `no${expScope.exclusionReason ? ` — ${expScope.exclusionReason}` : ''}`],
+      ['Contributing runs', `${expScope.includedRunCount ?? 0} (${(expScope.includedRunIds ?? []).join(', ') || 'none'}) · ${expScope.includedGames ?? 0} games`],
+      ['Recorded runs', `${expScope.totalRuns ?? 0} total · ${expScope.excludedRunCount ?? 0} excluded`],
+    );
+  } else {
+    scopeRows.push(['Experiment', `unavailable — ${dossier.experiment?.reason ?? 'not supplied'}`]);
+  }
+  out.push(mdTable(['Field', 'Value'], scopeRows));
+  if (dossier.experiment?.available === true && dossier.experiment.warnings?.length) {
+    out.push(`Experiment compatibility warnings: ${dossier.experiment.warnings.length} run(s) differ from the contributing baseline — see JSON \`experiment.runs\` for per-run diffs.\n`);
+  }
 
   out.push(`## Evidence Coverage\n`);
   out.push(mdTable(['Source', 'Count', 'Hash / provenance'], [
     ['Observatory summaries', ds.observatorySummaries, prov.observatoryHash?.slice(0, 16)],
-    ['Detailed matches', ds.detailedMatches, ''],
+    ['Detailed matches', ds.detailedMatches ?? 'unavailable (not collected)', ''],
     ['Retained replays', ds.retainedReplayCount ?? '—', ''],
     ['Campaign aggregate', ds.aggregate?.matchCount, prov.aggregateHash?.slice(0, 16)],
     ['Corpus replays', ds.corpus?.replayCount, ds.corpus?.aggregateHash?.slice(0, 16)],
@@ -856,13 +1135,28 @@ export function renderAnalysisDossierMarkdown(dossier) {
     ['Strategy sources', ds.lab?.strategySourceCount, ''],
   ]));
 
+  out.push(`## Companion Evidence\n`);
+  out.push(`_Richer evidence that exists outside this dossier — the dossier is a synthesis layer; the listed artifacts remain authoritative._\n`);
+  const companions = dossier.companionArtifacts ?? {};
+  const caRows = [
+    ['Strategy decision evidence', companions.strategy?.available === true ? `${companions.strategy.sourceCount} source(s), ${companions.strategy.decisionEventCount} decision events (${companions.strategy.retainedDecisionEventCount} retained)` : `unavailable — ${companions.strategy?.reason ?? 'not supplied'}`, companions.strategy?.authoritativeArtifact ?? ''],
+    ['Lab run envelopes', companions.runs?.available === true ? `${companions.runs.runCount} run(s): ${(companions.runs.runIds ?? []).join(', ')}` : `unavailable — ${companions.runs?.reason ?? 'not supplied'}`, companions.runs?.authoritativeArtifact ?? ''],
+    ['Experiment run records', companions.experimentRuns?.available === true ? `${companions.experimentRuns.runCount} run(s) under ${companions.experimentRuns.experimentId ?? '?'} (${(companions.experimentRuns.includedRunIds ?? []).length} contributing)${companions.experimentRuns.persisted === false ? ' · session-only' : ''}` : `unavailable — ${companions.experimentRuns?.reason ?? 'not supplied'}`, companions.experimentRuns?.authoritativeArtifact ?? ''],
+    ['Retained replays', companions.replays?.available === true ? `${companions.replays.retainedReplayCount} ref(s)` : `unavailable — ${companions.replays?.reason ?? 'none'}`, companions.replays?.authoritativeArtifact ?? ''],
+    ['Batch matrices', companions.batchMatrices?.available === true ? `${companions.batchMatrices.matrixCount}: ${(companions.batchMatrices.matrixIds ?? []).join(', ')}` : 'none', ''],
+    ['Research projects', companions.researchProjects?.available === true ? `${companions.researchProjects.projectCount}: ${(companions.researchProjects.experimentIds ?? []).join(', ')}` : 'none', ''],
+    ['Rule mutations', companions.ruleMutations?.available === true ? `${companions.ruleMutations.experimentCount}: ${(companions.ruleMutations.experimentIds ?? []).join(', ')}` : 'none', ''],
+  ];
+  out.push(mdTable(['Domain', 'Companion evidence', 'Authoritative artifact'], caRows));
+
   out.push(`## Integrity & Completeness\n`);
   const ig = dossier.integrity;
   if (!ig?.completeness && !ig?.reconciliation) out.push('_Unavailable — Observatory analytics not loaded._\n');
   else {
     out.push(`- Completeness: **${ig.completeness?.status ?? 'UNKNOWN'}** (${ig.completeness?.unclassifiedCount ?? '?'} unclassified, tolerance ${ig.completeness?.tolerance ?? '?'})`);
-    out.push(`- Reconciliation: invariant ${ig.reconciliation?.invariantHolds === true ? 'HOLDS' : ig.reconciliation?.invariantHolds === false ? 'VIOLATED' : 'unknown'} · ${ig.reconciliation?.unregisteredTags ?? '?'} unregistered telemetry tag(s)`);
-    out.push(`- Quarantine ledger: ${(ig.quarantineLedger ?? []).length} tag(s) quarantined`);
+    out.push(`- Reconciliation: invariant ${ig.reconciliation?.invariantHolds === true ? 'HOLDS' : ig.reconciliation?.invariantHolds === false ? 'VIOLATED' : 'unknown'} · ${ig.reconciliation?.unregisteredTags ?? '?'} unregistered telemetry tag(s) on tracked entities`);
+    const q = ig.quarantine ?? {};
+    out.push(`- Quarantine: ${q.unregisteredTags ?? (ig.quarantineLedger ?? []).length} unregistered tag(s) → ${q.quarantinedEntities ?? '?'} quarantined entit(ies)${(q.discoveryExemptUnregistered ?? 0) > 0 ? ` + ${q.discoveryExemptUnregistered} unregistered tag(s) on discovery-exempt entit(ies) (ledger-only, not quarantined)` : ''}`);
     out.push(`- Opportunity telemetry: ${ig.hasOpportunityTelemetry === true ? 'present' : ig.hasOpportunityTelemetry === false ? 'ABSENT' : 'unknown'} · legacy schema: ${ig.legacySchema === true ? 'yes' : ig.legacySchema === false ? 'no' : 'unknown'}`);
     if (ig.campaignHealth) {
       const h = ig.campaignHealth;
@@ -919,6 +1213,38 @@ export function renderAnalysisDossierMarkdown(dossier) {
     if (items.length > 40) out.push(`_${items.length - 40} additional mechanics in the JSON export._\n`);
   }
 
+  out.push(`## Combo Atlas\n`);
+  const cb = mdSectionStatus(dossier.combo);
+  if (cb) out.push(cb); else {
+    const c = dossier.combo, t = c.totals ?? {}, cov = c.coverage ?? {};
+    out.push(`Canonical Combo (§8) analytics — lifecycle coverage **${cov.lifecycleStatus ?? 'unknown'}** (${cov.lifecycleCoveredMatches ?? '?'}/${cov.matches ?? '?'} matches); broken-by-4♥ is ${cov.brokenStatus ?? 'unknown'}${cov.brokenReason ? ` — ${cov.brokenReason}` : ''}.\n`);
+    out.push(mdTable(['Metric', 'Value'], [
+      ['Legal opportunities', t.opportunities], ['Declarations', t.declarations],
+      ['Pick rate', pctText(t.pickRate)], ['Resolved', t.resolved], ['Countered', t.countered],
+      ['Fizzled', t.fizzled], ['Broken (4♥)', cov.brokenStatus === 'unavailable' ? 'n/a' : t.broken],
+      ['Resolve rate', pctText(t.resolveRate)], ['Games with ≥1 Combo', t.gamesWithCombo],
+      ['Combos per game', numText(t.combosPerGame)], ['Raw win assoc', numText(t.rawWinAssociation)],
+      ['Adj. win assoc', numText(t.adjustedWinAssociation)],
+    ]));
+    const recipes = c.recipes ?? [];
+    if (recipes.length) {
+      out.push(`### Recipes\n`);
+      out.push(mdTable(['Recipe', 'Uses', 'Opportunities', 'Pick%', 'Resolve%', 'Adj. assoc', 'Grade'], recipes.slice(0, 30).map(r => [
+        r.label ?? r.recipeId, r.uses, r.opportunities, pctText(r.pickRate), pctText(r.resolveRate), numText(r.adjustedAssociation), r.evidenceGrade ?? '—',
+      ])));
+      if (recipes.length > 30) out.push(`_${recipes.length - 30} additional recipes in the JSON export._\n`);
+    }
+    const policies = c.policies ?? [];
+    if (policies.length) {
+      out.push(`### Combo propensity by policy\n`);
+      out.push(mdTable(['Policy', 'Opportunities', 'Declared', 'Propensity', 'Resolve%', 'Win%'], policies.map(p => [
+        p.policyId, p.opportunities, p.declarations, pctText(p.comboPropensity), pctText(p.resolveRate), pctText(p.winRate),
+      ])));
+    }
+    for (const lim of c.limitations ?? []) out.push(`- _${lim}_`);
+    out.push('');
+  }
+
   out.push(`## Synergies & Anti-Synergies\n`);
   const sy = mdSectionStatus(dossier.synergies);
   if (sy) out.push(sy); else {
@@ -952,8 +1278,8 @@ export function renderAnalysisDossierMarkdown(dossier) {
   }
 
   out.push(`## Choice Analysis\n`);
-  const ca = mdSectionStatus(dossier.choiceAnalysis);
-  if (ca) out.push(ca); else {
+  const choiceStatus = mdSectionStatus(dossier.choiceAnalysis);
+  if (choiceStatus) out.push(choiceStatus); else {
     const c = dossier.choiceAnalysis.coverage ?? {};
     out.push(`Coverage: ${c.decisionsUsable ?? '?'}/${c.decisionsSeen ?? '?'} usable decision frames (${c.multiOptionDecisions ?? '?'} multi-option). ${dossier.choiceAnalysis.contextCount ?? 0} contexts, ${Object.keys(dossier.choiceAnalysis.entities ?? {}).length} entities.\n`);
     if (dossier.choiceAnalysis.contractNote) out.push(`> ${dossier.choiceAnalysis.contractNote}\n`);

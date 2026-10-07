@@ -2,16 +2,18 @@
 // Scans accumulated Lab evidence for testable anomalies, forms falsifiable
 // hypotheses, runs targeted mirrored series, attempts falsification,
 // replicates survivors, and promotes only gated results. Zero discoveries
-// is a valid, successful outcome — never an error state.
+// after a real evidence scan is a valid, successful outcome — never an
+// error state. A run that received zero admissible evidence is BLOCKED,
+// an input failure distinct from any scientific outcome.
 //
 // Scientific logic lives entirely in the runtime modules
 // (evolution/discovery-*.mjs). This workspace renders state and forwards
 // intents — it never judges evidence itself.
 
-import { app, esc, fmt } from '../state.js';
+import { app, esc, fmt, state } from '../state.js';
 import { LAB_IDENTITY } from '../evolution/identity.mjs';
 import { EvolutionStore } from '../evolution/evolution-store.mjs';
-import { executeDiscoveryRun, prepareDiscoveryRun } from '../evolution/discovery-runner.mjs';
+import { executeDiscoveryRun, prepareDiscoveryRun, resolveEvidenceScope } from '../evolution/discovery-runner.mjs';
 import { DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary } from '../evolution/discovery-domain.mjs';
 
 const store = new EvolutionStore(LAB_IDENTITY);
@@ -45,6 +47,9 @@ const view = {
   error: '',
   storageError: '',
   mounted: false,
+  // Pre-run evidence resolution — what a new run would actually scan.
+  // 'idle' means the store has not been inspected yet on this mount.
+  evidence: { status: 'idle', scope: null, error: '' },
 };
 
 let controller = null;
@@ -69,15 +74,18 @@ export function renderDiscover() {
       <p>Autonomous research — anomaly scan → falsifiable hypotheses → targeted experiments → falsification → replication → gated promotion.</p></div>
       <div class="toolbar">
         <span class="evo-state dsc-state-${esc((run?.status ?? 'idle').toLowerCase())}" data-testid="dsc-state">${esc(view.running ? 'RUNNING' : run?.status ?? 'CONFIGURED')}</span>
-        <button id="dsc-start" class="primary-button" data-testid="dsc-start" ${view.running || run?.status === 'PAUSED' ? 'disabled' : ''}>Start Run</button>
+        <button id="dsc-start" class="primary-button" data-testid="dsc-start" ${view.running || run?.status === 'PAUSED' || (view.evidence.status === 'ready' && view.evidence.scope?.eligibleGameCount === 0) ? 'disabled' : ''}>Start Run</button>
         <button id="dsc-resume" class="secondary-button" data-testid="dsc-resume" ${!view.running && run?.status === 'PAUSED' ? '' : 'disabled'}>Resume</button>
         <button id="dsc-pause" class="secondary-button" data-testid="dsc-pause" ${view.running ? '' : 'disabled'}>Pause</button>
+        <button id="dsc-new" class="secondary-button" data-testid="dsc-new" ${view.running ? 'disabled' : ''}>New Discovery</button>
+        <button id="dsc-evidence-refresh" class="ghost-button" data-testid="dsc-evidence-refresh" ${view.running ? 'disabled' : ''} title="Re-resolve stored Lab evidence">↻ Evidence</button>
       </div></div>
     <div class="panel-body">
       <div class="notice"><b>Finding ≠ Discovery.</b> Candidates are only signals — a Discovery requires controlled fresh evidence, seat-mirroring where relevant, independent-seed replication, challenge stages, and every promotion gate. A run that ends with <b>zero discoveries</b> is a successful result. Effect claims are reproducible associations inside deterministic self-play simulation, not causal proofs.</div>
       <p id="dsc-error" class="danger" role="alert">${esc(view.error)}</p>
       ${view.storageError ? `<div class="notice warning">Storage: ${esc(view.storageError)}</div>` : ''}
       ${configHtml(run)}
+      ${evidenceHtml()}
       ${run ? runHtml(run) : ''}
       ${queueHtml(run)}
       ${journalHtml(run)}
@@ -88,6 +96,7 @@ export function renderDiscover() {
     </div></section>`;
   bind();
   refreshLists();
+  if (!view.running && view.evidence.status === 'idle') void refreshEvidence();
 }
 
 function configHtml(run) {
@@ -105,6 +114,87 @@ function configHtml(run) {
   </section>`;
 }
 
+/** Render a per-reason exclusion ledger line. Reason codes come from the
+ * snapshot (EVIDENCE_EXCLUSION); unknown codes degrade to lowercase text. */
+function exclusionText(reasons) {
+  return Object.entries(reasons ?? {})
+    .map(([k, v]) => `${fmt(v)}× ${String(k).toLowerCase().replaceAll('_', ' ')}`)
+    .join(' · ');
+}
+
+/** What a run started right now would scan — resolved against the Lab
+ * series store before launch so an empty scope is visible up front,
+ * never discovered as a zero-game run after the fact. */
+function evidenceHtml() {
+  if (view.running) return '';
+  const ev = view.evidence;
+  const corpus = state.aggregate?.matchCount;
+  const corpusNote = typeof corpus === 'number' && corpus > 0
+    ? `The COHORT strip above reports ${fmt(corpus)} certified corpus matches — match-evidence summaries (M-*/PR-* identifiers). DISCOVER does not scan those: it investigates stored Lab series run artifacts (EL-*) produced by this origin.`
+    : 'DISCOVER scans stored Lab series run artifacts on this origin — it does not consume the certified corpus cohort shown in the strip.';
+  let body;
+  if (ev.status === 'idle' || ev.status === 'loading') {
+    body = '<p class="footer-note">Resolving stored Lab evidence…</p>';
+  } else if (ev.status === 'error') {
+    body = `<p class="footer-note warning">Evidence store could not be inspected: ${esc(ev.error || 'unknown error')}</p>`;
+  } else {
+    const s = ev.scope;
+    const reasons = exclusionText(s.exclusionReasons);
+    const trunc = s.truncatedRunCount ? ` · ${fmt(s.truncatedRunCount)} stored run(s) beyond the scan cap` : '';
+    body = `<div class="dsc-run-grid">
+      <span><small>Stored runs</small><b>${fmt(s.historyRunCount)}</b></span>
+      <span><small>Selected</small><b>${fmt(s.selectedGameCount)} games · ${fmt(s.selectedRunCount)} runs</b></span>
+      <span><small>Admissible</small><b>${fmt(s.eligibleGameCount)} games · ${fmt(s.eligibleRunCount)} runs</b></span>
+      <span><small>Excluded</small><b>${fmt(s.excludedRunCount)} runs</b></span>
+    </div>
+    ${(reasons || trunc) ? `<p class="footer-note warning">Exclusions: ${esc(reasons || 'none')}${esc(trunc)}</p>` : ''}
+    ${s.eligibleGameCount === 0 ? '<p class="footer-note warning"><b>No admissible evidence.</b> A run started now would block before research — run a Lab series on this origin first, then refresh.</p>' : ''}`;
+  }
+  return `<section class="evo-section" data-testid="dsc-evidence"><h3>Evidence Resolution</h3>
+    ${body}
+    <p class="footer-note">${esc(corpusNote)}</p>
+  </section>`;
+}
+
+async function refreshEvidence() {
+  if (view.running) return;
+  view.evidence = { status: 'loading', scope: view.evidence.scope, error: '' };
+  patchEvidence();
+  try {
+    const scope = await resolveEvidenceScope(store, {}, LAB_IDENTITY);
+    if (!view.mounted || view.running) return;
+    view.evidence = { status: 'ready', scope, error: '' };
+  } catch (error) {
+    if (!view.mounted || view.running) return;
+    view.evidence = { status: 'error', scope: null, error: String(error?.message ?? error) };
+  }
+  patchEvidence();
+}
+
+function patchEvidence() {
+  const el = document.querySelector('[data-testid="dsc-evidence"]');
+  if (el) el.outerHTML = evidenceHtml();
+  const start = document.getElementById('dsc-start');
+  if (start && !view.running) {
+    start.disabled = view.run?.status === 'PAUSED'
+      || (view.evidence.status === 'ready' && view.evidence.scope?.eligibleGameCount === 0);
+  }
+}
+
+/** Reset the current Discovery session to a clean workspace. Only
+ * ephemeral current-run state is cleared — past run envelopes and the
+ * promoted Discovery Library are historical artifacts in IndexedDB and
+ * are never touched. A new run can be started immediately. */
+function resetDiscovery() {
+  if (view.running) return;
+  view.run = null;
+  view.inspectedDiscovery = null;
+  view.live = { completed: 0, total: 0, hypothesisId: null, stageKey: null };
+  view.error = '';
+  view.evidence = { status: 'idle', scope: null, error: '' };
+  renderDiscover();
+}
+
 function runHtml(run) {
   const live = view.live;
   const pctDone = live.total > 0 ? Math.min(100, Math.round((live.completed / live.total) * 100)) : 0;
@@ -119,7 +209,8 @@ function runHtml(run) {
       <span><small>Discoveries</small><b>${run.discoveries.length}</b></span>
       <span><small>Snapshot</small><b><code>${esc(String(run.evidence.snapshotId).slice(0, 18))}…</code></b></span>
     </div>
-    ${run.evidence.excludedCount ? `<p class="footer-note warning">${run.evidence.excludedCount} stored runs excluded — foreign fingerprint or unverified import (disclosed, never pooled).</p>` : ''}
+    ${run.evidence.excludedCount ? `<p class="footer-note warning">${fmt(run.evidence.excludedCount)} stored run(s) excluded — ${esc(exclusionText(run.evidence.exclusionReasons) || 'inadmissible')} (disclosed, never pooled).</p>` : ''}
+    ${run.status === 'BLOCKED' ? `<p class="footer-note warning"><b>Blocked before research:</b> ${esc((run.warnings ?? []).find((w) => w.code === 'EVIDENCE_RESOLUTION_FAILED')?.detail ?? 'no admissible evidence reached the scanner')}. 0 hypotheses were evaluated — this is an input failure, not a scientific result.</p>` : ''}
     ${run.warnings.length ? `<p class="footer-note warning">${run.warnings.map((w) => esc(`${w.code}${w.detail ? ` — ${w.detail}` : ''}`)).join(' · ')}</p>` : ''}
     ${view.running ? `<div class="evo-progress-track"><div class="evo-progress-fill" style="width:${pctDone}%"></div></div>
       <p role="status">${live.hypothesisId ? `Investigating <b>${esc(live.hypothesisId)}</b>${live.stageKey ? ` → ${esc(live.stageKey)}` : ''} · ` : ''}${fmt(live.completed)} / ${fmt(live.total)} stage games · ${fmt(run.budget.consumed + live.completed)} / ${fmt(run.budget.allocated)} budget consumed</p>` : ''}
@@ -169,8 +260,18 @@ function journalHtml(run) {
 }
 
 function summaryHtml(run) {
-  if (!run || !['COMPLETE', 'PAUSED', 'STOPPED', 'ERROR'].includes(run.status)) return '';
+  if (!run || !['COMPLETE', 'PAUSED', 'STOPPED', 'ERROR', 'BLOCKED'].includes(run.status)) return '';
   const s = discoveryRunSummary(run);
+  // Verdict wording is honest about what actually happened: an input
+  // failure (BLOCKED) evaluated no hypotheses; a scanned-but-quiet run
+  // produced no candidates; tested-and-rejected is a real negative result.
+  const zeroNote = run.status === 'BLOCKED'
+    ? '<p class="dsc-zero"><b>No hypotheses were evaluated — this run received no admissible evidence.</b> This is an input-resolution failure, not a scientific result.</p>'
+    : (s.promoted === 0 && s.conditional === 0 && run.status === 'COMPLETE'
+      ? (s.evaluated === 0
+        ? `<p class="dsc-zero"><b>Evidence was scanned successfully, but no candidate met the discovery thresholds.</b> ${fmt(run.evidence.gameCount)} games across ${run.evidence.runCount} run(s) were evaluated — a valid negative scan.${run.candidates.length ? ` ${run.candidates.length} candidate(s) surfaced but none could be shaped into an executable plan within the budget.` : ''}</p>`
+        : `<p class="dsc-zero"><b>No claim satisfied the promotion criteria.</b> ${s.evaluated} hypothesis(es) were tested and did not survive the evidence gates — a valid result.</p>`)
+      : '');
   return `<section class="evo-section" data-testid="dsc-summary"><h3>Run Summary</h3>
     <div class="dsc-run-grid">
       <span><small>Evaluated</small><b>${s.evaluated}</b></span>
@@ -180,9 +281,7 @@ function summaryHtml(run) {
       <span><small>Promoted</small><b>${s.promoted}</b></span>
       <span><small>Games used</small><b>${fmt(s.budget.consumed)}</b></span>
     </div>
-    ${s.promoted === 0 && s.conditional === 0 && run.status === 'COMPLETE'
-      ? `<p class="dsc-zero"><b>No claim satisfied the promotion criteria.</b> This is a valid result — hypotheses were tested and did not survive the evidence gates.</p>`
-      : ''}
+    ${zeroNote}
     ${run.discoveries.length ? `<p>${run.discoveries.map((d) => `<code>${esc(d.discoveryId)}</code>`).join(' ')} promoted — see the Discovery Library below.</p>` : ''}
   </section>`;
 }
@@ -305,6 +404,9 @@ async function startRun(resume = false) {
     view.running = false;
     controller = null;
     view.live = { completed: 0, total: 0, hypothesisId: null, stageKey: null };
+    // Stage runs were persisted mid-run — the stored-evidence scope has
+    // changed, so the pre-run resolution preview must be re-resolved.
+    view.evidence = { status: 'idle', scope: null, error: '' };
     if (view.mounted) renderDiscover();
   }
 }
@@ -338,5 +440,7 @@ function bind() {
   document.getElementById('dsc-start')?.addEventListener('click', () => { startRun(false); });
   document.getElementById('dsc-resume')?.addEventListener('click', () => { startRun(true); });
   document.getElementById('dsc-pause')?.addEventListener('click', () => { cancelRun(); });
+  document.getElementById('dsc-new')?.addEventListener('click', () => { resetDiscovery(); });
+  document.getElementById('dsc-evidence-refresh')?.addEventListener('click', () => { refreshEvidence(); });
   bindLists();
 }

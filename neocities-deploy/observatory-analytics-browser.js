@@ -11,7 +11,7 @@
 // Formula hashes are sha256Text over the shared metric-registry formula text,
 // so they equal the canonical hashes by construction.
 
-import { sha256Text } from './engine/browser-entry.js?v=dac162e115e4';
+import { sha256Text } from './engine/browser-entry.js?v=ef8ac632ff7c';
 import {
   MECHANIC_REGISTRY,
   mechanicDisplayName,
@@ -21,15 +21,15 @@ import {
   analyticsEntityDefinition,
   synergyExcludedTags,
   areTagsInseparable,
-} from './mechanic-registry-browser.js?v=dac162e115e4';
+} from './mechanic-registry-browser.js?v=ef8ac632ff7c';
 
 // Metric identity, estimators and the synergy/mechanics inference core are
 // shared verbatim with canonical analytics (scripts/build.mjs copies them into
 // dist/shared-analytics/), so formula hashes and estimands cannot diverge.
-import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS } from './shared-analytics/metric-registry.mjs?v=dac162e115e4';
-import { wilsonInterval, normalCdf, differenceInProportions } from './shared-analytics/estimators.mjs?v=dac162e115e4';
-import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './shared-analytics/observatory-core.mjs?v=dac162e115e4';
-import { deriveTagRelations, choiceSupportStatus, CHOICE_SUPPORT_MIN_DECLINES } from './shared-analytics/observatory-integrity.mjs?v=dac162e115e4';
+import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS } from './shared-analytics/metric-registry.mjs?v=ef8ac632ff7c';
+import { wilsonInterval, normalCdf, differenceInProportions } from './shared-analytics/estimators.mjs?v=ef8ac632ff7c';
+import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './shared-analytics/observatory-core.mjs?v=ef8ac632ff7c';
+import { deriveTagRelations, choiceSupportStatus, CHOICE_SUPPORT_MIN_DECLINES } from './shared-analytics/observatory-integrity.mjs?v=ef8ac632ff7c';
 
 export { ANALYTICS_SCHEMA_VERSION, wilsonInterval };
 const _formulaHashCache = {};

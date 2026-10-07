@@ -82,46 +82,62 @@ mkdirSync(dist, { recursive: true });
 cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
 // Portable lab domain/session have no engine rules or Node I/O. Browser workers
 // execute the existing autonomy runtime; the dashboard owns only artifacts.
-for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'batch-matrix.mjs', 'strategy-contracts.mjs', 'strategy-evidence.mjs', 'strategy-analysis.mjs', 'strategy-synthesis.mjs', 'strategy-branch.mjs', 'strategy-information.mjs', 'strategy-live.mjs', 'observatory-bridge.mjs', 'matchup-lab.mjs', 'profile-contracts.mjs', 'profile-journal.mjs', 'profile-store.mjs', 'profile-science.mjs', 'profile-arena.mjs', 'mutation-domain.mjs', 'discovery-domain.mjs', 'discovery-scan.mjs', 'discovery-engine.mjs']) {
+for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'combo-telemetry.mjs', 'batch-matrix.mjs', 'strategy-contracts.mjs', 'strategy-evidence.mjs', 'strategy-analysis.mjs', 'strategy-synthesis.mjs', 'strategy-branch.mjs', 'strategy-information.mjs', 'strategy-live.mjs', 'observatory-bridge.mjs', 'matchup-lab.mjs', 'profile-contracts.mjs', 'profile-journal.mjs', 'profile-store.mjs', 'profile-science.mjs', 'profile-arena.mjs', 'mutation-domain.mjs', 'discovery-domain.mjs', 'discovery-scan.mjs', 'discovery-engine.mjs', 'experiment-domain.mjs']) {
   const content = await readFile(path.join(root, 'packages/simulation-runtime/src', name), 'utf8');
   await writeFile(path.join(dist, 'evolution', name), content.replace("from '@intrilex/shared'", "from '../shared-browser.js'").replace("from '@intrilex/statistics/estimators'", "from '../shared-analytics/estimators.mjs'").replace("from '../../policies/src/weighted-heuristic.mjs'", "from './weighted-heuristic.mjs'"));
 }
 await writeFile(path.join(dist, 'evolution/weighted-heuristic.mjs'), (await readFile(path.join(root,'packages/policies/src/weighted-heuristic.mjs'),'utf8')).replace("from './scoring.mjs'","from '../policy-scoring.js'"));
 await writeFile(path.join(dist, 'evolution/identity.mjs'), `export const LAB_IDENTITY = ${JSON.stringify(await evolutionIdentity())};\n`);
-for(const name of (await readdir(path.join(dist,'strategy'))).filter(n=>/\.(js|mjs)$/.test(n))) {
-  const file=path.join(dist,'strategy',name);
-  await writeFile(file,(await readFile(file,'utf8')).replaceAll('../../../../packages/simulation-runtime/src/','../evolution/').replaceAll('../../../../packages/policies/src/action-evaluation.mjs','../action-evaluation.mjs'));
-}
-{
-  const file=path.join(dist,'router.js');
-  await writeFile(file,(await readFile(file,'utf8')).replaceAll('../../../packages/simulation-runtime/src/','./evolution/'));
-}
-// analysis-dossier.js is isomorphic: tests import the src file (packages paths
-// resolve in Node); the browser copy uses the dist shared/evolution mirrors.
-{
-  const file=path.join(dist,'analysis-dossier.js');
-  await writeFile(file,(await readFile(file,'utf8'))
-    .replaceAll('../../../packages/shared/src/canonical.mjs','./shared-browser.js')
-    .replaceAll('../../../packages/simulation-runtime/src/','./evolution/'));
-}
-// Meta Atlas: raw dist copies keep the package specifier so Node tests and
-// esbuild resolve it; in the browser bundle the specifier maps to the
-// shared-analytics mirror written by copySharedAnalytics().
-{
-  const metaAtlasDist = {
-    'atlas/atlas-render.mjs': '../shared-analytics/meta-atlas.mjs',
-    'workspaces/meta-atlas.js': '../shared-analytics/meta-atlas.mjs',
-  };
-  for (const [rel, target] of Object.entries(metaAtlasDist)) {
-    const file = path.join(dist, rel);
-    await writeFile(file, (await readFile(file, 'utf8'))
-      .replaceAll("from '@intrilex/analytics/meta-atlas'", `from '${target}'`));
+// Rewrite repo-relative/package imports in raw src copies to the dist
+// mirrors. The missing-critical-files fallback below re-copies src→dist
+// wholesale, so this must be re-runnable — it is invoked again there.
+async function rewriteDistModulePaths() {
+  for(const name of (await readdir(path.join(dist,'strategy'))).filter(n=>/\.(js|mjs)$/.test(n))) {
+    const file=path.join(dist,'strategy',name);
+    await writeFile(file,(await readFile(file,'utf8')).replaceAll('../../../../packages/simulation-runtime/src/','../evolution/').replaceAll('../../../../packages/policies/src/action-evaluation.mjs','../action-evaluation.mjs'));
+  }
+  {
+    const file=path.join(dist,'router.js');
+    await writeFile(file,(await readFile(file,'utf8')).replaceAll('../../../packages/simulation-runtime/src/','./evolution/'));
+  }
+  // Experiment runs manager: src/experiments/*.mjs|js import the pure domain
+  // module + canonical hashing via repo-relative paths; rewrite both to the
+  // dist mirrors (evolution/experiment-domain.mjs, shared-browser.js).
+  const experimentsDir = path.join(dist, 'experiments');
+  if (existsSync(experimentsDir)) for(const name of (await readdir(experimentsDir)).filter(n=>/\.(js|mjs)$/.test(n))) {
+    const file=path.join(dist,'experiments',name);
+    await writeFile(file,(await readFile(file,'utf8'))
+      .replaceAll('../../../../packages/simulation-runtime/src/','../evolution/')
+      .replaceAll('../../../../packages/shared/src/canonical.mjs','../shared-browser.js'));
+  }
+  // analysis-dossier.js is isomorphic: tests import the src file (packages paths
+  // resolve in Node); the browser copy uses the dist shared/evolution mirrors.
+  {
+    const file=path.join(dist,'analysis-dossier.js');
+    await writeFile(file,(await readFile(file,'utf8'))
+      .replaceAll('../../../packages/shared/src/canonical.mjs','./shared-browser.js')
+      .replaceAll('../../../packages/simulation-runtime/src/','./evolution/'));
+  }
+  // Meta Atlas: raw dist copies keep the package specifier so Node tests and
+  // esbuild resolve it; in the browser bundle the specifier maps to the
+  // shared-analytics mirror written by copySharedAnalytics().
+  {
+    const metaAtlasDist = {
+      'atlas/atlas-render.mjs': '../shared-analytics/meta-atlas.mjs',
+      'workspaces/meta-atlas.js': '../shared-analytics/meta-atlas.mjs',
+    };
+    for (const [rel, target] of Object.entries(metaAtlasDist)) {
+      const file = path.join(dist, rel);
+      await writeFile(file, (await readFile(file, 'utf8'))
+        .replaceAll("from '@intrilex/analytics/meta-atlas'", `from '${target}'`));
+    }
+  }
+  for(const name of ['evolution-analytics-model.mjs','evolution-analytics-charts.mjs']) {
+    const file=path.join(dist,'evolution',name);
+    await writeFile(file,(await readFile(file,'utf8')).replaceAll('../../../../packages/simulation-runtime/src/strategic-telemetry.mjs','./strategic-telemetry.mjs'));
   }
 }
-for(const name of ['evolution-analytics-model.mjs','evolution-analytics-charts.mjs']) {
-  const file=path.join(dist,'evolution',name);
-  await writeFile(file,(await readFile(file,'utf8')).replaceAll('../../../../packages/simulation-runtime/src/strategic-telemetry.mjs','./strategic-telemetry.mjs'));
-}
+await rewriteDistModulePaths();
 // ── Analytics AI core: copy isomorphic package modules into dist/analytics-ai ──
 // The browser UI adapters (apps/lab-web/src/analytics-ai/*.js) import these
 // .mjs modules via relative paths. The package is self-contained (no workspace
@@ -149,6 +165,7 @@ async function copySharedAnalytics() {
     ['packages/analytics/src/observatory-core.mjs', 'observatory-core.mjs'],
     ['packages/analytics/src/choice-analysis.mjs', 'choice-analysis.mjs'],
     ['packages/analytics/src/meta-atlas.mjs', 'meta-atlas.mjs'],
+    ['packages/analytics/src/combo-analytics.mjs', 'combo-analytics.mjs'],
   ];
   for (const [src, name] of sources) {
     const text = (await readFile(path.join(root, src), 'utf8')).replaceAll("from '@intrilex/statistics/estimators'", "from './estimators.mjs'");
@@ -594,6 +611,11 @@ if (missingFiles.length > 0) {
   await copySharedAnalytics();
   // Re-copy engine files synchronously
   cpSync(path.join(root, 'packages/browser-crypto-shim/src/hash.js'), path.join(dist, 'engine/hash.js'), { force: true });
+  // The wholesale src re-copy restores raw package paths — re-apply the
+  // dist rewrites (strategy/, router.js, experiments/, analysis-dossier,
+  // Meta Atlas, evolution analytics) or the browser bundle pulls in the
+  // Node-only canonical.mjs and fails on node:crypto.
+  await rewriteDistModulePaths();
   // Re-write shared-browser.js and browser-entry.js synchronously
   const { writeFileSync } = await import('node:fs');
   writeFileSync(path.join(dist, 'shared-browser.js'), [

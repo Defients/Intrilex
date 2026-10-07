@@ -23,6 +23,7 @@ export const WORKSPACES = [
   ['/replays','▶','Replays','Verification'],
   ['/history','☰','History','Match ledger'],
   ['/mechanics','⌁','Mechanics','Atlas'],
+  ['/combo','⚡','Combo','Combo Atlas'],
   ['/synergies','⟷','Synergies','Relationships'],
   ['/ranks','★','Ranks','Power observatory'],
   ['/atlas','⌖','Meta Atlas','Strategic population map'],
@@ -59,6 +60,7 @@ export const WORKSPACE_KEYWORDS = {
   '/replays': 'replay vault library verify search',
   '/history': 'ledger results outcomes matches',
   '/mechanics': 'rules systems atlas keywords opportunity usage impact',
+  '/combo': 'combo combos comboing super ultra recipe lifecycle countered broken pick rate propensity',
   '/synergies': 'relationships pairs combos interactions counterexamples',
   '/ranks': 'best cards power rankings tier strongest',
   '/atlas': 'population map scatter behavior metrics matchup counters strong weak similar different',
@@ -94,6 +96,7 @@ export const SUBTITLES = {
   '/caster':'Watch a completed AI-vs-AI match unfold live with synchronized Ollama commentary. An observability instrument disguised as a broadcast experience.',
   '/replays':'Verify, search, compare, and investigate retained match evidence.',
   '/mechanics':'Opportunity, usage, impact, uncertainty, and replay evidence by mechanic.',
+  '/combo':'Canonical Combo intelligence — recipes, components, lifecycle, and policy comboing propensity.',
   '/synergies':'Stratified synergy, anti-synergy, motifs, and counterexamples.',
   '/ranks':'Cohort-relative rank power profiles, counterfactual decision value, and balance watchlist.',
   '/atlas':'Policy population mapped onto two chosen observed metrics — position, matchup edges, evidence tiers, and quantitative comparison. No inferred archetypes.',
@@ -125,6 +128,7 @@ export const INSTRUMENTS = {
   '/replays': 'OBS-03 · VERIFICATION VAULT',
   '/history': 'OBS-04 · MATCH LEDGER',
   '/mechanics': 'OBS-05 · MECHANIC ATLAS',
+  '/combo': 'OBS-20 · COMBO ATLAS',
   '/synergies': 'OBS-06 · RELATIONSHIP MATRIX',
   '/ranks': 'OBS-07 · POWER OBSERVATORY',
   '/compare': 'OBS-08 · COHORT COMPARATOR',
@@ -175,7 +179,7 @@ export function renderNavigation() {
   const SECTIONS = [
     { label: 'Learn', routes: ['/rules', '/cards', STRATEGY_NAMES.route] },
     { label: 'Observe', routes: ['/watch', '/caster', '/replays', '/history'] },
-    { label: 'Analyze', routes: ['/mechanics', '/synergies', '/ranks', '/atlas', '/compare', '/traces', '/branches', '/diagnostics'] },
+    { label: 'Analyze', routes: ['/mechanics', '/synergies', '/ranks', '/atlas', '/compare', '/traces', '/branches', '/diagnostics', '/combo'] },
     { label: 'Experiment', routes: ['/evolution', '/mutation', '/discover', '/tournament'] },
     { label: 'Evidence', routes: ['/evidence', '/intelligence'] },
   ];
@@ -214,7 +218,13 @@ export function updateRailContext() {
   if (!el) return;
   const o = state.observatory ?? {};
   const n = state.aggregate?.matchCount ?? (Array.isArray(o.summaries) ? o.summaries.length : null);
-  const origin = o.datasetOrigin === 'EVOLUTION_LAB' ? 'Lab dataset' : 'Certified corpus';
+  const basis = state.evidenceBasis;
+  // Analysis-set sessions disclose their evidence basis ("N runs") so the rail
+  // can't pass a curated aggregate off as the full store.
+  const origin = o.datasetOrigin === 'EVOLUTION_LAB' ? 'Lab dataset'
+    : basis && !basis.fallback && basis.includedRunCount > 0
+      ? `${basis.includedRunCount}/${basis.totalRuns} runs`
+      : 'Certified corpus';
   const vis = ({ public: 'Public', player: 'Player', judge: 'Omniscient' })[state.visibility] ?? 'Public';
   el.innerHTML = `<span class="rail-context-row"><b>${n != null ? fmt(n) : '—'}</b><small>matches</small></span><span class="rail-context-meta">${esc(origin)} · ${esc(vis)} view</span>`;
 }

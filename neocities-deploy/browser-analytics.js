@@ -5,9 +5,9 @@
 // Rank attribution extracted to rank-attribution-browser.js (P4.3).
 // Rank power model extracted to rank-power-model.js (P4.3).
 
-import './engine/ranks.js?v=dac162e115e4';
-import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=dac162e115e4';
-import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=dac162e115e4';
+import './engine/ranks.js?v=ef8ac632ff7c';
+import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=ef8ac632ff7c';
+import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=ef8ac632ff7c';
 import {
   CANONICAL_RANKS,
   classifyPlayForm,
@@ -15,7 +15,7 @@ import {
   buildSourceCards,
   attributeRankAction,
   attributeAction,
-} from './rank-attribution-browser.js?v=dac162e115e4';
+} from './rank-attribution-browser.js?v=ef8ac632ff7c';
 import {
   RANK_POWER_SCHEMA_VERSION,
   RPI_AXIS_WEIGHTS,
@@ -26,7 +26,7 @@ import {
   computeDecisionPower,
   buildBalanceWatchlist,
   buildRankPowerModel,
-} from './rank-power-model.js?v=dac162e115e4';
+} from './rank-power-model.js?v=ef8ac632ff7c';
 import {
   ANALYTICS_SCHEMA_VERSION,
   buildMechanicsAtlas,
@@ -35,15 +35,16 @@ import {
   buildPolicyFingerprints,
   detectAnomalies,
   buildPairedABBAAnalysis,
-} from './observatory-analytics-browser.js?v=dac162e115e4';
+} from './observatory-analytics-browser.js?v=ef8ac632ff7c';
 import {
   mechanicRegistryHash,
   quarantineUnknownTags,
-} from './mechanic-registry-browser.js?v=dac162e115e4';
-import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=dac162e115e4';
-import { winRateRecord } from './shared-analytics/estimators.mjs?v=dac162e115e4';
-import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=dac162e115e4';
-import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=dac162e115e4';
+} from './mechanic-registry-browser.js?v=ef8ac632ff7c';
+import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=ef8ac632ff7c';
+import { winRateRecord } from './shared-analytics/estimators.mjs?v=ef8ac632ff7c';
+import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=ef8ac632ff7c';
+import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=ef8ac632ff7c';
+import { buildComboAtlas } from './shared-analytics/combo-analytics.mjs?v=ef8ac632ff7c';
 
 // Re-export for backward compatibility (other modules import from browser-analytics)
 export {
@@ -976,7 +977,10 @@ function metricRegistryWithHashes() { return metricRegistryWithHashesUsing(formu
 const EXTRACT_VERSION = '1.0.0';
 function _pct(v) { return Number.isFinite(Number(v)) ? `${(Number(v) * 100).toFixed(1)}%` : null; }
 function _fmtCI(ci) { if (!Array.isArray(ci) || ci.length < 2) return null; return `[${Number(ci[0]).toFixed(3)}, ${Number(ci[1]).toFixed(3)}]`; }
-function _gradeLabel(g) { const m = { A: 'strong', B: 'moderate', C: 'weak', D: 'very weak' }; return m[g] ?? 'insufficient'; }
+// Two grade vocabularies exist: canonical (INSUFFICIENT/EXPLORATORY/
+// SUPPORTED/ROBUST) and legacy letters (A–D). Never emit a parenthetical
+// that contradicts the grade itself.
+function _gradeLabel(mech) { const canonical = { INSUFFICIENT: 'insufficient', EXPLORATORY: 'weak', SUPPORTED: 'moderate', ROBUST: 'strong' }, legacy = { A: 'strong', B: 'moderate', C: 'weak', D: 'very weak' }; return mech?.evidenceGradeLegacy ?? canonical[mech?.evidenceGrade] ?? legacy[mech?.evidenceGrade] ?? null; }
 function _describePolicy(p) {
   const fp = p.fingerprint ?? {}, traits = [];
   if (fp.scoreAggression > 0.6) traits.push('high action frequency'); else if (fp.scoreAggression < 0.25) traits.push('low action frequency');
@@ -994,7 +998,7 @@ function _describeMechanic(m) {
   parts.push(`Used in ${_pct(m.matchUsageRate)} of ${unit} observations (${m.sampleSize}/${opportunities}).`);
   if (m.outcomeAssociation !== null && Number.isFinite(m.outcomeAssociation)) { const dir = m.outcomeAssociation > 0 ? 'positive' : 'negative'; parts.push(`Outcome association: ${dir} (${m.outcomeAssociation.toFixed(3)}, CI ${_fmtCI(m.outcomeAssociation95)}).`); }
   if (m.immediatePointImpact) { const i = m.immediatePointImpact; parts.push(`Immediate point impact: mean ${i.mean?.toFixed(2)} over ${i.n} measured declarations.`); }
-  parts.push(`Evidence grade: ${m.evidenceGrade} (${_gradeLabel(m.evidenceGrade)}).`);
+  const _gt = _gradeLabel(m); parts.push(`Evidence grade: ${m.evidenceGrade ?? 'ungraded'}${_gt ? ` (${_gt})` : ''}.`);
   if (m.choiceSupport && (m.choiceSupport.status === 'limited' || m.choiceSupport.status === 'unsupported')) {
     parts.push(`Choice identification: ${m.choiceSupport.status} — only ${m.choiceSupport.declinedCount} legal-but-unselected frame(s); pick rate is selection regularity, not preference evidence.`);
   }
@@ -1034,7 +1038,7 @@ export function extractAnalysis({ analytics, aggregate = null }) {
   const lowSample = mechanicFindings.filter(m => m.sampleSize < 20).length;
   if (lowSample > 0) recommendations.push(`${lowSample} mechanic(s) have sample size below 20 — interpret with caution.`);
   if (!recommendations.length) recommendations.push('No action required — dataset is internally consistent and statistically sound.');
-  const core = { extractVersion: EXTRACT_VERSION, analyticsSchemaVersion: ANALYTICS_SCHEMA_VERSION, sourceHash: analytics.observatoryHash ?? null, aggregateHash: aggregate?.aggregateHash ?? analytics.aggregateHash ?? null, executiveSummary, dataset: { matchCount, completedMatchCount: aggregate?.completedMatchCount ?? 0, abortCount, drawCount: aggregate?.drawCount ?? 0, detailedMatchCount: analytics.detailedMatchCount ?? 0, policyCount: policies.length, mechanicCount: mechanics.length, synergyCount: synergies.length, motifCount: motifs.length, anomalyCount: anomalies.length }, policyFindings, mechanicFindings, synergyFindings, motifFindings, anomalies: anomalySummary, completeness: analytics.completeness, metricRegistry: metricRegistryWithHashes(), interpretationBoundary: analytics.interpretationBoundary, recommendations };
+  const core = { extractVersion: EXTRACT_VERSION, analyticsSchemaVersion: ANALYTICS_SCHEMA_VERSION, sourceHash: analytics.observatoryHash ?? null, aggregateHash: aggregate?.aggregateHash ?? analytics.aggregateHash ?? null, executiveSummary, dataset: { matchCount, completedMatchCount: aggregate?.completedMatchCount ?? 0, abortCount, drawCount: aggregate?.drawCount ?? 0, detailedMatchCount: analytics.detailedMatchCount ?? null, policyCount: policies.length, mechanicCount: mechanics.length, synergyCount: synergies.length, motifCount: motifs.length, anomalyCount: anomalies.length }, policyFindings, mechanicFindings, synergyFindings, motifFindings, anomalies: anomalySummary, completeness: analytics.completeness, metricRegistry: metricRegistryWithHashes(), interpretationBoundary: analytics.interpretationBoundary, recommendations };
   return { ...core, extractHash: hashCanonical(core) };
 }
 
@@ -1080,7 +1084,7 @@ export function buildObservatoryAnalytics({ summaries, detailedMatches = [], agg
   const core = { schemaVersion: ANALYTICS_SCHEMA_VERSION, metricRegistry: metricRegistryWithHashes(), summaryCount: summaries.length, aggregateHash: aggregate?.aggregateHash ?? null,
     // Provenance echo: self-describing artifact (parity with canonical analytics)
     evidenceEpoch: aggregate?.evidenceEpoch ?? null, postRulesParityRepair: aggregate?.postRulesParityRepair ?? null, engineVersion: aggregate?.engineVersion ?? null, rulesVersion: aggregate?.rulesVersion ?? null, profileId: aggregate?.profileId ?? null, authorityHash: aggregate?.authorityHash ?? null, releaseIdentityHash: aggregate?.releaseIdentityHash ?? null,
-    mechanics, synergies, synergyDiagnostics, synergyCandidateSet: synergies.candidateSet ?? null, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, choiceAnalysis, choiceAnalysisError, mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, reconciliation, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
+    mechanics, synergies, synergyDiagnostics, synergyCandidateSet: synergies.candidateSet ?? null, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, choiceAnalysis, choiceAnalysisError, combo: buildComboAtlas(summaries), mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, reconciliation, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
   return { ...core, observatoryHash: hashCanonical(core) };
 }
 // buildPairedABBAAnalysis lives in observatory-analytics-browser.js

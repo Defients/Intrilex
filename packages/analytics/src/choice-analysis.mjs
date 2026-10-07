@@ -24,6 +24,14 @@ export function actionMechanicTags(action) {
   const tags = new Set();
   if (!NON_MECHANIC_FAMILIES.has(action?.family) && !TIMING_FAMILIES.has(action?.family)) tags.add(action.family);
   if (action?.mode && !NON_MECHANIC_MODES.has(action.mode) && action.mode !== action.family) tags.add(action.mode);
+  // Canonical Combo parent tag (rulebook §8) — parity with runtime.mjs /
+  // combo-telemetry.mjs comboClassOf. Family/mode-only so reduced decision
+  // records ({family,mode}) classify identically.
+  const kind = action?.semantics?.effectKind ?? action?.advanced?.kind ?? action?.kind ?? null;
+  if (action?.family === 'super' || action?.family === 'ultra'
+    || (action?.family === 'counter' && action?.mode === 'super-ace')
+    || kind === 'declare-combo' || kind === 'core-declare-combo'
+    || (typeof kind === 'string' && (kind.startsWith('advanced-super-') || kind.startsWith('advanced-ultra-')))) tags.add('combo');
   return [...tags].sort();
 }
 

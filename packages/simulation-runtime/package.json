@@ -13,6 +13,7 @@
     "./counterfactual": "./src/counterfactual.mjs",
     "./policy-catalog": "./src/policy-catalog.mjs",
     "./rank-attribution": "./src/rank-attribution.mjs",
+    "./combo-telemetry": "./src/combo-telemetry.mjs",
     "./rank-counterfactual": "./src/rank-counterfactual.mjs",
     "./rank-power": "./src/rank-power.mjs",
     "./variant-registry": "./src/variant-registry.mjs",

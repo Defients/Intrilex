@@ -1,2 +1,2 @@
-import"./chunk-chunk-HADQ5WYF.js?v=dac162e115e4";var e=!0;function r(t){e=!!t}function n(t){if(!e||typeof navigator>"u"||typeof navigator.vibrate!="function")return!1;try{return navigator.vibrate(t)}catch{return!1}}export{r as setHapticsEnabled,n as vibrate};
+import"./chunk-chunk-HADQ5WYF.js?v=ef8ac632ff7c";var e=!0;function r(t){e=!!t}function n(t){if(!e||typeof navigator>"u"||typeof navigator.vibrate!="function")return!1;try{return navigator.vibrate(t)}catch{return!1}}export{r as setHapticsEnabled,n as vibrate};
 //# sourceMappingURL=chunk-haptics-PDKBTJ3H.js.map

@@ -4,7 +4,7 @@
 // tag validation/quarantine used by the observatory analytics builders.
 // Uses hashCanonical from the browser engine shim (no Node.js deps).
 
-import { hashCanonical } from './engine/browser-entry.js?v=dac162e115e4';
+import { hashCanonical } from './engine/browser-entry.js?v=ef8ac632ff7c';
 
 export const MECHANIC_REGISTRY_VERSION = '1.0.0';
 
@@ -34,6 +34,7 @@ const MECHANIC_DEFINITIONS = [
   { mechanicId: 'super', displayName: 'Super Play', category: 'advanced', description: 'Super mechanic combining multiple cards for enhanced effect.', authorityRefs: ['rules/player-rulebook.md#super'], eligibleFamilies: ['super'], primaryEligible: true, secondaryEligible: false, structural: false, analyticsEnabled: true },
   { mechanicId: 'rank10', displayName: 'Rank 10 Mechanic', category: 'advanced', description: 'Rank 10 advanced mechanic including Stack Theft variants.', authorityRefs: ['rules/player-rulebook.md#rank10'], eligibleFamilies: ['rank10'], primaryEligible: true, secondaryEligible: false, structural: false, analyticsEnabled: true },
   { mechanicId: 'ultra', displayName: 'Ultra', category: 'terminal', description: 'Ultra mechanic — high-impact advanced declaration with declaration restrictions.', authorityRefs: ['rules/player-rulebook.md#ultra'], eligibleFamilies: ['ultra'], primaryEligible: true, secondaryEligible: false, structural: false, analyticsEnabled: true },
+  { mechanicId: 'combo', displayName: 'Combo', category: 'advanced', description: 'Canonical Combo (rulebook §8): one declared multi-card play, enabled by an explicit effect, resolved as a single atomic stack item. Super and Ultra are the current Combo classes; Royal Marriage, Queen\'s Court, rank10, voltage and generic multi-card plays are not Combos.', authorityRefs: ['rules/player-rulebook.md#combo'], eligibleFamilies: ['super', 'ultra'], primaryEligible: true, secondaryEligible: true, structural: false, analyticsEnabled: true },
   { mechanicId: 'voltage', displayName: 'Voltage', category: 'terminal', description: 'Voltage trigger mechanic advancing toward terminal resolution.', authorityRefs: ['rules/player-rulebook.md#voltage'], eligibleFamilies: ['voltage'], primaryEligible: true, secondaryEligible: false, structural: false, analyticsEnabled: true },
   { mechanicId: 'counter', displayName: 'Counter', category: 'response', description: 'Counter an opponent effect or response on the Stack.', authorityRefs: ['rules/player-rulebook.md#counter'], eligibleFamilies: ['counter'], primaryEligible: true, secondaryEligible: false, structural: false, analyticsEnabled: true },
   { mechanicId: 'disrupt', displayName: 'Disrupt', category: 'response', description: 'Disrupt opponent play through various means (scuttle, tap, aegis, theft).', authorityRefs: ['rules/player-rulebook.md#disrupt'], eligibleFamilies: ['disrupt'], primaryEligible: true, secondaryEligible: false, structural: false, analyticsEnabled: true },
@@ -178,8 +179,20 @@ export function synergyExcludedTags() {
   return new Set([...DIAGNOSTIC_TAGS, ...ACTION_FAMILY_TAGS, 'exhausted-pass', 'private-choice', 'effect-private-choice', 'anchor-private-choice']);
 }
 
+// Canonical Combo recipe-mode tags (rulebook §8): every action emitting one
+// of these mode tags is a Combo declaration, so a combo×recipe pair is a
+// tautology, not a synergy. Parity with packages/decision-intelligence.
+const COMBO_RECIPE_MODES = new Set([
+  'super-ace', 'two-score', 'two-hold', 'three-raid', 'four-exchange-pr', 'four-exchange-er',
+  'five-recycle', 'six-dig', 'seven-topdeck', 'eight-absolute-scuttle', 'jack-tempo',
+  'three-red-counter', 'three-black-4', 'three-black-7', 'three-black-9', 'three-black-j',
+  'three-black-q', 'three-black-k', '2-black-2-red-draw', '2-black-2-red-rummage',
+]);
+
 export function areTagsInseparable(a, b) {
   if (a === b) return true;
+  if ((a === 'combo' && ['super', 'ultra'].includes(b)) || (b === 'combo' && ['super', 'ultra'].includes(a))) return true;
+  if ((a === 'combo' && (b.startsWith('super-') || COMBO_RECIPE_MODES.has(b))) || (b === 'combo' && (a.startsWith('super-') || COMBO_RECIPE_MODES.has(a)))) return true;
   if ((a === 'super' && b.startsWith('super-')) || (b === 'super' && a.startsWith('super-'))) return true;
   if ((a === 'voltage' && b.startsWith('voltage-')) || (b === 'voltage' && a.startsWith('voltage-'))) return true;
   if ((a === 'rank10' && b.startsWith('rank10-')) || (b === 'rank10' && a.startsWith('rank10-'))) return true;

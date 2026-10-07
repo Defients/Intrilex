@@ -148,7 +148,17 @@ function blankStats(policyId) {
     // reported unavailable instead of silently zero.
     cover: {},
     sums: {},
+    // coverTurns[field]: full turns accumulated ONLY over rows that carried
+    // `field` — the per-turn denominator must match the telemetry cohort.
+    coverTurns: {},
+    // pairUse/pairOpp/pairCover[key] : numerator/denominator sums + row
+    // count restricted to rows carrying BOTH fields of a ratio — a
+    // partially-covered denominator must not borrow opportunities from
+    // rows the numerator never saw.
+    pairUse: {}, pairOpp: {}, pairCover: {},
+    turnsCover: 0,
     mechUse: {}, mechOpp: {},
+    mechCover: 0, mechPairCover: 0, mechUseP: {}, mechOppP: {},
   };
 }
 
@@ -158,6 +168,17 @@ const SUM_FIELDS = [
   'quickDeclarationCount', 'instantDeclarationCount', 'interruptDeclarationCount',
   'meaningfulResponseDecisionCount', 'advancedDecisionCount', 'voltageDecisionCount',
   'ultraDecisionCount', 'privateChoiceDecisionCount',
+  'comboOpportunityCount', 'comboDeclarationCount',
+];
+
+/** Ratio metrics whose numerator and denominator must come from the same
+ * telemetry-covered rows — key `numerator/denominator` in pairUse/pairOpp. */
+const FIELD_PAIRS = [
+  ['responsePlayCount', 'responseOpportunityCount'],
+  ['responseDeclineCount', 'responseOpportunityCount'],
+  ['counterDeclarationCount', 'decisionCount'],
+  ['instantDeclarationCount', 'decisionCount'],
+  ['comboDeclarationCount', 'comboOpportunityCount'],
 ];
 
 const isDrawRow = (row) => row.terminationReason === 'CANONICAL_DRAW' || row.winner === 'DRAW';
@@ -203,17 +224,39 @@ export function buildPolicyStats(summaries) {
       } else {
         s.aborts += 1;
       }
-      s.turns += numOr(row.completedFullTurns);
+      if (row.completedFullTurns != null) { s.turnsCover += 1; s.turns += numOr(row.completedFullTurns); }
       s.scoreFor += numOr(p?.scoreFor, seat === 1 ? numOr(row.finalScores?.P1) : numOr(row.finalScores?.P2));
       s.scoreAgainst += numOr(p?.scoreAgainst, seat === 1 ? numOr(row.finalScores?.P2) : numOr(row.finalScores?.P1));
       for (const field of SUM_FIELDS) {
         if (p && p[field] != null) {
           s.cover[field] = (s.cover[field] ?? 0) + 1;
           s.sums[field] = (s.sums[field] ?? 0) + numOr(p[field]);
+          if (row.completedFullTurns != null) s.coverTurns[field] = (s.coverTurns[field] ?? 0) + numOr(row.completedFullTurns);
         }
       }
-      for (const [tag, n] of Object.entries(p?.mechanicCounts ?? {})) s.mechUse[tag] = (s.mechUse[tag] ?? 0) + numOr(n);
-      for (const [tag, n] of Object.entries(p?.mechanicOpportunityCounts ?? {})) s.mechOpp[tag] = (s.mechOpp[tag] ?? 0) + numOr(n);
+      for (const [fN, fD] of FIELD_PAIRS) {
+        if (p && p[fN] != null && p[fD] != null) {
+          const k = `${fN}/${fD}`;
+          s.pairCover[k] = (s.pairCover[k] ?? 0) + 1;
+          s.pairUse[k] = (s.pairUse[k] ?? 0) + numOr(p[fN]);
+          s.pairOpp[k] = (s.pairOpp[k] ?? 0) + numOr(p[fD]);
+        }
+      }
+      const mech = p?.mechanicCounts ?? null;
+      const mechOpp = p?.mechanicOpportunityCounts ?? null;
+      if (mech) {
+        s.mechCover += 1;
+        for (const [tag, n] of Object.entries(mech)) s.mechUse[tag] = (s.mechUse[tag] ?? 0) + numOr(n);
+      }
+      for (const [tag, n] of Object.entries(mechOpp ?? {})) s.mechOpp[tag] = (s.mechOpp[tag] ?? 0) + numOr(n);
+      if (mech && mechOpp) {
+        // Use-per-opportunity estimands pair both maps row-by-row: a row
+        // carrying only one side is excluded rather than fabricating the
+        // missing half as zero.
+        s.mechPairCover += 1;
+        for (const [tag, n] of Object.entries(mech)) s.mechUseP[tag] = (s.mechUseP[tag] ?? 0) + numOr(n);
+        for (const [tag, n] of Object.entries(mechOpp)) s.mechOppP[tag] = (s.mechOppP[tag] ?? 0) + numOr(n);
+      }
     }
   }
   for (const s of byPolicy.values()) {
@@ -226,8 +269,18 @@ export function buildPolicyStats(summaries) {
 const covered = (s, field) => numOr(s.cover?.[field]);
 const sumField = (s, field) => numOr(s.sums?.[field]);
 const rate = (num, den) => (den > 0 ? num / den : null);
-const perGame = (s, field) => (covered(s, field) > 0 ? sumField(s, field) / s.games : null);
+// Coverage-aware per-game mean: the estimand is "per telemetry-covered
+// game" — a row that never carried the field is unknown, not zero, so it
+// stays out of the denominator and cannot dilute the measured mean.
+const perGame = (s, field) => (covered(s, field) > 0 ? sumField(s, field) / covered(s, field) : null);
 const mechRate = (s, use, opp) => (opp > 0 ? use / opp : null);
+const pairKey = (fN, fD) => `${fN}/${fD}`;
+const pairRate = (s, fN, fD) => mechRate(s, numOr(s.pairUse?.[pairKey(fN, fD)]), numOr(s.pairOpp?.[pairKey(fN, fD)]));
+const pairCoverInfo = (s, fN, fD) => ({ covered: numOr(s.pairCover?.[pairKey(fN, fD)]), total: s.games });
+const tagFamilyPair = (s, test) => mechRate(s, tagFamilySum(s.mechUseP, test), tagFamilySum(s.mechOppP, test));
+/** Telemetry coverage of a field-based metric, for disclosure: how many
+ * participations actually carried the field out of all retained games. */
+const coverInfo = (s, field) => ({ covered: covered(s, field), total: s.games });
 
 // ── Atlas metric registry ────────────────────────────────────────────────
 // Structured metadata per axis-able metric. `extract(stats)` returns the
@@ -278,137 +331,172 @@ export const ATLAS_METRIC_REGISTRY = Object.freeze({
   // ── Tempo ──
   miniTurnsPerGame: {
     id: 'miniTurnsPerGame', label: 'Mini-Turns / Game', axis: 'Mini-turn actions per game', unit: 'per-game', category: 'tempo',
-    description: 'Mean mini-turn actions taken per game (policy activity level).',
+    description: 'Mean mini-turn actions per telemetry-covered game (policy activity level). Games without the field are unknown, not zero.',
     source: 'participants[].miniTurnActionCount',
     extract: (s) => perGame(s, 'miniTurnActionCount'),
+    coverage: (s) => coverInfo(s, 'miniTurnActionCount'),
     unavailableReason: 'mini-turn telemetry not retained',
   },
   miniTurnsPerTurn: {
     id: 'miniTurnsPerTurn', label: 'Mini-Turn Utilization', axis: 'Mini-turn actions per full turn', unit: 'per-turn', category: 'tempo',
-    description: 'Mini-turn actions divided by the full turns those matches ran — how much of each turn the policy used.',
+    description: 'Mini-turn actions divided by the full turns of telemetry-covered matches — how much of each turn the policy used.',
     source: 'miniTurnActionCount / completedFullTurns',
-    extract: (s) => (covered(s, 'miniTurnActionCount') > 0 && s.turns > 0 ? sumField(s, 'miniTurnActionCount') / s.turns : null),
+    extract: (s) => (covered(s, 'miniTurnActionCount') > 0 && numOr(s.coverTurns?.miniTurnActionCount) > 0 ? sumField(s, 'miniTurnActionCount') / numOr(s.coverTurns.miniTurnActionCount) : null),
+    coverage: (s) => coverInfo(s, 'miniTurnActionCount'),
     unavailableReason: 'mini-turn telemetry not retained',
   },
   decisionsPerGame: {
     id: 'decisionsPerGame', label: 'Decisions / Game', axis: 'Policy decisions per game', unit: 'per-game', category: 'tempo',
-    description: 'Mean policy decision frames per game.',
+    description: 'Mean policy decision frames per telemetry-covered game.',
     source: 'participants[].decisionCount',
     extract: (s) => perGame(s, 'decisionCount'),
+    coverage: (s) => coverInfo(s, 'decisionCount'),
     unavailableReason: 'decision telemetry not retained',
   },
   matchLength: {
     id: 'matchLength', label: 'Avg Match Length', axis: 'Mean full turns per match', unit: 'per-game', category: 'tempo',
-    description: 'Mean completed full turns of matches the policy participated in.',
+    description: 'Mean completed full turns of matches the policy participated in (over matches that recorded the field).',
     source: 'completedFullTurns',
-    extract: (s) => (s.games > 0 ? s.turns / s.games : null),
+    extract: (s) => (s.turnsCover > 0 ? s.turns / s.turnsCover : null),
+    coverage: (s) => ({ covered: s.turnsCover, total: s.games }),
   },
   exhaustedPassRate: {
     id: 'exhaustedPassRate', label: 'Exhausted Passes / Game', axis: 'Exhausted passes per game', unit: 'per-game', category: 'tempo',
-    description: 'Forced passes (no legal mini-turn action) per game — how often the policy runs out of things to do.',
+    description: 'Forced passes (no legal mini-turn action) per telemetry-covered game — how often the policy runs out of things to do.',
     source: 'participants[].exhaustedPassActionCount',
     extract: (s) => perGame(s, 'exhaustedPassActionCount'),
+    coverage: (s) => coverInfo(s, 'exhaustedPassActionCount'),
     unavailableReason: 'exhausted-pass telemetry not retained',
   },
   // ── Interaction ──
   responsePlayRate: {
     id: 'responsePlayRate', label: 'Response Engagement', axis: 'Response plays / opportunities', unit: 'percent', category: 'interaction',
-    description: 'Response plays divided by response opportunities — how often the policy engages the response window when it can.',
+    description: 'Response plays divided by response opportunities over rows carrying both fields — how often the policy engages the response window when it can.',
     source: 'participants[].responsePlayCount / responseOpportunityCount',
-    extract: (s) => rate(sumField(s, 'responsePlayCount'), sumField(s, 'responseOpportunityCount')),
+    extract: (s) => pairRate(s, 'responsePlayCount', 'responseOpportunityCount'),
+    coverage: (s) => pairCoverInfo(s, 'responsePlayCount', 'responseOpportunityCount'),
     unavailableReason: 'no response opportunities observed',
   },
   responseDeclineRate: {
     id: 'responseDeclineRate', label: 'Response Decline Rate', axis: 'Response declines / opportunities', unit: 'percent', category: 'interaction',
-    description: 'Response declines divided by response opportunities — how often the policy passes up the response window.',
+    description: 'Response declines divided by response opportunities over rows carrying both fields — how often the policy passes up the response window.',
     source: 'participants[].responseDeclineCount / responseOpportunityCount',
-    extract: (s) => rate(sumField(s, 'responseDeclineCount'), sumField(s, 'responseOpportunityCount')),
+    extract: (s) => pairRate(s, 'responseDeclineCount', 'responseOpportunityCount'),
+    coverage: (s) => pairCoverInfo(s, 'responseDeclineCount', 'responseOpportunityCount'),
     unavailableReason: 'no response opportunities observed',
   },
   counterRate: {
     id: 'counterRate', label: 'Counter Rate', axis: 'Counters / decision', unit: 'percent', category: 'interaction',
-    description: 'Counter declarations per policy decision.',
+    description: 'Counter declarations per policy decision over rows carrying both fields.',
     source: 'participants[].counterDeclarationCount / decisionCount',
-    extract: (s) => rate(sumField(s, 'counterDeclarationCount'), sumField(s, 'decisionCount')),
+    extract: (s) => pairRate(s, 'counterDeclarationCount', 'decisionCount'),
+    coverage: (s) => pairCoverInfo(s, 'counterDeclarationCount', 'decisionCount'),
     unavailableReason: 'counter telemetry not retained',
   },
   instantRate: {
     id: 'instantRate', label: 'Instant Rate', axis: 'Instants / decision', unit: 'percent', category: 'interaction',
-    description: 'Instant declarations per policy decision.',
+    description: 'Instant declarations per policy decision over rows carrying both fields.',
     source: 'participants[].instantDeclarationCount / decisionCount',
-    extract: (s) => rate(sumField(s, 'instantDeclarationCount'), sumField(s, 'decisionCount')),
+    extract: (s) => pairRate(s, 'instantDeclarationCount', 'decisionCount'),
+    coverage: (s) => pairCoverInfo(s, 'instantDeclarationCount', 'decisionCount'),
     unavailableReason: 'instant telemetry not retained',
   },
   prInteractionRate: {
     id: 'prInteractionRate', label: 'PR-Row Engagement', axis: 'PR-row mechanic use / opportunity', unit: 'percent', category: 'interaction',
     description: 'Uses of Point-Row-targeted mechanics (telemetry tags ending -pr) divided by recorded opportunities for those mechanics.',
     source: 'mechanicCounts / mechanicOpportunityCounts (*-pr tags)', needsOpportunities: true,
-    extract: (s) => mechRate(s, tagFamilySum(s.mechUse, (t) => PR_TAG.test(t)), tagFamilySum(s.mechOpp, (t) => PR_TAG.test(t))),
+    extract: (s) => tagFamilyPair(s, (t) => PR_TAG.test(t)),
+    coverage: (s) => ({ covered: s.mechPairCover, total: s.games }),
     unavailableReason: 'no PR-row mechanic opportunities observed',
   },
   erInteractionRate: {
     id: 'erInteractionRate', label: 'ER-Row Engagement', axis: 'ER-row mechanic use / opportunity', unit: 'percent', category: 'interaction',
     description: 'Uses of Effect-Row-targeted mechanics (telemetry tags ending -er) divided by recorded opportunities for those mechanics.',
     source: 'mechanicCounts / mechanicOpportunityCounts (*-er tags)', needsOpportunities: true,
-    extract: (s) => mechRate(s, tagFamilySum(s.mechUse, (t) => ER_TAG.test(t)), tagFamilySum(s.mechOpp, (t) => ER_TAG.test(t))),
+    extract: (s) => tagFamilyPair(s, (t) => ER_TAG.test(t)),
+    coverage: (s) => ({ covered: s.mechPairCover, total: s.games }),
     unavailableReason: 'no ER-row mechanic opportunities observed',
   },
   disruptRate: {
     id: 'disruptRate', label: 'Disrupt Rate', axis: 'Disrupt use / opportunity', unit: 'percent', category: 'interaction',
     description: 'Disrupt mechanic uses divided by recorded Disrupt opportunities.',
     source: 'mechanicCounts / mechanicOpportunityCounts (disrupt)', needsOpportunities: true,
-    extract: (s) => mechRate(s, numOr(s.mechUse?.disrupt), numOr(s.mechOpp?.disrupt)),
+    extract: (s) => mechRate(s, numOr(s.mechUseP?.disrupt), numOr(s.mechOppP?.disrupt)),
+    coverage: (s) => ({ covered: s.mechPairCover, total: s.games }),
     unavailableReason: 'no Disrupt opportunities observed',
+  },
+  comboPropensity: {
+    id: 'comboPropensity', label: 'Combo Propensity', axis: 'Combo declarations / legal opportunities', unit: 'percent', category: 'behavioral',
+    description: 'Canonical Combo (rulebook §8) declarations divided by legal Combo opportunities — behavioral "comboing", a tendency under legal choice, over rows carrying both fields. Not a raw declaration count.',
+    source: 'participants[].comboDeclarationCount / comboOpportunityCount', needsOpportunities: true,
+    extract: (s) => pairRate(s, 'comboDeclarationCount', 'comboOpportunityCount'),
+    coverage: (s) => pairCoverInfo(s, 'comboDeclarationCount', 'comboOpportunityCount'),
+    unavailableReason: 'combo opportunity telemetry not retained',
+  },
+  comboRate: {
+    id: 'comboRate', label: 'Combo Frequency', axis: 'Combos / participation', unit: 'per-game', category: 'behavioral',
+    description: 'Canonical Combo declarations per telemetry-covered participation.',
+    source: 'participants[].comboDeclarationCount',
+    extract: (s) => perGame(s, 'comboDeclarationCount'),
+    coverage: (s) => coverInfo(s, 'comboDeclarationCount'),
+    unavailableReason: 'combo telemetry not retained',
   },
   // ── Resource ──
   drawRate: {
     id: 'drawRate', label: 'Draw Rate', axis: 'Draw use / opportunity', unit: 'percent', category: 'resource',
     description: 'Draw mechanic uses divided by recorded Draw opportunities.',
     source: 'mechanicCounts / mechanicOpportunityCounts (draw)', needsOpportunities: true,
-    extract: (s) => mechRate(s, numOr(s.mechUse?.draw), numOr(s.mechOpp?.draw)),
+    extract: (s) => mechRate(s, numOr(s.mechUseP?.draw), numOr(s.mechOppP?.draw)),
+    coverage: (s) => ({ covered: s.mechPairCover, total: s.games }),
     unavailableReason: 'no Draw opportunities observed',
   },
   privateChoiceDensity: {
     id: 'privateChoiceDensity', label: 'Private Choices / Game', axis: 'Private choices per game', unit: 'per-game', category: 'resource',
-    description: 'Private-choice selections per game (hidden-information decision density).',
+    description: 'Private-choice selections per telemetry-covered game (hidden-information decision density).',
     source: 'participants[].privateChoiceDecisionCount',
     extract: (s) => perGame(s, 'privateChoiceDecisionCount'),
+    coverage: (s) => coverInfo(s, 'privateChoiceDecisionCount'),
     unavailableReason: 'private-choice telemetry not retained',
   },
   // ── Strategic action behavior ──
   scoreFrequency: {
     id: 'scoreFrequency', label: 'Scoring Actions / Game', axis: 'Score actions per game', unit: 'per-game', category: 'behavioral',
-    description: 'Score-family actions per game — how often the policy banks points.',
+    description: 'Score-family actions per mechanic-telemetry-covered game — how often the policy banks points. Games without telemetry are unknown, not zero.',
     source: 'mechanicCounts (score)',
-    extract: (s) => (Object.keys(s.mechUse ?? {}).length > 0 ? numOr(s.mechUse.score) / s.games : null),
+    extract: (s) => (s.mechCover > 0 ? numOr(s.mechUse.score) / s.mechCover : null),
+    coverage: (s) => ({ covered: s.mechCover, total: s.games }),
     unavailableReason: 'mechanic usage telemetry not retained',
   },
   scorePickRate: {
     id: 'scorePickRate', label: 'Score Pick Rate', axis: 'Score use / opportunity', unit: 'percent', category: 'behavioral',
     description: 'Score-family uses divided by recorded Score opportunities — takes points when able.',
     source: 'mechanicCounts / mechanicOpportunityCounts (score)', needsOpportunities: true,
-    extract: (s) => mechRate(s, numOr(s.mechUse?.score), numOr(s.mechOpp?.score)),
+    extract: (s) => mechRate(s, numOr(s.mechUseP?.score), numOr(s.mechOppP?.score)),
+    coverage: (s) => ({ covered: s.mechPairCover, total: s.games }),
     unavailableReason: 'no Score opportunities observed',
   },
   advancedFrequency: {
     id: 'advancedFrequency', label: 'Advanced / Game', axis: 'Advanced decisions per game', unit: 'per-game', category: 'behavioral',
-    description: 'Advanced-mechanic decision frames per game.',
+    description: 'Advanced-mechanic decision frames per telemetry-covered game.',
     source: 'participants[].advancedDecisionCount',
     extract: (s) => perGame(s, 'advancedDecisionCount'),
+    coverage: (s) => coverInfo(s, 'advancedDecisionCount'),
     unavailableReason: 'advanced-decision telemetry not retained',
   },
   ultraFrequency: {
     id: 'ultraFrequency', label: 'Ultra / Game', axis: 'Ultra declarations per game', unit: 'per-game', category: 'behavioral',
-    description: 'Ultra declarations per game.',
+    description: 'Ultra declarations per telemetry-covered game.',
     source: 'participants[].ultraDecisionCount',
     extract: (s) => perGame(s, 'ultraDecisionCount'),
+    coverage: (s) => coverInfo(s, 'ultraDecisionCount'),
     unavailableReason: 'ultra telemetry not retained',
   },
   voltageFrequency: {
     id: 'voltageFrequency', label: 'Voltage / Game', axis: 'Voltage declarations per game', unit: 'per-game', category: 'behavioral',
-    description: 'Voltage trigger declarations per game.',
+    description: 'Voltage trigger declarations per telemetry-covered game.',
     source: 'participants[].voltageDecisionCount',
     extract: (s) => perGame(s, 'voltageDecisionCount'),
+    coverage: (s) => coverInfo(s, 'voltageDecisionCount'),
     unavailableReason: 'voltage telemetry not retained',
   },
 });
@@ -492,7 +580,11 @@ export function buildMatchupEdges(summaries) {
     if (r0 === 'abort' && r1 === 'abort') continue;
     e.games += 1;
     if (row.matchId) e.matchIds.push(row.matchId);
-    if (seatOf(0) === 1) e.seatA1 += 1; else e.seatB1 += 1;
+    // Seat counters belong to the normalized policy identity, not the
+    // participant array position — a row arriving as [b, a] must still
+    // attribute seat 1 to whichever of a/b actually sat there.
+    const aIdx = policyIds[0] === e.a ? 0 : 1;
+    if (seatOf(aIdx) === 1) e.seatA1 += 1; else e.seatB1 += 1;
     if (r0 === 'draw' || r1 === 'draw') { e.draws += 1; continue; }
     const winnerIdx = r0 === 'win' ? 0 : r1 === 'win' ? 1 : -1;
     if (winnerIdx < 0) continue;
@@ -574,7 +666,13 @@ export function identityColor(id) {
 export function buildAtlasModel({ summaries, xMetricId, yMetricId, minGames = 1, cohort = 'all' } = {}) {
   const all = Array.isArray(summaries) ? summaries : [];
   const cohorts = atlasCohorts(all);
-  const scoped = cohort === 'all' || !cohorts.has(cohort) ? all : cohorts.get(cohort);
+  // An unknown cohort (stale deep-link, typo) must never silently widen
+  // the evidence population — the model scopes to nothing and discloses
+  // why. Only the explicit 'all' value combines cohorts.
+  const cohortError = cohort !== 'all' && !cohorts.has(cohort)
+    ? { requested: cohort, reason: `unknown cohort "${cohort}" — no evidence was selected` }
+    : null;
+  const scoped = cohort === 'all' ? all : cohorts.get(cohort) ?? [];
   const xDef = atlasMetric(xMetricId) ?? atlasMetric(ATLAS_DEFAULT_X);
   const yDef = atlasMetric(yMetricId) ?? atlasMetric(ATLAS_DEFAULT_Y);
   const stats = buildPolicyStats(scoped);
@@ -624,6 +722,7 @@ export function buildAtlasModel({ summaries, xMetricId, yMetricId, minGames = 1,
     edges,
     stats,
     cohorts: [...cohorts.keys()],
+    cohortError,
     matchCount: scoped.length,
     totalPolicies: stats.size,
     hasOpportunityTelemetry: hasOppTelemetry,

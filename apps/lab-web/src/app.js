@@ -37,6 +37,7 @@ import { renderCards } from './workspaces/cards/card-workspace.js';
 import { renderAuth } from './workspaces/auth.js';
 import { renderSettings } from './workspaces/settings.js';
 import { renderCompare, renderMechanics, renderSynergies, renderHistory, renderReplays, renderTraces } from './workspaces/observatory.js';
+import { renderComboAtlas } from './workspaces/combo-atlas.js';
 import { renderMetaAtlas } from './workspaces/meta-atlas.js';
 import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js';
 import { createReplayTransport } from './replay-transport.mjs';
@@ -287,7 +288,7 @@ export function render() {
   const renderers = {
     '/strategy': renderStrategy,
     '/watch': renderWatch, '/replays': renderReplays, '/history': renderHistory,
-    '/mechanics': renderMechanics, '/synergies': renderSynergies,
+    '/mechanics': renderMechanics, '/combo': renderComboAtlas, '/synergies': renderSynergies,
     '/ranks': renderRanks, '/atlas': renderMetaAtlas, '/cards': renderCards, '/compare': renderCompare, '/traces': renderTraces,
     '/branches': renderBranches, '/forensic': renderForensic, '/diagnostics': renderDiagnostics, '/evolution': renderEvolutionLab, '/mutation': renderMutationChamber, '/discover': renderDiscover, '/tournament': renderTournament, '/evidence': renderEvidence, '/release-notes': renderReleaseNotes, '/profile': renderProfile, '/player': renderProfile, '/intelligence': renderIntelligence, '/achievements': async () => { const { renderAchievementsWorkspace } = await getAchievementUi(); return renderAchievementsWorkspace(app); }, '/settings': renderSettings
   };
@@ -1944,7 +1945,7 @@ function renderFilters() {
   // communicates analytical confidence instead of reading as a bare filter.
   const matchCount = state.aggregate?.matchCount ?? (Array.isArray(state.observatory?.summaries) ? state.observatory.summaries.length : null);
   const provenanceNote = `${matchCount != null ? fmt(matchCount) + ' matches · ' : ''}Engine ${ENGINE_VERSION} · Rules v${RULES_VERSION} · all compatible observations`;
-  filterBar.innerHTML = `<span class="eyebrow">COHORT</span>${chips.length ? `<span class="filter-count-badge" aria-label="${chips.length} active filters">${chips.length}</span>` : ''}${chips.length ? chips.map(([k, v], i) => `<span class="filter-chip"><b>${esc(k)}</b>${esc(v)}<button data-remove-filter="${i}" aria-label="Remove ${esc(k)} filter: ${esc(v)}">×</button></span>`).join('') : `<span class="footer-note cohort-provenance">${esc(provenanceNote)}</span>`}<button id="clear-filters" class="ghost-button" ${chips.length ? '' : 'disabled'}>Clear</button><label class="compact-control filter-view">View <select id="global-visibility" aria-label="Visibility mode">${visOpt('public', 'Public')}${visOpt('player', 'Player-authorized')}${visOpt('judge', 'Omniscient')}</select></label>`;
+  filterBar.innerHTML = `<span class="eyebrow">COHORT</span>${chips.length ? `<span class="filter-count-badge" aria-label="${chips.length} active filters">${chips.length}</span>` : ''}${chips.length ? chips.map(([k, v], i) => `<span class="filter-chip"><b>${esc(k)}</b>${esc(v)}<button data-remove-filter="${i}" aria-label="Remove ${esc(k)} filter: ${esc(v)}">×</button></span>`).join('') : `<span class="footer-note cohort-provenance">${esc(provenanceNote)}</span>`}<button id="clear-filters" class="ghost-button" ${chips.length ? '' : 'disabled'} title="Clear cohort filters only — does not affect Discovery runs">Clear Cohort</button><label class="compact-control filter-view">View <select id="global-visibility" aria-label="Visibility mode">${visOpt('public', 'Public')}${visOpt('player', 'Player-authorized')}${visOpt('judge', 'Omniscient')}</select></label>`;
   // Re-query after innerHTML replaces child nodes — these can't be cached
   filterBar.querySelectorAll('[data-remove-filter]').forEach(button => button.addEventListener('click', () => { chips[Number(button.dataset.removeFilter)][2](); render(); }));
   const visSelect = filterBar.querySelector('#global-visibility');

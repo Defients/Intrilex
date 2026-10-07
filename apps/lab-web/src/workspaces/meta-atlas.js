@@ -89,8 +89,12 @@ function axisSelect(id, current, model) {
 
 function controlsHtml(model) {
   const p = prefs();
-  const cohortOpts = ['all', ...model.cohorts].map((c) =>
-    `<option value="${esc(c)}" ${p.cohort === c ? 'selected' : ''}>${esc(c === 'all' ? 'All evidence' : atlasCohortLabel(c))}</option>`).join('');
+  // A stale/unknown cohort stays visible in the selector (marked
+  // unavailable) rather than silently presenting as "All evidence" —
+  // the evidence scope shown must match the scope actually applied.
+  const cohortVals = ['all', ...model.cohorts, ...(model.cohortError ? [model.cohortError.requested] : [])];
+  const cohortOpts = cohortVals.map((c) =>
+    `<option value="${esc(c)}" ${p.cohort === c ? 'selected' : ''}>${esc(c === 'all' ? 'All evidence' : c === model.cohortError?.requested ? `${c} — unavailable` : atlasCohortLabel(c))}</option>`).join('');
   const minGamesOpts = MIN_GAMES_OPTIONS.map((n) => `<option value="${n}" ${p.minGames === n ? 'selected' : ''}>≥ ${n} game${n > 1 ? 's' : ''}</option>`).join('');
   const nodeOpts = model.nodes.map((n) => `<option value="${esc(n.id)}" ${state.atlasSelected === n.id ? 'selected' : ''}>${esc(policyLabel(n.id))}</option>`).join('');
   return `<div class="atlas-controls" data-testid="atlas-controls">
@@ -119,7 +123,12 @@ export function renderMetaAtlas() {
   const p = prefs();
   const model = atlasModel();
   const originNote = state.observatory?.datasetOrigin === 'EVOLUTION_LAB'
-    ? ' Nodes derive from propagated lab runs (unverified telemetry).' : '';
+    ? ' Nodes derive from propagated lab runs (unverified telemetry).'
+    : state.observatory?.datasetOrigin === 'EXPERIMENT_RUNS'
+      ? ' Nodes derive from the experiment analysis set, not the certified corpus.' : '';
+  const cohortNote = model.cohortError
+    ? `<div class="notice warn atlas-cohort-note" data-testid="atlas-cohort-note"><strong>Cohort "${esc(model.cohortError.requested)}" has no evidence.</strong> ${esc(model.cohortError.reason)} — the scope was not widened to all evidence. Choose another dataset cohort.</div>`
+    : '';
   const excludedNote = model.excluded.length
     ? `<div class="notice info atlas-exclusions" data-testid="atlas-exclusions"><strong>${model.nodes.length} of ${model.totalPolicies} policies mapped.</strong> ${model.excluded.length} excluded: ${model.excluded.map((e) => `${esc(e.id)} (${esc(e.reason)})`).join('; ')}.</div>`
     : '';
@@ -132,6 +141,7 @@ export function renderMetaAtlas() {
     <div class="toolbar"><button id="atlas-export" class="secondary-button" data-testid="atlas-export">⇩ Export model</button><button id="atlas-reset-view" class="secondary-button">Reset view</button></div></div>
     ${labDatasetBanner()}${obsContextStrip(state.observatory)}
     ${controlsHtml(model)}
+    ${cohortNote}
     ${excludedNote}
     ${atlasSummaryHtml(model)}
     <div class="atlas-layout">

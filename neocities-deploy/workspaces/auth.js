@@ -5,8 +5,8 @@
 // Reflects the current auth state from auth-controller.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, showToast } from '../state.js?v=dac162e115e4';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=dac162e115e4';
+import { app, esc, showToast } from '../state.js?v=ef8ac632ff7c';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=ef8ac632ff7c';
 import {
   getAuthState,
   getProfile,
@@ -15,8 +15,8 @@ import {
   signInWithGoogle,
   signOut,
   subscribe,
-} from '../play/network/auth-controller.js?v=dac162e115e4';
-import { legalAcknowledgmentHtml } from '../legal-pages.js?v=dac162e115e4';
+} from '../play/network/auth-controller.js?v=ef8ac632ff7c';
+import { legalAcknowledgmentHtml } from '../legal-pages.js?v=ef8ac632ff7c';
 
 let _unsub = null;
 

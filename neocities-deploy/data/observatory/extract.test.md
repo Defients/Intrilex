@@ -2,9 +2,9 @@
 
 **Extract version:** 1.0.0
 **Analytics schema:** 4.2.0
-**Source hash:** `e575f12f7f70448743e77b00393638d78cb419467aee6e5d90b0462986d0b03d`
+**Source hash:** `3ffe3c3323c88cc6fc283c1bcd1387f1779b84311ec9b1cf0ca56d6888b123e6`
 **Aggregate hash:** `59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2`
-**Extract hash:** `6ea0307c2a4db4a7fb6852b76deb924ac49b72df72cda109a1c4cb3f7474d8d4`
+**Extract hash:** `d1414f564a3fe8707df333009146620188af223c28127717c9df7246f1e5a67f`
 
 ## Executive Summary
 
@@ -474,7 +474,7 @@ Replay refs: M-67e0e95c9279752ebbb3, M-3e56af56c419de97ddc8, M-cc250cc50515a292f
 
 <details><summary><b>draw</b></summary>
 
-Used in 50.5% of participant observations (101/200). Outcome association: negative (-0.210, CI [-0.346, -0.075]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient).
+Used in 50.5% of participant observations (101/200). Outcome association: negative (-0.210, CI [-0.346, -0.075]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak).
 
 Replay refs: M-da33bf6f5bb04f175916, M-754f798f908f9e4f73d8, M-d42c5a76b1a43e8227de, M-3dc3510153eebdf54abb
 </details>
@@ -565,7 +565,7 @@ Replay refs: M-f3fba5744ac97b09f3e9, M-7d6730d8dab297d9def5, M-d42c5a76b1a43e822
 
 <details><summary><b>five-gy-bottom</b></summary>
 
-Used in 11.0% of participant observations (22/200). Outcome association: positive (0.460, CI [0.319, 0.600]). Evidence grade: EXPLORATORY (insufficient).
+Used in 11.0% of participant observations (22/200). Outcome association: positive (0.460, CI [0.319, 0.600]). Evidence grade: EXPLORATORY (weak).
 
 Replay refs: M-f3fba5744ac97b09f3e9, M-8fcc52b645373191c478, M-b615ae18bd3e0f132ef8, M-84269db284883330999c
 </details>
@@ -1258,7 +1258,7 @@ Replay refs: M-f3fba5744ac97b09f3e9, M-f1291cd390d331a3ffbb, M-1b9ce7c6ecb94b540
 
 <details><summary><b>swap-bar</b></summary>
 
-Used in 55.5% of participant observations (111/200). Outcome association: positive (0.233, CI [0.097, 0.368]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient).
+Used in 55.5% of participant observations (111/200). Outcome association: positive (0.233, CI [0.097, 0.368]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak).
 
 Replay refs: M-da33bf6f5bb04f175916, M-dfab048a83e3b8acc06c, M-d42c5a76b1a43e8227de, M-5ef9d016ebb1846cf10b
 </details>
@@ -1412,7 +1412,7 @@ Replay refs: M-da33bf6f5bb04f175916, M-c7fa95689d660a49366b, M-d42c5a76b1a43e822
 
 <details><summary><b>voltage</b></summary>
 
-Used in 16.0% of participant observations (32/200). Outcome association: positive (0.298, CI [0.130, 0.465]). Evidence grade: EXPLORATORY (insufficient).
+Used in 16.0% of participant observations (32/200). Outcome association: positive (0.298, CI [0.130, 0.465]). Evidence grade: EXPLORATORY (weak).
 
 Replay refs: M-f3fba5744ac97b09f3e9, M-889076167d236a1a97c2, M-b615ae18bd3e0f132ef8, M-015b0b148b1e1f8a9876
 </details>
@@ -1447,10 +1447,10 @@ Replay refs: M-9ac093c9da6330a6fdec, M-950f525deedd2a7736c7, M-e50eb7181b42fcaf3
 - **2-black-2-red-draw → disrupt** — 2 occurrence(s), 2 matches
 - **2-black-2-red-draw → score** — 2 occurrence(s), 2 matches
 - **2-black-2-red-rummage → score** — 2 occurrence(s), 1 matches
+- **combo → combo** — 2 occurrence(s), 2 matches
+- **combo → disrupt** — 2 occurrence(s), 2 matches
 - **disrupt → disrupt** — 2 occurrence(s), 2 matches
 - **disrupt → unclassified** — 2 occurrence(s), 2 matches
-- **rank10-stack-theft → three-red-counter** — 2 occurrence(s), 2 matches
-- **score → disrupt** — 2 occurrence(s), 2 matches
 
 ## Anomalies
 

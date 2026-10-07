@@ -14,6 +14,7 @@
 // ═══════════════════════════════════════════════════════════════
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { runInNewContext } from 'node:vm';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -233,6 +234,35 @@ test('filters: evidence scope filter uses the mapping, not guesses', () => {
   assert.ok(!insufficient.some(m => m.identity === 'A♣'), 'card with mapped evidence must not appear as insufficient');
 });
 
+test('filters: rank fallback means exactly "entity evidence missing, rank aggregate exists"', () => {
+  const va = makeVa({ metrics: {
+    'K': { variantOpportunityCount: 40, variantSelectionCount: 8 },          // rank aggregate exists
+    'A:normal': { variantOpportunityCount: 50, variantSelectionCount: 10 }, // exact evidence — no fallback
+  } });
+  const deck = M.buildDeck(va);
+  const fb = M.filterModels(deck, { evidence: 'rank-fallback' });
+  assert.deepEqual(fb.map((m) => m.identity).sort(), ['K♠', 'K♣', 'K♦', 'K♥'].sort(),
+    'only the four Kings qualify — their mapped entity rows are missing but rank K carries telemetry');
+  for (const m of fb) {
+    assert.equal(m.evidence.status, M.EVIDENCE_STATUS.UNAVAILABLE, 'fallback applies only when own evidence is missing');
+    assert.ok(m.evidence.rankFallback, 'fallback disclosure must travel with the model');
+    assert.equal(m.evidence.rankFallback.key, 'K');
+  }
+  assert.ok(!fb.some((m) => m.identity === 'A♣'), 'a card with mapped evidence must not appear in rank-fallback');
+  // No rank telemetry at all → the filter returns nothing, by design.
+  assert.equal(M.filterModels(M.buildDeck(makeVa()), { evidence: 'rank-fallback' }).length, 0);
+});
+
+test('filters: every visible evidence filter has defined, deterministic semantics', () => {
+  const deck = M.buildDeck(null);
+  for (const f of M.EVIDENCE_FILTERS) {
+    const result = M.filterModels(deck, { evidence: f.value });
+    assert.ok(Array.isArray(result), `${f.value} must evaluate`);
+    assert.deepEqual(M.filterModels(deck, { evidence: f.value }).map((m) => m.identity), result.map((m) => m.identity), `${f.value} must be deterministic`);
+    if (f.value !== 'all') assert.ok(result.length <= deck.length, `${f.value} must narrow, never widen`);
+  }
+});
+
 test('filters: clear filters restores the full deck (toolbar contract)', async () => {
   const ws = await src('workspaces/cards/card-workspace.js');
   assert.ok(ws.includes('card-clear-filters'), 'clear-filters control must exist');
@@ -285,4 +315,55 @@ test('deep-link: selected card syncs to ?card= without extra history entries', a
   const ws = await src('workspaces/cards/card-workspace.js');
   assert.ok(ws.includes('history.replaceState'), 'must use replaceState (no history spam)');
   assert.ok(ws.includes("params.get('card')"), 'must read the card deep-link');
+});
+
+// ═══ List-view pick-rate truthfulness ══════════════════════════
+// pct(null) coerces through Number() to 0 — so the guard must live at
+// the call site. This exercises the real listViewHTML renderer.
+
+async function loadListViewHTML() {
+  const wsSrc = (await src('workspaces/cards/card-workspace.js'))
+    .replace(/^import .*;$/gm, '').replace(/^export /gm, '');
+  const sandbox = {
+    state: {}, app: { innerHTML: '' },
+    esc: (s) => String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'),
+    fmt: (n) => String(n),
+    // Faithful copy of state.js pct semantics — Number(null) === 0, which
+    // is exactly why the call-site guard matters.
+    pct: (value) => Number.isFinite(Number(value)) ? `${(Number(value) * 100).toFixed(1)}%` : '—',
+    rerender: () => {}, labDatasetBanner: () => '', obsContextStrip: () => '', metricStrip: () => '',
+    emptyEvidenceState: () => '', dossierSection: () => '', renderCardFace: () => '',
+    renderAdvancedCardRulesView: () => '', radarChart: () => '', CARD_FACE_REGISTRY_META: {},
+    M, location: { hash: '#/cards' }, history: { replaceState() {} },
+    document: { querySelector: () => null, querySelectorAll: () => [], getElementById: () => null, createElement: () => ({ click() {}, setAttribute() {} }) },
+  };
+  return runInNewContext(`${wsSrc}\n({ listViewHTML })`, sandbox);
+}
+
+function listRowModel(metrics, status = 'available') {
+  return {
+    identity: 'A♣', title: 'Ace', suitLabel: '♣', pr: 4, timings: [],
+    entity: { scopeLabel: 'Shared normal evidence — ♣/♦/♥' },
+    evidence: { status, confidence: 'MEDIUM', metrics },
+  };
+}
+
+test('list view: pick rate shows 0.0% only for a measured zero — null/missing render —', async () => {
+  const { listViewHTML } = await loadListViewHTML();
+  const measuredZero = listViewHTML([listRowModel({ variantOpportunityCount: 50, variantSelectionCount: 0, variantPlayRate: 0 })], null);
+  assert.ok(measuredZero.includes('0.0%'), 'a measured 0% pick rate renders 0.0%');
+  for (const bad of [null, undefined, Number.NaN]) {
+    const html = listViewHTML([listRowModel({ variantOpportunityCount: 50, variantSelectionCount: 10, variantPlayRate: bad })], null);
+    assert.ok(!html.includes('0.0%'), `pick rate ${bad} must never render as 0.0%`);
+    assert.ok(html.includes('—'), 'missing pick rate renders —');
+  }
+});
+
+test('list view: a legacy integrity-failure row never implies a 0% pick rate', async () => {
+  const { listViewHTML } = await loadListViewHTML();
+  const va = makeVa({ metrics: { 'A:normal': { variantOpportunityCount: 0, variantSelectionCount: 5 } } });
+  const model = M.buildDeck(va).find((m) => m.identity === 'A♣');
+  assert.equal(model.evidence.status, M.EVIDENCE_STATUS.INTEGRITY_FAILURE, 'fixture must hit the legacy telemetry path');
+  const html = listViewHTML([model], null);
+  assert.ok(!html.includes('0.0%'), 'unrecorded opportunity denominators make pick rate unknowable — never 0.0%');
 });

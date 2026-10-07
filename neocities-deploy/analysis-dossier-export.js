@@ -3,13 +3,14 @@
 // read-only liveLabSnapshot boundary), builds the canonical dossier and
 // downloads it. All analytics live in analysis-dossier.js — this module only
 // does I/O. Browser-only; tests exercise the builder directly.
-import { state } from './state.js?v=dac162e115e4';
-import { buildAnalysisDossier, serializeAnalysisDossier, renderAnalysisDossierMarkdown, analysisDossierFileNames } from './analysis-dossier.js?v=dac162e115e4';
-import { EvolutionStore } from './evolution/evolution-store.mjs?v=dac162e115e4';
-import { StrategyStore } from './strategy/strategy-store.mjs?v=dac162e115e4';
-import { LAB_IDENTITY } from './evolution/identity.mjs?v=dac162e115e4';
-import { liveLabSnapshot } from './workspaces/evolution-dashboard.js?v=dac162e115e4';
-import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION, SCHEMA_VERSION } from './version.js?v=dac162e115e4';
+import { state } from './state.js?v=ef8ac632ff7c';
+import { buildAnalysisDossier, serializeAnalysisDossier, renderAnalysisDossierMarkdown, analysisDossierFileNames, deriveEvidenceStatus } from './analysis-dossier.js?v=ef8ac632ff7c';
+import { EvolutionStore } from './evolution/evolution-store.mjs?v=ef8ac632ff7c';
+import { StrategyStore } from './strategy/strategy-store.mjs?v=ef8ac632ff7c';
+import { LAB_IDENTITY } from './evolution/identity.mjs?v=ef8ac632ff7c';
+import { liveLabSnapshot } from './workspaces/evolution-dashboard.js?v=ef8ac632ff7c';
+import { collectExperimentEvidence } from './experiments/experiment-controller.mjs?v=ef8ac632ff7c';
+import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION, SCHEMA_VERSION } from './version.js?v=ef8ac632ff7c';
 
 const STRATEGY_STORES = ['evidence', 'sources', 'events', 'replays', 'studies', 'claims', 'archives', 'informationSets', 'informationPlans', 'informationStudies', 'provenance'];
 
@@ -26,8 +27,14 @@ export async function collectLabEvidence() {
     liveAggregator: live.liveAggregator ?? null, liveArchiveRef: live.liveArchiveRef ?? null,
     analyticsFilters: live.analyticsFilters ?? null, liveMatrix: live.liveMatrix ?? null,
     persistedRuns: [], matrices: [], researchProjects: [], mutations: [], strategy: null,
+    experiments: null,
     collectionNotes: [],
   };
+  try {
+    lab.experiments = collectExperimentEvidence();
+  } catch (error) {
+    lab.experiments = { available: false, reason: `Experiment evidence projection failed: ${error?.message ?? 'unknown error'}` };
+  }
   if (live.researchProject) lab.researchProjects.push({ project: live.researchProject, contentHash: null });
   if (live.researchArchive) lab.collectionNotes.push('A historical research archive is open for inspection; it is not merged into current evidence.');
 
@@ -97,9 +104,43 @@ export async function buildCurrentAnalysisDossier() {
     rankAuthority: state.rankAuthority ?? null, rankAnatomyRegistry: state.rankAnatomyRegistry ?? null,
     replayIndex: state.index ?? null, autonomyIndex: state.autonomyIndex ?? null,
     versions: { labVersion: LAB_VERSION, engineVersion: ENGINE_VERSION, rulesVersion: RULES_VERSION, officialRulesVersion: OFFICIAL_RULES_VERSION, observatorySchemaVersion: SCHEMA_VERSION },
-    analysisExtract, lab,
+    analysisExtract, lab, experiments: lab.experiments,
   });
   return dossier;
+}
+
+/**
+ * Compact Evidence Status for the export hub overlay — derived from the same
+ * evidence stores as the dossier (same source of truth) but at metadata
+ * level only: no run bodies, no full dossier serialization. Called every
+ * time the overlay opens so counts can never go stale.
+ */
+export async function dossierEvidenceStatus() {
+  const live = liveLabSnapshot();
+  let experiments = null;
+  try { experiments = collectExperimentEvidence(); }
+  catch (error) { experiments = { available: false, reason: `Experiment evidence projection failed: ${error?.message ?? 'unknown error'}` }; }
+  let strategySources = [], strategyReachable = false;
+  try {
+    const strategies = new StrategyStore();
+    try { strategySources = await strategies.listSources(); strategyReachable = true; }
+    finally { strategies.close(); }
+  } catch { strategyReachable = false; }
+  let labRunCount = 0;
+  try {
+    const store = new EvolutionStore(LAB_IDENTITY);
+    try { labRunCount = (await store.list()).length; }
+    finally { store.close(); }
+  } catch { labRunCount = 0; }
+  return deriveEvidenceStatus({
+    observatory: state.observatory ?? null,
+    experiments,
+    strategySources,
+    strategyReachable,
+    labRunCount,
+    liveRunStrategicTrace: live.liveRun?.config?.strategicTrace === true,
+    labFingerprint: LAB_IDENTITY?.fingerprint ?? null,
+  });
 }
 
 function downloadFile(name, text, type) {

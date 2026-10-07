@@ -155,6 +155,89 @@ test('MetaAtlas: missing telemetry fields produce null metrics, not fabricated z
   assert.equal(atlasMetric('responsePlayRate').extract(stats.get('beta')), 0.25);
 });
 
+test('MetaAtlas: partial telemetry coverage never dilutes per-game metrics toward zero', () => {
+  // alpha plays 2 games; miniTurnActionCount is retained on only ONE of
+  // them. The estimand is per telemetry-covered game — the missing row is
+  // unknown, not an observed zero, so it cannot halve the measured mean.
+  const rows = alphaBetaSeries(1);
+  rows[0].participants[0].miniTurnActionCount = 20;
+  delete rows[1].participants[0].miniTurnActionCount;
+  const stats = buildPolicyStats(rows);
+  const a = stats.get('alpha');
+  assert.equal(a.games, 2);
+  const def = atlasMetric('miniTurnsPerGame');
+  assert.equal(def.extract(a), 20, 'sum over covered rows ÷ covered rows — never ÷ all games');
+  assert.deepEqual(def.coverage(a), { covered: 1, total: 2 }, 'partial coverage is disclosed');
+});
+
+test('MetaAtlas: zero telemetry coverage yields null, full coverage yields the true mean', () => {
+  const stripped = alphaBetaSeries(2).map((r) => {
+    delete r.participants[0].miniTurnActionCount;
+    return r;
+  });
+  const zero = buildPolicyStats(stripped).get('alpha');
+  assert.equal(atlasMetric('miniTurnsPerGame').extract(zero), null, 'no coverage → unavailable, never 0');
+  const full = buildPolicyStats(alphaBetaSeries(2)).get('alpha');
+  assert.equal(atlasMetric('miniTurnsPerGame').extract(full), 5, 'full coverage → mean over all covered games');
+  assert.deepEqual(atlasMetric('miniTurnsPerGame').coverage(full), { covered: 3, total: 3 });
+});
+
+test('MetaAtlas: mixed old/new telemetry — every optional per-game metric respects coverage', () => {
+  // Simulate a mixed corpus: newer rows carry the field, older ones never
+  // retained it. Each field-based metric must divide by its own covered
+  // denominator — including the frequencies the mission calls out.
+  const fields = ['decisionCount', 'advancedDecisionCount', 'ultraDecisionCount',
+    'voltageDecisionCount', 'exhaustedPassActionCount', 'privateChoiceDecisionCount'];
+  const metricFor = { decisionCount: 'decisionsPerGame', advancedDecisionCount: 'advancedFrequency',
+    ultraDecisionCount: 'ultraFrequency', voltageDecisionCount: 'voltageFrequency',
+    exhaustedPassActionCount: 'exhaustedPassRate', privateChoiceDecisionCount: 'privateChoiceDensity' };
+  const rows = alphaBetaSeries(3);
+  // New telemetry only on the first row; the other three rows are old-schema.
+  const values = { decisionCount: 10, advancedDecisionCount: 1, ultraDecisionCount: 4, voltageDecisionCount: 2, exhaustedPassActionCount: 7, privateChoiceDecisionCount: 1 };
+  for (const f of fields) {
+    rows[0].participants[0][f] = values[f];
+    for (let i = 1; i < rows.length; i += 1) delete rows[i].participants[0][f];
+  }
+  const stats = buildPolicyStats(rows);
+  const a = stats.get('alpha');
+  for (const f of fields) {
+    const def = atlasMetric(metricFor[f]);
+    assert.equal(def.extract(a), values[f], `${metricFor[f]} must use the covered denominator (1), not games (${a.games})`);
+    assert.deepEqual(def.coverage(a), { covered: 1, total: a.games });
+  }
+});
+
+test('MetaAtlas: paired-field ratios exclude rows missing either side', () => {
+  // Row 1 carries play+opportunity; row 2 carries the opportunity count
+  // only. The ratio's denominator must not borrow opportunities from rows
+  // whose numerator was never observed.
+  const rows = alphaBetaSeries(1);
+  rows[0].participants[0].responseOpportunityCount = 8;
+  rows[0].participants[0].responsePlayCount = 4;
+  delete rows[1].participants[0].responsePlayCount;
+  const stats = buildPolicyStats(rows);
+  const a = stats.get('alpha');
+  const def = atlasMetric('responsePlayRate');
+  assert.equal(def.extract(a), 0.5, '4 plays / 8 opportunities on paired rows — never 4/16 across unpaired rows');
+  assert.deepEqual(def.coverage(a), { covered: 1, total: 2 });
+});
+
+test('MetaAtlas: mechanic use/opportunity metrics pair rows that carry both maps', () => {
+  const rows = alphaBetaSeries(1);
+  rows[0].participants[0].mechanicCounts = { score: 3 };
+  rows[0].participants[0].mechanicOpportunityCounts = { score: 6 };
+  delete rows[1].participants[0].mechanicOpportunityCounts;   // unpaired row — numerator-only
+  const stats = buildPolicyStats(rows);
+  const a = stats.get('alpha');
+  assert.equal(atlasMetric('scorePickRate').extract(a), 0.5, 'paired estimand: 3 uses / 6 opportunities on the row carrying both');
+  // scoreFrequency is per covered game: the row WITHOUT mechanicCounts is
+  // not a zero-usage observation.
+  const rows2 = alphaBetaSeries(1);
+  delete rows2[1].participants[0].mechanicCounts;
+  const a2 = buildPolicyStats(rows2).get('alpha');
+  assert.equal(atlasMetric('scoreFrequency').extract(a2), 2, 'mechanic-covered games only — row without the map excluded');
+});
+
 test('MetaAtlas: self-play counts toward games but never the cross-policy record', () => {
   const stats = buildPolicyStats([
     mkSummary({ id: 'S-1', p1: 'alpha', p2: 'alpha' }),
@@ -225,6 +308,36 @@ test('MetaAtlas: unbalanced seats are reported on the edge', () => {
   assert.equal(e.seatB1, 0);
 });
 
+test('MetaAtlas: seat attribution follows normalized policy identity, not participant array order', () => {
+  // The SAME real-world result supplied in both policy array orders must
+  // produce identical edge output: alpha won from seat 1 against beta.
+  const forward = [mkSummary({ id: 'S-1', p1: 'alpha', p2: 'beta', p1Seat: 1, r1: 'win', r2: 'loss', winner: 'P1' })];
+  const flipped = [{
+    matchId: 'S-1', policyIds: ['beta', 'alpha'], seatOrder: ['P1', 'P2'], winner: 'P2',
+    winningSeat: 1, terminationReason: 'NORMAL_VICTORY', completedFullTurns: 10,
+    finalScores: { P1: 10, P2: 20 },
+    participants: [
+      { matchId: 'S-1', seat: 2, playerId: 'P1', policyId: 'beta', result: 'loss', scoreFor: 10, scoreAgainst: 20 },
+      { matchId: 'S-1', seat: 1, playerId: 'P2', policyId: 'alpha', result: 'win', scoreFor: 20, scoreAgainst: 10 },
+    ],
+  }];
+  const eF = buildMatchupEdges(forward)[0];
+  const eR = buildMatchupEdges(flipped)[0];
+  for (const k of ['a', 'b', 'games', 'decisive', 'draws', 'aWins', 'bWins', 'seatA1', 'seatB1', 'winRate', 'advantage', 'tier', 'balancedSeats']) {
+    assert.deepEqual(eR[k], eF[k], `${k} must be order-invariant (${eR[k]} vs ${eF[k]})`);
+  }
+  assert.equal(eF.seatA1, 1, 'alpha — normalized a — sat in seat 1');
+  assert.equal(eF.seatB1, 0);
+  // The unbalanced-seat flag must also be order-invariant over a series.
+  const rows = [];
+  for (let i = 0; i < 8; i += 1) {
+    rows.push(mkSummary({ id: `Z-${i}`, p1: 'alpha', p2: 'beta', p1Seat: 1 }));
+    flipped.push({ ...structuredClone(flipped[0]), matchId: `Zf-${i}` });
+  }
+  flipped.shift();
+  assert.deepEqual(buildMatchupEdges(flipped)[0].balancedSeats, buildMatchupEdges(rows)[0].balancedSeats);
+});
+
 // ── atlas model ──────────────────────────────────────────────────────────
 test('MetaAtlas: buildAtlasModel normalizes nodes with axis values and evidence', () => {
   const model = buildAtlasModel({ summaries: alphaBetaSeries(5), xMetricId: 'miniTurnsPerGame', yMetricId: 'winRate' });
@@ -266,6 +379,24 @@ test('MetaAtlas: invalid metric ids fall back to defaults; cohort scope isolates
   assert.equal(scoped.matchCount, 5);
   const alpha = scoped.nodes.find((n) => n.id === 'alpha');
   assert.ok(Math.abs(alpha.y - 4 / 5) < 1e-9);
+});
+
+test('MetaAtlas: an unknown cohort never silently widens to all evidence', () => {
+  const rows = alphaBetaSeries(5);
+  const allModel = buildAtlasModel({ summaries: rows, xMetricId: 'miniTurnsPerGame', yMetricId: 'winRate' });
+  assert.ok(allModel.matchCount > 0);
+  const stale = buildAtlasModel({ summaries: rows, xMetricId: 'miniTurnsPerGame', yMetricId: 'winRate', cohort: 'matrix:stale-link' });
+  assert.ok(stale.cohortError, 'a stale cohort must be reported, not widened');
+  assert.equal(stale.cohortError.requested, 'matrix:stale-link');
+  assert.equal(stale.nodes.length, 0);
+  assert.equal(stale.edges.length, 0);
+  assert.equal(stale.matchCount, 0);
+  assert.notEqual(stale.matchCount, allModel.matchCount, 'invalid cohort must never produce the all-evidence model');
+  // 'all' remains the only path that intentionally combines cohorts.
+  const mixed = [...alphaBetaSeries(2).map((r) => ({ ...r, matrixId: 'MX-1' })), ...alphaBetaSeries(2)];
+  const onlyMatrix = buildAtlasModel({ summaries: mixed, xMetricId: 'miniTurnsPerGame', yMetricId: 'winRate', cohort: 'matrix:MX-1' });
+  assert.equal(onlyMatrix.matchCount, 3);
+  assert.equal(onlyMatrix.cohortError, null);
 });
 
 // ── collisions ───────────────────────────────────────────────────────────

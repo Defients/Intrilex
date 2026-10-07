@@ -160,6 +160,7 @@ export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
     ...(summary.exhaustedPassActionCount!=null?{exhaustedPassActionCount:summary.exhaustedPassActionCount}:{}) ,
     ...(summary.triggerCount!=null?{triggerCount:summary.triggerCount}:{}) ,
     ...(summary.strategicTelemetry ? {strategicTelemetry:summary.strategicTelemetry} : {}),
+    ...(summary.comboTelemetry ? {comboTelemetry:jsonClean(summary.comboTelemetry)} : {}),
     ...(summary.strategyDecisions ? {strategyDecisions:summary.strategyDecisions} : {}),
     ...(summary.terminalEvidence ? {terminalEvidence:summary.terminalEvidence} : {}),
     actionCounts: summary.decisionFamilyCounts ?? {}, eventCounts: summary.eventTypeCounts ?? {},

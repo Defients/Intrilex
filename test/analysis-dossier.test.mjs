@@ -391,3 +391,257 @@ test('incomplete and imported-unverified mutation experiments are flagged in ope
   assert.ok(d.openQuestions.some(q => q.includes('EXP-PART') && /full declared plan/.test(q)));
   assert.ok(d.openQuestions.some(q => q.includes('EXP-IMPORTED') && /IMPORTED_UNVERIFIED/.test(q)));
 });
+
+test('a cancelled mutation experiment projects cancelled execution and stays flagged, never a finished verdict', () => {
+  // The shape the workspace writes when a run is cancelled: status
+  // incomplete, execution carries the cancelled flag, no ledger/arms —
+  // the dossier must copy that truth, not synthesize a complete record.
+  const lab = labInput();
+  lab.mutations = [{ record: {
+    experimentType: 'rule-mutation', experimentId: 'EXP-CANCELLED',
+    status: 'incomplete', createdAt: '2026-01-03T00:00:00.000Z',
+    baseline: { engineVersion: '4.2.6', rulesVersion: '4.3.1', labVersion: '1.0.0', authorityHash: 'abc' },
+    mutation: { id: 'MUT-c', targetId: 'miniTurns.hardCap', label: 'mini-turn cap', baselineValue: 3, mutatedValue: 2, type: 'numeric' },
+    hypothesis: 'h', config: { profileId: 'core-advanced-authority', population: ['tempo-tactical'], gamesPerArm: 4, matchedSeeds: true, swapSides: true, seedBase: 7, decisionLimit: 1800, objective: null },
+    execution: { plannedSpecCount: 8, completedSpecCount: 0, cancelled: true, completedAt: '2026-01-03T00:00:10.000Z' },
+  }, contentHash: null }];
+  lab.liveRun = null;
+  const d = buildAnalysisDossier(dossierInput({ lab }), { generatedAt: GENERATED });
+  const mut = d.evolution.ruleMutations.find((m) => m.experimentId === 'EXP-CANCELLED');
+  assert.ok(mut, 'the cancelled experiment must still surface in the dossier');
+  assert.equal(mut.status, 'incomplete');
+  assert.equal(mut.execution.cancelled, true, 'the cancelled flag is projected verbatim');
+  assert.equal(mut.execution.completedSpecCount, 0);
+  assert.ok(d.openQuestions.some((q) => q.includes('EXP-CANCELLED')), 'a cancelled plan remains an open question, not silent');
+});
+
+// ── Experiment scope (v1.1) ──────────────────────────────────────────────
+// `experiments` is the collectExperimentEvidence() projection — the dossier
+// must expose exactly which experiment runs produced (or failed to produce)
+// the exported dataset.
+import { deriveEvidenceStatus } from '../apps/lab-web/src/analysis-dossier.js';
+
+function experimentInput(overrides = {}) {
+  return {
+    available: true,
+    experimentId: 'EXP-LAB', analysisSetId: 'SET-LAB',
+    includedRunIds: [], includedRunCount: 0, includedGames: 0,
+    excludedRunCount: 0, excludedGames: 0, totalRuns: 0,
+    invalidatedCount: 0, archivedCount: 0, failedCount: 0,
+    persisted: true, fallback: 'certified-baseline', bundledBaselineContributing: false,
+    runs: [], warnings: [],
+    ...overrides,
+  };
+}
+const runRow = (id, extra = {}) => ({ runId: id, ordinal: 1, status: 'COMPLETED', lifecycle: 'active', pinned: false, included: true, origin: 'session', createdAt: '2026-01-10T00:00:00.000Z', matchCount: 500, seat1WinRate: 0.5, compatibility: 'COMPATIBLE', exclusionReason: null, exclusionNote: null, rulesVersion: '4.3.1', engineVersion: '4.2.6', profileId: 'core-advanced-authority', policyIds: ['value', 'tempo'], canonicalResultHash: 'a'.repeat(64), runHash: 'b'.repeat(64), ...extra });
+const experimentObservatory = { ...observatory, datasetOrigin: 'EXPERIMENT_RUNS' };
+
+test('certified-corpus export declares the experiment has no recorded runs', () => {
+  const d = buildAnalysisDossier(dossierInput({ experiments: experimentInput() }), { generatedAt: GENERATED });
+  assert.equal(d.scope.datasetOrigin, 'CERTIFIED_CORPUS');
+  assert.equal(d.scope.experiment.available, true);
+  assert.equal(d.scope.experiment.selectedExperimentIncluded, false);
+  assert.match(d.scope.experiment.exclusionReason, /No experiment runs recorded/);
+  assert.equal(d.dataset.experiment.runCount, 0);
+  assert.equal(d.companionArtifacts.experimentRuns.available, false);
+  assert.match(d.companionArtifacts.experimentRuns.reason, /no session runs/i);
+});
+
+test('experiment-linked dataset reports contributing runs and identity', () => {
+  const experiments = experimentInput({
+    includedRunIds: ['RUN-001', 'RUN-002'], includedRunCount: 2, includedGames: 1500,
+    totalRuns: 3, excludedRunCount: 1, excludedGames: 500, fallback: null,
+    runs: [runRow('RUN-001'), runRow('RUN-002', { ordinal: 2 }), runRow('RUN-003', { ordinal: 3, included: false, exclusionReason: 'duplicate' })],
+  });
+  const d = buildAnalysisDossier(dossierInput({ observatory: experimentObservatory, experiments }), { generatedAt: GENERATED });
+  assert.equal(d.scope.datasetOrigin, 'EXPERIMENT_RUNS');
+  assert.equal(d.scope.experiment.selectedExperimentIncluded, true);
+  assert.equal(d.scope.experiment.experimentId, 'EXP-LAB');
+  assert.equal(d.scope.experiment.analysisSetId, 'SET-LAB');
+  assert.deepEqual(d.scope.experiment.includedRunIds, ['RUN-001', 'RUN-002']);
+  assert.equal(d.dataset.experiment.includedGames, 1500);
+  assert.equal(d.experiment.runs.length, 3);
+  const excluded = d.experiment.runs.find(r => r.runId === 'RUN-003');
+  assert.equal(excluded.included, false);
+  assert.equal(excluded.exclusionReason, 'duplicate');
+  const md = renderAnalysisDossierMarkdown(d);
+  assert.ok(md.includes('## Evidence Scope'), 'markdown exposes the scope section');
+  assert.ok(md.includes('EXP-LAB'), 'markdown names the experiment');
+  assert.ok(md.includes('Experiment included | yes'), 'markdown states inclusion');
+});
+
+test('selected-but-not-contributing experiment is fail-visible, never implied included', () => {
+  // Runs exist in the store but the exported dataset is the certified corpus —
+  // e.g. every run was excluded, or the store could not persist the selection.
+  const experiments = experimentInput({
+    totalRuns: 2, excludedRunCount: 2, excludedGames: 1000,
+    runs: [runRow('RUN-001', { included: false, exclusionReason: 'other' }), runRow('RUN-002', { ordinal: 2, included: false, exclusionReason: 'exploratory' })],
+  });
+  const d = buildAnalysisDossier(dossierInput({ experiments }), { generatedAt: GENERATED });
+  assert.equal(d.scope.datasetOrigin, 'CERTIFIED_CORPUS');
+  assert.equal(d.scope.experiment.selectedExperimentIncluded, false);
+  assert.match(d.scope.experiment.exclusionReason, /recorded but none contribute/);
+  assert.ok(d.openQuestions.some(q => q.includes('EXP-LAB')), 'open questions surface the non-contributing experiment');
+  const md = renderAnalysisDossierMarkdown(d);
+  assert.ok(md.includes('no —'), 'markdown says the experiment is NOT included');
+});
+
+test('missing experiment evidence is an explicit unavailable domain', () => {
+  const d = buildAnalysisDossier(dossierInput(), { generatedAt: GENERATED });
+  assert.equal(d.experiment.available, false);
+  assert.equal(d.scope.experiment.selectedExperimentIncluded, null);
+  assert.ok(d.unavailable.some(u => u.domain === 'experiment'), 'unavailable domains declare experiment');
+});
+
+// ── Companion artifacts (v1.1) ───────────────────────────────────────────
+test('companionArtifacts manifest reports strategy, runs, replays and experiment evidence', () => {
+  const lab = labInput();
+  lab.strategy = {
+    sources: [
+      { artifactId: 'SRC-1', origin: 'LOCAL', fidelity: 'full', fingerprint: 'aa', rulesProfile: 'core-advanced-authority', eraId: 'e1', eventCount: 5000, retainedEvents: 1200, checkpointIds: [], policyIds: ['value'], subjects: [], replayHash: 'h1' },
+      { artifactId: 'SRC-2', origin: 'IMPORTED_UNVERIFIED', fidelity: 'sampled', fingerprint: 'aa', rulesProfile: 'core-advanced-authority', eraId: 'e1', eventCount: 3000, retainedEvents: 800, checkpointIds: [], policyIds: ['tempo'], subjects: [], replayHash: null },
+    ],
+    provenance: [], counts: { evidence: 2, sources: 2, events: 2 },
+  };
+  const experiments = experimentInput({
+    includedRunIds: ['RUN-001'], includedRunCount: 1, includedGames: 500, totalRuns: 1,
+    runs: [runRow('RUN-001')], fallback: null,
+  });
+  const d = buildAnalysisDossier(dossierInput({ lab, observatory: experimentObservatory, experiments }), { generatedAt: GENERATED });
+  const ca = d.companionArtifacts;
+  assert.equal(ca.strategy.available, true);
+  assert.equal(ca.strategy.sourceCount, 2);
+  assert.equal(ca.strategy.decisionEventCount, 8000);
+  assert.equal(ca.strategy.retainedDecisionEventCount, 2000);
+  assert.deepEqual(ca.strategy.artifactIds, ['SRC-1', 'SRC-2']);
+  assert.equal(ca.strategy.origins.IMPORTED_UNVERIFIED, 1);
+  assert.match(ca.strategy.authoritativeArtifact, /Strategy export bundle/);
+  assert.equal(ca.runs.available, true);
+  assert.ok(ca.runs.runIds.length >= 1);
+  assert.equal(ca.experimentRuns.available, true);
+  assert.equal(ca.experimentRuns.runCount, 1);
+  assert.deepEqual(ca.experimentRuns.includedRunIds, ['RUN-001']);
+  assert.equal(ca.replays.available, true);
+  assert.ok(ca.replays.retainedReplayCount >= 1);
+  const md = renderAnalysisDossierMarkdown(d);
+  assert.ok(md.includes('## Companion Evidence'), 'markdown exposes the companion manifest');
+  assert.ok(md.includes('8000'), 'markdown reports decision events');
+});
+
+test('empty-but-reachable strategy store is "none recorded", not unavailable noise', () => {
+  const lab = labInput();
+  lab.strategy = { sources: [], provenance: [], counts: { events: 0 } };
+  const d = buildAnalysisDossier(dossierInput({ lab }), { generatedAt: GENERATED });
+  assert.equal(d.companionArtifacts.strategy.available, false);
+  assert.match(d.companionArtifacts.strategy.reason, /no evidence sources/i);
+  assert.equal(d.companionArtifacts.strategy.decisionEventCount, 0);
+});
+
+// ── Integrity semantics (v1.1) ───────────────────────────────────────────
+test('quarantine metrics are distinctly named: unregistered tags vs quarantined entities vs exempt', () => {
+  const obs = structuredClone(observatory);
+  // Ledger has 3 unregistered tags; only 2 tracked entities are quarantined —
+  // the third tag belongs to a discovery-exempt entity (e.g. 'unclassified').
+  obs.quarantineLedger = [{ tag: 'x1' }, { tag: 'x2' }, { tag: 'unclassified' }];
+  obs.mechanics = [{ mechanic: 'x1', quarantined: true }, { mechanic: 'x2', quarantined: true }, { mechanic: 'unclassified', quarantined: false }];
+  const d = buildAnalysisDossier(dossierInput({ observatory: obs }), { generatedAt: GENERATED });
+  const q = d.integrity.quarantine;
+  assert.equal(q.unregisteredTags, 3);
+  assert.equal(q.quarantinedEntities, 2);
+  assert.equal(q.discoveryExemptUnregistered, 1, 'the 3-vs-2 difference is explained, not silently dropped');
+  const md = renderAnalysisDossierMarkdown(d);
+  assert.ok(md.includes('unregistered telemetry tag(s) on tracked entities'), 'reconciliation line names what it counts');
+  assert.ok(md.includes('discovery-exempt'), 'markdown discloses the exempt residue');
+});
+
+test('detailedMatchCount distinguishes unavailable (null) from measured zero', () => {
+  const obsAbsent = { ...observatory };
+  delete obsAbsent.detailedMatchCount;
+  const d1 = buildAnalysisDossier(dossierInput({ observatory: obsAbsent }), { generatedAt: GENERATED });
+  assert.equal(d1.dataset.detailedMatches, null, 'absent → null, never a fabricated zero');
+  assert.equal(d1.observatory.detailedMatchCount, null);
+  const md = renderAnalysisDossierMarkdown(d1);
+  assert.ok(md.includes('unavailable (not collected)'), 'markdown says unavailable, not zero');
+  const obsZero = { ...observatory, detailedMatchCount: 0 };
+  const d2 = buildAnalysisDossier(dossierInput({ observatory: obsZero }), { generatedAt: GENERATED });
+  assert.equal(d2.dataset.detailedMatches, 0, 'measured zero stays a number');
+});
+
+test('extractAnalysis never emits contradictory grade prose (ROBUST != insufficient)', () => {
+  const obs = structuredClone(observatory);
+  const mech = obs.mechanics[0];
+  mech.evidenceGrade = 'ROBUST';
+  mech.evidenceGradeLegacy = 'strong';
+  const extract = extractAnalysis({ analytics: obs, aggregate });
+  const row = extract.mechanicFindings.find(m => m.mechanic === mech.mechanic);
+  assert.match(row.summary, /Evidence grade: ROBUST \(strong\)/);
+  assert.doesNotMatch(row.summary, /ROBUST \(insufficient\)/);
+  // No grade → no fabricated parenthetical.
+  delete mech.evidenceGrade; delete mech.evidenceGradeLegacy;
+  const extract2 = extractAnalysis({ analytics: obs, aggregate });
+  const row2 = extract2.mechanicFindings.find(m => m.mechanic === mech.mechanic);
+  assert.match(row2.summary, /Evidence grade: ungraded\./);
+});
+
+test('extract dataset.detailedMatchCount is null when the domain was not collected', () => {
+  const obs = structuredClone(observatory);
+  delete obs.detailedMatchCount;
+  const extract = extractAnalysis({ analytics: obs, aggregate });
+  assert.equal(extract.dataset.detailedMatchCount, null);
+  const extract2 = extractAnalysis({ analytics: { ...obs, detailedMatchCount: 12 }, aggregate });
+  assert.equal(extract2.dataset.detailedMatchCount, 12);
+});
+
+test('markdown Evidence Scope, Companion Evidence and JSON agree', () => {
+  const lab = labInput();
+  const experiments = experimentInput({ totalRuns: 1, includedRunIds: ['RUN-001'], includedRunCount: 1, includedGames: 500, runs: [runRow('RUN-001')], fallback: null });
+  const d = buildAnalysisDossier(dossierInput({ lab, observatory: experimentObservatory, experiments }), { generatedAt: GENERATED });
+  const md = renderAnalysisDossierMarkdown(d);
+  for (const s of ['## Evidence Scope', '## Companion Evidence']) assert.ok(md.includes(s), `missing ${s}`);
+  // Every scope number the markdown prints comes straight from the JSON.
+  assert.equal(d.scope.experiment.includedGames, 500);
+  assert.ok(md.includes('500'), 'markdown prints the same included-games figure as JSON');
+});
+
+// ── Evidence Status derivation (export hub) ──────────────────────────────
+test('deriveEvidenceStatus: corpus-only has no lab runs, no deep tracking, no warnings', () => {
+  const s = deriveEvidenceStatus({ observatory, experiments: experimentInput(), strategySources: [], strategyReachable: true });
+  assert.equal(s.origin, 'CERTIFIED_CORPUS');
+  assert.equal(s.sourceLabel, 'Certified Corpus');
+  assert.equal(s.matches, observatory.summaryCount);
+  assert.equal(s.deepTracking.state, 'none');
+  assert.equal(s.labRuns.count, 0);
+  assert.equal(s.warnings.length, 0);
+});
+
+test('deriveEvidenceStatus: experiment-linked shows experiment label and attached runs', () => {
+  const experiments = experimentInput({ includedRunIds: ['RUN-001', 'RUN-002'], includedRunCount: 2, includedGames: 1500, totalRuns: 2, fallback: null, runs: [runRow('RUN-001'), runRow('RUN-002', { ordinal: 2 })] });
+  const s = deriveEvidenceStatus({ observatory: experimentObservatory, experiments, strategySources: [], strategyReachable: true, labRunCount: 0 });
+  assert.equal(s.sourceLabel, 'Experiment · EXP-LAB');
+  assert.equal(s.labRuns.count, 2);
+  assert.equal(s.experiment.included, true);
+  assert.equal(s.warnings.length, 0);
+});
+
+test('deriveEvidenceStatus: recorded-but-not-contributing runs produce a warning', () => {
+  const experiments = experimentInput({ totalRuns: 2, runs: [runRow('RUN-001', { included: false }), runRow('RUN-002', { ordinal: 2, included: false })] });
+  const s = deriveEvidenceStatus({ observatory, experiments, strategySources: [], strategyReachable: true });
+  assert.equal(s.origin, 'CERTIFIED_CORPUS');
+  assert.ok(s.warnings.some(w => w.includes('recorded but none contribute')));
+});
+
+test('deriveEvidenceStatus: deep tracking states — persisted, imported-only, historical-only, enabled-no-evidence', () => {
+  const src = (extra = {}) => ({ artifactId: 'S', origin: 'LOCAL', fidelity: 'full', fingerprint: 'fp1', eventCount: 84221, retainedEvents: 12000, ...extra });
+  let s = deriveEvidenceStatus({ observatory, experiments: experimentInput(), strategySources: [src()], strategyReachable: true, labFingerprint: 'fp1' });
+  assert.equal(s.deepTracking.state, 'persisted');
+  assert.equal(s.deepTracking.decisionEvents, 84221);
+  s = deriveEvidenceStatus({ observatory, experiments: experimentInput(), strategySources: [src({ origin: 'IMPORTED_UNVERIFIED' })], strategyReachable: true, labFingerprint: 'fp1' });
+  assert.equal(s.deepTracking.state, 'imported-unverified');
+  s = deriveEvidenceStatus({ observatory, experiments: experimentInput(), strategySources: [src({ fingerprint: 'other-fp' })], strategyReachable: true, labFingerprint: 'fp1' });
+  assert.equal(s.deepTracking.state, 'historical-only');
+  assert.ok(s.warnings.some(w => w.includes('different research fingerprint')));
+  s = deriveEvidenceStatus({ observatory, experiments: experimentInput(), strategySources: [], strategyReachable: true, liveRunStrategicTrace: true });
+  assert.equal(s.deepTracking.state, 'enabled-no-evidence');
+  s = deriveEvidenceStatus({ observatory, experiments: experimentInput(), strategySources: null, strategyReachable: false });
+  assert.equal(s.deepTracking.state, 'unavailable');
+});

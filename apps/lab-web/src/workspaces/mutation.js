@@ -54,17 +54,20 @@ const view = {
   mounted: false,
 };
 
-let abortRequested = false;
-// Live segment orchestrator for the current run — null when idle. Cancel
-// settles every segment exactly once, so runExperiment() can never hang.
-let activeRunner = null;
+// Cancellation is owned by an explicit per-run execution token, never by
+// render state. RENDERING CANNOT CHANGE WHETHER AN EXPERIMENT WAS
+// CANCELLED — a cancelled token stays cancelled for the life of its own
+// run, and a stale token's async settlement may not resurrect the
+// workspace after the user has navigated away.
+let activeExecution = null; // { runner, record, cancelled }
 
 /** Cancel the running experiment. Idempotent — repeated calls are harmless. */
 function cancelExperiment() {
-  abortRequested = true;
-  const runner = activeRunner;
-  activeRunner = null;
-  try { runner?.cancel(); } catch { /* settlement is already best-effort */ }
+  const exec = activeExecution;
+  activeExecution = null;
+  if (!exec) { view.workersLive = []; view.running = false; return; }
+  exec.cancelled = true;
+  try { exec.runner?.cancel(); } catch { /* settlement is already best-effort */ }
   view.workersLive = [];
   view.running = false;
 }
@@ -88,7 +91,6 @@ export function cleanupMutationChamber() {
 
 export function renderMutationChamber() {
   view.mounted = true;
-  abortRequested = false;
   const mutation = view.mutation ?? buildMutation();
   view.mutation = mutation;
   const record = view.record;
@@ -347,7 +349,10 @@ async function runExperiment() {
   view.running = true;
   view.error = '';
   view.progress = { done: 0, total: plan.specs.length };
-  abortRequested = false;
+  // The execution token owns this run's lifecycle — renders and route
+  // changes can cancel it, but can never un-cancel it.
+  const exec = { runner: null, record: view.record, cancelled: false };
+  activeExecution = exec;
   renderMutationChamber();
 
   const workers = Math.max(1, Math.min(view.workers, plan.specs.length));
@@ -359,7 +364,7 @@ async function runExperiment() {
   const runner = runMutationSegments(segments, {
     createWorker: () => new Worker('worker.js', { type: 'module' }),
     onProgress: (_index, delta) => {
-      if (!view.mounted) return;
+      if (!view.mounted || activeExecution !== exec) return;
       view.progress.done = Math.min(view.progress.total, view.progress.done + delta);
       const el = document.querySelector('[data-testid="mut-status"] p[role="status"]');
       if (el) el.textContent = `${fmt(view.progress.done)} / ${fmt(view.progress.total)} matches (${workers} workers) — control + mutant interleaved`;
@@ -367,22 +372,27 @@ async function runExperiment() {
       if (fill) fill.style.width = `${Math.round((view.progress.done / view.progress.total) * 100)}%`;
     },
   });
-  activeRunner = runner;
+  exec.runner = runner;
   view.workersLive = runner.workers();
   const settled = await runner.promise;
   const results = settled.flat();
-  activeRunner = null;
-  view.workersLive = [];
-  view.running = false;
-  if (abortRequested) {
-    view.record.status = 'incomplete';
-    view.record.execution = {
+  const stillCurrent = activeExecution === exec;
+  if (stillCurrent) { activeExecution = null; view.workersLive = []; view.running = false; }
+  if (exec.cancelled || !stillCurrent) {
+    // Cancelled or superseded runs close 'incomplete' on their own
+    // record — they are never folded into ordinary worker-fault
+    // finalization, and a settled-after-unmount execution never
+    // re-renders the workspace.
+    exec.record.status = 'incomplete';
+    exec.record.execution = {
       plannedSpecCount: plan.specs.length,
       completedSpecCount: results.filter((r) => r.ok).length,
-      cancelled: true,
+      cancelled: exec.cancelled === true,
       completedAt: new Date().toISOString(),
     };
-    renderMutationChamber();
+    // The cancellation itself is settled state, not running state — it is
+    // always safe to show while the workspace is mounted.
+    if (view.mounted) renderMutationChamber();
     return;
   }
 
@@ -406,7 +416,7 @@ async function runExperiment() {
     view.error = `Finalization failed: ${error.message}`;
     view.record.status = 'failed';
   }
-  renderMutationChamber();
+  if (view.mounted) renderMutationChamber();
 }
 
 async function exportExperiment() {

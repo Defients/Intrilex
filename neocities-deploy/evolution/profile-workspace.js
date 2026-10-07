@@ -1,12 +1,12 @@
-import { esc } from '../state.js?v=dac162e115e4';
-import { LAB_IDENTITY } from './identity.mjs?v=dac162e115e4';
-import { LAB_PROFILES } from './evolution-domain.mjs?v=dac162e115e4';
-import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=dac162e115e4';
-import { EvolutionStore } from './evolution-store.mjs?v=dac162e115e4';
-import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoint, canCompareMeasurements, resolveEra, sameHead, CONTRACTS } from './profile-contracts.mjs?v=dac162e115e4';
-import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs?v=dac162e115e4';
-import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs?v=dac162e115e4';
-import { buildDossier } from './profile-journal.mjs?v=dac162e115e4';
+import { esc } from '../state.js?v=ef8ac632ff7c';
+import { LAB_IDENTITY } from './identity.mjs?v=ef8ac632ff7c';
+import { LAB_PROFILES } from './evolution-domain.mjs?v=ef8ac632ff7c';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=ef8ac632ff7c';
+import { EvolutionStore } from './evolution-store.mjs?v=ef8ac632ff7c';
+import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoint, canCompareMeasurements, resolveEra, sameHead, CONTRACTS } from './profile-contracts.mjs?v=ef8ac632ff7c';
+import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs?v=ef8ac632ff7c';
+import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs?v=ef8ac632ff7c';
+import { buildDossier } from './profile-journal.mjs?v=ef8ac632ff7c';
 
 // Profile-centered Lab workflows. Presentation only: every scientific or
 // head-changing action goes through ProfileStore / profile-science.

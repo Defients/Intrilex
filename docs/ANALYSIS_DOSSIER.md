@@ -25,7 +25,7 @@ Run experiments / simulations / Arena / Evolution Lab
 | `test/analysis-dossier.test.mjs` | Contract tests. |
 | `scripts/generate-analysis-dossier.mjs` | Emits `sample-data/observatory/analysis-dossier.sample.{json,md}` from the shipped fixtures. |
 
-## Canonical schema (`format: "intrilex-analysis-dossier"`, schemaVersion `1.0.0`)
+## Canonical schema (`format: "intrilex-analysis-dossier"`, schemaVersion `1.1.0`)
 
 The **JSON is authoritative**. Markdown is rendered deterministically from the
 exact same dossier object — the two can never diverge semantically.
@@ -40,10 +40,14 @@ dossierHash, hashScope — SHA-256 over canonical JSON of the dossier minus
 identity               — engine/rules/lab/analytics versions, authority
                          profile + hash, release identity hash, capability
                          hash, lab fingerprint, implementation hashes
-scope                  — datasetOrigin (CERTIFIED_CORPUS | EVOLUTION_LAB),
-                         authority profile, experiment/canonical result
-                         hashes, Arena view filters, lab run/matrix/experiment/
-                         checkpoint ids
+scope                  — datasetOrigin (CERTIFIED_CORPUS | EVOLUTION_LAB |
+                         EXPERIMENT_RUNS), authority profile,
+                         experiment/canonical result hashes, Arena view
+                         filters, lab run/matrix/experiment/checkpoint ids,
+                         and scope.experiment — whether a selected/persisted
+                         experiment actually contributed
+                         (selectedExperimentIncluded, included run IDs,
+                         explicit exclusionReason when it did not)
 provenance             — observatoryHash, aggregateHash, sourceHashes,
                          evidenceEpoch, postRulesParityRepair, index hashes,
                          extractHash, per-artifact content hashes and
@@ -67,6 +71,11 @@ ranks                  — rankPower (ladder, axis coverage, balance
 variants               — variant analytics (or explicit error)
 pairedAnalysis         — matched AB/BA seat-swap results (McNemar, bootstrap)
 choiceAnalysis         — conditional choice-set coverage, contexts, entities
+combo                  — canonical Combo (§8) analytics: opportunities,
+                         declarations, propensity, recipes, components,
+                         lifecycle (resolved/countered/fizzled), coverage
+                         status; broken is 'unavailable' while 4♥ Combo
+                         Breaker is unimplemented
 anomalies              — integrity anomaly list with severity + baselines
 
 strategy               — evidence corpus inventory: provenance cohorts,
@@ -84,6 +93,17 @@ evolution              — run projections (config, checkpoints, metrics,
                          telemetry coverage, compact record rows, replay
                          retention refs), research project summaries with
                          evaluation leaderboards, historicalArtifacts list
+experiment             — persistent experiment evidence basis: every recorded
+                         run, inclusion status + exclusion reason, active
+                         analysis set, counts, warnings (or
+                         available:false + reason when the store is
+                         unreachable)
+companionArtifacts     — reference manifest (not a data dump) for richer
+                         evidence living outside the dossier: strategy
+                         sources + decision-event counts, replay refs,
+                         Evolution Lab run artifacts, persisted experiment
+                         runs — each with available, counts, ids/hashes and
+                         an authoritativeArtifact pointer
 
 findings               — normalized machine-readable findings
 uncertainties          — explicit uncertainty statements
@@ -105,9 +125,19 @@ rankAnatomyRegistry    — verbatim
   accessible** — never a fabricated zero.
 - `null` on a field means the underlying model did not produce a value.
 - A measured `0` is always the number `0` and is never emitted where a value
-  was not measured.
+  was not measured. `dataset.detailedMatches` follows this contract: `0` =
+  detailed matches were collected and none exist; `null` = the domain was
+  never collected.
 - Failed/corrupt artifacts are surfaced (`status: "CORRUPT"` /
   `"UNREADABLE"`) with a `collectionNotes` entry in provenance.
+
+`integrity.quarantine` reconciles two intentionally distinct telemetry
+counts instead of conflating them: `unregisteredTags` (all unregistered
+telemetry tags on tracked entities), `quarantinedEntities` (non-registry,
+non-discovery-exempt tracked entities), and `discoveryExemptUnregistered`
+(the explained residue — e.g. `unclassified` tags that appear in the ledger
+but are exempt from entity quarantine). The values may legitimately differ;
+the dossier discloses the difference rather than forcing agreement.
 
 ## Provenance and historical evidence
 
@@ -121,6 +151,23 @@ Artifacts whose `identity.fingerprint` differs from the current lab identity
 are flagged `historical: true` and listed in `evolution.historicalArtifacts`.
 Imported evidence (`evidenceOrigin: "IMPORTED_UNVERIFIED"`) retains its origin
 marker. Neither is silently merged into current-authority claims.
+
+## Experiment scope
+
+When the persistent experiment evidence store (`ExperimentStore`) is
+reachable, `experiment` records the full evidence basis — every recorded run
+with its inclusion status and exclusion reason, the active analysis set,
+included/excluded counts and games, and warnings. The dossier never implies
+an experiment contributed when it did not:
+
+- `scope.experiment.selectedExperimentIncluded` is `true` only when
+  `datasetOrigin === 'EXPERIMENT_RUNS'` **and** at least one included run
+  contributes games.
+- A recorded-but-not-contributing experiment (all runs excluded, none
+  recorded, or never persisted) carries an explicit `exclusionReason` and is
+  surfaced in `openQuestions`.
+- An unreachable store yields `experiment.available: false` plus an
+  `unavailable` domain entry — absent, not silently "no runs".
 
 `dossierHash` is `SHA-256` over the canonical (key-sorted) JSON of the dossier
 with `generatedAt`, `exportId` and `dossierHash` removed. Rebuilding from the
@@ -168,8 +215,12 @@ Suggested prompts for an AI receiving the dossier:
 
 ## Exporting
 
-- **UI:** command palette / Evidence workspace → *Export Analysis Dossier*
-  (JSON, Markdown, or Both). Filenames:
+- **UI:** sidebar footer export button (next to the Engine version) →
+  *Analysis Export* overlay — JSON, Markdown, or JSON + Markdown, with a
+  live Evidence Status summary (source, matches, deep tracking, lab runs)
+  derived from the same collected evidence. The Evidence workspace →
+  *Export Analysis Dossier* controls call the identical pipeline.
+  Filenames:
   `intrilex-analysis-dossier-<UTC timestamp>-<hash12>.{json,md}`.
 - **Node:** `node scripts/generate-analysis-dossier.mjs` writes the sample
   pair under `sample-data/observatory/`. `DOSSIER_GENERATED_AT` overrides the

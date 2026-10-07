@@ -145,6 +145,17 @@ async function _loadObservatoryDataInner() {
   state.rankAnatomyRegistry = await data('data/observatory/rank-anatomy-registry.json', null);
   state._rankAnatomyModule = await import('./workspaces/ranks/rank-anatomy-workspace.js');
   state.bootState = { aggregate: structuredClone(state.aggregate), observatory: structuredClone(state.observatory), rankPower: structuredClone(state.rankPower), swapMatrix: structuredClone(state.swapMatrix), variantAnalytics: structuredClone(state.variantAnalytics) };
+  // Initialize the experiment evidence store: loads persisted runs + the
+  // active analysis set, and rebuilds state.observatory from the included
+  // runs when a saved selection exists. Without this, campaigns are never
+  // recorded and exported dossiers cannot report experiment scope.
+  try {
+    const { initExperiments, applySelection, experimentsReady } = await import('./experiments/experiment-controller.mjs');
+    const { hasActiveSelection } = await initExperiments({ bootSummaries: state.observatory?.summaries ?? [], bootAggregate: state.aggregate });
+    if (experimentsReady() && hasActiveSelection) await applySelection();
+  } catch (err) {
+    console.warn('[experiments] evidence store init failed — experiment runs disabled this session:', err);
+  }
   // Default replay selection: prefer autonomy replays only when their bodies
   // are actually bundled in this build; the certified corpus is always
   // shipped, so it is the reliable default.

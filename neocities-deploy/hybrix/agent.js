@@ -9,17 +9,17 @@
  * runtime. Also works standalone for real-time games.
  */
 
-import { createPerception } from "./perception.js?v=dac162e115e4";
-import { createPersonality, updateMorale, decayMorale, describePersonality } from "./personality.js?v=dac162e115e4";
-import { createMemory } from "./memory.js?v=dac162e115e4";
-import { createCognition } from "./cognition.js?v=dac162e115e4";
-import { createSharedBlackboard, evaluateCoordination } from "./coordination.js?v=dac162e115e4";
-import { createFailsafe, determineLodTier } from "./failsafe.js?v=dac162e115e4";
-import { createDebugSystem } from "./debug.js?v=dac162e115e4";
-import { getDifficultyConfig, getReactionMultiplier, getAdaptationRate, isCoordinationEnabled, auditDifficultyConfig } from "./difficulty.js?v=dac162e115e4";
-import { evaluateRankStrategy } from "./rank-strategy.js?v=dac162e115e4";
-import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=dac162e115e4";
-import { scorePolicyAction } from "../policy-scoring.js?v=dac162e115e4";
+import { createPerception } from "./perception.js?v=ef8ac632ff7c";
+import { createPersonality, updateMorale, decayMorale, describePersonality } from "./personality.js?v=ef8ac632ff7c";
+import { createMemory } from "./memory.js?v=ef8ac632ff7c";
+import { createCognition } from "./cognition.js?v=ef8ac632ff7c";
+import { createSharedBlackboard, evaluateCoordination } from "./coordination.js?v=ef8ac632ff7c";
+import { createFailsafe, determineLodTier } from "./failsafe.js?v=ef8ac632ff7c";
+import { createDebugSystem } from "./debug.js?v=ef8ac632ff7c";
+import { getDifficultyConfig, getReactionMultiplier, getAdaptationRate, isCoordinationEnabled, auditDifficultyConfig } from "./difficulty.js?v=ef8ac632ff7c";
+import { evaluateRankStrategy } from "./rank-strategy.js?v=ef8ac632ff7c";
+import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=ef8ac632ff7c";
+import { scorePolicyAction } from "../policy-scoring.js?v=ef8ac632ff7c";
 
 export const ARCHETYPE_TO_SCORING_POLICY = Object.freeze({
   rusher: 'score-rush',

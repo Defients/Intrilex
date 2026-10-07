@@ -29,10 +29,10 @@
       "mechanicCount": 162,
       "motifCount": 60,
       "policyCount": 16,
-      "synergyCount": 2
+      "synergyCount": 0
     },
     "executiveSummary": "Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. All matches completed without aborts. Highest win rate: hybrix-rusher at 83.3% (CI [0.436, 0.970], 6 games). No synergy pairs reached statistical significance after FDR correction. 162 mechanic(s) measured with evidence-backed associations. 30 anomaly/anomalies flagged (0 critical, 5 warning, 25 info). Data completeness: PASS (no unclassified facts). Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
-    "extractHash": "77d4964faf42f6a065f8e87362adb55bfb70f473b8b8c2153e123aa36099b2f7",
+    "extractHash": "c913bce446eae14c6284c4310fbaba634b8a20d37f9314eb142da9e396735352",
     "extractVersion": "1.0.0",
     "interpretationBoundary": "Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
     "mechanicFindings": [
@@ -1017,7 +1017,7 @@
         "sampleSize": 101,
         "selectionCount": 370,
         "status": "measured",
-        "summary": "Used in 50.5% of participant observations (101/200). Outcome association: negative (-0.210, CI [-0.346, -0.075]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient).",
+        "summary": "Used in 50.5% of participant observations (101/200). Outcome association: negative (-0.210, CI [-0.346, -0.075]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak).",
         "usageUnit": "participant"
       },
       {
@@ -1487,7 +1487,7 @@
         "sampleSize": 22,
         "selectionCount": 61,
         "status": "measured",
-        "summary": "Used in 11.0% of participant observations (22/200). Outcome association: positive (0.460, CI [0.319, 0.600]). Evidence grade: EXPLORATORY (insufficient).",
+        "summary": "Used in 11.0% of participant observations (22/200). Outcome association: positive (0.460, CI [0.319, 0.600]). Evidence grade: EXPLORATORY (weak).",
         "usageUnit": "participant"
       },
       {
@@ -4817,7 +4817,7 @@
         "sampleSize": 111,
         "selectionCount": 212,
         "status": "measured",
-        "summary": "Used in 55.5% of participant observations (111/200). Outcome association: positive (0.233, CI [0.097, 0.368]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (insufficient).",
+        "summary": "Used in 55.5% of participant observations (111/200). Outcome association: positive (0.233, CI [0.097, 0.368]). Immediate point impact: mean 0.00 over undefined measured declarations. Evidence grade: EXPLORATORY (weak).",
         "usageUnit": "participant"
       },
       {
@@ -5563,7 +5563,7 @@
         "sampleSize": 32,
         "selectionCount": 121,
         "status": "measured",
-        "summary": "Used in 16.0% of participant observations (32/200). Outcome association: positive (0.298, CI [0.130, 0.465]). Evidence grade: EXPLORATORY (insufficient).",
+        "summary": "Used in 16.0% of participant observations (32/200). Outcome association: positive (0.298, CI [0.130, 0.465]). Evidence grade: EXPLORATORY (weak).",
         "usageUnit": "participant"
       },
       {
@@ -6898,62 +6898,10 @@
       }
     ],
     "recommendations": [
-      "Most synergy findings are inconclusive — consider increasing match count for statistical power.",
       "133 mechanic(s) have sample size below 20 — interpret with caution."
     ],
-    "sourceHash": "497b7a6564ef281b274e74dfeeb57c5691a1639a270f3dd544955ccd00408a84",
-    "synergyFindings": [
-      {
-        "baselineCount": 83,
-        "confidenceInterval": [
-          0.00803098041444785,
-          55.34124372223375
-        ],
-        "effect": 0.6666666666666667,
-        "evidenceGrade": "INSUFFICIENT",
-        "jointOpportunityCount": 30,
-        "pValue": 0.8572805060842137,
-        "pair": "draw::2-black-2-red-draw",
-        "qValue": 0.9009849105080965,
-        "relationshipClass": "anti-synergy",
-        "replayRefs": [
-          "M-fd7699a659985da0fd8b",
-          "M-581e8e1bf1c1db31783f",
-          "M-cc250cc50515a292f3e3",
-          "M-4e938b55c5c081cf4195"
-        ],
-        "shrunkEffect": 0.8536531748787067,
-        "source": "draw",
-        "status": "inconclusive",
-        "summary": "draw + 2-black-2-red-draw: anti-synergy (effect 0.667, shrunk 0.854, CI [0.008, 55.341], q=0.9010). inconclusive after FDR correction. Joint sample: 30.",
-        "target": "2-black-2-red-draw"
-      },
-      {
-        "baselineCount": 86,
-        "confidenceInterval": [
-          0.0570898728762284,
-          25.823013103882438
-        ],
-        "effect": 1.2141797788555981,
-        "evidenceGrade": "INSUFFICIENT",
-        "jointOpportunityCount": 43,
-        "pValue": 0.9009849105080965,
-        "pair": "draw::jack",
-        "qValue": 0.9009849105080965,
-        "relationshipClass": "synergy",
-        "replayRefs": [
-          "M-67e0e95c9279752ebbb3",
-          "M-754f798f908f9e4f73d8",
-          "M-cc250cc50515a292f3e3",
-          "M-4e938b55c5c081cf4195"
-        ],
-        "shrunkEffect": 1.115107584110157,
-        "source": "draw",
-        "status": "inconclusive",
-        "summary": "draw + jack: positive synergy (effect 1.214, shrunk 1.115, CI [0.057, 25.823], q=0.9010). inconclusive after FDR correction. Joint sample: 43.",
-        "target": "jack"
-      }
-    ]
+    "sourceHash": "e575f12f7f70448743e77b00393638d78cb419467aee6e5d90b0462986d0b03d",
+    "synergyFindings": []
   },
   "anomalies": {
     "available": true,
@@ -194928,6 +194876,140 @@
     },
     "schemaVersion": "1.1.0"
   },
+  "companionArtifacts": {
+    "batchMatrices": {
+      "available": false,
+      "reason": "No batch matrix artifacts recorded."
+    },
+    "experimentRuns": {
+      "available": false,
+      "reason": "Experiment evidence store not supplied to this export."
+    },
+    "replays": {
+      "authoritativeArtifact": "Replay bodies live in the certified replay index, the lab replay index, and Evolution run envelopes.",
+      "available": true,
+      "observatoryRetainedCount": 100,
+      "refs": [
+        "M-015b0b148b1e1f8a9876",
+        "M-031ed40318b12b46cc1e",
+        "M-04f952648982b1b60b68",
+        "M-0cb7ff81422b13b69064",
+        "M-0d19d7f964160eabb432",
+        "M-0eb5279a20c8b5c7fadc",
+        "M-0eea1b0ddb6b07c2fb95",
+        "M-0ff40b5b215e28c298ff",
+        "M-171e3ddc109606355fe8",
+        "M-1ab884d86fec8ccf132f",
+        "M-1b16b9dae9b5e9933821",
+        "M-1b9ce7c6ecb94b540b09",
+        "M-1d9b0db8df3efa98ae2c",
+        "M-1e315378d0c99486e181",
+        "M-1eda409b45784512a347",
+        "M-2275fdfcc7bdc5ffd0be",
+        "M-281a5cd2113c6a01ede0",
+        "M-29d8421ee41250f8c875",
+        "M-2e7aa9b5e00505294fc0",
+        "M-34f95691dcfd17f93e47",
+        "M-38bc37c903f30b850762",
+        "M-3dc3510153eebdf54abb",
+        "M-3e56af56c419de97ddc8",
+        "M-43ee676468dfdd29d4e0",
+        "M-44dff5891c6198671640",
+        "M-45801dddc6b525246c7c",
+        "M-4637c7fa222fd4f0e395",
+        "M-46ef419cc3ad42da20d8",
+        "M-472470d437a19495c696",
+        "M-4756067b923a59fad42d",
+        "M-4e938b55c5c081cf4195",
+        "M-51c5b0a7f314d910b2df",
+        "M-522454b71d0726b45836",
+        "M-581e8e1bf1c1db31783f",
+        "M-5ef9d016ebb1846cf10b",
+        "M-5f0108d242d5ab67d089",
+        "M-5f0d1c1b8066da4877b9",
+        "M-5f2660010ee9acaad412",
+        "M-67e0e95c9279752ebbb3",
+        "M-6d0b4f6682536c727bbc",
+        "M-6f27bc08a55e9f60beda",
+        "M-71fc87e2f89eabd4d70c",
+        "M-754f798f908f9e4f73d8",
+        "M-7b7e7ab66d88f3491867",
+        "M-7d2e54be2e472d2f7c7d",
+        "M-7d6730d8dab297d9def5",
+        "M-8275bf044c49fd222874",
+        "M-82d0158eacf1f693fe2a",
+        "M-84269db284883330999c",
+        "M-8668f8812e8f342f70dc",
+        "M-889076167d236a1a97c2",
+        "M-8c60ef2014c378bcb9ff",
+        "M-8fcc52b645373191c478",
+        "M-900dab4d200274290b44",
+        "M-950f525deedd2a7736c7",
+        "M-953e4aeb783b8a7c612e",
+        "M-97ab3f793f2aeef24f57",
+        "M-97e74d496af22ec1ef0c",
+        "M-9ac093c9da6330a6fdec",
+        "M-9c21702da5d01e560631",
+        "M-9c890ada2c2ec493c6f9",
+        "M-9c9a76ea4e99e1871ffa",
+        "M-9db1549bec3c58b78cff",
+        "M-9e5f57461794b4359633",
+        "M-a01adf022172322ccfcb",
+        "M-a0945b1315ef7a1c6d20",
+        "M-a15fedb894e0081a701f",
+        "M-a26aba35b5810012c4f3",
+        "M-a478ccdcc1e81c64bdb5",
+        "M-a6073e68be3dfa99914b",
+        "M-a70f77adb2c9476531b2",
+        "M-ac36b3d8d85d2a58545e",
+        "M-b0a0a5aeacc0742aa682",
+        "M-b13d6d117b0cf5e2ed26",
+        "M-b5430fc382f70a768507",
+        "M-b615ae18bd3e0f132ef8",
+        "M-be23c86bf5150b63b8ce",
+        "M-bed22b8e4cd1165a3196",
+        "M-c0ba3f945ece330667df",
+        "M-c16d20b1a2a555dc6b2a",
+        "M-c7e06b8e9ceba7badd1b",
+        "M-c7fa95689d660a49366b",
+        "M-cc250cc50515a292f3e3",
+        "M-cc2da4250ea78f0c5da4",
+        "M-cd7618de7602f750b9aa",
+        "M-ce9543d13e2c07e82e66",
+        "M-d2d7a9c1509c8d724a31",
+        "M-d42c5a76b1a43e8227de",
+        "M-d5b17d7b99557deb8cf5",
+        "M-da33bf6f5bb04f175916",
+        "M-dfab048a83e3b8acc06c",
+        "M-e50eb7181b42fcaf3c35",
+        "M-ebe73b4e96d2314f230f",
+        "M-ec8f8ba09f1121a2d16f",
+        "M-ee7b17238b5a8fc4f4f8",
+        "M-f1291cd390d331a3ffbb",
+        "M-f3fba5744ac97b09f3e9",
+        "M-f468fb9b0431f3ac6637",
+        "M-fa05d1e275802242db55",
+        "M-fd7699a659985da0fd8b"
+      ],
+      "retainedReplayCount": 100
+    },
+    "researchProjects": {
+      "available": false,
+      "reason": "No research project envelopes recorded."
+    },
+    "ruleMutations": {
+      "available": false,
+      "reason": "No rule-mutation experiment envelopes recorded."
+    },
+    "runs": {
+      "available": false,
+      "reason": "Evolution Lab store not supplied or unreachable."
+    },
+    "strategy": {
+      "available": false,
+      "reason": "Evolution Lab storage not reachable from this context."
+    }
+  },
   "dataset": {
     "aggregate": {
       "abortCount": 0,
@@ -194976,8 +195058,11 @@
       }
     },
     "detailedMatches": 12,
+    "experiment": null,
     "lab": {
       "matrixCount": 0,
+      "mutationExperimentCount": 0,
+      "mutationExperimentUnreadable": 0,
       "persistedRecords": 0,
       "persistedRunCount": 0,
       "researchProjectCount": 0,
@@ -195604,14 +195689,20 @@
       }
     ]
   },
-  "dossierHash": "9f800b8b09185a76cf70adef4a1a1b97e7bccfe23d67514b646247816d88b0c6",
-  "dossierVersion": "1.0.0",
+  "dossierHash": "d66f2a350b921afed6ffa56724228cc3eca498bc98e9f3ac3be611616a6726bb",
+  "dossierVersion": "1.1.0",
   "evidenceGaps": [
     {
       "domain": "paired-analysis",
       "gap": "No complete matched AB/BA pair blocks in the Observatory dataset",
       "severity": "high",
       "suggestedEvidence": "Mirror-seats campaign or Arena runs with pairedRunId linkage"
+    },
+    {
+      "domain": "synergies",
+      "gap": "No synergy pairs cleared the modelling threshold",
+      "severity": "medium",
+      "suggestedEvidence": "More joint-opportunity observations for candidate pairs"
     },
     {
       "domain": "arena",
@@ -195632,6 +195723,12 @@
       "suggestedEvidence": "Commit an experiment in the Evolution Lab Research panel"
     },
     {
+      "domain": "rule-mutation",
+      "gap": "No Rule Mutation Chamber experiments persisted",
+      "severity": "low",
+      "suggestedEvidence": "Run a mutation experiment in the Mutation Chamber"
+    },
+    {
       "domain": "integrity",
       "gap": "30 anomalies flagged for review",
       "severity": "medium",
@@ -195642,6 +195739,7 @@
     "historicalArtifacts": [],
     "labIdentity": null,
     "researchProjects": [],
+    "ruleMutations": [],
     "runs": []
   },
   "executiveSummary": {
@@ -195649,11 +195747,18 @@
     "lines": [
       "Observatory dataset: 100 match summaries under authority profile \"core-advanced-authority\" (rules 4.3.1, engine 4.2.6, epoch post-rules-parity-repair-v0.28.1, post-parity-repair).",
       "Campaign aggregate: 100 matches, 100 completed, 0 aborts, 0 draws; seat-1 win rate 44.0% (Wilson95 [0.347, 0.538]).",
-      "162 mechanic entities tracked (18 registry-registered), 2 modelled synergies, 16 policies, 30 anomalies, completeness PASS.",
+      "162 mechanic entities tracked (18 registry-registered), 0 modelled synergies, 16 policies, 30 anomalies, completeness PASS.",
       "Rank power: 12/18 ladder entries are balance-qualified; descriptive leader 10:club; qualified leader 8."
     ]
   },
-  "exportId": "20261006141443-9f800b8b0918",
+  "experiment": {
+    "available": false,
+    "exclusionReason": "Experiment evidence unavailable — run inclusion cannot be verified.",
+    "experimentId": null,
+    "reason": "Experiment evidence store not supplied to this export.",
+    "selectedExperimentIncluded": null
+  },
+  "exportId": "20261006232106-d66f2a350b92",
   "findings": [
     {
       "claim": "56 completed turns ≥ p95 baseline (50.05 turns); tail detector flags ~5% of matches by construction",
@@ -204260,62 +204365,16 @@
       },
       "status": "measured",
       "subject": "value-tactical"
-    },
-    {
-      "claim": "draw × 2-black-2-red-draw: anti-synergy (model OR 0.6667)",
-      "confidenceInterval": [
-        0.00803098041444785,
-        55.34124372223375
-      ],
-      "domain": "synergy",
-      "effect": 0.8536531748787067,
-      "evidenceGrade": null,
-      "findingId": "synergy:draw::2-black-2-red-draw",
-      "humanSummary": "anti-synergy — model direction negative, marginal direction negative",
-      "interpretationBoundary": "Synergy interaction is the A×B odds-ratio from a stratified logistic model — model-dependent, not a causal claim.",
-      "pValue": 0.8572805060842137,
-      "qValue": 0.9009849105080965,
-      "sampleSize": 30,
-      "sourceRefs": {
-        "estimand": "odds-ratio-interaction",
-        "source": "draw",
-        "target": "2-black-2-red-draw"
-      },
-      "status": "MODELED_INCONCLUSIVE",
-      "subject": "draw × 2-black-2-red-draw"
-    },
-    {
-      "claim": "draw × jack: synergy (model OR 1.2142)",
-      "confidenceInterval": [
-        0.0570898728762284,
-        25.823013103882438
-      ],
-      "domain": "synergy",
-      "effect": 1.115107584110157,
-      "evidenceGrade": null,
-      "findingId": "synergy:draw::jack",
-      "humanSummary": "synergy — model direction positive, marginal direction negative (directions disagree)",
-      "interpretationBoundary": "Synergy interaction is the A×B odds-ratio from a stratified logistic model — model-dependent, not a causal claim.",
-      "pValue": 0.9009849105080965,
-      "qValue": 0.9009849105080965,
-      "sampleSize": 43,
-      "sourceRefs": {
-        "estimand": "odds-ratio-interaction",
-        "source": "draw",
-        "target": "jack"
-      },
-      "status": "MODELED_INCONCLUSIVE",
-      "subject": "draw × jack"
     }
   ],
   "format": "intrilex-analysis-dossier",
-  "generatedAt": "2026-10-06T14:14:43.388Z",
+  "generatedAt": "2026-10-06T23:21:06.662Z",
   "hashScope": "SHA-256 over canonical JSON of this dossier excluding generatedAt, exportId and dossierHash. Rebuilding from the same analytical state reproduces the hash.",
   "identity": {
     "analyticsSchemaVersion": "4.2.0",
     "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0",
     "authorityProfile": "core-advanced-authority",
-    "capabilityHash": "74a3d31cfeddc86f4b7b4d0a70811266c28cf975d81342ffaf0353e9ee860698",
+    "capabilityHash": "c694e02b8ad1cf15351e4814b9c3b90c835e1a7a3d5357ded65f3cb4ae9d4f0b",
     "engineHash": null,
     "engineVersion": "4.2.6",
     "labArtifactSchema": 1,
@@ -204331,7 +204390,7 @@
   "integrity": {
     "campaignHealth": {
       "canonicalMechanics": 12,
-      "eligibleSynergyPairs": 2,
+      "eligibleSynergyPairs": 0,
       "entitiesWithAdjustedAssociation": 162,
       "entitiesWithOpportunityData": 162,
       "entitiesWithPointImpact": 37,
@@ -204340,13 +204399,12 @@
       "evidenceQualifiedSynergyPairs": 0,
       "incompleteABBA": 100,
       "nearThresholdPairs": 50,
-      "rejectedSynergyPairs": 274,
-      "successfullyModeledSynergyPairs": 2,
+      "rejectedSynergyPairs": 276,
+      "successfullyModeledSynergyPairs": 0,
       "synergyCandidatePairs": 276,
       "synergyCellStatusCounts": {
-        "FAILED": 10,
+        "FAILED": 12,
         "INSUFFICIENT_DATA": 263,
-        "MODELED_INCONCLUSIVE": 2,
         "NOT_IDENTIFIABLE": 1
       },
       "trackedEntities": 162,
@@ -204360,6 +204418,11 @@
     },
     "hasOpportunityTelemetry": true,
     "legacySchema": false,
+    "quarantine": {
+      "discoveryExemptUnregistered": 1,
+      "quarantinedEntities": 143,
+      "unregisteredTags": 144
+    },
     "quarantineLedger": [
       {
         "reason": "No canonical mechanic registry entry",
@@ -225429,15 +225492,15 @@
     "detailedMatchCount": 12,
     "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
     "mechanicRegistryHash": "1c049a94aa3a5c322fc350ff0a6f36aadd671d50dd2a14a8b8982150bd526178",
-    "observatoryHash": "497b7a6564ef281b274e74dfeeb57c5691a1639a270f3dd544955ccd00408a84",
+    "observatoryHash": "e575f12f7f70448743e77b00393638d78cb419467aee6e5d90b0462986d0b03d",
     "postRulesParityRepair": true,
     "schemaVersion": "4.2.0",
     "summaryCount": 100
   },
   "openQuestions": [
-    "143 telemetry tag(s) are quarantined pending canonical mechanic registry classification — their measurements are descriptive, not canonical.",
+    "143 tracked entit(ies) are quarantined pending canonical mechanic registry classification — their measurements are descriptive, not canonical.",
     "162 mechanic entit(ies) lack identified choice-support or carry weak evidence grades — additional matched-opportunity data is required before preference claims.",
-    "274 candidate synergy pair(s) were rejected or remain unmodelled ({\"FAILED\":10,\"INSUFFICIENT_DATA\":263,\"MODELED_INCONCLUSIVE\":2,\"NOT_IDENTIFIABLE\":1}) — interactions in those cells are unmeasured, not absent.",
+    "276 candidate synergy pair(s) were rejected or remain unmodelled ({\"FAILED\":12,\"INSUFFICIENT_DATA\":263,\"NOT_IDENTIFIABLE\":1}) — interactions in those cells are unmeasured, not absent.",
     "100 incomplete AB/BA pair block(s) reduce paired seat-swap power; seat effects on those blocks are unresolved.",
     "pairedRunIds are present but none grouped ≥2 matches — the campaign schedule did not repeat pair blocks, so AB/BA pairing is not possible on this dataset"
   ],
@@ -226733,18 +226796,20 @@
   "provenance": {
     "aggregateHash": "59791c83908dd300acb667002e5988fc54717ef43737c0c993aff8ba115abac2",
     "artifacts": {
+      "experiment": null,
       "matrices": [],
+      "mutations": [],
       "research": [],
       "runs": []
     },
     "collectionNotes": [],
     "corpusAggregateHash": "230017997cad8663c09c351cd0f648e136c282829735e1b6fd53c944b880c7f8",
-    "dossierSchemaVersion": "1.0.0",
+    "dossierSchemaVersion": "1.1.0",
     "evidenceEpoch": "post-rules-parity-repair-v0.28.1",
-    "extractHash": "77d4964faf42f6a065f8e87362adb55bfb70f473b8b8c2153e123aa36099b2f7",
+    "extractHash": "c913bce446eae14c6284c4310fbaba634b8a20d37f9314eb142da9e396735352",
     "generator": "lab-web analysis-dossier",
     "labReplayIndexHash": "52d853fe9367b1acca679c55ed6e136c40786e2cc1f9d07458dce19fc6a05a44",
-    "observatoryHash": "497b7a6564ef281b274e74dfeeb57c5691a1639a270f3dd544955ccd00408a84",
+    "observatoryHash": "e575f12f7f70448743e77b00393638d78cb419467aee6e5d90b0462986d0b03d",
     "postRulesParityRepair": true,
     "replayIndexHash": "f09274c60229b31dd5554f51fd4badd7950a565bfc4c72f5a071ef49ba1240b8",
     "sourceHashes": {
@@ -235469,21 +235534,33 @@
     }
   },
   "recommendations": [
-    "Most synergy findings are inconclusive — consider increasing match count for statistical power.",
     "133 mechanic(s) have sample size below 20 — interpret with caution.",
     "144 telemetry tag(s) are quarantined pending canonical mechanic registry entries — extend the registry before treating them as canonical mechanics."
   ],
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "scope": {
     "arenaFilters": null,
     "authorityProfileId": "core-advanced-authority",
     "canonicalResultHash": "c114149cc7900f4abdb812f108400cc84cdceb040dca0c81aa02c4d4661b3039",
     "datasetOrigin": "CERTIFIED_CORPUS",
+    "experiment": {
+      "analysisSetId": null,
+      "available": false,
+      "excludedRunCount": 0,
+      "exclusionReason": "Experiment evidence unavailable — run inclusion cannot be verified.",
+      "experimentId": null,
+      "includedGames": 0,
+      "includedRunCount": 0,
+      "includedRunIds": [],
+      "selectedExperimentIncluded": null,
+      "totalRuns": 0
+    },
     "experimentHash": "8c41081f41328880af83c8769bcdaa42771dbba17de851d5714b8814e5fe406d",
     "labScope": {
       "checkpointIds": [],
       "experimentIds": [],
       "matrixIds": [],
+      "mutationExperimentIds": [],
       "runIds": []
     }
   },
@@ -235791,6 +235868,134 @@
         "status": "rejected",
         "strataAttempted": 23,
         "target": "scuttle"
+      },
+      {
+        "cellStatus": "FAILED",
+        "cohortN": {
+          "aOnly": 58,
+          "bOnly": 28,
+          "both": 43,
+          "neither": 71
+        },
+        "effectiveN": 32,
+        "eligibleN": 200,
+        "excludedN": 168,
+        "excludedStrata": [
+          {
+            "n": 16,
+            "reason": "OUTCOME_SEPARATION",
+            "stratum": "core-advanced-authority|random-legal|seat:1"
+          },
+          {
+            "n": 7,
+            "reason": "OUTCOME_SEPARATION",
+            "stratum": "core-advanced-authority|random-legal|seat:2"
+          },
+          {
+            "n": 7,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|score-rush|seat:2"
+          },
+          {
+            "n": 7,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|control|seat:2"
+          },
+          {
+            "n": 7,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|tempo|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|value|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|score-rush-tactical|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|control-tactical|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|tempo-tactical|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|value-tactical|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-rusher|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-defender|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-trickster|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "OUTCOME_SEPARATION",
+            "stratum": "core-advanced-authority|hybrix-sniper|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-support|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-tank|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "OUTCOME_SEPARATION",
+            "stratum": "core-advanced-authority|hybrix-baseline|seat:2"
+          },
+          {
+            "n": 16,
+            "reason": "OUTCOME_SEPARATION",
+            "stratum": "core-advanced-authority|score-rush|seat:1"
+          },
+          {
+            "n": 16,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|control|seat:1"
+          },
+          {
+            "n": 16,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|score-rush-tactical|seat:1"
+          },
+          {
+            "n": 4,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|control-tactical|seat:1"
+          }
+        ],
+        "id": "draw::jack",
+        "rawN": 200,
+        "reason": "insufficient-contributing-n",
+        "reasonCode": "INSUFFICIENT_EFFECTIVE_N",
+        "source": "draw",
+        "status": "rejected",
+        "strataAttempted": 23,
+        "target": "jack",
+        "threshold": 50
       },
       {
         "cellStatus": "FAILED",
@@ -236111,6 +236316,139 @@
         "status": "rejected",
         "target": "eight-aegis-field",
         "threshold": 10
+      },
+      {
+        "cellStatus": "FAILED",
+        "cohortN": {
+          "aOnly": 71,
+          "bOnly": 12,
+          "both": 30,
+          "neither": 87
+        },
+        "effectiveN": 16,
+        "eligibleN": 200,
+        "excludedN": 184,
+        "excludedStrata": [
+          {
+            "n": 16,
+            "reason": "OUTCOME_SEPARATION",
+            "stratum": "core-advanced-authority|random-legal|seat:1"
+          },
+          {
+            "n": 7,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|random-legal|seat:2"
+          },
+          {
+            "n": 7,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|score-rush|seat:2"
+          },
+          {
+            "n": 7,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|control|seat:2"
+          },
+          {
+            "n": 7,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|tempo|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "OUTCOME_SEPARATION",
+            "stratum": "core-advanced-authority|value|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|score-rush-tactical|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|control-tactical|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|tempo-tactical|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|value-tactical|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-rusher|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-defender|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-trickster|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-sniper|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-support|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-tank|seat:2"
+          },
+          {
+            "n": 6,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|hybrix-baseline|seat:2"
+          },
+          {
+            "n": 16,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|score-rush|seat:1"
+          },
+          {
+            "n": 16,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|control|seat:1"
+          },
+          {
+            "n": 16,
+            "reason": "OUTCOME_SEPARATION",
+            "stratum": "core-advanced-authority|tempo|seat:1"
+          },
+          {
+            "n": 16,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|score-rush-tactical|seat:1"
+          },
+          {
+            "n": 4,
+            "reason": "EMPTY_COHORT",
+            "stratum": "core-advanced-authority|control-tactical|seat:1"
+          }
+        ],
+        "id": "draw::2-black-2-red-draw",
+        "rawN": 200,
+        "reason": "insufficient-contributing-n",
+        "reasonCode": "INSUFFICIENT_EFFECTIVE_N",
+        "source": "draw",
+        "status": "rejected",
+        "strataAttempted": 23,
+        "target": "2-black-2-red-draw",
+        "threshold": 50
       },
       {
         "cellStatus": "FAILED",
@@ -241228,424 +241566,7 @@
         "threshold": 20
       }
     ],
-    "items": [
-      {
-        "aOnlyN": 71,
-        "anyStratumSeparated": true,
-        "bOnlyN": 12,
-        "baselineCount": 83,
-        "bothN": 30,
-        "cellStatus": "MODELED_INCONCLUSIVE",
-        "cohortBalance": 0.3333333333333333,
-        "cohortN": {
-          "aOnly": 71,
-          "bOnly": 12,
-          "both": 30,
-          "neither": 87
-        },
-        "confidenceInterval": [
-          0.00803098041444785,
-          55.34124372223375
-        ],
-        "contributingCohortN": {
-          "aOnly": 3,
-          "bOnly": 5,
-          "both": 6,
-          "neither": 2
-        },
-        "contributingN": 16,
-        "counterexampleRefs": [
-          "M-fd7699a659985da0fd8b",
-          "M-46ef419cc3ad42da20d8"
-        ],
-        "direction": "bidirectional",
-        "directionAgreement": true,
-        "displayName": "draw × 2-black-2-red-draw",
-        "effect": 0.6666666666666667,
-        "effectiveN": 16,
-        "eligibleN": 200,
-        "emptyCohortStrata": 19,
-        "estimand": "odds-ratio-interaction",
-        "evidenceGrade": "INSUFFICIENT",
-        "evidenceGradeLegacy": "insufficient",
-        "evidenceReasons": [
-          {
-            "code": "INSUFFICIENT_SAMPLE",
-            "detail": "16 usable observations < 20 required"
-          },
-          {
-            "code": "PARTIAL_SEPARATION",
-            "detail": "3 stratum/strata with outcome separation excluded from the pooled estimate"
-          }
-        ],
-        "evidenceScale": "odds-ratio",
-        "excludedN": 184,
-        "excludedStrata": [
-          {
-            "n": 16,
-            "reason": "OUTCOME_SEPARATION",
-            "stratum": "core-advanced-authority|random-legal|seat:1"
-          },
-          {
-            "n": 7,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|random-legal|seat:2"
-          },
-          {
-            "n": 7,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|score-rush|seat:2"
-          },
-          {
-            "n": 7,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|control|seat:2"
-          },
-          {
-            "n": 7,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|tempo|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "OUTCOME_SEPARATION",
-            "stratum": "core-advanced-authority|value|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|score-rush-tactical|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|control-tactical|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|tempo-tactical|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|value-tactical|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-rusher|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-defender|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-trickster|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-sniper|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-support|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-tank|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-baseline|seat:2"
-          },
-          {
-            "n": 16,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|score-rush|seat:1"
-          },
-          {
-            "n": 16,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|control|seat:1"
-          },
-          {
-            "n": 16,
-            "reason": "OUTCOME_SEPARATION",
-            "stratum": "core-advanced-authority|tempo|seat:1"
-          },
-          {
-            "n": 16,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|score-rush-tactical|seat:1"
-          },
-          {
-            "n": 4,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|control-tactical|seat:1"
-          }
-        ],
-        "formulaHash": "04014bc291125d4f787daa58b750a36aa66d6a4af368a50a86acf9ff090971e1",
-        "id": "draw::2-black-2-red-draw",
-        "jointOpportunityCount": 30,
-        "limitations": [
-          "Interaction is the A×B odds ratio of a stratified logistic model (direction from log OR) — association, not causation.",
-          "Four cohorts: Neither=87, A-only=71, B-only=12, Both=30; 16 of 200 observations in 1/23 contributing strata.",
-          "22 stratum/strata excluded (19 empty cohort, 3 outcome separation); excluded strata contribute nothing to the estimate or its N.",
-          "Low-frequency pairs are suppressed by minimum cohort thresholds."
-        ],
-        "logEstimate": -0.40546510810816416,
-        "logOR": -0.40546510810816416,
-        "marginalDirection": "negative",
-        "marginalInteraction": -0.2055852355512383,
-        "marginalInteractionPP": -0.2055852355512383,
-        "modelDirection": "negative",
-        "modelOR": 0.6666666666666667,
-        "modelStatus": "modeled",
-        "neitherN": 87,
-        "pValue": 0.8572805060842137,
-        "qValue": 0.9009849105080965,
-        "rankStrength": 0.1582302860909909,
-        "rawEffect": -0.2055852355512383,
-        "relationshipClass": "anti-synergy",
-        "relationshipClassBasis": "model-log-odds",
-        "replayRefs": [
-          "M-fd7699a659985da0fd8b",
-          "M-581e8e1bf1c1db31783f",
-          "M-cc250cc50515a292f3e3",
-          "M-4e938b55c5c081cf4195"
-        ],
-        "sampleSize": 200,
-        "separatedStrata": 3,
-        "separation": true,
-        "separationAffectedEstimate": true,
-        "shrinkageFactor": 0.3902439024390244,
-        "shrunkEffect": 0.8536531748787067,
-        "shrunkLogOR": -0.1582302860909909,
-        "shrunkOR": 0.8536531748787067,
-        "source": "draw",
-        "standardError": 2.254624876411447,
-        "status": "inconclusive",
-        "strataAttempted": 23,
-        "strataContributing": 1,
-        "strataCount": 1,
-        "strataExcluded": 22,
-        "target": "2-black-2-red-draw"
-      },
-      {
-        "aOnlyN": 58,
-        "anyStratumSeparated": true,
-        "bOnlyN": 28,
-        "baselineCount": 86,
-        "bothN": 43,
-        "cellStatus": "MODELED_INCONCLUSIVE",
-        "cohortBalance": 0.4,
-        "cohortN": {
-          "aOnly": 58,
-          "bOnly": 28,
-          "both": 43,
-          "neither": 71
-        },
-        "confidenceInterval": [
-          0.0570898728762284,
-          25.823013103882438
-        ],
-        "contributingCohortN": {
-          "aOnly": 9,
-          "bOnly": 4,
-          "both": 10,
-          "neither": 9
-        },
-        "contributingN": 32,
-        "counterexampleRefs": [
-          "M-67e0e95c9279752ebbb3",
-          "M-c7fa95689d660a49366b"
-        ],
-        "direction": "bidirectional",
-        "directionAgreement": false,
-        "displayName": "draw × jack",
-        "effect": 1.2141797788555981,
-        "effectiveN": 32,
-        "eligibleN": 200,
-        "emptyCohortStrata": 16,
-        "estimand": "odds-ratio-interaction",
-        "evidenceGrade": "INSUFFICIENT",
-        "evidenceGradeLegacy": "insufficient",
-        "evidenceReasons": [
-          {
-            "code": "CI_CROSSES_NULL",
-            "detail": "confidence interval contains the null value (1, odds-ratio scale)"
-          },
-          {
-            "code": "PARTIAL_SEPARATION",
-            "detail": "5 stratum/strata with outcome separation excluded from the pooled estimate"
-          }
-        ],
-        "evidenceScale": "odds-ratio",
-        "excludedN": 168,
-        "excludedStrata": [
-          {
-            "n": 16,
-            "reason": "OUTCOME_SEPARATION",
-            "stratum": "core-advanced-authority|random-legal|seat:1"
-          },
-          {
-            "n": 7,
-            "reason": "OUTCOME_SEPARATION",
-            "stratum": "core-advanced-authority|random-legal|seat:2"
-          },
-          {
-            "n": 7,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|score-rush|seat:2"
-          },
-          {
-            "n": 7,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|control|seat:2"
-          },
-          {
-            "n": 7,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|tempo|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|value|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|score-rush-tactical|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|control-tactical|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|tempo-tactical|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|value-tactical|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-rusher|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-defender|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-trickster|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "OUTCOME_SEPARATION",
-            "stratum": "core-advanced-authority|hybrix-sniper|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-support|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|hybrix-tank|seat:2"
-          },
-          {
-            "n": 6,
-            "reason": "OUTCOME_SEPARATION",
-            "stratum": "core-advanced-authority|hybrix-baseline|seat:2"
-          },
-          {
-            "n": 16,
-            "reason": "OUTCOME_SEPARATION",
-            "stratum": "core-advanced-authority|score-rush|seat:1"
-          },
-          {
-            "n": 16,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|control|seat:1"
-          },
-          {
-            "n": 16,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|score-rush-tactical|seat:1"
-          },
-          {
-            "n": 4,
-            "reason": "EMPTY_COHORT",
-            "stratum": "core-advanced-authority|control-tactical|seat:1"
-          }
-        ],
-        "formulaHash": "04014bc291125d4f787daa58b750a36aa66d6a4af368a50a86acf9ff090971e1",
-        "id": "draw::jack",
-        "jointOpportunityCount": 43,
-        "limitations": [
-          "Interaction is the A×B odds ratio of a stratified logistic model (direction from log OR) — association, not causation.",
-          "Four cohorts: Neither=71, A-only=58, B-only=28, Both=43; 32 of 200 observations in 2/23 contributing strata.",
-          "21 stratum/strata excluded (16 empty cohort, 5 outcome separation); excluded strata contribute nothing to the estimate or its N.",
-          "Unstratified probability contrast (-10.2 pp) points the other way from the modeled odds ratio.",
-          "Low-frequency pairs are suppressed by minimum cohort thresholds."
-        ],
-        "logEstimate": 0.1940687696927965,
-        "logOR": 0.1940687696927965,
-        "marginalDirection": "negative",
-        "marginalInteraction": -0.10230952676766292,
-        "marginalInteractionPP": -0.10230952676766292,
-        "modelDirection": "positive",
-        "modelOR": 1.2141797788555981,
-        "modelStatus": "modeled",
-        "neitherN": 71,
-        "pValue": 0.9009849105080965,
-        "qValue": 0.9009849105080965,
-        "rankStrength": 0.1089508882485875,
-        "rawEffect": -0.10230952676766292,
-        "relationshipClass": "synergy",
-        "relationshipClassBasis": "model-log-odds",
-        "replayRefs": [
-          "M-67e0e95c9279752ebbb3",
-          "M-754f798f908f9e4f73d8",
-          "M-cc250cc50515a292f3e3",
-          "M-4e938b55c5c081cf4195"
-        ],
-        "sampleSize": 200,
-        "separatedStrata": 5,
-        "separation": true,
-        "separationAffectedEstimate": true,
-        "shrinkageFactor": 0.5614035087719298,
-        "shrunkEffect": 1.115107584110157,
-        "shrunkLogOR": 0.1089508882485875,
-        "shrunkOR": 1.115107584110157,
-        "source": "draw",
-        "standardError": 1.5598232057026309,
-        "status": "inconclusive",
-        "strataAttempted": 23,
-        "strataContributing": 2,
-        "strataCount": 2,
-        "strataExcluded": 21,
-        "target": "jack"
-      }
-    ]
+    "items": []
   },
   "unavailable": [
     {
@@ -241656,6 +241577,11 @@
     {
       "domain": "strategy",
       "reason": "Evolution Lab storage not reachable from this context.",
+      "source": null
+    },
+    {
+      "domain": "experiment",
+      "reason": "Experiment evidence store not supplied to this export.",
       "source": null
     }
   ],

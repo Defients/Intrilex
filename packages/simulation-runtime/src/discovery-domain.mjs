@@ -1,5 +1,5 @@
 import { hashCanonical } from '@intrilex/shared';
-import { evidenceGradeDetailed, normalCdf, Z95 } from '@intrilex/statistics/estimators';
+import { evidenceGradeDetailed, normalCdf, benjaminiHochberg, Z95 } from '@intrilex/statistics/estimators';
 import { assertIdentity, labConfig, LAB_PROFILES, LAB_LIMITS } from './evolution-domain.mjs';
 
 export const GRADE_RANK = Object.freeze({ INSUFFICIENT: 0, EXPLORATORY: 1, SUPPORTED: 2, ROBUST: 3 });
@@ -31,7 +31,10 @@ export const DISCOVERY_CATEGORIES = Object.freeze(['matchup', 'card', 'turn-phas
  * conditional_discovery may later be weakened by new evidence). */
 export const LIFECYCLE = Object.freeze(['observation', 'candidate', 'hypothesis', 'supported_finding', 'replicated_finding', 'discovery', 'conditional_discovery', 'rejected', 'unresolved']);
 export const TERMINAL_HYPOTHESIS_STATES = Object.freeze(['discovery', 'conditional_discovery', 'rejected', 'unresolved']);
-export const RUN_STATES = Object.freeze(['IDLE', 'RUNNING', 'PAUSED', 'STOPPED', 'COMPLETE', 'ERROR']);
+// BLOCKED is a pre-research terminal state: the run's frozen evidence
+// scope resolved to zero admissible game rows, so execution never
+// started. It is an input failure — never a scientific outcome.
+export const RUN_STATES = Object.freeze(['IDLE', 'RUNNING', 'PAUSED', 'STOPPED', 'COMPLETE', 'BLOCKED', 'ERROR']);
 export const STAGE_STATES = Object.freeze(['pending', 'running', 'complete', 'skipped']);
 export const CHECK_VERDICTS = Object.freeze(['passed', 'failed', 'inconclusive', 'not-applicable']);
 
@@ -52,6 +55,7 @@ export const DISCOVERY_LIMITS = Object.freeze({
   minScanDecisive: 40,
   minMechanicCohort: 30,
   minPairingDecisive: 60,
+  minComboOpportunities: 30,
   evidenceRunsMax: 512,
 });
 
@@ -97,25 +101,56 @@ export function discoveryConfig(input = {}) {
 
 // ── Evidence snapshot ────────────────────────────────────────────
 
+/** Reason codes for evidence exclusion — disclosed per run, never silent. */
+export const EVIDENCE_EXCLUSION = Object.freeze({
+  FOREIGN_FINGERPRINT: 'FOREIGN_FINGERPRINT',
+  IMPORTED_UNVERIFIED: 'IMPORTED_UNVERIFIED',
+  MISSING_RECORDS: 'MISSING_RECORDS',
+  UNREADABLE: 'UNREADABLE',
+});
+
 /**
  * Freeze the evidence scope for a run. Only runs whose identity matches
  * the executing implementation are admissible — imported or
  * foreign-fingerprint runs are counted and disclosed, never pooled.
  * @param {Array<object>} runs validated intrilex-evolution-lab payloads
  * @param {object} identity RulesetFingerprint
+ * @param {object} [opts]
+ * @param {Array<string>} [opts.unreadableRunIds] history rows whose
+ *   payloads failed to load — counted as UNREADABLE exclusions so the
+ *   selected→admissible ledger reconciles.
+ * @param {number|null} [opts.historyRunCount] total stored rows before
+ *   the selection cap was applied (disclosed scope truncation).
+ * @param {number} [opts.truncatedRunCount] stored rows beyond the cap.
  */
-export function createEvidenceSnapshot(runs, identity) {
+export function createEvidenceSnapshot(runs, identity, { unreadableRunIds = [], historyRunCount = null, truncatedRunCount = 0 } = {}) {
   assertIdentity(identity);
   const eligible = [], excluded = [];
+  const exclusionReasons = {};
+  let selectedGameCount = 0;
+  const exclude = (runId, reason) => {
+    excluded.push(runId);
+    exclusionReasons[reason] = (exclusionReasons[reason] ?? 0) + 1;
+  };
   for (const run of runs ?? []) {
-    if (run?.identity?.fingerprint === identity.fingerprint && run.evidenceOrigin !== 'IMPORTED_UNVERIFIED' && Array.isArray(run.records)) eligible.push(run);
-    else excluded.push(run?.runId ?? 'unknown');
+    if (Array.isArray(run?.records)) selectedGameCount += run.records.length;
+    if (run?.identity?.fingerprint !== identity.fingerprint) exclude(run?.runId ?? 'unknown', EVIDENCE_EXCLUSION.FOREIGN_FINGERPRINT);
+    else if (run.evidenceOrigin === 'IMPORTED_UNVERIFIED') exclude(run.runId, EVIDENCE_EXCLUSION.IMPORTED_UNVERIFIED);
+    else if (!Array.isArray(run.records)) exclude(run.runId, EVIDENCE_EXCLUSION.MISSING_RECORDS);
+    else eligible.push(run);
   }
+  for (const runId of unreadableRunIds ?? []) exclude(runId ?? 'unknown', EVIDENCE_EXCLUSION.UNREADABLE);
   eligible.sort((a, b) => a.runId.localeCompare(b.runId));
   const runIds = eligible.map((r) => r.runId);
   const gameCount = eligible.reduce((n, r) => n + r.records.length, 0);
   const snapshotId = `ES-${hashCanonical({ runIds, gameCount, fingerprint: identity.fingerprint })}`;
-  return { snapshotId, runIds, runCount: runIds.length, gameCount, fingerprint: identity.fingerprint, excludedCount: excluded.length, excludedRunIds: excluded.slice(0, 32) };
+  return {
+    snapshotId, runIds, runCount: runIds.length, gameCount, fingerprint: identity.fingerprint,
+    selectedRunCount: (runs?.length ?? 0) + (unreadableRunIds?.length ?? 0), selectedGameCount,
+    excludedCount: excluded.length, excludedRunIds: excluded.slice(0, 32), exclusionReasons,
+    ...(historyRunCount != null ? { historyRunCount } : {}),
+    ...(truncatedRunCount ? { truncatedRunCount } : {}),
+  };
 }
 
 // ── Lifecycle / journal ─────────────────────────────────────────
@@ -305,7 +340,22 @@ export function createDiscoveryRun(input, evidenceSnapshot, identity, createdAt 
  *   conditional — survived but a challenge narrowed the claimed scope
  *   promote     — all gates passed
  */
-export function evaluatePromotion(hypothesis) {
+export function rawEstimatePValue(estimate, interval) {
+  if (!isFiniteNum(estimate) || !isFiniteNum(interval?.[0]) || !isFiniteNum(interval?.[1])) return null;
+  const se = Math.abs(interval[1] - interval[0]) / (2 * Z95);
+  if (!(se > 0)) return null;
+  return Math.min(1, 2 * (1 - normalCdf(Math.abs(estimate) / se)));
+}
+
+/**
+ * @param {object} hypothesis hypothesis carrying pooled evidence + plan
+ * @param {{familyPValues?: Array<{id: string, pValue: number}>}} [options]
+ *   familyPValues: the measured hypothesis family used for multiplicity
+ *   adjustment ({id, pValue} entries; the focal hypothesis is always
+ *   added). Only a real Benjamini–Hochberg q-value is supplied to the
+ *   evidence grader — a raw p-value is never relabeled as a q-value.
+ */
+export function evaluatePromotion(hypothesis, options = {}) {
   const g = PROMOTION_GATES;
   const ev = hypothesis.evidence ?? {};
   const reasons = [];
@@ -327,19 +377,36 @@ export function evaluatePromotion(hypothesis) {
   gate('CI_EXCLUDES_NULL', ciExcludesNull, `95% interval [${interval.map((v) => (isFiniteNum(v) ? v.toFixed(3) : 'n/a')).join(', ')}]`);
   gate('CI_WIDTH', width != null && width <= g.maxIntervalWidth, `width ${width == null ? 'n/a' : width.toFixed(3)} ≤ ${g.maxIntervalWidth}`);
 
-  // A conservative p-value read off the 95% interval (se = width/(2·z₉₅))
-  // is supplied as the multiplicity term — treating an unadjusted p as a
-  // q-value is stricter than any FDR correction over this small family.
-  let pValue = null;
-  if (isFiniteNum(estimate) && isFiniteNum(interval[0]) && isFiniteNum(interval[1])) {
-    const se = Math.abs(interval[1] - interval[0]) / (2 * Z95);
-    if (se > 0) pValue = Math.min(1, 2 * (1 - normalCdf(Math.abs(estimate) / se)));
+  // Multiplicity handling is explicit: the interval-derived quantity is
+  // a raw p-value only. It becomes usable significance evidence solely
+  // after a real Benjamini–Hochberg adjustment over the measured
+  // hypothesis family supplied by the caller. The ledger discloses the
+  // raw p, the adjusted q and the family size — what was and was not
+  // adjusted stays on the record.
+  const pValue = rawEstimatePValue(estimate, interval);
+  let qValue = null, familySize = 0;
+  if (pValue != null) {
+    const family = (Array.isArray(options.familyPValues) ? options.familyPValues : [])
+      .filter((f) => f && f.id !== hypothesis.hypothesisId && isFiniteNum(f.pValue));
+    family.push({ id: hypothesis.hypothesisId, pValue });
+    familySize = family.length;
+    qValue = benjaminiHochberg(family).find((f) => f.id === hypothesis.hypothesisId)?.qValue ?? null;
+    gate('MULTIPLICITY', qValue != null,
+      `raw p=${pValue.toFixed(4)} → Benjamini–Hochberg q=${qValue != null ? qValue.toFixed(4) : 'unavailable'} over ${familySize} measured hypothesis(es)`);
+  } else {
+    gate('MULTIPLICITY', true, 'no measurable estimate — nothing to adjust');
   }
   const grade = evidenceGradeDetailed({
     sampleSize: decisive, interval, effectSize: estimate, minimum: g.replicationMinDecisive, nullValue: 0, scale: 'difference',
-    ...(pValue != null ? { qValue: pValue } : {}),
+    ...(qValue != null ? { qValue } : {}),
   });
   gate('EVIDENCE_GRADE', GRADE_RANK[grade.grade] >= GRADE_RANK[g.requiredEvidenceGrade], `grade ${grade.grade} vs ${g.requiredEvidenceGrade} required`);
+
+  const unpersisted = (hypothesis.plan?.stages ?? []).filter((s) => s.persisted === false);
+  gate('PERSISTENCE_INTEGRITY', unpersisted.length === 0,
+    unpersisted.length === 0
+      ? 'every completed stage run is durably persisted'
+      : `stage run(s) ${unpersisted.map((s) => s.key).join(', ')} executed but were not durably persisted — promotion is blocked until durable evidence exists`);
 
   const rep = hypothesis.replication ?? { attempted: 0, passed: 0 };
   gate('REPLICATION_COUNT', rep.attempted >= g.minReplicationBatches && rep.passed === rep.attempted, `replication ${rep.passed}/${rep.attempted} vs ${g.minReplicationBatches} independent batches`);
@@ -358,23 +425,43 @@ export function evaluatePromotion(hypothesis) {
   const anyCheckInconclusive = (hypothesis.checks ?? []).some((c) => c.verdict === 'inconclusive');
   gate('NO_UNRESOLVED_CONFOUND', !anyCheckInconclusive, 'no challenge may remain inconclusive at promotion');
 
-  // Verdict precedence: hard refutations first, then evidence gaps.
+  // Verdict precedence: integrity failures first (a missing durable
+  // evidence artifact means no verdict can be rendered at all — the
+  // measurement cannot be audited), then hard refutations, then gaps.
+  if (unpersisted.length > 0) {
+    return { verdict: 'unresolved', confidence: null, grade: grade.grade, reasons, pValue, qValue, familySize };
+  }
   if (ciRefutes || repFailed || seatConfounded) {
-    return { verdict: 'reject', confidence: null, grade: grade.grade, reasons };
+    return { verdict: 'reject', confidence: null, grade: grade.grade, reasons, pValue, qValue, familySize };
   }
   const allPassed = reasons.every((r) => r.passed);
   if (allPassed && !populationFailed) {
     const confidence = GRADE_RANK[grade.grade] >= GRADE_RANK[g.highConfidenceGrade] && rep.passed >= 3 ? 'HIGH' : 'MODERATE';
-    return { verdict: 'promote', confidence, grade: grade.grade, reasons };
+    return { verdict: 'promote', confidence, grade: grade.grade, reasons, pValue, qValue, familySize };
   }
   if (allPassed && populationFailed) {
-    return { verdict: 'conditional', confidence: 'MODERATE', grade: grade.grade, reasons };
+    return { verdict: 'conditional', confidence: 'MODERATE', grade: grade.grade, reasons, pValue, qValue, familySize };
   }
   // Sample/width/grade/replication gaps are inconclusive, not refutations.
-  return { verdict: 'unresolved', confidence: null, grade: grade.grade, reasons };
+  return { verdict: 'unresolved', confidence: null, grade: grade.grade, reasons, pValue, qValue, familySize };
 }
 
 // ── Discovery artifact ───────────────────────────────────────────
+
+/** Machine-readable units for each supported outcome metric. The unit
+ * is semantic — artifacts that measure turns must not claim to measure
+ * probabilities. */
+export const EFFECT_UNITS = {
+  winRateA: 'probability',
+  seat1WinRate: 'probability',
+  faultRate: 'probability',
+  mechanicDelta: 'probability-difference',
+  meanTurns: 'full-turns',
+};
+
+export function effectUnitForMetric(metric) {
+  return EFFECT_UNITS[metric] ?? 'probability';
+}
 
 export function createDiscoveryArtifact(hypothesis, run, promotion, createdAt = new Date().toISOString()) {
   const ev = hypothesis.evidence;
@@ -396,7 +483,7 @@ export function createDiscoveryArtifact(hypothesis, run, promotion, createdAt = 
       metric: hypothesis.outcome,
       estimate: ev.estimate,
       interval95: ev.interval,
-      unit: 'probability',
+      unit: effectUnitForMetric(hypothesis.outcome),
       direction: hypothesis.direction,
       decisive: ev.decisive,
       games: ev.games,
@@ -526,12 +613,20 @@ export function discoveryRunSummary(run) {
   }
   return {
     runId: run.runId, status: run.status, mode: run.mode, createdAt: run.createdAt, completedAt: run.completedAt,
-    evidence: { snapshotId: run.evidence?.snapshotId, runCount: run.evidence?.runCount, gameCount: run.evidence?.gameCount },
+    evidence: {
+      snapshotId: run.evidence?.snapshotId, runCount: run.evidence?.runCount, gameCount: run.evidence?.gameCount,
+      selectedRunCount: run.evidence?.selectedRunCount ?? run.evidence?.runCount ?? 0,
+      selectedGameCount: run.evidence?.selectedGameCount ?? run.evidence?.gameCount ?? 0,
+      excludedCount: run.evidence?.excludedCount ?? 0,
+      exclusionReasons: run.evidence?.exclusionReasons ?? {},
+    },
     candidates: run.candidates?.length ?? 0,
     hypotheses: run.hypotheses?.length ?? 0,
     ...counts,
     budget: { allocated: run.budget?.allocated ?? 0, consumed: run.budget?.consumed ?? 0 },
     discoveries: (run.discoveries ?? []).map((d) => d.discoveryId ?? d),
-    zeroDiscoveryIsSuccess: counts.promoted === 0 && counts.conditional === 0,
+    // A zero-discovery result is a success only when research actually
+    // ran to completion — a BLOCKED input failure is never a result.
+    zeroDiscoveryIsSuccess: run.status === 'COMPLETE' && counts.promoted === 0 && counts.conditional === 0,
   };
 }

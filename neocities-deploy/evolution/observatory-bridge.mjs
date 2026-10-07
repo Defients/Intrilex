@@ -82,6 +82,9 @@ export function observatorySummaryForRecord(record, run, { pairId = null } = {})
     ...(record.primaryMechanicCounts ? { primaryMechanicCounts: record.primaryMechanicCounts } : (sumParticipantCounts(participants, 'primaryMechanicCounts') ? { primaryMechanicCounts: sumParticipantCounts(participants, 'primaryMechanicCounts') } : {})),
     ...(record.primaryMechanicOpportunityCounts ? { primaryMechanicOpportunityCounts: record.primaryMechanicOpportunityCounts } : {}),
     ...(record.rankDecisions ? { rankDecisions: record.rankDecisions } : {}),
+    // Canonical Combo telemetry (§8) — retained verbatim when present;
+    // records without it expose no Combo lifecycle, never an inferred one.
+    ...(record.comboTelemetry ? { comboTelemetry: record.comboTelemetry } : {}),
     ruleCompliance: { status: record.ruleCompliance ?? 'UNAVAILABLE' },
     // Provenance: Observatory rows keep lab lineage for filtering/reporting.
     telemetryOrigin: 'EVOLUTION_LAB',
@@ -132,6 +135,7 @@ export function observatoryCoverage(summaries) {
     withParticipants: has(s => s.participants?.some(p => p.mechanicCounts && Object.keys(p.mechanicCounts).length)),
     withOpportunityCounts: has(s => s.mechanicOpportunityCounts && Object.keys(s.mechanicOpportunityCounts).length),
     withRankDecisions: has(s => s.rankDecisions?.length),
+    withComboTelemetry: has(s => s.comboTelemetry?.records != null || s.comboTelemetry?.seats != null),
     withResponseCounters: has(s => s.responseOpportunityCount != null),
     imported: has(s => s.evidenceOrigin === 'IMPORTED_UNVERIFIED'),
   };

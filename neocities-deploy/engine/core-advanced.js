@@ -1,12 +1,12 @@
-import { canonicalClone } from "./canonical-json.js?v=dac162e115e4";
-import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=dac162e115e4";
-import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js?v=dac162e115e4";
-import { cardPointValue, parseIdentity, rankDefinition, resolvePointValue, resolveRankAction } from "./ranks.js?v=dac162e115e4";
-import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=dac162e115e4";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=dac162e115e4";
-import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js?v=dac162e115e4";
-import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js?v=dac162e115e4";
-import { phase8Runtime } from "./phase8.js?v=dac162e115e4";
+import { canonicalClone } from "./canonical-json.js?v=ef8ac632ff7c";
+import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=ef8ac632ff7c";
+import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js?v=ef8ac632ff7c";
+import { cardPointValue, parseIdentity, rankDefinition, resolvePointValue, resolveRankAction } from "./ranks.js?v=ef8ac632ff7c";
+import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=ef8ac632ff7c";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=ef8ac632ff7c";
+import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js?v=ef8ac632ff7c";
+import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js?v=ef8ac632ff7c";
+import { phase8Runtime } from "./phase8.js?v=ef8ac632ff7c";
 export const CORE_ADVANCED_AUTHORITY_PROFILE = Object.freeze({
     id: "core-advanced-authority",
     displayName: "Advanced Core Authority — Audited Public Supers, Rank 10, Ultras, Voltage & Royal Marriage",

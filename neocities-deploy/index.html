@@ -62,7 +62,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=Dancing+Script:wght@500;600;700&family=Great+Vibes&display=swap">
-  <link rel="stylesheet" href="styles.ecaabc7ea27e.css">
+  <link rel="stylesheet" href="styles.dd49ff7fab6f.css">
 
   <!-- Structured data (JSON-LD is not executed as script, so CSP script-src does not apply) -->
   <script type="application/ld+json">
@@ -148,11 +148,27 @@
       <nav id="workspace-nav" class="workspace-nav" aria-label="Analytical workspaces"></nav>
       <div id="rail-context" class="rail-context" aria-label="Active dataset"></div>
       <details class="authority-stamp">
-        <summary><span class="live-dot" aria-hidden="true"></span><span class="stamp-line"><strong></strong><small class="stamp-verified" id="stamp-verified">Verified</small></span><span class="stamp-chevron" aria-hidden="true">▾</span></summary>
+        <summary><span class="live-dot" aria-hidden="true"></span><span class="stamp-line"><strong></strong><small class="stamp-verified" id="stamp-verified">Verified</small></span><button id="analysis-export-trigger" class="export-trigger" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="analysis-export-hub" title="Export Research Data" aria-label="Export Research Data"><span aria-hidden="true">⇩</span></button><span class="stamp-chevron" aria-hidden="true">▾</span></summary>
         <div class="stamp-details"><small></small><a class="stamp-link" href="#/evidence">Integrity evidence →</a></div>
       </details>
       <button id="rail-toggle" class="rail-toggle" type="button" aria-expanded="true" aria-controls="side-rail" aria-label="Collapse sidebar" title="Collapse sidebar"><span class="rail-toggle-icon" aria-hidden="true"></span></button>
     </aside>
+    <div id="analysis-export-hub" class="export-hub" role="dialog" aria-modal="false" aria-labelledby="analysis-export-hub-title" hidden>
+      <div class="export-hub-head">
+        <div><p class="eyebrow">Analysis export</p><h2 id="analysis-export-hub-title">Research evidence package</h2></div>
+        <button class="icon-button" id="analysis-export-close" type="button" aria-label="Close analysis export">×</button>
+      </div>
+      <div class="export-hub-actions">
+        <button class="export-choice" type="button" data-export-format="json"><b>{ } JSON</b><small>Authoritative structured analysis data</small></button>
+        <button class="export-choice" type="button" data-export-format="markdown"><b>≡ Markdown</b><small>Human-readable projection</small></button>
+        <button class="export-choice primary" type="button" data-export-format="both"><b>⇩ JSON + Markdown</b><small>Recommended for AI review</small></button>
+      </div>
+      <div class="export-status" data-testid="export-evidence-status">
+        <p class="eyebrow">Evidence status</p>
+        <div id="export-status-rows" class="export-status-rows" aria-live="polite"></div>
+        <ul id="export-status-warnings" class="export-status-warnings" hidden></ul>
+      </div>
+    </div>
     <main id="main" tabindex="-1">
       <header class="global-header">
         <div class="title-stack"><nav class="breadcrumb" aria-label="Breadcrumb" id="breadcrumb"><a href="#/">Intrilex</a><span class="breadcrumb-sep" aria-hidden="true">/</span><span id="breadcrumb-current">Observatory</span></nav><p class="eyebrow"></p><h1 id="page-title"></h1><p id="page-subtitle"></p></div>
@@ -190,7 +206,7 @@
     </div>
     <div id="advanced-card-rules-content"></div>
   </dialog>
-  <script type="module" src="app.dac162e115e4.js"></script>
+  <script type="module" src="app.ef8ac632ff7c.js"></script>
   <script src="sw-kill.js"></script>
 </body>
 </html>
