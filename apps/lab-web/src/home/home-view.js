@@ -32,11 +32,6 @@ const LAB_ICON_SVG = `<svg class="lab-button-icon" viewBox="0 0 24 24" fill="non
   <path d="M9.5 15.5l2-1M14.5 15.5l-2-1" opacity=".6"/>
 </svg>`;
 
-const REDDIT_SVG = `<svg class="reddit-emblem" viewBox="0 0 24 24" aria-hidden="true">
-  <circle cx="12" cy="12" r="12" fill="#FF4500"/>
-  <path fill="#fff" d="M19.9 12a1.6 1.6 0 0 0-2.7-1.1 7.9 7.9 0 0 0-4.3-1.4l.9-2.9 2.4.6a1.2 1.2 0 1 0 .1-.6l-2.8-.7a.3.3 0 0 0-.4.2l-1 3.4a7.9 7.9 0 0 0-4.3 1.4A1.6 1.6 0 1 0 6 13.4a3 3 0 0 0 0 .5c0 2.4 2.7 4.3 6 4.3s6-1.9 6-4.3a3 3 0 0 0 0-.5 1.6 1.6 0 0 0 1.9-1.4zM9.3 13a1.1 1.1 0 1 1 1.1 1.1A1.1 1.1 0 0 1 9.3 13zm6.1 2.9a4 4 0 0 1-2.6.8h-1.6a4 4 0 0 1-2.6-.8.3.3 0 0 1 .4-.4 3.4 3.4 0 0 0 2.2.6h1.6a3.4 3.4 0 0 0 2.2-.6.3.3 0 0 1 .4.4zm-.8-1.8A1.1 1.1 0 1 1 15.7 13a1.1 1.1 0 0 1-1.1 1.1z"/>
-</svg>`;
-
 /** Primary header navigation — all real destinations. */
 const PRIMARY_NAV = [
   { href: '#/play', label: 'PLAY' },
@@ -48,12 +43,17 @@ const PRIMARY_NAV = [
   { href: 'https://reddit.com/r/intrilex', label: 'COMMUNITY', external: true },
 ];
 
-/** EXPLORE lower panel — four real ecosystem routes (2 × 2). */
+/**
+ * EXPLORE lower panel — four real ecosystem routes (2 × 2).
+ * Each tile's artwork IS the button surface (labels, icons and
+ * arrows are baked into the PNG); label/sub survive only as the
+ * accessible name so nothing duplicates visually.
+ */
 const EXPLORE_DESTINATIONS = [
-  { href: '#/rules', label: 'RULES', sub: 'Official rulebook', icon: '§' },
-  { href: '#/cards', label: 'CARDS', sub: 'Card library', icon: '🃏' },
-  { href: '#/leaderboard', label: 'RANKINGS', sub: 'Global ladder', icon: '★' },
-  { href: 'https://reddit.com/r/intrilex', label: 'COMMUNITY', sub: 'Reddit & more', icon: REDDIT_SVG, external: true },
+  { href: '#/rules', label: 'RULES', sub: 'Official rulebook', image: 'assets/rules.png' },
+  { href: '#/cards', label: 'CARDS', sub: 'Card library', image: 'assets/cards.png' },
+  { href: '#/leaderboard', label: 'RANKINGS', sub: 'Global ladder', image: 'assets/rankings.png' },
+  { href: 'https://reddit.com/r/intrilex', label: 'COMMUNITY', sub: 'Reddit & more', image: 'assets/community.png', external: true },
 ];
 
 /**
@@ -206,10 +206,8 @@ export function renderHomePage({ labVersion = '', rulesVersion = '' } = {}) {
             <span class="home-panel-eyebrow" id="home-explore-title">EXPLORE</span>
           </header>
           <div class="home-explore-grid">
-            ${EXPLORE_DESTINATIONS.map(d => `<a class="home-explore-item" href="${esc(d.href)}"${d.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>
-              <span class="home-explore-icon" aria-hidden="true">${d.icon}</span>
-              <span class="home-explore-text"><strong>${esc(d.label)}</strong><small>${esc(d.sub)}</small></span>
-              <span class="home-explore-arrow" aria-hidden="true">&rarr;</span>
+            ${EXPLORE_DESTINATIONS.map(d => `<a class="home-explore-item" href="${esc(d.href)}"${d.external ? ' target="_blank" rel="noopener noreferrer"' : ''} aria-label="${esc(`${d.label} — ${d.sub}`)}">
+              <img class="home-explore-art" src="${esc(d.image)}" alt="" width="1450" height="483" decoding="async" />
             </a>`).join('')}
           </div>
         </article>
