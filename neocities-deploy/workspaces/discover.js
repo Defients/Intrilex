@@ -10,11 +10,11 @@
 // (evolution/discovery-*.mjs). This workspace renders state and forwards
 // intents — it never judges evidence itself.
 
-import { app, esc, fmt, state } from '../state.js?v=adf8892fce29';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=adf8892fce29';
-import { EvolutionStore } from '../evolution/evolution-store.mjs?v=adf8892fce29';
-import { executeDiscoveryRun, prepareDiscoveryRun, resolveEvidenceScope } from '../evolution/discovery-runner.mjs?v=adf8892fce29';
-import { DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary } from '../evolution/discovery-domain.mjs?v=adf8892fce29';
+import { app, esc, fmt, state } from '../state.js?v=943d1ec6c237';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=943d1ec6c237';
+import { EvolutionStore } from '../evolution/evolution-store.mjs?v=943d1ec6c237';
+import { executeDiscoveryRun, prepareDiscoveryRun, resolveEvidenceScope } from '../evolution/discovery-runner.mjs?v=943d1ec6c237';
+import { DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary } from '../evolution/discovery-domain.mjs?v=943d1ec6c237';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 const pp = (n) => Number.isFinite(n) ? `${n >= 0 ? '+' : ''}${(n * 100).toFixed(1)}pp` : '—';

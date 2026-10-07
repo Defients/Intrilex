@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { pruneDeployFiles, staleDeployFiles, writeDeployOwnership, deployParityProblems, finalizeDeployRuntime } from '../scripts/deploy-ownership.mjs';
+import { pruneDeployFiles, staleDeployFiles, writeDeployOwnership, deployParityProblems, deployConfigProblems, finalizeDeployRuntime } from '../scripts/deploy-ownership.mjs';
 import { cp, symlink, stat, utimes } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -134,6 +134,33 @@ test('deployment parity rejects missing, altered and stale files, including runt
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+
+test('runtime-config gate rejects non-production builds — a dev-env snapshot can never satisfy sync or parity', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'intrilex-deploy-config-'));
+  const dist = join(root, 'dist'), deploy = join(root, 'deploy');
+  try {
+    await mkdir(dist); await mkdir(deploy);
+    const production = 'window.__INTRILEX_CONFIG__={supabase:{url:"https://x.supabase.co",publishableKey:"sb_publishable_x"},matchServerUrl:"wss://match.intrilex.cards"};';
+    await writeFile(join(dist, '__intrilex-config.prod1.js'), production);
+    await writeFile(join(deploy, '__intrilex-config.prod1.js'), production);
+    assert.deepEqual(await deployConfigProblems(dist), []);
+    assert.deepEqual(await deployConfigProblems(dist, deploy), []);
+    // A dev build (localhost ws, no Supabase credentials) fails closed.
+    await rm(join(dist, '__intrilex-config.prod1.js'));
+    await writeFile(join(dist, '__intrilex-config.dev01.js'),
+      'window.__INTRILEX_CONFIG__={matchServerUrl:"ws://localhost:3099"};');
+    const problems = await deployConfigProblems(dist);
+    assert.ok(problems.some(p => p.includes('match server')));
+    assert.ok(problems.some(p => p.includes('Supabase')));
+    // The published snapshot is checked too — a stale/dev deploy fails.
+    assert.ok((await deployConfigProblems(dist, deploy)).some(p => p.startsWith('Source build')));
+    await rm(join(deploy, '__intrilex-config.prod1.js'));
+    assert.ok((await deployConfigProblems(dist, deploy)).some(p => p.startsWith('Deploy snapshot')));
+    // No hashed config at all → fail closed, never silently pass.
+    await rm(join(dist, '__intrilex-config.dev01.js'));
+    assert.ok((await deployConfigProblems(dist)).some(p => p.includes('no hashed runtime config')));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 test('deployment preserves shared hash exports required by unbundled Evolution workers', async () => {
   const root = await mkdtemp(join(tmpdir(), 'intrilex-evolution-worker-deploy-'));

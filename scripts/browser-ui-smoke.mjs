@@ -281,28 +281,37 @@ try{
 
   // ── Canonical homepage proof ──
   // The WIP "coming soon" landing was removed by the homepage work — the
-  // canonical homepage (home/home-view.js) is now the front door. Prove
-  // structural surfaces that carry real meaning (navigation, Play CTA,
-  // Live Pulse, Preseason, Leaders, News, Explore) rather than decorative
-  // selectors. Dynamic regions must exist as containers; their data may
-  // legitimately degrade to '—' with no backend, so the proof never
-  // requires live network-derived values.
+  // canonical V2 homepage (home/home-view.js) is now the front door:
+  //   HEADER → CINEMATIC HERO → LIVE PULSE → PRESEASON → NEWS → EXPLORE → FOOTER
+  // The old Leaders section is intentionally retired (leader data feeds the
+  // pulse 'top rating' metric instead). Prove structural surfaces that carry
+  // real meaning rather than decorative selectors. Dynamic regions must
+  // exist as containers; their data may legitimately degrade with no
+  // backend, so the proof never requires live network-derived values.
   const landingProof={};
   await cdp.evaluate(`location.hash='#/'`);
   await waitFor(cdp.evaluate,`Boolean(document.querySelector('#landing-app .home-app'))`,{label:'canonical homepage render'});
-  const landingOk=await cdp.evaluate(`(()=>({
+  const landingOk=await cdp.evaluate(`(()=>{
+    const grid=document.querySelector('.home-grid');
+    const gridHtml=grid?grid.innerHTML:'';
+    const iPre=gridHtml.indexOf('home-preseason'),iNews=gridHtml.indexOf('home-news"'),iExp=gridHtml.indexOf('home-explore');
+    return {
     shellHidden:getComputedStyle(document.querySelector('.observatory-shell')).display==='none',
     homeVisible:Boolean(document.querySelector('#landing-app .home-app')),
+    hero:Boolean(document.querySelector('.home-hero')&&document.querySelector('#home-hero-title')),
     primaryNav:document.querySelectorAll('.home-nav .home-nav-link').length>=5,
-    playCta:Boolean(document.querySelector('[data-testid="home-solo-btn"]')&&document.querySelector('[data-testid="home-direct-btn"]')),
+    playCta:Boolean(document.querySelector('[data-testid="home-solo-btn"]')),
+    directDuelCta:Boolean(document.querySelector('[data-testid="home-direct-btn"]')),
     livePulse:Boolean(document.querySelector('[data-home-pulse]')&&document.querySelector('[data-home-pulse-metrics]')),
     preseasonPanel:Boolean(document.querySelector('#home-preseason-title')&&document.querySelector('.home-preseason')),
-    leaders:Boolean(document.querySelector('#home-leaders-title')&&document.querySelector('[data-home-leaders]')),
     news:Boolean(document.querySelector('#home-news-title')&&document.querySelector('[data-home-news]')),
     explore:Boolean(document.querySelector('#home-explore-title')),
+    gridOrder:Boolean(grid)&&iPre>-1&&iNews>iPre&&iExp>iNews,
+    leadersRetired:!document.querySelector('#home-leaders-title, [data-home-leaders]'),
+    footer:Boolean(document.querySelector('.landing-footer')),
     wipGone:!document.querySelector('.wip-landing, #wip-newsletter-form, .wip-dev-preview-btn'),
     brainRemoved:!document.querySelector('#brain-container, .wip-brain-section'),
-  }))()`);
+  }})()`);
   if(Object.values(landingOk).some(v=>v!==true))throw new Error(`Homepage check failed: ${JSON.stringify(landingOk)}`);
   landingProof.home=true;
 
@@ -353,7 +362,7 @@ try{
   if(cdp.exceptions.length)throw new Error(`Browser exceptions: ${cdp.exceptions.join('\n')}`);
 
   report={schemaVersion:'2.0.0',status:'PASS',browser:'Chromium 144 headless',workspaces:workspaceProof,landing:landingProof,campaign:{state:campaignResult.state,status:campaignResult.status,matchCount:1,abortCount:0},replay:{checkpointStep:true,playerProjection:true,opponentHandHidden:true},accessibility,responsive:viewportResults,reducedMotion:true,exceptions:[]};
-  if(writeReports){await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`);await writeFile(reportMdPath,`# Browser UI Smoke\n\nStatus: **PASS**\n\n- Twelve smoke-tested workspaces including Caster, Combo Atlas, Ranks, Traces, Branches, and Diagnostics: PASS\n- Canonical homepage (nav · Play CTAs · Live Pulse · Preseason · Leaders · News · Explore): PASS\n- Play · Puzzles · Rules · Sim routes: PASS\n- Semantic checkpoint stepping: PASS\n- Player-authorized hidden-hand projection: PASS\n- Browser Worker campaign: 1/1 complete (semantic data-state contract)\n- DISCOVER START RUN never silently no-ops: PASS\n- Combo Atlas renders; 4♥ breaker disclosed as unavailable: PASS\n- Accessibility-tree unnamed interactive controls: 0\n- Responsive viewports: 390×844, 768×1024, 1366×768, 1920×1080\n- Reduced-motion emulation: PASS\n- Screenshots: \`reports/local/visual-qa/\`\n`);}
+  if(writeReports){await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`);await writeFile(reportMdPath,`# Browser UI Smoke\n\nStatus: **PASS**\n\n- Twelve smoke-tested workspaces including Caster, Combo Atlas, Ranks, Traces, Branches, and Diagnostics: PASS\n- Canonical homepage (nav · Play CTAs · Live Pulse · Preseason → News → Explore grid · footer · Leaders retired): PASS\n- Play · Puzzles · Rules · Sim routes: PASS\n- Semantic checkpoint stepping: PASS\n- Player-authorized hidden-hand projection: PASS\n- Browser Worker campaign: 1/1 complete (semantic data-state contract)\n- DISCOVER START RUN never silently no-ops: PASS\n- Combo Atlas renders; 4♥ breaker disclosed as unavailable: PASS\n- Accessibility-tree unnamed interactive controls: 0\n- Responsive viewports: 390×844, 768×1024, 1366×768, 1920×1080\n- Reduced-motion emulation: PASS\n- Screenshots: \`reports/local/visual-qa/\`\n`);}
   console.log(`BROWSER UI SMOKE PASS: workspaces=12; landing=5; campaign=1; screenshots=${viewportResults.length+2}`);
 }catch(error){report={schemaVersion:'2.0.0',status:'FAIL',error:error.stack??String(error),exceptions:cdp?.exceptions??[]};if(writeReports)await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`).catch(()=>{});console.error(error);process.exitCode=1;}
 finally{try{cdp?.socket.close();}catch{}try{process.kill(-child.pid,'SIGKILL');}catch{}try{await rm(profileDir,{recursive:true,force:true});}catch{/* Windows may lock Chrome crash files; best-effort cleanup */}try{tempServer?.close();}catch{}}

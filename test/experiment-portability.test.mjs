@@ -30,7 +30,7 @@ import {
   includeRunInSet, excludeRunFromSet, invalidateRun, archiveRun, restoreRun, pinRun,
   planMigration,
   payloadEvidenceHash, verifyRunPayload, markRunIntegrity, runIntegrityState,
-  runAnalyticallyEligible,
+  runAnalyticallyEligible, validateRunRecord,
 } from '../packages/simulation-runtime/src/experiment-domain.mjs';
 import {
   EXPERIMENT_RUN_FORMAT, RESEARCH_PACKAGE_FORMAT, PACKAGE_COMPLETENESS,
@@ -40,7 +40,7 @@ import {
   researchPackageManifest, buildResearchPackage,
   validateResearchPackage, parseResearchPackage,
   runDecisionFidelity, replayCoverageForSummaries, runEvidenceBearing,
-  packageDecisionFidelity,
+  packageDecisionFidelity, summariesCarryDecisionEvidence,
 } from '../packages/simulation-runtime/src/experiment-portability.mjs';
 import { ExperimentStore } from '../apps/lab-web/src/experiments/experiment-store.mjs';
 
@@ -140,11 +140,12 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     contributingRuns, evidenceBasis, previewSelectionMetrics,
     includeRunInSet, excludeRunFromSet, invalidateRun, archiveRun, restoreRun, pinRun,
     planMigration, payloadEvidenceHash, verifyRunPayload, markRunIntegrity,
-    runIntegrityState, runAnalyticallyEligible,
+    runIntegrityState, runAnalyticallyEligible, validateRunRecord,
+    DECISION_FIDELITY,
     experimentRunArtifact, artifactEvidenceForRun,
     validateExperimentRunArtifact, parseExperimentRunArtifact,
     validateResearchPackage, parseResearchPackage,
-    runDecisionFidelity, runEvidenceBearing,
+    runDecisionFidelity, runEvidenceBearing, summariesCarryDecisionEvidence,
   };
   const api = runInNewContext(`${src}\n({ initExperiments, recordCampaignRun, recordFailedRun, recordCancelledRun, experimentsReady, storePersisted, getExperiment, getExperimentRuns, getActiveAnalysisSet, getIncludedRuns, getEvidenceBasis, runsWithCompatibility, previewRunSelection, allRunIds, nextRunOrdinalStart, setRunIncluded, setRunExcluded, markRunInvalidated, markRunArchived, markRunRestored, markRunPinned, includeAllCompatible, isolateRun, restoreBaseline, deleteRun, applySelection, collectExperimentEvidence, registerRunExecutor, beginExperimentRun, commitExperimentBatch, finalizeExperimentRun, failExperimentRun, cancelExperimentRun, getIncompleteRuns, resumeExperimentRun, discardManifest, loadRunMatchDetail, verifyRunArtifacts, exportRunArtifactEnvelope, exportRunArtifactText, exportAllRunArtifacts, importRunArtifact, importResearchPackage })`, sandbox);
   return { api, state, toasts };
@@ -427,6 +428,163 @@ test('package import admits runs, replays analysis membership, and dedupes on re
   assert.equal(again.imported.length, 0);
   assert.equal(again.duplicates.length, 2);
   assert.equal(dst.api.getEvidenceBasis().includedGames, 100);
+});
+
+// ── Deep artifact verification — corruption is never 'missing' ───
+test('verifyRunArtifacts detects in-place batch corruption — corrupt, and the exporter agrees', async () => {
+  const idb = createFakeIndexedDB();
+  const { api, store } = await initApi(idb);
+  const { runId } = await sealRun(api);
+  // Mutate a committed batch in place — same batchId, same index, poisoned
+  // summaries. The fake's get returns the stored object, so this simulates
+  // storage-layer corruption of an otherwise "present" chunk.
+  (await store.getRunBatch(runId, 0)).summaries[0].scoreMargin = 9999;
+  const row = (await api.verifyRunArtifacts()).find(r => r.runId === runId);
+  assert.equal(row.artifact, 'corrupt', 'a present-but-tampered batch is corrupt, never durable or missing');
+  assert.equal(row.code, 'RUN_PAYLOAD_HASH_MISMATCH');
+  assert.equal(row.exportable, false);
+  // Verifier and exporter run the same sealed chain — identical failure.
+  await assert.rejects(() => api.exportRunArtifactEnvelope(runId), /RUN_PAYLOAD_HASH_MISMATCH/);
+  // The batch row is still stored — corrupt evidence stays inspectable.
+  assert.ok((await store.listRunBatches(runId)).length > 0);
+});
+
+test('verifyRunArtifacts detects tampered payload descriptors — payload hash mismatch is corrupt', async () => {
+  const idb = createFakeIndexedDB();
+  const { api, store } = await initApi(idb);
+  const { runId } = await sealRun(api);
+  // Forge the descriptor chain: point a descriptor at a different hash while
+  // leaving every batch row intact — the sealed payloadHash must reject it.
+  (await store.getRunPayload(runId)).batches[0].summariesHash = 'forged-descriptor';
+  const row = (await api.verifyRunArtifacts()).find(r => r.runId === runId);
+  assert.equal(row.artifact, 'corrupt');
+  assert.equal(row.code, 'RUN_PAYLOAD_HASH_MISMATCH');
+  await assert.rejects(() => api.exportRunArtifactEnvelope(runId), /RUN_PAYLOAD_HASH_MISMATCH/);
+});
+
+test('verifyRunArtifacts marks a sealed-record hash failure corrupt — inspectable, exportable: false', async () => {
+  const idb = createFakeIndexedDB();
+  const first = await initApi(idb);
+  const { runId } = await sealRun(first.api);
+  // Corrupt a sealed record field in storage, then reload into a fresh
+  // controller — the record surfaces corrupt:true at read time.
+  const raw = new ExperimentStore(idb);
+  await raw.open();
+  (await raw.getRun(runId)).metrics.matchCount = 9999;
+  const second = await initApi(idb);
+  const row = (await second.api.verifyRunArtifacts()).find(r => r.runId === runId);
+  assert.equal(row.artifact, 'corrupt');
+  assert.equal(row.code, 'RUN_HASH_MISMATCH');
+  assert.equal(row.exportable, false);
+  await assert.rejects(() => second.api.exportRunArtifactEnvelope(runId), /RUN_HASH_MISMATCH/);
+});
+
+test('verifyRunArtifacts distinguishes session-only evidence from durable — exportable, never durable', async () => {
+  const idb = createFakeIndexedDB();
+  const { api } = await initApi(idb);
+  // Quota failure on the payload write → session-retained evidence.
+  idb._failNextTransaction({ name: 'QuotaExceededError' });
+  const rec = await api.recordCampaignRun({
+    config: { matchCount: 1, profileId: 'core-advanced-authority', policyIds: ['score-rush', 'control'] },
+    summaries: [fakeSummary(0)], aggregate: { matchCount: 1 },
+  });
+  assert.equal(rec.run.payloadKind, 'session');
+  const row = (await api.verifyRunArtifacts()).find(r => r.runId === rec.run.runId);
+  assert.equal(row.artifact, 'session', 'session-retained evidence is honestly session, not durable');
+  assert.equal(row.exportable, true);
+  // And the exported session artifact is itself self-verifying.
+  const env = await api.exportRunArtifactEnvelope(rec.run.runId);
+  assert.equal(env.format, EXPERIMENT_RUN_FORMAT);
+});
+
+// ── Fidelity at the verification surface ─────────────────────────
+test('verifyRunArtifacts grounds fidelity in inspected evidence — FULL / SUMMARY / UNRESOLVED, never config', async () => {
+  const idb = createFakeIndexedDB();
+  const { api, store } = await initApi(idb);
+  const deep = await sealRun(api, { ordinals: [0, 100], summariesOf: (o, n) => fakeSummaries(o, n, { deep: true }) });
+  const shallow = await sealRun(api, { ordinals: [100, 200] });
+  const corrupt = await sealRun(api, { ordinals: [200, 300] });
+  (await store.getRunBatch(corrupt.runId, 0)).summaries[0].scoreMargin = -1;
+  const rows = await api.verifyRunArtifacts();
+  assert.equal(rows.find(r => r.runId === deep.runId)?.fidelity, DECISION_FIDELITY.FULL,
+    'committed summaries carry decision detail → FULL');
+  assert.equal(rows.find(r => r.runId === shallow.runId)?.fidelity, DECISION_FIDELITY.SUMMARY,
+    'inspected summaries without decision detail → SUMMARY');
+  const bad = rows.find(r => r.runId === corrupt.runId);
+  assert.equal(bad.artifact, 'corrupt');
+  assert.equal(bad.fidelity, DECISION_FIDELITY.UNRESOLVED,
+    'corrupt evidence-bearing run reports UNRESOLVED — never a fidelity verdict it could not inspect');
+});
+
+// ── Research-package membership identity binding ─────────────────
+test('package membership never binds to a conflicting local run — same runId, different runHash', async () => {
+  // Destination already holds a CONFLICTING run under the same ordinal-derived
+  // runId (same id string, different evidence → different sealed runHash).
+  const dst = await initApi(createFakeIndexedDB());
+  const conflict = await sealRun(dst.api, { summariesOf: (o, n) => fakeSummaries(o, n, { winningSeat: 2, terminationReason: 'CANONICAL_DRAW' }) });
+  const src = await initApi(createFakeIndexedDB());
+  const orig = await sealRun(src.api);
+  assert.equal(orig.runId, conflict.runId, 'same experiment + same ordinal → identical runId');
+  // Local curation holds the conflicting run OUT of the analysis set.
+  await dst.api.setRunExcluded(conflict.runId, { reason: 'other', note: 'held out locally' });
+
+  const env = await src.api.exportRunArtifactEnvelope(orig.runId);
+  const files = { [`runs/${orig.runId}.json`]: JSON.stringify(env), 'analysis/dossier.json': '{}' };
+  const manifest = researchPackageManifest({
+    experimentId: src.api.getExperiment().experimentId,
+    perRun: [{ runId: orig.runId, matchCount: 100, included: true, evidenceBearing: true, fidelity: DECISION_FIDELITY.SUMMARY, artifactFile: `runs/${orig.runId}.json` }],
+    analysisPresent: true,
+  });
+  const report = await dst.api.importResearchPackage(JSON.stringify(buildResearchPackage({ manifest, files })));
+  assert.equal(report.imported.length, 0, 'conflicting artifact is not admitted');
+  assert.ok(report.failed.some(f => f.code === 'RUN_ARTIFACT_CONFLICT'));
+  assert.ok(report.membershipUnresolved.includes(conflict.runId), 'unresolved membership is disclosed');
+  assert.equal(report.membershipApplied, false);
+  // The conflicting local run did NOT gain package membership — it stays excluded.
+  assert.ok(!dst.api.getActiveAnalysisSet().includedRunIds.includes(conflict.runId),
+    'a same-id conflicting run must never satisfy package membership');
+  // …and remains inspectable — never silently deleted.
+  assert.ok(dst.api.getExperimentRuns().some(r => r.runId === conflict.runId));
+
+  // Inverse: a package EXCLUSION must not strip the conflicting local run
+  // either — manifest curation binds to artifact identity, not the string id.
+  const dst2 = await initApi(createFakeIndexedDB());
+  const conflict2 = await sealRun(dst2.api, { summariesOf: (o, n) => fakeSummaries(o, n, { winningSeat: 2, terminationReason: 'CANONICAL_DRAW' }) });
+  assert.ok(dst2.api.getActiveAnalysisSet().includedRunIds.includes(conflict2.runId), 'locally included before import');
+  const exclManifest = researchPackageManifest({
+    experimentId: src.api.getExperiment().experimentId,
+    perRun: [{ runId: orig.runId, matchCount: 100, included: false, evidenceBearing: true, fidelity: DECISION_FIDELITY.SUMMARY, artifactFile: `runs/${orig.runId}.json` }],
+    analysisPresent: true,
+  });
+  await dst2.api.importResearchPackage(JSON.stringify(buildResearchPackage({ manifest: exclManifest, files })));
+  assert.ok(dst2.api.getActiveAnalysisSet().includedRunIds.includes(conflict2.runId),
+    'the package exclusion binds to evidence it could not admit — local inclusion survives');
+});
+
+test('identical duplicate artifacts DO satisfy package membership — hash identity, not id string', async () => {
+  const src = await initApi(createFakeIndexedDB());
+  const orig = await sealRun(src.api);
+  const env = await src.api.exportRunArtifactEnvelope(orig.runId);
+  const files = { [`runs/${orig.runId}.json`]: JSON.stringify(env), 'analysis/dossier.json': '{}' };
+  const manifest = researchPackageManifest({
+    experimentId: src.api.getExperiment().experimentId,
+    perRun: [{ runId: orig.runId, matchCount: 100, included: true, evidenceBearing: true, fidelity: DECISION_FIDELITY.SUMMARY, artifactFile: `runs/${orig.runId}.json` }],
+    analysisPresent: true,
+  });
+  const text = JSON.stringify(buildResearchPackage({ manifest, files }));
+
+  // Destination already holds the SAME evidence — exclusion excluded it.
+  const dst = await initApi(createFakeIndexedDB());
+  const res = await dst.api.importRunArtifact(JSON.stringify(env));
+  assert.equal(res.outcome, 'imported');
+  await dst.api.setRunExcluded(orig.runId, { reason: 'other', note: 'held out before package import' });
+
+  const report = await dst.api.importResearchPackage(text);
+  assert.equal(report.duplicates.length, 1, 'hash-identical artifact is a duplicate, not a conflict');
+  assert.equal(report.failed.length, 0);
+  assert.ok(report.membershipUnresolved.length === 0);
+  assert.ok(dst.api.getActiveAnalysisSet().includedRunIds.includes(orig.runId),
+    'verified-identical duplicate satisfies declared membership');
 });
 
 test('exportAllRunArtifacts reports per-run failures, never silently skips', async () => {

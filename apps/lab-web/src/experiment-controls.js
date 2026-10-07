@@ -175,7 +175,7 @@ function renderCommandResults() {
     { label: 'Export Analysis Dossier (JSON)', detail: 'AI research-state export · downloads file', run: () => { invokeAppAction('exportAnalysisDossier', 'json'); } },
     { label: 'Export Analysis Dossier (Markdown)', detail: 'AI research-state export · downloads file', run: () => { invokeAppAction('exportAnalysisDossier', 'markdown'); } },
     { label: 'Export Analysis Dossier (JSON + Markdown)', detail: 'AI research-state export · downloads both files', run: () => { invokeAppAction('exportAnalysisDossier', 'both'); } },
-    { label: 'Export Research Package', detail: 'Manifest + dossier + all durable run artifacts · downloads file', run: () => { invokeAppAction('exportResearchPackage'); } },
+    { label: 'Export Research Package', detail: 'Manifest + dossier + every resolvable run artifact · missing evidence is declared in the manifest, never hidden', run: () => { invokeAppAction('exportResearchPackage'); } },
     { label: 'Manage Experiment Runs', detail: 'Manage runs · include/exclude · verify · export artifacts', run: () => { openManageRuns(); } },
     { label: 'Extract analysis (JSON)', detail: 'Analysis dossier · copy to clipboard (legacy)', run: () => { invokeAppAction('showExtract', 'json'); } },
     { label: 'Extract analysis (Markdown)', detail: 'Analysis dossier · copy to clipboard (legacy)', run: () => { invokeAppAction('showExtract', 'markdown'); } }

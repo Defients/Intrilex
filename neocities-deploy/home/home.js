@@ -13,17 +13,17 @@
 // module never reaches into app-level singletons.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js?v=adf8892fce29';
-import { LAB_VERSION, RULES_VERSION } from '../version.js?v=adf8892fce29';
-import { getMatchServerUrl } from '../play/network/match-server-config.js?v=adf8892fce29';
-import { fetchLeaderboard, fetchSeasons } from '../play/ranked/leaderboard-data.js?v=adf8892fce29';
-import { fetchDirectory } from '../play/players/players-data.js?v=adf8892fce29';
+import { esc } from '../state.js?v=943d1ec6c237';
+import { LAB_VERSION, RULES_VERSION } from '../version.js?v=943d1ec6c237';
+import { getMatchServerUrl } from '../play/network/match-server-config.js?v=943d1ec6c237';
+import { fetchLeaderboard, fetchSeasons } from '../play/ranked/leaderboard-data.js?v=943d1ec6c237';
+import { fetchDirectory } from '../play/players/players-data.js?v=943d1ec6c237';
 import {
   renderHomePage,
   renderPulseMetricsHtml,
   renderPulseStatusText,
   renderNewsHtml,
-} from './home-view.js?v=adf8892fce29';
+} from './home-view.js?v=943d1ec6c237';
 import {
   HOME_PULSE_INTERVAL_MS,
   matchServerHttpBase,
@@ -33,7 +33,7 @@ import {
   parseChangelogEntries,
   buildPulseMetrics,
   formatUpdatedAgo,
-} from './home-data.js?v=adf8892fce29';
+} from './home-data.js?v=943d1ec6c237';
 
 // AbortController for the current homepage's listeners/timers.
 // Aborted on each re-render to prevent accumulation (IRX-M41).
@@ -154,7 +154,7 @@ async function loadContinueCard(root) {
   const slot = root.querySelector('#landing-continue-slot');
   if (!slot) return;
   try {
-    const { isIndexedDBAvailable, listSaves } = await import('../play/persistence.js?v=adf8892fce29');
+    const { isIndexedDBAvailable, listSaves } = await import('../play/persistence.js?v=943d1ec6c237');
     if (!isIndexedDBAvailable()) return;
     const saves = await listSaves();
     // Guard: user may have navigated away during the async work.

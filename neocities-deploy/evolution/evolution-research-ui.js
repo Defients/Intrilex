@@ -1,11 +1,11 @@
-import { esc } from '../state.js?v=adf8892fce29';
-import { LAB_IDENTITY } from './identity.mjs?v=adf8892fce29';
-import { createLabRun, CLEAN_REASONS } from './evolution-domain.mjs?v=adf8892fce29';
-import { createEvaluationPack,createBaselineSuite,createExperiment,cloneExperiment,compareCheckpoints,researchEnvelope,parseResearchImport, recordEvaluation, inspectResearchArtifact } from './evolution-research.mjs?v=adf8892fce29';
-import { evaluateSuite } from './evolution-evaluation.mjs?v=adf8892fce29';
-import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=adf8892fce29';
-import { EvolutionStore } from './evolution-store.mjs?v=adf8892fce29';
-import { collectExperimentEvidence } from '../experiments/experiment-controller.mjs?v=adf8892fce29';
+import { esc } from '../state.js?v=943d1ec6c237';
+import { LAB_IDENTITY } from './identity.mjs?v=943d1ec6c237';
+import { createLabRun, CLEAN_REASONS } from './evolution-domain.mjs?v=943d1ec6c237';
+import { createEvaluationPack,createBaselineSuite,createExperiment,cloneExperiment,compareCheckpoints,researchEnvelope,parseResearchImport, recordEvaluation, inspectResearchArtifact } from './evolution-research.mjs?v=943d1ec6c237';
+import { evaluateSuite } from './evolution-evaluation.mjs?v=943d1ec6c237';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=943d1ec6c237';
+import { EvolutionStore } from './evolution-store.mjs?v=943d1ec6c237';
+import { collectExperimentEvidence } from '../experiments/experiment-controller.mjs?v=943d1ec6c237';
 
 const store=new EvolutionStore(LAB_IDENTITY);
 const view={project:null,history:[],controller:null,error:'',progress:null,comparison:null,selectedA:null,selectedB:null,readConfig:null,serial:0,started:0,attempted:0,failed:0,archive:null};
@@ -53,8 +53,11 @@ function campaignExperimentsHtml(){
   // Only render when campaign evidence actually exists — the bundled
   // certified corpus alone does not make a saved experiment.
   if(!ev?.available||(!ev.runs.some(r=>r.origin!=='bundled')&&!ev.incompleteRunCount))return '';
-  const durable=ev.runs.filter(r=>r.persistence==='persisted'&&r.origin!=='bundled').length;
-  return `<div id="evo-research-campaigns" data-testid="evo-research-campaigns"><h4>Campaign experiments — experiment evidence store</h4><div class="evo-replay-row"><span><b>${esc(ev.experimentId??'Experiment')}</b> · ${ev.totalRuns} run${ev.totalRuns===1?'':'s'} · ${ev.includedRunCount} included · ${esc(String(ev.includedGames??0))} games in analysis · ${durable} durable artifact${durable===1?'':'s'}${ev.incompleteRunCount?` · ${ev.incompleteRunCount} incomplete/resumable`:''}${ev.corruptCount+ev.quarantinedCount+ev.payloadUnavailableCount?` · <span class="danger">${ev.corruptCount+ev.quarantinedCount+ev.payloadUnavailableCount} integrity-blocked</span>`:''}</span></div></div>`;
+  // 'persisted' is all this synchronous render can know — a stored record
+  // is not a verified durable artifact; that claim belongs to
+  // Verify artifacts / dossier export (hash-chain verification).
+  const persisted=ev.runs.filter(r=>r.persistence==='persisted'&&r.origin!=='bundled').length;
+  return `<div id="evo-research-campaigns" data-testid="evo-research-campaigns"><h4>Campaign experiments — experiment evidence store</h4><div class="evo-replay-row"><span><b>${esc(ev.experimentId??'Experiment')}</b> · ${ev.totalRuns} run${ev.totalRuns===1?'':'s'} · ${ev.includedRunCount} included · ${esc(String(ev.includedGames??0))} games in analysis · ${persisted} persisted record${persisted===1?'':'s'}${ev.incompleteRunCount?` · ${ev.incompleteRunCount} incomplete/resumable`:''}${ev.corruptCount+ev.quarantinedCount+ev.payloadUnavailableCount?` · <span class="danger">${ev.corruptCount+ev.quarantinedCount+ev.payloadUnavailableCount} integrity-blocked</span>`:''}</span></div></div>`;
 }
 function progressText(){const x=view.progress,cp=view.project?.checkpoints.find(c=>c.checkpointId===x?.checkpointId),gps=view.started ? view.attempted/((performance.now()-view.started)/1000) : 0;return x?`${x.mode} · generation ${cp?.generation??'—'} · ${x.opponent??''} · ${x.completed??0}/${x.total??0} suite games · ${view.attempted} attempts / ${view.failed} failed in this execution · ${gps.toFixed(2)} games/sec · ${x.packId?.slice(0,18)??''}`:'No research execution active.';}
 function pickProject(p){view.project=p;view.archive=null;view.progress=null;view.started=0;view.attempted=0;view.failed=0;view.selectedA=p.checkpoints[0]?.checkpointId;view.selectedB=p.checkpoints[1]?.checkpointId;view.comparison=null;view.error='';render();}

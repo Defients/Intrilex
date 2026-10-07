@@ -41,11 +41,14 @@ export const RESEARCH_PACKAGE_SCHEMA_VERSION = 1;
 
 // Decision-evidence fidelity — shared vocabulary with the Strategy evidence
 // contract (strategy-evidence.mjs uses the same labels for sealed sources).
+// UNRESOLVED is the honest "not inspected" state: a configuration flag is a
+// collection request, never proof that decision evidence survived.
 export const DECISION_FIDELITY = Object.freeze({
   NONE: 'NONE',
   SUMMARY: 'SUMMARY_ONLY',
   FULL: 'FULL_DECISION_EVIDENCE',
   MIXED: 'MIXED',
+  UNRESOLVED: 'UNRESOLVED',
 });
 
 const fail = code => { throw Object.assign(new Error(code), { code }); };
@@ -53,30 +56,38 @@ const fail = code => { throw Object.assign(new Error(code), { code }); };
 // ── Run artifact (export) ───────────────────────────────────────
 
 /**
+ * Evidence predicate: does a retained summary set actually carry
+ * decision-level capture? candidateScores on decisions, the
+ * strategicTelemetry blob, or strategyDecisions are the durable signals.
+ * Shared by runDecisionFidelity and the controller's artifact probe so
+ * every surface applies the identical evidence test.
+ */
+export function summariesCarryDecisionEvidence(summaries) {
+  return (summaries ?? []).some(s =>
+    Array.isArray(s?.decisions) && s.decisions.some(d => Array.isArray(d?.candidateScores) && d.candidateScores.length > 0)
+    || s?.strategicTelemetry != null
+    || (Array.isArray(s?.strategyDecisions) && s.strategyDecisions.length > 0));
+}
+
+/**
  * Classify a run's retained decision evidence.
- * FULL  — the run executed with deep decision tracing AND the committed
- *         summaries carry decision-level detail (decisions arrays with
- *         candidate scores, or strategicTelemetry). Verified against
- *         evidence when a batch sample is supplied; config alone is not
- *         trusted when evidence is inspectable.
- * SUMMARY — match-level summaries only (decision transcripts may exist but
- *         without policy-score capture / strategic telemetry).
- * NONE  — no analyzable evidence retained at all.
+ * FULL  — committed summaries provably carry decision-level detail
+ *         (decisions arrays with candidate scores, strategicTelemetry, or
+ *         strategyDecisions). Evidence presence — not the strategicTrace
+ *         request flag — is the only basis for FULL.
+ * SUMMARY — evidence inspected: match-level summaries only.
+ * NONE  — evidence inspected and empty / no analyzable evidence retained.
+ * UNRESOLVED — no retained evidence was supplied for inspection. Callers
+ *         MUST surface this rather than inferring fidelity from config.
  */
 export function runDecisionFidelity(run, { sampleSummaries = null } = {}) {
-  const traced = run?.config?.strategicTrace === true;
-  if (Array.isArray(sampleSummaries) && sampleSummaries.length) {
-    // Evidence-grounded check: does a committed summary actually carry
-    // decision-level capture? candidateScores on decisions or the
-    // strategicTelemetry blob are the durable signals.
-    const hasDecisionEvidence = sampleSummaries.some(s =>
-      Array.isArray(s?.decisions) && s.decisions.some(d => Array.isArray(d?.candidateScores) && d.candidateScores.length > 0)
-      || s?.strategicTelemetry != null
-      || (Array.isArray(s?.strategyDecisions) && s.strategyDecisions.length > 0));
-    if (traced && !hasDecisionEvidence) return DECISION_FIDELITY.SUMMARY; // requested but not retained — disclose truthfully
-    return hasDecisionEvidence ? DECISION_FIDELITY.FULL : DECISION_FIDELITY.SUMMARY;
+  if (Array.isArray(sampleSummaries)) {
+    if (!sampleSummaries.length) return DECISION_FIDELITY.NONE;
+    return summariesCarryDecisionEvidence(sampleSummaries)
+      ? DECISION_FIDELITY.FULL : DECISION_FIDELITY.SUMMARY;
   }
-  return traced ? DECISION_FIDELITY.FULL : DECISION_FIDELITY.SUMMARY;
+  void run;
+  return DECISION_FIDELITY.UNRESOLVED;
 }
 
 /**
@@ -233,7 +244,9 @@ export function parseExperimentRunArtifact(text, { importBytes = 0 } = {}) {
  * MIXED when included runs disagree; NONE when no evidence-bearing runs.
  */
 export function packageDecisionFidelity(perRunFidelities) {
-  const set = new Set((perRunFidelities ?? []).filter(Boolean));
+  // UNRESOLVED contributes no fidelity claim — unverified evidence must not
+  // count toward FULL, nor drag a cohort to MIXED on an unproven basis.
+  const set = new Set((perRunFidelities ?? []).filter(f => f && f !== DECISION_FIDELITY.UNRESOLVED));
   if (!set.size) return DECISION_FIDELITY.NONE;
   if (set.size > 1) return DECISION_FIDELITY.MIXED;
   const only = [...set][0];

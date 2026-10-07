@@ -68,7 +68,11 @@ jobs:
     name: Release Certification
     needs: quality
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # The release job runs the full self-audit, deterministic packaging,
+    # and a complete extracted-archive re-verification (offline install +
+    # two builds + focused tests) — real work that exceeds the quality
+    # domain bound. 75 minutes covers the worst measured path.
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
         with:

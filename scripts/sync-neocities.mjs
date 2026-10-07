@@ -21,7 +21,7 @@ import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { pruneDeployFiles, writeDeployOwnership, deployParityProblems, finalizeDeployRuntime } from './deploy-ownership.mjs';
+import { pruneDeployFiles, writeDeployOwnership, deployParityProblems, deployConfigProblems, finalizeDeployRuntime, PRODUCTION_MATCH_SERVER_URL } from './deploy-ownership.mjs';
 import { withRetry } from './lib/write-with-retry.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -67,7 +67,7 @@ async function main() {
     // setting this in-process before spawning the build child ensures
     // the production wss://match.intrilex.cards URL is injected into
     // __intrilex-config.js and the CSP connect-src directive.
-    process.env.INTRILEX_MATCH_SERVER_URL = 'wss://match.intrilex.cards';
+    process.env.INTRILEX_MATCH_SERVER_URL = PRODUCTION_MATCH_SERVER_URL;
     await runCmd('pnpm', ['run', 'build']);
     console.log('[neocities] Build complete.\n');
   }
@@ -93,11 +93,20 @@ async function main() {
   console.log(`[neocities] Source build: app=${refs.appJs} (${distAppStat.size} bytes)${refs.stylesCss ? `, styles=${refs.stylesCss}` : ''}`);
 
   if (checkOnly) {
-    const problems = await deployParityProblems(distDir, deployDir, refs.appJs);
+    const problems = [
+      ...await deployParityProblems(distDir, deployDir, refs.appJs),
+      ...await deployConfigProblems(distDir, deployDir),
+    ];
     if (problems.length) throw new Error(problems.join('\n'));
-    console.log('[neocities] Source/deploy byte parity and ownership PASS');
+    console.log('[neocities] Source/deploy byte parity, ownership and runtime-config PASS');
     return;
   }
+  // Fail closed BEFORE mutating the mirror: a dist built from a dev .env
+  // (localhost match server / missing credentials) must never be synced —
+  // the config hash would differ from the release build and the snapshot
+  // would fail parity anyway.
+  const configProblems = await deployConfigProblems(distDir);
+  if (configProblems.length) throw new Error(configProblems.join('\n'));
   // Creation is allowed only for a sync; verification never mutates the mirror.
   if (!existsSync(deployDir)) await mkdir(deployDir, { recursive: true });
   const stale = await pruneDeployFiles(distDir, deployDir);

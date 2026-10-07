@@ -7,7 +7,7 @@
 // defined in spec section 10.1.
 // ═══════════════════════════════════════════════════════════════
 
-import {} from '../action-presenter.js?v=adf8892fce29';
+import {} from '../action-presenter.js?v=943d1ec6c237';
 
 /**
  * Action form classification for Rank Anatomy linking.

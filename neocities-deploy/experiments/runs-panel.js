@@ -11,7 +11,7 @@
 // never touches the store or state.observatory directly.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc, fmt, pct, short, showToast } from '../state.js?v=adf8892fce29';
+import { esc, fmt, pct, short, showToast } from '../state.js?v=943d1ec6c237';
 import {
   experimentsReady, getExperiment, runsWithCompatibility, getEvidenceBasis,
   setRunIncluded, setRunExcluded, markRunInvalidated, markRunArchived,
@@ -19,11 +19,11 @@ import {
   previewRunSelection, allRunIds,
   getIncompleteRuns, resumeExperimentRun, finalizeExperimentRun, discardManifest,
   verifyRunArtifacts, exportRunArtifactText, exportAllRunArtifacts, importRunArtifact,
-} from './experiment-controller.mjs?v=adf8892fce29';
-import { downloadResearchPackage, importResearchPackageText } from './research-package.mjs?v=adf8892fce29';
+} from './experiment-controller.mjs?v=943d1ec6c237';
+import { downloadResearchPackage, importResearchPackageText } from './research-package.mjs?v=943d1ec6c237';
 import {
   EXCLUSION_REASONS, COMPATIBILITY, RUN_STATUS, RUN_LIFECYCLE, BUNDLED_RUN_ID,
-} from '../evolution/experiment-domain.mjs?v=adf8892fce29';
+} from '../evolution/experiment-domain.mjs?v=943d1ec6c237';
 
 const REASON_LABELS = {
   'configuration-mismatch': 'Configuration mismatch',
@@ -62,7 +62,7 @@ const MANIFEST_STATUS_BADGES = {
   running: '<span class="run-badge run-compatible">Running</span>',
   queued: '<span class="run-badge run-compatible">Queued</span>',
   paused: '<span class="run-badge run-treatment">Paused</span>',
-  interrupted: '<span class="run-badge run-invalidated" title="Execution stopped before the run finished — committed batches are durable">Interrupted</span>',
+  interrupted: '<span class="run-badge run-invalidated" title="Execution stopped before the run finished — committed batches are persisted and resumable">Interrupted</span>',
   cancelled: '<span class="run-badge run-failed">Cancelled</span>',
   failed: '<span class="run-badge run-failed">Failed</span>',
 };
@@ -103,7 +103,7 @@ const statusBadges = (run, row) => {
   if (row?.persistence === 'session-record') out.push('<span class="run-badge run-session" title="Run record could not be saved to browser storage — retained for this session only, it will be lost on reload">Not saved</span>');
   else if (run.payloadKind === 'session') out.push('<span class="run-badge run-session" title="Evidence retained for this session only — storage limit">Session only</span>');
   if (run.corrupt) out.push(`<span class="run-badge run-failed" title="Record failed integrity validation (${esc(run.corruptCode ?? 'RUN_HASH_MISMATCH')}) — quarantined, cannot contribute">Integrity failed</span>`);
-  if (run.config?.strategicTrace === true) out.push('<span class="run-badge run-compatible" title="Deep decision tracing was enabled for this run — per-decision evidence is present in the payload">Deep trace</span>');
+  if (run.config?.strategicTrace === true) out.push('<span class="run-badge run-compatible" title="Deep decision tracing was requested for this run — whether per-decision evidence was retained is proven by Verify artifacts, not by this flag">Deep trace</span>');
   if (run.lifecycle?.integrity?.state === 'quarantined') out.push(`<span class="run-badge run-failed" title="${esc(run.lifecycle.integrity.note || 'Evidence payload failed integrity verification')} — cannot contribute">Quarantined</span>`);
   if (run.lifecycle?.integrity?.state === 'payload-unavailable') out.push(`<span class="run-badge run-failed" title="${esc(run.lifecycle.integrity.note || 'Evidence payload no longer available')} — cannot contribute">No payload</span>`);
   return out.join('');
@@ -157,7 +157,7 @@ function detailBlock(row) {
     run.lifecycle?.state === RUN_LIFECYCLE.INVALIDATED ? `<button class="secondary-button" data-run-action="restore" data-run="${esc(run.runId)}">Restore (clear invalidation)</button>` : '',
     run.lifecycle?.state === RUN_LIFECYCLE.ARCHIVED ? `<button class="secondary-button" data-run-action="unarchive" data-run="${esc(run.runId)}">Unarchive</button>` : `<button class="ghost-button" data-run-action="archive" data-run="${esc(run.runId)}">Archive</button>`,
     `<button class="ghost-button" data-run-action="pin" data-run="${esc(run.runId)}">${run.lifecycle?.pinned ? 'Unpin' : 'Pin'}</button>`,
-    run.runId !== BUNDLED_RUN_ID && run.status === RUN_STATUS.COMPLETED ? `<button class="ghost-button" data-run-action="export" data-run="${esc(run.runId)}" title="Download this run's durable evidence as a self-verifying artifact">Export artifact</button>` : '',
+    run.runId !== BUNDLED_RUN_ID && run.status === RUN_STATUS.COMPLETED ? `<button class="ghost-button" data-run-action="export" data-run="${esc(run.runId)}" title="Download this run's evidence as a self-verifying artifact — export verifies the sealed hash chain and fails if integrity cannot be proven">Export artifact</button>` : '',
     run.runId !== BUNDLED_RUN_ID ? `<button class="ghost-button danger" data-run-action="delete" data-run="${esc(run.runId)}">${panel.confirmDelete === run.runId ? 'Confirm delete — evidence is removed permanently' : 'Delete run'}</button>` : '',
   ].filter(Boolean).join(' ');
   const exForm = panel.excluding === run.runId ? exclusionForm(run, 'exclude') : '';

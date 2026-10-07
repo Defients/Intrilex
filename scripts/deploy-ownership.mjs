@@ -4,6 +4,10 @@ import path from 'node:path';
 
 const protectedFile = file => file === '404.html' || file === '_headers' || file.startsWith('assets/fonts/');
 const manifestName = '.build-owned.json';
+// The deploy mirror is the production surface — the same endpoint the
+// build step forces when invoked through `sync-neocities.mjs --build`.
+export const PRODUCTION_MATCH_SERVER_URL = 'wss://match.intrilex.cards';
+const hashedConfigFile = /^__intrilex-config\.[a-zA-Z0-9_-]+\.js$/;
 const generatedRootFile = /^(?:(?:app|styles|tactical|__intrilex-config)\.[a-zA-Z0-9_-]+\.(?:js|css)|.+-[A-Z0-9]{8}\.(?:js|css))(?:\.map)?$/;
 // Former generated files predating ownership manifests; neither has a source
 // consumer now. Preserve them if a future build explicitly owns them again.
@@ -98,6 +102,32 @@ export async function finalizeDeployRuntime(deploy, appBundle) {
     const projected = projectedRuntime(file, appBundle);
     if (projected !== null) await writeFile(path.join(deploy, file), projected, 'utf8');
   }
+}
+
+/**
+ * Runtime-config gate for the production mirror. The baked
+ * `__intrilex-config.*.js` carries environment-injected endpoints — a dist
+ * produced by a bare dev build (`ws://localhost` match server, missing
+ * Supabase credentials) must never satisfy sync or parity. That drift is
+ * exactly how a stale deploy snapshot used to pass review: the config hash
+ * differs, index.html differs, and every `?v=` reference shifts.
+ * Pass `deploy` to check the published snapshot as well as the source build.
+ */
+export async function deployConfigProblems(dist, deploy = null) {
+  const problems = [];
+  const inspect = async (dir, label) => {
+    const files = await listBuildFiles(dir);
+    const configFile = files.find(file => hashedConfigFile.test(file));
+    if (!configFile) { problems.push(`${label} tree has no hashed runtime config (__intrilex-config.*.js)`); return; }
+    const config = await readFile(path.join(dir, configFile), 'utf8');
+    if (!config.includes(`matchServerUrl:"${PRODUCTION_MATCH_SERVER_URL}"`))
+      problems.push(`${label} runtime config lacks the production match server URL — rebuild with INTRILEX_MATCH_SERVER_URL=${PRODUCTION_MATCH_SERVER_URL}`);
+    if (!/supabase:\{url:"https:\/\/[^"]+",publishableKey:"[^"]+"\}/.test(config))
+      problems.push(`${label} runtime config lacks Supabase credentials — rebuild with SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY set`);
+  };
+  await inspect(dist, 'Source build');
+  if (deploy) await inspect(deploy, 'Deploy snapshot');
+  return problems;
 }
 
 /** Read-only byte parity, including compatibility projections and ownership. */

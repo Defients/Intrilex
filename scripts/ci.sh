@@ -11,7 +11,7 @@
 #   rank-integration, rank7-scoring, full-rank-legality-resolution-ai,
 #   package-graph, package-smoke-tests, manifest-verify,
 #   browser-parity, browser-ui-smoke, browser-e2e-certification,
-#   self-audit-generate, truth-drift-check,
+#   self-audit-release-verify, truth-drift-check,
 #   v0.21.0-board-lock, v0.20.0-queens-court-canon,
 #   release-package, release-verify-extracted
 exec node scripts/ci.mjs "$@"

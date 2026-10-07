@@ -12,7 +12,7 @@
  * - For turn-based games, reaction delay is measured in turns, not ms
  */
 
-import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=adf8892fce29";
+import { DeterministicPolicyRng } from "./browser-policy-sdk.js?v=943d1ec6c237";
 
 /**
  * Create a perception system for a single bot.

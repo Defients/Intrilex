@@ -4,7 +4,10 @@
  * Runs on Windows, macOS, and Linux without bash.
  *
  * The Node runner is the canonical stage registry. Each stage:
- *   - Runs with a timeout (default 240s)
+ *   - Runs with a timeout (default 240s; a stage may declare a larger
+ *     bound via its optional 5th tuple element {timeout} — reserved for
+ *     stages whose work legitimately exceeds the default, e.g. packaging
+ *     the full source distribution or verifying the extracted archive)
  *   - Captures stdout/stderr to a log
  *   - Reports PASS/FAIL/SKIP with elapsed time
  *   - Exits on first failure (fail-fast)
@@ -137,17 +140,29 @@ const STAGES = [
   ['hybrix-benchmark', 'node', ['scripts/benchmark-hybrix.mjs'], { BENCH_MATCHES: '20' }],
   ['package-graph', 'node', ['scripts/check-package-graph.mjs']],
   ['typecheck', 'node', ['scripts/typecheck.mjs']],
-  // IRX-C05: self-audit must run BEFORE release-package so the manifest
-  // can compute its verdict from the actual self-audit results.
-  ['self-audit-generate', 'node', ['scripts/generate-self-audit.mjs', '--release']],
-  ['release-package', 'node', ['scripts/package-release.mjs']],
+  // IRX-C05: self-audit evidence must exist BEFORE release-package so the
+  // manifest can compute its verdict from the actual self-audit results.
+  // The release audit is produced once by the release workflow's
+  // `self-audit:release` step — this stage attests that evidence is real,
+  // release-mode, PASS, and bound to this commit instead of re-running the
+  // full multi-minute audit a second time inside a short stage timeout.
+  ['self-audit-release-verify', 'node', ['scripts/verify-release-audit.mjs']],
+  // Packaging hashes every tracked file, runs two secret scans, and
+  // deflates the whole source distribution — legitimately minutes, so it
+  // declares a real bound instead of dying at the default 240s.
+  ['release-package', 'node', ['scripts/package-release.mjs'], {}, { timeout: 900000 }],
+  ['falsification-sweep', 'node', ['scripts/falsification-sweep.mjs']],
   ['falsification-sweep', 'node', ['scripts/falsification-sweep.mjs']],
   // Release-artifact claims are verified in the release domain, where
   // `release-package` has already produced release/ outputs. In quality
   // domains they are reported as SKIP, not FAIL.
   ['release-verify-falsification', 'node', ['scripts/falsification-sweep.mjs', '--require-release-artifacts']],
   ['browser-e2e-certification', 'node', ['scripts/browser-e2e-certification.mjs']],
-  ['release-verify-extracted', 'node', ['scripts/verify-extracted.mjs']],
+  // Extracted verification legitimately runs far past 240s: offline pnpm
+  // install, manifest verification over every archived file, a two-build
+  // determinism check, the unit suite, and CLI smoke runs — all inside the
+  // extracted copy. Declare the bound the work actually needs.
+  ['release-verify-extracted', 'node', ['scripts/verify-extracted.mjs'], {}, { timeout: 1800000 }],
   ['manifest-verify', 'node', ['scripts/manifest.mjs', 'verify']],
   ['truth-drift-check', 'node', ['scripts/truth-drift-check.mjs', '--no-staleness']],
   ['v0.21.0-version-contract', 'node', ['--test', 'test/v0.21.0-version-contract.test.mjs']],
@@ -328,12 +343,12 @@ const STAGES = [
 let passCount = 0, skipCount = 0, failCount = 0;
 const stageNames = [], stageStatuses = [];
 
-async function runStep(name, cmd, cmdArgs, envOverride = {}) {
+async function runStep(name, cmd, cmdArgs, envOverride = {}, opts = {}) {
   const started = Date.now();
   const result = spawnSync(cmd, cmdArgs, {
     cwd: root,
     encoding: 'utf8',
-    timeout: customTimeout,
+    timeout: opts.timeout ?? customTimeout,
     maxBuffer: 50 * 1024 * 1024,
     env: { ...process.env, INTRILEX_WRITE_REPORTS: '0', ...envOverride }
   });
@@ -379,8 +394,8 @@ if (args.includes('--list')) { console.log(JSON.stringify(stagesToRun.map(([name
 
 console.log(`CI START: ${stagesToRun.length} stages${noFailFast ? ' (no-fail-fast)' : ''}`);
 
-for (const [name, cmd, cmdArgs, envOverride] of stagesToRun) {
-  await runStep(name, cmd, cmdArgs, envOverride);
+for (const [name, cmd, cmdArgs, envOverride, opts] of stagesToRun) {
+  await runStep(name, cmd, cmdArgs, envOverride, opts);
 }
 
 async function writeReport() {

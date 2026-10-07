@@ -691,7 +691,11 @@ function experimentSection(experiments, datasetOrigin) {
       persistence: r.persistence ?? 'persisted',
       artifact: artifactById.get(r.runId)?.artifact ?? null,
       exportable: artifactById.get(r.runId)?.exportable ?? null,
-      decisionFidelity: artifactById.get(r.runId)?.fidelity ?? (r.strategicTrace ? 'FULL_DECISION_EVIDENCE' : 'SUMMARY_ONLY'),
+      // Fidelity is evidence-grounded: artifact verification scanned the
+      // retained summaries. When verification did not run, the honest value
+      // is UNRESOLVED — a strategicTrace request flag is never proof that
+      // decision evidence survived.
+      decisionFidelity: artifactById.get(r.runId)?.fidelity ?? 'UNRESOLVED',
       strategicTrace: r.strategicTrace === true,
       createdAt: r.createdAt ?? null, matchCount: r.matchCount ?? 0,
       compatibility: r.compatibility ?? null,

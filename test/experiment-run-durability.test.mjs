@@ -30,6 +30,7 @@ import {
   payloadEvidenceHash, verifyRunPayload, markRunIntegrity, runIntegrityState,
   runAnalyticallyEligible,
 } from '../packages/simulation-runtime/src/experiment-domain.mjs';
+import { summariesCarryDecisionEvidence } from '../packages/simulation-runtime/src/experiment-portability.mjs';
 import { ExperimentStore } from '../apps/lab-web/src/experiments/experiment-store.mjs';
 
 // ── Minimal fake IndexedDB (same surface as experiment-runs.test.mjs) ──
@@ -122,7 +123,8 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     contributingRuns, evidenceBasis, previewSelectionMetrics,
     includeRunInSet, excludeRunFromSet, invalidateRun, archiveRun, restoreRun, pinRun,
     planMigration, payloadEvidenceHash, verifyRunPayload, markRunIntegrity,
-    runIntegrityState, runAnalyticallyEligible,
+    runIntegrityState, runAnalyticallyEligible, validateRunRecord,
+    summariesCarryDecisionEvidence,
   };
   const api = runInNewContext(`${src}\n({ initExperiments, recordCampaignRun, recordFailedRun, recordCancelledRun, experimentsReady, storePersisted, getExperiment, getExperimentRuns, getActiveAnalysisSet, getIncludedRuns, getEvidenceBasis, runsWithCompatibility, previewRunSelection, allRunIds, nextRunOrdinalStart, setRunIncluded, setRunExcluded, markRunInvalidated, markRunArchived, markRunRestored, markRunPinned, includeAllCompatible, isolateRun, restoreBaseline, deleteRun, applySelection, collectExperimentEvidence, registerRunExecutor, beginExperimentRun, commitExperimentBatch, finalizeExperimentRun, failExperimentRun, cancelExperimentRun, getIncompleteRuns, resumeExperimentRun, discardManifest, loadRunMatchDetail })`, sandbox);
   return { api, state, toasts };

@@ -4,7 +4,7 @@
 // tag validation/quarantine used by the observatory analytics builders.
 // Uses hashCanonical from the browser engine shim (no Node.js deps).
 
-import { hashCanonical } from './engine/browser-entry.js?v=adf8892fce29';
+import { hashCanonical } from './engine/browser-entry.js?v=943d1ec6c237';
 
 export const MECHANIC_REGISTRY_VERSION = '1.0.0';
 

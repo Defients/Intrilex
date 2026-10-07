@@ -185,10 +185,13 @@ function experimentRunsSnapshot() {
 function experimentLedgerHtml() {
   const rows=experimentRunsSnapshot();
   if (!rows.length) return '';
-  const durable=rows.filter(r=>r.persistence==='persisted').length;
+  // 'persisted' is the truthful label here: a stored run record is not a
+  // verified durable artifact — durability is proven by the Verify
+  // artifacts probe (payload + batch hash chain), not by persistence.
+  const persisted=rows.filter(r=>r.persistence==='persisted').length;
   return `<div id="evo-exp-ledger" data-testid="evo-exp-ledger"><h4>Experiment evidence runs</h4>
-    <p>${rows.length} experiment run${rows.length===1?'':'s'} · ${durable} durable · stored in the experiment evidence store. Export produces a self-verifying run artifact; manage inclusion in the Experiment panel.</p>
-    ${rows.map(r=>`<div class="evo-replay-row"><span><b>#${String(r.ordinal).padStart(3,'0')}</b> ${esc(r.policyIds?.join(' / ') ?? r.profileId ?? '')} · ${fmt(r.matchCount)} games · ${esc(r.status)}${r.included?' · included':' · excluded'} · ${esc(r.persistence==='persisted'?'durable':r.persistence==='session-payload'?'session only':'not saved')}${r.strategicTrace?' · deep trace':''}<br><code>${esc(r.runId)}</code>${r.integrity && r.integrity!=='ok'?`<br><span class="danger">Integrity: ${esc(r.integrity)}</span>`:''}</span><button class="ghost-button" data-exp-export-run="${esc(r.runId)}" ${r.status==='COMPLETED'?'':'disabled'}>Export artifact</button><button class="ghost-button" data-exp-open-runs>Manage</button></div>`).join('')}
+    <p>${rows.length} experiment run${rows.length===1?'':'s'} · ${persisted} persisted · stored in the experiment evidence store. Export verifies the sealed hash chain and produces a self-verifying run artifact; manage inclusion in the Experiment panel.</p>
+    ${rows.map(r=>`<div class="evo-replay-row"><span><b>#${String(r.ordinal).padStart(3,'0')}</b> ${esc(r.policyIds?.join(' / ') ?? r.profileId ?? '')} · ${fmt(r.matchCount)} games · ${esc(r.status)}${r.included?' · included':' · excluded'} · ${esc(r.persistence==='persisted'?'persisted':r.persistence==='session-payload'?'session only':'not saved')}${r.strategicTrace?' · deep trace requested':''}<br><code>${esc(r.runId)}</code>${r.integrity && r.integrity!=='ok'?`<br><span class="danger">Integrity: ${esc(r.integrity)}</span>`:''}</span><button class="ghost-button" data-exp-export-run="${esc(r.runId)}" ${r.status==='COMPLETED'?'':'disabled'}>Export artifact</button><button class="ghost-button" data-exp-open-runs>Manage</button></div>`).join('')}
     <div class="toolbar"><button class="secondary-button" data-exp-export-all>Export all run artifacts</button><button class="secondary-button" data-exp-export-package>Export research package</button></div></div>`;
 }
 async function refreshHistory() {

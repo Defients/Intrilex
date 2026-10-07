@@ -64,16 +64,27 @@ export function initAnalysisExportHub() {
       const s = await dossierEvidenceStatus();
       if (token !== statusToken || !isOpen()) return; // closed or superseded
       const row = (k, v) => `<div class="export-status-row"><small>${esc(k)}</small><b>${esc(v)}</b></div>`;
-      // Experiment-store truth: attached runs are listed with their durable
-      // artifact status so the hub can never imply portability it lacks.
+      // Experiment-store truth: the hub reports the same verified artifact
+      // status as Manage Runs / dossier export — a persisted run record is
+      // NOT proof of a durable artifact, so this probes the real sealed
+      // chain (payload + every committed batch hash) instead of trusting
+      // the persistence label.
       let artifactRow = 'no experiment evidence';
       try {
-        const { collectExperimentEvidence } = await import('./experiments/experiment-controller.mjs');
+        const { collectExperimentEvidence, verifyRunArtifacts } = await import('./experiments/experiment-controller.mjs');
         const ev = collectExperimentEvidence();
         if (ev?.available) {
           const real = (ev.runs ?? []).filter(r => r.origin !== 'bundled');
-          const durable = real.filter(r => r.persistence === 'persisted').length;
-          artifactRow = real.length ? `${durable}/${real.length} durable` : 'no experiment evidence';
+          if (!real.length) artifactRow = 'no experiment evidence';
+          else {
+            const artifacts = await verifyRunArtifacts();
+            const count = key => artifacts.filter(a => a.artifact === key).length;
+            const durable = count('durable'), session = count('session');
+            const unresolvable = artifacts.filter(a => !['durable', 'session', 'none'].includes(a.artifact)).length;
+            artifactRow = `${durable}/${real.length} durable`
+              + (session ? ` · ${session} session-only` : '')
+              + (unresolvable ? ` · ${unresolvable} unresolvable` : '');
+          }
         }
       } catch { /* evidence store offline — the row stays honest */ }
       if (rows) rows.innerHTML = [

@@ -17,11 +17,11 @@
 //
 // This file is isomorphic: it runs in Node (tests import it from src/) and in
 // the browser (build.mjs rewrites the two packages/ imports to dist shims).
-import { canonicalize, hashCanonical } from './shared-browser.js?v=adf8892fce29';
-import { arenaAnalytics, researchAnalytics } from './evolution/evolution-analytics-model.mjs?v=adf8892fce29';
-import { summarizeRecords, LAB_SCHEMA } from './evolution/evolution-domain.mjs?v=adf8892fce29';
-import { observatorySummariesForRun, observatoryCoverage } from './evolution/observatory-bridge.mjs?v=adf8892fce29';
-import { batchMatrixView } from './evolution/batch-matrix.mjs?v=adf8892fce29';
+import { canonicalize, hashCanonical } from './shared-browser.js?v=943d1ec6c237';
+import { arenaAnalytics, researchAnalytics } from './evolution/evolution-analytics-model.mjs?v=943d1ec6c237';
+import { summarizeRecords, LAB_SCHEMA } from './evolution/evolution-domain.mjs?v=943d1ec6c237';
+import { observatorySummariesForRun, observatoryCoverage } from './evolution/observatory-bridge.mjs?v=943d1ec6c237';
+import { batchMatrixView } from './evolution/batch-matrix.mjs?v=943d1ec6c237';
 
 export const DOSSIER_FORMAT = 'intrilex-analysis-dossier';
 export const DOSSIER_VERSION = '1.1.0';
@@ -691,7 +691,11 @@ function experimentSection(experiments, datasetOrigin) {
       persistence: r.persistence ?? 'persisted',
       artifact: artifactById.get(r.runId)?.artifact ?? null,
       exportable: artifactById.get(r.runId)?.exportable ?? null,
-      decisionFidelity: artifactById.get(r.runId)?.fidelity ?? (r.strategicTrace ? 'FULL_DECISION_EVIDENCE' : 'SUMMARY_ONLY'),
+      // Fidelity is evidence-grounded: artifact verification scanned the
+      // retained summaries. When verification did not run, the honest value
+      // is UNRESOLVED — a strategicTrace request flag is never proof that
+      // decision evidence survived.
+      decisionFidelity: artifactById.get(r.runId)?.fidelity ?? 'UNRESOLVED',
       strategicTrace: r.strategicTrace === true,
       createdAt: r.createdAt ?? null, matchCount: r.matchCount ?? 0,
       compatibility: r.compatibility ?? null,

@@ -34,13 +34,14 @@ import {
   contributingRuns, evidenceBasis, previewSelectionMetrics,
   includeRunInSet, excludeRunFromSet, invalidateRun, archiveRun, restoreRun, pinRun,
   planMigration, payloadEvidenceHash, verifyRunPayload, markRunIntegrity,
-  runIntegrityState, runAnalyticallyEligible,
+  runIntegrityState, runAnalyticallyEligible, validateRunRecord,
 } from '../evolution/experiment-domain.mjs';
 import {
   experimentRunArtifact, artifactEvidenceForRun,
   validateExperimentRunArtifact, parseExperimentRunArtifact,
   validateResearchPackage, parseResearchPackage,
-  runDecisionFidelity, runEvidenceBearing,
+  runEvidenceBearing, DECISION_FIDELITY,
+  summariesCarryDecisionEvidence,
 } from '../evolution/experiment-portability.mjs';
 import { ExperimentStore } from './experiment-store.mjs';
 
@@ -918,6 +919,105 @@ function _restoreBootView() {
 }
 
 /**
+ * Shared evidence-integrity probe — the single definition of "this run's
+ * retained evidence verifies". Manage Runs verification, artifact export,
+ * analysis ingestion, dossier/export status, and package assembly all
+ * resolve artifact state through this function so they can never disagree
+ * about what 'durable' means.
+ *
+ * A run reports 'durable' only when the FULL sealed chain verifies:
+ *   runHash (validateRunRecord) → payload presence → payloadHash binding
+ *   the descriptor chain → every expected committed batch exists → every
+ *   batch's summariesHash → descriptor↔batch consistency → no duplicate
+ *   batch indexes or match ordinals. Corruption is never downgraded to
+ *   'missing': hash/consistency failures report 'corrupt' with a stable
+ *   code; genuinely absent rows report 'missing'/'missing-chunks'.
+ *
+ * Evidence is probed at batch granularity — one batch in memory at a time,
+ * released before the next loads. Returns:
+ *   { ok, code, artifact, payload, descriptors, decisionEvidence, summaryCount }
+ *   artifact: 'durable'|'session'|'missing'|'missing-chunks'|'corrupt'|
+ *             'unreachable'|'none'|'bundled'|integrity state
+ */
+async function _probeRunEvidence(run) {
+  // A recorded integrity verdict is authoritative — flagged evidence stays
+  // flagged until it is dealt with, never quietly re-promoted.
+  const flagged = runIntegrityState(run);
+  if (flagged !== 'ok') {
+    const code = run.corrupt === true
+      ? (run.corruptCode ?? 'RUN_HASH_MISMATCH')
+      : (run.lifecycle?.integrity?.code ?? 'RUN_INTEGRITY_FLAGGED');
+    return { ok: false, code, artifact: flagged, payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+  }
+  try { validateRunRecord(run); }
+  catch (error) { return { ok: false, code: error?.code ?? 'RUN_HASH_MISMATCH', artifact: 'corrupt', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 }; }
+  if (run.payloadKind === 'bundled') {
+    return { ok: true, code: null, artifact: 'bundled', payload: null, descriptors: null, decisionEvidence: null, summaryCount: _bootSummaries.length };
+  }
+  if (run.payloadKind === 'none') {
+    // Evidence was never retained by design — 'none' is the honest
+    // resolvability state, but a completed run that contributes nothing
+    // must still surface as an integrity event during selection.
+    return { ok: false, code: 'RUN_NO_RETAINED_EVIDENCE', artifact: 'none', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+  }
+  if (run.payloadKind === 'session') {
+    const payload = _sessionPayloads.get(run.runId) ?? null;
+    if (!payload) return { ok: false, code: 'RUN_PAYLOAD_MISSING', artifact: 'missing', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+    const verdict = verifyRunPayload(run, payload);
+    if (!verdict.ok) return { ok: false, code: verdict.code, artifact: 'corrupt', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+    const summaries = payload.summaries ?? [];
+    return { ok: true, code: null, artifact: 'session', payload, descriptors: null, decisionEvidence: summariesCarryDecisionEvidence(summaries), summaryCount: summaries.length };
+  }
+  let payload = null;
+  try { payload = await _store.getRunPayload(run.runId); }
+  catch { return { ok: false, code: 'RUN_STORE_UNREACHABLE', artifact: 'unreachable', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 }; }
+  if (!payload) return { ok: false, code: 'RUN_PAYLOAD_MISSING', artifact: 'missing', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+  const verdict = verifyRunPayload(run, payload);
+  if (!verdict.ok) return { ok: false, code: verdict.code, artifact: 'corrupt', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+  if (run.payloadKind === 'indexeddb') {
+    const summaries = payload.summaries ?? [];
+    return { ok: true, code: null, artifact: 'durable', payload, descriptors: null, decisionEvidence: summariesCarryDecisionEvidence(summaries), summaryCount: summaries.length };
+  }
+  if (run.payloadKind === 'indexeddb-batches') {
+    const descriptors = (payload.batches ?? []).slice()
+      .sort((a, b) => (a.ordinalStart ?? 0) - (b.ordinalStart ?? 0) || (a.batchIndex ?? 0) - (b.batchIndex ?? 0));
+    // Verify every committed batch before reporting durable: presence,
+    // summariesHash, descriptor↔batch consistency, and ordinal uniqueness
+    // across the whole run — the same invariants the artifact importer
+    // enforces (RUN_CHUNK_MISSING / RUN_ARTIFACT_DUPLICATE_ORDINAL).
+    const seenBatchIndexes = new Set();
+    const seenOrdinals = new Set();
+    let decisionEvidence = false;
+    let summaryCount = 0;
+    for (const d of descriptors) {
+      if (seenBatchIndexes.has(d.batchIndex)) return { ok: false, code: 'RUN_DESCRIPTOR_DUPLICATE', artifact: 'corrupt', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+      seenBatchIndexes.add(d.batchIndex);
+      let batch = null;
+      try { batch = await _store.getRunBatch(run.runId, d.batchIndex); }
+      catch { return { ok: false, code: 'RUN_STORE_UNREACHABLE', artifact: 'unreachable', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 }; }
+      if (!batch) return { ok: false, code: 'RUN_CHUNK_MISSING', artifact: 'missing-chunks', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+      if (batchSummariesHash(batch.summaries) !== d.summariesHash) return { ok: false, code: 'RUN_PAYLOAD_HASH_MISMATCH', artifact: 'corrupt', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+      const summaries = batch.summaries ?? [];
+      if (batch.ordinalStart !== d.ordinalStart || batch.ordinalEnd !== d.ordinalEnd
+        || (d.matchCount != null && d.matchCount !== summaries.length)) {
+        return { ok: false, code: 'RUN_DESCRIPTOR_MISMATCH', artifact: 'corrupt', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+      }
+      for (const s of summaries) {
+        const o = s?.matchOrdinal;
+        if (o != null) {
+          if (seenOrdinals.has(o)) return { ok: false, code: 'RUN_ARTIFACT_DUPLICATE_ORDINAL', artifact: 'corrupt', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+          seenOrdinals.add(o);
+        }
+      }
+      summaryCount += summaries.length;
+      if (!decisionEvidence && summariesCarryDecisionEvidence(summaries)) decisionEvidence = true;
+    }
+    return { ok: true, code: null, artifact: 'durable', payload, descriptors, decisionEvidence, summaryCount };
+  }
+  return { ok: false, code: 'RUN_PAYLOAD_MISSING', artifact: 'missing', payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 };
+}
+
+/**
  * Verify a run's evidence and stream it to a chunk consumer, bounded by
  * batch size — never by whole-run size. Returns { ok, code }:
  *   - bundled: baseline corpus ships with the app; its authority is the
@@ -930,45 +1030,21 @@ function _restoreBootView() {
  *     and nothing partial reaches the aggregate.
  */
 async function _verifyAndStreamRun(run, onChunk) {
-  if (run.payloadKind === 'bundled') { await onChunk(_bootSummaries); return { ok: true, code: null }; }
-  if (run.payloadKind === 'session') {
-    const payload = _sessionPayloads.get(run.runId) ?? null;
-    if (!payload) return { ok: false, code: 'RUN_PAYLOAD_MISSING' };
-    const verdict = verifyRunPayload(run, payload);
-    if (!verdict.ok) return { ok: false, code: verdict.code };
-    await onChunk(payload.summaries ?? []);
-    return { ok: true, code: null };
-  }
-  if (run.payloadKind === 'indexeddb') {
-    const payload = await _store.getRunPayload(run.runId);
-    if (!payload) return { ok: false, code: 'RUN_PAYLOAD_MISSING' };
-    const verdict = verifyRunPayload(run, payload);
-    if (!verdict.ok) return { ok: false, code: verdict.code };
-    await onChunk(payload.summaries ?? []);
-    return { ok: true, code: null };
-  }
-  if (run.payloadKind === 'indexeddb-batches') {
-    const payload = await _store.getRunPayload(run.runId);
-    if (!payload) return { ok: false, code: 'RUN_PAYLOAD_MISSING' };
-    const verdict = verifyRunPayload(run, payload);
-    if (!verdict.ok) return { ok: false, code: verdict.code };
-    const descriptors = (payload.batches ?? []).slice()
-      .sort((a, b) => (a.ordinalStart ?? 0) - (b.ordinalStart ?? 0) || (a.batchIndex ?? 0) - (b.batchIndex ?? 0));
-    // Pass 1: verify every batch hash before emitting — a run contributes
-    // completely or not at all, never partially.
-    for (const d of descriptors) {
+  const probe = await _probeRunEvidence(run);
+  if (!probe.ok) return { ok: false, code: probe.code };
+  if (probe.artifact === 'bundled') { await onChunk(_bootSummaries); return { ok: true, code: null }; }
+  if (probe.descriptors) {
+    // Pass 2: stream one verified batch at a time; each is released after
+    // consume — whole-run evidence never materializes on the main thread.
+    for (const d of probe.descriptors) {
       const batch = await _store.getRunBatch(run.runId, d.batchIndex);
-      if (!batch) return { ok: false, code: 'RUN_PAYLOAD_MISSING' };
-      if (batchSummariesHash(batch.summaries) !== d.summariesHash) return { ok: false, code: 'RUN_PAYLOAD_HASH_MISMATCH' };
-    }
-    // Pass 2: stream one batch at a time; each is released after consume.
-    for (const d of descriptors) {
-      const batch = await _store.getRunBatch(run.runId, d.batchIndex);
+      if (!batch) return { ok: false, code: 'RUN_CHUNK_MISSING' };
       await onChunk(batch.summaries ?? []);
     }
     return { ok: true, code: null };
   }
-  return { ok: false, code: 'RUN_PAYLOAD_MISSING' };
+  if (probe.payload) await onChunk(probe.payload.summaries ?? []);
+  return { ok: true, code: null };
 }
 
 /** Mark a run's detected-integrity state and persist it. The record stays in
@@ -1057,8 +1133,14 @@ export async function applySelection({ fastPath = null } = {}) {
     if (!result.ok) integrityEvents.push({ run, code: result.code });
   }
   for (const { run, code } of integrityEvents) {
-    const state_ = code === 'RUN_PAYLOAD_HASH_MISMATCH' ? RUN_INTEGRITY.QUARANTINED : RUN_INTEGRITY.PAYLOAD_UNAVAILABLE;
-    const note = code === 'RUN_PAYLOAD_HASH_MISMATCH'
+    // Corruption-class codes quarantine (evidence exists but fails the hash
+    // chain or sealed invariants); absence-class codes mark the payload
+    // unavailable. Corruption is never silently downgraded to missing.
+    const corruptClass = code === 'RUN_PAYLOAD_HASH_MISMATCH' || code === 'RUN_HASH_MISMATCH'
+      || code === 'RUN_DESCRIPTOR_MISMATCH' || code === 'RUN_DESCRIPTOR_DUPLICATE'
+      || code === 'RUN_ARTIFACT_DUPLICATE_ORDINAL';
+    const state_ = corruptClass ? RUN_INTEGRITY.QUARANTINED : RUN_INTEGRITY.PAYLOAD_UNAVAILABLE;
+    const note = corruptClass
       ? `Evidence payload failed integrity verification (${code}) — quarantined; the record stays inspectable.`
       : `Evidence payload referenced by this run is no longer available (${code}) — excluded from analytics.`;
     await _flagRunIntegrity(run.runId, { state: state_, code, note });
@@ -1199,32 +1281,32 @@ export function collectExperimentEvidence() {
 /** Per-run artifact resolution status for Manage Runs / ledger surfaces.
  *  artifact: 'durable' | 'session' | 'missing' | 'missing-chunks' |
  *            'unreachable' | 'none' | integrity state (corrupt/quarantined/…)
- */
+ *  'durable' requires the full sealed chain verified by _probeRunEvidence —
+ *  runHash, payloadHash→descriptor chain, every committed batch's
+ *  summariesHash, descriptor↔batch consistency, ordinal uniqueness.
+ *  fidelity is evidence-grounded: FULL/SUMMARY only when the retained
+ *  summaries were inspected; UNRESOLVED when the run is evidence-bearing
+ *  but its evidence could not be trusted this pass; NONE otherwise. */
 export async function verifyRunArtifacts() {
   const rows = [];
   for (const run of _runs) {
     if (run.runId === BUNDLED_RUN_ID) continue;
-    const integrity = runIntegrityState(run);
-    let artifact = 'none';
-    if (integrity !== 'ok') artifact = integrity;
-    else if (run.payloadKind === 'none') artifact = 'none';
-    else if (run.payloadKind === 'session') {
-      artifact = _sessionPayloads.has(run.runId) ? 'session' : 'missing';
-    } else {
-      try {
-        const payload = await _store.getRunPayload(run.runId);
-        if (!payload) artifact = 'missing';
-        else if (run.payloadKind === 'indexeddb-batches') {
-          const have = new Set((await _store.listRunBatches(run.runId)).map(b => b.batchIndex));
-          const missing = (payload.batches ?? []).filter(d => !have.has(d.batchIndex));
-          artifact = missing.length ? 'missing-chunks' : 'durable';
-        } else artifact = 'durable';
-      } catch { artifact = 'unreachable'; }
+    const probe = await _probeRunEvidence(run);
+    const artifact = probe.artifact;
+    let fidelity = DECISION_FIDELITY.NONE;
+    if (runEvidenceBearing(run)) {
+      if ((artifact === 'durable' || artifact === 'session') && probe.decisionEvidence != null) {
+        fidelity = probe.decisionEvidence ? DECISION_FIDELITY.FULL : DECISION_FIDELITY.SUMMARY;
+      } else if (artifact === 'missing' || artifact === 'none' || artifact === 'payload-unavailable') {
+        fidelity = DECISION_FIDELITY.NONE; // verified: nothing analyzable retained
+      } else {
+        fidelity = DECISION_FIDELITY.UNRESOLVED; // evidence exists but could not be trusted/inspected
+      }
     }
     rows.push({
       runId: run.runId, ordinal: run.ordinal, matchCount: run.metrics?.matchCount ?? 0,
-      status: run.status, persistence: _persistenceOf(run), artifact,
-      fidelity: runEvidenceBearing(run) ? runDecisionFidelity(run) : 'NONE',
+      status: run.status, persistence: _persistenceOf(run), artifact, code: probe.code,
+      fidelity,
       exportable: artifact === 'durable' || artifact === 'session',
     });
   }
@@ -1243,17 +1325,29 @@ export async function exportRunArtifactEnvelope(runId) {
   if (run.payloadKind === 'bundled') {
     throw Object.assign(new Error('RUN_ARTIFACT_BUNDLED — the certified corpus ships with the application; there is no run artifact to export.'), { code: 'RUN_ARTIFACT_BUNDLED' });
   }
+  // The export path runs the SAME verification probe as Manage Runs /
+  // dossier status — a run that cannot verify is never serialized into a
+  // self-verifying envelope, and the failure code matches exactly what
+  // verifyRunArtifacts() reported.
+  const probe = await _probeRunEvidence(run);
+  if (!probe.ok && run.payloadKind !== 'none') {
+    // Preserve the historical export vocabulary for session-only evidence.
+    const code = run.payloadKind === 'session' && probe.code === 'RUN_PAYLOAD_MISSING'
+      ? 'RUN_PAYLOAD_UNAVAILABLE' : probe.code;
+    throw Object.assign(new Error(code), { code });
+  }
   let payload = null, batches = null;
   if (run.payloadKind === 'indexeddb-batches') {
-    payload = await _store.getRunPayload(runId);
-    if (!payload) throw Object.assign(new Error('RUN_PAYLOAD_MISSING'), { code: 'RUN_PAYLOAD_MISSING' });
-    batches = await _store.listRunBatches(runId);
-  } else if (run.payloadKind === 'indexeddb') {
-    payload = await _store.getRunPayload(runId);
-    if (!payload) throw Object.assign(new Error('RUN_PAYLOAD_MISSING'), { code: 'RUN_PAYLOAD_MISSING' });
-  } else if (run.payloadKind === 'session') {
-    payload = _sessionPayloads.get(runId) ?? null;
-    if (!payload) throw Object.assign(new Error('RUN_PAYLOAD_UNAVAILABLE'), { code: 'RUN_PAYLOAD_UNAVAILABLE' });
+    payload = probe.payload;
+    batches = [];
+    for (const d of probe.descriptors) {
+      const batch = await _store.getRunBatch(runId, d.batchIndex);
+      if (!batch) throw Object.assign(new Error('RUN_CHUNK_MISSING'), { code: 'RUN_CHUNK_MISSING' });
+      batches.push(batch);
+    }
+  } else if (run.payloadKind === 'indexeddb' || run.payloadKind === 'session') {
+    payload = probe.payload;
+    if (!payload) throw Object.assign(new Error(run.payloadKind === 'session' ? 'RUN_PAYLOAD_UNAVAILABLE' : 'RUN_PAYLOAD_MISSING'), { code: run.payloadKind === 'session' ? 'RUN_PAYLOAD_UNAVAILABLE' : 'RUN_PAYLOAD_MISSING' });
   }
   const evidence = artifactEvidenceForRun(run, payload, batches);
   return experimentRunArtifact({
@@ -1288,7 +1382,10 @@ export async function exportAllRunArtifacts() {
 async function _admitRunArtifact({ run, payload, batches }) {
   const existing = _findRun(run.runId) ?? await _store.getRun(run.runId).catch(() => null);
   if (existing) {
-    if (existing.runHash === run.runHash) return { runId: run.runId, outcome: 'duplicate', alreadyPresent: true };
+    // Equal runHash implies equal experimentId — the experiment id is part
+    // of the sealed evidence the hash covers, so a cryptographically
+    // identical duplicate shares the artifact's experiment identity.
+    if (existing.runHash === run.runHash) return { runId: run.runId, outcome: 'duplicate', alreadyPresent: true, sameExperiment: run.experimentId === _experiment.experimentId };
     throw Object.assign(new Error('RUN_ARTIFACT_CONFLICT — a different run already holds this runId.'), { code: 'RUN_ARTIFACT_CONFLICT' });
   }
   if (run.experimentId !== _experiment.experimentId) {
@@ -1354,10 +1451,17 @@ export async function importResearchPackage(input) {
     imported: [], duplicates: [], foreign: [], failed: [],
     warnings: [...(manifest.warnings ?? [])],
     membershipApplied: false,
+    membershipUnresolved: [],
   };
+  // Resolution map: runId → admitted identity for THIS experiment. Only
+  // artifacts that were actually admitted (fresh import) or cryptographically
+  // identical duplicates count — a local run that merely shares the string
+  // runId (different runHash) must never satisfy package membership.
+  const resolved = new Map();
   for (const art of runArtifacts) {
     try {
       const res = await _admitRunArtifact({ run: art.run, payload: art.payload, batches: art.batches });
+      resolved.set(art.run.runId, { sameExperiment: res.sameExperiment === true });
       if (res.outcome === 'duplicate') report.duplicates.push(art.run.runId);
       else report.imported.push(art.run.runId);
       if (res.sameExperiment === false) report.foreign.push(art.run.runId);
@@ -1366,21 +1470,26 @@ export async function importResearchPackage(input) {
     }
   }
   // Membership reconstruction: the manifest's declared inclusion applies only
-  // where the run actually resolved under this experiment.
+  // to runs the package actually resolved under this experiment — imported
+  // or hash-identical duplicate. A conflicting local record under the same
+  // runId is left untouched: it gains no membership and is not excluded on
+  // the package's behalf.
   if (manifest.experimentId === _experiment.experimentId) {
-    const declared = (manifest.runArtifacts?.perRun ?? []).filter(r => r.includedInAnalysis === true).map(r => r.runId);
-    const present = new Set(_runs.map(r => r.runId));
-    const wanted = declared.filter(id => present.has(id) && id !== BUNDLED_RUN_ID);
+    const perRun = manifest.runArtifacts?.perRun ?? [];
+    const declared = perRun.filter(r => r.includedInAnalysis === true).map(r => r.runId);
+    const admitted = new Set([...resolved].filter(([, r]) => r.sameExperiment).map(([id]) => id));
+    const wanted = declared.filter(id => admitted.has(id) && id !== BUNDLED_RUN_ID);
+    report.membershipUnresolved = declared.filter(id => !wanted.includes(id));
     const current = new Set(_set.includedRunIds ?? []);
     let changed = false;
     for (const id of wanted) {
       if (!current.has(id)) { _set = includeRunInSet(_set, id); changed = true; }
     }
     for (const id of [...current]) {
-      // Runs that exist locally but the package excludes stay excluded —
-      // record the reason rather than silently dropping membership.
-      const isPackageRun = (manifest.runArtifacts?.perRun ?? []).some(r => r.runId === id);
-      if (isPackageRun && !wanted.includes(id) && id !== BUNDLED_RUN_ID) {
+      // Exclusion replays only for ids the package resolved — a conflicting
+      // or unresolvable local run keeps its local curation state.
+      const isPackageRun = perRun.some(r => r.runId === id);
+      if (isPackageRun && !wanted.includes(id) && admitted.has(id) && id !== BUNDLED_RUN_ID) {
         _set = excludeRunFromSet(_set, id, { reason: 'other', note: 'Excluded by imported research package manifest' });
         changed = true;
       }
