@@ -11,6 +11,7 @@ const html = readFileSync('apps/lab-web/src/index.html', 'utf8');
 const hub = readFileSync('apps/lab-web/src/analysis-export-hub.mjs', 'utf8');
 const exporter = readFileSync('apps/lab-web/src/analysis-dossier-export.js', 'utf8');
 const controls = readFileSync('apps/lab-web/src/experiment-controls.js', 'utf8');
+const controller = readFileSync('apps/lab-web/src/experiments/experiment-controller.mjs', 'utf8');
 const evidence = readFileSync('apps/lab-web/src/workspaces/evidence.js', 'utf8');
 const dataLoader = readFileSync('apps/lab-web/src/data-loader.js', 'utf8');
 const css = readFileSync('apps/lab-web/src/css/observatory.css', 'utf8');
@@ -95,14 +96,15 @@ test('EXPORT-08: status is derived from the same collected evidence the dossier 
 test('EXPORT-09: experiment store is initialized at boot — dossier scope can never be silently empty', () => {
   assert.ok(dataLoader.includes('initExperiments'), 'boot initializes the experiment evidence store');
   assert.ok(dataLoader.includes('applySelection'), 'a saved selection is reapplied at boot');
-  assert.ok(controls.includes('recordCampaignRun'), 'campaign completions are recorded as runs');
-  assert.ok(controls.includes('recordFailedRun'), 'failed executions are recorded');
-  assert.ok(controls.includes('recordCancelledRun'), 'cancelled executions are recorded');
+  assert.ok(controls.includes('beginExperimentRun'), 'a durable run manifest is opened before any simulation work');
+  assert.ok(controls.includes('finalizeExperimentRun'), 'campaign completions are sealed as durable runs');
+  assert.ok(controls.includes('failExperimentRun'), 'failed executions are recorded');
+  assert.ok(controls.includes('cancelExperimentRun'), 'cancelled executions are recorded');
 });
 
-test('EXPORT-10: campaign observatory is tagged EXPERIMENT_RUNS even when persistence is unavailable', () => {
-  const finalize = controls.slice(controls.indexOf('async function finalizeCampaignResult'));
-  assert.ok(finalize.includes("datasetOrigin: 'EXPERIMENT_RUNS'"), 'campaign dataset is never mislabeled certified corpus');
+test('EXPORT-10: campaign observatory is tagged EXPERIMENT_RUNS; runs refuse to start without durable persistence', () => {
+  assert.ok(controller.includes("datasetOrigin: 'EXPERIMENT_RUNS'"), 'campaign dataset is never mislabeled certified corpus');
+  assert.ok(controls.includes('Evidence store unavailable'), 'a persistence-unavailable run never produces undurable campaign data');
 });
 
 // ── Styling ──────────────────────────────────────────────────────────────

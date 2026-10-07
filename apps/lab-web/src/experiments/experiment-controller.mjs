@@ -24,7 +24,12 @@ import { hashCanonical } from '../../../../packages/shared/src/canonical.mjs';
 import {
   DEFAULT_EXPERIMENT_ID, BUNDLED_RUN_ID,
   RUN_STATUS, RUN_LIFECYCLE, COMPATIBILITY, EXCLUSION_REASONS, RUN_INTEGRITY,
+  MANIFEST_STATUS,
   createExperiment, createAnalysisSet, createRunRecord,
+  createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
+  commitManifestBatch, manifestTransition, manifestIsActive, manifestIsResumable,
+  manifestRemainingSegments, manifestCommittedCoverage,
+  runIdFor, batchSummariesHash, slimSummary,
   nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
   contributingRuns, evidenceBasis, previewSelectionMetrics,
   includeRunInSet, excludeRunFromSet, invalidateRun, archiveRun, restoreRun, pinRun,
@@ -43,6 +48,12 @@ let _sessionPayloads = new Map(); // runId → {summaries, aggregate} for payloa
 // them back in (never silently dropping a completed run) without resurrecting
 // records that were legitimately deleted.
 let _memoryOnlyRunIds = new Set();
+// Live run manifests (in-progress / interrupted runs). manifestId === the
+// runId the manifest will seal into — one manifest per run, ever.
+let _manifests = new Map();
+// Optional executor injected by experiment-controls: given a resume plan it
+// re-spawns workers and drives the remaining segments to completion.
+let _runExecutor = null;
 let _bootSummaries = [];
 let _ready = false;
 let _applyToken = 0;
@@ -103,7 +114,16 @@ export function allRunIds() { return _runs.map(r => r.runId); }
  * re-observing identical seeds across runs. */
 export function nextRunOrdinalStart() {
   const start = nextOrdinalStart(_runs.filter(r => r.origin !== 'bundled'));
-  return Number.isInteger(start) && start > 0 ? start : 0;
+  // Retained manifests reserve their ordinal ranges too — a new run must
+  // never re-observe ordinals an interrupted run already committed (or may
+  // still commit on resume). Resuming reuses the manifest's own range.
+  let manifestEnd = 0;
+  for (const m of _manifests.values()) {
+    if (m.sealedRunId) continue; // sealed coverage lives on the run record
+    for (const s of m.segments ?? []) manifestEnd = Math.max(manifestEnd, s.ordinalEnd ?? 0);
+  }
+  const next = Math.max(Number.isInteger(start) && start > 0 ? start : 0, manifestEnd);
+  return next;
 }
 
 // ── Boot / migration ────────────────────────────────────────────
@@ -145,6 +165,26 @@ export async function initExperiments({ bootSummaries = [], bootAggregate = null
     _set = { ..._set, includedRunIds: liveIncluded };
     await _persistSet();
   }
+  // Crash/reload recovery: any manifest still marked active was cut off
+  // mid-execution (the tab cannot resume a dead worker). Reclassify it
+  // interrupted — committed batches are already durable; the run becomes
+  // resumable evidence rather than silently vanishing.
+  _manifests = new Map();
+  try {
+    if (typeof _store.listManifests === 'function') {
+      for (const manifest of await _store.listManifests(_experiment.experimentId)) {
+        let live = manifest;
+        if (manifestIsActive(manifest)) {
+          live = manifestTransition(manifest, MANIFEST_STATUS.INTERRUPTED, {
+            failure: { message: 'Execution interrupted (browser closed or reloaded before the run finished).', phase: 'execution' },
+          });
+          try { await _store.putManifest(live); }
+          catch (error) { console.warn('[experiments] interrupted-manifest persist failed:', error); }
+        }
+        _manifests.set(live.manifestId, live);
+      }
+    }
+  } catch (error) { console.warn('[experiments] manifest recovery failed — interrupted runs may not be listed:', error); }
   _ready = true;
   _syncEvidenceBasis();
   return { hasActiveSelection: contributingRuns(_runs, _set).some(r => r.runId !== BUNDLED_RUN_ID) };
@@ -293,6 +333,13 @@ export async function recordCampaignRun({ config = {}, result = {}, summaries = 
     payloadHash: summaries.length ? payloadEvidenceHash({ summaries, aggregate }) : null,
   });
   const { run: stored, persisted, payloadSessionOnly, metaFailed } = await _persistRunAndPayload(run, summaries.length ? { summaries, aggregate } : null);
+  const { compatibility: compat, included, setPersisted } = await _registerStoredRun(stored, baseline);
+  return { run: stored, compatibility: compat, included, persisted, payloadSessionOnly, metaFailed, setPersisted };
+}
+
+/** Shared post-persistence registration: baseline compatibility check,
+ * include-or-auto-exclude in the analysis set, refresh + basis sync. */
+async function _registerStoredRun(stored, baseline = _semanticFromBaseline()) {
   const compat = classifyRunCompatibility(stored, baseline);
   let included = false;
   if (compat.status === COMPATIBILITY.INCOMPATIBLE && baseline) {
@@ -312,7 +359,7 @@ export async function recordCampaignRun({ config = {}, result = {}, summaries = 
   // erased from the library by this refresh.
   await _refreshRuns();
   _syncEvidenceBasis();
-  return { run: stored, compatibility: compat, included, persisted, payloadSessionOnly, metaFailed, setPersisted };
+  return { compatibility: compat, included, setPersisted };
 }
 
 /** Record a failed execution — retained for provenance, never contributes. */
@@ -356,6 +403,329 @@ export async function recordCancelledRun({ config = {} } = {}) {
   await _refreshRuns();
   _syncEvidenceBasis();
   return run;
+}
+
+// ── Chunked run lifecycle (manifest → batch commits → seal) ─────
+//
+// The durable execution contract:
+//   beginExperimentRun    — manifest persisted BEFORE any simulation runs
+//   commitExperimentBatch — batch record + manifest checkpoint atomically
+//   finalizeExperimentRun — payload descriptor + run record + completed
+//                           manifest atomically; only then is the run
+//                           allowed to exist or contribute
+//   fail/cancel           — manifest transitions; committed batches kept
+//   resume                — replan from the committed frontier
+//
+// A run NEVER appears completed unless every required write committed.
+// A crash loses at most the in-flight batch.
+
+async function _getManifest(manifestId) {
+  return _manifests.get(manifestId) ?? await _store.getManifest(manifestId) ?? null;
+}
+
+async function _persistManifest(manifest) {
+  await _store.putManifest(manifest);
+  _manifests.set(manifest.manifestId, manifest);
+}
+
+/** Inject the UI executor that drives worker segments for a resume plan. */
+export function registerRunExecutor(fn) { _runExecutor = fn; }
+
+/**
+ * Open a manifest for a new run. Persisted before any simulation begins so
+ * even a crash during batch 1 leaves an honest interrupted record. Throws
+ * when experiments aren't ready or the manifest can't be written — a run
+ * that cannot checkpoint does not start.
+ */
+export async function beginExperimentRun({ config = {}, segments = null, batchSize = 0 } = {}) {
+  if (!_ready || !_experiment) throw Object.assign(new Error('EXPERIMENTS_NOT_READY'), { code: 'EXPERIMENTS_NOT_READY' });
+  const ordinal = Math.max(
+    nextRunOrdinal(_runs.filter(r => r.origin !== 'bundled')),
+    [..._manifests.values()].reduce((m, x) => Math.max(m, (x.ordinal ?? 0) + 1), 0),
+  );
+  const runId = runIdFor(_experiment.experimentId, ordinal);
+  const manifest = createRunManifest({
+    runId, experimentId: _experiment.experimentId, ordinal,
+    config, requestedMatches: config.matchCount ?? 0, batchSize, segments,
+  });
+  await _persistManifest(manifest);
+  return { runId, manifest };
+}
+
+/**
+ * Commit a simulated batch durably. The batch record and the manifest
+ * checkpoint write in ONE transaction — committedMatches can never claim
+ * evidence the store doesn't hold. Throws on write failure; callers must
+ * treat that as a persistence failure (pause/fail the run, never continue
+ * accumulating unsaved work).
+ */
+export async function commitExperimentBatch(runId, { segmentIndex = 0, ordinalStart = null, ordinalEnd = null, summaries = [] } = {}) {
+  const manifest = await _getManifest(runId);
+  if (!manifest) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING' });
+  if (!manifestIsActive(manifest)) {
+    throw Object.assign(new Error('RUN_MANIFEST_NOT_ACTIVE'), { code: 'RUN_MANIFEST_NOT_ACTIVE' });
+  }
+  const batchIndex = (manifest.committedBatches ?? []).length;
+  const batch = {
+    batchId: `${runId}#${batchIndex}`,
+    runId, batchIndex, segmentIndex,
+    ordinalStart: ordinalStart ?? summaries[0]?.matchOrdinal ?? null,
+    ordinalEnd: ordinalEnd ?? (summaries.length ? (summaries[summaries.length - 1]?.matchOrdinal ?? 0) + 1 : ordinalStart),
+    matchCount: summaries.length,
+    summariesHash: batchSummariesHash(summaries),
+    committedAt: new Date().toISOString(),
+    summaries,
+  };
+  const next = commitManifestBatch(manifest, {
+    batchIndex, segmentIndex,
+    ordinalStart: batch.ordinalStart, ordinalEnd: batch.ordinalEnd,
+    matchCount: batch.matchCount,
+    summariesHash: batch.summariesHash,
+    matchResultHashes: summaries.map(s => ({ o: s.matchOrdinal, h: s.matchResultHash })),
+    committedAt: batch.committedAt,
+  });
+  next.headline = foldSummariesIntoHeadline(manifest.headline ? { ...manifest.headline, seatWins: { ...manifest.headline.seatWins } } : createManifestHeadline(), summaries);
+  await _store.commitRunBatch({ manifest: next, batch });
+  _manifests.set(runId, next);
+  return { runId, batchIndex, committedMatches: next.committedMatches, requestedMatches: next.requestedMatches };
+}
+
+/**
+ * Stream a run's committed batches to the aggregate pipeline (worker when
+ * available). Each batch is loaded, hash-verified, posted, and released —
+ * finalize never materializes the whole run on the main thread.
+ */
+async function _aggregateCommitted(runId, descriptors, semantic) {
+  let stream = null;
+  try { stream = _aggregateStream(); } catch { stream = null; }
+  const parts = stream ? null : []; // union only for the no-worker fallback
+  for (const d of descriptors) {
+    const batch = await _store.getRunBatch(runId, d.batchIndex);
+    if (!batch) throw Object.assign(new Error('RUN_PAYLOAD_MISSING'), { code: 'RUN_PAYLOAD_MISSING' });
+    if (batchSummariesHash(batch.summaries) !== d.summariesHash) {
+      throw Object.assign(new Error('RUN_PAYLOAD_HASH_MISMATCH'), { code: 'RUN_PAYLOAD_HASH_MISMATCH' });
+    }
+    if (stream) stream.worker.postMessage({ type: 'run-autonomy-aggregate-chunk', summariesJson: JSON.stringify(batch.summaries) });
+    else parts.push(...batch.summaries);
+  }
+  if (stream) {
+    stream.worker.postMessage({ type: 'run-autonomy-aggregate-finish', semantic });
+    try { return await stream.done; }
+    catch (error) { console.warn('[experiments] streamed aggregate failed — sealing with headline metrics:', error?.message ?? error); return { aggregate: null, observatory: null }; }
+  }
+  try {
+    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js');
+    const aggregate = campaignAggregate(parts, semantic);
+    return { aggregate, observatory: buildObservatoryAnalytics({ summaries: parts, aggregate }) };
+  } catch (error) {
+    // The seal must not fail because the observatory recompute did — the
+    // committed batches are already durable evidence. Metrics fall back to
+    // the manifest headline; applySelection recomputes analytics later.
+    console.warn('[experiments] aggregate unavailable at seal — headline metrics used:', error?.message ?? error);
+    return { aggregate: null, observatory: null };
+  }
+}
+
+/**
+ * Seal a manifest into an immutable Run. Committed batches stay in the
+ * runBatches store; the payload row holds the descriptor chain + aggregate.
+ * Finalize uses only committed work — sealing an interrupted manifest
+ * produces honest partial evidence (requested vs committed is explicit).
+ */
+export async function finalizeExperimentRun(runId, { durationMs = null } = {}) {
+  if (!_ready) return null;
+  const manifest = await _getManifest(runId);
+  if (!manifest) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING' });
+  if (manifest.sealedRunId) throw Object.assign(new Error('RUN_ALREADY_SEALED'), { code: 'RUN_ALREADY_SEALED' });
+  const descriptors = (manifest.committedBatches ?? []).slice()
+    .sort((a, b) => (a.ordinalStart ?? 0) - (b.ordinalStart ?? 0) || (a.batchIndex ?? 0) - (b.batchIndex ?? 0));
+  if (!descriptors.length) {
+    const failed = manifestTransition(manifest, MANIFEST_STATUS.FAILED, { failure: { message: 'No committed evidence to seal.', phase: 'finalize' } });
+    await _persistManifest(failed).catch(() => {});
+    throw Object.assign(new Error('RUN_NO_COMMITTED_EVIDENCE'), { code: 'RUN_NO_COMMITTED_EVIDENCE' });
+  }
+  const committed = manifest.committedMatches ?? descriptors.reduce((n, d) => n + (d.matchCount ?? 0), 0);
+  const requested = manifest.requestedMatches ?? committed;
+  const partial = committed < requested;
+  const hashEntries = descriptors.flatMap(d => d.matchResultHashes ?? []).sort((a, b) => (a.o ?? 0) - (b.o ?? 0));
+  const canonicalResultHash = hashCanonical(hashEntries.map(x => x.h));
+  const semantic = {
+    experimentHash: canonicalResultHash,
+    profileId: manifest.config?.profileId ?? null,
+    engineVersion: ENGINE_VERSION,
+    rulesVersion: RULES_VERSION,
+    labVersion: LAB_VERSION,
+    canonicalResultHash,
+  };
+  const { aggregate, observatory } = await _aggregateCommitted(runId, descriptors, semantic);
+  const baseline = _semanticFromBaseline();
+  const run = createRunRecord({
+    experimentId: _experiment.experimentId,
+    ordinal: manifest.ordinal ?? nextRunOrdinal(_runs.filter(r => r.origin !== 'bundled')),
+    status: RUN_STATUS.COMPLETED,
+    config: {
+      ...manifest.config,
+      matchCount: committed,
+      ...(partial ? { requestedMatchCount: requested, ordinalCoverage: manifestCommittedCoverage(manifest) } : {}),
+    },
+    provenance: {
+      rulesVersion: RULES_VERSION,
+      engineVersion: ENGINE_VERSION,
+      labVersion: LAB_VERSION,
+      experimentHash: aggregate?.experimentHash ?? canonicalResultHash,
+      canonicalResultHash,
+      aggregateHash: aggregate?.aggregateHash ?? null,
+    },
+    metrics: {
+      matchCount: aggregate?.matchCount ?? committed,
+      completedMatchCount: aggregate?.completedMatchCount ?? manifest.headline?.completedMatchCount ?? null,
+      abortCount: aggregate?.abortCount ?? manifest.headline?.abortCount ?? 0,
+      drawCount: aggregate?.drawCount ?? manifest.headline?.drawCount ?? 0,
+      seat1Wins: aggregate?.seatWins?.['1'] ?? manifest.headline?.seatWins?.['1'] ?? null,
+      seat2Wins: aggregate?.seatWins?.['2'] ?? manifest.headline?.seatWins?.['2'] ?? null,
+      seat1WinRate: aggregate?.seat1WinRate ?? null,
+      durationMs: durationMs ?? aggregate?.durationMs ?? manifest.headline?.durationMs ?? null,
+      policyResults: aggregate?.policies ?? null,
+    },
+    payloadKind: 'indexeddb-batches',
+    payloadHash: payloadEvidenceHash({
+      kind: 'batches',
+      batches: descriptors.map(d => ({ batchIndex: d.batchIndex, ordinalStart: d.ordinalStart, ordinalEnd: d.ordinalEnd, matchCount: d.matchCount, summariesHash: d.summariesHash })),
+      aggregate,
+    }),
+  });
+  const payload = {
+    kind: 'batches',
+    batches: descriptors.map(d => ({ batchIndex: d.batchIndex, ordinalStart: d.ordinalStart, ordinalEnd: d.ordinalEnd, matchCount: d.matchCount, summariesHash: d.summariesHash })),
+    aggregate,
+  };
+  const sealed = run;
+  if (partial) sealed.retentionNote = `Sealed as partial evidence — ${committed} of ${requested} requested matches committed before the run stopped.`;
+  const finalManifest = manifestTransition(
+    { ...manifest, sealedRunId: run.runId, resumable: false },
+    MANIFEST_STATUS.COMPLETED,
+  );
+  await _store.finalizeRun({ run: sealed, payload, manifest: finalManifest });
+  _manifests.set(runId, finalManifest);
+  const { compatibility: compat, included, setPersisted } = await _registerStoredRun(sealed, baseline);
+  await applySelection({ fastPath: { aggregate, observatory } });
+  return { run: sealed, compatibility: compat, included, persisted: _store.persisted === true, payloadSessionOnly: false, metaFailed: false, setPersisted, aggregate, observatory };
+}
+
+/** Mark a manifest run failed — committed evidence is preserved. */
+export async function failExperimentRun(runId, error = null) {
+  const manifest = await _getManifest(runId);
+  if (!manifest) return null;
+  const next = manifestTransition(manifest, MANIFEST_STATUS.FAILED, {
+    failure: { message: String(error ?? 'unknown').slice(0, 500), phase: 'execution' },
+  });
+  await _persistManifest(next).catch(e => { console.warn('[experiments] fail-transition persist failed:', e); _manifests.set(runId, next); });
+  _syncEvidenceBasis();
+  return next;
+}
+
+/** Cancel a manifest run — committed evidence is preserved and resumable. */
+export async function cancelExperimentRun(runId) {
+  const manifest = await _getManifest(runId);
+  if (!manifest) return null;
+  const next = manifestTransition(manifest, MANIFEST_STATUS.CANCELLED, {
+    failure: { message: 'Cancelled by user.', phase: 'execution' },
+  });
+  await _persistManifest(next).catch(e => { console.warn('[experiments] cancel-transition persist failed:', e); _manifests.set(runId, next); });
+  _syncEvidenceBasis();
+  return next;
+}
+
+/** Incomplete manifests for the Manage Runs surface. */
+export function getIncompleteRuns() {
+  return [..._manifests.values()]
+    .filter(m => m.status !== MANIFEST_STATUS.COMPLETED)
+    .map(m => ({
+      manifestId: m.manifestId,
+      runId: m.runId,
+      ordinal: m.ordinal ?? 0,
+      status: m.status,
+      requestedMatches: m.requestedMatches ?? 0,
+      committedMatches: m.committedMatches ?? 0,
+      headline: m.headline ?? null,
+      updatedAt: m.updatedAt ?? null,
+      createdAt: m.createdAt ?? null,
+      resumable: manifestIsResumable(m),
+      failure: m.failure ?? null,
+      config: m.config ?? {},
+    }))
+    .sort((a, b) => String(b.updatedAt ?? '').localeCompare(String(a.updatedAt ?? '')));
+}
+
+/**
+ * Resume an interrupted/cancelled manifest from its committed frontier.
+ * Returns the plan executed — deterministic: the same ordinals produce the
+ * same seeds, so resumed evidence is indistinguishable from uninterrupted.
+ */
+export async function resumeExperimentRun(manifestId) {
+  const manifest = await _getManifest(manifestId);
+  if (!manifest) throw new Error('RUN_MANIFEST_MISSING');
+  if (manifest.sealedRunId) throw new Error('RUN_ALREADY_SEALED');
+  if (manifestRemainingSegments(manifest).length === 0) {
+    // Every ordinal committed but the seal never landed — no resimulation
+    // needed, the caller just finalizes.
+    return { runId: manifestId, resumed: false, needsSeal: true };
+  }
+  if (!manifestIsResumable(manifest)) throw new Error('RUN_NOT_RESUMABLE');
+  const running = manifestTransition(manifest, MANIFEST_STATUS.RUNNING, { failure: null });
+  await _persistManifest(running);
+  const base = manifest.config?.ordinalStart ?? 0;
+  const plan = {
+    runId: manifestId,
+    config: manifest.config ?? {},
+    batchSize: manifest.batchSize ?? 0,
+    requestedMatches: manifest.requestedMatches ?? 0,
+    committedMatches: manifest.committedMatches ?? 0,
+    // Worker-relative ranges: workers take ordinalStart/End relative to the
+    // campaign's matchCount, while manifest segments are absolute ordinals.
+    segments: manifestRemainingSegments(manifest).map(s => ({
+      index: s.index,
+      ordinalStart: s.ordinalStart - base,
+      ordinalEnd: s.ordinalEnd - base,
+    })),
+  };
+  if (_runExecutor) {
+    Promise.resolve(_runExecutor(plan)).catch(error => {
+      failExperimentRun(manifestId, error?.message ?? error).catch(() => {});
+    });
+  }
+  return plan;
+}
+
+/** Delete an unfinalized manifest plus its committed batches. */
+export async function discardManifest(manifestId) {
+  const manifest = await _getManifest(manifestId);
+  if (!manifest) throw new Error('RUN_MANIFEST_MISSING');
+  if (manifest.sealedRunId) throw new Error('RUN_ALREADY_SEALED');
+  await _store.deleteManifestCascade(manifestId);
+  _manifests.delete(manifestId);
+  _syncEvidenceBasis();
+  return manifestId;
+}
+
+/**
+ * Load a single match's full detail (decisions, traces, replay) on demand.
+ * The retained UI index is slim — detail lives in the batch store and is
+ * fetched only for explicit inspection (Watch, traces, debugging).
+ */
+export async function loadRunMatchDetail(runId, matchId) {
+  const run = _findRun(runId);
+  const manifest = await _getManifest(runId);
+  const descriptors = run?.payloadKind === 'indexeddb-batches'
+    ? (await _store.getRunPayload(runId))?.batches ?? []
+    : (manifest?.committedBatches ?? []);
+  for (const d of descriptors) {
+    const batch = await _store.getRunBatch(runId, d.batchIndex);
+    if (!batch) continue;
+    const found = (batch.summaries ?? []).find(s => s.matchId === matchId || s.matchOrdinal === matchId);
+    if (found) return found;
+  }
+  return null;
 }
 
 // ── Curation ────────────────────────────────────────────────────
@@ -542,27 +912,57 @@ function _restoreBootView() {
 }
 
 /**
- * Load a run's evidence payload and verify it against the sealed payloadHash.
- * Returns { summaries, verdict } — verdict.ok=false means the payload is
- * missing or tampered and MUST NOT reach an aggregate.
+ * Verify a run's evidence and stream it to a chunk consumer, bounded by
+ * batch size — never by whole-run size. Returns { ok, code }:
  *   - bundled: baseline corpus ships with the app; its authority is the
  *     bundled artifact itself, not a stored payload.
  *   - unsealed records (payloadHash null, schema 1.0): verified:false — the
  *     record's own runHash is the authority, nothing to check against.
+ *   - 'indexeddb-batches': the descriptor chain is verified against the
+ *     sealed payloadHash first, then every batch is hash-verified BEFORE any
+ *     of its summaries streams — a corrupt batch quarantines the whole run
+ *     and nothing partial reaches the aggregate.
  */
-async function _loadRunSummaries(run) {
-  if (run.payloadKind === 'bundled') return { summaries: _bootSummaries, verdict: { ok: true, verified: false, code: null } };
-  let payload = null;
-  if (run.payloadKind === 'session') payload = _sessionPayloads.get(run.runId) ?? null;
-  else if (run.payloadKind === 'indexeddb') payload = await _store.getRunPayload(run.runId);
-  // A record that claims a durable/session payload but has none is an
-  // integrity observation even for legacy unsealed records (payloadHash
-  // null) — an empty contribution would silently underweight the set.
-  if (payload == null && (run.payloadKind === 'session' || run.payloadKind === 'indexeddb')) {
-    return { summaries: [], verdict: { ok: false, verified: false, code: 'RUN_PAYLOAD_MISSING' } };
+async function _verifyAndStreamRun(run, onChunk) {
+  if (run.payloadKind === 'bundled') { await onChunk(_bootSummaries); return { ok: true, code: null }; }
+  if (run.payloadKind === 'session') {
+    const payload = _sessionPayloads.get(run.runId) ?? null;
+    if (!payload) return { ok: false, code: 'RUN_PAYLOAD_MISSING' };
+    const verdict = verifyRunPayload(run, payload);
+    if (!verdict.ok) return { ok: false, code: verdict.code };
+    await onChunk(payload.summaries ?? []);
+    return { ok: true, code: null };
   }
-  const verdict = verifyRunPayload(run, payload);
-  return { summaries: verdict.ok ? (payload?.summaries ?? []) : [], verdict };
+  if (run.payloadKind === 'indexeddb') {
+    const payload = await _store.getRunPayload(run.runId);
+    if (!payload) return { ok: false, code: 'RUN_PAYLOAD_MISSING' };
+    const verdict = verifyRunPayload(run, payload);
+    if (!verdict.ok) return { ok: false, code: verdict.code };
+    await onChunk(payload.summaries ?? []);
+    return { ok: true, code: null };
+  }
+  if (run.payloadKind === 'indexeddb-batches') {
+    const payload = await _store.getRunPayload(run.runId);
+    if (!payload) return { ok: false, code: 'RUN_PAYLOAD_MISSING' };
+    const verdict = verifyRunPayload(run, payload);
+    if (!verdict.ok) return { ok: false, code: verdict.code };
+    const descriptors = (payload.batches ?? []).slice()
+      .sort((a, b) => (a.ordinalStart ?? 0) - (b.ordinalStart ?? 0) || (a.batchIndex ?? 0) - (b.batchIndex ?? 0));
+    // Pass 1: verify every batch hash before emitting — a run contributes
+    // completely or not at all, never partially.
+    for (const d of descriptors) {
+      const batch = await _store.getRunBatch(run.runId, d.batchIndex);
+      if (!batch) return { ok: false, code: 'RUN_PAYLOAD_MISSING' };
+      if (batchSummariesHash(batch.summaries) !== d.summariesHash) return { ok: false, code: 'RUN_PAYLOAD_HASH_MISMATCH' };
+    }
+    // Pass 2: stream one batch at a time; each is released after consume.
+    for (const d of descriptors) {
+      const batch = await _store.getRunBatch(run.runId, d.batchIndex);
+      await onChunk(batch.summaries ?? []);
+    }
+    return { ok: true, code: null };
+  }
+  return { ok: false, code: 'RUN_PAYLOAD_MISSING' };
 }
 
 /** Mark a run's detected-integrity state and persist it. The record stays in
@@ -577,11 +977,20 @@ async function _flagRunIntegrity(runId, { state: integrityState, code = null, no
   catch (error) { console.warn('[experiments] integrity mark persist failed:', error); _runs = _runs.map(r => r.runId === runId ? updated : r); }
 }
 
-function _aggregateWorker(summariesJson, semantic) {
-  return new Promise((resolve, reject) => {
-    let worker;
-    try { worker = new Worker('worker.js', { type: 'module' }); }
-    catch (error) { reject(error); return; }
+/** Last-resort union collector for the no-worker fallback path. */
+async function _collectUnion(runs) {
+  const union = [];
+  for (const run of runs) {
+    const result = await _verifyAndStreamRun(run, async summaries => { union.push(...summaries); });
+    if (!result.ok) console.warn(`[experiments] run ${run.runId} dropped during fallback union: ${result.code}`);
+  }
+  return union;
+}
+
+/** Open a streaming aggregate worker: post begin → chunk×N → finish. */
+function _aggregateStream() {
+  const worker = new Worker('worker.js', { type: 'module' });
+  const done = new Promise((resolve, reject) => {
     const timer = setTimeout(() => { try { worker.terminate(); } catch { /* already terminated */ } reject(new Error('AGGREGATE_WORKER_TIMEOUT')); }, 180000);
     worker.onmessage = e => {
       const x = e.data ?? {};
@@ -592,15 +1001,17 @@ function _aggregateWorker(summariesJson, semantic) {
       else reject(new Error(x.error ?? 'AGGREGATE_FAILED'));
     };
     worker.onerror = e => { clearTimeout(timer); try { worker.terminate(); } catch { /* already terminated */ } reject(new Error(e.message ?? 'AGGREGATE_WORKER_ERROR')); };
-    worker.postMessage({ type: 'run-autonomy-aggregate', summariesJson, semantic });
   });
+  worker.postMessage({ type: 'run-autonomy-aggregate-begin' });
+  return { worker, done };
 }
 
 /**
  * Recompute state.observatory / state.aggregate from the currently included
- * runs. Union of raw summaries → campaignAggregate → buildObservatoryAnalytics
- * (in a worker when available). Empty selection restores the certified
- * baseline view — never an erased/blank dataset.
+ * runs. Verified run evidence streams to the aggregate worker one batch at
+ * a time — the union is never assembled on the main thread. The retained
+ * UI index is the slim projection (no per-decision detail). Empty selection
+ * restores the certified baseline view — never an erased/blank dataset.
  */
 export async function applySelection({ fastPath = null } = {}) {
   if (!_ready) return;
@@ -614,19 +1025,30 @@ export async function applySelection({ fastPath = null } = {}) {
     rerender();
     return;
   }
-  // Verify every contributing payload against its sealed payloadHash BEFORE
-  // aggregating. A missing payload marks the run payload-unavailable (kept,
-  // disclosed); a hash mismatch quarantines it (kept, inspectable). Neither
-  // state contributes rows — and neither is silent.
+  const contributingClean0 = contributing.filter(runAnalyticallyEligible);
+  const useFastPath = fastPath && sessionRuns.length === 1 && contributingClean0.length === sessionRuns.length;
+  // Stream verified evidence: per-run verification happens BEFORE any chunk
+  // reaches the aggregate, so a corrupt run contributes nothing — identical
+  // semantics to the old load-then-aggregate flow, at batch-bounded memory.
   const integrityEvents = [];
-  const parts = [];
+  const slimIndex = [];
+  const resultHashes = [];
+  let stream = null;
+  if (!useFastPath) {
+    try { stream = _aggregateStream(); }
+    catch (error) { console.warn('[experiments] aggregate worker unavailable — unioning on main thread:', error?.message ?? error); }
+  }
+  const parts = stream ? null : []; // union only retained for the no-worker fallback
   for (const run of contributing) {
-    const { summaries, verdict } = await _loadRunSummaries(run);
-    if (!verdict.ok) {
-      integrityEvents.push({ run, code: verdict.code });
-      continue;
-    }
-    parts.push(...summaries);
+    const result = await _verifyAndStreamRun(run, async summaries => {
+      for (const s of summaries) {
+        slimIndex.push(slimSummary(s));
+        resultHashes.push(s.matchResultHash);
+      }
+      if (stream) stream.worker.postMessage({ type: 'run-autonomy-aggregate-chunk', summariesJson: JSON.stringify(summaries) });
+      else if (parts) parts.push(...summaries);
+    });
+    if (!result.ok) integrityEvents.push({ run, code: result.code });
   }
   for (const { run, code } of integrityEvents) {
     const state_ = code === 'RUN_PAYLOAD_HASH_MISMATCH' ? RUN_INTEGRITY.QUARANTINED : RUN_INTEGRITY.PAYLOAD_UNAVAILABLE;
@@ -636,13 +1058,14 @@ export async function applySelection({ fastPath = null } = {}) {
     await _flagRunIntegrity(run.runId, { state: state_, code, note });
     showToast(`Run #${String(run.ordinal).padStart(3, '0')} ${state_ === RUN_INTEGRITY.QUARANTINED ? 'quarantined: payload failed integrity verification' : 'has no retained evidence payload'} — it cannot contribute to analysis.`, { type: 'error', title: 'Evidence integrity' });
   }
-  if (token !== _applyToken) return; // superseded by a newer selection change
+  if (token !== _applyToken) { try { stream?.worker.terminate(); } catch { /* already terminated */ } return; } // superseded by a newer selection change
   const contributingClean = contributingRuns(_runs, _set);
   if (integrityEvents.length) {
     // Quarantined/unavailable runs are analytically ineligible — recompute.
     _syncEvidenceBasis();
     sessionRuns = contributingClean.filter(r => r.runId !== BUNDLED_RUN_ID);
     if (!sessionRuns.length) {
+      try { stream?.worker.terminate(); } catch { /* already terminated */ }
       _restoreBootView();
       updateRailContext();
       rerender();
@@ -651,7 +1074,7 @@ export async function applySelection({ fastPath = null } = {}) {
   }
   const baseline = compatibilityBaseline(_runs, new Set(contributingClean.map(r => r.runId)));
   let aggregate = null, observatory = null;
-  if (fastPath && sessionRuns.length === 1 && contributingClean.length === sessionRuns.length) {
+  if (useFastPath) {
     // The just-completed run's worker already computed its own analytics —
     // reuse them instead of a redundant recompute.
     aggregate = fastPath.aggregate ?? null;
@@ -664,16 +1087,25 @@ export async function applySelection({ fastPath = null } = {}) {
       engineVersion: baseline?.provenance?.engineVersion ?? null,
       rulesVersion: baseline?.provenance?.rulesVersion ?? null,
       labVersion: LAB_VERSION,
-      canonicalResultHash: hashCanonical(parts.map(m => m.matchResultHash)),
+      canonicalResultHash: hashCanonical(resultHashes),
     };
     try {
-      ({ aggregate, observatory } = await _aggregateWorker(JSON.stringify(parts), semantic));
+      if (stream) {
+        stream.worker.postMessage({ type: 'run-autonomy-aggregate-finish', semantic });
+        ({ aggregate, observatory } = await stream.done);
+      } else {
+        throw new Error('NO_AGGREGATE_WORKER');
+      }
     } catch (workerError) {
       console.warn('[experiments] aggregate worker failed, computing on main thread:', workerError?.message ?? workerError);
       try {
+        // No-worker fallback unions verified evidence on the main thread
+        // (bounded by the analysis union — the legacy behavior, not the
+        // streaming path's batch bound).
+        const union = parts ?? await _collectUnion(contributingClean);
         const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js');
-        aggregate = campaignAggregate(parts, semantic);
-        observatory = buildObservatoryAnalytics({ summaries: parts, aggregate });
+        aggregate = campaignAggregate(union, semantic);
+        observatory = buildObservatoryAnalytics({ summaries: union, aggregate });
       } catch (inner) {
         console.error('[experiments] aggregation failed:', inner);
         showToast('Could not recompute the analysis set — showing previous evidence.', { type: 'error', title: 'Aggregation failed' });
@@ -683,7 +1115,7 @@ export async function applySelection({ fastPath = null } = {}) {
   }
   if (token !== _applyToken) return;
   state.aggregate = aggregate;
-  state.observatory = { ...observatory, summaries: parts, datasetOrigin: 'EXPERIMENT_RUNS' };
+  state.observatory = { ...observatory, summaries: slimIndex, datasetOrigin: 'EXPERIMENT_RUNS' };
   _syncDerivedFromObservatory();
   _syncEvidenceBasis();
   updateRailContext();
@@ -716,6 +1148,12 @@ export function collectExperimentEvidence() {
     persisted: basis.persisted,
     memoryOnlyRunCount: basis.memoryOnlyRunCount,
     sessionPayloadRunCount: basis.sessionPayloadRunCount,
+    incompleteRunCount: getIncompleteRuns().length,
+    incompleteRuns: getIncompleteRuns().map(m => ({
+      manifestId: m.manifestId, status: m.status, ordinal: m.ordinal,
+      requestedMatches: m.requestedMatches, committedMatches: m.committedMatches,
+      resumable: m.resumable, failure: m.failure,
+    })),
     fallback: basis.fallback,
     runs: rows.map(({ run, compatibility, included, exclusion, persistence }) => ({
       runId: run.runId, ordinal: run.ordinal, status: run.status,

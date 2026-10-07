@@ -17,6 +17,7 @@ import {
   setRunIncluded, setRunExcluded, markRunInvalidated, markRunArchived,
   markRunRestored, markRunPinned, deleteRun, isolateRun, includeAllCompatible,
   previewRunSelection, allRunIds,
+  getIncompleteRuns, resumeExperimentRun, finalizeExperimentRun, discardManifest,
 } from './experiment-controller.mjs';
 import {
   EXCLUSION_REASONS, COMPATIBILITY, RUN_STATUS, RUN_LIFECYCLE, BUNDLED_RUN_ID,
@@ -55,6 +56,40 @@ const compatBadge = ({ compatibility, baseline }) => {
   if (compatibility.status === COMPATIBILITY.TREATMENT_CHANGE) return '<span class="run-badge run-treatment" title="Treatment/config differs from baseline — aggregatable, disclosed">Config Δ</span>';
   return '<span class="run-badge run-compatible">Current</span>';
 };
+const MANIFEST_STATUS_BADGES = {
+  running: '<span class="run-badge run-compatible">Running</span>',
+  queued: '<span class="run-badge run-compatible">Queued</span>',
+  paused: '<span class="run-badge run-treatment">Paused</span>',
+  interrupted: '<span class="run-badge run-invalidated" title="Execution stopped before the run finished — committed batches are durable">Interrupted</span>',
+  cancelled: '<span class="run-badge run-failed">Cancelled</span>',
+  failed: '<span class="run-badge run-failed">Failed</span>',
+};
+
+/** Incomplete run manifests — interrupted/cancelled/failed executions with
+ * durably committed batches. Partial evidence is honest evidence: rows show
+ * committed-vs-requested explicitly, never a rounded "done". */
+function incompleteRowHtml(m) {
+  const badge = MANIFEST_STATUS_BADGES[m.status] ?? `<span class="run-badge">${esc(m.status)}</span>`;
+  const headline = m.headline?.matchCount ? `seat 1 ${pct((m.headline.seatWins?.['1'] ?? 0) / Math.max(1, (m.headline.seatWins?.['1'] ?? 0) + (m.headline.seatWins?.['2'] ?? 0)))}` : '—';
+  const actions = [
+    m.resumable ? `<button class="secondary-button" data-manifest-action="resume" data-manifest="${esc(m.manifestId)}">Resume</button>` : '',
+    m.committedMatches > 0 ? `<button class="ghost-button" data-manifest-action="seal" data-manifest="${esc(m.manifestId)}" title="Seal committed batches as a partial-evidence run — the record stays honest about committed vs requested">Seal partial</button>` : '',
+    `<button class="ghost-button danger" data-manifest-action="discard" data-manifest="${esc(m.manifestId)}">${panel.confirmDelete === m.manifestId ? 'Confirm delete — committed evidence is removed permanently' : 'Delete'}</button>`,
+  ].filter(Boolean).join(' ');
+  return `<div class="run-row run-incomplete-row" data-manifest-row="${esc(m.manifestId)}">
+    <div class="run-row-main">
+      <span class="run-toggle-locked" aria-hidden="true">—</span>
+      <div class="run-row-label" role="group">
+        <b>#${String(m.ordinal).padStart(3, '0')}</b>
+        <span>${fmt(m.committedMatches)} / ${fmt(m.requestedMatches)} games</span>
+        <span class="run-headline">${esc(headline)}</span>
+        <span class="run-badges">${badge}</span>
+      </div>
+    </div>
+    <div class="run-incomplete-detail"><small>${m.failure?.message ? esc(m.failure.message) : ''}${m.config?.policyIds ? ` · ${esc(m.config.policyIds.join(' vs '))}` : ''}</small><div class="run-actions">${actions}</div></div>
+  </div>`;
+}
+
 const statusBadges = (run, row) => {
   const out = [];
   if (run.status === RUN_STATUS.FAILED) out.push('<span class="run-badge run-failed">Failed</span>');
@@ -217,11 +252,12 @@ export function renderRunsPanel() {
   const rows = runsWithCompatibility();
   const basis = getEvidenceBasis();
   const visible = _visibleRows(rows);
+  const incomplete = getIncompleteRuns();
   const preview = panel.previewAll ? previewRunSelection(allRunIds()) : null;
   host.hidden = false;
   host.innerHTML = `<div class="runs-panel">
     <div class="runs-head">
-      <div class="runs-head-left"><b>Runs</b><small>${basis.includedRunCount}/${basis.totalRuns} included · ${fmt(basis.includedGames)} games in analysis</small>${(basis.corruptCount + basis.quarantinedCount + basis.payloadUnavailableCount) ? `<small class="exp-evidence-warn">⚠ ${fmt(basis.corruptCount + basis.quarantinedCount + basis.payloadUnavailableCount)} run${basis.corruptCount + basis.quarantinedCount + basis.payloadUnavailableCount === 1 ? '' : 's'} quarantined or missing evidence — never contributes</small>` : ''}</div>
+      <div class="runs-head-left"><b>Runs</b><small>${basis.includedRunCount}/${basis.totalRuns} included · ${fmt(basis.includedGames)} games in analysis${incomplete.length ? ` · ${incomplete.length} incomplete` : ''}</small>${(basis.corruptCount + basis.quarantinedCount + basis.payloadUnavailableCount) ? `<small class="exp-evidence-warn">⚠ ${fmt(basis.corruptCount + basis.quarantinedCount + basis.payloadUnavailableCount)} run${basis.corruptCount + basis.quarantinedCount + basis.payloadUnavailableCount === 1 ? '' : 's'} quarantined or missing evidence — never contributes</small>` : ''}</div>
       <div class="runs-head-right">
         <select id="exp-runs-filter" aria-label="Filter runs">
           ${[['all', 'All active'], ['included', 'Included'], ['excluded', 'Excluded'], ['warnings', 'Compatibility warnings'], ['integrity', 'Integrity failures'], ['invalidated', 'Invalidated'], ['archived', 'Archived']].map(([v, l]) => `<option value="${v}" ${panel.filter === v ? 'selected' : ''}>${l}</option>`).join('')}
@@ -231,6 +267,7 @@ export function renderRunsPanel() {
       </div>
     </div>
     ${preview ? `<div class="runs-preview"><b>Preview — all ${preview.runCount} completed runs:</b> ${fmt(preview.games)} games · seat 1 ${pct(preview.seat1WinRate)}${basis.excludedRunCount ? ` (${fmt(preview.games - basis.includedGames)} more games than current selection)` : ''}</div>` : ''}
+    ${incomplete.length ? `<div class="runs-incomplete"><b>In progress &amp; interrupted</b><small>committed counts are durable writes — resume continues from the checkpoint, seal keeps partial evidence honestly labeled</small>${incomplete.map(incompleteRowHtml).join('')}</div>` : ''}
     <div class="runs-list" role="list">${visible.length ? visible.map(rowHtml).join('') : '<div class="empty-state"><strong>No runs match this filter</strong>Run a batch or change the filter.</div>'}</div>
     <p class="runs-foot">Runs are immutable evidence. Exclusion removes a run from analysis — it never deletes it. ${(() => {
       if (!basis.persisted) return '<b>Storage unavailable: runs persist for this session only.</b>';
@@ -244,6 +281,7 @@ export function renderRunsPanel() {
   host.querySelector('#exp-runs-include-compat')?.addEventListener('click', async () => { await _guarded(includeAllCompatible(), 'Compatible runs included'); });
   host.querySelector('#exp-runs-preview')?.addEventListener('click', () => { panel.previewAll = !panel.previewAll; renderRunsPanel(); });
   host.querySelectorAll('[data-run-action]').forEach(el => el.addEventListener('click', _onRunAction));
+  host.querySelectorAll('[data-manifest-action]').forEach(el => el.addEventListener('click', _onManifestAction));
   host.querySelectorAll('.run-include-toggle').forEach(el => el.addEventListener('change', _onIncludeToggle));
   host.querySelectorAll('form[data-run-form]').forEach(f => f.addEventListener('submit', _onRunFormSubmit));
 }
@@ -320,6 +358,27 @@ async function _onRunAction(e) {
   if (action === 'delete') {
     if (panel.confirmDelete !== runId) { panel.confirmDelete = runId; renderRunsPanel(); return; }
     await _guarded(deleteRun(runId), 'Run deleted');
+  }
+}
+
+async function _onManifestAction(e) {
+  const action = e.currentTarget.dataset.manifestAction;
+  const manifestId = e.currentTarget.dataset.manifest;
+  if (action === 'resume') {
+    await _guarded((async () => {
+      const plan = await resumeExperimentRun(manifestId);
+      if (plan?.needsSeal) await finalizeExperimentRun(manifestId);
+      return plan;
+    })(), 'Resume started — progress shows in the run status');
+    return;
+  }
+  if (action === 'seal') {
+    await _guarded(finalizeExperimentRun(manifestId), 'Committed evidence sealed as a partial run');
+    return;
+  }
+  if (action === 'discard') {
+    if (panel.confirmDelete !== manifestId) { panel.confirmDelete = manifestId; renderRunsPanel(); return; }
+    await _guarded(discardManifest(manifestId), 'Incomplete run deleted');
   }
 }
 

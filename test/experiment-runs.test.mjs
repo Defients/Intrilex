@@ -19,7 +19,12 @@ import { hashCanonical } from '../packages/shared/src/canonical.mjs';
 import {
   DEFAULT_EXPERIMENT_ID, DEFAULT_ANALYSIS_SET_ID, BUNDLED_RUN_ID,
   RUN_STATUS, RUN_LIFECYCLE, COMPATIBILITY, EXCLUSION_REASONS, RUN_INTEGRITY,
+  MANIFEST_STATUS,
   createExperiment, createAnalysisSet, createRunRecord,
+  createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
+  commitManifestBatch, manifestTransition, manifestIsActive, manifestIsResumable,
+  manifestRemainingSegments, manifestCommittedCoverage,
+  batchSummariesHash, slimSummary,
   nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
   contributingRuns, evidenceBasis, previewSelectionMetrics,
   includeRunInSet, excludeRunFromSet, invalidateRun, archiveRun, restoreRun, pinRun,
@@ -34,30 +39,36 @@ import { buildAnalysisDossier, renderAnalysisDossierMarkdown } from '../apps/lab
 // Implements just the surface experiment-store.mjs uses so tests exercise the
 // real IDB code path (transactions, keyPaths, getAll) and true "reopen"
 // roundtrips — not just the memory fallback.
-const KEY_PATHS = { experiments: 'experimentId', runs: 'runId', analysisSets: 'analysisSetId', payloads: 'runId' };
+const KEY_PATHS = { experiments: 'experimentId', runs: 'runId', analysisSets: 'analysisSetId', payloads: 'runId', manifests: 'manifestId', runBatches: 'batchId' };
 function createFakeIndexedDB() {
   const databases = new Map(); // dbName → Map<storeName, Map<key, value>>
-  const wrapStore = (table, keyPath) => ({
-    get(key) { const req = {}; globalThis.queueMicrotask(() => { req.result = table.get(key); req.onsuccess?.(); }); return req; },
-    getAll() { const req = {}; globalThis.queueMicrotask(() => { req.result = [...table.values()]; req.onsuccess?.(); }); return req; },
-    put(value, key) { table.set(key ?? value[keyPath], structuredClone(value)); const req = {}; globalThis.queueMicrotask(() => req.onsuccess?.()); return req; },
-    delete(key) { table.delete(key); const req = {}; globalThis.queueMicrotask(() => req.onsuccess?.()); return req; },
-  });
   let failNextTransaction = null; // error object → tx aborts with it
   const wrapDb = data => ({
     objectStoreNames: { contains: n => data.has(n) },
     createObjectStore(name) { if (!data.has(name)) data.set(name, new Map()); },
     transaction(_names) {
       const tx = { oncomplete: null, onerror: null, onabort: null, error: null };
+      // Stage writes: a real IDB transaction commits all-or-nothing — an
+      // abort must leave no partial record.
+      const staged = [];
       if (failNextTransaction) {
         tx.error = failNextTransaction; failNextTransaction = null;
         setTimeout(() => tx.onabort?.(), 0);
       } else {
-        setTimeout(() => tx.oncomplete?.(), 0);
+        setTimeout(() => {
+          for (const op of staged) { if (op.del) op.table.delete(op.key); else op.table.set(op.key, structuredClone(op.value)); }
+          tx.oncomplete?.();
+        }, 0);
       }
       tx.objectStore = name => {
         if (!data.has(name)) data.set(name, new Map());
-        return wrapStore(data.get(name), KEY_PATHS[name]);
+        const table = data.get(name);
+        return {
+          get(key) { const req = {}; globalThis.queueMicrotask(() => { req.result = table.get(key); req.onsuccess?.(); }); return req; },
+          getAll() { const req = {}; globalThis.queueMicrotask(() => { req.result = [...table.values()]; req.onsuccess?.(); }); return req; },
+          put(value, key) { staged.push({ table, key: key ?? value[KEY_PATHS[name]], value }); const req = {}; globalThis.queueMicrotask(() => req.onsuccess?.()); return req; },
+          delete(key) { staged.push({ table, key, del: true }); const req = {}; globalThis.queueMicrotask(() => req.onsuccess?.()); return req; },
+        };
       };
       return tx;
     },
@@ -462,7 +473,12 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     hashCanonical, ExperimentStore,
     DEFAULT_EXPERIMENT_ID, DEFAULT_ANALYSIS_SET_ID, BUNDLED_RUN_ID,
     RUN_STATUS, RUN_LIFECYCLE, COMPATIBILITY, EXCLUSION_REASONS, RUN_INTEGRITY,
+    MANIFEST_STATUS,
     createExperiment, createAnalysisSet, createRunRecord,
+    createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
+    commitManifestBatch, manifestTransition, manifestIsActive, manifestIsResumable,
+    manifestRemainingSegments, manifestCommittedCoverage,
+    runIdFor, batchSummariesHash, slimSummary,
     nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
     contributingRuns, evidenceBasis, previewSelectionMetrics,
     includeRunInSet, excludeRunFromSet, invalidateRun, archiveRun, restoreRun, pinRun,

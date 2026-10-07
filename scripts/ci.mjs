@@ -318,6 +318,9 @@ const STAGES = [
   // Run-registration retention: session fallback, metadata failure, refresh
   // merge, reload semantics — the vanishing-run bug class.
   ['experiment-run-retention', 'node', ['--test', 'test/experiment-run-retention.test.mjs']],
+  // Incremental durability: manifest lifecycle, atomic batch commits, crash
+  // recovery, resume, partial seals, stacked runs, integrity quarantine.
+  ['experiment-run-durability', 'node', ['--test', 'test/experiment-run-durability.test.mjs']],
   ['combo-analytics', 'node', ['--test', 'test/combo-analytics.test.mjs']],
 ];
 

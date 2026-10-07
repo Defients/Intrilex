@@ -35,7 +35,10 @@ export const BUNDLED_EXPERIMENT_ID = DEFAULT_EXPERIMENT_ID;
 export const RUN_STATUS = Object.freeze({ COMPLETED: 'COMPLETED', FAILED: 'FAILED', CANCELLED: 'CANCELLED' });
 export const RUN_LIFECYCLE = Object.freeze({ ACTIVE: 'active', INVALIDATED: 'invalidated', ARCHIVED: 'archived' });
 export const COMPATIBILITY = Object.freeze({ COMPATIBLE: 'compatible', TREATMENT_CHANGE: 'treatment-change', INCOMPATIBLE: 'incompatible' });
-export const PAYLOAD_KINDS = Object.freeze(['indexeddb', 'bundled', 'session', 'none']);
+// 'indexeddb-batches' — evidence lives in the runBatches store as committed
+// batch records; the payloads row holds only the batch descriptor chain and
+// the run aggregate. This is the durable chunked-execution payload kind.
+export const PAYLOAD_KINDS = Object.freeze(['indexeddb', 'indexeddb-batches', 'bundled', 'session', 'none']);
 // lifecycle.integrity.state — detected integrity states. Unlike lifecycle
 // curation (user bookkeeping) these are written by the evidence layer when
 // verification fails. 'quarantined' = detected corruption (runHash or
@@ -53,7 +56,7 @@ export const EXCLUSION_REASONS = Object.freeze([
 // aggregate). Sized generously — a 10k-game run produces ~25–60 MB of
 // summaries; beyond that the run record still persists but the payload is
 // marked 'session' and the UI must disclose the retention limit.
-export const EXPERIMENT_LIMITS = Object.freeze({ persistRunBytes: 96 * 1024 * 1024, metaBytes: 512 * 1024, importBytes: 256 * 1024 * 1024 });
+export const EXPERIMENT_LIMITS = Object.freeze({ persistRunBytes: 96 * 1024 * 1024, metaBytes: 512 * 1024, importBytes: 256 * 1024 * 1024, batchBytes: 64 * 1024 * 1024 });
 
 const fail = code => { throw Object.assign(new Error(code), { code }); };
 const isStr = v => typeof v === 'string' && v.length > 0;
@@ -156,6 +159,13 @@ export function createRunRecord({ experimentId, ordinal, createdAt, status = RUN
       ordinalStart: config.ordinalStart ?? null,
       ordinalEnd: config.ordinalEnd ?? null,
       strategicTrace: config.strategicTrace === true,
+      // Partial-seal fields — only present when a run was sealed before its
+      // full requested range committed. requestedMatchCount keeps the
+      // requested/committed distinction explicit on the immutable record;
+      // ordinalCoverage records the exact committed ordinal ranges (which
+      // may be sparse across segments for multi-worker runs).
+      ...(config.requestedMatchCount != null ? { requestedMatchCount: config.requestedMatchCount } : {}),
+      ...(Array.isArray(config.ordinalCoverage) ? { ordinalCoverage: config.ordinalCoverage.map(c => ({ start: c.start, end: c.end })) } : {}),
     },
     provenance: {
       rulesVersion: provenance.rulesVersion ?? null,
@@ -334,6 +344,16 @@ export function pinRun(run, pinned = true) {
  * storedAt. Deterministic across runtimes because hashCanonical is.
  */
 export function payloadEvidenceHash(payload) {
+  // Batched payload (payloadKind 'indexeddb-batches'): the descriptor chain
+  // binds each batch's summariesHash in ordinal order — the seal covers the
+  // same analytical content ({summaries, aggregate}) without the payload row
+  // ever materializing the raw evidence again.
+  if (Array.isArray(payload?.batches)) {
+    return hashCanonical({
+      summariesChain: payload.batches.map(b => ({ batchIndex: b.batchIndex, summariesHash: b.summariesHash, matchCount: b.matchCount })),
+      aggregate: payload.aggregate ?? null,
+    });
+  }
   return hashCanonical({ summaries: payload?.summaries ?? [], aggregate: payload?.aggregate ?? null });
 }
 
@@ -502,4 +522,178 @@ export function planMigration({ experiments = [], runs = [], analysisSets = [], 
     writes.runs.push(bundledBaselineRun({ aggregate, summaryCount, createdAt: at }));
   }
   return writes;
+}
+
+// ── Run manifests: durable checkpoints for chunked execution ────
+//
+// A manifest is the mutable, durable record of a run IN PROGRESS. Unlike
+// the immutable Run record (written once at seal time), the manifest is
+// updated at every committed batch so a crash/reload loses at most the
+// in-flight batch — never committed evidence.
+//
+//   segments[]        — worker ordinal ranges with a committed frontier
+//                       (nextOrdinal). Resume replans from the frontier,
+//                       never re-simulating committed ordinals.
+//   committedBatches[]— per-batch descriptors (hashes + matchResultHash
+//                       index). The batch records themselves live in the
+//                       runBatches store; the manifest is the lightweight
+//                       checkpoint consulted on every read path.
+//   headline          — running scalar aggregates folded at commit time so
+//                       an interrupted run can report honest partial stats
+//                       without loading any raw evidence.
+//   sealedRunId       — set when the manifest is finalized into an
+//                       immutable Run; afterwards the manifest is history.
+
+export const MANIFEST_SCHEMA_VERSION = '1.0.0';
+export const MANIFEST_STATUS = Object.freeze({
+  QUEUED: 'queued',
+  RUNNING: 'running',
+  PAUSED: 'paused',
+  INTERRUPTED: 'interrupted',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  CANCELLED: 'cancelled',
+});
+const ACTIVE_MANIFEST_STATUSES = new Set([MANIFEST_STATUS.QUEUED, MANIFEST_STATUS.RUNNING, MANIFEST_STATUS.PAUSED]);
+const RESUMABLE_MANIFEST_STATUSES = new Set([MANIFEST_STATUS.INTERRUPTED, MANIFEST_STATUS.CANCELLED, MANIFEST_STATUS.FAILED, MANIFEST_STATUS.PAUSED]);
+
+// Heavy per-match fields stripped from the retained UI index. The full
+// record stays in the batch store — this projection keeps state.observatory
+// bounded while analytics/table consumers keep every field they read.
+const SUMMARY_HEAVY_FIELDS = new Set(['rankDecisions', 'decisions', 'strategicTelemetry', 'strategyDecisions', 'replay', 'capturedEvents', 'auditDecisions', 'decisionTraces']);
+
+export function slimSummary(summary) {
+  if (!summary || typeof summary !== 'object') return summary;
+  let slim = null;
+  for (const key of SUMMARY_HEAVY_FIELDS) {
+    if (summary[key] === undefined) continue;
+    if (!slim) { slim = { ...summary }; }
+    delete slim[key];
+  }
+  return slim ?? summary;
+}
+
+export function createRunManifest({ runId, experimentId = DEFAULT_EXPERIMENT_ID, ordinal = 0, config = {}, requestedMatches = null, batchSize = 0, segments = null, createdAt = null }) {
+  if (!isStr(runId)) fail('RUN_MANIFEST_ID_REQUIRED');
+  const at = createdAt ?? new Date().toISOString();
+  const requested = requestedMatches ?? config.matchCount ?? 0;
+  const base = config.ordinalStart ?? 0;
+  const segs = (segments ?? [{ index: 0, ordinalStart: base, ordinalEnd: base + requested }]).map(s => ({
+    index: s.index,
+    ordinalStart: s.ordinalStart,
+    ordinalEnd: s.ordinalEnd,
+    nextOrdinal: s.ordinalStart,
+    committed: 0,
+  }));
+  return {
+    manifestId: runId,
+    runId,
+    experimentId,
+    schemaVersion: MANIFEST_SCHEMA_VERSION,
+    ordinal,
+    status: MANIFEST_STATUS.RUNNING,
+    createdAt: at,
+    startedAt: at,
+    updatedAt: at,
+    completedAt: null,
+    // Requested vs committed are distinct forever — a manifest may be sealed
+    // as partial evidence, and the run record records both counts.
+    config: { ...config },
+    requestedMatches: requested,
+    committedMatches: 0,
+    batchSize,
+    segments: segs,
+    committedBatches: [],
+    headline: createManifestHeadline(),
+    resumable: true,
+    sealedRunId: null,
+    failure: null,
+  };
+}
+
+export function createManifestHeadline() {
+  return { matchCount: 0, completedMatchCount: 0, abortCount: 0, drawCount: 0, seatWins: { '1': 0, '2': 0 }, durationMs: 0 };
+}
+
+const MANIFEST_COMPLETE_REASONS = new Set(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW']);
+
+/** Fold a batch of match summaries into the manifest's running headline.
+ * Scalar counts only — no per-match data is retained here. */
+export function foldSummariesIntoHeadline(headline, summaries) {
+  const h = headline ?? createManifestHeadline();
+  for (const s of summaries ?? []) {
+    h.matchCount += 1;
+    if (!MANIFEST_COMPLETE_REASONS.has(s?.terminationReason)) { h.abortCount += 1; continue; }
+    h.completedMatchCount += 1;
+    if (s.terminationReason === 'CANONICAL_DRAW') h.drawCount += 1;
+    if (s.winningSeat === 1) h.seatWins['1'] += 1;
+    else if (s.winningSeat === 2) h.seatWins['2'] += 1;
+    h.durationMs += s.durationMs ?? 0;
+  }
+  return h;
+}
+
+export function batchSummariesHash(summaries) {
+  return hashCanonical(summaries ?? []);
+}
+
+/**
+ * Record a successfully persisted batch on the manifest. Pure — returns the
+ * updated manifest; the caller persists it atomically with the batch record.
+ * The descriptor carries the batch's integrity hash and the per-match
+ * result-hash index so a finalize can rebuild the canonical run hash and an
+ * integrity check can verify evidence without touching run records.
+ */
+export function commitManifestBatch(manifest, { batchIndex, segmentIndex = 0, ordinalStart, ordinalEnd, matchCount, summariesHash, matchResultHashes = [], committedAt = null }) {
+  const at = committedAt ?? new Date().toISOString();
+  const segments = (manifest.segments ?? []).map(s => s.index === segmentIndex
+    ? { ...s, nextOrdinal: Math.max(s.nextOrdinal ?? s.ordinalStart, ordinalEnd), committed: (s.committed ?? 0) + matchCount }
+    : s);
+  return {
+    ...manifest,
+    updatedAt: at,
+    committedMatches: (manifest.committedMatches ?? 0) + matchCount,
+    committedBatches: [...(manifest.committedBatches ?? []), {
+      batchIndex, segmentIndex, ordinalStart, ordinalEnd, matchCount,
+      summariesHash, matchResultHashes, committedAt: at,
+    }],
+    segments,
+  };
+}
+
+export function manifestTransition(manifest, status, { failure = null, completedAt = null } = {}) {
+  if (!Object.values(MANIFEST_STATUS).includes(status)) fail('RUN_MANIFEST_STATUS_INVALID');
+  const at = new Date().toISOString();
+  return {
+    ...manifest,
+    status,
+    updatedAt: at,
+    completedAt: status === MANIFEST_STATUS.COMPLETED ? (completedAt ?? at) : (manifest.completedAt ?? null),
+    failure,
+  };
+}
+
+export function manifestIsActive(manifest) {
+  return ACTIVE_MANIFEST_STATUSES.has(manifest?.status);
+}
+
+/** Segments (absolute ordinal ranges) still needing simulation. */
+export function manifestRemainingSegments(manifest) {
+  return (manifest?.segments ?? [])
+    .filter(s => (s.nextOrdinal ?? s.ordinalStart) < s.ordinalEnd)
+    .map(s => ({ index: s.index, ordinalStart: s.nextOrdinal ?? s.ordinalStart, ordinalEnd: s.ordinalEnd }));
+}
+
+/** Ordinal coverage committed so far — used for partial seals so the run
+ * record honestly describes which ordinals produced evidence. */
+export function manifestCommittedCoverage(manifest) {
+  return (manifest?.segments ?? [])
+    .map(s => ({ start: s.ordinalStart, end: Math.min(s.nextOrdinal ?? s.ordinalStart, s.ordinalEnd) }))
+    .filter(c => c.end > c.start);
+}
+
+export function manifestIsResumable(manifest) {
+  return manifest?.resumable === true && !manifest?.sealedRunId
+    && RESUMABLE_MANIFEST_STATUSES.has(manifest?.status)
+    && manifestRemainingSegments(manifest).length > 0;
 }

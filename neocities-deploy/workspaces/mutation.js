@@ -3,18 +3,18 @@
 // stays canonical. Control and mutant arms run the same seeds, seats, and
 // policies so the mutation is the only intended experimental variable.
 
-import { app, esc, fmt } from '../state.js?v=09c7519902ec';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=09c7519902ec';
-import { LAB_VERSION } from '../version.js?v=09c7519902ec';
+import { app, esc, fmt } from '../state.js?v=037146099ebb';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=037146099ebb';
+import { LAB_VERSION } from '../version.js?v=037146099ebb';
 import {
   MUTATION_TARGETS, MUTATION_TARGET_BY_ID, MUTATION_LIMITS,
   MUTATION_OBJECTIVE_METRICS, MUTATION_OBJECTIVE_DIRECTIONS,
   createRuleMutation, createExperimentConfig, buildMutationExperimentPlan,
   createExperimentRecord, finalizeExperimentRecord, compactExperimentRecord,
   serializeExperiment, mutationDisplay,
-} from '../evolution/mutation-domain.mjs?v=09c7519902ec';
-import { EvolutionStore, parseMutationImport } from '../evolution/evolution-store.mjs?v=09c7519902ec';
-import { runMutationSegments } from './mutation-runner.mjs?v=09c7519902ec';
+} from '../evolution/mutation-domain.mjs?v=037146099ebb';
+import { EvolutionStore, parseMutationImport } from '../evolution/evolution-store.mjs?v=037146099ebb';
+import { runMutationSegments } from './mutation-runner.mjs?v=037146099ebb';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 const POPULATION_IDS = ['random-legal', 'score-rush', 'control', 'tempo', 'value', 'score-rush-tactical', 'control-tactical', 'tempo-tactical', 'value-tactical'];

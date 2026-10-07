@@ -3,6 +3,11 @@ const engineModule = import('./engine/browser-entry.js');
 const autonomyModule = import('./autonomy-runtime.js');
 const analyticsModule = import('./browser-analytics.js');
 let strategyStudyAbort=null;
+// Streaming aggregation accumulator — the main thread posts
+// run-autonomy-aggregate-begin, any number of -chunk messages, then -finish.
+// Bounded by the analysis union (transient, worker-scoped) rather than by
+// main-thread UI state.
+let _aggregateChunks=null;
 
 const fetchJson = async (url) => {
   const response = await fetch(url);
@@ -76,7 +81,16 @@ self.onmessage = async (event) => {
       const { runBrowserCampaign, LAB_VERSION } = await autonomyModule;
       const { campaignAggregate, buildObservatoryAnalytics } = await analyticsModule;
       const started=performance.now();
-      const campaignResult=runBrowserCampaign(event.data.config??{},(progress)=>self.postMessage({type:'autonomy-campaign-progress',progress}));
+      const cfg=event.data.config??{};
+      // Batched mode: emit bounded autonomy-campaign-batch messages; the
+      // worker never holds more than one batch plus the folded core.
+      if (cfg.batchSize) {
+        const campaignResult=runBrowserCampaign({...cfg,onBatch:batch=>self.postMessage({type:'autonomy-campaign-batch',workerIndex:event.data.workerIndex??0,ordinalStart:batch.ordinalStart,ordinalEnd:batch.ordinalEnd,summariesJson:JSON.stringify(batch.summaries)})},(progress)=>self.postMessage({type:'autonomy-campaign-progress',progress}));
+        const payload={type:'autonomy-campaign-result',ok:true,workerIndex:event.data.workerIndex??0,result:{...campaignResult,durationMs:Math.round(performance.now()-started)}};
+        self.postMessage(payload);
+        return;
+      }
+      const campaignResult=runBrowserCampaign(cfg,(progress)=>self.postMessage({type:'autonomy-campaign-progress',progress}));
       const summaries=campaignResult.summaries??[];
       const semantic={experimentHash:campaignResult.canonicalResultHash,profileId:campaignResult.profileId,engineVersion:campaignResult.engineVersion,rulesVersion:RULES_VERSION,labVersion:LAB_VERSION,canonicalResultHash:campaignResult.canonicalResultHash};
       const aggregate=campaignAggregate(summaries,semantic);
@@ -143,6 +157,13 @@ self.onmessage = async (event) => {
     try {
       const { runBrowserCampaign } = await autonomyModule;
       const cfg=event.data.config??{};
+      // Batched mode: each segment streams bounded batches; committed
+      // evidence flows to the store one batch at a time.
+      if (cfg.batchSize) {
+        const campaignResult=runBrowserCampaign({...cfg,onBatch:batch=>self.postMessage({type:'autonomy-campaign-batch',workerIndex:event.data.workerIndex,ordinalStart:batch.ordinalStart,ordinalEnd:batch.ordinalEnd,summariesJson:JSON.stringify(batch.summaries)})},(progress)=>self.postMessage({type:'autonomy-campaign-progress',progress:{completed:progress.completed,total:progress.total,workerIndex:event.data.workerIndex}}));
+        self.postMessage({ type:'autonomy-segment-result', ok:true, workerIndex:event.data.workerIndex, result:campaignResult });
+        return;
+      }
       const campaignResult=runBrowserCampaign(cfg,(progress)=>self.postMessage({type:'autonomy-campaign-progress',progress:{completed:progress.completed,total:progress.total,workerIndex:event.data.workerIndex}}));
       self.postMessage({ type:'autonomy-segment-result', ok:true, workerIndex:event.data.workerIndex, summariesJson:JSON.stringify(campaignResult.summaries??[]) });
     } catch(error){ self.postMessage({ type:'autonomy-segment-result', ok:false, workerIndex:event.data.workerIndex, error:error?.stack??String(error) }); }
@@ -174,6 +195,27 @@ self.onmessage = async (event) => {
       }
       self.postMessage({ type: 'mutation-segment-result', ok: true, workerIndex: event.data.workerIndex, resultsJson: JSON.stringify(results) });
     } catch (error) { self.postMessage({ type: 'mutation-segment-result', ok: false, workerIndex: event.data.workerIndex, error: error?.stack ?? String(error) }); }
+    return;
+  }
+  if (type === 'run-autonomy-aggregate-begin') {
+    _aggregateChunks=[];
+    return;
+  }
+  if (type === 'run-autonomy-aggregate-chunk') {
+    const chunk=JSON.parse(event.data.summariesJson??'[]');
+    if(_aggregateChunks)_aggregateChunks.push(...chunk);else _aggregateChunks=chunk;
+    return;
+  }
+  if (type === 'run-autonomy-aggregate-finish') {
+    try {
+      const { campaignAggregate, buildObservatoryAnalytics } = await analyticsModule;
+      const summaries=_aggregateChunks??[];
+      _aggregateChunks=null;
+      const semantic=event.data.semantic??{};
+      const aggregate=campaignAggregate(summaries,semantic);
+      const observatory=buildObservatoryAnalytics({summaries,aggregate});
+      self.postMessage({ type:'autonomy-aggregate-result', ok:true, aggregateJson:JSON.stringify(aggregate), observatoryJson:JSON.stringify(observatory) });
+    } catch(error){ _aggregateChunks=null; self.postMessage({ type:'autonomy-aggregate-result', ok:false, error:error?.stack??String(error) }); }
     return;
   }
   if (type === 'run-autonomy-aggregate') {

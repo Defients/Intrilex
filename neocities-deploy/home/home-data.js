@@ -60,19 +60,20 @@ export function matchServerHttpBase(wsUrl) {
  * @param {typeof fetch} opts.fetchImpl
  * @param {string|null} opts.httpBase - from matchServerHttpBase()
  * @param {AbortSignal} [opts.signal]
+ * @param {number} [opts.timeoutMs] - defaults to HOME_STATS_TIMEOUT_MS (tests may shorten)
  * @returns {Promise<{ ok: true, stats: HomeStats } | { ok: false, stats: null }>}
  */
-export async function fetchHomeStats({ fetchImpl, httpBase, signal } = {}) {
+export async function fetchHomeStats({ fetchImpl, httpBase, signal, timeoutMs = HOME_STATS_TIMEOUT_MS } = {}) {
   if (!httpBase || typeof fetchImpl !== 'function') return { ok: false, stats: null };
-  const timeoutSignal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
-    ? AbortSignal.timeout(HOME_STATS_TIMEOUT_MS)
-    : undefined;
+  const request = composedRequestSignal(signal, timeoutMs);
   try {
     const res = await fetchImpl(`${httpBase}/api/public/home-stats`, {
       method: 'GET',
       headers: { Accept: 'application/json' },
-      // Caller's abort wins when provided; otherwise use the timeout.
-      signal: signal ?? timeoutSignal,
+      // The request obeys BOTH the caller's lifetime signal (navigation
+      // aborts it) and the HTTP timeout (a stalled request terminates
+      // after HOME_STATS_TIMEOUT_MS).
+      signal: request.signal,
       cache: 'no-store',
     });
     if (!res.ok) return { ok: false, stats: null };
@@ -90,6 +91,8 @@ export async function fetchHomeStats({ fetchImpl, httpBase, signal } = {}) {
     };
   } catch {
     return { ok: false, stats: null };
+  } finally {
+    request.dispose();
   }
 }
 
@@ -326,6 +329,45 @@ export function formatUpdatedAgo(updatedAt, now = Date.now()) {
 }
 
 // ── internal helpers ──
+
+/**
+ * Compose the caller's lifetime signal with the HTTP timeout so the
+ * request honours both. Prefers AbortSignal.any; where unavailable, a
+ * manual controller forwards the caller's abort while a timer bounds the
+ * request. dispose() releases the timer/listener — callers must invoke it
+ * once the fetch settles.
+ */
+function composedRequestSignal(callerSignal, timeoutMs = HOME_STATS_TIMEOUT_MS) {
+  const noop = () => {};
+  if (typeof AbortSignal === 'undefined') return { signal: undefined, dispose: noop };
+  const hasTimeoutApi = typeof AbortSignal.timeout === 'function';
+  if (callerSignal && hasTimeoutApi && typeof AbortSignal.any === 'function') {
+    // Modern path: one composed signal — caller abort OR timeout wins.
+    return {
+      signal: AbortSignal.any([callerSignal, AbortSignal.timeout(timeoutMs)]),
+      dispose: noop,
+    };
+  }
+  if (!callerSignal && hasTimeoutApi) {
+    return { signal: AbortSignal.timeout(timeoutMs), dispose: noop };
+  }
+  // Fallback: manual composition — forward the caller's abort and bound
+  // the request with our own timer (also covers engines without
+  // AbortSignal.timeout/any).
+  const controller = new AbortController();
+  const onCallerAbort = () => controller.abort(callerSignal.reason);
+  if (callerSignal?.aborted) onCallerAbort();
+  else callerSignal?.addEventListener('abort', onCallerAbort, { once: true });
+  const timer = setTimeout(() => controller.abort(new Error('home-stats timeout')), timeoutMs);
+  timer.unref?.();
+  return {
+    signal: controller.signal,
+    dispose: () => {
+      clearTimeout(timer);
+      callerSignal?.removeEventListener?.('abort', onCallerAbort);
+    },
+  };
+}
 
 function numOrNull(v) {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;

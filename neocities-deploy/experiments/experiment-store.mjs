@@ -2,13 +2,19 @@
 // experiment-store.mjs — Persistent storage for Experiment runs,
 // analysis sets, and run evidence payloads.
 //
-// Storage shape (IndexedDB 'intrilex-experiment-lab', v1):
+// Storage shape (IndexedDB 'intrilex-experiment-lab', v2):
 //   experiments   { experimentId }  — persistent investigation containers
 //   runs          { runId }         — immutable evidence records + lifecycle
 //   analysisSets  { analysisSetId } — included-run selection per experiment
 //   payloads      { runId }         — heavy per-run evidence (summaries +
-//                                     aggregate). Kept in a separate store so
-//                                     listing runs never deserializes MBs.
+//                                     aggregate), or for batched runs the
+//                                     batch-descriptor chain + aggregate.
+//   manifests     { manifestId }    — mutable run checkpoints updated at
+//                                     every committed batch (crash recovery)
+//   runBatches    { batchId }       — committed raw evidence batches. Each
+//                                     batch is the unit of durability:
+//                                     written transactionally with its
+//                                     manifest checkpoint.
 //
 // The store deliberately follows the EvolutionStore conventions: injectable
 // IDB factory, byte budgets before write, QuotaExceededError mapped to an
@@ -25,12 +31,14 @@ import {
 } from '../evolution/experiment-domain.mjs';
 
 const DB_NAME = 'intrilex-experiment-lab';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORES = Object.freeze({
   EXPERIMENTS: 'experiments',
   RUNS: 'runs',
   ANALYSIS_SETS: 'analysisSets',
   PAYLOADS: 'payloads',
+  MANIFESTS: 'manifests',
+  RUN_BATCHES: 'runBatches',
 });
 
 const byteSize = value => new TextEncoder().encode(JSON.stringify(value)).byteLength;
@@ -40,7 +48,7 @@ const isQuota = err => err?.name === 'QuotaExceededError' || err?.code === 'BROW
 // In-memory backend — same async surface as the IDB transaction helpers.
 // Used when IndexedDB is unavailable (tests, locked-down browsers).
 function createMemoryBackend() {
-  const tables = { experiments: new Map(), runs: new Map(), analysisSets: new Map(), payloads: new Map() };
+  const tables = { experiments: new Map(), runs: new Map(), analysisSets: new Map(), payloads: new Map(), manifests: new Map(), runBatches: new Map() };
   return {
     persisted: false,
     async get(store, key) { return tables[store]?.get(key) ?? undefined; },
@@ -51,7 +59,7 @@ function createMemoryBackend() {
   };
 }
 function keyPathFor(store) {
-  return { experiments: 'experimentId', runs: 'runId', analysisSets: 'analysisSetId', payloads: 'runId' }[store];
+  return { experiments: 'experimentId', runs: 'runId', analysisSets: 'analysisSetId', payloads: 'runId', manifests: 'manifestId', runBatches: 'batchId' }[store];
 }
 
 export class ExperimentStore {
@@ -88,6 +96,8 @@ export class ExperimentStore {
         if (!db.objectStoreNames.contains(STORES.RUNS)) db.createObjectStore(STORES.RUNS, { keyPath: 'runId' });
         if (!db.objectStoreNames.contains(STORES.ANALYSIS_SETS)) db.createObjectStore(STORES.ANALYSIS_SETS, { keyPath: 'analysisSetId' });
         if (!db.objectStoreNames.contains(STORES.PAYLOADS)) db.createObjectStore(STORES.PAYLOADS, { keyPath: 'runId' });
+        if (!db.objectStoreNames.contains(STORES.MANIFESTS)) db.createObjectStore(STORES.MANIFESTS, { keyPath: 'manifestId' });
+        if (!db.objectStoreNames.contains(STORES.RUN_BATCHES)) db.createObjectStore(STORES.RUN_BATCHES, { keyPath: 'batchId' });
       };
       req.onsuccess = () => {
         const db = req.result;
@@ -239,6 +249,83 @@ export class ExperimentStore {
     return filtered.sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0) || String(a.createdAt ?? '').localeCompare(String(b.createdAt ?? '')));
   }
 
+  // ── Run manifests (durable checkpoints) ───────────────────────
+  // Manifests are small mutable records — read/written freely during a run.
+  async putManifest(manifest) {
+    if (byteSize(manifest) > EXPERIMENT_LIMITS.metaBytes) {
+      throw Object.assign(new Error('RUN_MANIFEST_TOO_LARGE'), { code: 'RUN_MANIFEST_TOO_LARGE' });
+    }
+    await this._putAll([[STORES.MANIFESTS, manifest]]);
+    return manifest.manifestId;
+  }
+  async getManifest(manifestId) { return (await this._get(STORES.MANIFESTS, manifestId)) ?? null; }
+  async listManifests(experimentId = null) {
+    const all = await this._all(STORES.MANIFESTS);
+    const filtered = experimentId ? all.filter(m => m.experimentId === experimentId) : all;
+    return filtered.sort((a, b) => String(a.updatedAt ?? '').localeCompare(String(b.updatedAt ?? '')));
+  }
+
+  // ── Run batches (committed raw evidence) ──────────────────────
+  /**
+   * Atomic batch commit: batch record + manifest checkpoint land in one
+   * transaction. A crash mid-transaction commits neither — the manifest
+   * can never claim a batch the store does not hold.
+   */
+  async commitRunBatch({ manifest, batch }) {
+    const size = byteSize(batch);
+    if (size > EXPERIMENT_LIMITS.batchBytes) {
+      throw Object.assign(new Error('RUN_BATCH_TOO_LARGE_FOR_BROWSER_ARCHIVE'), { code: 'RUN_BATCH_TOO_LARGE_FOR_BROWSER_ARCHIVE', artifactSize: size });
+    }
+    await this._putAll([[STORES.RUN_BATCHES, batch], [STORES.MANIFESTS, manifest]]);
+    return batch.batchId;
+  }
+  async getRunBatch(runId, batchIndex) { return (await this._get(STORES.RUN_BATCHES, `${runId}#${batchIndex}`)) ?? null; }
+  async listRunBatches(runId) {
+    return (await this._all(STORES.RUN_BATCHES)).filter(b => b.runId === runId).sort((a, b) => (a.batchIndex ?? 0) - (b.batchIndex ?? 0));
+  }
+  /**
+   * Atomic run seal: payload descriptor + immutable run record + completed
+   * manifest land in one transaction. A run can never appear 'COMPLETED'
+   * while its evidence writes are still in flight.
+   */
+  async finalizeRun({ run, payload, manifest }) {
+    validateRunRecord(run);
+    if (byteSize(run) > EXPERIMENT_LIMITS.metaBytes) {
+      throw Object.assign(new Error('RUN_META_TOO_LARGE'), { code: 'RUN_META_TOO_LARGE' });
+    }
+    const entries = [[STORES.RUNS, run], [STORES.MANIFESTS, manifest]];
+    if (payload) entries.push([STORES.PAYLOADS, { runId: run.runId, storedAt: new Date().toISOString(), ...payload }]);
+    await this._putAll(entries);
+    return run.runId;
+  }
+
+  /** Delete an unfinalized manifest plus every batch it committed. */
+  async deleteManifestCascade(manifestId) {
+    const batches = await this.listRunBatches(manifestId);
+    await this._delAll([
+      ...batches.map(b => [STORES.RUN_BATCHES, b.batchId]),
+      [STORES.MANIFESTS, manifestId],
+    ]);
+    return { deleted: manifestId, batches: batches.length };
+  }
+
+  /** Multi-store delete in one transaction. */
+  async _delAll(entries) {
+    await this.open();
+    if (this.memory) {
+      for (const [store, key] of entries) await this.memory.del(store, key);
+      return;
+    }
+    const db = this.db;
+    const storeNames = [...new Set(entries.map(([s]) => s))];
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(storeNames, 'readwrite');
+      tx.oncomplete = () => resolve();
+      tx.onabort = tx.onerror = () => reject(tx.error ?? new Error('EXPERIMENT_STORAGE_DELETE_FAILED'));
+      for (const [store, key] of entries) tx.objectStore(store).delete(key);
+    });
+  }
+
   // ── Analysis sets ─────────────────────────────────────────────
   async putAnalysisSet(set) {
     validateAnalysisSet(set);
@@ -272,7 +359,8 @@ export class ExperimentStore {
   }
 
   /** Destructive delete — guarded by the caller. Removes the run record,
-   * its payload, and scrubs it from every analysis set it appears in. */
+   * its payload, its manifest and any committed batches, and scrubs it
+   * from every analysis set it appears in. */
   async deleteRun(runId) {
     const sets = await this.listAnalysisSets();
     const run = await this.getRun(runId);
@@ -283,8 +371,13 @@ export class ExperimentStore {
       exclusions: Object.fromEntries(Object.entries(s.exclusions ?? {}).filter(([id]) => id !== runId)),
       updatedAt: new Date().toISOString(),
     }])]);
-    await this._del(STORES.PAYLOADS, runId);
-    await this._del(STORES.RUNS, runId);
+    const batches = await this.listRunBatches(runId);
+    await this._delAll([
+      ...batches.map(b => [STORES.RUN_BATCHES, b.batchId]),
+      [STORES.PAYLOADS, runId],
+      [STORES.MANIFESTS, runId],
+      [STORES.RUNS, runId],
+    ]);
     return { deleted: runId, experimentId };
   }
 

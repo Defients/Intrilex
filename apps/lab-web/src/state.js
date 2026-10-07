@@ -78,7 +78,7 @@ export const state = {
   playing:false, timer:null, speed:1, layout:_persisted.layout, showOrchestration:false, reducedMotion:_persisted.reducedMotion, reducedSensory:_persisted.reducedSensory, fx:_persisted.fx, rulesIllustrated:_persisted.rulesIllustrated, rulesViewMode:_persisted.rulesViewMode || (_persisted.rulesIllustrated === false ? 'text' : 'illustrated'), haptics:_persisted.haptics, highContrast:_persisted.highContrast, seasonalThemes:_persisted.seasonalThemes,
   selectedTimelineIndex:null, selectedMechanic:null, selectedSynergy:null, selectedPolicy:null, comparePolicyRight:null,
   filters:{profile:'all',evidence:'all'}, campaignWorker:null, campaignWorkers:[],
-  lastCampaignResult:null, pendingRunConfig:null, evidenceBasis:null,
+  lastCampaignResult:null, pendingRunConfig:null, activeRunManifest:null, evidenceBasis:null,
   historyPage:0, historyFilterTerm:'', historyFilterReason:'all', historyFilterPolicy:'all',
   traceIndex:null, traceFilterPolicy:'all', traceSelectedId:null,
   branchReplayId:null, branchCheckpoint:0, branchAltAction:null, branchRolloutCount:32, branchContP1:'score-rush', branchContP2:'control', branchResult:null, branchResultB:null, branchComparison:null, branchRunning:false,

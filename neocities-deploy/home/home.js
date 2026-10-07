@@ -11,11 +11,11 @@
 // module never reaches into app-level singletons.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js?v=09c7519902ec';
-import { LAB_VERSION, RULES_VERSION } from '../version.js?v=09c7519902ec';
-import { getMatchServerUrl } from '../play/network/match-server-config.js?v=09c7519902ec';
-import { fetchLeaderboard, fetchSeasons } from '../play/ranked/leaderboard-data.js?v=09c7519902ec';
-import { fetchDirectory } from '../play/players/players-data.js?v=09c7519902ec';
+import { esc } from '../state.js?v=037146099ebb';
+import { LAB_VERSION, RULES_VERSION } from '../version.js?v=037146099ebb';
+import { getMatchServerUrl } from '../play/network/match-server-config.js?v=037146099ebb';
+import { fetchLeaderboard, fetchSeasons } from '../play/ranked/leaderboard-data.js?v=037146099ebb';
+import { fetchDirectory } from '../play/players/players-data.js?v=037146099ebb';
 import {
   renderHomePage,
   renderPulseMetricsHtml,
@@ -23,7 +23,7 @@ import {
   renderLeadersHtml,
   renderLeadersEmpty,
   renderNewsHtml,
-} from './home-view.js?v=09c7519902ec';
+} from './home-view.js?v=037146099ebb';
 import {
   HOME_PULSE_INTERVAL_MS,
   matchServerHttpBase,
@@ -33,7 +33,7 @@ import {
   parseChangelogEntries,
   buildPulseMetrics,
   formatUpdatedAgo,
-} from './home-data.js?v=09c7519902ec';
+} from './home-data.js?v=037146099ebb';
 
 // AbortController for the current homepage's listeners/timers.
 // Aborted on each re-render to prevent accumulation (IRX-M41).
@@ -155,7 +155,7 @@ async function loadContinueCard(root) {
   const slot = root.querySelector('#landing-continue-slot');
   if (!slot) return;
   try {
-    const { isIndexedDBAvailable, listSaves } = await import('../play/persistence.js?v=09c7519902ec');
+    const { isIndexedDBAvailable, listSaves } = await import('../play/persistence.js?v=037146099ebb');
     if (!isIndexedDBAvailable()) return;
     const saves = await listSaves();
     // Guard: user may have navigated away during the async work.

@@ -4,9 +4,9 @@
 // Supports public (sanitized) and private (full) export.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from './hash.js?v=09c7519902ec';
-import { listReplays,   putReplay,   deleteReplay} from './persistence.js?v=09c7519902ec';
-import { finishLocalStrategy } from '../strategy/strategy-player.js?v=09c7519902ec';
+import { hashCanonical } from './hash.js?v=037146099ebb';
+import { listReplays,   putReplay,   deleteReplay} from './persistence.js?v=037146099ebb';
+import { finishLocalStrategy } from '../strategy/strategy-player.js?v=037146099ebb';
 
 /**
  * FULL-MATCH WATCH CONTRACT — selective runtime retention.
@@ -33,7 +33,7 @@ export const RETAINED_REPLAY_CAP = 8;
  */
 export async function retainLabReplay(replay, ctx = {}) {
   if (!replay?.initialState || !Array.isArray(replay?.commands) || replay.commands.length === 0) return null;
-  const { isIndexedDBAvailable } = await import('./persistence.js?v=09c7519902ec');
+  const { isIndexedDBAvailable } = await import('./persistence.js?v=037146099ebb');
   if (!isIndexedDBAvailable()) return null;
   const summary = ctx.summary ?? {};
   const replayId = `LAB-${ctx.id ?? `run-${Date.now()}`}`;
@@ -75,7 +75,7 @@ export async function retainLabReplay(replay, ctx = {}) {
 export async function createReplayRecord(session) {
   const certifiedReplay = await session.createCertifiedReplay();
   const publicView = await session.createPublicReplay(certifiedReplay);
-  const {strictView}=await import('../autonomy-runtime.js?v=09c7519902ec');
+  const {strictView}=await import('../autonomy-runtime.js?v=037146099ebb');
   session._strategyTerminalScores=Object.fromEntries(['P1','P2'].map(id=>[id,strictView(session.state,id).own.securedPoints]));
 
   const replayId = `R-${session.sessionId}`;
@@ -121,7 +121,7 @@ export async function saveReplay(record) {
  */
 export async function verifyReplayRecord(record) {
   try {
-    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=09c7519902ec');
+    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=037146099ebb');
     verifyCertifiedReplay(record.certifiedReplay);
     return { valid: true };
   } catch (error) {

@@ -3,14 +3,14 @@
 // read-only liveLabSnapshot boundary), builds the canonical dossier and
 // downloads it. All analytics live in analysis-dossier.js — this module only
 // does I/O. Browser-only; tests exercise the builder directly.
-import { state } from './state.js?v=09c7519902ec';
-import { buildAnalysisDossier, serializeAnalysisDossier, renderAnalysisDossierMarkdown, analysisDossierFileNames, deriveEvidenceStatus } from './analysis-dossier.js?v=09c7519902ec';
-import { EvolutionStore } from './evolution/evolution-store.mjs?v=09c7519902ec';
-import { StrategyStore } from './strategy/strategy-store.mjs?v=09c7519902ec';
-import { LAB_IDENTITY } from './evolution/identity.mjs?v=09c7519902ec';
-import { liveLabSnapshot } from './workspaces/evolution-dashboard.js?v=09c7519902ec';
-import { collectExperimentEvidence } from './experiments/experiment-controller.mjs?v=09c7519902ec';
-import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION, SCHEMA_VERSION } from './version.js?v=09c7519902ec';
+import { state } from './state.js?v=037146099ebb';
+import { buildAnalysisDossier, serializeAnalysisDossier, renderAnalysisDossierMarkdown, analysisDossierFileNames, deriveEvidenceStatus } from './analysis-dossier.js?v=037146099ebb';
+import { EvolutionStore } from './evolution/evolution-store.mjs?v=037146099ebb';
+import { StrategyStore } from './strategy/strategy-store.mjs?v=037146099ebb';
+import { LAB_IDENTITY } from './evolution/identity.mjs?v=037146099ebb';
+import { liveLabSnapshot } from './workspaces/evolution-dashboard.js?v=037146099ebb';
+import { collectExperimentEvidence } from './experiments/experiment-controller.mjs?v=037146099ebb';
+import { LAB_VERSION, ENGINE_VERSION, RULES_VERSION, OFFICIAL_RULES_VERSION, SCHEMA_VERSION } from './version.js?v=037146099ebb';
 
 const STRATEGY_STORES = ['evidence', 'sources', 'events', 'replays', 'studies', 'claims', 'archives', 'informationSets', 'informationPlans', 'informationStudies', 'provenance'];
 

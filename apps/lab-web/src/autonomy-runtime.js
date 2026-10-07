@@ -234,21 +234,45 @@ export function validateMatchCount(requested){
   if(n>MAX_BROWSER_MATCH_COUNT)throw new Error(`MATCH_COUNT_EXCEEDS_MAXIMUM: requested ${n}, maximum ${MAX_BROWSER_MATCH_COUNT}. Reduce the match count or use the batch CLI for larger campaigns.`);
   return n;
 }
+// Streaming campaign-core collector — produces the exact fields
+// buildCampaignCore computes, but folds one summary at a time so a batched
+// campaign never needs the full summaries array resident to produce its
+// core. matchResultHash order is canonicalized by matchOrdinal at finish,
+// so out-of-order folds across worker segments still produce the same
+// canonicalResultHash as a single in-order campaign.
+export function createCampaignCoreCollector(){
+  const hashes=[];let completed=0,draws=0,seat1Wins=0;
+  const totals={completedFullTurns:0,responseDecisionCount:0,privateChoiceDecisionCount:0,advancedDecisionCount:0,voltageDecisionCount:0,ultraDecisionCount:0,triggerCount:0};
+  let seen=0;
+  return{
+    add(item){
+      seen+=1;
+      hashes.push({o:item.matchOrdinal??seen,h:item.matchResultHash});
+      if(!COMPLETE_REASONS.has(item.terminationReason))return;
+      completed+=1;
+      if(item.terminationReason==='CANONICAL_DRAW')draws+=1;
+      if(item.winningSeat===1)seat1Wins+=1;
+      for(const key of Object.keys(totals))totals[key]+=Number(item[key]??0);
+    },
+    finish({profileId=DEFAULT_PROFILE_ID,policyIds=['random-legal','random-legal'],matchCount=seen,engineVersion=ENGINE_VERSION}={}){
+      const count=Number(matchCount)||seen;
+      const core={schemaVersion:'4.0.0',engineVersion,profileId,policyIds,requestedMatchCount:count,effectiveMatchCount:count,matchCount:count,completedMatchCount:completed,abortCount:seen-completed,drawCount:draws,seat1Wins,seat2Wins:completed-seat1Wins-draws,meanFullTurns:completed?totals.completedFullTurns/completed:null,responseDecisionCount:totals.responseDecisionCount,privateChoiceDecisionCount:totals.privateChoiceDecisionCount,advancedDecisionCount:totals.advancedDecisionCount,voltageDecisionCount:totals.voltageDecisionCount,ultraDecisionCount:totals.ultraDecisionCount,triggerCount:totals.triggerCount,canonicalResultHash:hashCanonical(hashes.slice().sort((a,b)=>a.o-b.o).map(x=>x.h))};
+      return{...core,status:core.abortCount===0?'PASS':'FAIL',aggregateHash:hashCanonical(core)};
+    },
+  };
+}
+
 // Builds the campaign-level result core from a fully-collected, ordinal-ordered
 // summaries array. Exported so the main thread can assemble the campaign result
 // from per-worker segment summaries (multi-worker parallel campaigns) without
 // re-running the engine.
 export function buildCampaignCore(summaries,{profileId=DEFAULT_PROFILE_ID,policyIds=['random-legal','random-legal'],matchCount=summaries.length,engineVersion=ENGINE_VERSION}={}){
-  const count=Number(matchCount)||summaries.length;
-  const completed=summaries.filter(item=>COMPLETE_REASONS.has(item.terminationReason));
-  const seat1Wins=completed.filter(item=>item.winningSeat===1).length;
-  const drawCount=completed.filter(item=>item.terminationReason==='CANONICAL_DRAW').length;
-  const totals=(key)=>summaries.reduce((sum,item)=>sum+Number(item[key]??0),0);
-  const core={schemaVersion:'4.0.0',engineVersion,profileId,policyIds,requestedMatchCount:count,effectiveMatchCount:count,matchCount:count,completedMatchCount:completed.length,abortCount:summaries.length-completed.length,drawCount,seat1Wins,seat2Wins:completed.length-seat1Wins-drawCount,meanFullTurns:completed.length?totals('completedFullTurns')/completed.length:null,responseDecisionCount:totals('responseDecisionCount'),privateChoiceDecisionCount:totals('privateChoiceDecisionCount'),advancedDecisionCount:totals('advancedDecisionCount'),voltageDecisionCount:totals('voltageDecisionCount'),ultraDecisionCount:totals('ultraDecisionCount'),triggerCount:totals('triggerCount'),canonicalResultHash:hashCanonical(summaries.map(item=>item.matchResultHash))};
-  return{...core,status:core.abortCount===0?'PASS':'FAIL',aggregateHash:hashCanonical(core),summaries};
+  const collector=createCampaignCoreCollector();
+  for(const item of summaries)collector.add(item);
+  return{...collector.finish({profileId,policyIds,matchCount,engineVersion}),summaries};
 }
 
-export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','random-legal'],seedCatalogId='browser-v5',profileId=DEFAULT_PROFILE_ID,seedStrategy='ordinal-hash',fixedSeed=12345,ordinalStart=0,ordinalEnd=null,ordinalBase=0,strategicTrace=false},onProgress=()=>{}){
+export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','random-legal'],seedCatalogId='browser-v5',profileId=DEFAULT_PROFILE_ID,seedStrategy='ordinal-hash',fixedSeed=12345,ordinalStart=0,ordinalEnd=null,ordinalBase=0,strategicTrace=false,batchSize=0,onBatch=null},onProgress=()=>{}){
   const requestedMatchCount=validateMatchCount(matchCount);
   const count=requestedMatchCount;
   // ordinalBase shifts the absolute ordinal space so consecutive experiment
@@ -259,6 +283,13 @@ export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','ra
   const start=base+Math.max(0,Math.min(count,Number(ordinalStart)||0));
   const end=base+Math.min(count,ordinalEnd!==null?(Number(ordinalEnd)||count):count);
   const segmentSize=Math.max(0,end-start),summaries=[];
+  // Batched mode: `summaries` is only the in-flight batch — it is handed to
+  // onBatch at every batchSize boundary and released. The collector keeps
+  // the campaign core without retaining any summary. When onBatch is used
+  // the returned core has NO summaries array — nothing accumulates.
+  const chunkSize=Math.max(0,Math.floor(Number(batchSize)||0));
+  const collector=chunkSize?createCampaignCoreCollector():null;
+  let batchStart=start;
   // AB/BA seat-swap design: even ordinals use ['P1','P2'], odd ordinals use ['P2','P1'].
   // This mirrors the Node campaign's seat-swap logic and enables paired AB/BA analysis.
   // The pairedRunId links AB and BA runs: ordinals 2k and 2k+1 form a matched pair.
@@ -275,11 +306,20 @@ export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','ra
     const seatOrder=seatSwapped?['P2','P1']:['P1','P2'];
     const seed=seedStrategy==='fixed'?(Number(fixedSeed)>>>0)||1:uint32FromHash({seedCatalogId,ordinal,policyIds,profileId,engineVersion:ENGINE_VERSION});
     const pairedRunId=`PR-browser-${policyIds[0]}-${policyIds[1]}-block-${Math.floor(ordinal/2)}`;
-    summaries.push(runBrowserPolicyMatch({seed,policyIds,ordinal,profileId,seatOrder,seatSwapped,pairedRunId,strategicTelemetryEnabled:strategicTrace===true,strategicTrace:strategicTrace===true}));
+    const summary=runBrowserPolicyMatch({seed,policyIds,ordinal,profileId,seatOrder,seatSwapped,pairedRunId,strategicTelemetryEnabled:strategicTrace===true,strategicTrace:strategicTrace===true});
+    if(collector)collector.add(summary);
+    summaries.push(summary);
+    if(chunkSize&&summaries.length>=chunkSize){
+      onBatch?.({ordinalStart:batchStart,ordinalEnd:ordinal+1,summaries:[...summaries]});
+      summaries.length=0;
+      batchStart=ordinal+1;
+    }
     const done=ordinal-start+1;
     if(done%reportInterval===0||ordinal===end-1||maybeReport(false))onProgress({completed:done,total:segmentSize});
   }
+  if(chunkSize&&summaries.length)onBatch?.({ordinalStart:batchStart,ordinalEnd:end,summaries:[...summaries]});
   // Always emit a final progress tick (covers segmentSize===0 and last-match races)
   onProgress({completed:segmentSize,total:segmentSize});
+  if(collector)return collector.finish({profileId,policyIds,matchCount:count,engineVersion:ENGINE_VERSION});
   return buildCampaignCore(summaries,{profileId,policyIds,matchCount:count,engineVersion:ENGINE_VERSION});
 }

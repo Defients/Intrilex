@@ -4,46 +4,46 @@
 // Never owns authoritative state — delegates to PlaySession.
 // ═══════════════════════════════════════════════════════════════
 
-import { createSession, restoreSession, SessionState } from './play-controller.js?v=09c7519902ec';
-import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=09c7519902ec';
+import { createSession, restoreSession, SessionState } from './play-controller.js?v=037146099ebb';
+import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=037146099ebb';
 import {
   buildOpponentModel,
   policyTraitsFromId,
   resolveOpponent,
   archetypeForDifficulty,
-} from './opponent-catalog.mjs?v=09c7519902ec';
+} from './opponent-catalog.mjs?v=037146099ebb';
 import {
   renderArchetypeGrid,
   renderOpponentBrief,
   renderMatchBrief,
   renderPlaystyleScope,
-} from './ranked-duel-hub.mjs?v=09c7519902ec';
-import { getGameplaySkin } from './gameplay-skin.js?v=09c7519902ec';
-import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=09c7519902ec';
-import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=09c7519902ec';
-import { buildSaveIntegrityPayload } from './save-integrity.js?v=09c7519902ec';
-import { validateSnapshotPrivacy } from './play-privacy.js?v=09c7519902ec';
-import { POLICY_IDS } from '../autonomy-runtime.js?v=09c7519902ec';
-import { GuidanceMode } from './intelligence/action-explanation.js?v=09c7519902ec';
-import './orchestration/declaration-flow.js?v=09c7519902ec';
-import './state/play-lifecycle.js?v=09c7519902ec';
-import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=09c7519902ec';
-import { getAiBanter } from './ai-personality.js?v=09c7519902ec';
-import { SoundEngine } from './play-sound.js?v=09c7519902ec';
-import { ParticleSystem } from './play-particles.js?v=09c7519902ec';
-import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=09c7519902ec';
-import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=09c7519902ec';
-import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=09c7519902ec';
-import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=09c7519902ec';
-import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=09c7519902ec';
-import { renderRecap } from './academy/academy-recap.mjs?v=09c7519902ec';
-import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs?v=09c7519902ec';
-import { FirstContactController } from './first-contact/fc-controller.mjs?v=09c7519902ec';
-import { FIRST_CONTACT_SCENARIO, validateFirstContactScenario } from './first-contact/fc-scenario.mjs?v=09c7519902ec';
-import { renderFcRecapBlock } from './first-contact/fc-panel.mjs?v=09c7519902ec';
-import { createSessionAutosave } from './session-autosave.js?v=09c7519902ec';
-import { state, resetState } from './play-state.js?v=09c7519902ec';
-import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js?v=09c7519902ec';
+} from './ranked-duel-hub.mjs?v=037146099ebb';
+import { getGameplaySkin } from './gameplay-skin.js?v=037146099ebb';
+import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=037146099ebb';
+import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=037146099ebb';
+import { buildSaveIntegrityPayload } from './save-integrity.js?v=037146099ebb';
+import { validateSnapshotPrivacy } from './play-privacy.js?v=037146099ebb';
+import { POLICY_IDS } from '../autonomy-runtime.js?v=037146099ebb';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=037146099ebb';
+import './orchestration/declaration-flow.js?v=037146099ebb';
+import './state/play-lifecycle.js?v=037146099ebb';
+import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=037146099ebb';
+import { getAiBanter } from './ai-personality.js?v=037146099ebb';
+import { SoundEngine } from './play-sound.js?v=037146099ebb';
+import { ParticleSystem } from './play-particles.js?v=037146099ebb';
+import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=037146099ebb';
+import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=037146099ebb';
+import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=037146099ebb';
+import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=037146099ebb';
+import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=037146099ebb';
+import { renderRecap } from './academy/academy-recap.mjs?v=037146099ebb';
+import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs?v=037146099ebb';
+import { FirstContactController } from './first-contact/fc-controller.mjs?v=037146099ebb';
+import { FIRST_CONTACT_SCENARIO, validateFirstContactScenario } from './first-contact/fc-scenario.mjs?v=037146099ebb';
+import { renderFcRecapBlock } from './first-contact/fc-panel.mjs?v=037146099ebb';
+import { createSessionAutosave } from './session-autosave.js?v=037146099ebb';
+import { state, resetState } from './play-state.js?v=037146099ebb';
+import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js?v=037146099ebb';
 import {
   openAdvancedCardRules as openAdvancedCardRulesController,
   closeAdvancedCardRules,
@@ -51,19 +51,19 @@ import {
   findAuthorizedCard,
   buildCurrentMatchContext,
   getOpenIdentity,
-} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=09c7519902ec';
-import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=09c7519902ec';
+} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=037146099ebb';
+import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=037146099ebb';
 import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
   renderNetworkQueueWaiting, renderNetworkSpectateForm, renderNetworkSpectating,
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
   renderNetworkUnavailable, buildInviteLink,
-} from './network/network-lobby-renderer.mjs?v=09c7519902ec';
-import { getMatchServerUrl, validateMatchServerUrl } from './network/match-server-config.js?v=09c7519902ec';
-import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=09c7519902ec';
-import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=09c7519902ec';
-import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=09c7519902ec';
-import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=09c7519902ec';
+} from './network/network-lobby-renderer.mjs?v=037146099ebb';
+import { getMatchServerUrl, validateMatchServerUrl } from './network/match-server-config.js?v=037146099ebb';
+import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=037146099ebb';
+import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=037146099ebb';
+import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=037146099ebb';
+import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=037146099ebb';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -553,7 +553,7 @@ function wireResumePrompt(container) {
  * there is no silent fallback to a baseline policy.
  */
 async function profileStore() {
-  const [{ ProfileStore, IndexedDbBackend }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=09c7519902ec'), import('../evolution/identity.mjs?v=09c7519902ec')]);
+  const [{ ProfileStore, IndexedDbBackend }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=037146099ebb'), import('../evolution/identity.mjs?v=037146099ebb')]);
   return new ProfileStore(new IndexedDbBackend(), { identity: LAB_IDENTITY });
 }
 async function startAgentProfileMatch(agentProfileId, container) {
@@ -577,7 +577,7 @@ async function recordAgentExperience(session, snapshot) {
   let notice;
   for (const entry of session.decisionJournal) if (entry.source === 'ai' && entry.family) families[entry.family] = (families[entry.family] ?? 0) + 1;
   try {
-    const { buildExperienceRecord } = await import('../evolution/profile-science.mjs?v=09c7519902ec');
+    const { buildExperienceRecord } = await import('../evolution/profile-science.mjs?v=037146099ebb');
     const record = buildExperienceRecord({ encounterId: session.sessionId, snapshot: agent, agentSeat: aiSeat, rulesProfileId: session.setup.profileId,
       outcome: { winner: snapshot.match.winner ?? null, terminationReason: snapshot.match.terminationReason ?? null, fullTurns: snapshot.match.fullTurnSequence ?? null },
       observations: { agentDecisions: session.decisionJournal.filter(e => e.source === 'ai').length, agentFamilyCounts: families } });
@@ -863,7 +863,7 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
   // Presentation-only advice reuses the shipped Intrilex scoring module.
   // It receives validated visible cards, never the session's raw state/vault.
   const [{ rankPolicyActionsWithDecomposition }, { mountGameTable }] = await Promise.all([
-    import('../policy-scoring.js?v=09c7519902ec'), import('../client/mount.tsx?v=09c7519902ec'),
+    import('../policy-scoring.js?v=037146099ebb'), import('../client/mount.tsx?v=037146099ebb'),
   ]);
   // The shell replaces play-root on hash navigation. Never publish into a
   // detached root or finish an async mount for a session that has been replaced.
@@ -998,7 +998,7 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
     positionAcademyCoachmarks(container);
     bindAcademyCoachmarkDismiss(container);
     if (getOpenIdentity() && state.advancedRulesCardId) {
-      const { refreshCurrentMatch } = await import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=09c7519902ec');
+      const { refreshCurrentMatch } = await import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=037146099ebb');
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     }
   } catch (error) {
@@ -1343,7 +1343,7 @@ async function renderActiveMatch(container) {
   // inspected card is no longer inspectable, the controller sanitizes
   // (closes) the view to avoid leaking stale information.
   if (getOpenIdentity() && state.advancedRulesCardId) {
-    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=09c7519902ec').then(({ refreshCurrentMatch }) => {
+    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=037146099ebb').then(({ refreshCurrentMatch }) => {
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     });
   }
@@ -1478,7 +1478,7 @@ function bindReplayLibraryEvents(container) {
       } else if (action === 'delete-replay') {
         const confirmed = await showConfirmDialog('Delete replay', `Delete replay ${replayId}? This cannot be undone.`);
         if (confirmed) {
-          const { deleteReplay } = await import('./persistence.js?v=09c7519902ec');
+          const { deleteReplay } = await import('./persistence.js?v=037146099ebb');
           await deleteReplay(replayId);
           await renderReplays(container);
         }
@@ -1511,7 +1511,7 @@ async function watchLocalReplay(replayId, container) {
     // Route the local IndexedDB record through the shared replay resolver —
     // normalization, state mutation and navigation are identical for every
     // replay source, so Watch stays source-agnostic.
-    const { openReplay } = await import('../data-loader.js?v=09c7519902ec');
+    const { openReplay } = await import('../data-loader.js?v=037146099ebb');
     await openReplay({
       kind: 'local',
       replayId,
@@ -1896,7 +1896,7 @@ function bindNetworkWaitingEvents(container) {
  * Render the matchmaking queue flow — joins the queue and waits for pairing.
  */
 async function renderNetworkQueueFlow(container) {
-  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=09c7519902ec');
+  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=037146099ebb');
   const serverUrl = getNetworkServerUrl();
   if (!serverUrl) {
     container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
@@ -2113,7 +2113,7 @@ function fetchSpectatableList(serverUrl, listSpectatable) {
  * Match ID form remains available as a fallback and for private shares.
  */
 async function renderNetworkSpectateFlow(container) {
-  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=09c7519902ec');
+  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=037146099ebb');
 
   // Live-list state for the discovery section
   let liveState = { liveMatches: null, liveLoading: false, liveError: null };

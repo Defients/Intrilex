@@ -50,10 +50,19 @@ const SCENARIO_KIND_PATTERN = /CONFORMANCE|CERTIFICATION|SCENARIO_FIXTURE/i;
 const SCENARIO_ID_PATTERN = /^(CT|FIXTURE|SCENARIO|PUZZLE)-/i;
 /** Retained match artifact kinds (full-match campaign evidence). */
 const RETAINED_KIND_PATTERN = /RETAINED|FULL_MATCH|COMPLETE_MATCH/i;
-/** Termination reasons that prove a match reached a canonical end state. */
+/**
+ * Termination reasons that prove a match reached a canonical end state.
+ * Aligned with the runtime's canonical completion vocabulary
+ * (COMPLETE_REASONS / CLEAN_REASONS in simulation-runtime):
+ * NORMAL_VICTORY, EXHAUSTED_RESOLUTION, CANONICAL_DRAW — plus the recorded
+ * terminal outcomes accepted by evidence validation (DECISION_LIMIT,
+ * ENGINE_REJECTION, …). Fault/invalid-result reasons (WORKER_FAULT,
+ * POLICY_ERROR, INVALID_RESULT, …) are deliberately absent.
+ */
 const TERMINAL_REASONS = new Set([
-  'VICTORY', 'CANONICAL_DRAW', 'EXHAUSTED_RESOLUTION', 'ENGINE_REJECTION',
-  'DECISION_LIMIT', 'COMMAND_LIMIT', 'CONCESSION', 'TIMEOUT', 'ABORT',
+  'VICTORY', 'NORMAL_VICTORY', 'CANONICAL_DRAW', 'EXHAUSTED_RESOLUTION',
+  'ENGINE_REJECTION', 'DECISION_LIMIT', 'COMMAND_LIMIT', 'CONCESSION',
+  'TIMEOUT', 'ABORT',
 ]);
 const HIDDEN_CLASSES = new Set(['engine-orchestration', 'engine-orchestration-summary']);
 
@@ -173,15 +182,44 @@ export const isOrchestrationClass = cls => HIDDEN_CLASSES.has(cls);
 
 // ── Structural frame analysis ───────────────────────────────────
 
+// Recording annotations stamped on metadata-only command index rows by the
+// artifact generators (scripts/generate-data.mjs, generate-autonomy-replay-
+// artifacts.mjs). A real engine command never carries them — their presence
+// means the executable body was elided upstream.
+const COMMAND_INDEX_FIELDS = ['commandIndex', 'accepted', 'eventStartIndex', 'eventEndIndex'];
+
+/**
+ * True when one command carries genuinely executable content in a shape
+ * the engine consumes:
+ *   command.action             — RESOLVE_*_ACTION family (incl. core authority)
+ *   command.payload.action     — wrapped action envelope
+ *   command.play               — DECLARE_PLAY / RESPOND_WITH_PLAY declaration
+ *   command.payload + choiceId — HIDDEN_CHOICE direct payload (the only raw
+ *                                payload shape the engine reads)
+ *   bare `type`                — primitive commands (PASS_PRIORITY,
+ *                                RESOLVE_TOP, MOVE_CARD, …) execute on
+ *                                type + scalar fields alone — but only when
+ *                                no index bookkeeping marks the row as a
+ *                                metadata-only summary.
+ */
+function commandIsExecutable(command) {
+  if (!command || typeof command !== 'object') return false;
+  if (commandAction(command) != null) return true;
+  if (command.play != null) return true;
+  if (command.payload != null && command.choiceId != null) return true;
+  if (COMMAND_INDEX_FIELDS.some(field => command[field] != null)) return false;
+  return typeof command.type === 'string' && command.type.length > 0;
+}
+
 /**
  * True when the command stream is executable — every command carries an
- * action payload. Retained-artifact command indexes (public lab replays)
- * are metadata-only and cannot drive deterministic reconstruction.
+ * executable instruction. Retained-artifact command indexes (public lab
+ * replays) are metadata-only and cannot drive deterministic reconstruction.
  */
 export function commandsExecutable(replay) {
   const commands = replay?.commands;
   if (!Array.isArray(commands) || commands.length === 0) return false;
-  return commands.every(c => c && typeof c === 'object' && (c.action != null || c.payload?.action != null || c.payload != null));
+  return commands.every(commandIsExecutable);
 }
 
 /**
@@ -232,6 +270,8 @@ function classification(artifactClass, evidence, reasons) {
  * build-manifest status for the record's artifact source ('bundled' |
  * 'excluded' | 'runtime' | 'unknown'); `summary` is an optional joined
  * match summary (observatory ndjson) carrying winner/termination evidence.
+ * The record's own embedded `summary` field is consulted as a fallback
+ * evidence source when the joined summary is absent.
  */
 export function classifyIndexRecord(record, { availability = 'unknown', summary = null } = {}) {
   if (!record || typeof record !== 'object') {
@@ -242,10 +282,10 @@ export function classifyIndexRecord(record, { availability = 'unknown', summary 
     replayKind: record.replayKind ?? null,
     commandCount: record.commandCount ?? summary?.commandCount ?? null,
     eventCount: record.eventCount ?? summary?.eventCount ?? null,
-    turns: summary?.completedFullTurns ?? null,
-    winner: record.winner ?? summary?.winner ?? null,
-    terminationReason: record.terminationReason ?? summary?.terminationReason ?? null,
-    initialTurn: summary?.initialTurn ?? null,
+    turns: summary?.completedFullTurns ?? record.summary?.completedFullTurns ?? null,
+    winner: record.winner ?? summary?.winner ?? record.summary?.winner ?? null,
+    terminationReason: record.terminationReason ?? summary?.terminationReason ?? record.summary?.terminationReason ?? null,
+    initialTurn: summary?.initialTurn ?? record.summary?.initialTurn ?? null,
   };
   const terminal = evidence.winner != null || TERMINAL_REASONS.has(evidence.terminationReason);
   const reasons = [];
@@ -254,19 +294,23 @@ export function classifyIndexRecord(record, { availability = 'unknown', summary 
     reasons.push('certification/conformance fixture family');
     return classification(REPLAY_ARTIFACT_CLASS.SCENARIO_FIXTURE, evidence, reasons);
   }
-  if (RETAINED_KIND_PATTERN.test(String(record.replayKind))) {
-    reasons.push(terminal ? 'retained artifact with recorded terminal state' : 'retained match artifact kind');
-    return classification(REPLAY_ARTIFACT_CLASS.FULL_MATCH, evidence, reasons);
-  }
+  const retainedKind = RETAINED_KIND_PATTERN.test(String(record.replayKind));
   if (terminal) {
-    reasons.push('terminal outcome recorded in index/summary');
+    reasons.push(retainedKind
+      ? 'retained artifact with recorded terminal state'
+      : 'terminal outcome recorded in index/summary');
     return classification(REPLAY_ARTIFACT_CLASS.FULL_MATCH, evidence, reasons);
   }
   if (availability === 'excluded') {
     reasons.push('no terminal evidence and body unavailable');
     return classification(REPLAY_ARTIFACT_CLASS.METADATA_ONLY, evidence, reasons);
   }
-  reasons.push('insufficient metadata to prove completeness');
+  // A retained artifact kind (RETAINED/FULL_MATCH/COMPLETE_MATCH) is
+  // supporting naming evidence only — without terminal evidence the record
+  // cannot claim complete-match status from index metadata alone.
+  reasons.push(retainedKind
+    ? 'retained match artifact kind, but no terminal evidence recorded'
+    : 'insufficient metadata to prove completeness');
   return classification(REPLAY_ARTIFACT_CLASS.UNKNOWN, evidence, reasons);
 }
 
@@ -351,6 +395,60 @@ export function classifyReplayBody(replay, { kind = null, indexRecord = null, ma
   }
   reasons.push('no terminal state is recorded for this artifact');
   return classification(REPLAY_ARTIFACT_CLASS.PARTIAL_REPLAY, evidence, reasons);
+}
+
+// ── Candidate chronology (open-a-full-match selection) ──────────
+
+// Genuine timestamp fields, checked in order. Match ordinals, evidence
+// epochs, run ids, hashes, and array positions are NOT chronology and are
+// deliberately absent from this list.
+const TIMESTAMP_FIELDS = ['completedAt', 'endedAt', 'recordedAt', 'timestamp', 'generatedAt'];
+
+/**
+ * The wall-clock time recorded on a replay record or joined summary, in
+ * epoch ms — or null when no real timestamp exists. Numeric values are
+ * taken as ms; strings must parse as dates. Never synthesizes ordering
+ * from ids, ordinals, or evidence-epoch tags.
+ */
+export function recordedTimestampMs(...sources) {
+  for (const source of sources) {
+    if (!source || typeof source !== 'object') continue;
+    for (const field of TIMESTAMP_FIELDS) {
+      const raw = source[field];
+      const ms = typeof raw === 'number' ? raw
+        : typeof raw === 'string' ? Date.parse(raw) : NaN;
+      if (Number.isFinite(ms)) return ms;
+    }
+  }
+  return null;
+}
+
+/**
+ * Order FULL_MATCH candidates for the "open a full match" action.
+ *
+ * Each candidate: { id, record, summary, cls } — `cls` is the
+ * classifyIndexRecord result, `record`/`summary` the joined metadata.
+ *
+ *   - Candidates with a real recorded timestamp sort newest-first.
+ *   - When NO candidate carries chronology (the bundled index schema
+ *     records none), the documented deterministic fallback prefers the
+ *     richest recorded evidence — most completed turns — with the id as
+ *     an order-independent tiebreak. That fallback is a pick, not a
+ *     "latest" claim.
+ *
+ * Returns a new sorted array; the input is not mutated.
+ */
+export function orderFullMatchCandidates(candidates) {
+  const scored = (Array.isArray(candidates) ? candidates : [])
+    .map(c => ({ ...c, ts: recordedTimestampMs(c?.record, c?.summary) }));
+  const timed = scored.filter(c => c.ts != null);
+  const ordered = timed.length === scored.length ? scored
+    : timed.length ? timed
+    : scored;
+  return ordered.sort((a, b) =>
+    (b.ts ?? 0) - (a.ts ?? 0)
+    || (b.cls?.evidence?.turns ?? 0) - (a.cls?.evidence?.turns ?? 0)
+    || String(a.id ?? '').localeCompare(String(b.id ?? '')));
 }
 
 // ── Presentation ────────────────────────────────────────────────

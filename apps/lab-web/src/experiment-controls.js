@@ -4,10 +4,9 @@
 
 import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting } from './state.js';
 import { WORKSPACES, WORKSPACE_KEYWORDS, route, policyOptions, updateRailContext } from './router.js';
-import { RULES_VERSION, LAB_VERSION } from './version.js';
 import { populateDialogHeading } from './seo-metadata.js';
 import { rerender, invokeAppAction } from './rerender.js';
-import { experimentsReady, nextRunOrdinalStart, recordCampaignRun, recordFailedRun, recordCancelledRun, applySelection, restoreBaseline } from './experiments/experiment-controller.mjs';
+import { experimentsReady, nextRunOrdinalStart, beginExperimentRun, commitExperimentBatch, finalizeExperimentRun, failExperimentRun, cancelExperimentRun, registerRunExecutor, restoreBaseline } from './experiments/experiment-controller.mjs';
 import { renderEvidenceStrip, renderRunsPanel } from './experiments/runs-panel.js';
 import { initAnalysisExportHub } from './analysis-export-hub.mjs';
 
@@ -198,6 +197,12 @@ function setCampaignState(value) {
   if (el) el.dataset.state = value;
 }
 
+// Durability batch size: each segment flushes this many match summaries to
+// the evidence store (batch record + manifest checkpoint, one transaction)
+// before continuing. Bounds the volatile working set to ~this many payloads
+// per worker regardless of run size.
+const RUN_BATCH_SIZE = 50;
+
 async function runBrowserCampaign() {
   const status = document.querySelector('#experiment-status');
   setCampaignState('running');
@@ -216,107 +221,156 @@ async function runBrowserCampaign() {
   const runConfig = {
     presetId: document.querySelector('#exp-preset')?.value || null,
     profileId: profile, policyIds: [p1, p2], matchCount: count, workers,
-    seedStrategy, ordinalBase, strategicTrace,
+    seedStrategy, ordinalStart: ordinalBase, ordinalEnd: ordinalBase + count, ordinalBase, strategicTrace,
   };
   state.pendingRunConfig = runConfig;
-  status.textContent = `Running ${count} matches with ${workers} worker(s)…`;
   document.querySelector('#run-experiment').disabled = true;
   document.querySelector('#cancel-experiment').disabled = false;
 
-  // Single-worker path: keep the original in-worker aggregation (returns a
-  // fully-built campaign result incl. aggregate + observatory JSON).
-  if (workers === 1) {
-    const worker = new Worker('worker.js', { type: 'module' });
-    state.campaignWorker = worker;
-    state.campaignWorkers = [worker];
-    worker.onmessage = async e => {
-      const x = e.data;
-      if (x.type === 'autonomy-campaign-progress') {
-        const p = x.progress ?? {};
-        const done = p.completed ?? 0, total = p.total ?? count;
-        status.textContent = `Progress: ${done}/${total} matches (1 worker)`;
-        updateCampaignProgress(done, total);
-      } else if (x.type === 'autonomy-campaign-result') {
-        worker.terminate();
-        state.campaignWorker = null;
-        state.campaignWorkers = [];
-        await finalizeCampaignResult(x, count, 1, runConfig);
-      }
-    };
-    worker.onerror = e => {
-      worker.terminate();
-      state.campaignWorker = null;
-      state.campaignWorkers = [];
-      recordFailedRun({ config: runConfig, error: e.message }).catch(() => {});
-      setCampaignState('failed');
-      status.textContent = `Worker error: ${e.message}`;
-      const bar = document.querySelector('#campaign-progress');
-      if (bar) bar.hidden = true;
-      document.querySelector('#run-experiment').disabled = false;
-      document.querySelector('#cancel-experiment').disabled = true;
-      showToast(e.message ?? 'Worker error', { type: 'error', title: 'Worker error' });
-    };
-    worker.postMessage({ type: 'run-autonomy-campaign', config: { matchCount: count, policyIds: [p1, p2], profileId: profile, seedStrategy, workerCount: workers, ordinalBase, strategicTrace } });
+  // The durable path requires the evidence store: a run that cannot
+  // checkpoint must never pretend to be durable.
+  if (!experimentsReady()) {
+    setCampaignState('failed');
+    status.textContent = 'Evidence store unavailable — a durable run cannot start. Reload to retry.';
+    document.querySelector('#run-experiment').disabled = false;
+    document.querySelector('#cancel-experiment').disabled = true;
+    showToast('Experiment evidence store is unavailable — the run was not started.', { type: 'error', title: 'Durability unavailable' });
     return;
   }
 
-  // Multi-worker path: split the ordinal range into `workers` contiguous
-  // segments and dispatch `run-autonomy-segment` to each. Each segment runs
-  // `runBrowserCampaign` over its [ordinalStart, ordinalEnd) slice, preserving
-  // the absolute-ordinal AB/BA seat-swap design. Summaries are reassembled in
-  // ordinal order on the main thread, then the campaign core + aggregate +
-  // observatory are built here.
-  const segments = splitOrdinals(count, workers);
+  // Segment layout: relative ordinals for workers, absolute for the manifest.
+  const relSegments = splitOrdinals(count, workers).map((s, i) => ({ index: i, ordinalStart: s.start, ordinalEnd: s.end }));
+  const absSegments = relSegments.map(s => ({ index: s.index, ordinalStart: ordinalBase + s.ordinalStart, ordinalEnd: ordinalBase + s.ordinalEnd }));
+  status.textContent = 'Opening durable run — writing manifest…';
+  let begun;
+  try {
+    begun = await beginExperimentRun({ config: runConfig, segments: absSegments, batchSize: RUN_BATCH_SIZE });
+  } catch (error) {
+    setCampaignState('failed');
+    status.textContent = `Run could not start — manifest persistence failed: ${error?.message ?? error}`;
+    document.querySelector('#run-experiment').disabled = false;
+    document.querySelector('#cancel-experiment').disabled = true;
+    showToast('The run manifest could not be persisted — no simulation started.', { type: 'error', title: 'Durability unavailable' });
+    return;
+  }
+  status.textContent = `Running ${count} matches with ${workers} worker(s)…`;
+  await _driveRunSegments({
+    runId: begun.runId,
+    config: runConfig,
+    batchSize: RUN_BATCH_SIZE,
+    requestedMatches: count,
+    committedMatches: 0,
+    segments: relSegments,
+  });
+}
+
+/**
+ * Shared execution driver for fresh runs and resumes. Spawns one worker per
+ * remaining segment range; every emitted batch is committed transactionally
+ * (batch record + manifest checkpoint) through a serialized queue so the
+ * manifest's committedMatches can never run ahead of durable evidence.
+ */
+async function _driveRunSegments(plan) {
+  const status = document.querySelector('#experiment-status');
+  const count = plan.requestedMatches ?? plan.config?.matchCount ?? 0;
+  const priorCommitted = plan.committedMatches ?? 0;
+  const segs = plan.segments;
   const startedAt = performance.now();
-  const segmentSummaries = new Array(segments.length).fill(null);
-  const segmentDone = new Array(segments.length).fill(0);
-  const segmentTotal = segments.map(s => s.size);
+  const segmentDone = segs.map(() => 0);
+  const segmentTotal = segs.map(s => s.ordinalEnd - s.ordinalStart);
   let completedSegments = 0, failedSegment = null, finalized = false;
-  const totalTotal = segmentTotal.reduce((a, b) => a + b, 0);
+  let committed = priorCommitted;
   const spawned = [];
   state.campaignWorkers = spawned;
-  state.campaignWorker = null; // multi-worker: tracked via campaignWorkers
+  state.campaignWorker = null;
+  state.activeRunManifest = plan.runId;
 
-  const reportAggregateProgress = () => {
-    const done = segmentDone.reduce((a, b) => a + b, 0);
-    status.textContent = `Progress: ${done}/${totalTotal} matches (${workers} workers)`;
-    updateCampaignProgress(done, totalTotal);
+  const commitQueue = { chain: Promise.resolve(), error: null };
+  const reportProgress = () => {
+    const done = priorCommitted + segmentDone.reduce((a, b) => a + b, 0);
+    // Simulated vs durably committed are distinct numbers — always.
+    status.textContent = `Progress: ${done}/${count} simulated · ${committed} saved`;
+    updateCampaignProgress(done, Math.max(count, 1));
   };
-
-  const maybeFinalize = async () => {
-    if (finalized || completedSegments < segments.length) return;
+  const enqueueCommit = msg => {
+    commitQueue.chain = commitQueue.chain.then(async () => {
+      const summaries = JSON.parse(msg.summariesJson ?? '[]');
+      const res = await commitExperimentBatch(plan.runId, {
+        segmentIndex: msg.workerIndex ?? 0,
+        ordinalStart: msg.ordinalStart,
+        ordinalEnd: msg.ordinalEnd,
+        summaries,
+      });
+      committed = res.committedMatches;
+      reportProgress();
+    }).catch(error => { if (!commitQueue.error) commitQueue.error = error; });
+  };
+  const finishRun = async () => {
+    if (finalized || completedSegments < segs.length) return;
     finalized = true;
-    // All segments done — terminate workers and assemble the campaign result.
     for (const w of spawned) { try { w.terminate(); } catch { /* already terminated */ } }
     state.campaignWorker = null;
     state.campaignWorkers = [];
-    if (failedSegment) {
-      await finalizeCampaignResult({ type: 'autonomy-campaign-result', ok: false, error: failedSegment }, count, workers, runConfig);
+    state.activeRunManifest = null;
+    // Flush pending commits — the seal only counts durably committed work.
+    await commitQueue.chain;
+    document.querySelector('#run-experiment').disabled = false;
+    document.querySelector('#cancel-experiment').disabled = true;
+    const bar = document.querySelector('#campaign-progress');
+    if (bar) bar.hidden = true;
+    if (commitQueue.error) {
+      // Persistence failure: stop honestly — committed batches are retained,
+      // the run is resumable/sealable from Manage Runs.
+      await failExperimentRun(plan.runId, commitQueue.error?.message ?? commitQueue.error);
+      setCampaignState('failed');
+      status.textContent = `Persistence failed — ${committed} of ${count} matches durably committed. Resume or seal partial evidence from Manage Runs.`;
+      showToast(`Persistence failed at ${committed}/${count} — committed evidence is retained; the run is resumable from Manage Runs.`, { type: 'error', title: 'Run paused (persistence)' });
+      refreshRunsUi();
+      updateRailContext();
+      rerender();
       return;
     }
-    // Concatenate segment summaries in ordinal order (segments are contiguous
-    // and assigned in order, so index order == ordinal order).
-    const summaries = [];
-    for (let i = 0; i < segmentSummaries.length; i += 1) {
-      const seg = segmentSummaries[i];
-      if (Array.isArray(seg)) summaries.push(...seg);
+    if (failedSegment) {
+      await failExperimentRun(plan.runId, failedSegment);
+      setCampaignState('failed');
+      status.textContent = `Failed: ${failedSegment} — ${committed} of ${count} matches committed. Resume or seal from Manage Runs.`;
+      showToast(failedSegment, { type: 'error', title: 'Run failed' });
+      refreshRunsUi();
+      updateRailContext();
+      rerender();
+      return;
     }
     try {
-      const { buildCampaignCore } = await import('./autonomy-runtime.js');
-      const { campaignAggregate, buildObservatoryAnalytics } = await import('./browser-analytics.js');
-      const core = buildCampaignCore(summaries, { profileId: profile, policyIds: [p1, p2], matchCount: count });
-      const semantic = { experimentHash: core.canonicalResultHash, profileId: core.profileId, engineVersion: core.engineVersion, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, canonicalResultHash: core.canonicalResultHash };
-      const aggregate = campaignAggregate(summaries, semantic);
-      const observatory = buildObservatoryAnalytics({ summaries, aggregate });
-      const result = { ...core, durationMs: Math.round(performance.now() - startedAt) };
-      const x = { type: 'autonomy-campaign-result', ok: true, result, aggregateJson: JSON.stringify(aggregate), observatoryJson: JSON.stringify(observatory), summariesJson: JSON.stringify(summaries) };
-      await finalizeCampaignResult(x, count, workers, runConfig);
-    } catch (err) {
-      await finalizeCampaignResult({ type: 'autonomy-campaign-result', ok: false, error: err?.stack ?? String(err) }, count, workers, runConfig);
+      const rec = await finalizeExperimentRun(plan.runId, { durationMs: Math.round(performance.now() - startedAt) });
+      const run = rec?.run;
+      const mechCount = state.observatory?.mechanics?.length ?? 0;
+      const synCount = state.observatory?.synergies?.length ?? 0;
+      const basis = state.evidenceBasis;
+      const evidenceNote = basis && !basis.fallback
+        ? ` · evidence: ${fmt(basis.includedGames)} games from ${basis.includedRunCount} run${basis.includedRunCount === 1 ? '' : 's'}`
+        : '';
+      const runLabel = run ? `Run #${String(run.ordinal).padStart(3, '0')} · ` : '';
+      setCampaignState('complete');
+      status.textContent = `${runLabel}${run?.metrics?.matchCount ?? committed} matches committed, ${run?.metrics?.abortCount ?? 0} aborts · ${mechCount} mechanics, ${synCount} synergies${evidenceNote} · persisted`;
+      showToast(`${run?.metrics?.matchCount ?? committed} matches durably committed${evidenceNote}`, { type: 'success', title: run ? `Run #${String(run.ordinal).padStart(3, '0')} complete` : 'Run complete' });
+      if (rec?.included === false && run) {
+        showToast(`Run #${String(run.ordinal).padStart(3, '0')} recorded but auto-excluded — it differs materially from the current baseline. Inspect it under Manage Runs.`, { type: 'warning', title: 'Incompatible run' });
+      }
+      renderCampaignSummary({ ok: true, result: { matchCount: run?.metrics?.matchCount ?? committed, abortCount: run?.metrics?.abortCount ?? 0, durationMs: run?.metrics?.durationMs ?? 0, canonicalResultHash: run?.provenance?.canonicalResultHash ?? null } });
+      state.lastCampaignResult = null;
+      state.pendingRunConfig = null;
+    } catch (error) {
+      await failExperimentRun(plan.runId, error?.message ?? error);
+      setCampaignState('failed');
+      status.textContent = `Seal failed: ${error?.message ?? error} — ${committed} of ${count} matches committed. Resume or seal from Manage Runs.`;
+      showToast(error?.message ?? 'Run seal failed', { type: 'error', title: 'Run seal failed' });
     }
+    refreshRunsUi();
+    updateRailContext();
+    rerender();
   };
 
-  segments.forEach((seg, i) => {
+  segs.forEach((seg, i) => {
     const worker = new Worker('worker.js', { type: 'module' });
     spawned.push(worker);
     worker.onmessage = e => {
@@ -324,33 +378,31 @@ async function runBrowserCampaign() {
       if (x.type === 'autonomy-campaign-progress') {
         const p = x.progress ?? {};
         segmentDone[i] = p.completed ?? segmentDone[i];
-        reportAggregateProgress();
-      } else if (x.type === 'autonomy-segment-result') {
-        if (x.ok) {
-          try { segmentSummaries[i] = JSON.parse(x.summariesJson ?? '[]'); }
-          catch { segmentSummaries[i] = []; }
-        } else if (!failedSegment) {
-          failedSegment = x.error ?? `Worker ${i} failed`;
-        }
+        reportProgress();
+      } else if (x.type === 'autonomy-campaign-batch') {
+        enqueueCommit(x);
+      } else if (x.type === 'autonomy-segment-result' || x.type === 'autonomy-campaign-result') {
+        if (x.ok !== true && !failedSegment) failedSegment = x.error ?? `Worker ${i} failed`;
         completedSegments += 1;
         segmentDone[i] = segmentTotal[i];
-        reportAggregateProgress();
-        maybeFinalize();
+        reportProgress();
+        finishRun();
       }
     };
     worker.onerror = e => {
       if (!failedSegment) failedSegment = e.message ?? `Worker ${i} error`;
-      if (segmentSummaries[i] === null) { segmentSummaries[i] = []; completedSegments += 1; }
-      reportAggregateProgress();
-      maybeFinalize();
+      completedSegments += 1;
+      segmentDone[i] = segmentTotal[i];
+      reportProgress();
+      finishRun();
     };
     worker.postMessage({
       type: 'run-autonomy-segment',
-      workerIndex: i,
-      config: { matchCount: count, policyIds: [p1, p2], profileId: profile, seedStrategy, ordinalStart: seg.start, ordinalEnd: seg.end, ordinalBase, strategicTrace },
+      workerIndex: seg.index,
+      config: { matchCount: count, policyIds: plan.config.policyIds, profileId: plan.config.profileId, seedStrategy: plan.config.seedStrategy, ordinalStart: seg.ordinalStart, ordinalEnd: seg.ordinalEnd, ordinalBase: plan.config.ordinalBase ?? plan.config.ordinalStart ?? 0, strategicTrace: plan.config.strategicTrace === true, batchSize: plan.batchSize || RUN_BATCH_SIZE },
     });
   });
-  reportAggregateProgress();
+  reportProgress();
 }
 
 // Drives the campaign progress bar: fill width, percentage readout, and the
@@ -401,121 +453,6 @@ function refreshRunsUi() {
   syncRunButtonLabel();
 }
 
-// Shared finalization for both single- and multi-worker paths: updates state,
-// records the immutable Run, recomputes the active Analysis Set, renders the
-// campaign summary, and re-renders the current workspace.
-async function finalizeCampaignResult(x, count, _workers, runConfig = null) {
-  state.lastCampaignResult = x;
-  state.pendingRunConfig = null;
-  document.querySelector('#run-experiment').disabled = false;
-  document.querySelector('#cancel-experiment').disabled = true;
-  const bar = document.querySelector('#campaign-progress');
-  if (bar) bar.hidden = true;
-  const status = document.querySelector('#experiment-status');
-  if (x.ok) {
-    const r = x.result ?? {};
-    let summaries = [];
-    try { summaries = JSON.parse(x.summariesJson ?? '[]'); } catch { summaries = []; }
-    // Update state with campaign-derived data so workspaces reflect the new campaign
-    try {
-      if (summaries.length) {
-        state.observatory = state.observatory ?? {};
-        state.observatory.summaries = summaries;
-        state.aggregate = x.aggregateJson ? JSON.parse(x.aggregateJson) : state.aggregate;
-        if (x.observatoryJson) {
-          const obs = JSON.parse(x.observatoryJson);
-          // Tag the origin immediately — a campaign dataset is experiment
-          // output even when the evidence store is unavailable, and the
-          // dossier must never mislabel it as the certified corpus.
-          state.observatory = { ...obs, summaries, datasetOrigin: 'EXPERIMENT_RUNS' };
-        }
-        // Fallback: if the worker's observatory arrived with 0 mechanics (e.g.
-        // stale cached worker module), rebuild observatory analytics on the
-        // main thread from the campaign summaries so Mechanics/Synergies propagate.
-        if (!state.observatory.mechanics?.length && summaries.length > 0) {
-          console.warn('[campaign] Worker observatory has 0 mechanics — rebuilding on main thread from', summaries.length, 'summaries');
-          try {
-            const { buildObservatoryAnalytics, campaignAggregate } = await import('./browser-analytics.js');
-            const semantic = { experimentHash: r.canonicalResultHash, profileId: r.profileId, engineVersion: r.engineVersion, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, canonicalResultHash: r.canonicalResultHash };
-            const fallbackAggregate = x.aggregateJson ? JSON.parse(x.aggregateJson) : campaignAggregate(summaries, semantic);
-            const fallbackObs = buildObservatoryAnalytics({ summaries, aggregate: fallbackAggregate });
-            state.observatory = { ...fallbackObs, summaries, datasetOrigin: 'EXPERIMENT_RUNS' };
-            state.aggregate = fallbackAggregate;
-            console.info(`[campaign] Main-thread observatory rebuild: ${fallbackObs.mechanics?.length} mechanics, ${fallbackObs.synergies?.length} synergies`);
-          } catch (rebuildErr) { console.error('[campaign] Main-thread observatory rebuild failed:', rebuildErr); }
-        }
-      }
-      // Sync derived state fields that some workspaces read directly rather
-      // than via state.observatory. At boot, data-loader.js extracts these
-      // from the loaded observatory (lines 114-123). After a campaign run
-      // replaces state.observatory, they must be re-synced or the Ranks
-      // workspace (rankPower, swapMatrix, variantAnalytics) will show stale
-      // boot-time data instead of the freshly computed campaign analytics.
-      state.rankPower = state.observatory.rankPower ?? null;
-      state.swapMatrix = state.observatory.swapMatrix ?? null;
-      state.variantAnalytics = state.observatory.variantAnalytics ?? state.variantAnalytics;
-    } catch (err) { console.warn('Failed to update state from campaign result:', err); }
-    // Persist the execution as an immutable Run in the experiment store and
-    // recompute the analysis set over all included runs. Runs accumulate —
-    // a new run never erases prior evidence.
-    let rec = null;
-    if (experimentsReady() && runConfig) {
-      try {
-        rec = await recordCampaignRun({
-          config: { ...runConfig, ordinalStart: runConfig.ordinalBase, ordinalEnd: runConfig.ordinalBase + count },
-          result: r,
-          summaries,
-          aggregate: state.aggregate,
-        });
-        const fastPath = {
-          aggregate: x.aggregateJson ? JSON.parse(x.aggregateJson) : null,
-          observatory: x.observatoryJson ? JSON.parse(x.observatoryJson) : null,
-        };
-        await applySelection({ fastPath });
-        if (rec?.included === false && rec?.run) {
-          showToast(`Run #${String(rec.run.ordinal).padStart(3, '0')} recorded but auto-excluded — it differs materially from the current baseline. Inspect it under Manage Runs.`, { type: 'warning', title: 'Incompatible run' });
-        } else if (rec?.metaFailed) {
-          showToast('Run completed — browser storage is unavailable, so the run and its evidence are retained for this session only and will be lost on reload.', { type: 'warning', title: 'Run recorded (session only)' });
-        } else if (rec?.payloadSessionOnly) {
-          showToast('Run recorded — evidence payload retained for this session only (storage limit).', { type: 'warning', title: 'Run recorded' });
-        } else if (rec?.setPersisted === false) {
-          showToast('Run recorded — the analysis selection could not be persisted; curation changes are kept for this session only.', { type: 'warning', title: 'Run recorded' });
-        }
-      } catch (err) {
-        console.warn('[experiments] run record failed:', err);
-        showToast('Campaign completed but the run could not be persisted this session.', { type: 'warning', title: 'Evidence persistence' });
-      }
-    }
-    const mechCount = state.observatory?.mechanics?.length ?? 0;
-    const synCount = state.observatory?.synergies?.length ?? 0;
-    const basis = state.evidenceBasis;
-    const evidenceNote = basis && !basis.fallback
-      ? ` · evidence: ${fmt(basis.includedGames)} games from ${basis.includedRunCount} run${basis.includedRunCount === 1 ? '' : 's'}`
-      : '';
-    // Retention truth: a completed simulation is not the same as persisted
-    // evidence. The status line must never read as clean success when the
-    // run record or payload only lives in this session.
-    const retentionNote = rec?.metaFailed ? ' · session-only (storage unavailable; lost on reload)'
-      : rec?.payloadSessionOnly ? ' · session-only evidence'
-      : rec?.run ? ' · persisted' : '';
-    const runLabel = rec?.run ? `Run #${String(rec.run.ordinal).padStart(3, '0')} · ` : '';
-    setCampaignState('complete');
-    status.textContent = `${runLabel}${count} matches, ${r.abortCount ?? r.aborts ?? 0} aborts, ${r.durationMs ?? 0}ms · ${mechCount} mechanics, ${synCount} synergies${evidenceNote}${retentionNote}`;
-    showToast(`${count} matches · ${r.abortCount ?? r.aborts ?? 0} aborts · ${mechCount} mechanics · ${synCount} synergies${evidenceNote}${retentionNote}`, { type: rec?.metaFailed || rec?.payloadSessionOnly ? 'warning' : 'success', title: rec?.run ? `Run #${String(rec.run.ordinal).padStart(3, '0')} complete` : 'Campaign complete' });
-  } else {
-    if (experimentsReady() && runConfig) recordFailedRun({ config: runConfig, error: x.error }).catch(() => {});
-    setCampaignState('failed');
-    status.textContent = `Failed: ${x.error ?? 'unknown error'}`;
-    showToast(x.error ?? 'Campaign failed', { type: 'error', title: 'Campaign failed' });
-  }
-  renderCampaignSummary(x);
-  refreshRunsUi();
-  updateRailContext();
-  // Re-render the current workspace so Mechanics/Synergies/Compare/etc.
-  // reflect the freshly updated state.observatory immediately.
-  rerender();
-}
-
 function cancelBrowserCampaign() {
   if (state.campaignWorker) {
     try { state.campaignWorker.terminate(); } catch { /* already terminated */ }
@@ -523,18 +460,25 @@ function cancelBrowserCampaign() {
   }
   for (const w of state.campaignWorkers ?? []) { try { w.terminate(); } catch { /* already terminated */ } }
   state.campaignWorkers = [];
-  if (experimentsReady() && state.pendingRunConfig) {
-    recordCancelledRun({ config: state.pendingRunConfig }).catch(() => {});
-    state.pendingRunConfig = null;
+  if (experimentsReady() && state.activeRunManifest) {
+    // Committed batches stay durable — the manifest becomes a resumable
+    // cancelled run instead of a deleted one.
+    cancelExperimentRun(state.activeRunManifest).catch(() => {});
   }
+  state.activeRunManifest = null;
+  state.pendingRunConfig = null;
   setCampaignState('cancelled');
-  document.querySelector('#experiment-status').textContent = 'Cancelled.';
+  document.querySelector('#experiment-status').textContent = 'Cancelled — committed batches are retained and resumable from Manage Runs.';
   const bar = document.querySelector('#campaign-progress');
   if (bar) bar.hidden = true;
   document.querySelector('#run-experiment').disabled = false;
   document.querySelector('#cancel-experiment').disabled = true;
   refreshRunsUi();
 }
+
+// Resume entry point used by Manage Runs: the controller hands back a
+// segment plan and this driver re-executes only the remaining ordinals.
+registerRunExecutor(plan => _driveRunSegments(plan));
 
 function resetCampaignResults() {
   state.lastCampaignResult = null;
