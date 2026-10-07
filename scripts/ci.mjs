@@ -38,6 +38,7 @@ const customTimeout = args.includes('--timeout') ? parseInt(args[args.indexOf('-
 
 // ── Stage definitions (mirrors ci.sh) ──
 const STAGES = [
+  ['lab-trust-wave0', 'node', ['--test', 'test/lab-trust-wave0.test.mjs']],
   ['release-inventory', 'node', ['--test', 'test/release-inventory.test.mjs']],
   ['auth-production-startup', 'node', ['--test', 'test/production-startup.test.mjs']],
   ['deploy-ownership', 'node', ['--test', 'test/deploy-ownership.test.mjs']],
@@ -90,7 +91,7 @@ const STAGES = [
   ['analytics-ai-ui', 'node', ['--test', 'test/analytics-ai-ui.test.mjs']],
   ['browser-analytics-coverage', 'node', ['--test', 'test/browser-analytics-coverage.test.mjs']],
   ['analytics-measurement-integrity', 'node', ['--test', 'test/measurement-integrity.test.mjs']],
-  ['observatory', 'node', ['--test', 'test/observatory.test.mjs', 'test/observatory-hardening.test.mjs', 'test/observatory-completion.test.mjs', 'test/observatory-integrity.test.mjs', 'test/observatory-choice-support.test.mjs', 'test/observatory-ux.test.mjs', 'test/watch-theatre.test.mjs', 'test/replay-resolver.test.mjs', 'test/watch-contract.test.mjs']],
+  ['observatory', 'node', ['--test', 'test/observatory.test.mjs', 'test/observatory-hardening.test.mjs', 'test/observatory-completion.test.mjs', 'test/experiment-integrity.test.mjs', 'test/observatory-integrity.test.mjs', 'test/observatory-choice-support.test.mjs', 'test/observatory-ux.test.mjs', 'test/watch-theatre.test.mjs', 'test/replay-resolver.test.mjs', 'test/watch-contract.test.mjs']],
   ['visual', 'node', ['--test', 'test/visual.test.mjs']],
   ['card-face-renderer', 'node', ['--test', 'test/card-face-renderer.test.mjs']],
   ['cards-observatory', 'node', ['--test', 'test/cards-observatory.test.mjs']],
@@ -286,6 +287,8 @@ const STAGES = [
   ['irx-c11-tournament-transactional', 'node', ['--test', 'test/irx-c11-tournament-transactional.test.mjs']],
   // Replay Caster v0.1 — live broadcast experience with Ollama commentary
   ['replay-caster', 'node', ['--test', 'test/replay-caster.test.mjs']],
+  // Caster V2 — preparation pipeline, cumulative game log, hand authorization
+  ['caster-v2', 'node', ['--test', 'test/caster-v2.test.mjs']],
   // Caster Full-Screen Spectator — regression tests for game UI integration
   ['caster-fullscreen', 'node', ['--test', 'test/caster-fullscreen.test.mjs']],
   // Caster decision integrity — transcript anchoring, orchestration exclusion, spectator view

@@ -6,7 +6,7 @@ import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting 
 import { WORKSPACES, WORKSPACE_KEYWORDS, route, policyOptions, updateRailContext } from './router.js';
 import { populateDialogHeading } from './seo-metadata.js';
 import { rerender, invokeAppAction } from './rerender.js';
-import { experimentsReady, nextRunOrdinalStart, beginExperimentRun, commitExperimentBatch, finalizeExperimentRun, failExperimentRun, cancelExperimentRun, registerRunExecutor, restoreBaseline } from './experiments/experiment-controller.mjs';
+import { experimentsReady, storePersisted, nextRunOrdinalStart, beginExperimentRun, commitExperimentBatch, finalizeExperimentRun, failExperimentRun, cancelExperimentRun, registerRunExecutor, restoreBaseline } from './experiments/experiment-controller.mjs';
 import { renderEvidenceStrip, renderRunsPanel, openRunsPanel } from './experiments/runs-panel.js';
 import { initAnalysisExportHub } from './analysis-export-hub.mjs';
 
@@ -14,13 +14,14 @@ import { initAnalysisExportHub } from './analysis-export-hub.mjs';
 export function renderExperimentControls() {
   document.querySelector('#experiment-controls').innerHTML = `<div class="experiment-grid">
     <div id="exp-evidence" class="exp-evidence-slot"></div>
+    <p role="note">Exploratory evidence only. Confirmatory claims are suspended while evidence integrity is repaired.</p>
     <label>Experiment preset<select id="exp-preset"><option value="">Custom (manual config)</option><option value="EXP-01-2B2R-HOLD-FIRE">EXP-01: 2B2R Hold vs Fire</option><option value="EXP-02-BOARD-LOCK-LEAD">EXP-02: Board Lock Lead vs Comeback</option><option value="EXP-03-TEN-HEART-OPPORTUNITY-COST">EXP-03: 10♥ Tempo Opportunity Cost</option><option value="EXP-04-QUEEN-FORTRESS-WINDOW">EXP-04: Queen Fortress Breach Window</option><option value="EXP-05-TOTAL-CLEAR-REBOUND">EXP-05: Total Clear Rebound</option><option value="EXP-06-UNRESTRICTED-BENCHMARK">EXP-06: Unrestricted Seat Balance</option><option value="EXP-07-COUNTER-RETENTION-VALUE">EXP-07: Counter Retention Value</option></select></label>
     <label>Profile<select id="exp-profile"><option value="core-advanced-authority">Advanced Core · supported</option><option value="core-unrestricted-authority">Unrestricted Core · hidden supers + sudden death</option><option value="first-contact-trigger-closure">Complete First Contact</option></select></label>
     <div class="inline-fields"><label>Seat 1<select id="exp-p1">${policyOptions('score-rush')}</select></label><label>Seat 2<select id="exp-p2">${policyOptions('control')}</select></label></div>
     <div class="inline-fields"><label>Matches<input id="exp-count" type="number" min="1" max="10000" value="100"></label><label>Workers<select id="exp-workers"><option>1</option><option selected>2</option><option>4</option></select></label></div>
     <label>Seed strategy<select id="exp-seed"><option value="ordinal-hash">Experiment hash + ordinal</option><option value="fixed">Fixed seed</option></select></label>
     <label class="exp-toggle"><span class="exp-toggle-text">Deep decision tracing<button type="button" class="info-dot tooltip-wide" data-tooltip="Re-ranks all legal actions at every decision and keeps a trace per decision — heavy compute and memory. Use for small evidence runs needing decision-level detail, not large campaigns. Telemetry is hash-excluded: results stay deterministic." aria-label="About deep decision tracing">ⓘ</button></span><input id="exp-deep-trace" type="checkbox" class="exp-switch" role="switch"></label>
-    <div class="preflight" id="preflight"><b>Preflight:</b> 25 ordered pairings · matched AB/BA seat-swap · paired McNemar + bootstrap · deterministic telemetry v4.1 · unsupported systems fail closed.</div>
+    <div class="preflight" id="preflight"><b>Preflight:</b> 25 ordered pairings · paired AB/BA design — each policy plays once per physical seat per pair · paired McNemar + bootstrap · deterministic telemetry v4.1 · unsupported systems fail closed.</div>
     <div class="rail-actions"><button id="run-experiment" type="button" class="primary-button">Run experiment</button><button id="cancel-experiment" type="button" class="secondary-button" disabled>Cancel</button><button id="reset-experiment" type="button" class="ghost-button" title="Restore the bundled certified baseline as the working dataset — does not delete stored runs">Baseline</button></div>
     <output id="experiment-status" class="footer-note" aria-live="polite" data-state="idle">Ready.</output>
     <div id="campaign-progress" class="campaign-progress" role="progressbar" aria-label="Experiment progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div class="campaign-progress-bar"><div class="campaign-progress-bar-fill" style="width:0%"></div></div><output class="campaign-progress-pct">0%</output></div>
@@ -54,9 +55,10 @@ export function updatePreflight() {
     return;
   }
   runBtn.disabled = false;
-  const seatDesign = p1 === p2 ? 'self-play' : 'matched AB/BA seat-swap';
+  const seatDesign = p1 === p2 ? 'self-play (excluded from cross-policy inference)' : 'paired AB/BA — each policy occupies each physical seat once per 2-match block';
+  const oddNote = n % 2 === 1 && p1 !== p2 ? ` · <b>odd count: last match is an unpaired AB leg</b> (pairing reports it incomplete)` : '';
   const presetLabel = preset ? `preset ${esc(preset)} · ` : '';
-  document.querySelector('#preflight').innerHTML = `<b>Preflight:</b> ${presetLabel}${esc(scope)} · ${esc(p1)} vs ${esc(p2)} · ${fmt(n)} matches · ${w} browser worker${w === 1 ? '' : 's'} · ${esc(seed === 'ordinal-hash' ? 'ordinal-hash seed' : 'fixed seed')} · ${esc(seatDesign)} · paired McNemar + bootstrap · semantic telemetry v4.1${deepTrace ? ' · deep decision tracing (per-decision traces + candidate scores)' : ''} · evidence epoch: post-rules-parity-repair · unsupported systems fail closed.`;
+  document.querySelector('#preflight').innerHTML = `<b>Preflight:</b> ${presetLabel}${esc(scope)} · ${esc(p1)} vs ${esc(p2)} · ${fmt(n)} matches · ${w} browser worker${w === 1 ? '' : 's'} · ${esc(seed === 'ordinal-hash' ? 'ordinal-hash seed' : 'fixed seed')} · ${esc(seatDesign)}${oddNote} · paired McNemar + bootstrap · semantic telemetry v4.1${deepTrace ? ' · deep decision tracing (per-decision traces + candidate scores)' : ''} · evidence epoch: post-rules-parity-repair · unsupported systems fail closed.`;
 }
 
 /** Open the Experiment dialog directly on the Manage Runs surface —
@@ -243,7 +245,7 @@ async function runBrowserCampaign() {
 
   // The durable path requires the evidence store: a run that cannot
   // checkpoint must never pretend to be durable.
-  if (!experimentsReady()) {
+  if (!experimentsReady() || !storePersisted()) {
     setCampaignState('failed');
     status.textContent = 'Evidence store unavailable — a durable run cannot start. Reload to retry.';
     document.querySelector('#run-experiment').disabled = false;

@@ -57,6 +57,16 @@ export type TableOptions = {
   opponentHand?: readonly TableCard[];
   /** Custom HTML injected into the sidebar actions area (Caster rail). */
   railHtml?: string;
+  /**
+   * Caster-only: per-seat hand visibility controls rendered inside the
+   * spectator hand headers. Presentational toggles — they never change
+   * the semantic model's information policy.
+   */
+  handControls?: {
+    seat1?: { visible: boolean; onToggle?: () => void };
+    seat2?: { visible: boolean; onToggle?: () => void };
+    unavailable?: string | null;
+  };
   teaching?: TeachingSupport;
   rankSuggestions?: SuggestionRanker;
   onExit?: () => void;
@@ -97,11 +107,11 @@ export function mountGameTable(container: HTMLElement, input: unknown, options: 
   container.replaceChildren(host);
   const root = createRoot(host);
   const debug = resolveDebug(options.debug);
-  const renderTable = (chat: ChatConfig | undefined, opponentHand: readonly TableCard[] | undefined, railHtml: string | undefined, teaching = options.teaching) => {
+  const renderTable = (chat: ChatConfig | undefined, opponentHand: readonly TableCard[] | undefined, railHtml: string | undefined, teaching = options.teaching, handControls = options.handControls) => {
     root.render(<TableBoundary>
       {options.legacy
         ? <GameTable store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} skin={options.skin} debug={debug} chat={chat} opponentHand={opponentHand} railHtml={railHtml} />
-        : <IntrilexGame opponentHand={opponentHand} railHtml={railHtml} viewRole={options.viewRole} store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} onExit={options.onExit} skin={options.skin} debug={debug} chat={chat} rankSuggestions={options.rankSuggestions} teaching={teaching ? { ...teaching, onAction: options.teaching?.onAction ?? teaching.onAction } : undefined} />}
+        : <IntrilexGame opponentHand={opponentHand} railHtml={railHtml} handControls={handControls} viewRole={options.viewRole} store={store} onSave={options.onSave} onInspect={options.onInspect} onReorderHand={options.onReorderHand} onExit={options.onExit} skin={options.skin} debug={debug} chat={chat} rankSuggestions={options.rankSuggestions} teaching={teaching ? { ...teaching, onAction: options.teaching?.onAction ?? teaching.onAction } : undefined} />}
     </TableBoundary>);
   };
   flushSync(() => renderTable(options.chat, options.opponentHand, options.railHtml));
@@ -116,16 +126,16 @@ export function mountGameTable(container: HTMLElement, input: unknown, options: 
     console.warn('[tactical-board] CSS load failed:', error?.message ?? error);
   });
   return {
-    update(snapshot: unknown, readOnly = false, chat?: ChatConfig, opponentHand?: readonly TableCard[], railHtml?: string, teaching?: TeachingSupport) {
+    update(snapshot: unknown, readOnly = false, chat?: ChatConfig, opponentHand?: readonly TableCard[], railHtml?: string, teaching?: TeachingSupport, handControls?: TableOptions['handControls']) {
       if (disposed) return;
       store.update(snapshot, { readOnly, coalesceIdenticalActions: true, ...modelOptions });
       // Re-render the root when presentational props change. The Caster
       // passes opponentHand/railHtml on every beat; flushSync ensures the
       // DOM is committed before the caller wires up rail controls via
       // querySelector. The player path only re-renders when chat changes.
-      const needsRender = chat !== undefined || opponentHand !== undefined || railHtml !== undefined || teaching !== undefined;
+      const needsRender = chat !== undefined || opponentHand !== undefined || railHtml !== undefined || teaching !== undefined || handControls !== undefined;
       if (needsRender) {
-        flushSync(() => renderTable(chat, opponentHand, railHtml, teaching));
+        flushSync(() => renderTable(chat, opponentHand, railHtml, teaching, handControls ?? options.handControls));
       }
     },
     dispose() {

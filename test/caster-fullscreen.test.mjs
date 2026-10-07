@@ -136,7 +136,8 @@ test('caster-workspace.js: renderTheatre updates Astra in place on beat changes'
 
 test('caster-workspace.js: theatre header carries the exit-caster control', () => {
   assert.match(casterSrc, /data-action="exit-caster"/, 'header must have exit-caster button');
-  assert.match(casterSrc, /Back to Observatory/, 'header must show "Back to Observatory" label');
+  assert.match(casterSrc, /New Cast/, 'header must show "New Cast" label');
+  assert.match(casterSrc, /caster-back-lab/, 'header must show a Back to Lab link');
   assert.match(casterSrc, /data-caster="1"/, 'header must carry data-caster="1"');
 });
 

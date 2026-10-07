@@ -5,9 +5,9 @@
 // Rank attribution extracted to rank-attribution-browser.js (P4.3).
 // Rank power model extracted to rank-power-model.js (P4.3).
 
-import './engine/ranks.js?v=5c298831b65d';
-import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=5c298831b65d';
-import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=5c298831b65d';
+import './engine/ranks.js?v=7d7375aa53c1';
+import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=7d7375aa53c1';
+import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=7d7375aa53c1';
 import {
   CANONICAL_RANKS,
   classifyPlayForm,
@@ -15,7 +15,7 @@ import {
   buildSourceCards,
   attributeRankAction,
   attributeAction,
-} from './rank-attribution-browser.js?v=5c298831b65d';
+} from './rank-attribution-browser.js?v=7d7375aa53c1';
 import {
   RANK_POWER_SCHEMA_VERSION,
   RPI_AXIS_WEIGHTS,
@@ -26,7 +26,7 @@ import {
   computeDecisionPower,
   buildBalanceWatchlist,
   buildRankPowerModel,
-} from './rank-power-model.js?v=5c298831b65d';
+} from './rank-power-model.js?v=7d7375aa53c1';
 import {
   ANALYTICS_SCHEMA_VERSION,
   buildMechanicsAtlas,
@@ -35,16 +35,14 @@ import {
   buildPolicyFingerprints,
   detectAnomalies,
   buildPairedABBAAnalysis,
-} from './observatory-analytics-browser.js?v=5c298831b65d';
-import {
-  mechanicRegistryHash,
-  quarantineUnknownTags,
-} from './mechanic-registry-browser.js?v=5c298831b65d';
-import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=5c298831b65d';
-import { winRateRecord } from './shared-analytics/estimators.mjs?v=5c298831b65d';
-import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=5c298831b65d';
-import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=5c298831b65d';
-import { buildComboAtlas } from './shared-analytics/combo-analytics.mjs?v=5c298831b65d';
+} from './observatory-analytics-browser.js?v=7d7375aa53c1';
+import { mechanicRegistryHash, quarantineUnknownTags, taxonomyCoverage } from './mechanic-registry-browser.js?v=7d7375aa53c1';
+import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=7d7375aa53c1';
+import { winRateRecord } from './shared-analytics/estimators.mjs?v=7d7375aa53c1';
+import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=7d7375aa53c1';
+import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=7d7375aa53c1';
+import { buildComboAtlas } from './shared-analytics/combo-analytics.mjs?v=7d7375aa53c1';
+import { buildExperimentIntegrity, analyzeEarlyVictories, analyzeDecisiveness } from './shared-analytics/experiment-integrity.mjs?v=7d7375aa53c1';
 
 // Re-export for backward compatibility (other modules import from browser-analytics)
 export {
@@ -1086,12 +1084,15 @@ export function buildObservatoryAnalytics({ summaries, detailedMatches = [], agg
   const campaignHealth = { trackedEntities: mechanics.length, canonicalMechanics: _f(m => m.dimension === 'canonical-mechanic'), entitiesWithOpportunityData: _f(m => m.hasOpportunityData), entitiesWithValidPickRate: _f(m => m.pickRateStatus?.status === 'available'), entitiesWithRawAssociation: _f(m => m.rawWinAssociationStatus?.status === 'available'), entitiesWithAdjustedAssociation: _f(m => m.adjustedWinAssociationStatus?.status === 'available'), entitiesWithPointImpact: _f(m => m.pointImpactStatus?.status === 'available' && m.actorPointImpact != null), eligibleSynergyPairs: synergies.length, nearThresholdPairs, successfullyModeledSynergyPairs: synergies.filter(s => s.modelStatus === 'modeled').length, rejectedSynergyPairs: synergyDiagnostics.length, synergyCandidatePairs: synergies.candidateSet?.pairCount ?? null, synergyCellStatusCounts: [...synergies, ...synergyDiagnostics].reduce((acc, row) => { acc[row.cellStatus] = (acc[row.cellStatus] ?? 0) + 1; return acc; }, {}), evidenceQualifiedSynergyPairs: synergies.filter(s => s.evidenceGrade !== 'INSUFFICIENT').length, unmappedDiagnostics: _f(m => m.dimension === 'diagnostic' && !m.registryVerified), incompleteABBA: pairedABBA?.incompletePairs ?? 0 };
   // Taxonomy reconciliation: tracked entities = Σ dimension buckets; the
   // invariant is checked here so count drift surfaces in the artifact itself.
-  const reconciliation = { trackedEntities: mechanics.length, byDimension: dimensionCounts, registered: mechanics.filter(m => m.registryVerified).length, unregisteredTags: quarantineLedger.length, invariantHolds: mechanics.length === Object.values(dimensionCounts).reduce((a, b) => a + b, 0) };
+  const reconciliation = { trackedEntities: mechanics.length, byDimension: dimensionCounts, registered: mechanics.filter(m => m.registryVerified).length, unregisteredTags: quarantineLedger.length, taxonomyCoverage: taxonomyCoverage(allMechanicTags), invariantHolds: mechanics.length === Object.values(dimensionCounts).reduce((a, b) => a + b, 0) };
+  const comboAtlas = buildComboAtlas(summaries);
   const core = { schemaVersion: ANALYTICS_SCHEMA_VERSION, metricRegistry: metricRegistryWithHashes(), summaryCount: summaries.length, aggregateHash: aggregate?.aggregateHash ?? null,
     // Provenance echo: self-describing artifact (parity with canonical analytics)
     evidenceEpoch: aggregate?.evidenceEpoch ?? null, postRulesParityRepair: aggregate?.postRulesParityRepair ?? null, engineVersion: aggregate?.engineVersion ?? null, rulesVersion: aggregate?.rulesVersion ?? null, profileId: aggregate?.profileId ?? null, authorityHash: aggregate?.authorityHash ?? null, releaseIdentityHash: aggregate?.releaseIdentityHash ?? null,
-    mechanics, synergies, synergyDiagnostics, synergyCandidateSet: synergies.candidateSet ?? null, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, choiceAnalysis, choiceAnalysisError, combo: buildComboAtlas(summaries), mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, reconciliation, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
+    mechanics, synergies, synergyDiagnostics, synergyCandidateSet: synergies.candidateSet ?? null, motifs, policies, anomalies, rankPower: rankAnalytics.rankPower, swapMatrix: rankAnalytics.swapMatrix, rankCounters: rankAnalytics.rankCounters, tenSuitExpansion: rankAnalytics.tenSuitExpansion ?? null, variantAnalytics, pairedABBA, choiceAnalysis, choiceAnalysisError, combo: comboAtlas,
+    // Experiment self-audit: PASS is never claimed unless the data proves it.
+    experimentIntegrity: buildExperimentIntegrity(summaries, { aggregate, pairedABBA, combo: comboAtlas }), earlyVictories: analyzeEarlyVictories(summaries), decisiveness: analyzeDecisiveness(summaries),
+    mechanicRegistryHash: mechanicRegistryHash(), quarantineLedger, taxonomyDimensions: dimensionCounts, hasOpportunityTelemetry, legacySchema: !hasOpportunityTelemetry, campaignHealth, reconciliation, completeness: { unclassifiedCount, tolerance: 0, status: unclassifiedCount === 0 ? 'PASS' : 'FAIL' }, interpretationBoundary: 'Browser-side observatory analytics. Associations are evidence-backed, not causal proof. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.' };
   return { ...core, observatoryHash: hashCanonical(core) };
 }
-// buildPairedABBAAnalysis lives in observatory-analytics-browser.js
 // (imported above) to keep this orchestrator under its size budget.

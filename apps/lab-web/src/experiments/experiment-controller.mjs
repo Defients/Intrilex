@@ -313,6 +313,7 @@ export async function recordCampaignRun({ config = {}, result = {}, summaries = 
       ordinalStart: config.ordinalStart ?? null,
       ordinalEnd: config.ordinalEnd ?? null,
       strategicTrace: config.strategicTrace === true,
+      experimentDesign: config.experimentDesign ?? aggregate?.experimentDesign ?? null,
     },
     provenance: {
       rulesVersion: aggregate?.rulesVersion ?? RULES_VERSION,
@@ -435,6 +436,14 @@ async function _persistManifest(manifest) {
   _manifests.set(manifest.manifestId, manifest);
 }
 
+/** Wave 0: memory fallback remains readable/exportable, never resumable. */
+function requirePersistentCampaign() {
+  if (_store?.persisted !== true) throw Object.assign(
+    new Error('Persistent storage unavailable; durable campaign start/resume is suspended. Existing session evidence remains available for inspection and export.'),
+    { code: 'LAB_WAVE0_PERSISTENT_STORAGE_REQUIRED' },
+  );
+}
+
 /** Inject the UI executor that drives worker segments for a resume plan. */
 export function registerRunExecutor(fn) { _runExecutor = fn; }
 
@@ -446,6 +455,7 @@ export function registerRunExecutor(fn) { _runExecutor = fn; }
  */
 export async function beginExperimentRun({ config = {}, segments = null, batchSize = 0 } = {}) {
   if (!_ready || !_experiment) throw Object.assign(new Error('EXPERIMENTS_NOT_READY'), { code: 'EXPERIMENTS_NOT_READY' });
+  requirePersistentCampaign();
   const ordinal = Math.max(
     nextRunOrdinal(_runs.filter(r => r.origin !== 'bundled')),
     [..._manifests.values()].reduce((m, x) => Math.max(m, (x.ordinal ?? 0) + 1), 0),
@@ -670,6 +680,7 @@ export function getIncompleteRuns() {
  * same seeds, so resumed evidence is indistinguishable from uninterrupted.
  */
 export async function resumeExperimentRun(manifestId) {
+  requirePersistentCampaign();
   const manifest = await _getManifest(manifestId);
   if (!manifest) throw new Error('RUN_MANIFEST_MISSING');
   if (manifest.sealedRunId) throw new Error('RUN_ALREADY_SEALED');

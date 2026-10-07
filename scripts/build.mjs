@@ -82,7 +82,7 @@ mkdirSync(dist, { recursive: true });
 cpSync(path.join(root, 'apps/lab-web/src'), dist, { recursive: true });
 // Portable lab domain/session have no engine rules or Node I/O. Browser workers
 // execute the existing autonomy runtime; the dashboard owns only artifacts.
-for (const name of ['evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'combo-telemetry.mjs', 'adaptive-strategy.mjs', 'batch-matrix.mjs', 'strategy-contracts.mjs', 'strategy-evidence.mjs', 'strategy-analysis.mjs', 'strategy-synthesis.mjs', 'strategy-branch.mjs', 'strategy-information.mjs', 'strategy-live.mjs', 'observatory-bridge.mjs', 'matchup-lab.mjs', 'profile-contracts.mjs', 'profile-journal.mjs', 'profile-store.mjs', 'profile-science.mjs', 'profile-arena.mjs', 'mutation-domain.mjs', 'discovery-domain.mjs', 'discovery-scan.mjs', 'discovery-engine.mjs', 'experiment-domain.mjs', 'experiment-portability.mjs']) {
+for (const name of ['lab-trust-policy.mjs', 'evolution-domain.mjs', 'evolution-session.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'evolution-retention.mjs', 'strategic-telemetry.mjs', 'combo-telemetry.mjs', 'adaptive-strategy.mjs', 'batch-matrix.mjs', 'strategy-contracts.mjs', 'strategy-evidence.mjs', 'strategy-analysis.mjs', 'strategy-synthesis.mjs', 'strategy-branch.mjs', 'strategy-information.mjs', 'strategy-live.mjs', 'observatory-bridge.mjs', 'matchup-lab.mjs', 'profile-contracts.mjs', 'profile-journal.mjs', 'profile-store.mjs', 'profile-science.mjs', 'profile-arena.mjs', 'mutation-domain.mjs', 'discovery-domain.mjs', 'discovery-scan.mjs', 'discovery-engine.mjs', 'experiment-domain.mjs', 'experiment-portability.mjs']) {
   const content = await readFile(path.join(root, 'packages/simulation-runtime/src', name), 'utf8');
   await writeFile(path.join(dist, 'evolution', name), content.replace("from '@intrilex/shared'", "from '../shared-browser.js'").replace("from '@intrilex/statistics/estimators'", "from '../shared-analytics/estimators.mjs'").replace("from '../../policies/src/weighted-heuristic.mjs'", "from './weighted-heuristic.mjs'"));
 }
@@ -160,15 +160,20 @@ async function copySharedAnalytics() {
   await mkdir(out, { recursive: true });
   const sources = [
     ['packages/statistics/src/estimators.mjs', 'estimators.mjs'],
+    ['packages/statistics/src/paired-tests.mjs', 'paired-tests.mjs'],
     ['packages/analytics/src/metric-registry.mjs', 'metric-registry.mjs'],
     ['packages/analytics/src/observatory-integrity.mjs', 'observatory-integrity.mjs'],
     ['packages/analytics/src/observatory-core.mjs', 'observatory-core.mjs'],
     ['packages/analytics/src/choice-analysis.mjs', 'choice-analysis.mjs'],
     ['packages/analytics/src/meta-atlas.mjs', 'meta-atlas.mjs'],
     ['packages/analytics/src/combo-analytics.mjs', 'combo-analytics.mjs'],
+    ['packages/analytics/src/paired-abba.mjs', 'paired-abba.mjs'],
+    ['packages/analytics/src/experiment-integrity.mjs', 'experiment-integrity.mjs'],
   ];
   for (const [src, name] of sources) {
-    const text = (await readFile(path.join(root, src), 'utf8')).replaceAll("from '@intrilex/statistics/estimators'", "from './estimators.mjs'");
+    const text = (await readFile(path.join(root, src), 'utf8'))
+      .replaceAll("from '@intrilex/statistics/estimators'", "from './estimators.mjs'")
+      .replaceAll("from '@intrilex/statistics/paired-tests'", "from './paired-tests.mjs'");
     if (/from '@intrilex\//.test(text)) throw new Error(`shared-analytics/${name} has an unrewritten workspace import`);
     writeFileSync(path.join(out, name), text);
   }

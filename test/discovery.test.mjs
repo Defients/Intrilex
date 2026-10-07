@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { runInNewContext } from 'node:vm';
+import { LAB_TRUST_POLICY } from '../packages/simulation-runtime/src/lab-trust-policy.mjs';
 import { readFile } from 'node:fs/promises';
 import { hashCanonical } from '../packages/shared/src/canonical.mjs';
 import {
@@ -334,18 +335,19 @@ function promotableHypothesis(overrides = {}) {
   return h;
 }
 
-test('promotion gates promote only when every gate passes', () => {
+test('Wave 0 blocks discovery promotion while retaining all statistical gate results', () => {
   const j = evaluatePromotion(promotableHypothesis());
-  assert.equal(j.verdict, 'promote');
-  assert.equal(j.confidence, 'MODERATE');
-  assert.ok(j.reasons.every((r) => r.passed), JSON.stringify(j.reasons.filter((r) => !r.passed)));
+  assert.equal(j.verdict, 'unresolved');
+  assert.equal(j.confidence, null);
+  assert.deepEqual(j.reasons.filter(r => !r.passed).map(r => r.code), ['LAB_WAVE0_CONFIRMATORY_COMPARISON_BLOCKED']);
 });
 
-test('promotion gates: robust pooled evidence with 3 replications earns HIGH confidence', () => {
+test('Wave 0 does not grant discovery authority even to robust pooled evidence with 3 replications', () => {
   const h = promotableHypothesis({ evidence: { decisive: 640, games: 640, estimate: 0.12, interval: [0.08, 0.16] }, replication: { attempted: 3, passed: 3 } });
   const j = evaluatePromotion(h);
-  assert.equal(j.verdict, 'promote');
-  assert.equal(j.confidence, 'HIGH');
+  assert.equal(j.verdict, 'unresolved');
+  assert.equal(j.confidence, null);
+  assert.ok(j.reasons.filter(r => r.code !== 'LAB_WAVE0_CONFIRMATORY_COMPARISON_BLOCKED').every(r => r.passed));
 });
 
 test('insufficient sample cannot promote — it stays unresolved', () => {
@@ -354,15 +356,15 @@ test('insufficient sample cannot promote — it stays unresolved', () => {
   assert.ok(j.reasons.some((r) => r.code === 'MIN_SAMPLE' && !r.passed));
 });
 
-test('failed replication and seat confound reject; failed population challenge narrows to conditional', () => {
+test('failed replication and seat confound still reject; Wave 0 withholds conditional discovery authority', () => {
   const failed = promotableHypothesis({ replication: { attempted: 2, passed: 1 }, checks: [{ kind: 'seat-mirror', verdict: 'passed' }, { kind: 'replication', verdict: 'failed', detail: 'x' }] });
   assert.equal(evaluatePromotion(failed).verdict, 'reject');
   const seatBad = promotableHypothesis({ checks: [{ kind: 'seat-mirror', verdict: 'failed' }] });
   assert.equal(evaluatePromotion(seatBad).verdict, 'reject');
   const narrowed = promotableHypothesis({ checks: [{ kind: 'seat-mirror', verdict: 'passed' }, { kind: 'challenge-population', verdict: 'failed' }] });
   const j = evaluatePromotion(narrowed);
-  assert.equal(j.verdict, 'conditional');
-  assert.equal(j.confidence, 'MODERATE');
+  assert.equal(j.verdict, 'unresolved');
+  assert.equal(j.confidence, null);
 });
 
 test('an interval that excludes the claimed direction rejects; wide intervals stay unresolved', () => {
@@ -374,9 +376,10 @@ test('an interval that excludes the claimed direction rejects; wide intervals st
 
 // ── Discovery artifact / lifecycle ──────────────────────────────
 
-test('discovery artifact carries gates, provenance and an explicit non-causal limitation', () => {
+test('historical discovery artifact remains inspectable with provenance and an explicit non-causal limitation', () => {
   const h = promotableHypothesis();
-  const j = evaluatePromotion(h);
+  // Historical format fixture only, not a current promotion decision.
+  const j = { verdict: 'promote', confidence: 'MODERATE', grade: 'SUPPORTED', reasons: [] };
   const run = createDiscoveryRun({ mode: 'open', gameBudget: 512 }, createEvidenceSnapshot(flatCorpus(), IDENT), IDENT, NOW);
   const d = createDiscoveryArtifact(h, run, j, NOW);
   validateDiscoveryArtifact(d);
@@ -430,26 +433,21 @@ test('a stored RUNNING artifact is reopened as PAUSED', async () => {
 
 // ── Orchestrator end-to-end (synthetic executor) ────────────────
 
-test('end-to-end: reproduced anomaly promotes to a discovery', async () => {
+test('end-to-end: reproduced anomaly retains exploratory evidence without a Wave 0 discovery claim', async () => {
   const { run } = await corpusRun(matchupCorpus(), { executor: fakeExecutor({ 'tempo|value': { pA: 0.74 } }), gameBudget: 4096 });
   assert.equal(run.status, 'COMPLETE');
-  assert.equal(run.discoveries.length, 1);
-  const d = run.discoveries[0];
-  assert.equal(d.category, 'matchup');
-  assert.equal(d.status, 'discovery');
-  assert.equal(d.replication.attempted, 2);
-  assert.equal(d.replication.passed, 2);
-  assert.equal(d.seatMirroring, 'PASSED');
-  assert.ok(d.effect.estimate > 0.05);
-  assert.ok(d.effect.interval95[0] > 0);
-  assert.equal(d.provenance.evidenceSnapshotId, run.evidence.snapshotId);
-  assert.ok(d.provenance.experimentRunIds.length >= 3);
+  assert.equal(run.discoveries.length, 0);
   const h = run.hypotheses[0];
-  assert.equal(h.status, 'discovery');
-  assert.deepEqual(h.lifecycle.map((l) => l.state), ['hypothesis', 'queued', 'testing', 'supported_finding', 'replicating', 'replicating', 'replicated_finding', 'discovery']);
-  assert.ok(run.journal.some((e) => e.type === 'discovery'));
+  assert.equal(h.status, 'unresolved');
+  assert.equal(h.replication.attempted, 2);
+  assert.equal(h.replication.passed, 2);
+  assert.ok(h.evidence.estimate > 0.05);
+  assert.ok(h.evidence.interval[0] > 0);
+  assert.deepEqual(h.lifecycle.map((l) => l.state), ['hypothesis', 'queued', 'testing', 'supported_finding', 'replicating', 'replicating', 'unresolved']);
+  assert.match(h.lifecycle.at(-1).reason, /LAB_WAVE0_CONFIRMATORY_COMPARISON_BLOCKED/);
+  assert.equal(run.journal.some((e) => e.type === 'discovery'), false);
   assert.ok(run.budget.consumed <= run.budget.allocated);
-  assert.equal(discoveryRunSummary(run).promoted, 1);
+  assert.equal(discoveryRunSummary(run).promoted, 0);
 });
 
 test('end-to-end: vanished signal resolves unresolved, opposite signal rejects', async () => {
@@ -476,13 +474,12 @@ test('end-to-end: seat-confounded signal is rejected and spawns a seat investiga
   assert.ok(original.checks.some((c) => c.kind === 'seat-mirror' && c.verdict === 'failed'));
   const seatH = run.hypotheses.find((h) => h.outcome === 'seat1WinRate' && h.scope?.pairing === 'tempo|value');
   assert.ok(seatH, 'seat confound must be investigated by a dedicated seat hypothesis');
-  assert.equal(seatH.status, 'discovery');
+  assert.equal(seatH.status, 'unresolved');
   // Other pairings may legitimately investigate and promote on their own
   // evidence under the leave-one-out baseline — the required outcome is
   // that the seat confound produces exactly one durable seat discovery.
   const seatDiscoveries = run.discoveries.filter((d) => d.category === 'seat');
-  assert.equal(seatDiscoveries.length, 1);
-  assert.equal(seatDiscoveries[0].status, 'discovery');
+  assert.equal(seatDiscoveries.length, 0, 'Wave 0 preserves the investigation but withholds discovery authority');
   assert.ok(run.journal.some((e) => e.type === 'confound'));
 });
 
@@ -531,7 +528,7 @@ test('end-to-end: no candidates yields a successful zero-discovery run', async (
   assert.ok(run.journal.some((e) => e.type === 'scan-empty'));
 });
 
-test('end-to-end: card hypothesis promotes; failed population challenge narrows scope', async () => {
+test('end-to-end: card hypothesis keeps challenge evidence but cannot promote during Wave 0', async () => {
   const runs = flatCorpus({ games: 40 });
   runs.push(fakeRun('score-rush', 'control', { games: 160, pA: 0.5, seed: 42, mech: { tag: 'TRICK', useRate: 0.6, lift: 0.28 } }));
   const survives = await corpusRun(runs, {
@@ -540,7 +537,7 @@ test('end-to-end: card hypothesis promotes; failed population challenge narrows 
   });
   const card = survives.run.hypotheses.find((h) => h.category === 'card');
   assert.ok(card, 'card candidate should spawn a hypothesis');
-  assert.equal(card.status, 'discovery');
+  assert.equal(card.status, 'unresolved');
   assert.ok(card.checks.some((c) => c.kind === 'challenge-population' && c.verdict === 'passed'));
 
   const narrowed = await corpusRun(runs, {
@@ -604,7 +601,8 @@ test('family-wide BH never strengthens a finding — a marginal signal demotes u
   // the EXPLORATORY ceiling → EVIDENCE_GRADE fails → unresolved.
   const h = promotableHypothesis({ evidence: { estimate: 0.07, interval: [0.02, 0.12] } });
   const solo = evaluatePromotion(h);
-  assert.equal(solo.verdict, 'promote', `fixture must be promotable alone (${solo.reasons.filter((r) => !r.passed).map((r) => r.code)})`);
+  assert.equal(solo.verdict, 'unresolved');
+  assert.deepEqual(solo.reasons.filter(r => !r.passed).map(r => r.code), ['LAB_WAVE0_CONFIRMATORY_COMPARISON_BLOCKED']);
   assert.equal(solo.grade, 'SUPPORTED');
   const family = Array.from({ length: 40 }, (_, i) => ({ id: `H-family-${i}`, pValue: 0.5 }));
   const adjusted = evaluatePromotion(h, { familyPValues: family });
@@ -791,7 +789,7 @@ test('discovery artifact effect.unit follows the outcome metric — turns are no
 async function browserDiscoveryAdapter({ executeSeries } = {}) {
   const src = (await readFile('apps/lab-web/src/evolution/discovery-runner.mjs', 'utf8'))
     .replace(/^import .*;$/gm, '').replace(/^export /gm, '');
-  const sandbox = {
+  const sandbox = { LAB_TRUST_POLICY,
     executeBrowserSeries: executeSeries ?? (async (series) => ({
       run: fakeRun(series.botA, series.botB, { games: series.gameCount, pA: 0.6, seed: series.seed + 3, profileId: series.profileId }),
     })),
@@ -1206,7 +1204,7 @@ async function discoverWorkspace({ scope = null, scopeError = null, prepareResul
     loadDiscoveryRun: store.loadDiscoveryRun ?? (async (id) => ({ runId: id, status: 'PAUSED' })),
     loadDiscovery: store.loadDiscovery ?? (async () => { throw new Error('none'); }),
   };
-  const sandbox = {
+  const sandbox = { LAB_TRUST_POLICY,
     console, document: dom.document, setTimeout, queueMicrotask: globalThis.queueMicrotask,
     AbortController: class { constructor() { this.signal = { aborted: false }; } abort() { this.signal.aborted = true; } },
     app: dom.app,

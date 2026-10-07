@@ -10,11 +10,12 @@
 // (evolution/discovery-*.mjs). This workspace renders state and forwards
 // intents — it never judges evidence itself.
 
-import { app, esc, fmt, state } from '../state.js?v=5c298831b65d';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=5c298831b65d';
-import { EvolutionStore } from '../evolution/evolution-store.mjs?v=5c298831b65d';
-import { executeDiscoveryRun, prepareDiscoveryRun, resolveEvidenceScope } from '../evolution/discovery-runner.mjs?v=5c298831b65d';
-import { DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary } from '../evolution/discovery-domain.mjs?v=5c298831b65d';
+import { app, esc, fmt, state } from '../state.js?v=7d7375aa53c1';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=7d7375aa53c1';
+import { EvolutionStore } from '../evolution/evolution-store.mjs?v=7d7375aa53c1';
+import { executeDiscoveryRun, prepareDiscoveryRun, resolveEvidenceScope } from '../evolution/discovery-runner.mjs?v=7d7375aa53c1';
+import { DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary } from '../evolution/discovery-domain.mjs?v=7d7375aa53c1';
+import { LAB_TRUST_POLICY } from '../evolution/lab-trust-policy.mjs?v=7d7375aa53c1';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 const pp = (n) => Number.isFinite(n) ? `${n >= 0 ? '+' : ''}${(n * 100).toFixed(1)}pp` : '—';
@@ -92,6 +93,7 @@ export function renderDiscover() {
   const run = view.run;
   const startReason = startDisabledReason();
   app.innerHTML = `<section class="panel" data-testid="discover-workspace">
+    <p role="note">${esc(LAB_TRUST_POLICY.notice)} Historical discovery labels are retained, not recertified.</p>
     <div class="panel-header"><div><h2>✦ Discovery Engine</h2>
       <p>Autonomous research — anomaly scan → falsifiable hypotheses → targeted experiments → falsification → replication → gated promotion.</p></div>
       <div class="toolbar">

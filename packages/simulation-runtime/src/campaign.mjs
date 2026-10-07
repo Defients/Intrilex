@@ -38,8 +38,16 @@ export async function runCampaign(config) {
     evidenceEpoch: config.evidenceEpoch ?? 'post-rules-parity-repair-v0.28.1',
     postRulesParityRepair: config.postRulesParityRepair ?? true,
     authorityHash: config.authorityHash ?? null,
-    releaseIdentityHash: config.releaseIdentityHash ?? null
+    releaseIdentityHash: config.releaseIdentityHash ?? null,
   };
+  // Design-of-record: paired AB/BA in which the BA leg reverses the
+  // policy↔seat assignment (policyIds[i] binds to seat i+1). Introduced by
+  // the seat-swap repair — legacy corpora predate this marker and cannot
+  // prove balanced seat assignment. Kept OUT of `semantic`: it is a fixed
+  // property of this scheduler version, not a per-experiment knob — folding
+  // it into experimentHash would re-key every derived seed for no
+  // discriminative value.
+  const experimentDesign = { type: 'paired-ab-ba', designVersion: '2.0.0', pairSize: 2, seedPolicy: 'independent-derived-per-ordinal' };
   const experimentHash = hashCanonical(semantic);
   const ordinalStart = config.ordinalStart ?? 0, ordinalEnd = config.ordinalEnd ?? config.matchCount;
   if (!Number.isInteger(ordinalStart) || !Number.isInteger(ordinalEnd) || ordinalStart < 0 || ordinalEnd > config.matchCount || ordinalEnd <= ordinalStart) throw new RangeError('Invalid campaign ordinal range');
@@ -48,11 +56,16 @@ export async function runCampaign(config) {
     const pair = config.policyPairs[ordinal % config.policyPairs.length];
     const swap = Math.floor(ordinal / config.policyPairs.length) % 2 === 1;
     const seatOrder = swap ? ['P2', 'P1'] : ['P1', 'P2'];
+    // True AB/BA: policyIds[i] is bound to physical seat i+1 by the runtime
+    // (seatOrder only selects which player label sits there). The BA leg must
+    // therefore reverse the policy array — reversing seatOrder alone leaves
+    // every policy permanently in the same seat/first-mover slot.
+    const legPolicyIds = swap ? [pair[1], pair[0]] : [pair[0], pair[1]];
     // pairedRunId links AB and BA runs: ordinals k and k+P (where P = policyPairs.length)
     // form a matched AB/BA pair sharing the same pairedRunId.
     const pairBlockIndex = Math.floor(ordinal / config.policyPairs.length);
     const pairedRunId = `PR-${experimentHash.slice(0, 16)}-${pair[0]}-${pair[1]}-block-${Math.floor(pairBlockIndex / 2)}`;
-    return { ordinal, profileId: semantic.profileId, seed: deriveMatchSeed(experimentHash, ordinal), seatOrder, policyIds: pair, decisionLimit: semantic.decisionLimit, includeReplay: false, workerCount: config.workerCount ?? 1, runInstanceId: config.runInstanceId ?? experimentHash, pairedRunId, seatSwapped: swap, evidenceEpoch: semantic.evidenceEpoch, postRulesParityRepair: semantic.postRulesParityRepair, authorityHash: semantic.authorityHash, releaseIdentityHash: semantic.releaseIdentityHash };
+    return { ordinal, profileId: semantic.profileId, seed: deriveMatchSeed(experimentHash, ordinal), seatOrder, policyIds: legPolicyIds, decisionLimit: semantic.decisionLimit, includeReplay: false, workerCount: config.workerCount ?? 1, runInstanceId: config.runInstanceId ?? experimentHash, pairedRunId, pairedLeg: swap ? 'BA' : 'AB', seatSwapped: swap, evidenceEpoch: semantic.evidenceEpoch, postRulesParityRepair: semantic.postRulesParityRepair, authorityHash: semantic.authorityHash, releaseIdentityHash: semantic.releaseIdentityHash };
   });
   const workerCount = Math.max(1, Math.min(config.workerCount ?? 1, specs.length));
   let records;
@@ -93,7 +106,7 @@ export async function runCampaign(config) {
   const accountingInvariant = totalAccounted === records.length;
   const campaignStatus = errorCount > 0 ? 'FAIL' : (abortedCount > 0 || unsupportedCount > 0) ? 'PARTIAL' : 'PASS';
   return {
-    schemaVersion: '4.1.0', semantic, experimentHash, workerCount,
+    schemaVersion: '4.1.0', semantic, experimentHash, experimentDesign, workerCount,
     semanticMatchCount: config.matchCount, ordinalRange: [ordinalStart, ordinalEnd],
     matchCount: successes.length, requestedMatchCount: config.matchCount,
     completedCount, abortedCount, unsupportedCount, errorCount,
@@ -234,6 +247,7 @@ export function campaignAggregate(campaign) {
     postRulesParityRepair: campaign.postRulesParityRepair ?? campaign.semantic.postRulesParityRepair ?? true,
     authorityHash: campaign.authorityHash ?? campaign.semantic.authorityHash ?? null,
     releaseIdentityHash: campaign.releaseIdentityHash ?? campaign.semantic.releaseIdentityHash ?? null,
+    experimentDesign: campaign.experimentDesign ?? campaign.semantic.experimentDesign ?? null,
     matchCount: campaign.summaries.length, completedMatchCount: completed.length, abortCount: campaign.summaries.length - completed.length,
     drawCount: terminations.CANONICAL_DRAW ?? 0, terminationCounts: Object.fromEntries(Object.entries(terminations).sort()),
     seatWins, seat1WinRate: decisive.length ? seatWins['1'] / decisive.length : 0,

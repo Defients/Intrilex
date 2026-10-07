@@ -243,18 +243,23 @@ test('cross-era deltas are blocked; a common-era re-evaluation produces new comp
   assert.notEqual(a.id, historical.id, 're-evaluation is new evidence, not a rewrite');
 });
 
-test('promotion journal is complete, deterministic and bounded in its claims (labeled fixture)', async () => {
+test('promotion journal preparation remains complete and bounded without granting Wave 0 authority (labeled fixture)', async () => {
   const store = memoryStore(), created = await createGraveMaw(store), id = created.agentProfileId;
   const { nomination } = await fixtureSeries({ store, agentProfileId: id, commandId: 's' });
   const { decision } = await fixtureChallenge({ store, agentProfileId: id, nominationId: nomination.id, commandId: 'c' });
-  const promoted = await promoteChallenger({ store, agentProfileId: id, decisionId: decision.id, commandId: 'p' });
-  const journal = await store.getArtifact(promoted.journalId), s = journal.body.sections;
+  // Inspect preparation only. The real store rejection is covered by the
+  // Wave 0 suite; this capture does not execute or simulate a Head transition.
+  const before = JSON.stringify(await store.profileView(id));
+  let prepared;
+  store.promote = async input => { prepared = input; };
+  await promoteChallenger({ store, agentProfileId: id, decisionId: decision.id, commandId: 'p' });
+  const { journal, promotionRecord: record } = prepared, s = journal.body.sections;
   for (const key of ['parameterChange', 'behaviorChange', 'performanceChange', 'tradeoffs', 'decision', 'interpretation', 'evidenceQuality', 'references']) assert.ok(s[key], key);
   assert.equal(s.performanceChange.purpose, 'PROMOTION_CHALLENGE'); assert.equal(s.performanceChange.blocks, 48); assert.equal(s.performanceChange.games, 960);
   assert.match(s.interpretation, /not an unbiased estimate of general strength/); assert.match(s.interpretation, /does not show that any parameter change caused/);
   assert.match(s.behaviorChange.note, /Not evidence that a parameter caused a behavior/);
   assert.equal(s.references.decisionId, decision.id); assert.equal(s.references.nominationId, nomination.id);
   assert.equal(s.evidenceQuality.repeatedTesting.attemptNumber, 1);
-  const record = (await store.listArtifacts(id, 'PROMOTION_RECORD'))[0];
-  assert.equal(record.body.journalId, journal.id); assert.equal(record.body.transitionId, promoted.transitionId);
+  assert.equal(record.body.journalId, journal.id);
+  assert.equal(JSON.stringify(await store.profileView(id)), before, 'preparation writes no evidence or Head');
 });

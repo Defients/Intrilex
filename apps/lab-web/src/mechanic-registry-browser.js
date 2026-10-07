@@ -109,7 +109,27 @@ export function validateMechanicTags(tags) {
 
 export function quarantineUnknownTags(tags) {
   const { unknown } = validateMechanicTags(tags);
-  return unknown.map((tag) => ({ tag, status: 'QUARANTINED', reason: 'No canonical mechanic registry entry' }));
+  // Quarantine is reserved for tags with NO taxonomy classification at all —
+  // action-family / action-mode / rank-effect / diagnostic tags are known
+  // non-mechanic dimensions, not missing registry entries.
+  return unknown
+    .filter((tag) => !ACTION_FAMILY_TAGS.has(tag) && !ACTION_MODE_TAGS.has(tag) && !RANK_EFFECT_TAGS.has(tag) && !DIAGNOSTIC_TAGS.has(tag))
+    .map((tag) => ({ tag, status: 'QUARANTINED', reason: 'No canonical registry entry or taxonomy classification' }));
+}
+
+/** Taxonomy coverage report — registered vs classified-non-mechanic vs truly unclassified. */
+export function taxonomyCoverage(tags) {
+  const report = { registered: 0, taxonomyClassified: 0, quarantined: 0, quarantinedTags: [] };
+  for (const tag of [...new Set(tags ?? [])]) {
+    if (MECHANIC_REGISTRY[tag]) report.registered += 1;
+    else if (ACTION_FAMILY_TAGS.has(tag) || ACTION_MODE_TAGS.has(tag) || RANK_EFFECT_TAGS.has(tag) || DIAGNOSTIC_TAGS.has(tag)) report.taxonomyClassified += 1;
+    else { report.quarantined += 1; report.quarantinedTags.push(tag); }
+  }
+  const total = report.registered + report.taxonomyClassified + report.quarantined;
+  report.total = total;
+  report.registeredShare = total ? report.registered / total : null;
+  report.quarantinedShare = total ? report.quarantined / total : null;
+  return report;
 }
 
 // ── Taxonomy Dimensions (browser port of mechanic-registry.mjs) ──

@@ -15,6 +15,7 @@ import { LAB_IDENTITY } from '../evolution/identity.mjs';
 import { EvolutionStore } from '../evolution/evolution-store.mjs';
 import { executeDiscoveryRun, prepareDiscoveryRun, resolveEvidenceScope } from '../evolution/discovery-runner.mjs';
 import { DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary } from '../evolution/discovery-domain.mjs';
+import { LAB_TRUST_POLICY } from '../evolution/lab-trust-policy.mjs';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 const pp = (n) => Number.isFinite(n) ? `${n >= 0 ? '+' : ''}${(n * 100).toFixed(1)}pp` : '—';
@@ -92,6 +93,7 @@ export function renderDiscover() {
   const run = view.run;
   const startReason = startDisabledReason();
   app.innerHTML = `<section class="panel" data-testid="discover-workspace">
+    <p role="note">${esc(LAB_TRUST_POLICY.notice)} Historical discovery labels are retained, not recertified.</p>
     <div class="panel-header"><div><h2>✦ Discovery Engine</h2>
       <p>Autonomous research — anomaly scan → falsifiable hypotheses → targeted experiments → falsification → replication → gated promotion.</p></div>
       <div class="toolbar">

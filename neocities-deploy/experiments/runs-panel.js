@@ -11,7 +11,7 @@
 // never touches the store or state.observatory directly.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc, fmt, pct, short, showToast } from '../state.js?v=5c298831b65d';
+import { esc, fmt, pct, short, showToast } from '../state.js?v=7d7375aa53c1';
 import {
   experimentsReady, getExperiment, runsWithCompatibility, getEvidenceBasis,
   setRunIncluded, setRunExcluded, markRunInvalidated, markRunArchived,
@@ -19,11 +19,11 @@ import {
   previewRunSelection, allRunIds,
   getIncompleteRuns, resumeExperimentRun, finalizeExperimentRun, discardManifest,
   verifyRunArtifacts, exportRunArtifactText, exportAllRunArtifacts, importRunArtifact,
-} from './experiment-controller.mjs?v=5c298831b65d';
-import { downloadResearchPackage, importResearchPackageText } from './research-package.mjs?v=5c298831b65d';
+} from './experiment-controller.mjs?v=7d7375aa53c1';
+import { downloadResearchPackage, importResearchPackageText } from './research-package.mjs?v=7d7375aa53c1';
 import {
   EXCLUSION_REASONS, COMPATIBILITY, RUN_STATUS, RUN_LIFECYCLE, BUNDLED_RUN_ID,
-} from '../evolution/experiment-domain.mjs?v=5c298831b65d';
+} from '../evolution/experiment-domain.mjs?v=7d7375aa53c1';
 
 const REASON_LABELS = {
   'configuration-mismatch': 'Configuration mismatch',

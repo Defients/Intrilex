@@ -5,7 +5,8 @@
   "exports": {
     ".": "./src/statistics.mjs",
     "./evidence-honest": "./src/evidence-honest.mjs",
-    "./estimators": "./src/estimators.mjs"
+    "./estimators": "./src/estimators.mjs",
+    "./paired-tests": "./src/paired-tests.mjs"
   },
   "dependencies": {}
 }

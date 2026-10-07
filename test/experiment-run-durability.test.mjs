@@ -424,7 +424,7 @@ test('lazy detail: a single match loads by id without materializing the run', as
   assert.equal(await api.loadRunMatchDetail(runId, 'T-999'), null);
 });
 
-test('memory backend parity: the same lifecycle works when IndexedDB is absent', async () => {
+test('Wave 0: memory fallback retains inspection but cannot open a durable campaign', async () => {
   const { api, store } = await (async () => {
     const c = await experimentController();
     const s = new ExperimentStore(null);
@@ -432,11 +432,9 @@ test('memory backend parity: the same lifecycle works when IndexedDB is absent',
     return { api: c.api, store: s };
   })();
   assert.equal(store.persisted, false);
-  const { runId } = await api.beginExperimentRun({ config: { ...RUN_CFG, matchCount: 50 }, segments: [{ index: 0, ordinalStart: 0, ordinalEnd: 50 }], batchSize: 50 });
-  await api.commitExperimentBatch(runId, { segmentIndex: 0, ordinalStart: 0, ordinalEnd: 50, summaries: fakeSummaries(0, 50) });
-  const rec = await api.finalizeExperimentRun(runId);
-  assert.equal(rec.run.status, RUN_STATUS.COMPLETED);
-  assert.equal(rec.run.payloadKind, 'indexeddb-batches');
+  await assert.rejects(() => api.beginExperimentRun({ config: RUN_CFG }), { code: 'LAB_WAVE0_PERSISTENT_STORAGE_REQUIRED' });
+  assert.equal((await store.listManifests()).length, 0);
+  assert.ok(api.getExperimentRuns().length > 0, 'bundled/session inspection remains available');
 });
 
 test('dossier evidence disclosure lists incomplete runs honestly', async () => {

@@ -1,5 +1,5 @@
-import { canonicalClone } from "./canonical-json.js?v=5c298831b65d";
-import { resolveRuleNumber } from "./rule-parameters.js?v=5c298831b65d";
+import { canonicalClone } from "./canonical-json.js?v=7d7375aa53c1";
+import { resolveRuleNumber } from "./rule-parameters.js?v=7d7375aa53c1";
 export function isHandZone(zone) {
     return zone.endsWith("_HAND");
 }

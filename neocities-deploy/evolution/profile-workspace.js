@@ -1,13 +1,14 @@
-import { esc } from '../state.js?v=5c298831b65d';
-import { LAB_IDENTITY } from './identity.mjs?v=5c298831b65d';
-import { LAB_PROFILES } from './evolution-domain.mjs?v=5c298831b65d';
-import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=5c298831b65d';
-import { EvolutionStore } from './evolution-store.mjs?v=5c298831b65d';
-import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoint, canCompareMeasurements, resolveEra, sameHead, CONTRACTS } from './profile-contracts.mjs?v=5c298831b65d';
-import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs?v=5c298831b65d';
-import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs?v=5c298831b65d';
-import { buildDossier } from './profile-journal.mjs?v=5c298831b65d';
-import { MODIFIER_STATES, STRATEGIC_STATE_LABELS, DEFAULT_ADAPTIVE_THRESHOLDS, ADAPTIVE_MODIFIER_BOUND, ADAPTIVE_MODIFIER_SCALE, createAdaptiveConfig } from './adaptive-strategy.mjs?v=5c298831b65d';
+import { esc } from '../state.js?v=7d7375aa53c1';
+import { LAB_IDENTITY } from './identity.mjs?v=7d7375aa53c1';
+import { LAB_PROFILES } from './evolution-domain.mjs?v=7d7375aa53c1';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=7d7375aa53c1';
+import { EvolutionStore } from './evolution-store.mjs?v=7d7375aa53c1';
+import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoint, canCompareMeasurements, resolveEra, sameHead, CONTRACTS } from './profile-contracts.mjs?v=7d7375aa53c1';
+import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs?v=7d7375aa53c1';
+import { LAB_TRUST_POLICY } from './lab-trust-policy.mjs?v=7d7375aa53c1';
+import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs?v=7d7375aa53c1';
+import { buildDossier } from './profile-journal.mjs?v=7d7375aa53c1';
+import { MODIFIER_STATES, STRATEGIC_STATE_LABELS, DEFAULT_ADAPTIVE_THRESHOLDS, ADAPTIVE_MODIFIER_BOUND, ADAPTIVE_MODIFIER_SCALE, createAdaptiveConfig } from './adaptive-strategy.mjs?v=7d7375aa53c1';
 
 // Profile-centered Lab workflows. Presentation only: every scientific or
 // head-changing action goes through ProfileStore / profile-science.
@@ -112,7 +113,7 @@ export function mountProfileWorkspace(root) {
     const challengeRows = challenges.map(c => {
       const d = kind('CHALLENGE_DECISION').find(x => x.body.challengeId === c.id), auth = d ? promotionAuthority({ decision: d, manifest: c, head: v.head }) : null;
       const s = d?.body.statistics;
-      return `<tr><th scope="row">#${c.body.attempt.number}</th><td>${c.body.attempt.automaticEligible ? 'Eligible' : 'Repeat — manual only'}</td><td>${d ? `${esc(d.body.decision)}<br><small>${esc(d.body.reasons.join(', '))}</small>` : esc(op(c.id)?.status ?? 'NOT RUN')}</td>
+      return `<tr><th scope="row">#${c.body.attempt.number}</th><td>${!LAB_TRUST_POLICY.automaticPromotion ? 'Suspended — exploratory only' : c.body.attempt.automaticEligible ? 'Eligible' : 'Repeat — manual only'}</td><td>${d ? `${esc(d.body.decision)}<br><small>${esc(d.body.reasons.join(', '))}</small>` : esc(op(c.id)?.status ?? 'NOT RUN')}</td>
         <td>${s?.available ? `mean ${fmt(s.mean, 4)}<br>95% one-sided [${fmt(s.lower, 4)}, ${fmt(s.upper, 4)}]<br>${s.blocks} blocks · ${s.games} games` : 'unavailable'}</td>
         <td>${!d ? `<button data-ap-run-challenge="${esc(c.id)}" ${busy() ? 'disabled' : ''}>Run / resume challenge</button>` : auth.ok ? `<button data-ap-promote="${esc(d.id)}" ${busy() ? 'disabled' : ''}>Promote (atomic)</button>` : `<small>Not authorized: ${esc(auth.reasons.join(', '))}</small>`}
         ${d && !sameHead(c.body.expectedHead, v.head) ? `<br><button data-ap-rechallenge="${esc(nomination.id)}" ${busy() ? 'disabled' : ''}>Re-challenge current head</button>` : ''}</td></tr>`;
@@ -218,7 +219,7 @@ export function mountProfileWorkspace(root) {
 
   function render() {
     const v = ui.view;
-    root.innerHTML = `<div class="evo-workspace-title"><div><span class="evo-eyebrow">AGENT PROFILES</span><h3>Persistent agent profiles</h3><p>Named minds with authored intent, exact active checkpoints, and evidence that survives the next release.</p></div></div>
+    root.innerHTML = `<div class="evo-workspace-title"><div><span class="evo-eyebrow">AGENT PROFILES</span><h3>Persistent agent profiles</h3><p>Named minds with authored intent, exact active checkpoints, and retained historical evidence.</p><p role="note">${esc(LAB_TRUST_POLICY.notice)}</p></div></div>
       <p class="danger" role="alert" id="ap-error">${esc(ui.error)}</p><p role="status" id="ap-notice">${esc(ui.notice)}</p><p role="status" id="ap-progress" aria-live="polite">${esc(ui.progress)}</p>
       <div class="ap-layout">${rosterHtml()}<section class="ap-main" aria-label="Selected Profile">${v ? `<header class="ap-header"><h3>${esc(v.profile.displayName)}</h3>${v.profile.origin !== 'LOCAL' ? badge(v.profile.origin === 'MIGRATED_FROM_V1' ? 'Migrated from V1' : 'Imported — unverified', 'warning') : ''}${v.profile.forkOf ? badge(`Fork of ${short(v.profile.forkOf.agentProfileId, 12)}`) : ''}</header>
         <div class="evo-tabs" role="tablist" aria-label="Profile workflows">${TABS.map(([k, label]) => `<button role="tab" id="ap-tab-${k}" aria-controls="ap-panel" aria-selected="${ui.tab === k}" data-ap-tab="${k}" tabindex="${ui.tab === k ? 0 : -1}">${label}</button>`).join('')}</div>

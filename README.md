@@ -40,9 +40,9 @@ Active Play runs on the **Homecoming rules-assisted board**: structured Action F
 ### Play
 
 - **Complete rules profiles** — Advanced Core, Unrestricted Core (hidden supers, generated effect copies, 10♦ Mimic, Sudden Death), and First Contact for tutorials, all human- and AI-playable
-- **Online 1v1 Direct Duel** — server-authoritative WebSocket matches with a hidden-information firewall, idempotent submission, reconnect grace countdowns, rematch flow, and certified replays
-- **Ranked ladder** — Glicko-2 ratings with RD/volatility provenance, seasons with operator provisioning, placements, leaderboards, and public player profiles
-- **Tournament workspace** — AI brackets with AB/BA seat-swap fairness and post-tournament analytics
+- **Online 1v1 Direct Duel** — SUPPORTED: server-authoritative WebSocket matches with a hidden-information firewall, idempotent submission, reconnect grace countdowns, rematch flow, and certified replays
+- **Ranked matchmaking ladder** — Glicko-2 ratings with RD/volatility provenance, seasons with operator provisioning, placements, leaderboards, and public player profiles
+- **Tournament workspace** — SUPPORTED: AI brackets with AB/BA seat-swap fairness and post-tournament analytics
 - **Spectator mode** — neutral projection (never a player's authorized view), capacity limits, and spectator discovery
 - **Academy + puzzle ladder** — 5 sequential interactive lessons and progressive puzzles with progress tracking
 
@@ -145,7 +145,7 @@ vendor/            Pinned toolchain (TypeScript) and engine sources
 
 Intrilex reports its limits as precisely as its capabilities:
 
-- **Canonical 3–4 player multiplayer** — blocked by scope freeze; online 1v1 Direct Duel *is* supported
+- **Canonical 3–4 player Multiplayer** — BLOCKED by scope freeze; online 1v1 Direct Duel *is* supported
 - **Optional game modules** — blocked by scope freeze
 - **Event-level state stepping** — replay stepping operates at command level
 - **Lookahead / Tournament / Human-meta-proxy policy tiers** — not yet benchmarked

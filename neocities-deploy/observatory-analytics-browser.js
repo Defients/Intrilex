@@ -11,7 +11,7 @@
 // Formula hashes are sha256Text over the shared metric-registry formula text,
 // so they equal the canonical hashes by construction.
 
-import { sha256Text } from './engine/browser-entry.js?v=5c298831b65d';
+import { sha256Text } from './engine/browser-entry.js?v=7d7375aa53c1';
 import {
   MECHANIC_REGISTRY,
   mechanicDisplayName,
@@ -21,15 +21,15 @@ import {
   analyticsEntityDefinition,
   synergyExcludedTags,
   areTagsInseparable,
-} from './mechanic-registry-browser.js?v=5c298831b65d';
+} from './mechanic-registry-browser.js?v=7d7375aa53c1';
 
 // Metric identity, estimators and the synergy/mechanics inference core are
 // shared verbatim with canonical analytics (scripts/build.mjs copies them into
 // dist/shared-analytics/), so formula hashes and estimands cannot diverge.
-import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS } from './shared-analytics/metric-registry.mjs?v=5c298831b65d';
-import { wilsonInterval, normalCdf, differenceInProportions } from './shared-analytics/estimators.mjs?v=5c298831b65d';
-import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './shared-analytics/observatory-core.mjs?v=5c298831b65d';
-import { deriveTagRelations, choiceSupportStatus, CHOICE_SUPPORT_MIN_DECLINES } from './shared-analytics/observatory-integrity.mjs?v=5c298831b65d';
+import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS } from './shared-analytics/metric-registry.mjs?v=7d7375aa53c1';
+import { wilsonInterval, differenceInProportions } from './shared-analytics/estimators.mjs?v=7d7375aa53c1';
+import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './shared-analytics/observatory-core.mjs?v=7d7375aa53c1';
+import { deriveTagRelations, choiceSupportStatus, CHOICE_SUPPORT_MIN_DECLINES } from './shared-analytics/observatory-integrity.mjs?v=7d7375aa53c1';
 
 export { ANALYTICS_SCHEMA_VERSION, wilsonInterval };
 const _formulaHashCache = {};
@@ -62,94 +62,10 @@ function summarizeNumbers(values) {
 }
 
 
-function binomialCoefficient(n, k) {
-  if (k < 0 || k > n) return 0;
-  if (k === 0 || k === n) return 1;
-  let result = 1;
-  for (let i = 0; i < k; i += 1) result = (result * (n - i)) / (i + 1);
-  return result;
-}
-
-function chiSquarePValue(statistic, df) {
-  if (df === 1) return 2 * (1 - normalCdf(Math.sqrt(statistic)));
-  const x = statistic / 2, a = df / 2;
-  let sum = 1, term = 1;
-  for (let i = 1; i < 200; i += 1) { term *= x / (a + i - 1); sum += term; if (Math.abs(term) < 1e-12) break; }
-  const lower = Math.pow(x, a) * Math.exp(-x) * sum / gammaFn(a);
-  return Math.max(0, Math.min(1, 1 - lower));
-}
-
-function gammaFn(z) {
-  const g = 7;
-  const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
-  if (z < 0.5) return Math.PI / (Math.sin(Math.PI * z) * gammaFn(1 - z));
-  z -= 1;
-  let x = c[0];
-  for (let i = 1; i < g + 2; i += 1) x += c[i] / (z + i);
-  const t = z + g + 0.5;
-  return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
-}
-
-function seedFrom(seed) {
-  const h = sha256Text(String(seed));
-  return parseInt(h.slice(0, 8), 16);
-}
-
-function rng(seed) {
-  let s = seed >>> 0;
-  return function () {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
-
-export function mcnemarPairedTest(pairs) {
-  let b = 0, c = 0, seat1Always = 0, seat2Always = 0;
-  for (const p of pairs) {
-    if (!p) continue;
-    const aWonSeat1 = Boolean(p.aSeat1Win), bWonSeat1 = Boolean(p.bSeat1Win);
-    const aWonSeat2 = Boolean(p.aSeat2Win), bWonSeat2 = Boolean(p.bSeat2Win);
-    if (aWonSeat1 && aWonSeat2) b += 1;
-    else if (bWonSeat1 && bWonSeat2) c += 1;
-    else if (aWonSeat1 && bWonSeat1) seat1Always += 1;
-    else if (bWonSeat2 && aWonSeat2) seat2Always += 1;
-  }
-  const discordant = b + c;
-  if (discordant === 0) return { b: 0, c: 0, estimate: 0, standardError: null, statistic: 0, pValue: 1, method: 'no-discordant-pairs', sampleSize: pairs.length, discordantPairs: 0, effect: 'policy-advantage', seatEffectConcordant: { seat1AlwaysWins: seat1Always, seat2AlwaysWins: seat2Always } };
-  const estimate = (b - c) / discordant;
-  const standardError = 1 / Math.sqrt(discordant);
-  if (discordant < 25) {
-    const k = Math.min(b, c);
-    let tail = 0;
-    for (let i = 0; i <= k; i += 1) tail += binomialCoefficient(discordant, i) * Math.pow(0.5, discordant);
-    const pValue = Math.min(1, 2 * tail);
-    return { b, c, estimate, standardError, statistic: Math.abs(b - c), pValue, method: 'exact-binomial', sampleSize: pairs.length, discordantPairs: discordant, effect: 'policy-advantage', seatEffectConcordant: { seat1AlwaysWins: seat1Always, seat2AlwaysWins: seat2Always } };
-  }
-  const statistic = (Math.abs(b - c) - 1) ** 2 / discordant;
-  const pValue = chiSquarePValue(statistic, 1);
-  return { b, c, estimate, standardError, statistic, pValue, method: 'mcnemar-continuity-corrected', sampleSize: pairs.length, discordantPairs: discordant, effect: 'policy-advantage', seatEffectConcordant: { seat1AlwaysWins: seat1Always, seat2AlwaysWins: seat2Always } };
-}
-
-export function pairedBootstrapABBA(pairs, { iterations = 2000, seed = 'intrilex-abba-paired', alpha = 0.05 } = {}) {
-  if (!pairs.length) return { estimate: null, interval: [null, null], iterations: 0, seed: String(seed), sampleSize: 0 };
-  const random = rng(seedFrom(seed));
-  const estimate = (sample) => {
-    let aWins = 0, bWins = 0, total = 0;
-    for (const p of sample) { if (!p) continue; if (p.aSeat1Win) aWins += 1; if (p.aSeat2Win) aWins += 1; if (p.bSeat1Win) bWins += 1; if (p.bSeat2Win) bWins += 1; total += 2; }
-    return total > 0 ? (aWins - bWins) / total : null;
-  };
-  const samples = [];
-  for (let i = 0; i < iterations; i += 1) {
-    const sample = [];
-    for (let j = 0; j < pairs.length; j += 1) sample.push(pairs[Math.floor(random() * pairs.length)]);
-    const value = estimate(sample);
-    if (Number.isFinite(value)) samples.push(value);
-  }
-  return { estimate: estimate(pairs), interval: [quantile(samples, alpha / 2), quantile(samples, 1 - alpha / 2)], iterations: samples.length, seed: String(seed), sampleSize: pairs.length };
-}
-
-
-
+// Paired AB/BA inference (McNemar, paired bootstrap, sign test) lives in the
+// shared crypto-free module mirrored at dist/shared-analytics/paired-tests.mjs
+// — identical code in Node and browser, so resamples cannot diverge.
+export { mcnemarPairedTest, pairedBootstrapABBA, binomialSignTest } from './shared-analytics/paired-tests.mjs?v=7d7375aa53c1';
 
 // ── Internal helpers ──
 
@@ -428,56 +344,24 @@ export function detectAnomalies(summaries,detailedMatches=[]){
   const threshold=turns.p95??Infinity;
   const anomalies=[];
   for(const row of summaries){
-    if(row.completedFullTurns>=threshold)anomalies.push({type:'LONG_MATCH',severity:'warning',matchId:row.matchId,value:row.completedFullTurns,threshold,baseline:threshold,unit:'full turns',detail:`${row.completedFullTurns} completed turns ≥ p95 baseline (${threshold} turns); tail detector flags ~5% of matches by construction`});
-    if(row.terminationReason==='UNSUPPORTED_CONFIGURATION'||row.terminationReason==='ENGINE_REJECTION')anomalies.push({type:row.terminationReason,severity:'critical',matchId:row.matchId,value:row.errorCode,baseline:'accepted run',unit:'termination',detail:`match terminated with ${row.terminationReason}${row.errorCode?` (${row.errorCode})`:''}`});
-    if((row.automaticPriorityAdvanceCount??0)>Math.max(30,(row.responseOpportunityCount??0)*8))anomalies.push({type:'ORCHESTRATION_DENSITY',severity:'info',matchId:row.matchId,value:row.automaticPriorityAdvanceCount,threshold:Math.max(30,(row.responseOpportunityCount??0)*8),unit:'automatic priority advances per match',detail:`${row.automaticPriorityAdvanceCount} automatic priority advances > max(30, 8×${row.responseOpportunityCount??0} response opportunities)`});
-    if((row.responsePlayedCount??0)>20)anomalies.push({type:'RESPONSE_CHAIN_INTENSITY',severity:'info',matchId:row.matchId,value:row.responsePlayedCount,threshold:20,unit:'response plays per match',detail:`${row.responsePlayedCount} response plays > 20 per match`});
+    // category distinguishes true integrity failures from tail-of-distribution
+    // diagnostic signals — a p95 marker flags ~5% of any dataset by
+    // construction and must not read as engine corruption.
+    if(row.completedFullTurns>=threshold)anomalies.push({type:'LONG_MATCH',severity:'warning',category:'diagnostic-signal',matchId:row.matchId,value:row.completedFullTurns,threshold,baseline:threshold,unit:'full turns',detail:`${row.completedFullTurns} completed turns ≥ p95 baseline (${threshold} turns); tail detector flags ~5% of matches by construction`});
+    if(row.terminationReason==='UNSUPPORTED_CONFIGURATION'||row.terminationReason==='ENGINE_REJECTION')anomalies.push({type:row.terminationReason,severity:'critical',category:'integrity-failure',matchId:row.matchId,value:row.errorCode,baseline:'accepted run',unit:'termination',detail:`match terminated with ${row.terminationReason}${row.errorCode?` (${row.errorCode})`:''}`});
+    if((row.automaticPriorityAdvanceCount??0)>Math.max(30,(row.responseOpportunityCount??0)*8))anomalies.push({type:'ORCHESTRATION_DENSITY',severity:'info',category:'diagnostic-signal',matchId:row.matchId,value:row.automaticPriorityAdvanceCount,threshold:Math.max(30,(row.responseOpportunityCount??0)*8),unit:'automatic priority advances per match',detail:`${row.automaticPriorityAdvanceCount} automatic priority advances > max(30, 8×${row.responseOpportunityCount??0} response opportunities)`});
+    if((row.responsePlayedCount??0)>20)anomalies.push({type:'RESPONSE_CHAIN_INTENSITY',severity:'info',category:'diagnostic-signal',matchId:row.matchId,value:row.responsePlayedCount,threshold:20,unit:'response plays per match',detail:`${row.responsePlayedCount} response plays > 20 per match`});
   }
   for(const match of detailedMatches){
     const unclassified=(match.facts?.resolutionFacts??[]).filter(f=>f.mechanicTags?.includes('unclassified')).length;
-    if(unclassified)anomalies.push({type:'UNCLASSIFIED_FACT',severity:'warning',matchId:match.summary.matchId,value:unclassified,unit:'unclassified resolution facts',detail:`${unclassified} resolution fact${unclassified===1?'':'s'} carry the 'unclassified' mechanic tag`});
+    if(unclassified)anomalies.push({type:'UNCLASSIFIED_FACT',severity:'warning',category:'integrity-warning',matchId:match.summary.matchId,value:unclassified,unit:'unclassified resolution facts',detail:`${unclassified} resolution fact${unclassified===1?'':'s'} carry the 'unclassified' mechanic tag`});
   }
   return anomalies.sort((a,b)=>String(a.matchId).localeCompare(String(b.matchId))||a.type.localeCompare(b.type));
 }
 
-// ── AB/BA matched-pair analysis (browser port, parity with @intrilex/analytics) ──
-// Moved here from browser-analytics.js so the orchestrator module stays under
-// its size budget; behavior unchanged.
-export function buildPairedABBAAnalysis(summaries) {
-  const hasPairedRunIds = summaries.some((r) => r.pairedRunId);
-  const pairBlocks = new Map();
-  let incompletePairs = 0;
-  for (const row of summaries) {
-    const blockKey = (hasPairedRunIds && row.pairedRunId) ? row.pairedRunId : [...(row.policyIds ?? [])].sort().join('__');
-    if (!pairBlocks.has(blockKey)) pairBlocks.set(blockKey, []);
-    pairBlocks.get(blockKey).push(row);
-  }
-  const pairResults = [];
-  for (const [blockKey, rows] of pairBlocks) {
-    rows.sort((a, b) => (a.matchOrdinal ?? 0) - (b.matchOrdinal ?? 0));
-    const policyA = rows[0]?.policyIds?.[0] ?? 'A', policyB = rows[0]?.policyIds?.[1] ?? 'B';
-    const pairs = [];
-    for (let i = 0; i + 1 < rows.length; i += 2) {
-      const seat1Row = rows[i], seat2Row = rows[i + 1];
-      if (!seat1Row || !seat2Row) { incompletePairs += 1; continue; }
-      const seatSwapped = seat2Row.seatSwapped === true || (JSON.stringify(seat2Row.seatOrder) !== JSON.stringify(seat1Row.seatOrder));
-      const s1wp = seat1Row.winner !== 'DRAW' && seat1Row.winner !== 'ABORTED' ? seat1Row.policyIds[seat1Row.seatOrder.indexOf(seat1Row.winner)] : null;
-      const s2wp = seat2Row.winner !== 'DRAW' && seat2Row.winner !== 'ABORTED' ? seat2Row.policyIds[seat2Row.seatOrder.indexOf(seat2Row.winner)] : null;
-      pairs.push({ aSeat1Win: s1wp === policyA, bSeat1Win: s1wp === policyB, aSeat2Win: s2wp === policyA, bSeat2Win: s2wp === policyB, seatSwapped, pairedRunId: seat1Row.pairedRunId ?? null });
-    }
-    if (rows.length % 2 === 1) incompletePairs += 1;
-    if (pairs.length === 0) continue;
-    const allSwapped = pairs.every((p) => p.seatSwapped);
-    const mcnemar = mcnemarPairedTest(pairs);
-    const bootstrap = pairedBootstrapABBA(pairs, { iterations: 2000, seed: `abba:${blockKey}` });
-    pairResults.push({ policyPair: blockKey, policyA, policyB, pairedBlocks: pairs.length, seatSwapVerified: allSwapped, mcnemar, bootstrap, design: allSwapped ? 'matched AB/BA seat-swap (verified)' : 'AB/BA seat-swap (unverified — legacy or incomplete)', interpretation: mcnemar.pValue < 0.05 ? 'statistically significant seat-policy differential (p < 0.05)' : 'no statistically significant seat-policy differential detected' });
-  }
-  const totalPairs = pairResults.reduce((s, r) => s + r.pairedBlocks, 0);
-  // Distinguish "no pairs" causes: a schedule that never repeated a
-  // pairedRunId yields hasPairedRunIds=true with zero complete pairs — a data
-  // limitation of the campaign, not a pairing failure.
-  const scheduleNote = totalPairs === 0 && hasPairedRunIds
-    ? 'pairedRunIds are present but none grouped ≥2 matches — the campaign schedule did not repeat pair blocks, so AB/BA pairing is not possible on this dataset'
-    : null;
-  return { schemaVersion: ANALYTICS_SCHEMA_VERSION, design: 'matched AB/BA seat-swap', pairCount: pairResults.length, totalPairedBlocks: totalPairs, incompletePairs, hasPairedRunIds, scheduleNote, pairResults: pairResults.sort((a, b) => a.policyPair.localeCompare(b.policyPair)), interpretationBoundary: hasPairedRunIds ? 'AB/BA pairs are linked by pairedRunId.' : 'AB/BA pairs are matched by policy-pair block (legacy).' };
-}
+// ── AB/BA matched-pair analysis ──
+// Canonical implementation in the shared module (mirrored verbatim from
+// packages/analytics/src/paired-abba.mjs): verifies actual policy↔seat
+// assignment per block — fail-closed — and aggregates paired inference per
+// matchup rather than emitting one McNemar per individual pair.
+export { buildPairedABBAAnalysis, PAIRED_ABBA_SCHEMA_VERSION, PAIR_BLOCK_REASON, PAIR_DESIGN_STATUS, verifyPairBlock, seatAssignmentOf } from './shared-analytics/paired-abba.mjs?v=7d7375aa53c1';

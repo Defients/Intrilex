@@ -79,3 +79,11 @@ export async function fixtureChallenge({ store, agentProfileId, nominationId, co
   await store.storeArtifacts({ artifacts: [challengerMeasurement, incumbentMeasurement, decision] });
   return { manifest, decision, challengerMeasurement, incumbentMeasurement, cm, im, pack, era, policy };
 }
+/** Explicit manual activation for transaction/snapshot tests during Wave 0.
+ * This never impersonates automatic promotion or bypasses store authority. */
+export async function manuallyActivateFixtureDecision({ store, agentProfileId, decisionId, commandId }) {
+  const decision = await store.getArtifact(decisionId);
+  const manifest = await store.getArtifact(decision.body.challengeId);
+  return store.manualActivate({ commandId, agentProfileId, expectedHead: manifest.body.expectedHead,
+    checkpointId: manifest.body.challengerCheckpointId, reason: 'Explicit fixture manual activation; no automatic approval claimed.', recommendationDecisionId: decisionId });
+}

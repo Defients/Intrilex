@@ -57,7 +57,7 @@ export function observatorySummaryForRecord(record, run, { pairId = null } = {})
     schemaVersion: '4.1.0', analyticsSchemaVersion: '4.2.0',
     matchId: record.matchId, matchOrdinal: record.ordinal, seed: record.seed,
     profileId, seatOrder: ['P1', 'P2'], policyIds: [...(record.policyIds ?? [])],
-    ...(pairId ? { pairedRunId: pairId } : {}),
+    ...(pairId ? { pairedRunId: pairId, pairedLeg: record.swapped === true ? 'BA' : 'AB' } : {}),
     seatSwapped: record.swapped === true,
     winner: record.winner, winningSeat: record.winningSeat ?? null,
     terminationReason: record.terminationReason,

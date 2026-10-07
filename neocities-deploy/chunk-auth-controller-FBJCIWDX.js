@@ -1,2 +1,0 @@
-import{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o}from"./chunk-chunk-LZNUOBHG.js?v=5c298831b65d";import"./chunk-chunk-55CRAFZL.js?v=5c298831b65d";import"./chunk-chunk-HADQ5WYF.js?v=5c298831b65d";export{o as _resetAuthState,m as clearMigrationPending,f as getAccessToken,l as getAccountId,i as getAuthState,k as getGuestIdentity,h as getProfile,a as initAuth,j as isMigrationPending,g as onTokenRefresh,b as signInAnonymously,c as signInWithDiscord,d as signInWithGoogle,e as signOut,n as subscribe};
-//# sourceMappingURL=chunk-auth-controller-FBJCIWDX.js.map

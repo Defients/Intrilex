@@ -243,6 +243,8 @@ test('Test N: analyzeSynergies suppresses pairs below minimum cohort thresholds'
 });
 
 // ── Test O: buildPairedABBAAnalysis with pairedRunId ──
+// Post seat-swap repair: a true BA leg reverses policyIds (policy↔seat),
+// not merely seatOrder (player labels). Stub mirrors verified data.
 test('Test O: buildPairedABBAAnalysis uses pairedRunId when available', () => {
   const summaries = [];
   for (let i = 0; i < 20; i++) {
@@ -250,8 +252,10 @@ test('Test O: buildPairedABBAAnalysis uses pairedRunId when available', () => {
     const seatOrder = seatSwapped ? ['P2', 'P1'] : ['P1', 'P2'];
     summaries.push({
       ...makeRow(i, false, false, i % 2 === 0),
+      policyIds: seatSwapped ? ['value', 'control'] : ['control', 'value'],
       seatOrder,
       seatSwapped,
+      pairedLeg: seatSwapped ? 'BA' : 'AB',
       pairedRunId: `PR-test-block-${Math.floor(i / 2)}`,
       matchOrdinal: i,
     });
@@ -260,6 +264,7 @@ test('Test O: buildPairedABBAAnalysis uses pairedRunId when available', () => {
   assert.ok(result.hasPairedRunIds, 'Should detect pairedRunIds');
   assert.ok(result.pairResults.length > 0, 'Should have pair results');
   assert.ok(result.pairResults[0].seatSwapVerified, 'Seat swap should be verified');
+  assert.equal(result.pairResults[0].designStatus, 'verified');
   assert.equal(result.incompletePairs, 0, 'Should have no incomplete pairs');
 });
 
@@ -271,7 +276,9 @@ test('Test P: buildPairedABBAAnalysis detects incomplete pairs', () => {
     const seatOrder = seatSwapped ? ['P2', 'P1'] : ['P1', 'P2'];
     summaries.push({
       ...makeRow(i, false, false, i % 2 === 0),
+      policyIds: seatSwapped ? ['value', 'control'] : ['control', 'value'],
       seatOrder, seatSwapped,
+      pairedLeg: seatSwapped ? 'BA' : 'AB',
       pairedRunId: `PR-test-block-${Math.floor(i / 2)}`,
       matchOrdinal: i,
     });
@@ -284,14 +291,20 @@ test('Test P: buildPairedABBAAnalysis detects incomplete pairs', () => {
 test('Test Q: buildPairedABBAAnalysis works in legacy mode without pairedRunId', () => {
   const summaries = [];
   for (let i = 0; i < 20; i++) {
+    const seatSwapped = i % 2 === 1;
     summaries.push({
       ...makeRow(i, false, false, i % 2 === 0),
+      // Legacy corpora lack pair metadata but may still carry true reversed
+      // policyIds — adjacency pairing verifies on actual seat assignments.
+      policyIds: seatSwapped ? ['value', 'control'] : ['control', 'value'],
+      seatOrder: seatSwapped ? ['P2', 'P1'] : ['P1', 'P2'],
       matchOrdinal: i,
     });
   }
   const result = buildPairedABBAAnalysis(summaries);
   assert.equal(result.hasPairedRunIds, false, 'Should detect legacy mode');
   assert.ok(result.pairResults.length > 0, 'Should still produce pair results');
+  assert.equal(result.pairResults[0].pairingBasis, 'adjacency-heuristic');
 });
 
 // ── Test R: buildObservatoryAnalytics includes new fields ──

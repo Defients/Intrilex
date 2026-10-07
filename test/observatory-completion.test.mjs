@@ -402,13 +402,16 @@ test('V: Rehydration idempotence — building atlas twice produces same results'
 });
 
 // Test W: AB/BA reversal — second run reverses policy-seat assignments
+// (post-repair: BA legs carry reversed policyIds, not just reversed labels).
 test('W: AB/BA reversal — pairedRunId and seatSwapped are present in analytics', () => {
   const rows = [];
   for (let i = 0; i < 20; i++) {
     const seatSwapped = i % 2 === 1;
     rows.push({
       ...makeUnit(i, 'scuttle', 'counter', i % 2 === 0),
+      policyIds: seatSwapped ? ['value', 'control'] : ['control', 'value'],
       seatSwapped,
+      pairedLeg: seatSwapped ? 'BA' : 'AB',
       pairedRunId: `PR-test-block-${Math.floor(i / 2)}`,
       seatOrder: seatSwapped ? ['P2', 'P1'] : ['P1', 'P2'],
     });
@@ -417,6 +420,7 @@ test('W: AB/BA reversal — pairedRunId and seatSwapped are present in analytics
   assert.ok(result.pairedABBA, 'Paired AB/BA analysis should be present');
   assert.equal(result.pairedABBA.hasPairedRunIds, true, 'Should detect pairedRunIds');
   assert.equal(result.pairedABBA.incompletePairs, 0, 'Should have no incomplete pairs');
+  assert.equal(result.pairedABBA.designStatus, 'verified', 'True policy↔seat reversal should verify');
 });
 
 // Test X: Browser/Node parity — same logic produces same metric semantics

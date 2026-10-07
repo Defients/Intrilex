@@ -3,12 +3,10 @@ import {
   deterministicClusterBootstrap,
   differenceInProportions,
   formulaHash,
-  mcnemarPairedTest,
-  pairedBootstrapABBA,
   summarizeNumbers,
   wilsonInterval
 } from '@intrilex/statistics';
-import { MECHANIC_REGISTRY, mechanicRegistryHash, mechanicDisplayName, mechanicCategory, isExcludedFromDiscovery, validateMechanicTags, quarantineUnknownTags, classifyTagDimension, analyticsEntityDefinition, synergyExcludedTags, areTagsInseparable } from '@intrilex/decision-intelligence/mechanic-registry';
+import { MECHANIC_REGISTRY, mechanicRegistryHash, mechanicDisplayName, mechanicCategory, isExcludedFromDiscovery, validateMechanicTags, quarantineUnknownTags, taxonomyCoverage, classifyTagDimension, analyticsEntityDefinition, synergyExcludedTags, areTagsInseparable } from '@intrilex/decision-intelligence/mechanic-registry';
 import { buildRankAnalytics, buildVariantAnalytics, expandTenSuitsInRankPower } from './rank-integration.mjs';
 import { buildChoiceAnalysis, decisionChoices } from './choice-analysis.mjs';
 import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS, metricRegistryWithHashesUsing } from './metric-registry.mjs';
@@ -371,14 +369,17 @@ export function detectAnomalies(summaries,detailedMatches=[]){
   const threshold=turns.p95??Infinity;
   const anomalies=[];
   for(const row of summaries){
-    if(row.completedFullTurns>=threshold)anomalies.push({type:'LONG_MATCH',severity:'warning',matchId:row.matchId,value:row.completedFullTurns,threshold,baseline:threshold,unit:'full turns',detail:`${row.completedFullTurns} completed turns ≥ p95 baseline (${threshold} turns); tail detector flags ~5% of matches by construction`});
-    if(row.terminationReason==='UNSUPPORTED_CONFIGURATION'||row.terminationReason==='ENGINE_REJECTION')anomalies.push({type:row.terminationReason,severity:'critical',matchId:row.matchId,value:row.errorCode,baseline:'accepted run',unit:'termination',detail:`match terminated with ${row.terminationReason}${row.errorCode?` (${row.errorCode})`:''}`});
-    if((row.automaticPriorityAdvanceCount??0)>Math.max(30,(row.responseOpportunityCount??0)*8))anomalies.push({type:'ORCHESTRATION_DENSITY',severity:'info',matchId:row.matchId,value:row.automaticPriorityAdvanceCount,threshold:Math.max(30,(row.responseOpportunityCount??0)*8),unit:'automatic priority advances per match',detail:`${row.automaticPriorityAdvanceCount} automatic priority advances > max(30, 8×${row.responseOpportunityCount??0} response opportunities)`});
-    if((row.responsePlayedCount??0)>20)anomalies.push({type:'RESPONSE_CHAIN_INTENSITY',severity:'info',matchId:row.matchId,value:row.responsePlayedCount,threshold:20,unit:'response plays per match',detail:`${row.responsePlayedCount} response plays > 20 per match`});
+    // category distinguishes true integrity failures from tail-of-distribution
+    // diagnostic signals — a p95 marker flags ~5% of any dataset by
+    // construction and must not read as engine corruption.
+    if(row.completedFullTurns>=threshold)anomalies.push({type:'LONG_MATCH',severity:'warning',category:'diagnostic-signal',matchId:row.matchId,value:row.completedFullTurns,threshold,baseline:threshold,unit:'full turns',detail:`${row.completedFullTurns} completed turns ≥ p95 baseline (${threshold} turns); tail detector flags ~5% of matches by construction`});
+    if(row.terminationReason==='UNSUPPORTED_CONFIGURATION'||row.terminationReason==='ENGINE_REJECTION')anomalies.push({type:row.terminationReason,severity:'critical',category:'integrity-failure',matchId:row.matchId,value:row.errorCode,baseline:'accepted run',unit:'termination',detail:`match terminated with ${row.terminationReason}${row.errorCode?` (${row.errorCode})`:''}`});
+    if((row.automaticPriorityAdvanceCount??0)>Math.max(30,(row.responseOpportunityCount??0)*8))anomalies.push({type:'ORCHESTRATION_DENSITY',severity:'info',category:'diagnostic-signal',matchId:row.matchId,value:row.automaticPriorityAdvanceCount,threshold:Math.max(30,(row.responseOpportunityCount??0)*8),unit:'automatic priority advances per match',detail:`${row.automaticPriorityAdvanceCount} automatic priority advances > max(30, 8×${row.responseOpportunityCount??0} response opportunities)`});
+    if((row.responsePlayedCount??0)>20)anomalies.push({type:'RESPONSE_CHAIN_INTENSITY',severity:'info',category:'diagnostic-signal',matchId:row.matchId,value:row.responsePlayedCount,threshold:20,unit:'response plays per match',detail:`${row.responsePlayedCount} response plays > 20 per match`});
   }
   for(const match of detailedMatches){
     const unclassified=(match.facts?.resolutionFacts??[]).filter(f=>f.mechanicTags?.includes('unclassified')).length;
-    if(unclassified)anomalies.push({type:'UNCLASSIFIED_FACT',severity:'warning',matchId:match.summary.matchId,value:unclassified,unit:'unclassified resolution facts',detail:`${unclassified} resolution fact${unclassified===1?'':'s'} carry the 'unclassified' mechanic tag`});
+    if(unclassified)anomalies.push({type:'UNCLASSIFIED_FACT',severity:'warning',category:'integrity-warning',matchId:match.summary.matchId,value:unclassified,unit:'unclassified resolution facts',detail:`${unclassified} resolution fact${unclassified===1?'':'s'} carry the 'unclassified' mechanic tag`});
   }
   return anomalies.sort((a,b)=>String(a.matchId).localeCompare(String(b.matchId))||a.type.localeCompare(b.type));
 }
@@ -395,110 +396,13 @@ export function compareCohorts(left,right){
   });
 }
 
-/**
- * Build paired AB/BA seat-swap analysis from campaign summaries.
- *
- * The campaign already runs an AB/BA design: for each policy pair (A, B),
- * ordinals alternate seat assignment (A@seat1/B@seat2, then B@seat1/A@seat2).
- * This function groups matched pairs and runs:
- *   - McNemar exact/chi-square test on discordant pairs
- *   - Paired bootstrap on the seat-policy win-rate differential
- *
- * @param {Array} summaries - campaign match summaries with policyIds, seatOrder, winner
- * @returns {object} paired experiment analysis
- */
-export function buildPairedABBAAnalysis(summaries) {
-  // Group summaries by pairedRunId if available, otherwise by policy-pair block.
-  // The campaign assigns pairedRunId to link AB and BA runs. If pairedRunId is
-  // not present (legacy data), we fall back to pairing by ordinal block.
-  const hasPairedRunIds = summaries.some((r) => r.pairedRunId);
-  const pairBlocks = new Map();
-  let incompletePairs = 0;
-  for (const row of summaries) {
-    let pairKey, blockKey;
-    if (hasPairedRunIds && row.pairedRunId) {
-      pairKey = row.pairedRunId;
-      blockKey = row.pairedRunId;
-    } else {
-      pairKey = [...(row.policyIds ?? [])].sort().join('__');
-      blockKey = pairKey;
-    }
-    if (!pairBlocks.has(blockKey)) pairBlocks.set(blockKey, []);
-    pairBlocks.get(blockKey).push(row);
-  }
-
-  const pairResults = [];
-  for (const [blockKey, rows] of pairBlocks) {
-    rows.sort((a, b) => (a.matchOrdinal ?? 0) - (b.matchOrdinal ?? 0));
-    const policyA = rows[0]?.policyIds?.[0] ?? 'A';
-    const policyB = rows[0]?.policyIds?.[1] ?? 'B';
-    // Pair consecutive ordinals: (0,1), (2,3), ... within this block
-    // First of pair = A@seat1/B@seat2, second = B@seat1/A@seat2
-    const pairs = [];
-    for (let i = 0; i + 1 < rows.length; i += 2) {
-      const seat1Row = rows[i];
-      const seat2Row = rows[i + 1];
-      if (!seat1Row || !seat2Row) { incompletePairs += 1; continue; }
-      // Verify seat swap: second row should have reversed seat order
-      const seatSwapped = seat2Row.seatSwapped === true ||
-        (JSON.stringify(seat2Row.seatOrder) !== JSON.stringify(seat1Row.seatOrder));
-      const seat1WinnerPolicy = seat1Row.winner !== 'DRAW' && seat1Row.winner !== 'ABORTED'
-        ? seat1Row.policyIds[seat1Row.seatOrder.indexOf(seat1Row.winner)] : null;
-      const seat2WinnerPolicy = seat2Row.winner !== 'DRAW' && seat2Row.winner !== 'ABORTED'
-        ? seat2Row.policyIds[seat2Row.seatOrder.indexOf(seat2Row.winner)] : null;
-      pairs.push({
-        aSeat1Win: seat1WinnerPolicy === policyA,
-        bSeat1Win: seat1WinnerPolicy === policyB,
-        aSeat2Win: seat2WinnerPolicy === policyA,
-        bSeat2Win: seat2WinnerPolicy === policyB,
-        seatSwapped,
-        pairedRunId: seat1Row.pairedRunId ?? null,
-        dealSeedNote: 'AB and BA ordinals use distinct derived seeds; pairing is by policy-pair block, not identical deal'
-      });
-    }
-    // Check for odd remainder (incomplete pair)
-    if (rows.length % 2 === 1) incompletePairs += 1;
-    if (pairs.length === 0) continue;
-    // Check if all pairs have verified seat swapping
-    const allSwapped = pairs.every((p) => p.seatSwapped);
-    const mcnemar = mcnemarPairedTest(pairs);
-    const bootstrap = pairedBootstrapABBA(pairs, { iterations: 2000, seed: `abba:${blockKey}` });
-    pairResults.push({
-      policyPair: blockKey,
-      policyA,
-      policyB,
-      pairedBlocks: pairs.length,
-      seatSwapVerified: allSwapped,
-      mcnemar,
-      bootstrap,
-      design: allSwapped ? 'matched AB/BA seat-swap (verified)' : 'AB/BA seat-swap (unverified — legacy or incomplete)',
-      interpretation: mcnemar.pValue < 0.05
-        ? 'statistically significant seat-policy differential (p < 0.05)'
-        : 'no statistically significant seat-policy differential detected'
-    });
-  }
-
-  const totalPairs = pairResults.reduce((s, r) => s + r.pairedBlocks, 0);
-  // Distinguish "no pairs exist" causes: a schedule that never repeated a
-  // pairedRunId produces hasPairedRunIds=true with zero complete pairs —
-  // that is a data limitation of the campaign, not a pairing failure.
-  const scheduleNote = totalPairs === 0 && hasPairedRunIds
-    ? 'pairedRunIds are present but none grouped ≥2 matches — the campaign schedule did not repeat pair blocks, so AB/BA pairing is not possible on this dataset'
-    : null;
-  return {
-    schemaVersion: ANALYTICS_SCHEMA_VERSION,
-    design: 'matched AB/BA seat-swap',
-    pairCount: pairResults.length,
-    totalPairedBlocks: totalPairs,
-    incompletePairs,
-    hasPairedRunIds,
-    scheduleNote,
-    pairResults: pairResults.sort((a, b) => a.policyPair.localeCompare(b.policyPair)),
-    interpretationBoundary: hasPairedRunIds
-      ? 'AB/BA pairs are linked by pairedRunId. Discordant-pair McNemar and paired bootstrap control for seat assignment. AB and BA ordinals use distinct derived seeds; pairing is by policy-pair block, not by identical deal seed.'
-      : 'AB/BA pairs are matched by policy-pair block (legacy — no pairedRunId). Discordant-pair McNemar and paired bootstrap control for seat assignment, not for deal variance. Deal-seed-matched AB/BA requires a future campaign mode that derives BA seeds from the AB seed.'
-  };
-}
+// Paired AB/BA analysis lives in ./paired-abba.mjs — shared verbatim with the
+// browser Observatory (dist/shared-analytics). It verifies actual policy↔seat
+// assignment per block (fail-closed), aggregates McNemar per matchup, and
+// reports seat effects separately. Re-exported here for API stability.
+export { buildPairedABBAAnalysis, PAIRED_ABBA_SCHEMA_VERSION, PAIR_BLOCK_REASON, PAIR_DESIGN_STATUS, seatPolicyOf, seatAssignmentOf, declaredLegOf, matchupKeyOf, winningPolicyOf, verifyPairBlock } from './paired-abba.mjs';
+import { buildPairedABBAAnalysis } from './paired-abba.mjs';
+import { buildExperimentIntegrity, analyzeEarlyVictories, analyzeDecisiveness } from './experiment-integrity.mjs';
 
 export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregate=null}){
   const mechanics=buildMechanicsAtlas(summaries,detailedMatches);
@@ -534,8 +438,10 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
   // Integrity gate: descriptive RPI stays visible, but ranks whose own or
   // child-variant opportunity accounting is invalid cannot balance-qualify.
   rankAnalytics = { ...rankAnalytics, rankPower: applyRankBalanceQualification(rankAnalytics.rankPower, variantAnalytics) };
-  // Build paired AB/BA seat-swap analysis
+  // Build paired AB/BA seat-swap analysis (verifies policy↔seat assignment
+  // per block; aggregates paired inference per matchup — not per block)
   const pairedABBA=buildPairedABBAAnalysis(summaries);
+  const comboAtlas=buildComboAtlas(summaries);
   // Conditional choice-set analysis: what was simultaneously legal when each
   // option was selected, and how deterministic each policy is inside a
   // recurring offered set. Diagnostic only — deterministic Profile choices
@@ -595,6 +501,7 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
     byDimension: dimensionCounts,
     registered: mechanics.filter(m => m.registryVerified).length,
     unregisteredTags: quarantineLedger.length,
+    taxonomyCoverage: taxonomyCoverage(allMechanicTags),
     invariantHolds: mechanics.length === Object.values(dimensionCounts).reduce((a, b) => a + b, 0),
   };
   const core={
@@ -615,7 +522,14 @@ export function buildObservatoryAnalytics({summaries,detailedMatches=[],aggregat
     pairedABBA,
     choiceAnalysis,
     choiceAnalysisError,
-    combo:buildComboAtlas(summaries),
+    combo:comboAtlas,
+    // Experiment self-audit: derived only from exported evidence — never
+    // claims PASS unless the data proves it (post-seat-swap-repair).
+    experimentIntegrity:buildExperimentIntegrity(summaries,{aggregate,pairedABBA,combo:comboAtlas}),
+    // Descriptive diagnostics: early-victory buckets + decisiveness/margin
+    // profile turn corpus oddities into analyzable signals.
+    earlyVictories:analyzeEarlyVictories(summaries),
+    decisiveness:analyzeDecisiveness(summaries),
     mechanicRegistryHash:mechanicRegistryHash(),
     quarantineLedger,
     taxonomyDimensions: dimensionCounts,

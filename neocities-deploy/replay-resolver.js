@@ -20,8 +20,8 @@
 // be exercised directly in Node tests with injected dependencies.
 // ═══════════════════════════════════════════════════════════════
 
-import { ensureReplayFrames } from './replay-frames.js?v=5c298831b65d';
-import { classifyReplayBody, classifyIndexRecord, artifactHeadline, REPLAY_ARTIFACT_CLASS } from './replay-contract.mjs?v=5c298831b65d';
+import { ensureReplayFrames } from './replay-frames.js?v=7d7375aa53c1';
+import { classifyReplayBody, classifyIndexRecord, artifactHeadline, REPLAY_ARTIFACT_CLASS } from './replay-contract.mjs?v=7d7375aa53c1';
 export { REPLAY_ARTIFACT_CLASS };
 
 export const REPLAY_STATUS = Object.freeze({

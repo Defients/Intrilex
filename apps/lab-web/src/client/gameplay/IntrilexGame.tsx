@@ -39,6 +39,19 @@ export type IntrilexGameProps = {
    * semantic model reports viewerMode 'omniscient'.
    */
   viewRole?: 'player' | 'spectator' | 'caster';
+  /**
+   * Caster-only: per-seat hand visibility controls. Purely
+   * presentational — hiding a seat renders concealed placeholders, so
+   * no card identity enters the DOM for a hidden hand. `unavailable`
+   * disables the toggles when the replay carries no authorized hand
+   * identities (privacy-redacted artifacts).
+   */
+  handControls?: {
+    seat1?: { visible: boolean; onToggle?: () => void };
+    seat2?: { visible: boolean; onToggle?: () => void };
+    /** Message shown when identities were never recorded/authorized. */
+    unavailable?: string | null;
+  };
 };
 
 function Section({ title, children, className = '' }: { title: string; children: ReactNode; className?: string }) {
@@ -99,9 +112,11 @@ type SessionProps = IntrilexGameProps & { snapshot: ReturnType<GameStore['getSna
 const StableGameSession = memo(GameSession, (a, b) => a.snapshot === b.snapshot && a.store === b.store &&
   a.onSave === b.onSave && a.onInspect === b.onInspect && a.onReorderHand === b.onReorderHand && a.onExit === b.onExit &&
   a.skin === b.skin && a.debug === b.debug && a.network === b.network && a.rankSuggestions === b.rankSuggestions && a.railHtml === b.railHtml && a.opponentHand === b.opponentHand && a.viewRole === b.viewRole &&
+  a.handControls?.seat1?.visible === b.handControls?.seat1?.visible && a.handControls?.seat2?.visible === b.handControls?.seat2?.visible &&
+  a.handControls?.unavailable === b.handControls?.unavailable &&
   a.teaching?.panelHtml === b.teaching?.panelHtml && a.teaching?.coachmarkHtml === b.teaching?.coachmarkHtml && a.teaching?.onAction === b.teaching?.onAction);
 
-function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit, skin = 'dark', debug, network, rankSuggestions, teaching, railHtml, opponentHand, viewRole }: SessionProps) {
+function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit, skin = 'dark', debug, network, rankSuggestions, teaching, railHtml, opponentHand, viewRole, handControls }: SessionProps) {
   const { game } = snapshot;
   const spectator = viewRole === 'spectator' || viewRole === 'caster';
   const omniscient = spectator && game.viewerMode === 'omniscient';
@@ -213,15 +228,28 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
   // Spectator hand lane: a neutral read-only strip for either seat.
   // Public mode renders card backs sized by the public hand count;
   // omniscient mode renders the face-up cards the model authorized.
-  function spectatorHand(player: typeof game.self, faceUp: boolean, testId: string) {
-    const shown: SemanticCard[] = faceUp
+  // Caster passes per-seat controls: hiding a seat swaps the authorized
+  // cards for concealed placeholders, so no identity reaches the DOM.
+  function spectatorHand(player: typeof game.self, faceUp: boolean, testId: string, seatKey?: 'seat1' | 'seat2') {
+    const control = seatKey ? handControls?.[seatKey] : undefined;
+    const unavailable = handControls?.unavailable;
+    const effectiveFaceUp = faceUp && (control ? control.visible : true);
+    const shown: SemanticCard[] = effectiveFaceUp
       ? [...player.hand]
       : Array.from({ length: player.handCount }, (_, index) => ({
           id: `concealed:${player.id}:hand:${index}`, identity: null,
           label: 'Hidden card', markers: ['Face down'],
         }));
+    const statusText = unavailable
+      ? unavailable
+      : effectiveFaceUp ? 'Omniscient view — identities visible' : control ? 'Concealed — hidden by viewer' : 'Concealed — public count only';
     return <section className="hc-hand fc-hand hx-hand hx-hand-spectator" data-testid={testId} aria-label={`${player.name} hand`}>
-      <div className="hand-head"><strong>{player.name} Hand ({player.handCount})</strong><span>{faceUp ? 'Omniscient view — identities visible' : 'Concealed — public count only'}</span></div>
+      <div className="hand-head"><strong>{player.name} Hand ({player.handCount})</strong><span>{statusText}</span>
+        {control && <button type="button" className="hx-hand-vis" data-testid={`${testId}-visibility`}
+          aria-pressed={control.visible} disabled={Boolean(unavailable)}
+          title={unavailable ? unavailable : control.visible ? 'Hide this hand' : 'Show this hand'}
+          onClick={() => control.onToggle?.()}>{control.visible ? '◉ Visible' : '◎ Hidden'}</button>}
+      </div>
       <ul className="hx-hand-strip fc-cards hx-hand-cards" tabIndex={0} aria-label={`${player.name} hand cards`}>
         {shown.map(card => <li className="hx-hand-slot" key={card.id}>
           <TabletopCard card={card} size="sm" purpose="Inspect card"
@@ -253,20 +281,20 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
 
   return <DirectManipulation store={store} game={game} blocked={blocked} interrupted={Boolean(activeComposer || inspected || teaching?.coachmarkHtml)} submit={confirm} skin={skinName}><main className="astra-client hc-game" data-skin={skinName} data-testid="play-board" data-play-state={game.status} aria-label="Intrilex gameboard">
     <header className="hc-header"><a href="#/" aria-label="Intrilex Home"><Wordmark /></a><span className="hc-table-title">Intrilex · {railHtml !== undefined ? 'Replay Caster' : 'Rules-assisted'} <span className="pill">{railHtml !== undefined ? 'Read only' : network ? 'Online match' : 'Local match'}</span></span>
-      <nav aria-label="Match controls"><a href="#/rules" target="_blank" rel="noreferrer">Rules</a>
+      <nav aria-label="Match controls">{railHtml === undefined && <a href="#/rules" target="_blank" rel="noreferrer">Rules</a>}
         {!spectator && onSave && <button type="button" disabled={saveState === 'Saving…'} onClick={() => void save()}><Icon name="save" />Save</button>}
         {!spectator && <button type="button" onClick={() => setShowSuggestions(value => !value)} aria-pressed={showSuggestions}>Hints</button>}
         {!spectator && <GestureSettings />}
         {!spectator && onExit && <button type="button" onClick={onExit}>{network ? 'Forfeit' : 'Exit'}</button>}
       </nav>
     </header>
-    <div className="hc-status fc-status" role="status"><span className="hx-logo"><b>Intrilex</b><em>HybriX</em></span><span className="eyebrow">Rules-assisted</span><strong>{status}</strong><span className="hx-stats"><span className="hx-stat"><i>Turn</i>{game.turn}</span><span className="hx-stat"><i>Phase</i>{formatLabel(game.phase)}</span><span className="hx-stat"><i>Window</i>{game.choice ? 'Choice' : game.stack.length ? 'Reactive' : 'Normal'}</span><span className="hx-stat"><i>Actor</i>{nameOf(game.activePlayerId)}</span><span className="hx-stat"><i>Priority</i>{nameOf(game.priorityOwnerId)}</span>{game.self.miniTurnsRemaining != null && <span className="hx-stat hx-stat-dots"><i>{spectator ? `${game.self.name} Mini-Turns` : 'Your Mini-Turns'}</i>{game.self.miniTurnsRemaining}<span className="hx-dots" aria-hidden="true">{Array.from({ length: 3 }, (_, i) => <i key={i} className={i < game.self.miniTurnsRemaining! ? 'on' : ''} />)}</span></span>}{spectator && game.opponent.miniTurnsRemaining != null && <span className="hx-stat hx-stat-dots"><i>{game.opponent.name} Mini-Turns</i>{game.opponent.miniTurnsRemaining}<span className="hx-dots" aria-hidden="true">{Array.from({ length: 3 }, (_, i) => <i key={i} className={i < game.opponent.miniTurnsRemaining! ? 'on' : ''} />)}</span></span>}</span>{saveState && <span className="hc-save-state">{saveState}</span>}</div>
+    <div className="hc-status fc-status" role="status"><span className="hx-logo"><b>Intrilex</b><em>HybriX</em></span><span className="eyebrow">{railHtml !== undefined ? 'Replay Caster' : 'Rules-assisted'}</span><strong>{status}</strong><span className="hx-stats"><span className="hx-stat"><i>Turn</i>{game.turn}</span><span className="hx-stat"><i>Phase</i>{formatLabel(game.phase)}</span><span className="hx-stat"><i>Window</i>{game.choice ? 'Choice' : game.stack.length ? 'Reactive' : 'Normal'}</span><span className="hx-stat"><i>Actor</i>{nameOf(game.activePlayerId)}</span><span className="hx-stat"><i>Priority</i>{nameOf(game.priorityOwnerId)}</span>{game.self.miniTurnsRemaining != null && <span className="hx-stat hx-stat-dots"><i>{spectator ? `${game.self.name} Mini-Turns` : 'Your Mini-Turns'}</i>{game.self.miniTurnsRemaining}<span className="hx-dots" aria-hidden="true">{Array.from({ length: 3 }, (_, i) => <i key={i} className={i < game.self.miniTurnsRemaining! ? 'on' : ''} />)}</span></span>}{spectator && game.opponent.miniTurnsRemaining != null && <span className="hx-stat hx-stat-dots"><i>{game.opponent.name} Mini-Turns</i>{game.opponent.miniTurnsRemaining}<span className="hx-dots" aria-hidden="true">{Array.from({ length: 3 }, (_, i) => <i key={i} className={i < game.opponent.miniTurnsRemaining! ? 'on' : ''} />)}</span></span>}</span>{saveState && <span className="hc-save-state">{saveState}</span>}</div>
     {snapshot.error && <p className="hc-error" role="alert">{snapshot.error}</p>}
     <div className="hc-layout fc-layout">
       <aside className="hc-left hx-left" data-testid="score-rail" aria-label="Players and shared table">
         <Summary game={game} opponent spectator={spectator} />
         {spectator
-          ? spectatorHand(game.opponent, omniscient, 'seat2-hand')
+          ? spectatorHand(game.opponent, omniscient, 'seat2-hand', 'seat2')
           : opponentHand && opponentHand.length > 0 && <CardLane title="Hand" owner={game.opponent.name} cards={opponentHand} selectedId={inspectId} onCard={card => setInspectId(card.id)} />}
         <Section title="Swap Bar" className="hc-swap hx-swap"><ul className="hx-swap-slots" aria-label="Swap Bar slots">{game.swap.map((card, index) => <li className="hx-swap-slot" key={card.id}><DragTarget as="span" destination={{ kind: 'zone', id: `swap:${index}` }} label={`Swap Bar slot ${index + 1}`} className="hc-card-target">
           <TabletopCard card={card} size="sm" purpose={`Choose swap slot ${index + 1}`} onDoubleClick={() => { if (card.identity) setInspectId(card.id); }} onClick={() => {
@@ -309,7 +337,7 @@ function GameSession({ store, snapshot, onSave, onInspect, onReorderHand, onExit
           <button type="button" className="fc-pile hx-pile" disabled={!game.discardTop} onClick={() => game.discardTop && setInspectId(game.discardTop.id)}><PileTray top={game.discardTop} /><b>Graveyard</b><span className="hx-pile-count">{game.discardCount}</span><span className="hx-pile-off">{game.discardTop ? 'Inspect top card' : 'Empty'}</span></button>
           <div className="fc-pile hx-pile"><PileTray /><b>Exile</b><span className="hx-pile-count">{game.exileCount}</span><span className="hx-pile-off">{game.exileCount ? 'Public count' : 'Empty'}</span></div>
         </section>
-        {spectator ? spectatorHand(game.self, omniscient, 'seat1-hand') : <section className="hc-hand fc-hand hx-hand" data-grid="playerH" aria-label="Your hand"><div className="hand-head"><strong>Your Hand ({game.self.handCount})</strong><span>Private — only you see these faces</span></div>
+        {spectator ? spectatorHand(game.self, omniscient, 'seat1-hand', 'seat1') : <section className="hc-hand fc-hand hx-hand" data-grid="playerH" aria-label="Your hand"><div className="hand-head"><strong>Your Hand ({game.self.handCount})</strong><span>Private — only you see these faces</span></div>
           <div className="hx-hand-wrap"><button type="button" className="hx-hand-arrow" aria-label="Scroll hand left" onClick={() => handStrip.current?.scrollBy({ left: -180, behavior: 'smooth' })}>‹</button>
           <ul className="hx-hand-strip fc-cards hx-hand-cards" ref={handStrip} tabIndex={0} aria-label="Your visible hand cards">{orderedIds.map((id, index) => <li className="hx-hand-slot" key={id}>{cardNode(handMap.get(id)!, false, true)}
             {onReorderHand && <div className="hc-reorder"><button type="button" aria-label={`Move ${handMap.get(id)!.label} left`} disabled={index === 0} onClick={() => void reorder(id, -1)}>‹</button><button type="button" aria-label={`Move ${handMap.get(id)!.label} right`} disabled={index === orderedIds.length - 1} onClick={() => void reorder(id, 1)}>›</button></div>}

@@ -11,7 +11,9 @@
     "./observatory-integrity": "./src/observatory-integrity.mjs",
     "./meta-atlas": "./src/meta-atlas.mjs",
     "./combo-analytics": "./src/combo-analytics.mjs",
-    "./choice-analysis": "./src/choice-analysis.mjs"
+    "./choice-analysis": "./src/choice-analysis.mjs",
+    "./paired-abba": "./src/paired-abba.mjs",
+    "./experiment-integrity": "./src/experiment-integrity.mjs"
   },
   "dependencies": {
     "@intrilex/shared": "workspace:*",

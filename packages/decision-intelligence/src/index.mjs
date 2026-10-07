@@ -25,6 +25,7 @@ export {
   analyticsEligibleMechanics,
   validateMechanicTags,
   quarantineUnknownTags,
+  taxonomyCoverage,
   TAXONOMY_DIMENSIONS,
   classifyTagDimension,
   analyticsEntityDefinition,

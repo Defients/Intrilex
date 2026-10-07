@@ -1,249 +1,609 @@
 /* ═══════════════════════════════════════════════════════════════
-   caster.css — Replay Caster workspace styles.
-   Observability instrument disguised as a broadcast experience.
+   caster.css — Replay Caster workspace styles (V2).
+
+   Three-stage broadcast experience:
+     SETUP → PREPARE BROADCAST → CAST / PLAYBACK
+
+   Sections:
+     1. Shared setup/prep shell
+     2. Setup screen (matchup, config, library)
+     3. Preparation screen (staged pipeline)
+     4. Broadcast theatre header
+     5. Right rail (commentary + transport + timeline)
+     6. Match-end card
+     7. WAIT WHAT investigation
+     8. Read-only + privacy guards
+     9. Responsive
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Setup screen ─────────────────────────────────────────────── */
-.caster-setup { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
-.caster-setup-section { background: var(--surface-2, #1a1a2e); border-radius: 8px; padding: 16px 20px; }
-.caster-setup-section h3 { margin: 0 0 12px 0; font-size: 1rem; color: var(--text-2, #c0c0d0); }
-.caster-setup-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
-.caster-setup-row label { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--text-3, #888); }
-.caster-setup-row select, .caster-setup-row input { padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-2, #333); background: var(--surface-1, #111); color: var(--text-1, #e0e0e0); }
-.caster-ollama-toggle { flex-direction: row !important; align-items: center; gap: 8px; }
-.caster-ollama-config { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 8px; padding: 12px; background: var(--surface-1, #111); border-radius: 6px; }
-.caster-ollama-config label { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 4px; }
-.caster-ollama-config input { padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-2, #333); background: var(--surface-2, #1a1a2e); color: var(--text-1, #e0e0e0); }
-.caster-ollama-status { font-size: 0.8rem; color: var(--text-3, #888); }
-.caster-setup-actions { display: flex; justify-content: center; padding: 8px 0; }
-.caster-setup-note { font-size: 0.8rem; color: var(--text-3, #888); text-align: center; line-height: 1.5; }
-.caster-setup-note p { margin: 0; }
-
-/* ── Theatre layout ───────────────────────────────────────────── */
-.caster-panel { max-width: 100%; }
-.caster-theatre { display: flex; flex-direction: column; gap: 16px; }
-
-/* ── Playback controls ────────────────────────────────────────── */
-.caster-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface-2, #1a1a2e); border-radius: 8px; }
-.caster-controls .transport { display: flex; gap: 4px; }
-.caster-controls .transport button { min-width: 36px; height: 36px; border-radius: 4px; border: 1px solid var(--border-2, #333); background: var(--surface-1, #111); color: var(--text-1, #e0e0e0); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
-.caster-controls .transport button:disabled { opacity: 0.4; cursor: default; }
-.caster-controls .transport button:hover:not(:disabled) { background: var(--surface-3, #222); }
-.caster-controls .progress { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; }
-.caster-controls .progress input[type="range"] { flex: 1; }
-.caster-controls .progress span { font-size: 0.8rem; color: var(--text-3, #888); min-width: 60px; text-align: right; }
-.caster-controls .speed-control select { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-2, #333); background: var(--surface-1, #111); color: var(--text-1, #e0e0e0); }
-.caster-current-beat { display: flex; gap: 8px; align-items: center; font-size: 0.85rem; flex-wrap: wrap; }
-.caster-beat-kind { font-weight: 600; color: var(--accent-1, #6cf); }
-.caster-beat-seat, .caster-beat-turn { color: var(--text-3, #888); }
-.caster-beat-delta { color: var(--accent-2, #fc6); font-weight: 600; }
-
-/* ── Score bars ───────────────────────────────────────────────── */
-.caster-scores { display: flex; gap: 16px; flex-wrap: wrap; }
-.caster-score-bar { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px; }
-.caster-score-label { display: flex; justify-content: space-between; font-size: 0.85rem; }
-.caster-score-label .caster-seat { font-weight: 600; color: var(--text-1, #e0e0e0); }
-.caster-score-label .caster-policy { color: var(--text-3, #888); font-size: 0.8rem; }
-.caster-score-track { height: 8px; background: var(--surface-1, #111); border-radius: 4px; overflow: hidden; }
-.caster-score-fill { height: 100%; background: linear-gradient(90deg, var(--accent-1, #6cf), var(--accent-2, #fc6)); transition: width 0.3s ease; }
-.caster-score-value { font-size: 0.8rem; color: var(--text-3, #888); text-align: right; }
-
-/* ── Commentary ───────────────────────────────────────────────── */
-.caster-commentary { padding: 16px 20px; background: var(--surface-2, #1a1a2e); border-left: 3px solid var(--accent-1, #6cf); border-radius: 0 8px 8px 0; min-height: 60px; }
-.caster-commentary-silent { border-left-color: var(--border-2, #333); color: var(--text-3, #888); display: flex; align-items: center; justify-content: center; }
-.caster-commentary-headline { font-weight: 600; font-size: 1rem; margin-bottom: 4px; color: var(--text-1, #e0e0e0); }
-.caster-commentary-body { font-size: 0.9rem; line-height: 1.5; color: var(--text-2, #c0c0d0); }
-.caster-commentary-meta { margin-top: 8px; font-size: 0.75rem; }
-.caster-tone { color: var(--text-3, #888); text-transform: uppercase; letter-spacing: 0.05em; }
-.caster-commentary-loading { padding: 8px 20px; font-size: 0.85rem; color: var(--text-3, #888); font-style: italic; }
-.caster-commentary-error { padding: 8px 20px; font-size: 0.85rem; color: var(--danger, #c44); }
-
-/* ── WAIT WHAT ────────────────────────────────────────────────── */
-.caster-actions { display: flex; gap: 8px; }
-.caster-wait-what-btn { padding: 8px 20px; border-radius: 6px; border: 2px solid var(--accent-2, #fc6); background: transparent; color: var(--accent-2, #fc6); font-weight: 700; font-size: 0.9rem; cursor: pointer; letter-spacing: 0.05em; }
-.caster-wait-what-btn:hover { background: var(--accent-2, #fc6); color: var(--surface-1, #111); }
-.caster-wait-what { margin-top: 8px; padding: 16px 20px; background: var(--surface-2, #1a1a2e); border: 2px solid var(--accent-2, #fc6); border-radius: 8px; }
-.caster-ww-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.caster-ww-header h3 { margin: 0; font-size: 1rem; color: var(--accent-2, #fc6); }
-.caster-ww-body { display: flex; flex-direction: column; gap: 16px; }
-.caster-ww-meta p { margin: 2px 0; font-size: 0.85rem; }
-.caster-ww-meta code { font-family: monospace; font-size: 0.8rem; color: var(--text-3, #888); }
-.caster-ww-diagnostics ul { margin: 4px 0; padding-left: 20px; }
-.caster-ww-diagnostics li { font-size: 0.85rem; margin: 4px 0; }
-.caster-ww-context { display: flex; gap: 20px; flex-wrap: wrap; }
-.caster-ww-before, .caster-ww-after { flex: 1; min-width: 200px; }
-.caster-ww-before h4, .caster-ww-after h4 { margin: 0 0 8px 0; font-size: 0.85rem; color: var(--text-3, #888); }
-.caster-ww-context ul { list-style: none; padding: 0; margin: 0; }
-.caster-ww-context li { margin: 2px 0; }
-.caster-ww-jump { background: none; border: 1px solid var(--border-2, #333); border-radius: 4px; padding: 4px 8px; color: var(--text-2, #c0c0d0); cursor: pointer; font-size: 0.8rem; text-align: left; }
-.caster-ww-jump:hover { background: var(--surface-3, #222); border-color: var(--accent-1, #6cf); }
-.caster-ww-commentary p { font-size: 0.85rem; margin: 4px 0; }
-
-/* ── WAIT WHAT investigation lifecycle ────────────────────────── */
-.caster-ww-invalidation { padding: 12px; border-radius: 6px; margin-bottom: 8px; }
-.caster-ww-alternatives { padding: 12px; background: var(--surface-1, #111); border-radius: 6px; border: 1px solid var(--border-2, #333); }
-.caster-ww-alternatives h4 { margin: 0 0 6px 0; font-size: 0.85rem; color: var(--text-3, #888); }
-.caster-ww-alternatives-hint { font-size: 0.8rem; color: var(--text-3, #888); margin: 0 0 8px 0; }
-.caster-ww-branch-btn { font-size: 0.8rem; padding: 6px 12px; }
-.caster-ww-annotation-form { padding: 12px; background: var(--surface-1, #111); border-radius: 6px; border: 1px solid var(--border-2, #333); }
-.caster-ww-annotation-form h4 { margin: 0 0 8px 0; font-size: 0.85rem; color: var(--text-3, #888); }
-.caster-ww-annotation-form textarea { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--border-2, #333); background: var(--surface-2, #1a1a2e); color: var(--text-1, #e0e0e0); font-size: 0.85rem; resize: vertical; margin-bottom: 8px; box-sizing: border-box; }
-.caster-ww-annotation-form select { padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-2, #333); background: var(--surface-2, #1a1a2e); color: var(--text-1, #e0e0e0); font-size: 0.85rem; margin-right: 8px; margin-bottom: 8px; }
-.caster-ww-annotations-list { margin: 8px 0 0 0; padding-left: 20px; }
-.caster-ww-annotations-list li { font-size: 0.8rem; margin: 4px 0; color: var(--text-2, #c0c0d0); }
-.caster-ww-export { padding: 12px; background: var(--surface-1, #111); border-radius: 6px; border: 1px solid var(--border-2, #333); }
-.caster-ww-export h4 { margin: 0 0 8px 0; font-size: 0.85rem; color: var(--text-3, #888); }
-.caster-ww-export button { font-size: 0.8rem; padding: 6px 12px; margin-right: 8px; }
-.caster-ww-export-result { margin-top: 8px; padding: 8px; border-radius: 4px; }
-
-/* ── Timeline ─────────────────────────────────────────────────── */
-.caster-timeline { padding: 12px 16px; background: var(--surface-2, #1a1a2e); border-radius: 8px; }
-.caster-timeline-label { font-size: 0.8rem; color: var(--text-3, #888); margin-bottom: 8px; }
-.caster-timeline-items { display: flex; gap: 2px; flex-wrap: wrap; align-items: center; }
-.caster-tl-item { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; }
-.caster-tl-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border-2, #333); transition: all 0.15s; }
-.caster-tl-decision .caster-tl-dot { background: var(--accent-1, #6cf); }
-.caster-tl-response .caster-tl-dot { background: var(--accent-3, #f6c); }
-.caster-tl-turn .caster-tl-dot { background: var(--text-3, #555); width: 6px; height: 6px; }
-.caster-tl-start .caster-tl-dot, .caster-tl-end .caster-tl-dot { background: var(--accent-2, #fc6); width: 12px; height: 12px; }
-.caster-tl-item.current .caster-tl-dot { transform: scale(1.6); box-shadow: 0 0 6px var(--accent-1, #6cf); }
-.caster-tl-item:hover .caster-tl-dot { transform: scale(1.4); }
-
-/* ── Board layout ─────────────────────────────────────────────── */
-.caster-board { display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--surface-2, #1a1a2e); border-radius: 8px; min-height: 200px; }
-.caster-board-empty { padding: 20px; text-align: center; color: var(--text-3, #888); font-size: 0.9rem; }
-.caster-board-status { display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-2, #c0c0d0); margin-bottom: 4px; }
-.caster-board-phase, .caster-board-turn { text-transform: uppercase; letter-spacing: 0.05em; }
-
-.caster-player-board { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--surface-1, #111); border-radius: 8px; border: 1px solid var(--border-2, #333); }
-.caster-player-board[data-seat="Seat 2"] { border-color: var(--accent-2, #fc6); }
-.caster-player-board[data-seat="Seat 1"] { border-color: var(--accent-1, #6cf); }
-.caster-player-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
-.caster-player-name { font-weight: 600; color: var(--text-1, #e0e0e0); }
-.caster-player-goal { font-size: 0.8rem; color: var(--text-3, #888); }
-
-.caster-card-row { display: flex; align-items: center; gap: 8px; }
-.caster-row-label { min-width: 80px; font-size: 0.75rem; color: var(--text-3, #888); text-transform: uppercase; letter-spacing: 0.05em; }
-.caster-row-cards { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.caster-card { width: 40px; height: 56px; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; border: 1px solid var(--border-2, #333); background: var(--surface-2, #1a1a2e); color: var(--text-1, #e0e0e0); }
-.caster-card-face { background: var(--surface-3, #fff); color: var(--surface-1, #111); }
-.caster-card-face.red { color: #c00; }
-.caster-card-back { background: linear-gradient(135deg, var(--accent-1, #6cf), var(--accent-2, #fc6)); color: transparent; }
-.caster-card-back-pattern { width: 20px; height: 28px; border-radius: 2px; background: repeating-linear-gradient(45deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 3px, transparent 3px, transparent 6px); }
-.caster-card-empty { background: transparent; border-style: dashed; opacity: 0.3; }
-.caster-card-rank { font-size: 0.9rem; font-weight: 700; line-height: 1; }
-.caster-card-suit { font-size: 0.85rem; line-height: 1; }
-
-.caster-stack { padding: 12px; background: var(--surface-1, #111); border-radius: 8px; border: 1px dashed var(--border-2, #333); }
-
-.caster-zones { display: flex; gap: 16px; justify-content: center; font-size: 0.8rem; color: var(--text-3, #888); padding: 4px 0; }
-.caster-zone { padding: 4px 12px; background: var(--surface-1, #111); border-radius: 4px; border: 1px solid var(--border-2, #333); }
-
-/* ── Responsive ───────────────────────────────────────────────── */
-@media (max-width: 720px) {
-  .caster-setup-row { flex-direction: column; }
-  .caster-scores { flex-direction: column; }
-  .caster-ww-context { flex-direction: column; }
-  .caster-controls { flex-direction: column; align-items: stretch; }
-  .caster-controls .progress { width: 100%; }
-  .caster-setup-game-vs-card { flex-direction: column; gap: 8px; }
+/* ── 1. Shared setup/prep shell ────────────────────────────────── */
+.caster-setup-game {
+  max-width: 880px;
+  margin: 32px auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Caster Full-Screen Spectator — Right Rail + Setup Restyle
-   ═══════════════════════════════════════════════════════════════ */
+.caster-setup-game-header {
+  padding: 12px 0 4px;
+}
 
-/* ── Right rail (commentary + transport) ───────────────────────── */
+.caster-setup-game-header h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin: 10px 0 6px;
+  letter-spacing: 0.06em;
+}
+
+.caster-setup-game-header p {
+  font-size: 0.9rem;
+  color: rgba(148, 163, 184, 0.7);
+  margin: 0;
+}
+
+.caster-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.caster-setup-tag {
+  letter-spacing: 0.02em;
+}
+
+.caster-setup-game-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.caster-setup-game-section {
+  background: linear-gradient(180deg, #0f172a 0%, #0d1525 100%);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.caster-setup-game-section h3 {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(148, 163, 184, 0.8);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.caster-setup-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.caster-setup-row:last-child { margin-bottom: 0; }
+
+.caster-setup-row label {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: rgba(148, 163, 184, 0.75);
+}
+
+.caster-setup-game-section .caster-setup-row select,
+.caster-setup-game-section .caster-setup-row input {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e2e8f0;
+}
+
+.caster-setup-game-section .caster-setup-row select:focus,
+.caster-setup-game-section .caster-setup-row input:focus {
+  outline: none;
+  border-color: var(--accent-1, #6cf);
+}
+
+.caster-ollama-toggle {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.caster-ollama-config {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(8, 12, 24, 0.8);
+  border-radius: 6px;
+}
+
+.caster-ollama-config label {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: rgba(148, 163, 184, 0.75);
+}
+
+.caster-ollama-config input {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e2e8f0;
+}
+
+.caster-ollama-status {
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.caster-commentary-source {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.caster-setup-note {
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.6);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.caster-setup-note p { margin: 0; }
+
+/* ── 2. Setup screen ───────────────────────────────────────────── */
+
+/* VS matchup card — the dominant element of the setup stage. */
+.caster-setup-game-vs-card {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 24px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+}
+
+.caster-setup-game-vs-seat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.caster-setup-game-vs-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(148, 163, 184, 0.55);
+  text-transform: uppercase;
+}
+
+.caster-setup-game-vs-divider {
+  align-self: center;
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--accent-2, #fc6);
+  letter-spacing: 0.12em;
+  padding: 0 10px;
+}
+
+.caster-setup-game-select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.caster-setup-game-select:hover { border-color: rgba(148, 163, 184, 0.4); }
+
+.caster-setup-game-select:focus {
+  outline: none;
+  border-color: var(--accent-1, #6cf);
+  box-shadow: 0 0 0 2px rgba(108, 204, 255, 0.15);
+}
+
+/* Two-column config: Match Config vs Commentary side by side. */
+.caster-setup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 16px;
+}
+
+/* Primary action */
+.caster-setup-game-actions {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.caster-setup-game-start {
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+  padding: 14px 48px !important;
+  border-radius: 10px !important;
+  letter-spacing: 0.08em;
+}
+
+.caster-setup-or {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: rgba(148, 163, 184, 0.45);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.caster-setup-or::before,
+.caster-setup-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.12);
+}
+
+/* Replay library — first-class alternate workflow. */
+.caster-library-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(148, 163, 184, 0.6);
+}
+
+.caster-replay-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.caster-replay-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  text-align: left;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.caster-replay-card:hover,
+.caster-replay-card:focus-visible {
+  border-color: var(--accent-1, #6cf);
+  background: rgba(23, 34, 62, 0.95);
+}
+
+.caster-replay-card strong {
+  font-size: 0.85rem;
+  font-family: ui-monospace, monospace;
+}
+
+.caster-replay-card span {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.caster-replay-card em {
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent-1, #6cf);
+  margin-top: 4px;
+}
+
+/* Loading fallback */
+.caster-setup-game-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.caster-setup-game-loading strong { font-size: 1rem; color: #e2e8f0; }
+.caster-setup-game-loading small { font-size: 0.85rem; color: rgba(148, 163, 184, 0.6); }
+
+/* ── 3. Preparation screen ─────────────────────────────────────── */
+
+.caster-prep-stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.caster-prep-stage {
+  display: grid;
+  grid-template-columns: 28px minmax(180px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.7);
+  font-size: 0.85rem;
+  color: rgba(148, 163, 184, 0.6);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.caster-prep-stage-icon {
+  font-weight: 800;
+  text-align: center;
+}
+
+.caster-prep-stage-detail {
+  font-size: 0.78rem;
+  color: rgba(148, 163, 184, 0.55);
+  text-align: right;
+}
+
+.caster-prep-stage.is-queued { opacity: 0.55; }
+
+.caster-prep-stage.is-running {
+  border-color: rgba(108, 204, 255, 0.45);
+  color: #e2e8f0;
+}
+.caster-prep-stage.is-running .caster-prep-stage-icon { color: var(--accent-1, #6cf); }
+
+.caster-prep-stage.is-complete { color: rgba(226, 232, 240, 0.9); }
+.caster-prep-stage.is-complete .caster-prep-stage-icon { color: #6ee7a0; }
+
+.caster-prep-stage.is-warning { border-color: rgba(252, 204, 102, 0.4); }
+.caster-prep-stage.is-warning .caster-prep-stage-icon { color: var(--accent-2, #fc6); }
+
+.caster-prep-stage.is-failed {
+  border-color: rgba(255, 107, 107, 0.5);
+  color: #e2e8f0;
+}
+.caster-prep-stage.is-failed .caster-prep-stage-icon { color: #ff6b6b; }
+
+.caster-prep-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.caster-prep-chip {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.8);
+  color: rgba(226, 232, 240, 0.85);
+  font-family: ui-monospace, monospace;
+}
+
+.caster-prep-failure {
+  padding: 14px 18px;
+  border-radius: 8px;
+}
+
+.caster-prep-failure p { margin: 6px 0 10px; font-size: 0.85rem; }
+
+.caster-prep-failure-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.caster-prep-actions {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+/* ── 4. Broadcast theatre header ───────────────────────────────── */
+
+.caster-theatre-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 52px;
+  padding: 6px 14px;
+  box-sizing: border-box;
+  background: #070b18;
+  border-bottom: 1px solid #262e55;
+}
+
+.caster-theatre-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: rgba(148, 163, 184, 0.75);
+  white-space: nowrap;
+}
+
+.caster-theatre-brand b {
+  color: #e2e8f0;
+  font-weight: 800;
+}
+
+.caster-pill-readonly {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.caster-theatre-meta {
+  flex: 1;
+  font-size: 0.78rem;
+  color: rgba(148, 163, 184, 0.6);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caster-exit-button {
+  width: auto;
+  min-height: 34px;
+  padding: 6px 12px;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.caster-board-host { height: calc(100dvh - 52px); min-height: 0; }
+.caster-board-host > div { height: 100%; }
+.caster-board-host .astra-client.hc-game { height: 100%; min-height: 0; }
+
+/* ── 5. Right rail (commentary + transport + timeline) ─────────── */
 /* The right rail replaces Actions + Chat inside rd-right-rail-bottom-inner */
+
 .caster-right-rail {
   display: flex !important;
   flex-direction: column !important;
   gap: 0 !important;
+  min-height: 0;
 }
 
 .caster-rail-section-header {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: rgba(148,163,184,0.6);
+  color: rgba(148, 163, 184, 0.6);
   padding: 6px 10px 4px;
-  border-bottom: 1px solid rgba(148,163,184,0.08);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
   text-transform: uppercase;
 }
 
-/* Commentary section (top, larger) */
 .caster-rail-commentary-section {
   display: flex;
   flex-direction: column;
   flex: 1 1 60%;
   min-height: 80px;
   overflow-y: auto;
-  border: 1px solid rgba(148,163,184,0.08);
+  border: 1px solid rgba(148, 163, 184, 0.08);
   border-radius: 8px;
   background: linear-gradient(180deg, #0b1226 0%, #0a0e1a 100%);
 }
 
-/* Transport controls section (bottom, smaller) */
 .caster-rail-transport-section {
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
-  min-height: 60px;
-  border: 1px solid rgba(148,163,184,0.08);
+  border: 1px solid rgba(148, 163, 184, 0.08);
   border-radius: 8px;
   background: linear-gradient(180deg, #0b1226 0%, #0a0e1a 100%);
 }
 
-/* Commentary display inside right rail */
-.caster-rail-commentary-section .caster-commentary {
+/* Commentary display */
+.caster-commentary {
   flex: 1;
+  padding: 14px 16px;
   border-left: 3px solid var(--accent-1, #6cf);
-  border-radius: 0;
-  background: transparent;
 }
 
-.caster-rail-commentary-section .caster-commentary-silent {
-  border-left-color: rgba(148,163,184,0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(148,163,184,0.4);
-  font-size: 1.2rem;
+.caster-commentary-headline {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 4px;
+  color: #e2e8f0;
 }
 
-.caster-rail-commentary-section .caster-commentary-loading,
-.caster-rail-commentary-section .caster-commentary-error {
-  border-left: none;
-  padding-left: 10px;
+.caster-commentary-body {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(192, 192, 208, 0.95);
 }
+
+.caster-commentary-meta {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  color: rgba(148, 163, 184, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Deliberate quiet state for beats with no commentary. */
+.caster-commentary-silent { border-left-color: rgba(148, 163, 184, 0.15); }
+
+.caster-commentary-quiet {
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.45);
+  font-style: italic;
+}
+
+.caster-commentary-loading,
+.caster-commentary-error {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+}
+
+.caster-commentary-loading { color: rgba(148, 163, 184, 0.7); font-style: italic; }
+.caster-commentary-error { color: var(--danger, #c44); }
 
 .caster-rail-commentary-section .caster-actions {
-  padding: 4px 10px 8px;
+  padding: 4px 12px 10px;
 }
 
-/* WAIT WHAT panel inside right rail */
-.caster-rail-commentary-section .caster-wait-what {
-  margin: 0 8px 8px;
+/* WAIT WHAT trigger — investigation tool, secondary to commentary. */
+.caster-actions { display: flex; gap: 8px; }
+
+.caster-wait-what-btn {
+  padding: 6px 14px;
   border-radius: 6px;
+  border: 1px solid var(--accent-2, #fc6);
+  background: transparent;
+  color: var(--accent-2, #fc6);
+  font-weight: 600;
+  font-size: 0.78rem;
+  cursor: pointer;
+  letter-spacing: 0.04em;
 }
 
-/* Transport controls inside right rail */
+.caster-wait-what-btn:hover { background: rgba(252, 204, 102, 0.12); }
+
+/* Transport controls */
 .caster-rail-transport-section .caster-controls {
-  background: transparent;
-  border-radius: 0;
-  padding: 8px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
+  padding: 8px 10px;
+  background: transparent;
 }
+
+.caster-controls .transport { display: flex; gap: 4px; }
 
 .caster-rail-transport-section .caster-controls .transport button {
   min-width: 32px;
   height: 32px;
   font-size: 0.9rem;
   border-radius: 6px;
-  border: 1px solid rgba(148,163,184,0.15);
-  background: rgba(15,23,42,0.8);
-  color: rgba(226,232,240,0.9);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(15, 23, 42, 0.8);
+  color: rgba(226, 232, 240, 0.9);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -252,8 +612,8 @@
 }
 
 .caster-rail-transport-section .caster-controls .transport button:hover:not(:disabled) {
-  background: rgba(30,41,59,0.9);
-  border-color: rgba(148,163,184,0.3);
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(148, 163, 184, 0.3);
 }
 
 .caster-rail-transport-section .caster-controls .transport button:disabled {
@@ -261,51 +621,136 @@
   cursor: default;
 }
 
-.caster-rail-transport-section .caster-controls .progress input[type="range"] {
+.caster-rail-transport-section .caster-controls .transport button:focus-visible,
+.caster-tl-canvas:focus-visible,
+.caster-replay-card:focus-visible {
+  outline: 2px solid var(--accent-1, #6cf);
+  outline-offset: 1px;
+}
+
+.caster-controls .progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.caster-controls .progress input[type="range"] {
+  flex: 1;
   accent-color: var(--accent-1, #6cf);
 }
 
-.caster-rail-transport-section .caster-controls .speed-control select {
+.caster-controls .progress span {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.7);
+  min-width: 72px;
+  text-align: right;
+  font-family: ui-monospace, monospace;
+}
+
+.caster-controls .speed-control select {
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid rgba(148,163,184,0.15);
-  background: rgba(15,23,42,0.8);
-  color: rgba(226,232,240,0.9);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(15, 23, 42, 0.8);
+  color: rgba(226, 232, 240, 0.9);
   font-size: 0.8rem;
 }
 
-.caster-rail-transport-section .caster-current-beat {
+.caster-controls .speed-control label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.7);
 }
 
-/* Timeline inside right rail */
+.caster-current-beat {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.caster-beat-kind { font-weight: 700; color: var(--accent-1, #6cf); }
+.caster-beat-seat, .caster-beat-turn { color: rgba(148, 163, 184, 0.7); }
+.caster-beat-delta { color: var(--accent-2, #fc6); font-weight: 700; }
+
+/* Scalable timeline — a canvas density strip. Beats are bucketed into
+   pixel columns so 2000+ beats stay legible instead of becoming dot
+   soup. Category colors live in custom properties: the canvas reads
+   them via getComputedStyle and the legend dots reuse them, so the
+   strip and its key can never drift apart. */
 .caster-rail-transport-section .caster-timeline {
-  background: transparent;
-  border-radius: 0;
-  padding: 4px 10px 8px;
+  --caster-tl-start: var(--accent-2, #fc6);
+  --caster-tl-end: var(--accent-2, #fc6);
+  --caster-tl-major: var(--accent-1, #6cf);
+  --caster-tl-response: rgba(246, 108, 204, 0.6);
+  --caster-tl-decision: rgba(108, 204, 255, 0.55);
+  --caster-tl-turn: rgba(148, 163, 184, 0.3);
+  position: relative;
+  padding: 4px 10px 4px;
 }
 
-.caster-rail-transport-section .caster-timeline-items {
-  gap: 1px;
+.caster-tl-canvas {
+  display: block;
+  width: 100%;
+  height: 24px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.45);
+  cursor: ew-resize;
+  touch-action: none;
 }
 
-.caster-rail-transport-section .caster-tl-dot {
+.caster-tl-tooltip {
+  position: absolute;
+  top: 0;
+  transform: translate(-50%, -100%);
+  margin-top: -2px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(8, 12, 24, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 0.68rem;
+  font-family: ui-monospace, monospace;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.caster-timeline-legend {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 4px 2px 4px;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.55);
+}
+
+.caster-tl-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.caster-tl-key-dot {
+  display: inline-block;
   width: 8px;
   height: 8px;
+  border-radius: 2px;
 }
 
-.caster-rail-transport-section .caster-tl-turn .caster-tl-dot {
-  width: 5px;
-  height: 5px;
-}
+.caster-tl-key-start { background: var(--caster-tl-start); }
+.caster-tl-key-major { background: var(--caster-tl-major); }
+.caster-tl-key-response { background: var(--caster-tl-response); }
+.caster-tl-key-turn { background: var(--caster-tl-turn); }
+.caster-tl-key-decision { background: var(--caster-tl-decision); }
 
-.caster-rail-transport-section .caster-tl-start .caster-tl-dot,
-.caster-rail-transport-section .caster-tl-end .caster-tl-dot {
-  width: 10px;
-  height: 10px;
-}
-
-/* Footer with New Match button */
 .caster-rail-footer {
   padding: 4px 10px 8px;
   display: flex;
@@ -317,178 +762,227 @@
   padding: 4px 12px;
 }
 
-/* ── Card interaction disabling for caster (read-only) ─────────── */
-.ranked-duel-shell[data-caster="1"] .rd-card {
-  pointer-events: none;
-  cursor: default;
-}
+/* ── 6. Match-end card ─────────────────────────────────────────── */
 
-.ranked-duel-shell[data-caster="1"] .rd-hand-card {
-  pointer-events: none;
-}
-
-.ranked-duel-shell[data-caster="1"] .rd-swap-slot {
-  pointer-events: none;
-}
-
-/* ── Game-style setup screen ───────────────────────────────────── */
-.caster-setup-game {
-  max-width: 680px;
-  margin: 40px auto;
-  padding: 0 20px;
+.caster-match-end {
+  margin: 10px 12px 4px;
+  padding: 14px 16px;
+  border: 1px solid rgba(252, 204, 102, 0.35);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(30, 25, 10, 0.5), rgba(15, 23, 42, 0.8));
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 8px;
 }
 
-.caster-setup-game-header {
-  text-align: center;
-  padding: 20px 0;
-}
-
-.caster-setup-game-header h2 {
-  font-size: 1.8rem;
+.caster-match-end-title {
+  font-size: 0.72rem;
   font-weight: 800;
-  color: #e2e8f0;
-  margin: 0 0 8px 0;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.14em;
+  color: var(--accent-2, #fc6);
 }
 
-.caster-setup-game-header p {
-  font-size: 0.9rem;
-  color: rgba(148,163,184,0.7);
-  margin: 0;
-}
-
-.caster-setup-game-body {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* VS matchup card */
-.caster-setup-game-vs-card {
+.caster-match-end-scores {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border: 1px solid rgba(148,163,184,0.12);
-  border-radius: 12px;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.caster-setup-game-vs-seat {
+.caster-end-seat {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
-.caster-setup-game-vs-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: rgba(148,163,184,0.5);
-  text-transform: uppercase;
+.caster-end-seat span {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.75);
 }
 
-.caster-setup-game-vs-divider {
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: var(--accent-2, #fc6);
-  letter-spacing: 0.1em;
-  padding: 0 8px;
-}
-
-.caster-setup-game-select {
-  width: 100%;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(148,163,184,0.2);
-  background: rgba(15,23,42,0.9);
+.caster-end-seat b {
+  font-size: 1.5rem;
   color: #e2e8f0;
-  font-size: 0.9rem;
-  cursor: pointer;
+  font-variant-numeric: tabular-nums;
 }
 
-.caster-setup-game-select:hover {
-  border-color: rgba(148,163,184,0.4);
+.caster-end-vs {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: rgba(148, 163, 184, 0.5);
 }
 
-.caster-setup-game-select:focus {
-  outline: none;
-  border-color: var(--accent-1, #6cf);
-  box-shadow: 0 0 0 2px rgba(108,204,255,0.15);
-}
-
-/* Game-style sections */
-.caster-setup-game-section {
-  background: linear-gradient(180deg, #0f172a 0%, #0d1525 100%);
-  border: 1px solid rgba(148,163,184,0.1);
-  border-radius: 10px;
-  padding: 16px 20px;
-}
-
-.caster-setup-game-section h3 {
-  margin: 0 0 12px 0;
+.caster-match-end-winner {
   font-size: 0.85rem;
   font-weight: 700;
-  color: rgba(148,163,184,0.8);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.caster-setup-game-section .caster-setup-row select,
-.caster-setup-game-section .caster-setup-row input {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(148,163,184,0.15);
-  background: rgba(15,23,42,0.9);
   color: #e2e8f0;
 }
 
-.caster-setup-game-section .caster-setup-row select:focus,
-.caster-setup-game-section .caster-setup-row input:focus {
-  outline: none;
-  border-color: var(--accent-1, #6cf);
+.caster-match-end-meta {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.65);
+  font-family: ui-monospace, monospace;
 }
 
-/* Start button */
-.caster-setup-game-actions {
+.caster-match-end-actions {
   display: flex;
-  justify-content: center;
-  padding: 8px 0;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
 }
 
-.caster-setup-game-start {
-  font-size: 1.1rem !important;
-  font-weight: 700 !important;
-  padding: 14px 40px !important;
-  border-radius: 10px !important;
-  letter-spacing: 0.03em;
+/* ── 7. WAIT WHAT investigation ────────────────────────────────── */
+
+.caster-wait-what {
+  margin: 0 8px 8px;
+  padding: 14px 16px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(252, 204, 102, 0.5);
+  border-radius: 8px;
 }
 
-/* Loading state */
-.caster-setup-game-loading {
+.caster-ww-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.caster-ww-header h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--accent-2, #fc6);
+}
+
+.caster-ww-body {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 40px 20px;
-  text-align: center;
+  gap: 14px;
 }
 
-.caster-setup-game-loading strong {
-  font-size: 1rem;
+.caster-ww-meta p { margin: 2px 0; font-size: 0.82rem; }
+.caster-ww-meta code { font-family: monospace; font-size: 0.78rem; color: rgba(148, 163, 184, 0.7); }
+.caster-ww-diagnostics ul { margin: 4px 0; padding-left: 20px; }
+.caster-ww-diagnostics li { font-size: 0.82rem; margin: 4px 0; }
+
+.caster-ww-context { display: flex; gap: 16px; flex-wrap: wrap; }
+.caster-ww-before, .caster-ww-after { flex: 1; min-width: 160px; }
+.caster-ww-before h4, .caster-ww-after h4 { margin: 0 0 8px; font-size: 0.82rem; color: rgba(148, 163, 184, 0.7); }
+.caster-ww-context ul { list-style: none; padding: 0; margin: 0; }
+.caster-ww-context li { margin: 2px 0; }
+
+.caster-ww-jump {
+  background: none;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: rgba(192, 192, 208, 0.95);
+  cursor: pointer;
+  font-size: 0.78rem;
+  text-align: left;
+}
+
+.caster-ww-jump:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: var(--accent-1, #6cf);
+}
+
+.caster-ww-commentary p { font-size: 0.82rem; margin: 4px 0; }
+
+.caster-ww-invalidation { padding: 12px; border-radius: 6px; margin-bottom: 8px; }
+
+.caster-ww-alternatives {
+  padding: 12px;
+  background: rgba(8, 12, 24, 0.8);
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.caster-ww-alternatives h4 { margin: 0 0 6px; font-size: 0.82rem; color: rgba(148, 163, 184, 0.7); }
+.caster-ww-alternatives-hint { font-size: 0.78rem; color: rgba(148, 163, 184, 0.6); margin: 0 0 8px; }
+.caster-ww-branch-btn { font-size: 0.78rem; padding: 6px 12px; }
+
+.caster-ww-annotation-form {
+  padding: 12px;
+  background: rgba(8, 12, 24, 0.8);
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.caster-ww-annotation-form h4 { margin: 0 0 8px; font-size: 0.82rem; color: rgba(148, 163, 184, 0.7); }
+
+.caster-ww-annotation-form textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.9);
   color: #e2e8f0;
+  font-size: 0.82rem;
+  resize: vertical;
+  margin-bottom: 8px;
+  box-sizing: border-box;
 }
 
-.caster-setup-game-loading small {
-  font-size: 0.85rem;
-  color: rgba(148,163,184,0.6);
+.caster-ww-annotation-form select {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  margin-right: 8px;
+  margin-bottom: 8px;
 }
 
-/* Omniscient opponent hand (face-up cards in caster) */
+.caster-ww-annotations-list { margin: 8px 0 0; padding-left: 20px; }
+.caster-ww-annotations-list li { font-size: 0.78rem; margin: 4px 0; color: rgba(192, 192, 208, 0.95); }
+
+.caster-ww-export {
+  padding: 12px;
+  background: rgba(8, 12, 24, 0.8);
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.caster-ww-export h4 { margin: 0 0 8px; font-size: 0.82rem; color: rgba(148, 163, 184, 0.7); }
+.caster-ww-export button { font-size: 0.78rem; padding: 6px 12px; margin-right: 8px; }
+.caster-ww-export-result { margin-top: 8px; padding: 8px; border-radius: 4px; }
+
+/* ── 8. Read-only + privacy guards ─────────────────────────────── */
+
+/* Belt-and-suspenders: nothing under the Caster host offers player
+   affordances (hand reorder, action surface). The spectator semantic
+   model already suppresses these; this keeps stray controls inert. */
+[data-caster="1"] ~ .caster-board-host .hc-reorder,
+.caster-board-host .hc-reorder {
+  display: none;
+  pointer-events: none;
+}
+
+/* Per-seat hand visibility toggle (rendered by IntrilexGame when the
+   Caster passes handControls). Small pill in the spectator hand head. */
+.hx-hand-vis {
+  margin-left: auto;
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.8);
+  color: rgba(226, 232, 240, 0.9);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.hx-hand-vis:hover:not(:disabled) { border-color: var(--accent-1, #6cf); }
+.hx-hand-vis:disabled { opacity: 0.45; cursor: default; }
+.hx-hand-vis[aria-pressed="false"] { color: rgba(148, 163, 184, 0.65); }
+
+/* Legacy omniscient opponent hand (kept for older board surfaces). */
 .rd-opponent-hand-omniscient {
   display: flex;
   gap: 4px;
@@ -501,24 +995,17 @@
   height: auto;
 }
 
+/* ── 9. Responsive ─────────────────────────────────────────────── */
 
-/* Caster composes the canonical board inside its persistent exit header. */
-.caster-theatre-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 52px;
-  padding: 6px 12px;
-  box-sizing: border-box;
-  background: #070b18;
-  border-bottom: 1px solid #262e55;
+@media (max-width: 1100px) {
+  .caster-setup-grid { grid-template-columns: 1fr; }
 }
-.caster-exit-button {
-  width: auto;
-  min-height: 36px;
-  padding: 6px 12px;
-  white-space: nowrap;
+
+@media (max-width: 720px) {
+  .caster-setup-row { flex-direction: column; }
+  .caster-ww-context { flex-direction: column; }
+  .caster-setup-game-vs-card { flex-direction: column; gap: 10px; }
+  .caster-theatre-brand { display: none; }
+  .caster-theatre-meta { font-size: 0.7rem; }
+  .caster-match-end-scores { flex-direction: column; }
 }
-.caster-board-host { height: calc(100dvh - 52px); min-height: 0; }
-.caster-board-host > div { height: 100%; }
-.caster-board-host .astra-client.hc-game { height: 100%; min-height: 0; }

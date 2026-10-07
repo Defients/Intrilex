@@ -7,6 +7,7 @@ import {
 } from './profile-contracts.mjs';
 import { buildJournal, parameterProvenance, genomeDelta } from './profile-journal.mjs';
 import { validateAdaptiveConfig } from './adaptive-strategy.mjs';
+import { LAB_TRUST_POLICY } from './lab-trust-policy.mjs';
 
 // ── Storage layout ─────────────────────────────────────────────────────────
 // artifacts/checkpoints/events are immutable (insert-or-verify); heads and
@@ -669,6 +670,7 @@ export function previewAuthoredEdit({ source, next, checkpointsById }) {
 /** Pure authority check for automatic promotion (canPromoteInContext). */
 export function promotionAuthority({ decision, manifest, head }) {
   const reasons = [];
+  if (!LAB_TRUST_POLICY.automaticPromotion) reasons.push(LAB_TRUST_POLICY.promotionReason);
   if (decision.body.decision !== 'APPROVE') reasons.push(`DECISION_${decision.body.decision}`);
   if (decision.body.challengeId !== manifest.id) reasons.push('DECISION_MANIFEST_MISMATCH');
   if (!manifest.body.attempt.automaticEligible) reasons.push('REPEAT_ATTEMPT_NOT_AUTOMATICALLY_ELIGIBLE');

@@ -1,6 +1,7 @@
 import { hashCanonical } from '../shared-browser.js';
 import { evidenceGradeDetailed, normalCdf, benjaminiHochberg, Z95 } from '../shared-analytics/estimators.mjs';
 import { assertIdentity, labConfig, LAB_PROFILES, LAB_LIMITS } from './evolution-domain.mjs';
+import { LAB_TRUST_POLICY } from './lab-trust-policy.mjs';
 
 export const GRADE_RANK = Object.freeze({ INSUFFICIENT: 0, EXPLORATORY: 1, SUPPORTED: 2, ROBUST: 3 });
 
@@ -424,6 +425,7 @@ export function evaluatePromotion(hypothesis, options = {}) {
 
   const anyCheckInconclusive = (hypothesis.checks ?? []).some((c) => c.verdict === 'inconclusive');
   gate('NO_UNRESOLVED_CONFOUND', !anyCheckInconclusive, 'no challenge may remain inconclusive at promotion');
+  gate(LAB_TRUST_POLICY.comparisonReason, LAB_TRUST_POLICY.confirmatoryComparison, LAB_TRUST_POLICY.notice);
 
   // Verdict precedence: integrity failures first (a missing durable
   // evidence artifact means no verdict can be rendered at all — the

@@ -7,7 +7,7 @@ import { baselinePolicyState } from '../packages/policies/src/weighted-heuristic
 import { ProfileStore, MemoryBackend, validateSnapshot, transitionIdFor } from '../packages/simulation-runtime/src/profile-store.mjs';
 import { TEMPLATE_CATALOG, resolveEra, resolveObjective, makeArtifact, headToken } from '../packages/simulation-runtime/src/profile-contracts.mjs';
 import { promoteChallenger, startSeries, prepareChallenge, buildExperienceRecord } from '../packages/simulation-runtime/src/profile-science.mjs';
-import { identity, memoryStore, createGraveMaw, fixtureSeries, fixtureChallenge, FIXED_CLOCK } from './fixtures/agent-profile-fixtures.mjs';
+import { identity, memoryStore, createGraveMaw, fixtureSeries, fixtureChallenge, manuallyActivateFixtureDecision, FIXED_CLOCK } from './fixtures/agent-profile-fixtures.mjs';
 
 const code = async fn => { try { await fn(); } catch (error) { return error.code ?? error.message; } return 'NO_ERROR'; };
 const cloneData = data => new Map([...data].map(([k, v]) => [k, new Map([...v].map(([kk, vv]) => [kk, structuredClone(vv)]))]));
@@ -60,7 +60,7 @@ test('command retries are idempotent and a reused commandId with a different pay
 test('drafts never move the head; authored activation previews replaced learned values and keeps history', async () => {
   const { store, created, decision } = await promotedProfile();
   const h1 = await store.getHead(created.agentProfileId);
-  await promoteChallenger({ store, agentProfileId: created.agentProfileId, decisionId: decision.id, commandId: 'promote-1' });
+  await manuallyActivateFixtureDecision({ store, agentProfileId: created.agentProfileId, decisionId: decision.id, commandId: 'promote-1' });
   const head = await store.getHead(created.agentProfileId), champion = await store.getCheckpoint(head.championCheckpointId);
   const learnedParameter = champion.mutation.operator.parameter, trait = { points: 'scoringDrive', resource: 'resourceAppetite', tempo: 'initiative', defense: 'guard', synergy: 'combinationPlay', risk: 'riskAppetite' }[learnedParameter];
   const draft = await store.saveDraftRevision({ agentProfileId: created.agentProfileId, baseRevisionId: head.activeRevisionId, traits: { [trait]: 10 }, sourceCheckpointId: head.championCheckpointId });
@@ -81,7 +81,7 @@ test('drafts never move the head; authored activation previews replaced learned 
 test('A → B → A rollback leaves old challenge authorization stale and repeat attempts ineligible', async () => {
   const { store, created, nomination, decision } = await promotedProfile();
   const id = created.agentProfileId;
-  const p = await promoteChallenger({ store, agentProfileId: id, decisionId: decision.id, commandId: 'promote-B' });
+  const p = await manuallyActivateFixtureDecision({ store, agentProfileId: id, decisionId: decision.id, commandId: 'promote-B' });
   const rolled = await store.rollback({ commandId: 'rollback-A', agentProfileId: id, expectedHead: p.head, targetSequence: 1 });
   assert.equal(rolled.head.championCheckpointId, created.head.championCheckpointId, 'checkpoint A is active again');
   assert.equal(rolled.head.headVersion, 3, 'fresh head version, not the old one');
@@ -91,58 +91,58 @@ test('A → B → A rollback leaves old challenge authorization stale and repeat
   assert.equal(again.decision.body.decision, 'APPROVE', 'scientific decision is separate from authorization');
   assert.match(await code(() => promoteChallenger({ store, agentProfileId: id, decisionId: again.decision.id, commandId: 'promote-repeat' })), /PROMOTION_NOT_AUTHORIZED/);
   const events = await store.listEvents(id);
-  assert.deepEqual(events.map(e => e.type), ['INITIALIZED', 'PROMOTED', 'ROLLED_BACK']);
+  assert.deepEqual(events.map(e => e.type), ['INITIALIZED', 'MANUALLY_ACTIVATED', 'ROLLED_BACK']);
 });
 
-test('two Series from one head: the first promotion makes the second authorization stale; re-challenge is explicit', async () => {
+test('two Series from one head: manual activation makes old automatic authorization stale; re-challenge is explicit', async () => {
   const store = memoryStore(), created = await createGraveMaw(store), id = created.agentProfileId;
   const a = await fixtureSeries({ store, agentProfileId: id, commandId: 'series-A' }), b = await fixtureSeries({ store, agentProfileId: id, commandId: 'series-B' });
   assert.notEqual(a.nomination.body.checkpointId, b.nomination.body.checkpointId);
   const ca = await fixtureChallenge({ store, agentProfileId: id, nominationId: a.nomination.id, commandId: 'ch-A' }), cb = await fixtureChallenge({ store, agentProfileId: id, nominationId: b.nomination.id, commandId: 'ch-B' });
-  await promoteChallenger({ store, agentProfileId: id, decisionId: ca.decision.id, commandId: 'promote-A' });
+  await manuallyActivateFixtureDecision({ store, agentProfileId: id, decisionId: ca.decision.id, commandId: 'promote-A' });
   assert.equal(await code(() => promoteChallenger({ store, agentProfileId: id, decisionId: cb.decision.id, commandId: 'promote-B' })), 'STALE_HEAD');
   const rb = await fixtureChallenge({ store, agentProfileId: id, nominationId: b.nomination.id, commandId: 'rech-B' });
   assert.equal(rb.manifest.body.incumbentCheckpointId, a.nomination.body.checkpointId, 'new attempt targets the current head');
   assert.equal(rb.manifest.body.attempt.automaticEligible, true, 'genuinely changed incumbent is a new challenge');
   const decisions = (await store.listArtifacts(id, 'CHALLENGE_DECISION')).map(d => d.id);
   assert.ok(decisions.includes(cb.decision.id), 'original stale attempt retained');
-  const promoted = await promoteChallenger({ store, agentProfileId: id, decisionId: rb.decision.id, commandId: 'promote-B2' });
+  const promoted = await manuallyActivateFixtureDecision({ store, agentProfileId: id, decisionId: rb.decision.id, commandId: 'promote-B2' });
   assert.equal(promoted.head.headVersion, 3);
 });
 
-test('independent connections promoting concurrently: at most one transition wins', async () => {
+test('independent connections manually activating concurrently: at most one transition wins', async () => {
   const store = memoryStore(), created = await createGraveMaw(store), id = created.agentProfileId;
   const a = await fixtureSeries({ store, agentProfileId: id, commandId: 'series-A' }), b = await fixtureSeries({ store, agentProfileId: id, commandId: 'series-B' });
   const ca = await fixtureChallenge({ store, agentProfileId: id, nominationId: a.nomination.id, commandId: 'ch-A' }), cb = await fixtureChallenge({ store, agentProfileId: id, nominationId: b.nomination.id, commandId: 'ch-B' });
   const tabA = new ProfileStore(new MemoryBackend({ data: store.backend.data }), { identity, clock: FIXED_CLOCK }), tabB = new ProfileStore(new MemoryBackend({ data: store.backend.data }), { identity, clock: FIXED_CLOCK });
-  const results = await Promise.allSettled([promoteChallenger({ store: tabA, agentProfileId: id, decisionId: ca.decision.id, commandId: 'tab-A' }), promoteChallenger({ store: tabB, agentProfileId: id, decisionId: cb.decision.id, commandId: 'tab-B' })]);
+  const results = await Promise.allSettled([manuallyActivateFixtureDecision({ store: tabA, agentProfileId: id, decisionId: ca.decision.id, commandId: 'tab-A' }), manuallyActivateFixtureDecision({ store: tabB, agentProfileId: id, decisionId: cb.decision.id, commandId: 'tab-B' })]);
   assert.equal(results.filter(r => r.status === 'fulfilled').length, 1);
   assert.equal(results.find(r => r.status === 'rejected').reason.code, 'STALE_HEAD');
-  assert.equal((await store.listEvents(id)).filter(e => e.type === 'PROMOTED').length, 1);
+  assert.equal((await store.listEvents(id)).filter(e => e.type === 'MANUALLY_ACTIVATED').length, 1);
 });
 
-test('duplicate promotion after acknowledgement loss replays one transition; payload reuse is rejected', async () => {
+test('duplicate manual activation after acknowledgement loss replays one transition; payload reuse is rejected', async () => {
   const { store, created, decision } = await promotedProfile(), id = created.agentProfileId;
-  const first = await promoteChallenger({ store, agentProfileId: id, decisionId: decision.id, commandId: 'promote-1' });
-  const retry = await promoteChallenger({ store, agentProfileId: id, decisionId: decision.id, commandId: 'promote-1' });
+  const first = await manuallyActivateFixtureDecision({ store, agentProfileId: id, decisionId: decision.id, commandId: 'promote-1' });
+  const retry = await manuallyActivateFixtureDecision({ store, agentProfileId: id, decisionId: decision.id, commandId: 'promote-1' });
   assert.equal(retry.replayed, true); assert.equal(retry.transitionId, first.transitionId);
-  assert.equal((await store.listArtifacts(id, 'PROMOTION_RECORD')).length, 1);
+  assert.equal((await store.listArtifacts(id, 'PROMOTION_RECORD')).length, 0, 'manual activation never mints a promotion record');
   assert.equal((await store.listEvents(id)).length, 2);
   assert.equal(await code(() => store.rollback({ commandId: 'promote-1', agentProfileId: id, expectedHead: first.head, targetSequence: 1 })), 'COMMAND_ID_REUSED');
 });
 
-test('a failure at every write boundary of a promotion leaves no partial head, record, journal or receipt', async () => {
+test('a failure at every write boundary of manual activation leaves no partial head, journal or receipt', async () => {
   const { data, created, decision } = await promotedProfile(), id = created.agentProfileId;
   let writes = 0;
   const probe = new ProfileStore(new MemoryBackend({ data: cloneData(data), onWrite: () => { writes++; } }), { identity, clock: FIXED_CLOCK });
-  await promoteChallenger({ store: probe, agentProfileId: id, decisionId: decision.id, commandId: 'promote-1' });
-  assert.ok(writes >= 5, `promotion writes record, journal, event, head and receipt (saw ${writes})`);
+  await manuallyActivateFixtureDecision({ store: probe, agentProfileId: id, decisionId: decision.id, commandId: 'promote-1' });
+  assert.ok(writes >= 4, `manual activation writes journal, event, head and receipt (saw ${writes})`);
   for (let k = 0; k < writes; k++) {
     const copy = cloneData(data), before = dataDigest(copy);
     const faulty = new ProfileStore(new MemoryBackend({ data: copy, onWrite: ({ index }) => { if (index === k) throw new Error(`INJECTED_FAULT_${k}`); } }), { identity, clock: FIXED_CLOCK });
-    assert.equal(await code(() => promoteChallenger({ store: faulty, agentProfileId: id, decisionId: decision.id, commandId: 'promote-1' })), `INJECTED_FAULT_${k}`);
+    assert.equal(await code(() => manuallyActivateFixtureDecision({ store: faulty, agentProfileId: id, decisionId: decision.id, commandId: 'promote-1' })), `INJECTED_FAULT_${k}`);
     assert.equal(dataDigest(copy), before, `write ${k}: no partial transition`);
-    const recovered = await promoteChallenger({ store: new ProfileStore(new MemoryBackend({ data: copy }), { identity, clock: FIXED_CLOCK }), agentProfileId: id, decisionId: decision.id, commandId: 'promote-1' });
+    const recovered = await manuallyActivateFixtureDecision({ store: new ProfileStore(new MemoryBackend({ data: copy }), { identity, clock: FIXED_CLOCK }), agentProfileId: id, decisionId: decision.id, commandId: 'promote-1' });
     assert.equal(recovered.head.headVersion, 2, `write ${k}: retry commits once`);
   }
 });
@@ -229,7 +229,7 @@ test('snapshots are exact, digest-checked, frozen and never fall back when execu
   const pinned = await store.resolveProfileHead(id);
   validateSnapshot(pinned);
   assert.throws(() => { pinned.policyState.weights.points = 1; });
-  await promoteChallenger({ store, agentProfileId: id, decisionId: decision.id, commandId: 'p' });
+  await manuallyActivateFixtureDecision({ store, agentProfileId: id, decisionId: decision.id, commandId: 'p' });
   const moved = await store.resolveProfileHead(id);
   assert.notEqual(moved.checkpointId, pinned.checkpointId); assert.equal(pinned.profile.headVersion, 1);
   const forged = { ...pinned, policyState: { ...pinned.policyState, weights: { ...pinned.policyState.weights, points: 2000 } } };
@@ -250,7 +250,7 @@ test('immutable writes: identical repeats are idempotent; corrupted stored conte
 
 test('retention protects the decision closure and records explicit trace tombstones', async () => {
   const { store, created, decision } = await promotedProfile(), id = created.agentProfileId;
-  await promoteChallenger({ store, agentProfileId: id, decisionId: decision.id, commandId: 'p' });
+  await manuallyActivateFixtureDecision({ store, agentProfileId: id, decisionId: decision.id, commandId: 'p' });
   const closure = await store.protectedClosure();
   for (const ref of [decision.id, decision.body.challengerMeasurementId, decision.body.incumbentMeasurementId, decision.body.challengeId]) assert.ok(closure.has(ref), ref);
   assert.equal(await code(() => store.deleteResearchArtifacts([decision.body.challengerMeasurementId])), 'PROTECTED_EVIDENCE');
@@ -265,14 +265,14 @@ test('retention protects the decision closure and records explicit trace tombsto
 
 test('export/import: isolated store, idempotent repeat, conflicting head rejected, fork import allowed, no partial publish', async () => {
   const { store, created, decision } = await promotedProfile(), id = created.agentProfileId;
-  await promoteChallenger({ store, agentProfileId: id, decisionId: decision.id, commandId: 'p' });
+  await manuallyActivateFixtureDecision({ store, agentProfileId: id, decisionId: decision.id, commandId: 'p' });
   const bundle = await store.exportProfile(id), text = JSON.stringify(bundle);
   const empty = memoryStore(), result = await empty.importBundle(text);
   assert.equal(result.idempotent, false);
   const imported = await empty.profileView(id), original = await store.profileView(id);
   assert.equal(hashCanonical(imported.head), hashCanonical(original.head));
   assert.deepEqual(imported.events.map(e => e.transitionId), original.events.map(e => e.transitionId));
-  for (const kind of ['PROFILE_REVISION', 'CAPABILITY_OBJECTIVE', 'SERIES_MANIFEST', 'PROMOTION_RECORD', 'LEARNING_JOURNAL', 'CHALLENGE_DECISION']) assert.ok(imported.artifacts.some(a => a.kind === kind), kind);
+  for (const kind of ['PROFILE_REVISION', 'CAPABILITY_OBJECTIVE', 'SERIES_MANIFEST', 'LEARNING_JOURNAL', 'CHALLENGE_DECISION']) assert.ok(imported.artifacts.some(a => a.kind === kind), kind);
   for (const cp of original.checkpoints) assert.equal(hashCanonical(await empty.getCheckpoint(cp.checkpointId)), hashCanonical(cp));
   assert.equal(imported.profile.origin, 'IMPORTED_UNVERIFIED');
   assert.ok(imported.artifacts.filter(a => a.scope === id).every(a => a.meta.origin === 'IMPORTED_UNVERIFIED'));

@@ -17,11 +17,11 @@
 //
 // This file is isomorphic: it runs in Node (tests import it from src/) and in
 // the browser (build.mjs rewrites the two packages/ imports to dist shims).
-import { canonicalize, hashCanonical } from './shared-browser.js?v=5c298831b65d';
-import { arenaAnalytics, researchAnalytics } from './evolution/evolution-analytics-model.mjs?v=5c298831b65d';
-import { summarizeRecords, LAB_SCHEMA } from './evolution/evolution-domain.mjs?v=5c298831b65d';
-import { observatorySummariesForRun, observatoryCoverage } from './evolution/observatory-bridge.mjs?v=5c298831b65d';
-import { batchMatrixView } from './evolution/batch-matrix.mjs?v=5c298831b65d';
+import { canonicalize, hashCanonical } from './shared-browser.js?v=7d7375aa53c1';
+import { arenaAnalytics, researchAnalytics } from './evolution/evolution-analytics-model.mjs?v=7d7375aa53c1';
+import { summarizeRecords, LAB_SCHEMA } from './evolution/evolution-domain.mjs?v=7d7375aa53c1';
+import { observatorySummariesForRun, observatoryCoverage } from './evolution/observatory-bridge.mjs?v=7d7375aa53c1';
+import { batchMatrixView } from './evolution/batch-matrix.mjs?v=7d7375aa53c1';
 
 export const DOSSIER_FORMAT = 'intrilex-analysis-dossier';
 export const DOSSIER_VERSION = '1.1.0';
@@ -386,13 +386,15 @@ function collectFindings({ observatory, extract }) {
   for (const row of observatory?.pairedABBA?.pairResults ?? []) {
     findings.push({
       findingId: `paired-abba:${row.policyPair}`, domain: 'paired-analysis', subject: row.policyPair,
-      claim: `${row.policyA} vs ${row.policyB}: paired score analysis over ${row.pairedBlocks} matched AB/BA block(s) — ${row.interpretation ?? 'no interpretation'}`,
+      claim: `${row.policyA} vs ${row.policyB}: ${(row.pairedBlocks ?? 0) * 2} paired legs over ${row.pairedBlocks} matched AB/BA block(s) — ${row.interpretation ?? 'no interpretation'}`,
       status: row.pairedBlocks > 0 ? 'measured' : 'inconclusive', evidenceGrade: null,
-      sampleSize: row.pairedBlocks ?? null, effect: row.mcnemar?.oddsRatio ?? null,
-      confidenceInterval: row.bootstrap?.interval95 ?? row.bootstrap?.ci ?? null,
+      sampleSize: row.pairedBlocks ?? null, effect: row.mcnemar?.estimate ?? null,
+      confidenceInterval: row.bootstrap?.interval ?? null,
       pValue: row.mcnemar?.pValue ?? null, qValue: null,
       humanSummary: row.interpretation ?? null,
-      interpretationBoundary: row.seatSwapVerified ? 'Matched AB/BA seat-swap verified by pairedRunId.' : 'Pair blocks matched heuristically — seat-swap not verified.',
+      interpretationBoundary: row.seatSwapVerified
+        ? `Matched AB/BA seat-swap verified — policy effect is identifiable. Design: ${row.designStatus ?? 'verified'}.`
+        : `Policy/seat assignment NOT verified (${row.designStatus ?? 'unverified'}) — causal inference unavailable; reported win rates confound policy with seat.`,
       sourceRefs: { policyPair: row.policyPair, mcnemar: row.mcnemar ?? null, bootstrap: row.bootstrap ?? null },
     });
   }
@@ -401,7 +403,11 @@ function collectFindings({ observatory, extract }) {
       findings.push({ findingId: `insufficient:${f.mechanic ?? f.metricId}`, domain: 'evidence-gap', subject: f.displayName ?? f.mechanic, claim: 'Insufficient measured evidence for an inferential claim', status: 'inconclusive', evidenceGrade: f.evidenceGrade ?? null, sampleSize: f.sampleSize ?? f.legalOpportunityCount ?? null, effect: null, confidenceInterval: null, pValue: null, qValue: null, humanSummary: null, interpretationBoundary: 'Reported opportunity counts fall below the model\'s inference thresholds.', sourceRefs: { metricId: f.metricId ?? null } });
     }
   }
-  return findings.sort((a, b) => a.domain.localeCompare(b.domain) || String(a.findingId).localeCompare(String(b.findingId)));
+  // Code-unit ordering (not localeCompare) — the dossier is hashed, so the
+  // sort must be identical across ICU/locale environments.
+  return findings.sort((a, b) => a.domain === b.domain
+    ? (a.findingId < b.findingId ? -1 : a.findingId > b.findingId ? 1 : 0)
+    : (a.domain < b.domain ? -1 : 1));
 }
 
 // ── Open questions / evidence gaps ───────────────────────────────────────
@@ -502,6 +508,10 @@ function observatorySections(observatory, aggregate) {
       discoveryExemptUnregistered: Math.max(0, unregisteredTags - quarantinedEntities),
     },
     taxonomyDimensions: observatory.taxonomyDimensions ?? null,
+    taxonomyCoverage: observatory.reconciliation?.taxonomyCoverage ?? null,
+    experimentIntegrity: observatory.experimentIntegrity ?? null,
+    earlyVictories: observatory.earlyVictories ?? null,
+    decisiveness: observatory.decisiveness ?? null,
     hasOpportunityTelemetry: observatory.hasOpportunityTelemetry ?? null,
     legacySchema: observatory.legacySchema ?? null,
     ruleCompliance: aggregate?.ruleCompliance ?? null,
@@ -1200,6 +1210,35 @@ export function renderAnalysisDossierMarkdown(dossier) {
     out.push('');
   }
 
+  // Experiment self-audit trust dashboard — only shows PASS when the
+  // exported evidence actually proves it (post seat-swap repair).
+  out.push(`## Experiment Integrity\n`);
+  const ei = ig?.experimentIntegrity;
+  if (!ei?.checks) out.push('_Experiment self-audit unavailable — run Observatory analytics to evaluate design validity._\n');
+  else {
+    out.push(`Overall: **${ei.overall}** · ${ei.matches} matches${ei.provenance?.engineVersion ? ` · engine ${ei.provenance.engineVersion}` : ''}\n`);
+    out.push(mdTable(['Check', 'Status', 'Detail'], Object.entries(ei.checks).map(([k, c]) => [k, c.status, c.detail ?? '—'])));
+  }
+
+  // Descriptive diagnostics — turn-zero/early victories and decisiveness.
+  // Reported WITHOUT causal/balance claims; small buckets carry sample warnings.
+  const ev = ig?.earlyVictories;
+  if (ev?.buckets?.length) {
+    out.push(`\n## Early Victory Analysis\n`);
+    out.push(`${ev.totalDecisiveMatches} decisive matches.\n`);
+    out.push(mdTable(['Bucket', 'Count', 'Share', 'Seat1/Seat2', 'Top enriched mechanics'], ev.buckets.map(b => [
+      b.label, b.count, pctText(b.shareOfDataset), `${b.seat1Wins}/${b.seat2Wins}`,
+      (b.mechanicEnrichment ?? []).slice(0, 3).map(e => `${e.tag} ×${e.enrichmentRatio}`).join(', ') || '—',
+    ])));
+    for (const b of ev.buckets) if (b.minimumSampleWarning) out.push(`> ${b.label}: ${b.minimumSampleWarning}\n`);
+    out.push('_Enrichment is descriptive evidence for investigation — not a nerf signal._\n');
+  }
+  const dv = ig?.decisiveness;
+  if (dv?.decisiveMatches) {
+    out.push(`\n## Decisiveness\n`);
+    out.push(`${dv.decisiveMatches}/${dv.matches} decisive (${pctText(dv.decisiveRate)}) · margin median ${dv.scoreMargin?.median ?? '?'} / mean ${dv.scoreMargin?.mean ?? '?'} · zero-score losers ${dv.zeroScoreLosers} (${pctText(dv.zeroScoreLoserRate)}) · winner mean ${dv.winnerScore?.mean ?? '?'} vs loser mean ${dv.loserScore?.mean ?? '?'}\n`);
+  }
+
   out.push(`## Policy / Profile Performance\n`);
   const pol = mdSectionStatus(dossier.policies);
   if (pol) out.push(pol); else {
@@ -1305,10 +1344,14 @@ export function renderAnalysisDossierMarkdown(dossier) {
   const pa = mdSectionStatus(dossier.pairedAnalysis);
   if (pa) out.push(pa); else {
     const abba = dossier.pairedAnalysis;
-    out.push(`Design: ${abba.design ?? 'unknown'} · ${abba.totalPairedBlocks ?? 0} complete paired blocks · ${abba.incompletePairs ?? 0} incomplete · pairing by ${abba.hasPairedRunIds ? 'pairedRunId' : 'policy-pair block (legacy)'}\n`);
+    out.push(`Design: ${abba.design ?? 'unknown'} (status: ${abba.designStatus ?? 'unknown'}) · ${abba.totalPairedBlocks ?? 0} complete paired blocks · ${abba.incompletePairs ?? 0} incomplete · ${abba.malformedBlocks ?? 0} malformed · pairing by ${abba.hasPairedRunIds ? 'pairedRunId' : 'policy-pair block (legacy)'}\n`);
     if (abba.scheduleNote) out.push(`> ${abba.scheduleNote}\n`);
-    if (abba.pairResults?.length) out.push(mdTable(['Pair', 'Blocks', 'Seat-swap verified', 'McNemar p', 'Interpretation'], abba.pairResults.map(r => [
-      r.policyPair, r.pairedBlocks, r.seatSwapVerified, numText(r.mcnemar?.pValue), r.interpretation,
+    if (abba.seatBalance) out.push(`Seat balance: seat1 ${pctText(abba.seatBalance.seat1WinRate)} (${abba.seatBalance.seat1Wins ?? 0}/${abba.seatBalance.decisiveLegs ?? 0} decisive) · seat2 ${pctText(1 - (abba.seatBalance.seat1WinRate ?? 0))} (${abba.seatBalance.seat2Wins ?? 0}/${abba.seatBalance.decisiveLegs ?? 0} decisive)\n`);
+    if (abba.pairResults?.length) out.push(mdTable(['Pair', 'Blocks', 'Design', 'McNemar p', 'A: seat1 / seat2', 'B: seat1 / seat2', 'Interpretation'], abba.pairResults.map(r => [
+      r.policyPair, r.pairedBlocks, r.designStatus ?? '—', numText(r.mcnemar?.pValue),
+      `${pctText(r.seatConditioned?.[r.policyA]?.seat1?.winRate)} / ${pctText(r.seatConditioned?.[r.policyA]?.seat2?.winRate)}`,
+      `${pctText(r.seatConditioned?.[r.policyB]?.seat1?.winRate)} / ${pctText(r.seatConditioned?.[r.policyB]?.seat2?.winRate)}`,
+      r.interpretation,
     ])));
   }
 

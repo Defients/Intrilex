@@ -316,8 +316,11 @@ export function canTrainOrResume({ checkpoint, manifest = null }, currentIdentit
   return verdict([...new Set(reasons)]);
 }
 /** Paired deltas need the same era and the same pack; unpaired comparisons are declined in this release. */
-export function canCompareMeasurements(a, b) {
+export function canCompareMeasurements(a, b, { purpose = 'EXPLORATORY' } = {}) {
   const reasons = [];
+  // v1 provenance cannot certify confirmation. Descriptive compatibility
+  // remains available; this restriction does not mint a new evidence schema.
+  if (purpose !== 'EXPLORATORY') reasons.push('LAB_WAVE0_CONFIRMATORY_COMPARISON_BLOCKED');
   if (a?.kind !== 'MEASUREMENT_RESULT' || b?.kind !== 'MEASUREMENT_RESULT') return verdict(['NOT_A_MEASUREMENT']);
   if (a.body.eraId !== b.body.eraId) reasons.push('EVALUATION_ERA_MISMATCH');
   if (a.body.packId !== b.body.packId) reasons.push('UNPAIRED_SAMPLES_UNSUPPORTED');

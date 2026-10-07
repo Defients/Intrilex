@@ -120,9 +120,13 @@ export function renderCompare() {
     ])}</div>`;
   };
   const abba = o.pairedABBA;
+  const abbaStatusClass = abba?.designStatus === 'verified' ? 'info' : abba?.designStatus === 'malformed' ? 'error' : 'warning';
+  const seatBalanceNote = abba?.seatBalance?.decisiveLegs
+    ? ` Seat effect: seat 1 won ${pct(abba.seatBalance.seat1WinRate)} of ${abba.seatBalance.decisiveLegs} decisive legs${abba.seatBalance.signTest?.pValue != null ? ` (sign-test p=${abba.seatBalance.signTest.pValue})` : ''}.`
+    : '';
   const designNote = abba?.scheduleNote
-    ? `<div class="notice info" style="margin-top:12px"><strong>Matched design:</strong> ${esc(abba.scheduleNote)}.</div>`
-    : (abba ? `<div class="notice info" style="margin-top:12px"><strong>Matched design:</strong> ${abba.totalPairedBlocks ?? 0} complete AB/BA seat-swap pair${abba.totalPairedBlocks === 1 ? '' : 's'}${abba.incompletePairs ? ` · ${abba.incompletePairs} incomplete` : ''}. Win rates are cross-policy decisive games; self-play is excluded. These are observational associations, not causal rankings.</div>` : '');
+    ? `<div class="notice ${abbaStatusClass}" style="margin-top:12px"><strong>Matched design:</strong> ${esc(abba.scheduleNote)}.${seatBalanceNote}</div>`
+    : (abba ? `<div class="notice ${abbaStatusClass}" style="margin-top:12px"><strong>Matched design:</strong> ${abba.totalPairedBlocks ?? 0} complete AB/BA seat-swap pair${abba.totalPairedBlocks === 1 ? '' : 's'} (${abba.designStatus ?? 'unknown'})${abba.incompletePairs ? ` · ${abba.incompletePairs} incomplete` : ''}${abba.malformedBlocks ? ` · ${abba.malformedBlocks} malformed` : ''}.${seatBalanceNote} ${abba.designStatus === 'verified' ? 'Each policy occupied each seat once per block — win rates are seat-controlled observational associations, not causal rankings.' : 'Policy↔seat balance is NOT verified — treat win rates as descriptive only.'}</div>` : '');
   // ── Matchup analyzer header (Atlas UX pass) ─────────────────────
   // Strong A-vs-B hero: decisive win rates with Wilson CIs on a shared
   // interval plot, comparability flags, then fingerprint divergence.
@@ -148,7 +152,7 @@ export function renderCompare() {
   const sharedOpp = [...oppL].filter(x => oppR.has(x)).length;
   const comparabilityHtml = `<div class="matchup-comparability">${[
     recL?.selfPlayGames || recR?.selfPlayGames ? `<span class="matchup-flag flag-info" title="Self-play participations are excluded from cross-policy rates">Self-play excluded</span>` : '',
-    abba ? `<span class="matchup-flag ${abba.totalPairedBlocks > 0 ? 'flag-pass' : 'flag-warn'}" title="${esc(abba.scheduleNote ?? 'Matched AB/BA seat-swap design')}">AB/BA pairing: ${abba.totalPairedBlocks > 0 ? `${abba.totalPairedBlocks} pair${abba.totalPairedBlocks === 1 ? '' : 's'}` : 'unavailable'}</span>` : '',
+    abba ? `<span class="matchup-flag ${abba.designStatus === 'verified' ? 'flag-pass' : abba.designStatus === 'malformed' ? 'flag-fail' : 'flag-warn'}" title="${esc(abba.scheduleNote ?? `Matched AB/BA seat-swap — design ${abba.designStatus ?? 'unknown'}`)}">AB/BA pairing: ${abba.designStatus === 'verified' ? `${abba.totalPairedBlocks} verified pair${abba.totalPairedBlocks === 1 ? '' : 's'}` : (abba.designStatus ?? 'unverified')}</span>` : '',
     `<span class="matchup-flag" title="Distinct policies both A and B have faced">${sharedOpp} shared opponent${sharedOpp === 1 ? '' : 's'}</span>`,
     recL && recR ? `<span class="matchup-flag ${Math.min(recL.decisive ?? 0, recR.decisive ?? 0) >= 10 ? 'flag-pass' : 'flag-warn'}" title="Decisive cross-policy games per policy">Decisive n: ${recL.decisive ?? 0} / ${recR.decisive ?? 0}</span>` : '',
     oppL.size !== oppR.size ? `<span class="matchup-flag flag-warn" title="The two policies faced different opponent pools — schedule imbalance limits comparability">Schedule imbalance</span>` : '',

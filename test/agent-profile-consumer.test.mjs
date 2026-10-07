@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { hashCanonical } from '@intrilex/shared';
 import { createSession, restoreSession, SessionState, buildSaveIntegrityPayload } from '../apps/lab-web/dist/play/play-controller.js';
 import { LAB_IDENTITY } from '../apps/lab-web/dist/evolution/identity.mjs';
-import { buildExperienceRecord, promoteChallenger } from '../packages/simulation-runtime/src/profile-science.mjs';
-import { identity, memoryStore, createGraveMaw, fixtureSeries, fixtureChallenge } from './fixtures/agent-profile-fixtures.mjs';
+import { buildExperienceRecord } from '../packages/simulation-runtime/src/profile-science.mjs';
+import { identity, memoryStore, createGraveMaw, fixtureSeries, fixtureChallenge, manuallyActivateFixtureDecision } from './fixtures/agent-profile-fixtures.mjs';
 
 const code = async fn => { try { await fn(); } catch (error) { return error.reasonCode ?? error.code ?? error.message; } return 'NO_ERROR'; };
 async function step(session, limit = 6000) {
@@ -50,7 +50,7 @@ test('a running match stays pinned when the Profile head moves; save/restore use
     if (session.status === SessionState.AI_DECISION) await session.stepAI();
     else { const s = session.getSnapshot(); await session.submitHumanAction({ sessionId: s.sessionId, stateRevision: s.decision.stateRevision, decisionFrameHash: s.decision.frameHash, actionId: s.decision.legalActions[0].actionId }); }
   }
-  await promoteChallenger({ store, agentProfileId: id, decisionId: decision.id, commandId: 'promote-mid-match' });
+  await manuallyActivateFixtureDecision({ store, agentProfileId: id, decisionId: decision.id, commandId: 'promote-mid-match' });
   const moved = await store.resolveProfileHead(id);
   assert.notEqual(moved.checkpointId, pinned.checkpointId, 'head moved');
   assert.equal(session._agent.checkpointId, pinned.checkpointId, 'running policy unchanged');

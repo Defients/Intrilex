@@ -182,7 +182,7 @@ self.onmessage = async (event) => {
         try {
           const summary = runBrowserPolicyMatch({
             seed: spec.seed, ordinal: spec.ordinal, profileId: spec.profileId,
-            seatOrder: spec.seatOrder, seatSwapped: spec.seatSwapped, pairedRunId: spec.pairedRunId,
+            seatOrder: spec.seatOrder, seatSwapped: spec.seatSwapped, pairedRunId: spec.pairedRunId, pairedLeg: spec.pairedLeg ?? null,
             policyIds: spec.policyIds, decisionLimit: spec.decisionLimit,
             ...(spec.ruleOverrides ? { ruleOverrides: spec.ruleOverrides } : {}),
           });

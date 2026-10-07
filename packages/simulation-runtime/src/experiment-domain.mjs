@@ -159,6 +159,11 @@ export function createRunRecord({ experimentId, ordinal, createdAt, status = RUN
       ordinalStart: config.ordinalStart ?? null,
       ordinalEnd: config.ordinalEnd ?? null,
       strategicTrace: config.strategicTrace === true,
+      // Design-of-record: the scheduler knows the experimental design at
+      // creation time — persist it so exported analysis never has to infer
+      // AB/BA structure from incidental match ordering. Legacy runs simply
+      // lack this field (cannot prove seat balance retrospectively).
+      ...(config.experimentDesign ? { experimentDesign: config.experimentDesign } : {}),
       // Partial-seal fields — only present when a run was sealed before its
       // full requested range committed. requestedMatchCount keeps the
       // requested/committed distinction explicit on the immutable record;

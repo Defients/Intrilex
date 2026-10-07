@@ -357,7 +357,10 @@ function collectPastCommentary(history, beats, beatIndex) {
     if (!h || !h.beatId) continue;
     const idx = beats.findIndex(b => b.beatId === h.beatId);
     if (idx >= 0 && idx < beatIndex) {
-      out.unshift({ beatId: h.beatId, commentary: h.commentary, mode: h.mode });
+      // History entries store the generated text under `text`
+      // (caster-session.mjs); `commentary` is accepted for callers that
+      // supply raw records.
+      out.unshift({ beatId: h.beatId, commentary: h.text ?? h.commentary, mode: h.mode });
     }
   }
   return out;

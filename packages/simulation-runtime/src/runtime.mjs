@@ -683,6 +683,10 @@ export function runPolicyMatch(config) {
     schemaVersion: TELEMETRY_SCHEMA_VERSION, analyticsSchemaVersion: ANALYTICS_SCHEMA_VERSION,
     matchId, matchOrdinal: config.ordinal ?? 0, seed: setup.seed, profileId, seatOrder, policyIds,
     pairedRunId: config.pairedRunId ?? null, seatSwapped: config.seatSwapped ?? false,
+    // pairedLeg declares AB/BA orientation for the pair block; emitted only
+    // when the scheduler supplies it so regenerated legacy matches hash
+    // identically (the field never existed before the seat-swap repair).
+    ...(config.pairedLeg ? { pairedLeg: config.pairedLeg } : {}),
     ruleOverrides: config.ruleOverrides ?? null,
     engineVersion: ENGINE_VERSION, rulesVersion: RULES_VERSION, labVersion: LAB_VERSION, replayDataVersion: REPLAY_DATA_VERSION, provenanceHash: provenance.provenanceHash,
     evidenceEpoch: config.evidenceEpoch ?? 'post-rules-parity-repair-v0.28.1',

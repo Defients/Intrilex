@@ -410,6 +410,39 @@ export function buildComboAtlas(summaries) {
     };
   }).sort((a, b) => (b.comboPropensity ?? -1) - (a.comboPropensity ?? -1));
 
+  // ── Lifecycle reconciliation invariant ──────────────────────────────────
+  // For every match carrying first-class combo telemetry:
+  //   totals.declarations == records.length
+  //   totals.declarations == resolved + countered + fizzled + broken + pending
+  //   Σ seats[].declarations == Σ participants[].comboDeclarationCount == records.length
+  // Any violation is surfaced fail-closed — Combo totals must never silently
+  // drift from their declared components.
+  const reconcileFailures = [];
+  for (const { summary, obs } of observations) {
+    if (obs.source !== 'combo-telemetry') continue;
+    const t = summary.comboTelemetry?.totals ?? {};
+    const declared = num(t.declarations);
+    const seatDecl = (summary.comboTelemetry?.seats ?? []).reduce((s, x) => s + num(x.declarations), 0);
+    const participantDecl = (summary.participants ?? []).reduce((s, p) => s + num(p.comboDeclarationCount), 0);
+    const lifecycleSum = num(t.resolved) + num(t.countered) + num(t.fizzled) + num(t.broken) + num(t.pending);
+    if (declared !== obs.records.length || seatDecl !== obs.records.length || participantDecl !== obs.records.length || declared !== lifecycleSum) {
+      reconcileFailures.push({
+        matchId: summary.matchId ?? null,
+        totalsDeclarations: declared, recordCount: obs.records.length,
+        seatDeclarations: seatDecl, participantDeclarations: participantDecl, lifecycleSum,
+      });
+    }
+  }
+  const reconciliation = {
+    invariant: 'declared == resolved + countered + fizzled + broken + pending == records == Σ seats == Σ participants',
+    checkedMatches: telemetryMatches,
+    declarations: totalDeclarations,
+    lifecycleTotal,
+    failureCount: reconcileFailures.length,
+    failures: reconcileFailures.slice(0, 20),
+    status: telemetryMatches === 0 ? 'not-applicable' : reconcileFailures.length === 0 ? 'pass' : 'fail',
+  };
+
   const pickRate = rate(totalDeclarations, totalOpportunities);
   const settleDenominator = resolved + countered + fizzled + broken;
   return {
@@ -458,6 +491,7 @@ export function buildComboAtlas(summaries) {
       coverage: lifecycleCoveredMatches > 0 ? 'covered' : 'unavailable',
       settledTotal: lifecycleTotal,
     },
+    reconciliation,
     committedDistribution: Object.fromEntries(Object.entries(committedDistribution).sort(([a], [b]) => Number(a) - Number(b))),
     recipes,
     components: {
