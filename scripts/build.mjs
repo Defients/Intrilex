@@ -372,19 +372,66 @@ await slimIndexFile('autonomy/lab-replay-index.json', 'lab-replay-index.json');
 // replays are always shipped; autonomy replay blobs ship only when
 // INTRILEX_INCLUDE_REPLAY_BLOBS=1. The browser reads this manifest at boot
 // so metadata-only records are never presented as watchable.
+// ── Representative retained-match bundling ────────────────────────────────
+// FULL-MATCH WATCH CONTRACT: the bulk blob dirs stay excluded (~670MB), but
+// a deterministic small set of retained full-match artifacts ships in every
+// build so Watch can always demonstrate a provably complete game. Selection
+// = longest artifacts (by commandCount) whose terminal frame carries real
+// terminal evidence (winner or terminal event type); ties break on fixtureId.
+// INTRILEX_RETAINED_MATCHES=0 disables.
+const retainedMatchCount = includeReplayBlobs
+  ? 0
+  : Math.max(0, Number(process.env.INTRILEX_RETAINED_MATCHES ?? '2') || 0);
+const bundledAutonomyIds = [];
+if (retainedMatchCount > 0) {
+  const publicDir = path.join(root, 'sample-data/autonomy/lab-replays/public');
+  if (existsSync(publicDir)) {
+    const candidates = [];
+    for (const f of await readdir(publicDir)) {
+      if (!f.endsWith('.json')) continue;
+      try {
+        const artifact = JSON.parse(await readFile(path.join(publicDir, f), 'utf8'));
+        const last = artifact.frames?.at(-1);
+        const terminal = last?.state?.winner != null
+          || (last?.eventTypes ?? []).some(t => /TERMINATION|VICTORY|MATCH_(END|COMPLETE)/.test(t));
+        if (terminal) candidates.push({ f, commandCount: artifact.commands?.length ?? 0 });
+      } catch { /* skip unreadable artifact */ }
+    }
+    candidates.sort((a, b) => (b.commandCount - a.commandCount) || a.f.localeCompare(b.f));
+    const picked = candidates.slice(0, retainedMatchCount);
+    if (picked.length) {
+      const outDir = path.join(dist, 'data/autonomy/lab-replays/public');
+      await mkdir(outDir, { recursive: true });
+      for (const { f } of picked) {
+        await cp(path.join(publicDir, f), path.join(outDir, f));
+        bundledAutonomyIds.push(f.replace(/\.json$/, ''));
+      }
+      console.log(`build: bundled ${picked.length} representative retained full-match artifact(s): ${bundledAutonomyIds.join(', ')}`);
+    }
+  }
+}
 await writeFile(path.join(dist, 'data/replay-availability.json'), JSON.stringify({
   schemaVersion: '1.0.0',
   sources: {
     corpus: { status: 'bundled', urlTemplate: 'data/certified-replays/<fixtureId>.certified.replay.json' },
-    autonomy: { status: includeReplayBlobs ? 'bundled' : 'excluded', urlTemplate: 'data/autonomy/replays/public/<fixtureId>.public.replay.json' },
+    autonomy: {
+      status: includeReplayBlobs ? 'bundled' : 'excluded',
+      urlTemplate: 'data/autonomy/lab-replays/public/<fixtureId>.json',
+      bundledFixtureIds: bundledAutonomyIds,
+    },
   },
 }, null, 2) + '\n');
 
 // ── Clean up empty directories left by blob-dir exclusion filter ──────────
 // The cp filter creates parent directories before excluding their children,
 // leaving empty dirs like data/autonomy/replays/ and data/autonomy/lab-replays/.
-for (const emptyDir of ['data/autonomy/replays', 'data/autonomy/lab-replays', 'data/replays/public']) {
+for (const emptyDir of ['data/autonomy/replays', 'data/replays/public']) {
   const abs = path.join(dist, emptyDir);
+  if (existsSync(abs)) await rm(abs, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
+}
+// lab-replays/ is only removed when nothing was selectively bundled above.
+if (!bundledAutonomyIds.length) {
+  const abs = path.join(dist, 'data/autonomy/lab-replays');
   if (existsSync(abs)) await rm(abs, { recursive: true, force: true, maxRetries: 10, retryDelay: 250 });
 }
 

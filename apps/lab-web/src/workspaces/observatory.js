@@ -9,7 +9,8 @@ import { wilsonInterval } from '../observatory-analytics-browser.js';
 import { obsContextStrip, metricStrip, evidenceBadge, dossierSection, miniBar, segmentControl } from './observatory-ui.js';
 // IRX-C06: Use rerender bus instead of dynamic import('../app.js') to break backedge
 import { rerender } from '../rerender.js';
-import { openReplay } from '../data-loader.js';
+import { openReplay, descriptorKindForRecord, recordAvailability } from '../data-loader.js';
+import { classifyIndexRecord, REPLAY_ARTIFACT_CLASS, ARTIFACT_CLASS_LABEL } from '../replay-contract.mjs';
 
 // Generic segmented-control binder shared by the workspace display modes.
 // Each button carries data-seg-id (state key) + data-seg-value.
@@ -2308,35 +2309,88 @@ export function renderHistory() {
 // index metadata existing is not the same as the replay artifact being
 // available (autonomy blobs are excluded from normal builds). Rows still
 // route into Watch, which presents the truthful standby state.
+/**
+ * Replay Library — Full-Match Watch Contract disclosure. Every row
+ * advertises its artifact class (FULL_MATCH / SCENARIO_FIXTURE /
+ * PARTIAL_REPLAY / METADATA_ONLY / UNKNOWN) so certification fixtures can
+ * no longer masquerade as complete games, plus the body availability and
+ * observed turn/command counts. Local IndexedDB replays (retained Lab /
+ * Experiment / session matches) form their own section.
+ */
 export function renderReplays() {
-  const availabilityOf = (kind) => state.replayAvailability?.sources?.[kind]?.status ?? 'unknown';
-  const statusFor = (kind) => {
-    const availability = availabilityOf(kind);
-    if (availability === 'bundled') return { label: 'Available', cls: 'available', title: 'Replay body is bundled in this build' };
-    if (availability === 'excluded') return { label: 'Metadata only', cls: 'metadata-only', title: 'Replay metadata exists, but the full replay was not included in this build' };
-    return { label: 'Availability unknown', cls: 'unknown', title: 'Build manifest unavailable — Watch will attempt to load the replay' };
-  };
+  const summaryFor = (id) => state.observatory?.summaries?.find(s => s.matchId === id) ?? null;
+  // Classify every index record once — classification feeds both the Type
+  // column and the disclosure filter.
+  const enriched = (section) => section.records.map(r => {
+    const availability = recordAvailability(r, section.kind);
+    const cls = classifyIndexRecord(r, { availability, summary: summaryFor(r.fixtureId) });
+    return { record: r, cls, availability, descriptorKind: descriptorKindForRecord(r, section.kind) };
+  });
   const sections = [
     { kind: 'corpus', label: 'Certified corpus', records: state.index?.records ?? [] },
     { kind: 'autonomy', label: 'Autonomy campaign', records: state.autonomyIndex?.records ?? [] },
-  ].filter(s => s.records.length);
-  if (!sections.length) { app.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">▶</span><strong>No replay records.</strong><p>Run a campaign to generate certified replays.</p></div>'; return; }
-  const allRecords = sections.flatMap(s => s.records);
-  const outcomeCounts = {};
-  for (const r of allRecords) outcomeCounts[r.outcome ?? r.terminationReason ?? 'unknown'] = (outcomeCounts[r.outcome ?? r.terminationReason ?? 'unknown'] ?? 0) + 1;
-  const availableCount = sections.filter(s => availabilityOf(s.kind) !== 'excluded').reduce((a, s) => a + s.records.length, 0);
+  ].filter(s => s.records.length).map(s => ({ ...s, rows: enriched(s) }));
+  const localRows = (state.localReplays ?? []).map(r => {
+    const terminal = r.winner != null || r.terminationReason != null;
+    const cls = {
+      class: r.hasBody ? (terminal ? REPLAY_ARTIFACT_CLASS.FULL_MATCH : REPLAY_ARTIFACT_CLASS.PARTIAL_REPLAY)
+        : REPLAY_ARTIFACT_CLASS.METADATA_ONLY,
+      evidence: { turns: r.fullTurnSequence, commandCount: r.commandCount, winner: r.winner, terminationReason: r.terminationReason },
+      reasons: [],
+    };
+    return { record: r, cls, availability: 'runtime', descriptorKind: 'local' };
+  });
+  const filter = ['all', 'full', 'scenario', 'metadata'].includes(state.replayLibraryFilter) ? state.replayLibraryFilter : 'all';
+  const filterFn = {
+    all: () => true,
+    full: (row) => row.cls.class === REPLAY_ARTIFACT_CLASS.FULL_MATCH,
+    scenario: (row) => row.cls.class === REPLAY_ARTIFACT_CLASS.SCENARIO_FIXTURE,
+    metadata: (row) => row.cls.class === REPLAY_ARTIFACT_CLASS.METADATA_ONLY || row.availability === 'excluded',
+  }[filter];
+  if (!sections.length && !localRows.length) { app.innerHTML = '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">▶</span><strong>No replay records.</strong><p>Run a campaign to generate certified replays.</p></div>'; return; }
+  const allRows = [...sections.flatMap(s => s.rows), ...localRows];
+  const filteredCount = allRows.filter(filterFn).length;
+  const classCounts = {};
+  for (const row of allRows) classCounts[row.cls.class] = (classCounts[row.cls.class] ?? 0) + 1;
   const replaySummaryHtml = metricStrip([
-    { label: 'Indexed replays', value: fmt(allRecords.length), sub: `${fmt(availableCount)} body${availableCount === 1 ? '' : 'ies'} bundled in this build` },
-    { label: 'Total commands', value: fmt(allRecords.reduce((a, r) => a + (r.commandCount ?? 0), 0)), sub: `median ${fmt(allRecords.map(r => r.commandCount ?? 0).sort((x, y) => x - y)[Math.floor(allRecords.length / 2)] ?? 0)} / replay` },
-    { label: 'Sources', value: fmt(sections.length), sub: sections.map(s => `${s.label} ×${s.records.length}`).join(' · ') },
+    { label: 'Indexed replays', value: fmt(allRows.length), sub: `${fmt(filteredCount)} shown under filter` },
+    { label: 'Full matches', value: fmt(classCounts.FULL_MATCH ?? 0), sub: 'terminal evidence recorded' },
+    { label: 'Scenario fixtures', value: fmt(classCounts.SCENARIO_FIXTURE ?? 0), sub: 'certification artifacts — not complete games' },
   ]);
-  const tableFor = (section) => {
-    const status = statusFor(section.kind);
-    return `<h3 class="replay-source-heading">${esc(section.label)} <span class="replay-count-note">${section.records.length} record${section.records.length === 1 ? '' : 's'}</span></h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fixture</th><th>Commands</th><th>Events</th><th>Outcome</th><th>Status</th></tr></thead><tbody>${section.records.map(r => `<tr class="clickable-row replay-row-${status.cls}" data-fixture="${esc(r.fixtureId)}" data-replay-kind="${section.kind}"><td class="mono">${esc(r.fixtureId)}</td><td>${r.commandCount ?? '—'}</td><td>${r.eventCount ?? '—'}</td><td>${esc(r.outcome ?? r.terminationReason ?? '—')}</td><td><span class="replay-status replay-status-${status.cls}" title="${esc(status.title)}">${esc(status.label)}</span></td></tr>`).join('')}</tbody></table></div>`;
+  const statusFor = (availability) => {
+    if (availability === 'bundled' || availability === 'runtime') return { label: 'Playable', cls: 'available', title: 'Replay body is available in this build' };
+    if (availability === 'excluded') return { label: 'Metadata only', cls: 'metadata-only', title: 'Replay metadata exists, but the full replay was not included in this build' };
+    return { label: 'Availability unknown', cls: 'unknown', title: 'Build manifest unavailable — Watch will attempt to load the replay' };
   };
-  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Replay Library</h2><p>${allRecords.length} indexed replays across ${sections.length} source${sections.length === 1 ? '' : 's'} — click to open in Watch</p></div></div><div class="panel-body">${obsContextStrip(state.observatory)}${replaySummaryHtml}${sections.map(tableFor).join('')}</div></section>`;
+  const rowHtml = (row) => {
+    const r = row.record;
+    const status = statusFor(row.availability);
+    const id = r.fixtureId ?? r.replayId ?? '—';
+    const ev = row.cls.evidence ?? {};
+    const turns = ev.turns ?? (ev.initialTurn != null ? `from ${ev.initialTurn}` : null);
+    const disabled = row.availability === 'excluded' ? ' aria-disabled="true" title="Replay body not included in this build — metadata only"' : '';
+    return `<tr class="clickable-row replay-row-${status.cls}" data-fixture="${esc(id)}" data-replay-kind="${esc(row.descriptorKind)}"${disabled}><td class="mono">${esc(id)}</td><td><span class="replay-class replay-class-${esc(row.cls.class.toLowerCase().replaceAll('_', '-'))}" title="${esc(row.cls.reasons?.join('; ') ?? '')}">${esc(ARTIFACT_CLASS_LABEL[row.cls.class] ?? 'Unknown')}</span></td><td>${turns ?? '—'}</td><td>${ev.commandCount ?? r.commandCount ?? '—'}</td><td>${esc(r.outcome ?? ev.winner ?? ev.terminationReason ?? r.terminationReason ?? '—')}</td><td><span class="replay-status replay-status-${status.cls}" title="${esc(status.title)}">${esc(status.label)}</span></td></tr>`;
+  };
+  const tableFor = (section) => {
+    const rows = section.rows.filter(filterFn);
+    if (!rows.length) return '';
+    return `<h3 class="replay-source-heading">${esc(section.label)} <span class="replay-count-note">${rows.length} record${rows.length === 1 ? '' : 's'}</span></h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Replay</th><th>Type</th><th>Turns</th><th>Commands</th><th>Outcome</th><th>Availability</th></tr></thead><tbody>${rows.map(rowHtml).join('')}</tbody></table></div>`;
+  };
+  const localRowsShown = localRows.filter(filterFn);
+  const localSection = localRowsShown.length
+    ? `<h3 class="replay-source-heading">Retained local replays <span class="replay-count-note">${localRowsShown.length} record${localRowsShown.length === 1 ? '' : 's'}</span></h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Replay</th><th>Type</th><th>Turns</th><th>Commands</th><th>Outcome</th><th>Availability</th></tr></thead><tbody>${localRowsShown.map(rowHtml).join('')}</tbody></table></div>` : '';
+  const filterControl = `<select id="replay-library-filter" aria-label="Replay type filter"><option value="all" ${filter === 'all' ? 'selected' : ''}>All artifacts</option><option value="full" ${filter === 'full' ? 'selected' : ''}>Full matches</option><option value="scenario" ${filter === 'scenario' ? 'selected' : ''}>Scenario fixtures</option><option value="metadata" ${filter === 'metadata' ? 'selected' : ''}>Metadata only</option></select>`;
+  app.innerHTML = `<section class="panel"><div class="panel-header"><div><h2>Replay Library</h2><p>${allRows.length} indexed replays — click a playable row to open in Watch</p></div><div class="toolbar">${filterControl}</div></div><div class="panel-body">${obsContextStrip(state.observatory)}${replaySummaryHtml}${localSection}${sections.map(tableFor).join('')}</div></section>`;
+  document.querySelector('#replay-library-filter')?.addEventListener('change', e => {
+    state.replayLibraryFilter = e.target.value;
+    rerender();
+  });
   document.querySelectorAll('[data-fixture]').forEach(row => row.onclick = () => {
-    void openReplay({ kind: row.dataset.replayKind, fixtureId: row.dataset.fixture });
+    if (row.getAttribute('aria-disabled') === 'true') return;
+    const kind = row.dataset.replayKind;
+    void openReplay(kind === 'local'
+      ? { kind: 'local', replayId: row.dataset.fixture }
+      : { kind, fixtureId: row.dataset.fixture });
   });
 }
 

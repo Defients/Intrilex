@@ -431,9 +431,73 @@
 .watch-readout .readout-links { display: flex; gap: 8px; flex-wrap: wrap; }
 .watch-readout .readout-links .ix-cross-link { font-size: 11px; }
 
+/* ── Evidence strip — Full-Match Watch Contract disclosure ───── */
+.watch-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 8px 0 2px;
+  padding: 7px 10px;
+  border: 1px solid var(--border, rgba(255,255,255,.12));
+  background: rgba(255,255,255,.02);
+  border-radius: 4px;
+}
+.watch-evidence .evidence-headline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.watch-evidence .evidence-badge {
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid var(--muted-bright, #888);
+  color: var(--muted-bright, #888);
+}
+.watch-evidence .evidence-badge.evidence-full-match {
+  border-color: #37d67a;
+  color: #37d67a;
+}
+.watch-evidence .evidence-badge.evidence-scenario-fixture {
+  border-color: #e0a63c;
+  color: #e0a63c;
+}
+.watch-evidence .evidence-badge.evidence-partial-replay {
+  border-color: #d0684a;
+  color: #d0684a;
+}
+.watch-evidence .evidence-badge.evidence-metadata-only {
+  border-color: #7f6ae0;
+  color: #7f6ae0;
+}
+.watch-evidence .evidence-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .06em;
+  color: var(--muted, #999);
+}
+.watch-evidence .evidence-chip { white-space: nowrap; }
+.watch-evidence .evidence-chip + .evidence-chip::before {
+  content: '·';
+  margin-right: 8px;
+  opacity: .5;
+}
+
 /* ── Timeline header alignment with the instrument frame ─────── */
 .watch-timeline { margin-top: 2px; }
 .watch-timeline .timeline-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
@@ -442,12 +506,54 @@
   color: var(--muted-bright);
   margin-bottom: 6px;
 }
+.watch-timeline .timeline-mode-switch {
+  display: inline-flex;
+  gap: 2px;
+  letter-spacing: normal;
+}
+.watch-timeline .timeline-mode {
+  font: inherit;
+  font-size: 9px;
+  padding: 2px 8px;
+  border: 1px solid var(--border, rgba(255,255,255,.14));
+  background: transparent;
+  color: var(--muted, #999);
+  cursor: pointer;
+  border-radius: 3px;
+}
+.watch-timeline .timeline-mode.active {
+  border-color: var(--accent, #7fd4ff);
+  color: var(--accent, #7fd4ff);
+}
+.watch-timeline .timeline-counts {
+  margin-left: auto;
+  font-weight: 400;
+  letter-spacing: .08em;
+  color: var(--muted, #999);
+  text-transform: none;
+}
 .watch-timeline .timeline-items {
   display: grid;
   gap: 5px;
-  max-height: 320px;
+  max-height: min(52vh, 460px);
   overflow: auto;
   padding-right: 4px;
+}
+.watch-timeline .timeline-item.turn-group {
+  font-weight: 700;
+}
+.watch-timeline .turn-group-count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted, #999);
+}
+.watch-timeline .turn-group-frames {
+  display: grid;
+  gap: 4px;
+  margin-left: 14px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border, rgba(255,255,255,.12));
 }
 
 /* ── Responsive — the instrument degrades gracefully ─────────── */

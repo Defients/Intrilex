@@ -9,7 +9,7 @@ import { renderRulesPage } from './rulebook-renderer.js';
 import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js';
 import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        fmt,        clamp,        showToast,        persistSetting} from './state.js';
 import { TITLES,   SUBTITLES,   INSTRUMENTS,   LANDING_MODES,   isPlayRoute,   route,   updateRailContext} from './router.js';
-import { boot,   loadReplay,   loadAuthorized,   getObservatoryBootPromise,   openReplay} from './data-loader.js';
+import { boot,   loadReplay,   loadAuthorized,   getObservatoryBootPromise,   openReplay,   openLatestRetainedMatch} from './data-loader.js';
 import { replayDescriptorKey,   describeWatchStandby,   REPLAY_STATUS} from './replay-resolver.js';
 import { syncRailToggle } from './experiment-controls.js';
 import {} from './integrity.js';
@@ -41,6 +41,11 @@ import { renderComboAtlas } from './workspaces/combo-atlas.js';
 import { renderMetaAtlas } from './workspaces/meta-atlas.js';
 import { installGlobalErrorBoundary, withErrorBoundary } from './error-boundary.js';
 import { createReplayTransport } from './replay-transport.mjs';
+import {
+  TIMELINE_MODES, REPLAY_ARTIFACT_CLASS, ARTIFACT_CLASS_LABEL,
+  timelineModel, artifactHeadline, commandSemanticClass, commandLabel,
+  commandAction, frameEventTypes,
+} from './replay-contract.mjs';
 import { renderPrivacyPage, renderTermsPage } from './legal-pages.js';
 import { applyRouteMetadata, populateObservatoryShellText } from './seo-metadata.js';
 
@@ -1981,31 +1986,24 @@ export function togglePlay() { replayTransport.togglePlay(); }
 function stepTo(index) { replayTransport.stepTo(index); }
 function stepBy(delta) { replayTransport.stepBy(delta); }
 function commandAt(index) { return state.replay.commands?.[Math.max(0, index - 1)] ?? null; }
-function commandAction(command) { return command?.action ?? command?.payload?.action ?? null; }
-function frameEventTypes(frame) { return (frame?.events ?? (frame?.eventTypes ?? []).map(type => ({ type }))).map(event => event.type); }
-function semanticForCommand(command, frame) {
-  const action = commandAction(command), kind = String(action?.kind ?? command?.type ?? '').toLowerCase(), semantic = action?.semantic, types = frameEventTypes(frame);
-  if (types.some(type => /RESPONSE_WINDOW_CLOSED/.test(type))) return 'engine-orchestration-summary';
-  if (semantic === 'AUTOMATIC_PRIORITY_ADVANCE' || types.some(type => /AUTOMATIC_PRIORITY_ADVANCE/.test(type))) return 'engine-orchestration';
-  if (semantic === 'DECLINE_RESPONSE' || types.some(type => /RESPONSE_DECLINED/.test(type)) || kind.includes('pass-priority')) return 'response-decline';
-  if (kind.includes('private-choice') || kind.includes('hidden_choice')) return 'private-choice';
-  if (/counter|disrupt|instant|quick|interrupt/.test(kind)) return 'free-response-play';
-  if (/phase|complete-turn|begin-/.test(kind)) return 'phase-transition';
-  if (types.some(t => /TRIGGER|VOLTAGE/.test(t))) return 'trigger';
-  return 'mini-turn-action';
-}
-function semanticLabel(command, frame) {
-  const cls = semanticForCommand(command, frame), action = commandAction(command), types = frameEventTypes(frame);
-  if (types.some(type => /RESPONSE_WINDOW_CLOSED/.test(type))) return 'Response window closed — no responses';
-  if (cls === 'engine-orchestration') return 'Response priority advanced automatically';
-  if (cls === 'response-decline') return `${command?.actorId ?? 'Player'} declined a legal response`;
-  if (types.some(type => /EXHAUSTED_PASS/.test(type))) return `${command?.actorId ?? 'Player'} took the forced Exhausted Pass`;
-  const key = String(action?.kind ?? command?.type ?? 'Initial state').replace(/^(core|autonomy)-/, '').replaceAll('-', ' ');
-  return key.replace(/\b\w/g, c => c.toUpperCase());
-}
-function visibleTimeline() {
-  const items = state.replay.frames.map((frame, index) => ({ index, frame, command: index ? state.replay.commands[index - 1] : null, class: semanticForCommand(index ? state.replay.commands[index - 1] : null, frame) }));
-  return items.filter(item => state.showOrchestration || item.class !== 'engine-orchestration');
+// Timeline semantics delegate to the Full-Match Watch Contract
+// (replay-contract.mjs) — one canonical implementation shared by the
+// Watch timeline, scrubber, and the browser tests.
+function semanticForCommand(command, frame) { return commandSemanticClass(command, frame); }
+function semanticLabel(command, frame) { return commandLabel(command, frame); }
+/**
+ * Timeline model for the active replay under the selected display mode.
+ * 'all' is canonical (every frame); 'actions' hides engine orchestration;
+ * 'turns' groups frames per observed full turn without removing evidence.
+ * state.showOrchestration remains as an explicit override — when true the
+ * 'actions' filter is bypassed (equivalent to 'all' visibility).
+ */
+function watchTimelineModel() {
+  const mode = TIMELINE_MODES.includes(state.watchTimelineMode) ? state.watchTimelineMode : 'actions';
+  return timelineModel(state.replay, {
+    mode: state.showOrchestration && mode === 'actions' ? 'all' : mode,
+    currentFrame: state.frame,
+  });
 }
 function triggerFxForFrame() { if (!state.fx || state.reducedMotion || state.reducedSensory) return; const types = frameEventTypes(state.replay.frames[state.frame]); let cls = ''; if (types.some(t => /ULTRA/.test(t))) cls = 'fx-ultra'; else if (types.some(t => /COUNTER/.test(t))) cls = 'fx-counter'; else if (types.some(t => /SCORE|GOAL/.test(t))) cls = 'fx-score'; else if (types.some(t => /REJECT|INVARIANT/.test(t))) cls = 'fx-error'; if (cls) { fxLayer.className = `fx-layer ${cls}`; setTimeout(() => fxLayer.className = 'fx-layer', 650); } }
 function stopTransientFx() { if (!state.fx) fxLayer.className = 'fx-layer'; }
@@ -2069,6 +2067,37 @@ function watchScrubberMarkers(total, forensicSession) {
   const pos = (clamp(state.frame, 0, total) / total) * 100;
   return `${ticks.join('')}<span class="scrubber-position" style="left:${pos.toFixed(2)}%"></span>`;
 }
+/**
+ * Full-Match Watch Contract evidence strip — one honest line of artifact
+ * disclosure rendered next to the transport for BOTH loaded and standby
+ * states. Every field comes from the resolver-attached classification
+ * (replay-contract.mjs); nothing is inferred for display only.
+ */
+function watchEvidenceHtml() {
+  const cls = state.replayContract ?? state.replay?._contract ?? null;
+  const ev = cls?.evidence ?? {};
+  const artifactClass = cls?.class ?? REPLAY_ARTIFACT_CLASS.UNKNOWN;
+  const headline = cls ? artifactHeadline(cls) : 'NO REPLAY';
+  const badge = `<span class="evidence-badge evidence-${esc(artifactClass.toLowerCase().replaceAll('_', '-'))}" data-testid="evidence-class">${esc(ARTIFACT_CLASS_LABEL[artifactClass] ?? 'Unknown artifact')}</span>`;
+  const chips = [];
+  const sourceLabel = { corpus: 'Certified corpus', autonomy: 'Retained lab replay', local: 'Local replay', object: 'Runtime session' }[state.replaySource?.kind] ?? null;
+  if (sourceLabel) chips.push(sourceLabel);
+  const matchId = ev.fixtureId ?? state.replaySource?.id ?? null;
+  if (matchId) chips.push(matchId);
+  if (artifactClass === REPLAY_ARTIFACT_CLASS.METADATA_ONLY) {
+    chips.push('Replay body not present in this build');
+  } else {
+    if (ev.turns != null) chips.push(`${ev.turns} turns`);
+    if (ev.commandCount != null) chips.push(`${ev.commandCount} commands`);
+    if (ev.frameCount != null) chips.push(`${ev.frameCount} frames`);
+    if (ev.frameIntegrity) chips.push(ev.frameIntegrity);
+    if (ev.terminationReason) chips.push(`termination ${ev.terminationReason}`);
+    else if (ev.winner != null) chips.push(`winner ${typeof ev.winner === 'string' ? ev.winner : (ev.winner.playerId ?? '—')}`);
+    if (ev.hash) chips.push(`hash ${String(ev.hash).slice(0, 12)}…`);
+  }
+  return `<div class="watch-evidence" data-testid="watch-evidence" data-artifact-class="${esc(artifactClass)}"><div class="evidence-headline">${badge}<span class="evidence-line">${esc(headline)}</span></div>${chips.length ? `<div class="evidence-chips">${chips.map(c => `<span class="evidence-chip">${esc(c)}</span>`).join('')}</div>` : ''}</div>`;
+}
+
 /** Transport console — forensic replay transport shared by live and standby states. */
 function watchTransportHtml({ loaded, total, forensicSession, currentLabel = '', currentClass = '' }) {
   const s = loaded ? currentState() : {};
@@ -2153,6 +2182,58 @@ function watchReadoutsHtml({ s, frame, players, currentCmd, currentLabel, curren
   </div>`;
 }
 
+/**
+ * One timeline item button. `item` is a timelineModel() entry
+ * ({ index, frame, command, class, turn, label }); forensic markers are
+ * layered on by frame index exactly as before.
+ */
+function watchTimelineItemHtml(item, forensicState) {
+  const isCurrent = item.index === state.frame;
+  const label = item.label ?? (item.index === 0 ? 'Start' : '—');
+  let forensicClasses = '';
+  if (forensicState?.session) {
+    const fs = forensicFrameSummary(forensicState.session, item.index);
+    if (fs.hasBookmark) forensicClasses += ' has-bookmark';
+    if (fs.annotationCount > 0) forensicClasses += ' has-annotation';
+    if (fs.branchCount > 0) forensicClasses += ' has-branch';
+  }
+  return `<button class="timeline-item ${item.class} ${isCurrent ? 'current' : ''}${forensicClasses}" data-class="${item.class}" data-frame="${item.index}" title="${esc(label)}" aria-current="${isCurrent ? 'true' : 'false'}"><span class="timeline-dot" aria-hidden="true"></span><span class="timeline-label">${esc(label)}</span></button>`;
+}
+
+/**
+ * Timeline markup for the active mode.
+ *   all     — every canonical frame in order.
+ *   actions — player-facing frames; orchestration hidden (counted).
+ *   turns   — per-turn group headers; the group containing the current
+ *             frame expands to expose its canonical frames in place.
+ */
+function watchTimelineHtml(model, forensicState) {
+  const modeButtons = TIMELINE_MODES.map(mode =>
+    `<button type="button" class="timeline-mode ${mode === model.mode ? 'active' : ''}" data-timeline-mode="${mode}" aria-pressed="${mode === model.mode}">${mode[0].toUpperCase()}${mode.slice(1)}</button>`).join('');
+  const counts = model.mode === 'all'
+    ? `${model.totalFrames} frames · canonical — nothing hidden`
+    : model.mode === 'actions'
+      ? `${model.visibleCount} visible · ${model.hiddenOrchestration} engine transitions hidden · ${model.totalFrames} total`
+      : `${model.turnCount} turns · ${model.totalFrames} frames grouped — nothing removed`;
+  const bookmarkBadge = forensicState?.session?.bookmarks?.length
+    ? ` <span class="forensic-timeline-badge" aria-label="${forensicState.session.bookmarks.length} bookmarks">${forensicState.session.bookmarks.length}</span>` : '';
+  let body;
+  if (model.mode === 'turns') {
+    body = model.groups.map((group, gi) => {
+      const isCurrentGroup = gi === model.currentGroup;
+      const seat = group.seat ? ` — ${esc(group.seat)}` : '';
+      const turnTitle = group.turn == null ? 'Untracked' : `Turn ${group.turn}`;
+      const header = `<button class="timeline-item turn-group ${isCurrentGroup ? 'current' : ''}" data-frame="${group.firstIndex}" title="${esc(`${turnTitle}${seat} — ${group.count} frames`)}" aria-current="${isCurrentGroup ? 'true' : 'false'}"><span class="timeline-dot" aria-hidden="true"></span><span class="timeline-label">${esc(turnTitle)}${seat}</span><span class="turn-group-count">${group.count}</span></button>`;
+      const nested = isCurrentGroup
+        ? `<div class="turn-group-frames">${group.items.map(item => watchTimelineItemHtml(item, forensicState)).join('')}</div>` : '';
+      return header + nested;
+    }).join('');
+  } else {
+    body = model.items.map(item => watchTimelineItemHtml(item, forensicState)).join('');
+  }
+  return `<div class="watch-timeline"><div class="timeline-header">Timeline${bookmarkBadge}<span class="timeline-mode-switch" role="group" aria-label="Timeline mode">${modeButtons}</span><span class="timeline-counts" data-testid="timeline-counts">${esc(counts)}</span></div><div class="timeline-items" data-timeline-mode="${model.mode}">${body}</div></div>`;
+}
+
 function renderWatch() {
   if (!state.replay || !state.replay.frames) {
     // IRX-H21: The Watch workspace renders even when replay blobs are
@@ -2167,6 +2248,8 @@ function renderWatch() {
     const sourceLabel = state.replaySource?.id ? `<span class="theatre-source-label">${esc(state.replaySource.label ?? `${state.replaySource.kind ?? 'replay'} · ${state.replaySource.id}`)}</span>` : '';
     const retryButton = standby.variant === 'error' && state.replayRequest
       ? '<button id="watch-standby-retry" type="button" class="secondary-button">Retry</button>' : '';
+    const latestButton = standby.variant === 'idle'
+      ? '<button id="watch-standby-latest" type="button" class="secondary-button">Open latest full match</button>' : '';
     app.innerHTML = `<div class="watch-layout watch-layout-idle">
       <section class="watch-theatre theatre-standby" aria-label="Match theatre — standby" data-standby-variant="${esc(standby.variant)}">
         <div class="theatre-chrome"><span class="theatre-eyebrow"><span class="live-dot standby" aria-hidden="true"></span>MATCH THEATRE // ${esc(eyebrow)}</span><span class="theatre-chrome-meta">OBS-01 · ${esc(eyebrow)}</span></div>
@@ -2178,10 +2261,11 @@ function renderWatch() {
         <div class="theatre-standby-core">
           <strong>${esc(standby.headline)}</strong>${sourceLabel}
           <p>${esc(standby.detail)}</p>
-          <div class="theatre-standby-actions"><a class="primary-button" href="#/replays">Browse replays</a>${retryButton}<button id="watch-standby-experiment" type="button" class="secondary-button">Run experiment</button></div>
+          <div class="theatre-standby-actions"><a class="primary-button" href="#/replays">Browse replays</a>${latestButton}${retryButton}<button id="watch-standby-experiment" type="button" class="secondary-button">Run experiment</button></div>
         </div>
         <div class="theatre-ghost-timeline" aria-hidden="true">${'<i></i>'.repeat(28)}</div>
       </section>
+      ${watchEvidenceHtml()}
       ${watchTransportHtml({ loaded: false, total: 0, forensicSession: null })}
     </div>`;
     document.querySelector('#watch-standby-experiment')?.addEventListener('click', () => {
@@ -2189,6 +2273,13 @@ function renderWatch() {
     });
     document.querySelector('#watch-standby-retry')?.addEventListener('click', () => {
       if (state.replayRequest) void openReplay(state.replayRequest, { navigate: false });
+    });
+    // Full-Match Watch Contract: the standby offers to open the most recent
+    // provably-complete match — never a scenario fixture (CT-*).
+    document.querySelector('#watch-standby-latest')?.addEventListener('click', () => {
+      void openLatestRetainedMatch().then(result => {
+        if (!result) showToast('No complete match replay is retained in this build.', { type: 'info' });
+      });
     });
     return;
   }
@@ -2203,7 +2294,13 @@ function renderWatch() {
   }
   setCurrentFrame(state.frame);
 
-  const frame = currentFrame(), s = currentState(), timeline = visibleTimeline(), total = state.replay.frames.length - 1;
+  // Preserve the timeline scroll position across the full re-render — the
+  // DOM is rebuilt on every frame transition, so without this the viewport
+  // snaps to the top of a 300+ item timeline (the reported "truncated
+  // match" impression). scrollIntoView below then guarantees the current
+  // item stays visible.
+  const previousTimelineScroll = document.querySelector('.timeline-items')?.scrollTop ?? null;
+  const frame = currentFrame(), s = currentState(), timeline = watchTimelineModel(), total = state.replay.frames.length - 1;
   const players = s.turnOrder ?? Object.keys(s.players ?? {});
   const currentCmd = commandAt(state.frame);
   const currentLabel = state.frame === 0 ? 'Initial state' : semanticLabel(currentCmd, frame);
@@ -2229,6 +2326,7 @@ function renderWatch() {
         <div class="theatre-statusrail"><span>TURN <b>${esc(String(s.fullTurnSequence ?? '—'))}</b></span><span>PHASE <b>${esc(String(s.phase ?? '—').toUpperCase())}</b></span><span>ACTIVE <b>${esc(String(s.activePlayerId ?? '—'))}</b></span><span>${players.map(id => `${esc(id)} <b>${secured(s, s.players?.[id])}</b> PTS`).join(' · ')}</span>${railFlag}</div>
       </section>
       ${renderFrameCommentary(state.frame)}
+      ${watchEvidenceHtml()}
       ${watchTransportHtml({ loaded: true, total, forensicSession: forensicState?.session, currentLabel, currentClass })}
       ${watchReadoutsHtml({ s, frame, players, currentCmd, currentLabel, currentClass, indexRec, summary, total })}
       ${(() => {
@@ -2246,19 +2344,7 @@ function renderWatch() {
           </div>
         `).join('')}</div>`;
       })()}
-      <div class="watch-timeline"><div class="timeline-header">Timeline${forensicState?.session?.bookmarks?.length ? ` <span class="forensic-timeline-badge" aria-label="${forensicState.session.bookmarks.length} bookmarks">${forensicState.session.bookmarks.length}</span>` : ''}</div><div class="timeline-items">${timeline.map(item => {
-        const isCurrent = item.index === state.frame;
-        const label = item.index === 0 ? 'Start' : semanticLabel(item.command, item.frame);
-        // IRX-FORENSIC: Add bookmark/annotation/branch indicators to timeline items.
-        let forensicClasses = '';
-        if (forensicState?.session) {
-          const summary = forensicFrameSummary(forensicState.session, item.index);
-          if (summary.hasBookmark) forensicClasses += ' has-bookmark';
-          if (summary.annotationCount > 0) forensicClasses += ' has-annotation';
-          if (summary.branchCount > 0) forensicClasses += ' has-branch';
-        }
-        return `<button class="timeline-item ${item.class} ${isCurrent ? 'current' : ''}${forensicClasses}" data-class="${item.class}" data-frame="${item.index}" title="${esc(label)}" aria-current="${isCurrent ? 'true' : 'false'}"><span class="timeline-dot" aria-hidden="true"></span><span class="timeline-label">${esc(label)}</span></button>`;
-      }).join('')}</div></div>
+      ${watchTimelineHtml(timeline, forensicState)}
     </div>
     ${forensicSidebarHtml}
   </div>${renderForensicComparisonOverlay()}`;
@@ -2280,6 +2366,19 @@ function renderWatch() {
   document.querySelector('#frame-slider').oninput = e => stepTo(Number(e.target.value));
   document.querySelector('#play-speed').onchange = e => { state.speed = Number(e.target.value); };
   document.querySelectorAll('.timeline-item').forEach(btn => btn.onclick = () => stepTo(Number(btn.dataset.frame)));
+  document.querySelectorAll('[data-timeline-mode]').forEach(btn => btn.onclick = () => {
+    state.watchTimelineMode = btn.dataset.timelineMode;
+    persistSetting('watchTimelineMode', state.watchTimelineMode);
+    render();
+  });
+  // Keep the active timeline entry visible across the full re-render —
+  // restore the user's scroll position first, then nudge the current item
+  // into view only when it is actually out of sight.
+  const timelineEl = document.querySelector('.timeline-items');
+  if (timelineEl) {
+    if (previousTimelineScroll != null) timelineEl.scrollTop = previousTimelineScroll;
+    timelineEl.querySelector('.timeline-item.current')?.scrollIntoView({ block: 'nearest' });
+  }
   document.querySelectorAll('.card-token').forEach(btn => btn.onclick = () => {
     const identity = btn.dataset.identity;
     if (identity && identity !== 'HIDDEN') {

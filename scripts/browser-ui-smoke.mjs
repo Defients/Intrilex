@@ -157,6 +157,13 @@ try{
   await cdp.call('Page.navigate',{url:`${serverUrl}/#/watch`});
   await new Promise(r=>setTimeout(r,10000));
   await waitFor(cdp.evaluate,`document.querySelector('#page-title')?.textContent==='Watch' && Boolean(document.querySelector('#frame-slider'))`,{label:'Watch workspace boot',timeout:60000});
+  // FULL-MATCH WATCH CONTRACT: Watch no longer auto-loads a certification
+  // fixture — it opens on an honest standby. Select the deterministic
+  // privacy fixture (CT-004) explicitly through the Replay Library row,
+  // exactly the path a user takes.
+  await cdp.evaluate(`location.hash='#/replays'`);
+  await waitFor(cdp.evaluate,`Boolean(document.querySelector('[data-fixture="CT-004"]'))`,{label:'Replay Library row',timeout:30000});
+  await cdp.evaluate(`document.querySelector('[data-fixture="CT-004"]').click()`);
   // IRX-H21: Wait for replay to load (frame slider becomes enabled with max > 0)
   try {
     await waitFor(cdp.evaluate,`(()=>{const s=document.querySelector('#frame-slider');return s&&!s.disabled&&Number(s.max)>0})()`,{label:'replay loaded',timeout:30000});

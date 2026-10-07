@@ -62,8 +62,11 @@ test('replayDescriptorKey distinguishes sources with equal fixture ids', () => {
 test('staticReplayUrl covers only bundled-file kinds', () => {
   assert.equal(staticReplayUrl({ kind: 'corpus', fixtureId: 'CT-001' }),
     'data/certified-replays/CT-001.certified.replay.json');
+  // Autonomy resolves the frame-embedded retained artifact — the certified
+  // public envelope (autonomy/replays/public/*) carries a privacy-redacted
+  // initialState and cannot faithfully reconstruct the match.
   assert.equal(staticReplayUrl({ kind: 'autonomy', fixtureId: 'CT-001' }),
-    'data/autonomy/replays/public/CT-001.public.replay.json');
+    'data/autonomy/lab-replays/public/CT-001.json');
   assert.equal(staticReplayUrl({ kind: 'local', replayId: 'R-1' }), null);
   assert.equal(staticReplayUrl({ kind: 'object', replay: {} }), null);
 });
@@ -252,7 +255,8 @@ test('every Watch navigation site routes through openReplay', async () => {
   // Replay Library rows resolve a descriptor; they no longer mutate
   // fixtureId/replayKind/replay directly.
   const observatory = await scan('apps/lab-web/src/workspaces/observatory.js');
-  assert.match(observatory, /openReplay\(\{ kind: row\.dataset\.replayKind, fixtureId: row\.dataset\.fixture \}\)/);
+  assert.match(observatory, /openReplay\(kind === 'local'/);
+  assert.match(observatory, /\{ kind, fixtureId: row\.dataset\.fixture \}/);
   assert.doesNotMatch(observatory, /const isAutonomy = !!state\.autonomyIndex/);
   // Match History Watch action checks the index for a real replay record
   // before offering navigation.
@@ -291,7 +295,10 @@ test('Watch render guard cannot loop on a failed descriptor', async () => {
 
 test('Replay Library distinguishes metadata from bundled bodies', async () => {
   const src = await readFile(path.join(root, 'apps/lab-web/src/workspaces/observatory.js'), 'utf8');
-  assert.match(src, /state\.replayAvailability\?\.sources\?\.\[kind\]\?\.status/);
+  // Availability joins go through data-loader helpers so retained-match
+  // records resolve to the artifact family that actually serves them.
+  assert.match(src, /recordAvailability\(/);
+  assert.match(src, /descriptorKindForRecord\(/);
   assert.match(src, /Metadata only/);
   assert.match(src, /data-replay-kind/);
 });
@@ -301,7 +308,8 @@ test('build script writes an honest replay-availability manifest', async () => {
   const build = await readFile(path.join(root, 'scripts/build.mjs'), 'utf8');
   assert.match(build, /data\/replay-availability\.json/);
   assert.match(build, /corpus: \{ status: 'bundled'/);
-  assert.match(build, /autonomy: \{ status: includeReplayBlobs \? 'bundled' : 'excluded'/);
+  assert.match(build, /status: includeReplayBlobs \? 'bundled' : 'excluded'/);
+  assert.match(build, /bundledFixtureIds/);
   // The resolver only fetches autonomy bodies when the manifest allows.
   const resolver = await readFile(path.join(root, 'apps/lab-web/src/replay-resolver.js'), 'utf8');
   assert.match(resolver, /EXCLUDED_FROM_BUILD/);

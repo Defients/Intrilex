@@ -21,6 +21,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { ensureReplayFrames } from './replay-frames.js';
+import { classifyReplayBody, classifyIndexRecord, artifactHeadline, REPLAY_ARTIFACT_CLASS } from './replay-contract.mjs';
+export { REPLAY_ARTIFACT_CLASS };
 
 export const REPLAY_STATUS = Object.freeze({
   IDLE: 'idle',
@@ -65,14 +67,20 @@ export function replayDescriptorId(descriptor) {
 /**
  * Availability of a replay source kind on this deployment.
  * `manifest` is the parsed data/replay-availability.json written by
- * scripts/build.mjs ({ sources: { <kind>: { status } } }). A missing
- * manifest returns 'unknown' — resolution then attempts a fetch and
- * reports an honest error if the body is absent. Runtime kinds
- * (local/object) are always 'runtime'.
+ * scripts/build.mjs ({ sources: { <kind>: { status, bundledFixtureIds } } }).
+ * `bundledFixtureIds` is the representative retained-match allowlist — those
+ * bodies ship even when the source's bulk status is 'excluded'. A missing
+ * manifest returns 'unknown' — resolution then attempts a fetch and reports
+ * an honest error if the body is absent. Runtime kinds (local/object) are
+ * always 'runtime'.
  */
-export function replayAvailability(kind, manifest) {
+export function replayAvailability(kind, manifest, id = null) {
   if (kind === 'local' || kind === 'object') return 'runtime';
-  const status = manifest?.sources?.[kind]?.status;
+  const source = manifest?.sources?.[kind];
+  if (id && Array.isArray(source?.bundledFixtureIds) && source.bundledFixtureIds.includes(id)) {
+    return 'bundled';
+  }
+  const status = source?.status;
   return status === 'bundled' || status === 'excluded' ? status : 'unknown';
 }
 
@@ -82,7 +90,12 @@ export function staticReplayUrl(descriptor) {
     return `data/certified-replays/${descriptor.fixtureId}.certified.replay.json`;
   }
   if (descriptor?.kind === 'autonomy') {
-    return `data/autonomy/replays/public/${descriptor.fixtureId}.public.replay.json`;
+    // The retained frame-embedded artifact — its public frames are real
+    // recorded public views. The certified public envelope
+    // (autonomy/replays/public/*.public.replay.json) carries a privacy-
+    // redacted initialState, so command re-execution against it diverges;
+    // it is certification evidence, not a Watchable body.
+    return `data/autonomy/lab-replays/public/${descriptor.fixtureId}.json`;
   }
   return null;
 }
@@ -120,6 +133,28 @@ export async function resolveReplay(descriptor, deps = {}) {
     id: replayDescriptorId(descriptor),
     label: descriptor?.label ?? null,
   };
+  // Optional metadata join: (id) => { indexRecord, matchSummary } — lets the
+  // resolver attach the Watch completeness contract without importing state.
+  const lookupMeta = (id) => deps.lookupMeta?.(id) ?? { indexRecord: null, matchSummary: null };
+  const availabilityOf = (kind, id) => replayAvailability(kind, deps.availability, id);
+  const classify = (replay, availability) => {
+    const { indexRecord, matchSummary } = lookupMeta(meta.id);
+    const classification = classifyReplayBody(replay, {
+      kind: meta.kind, indexRecord, matchSummary, availability });
+    if (replay) replay._contract = classification;
+    return classification;
+  };
+  const classifyRecord = (availability) => {
+    const { indexRecord, matchSummary } = lookupMeta(meta.id);
+    return classifyIndexRecord(indexRecord ?? { fixtureId: meta.id }, { availability, summary: matchSummary });
+  };
+  const normalizeFailure = (replay, fallback) => {
+    const reason = replay?._frameAnalysis?.reason;
+    const diverged = replay?._frameIntegrity === 'diverged';
+    return diverged
+      ? 'The recorded command stream does not reproduce the recorded final state — playback refused rather than fabricated.'
+      : (reason ? `${fallback} (${reason})` : fallback);
+  };
   if (!descriptor || typeof descriptor !== 'object' || !descriptor.kind) {
     return fail(REPLAY_STATUS.ERROR, REPLAY_FAILURE.NO_DESCRIPTOR,
       'No replay source was selected.', meta);
@@ -134,9 +169,10 @@ export async function resolveReplay(descriptor, deps = {}) {
       await ensureFrames(replay);
       if (!Array.isArray(replay.frames) || replay.frames.length === 0) {
         return fail(REPLAY_STATUS.ERROR, REPLAY_FAILURE.NORMALIZE_FAILED,
-          'This result does not contain enough information for frame-by-frame playback.', meta);
+          normalizeFailure(replay, 'This result does not contain enough information for frame-by-frame playback.'),
+          { ...meta, classification: classify(replay, 'runtime') });
       }
-      return { status: REPLAY_STATUS.READY, replay, meta };
+      return { status: REPLAY_STATUS.READY, replay, meta: { ...meta, classification: classify(replay, 'runtime') } };
     }
     if (descriptor.kind === 'local') {
       const record = deps.getLocalReplay ? await deps.getLocalReplay(descriptor.replayId) : null;
@@ -147,22 +183,24 @@ export async function resolveReplay(descriptor, deps = {}) {
       }
       const replay = structuredClone(raw);
       await ensureFrames(replay);
+      if (!meta.id) meta.id = record.sessionId ?? descriptor.replayId;
       if (!Array.isArray(replay.frames) || replay.frames.length === 0) {
         return fail(REPLAY_STATUS.ERROR, REPLAY_FAILURE.NORMALIZE_FAILED,
-          'The saved replay could not be reconstructed for playback.', meta);
+          normalizeFailure(replay, 'The saved replay could not be reconstructed for playback.'),
+          { ...meta, classification: classify(replay, 'runtime') });
       }
-      if (!meta.id) meta.id = record.sessionId ?? descriptor.replayId;
-      return { status: REPLAY_STATUS.READY, replay, meta };
+      return { status: REPLAY_STATUS.READY, replay, meta: { ...meta, classification: classify(replay, 'runtime') } };
     }
     if (descriptor.kind === 'corpus' || descriptor.kind === 'autonomy') {
       if (!descriptor.fixtureId) {
         return fail(REPLAY_STATUS.ERROR, REPLAY_FAILURE.NO_DESCRIPTOR,
           'No replay was selected.', meta);
       }
-      const availability = replayAvailability(descriptor.kind, deps.availability);
+      const availability = availabilityOf(descriptor.kind, descriptor.fixtureId);
       if (availability === 'excluded') {
         return fail(REPLAY_STATUS.UNAVAILABLE, REPLAY_FAILURE.EXCLUDED_FROM_BUILD,
-          'Replay metadata exists, but the full replay was not included in this build.', meta);
+          'Replay metadata exists, but the full replay was not included in this build.',
+          { ...meta, classification: classifyRecord(availability) });
       }
       const url = staticReplayUrl(descriptor);
       let replay;
@@ -170,14 +208,16 @@ export async function resolveReplay(descriptor, deps = {}) {
         replay = await fetchJson(url);
       } catch {
         return fail(REPLAY_STATUS.ERROR, REPLAY_FAILURE.FETCH_FAILED,
-          'The replay artifact could not be loaded from this deployment.', meta);
+          'The replay artifact could not be loaded from this deployment.',
+          { ...meta, classification: classifyRecord(availability) });
       }
       await ensureFrames(replay);
       if (!Array.isArray(replay?.frames) || replay.frames.length === 0) {
         return fail(REPLAY_STATUS.ERROR, REPLAY_FAILURE.NORMALIZE_FAILED,
-          'The replay artifact is malformed or cannot be reconstructed.', meta);
+          normalizeFailure(replay, 'The replay artifact is malformed or cannot be reconstructed.'),
+          { ...meta, classification: classify(replay, availability) });
       }
-      return { status: REPLAY_STATUS.READY, replay, meta };
+      return { status: REPLAY_STATUS.READY, replay, meta: { ...meta, classification: classify(replay, availability) } };
     }
     return fail(REPLAY_STATUS.ERROR, REPLAY_FAILURE.NO_DESCRIPTOR,
       'Unsupported replay source.', meta);
@@ -213,6 +253,7 @@ export async function openReplay(descriptor, ctx = {}) {
   state.replayStatus = REPLAY_STATUS.LOADING;
   state.replayError = null;
   state.replaySource = { kind: descriptor?.kind ?? null, id, label: descriptor?.label ?? null };
+  state.replayContract = null;
   state.replay = null;
   state.authorized = null;
   state.frame = 0;
@@ -232,12 +273,14 @@ export async function openReplay(descriptor, ctx = {}) {
   if (state.replayRequest !== descriptor || state._replayLoadedFor !== key) return result;
   if (result.status === REPLAY_STATUS.READY) {
     state.replay = result.replay;
+    state.replayContract = result.meta?.classification ?? null;
     state.replayStatus = REPLAY_STATUS.READY;
     if (state.visibility !== 'public' && STATIC_REPLAY_KINDS.has(descriptor.kind)) {
       await ctx.loadAuthorized?.(descriptor, result.replay);
     }
   } else {
     state.replayStatus = result.status;
+    state.replayContract = result.meta?.classification ?? null;
     state.replayError = { code: result.code, message: result.message };
   }
   ctx.rerender?.();
@@ -250,17 +293,22 @@ export async function openReplay(descriptor, ctx = {}) {
  * @returns {{variant:'loading'|'unavailable'|'error'|'idle', headline:string, detail:string}}
  */
 export function describeWatchStandby(state) {
+  const cls = state?.replayContract;
+  const artifactLine = cls && cls.class && cls.class !== REPLAY_ARTIFACT_CLASS.UNKNOWN
+    ? artifactHeadline(cls) : null;
   if (state?.replayStatus === REPLAY_STATUS.LOADING) {
     return { variant: 'loading', headline: 'Loading replay…',
       detail: 'Resolving the replay source and reconstructing frames.' };
   }
   if (state?.replayStatus === REPLAY_STATUS.UNAVAILABLE) {
     return { variant: 'unavailable', headline: 'Replay metadata available',
-      detail: state?.replayError?.message ?? 'The full replay was not included in this build.' };
+      detail: artifactLine ? `${artifactLine} — body not in this build`
+        : (state?.replayError?.message ?? 'The full replay was not included in this build.') };
   }
   if (state?.replayStatus === REPLAY_STATUS.ERROR) {
     return { variant: 'error', headline: 'Replay unavailable',
-      detail: state?.replayError?.message ?? 'This result does not contain enough information for frame-by-frame playback.' };
+      detail: artifactLine ? `${artifactLine} — ${state?.replayError?.message ?? 'not playable'}`
+        : (state?.replayError?.message ?? 'This result does not contain enough information for frame-by-frame playback.') };
   }
   return { variant: 'idle', headline: 'No replay loaded.',
     detail: 'No replay selected — choose a replay from the Replay Library to inspect canonical state, decision flow, and causal evidence.' };

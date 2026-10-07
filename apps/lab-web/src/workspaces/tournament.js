@@ -6,6 +6,7 @@ import { state, app, esc, pct, showToast, clamp } from '../state.js';
 import { rerender } from '../rerender.js';
 import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js';
 import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js';
+import { retainLabReplay } from '../play/replay-library.js';
 import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js';
 
 const ALL_POLICIES = [
@@ -762,6 +763,14 @@ async function runLiveMatchGames(tournament, match, worker) {
     lv.currentFrame = 0;
     lv.gameWinner = winningPolicy;
     lv.gameSummary = summary;
+    // FULL-MATCH WATCH CONTRACT: selectively retain this complete match
+    // replay body in IndexedDB so the Replay Library + Watch standby can
+    // reopen it (bounded retention — replay-library.js prunes oldest).
+    void retainLabReplay(replay, {
+      id: `${lv.matchId}-g${g + 1}`,
+      summary: { ...summary, seed, policyIds: [p1Policy, p2Policy] },
+      source: 'tournament-live',
+    }).catch(() => {});
     lv.seat1Wins = seat1Wins + (winningPolicy === match.seat1Policy ? 1 : 0);
     lv.seat2Wins = seat2Wins + (winningPolicy === match.seat2Policy ? 1 : 0);
     lv.hasMoreGames = (lv.seat1Wins < winsNeeded) && (lv.seat2Wins < winsNeeded) && (g + 1 < bestOf);

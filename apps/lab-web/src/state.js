@@ -31,8 +31,8 @@ export const pageSubtitle = document.querySelector('#page-subtitle');
 // `intrilex:settings` localStorage key as a single JSON blob so we
 // don't litter localStorage with one key per setting.
 const SETTINGS_KEY = 'intrilex:settings';
-const PERSISTABLE_SETTINGS = ['reducedMotion', 'reducedSensory', 'fx', 'layout', 'visibility', 'rulesIllustrated', 'rulesViewMode', 'haptics', 'highContrast', 'seasonalThemes', 'atlasPrefs'];
-const SETTINGS_DEFAULTS = { reducedMotion: false, reducedSensory: false, fx: true, layout: 'observatory', visibility: 'public', rulesIllustrated: true, rulesViewMode: 'illustrated', haptics: true, highContrast: false, seasonalThemes: true };
+const PERSISTABLE_SETTINGS = ['reducedMotion', 'reducedSensory', 'fx', 'layout', 'visibility', 'rulesIllustrated', 'rulesViewMode', 'haptics', 'highContrast', 'seasonalThemes', 'atlasPrefs', 'watchTimelineMode'];
+const SETTINGS_DEFAULTS = { reducedMotion: false, reducedSensory: false, fx: true, layout: 'observatory', visibility: 'public', rulesIllustrated: true, rulesViewMode: 'illustrated', haptics: true, highContrast: false, seasonalThemes: true, watchTimelineMode: 'actions' };
 
 function loadPersistedSettings() {
   let saved = {};
@@ -58,7 +58,7 @@ function persistSetting(key, value) {
 const _persisted = loadPersistedSettings();
 export const state = {
   index:null, autonomyIndex:null, corpusAnalytics:null, aggregate:null, observatory:null, capabilities:null,
-  replay:null, authorized:null, replayKind:'corpus', fixtureId:'CT-001', frame:0, visibility:_persisted.visibility, viewer:'P1',
+  replay:null, authorized:null, replayKind:'corpus', fixtureId:null, frame:0, visibility:_persisted.visibility, viewer:'P1',
   _replayLoadedFor:null,
   // Replay acquisition state (replay-resolver.js). replayStatus is honest
   // about why Watch has no frames: 'idle' | 'loading' | 'ready' |
@@ -66,7 +66,15 @@ export const state = {
   // replayRequest is the active replay descriptor; replaySource carries the
   // human-readable origin; replayAvailability is the build manifest that
   // distinguishes "metadata exists" from "replay body is bundled".
-  replayStatus:'idle', replayError:null, replaySource:null, replayRequest:null, replayAvailability:null,
+  // replayContract is the Full-Match Watch Contract classification
+  // (replay-contract.mjs) attached by the resolver for the active replay.
+  replayStatus:'idle', replayError:null, replaySource:null, replayRequest:null, replayAvailability:null, replayContract:null,
+  // Full-Match Watch Contract: Watch never auto-selects a certification
+  // fixture — fixtureId stays null until an explicit replay is chosen.
+  // watchTimelineMode: 'turns' | 'actions' | 'all' (presentation only; 'all'
+  // is canonical). replayLibraryFilter drives /replays disclosure filters.
+  // localReplays is the IndexedDB retained-replay index (data-loader).
+  watchTimelineMode:_persisted.watchTimelineMode, replayLibraryFilter:'all', localReplays:null,
   playing:false, timer:null, speed:1, layout:_persisted.layout, showOrchestration:false, reducedMotion:_persisted.reducedMotion, reducedSensory:_persisted.reducedSensory, fx:_persisted.fx, rulesIllustrated:_persisted.rulesIllustrated, rulesViewMode:_persisted.rulesViewMode || (_persisted.rulesIllustrated === false ? 'text' : 'illustrated'), haptics:_persisted.haptics, highContrast:_persisted.highContrast, seasonalThemes:_persisted.seasonalThemes,
   selectedTimelineIndex:null, selectedMechanic:null, selectedSynergy:null, selectedPolicy:null, comparePolicyRight:null,
   filters:{profile:'all',evidence:'all'}, campaignWorker:null, campaignWorkers:[],

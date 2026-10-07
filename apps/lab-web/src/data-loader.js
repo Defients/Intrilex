@@ -8,6 +8,7 @@ import { renderExperimentControls, bindGlobal } from './experiment-controls.js';
 import { ensureReplayFrames } from './replay-frames.js';
 import { rerender } from './rerender.js';
 import { openReplay as openReplayDescriptor } from './replay-resolver.js';
+import { classifyIndexRecord, REPLAY_ARTIFACT_CLASS } from './replay-contract.mjs';
 
 // ── Replay loading ────────────────────────────────────────────────
 // Replay acquisition flows through the resolver layer (replay-resolver.js):
@@ -19,6 +20,21 @@ import { openReplay as openReplayDescriptor } from './replay-resolver.js';
 async function getLocalReplayRecord(replayId) {
   const { getReplay } = await import('./play/persistence.js');
   return getReplay(replayId);
+}
+
+/**
+ * Join a replay id to its index record and match summary, so the resolver
+ * can attach the Watch completeness contract (replay-contract.mjs).
+ * Autonomy retained matches live in lab-replay-index; corpus conformance
+ * fixtures and retained records live in replay-index; per-match summaries
+ * (match-summaries.ndjson) carry winner/termination evidence.
+ */
+export function replayLookupMeta(id) {
+  if (!id) return { indexRecord: null, matchSummary: null };
+  const indexRecord = state.index?.records?.find(r => r.fixtureId === id)
+    ?? state.autonomyIndex?.records?.find(r => r.fixtureId === id) ?? null;
+  const matchSummary = state.observatory?.summaries?.find(s => s.matchId === id) ?? null;
+  return { indexRecord, matchSummary };
 }
 
 /**
@@ -36,6 +52,7 @@ export async function openReplay(descriptor, opts = {}) {
     getLocalReplay: getLocalReplayRecord,
     ensureFrames: ensureReplayFrames,
     availability: state.replayAvailability,
+    lookupMeta: replayLookupMeta,
     loadAuthorized: () => loadAuthorized(),
     navigate: navigate ? () => { location.hash = '#/watch'; } : null,
     rerender,
@@ -55,10 +72,100 @@ export async function loadAuthorized() {
   try {
     const kind = state.replayKind;
     const url = kind === 'autonomy'
-      ? `data/autonomy/replays/authorized/${state.fixtureId}.authorized.replay.json`
+      ? `data/autonomy/lab-replays/authorized/${state.fixtureId}.json`
       : `data/replays/authorized/${state.fixtureId}.json`;
     state.authorized = await data(url, null);
   } catch { state.authorized = null; }
+}
+
+/**
+ * Refresh the local (IndexedDB) replay index — lightweight summaries used
+ * by the Replay Library's local section and by the Watch standby's
+ * "latest retained match" action. Safe no-op when IndexedDB is absent.
+ */
+export async function refreshLocalReplayIndex() {
+  try {
+    const { listReplays } = await import('./play/persistence.js');
+    const records = await listReplays();
+    state.localReplays = records.map(r => ({
+      replayId: r.replayId,
+      completedAt: r.completedAt ?? null,
+      profileId: r.profileId ?? null,
+      mode: r.mode ?? null,
+      winner: r.winner ?? null,
+      terminationReason: r.terminationReason ?? null,
+      fullTurnSequence: r.fullTurnSequence ?? null,
+      decisionCount: r.decisionCount ?? null,
+      commandCount: r.certifiedReplay?.commands?.length ?? null,
+      certified: Boolean(r.certifiedReplayHash),
+      hasBody: Boolean(r.certifiedReplay),
+    }));
+  } catch {
+    state.localReplays = [];
+  }
+  return state.localReplays;
+}
+
+/**
+ * Find the most recent replay Watch can prove is a complete match and open
+ * it. Candidates: local retained replays first (user/session evidence),
+ * then bundled index records that classify as FULL_MATCH with terminal
+ * evidence. Returns the opened result, or null when none qualifies.
+ */
+export async function openLatestRetainedMatch() {
+  const locals = Array.isArray(state.localReplays) ? state.localReplays : await refreshLocalReplayIndex();
+  const completeLocal = locals
+    .filter(r => r.hasBody && (r.winner != null || r.terminationReason != null))
+    .sort((a, b) => String(b.completedAt ?? '').localeCompare(String(a.completedAt ?? '')));
+  if (completeLocal.length) {
+    return openReplay({ kind: 'local', replayId: completeLocal[0].replayId });
+  }
+  const autonomyBundledIds = new Set(state.replayAvailability?.sources?.autonomy?.bundledFixtureIds ?? []);
+  const autonomyFullyBundled = state.replayAvailability?.sources?.autonomy?.status === 'bundled';
+  const autonomyCandidates = (state.autonomyIndex?.records ?? [])
+    .filter(r => autonomyFullyBundled || autonomyBundledIds.has(r.fixtureId));
+  if (autonomyCandidates.length) {
+    const candidates = autonomyCandidates
+      .map(r => ({ record: r, cls: classifyIndexRecord(r, {
+        availability: 'bundled',
+        summary: state.observatory?.summaries?.find(s => s.matchId === r.fixtureId) ?? null }) }))
+      .filter(c => c.cls.class === REPLAY_ARTIFACT_CLASS.FULL_MATCH);
+    if (candidates.length) {
+      candidates.sort((a, b) => (b.cls.evidence?.turns ?? 0) - (a.cls.evidence?.turns ?? 0));
+      return openReplay({ kind: 'autonomy', fixtureId: candidates[0].record.fixtureId });
+    }
+  }
+  const corpusCandidates = (state.index?.records ?? [])
+    .map(r => ({ record: r, cls: classifyIndexRecord(r, {
+      availability: recordAvailability(r, 'corpus'),
+      summary: state.observatory?.summaries?.find(s => s.matchId === r.fixtureId) ?? null }) }))
+    .filter(c => c.cls.class === REPLAY_ARTIFACT_CLASS.FULL_MATCH);
+  const openable = corpusCandidates.filter(c => recordAvailability(c.record, 'corpus') !== 'excluded');
+  if (openable.length) {
+    openable.sort((a, b) => (b.cls.evidence?.turns ?? 0) - (a.cls.evidence?.turns ?? 0));
+    return openReplay({ kind: descriptorKindForRecord(openable[0].record, 'corpus'), fixtureId: openable[0].record.fixtureId });
+  }
+  return null;
+}
+
+/**
+ * Which resolver kind actually serves a record's body. Retained match
+ * artifacts (ADVANCED_CORE_RETAINED, the M-* records) are dual-indexed —
+ * they appear in replay-index.json AND lab-replay-index.json — but their
+ * bodies only exist under the autonomy artifact directories.
+ */
+export function descriptorKindForRecord(record, indexKind) {
+  return /RETAINED|FULL_MATCH|COMPLETE_MATCH/i.test(String(record?.replayKind ?? ''))
+    ? 'autonomy' : indexKind;
+}
+
+/** Build-manifest availability for the artifact that would serve a record. */
+export function recordAvailability(record, indexKind) {
+  const kind = descriptorKindForRecord(record, indexKind);
+  const source = state.replayAvailability?.sources?.[kind];
+  const id = record?.fixtureId ?? record?.replayId ?? null;
+  if (id && Array.isArray(source?.bundledFixtureIds) && source.bundledFixtureIds.includes(id)) return 'bundled';
+  return source?.status ?? 'unknown';
 }
 
 // ── Trace index/data loading ──────────────────────────────────────
@@ -156,20 +263,18 @@ async function _loadObservatoryDataInner() {
   } catch (err) {
     console.warn('[experiments] evidence store init failed — experiment runs disabled this session:', err);
   }
-  // Default replay selection: prefer autonomy replays only when their bodies
-  // are actually bundled in this build; the certified corpus is always
-  // shipped, so it is the reliable default.
-  const autonomyBundled = state.replayAvailability?.sources?.autonomy?.status === 'bundled';
-  if (autonomyBundled && state.autonomyIndex?.records?.length) {
-    state.replayKind = 'autonomy';
-    state.fixtureId = state.autonomyIndex.records[0].fixtureId;
-  } else {
-    state.replayKind = 'corpus';
-    state.fixtureId = state.index?.records[0]?.fixtureId ?? 'CT-001';
-  }
+  // Local (IndexedDB) replay index — feeds the Replay Library's retained
+  // section and the Watch standby "latest full match" action. Failure is
+  // non-fatal: the library simply shows no local section.
+  await refreshLocalReplayIndex();
+  // FULL-MATCH WATCH CONTRACT: no automatic fixture selection. Every bundled
+  // corpus body is a certification fixture (CT-*), never a complete match —
+  // auto-loading one presented a truncated scenario as if it were a game.
+  // Watch opens on an honest standby instead; explicit selection comes from
+  // the Replay Library, History, Traces, or the standby actions.
   renderNavigation();
   renderExperimentControls();
   bindGlobal();
   const r = route();
-  if (!LANDING_MODES.has(r) && !isPlayRoute(r)) await loadReplay(state.fixtureId);
+  if (!LANDING_MODES.has(r) && !isPlayRoute(r) && state.fixtureId) await loadReplay(state.fixtureId);
 }
