@@ -48,6 +48,7 @@ export default [
         ResizeObserver: 'readonly',
         IntersectionObserver: 'readonly',
         AbortController: 'readonly',
+        AbortSignal: 'readonly',
         indexedDB: 'readonly',
         localStorage: 'readonly',
         sessionStorage: 'readonly',
