@@ -1,3 +1,3 @@
 // Evolution Lab: deterministic research, frozen suites and experimental local heuristic lineages.
 // Future: strategy clustering, Hall of Fame, Balance Lab.
-export { renderEvolutionLab, cleanupEvolutionLab } from './evolution-dashboard.js?v=ef8ac632ff7c';
+export { renderEvolutionLab, cleanupEvolutionLab } from './evolution-dashboard.js?v=09c7519902ec';

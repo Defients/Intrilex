@@ -45,9 +45,9 @@ test('release-notes: app.js imports and dispatches /release-notes', async () => 
   assert.match(js, /'\/release-notes': renderReleaseNotes/);
 });
 
-test('release-notes: landing rail links to #/release-notes', async () => {
-  const js = await read('apps/lab-web/src/app.js');
-  assert.match(js, /href="#\/release-notes"/);
+test('release-notes: homepage links to #/release-notes', async () => {
+  const view = await read('apps/lab-web/src/home/home-view.js');
+  assert.match(view, /href="#\/release-notes"/);
 });
 
 test('release-notes: workspace renders version summary cards from version.js', async () => {

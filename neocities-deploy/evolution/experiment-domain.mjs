@@ -35,6 +35,14 @@ export const BUNDLED_EXPERIMENT_ID = DEFAULT_EXPERIMENT_ID;
 export const RUN_STATUS = Object.freeze({ COMPLETED: 'COMPLETED', FAILED: 'FAILED', CANCELLED: 'CANCELLED' });
 export const RUN_LIFECYCLE = Object.freeze({ ACTIVE: 'active', INVALIDATED: 'invalidated', ARCHIVED: 'archived' });
 export const COMPATIBILITY = Object.freeze({ COMPATIBLE: 'compatible', TREATMENT_CHANGE: 'treatment-change', INCOMPATIBLE: 'incompatible' });
+export const PAYLOAD_KINDS = Object.freeze(['indexeddb', 'bundled', 'session', 'none']);
+// lifecycle.integrity.state — detected integrity states. Unlike lifecycle
+// curation (user bookkeeping) these are written by the evidence layer when
+// verification fails. 'quarantined' = detected corruption (runHash or
+// payloadHash mismatch); 'payload-unavailable' = the record references a
+// payload that no longer exists (e.g. a session-only payload after reload).
+// Both keep the run inspectable but analytically ineligible.
+export const RUN_INTEGRITY = Object.freeze({ QUARANTINED: 'quarantined', PAYLOAD_UNAVAILABLE: 'payload-unavailable' });
 
 export const EXCLUSION_REASONS = Object.freeze([
   'configuration-mismatch', 'engine-defect', 'corrupted-incomplete',
@@ -124,7 +132,7 @@ export function compatibilityFingerprint(run) {
  */
 const TREATMENT_FIELDS = ['policyIds', 'presetId', 'seedStrategy', 'strategicTrace', 'workers'];
 
-export function createRunRecord({ experimentId, ordinal, createdAt, status = RUN_STATUS.COMPLETED, config = {}, provenance = {}, metrics = {}, payloadKind = 'indexeddb', origin = 'session', error = null }) {
+export function createRunRecord({ experimentId, ordinal, createdAt, status = RUN_STATUS.COMPLETED, config = {}, provenance = {}, metrics = {}, payloadKind = 'indexeddb', payloadHash = null, origin = 'session', error = null }) {
   if (!isStr(experimentId)) fail('EXPERIMENT_ID_REQUIRED');
   if (!Number.isInteger(ordinal) || ordinal < 0) fail('RUN_ORDINAL_INVALID');
   if (!Object.values(RUN_STATUS).includes(status)) fail('RUN_STATUS_INVALID');
@@ -171,12 +179,18 @@ export function createRunRecord({ experimentId, ordinal, createdAt, status = RUN
       policyResults: metrics.policyResults ?? null,
     },
     payloadKind, // 'indexeddb' | 'bundled' | 'session' | 'none'
-    lifecycle: { state: RUN_LIFECYCLE.ACTIVE, pinned: false, invalidated: null, archivedAt: null },
+    // payloadHash binds the run to one exact evidence payload (canonical
+    // summaries+aggregate). Storage bookkeeping (payloadKind/retentionNote)
+    // is NOT evidence identity — see runHash below.
+    payloadHash: payloadHash ?? null,
+    lifecycle: { state: RUN_LIFECYCLE.ACTIVE, pinned: false, invalidated: null, archivedAt: null, integrity: null },
   };
   // runHash covers identity + evidence fields only. lifecycle is curation
-  // bookkeeping and deliberately excluded so flag changes don't look like
-  // evidence tampering.
-  const { lifecycle: _lifecycle, ...evidence } = run;
+  // bookkeeping; payloadKind/retentionNote are retention bookkeeping — where
+  // the evidence payload lives is mutable storage state, never part of the
+  // experiment's immutable identity. All three are deliberately excluded so
+  // retention/lifecycle changes don't look like evidence tampering.
+  const { lifecycle: _lifecycle, payloadKind: _payloadKind, retentionNote: _retentionNote, ...evidence } = run;
   run.runHash = hashCanonical(evidence);
   run.compatibilityFingerprint = compatibilityFingerprint(run);
   return run;
@@ -203,8 +217,21 @@ export function validateRunRecord(run) {
   if (!isStr(run.runId) || !isStr(run.experimentId)) fail('RUN_IDENTITY_MISSING');
   if (!Number.isInteger(run.ordinal) || run.ordinal < 0) fail('RUN_ORDINAL_INVALID');
   if (!Object.values(RUN_STATUS).includes(run.status)) fail('RUN_STATUS_INVALID');
-  const { lifecycle: _lifecycle, runHash: _runHash, compatibilityFingerprint: _fp, ...evidence } = run;
-  if (isStr(run.runHash) && run.runHash !== hashCanonical(evidence)) fail('RUN_HASH_MISMATCH');
+  if (!PAYLOAD_KINDS.includes(run.payloadKind)) fail('RUN_PAYLOAD_KIND_INVALID');
+  // Current envelope: evidence fields only — lifecycle (curation) and
+  // retention bookkeeping (payloadKind/retentionNote) are excluded.
+  const { lifecycle: _lifecycle, runHash: _runHash, compatibilityFingerprint: _fp, payloadKind: _pk, retentionNote: _rn, ...evidence } = run;
+  if (isStr(run.runHash)) {
+    if (run.runHash === hashCanonical(evidence)) return run;
+    // Schema 1.0 compatibility: the original envelope also covered
+    // payloadKind/retentionNote. Records sealed under that formula stay
+    // valid — retention state is not evidence, so widening the exclusion
+    // cannot conceal tampering with the evidence itself.
+    const legacy = { ...evidence };
+    if (run.payloadKind !== undefined) legacy.payloadKind = run.payloadKind;
+    if (run.retentionNote !== undefined) legacy.retentionNote = run.retentionNote;
+    if (run.runHash !== hashCanonical(legacy)) fail('RUN_HASH_MISMATCH');
+  }
   return run;
 }
 
@@ -299,15 +326,68 @@ export function pinRun(run, pinned = true) {
   return { ...run, lifecycle: { ...run.lifecycle, pinned: pinned === true } };
 }
 
+// ── Payload integrity ───────────────────────────────────────────
+
+/**
+ * Canonical hash of a run's evidence payload — the analytical content only
+ * ({summaries, aggregate}), never incidental storage fields like runId or
+ * storedAt. Deterministic across runtimes because hashCanonical is.
+ */
+export function payloadEvidenceHash(payload) {
+  return hashCanonical({ summaries: payload?.summaries ?? [], aggregate: payload?.aggregate ?? null });
+}
+
+/**
+ * Verify that a loaded payload is the exact evidence the run record was
+ * sealed against. Returns { ok, verified, code }:
+ *   verified:false + ok — the record predates payload sealing (legacy or
+ *     bundled); nothing to check, contribute on the record's own authority.
+ *   RUN_PAYLOAD_MISSING      — the record binds a payload that isn't there.
+ *   RUN_PAYLOAD_HASH_MISMATCH — the stored payload is not the sealed evidence.
+ */
+export function verifyRunPayload(run, payload) {
+  const expected = run?.payloadHash ?? null;
+  if (!isStr(expected)) return { ok: true, verified: false, code: null };
+  if (!payload || typeof payload !== 'object') return { ok: false, verified: false, code: 'RUN_PAYLOAD_MISSING' };
+  if (payloadEvidenceHash(payload) !== expected) return { ok: false, verified: false, code: 'RUN_PAYLOAD_HASH_MISMATCH' };
+  return { ok: true, verified: true, code: null };
+}
+
+/**
+ * Detected-integrity transition (evidence layer, not user curation):
+ * 'quarantined' for corruption, 'payload-unavailable' for a referenced
+ * payload that no longer exists. Pure — returns a new record.
+ */
+export function markRunIntegrity(run, { state, code = null, note = '', at = null } = {}) {
+  if (!Object.values(RUN_INTEGRITY).includes(state)) fail('RUN_INTEGRITY_STATE_INVALID');
+  return { ...run, lifecycle: { ...run.lifecycle, integrity: { state, code, note: String(note ?? ''), detectedAt: at ?? new Date().toISOString() } } };
+}
+
+/** The run's analytic integrity: 'corrupt' (failed hash validation at read),
+ * an integrity state ('quarantined'/'payload-unavailable'), or 'ok'. */
+export function runIntegrityState(run) {
+  if (run?.corrupt === true) return 'corrupt';
+  return run?.lifecycle?.integrity?.state ?? 'ok';
+}
+
+/** Analytically eligible — the inverse of every integrity exclusion. */
+export function runAnalyticallyEligible(run) {
+  return runIntegrityState(run) === 'ok';
+}
+
 // ── Evidence basis ──────────────────────────────────────────────
 
 /** Runs that actually contribute to analysis: included in the set,
- * completed, and not invalidated/archived. Excluded ≠ deleted. */
+ * completed, not invalidated/archived, and integrity-clean. A record whose
+ * sealed hash failed validation (corrupt:true) or whose evidence payload
+ * failed verification is analytically ineligible forever — it stays
+ * inspectable but can never silently enter an aggregate. */
 export function contributingRuns(runs, set) {
   const included = new Set(set?.includedRunIds ?? []);
   return runs.filter(r => included.has(r.runId)
     && r.status === RUN_STATUS.COMPLETED
-    && (r.lifecycle?.state ?? RUN_LIFECYCLE.ACTIVE) === RUN_LIFECYCLE.ACTIVE);
+    && (r.lifecycle?.state ?? RUN_LIFECYCLE.ACTIVE) === RUN_LIFECYCLE.ACTIVE
+    && runAnalyticallyEligible(r));
 }
 
 /**
@@ -335,6 +415,11 @@ export function evidenceBasis(runs, set, { baselineRun = null } = {}) {
     includedGames: contributing.reduce((n, r) => n + (r.metrics?.matchCount ?? 0), 0),
     excludedRunCount: excludedRuns.length,
     excludedGames: excludedGameCount,
+    // Integrity disclosure — never folded silently into "excluded".
+    corruptCount: runs.filter(r => r.corrupt === true).length,
+    quarantinedCount: runs.filter(r => runIntegrityState(r) === 'quarantined').length,
+    payloadUnavailableCount: runs.filter(r => runIntegrityState(r) === 'payload-unavailable').length,
+    integrityFailures: runs.filter(r => !runAnalyticallyEligible(r)).map(r => ({ runId: r.runId, state: runIntegrityState(r), code: r.corruptCode ?? r.lifecycle?.integrity?.code ?? null })),
     invalidatedCount: runs.filter(r => r.lifecycle?.state === RUN_LIFECYCLE.INVALIDATED).length,
     archivedCount: runs.filter(r => r.lifecycle?.state === RUN_LIFECYCLE.ARCHIVED).length,
     failedCount: runs.filter(r => r.status === RUN_STATUS.FAILED).length,
@@ -347,7 +432,7 @@ export function evidenceBasis(runs, set, { baselineRun = null } = {}) {
  * per-run metrics only — no payload load or worker recompute needed. */
 export function previewSelectionMetrics(runs, runIds) {
   const selected = new Set(runIds);
-  const chosen = runs.filter(r => selected.has(r.runId) && r.status === RUN_STATUS.COMPLETED);
+  const chosen = runs.filter(r => selected.has(r.runId) && r.status === RUN_STATUS.COMPLETED && runAnalyticallyEligible(r));
   const games = chosen.reduce((n, r) => n + (r.metrics?.matchCount ?? 0), 0);
   const completed = chosen.reduce((n, r) => n + (r.metrics?.completedMatchCount ?? 0), 0);
   const s1 = chosen.reduce((n, r) => n + (r.metrics?.seat1Wins ?? 0), 0);

@@ -21,6 +21,6 @@ test('controls expose labels',async()=>{
 
 test('focus-visible styling exists',async()=>assert.match(await readCss(),/:focus-visible/));
 test('statuses are encoded in text and not color alone',async()=>{const js=await readFile('apps/lab-web/src/app.js','utf8');const evidence=await readFile('apps/lab-web/src/workspaces/evidence.js','utf8');assert.match(evidence,/SUPPORTED/);assert.match(js,/BLOCKED|REPLAY_ONLY|danger|warning/);});
-test('landing page has skip link in renderLanding',async()=>{const js=await readFile('apps/lab-web/src/app.js','utf8');assert.match(js,/class="skip skip-link" href="#landing-main"/);});
+test('homepage has skip link to main content',async()=>{const js=await readFile('apps/lab-web/src/home/home-view.js','utf8');assert.match(js,/class="skip skip-link" href="#landing-main"/);});
 test('landing cards have focus-visible styling',async()=>{const css=await readCss();assert.match(css,/\.landing-card:focus-visible/);});
 test('landing page respects reduced-motion for aurora animation',async()=>{const css=await readCss();assert.match(css,/\.landing-aurora\{animation:none\}/);});

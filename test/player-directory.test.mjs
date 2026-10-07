@@ -476,7 +476,8 @@ test('routing: openPlayersOverlay is wired in app.js (overlay pattern, not obser
   assert.ok(appSrc.includes('openPlayersOverlay'), 'app.js must have openPlayersOverlay function');
   assert.ok(appSrc.includes("r === '/players'"), 'app.js must handle /players in renderLandingMode');
   assert.ok(!appSrc.includes("'/players': renderPlayers"), 'app.js must NOT dispatch /players as observatory renderer');
-  assert.ok(appSrc.includes('data-players-card'), 'app.js must have data-players-card on the rail card');
+  const homeView = await readFile(path.join(root, 'apps/lab-web/src/home/home-view.js'), 'utf8');
+  assert.ok(homeView.includes("'#/players'"), 'homepage must link to /players (route renders the overlay on the homepage)');
 });
 
 test('routing: players workspace file exists with data-testid hooks', async () => {

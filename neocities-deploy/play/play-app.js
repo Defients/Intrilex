@@ -4,46 +4,46 @@
 // Never owns authoritative state — delegates to PlaySession.
 // ═══════════════════════════════════════════════════════════════
 
-import { createSession, restoreSession, SessionState } from './play-controller.js?v=ef8ac632ff7c';
-import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=ef8ac632ff7c';
+import { createSession, restoreSession, SessionState } from './play-controller.js?v=09c7519902ec';
+import { renderBoard, renderNewMatchSetup } from './ranked-duel-renderer.mjs?v=09c7519902ec';
 import {
   buildOpponentModel,
   policyTraitsFromId,
   resolveOpponent,
   archetypeForDifficulty,
-} from './opponent-catalog.mjs?v=ef8ac632ff7c';
+} from './opponent-catalog.mjs?v=09c7519902ec';
 import {
   renderArchetypeGrid,
   renderOpponentBrief,
   renderMatchBrief,
   renderPlaystyleScope,
-} from './ranked-duel-hub.mjs?v=ef8ac632ff7c';
-import { getGameplaySkin } from './gameplay-skin.js?v=ef8ac632ff7c';
-import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=ef8ac632ff7c';
-import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=ef8ac632ff7c';
-import { buildSaveIntegrityPayload } from './save-integrity.js?v=ef8ac632ff7c';
-import { validateSnapshotPrivacy } from './play-privacy.js?v=ef8ac632ff7c';
-import { POLICY_IDS } from '../autonomy-runtime.js?v=ef8ac632ff7c';
-import { GuidanceMode } from './intelligence/action-explanation.js?v=ef8ac632ff7c';
-import './orchestration/declaration-flow.js?v=ef8ac632ff7c';
-import './state/play-lifecycle.js?v=ef8ac632ff7c';
-import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=ef8ac632ff7c';
-import { getAiBanter } from './ai-personality.js?v=ef8ac632ff7c';
-import { SoundEngine } from './play-sound.js?v=ef8ac632ff7c';
-import { ParticleSystem } from './play-particles.js?v=ef8ac632ff7c';
-import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=ef8ac632ff7c';
-import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=ef8ac632ff7c';
-import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=ef8ac632ff7c';
-import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=ef8ac632ff7c';
-import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=ef8ac632ff7c';
-import { renderRecap } from './academy/academy-recap.mjs?v=ef8ac632ff7c';
-import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs?v=ef8ac632ff7c';
-import { FirstContactController } from './first-contact/fc-controller.mjs?v=ef8ac632ff7c';
-import { FIRST_CONTACT_SCENARIO, validateFirstContactScenario } from './first-contact/fc-scenario.mjs?v=ef8ac632ff7c';
-import { renderFcRecapBlock } from './first-contact/fc-panel.mjs?v=ef8ac632ff7c';
-import { createSessionAutosave } from './session-autosave.js?v=ef8ac632ff7c';
-import { state, resetState } from './play-state.js?v=ef8ac632ff7c';
-import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js?v=ef8ac632ff7c';
+} from './ranked-duel-hub.mjs?v=09c7519902ec';
+import { getGameplaySkin } from './gameplay-skin.js?v=09c7519902ec';
+import { renderReplayLibrary, listReplaySummaries, downloadReplay } from './replay-library.js?v=09c7519902ec';
+import { getSave, putSave, isIndexedDBAvailable, getPreference, updatePlayerStats, getReplay } from './persistence.js?v=09c7519902ec';
+import { buildSaveIntegrityPayload } from './save-integrity.js?v=09c7519902ec';
+import { validateSnapshotPrivacy } from './play-privacy.js?v=09c7519902ec';
+import { POLICY_IDS } from '../autonomy-runtime.js?v=09c7519902ec';
+import { GuidanceMode } from './intelligence/action-explanation.js?v=09c7519902ec';
+import './orchestration/declaration-flow.js?v=09c7519902ec';
+import './state/play-lifecycle.js?v=09c7519902ec';
+import { acquireLease, releaseLease, checkLease, forceTakeLease, generateTabId } from './state/session-lease.js?v=09c7519902ec';
+import { getAiBanter } from './ai-personality.js?v=09c7519902ec';
+import { SoundEngine } from './play-sound.js?v=09c7519902ec';
+import { ParticleSystem } from './play-particles.js?v=09c7519902ec';
+import { renderAcademy, getCompletedLessons, markLessonComplete } from './academy/academy-renderer.mjs?v=09c7519902ec';
+import { AcademyController, AcademyPhase, academyGuidanceMode } from './academy/academy-controller.mjs?v=09c7519902ec';
+import { findLesson as findLessonV2 } from './academy/curriculum.mjs?v=09c7519902ec';
+import { isFoundationsComplete, loadProgress } from './academy/academy-progress.mjs?v=09c7519902ec';
+import { renderBriefing, shouldSkipBriefing, setSkipBriefing } from './academy/academy-briefing.mjs?v=09c7519902ec';
+import { renderRecap } from './academy/academy-recap.mjs?v=09c7519902ec';
+import { renderGuidedIntroScreen, startGuidedMatch } from './guided-exhibition/guided-view.mjs?v=09c7519902ec';
+import { FirstContactController } from './first-contact/fc-controller.mjs?v=09c7519902ec';
+import { FIRST_CONTACT_SCENARIO, validateFirstContactScenario } from './first-contact/fc-scenario.mjs?v=09c7519902ec';
+import { renderFcRecapBlock } from './first-contact/fc-panel.mjs?v=09c7519902ec';
+import { createSessionAutosave } from './session-autosave.js?v=09c7519902ec';
+import { state, resetState } from './play-state.js?v=09c7519902ec';
+import { bindBoardEvents as bindBoardEventsModule, addBeforeUnloadProtection, removeBeforeUnloadProtection, showForfeitConfirmation } from './board-events.js?v=09c7519902ec';
 import {
   openAdvancedCardRules as openAdvancedCardRulesController,
   closeAdvancedCardRules,
@@ -51,19 +51,19 @@ import {
   findAuthorizedCard,
   buildCurrentMatchContext,
   getOpenIdentity,
-} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=ef8ac632ff7c';
-import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=ef8ac632ff7c';
+} from './advanced-card-rules/advanced-card-rules-controller.mjs?v=09c7519902ec';
+import { NetworkPlaySession, NetworkSessionState } from './network/network-session.mjs?v=09c7519902ec';
 import {
   renderNetworkLobby, renderNetworkCreateWaiting, renderNetworkJoinForm,
   renderNetworkQueueWaiting, renderNetworkSpectateForm, renderNetworkSpectating,
   renderNetworkJoinWaiting, renderNetworkReconnectDialog, renderNetworkError,
-  renderNetworkUnavailable,
-} from './network/network-lobby-renderer.mjs?v=ef8ac632ff7c';
-import { getMatchServerUrl, validateMatchServerUrl } from './network/match-server-config.js?v=ef8ac632ff7c';
-import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=ef8ac632ff7c';
-import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=ef8ac632ff7c';
-import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=ef8ac632ff7c';
-import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=ef8ac632ff7c';
+  renderNetworkUnavailable, buildInviteLink,
+} from './network/network-lobby-renderer.mjs?v=09c7519902ec';
+import { getMatchServerUrl, validateMatchServerUrl } from './network/match-server-config.js?v=09c7519902ec';
+import { renderFunnelBanner, wireFunnelBanner, completeStep, advanceToStep, getCurrentStep, FunnelStep } from './first-run-funnel.js?v=09c7519902ec';
+import { getAccessToken, onTokenRefresh } from './network/auth-controller.js?v=09c7519902ec';
+import { getAchievementRuntime } from './achievements/achievement-runtime.js?v=09c7519902ec';
+import { getAchievementPresenter } from './achievements/achievement-presenter.js?v=09c7519902ec';
 
 const esc = (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -192,8 +192,8 @@ export async function handlePlayRoute(route, container) {
     await renderNetworkLobbyHub(container);
   } else if (sub === '/online/create') {
     await renderNetworkCreateFlow(container);
-  } else if (sub === '/online/join') {
-    await renderNetworkJoinFlow(container);
+  } else if (sub === '/online/join' || sub.startsWith('/online/join/')) {
+    await renderNetworkJoinFlow(container, extractJoinCodeFromSub(sub));
   } else if (sub === '/online/queue') {
     await renderNetworkQueueFlow(container);
   } else if (sub === '/online/spectate') {
@@ -553,7 +553,7 @@ function wireResumePrompt(container) {
  * there is no silent fallback to a baseline policy.
  */
 async function profileStore() {
-  const [{ ProfileStore, IndexedDbBackend }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=ef8ac632ff7c'), import('../evolution/identity.mjs?v=ef8ac632ff7c')]);
+  const [{ ProfileStore, IndexedDbBackend }, { LAB_IDENTITY }] = await Promise.all([import('../evolution/profile-store.mjs?v=09c7519902ec'), import('../evolution/identity.mjs?v=09c7519902ec')]);
   return new ProfileStore(new IndexedDbBackend(), { identity: LAB_IDENTITY });
 }
 async function startAgentProfileMatch(agentProfileId, container) {
@@ -577,7 +577,7 @@ async function recordAgentExperience(session, snapshot) {
   let notice;
   for (const entry of session.decisionJournal) if (entry.source === 'ai' && entry.family) families[entry.family] = (families[entry.family] ?? 0) + 1;
   try {
-    const { buildExperienceRecord } = await import('../evolution/profile-science.mjs?v=ef8ac632ff7c');
+    const { buildExperienceRecord } = await import('../evolution/profile-science.mjs?v=09c7519902ec');
     const record = buildExperienceRecord({ encounterId: session.sessionId, snapshot: agent, agentSeat: aiSeat, rulesProfileId: session.setup.profileId,
       outcome: { winner: snapshot.match.winner ?? null, terminationReason: snapshot.match.terminationReason ?? null, fullTurns: snapshot.match.fullTurnSequence ?? null },
       observations: { agentDecisions: session.decisionJournal.filter(e => e.source === 'ai').length, agentFamilyCounts: families } });
@@ -863,7 +863,7 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
   // Presentation-only advice reuses the shipped Intrilex scoring module.
   // It receives validated visible cards, never the session's raw state/vault.
   const [{ rankPolicyActionsWithDecomposition }, { mountGameTable }] = await Promise.all([
-    import('../policy-scoring.js?v=ef8ac632ff7c'), import('../client/mount.tsx?v=ef8ac632ff7c'),
+    import('../policy-scoring.js?v=09c7519902ec'), import('../client/mount.tsx?v=09c7519902ec'),
   ]);
   // The shell replaces play-root on hash navigation. Never publish into a
   // detached root or finish an async mount for a session that has been replaced.
@@ -998,7 +998,7 @@ async function renderTacticalBoard(container, snapshot, isNetworkMatch) {
     positionAcademyCoachmarks(container);
     bindAcademyCoachmarkDismiss(container);
     if (getOpenIdentity() && state.advancedRulesCardId) {
-      const { refreshCurrentMatch } = await import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=ef8ac632ff7c');
+      const { refreshCurrentMatch } = await import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=09c7519902ec');
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     }
   } catch (error) {
@@ -1343,7 +1343,7 @@ async function renderActiveMatch(container) {
   // inspected card is no longer inspectable, the controller sanitizes
   // (closes) the view to avoid leaking stale information.
   if (getOpenIdentity() && state.advancedRulesCardId) {
-    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=ef8ac632ff7c').then(({ refreshCurrentMatch }) => {
+    import('./advanced-card-rules/advanced-card-rules-controller.mjs?v=09c7519902ec').then(({ refreshCurrentMatch }) => {
       refreshCurrentMatch(snapshot, state.advancedRulesCardId);
     });
   }
@@ -1478,7 +1478,7 @@ function bindReplayLibraryEvents(container) {
       } else if (action === 'delete-replay') {
         const confirmed = await showConfirmDialog('Delete replay', `Delete replay ${replayId}? This cannot be undone.`);
         if (confirmed) {
-          const { deleteReplay } = await import('./persistence.js?v=ef8ac632ff7c');
+          const { deleteReplay } = await import('./persistence.js?v=09c7519902ec');
           await deleteReplay(replayId);
           await renderReplays(container);
         }
@@ -1511,7 +1511,7 @@ async function watchLocalReplay(replayId, container) {
     // Route the local IndexedDB record through the shared replay resolver —
     // normalization, state mutation and navigation are identical for every
     // replay source, so Watch stays source-agnostic.
-    const { openReplay } = await import('../data-loader.js?v=ef8ac632ff7c');
+    const { openReplay } = await import('../data-loader.js?v=09c7519902ec');
     await openReplay({
       kind: 'local',
       replayId,
@@ -1703,10 +1703,23 @@ async function renderNetworkCreateWaitingRoom(container) {
 }
 
 /**
- * Render the join flow — shows the invite code input form.
+ * Extract an invite code from a join sub-route (deep link).
+ * Supports '#/play/online/join/<CODE>' invite links shared by the creator.
+ * @param {string} sub - Play sub-route (e.g. '/online/join/ABC123')
+ * @returns {string} Sanitized uppercase code, or '' when absent/invalid
  */
-async function renderNetworkJoinFlow(container) {
-  container.innerHTML = renderNetworkJoinForm({});
+function extractJoinCodeFromSub(sub) {
+  const m = /^\/online\/join\/([A-Za-z0-9]{6,8})\/?$/.exec(sub ?? '');
+  return m ? m[1].toUpperCase() : '';
+}
+
+/**
+ * Render the join flow — shows the invite code input form.
+ * @param {object} container - Route container
+ * @param {string} [prefillCode] - Invite code from a shared join link
+ */
+async function renderNetworkJoinFlow(container, prefillCode = '') {
+  container.innerHTML = renderNetworkJoinForm({ prefillCode });
   bindNetworkJoinFormEvents(container);
 }
 
@@ -1721,12 +1734,12 @@ function bindNetworkJoinFormEvents(container) {
     const formData = new FormData(form);
     const inviteCode = (formData.get('inviteCode') ?? '').toString().trim().toUpperCase();
     if (!inviteCode || inviteCode.length < 6 || inviteCode.length > 8) {
-      container.innerHTML = renderNetworkJoinForm({ error: 'Invite code must be 6–8 characters.' });
+      container.innerHTML = renderNetworkJoinForm({ error: 'Invite code must be 6–8 characters.', prefillCode: inviteCode });
       bindNetworkJoinFormEvents(container);
       return;
     }
 
-    container.innerHTML = renderNetworkJoinForm({ connecting: true });
+    container.innerHTML = renderNetworkJoinForm({ connecting: true, prefillCode: inviteCode });
     bindNetworkJoinFormEvents(container);
 
     try {
@@ -1769,7 +1782,7 @@ function bindNetworkJoinFormEvents(container) {
       await session.connect();
       const result = await session.joinDuel(inviteCode);
       if (result?.error) {
-        container.innerHTML = renderNetworkJoinForm({ error: result.error });
+        container.innerHTML = renderNetworkJoinForm({ error: result.error, prefillCode: inviteCode });
         bindNetworkJoinFormEvents(container);
         return;
       }
@@ -1777,7 +1790,7 @@ function bindNetworkJoinFormEvents(container) {
       state.activeContainer = container;
       await renderNetworkJoinWaitingRoom(container);
     } catch (error) {
-      container.innerHTML = renderNetworkJoinForm({ error: error.message ?? 'Failed to join match.' });
+      container.innerHTML = renderNetworkJoinForm({ error: error.message ?? 'Failed to join match.', prefillCode: inviteCode });
       bindNetworkJoinFormEvents(container);
     }
   });
@@ -1862,6 +1875,18 @@ function bindNetworkWaitingEvents(container) {
             el.textContent = 'Copy code';
           }
         } catch { /* clipboard may be blocked */ }
+      } else if (action === 'network-copy-invite-link') {
+        const link = buildInviteLink(`${location.origin}${location.pathname}`, session.inviteCode);
+        try {
+          if (link) await navigator.clipboard.writeText(link);
+          el.textContent = '✓ Link copied';
+          const resetDelay = state.reducedMotion ? 0 : 2000;
+          if (resetDelay > 0) {
+            setTimeout(() => { el.textContent = 'Copy invite link'; }, resetDelay);
+          } else {
+            el.textContent = 'Copy invite link';
+          }
+        } catch { /* clipboard may be blocked */ }
       }
     });
   });
@@ -1871,7 +1896,7 @@ function bindNetworkWaitingEvents(container) {
  * Render the matchmaking queue flow — joins the queue and waits for pairing.
  */
 async function renderNetworkQueueFlow(container) {
-  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=ef8ac632ff7c');
+  const { queueJoin, queueLeave, authenticate } = await import('./network/network-protocol-client.mjs?v=09c7519902ec');
   const serverUrl = getNetworkServerUrl();
   if (!serverUrl) {
     container.innerHTML = renderNetworkUnavailable({ reason: 'configuration-error' });
@@ -2088,7 +2113,7 @@ function fetchSpectatableList(serverUrl, listSpectatable) {
  * Match ID form remains available as a fallback and for private shares.
  */
 async function renderNetworkSpectateFlow(container) {
-  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=ef8ac632ff7c');
+  const { spectateMatch, spectateLeave, listSpectatable } = await import('./network/network-protocol-client.mjs?v=09c7519902ec');
 
   // Live-list state for the discovery section
   let liveState = { liveMatches: null, liveLoading: false, liveError: null };
@@ -2460,7 +2485,8 @@ function bindNetworkErrorEvents(container) {
         if (hash.includes('/create')) {
           await renderNetworkCreateFlow(container);
         } else if (hash.includes('/join')) {
-          await renderNetworkJoinFlow(container);
+          const sub = hash.replace(/^#\/?play/, '') || '';
+          await renderNetworkJoinFlow(container, extractJoinCodeFromSub(sub));
         } else {
           await renderNetworkLobbyHub(container);
         }

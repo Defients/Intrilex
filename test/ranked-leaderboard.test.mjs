@@ -612,7 +612,10 @@ test('privacy: leaderboard UI source has no service-key or secret references', a
 
 test('ui: leaderboard is wired as a homepage overlay (not a Simulation Lab workspace)', async () => {
   const router = await readFile(path.join(root, 'apps/lab-web/src/router.js'), 'utf8');
-  assert.ok(!router.includes("'/leaderboard'"), 'router no longer has /leaderboard workspace (removed from Simulation Lab)');
+  // /leaderboard is a landing-mode route (renders the homepage, then opens
+  // the leaderboard overlay) — not an observatory workspace.
+  assert.ok(/LANDING_MODES = new Set\(\[[^\]]*'\/leaderboard'/.test(router), '/leaderboard must be a LANDING_MODES route');
+  assert.ok(!/WORKSPACES = \[[^\]]*'\/leaderboard'/.test(router), '/leaderboard must NOT be an observatory workspace');
   const appJs = await readFile(path.join(root, 'apps/lab-web/src/app.js'), 'utf8');
   assert.ok(appJs.includes('renderLeaderboard'), 'app.js imports renderLeaderboard');
   assert.ok(appJs.includes('openLeaderboardOverlay'), 'app.js has openLeaderboardOverlay for homepage overlay');

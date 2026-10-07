@@ -343,6 +343,13 @@ details.authority-stamp{display:block;margin-top:8px;padding:0;border:0;backgrou
 .replay-status-available{color:var(--accent,#5ad7e8);border-color:rgba(90,215,232,.4);background:rgba(90,215,232,.08)}
 .replay-status-metadata-only{color:var(--amber);border-color:rgba(241,189,93,.4);background:rgba(241,189,93,.08)}
 .replay-status-unknown{color:var(--muted);background:rgba(255,255,255,.05)}
+/* Full-Match Watch Contract — artifact class disclosure */
+.replay-class{display:inline-block;padding:1px 8px;border-radius:3px;font-size:9.5px;letter-spacing:.08em;font-weight:700;text-transform:uppercase;border:1px solid var(--border-soft);white-space:nowrap}
+.replay-class-full-match{color:#37d67a;border-color:rgba(55,214,122,.4);background:rgba(55,214,122,.08)}
+.replay-class-scenario-fixture{color:var(--amber);border-color:rgba(241,189,93,.4);background:rgba(241,189,93,.08)}
+.replay-class-partial-replay{color:#d0684a;border-color:rgba(208,104,74,.4);background:rgba(208,104,74,.08)}
+.replay-class-metadata-only{color:var(--muted);background:rgba(255,255,255,.05)}
+.replay-class-unknown{color:var(--muted);border-style:dashed}
 .replay-row-metadata-only td{color:var(--muted)}
 .replay-row-metadata-only:hover td{color:var(--text)}
 

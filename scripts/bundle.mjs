@@ -207,16 +207,21 @@ async function bundle() {
 
     // Inject production WebSocket endpoint into CSP connect-src directive.
     // This prevents mixed-content blocking when the frontend is on HTTPS
-    // and the match server is on a separate WSS host.
+    // and the match server is on a separate WSS host. The HTTPS equivalent
+    // is injected too — the homepage Live Pulse fetches
+    // /api/public/home-stats over plain HTTPS.
     if (matchServerUrl && matchServerUrl.startsWith('wss://')) {
       const cspWsHost = matchServerUrl; // Full wss:// URL for CSP
-      // Add the WSS endpoint to connect-src if not already present
-      if (html.includes('connect-src') && !html.includes(cspWsHost)) {
-        html = html.replace(
-          /(connect-src[^;]*?)(;)/,
-          `$1 ${cspWsHost}$2`
-        );
-        console.log(`bundle: added ${cspWsHost} to CSP connect-src`);
+      const cspHttpHost = 'https://' + matchServerUrl.slice('wss://'.length);
+      for (const host of [cspWsHost, cspHttpHost]) {
+        // Add the endpoint to connect-src if not already present
+        if (html.includes('connect-src') && !html.includes(host)) {
+          html = html.replace(
+            /(connect-src[^;]*?)(;)/,
+            `$1 ${host}$2`
+          );
+          console.log(`bundle: added ${host} to CSP connect-src`);
+        }
       }
     }
 

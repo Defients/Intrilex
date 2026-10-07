@@ -90,6 +90,17 @@ class InMemoryOutboxStorage {
     return [...this._jobs.values()].filter(j => j.status === 'pending' || j.status === 'in_progress').length;
   }
 
+  /**
+   * Count jobs of a given type created at or after sinceMs.
+   * Used for public stats (e.g. "duels today" counts result jobs).
+   * @param {string} jobType
+   * @param {number} sinceMs
+   * @returns {number}
+   */
+  countJobsSince(jobType, sinceMs) {
+    return [...this._jobs.values()].filter(j => j.jobType === jobType && j.createdAt >= sinceMs).length;
+  }
+
   close() { /* no-op */ }
 }
 
@@ -177,6 +188,19 @@ class SqliteOutboxStorage {
     ).get().count);
   }
 
+  /**
+   * Count jobs of a given type created at or after sinceMs.
+   * Used for public stats (e.g. "duels today" counts result jobs).
+   * @param {string} jobType
+   * @param {number} sinceMs
+   * @returns {number}
+   */
+  countJobsSince(jobType, sinceMs) {
+    return Number(this._db.prepare(
+      'SELECT COUNT(*) AS count FROM terminal_outbox WHERE jobType = ? AND createdAt >= ?'
+    ).get(jobType, sinceMs).count);
+  }
+
   close() {
     try { this._db.close(); } catch { /* ignore */ }
   }
@@ -212,6 +236,19 @@ export class TerminalOutbox {
 
   _assertOpen() {
     if (this._shuttingDown) throw new Error('TerminalOutbox is shutting down or closed');
+  }
+
+  /**
+   * Count jobs of a given type created at or after sinceMs — read-only
+   * aggregation for public statistics (does not assert open so the
+   * homepage stats endpoint keeps working during drain).
+   * @param {string} jobType - 'result' | 'achievements' | 'achievement_progress'
+   * @param {number} sinceMs - epoch milliseconds
+   * @returns {number}
+   */
+  countJobsSince(jobType, sinceMs) {
+    if (this._closed) return 0;
+    return this._storage.countJobsSince(jobType, sinceMs);
   }
 
   /**

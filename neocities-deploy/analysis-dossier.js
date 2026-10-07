@@ -17,11 +17,11 @@
 //
 // This file is isomorphic: it runs in Node (tests import it from src/) and in
 // the browser (build.mjs rewrites the two packages/ imports to dist shims).
-import { canonicalize, hashCanonical } from './shared-browser.js?v=ef8ac632ff7c';
-import { arenaAnalytics, researchAnalytics } from './evolution/evolution-analytics-model.mjs?v=ef8ac632ff7c';
-import { summarizeRecords, LAB_SCHEMA } from './evolution/evolution-domain.mjs?v=ef8ac632ff7c';
-import { observatorySummariesForRun, observatoryCoverage } from './evolution/observatory-bridge.mjs?v=ef8ac632ff7c';
-import { batchMatrixView } from './evolution/batch-matrix.mjs?v=ef8ac632ff7c';
+import { canonicalize, hashCanonical } from './shared-browser.js?v=09c7519902ec';
+import { arenaAnalytics, researchAnalytics } from './evolution/evolution-analytics-model.mjs?v=09c7519902ec';
+import { summarizeRecords, LAB_SCHEMA } from './evolution/evolution-domain.mjs?v=09c7519902ec';
+import { observatorySummariesForRun, observatoryCoverage } from './evolution/observatory-bridge.mjs?v=09c7519902ec';
+import { batchMatrixView } from './evolution/batch-matrix.mjs?v=09c7519902ec';
 
 export const DOSSIER_FORMAT = 'intrilex-analysis-dossier';
 export const DOSSIER_VERSION = '1.1.0';
@@ -640,7 +640,7 @@ function experimentSection(experiments, datasetOrigin) {
   if (!included) {
     if (linked) exclusionReason = 'Dataset origin claims experiment runs but no recorded run contributes — inconsistent scope state.';
     else if (includedRunCount > 0) exclusionReason = `${includedRunCount} run(s) are included in the active analysis set but the exported dataset is ${datasetOrigin ?? 'CERTIFIED_CORPUS'} — the experiment selection is not reflected in this dossier's dataset.`;
-    else if ((experiments.totalRuns ?? 0) > 0) exclusionReason = `${experiments.totalRuns} experiment run(s) recorded but none contribute (excluded, invalidated, archived, or failed) — the exported dataset is ${datasetOrigin ?? 'CERTIFIED_CORPUS'}.`;
+    else if ((experiments.totalRuns ?? 0) > 0) exclusionReason = `${experiments.totalRuns} experiment run(s) recorded but none contribute (excluded, invalidated, archived, quarantined, or failed) — the exported dataset is ${datasetOrigin ?? 'CERTIFIED_CORPUS'}.`;
     else exclusionReason = 'No experiment runs recorded — the exported dataset is the certified baseline.';
   }
   return available({
@@ -659,18 +659,28 @@ function experimentSection(experiments, datasetOrigin) {
     invalidatedCount: experiments.invalidatedCount ?? 0,
     archivedCount: experiments.archivedCount ?? 0,
     failedCount: experiments.failedCount ?? 0,
+    corruptCount: experiments.corruptCount ?? 0,
+    quarantinedCount: experiments.quarantinedCount ?? 0,
+    payloadUnavailableCount: experiments.payloadUnavailableCount ?? 0,
+    integrityFailures: experiments.integrityFailures ?? [],
+    memoryOnlyRunCount: experiments.memoryOnlyRunCount ?? 0,
+    sessionPayloadRunCount: experiments.sessionPayloadRunCount ?? 0,
     bundledBaselineContributing: experiments.bundledBaselineContributing === true,
     fallback: experiments.fallback ?? null,
     runs: (experiments.runs ?? []).map(r => ({
       runId: r.runId ?? null, ordinal: r.ordinal ?? null, status: r.status ?? null,
       lifecycle: r.lifecycle ?? 'active', pinned: r.pinned === true,
       included: r.included === true, origin: r.origin ?? 'session',
+      persistence: r.persistence ?? 'persisted',
       createdAt: r.createdAt ?? null, matchCount: r.matchCount ?? 0,
       compatibility: r.compatibility ?? null,
       exclusionReason: r.exclusionReason ?? null, exclusionNote: r.exclusionNote ?? null,
       rulesVersion: r.rulesVersion ?? null, engineVersion: r.engineVersion ?? null,
       profileId: r.profileId ?? null, policyIds: r.policyIds ?? null,
       canonicalResultHash: r.canonicalResultHash ?? null, runHash: r.runHash ?? null,
+      payloadHash: r.payloadHash ?? null,
+      integrity: r.integrity ?? 'ok', integrityCode: r.integrityCode ?? null,
+      integrityNote: r.integrityNote ?? null,
     })),
     warnings: experiments.warnings ?? [],
     storeNote: 'Run records live in the experiment evidence store (IndexedDB intrilex-experiment-lab); excluded runs are retained, never deleted.',

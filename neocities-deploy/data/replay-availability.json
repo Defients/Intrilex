@@ -7,7 +7,11 @@
     },
     "autonomy": {
       "status": "excluded",
-      "urlTemplate": "data/autonomy/replays/public/<fixtureId>.public.replay.json"
+      "urlTemplate": "data/autonomy/lab-replays/public/<fixtureId>.json",
+      "bundledFixtureIds": [
+        "M-cdbb93aac376239f7748",
+        "M-6eb96a20b1344ba12321"
+      ]
     }
   }
 }

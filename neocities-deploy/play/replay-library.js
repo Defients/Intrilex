@@ -4,9 +4,68 @@
 // Supports public (sanitized) and private (full) export.
 // ═══════════════════════════════════════════════════════════════
 
-import { hashCanonical } from './hash.js?v=ef8ac632ff7c';
-import { listReplays,   putReplay} from './persistence.js?v=ef8ac632ff7c';
-import { finishLocalStrategy } from '../strategy/strategy-player.js?v=ef8ac632ff7c';
+import { hashCanonical } from './hash.js?v=09c7519902ec';
+import { listReplays,   putReplay,   deleteReplay} from './persistence.js?v=09c7519902ec';
+import { finishLocalStrategy } from '../strategy/strategy-player.js?v=09c7519902ec';
+
+/**
+ * FULL-MATCH WATCH CONTRACT — selective runtime retention.
+ *
+ * Campaign runs deliberately do NOT retain replay bodies (hundreds of MB);
+ * only matches the user explicitly watched/generated individually produce
+ * a replay envelope in memory. Those envelopes are retained here so the
+ * Replay Library and Watch can reopen them — a small, bounded set stored
+ * in IndexedDB rather than shipped in the build.
+ */
+
+/** Maximum retained lab/session replay bodies kept locally. */
+export const RETAINED_REPLAY_CAP = 8;
+
+/**
+ * Persist a complete runtime replay envelope ({initialState, commands})
+ * produced by runBrowserPolicyMatch(recordReplay:true) so it stays
+ * Watchable through the resolver's 'local' source path.
+ * Best-effort by contract: IndexedDB failures are swallowed by the caller.
+ *
+ * @param {object} replay - { initialState, commands } certified envelope
+ * @param {object} [ctx] - { id, summary, source } provenance
+ * @returns {Promise<string|null>} replayId when stored, else null
+ */
+export async function retainLabReplay(replay, ctx = {}) {
+  if (!replay?.initialState || !Array.isArray(replay?.commands) || replay.commands.length === 0) return null;
+  const { isIndexedDBAvailable } = await import('./persistence.js?v=09c7519902ec');
+  if (!isIndexedDBAvailable()) return null;
+  const summary = ctx.summary ?? {};
+  const replayId = `LAB-${ctx.id ?? `run-${Date.now()}`}`;
+  const record = {
+    replayId,
+    sessionId: ctx.id ?? replayId,
+    completedAt: new Date().toISOString(),
+    profileId: summary.profileId ?? null,
+    mode: ctx.source ?? 'lab-simulation',
+    retention: 'lab',
+    seed: summary.seed ?? null,
+    humanPlayerId: null,
+    aiPolicyId: Array.isArray(summary.policyIds) ? summary.policyIds.join(' vs ') : null,
+    winner: summary.winner ?? null,
+    terminationReason: summary.terminationReason ?? null,
+    fullTurnSequence: summary.completedFullTurns ?? null,
+    decisionCount: summary.decisionCount ?? null,
+    certifiedReplay: replay,
+    certifiedReplayHash: replay.integrityHash ?? summary.finalStateHash ?? null,
+    publicView: null,
+    publicViewHash: null,
+    contentHash: hashCanonical({ replayId, winner: summary.winner ?? null, commands: replay.commands.length }),
+  };
+  await putReplay(record);
+  // Prune older lab-retained bodies beyond the cap — retention is bounded.
+  const all = await listReplays();
+  const labRecords = all.filter(r => r.retention === 'lab');
+  for (const old of labRecords.slice(RETAINED_REPLAY_CAP)) {
+    await deleteReplay(old.replayId);
+  }
+  return replayId;
+}
 
 /**
  * Create a replay record from a completed session.
@@ -16,7 +75,7 @@ import { finishLocalStrategy } from '../strategy/strategy-player.js?v=ef8ac632ff
 export async function createReplayRecord(session) {
   const certifiedReplay = await session.createCertifiedReplay();
   const publicView = await session.createPublicReplay(certifiedReplay);
-  const {strictView}=await import('../autonomy-runtime.js?v=ef8ac632ff7c');
+  const {strictView}=await import('../autonomy-runtime.js?v=09c7519902ec');
   session._strategyTerminalScores=Object.fromEntries(['P1','P2'].map(id=>[id,strictView(session.state,id).own.securedPoints]));
 
   const replayId = `R-${session.sessionId}`;
@@ -62,7 +121,7 @@ export async function saveReplay(record) {
  */
 export async function verifyReplayRecord(record) {
   try {
-    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=ef8ac632ff7c');
+    const { verifyCertifiedReplay } = await import('../engine/browser-entry.js?v=09c7519902ec');
     verifyCertifiedReplay(record.certifiedReplay);
     return { valid: true };
   } catch (error) {

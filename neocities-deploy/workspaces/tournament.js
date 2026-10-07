@@ -2,11 +2,12 @@
 // workspaces/tournament.js — /tournament workspace: AI tournament mode
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, showToast, clamp } from '../state.js?v=ef8ac632ff7c';
-import { rerender } from '../rerender.js?v=ef8ac632ff7c';
-import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=ef8ac632ff7c';
-import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=ef8ac632ff7c';
-import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=ef8ac632ff7c';
+import { state, app, esc, pct, showToast, clamp } from '../state.js?v=09c7519902ec';
+import { rerender } from '../rerender.js?v=09c7519902ec';
+import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=09c7519902ec';
+import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=09c7519902ec';
+import { retainLabReplay } from '../play/replay-library.js?v=09c7519902ec';
+import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=09c7519902ec';
 
 const ALL_POLICIES = [
   'random-legal','score-rush','control','tempo','value',
@@ -499,7 +500,7 @@ function liveSemanticLabel(command) {
 // ── Frame reconstruction from replay ────────────────────────────
 
 async function reconstructFrames(replay) {
-  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=ef8ac632ff7c');
+  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=09c7519902ec');
   const engine = new IntrilexEngine();
   let s = structuredClone(replay.initialState);
   const frames = [{ state: s, events: [], command: null, commandIndex: -1 }];
@@ -602,7 +603,7 @@ async function openLiveReplayInWatch() {
   state.tournamentRunning = false;
   state.tournamentAutoPlaying = false;
   state.tournamentLiveView = null;
-  const { openReplay } = await import('../data-loader.js?v=ef8ac632ff7c');
+  const { openReplay } = await import('../data-loader.js?v=09c7519902ec');
   await openReplay({ kind: 'object', replay, id, label });
 }
 
@@ -762,6 +763,14 @@ async function runLiveMatchGames(tournament, match, worker) {
     lv.currentFrame = 0;
     lv.gameWinner = winningPolicy;
     lv.gameSummary = summary;
+    // FULL-MATCH WATCH CONTRACT: selectively retain this complete match
+    // replay body in IndexedDB so the Replay Library + Watch standby can
+    // reopen it (bounded retention — replay-library.js prunes oldest).
+    void retainLabReplay(replay, {
+      id: `${lv.matchId}-g${g + 1}`,
+      summary: { ...summary, seed, policyIds: [p1Policy, p2Policy] },
+      source: 'tournament-live',
+    }).catch(() => {});
     lv.seat1Wins = seat1Wins + (winningPolicy === match.seat1Policy ? 1 : 0);
     lv.seat2Wins = seat2Wins + (winningPolicy === match.seat2Policy ? 1 : 0);
     lv.hasMoreGames = (lv.seat1Wins < winsNeeded) && (lv.seat2Wins < winsNeeded) && (g + 1 < bestOf);

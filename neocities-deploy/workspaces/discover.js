@@ -10,11 +10,11 @@
 // (evolution/discovery-*.mjs). This workspace renders state and forwards
 // intents — it never judges evidence itself.
 
-import { app, esc, fmt, state } from '../state.js?v=ef8ac632ff7c';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=ef8ac632ff7c';
-import { EvolutionStore } from '../evolution/evolution-store.mjs?v=ef8ac632ff7c';
-import { executeDiscoveryRun, prepareDiscoveryRun, resolveEvidenceScope } from '../evolution/discovery-runner.mjs?v=ef8ac632ff7c';
-import { DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary } from '../evolution/discovery-domain.mjs?v=ef8ac632ff7c';
+import { app, esc, fmt, state } from '../state.js?v=09c7519902ec';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=09c7519902ec';
+import { EvolutionStore } from '../evolution/evolution-store.mjs?v=09c7519902ec';
+import { executeDiscoveryRun, prepareDiscoveryRun, resolveEvidenceScope } from '../evolution/discovery-runner.mjs?v=09c7519902ec';
+import { DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary } from '../evolution/discovery-domain.mjs?v=09c7519902ec';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 const pp = (n) => Number.isFinite(n) ? `${n >= 0 ? '+' : ''}${(n * 100).toFixed(1)}pp` : '—';
@@ -40,6 +40,10 @@ const view = {
   seed: 1,
   run: null,
   running: false,
+  // launching: set the instant START is pressed and held until the run
+  // reaches executeDiscoveryRun (or the launch fails). It is what makes
+  // the gap between click and RUNNING visible — and prevents double-fire.
+  launching: false,
   live: { completed: 0, total: 0, hypothesisId: null, stageKey: null },
   inspectedDiscovery: null,
   history: [],
@@ -66,15 +70,34 @@ export function cleanupDiscover() {
   view.mounted = false;
 }
 
+/** Single source of truth for whether START can fire — used by the render,
+ * the evidence patch, and the library patch so the button can never drift
+ * from the reasons that actually block a launch. Auditor is exempt from the
+ * zero-evidence disable only when prior Discoveries exist to re-test. */
+function startDisabledReason() {
+  if (view.launching) return 'Preparing the run — evidence is being resolved';
+  if (view.running) return 'A run is in progress';
+  if (view.run?.status === 'PAUSED') return 'A paused run exists — Resume it or use New Discovery';
+  if (view.evidence.status === 'loading') return 'Evidence is still being resolved';
+  if (view.evidence.status === 'ready'
+    && (view.evidence.scope?.eligibleGameCount ?? 0) === 0
+    && !(view.mode === 'auditor' && view.library.length > 0)) {
+    return 'No admissible Lab evidence — run a Lab series first';
+  }
+  return null;
+}
+
 export function renderDiscover() {
   view.mounted = true;
   const run = view.run;
+  const startReason = startDisabledReason();
   app.innerHTML = `<section class="panel" data-testid="discover-workspace">
     <div class="panel-header"><div><h2>✦ Discovery Engine</h2>
       <p>Autonomous research — anomaly scan → falsifiable hypotheses → targeted experiments → falsification → replication → gated promotion.</p></div>
       <div class="toolbar">
-        <span class="evo-state dsc-state-${esc((run?.status ?? 'idle').toLowerCase())}" data-testid="dsc-state">${esc(view.running ? 'RUNNING' : run?.status ?? 'CONFIGURED')}</span>
-        <button id="dsc-start" class="primary-button" data-testid="dsc-start" ${view.running || run?.status === 'PAUSED' || (view.evidence.status === 'ready' && view.evidence.scope?.eligibleGameCount === 0) ? 'disabled' : ''}>Start Run</button>
+        <span class="evo-state dsc-state-${esc((run?.status ?? 'idle').toLowerCase())}" data-testid="dsc-state">${esc(view.running ? 'RUNNING' : view.launching ? 'PREPARING' : run?.status ?? 'CONFIGURED')}</span>
+        <button id="dsc-start" class="primary-button" data-testid="dsc-start" ${startReason ? 'disabled' : ''}>Start Run</button>
+        <small id="dsc-start-hint" class="dsc-start-hint" data-testid="dsc-start-hint" ${startReason ? '' : 'hidden'}>${esc(startReason ?? '')}</small>
         <button id="dsc-resume" class="secondary-button" data-testid="dsc-resume" ${!view.running && run?.status === 'PAUSED' ? '' : 'disabled'}>Resume</button>
         <button id="dsc-pause" class="secondary-button" data-testid="dsc-pause" ${view.running ? '' : 'disabled'}>Pause</button>
         <button id="dsc-new" class="secondary-button" data-testid="dsc-new" ${view.running ? 'disabled' : ''}>New Discovery</button>
@@ -129,9 +152,12 @@ function evidenceHtml() {
   if (view.running) return '';
   const ev = view.evidence;
   const corpus = state.aggregate?.matchCount;
-  const corpusNote = typeof corpus === 'number' && corpus > 0
+  const expRuns = state.evidenceBasis?.totalRuns ?? 0;
+  const corpusNote = `${typeof corpus === 'number' && corpus > 0
     ? `The COHORT strip above reports ${fmt(corpus)} certified corpus matches — match-evidence summaries (M-*/PR-* identifiers). DISCOVER does not scan those: it investigates stored Lab series run artifacts (EL-*) produced by this origin.`
-    : 'DISCOVER scans stored Lab series run artifacts on this origin — it does not consume the certified corpus cohort shown in the strip.';
+    : 'DISCOVER scans stored Lab series run artifacts on this origin — it does not consume the certified corpus cohort shown in the strip.'} ${expRuns > 0
+    ? `${fmt(expRuns)} Experiment run(s) live in the separate Experiment evidence store (Run → Analysis Set) — DISCOVER does not scan them either; the two evidence stores are intentionally distinct.`
+    : 'Experiment runs live in a separate evidence store (Run → Analysis Set) — DISCOVER does not scan them; the two evidence stores are intentionally distinct.'}`;
   let body;
   if (ev.status === 'idle' || ev.status === 'loading') {
     body = '<p class="footer-note">Resolving stored Lab evidence…</p>';
@@ -157,7 +183,7 @@ function evidenceHtml() {
 }
 
 async function refreshEvidence() {
-  if (view.running) return;
+  if (view.running || view.launching) return;
   view.evidence = { status: 'loading', scope: view.evidence.scope, error: '' };
   patchEvidence();
   try {
@@ -171,14 +197,19 @@ async function refreshEvidence() {
   patchEvidence();
 }
 
+function patchStartButton() {
+  const start = document.getElementById('dsc-start');
+  if (!start) return;
+  const reason = startDisabledReason();
+  start.disabled = reason != null;
+  const hint = document.getElementById('dsc-start-hint');
+  if (hint) { hint.textContent = reason ?? ''; hint.hidden = !reason; }
+}
+
 function patchEvidence() {
   const el = document.querySelector('[data-testid="dsc-evidence"]');
   if (el) el.outerHTML = evidenceHtml();
-  const start = document.getElementById('dsc-start');
-  if (start && !view.running) {
-    start.disabled = view.run?.status === 'PAUSED'
-      || (view.evidence.status === 'ready' && view.evidence.scope?.eligibleGameCount === 0);
-  }
+  patchStartButton();
 }
 
 /** Reset the current Discovery session to a clean workspace. Only
@@ -186,7 +217,7 @@ function patchEvidence() {
  * promoted Discovery Library are historical artifacts in IndexedDB and
  * are never touched. A new run can be started immediately. */
 function resetDiscovery() {
-  if (view.running) return;
+  if (view.running || view.launching) return;
   view.run = null;
   view.inspectedDiscovery = null;
   view.live = { completed: 0, total: 0, hypothesisId: null, stageKey: null };
@@ -350,6 +381,9 @@ async function refreshLists() {
     const l = document.querySelector('[data-testid="dsc-library"]');
     if (l) l.outerHTML = libraryHtml();
     bindLists();
+    // Auditor eligibility depends on the library — a zero-evidence scope
+    // unlocks START for auditor once prior Discoveries are known.
+    patchStartButton();
   } catch (error) {
     view.storageError = error.message;
   }
@@ -367,20 +401,51 @@ function bindLists() {
   }));
 }
 
+/** Turn a launch failure into a precise inline message — the START button
+ * must never look like it did nothing. Codes map to root-cause text. */
+function launchErrorText(error) {
+  const msg = String(error?.message ?? error ?? 'unknown failure');
+  if (msg === 'INDEXEDDB_UNAVAILABLE') return 'Evidence store could not be inspected — IndexedDB is unavailable in this context. Lab evidence cannot be read or retained here.';
+  if (msg === 'LAB_STORAGE_BLOCKED') return 'Evidence store could not be inspected — the Lab database is blocked by another open Intrilex tab. Close it and retry.';
+  if (msg.startsWith('LAB_STORAGE')) return `Evidence store could not be inspected — ${msg}.`;
+  return `Discovery run could not start — ${msg}.`;
+}
+
 async function startRun(resume = false) {
-  if (view.running) return;
+  // START must never silently no-op: the button is disabled while launching
+  // or running, so a click that reaches here always produces a visible
+  // transition — PREPARING immediately, then RUNNING or an inline error.
+  if (view.running || view.launching) return;
   view.error = '';
+  view.launching = true;
+  // Immediate visible transition — before any storage awaits — plus a
+  // disabled button so rapid clicks cannot double-fire the launch.
+  const startBtn = document.getElementById('dsc-start');
+  if (startBtn) startBtn.disabled = true;
+  const hint = document.getElementById('dsc-start-hint');
+  if (hint) { hint.textContent = 'Preparing the run — evidence is being resolved'; hint.hidden = false; }
+  const chip = document.querySelector('[data-testid="dsc-state"]');
+  if (chip) chip.textContent = resume ? 'RESUMING' : 'PREPARING';
   try {
     if (!resume || !view.run || view.run.status !== 'PAUSED') {
       const run = await prepareDiscoveryRun(store, {
         mode: view.mode, gameBudget: view.gameBudget, confirmGames: view.confirmGames,
         workerCount: view.workers, profileId: view.profileId, seed: view.seed,
       }, LAB_IDENTITY);
+      if (!view.mounted) { view.launching = false; return; }
       await store.saveDiscoveryRun(run);
+      if (!view.mounted) { view.launching = false; return; }
       view.run = run;
     }
-  } catch (error) { view.error = error.message; renderDiscover(); return; }
+  } catch (error) {
+    view.launching = false;
+    if (!view.mounted) return; // navigated away mid-prepare — never clobber the live route
+    view.error = launchErrorText(error);
+    renderDiscover();
+    return;
+  }
 
+  view.launching = false;
   view.running = true;
   controller = new AbortController();
   renderDiscover();
@@ -402,6 +467,7 @@ async function startRun(resume = false) {
     try { if (view.run?.runId) view.run = await store.loadDiscoveryRun(view.run.runId); } catch { /* storage may be the failure */ }
   } finally {
     view.running = false;
+    view.launching = false;
     controller = null;
     view.live = { completed: 0, total: 0, hypothesisId: null, stageKey: null };
     // Stage runs were persisted mid-run — the stored-evidence scope has

@@ -328,16 +328,15 @@ test('homepage: app.js imports renderRankingSystemOverlay', async () => {
   assert.ok(js.includes('ranking-system-overlay.js'), 'import must reference the overlay module');
 });
 
-test('homepage: app.js has a Ranking System rail card button', async () => {
-  const js = await src('app.js');
-  assert.ok(js.includes('data-ranking-system-card'), 'must have the ranking-system card button');
-  assert.ok(js.includes('Ranking System'), 'button must be labelled Ranking System');
-  assert.ok(js.includes('data-testid="ranking-system-button"'), 'button must have a test id');
+test('homepage: home-view has a Ranking System card button', async () => {
+  const view = await src('home/home-view.js');
+  assert.ok(view.includes('data-ranking-system-card'), 'must have the ranking-system card button');
+  assert.ok(view.includes('Ranking System'), 'button must be labelled Ranking System');
+  assert.ok(view.includes('data-testid="ranking-system-button"'), 'button must have a test id');
 });
 
-test('homepage: app.js wires the card to openRankingSystemOverlay', async () => {
-  const js = await src('app.js');
-  assert.ok(js.includes('openRankingSystemOverlay'), 'must define the overlay opener');
+test('homepage: home.js wires the card to openRankingSystemOverlay', async () => {
+  const js = await src('home/home.js');
   assert.ok(/data-ranking-system-card[\s\S]*openRankingSystemOverlay/.test(js),
     'card click must call openRankingSystemOverlay');
 });

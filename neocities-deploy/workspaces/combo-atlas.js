@@ -6,11 +6,11 @@
 // authoritative combo telemetry (or the rankDecisions fallback).
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct } from '../state.js?v=ef8ac632ff7c';
-import { barChart, donutChart, sankeyFlow, chartTableAlternative, sparkline } from '../chart-toolkit.js?v=ef8ac632ff7c';
-import { obsContextStrip, metricStrip } from './observatory-ui.js?v=ef8ac632ff7c';
-import { labDatasetBanner } from './observatory.js?v=ef8ac632ff7c';
-import { rerender } from '../rerender.js?v=ef8ac632ff7c';
+import { state, app, esc, fmt, pct } from '../state.js?v=09c7519902ec';
+import { barChart, donutChart, sankeyFlow, chartTableAlternative, sparkline } from '../chart-toolkit.js?v=09c7519902ec';
+import { obsContextStrip, metricStrip } from './observatory-ui.js?v=09c7519902ec';
+import { labDatasetBanner } from './observatory.js?v=09c7519902ec';
+import { rerender } from '../rerender.js?v=09c7519902ec';
 
 const na = '<span class="metric-na" title="Unavailable in this dataset or engine build">n/a</span>';
 const rateFmt = (v) => (v == null || !Number.isFinite(v) ? na : pct(v));

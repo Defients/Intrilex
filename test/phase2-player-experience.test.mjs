@@ -2,7 +2,7 @@
 // phase2-player-experience.test.mjs — Phase 2 PX tests
 //
 // Tests for:
-//   A-01 — Academy as default onboarding (landing page CTA)
+//   A-01 — Academy onboarding (homepage hero link)
 //   A-02 — Card Inspector as educational bridge
 //   A-03 — Decision-intelligence tooltips
 //   F-01 — Post-match teaching moments with next-step links
@@ -14,62 +14,28 @@ import { join } from 'node:path';
 
 import { renderTeachingMoment } from '../packages/decision-intelligence/src/teaching-moments.mjs';
 
-const appSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/app.js'), 'utf8');
+const homeViewSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/home/home-view.js'), 'utf8');
 const cardWsSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/workspaces/cards/card-workspace.js'), 'utf8');
 const cardModelSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/workspaces/cards/card-model.js'), 'utf8');
 const teachingSrc = readFileSync(join(process.cwd(), 'packages/decision-intelligence/src/teaching-moments.mjs'), 'utf8');
-const landingRevampSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/css/landing-revamp.css'), 'utf8');
 const rankedDuelCssSrc = readFileSync(join(process.cwd(), 'apps/lab-web/src/play/ranked-duel.css'), 'utf8');
 // ═══════════════════════════════════════════════════════════════
-// A-01: ACADEMY AS DEFAULT ONBOARDING
+// A-01: ACADEMY ONBOARDING ON THE HOMEPAGE
+//
+// The homepage hero routes new players to the Academy and reads the
+// rules — onboarding is a real path, not a funnel-state fork. The
+// retired WIP page's localStorage visitor segmentation was removed
+// with it; Academy discoverability is what must hold.
 // ═══════════════════════════════════════════════════════════════
 
-test('A-01: detectVisitorState function exists in app.js', () => {
-  assert.ok(appSrc.includes('function detectVisitorState'), 'detectVisitorState must exist');
+test('A-01: homepage links to the Academy for new players', () => {
+  assert.ok(homeViewSrc.includes('#/play/academy'), 'Homepage must link to the Academy');
+  assert.ok(homeViewSrc.includes('Start with the Academy'), 'Academy link must be presented as the new-player path');
 });
 
-test('A-01: renderPlayCtaSection function exists in app.js', () => {
-  assert.ok(appSrc.includes('function renderPlayCtaSection'), 'renderPlayCtaSection must exist');
-});
-
-test('A-01: landing page renders play CTA section', () => {
-  assert.ok(appSrc.includes('${renderPlayCtaSection()}'), 'Landing page must call renderPlayCtaSection()');
-});
-
-test('A-01: first-time visitor gets Academy as primary CTA', () => {
-  assert.ok(appSrc.includes("state === 'first-time'"), 'Must handle first-time state');
-  assert.ok(appSrc.includes('Learn with Academy'), 'First-time CTA must mention Academy');
-});
-
-test('A-01: returning-incomplete visitor gets Continue Academy CTA', () => {
-  assert.ok(appSrc.includes("state === 'returning-incomplete'"), 'Must handle returning-incomplete state');
-  assert.ok(appSrc.includes('Continue Academy'), 'Returning-incomplete CTA must say Continue Academy');
-});
-
-test('A-01: returning-complete visitor gets Play Now CTA', () => {
-  // returning-complete is the fallthrough case in renderPlayCtaSection
-  assert.ok(appSrc.includes("returning-complete"), 'Must handle returning-complete state');
-  assert.ok(appSrc.includes('Play Intrilex'), 'Returning-complete CTA must say Play Intrilex');
-});
-
-test('A-01: visitor state checks localStorage keys', () => {
-  assert.ok(appSrc.includes("intrilex:funnel-state"), 'Must check funnel state key');
-  assert.ok(appSrc.includes("intrilex:academy-progress-v2"), 'Must check academy progress key');
-});
-
-test('A-01: academyTotal guards against zero', () => {
-  assert.ok(appSrc.includes('Math.max(1, lessons.length)'), 'academyTotal must guard against 0');
-});
-
-test('A-01: CSS has play CTA styles', () => {
-  assert.ok(landingRevampSrc.includes('.wip-play-cta'), 'CSS must have .wip-play-cta');
-  assert.ok(landingRevampSrc.includes('.wip-play-cta-primary'), 'CSS must have .wip-play-cta-primary');
-  assert.ok(landingRevampSrc.includes('.wip-play-cta-secondary'), 'CSS must have .wip-play-cta-secondary');
-});
-
-test('A-01: CSS has reduced-motion support for play CTA', () => {
-  assert.ok(landingRevampSrc.includes('.wip-play-cta') && landingRevampSrc.includes('prefers-reduced-motion'),
-    'Play CTA must be in reduced-motion media query');
+test('A-01: homepage primary nav exposes LEARN → Academy', () => {
+  assert.ok(homeViewSrc.includes("href: '#/play/academy'"), 'Primary nav must route LEARN to the Academy');
+  assert.ok(homeViewSrc.includes("label: 'LEARN'"), 'Primary nav must have a LEARN item');
 });
 
 // ═══════════════════════════════════════════════════════════════

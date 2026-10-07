@@ -64,6 +64,10 @@ export class MatchmakingQueue {
     /** @type {QueueEntry[]} */
     this._queue = []; // [{ connectionId, profileId, joinedAt }]
     this._byConnection = new Map(); // connectionId → queue index
+    // Real wait-time samples (ms) recorded each time a pair is matched.
+    // Bounded ring buffer — basis for the public avgQueueSeconds stat.
+    /** @type {number[]} */
+    this._waitSamples = [];
     this._onCreateMatch = onCreateMatch;
     // Stored for caller introspection only; the queue itself never invokes it.
     /** @type {(function(string, string): Promise<boolean>)|null} */
@@ -156,6 +160,32 @@ export class MatchmakingQueue {
   }
 
   /**
+   * Mean wait time (ms) across recent successful pairings, or null when
+   * no pairing has been recorded yet. Bounded to the last 200 samples —
+   * this is a real observed statistic, never a projection.
+   * @returns {number|null}
+   */
+  get averageWaitMs() {
+    if (!this._waitSamples.length) return null;
+    const sum = this._waitSamples.reduce((a, b) => a + b, 0);
+    return Math.round(sum / this._waitSamples.length);
+  }
+
+  /**
+   * Record a successful pairing's wait times.
+   * @param {QueueEntry[]} entries
+   */
+  _recordPairWaits(entries) {
+    const now = Date.now();
+    for (const e of entries) {
+      this._waitSamples.push(Math.max(0, now - e.joinedAt));
+    }
+    if (this._waitSamples.length > 200) {
+      this._waitSamples.splice(0, this._waitSamples.length - 200);
+    }
+  }
+
+  /**
    * Clean up expired entries.
    * @param {number} [maxAgeMs=QUEUE_TIMEOUT_MS]
    * @returns {string[]} Array of expired connection IDs
@@ -242,6 +272,9 @@ export class MatchmakingQueue {
         // If no one in band, fall through to FIFO (b is already set above)
       }
     }
+
+    // Record real wait times before removing both from the queue.
+    this._recordPairWaits([a, b]);
 
     // Remove both from queue
     this.dequeue(a.connectionId);

@@ -30,12 +30,12 @@ test('route() returns landing modes for /, /play, /rules', async () => {
 });
 
 // ── Render functions ──
-test('renderWipLanding() exists and renders WIP coming soon hero and newsletter', async () => {
+test('homepage renders via renderHome() from the home module', async () => {
   const js = await src('app.js');
-  assert.match(js, /function renderWipLanding\(\)/);
-  assert.match(js, /wip-coming-soon/);
-  assert.match(js, /wip-newsletter/);
-  assert.match(js, /wip-dev-preview-btn/);
+  assert.match(js, /import \{ renderHome \} from '\.\/home\/home\.js'/);
+  const view = await src('home/home-view.js');
+  assert.match(view, /export function renderHomePage\(/);
+  assert.match(view, /home-app/);
 });
 
 test('retired Intrilex Brain feature is absent from the landing page', async () => {
@@ -44,11 +44,24 @@ test('retired Intrilex Brain feature is absent from the landing page', async () 
   assert.doesNotMatch(styles, /css\/brain\.css/);
 });
 
-test('renderLanding() exists and renders play panel and rules card', async () => {
+test('retired WIP/launcher renderers are gone — homepage is canonical', async () => {
   const js = await src('app.js');
-  assert.match(js, /function renderLanding\(\)/);
-  assert.match(js, /landing-card.*play/);
-  assert.match(js, /landing-card.*rules/);
+  assert.doesNotMatch(js, /function renderWipLanding\(\)/);
+  assert.doesNotMatch(js, /function renderLanding\(\)/);
+  const view = await src('home/home-view.js');
+  assert.doesNotMatch(view, /wip-coming-soon|wip-newsletter|landing-mode-tile/);
+});
+
+test('homepage markup contains hero, mode CTAs, pulse, and ecosystem panels', async () => {
+  const view = await src('home/home-view.js');
+  assert.match(view, /home-hero/);
+  assert.match(view, /home-mode-btn solo/);
+  assert.match(view, /home-mode-btn direct/);
+  assert.match(view, /home-pulse/);
+  assert.match(view, /home-preseason/);
+  assert.match(view, /home-leaders/);
+  assert.match(view, /home-news/);
+  assert.match(view, /home-explore/);
 });
 
 test('renderPlayMode() exists and lazy-loads the play module', async () => {
@@ -63,12 +76,14 @@ test('renderRules() exists and calls renderRulesPage', async () => {
   assert.match(js, /renderRulesPage/);
 });
 
-test('renderLandingMode() dispatches to render functions for /, /dev, and /rules', async () => {
+test('renderLandingMode() dispatches / and /dev to the homepage and /rules to the rulebook', async () => {
   const js = await src('app.js');
   assert.ok(js.includes('function renderLandingMode(r)'), 'must have renderLandingMode function');
-  assert.ok(js.includes("if (r === '/') renderWipLanding()"), 'must dispatch / to renderWipLanding');
-  assert.ok(js.includes("else if (r === '/dev') renderLanding()"), 'must dispatch /dev to renderLanding');
+  assert.ok(js.includes('renderHome(landingContainer, homeCtx)'), 'must render the homepage');
+  assert.ok(js.includes("if (r === '/') renderHomePageRoute()"), 'must dispatch / to the homepage');
+  assert.ok(js.includes("else if (r === '/dev')"), 'must dispatch /dev');
   assert.ok(js.includes("if (r === '/rules') renderRules()"), 'must dispatch /rules to renderRules');
+  assert.ok(js.includes("r === '/leaderboard'"), 'must dispatch /leaderboard overlay route');
 });
 
 // ── Render guard ──
@@ -303,7 +318,7 @@ test('dist/rulebook-renderer.js exists', async () => {
 
 test('dist/app.js contains landing page render functions', async () => {
   const js = await dist('app.js');
-  assert.match(js, /renderLanding/);
+  assert.match(js, /renderHome|renderLanding/);
   assert.match(js, /renderPlay/);
   assert.match(js, /renderRules/);
 });
@@ -316,41 +331,25 @@ test('app.js imports renderRulesPage from rulebook-renderer.js', async () => {
 
 // ── Homepage polish pass (v0.24.2 final polish) ──
 test('header brand sub uses timeless descriptor, not version string', async () => {
-  const js = await src('app.js');
-  assert.match(js, /TACTICAL PLAYING CARD GAME/);
-  assert.doesNotMatch(js, /DETERMINISTIC CARD ENGINE.*V\$\{RULES_VERSION\}/);
+  const view = await src('home/home-view.js');
+  assert.match(view, /TACTICAL PLAYING CARD GAME/);
+  assert.doesNotMatch(view, /DETERMINISTIC CARD ENGINE.*V\$\{RULES_VERSION\}/);
 });
 
-test('default selected mode is local', async () => {
-  const js = await src('app.js');
-  assert.match(js, /_landingSelectedMode = 'local'/);
-  assert.match(js, /class="landing-mode-tile selected"[^>]*data-mode="local"/);
+test('hero has two real mode CTAs: Solo Duel and Direct Duel', async () => {
+  const view = await src('home/home-view.js');
+  assert.match(view, /PLAY SOLO DUEL/);
+  assert.match(view, /PLAY DIRECT DUEL/);
+  assert.match(view, /href="#\/play\/new"/);
+  assert.match(view, /href="#\/play\/online"/);
+  assert.match(view, /data-testid="home-solo-btn"/);
+  assert.match(view, /data-testid="home-direct-btn"/);
 });
 
-test('mode tiles have selected-state check indicator', async () => {
-  const js = await src('app.js');
-  assert.match(js, /landing-mode-check/);
-  const css = await cssSrc();
-  assert.match(css, /\.landing-mode-check/);
-  assert.match(css, /\.landing-mode-tile\.selected \.landing-mode-check/);
-});
-
-test('primary CTA is mode-aware with dynamic labels', async () => {
-  const js = await src('app.js');
-  assert.match(js, /START LOCAL DUEL/);
-  assert.match(js, /START ONLINE DUEL/);
-  assert.match(js, /modeLabels\[/);
-});
-
-test('initial CTA text matches default local mode', async () => {
-  const js = await src('app.js');
-  assert.match(js, /<span>START LOCAL DUEL<\/span>/);
-});
-
-test('Online Duel copy does not overpromise with worldwide', async () => {
-  const js = await src('app.js');
-  assert.match(js, /Compete against players online/);
-  assert.doesNotMatch(js, /players worldwide/);
+test('Direct Duel copy does not overpromise with worldwide', async () => {
+  const view = await src('home/home-view.js');
+  assert.match(view, /Compete against real players online/);
+  assert.doesNotMatch(view, /players worldwide/);
 });
 
 test('Learn Intrilex rail card removed (no redundant CTA to tutorial)', async () => {
@@ -359,51 +358,32 @@ test('Learn Intrilex rail card removed (no redundant CTA to tutorial)', async ()
   assert.doesNotMatch(js, /landing-rail-card learn/);
 });
 
-test('right rail order: What\'s New, Rules, Ranking System, Players, Leaderboard, Subreddit', async () => {
-  const js = await src('app.js');
-  const railStart = js.indexOf('landing-secondary-rail');
-  const railSection = js.slice(railStart);
-  const whatsNewIdx = railSection.indexOf("WHAT'S NEW");
-  const rulesIdx = railSection.indexOf('landing-rail-card rules');
-  const rankingIdx = railSection.indexOf('data-ranking-system-card');
-  const playersIdx = railSection.indexOf('data-players-card');
-  const leaderboardIdx = railSection.indexOf('data-leaderboard-card');
-  const subredditIdx = railSection.indexOf('landing-rail-card subreddit');
-  assert.ok(whatsNewIdx > -1 && whatsNewIdx < rulesIdx, "What's New must come before Rules");
-  assert.ok(rulesIdx > -1 && rulesIdx < rankingIdx, 'Rules must come before Ranking System');
-  assert.ok(rankingIdx > -1 && rankingIdx < playersIdx, 'Ranking System must come before Players');
-  assert.ok(playersIdx > -1 && playersIdx < leaderboardIdx, 'Players must come before Leaderboard');
-  assert.ok(leaderboardIdx > -1 && leaderboardIdx < subredditIdx, 'Leaderboard must come before Subreddit');
-});
-
-test('Continue Duel slot is in the topbar, not the rail', async () => {
-  const js = await src('app.js');
-  const topbarStart = js.indexOf('landing-topbar');
-  const topbarEnd = js.indexOf('</header>', topbarStart);
-  const topbarSection = js.slice(topbarStart, topbarEnd);
+test('Continue Duel slot is in the topbar', async () => {
+  const view = await src('home/home-view.js');
+  const topbarStart = view.indexOf('home-topbar');
+  const topbarEnd = view.indexOf('</header>', topbarStart);
+  const topbarSection = view.slice(topbarStart, topbarEnd);
   assert.ok(topbarSection.includes('landing-continue-slot'), 'Continue slot must be in the topbar');
-  // Continue slot must NOT be inside the rail's landing-cards div
-  const railCardsStart = js.indexOf('class="landing-cards"');
-  const railCardsEnd = js.indexOf('</div>', js.indexOf('landing-rail-card subreddit', railCardsStart));
-  const railCardsSection = js.slice(railCardsStart, railCardsEnd);
-  assert.ok(!railCardsSection.includes('landing-continue-slot'), 'Continue slot must not be in the rail cards');
+  assert.ok(topbarSection.includes('PLAY NOW'), 'Default utility action must be PLAY NOW');
 });
 
 test('Forums card removed (no discourse.group links)', async () => {
   const js = await src('app.js');
+  const view = await src('home/home-view.js');
   assert.doesNotMatch(js, /discourse\.group/);
-  assert.doesNotMatch(js, /landing-rail-card forums/);
+  assert.doesNotMatch(view, /discourse\.group/);
+  assert.doesNotMatch(view, /landing-rail-card forums/);
 });
 
-test('Rules card copy says complete official rulebook', async () => {
-  const js = await src('app.js');
-  assert.match(js, /Read the complete official rulebook/);
+test('Rules copy points at the official rulebook', async () => {
+  const view = await src('home/home-view.js');
+  assert.match(view, /official rules/i);
+  assert.match(view, /href="#\/rules"/);
 });
 
-test('What\'s New card shows version from canonical sources', async () => {
-  const js = await src('app.js');
-  assert.match(js, /v\$\{LAB_VERSION\}/);
-  assert.match(js, /WHAT'S NEW/);
+test('footer links carry the canonical version', async () => {
+  const view = await src('home/home-view.js');
+  assert.match(view, /v\$\{esc\(labVersion\)\}/);
 });
 
 test('footer credit uses muted color, not bright red', async () => {
@@ -413,46 +393,17 @@ test('footer credit uses muted color, not bright red', async () => {
   assert.doesNotMatch(css, /\.landing-footer-credit-name\{[^}]*color:#CC0011/);
 });
 
-test('mode tiles have radiogroup and radio semantics', async () => {
-  const js = await src('app.js');
-  assert.match(js, /role="radiogroup"/);
-  assert.match(js, /role="radio"/);
-  assert.match(js, /aria-checked="true"/);
-  assert.match(js, /aria-checked="false"/);
-});
-
-test('mode tiles support arrow-key navigation', async () => {
-  const js = await src('app.js');
-  assert.match(js, /ArrowRight/);
-  assert.match(js, /ArrowLeft/);
-});
-
-test('landing-mode-tile has position relative for check indicator', async () => {
-  const css = await cssSrc();
-  assert.match(css, /\.landing-mode-tile\{[^}]*position:relative/);
-});
-
-// ── Homepage revamp regression tests (IRX-M41/M42) ──
-test('landing-rail-card entrance animation uses backwards fill-mode (not both) so hover transforms work', async () => {
-  const css = await cssSrc();
-  // The animation must NOT use 'both' fill-mode, otherwise the retained
-  // transform:translateY(0) overrides :hover transform:translateX(2px).
-  const railCardAnimMatch = css.match(/\.landing-rail-card\{[^}]*animation:revamp-fade-up[^}]*\}/);
-  assert.ok(railCardAnimMatch, 'must have entrance animation on .landing-rail-card');
-  assert.match(railCardAnimMatch[0], /backwards/);
-  assert.doesNotMatch(railCardAnimMatch[0], /\bboth\b/);
-});
-
-test('bindLandingEvents uses AbortController to prevent document listener accumulation', async () => {
-  const js = await src('app.js');
-  assert.match(js, /_landingListenerAbort/);
+// ── Homepage regression tests (IRX-M41/M42 heritage) ──
+test('home.js uses AbortController to prevent document listener accumulation', async () => {
+  const js = await src('home/home.js');
+  assert.match(js, /_homeAbort/);
   assert.match(js, /new AbortController\(\)/);
   assert.match(js, /\{ signal \}/);
-  assert.match(js, /_landingListenerAbort\.abort\(\)/);
+  assert.match(js, /_homeAbort\.abort\(\)/);
 });
 
 test('loadContinueCard guards against stale slot after navigation', async () => {
-  const js = await src('app.js');
+  const js = await src('home/home.js');
   assert.match(js, /slot\.isConnected/);
 });
 
@@ -538,54 +489,74 @@ test('landing-mobile.css has landscape phone orientation support', async () => {
   assert.match(mobileSection, /orientation:landscape/);
 });
 
-// ── W.I.P. Landing Page (Coming Soon) ──
-test('WIP landing page has required elements in app.js', async () => {
-  const js = await src('app.js');
-  assert.match(js, /class="landing-app wip-landing"/);
-  assert.match(js, /class="wip-coming-soon"/);
-  assert.match(js, /class="wip-tagline"/);
-  assert.match(js, /class="wip-notice"/);
-  assert.match(js, /class="wip-features"/);
-  assert.match(js, /class="wip-newsletter"/);
-  assert.match(js, /class="wip-community"/);
-  assert.match(js, /class="wip-dev-preview-btn"/);
-  assert.match(js, /href="#\/dev"/);
+// ── Homepage structure (canonical full-page experience) ──
+test('homepage section order: hero → pulse → grid → footer', async () => {
+  const view = await src('home/home-view.js');
+  const heroIdx = view.indexOf('home-hero"');
+  const pulseIdx = view.indexOf('home-pulse"');
+  const gridIdx = view.indexOf('home-grid"');
+  assert.ok(heroIdx > -1 && pulseIdx > heroIdx && gridIdx > pulseIdx,
+    'canonical order must be hero → live pulse → ecosystem grid');
 });
 
-test('WIP newsletter binds form submission and localStorage save', async () => {
-  const js = await src('app.js');
-  assert.match(js, /function bindWipLandingEvents\(\)/);
-  assert.match(js, /localStorage\.setItem\('intrilex:newsletter-email'/);
-  assert.match(js, /showToast\(.*thank you/i);
+test('homepage primary nav has all approved destinations', async () => {
+  const view = await src('home/home-view.js');
+  for (const label of ['PLAY', 'LEARN', 'CARDS', 'RANKINGS', 'TOURNAMENTS', 'NEWS', 'COMMUNITY']) {
+    assert.ok(view.includes(`label: '${label}'`), `nav must include ${label}`);
+  }
 });
 
-test('WIP landing CSS classes exist in landing-revamp.css', async () => {
-  const css = await cssSrc();
-  assert.match(css, /\.wip-landing/);
-  assert.match(css, /\.wip-topbar/);
-  assert.match(css, /\.wip-dev-preview-btn/);
-  assert.match(css, /\.wip-hero/);
-  assert.match(css, /\.wip-coming-soon/);
-  assert.match(css, /\.wip-logo/);
-  assert.match(css, /\.wip-tagline/);
-  assert.match(css, /\.wip-notice/);
-  assert.match(css, /\.wip-features/);
-  assert.match(css, /\.wip-feature-pill/);
-  assert.match(css, /\.wip-newsletter/);
-  assert.match(css, /\.wip-newsletter-form/);
-  assert.match(css, /\.wip-newsletter-input/);
-  assert.match(css, /\.wip-newsletter-btn/);
-  assert.match(css, /\.wip-community/);
-  assert.match(css, /\.wip-community-btn/);
+test('homepage Explore panel wires real ecosystem routes', async () => {
+  const view = await src('home/home-view.js');
+  for (const href of ['#/rules', '#/cards', '#/tournaments', '#/leaderboard', '#/players']) {
+    assert.ok(view.includes(`href: '${href}'`), `explore must link to ${href}`);
+  }
+  assert.match(view, /reddit\.com\/r\/intrilex/);
 });
 
-test('WIP landing responsive styles exist in landing-mobile.css', async () => {
-  const css = await cssSrc();
-  const mobileSection = css.slice(css.indexOf('W.I.P. CINEMATIC LANDING RESPONSIVE OVERRIDES'));
-  assert.ok(mobileSection.length > 0, 'WIP responsive section must exist in landing-mobile.css');
-  assert.match(mobileSection, /\.wip-landing/);
-  assert.match(mobileSection, /\.wip-features/);
-  assert.match(mobileSection, /\.wip-newsletter-form/);
+test('home.css is imported and styles the homepage', async () => {
+  const styles = await src('styles.css');
+  assert.match(styles, /@import\s+'\.\/css\/home\.css'/);
+  const css = await readFile(path.join(root, 'apps/lab-web/src/css/home.css'), 'utf8');
+  assert.match(css, /\.home-hero/);
+  assert.match(css, /\.home-pulse/);
+  assert.match(css, /\.home-grid/);
+  assert.match(css, /@media\s*\(prefers-reduced-motion:reduce\)/);
+});
+
+test('homepage unlocks the fixed landing viewport so the page scrolls', async () => {
+  const css = await readFile(path.join(root, 'apps/lab-web/src/css/home.css'), 'utf8');
+  const appRule = css.match(/\.home-app\{[^}]*\}/);
+  assert.ok(appRule, 'must have .home-app rule');
+  assert.match(appRule[0], /position:relative/);
+  assert.match(appRule[0], /overflow:visible/);
+});
+
+test('home.css has responsive breakpoints for tablet and phone', async () => {
+  const css = await readFile(path.join(root, 'apps/lab-web/src/css/home.css'), 'utf8');
+  assert.match(css, /@media\s*\(max-width:1100px\)/);
+  assert.match(css, /@media\s*\(max-width:900px\)/);
+  assert.match(css, /@media\s*\(max-width:640px\)/);
+  assert.match(css, /@media\s*\(max-width:430px\)/);
+});
+
+test('homepage has mobile nav drawer + toggle', async () => {
+  const view = await src('home/home-view.js');
+  assert.match(view, /data-home-nav-toggle/);
+  assert.match(view, /data-home-nav-drawer/);
+  const js = await src('home/home.js');
+  assert.match(js, /aria-expanded/);
+});
+
+test('home.css uses -webkit-backdrop-filter alongside backdrop-filter', async () => {
+  const css = await readFile(path.join(root, 'apps/lab-web/src/css/home.css'), 'utf8');
+  // '/backdrop-filter/' matches both plain and prefixed occurrences, so a
+  // fully-prefixed file has exactly 2 matches per rule (1 webkit + 1 plain).
+  const bdMatches = css.match(/backdrop-filter/g) || [];
+  const webkitMatches = css.match(/-webkit-backdrop-filter/g) || [];
+  assert.ok(webkitMatches.length > 0, 'must have -webkit-backdrop-filter rules');
+  assert.equal(bdMatches.length, webkitMatches.length * 2,
+    'every backdrop-filter must have a -webkit- counterpart');
 });
 
 // ── Showcase view mode (tri-state toggle) ──

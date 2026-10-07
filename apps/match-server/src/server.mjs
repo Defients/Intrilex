@@ -737,7 +737,7 @@ export async function startServer(opts = {}) {
 
     // Health endpoint at /
     if (req.url === '/' || req.url === '/health') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({
         server: 'Intrilex Match Authority',
         version: '1.0.0',
@@ -748,8 +748,38 @@ export async function startServer(opts = {}) {
     }
     // Metrics endpoint at /metrics — sanitized for public exposure (IRX-M02)
     if (req.url === '/metrics') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify(getPublicHealthMetrics()));
+      return;
+    }
+    // Public homepage stats — aggregated, sanitized, CORS-open so the
+    // Intrilex homepage can render its Live Pulse strip. No auth, no
+    // player-identifying data, no internal event names (IRX-M02 rules).
+    if (req.url?.split('?')[0] === '/api/public/home-stats') {
+      const headers = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=15',
+      };
+      if (req.method !== 'GET') {
+        res.writeHead(405, { ...headers, Allow: 'GET' });
+        res.end(JSON.stringify({ error: 'Method not allowed' }));
+        return;
+      }
+      // "Today" = server-local midnight. Result jobs are enqueued once per
+      // terminal match, so this counts duels completed today.
+      const dayStart = new Date();
+      dayStart.setHours(0, 0, 0, 0);
+      const avgWaitMs = matchmakingQueue?.averageWaitMs ?? null;
+      res.writeHead(200, headers);
+      res.end(JSON.stringify({
+        onlinePlayers: connections.size,
+        activeMatches: matchStore?.count ?? 0,
+        queueSize: matchmakingQueue?.size ?? 0,
+        duelsToday: terminalOutbox ? terminalOutbox.countJobsSince('result', dayStart.getTime()) : null,
+        avgQueueSeconds: avgWaitMs != null ? Math.round(avgWaitMs / 100) / 10 : null,
+        updatedAt: new Date().toISOString(),
+      }));
       return;
     }
     // Detailed operator metrics are disabled until a server-only token is set.

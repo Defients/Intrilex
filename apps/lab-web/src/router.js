@@ -155,7 +155,7 @@ export const INSTRUMENTS = {
 
 export const LEGAL_MODES = new Set(['/privacy', '/terms']);
 
-export const LANDING_MODES = new Set(['/', '/dev', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/play/first-contact', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/privacy', '/terms', '/auth', '/players', '/dev/puzzles', '/caster', '/forensic']);
+export const LANDING_MODES = new Set(['/', '/dev', '/play', '/play/new', '/play/match', '/play/replays', '/play/academy', '/play/first-contact', '/puzzles', '/seasons', '/meta', '/tournaments', '/rules', '/privacy', '/terms', '/auth', '/players', '/leaderboard', '/dev/puzzles', '/caster', '/forensic']);
 
 export const isPlayRoute = (r) => r === '/play' || r.startsWith('/play/');
 
